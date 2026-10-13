@@ -22,12 +22,15 @@ import { CommonActions } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Modal, Pressable, View, type PressableStateCallbackType } from 'react-native';
-import { stage1Cards } from '../../content';
+import { episodesAll, stage1Cards } from '../../content';
 import { RomanizationModeOverride, useRomanizationMode } from '../../i18n/use-romanization-mode';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { localizeCard } from '../../logic/content-locale';
+import { completeStages } from '../../logic/my-route/latch';
 import { buildHangulCheck } from '../../logic/stage1/hangul-check';
 import {
+  guardsBack,
+  hangulCheckOpens,
   pauseLine,
   resultHeadline,
   reviewCompleteEvent,
@@ -63,7 +66,38 @@ type Props = NativeStackScreenProps<RootStackParamList, 'StageReview'>;
 /** react-native-web also reports keyboard focus to the style callback. */
 type PressState = PressableStateCallbackType & { focused?: boolean };
 
-export function StageReviewScreen({ navigation }: Props): React.ReactElement {
+export function StageReviewScreen({ route, navigation }: Props): React.ReactElement {
+  const messages = useMessages();
+  const profile = useProfileStore(activeProfileSelector);
+  const snapshot = useProgressStore((s) => (profile ? s.byProfile[profile.id] : undefined));
+  const opens = useMemo(
+    () => (snapshot ? hangulCheckOpens(route.params.stageKey, completeStages(snapshot, episodesAll)) : false),
+    [snapshot, route.params.stageKey],
+  );
+  // Only a learner who finished Stage 1 reaches the check; a stale link or a future caller gets one calm line.
+  if (!opens) {
+    return (
+      <Screen tone="canvas" scrollable>
+        <View style={{ alignItems: 'center', paddingTop: spacing.xxl }} testID="hangul-check-not-ready">
+          <Hoya pose="thinking" size={120} accessibilityLabel={messages.a11y.hoya('thinking')} />
+          <Spacer size="lg" />
+          <Body align="center">{messages.learner.stageReview.notReady}</Body>
+          <Spacer size="xl" />
+          <Button
+            label={messages.learner.stageReview.result.backHome.cta}
+            tone="primary"
+            size="hero"
+            fullWidth
+            onPress={() => navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: 'Main' }] }))}
+          />
+        </View>
+      </Screen>
+    );
+  }
+  return <HangulCheck navigation={navigation} />;
+}
+
+function HangulCheck({ navigation }: { navigation: Props['navigation'] }): React.ReactElement {
   const messages = useMessages();
   const m = messages.learner.stageReview;
   const locale = useLocale();
@@ -76,7 +110,11 @@ export function StageReviewScreen({ navigation }: Props): React.ReactElement {
   const flowRef = useRef(flow);
   const [result, setResult] = useState<{ view: ReviewResultView; at: string } | null>(null);
 
+  // Set before the flow's own exits, so the back guard below lets them through.
+  const allowLeave = useRef(false);
+
   const exit = useCallback((): void => {
+    allowLeave.current = true;
     useReviewRunStore.getState().reset();
     if (navigation.canGoBack()) navigation.goBack();
     else navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: 'Main' }] }));
@@ -121,6 +159,18 @@ export function StageReviewScreen({ navigation }: Props): React.ReactElement {
 
   // Leaving the screen any other way forgets the run too: nothing is saved, nothing is lost.
   useEffect(() => () => useReviewRunStore.getState().reset(), []);
+
+  // Hardware back and swipe-back mid-check ask "Stop the check?" first, like the close
+  // button (spec §3.9); before the start and after the result they leave at once.
+  useEffect(
+    () =>
+      navigation.addListener('beforeRemove', (e) => {
+        if (allowLeave.current || !guardsBack(flowRef.current)) return;
+        e.preventDefault();
+        dispatch({ type: 'leave' });
+      }),
+    [navigation, dispatch],
+  );
 
   const host = useMemo(() => reviewHost(() => dispatch({ type: 'chunk-done' })), [dispatch]);
   const close = { label: m.leave.close, onPress: () => dispatch({ type: 'leave' }) };
@@ -214,7 +264,7 @@ export function StageReviewScreen({ navigation }: Props): React.ReactElement {
                   ko={tip.char}
                   romanization={tip.romanization}
                   size="sm"
-                  accessibilityLabel={messages.a11y.practiceLetter(tip.romanization)}
+                  accessibilityLabel={tip.final ? messages.a11y.practiceFinal(tip.romanization) : messages.a11y.practiceLetter(tip.romanization)}
                   testID={`hangul-check-tip-${tip.jamoId}`}
                   onPress={() => {
                     useReviewRunStore.getState().reset();
@@ -260,7 +310,7 @@ export function StageReviewScreen({ navigation }: Props): React.ReactElement {
           onPress={() => navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: 'Main' }] }))}
         />
         <Spacer size="sm" />
-        <Button label={m.result.seeCards.cta} tone="ghost" size="md" fullWidth onPress={() => navigation.navigate('Main', { screen: 'Library' })} />
+        <Button label={m.result.seeCards.cta} tone="ghost" size="md" fullWidth onPress={() => navigation.navigate('Main', { screen: 'Library', params: { section: 'cards' } })} />
         <Spacer size="lg" />
       </Screen>
     );

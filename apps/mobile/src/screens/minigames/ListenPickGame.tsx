@@ -184,6 +184,12 @@ export function ListenPickGame({ scope, host, onBack, onClose }: Props): React.R
     return (
       <Screen>
         <Body>{copy.listenPick.empty}</Body>
+        {onClose && !onBack ? (
+          <>
+            <Spacer size="lg" />
+            <Button label={onClose.label} tone="secondary" size="md" onPress={onClose.onPress} testID="listen-pick-close" />
+          </>
+        ) : null}
         {onBack ? (
           <>
             <Spacer size="lg" />

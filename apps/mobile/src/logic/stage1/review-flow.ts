@@ -1,4 +1,4 @@
-import type { Quest, RomanizationMode, ReviewEntry } from '@hangul-route/content-schema';
+import type { Quest, RomanizationMode, ReviewEntry, StageKey } from '@hangul-route/content-schema';
 import type { Messages } from '@hangul-route/i18n';
 import { episodesAll } from '../../content/episodes';
 import { findJamo } from '../../content/jamo';
@@ -74,6 +74,11 @@ export function stepReviewFlow(state: ReviewFlowState, event: ReviewFlowEvent): 
   }
 }
 
+/** A system back (Android back, swipe-back) asks before leaving only while there is a run to lose. */
+export function guardsBack(state: ReviewFlowState): boolean {
+  return state.phase === 'playing' || state.phase === 'pause';
+}
+
 /** One item's first-try record (the review run store keeps these). */
 export interface ReviewAnswer {
   /** Right on the first answer. */
@@ -88,8 +93,13 @@ export interface ReviewTally {
   symbolsCorrect: number;
   wordsCorrect: number;
   retries: number;
-  /** Items answered wrong on the first try, in item order. */
+  /** Items answered wrong on the first try, in item order (the learner's tips come from these). */
   missedItemIds: string[];
+  /**
+   * Items the run never asked (a round the game could not play), in item order. Not right on the
+   * first try, so the caregiver entry lists them as missed; never a tip on the learner screen.
+   */
+  unansweredItemIds: string[];
 }
 
 export function tallyReview(itemIds: readonly string[], answers: Readonly<Record<string, ReviewAnswer>>): ReviewTally {
@@ -97,15 +107,19 @@ export function tallyReview(itemIds: readonly string[], answers: Readonly<Record
   let wordsCorrect = 0;
   let retries = 0;
   const missedItemIds: string[] = [];
+  const unansweredItemIds: string[] = [];
   for (const id of itemIds) {
     const answer = answers[id];
-    if (!answer) continue;
+    if (!answer) {
+      unansweredItemIds.push(id);
+      continue;
+    }
     retries += answer.retries;
     if (!answer.first) missedItemIds.push(id);
     else if (isSymbolItem(id)) symbolsCorrect += 1;
     else wordsCorrect += 1;
   }
-  return { correct: symbolsCorrect + wordsCorrect, total: itemIds.length, symbolsCorrect, wordsCorrect, retries, missedItemIds };
+  return { correct: symbolsCorrect + wordsCorrect, total: itemIds.length, symbolsCorrect, wordsCorrect, retries, missedItemIds, unansweredItemIds };
 }
 
 /** A tip letter on the result: tapping it opens the quest that teaches it. */
@@ -114,6 +128,8 @@ export interface TipLetter {
   char: string;
   /** The sound value (`t`, the final's `ng`). */
   romanization: string;
+  /** A final consonant: its screen-reader label names it as a final (`a11y.practiceFinal`). */
+  final: boolean;
   questId: string;
   episodeId: string;
 }
@@ -137,7 +153,7 @@ export function reviewResultView(tally: ReviewTally, quests: readonly Quest[] = 
     const quest = teachingQuestFor(jamoId, quests);
     const episode = quest && episodesAll.find((e) => e.questIds.includes(quest.id));
     if (!jamo || !quest || !episode) continue;
-    tips.push({ jamoId, char: jamo.char, romanization: jamo.romanization, questId: quest.id, episodeId: episode.id });
+    tips.push({ jamoId, char: jamo.char, romanization: jamo.romanization, final: jamo.kind === 'batchim', questId: quest.id, episodeId: episode.id });
   }
   return { stars: reviewStars(tally.correct, tally.total), tips, everyLetter: missedSymbols.length === 0 };
 }
@@ -151,9 +167,13 @@ export function pauseLine(chunk: number, m: Messages['learner']['stageReview']['
   return [m.first, m.second, m.third][chunk] ?? m.fourth;
 }
 
-/** The caregiver channel's entry (`recordReview`): one per attempt, the numbers stay off the learner screen. */
+/**
+ * The caregiver channel's entry (`recordReview`): one per attempt, the numbers stay off the learner
+ * screen. `missedItemIds` means "not right on the first try": the misses and any item never asked.
+ */
 export function stageCertificateEntry({ itemIds, tally, now }: { itemIds: readonly string[]; tally: ReviewTally; now: Date }): ReviewEntry {
   const at = now.toISOString();
+  const notRight = new Set([...tally.missedItemIds, ...tally.unansweredItemIds]);
   return {
     id: `review:stage1:${at}`,
     kind: 'stage-certificate',
@@ -161,8 +181,13 @@ export function stageCertificateEntry({ itemIds, tally, now }: { itemIds: readon
     scope: 'stage1',
     itemIds: [...itemIds],
     resultStars: reviewStars(tally.correct, tally.total),
-    missedItemIds: tally.missedItemIds,
+    missedItemIds: itemIds.filter((id) => notRight.has(id)),
   };
+}
+
+/** The Hangul Check opens only for Stage 1, once Stage 1 is complete (`completeStages`); any other route param is the not-ready state. */
+export function hangulCheckOpens(stageKey: StageKey, complete: ReadonlySet<StageKey>): boolean {
+  return stageKey === 'stage1' && complete.has('stage1');
 }
 
 /** `review.start { kind, stageKey, hideRomanization }` when the check begins. */

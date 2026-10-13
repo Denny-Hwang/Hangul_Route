@@ -416,9 +416,19 @@ describe('summarize: stage1Anchor, the Hangul Check verdict (F-QUEST-002 §3.9)'
     expect(out.stage1).toEqual(run([]).stage1);
   });
 
-  it('an entry from before missedItemIds counts as nothing missed; an unknown symbol id is never a tricky key', () => {
-    const { missedItemIds: _m, ...old } = review('2026-09-20T10:00:00.000Z', []);
-    expect(run([old]).stage1Anchor?.met).toBe(true);
+  it('an entry without missedItemIds is unknown, never all right: it gives no verdict', () => {
+    // An older build strips the field when it re-saves the snapshot (zod drops unknown keys).
+    const { missedItemIds: _m, ...stripped } = review('2026-09-20T10:00:00.000Z', []);
+    expect(run([stripped])).not.toHaveProperty('stage1Anchor');
+  });
+
+  it('a stripped newest entry falls back to the newest check that kept its misses', () => {
+    const older = review('2026-09-19T10:00:00.000Z', SYMBOLS.slice(0, 5));
+    const { missedItemIds: _m, ...stripped } = review('2026-09-20T10:00:00.000Z', []);
+    expect(run([stripped, older]).stage1Anchor).toMatchObject({ met: false, checkedAt: '2026-09-19T10:00:00.000Z' });
+  });
+
+  it('an unknown symbol id is never a tricky key', () => {
     expect(run([review('2026-09-20T10:00:00.000Z', ['jamo:nope'])]).stage1Anchor?.tricky).toEqual([]);
   });
 

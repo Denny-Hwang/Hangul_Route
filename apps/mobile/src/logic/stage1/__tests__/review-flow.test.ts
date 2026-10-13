@@ -4,6 +4,8 @@ import { describe, expect, it } from 'vitest';
 import { bannedNumberIn, leafStrings } from '../../reviews/banned-text';
 import { buildHangulCheck } from '../hangul-check';
 import {
+  guardsBack,
+  hangulCheckOpens,
   pauseLine,
   resultHeadline,
   reviewCompleteEvent,
@@ -116,9 +118,23 @@ describe('tallyReview: first try over the 35 items', () => {
     expect(tally.missedItemIds).toEqual(ids.filter((id) => id === 'jamo:tieut' || id === 'word:bap'));
   });
 
-  it('an item never answered is not right and not a miss', () => {
+  it('an item never answered is not right and not a learner miss, but is listed as unanswered', () => {
     const tally = tallyReview(ids, {});
     expect(tally).toMatchObject({ correct: 0, symbolsCorrect: 0, wordsCorrect: 0, missedItemIds: [] });
+    expect(tally.unansweredItemIds).toEqual(ids);
+  });
+
+  it('the caregiver entry counts an unanswered item as not right on the first try, in item order', () => {
+    const answers = all(true);
+    delete answers['jamo:tieut'];
+    answers['word:bap'] = { first: false, retries: 1 };
+    const tally = tallyReview(ids, answers);
+    expect(tally.missedItemIds).toEqual(['word:bap']);
+    expect(tally.unansweredItemIds).toEqual(['jamo:tieut']);
+    const entry = stageCertificateEntry({ itemIds: ids, tally, now: new Date('2026-10-12T09:00:00.000Z') });
+    expect(entry.missedItemIds).toEqual(ids.filter((id) => id === 'jamo:tieut' || id === 'word:bap'));
+    // The learner sees no tip for a letter that was never asked.
+    expect(reviewResultView(tally).tips).toEqual([]);
   });
 });
 
@@ -137,9 +153,9 @@ describe('reviewResultView: what the learner sees', () => {
     expect(view.everyLetter).toBe(false);
     expect(view.tips).toHaveLength(3);
     const tieut = reviewResultView(tallyReview(['jamo:tieut'], { 'jamo:tieut': { first: false, retries: 0 } })).tips[0];
-    expect(tieut).toEqual({ jamoId: 'jamo:tieut', char: 'ㅌ', romanization: 't', questId: 'quest:stage1-life-q3', episodeId: 'episode:stage1-life' });
+    expect(tieut).toEqual({ jamoId: 'jamo:tieut', char: 'ㅌ', romanization: 't', final: false, questId: 'quest:stage1-life-q3', episodeId: 'episode:stage1-life' });
     const final = reviewResultView(tallyReview(['jamo:ieung-batchim'], { 'jamo:ieung-batchim': { first: false, retries: 0 } })).tips[0];
-    expect(final).toMatchObject({ char: 'ㅇ', romanization: 'ng', questId: 'quest:stage1-rites-q2' });
+    expect(final).toMatchObject({ char: 'ㅇ', romanization: 'ng', final: true, questId: 'quest:stage1-rites-q2' });
   });
 
   it('a word miss alone keeps "Every letter!"', () => {
@@ -153,6 +169,50 @@ describe('reviewResultView: what the learner sees', () => {
 
   it('leaves out a tip whose symbol no quest teaches (never a dead chip)', () => {
     expect(reviewResultView(tallyReview(['jamo:nope'], { 'jamo:nope': { first: false, retries: 0 } })).tips).toEqual([]);
+  });
+});
+
+describe('guardsBack: a system back mid-check asks "Stop the check?" first', () => {
+  const start = startReviewFlow({ chunks: 5, romanizationMode: 'always' });
+  it('guards while playing and during a pause', () => {
+    const playing = run(start, [{ type: 'start' }]).state;
+    expect(guardsBack(playing)).toBe(true);
+    expect(guardsBack(run(playing, [{ type: 'chunk-done' }]).state)).toBe(true);
+  });
+
+  it('lets back through on the intro and on the result', () => {
+    expect(guardsBack(start)).toBe(false);
+    const one = startReviewFlow({ chunks: 1, romanizationMode: 'always' });
+    expect(guardsBack(run(one, [{ type: 'start' }, { type: 'chunk-done' }]).state)).toBe(false);
+  });
+
+  it('a guarded back opens the same question as the close button', () => {
+    const playing = run(start, [{ type: 'start' }]).state;
+    expect(stepReviewFlow(playing, { type: 'leave' }).state.leaving).toBe(true);
+  });
+});
+
+describe('hangulCheckOpens: the route opens only for a learner who finished Stage 1', () => {
+  it('is true for stage1 when Stage 1 is complete', () => {
+    expect(hangulCheckOpens('stage1', new Set(['stage1']))).toBe(true);
+  });
+
+  it('is false before Stage 1 is complete and for any other stage key', () => {
+    expect(hangulCheckOpens('stage1', new Set())).toBe(false);
+    expect(hangulCheckOpens('stage2', new Set(['stage1', 'stage2']))).toBe(false);
+  });
+});
+
+describe('tip labels', () => {
+  const a11y = getMessages('en').a11y;
+  it('names a letter as a letter and a final as a final consonant', () => {
+    expect(a11y.practiceLetter('t')).toBe('Practice the letter t again');
+    expect(a11y.practiceFinal('n')).toBe('Practice the final consonant n again');
+  });
+
+  it('the not-ready line has no number and no shame word', () => {
+    expect(bannedNumberIn(copy.notReady)).toBeNull();
+    expect(copy.notReady).toBe('The Hangul Check is not open yet. Keep playing your quests.');
   });
 });
 

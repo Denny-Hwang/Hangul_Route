@@ -169,12 +169,15 @@ const ANCHOR_WORDS = 4;
  * caregiver channel only. Not `stage1.anchorAccuracy` (the average accuracy of Stage 1 quests):
  * a dashboard must not conflate them. `tricky` holds the symbol keys missed on the first try.
  * Undefined with no check, so the summary of a learner who never took one is unchanged.
+ *
+ * Only an entry that carries `missedItemIds` is read: an older build strips the field when it
+ * re-saves the snapshot, and a stripped entry means "unknown", never "every item right".
  */
 export function stage1AnchorOf(reviews: readonly ReviewEntry[]): ProgressSummary['stage1Anchor'] {
-  const checks = reviews.filter((r) => r.kind === 'stage-certificate' && r.scope === 'stage1');
+  const checks = reviews.filter((r) => r.kind === 'stage-certificate' && r.scope === 'stage1' && Array.isArray(r.missedItemIds));
   const newest = checks.reduce<ReviewEntry | undefined>((best, r) => (!best || compareInstant(r.generatedAt, best.generatedAt) > 0 ? r : best), undefined);
   if (!newest) return undefined;
-  const missed = new Set(newest.missedItemIds ?? []);
+  const missed = new Set(newest.missedItemIds);
   const isSymbol = (id: string): boolean => id.startsWith('jamo:');
   const symbolsRight = newest.itemIds.filter((id) => isSymbol(id) && !missed.has(id)).length;
   const wordsRight = newest.itemIds.filter((id) => !isSymbol(id) && !missed.has(id)).length;

@@ -87,7 +87,12 @@ export function mergeHomework(l: HomeworkAssignment, s: HomeworkAssignment): Hom
 export function mergeReview(l: ReviewEntry, s: ReviewEntry): ReviewEntry {
   const ls = l.resultStars ?? -1;
   const ss = s.resultStars ?? -1;
-  return ls >= ss ? l : s;
+  if (ls !== ss) return ls > ss ? l : s;
+  // A tie: the copy that kept `missedItemIds` wins, so a copy an older build stripped never
+  // replaces a complete one (F-QUEST-002 §3.9, the caregiver verdict reads the field).
+  const lm = Array.isArray(l.missedItemIds);
+  const sm = Array.isArray(s.missedItemIds);
+  return lm || !sm ? l : s;
 }
 
 /**

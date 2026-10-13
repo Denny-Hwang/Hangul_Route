@@ -4,7 +4,7 @@ import { PLACEMENT_KEEP } from '@hangul-route/content-schema';
 import { seededRandom } from '../../listen-pick';
 import { placementResult } from '../../placement/__tests__/fixtures';
 import { selfRoute } from '../../homework/__tests__/curriculum-fixture';
-import { compareInstant, isSubsetOf, mergeCard, mergeQuestDoneAt, mergeSnapshots, mergeVocab, rebaseSnapshot, withSnapshotDefaults } from '../merge';
+import { compareInstant, isSubsetOf, mergeCard, mergeQuestDoneAt, mergeReview, mergeSnapshots, mergeVocab, rebaseSnapshot, withSnapshotDefaults } from '../merge';
 
 const NOW = new Date('2026-09-21T12:00:00.000Z');
 const base = (over: Partial<ProgressSnapshot> = {}): ProgressSnapshot => ({
@@ -77,6 +77,17 @@ describe('mergeSnapshots (F-SYNC-001 §3.3)', () => {
     expect(m.episodes[0]).toMatchObject({ questsCompleted: 2, totalQuests: 3, completedAt: 'c' });
     expect(m.homework[0]?.completedAt).toBe('done');
     expect(m.reviews[0]?.resultStars).toBe(3);
+  });
+
+  it('mergeReview: on a star tie the copy that kept missedItemIds wins, whichever side it is on', () => {
+    const full = { id: 'r1', kind: 'stage-certificate' as const, generatedAt: 't', scope: 'stage1', itemIds: ['jamo:a'], resultStars: 3 as const, missedItemIds: ['jamo:a'] };
+    const { missedItemIds: _m, ...stripped } = full;
+    expect(mergeReview(stripped, full)).toBe(full);
+    expect(mergeReview(full, stripped)).toBe(full);
+    // Higher stars still win first; a tie of two complete copies keeps the local one.
+    expect(mergeReview({ ...stripped, resultStars: 3 }, { ...full, resultStars: 2 }).resultStars).toBe(3);
+    const other = { ...full, missedItemIds: [] };
+    expect(mergeReview(full, other)).toBe(full);
   });
 
   it('unions sessions by id, sorts them, and recomputes the streak from the union', () => {

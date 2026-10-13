@@ -84,15 +84,15 @@ E. Stop the check? (over B or C)
 - A: [[ LET'S GO ]] -> B part 1; `review.start { kind: 'stage-certificate', stageKey, hideRomanization }`
 - B: option tap -> first answer per item scores (review-run-store); a wrong tap is amber, the item stays open until the right one
 - B: last item of a part -> C (or D after part 5)
-- B/C: [x] -> E
+- B/C: [x] -> E; a system back (Android back, iOS swipe-back) during B or C also opens E (`guardsBack`); on A and D it leaves at once
 - C: [[ KEEP GOING ]] -> next part
-- D: tip chip -> `quest/player` for the quest that teaches the letter (`teachingQuestFor`)
-- D: card -> `CardDetail`; [[ BACK HOME ]] -> Main; [ See my cards ] -> Library
+- D: tip chip -> `quest/player` for the quest that teaches the letter (`teachingQuestFor`); read "Practice the letter t again", or "Practice the final consonant n again" for a final
+- D: card -> `CardDetail`; [[ BACK HOME ]] -> Main; [ See my cards ] -> Library on its Cards section (`section: 'cards'`)
 - E: [[ KEEP GOING ]] -> back where it was; [ Stop ] -> back, the run is discarded
 
 ## Navigation graph
 
-Enter from: `results/stage1-complete` (primary) · `journey/grid` Stage 1 header button (once complete)
+Enter from: `results/stage1-complete` (primary) · `journey/grid` Stage 1 header button (once complete). The route opens only for `stageKey: 'stage1'` once Stage 1 is complete (`hangulCheckOpens`); otherwise the not-ready state
 Exit to: back (intro, stop) · `quest/player` (tip) · `library/card-detail` · `library/gallery` · `home/todays-mission`
 
 ## States
@@ -101,13 +101,15 @@ Exit to: back (intro, stop) · `quest/player` (tip) · `library/card-detail` · 
 - **no sound**: Listen & Pick shows the prompt as text ("No sound? Read it here."); the item scores normally.
 - **every letter right**: "Every letter!" in place of the tip row.
 - **no cards owned** (possible after a reset): the cards row is left out; the certificate still shows.
-- **taken twice**: two entries; the caregiver summary reads the newest.
+- **taken twice**: two entries; the caregiver summary reads the newest that carries `missedItemIds` (an entry an older build stripped is "unknown", never "all right").
+- **not ready** (the route opened before Stage 1 is complete, or for another stage key, e.g. a stale link): Hoya thinking, one line "The Hangul Check is not open yet. Keep playing your quests." and [[ BACK HOME ]]. Never a dead end.
+- **an item the game cannot play** (guarded by content tests): it is never asked, it is no tip, and the caregiver entry lists it in `missedItemIds` (not right on the first try). A part with no playable item shows the empty line with a [ Stop the check ] button.
 - **reduced motion**: no pulse or slide; instant changes.
 
 ## Data needs
 
-- reads: the active profile (name, romanization mode), `jamoAll`, the confusable table, the Stage 1 curriculum (`teachingQuestFor`), owned cards, messages `learner.stageReview.*`, `a11y.practiceLetter`
-- writes: `progress-store.recordReview(profileId, { id: 'review:stage1:<iso>', kind: 'stage-certificate', generatedAt, scope: 'stage1', itemIds (35), resultStars, missedItemIds })`, persisted and synced; `summarize` then writes `stage1Anchor { met, checkedAt, tricky }` (met = 27+ of 30 symbols and 4+ of 5 words) for the caregiver channel
+- reads: the active profile (name, romanization mode), `jamoAll`, the confusable table, the Stage 1 curriculum (`teachingQuestFor`), owned cards, messages `learner.stageReview.*`, `a11y.practiceLetter`, `a11y.practiceFinal`
+- writes: `progress-store.recordReview(profileId, { id: 'review:stage1:<iso>', kind: 'stage-certificate', generatedAt, scope: 'stage1', itemIds (35), resultStars, missedItemIds (the first-try misses and any item never asked, in item order) })`, persisted and synced; a sync merge keeps the higher stars and, on a tie, the copy that kept `missedItemIds`; `summarize` then writes `stage1Anchor { met, checkedAt, tricky }` (met = 27+ of 30 symbols and 4+ of 5 words) for the caregiver channel
 - telemetry: `review.start`, `review.complete { kind, stageKey, symbolsCorrect, wordsCorrect, retries, stars }` (internal analytics; never on a learner screen)
 
 ## Open questions

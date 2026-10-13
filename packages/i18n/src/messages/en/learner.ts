@@ -1427,6 +1427,8 @@ export const learner = {
    */
   stageReview: {
     title: 'Hangul Check',
+    /** The route opened for a learner who has not finished Stage 1 (a stale link): one calm line and Back home. */
+    notReady: 'The Hangul Check is not open yet. Keep playing your quests.',
     intro: {
       body: 'About four minutes. Pictures and sounds. No timer.',
       hideRomanization: 'Reading practice: hide the romanization until I tap',
