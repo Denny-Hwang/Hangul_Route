@@ -1,9 +1,13 @@
-import { isGrownUpPath } from '@hangul-route/content-schema';
+import { readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { GROWN_UP_PREFIXES, isGrownUpPath } from '@hangul-route/content-schema';
 import { LOCALES } from '@hangul-route/i18n';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import robots, { dynamic as robotsDynamic } from '../app/robots';
 import sitemap, { dynamic as sitemapDynamic } from '../app/sitemap';
-import { SITE_PAGES, SITE_URL, shownSiteLocales } from '../lib/site-metadata';
+import { SITE_PAGES, SITE_URL, shownSiteLocales, siteAlternates } from '../lib/site-metadata';
+import { sitePath } from '../lib/site-path';
 import { siteRobots, siteSitemap } from '../lib/site-surface';
 
 /**
@@ -31,9 +35,9 @@ describe('robots.txt (F-SITE-002 S-9)', () => {
     expect(robotsDynamic).toBe('force-static');
   });
 
-  it('allows the site, disallows /design-preview/ and names the sitemap on SITE_URL', () => {
+  it('allows the site, disallows /design-preview (the index sheet and every sheet under it) and names the sitemap', () => {
     expect(robots()).toEqual({
-      rules: { userAgent: '*', allow: '/', disallow: '/design-preview/' },
+      rules: { userAgent: '*', allow: '/', disallow: '/design-preview' },
       sitemap: 'https://hangulroute.com/sitemap.xml',
     });
     expect(siteRobots()).toEqual(robots());
@@ -66,17 +70,53 @@ describe('sitemap.xml (F-SITE-002 S-9)', () => {
     expect(shown.length).toBeGreaterThan(1);
     expect(entries).toHaveLength(SITE_PAGES.length * shown.length);
 
+    expect(entries.map((entry) => entry.url)).toEqual(
+      shown.flatMap((locale) => SITE_PAGES.map((page) => `${SITE_URL}${sitePath(locale, page)}`)),
+    );
+    expect(shown).toEqual(['en', 'es', 'ko']);
+
     const teachers = entries.find((entry) => entry.url === 'https://hangulroute.com/es/teachers');
-    expect(teachers?.alternates?.languages).toMatchObject({
-      en: 'https://hangulroute.com/teachers',
-      es: 'https://hangulroute.com/es/teachers',
-      'x-default': 'https://hangulroute.com/teachers',
+    expect(teachers).toEqual({
+      url: 'https://hangulroute.com/es/teachers',
+      alternates: {
+        languages: {
+          en: 'https://hangulroute.com/teachers',
+          es: 'https://hangulroute.com/es/teachers',
+          ko: 'https://hangulroute.com/ko/teachers',
+          'x-default': 'https://hangulroute.com/teachers',
+        },
+      },
     });
     const home = entries.find((entry) => entry.url === 'https://hangulroute.com/es');
-    expect(home?.alternates?.languages).toMatchObject({ en: 'https://hangulroute.com/', 'x-default': 'https://hangulroute.com/' });
+    expect(home).toEqual({
+      url: 'https://hangulroute.com/es',
+      alternates: {
+        languages: {
+          en: 'https://hangulroute.com/',
+          es: 'https://hangulroute.com/es',
+          ko: 'https://hangulroute.com/ko',
+          'x-default': 'https://hangulroute.com/',
+        },
+      },
+    });
 
     for (const page of SITE_PAGES) {
       expect(entries.filter((entry) => barePath(entry.url) === page)).toHaveLength(shown.length);
+    }
+  });
+
+  it('names the same alternates as the pages themselves (siteAlternates made absolute)', () => {
+    for (const showAll of [false, true]) {
+      const entries = siteSitemap(showAll);
+      for (const page of SITE_PAGES) {
+        const languages = siteAlternates(page, showAll)?.languages;
+        const expected = languages
+          ? Object.fromEntries(Object.entries(languages).map(([lang, href]) => [lang, `${SITE_URL}${String(href)}`]))
+          : undefined;
+        for (const entry of entries.filter((item) => barePath(item.url) === page)) {
+          expect(entry.alternates?.languages).toEqual(expected);
+        }
+      }
     }
   });
 
@@ -97,5 +137,24 @@ describe('sitemap.xml (F-SITE-002 S-9)', () => {
         }
       }
     }
+  });
+});
+
+describe('the export check in preview-deploy.yml (F-SITE-002 S-9)', () => {
+  const workflow = readFileSync(
+    join(dirname(fileURLToPath(import.meta.url)), '../../../../.github/workflows/preview-deploy.yml'),
+    'utf8',
+  );
+
+  it('disallows the same robots prefix the route returns', () => {
+    expect(siteRobots().rules).toMatchObject({ disallow: '/design-preview' });
+    expect(workflow).toContain("grep -qx 'Disallow: /design-preview' apps/web/out/robots.txt");
+  });
+
+  it('rejects every grown-up prefix of GROWN_UP_PREFIXES, so a new prefix cannot slip past the shell check', () => {
+    const match = /\(\/\[a-z\]\{2\}\)\?\/\(([a-z|-]+)\)/.exec(workflow);
+    expect(match).not.toBeNull();
+    const segments = (match?.[1] ?? '').split('|');
+    expect(segments).toEqual([...GROWN_UP_PREFIXES.map((prefix) => prefix.slice(1)), 'design-preview']);
   });
 });

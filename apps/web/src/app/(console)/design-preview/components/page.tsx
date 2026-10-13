@@ -3,6 +3,7 @@ import { iconGlyphs } from '@hangul-route/design-system/icon-glyphs';
 import type { SceneArtLike } from '@hangul-route/design-system/scene-art';
 import { SceneSvg } from '@hangul-route/design-system/scene-art/dom';
 import { borderWidth, colors, radii, spacing, touchTarget, typography } from '@hangul-route/design-system/tokens';
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import React from 'react';
 
@@ -13,6 +14,11 @@ import React from 'react';
  *
  * F-VR-001 spec. Token-only — no RN imports.
  */
+
+/** Not for search engines: robots.txt disallows `/design-preview` too (F-SITE-002 OD-10). */
+export const metadata: Metadata = {
+  robots: { index: false, follow: false },
+};
 
 export default function ComponentsPreviewPage(): JSX.Element {
   return (
