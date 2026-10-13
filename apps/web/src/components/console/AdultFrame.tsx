@@ -14,6 +14,7 @@ import { ROUTES } from '@/lib/console/routing';
 import { readLastPersona, writeLastPersona } from '@/lib/console/shell-store';
 import { currentNavItem, navFlags, navItemsFor, soloFamilyLearnerSpace, type NavEntry, type SoloLearner } from '@/lib/console/shell-nav';
 import { clearGrownUpTab } from '@/lib/console/unlock';
+import { useGrownUpLocation } from './grown-up-location';
 import { LanguageSelect } from './LanguageSelect';
 import { useConsole } from './use-console';
 
@@ -112,7 +113,7 @@ const FRAME_CSS = `
 .hr-frame-switch [role="radio"][aria-checked="true"]{background:${colors.brand.secondaryDark};color:${colors.text.onSecondary}}
 .hr-frame-back{margin-left:auto;flex:1 1 ${WAY_BACK_BASIS};max-width:max-content;display:inline-flex;align-items:center;gap:${spacing.xs}px;min-height:${touchTarget.min}px;padding:${spacing.xs}px ${spacing.md}px ${spacing.xs}px ${spacing.sm}px;border-radius:${radii.pill}px;border:${borderWidth.thin}px solid ${colors.border.strong};background:${colors.surface.paper};color:${colors.text.primary};font-size:${typography.size.bodySm}px;font-weight:${typography.weight.bold};line-height:${typography.leading.tight};text-align:left;cursor:pointer}
 .hr-frame-wide{display:none}
-.hr-frame-list{display:flex;overflow-x:auto;scrollbar-width:none;list-style:none;margin:0;padding:0}
+.hr-frame-list{display:flex;flex-wrap:wrap;list-style:none;margin:0;padding:0}
 .hr-frame-list li{flex:1 0 ${touchTarget.min}px;display:flex}
 .hr-frame-item{flex:1;display:inline-flex;align-items:center;justify-content:center;min-height:${touchTarget.min}px;padding:0 ${spacing.xs}px;border:none;border-bottom:${borderWidth.thick}px solid transparent;background:transparent;color:${colors.text.secondary};font-size:${typography.size.bodySm}px;font-weight:${typography.weight.semibold};text-decoration:none;white-space:nowrap;cursor:pointer}
 .hr-frame-item[aria-current="page"]{color:${colors.text.primary};font-weight:${typography.weight.bold};border-bottom-color:${colors.brand.primary}}
@@ -130,7 +131,7 @@ const FRAME_CSS = `
 .hr-frame-wide{display:inline-flex}
 .hr-frame-back{flex:none}
 .hr-frame-switch [role="radio"]{padding-left:${spacing.md}px;padding-right:${spacing.md}px}
-.hr-frame-list{overflow-x:visible;gap:${spacing.xs}px}
+.hr-frame-list{gap:${spacing.xs}px}
 .hr-frame-list li{flex:none}
 .hr-frame-item{padding:0 ${spacing.md}px}
 .hr-frame-tools{display:none}
@@ -258,7 +259,12 @@ export function AdultFrame({
   const state: FrameSpaces = fetchOwn ? ownSpaces : spaces;
   const list = Array.isArray(state) ? (state as readonly SpaceListItem[]) : null;
   const failed = state === 'failed';
-  const { origin, pathname, search } = browser.location();
+  // The router's committed path and query when the page sits in `GrownUpGate`; the browser's otherwise.
+  const routed = useGrownUpLocation();
+  const where = browser.location();
+  const origin = where.origin;
+  const pathname = routed ? routed.pathname : where.pathname;
+  const search = routed ? routed.search : where.search;
   const area = pageArea(pathname, search);
   const live = FAMILY_HOME_LIVE;
   const active = activePersona({ area, spaces: list, last, live });
@@ -287,10 +293,14 @@ export function AdultFrame({
   const names: Record<AdultPersona, string> = { parent: shell.persona.parent, teacher: shell.persona.teacher };
   const navPersona = list ? active.persona : fallbackPersona(last, null);
   const items: NavEntry[] = failed ? [] : navItemsFor({ persona: navPersona, spaces: list ?? [], soloLearner: solo, flags, live });
-  const current = list ? currentNavItem(pathname, active.persona, active.resolved) : currentNavItem(pathname, navPersona, false);
+  const current = list ? currentNavItem(pathname, active.persona, active.resolved, live) : currentNavItem(pathname, navPersona, false, live);
   const withSwitch = !!list && showPersonaSwitch(held, live);
   const brandHref = list && held.length > 0 ? personaHome(active.persona, live) : ROUTES.signIn;
-  const doSignOut = onSignOut ?? signOut;
+  const doSignOut = (): void => {
+    // The per-tab roster read belongs to this account: the next one to sign in here reads its own.
+    resetFrameMemory();
+    (onSignOut ?? signOut)();
+  };
 
   const choose = (persona: AdultPersona): void => {
     if (active.resolved && persona === active.persona) return;

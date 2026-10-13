@@ -1,8 +1,8 @@
-import type { AdultPersona } from '@hangul-route/content-schema';
+import { APP_ROUTES, type AdultPersona } from '@hangul-route/content-schema';
 import type { Messages, UiLocale } from '@hangul-route/i18n';
 import type { SpaceListItem } from './api';
 import { browseEntryShown, buildEnv, notesEnabled, reportsEnabled, type ConsoleEnv } from './config';
-import { personaHome } from './personas';
+import { FAMILY_HOME_LIVE, personaHome } from './personas';
 import { ROUTES } from './routing';
 
 /**
@@ -118,18 +118,24 @@ const BILLING_PAGE = /^\/(?:account\/billing|teach\/billing)(?:[/.]|$)/;
 const SPACE_PAGE = /^\/(?:teach|parent)\/space(?:[/.]|$)/;
 const REPORT_PAGE = /^\/(?:teach|parent)\/space\/(?:learner|report)(?:[/.]|$)/;
 const NOTES_PAGE = /^\/(?:teach|parent)\/space\/notes(?:[/.]|$)/;
-const HOME_PAGE = /^\/(?:parent|teach\/home)(?:\/|\.html)?$/;
+const PARENT_HOME_PAGE = /^\/parent(?:\/|\.html)?$/;
+const TEACHER_HOME_PAGE = /^\/teach\/home(?:\/|\.html)?$/;
 
 /**
  * The item to highlight (`aria-current="page"`, section 3.8): Billing on the billing pages; on the
  * active persona's pages, Reports and Notes on theirs (Family rows only), else the persona's home
- * item. Nothing while the persona is only a guess, and nothing on a page of no persona.
+ * item. Nothing while the persona is only a guess, and nothing on a page of no persona. On a home,
+ * the persona's home item only when it links to this very home: on a home the account does not
+ * hold (the "not set up yet" states), the nav keeps the other persona's items and none is current.
  */
-export function currentNavItem(pathname: string, persona: AdultPersona, resolved: boolean): NavId | null {
+export function currentNavItem(pathname: string, persona: AdultPersona, resolved: boolean, live: boolean = FAMILY_HOME_LIVE): NavId | null {
   if (BILLING_PAGE.test(pathname)) return 'billing';
   if (!resolved) return null;
   if (persona === 'parent' && REPORT_PAGE.test(pathname)) return 'reports';
   if (persona === 'parent' && NOTES_PAGE.test(pathname)) return 'notes';
-  if (HOME_PAGE.test(pathname) || SPACE_PAGE.test(pathname)) return persona === 'parent' ? 'home' : 'classes';
+  const homeItem: NavId = persona === 'parent' ? 'home' : 'classes';
+  const pageHome = PARENT_HOME_PAGE.test(pathname) ? APP_ROUTES.parentHome : TEACHER_HOME_PAGE.test(pathname) ? APP_ROUTES.teacherHome : null;
+  if (pageHome) return personaHome(persona, live) === pageHome ? homeItem : null;
+  if (SPACE_PAGE.test(pathname)) return homeItem;
   return null;
 }

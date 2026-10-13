@@ -66,6 +66,7 @@ vi.mock('@/lib/i18n/locale-context', async () => {
 });
 
 import { AdultFrame, opensLearnerApp, resetFrameMemory, type AdultFrameEnvironment, type FrameSpaces } from '../AdultFrame';
+import { GrownUpLocationContext } from '../grown-up-location';
 
 const en = getMessages('en');
 
@@ -276,6 +277,51 @@ describe('the active persona and the navigation (section 3.8)', () => {
     expect(rosterCalls).toEqual(['sp_f']);
   });
 
+  it('Sign out forgets the per-tab roster read, so the next account in this tab reads its own', async () => {
+    vi.stubEnv('NEXT_PUBLIC_REPORTS_ENABLED', 'true');
+    const rosterCalls: string[] = [];
+    consoleView.api = {
+      listSpaces: async () => ({ ok: true, data: [item('sp_f', 'family', 'owner', 1)] }),
+      roster: async (id: string) => {
+        rosterCalls.push(id);
+        return { ok: true, data: { learners: [{ id: 'lrn_1' }] } };
+      },
+    };
+    const r = await render(fakeEnv({ pathname: '/parent' }));
+    await act(async () => {
+      byTestId(r, 'frame-foot-sign-out')[0]?.props.onClick();
+    });
+    expect(consoleView.signOuts).toBe(1);
+    act(() => mounted?.unmount());
+    mounted = null;
+    await render(fakeEnv({ pathname: '/parent' }));
+    expect(rosterCalls).toEqual(['sp_f', 'sp_f']);
+  });
+
+  it("reads the page from the router's committed location inside GrownUpGate, not from window.location", async () => {
+    // A client navigation from a family page to a class page on a page that stays mounted: the browser
+    // still reports the old query while the router has committed the new one.
+    const env = fakeEnv({ pathname: '/teach/space', search: '?id=sp_f' });
+    await act(async () => {
+      mounted = create(
+        <GrownUpLocationContext.Provider value={{ pathname: '/teach/space', search: 'id=sp_c' }}>
+          <AdultFrame env={env} spaces={[family, klass]}>
+            <p>page</p>
+          </AdultFrame>
+        </GrownUpLocationContext.Provider>,
+      );
+    });
+    const r = mounted as unknown as ReactTestRenderer;
+    expect(byTestId(r, 'persona-teacher')[0]?.props['aria-checked']).toBe(true);
+    expect(current(r)).toEqual(['Classes']);
+  });
+
+  it('on a home the account does not hold, no item is current (the other persona home item links elsewhere)', async () => {
+    const r = await render(fakeEnv({ pathname: '/parent' }), [klass]);
+    expect(navIds(r)).toEqual(['classes', 'billing']);
+    expect(current(r)).toEqual([]);
+  });
+
   it('reads the spaces list itself when the page does not hand it over; a failed read draws no nav', async () => {
     consoleView.api = { listSpaces: async () => ({ ok: false, error: 'network' }), roster: async () => ({ ok: false }) };
     const r = await render(fakeEnv());
@@ -358,6 +404,14 @@ describe('the phone layout and the footer (section 3.8)', () => {
     expect(css).toMatch(/\.hr-frame-wide\{display:none\}/);
     expect(css).toMatch(/@media \(min-width:45em\)\{[\s\S]*\.hr-frame-wide\{display:inline-flex\}[\s\S]*\.hr-frame-tools\{display:none\}/);
     expect(css).toMatch(/@media \(min-width:70em\)\{[\s\S]*\.hr-frame-name\{position:static/);
+  });
+
+  it('the phone nav wraps to a second row instead of scrolling sideways (mock: no sideways scroll at 320 and 375)', async () => {
+    const r = await render(fakeEnv(), [klass]);
+    const css = String(r.root.findByType('style').children[0]);
+    expect(css).toMatch(/\.hr-frame-list\{[^}]*flex-wrap:wrap/);
+    expect(css).not.toMatch(/overflow-x:auto/);
+    expect(css).not.toMatch(/scrollbar-width:none/);
   });
 
   it('Sign out from either place runs the console sign-out', async () => {
