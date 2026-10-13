@@ -171,7 +171,7 @@ export function ReportBack({ link }: { link: ReportLink }): JSX.Element {
 
 /**
  * The header: the back link, then (row 2 on a phone) **Print or save as PDF** with its hint, which it names with
- * `aria-describedby`. Print is disabled while the report loads or failed. **Send a note** joins the second row in
+ * `aria-describedby`. Print is disabled while the report loads; a cached report shown with a failed later load stays printable. **Send a note** joins the second row in
  * RP-12 (after F-FEEDBACK-001 FB-11), so it is not drawn here.
  */
 export function ReportHeader({ back, printDisabled, onPrint }: { back: ReportLink; printDisabled: boolean; onPrint: () => void }): JSX.Element {
@@ -533,14 +533,21 @@ function DetailBlock({ block }: { block: Exclude<ReportDetailBlock, { kind: 'tot
     <div className="hr-report-detail-block">
       <h3>{block.heading}</h3>
       {block.kind === 'letters' ? (
-        <ul className="hr-report-tiles">
-          {block.letters.map((letter) => (
-            <li key={letter.letter} className="hr-report-tile">
-              <span lang="ko">{letter.letter}</span>
-              {letter.romanization ? <span className="hr-report-rom">{letter.romanization}</span> : null}
-            </li>
-          ))}
-        </ul>
+        <>
+          <ul className="hr-report-tiles">
+            {block.letters.map((letter) => (
+              <li key={letter.letter} className="hr-report-tile">
+                <span lang="ko">{letter.letter}</span>
+                {letter.romanization ? <span className="hr-report-rom">{letter.romanization}</span> : null}
+              </li>
+            ))}
+          </ul>
+          {block.moreLine !== null ? (
+            <p className="hr-report-letters-more" data-testid="report-letters-more">
+              {block.moreLine}
+            </p>
+          ) : null}
+        </>
       ) : (
         <ul className="hr-report-detail-lines">
           {block.lines.map((line) => (

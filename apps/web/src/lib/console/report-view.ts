@@ -392,11 +392,17 @@ export interface ReportSpaceRef {
  * to the persona home, which is the space's roster until RP-7c (F-APP-001 A-5b) gives a family its parent home; the
  * console home when the space is not known (a failed load).
  */
-export function reportBackLink(from: ReportFrom | null, space: ReportSpaceRef | null, locale: UiLocale = DEFAULT_LOCALE): ReportLink {
+export function reportBackLink(
+  from: ReportFrom | null,
+  space: ReportSpaceRef | null,
+  locale: UiLocale = DEFAULT_LOCALE,
+  /** The kind the page's own prefix tells (`spaceKindOfPath`): with no space known, a `/parent/space…` page goes home to the parent console. */
+  pageKind?: 'family',
+): ReportLink {
   const back = getMessages(locale).report.back;
   // The parent home (F-APP-001 section 3.8, the app's route table): only RP-7c's parent home card sends `from=home`.
   if (from === 'home') return { href: APP_ROUTES.parentHome, text: back.home };
-  if (space === null) return { href: ROUTES.home, text: back.home };
+  if (space === null) return { href: pageKind === 'family' ? APP_ROUTES.parentHome : ROUTES.home, text: back.home };
   return { href: ROUTES.space(space.id, space.kind), text: back.space(space.name) };
 }
 
@@ -547,7 +553,8 @@ export interface ReportThisPeriod {
 export type ReportDetailBlock =
   /** "Since the start: 6 quests, 5 cards": leads the panel with no heading of its own (design pass #444). */
   | { kind: 'totals'; line: string }
-  | { kind: 'letters'; heading: string; letters: ReportLetter[]; more: number }
+  /** `moreLine`: "And N more letters" after the strong tiles when more are known than they show (RP-9 log), else null. */
+  | { kind: 'letters'; heading: string; letters: ReportLetter[]; more: number; moreLine: string | null }
   | { kind: 'lines'; heading: string; lines: string[] };
 
 export interface ReportMoreDetail {
@@ -707,7 +714,7 @@ function detailView(report: LearnerReport, summary: ReportSummary, w: ReportWord
   const d = m.report.detail;
   const blocks: ReportDetailBlock[] = [{ kind: 'totals', line: d.totals(detail.totals.quests, detail.totals.cards) }];
   const letters = (heading: string, list: readonly string[], more = 0): void => {
-    if (list.length) blocks.push({ kind: 'letters', heading, letters: list.map(letterLabel), more });
+    if (list.length) blocks.push({ kind: 'letters', heading, letters: list.map(letterLabel), more, moreLine: more > 0 ? d.lettersMore(more) : null });
   };
   letters(d.lettersStrong(w.name), detail.lettersStrong, detail.lettersStrongMore);
   letters(d.lettersPractising, detail.lettersPractising);
@@ -927,12 +934,14 @@ export interface ReportScreenInput {
   /** The last report this page loaded for the same space and learner (`reportCacheKey`), else null. */
   cached: LearnerReportBody | null;
   locale?: UiLocale;
+  /** The kind the page's own prefix tells (`spaceKindOfPath`): the `/parent/space/learner` twin passes `family`. */
+  pageKind?: 'family';
 }
 
 export function reportScreenOf(input: ReportScreenInput): ReportScreen {
   const locale = input.locale ?? DEFAULT_LOCALE;
   const m = getMessages(locale);
-  const back = reportBackLink(input.query.from, null, locale);
+  const back = reportBackLink(input.query.from, null, locale, input.pageKind);
   if (!input.enabled) return { kind: 'state', title: m.report.state.flagOff, retry: null, back };
   if (!input.query.spaceId || !input.query.learnerId) return { kind: 'state', title: m.report.state.unavailable, retry: null, back };
   const { load, cached } = input;

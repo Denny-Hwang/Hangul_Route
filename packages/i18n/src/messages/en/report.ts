@@ -143,6 +143,8 @@ export const report = {
   /** More detail (layer 3). `letters` slots take taught Korean, rendered by the page. */
   detail: {
     lettersStrong: (name: string) => `Letters ${name} knows well`,
+    /** One line after the strong tiles when more letters are known than the tiles show (`lettersStrongMore`). */
+    lettersMore: (n: number) => plural('en', n, { one: 'And 1 more letter', other: `And ${n} more letters` }),
     lettersPractising: 'Letters being practiced',
     lettersNew: 'New letters this period',
     totals: (quests: number, cards: number) => `Since the start: ${questCount(quests)}, ${cardCount(cards)}`,

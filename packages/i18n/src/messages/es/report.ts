@@ -104,6 +104,7 @@ export const report = {
   },
   detail: {
     lettersStrong: (name: string) => `Letras que ${name} conoce bien`,
+    lettersMore: (n: number) => plural('es', n, { one: 'Y 1 letra más', other: `Y ${n} letras más` }),
     lettersPractising: 'Letras en práctica',
     lettersNew: 'Letras nuevas en este periodo',
     totals: (quests: number, cards: number) => `Desde el inicio: ${questCount(quests)}, ${cardCount(cards)}`,

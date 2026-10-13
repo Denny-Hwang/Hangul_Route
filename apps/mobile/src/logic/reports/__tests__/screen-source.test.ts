@@ -15,6 +15,10 @@ const root = src('navigation/root.tsx');
 const pin = src('screens/parent/PinEntryScreen.tsx');
 
 describe('LearnerReportScreen source rules', () => {
+  it('draws "And N more letters" as one line after the strong tiles when the view model has one (RP-9 log)', () => {
+    expect(screenCode).toMatch(/<LetterTiles[^\n]*\/>\s*\{block\.moreLine !== null \? <Body testID=\{`learner-report-letters-more-\$\{block\.key\}`\}>\{block\.moreLine\}<\/Body> : null\}/);
+  });
+
   it('the voice comes from reportVoice, never from gateOpensDirectly', () => {
     expect(screen).toContain('reportVoice({ profiles, activeProfileId: activeId, profileId })');
     expect(screenCode).not.toContain('gateOpensDirectly');

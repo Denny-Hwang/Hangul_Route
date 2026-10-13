@@ -170,6 +170,7 @@ describe('the week report of a steady learner (behaviour 1, family viewer)', () 
       { letter: 'ㅓ', romanization: 'eo' },
     ]);
     expect(strong?.kind === 'letters' ? strong.more : null).toBe(0);
+    expect(strong?.kind === 'letters' ? strong.moreLine : undefined).toBeNull();
     expect(detail?.blocks[4]).toEqual({
       kind: 'lines',
       heading: 'Level check',
@@ -184,6 +185,18 @@ describe('the week report of a steady learner (behaviour 1, family viewer)', () 
       ],
     });
     expect(detail?.blocks[5]).toEqual({ kind: 'lines', heading: 'Plan', lines: ["This week's plan: 3 done, 2 ready to play", 'Own route: 2 done, 2 ready to play'] });
+  });
+
+  it('says "And N more letters" after the strong tiles only when more are known than the 24 shown (RP-9 log)', () => {
+    const ALL = ['ㄱ', 'ㄴ', 'ㄷ', 'ㄹ', 'ㅁ', 'ㅂ', 'ㅅ', 'ㅇ', 'ㅈ', 'ㅊ', 'ㅋ', 'ㅌ', 'ㅍ', 'ㅎ', 'ㅏ', 'ㅑ', 'ㅓ', 'ㅕ', 'ㅗ', 'ㅛ', 'ㅜ', 'ㅠ', 'ㅡ', 'ㅣ', 'ㄲ', 'ㄸ', 'ㅃ'];
+    const strongOf = (count: number): Extract<NonNullable<LearnerReportView['moreDetail']>['blocks'][number], { kind: 'letters' }> | undefined => {
+      const block = view({ ...STEADY, jamoRecognized: ALL.slice(0, count) }).moreDetail?.blocks.find((b) => b.kind === 'letters');
+      return block?.kind === 'letters' ? block : undefined;
+    };
+    expect(strongOf(24)).toMatchObject({ more: 0, moreLine: null });
+    expect(strongOf(25)).toMatchObject({ more: 1, moreLine: 'And 1 more letter' });
+    expect(strongOf(27)).toMatchObject({ more: 3, moreLine: 'And 3 more letters' });
+    expect(strongOf(27)?.letters).toHaveLength(24);
   });
 
   it('dates the level check and its starting spot on the learner-local day, with the year when it is not this year', () => {
@@ -663,6 +676,9 @@ describe('the back link (section 3.1)', () => {
   it('goes to the console home when the space is not known (a failed load)', () => {
     expect(reportBackLink('roster', null)).toEqual({ href: '/teach/home', text: 'Back to home' });
     expect(reportBackLink(null, null)).toEqual({ href: '/teach/home', text: 'Back to home' });
+    // The `/parent/space/learner` twin with no space known goes home to the parent console.
+    expect(reportBackLink(null, null, 'en', 'family')).toEqual({ href: '/parent', text: 'Back to home' });
+    expect(reportBackLink('roster', cls, 'en', 'family')).toEqual({ href: '/teach/space?id=space%3Asunflower', text: 'Back to Sunflower' });
   });
 
   it('is carried by the view', () => {
