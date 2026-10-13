@@ -565,6 +565,8 @@ export const caregiver = {
     a11y: {
       review: 'Revisar el cambio',
       move: (space: string) => `Cambiar desde ${space}`,
+    },
+  },
   browse: {
     documentTitle: 'Lecciones de Hangul Route',
     home: {
