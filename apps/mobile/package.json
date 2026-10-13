@@ -21,6 +21,7 @@
     "audio:status": "node scripts/audio/check-audio.mjs --status",
     "build:web": "node scripts/audio/gen-audio-map.mjs && expo export --platform web --output-dir dist && node scripts/app-host/merge-console.mjs dist && node scripts/pwa-postbuild.mjs dist",
     "build:web:fixtures": "node scripts/build-web-fixtures.mjs dist-e2e",
+    "build:web:fixtures:gated": "node scripts/build-web-fixtures.mjs dist-e2e-gated --content-gating",
     "serve:web": "node scripts/serve-dist.mjs dist",
     "test:e2e:web": "playwright test"
   },

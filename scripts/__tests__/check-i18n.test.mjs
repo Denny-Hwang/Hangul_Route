@@ -97,6 +97,7 @@ describe("check-i18n: a) plural-suffix ternaries", () => {
       "scripts/i18n-migrated.json": MIGRATED(),
       "apps/mobile/dist/_next/static/chunks/a.js": bundled,
       "apps/mobile/dist-e2e/b.js": bundled,
+      "apps/mobile/dist-e2e-gated/e.js": bundled,
       "apps/web/out/_next/static/chunks/c.js": bundled,
       "apps/web/out-console/_next/static/chunks/d.js": bundled,
     });

@@ -41,7 +41,7 @@ const ts = loadTypeScript();
 
 const SCAN_DIRS = ["apps", "packages", "scripts"];
 const SKIPPED_DIRS = new Set([
-  "node_modules", "dist", "dist-e2e", "build", "out", "coverage", ".next", ".expo", ".turbo",
+  "node_modules", "dist", "dist-e2e", "dist-e2e-gated", "build", "out", "coverage", ".next", ".expo", ".turbo",
   "__tests__", "__mocks__", "e2e", ".git",
   // apps/web build:console output, the console role merged into the learner dist (F-APP-001 A-3)
   "out-console",
