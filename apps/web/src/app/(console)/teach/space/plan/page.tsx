@@ -70,6 +70,9 @@ function PlanInner(): JSX.Element {
   const addApplied = useRef(false);
   // True while a draft the quest was added to is open and never saved: a reload of the page data keeps it.
   const addOpen = useRef(false);
+  // True while the add opened a new unsaved draft (the open plan was published or a route): the switcher then marks no
+  // stored plan, so each one can be opened from it, as with the suggestion.
+  const [addedNew, setAddedNew] = useState(false);
   // The learner the open draft was suggested for; a key, so the notice follows the header language select.
   const [suggestedFor, setSuggestedFor] = useState<string | null>(null);
   // Read by `load` without making a language switch reload (and replace) the open draft.
@@ -83,6 +86,7 @@ function PlanInner(): JSX.Element {
     setDirty(false);
     suggestionOpen.current = false;
     addOpen.current = false;
+    setAddedNew(false);
     setSuggestedFor(null);
   };
   /** An edit in the builder. */
@@ -117,7 +121,7 @@ function PlanInner(): JSX.Element {
       setDirty(true);
       setEditing(true);
       setSuggestedFor(suggestId);
-      router.replace(ROUTES.spacePlan(spaceId, undefined, roster?.space.kind));
+      router.replace(ROUTES.spacePlan(spaceId, undefined, rosterRes.data.space.kind));
       return;
     }
     const current = selectedPlan(plansRes.data, selectedId);
@@ -129,6 +133,7 @@ function PlanInner(): JSX.Element {
       setEditing(true);
       suggestionOpen.current = false;
       addOpen.current = added;
+      setAddedNew(next.id === undefined);
       setSuggestedFor(null);
       router.replace(ROUTES.spacePlan(spaceId, selectedId ?? undefined, rosterRes.data.space.kind));
       return;
@@ -207,8 +212,9 @@ function PlanInner(): JSX.Element {
     return result.ok;
   };
 
-  // While the unsaved suggestion is open the switcher marks no stored plan, so every plan can be opened from it.
-  const openPlanId = suggestedFor ? null : (current?.id ?? null);
+  // While an unsaved new draft (the suggestion, or one the add opened) is open the switcher marks no stored plan, so
+  // every plan can be opened from it.
+  const openPlanId = suggestedFor || addedNew ? null : (current?.id ?? null);
 
   const select = (plan: PlanView): void => {
     if (plan.id === openPlanId) return;
@@ -387,10 +393,11 @@ function PlanInner(): JSX.Element {
               {busy ? p.saving.cta : c.publishPlan}
             </Button>
             <Button disabled={busy || !api || draft.items.length === 0 || draft.title.trim().length === 0} onClick={() => void save(false)}>{c.saveDraft}</Button>
-            {current?.publishedAt ? (
+            {current?.publishedAt && !addedNew ? (
               <Button
                 onClick={() => {
-                  setDirty(false);
+                  // Back to the published plan's readout; any unsaved suggestion or add is closed with the edits.
+                  openDraft(EMPTY);
                   setEditing(false);
                 }}
               >

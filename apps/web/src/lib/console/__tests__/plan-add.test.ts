@@ -24,8 +24,11 @@ describe('addFrom', () => {
     expect(addFrom(params('id=space%3Ac&add=episode%3Astage1-life'))).toEqual({ requested: true, questId: null });
     const closed: Catalog = { ...CATALOG, cells: CATALOG.cells.map((c) => (c.episodeId === 'episode:stage1-life' ? { ...c, status: 'preview' } : c)) };
     expect(addFrom(params('add=quest%3Astage1-life-q2'), closed)).toEqual({ requested: true, questId: null });
-    const draftStory = CATALOG.stories.find((s) => s.status === 'draft');
-    if (draftStory) expect(addFrom(params(`add=${encodeURIComponent(draftStory.questId)}`))).toEqual({ requested: true, questId: null });
+    const story = CATALOG.stories[0];
+    if (!story) throw new Error('the catalogue has no story');
+    const storyParam = params(`add=${encodeURIComponent(story.questId)}`);
+    const withStory = (status: typeof story.status): Catalog => ({ ...CATALOG, stories: CATALOG.stories.map((s) => (s.questId === story.questId ? { ...s, status } : s)) });
+    expect(addFrom(storyParam, withStory('draft'))).toEqual({ requested: true, questId: null });
   });
 
   it('takes the first value when the parameter repeats', () => {

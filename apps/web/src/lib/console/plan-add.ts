@@ -45,6 +45,10 @@ interface PlanForAdd {
  * Where the quest lands. The plan the builder opens, when it is an unpublished classic draft, gets the quest (once:
  * `added` is false when it already held it). A published plan is never changed by a link, and a route draft keeps its
  * weeks, so otherwise a new untitled draft for everyone holds only the quest.
+ *
+ * Who the plan is for is left to the grown-up on purpose: the link carries the quest id only (section 3.6,
+ * `&add=<questId>`), an open draft keeps its own learners, and a new draft starts with everyone, the builder's usual
+ * default. The builder shows who it reaches before anything is published, so nothing reaches a learner unseen.
  */
 export function draftForAdd(current: PlanForAdd | null, questId: string): { draft: AddDraft; added: boolean } {
   if (current && current.publishedAt === null && !current.meta) {
