@@ -16,6 +16,7 @@ import { lectureModeEnabled } from '@/lib/console/config';
 import { canComposeIn } from '@/lib/console/lecture';
 import { type RepaceResult, repaceSaveBody, reweek, selectedPlan, swapRouteItems, withTargetDate } from '@/lib/console/curriculum';
 import { builderOnLoad, suggestFrom, suggestionFor, suggestionNoticeShown } from '@/lib/console/placement';
+import { addFrom, draftForAdd, withQuest } from '@/lib/console/plan-add';
 import { type PlanError, dateKey, memberKind, moveItem, oneExplicitPerDay, planErrorText, planEveryone, planReadout, spreadDates } from '@/lib/console/plans';
 import { relativeDay } from '@/lib/console/rollup';
 import { ROUTES, spaceIdFrom } from '@/lib/console/routing';
@@ -63,6 +64,12 @@ function PlanInner(): JSX.Element {
   const suggestionApplied = useRef(false);
   // True while the suggestion is open and never saved: a reload of the page data keeps it (`builderOnLoad`).
   const suggestionOpen = useRef(false);
+  // `?add=<questId>` from a learner report's Add to a plan (F-REPORT-001 RP-10): the quest pre-added as a draft item,
+  // once. Read once, like the suggestion: the param leaves the address when the draft opens, so a refresh adds nothing.
+  const [addRequest] = useState(() => addFrom(params));
+  const addApplied = useRef(false);
+  // True while a draft the quest was added to is open and never saved: a reload of the page data keeps it.
+  const addOpen = useRef(false);
   // The learner the open draft was suggested for; a key, so the notice follows the header language select.
   const [suggestedFor, setSuggestedFor] = useState<string | null>(null);
   // Read by `load` without making a language switch reload (and replace) the open draft.
@@ -75,6 +82,7 @@ function PlanInner(): JSX.Element {
     setDraftState(next);
     setDirty(false);
     suggestionOpen.current = false;
+    addOpen.current = false;
     setSuggestedFor(null);
   };
   /** An edit in the builder. */
@@ -95,13 +103,17 @@ function PlanInner(): JSX.Element {
     setRoster(rosterRes.data);
     setPlans(plansRes.data);
     const suggestion = suggestionFor(rosterRes.data.learners, suggestId, localeRef.current);
-    const step = builderOnLoad({ suggestionApplied: suggestionApplied.current, suggestionOpen: suggestionOpen.current, suggestionFound: suggestion !== null });
+    const step = builderOnLoad({ suggestionApplied: suggestionApplied.current, suggestionOpen: suggestionOpen.current || addOpen.current, suggestionFound: suggestion !== null });
     if (step === 'keep') return;
+    const addNow = addRequest.requested && !addApplied.current;
+    if (addNow) addApplied.current = true;
+    const addId = addNow ? addRequest.questId : null;
     if (step === 'suggestion' && suggestion) {
       // An unsaved new draft: an ordinary plan for this learner only, never a change to their check or progress.
       suggestionApplied.current = true;
       suggestionOpen.current = true;
-      setDraftState({ title: suggestion.draft.title, items: suggestion.draft.items, targets: suggestion.draft.targets, meta: null });
+      const items = addId ? withQuest(suggestion.draft.items, addId) : suggestion.draft.items;
+      setDraftState({ title: suggestion.draft.title, items, targets: suggestion.draft.targets, meta: null });
       setDirty(true);
       setEditing(true);
       setSuggestedFor(suggestId);
@@ -109,13 +121,27 @@ function PlanInner(): JSX.Element {
       return;
     }
     const current = selectedPlan(plansRes.data, selectedId);
+    if (addId) {
+      // A link never publishes or saves: the quest joins the open classic draft, or a new draft holds it.
+      const { draft: next, added } = draftForAdd(current, addId);
+      setDraftState(next);
+      setDirty(added);
+      setEditing(true);
+      suggestionOpen.current = false;
+      addOpen.current = added;
+      setSuggestedFor(null);
+      router.replace(ROUTES.spacePlan(spaceId, selectedId ?? undefined, rosterRes.data.space.kind));
+      return;
+    }
+    // An unknown or closed quest adds nothing; the builder opens as it always does, with a clean address.
+    if (addNow) router.replace(ROUTES.spacePlan(spaceId, selectedId ?? undefined, rosterRes.data.space.kind));
     if (current && !current.publishedAt) {
       openDraft(draftOf(current));
       setEditing(true);
     } else if (!current) {
       setEditing(true);
     }
-  }, [api, spaceId, selectedId, suggestId, router]);
+  }, [api, spaceId, selectedId, suggestId, addRequest, router]);
 
   useEffect(() => {
     void load();

@@ -253,3 +253,57 @@ test.describe('the learner report (RP-7a2)', () => {
     await expect(page.locator(`[id="${described}"]`)).toHaveText('ㅂ (b) and ㅅ (s): worth another visit.');
   });
 });
+
+/** RP-10: the plan builder takes `&add=<questId>` from Add to a plan and pre-adds the quest as a draft item. */
+test.describe('Add to a plan opens the builder with the quest pre-added (RP-10)', () => {
+  test.skip(!FULL, 'needs an export built with reports on (REPORTS_E2E=1)');
+
+  const planUrl = (extra: string) => `/teach/space/plan?id=${encodeURIComponent(spaceId('class'))}&${extra}`;
+  const yours = (page: Page) => page.getByLabel('Your plan', { exact: true });
+  const draft = (items: { kind: string; id: string }[]) => ({
+    id: 'plan:draft',
+    spaceId: spaceId('class'),
+    authorAccountId: 'acct-e2e',
+    title: 'Letters to revisit',
+    items,
+    targetLearnerIds: null,
+    publishedAt: null,
+    archivedAt: null,
+    createdAt: '2026-10-14T00:00:00.000Z',
+    updatedAt: '2026-10-14T00:00:00.000Z',
+  });
+
+  test('from the report: a new draft holds the quest, nothing is saved, and the address drops add', async ({ page }) => {
+    const writes: string[] = [];
+    page.on('request', (request) => {
+      if (request.method() === 'PUT' || request.method() === 'POST') writes.push(request.url());
+    });
+    await mockReport(page, { kind: 'class', role: 'teacher' });
+    await page.goto(reportUrl('class'));
+    await page.getByTestId('report-line-letters_revisit').getByRole('link', { name: 'Add to a plan' }).click();
+    await expect(page.getByRole('heading', { name: 'Your plan (1)' })).toBeVisible();
+    await expect(yours(page)).toContainText('Family at the Table');
+    await expect(page).toHaveURL(/\/teach\/space\/plan\?id=space%3Asunflower$/);
+    await expect(page.getByTestId('publish-plan')).toBeDisabled();
+    expect(writes).toEqual([]);
+  });
+
+  test('an unknown or closed quest adds nothing and the builder opens as usual', async ({ page }) => {
+    await mockReport(page, { kind: 'class', role: 'teacher' });
+    for (const id of ['quest:nope', 'episode:stage1-life', 'quest:story-sejong-new-letters-listen']) {
+      await page.goto(planUrl(`add=${encodeURIComponent(id)}`));
+      await expect(page.getByRole('heading', { name: 'Your plan (0)' })).toBeVisible();
+      await expect(page).toHaveURL(/\/teach\/space\/plan\?id=space%3Asunflower$/);
+    }
+  });
+
+  test('a duplicate add leaves the open draft as it was; another quest joins it', async ({ page }) => {
+    await mockReport(page, { kind: 'class', role: 'teacher', plans: [draft([{ kind: 'quest', id: 'quest:stage1-life-q2' }])] });
+    await page.goto(planUrl('add=quest%3Astage1-life-q2'));
+    await expect(page.getByRole('heading', { name: 'Edit plan' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Your plan (1)' })).toBeVisible();
+    await page.goto(planUrl('add=quest%3Astage1-life-q3'));
+    await expect(page.getByRole('heading', { name: 'Your plan (2)' })).toBeVisible();
+    await expect(page.getByLabel('Plan title')).toHaveValue('Letters to revisit');
+  });
+});

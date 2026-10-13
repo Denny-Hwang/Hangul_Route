@@ -34,6 +34,9 @@ describe('console routing (F-CONSOLE-001)', () => {
     expect(landingAfterCreate('class', 'space:c', false)).toBe('/teach/space?id=space%3Ac');
     expect(ROUTES.spacePlan('space:c')).toBe('/teach/space/plan?id=space%3Ac');
     expect(ROUTES.spacePlan('space:c', 'plan:r1')).toBe('/teach/space/plan?id=space%3Ac&plan=plan%3Ar1');
+    // F-REPORT-001 RP-10: the report's Add to a plan pre-adds one quest (ids only).
+    expect(ROUTES.spacePlan('space:c', undefined, 'class', 'quest:stage1-life-q2')).toBe('/teach/space/plan?id=space%3Ac&add=quest%3Astage1-life-q2');
+    expect(ROUTES.spacePlan('space:f', 'plan:1', 'family', 'quest:a b')).toBe('/parent/space/plan?id=space%3Af&plan=plan%3A1&add=quest%3Aa%20b');
     expect(ROUTES.spaceCurriculum('space:c')).toBe('/teach/space/curriculum?id=space%3Ac');
     expect(ROUTES.spaceRelink('space:c')).toBe('/teach/space/relink?id=space%3Ac');
     expect(ROUTES.spaceSettings('space:c')).toBe('/teach/space/settings?id=space%3Ac');

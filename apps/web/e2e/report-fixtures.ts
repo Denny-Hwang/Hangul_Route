@@ -121,6 +121,8 @@ export interface ReportMock {
   status?: number;
   /** Hold the learner route until `release()` (the loading state). */
   hold?: boolean;
+  /** The space's plans (RP-10, the plan builder after Add to a plan); none by default. */
+  plans?: unknown[];
 }
 
 export const spaceId = (kind: Kind): string => (kind === 'class' ? 'space:sunflower' : 'space:kim-family');
@@ -181,6 +183,7 @@ export async function mockReport(page: Page, first: ReportMock, later: ReportMoc
       const { space } = body(first) as { space: unknown };
       return json(route, 200, { spaces: [{ space, role: first.role ?? 'owner', counts: { learners: 1, accounts: 1, classes: 0 } }] });
     }
+    if (/\/plans$/.test(url.pathname) && request.method() === 'GET') return json(route, 200, { plans: first.plans ?? [] });
     return json(route, 200, { plans: [], requests: [], entitlements: [] });
   });
   return {

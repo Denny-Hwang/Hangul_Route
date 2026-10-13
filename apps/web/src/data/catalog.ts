@@ -1,4 +1,4 @@
-import { CATALOG, ThemeKeySchema, cellIsReady, type Catalog, type CatalogCell, type CatalogQuest, type PlanItem, type StageKey } from '@hangul-route/content-schema';
+import { CATALOG, ThemeKeySchema, cellIsReady, storyIsReady, type Catalog, type CatalogCell, type CatalogQuest, type PlanItem, type StageKey } from '@hangul-route/content-schema';
 import { DEFAULT_LOCALE, getMessages, type UiLocale } from '@hangul-route/i18n';
 
 /**
@@ -51,6 +51,19 @@ export function catalogLabel(kind: ItemKind, id: string, locale: UiLocale = DEFA
   if (!cell) return id;
   const words = getMessages(locale).console;
   return cellIsReady(cell) ? words.plan.catalog.episodeLabel(cell.title, cell.questIds.length) : words.curriculum.catalog.comingSoon(cell.title);
+}
+
+/**
+ * Whether the plan builder may add this quest from an address (F-REPORT-001 RP-10, `&add=<questId>`): a lesson quest
+ * of a released episode, or the listen quest of a signed story. An unknown id, an episode id and a closed quest (its
+ * episode not released, its story not signed) are refused, so a link never puts in a plan what a learner cannot open.
+ */
+export function plannableQuest(id: string, source: Catalog = CATALOG): boolean {
+  const quest = indexOf(source).quests.get(id);
+  if (quest === undefined) return false;
+  if (quest.kind === 'story') return source.stories.some((story) => story.questId === id && storyIsReady(story));
+  const cell = indexOf(source).cells.get(quest.episodeId);
+  return cell !== undefined && cellIsReady(cell);
 }
 
 /** The quests of an episode, in the cell's own order (empty for an episode that is not released yet). */
