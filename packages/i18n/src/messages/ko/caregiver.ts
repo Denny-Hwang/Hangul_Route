@@ -45,7 +45,7 @@ export const caregiver = {
   notes: {
     row: { title: (learner: string) => `받은 쪽지: ${learner}` },
     title: (learner: string) => `받은 쪽지: ${learner}`,
-    empty: (learner: string) => `${learner}: 아직 받은 쪽지가 없어요.`,
+    empty: (learner: string) => `아직 ${learner}에게 온 쪽지가 없어요.`,
     putAway: '이 기기에서 치움',
     status: { opened: '읽음' },
     hide: {
@@ -64,11 +64,11 @@ export const caregiver = {
       reasons: {
         unkind: '친절하지 않아요',
         unsafe: '안전하지 않아요',
-        not_for_me: (learner: string) => `${learner}에게 맞지 않는 쪽지예요`,
+        not_for_me: (learner: string) => `${learner}에게 보낸 쪽지가 아니에요`,
         other: '기타',
       },
       submit: { cta: '신고하고 숨기기' },
-      line: (learner: string) => `모든 기기에서 ${learner}에게 이 쪽지가 사라져요. 신고는 저희 팀이 하나하나 확인해요.`,
+      line: (learner: string) => `이 쪽지가 모든 기기에서 ${learner}에게 더 이상 보이지 않아요. 신고는 저희 팀이 하나하나 확인해요.`,
       justHide: { cta: '숨기기만 하기' },
       close: '닫기',
       reported: '고마워요. 쪽지가 사라졌어요.',
@@ -90,7 +90,7 @@ export const caregiver = {
       keep: { cta: '그대로 두기' },
       change: { cta: '바꾸기' },
     },
-    disclosure: (learner: string) => `${learner}: 선생님은 자기가 보낸 쪽지에 고른 답을 볼 수 있어요.`,
+    disclosure: (learner: string) => `선생님은 자기가 보낸 쪽지에서 ${learner}의 답을 볼 수 있어요.`,
     offline: '인터넷에 연결한 뒤에 할 수 있어요.',
     saveFailed: '저장하지 못했어요. 다시 해 보세요.',
     sendNote: { cta: '쪽지 보내기' },

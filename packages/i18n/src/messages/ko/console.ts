@@ -300,7 +300,7 @@ export const consoleMsgs = {
       },
       blockConfirm: {
         title: '이 사람의 쪽지를 받지 않을까요?',
-        body: (learner: string) => `${learner}: 이 사람이 보낸 쪽지를 더는 받지 않아요. 보낸 사람에게는 알리지 않아요.`,
+        body: (learner: string) => `이제 ${learner}에게는 이 사람의 쪽지가 오지 않아요. 보낸 사람에게는 알리지 않아요.`,
         cta: '받지 않기',
         cancel: { cta: '취소' },
       },
@@ -310,7 +310,7 @@ export const consoleMsgs = {
         reasons: {
           unkind: '친절하지 않아요',
           unsafe: '안전하지 않아요',
-          not_for_me: (learner: string) => `${learner}에게 맞지 않는 쪽지예요`,
+          not_for_me: (learner: string) => `${learner}에게 보낸 쪽지가 아니에요`,
           other: '기타',
         },
         submit: { cta: '신고하고 숨기기' },
@@ -329,13 +329,13 @@ export const consoleMsgs = {
         saved: '저장했어요',
         stopped: { title: '쪽지를 받지 않는 사람', allowAgain: { cta: '다시 받기' } },
       },
-      disclosure: (learner: string) => `${learner}: 선생님은 자기가 보낸 쪽지에 고른 답을 볼 수 있어요. 쪽지를 언제 읽었는지는 볼 수 없어요.`,
+      disclosure: (learner: string) => `선생님은 자기가 보낸 쪽지에서 ${learner}의 답을 볼 수 있어요. 쪽지를 언제 읽었는지는 볼 수 없어요.`,
       oneTimeCard: {
         line: (mode: string) => `반에서 오는 쪽지: ${mode}`,
         keep: { cta: '그대로 두기' },
         change: { cta: '바꾸기' },
       },
-      empty: (learner: string) => `${learner}: 아직 받은 쪽지가 없어요.`,
+      empty: (learner: string) => `아직 ${learner}에게 온 쪽지가 없어요.`,
       noLearners: '먼저 가족 공간에 학습자를 추가해 주세요.',
       error: '쪽지를 불러오지 못했어요. 다시 해 보세요.',
       retry: { cta: '다시 시도' },

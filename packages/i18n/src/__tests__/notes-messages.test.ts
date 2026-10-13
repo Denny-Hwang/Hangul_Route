@@ -481,6 +481,18 @@ describe('ko / es notes strings (FB-5b, OD-15)', () => {
     expect(ko$.console.notes.family.report.tooMany).toContain('hello@hangulroute.com');
   });
 
+  it('ko: pins the lines the multi-agent review changed (names never before a consonant-dependent particle)', () => {
+    expect(ko$.common.notes.familyLabels.aunt).toBe('이모');
+    expect(ko$.caregiver.notes.disclosure('Mina')).toBe('선생님은 자기가 보낸 쪽지에서 Mina의 답을 볼 수 있어요.');
+    expect(ko$.console.notes.family.disclosure('Mina')).toBe(
+      '선생님은 자기가 보낸 쪽지에서 Mina의 답을 볼 수 있어요. 쪽지를 언제 읽었는지는 볼 수 없어요.',
+    );
+    expect(ko$.caregiver.notes.report.reasons.not_for_me('Mina')).toBe('Mina에게 보낸 쪽지가 아니에요');
+    expect(ko$.console.notes.family.report.reasons.not_for_me('Mina')).toBe('Mina에게 보낸 쪽지가 아니에요');
+    expect(ko$.caregiver.notes.empty('Mina')).toBe('아직 Mina에게 온 쪽지가 없어요.');
+    expect(ko$.console.notes.family.blockConfirm.body('Mina')).toBe('이제 Mina에게는 이 사람의 쪽지가 오지 않아요. 보낸 사람에게는 알리지 않아요.');
+  });
+
   it('ko: the grown-up side names a teacher by the class, never "your child" (section 8.2-a, section 9)', () => {
     const outputs = [...render(lookup(ko$, 'caregiver.notes'), 'caregiver.notes'), ...render(lookup(ko$, 'console.notes'), 'console.notes')];
     for (const { path, text } of outputs) expect(/자녀분|아이가|우리 아이|당신의 (학생|자녀)/.test(text), `${path}: ${text}`).toBe(false);
