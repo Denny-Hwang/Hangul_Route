@@ -57,6 +57,7 @@ jobs:
           test -f apps/web/out/teach/space.html
           test -f apps/web/out/teach/space/settings.html
           test -f apps/web/out/teach/space/learner.html
+          test -f apps/web/out/teach/space/report.html
           test -f apps/web/out/404.html
           test -f apps/web/out/design-preview/scenes.html
           test -f apps/web/out/design-preview/scenes/library.html

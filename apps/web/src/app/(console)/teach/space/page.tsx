@@ -22,6 +22,7 @@ import { contentGatingEnabled, lectureModeEnabled, reportsEnabled } from '@/lib/
 import { canComposeIn } from '@/lib/console/lecture';
 import { levelPillLabel } from '@/lib/console/level-label';
 import { rosterReportLink } from '@/lib/console/report-view';
+import { rosterClassReportLink } from '@/lib/console/class-report-view';
 import { capState, classRollup, codeExpiry, percent, relativeDay } from '@/lib/console/rollup';
 import { ownRouteLine, readoutLine as routeReadoutLine, spaceCoverage, type SpaceCoverage } from '@/lib/console/curriculum';
 import { rosterFreeLessonsLine } from '@/lib/console/free-lessons-line-view';
@@ -180,6 +181,7 @@ function SpaceInner(): JSX.Element {
                 <WeekWordsRevisit words={consoleWords(rollup.vocabRevisit, locale)} />
                 {rollup.notSynced ? <li>{c.space.week.notSynced(rollup.notSynced)}</li> : null}
               </ul>
+              <ClassReportLink spaceId={spaceId} kind={roster.space.kind} locale={locale} />
             </section>
           ) : null}
 
@@ -282,6 +284,21 @@ function SeeReport({ spaceId, kind, learnerId, locale }: { spaceId: string; kind
     <Link
       href={link.href}
       data-testid="see-report"
+      style={{ ...buttonBase, display: 'inline-flex', alignItems: 'center', minHeight: touchTarget.min, marginTop: spacing.sm, textDecoration: 'none', boxSizing: 'border-box' }}
+    >
+      {link.text}
+    </Link>
+  );
+}
+
+/** The roll-up's **Class report** (F-REPORT-001 RP-8, section 3.1): class spaces only, while reports are on. */
+function ClassReportLink({ spaceId, kind, locale }: { spaceId: string; kind: Roster['space']['kind']; locale: UiLocale }): JSX.Element | null {
+  const link = rosterClassReportLink({ spaceId, kind, enabled: reportsEnabled(locale), locale });
+  if (link === null) return null;
+  return (
+    <Link
+      href={link.href}
+      data-testid="class-report-link"
       style={{ ...buttonBase, display: 'inline-flex', alignItems: 'center', minHeight: touchTarget.min, marginTop: spacing.sm, textDecoration: 'none', boxSizing: 'border-box' }}
     >
       {link.text}

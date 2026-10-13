@@ -501,6 +501,7 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'report.class.learners': [[1], [300]],
   'report.class.olderApp': [[1], [120]],
   'report.class.notSaved': [[1], [120]],
+  'report.class.windowNotSaved': [[1], [120]],
   'report.class.questsNew': [[1], [2400]],
   'report.class.cardsNew': [[1], [2400]],
   'report.class.milestones': [['this week'], ['in the week to Sep 30, 2026']],

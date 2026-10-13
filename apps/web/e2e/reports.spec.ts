@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { touchTarget } from '@hangul-route/design-system/tokens';
-import { EMPTY, LEGACY, PARTIAL, SESSION_KEY, mockReport, reportUrl, spaceId } from './report-fixtures';
+import { EMPTY, LEGACY, PARTIAL, SESSION_KEY, classUrl, mockClass, mockReport, reportUrl, spaceId } from './report-fixtures';
 
 /**
  * F-REPORT-001 section 5, `web/e2e/reports.spec.ts` (RP-7a2 cases): the learner report page on the static export,
@@ -348,3 +348,82 @@ test.describe('the learner report (RP-7a2)', () => {
     expect(pages).toBeLessThanOrEqual(2);
   });
 });
+
+test.describe('the class report (RP-8)', () => {
+  test.skip(!FULL, 'needs an export built with reports on (REPORTS_E2E=1)');
+
+  for (const viewport of VIEWPORTS) {
+    test(`no sideways scroll at ${viewport.width} x ${viewport.height}`, async ({ page }) => {
+      await page.setViewportSize(viewport);
+      await mockClass(page);
+      await page.goto(classUrl());
+      await expect(headline(page)).toBeVisible();
+      await noSidewaysScroll(page);
+      await page.getByTestId('report-more-button').click();
+      await noSidewaysScroll(page);
+    });
+  }
+
+  test('first screen at 390 x 844: the headline without scrolling; no learner name anywhere; generic title', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await mockClass(page);
+    await page.goto(classUrl());
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Sunflower: class report');
+    await expect(headline(page)).toHaveText('8 of 12 learners practiced this week.');
+    expect(await headline(page).evaluate((node) => node.getBoundingClientRect().bottom)).toBeLessThanOrEqual(844);
+    await page.getByTestId('report-more-button').click();
+    const text = await page.locator('main').innerText();
+    expect(text).not.toMatch(/Mina|profile:/);
+    expect(text).not.toMatch(/\b(top|most|least|best|lowest|average)\b/i);
+    await expect(page).toHaveTitle('Report - Hangul Route');
+  });
+
+  test('tabs and stepper put the period and the window in the URL and in the request', async ({ page }) => {
+    const mock = await mockClass(page);
+    await page.goto(classUrl());
+    await expect(headline(page)).toBeVisible();
+    await page.getByRole('tab', { name: 'This month' }).click();
+    await expect(page).toHaveURL(/period=month/);
+    await expect(page.getByRole('tab', { name: 'This month' })).toBeFocused();
+    await page.getByTestId('report-step-prev').click();
+    await expect(page).toHaveURL(/at=2026-09-01/);
+    await page.getByTestId('report-step-next').click();
+    await expect(page).not.toHaveURL(/at=/);
+    await expect(page.getByTestId('report-step-prev')).toBeFocused();
+    expect(mock.calls).toEqual(['?period=week', '?period=month', '?period=month&at=2026-09-01', '?period=month']);
+  });
+
+  test('a family space has no class report: not available', async ({ page }) => {
+    await mockClass(page, { status: 409 });
+    await page.goto(classUrl());
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('This report is not available.');
+  });
+
+  test('the class chooser lists the classes; one class opens directly', async ({ page, browser }) => {
+    await mockClass(page, { spaces: [{ id: 'space:a', kind: 'class', name: 'Room A' }, { id: 'space:k', kind: 'family', name: 'Kim family' }, { id: 'space:b', kind: 'class', name: 'Room B' }] });
+    await page.goto('/teach/space/report');
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Which class?');
+    await expect(page.getByTestId('class-chooser').getByRole('link')).toHaveCount(2);
+    await expect(page.getByText('Kim family')).toHaveCount(0);
+    const other = await browser.newPage();
+    await mockClass(other);
+    await other.goto('/teach/space/report');
+    await expect(other).toHaveURL(/id=space%3Asunflower/);
+    await expect(other.getByRole('heading', { level: 1 })).toHaveText('Sunflower: class report');
+    await other.close();
+  });
+
+  test('print: the footer, More detail expanded, homework as text, no frame or buttons', async ({ page }) => {
+    await mockClass(page);
+    await page.goto(classUrl());
+    await expect(headline(page)).toBeVisible();
+    await page.emulateMedia({ media: 'print' });
+    await expect(page.getByTestId('report-print-footer')).toBeVisible();
+    await expect(page.getByTestId('report-detail')).toBeVisible();
+    await expect(page.getByText('Week three')).toBeVisible();
+    await expect(page.getByTestId('frame-nav')).toBeHidden();
+    await expect(page.getByTestId('report-print')).toBeHidden();
+    await expect(page.getByTestId('report-step-prev')).toBeHidden();
+  });
+});
+
