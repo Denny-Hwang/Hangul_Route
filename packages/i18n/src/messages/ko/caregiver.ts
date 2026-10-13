@@ -695,6 +695,7 @@ export const caregiver = {
       destinationBusy: '그 반에 기다리는 이동이 많아요. 며칠 뒤에 다시 해 주세요.',
       tooManyRequests: '오늘은 이동을 많이 시작했어요. 내일 다시 해 주세요.',
       localeUnavailable: '아직 이 언어로는 볼 수 없어요.',
+      updateApp: '앱을 업데이트하면 새 내용을 볼 수 있어요.',
     },
     consent: {
       titleSelf: (destination: string) => `새 반(${destination})으로 옮기시겠습니까?`,
