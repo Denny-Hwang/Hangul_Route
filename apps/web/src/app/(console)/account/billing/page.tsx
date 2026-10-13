@@ -5,7 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import { Suspense, useCallback, useEffect, useState } from 'react';
 import { CurrentPlanList, PlanRowList } from '@/components/console/BillingParts';
 import { Button, Field, Muted, Notice, panelStyle } from '@/components/console/ui';
-import { AdultFrame } from '@/components/console/AdultFrame';
+import { AdultFrame, type FrameSpaces } from '@/components/console/AdultFrame';
 import { useConsole } from '@/components/console/use-console';
 import type { Promo } from '@hangul-route/content-schema';
 import type { EntitlementView, SpaceListItem } from '@/lib/console/api';
@@ -21,6 +21,8 @@ function BillingInner(): JSX.Element {
   const b = c.billing;
   const params = useSearchParams();
   const [spaces, setSpaces] = useState<SpaceListItem[] | null>(null);
+  // The frame takes this page's spaces read (no second `GET /api/spaces`); its own failure, apart from entitlements.
+  const [spacesFailed, setSpacesFailed] = useState(false);
   const [entitlements, setEntitlements] = useState<EntitlementView[] | null>(null);
   // Keys and data, not text: the notes are worded at render time, so they follow the header language select.
   const [error, setError] = useState(false);
@@ -35,11 +37,12 @@ function BillingInner(): JSX.Element {
     if (!api) return;
     setError(false);
     const [s, e] = await Promise.all([api.listSpaces(), api.entitlements()]);
+    setSpacesFailed(!s.ok);
+    if (s.ok) setSpaces(s.data);
     if (!s.ok || !e.ok) {
       setError(true);
       return;
     }
-    setSpaces(s.data);
     setEntitlements(e.data);
   }, [api]);
 
@@ -47,7 +50,8 @@ function BillingInner(): JSX.Element {
     void load();
   }, [load]);
 
-  if (!ready || !session) return <AdultFrame>{null}</AdultFrame>;
+  const frameSpaces: FrameSpaces = !api || spacesFailed ? 'failed' : spaces;
+  if (!ready || !session) return <AdultFrame spaces={frameSpaces}>{null}</AdultFrame>;
 
   const cards = entitlements ? currentPlanCards(entitlements, now, locale) : [];
   const rows = spaces && entitlements ? planRowsFor(session.accountId, spaces, entitlements, now, locale) : [];
@@ -110,7 +114,7 @@ function BillingInner(): JSX.Element {
   };
 
   return (
-    <AdultFrame onSignOut={signOut} title={b.title}>
+    <AdultFrame onSignOut={signOut} title={b.title} spaces={frameSpaces}>
       {!api ? <Notice tone="nudge">{c.shell.noApi}</Notice> : null}
       {note ? <Notice tone={note === 'success' ? 'success' : 'nudge'}>{billingNoteText(note, locale)}</Notice> : null}
       {pastDue ? <Notice tone="nudge">{c.billingPastDue}</Notice> : null}
