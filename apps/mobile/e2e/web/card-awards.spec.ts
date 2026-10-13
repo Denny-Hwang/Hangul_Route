@@ -188,10 +188,11 @@ test.describe('card awards (F-STORY-006 6.9, release bundle)', () => {
     await expect(catchUp(page)).toHaveCount(0);
 
     // Hanbok and the Bow, with a first-try miss in round 2: one of two counts, a 1-star run.
-    await playRitesLastQuest(page, true);
+    await playRitesLastQuest(page, q3 as string, true);
     await expect(page.getByText('New card for your library!')).toHaveCount(0);
     const banner = page.getByTestId('extra-cards-banner');
-    await expect(banner.getByText(`${extras.length} more cards joined your Library!`)).toBeVisible();
+    const joined = extras.length === 1 ? '1 more card joined your Library!' : `${extras.length} more cards joined your Library!`;
+    await expect(banner.getByText(joined, { exact: true })).toBeVisible();
     await expect(banner.getByText('You finished New Year & Festivals!', { exact: true })).toBeVisible();
     for (const id of extras) await expect(banner.getByRole('button', { name: `Open card: ${titleOf(id)}` }), id).toBeVisible();
     for (const id of held) await expect(banner.getByRole('button', { name: `Open card: ${titleOf(id)}` }), id).toHaveCount(0);
@@ -215,12 +216,22 @@ test.describe('card awards (F-STORY-006 6.9, release bundle)', () => {
     await expect(catchUp(page)).toHaveCount(0);
 
     // A replay brings nothing new and takes nothing away.
-    await playRitesLastQuest(page, false);
+    await playRitesLastQuest(page, q3 as string, false);
     await expect(page.getByText('Wonderful!').or(page.getByText('Great!')).or(page.getByText('You tried!'))).toBeVisible();
     await expect(page.getByTestId('extra-cards-banner')).toHaveCount(0);
     await expect(page.getByText('New card for your library!')).toHaveCount(0);
+    // Read the record after leaving Results and opening Home again, so a late write from the replay
+    // (a card removed, duplicated or marked seen) has landed before the check.
+    await page.goto('/');
+    await expect(page.getByText('Today with Hoya')).toBeVisible();
+    await closeInstallGuide(page);
+    await expect(catchUp(page)).toHaveCount(0);
+    const savedIds = saved.map((c) => c.cardId).sort();
+    await expect.poll(async () => (await storedCards(page, profileId)).map((c) => c.cardId).sort()).toEqual(savedIds);
     const after = await storedCards(page, profileId);
-    expect(after.map((c) => c.cardId).sort()).toEqual(saved.map((c) => c.cardId).sort());
+    expect(new Set(after.map((c) => c.cardId)).size).toBe(after.length);
+    for (const id of extras) expect(after.find((c) => c.cardId === id)?.newSinceLastView, id).toBe(true);
+    for (const id of held) expect(after.find((c) => c.cardId === id)?.newSinceLastView, id).toBe(false);
     expect(errors).toEqual([]);
   });
 
@@ -304,18 +315,20 @@ function readStory(slug: string): Story {
 /**
  * The last quest of New Year & Festivals (Hanbok and the Bow) from the Journey: Discover read, the
  * practice and the story order skipped, the Check played (the vowel yo, then the word hanbok).
+ * The quest is found by its row on the episode page (`episode-quest-<id>`), not by position, so
+ * adding or reordering quests in the episode does not send the spec into another quest.
  * `firstTime` starts it, otherwise it is played again; the first run takes a wrong card first in
  * round 2, so one of two counts.
  */
-async function playRitesLastQuest(page: Page, firstTime: boolean): Promise<void> {
+async function playRitesLastQuest(page: Page, questId: string, firstTime: boolean): Promise<void> {
   await page.getByText('Journey', { exact: true }).last().click();
   await page.getByRole('button', { name: journeyCellName(1, 'Holidays') }).click();
-  // Quests 1-2 are done (Play again); the third is Start the first time and Play again after.
-  await page.getByRole('button', { name: firstTime ? 'Start' : 'Play again', exact: true }).nth(firstTime ? 0 : 2).click();
+  const row = shown(page, `episode-quest-${questId}`);
+  await row.getByRole('button', { name: firstTime ? 'Start' : 'Play again', exact: true }).click();
   await page.getByRole('button', { name: 'Continue' }).click();
   await passDiscover(page);
   await page.getByRole('button', { name: 'Skip for now' }).click();
   await page.getByRole('button', { name: 'Skip for now' }).click();
-  await playCheckByIds(page, [{ answer: 'jamo:yo' }, firstTime ? { answer: '한복', missWith: '한국' } : { answer: '한복' }]);
+  await playCheckByIds(page, [{ answer: 'jamo:yo' }, firstTime ? { answer: '\uD55C\uBCF5', missWith: '\uD55C\uAD6D' } : { answer: '\uD55C\uBCF5' }]);
   await page.getByRole('button', { name: 'See results' }).click();
 }
