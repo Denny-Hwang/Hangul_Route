@@ -61,7 +61,8 @@ export function localizeTitle<T extends { titleEn: string }>(item: T, entityId: 
  * (replay, new, assigned), else its episode (explore); the daily test names itself.
  */
 export function localizeMissionCard(card: MissionCard, locale: UiLocale, overlays?: Overlays): MissionCard {
-  const entityId = card.storyId ?? card.questId ?? card.episodeId;
+  // A practice card of a word topic is titled by its topic (`vocab-topic:<key>` overlay, F-ENT-003 E3-7).
+  const entityId = card.storyId ?? card.questId ?? card.episodeId ?? (card.topicKey === undefined ? undefined : `vocab-topic:${card.topicKey}`);
   const { titleEn } = card;
   if (titleEn === null || entityId === undefined) return card;
   const localized = localizeTitle({ titleEn }, entityId, locale, overlays).titleEn;

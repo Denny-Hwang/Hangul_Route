@@ -645,7 +645,7 @@ describe('card ② follows routeNext (F-ENT-003 section 3.7, PR E3-4)', () => {
     expect(card).toMatchObject({ questId: 'quest:a', subtitle: 'new' });
   });
 
-  it('at rest (and until E3-7, at free-end) card ② keeps today\'s replay fallback among open quests', () => {
+  it('at rest (and at free-end when the caller gives no freeEnd) card ② keeps today\'s replay fallback among open quests', () => {
     const all = snapshot(QUESTS.map((q) => done(q.id, YESTERDAY, 1)));
     expect(build({ snapshot: all, route: routeOf(all, { sources: [] }) }).cards.find((c) => c.slot === 2)).toMatchObject({
       questId: 'quest:c',
@@ -700,5 +700,105 @@ describe('card ② follows routeNext (F-ENT-003 section 3.7, PR E3-4)', () => {
       subtitle: 'nextInPlan',
       collected: true,
     });
+  });
+});
+
+describe('card ② at the end of the free lessons (F-ENT-003 section 3.7, PR E3-7)', () => {
+  const P = 'profile:kid1';
+  const all = (): ProgressSnapshot => snapshot(QUESTS.slice(0, 2).map((q) => done(q.id, YESTERDAY, 0.5)));
+  const closedC = (id: string): boolean => id !== 'quest:c';
+  const freeEndRoute = (snap: ProgressSnapshot, over: Partial<RouteNextInput> = {}): RouteNextInput => ({
+    snapshot: snap,
+    profileId: P,
+    today: TODAY,
+    sources: [],
+    quests: QUESTS,
+    episodes: EPISODES,
+    cursor: { isEntitled: () => true, skipQuestIds: undefined },
+    isQuestOpen: closedC,
+    gating: { active: true, tier: 'free' },
+    ...over,
+  });
+  const topic = { kind: 'topic' as const, topicKey: 'food', title: 'Food' };
+
+  it('the celebration once while the seen key is unset: Hoya, the title and the line, and still three cards', () => {
+    const snap = all();
+    const plan = build({ snapshot: snap, route: freeEndRoute(snap), isQuestOpen: closedC, freeEnd: { seen: false, practice: topic } });
+    expect(plan.cards).toHaveLength(3);
+    const card = plan.cards.find((c) => c.slot === 2)!;
+    expect(card).toMatchObject({ kind: 'free-end', subtitle: 'freeEnd', placedOut: false, titleEn: null });
+    expect(card.questId).toBeUndefined();
+    expect(missionCardText(card, learner)).toEqual({ title: 'You finished your first lessons!', subtitle: 'You played every quest that is open for you.' });
+  });
+
+  it('after it was seen: the practice card names the topic, "Keep practicing", with no ask', () => {
+    const snap = all();
+    const plan = build({ snapshot: snap, route: freeEndRoute(snap), isQuestOpen: closedC, freeEnd: { seen: true, practice: topic } });
+    const card = plan.cards.find((c) => c.slot === 2)!;
+    expect(card).toMatchObject({ kind: 'practice', subtitle: 'practice', practiceKind: 'topic', topicKey: 'food' });
+    expect(missionCardText(card, learner)).toEqual({ title: 'Food words', subtitle: 'Keep practicing' });
+    expect(plan.cards).toHaveLength(3);
+  });
+
+  it('a practice replay or story keeps its own title and opens its quest', () => {
+    const snap = all();
+    const replay = { kind: 'replay' as const, questId: 'quest:a', episodeId: 'episode:one', title: 'Meet g, n, d' };
+    const card = build({ snapshot: snap, route: freeEndRoute(snap), isQuestOpen: closedC, freeEnd: { seen: true, practice: replay } }).cards.find(
+      (c) => c.slot === 2,
+    )!;
+    expect(card).toMatchObject({ kind: 'practice', practiceKind: 'replay', questId: 'quest:a', episodeId: 'episode:one' });
+    expect(missionCardText(card, learner).title).toBe('Meet g, n, d');
+    const story = { kind: 'story' as const, storyId: 'story:x', questId: 'quest:x', episodeId: 'episode:x', title: 'The Sun and the Moon' };
+    const storyCard = build({ snapshot: snap, route: freeEndRoute(snap), isQuestOpen: closedC, freeEnd: { seen: true, practice: story } }).cards.find(
+      (c) => c.slot === 2,
+    )!;
+    expect(storyCard).toMatchObject({ practiceKind: 'story', storyId: 'story:x', questId: 'quest:x' });
+  });
+
+  it('seen with no practice target keeps the replay fallback', () => {
+    const snap = all();
+    const card = build({ snapshot: snap, route: freeEndRoute(snap), isQuestOpen: closedC, freeEnd: { seen: true, practice: null } }).cards.find(
+      (c) => c.slot === 2,
+    );
+    expect(card).toMatchObject({ kind: 'new', questId: 'quest:b' });
+  });
+
+  it('a placed-out free-end is marked so the card offers Practice words', () => {
+    const snap = all();
+    const placed = freeEndRoute(snap, { cursor: { isEntitled: () => true, skipQuestIds: new Set(['quest:a', 'quest:b']) } });
+    const fresh = snapshot([]);
+    const card = build({ snapshot: fresh, route: { ...placed, snapshot: fresh }, isQuestOpen: closedC, freeEnd: { seen: false, practice: topic } }).cards.find(
+      (c) => c.slot === 2,
+    );
+    expect(card).toMatchObject({ kind: 'free-end', placedOut: true });
+  });
+
+  it('the day pin: a pinned celebration gives way to the practice card once seen, and to the one next once lessons open', () => {
+    const snap = all();
+    const pinned = build({ snapshot: snap, route: freeEndRoute(snap), isQuestOpen: closedC, freeEnd: { seen: false, practice: topic } });
+    const seen = build({ snapshot: snap, pinned, route: freeEndRoute(snap), isQuestOpen: closedC, freeEnd: { seen: true, practice: topic } });
+    expect(seen.cards.find((c) => c.slot === 2)).toMatchObject({ kind: 'practice', topicKey: 'food' });
+    // The practice target stays for the day even when another topic would come first now.
+    const again = build({ snapshot: snap, pinned: seen, route: freeEndRoute(snap), isQuestOpen: closedC, freeEnd: { seen: true, practice: { ...topic, topicKey: 'animals', title: 'Animals' } } });
+    expect(again.cards.find((c) => c.slot === 2)).toMatchObject({ kind: 'practice', topicKey: 'food' });
+    const premium = freeEndRoute(snap, { gating: { active: true, tier: 'premium' }, isQuestOpen: () => true });
+    const opened = build({ snapshot: snap, pinned: seen, route: premium, freeEnd: { seen: true, practice: topic } });
+    expect(opened.cards.find((c) => c.slot === 2)).toMatchObject({ kind: 'new', questId: 'quest:c' });
+    expect(opened.cards).toHaveLength(3);
+  });
+
+  it('subscribers and the switch-off state never get the free-end or practice card', () => {
+    const snap = all();
+    const off = freeEndRoute(snap, { gating: { active: false, tier: 'free' }, isQuestOpen: () => true });
+    const card = build({ snapshot: snap, route: off, freeEnd: { seen: false, practice: topic } }).cards.find((c) => c.slot === 2);
+    expect(card).toMatchObject({ kind: 'new', questId: 'quest:c' });
+  });
+
+  it('the free-end and practice words pass the learner banned-text scan', () => {
+    const snap = all();
+    for (const seen of [false, true]) {
+      const plan = build({ snapshot: snap, route: freeEndRoute(snap), isQuestOpen: closedC, freeEnd: { seen, practice: topic } });
+      expect(scanLearnerCopy(missionCopy(plan, learner))).toEqual([]);
+    }
   });
 });
