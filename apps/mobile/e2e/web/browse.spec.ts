@@ -498,7 +498,8 @@ test('home: the layers in order for an account pass, one-row section control, no
   await expect(stories.first()).toBeVisible();
   for (const tile of await stories.all()) {
     await expect(tile).toHaveAttribute('aria-label', /^.+\. About \d+ minutes?\.$/);
-    await expect(tile).not.toContainText(/\b(New|Keep reading|Finished)\b/);
+    // The state line sat between the romanization and the minutes; a title may still hold such a word.
+    await expect(tile).not.toContainText(/(New|Keep reading|Finished)about \d+ min$/);
   }
   await shot(page, 'br7-browse-home-library-pixel5');
 });
