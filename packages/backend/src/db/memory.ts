@@ -478,6 +478,9 @@ export class MemoryDb implements Db {
   async getSpaces(ids: readonly string[]): Promise<Space[]> {
     return clone([...new Set(ids)].flatMap((spaceId) => this.spaces.get(spaceId) ?? []));
   }
+  async getAccounts(ids: readonly string[]): Promise<Account[]> {
+    return clone([...new Set(ids)].flatMap((accountId) => this.accounts.get(accountId) ?? []));
+  }
   async purgeTransfers(endedBefore: Date, executedBefore: Date, limit: number): Promise<number> {
     const ended = endedBefore.toISOString();
     const executed = executedBefore.toISOString();

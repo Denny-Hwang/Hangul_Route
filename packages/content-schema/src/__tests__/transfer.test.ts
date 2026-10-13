@@ -78,6 +78,7 @@ const inboxTransfer = {
   learnerRoute: 'caregiver',
   canVeto: true,
   endedFrom: null,
+  termsDigest: null,
 };
 
 describe('transfer constants (F-SPACE-002 §4.1)', () => {
@@ -296,6 +297,18 @@ describe('InboxTransferSchema is lenient on the wire', () => {
     expect(row.visibleToday).toEqual([{ kind: 'family', name: 'Home', ownerName: null }]);
   });
 
+  it('reads termsDigest leniently: an older Worker omits it and a malformed value never drops the row', () => {
+    const { termsDigest: _digest, ...older } = inboxTransfer;
+    expect(InboxTransferSchema.parse(older).termsDigest).toBeNull();
+    const digest = 'a1'.repeat(32);
+    expect(InboxTransferSchema.parse({ ...inboxTransfer, termsDigest: digest }).termsDigest).toBe(digest);
+    for (const bad of ['A1'.repeat(32), 'a1', 12, null, 'g'.repeat(64)]) {
+      const row = InboxTransferSchema.safeParse({ ...inboxTransfer, termsDigest: bad });
+      expect(row.success, String(bad)).toBe(true);
+      expect(row.success && row.data.termsDigest, String(bad)).toBeNull();
+    }
+  });
+
   it('rejects a row without an id or with a malformed one', () => {
     const { id: _id, ...noId } = inboxTransfer;
     expect(InboxTransferSchema.safeParse(noId).success).toBe(false);
@@ -378,5 +391,15 @@ describe('SyncInboxSchema transfer additions (F-SPACE-002 §4.4)', () => {
 
   it('a non-array transfers value reads as empty', () => {
     expect(SyncInboxSchema.parse({ ...newWorker, transfers: null }).transfers).toEqual([]);
+  });
+
+  it('deviceScope: the value the Worker sends, else null (unknown, never a guess), and never costs the rest', () => {
+    expect(SyncInboxSchema.parse(oldWorker).deviceScope).toBeNull();
+    expect(SyncInboxSchema.parse({ ...newWorker, deviceScope: 'class' }).deviceScope).toBe('class');
+    expect(SyncInboxSchema.parse({ ...newWorker, deviceScope: 'full' }).deviceScope).toBe('full');
+    const odd = SyncInboxSchema.parse({ ...newWorker, deviceScope: 'kiosk' });
+    expect(odd.deviceScope).toBeNull();
+    expect(odd.memberships).toEqual([membership]);
+    expect(PreTransferSyncInboxSchema.safeParse({ ...newWorker, deviceScope: 'class' }).success).toBe(true);
   });
 });
