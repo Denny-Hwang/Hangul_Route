@@ -184,7 +184,7 @@ export const consoleMsgs = {
     upgrade: 'Mejorar',
     week: {
       title: 'Esta semana',
-      practiced: (practiced: number, students: number) => `${practiced} de ${students} ${practiced === 1 ? 'practicó' : 'practicaron'} esta semana`,
+      practiced: (practiced: number, students: number) => `${practiced} de ${students} ${plural('es', practiced, { one: 'practicó', other: 'practicaron' })} esta semana`,
       anchor: (accuracy: string) => `Clave de la Etapa 1: ${accuracy}`,
       revisit: (jamo: string) => `Jamo para repasar en grupo: ${jamo}`,
       notSynced: (count: number) =>
@@ -207,7 +207,7 @@ export const consoleMsgs = {
       revisit: (jamo: string) => `Repasar: ${jamo}`,
       planReadout: (plan: string, readout: string) => `${plan}: ${readout}`,
       joined: (when: string) => `se unió ${when}`,
-      words: (collected: number, strong: number) => `Palabras: ${collected} conseguidas · ${strong} firmes`,
+      words: (collected: number, strong: number) => `Palabras: ${plural('es', collected, { one: `${collected} conseguida`, other: `${collected} conseguidas` })} · ${plural('es', strong, { one: `${strong} firme`, other: `${strong} firmes` })}`,
       wordsRevisit: (words: string) => `Palabras para repasar: ${words}`,
     },
     wordGloss: (romanization: string, gloss: string) => `${romanization} (${gloss})`,
@@ -584,7 +584,7 @@ export const consoleMsgs = {
     preview: {
       title: 'Tu ruta',
       stats: (items: number, minutes: number, stage: number) =>
-        `${plural('es', items, { one: `${items} lección o historia`, other: `${items} lecciones e historias` })} · cerca de ${minutes} minutos · termina en la Etapa ${stage}`,
+        `${plural('es', items, { one: `${items} lección o historia`, other: `${items} lecciones e historias` })} · ${plural('es', minutes, { one: `cerca de ${minutes} minuto`, other: `cerca de ${minutes} minutos` })} · termina en la Etapa ${stage}`,
       empty: 'Aún no hay nada listo para planear desde este punto de partida. Cambia algo para probar otro rango.',
       table: {
         label: 'Las semanas de la ruta',
@@ -668,9 +668,9 @@ export const consoleMsgs = {
       notStarted: (date: string) => `La ruta empieza el ${date}.`,
       ended: 'La ruta terminó. Todo lo terminado sigue terminado.',
       allWeeks: 'Ver todas',
-      line: (done: number, total: number, planned: number) => `${done} / ${total} hasta ahora · ${planned} planeados`,
+      line: (done: number, total: number, planned: number) => `${done} / ${total} hasta ahora · ${plural('es', planned, { one: `${planned} planeado`, other: `${planned} planeados` })}`,
       lineNotReady: (done: number, total: number, planned: number, notReady: number) =>
-        `${done} / ${total} hasta ahora · ${planned} planeados · ${plural('es', notReady, { one: `${notReady} aún no está listo`, other: `${notReady} aún no están listos` })}`,
+        `${done} / ${total} hasta ahora · ${plural('es', planned, { one: `${planned} planeado`, other: `${planned} planeados` })} · ${plural('es', notReady, { one: `${notReady} aún no está listo`, other: `${notReady} aún no están listos` })}`,
       waiting: 'esperando la próxima sincronización',
       repace: { cta: 'Reajustar desde hoy' },
       repaceHint: 'Mantiene lo hecho y ordena el resto desde la próxima sesión.',
@@ -956,7 +956,7 @@ export const consoleMsgs = {
       label: 'Esta semana',
       title: 'Esta semana (toda la escuela)',
       line: (practiced: number, students: number, classesWithPlan: number, classes: number) =>
-        `${practiced} de ${plural('es', students, { one: `${students} estudiante`, other: `${students} estudiantes` })} ${practiced === 1 ? 'practicó' : 'practicaron'} · ${classesWithPlan} de ${plural('es', classes, { one: `${classes} clase`, other: `${classes} clases` })} ${classesWithPlan === 1 ? 'tiene' : 'tienen'} un plan publicado`,
+        `${practiced} de ${plural('es', students, { one: `${students} estudiante`, other: `${students} estudiantes` })} ${plural('es', practiced, { one: 'practicó', other: 'practicaron' })} · ${classesWithPlan} de ${plural('es', classes, { one: `${classes} clase`, other: `${classes} clases` })} ${plural('es', classesWithPlan, { one: 'tiene', other: 'tienen' })} un plan publicado`,
     },
     classes: {
       title: 'Clases',
@@ -1012,7 +1012,7 @@ export const consoleMsgs = {
     onStage: (n: number) => `En la Etapa ${n}`,
     stageLine: (known: number, done: number) => {
       const quests = plural('es', done, { one: `${done} misión hecha`, other: `${done} misiones hechas` });
-      return known > 0 ? `${known} ${known === 1 ? 'dominada' : 'dominadas'} según la prueba de nivel, ${quests}` : quests;
+      return known > 0 ? `${known} ${plural('es', known, { one: 'dominada', other: 'dominadas' })} según la prueba de nivel, ${quests}` : quests;
     },
     stage: (n: number, text: string) => `Etapa ${n}: ${text}`,
     stages: (from: number, to: number, text: string) => `Etapas ${from} a ${to}: ${text}`,
@@ -1087,7 +1087,7 @@ export const consoleMsgs = {
     updated: (date: string) => `Actualizado: ${date}`,
     notSynced: (name: string) => `La Ruta de aprendizaje aparece después de la próxima sincronización de ${name} con la app más reciente.`,
     notFound: 'No encontramos a este estudiante en este espacio.',
-    knownLine: (known: number) => `${known} ${known === 1 ? 'dominada' : 'dominadas'} según la prueba de nivel`,
+    knownLine: (known: number) => `${known} ${plural('es', known, { one: 'dominada', other: 'dominadas' })} según la prueba de nivel`,
     stageRow: (n: number, title: string, state: string) => `${n}. ${title} · ${state}`,
   },
   notes: {

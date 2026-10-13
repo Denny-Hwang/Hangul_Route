@@ -222,7 +222,7 @@ export const report = {
   },
   class: {
     headline: (count: number, total: number, when: string) =>
-      `${count} de ${learnerCount(total)} ${count === 1 ? 'practicó' : 'practicaron'} ${when}.`,
+      `${count} de ${learnerCount(total)} ${plural('es', count, { one: 'practicó', other: 'practicaron' })} ${when}.`,
     learners: (count: number) => learnerCount(count),
     olderApp: (count: number) =>
       plural('es', count, {

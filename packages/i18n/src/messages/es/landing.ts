@@ -291,7 +291,7 @@ export const landing = {
         other: `${cards} tarjetas del patrimonio. Una Corea, una tarjeta a la vez.`,
       }),
     body: (cards: number, common: number, uncommon: number, rare: number, legendary: number) =>
-      `Cada letra que aprendes te da un pedazo real de la cultura coreana: un tazón de ramyeon, una luna de Chuseok, un columpio de una pintura de Dano. La Etapa 1 trae ${plural('es', cards, { one: `${cards} tarjeta`, other: `${cards} tarjetas` })}: ${common} comunes, ${uncommon} poco comunes, ${rare} raras y ${legendary} legendarias.`,
+      `Cada letra que aprendes te da un pedazo real de la cultura coreana: un tazón de ramyeon, una luna de Chuseok, un columpio de una pintura de Dano. La Etapa 1 trae ${plural('es', cards, { one: `${cards} tarjeta`, other: `${cards} tarjetas` })}: ${plural('es', common, { one: `${common} común`, other: `${common} comunes` })}, ${plural('es', uncommon, { one: `${uncommon} poco común`, other: `${uncommon} poco comunes` })}, ${plural('es', rare, { one: `${rare} rara`, other: `${rare} raras` })} y ${plural('es', legendary, { one: `${legendary} legendaria`, other: `${legendary} legendarias` })}.`,
     listLabel: 'Tarjetas de la Etapa 1',
     rarity: { common: 'Común', uncommon: 'Poco común', rare: 'Rara', legendary: 'Legendaria' },
     cardLabel: (romanization: string, meaning: string) => `Palabra coreana ${romanization}, significa ${meaning}`,

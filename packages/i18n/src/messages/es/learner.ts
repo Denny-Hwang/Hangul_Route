@@ -996,12 +996,12 @@ export const learner = {
     library: {
       title: 'Palabras',
       line: 'Elige un tema. Conoce unas palabras a la vez.',
-      collected: (n: number) => `${n} conseguidas`,
+      collected: (n: number) => plural('es', n, { one: `${n} conseguida`, other: `${n} conseguidas` }),
     },
     topics: {
       title: 'Palabras',
       line: 'Elige un tema que te guste.',
-      collected: (n: number) => `${n} conseguidas`,
+      collected: (n: number) => plural('es', n, { one: `${n} conseguida`, other: `${n} conseguidas` }),
       tileA11y: (title: string, n: number) => `${title}. ${plural('es', n, { one: '1 palabra conseguida', other: `${n} palabras conseguidas` })}.`,
       empty: 'Las palabras vienen en camino.',
       back: 'Atrás',
@@ -1011,7 +1011,7 @@ export const learner = {
     topic: {
       notFound: 'No se encontró el tema',
       back: 'Atrás',
-      collected: (n: number) => `${n} conseguidas`,
+      collected: (n: number) => plural('es', n, { one: `${n} conseguida`, other: `${n} conseguidas` }),
       wallNew: 'Aún sin conseguir',
       learn: { label: 'Aprender', line: 'Conoce unas palabras con imágenes.' },
       speed: {

@@ -27,7 +27,7 @@ export const a11y = {
   }) => {
     const where = `Etapa ${c.stage} ${c.stageTitle}, ${c.themeTitle}`;
     const count = plural('es', c.stories, { one: '1 historia del patrimonio', other: `${c.stories} historias del patrimonio` });
-    const stories = c.stories === 0 ? '' : c.finished > 0 ? `${count}, ${c.finished} terminadas` : count;
+    const stories = c.stories === 0 ? '' : c.finished > 0 ? `${count}, ${plural('es', c.finished, { one: `${c.finished} terminada`, other: `${c.finished} terminadas` })}` : count;
     const holds = c.kind === 'book' ? 'libro de historias' : 'lección';
     const head =
       c.kind === 'placeholder'

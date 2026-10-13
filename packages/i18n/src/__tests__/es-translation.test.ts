@@ -69,6 +69,21 @@ describe('Spanish dictionary (F-I18N-001 PR 15)', () => {
     expect(es.caregiver.plan.freePlan.line(15, 24, 65)).toBe('La Etapa 1 es gratis: 15 lecciones, 24 letras, cerca de 65 minutos. Todo lo terminado se queda.');
   });
 
+  it('agrees with a count of 1 and of 2 in the counts the PR 15 review found (plural, never "1 conseguidas")', () => {
+    for (const collected of [es.learner.vocab.library.collected, es.learner.vocab.topics.collected, es.learner.vocab.topic.collected]) {
+      expect(collected(1)).toBe('1 conseguida');
+      expect(collected(2)).toBe('2 conseguidas');
+    }
+    const cell = (finished: number) =>
+      es.a11y.journeyCell({ stage: 1, stageTitle: 'Hangul', themeTitle: 'Letras y libros', kind: 'stories-only', complete: false, stories: 2, finished, start: false, placedOut: false });
+    expect(cell(1)).toBe('Etapa 1 Hangul, Letras y libros: 2 historias del patrimonio, 1 terminada');
+    expect(cell(2)).toBe('Etapa 1 Hangul, Letras y libros: 2 historias del patrimonio, 2 terminadas');
+    expect(es.landing.cards.body(1, 1, 1, 1, 1)).toContain('La Etapa 1 trae 1 tarjeta: 1 común, 1 poco común, 1 rara y 1 legendaria.');
+    expect(es.landing.cards.body(24, 12, 6, 4, 2)).toContain('La Etapa 1 trae 24 tarjetas: 12 comunes, 6 poco comunes, 4 raras y 2 legendarias.');
+    expect(es.report.class.headline(1, 1, 'esta semana')).toBe('1 de 1 estudiante practicó esta semana.');
+    expect(es.report.class.headline(2, 5, 'esta semana')).toBe('2 de 5 estudiantes practicaron esta semana.');
+  });
+
   it('has a review-ledger entry for every namespace (§3.10 step 3)', () => {
     const entries = (ledger as Record<string, Record<string, { enSha: string; reviewedBy: string; reviewedAt: string }>>).es ?? {};
     expect(Object.keys(entries).sort()).toEqual(Object.keys(en).sort());
