@@ -75,6 +75,14 @@ export function sectionAfter(sections: readonly BrowseSection[], current: Browse
   }
 }
 
+/**
+ * Whether the Journey section opens with the stage line (section 4.2): only when the build has no Route
+ * section, which already lists the stages (flag off, `EXPO_PUBLIC_MY_ROUTE_ENABLED=false`, F-ROUTE-001 R-10b).
+ */
+export function journeyStageLine(sections: readonly BrowseSection[]): boolean {
+  return !sections.includes('route');
+}
+
 /** The section shown first: a requested one this build offers, else the default (the first). */
 export function initialSection(sections: readonly BrowseSection[], requested: BrowseSection | undefined): BrowseSection {
   return requested !== undefined && sections.includes(requested) ? requested : (sections[0] as BrowseSection);
