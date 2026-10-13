@@ -45,11 +45,9 @@ export const REGISTERED_SOURCES: readonly RegisteredSource[] = [
   // B3. TS data, API (isolated jamo only: R7)
   { path: 'packages/backend/src/routes/content.ts', cls: 'B3', suite: BACKEND_SUITE, needle: 'routes/content' },
   // C. Inline literals in pages
-  { path: 'apps/web/src/components/landing/MeetHoya.tsx', cls: 'C', suite: WEB_SOURCES_SUITE, needle: 'landing/MeetHoya.tsx' },
   { path: 'apps/web/src/app/(console)/design-preview/page.tsx', cls: 'C', suite: WEB_SOURCES_SUITE, needle: 'design-preview/page.tsx' },
   { path: 'apps/web/src/app/(console)/design-preview/cards/page.tsx', cls: 'C', suite: WEB_SOURCES_SUITE, needle: 'design-preview/cards/page.tsx' },
   { path: 'apps/web/src/app/(console)/design-preview/components/page.tsx', cls: 'C', suite: WEB_SOURCES_SUITE, needle: 'design-preview/components/page.tsx' },
-  { path: 'apps/web/src/components/landing/LandingPage.tsx', cls: 'C', suite: WEB_SOURCES_SUITE, needle: 'landing/LandingPage.tsx' },
   { path: 'apps/mobile/src/screens/minigames/VoiceEchoGame.tsx', cls: 'C', suite: WEB_SOURCES_SUITE, needle: 'minigames/VoiceEchoGame.tsx' },
 ];
 
