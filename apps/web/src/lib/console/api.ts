@@ -1,7 +1,23 @@
 import { ProgressSummarySchema, ReportSummarySchema, ReceiptViewSchema, SpaceKindSchema, parseBillingSummary, type BillingSummary, type ReceiptView } from '@hangul-route/content-schema';
+import { noteTransferResult } from './transfer-lock';
 import type {
   CurriculumMeta,
   Entitlement,
+  InboxVisibleSpace,
+  LearnerSlotState,
+  SpaceSettings,
+  TransferApproveBody,
+  TransferBlockReason,
+  TransferCreateBody,
+  TransferDeclineBody,
+  TransferEndReason,
+  TransferEndedFrom,
+  TransferFamilyPrefsBody,
+  TransferInitiator,
+  TransferLearnerRoute,
+  TransferPremiumChange,
+  TransferPreviewBody,
+  TransferStepState,
   LearnerLevelId,
   LearnerReportResponse,
   PlanItem,
@@ -176,7 +192,10 @@ export interface ClerkErrorHint {
 
 export type ApiError = 'unauthorized' | 'forbidden' | 'not_found' | 'invalid' | 'network' | 'unknown';
 /** `code` is the server envelope's error code when it sent one (e.g. stripe_not_configured). */
-export type ApiResult<T> = { ok: true; data: T } | { ok: false; error: ApiError; status: number; code?: string; clerk_error?: ClerkErrorHint };
+/** `details` is the envelope's `error.details`, kept only by the calls that read it (class moves: `startedBy`, `current`, `retryAfterSeconds`). */
+export type ApiResult<T> =
+  | { ok: true; data: T }
+  | { ok: false; error: ApiError; status: number; code?: string; clerk_error?: ClerkErrorHint; details?: Record<string, unknown> };
 
 export interface ConsoleApiOptions {
   endpoint: string;
@@ -225,17 +244,18 @@ export function createConsoleApi(opts: ConsoleApiOptions) {
   const billing = `${opts.endpoint}/api/billing`;
   const resolveToken = async (): Promise<string | null> => (typeof opts.token === 'string' ? opts.token : opts.token().catch(() => null));
 
-  async function call<T>(url: string, init: RequestInit, okStatus: number[]): Promise<ApiResult<T>> {
+  async function call<T>(url: string, init: RequestInit, okStatus: number[], opts: { details?: boolean } = {}): Promise<ApiResult<T>> {
     try {
       const token = await resolveToken();
       if (!token) return { ok: false, error: 'unauthorized', status: 401 }; // signed out mid-flight: no request leaves
       const headers = { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` };
       const res = await fetchImpl(url, { ...init, headers });
-      const body = (await res.json().catch(() => ({}))) as { data?: T; error?: { code?: unknown }; clerk_error?: unknown };
+      const body = (await res.json().catch(() => ({}))) as { data?: T; error?: { code?: unknown; details?: unknown }; clerk_error?: unknown };
       if (!okStatus.includes(res.status) || body.data === undefined) {
         const code = typeof body.error?.code === 'string' ? body.error.code : undefined;
         const hint = body.clerk_error && typeof body.clerk_error === 'object' ? { clerk_error: body.clerk_error as ClerkErrorHint } : {};
-        return { ok: false, error: mapError(res.status), status: res.status, ...(code ? { code } : {}), ...hint };
+        const details = opts.details && isPlainRecord(body.error?.details) ? { details: body.error.details } : {};
+        return { ok: false, error: mapError(res.status), status: res.status, ...(code ? { code } : {}), ...hint, ...details };
       }
       return { ok: true, data: body.data };
     } catch {
@@ -325,7 +345,207 @@ export function createConsoleApi(opts: ConsoleApiOptions) {
           return data === null ? { ok: false, error: 'unknown', status: 200, code: 'bad_response' } : { ok: true, data };
         },
       ),
+    // Class moves (F-SPACE-002 section 4.4, PR T-6a). `spaceId` is the acting space (the source or destination class,
+    // or the family); the learner id travels in the body only and a request by its opaque `transfer:` id (T14). Every
+    // answer goes through `noteTransferResult`, so the first `422 transfers_locked` hides the entry points.
+    /** Resolves the code; writes nothing (except a failed-code count). A class sees the class name only. */
+    previewTransfer: (spaceId: string, body: TransferPreviewBody): Promise<ApiResult<TransferPreview>> =>
+      transferCall<TransferPreview>(`${transfers(spaceId)}/preview`, { method: 'POST', body: JSON.stringify(body) }, [200]),
+    /** 201 with the new request, or 200 with the caller's own open one (idempotent). */
+    createTransfer: (spaceId: string, body: TransferCreateBody): Promise<ApiResult<TransferView>> =>
+      transferCall<{ request?: unknown }>(transfers(spaceId), { method: 'POST', body: JSON.stringify(body) }, [200, 201]).then(requestOf),
+    /** The space's requests (class: both roles; family: its learners, with `options`; school: `counts`), read leniently. */
+    transferRequests: (spaceId: string): Promise<ApiResult<TransferList>> =>
+      transferCall<unknown>(transfers(spaceId), { method: 'GET' }, [200]).then((r) => (r.ok ? { ok: true as const, data: readTransferList(r.data) } : r)),
+    approveTransfer: (spaceId: string, transferId: string, body: TransferApproveBody): Promise<ApiResult<TransferView>> =>
+      transferCall<{ request?: unknown }>(`${transfers(spaceId)}/${encodeURIComponent(transferId)}/approve`, { method: 'POST', body: JSON.stringify(body) }, [200]).then(requestOf),
+    declineTransfer: (spaceId: string, transferId: string, body: TransferDeclineBody): Promise<ApiResult<TransferView>> =>
+      transferCall<{ request?: unknown }>(`${transfers(spaceId)}/${encodeURIComponent(transferId)}/decline`, { method: 'POST', body: JSON.stringify(body) }, [200]).then(requestOf),
+    cancelTransfer: (spaceId: string, transferId: string): Promise<ApiResult<TransferView>> =>
+      transferCall<{ request?: unknown }>(`${transfers(spaceId)}/${encodeURIComponent(transferId)}/cancel`, { method: 'POST', body: '{}' }, [200]).then(requestOf),
+    retryTransfer: (spaceId: string, transferId: string): Promise<ApiResult<TransferView>> =>
+      transferCall<{ request?: unknown }>(`${transfers(spaceId)}/${encodeURIComponent(transferId)}/retry`, { method: 'POST', body: '{}' }, [200]).then(requestOf),
+    /** The guardian's switch (`:id` a family): teacher requests on or off for one learner. */
+    setTransferPrefs: (spaceId: string, learnerId: string, body: TransferFamilyPrefsBody): Promise<ApiResult<TransferPrefs>> =>
+      transferCall<{ prefs?: unknown }>(`${base}/${encodeURIComponent(spaceId)}/learners/${encodeURIComponent(learnerId)}/transfer-prefs`, { method: 'PUT', body: JSON.stringify(body) }, [200]).then(
+        (r): ApiResult<TransferPrefs> => {
+          if (!r.ok) return r;
+          const prefs = r.data.prefs;
+          return isPlainRecord(prefs) && typeof prefs.blockTeacherRequests === 'boolean' && typeof prefs.selfManaged === 'boolean'
+            ? { ok: true, data: { blockTeacherRequests: prefs.blockTeacherRequests, selfManaged: prefs.selfManaged } }
+            : BAD_RESPONSE;
+        },
+      ),
   };
+
+  function transfers(spaceId: string): string {
+    return `${base}/${encodeURIComponent(spaceId)}/transfer-requests`;
+  }
+
+  async function transferCall<T>(url: string, init: RequestInit, okStatus: number[]): Promise<ApiResult<T>> {
+    const result = await call<T>(url, init, okStatus, { details: true });
+    noteTransferResult(result);
+    return result;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Class moves (F-SPACE-002 section 4.2 "Views"; the Worker's `lib/transfer-views.ts`). Each party has its own view;
+// an ending reads `ended` for everyone, and only the decider's own view carries `endedByYou` and its reason.
+
+/** `ended` stands for declined, cancelled and expired alike, so the status itself never says who decided. */
+export type TransferViewStatus = 'requested' | 'approved' | 'executed' | 'ended';
+
+/** Each side's step; null once the request ended (the steps of an ended request would hint who said no). */
+export interface TransferSteps {
+  learner: TransferStepState;
+  source: TransferStepState;
+  destination: TransferStepState;
+}
+
+interface TransferClassViewCommon {
+  id: string;
+  status: TransferViewStatus;
+  steps: TransferSteps | null;
+  agreedBySchoolAdmin: boolean;
+  /** The earliest move date once everyone agreed (`approved`). */
+  scheduledFor: string | null;
+  /** Why an agreed move waits for room (`approved` only). */
+  blockReason: TransferBlockReason | null;
+  createdAt: string;
+  expiresAt: string;
+  executedAt: string | null;
+  endedAt: string | null;
+  endedByYou: boolean;
+  endReason: TransferEndReason | null;
+}
+
+export interface TransferSourceView extends TransferClassViewCommon {
+  role: 'source';
+  initiator: TransferInitiator;
+  /** Only on a request this class started, before the move. */
+  learnerId: string | null;
+  /** While open; null afterwards, so history keeps no name. */
+  learner: { name: string; avatar: string } | null;
+  /** Only when this class started it or the family chose to introduce it. */
+  destination: { spaceId: string; name: string } | null;
+}
+
+export interface TransferDestinationView extends TransferClassViewCommon {
+  role: 'destination';
+  /** Initials (`rosterAlias`) until the move, never the learner id (T8). */
+  learner: { name: string; avatar: string; level: string } | null;
+  comingFrom: { name: string } | null;
+}
+
+/** What the learner side is told about the destination (owner, school, age bucket, size), so a typed name is not the only identity. */
+export interface TransferDestinationFacts {
+  ownerName: string | null;
+  schoolName: string | null;
+  ageBucket: string | null;
+  learnerCount: number;
+}
+
+/** The consent sheet's server flags and `visibleToday` (section 4.11). */
+export interface TransferSheetTerms {
+  premiumChange: TransferPremiumChange;
+  destinationConsentMode: SpaceSettings['consentMode'];
+  relinkAffected: boolean;
+  sourcePlansAffected: boolean;
+  visibleToday: InboxVisibleSpace[];
+}
+
+export interface TransferLearnerSideView extends TransferSheetTerms {
+  id: string;
+  role: 'learner_side';
+  status: TransferViewStatus;
+  initiator: TransferInitiator;
+  learner: { id: string; name: string };
+  from: { spaceId: string; name: string };
+  to: { spaceId: string; name: string } & TransferDestinationFacts;
+  learnerState: LearnerSlotState;
+  sourceState: TransferStepState;
+  destinationState: TransferStepState;
+  introduce: boolean;
+  blockReason: TransferBlockReason | null;
+  executeAfter: string | null;
+  createdAt: string;
+  expiresAt: string;
+  executedAt: string | null;
+  endedAt: string | null;
+  learnerRoute: TransferLearnerRoute;
+  endedFrom: TransferEndedFrom | null;
+  /** The digest of the sheet this view shows while the learner slot is open (sent back on approve); null otherwise. */
+  termsDigest: string | null;
+}
+
+export type TransferView = TransferSourceView | TransferDestinationView | TransferLearnerSideView;
+
+/** A family's learner and their live classes, for Start a move (`options`). */
+export interface TransferOption {
+  learnerId: string;
+  name: string;
+  classes: { spaceId: string; name: string }[];
+  selfManaged: boolean;
+  blockTeacherRequests: boolean;
+}
+
+/** A school's count of waiting moves per child class (`TransferSchoolCountView`). */
+export interface TransferSchoolCount {
+  spaceId: string;
+  waiting: number;
+}
+
+export interface TransferList {
+  requests: TransferView[];
+  options?: TransferOption[];
+  counts?: TransferSchoolCount[];
+}
+
+/**
+ * A preview: a class sees `{ destination: { id, kind, name } }` only; the learner side also gets the destination
+ * facts, the sheet's terms and `termsDigest` (section 4.4).
+ */
+export type TransferPreview =
+  | { destination: { id: string; kind: SpaceKind; name: string } }
+  | ({ destination: { id: string; kind: SpaceKind; name: string } & TransferDestinationFacts; termsDigest: string } & TransferSheetTerms);
+
+export interface TransferPrefs {
+  blockTeacherRequests: boolean;
+  selfManaged: boolean;
+}
+
+const BAD_RESPONSE = { ok: false as const, error: 'unknown' as const, status: 200, code: 'bad_response' };
+
+const VIEW_ROLES: ReadonlySet<string> = new Set(['source', 'destination', 'learner_side']);
+const VIEW_STATUSES: ReadonlySet<string> = new Set(['requested', 'approved', 'executed', 'ended']);
+
+/**
+ * A view this build can word: a known role and status and a string id. API answers are cast, not parsed, so a role
+ * or status a newer Worker adds (deployed first, an old console bundle cached) is dropped instead of reaching the
+ * role-keyed copy.
+ */
+function readableView(raw: unknown): raw is TransferView {
+  return isPlainRecord(raw) && typeof raw.id === 'string' && typeof raw.role === 'string' && VIEW_ROLES.has(raw.role) && typeof raw.status === 'string' && VIEW_STATUSES.has(raw.status);
+}
+
+function requestOf(r: ApiResult<{ request?: unknown }>): ApiResult<TransferView> {
+  if (!r.ok) return r;
+  return readableView(r.data.request) ? { ok: true, data: r.data.request } : BAD_RESPONSE;
+}
+
+function readTransferList(raw: unknown): TransferList {
+  const data = isPlainRecord(raw) ? raw : {};
+  const list: TransferList = { requests: Array.isArray(data.requests) ? data.requests.filter(readableView) : [] };
+  if (Array.isArray(data.options)) {
+    list.options = data.options.filter(
+      (o): o is TransferOption => isPlainRecord(o) && typeof o.learnerId === 'string' && typeof o.name === 'string' && Array.isArray(o.classes) && typeof o.selfManaged === 'boolean' && typeof o.blockTeacherRequests === 'boolean',
+    );
+  }
+  if (Array.isArray(data.counts)) {
+    list.counts = data.counts.filter((c): c is TransferSchoolCount => isPlainRecord(c) && typeof c.spaceId === 'string' && typeof c.waiting === 'number');
+  }
+  return list;
 }
 
 export type ConsoleApi = ReturnType<typeof createConsoleApi>;
