@@ -289,4 +289,39 @@ describe("PWA e2e", () => {
     assert.match(text, /build:web:fixtures/);
     assert.match(text, /build:web\b(?!:)/);
   });
+  // F-STORY-004 PR 4.8b: the gating fixture bundle (fixtures + EXPO_PUBLIC_CONTENT_GATING_ENABLED=true,
+  // dist-e2e-gated/) has its own build, its own artifact and its own e2e line; neither fixture run
+  // picks up the other bundle's spec files.
+  test("the gating fixture bundle is built into its own directory with content gating on", () => {
+    const step = text.slice(text.indexOf("- name: Build the gating fixture bundle"));
+    assert.ok(text.includes("- name: Build the gating fixture bundle"), "a build step for the gating fixture bundle");
+    assert.match(step.split("\n- name:")[0], /pnpm --filter @hangul-route\/mobile build:web:fixtures:gated/);
+    const pkg = JSON.parse(read("apps/mobile/package.json"));
+    assert.match(pkg.scripts["build:web:fixtures:gated"], /build-web-fixtures\.mjs dist-e2e-gated --content-gating$/);
+    assert.match(text, /name: pwa-dist-e2e-gated\n\s+path: apps\/mobile\/dist-e2e-gated/);
+  });
+
+  test("the gating run serves the gating bundle and lists only the gated spec", () => {
+    const at = text.indexOf("- name: Offline e2e (gating fixture bundle");
+    assert.ok(at >= 0, "an e2e step for the gating fixture bundle");
+    const step = text.slice(at).split(/\n\s+- name: /)[0];
+    assert.match(step, /if: \$\{\{ !cancelled\(\) && matrix\.shard == 1 \}\}/);
+    assert.match(step, /STORY_FIXTURES_GATED: "1"/);
+    assert.doesNotMatch(step, /STORY_FIXTURES: "1"/);
+    assert.match(step, /pnpm exec playwright test story-shelf-gated\.spec\b/);
+    assert.match(read("apps/mobile/playwright.config.ts"), /STORY_FIXTURES_GATED === '1'[\s\S]*?dist-e2e-gated/);
+  });
+
+  test("the regular fixture list names story-shelf anchored, so the gated spec never runs on it", () => {
+    const arr = text.match(/files=\(\n([\s\S]*?)\n\s*\)/)?.[1] ?? "";
+    const words = arr.split("\n").map((l) => l.replace(/#.*/, "").trim()).filter(Boolean);
+    assert.ok(words.includes("story-shelf.spec"));
+    assert.deepEqual(words.filter((w) => "story-shelf-gated.spec.ts".includes(w)), [], "an entry that matches the gated spec");
+  });
+
+  test("every spec that needs the gating bundle runs in the gating run", () => {
+    const dir = join(ROOT, "apps", "mobile", "e2e", "web");
+    const gated = readdirSync(dir).filter((n) => n.endsWith(".spec.ts") && /!\s*GATED_BUILD\b/.test(readFileSync(join(dir, n), "utf8")));
+    assert.deepEqual(gated, ["story-shelf-gated.spec.ts"]);
+  });
 });
