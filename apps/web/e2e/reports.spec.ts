@@ -190,6 +190,7 @@ test.describe('the learner report (RP-7a2)', () => {
     await expect(headline(page)).toBeVisible();
     await page.getByRole('tab', { name: 'This month' }).click();
     await expect(page.getByTestId('report-error-line')).toHaveText("Can't load the report right now.");
+    await expect(page.getByTestId('report-status')).toHaveText("Can't load the report right now.");
     await expect(page.getByRole('heading', { level: 1 })).toHaveText('Mina: report');
     await expect(page.getByTestId('report-print')).toBeEnabled();
   });
@@ -212,18 +213,25 @@ test.describe('the learner report (RP-7a2)', () => {
     await other.close();
   });
 
+  // Assumption e: the roster card is 280 px at its narrowest (the roster grid's `minmax(280px, 1fr)`), which a 320 px
+  // phone gives it; See report must fit inside that card beside its other links, at least a touch target tall.
   for (const kind of ['class', 'family'] as const) {
-    for (const width of [280, 320]) {
+    for (const width of [320, 390]) {
       test(`the ${kind} roster card has room for See report at ${width} px (assumption e)`, async ({ page }) => {
         await page.setViewportSize({ width, height: 800 });
         await mockReport(page, { kind });
         await page.goto(`/teach/space?id=${encodeURIComponent(spaceId(kind))}`);
-        const link = page.getByTestId('student-card').getByTestId('see-report');
+        const card = page.getByTestId('student-card');
+        const link = card.getByTestId('see-report');
         await expect(link).toBeVisible();
         await expect(link).toHaveText('See report');
+        const cardBox = await card.boundingBox();
         const box = await link.boundingBox();
-        expect(box && box.height >= touchTarget.min).toBe(true);
-        expect(box && box.x >= 0 && box.x + box.width <= width).toBe(true);
+        if (!cardBox || !box) throw new Error('no layout');
+        if (width === 320) expect(Math.round(cardBox.width)).toBeLessThanOrEqual(290);
+        expect(box.height).toBeGreaterThanOrEqual(touchTarget.min);
+        expect(box.x).toBeGreaterThanOrEqual(cardBox.x);
+        expect(box.x + box.width).toBeLessThanOrEqual(cardBox.x + cardBox.width);
         // Ids and codes only: the learner's name never reaches the address.
         const href = (await link.getAttribute('href')) ?? '';
         expect(href).toContain(`id=${encodeURIComponent(spaceId(kind))}`);
