@@ -49,7 +49,7 @@ import { gridQuestProgress } from '../../logic/journey';
 import { homeColumns } from '../../logic/layout/home-columns';
 import { homeStripView, type HomeStripView } from '../../logic/my-route/home-strip';
 import { buildMyRoute } from '../../logic/my-route/model';
-import { localizedRouteContent, routeModelInput } from '../../logic/my-route/route-input';
+import { localizedRouteContent, routeModelInput, routeWeekOf } from '../../logic/my-route/route-input';
 import { emptySnapshot } from '../../logic/my-route/view';
 import { placementEntriesOn, questsDoneOf } from '../../logic/placement/entry';
 import { skippedEvent } from '../../logic/placement/events';
@@ -356,7 +356,8 @@ export function HomeScreen(): React.ReactElement {
       const snapshot = snap ?? emptySnapshot(profile.id);
       // The same F-ENT-003 input as card (2), so the strip's goal is the Learning Route's (LR-5a).
       const model = buildMyRoute(routeModelInput({ snapshot, tier, localized: routeContent, now: new Date(), ...(routeInput ? { next: routeInput } : {}) }));
-      return homeStripView({ model, messages: m, goalStage: model.goal?.stage ?? null });
+      // The same week as the Learning Route's plan line (R-7b): the goal's plan, the class's or the learner's own.
+      return homeStripView({ model, messages: m, goalStage: model.goal?.stage ?? null, week: routeWeekOf(model, routeInput ?? undefined) });
     } catch {
       // Content that cannot be read leaves the slot empty; the page itself shows the retry.
       return null;
