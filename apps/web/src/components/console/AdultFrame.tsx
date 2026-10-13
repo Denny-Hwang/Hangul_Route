@@ -12,7 +12,7 @@ import { learnerHome, type DeviceGateRead } from '@/lib/console/grown-up-lock';
 import { FAMILY_HOME_LIVE, activePersona, fallbackPersona, heldPersonas, homeToRecord, pageArea, personaHome, showPersonaSwitch } from '@/lib/console/personas';
 import { ROUTES } from '@/lib/console/routing';
 import { readLastPersona, writeLastPersona } from '@/lib/console/shell-store';
-import { currentNavItem, lessonsUrl, navFlags, navItemsFor, soloFamilyLearnerSpace, type NavEntry, type SoloLearner } from '@/lib/console/shell-nav';
+import { currentNavItem, navFlags, navItemsFor, soloFamilyLearnerSpace, type NavEntry, type SoloLearner } from '@/lib/console/shell-nav';
 import { clearGrownUpTab } from '@/lib/console/unlock';
 import { LanguageSelect } from './LanguageSelect';
 import { useConsole } from './use-console';
@@ -263,7 +263,7 @@ export function AdultFrame({
   const live = FAMILY_HOME_LIVE;
   const active = activePersona({ area, spaces: list, last, live });
   const held = heldPersonas(list);
-  const flags = navFlags(locale);
+  const flags = navFlags(locale, undefined, origin);
   const soloSpace = flags.reports && list ? soloFamilyLearnerSpace(list) : null;
   const toRecord = homeToRecord(area, active, held, live);
 
@@ -336,14 +336,14 @@ export function AdultFrame({
             <ul className="hr-frame-list">
               {items.map((entry) => (
                 <li key={entry.id}>
-                  {'href' in entry.target ? (
+                  {entry.target.document ? (
+                    <a className="hr-frame-item" href={entry.target.href} data-testid={`nav-${entry.id}`}>
+                      {shell.nav[entry.labelKey]}
+                    </a>
+                  ) : (
                     <Link className="hr-frame-item" href={entry.target.href} aria-current={current === entry.id ? 'page' : undefined} data-testid={`nav-${entry.id}`}>
                       {shell.nav[entry.labelKey]}
                     </Link>
-                  ) : (
-                    <button type="button" className="hr-frame-item" onClick={() => browser.assign(lessonsUrl(origin))} data-testid={`nav-${entry.id}`}>
-                      {shell.nav[entry.labelKey]}
-                    </button>
                   )}
                 </li>
               ))}

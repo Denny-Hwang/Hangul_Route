@@ -1,7 +1,7 @@
-import { buildBrowseUrl, type AdultPersona } from '@hangul-route/content-schema';
+import type { AdultPersona } from '@hangul-route/content-schema';
 import type { Messages, UiLocale } from '@hangul-route/i18n';
 import type { SpaceListItem } from './api';
-import { browseEntryEnabled, buildEnv, notesEnabled, reportsEnabled, type ConsoleEnv } from './config';
+import { browseEntryShown, buildEnv, notesEnabled, reportsEnabled, type ConsoleEnv } from './config';
 import { personaHome } from './personas';
 import { ROUTES } from './routing';
 
@@ -13,8 +13,15 @@ import { ROUTES } from './routing';
 
 export type NavId = 'home' | 'reports' | 'notes' | 'classes' | 'lessons' | 'billing';
 
-/** A link, or an action the frame runs (Lessons opens the lesson browser, F-BROWSE-001). */
-export type NavTarget = { href: string } | { action: 'browse' };
+/**
+ * A link. `document` marks a learner root of this origin (Lessons opens All lessons at `/browse`, F-BROWSE-001), a
+ * plain same-tab link rather than a console client navigation; F-BROWSE-001 BR-10 adds the click that writes the
+ * tab's browse pass first (`openBrowse(undefined, 'nav')`).
+ */
+export type NavTarget = { href: string; document?: true };
+
+/** All lessons, a learner root of the app origin (F-APP-001 section 3.2, `LEARNER_ROOTS`). */
+export const BROWSE_PATH = '/browse';
 
 /** The sibling predicates the registry reads (section 3.8), each off by default. */
 export interface NavFlags {
@@ -80,13 +87,16 @@ export const ADULT_NAV: readonly AdultNavItem[] = [
     enabled: (ctx) => ctx.flags.notes,
   },
   { id: 'classes', persona: 'teacher', labelKey: 'classes', target: () => ({ href: personaHome('teacher') }), enabled: () => true },
-  { id: 'lessons', persona: 'both', labelKey: 'lessons', target: () => ({ action: 'browse' }), enabled: (ctx) => ctx.flags.browse },
+  { id: 'lessons', persona: 'both', labelKey: 'lessons', target: () => ({ href: BROWSE_PATH, document: true }), enabled: (ctx) => ctx.flags.browse },
   { id: 'billing', persona: 'both', labelKey: 'billing', target: () => ({ href: ROUTES.billing }), enabled: () => true },
 ];
 
-/** The predicates for this build and console locale (Reports also needs a reviewed locale, F-REPORT-001 section 3.1). */
-export function navFlags(locale: UiLocale, env: ConsoleEnv = buildEnv()): NavFlags {
-  return { reports: reportsEnabled(locale, env), notes: notesEnabled(env), browse: browseEntryEnabled(env) };
+/**
+ * The predicates for this build, console locale and page origin (Reports also needs a reviewed locale, F-REPORT-001
+ * section 3.1; Lessons the app origin, F-BROWSE-001 section 4.3).
+ */
+export function navFlags(locale: UiLocale, env: ConsoleEnv = buildEnv(), origin = ''): NavFlags {
+  return { reports: reportsEnabled(locale, env), notes: notesEnabled(env), browse: browseEntryShown(origin, env) };
 }
 
 export interface NavEntry {
@@ -122,9 +132,4 @@ export function currentNavItem(pathname: string, persona: AdultPersona, resolved
   if (persona === 'parent' && NOTES_PAGE.test(pathname)) return 'notes';
   if (HOME_PAGE.test(pathname) || SPACE_PAGE.test(pathname)) return persona === 'parent' ? 'home' : 'classes';
   return null;
-}
-
-/** The lesson browser on this origin with the nav source (F-BROWSE-001 section 4.3; BR-10 adds the account pass). */
-export function lessonsUrl(origin: string): string {
-  return buildBrowseUrl(origin, { source: 'nav' });
 }

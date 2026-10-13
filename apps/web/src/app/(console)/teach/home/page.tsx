@@ -8,11 +8,11 @@ import { AdultFrame, type FrameSpaces } from '@/components/console/AdultFrame';
 import { Button, Muted, Notice, buttonBase, panelStyle } from '@/components/console/ui';
 import { useConsole } from '@/components/console/use-console';
 import type { SpaceListItem } from '@/lib/console/api';
-import { browseEntryEnabled, reportsEnabled, notesEnabled } from '@/lib/console/config';
+import { browseEntryShown, reportsEnabled, notesEnabled } from '@/lib/console/config';
 import { FAMILY_HOME_LIVE, personaHome } from '@/lib/console/personas';
 import { ROUTES, statusLine } from '@/lib/console/routing';
 import { writeLastPersona } from '@/lib/console/shell-store';
-import { lessonsUrl } from '@/lib/console/shell-nav';
+import { BROWSE_PATH } from '@/lib/console/shell-nav';
 import { START_CLASS, START_FAMILY, classRowLinks, teacherHomeView } from '@/lib/console/teacher-home';
 
 /**
@@ -82,7 +82,7 @@ export default function HomePage(): JSX.Element {
     void writeLastPersona('parent');
     router.push(personaHome('parent', FAMILY_HOME_LIVE));
   };
-  const openLessons = (): void => window.location.assign(lessonsUrl(window.location.origin));
+  const lessons = browseEntryShown(typeof window === 'undefined' ? '' : window.location.origin);
 
   const row = (item: SpaceListItem): JSX.Element => {
     const archived = !!item.space.archivedAt;
@@ -201,10 +201,10 @@ export default function HomePage(): JSX.Element {
           {view.classRows.length > 0 ? <div style={rowsStyle}>{view.classRows.map(row)}</div> : null}
           {group('home-family', c.kind.group.family, view.familyRows)}
           {group('home-school', c.kind.group.school, view.schoolRows)}
-          {browseEntryEnabled() ? (
-            <button type="button" onClick={openLessons} style={{ ...smallButton, alignSelf: 'flex-start' }} data-testid="home-lessons">
+          {lessons ? (
+            <a href={BROWSE_PATH} style={{ ...smallButton, alignSelf: 'flex-start' }} data-testid="home-lessons">
               {c.home.lessons}
-            </button>
+            </a>
           ) : null}
           {crossLink}
         </div>

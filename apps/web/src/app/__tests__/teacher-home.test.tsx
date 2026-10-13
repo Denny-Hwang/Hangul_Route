@@ -150,10 +150,17 @@ describe('the teacher home (F-APP-001 A-5a)', () => {
     expect(byTestId(r, 'class-report-sp_s')).toHaveLength(0);
   });
 
-  it('with the lesson browser on, Lessons sits under the list as a button', async () => {
-    vi.stubEnv('NEXT_PUBLIC_BROWSE_ENABLED', 'true');
-    const r = await render([klass]);
-    expect(byTestId(r, 'home-lessons')[0]?.type).toBe('button');
+  it('with the lesson browser on, Lessons sits under the list as a link to All lessons, on the app origin only', async () => {
+    vi.stubEnv('NEXT_PUBLIC_BROWSE', 'enabled');
+    vi.stubGlobal('window', { location: { origin: 'https://app.hangulroute.com' } });
+    let r = await render([klass]);
+    expect(byTestId(r, 'home-lessons')[0]?.type).toBe('a');
+    expect(byTestId(r, 'home-lessons')[0]?.props.href).toBe('/browse');
+    act(() => mounted?.unmount());
+    vi.stubGlobal('window', { location: { origin: 'https://hangulroute.com' } });
+    r = await render([klass]);
+    expect(byTestId(r, 'home-lessons')).toHaveLength(0);
+    vi.unstubAllGlobals();
   });
 
   it('cross-link without a family: Learning at home too? Set up a family space', async () => {

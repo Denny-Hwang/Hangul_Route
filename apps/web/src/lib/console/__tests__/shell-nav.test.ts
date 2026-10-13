@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { SpaceListItem } from '../api';
-import { ADULT_NAV, currentNavItem, lessonsUrl, navFlags, navItemsFor, ownFamilySpaces, soloFamilyLearnerSpace, type NavContext } from '../shell-nav';
+import { ADULT_NAV, currentNavItem, navFlags, navItemsFor, ownFamilySpaces, soloFamilyLearnerSpace, type NavContext } from '../shell-nav';
 
 /** F-APP-001 A-5a, section 3.8: the adult navigation registry, its predicates and its targets. */
 function item(id: string, kind: SpaceListItem['space']['kind'], role: SpaceListItem['role'], learners = 1): SpaceListItem {
@@ -37,8 +37,16 @@ describe('ADULT_NAV', () => {
 
 describe('navFlags', () => {
   it('reads the three sibling predicates, each off by default', () => {
-    expect(navFlags('en', {})).toEqual(ALL_OFF);
-    expect(navFlags('en', { NEXT_PUBLIC_REPORTS_ENABLED: 'true', NEXT_PUBLIC_NOTES_ENABLED: '1', NEXT_PUBLIC_BROWSE_ENABLED: 'true' })).toEqual(ALL_ON);
+    expect(navFlags('en', {}, 'https://app.hangulroute.com')).toEqual(ALL_OFF);
+    expect(navFlags('en', { NEXT_PUBLIC_REPORTS_ENABLED: 'true', NEXT_PUBLIC_NOTES_ENABLED: '1', NEXT_PUBLIC_BROWSE: 'enabled' }, 'https://app.hangulroute.com')).toEqual(ALL_ON);
+  });
+
+  it('shows Lessons only with browseEnabled() on the app origin (F-BROWSE-001 section 4.3, BR-0b)', () => {
+    const on = { NEXT_PUBLIC_BROWSE: 'enabled' };
+    expect(navFlags('en', on, 'https://hangulroute.com').browse).toBe(false);
+    expect(navFlags('en', on, 'http://localhost:4173').browse).toBe(false);
+    expect(navFlags('en', { ...on, NEXT_PUBLIC_APP_URL: 'http://localhost:4173' }, 'http://localhost:4173').browse).toBe(true);
+    expect(navFlags('en', { NEXT_PUBLIC_BROWSE: 'true' }, 'https://app.hangulroute.com').browse).toBe(false);
   });
 
   it('keeps Reports off in a console locale whose report words are not reviewed', () => {
@@ -66,10 +74,10 @@ describe('navItemsFor', () => {
     expect(ids(ctx({ flags: { ...ALL_OFF, browse: true } }))).toEqual(['home', 'lessons', 'billing']);
   });
 
-  it('targets: Home the family home, Classes the teacher home, Billing the billing page, Lessons an action', () => {
+  it('targets: Home the family home, Classes the teacher home, Billing the billing page, Lessons All lessons at /browse (a learner root)', () => {
     const family = navItemsFor(ctx({ persona: 'parent', flags: ALL_ON }));
     expect(family.find((entry) => entry.id === 'home')?.target).toEqual({ href: '/parent' });
-    expect(family.find((entry) => entry.id === 'lessons')?.target).toEqual({ action: 'browse' });
+    expect(family.find((entry) => entry.id === 'lessons')?.target).toEqual({ href: '/browse', document: true });
     expect(family.find((entry) => entry.id === 'billing')?.target).toEqual({ href: '/teach/billing' });
     const teacher = navItemsFor(ctx({ persona: 'teacher' }));
     expect(teacher.find((entry) => entry.id === 'classes')?.target).toEqual({ href: '/teach/home' });
@@ -138,12 +146,5 @@ describe('currentNavItem', () => {
     expect(currentNavItem('/teach/space', 'teacher', false)).toBeNull();
     expect(currentNavItem('/start', 'teacher', true)).toBeNull();
     expect(currentNavItem('/teach/billing', 'teacher', false)).toBe('billing');
-  });
-});
-
-describe('lessonsUrl', () => {
-  it('opens the lesson browser on the same origin, source nav (F-BROWSE-001 section 4.3)', () => {
-    expect(lessonsUrl('https://app.hangulroute.com')).toBe('https://app.hangulroute.com/browse#s=nav');
-    expect(lessonsUrl('')).toBe('/browse#s=nav');
   });
 });

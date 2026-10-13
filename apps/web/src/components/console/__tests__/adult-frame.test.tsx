@@ -238,18 +238,24 @@ describe('the active persona and the navigation (section 3.8)', () => {
     expect(byTestId(r, 'frame-brand')[0]?.props.href).toBe('/signin');
   });
 
-  it('draws every sibling item when its flag is on: Reports, Notes and Lessons (a button that opens the lesson browser)', async () => {
+  it('draws every sibling item when its flag is on: Reports, Notes and Lessons (a link to All lessons, same tab)', async () => {
     vi.stubEnv('NEXT_PUBLIC_REPORTS_ENABLED', 'true');
     vi.stubEnv('NEXT_PUBLIC_NOTES_ENABLED', 'true');
-    vi.stubEnv('NEXT_PUBLIC_BROWSE_ENABLED', 'true');
+    vi.stubEnv('NEXT_PUBLIC_BROWSE', 'enabled');
     const env = fakeEnv({ pathname: '/parent' });
     const r = await render(env, [family, klass]);
     expect(navIds(r)).toEqual(['home', 'reports', 'notes', 'lessons', 'billing']);
     const lessons = byTestId(r, 'nav-lessons')[0] as ReactTestInstance;
-    expect(lessons.type).toBe('button');
-    await act(async () => lessons.props.onClick());
-    expect(env.assigned).toEqual(['https://app.hangulroute.com/browse#s=nav']);
+    expect(lessons.type).toBe('a');
+    expect(lessons.props.href).toBe('/browse');
+    expect(lessons.props.target).toBeUndefined();
     expect(byTestId(r, 'nav-notes')[0]?.props.href).toBe('/parent/space/notes?id=sp_f');
+  });
+
+  it('keeps Lessons out on any origin but the app host (the site still serving the console)', async () => {
+    vi.stubEnv('NEXT_PUBLIC_BROWSE', 'enabled');
+    const r = await render(fakeEnv({ pathname: '/parent', origin: 'https://hangulroute.com' }), [family, klass]);
+    expect(navIds(r)).not.toContain('lessons');
   });
 
   it('Reports opens the one learner report of a one-learner family, read from its roster once per tab', async () => {
