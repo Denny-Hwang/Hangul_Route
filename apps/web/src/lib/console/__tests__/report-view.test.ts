@@ -928,3 +928,18 @@ describe('the growth legend (RP-7b)', () => {
     expect(growth?.latest).toEqual(growth?.baseline);
   });
 });
+
+describe('F-BROWSE-001 BR-11: P1 carries its quest as an All lessons target', () => {
+  it('the P1 line with a quest this build names gets a quest target, whatever the role, archived or not', () => {
+    for (const over of [{ kind: 'family' as const, role: 'owner' as const }, { kind: 'class' as const, role: 'caregiver' as const }, { kind: 'class' as const, role: 'teacher' as const, archivedAt: '2026-10-01T00:00:00.000Z' }]) {
+      expect(view(STEADY, over).practiceNext?.lines[0]?.preview).toEqual({ kind: 'quest', id: 'quest:stage1-life-q2' });
+    }
+  });
+
+  it('no other line, and no P1 without a quest (legacy), carries one', () => {
+    const v = view(STEADY, { kind: 'class', role: 'teacher' });
+    expect(v.practiceNext?.lines.slice(1).every((line) => line.preview === null)).toBe(true);
+    expect(v.wentWell?.lines.every((line) => line.preview === null)).toBe(true);
+    expect(view(LEGACY, { kind: 'class', role: 'teacher' }).practiceNext?.lines[0]?.preview).toBeNull();
+  });
+});

@@ -5,6 +5,7 @@ import { IconSvg } from '@hangul-route/design-system/icon-glyphs/dom';
 import { borderWidth, colors, layout, radii, spacing, touchTarget, typography } from '@hangul-route/design-system/tokens';
 import Link from 'next/link';
 import { forwardRef, useState, type KeyboardEvent, type ReactNode } from 'react';
+import { BrowseLink, useBrowseLinksShown } from '@/components/console/BrowseLink';
 import { avatarChipModel } from '@/lib/console/avatar-chip';
 import { GROWTH_BOX, growthAxisShown, growthChart } from '@/lib/console/report-growth';
 import type {
@@ -464,7 +465,9 @@ function WordGloss({ romanization, gloss }: { romanization: string; gloss: strin
  * (**Add to a plan** or **Open the plan**; F-BROWSE-001 BR-11 adds **Preview** beside Add to a plan). No group without
  * an action.
  */
-function InsightLine({ line, id }: { line: ReportLineView; id: string }): JSX.Element {
+function InsightLine({ line, id, preview }: { line: ReportLineView; id: string; preview: boolean }): JSX.Element {
+  const label = useMessages().console.browse.preview.cta;
+  const target = preview ? (line.preview ?? null) : null;
   return (
     <li data-testid={`report-line-${line.code}`}>
       <div className="hr-report-insight-text">
@@ -477,13 +480,14 @@ function InsightLine({ line, id }: { line: ReportLineView; id: string }): JSX.El
           </p>
         ) : null}
       </div>
-      {line.actions.length > 0 ? (
+      {line.actions.length > 0 || target ? (
         <div className="hr-report-line-actions hr-report-actions" data-testid="report-line-actions">
           {line.actions.map((action) => (
             <Link key={action.href} className="hr-report-ghost" href={action.href} aria-describedby={id}>
               {action.text}
             </Link>
           ))}
+          {target ? <BrowseLink target={target} source="report" label={label} describedBy={id} className="hr-report-ghost" testId={`report-preview-${line.code}`} /> : null}
         </div>
       ) : null}
     </li>
@@ -491,13 +495,23 @@ function InsightLine({ line, id }: { line: ReportLineView; id: string }): JSX.El
 }
 
 /** What went well or What to practice next: drawn only with a line (the view model gives null otherwise). */
-export function ReportInsights({ section, kind }: { section: ReportSection; kind: 'went-well' | 'practice-next' }): JSX.Element {
+export function ReportInsights({
+  section,
+  kind,
+  preview,
+}: {
+  section: ReportSection;
+  kind: 'went-well' | 'practice-next';
+  /** **Preview** into All lessons on P1 (F-BROWSE-001 BR-11); omitted, `browseLinksShown()` for this page decides. */
+  preview?: boolean;
+}): JSX.Element {
+  const shown = useBrowseLinksShown();
   return (
     <section className={`hr-report-section hr-report-${kind}`} data-testid={`report-${kind}`}>
       <h2>{section.heading}</h2>
       <ul className="hr-report-insights">
         {section.lines.map((line, index) => (
-          <InsightLine key={`${line.code}-${index}`} line={line} id={`hr-report-${kind}-${index}`} />
+          <InsightLine key={`${line.code}-${index}`} line={line} id={`hr-report-${kind}-${index}`} preview={preview ?? shown} />
         ))}
       </ul>
     </section>
