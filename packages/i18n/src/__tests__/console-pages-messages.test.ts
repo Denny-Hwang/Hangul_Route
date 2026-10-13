@@ -303,3 +303,30 @@ describe('console counts use plural() in every locale (en, es, ko, en-XA)', () =
     }
   });
 });
+
+// F-I18N-001 §10: the every-locale check above passed on the English fallback until the Spanish overlay landed
+// (PR 15). These literal rows pin the Spanish n = 1 / n = 2 wording of the console counts.
+describe('Spanish console counts, n = 1 and n = 2 (F-I18N-001 PR 15)', () => {
+  const es = getMessages('es').console;
+  it.each([
+    [es.space.title.family('Familia Kim', 1), 'Familia Kim · 1 estudiante'],
+    [es.space.title.family('Familia Kim', 2), 'Familia Kim · 2 estudiantes'],
+    [es.space.title.school('Escuela Seúl', 1), 'Escuela Seúl · 1 miembro'],
+    [es.space.week.notSynced(1), '1 no sincroniza desde hace una semana'],
+    [es.space.week.notSynced(2), '2 no sincronizan desde hace una semana'],
+    [es.space.learner.questsCards(7, 24, 1), 'Misiones 7 / 24 · 1 tarjeta'],
+    [es.space.learner.questsCards(7, 24, 2), 'Misiones 7 / 24 · 2 tarjetas'],
+    [es.planCounts.items(1), '1 elemento'],
+    [es.planCounts.items(2), '2 elementos'],
+    [es.planCounts.targets('school', 2), '2 miembros'],
+    [es.spaceCounts.students(1), '1 estudiante'],
+    [es.plan.summary.some.class(7, 1), '7 elementos · para 1 estudiante'],
+    [es.plan.summary.some.class(1, 2), '1 elemento · para 2 estudiantes'],
+    [es.billing.seats(1), '1 plaza'],
+    [es.billing.seats(2), '2 plazas'],
+    [es.school.classes.line('Prof. Park', 1, 'hoy', true), 'Prof. Park · 1 estudiante · activa hoy · plan publicado'],
+    [es.school.classes.line(null, 2, 'ayer', false), 'aún sin docente · 2 estudiantes · activa ayer'],
+    [es.parent.child.quests(1), '1 misión'],
+    [es.parent.child.cards(2), '2 tarjetas'],
+  ])('%s', (actual, expected) => expect(actual).toBe(expected));
+});

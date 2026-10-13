@@ -45,7 +45,7 @@ describe('Spanish dictionary (F-I18N-001 PR 15)', () => {
       }
       return false;
     });
-    expect(untouched).toEqual(LITERALLY_SHARED);
+    expect([...untouched].sort()).toEqual([...LITERALLY_SHARED].sort());
   });
 
   it('reads the spec examples (§3.1, §3.4)', () => {
@@ -68,4 +68,61 @@ describe('Spanish dictionary (F-I18N-001 PR 15)', () => {
  * Paths whose Spanish text is, on purpose, identical to the English: a proper name, a code word or a word
  * Spanish uses as is. Listed so a new untranslated key cannot hide among them.
  */
-const LITERALLY_SHARED: readonly string[] = [];
+const LITERALLY_SHARED: readonly string[] = [
+  // Format-only templates: arguments joined by punctuation, a colon, a middle dot or a slash.
+  'a11y.homeworkRow',
+  'a11y.planStatus',
+  'a11y.myRoute.later',
+  'a11y.myRoute.cell',
+  'a11y.myRoute.skill',
+  'a11y.myRoute.gain',
+  'a11y.myRoute.homeStrip',
+  'learner.journey.countMark',
+  'learner.journey.cellStories.title',
+  'learner.quest.progress',
+  'learner.minigame.progress.pill',
+  'learner.story.check.position.pill',
+  'learner.story.reader.position.pill',
+  'learner.storyShelf.episode.rowLabel',
+  'learner.storyShelf.cultureNotes.source',
+  'learner.storyShelf.heroLabel',
+  'console.space.learner.planReadout',
+  'console.space.wordGloss',
+  'console.plan.titleFor',
+  'console.plan.readout.progress',
+  'console.curriculum.goals.themeChosen',
+  'console.curriculum.preview.dateRange',
+  'console.curriculum.preview.taggedItem',
+  'console.curriculum.preview.itemLine',
+  'console.curriculum.builder.planChip',
+  'console.school.licence.line',
+  'console.parent.child.stars',
+  'console.learningRoute.stageRow',
+  'report.detail.strand',
+  'report.class.count',
+  'report.letter',
+  // Words Spanish uses as they are: the minute abbreviation "min", "final", "Plan", "Extras", "Quiz", "admin", "App", "Android".
+  'a11y.minigame.finalTile',
+  'learner.storyShelf.episode.minutes.pill',
+  'console.space.openPlan.label',
+  'console.plan.catalog.questLine',
+  'console.curriculum.rhythm.minutesOption',
+  'console.curriculum.preview.table.extras',
+  'console.lecture.catalogue.line',
+  'console.lecture.outline.minutes',
+  'console.lecture.outline.addQuiz.cta',
+  'console.settings.grownUps.role.admin',
+  'landing.footer.app',
+  'learner.audio.voiceHelp.sections.android.title',
+  // Names, sample values and glyphs: the brand, sample ids and addresses, arrows and the close cross.
+  'console.shell.backToSite',
+  'console.signIn.accountId.placeholder',
+  'console.signIn.email.placeholder',
+  'console.plan.yours.moveUp.cta',
+  'console.plan.yours.moveDown.cta',
+  'console.plan.yours.remove.cta',
+  'console.lecture.outline.upGlyph',
+  'console.lecture.outline.downGlyph',
+  'landing.footer.copyright',
+  'landing.localeBanner.close.cta',
+];
