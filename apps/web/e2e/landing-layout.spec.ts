@@ -149,8 +149,8 @@ test.describe('the site header: keyboard focus follows the visual order (F-SITE-
   /** Header stops, then the page's first stop (its primary action). Hidden phone items are out of the Tab order. */
   const STOPS: Record<'phone' | 'wide', string[]> = {
     phone: ['Skip to content', 'Hangul Route', 'Sign in', 'Start learning'],
-    // The shipped persona pages only (SHIPPED_PERSONA_PAGES); S-4b adds Parents and Teachers.
-    wide: ['Skip to content', 'Hangul Route', 'Start learning', 'Learners', 'Sign in', 'Start learning'],
+    // Every persona page ships from S-4b (SHIPPED_PERSONA_PAGES).
+    wide: ['Skip to content', 'Hangul Route', 'Start learning', 'Learners', 'Parents', 'Teachers', 'Sign in', 'Start learning'],
   };
   for (const width of [...LANDING_WIDTHS, 1280]) {
     test(`${width}px: skip link, brand, then the header items left to right, then the page`, async ({ page }) => {

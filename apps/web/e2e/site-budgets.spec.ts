@@ -203,8 +203,8 @@ for (const budget of PAGES) {
       expect(rows).toBe(1);
       expect(height).toBeLessThanOrEqual(HEADER_MAX);
       const nav = page.getByRole('navigation', { name: en.nav.label });
-      // The shipped persona pages only (SHIPPED_PERSONA_PAGES); S-4b adds Parents and Teachers.
-      await expect(nav.getByRole('link')).toHaveText([en.nav.learners]);
+      // Every persona page ships from S-4b (SHIPPED_PERSONA_PAGES).
+      await expect(nav.getByRole('link')).toHaveText([en.nav.learners, en.nav.parents, en.nav.teachers]);
       await expect(nav.locator('a[aria-current="page"]')).toHaveAttribute('href', budget.path);
     });
   });
