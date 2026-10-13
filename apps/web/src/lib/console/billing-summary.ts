@@ -138,6 +138,8 @@ export interface BillingHomeOptions {
   claims?: Readonly<SiteClaims>;
   /** A code checked with `POST /stripe/promo`; rewrites every offer's price line. */
   promo?: Promo | null;
+  /** The plan the code was checked for; when set, only that plan's price lines take the promo. */
+  promoPlanKey?: PurchasablePlanKey | null;
 }
 
 const KIND_ORDER: Readonly<Record<SpaceKind, number>> = { family: 0, class: 1, school: 2 };
@@ -336,7 +338,10 @@ export function billingHomeView(summary: BillingSummary, options: BillingHomeOpt
   const { now } = options;
   const locale = options.locale ?? DEFAULT_LOCALE;
   const claims = options.claims ?? SITE_CLAIMS;
-  const promo = options.promo ?? null;
+  const promoPlanKey = options.promoPlanKey ?? null;
+  const rawPromo = options.promo ?? null;
+  // A code is checked against one plan; other plans keep the plain price, so the page never shows a price checkout refuses.
+  const promoFor = (planKey: PurchasablePlanKey): Promo | null => (promoPlanKey === null || promoPlanKey === planKey ? rawPromo : null);
   const billing = getMessages(locale).console.billing;
 
   const ordered = orderCards(summary.cards);
@@ -344,7 +349,7 @@ export function billingHomeView(summary: BillingSummary, options: BillingHomeOpt
   const single = buyers.length === 1 ? buyers[0] : undefined;
   const cards = ordered.map((card) => {
     const plan = card === single ? buyable(card) : null;
-    const offer = plan ? { ...offerFor(card, plan, true, locale, claims, promo), primary: true } : null;
+    const offer = plan ? { ...offerFor(card, plan, true, locale, claims, promoFor(plan)), primary: true } : null;
     return cardView(card, offer, now, locale);
   });
   const accountCards = summary.account.map((card) => accountCardView(card, now, locale));
@@ -352,7 +357,10 @@ export function billingHomeView(summary: BillingSummary, options: BillingHomeOpt
   const addPlan =
     buyers.length > 1
       ? {
-          offers: buyers.map((card, i) => ({ ...offerFor(card, buyable(card) as PurchasablePlanKey, false, locale, claims, promo), primary: i === 0 })),
+          offers: buyers.map((card, i) => {
+            const plan = buyable(card) as PurchasablePlanKey;
+            return { ...offerFor(card, plan, false, locale, claims, promoFor(plan)), primary: i === 0 };
+          }),
           contact: buyers
             // The server's contact action, the same flag the card's own Contact us button reads.
             .filter((card) => card.actions.contact)
@@ -387,4 +395,19 @@ export function billingHomeView(summary: BillingSummary, options: BillingHomeOpt
 export function summaryFailureNotice(offline: boolean, locale: UiLocale = DEFAULT_LOCALE): { text: string; retry: string } {
   const billing = getMessages(locale).console.billing;
   return { text: offline ? billing.offline : billing.cantCheck, retry: billing.retry.cta };
+}
+
+/** A note above the cards after Get … or Manage subscription did not reach Stripe (section 4.4; neutral tone). */
+export type BillingActionNote = 'alreadyActive' | 'notConfigured' | 'liveOff' | 'checkoutFailed' | 'portalFailed';
+
+/** The note for a refused checkout or portal call, from the server's error code. */
+export function actionNoteFor(action: 'checkout' | 'portal', code: string | undefined): BillingActionNote {
+  if (action === 'checkout' && code === 'already_active') return 'alreadyActive';
+  if (code === 'stripe_not_configured' || code === 'not_configured') return 'notConfigured';
+  if (code === 'live_not_enabled') return 'liveOff';
+  return action === 'checkout' ? 'checkoutFailed' : 'portalFailed';
+}
+
+export function actionNoteText(note: BillingActionNote, locale: UiLocale = DEFAULT_LOCALE): string {
+  return getMessages(locale).console.billing[note];
 }
