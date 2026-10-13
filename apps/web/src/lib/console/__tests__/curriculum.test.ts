@@ -1,21 +1,44 @@
 import {
   CATALOG,
   CurriculumParamsSchema,
+  PACES,
+  StageKeySchema,
   addDays,
   generateCurriculum,
+  proposeRoute,
+  questsPlacedOutAtLevel,
+  routeCatalogOf,
+  themeOrderFor,
   toMeta,
   toPlanItems,
   type Catalog,
   type CurriculumMeta,
+  type DurationOption,
   type Entitlement,
   type PlanItem,
+  type StageKey,
+  type ThemeKey,
   type WeekMeta,
+  type Weekday,
 } from '@hangul-route/content-schema';
+import { CATALOG_2026_10 } from '@hangul-route/content-schema/testing/catalog-2026-10';
 import { findBannedWord, getMessages } from '@hangul-route/i18n';
 import { describe, expect, it } from 'vitest';
 import {
+  PACE_CHOICES,
   STARTING_LEVELS,
   STARTING_POINT_IDS,
+  followProposal,
+  lengthPreviewText,
+  paceOf,
+  pacePatch,
+  planUpdateOffer,
+  prefilledState,
+  relearnedState,
+  reseedSaveBody,
+  suggestedPace,
+  updateAskText,
+  wizardProposal,
   dateRangeText,
   defaultsFor,
   draftPlanBody,
@@ -47,6 +70,7 @@ import {
   weeksToFit,
   withTargetDate,
   wizardProblem,
+  type PlannerLearner,
   type WizardState,
 } from '../curriculum';
 
@@ -645,5 +669,433 @@ describe('Use this route: the draft body', () => {
       expect(date >= TODAY).toBe(true);
       expect(date <= addDays(TODAY, 12 * 7 - 1)).toBe(true);
     }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// PR P2-6b (FP-B5, FP-B11; OD-12 / OD-13 decided 2026-10-12): the wizard pre-selects
+// `proposeRoute`'s pace and length, tags them Suggested, words a preview line per length,
+// prefills start, focus, themes and motivation, and a family learner card offers
+// **Update the plan** (`reseed`) after a newer level check.
+// ---------------------------------------------------------------------------
+
+/** The frozen October 2026 catalogue of the 1.2 goldens (15 Stage 1 lessons, 24 stories ready). */
+const FROZEN = CATALOG_2026_10;
+/** The Monday of the 1.2 table. */
+const MONDAY = '2026-10-12';
+const ALL_STAGES = [...StageKeySchema.options];
+
+type Oral = 'stage1' | 'stage2' | 'stage3' | 'stage4' | 'stage5' | 'stage6' | 'stage7';
+const placedWith = (stage: 'stage1' | 'stage2' | 'stage3', band: number, oralStage: Oral | null = null) => ({
+  placement: { level: { stage, band }, oralStage },
+  stage1: { questsDone: 0, questsTotal: 15 },
+});
+const ctx = (learners: readonly PlannerLearner[], unlockedStages: readonly StageKey[] = ['stage1'], today = MONDAY) => ({ learners, unlockedStages, today, source: FROZEN });
+
+describe('paceOf and the pace chips (OD-13: Gentle 2, Steady 3, Brisk 4)', () => {
+  it('names the chip of the rhythm; chosen weekdays win; off the chips is null', () => {
+    const base = defaultsFor('family', [], MONDAY);
+    expect(PACE_CHOICES).toEqual(['gentle', 'steady', 'brisk']);
+    expect(paceOf({ ...base, sessionsPerWeek: 2 })).toBe('gentle');
+    expect(paceOf({ ...base, sessionsPerWeek: 3 })).toBe('steady');
+    expect(paceOf({ ...base, sessionsPerWeek: 4 })).toBe('brisk');
+    expect(paceOf({ ...base, sessionsPerWeek: 5 })).toBeNull();
+    expect(paceOf({ ...base, sessionsPerWeek: 2, sessionDays: ['mon', 'wed', 'fri'] })).toBe('steady');
+    expect(paceOf({ ...base, sessionsPerWeek: 3, sessionDays: ['mon'] })).toBeNull();
+  });
+
+  it('a pace chip sets the sessions and clears chosen weekdays (their count would win)', () => {
+    expect(pacePatch('brisk')).toEqual({ sessionsPerWeek: 4, sessionDays: [] });
+    expect(pacePatch('gentle')).toEqual({ sessionsPerWeek: 2, sessionDays: [] });
+  });
+
+  it('suggests Gentle for a class and a Pictures-first learner, Steady otherwise', () => {
+    const kid = learner('kid', '5-7');
+    const reader = learner('reader', '10-11');
+    expect(suggestedPace(defaultsFor('class', [reader], MONDAY), [reader])).toBe('gentle');
+    expect(suggestedPace(defaultsFor('family', [kid], MONDAY), [kid])).toBe('gentle');
+    expect(suggestedPace(defaultsFor('family', [reader], MONDAY), [reader])).toBe('steady');
+    expect(suggestedPace(defaultsFor('family', [kid, reader], MONDAY), [kid, reader])).toBe('steady');
+  });
+});
+
+describe('prefilledState: the wizard starts from proposeRoute (section 3.8 steps 1 and 2)', () => {
+  it('a new class at Brand new, free tier: Gentle and 12 weeks pre-selected (1.2 column A), 10 minutes for a Pictures-first roster', () => {
+    const roster = [learner('a', '5-7'), learner('b', '5-7'), learner('c', '8-9')];
+    const state = prefilledState('class', ctx(roster));
+    expect(state).toMatchObject({ audience: 'class', start: 'brand-new', sessionsPerWeek: 2, sessionDays: [], length: '12-week', lengthPicked: false, minutesPerSession: 10, startDate: MONDAY, focus: 'balanced', themes: [] });
+    expect(paceOf(state)).toBe('gentle');
+    expect(wizardProblem(state, MONDAY)).toBeNull();
+  });
+
+  it('a family learner who reads words (stage1 band 3): Steady and 4 weeks', () => {
+    const family = [learner('sam', '10-11', placedWith('stage1', 3))];
+    const state = prefilledState('family', ctx(family));
+    expect(state).toMatchObject({ learnerId: 'sam', start: 'reads-words', sessionsPerWeek: 3, length: '4-week', minutesPerSession: 15 });
+  });
+
+  it('a Pictures-first family learner gets Gentle and 10 minutes', () => {
+    const family = [learner('kid', '5-7')];
+    expect(prefilledState('family', ctx(family))).toMatchObject({ learnerId: 'kid', sessionsPerWeek: 2, minutesPerSession: 10, length: '12-week' });
+  });
+
+  it('prefills a reading focus when the learner hears far more than they read (F-PLC-001 AM-4)', () => {
+    const family = [learner('ana', '10-11', placedWith('stage1', 1, 'stage3'))];
+    expect(prefilledState('family', ctx(family)).focus).toBe('reading');
+    const near = [learner('ana', '10-11', placedWith('stage1', 1, 'stage2'))];
+    expect(prefilledState('family', ctx(near)).focus).toBe('balanced');
+  });
+
+  it('waits for the learner in a family of several (no proposal for nobody), then prefills for the pick', () => {
+    const family = [learner('a', '5-7'), learner('b', '10-11', placedWith('stage1', 2))];
+    const waiting = prefilledState('family', ctx(family));
+    expect(waiting.learnerId).toBeNull();
+    const picked = prefilledState('family', ctx(family), 'b');
+    expect(picked).toMatchObject({ learnerId: 'b', start: 'all-letters', sessionsPerWeek: 3, length: '4-week' });
+  });
+
+  it('leaves the length to the grown-up when nothing is ready to plan (proposeRoute is null)', () => {
+    const empty = { ...FROZEN, stories: FROZEN.stories.map((story) => ({ ...story, status: 'draft' as const })) };
+    const family = [learner('lee', '10-11', placedWith('stage2', 0))];
+    const state = prefilledState('family', { ...ctx(family), source: empty });
+    expect(state).toMatchObject({ start: 'first-words', length: null, lengthPicked: false });
+    expect(wizardProblem(state, MONDAY)).toBe('no-length');
+  });
+
+  it('starts a class on a licence with every stage open: 12 weeks at Gentle', () => {
+    const state = prefilledState('class', ctx([], ALL_STAGES));
+    expect(state).toMatchObject({ sessionsPerWeek: 2, length: '12-week' });
+  });
+});
+
+describe('followProposal: the suggested length follows the start and the pace until a length is picked', () => {
+  const family = [learner('kim', '10-11')];
+  const c = ctx(family);
+
+  it('moves the length with the pace (band 2: Gentle 12 weeks, Steady 4 weeks)', () => {
+    const start = followProposal({ ...prefilledState('family', c), start: 'all-letters' }, c);
+    expect(start).toMatchObject({ sessionsPerWeek: 3, length: '4-week' });
+    const gentle = followProposal({ ...start, ...pacePatch('gentle') }, c);
+    expect(gentle.length).toBe('12-week');
+  });
+
+  it('moves the length with the starting point', () => {
+    const base = prefilledState('family', c);
+    expect(base.length).toBe('12-week');
+    expect(followProposal({ ...base, start: 'reads-words' }, c).length).toBe('4-week');
+  });
+
+  it('keeps a length the grown-up picked, and a custom length', () => {
+    const picked = { ...prefilledState('family', c), length: '6-month' as const, lengthPicked: true };
+    expect(followProposal({ ...picked, start: 'reads-words' }, c).length).toBe('6-month');
+    const custom = { ...picked, length: 'custom' as const, customWeeks: 9 };
+    expect(followProposal({ ...custom, ...pacePatch('brisk') }, c)).toMatchObject({ length: 'custom', customWeeks: 9 });
+  });
+
+  it('keeps the length as it is when the rhythm is off the chips (no proposal)', () => {
+    const base = prefilledState('family', c);
+    const offChips = followProposal({ ...base, sessionDays: ['mon', 'tue', 'wed', 'thu', 'fri'] }, c);
+    expect(offChips.length).toBe(base.length);
+    expect(offChips.lengthPicked).toBe(false);
+    expect(wizardProposal(offChips, c)).toBeNull();
+  });
+
+  it('follows the reading focus with the start until the grown-up picks a focus (F-PLC-001 AM-4)', () => {
+    const hearsMore = ctx([learner('ana', '10-11', placedWith('stage1', 1, 'stage3'))]);
+    const base = prefilledState('family', hearsMore);
+    expect(base.focus).toBe('reading');
+    // A much later start: the oral stage is no longer two stages ahead, so the reading focus ends.
+    const later = followProposal({ ...base, start: 'first-sentences' }, hearsMore);
+    expect(later.focus).toBe('balanced');
+    expect(followProposal({ ...later, start: 'some-letters' }, hearsMore).focus).toBe('reading');
+    const picked = { ...base, focus: 'culture' as const, focusPicked: true };
+    expect(followProposal({ ...picked, start: 'first-sentences' }, hearsMore).focus).toBe('culture');
+  });
+});
+
+describe('relearnedState: another learner picked in a family keeps what the grown-up chose', () => {
+  const family = [learner('kid', '5-7'), learner('sam', '10-11', placedWith('stage1', 3))];
+  const c = ctx(family);
+  const LATER_DAY = '2026-10-19';
+
+  it('the first pick (nothing touched) is the proposal for that learner', () => {
+    expect(relearnedState(prefilledState('family', c), c, 'sam')).toMatchObject({ learnerId: 'sam', start: 'reads-words', sessionsPerWeek: 3, length: '4-week' });
+  });
+
+  it('keeps the weekdays, minutes, start day, themes, focus and a picked length on a re-pick', () => {
+    const edited = {
+      ...relearnedState(prefilledState('family', c), c, 'kid'),
+      sessionDays: ['mon', 'wed', 'fri'] as Weekday[],
+      minutesPerSession: 20 as const,
+      rhythmPicked: true,
+      startDate: LATER_DAY,
+      themes: ['crafts'] as ThemeKey[],
+      goalsPicked: true,
+      focus: 'culture' as const,
+      focusPicked: true,
+      length: '6-month' as const,
+      lengthPicked: true,
+    };
+    expect(relearnedState(edited, c, 'sam')).toMatchObject({
+      learnerId: 'sam',
+      start: 'reads-words',
+      sessionDays: ['mon', 'wed', 'fri'],
+      minutesPerSession: 20,
+      startDate: LATER_DAY,
+      themes: ['crafts'],
+      focus: 'culture',
+      length: '6-month',
+    });
+  });
+
+  it('an untouched rhythm follows the new learner (Pictures-first Gentle to Steady), and the length with it', () => {
+    const kid = relearnedState(prefilledState('family', c), c, 'kid');
+    expect(kid).toMatchObject({ sessionsPerWeek: 2, minutesPerSession: 10 });
+    expect(relearnedState(kid, c, 'sam')).toMatchObject({ sessionsPerWeek: 3, minutesPerSession: 15, length: '4-week' });
+  });
+});
+
+describe('the same input as the app gives the same defaultId and options (section 3.12)', () => {
+  it('matches proposeRoute for a self learner at every starting point, pace and tier', () => {
+    const routeCatalog = routeCatalogOf(FROZEN);
+    for (const start of STARTING_POINT_IDS) {
+      for (const pace of PACE_CHOICES) {
+        for (const unlocked of [['stage1'] as StageKey[], ALL_STAGES]) {
+          const family = [learner('sam', '10-11')];
+          const state: WizardState = { ...prefilledState('family', ctx(family, unlocked)), start, ...pacePatch(pace) };
+          const level = STARTING_LEVELS[start];
+          const app = proposeRoute({
+            audience: 'self',
+            seed: { level, oralStage: null, placedOutQuestIds: questsPlacedOutAtLevel(level, routeCatalog), themeOrder: themeOrderFor(undefined), startQuestId: null },
+            completedQuestIds: [],
+            levelOrder: 2,
+            pace,
+            unlockedStages: unlocked,
+            catalog: FROZEN,
+            today: MONDAY,
+          });
+          const wizard = wizardProposal(state, ctx(family, unlocked));
+          expect(wizard?.defaultId).toBe(app?.defaultId);
+          expect(wizard?.options).toEqual(app?.options);
+        }
+      }
+    }
+  });
+
+  it('a level check of band 0 equals no level check at all', () => {
+    const family = [learner('sam', '10-11')];
+    const state = prefilledState('family', ctx(family));
+    const app = proposeRoute({ audience: 'self', seed: null, completedQuestIds: [], levelOrder: 2, unlockedStages: ['stage1'], catalog: FROZEN, today: MONDAY });
+    const wizard = wizardProposal(state, ctx(family));
+    expect(wizard?.defaultId).toBe(app?.defaultId);
+    expect(wizard?.options).toEqual(app?.options);
+  });
+
+  it('carries a motivation into the proposal and the params, and reads a cleared start day as today', () => {
+    const family = [learner('sam', '10-11')];
+    const state: WizardState = { ...prefilledState('family', ctx(family)), motivation: 'kculture' };
+    expect(wizardProposal(state, ctx(family))?.params.goals.motivation).toBe('kculture');
+    expect(toParams(state, ['stage1'])?.goals).toEqual({ focus: 'balanced', motivation: 'kculture' });
+    expect(wizardProposal({ ...state, startDate: '' }, ctx(family))?.params.startDate).toBe(MONDAY);
+  });
+
+  it('uses the chosen start day (a class: its next class day)', () => {
+    const later = followProposal({ ...prefilledState('class', ctx([])), startDate: '2026-10-18' }, ctx([]));
+    expect(wizardProposal(later, ctx([]))?.params.startDate).toBe('2026-10-18');
+  });
+});
+
+describe('one honest preview line per length (AMENDMENTS 1.3)', () => {
+  const words = m.proposal;
+  const option = (patch: Partial<DurationOption>): DurationOption => ({
+    id: '12-week',
+    weeks: 12,
+    stats: { lessons: 15, stories: 4, comingSoonItems: 0, openSessions: 0, endsAtStage: 'stage1' },
+    lastLessonWeek: 7,
+    lastContentWeek: 12,
+    preview: 'lessons-and-stories',
+    warnings: [],
+    ...patch,
+  });
+
+  it('words each preview code', () => {
+    expect(lengthPreviewText(option({}), 'en')).toBe(words.lessonsAndStories(1, 7));
+    expect(lengthPreviewText(option({ preview: 'lessons-and-stories', stats: { lessons: 16, stories: 2, comingSoonItems: 0, openSessions: 0, endsAtStage: 'stage2' }, lastLessonWeek: 12 }), 'en')).toBe(words.lessonsAndStories(2, 12));
+    expect(lengthPreviewText(option({ id: '4-week', weeks: 4, preview: 'lessons-cut-short', lastLessonWeek: 7 }), 'en')).toBe(words.lessonsCutShort(4));
+    expect(lengthPreviewText(option({ preview: 'lessons-then-free-practice', lastContentWeek: 3 }), 'en')).toBe(words.lessonsThenFree(3));
+    expect(lengthPreviewText(option({ id: '4-week', weeks: 4, preview: 'lessons-then-free-practice', lastContentWeek: 4 }), 'en')).toBe(words.lessonsFill(4));
+    expect(lengthPreviewText(option({ preview: 'stories-and-words', stats: { lessons: 0, stories: 9, comingSoonItems: 0, openSessions: 3, endsAtStage: 'stage1' } }), 'en')).toBe(words.storiesAndWords(9));
+  });
+
+  it('claims Stage 1 is done only when it is, and never claims a finish for a cut-short card', () => {
+    expect(words.lessonsAndStories(1, 7)).toContain('Stage 1');
+    expect(words.lessonsAndStories(2, 12)).not.toMatch(/Stage \d is done/);
+    expect(words.lessonsCutShort(4)).not.toMatch(/done|finish(ed|es)? in/i);
+  });
+
+  it('words every real card of the frozen catalogue without a banned word, a price or Premium', () => {
+    for (const start of STARTING_POINT_IDS) {
+      for (const pace of PACE_CHOICES) {
+        const family = [learner('sam', '10-11')];
+        const proposal = wizardProposal({ ...prefilledState('family', ctx(family)), start, ...pacePatch(pace) }, ctx(family));
+        for (const card of proposal?.options ?? []) {
+          const text = lengthPreviewText(card, 'en');
+          expect(text.length).toBeGreaterThan(0);
+          expect(findBannedWord(text, 'en', 'learner'), text).toBeNull();
+          expect(findBannedWord(text, 'en', 'caregiver'), text).toBeNull();
+          expect(text).not.toMatch(/premium|\$|price|\b(behind|late|missed|overdue)\b/i);
+          if (card.preview === 'lessons-cut-short') expect(card.lastLessonWeek).toBeGreaterThan(card.weeks);
+        }
+      }
+    }
+  });
+
+  it('keeps the new pace, suggested and update words free of banned words', () => {
+    const texts = [
+      m.rhythm.pace,
+      m.rhythm.suggested,
+      ...PACE_CHOICES.map((pace) => m.rhythm.paceOption(m.rhythm.paces[pace], PACES[pace])),
+      m.rhythm.offChips,
+      m.update.line('Sam'),
+      m.update.cta,
+      m.update.label('Sam'),
+      m.update.ask(3, 1, 'Meet the Letters'),
+      m.update.ask(1, 0, null),
+      m.update.done,
+      m.update.failed,
+    ];
+    for (const text of texts) {
+      expect(findBannedWord(text, 'en', 'learner'), text).toBeNull();
+          expect(findBannedWord(text, 'en', 'caregiver'), text).toBeNull();
+      expect(text).not.toMatch(/\b(behind|late|missed|overdue)\b|should have|compared to|premium/i);
+    }
+  });
+});
+
+describe('Update the plan: a family learner card after a newer level check (reseed, console mode)', () => {
+  const START = '2026-10-12';
+  const LATER = '2026-10-26';
+  const familyRoute = (patch: Partial<{ targetLearnerIds: string[] | null; publishedAt: string | null; archivedAt: string | null; start: 'brand-new' | 'reads-words' }> = {}) => {
+    const family = [learner('sam', '10-11')];
+    const state: WizardState = { ...prefilledState('family', ctx(family, ['stage1'], START)), start: patch.start ?? 'brand-new', length: '12-week', lengthPicked: true };
+    const params = toParams(state, ['stage1']);
+    if (!params) throw new Error('params');
+    const draft = generateCurriculum(params, FROZEN);
+    return {
+      id: 'plan:route-sam',
+      title: 'Route · 12 weeks',
+      items: toPlanItems(draft),
+      meta: { ...toMeta(draft), horizonDays: 7 },
+      targetLearnerIds: patch.targetLearnerIds === undefined ? ['sam'] : patch.targetLearnerIds,
+      publishedAt: patch.publishedAt === undefined ? '2026-10-11T09:00:00.000Z' : patch.publishedAt,
+      archivedAt: patch.archivedAt ?? null,
+      updatedAt: '2026-10-11T09:00:00.000Z',
+    };
+  };
+  const sam = (summary: ReturnType<typeof placedWith> | null) => ({ id: 'sam', summary });
+
+  it('offers an update when the newest check found a later start than the plan\'s', () => {
+    const plan = familyRoute();
+    const offer = planUpdateOffer('family', sam(placedWith('stage1', 3)), [plan], LATER, FROZEN);
+    expect(offer).not.toBeNull();
+    expect(offer?.plan.id).toBe('plan:route-sam');
+    expect(offer?.level).toEqual({ stage: 'stage1', band: 3 });
+    expect(offer?.diff.itemsRemoved).toBeGreaterThan(0);
+    expect(offer?.diff.newStartQuestId).toBe('quest:stage1-nature-q2');
+  });
+
+  it('saves the same plan, still published, with past items kept, the placed-out lessons gone and the end date unchanged', () => {
+    const plan = familyRoute();
+    const offer = planUpdateOffer('family', sam(placedWith('stage1', 3)), [plan], LATER, FROZEN);
+    if (!offer) throw new Error('offer');
+    const body = reseedSaveBody(offer, LATER, '2026-10-26T10:00:00.000Z', FROZEN);
+    expect(body).toMatchObject({ id: plan.id, title: plan.title, targetLearnerIds: ['sam'], publish: true });
+    expect(body.meta.params.level).toEqual({ stage: 'stage1', band: 3 });
+    expect(body.meta.repacedAt).toBe('2026-10-26T10:00:00.000Z');
+    expect(body.meta.horizonDays).toBe(7);
+    expect(routeEndDate(body.meta)).toBe(routeEndDate(plan.meta));
+    const past = (items: readonly PlanItem[]) => items.filter((item) => item.targetDate !== undefined && item.targetDate < LATER);
+    expect(past(body.items)).toEqual(past(plan.items));
+    const placedOut = new Set(questsPlacedOutAtLevel({ stage: 'stage1', band: 3 }, routeCatalogOf(FROZEN)));
+    expect(body.items.filter((item) => item.targetDate !== undefined && item.targetDate >= LATER).some((item) => placedOut.has(item.id))).toBe(false);
+    expect(body.items.every((item) => item.week !== undefined && item.week <= body.meta.weeks.length)).toBe(true);
+  });
+
+  it('offers nothing for the same or an earlier start, without a check, or for a class or a school', () => {
+    const plan = familyRoute({ start: 'reads-words' });
+    expect(planUpdateOffer('family', sam(placedWith('stage1', 3)), [plan], LATER, FROZEN)).toBeNull();
+    expect(planUpdateOffer('family', sam(placedWith('stage1', 1)), [plan], LATER, FROZEN)).toBeNull();
+    expect(planUpdateOffer('family', sam(null), [familyRoute()], LATER, FROZEN)).toBeNull();
+    expect(planUpdateOffer('family', { id: 'sam', summary: {} }, [familyRoute()], LATER, FROZEN)).toBeNull();
+    expect(planUpdateOffer('class', sam(placedWith('stage1', 3)), [familyRoute()], LATER, FROZEN)).toBeNull();
+    expect(planUpdateOffer('school', sam(placedWith('stage1', 3)), [familyRoute()], LATER, FROZEN)).toBeNull();
+  });
+
+  it('only updates a live route made for this one learner', () => {
+    const check = sam(placedWith('stage1', 3));
+    expect(planUpdateOffer('family', check, [familyRoute({ targetLearnerIds: null })], LATER, FROZEN)).toBeNull();
+    expect(planUpdateOffer('family', check, [familyRoute({ targetLearnerIds: ['sam', 'ana'] })], LATER, FROZEN)).toBeNull();
+    expect(planUpdateOffer('family', check, [familyRoute({ targetLearnerIds: ['ana'] })], LATER, FROZEN)).toBeNull();
+    expect(planUpdateOffer('family', check, [familyRoute({ publishedAt: null })], LATER, FROZEN)).toBeNull();
+    expect(planUpdateOffer('family', check, [familyRoute({ archivedAt: '2026-10-20T00:00:00.000Z' })], LATER, FROZEN)).toBeNull();
+    const { meta: _meta, ...classic } = familyRoute();
+    expect(planUpdateOffer('family', check, [{ ...classic, meta: null }], LATER, FROZEN)).toBeNull();
+  });
+
+  it('picks the newest live route of the learner', () => {
+    const older = { ...familyRoute(), id: 'plan:older', publishedAt: '2026-10-01T00:00:00.000Z' };
+    const newer = familyRoute();
+    expect(planUpdateOffer('family', sam(placedWith('stage1', 3)), [older, newer], LATER, FROZEN)?.plan.id).toBe('plan:route-sam');
+  });
+
+  it('skips a stored meta this build cannot read (a newer Worker\'s shape) and never throws in render', () => {
+    const check = sam(placedWith('stage1', 3));
+    const plan = familyRoute();
+    const newer = { ...plan, meta: { ...plan.meta, params: { ...plan.meta.params, goals: { focus: 'speaking' } } } } as unknown as typeof plan;
+    expect(() => planUpdateOffer('family', check, [newer], LATER, FROZEN)).not.toThrow();
+    expect(planUpdateOffer('family', check, [newer], LATER, FROZEN)).toBeNull();
+    const badDate = { ...plan, meta: { ...plan.meta, params: { ...plan.meta.params, startDate: 'soon' } } };
+    expect(planUpdateOffer('family', check, [badDate], LATER, FROZEN)).toBeNull();
+    // An older readable route still gets its offer when the newest one is unreadable.
+    const older = { ...plan, id: 'plan:older', publishedAt: '2026-10-01T00:00:00.000Z' };
+    expect(planUpdateOffer('family', check, [newer, older], LATER, FROZEN)?.plan.id).toBe('plan:older');
+  });
+
+  it('every placement level places out no more lessons than the params hold (40), so the seed never throws', () => {
+    for (const stage of StageKeySchema.options) {
+      for (const band of [0, 1, 2, 3]) {
+        expect(questsPlacedOutAtLevel({ stage, band }, routeCatalogOf(CATALOG)).length).toBeLessThanOrEqual(40);
+      }
+    }
+  });
+
+  it('offers nothing once the route has ended (nothing ahead to move)', () => {
+    expect(planUpdateOffer('family', sam(placedWith('stage1', 3)), [familyRoute()], '2027-02-01', FROZEN)).toBeNull();
+  });
+
+  it('words the card line and the confirm', () => {
+    expect(m.update.line('Sam')).toBe("Sam's newest check found a later place to start.");
+    expect(m.update.cta).toBe('Update the plan');
+    expect(updateAskText({ itemsRemoved: 3, itemsAdded: 1, newStartQuestId: 'quest:stage1-nature-q2' }, 'en', FROZEN)).toBe(
+      m.update.ask(3, 1, FROZEN.quests.find((quest) => quest.id === 'quest:stage1-nature-q2')?.title ?? ''),
+    );
+    expect(updateAskText({ itemsRemoved: 2, itemsAdded: 0, newStartQuestId: null }, 'en', FROZEN)).toBe(m.update.ask(2, 0, null));
+  });
+
+  it('words only the joins when nothing leaves, and no count when nothing changes in number', () => {
+    expect(m.update.ask(0, 2, null)).toBe('Update the plan? It moves ahead from today and keeps the same end date. 2 items join the plan. What is done stays done.');
+    expect(m.update.ask(0, 0, null)).toBe('Update the plan? It moves ahead from today and keeps the same end date. What is done stays done.');
+    expect(m.update.ask(1, 1, null)).toBe('Update the plan? It moves ahead from today and keeps the same end date. 1 item leaves the plan, 1 joins it. What is done stays done.');
+    expect(m.update.ask(0, 2, null)).not.toMatch(/\b0\b/);
+  });
+
+  it('the Spanish console words the pace chips, the preview lines and Update the plan (no English fallback)', () => {
+    const es = getMessages('es').console.curriculum;
+    expect(es.rhythm.paceOption(es.rhythm.paces.gentle, 2)).toBe('Suave · 2 días por semana');
+    expect(es.rhythm.suggested).toBe('Sugerido');
+    expect(es.update.cta).toBe('Actualizar el plan');
+    expect(es.update.ask(0, 1, null)).not.toMatch(/\b0\b/);
+    expect(lengthPreviewText({ preview: 'lessons-cut-short', weeks: 4 } as Parameters<typeof lengthPreviewText>[0], 'es')).toBe(es.proposal.lessonsCutShort(4));
+    expect(es.proposal.lessonsCutShort(4)).not.toBe(m.proposal.lessonsCutShort(4));
   });
 });

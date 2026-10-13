@@ -3,15 +3,23 @@ import {
   CATALOG,
   FREE_ROUTE_STAGES,
   CURRICULUM_MAX_ITEMS,
+  CurriculumMetaSchema,
   LENGTH_PRESETS,
+  PACES,
   PICTURES_FIRST_MINUTES,
   StageKeySchema,
   WEEKDAYS,
   addDays,
+  defaultPaceFor,
   generateCurriculum,
   isDateKey,
   levelOrder,
+  placementLevelRank,
+  proposeRoute,
+  questsPlacedOutAtLevel,
   regenerateFrom,
+  routeCatalogOf,
+  themeOrderFor,
   toMeta,
   toPlanItems,
   type Catalog,
@@ -22,11 +30,16 @@ import {
   type CurriculumStats,
   type CurriculumWarning,
   type DaysOff,
+  type DurationOption,
   type Entitlement,
   type Focus,
   type LengthPresetId,
+  type Motivation,
+  type PaceId,
   type PlacementLevel,
   type PlanItem,
+  type ProposeInput,
+  type RouteProposal,
   type SpaceRole,
   type StageKey,
   type ThemeKey,
@@ -46,10 +59,11 @@ import { currentPlan, type PlanLike, type ReadoutRow } from './plans';
  * (`@hangul-route/content-schema`) runs locally, so the preview works offline. Every
  * text here is worded from `console.curriculum` messages in the console's UI locale.
  *
- * Not here on purpose (they need owner decisions OD-12 / OD-13 and `proposeRoute`,
- * F-PLAN-002 PR P2-6b, after P2-3b): the pace chips, a pre-selected *Suggested* length and the family
- * card's *Update the plan* (`reseed`). Until then no length is pre-selected and the
- * rhythm starts from the audience table of section 3.1.
+ * PR P2-6b (FP-B5, OD-12 / OD-13 decided 2026-10-12): the wizard starts from `proposeRoute`, the
+ * same function the app calls, so the same start, pace and tier pre-select the same length: the
+ * pace chips, a *Suggested* pace and length, one preview line per length, and the family card's
+ * **Update the plan** (`reseed`) after a newer level check (`prefilledState`, `followProposal`,
+ * `planUpdateOffer`).
  */
 
 export type WizardAudience = 'class' | 'family';
@@ -85,8 +99,16 @@ export interface WizardState {
   /** Family only: the learner the route is for (null = everyone in the family). */
   learnerId: string | null;
   start: StartingPointId;
-  /** None until the grown-up picks one (no recommendation without `proposeRoute`). */
+  /** Pre-selected from `proposeRoute` (`prefilledState`); null when nothing is ready to plan, until the grown-up picks one. */
   length: LengthChoice | null;
+  /** The grown-up picked the length: it no longer follows the suggestion when the start or the pace changes. */
+  lengthPicked: boolean;
+  /** The grown-up picked a focus: it no longer follows the start (AM-4 reading focus). */
+  focusPicked?: boolean | undefined;
+  /** The grown-up set the pace, the weekdays or the minutes: another learner's pick keeps them. */
+  rhythmPicked?: boolean | undefined;
+  /** The grown-up set the themes: another learner's pick keeps them. */
+  goalsPicked?: boolean | undefined;
   customWeeks: number;
   startDate: string;
   sessionsPerWeek: number;
@@ -97,13 +119,15 @@ export interface WizardState {
   focus: Focus;
   /** In priority order. */
   themes: ThemeKey[];
+  /** Prefilled from `proposeRoute` (the console has no motivation of its own); carried into the params. */
+  motivation?: Motivation | undefined;
   culturalAnchors: boolean;
   includeComingSoon: boolean;
 }
 
 /** The summary fields the planner reads (section 3.8: placement first, Stage 1 counts as the fallback). */
 export interface PlannerSummary {
-  placement?: { level: PlacementLevel } | undefined;
+  placement?: { level: PlacementLevel; oralStage?: StageKey | null } | undefined;
   stage1: { questsDone: number; questsTotal: number };
 }
 
@@ -146,7 +170,10 @@ export function levelHint(learners: readonly PlannerLearner[]): StartingPointId 
   return best;
 }
 
-/** The wizard's starting state (section 3.1 table); a family's only learner is picked for the grown-up. */
+/**
+ * The wizard's state before `proposeRoute` (section 3.1 table); a family's only learner is picked
+ * for the grown-up. The page starts from `prefilledState`, which applies the proposal on top.
+ */
 export function defaultsFor(audience: WizardAudience, learners: readonly PlannerLearner[], today: string, learnerId: string | null = null): WizardState {
   const picked = audience === 'family' ? (learners.find((l) => l.id === learnerId) ?? (learnerId === null && learners.length === 1 ? learners[0] : undefined)) : undefined;
   const picturesFirst =
@@ -159,6 +186,7 @@ export function defaultsFor(audience: WizardAudience, learners: readonly Planner
     learnerId: picked?.id ?? null,
     start: start ?? 'brand-new',
     length: null,
+    lengthPicked: false,
     customWeeks: 12,
     startDate: today,
     sessionsPerWeek: AUDIENCE_DEFAULTS[audience].sessionsPerWeek,
@@ -195,7 +223,11 @@ export function toParams(state: WizardState, unlockedStages: readonly StageKey[]
     ...(days.length > 0 ? { sessionDays: days } : {}),
     minutesPerSession: state.minutesPerSession,
     daysOff: state.daysOff.map((range) => ({ ...range })),
-    goals: { focus: state.focus, ...(state.themes.length > 0 ? { themes: [...state.themes] } : {}) },
+    goals: {
+      focus: state.focus,
+      ...(state.themes.length > 0 ? { themes: [...state.themes] } : {}),
+      ...(state.motivation === undefined ? {} : { motivation: state.motivation }),
+    },
     ...(state.length !== null && state.length !== 'custom' ? { reviewEvery: LENGTH_PRESETS[state.length].reviewEvery } : {}),
     includeComingSoon: state.includeComingSoon,
     culturalAnchors: state.culturalAnchors,
@@ -225,6 +257,269 @@ export function wizardProblem(state: WizardState, today: string): WizardProblem 
  */
 export function learnerProblem(state: Pick<WizardState, 'audience' | 'learnerId'>, learnerCount: number): 'no-learner' | null {
   return state.audience === 'family' && learnerCount > 0 && state.learnerId === null ? 'no-learner' : null;
+}
+
+// ---------------------------------------------------------------------------
+// The proposal (PR P2-6b, FP-B5; AMENDMENTS-PLC-PLAN-HANDOFF section 1): the pace chips, the
+// suggested pace and length, a preview line per length, and the prefilled start and goals.
+// ---------------------------------------------------------------------------
+
+/** The three pace chips, in order (OD-13: Gentle 2, Steady 3, Brisk 4 days a week). */
+export const PACE_CHOICES: readonly PaceId[] = ['gentle', 'steady', 'brisk'];
+
+/** The chip of the wizard's rhythm (chosen weekdays win over the count), or null off the chips. */
+export function paceOf(state: Pick<WizardState, 'sessionsPerWeek' | 'sessionDays'>): PaceId | null {
+  const sessions = state.sessionDays.length > 0 ? state.sessionDays.length : state.sessionsPerWeek;
+  return PACE_CHOICES.find((pace) => PACES[pace] === sessions) ?? null;
+}
+
+/** A pace chip: its sessions a week, and chosen weekdays cleared (their count would win over the chip). */
+export function pacePatch(pace: PaceId): Pick<WizardState, 'sessionsPerWeek' | 'sessionDays'> {
+  return { sessionsPerWeek: PACES[pace], sessionDays: [] };
+}
+
+/** What `proposeRoute` reads about who the route is for, the tier, the day and the catalogue. */
+export interface ProposalContext {
+  learners: readonly PlannerLearner[];
+  unlockedStages: readonly StageKey[];
+  today: string;
+  source?: Catalog;
+}
+
+const pickedLearner = (state: Pick<WizardState, 'audience' | 'learnerId'>, learners: readonly PlannerLearner[]): PlannerLearner | undefined =>
+  state.audience === 'family' ? learners.find((l) => l.id === state.learnerId) : undefined;
+
+/** D1 reading level of a family's chosen learner; null for a class or before a learner is chosen. */
+const levelOrderOf = (state: Pick<WizardState, 'audience' | 'learnerId'>, learners: readonly PlannerLearner[]): 0 | 1 | 2 | null => {
+  const picked = pickedLearner(state, learners);
+  return picked ? levelOrder(picked.ageGroup) : null;
+};
+
+/** The pace tagged *Suggested*: Gentle for a class and a Pictures-first learner, Steady otherwise (OD-13). */
+export function suggestedPace(state: Pick<WizardState, 'audience' | 'learnerId'>, learners: readonly PlannerLearner[]): PaceId {
+  return defaultPaceFor(state.audience, levelOrderOf(state, learners));
+}
+
+/**
+ * The input the app would pass for the same start, pace and tier: the starting point's level as
+ * the seed (its placed-out lessons from the shared catalogue; a family learner's oral stage from
+ * the newest check), no completions (the console only reads counts), the D1 reading level of a
+ * family's learner or the roster's for a class, the start day, and the entitlement of the space.
+ * The pace is a chip: the suggested one for the first state, the rhythm's chip after.
+ */
+function proposalInput(state: WizardState, context: ProposalContext, pace: PaceId): ProposeInput {
+  const source = context.source ?? CATALOG;
+  const level = STARTING_LEVELS[state.start];
+  const picked = pickedLearner(state, context.learners);
+  const rosterLevelOrders = context.learners.map((l) => levelOrder(l.ageGroup)).filter((order): order is 0 | 1 | 2 => order !== null);
+  return {
+    audience: state.audience,
+    seed: {
+      level,
+      oralStage: picked?.summary?.placement?.oralStage ?? null,
+      placedOutQuestIds: questsPlacedOutAtLevel(level, routeCatalogOf(source)),
+      themeOrder: themeOrderFor(undefined),
+      startQuestId: null,
+    },
+    ...(state.motivation === undefined ? {} : { motivation: state.motivation }),
+    completedQuestIds: [],
+    levelOrder: levelOrderOf(state, context.learners),
+    pace,
+    ...(state.audience === 'class' ? { rosterLevelOrders } : {}),
+    unlockedStages: [...context.unlockedStages],
+    catalog: source,
+    today: context.today,
+    ...(isDateKey(state.startDate) ? { startDate: state.startDate } : {}),
+  };
+}
+
+/** `proposeRoute` for the wizard's start, pace and tier: the *Suggested* length and the line under each length. Null off the chips or when nothing is ready to plan. */
+export function wizardProposal(state: WizardState, context: ProposalContext): RouteProposal | null {
+  const pace = paceOf(state);
+  return pace === null ? null : proposeRoute(proposalInput(state, context, pace));
+}
+
+/**
+ * The wizard's first state (section 3.8 steps 1 and 2): the audience defaults, then the proposal
+ * for that start and the suggested pace on top: the pace, the length, the minutes, the start day,
+ * the focus, themes and motivation. A family of several learners waits for the grown-up's pick
+ * (`learnerId`) before a learner's level and reading level count. With nothing ready to plan the
+ * length stays unchosen.
+ */
+export function prefilledState(audience: WizardAudience, context: ProposalContext, learnerId: string | null = null): WizardState {
+  const base = defaultsFor(audience, context.learners, context.today, learnerId);
+  const pace = suggestedPace(base, context.learners);
+  const proposal = proposeRoute(proposalInput(base, context, pace));
+  if (proposal === null) return base;
+  const { params } = proposal;
+  return {
+    ...base,
+    ...pacePatch(pace),
+    length: proposal.defaultId,
+    minutesPerSession: params.minutesPerSession,
+    startDate: params.startDate,
+    focus: params.goals.focus,
+    themes: [...(params.goals.themes ?? [])],
+    motivation: params.goals.motivation,
+  };
+}
+
+/**
+ * After the start or the pace changes: the length follows the new suggestion until the grown-up
+ * picks one, and so does the focus (a later start can end the reading focus, AM-4) until the
+ * grown-up picks a focus. Off the pace chips the length stays as it was (still a valid choice,
+ * shown without the *Suggested* tag).
+ */
+export function followProposal(state: WizardState, context: ProposalContext): WizardState {
+  if (state.lengthPicked && state.focusPicked === true) return state;
+  const proposal = wizardProposal(state, context);
+  if (proposal === null) return state;
+  return {
+    ...state,
+    ...(state.lengthPicked ? {} : { length: proposal.defaultId }),
+    ...(state.focusPicked === true ? {} : { focus: proposal.params.goals.focus }),
+  };
+}
+
+/**
+ * Another learner picked in a family (step 1): the proposal for that learner, keeping what the
+ * grown-up already chose (the length, the rhythm, the goals, the start day, days off, custom weeks
+ * and the extras). Only the untouched fields follow the new learner.
+ */
+export function relearnedState(current: WizardState, context: ProposalContext, learnerId: string): WizardState {
+  const next = prefilledState('family', context, learnerId);
+  const merged: WizardState = {
+    ...next,
+    daysOff: current.daysOff,
+    customWeeks: current.customWeeks,
+    culturalAnchors: current.culturalAnchors,
+    includeComingSoon: current.includeComingSoon,
+    ...(current.lengthPicked ? { length: current.length, lengthPicked: true } : {}),
+    ...(current.rhythmPicked === true
+      ? { sessionsPerWeek: current.sessionsPerWeek, sessionDays: current.sessionDays, minutesPerSession: current.minutesPerSession, rhythmPicked: true }
+      : {}),
+    ...(current.startDate !== context.today ? { startDate: current.startDate } : {}),
+    ...(current.goalsPicked === true ? { themes: current.themes, motivation: current.motivation, goalsPicked: true } : {}),
+    ...(current.focusPicked === true ? { focus: current.focus, focusPicked: true } : {}),
+  };
+  return followProposal(merged, context);
+}
+
+/** The honest line under a length chip (AMENDMENTS section 1.3): a projection, never a deadline or a finish the card does not reach. */
+export function lengthPreviewText(option: DurationOption, locale: UiLocale = DEFAULT_LOCALE): string {
+  const words = getMessages(locale).console.curriculum.proposal;
+  switch (option.preview) {
+    case 'lessons-and-stories':
+      return words.lessonsAndStories(StageKeySchema.options.indexOf(option.stats.endsAtStage) + 1, option.lastLessonWeek);
+    case 'lessons-cut-short':
+      return words.lessonsCutShort(option.weeks);
+    case 'lessons-then-free-practice':
+      return option.lastContentWeek >= option.weeks ? words.lessonsFill(option.weeks) : words.lessonsThenFree(option.lastContentWeek);
+    case 'stories-and-words':
+      return words.storiesAndWords(option.stats.stories);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Update the plan (section 3.8 step 4, FP-B5): a family learner's newer level check moves the
+// start of the learner's own live route ahead (`reseed`, console mode: no completions known).
+// ---------------------------------------------------------------------------
+
+/** A saved plan as the roster reads it. */
+export interface UpdatablePlan extends PlanLike {
+  id: string;
+  title: string;
+  items: PlanItem[];
+  targetLearnerIds: string[] | null;
+  meta?: CurriculumMeta | null;
+}
+
+export interface PlanUpdateOffer<T extends UpdatablePlan = UpdatablePlan> {
+  plan: T & { meta: CurriculumMeta };
+  /** The newest check's level and its placed-out lessons: the re-seed's patch. */
+  level: PlacementLevel;
+  placedOutQuestIds: string[];
+  diff: NonNullable<RouteProposal['diff']>;
+}
+
+/**
+ * The family card's **Update the plan**, or null: only in a family space, for a learner whose
+ * newest check (`summary.placement`) found a later start than the level of the learner's own live
+ * route (published, not archived, a curriculum made for this learner alone), and only when
+ * `proposeRoute` reads it as an `update` (the future changes and still holds a lesson or story).
+ * Class plans are never updated per learner; an earlier start is never offered.
+ */
+export function planUpdateOffer<T extends UpdatablePlan>(
+  kind: string,
+  learner: { id: string; summary: Pick<PlannerSummary, 'placement'> | null },
+  plans: readonly T[],
+  today: string,
+  source: Catalog = CATALOG,
+): PlanUpdateOffer<T> | null {
+  const placement = learner.summary?.placement;
+  if (kind !== 'family' || !placement) return null;
+  // The stored meta is read as untrusted: a newer Worker's shape (or a damaged row) is skipped, never thrown in render.
+  const own = plans
+    .filter((plan) => isLive(plan) && plan.targetLearnerIds?.length === 1 && plan.targetLearnerIds[0] === learner.id)
+    .sort(newestPublished)
+    .flatMap((plan): (T & { meta: CurriculumMeta })[] => {
+      const meta = CurriculumMetaSchema.safeParse(plan.meta);
+      return meta.success ? [{ ...plan, meta: meta.data }] : [];
+    })[0];
+  if (!own || placementLevelRank(placement.level) <= placementLevelRank(own.meta.params.level)) return null;
+  try {
+    const placedOutQuestIds = questsPlacedOutAtLevel(placement.level, routeCatalogOf(source));
+    const proposal = proposeRoute({
+      audience: 'family',
+      seed: { level: placement.level, oralStage: placement.oralStage ?? null, placedOutQuestIds, themeOrder: themeOrderFor(undefined), startQuestId: null },
+      completedQuestIds: [],
+      levelOrder: null,
+      unlockedStages: own.meta.params.unlockedStages,
+      catalog: source,
+      today,
+      existing: { meta: own.meta, items: own.items },
+    });
+    if (proposal?.kind !== 'update' || proposal.diff === undefined) return null;
+    return { plan: own, level: placement.level, placedOutQuestIds, diff: proposal.diff };
+  } catch {
+    // A plan the generator cannot read shows no offer; the card itself always renders.
+    return null;
+  }
+}
+
+/** The confirm before **Update the plan**: what leaves and joins the plan, its next lesson, and that the end date stays. */
+export function updateAskText(diff: PlanUpdateOffer['diff'], locale: UiLocale = DEFAULT_LOCALE, source: Catalog = CATALOG): string {
+  const next = diff.newStartQuestId === null ? null : itemTitle('quest', diff.newStartQuestId, source);
+  return getMessages(locale).console.curriculum.update.ask(diff.itemsRemoved, diff.itemsAdded, next);
+}
+
+/**
+ * The plan save that applies an update: `regenerateFrom(plan, today, catalog, { mode: 'reseed' })`
+ * with the check's level and placed-out lessons (items before today stay, the end date stays), the
+ * same id, title and learner, still published, the plan's horizon kept and `repacedAt` set, so
+ * devices reconcile the new dates on their next sync.
+ */
+export function reseedSaveBody(
+  offer: PlanUpdateOffer,
+  today: string,
+  nowIso: string,
+  source: Catalog = CATALOG,
+): { id: string; title: string; items: CurriculumItem[]; targetLearnerIds: string[] | null; publish: true; meta: CurriculumMeta } {
+  const { plan } = offer;
+  // Throws on a plan the generator cannot read; the caller turns that into its failed state.
+  const draft = regenerateFrom({ meta: plan.meta, items: plan.items }, today, source, {
+    mode: 'reseed',
+    paramsPatch: { level: offer.level, placedOutQuestIds: [...offer.placedOutQuestIds] },
+    completedQuestIds: [],
+  });
+  return {
+    id: plan.id,
+    title: plan.title,
+    items: toPlanItems(draft),
+    targetLearnerIds: plan.targetLearnerIds,
+    publish: true,
+    meta: { ...toMeta(draft), horizonDays: plan.meta.horizonDays, repacedAt: nowIso },
+  };
 }
 
 /** An active entitlement (a Family Plan or a Group License) covers the space or its school. */

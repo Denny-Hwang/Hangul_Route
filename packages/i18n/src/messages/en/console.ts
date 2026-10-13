@@ -698,6 +698,14 @@ export const consoleMsgs = {
       sessionsNote: (sessions: number, weeks: number) =>
         `That is ${plural('en', sessions, { one: `${sessions} session`, other: `${sessions} sessions` })} in ${plural('en', weeks, { one: `${weeks} week`, other: `${weeks} weeks` })}.`,
       tooMany: 'That is more than a plan can hold. Choose fewer weeks or sessions.',
+      /** Pace chips (F-PLAN-002 PR P2-6b, OD-13): Gentle 2, Steady 3, Brisk 4 days a week. */
+      pace: 'How many days a week?',
+      paces: { gentle: 'Gentle', steady: 'Steady', brisk: 'Brisk' },
+      paceOption: (pace: string, n: number) => `${pace} · ${plural('en', n, { one: `${n} day a week`, other: `${n} days a week` })}`,
+      /** The tag on the recommended pace and length (`proposeRoute`, the same as the app's). */
+      suggested: 'Suggested',
+      /** Weekdays whose count is on no pace chip: no suggestion is shown. */
+      offChips: 'Your chosen days set the pace. Pick a pace to see a suggested length.',
     },
     goals: {
       title: 'What matters most?',
@@ -836,6 +844,47 @@ export const consoleMsgs = {
       planTerm: { cta: 'Plan this term' },
       ownRoute: (done: number, total: number, weeks: number) =>
         `Own route: ${done} / ${total} so far · ${plural('en', weeks, { one: `${weeks} week`, other: `${weeks} weeks` })}`,
+    },
+    /**
+     * One honest line under each length chip (AMENDMENTS-PLC-PLAN-HANDOFF section 1.3, P2-6b): a
+     * projection, never a deadline; a card never claims a finish its draft does not reach.
+     */
+    proposal: {
+      lessonsAndStories: (stage: number, week: number) =>
+        stage === 1 ? `Stage 1 is done around week ${week}, then heritage stories.` : `The lessons ready now are done around week ${week}, then heritage stories.`,
+      lessonsCutShort: (weeks: number) => `The first lessons fit in ${weeks} weeks. More weeks hold the rest.`,
+      lessonsThenFree: (weeks: number) =>
+        plural('en', weeks, {
+          one: 'About 1 week of lessons is ready now. The rest is free practice.',
+          other: `About ${weeks} weeks of lessons are ready now. The rest is free practice.`,
+        }),
+      lessonsFill: (weeks: number) => `Lessons fill all ${weeks} weeks.`,
+      storiesAndWords: (stories: number) =>
+        stories > 0
+          ? plural('en', stories, { one: 'No lessons left at this start: 1 heritage story and word topics.', other: `No lessons left at this start: ${stories} heritage stories and word topics.` })
+          : 'No lessons left at this start: word topics and free practice.',
+    },
+    /**
+     * A family learner card after a newer level check (section 3.8 step 4, FP-B5): the route can
+     * move its start ahead (`reseed`) and keep its end date. Never per learner in a class.
+     */
+    update: {
+      line: (name: string) => `${name}'s newest check found a later place to start.`,
+      cta: 'Update the plan',
+      label: (name: string) => `Update the plan for ${name}`,
+      ask: (removed: number, added: number, next: string | null) => {
+        const counts =
+          removed > 0
+            ? ` ${plural('en', removed, { one: '1 item leaves the plan', other: `${removed} items leave the plan` })}${
+                added > 0 ? `, ${plural('en', added, { one: '1 joins it', other: `${added} join it` })}` : ''
+              }.`
+            : added > 0
+              ? ` ${plural('en', added, { one: '1 item joins the plan', other: `${added} items join the plan` })}.`
+              : '';
+        return `Update the plan? It moves ahead from today and keeps the same end date.${counts}${next ? ` Next: ${next}.` : ''} What is done stays done.`;
+      },
+      done: 'Updated. Devices pick up the new plan on their next sync.',
+      failed: "Couldn't update the plan right now. Try again.",
     },
     /** An episode that is not released yet; a ready one uses `plan.catalog.episodeLabel`. */
     catalog: {
