@@ -222,6 +222,8 @@ export interface ActivityInput {
   optionCount: 3 | 4;
   /** F-QUEST-002's Pic-Word Match is in the build (`capabilities.picWordMatch`). */
   picWordMatch: boolean;
+  /** The collected words deal a Match board (`matchPlayable`): words that cannot share one board draw no Match. */
+  matchPlayable: boolean;
   /** The activity screens this build has (`VOCAB_SCREENS`): an activity without its screen is not drawn. */
   screens: Readonly<Record<VocabActivity, boolean>>;
   copy: VocabCopy;
@@ -252,7 +254,7 @@ export function topicActivities(i: ActivityInput): ActivityButtonView[] {
   if (i.screens.speed && i.screens[speedOpens]) {
     drafts.push({ kind: 'speed', label: t.speed.label, line: speedActivityLine(i.copy, i.collected, i.optionCount), opens: speedOpens });
   }
-  if (i.screens.match && i.picWordMatch && i.collected >= MATCH_MIN_COLLECTED) {
+  if (i.screens.match && i.picWordMatch && i.collected >= MATCH_MIN_COLLECTED && i.matchPlayable) {
     drafts.push({ kind: 'match', label: t.match.label, line: t.match.line, opens: 'match' });
   }
   const primary = drafts.some((d) => d.kind === i.suggestion) ? i.suggestion : drafts[0]?.kind;

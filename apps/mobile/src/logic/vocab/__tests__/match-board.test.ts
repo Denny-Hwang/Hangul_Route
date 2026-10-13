@@ -1,7 +1,7 @@
 import { PicWordRoundSchema } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
 import { VOCAB_ITEMS } from '../../../content/__generated__/vocab';
-import { MATCH_MAX_PAIRS, matchBoard, matchScope } from '../match-board';
+import { MATCH_MAX_PAIRS, matchBoard, matchPlayable, matchScope } from '../match-board';
 import { progress, state, word } from './fixtures';
 
 const food = VOCAB_ITEMS.filter((item) => item.topics.includes('food'));
@@ -52,6 +52,19 @@ describe('matchBoard (F-VOC-003 section 3.9: a board from the collected words)',
     expect(PicWordRoundSchema.safeParse(board).success).toBe(true);
   });
 
+  it('finds a board whenever 3 words fit together, whatever the seed (a word that clashes with two others is left out)', () => {
+    // a clashes with b (the same Korean) and with c (the same picture); b, c and d fit together.
+    const items = [
+      word('a', { ko: 'x', visual: 'word:food-same' }),
+      word('b', { ko: 'x' }),
+      word('c', { ko: 'y', visual: 'word:food-same' }),
+      word('d', { ko: 'z' }),
+    ];
+    // A first pick of a would leave a and d only; the board is b, c and d for every seed.
+    const all = progress(items.map((i) => state(i.id.slice(6))));
+    for (let seed = 1; seed <= 30; seed += 1) expect(matchBoard(items, all, { ...base, seed })?.pairs).toHaveLength(3);
+  });
+
   it('is the same board for the same seed and may differ for another', () => {
     const ids = (seed: number) => matchBoard(food, collectedAll, { ...base, seed })!.pairs.map((p) => p.id);
     expect(ids(5)).toEqual(ids(5));
@@ -64,5 +77,22 @@ describe('matchScope', () => {
   it('wraps one board as a pic-word-match scope', () => {
     const board = matchBoard(food, collectedAll, base)!;
     expect(matchScope(board)).toEqual({ kind: 'pic-word-match', picWord: { boards: [board] } });
+  });
+});
+
+describe('matchPlayable (the topic page draws Match only when a board can be dealt)', () => {
+  const nature = VOCAB_ITEMS.filter((item) => item.topics.includes('nature'));
+
+  it('false for 3 collected words that cannot share a board (excluded pairs): no Match that goes nowhere', () => {
+    const clash = progress(['gureum', 'bi-rain', 'haneul'].map((s) => state(s)));
+    expect(nature.some((i) => i.id === 'vocab:gureum')).toBe(true);
+    expect(matchPlayable(nature, clash, () => true)).toBe(false);
+    for (let seed = 1; seed <= 10; seed += 1) expect(matchBoard(nature, clash, { ...base, seed })).toBeNull();
+  });
+
+  it('true exactly when matchBoard deals a board', () => {
+    expect(matchPlayable(food, collectedAll, () => true)).toBe(true);
+    expect(matchPlayable(food, progress([state('uyu'), state('ppang')]), () => true)).toBe(false);
+    expect(matchPlayable(food, collectedAll, () => false)).toBe(false);
   });
 });

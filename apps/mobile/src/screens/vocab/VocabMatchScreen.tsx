@@ -54,35 +54,55 @@ function MatchSession({ source, navigation }: { source: VocabTopic; navigation: 
   const profile = useProfileStore(activeProfileSelector);
   const profileId = profile?.id ?? null;
   const snap = useProgressStore((s) => (profileId ? s.byProfile[profileId] : undefined));
-  // The board is dealt once, from the words collected when the screen opened.
-  const [progress] = useState(() => (snap ? vocabOf(snap) : emptyVocab()));
-  const [seed] = useState(() => Date.now());
-  const board = useMemo(
-    () => matchBoard(topicWords(topicKey), progress, { seed, canRender: canRenderPicture, glossOf: (item) => localizedGloss(item, locale) }),
-    [topicKey, progress, seed, locale],
+  // The board is dealt once, from the words collected when the screen opened. Its identity never follows the
+  // UI language (a language change mid-board must not restart the run); the meanings follow it at render.
+  const [dealt] = useState(() =>
+    matchBoard(topicWords(topicKey), snap ? vocabOf(snap) : emptyVocab(), { seed: Date.now(), canRender: canRenderPicture, glossOf: (item) => item.en }),
   );
-  const scope = useMemo(() => (board ? matchScope(board) : null), [board]);
+  const scope = useMemo(() => {
+    if (dealt === null) return null;
+    const byId = new Map(topicWords(topicKey).map((item) => [item.id, item]));
+    const pairs = dealt.pairs.map((p) => {
+      const item = byId.get(p.id);
+      return item ? { ...p, word: { ...p.word, en: localizedGloss(item, locale) } } : p;
+    });
+    return matchScope({ ...dealt, pairs });
+  }, [dealt, topicKey, locale]);
 
   const back = useCallback(() => backOrHome(navigation, () => navigation.navigate('VocabTopic', { topicKey })), [navigation, topicKey]);
 
   // The run: begun when the board shows, written once when it is done; left early, nothing is written.
   const done = useRef(false);
+  // Pairs matched so far: a board whose last pair landed is finished, even when the learner leaves inside the
+  // game's short pause before it reports the end.
+  const matched = useRef(new Set<string>());
   useEffect(() => {
-    if (board === null || profileId === null) return;
+    if (dealt === null || profileId === null) return;
     useVocabRunStore.getState().begin(profileId, topicKey, 'match');
     return () => {
-      if (!done.current) useVocabRunStore.getState().reset();
+      if (done.current) return;
+      if (matched.current.size >= dealt.pairs.length) useVocabRunStore.getState().complete();
+      else useVocabRunStore.getState().reset();
     };
-  }, [board, profileId, topicKey]);
+  }, [dealt, profileId, topicKey]);
 
+  // No board (the words cannot share one): back to the topic page it came from, or the topic page in its place.
   useEffect(() => {
-    if (board === null) navigation.replace('VocabTopic', { topicKey });
-  }, [board, navigation, topicKey]);
+    if (dealt !== null) return;
+    const routes = navigation.getState().routes;
+    const before = routes[routes.length - 2];
+    const fromTopic = before?.name === 'VocabTopic' && (before.params as { topicKey?: string } | undefined)?.topicKey === topicKey;
+    if (fromTopic) navigation.goBack();
+    else navigation.replace('VocabTopic', { topicKey });
+  }, [dealt, navigation, topicKey]);
 
   const host = useMemo<MinigameHost>(
     () => ({
       mode: 'vocab',
-      answer: vocabHost.answer,
+      answer: (key, correct, meta) => {
+        if (correct && meta?.itemId !== undefined) matched.current.add(meta.itemId);
+        vocabHost.answer(key, correct, meta);
+      },
       complete: () => {
         done.current = true;
         vocabHost.complete();
@@ -93,5 +113,5 @@ function MatchSession({ source, navigation }: { source: VocabTopic; navigation: 
   );
 
   if (scope === null) return <Screen tone="canvas" testID="vocab-match-redirect">{null}</Screen>;
-  return <PicWordMatchGame scope={scope} host={host} onBack={back} leading={<BackButton onPress={back} />} />;
+  return <PicWordMatchGame scope={scope} host={host} onBack={back} leading={<BackButton onPress={back} />} showCount={false} />;
 }

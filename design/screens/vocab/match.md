@@ -10,7 +10,7 @@ Screenshots: `pnpm --filter @hangul-route/mobile build:web:fixtures`, then `HR_S
 ```
 ┌────────────────────────────────┐
 │ [<-]                           │  <- Back, top-left, as on every Words screen
-│ [=======-----]  2 / 4   [Skip] │  <- the game's own header (F-QUEST-002), unchanged
+│ [=======-----]          [Skip] │  <- the game's own header (F-QUEST-002), without its count
 │ Match each picture             │
 │ ┌───────────┐  ┌───────────┐   │
 │ │   [pic]   │  │ ~~ 우유 ~~ │   │  <- pictures left, words right, tap-tap in either order
@@ -44,5 +44,7 @@ As the game (design/wireframes/minigame/pic-word-match.md): every tile is a butt
 ## Decisions taken while building
 
 - **Back sits above the game's header** through a small `leading` slot added to `PicWordMatchGame` (it renders the node first inside its own `Screen`). A quest host passes nothing, so the quest screen is unchanged. Without it a web learner in a standalone PWA would have no way out of a board but finishing it.
-- **The game's header is kept**: its bar and "2 / 4" pill count the pairs matched so far on this board (fill-only: a miss never lowers them), the same progress line as in a quest, not a score; Match keeps the game exactly as F-QUEST-002 ships it.
+- **The game's header keeps its fill-only bar and Skip, not its count**: `PicWordMatchGame` takes `showCount={false}` here, so the "2 / 4" pill of the quest header is not drawn (no fraction on the Words screens, §3.8, D3); a quest host passes nothing and keeps it.
+- **Match is drawn only when a board can be dealt** (`matchPlayable`): 3 collected words that cannot share one board (an excluded pair, one picture, one sense) draw no Match, so the button never goes nowhere. The board search finds a board whenever 3 such words exist, whatever the seed. If the screen still opens with no board, it goes back to the topic page it came from (or puts the topic page in its place).
+- **A finished board is kept** even when the learner leaves inside the game's 700 ms pause before it reports the end; a language change mid-board relabels the meanings without restarting the run.
 - **No summary screen**: the topic page is the summary (its meter and count fill as the words are practised); Match has no stars (the Speed round owns them).

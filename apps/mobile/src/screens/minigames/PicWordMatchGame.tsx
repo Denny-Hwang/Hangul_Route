@@ -59,6 +59,11 @@ interface Props {
   onBack?: () => void;
   /** Drawn above the board's header row: a host's own way out (the Words Match screen's Back, F-VOC-003 C-6). */
   leading?: React.ReactNode;
+  /**
+   * The header's "n / m" count beside the fill-only bar (default on, the quest step's header). The Words
+   * Match screen turns it off: no fraction appears on the Words screens (F-VOC-003 §3.8, D3).
+   */
+  showCount?: boolean;
 }
 
 interface TileFrameProps {
@@ -93,7 +98,7 @@ function TileFrame({ selected, badge, children }: TileFrameProps): React.ReactEl
   );
 }
 
-export function PicWordMatchGame({ scope, host, onBack, leading }: Props): React.ReactElement {
+export function PicWordMatchGame({ scope, host, onBack, leading, showCount = true }: Props): React.ReactElement {
   const [seed] = useState(() => Math.floor(Math.random() * 0x7fffffff));
   const boards = useMemo(() => validBoards(scope), [scope]);
   const orders = useMemo(() => boards.map((board, i) => shuffleBoard(board, seed + i)), [boards, seed]);
@@ -200,7 +205,7 @@ export function PicWordMatchGame({ scope, host, onBack, leading }: Props): React
         <View style={{ flex: 1 }}>
           <Progress value={header.value} max={header.max} tone="primary" />
         </View>
-        <Pill label={header.label} tone="neutral" size="sm" />
+        {showCount ? <Pill label={header.label} tone="neutral" size="sm" /> : null}
         {canSkip(state) ? (
           <Button label={copy.skip.cta} tone="ghost" size="sm" onPress={() => dispatch({ type: 'skip' })} testID="pic-word-skip" />
         ) : null}

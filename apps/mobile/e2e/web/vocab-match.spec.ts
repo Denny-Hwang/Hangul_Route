@@ -14,7 +14,8 @@ import { controlsPastEdge, expectNoHorizontalOverflow } from './viewport';
  */
 
 const FIXTURE_BUILD = process.env.STORY_FIXTURES === '1';
-const SHAME = /\b(wrong|fail\w*|missed|lost|lose|premium|locked)\b|%/i;
+/** Words and marks a learner never reads here (D3, T3): no fraction, no percent, no "wrong" (as vocab-cards.spec). */
+const SHAME = /\b(wrong|fail\w*|missed|lost|lose|premium|locked)\b|%|\d\s*\/\s*\d|\d+ of \d+/i;
 const WORDS = ['vocab:sagwa-apple', 'vocab:uyu', 'vocab:ppang', 'vocab:bap'] as const;
 
 type E2eWindow = Window & {
@@ -82,6 +83,66 @@ test.describe('Words Match (fixture bundle)', () => {
     await expectNoHorizontalOverflow(page);
     expect(await page.evaluate(controlsPastEdge)).toEqual([]);
     await shot(page, 'vocab-match-board');
+  });
+
+  test('collected words that cannot share one board draw no Match (never a button that goes nowhere)', async ({ page }) => {
+    await newLearner(page);
+    // gureum against bi and haneul are excluded pairs: at most 2 of these 3 fit on a board.
+    await collect(page, ['vocab:gureum', 'vocab:bi-rain', 'vocab:haneul']);
+    await openTopic(page, 'nature');
+    await expect(page.getByTestId('vocab-topic-count')).toHaveText('3 collected');
+    await expect(page.getByTestId('vocab-activity-match')).toHaveCount(0);
+  });
+
+  test('the board shows no count or fraction beside its fill-only bar', async ({ page }) => {
+    await newLearner(page);
+    await collect(page, WORDS);
+    await openTopic(page, 'food');
+    await page.getByTestId('vocab-activity-match').click();
+    const pairs = await boardPairs(page);
+    await page.getByTestId(`pic-word-picture-${pairs[0]}`).click();
+    await page.getByTestId(`pic-word-word-${pairs[0]}`).click();
+    expect(await page.locator('body').innerText()).not.toMatch(SHAME);
+  });
+
+  test('Skip after one match writes that answer and one session, then the topic page', async ({ page }) => {
+    await newLearner(page);
+    await collect(page, WORDS);
+    await openTopic(page, 'food');
+    await page.getByTestId('vocab-activity-match').click();
+    const pairs = await boardPairs(page);
+    await page.getByTestId(`pic-word-picture-${pairs[0]}`).click();
+    await page.getByTestId(`pic-word-word-${pairs[0]}`).click();
+    await page.getByTestId('pic-word-skip').click();
+    await expect(page.getByTestId('vocab-topic')).toBeVisible({ timeout: 5000 });
+    const id = await profileId(page);
+    await expect
+      .poll(async () => (await readStored<StoredVocab>(page, `progress:${id}`))?.vocab?.topics.find((t) => t.topic === 'food')?.sessions ?? 0)
+      .toBe(1);
+    const items = (await readStored<StoredVocab>(page, `progress:${id}`))?.vocab?.items ?? [];
+    expect(items.find((i) => i.id === pairs[0])?.seen).toBe(1);
+    expect(items.filter((i) => pairs.slice(1).includes(i.id)).every((i) => i.seen === 0)).toBe(true);
+  });
+
+  test('Back right after the last pair, before the board reports its end, still keeps the finished board', async ({ page }) => {
+    await newLearner(page);
+    await collect(page, WORDS);
+    await openTopic(page, 'food');
+    await page.getByTestId('vocab-activity-match').click();
+    const pairs = await boardPairs(page);
+    for (const pair of pairs) {
+      await page.getByTestId(`pic-word-picture-${pair}`).click();
+      await page.getByTestId(`pic-word-word-${pair}`).click();
+    }
+    // Inside the game's 700 ms pause before it reports the end.
+    await page.getByRole('button', { name: 'Go back' }).click();
+    await expect(page.getByTestId('vocab-topic')).toBeVisible();
+    const id = await profileId(page);
+    await expect
+      .poll(async () => (await readStored<StoredVocab>(page, `progress:${id}`))?.vocab?.topics.find((t) => t.topic === 'food')?.sessions ?? 0)
+      .toBe(1);
+    const items = (await readStored<StoredVocab>(page, `progress:${id}`))?.vocab?.items ?? [];
+    for (const pair of pairs) expect(items.find((i) => i.id === pair)?.right).toBe(1);
   });
 
   test('a finished board writes each first answer and one session, then the topic page shows again', async ({ page }) => {
