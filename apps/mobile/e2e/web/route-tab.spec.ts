@@ -65,17 +65,27 @@ const rgbOf = (hex: string): string => {
 /**
  * The selected tab: the web tab bar marks no aria-selected and does not change the address, so the
  * selected item is the one whose label wears the active tint (`tabBarActiveTintColor`, brand.primary).
+ * The label is found by its own words (`labels`), never by its place, so an icon glyph or a badge in the
+ * item cannot be read instead. Returns every item's label and tint, for a readable failure.
  */
-async function selectedTabs(page: Page): Promise<string[]> {
-  const tints = await page.evaluate(() =>
-    [...document.querySelectorAll('[role="tablist"] a')].map((item) => {
-      const leaves = [...item.querySelectorAll('div, span')].filter((el) => el.children.length === 0 && (el.textContent ?? '').trim() !== '');
-      const label = leaves[leaves.length - 1];
-      return { text: label?.textContent ?? '', color: label ? getComputedStyle(label).color : '' };
-    }),
+async function tabTints(page: Page, labels: readonly string[]): Promise<Array<{ text: string; color: string }>> {
+  return page.evaluate(
+    (words) =>
+      [...document.querySelectorAll('[role="tablist"] a')].map((item) => {
+        const label = [...item.querySelectorAll('div, span')].find((el) => el.children.length === 0 && words.includes((el.textContent ?? '').trim()));
+        return { text: label?.textContent?.trim() ?? '', color: label ? getComputedStyle(label).color : '' };
+      }),
+    [...labels],
   );
+}
+
+async function selectedTabs(page: Page, labels: readonly string[]): Promise<string[]> {
+  const tints = await tabTints(page, labels);
   return tints.filter((t) => t.color === rgbOf(colors.brand.primary)).map((t) => t.text);
 }
+
+/** The four tab labels in English (the flag-on bar: Today, Route, Journey, Library). */
+const TAB_LABELS: readonly string[] = Object.values(en.a11y.tabs);
 
 const noSideScroll = (page: Page): Promise<boolean> =>
   page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth);
@@ -275,8 +285,10 @@ test.describe('flag on: the Route tab (LR-4)', () => {
     await expect(page.getByText(en.learner.myRoute.purpose, { exact: true })).toHaveCount(0);
     await expect(page.getByTestId('my-route-card-cta')).toHaveCount(0);
     await expect(page.getByTestId('my-route-card').getByRole('button')).toHaveCount(0);
-    // No tab redirect: a moment later it is still the read-only page, not the learner's tab.
-    await page.waitForTimeout(800);
+    // No tab redirect: once the page has settled (no request in flight, two frames drawn) it is still the
+    // read-only page, not the learner's tab.
+    await page.waitForLoadState('networkidle');
+    await page.evaluate(() => new Promise<void>((done) => requestAnimationFrame(() => requestAnimationFrame(() => done()))));
     await expect(screen.getByText(en.caregiver.journey.viewing('Dani'), { exact: true })).toBeVisible();
     await expect(page.getByText(en.learner.myRoute.purpose, { exact: true })).toHaveCount(0);
     expect(await noSideScroll(page)).toBe(true);
@@ -316,7 +328,9 @@ test.describe('flag on: the Route tab (LR-4)', () => {
     await expect(page.getByText(en.learner.myRoute.purpose, { exact: true })).toBeVisible();
     await expect(page.getByRole('button', { name: en.a11y.goBack, exact: true })).toHaveCount(0);
     await expect(page.getByTestId('my-route-screen')).toBeVisible();
-    await expect.poll(() => selectedTabs(page)).toEqual([en.a11y.tabs.route]);
+    await expect
+      .poll(() => selectedTabs(page, TAB_LABELS), { message: 'the Route tab wears the active tint (see tabTints for every item)' })
+      .toEqual([en.a11y.tabs.route]);
     await shot(page, 'route-from-level-check-375');
   });
 });
