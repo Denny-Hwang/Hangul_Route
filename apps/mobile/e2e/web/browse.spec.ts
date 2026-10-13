@@ -1,7 +1,8 @@
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { onboardChild } from './helpers';
+import { answerCheckRounds, onboardChild, passDiscover } from './helpers';
 import { shot } from './shots';
+import { nextPage, position } from './story-reader-helpers';
 
 /**
  * F-BROWSE-001 BR-6 (sections 4.1, 4.3, 4.4, 4.10): the All lessons root at
@@ -10,8 +11,8 @@ import { shot } from './shots';
  * link's fragment and takes it out of the address, keeps `document.title` fixed,
  * resolves its pass per tab, shows the Access screen without one, and writes
  * nothing of a learner's: the device's stored key/value set is unchanged apart
- * from `browse:*`, and the learner telemetry queue is byte-identical. BR-7 and
- * BR-8 add the catalogue, the preview and the strip measurements.
+ * from `browse:*`, and the learner telemetry queue is byte-identical. BR-7 adds
+ * the catalogue, BR-8 the preview and the strip measurements.
  */
 const PASS_KEY = 'hr:browse:pass';
 const UNLOCK_KEY = 'hr:grownup:unlock';
@@ -680,4 +681,197 @@ test('the catalogue writes nothing of a learner: home, an outline, an item page 
   const deviceAfter = await snapshotDevice(page);
   expect(changedOutsideBrowse(deviceBefore, deviceAfter).filter((k) => !k.startsWith('session:hr:grownup') && !k.startsWith('session:hr:console'))).toEqual([]);
   expect((await readAllStored(page))[LEARNER_QUEUE]).toBe(SEEDED_QUEUE);
+});
+
+/* ---------------------------------------------------------------------------------------------
+ * BR-8: the preview (sections 4.7, 4.8, 4.10; mocks design/screens/browse/preview-player.md,
+ * preview-end.md, preview-frame.md). A full Stage 1 lesson plays as the learner sees it under the
+ * preview strip and ends on the preview end screen; nothing of a learner changes on the device.
+ * The strip's first mount (BR-6 built it) is measured here.
+ * ------------------------------------------------------------------------------------------- */
+
+
+const strip = (page: Page) => page.getByTestId('preview-strip');
+/** The visually hidden status regions that hold the strip's text: one per focused lesson screen. */
+const announced = (page: Page) => page.getByTestId('preview-strip-status');
+
+async function openLessonPage(page: Page, questId: string): Promise<void> {
+  await page.goto('/');
+  await writeGatePass(page);
+  await page.goto(`/browse#t=${questId}&s=report`);
+  await expect(page.getByTestId('browse-item')).toBeVisible();
+}
+
+test('a full Stage 1 lesson, its end screen and its card write nothing of a learner', async ({ page }) => {
+  await onboardChild(page, { name: 'Mina' });
+  await page.goto('/');
+  await expect(page.getByText('Hi, Mina!')).toBeVisible();
+  await putStored(page, LEARNER_QUEUE, SEEDED_QUEUE);
+  const storedBefore = await readAllStored(page);
+  const deviceBefore = await snapshotDevice(page);
+  await writeGatePass(page);
+  await page.evaluate(() => window.location.assign('/browse#t=quest:stage1-letters-q1&s=gate'));
+  await expect(page.getByRole('heading', { name: 'Meet a, eo, g, n' })).toBeVisible();
+  await bootSettled(page);
+
+  // No strip on the catalogue pages.
+  await expect(strip(page)).toHaveCount(0);
+  await page.getByTestId('browse-preview').click();
+
+  // The learner player, unchanged, under the strip: Hello, Look and learn, the games, the Check, Finish.
+  await expect(strip(page)).toBeVisible();
+  await expect(page.getByTestId('preview-strip-text')).toHaveText('Preview. Nothing is saved.');
+  await expect(announced(page)).toHaveCount(1);
+  await page.getByRole('button', { name: 'Continue' }).click();
+  await passDiscover(page);
+  await page.getByRole('button', { name: 'Skip for now' }).click();
+  await page.getByRole('button', { name: 'Skip for now' }).click();
+  await page.getByRole('button', { name: 'Go', exact: true }).click();
+  // A game step is a lesson screen too: the strip sits above the learner game, announced once for this screen.
+  await expect(page.locator('[data-testid^="listen-pick-option-"]').first()).toBeVisible();
+  await expect(page.getByTestId('preview-leave').last()).toBeVisible();
+  await expect(announced(page)).toHaveCount(1);
+  await answerCheckRounds(page);
+  await page.getByRole('button', { name: 'See results' }).click();
+
+  // The preview end screen replaces Results: no stars, no score, a still card.
+  await expect(page.getByRole('heading', { name: 'That is the whole lesson.' })).toBeVisible();
+  await expect(page.getByText('At this point a learner sees 1 to 3 stars and collects:')).toBeVisible();
+  await expect(page.getByText('Wonderful!')).toHaveCount(0);
+  await expect(page.getByTestId('preview-leave')).toHaveCount(0);
+  // The end screen's strip has no button and is announced once too.
+  await expect(announced(page)).toHaveCount(1);
+  await expect(page.getByTestId('browse-end-next')).toHaveText('Next lesson');
+  await shot(page, 'br8-browse-preview-end-pixel5');
+  await page.getByTestId('browse-end-card').click();
+  await expect(page.getByTestId('browse-card-back')).toBeVisible();
+  await page.getByTestId('browse-card-back').click();
+  await page.getByTestId('browse-end-back').click();
+  await expect(page.getByRole('heading', { name: 'Meet a, eo, g, n' })).toBeVisible();
+
+  const deviceAfter = await snapshotDevice(page);
+  expect(changedOutsideBrowse(deviceBefore, deviceAfter).filter((k) => !k.startsWith('session:hr:grownup') && !k.startsWith('session:hr:console'))).toEqual([]);
+  // Every stored key and value is what it was (the learner's progress, profiles and account keys included), the
+  // learner telemetry queue byte for byte; only `browse:*` may differ.
+  const stored = await readAllStored(page);
+  const changed = [...new Set([...Object.keys(storedBefore), ...Object.keys(stored)])].filter((k) => storedBefore[k] !== stored[k]);
+  expect(changed.filter((k) => !k.startsWith('hr:browse:'))).toEqual([]);
+  expect(stored[LEARNER_QUEUE]).toBe(SEEDED_QUEUE);
+});
+
+test('Leave preview asks once: Keep going stays, Leave goes back to the lesson page with no end screen', async ({ page }) => {
+  await openLessonPage(page, 'quest:stage1-letters-q1');
+  await page.getByTestId('browse-preview').click();
+  await page.getByRole('button', { name: 'Continue' }).click();
+  await page.getByTestId('preview-leave').click();
+  await expect(page.getByRole('alertdialog', { name: 'Leave this preview?' })).toBeVisible();
+  await shot(page, 'br8-browse-leave-confirm-pixel5');
+  await page.getByTestId('browse-leave-keep').click();
+  await expect(page.getByRole('alertdialog')).toHaveCount(0);
+  await expect(strip(page)).toBeVisible();
+  await page.getByTestId('preview-leave').click();
+  await page.getByTestId('browse-leave-confirm').click();
+  await expect(page.getByRole('heading', { name: 'Meet a, eo, g, n' })).toBeVisible();
+  await expect(page.getByTestId('browse-preview-end')).toHaveCount(0);
+  await expect(strip(page)).toHaveCount(0);
+  // A new preview starts at the beginning: the run was discarded.
+  await page.getByTestId('browse-preview').click();
+  await expect(page.getByText('Hi from Hoya')).toBeVisible();
+});
+
+test('the preview strip at 320 wide: at most PREVIEW_STRIP_MAX_HEIGHT, text and Leave preview apart, nothing overflows', async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 640 });
+  await openLessonPage(page, 'quest:stage1-letters-q1');
+  await page.getByTestId('browse-preview').click();
+  await expect(strip(page)).toBeVisible();
+  const box = await strip(page).boundingBox();
+  // PREVIEW_STRIP_MAX_HEIGHT (logic/browse/layout.ts), measured on the mock at 320 with 200 % text. React Native Web
+  // draws in px, so the browser's text size does not reach it (BR-6 note): this is the default size at 320.
+  expect(box?.height ?? Infinity).toBeLessThanOrEqual(135);
+  const text = await page.getByTestId('preview-strip-text').boundingBox();
+  const leave = await page.getByTestId('preview-leave').boundingBox();
+  if (!text || !leave) throw new Error('the strip draws its text and Leave preview');
+  const apart = text.x + text.width <= leave.x || leave.x + leave.width <= text.x || text.y + text.height <= leave.y || leave.y + leave.height <= text.y;
+  expect(apart).toBe(true);
+  expect(leave.height).toBeGreaterThanOrEqual(64);
+  for (const id of ['preview-strip-text', 'preview-leave']) {
+    expect(await page.getByTestId(id).evaluate((el) => el.scrollWidth <= el.clientWidth + 1 && el.scrollHeight <= el.clientHeight + 1)).toBe(true);
+  }
+  // The learner close control starts below the strip: the strip pushes the lesson down, never covers it.
+  const close = await page.getByRole('button', { name: 'Leave quest' }).boundingBox();
+  expect((close?.y ?? 0) + 0.5).toBeGreaterThanOrEqual((box?.y ?? 0) + (box?.height ?? 0));
+  expect(await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth)).toBe(false);
+  await shot(page, 'br8-browse-preview-320');
+});
+
+test('Leave preview shows the border.focus ring on keyboard focus, and the strip is announced once per screen', async ({ page }) => {
+  await openLessonPage(page, 'quest:stage1-letters-q1');
+  await page.getByTestId('browse-preview').click();
+  const leave = page.getByTestId('preview-leave');
+  const ring = () => leave.evaluate((el) => getComputedStyle(el).borderTopColor);
+  const atRest = await ring();
+  await leave.focus();
+  await expect.poll(ring).not.toBe(atRest);
+  // One announcement for the screen that has focus, with the strip's own words.
+  await expect(announced(page)).toHaveCount(1);
+  await expect(announced(page)).toHaveText('Preview. Nothing is saved.');
+  // Back on the item page there is no strip, so nothing is announced.
+  await page.getByTestId('preview-leave').click();
+  await page.getByTestId('browse-leave-confirm').click();
+  await expect(announced(page)).toHaveCount(0);
+});
+
+/** A reviewed Story Time tale of the release build (content anchor: changes with the shelf). */
+const STORY_ID = 'story:chuseok-ganggangsullae';
+
+test('a story plays as the learner replay reader under the strip, ends on the story end screen and writes nothing', async ({ page }) => {
+  await onboardChild(page, { name: 'Mina' });
+  await page.goto('/');
+  await expect(page.getByText('Hi, Mina!')).toBeVisible();
+  await putStored(page, LEARNER_QUEUE, SEEDED_QUEUE);
+  const before = await readAllStored(page);
+  await writeGatePass(page);
+  await page.evaluate((id) => window.location.assign(`/browse#t=${id}&s=gate`), STORY_ID);
+  await expect(page.getByTestId('browse-item')).toBeVisible();
+  await bootSettled(page);
+
+  // The sources page from the item page: Copy link only, no Open, and no strip (it is not a lesson screen).
+  await page.getByTestId('browse-see-sources').click();
+  await expect(page.getByTestId('story-sources-title')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Open link' })).toHaveCount(0);
+  await expect(page.getByTestId('preview-strip')).toHaveCount(0);
+  await page.getByTestId('story-sources-back').click();
+  await expect(page.getByTestId('browse-preview')).toHaveText('Preview this story');
+  await expect(page.getByTestId('browse-preview-questions')).toBeVisible();
+
+  // The replay reader at scene 1 of the lowest level, under the strip.
+  await page.getByTestId('browse-preview').click();
+  await expect(page.getByTestId('preview-strip')).toBeVisible();
+  await expect(position(page)).toHaveText(/^1 \/ \d+$/);
+  await shot(page, 'br8-browse-story-reader-pixel5');
+  const total = Number(/\/ (\d+)$/.exec(await position(page).innerText())?.[1] ?? '0');
+  for (let i = 1; i <= total; i += 1) await nextPage(page);
+  await page.getByTestId('story-reader-end-primary').click();
+
+  // The story form of the end screen: no stars, no card.
+  await expect(page.getByRole('heading', { name: 'That is the whole story.' })).toBeVisible();
+  await expect(page.getByText('A learner can read it again any time.')).toBeVisible();
+  await expect(page.getByTestId('browse-end-card')).toHaveCount(0);
+  await expect(page.getByTestId('browse-end-again')).toHaveText('Read again');
+  await shot(page, 'br8-browse-story-end-pixel5');
+  await page.getByTestId('browse-end-back').click();
+  await expect(page.getByTestId('browse-item')).toBeVisible();
+
+  // Preview the questions plays the story's quest, and Leave returns to the story page, not the quest's page.
+  await page.getByTestId('browse-preview-questions').click();
+  await expect(page.getByTestId('preview-strip')).toBeVisible();
+  await page.getByTestId('preview-leave').click();
+  await page.getByTestId('browse-leave-confirm').click();
+  await expect(page.getByTestId('browse-preview')).toHaveText('Preview this story');
+  await expect(page.getByTestId('browse-preview-questions')).toBeVisible();
+
+  const after = await readAllStored(page);
+  const changed = [...new Set([...Object.keys(before), ...Object.keys(after)])].filter((k) => before[k] !== after[k]);
+  expect(changed.filter((k) => !k.startsWith('hr:browse:'))).toEqual([]);
+  expect(after[LEARNER_QUEUE]).toBe(SEEDED_QUEUE);
 });
