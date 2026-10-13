@@ -3,6 +3,7 @@ import { useNavigation, useRoute, type RouteProp } from '@react-navigation/nativ
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React from 'react';
 import type { RootStackParamList } from '../../navigation/types';
+import { backToNotes } from './back-to-notes';
 import { NoteDetailPane } from './NoteDetailPane';
 import { BackButton } from './parts';
 
@@ -20,8 +21,8 @@ export function NoteDetailScreen(): React.ReactElement {
       <Spacer size="sm" />
       <NoteDetailPane
         noteId={noteId}
-        onPutAway={() => navigation.replace('Notes', { notice: 'putAway' })}
-        onSeeMyNotes={() => navigation.replace('Notes')}
+        onPutAway={() => backToNotes(navigation, { notice: 'putAway' })}
+        onSeeMyNotes={() => backToNotes(navigation)}
       />
       <Spacer size="xl" />
     </Screen>

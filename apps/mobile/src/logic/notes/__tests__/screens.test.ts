@@ -6,6 +6,7 @@ import {
   cardShownEvent,
   listViewedEvent,
   myNotesRowView,
+  notesReturnRoutes,
   noteOpenedEvent,
   reactionPickedEvent,
   reportLinkA11y,
@@ -141,5 +142,27 @@ describe('myNotesRowView (section 6.5 item 2)', () => {
     expect(myNotesRowView({ enabled: true, memberships: [], data: data({ notes: [read] }) })).toEqual({ isNew: false });
     // A put-away unread note is not new on this device.
     expect(myNotesRowView({ enabled: true, memberships: [], data: data({ notes: [note('aaaaaaaa')], putAway: ['note:aaaaaaaa'] }) })).toEqual({ isNew: false });
+  });
+});
+
+describe('notesReturnRoutes (back to one My notes, section 6.10 items 3 and 4)', () => {
+  const r = (name: string, key = name): { key: string; name: string } => ({ key, name });
+
+  it('drops the note page (and the sheet and PIN above it) and goes back to the My notes below', () => {
+    expect(notesReturnRoutes([r('Main'), r('Notes'), r('NoteDetail')]).map((x) => x.name)).toEqual(['Main', 'Notes']);
+    expect(notesReturnRoutes([r('Main'), r('Notes'), r('NoteDetail'), r('NoteReport')]).map((x) => x.name)).toEqual(['Main', 'Notes']);
+    expect(notesReturnRoutes([r('Main'), r('Notes'), r('NoteDetail'), r('PinEntry'), r('NoteReport')]).map((x) => x.name)).toEqual(['Main', 'Notes']);
+    // The same Notes route is kept (its key), so the list is not stacked twice.
+    expect(notesReturnRoutes([r('Main'), r('Notes', 'notes-1'), r('NoteDetail')])[1]).toEqual({ key: 'notes-1', name: 'Notes' });
+  });
+
+  it('adds one My notes when none is below (the Home card opened the note)', () => {
+    const out = notesReturnRoutes([r('Main'), r('NoteDetail'), r('NoteReport')]);
+    expect(out.map((x) => x.name)).toEqual(['Main', 'Notes']);
+    expect(out[1]?.key).toMatch(/^Notes-/);
+  });
+
+  it('a wide window: the sheet over My notes goes back to it', () => {
+    expect(notesReturnRoutes([r('Main'), r('Notes'), r('NoteReport')]).map((x) => x.name)).toEqual(['Main', 'Notes']);
   });
 });

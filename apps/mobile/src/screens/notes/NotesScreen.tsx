@@ -52,6 +52,16 @@ export function NotesScreen(): React.ReactElement {
   const [selected, setSelected] = useState<string | null>(null);
   const [notice, setNotice] = useState(route.params?.notice === 'putAway');
   const viewed = useRef<string | null>(null);
+  /** Two panes open the newest note once per visit; after that only a tapped row opens (and so is marked read). */
+  const autoPicked = useRef(false);
+
+  // Back from a note page that put its note away: this same list says so once.
+  const noticeParam = route.params?.notice;
+  useEffect(() => {
+    if (noticeParam !== 'putAway') return;
+    setNotice(true);
+    navigation.setParams({ notice: undefined });
+  }, [noticeParam, navigation]);
 
   useEffect(() => {
     if (status !== 'ready' || profileId === null || viewed.current === profileId) return;
@@ -59,9 +69,17 @@ export function NotesScreen(): React.ReactElement {
     void track(listViewedEvent(list));
   }, [status, profileId, list]);
 
-  // Two panes: the open note is the picked row, else the newest (it is on screen, so it is opened).
+  // Two panes: the newest note opens once when the list first shows (it is on screen, so it is
+  // opened and marked read). The pick is pinned: a note that moves to Earlier, or one put away,
+  // never makes the next unread note open by itself.
   const twoPanes = panes === 2;
-  const openId = twoPanes ? (rows.find((r) => r.id === selected)?.id ?? rows[0]?.id ?? null) : null;
+  const firstId = rows[0]?.id ?? null;
+  useEffect(() => {
+    if (!twoPanes || autoPicked.current || firstId === null) return;
+    autoPicked.current = true;
+    setSelected((current) => current ?? firstId);
+  }, [twoPanes, firstId]);
+  const openId = twoPanes ? (rows.find((r) => r.id === selected)?.id ?? null) : null;
 
   const open = (id: string): void => {
     setNotice(false);

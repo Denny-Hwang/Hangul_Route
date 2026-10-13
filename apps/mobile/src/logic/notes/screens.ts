@@ -4,7 +4,7 @@ import type { RootStackParamList } from '../../navigation/types';
 import { episodeOfQuest } from '../browse/bundle';
 import { isPresetId } from './copy';
 import type { NotesData } from './types';
-import { visibleNotes, type HomeNotesCard, type NoteDetailView, type NoteRowView } from './view';
+import { showMyNotesRow, visibleNotes, type HomeNotesCard, type NoteDetailView, type NoteRowView } from './view';
 
 /**
  * What the learner's notes screens decide beyond the view models (F-FEEDBACK-001 FB-8; mocks
@@ -96,8 +96,20 @@ export function reportLinkA11y(m: Messages, label: string, selfManaged: boolean)
  * unread.
  */
 export function myNotesRowView(i: { enabled: boolean; memberships: readonly LearnerMembership[]; data: NotesData | null }): { isNew: boolean } | null {
-  if (!i.enabled) return null;
-  const cached = i.data?.notes.length ?? 0;
-  if (i.memberships.length === 0 && cached === 0) return null;
+  if (!showMyNotesRow(i)) return null;
   return { isNew: i.data !== null && visibleNotes(i.data).some((n) => n.readAt === null) };
+}
+
+/** The routes the note page, the gate and the report sheet stack over My notes. */
+const OVER_NOTES = new Set(['NoteDetail', 'PinEntry', 'NoteReport']);
+
+/**
+ * The stack after leaving a note for My notes (Put this note away, Done on the report sheet): the
+ * note page and whatever sits over it are dropped, and the My notes below is kept (its key, so the
+ * list is never stacked twice); when the note was opened from Home, one My notes is added.
+ */
+export function notesReturnRoutes<R extends { key: string; name: string }>(routes: readonly R[]): Array<R | { key: string; name: 'Notes' }> {
+  const kept = [...routes];
+  while (kept.length > 1 && OVER_NOTES.has(kept[kept.length - 1]?.name ?? '')) kept.pop();
+  return kept[kept.length - 1]?.name === 'Notes' ? kept : [...kept, { key: `Notes-${Date.now().toString(36)}`, name: 'Notes' }];
 }

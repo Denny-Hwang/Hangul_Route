@@ -18,11 +18,15 @@ import { shot } from './shots';
  */
 
 const NOTES = process.env.E2E_NOTES === '1';
+/** The free-plan switch (F-ENT-003): only a build with it on has closed quests. */
+const GATED = process.env.E2E_CONTENT_GATING === '1';
 const NOW = Date.parse('2026-10-12T12:00:00.000Z');
 const EMOJI = /\p{Extended_Pictographic}/u;
 /** Never on a learner notes screen: shame and pressure words, a ranking, an unread warning. */
 const NEVER = /unread|ignored|no reply|\blate\b|behind|missed|ranking|\bprice\b|premium|upgrade/i;
 const QUEST = 'quest:stage1-letters-q1';
+/** A Stage 2 quest: closed for a learner on the free plan (all of Stage 1). */
+const CLOSED_QUEST = 'quest:stage2-life-q1';
 
 const iso = (hoursAgo: number): string => new Date(NOW - hoursAgo * 3_600_000).toISOString();
 
@@ -79,7 +83,7 @@ async function closeInstallGuide(page: Page): Promise<void> {
   if (await guide.isVisible()) await guide.getByRole('button', { name: 'Not now' }).click();
 }
 
-async function learnerWithNotes(page: Page, notes: SeedNote[], o: { self?: boolean; name?: string } = {}): Promise<string> {
+async function learnerWithNotes(page: Page, notes: SeedNote[], o: { self?: boolean; name?: string; memberships?: unknown[] } = {}): Promise<string> {
   const name = o.name ?? 'Mina';
   await page.clock.setFixedTime(NOW);
   if (o.self) await onboardSelf(page, { name, startJourney: false });
@@ -87,7 +91,7 @@ async function learnerWithNotes(page: Page, notes: SeedNote[], o: { self?: boole
   await page.goto('/');
   await expect(page.getByText(`Hi, ${name}!`)).toBeVisible();
   const profileId = (await readStored<string>(page, 'profiles:active')) as string;
-  await seedStored(page, `memberships:${profileId}`, MEMBERSHIPS);
+  await seedStored(page, `memberships:${profileId}`, o.memberships ?? MEMBERSHIPS);
   await seedStored(page, `notes:${profileId}`, { notes, prefs: { classes: 'all', acknowledged: true }, putAway: [], classNotesCardSeen: true, queue: [] });
   await expect(page.getByText(`Hi, ${name}!`)).toBeVisible();
   await closeInstallGuide(page);
@@ -237,6 +241,30 @@ test.describe('notes screens (flag on)', () => {
     expect(stored?.putAway).toEqual(['note:aaaaaaaa']);
     expect(stored?.queue.filter((w) => w.kind === 'report')).toEqual([]);
     await shot(page, 'notes-put-away');
+    // One My notes on the stack: one Back reaches Profile.
+    await page.getByTestId('notes-back').click();
+    await expect(page.getByTestId('profile-notes-row')).toBeVisible();
+  });
+
+  test('a closed suggested quest shows its caption, with no Start, no gate and no paywall', async ({ page }) => {
+    test.skip(!GATED, 'needs a build with EXPO_PUBLIC_CONTENT_GATING_ENABLED=true and E2E_CONTENT_GATING=1');
+    // A class space opens every quest for its learners, so this learner is on the free plan alone: the
+    // note stays on the device from an earlier sync.
+    await learnerWithNotes(page, [classNote({ presetId: 'next_try_this', text: null, suggest: { kind: 'quest', id: CLOSED_QUEST } })], { memberships: [] });
+    await page.getByTestId('home-notes-card').click();
+    const quest = page.getByTestId('note-quest-closed');
+    await expect(quest).toBeVisible();
+    await expect(page.getByTestId('note-quest-closed-caption')).toHaveText('Opens with the full route');
+    await expect(page.getByTestId('note-quest-open')).toHaveCount(0);
+    await expect(page.getByTestId('note-quest-start')).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'Start' })).toHaveCount(0);
+    await expect(quest.getByRole('button')).toHaveCount(0);
+    // Tapping the card opens nothing: no PIN screen, no plan or price page.
+    await quest.click();
+    await expect(page.getByTestId('note-page')).toBeVisible();
+    await expect(page.getByText('Enter your 4-digit PIN to continue.')).toHaveCount(0);
+    expect(await page.locator('body').innerText()).not.toMatch(NEVER);
+    await shot(page, 'notes-page-quest-closed');
   });
 
   test('Tell a grown-up opens the PIN screen on a family device', async ({ page }) => {
@@ -255,20 +283,45 @@ test.describe('notes screens (flag on)', () => {
 
   test('wide window: My notes and the open note side by side, the open row marked', async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 900 });
-    await learnerWithNotes(page, [classNote(), familyNote()]);
+    const profileId = await learnerWithNotes(page, [classNote(), familyNote()]);
     await expect(page.getByTestId('home-side-column').getByTestId('home-notes-card')).toBeVisible();
     await shot(page, 'notes-home-wide');
     await page.getByTestId('home-notes-card').click();
     const rows = page.getByTestId('notes-list').getByRole('link');
     await expect(rows).toHaveCount(2);
-    await expect(rows.first()).toHaveAttribute('aria-current', 'true');
+    const classRow = page.getByTestId('notes-row-note:aaaaaaaa');
+    const familyRow = page.getByTestId('notes-row-note:bbbbbbbb');
+    await expect(classRow).toHaveAttribute('aria-current', 'true');
     await expect(page.getByTestId('note-preset')).toHaveText('Your reading is getting stronger.');
-    await rows.nth(1).click();
-    await expect(rows.nth(1)).toHaveAttribute('aria-current', 'true');
+    // Only the open note is marked read: the next unread one waits under New until it is tapped.
+    const readAt = async (id: string): Promise<string | null | undefined> =>
+      ((await readStored<{ notes: SeedNote[] }>(page, `notes:${profileId}`))?.notes ?? []).find((n) => n.id === id)?.readAt;
+    await expect.poll(() => readAt('note:aaaaaaaa')).not.toBeNull();
+    await page.waitForTimeout(500);
+    expect(await readAt('note:bbbbbbbb')).toBeNull();
+    await expect(page.getByTestId('notes-group-new').getByTestId('notes-row-note:bbbbbbbb')).toBeVisible();
+    await expect(classRow).toHaveAttribute('aria-current', 'true');
+    await expect(page.getByTestId('note-preset')).toHaveText('Your reading is getting stronger.');
+    await familyRow.click();
+    await expect(familyRow).toHaveAttribute('aria-current', 'true');
     await expect(page.getByTestId('note-preset')).toHaveText('Thinking of you. Have fun learning today.');
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
     expect(overflow).toBeLessThanOrEqual(0);
     await shot(page, 'notes-list-wide');
+  });
+
+  test('wide window: putting the open note away opens no other note', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+    const profileId = await learnerWithNotes(page, [classNote(), familyNote()]);
+    await page.getByTestId('home-notes-card').click();
+    await expect(page.getByTestId('note-preset')).toHaveText('Your reading is getting stronger.');
+    await page.getByRole('button', { name: 'Put this note away' }).click();
+    await expect(page.getByTestId('notes-put-away-done')).toBeVisible();
+    await expect(page.getByTestId('note-preset')).toHaveCount(0);
+    await page.waitForTimeout(500);
+    const notes = (await readStored<{ notes: SeedNote[] }>(page, `notes:${profileId}`))?.notes ?? [];
+    expect(notes.find((n) => n.id === 'note:bbbbbbbb')?.readAt).toBeNull();
+    await expect(page.getByTestId('notes-group-new').getByRole('link')).toHaveCount(1);
   });
 
   test('no sideways scroll on the note page at 320', async ({ page }) => {
