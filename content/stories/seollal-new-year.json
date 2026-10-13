@@ -2,13 +2,15 @@
   "v": 1,
   "id": "story:seollal-new-year",
   "state": "ready",
-  "contentVer": 3,
+  "contentVer": 4,
   "title": {
     "ko": "호야의 설날 아침",
     "romanization": "Hoyaui Seollal achim",
     "en": "Hoya's Seollal Morning"
   },
   "summaryEn": "Hoya spends Seollal, the Lunar New Year, with a family: new seolbim clothes, a New Year bow (sebae), a warm bowl of tteokguk, and a lively game of yunnori.",
+  "hoyaIntroEn": "Happy New Year! Spend Seollal morning with me and a family.",
+  "hoyaOutroEn": "New clothes, a New Year bow, a bowl of tteokguk and a game of yunnori. What a happy Seollal!",
   "theme": "rites",
   "kind": "intangible",
   "recommendedStage": 1,
@@ -24,9 +26,11 @@
     "noteEn": "Heritage history, researched from the sources listed on the Sources screen."
   },
   "review": {
-    "language": "draft",
-    "culture": "draft",
-    "advisory": []
+    "language": "native-reviewed",
+    "culture": "culture-reviewed",
+    "advisory": [],
+    "reviewedBy": "MAR",
+    "reviewedAt": "2026-10-13"
   },
   "keywords": [
     {
@@ -595,8 +599,22 @@
     }
   ],
   "coverSceneId": "s1",
+  "rewardCardIds": {
+    "listen": "card:story-seollal-new-year"
+  },
+  "shelf": {
+    "category": "story-time",
+    "order": 1,
+    "sampler": true,
+    "minutes": 4
+  },
   "pillarTags": [],
   "companionId": "hoya",
+  "card": {
+    "titleEn": "Words of Blessing",
+    "keywordId": "deokdam",
+    "factId": "f5"
+  },
   "facts": [
     {
       "id": "f1",
@@ -876,7 +894,7 @@
     "passes": 3,
     "checkedAt": "2026-10-10",
     "scope": "cluster",
-    "notes": "Third independent pass over 6 episodes / 61 facts / 161 source entries (70 unique URLs). Every URL was re-fetched with my own scripts (UNESCO pages via Wayback copies; heritage.go.kr descriptions via the portal ajax html and khs.go.kr open API; folkency via its JSON API) and each quote or locator was machine-matched to the page text; the few non-matching strings were checked by hand (portal metadata fields, hanja or footnote punctuation, label text). Corrections: (1) pansori scene 2 now gives both UNESCO steps (2003 masterpiece proclamation, 2008 Representative List); (2) pansori f11 states the Aesop title as in the cited Townsend text and the common alternate title; (3) added sources: NFM 놀보박타령 for 'greedy' (f5), 표준국어대사전 타다 for 'sawed' (f6), 한국민족문화대백과사전 선도해 for the Samguk sagi tale (f12); (4) Seollal f9/f10 designation-date locators now cite the KHS open API field. No other change. See seasons-tales.signoff.md."
+    "notes": "Third independent pass over 6 episodes / 61 facts / 161 source entries (70 unique URLs). Every URL was re-fetched with my own scripts (UNESCO pages via Wayback copies; heritage.go.kr descriptions via the portal ajax html and khs.go.kr open API; folkency via its JSON API) and each quote or locator was machine-matched to the page text; the few non-matching strings were checked by hand (portal metadata fields, hanja or footnote punctuation, label text). Corrections: (1) pansori scene 2 now gives both UNESCO steps (2003 masterpiece proclamation, 2008 Representative List); (2) pansori f11 states the Aesop title as in the cited Townsend text and the common alternate title; (3) added sources: NFM 놀보박타령 for 'greedy' (f5), 표준국어대사전 타다 for 'sawed' (f6), 한국민족문화대백과사전 선도해 for the Samguk sagi tale (f12); (4) Seollal f9/f10 designation-date locators now cite the KHS open API field. No other change. See seasons-tales.signoff.md. MAR 2026-10-13 language review (F-STORY-001 PR 1.9): Korean strings, romanization and glosses read; findings and outcomes in the PR. MAR 2026-10-13 culture review (F-STORY-001 PR 1.9): heritage accuracy, framing, tone and advisories read; review.advisory confirmed; findings and outcomes in the PR."
   },
   "authorNotes": "Romanization: 윷놀이 is pronounced [윤노리], so RR (the repo converter) gives 'yunnori', and yunnori is the app-wide romanization (the yut heritage card also stores yunnori). 'Yut nori' (Korea Heritage Service) and 'yutnori' appear only as alternate English spellings. 'Saehae bok mani badeuseyo' is the greeting most people use today, but the Encyclopedia of Korean Culture calls it a modern greeting (older ones include '과세 안녕히 하셨습니까'). The narration keeps that in facts and doesn't call it ancient. The tteokguk age saying is presented only as a saying. Sebae money (세뱃돈) is described the way the Encyclopedia does: 'a little money, or rice cakes and fruit'. Left out on purpose: the sources don't explain which way up the yut sticks count for each throw (엎어지다/젖혀지다), so the narration doesn't say. Also left out are 차례 table details, 복조리, and 안택 rites. Note for existing content: heritage-cards.ts says tteokguk slices 'look like coins for good luck'. None of the sources checked here supports that, so it's not used here; please review it. REVISION 2026-10-10: \"four great holidays\" now stated as the late-Joseon Dongguk sesigi listing (the 1518 list had three: Seol, Dano, Chuseok, per the KHS portal). Check 3 reworded to an in-story question; \"Everyone\" softened to \"People\". AUTHORING 2026-10-11 (F-STORY-001 PR 1.8d): title romanization, scene captions and check explanations written from the cited facts; every scene is artPending (text-only tile) until the art PRs; no claim or source changed. Korean spacing: the learner term is written 국가 무형 유산 (spaced by word, 한글 맞춤법 제50항) so each word lines up with gukga muhyeong yusan; the facts keep the official 국가무형유산. REVIEW 2026-10-11 (PR 1.8d review fixes): s7 also cites f7 (the winning rule); s8 says 'listed' in short sentences; check 1 uses only words this story teaches; s4 now uses the halmeoni keyword as a token; learning goals use receptive verbs (Know, Understand, Read and recognize). PR #208 REVIEW FIXES 2026-10-11: s8 caption 'Two National Intangible Heritage listings' (f9's item is Seol and Daeboreum, not Seol alone; the full name exceeds the 48-character caption cap).",
   "errata": []

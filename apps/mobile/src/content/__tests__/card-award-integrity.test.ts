@@ -74,11 +74,20 @@ function finished(ids: readonly string[], stars: 1 | 2 | 3, episodes: readonly E
   };
 }
 
+/**
+ * Every episode a learner can play: the playable grid episodes and the shelf
+ * story episodes (F-STORY-004 §3.1), whose quests award the story cards.
+ */
+function offeredEpisodes(episodes: readonly Episode[]): Episode[] {
+  const shelf = episodes.filter((e) => e.placement === 'shelf' && (e.status === 'shipped' || e.status === 'ready'));
+  return [...playableEpisodes(episodes), ...shelf];
+}
+
 /** T-AWARD-1 over a world: each card in `cards` is listed to a learner who owns nothing, and finishing every playable quest at 1 star earns it. */
 function expectEarnable(w: AwardWorld, cards: readonly HeritageCard[]): void {
   const listed = new Set(obtainableCards(w, new Set()).map((c) => c.id));
   expect(cards.map((c) => c.id).filter((id) => !listed.has(id))).toEqual([]);
-  const all = playableEpisodes([...w.episodes]).flatMap((e) => e.questIds);
+  const all = offeredEpisodes(w.episodes).flatMap((e) => e.questIds);
   const earned = new Set(derivedAwards(w, finished(all, 1, w.episodes), PROFILE).map((a) => a.cardId));
   expect(cards.map((c) => c.id).filter((id) => !earned.has(id))).toEqual([]);
 }
@@ -94,7 +103,7 @@ describe('card award integrity (F-STORY-006 T-AWARD-1..5)', () => {
   });
 
   it('T-AWARD-1: finishing every playable quest, even at 1 star, earns every card', () => {
-    const all = playableEpisodes(episodesAll).flatMap((e) => e.questIds);
+    const all = offeredEpisodes(episodesAll).flatMap((e) => e.questIds);
     const earned = new Set(derivedAwards(world, finished(all, 1), PROFILE).map((a) => a.cardId));
     expect(earnable.map((c) => c.id).filter((id) => !earned.has(id))).toEqual([]);
   });
@@ -375,7 +384,8 @@ describe('heritage story cards (F-STORY-006 T-AWARD-6, T-AWARD-7)', () => {
     const shelfWorld = (shelved: readonly Story[], cardsOf: { cards: HeritageCard[]; sets: AwardWorld['sets'] }): AwardWorld => ({
       cards: [...handWritten, ...cardsOf.cards],
       episodes: [
-        ...episodesAll,
+        // The grid as shipped; the shelf is exactly the stories given here.
+        ...episodesAll.filter((e) => e.placement !== 'shelf'),
         ...shelved.map((s) => ({
           ...episodesAll[0]!,
           id: `episode:shelf-${slugOf(s.id)}`,
@@ -465,6 +475,48 @@ describe('heritage story cards (F-STORY-006 T-AWARD-6, T-AWARD-7)', () => {
       const count = (t: ThemeKey): number => themes.filter((x) => x === t).length;
       const top = Math.max(...themes.map(count));
       expect(def.theme, def.id).toBe(themes.find((t) => count(t) === top));
+    }
+  });
+});
+
+/**
+ * The fact on a story card's back face says what the card names (F-STORY-001
+ * PR 1.9 culture review; F-STORY-006 §3.8 as built), and reads as learner text
+ * with no Hangul. "Names the subject" is checked as: the claim contains the
+ * headword's romanization, or a word of four letters or more from the card
+ * title (a trailing plural "s" dropped), case-insensitively.
+ */
+describe('story card facts name their subject (F-STORY-006 §3.8 as built)', () => {
+  const HANGUL = /[ᄀ-ᇿ㄰-㆏가-힯]/;
+  const namesSubject = (claim: string, titleEn: string, romanization: string): boolean => {
+    const text = claim.toLowerCase();
+    if (text.includes(romanization.toLowerCase())) return true;
+    return titleEn
+      .toLowerCase()
+      .split(/[^a-z]+/)
+      .filter((w) => w.length >= 4)
+      .map((w) => w.replace(/s$/, ''))
+      .some((w) => text.includes(w));
+  };
+
+  it('the check itself: a matching title word or romanization passes, an unrelated fact fails', () => {
+    expect(namesSubject('Gimjang is the custom of making kimchi.', 'Making Winter Kimchi', 'gimjang')).toBe(true);
+    expect(namesSubject('The five basic consonant letters were made...', 'Consonants', 'jaeum')).toBe(true);
+    expect(namesSubject('Arirang exists in many regional versions.', 'Making Winter Kimchi', 'gimjang')).toBe(false);
+    expect(namesSubject('Soil differs in dryness and dampness.', 'Rain Gauge', 'cheugugi')).toBe(false);
+  });
+
+  it('every bundled story card fact names the card subject and carries no Hangul', () => {
+    const withCard = storiesAll.filter((s) => s.card);
+    expect(withCard.length).toBeGreaterThan(0);
+    for (const story of withCard) {
+      const card = story.card;
+      if (!card) continue;
+      const keyword = story.keywords.find((k) => k.id === card.keywordId);
+      const fact = story.facts.find((f) => f.id === card.factId);
+      if (!keyword || !fact) throw new Error(`${story.id}: card keyword or fact does not resolve`);
+      expect(namesSubject(fact.claimEn, card.titleEn, keyword.romanization), `${story.id} ${card.titleEn}: ${fact.id}`).toBe(true);
+      expect(fact.claimEn, `${story.id}: ${fact.id}`).not.toMatch(HANGUL);
     }
   });
 });

@@ -53,7 +53,8 @@ describe('STAGE1_QUESTS (shipped content)', () => {
   it('is exactly the stage1 quests of the shipped grid episodes', () => {
     const ids = new Set(
       episodesAll
-        .filter((e) => e.stage === 'stage1' && (e.status === 'shipped' || e.status === 'ready'))
+        // Grid episodes only: a shelf story's episode also says stage1 (F-STORY-004 §3.1) but teaches no letter.
+        .filter((e) => e.stage === 'stage1' && e.placement !== 'shelf' && (e.status === 'shipped' || e.status === 'ready'))
         .flatMap((e) => e.questIds),
     );
     expect(STAGE1_QUESTS.map((q) => q.id)).toEqual(questsAll.filter((q) => ids.has(q.id)).map((q) => q.id));

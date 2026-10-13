@@ -36,6 +36,7 @@ const {
   checkBudget,
   heldStoryCards,
   levelCode,
+  offShelfStory,
   renderBundle,
   slugOf,
 } = await import(SCRIPT);
@@ -507,6 +508,27 @@ describe("build-stories.mjs: --include-fixtures (F-STORY-002 PR 2.6a, e2e builds
     assert.match(r.stdout, /do not commit/i);
   });
 
+  test("content stories ship off the shelf: no shelf, card or listen reward, so the fixtures alone fill the shelf (F-STORY-001 PR 1.9)", () => {
+    const root = makeRoot();
+    putFixtures(root);
+    putStory(root, ready({ id: "story:zz-content", rewardCardIds: { listen: "card:story-zz-content" }, card: { titleEn: "Content", keywordId: "sejong", factId: "f1" } }));
+    const r = run(root, ["--include-fixtures"]);
+    assert.equal(r.status, 0, r.stderr + r.stdout);
+    const src = generatedOf(root);
+    const [content] = JSON.parse(src.match(/const contentStories: Story\[\] = ([\s\S]*?);\n\n/)[1]);
+    assert.equal(content.id, "story:zz-content");
+    assert.equal(content.shelf, undefined);
+    assert.equal(content.card, undefined);
+    assert.equal(content.rewardCardIds?.listen, undefined);
+    const episodes = JSON.parse(src.match(/export const storyEpisodes: Episode\[\] = ([\s\S]*?);\n\nexport/)[1]);
+    assert.deepEqual(episodes.map((e) => e.id), ["episode:shelf-hangul-day"]);
+    // The release bundle keeps the content story on its shelf.
+    assert.equal(run(root).status, 0);
+    const released = evaluate(generatedOf(root));
+    assert.deepEqual(released.storyEpisodes.map((e) => e.id), ["episode:shelf-zz-content"]);
+    assert.ok(released.storiesAll[0].shelf);
+  });
+
   test("the bundle without the flag never holds a fixture, so --check fails on a fixture bundle", () => {
     const root = makeRoot();
     putFixtures(root);
@@ -596,8 +618,8 @@ describe("build-stories.mjs: --report and the bundle budget", () => {
     assert.ok(problems.some((p) => /gzip/.test(p)));
   });
 
-  test("the launch budget matches the spec (1.0 MB raw, 260 KB gzip, 60 KB per story, 130 KB scene art)", () => {
-    assert.equal(BUDGET.totalRaw, 1_000_000);
+  test("the launch budget matches the spec (1.1 MB raw, 260 KB gzip, 60 KB per story, 130 KB scene art)", () => {
+    assert.equal(BUDGET.totalRaw, 1_100_000);
     assert.equal(BUDGET.totalGzip, 260_000);
     assert.equal(BUDGET.perStoryRaw, 60_000);
     assert.equal(BUDGET.artRaw, 130_000);
@@ -637,5 +659,32 @@ describe("build-stories.mjs: the checked-in bundle", () => {
       cwd: REPO,
     });
     assert.equal(r.status, 0, r.stderr + r.stdout);
+  });
+});
+
+describe("build-stories.mjs: offShelfStory (the e2e fixture bundle)", () => {
+  const base = { id: "story:x", shelf: { category: "letters" }, card: { titleEn: "X" }, title: { ko: "x" } };
+
+  test("a story without rewardCardIds drops shelf and card and gains no rewardCardIds key", () => {
+    const out = offShelfStory(base);
+    assert.deepEqual(out, { id: "story:x", title: { ko: "x" } });
+    assert.equal("rewardCardIds" in out, false);
+  });
+
+  test("a listen-only reward is dropped with the key", () => {
+    const out = offShelfStory({ ...base, rewardCardIds: { listen: "card:x" } });
+    assert.equal("rewardCardIds" in out, false);
+  });
+
+  test("listen plus other rewards keeps the others", () => {
+    const out = offShelfStory({ ...base, rewardCardIds: { listen: "card:x", read: "card:y" } });
+    assert.deepEqual(out, { id: "story:x", title: { ko: "x" }, rewardCardIds: { read: "card:y" } });
+  });
+
+  test("does not change its input", () => {
+    const input = { ...base, rewardCardIds: { listen: "card:x" } };
+    offShelfStory(input);
+    assert.deepEqual(input.rewardCardIds, { listen: "card:x" });
+    assert.ok(input.shelf && input.card);
   });
 });

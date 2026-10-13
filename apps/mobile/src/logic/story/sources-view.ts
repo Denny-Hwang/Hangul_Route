@@ -13,7 +13,8 @@ import { isTraditionalTale, sceneCaption } from './scene-view';
  * the third scene of any tier: the tiers are read in order inside each scene
  * position, and the caption is the first tier's. A fact cited again later is
  * a "See fact" row; a fact no scene cites (used only by checks or culture
- * notes) goes in the final bucket.
+ * notes) goes in the "used" bucket, and the story card's fact, when no scene
+ * cites it (F-STORY-006 §3.8 card-back facts), goes last under "On the story card".
  *
  * The words come from `learner.story.sources` in the UI locale (the screen
  * passes `useMessages()`'s subtree); English by default.
@@ -62,7 +63,8 @@ export type SourcesItem = { type: 'fact'; fact: FactCardView } | { type: 'see'; 
 
 export type SourcesSection =
   | { kind: 'scene'; sceneIndex: number; heading: string; caption: string; items: SourcesItem[] }
-  | { kind: 'used'; heading: string; items: SourcesItem[] };
+  | { kind: 'used'; heading: string; items: SourcesItem[] }
+  | { kind: 'card'; heading: string; items: SourcesItem[] };
 
 export interface CorrectionView {
   id: string;
@@ -191,12 +193,22 @@ function sectionsOf(copy: SourcesCopy, story: Story, errata: ReturnType<typeof v
     }
   }
 
+  const cardFactId = story.card?.factId;
   const uncited = story.facts.filter((f) => !shown.has(f.id));
-  if (uncited.length > 0) {
+  const used = uncited.filter((f) => f.id !== cardFactId);
+  const onCard = uncited.filter((f) => f.id === cardFactId);
+  if (used.length > 0) {
     sections.push({
       kind: 'used',
       heading: copy.usedInQuestions,
-      items: uncited.map((f) => ({ type: 'fact', fact: factCard(copy, story, f, errata) })),
+      items: used.map((f) => ({ type: 'fact', fact: factCard(copy, story, f, errata) })),
+    });
+  }
+  if (onCard.length > 0) {
+    sections.push({
+      kind: 'card',
+      heading: copy.onTheCard,
+      items: onCard.map((f) => ({ type: 'fact', fact: factCard(copy, story, f, errata) })),
     });
   }
   return sections;

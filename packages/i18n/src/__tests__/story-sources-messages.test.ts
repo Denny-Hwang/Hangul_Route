@@ -27,6 +27,7 @@ describe('learner.story.sources (English wording as shipped in PR 2.5)', () => {
     expect(s.scope.inTheTale).toBe('What the tale says');
     expect(s.updated.pill).toBe('Updated');
     expect(s.usedInQuestions).toBe('Used in questions and notes');
+    expect(s.onTheCard).toBe('On the story card');
     expect(s.highlighted.pill).toBe('Highlighted');
     expect(s.noSources).toBe('No sources are listed for this story.');
   });

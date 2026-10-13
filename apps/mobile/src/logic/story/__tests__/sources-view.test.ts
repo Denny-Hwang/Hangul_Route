@@ -52,6 +52,28 @@ describe('buildSourcesView: facts grouped by the first scene that cites them (F-
     expect(see).toEqual({ type: 'see', factId: 'f1', label: 'See fact f1' });
   });
 
+  it('a fact cited only by the story card sits under "On the story card", after the questions bucket', () => {
+    const story = readyStory();
+    story.facts.push(fact('f4'), fact('f5'));
+    story.cultureNotes[0]!.factIds = ['f4'];
+    story.card = { titleEn: 'A card', keywordId: 'kw', factId: 'f5' };
+    const v = buildSourcesView(story);
+    expect(outline(v.sections).slice(-2)).toEqual([
+      ['Used in questions and notes', ['fact f4']],
+      ['On the story card', ['fact f5']],
+    ]);
+    expect(v.sections.at(-1)!.kind).toBe('card');
+    expect(findFactSection(v, 'f5')).toEqual({ section: v.sections.length - 1, item: 0 });
+  });
+
+  it('a card fact that a scene also cites stays under its scene (no card section)', () => {
+    const story = readyStory();
+    story.card = { titleEn: 'A card', keywordId: 'kw', factId: 'f1' };
+    const v = buildSourcesView(story);
+    expect(v.sections.some((s) => s.kind === 'card')).toBe(false);
+    expect(v.sections[0]!.items[0]).toMatchObject({ type: 'fact', fact: { id: 'f1' } });
+  });
+
   it('a fact cited by scenes 2 and 5 sits under Scene 2; Scene 5 shows only the reference (§3.14 #2)', () => {
     const story = readyStory();
     const listen = story.tiers[0]!;
@@ -271,6 +293,7 @@ describe('buildSourcesView: words from the UI locale (learner.story.sources, PR 
       sceneHeading: (n: number) => `S${n}`,
       seeFact: (id: string) => `->${id}`,
       usedInQuestions: 'UQ',
+      onTheCard: 'OC',
       counts: (f: number, s: number) => `${f}/${s}`,
       checked: (p: number, d: string, v: number) => `${p}|${d}|${v}`,
       sourcesHeading: (n: number) => `N${n}`,
@@ -280,11 +303,12 @@ describe('buildSourcesView: words from the UI locale (learner.story.sources, PR 
       noSources: 'NONE',
     };
     const story = readyStory();
-    story.facts.push(fact('f4'));
+    story.facts.push(fact('f4'), fact('f5'));
+    story.card = { titleEn: 'A card', keywordId: 'kw', factId: 'f5' };
     const v = buildSourcesView(story, tagged);
-    expect(v.sections.map((s) => s.heading)).toEqual(['S1', 'S2', 'S3', 'S4', 'UQ']);
+    expect(v.sections.map((s) => s.heading)).toEqual(['S1', 'S2', 'S3', 'S4', 'UQ', 'OC']);
     expect(v.sections[1]!.items[0]).toEqual({ type: 'see', factId: 'f1', label: '->f1' });
-    expect(v.counts.label).toBe('4/6');
+    expect(v.counts.label).toBe('5/7');
     expect(v.checked.label).toBe(`3|2026-10-10|${story.contentVer}`);
     const card = v.sections[0]!.items[0]!;
     expect(card.type === 'fact' && [card.fact.scopeLabel, card.fact.sourcesHeading, card.fact.sources[0]!.label, card.fact.sources[0]!.accessedLabel]).toEqual([

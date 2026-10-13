@@ -637,6 +637,7 @@ export const learner = {
       approximation: (text: string, rationale: string) => `“${text}”에 대해: ${rationale}`,
       dependsOnToday: '오늘 날짜에 따라 달라져요.',
       usedInQuestions: '문제와 노트에 쓰였어요',
+      onTheCard: '이야기 카드에 쓰였어요',
       highlighted: { pill: '강조됨' },
       openLink: { cta: '링크 열기' },
       copyLink: { cta: '링크 복사' },

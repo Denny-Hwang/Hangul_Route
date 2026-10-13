@@ -2,13 +2,15 @@
   "v": 1,
   "id": "story:sillok-mountain-archives",
   "state": "ready",
-  "contentVer": 2,
+  "contentVer": 3,
   "title": {
     "ko": "산으로 간 실록",
     "romanization": "Saneuro gan sillok",
     "en": "The Annals Hide in the Mountains"
   },
   "summaryEn": "After a king died, officials turned the historians' notes into the Annals and guarded the books in archives far away in the mountains. Hoya follows the Annals from draft to mountain archive.",
+  "hoyaIntroEn": "Where did the Annals go to stay safe? Let's follow them into the mountains!",
+  "hoyaOutroEn": "From notes to books to mountain archives: you followed the Annals all the way!",
   "theme": "letters",
   "kind": "documentary",
   "recommendedStage": 2,
@@ -25,13 +27,15 @@
     "noteEn": "Heritage history, researched from the sources listed on the Sources screen."
   },
   "review": {
-    "language": "draft",
-    "culture": "draft",
+    "language": "native-reviewed",
+    "culture": "culture-reviewed",
     "advisory": [
       "war",
       "loss"
     ],
-    "advisoryNoteEn": "Mentions a king's death and a war in which some books were lost, told briefly and with no violent detail."
+    "advisoryNoteEn": "Mentions a king's death and a war in which some books were lost, told briefly and with no violent detail.",
+    "reviewedBy": "MAR",
+    "reviewedAt": "2026-10-13"
   },
   "keywords": [
     {
@@ -609,8 +613,22 @@
     }
   ],
   "coverSceneId": "s1",
+  "rewardCardIds": {
+    "listen": "card:story-sillok-mountain-archives"
+  },
+  "shelf": {
+    "category": "culture",
+    "order": 8,
+    "sampler": false,
+    "minutes": 5
+  },
   "pillarTags": [],
   "companionId": "hoya",
+  "card": {
+    "titleEn": "History Archive",
+    "keywordId": "sago",
+    "factId": "f7"
+  },
   "facts": [
     {
       "id": "f1",
@@ -890,7 +908,7 @@
     "passes": 3,
     "checkedAt": "2026-10-10",
     "scope": "cluster",
-    "notes": "Third independent pass. All Sillok entries (Taejong 4/2/8 #4; Jeongjo 19/leap2/13 #1 and #3) re-fetched from sillok.history.go.kr and compared to original Chinese/Korean text. Every non-UNESCO URL cited was re-fetched fresh and every quote segment machine-matched, plus heritage.go.kr 국가유산 설명 text loaded from the portal's own ajax file (DATA1/heritage/hub_img/html/cul_*.html). UNESCO register pages for all four items verified via Internet Archive (registration years 1997/2001/2007/2011 with exact wording); Uigwe nomination PDF re-extracted and quotes/section numbers verified; Seungjeongwon nomination PDF could not be re-fetched (captcha) so the author's saved text was used, with other sources backing each fact. Corrections this pass: poswae schedule mistranslation (격 2년 = every third year, not every other year), 'dried herbs' removed, ep5 f4 quote exactified, 3 vocab words not appearing in scenes removed, ep5 f8 second source (정병모 판화사적 연구) and ep6 f3 festival official site added, UNESCO locators replaced by exact page wording, ep3 f7 3,045+198 clarification."
+    "notes": "Third independent pass. All Sillok entries (Taejong 4/2/8 #4; Jeongjo 19/leap2/13 #1 and #3) re-fetched from sillok.history.go.kr and compared to original Chinese/Korean text. Every non-UNESCO URL cited was re-fetched fresh and every quote segment machine-matched, plus heritage.go.kr 국가유산 설명 text loaded from the portal's own ajax file (DATA1/heritage/hub_img/html/cul_*.html). UNESCO register pages for all four items verified via Internet Archive (registration years 1997/2001/2007/2011 with exact wording); Uigwe nomination PDF re-extracted and quotes/section numbers verified; Seungjeongwon nomination PDF could not be re-fetched (captcha) so the author's saved text was used, with other sources backing each fact. Corrections this pass: poswae schedule mistranslation (격 2년 = every third year, not every other year), 'dried herbs' removed, ep5 f4 quote exactified, 3 vocab words not appearing in scenes removed, ep5 f8 second source (정병모 판화사적 연구) and ep6 f3 festival official site added, UNESCO locators replaced by exact page wording, ep3 f7 3,045+198 clarification. MAR 2026-10-13 language review (F-STORY-001 PR 1.9): Korean strings, romanization and glosses read; findings and outcomes in the PR. MAR 2026-10-13 culture review (F-STORY-001 PR 1.9): heritage accuracy, framing, tone and advisories read; review.advisory confirmed; findings and outcomes in the PR."
   },
   "authorNotes": "Sources disagree on how many sets were newly printed in 1603-1606 (Korea Heritage Service and National Archives: four; Encyclopedia of Korean Culture: three printed plus the original and a proof copy); all agree on five sets in five archives, so narration says 'making five sets'. Poswae frequency also differs slightly (every 3 years in NIKH and the Annals entry; every 2-3 years in National Archives; the 진술축미 schedule of the Encyclopedia's poswae entry, i.e. every third year, though it often slipped), so narration says 'every few years'. Revision: 'red silk' changed to 'red cloth' (the poswae entry says 홍보 'red wrapping cloth'; only the National Archives says silk); the herbs' purpose is now stated generally ('protect from bugs and rot', per the poswae entry and the National Archives) rather than the National Archives' split into cheongung = insects and changpo = germs/fragrance; 'on a sunny day' replaced by 'on a clear day' (supported by two sources); the closing sentence 'Thanks to such care, the Annals survive today' was removed because it was not backed by a fact entry. Secho by washing is limited to early Joseon (later drafts were mostly burned). The Imjin War is mentioned only as 'a great war' with no violent detail. Omitted as out of scope or tragic: later moves to Jeongjoksan/Jeoksangsan, the Qing invasion, colonial-era removal of the Odaesan copy and its loss in the 1923 Kanto earthquake, the Korean War, and the 2006 return.",
   "errata": []

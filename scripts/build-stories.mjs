@@ -43,9 +43,11 @@ export const GENERATED_HEADER =
  * Bundle budget (F-STORY-001 §3.9): the launch set of 24 stories. Raising a
  * ceiling is a reviewed one-line change. `artRaw` is the scene-art share
  * (F-STORY-002 §3.9.7): the compact JSON of every bundled scene's `art`.
+ * `totalRaw` was 1.0 MB until PR 1.9 gave all 24 stories a shelf block: their
+ * derived shelf episodes and quests add about 50 KB raw (gzip stays in budget).
  */
 export const BUDGET = Object.freeze({
-  totalRaw: 1_000_000,
+  totalRaw: 1_100_000,
   totalGzip: 260_000,
   perStoryRaw: 60_000,
   artRaw: 130_000,
@@ -268,6 +270,20 @@ export function renderFixtureBundle({ stories, fixtures, episodes, quests, held 
   );
 }
 
+/**
+ * A content story as the e2e bundle (--include-fixtures) carries it: still readable, but off the
+ * shelf (no `shelf`, `card` or listen reward card). The fixture specs own what the shelf, Home,
+ * the Journey and the Library show, so only the fixtures may fill them; the release bundle's own
+ * shelf is covered by the regular-build e2e (library-shelf-live.spec.ts). Since F-STORY-001 PR 1.9
+ * every content story has a shelf block. Pure.
+ */
+export function offShelfStory(story) {
+  const { shelf: _shelf, card: _card, rewardCardIds, ...rest } = story;
+  if (!rewardCardIds) return rest;
+  const { listen: _listen, ...otherRewards } = rewardCardIds;
+  return Object.keys(otherRewards).length > 0 ? { ...rest, rewardCardIds: otherRewards } : rest;
+}
+
 /** Pure: size problems as human-readable strings (empty = within budget). */
 export function checkBudget({ perStory, total, art }) {
   const problems = [];
@@ -435,8 +451,9 @@ export function main(argv, root) {
     }
     bundle = { ...buildBundle(stories), held: heldStoryCards(all) };
     if (opts.includeFixtures) {
-      const all = buildBundle([...stories, ...fixtures]);
-      bundle = { ...bundle, episodes: all.episodes, quests: all.quests };
+      const offShelf = stories.map(offShelfStory);
+      const all = buildBundle([...offShelf, ...fixtures]);
+      bundle = { ...bundle, stories: offShelf, episodes: all.episodes, quests: all.quests };
     }
   } catch (error) {
     if (error instanceof ContentError) {
