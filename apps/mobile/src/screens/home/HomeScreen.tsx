@@ -44,6 +44,7 @@ import {
   type MissionCard,
 } from '../../logic/homework/mission-builder';
 import { dueTodayCount, showsTodayCount } from '../../logic/homework/assignment-groups';
+import { homeCardLock } from '../../logic/homework/home-card-access';
 import { mergeAssignments } from '../../logic/homework/assignment-merger';
 import { gridQuestProgress } from '../../logic/journey';
 import { homeColumns } from '../../logic/layout/home-columns';
@@ -269,6 +270,11 @@ export function HomeScreen(): React.ReactElement {
   );
   const freeTopics = useMemo(() => freeTopicsInBuild(), []);
   const samplerStory = useMemo(() => samplerStoryOf(storyIndex), [storyIndex]);
+  // Story locks (F-STORY-004 §3.7): the story card is never picked locked, and a tap checks again (PR 4.8e).
+  const isStoryLocked = useMemo(
+    () => storyLockFor({ tier, gatingEnabled: gatingActive(flags, bundleOs()), episodes: episodesAll, isQuestOpen: questOpen }),
+    [tier, questOpen],
+  );
 
   // Today's mission: the plan is pinned for the day so finishing one card never reshuffles the other
   // two under the learner (F-HW-001 §3.2). The pin lives in a session store keyed by profile and day,
@@ -321,12 +327,7 @@ export function HomeScreen(): React.ReactElement {
       stories: {
         entries: storyIndex,
         bookmarks,
-        isLocked: storyLockFor({
-          tier,
-          gatingEnabled: gatingActive(flags, bundleOs()),
-          episodes: episodesAll,
-          isQuestOpen: questOpen,
-        }),
+        isLocked: isStoryLocked,
         // F-STORY-005 §3.4: stories near the learner's stage come first; it only orders, never hides.
         fits: storyFitsForSnapshot(snap),
       },
@@ -344,7 +345,7 @@ export function HomeScreen(): React.ReactElement {
     pinMission(merged);
     return merged;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [profile, snap, tier, questOpen, routeInput, bookmarks, storyIndex, freeEndSeen, freeTopics, samplerStory]);
+  }, [profile, snap, tier, questOpen, routeInput, bookmarks, storyIndex, freeEndSeen, freeTopics, samplerStory, isStoryLocked]);
 
   // The route strip (F-ROUTE-001 R-4b, OD-3): built from `routeModelInput`, the same input as the
   // Learning Route page, so the strip and the page always name the same stage and pips.
@@ -416,7 +417,19 @@ export function HomeScreen(): React.ReactElement {
     return true;
   };
 
+  // A pinned card whose quest closed, or whose story locked, after the pin takes the locked path, as a
+  // locked Library tile does (F-STORY-004 PR 4.8e); nothing is closed while gating is off.
+  const openLocked = (card: MissionCard): boolean => {
+    const lock = homeCardLock({ card, entries: storyIndex, isQuestOpen: questOpen, isStoryLocked, opensDirectly: gateOpensDirectlyNow() });
+    if (!lock) return false;
+    if (lock.storyId) void track({ name: 'story.locked.tapped', profileId: profile?.id, payload: { storyId: lock.storyId } });
+    if (lock.gate.route === 'Paywall') navigation.navigate('Paywall', lock.gate.params);
+    else navigation.navigate('PinEntry', lock.gate.params);
+    return true;
+  };
+
   const openCard = (card: MissionCard): void => {
+    if (openLocked(card)) return;
     if (card.kind === 'story' && openStory(card)) return;
     // A practice card of a word topic opens the topic page (F-ENT-003 section 3.7).
     if (card.kind === 'practice' && card.topicKey) {
