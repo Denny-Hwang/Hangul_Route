@@ -128,7 +128,8 @@ async function answerId(page: Page): Promise<string> {
     return item.id;
   }
   const text = await word.innerText();
-  const item = FOOD.find((i) => text.includes(i.ko));
+  // The longest word the prompt contains: 김밥 also contains 밥.
+  const item = [...FOOD].sort((a, b) => b.ko.length - a.ko.length).find((i) => text.includes(i.ko));
   if (!item) throw new Error(`no Food word in "${text}"`);
   return item.id;
 }
