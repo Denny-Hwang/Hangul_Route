@@ -1395,6 +1395,191 @@ export const consoleMsgs = {
     stageRow: (n: number, title: string, state: string) => `${n}. ${title} · ${state}`,
   },
   /**
+   * Class moves (F-SPACE-002 section 4.8, PR T-6a; mockups `design/screens/transfer/`, T-0b #472). "Move" is the
+   * user-facing word everywhere; `transfer` stays the internal name. The class pages say "student" through
+   * `memberNoun` (`memberNounSingular`), the family page says "learner". No card ever names who said no: every
+   * ending is `ended` with a date. No countdown on a family or destination surface (`daysLeft` is source-only
+   * meta text), no red, no price or plan name. Dates arrive formatted. The consent lines themselves are not here:
+   * they are the keyed en / ko / es catalogue `TRANSFER_CONSENT_TEXT` in content-schema (section 4.11); `consent`
+   * below holds only the sheet's frame around them.
+   */
+  transfer: {
+    /** Page heading and the document title's first part (T14: never a name in a title). */
+    title: 'Class moves',
+    /** `memberNounSingular(kind)`: one member of a space, for teacher and class copy. */
+    memberNoun: { family: 'learner', class: 'student', school: 'member' },
+    /** The roster button (permanent, as Re-link's) and the home and school-row counts; a count of 0 shows `entry.cta`. */
+    entry: { cta: 'Class moves' },
+    waiting: (n: number) => plural('en', n, { one: `${n} class move waiting`, other: `${n} class moves waiting` }),
+    /** A school row's link to one child class (counts only). */
+    schoolRow: (className: string, n: number) => `${className}: ${plural('en', n, { one: `${n} class move waiting`, other: `${n} class moves waiting` })}`,
+    back: (space: string) => `Back to ${space}`,
+    groups: {
+      leaving: 'Leaving this class',
+      joining: 'Joining this class',
+      asked: 'Asked about your learners',
+      start: 'Start a move',
+      prefs: 'Move requests from teachers',
+      history: 'Earlier',
+    },
+    empty: 'Nothing waiting.',
+    /** Each step is a glyph, the step name and a state word (never colour alone). */
+    steps: {
+      family: 'Family',
+      thisClass: 'This class',
+      newClass: 'New class',
+      saidYes: 'said yes',
+      youSaidYes: 'you said yes',
+      waiting: 'waiting',
+    },
+    /** Card meta: when it was asked; `days` is whole days since the request (0 = today). */
+    meta: {
+      asked: (days: number) => (days === 0 ? 'asked today' : plural('en', days, { one: `asked ${days} day ago`, other: `asked ${days} days ago` })),
+      askedByFamily: (days: number) =>
+        days === 0 ? 'asked by the family · today' : plural('en', days, { one: `asked by the family · ${days} day ago`, other: `asked by the family · ${days} days ago` }),
+      askedByClass: (className: string, days: number) =>
+        days === 0
+          ? `Asked by the teacher of ${className} · today`
+          : plural('en', days, { one: `Asked by the teacher of ${className} · ${days} day ago`, other: `Asked by the teacher of ${className} · ${days} days ago` }),
+      /** Source teacher's cards only, plain meta text (no countdown elsewhere). */
+      daysLeft: (days: number) => plural('en', days, { one: `${days} day left`, other: `${days} days left` }),
+    },
+    /** Card lines, one short sentence each. */
+    lines: {
+      familyAsked: (name: string) => `${name}'s family asked to move to another class.`,
+      familyAskedTo: (name: string, destination: string) => `${name}'s family asked to move to ${destination}.`,
+      waitingAll: 'Nothing changes until all three say yes.',
+      waitingFamily: 'Waiting for the family.',
+      newClass: (destination: string) => `New class: ${destination}`,
+      agreedBySchoolAdmin: 'Agreed by the school admin.',
+      waitingRoom: 'Waiting for room in the new class.',
+      scheduled: (date: string) => `Everyone agreed. The move happens on ${date}.`,
+      familySaidYes: 'The family has said yes.',
+      comingFrom: (source: string) => `Coming from ${source}.`,
+      youSaidYes: 'You said yes. Nothing changes until everyone says yes.',
+      fullClass: 'Everyone has said yes. This class is full right now.',
+      fullSchool: 'Everyone has said yes. The school is full right now.',
+      moveWaiting: 'Everyone has said yes. The move is waiting.',
+      learnerCap: (name: string) => `${name} is in the most classes allowed. Leave one, then the move can go ahead.`,
+      newCode: 'Your class code may have been shared during the move. You can make a new one.',
+      /** Family cards. */
+      waitingBoth: (date: string) => `Waiting for the other classes. The move happens after ${date} if both say yes. You can cancel any time.`,
+      waitingOne: (date: string) => `Waiting for the other class. The move happens after ${date} if it says yes. You can cancel any time.`,
+      planned: (date: string) => `A move is planned for ${date}.`,
+      checkAgain: 'Please check this again.',
+      moved: (name: string, className: string) => `Moved. ${name} is now in ${className}. Cards and stars stayed with ${name}.`,
+      movedTablet: (source: string) => `A tablet that joined through ${source} needs to join again.`,
+      movedOwn: (name: string, className: string) => `${name} moved to ${className} on their own.`,
+      notNowEnds: 'Not now ends this request. You can start a move yourself any time.',
+      manageOwn: (name: string) => `${name} manages their own classes. Ask them to start a move on their device.`,
+    },
+    /** History rows: a date and one of these, never a name (`noun` is `memberNoun`). */
+    history: {
+      movedOut: (noun: string) => `A ${noun} moved to another class`,
+      joined: (noun: string) => `A ${noun} joined this class`,
+      ended: 'This request ended.',
+      endedFromTablet: (name: string) => `Ended from ${name}'s tablet.`,
+    },
+    actions: {
+      agree: { cta: 'Agree' },
+      agreeBoth: { cta: 'Agree for both classes' },
+      notNow: { cta: 'Not now' },
+      noRoom: { cta: 'No room' },
+      accept: { cta: 'Accept' },
+      cancelRequest: { cta: 'Cancel request' },
+      cancel: { cta: 'Cancel' },
+      tryAgain: { cta: 'Try again' },
+      refresh: { cta: 'Refresh' },
+      newCode: { cta: 'New class code' },
+      review: { cta: 'Review and agree' },
+      view: { cta: 'View' },
+      backToRoster: { cta: 'Back to the roster' },
+    },
+    /** Page and card states (wireframe "States"). */
+    states: {
+      failed: "Didn't go through",
+      changed: 'Something changed. Look again.',
+      forbidden: "You can no longer answer this class's moves.",
+      locked: "Class moves aren't available yet.",
+      offline: 'This needs internet.',
+      familyTooNew: 'Moves open one day after a family is set up.',
+      conflicted: "A teacher of this class can't answer for the family.",
+    },
+    /** The settings learner row and the start sheet (T-6c; `start-sheet.md`). */
+    start: {
+      move: { class: { cta: 'Move to another class' }, family: { cta: 'Move to a class' } },
+      title: (name: string) => `Move ${name} to another class`,
+      step1: 'Ask the other teacher for their class code.',
+      find: { cta: 'Find class' },
+      looking: { cta: 'Looking…' },
+      found: (destination: string) => `Move to "${destination}"?`,
+      familyFirst: 'The family is asked first. The other class sees nothing until the family says yes. Then it sees only initials, a picture and a level until the move.',
+      nothingUntil: 'Nothing changes until everyone has said yes, and then not for 2 days.',
+      keeps: (name: string) => `${name} keeps cards and stars. You can cancel any time before the move.`,
+      send: { cta: 'Send request' },
+      sending: { cta: 'Sending…' },
+      sent: 'Request sent. Nothing changes until everyone says yes.',
+      /** The family's Start a move panel (T-6d; `family-page.md`). */
+      learner: 'Learner',
+      nowIn: 'Now in',
+      newCode: 'New class code',
+      noLearner: 'No learner here is in a class right now.',
+      prefs: 'Do not accept move requests from teachers',
+    },
+    /** One sentence per answer of preview / create, under the code field (`startErrorKey`). */
+    errors: {
+      codeNotFound: "That code didn't work.",
+      codeExpired: 'That code is too old. Ask for a new one.',
+      full: 'That class is full right now.',
+      alreadyMember: (name: string) => `${name} is already in that class.`,
+      tooManyAttempts: 'Too many tries. Try again later.',
+      cannotSend: "This request can't be sent right now.",
+      familyNeeded: 'A family account is needed to answer this. Ask the family to start the move from their app.',
+      sameSpace: (name: string) => `That code is for the class ${name} is in now.`,
+      alreadyOpen: (name: string) => `${name} already has a move waiting.`,
+      alreadyOpenClass: (name: string) => `A class already asked about moving ${name}. Its card is above.`,
+      alreadyOpenFamily: (name: string) => `A move for ${name} is already waiting. Its card is above.`,
+      destinationBusy: 'That class has many moves waiting. Try again in a few days.',
+      tooManyRequests: 'Too many moves were started today. Try again tomorrow.',
+      notTransferable: "That code can't be used for a move.",
+      cooldown: 'You can ask again in about a week.',
+      localeUnavailable: 'Not available in your language yet.',
+    },
+    /**
+     * The consent sheet's frame (T-6d; `consent-sheet.md`): title, identity block, `visible_today` items, the reading
+     * hint and the buttons. The sheet renders this frame in the language its switch picks, like the lines.
+     */
+    consent: {
+      title: (name: string, destination: string) => `Move ${name} to ${destination}?`,
+      language: 'Language',
+      who: 'Who is the new class?',
+      teacher: (owner: string) => `Teacher: ${owner}`,
+      learners: (n: number) => plural('en', n, { one: `${n} learner`, other: `${n} learners` }),
+      age: { days: 'Less than a week old', weeks: 'A few weeks old', months: 'A few months old', years: 'More than a year old' },
+      visibleClass: (space: string, owner: string) => `${space} (teacher ${owner})`,
+      visibleYou: (family: string) => `${family} (you)`,
+      visibleFamily: (family: string, owner: string) => `${family} (family, ${owner})`,
+      readToEnd: 'Read to the end to continue.',
+      updated: 'This text was updated. Please read it again.',
+      unavailable: 'Not available in your language yet.',
+      yes: (name: string) => `Yes, move ${name}`,
+      notNow: { cta: 'Not now' },
+      tryAgain: { cta: 'Try again' },
+      failed: "Didn't go through",
+    },
+    /** Read aloud, never drawn. */
+    a11y: {
+      steps: 'Who has said yes',
+      reasons: 'Choose an answer',
+      notNowReasons: 'Not now, choose a reason',
+      updated: 'Class moves updated.',
+      to: 'to',
+      close: 'Close',
+      moveRow: (name: string) => `Move ${name} to another class`,
+      moveRowFamily: (name: string) => `Move ${name} to a class`,
+    },
+  },
+  /**
    * Notes from grown-ups on app.hangulroute.com (F-FEEDBACK-001 FB-5; wireframes console/note-composer.md,
    * console/notes-sent.md, console/family-notes.md, console/notes-hub.md). FB-10 builds the view models,
    * FB-11a, FB-11b and FB-12 render them. Where the space kind changes the word, a `class` / `family`
