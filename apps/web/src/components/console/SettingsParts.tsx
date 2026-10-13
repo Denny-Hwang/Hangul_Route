@@ -1,6 +1,7 @@
 'use client';
 
 import { colors, spacing, typography } from '@hangul-route/design-system/tokens';
+import { MoveRowAction } from '@/components/console/TransferParts';
 import { Button, Field, Muted, panelStyle } from '@/components/console/ui';
 import type { MemberView, Roster } from '@/lib/console/api';
 import { canDeleteLearnerData } from '@/lib/console/relink';
@@ -33,6 +34,12 @@ export interface SettingsSectionsProps {
   onDeleteTarget: (memberId: string) => void;
   onTypedName: (value: string) => void;
   onDelete: (member: MemberView) => void;
+  /**
+   * Class moves (F-SPACE-002 section 4.8, T-6c; design/screens/transfer/start-sheet.md): when set, a live class's
+   * learner rows show **Move to another class** before Remove (never in the Danger zone); offline it is disabled
+   * with "This needs internet.". Absent while `NEXT_PUBLIC_CLASS_TRANSFER` is unset or the session is locked.
+   */
+  move?: { online: boolean; onMove: (member: MemberView) => void };
 }
 
 const h2Style = { fontSize: typography.size.bodyLg, margin: `0 0 ${spacing.xs}px` } as const;
@@ -56,6 +63,7 @@ export function SettingsSections({
   onDeleteTarget,
   onTypedName,
   onDelete,
+  move,
 }: SettingsSectionsProps): JSX.Element {
   const { messages, locale } = useConsoleLocale();
   const c = messages.console;
@@ -124,13 +132,16 @@ export function SettingsSections({
         <h2 style={h2Style}>{s.learners.title[space.kind]}</h2>
         {learners.length === 0 ? <Muted>{s.learners.none}</Muted> : null}
         {learners.map((l) => (
-          <div key={l.memberId} style={rowStyle}>
+          <div key={l.memberId} style={{ ...rowStyle, flexWrap: 'wrap' }}>
             <span>
               {l.name} <span style={{ color: colors.text.muted }}>· {c.space.learner.joined(relativeDay(l.joinedAt, now, locale))}</span>
             </span>
-            <Button disabled={busy || archived} onClick={() => onRemoveLearner(l)}>
-              {s.learners.remove[space.kind].cta}
-            </Button>
+            <span style={{ display: 'flex', flexWrap: 'wrap', gap: spacing.sm, alignItems: 'center' }}>
+              {move && space.kind === 'class' && !archived ? <MoveRowAction name={l.name} online={move.online} onMove={() => move.onMove(l)} /> : null}
+              <Button disabled={busy || archived} onClick={() => onRemoveLearner(l)}>
+                {s.learners.remove[space.kind].cta}
+              </Button>
+            </span>
           </div>
         ))}
       </section>
