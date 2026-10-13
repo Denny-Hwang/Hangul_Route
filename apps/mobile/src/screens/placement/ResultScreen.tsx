@@ -199,7 +199,7 @@ function ResultView({ check }: { check: FinishedCheck }): React.ReactElement {
             onChange={() => onResultAction('changePlan')}
           />
           <Spacer size="sm" />
-          <Button label={copy.strip.justStart} tone="secondary" size="lg" fullWidth disabled={busy} onPress={() => onResultAction('justStart')} testID="placement-plan-just-start" />
+          <Button label={copy.strip.justStart} tone="ghost" size="lg" fullWidth disabled={busy} onPress={() => onResultAction('justStart')} testID="placement-plan-just-start" />
         </>
       ) : null}
       {view.planUpdate ? (
