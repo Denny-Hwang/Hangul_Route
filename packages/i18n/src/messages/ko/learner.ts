@@ -53,7 +53,7 @@ export const learner = {
   firstQuest: {
     title: '첫 카드가 기다리고 있어요.',
     bubble: '첫 퀘스트에서 한글 글자를 만나고 문화 카드를 받을 거예요.',
-    bubbleNoQuest: '먼저 제가 둘러보게 해 줄게요!',
+    bubbleNoQuest: '먼저 제가 구경시켜 줄게요!',
     summary: (quests: number, minutes: number, cards: number) => `퀘스트 ${quests}개 · 약 ${minutes}분 · 카드 ${cards}장이 기다려요`,
     firstUp: '첫 번째',
     questLine: (title: string, blurb: string | null) => (blurb === null || blurb === '' ? title : `${title} — ${blurb}`),
@@ -141,7 +141,7 @@ export const learner = {
       pill: (days: number) => `${days}일 연속`,
     },
     cards: { pill: (cards: number) => `카드 ${cards}장` },
-    stars: { pill: (quests: number) => `별 받은 퀘스트 ${quests}개` },
+    stars: { pill: (quests: number) => `별 퀘스트 ${quests}개` },
     mission: {
       heading: '오늘 호야와 함께',
       dailyTest: { title: '빠른 복습' },
@@ -214,7 +214,7 @@ export const learner = {
       story: '이야기를 끝내면 그 카드를 받아요.',
       welcome: '호야의 호랑이 카드는 환영 선물이에요.',
     },
-    panes: { master: '카드 모음', detail: '카드 정보' },
+    panes: { master: '카드 목록', detail: '카드 정보' },
     earnHint: {
       episode: (title: string) => `에피소드 끝내기: ${title}`,
       story: (title: string) => `이야기 끝내기: ${title}`,
@@ -319,7 +319,7 @@ export const learner = {
       tomorrow: '내일',
       inDays: (n: number) => `${n}일 뒤`,
     },
-    from: { parent: '집에서', teacher: '반에서', system: '호야가', route: '내 계획' },
+    from: { parent: '집에서', teacher: '반에서', system: '호야에게서', route: '내 계획' },
     moreToday: '더 기다리고 있어요. 하나씩 나와요.',
     later: '나중에',
   },
@@ -767,7 +767,7 @@ export const learner = {
     soundNeeded: {
       title: '소리를 켜야 할 수 있어요',
       tryAgain: '다시 해 보기',
-      startLearning: '배우기 시작',
+      startLearning: '배우기 시작하기',
       withoutSound: '소리 없이 확인하기',
     },
     resume: { title: '하던 곳부터 이어서 할까요?', continue: '이어서 하기', startAgain: '처음부터 하기' },
@@ -919,7 +919,7 @@ export const learner = {
     },
     games: {
       title: (skill: string) => `이 기술을 키우는 게임: ${skill}`,
-      note: '이 게임 가운데 하나가 들어 있는 퀘스트를 끝내면 여기에 세어져요.',
+      note: '이 게임 가운데 하나가 들어 있는 퀘스트를 끝내면 여기에 포함돼요.',
       matchSound: '소리를 듣고 글자 찾기',
       tapRespond: '듣고 대답 누르기',
       listenPick: '듣고 고르기',
@@ -986,12 +986,12 @@ export const learner = {
     library: {
       title: '낱말',
       line: '주제를 골라요. 낱말을 몇 개씩 만나요.',
-      collected: (n: number) => `${n}개 모음`,
+      collected: (n: number) => `모은 낱말 ${n}개`,
     },
     topics: {
       title: '낱말',
       line: '좋아하는 주제를 골라요.',
-      collected: (n: number) => `${n}개 모음`,
+      collected: (n: number) => `모은 낱말 ${n}개`,
       tileA11y: (title: string, n: number) => `${title}. 모은 낱말 ${n}개.`,
       empty: '낱말이 곧 와요.',
       back: '뒤로',
@@ -1001,7 +1001,7 @@ export const learner = {
     topic: {
       notFound: '주제를 찾을 수 없어요',
       back: '뒤로',
-      collected: (n: number) => `${n}개 모음`,
+      collected: (n: number) => `모은 낱말 ${n}개`,
       wallNew: '아직 모으지 않았어요',
       learn: { label: '배우기', line: '그림과 함께 낱말 몇 개를 만나요.' },
       speed: {
@@ -1050,7 +1050,7 @@ export const learner = {
     },
     detail: {
       from: (sender: string) => `보낸 사람: ${sender}`,
-      suggest: { title: '이 퀘스트를 해 봐요', start: { cta: '시작하기' }, closed: '전체 루트에서 열려요' },
+      suggest: { title: '이 퀘스트를 해 봐요', start: { cta: '시작' }, closed: '전체 루트에서 열려요' },
       reactions: { heading: '한 번 눌러서 답해요' },
       putAway: { cta: '이 쪽지 치우기' },
       putAwayDone: '치웠어요. 어른은 계속 볼 수 있어요.',

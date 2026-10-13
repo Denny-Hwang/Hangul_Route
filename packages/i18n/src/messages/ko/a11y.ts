@@ -92,7 +92,7 @@ export const a11y = {
       correct: (label: string) => `정답: ${label}`,
       wrong: (label: string) => `이건 아니에요: ${label}`,
       hint: (label: string) => `여기를 봐요: ${label}`,
-      selected: (label: string) => `고름: ${label}`,
+      selected: (label: string) => `선택함: ${label}`,
       matched: (badge: number, label: string) => `짝 맞춤, ${badge}번: ${label}`,
     },
     koreanWord: (word: string) => `한국어 낱말 ${word}`,
@@ -162,7 +162,7 @@ export const a11y = {
     step: (window: string) => `보기: ${window}`,
     stepNext: (window: string) => `다음: ${window} 보기`,
     calendar: (days: string) => `연습한 날: ${days}.`,
-    calendarNone: '이 기간에는 연습한 날이 없어요.',
+    calendarNone: '이 기간에는 연습 기록이 없어요.',
     notSaved: (days: string) => `아직 저장 안 됨: ${days}.`,
     growthTable: '월별 퀘스트와 카드',
     loading: '리포트를 불러오는 중',
@@ -178,7 +178,7 @@ export const a11y = {
   },
   shell: {
     redirecting: '홈으로 이동하고 있어요…',
-    personaSwitch: '가족과 선생님 사이에서 바꾸기',
+    personaSwitch: '가족과 선생님 전환하기',
   },
   access: {
     next: '다음',

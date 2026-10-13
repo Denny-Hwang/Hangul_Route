@@ -143,7 +143,7 @@ export const caregiver = {
         self: '무료 레슨을 모두 끝냈어요.',
       },
       setPlan: '계획을 세우면 다음에 할 것을 안내해 줘요.',
-      setPlanWeb: '계획은 어른용 공간에서 세워요: 학기 계획하기.',
+      setPlanWeb: '계획은 어른 공간에서 세워요: 학기 계획하기.',
     },
   },
 
@@ -335,7 +335,7 @@ export const caregiver = {
       vocabulary: '낱말',
       sentences: '문장',
     },
-    status: { secure: '탄탄함', gettingThere: '거의 다 옴', notYet: '다음에 배울 것', notTested: '확인 안 함' },
+    status: { secure: '탄탄함', gettingThere: '거의 다 옴', notYet: '아직', notTested: '확인 안 함' },
     rung: {
       recog: '글자 모양',
       'sound-basic': '첫 글자 소리',
@@ -359,7 +359,7 @@ export const caregiver = {
     shortHint: '짧은 확인은 처음 글자만 봐요. 기본 확인을 하면 더 뒤의 시작 위치를 찾을 수 있어요.',
     tryStandard: '기본 확인 해 보기',
     checkedTwice: '두 번 확인함',
-    notFinished: '끝내지 않음',
+    notFinished: '일부만 확인함',
     spellingTiles: '타일로 글자 만들기',
     onlyForward: '새로 확인해도 루트는 앞으로만 움직여요.',
     takenOn: (date: string, language: string) => `확인한 날: ${date} · 언어: ${language}`,
@@ -408,7 +408,7 @@ export const caregiver = {
     },
   },
   skillsNote:
-    '수준 확인은 읽기와 듣기를 봐요. 쓰기는 따라 쓰기 게임으로 연습하고, 채점하지 않아요. 각 줄은 이 게임이 들어 있는 퀘스트 가운데 끝낸 것을 세요. 퀘스트 안에서 게임을 건너뛰어도 그대로 세요.',
+    '수준 확인은 읽기와 듣기를 봐요. 쓰기는 따라 쓰기 게임으로 연습하고, 채점하지 않아요. 각 줄은 이 게임이 들어 있는 퀘스트 가운데 끝낸 것의 수예요. 퀘스트 안에서 게임을 건너뛰어도 수에 들어가요.',
   grownUpHome: {
     noPin: '이 기기에는 어른용 PIN이 없어요. 대신 어른용 페이지에서 로그인해 주세요.',
     continue: { cta: '계속' },

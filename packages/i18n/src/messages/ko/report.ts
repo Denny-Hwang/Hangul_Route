@@ -208,7 +208,7 @@ export const report = {
     headline: (count: number, total: number, when: string) => `학습자 ${total}명 중 ${count}명이 ${when} 연습했어요.`,
     learners: (count: number) => `학습자 ${count}명`,
     olderApp: (count: number) => `학습자 ${count}명은 앱이 예전 버전이에요. 업데이트하면 날짜별 기록이 보여요.`,
-    notSaved: (count: number) => `학습자 ${count}명은 마지막 저장이 7일보다 더 전이에요.`,
+    notSaved: (count: number) => `학습자 ${count}명은 마지막으로 저장한 지 7일이 넘었어요.`,
     section: {
       practiceTogether: '함께 연습해요',
       daysPracticed: '연습한 날',

@@ -15,7 +15,7 @@ const FAQ_ADULT = {
 } as const;
 const FAQ_KOREAN = {
   q: '한국어를 조금이라도 알아야 하나요?',
-  a: '아니요 — 처음부터 시작하는 분을 위해 만들었어요. 안내는 고른 언어로 쉽고 짧게 쓰여 있어요. 한국어는 배우는 내용으로만 나와요.',
+  a: '아니요 — 처음부터 시작하는 분을 위해 만들었어요. 안내는 쉽고 짧은 말로 쓰여 있어요. 한국어는 배우는 내용으로만 나와요.',
 } as const;
 /** The backup sentence, word for word wherever the site says where learning data lives (privacy-statements.test.ts). */
 const BACKUP_FIRST = '학습자의 별명과 진도는 기기에 저장되고, 복구 코드로 되찾을 수 있도록 저희 서버에도 백업돼요.';
@@ -59,14 +59,14 @@ export const landing = {
     dashboard: '대시보드',
     teachers: '선생님',
     signIn: '로그인',
-    start: '배우기 시작',
+    start: '배우기 시작하기',
     skip: '본문으로 건너뛰기',
   },
   home: {
     hero: {
       title: '나이와 상관없이, 한글을 처음부터 배워요.',
       lead: '짧고 재미있는 퀘스트로 한글을 읽고, 듣고, 쓰는 법을 배워요. 호랑이 호야가 길잡이가 되어 줘요.',
-      start: '배우기 시작',
+      start: '배우기 시작하기',
       grownUps: '부모님이나 선생님인가요? 내 페이지 찾기',
       facts: '브라우저에서 바로 돼요 · 설치할 것이 없어요 · 처음 방문한 뒤에는 대부분의 기기에서 오프라인으로도 돼요',
       bubble: (letter: string, romanization: string) => `안녕하세요! 오늘 만날 글자: ${letter} (${romanization})`,
@@ -126,8 +126,8 @@ export const landing = {
       lead: '5분 퀘스트 하나씩, 한글 읽기, 듣기, 쓰기를 배워요.',
       learn: {
         title: '가장 먼저 배우는 것',
-        body: '1단계는 한글 자모예요: 글자, 그 소리, 그리고 글자가 모여 소리 덩어리를 만드는 방법을 배워요.',
-        bullets: { read: '글자와 글자 덩어리 읽기', listen: '듣고 소리 짝짓기', write: '따라 쓰면서 글자 쓰기' },
+        body: '1단계는 한글 자모예요: 글자, 그 소리, 그리고 글자가 모여 글자 덩어리를 이루는 방법을 배워요.',
+        bullets: { read: '글자와 글자 덩어리 읽기', listen: '듣고 소리 짝짓기', write: '글자를 따라 쓰기' },
       },
       quest: {
         title: '대부분의 퀘스트는 이렇게 해요',
@@ -142,7 +142,7 @@ export const landing = {
       cards: {
         title: '한국 문화 모으기',
         body: '글자를 하나 배울 때마다 카드를 받아요: 한국의 음식, 예술, 일상의 한 조각이에요.',
-        seeAll: (cards: number) => `1단계 카드 ${cards}장 모두 보기`,
+        seeAll: (cards: number) => (cards === 1 ? `1단계 카드 ${cards}장 보기` : `1단계 카드 ${cards}장 모두 보기`),
       },
       route: {
         title: '내 학습 루트',
@@ -274,7 +274,7 @@ export const landing = {
     title: '이렇게 해요',
     steps: {
       journey: { title: '문화 여정', body: '7단계 × 5가지 문화 주제. 학습자마다 한국어를 지나는 자기만의 루트를 그려요.' },
-      games: { title: '미니게임', body: '누르고, 만들고, 따라 쓰고, 짝짓기 — 나이와 상관없이 어느 날에나 쏙 들어가는 5분 게임이에요.' },
+      games: { title: '미니게임', body: '누르기, 만들기, 따라 쓰기, 짝짓기 — 나이와 상관없이 어느 날에나 쏙 들어가는 5분 게임이에요.' },
       collect: {
         title: '문화 모으기',
         body: (cards: number) => `1단계에서 문화 카드 ${cards}장을 받아요 — 김치부터 추석, 가야금까지.`,
@@ -294,7 +294,7 @@ export const landing = {
   games: {
     eyebrow: (shipped: number, beta: number) => (beta > 0 ? `미니게임 ${shipped}개 + 베타 ${beta}개` : `미니게임 ${shipped}개`),
     title: '하나도 공부 같지 않아요.',
-    body: '네 가지 연습 — 알아보기, 만들기, 활용, 복습 — 을 90초짜리 놀이에 담았어요. 호야는 절대 “틀렸어”라고 하지 않아요.',
+    body: '네 가지 연습(알아보기, 만들기, 활용, 복습)을 90초짜리 놀이에 담았어요. 호야는 절대 “틀렸어”라고 하지 않아요.',
     listLabel: '1단계 미니게임',
     family: { recognition: '알아보기', production: '만들기', application: '활용', review: '복습' },
     beta: '베타 — 원하면 켜기',
@@ -319,7 +319,7 @@ export const landing = {
         title: '진도는 백업돼요.',
         body: BACKUP,
       },
-      gate: { title: '부모 확인 장치.', body: '돈이 드는 일이나 데이터를 지우는 일은 간단한 곱셈 문제를 풀어야 할 수 있어요.' },
+      gate: { title: '부모 확인 장치.', body: '돈이 드는 일이나 데이터를 지우는 일은 간단한 곱셈 문제를 풀어야 해요.' },
       shared: { title: '형제자매가 기기를 함께 써요.', body: '학습자마다 자기 별과 카드를 따로 가져요. 추가 구매 권유는 없어요.' },
     },
   },
@@ -421,7 +421,7 @@ export const landing = {
   notFound: {
     body: '이 페이지를 찾을 수 없어요.',
     home: '홈으로 가기',
-    start: '배우기 시작',
+    start: '배우기 시작하기',
   },
   localeBanner: {
     label: '언어 추천',

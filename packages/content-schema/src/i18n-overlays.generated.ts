@@ -2271,7 +2271,7 @@ export const OVERLAYS: Overlays = {
       "listenPick.rounds.lp-sym-jamo-chieut.prompt": "글자 chieut"
     },
     "minigame:s1-life-q2-check": {
-      "listenPick.rounds.1.prompt": "남자 부모를 부르는 말",
+      "listenPick.rounds.1.prompt": "아빠를 높여 부르는 말",
       "listenPick.rounds.lp-sym-jamo-siot.prompt": "글자 siot"
     },
     "minigame:s1-life-q3-apply": {
@@ -2456,7 +2456,7 @@ export const OVERLAYS: Overlays = {
     "quest:stage1-life-q2": {
       "steps.s2.discover.pages.0.items.0.example.gloss": "껍질이 노랗고 길쭉한 과일",
       "steps.s2.discover.pages.0.items.1.example.gloss": "갈기가 있는 큰 동물",
-      "steps.s2.discover.pages.1.items.0.word.gloss": "남자 부모를 부르는 말",
+      "steps.s2.discover.pages.1.items.0.word.gloss": "아빠를 높여 부르는 말",
       "steps.s2.discover.pages.1.items.1.word.gloss": "아주 어린 아이",
       "steps.s2.discover.pages.2.items.0.word.gloss": "어머니를 다정하게 부르는 말",
       "steps.s2.discover.pages.2.items.1.word.gloss": "함께 사는 엄마, 아빠, 형제 같은 사람들"
