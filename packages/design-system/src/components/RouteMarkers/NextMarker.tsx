@@ -9,6 +9,8 @@ import { NEXT_MARKER_BASE, NEXT_TIP_INSET, nextMarkerParts, nextMarkerTop } from
 export interface NextMarkerProps {
   /** Where the tip lands from the parent's top edge: `NEXT_TIP_INSET` inside a cell (default), negative above it. */
   tipInset?: number;
+  /** The marked box's border width, measured off so the tip is placed from its outer edge; 0 for a borderless box. */
+  edge?: number;
   testID?: string;
 }
 
@@ -18,7 +20,7 @@ export interface NextMarkerProps {
  * means "You started here" on the same grid. Absolutely placed, so it adds no size and no target;
  * decorative, because the label carries the word.
  */
-export function NextMarker({ tipInset = NEXT_TIP_INSET, testID }: NextMarkerProps): React.ReactElement {
+export function NextMarker({ tipInset = NEXT_TIP_INSET, edge = 0, testID }: NextMarkerProps): React.ReactElement {
   const band = markerBand(NEXT_MARKER_BASE);
   return (
     <View
@@ -29,7 +31,7 @@ export function NextMarker({ tipInset = NEXT_TIP_INSET, testID }: NextMarkerProp
       aria-hidden
       style={{
         position: 'absolute',
-        top: nextMarkerTop(tipInset),
+        top: nextMarkerTop(tipInset, edge),
         left: '50%',
         marginLeft: -NEXT_MARKER_BASE / 2,
         width: NEXT_MARKER_BASE,

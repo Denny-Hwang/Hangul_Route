@@ -1,7 +1,7 @@
 import React from 'react';
 import { describe, expect, it, vi } from 'vitest';
-import { colors, spacing, typography } from '../../../tokens';
-import { nextMarkerParts, nextMarkerTop, routeRingParts, tagMarkParts, NEXT_MARKER_BASE, TAG_MARK_SIZE } from '../geometry';
+import { borderWidth, colors, spacing, typography } from '../../../tokens';
+import { nextMarkerParts, nextMarkerTop, routeRingParts, tagMarkParts, NEXT_MARKER_BASE, NEXT_TIP_INSET, TAG_MARK_SIZE } from '../geometry';
 import { markerBand } from '../../PipRow/geometry';
 import { NextMarker } from '../NextMarker';
 import { RouteLegend, TagMark } from '../RouteLegend';
@@ -70,6 +70,15 @@ describe('NextMarker', () => {
   it('takes another tip inset (the episode row, E3-6)', () => {
     const view = NextMarker({ tipInset: -spacing.xxs }) as El;
     expect((view.props.style as Props).top).toBeCloseTo(nextMarkerTop(-spacing.xxs), 6);
+  });
+
+  it("takes the marked box's border out of the offset, so the tip is measured from the outer edge", () => {
+    // An absolute child is placed from inside its parent's border (Yoga and CSS alike).
+    for (const edge of [borderWidth.base, borderWidth.thick]) {
+      const view = NextMarker({ edge }) as El;
+      expect((view.props.style as Props).top).toBeCloseTo(nextMarkerTop(NEXT_TIP_INSET, edge), 6);
+      expect((view.props.style as Props).top).toBeCloseTo(nextMarkerTop() - edge, 6);
+    }
   });
 });
 

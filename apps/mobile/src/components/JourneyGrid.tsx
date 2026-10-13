@@ -24,6 +24,7 @@ import { cellLabel, cellTestId, countMarkOf } from '../logic/journey-cells';
 import {
   journeyGridRows,
   journeyLegend,
+  labelMarksOf,
   withAccessWords,
   type JourneyAccessInput,
   type JourneyCellView,
@@ -52,6 +53,8 @@ const COUNT_MARK = spacing.lg + spacing.xs;
 /** The glyph a stories-only cell draws in place of its letter (books). A coming-later cell is empty (E3-D D5). */
 const CELL_GLYPH = spacing.lg + spacing.xs;
 const STAGE_RING = 32;
+/** A cell's border (`border.focus` at `borderWidth.thick` when selected in two panes). */
+const CELL_EDGE = borderWidth.base;
 
 export interface JourneyGridProps {
   /** Stage definitions in the UI locale. */
@@ -243,7 +246,7 @@ function GridCell({ cell, stage, theme, paneMode, onOpen, onOpenStories, episode
       accessibilityRole="button"
       aria-selected={paneMode && !storiesOnly ? cell.selected : undefined}
       accessibilityLabel={withAccessWords(
-        cellLabel(model, stage, theme, messages.a11y.journeyCell, cell.marks),
+        cellLabel(model, stage, theme, messages.a11y.journeyCell, labelMarksOf(cell)),
         cell.access,
         episodeTitle,
         messages.a11y.access,
@@ -255,7 +258,7 @@ function GridCell({ cell, stage, theme, paneMode, onOpen, onOpenStories, episode
         borderRadius: radii.md,
         backgroundColor: isLater ? colors.surface.sunken : completed ? colors.feedback.successLight : colors.surface.paper,
         borderStyle: placedOut && !cell.selected ? 'dashed' : 'solid',
-        borderWidth: cell.selected ? borderWidth.thick : 2,
+        borderWidth: cell.selected ? borderWidth.thick : CELL_EDGE,
         borderColor: cell.selected
           ? colors.border.focus
           : isLater || storiesOnly
@@ -325,8 +328,9 @@ function GridCell({ cell, stage, theme, paneMode, onOpen, onOpenStories, episode
           </Text>
         </View>
       ) : null}
-      {/* The Next triangle over the top edge, the top layer (E3-D D1: the pip rows' cursor, not the pin). */}
-      {next ? <NextMarker testID={`journey-next-${cell.stage}-${cell.theme}`} /> : null}
+      {/* The Next triangle over the top edge, the top layer (E3-D D1: the pip rows' cursor, not the pin).
+          Its tip is placed from the cell's outer edge, so the cell's own border comes off the offset. */}
+      {next ? <NextMarker edge={cell.selected ? borderWidth.thick : CELL_EDGE} testID={`journey-next-${cell.stage}-${cell.theme}`} /> : null}
     </Pressable>
   );
 }

@@ -14,6 +14,10 @@ import { expectNoHorizontalOverflow } from './viewport';
  */
 
 const LETTERS = /^Stage 1 Hangul, Letters & Books: lesson/;
+/** RouteMarkers spec, Geometry: the Next tip `borderWidth.base + spacing.xxs` below the cell's outer top edge. */
+const TIP_INSET = 4;
+/** The 19.2 x 9.6 triangle reaches this far above the cell. */
+const TRIANGLE_ABOVE = 5.6;
 
 async function newLearner(page: Page, width = 320, height = 568): Promise<string> {
   await page.setViewportSize({ width, height });
@@ -79,7 +83,10 @@ test.describe('Journey route marks (F-ENT-003 E3-5)', () => {
       expect(drawn).not.toBeNull();
       expect(drawn?.clipped).toBe(false);
       expect(drawn!.height).toBeGreaterThan(9);
-      expect(drawn!.bottom).toBeGreaterThan(box.y);
+      // The spec's geometry, measured from the cell's outer edge: the tip 4 dp inside (NEXT_TIP_INSET),
+      // the triangle's top 5.6 dp above the cell.
+      expect(Math.abs(drawn!.bottom - box.y - TIP_INSET)).toBeLessThanOrEqual(0.5);
+      expect(Math.abs(box.y - drawn!.top - TRIANGLE_ABOVE)).toBeLessThanOrEqual(0.5);
     }
 
     // A coming-later cell is sunken and empty: no glyph (D5), no lock anywhere on the grid.

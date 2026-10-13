@@ -147,7 +147,9 @@ export function journeyCell(i: JourneyCellInput): JourneyCellView {
     // One pane: a later cell does nothing. Two panes: it is selectable (its page says "coming soon").
     disabled: !storiesOnly && (!episode || (state === 'later' && !i.paneMode)),
     marks: i.marksOf ? i.marksOf(i.stage, i.theme, episode) : NO_CELL_MARKS,
-    access: storiesOnly ? NO_CELL_ACCESS : cellAccess(playableIn(i.stage, i.theme, i.gridEpisodes), i.access),
+    // A coming-later cell (its first volume a draft or preview) is sunken and empty: no route mark ever (E3-D D5),
+    // even when a later volume of it is playable.
+    access: storiesOnly || state === 'later' ? NO_CELL_ACCESS : cellAccess(playableIn(i.stage, i.theme, i.gridEpisodes), i.access),
     model,
   };
 }
@@ -188,6 +190,15 @@ export function withAccessWords(label: string, access: JourneyCellAccess, title:
   );
   if (parts.length === 0) return label;
   return `${label}${label.endsWith('.') ? '' : '.'} ${parts.join(' ')}`;
+}
+
+/**
+ * The level-check marks a cell's label reads (section 3.14, labels equal what is shown). A closed cell
+ * drops the placed-out sentence, which ends "and it is still open to play", so a screen reader never
+ * hears "still open to play" and "not open yet" on one cell; the start pin is always read.
+ */
+export function labelMarksOf(cell: Pick<JourneyCellView, 'marks' | 'access'>): JourneyCellMarks {
+  return cell.access.notOpen && cell.marks.placedOut ? { ...cell.marks, placedOut: false } : cell.marks;
 }
 
 export interface LearnerMarksInput {

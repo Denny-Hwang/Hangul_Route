@@ -5,7 +5,8 @@ import nextSource from '../NextMarker.tsx?raw';
 import legendSource from '../RouteLegend.tsx?raw';
 import stickerSource from '../StickerIcon.tsx?raw';
 import indexSource from '../index.ts?raw';
-import { borderWidth, spacing, typography } from '../../../tokens';
+import { borderWidth, layout, spacing, typography } from '../../../tokens';
+import { scaleMedia } from '../../../layout';
 import { LATER_DASHES, PIP_SIZE, cursorMarkerParts, markerBand, pipParts, type PipPart } from '../../PipRow/geometry';
 import {
   NEXT_MARKER_BASE,
@@ -90,6 +91,32 @@ describe('routeRingParts', () => {
     const inner = COMPACT_CELL_320 - 2 * borderWidth.base;
     expect(ROUTE_RING_SIZE + 2 * spacing.xxs).toBeLessThanOrEqual(inner);
   });
+
+  it("fits every row of the spec's fit table, the stroke scaled with the ring", () => {
+    // GridCell in the web build (spec "Fit at every measured cell size"): the cell, its layout class, the clearance each side.
+    const rows = [
+      { cell: 54.4, scale: layout.mediaScale.compact, ring: 40, stroke: 3, clearance: 5.2 },
+      { cell: 62.4, scale: layout.mediaScale.compact, ring: 40, stroke: 3, clearance: 9.2 },
+      { cell: 65.4, scale: layout.mediaScale.compact, ring: 40, stroke: 3, clearance: 10.7 },
+      { cell: 107.2, scale: layout.mediaScale.regular, ring: 48, stroke: 4, clearance: 27.6 },
+      { cell: layout.columns.journeyCellMax, scale: layout.mediaScale.regular, ring: 48, stroke: 4, clearance: 30 },
+      { cell: 76.4, scale: layout.mediaScale.wide, ring: 56, stroke: 4, clearance: 8.2 },
+    ];
+    for (const row of rows) {
+      const size = scaleMedia(ROUTE_RING_SIZE, row.scale);
+      const stroke = scaleMedia(ROUTE_RING_STROKE, row.scale);
+      expect([size, stroke]).toEqual([row.ring, row.stroke]);
+      const inner = row.cell - 2 * borderWidth.base;
+      expect((inner - size) / 2).toBeCloseTo(row.clearance, 1);
+      expect((inner - size) / 2).toBeGreaterThanOrEqual(spacing.xxs);
+    }
+  });
+
+  it('the wide ring fits the narrowest two-pane cell (the 64 dp cell floor of F-LAYOUT-001)', () => {
+    // The floor pane-sizes.test asserts for journeyCellSize in the two-pane grid.
+    const floor = 64;
+    expect(scaleMedia(ROUTE_RING_SIZE, layout.mediaScale.wide)).toBeLessThanOrEqual(floor - 2 * borderWidth.base);
+  });
 });
 
 describe('the Next triangle', () => {
@@ -118,6 +145,18 @@ describe('the Next triangle', () => {
     expect(drawnTop).toBeLessThan(0);
     expect(-drawnTop).toBeLessThanOrEqual(spacing.sm);
     expect(-drawnTop).toBeCloseTo(5.6, 2);
+  });
+
+  it("measured from the marked box's outer edge: a bordered parent's edge comes off the offset", () => {
+    // Absolute children are placed from inside the border, so the cell passes its 2 dp edge (3 dp selected).
+    for (const edge of [borderWidth.base, borderWidth.thick]) {
+      const top = nextMarkerTop(NEXT_TIP_INSET, edge);
+      expect(edge + top + nextTipY()).toBeCloseTo(NEXT_TIP_INSET, 6);
+      const ys = vertices((nextMarkerParts()[0] as PathPart).d).map(([, y]) => y);
+      expect(-(edge + top + Math.min(...ys))).toBeCloseTo(5.6, 2);
+    }
+    // The selected 3 dp focus edge leaves the tip 1 dp inside it.
+    expect(NEXT_TIP_INSET - borderWidth.thick).toBe(1);
   });
 
   it('a negative inset puts the tip above the edge (the episode row disc, E3-6)', () => {

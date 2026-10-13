@@ -1,14 +1,15 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import type { Episode, RouteCatalog, StageKey, ThemeKey } from '@hangul-route/content-schema';
+import type { Episode, HomeworkAssignment, ProgressSnapshot, RouteCatalog, StageKey, ThemeKey } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
-import { episodesAll, gridEpisodes, stages, themes } from '../../content';
+import { episodesAll, gridEpisodes, questsAll, stages, themes } from '../../content';
 import { getMessages } from '@hangul-route/i18n';
 import {
   NO_CELL_ACCESS,
   NO_CELL_MARKS,
   journeyCell,
   journeyLegend,
+  labelMarksOf,
   withAccessWords,
   journeyCellState,
   journeyGridRows,
@@ -17,6 +18,8 @@ import {
   type JourneyMarksOf,
 } from '../journey-grid';
 import { questOpenPredicate } from '../content-access';
+import { cellLabel } from '../journey-cells';
+import { planView, routeNext, type RouteNextInput } from '../route-next';
 import { shelfIndex, story } from '../story/__tests__/shelf-fixture';
 
 /**
@@ -356,8 +359,9 @@ describe('route marks (F-ENT-003 E3-5)', () => {
     expect(cells.find((c) => c.key === 'stage2-nature')?.access.notOpen).toBe(true);
   });
 
-  it('precedence Next > In your plan > Not open yet: a closed cell is never drawn as Next or In your plan', () => {
+  it('precedence Next > In your plan > Not open yet: the higher mark wins on one cell, never two rings', () => {
     // A stale input naming a closed episode cannot put two marks on it: the ring of the higher mark wins.
+    // (routeNext and planView never name a closed quest; the bundle test below ties the grid to them.)
     const rows = journeyGridRows({
       stages,
       themes,
@@ -367,6 +371,21 @@ describe('route marks (F-ENT-003 E3-5)', () => {
     const cells = rows.flatMap((r) => r.cells);
     expect(cells.find((c) => c.key === 'stage2-life')?.access).toEqual({ next: true, inPlan: false, notOpen: false });
     expect(cells.find((c) => c.key === 'stage2-nature')?.access).toEqual({ next: false, inPlan: true, notOpen: false });
+  });
+
+  it('a coming-later cell never carries a mark, even when a later volume of it is playable', () => {
+    // Volume 1 is a draft (the cell looks "coming later"); volume 2 is shipped and named by every input.
+    const v1 = ep('s3-life', 'stage3', 'life', 'draft', ['quest:s3-life-q1']);
+    const v2 = { ...ep('s3-life-v2', 'stage3', 'life', 'shipped', ['quest:s3-life-v2-q1']), volume: 2 };
+    for (const over of [
+      { nextEpisodeId: 'episode:s3-life-v2' },
+      { inPlanEpisodeIds: new Set(['episode:s3-life-v2']) },
+      { isQuestOpen: freeOpen() },
+    ]) {
+      const cell = journeyCell({ stage: 'stage3', theme: 'life', ...base, gridEpisodes: [...ALL, v1, v2], access: access(over) });
+      expect(cell.state).toBe('later');
+      expect(cell.access).toBe(NO_CELL_ACCESS);
+    }
   });
 
   it('subscribers and the switch-off state show no access mark (questAccess never closes)', () => {
@@ -386,6 +405,70 @@ describe('route marks (F-ENT-003 E3-5)', () => {
     const later = rows.filter((r) => r.stage !== 'stage1').flatMap((r) => r.cells).filter((c) => c.state === 'open' && c.model.kind !== 'stories-only');
     expect(later.length).toBeGreaterThan(0);
     expect(later.every((c) => c.access.notOpen)).toBe(true);
+  });
+
+  it('tied to routeNext and planView on the bundle: no closed cell is Next or In your plan, the plan rings stay in Stage 1', () => {
+    const P = 'profile:p1';
+    const today = '2026-10-12';
+    const grid = gridEpisodes(episodesAll);
+    const playable = grid.filter((e) => e.status === 'shipped' || e.status === 'ready');
+    const stage1 = playable.filter((e) => e.stage === 'stage1').flatMap((e) => e.questIds);
+    const stage2 = playable.filter((e) => e.stage === 'stage2').flatMap((e) => e.questIds);
+    expect(stage1.length).toBeGreaterThan(1);
+    expect(stage2.length).toBeGreaterThan(0);
+    // A seeded self plan reaching from Stage 1 into Stage 2, every item inside the horizon.
+    const planned = [...stage1.slice(1, 3), ...stage2.slice(0, 2)];
+    const episodeOf = (q: string): string => episodesAll.find((e) => e.questIds.includes(q))!.id;
+    const homework: HomeworkAssignment[] = planned.map((questId) => ({
+      id: `route:mine#${questId}`,
+      profileId: P,
+      questId,
+      episodeId: episodeOf(questId),
+      assignedBy: 'system',
+      assignedAt: '2026-10-01T00:00:00.000Z',
+      targetDate: today,
+    }));
+    const snapshot: ProgressSnapshot = {
+      profileId: P,
+      updatedAt: `${today}T08:00:00.000Z`,
+      episodes: [],
+      quests: [],
+      cards: [],
+      sessions: [],
+      homework,
+      reviews: [],
+      streakDays: 0,
+    };
+    const isQuestOpen = questOpenPredicate({ tier: 'free', gatingEnabled: true, completedQuestIds: new Set() });
+    const input: RouteNextInput = {
+      snapshot,
+      profileId: P,
+      today,
+      sources: [{ id: 'route:mine', kind: 'self', assignedAt: '2026-10-01T00:00:00.000Z', items: planned.map((id) => ({ kind: 'quest' as const, id })), meta: null }],
+      quests: questsAll,
+      episodes: episodesAll,
+      cursor: { isEntitled: () => true, skipQuestIds: undefined, isQuestOpen },
+      isQuestOpen,
+      gating: { active: true, tier: 'free' },
+    };
+    const next = routeNext(input);
+    const routeAccess: JourneyAccessInput = {
+      nextEpisodeId: next.kind === 'quest' ? next.episodeId : null,
+      inPlanEpisodeIds: planView(input).inPlanEpisodeIds,
+      isQuestOpen,
+    };
+    const cells = journeyGridRows({ stages, themes, gridEpisodes: grid, paneMode: false, selectedId: null, access: routeAccess }).flatMap((r) => r.cells);
+    const questsOfCell = (key: string): string[] => playable.filter((e) => `${e.stage}-${e.theme}` === key).flatMap((e) => e.questIds);
+    const marked = cells.filter((c) => c.access.next || c.access.inPlan);
+    expect(marked.some((c) => c.access.next)).toBe(true);
+    expect(marked.some((c) => c.access.inPlan)).toBe(true);
+    for (const c of marked) expect(questsOfCell(c.key).some(isQuestOpen)).toBe(true);
+    expect(cells.filter((c) => c.access.inPlan).every((c) => c.stage === 'stage1')).toBe(true);
+    // The plan's Stage 2 cells are closed for this learner: the dotted ring, not the solid one.
+    const planStage2 = new Set(stage2.slice(0, 2).map(episodeOf));
+    const closedPlanCells = cells.filter((c) => c.episodeId !== null && planStage2.has(c.episodeId));
+    expect(closedPlanCells.length).toBeGreaterThan(0);
+    expect(closedPlanCells.every((c) => c.access.notOpen && !c.access.inPlan && !c.access.next)).toBe(true);
   });
 
   describe('taste note (E3-D D11)', () => {
@@ -438,6 +521,22 @@ describe('route marks (F-ENT-003 E3-5)', () => {
       );
     });
 
+    it('a closed placed-out cell drops "still open to play": the label says only what is true', () => {
+      const j = getMessages('en').a11y.journeyCell;
+      const model = { stage: 'stage2', theme: 'life', kind: 'lesson', episodeId: 'episode:s2-life', completed: false, storyCount: 0, storiesFinished: 0 } as const;
+      const stage = { order: 2, titleEn: 'Words' };
+      const theme = { titleEn: 'Life' };
+      const closed = { marks: { completed: false, placedOut: true, isStart: false }, access: { next: false, inPlan: false, notOpen: true } };
+      const label = withAccessWords(cellLabel(model, stage, theme, j, labelMarksOf(closed)), closed.access, 'Lunch Box Words', m);
+      expect(label).not.toMatch(/still open to play/);
+      expect(label).toMatch(/Lunch Box Words: not open yet\. Opens the lesson page\.$/);
+      // An open placed-out cell keeps its sentence, and the start pin is always read.
+      const open = { marks: { completed: false, placedOut: true, isStart: true }, access: NO_CELL_ACCESS };
+      expect(labelMarksOf(open)).toEqual(open.marks);
+      expect(cellLabel(model, stage, theme, j, labelMarksOf(open))).toMatch(/still open to play/);
+      expect(labelMarksOf({ ...closed, marks: { ...closed.marks, isStart: true } })).toEqual({ completed: false, placedOut: false, isStart: true });
+    });
+
     it('the words carry no lock, price or product word', () => {
       const all = [m.next, m.inPlan, m.notOpen('T'), getMessages('en').learner.access.notOpen].join(' ');
       expect(all).not.toMatch(/lock|premium|buy|price|trial|family plan|\$|\d/i);
@@ -464,6 +563,10 @@ describe('JourneyGrid sources (F-ENT-003 E3-5)', () => {
     expect(grid).toContain('<RouteLegend');
     expect(grid.indexOf('<RouteLegend')).toBeLessThan(grid.indexOf('themeColumnLabel(t)'));
     expect(grid).toContain('<NextMarker');
+    // The tip is placed from the cell's outer edge: the cell's border comes off the offset.
+    expect(grid).toMatch(/<NextMarker[^>]*edge=\{cell\.selected \? borderWidth\.thick : CELL_EDGE\}/);
+    expect(grid).toMatch(/borderWidth: cell\.selected \? borderWidth\.thick : CELL_EDGE/);
+    expect(grid).toMatch(/cellLabel\(model, stage, theme, messages\.a11y\.journeyCell, labelMarksOf\(cell\)\)/);
     expect(grid).toContain('<RouteRing');
     expect(grid).toContain('row.tasteNote');
     expect(grid).not.toMatch(/\{row\.availability === 'taste' \? \(/);

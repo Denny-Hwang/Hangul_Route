@@ -50,11 +50,13 @@ export function nextTipY(): number {
 }
 
 /**
- * The band's top relative to the marked box's outer top edge, so the tip lands `tipInset` below
- * it (a cell); a negative inset puts the tip above it (the episode row's number disc, E3-6).
+ * The band's `top` inside the marked box, so the tip lands `tipInset` below the box's OUTER top edge
+ * (a cell); a negative inset puts the tip above it (the episode row's number disc, E3-6). An absolute
+ * child is placed from inside its parent's border (Yoga and CSS alike), so a bordered box passes its
+ * border width as `edge` (a Journey cell: 2, or 3 when selected in two panes).
  */
-export function nextMarkerTop(tipInset: number = NEXT_TIP_INSET): number {
-  return tipInset - nextTipY();
+export function nextMarkerTop(tipInset: number = NEXT_TIP_INSET, edge: number = 0): number {
+  return tipInset - nextTipY() - edge;
 }
 
 /** The stage pip's cursor triangle (`cursorMarkerParts(PIP_SIZE.stage)`, 12 x 6) centred in a `size` box. */
