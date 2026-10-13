@@ -7,6 +7,9 @@ import { BrowseCardScreen } from '../screens/browse/BrowseCardScreen';
 import { BrowseEpisodeScreen } from '../screens/browse/BrowseEpisodeScreen';
 import { BrowseHomeScreen } from '../screens/browse/BrowseHomeScreen';
 import { BrowseItemScreen } from '../screens/browse/BrowseItemScreen';
+import { BrowseMinigameScreen, BrowseStoryReaderScreen, BrowseStorySourcesScreen } from '../screens/browse/BrowseLessonScreens';
+import { PreviewEndScreen } from '../screens/browse/PreviewEndScreen';
+import { PreviewQuestScreen } from '../screens/browse/PreviewQuestScreen';
 import type { RootStackParamList } from './types';
 
 /**
@@ -41,6 +44,12 @@ export const BROWSE_REGISTERED_ROUTES: ReadonlySet<BrowseRouteName> = new Set<Br
   'BrowseEpisode',
   'BrowseItem',
   'CardDetail',
+  // BR-8: the preview, the learner lesson screens through the navigation adapter, and the end screen.
+  'PreviewQuest',
+  'Minigame',
+  'StoryReader',
+  'StorySources',
+  'PreviewEnd',
 ]);
 
 const Stack = createNativeStackNavigator<BrowseStackParamList>();
@@ -52,6 +61,11 @@ export function BrowseNavigator(): React.ReactElement {
       <Stack.Screen name="BrowseEpisode" component={BrowseEpisodeScreen} />
       <Stack.Screen name="BrowseItem" component={BrowseItemScreen} />
       <Stack.Screen name="CardDetail" component={BrowseCardScreen} options={{ presentation: 'modal' }} />
+      <Stack.Screen name="PreviewQuest" component={PreviewQuestScreen} />
+      <Stack.Screen name="Minigame" component={BrowseMinigameScreen} />
+      <Stack.Screen name="StoryReader" component={BrowseStoryReaderScreen} />
+      <Stack.Screen name="StorySources" component={BrowseStorySourcesScreen} />
+      <Stack.Screen name="PreviewEnd" component={PreviewEndScreen} options={{ gestureEnabled: false }} />
       <Stack.Screen name="BrowseAccess" component={BrowseAccessScreen} options={{ gestureEnabled: false }} />
     </Stack.Navigator>
   );
