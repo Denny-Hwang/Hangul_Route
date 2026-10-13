@@ -2,7 +2,7 @@ import { plural } from '../../plural';
 import type { DeepPartial, Messages } from '../../types';
 
 /**
- * Spanish learner screens (F-I18N-001 PR 15): neutral Latin-American Spanish, informal "tú", plain words for
+ * Spanish learner screens (F-I18N-001 PR 15): neutral international Spanish (Latin-American vocabulary where a choice is needed, §3.10), informal "tú", plain words for
  * any age (no age framing), never an adjective that must agree with the learner's gender. Taught Korean,
  * titles, blurbs and glosses are content (overlays), never here.
  */
