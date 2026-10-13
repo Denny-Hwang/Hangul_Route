@@ -267,8 +267,10 @@ describe('the update (K3, AM-2)', () => {
     expect(past(next)).toEqual(past(active));
   });
 
-  it('updatedRouteOf is null without a seed', () => {
+  it('updatedRouteOf is null without a seed, or when the plan would not lay out', () => {
     expect(updatedRouteOf(planAtBand0(), proposalInputOf(context({ placements: undefined })), '2026-10-12T09:00:00.000Z')).toBeNull();
+    const broken = { ...proposalInputOf(raised), today: 'not-a-day' };
+    expect(updatedRouteOf(planAtBand0(), broken, '2026-10-12T09:00:00.000Z')).toBeNull();
   });
 
   it('planUpdateSource: an override on the newest result, else a retake', () => {
