@@ -1,6 +1,6 @@
 import { motion } from '@hangul-route/design-system';
-import React, { useRef } from 'react';
-import { Pressable } from 'react-native';
+import React, { useRef, type Ref } from 'react';
+import { Pressable, type View } from 'react-native';
 import Animated, { Easing, interpolate, runOnJS, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { cubicBezierPoints, flipAction, swapAtEdge, type FlipFace } from '../logic/flip';
 import { useReducedMotion } from '../platform/motion';
@@ -27,6 +27,8 @@ export interface FlipCardProps {
   onFlippingChange?: (flipping: boolean) => void;
   accessibilityLabelFront: string;
   accessibilityLabelBack: string;
+  /** The card button's node, for a caller that moves screen-reader focus to it (the flashcards, on each new card). */
+  pressableRef?: Ref<View>;
   testID?: string;
 }
 
@@ -43,6 +45,7 @@ export function FlipCard({
   onFlippingChange,
   accessibilityLabelFront,
   accessibilityLabelBack,
+  pressableRef,
   testID,
 }: FlipCardProps): React.ReactElement {
   const reducedMotion = useReducedMotion();
@@ -92,6 +95,7 @@ export function FlipCard({
 
   return (
     <Pressable
+      ref={pressableRef}
       onPress={handlePress}
       disabled={disabled}
       accessibilityRole="button"

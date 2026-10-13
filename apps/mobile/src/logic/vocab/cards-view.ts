@@ -174,7 +174,17 @@ export function cardsStartEvent(p: { topicKey: string; chunk: number; chunks: nu
 /** `vocab.cards.complete` (section 3.7): counts only, no names, no free text. */
 export function cardsCompleteEvent(p: { topicKey: string; chunk: number; tally: ChunkTally; checkFirstTry: number; checkQuestions: number }): {
   name: 'vocab.cards.complete';
-  payload: ChunkTally & { topicKey: string; chunk: number; checkFirstTry: number; checkQuestions: number };
+  payload: {
+    topicKey: string;
+    chunk: number;
+    words: number;
+    gotIt: number;
+    again: number;
+    heard: number;
+    newlyCollected: number;
+    checkFirstTry: number;
+    checkQuestions: number;
+  };
 } {
   const { tally } = p;
   return {
