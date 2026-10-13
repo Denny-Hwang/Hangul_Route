@@ -262,6 +262,88 @@ describe('locale-store: setters', () => {
     expect(mem.get('settings:profile:new')).toEqual({ romanizationMode: 'always', readToMe: false });
   });
 
+  it('setChallengeMode (F-VOC-004 S8) persists per profile, keeps every other setting and reports the change', () => {
+    useLocaleStore.getState().setProfileLocale('profile:a', 'es');
+    useLocaleStore.getState().setReadToMe('profile:a', true);
+    track.mockClear();
+    useLocaleStore.getState().setChallengeMode('profile:a', true, 'start_sheet');
+    expect(useLocaleStore.getState().byProfile['profile:a']).toEqual({ uiLocale: 'es', romanizationMode: 'always', readToMe: true, challengeMode: true });
+    expect(mem.get('settings:profile:a')).toEqual({ uiLocale: 'es', romanizationMode: 'always', readToMe: true, challengeMode: true });
+    expect(track).toHaveBeenCalledTimes(1);
+    expect(track).toHaveBeenCalledWith({
+      name: 'vocab.challenge_toggled',
+      profileId: 'profile:a',
+      payload: { on: true, source: 'start_sheet', clockScale: 1 },
+    });
+    useLocaleStore.getState().setChallengeMode('profile:a', false, 'profile');
+    expect(mem.get('settings:profile:a')).toMatchObject({ challengeMode: false });
+    expect(track).toHaveBeenLastCalledWith({
+      name: 'vocab.challenge_toggled',
+      profileId: 'profile:a',
+      payload: { on: false, source: 'profile', clockScale: 1 },
+    });
+    expect(useLocaleStore.getState().byProfile['profile:b']).toBeUndefined();
+  });
+
+  it('setChallengeMode to the value already stored writes nothing new to telemetry', () => {
+    useLocaleStore.getState().setChallengeMode('profile:a', false, 'profile');
+    expect(track).not.toHaveBeenCalled();
+    expect(useLocaleStore.getState().byProfile['profile:a']).toEqual({ romanizationMode: 'always', challengeMode: false });
+    useLocaleStore.getState().setChallengeMode('profile:a', true, 'profile');
+    track.mockClear();
+    useLocaleStore.getState().setChallengeMode('profile:a', true, 'start_sheet');
+    expect(track).not.toHaveBeenCalled();
+  });
+
+  it('setChallengeMode with a scale (a screen-reader opt-in) writes both at once and reports one event with the final scale', () => {
+    useLocaleStore.getState().setClockScale('profile:a', 1);
+    track.mockClear();
+    useLocaleStore.getState().setChallengeMode('profile:a', true, 'start_sheet', 2);
+    expect(mem.get('settings:profile:a')).toEqual({ romanizationMode: 'always', clockScale: 2, challengeMode: true });
+    expect(useLocaleStore.getState().byProfile['profile:a']).toMatchObject({ challengeMode: true, clockScale: 2 });
+    expect(track).toHaveBeenCalledTimes(1);
+    expect(track).toHaveBeenCalledWith({
+      name: 'vocab.challenge_toggled',
+      profileId: 'profile:a',
+      payload: { on: true, source: 'start_sheet', clockScale: 2 },
+    });
+    track.mockClear();
+    useLocaleStore.getState().setChallengeMode('profile:a', true, 'profile', 2);
+    expect(track).not.toHaveBeenCalled();
+  });
+
+  it('setClockScale persists the scale and reports it with the current Challenge state', () => {
+    useLocaleStore.getState().setChallengeMode('profile:a', true, 'profile');
+    track.mockClear();
+    useLocaleStore.getState().setClockScale('profile:a', 2);
+    expect(useLocaleStore.getState().byProfile['profile:a']).toEqual({ romanizationMode: 'always', challengeMode: true, clockScale: 2 });
+    expect(mem.get('settings:profile:a')).toEqual({ romanizationMode: 'always', challengeMode: true, clockScale: 2 });
+    expect(track).toHaveBeenCalledWith({
+      name: 'vocab.challenge_toggled',
+      profileId: 'profile:a',
+      payload: { on: true, source: 'profile', clockScale: 2 },
+    });
+    useLocaleStore.getState().setClockScale('profile:a', 1.5, 'start_sheet');
+    expect(track).toHaveBeenLastCalledWith({
+      name: 'vocab.challenge_toggled',
+      profileId: 'profile:a',
+      payload: { on: true, source: 'start_sheet', clockScale: 1.5 },
+    });
+    track.mockClear();
+    useLocaleStore.getState().setClockScale('profile:a', 1.5);
+    expect(track).not.toHaveBeenCalled();
+  });
+
+  it('setClockScale on a profile that never opted in stores the scale and reports Challenge off', () => {
+    useLocaleStore.getState().setClockScale('profile:new', 1.5);
+    expect(mem.get('settings:profile:new')).toEqual({ romanizationMode: 'always', clockScale: 1.5 });
+    expect(track).toHaveBeenCalledWith({
+      name: 'vocab.challenge_toggled',
+      profileId: 'profile:new',
+      payload: { on: false, source: 'profile', clockScale: 1.5 },
+    });
+  });
+
   it('a failing write never throws or loses the in-memory choice', async () => {
     storage.failWrites = true;
     expect(() => useLocaleStore.getState().setDeviceLocale('es')).not.toThrow();
