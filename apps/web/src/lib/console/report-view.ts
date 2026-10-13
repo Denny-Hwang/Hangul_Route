@@ -512,6 +512,8 @@ export interface ReportCalendarCellView {
 export interface ReportCalendarView {
   /** Blank cells before the first one in a Monday-first grid (a month; 0 for a week, which is a row). */
   lead: number;
+  /** The short weekday names, Monday first, in the console locale: the month grid's header row. */
+  weekdays: string[];
   cells: ReportCalendarCellView[];
   /** The visible sentence under the calendar: the practiced days, or "No practice days in this period." */
   practiced: string;
@@ -646,6 +648,9 @@ function windowName(window: NonNullable<LearnerReport['window']>, w: ReportWords
   return rangeOf(window, w);
 }
 
+/** A Monday-first week of day keys (2024-01-01 was a Monday): only their weekday names are read. */
+const MONDAY_WEEK: readonly string[] = ['2024-01-01', '2024-01-02', '2024-01-03', '2024-01-04', '2024-01-05', '2024-01-06', '2024-01-07'];
+
 function calendarView(report: LearnerReport, w: ReportWords): ReportCalendarView | null {
   const cells = report.calendar;
   if (cells === null || cells.length === 0) return null;
@@ -658,6 +663,7 @@ function calendarView(report: LearnerReport, w: ReportWords): ReportCalendarView
   const a11y = w.m.a11y.report;
   return {
     lead,
+    weekdays: MONDAY_WEEK.map((day) => weekdayText(day, w.locale)),
     cells: cells.map((cell) => ({ ...cell, weekday: weekdayText(cell.day, w.locale), date: Number(cell.day.slice(8, 10)) })),
     practiced: practiced.length ? a11y.calendar(w.m.report.list(practiced)) : a11y.calendarNone,
     notSaved: unsaved.length ? a11y.notSaved(w.m.report.list(unsaved)) : null,
@@ -889,9 +895,12 @@ export function rosterReportLink(opts: { spaceId: string; kind: SpaceKind; learn
   };
 }
 
-/** The page's cache key: the report body is the learner's summary, the same for every period and step. */
-export function reportCacheKey(spaceId: string, learnerId: string): string {
-  return JSON.stringify([spaceId, learnerId]);
+/**
+ * The page's cache key: the report body is the learner's summary, the same for every period and step. The signed-in
+ * account is part of it, so a report one account loaded never shows for another in the same tab.
+ */
+export function reportCacheKey(accountId: string, spaceId: string, learnerId: string): string {
+  return JSON.stringify([accountId, spaceId, learnerId]);
 }
 
 /**

@@ -865,9 +865,20 @@ describe('reportScreenOf: which screen the page draws (section 3.14, RP-7a2)', (
     expect(reportScreenOf({ enabled: true, query, load: fail('unauthorized', 401), cached: body })).toEqual({ kind: 'signedOut' });
   });
 
-  it('keys the cache by space and learner only: a period or a step reuses the same summary', () => {
-    expect(reportCacheKey('space:a', 'profile:b')).toBe(reportCacheKey('space:a', 'profile:b'));
-    expect(reportCacheKey('space:a', 'profile:b')).not.toBe(reportCacheKey('space:a', 'profile:c'));
-    expect(reportCacheKey('space:a|b', 'c')).not.toBe(reportCacheKey('space:a', 'b|c'));
+  it('keys the cache by account, space and learner only: a period or a step reuses the same summary, another account never', () => {
+    expect(reportCacheKey('acct:1', 'space:a', 'profile:b')).toBe(reportCacheKey('acct:1', 'space:a', 'profile:b'));
+    expect(reportCacheKey('acct:1', 'space:a', 'profile:b')).not.toBe(reportCacheKey('acct:1', 'space:a', 'profile:c'));
+    expect(reportCacheKey('acct:1', 'space:a', 'profile:b')).not.toBe(reportCacheKey('acct:2', 'space:a', 'profile:b'));
+    expect(reportCacheKey('acct:1', 'space:a|b', 'c')).not.toBe(reportCacheKey('acct:1', 'space:a', 'b|c'));
+  });
+});
+
+describe('the month grid header (RP-7a2)', () => {
+  it('names the weekdays Monday first in the console locale, for the grid header', () => {
+    const month = view(STEADY, { query: { period: 'month', at: null, from: null } });
+    expect(month.thisPeriod?.calendar?.weekdays).toEqual(['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']);
+    const es = view(STEADY, { query: { period: 'month', at: null, from: null }, locale: 'es' });
+    expect(es.thisPeriod?.calendar?.weekdays).toHaveLength(7);
+    expect(es.thisPeriod?.calendar?.weekdays[0]).not.toBe('Mon');
   });
 });

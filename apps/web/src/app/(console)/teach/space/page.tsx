@@ -1,10 +1,11 @@
 'use client';
 
-import { colors, radii, spacing, typography } from '@hangul-route/design-system/tokens';
+import { colors, radii, spacing, touchTarget, typography } from '@hangul-route/design-system/tokens';
+import type { UiLocale } from '@hangul-route/i18n';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { Suspense, useCallback, useEffect, useState } from 'react';
-import { Button, Muted, Notice, panelStyle } from '@/components/console/ui';
+import { Button, Muted, Notice, buttonBase, panelStyle } from '@/components/console/ui';
 import { AdultFrame } from '@/components/console/AdultFrame';
 import { AvatarChip } from '@/components/AvatarChip';
 import { SchoolAdmin } from '@/components/console/SchoolAdmin';
@@ -17,9 +18,10 @@ import { StudentWordsLines, WeekWordsRevisit } from '@/components/console/VocabW
 import { useTransfersShown } from '@/components/console/TransferParts';
 import { useConsole } from '@/components/console/use-console';
 import type { PlanView, Roster, SpaceListItem } from '@/lib/console/api';
-import { contentGatingEnabled, lectureModeEnabled } from '@/lib/console/config';
+import { contentGatingEnabled, lectureModeEnabled, reportsEnabled } from '@/lib/console/config';
 import { canComposeIn } from '@/lib/console/lecture';
 import { levelPillLabel } from '@/lib/console/level-label';
+import { rosterReportLink } from '@/lib/console/report-view';
 import { capState, classRollup, codeExpiry, percent, relativeDay } from '@/lib/console/rollup';
 import { ownRouteLine, readoutLine as routeReadoutLine, spaceCoverage, type SpaceCoverage } from '@/lib/console/curriculum';
 import { rosterFreeLessonsLine } from '@/lib/console/free-lessons-line-view';
@@ -257,6 +259,7 @@ function SpaceInner(): JSX.Element {
                         {c.notSyncedYet} · {c.space.learner.joined(relativeDay(l.joinedAt, now, locale))}
                       </Muted>
                     )}
+                    <SeeReport spaceId={spaceId} kind={roster.space.kind} learnerId={l.id} locale={locale} />
                   </article>
                 ))}
               </div>
@@ -265,6 +268,24 @@ function SpaceInner(): JSX.Element {
         </>
       ) : null}
     </AdultFrame>
+  );
+}
+
+/**
+ * The student card's **See report** (F-REPORT-001 RP-7a2, section 3.1): the learner's week report with `from=roster`,
+ * ids only, for a class and a family; not drawn while reports are off for this build or console locale.
+ */
+function SeeReport({ spaceId, kind, learnerId, locale }: { spaceId: string; kind: Roster['space']['kind']; learnerId: string; locale: UiLocale }): JSX.Element | null {
+  const link = rosterReportLink({ spaceId, kind, learnerId, enabled: reportsEnabled(locale), locale });
+  if (link === null) return null;
+  return (
+    <Link
+      href={link.href}
+      data-testid="see-report"
+      style={{ ...buttonBase, display: 'inline-flex', alignItems: 'center', minHeight: touchTarget.min, marginTop: spacing.sm, textDecoration: 'none', boxSizing: 'border-box' }}
+    >
+      {link.text}
+    </Link>
   );
 }
 
