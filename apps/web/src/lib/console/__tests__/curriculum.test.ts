@@ -885,6 +885,8 @@ describe('relearnedState: another learner picked in a family keeps what the grow
 });
 
 describe('the same input as the app gives the same defaultId and options (section 3.12)', () => {
+  // Every starting point x pace x tier through both proposers: the walk is the cost (about 0.4 s alone, over 1 s on a
+  // loaded machine), so this one test gets 15 s instead of the 5 s default (precedent: #431).
   it('matches proposeRoute for a self learner at every starting point, pace and tier', () => {
     const routeCatalog = routeCatalogOf(FROZEN);
     for (const start of STARTING_POINT_IDS) {
@@ -909,7 +911,7 @@ describe('the same input as the app gives the same defaultId and options (sectio
         }
       }
     }
-  });
+  }, 15_000);
 
   it('a level check of band 0 equals no level check at all', () => {
     const family = [learner('sam', '10-11')];
