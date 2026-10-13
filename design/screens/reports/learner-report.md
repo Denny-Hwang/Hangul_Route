@@ -116,7 +116,7 @@ Both variants show the same layers; nothing else differs. Neither shows a class 
 | unavailable / flag off | the back link and one block whose sentence is the page's `h1` (`report.state.unavailable` / `report.state.flagOff`; no learner name is known). No actions |
 | network error, no cached report | `report.state.error` as the `h1` (the first load failed, so no name is known) and `common.buttons.tryAgain`; Print disabled (the board draws this case) |
 | network error, cached report | the cached report stays as it was, with its own `h1`; `report.state.error` and `common.buttons.tryAgain` are a neutral state line (a paragraph, never a heading) under the glance, so the page keeps one `h1`; Print stays enabled for the report on screen |
-| parent chooser | `report.chooser.learner` as the `h1`, one row per learner (avatar, name, `arrow-right`), at least `touchTarget.min` tall, roster order, never a figure |
+| parent chooser | `report.chooser.learner` as the `h1`, one row per learner (avatar, name, `arrow-right`), at least `touchTarget.min` tall, in the parent home's order (families live first, oldest first; learners in join order), never a figure; a failed roster read keeps the other rows with the error and Try again under them |
 
 ## Accessibility
 

@@ -196,9 +196,9 @@ export async function mockReport(page: Page, first: ReportMock, later: ReportMoc
   };
 }
 
-/** The report address, ids and codes only. */
+/** The report address, ids and codes only: a family's under `/parent/learner` (RP-7c), a class's under `/teach/space/learner`. */
 export function reportUrl(kind: Kind, extra = 'period=week'): string {
-  return `/teach/space/learner?id=${encodeURIComponent(spaceId(kind))}&learner=profile%3Amina&${extra}`;
+  return `${kind === 'family' ? '/parent/learner' : '/teach/space/learner'}?id=${encodeURIComponent(spaceId(kind))}&learner=profile%3Amina&${extra}`;
 }
 
 /** A week class report (F-REPORT-001 RP-8): 12 members, 8 practiced, one older app; aggregates only. */

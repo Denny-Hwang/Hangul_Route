@@ -59,6 +59,8 @@ export function KoChip({
       testID={testID}
       style={{
         flexDirection: 'row',
+        // A narrow row moves the romanization under the Korean instead of breaking a Korean word in two.
+        flexWrap: 'wrap',
         alignItems: 'baseline',
         gap: spacing.xs,
         paddingHorizontal: spacing.sm,
@@ -71,7 +73,7 @@ export function KoChip({
     >
       <Text
         {...{ lang: KOREAN_LANGUAGE }}
-        style={{ fontFamily: typography.family.sansKr, fontSize: typography.size.prompt, fontWeight: typography.weight.bold, color: colors.text.primary }}
+        style={{ flexShrink: 0, maxWidth: '100%', fontFamily: typography.family.sansKr, fontSize: typography.size.prompt, fontWeight: typography.weight.bold, color: colors.text.primary }}
       >
         {ko}
       </Text>

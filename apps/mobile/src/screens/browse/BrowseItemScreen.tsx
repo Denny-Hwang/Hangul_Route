@@ -6,9 +6,10 @@ import { Pressable, Text, View } from 'react-native';
 import { cardById } from '../../content';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { episodeOfQuest } from '../../logic/browse/bundle';
-import { itemFacts, type ItemFacts, type QuestFacts, type StoryFacts, type TopicFacts } from '../../logic/browse/facts';
+import { itemFacts, type ItemFacts, type QuestFacts, type StoryFacts } from '../../logic/browse/facts';
 import { accessOf, billingShown, itemViewedEvent, plansTappedEvent, stepsLine, whereLine } from '../../logic/browse/home-view';
 import { storyPreviewParams } from '../../logic/browse/preview';
+import { topicHearShown } from '../../logic/browse/topic-view';
 import { BROWSE_REGISTERED_ROUTES, type BrowseStackParamList } from '../../navigation/browse';
 import { leaveTo } from '../../platform/browse-env';
 import { CardRow, HeaderBack, HeaderRow, KoChip, SkillChips, WordChip, focusRing, sendBrowseEvent, useItemViewed, type FocusState } from './browse-ui';
@@ -16,6 +17,7 @@ import { useBrowseSession } from './browse-session';
 import { LessonDisplaySheet } from './LessonDisplaySheet';
 import { BROWSE_ACTION_MAX_WIDTH, BROWSE_LABEL_COLUMN } from '../../logic/browse/layout';
 import { beginPreview } from './preview-session';
+import { TopicWordList } from './TopicWordList';
 
 /**
  * The item page (F-BROWSE-001 sections 4.2, 4.4 and 4.6; wireframe
@@ -128,7 +130,7 @@ export function BrowseItemScreen({ route, navigation }: Props): React.ReactEleme
         {facts.kind === 'story' && storyLevel ? (
           <StoryRows facts={facts} level={storyLevel} onLevel={setLevel} onSources={() => navigation.navigate('StorySources', { storyId: facts.id, from: 'episode' })} />
         ) : null}
-        {facts.kind === 'vocab-topic' ? <TopicRows facts={facts} /> : null}
+        {facts.kind === 'vocab-topic' ? <TopicWordList words={facts.words} hear={topicHearShown(access)} /> : null}
       </Card>
 
       {facts.kind === 'quest' && facts.where ? (
@@ -333,19 +335,6 @@ function StoryRows({
         </FactRow>
       ) : null}
     </View>
-  );
-}
-
-function TopicRows({ facts }: { facts: TopicFacts }): React.ReactElement {
-  const m = useMessages().caregiver.browse;
-  return (
-    <FactRow label={m.facts.words} testID="browse-facts-words">
-      <View style={{ gap: spacing.sm }}>
-        {facts.words.map((w) => (
-          <WordChip key={w.id} ko={w.ko} romanization={w.romanization} gloss={w.gloss} />
-        ))}
-      </View>
-    </FactRow>
   );
 }
 

@@ -595,6 +595,9 @@ export const caregiver = {
       sources: '출처',
       seeSources: { cta: '출처 보기' },
     },
+    topic: {
+      hearA11y: (romanization: string) => `듣기: ${romanization}`,
+    },
     preview: {
       strip: '미리 보기. 아무것도 저장되지 않아요.',
       leave: { cta: '미리 보기 나가기' },

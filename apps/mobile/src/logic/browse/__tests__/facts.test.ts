@@ -465,9 +465,29 @@ describe('itemFacts: word topic', () => {
     const food = itemFacts({ kind: 'vocab-topic', id: 'vocab-topic:food' }, bundle, 'es') as TopicFacts;
     const items = bundle.topicItems('food');
     expect(food).toMatchObject({ kind: 'vocab-topic', id: 'vocab-topic:food', key: 'food', count: items.length });
-    expect(food.words).toEqual(items.map((i) => ({ id: i.id, ko: i.ko, romanization: i.romanization, gloss: localizedGloss(i, 'es'), visual: i.visual })));
+    expect(food.words).toEqual(
+      items.map((i) => ({
+        id: i.id,
+        ko: i.ko,
+        romanization: i.romanization,
+        gloss: localizedGloss(i, 'es'),
+        visual: i.visual,
+        speech: { text: i.spokenKo ?? i.ko, ...(i.audioRef !== undefined ? { audioRef: i.audioRef } : {}) },
+      })),
+    );
     expect(food.titleKo.romanization.length).toBeGreaterThan(0);
     expect(itemFacts({ kind: 'vocab-topic', id: 'vocab-topic:space' }, bundle)).toBeNull();
+  });
+
+  it('a word is heard as the learner hears it (BR-9): its recording when it has one, else its spoken form, else its Korean', () => {
+    const [first] = bundle.topicItems('food');
+    if (!first) throw new Error('the food topic has words');
+    const recorded = { ...first, spokenKo: 'sagwa-spoken', audioRef: 'audio/vocab/food-apple.mp3' };
+    const withClip = { ...bundle, topicItems: (key: string) => (key === 'food' ? [recorded] : bundle.topicItems(key)) };
+    const word = (itemFacts({ kind: 'vocab-topic', id: 'vocab-topic:food' }, withClip) as TopicFacts).words[0];
+    expect(word?.speech).toEqual({ text: 'sagwa-spoken', audioRef: 'audio/vocab/food-apple.mp3' });
+    // no recording and no spoken form: the device voice says the Korean itself (playPrompt's fallback)
+    expect((itemFacts({ kind: 'vocab-topic', id: 'vocab-topic:food' }, bundle) as TopicFacts).words[0]?.speech).toEqual({ text: first.ko });
   });
 });
 
