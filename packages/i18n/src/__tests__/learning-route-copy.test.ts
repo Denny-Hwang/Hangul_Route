@@ -7,8 +7,8 @@ import { SAMPLES } from './samples';
 /**
  * AMENDMENTS-ROUTE-LEARNING-ROUTE section 7 (LR-1): the page is named **Learning Route**.
  * Section 7.2 pins the renamed English values; section 7.3 is the copy test below. Key paths,
- * code identifiers and telemetry names do not change (section 7.1). es / ko fall back to English
- * until the F-I18N-001 native review (section 7.3), so these rules run on the English values.
+ * code identifiers and telemetry names do not change (section 7.1). These rules run on the English values;
+ * the es / ko translations (F-I18N-001 PR 15 / 16) are held by their own copy tests.
  */
 const en = getMessages('en');
 

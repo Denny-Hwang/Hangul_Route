@@ -21,7 +21,7 @@ import {
  * pipeline runs it yet, F-I18N-001 §10), `/es`, `/ko`, `/es/about` and `/ko/about`, each at 320 / 375 / 768: the right `<html lang>`, no
  * sideways scroll, the primary CTA on screen without scrolling, and no control under `touchTarget.min`
  * beyond the ones listed today (`fixtures/landing-touch-allowlist.json`, a ratchet that only shrinks). The
- * es and ko dictionaries are empty until PR 15 / 16, so those pages still read English; the checks hold
+ * es and ko dictionaries are filled (PR 15 / 16), so those pages read Spanish and Korean; the checks hold
  * their layout to the English page's, so a translation that pushes the page wider or adds a small control fails.
  *
  * The pseudo-locale's layout is covered on the learner app (`apps/mobile/e2e/web/locale.spec.ts`); on the site
@@ -136,7 +136,7 @@ test.describe('the locale switcher on /es and /ko', () => {
     test(`/${lang}: links every locale's landing, marks its own, and fits a 320 px screen`, async ({ page }) => {
       await page.setViewportSize({ width: 320, height: HEIGHT });
       await page.goto(`/${lang}`);
-      // The switcher is named in the page's language (Spanish since F-I18N-001 PR 15; ko falls back to English).
+      // The switcher is named in the page's language (Spanish since F-I18N-001 PR 15, Korean since PR 16).
       const nav = page.locator(`nav[aria-label="${getMessages(lang).landing.footer.language}"]`);
       await expect(nav.locator('a')).toHaveText(['English', 'Español', '한국어']);
       for (const [hreflang, href] of [

@@ -19,9 +19,9 @@ type SpokenKind = Jamo['spokenKind'];
  * stops ㄱ ㄷ ㅂ ㅈ are "soft and light", the aspirated ㅋ ㅌ ㅍ ㅊ come "with a puff of air";
  * no "voiced English" claims. Spanish and Korean readers need their own hint, a
  * F-I18N-001 overlay (`jamo:*.soundHint`), never a translation of these English sound-alikes:
- * the Spanish hints are written (`content/i18n/es/stage1-jamo.json`, PR 15); the Korean ones are
- * pending (PR 16), and until then `localize` falls back to English, so ko must stay hidden (the
- * release guard in `__tests__/overlays.test.ts`).
+ * the Spanish hints are written (`content/i18n/es/stage1-jamo.json`, PR 15) and the Korean ones
+ * too, as Korean descriptions of each sound (`content/i18n/ko/stage1-jamo.json`, PR 16); a locale
+ * without them must stay hidden (the release guard in `__tests__/overlays.test.ts`).
  */
 const SOUND_HINTS: Readonly<Record<string, string>> = {
   'jamo:giyeok': 'a soft, light g (between g and k)',

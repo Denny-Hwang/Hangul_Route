@@ -12,9 +12,8 @@ import type { Messages } from '../types';
 import { SAMPLES } from './samples';
 
 /**
- * F-REPORT-001 section 3.11 (RP-6): the `report` namespace and `a11y.report`. English is the source; es / ko stay
- * empty overlays until the native review (F-I18N-001 PR 16) and fall back to English, so every rule below runs
- * on every locale's dictionary and holds again when an overlay lands.
+ * F-REPORT-001 section 3.11 (RP-6): the `report` namespace and `a11y.report`. English is the source; es (F-I18N-001
+ * PR 15) and ko (PR 16) are translated, and every rule below runs on every locale's dictionary.
  */
 const REPORT_ROOTS = ['report', 'a11y.report'] as const;
 
