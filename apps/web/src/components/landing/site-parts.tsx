@@ -1,6 +1,9 @@
 import { borderWidth, colors, radii, spacing, typography } from '@hangul-route/design-system/tokens';
+import { getMessages, type UiLocale } from '@hangul-route/i18n';
+import Link from 'next/link';
 import type { ReactNode } from 'react';
-import { PRIMARY_ACTION, SECONDARY_ACTION, SITE_SIZES, VISUALLY_HIDDEN, rem } from '../../lib/site-style';
+import type { SiteClaims } from '../../data/site-claims';
+import { HIT, PRIMARY_ACTION, SECONDARY_ACTION, SITE_SIZES, VISUALLY_HIDDEN, rem } from '../../lib/site-style';
 
 /**
  * The parts every page of the layered site is built from (F-SITE-002 §3.1 rules, §3.4 to §3.6; mock
@@ -155,5 +158,77 @@ export function Closing({ id, line, children }: { id: string; line: string; chil
       </p>
       {children}
     </section>
+  );
+}
+
+/** A section's lines: its base line and any claim lines after it, `spacing.sm` apart (one style, no badge). */
+export function Lines({ items }: { items: readonly string[] }): JSX.Element {
+  return (
+    <div style={{ display: 'grid', gap: spacing.sm }}>
+      {items.map((line) => (
+        <Body key={line}>{line}</Body>
+      ))}
+    </div>
+  );
+}
+
+/** An in-page text link to another site page (`next/link`, inside the site route group), with a 64 px hit area. */
+export function TextLink({ href, children }: { href: string; children: ReactNode }): JSX.Element {
+  return (
+    <Link
+      href={href}
+      className="hr-site-text-link"
+      style={{
+        ...HIT,
+        justifyContent: 'flex-start',
+        fontWeight: typography.weight.semibold,
+        textDecorationLine: 'underline',
+        textDecorationThickness: borderWidth.thin,
+        textUnderlineOffset: spacing.xs,
+      }}
+    >
+      {children}
+    </Link>
+  );
+}
+
+/**
+ * Two columns from 720 px (the grown-up pages' sections, mock design/screens/site/persona-page.md): one column on
+ * phones, where each section keeps its top rule; on wide screens the rule sits above the pair (`hr-site-row-2*`).
+ */
+export function TwoColumns({ left, right }: { left: ReactNode; right: ReactNode }): JSX.Element {
+  return (
+    <div className="hr-site-row-2-wrap">
+      <div className="hr-site-row-2">
+        <div>{left}</div>
+        <div>{right}</div>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * The Plans block of a persona page (F-SITE-002 §3.5, §3.6): the free line, the paid line only while paid plans are
+ * coming (once they are on sale, the managed line already says where), then the managed line, so the app host is named
+ * once. No price, no plan term and no billing link, ever.
+ */
+export function PlansBlock({ locale, claims, id }: { locale: UiLocale; claims: Readonly<SiteClaims>; id: string }): JSX.Element {
+  const t = getMessages(locale).landing;
+  return (
+    <Section id={id} title={t.persona.plansTitle}>
+      <div style={{ display: 'grid', gap: spacing.sm }}>
+        {/* Two keys in one paragraph: each stays its own text node, so a locale can word each one alone. */}
+        <Body>
+          <span>{t.plans.free.stage1}</span>
+          {claims.paidPlans === 'coming' ? (
+            <>
+              {' '}
+              <span>{t.plans.paid.coming}</span>
+            </>
+          ) : null}
+        </Body>
+        <Body>{t.plans.managedInApp}</Body>
+      </div>
+    </Section>
   );
 }

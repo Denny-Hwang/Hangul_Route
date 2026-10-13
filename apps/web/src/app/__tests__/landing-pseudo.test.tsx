@@ -11,11 +11,13 @@ import LandingPage from '../(en)/page';
 import PrivacyPage from '../(en)/privacy/page';
 import TermsPage from '../(en)/terms/page';
 import LearnersPage from '../(en)/learners/page';
+import ParentsPage from '../(en)/parents/page';
+import TeachersPage from '../(en)/teachers/page';
 
 /**
  * F-I18N-001 PR 11a, §3.11: the site's pages take every word from `messages/*\/landing.ts`.
  * With the English dictionary swapped for its pseudo-localised copy (en-XA), every text node
- * and labelled attribute on the landing, About, Privacy, Terms and Learners pages must be bracketed
+ * and labelled attribute on the landing, About, Privacy, Terms and persona pages must be bracketed
  * pseudo text. What may stay as it is: content (heritage cards, mini-game titles and blurbs),
  * taught Korean and its romanization, the contact address, and decoration the page passes in.
  */
@@ -55,6 +57,8 @@ describe('site pages render only dictionary text (en-XA)', () => {
     ['privacy', PrivacyPage],
     ['terms', TermsPage],
     ['learners', LearnersPage],
+    ['parents', ParentsPage],
+    ['teachers', TeachersPage],
   ] as const) {
     it(name, () => {
       const words = wordsOf(render(Page));
