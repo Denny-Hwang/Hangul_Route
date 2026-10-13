@@ -47,7 +47,7 @@ Then: only when the learner side, A and B have all said yes **and two days have 
 |  2. (after Find class)  Move to "<Class name>"?            |   <- name from the server preview, never typed
 |     - The family is asked first. The other class sees      |
 |       nothing until the family says yes. Then it sees only |
-|       initials and a level until the move.                 |
+|       initials, a picture and a level until the move.      |
 |     - Nothing changes until everyone has said yes, and     |
 |       then not for 2 days.                                 |
 |     - <Name> keeps cards and stars. You can cancel any     |
