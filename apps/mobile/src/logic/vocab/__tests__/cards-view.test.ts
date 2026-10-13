@@ -110,7 +110,7 @@ const A11Y: CardsA11y = {
     front: (w) => `${w}. Show meaning.`,
     back: (w, g) => `${w}, ${g}. Show word.`,
     turnedBack: (w, g) => `Meaning: ${g}. ${w}.`,
-    turnedFront: (w) => `${w}.`,
+    turnedFront: (w) => `Back to the word. ${w}.`,
   },
 };
 
@@ -122,7 +122,7 @@ describe('cardLabels (FlipCard spec: the labels carry the word, the back the wor
       front: 'Korean: sa-gwa, sagwa. Show meaning.',
       back: 'Korean: sa-gwa, sagwa, apple. Show word.',
       turnedBack: 'Meaning: apple. Korean: sa-gwa, sagwa.',
-      turnedFront: 'Korean: sa-gwa, sagwa.',
+      turnedFront: 'Back to the word. Korean: sa-gwa, sagwa.',
     });
   });
 

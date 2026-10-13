@@ -241,6 +241,19 @@ export const a11y = {
    * tap (`gloss` is the answer's meaning in the UI language, content), and the homonym topic chip.
    */
   vocab: {
+    /**
+     * The flashcard (F-VOC-003 C-5, design/screens/vocab/cards.md): the card button's name carries the word on its
+     * front and the word with its meaning on its back (design/components/FlipCard/spec.md), and the new face is said
+     * after a flip. `word` is `a11y.koreanItem` without a gloss, or `word(ko)` while reading practice hides the
+     * romanization; `gloss` is the meaning in the UI language (content).
+     */
+    cards: {
+      word: (ko: string) => `Korean: ${ko}`,
+      front: (word: string) => `${word}. Show meaning.`,
+      back: (word: string, gloss: string) => `${word}, ${gloss}. Show word.`,
+      turnedBack: (word: string, gloss: string) => `Meaning: ${gloss}. ${word}.`,
+      turnedFront: (word: string) => `Back to the word. ${word}.`,
+    },
     question: {
       speaker: 'Play the word again',
       /** The meaning starts the sentence, so its first letter is upper case ("Right. Apple."). */

@@ -66,7 +66,7 @@ F  Quick check (VocabQuestionView, check mode)        F  Summary                
 ## Accessibility
 
 - **The card is one button** whose name carries the word and what a press does (design/components/FlipCard/spec.md): the front is "Korean: 사과, sagwa. Show meaning." and the back "Korean: 사과, sagwa, apple. Show word." (`a11y.vocab.cards.front` / `.back`). In reading practice the romanization stays out of the name until it is revealed, as on screen.
-- **After a flip the new face is said**: "apple" side first ("Meaning: apple. Korean: 사과, sagwa.", `a11y.vocab.cards.turnedBack`) or "Korean: 사과, sagwa." (`turnedFront`). Native calls `announceForAccessibility`; the web writes it into a visually hidden polite live line that stays mounted. Nothing is said on the first showing of a card (focus moves to it instead).
+- **After a flip the new face is said**: "apple" side first ("Meaning: apple. Korean: 사과, sagwa.", `a11y.vocab.cards.turnedBack`) or "Back to the word. Korean: 사과, sagwa." (`turnedFront`). Native calls `announceForAccessibility`; the web writes it into a visually hidden polite live line that stays mounted. Nothing is said on the first showing of a card (focus moves to it instead).
 - **When a card changes, focus moves to the card** (`focusForScreenReader`).
 - The picture is `decorative` on the card (the meaning is in the name). The dots are hidden; nothing reads "n of m".
 - The speaker is "Hear the word"; when sound is off it says so ("Play sound, sound is off", the prompt slot's label).
