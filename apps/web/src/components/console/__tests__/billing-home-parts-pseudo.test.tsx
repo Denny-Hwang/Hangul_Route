@@ -139,7 +139,7 @@ describe('billing home parts render only dictionary text (en-XA)', () => {
     const rows = (['purchase', 'renewal', 'refund', 'failed'] as const).map((kind, i) =>
       receiptRow({ id: `bev:r${i}`, kind, planKey: 'family_lifetime', amountCents: 1530, currency: 'usd', livemode: false, occurredAt: '2028-10-02T09:00:00.000Z', hasReceipt: kind !== 'failed' }, PSEUDO),
     );
-    const html = renderToStaticMarkup(<BackToBilling href="/account/billing" />) + renderToStaticMarkup(<ReceiptsTable rows={rows} failed={new Set(['bev:r0'])} busyId={null} onView={noop} />);
+    const html = renderToStaticMarkup(<BackToBilling href="/account/billing" />) + renderToStaticMarkup(<ReceiptsTable rows={rows} notes={new Map([['bev:r0', 'failed'], ['bev:r1', 'tapAgain']] as const)} busyId={null} onView={noop} />);
     expect(html).toContain('role="rowheader"');
     expectAllPseudo(html, data);
   });

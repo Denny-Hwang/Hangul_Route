@@ -572,6 +572,8 @@ export const consoleMsgs = {
       view: { cta: 'View receipt' },
       viewA11y: (date: string) => `View receipt from ${date} (opens Stripe in a new tab)`,
       linkFailed: "Can't open this receipt right now.",
+      /** After step-up, when the browser blocked the new tab: one more tap opens it (the tap itself opens the tab). */
+      tapAgain: 'Confirmed. Tap View receipt again to open it.',
       pageTitle: (space: string) => `${space} · receipts`,
       notYours: 'This page is for the person who pays for this space.',
       cantLoad: "Can't load receipts right now.",

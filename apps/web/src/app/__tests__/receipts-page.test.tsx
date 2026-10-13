@@ -33,7 +33,7 @@ vi.mock('@/components/console/AdultFrame', () => ({
 const auth = vi.hoisted(() => ({ outcome: 'retry' as 'retry' | 'cancelled' | 'unavailable', calls: 0 }));
 vi.mock('@/components/console/auth-context', () => ({
   useConsoleAuth: () => ({
-    reverify: async (fetcher: () => Promise<unknown>) => {
+    reverify: async (fetcher: () => Promise<unknown>, _first: unknown) => {
       auth.calls += 1;
       if (auth.outcome === 'cancelled') return { kind: 'cancelled' };
       if (auth.outcome === 'unavailable') return { kind: 'unavailable' };
@@ -108,7 +108,11 @@ interface FakeTab {
   closed: boolean;
   close: () => void;
 }
-const browser = vi.hoisted(() => ({ online: true, opened: [] as Array<{ url: string; features?: string }>, tabs: [] as unknown[], blockPopups: false }));
+/**
+ * `blockPopups`: every `window.open` is blocked. `blockBlank`: only the blank tab inside the tap is blocked.
+ * `blockLater`: an open after the step-up (no tap of its own any more) is blocked.
+ */
+const browser = vi.hoisted(() => ({ online: true, opened: [] as Array<{ url: string; features?: string }>, tabs: [] as unknown[], blockPopups: false, blockBlank: false, blockLater: false }));
 
 beforeAll(() => {
   (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -130,10 +134,12 @@ beforeEach(() => {
   browser.opened = [];
   browser.tabs = [];
   browser.blockPopups = false;
+  browser.blockBlank = false;
+  browser.blockLater = false;
   win = Object.assign(new EventTarget(), {
     open: (url: string, _target: string, features?: string): FakeTab | null => {
       browser.opened.push({ url, ...(features ? { features } : {}) });
-      if (browser.blockPopups) return null;
+      if (browser.blockPopups || (browser.blockBlank && url === '') || (browser.blockLater && url !== '')) return null;
       const tab: FakeTab = {
         opener: win,
         location: { href: url || 'about:blank' },
@@ -143,7 +149,8 @@ beforeEach(() => {
         },
       };
       browser.tabs.push(tab);
-      return tab;
+      // As browsers do: with noopener or noreferrer the tab opens and the call returns null.
+      return features && /noopener|noreferrer/.test(features) ? null : tab;
     },
   });
   vi.stubGlobal('window', win);
@@ -250,18 +257,30 @@ describe('the receipts page', () => {
     expect(pageText()).toContain(r.linkFailed);
   });
 
-  it('a blocked blank tab: the link opens in a new tab after the lookup, without an opener', async () => {
+  it('a blocked blank tab: the link opens in a new tab after the lookup, its opener cleared; no failure line', async () => {
+    browser.blockBlank = true;
+    const root = await render();
+    await act(async () => {
+      viewButtons(root)[0]?.props.onClick();
+    });
+    await flush();
+    expect(browser.opened.at(-1)).toEqual({ url: 'https://invoice.stripe.com/i/acct_1/test_1' });
+    expect(tab().location.href).toBe('https://invoice.stripe.com/i/acct_1/test_1');
+    expect(tab().opener).toBeNull();
+    expect(pageText()).not.toContain(r.linkFailed);
+  });
+
+  it('every new tab blocked: that row says Can’t open this receipt right now', async () => {
     browser.blockPopups = true;
     const root = await render();
     await act(async () => {
       viewButtons(root)[0]?.props.onClick();
     });
     await flush();
-    expect(browser.opened.at(-1)).toEqual({ url: 'https://invoice.stripe.com/i/acct_1/test_1', features: 'noopener,noreferrer' });
-    expect(pageText()).toContain(r.linkFailed);
+    expect(rows(root).map((tr) => textOf(tr))[0]).toContain(r.linkFailed);
   });
 
-  it('step-up around the receipt link: Continue retries the lookup into the same tab', async () => {
+  it('step-up around the receipt link: the blank tab closes before the dialog opens; after Continue the receipt opens in a new tab', async () => {
     calls.linkResults = [HINT, { ok: true, data: { url: 'https://pay.stripe.com/receipts/test_2' } }];
     const root = await render();
     await act(async () => {
@@ -269,15 +288,45 @@ describe('the receipts page', () => {
     });
     const dialog = root.find((n) => n.props['data-testid'] === 'step-up' && typeof n.type === 'string');
     expect(textOf(dialog)).toContain(b.stepUp.title);
+    // The grown-up is not left looking at an empty tab while this tab asks them to confirm.
+    expect(tab(0).closed).toBe(true);
     await act(async () => {
       dialog.find((n) => n.type === 'button' && textOf(n) === b.stepUp.cta).props.onClick();
     });
     await flush();
     expect(auth.calls).toBe(1);
-    expect(tab().location.href).toBe('https://pay.stripe.com/receipts/test_2');
+    expect(browser.opened.at(-1)).toEqual({ url: 'https://pay.stripe.com/receipts/test_2' });
+    expect(tab(1).location.href).toBe('https://pay.stripe.com/receipts/test_2');
+    expect(tab(1).opener).toBeNull();
+    expect(pageText()).not.toContain(r.linkFailed);
+    expect(pageText()).not.toContain(r.tapAgain);
   });
 
-  it('step-up cancelled: the blank tab closes and the page says Nothing was changed', async () => {
+  it('step-up, then the new tab is blocked (no tap of its own any more): the row asks for one more tap, which opens it', async () => {
+    browser.blockLater = true;
+    calls.linkResults = [HINT, { ok: true, data: { url: 'https://pay.stripe.com/receipts/test_2' } }, { ok: true, data: { url: 'https://pay.stripe.com/receipts/test_3' } }];
+    const root = await render();
+    await act(async () => {
+      viewButtons(root)[0]?.props.onClick();
+    });
+    const dialog = root.find((n) => n.props['data-testid'] === 'step-up' && typeof n.type === 'string');
+    await act(async () => {
+      dialog.find((n) => n.type === 'button' && textOf(n) === b.stepUp.cta).props.onClick();
+    });
+    await flush();
+    const first = rows(root).map((tr) => textOf(tr))[0];
+    expect(first).toContain(r.tapAgain);
+    expect(first).not.toContain(r.linkFailed);
+    browser.blockLater = false;
+    await act(async () => {
+      viewButtons(root)[0]?.props.onClick();
+    });
+    await flush();
+    expect(tab(1).location.href).toBe('https://pay.stripe.com/receipts/test_3');
+    expect(pageText()).not.toContain(r.tapAgain);
+  });
+
+  it('step-up cancelled: the blank tab is closed and the page says Nothing was changed', async () => {
     calls.linkResults = [HINT];
     const root = await render();
     await act(async () => {
