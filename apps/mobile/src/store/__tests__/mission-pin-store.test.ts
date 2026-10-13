@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { beforeEach, describe, expect, it } from 'vitest';
 import type { MissionPlan } from '../../logic/homework/mission-builder';
 import { clearMissionPins, pinMission, pinnedMission } from '../mission-pin-store';
@@ -45,5 +47,27 @@ describe('mission-pin-store (F-STORY-004 PR 4.8c)', () => {
     pinMission(plan('p1', '2026-10-13'));
     expect(pinnedMission('p1', '2026-10-12')).toBeNull();
     expect(pinnedMission('p2', '2026-10-12')).toBe(other);
+  });
+});
+
+/**
+ * Source guard for the wiring (the mobile vitest lane does not render screens): Home must read and
+ * write this store, never a pin of its own, or Results' Back home drops the pin again (PR 4.8c).
+ */
+describe('HomeScreen pins the plan in the session store (F-STORY-004 PR 4.8c)', () => {
+  const home = readFileSync(join(__dirname, '..', '..', 'screens', 'home', 'HomeScreen.tsx'), 'utf8');
+
+  it('reads the pin for the active profile and day', () => {
+    expect(home).toMatch(/pinned:\s*pinnedMission\(profile\.id,\s*today\)/);
+  });
+
+  it('pins the merged plan it builds', () => {
+    expect(home).toMatch(/pinMission\(merged\)/);
+  });
+
+  it('keeps no pin of its own', () => {
+    expect(home).not.toMatch(/useRef<\s*MissionPlan/);
+    expect(home).not.toMatch(/pinned:\s*null/);
+    expect(home).not.toMatch(/pinnedPlan/);
   });
 });
