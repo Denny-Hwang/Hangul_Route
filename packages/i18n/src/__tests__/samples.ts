@@ -345,6 +345,7 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'learner.vocab.speed.nudge.miss.second': [['apple']],
   'learner.vocab.speed.relaxed.line': [[1], [8], [10]],
   'learner.vocab.speed.results.caught': [[0], [1], [7]],
+  'learner.vocab.speed.challenge.line': [[60], [90], [120]],
   'learner.vocab.library.collected': [[0], [1], [12]],
   'learner.vocab.topics.collected': [[0], [5]],
   'learner.vocab.topics.tileA11y': [['Food', 1], ['Food', 5]],
@@ -432,6 +433,7 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'a11y.vocab.question.reveal': [['apple']],
   'a11y.vocab.question.topic': [['Food']],
   'a11y.vocab.speed.sparks': [[0], [1], [3]],
+  'a11y.vocab.speed.timeLeft': [[1], [42], [120]],
   // F-REPORT-001 RP-6: the report namespace and a11y.report. Names run to the 20-character display name and dates to
   // the longest short form, so the length budgets see the long case; taught letters and words are stand-ins (no Hangul).
   'report.title.learner': [['Mina'], ['Alexandria Kimberley']],

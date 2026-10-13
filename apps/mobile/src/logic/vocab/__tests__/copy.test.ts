@@ -21,6 +21,7 @@ const SAMPLE_ARGS: Record<string, readonly (readonly unknown[])[]> = {
   'speed.nudge.miss.second': [['apple']],
   'speed.relaxed.line': [[1], [8], [10]],
   'speed.results.caught': [[0], [1], [7]],
+  'speed.challenge.line': [[60], [90], [120]],
 };
 
 function render(node: unknown, path: string, out: string[]): void {
