@@ -129,6 +129,16 @@ export const caregiver = {
       bodyDeviceOnly:
         'Each learner\'s nickname and progress are kept on this device. Cloud saving is not set up on this build, so use "Back up to a file" to keep a copy. We do not share with third parties.',
     },
+    /**
+     * All lessons from the grown-up area (F-BROWSE-001 sections 4.3, 4.11 items 2, 3 and 6; BR-12a), web only:
+     * the dashboard button, the Preview lessons rows of the in-app report and the read-only Learning Route page,
+     * and the line when the browser refuses this tab's storage (the console's `console.browse.storageBlocked`).
+     */
+    browse: {
+      open: { cta: 'Open all lessons' },
+      preview: { cta: 'Preview lessons' },
+      storageBlocked: "Your browser blocked this page's storage, so lessons cannot open here.",
+    },
   },
 
   /**

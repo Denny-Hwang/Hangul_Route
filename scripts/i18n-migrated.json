@@ -107,7 +107,8 @@
     "apps/web/src/app/(console)/teach/space/report/page.tsx",
     "apps/web/src/components/console/ClassReportParts.tsx",
     "apps/web/src/app/(console)/parent/learner/page.tsx",
-    "apps/mobile/src/screens/parent/SuggestedPlanCard.tsx"
+    "apps/mobile/src/screens/parent/SuggestedPlanCard.tsx",
+    "apps/web/src/components/console/FamilyNotesParts.tsx"
   ],
   "pluralTernaryBaseline": {
     "packages/content-schema/src/romanization/compare.ts": 1

@@ -984,6 +984,7 @@ export const learner = {
     },
     gains: { stars: 'Estrellas', cards: 'Tarjetas', stories: 'Historias leídas' },
     storiesNote: 'Las historias del patrimonio están abiertas siempre.',
+    plan: { open: 'Abrir el plan' },
     home: {
       strip: {
         title: 'Ruta de aprendizaje',

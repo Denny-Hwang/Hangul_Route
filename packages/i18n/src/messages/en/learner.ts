@@ -1253,6 +1253,11 @@ export const learner = {
     gains: { stars: 'Stars', cards: 'Cards', stories: 'Stories read' },
     storiesNote: 'Heritage stories are open any time.',
     /**
+     * The link on the weekly plan line (R-7d, section 3.9): opens F-PLAN-002's `RouteOverview`. Shown only for the
+     * learner's own weekly plan. Its accessible name is these same words.
+     */
+    plan: { open: 'Open plan' },
+    /**
      * The Home route strip (R-4b, section 3.1 entry 2; amendment LR-A6): the page's name, the goal
      * line from the goal source and the weekly plan week. No count of what is left, no date.
      */

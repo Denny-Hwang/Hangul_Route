@@ -1,14 +1,17 @@
-import { CATALOG } from '@hangul-route/content-schema';
+import { CATALOG, type SpaceRole } from '@hangul-route/content-schema';
+import type { SpaceListItem } from '../api';
 import { describe, expect, it } from 'vitest';
 import {
   FAMILY_TABS,
   composerPrefill,
+  notesHubView,
   notesPageQuery,
   notesPageHref,
   questOptions,
   questPrefill,
   reactionGlyph,
   notesSender,
+  reportNoteLink,
   rosterNotesLinks,
 } from '../notes-page';
 import type { RecipientRow } from '../notes';
@@ -41,6 +44,12 @@ describe('notesPageQuery', () => {
 
   it('an unknown tab or a compose value other than 1 reads as the defaults; blank values are absent', () => {
     expect(notesPageQuery(params('id=s&tab=other&compose=yes&learner=%20&quest='))).toEqual({ spaceId: 's', learner: null, quest: null, compose: false, tab: FAMILY_TABS[0] });
+  });
+
+  it('the family tabs: Received first, the default of section 6.13, then Sent (FB-12)', () => {
+    expect(FAMILY_TABS).toEqual(['received', 'sent']);
+    expect(notesPageQuery(params('id=s&tab=received')).tab).toBe('received');
+    expect(notesPageQuery(params('id=s')).tab).toBe('received');
   });
 
   it('null params (a static prerender) read as an empty page', () => {
@@ -164,5 +173,58 @@ describe('notesSender', () => {
     expect(notesSender('admin', 'school')).toBe(false);
     expect(notesSender('owner', 'school')).toBe(false);
     expect(notesSender(null, 'family')).toBe(false);
+  });
+});
+
+describe('notesHubView (FB-11b, console/notes-hub.md)', () => {
+  const item = (id: string, kind: 'family' | 'class' | 'school', role: SpaceRole, archived = false): SpaceListItem => ({
+    space: { id, kind, name: `Name ${id}`, parentSpaceId: null, settings: { consentMode: 'parent', anonymizeRoster: false }, archivedAt: archived ? '2026-10-01T00:00:00.000Z' : null, createdAt: '2026-09-01T00:00:00.000Z' },
+    role,
+    counts: { learners: 1, accounts: 1, classes: 0 },
+    joinCode: null,
+    joinCodeExpiresAt: null,
+  } as SpaceListItem);
+
+  it('one family where the account may send or oversee: straight on to its notes page (A)', () => {
+    expect(notesHubView([item('f1', 'family', 'caregiver'), item('c1', 'class', 'teacher')], 'parent')).toEqual({ kind: 'redirect', href: '/parent/space/notes?id=f1' });
+  });
+
+  it('one class the account teaches or owns: straight on to its notes page', () => {
+    expect(notesHubView([item('c1', 'class', 'owner'), item('f1', 'family', 'owner')], 'teacher')).toEqual({ kind: 'redirect', href: '/teach/space/notes?id=c1' });
+  });
+
+  it('several: one row per space in the API order, with its notes page (B); archived classes left out', () => {
+    expect(notesHubView([item('c2', 'class', 'teacher'), item('c1', 'class', 'owner'), item('c3', 'class', 'teacher', true)], 'teacher')).toEqual({
+      kind: 'list',
+      rows: [
+        { id: 'c2', name: 'Name c2', href: '/teach/space/notes?id=c2' },
+        { id: 'c1', name: 'Name c1', href: '/teach/space/notes?id=c1' },
+      ],
+    });
+  });
+
+  it('none: the persona start (C); a student, an admin or a school is not a notes space', () => {
+    expect(notesHubView([item('c1', 'class', 'admin'), item('s1', 'school', 'owner'), item('f1', 'family', 'student')], 'teacher')).toEqual({ kind: 'none', start: '/start?persona=teacher' });
+    expect(notesHubView([item('c1', 'class', 'teacher')], 'parent')).toEqual({ kind: 'none', start: '/start?persona=parent' });
+  });
+});
+
+describe('reportNoteLink (FB-11b, F-REPORT-001 section 3.6)', () => {
+  const base = { enabled: true, archived: false, spaceId: 'space:c1', learnerId: 'profile:a' };
+  it('the composer with the learner, for the roles that may send', () => {
+    expect(reportNoteLink({ ...base, kind: 'class', role: 'teacher' })).toBe('/teach/space/notes?id=space%3Ac1&compose=1&learner=profile%3Aa');
+    expect(reportNoteLink({ ...base, kind: 'class', role: 'owner' })).not.toBeNull();
+    expect(reportNoteLink({ ...base, kind: 'family', role: 'caregiver' })).toBe('/parent/space/notes?id=space%3Ac1&compose=1&learner=profile%3Aa');
+    expect(reportNoteLink({ ...base, kind: 'family', role: 'owner' })).not.toBeNull();
+  });
+
+  it('none: flag off, archived, a school admin, a teacher of a family, a caregiver of a class, an unknown role, a school', () => {
+    expect(reportNoteLink({ ...base, enabled: false, kind: 'class', role: 'owner' })).toBeNull();
+    expect(reportNoteLink({ ...base, archived: true, kind: 'class', role: 'owner' })).toBeNull();
+    expect(reportNoteLink({ ...base, kind: 'class', role: 'admin' })).toBeNull();
+    expect(reportNoteLink({ ...base, kind: 'family', role: 'teacher' })).toBeNull();
+    expect(reportNoteLink({ ...base, kind: 'class', role: 'caregiver' })).toBeNull();
+    expect(reportNoteLink({ ...base, kind: 'class', role: null })).toBeNull();
+    expect(reportNoteLink({ ...base, kind: 'school', role: 'owner' })).toBeNull();
   });
 });
