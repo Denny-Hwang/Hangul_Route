@@ -24,12 +24,12 @@ export function ParentsPage({ locale = DEFAULT_LOCALE, claims = SITE_CLAIMS }: P
   const parentSignIn = signIn('parent');
   const follow = [
     P.follow.body,
-    ...(showsClaim(claims, 'parentReports') ? [P.follow.reports] : []),
-    ...(showsClaim(claims, 'learningRoute') ? [P.follow.route] : []),
-    ...(showsClaim(claims, 'feedbackNotes') ? [P.follow.notes] : []),
-    ...(showsClaim(claims, 'browseAsLearner') ? [P.follow.browse] : []),
+    ...(showsClaim(claims, 'parentReports', locale) ? [P.follow.reports] : []),
+    ...(showsClaim(claims, 'learningRoute', locale) ? [P.follow.route] : []),
+    ...(showsClaim(claims, 'feedbackNotes', locale) ? [P.follow.notes] : []),
+    ...(showsClaim(claims, 'browseAsLearner', locale) ? [P.follow.browse] : []),
   ];
-  const whatSee = showsClaim(claims, 'parentReports') ? P.faq.whatSee.reports : P.faq.whatSee.a;
+  const whatSee = showsClaim(claims, 'parentReports', locale) ? P.faq.whatSee.reports : P.faq.whatSee.a;
   return (
     <SiteShell locale={locale} page="/parents" current="parents">
       <PageHead title={P.title} lead={P.lead}>

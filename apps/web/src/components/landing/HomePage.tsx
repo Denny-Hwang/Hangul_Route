@@ -41,7 +41,7 @@ export function HomePage({ locale = DEFAULT_LOCALE, claims = SITE_CLAIMS }: Home
   const steps = [
     H.how.steps.start,
     H.how.steps.quests,
-    { title: H.how.steps.collect.title, body: showsClaim(claims, 'learningRoute') ? H.how.routeBody : H.how.steps.collect.body },
+    { title: H.how.steps.collect.title, body: showsClaim(claims, 'learningRoute', locale) ? H.how.routeBody : H.how.steps.collect.body },
   ];
   return (
     <SiteShell locale={locale} page="/">

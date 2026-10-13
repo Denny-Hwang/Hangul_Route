@@ -29,6 +29,9 @@ export const a11y = {
   /** One of Today's mission cards; a collected card keeps its slot and says so. */
   missionCard: (title: string, subtitle: string, collected: boolean) =>
     `${title}. ${subtitle}.${collected ? ' Collected.' : ''}`,
+  /** The Home vocabulary card's button (F-VOC-005 section 3.10): the card's lines, then where it goes. */
+  vocabMissionCard: (title: string, subtitle: string, collected: boolean) =>
+    `${title}. ${subtitle}.${collected ? ' Collected.' : ''} Opens a quick round.`,
   /**
    * A Journey grid cell (F-STORY-005 §3.5, §3.12): the stage by its number and title, the theme, what the
    * cell holds (`kind` is the cell's `CellKind`) and how many heritage stories call it home; then the

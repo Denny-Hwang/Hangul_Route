@@ -111,6 +111,8 @@ beforeEach(() => {
   locales.available = ['en'];
   resetFrameMemory();
   vi.unstubAllEnvs();
+  // Reports are on by default since F-REPORT-001 RP-11; these cases start from every sibling flag off and switch on what they need.
+  vi.stubEnv('NEXT_PUBLIC_REPORTS_ENABLED', 'false');
 });
 afterEach(() => {
   act(() => mounted?.unmount());

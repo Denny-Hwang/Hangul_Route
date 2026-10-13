@@ -14,6 +14,8 @@ export const a11y = {
   profileEntry: 'Perfil y ajustes',
   openHomework: 'Abrir la tarea',
   missionCard: (title: string, subtitle: string, collected: boolean) => `${title}. ${subtitle}.${collected ? ' Conseguida.' : ''}`,
+  vocabMissionCard: (title: string, subtitle: string, collected: boolean) =>
+    `${title}. ${subtitle}.${collected ? ' Conseguida.' : ''} Abre una ronda rápida.`,
   journeyCell: (c: {
     stage: number;
     stageTitle: string;
