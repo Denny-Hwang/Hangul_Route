@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import { act, create, type ReactTestInstance, type ReactTestRenderer } from 'react-test-renderer';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import type { SpaceRole } from '@hangul-route/content-schema';
+import Page from '@/app/(console)/teach/space/curriculum/page';
 
 /**
  * F-ENT-003 E3-9, the wizard page's wiring (review 2026-10-12): with the console's free-plan
@@ -106,7 +107,6 @@ async function click(root: ReactTestInstance, id: string): Promise<void> {
 
 /** Opens the wizard and walks to the preview with the given length preset. */
 async function preview(length: string): Promise<ReactTestInstance> {
-  const { default: Page } = await import('@/app/(console)/teach/space/curriculum/page');
   await act(async () => {
     mounted = create(<Page />, { createNodeMock: (element) => (element.type === 'h1' ? { focus } : null) });
   });

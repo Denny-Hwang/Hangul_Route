@@ -150,3 +150,84 @@ describe('openBootIntentWhenReady', () => {
     expect(nav.navigate).not.toHaveBeenCalled();
   });
 });
+
+/**
+ * F-BROWSE-001 BR-12b (section 4.3 gate hand-off step 3): `/?gate=browse` opens the PIN screen for All lessons
+ * (`PinEntry { next: 'BrowseLessons' }`) over the start screen, or, when the grown-up gate opens directly, the
+ * gate hand-off at once. The key leaves the address; every other key stays.
+ */
+describe('the gate=browse boot intent', () => {
+  it('gate=browse is the All lessons intent and leaves the address', () => {
+    expect(parseBootIntent('?gate=browse')).toEqual({ intent: { kind: 'browse' }, search: '', changed: true });
+    expect(parseBootIntent('gate=browse').intent).toEqual({ kind: 'browse' });
+  });
+
+  it('keeps lang for the locale hand-off and other keys in order; every copy of gate leaves', () => {
+    const parsed = parseBootIntent('?lang=ko&gate=browse&from=site&gate=browse');
+    expect(parsed).toEqual({ intent: { kind: 'browse' }, search: '?lang=ko&from=site', changed: true });
+  });
+
+  it('takes no next: a next beside gate=browse is not read and stays where it was', () => {
+    expect(parseBootIntent('?gate=browse&next=%2Fparent')).toEqual({ intent: { kind: 'browse' }, search: '?next=%2Fparent', changed: true });
+  });
+
+  it('only the exact value: Browse, browse2 and an empty gate are no intent', () => {
+    for (const search of ['?gate=Browse', '?gate=browse2', '?gate=', '?gate']) {
+      expect(parseBootIntent(search), search).toEqual({ intent: null, search, changed: false });
+    }
+  });
+
+  function readyNavigator() {
+    return { isReady: vi.fn(() => true), navigate: vi.fn(), addListener: vi.fn(() => () => undefined) };
+  }
+  function browseSource() {
+    let intent: { kind: 'browse' } | null = { kind: 'browse' };
+    return {
+      peek: vi.fn(() => intent),
+      consume: vi.fn(() => {
+        intent = null;
+      }),
+    };
+  }
+
+  it('a device whose gate asks for the PIN: the PIN screen for All lessons, once', () => {
+    const nav = readyNavigator();
+    const src = browseSource();
+    const open = vi.fn(() => true);
+    openBootIntentWhenReady(nav, src, { opensDirectly: () => false, open });
+    openBootIntentWhenReady(nav, src, { opensDirectly: () => false, open });
+    expect(nav.navigate).toHaveBeenCalledTimes(1);
+    expect(nav.navigate).toHaveBeenCalledWith('PinEntry', { next: 'BrowseLessons' });
+    expect(open).not.toHaveBeenCalled();
+    expect(src.consume).toHaveBeenCalledTimes(1);
+  });
+
+  it('a gate that opens directly (no PIN needed, or the session is open): the hand-off at once, no PIN screen', () => {
+    const nav = readyNavigator();
+    const src = browseSource();
+    const open = vi.fn(() => true);
+    openBootIntentWhenReady(nav, src, { opensDirectly: () => true, open });
+    expect(open).toHaveBeenCalledTimes(1);
+    expect(nav.navigate).not.toHaveBeenCalled();
+    expect(src.consume).toHaveBeenCalledTimes(1);
+  });
+
+  it('a gate that opens directly but a browser that refuses the pass: the dashboard, with the storage line', () => {
+    const nav = readyNavigator();
+    const src = browseSource();
+    const open = vi.fn(() => false);
+    openBootIntentWhenReady(nav, src, { opensDirectly: () => true, open });
+    expect(open).toHaveBeenCalledTimes(1);
+    expect(nav.navigate).toHaveBeenCalledTimes(1);
+    expect(nav.navigate).toHaveBeenCalledWith('ParentDashboard', { browseBlocked: true });
+    expect(src.consume).toHaveBeenCalledTimes(1);
+  });
+
+  it('with no browse hand-off given (a build that cannot open All lessons), the intent is taken and nothing opens', () => {
+    const nav = readyNavigator();
+    const src = browseSource();
+    openBootIntentWhenReady(nav, src);
+    expect(nav.navigate).not.toHaveBeenCalled();
+    expect(src.consume).toHaveBeenCalledTimes(1);
+  });
+});
