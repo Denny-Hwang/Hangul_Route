@@ -20,7 +20,7 @@ Today's `/teach/home` with the Family group removed (families live under Family)
  | ( Class report )                                 |    archived: Class report stays, no Notes (D8)
  School (h2)
  | Riverside school · 4 classes        ( Open -> ) |
- ( Lessons )                                            browseEntryEnabled()
+ ( Lessons )                                            browseEnabled()
  Learning at home too? Set up a family space            or "Your family is under Family" (switch)
 ```
 

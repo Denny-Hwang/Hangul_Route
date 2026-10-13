@@ -37,7 +37,7 @@ Panel A — classes, reports and notes on
 |  | School name     4 classes   [ OPEN ]|  |  -> console/school-admin
 |                                           |
 |  archived rows dimmed, last               |
-|  [ Lessons ]                              |  <- lesson browser (flag)
+|  [ Lessons ]                              |  <- All lessons (flag)
 |                                           |
 |  muted: "Learning at home too? Set up a   |  <- no family persona
 |  family space"                            |
@@ -61,7 +61,7 @@ Panel B — no class yet (the account holds no teacher persona)
 - ( Class report ) → `/teach/space/report?id=` (F-REPORT-001) · ( Notes ) → `/teach/space/notes?id=` (F-FEEDBACK-001)
 - [ OPEN ] (school) → `console/school-admin` `/teach/space?id=`
 - [ + New class ] / [[ SET UP A CLASS ]] → `console/onboarding-role` at `/start?persona=teacher` (teacher card preselected; code step after)
-- [ Lessons ] → lesson browser window (F-BROWSE-001)
+- [ Lessons ] (`browseEnabled()` on the app origin) → All lessons at `/browse` in the same tab through `openBrowse(undefined, 'nav')` (F-BROWSE-001)
 - [ Go to Family ] / switch → `shell/parent-home`
 - "Learning at home too? Set up a family space" → `/start?persona=parent`
 

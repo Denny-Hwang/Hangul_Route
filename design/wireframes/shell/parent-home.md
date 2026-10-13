@@ -36,7 +36,7 @@ Panel A — family with learners (phone 375), every sibling flag on
 |  | ...                          |  |
 |  +-----------------------------+  |
 |                                   |
-|  [ Lessons ]                      |  <- opens the lesson browser
+|  [ Lessons ]                      |  <- All lessons, same tab
 |  [ Plan the week ] [ Plan the term ]
 |  [ Family settings ] [ Add a learner ]
 |                                   |
@@ -81,7 +81,7 @@ Panel D — no family yet (the account holds only the teacher persona, or none o
 - [[ SEE REPORT ]] (when reports are on) → `/parent/space/learner?id=<familyId>&learner=<learnerId>`; [[ OPEN ]] (reports off) → `/parent/space?id=<familyId>` (family roster)
 - ( Send a note ) (notes on) → `/parent/space/notes?id=<familyId>` (learner preselect per F-FEEDBACK-001, ids only)
 - ( Learning Route ) (route page on) → `/parent/space/route?id=<familyId>&learner=<learnerId>`
-- [ Lessons ] (browse on) → lesson browser in its own window (F-BROWSE-001; full for a paying account, sampler otherwise; no price shown)
+- [ Lessons ] (`browseEnabled()` on the app origin) → All lessons at `/browse` in the same tab through `openBrowse(undefined, 'nav')` (F-BROWSE-001; full for a paying account, sampler otherwise; no price shown)
 - [ Plan the week ] → `/parent/space/plan?id=` · [ Plan the term ] → `/parent/space/curriculum?id=` · [ Family settings ] → `/parent/space/settings?id=`
 - [ Add a learner ] → scrolls to / shows the join code panel
 - [ Copy ] → copies the code, label changes to "Copied"

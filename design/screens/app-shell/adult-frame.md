@@ -35,7 +35,7 @@ One persona: `(HR) Teacher            (< Back to learning)` — brand mark, then
 
 ## Navigation (`ADULT_NAV`)
 
-Items are drawn exactly as section 3.8 registers them; an item whose predicate is off is not drawn (never disabled). Lessons is a `<button>` (it opens the lesson browser window), the rest are links.
+Items are drawn exactly as section 3.8 registers them; an item whose predicate is off is not drawn (never disabled). Every item is a link, Lessons included: `<a href="/browse">`, whose click handler calls F-BROWSE-001 `openBrowse(undefined, 'nav')` to write the tab's pass and then opens All lessons at `/browse` in the same tab. It is shown only while `browseEnabled()` holds on the app origin (amended 2026-10-12 by F-BROWSE-001 BR-0b).
 
 | Persona | All flags on | Today (flags off) |
 |---|---|---|

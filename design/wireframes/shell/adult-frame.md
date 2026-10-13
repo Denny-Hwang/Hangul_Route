@@ -61,7 +61,7 @@ Nav registry (this spec registers every item; hidden when its predicate is off �
 | Reports | Family | `reportsEnabled()` |
 | Notes | Family | `notesEnabled()` |
 | Classes | Teacher | always |
-| Lessons | both | `browseEntryEnabled()` (a button: opens the lesson browser window) |
+| Lessons | both | `browseEnabled()` on the app origin (opens All lessons at `/browse` in the same tab, F-BROWSE-001 §4.3) |
 | Billing | both | always |
 
 - The persona switch is a two-option segmented control ("Family", "Teacher"); with one persona it is plain text.
@@ -73,7 +73,7 @@ Nav registry (this spec registers every item; hidden when its predicate is off �
 - ( Family | Teacher ) → writes last persona (shell store), opens the other home (`shell/parent-home` / `shell/teacher-home`)
 - Home / Classes / Notes / Billing → their pages (ids in `?id=` only; never a name)
 - Reports → the learner report when the account has one family with one learner; otherwise the family home (its cards are the index)
-- Lessons → F-BROWSE-001 `openBrowse({ source: 'nav' })` (named window; pass by `postMessage`)
+- Lessons → F-BROWSE-001 `openBrowse(undefined, 'nav')` (same tab; the pass goes in the tab's `sessionStorage`, then `location.assign('/browse')`; amended 2026-10-12 by F-BROWSE-001 BR-0b)
 - [Back to learning] / [Open the learner app] → clears the grown-up unlock and the console session, opens the learner app (`/` on the app host; `https://app.hangulroute.com/` when the console is still served on hangulroute.com)
 - [Sign out] → Clerk sign-out, clears the unlock and the console session → `shell/signin`
 - [Language v] → console locale (existing select)
@@ -83,7 +83,7 @@ Nav registry (this spec registers every item; hidden when its predicate is off �
 ## Navigation graph
 
 Enter from: every grown-up page renders inside it
-Exit to:    `shell/parent-home` · `shell/teacher-home` · `/account/billing` · report, notes and Learning Route pages (sibling specs) · lesson browser `/browse` (new window) · learner app `/` · `shell/signin` · hangulroute.com
+Exit to:    `shell/parent-home` · `shell/teacher-home` · `/account/billing` · report, notes and Learning Route pages (sibling specs) · lesson browser `/browse` (same tab, after the pass hand-off) · learner app `/` · `shell/signin` · hangulroute.com
 
 ## States
 

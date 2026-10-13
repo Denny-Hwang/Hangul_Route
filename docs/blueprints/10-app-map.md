@@ -83,7 +83,10 @@ Hangul Route
 │   ├─ A14. PWA shell (offline-ready · update banners · offline chip · install guide) [S] roadmap P2 · F-PWA-001
 │   ├─ A15. Lecture presenter (`/present`, 교사·어른이 TV·프로젝터로 하는 수업 · 로그인·프로필 없음 · 진도 기록 없음) [R] F-TCH-004
 │   │    └─ Projection mode (자원봉사 학생이 학습자 화면을 그대로 띄우는 옵션 · 교사 역할 불필요) [D] 연기 F-TCH-001 §3.4
-│   └─ A16. Story reader & Sources (퀘스트의 `story-read` 단계 · "Read it again" replay · 어른용 Sources · SVG 장면 그림) [S] F-STORY-002
+│   ├─ A16. Story reader & Sources (퀘스트의 `story-read` 단계 · "Read it again" replay · 어른용 Sources · SVG 장면 그림) [S] F-STORY-002
+│   └─ A17. All lessons (`/browse`, 학습자 웹 빌드의 세 번째 root · 어른이 모든 레슨을 학습자가 보는 그대로 미리 보기 · 학습자 데이터 읽기·쓰기 없음 · 웹 전용) [R] F-BROWSE-001
+│        ├─ Pass: 같은 탭 `sessionStorage` (`hr:browse:pass`) — 콘솔 **Lessons** (계정, 서버가 `full` / `sampler` 결정) 또는 앱 어른 영역 PIN 뒤 [ Open all lessons ] (gate, 15분 idle) · 학습자 root boot·Back to learning·Sign out 때 패스도 지워짐 (BR-6) · 패스 없음 → Access 화면만
+│        └─ Catalogue (home · episode · item) → Preview (학습자 퀘스트 플레이어·게임·이야기 리더, "Preview. Nothing is saved." 띠) → Preview end (별·점수·카드 없음)
 │
 ├─ B. Caregiver Console ─────────────────────────────────────────── 부모
 │   ├─ B1. Parent gate (PIN)                             [S] F-PROF-001
@@ -125,10 +128,10 @@ Hangul Route
 | 페르소나 (roadmap §1) | A Learner | B Caregiver | C Teacher/School | 결제 |
 |---|---|---|---|---|
 | P-A 개인 학습 (어른 없음) | ✓ 전부 (Stage 1) + Rescue Code | – | – | Free |
-| P-B 가정 | ✓ · Lecture presenter (A15, `/present`, 가족 TV, 프로필 없음) | ✓ 앱+웹 | C10 만 (가족 공간 `caregiver`; `plan.write` 와 같은 조건, F-TCH-004 §3.11) | Family Plan (`family_lifetime`, $15.30/년, 매년 갱신) |
+| P-B 가정 | ✓ · Lecture presenter (A15, `/present`, 가족 TV, 프로필 없음) · All lessons (A17, `/browse`, 어른만, 프로필 없음) | ✓ 앱+웹 | C10 만 (가족 공간 `caregiver`; `plan.write` 와 같은 조건, F-TCH-004 §3.11) | Family Plan (`family_lifetime`, $15.30/년, 매년 갱신) |
 | P-C 학급 학생 | ✓ + Join code | (부모가 있으면 ✓) | – | 교사가 지불 |
-| P-C 교사 | Lecture presenter 만 (A15, `/present`, 프로필 없음) | – | ✓ C1–C6, C8, C10 | 학생 ≤ 20 무료 → group_license ($153/yr) |
-| P-D 학교 관리자 | – | – | ✓ C7, C8 | group_license ($153/yr) / 상한 초과 seat 계약 |
+| P-C 교사 | Lecture presenter (A15, `/present`) · All lessons (A17, `/browse`) — 둘 다 프로필 없음 | – | ✓ C1–C6, C8, C10 | 학생 ≤ 20 무료 → group_license ($153/yr) |
+| P-D 학교 관리자 | All lessons (A17, `/browse`, 프로필 없음) | – | ✓ C7, C8 | group_license ($153/yr) / 상한 초과 seat 계약 |
 | P-6 성인 초보 학습자 (외국인, 2026-09-20 추가) | ✓ 아이와 동일 화면 (Stage 1 은 성인에게도 유효) · Rescue Code | – | – | Free → family_lifetime 과 동일 플랜 (개인 결제) |
 
 ---
@@ -198,6 +201,22 @@ Hangul Route
 | `classroom/projection-mode` | (연기, 자원봉사 학생용 — 교사 수업은 `classroom/lecture-presenter`) | 학습자 화면을 교실 TV 에 그대로 표시 | D | F-TCH-001 §3.4 | NEW |
 
 ※ `parent/gate` (수학 문제) 는 2026-09-19 에 PIN 으로 통합됨 (§7). 파일은 결정 기록용으로 남긴다.
+
+**A17. All lessons — `/browse` root (F-BROWSE-001 §4.1, 2026-10-12 BR-0b)**
+
+학습자 웹 빌드의 세 번째 root. F-APP-001 의 `pickRoot` (`platform/app-root(.web).ts`) 가 `App` 이 mount 되기 전에 고른다 (순서: `/present` · `/browse` · 어른 경로 bounce · app). `BrowseApp` 은 학습자 store 를 hydrate 하지 않고, 동기화·inbox·`PwaBanners` 를 띄우지 않으며, 돌아갈 곳이 있는 탭에서는 F-APP-001 의 `hr:grownup:unlock` 과 `hr:console:session` 을 지우지 않는다 (BD1). 돌아갈 곳이 없는 탭(`canGoBack()` false: 새 탭, 직접 입력한 주소)은 boot 때 둘 다 지운다 (BR-6). 자체 native stack (`navigation/browse.tsx`, `BrowseStackParamList`, 탭 없음). `/browse/…` 의 모르는 경로는 home. `document.title` 은 고정 "Hangul Route lessons" (`caregiver.browse.documentTitle`). 웹 전용 (OD-10): 네이티브 `pickRoot` 는 늘 `'app'`. 시안: `design/screens/browse/` (#421, #441).
+
+| ID | 코드 라우트 (`BrowseStackParamList`) | 목표 (한 줄) | 상태 | 스펙 | WF |
+|---|---|---|---|---|---|
+| `browse/access` | BrowseAccess `{ reason: 'none' \| 'expired', source: 'account' \| 'gate' \| 'unknown' }` | 활성 pass 가 없을 때 유일한 화면: "This page is for parents and teachers." — 레슨·제목·카드 없음, 들어온 길에 맞는 행동 (gate → 어른 영역, account → 내 계정, unknown → 어른 영역 + Sign in) | R | F-BROWSE-001 §4.3 | ✓ |
+| `browse/home` | BrowseHome `{ section?: 'route' \| 'journey' \| 'library'; stage?; note? }` (`stage`, `note`: §4.4 link targets, BR-6 `entryStack`) | 헤더 [ Close ] · **All lessons** · [ Lesson display ] · how-to 한 줄 · Route · Journey · Library (학습자 순서, 진도 없는 상태) | R | F-BROWSE-001 §4.5 | ✓ |
+| `browse/show-as` | (home 헤더의 bottom sheet, **Lesson display**) | 로마자 항상 / 탭하면 · UI 언어 (메모리만, 기기 로케일 안 씀) | R | F-BROWSE-001 §4.9 | ✓ |
+| `browse/episode` | BrowseEpisode `{ episodeId }` | 한 셀의 레슨들: 글자 · 낱말 · 기술 칩 (speaking 없음) · 분 · 보상 카드 | R | F-BROWSE-001 §4.6 | ✓ |
+| `browse/item` | BrowseItem `{ kind: 'quest' \| 'story' \| 'vocab-topic', id, focusJamoId? }` | What this teaches · Where it sits ([ See on the Journey ]) · 보상 카드 · [[ Preview this lesson ]] (닫힌 항목은 grown-up 한 줄) | R | F-BROWSE-001 §4.6 | ✓ |
+| `browse/preview-player` | PreviewQuest `{ questId, episodeId }` · Minigame · StoryReader (replay) · StorySources (Copy link 만) — 셋은 학습자 화면을 navigation adapter 로 (BR-5c) | 학습자 레슨 그대로 + `PreviewFrame` 띠 "Preview. Nothing is saved." · [ Leave preview ] — 세션·결과·카드·북마크 기록 없음 | R | F-BROWSE-001 §4.7 | ✓ |
+| `library/card-detail` (preview state) | CardDetail `{ cardId }` (modal) | `CardDetailView` `state: 'preview'`: 앞·뒤, earned 날짜·earn hint·공유 없음 | R | F-BROWSE-001 §4.7 | ✓ (학습자 WF 재사용) |
+| `browse/preview-end` | PreviewEnd `{ kind, id, episodeId? }` | "That is the whole lesson." — 별·점수·카드 애니메이션 없음 · [[ Next lesson ]] · [ Preview again ] · [ Back to the lesson page ] | R | F-BROWSE-001 §4.8 | ✓ |
+| `browse/entry-points` | (부록: 각 진입 화면에 더해지는 컨트롤) | 콘솔 **Lessons** · 리포트 · Learning Route 요약 · 계획 빌더 · roster 다시 보기 칩 · 앱 어른 영역 [ Open all lessons ] | R | F-BROWSE-001 §4.11 | ✓ |
 
 ### 3.2 B. Caregiver Console (mobile `parent/*` + web `/parent`)
 
@@ -307,7 +326,29 @@ journey/grid-with-stories ─┬─ (lesson 셀) ─▶ episode/detail ─▶ ep
 [web only] 첫 방문 ─▶ pwa/system-banners (offline-ready) ; 설치 안 됨 + 3회 방문 ─▶ pwa/install-guide
 [모든 채널] 창 크기·회전 ─▶ layout/wide (클래스 재계산) ; wide: journey/grid · library/gallery 의 셀/카드 탭 ─▶ 오른쪽 pane (이동 없음) ; 폰 가로 ─▶ 세로 안내 ─▶ "Keep sideways" 또는 회전
 [web, 로그인 없음] /present ─▶ classroom/lecture-presenter (A home: Recent · Quick lesson ─▶ B start ─▶ C stage) — 프로필·진도를 읽거나 쓰지 않음 (F-TCH-004 §3.9)
+[web, 같은 탭 pass] /browse (#t=<target>&s=<source>, 첫 그리기 전에 주소에서 지움) ─┬─ (활성 pass 없음) ─▶ browse/access ─▶ /?gate=browse (BR-12b, 그 전엔 /) · /parent · /teach/home · /signin
+                                                                                 └─ (pass 있음) ─▶ browse/home (target 이 있으면 그 화면으로: stage → Journey · episode → browse/episode · quest·story·vocab-topic·jamo·char → browse/item · card → library/card-detail)
+browse/home ─┬─ Route (stage 행) ─▶ Journey (그 stage) ; Journey (셀) ─▶ browse/episode ─▶ browse/item
+             ├─ Library (카드 ─▶ library/card-detail preview · 이야기·낱말 타일 ─▶ browse/item)
+             ├─▶ browse/show-as (sheet)
+             └─ [ Close ] ─▶ history.go(-(1+depth)) (referrer 가 같은 origin 이고 탭에 이전 항목이 있을 때, canGoBack) · 아니면 페르소나 홈 / sign-in (계정 pass) 또는 / (gate·kept pass); 1 s 안에 떠나지 않으면 그 주소로 이동
+browse/item ─ [[ Preview this lesson ]] ─▶ browse/preview-player (PreviewQuest ─▶ Minigame · StoryReader replay · StorySources Copy link) ─▶ browse/preview-end ─┬─▶ browse/item (Next lesson · Back to the lesson page)
+                                                                                                                                                              └─▶ browse/preview-player (Preview again)
+browse/preview-player ─ [ Leave preview ] ─▶ browse/item (end 화면 없이)
 [연기] 자원봉사 학생 ─▶ classroom/projection-mode (F-TCH-001 §3.4)
+```
+
+**All lessons 진입 edge** (F-BROWSE-001 §4.11, wireframe `browse/entry-points.md`). 모두 `buildBrowseUrl(origin, { target?, source })` 로 만든 같은 탭 이동이고 링크에는 콘텐츠 id 만 (BD7). 콘솔 쪽은 `browseEnabled()` (`NEXT_PUBLIC_BROWSE=enabled`) 이고 콘솔이 app origin 에서 돌 때만 보인다. 학습자 화면·페이월·Plan 화면·마케팅 사이트·이메일에서는 절대 열지 않는다.
+
+```
+shell/adult-frame ─ Lessons (ADULT_NAV, 두 페르소나) ──────────────────────────────▶ /browse            (s=nav, BR-10)
+리포트 (F-REPORT-001) ─ action slot [ Preview ] (insight 의 questId) · 글자 칩 ───▶ /browse#t=quest:… | t=char:…  (s=report, BR-11 · RP-13)
+Learning Route 요약 (/teach/space/route, LR-8) ─ stage 행 [ Preview lessons ] ─────▶ /browse#t=stage:…  (s=route, BR-11)
+console/plan-builder ─ 항목 행 [ Preview ] ─────────────────────────────────────────▶ /browse#t=quest:… | t=episode:…  (s=plan, BR-11)
+console/roster ─ 다시 보기 칩 (classRollup().revisit, 학습자 이름 없음) ────────────▶ /browse#t=char:…  (s=roster, BR-11)
+parent/dashboard (PIN 뒤, 웹만) ─ [ Open all lessons ] ─ openBrowseFromGate() ─────▶ /browse#s=gate     (gate pass, BR-12a)
+앱 안 읽기 전용 route 페이지 (R-9b) · 앱 안 리포트 (RP-9) ─ [ Preview lessons ] ─────▶ /browse#t=…&s=gate (gate pass, BR-12a)
+/?gate=browse (boot intent) ─▶ profiles/pin-entry { next: 'BrowseLessons' } ─(PIN)─▶ openBrowseFromGate() ─▶ /browse   (취소 → 학습자 홈, 아무것도 쓰지 않음; BR-12b)
 ```
 
 ### 4.3 Caregiver / Teacher Console (web)
@@ -325,6 +366,7 @@ shell/grown-up-lock ─ 학습자 프로필이 있는 기기에서 모든 어른
 shell/adult-frame ─┬─ [Family]  ─▶ shell/parent-home (/parent) ─▶ /parent/space/** (roster · plan · settings …)
                    ├─ [Teacher] ─▶ shell/teacher-home (/teach/home) ─▶ /teach/space/** (roster · plan · lecture …)
                    ├─▶ console/billing (/account/billing)
+                   ├─ [Lessons] ─▶ browse/home (/browse, 같은 탭, 계정 pass; unlock 은 지우지 않음 — [ Close ] 가 history.go(-(1+depth)) 로 돌아옴; 돌아갈 곳이 없는 탭(새 탭, 직접 입력한 주소)은 unlock 과 console session 을 지움, BR-6; F-BROWSE-001 BR-10)
                    └─▶ Back to learning (/) — unlock 과 콘솔 세션을 지움
 ```
 

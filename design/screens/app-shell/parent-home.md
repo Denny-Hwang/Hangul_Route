@@ -42,7 +42,7 @@ Wireframe: `design/wireframes/shell/parent-home.md` (Panels A, A', B, C, D) · s
 | off | **Open** (primary) → `/parent/space?id=` (the family roster) |
 | `notesEnabled()` | **Send a note** → `/parent/space/notes?id=` |
 | `learningRouteEnabled()` | **Learning Route** → `/parent/space/route?id=&learner=` |
-| `browseEntryEnabled()` | **Lessons** first among the family actions (a button: the lesson browser window) |
+| `browseEnabled()` | **Lessons** first among the family actions (opens All lessons at `/browse` in the same tab) |
 
 With every flag off (today) a card is: chip, name, the two lines and **Open** (`parent-home-states`, A').
 
