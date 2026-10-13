@@ -7,7 +7,7 @@ import { LOCALE_META, type UiLocale } from './locales';
  * locale's `speechLang`.
  */
 
-export type DateKind = 'weekday' | 'monthDay' | 'monthDayYear' | 'monthYear' | 'weekdayLong';
+export type DateKind = 'weekday' | 'monthDay' | 'monthDayYear' | 'monthYear' | 'weekdayLong' | 'monthShort';
 export type DateInput = Date | string | number;
 
 export interface FormatDateOptions {
@@ -64,6 +64,7 @@ const DATE_OPTIONS: Record<DateKind, Intl.DateTimeFormatOptions> = {
   monthDayYear: { month: 'short', day: 'numeric', year: 'numeric' },
   monthYear: { month: 'long', year: 'numeric' },
   weekdayLong: { weekday: 'long' },
+  monthShort: { month: 'short' },
 };
 
 function fallbackDate(locale: UiLocale, date: Date, kind: DateKind, utc: boolean): string {
@@ -71,6 +72,7 @@ function fallbackDate(locale: UiLocale, date: Date, kind: DateKind, utc: boolean
   if (kind === 'weekday') return WEEKDAYS[locale][weekday]!;
   if (kind === 'weekdayLong') return WEEKDAYS_LONG[locale][weekday]!;
   const month = MONTHS[locale][utc ? date.getUTCMonth() : date.getMonth()]!;
+  if (kind === 'monthShort') return month;
   const day = utc ? date.getUTCDate() : date.getDate();
   const year = utc ? date.getUTCFullYear() : date.getFullYear();
   if (kind === 'monthDay') return PATTERNS[locale].monthDay(month, day);
@@ -81,7 +83,7 @@ function fallbackDate(locale: UiLocale, date: Date, kind: DateKind, utc: boolean
 /**
  * A short date in the locale: `weekday` ("Thu"), `monthDay` ("Sep 3"), `monthDayYear` ("Sep 3, 2026") or a whole month,
  * `monthYear` ("September 2026"; "Sep 2026" from the fallback table), or a whole weekday, `weekdayLong` ("Thursday",
- * for a sentence that lists days). Empty string for an invalid date.
+ * for a sentence that lists days), or a month alone, `monthShort` ("Sep", a chart axis). Empty string for an invalid date.
  */
 export function formatDate(locale: UiLocale, value: DateInput, kind: DateKind, options: FormatDateOptions = {}): string {
   const date = new Date(value);

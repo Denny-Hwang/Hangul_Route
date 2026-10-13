@@ -692,4 +692,104 @@ export const caregiver = {
       offline: 'Grown-up pages need the internet.',
     },
   },
+  /**
+   * Class moves in the learner app (F-SPACE-002 section 4.12, PR T-7d): the Classes card variants and Move (T-7b,
+   * `design/screens/transfer/classes-card.md`), MoveClass, ApproveTransfer, the read-only and planned sheets and the
+   * Home line (T-7c, `app-sheets.md`); mocks #472, word for word. Rendered only while the inbox says
+   * `transfersEnabled` (CLASS_TRANSFER stays off until counsel, flip gate G2), so these keys are unused until then.
+   * Not here: the consent lines (content-schema `TRANSFER_CONSENT_TEXT`, en / ko / es) and the frame the app sheet
+   * shares with the console (`console.transfer.consent`: title, language, identity block, reading hint, Yes, Not now);
+   * `consent` below adds only the self-audience frame. Offline reads `retry.offline`, Back and Done read
+   * `common.buttons`, the gate mark reads `audience.gated`. "Move" is the user-facing word, "learner", "class" and
+   * "grown-up" the nouns; no age, no countdown, no number, no red, and no line names who said no.
+   */
+  transfer: {
+    /** Buttons. A gated one carries the lock glyph and `audience.gated(…, true)` as its accessible name. */
+    actions: {
+      move: { cta: 'Move' },
+      review: { cta: 'Review' },
+      setUpPin: { cta: 'Set up PIN' },
+      find: { cta: 'Find class' },
+      sending: { cta: 'Sending…' },
+      notNow: { cta: 'Not now' },
+      /** The veto on a learner-side request (device cancel). */
+      cancelRequest: { cta: 'Cancel the request' },
+      /** The planned (cooling-off) sheet. */
+      cancelMove: { cta: 'Cancel the move' },
+      /** The Home line while a move is planned. */
+      cancel: { cta: 'Cancel' },
+    },
+    /** Classes card quiet lines (variants a, b, d, d') and the pending row's first line. */
+    card: {
+      classScope: 'Use your rescue code first.',
+      askConsole: 'Ask the grown-up with the account to answer this in the console.',
+      needsPin: 'A grown-up needs to set up a PIN first. Open Profile, then Grown-up zone.',
+      pinTooNew: 'Moves open one day after the PIN is set.',
+      /** Teacher-started (`initiator: 'source'`). */
+      sourceAsked: (source: string) => `${source} asked about a move.`,
+      /** Learner-side, and any initiator value this app does not know. */
+      learnerAsked: (destination: string) => `Asked: a move to ${destination}.`,
+    },
+    /** State lines the card, the sheets and Home share; one short sentence each, dates arrive formatted. */
+    lines: {
+      checkAgain: 'Please check this again.',
+      waitingOther: 'Waiting for the other class to answer.',
+      waitingClasses: 'Waiting for the classes to answer.',
+      waitingRoom: 'Waiting for room in the new class.',
+      cannotAnswer: "This move can't be answered here.",
+      planned: (date: string) => `A move is planned for ${date}.`,
+      ended: 'This request ended.',
+      /** A one-off `role="status"` after a class tablet's inbox answers 401. */
+      joinAgain: 'Join your new class again.',
+      /** A one-off `role="status"` when the inbox shows `executed`. */
+      moved: (name: string, destination: string) => `Moved. ${name} is now in ${destination}. Cards and stars stayed with ${name}.`,
+      /** The read-only sheet's first line and the teacher-started Home line. */
+      askedMoving: (source: string, name: string, destination: string) => `${source} asked about moving ${name} to ${destination}.`,
+      consoleAnswers: 'A grown-up with an account answers this in the console.',
+      /** Not now's description on a teacher-started read-only sheet; it names the `actions.notNow` button. */
+      notNowEnds: 'Not now ends this request.',
+    },
+    /** MoveClass (device route, learner-started only). The code field reuses `join.code.rules` and `join.code.placeholder`. */
+    move: {
+      title: 'Move to another class',
+      step1: 'Ask the new teacher for their class code.',
+      codeLabel: 'Class code',
+      sent: 'Request sent. Nothing changes until everyone says yes.',
+    },
+    /** One line per preview / create answer under the code field (`role="alert"`); consent is never queued. */
+    errors: {
+      codeNotFound: "That code didn't work.",
+      codeExpired: 'That code is too old. Ask for a new one.',
+      full: 'That class is full right now.',
+      alreadyMember: (name: string) => `${name} is already in that class.`,
+      tooManyAttempts: 'Too many tries. Try again later.',
+      cooldown: 'You can ask again in about a week.',
+      caregiverRequired: 'Ask the grown-up with the account to start this move in the console.',
+      deviceConsentLocked: "Moves can't be started on this device yet.",
+      alreadyOpenClass: (name: string) => `A class already asked about moving ${name}. Look on the Classes & family card.`,
+      alreadyOpenLearner: (name: string) => `A move for ${name} is already waiting. Look on the Classes & family card.`,
+      sameSpace: (name: string) => `That code is for the class ${name} is in now.`,
+      notTransferable: "That code can't be used for a move.",
+      destinationBusy: 'That class has many moves waiting. Try again in a few days.',
+      tooManyRequests: 'Too many moves were started today. Try again tomorrow.',
+      localeUnavailable: 'Not available in your language yet.',
+    },
+    /** The self-audience consent frame; the rest of the frame is `console.transfer.consent`. */
+    consent: {
+      titleSelf: (destination: string) => `Move to ${destination}?`,
+      yesSelf: 'Yes, move me',
+    },
+    /** The read-only sheet (guard 11): the request, where the yes happens, and only the veto and Back. */
+    readOnly: { title: 'A move is waiting' },
+    /** One calm line under the Hoya tip when the learner side must answer; the teacher-started one is `lines.askedMoving`. */
+    home: {
+      learnerWaiting: (destination: string) => `A move to ${destination} is waiting.`,
+      selfWaiting: 'A move is waiting for you.',
+    },
+    /** Read aloud, never drawn. */
+    a11y: {
+      review: 'Review the move',
+      move: (space: string) => `Move from ${space}`,
+    },
+  },
 } as const;

@@ -702,4 +702,18 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'learner.weeklyPlan.proposal.comingSoonItem': [['Words at Home']],
   'learner.weeklyPlan.proposal.weekRowLabel': [['Mon', 'Meet g, n, d, l']],
   'learner.weeklyPlan.proposal.pickDayLabel': [['Wed', 'Oct 14']],
+  'learner.access.practice.topicTitle': [['Food'], ['Animals']],
+  // F-SPACE-002 T-7d: the learner app's class-move words.
+  'caregiver.transfer.card.sourceAsked': [['Sunday Class A']],
+  'caregiver.transfer.card.learnerAsked': [['Saturday Class B']],
+  'caregiver.transfer.lines.planned': [['Oct 14']],
+  'caregiver.transfer.lines.moved': [['Mina', 'Saturday Class B']],
+  'caregiver.transfer.lines.askedMoving': [['Sunday Class A', 'Mina', 'Saturday Class B']],
+  'caregiver.transfer.errors.alreadyMember': [['Mina']],
+  'caregiver.transfer.errors.alreadyOpenClass': [['Mina']],
+  'caregiver.transfer.errors.alreadyOpenLearner': [['Mina']],
+  'caregiver.transfer.errors.sameSpace': [['Mina']],
+  'caregiver.transfer.consent.titleSelf': [['Saturday Class B']],
+  'caregiver.transfer.home.learnerWaiting': [['Saturday Class B']],
+  'caregiver.transfer.a11y.move': [['Sunday Class A']],
 };

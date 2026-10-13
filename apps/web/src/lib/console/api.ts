@@ -303,6 +303,16 @@ export function createConsoleApi(opts: ConsoleApiOptions) {
     portal: (body: { subjectKind: 'account' | 'space'; subjectId: string }) =>
       call<{ url: string }>(`${entitlements}/stripe/portal`, { method: 'POST', body: JSON.stringify(body) }, [200]),
     /**
+     * F-BROWSE-001 section 5.4: the account's All lessons scope (`GET /api/entitlements/browse`), read leniently:
+     * `full` stays `full`; anything else, a scope a newer Worker adds included, reads as `sampler` (never `full`).
+     */
+    browseScope: (): Promise<ApiResult<{ scope: 'full' | 'sampler' }>> =>
+      call<unknown>(`${entitlements}/browse`, { method: 'GET' }, [200]).then((r) => {
+        if (!r.ok) return r;
+        const scope = isPlainRecord(r.data) && r.data.scope === 'full' ? 'full' : 'sampler';
+        return { ok: true as const, data: { scope } };
+      }),
+    /**
      * F-BILL-002 B-7: the billing home's summary, read leniently (`parseBillingSummary`), so a
      * newer Worker never blanks an older page. `poll` marks a checkout-return poll (no view event).
      */

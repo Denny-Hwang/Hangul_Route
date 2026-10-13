@@ -18,6 +18,7 @@ const gated = process.env.E2E_CONTENT_GATING === '1';
 const VIEWPORTS = [
   { width: 375, height: 667 },
   { width: 320, height: 568 },
+  { width: 1180, height: 820 },
 ] as const;
 
 /** Home, with the install guide out of the way. */

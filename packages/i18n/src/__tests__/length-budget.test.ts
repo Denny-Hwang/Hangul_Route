@@ -45,6 +45,7 @@ const ES_LENGTH_ALLOW_LIST: Readonly<Record<string, string>> = {
   'console.notes.composer.preview.title': '"Vista previa", one letter over, a heading',
   'console.notes.family.report.why': 'Spanish questions open with "¿": "¿Por qué?" is one letter over',
   'caregiver.notes.report.why': 'Spanish questions open with "¿": "¿Por qué?" is one letter over',
+  'console.browse.preview.cta': 'the Spanish word "Vista previa" (12) against "Preview" (7), the same word as console.notes.composer.preview.title; inside the 28-character cta budget, a link that wraps',
 };
 
 const BUDGETS: Readonly<Record<string, number>> = { tab: 12, pill: 24, cta: 28 };

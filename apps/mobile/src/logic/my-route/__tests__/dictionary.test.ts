@@ -97,6 +97,8 @@ const SAMPLES: Record<string, unknown[][]> = {
     ['ㄱ', 'g/k', 'Coming up in a quest'],
     ['ㄴ', 'n, at the end', 'Already known'],
   ],
+  // F-ENT-003 E3-7: the practice card's word topic title.
+  'learner.access.practice.topicTitle': [['Food'], ['Animals'], ['Family']],
 };
 
 type Rendered = { path: string; text: string; surface: Surface; args: unknown[] };

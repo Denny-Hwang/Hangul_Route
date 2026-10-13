@@ -27,6 +27,7 @@ import {
   type StageKey,
 } from '@hangul-route/content-schema';
 import { DEFAULT_LOCALE, formatDate, getMessages, type UiLocale } from '@hangul-route/i18n';
+import { plannableQuest } from '@/data/catalog';
 import type { ApiResult, LearnerReportBody } from './api';
 import type { LearningRouteGoal } from './learning-route-view';
 import { startingSpotLine } from './placement';
@@ -537,8 +538,10 @@ export interface ReportGrowthView {
   showTable: string;
   hideTable: string;
   baseline: { quests: number; cards: number };
-  /** Cumulative counts: they only rise (OD-10). */
-  rows: { m: string; label: string; quests: number; cards: number }[];
+  /** Cumulative counts: they only rise (OD-10). `label` names the month in the table, `short` under its chart point. */
+  rows: { m: string; label: string; short: string; quests: number; cards: number }[];
+  /** The legend's values: the last month's cumulative counts (the "earlier" baseline without a month). */
+  latest: { quests: number; cards: number };
 }
 
 export interface ReportThisPeriod {
@@ -565,6 +568,8 @@ export interface ReportMoreDetail {
 export interface LearnerReportView {
   /** `document.title`: never the learner's name (section 3.10). */
   documentTitle: string;
+  /** The printed footer (RP-7b, section 3.10): "Private: shared from Hangul Route on Oct 15.", the viewer's print day. */
+  printFooter: string;
   /** The `h1`: "{name}: report". */
   title: string;
   back: ReportLink;
@@ -694,6 +699,7 @@ function growthView(report: LearnerReport, w: ReportWords): ReportGrowthView | n
   if (growth === null) return null;
   const g = w.m.report.growth;
   const days = report.figures?.days.count ?? 0;
+  const lastMonth = growth.months.at(-1);
   return {
     since: growth.since === null ? null : g.since(dayText(growth.since, w), days),
     quests: g.quests,
@@ -703,7 +709,8 @@ function growthView(report: LearnerReport, w: ReportWords): ReportGrowthView | n
     showTable: g.showTable,
     hideTable: g.hideTable,
     baseline: growth.baseline,
-    rows: growth.months.map((row) => ({ ...row, label: monthText(`${row.m}-01`, w.locale) })),
+    rows: growth.months.map((row) => ({ ...row, label: monthText(`${row.m}-01`, w.locale), short: formatDate(w.locale, `${row.m}-01${DAY_KEY_TIME}`, 'monthShort', { utc: true }) })),
+    latest: lastMonth ? { quests: lastMonth.quests, cards: lastMonth.cards } : growth.baseline,
   };
 }
 
@@ -804,9 +811,9 @@ export function learnerReportView(input: LearnerReportViewInput): LearnerReportV
     const links = 'links' in line ? line.links : undefined;
     const actions: ReportLink[] = [];
     if (rights.planWrite && !archived && links) {
-      // A quest this build's catalogue lacks is never offered: the builder could not add it (design notes, RP-7a2).
+      // Only a quest the builder can add is offered (RP-10): never one this build's catalogue lacks or a closed one.
       if ('addToPlan' in links) {
-        if (questTitleOf(links.addToPlan, catalog) !== null) actions.push({ href: `${ROUTES.spacePlan(space.id, undefined, space.kind)}&add=${encodeURIComponent(links.addToPlan)}`, text: m.report.action.addToPlan });
+        if (plannableQuest(links.addToPlan, catalog)) actions.push({ href: ROUTES.spacePlan(space.id, undefined, space.kind, links.addToPlan), text: m.report.action.addToPlan });
       } else actions.push({ href: ROUTES.spacePlan(space.id, links.openPlan, space.kind), text: m.report.action.openPlan });
     }
     return { ...out, actions };
@@ -854,6 +861,7 @@ export function learnerReportView(input: LearnerReportViewInput): LearnerReportV
   const headline = headlineText(report, w);
   return {
     documentTitle: m.report.documentTitle,
+    printFooter: m.report.print.footer(formatDate(locale, now.getTime(), 'monthDay') || dayText(w.today, w)),
     title: m.report.title.learner(name),
     back: reportBackLink(query.from, space, locale),
     state: report.state,

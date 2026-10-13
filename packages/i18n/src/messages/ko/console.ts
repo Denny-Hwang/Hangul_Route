@@ -1295,4 +1295,13 @@ export const consoleMsgs = {
     },
     a11y: { close: '닫기' },
   },
+  /** All lessons from the console (F-BROWSE-001 BR-10, BR-11). */
+  browse: {
+    checkFailed: '플랜을 확인하지 못했어요.',
+    tryAgain: { cta: '다시 해 보기' },
+    openFree: { cta: '무료 레슨 열기' },
+    storageBlocked: '브라우저가 이 페이지의 저장 공간을 막았어요. 여기서는 레슨을 열 수 없어요.',
+    preview: { cta: '미리 보기' },
+    previewLessons: { cta: '레슨 미리 보기' },
+  },
 } satisfies DeepPartial<Messages['console']>;

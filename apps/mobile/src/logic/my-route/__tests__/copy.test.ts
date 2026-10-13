@@ -611,6 +611,20 @@ describe('routeCardCopy (Learning Route amendment sections 4.3, 6.2 and 10; LR-3
     expect(g.next).toBe('Next: Meet the First Letters');
   });
 
+  it('the first reached visit says so even when the hero rests, goes beyond or is free-end (LR-5c review)', () => {
+    // The moment is used up on this visit (key written, event sent), so its one line must show on it.
+    const m = model(['quest:stage2-life-q1', 'quest:stage2-nature-q1'], { sources: [goalSource('class')], routeNext: nextQuest('quest:stage1-letters-q1', 'episode:stage1-letters', 'stage1') });
+    expect(m.goal?.reached).toBe(true);
+    for (const hero of ['rest', 'beyond', 'freeEnd'] as const) {
+      const withHero = { ...m, hero };
+      expect(routeCardCopy(withHero, withGoal(self, withHero), { nextTitle: 'Meet the First Letters', firstReached: true }).hoya).toBe('You reached your goal. Hoya is proud!');
+      // Later visits keep the hero's own line.
+      expect(routeCardCopy(withHero, withGoal(self, withHero), { nextTitle: 'Meet the First Letters' }).hoya).not.toBe('You reached your goal. Hoya is proud!');
+      // The grown-up card never celebrates.
+      expect(routeCardCopy(withHero, withGoal(grownup, withHero), { nextTitle: 'Meet the First Letters', firstReached: true }).hoya).not.toBe('You reached your goal. Hoya is proud!');
+    }
+  });
+
   it('the end of the open road: one sentence, no goal line, no Next', () => {
     const m = model(ALL_8);
     expect(m.goal).toBeNull();

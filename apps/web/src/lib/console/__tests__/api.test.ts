@@ -263,3 +263,25 @@ describe('console api — billing (F-BILL-002 B-7)', () => {
     expect(await api.portal({ subjectKind: 'space', subjectId: 'space:fam' })).toEqual({ ok: false, error: 'forbidden', status: 403, code: 'forbidden' });
   });
 });
+
+describe('console api — browseScope (F-BROWSE-001 section 5.4)', () => {
+  it('reads GET /api/entitlements/browse leniently: full stays full, anything else reads as sampler', async () => {
+    const fetchImpl = vi.fn<typeof fetch>()
+      .mockResolvedValueOnce(json(200, { data: { scope: 'full' } }))
+      .mockResolvedValueOnce(json(200, { data: { scope: 'sampler' } }))
+      .mockResolvedValueOnce(json(200, { data: { scope: 'gold', extra: 1 } }))
+      .mockResolvedValueOnce(json(200, { data: 'full' }))
+      .mockResolvedValueOnce(json(503, {}))
+      .mockRejectedValueOnce(new Error('offline'));
+    const api = createConsoleApi({ endpoint: 'https://api.example.com', token: 't', fetchImpl });
+    expect(await api.browseScope()).toEqual({ ok: true, data: { scope: 'full' } });
+    expect(await api.browseScope()).toEqual({ ok: true, data: { scope: 'sampler' } });
+    expect(await api.browseScope()).toEqual({ ok: true, data: { scope: 'sampler' } });
+    expect(await api.browseScope()).toEqual({ ok: true, data: { scope: 'sampler' } });
+    expect(await api.browseScope()).toEqual({ ok: false, error: 'unknown', status: 503 });
+    expect(await api.browseScope()).toEqual({ ok: false, error: 'network', status: -1 });
+    const [url, init] = fetchImpl.mock.calls[0] as [string, RequestInit];
+    expect(url).toBe('https://api.example.com/api/entitlements/browse');
+    expect(init.method).toBe('GET');
+  });
+});
