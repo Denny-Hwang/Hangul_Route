@@ -404,7 +404,12 @@ describe("PWA e2e", () => {
     const run = step.match(/pnpm exec playwright test ([^\n]+)/)?.[1] ?? "";
     const listed = run.split(/\s+/).filter(Boolean);
     const dir = join(ROOT, "apps", "mobile", "e2e", "web");
-    const gated = readdirSync(dir).filter((n) => n.endsWith(".spec.ts") && /process\.env\.E2E_ROUTE === '1'/.test(readFileSync(join(dir, n), "utf8")));
+    const routeSpecs = readdirSync(dir).filter((n) => n.endsWith(".spec.ts") && /process\.env\.E2E_ROUTE === '1'/.test(readFileSync(join(dir, n), "utf8")));
+    // A spec that also needs STORY_FIXTURES=1 runs on the fixture bundle exported with the plan flag on
+    // (placement-plan.spec.ts, F-PLC-001 P-7b; P-10 adds it to the nightly run), not on dist-e2e-route/.
+    const needsFixtures = (n) => /process\.env\.STORY_FIXTURES === '1'/.test(readFileSync(join(dir, n), "utf8"));
+    assert.deepEqual(routeSpecs.filter(needsFixtures).sort(), ["placement-plan.spec.ts"]);
+    const gated = routeSpecs.filter((n) => !needsFixtures(n));
     assert.deepEqual(gated.sort(), ["route-plan.spec.ts", "route-proposal.spec.ts", "route.spec.ts"]);
     for (const spec of gated) {
       const selectors = listed.filter((s) => `e2e/web/${spec}`.includes(s));
