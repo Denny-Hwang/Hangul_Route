@@ -222,8 +222,11 @@ test.describe('level check screens (fixture bundle)', () => {
     const names = (await events(page)).map((e) => e.name);
     expect(names).toEqual(expect.arrayContaining(['placement.start', 'placement.item_answered', 'placement.complete']));
 
-    // Start opens the start quest.
-    await page.getByTestId('placement-result-primary').click();
+    // `flags.routeEnabled` is on by default since F-PLAN-002 P2-8b, so a self learner with no plan gets the
+    // weekly-plan strip (F-PLC-001 P-7b) in place of Start: Just start opens the start quest.
+    await expect(page.getByTestId('placement-plan-strip')).toBeVisible();
+    await expect(page.getByTestId('placement-result-primary')).toHaveCount(0);
+    await page.getByTestId('placement-plan-just-start').click();
     await expect(page.getByTestId('placement-result')).toHaveCount(0);
     await expect(page.getByRole('button', { name: 'Leave quest' })).toBeVisible();
   });
