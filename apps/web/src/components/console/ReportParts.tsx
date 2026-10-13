@@ -5,7 +5,7 @@ import { IconSvg } from '@hangul-route/design-system/icon-glyphs/dom';
 import { borderWidth, colors, layout, radii, spacing, touchTarget, typography } from '@hangul-route/design-system/tokens';
 import Link from 'next/link';
 import { createContext, forwardRef, useContext, useState, type KeyboardEvent, type ReactNode } from 'react';
-import { BrowseNoticeLine, useBrowseOpener, type BrowseOpenerEnv } from '@/components/console/BrowseLink';
+import { BrowseNoticeLine, useBrowseOpener, type BrowseOpener, type BrowseOpenerEnv } from '@/components/console/BrowseLink';
 import { avatarChipModel } from '@/lib/console/avatar-chip';
 import { browseUrl } from '@/lib/console/browse-link';
 import { GROWTH_BOX, growthAxisShown, growthChart } from '@/lib/console/report-growth';
@@ -122,6 +122,8 @@ export const REPORT_CSS = `
 .hr-report-letter-link,.hr-report-quest-link,.hr-report-tip-link{color:${colors.brand.secondaryDark};text-decoration:underline;text-decoration-thickness:${px(borderWidth.thin)};text-underline-offset:${rem(spacing.xxs)}}
 .hr-report-tip-link{display:inline-flex;align-items:center;min-height:${px(touchTarget.min)}}
 .hr-report-tile-link{color:${colors.text.primary};text-decoration:none}
+.hr-report-tiles .hr-report-tile-link{display:inline-flex}
+.hr-report-tiles .hr-report-tile-cell-notice{flex-basis:100%}
 .hr-report-letter-link:focus-visible,.hr-report-quest-link:focus-visible,.hr-report-tip-link:focus-visible,.hr-report-tile-link:focus-visible{${focusRing}}
 .hr-report [lang="ko"]{font-weight:${typography.weight.bold}}
 .hr-report-figures{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,${FIGURE_MIN}),1fr));gap:${rem(spacing.sm)}}
@@ -183,6 +185,7 @@ export const REPORT_CSS = `
 .hr-report .hr-report-print-footer{padding:${rem(spacing.md)} ${rem(spacing.xxl)};font-size:${rem(typography.size.caption)};color:${colors.text.secondary};border-top:${px(borderWidth.thin)} solid ${colors.border.strong};background:${colors.surface.paper}}
 .hr-report-letter-link,.hr-report-quest-link,.hr-report-tip-link,.hr-report-tile-link{color:inherit;text-decoration:none}
 .hr-report-tip-link{display:inline;min-height:0}
+.hr-report [data-testid$="-link-notice"]{display:none!important}
 }
 @media (min-width:${WIDE}){
 .hr-report-top{flex-direction:row;flex-wrap:wrap;align-items:center;justify-content:space-between;column-gap:${rem(spacing.sm)}}
@@ -452,11 +455,20 @@ function ReportBrowseLink({ target, className, testId, inline = false, children 
   const opener = useBrowseOpener(target, 'report', browse?.env);
   return (
     <>
-      <a href={browseUrl('', target, 'report')} className={className} onClick={opener.onClick} aria-busy={opener.checking || undefined} data-testid={testId}>
+      <ReportBrowseAnchor target={target} opener={opener} className={className} testId={testId}>
         {children}
-      </a>
+      </ReportBrowseAnchor>
       <BrowseNoticeLine opener={opener} testId={testId} inline={inline} />
     </>
+  );
+}
+
+/** The anchor alone: content ids only in its href, a plain click goes through the opener. */
+function ReportBrowseAnchor({ target, opener, className, testId, ariaLabel, children }: { target: BrowseTarget; opener: BrowseOpener; className: string; testId: string; ariaLabel?: string; children: ReactNode }): JSX.Element {
+  return (
+    <a href={browseUrl('', target, 'report')} className={className} onClick={opener.onClick} aria-label={ariaLabel} aria-busy={opener.checking || undefined} data-testid={testId}>
+      {children}
+    </a>
   );
 }
 
@@ -542,7 +554,10 @@ function InsightLine({ line, id }: { line: ReportLineView; id: string }): JSX.El
           <p className="hr-report-tip">
             {browse ? (
               <ReportBrowseLink target={{ kind: 'stage', stage: browse.stage }} className="hr-report-tip-link" testId="report-tip-link">
-                <ReportSentenceText sentence={line.tip} />
+                {/* No link inside the tip's link: its parts render as text (no nested anchors). */}
+                <ReportBrowseContext.Provider value={null}>
+                  <ReportSentenceText sentence={line.tip} />
+                </ReportBrowseContext.Provider>
               </ReportBrowseLink>
             ) : (
               <ReportSentenceText sentence={line.tip} />
@@ -711,24 +726,36 @@ export function ReportThisPeriodBlock({ block, month }: { block: ReportThisPerio
   );
 }
 
-/** A More detail letter tile: with Browse links on (RP-13) the tile is the link to its letter. */
-function LetterTile({ letter }: { letter: ReportLetter }): JSX.Element {
-  const browse = useContext(ReportBrowseContext);
-  const face = (
+function letterFace(letter: ReportLetter): JSX.Element {
+  return (
     <>
       <span lang="ko">{letter.letter}</span>
       {letter.romanization ? <span className="hr-report-rom">{letter.romanization}</span> : null}
     </>
   );
+}
+
+/** A More detail letter tile: with Browse links on (RP-13) the tile is the link to its letter. */
+function LetterTile({ letter }: { letter: ReportLetter }): JSX.Element {
+  const browse = useContext(ReportBrowseContext);
   const target = browse ? browseTargetOf({ kind: 'char', char: letter.letter }) : null;
-  return target ? (
-    <li>
-      <ReportBrowseLink target={target} className="hr-report-tile hr-report-tile-link" testId="report-tile-link">
-        {face}
-      </ReportBrowseLink>
+  return target ? <LinkedLetterTile letter={letter} target={target} env={browse?.env} /> : <li className="hr-report-tile">{letterFace(letter)}</li>;
+}
+
+/**
+ * The linked tile. Its name reads "letter (romanization)" (`report.letter`), not the face run together. While its
+ * line shows, the cell takes the whole row, so the line sits under the tile and the other tiles keep their places.
+ */
+function LinkedLetterTile({ letter, target, env }: { letter: ReportLetter; target: BrowseTarget; env: BrowseOpenerEnv | undefined }): JSX.Element {
+  const opener = useBrowseOpener(target, 'report', env);
+  const words = useMessages().report;
+  return (
+    <li className={opener.notice === null ? undefined : 'hr-report-tile-cell-notice'}>
+      <ReportBrowseAnchor target={target} opener={opener} className="hr-report-tile hr-report-tile-link" testId="report-tile-link" ariaLabel={letter.romanization ? words.letter(letter.letter, letter.romanization) : undefined}>
+        {letterFace(letter)}
+      </ReportBrowseAnchor>
+      <BrowseNoticeLine opener={opener} testId="report-tile-link" />
     </li>
-  ) : (
-    <li className="hr-report-tile">{face}</li>
   );
 }
 
