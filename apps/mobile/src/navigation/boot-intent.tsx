@@ -2,12 +2,16 @@ import { NavigationContainerRefContext } from '@react-navigation/native';
 import { useContext, useEffect } from 'react';
 import { openBootIntentWhenReady } from '../logic/shell/boot-intent';
 import { consumeBootIntent, peekBootIntent } from '../platform/app-root';
+import { openBrowseFromGate } from '../platform/browse-handoff';
+import { gateOpensDirectlyNow } from '../store/gate-now';
 
 /**
  * Acts on the boot intent the app root read (F-APP-001 section 3.9): `gate=grown-up&next=` is the
  * console lock's "Use the grown-up PIN", so the PIN screen for the grown-up area opens over the
  * learner start screen, once, as soon as the navigator is ready (`openBootIntentWhenReady`). A
  * correct PIN returns the tab to `next` with a PIN unlock; Cancel lands on the start screen.
+ * `gate=browse` (F-BROWSE-001 BR-12b) opens the PIN screen for All lessons, or, when the gate opens
+ * directly, the gate hand-off at once (`openBrowseFromGate`).
  * Rendered beside the root stack; native builds never have an intent (`platform/app-root.ts`).
  */
 export function BootIntentHook(): null {
@@ -21,6 +25,10 @@ export function BootIntentHook(): null {
         addListener: (event, listener) => root.addListener(event, listener),
       },
       { peek: peekBootIntent, consume: consumeBootIntent },
+      {
+        opensDirectly: () => gateOpensDirectlyNow(),
+        open: () => openBrowseFromGate(),
+      },
     );
   }, [root]);
   return null;
