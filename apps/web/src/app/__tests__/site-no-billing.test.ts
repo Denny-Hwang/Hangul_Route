@@ -15,6 +15,7 @@ import { PrivacyPage } from '../../components/landing/PrivacyPage';
 import { TeachersPage } from '../../components/landing/TeachersPage';
 import { TermsPage } from '../../components/landing/TermsPage';
 import { ALL_CLAIMS_ON } from '../../data/__tests__/site-claims-fixtures';
+import { siteMetadata } from '../../data/landing-copy';
 import { SITE_CLAIMS, type SiteClaims } from '../../data/site-claims';
 import { SITE_PAGES, type SitePage } from '../../lib/site-metadata';
 import * as EnAbout from '../(en)/about/page';
@@ -106,14 +107,25 @@ function isBillingLink(href: string): boolean {
   return BILLING_PATHS.some((billing) => path === billing || path.startsWith(`${billing}/`)) || /(?:^|\/)billing(?:\/|$)/i.test(path);
 }
 
+/** Korean number units that may sit between the digits and the currency (man, cheon, baek, eok: '1 man won'). */
+const KO_UNIT = '[\\uB9CC\\uCC9C\\uBC31\\uC5B5]';
+/** Korean currency words: won, dallo (dollar). */
+const KO_CURRENCY = '(?:\\uC6D0|\\uB2EC\\uB7EC)';
+/** A currency word or code written after a number (en, es). */
+const CURRENCY_WORD = '(?:US\\$|USD\\b|EUR\\b|KRW\\b|d[o\\u00F3]lar(?:es)?\\b|dollars?\\b|euros?\\b|pesos?\\b)';
+
 /** Amounts: the shared landing-claims price patterns plus a currency sign or code next to a number (en, es, ko). */
 const AMOUNT_PATTERNS: ReadonlyArray<{ name: string; re: RegExp }> = [
   ...SITE_PRICE_PATTERNS,
   { name: 'a currency sign before a number', re: /[$\u20AC\u00A3\u20A9\u00A5]\s?\d/ },
-  { name: 'a currency sign or code after a number', re: /\d\s?(?:[$\u20AC\u00A3\u20A9\u00A5]|US\$|USD\b|EUR\b|KRW\b|d[o\u00F3]lar(?:es)?\b|dollars?\b)/i },
-  { name: 'a price in Korean (won or dollars after a number)', re: /\d\s?(?:\uC6D0|\uB2EC\uB7EC)/ },
-  { name: 'a price per year or month (es)', re: /\bal\s+(?:a\u00F1o|mes)\b|\bpor\s+(?:a\u00F1o|mes)\b/i },
-  { name: 'a price per year or month (ko)', re: /(?:\uC5F0|\uC6D4)\s?\d/ },
+  { name: 'a currency code before a number', re: /\b(?:USD|EUR|KRW|MXN)\s?\d|US\$\s?\d/i },
+  { name: 'a currency sign or code after a number', re: new RegExp(`\\d\\s?(?:[$\\u20AC\\u00A3\\u20A9\\u00A5]|${CURRENCY_WORD})`, 'i') },
+  { name: 'a price in Korean (won or dollars after a number or a number unit)', re: new RegExp(`(?:\\d|${KO_UNIT})\\s?(?:${KO_UNIT}\\s?)?${KO_CURRENCY}`) },
+  {
+    name: 'a price per year or month (es)',
+    re: new RegExp(`\\d[\\d.,]*\\s?(?:[$\\u20AC]|${CURRENCY_WORD})?\\s*(?:al|por)\\s+(?:a\\u00F1o|mes)\\b`, 'i'),
+  },
+  { name: 'a price per year or month (ko)', re: new RegExp(`(?:\\uC5F0|\\uC6D4)\\s?\\d[\\d,.]*\\s?(?:${KO_UNIT}\\s?)*${KO_CURRENCY}`) },
 ];
 
 function amountsIn(text: string): string[] {
@@ -133,9 +145,13 @@ const decode = (s: string): string =>
     .replace(/&nbsp;|&#xa0;/g, ' ')
     .replace(/&amp;/g, '&');
 const textOf = (html: string): string => decode(html.replace(/<[^>]+>/g, ' ')).replace(/\s+/g, ' ');
-/** Every link-like attribute value in the markup: anchors, forms, buttons, `<link>`. */
+/** Every link-like attribute value in the markup: anchors, forms, buttons, `<link>`, and `src` (scripts, frames). */
 const linksOf = (html: string): string[] =>
-  [...html.matchAll(/\s(?:href|action|formaction|formAction)="([^"]*)"/g)].map((m) => decode(m[1] ?? ''));
+  [...html.matchAll(/\s(?:href|action|formaction|formAction|src)="([^"]*)"/g)].map((m) => decode(m[1] ?? ''));
+/** A site or app URL written out as text: a printed address works as a link once pasted into a browser. */
+const printedSiteUrlsOf = (text: string): string[] => [...text.matchAll(/(?:https?:\/\/)?[a-z0-9.-]*hangulroute\.com\/[^\s"'<>)]*/gi)].map((m) => m[0]);
+/** Stripe's embedded payment widgets: Stripe.js, the Pricing Table and the Buy Button (prices drawn client-side). */
+const STRIPE_EMBED = /js\.stripe\.com|<stripe-(?:pricing-table|buy-button)\b|stripe-(?:pricing-table|buy-button)|(?:pricing-table|buy-button)-id/i;
 
 type EnRoute = { default: () => JSX.Element; generateMetadata: () => Metadata };
 type LocRoute = {
@@ -215,7 +231,7 @@ function renderClaimStates(): Rendered[] {
 }
 
 function metadataTexts(): Array<{ label: string; text: string }> {
-  const out: Array<{ label: string; text: string }> = [];
+  const out: Array<{ label: string; text: string }> = [{ label: 'root layout (inherited by every page)', text: JSON.stringify(siteMetadata) }];
   for (const page of SITE_PAGES) {
     out.push({ label: `${page} (en)`, text: JSON.stringify(EN_ROUTES[page].generateMetadata()) });
     for (const locale of LOCALES.filter((l) => l !== 'en')) {
@@ -236,11 +252,20 @@ describe('site-no-billing: rendered pages carry no billing link (F-BILL-002 B-10
     it(`${build}: no page, in any locale or claim state, links to billing or to a Stripe payment page`, () => {
       vi.stubEnv('NEXT_PUBLIC_SHOW_ALL_LOCALES', showAll);
       const pages = [...renderRoutes(), ...renderClaimStates()];
-      expect(pages.length).toBeGreaterThan(0);
+      const nonEn = LOCALES.length - 1;
+      expect(pages).toHaveLength(SITE_PAGES.length * (1 + nonEn) + LOCALES.length * (CLAIMS_PAGES.length * 2 + PLAIN_PAGES.length));
       const found = pages.flatMap(({ label, html }) => linksOf(html).filter(isBillingLink).map((href) => `${label}: ${href}`));
       expect(found).toEqual([]);
       const printed = pages.filter(({ html }) => STRIPE_PAYMENT_URL.test(textOf(html))).map(({ label }) => label);
       expect(printed).toEqual([]);
+      const printedBilling = pages.flatMap(({ label, html }) =>
+        printedSiteUrlsOf(textOf(html))
+          .filter(isBillingLink)
+          .map((url) => `${label}: ${url}`),
+      );
+      expect(printedBilling).toEqual([]);
+      const embeds = pages.filter(({ html }) => STRIPE_EMBED.test(html)).map(({ label }) => label);
+      expect(embeds).toEqual([]);
     });
 
     it(`${build}: no page metadata (canonical, hreflang, Open Graph) points at billing or names an amount`, () => {
@@ -256,6 +281,7 @@ describe('site-no-billing: rendered pages carry no billing link (F-BILL-002 B-10
   it('every site page has an English and a locale route in the scan (a new page cannot skip the guard)', () => {
     expect(Object.keys(EN_ROUTES).sort()).toEqual([...SITE_PAGES].sort());
     expect(Object.keys(LOC_ROUTES).sort()).toEqual([...SITE_PAGES].sort());
+    expect([...CLAIMS_PAGES, ...PLAIN_PAGES].map(([page]) => page).sort()).toEqual([...SITE_PAGES].sort());
     const routeFiles = (dir: string): string[] => sourceFiles(dir).filter((file) => /(?:^|\/)page\.tsx$/.test(file));
     expect(routeFiles(join(appDir, '(en)'))).toHaveLength(SITE_PAGES.length);
     expect(routeFiles(join(appDir, '(loc)'))).toHaveLength(SITE_PAGES.length);
@@ -269,9 +295,9 @@ describe('site-no-billing: rendered pages name no amount (F-BILL-002 B-10)', () 
     expect(found).toEqual([]);
   });
 
-  it('the allow-list: the legal pages may still say payments go through Stripe (words, not a link)', () => {
-    const terms = textOf(renderToStaticMarkup(createElement(TermsPage, { locale: 'en' })));
-    const privacy = textOf(renderToStaticMarkup(createElement(PrivacyPage, { locale: 'en' })));
+  it.each(LOCALES)('the allow-list: the %s legal pages may still say payments go through Stripe (words, not a link)', (locale) => {
+    const terms = textOf(renderToStaticMarkup(createElement(TermsPage, { locale })));
+    const privacy = textOf(renderToStaticMarkup(createElement(PrivacyPage, { locale })));
     expect(`${terms} ${privacy}`).toMatch(/\bStripe\b/);
   });
 });
@@ -295,8 +321,9 @@ function sourceFiles(dir: string): string[] {
 
 /** Billing references in module code: a billing path literal, a Stripe payment URL, or a billing route or URL helper. */
 const SOURCE_RULES: ReadonlyArray<{ name: string; re: RegExp }> = [
-  { name: 'a billing path literal', re: /['"`](?:https?:\/\/[^'"`\s]*)?(?:\/[a-z]{2})?\/(?:account\/|teach\/)?billing\b/ },
+  { name: 'a billing path literal', re: /(?:['"`}]|\b(?:https?:\/\/)?[a-z0-9.-]*\.com)(?:\/[a-z]{2})?\/(?:account\/|teach\/)?billing\b/ },
   { name: 'a Stripe payment URL', re: STRIPE_PAYMENT_URL },
+  { name: 'a Stripe payment widget (Stripe.js, Pricing Table, Buy Button)', re: STRIPE_EMBED },
   { name: 'APP_ROUTES.billing', re: /\bAPP_ROUTES\s*(?:\.\s*billing|\[\s*['"]billing['"]\s*\])/ },
   { name: 'a billing URL helper', re: /\b(?:consoleBillingUrl|billingReturnUrl|billingUrl)\b/ },
   { name: 'a dollar amount', re: /\$\s?\d/ },
@@ -355,6 +382,28 @@ describe('site-no-billing: the rules', () => {
     expect(isBillingLink(href)).toBe(false);
   });
 
+  it.each([
+    ['`${APP_ORIGIN}/account/billing`', 'a billing path literal'],
+    ['`${base}/teach/billing?x=1`', 'a billing path literal'],
+    ["'https://app.hangulroute.com/account/billing'", 'a billing path literal'],
+    ["'/es/billing'", 'a billing path literal'],
+    ['<script src="https://js.stripe.com/v3/pricing-table.js" />', 'a Stripe payment widget (Stripe.js, Pricing Table, Buy Button)'],
+    ['<stripe-buy-button buy-button-id="buy_123" />', 'a Stripe payment widget (Stripe.js, Pricing Table, Buy Button)'],
+  ])('the source rules flag %s', (source, rule) => {
+    expect(SOURCE_RULES.filter(({ re }) => re.test(source)).map(({ name }) => name)).toContain(rule);
+  });
+
+  it.each(["'/account'", "'/teach'", '`${APP_ORIGIN}/sign-in`', "import { billingCopy } from './copy';"])('the source rules let %s through', (source) => {
+    expect(SOURCE_RULES.filter(({ re }) => re.test(source))).toEqual([]);
+  });
+
+  it('a billing address printed as text is caught, a printed site address is not', () => {
+    expect(printedSiteUrlsOf('Manage your plan at app.hangulroute.com/account/billing today.').filter(isBillingLink)).toEqual([
+      'app.hangulroute.com/account/billing',
+    ]);
+    expect(printedSiteUrlsOf('Sign in at app.hangulroute.com/sign-in.').filter(isBillingLink)).toEqual([]);
+  });
+
   it('linkPath drops the origin, the locale, the query and the fragment', () => {
     expect(linkPath('https://app.hangulroute.com/es/account/billing/?x=1#y')).toBe(APP_ROUTES.billing);
     expect(linkPath('/ko')).toBe('/');
@@ -374,7 +423,17 @@ describe('site-no-billing: the rules', () => {
     '\u20A920000',
     '20000\uC6D0',
     '15\uB2EC\uB7EC',
-    '\uC5F0 15',
+    '\uC5F0 15\uB2EC\uB7EC',
+    '1\uB9CC \uC6D0',
+    '2\uB9CC\uC6D0',
+    '1\uB9CC 9\uCC9C\uC6D0',
+    '\uC5F0 1\uB9CC 5\uCC9C\uC6D0',
+    'USD 15',
+    'EUR 12',
+    'KRW 20000',
+    '15 euros',
+    '15 pesos',
+    '5 \u20AC al mes',
     'just 5 per year',
     '5/yr',
     '5 al a\u00F1o',
@@ -390,6 +449,10 @@ describe('site-no-billing: the rules', () => {
     '1\uB2E8\uACC4',
     'Etapa 1',
     'Up to 5 learners in a family.',
+    '\uCE74\uB4DC 10\uC7A5',
+    '\uC6D4 1\uD68C \uC5F0\uC2B5',
+    'una vez al mes',
+    'Practica 2 veces por semana.',
   ])('lets %j through', (text) => {
     expect(amountsIn(text)).toEqual([]);
   });
