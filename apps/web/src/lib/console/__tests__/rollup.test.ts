@@ -40,8 +40,14 @@ describe('class roll-up (F-CONSOLE-001 §3.5)', () => {
       ],
       now,
     );
-    expect(roll).toEqual({ students: 4, practicedThisWeek: 2, anchorAccuracy: 0.7, revisit: ['ㅂ', 'ㅅ', 'ㅈ'], vocabRevisit: [], notSynced: 2 });
+    expect(roll).toEqual({ students: 4, practicedThisWeek: 2, anchorAccuracy: 0.7, revisit: ['ㅂ', 'ㅈ', 'ㅅ'], vocabRevisit: [], notSynced: 2 });
     expect(classRollup([], now)).toEqual({ students: 0, practicedThisWeek: 0, anchorAccuracy: null, revisit: [], vocabRevisit: [], notSynced: 0 });
+  });
+
+  // F-REPORT-001 RP-8 (RP-2c review note): ties break in teaching order, as the class report's letters do.
+  it('breaks a revisit tie in teaching order, so the roll-up and the class report agree', () => {
+    const roll = classRollup([learner('a', {}, { needsPractice: ['ㄱ', 'ㅏ', 'ㅓ'] })], now);
+    expect(roll.revisit).toEqual(['ㅏ', 'ㅓ', 'ㄱ']);
   });
 
   // F-VOC-005 P-4 (section 3.8, P9): the class signal is the words, never an order of students.
