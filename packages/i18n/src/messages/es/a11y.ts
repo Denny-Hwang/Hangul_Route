@@ -109,21 +109,23 @@ export const a11y = {
   planStatus: (name: string, state: string) => `${name}: ${state}.`,
   myRoute: {
     tab: 'Ruta de aprendizaje',
-    stage: (order: number, title: string, stateWord: string, here: boolean, start: boolean, played: number) =>
+    stage: (order: number, title: string, stateWord: string, here: boolean, start: boolean, played: number, goal = false) =>
       [
         `Etapa ${order}, ${title}.`,
         `${stateWord}.`,
         here ? 'Estás aquí.' : '',
+        goal ? 'Tu meta.' : '',
         start ? 'Empezaste aquí.' : '',
         played > 0 ? `${plural('es', played, { one: '1 misión jugada', other: `${played} misiones jugadas` })}.` : '',
       ]
         .filter((part) => part !== '')
         .join(' '),
-    stageGrownup: (name: string, order: number, title: string, stateWord: string, here: boolean, start: boolean, played: number) =>
+    stageGrownup: (name: string, order: number, title: string, stateWord: string, here: boolean, start: boolean, played: number, goal = false) =>
       [
         `Etapa ${order}, ${title}.`,
         `${stateWord}.`,
         here ? `${name} está aquí.` : '',
+        goal ? `Meta de ${name}.` : '',
         start ? `${name} empezó aquí.` : '',
         played > 0 ? `${plural('es', played, { one: '1 misión jugada', other: `${played} misiones jugadas` })}.` : '',
       ]
@@ -132,6 +134,7 @@ export const a11y = {
     later: (label: string, stateWord: string) => `${label}. ${stateWord}.`,
     trail: 'Lista de etapas',
     cell: (theme: string, title: string, word: string) => `${theme}: ${title}. ${word}.`,
+    cellInPlan: (cellLabel: string, tag: string) => `${cellLabel} ${tag}.`,
     skill: (label: string, detail: string) => `${label}. ${detail}.`,
     gain: (word: string, n: number) => `${word}: ${n}`,
     homeStrip: (title: string, here: string, progress: readonly string[], goal: string | null, week: string | null) =>
@@ -141,6 +144,31 @@ export const a11y = {
     homeStripGoal: (n: number, title: string) => `Meta: Etapa ${n}, ${title}`,
     rowGoal: (n: number, title: string) => `Meta: Etapa ${n}, ${title}.`,
     rowStarted: (n: number, band: string, date: string) => `Empezó: Etapa ${n}, ${band}, ${date}.`,
+    routeCard: (
+      hoyaText: string | null,
+      nowText: string | null,
+      goalText: string | null,
+      fromText: string | null,
+      planEndsText: string | null,
+      pipsText: string | null,
+      nextText: string | null,
+    ) =>
+      [
+        hoyaText,
+        ...[nowText, goalText, fromText, planEndsText, pipsText, nextText]
+          .filter((part): part is string => part !== null && part !== '')
+          .map((part) => `${part.replace(/ · /g, ', ').replace(/[.!]$/, '')}.`),
+      ]
+        .filter((part): part is string => part !== null && part !== '')
+        .join(' '),
+    labelled: (label: string, line: string) => `${label}: ${line}`,
+    goalPips: {
+      none: 'Para cuando quieras',
+      some: 'Algunas misiones hechas, hay más listas',
+      someDone: 'Algunas misiones hechas',
+      all: 'Todas las misiones hechas',
+    },
+    letter: (letter: string, sound: string, state: string) => `${letter}, ${sound}. ${state}.`,
   },
   vocab: {
     question: {

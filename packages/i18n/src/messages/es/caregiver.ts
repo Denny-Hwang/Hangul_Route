@@ -490,6 +490,8 @@ export const caregiver = {
     disclosure: (learner: string) => `Los docentes ven la respuesta que ${learner} elige en sus notas.`,
     offline: 'Conéctate a internet para hacer esto.',
     saveFailed: 'No se guardó. Reintenta.',
+    error: 'No se pudieron cargar las notas. Reintenta.',
+    retry: { cta: 'Reintentar' },
     sendNote: { cta: 'Enviar una nota' },
   },
   /**
