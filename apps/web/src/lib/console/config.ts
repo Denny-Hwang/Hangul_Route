@@ -1,3 +1,5 @@
+import type { UiLocale } from '@hangul-route/i18n';
+
 /** Build-time switches for the console — F-CONSOLE-001 §3.2. */
 export interface ConsoleEnv {
   NEXT_PUBLIC_API_BASE_URL?: string;
@@ -13,6 +15,8 @@ export interface ConsoleEnv {
   NEXT_PUBLIC_NOTES_ENABLED?: string;
   /** The grown-up Learning Route page (Learning Route amendment section 6.1, F-APP-001's reader), default off. */
   NEXT_PUBLIC_LEARNING_ROUTE_ENABLED?: string;
+  /** Progress reports (F-REPORT-001), the console twin of the learner app's `EXPO_PUBLIC_REPORTS_ENABLED`. */
+  NEXT_PUBLIC_REPORTS_ENABLED?: string;
   NODE_ENV?: string;
 }
 
@@ -34,6 +38,7 @@ export function buildEnv(): ConsoleEnv {
     NEXT_PUBLIC_CONTENT_GATING_ENABLED: process.env.NEXT_PUBLIC_CONTENT_GATING_ENABLED,
     NEXT_PUBLIC_NOTES_ENABLED: process.env.NEXT_PUBLIC_NOTES_ENABLED,
     NEXT_PUBLIC_LEARNING_ROUTE_ENABLED: process.env.NEXT_PUBLIC_LEARNING_ROUTE_ENABLED,
+    NEXT_PUBLIC_REPORTS_ENABLED: process.env.NEXT_PUBLIC_REPORTS_ENABLED,
     NODE_ENV: process.env.NODE_ENV,
   };
 }
@@ -106,6 +111,24 @@ export function notesEnabled(env: ConsoleEnv = buildEnv()): boolean {
 export function learningRouteEnabled(env: ConsoleEnv = buildEnv()): boolean {
   const raw = env.NEXT_PUBLIC_LEARNING_ROUTE_ENABLED;
   return raw === 'true' || raw === '1';
+}
+
+/**
+ * Console locales whose `report.*` words have passed native review (F-REPORT-001 section 3.1). Korean and Spanish
+ * join when their review lands (F-I18N-001 PR 16); until then a ko or es console shows no report entry.
+ */
+export const REPORT_REVIEWED_LOCALES: readonly UiLocale[] = ['en'];
+
+/**
+ * Progress reports (F-REPORT-001 section 3.1): the report pages, their entries and navigation items render only with
+ * `NEXT_PUBLIC_REPORTS_ENABLED` set to `'true'` or `'1'` (parsed like the learner app's flag; off by default, RP-11
+ * turns it on) **and** a console locale in `REPORT_REVIEWED_LOCALES`. Otherwise the entries are not drawn and the
+ * pages show the "not available yet" state with the back link. The Worker routes are always on; this flag never
+ * changes what they serve.
+ */
+export function reportsEnabled(locale: UiLocale, env: ConsoleEnv = buildEnv()): boolean {
+  const raw = env.NEXT_PUBLIC_REPORTS_ENABLED;
+  return (raw === 'true' || raw === '1') && REPORT_REVIEWED_LOCALES.includes(locale);
 }
 
 export const DEFAULT_APP_URL = 'https://app.hangulroute.com';

@@ -7,7 +7,7 @@ import { LOCALE_META, type UiLocale } from './locales';
  * locale's `speechLang`.
  */
 
-export type DateKind = 'weekday' | 'monthDay' | 'monthDayYear';
+export type DateKind = 'weekday' | 'monthDay' | 'monthDayYear' | 'monthYear' | 'weekdayLong';
 export type DateInput = Date | string | number;
 
 export interface FormatDateOptions {
@@ -21,6 +21,12 @@ const WEEKDAYS: Record<UiLocale, readonly string[]> = {
   ko: ['일', '월', '화', '수', '목', '금', '토'],
 };
 
+const WEEKDAYS_LONG: Record<UiLocale, readonly string[]> = {
+  en: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
+  es: ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'],
+  ko: ['일요일', '월요일', '화요일', '수요일', '목요일', '금요일', '토요일'],
+};
+
 const MONTHS: Record<UiLocale, readonly string[]> = {
   en: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
   es: ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'],
@@ -29,19 +35,26 @@ const MONTHS: Record<UiLocale, readonly string[]> = {
 
 const PATTERNS: Record<
   UiLocale,
-  { monthDay: (month: string, day: number) => string; monthDayYear: (month: string, day: number, year: number) => string }
+  {
+    monthDay: (month: string, day: number) => string;
+    monthDayYear: (month: string, day: number, year: number) => string;
+    monthYear: (month: string, year: number) => string;
+  }
 > = {
   en: {
     monthDay: (m, d) => `${m} ${d}`,
     monthDayYear: (m, d, y) => `${m} ${d}, ${y}`,
+    monthYear: (m, y) => `${m} ${y}`,
   },
   es: {
     monthDay: (m, d) => `${d} ${m}`,
     monthDayYear: (m, d, y) => `${d} ${m} ${y}`,
+    monthYear: (m, y) => `${m} ${y}`,
   },
   ko: {
     monthDay: (m, d) => `${m} ${d}일`,
     monthDayYear: (m, d, y) => `${y}년 ${m} ${d}일`,
+    monthYear: (m, y) => `${y}년 ${m}`,
   },
 };
 
@@ -49,18 +62,27 @@ const DATE_OPTIONS: Record<DateKind, Intl.DateTimeFormatOptions> = {
   weekday: { weekday: 'short' },
   monthDay: { month: 'short', day: 'numeric' },
   monthDayYear: { month: 'short', day: 'numeric', year: 'numeric' },
+  monthYear: { month: 'long', year: 'numeric' },
+  weekdayLong: { weekday: 'long' },
 };
 
 function fallbackDate(locale: UiLocale, date: Date, kind: DateKind, utc: boolean): string {
   const weekday = utc ? date.getUTCDay() : date.getDay();
   if (kind === 'weekday') return WEEKDAYS[locale][weekday]!;
+  if (kind === 'weekdayLong') return WEEKDAYS_LONG[locale][weekday]!;
   const month = MONTHS[locale][utc ? date.getUTCMonth() : date.getMonth()]!;
   const day = utc ? date.getUTCDate() : date.getDate();
+  const year = utc ? date.getUTCFullYear() : date.getFullYear();
   if (kind === 'monthDay') return PATTERNS[locale].monthDay(month, day);
-  return PATTERNS[locale].monthDayYear(month, day, utc ? date.getUTCFullYear() : date.getFullYear());
+  if (kind === 'monthYear') return PATTERNS[locale].monthYear(month, year);
+  return PATTERNS[locale].monthDayYear(month, day, year);
 }
 
-/** A short date in the locale: `weekday` ("Thu"), `monthDay` ("Sep 3") or `monthDayYear` ("Sep 3, 2026"). Empty string for an invalid date. */
+/**
+ * A short date in the locale: `weekday` ("Thu"), `monthDay` ("Sep 3"), `monthDayYear` ("Sep 3, 2026") or a whole month,
+ * `monthYear` ("September 2026"; "Sep 2026" from the fallback table), or a whole weekday, `weekdayLong` ("Thursday",
+ * for a sentence that lists days). Empty string for an invalid date.
+ */
 export function formatDate(locale: UiLocale, value: DateInput, kind: DateKind, options: FormatDateOptions = {}): string {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return '';

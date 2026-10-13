@@ -217,6 +217,9 @@ describe('Appendix A drafts (English)', () => {
     expect(s.updateAction('Mina')).toBe("Open Hangul Route on Mina's device while online to update.");
     expect(s.stale('Oct 2')).toBe('Last saved Oct 2.');
     expect([s.unavailable, s.error, s.flagOff]).toEqual(['This report is not available.', "Can't load the report right now.", 'Reports are not available yet.']);
+    // RP-7a1: the archived line for a viewer without `space.manage`, never "until you unarchive it".
+    expect(s.archived).toEqual({ family: 'This family space is archived. Its report is read-only.', class: 'This class is archived. Its report is read-only.' });
+    for (const line of Object.values(s.archived)) expect(line).not.toMatch(/unarchive/i);
   });
 
   it('pins the class words (section 3.7, behaviour 5)', () => {
@@ -241,8 +244,10 @@ describe('Appendix A drafts (English)', () => {
     expect(a.periodChanged(r.when.week)).toBe('Showing this week');
     expect(a.step(r.when.prevWeek)).toBe('Show last week');
     expect(a.step(r.step.range('Sep 24', 'Sep 30'))).toBe('Show Sep 24 to Sep 30');
-    // Next names the window it opens too, the current one included.
+    // Next names the window it opens too, the current one included, after its visible label (WCAG 2.5.3).
     expect(a.step(r.when.week)).toBe('Show this week');
+    expect(a.stepNext(r.when.week)).toBe(`${r.step.next}: show this week`);
+    expect(a.stepNext(r.when.prevWeek).startsWith(r.step.next)).toBe(true);
     expect(a.periodChanged(r.when.prevMonth)).toBe('Showing last month');
   });
 

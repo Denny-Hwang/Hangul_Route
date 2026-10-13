@@ -209,3 +209,57 @@ describe('ROUTES.spaceNotes', () => {
     expect(ROUTES.spaceNotes('space:c', 'class', { compose: false })).toBe('/teach/space/notes?id=space%3Ac');
   });
 });
+
+/** F-REPORT-001 section 3.1 (RP-7a1): the learner report and the class report, ids only in the URL. */
+describe('ROUTES.learnerReport and ROUTES.classReport', () => {
+  it('opens the learner report of a class under /teach/space/learner, week by default', () => {
+    expect(ROUTES.learnerReport({ spaceId: 'space:c', learnerId: 'profile:1', kind: 'class' })).toBe('/teach/space/learner?id=space%3Ac&learner=profile%3A1&period=week');
+    expect(ROUTES.learnerReport({ spaceId: 'space:c', learnerId: 'profile:1', kind: 'class', period: 'month', at: '2026-09-01', from: 'roster' })).toBe(
+      '/teach/space/learner?id=space%3Ac&learner=profile%3A1&period=month&at=2026-09-01&from=roster',
+    );
+  });
+
+  it('keeps a family on /teach/space/learner until RP-7c moves the family branch to /parent/learner', () => {
+    // Section 3.1: F-APP-001 keeps /teach/space/learner working for family ids, so no link breaks when RP-7c lands.
+    expect(ROUTES.learnerReport({ spaceId: 'space:f', learnerId: 'profile:2', kind: 'family', from: 'home' })).toBe('/teach/space/learner?id=space%3Af&learner=profile%3A2&period=week&from=home');
+  });
+
+  it('drops an `at` that is not a day key and any `at` on All time (no stepper there)', () => {
+    const base = { spaceId: 'space:c', learnerId: 'profile:1', kind: 'class' as const };
+    expect(ROUTES.learnerReport({ ...base, at: 'Mina' })).toBe('/teach/space/learner?id=space%3Ac&learner=profile%3A1&period=week');
+    expect(ROUTES.learnerReport({ ...base, at: '2026-10-1' })).toBe('/teach/space/learner?id=space%3Ac&learner=profile%3A1&period=week');
+    expect(ROUTES.learnerReport({ ...base, at: null })).toBe('/teach/space/learner?id=space%3Ac&learner=profile%3A1&period=week');
+    expect(ROUTES.learnerReport({ ...base, period: 'all', at: '2026-10-01' })).toBe('/teach/space/learner?id=space%3Ac&learner=profile%3A1&period=all');
+    expect(ROUTES.classReport({ spaceId: 'space:c', period: 'all', at: '2026-10-01' })).toBe('/teach/space/report?id=space%3Ac&period=all');
+  });
+
+  it('opens the class report under /teach/space/report', () => {
+    expect(ROUTES.classReport({ spaceId: 'space:c' })).toBe('/teach/space/report?id=space%3Ac&period=week');
+    expect(ROUTES.classReport({ spaceId: 'space:c', period: 'day', at: '2026-10-14' })).toBe('/teach/space/report?id=space%3Ac&period=day&at=2026-10-14');
+  });
+
+  it('encodes the ids, so an id can never add or change a query parameter', () => {
+    const url = new URL(ROUTES.learnerReport({ spaceId: 'space:a&learner=x', learnerId: 'profile:1#top?id=y', kind: 'class', period: 'day' }), 'https://app.example');
+    expect(url.pathname).toBe('/teach/space/learner');
+    expect([...url.searchParams.keys()]).toEqual(['id', 'learner', 'period']);
+    expect(url.searchParams.get('id')).toBe('space:a&learner=x');
+    expect(url.searchParams.get('learner')).toBe('profile:1#top?id=y');
+    expect(url.hash).toBe('');
+    const cls = new URL(ROUTES.classReport({ spaceId: 'space:a&period=all' }), 'https://app.example');
+    expect([...cls.searchParams.keys()]).toEqual(['id', 'period']);
+    expect(cls.searchParams.get('period')).toBe('week');
+  });
+
+  it('takes ids and codes only: no name ever reaches the URL', () => {
+    type LearnerOpts = Parameters<typeof ROUTES.learnerReport>[0];
+    type ClassOpts = Parameters<typeof ROUTES.classReport>[0];
+    const learnerKeys: Record<keyof LearnerOpts, true> = { spaceId: true, learnerId: true, kind: true, period: true, at: true, from: true };
+    const classKeys: Record<keyof ClassOpts, true> = { spaceId: true, period: true, at: true };
+    expect(Object.keys(learnerKeys)).toHaveLength(6);
+    expect(Object.keys(classKeys)).toHaveLength(3);
+    const all = { spaceId: 'space:x', learnerId: 'profile:y', kind: 'class' as const, period: 'week' as const, at: '2026-10-08', from: 'nav' as const };
+    for (const url of [new URL(ROUTES.learnerReport(all), 'https://app.example'), new URL(ROUTES.classReport(all), 'https://app.example')]) {
+      for (const name of ['name', 'displayName', 'learnerName', 'n']) expect(url.searchParams.has(name)).toBe(false);
+    }
+  });
+});

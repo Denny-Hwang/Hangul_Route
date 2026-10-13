@@ -39,12 +39,19 @@ export function placementBandLabel(level: PlacementLevel, locale: UiLocale = DEF
   return null;
 }
 
-/** "Starting spot: Stage 1 · Letters and sounds · Oct 9"; null without a readable placement. */
-export function startingSpotLine(summary: PlacementOf, locale: UiLocale = DEFAULT_LOCALE): string | null {
+/**
+ * "Starting spot: Stage 1 · Letters and sounds · Oct 9"; null without a readable placement. `dateOf` lets a caller
+ * date the check its own way (the report uses the learner-local day, OD-12); it returns '' for an unreadable time.
+ */
+export function startingSpotLine(
+  summary: PlacementOf,
+  locale: UiLocale = DEFAULT_LOCALE,
+  dateOf: (takenAt: string) => string = (takenAt) => formatDate(locale, takenAt, 'monthDay'),
+): string | null {
   const placement = summary?.placement;
   if (!placement) return null;
   const band = placementBandLabel(placement.level, locale);
-  const date = formatDate(locale, placement.takenAt, 'monthDay');
+  const date = dateOf(placement.takenAt);
   if (band === null || date === '') return null;
   return getMessages(locale).console.placement.startingSpot(placementStageNumber(placement.level.stage), band, date);
 }

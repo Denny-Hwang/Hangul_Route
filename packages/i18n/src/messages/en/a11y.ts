@@ -225,6 +225,12 @@ export const a11y = {
     periodChangedAll: 'Showing all time',
     /** The Previous and Next buttons, each naming the window it opens ("Show last week", "Show this week"). */
     step: (window: string) => `Show ${window}`,
+    /**
+     * The Next button's name: its visible label first, then the window it opens ("Next: show this week"), so a
+     * voice-control user who says "Next" reaches it (WCAG 2.5.3, Label in Name). Previous keeps `step`, whose
+     * name already holds its visible label ("Last week", the dates).
+     */
+    stepNext: (window: string) => `Next: show ${window}`,
     calendar: (days: string) => `Practiced on ${days}.`,
     calendarNone: 'No practice days in this period.',
     notSaved: (days: string) => `Not saved yet: ${days}.`,
