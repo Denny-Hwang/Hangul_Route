@@ -164,13 +164,24 @@ describe('sentListOfSpace on D1 does linear work', () => {
       const rows = learners.map((learnerId) => classNote({ learnerId, batchId: `batch:big-${b}`, batchKind: 'everyone', createdAt }));
       expect(await db.insertNotes(rows, [])).toBe(300);
     }
-    const started = performance.now();
+    /** The fastest of three runs, so a busy runner's pause does not decide the test. */
+    const fastest = async (run: () => Promise<unknown>): Promise<number> => {
+      let best = Number.POSITIVE_INFINITY;
+      for (let i = 0; i < 3; i += 1) {
+        const started = performance.now();
+        await run();
+        best = Math.min(best, performance.now() - started);
+      }
+      return best;
+    };
     const page = await db.sentListOfSpace(CLASS, { before: null, limit: 50, now: NOW });
-    const elapsed = performance.now() - started;
     expect(page).toHaveLength(50);
     expect(page.every((r) => r.batch?.size === 300 && r.batch.live === 300)).toBe(true);
-    // The per-note correlated version took 0.4 to 1 s here (about 4.5M rows read); the linear one takes under 10 ms.
-    expect(elapsed).toBeLessThan(150);
+    // A linear yardstick on the same runner: reading every note of those 50 batches once (15,000 rows).
+    const yardstick = await fastest(() => db.notesForSpace(CLASS, { before: null, limit: 15_000, now: NOW }));
+    const elapsed = await fastest(() => db.sentListOfSpace(CLASS, { before: null, limit: 50, now: NOW }));
+    // The per-note correlated version cost about 10 yardsticks here (about 4.5M rows read); the linear one is below one.
+    expect(elapsed).toBeLessThan(4 * yardstick);
     raw.close();
   }, 60_000);
 });
