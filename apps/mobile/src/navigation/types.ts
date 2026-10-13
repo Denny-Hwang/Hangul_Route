@@ -54,9 +54,10 @@ export type GrownUpDestination =
 
 /**
  * Append-only layout (every list in this file): add a new route as new lines just above the closing
- * line, never by editing an existing line, so parallel PRs do not conflict on a shared last line.
- * Unions: one `| member` per line, closed by the marker comment and a lone `;`
- * (pinned by logic/__tests__/nav-types-append.test.ts).
+ * line, never by editing an existing line. Two parallel PRs that insert at the same spot can still
+ * conflict, but the fix is always to keep both inserted lines; no existing line is rewritten.
+ * Every multi-line top-level union in this file: one `| member` per line, closed by the marker
+ * comment and a lone `;` (pinned by logic/__tests__/nav-types-append.test.ts).
  */
 export type RootStackParamList = {
   Onboarding: NavigatorScreenParams<OnboardingStackParamList>;
