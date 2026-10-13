@@ -118,6 +118,9 @@ const BR8_KEYS = [
   'end.backToStory.cta',
 ];
 
+/** BR-9: the word topic page's Hear button. */
+const BR9_KEYS = ['topic.hearA11y'];
+
 describe('caregiver.browse (BR-6)', () => {
   it('names the tab, the page and the preview strip as OD-8 says', () => {
     expect(browse.documentTitle).toBe('Hangul Route lessons');
@@ -164,6 +167,7 @@ describe('caregiver.browse (BR-6)', () => {
         'preview.strip',
         ...BR7_KEYS,
         ...BR8_KEYS,
+        ...BR9_KEYS,
       ].sort(),
     );
   });
@@ -268,5 +272,11 @@ describe('caregiver.browse (BR-8)', () => {
 
   it('the leave confirm of the preview strip (mock preview-player.md C): no warning, nothing is lost', () => {
     expect(browse.preview.leaveConfirm).toEqual({ title: 'Leave this preview?', keep: { cta: 'Keep going' }, leave: { cta: 'Leave' } });
+  });
+});
+
+describe('caregiver.browse (BR-9)', () => {
+  it('names the Hear button of a word row by its romanization, as the mock and the learner topic do', () => {
+    expect(browse.topic.hearA11y('sagwa')).toBe('Hear sagwa');
   });
 });
