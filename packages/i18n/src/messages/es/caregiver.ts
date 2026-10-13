@@ -96,7 +96,7 @@ export const caregiver = {
       label: 'Palabras',
       counts: (collected: number, strong: number) => `${collected} reunidas, ${strong} bien aprendidas`,
       firstTry: (percent: number) => `Acierto a la primera: ${percent} %`,
-      together: 'Para repasar en familia',
+      together: 'Para ver juntos',
     },
     privacy: {
       title: 'Privacidad',
