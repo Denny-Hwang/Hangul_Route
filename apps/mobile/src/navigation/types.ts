@@ -185,9 +185,14 @@ export type RootStackParamList = {
   /**
    * parent/note-report — the report sheet of one note (section 6.10 item 4). Reached through the gate
    * (`PinEntry { next: 'NoteReport', noteId, profileId }`), or directly from "Report this note" on a
-   * self-managed profile. FB-9 registers the screen.
+   * self-managed profile. `via` (default `note_page`): where Done returns and `notes.report_sent`'s `via`.
    */
-  NoteReport: { noteId: string; profileId: string };
+  NoteReport: { noteId: string; profileId: string; via?: 'note_page' | 'grown_up_zone' };
+  /**
+   * parent/notes B — Notes for <learner> in the grown-up zone (section 6.10 item 2, FB-9): every note the
+   * device holds for that profile, Hide and Report, the class-notes setting. Behind the gate.
+   */
+  NotesGrownUp: { profileId: string };
   /** Fixture builds only (`navigation/vocab-question-e2e.tsx`): the shared vocabulary question view on catalogue words. */
   VocabQuestionE2e: VocabQuestionE2eParams;
 };

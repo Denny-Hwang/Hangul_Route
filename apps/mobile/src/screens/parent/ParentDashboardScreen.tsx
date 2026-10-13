@@ -37,6 +37,7 @@ import { useAudience } from '../../store/audience';
 import { useUiStore } from '../../store/ui-store';
 import { LinkButton } from '../placement/parts';
 import { LearningRouteRow } from './LearningRouteRow';
+import { NotesDashboardRow } from '../notes/NotesDashboardRow';
 import type { RootStackParamList } from '../../navigation/types';
 import { useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
@@ -190,6 +191,15 @@ export function ParentDashboardScreen({ navigation }: Props): React.ReactElement
           );
         })
       )}
+
+      {/* F-FEEDBACK-001 FB-9 (section 6.10 item 1): one "Notes for <learner>" row per profile with notes or memberships. */}
+      {flags.notesEnabled ? (
+        <View testID="dashboard-notes-rows">
+          {profiles.map((p) => (
+            <NotesDashboardRow key={p.id} profileId={p.id} name={p.displayName} onOpen={() => navigation.navigate('NotesGrownUp', { profileId: p.id })} />
+          ))}
+        </View>
+      ) : null}
 
       <Spacer size="lg" />
       <Card padding="md" tone="sunken">
