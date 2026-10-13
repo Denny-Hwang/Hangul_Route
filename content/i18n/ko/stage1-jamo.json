@@ -99,22 +99,22 @@
       "exampleWord.gloss": "사람이나 물건을 부르는 말"
     },
     "jamo:giyeok-batchim": {
-      "soundHint": "‘책’의 끝소리. 짧게 막고 소리를 터뜨리지 않아요."
+      "soundHint": "‘악’의 끝소리. 짧게 막고 소리를 터뜨리지 않아요."
     },
     "jamo:nieun-batchim": {
-      "soundHint": "‘산’의 끝소리. n으로 끝나요."
+      "soundHint": "‘안’의 끝소리. n으로 끝나요."
     },
     "jamo:rieul-batchim": {
-      "soundHint": "‘달’의 끝소리. 혀끝을 윗잇몸에 대고 l로 끝나요."
+      "soundHint": "‘알’의 끝소리. 혀끝을 윗잇몸에 대고 l로 끝나요."
     },
     "jamo:mieum-batchim": {
-      "soundHint": "‘밤’의 끝소리. 입술을 다물고 m으로 끝나요."
+      "soundHint": "‘암’의 끝소리. 입술을 다물고 m으로 끝나요."
     },
     "jamo:bieup-batchim": {
-      "soundHint": "‘밥’의 끝소리. 입술을 다물고 짧게 끝나요."
+      "soundHint": "‘압’의 끝소리. 입술을 다물고 짧게 끝나요."
     },
     "jamo:ieung-batchim": {
-      "soundHint": "‘강’의 끝소리. ng로 끝나요."
+      "soundHint": "‘앙’의 끝소리. ng로 끝나요."
     }
   }
 }

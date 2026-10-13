@@ -2121,7 +2121,7 @@ export const OVERLAYS: Overlays = {
       "soundHint": "‘밥’의 첫소리. b와 p 사이의 부드러운 소리예요."
     },
     "jamo:bieup-batchim": {
-      "soundHint": "‘밥’의 끝소리. 입술을 다물고 짧게 끝나요."
+      "soundHint": "‘압’의 끝소리. 입술을 다물고 짧게 끝나요."
     },
     "jamo:chieut": {
       "exampleWord.gloss": "글과 그림을 묶어 만든 읽을거리",
@@ -2144,7 +2144,7 @@ export const OVERLAYS: Overlays = {
       "soundHint": "‘가족’의 첫소리. g와 k 사이의 부드러운 소리예요."
     },
     "jamo:giyeok-batchim": {
-      "soundHint": "‘책’의 끝소리. 짧게 막고 소리를 터뜨리지 않아요."
+      "soundHint": "‘악’의 끝소리. 짧게 막고 소리를 터뜨리지 않아요."
     },
     "jamo:hieut": {
       "exampleWord.gloss": "머리 위로 보이는 높고 넓은 곳",
@@ -2159,7 +2159,7 @@ export const OVERLAYS: Overlays = {
       "soundHint": "글자 맨 앞에서는 소리가 없어요(‘아이’). 받침에서는 ng 소리예요."
     },
     "jamo:ieung-batchim": {
-      "soundHint": "‘강’의 끝소리. ng로 끝나요."
+      "soundHint": "‘앙’의 끝소리. ng로 끝나요."
     },
     "jamo:jieut": {
       "exampleWord.gloss": "사람이 사는 건물",
@@ -2174,14 +2174,14 @@ export const OVERLAYS: Overlays = {
       "soundHint": "‘물’의 첫소리. 입술을 붙였다 떼는 m 소리예요."
     },
     "jamo:mieum-batchim": {
-      "soundHint": "‘밤’의 끝소리. 입술을 다물고 m으로 끝나요."
+      "soundHint": "‘암’의 끝소리. 입술을 다물고 m으로 끝나요."
     },
     "jamo:nieun": {
       "exampleWord.gloss": "줄기와 가지, 잎이 있는 키 큰 식물",
       "soundHint": "‘나무’의 첫소리. 혀끝을 윗잇몸에 대는 n 소리예요."
     },
     "jamo:nieun-batchim": {
-      "soundHint": "‘산’의 끝소리. n으로 끝나요."
+      "soundHint": "‘안’의 끝소리. n으로 끝나요."
     },
     "jamo:o": {
       "exampleWord.gloss": "물에서 헤엄치고 꽥꽥 우는 새",
@@ -2196,7 +2196,7 @@ export const OVERLAYS: Overlays = {
       "soundHint": "‘라면’의 첫소리. 혀끝으로 윗잇몸을 가볍게 튕겨요."
     },
     "jamo:rieul-batchim": {
-      "soundHint": "‘달’의 끝소리. 혀끝을 윗잇몸에 대고 l로 끝나요."
+      "soundHint": "‘알’의 끝소리. 혀끝을 윗잇몸에 대고 l로 끝나요."
     },
     "jamo:siot": {
       "exampleWord.gloss": "땅이 높이 솟은 곳",
