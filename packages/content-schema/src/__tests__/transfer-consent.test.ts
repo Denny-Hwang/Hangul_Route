@@ -42,7 +42,7 @@ const PINNED_HASHES: Record<string, Partial<Record<TransferConsentLocale, string
   'transfer-2026-10c': {
     en: 'dd15f08a9f2ada18e81d2ea1b4e81db3fa4cfc8d3456251f0918cf6896de521b',
     // F-SPACE-002 T-6d: the Korean and Spanish texts of the same version (English unchanged).
-    ko: '07d57905ea37b89735554325cd34248774a6891e12e076f3826030e22bc9d231',
+    ko: 'ad2597e8f70f4bfb0b9dc757fbf67243c24c51b4739471026bd5320e829f948f',
     es: 'e539aef4e705240989fdec66ce241e53110b3668834197464809f63539cf7069',
   },
 };
@@ -224,6 +224,11 @@ describe('consent text per locale', () => {
       else expect(line, id).toMatch(/(니다|십시오)\.$/);
     }
     for (const id of TEACHER_VISIBLE_ITEM_IDS) expect(ko.items[id], id).not.toMatch(/\}[\uAC00-\uD7A3]/);
+  });
+
+  it('ko: never puts the counter word 반 after a class name (a typed name often ends in it: "햇살반 반"), and "would move" stays conditional', () => {
+    for (const text of allTexts('ko')) expect(text, text).not.toMatch(/\{(source|destination)\}\s*반/);
+    expect(TRANSFER_CONSENT_TEXT.ko.lines.moving).toMatch(/려고 합니다\.$/);
   });
 
   it('keeps Spanish sentences short too (at most 18 words; Spanish runs a little longer than English)', () => {

@@ -92,7 +92,7 @@ export const ROMANIZATION_SCAN_IGNORE: readonly ScanIgnore[] = [
   { path: 'packages/i18n/src/messages/ko/landing.ts', reason: 'the whole ko UI overlay file (F-I18N-001 §3.10, PR 16): Korean site words, never taught Korean (the hero letter and Hoya phrase arrive as arguments)' },
   { path: 'packages/i18n/src/messages/ko/report.ts', reason: 'the whole ko UI overlay file (F-I18N-001 §3.10, PR 16): Korean report words, never taught Korean (letters and words arrive as arguments)' },
   { path: 'packages/i18n/src/messages/ko/index.ts', reason: 'the ko overlay barrel (F-I18N-001 PR 16): a doc comment naming the Korean registers' },
-  { path: 'packages/content-schema/src/schemas/transfer-consent.ts', reason: 'the Korean consent lines of a class move (F-SPACE-002 section 4.11, T-6d): Korean UI-locale legal text shown to a guardian, never taught Korean' },
+  { path: 'packages/content-schema/src/schemas/transfer-consent-ko.ts', reason: 'the Korean consent lines (that file only) of a class move (F-SPACE-002 section 4.11, T-6d): Korean UI-locale legal text shown to a guardian, never taught Korean' },
   { path: 'content/stories/research/', reason: 'provenance data: `rr` keys and a hyphenated romanization R2 would reject (same skip as SKIPPED_DIRS in scripts/validate-content.mjs)' },
   { path: '*.md', reason: 'documentation, not shipped content' },
   // Generated from class A JSON; listed so they do not trip the check when stories and vocabulary ship.
