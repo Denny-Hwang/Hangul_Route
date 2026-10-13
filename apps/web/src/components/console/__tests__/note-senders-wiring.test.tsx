@@ -39,6 +39,8 @@ vi.mock('@/components/console/use-console', async () => {
       data: [{ memberKind: 'account', memberId: 'acct:owner', role: 'owner', joinedAt: '2026-09-01T00:00:00.000Z', name: 'Ji-woo Kim', isOwner: true }],
     }),
     transferRequests: async () => ({ ok: true, data: { requests: [], options: [] } }),
+    // The archive confirm's plan read (F-BILL-002 B-12): not part of panel D.
+    billingSummary: async () => ({ ok: false, error: 'network', status: -1 }),
   };
   return { useConsole: () => ({ ready: true, session: { accountId: state.viewer, displayName: 'x' }, api, signOut: () => undefined, m: messages('en'), locale: 'en' }) };
 });
