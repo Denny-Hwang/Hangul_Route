@@ -110,7 +110,7 @@ export function LearnersPage({ locale = DEFAULT_LOCALE, claims = SITE_CLAIMS }: 
         </Fold>
       </Section>
 
-      {showsClaim(claims, 'learningRoute') ? (
+      {showsClaim(claims, 'learningRoute', locale) ? (
         <Section id="learners-route" title={L.route.title}>
           <Body>{L.route.body}</Body>
         </Section>
