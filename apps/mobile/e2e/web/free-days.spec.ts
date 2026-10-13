@@ -210,8 +210,8 @@ test.describe('free plan switch on (web)', () => {
     await expect(page.getByTestId('episode-quest-not-open')).toHaveCount(0);
     await expect(page.getByTestId('episode-preview-card')).toHaveCount(0);
     await page.getByRole('button', { name: 'Play again', exact: true }).first().click();
-    // The player keeps the kept quest: it opens on Discover, a step only the player shows.
-    await expect(page.getByText('Look and learn', { exact: true })).toBeVisible();
+    // The player keeps the kept quest: its Leave quest button shows only in the player.
+    await expect(page.getByRole('button', { name: 'Leave quest' })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Lunch Box Words' })).toHaveCount(0);
     await playToResults(page);
     await expect(page.getByRole('button', { name: 'Back home' }).first()).toBeVisible();
