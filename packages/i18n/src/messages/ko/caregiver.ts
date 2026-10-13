@@ -591,6 +591,28 @@ export const caregiver = {
     preview: {
       strip: '미리 보기. 아무것도 저장되지 않아요.',
       leave: { cta: '미리 보기 나가기' },
+      leaveConfirm: {
+        title: '이 미리 보기를 나갈까요?',
+        keep: { cta: '계속하기' },
+        leave: { cta: '나가기' },
+      },
+    },
+    end: {
+      lesson: {
+        title: '이 레슨은 여기까지예요.',
+        line: '여기서 학습자는 별을 1개에서 3개까지 받고, 이 카드를 모아요:',
+        lineNoCard: '여기서 학습자는 별을 1개에서 3개까지 받아요.',
+      },
+      story: {
+        title: '이 이야기는 여기까지예요.',
+        line: '학습자는 언제든 다시 읽을 수 있어요.',
+      },
+      next: { cta: '다음 레슨' },
+      again: { cta: '다시 미리 보기' },
+      back: { cta: '레슨 페이지로 돌아가기' },
+      nextStory: { cta: '다음 이야기' },
+      readAgain: { cta: '다시 읽기' },
+      backToStory: { cta: '이야기 페이지로 돌아가기' },
     },
     access: {
       title: '부모님과 선생님을 위한 페이지예요.',
