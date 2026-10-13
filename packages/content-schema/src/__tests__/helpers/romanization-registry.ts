@@ -87,6 +87,7 @@ export const ROMANIZATION_SCAN_IGNORE: readonly ScanIgnore[] = [
   { path: 'packages/i18n/src/messages/ko/caregiver.ts', reason: 'Korean UI words of the F-BILL-002 B-6 overlay (F-I18N-001 §3.10), not taught Korean: learner Plan screen words' },
   { path: 'packages/i18n/src/messages/ko/learner.ts', reason: 'Korean UI words of the F-BILL-002 B-6 overlay (F-I18N-001 §3.10), not taught Korean: Profile plan card words' },
   { path: 'packages/i18n/src/messages/ko/a11y.ts', reason: 'Korean UI words of the F-BILL-002 B-6 overlay (F-I18N-001 §3.10), not taught Korean: the Plan screen summary heading' },
+  { path: 'packages/i18n/src/messages/ko/common.ts', reason: 'Korean UI words of the F-FEEDBACK-001 FB-5b notes overlay (F-I18N-001 §3.10), not taught Korean: note presets, reactions and sender labels' },
   { path: 'content/stories/research/', reason: 'provenance data: `rr` keys and a hyphenated romanization R2 would reject (same skip as SKIPPED_DIRS in scripts/validate-content.mjs)' },
   { path: '*.md', reason: 'documentation, not shipped content' },
   // Generated from class A JSON; listed so they do not trip the check when stories and vocabulary ship.
