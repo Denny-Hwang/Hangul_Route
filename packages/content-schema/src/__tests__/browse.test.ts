@@ -43,7 +43,7 @@ const EVERY_TARGET: BrowseTarget[] = [
   { kind: 'char', char: 'ㅣ' },
 ];
 
-const EVERY_SOURCE: BrowseSource[] = ['nav', 'report', 'route', 'plan', 'roster', 'gate', 'direct'];
+const EVERY_SOURCE: BrowseSource[] = ['nav', 'report', 'route', 'plan', 'roster', 'gate', 'direct', 'notes'];
 
 const pass = (over: Record<string, unknown> = {}) => ({
   v: 1,
@@ -86,9 +86,13 @@ describe('scope and source enums', () => {
     expect(BrowseScopeSchema.safeParse('premium').success).toBe(false);
   });
 
-  it('accepts the seven sources and nothing else', () => {
+  it('accepts the eight sources and nothing else', () => {
     for (const s of EVERY_SOURCE) expect(BrowseSourceSchema.safeParse(s).success).toBe(true);
     expect(BrowseSourceSchema.safeParse('email').success).toBe(false);
+  });
+
+  it('the source list is exact, in order, with notes appended last (F-FEEDBACK-001 FB-15)', () => {
+    expect(BrowseSourceSchema.options).toEqual(['nav', 'report', 'route', 'plan', 'roster', 'gate', 'direct', 'notes']);
   });
 });
 

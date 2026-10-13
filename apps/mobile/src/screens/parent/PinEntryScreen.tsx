@@ -35,6 +35,7 @@ import {
   verifyPin,
 } from '../../logic/profiles/pin-hash';
 import { pinKeyMax, pinPadBudget, pinPadFirstWidth, pinPadLayout } from '../../logic/profiles/pin-pad-layout';
+import { routeGateStep } from '../../logic/route/proposal-flow';
 import type { RootStackParamList } from '../../navigation/types';
 import { pinHasher } from '../../platform/crypto';
 import { continueToGrownUpPage, openGrownUpArea } from '../../platform/grown-up-handoff';
@@ -173,11 +174,12 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
       const { profileId } = route.params;
       if (profileId === undefined) navigation.replace('ParentDashboard');
       else navigation.replace('LearnerReport', { profileId });
-    } else if (route.params.next === 'RouteProposal') {
-      // A child's weekly plan, made by the grown-up now through the gate (F-PLAN-002 section 3.9).
-      const { profileId } = route.params;
-      if (profileId === undefined) navigation.goBack();
-      else navigation.replace('RouteProposal', { source: 'profile', profileId });
+    } else if (route.params.next === 'RouteProposal' || route.params.next === 'RouteSetup' || route.params.next === 'RouteOverview') {
+      // A child's weekly plan, through the gate (F-PLAN-002 section 3.9): made, changed, or stopped on the overview underneath.
+      const step = routeGateStep(route.params.next, route.params.profileId);
+      if (step.kind === 'back') navigation.goBack();
+      else if (step.kind === 'proposal') navigation.replace('RouteProposal', { source: 'profile', profileId: step.profileId });
+      else navigation.replace('RouteSetup', { profileId: step.profileId });
     } else if (route.params.next === 'NoteReport') {
       // "Tell a grown-up" on a note page (F-FEEDBACK-001 section 6.10 item 4): the report sheet of that note.
       const { noteId, profileId, noteVia } = route.params;
