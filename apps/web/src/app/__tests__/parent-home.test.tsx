@@ -195,9 +195,11 @@ describe('the family home (F-APP-001 A-5b)', () => {
     expect(byTestId(r, 'family-settings')[0]?.props.href).toBe('/parent/space/settings?id=sp_f');
     expect(byTestId(r, 'family-lessons')).toHaveLength(0);
     act(() => mounted?.unmount());
-    vi.stubEnv('NEXT_PUBLIC_BROWSE_ENABLED', 'true');
+    vi.stubEnv('NEXT_PUBLIC_BROWSE', 'enabled');
+    vi.stubGlobal('window', { location: { origin: 'https://app.hangulroute.com' } });
     r = await render([family]);
-    expect(byTestId(r, 'family-lessons')).toHaveLength(1);
+    expect(byTestId(r, 'family-lessons')[0]?.props.href).toBe('/browse');
+    vi.unstubAllGlobals();
   });
 
   it('Add a learner is a disclosure: it opens the join code panel and the join line, and a second press closes it', async () => {
@@ -296,7 +298,7 @@ describe('the family home (F-APP-001 A-5b)', () => {
     expect(findBannedWord(allText(r))).toBeNull();
     for (const href of hrefs(r)) {
       expect(href).not.toMatch(/Sam|Mina|Kim/);
-      expect(href.startsWith('/parent') || href.startsWith('/teach/space/learner') || href.startsWith('/start')).toBe(true);
+      expect(href.startsWith('/parent') || href.startsWith('/teach/space/learner') || href.startsWith('/start') || href === '/browse').toBe(true);
     }
   });
 });

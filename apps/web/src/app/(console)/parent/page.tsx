@@ -9,13 +9,13 @@ import { AdultFrame, type FrameSpaces } from '@/components/console/AdultFrame';
 import { Button, buttonBase, panelStyle } from '@/components/console/ui';
 import { useConsole } from '@/components/console/use-console';
 import type { Roster, RosterLearner, SpaceListItem } from '@/lib/console/api';
-import { browseEntryEnabled, learningRouteEnabled, notesEnabled, reportsEnabled } from '@/lib/console/config';
+import { browseEntryShown, learningRouteEnabled, notesEnabled, reportsEnabled } from '@/lib/console/config';
 import { openAppWithJoinCode } from '@/lib/console/join-handoff';
 import { familyActionLinks, joinOrder, learnerCardActions, parentHomeView, type CardFlags } from '@/lib/console/parent-home';
 import { personaHome } from '@/lib/console/personas';
 import { relativeDay } from '@/lib/console/rollup';
 import { writeLastPersona } from '@/lib/console/shell-store';
-import { lessonsUrl } from '@/lib/console/shell-nav';
+import { BROWSE_PATH } from '@/lib/console/shell-nav';
 import { START_CLASS, START_FAMILY } from '@/lib/console/teacher-home';
 
 /**
@@ -136,7 +136,7 @@ export default function ParentHomePage(): JSX.Element {
   const p = c.parentHome;
   const now = new Date();
   const flags: CardFlags = { reports: reportsEnabled(locale), notes: notesEnabled(), route: learningRouteEnabled() };
-  const lessons = browseEntryEnabled();
+  const lessons = browseEntryShown(typeof window === 'undefined' ? '' : window.location.origin);
   const view = items ? parentHomeView(items) : null;
   const joinLine = p.empty.line(m.learner.home.profileLabel, m.caregiver.spaces.title, m.caregiver.spaces.join.cta);
 
@@ -144,7 +144,6 @@ export default function ParentHomePage(): JSX.Element {
     void writeLastPersona('teacher');
     router.push(personaHome('teacher'));
   };
-  const openLessons = (): void => window.location.assign(lessonsUrl(window.location.origin));
   const copy = async (spaceId: string, code: string): Promise<void> => {
     try {
       await navigator.clipboard.writeText(code);
@@ -225,9 +224,9 @@ export default function ParentHomePage(): JSX.Element {
     const actions = (
       <div className="hr-ph-actions">
         {lessons ? (
-          <button type="button" onClick={openLessons} style={button} data-testid="family-lessons">
+          <a href={BROWSE_PATH} style={button} data-testid="family-lessons">
             {p.actions.lessons}
-          </button>
+          </a>
         ) : null}
         <Link href={links.planWeek} style={button} data-testid="family-plan-week">
           {p.actions.planWeek}
