@@ -85,10 +85,7 @@ export const consoleMsgs = {
   schoolLicenceLapsed: 'La licencia necesita atención. Las clases siguen visibles; los estudiantes conservan la Etapa 1 de todos modos.',
 
   shell: {
-    backToSite: '← Hangul Route',
     home: 'Consola',
-    account: { cta: 'Cuenta' },
-    billing: { cta: 'Facturación' },
     signOut: { cta: 'Salir' },
     nav: { notes: 'Notas' },
     noApi: 'La consola necesita una dirección de API (NEXT_PUBLIC_API_BASE_URL) en esta versión.',
@@ -160,11 +157,9 @@ export const consoleMsgs = {
     },
   },
   home: {
-    title: (name: string) => `Hola, ${name}`,
     lastList: 'Se muestra la última lista que cargamos.',
     archived: '(archivado)',
     open: { cta: 'Abrir →' },
-    newSpace: { cta: '+ Nuevo espacio' },
   },
   space: {
     loading: 'Cargando…',

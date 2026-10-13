@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { DEFAULT_APP_URL, apiBaseUrl, appUrl, buildEnv, clerkPublishableKey, contentGatingEnabled, devAuthEnabled, lectureModeEnabled, learningRouteEnabled, notesEnabled, REPORT_REVIEWED_LOCALES, reportsEnabled, schoolConsentModeEnabled } from '../config';
+import { DEFAULT_APP_URL, apiBaseUrl, appUrl, browseEnabled, browseEntryShown, buildEnv, clerkPublishableKey, contentGatingEnabled, devAuthEnabled, lectureModeEnabled, learningRouteEnabled, notesEnabled, REPORT_REVIEWED_LOCALES, reportsEnabled, schoolConsentModeEnabled } from '../config';
 
 describe('console config (F-CONSOLE-001 §3.2)', () => {
   it('apiBaseUrl trims and rejects the placeholder', () => {
@@ -158,5 +158,22 @@ describe('reportsEnabled', () => {
     expect(buildEnv().NEXT_PUBLIC_REPORTS_ENABLED).toBe('true');
     expect(reportsEnabled('en')).toBe(true);
     expect(reportsEnabled('ko')).toBe(false);
+  });
+});
+
+describe('browseEnabled and browseEntryShown (F-BROWSE-001 section 5.4; F-APP-001 section 3.8, amended by BR-0b)', () => {
+  it('reads NEXT_PUBLIC_BROWSE=enabled only, off by default', () => {
+    expect(browseEnabled({})).toBe(false);
+    expect(browseEnabled({ NEXT_PUBLIC_BROWSE: 'enabled' })).toBe(true);
+    for (const raw of ['true', '1', 'Enabled', '']) expect(browseEnabled({ NEXT_PUBLIC_BROWSE: raw })).toBe(false);
+  });
+
+  it('shows a Lessons entry only on the app origin', () => {
+    const on = { NEXT_PUBLIC_BROWSE: 'enabled' };
+    expect(browseEntryShown('https://app.hangulroute.com', on)).toBe(true);
+    expect(browseEntryShown('https://hangulroute.com', on)).toBe(false);
+    expect(browseEntryShown('', on)).toBe(false);
+    expect(browseEntryShown('http://localhost:8081', { ...on, NEXT_PUBLIC_APP_URL: 'http://localhost:8081/' })).toBe(true);
+    expect(browseEntryShown('https://app.hangulroute.com', {})).toBe(false);
   });
 });

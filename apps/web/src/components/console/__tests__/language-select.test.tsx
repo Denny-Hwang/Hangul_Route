@@ -2,7 +2,6 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { LocaleProvider } from '@/lib/i18n/locale-context';
 import { LanguageSelect } from '../LanguageSelect';
-import { ConsoleShell } from '../ui';
 
 afterEach(() => {
   vi.unstubAllEnvs();
@@ -43,21 +42,5 @@ describe('console header language select (F-I18N-001 §3.3, wireframe language-p
     expect(html).toContain('<option value="ko" lang="ko">한국어</option>');
   });
 
-  it('sits first in the ConsoleShell header nav, which wraps on narrow screens; the default header is unchanged', () => {
-    const plain = renderToStaticMarkup(
-      <LocaleProvider>
-        <ConsoleShell title="Class A">body</ConsoleShell>
-      </LocaleProvider>,
-    );
-    expect(plain).not.toContain('<select');
-    expect(plain).toMatch(/<nav[^>]*><button[^>]*disabled=""[^>]*>Account<\/button>/);
-    expect(plain).toMatch(/<nav style="[^"]*flex-wrap:wrap/);
-
-    const qa = renderToStaticMarkup(
-      <LocaleProvider available={['en', 'es', 'ko']}>
-        <ConsoleShell title="Class A">body</ConsoleShell>
-      </LocaleProvider>,
-    );
-    expect(qa).toMatch(/<nav[^>]*><select[^>]*aria-label="Language"[\s\S]*<\/select><button[^>]*>Account<\/button>/);
-  });
+  // Its place in the adult frame (header from 45em, footer below it) is adult-frame.test.tsx's (F-APP-001 A-5a).
 });

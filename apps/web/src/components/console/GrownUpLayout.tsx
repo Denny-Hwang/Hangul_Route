@@ -1,10 +1,11 @@
 'use client';
 
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { Suspense, useEffect, type ReactNode } from 'react';
+import { Suspense, useEffect, useMemo, type ReactNode } from 'react';
 import { CLERK_LOAD_TIMEOUT_MS, signedOutTarget } from '@/lib/console/signin-flow';
 import { LocaleProvider } from '@/lib/i18n/locale-context';
 import { ConsoleAuthProvider, useConsoleAuth } from './auth-context';
+import { GrownUpLocationContext } from './grown-up-location';
 import { GrownUpLock } from './GrownUpLock';
 
 /**
@@ -46,12 +47,16 @@ export function GrownUpGate({ children }: { children: ReactNode }): JSX.Element 
     return () => clearTimeout(timer);
   }, [waiting, router, pathname, search]);
 
+  const location = useMemo(() => ({ pathname, search }), [pathname, search]);
+
   if (exempt) return <>{children}</>;
   if (!auth.ready || !auth.session) return <Pending />;
   return (
-    <GrownUpLock pathname={pathname} search={search} onSignInAgain={(url) => void auth.signOut(url)}>
-      {children}
-    </GrownUpLock>
+    <GrownUpLocationContext.Provider value={location}>
+      <GrownUpLock pathname={pathname} search={search} onSignInAgain={(url) => void auth.signOut(url)}>
+        {children}
+      </GrownUpLock>
+    </GrownUpLocationContext.Provider>
   );
 }
 

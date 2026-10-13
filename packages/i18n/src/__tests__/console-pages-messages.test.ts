@@ -14,10 +14,7 @@ const c = getMessages('en').console;
 
 describe('console shell (ui.tsx)', () => {
   it('keeps the header words', () => {
-    expect(c.shell.backToSite).toBe('← Hangul Route');
     expect(c.shell.home).toBe('Console');
-    expect(c.shell.account.cta).toBe('Account');
-    expect(c.shell.billing.cta).toBe('Billing');
     expect(c.shell.signOut.cta).toBe('Sign out');
     expect(c.shell.noApi).toBe('The console needs an API address (NEXT_PUBLIC_API_BASE_URL) on this build.');
   });
@@ -86,13 +83,11 @@ describe('start page (teach/start/page.tsx, routing.ts ROLE_CARDS and prefillNam
 });
 
 describe('home page (teach/home/page.tsx)', () => {
-  it('keeps the greeting, the list words and the buttons', () => {
+  it('keeps the list words and the buttons', () => {
     const h = c.home;
-    expect(h.title('Ms Kim')).toBe('Hi, Ms Kim');
     expect(h.lastList).toBe('Showing the last list we loaded.');
     expect(h.archived).toBe('(archived)');
     expect(h.open.cta).toBe('Open →');
-    expect(h.newSpace.cta).toBe('+ New space');
   });
 });
 

@@ -289,6 +289,8 @@ export const a11y = {
   /** The grown-up shell (F-APP-001 section 3.16): router pages announce this in a polite live region. */
   shell: {
     redirecting: 'Taking you to your home…',
+    /** The persona switch's group label (F-APP-001 section 3.16). */
+    personaSwitch: 'Switch between Family and Teacher',
   },
   /**
    * The route marks read as words (F-ENT-003 section 3.7, 3.14, Appendix A; PR E3-5): a Journey cell label

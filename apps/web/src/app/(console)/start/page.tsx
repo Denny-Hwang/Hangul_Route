@@ -4,7 +4,8 @@ import { colors, radii, spacing, typography } from '@hangul-route/design-system/
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useState } from 'react';
 import { personaHint, type SpaceKind } from '@hangul-route/content-schema';
-import { Button, ConsoleShell, Field, Muted, Notice, panelStyle } from '@/components/console/ui';
+import { Button, Field, Muted, Notice, panelStyle } from '@/components/console/ui';
+import { AdultFrame } from '@/components/console/AdultFrame';
 import { useConsole } from '@/components/console/use-console';
 import { codeExpiry } from '@/lib/console/rollup';
 import { ROUTES, landingAfterCreate, prefillName, presetKind, roleCards } from '@/lib/console/routing';
@@ -30,7 +31,7 @@ function StartInner(): JSX.Element {
   const [message, setMessage] = useState<'signInAgain' | 'createFailed' | null>(null);
   const [copied, setCopied] = useState(false);
 
-  if (!ready || !session) return <ConsoleShell>{null}</ConsoleShell>;
+  if (!ready || !session) return <AdultFrame>{null}</AdultFrame>;
 
   const create = async (): Promise<void> => {
     if (step.at !== 'name' || !api) return;
@@ -59,7 +60,7 @@ function StartInner(): JSX.Element {
   };
 
   return (
-    <ConsoleShell onSignOut={signOut} title={c.start.title}>
+    <AdultFrame onSignOut={signOut} title={c.start.title}>
       <div style={{ maxWidth: 560, margin: '0 auto' }}>
         {step.at === 'role' ? (
           <>
@@ -139,13 +140,13 @@ function StartInner(): JSX.Element {
           </>
         )}
       </div>
-    </ConsoleShell>
+    </AdultFrame>
   );
 }
 
 export default function StartPage(): JSX.Element {
   return (
-    <Suspense fallback={<ConsoleShell>{null}</ConsoleShell>}>
+    <Suspense fallback={<AdultFrame>{null}</AdultFrame>}>
       <StartInner />
     </Suspense>
   );
