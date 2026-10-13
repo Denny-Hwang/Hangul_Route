@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Start a move: every state (F-SPACE-002 mock, T-6c)</title>
+<link rel="stylesheet" href="transfer.css">
+</head>
+<body>
+<main class="board"><h1 class="page-title">Start sheet and the settings rows: every state</h1><p class="annot">Wireframe screen 1, spec 4.8. One field (the shipped join field), Find class, then the name from the server preview, never typed. Errors sit under the field, calm, one sentence; "cannot send" is one neutral message with no reason.</p><div class="board-grid"><div class="board-item"><p class="board-label">class settings row: Move next to Remove, outside the Danger zone</p><div class="sample"><div class="sample-pad stack-md"><ul class="learner-rows"><li class="learner-row"><div class="who"><span class="chip" style="background: var(--colors-hoya-furBlueDark)" aria-hidden="true"></span><div><p class="space-name">Mina</p><p class="space-status">joined 3 weeks ago</p></div></div>
+  <div class="stack" style="gap: var(--spacing-xs)"><div class="row-wrap"><button type="button" class="btn btn-small">Move to another class</button><button type="button" class="btn btn-small">Remove from class</button></div></div></li></ul></div></div></div>
+<div class="board-item"><p class="board-label">family settings row: "Move to a class" only for a learner in a live class (opens the family start flow with learner and class chosen)</p><div class="sample"><div class="sample-pad stack-md"><ul class="learner-rows"><li class="learner-row"><div class="who"><span class="chip" style="background: var(--colors-hoya-furBlueDark)" aria-hidden="true"></span><div><p class="space-name">Mina</p><p class="space-status">joined 3 weeks ago</p></div></div>
+  <div class="stack" style="gap: var(--spacing-xs)"><div class="row-wrap"><button type="button" class="btn btn-small">Move to a class</button><button type="button" class="btn btn-small">Remove from family</button></div></div></li><li class="learner-row"><div class="who"><span class="chip" style="background: var(--colors-hoya-furGreenDark)" aria-hidden="true"></span><div><p class="space-name">Jun</p><p class="space-status">joined 3 weeks ago</p></div></div>
+  <div class="stack" style="gap: var(--spacing-xs)"><div class="row-wrap"><button type="button" class="btn btn-small">Remove from family</button></div></div></li></ul></div></div></div>
+<div class="board-item"><p class="board-label">offline: Move disabled with the line as its description</p><div class="sample"><div class="sample-pad stack-md"><ul class="learner-rows"><li class="learner-row"><div class="who"><span class="chip" style="background: var(--colors-hoya-furBlueDark)" aria-hidden="true"></span><div><p class="space-name">Mina</p><p class="space-status">joined 3 weeks ago</p></div></div>
+  <div class="stack" style="gap: var(--spacing-xs)"><div class="row-wrap"><button type="button" class="btn btn-small" disabled aria-describedby="net-34">Move to another class</button><button type="button" class="btn btn-small">Remove from class</button></div><p class="row-help" id="net-34">This needs internet.</p></div></li></ul></div></div></div>
+<div class="board-item"><p class="board-label">archived class: no Move (settings stays readable); school rows never show Move</p><div class="sample"><div class="sample-pad stack-md"><ul class="learner-rows"><li class="learner-row"><div class="who"><span class="chip" style="background: var(--colors-hoya-furBlueDark)" aria-hidden="true"></span><div><p class="space-name">Mina</p><p class="space-status">joined 3 weeks ago</p></div></div>
+  <div class="stack" style="gap: var(--spacing-xs)"><div class="row-wrap"></div></div></li></ul></div></div></div>
+<div class="board-item"><p class="board-label">step 1, empty: focus on the heading; Find class is the primary</p><div class="sample"><div class="sheet-page" style="min-height: 0"><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-36">
+  <div class="sheet-head"><h2 id="sheet-36" tabindex="-1">Move Mina to another class</h2><button type="button" class="icon-btn" aria-label="Close"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6.5 6.5 L17.5 17.5" style="fill: none; stroke: var(--colors-text-primary); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round"/><path d="M17.5 6.5 L6.5 17.5" style="fill: none; stroke: var(--colors-text-primary); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round"/></svg></button></div>
+  <div class="sheet-step"><p><span class="sheet-step-num">1.</span> Ask the other teacher for their class code.</p>
+  <div class="code-field"><label for="code-37">Class code</label>
+  <div class="code-row"><div class="code-col"><input class="code-input" id="code-37" value="" placeholder="ABC123" maxlength="6" autocomplete="off" autocapitalize="characters" spellcheck="false" aria-describedby="rules-39">
+  <p class="code-rules" id="rules-39">6 letters or numbers — no O, I, 0 or 1</p></div><button type="button" class="btn btn-primary">Find class</button></div>
+  </div></div>
+  
+  <div class="sheet-actions"><button type="button" class="btn ">Cancel</button></div>
+</div></div></div></div>
+<div class="board-item"><p class="board-label">step 1, looking (Find class pressed)</p><div class="sample"><div class="sheet-page" style="min-height: 0"><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-40">
+  <div class="sheet-head"><h2 id="sheet-40" tabindex="-1">Move Mina to another class</h2><button type="button" class="icon-btn" aria-label="Close"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6.5 6.5 L17.5 17.5" style="fill: none; stroke: var(--colors-text-primary); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round"/><path d="M17.5 6.5 L6.5 17.5" style="fill: none; stroke: var(--colors-text-primary); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round"/></svg></button></div>
+  <div class="sheet-step"><p><span class="sheet-step-num">1.</span> Ask the other teacher for their class code.</p>
+  <div class="code-field"><label for="code-41">Class code</label>
+  <div class="code-row"><div class="code-col"><input class="code-input" id="code-41" value="K7PM4Q" placeholder="ABC123" maxlength="6" autocomplete="off" autocapitalize="characters" spellcheck="false" aria-describedby="rules-43">
+  <p class="code-rules" id="rules-43">6 letters or numbers — no O, I, 0 or 1</p></div><button type="button" class="btn " aria-disabled="true">Looking…</button></div>
+  </div></div>
+  
+  <div class="sheet-actions"><button type="button" class="btn ">Cancel</button></div>
+</div></div></div></div>
+<div class="board-item"><p class="board-label">wrong code (code_not_found, invalid_code)</p><div class="sample"><div class="sheet-page" style="min-height: 0"><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-44">
+  <div class="sheet-head"><h2 id="sheet-44" tabindex="-1">Move Mina to another class</h2><button type="button" class="icon-btn" aria-label="Close"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6.5 6.5 L17.5 17.5" style="fill: none; stroke: var(--colors-text-primary); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round"/><path d="M17.5 6.5 L6.5 17.5" style="fill: none; stroke: var(--colors-text-primary); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round"/></svg></button></div>
+  <div class="sheet-step"><p><span class="sheet-step-num">1.</span> Ask the other teacher for their class code.</p>
+  <div class="code-field"><label for="code-45">Class code</label>
+  <div class="code-row"><div class="code-col"><input class="code-input" id="code-45" value="K7PM4X" placeholder="ABC123" maxlength="6" autocomplete="off" autocapitalize="characters" spellcheck="false" aria-describedby="rules-47 err-46" aria-invalid="true">
+  <p class="code-rules" id="rules-47">6 letters or numbers — no O, I, 0 or 1</p></div><button type="button" class="btn btn-primary">Find class</button></div>
+  <p class="field-error" id="err-46" role="alert">That code didn't work.</p></div></div>
+  
+  <div class="sheet-actions"><button type="button" class="btn ">Cancel</button></div>
+</div></div></div></div>
+<div class="board-item"><p class="board-label">code_expired</p><div class="sample"><div class="sheet-page" style="min-height: 0"><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-48">
+  <div class="sheet-head"><h2 id="sheet-48" tabindex="-1">Move Mina to another class</h2><button type="button" class="icon-btn" aria-label="Close"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6.5 6.5 L17.5 17.5" style="fill: none; stroke: var(--colors-text-primary); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round"/><path d="M17.5 6.5 L6.5 17.5" style="fill: none; stroke: var(--colors-text-primary); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round"/></svg></button></div>
+  <div class="sheet-step"><p><span class="sheet-step-num">1.</span> Ask the other teacher for their class code.</p>
+  <div class="code-field"><label for="code-49">Class code</label>
+  <div class="code-row"><div class="code-col"><input class="code-input" id="code-49" value="H3RT9W" placeholder="ABC123" maxlength="6" autocomplete="off" autocapitalize="characters" spellcheck="false" aria-describedby="rules-51 err-50" aria-invalid="true">
+  <p class="code-rules" id="rules-51">6 letters or numbers — no O, I, 0 or 1</p></div><button type="button" class="btn btn-primary">Find class</button></div>
+  <p class="field-error" id="err-50" role="alert">That code is too old. Ask for a new one.</p></div></div>
+  
+  <div class="sheet-actions"><button type="button" class="btn ">Cancel</button></div>
+</div></div></div></div>
+<div class="board-item"><p class="board-label">cap_class / cap_school at preview</p><div class="sample"><div class="sheet-page" style="min-height: 0"><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-52">
+  <div class="sheet-head"><h2 id="sheet-52" tabindex="-1">Move Mina to another class</h2><button type="button" class="icon-btn" aria-label="Close"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6.5 6.5 L17.5 17.5" style="fill: none; stroke: var(--colors-text-primary); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round"/><path d="M17.5 6.5 L6.5 17.5" style="fill: none; stroke: var(--colors-text-primary); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round"/></svg></button></div>
+  <div class="sheet-step"><p><span class="sheet-step-num">1.</span> Ask the other teacher for their class code.</p>
+  <div class="code-field"><label for="code-53">Class code</label>
+  <div class="code-row"><div class="code-col"><input class="code-input" id="code-53" value="K7PM4Q" placeholder="ABC123" maxlength="6" autocomplete="off" autocapitalize="characters" spellcheck="false" aria-describedby="rules-55 err-54" aria-invalid="true">
+  <p class="code-rules" id="rules-55">6 letters or numbers — no O, I, 0 or 1</p></div><button type="button" class="btn btn-primary">Find class</button></div>
+  <p class="field-error" id="err-54" role="alert">That class is full right now.</p></div></div>
+  
+  <div class="sheet-actions"><button type="button" class="btn ">Cancel</button></div>
+</div></div></div></div>
+<div class="board-item"><p class="board-label">already_member</p><div class="sample"><div class="sheet-page" style="min-height: 0"><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-56">
+  <div class="sheet-head"><h2 id="sheet-56" tabindex="-1">Move Mina to another class</h2><button type="button" class="icon-btn" aria-label="Close"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6.5 6.5 L17.5 17.5" style="fill: none; stroke: var(--colors-text-primary); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round"/><path d="M17.5 6.5 L6.5 17.5" style="fill: none; stroke: var(--colors-text-primary); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round"/></svg></button></div>
+  <div class="sheet-step"><p><span class="sheet-step-num">1.</span> Ask the other teacher for their class code.</p>
+  <div class="code-field"><label for="code-57">Class code</label>
+  <div class="code-row"><div class="code-col"><input class="code-input" id="code-57" value="K7PM4Q" placeholder="ABC123" maxlength="6" autocomplete="off" autocapitalize="characters" spellcheck="false" aria-describedby="rules-59 err-58" aria-invalid="true">
+  <p class="code-rules" id="rules-59">6 letters or numbers — no O, I, 0 or 1</p></div><button type="button" class="btn btn-primary">Find class</button></div>
+  <p class="field-error" id="err-58" role="alert">Mina is already in that class.</p></div></div>
+  
+  <div class="sheet-actions"><button type="button" class="btn ">Cancel</button></div>
+</div></div></div></div>
+<div class="board-item"><p class="board-label">too_many_attempts (durable limiter)</p><div class="sample"><div class="sheet-page" style="min-height: 0"><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-60">
+  <div class="sheet-head"><h2 id="sheet-60" tabindex="-1">Move Mina to another class</h2><button type="button" class="icon-btn" aria-label="Close"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6.5 6.5 L17.5 17.5" style="fill: none; stroke: var(--colors-text-primary); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round"/><path d="M17.5 6.5 L6.5 17.5" style="fill: none; stroke: var(--colors-text-primary); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round"/></svg></button></div>
+  <div class="sheet-step"><p><span class="sheet-step-num">1.</span> Ask the other teacher for their class code.</p>
+  <div class="code-field"><label for="code-61">Class code</label>
+  <div class="code-row"><div class="code-col"><input class="code-input" id="code-61" value="K7PM4Q" placeholder="ABC123" maxlength="6" autocomplete="off" autocapitalize="characters" spellcheck="false" aria-describedby="rules-63 err-62" aria-invalid="true">
+  <p class="code-rules" id="rules-63">6 letters or numbers — no O, I, 0 or 1</p></div><button type="button" class="btn btn-primary">Find class</button></div>
+  <p class="field-error" id="err-62" role="alert">Too many tries. Try again later.</p></div></div>
+  
+  <div class="sheet-actions"><button type="button" class="btn ">Cancel</button></div>
+</div></div></div></div>
+<div class="board-item"><p class="board-label">cannot_send: family switched teacher requests off, learner manages their own classes, or a recent refusal; one neutral message</p><div class="sample"><div class="sheet-page" style="min-height: 0"><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-64">
+  <div class="sheet-head"><h2 id="sheet-64" tabindex="-1">Move Mina to another class</h2><button type="button" class="icon-btn" aria-label="Close"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6.5 6.5 L17.5 17.5" style="fill: none; stroke: var(--colors-text-primary); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round"/><path d="M17.5 6.5 L6.5 17.5" style="fill: none; stroke: var(--colors-text-primary); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round"/></svg></button></div>
+  <div class="sheet-step"><p><span class="sheet-step-num">1.</span> Ask the other teacher for their class code.</p>
+  <div class="code-field"><label for="code-65">Class code</label>
+  <div class="code-row"><div class="code-col"><input class="code-input" id="code-65" value="K7PM4Q" placeholder="ABC123" maxlength="6" autocomplete="off" autocapitalize="characters" spellcheck="false" aria-describedby="rules-67 err-66" aria-invalid="true">
+  <p class="code-rules" id="rules-67">6 letters or numbers — no O, I, 0 or 1</p></div><button type="button" class="btn btn-primary">Find class</button></div>
+  <p class="field-error" id="err-66" role="alert">This request can't be sent right now.</p></div></div>
+  
+  <div class="sheet-actions"><button type="button" class="btn ">Cancel</button></div>
+</div></div></div></div>
+<div class="board-item"><p class="board-label">family_needed: no family account can answer</p><div class="sample"><div class="sheet-page" style="min-height: 0"><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-68">
+  <div class="sheet-head"><h2 id="sheet-68" tabindex="-1">Move Mina to another class</h2><button type="button" class="icon-btn" aria-label="Close"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6.5 6.5 L17.5 17.5" style="fill: none; stroke: var(--colors-text-primary); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round"/><path d="M17.5 6.5 L6.5 17.5" style="fill: none; stroke: var(--colors-text-primary); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round"/></svg></button></div>
+  <div class="sheet-step"><p><span class="sheet-step-num">1.</span> Ask the other teacher for their class code.</p>
+  <div class="code-field"><label for="code-69">Class code</label>
+  <div class="code-row"><div class="code-col"><input class="code-input" id="code-69" value="K7PM4Q" placeholder="ABC123" maxlength="6" autocomplete="off" autocapitalize="characters" spellcheck="false" aria-describedby="rules-71 err-70" aria-invalid="true">
+  <p class="code-rules" id="rules-71">6 letters or numbers — no O, I, 0 or 1</p></div><button type="button" class="btn btn-primary">Find class</button></div>
+  <p class="field-error" id="err-70" role="alert">A family account is needed to answer this. Ask the family to start the move from their app.</p></div></div>
+  
+  <div class="sheet-actions"><button type="button" class="btn ">Cancel</button></div>
+</div></div></div></div>
+<div class="board-item"><p class="board-label">step 2, class found (server preview): Send request</p><div class="sample"><div class="sheet-page" style="min-height: 0"><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-72">
+  <div class="sheet-head"><h2 id="sheet-72" tabindex="-1">Move Mina to another class</h2><button type="button" class="icon-btn" aria-label="Close"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6.5 6.5 L17.5 17.5" style="fill: none; stroke: var(--colors-text-primary); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round"/><path d="M17.5 6.5 L6.5 17.5" style="fill: none; stroke: var(--colors-text-primary); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round"/></svg></button></div>
+  <div class="sheet-step"><p><span class="sheet-step-num">1.</span> Ask the other teacher for their class code.</p>
+  <div class="code-field"><label for="code-73">Class code</label>
+  <div class="code-row"><div class="code-col"><input class="code-input" id="code-73" value="K7PM4Q" placeholder="ABC123" maxlength="6" autocomplete="off" autocapitalize="characters" spellcheck="false" aria-describedby="rules-75">
+  <p class="code-rules" id="rules-75">6 letters or numbers — no O, I, 0 or 1</p></div><button type="button" class="btn ">Find class</button></div>
+  </div></div>
+  <div class="sheet-step"><div class="found"><p class="found-title"><span class="sheet-step-num">2.</span> Move to "Saturday Class B"?</p>
+      <ul class="sheet-bullets"><li>The family is asked first. The other teacher sees only initials and a level until the family says yes.</li><li>Nothing changes until everyone has said yes, and then not for 2 days.</li><li>Mina keeps cards and stars. You can cancel any time before the move.</li></ul></div></div>
+  <div class="sheet-actions"><button type="button" class="btn btn-primary">Send request</button><button type="button" class="btn ">Cancel</button></div>
+</div></div></div></div>
+<div class="board-item"><p class="board-label">sent: the sheet closes to this line on the settings page; View opens the requests page</p><div class="sample"><div class="sample-pad stack-md"><p class="done-line" role="status">Request sent. Nothing changes until everyone says yes.</p><div class="row-wrap"><button type="button" class="btn btn-small">View</button></div></div></div></div></div></main>
+
+</body>
+</html>

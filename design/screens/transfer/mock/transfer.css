@@ -1,0 +1,193 @@
+/*
+ * F-SPACE-002 T-0b design pass: static design mock of the class-move screens (console and learner app), not
+ * shipped code. Spec: docs/specs/F-SPACE-002-class-transfer.md (sections 4.2, 4.8, 4.10 to 4.14); wireframe:
+ * design/wireframes/console/class-transfer.md. The adult frame, the buttons, the learner-app parts and the design
+ * board come unchanged from the app-shell mock (#420), whose custom properties are the tokens of
+ * packages/design-system/src/tokens.ts named after the token (--spacing-xl is spacing.xl). The block below adds the
+ * four tokens this pass needs that the app-shell block does not copy. Text in rem, the console switch in em (45em,
+ * F-APP-001 section 3.8), learner screens in px. The few numbers that are not tokens are in ../README.md,
+ * "Constants".
+ */
+@import url("../../app-shell/mock/app-shell.css");
+
+:root {
+  --colors-feedback-nudge: #F2B33D;       /* colors.feedback.nudge: the amber of the waiting-for-room block (never feedback.danger) */
+  --colors-feedback-successDark: #2C5E3F; /* colors.feedback.successDark: the "said yes" check and its word */
+  --shadow-modal: 0 12px 32px rgba(42, 31, 20, 0.18); /* shadows.modal (shadowColor text.primary, opacity 0.18, radius 32, y 12) */
+  --z-modal: 40;                          /* z.modal */
+}
+
+/* Constants: values that are not tokens (README "Constants"). */
+:root {
+  --step-icon: 20px;   /* the Icon size of the step ticks: the console's inline glyph size (app-shell way back, 20 px) */
+  --code-field: 18rem; /* the class code field: six size.display characters (about 0.7em each) with spacing.sm tracking, plus spacing.md padding each side, measured 270 px */
+}
+
+/* ------------------------------------------------------------------------------------------ */
+/* Page head with the space name under the h1 (requests page, family page)                     */
+/* ------------------------------------------------------------------------------------------ */
+.move-layout { display: flex; flex-direction: column; gap: var(--spacing-xl); max-width: var(--max-width-reading); }
+.back-link { display: inline-flex; align-items: center; gap: var(--spacing-xs); min-height: var(--touch-min); padding-inline: var(--spacing-xs) var(--spacing-sm); align-self: flex-start; color: var(--colors-brand-secondaryDark); font-weight: var(--weight-semibold); text-decoration: underline; text-underline-offset: var(--spacing-xs); }
+.move-title { font-size: var(--size-title); line-height: var(--leading-tight); font-weight: var(--weight-bold); display: flex; flex-direction: column; gap: var(--spacing-xxs); }
+.move-title .space-sub { font-size: var(--size-bodyLg); font-weight: var(--weight-semibold); color: var(--colors-text-secondary); overflow-wrap: anywhere; }
+.group { display: flex; flex-direction: column; gap: var(--spacing-md); }
+.group > h2 { font-size: var(--size-bodyLg); font-weight: var(--weight-bold); }
+
+/* ------------------------------------------------------------------------------------------ */
+/* Move card: one request. Paper, quiet border, never a coloured edge for a state.             */
+/* ------------------------------------------------------------------------------------------ */
+.move-card { background: var(--colors-surface-paper); border: var(--border-width-thin) solid var(--colors-border-subtle); border-radius: var(--radii-lg); padding: var(--spacing-lg); display: flex; flex-direction: column; gap: var(--spacing-md); box-shadow: var(--shadow-card); }
+.move-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; column-gap: var(--spacing-md); row-gap: var(--spacing-xxs); }
+.move-who { display: flex; align-items: center; gap: var(--spacing-sm); font-size: var(--size-bodyLg); font-weight: var(--weight-bold); line-height: var(--leading-tight); overflow-wrap: anywhere; min-width: 0; }
+.move-route { display: flex; flex-wrap: wrap; align-items: center; gap: var(--spacing-xs); font-weight: var(--weight-semibold); overflow-wrap: anywhere; }
+.move-when { color: var(--colors-text-secondary); font-size: var(--size-bodySm); }
+.move-line { color: var(--colors-text-secondary); line-height: var(--leading-relaxed); }
+.move-line strong { color: var(--colors-text-primary); }
+.move-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--spacing-sm); }
+.move-actions .push { margin-left: auto; }
+.level-pill { display: inline-flex; align-items: center; padding: var(--spacing-xxs) var(--spacing-sm); border-radius: var(--radii-pill); background: var(--colors-surface-sunken); color: var(--colors-text-muted); font-size: var(--size-caption); font-weight: var(--weight-semibold); }
+.alias { font-size: var(--size-bodyLg); font-weight: var(--weight-bold); letter-spacing: var(--tracking-wide); }
+
+/* The three steps: text first, a check-mark glyph for "said yes" and a dash for "waiting", never colour alone. */
+.steps { display: flex; flex-direction: column; border-top: var(--border-width-thin) solid var(--colors-border-subtle); }
+.step { display: flex; align-items: center; gap: var(--spacing-sm); min-height: var(--spacing-xxxl); border-bottom: var(--border-width-thin) solid var(--colors-border-subtle); }
+.step .icon { width: var(--step-icon); height: var(--step-icon); }
+.step-who { flex: 1; min-width: 0; font-weight: var(--weight-semibold); overflow-wrap: anywhere; }
+.step-state { color: var(--colors-text-muted); font-size: var(--size-bodySm); }
+.step.yes .step-state { color: var(--colors-feedback-successDark); font-weight: var(--weight-semibold); }
+@media (min-width: 45em) {
+  .steps { flex-direction: row; border-top: none; gap: var(--spacing-sm); }
+  .step { flex: 1 1 0; min-width: 0; flex-wrap: wrap; column-gap: var(--spacing-xs); padding: var(--spacing-sm) var(--spacing-md); border: var(--border-width-thin) solid var(--colors-border-subtle); border-radius: var(--radii-md); }
+  .step-who { flex: 1 1 auto; }
+}
+
+/* Scheduled and ended: one quiet line. History: date-only rows, no names. */
+.move-card.quiet { box-shadow: none; background: var(--colors-surface-canvas); }
+.history { background: var(--colors-surface-paper); border: var(--border-width-thin) solid var(--colors-border-subtle); border-radius: var(--radii-lg); }
+.history li { display: flex; flex-wrap: wrap; justify-content: space-between; column-gap: var(--spacing-md); padding: var(--spacing-md) var(--spacing-lg); color: var(--colors-text-secondary); }
+.history li + li { border-top: var(--border-width-thin) solid var(--colors-border-subtle); }
+.history time { color: var(--colors-text-muted); font-size: var(--size-bodySm); }
+
+/* Waiting for room: amber nudge tint, a pause glyph in text.primary and the sentence; the amber bar is decoration. */
+.room-block { display: flex; align-items: flex-start; gap: var(--spacing-sm); padding: var(--spacing-md); border-radius: var(--radii-md); background: var(--colors-feedback-nudgeLight); border-left: var(--border-width-thick) solid var(--colors-feedback-nudge); color: var(--colors-text-primary); }
+.room-block .icon { margin-top: var(--spacing-xxs); }
+
+/* Neutral notices (locked, signed out, role lost, family too new, conflicted, not available in your language). */
+.notice { padding: var(--spacing-md) var(--spacing-lg); border-radius: var(--radii-md); background: var(--colors-surface-sunken); color: var(--colors-text-primary); line-height: var(--leading-relaxed); }
+.done-line { padding: var(--spacing-md) var(--spacing-lg); border-radius: var(--radii-md); background: var(--colors-feedback-successLight); color: var(--colors-text-primary); line-height: var(--leading-relaxed); }
+.error-line { color: var(--colors-text-primary); font-weight: var(--weight-semibold); }
+
+/* "Not now" with two quiet reasons on the receiving class only: a disclosure with two buttons, not an ARIA menu. */
+.reasons { display: flex; flex-wrap: wrap; gap: var(--spacing-sm); padding: var(--spacing-sm); border: var(--border-width-thin) solid var(--colors-border-subtle); border-radius: var(--radii-md); background: var(--colors-surface-canvas); width: 100%; }
+.chev { display: inline-block; width: var(--spacing-lg); height: var(--spacing-lg); }
+
+/* Skeleton */
+.skel { display: flex; flex-direction: column; gap: var(--spacing-sm); }
+.skel .skeleton-line.wide { width: 75%; }
+
+/* ------------------------------------------------------------------------------------------ */
+/* Settings learner rows (T-6c): Move sits next to Remove, outside the Danger zone.            */
+/* ------------------------------------------------------------------------------------------ */
+.settings-section { display: flex; flex-direction: column; gap: var(--spacing-sm); }
+.settings-section > h2 { font-size: var(--size-bodyLg); font-weight: var(--weight-bold); }
+.learner-rows { display: flex; flex-direction: column; gap: var(--spacing-sm); }
+.learner-row { background: var(--colors-surface-paper); border: var(--border-width-thin) solid var(--colors-border-subtle); border-radius: var(--radii-lg); padding: var(--spacing-md) var(--spacing-lg); display: flex; flex-direction: column; gap: var(--spacing-sm); }
+.learner-row .row-wrap .btn { flex: 1 1 auto; }
+.row-help { color: var(--colors-text-secondary); font-size: var(--size-bodySm); }
+@media (min-width: 45em) {
+  .learner-row { flex-direction: row; flex-wrap: wrap; align-items: center; justify-content: space-between; }
+  .learner-row .row-wrap .btn { flex: none; }
+}
+
+/* ------------------------------------------------------------------------------------------ */
+/* Sheets: console dialog (a centred card from 45em, full screen below) and the app sheets.    */
+/* The page behind is drawn as the overlay colour: a mock cannot keep the page under a modal. */
+/* ------------------------------------------------------------------------------------------ */
+.sheet-page { min-height: 100vh; background: var(--colors-surface-overlay); }
+.sheet { background: var(--colors-surface-paper); min-height: 100vh; padding: var(--spacing-lg) var(--gutter-compact) var(--spacing-xxl); display: flex; flex-direction: column; gap: var(--spacing-lg); }
+.sheet-head { display: flex; align-items: flex-start; gap: var(--spacing-sm); }
+.sheet-head h1, .sheet-head h2 { flex: 1; min-width: 0; font-size: var(--size-prompt); line-height: var(--leading-tight); font-weight: var(--weight-bold); overflow-wrap: anywhere; padding-top: var(--spacing-md); }
+.icon-btn { display: inline-flex; align-items: center; justify-content: center; width: var(--touch-min); height: var(--touch-min); flex: none; border-radius: var(--radii-pill); border: var(--border-width-thin) solid var(--colors-border-strong); background: var(--colors-surface-paper); cursor: pointer; }
+.sheet-tools { display: flex; flex-wrap: wrap; align-items: center; gap: var(--spacing-sm); }
+.sheet-step { display: flex; flex-direction: column; gap: var(--spacing-sm); }
+.sheet-step-num { font-weight: var(--weight-bold); }
+.sheet-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--spacing-sm); padding-top: var(--spacing-sm); }
+.sheet-actions .btn-primary { flex: 1 1 14rem; }
+.sheet-bullets { display: flex; flex-direction: column; gap: var(--spacing-xs); padding-left: var(--spacing-lg); list-style: disc; color: var(--colors-text-secondary); line-height: var(--leading-relaxed); }
+.sheet-bullets li { padding-left: var(--spacing-xxs); }
+@media (min-width: 45em) {
+  .sheet-page { padding: var(--spacing-xxl) var(--gutter-regular); }
+  .sheet { min-height: 0; max-width: var(--max-width-reading); margin: 0 auto; border-radius: var(--radii-lg); box-shadow: var(--shadow-modal); padding: var(--spacing-xl) var(--spacing-xxl) var(--spacing-xxl); }
+}
+
+/* The class code field: the shipped join field (JoinSpaceScreen): centred display text, spacing.sm tracking. */
+.code-field { display: flex; flex-direction: column; gap: var(--spacing-xs); }
+.code-field label { font-weight: var(--weight-semibold); }
+.code-row { display: flex; flex-wrap: wrap; align-items: stretch; gap: var(--spacing-sm); }
+.code-input { flex: 1 1 var(--code-field); max-width: 100%; min-height: var(--touch-hero); padding: 0 var(--spacing-md); text-align: center; font-size: var(--size-display); font-weight: var(--weight-bold); letter-spacing: var(--spacing-sm); text-transform: uppercase; color: var(--colors-text-primary); background: var(--colors-surface-paper); border: var(--border-width-base) solid var(--colors-border-subtle); border-radius: var(--radii-lg); }
+.code-input::placeholder { color: var(--colors-text-muted); }
+.code-row .btn { flex: 0 1 auto; min-height: var(--touch-hero); }
+.code-rules { color: var(--colors-text-muted); font-size: var(--size-bodySm); }
+.field-error { color: var(--colors-text-primary); font-weight: var(--weight-semibold); line-height: var(--leading-relaxed); }
+@media (min-width: 45em) { .code-input { flex: 0 1 var(--code-field); } }
+
+.found { display: flex; flex-direction: column; gap: var(--spacing-sm); padding: var(--spacing-lg); border-radius: var(--radii-md); background: var(--colors-surface-canvas); border: var(--border-width-thin) solid var(--colors-border-subtle); }
+.found-title { font-size: var(--size-bodyLg); font-weight: var(--weight-bold); line-height: var(--leading-tight); overflow-wrap: anywhere; }
+
+/* ------------------------------------------------------------------------------------------ */
+/* Consent sheet (T-6d console, T-7c app): one keyed list, canonical order, buttons last.      */
+/* ------------------------------------------------------------------------------------------ */
+.consent { display: flex; flex-direction: column; gap: var(--spacing-lg); }
+.consent-summary { display: flex; flex-direction: column; gap: var(--spacing-sm); padding: var(--spacing-lg); border-radius: var(--radii-md); background: var(--colors-brand-secondaryLight); }
+.consent-summary p { font-size: var(--size-body); line-height: var(--leading-relaxed); color: var(--colors-text-primary); }
+.consent-summary p:first-child { font-weight: var(--weight-bold); }
+.consent-lines { display: flex; flex-direction: column; gap: var(--spacing-md); }
+.consent-line { line-height: var(--leading-relaxed); }
+.consent-line.cond { padding-left: var(--spacing-md); border-left: var(--border-width-thick) solid var(--colors-border-strong); }
+.consent-list { display: flex; flex-direction: column; gap: var(--spacing-xs); padding-left: var(--spacing-lg); list-style: disc; color: var(--colors-text-secondary); line-height: var(--leading-relaxed); }
+.disclosure { display: flex; align-items: center; justify-content: space-between; gap: var(--spacing-sm); width: 100%; min-height: var(--touch-min); padding: var(--spacing-sm) var(--spacing-lg); border: var(--border-width-thin) solid var(--colors-border-strong); border-radius: var(--radii-md); background: var(--colors-surface-paper); font-weight: var(--weight-bold); text-align: left; cursor: pointer; }
+.disclosure[aria-expanded="true"] .chev { transform: rotate(90deg); }
+.who-block { display: flex; flex-direction: column; gap: var(--spacing-xs); padding: var(--spacing-md) var(--spacing-lg); border: var(--border-width-thin) solid var(--colors-border-subtle); border-radius: var(--radii-md); }
+.who-block h3 { font-size: var(--size-body); font-weight: var(--weight-bold); }
+.who-facts { display: flex; flex-direction: column; gap: var(--spacing-xxs); color: var(--colors-text-secondary); }
+.who-facts .fact-name { color: var(--colors-text-primary); font-weight: var(--weight-semibold); font-size: var(--size-bodyLg); overflow-wrap: anywhere; }
+.annot-id { font-family: var(--family-mono); font-size: var(--size-caption); color: var(--colors-text-muted); }
+.board .annot-id { display: block; }
+
+/* ------------------------------------------------------------------------------------------ */
+/* Learner app: Classes card rows (T-7b), sheets (T-7c), Home line                              */
+/* ------------------------------------------------------------------------------------------ */
+.app-card-title { font-size: var(--size-prompt); font-weight: var(--weight-bold); line-height: var(--leading-tight); }
+.space-line { display: flex; align-items: center; justify-content: space-between; gap: var(--spacing-md); }
+.space-line-text { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.space-line-name { font-weight: var(--weight-semibold); overflow-wrap: anywhere; }
+.space-line-btns { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--spacing-sm); }
+.rn-sm { min-height: var(--touch-min); padding: var(--spacing-xs) var(--spacing-lg); font-size: var(--size-bodySm); }
+.quiet-line { color: var(--colors-text-secondary); font-size: var(--size-bodySm); line-height: var(--leading-relaxed); }
+.pending-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--spacing-sm); padding: var(--spacing-sm) var(--spacing-md); border-radius: var(--radii-md); background: var(--colors-surface-sunken); }
+.pending-row p { flex: 1 1 12rem; line-height: var(--leading-relaxed); }
+.rows-gap { display: flex; flex-direction: column; gap: var(--spacing-md); }
+.app-sheet { display: flex; flex-direction: column; gap: var(--spacing-lg); }
+.app-sheet .rn-btn { width: 100%; }
+.home-line { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--spacing-sm); padding: var(--spacing-md) var(--spacing-lg); border-radius: var(--radii-lg); background: var(--colors-surface-paper); box-shadow: var(--shadow-card); }
+.home-line p { flex: 1 1 12rem; line-height: var(--leading-relaxed); }
+.gate-mark { display: inline-flex; }
+.app-code { width: 100%; min-height: var(--touch-hero); text-align: center; font-size: var(--size-display); font-weight: var(--weight-bold); letter-spacing: var(--spacing-sm); color: var(--colors-text-primary); background: var(--colors-surface-paper); border: var(--border-width-base) solid var(--colors-border-subtle); border-radius: var(--radii-lg); }
+.app-code::placeholder { color: var(--colors-text-muted); }
+.center { text-align: center; }
+
+/* Greyscale and protanopia check (check.html) */
+.contrast { width: 100%; border-collapse: collapse; font-size: var(--size-bodySm); }
+.contrast th, .contrast td { text-align: left; padding: var(--spacing-xs) var(--spacing-sm); border-bottom: var(--border-width-thin) solid var(--colors-border-subtle); vertical-align: top; }
+.move-line.with-icon { display: flex; align-items: flex-start; gap: var(--spacing-sm); color: var(--colors-text-primary); }
+.move-line.with-icon .icon { margin-top: var(--spacing-xxs); }
+.rn-back { flex: none; }
+.field { display: flex; flex-direction: column; gap: var(--spacing-xs); min-width: 0; max-width: 100%; font-weight: var(--weight-semibold); }
+.field .select, .sheet-tools .select { max-width: 100%; }
+.board .page-title { overflow-wrap: anywhere; }
+[hidden] { display: none !important; }
+.btn[aria-expanded="true"] .chev { transform: rotate(90deg); }
+.code-col { flex: 1 1 var(--code-field); max-width: 100%; display: flex; flex-direction: column; gap: var(--spacing-xs); }
+.code-col .code-input { flex: none; width: 100%; }
+.code-row { align-items: flex-start; }
+@media (min-width: 45em) { .code-col { flex: 0 1 var(--code-field); } }

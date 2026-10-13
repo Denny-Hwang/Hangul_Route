@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Classes card rows (F-SPACE-002 mock, learner app, T-7b)</title>
+<link rel="stylesheet" href="transfer.css">
+</head>
+<body>
+<main class="board"><h1 class="page-title">Learner app: Classes &amp; family card, the four row variants and their states</h1><p class="annot">Profile, then Classes &amp; family (SpacesCard). The route is decided from the inbox before any tap, so no PIN is spent on a dead end. Nothing new renders while transfersEnabled is false. A lock glyph marks a button behind the grown-up gate; its accessible name ends with "(PIN required)".</p><div class="board-grid"><div class="board-item"><p class="board-label">(a) class-linked tablet (class scope): no Move; one quiet line per card</p><div class="sample"><div class="app-screen" style="min-height: 0"><div class="stack-md">
+  <p class="unchanged" aria-hidden="true">Profile: profiles, stats, sound, language, plan, backup (unchanged)</p>
+  <section class="rn-card stack-md" aria-labelledby="cf-106"><h2 class="app-card-title" id="cf-106">Classes &amp; family</h2>
+  <div class="rows-gap"><div class="space-line"><div class="space-line-text"><span class="space-line-name">Sunday Class A</span><span class="rn-caption">Class</span></div><div class="space-line-btns"><button type="button" class="rn-btn rn-ghost rn-sm" aria-label="Leave Sunday Class A">Leave</button></div></div></div>
+  <p class="quiet-line">Use your grown-up's rescue code first.</p>
+  <button type="button" class="rn-btn rn-secondary">Join a class</button></section>
+</div></div></div></div>
+<div class="board-item"><p class="board-label">(b) the family has an account (route caregiver) and a teacher asked: read-only row, the quiet line; Review opens the gated read-only sheet whose only action is the veto (Not now)</p><div class="sample"><div class="app-screen" style="min-height: 0"><div class="stack-md">
+  <p class="unchanged" aria-hidden="true">Profile: profiles, stats, sound, language, plan, backup (unchanged)</p>
+  <section class="rn-card stack-md" aria-labelledby="cf-107"><h2 class="app-card-title" id="cf-107">Classes &amp; family</h2>
+  <div class="rows-gap"><div class="space-line"><div class="space-line-text"><span class="space-line-name">Sunday Class A</span><span class="rn-caption">Class</span></div><div class="space-line-btns"><button type="button" class="rn-btn rn-ghost rn-sm" aria-label="Leave Sunday Class A">Leave</button></div></div><div class="space-line"><div class="space-line-text"><span class="space-line-name">Kim family</span><span class="rn-caption">Family</span></div><div class="space-line-btns"><button type="button" class="rn-btn rn-ghost rn-sm" aria-label="Leave Kim family">Leave</button></div></div></div>
+  <div class="pending-row"><p>Sunday Class A asked about a move.</p><button type="button" class="rn-btn rn-ghost rn-sm" aria-label="Review (PIN required)"><span class="gate-mark"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M8.5 11 V8 A3.5 3.5 0 0 1 15.5 8 V11" style="fill: none; stroke: var(--colors-brand-primary); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round"/><path d="M7.5 11 H16.5 Q18 11 18 12.5 V18.5 Q18 20 16.5 20 H7.5 Q6 20 6 18.5 V12.5 Q6 11 7.5 11 Z" style="fill: var(--colors-brand-primary)"/></svg></span><span>Review</span></button></div><p class="quiet-line">Ask the grown-up with the account to answer this in the console.</p>
+  <button type="button" class="rn-btn rn-secondary">Join a class</button></section>
+</div></div></div></div>
+<div class="board-item"><p class="board-label">(c) this device can answer (route device: device consent on, no family account), nothing asked: Move beside Leave</p><div class="sample"><div class="app-screen" style="min-height: 0"><div class="stack-md">
+  <p class="unchanged" aria-hidden="true">Profile: profiles, stats, sound, language, plan, backup (unchanged)</p>
+  <section class="rn-card stack-md" aria-labelledby="cf-108"><h2 class="app-card-title" id="cf-108">Classes &amp; family</h2>
+  <div class="rows-gap"><div class="space-line"><div class="space-line-text"><span class="space-line-name">Sunday Class A</span><span class="rn-caption">Class</span></div><div class="space-line-btns"><button type="button" class="rn-btn rn-ghost rn-sm" aria-label="Move from Sunday Class A (PIN required)"><span class="gate-mark"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M8.5 11 V8 A3.5 3.5 0 0 1 15.5 8 V11" style="fill: none; stroke: var(--colors-brand-primary); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round"/><path d="M7.5 11 H16.5 Q18 11 18 12.5 V18.5 Q18 20 16.5 20 H7.5 Q6 20 6 18.5 V12.5 Q6 11 7.5 11 Z" style="fill: var(--colors-brand-primary)"/></svg></span><span>Move</span></button><button type="button" class="rn-btn rn-ghost rn-sm" aria-label="Leave Sunday Class A">Leave</button></div></div><div class="space-line"><div class="space-line-text"><span class="space-line-name">Weekday Class C</span><span class="rn-caption">Class</span></div><div class="space-line-btns"><button type="button" class="rn-btn rn-ghost rn-sm" aria-label="Leave Weekday Class C">Leave</button></div></div></div>
+  
+  <button type="button" class="rn-btn rn-secondary">Join a class</button></section>
+</div></div></div></div>
+<div class="board-item"><p class="board-label">(c) a learner-started move needs this device again (consent reset): the pending row with Review</p><div class="sample"><div class="app-screen" style="min-height: 0"><div class="stack-md">
+  <p class="unchanged" aria-hidden="true">Profile: profiles, stats, sound, language, plan, backup (unchanged)</p>
+  <section class="rn-card stack-md" aria-labelledby="cf-109"><h2 class="app-card-title" id="cf-109">Classes &amp; family</h2>
+  <div class="rows-gap"><div class="space-line"><div class="space-line-text"><span class="space-line-name">Sunday Class A</span><span class="rn-caption">Class</span></div><div class="space-line-btns"><button type="button" class="rn-btn rn-ghost rn-sm" aria-label="Move from Sunday Class A (PIN required)"><span class="gate-mark"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M8.5 11 V8 A3.5 3.5 0 0 1 15.5 8 V11" style="fill: none; stroke: var(--colors-brand-primary); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round"/><path d="M7.5 11 H16.5 Q18 11 18 12.5 V18.5 Q18 20 16.5 20 H7.5 Q6 20 6 18.5 V12.5 Q6 11 7.5 11 Z" style="fill: var(--colors-brand-primary)"/></svg></span><span>Move</span></button><button type="button" class="rn-btn rn-ghost rn-sm" aria-label="Leave Sunday Class A">Leave</button></div></div><div class="space-line"><div class="space-line-text"><span class="space-line-name">Weekday Class C</span><span class="rn-caption">Class</span></div><div class="space-line-btns"><button type="button" class="rn-btn rn-ghost rn-sm" aria-label="Leave Weekday Class C">Leave</button></div></div></div>
+  <div class="pending-row"><p>Asked: a move to Saturday Class B.</p><button type="button" class="rn-btn rn-primary rn-sm" aria-label="Review (PIN required)"><span class="gate-mark"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M8.5 11 V8 A3.5 3.5 0 0 1 15.5 8 V11" style="fill: none; stroke: var(--colors-text-onPrimary); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round"/><path d="M7.5 11 H16.5 Q18 11 18 12.5 V18.5 Q18 20 16.5 20 H7.5 Q6 20 6 18.5 V12.5 Q6 11 7.5 11 Z" style="fill: var(--colors-text-onPrimary)"/></svg></span><span>Review</span></button></div>
+  <button type="button" class="rn-btn rn-secondary">Join a class</button></section>
+</div></div></div></div>
+<div class="board-item"><p class="board-label">planned (the 2-day wait): any full-scope device of the learner can cancel, whatever the route (here (b))</p><div class="sample"><div class="app-screen" style="min-height: 0"><div class="stack-md">
+  <p class="unchanged" aria-hidden="true">Profile: profiles, stats, sound, language, plan, backup (unchanged)</p>
+  <section class="rn-card stack-md" aria-labelledby="cf-110"><h2 class="app-card-title" id="cf-110">Classes &amp; family</h2>
+  <div class="rows-gap"><div class="space-line"><div class="space-line-text"><span class="space-line-name">Sunday Class A</span><span class="rn-caption">Class</span></div><div class="space-line-btns"><button type="button" class="rn-btn rn-ghost rn-sm" aria-label="Leave Sunday Class A">Leave</button></div></div><div class="space-line"><div class="space-line-text"><span class="space-line-name">Kim family</span><span class="rn-caption">Family</span></div><div class="space-line-btns"><button type="button" class="rn-btn rn-ghost rn-sm" aria-label="Leave Kim family">Leave</button></div></div></div>
+  <div class="pending-row"><p>A move is planned for Oct 14.</p><button type="button" class="rn-btn rn-ghost rn-sm" aria-label="Cancel the move (PIN required)"><span class="gate-mark"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M8.5 11 V8 A3.5 3.5 0 0 1 15.5 8 V11" style="fill: none; stroke: var(--colors-brand-primary); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round"/><path d="M7.5 11 H16.5 Q18 11 18 12.5 V18.5 Q18 20 16.5 20 H7.5 Q6 20 6 18.5 V12.5 Q6 11 7.5 11 Z" style="fill: var(--colors-brand-primary)"/></svg></span><span>Cancel</span></button></div>
+  <button type="button" class="rn-btn rn-secondary">Join a class</button></section>
+</div></div></div></div>
+<div class="board-item"><p class="board-label">(c) self-managed adult on a self-only device with no PIN: the gate opens directly, so no lock glyph (selfManaged: the family route refuses, the device answers)</p><div class="sample"><div class="app-screen" style="min-height: 0"><div class="stack-md">
+  <p class="unchanged" aria-hidden="true">Profile: profiles, stats, sound, language, plan, backup (unchanged)</p>
+  <section class="rn-card stack-md" aria-labelledby="cf-111"><h2 class="app-card-title" id="cf-111">Classes &amp; family</h2>
+  <div class="rows-gap"><div class="space-line"><div class="space-line-text"><span class="space-line-name">Sunday Class A</span><span class="rn-caption">Class</span></div><div class="space-line-btns"><button type="button" class="rn-btn rn-ghost rn-sm" aria-label="Move from Sunday Class A">Move</button><button type="button" class="rn-btn rn-ghost rn-sm" aria-label="Leave Sunday Class A">Leave</button></div></div><div class="space-line"><div class="space-line-text"><span class="space-line-name">Kim family</span><span class="rn-caption">Family</span></div><div class="space-line-btns"><button type="button" class="rn-btn rn-ghost rn-sm" aria-label="Leave Kim family">Leave</button></div></div></div>
+  
+  <button type="button" class="rn-btn rn-secondary">Join a class</button></section>
+</div></div></div></div>
+<div class="board-item"><p class="board-label">(d) nobody can answer yet: a grown-up needs a PIN (device route available 24 hours after it is made)</p><div class="sample"><div class="app-screen" style="min-height: 0"><div class="stack-md">
+  <p class="unchanged" aria-hidden="true">Profile: profiles, stats, sound, language, plan, backup (unchanged)</p>
+  <section class="rn-card stack-md" aria-labelledby="cf-112"><h2 class="app-card-title" id="cf-112">Classes &amp; family</h2>
+  <div class="rows-gap"><div class="space-line"><div class="space-line-text"><span class="space-line-name">Sunday Class A</span><span class="rn-caption">Class</span></div><div class="space-line-btns"><button type="button" class="rn-btn rn-ghost rn-sm" aria-label="Leave Sunday Class A">Leave</button></div></div><div class="space-line"><div class="space-line-text"><span class="space-line-name">Weekday Class C</span><span class="rn-caption">Class</span></div><div class="space-line-btns"><button type="button" class="rn-btn rn-ghost rn-sm" aria-label="Leave Weekday Class C">Leave</button></div></div></div>
+  <p class="quiet-line">A grown-up needs to set up a PIN first. Open Profile, then Grown-ups.</p><button type="button" class="rn-btn rn-ghost">Set up PIN</button>
+  <button type="button" class="rn-btn rn-secondary">Join a class</button></section>
+</div></div></div></div>
+<div class="board-item"><p class="board-label">offline: Move disabled; Leave failing now shows the retry line instead of nothing</p><div class="sample"><div class="app-screen" style="min-height: 0"><div class="stack-md">
+  <p class="unchanged" aria-hidden="true">Profile: profiles, stats, sound, language, plan, backup (unchanged)</p>
+  <section class="rn-card stack-md" aria-labelledby="cf-113"><h2 class="app-card-title" id="cf-113">Classes &amp; family</h2>
+  <div class="rows-gap"><div class="space-line"><div class="space-line-text"><span class="space-line-name">Sunday Class A</span><span class="rn-caption">Class</span></div><div class="space-line-btns"><button type="button" class="rn-btn rn-ghost rn-sm" disabled aria-describedby="off-1">Move</button><button type="button" class="rn-btn rn-ghost rn-sm" aria-label="Leave Sunday Class A">Leave</button></div></div><div class="space-line"><div class="space-line-text"><span class="space-line-name">Weekday Class C</span><span class="rn-caption">Class</span></div><div class="space-line-btns"><button type="button" class="rn-btn rn-ghost rn-sm" aria-label="Leave Weekday Class C">Leave</button></div></div></div>
+  <p class="quiet-line" id="off-1" role="status">This needs internet. Try again when you are online.</p>
+  <button type="button" class="rn-btn rn-secondary">Join a class</button></section>
+</div></div></div></div>
+<div class="board-item"><p class="board-label">after the move, on a class-linked tablet of the old class (its next inbox call answers 401)</p><div class="sample"><div class="app-screen" style="min-height: 0"><div class="stack-md">
+  <p class="unchanged" aria-hidden="true">Profile: profiles, stats, sound, language, plan, backup (unchanged)</p>
+  <section class="rn-card stack-md" aria-labelledby="cf-114"><h2 class="app-card-title" id="cf-114">Classes &amp; family</h2>
+  <div class="rows-gap"></div>
+  <p class="quiet-line" role="status">Join your new class again.</p>
+  <button type="button" class="rn-btn rn-secondary">Join a class</button></section>
+</div></div></div></div>
+<div class="board-item"><p class="board-label">flag off (transfersEnabled false): today's card, unchanged</p><div class="sample"><div class="app-screen" style="min-height: 0"><div class="stack-md">
+  <p class="unchanged" aria-hidden="true">Profile: profiles, stats, sound, language, plan, backup (unchanged)</p>
+  <section class="rn-card stack-md" aria-labelledby="cf-115"><h2 class="app-card-title" id="cf-115">Classes &amp; family</h2>
+  <div class="rows-gap"><div class="space-line"><div class="space-line-text"><span class="space-line-name">Sunday Class A</span><span class="rn-caption">Class</span></div><div class="space-line-btns"><button type="button" class="rn-btn rn-ghost rn-sm" aria-label="Leave Sunday Class A">Leave</button></div></div><div class="space-line"><div class="space-line-text"><span class="space-line-name">Kim family</span><span class="rn-caption">Family</span></div><div class="space-line-btns"><button type="button" class="rn-btn rn-ghost rn-sm" aria-label="Leave Kim family">Leave</button></div></div></div>
+  
+  <button type="button" class="rn-btn rn-secondary">Join a class</button></section>
+</div></div></div></div></div></main>
+
+</body>
+</html>

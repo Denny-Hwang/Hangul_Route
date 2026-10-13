@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Class moves: every state (F-SPACE-002 mock, T-6b)</title>
+<link rel="stylesheet" href="transfer.css">
+</head>
+<body>
+<main class="board"><h1 class="page-title">Requests page (class): every state, and the roster and home entry points</h1><p class="annot">Wireframe console/class-transfer.md screen 2, spec 4.8. Cards show waiting / yes / scheduled / ended only. No card names who said no. No red: feedback.danger is not used on any move surface.</p><div class="board-grid"><div class="board-item"><p class="board-label">loading: skeleton cards, no spinner text</p><div class="sample"><div class="sample-pad stack-md"><div class="move-card"><div class="skel"><div class="skeleton-line short"></div><div class="skeleton-line wide"></div><div class="skeleton-line tall"></div></div></div><div class="move-card"><div class="skel"><div class="skeleton-line short"></div><div class="skeleton-line wide"></div></div></div></div></div></div>
+<div class="board-item"><p class="board-label">empty: the page stays reachable from the permanent Class moves button and stale links</p><div class="sample"><div class="sample-pad stack-md"><section class="group"><h2>Leaving this class</h2><p class="notice">Nothing waiting.</p></section></div></div></div>
+<div class="board-item"><p class="board-label">source, this class started it, waiting for the family (teacher-started, no family answer yet)</p><div class="sample"><div class="sample-pad stack-md"><article class="move-card" aria-labelledby="card-7">
+  <div class="move-head"><p class="move-who" id="card-7"><span class="chip" style="background: var(--colors-hoya-furBlueDark)" aria-hidden="true"></span><span>Mina</span></p><p class="move-when">asked 1 day ago · 13 days left</p></div>
+  
+  <ol class="steps" aria-label="Who has said yes"><li class="step"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M7 12 H17" style="fill: none; stroke: var(--colors-text-muted); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round"/></svg><span class="step-who">Family</span><span class="step-state">waiting</span></li><li class="step yes"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 12.5 L10 17.5 L19 6.5" style="fill: none; stroke: var(--colors-feedback-successDark); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round"/></svg><span class="step-who">This class</span><span class="step-state">you said yes</span></li><li class="step"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M7 12 H17" style="fill: none; stroke: var(--colors-text-muted); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round"/></svg><span class="step-who">New class</span><span class="step-state">waiting</span></li></ol>
+  <p class="move-line">Waiting for the family.</p>
+  <p class="move-line">New class: <strong>Saturday Class B</strong></p>
+  
+  <div class="move-actions"><button type="button" class="btn btn-quiet btn-small push">Cancel request</button></div>
+</article></div></div></div>
+<div class="board-item"><p class="board-label">source, the family started it and chose to name the new class</p><div class="sample"><div class="sample-pad stack-md"><article class="move-card" aria-labelledby="card-8">
+  <div class="move-head"><p class="move-who" id="card-8"><span class="chip" style="background: var(--colors-hoya-furGreenDark)" aria-hidden="true"></span><span>Jun</span></p><p class="move-when">asked by the family · 1 day ago</p></div>
+  
+  <ol class="steps" aria-label="Who has said yes"><li class="step yes"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 12.5 L10 17.5 L19 6.5" style="fill: none; stroke: var(--colors-feedback-successDark); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round"/></svg><span class="step-who">Family</span><span class="step-state">said yes</span></li><li class="step"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M7 12 H17" style="fill: none; stroke: var(--colors-text-muted); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round"/></svg><span class="step-who">This class</span><span class="step-state">waiting</span></li><li class="step"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M7 12 H17" style="fill: none; stroke: var(--colors-text-muted); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round"/></svg><span class="step-who">New class</span><span class="step-state">waiting</span></li></ol>
+  <p class="move-line">Jun's family asked to move to Saturday Class B.</p>
+  
+  <div class="move-actions"><button type="button" class="btn btn-primary">Agree</button><button type="button" class="btn btn-small push">Not now</button></div>
+</article></div></div></div>
+<div class="board-item"><p class="board-label">source, the family started it, new class not shared (default)</p><div class="sample"><div class="sample-pad stack-md"><article class="move-card" aria-labelledby="card-9">
+  <div class="move-head"><p class="move-who" id="card-9"><span class="chip" style="background: var(--colors-hoya-furGreenDark)" aria-hidden="true"></span><span>Jun</span></p><p class="move-when">asked by the family · 1 day ago</p></div>
+  
+  <ol class="steps" aria-label="Who has said yes"><li class="step yes"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 12.5 L10 17.5 L19 6.5" style="fill: none; stroke: var(--colors-feedback-successDark); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round"/></svg><span class="step-who">Family</span><span class="step-state">said yes</span></li><li class="step"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M7 12 H17" style="fill: none; stroke: var(--colors-text-muted); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round"/></svg><span class="step-who">This class</span><span class="step-state">waiting</span></li><li class="step"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M7 12 H17" style="fill: none; stroke: var(--colors-text-muted); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round"/></svg><span class="step-who">New class</span><span class="step-state">waiting</span></li></ol>
+  <p class="move-line">Jun's family asked to move to another class.</p>
+  
+  <div class="move-actions"><button type="button" class="btn btn-primary">Agree</button><button type="button" class="btn btn-small push">Not now</button></div>
+</article></div></div></div>
+<div class="board-item"><p class="board-label">one teacher owns or teaches both classes: one card, one click for both teacher steps; the family step stays separate</p><div class="sample"><div class="sample-pad stack-md"><article class="move-card" aria-labelledby="card-10">
+  <div class="move-head"><p class="move-who" id="card-10"><span class="chip" style="background: var(--colors-hoya-furBlueDark)" aria-hidden="true"></span><span>Mina</span></p><p class="move-when">asked by the family · 1 day ago</p></div>
+  
+  <ol class="steps" aria-label="Who has said yes"><li class="step yes"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 12.5 L10 17.5 L19 6.5" style="fill: none; stroke: var(--colors-feedback-successDark); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round"/></svg><span class="step-who">Family</span><span class="step-state">said yes</span></li><li class="step"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M7 12 H17" style="fill: none; stroke: var(--colors-text-muted); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round"/></svg><span class="step-who">This class</span><span class="step-state">waiting</span></li><li class="step"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M7 12 H17" style="fill: none; stroke: var(--colors-text-muted); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round"/></svg><span class="step-who">Saturday Class B</span><span class="step-state">waiting</span></li></ol>
+  <p class="move-line">Mina's family asked to move to Saturday Class B.</p>
+  
+  <div class="move-actions"><button type="button" class="btn btn-primary">Agree for both classes</button><button type="button" class="btn btn-small push">Not now</button></div>
+</article></div></div></div>
+<div class="board-item"><p class="board-label">a school admin agreed for this class (cascade): one step per click, a neutral line on both classes</p><div class="sample"><div class="sample-pad stack-md"><article class="move-card" aria-labelledby="card-11">
+  <div class="move-head"><p class="move-who" id="card-11"><span class="chip" style="background: var(--colors-hoya-furBlueDark)" aria-hidden="true"></span><span>Mina</span></p><p class="move-when">asked 2 days ago · 12 days left</p></div>
+  
+  <ol class="steps" aria-label="Who has said yes"><li class="step yes"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 12.5 L10 17.5 L19 6.5" style="fill: none; stroke: var(--colors-feedback-successDark); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round"/></svg><span class="step-who">Family</span><span class="step-state">said yes</span></li><li class="step yes"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 12.5 L10 17.5 L19 6.5" style="fill: none; stroke: var(--colors-feedback-successDark); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round"/></svg><span class="step-who">This class</span><span class="step-state">said yes</span></li><li class="step"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M7 12 H17" style="fill: none; stroke: var(--colors-text-muted); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round"/></svg><span class="step-who">New class</span><span class="step-state">waiting</span></li></ol>
+  <p class="move-line">Agreed by the school admin.</p>
+  
+  <div class="move-actions"><button type="button" class="btn btn-quiet btn-small push">Cancel request</button></div>
+</article></div></div></div>
+<div class="board-item"><p class="board-label">source, everyone agreed but the new class has no room: the source and the family read this line, never "full" blame</p><div class="sample"><div class="sample-pad stack-md"><article class="move-card" aria-labelledby="card-12">
+  <div class="move-head"><p class="move-who" id="card-12"><span class="chip" style="background: var(--colors-hoya-furBlueDark)" aria-hidden="true"></span><span>Mina</span></p></div>
+  
+  <ol class="steps" aria-label="Who has said yes"><li class="step yes"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 12.5 L10 17.5 L19 6.5" style="fill: none; stroke: var(--colors-feedback-successDark); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round"/></svg><span class="step-who">Family</span><span class="step-state">said yes</span></li><li class="step yes"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 12.5 L10 17.5 L19 6.5" style="fill: none; stroke: var(--colors-feedback-successDark); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round"/></svg><span class="step-who">This class</span><span class="step-state">said yes</span></li><li class="step yes"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 12.5 L10 17.5 L19 6.5" style="fill: none; stroke: var(--colors-feedback-successDark); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round"/></svg><span class="step-who">New class</span><span class="step-state">said yes</span></li></ol>
+  
+  <div class="room-block" role="status"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6.5 5 H10 V19 H6.5 Z" style="fill: var(--colors-text-primary)"/><path d="M14 5 H17.5 V19 H14 Z" style="fill: var(--colors-text-primary)"/></svg><p>Waiting for room in the new class.</p></div>
+  
+</article></div></div></div>
+<div class="board-item"><p class="board-label">scheduled (the 2-day wait): Cancel stays</p><div class="sample"><div class="sample-pad stack-md"><article class="move-card" aria-labelledby="card-13">
+  <div class="move-head"><p class="move-who" id="card-13"><span class="chip" style="background: var(--colors-hoya-furPurpleDark)" aria-hidden="true"></span><span>Sam</span></p></div>
+  
+  
+  <p class="move-line with-icon"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M3 12 A9 9 0 1 0 21 12 A9 9 0 1 0 3 12 Z" style="fill: none; stroke: var(--colors-feedback-successDark); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round"/><path d="M7.5 12.5 L10.5 15.5 L16.5 8.5" style="fill: none; stroke: var(--colors-feedback-successDark); stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round"/></svg><span>Everyone agreed. The move happens on Oct 14.</span></p>
+  
+  <div class="move-actions"><button type="button" class="btn btn-quiet btn-small push">Cancel request</button></div>
+</article></div></div></div>
+<div class="board-item"><p class="board-label">finished (30 days): date only, no name, no actor, no reason, for every kind of ending</p><div class="sample"><div class="sample-pad stack-md"><ul class="history" aria-label="Finished"><li><span>A student moved to another class</span><time>Oct 3</time></li><li><span>This request ended.</span><time>Oct 1</time></li></ul></div></div></div>
+<div class="board-item"><p class="board-label">destination, after the family said yes: initials (rosterAlias, always), picture, level label; no name, no id, no progress</p><div class="sample"><div class="sample-pad stack-md"><article class="move-card" aria-labelledby="card-15">
+  <div class="move-head"><p class="move-who" id="card-15"><span class="chip" style="background: var(--colors-hoya-furBlueDark)" aria-hidden="true"></span><span class="alias">M. K.</span><span class="level-pill">Some reading</span></p></div>
+  
+  
+  <p class="move-line">The family has said yes.</p>
+  
+  <div class="move-actions"><button type="button" class="btn btn-primary">Accept</button><button type="button" class="btn btn-small" aria-expanded="false" aria-controls="reasons-14" data-toggle><span>Not now</span><svg class="chev" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M9.5 6 L15.5 12 L9.5 18" style="fill: none; stroke: var(--colors-text-primary); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round"/></svg></button><div class="reasons" id="reasons-14" role="group" aria-label="Choose an answer" hidden><button type="button" class="btn btn-small">Not now</button><button type="button" class="btn btn-small">No room</button></div></div>
+</article></div></div></div>
+<div class="board-item"><p class="board-label">destination, the family ticked "introduce": one extra line</p><div class="sample"><div class="sample-pad stack-md"><article class="move-card" aria-labelledby="card-17">
+  <div class="move-head"><p class="move-who" id="card-17"><span class="chip" style="background: var(--colors-hoya-furBlueDark)" aria-hidden="true"></span><span class="alias">M. K.</span><span class="level-pill">Some reading</span></p></div>
+  
+  
+  <p class="move-line">Coming from Sunday Class A.</p>
+  <p class="move-line">The family has said yes.</p>
+  
+  <div class="move-actions"><button type="button" class="btn btn-primary">Accept</button><button type="button" class="btn btn-small" aria-expanded="false" aria-controls="reasons-16" data-toggle><span>Not now</span><svg class="chev" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M9.5 6 L15.5 12 L9.5 18" style="fill: none; stroke: var(--colors-text-primary); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round"/></svg></button><div class="reasons" id="reasons-16" role="group" aria-label="Choose an answer" hidden><button type="button" class="btn btn-small">Not now</button><button type="button" class="btn btn-small">No room</button></div></div>
+</article></div></div></div>
+<div class="board-item"><p class="board-label">destination, Not now opened: two quiet reasons, receiving class only; a disclosure with two buttons, no free text</p><div class="sample"><div class="sample-pad stack-md"><article class="move-card" aria-labelledby="card-19">
+  <div class="move-head"><p class="move-who" id="card-19"><span class="chip" style="background: var(--colors-hoya-furBlueDark)" aria-hidden="true"></span><span class="alias">M. K.</span><span class="level-pill">Some reading</span></p></div>
+  
+  
+  <p class="move-line">The family has said yes.</p>
+  
+  <div class="move-actions"><button type="button" class="btn btn-primary">Accept</button><button type="button" class="btn btn-small" aria-expanded="true" aria-controls="reasons-18" data-toggle><span>Not now</span><svg class="chev" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M9.5 6 L15.5 12 L9.5 18" style="fill: none; stroke: var(--colors-text-primary); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round"/></svg></button><div class="reasons" id="reasons-18" role="group" aria-label="Choose an answer"><button type="button" class="btn btn-small">Not now</button><button type="button" class="btn btn-small">No room</button></div></div>
+</article></div></div></div>
+<div class="board-item"><p class="board-label">destination, approved but full (cap_class): amber nudge tint, pause glyph and text; Try again</p><div class="sample"><div class="sample-pad stack-md"><article class="move-card" aria-labelledby="card-20">
+  <div class="move-head"><p class="move-who" id="card-20"><span class="chip" style="background: var(--colors-hoya-furBlueDark)" aria-hidden="true"></span><span class="alias">M. K.</span><span class="level-pill">Some reading</span></p></div>
+  
+  
+  
+  <div class="room-block" role="status"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6.5 5 H10 V19 H6.5 Z" style="fill: var(--colors-text-primary)"/><path d="M14 5 H17.5 V19 H14 Z" style="fill: var(--colors-text-primary)"/></svg><p>Everyone has said yes. This class is full right now.</p></div>
+  <div class="move-actions"><button type="button" class="btn btn-small">Try again</button></div>
+</article></div></div></div>
+<div class="board-item"><p class="board-label">destination, approved but the school is full (cap_school)</p><div class="sample"><div class="sample-pad stack-md"><article class="move-card" aria-labelledby="card-21">
+  <div class="move-head"><p class="move-who" id="card-21"><span class="chip" style="background: var(--colors-hoya-furBlueDark)" aria-hidden="true"></span><span class="alias">M. K.</span><span class="level-pill">Some reading</span></p></div>
+  
+  
+  
+  <div class="room-block" role="status"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6.5 5 H10 V19 H6.5 Z" style="fill: var(--colors-text-primary)"/><path d="M14 5 H17.5 V19 H14 Z" style="fill: var(--colors-text-primary)"/></svg><p>Everyone has said yes. The school is full right now.</p></div>
+  <div class="move-actions"><button type="button" class="btn btn-small">Try again</button></div>
+</article></div></div></div>
+<div class="board-item"><p class="board-label">destination, cap_learner (rare): the destination cannot fix it, so no Try again</p><div class="sample"><div class="sample-pad stack-md"><article class="move-card" aria-labelledby="card-22">
+  <div class="move-head"><p class="move-who" id="card-22"><span class="chip" style="background: var(--colors-hoya-furBlueDark)" aria-hidden="true"></span><span class="alias">M. K.</span><span class="level-pill">Some reading</span></p></div>
+  
+  
+  
+  <div class="room-block" role="status"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6.5 5 H10 V19 H6.5 Z" style="fill: var(--colors-text-primary)"/><path d="M14 5 H17.5 V19 H14 Z" style="fill: var(--colors-text-primary)"/></svg><p>Everyone has said yes. The move is waiting.</p></div>
+  
+</article></div></div></div>
+<div class="board-item"><p class="board-label">destination, after a move into this class: history line, New class code offered once</p><div class="sample"><div class="sample-pad stack-md"><ul class="history" aria-label="Finished"><li><span>A student joined this class</span><time>Oct 14</time></li></ul><div class="panel stack"><p class="move-line">Your class code may have been shared during the move. You can make a new one.</p><div class="row-wrap"><button type="button" class="btn btn-small">New class code</button></div></div></div></div></div>
+<div class="board-item"><p class="board-label">an action failed: the card stays, one line and Try again</p><div class="sample"><div class="sample-pad stack-md"><article class="move-card" aria-labelledby="card-23">
+  <div class="move-head"><p class="move-who" id="card-23"><span class="chip" style="background: var(--colors-hoya-furBlueDark)" aria-hidden="true"></span><span class="alias">M. K.</span><span class="level-pill">Some reading</span></p></div>
+  
+  
+  <p class="move-line">The family has said yes.</p>
+  <p class="error-line" role="alert">Didn't go through</p>
+  
+  <div class="move-actions"><button type="button" class="btn btn-primary">Try again</button></div>
+</article></div></div></div>
+<div class="board-item"><p class="board-label">the request ended meanwhile (409 not_open / expired): the card becomes the ended line</p><div class="sample"><div class="sample-pad stack-md"><ul class="history" aria-label="Finished"><li><span>This request ended.</span><time>Oct 12</time></li></ul></div></div></div>
+<div class="board-item"><p class="board-label">signed out (401): back to the same page after sign-in</p><div class="sample"><div class="sample-pad stack-md"><p class="notice">Please sign in again.</p><button type="button" class="btn btn-primary">Sign in again</button></div></div></div>
+<div class="board-item"><p class="board-label">role lost (403): no names</p><div class="sample"><div class="sample-pad stack-md"><p class="notice">You can no longer answer this class's moves.</p></div></div></div>
+<div class="board-item"><p class="board-label">locked (flag off, or 422 transfers_locked) on a stale link: entry points do not render elsewhere</p><div class="sample"><div class="sample-pad stack-md"><p class="notice">Class moves aren't available yet.</p><a class="text-link" href="#">Back to the roster</a></div></div></div>
+<div class="board-item"><p class="board-label">roster page, zero requests: the permanent button sits with Re-link requests and Settings</p><div class="sample"><div class="sample-pad stack-md"><p class="unchanged" aria-hidden="true">Roster header, This week (unchanged)</p><div class="row-wrap"><button type="button" class="btn btn-primary">Plan this week</button><button type="button" class="btn btn-small">Re-link requests</button><button type="button" class="btn btn-small">Class moves</button><button type="button" class="btn btn-small">Settings</button></div></div></div></div>
+<div class="board-item"><p class="board-label">roster page, two requests wait for this class: the same button carries the count (the Re-link pattern)</p><div class="sample"><div class="sample-pad stack-md"><div class="row-wrap"><button type="button" class="btn btn-primary">Plan this week</button><button type="button" class="btn btn-small">Re-link requests</button><button type="button" class="btn btn-small">2 class moves waiting</button><button type="button" class="btn btn-small">Settings</button></div></div></div></div>
+<div class="board-item"><p class="board-label">teacher home: the class row link line gains the count; a school row shows counts only and opens the school page</p><div class="sample"><div class="sample-pad stack-md"><div class="space-rows"><article class="space-row"><div class="space-main"><div><p class="space-name">Sunday Class A</p><p class="space-status">12 students</p></div><a class="btn btn-small" href="#">Open →</a></div><div class="space-links"><a class="btn btn-small" href="#">Class report</a><a class="btn btn-small" href="#">Notes</a><a class="btn btn-small" href="#">2 class moves waiting</a></div></article><article class="space-row"><div class="space-main"><div><p class="space-name">Riverside school</p><p class="space-status">4 classes</p></div><a class="btn btn-small" href="#">Open →</a></div><div class="space-links"><a class="btn btn-small" href="#">3 class moves waiting</a></div></article></div></div></div></div>
+<div class="board-item"><p class="board-label">family home: the family actions gain the count (singular form)</p><div class="sample"><div class="sample-pad stack-md"><div class="family-actions"><h2>Kim family</h2><div class="row-wrap"><button type="button" class="btn btn-small">Family settings</button><button type="button" class="btn btn-small">Add a learner</button><a class="btn btn-small" href="#">1 class move waiting</a></div></div></div></div></div></div></main>
+<script>
+document.addEventListener('click', function (e) {
+  var b = e.target.closest('[data-toggle]');
+  if (!b) return;
+  var t = document.getElementById(b.getAttribute('aria-controls'));
+  var open = b.getAttribute('aria-expanded') !== 'true';
+  b.setAttribute('aria-expanded', String(open));
+  if (t) t.hidden = !open;
+});
+</script>
+</body>
+</html>
