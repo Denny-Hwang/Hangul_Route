@@ -114,6 +114,7 @@ eas submit --platform ios --profile production     # TestFlight 업로드
 | 2.3 정확한 메타데이터 | 스크린샷 = 실제 화면 · "9 mini-games" 가 아니라 **8 active** 로 표기 (product-review §"카피 수치 정합성") |
 | 1.2 사용자 생성 콘텐츠 | 쪽지가 켜진 빌드만: §5 의 UGC 단락을 Notes 에 붙였다 ✅ · 필터 (미리 만든 문구 + 서버 텍스트 검사) · 신고 (기기 PIN 게이트, 가족 페이지) · 숨기기 · 막기 (Stop notes from this sender) · 자동 정지와 매일 검토 (`owner-runbook.md` §F) · 연락처 hello@hangulroute.com ✅ |
 | 3.1.1 IAP | 구매 없음, 구매 언급 없음 ✅ |
+| 3.1.1 · 3.1.3(b) 무료 플랜 경계 (F-ENT-003 OD-13) | 네이티브 스토어 빌드는 F-IAP-002 가 앱 안에서 Family Plan 을 팔기 전까지 **경계 없이** 나간다: iOS · Android 에서는 `EXPO_PUBLIC_CONTENT_GATING_ENABLED` 가 무엇이든 효과 스위치가 꺼져 있다 (`gatingActive`). 모든 레슨이 열려 있고, Not open yet 고리·미리보기·결제 안내가 없는지 TestFlight 빌드에서 확인 |
 | 5.1.1 데이터 수집 | 온보딩 동의 체크박스 + 부모 이메일 선택 ✅ · Privacy Policy URL 라이브 (§3) |
 | 5.1.4 Kids 데이터 | 이메일·이름은 기기 저장, 전송 없음 ✅ |
 | Privacy Manifest | `ios.privacyManifests` ✅ (Expo SDK 52 가 라이브러리 manifest 를 병합) |

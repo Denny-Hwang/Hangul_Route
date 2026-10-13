@@ -389,6 +389,30 @@ DELETE FROM feedback_notes WHERE id = '<note_id>' AND NOT EXISTS (SELECT 1 FROM 
 
 **확인**: `SELECT COUNT(*) FROM feedback_notes WHERE id = '<note_id>';` 가 `0`. `1` 이면 결과가 기록되지 않은 신고가 남아 있다는 뜻이니 F-2 부터 다시 한다. 기기의 사본은 다음 동기화 때 사라진다. 요청한 사람에게 지웠다고 (보낸 사람에게는 거두기 안내와 보관 기간을) 답장한다 (30일 안에, 개인정보 처리방침의 약속). 학습자의 데이터 전체를 지우는 요청이면 콘솔의 학습자 데이터 삭제 (`DELETE /api/spaces/:id/learners/:learnerId/data`) 가 쪽지·신고·설정·막기 행을 모두 함께 지운다.
 
+## G. Turn on the free plan (web) — 무료 플랜 켜기 (F-ENT-003 E3-11, OD-2)
+
+> 목적: 웹 앱에서 무료 플랜의 경계를 켠다. Stage 1 전체가 무료로 열리고 (OD-1), Stage 2 부터는 미리보기 (Not open yet) 가 된다. **오너만 켠다. Stripe Live 와 같은 릴리스에서만 켠다.** Stripe Live 가 꺼져 있는 동안에는 이 단계를 하지 않는다 (학습자가 결제할 수 없는 경계를 만나게 된다). 이 PR 은 단계만 적어 두며, 운영 변수는 하나도 바꾸지 않는다.
+
+**선행 조건 (모두 예일 때만)**
+1. F-ENT-003 E3-12b 와 E3-12c 가 머지됨 (어른 화면의 무료 레슨 줄).
+2. 다음 문구 그룹의 ko · es 오버레이가 들어 있고 원어민 검토를 마침: `console.access`, `console.curriculum.freeDays`, `caregiver.access`, `caregiver.plan.freePlan`. 없으면 한국어·스페인어 콘솔과 Plan 화면이 이 줄들을 영어로 보여 준다.
+3. 배포할 커밋에서 스위치를 켠 e2e 레인이 통과함 (저장소 쪽에서 돌리고 결과를 PR 에 남긴다):
+   - 스위치를 켠 빌드: `EXPO_PUBLIC_CONTENT_GATING_ENABLED=true pnpm --filter @hangul-route/mobile build:web`, 그다음 `E2E_CONTENT_GATING=1 pnpm --filter @hangul-route/mobile exec playwright test free-days plan-next plan-free-lines free-end episode-access dashboard-free-line`
+   - 게이팅 픽스처 번들: `pnpm --filter @hangul-route/mobile build:web:fixtures:gated`, 그다음 `STORY_FIXTURES_GATED=1 pnpm --filter @hangul-route/mobile exec playwright test story-shelf-gated.spec free-days`
+   - 같은 커밋의 CI `Build PWA · offline e2e` 가 초록 (shard 1 이 게이팅 픽스처 번들에서 `story-shelf-gated.spec` 을 돌린다, F-STORY-004 PR 4.8b 의 릴리스 게이트).
+4. F-STORY-004 PR 4.8d (고정된 Home 카드의 접근 재확인, #488) 와 PR 4.8e (Home 카드를 누를 때의 접근 확인) 가 머지됨.
+5. F-ENT-003 OD-14 에 답이 있거나 기본값 그대로 둔다.
+6. Stripe Live 를 켜는 릴리스와 같은 창 (§B Step 8 의 Live 절차와 `BILLING_LIVE_ALLOWED`).
+
+**단계 (5분, 위 조건이 모두 예일 때)**
+1. `hangul-route-app` → Settings → Build → Variables and Secrets → `EXPO_PUBLIC_CONTENT_GATING_ENABLED` = `true`. 같은 빌드가 앱 호스트의 어른 화면 (콘솔) 도 만들므로, 여기에 `NEXT_PUBLIC_CONTENT_GATING_ENABLED` = `true` 도 넣는다. → **Retry deployment**.
+2. `hangul-route-web` → Settings → Build → Variables and Secrets → `NEXT_PUBLIC_CONTENT_GATING_ENABLED` = `true` → **Retry deployment**.
+3. 사이트의 무료 문구 "Stage 1 is free." (`landing.plans.free.stage1`) 는 그대로 둔다 (OD-1). 사이트 쪽 변경은 없다.
+
+**확인**: 새 학습자 프로필로 https://app.hangulroute.com 을 열면 Journey 에서 Stage 1 칸에는 고리가 없고, Stage 2 · Stage 4 칸에는 점선 고리 (Not open yet) 가 보인다. Stage 2 칸을 누르면 미리보기와 **Ask a grown-up** 이 나온다. 가격·"Premium"·"trial" 같은 말은 학습자 화면 어디에도 없다.
+
+**되돌리기**: 세 변수를 `false` 로 (또는 삭제) → 두 프로젝트 모두 Retry deployment. 학습자가 끝낸 레슨·카드·별은 어느 방향으로도 바뀌지 않는다.
+
 ## 나중에 (법률 검토 후)
 학교 동의 모드 (c) 를 열 때만: `hangul-route-api` 런타임 변수 `SCHOOL_CONSENT_MODE=enabled` + `hangul-route-web` 빌드 변수 `NEXT_PUBLIC_SCHOOL_CONSENT_MODE=enabled` (Retry deployment). 그 전엔 콘솔에서 선택 불가로 잠겨 있다.
 
