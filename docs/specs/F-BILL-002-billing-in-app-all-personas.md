@@ -757,6 +757,17 @@ Assumptions this spec relies on (and what happens if they change):
 
 **2026-10-12, design pass** (B-8a's "design mock in `design/screens/`" dependency): `design/screens/billing/` gains `billing-home.md`, `checkout-return.md`, `step-up.md`, `receipts.md`, their mocks on `mock/billing.css` and shots at 375, 1280 and 320 with 200 % text. Every drawn string comes from B-6 / B-7 keys through the B-7 view models; no string, key or behaviour of this spec changes. The decisions the mocks take (D1 to D10: the dictionary's renew line, no "(sandbox amount)" suffix, what stays enabled while actions are off, the legacy no-history line on the card, notice tones, the marked card, no motion, the receipts table switching by its column) are recorded in `design/screens/billing/README.md`. Reviewed for design, accessibility, copy and billing correctness before the PR; the fixes are in the mocks.
 
+**2026-10-13, B-8 review (PRs #514, #521, #529)**. Two independent reviews of the stacked billing page PRs.
+
+| Finding | Resolution |
+|---|---|
+| B-8a: a code checked for the first offer's plan rewrote every price line in Add a plan, so a Group License row could show a price checkout then refused | Applied: the page keeps the plan the code was checked for; `billingHomeView` (`promoPlanKey`) prices only that plan's offers with the promo, and checkout for another plan carries no code. |
+| B-8b: the step-up dialog made every `body` child inert, including Clerk's own root, so a second step-up in one page session could leave Clerk's modal unusable behind an inert subtree | Applied: the dialog steps aside while Clerk verifies (no scrim, nothing inert; `design/screens/billing/step-up.md` state 2) and never makes Clerk's root inert (`#clerk-*`, `data-clerk-*`, `cl-*`). |
+| B-8b: in "verifying" nothing ended the wait if Clerk's UI never opened (its script blocked or offline), against section 4.12's "Clerk cannot be reached" row | Applied: offline is "Can't confirm right now" at once; otherwise, if Clerk's modal (`.cl-modalBackdrop`) has not appeared within `CLERK_UI_OPEN_TIMEOUT_MS` (10 s), the attempt reads "Can't confirm right now" and a late answer is dropped. Once Clerk's UI has shown, the grown-up takes as long as they need. |
+| B-8b: the dialog's fixed scrim was inside the page's size container (`.hr-bill`, `container: bill / inline-size`), which is the containing block of a fixed descendant, so it did not cover the viewport | Applied: the dialog is portalled to `body`; `apps/web/e2e/billing-step-up.spec.ts` (export built for it, `BILLING_E2E=1`) checks at 320 and 1280 px, opened far down the page, that the scrim is the viewport, the dialog is inside it, the page is inert and Clerk's root is not, Tab and Shift+Tab wrap, and Escape gives focus back. |
+| B-8b: each step-up sent the refused request twice before Clerk's UI opened (double-counting `billing.checkout_refused`) | Applied: the hint already in hand is handed to Clerk's handler, so only Clerk's retry reaches the Worker. |
+| B-8b: untested branches (checkout `promo_invalid`, a refused portal, the legacy account card's Manage, a return whose first read fails) and a poll that could start while a slow first read was out | Applied: page tests for each; a poll never starts while a summary read is in flight. |
+
 **2026-10-13, B-12 review amendments (PR #538)**, after two reviews of B-12 (both approve, minors only). Section 4.6's archive confirm as shipped.
 
 | Finding | Resolution |
