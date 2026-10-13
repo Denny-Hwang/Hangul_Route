@@ -26,6 +26,12 @@ describe('LearnerReportScreen source rules', () => {
     expect(screenCode).not.toMatch(/track\([^)]*profileId/);
   });
 
+  it('report.viewed is sent for every report drawn, whatever its state (as the console records every view)', () => {
+    expect(screenCode).toContain('const shown = built !== null;');
+    expect(screenCode).toContain('if (shown) void track(reportViewedEvent(period));');
+    expect(screenCode).not.toMatch(/state === 'ready'[^\n]*\n[^\n]*track\(/);
+  });
+
   it('Open Learning Route opens the grown-up read-only view of this report\'s profile', () => {
     expect(screen).toContain("navigation.navigate('MyRoute', { profileId, viewer: 'grownup' })");
     expect(screen).toContain('learningRoute: flags.myRouteEnabled');

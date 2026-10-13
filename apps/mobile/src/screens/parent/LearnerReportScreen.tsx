@@ -262,11 +262,12 @@ function ReportBody({ profileId, name, voice, navigation, locale, messages }: Bo
   }, [hydrated, stored, profileId, name, voice, period, at, locale, messages, tier, localized, attempt]);
 
   // One `report.viewed` on open and on each period change or step (section 3.13), without a profile id. Keyed on
-  // what the grown-up chose, not on `built`, which also changes when the progress store does.
-  const ready = built !== null && built.view.state === 'ready';
+  // what the grown-up chose, not on `built`, which also changes when the progress store does. Every drawn report
+  // counts, whatever its state (the console's route records every view too).
+  const shown = built !== null;
   useEffect(() => {
-    if (ready) void track(reportViewedEvent(period));
-  }, [period, at, ready]);
+    if (shown) void track(reportViewedEvent(period));
+  }, [period, at, shown]);
 
   // A step that removes the pressed button (Next on reaching this window, Previous on the oldest) moves focus to the
   // other step button, so it never drops to the page body (design pass #444).
