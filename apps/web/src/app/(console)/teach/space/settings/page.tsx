@@ -10,9 +10,11 @@ import { Button, LoadErrorPanel, Muted, Notice } from '@/components/console/ui';
 import { AdultFrame } from '@/components/console/AdultFrame';
 import { useConsole } from '@/components/console/use-console';
 import type { MemberView, Roster, TransferOption } from '@/lib/console/api';
+import { archiveConfirmText, archivePlanNote } from '@/lib/console/archive-plan-note';
 import { schoolConsentModeEnabled } from '@/lib/console/config';
 import { personaHome, personaOfKind } from '@/lib/console/personas';
 import { ROUTES, isKnownSpaceKind, loadErrorKey, spaceIdFrom, type LoadError } from '@/lib/console/routing';
+import type { BillingSummary } from '@hangul-route/content-schema';
 import type { Messages } from '@hangul-route/i18n';
 
 type SettingsNote = keyof Messages['console']['settings']['notes'];
@@ -21,7 +23,7 @@ type SettingsNote = keyof Messages['console']['settings']['notes'];
 function SettingsInner(): JSX.Element {
   const spaceId = spaceIdFrom(useSearchParams());
   const router = useRouter();
-  const { ready, session, api, signOut, m } = useConsole();
+  const { ready, session, api, signOut, m, locale } = useConsole();
   const c = m.console;
   const s = c.settings;
   const [roster, setRoster] = useState<Roster | null>(null);
@@ -39,6 +41,8 @@ function SettingsInner(): JSX.Element {
   const online = useOnline();
   // On a family (T-6d): the learners in a live class, from the class-moves list's `options`.
   const [moveOptions, setMoveOptions] = useState<TransferOption[]>([]);
+  // F-BILL-002 B-12: the billing summary, so the archive confirm can name the plan it affects; null = no line.
+  const [billing, setBilling] = useState<BillingSummary | null>(null);
   const now = new Date();
 
   const load = useCallback(async (): Promise<void> => {
@@ -59,6 +63,11 @@ function SettingsInner(): JSX.Element {
     if (r.data.space.kind === 'family' && movesShown) {
       const moves = await api.transferRequests(spaceId);
       setMoveOptions(moves.ok ? (moves.data.options ?? []) : []);
+    }
+    if (!r.data.space.archivedAt) {
+      // Read quietly (`poll`: no billing view event). A failed read keeps the plain confirm.
+      const summary = await api.billingSummary({ poll: true });
+      setBilling(summary.ok ? summary.data : null);
     }
   }, [api, spaceId, movesShown]);
 
@@ -119,7 +128,7 @@ function SettingsInner(): JSX.Element {
               if (window.confirm(s.learners.removeAsk(member.name, space.name))) void run(() => api.removeMember(spaceId, 'learner', member.memberId), 'removed', 'removeFailed');
             }}
             onArchive={() => {
-              if (archived || window.confirm(`${s.danger.archiveAsk(space.name)} ${c.archiveKeeps}`)) void run(() => api.archiveSpace(spaceId, !archived), archived ? 'unarchived' : 'archived', 'saveFailed');
+              if (archived || window.confirm(archiveConfirmText(space.name, archivePlanNote(billing, spaceId, new Date(), locale), locale))) void run(() => api.archiveSpace(spaceId, !archived), archived ? 'unarchived' : 'archived', 'saveFailed');
             }}
             onDeleteTarget={(memberId) => {
               setDeleteTarget(memberId);

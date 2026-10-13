@@ -207,7 +207,7 @@ export function receiptRow(r: ReceiptView, locale: UiLocale = DEFAULT_LOCALE): R
 type OwnCoverage = Extract<Coverage, { state: 'own' }>;
 
 /** The server's activity rule for a plan the space holds (F-ENT-001 section 3.2). */
-function ownCovers(c: OwnCoverage, now: Date): boolean {
+export function ownCovers(c: OwnCoverage, now: Date): boolean {
   const t = now.getTime();
   const future = c.expiresAt ? Date.parse(c.expiresAt) > t : null;
   if (c.status === 'trial' || c.status === 'active') return future !== false;
