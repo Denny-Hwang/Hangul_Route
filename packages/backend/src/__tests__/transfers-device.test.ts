@@ -1,4 +1,4 @@
-import { SyncInboxSchema, TRANSFER_CONSENT_TEXT_VERSION, TRANSFER_MAX_CREATED_PER_LEARNER_PER_DAY } from '@hangul-route/content-schema';
+import { SyncInboxSchema, TRANSFER_CONSENT_TEXT_VERSION, TRANSFER_MAX_CREATED_PER_LEARNER_PER_DAY, TRANSFER_MAX_OPEN_PER_DESTINATION } from '@hangul-route/content-schema';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { transferRateKey, type Db } from '../db';
 import { hashSecret } from '../lib/device-auth';
@@ -229,6 +229,8 @@ describe('the inbox (section 4.4)', () => {
       learnerRoute: 'caregiver',
       canVeto: true,
       endedFrom: null,
+      // The learner slot is already consented: nothing left to agree to.
+      termsDigest: null,
     });
     expect(row.executeAfter).toBe(new Date(NOW.getTime() + 48 * HOUR).toISOString());
     expect(Array.isArray(row.visibleToday)).toBe(true);
@@ -255,6 +257,7 @@ describe('the inbox (section 4.4)', () => {
         'learnerRoute',
         'canVeto',
         'endedFrom',
+        'termsDigest',
       ].sort(),
     );
     expect(Object.keys(row.to).sort()).toEqual(['ageBucket', 'name', 'ownerName', 'schoolName', 'spaceId']);
@@ -299,9 +302,28 @@ describe('the inbox (section 4.4)', () => {
     await approve(A, 'teacher-a', created.id, { slots: ['source'] });
     await approve(B, 'teacher-b', created.id, { slots: ['destination'] });
     vi.setSystemTime(new Date(NOW.getTime() + 49 * HOUR));
-    const [row] = transfersOf(await inbox(SUNI, suniPhone));
+    const r = await inbox(SUNI, suniPhone);
+    const [row] = transfersOf(r);
     expect(row).toMatchObject({ id: created.id, status: 'executed' });
     expect(await db.membership(B, 'learner', SUNI)).not.toBeNull();
+    // The same answer already carries the new class and not the old one (sections 4.10, 4.12): the move is
+    // settled before the memberships, plans and tier are read, so no second inbox round trip is needed.
+    const spaces = SyncInboxSchema.parse(r.body.data).memberships.map((m) => m.spaceId);
+    expect(spaces).toContain(B);
+    expect(spaces).not.toContain(A);
+  });
+
+  it('carries the sheet digest while the learner slot is pending, so a device approve is tied to what was shown (4.11)', async () => {
+    const created = deviceRequest(await dCreate(JUN, junPhone, junCreate()));
+    expect(transfersOf(await inbox(JUN, junPhone))[0]?.termsDigest).toBeNull();
+    expect(await db.resetLearnerConsent(created.id, 'terms_changed', NOW)).toBe(1);
+    const r0 = await inbox(JUN, junPhone);
+    const [row] = transfersOf(r0);
+    expect(row?.termsDigest).toMatch(/^[0-9a-f]{64}$/);
+    expect(SyncInboxSchema.parse(r0.body.data).transfers[0]?.termsDigest).toBe(row?.termsDigest);
+    // The approve recomputes the digest from live values: the one the inbox carried matches.
+    const r = await dApprove(JUN, junPhone, created.id, { consent: { ...pinConsent, termsDigest: row?.termsDigest } });
+    expect([r.status, deviceRequest(r).learnerState]).toEqual([200, 'consented']);
   });
 
   it('reads the destination facts set-wise: many ended requests to different classes cost no more reads than one (D1 statement budget)', async () => {
@@ -505,6 +527,21 @@ describe('device create: the code and destination guards answer as on the consol
     expect((await decline(A, 'teacher-a', created.id, { slot: 'source' })).status).toBe(200);
     const again = await dCreate(JUN, junPhone, junCreate());
     expect([again.status, again.body.error?.code]).toEqual([429, 'cooldown']);
+  });
+});
+
+describe('device create: a busy destination (section 4.2)', () => {
+  it(`preview and create answer 409 destination_busy at ${TRANSFER_MAX_OPEN_PER_DESTINATION} open requests to the class, and write nothing`, async () => {
+    for (let i = 0; i < TRANSFER_MAX_OPEN_PER_DESTINATION; i += 1) {
+      const id = `profile:busy-${i}`;
+      await filler(id);
+      await seedRow({ id: `transfer:busy-${i}`, learnerId: id, initiator: 'source', createdAgo: HOUR });
+    }
+    const shown = await dPreview(JUN, junPhone, { fromSpaceId: A, code: CODE_B });
+    expect([shown.status, shown.body.error?.code]).toEqual([409, 'destination_busy']);
+    const made = await dCreate(JUN, junPhone, junCreate());
+    expect([made.status, made.body.error?.code]).toEqual([409, 'destination_busy']);
+    expect(await db.transfersOfLearner(JUN)).toEqual([]);
   });
 });
 

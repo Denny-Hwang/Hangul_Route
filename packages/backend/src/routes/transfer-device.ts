@@ -105,8 +105,10 @@ async function createsToday(db: Db, learnerId: string, now: Date): Promise<numbe
 
 /**
  * One learner-side view as the sync inbox carries it: exactly the fields of
- * `InboxTransferSchema`, nothing else (no learner name or id, no terms
- * digest, no timestamps the app does not draw). `canVeto` is always true:
+ * `InboxTransferSchema`, nothing else (no learner name or id, no timestamps
+ * the app does not draw). `termsDigest` is the learner-side sheet's digest
+ * (4.11) while the learner slot is pending, so a device approve can be tied
+ * to the sheet it showed. `canVeto` is always true:
  * only a full-scope device reads transfers, and it can always say no.
  */
 export function inboxTransferView(v: TransferLearnerSideView): InboxTransfer {
@@ -131,6 +133,7 @@ export function inboxTransferView(v: TransferLearnerSideView): InboxTransfer {
     learnerRoute: v.learnerRoute,
     canVeto: true,
     endedFrom: v.endedFrom,
+    termsDigest: v.termsDigest,
   };
 }
 

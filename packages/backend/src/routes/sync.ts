@@ -119,16 +119,18 @@ syncRoutes.get('/learners/:id/inbox', async (c) => {
   if (typeof auth !== 'string') return auth;
   const db = dbFor(c);
   const now = new Date();
-  const { tier, source } = await tierForLearner(db, learnerId, now);
   // A class-approved device sees class and school spaces only — family plans stay with the family (SEC-4).
   const classScoped = (await db.getDevice(learnerId, auth))?.scope === 'class';
+  // Class moves (F-SPACE-002 section 4.4, T15): the lock is read before any transfer table; locked, all off and empty.
+  // Read first: settling can perform a due move (section 4.6), so the tier, plans and memberships below already
+  // reflect it and an `executed` row never arrives next to the old class (sections 4.10, 4.12).
+  const transfers = await inboxTransfers(db, learnerId, classScoped ? 'class' : 'full', c.env as TransferEnv | undefined, now);
+  const { tier, source } = await tierForLearner(db, learnerId, now);
   // F-PLAN-002 section 3.5: a curriculum reaches only an app that derives with a horizon (`?cap=curriculum`).
   const plans = (await inboxPlansFor(db, learnerId)).filter((p) => p.meta === null || acceptsCurriculum(c.req.queries('cap')));
   const memberships = await learnerMembershipRows(db, learnerId);
   // Notes from grown-ups (F-FEEDBACK-001 section 6.8): delivery rules 1-7 and the prefs row in one query.
   const notes = await db.notesForLearner(learnerId, classScoped ? 'class' : 'full', now, NOTE_INBOX_LIMIT);
-  // Class moves (F-SPACE-002 section 4.4, T15): the lock is read before any transfer table; locked, all off and empty.
-  const transfers = await inboxTransfers(db, learnerId, classScoped ? 'class' : 'full', c.env as TransferEnv | undefined, now);
   return ok(c, {
     rev: (await db.getSnapshot(learnerId))?.rev ?? 0,
     plans: classScoped ? plans.filter((p) => p.spaceKind !== 'family') : plans,

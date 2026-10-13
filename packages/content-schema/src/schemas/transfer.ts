@@ -295,5 +295,15 @@ export const InboxTransferSchema = z.object({
   learnerRoute: z.string(),
   canVeto: z.boolean(),
   endedFrom: z.string().nullable(),
+  /**
+   * The learner-side sheet's digest (section 4.11) while the learner slot is pending, else null. A device
+   * approve sends it back so the record is tied to what was shown. Lenient: an older Worker omits it and a
+   * malformed value reads as null, never dropping the row.
+   */
+  termsDigest: z
+    .string()
+    .regex(/^[0-9a-f]{64}$/)
+    .nullable()
+    .catch(null),
 });
 export type InboxTransfer = z.infer<typeof InboxTransferSchema>;
