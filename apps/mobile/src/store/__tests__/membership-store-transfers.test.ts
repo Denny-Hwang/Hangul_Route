@@ -73,6 +73,7 @@ interface InboxOver {
   transferDeviceConsent?: boolean;
   selfManaged?: boolean;
   transfers?: InboxTransfer[];
+  deviceScope?: 'full' | 'class' | null;
 }
 const inbox = (over: InboxOver = {}) => ({
   status: 'ok' as const,
@@ -152,6 +153,45 @@ describe('refresh fills transfersByLearner (section 4.12)', () => {
     mem.set(TRANSFER_SCOPE_KEY(L), classScopeMarker('an-older-secret'));
     await store().refresh(L);
     expect(store().transfersByLearner[L]?.scope).toBe('full');
+  });
+});
+
+describe('the device scope from the inbox (section 4.12, T-5c deviceScope)', () => {
+  it('a class tablet relinked before this build (no marker) learns its scope from the inbox and keeps it for this secret', async () => {
+    signedIn(fakeApi({ getInbox: vi.fn(async () => inbox({ deviceScope: 'class' })) }));
+    await store().refresh(L);
+    expect(store().transfersByLearner[L]?.scope).toBe('class');
+    expect(mem.get(TRANSFER_SCOPE_KEY(L))).toEqual(classScopeMarker('sec'));
+  });
+
+  it('the server says full: a stale class marker for this secret is dropped; an older Worker (null) leaves the marker alone', async () => {
+    mem.set(TRANSFER_SCOPE_KEY(L), classScopeMarker('sec'));
+    const getInbox = vi.fn().mockResolvedValueOnce(inbox({ deviceScope: null })).mockResolvedValue(inbox({ deviceScope: 'full' }));
+    signedIn(fakeApi({ getInbox }));
+    await store().refresh(L);
+    expect(store().transfersByLearner[L]?.scope).toBe('class');
+    await store().refresh(L);
+    expect(store().transfersByLearner[L]?.scope).toBe('full');
+    expect(mem.get(TRANSFER_SCOPE_KEY(L)) ?? null).toBeNull();
+  });
+
+  it('a legacy class tablet with no marker still clears its classes and plans and asks to join again after a move revokes it', async () => {
+    const getInbox = vi.fn().mockResolvedValueOnce(inbox({ deviceScope: 'class' })).mockResolvedValue({ status: 'error', code: 'http_401' });
+    signedIn(fakeApi({ getInbox }));
+    expect(await store().refresh(L)).toEqual([classA]);
+    usePlanStore.setState({ byLearner: { [L]: [{ id: 'plan:a' } as never] } });
+    await store().refresh(L);
+    expect(store().byLearner[L]).toEqual([]);
+    expect(usePlanStore.getState().byLearner[L]).toEqual([]);
+    expect(store().rejoinByLearner[L]).toBe(true);
+  });
+
+  it('a switch answer of 403 scope_limited marks the device class-scoped too', async () => {
+    useProfileStore.setState({ profiles: [{ id: L, displayName: 'Suni', ageGroup: '10-11', avatar: 'hoya-orange', role: 'learner', createdAt: 't', learnerType: 'self' }] });
+    useAccountStore.setState({ selfConsentAcceptedAt: '2026-10-01T00:00:00.000Z' });
+    signedIn(fakeApi({ putTransferPrefs: vi.fn(async () => ({ status: 'error', http: 403, code: 'scope_limited' })) }));
+    await store().refresh(L);
+    expect(mem.get(TRANSFER_SCOPE_KEY(L))).toEqual(classScopeMarker('sec'));
   });
 });
 
@@ -239,6 +279,18 @@ describe('the class tablet of the old class (section 4.6, 4.12)', () => {
     expect(store().rejoinByLearner[L]).toBe(true);
     expect(store().transfersByLearner[L]).toBeUndefined();
     store().clearRejoin(L);
+    expect(store().rejoinByLearner[L]).toBe(false);
+  });
+
+  it('the line is a one-off: later 401s after it was shown do not bring it back', async () => {
+    mem.set(TRANSFER_SCOPE_KEY(L), classScopeMarker('sec'));
+    signedIn(fakeApi({ getInbox: vi.fn().mockResolvedValueOnce(inbox()).mockResolvedValue({ status: 'error', code: 'http_401' }) }));
+    await store().refresh(L);
+    await store().refresh(L);
+    expect(store().rejoinByLearner[L]).toBe(true);
+    store().clearRejoin(L);
+    await store().refresh(L);
+    await store().refresh(L);
     expect(store().rejoinByLearner[L]).toBe(false);
   });
 
@@ -367,6 +419,28 @@ describe('the learner switch (guard 13)', () => {
     expect(api.putTransferPrefs).toHaveBeenCalledTimes(1);
   });
 
+  it('the device keeps its mark even when the answer to the on switch is lost, so it can still turn the switch off later', async () => {
+    self();
+    const getInbox = vi.fn().mockResolvedValueOnce(inbox()).mockResolvedValue(inbox({ selfManaged: true }));
+    const api = fakeApi({ getInbox, putTransferPrefs: vi.fn(async () => ({ status: 'error', http: -1, code: 'network' })) });
+    signedIn(api);
+    await store().refresh(L);
+    await store().refresh(L);
+    expect(mem.get(TRANSFER_SELF_SET_KEY(L))).toBe(true);
+    api.putTransferPrefs.mockResolvedValue({ status: 'ok', selfManaged: false } as never);
+    child();
+    await store().refresh(L);
+    expect(api.putTransferPrefs).toHaveBeenLastCalledWith(L, { selfManaged: false }, { deviceId: 'device-test', secret: 'sec' });
+  });
+
+  it('while moves cannot be agreed on a device the switch is not turned on (the Worker would refuse it)', async () => {
+    self();
+    const api = fakeApi({ getInbox: vi.fn(async () => inbox({ transferDeviceConsent: false })) });
+    signedIn(api);
+    await store().refresh(L);
+    expect(api.putTransferPrefs).not.toHaveBeenCalled();
+  });
+
   it('a refused switch leaves the inbox value', async () => {
     self();
     signedIn(fakeApi({ putTransferPrefs: vi.fn(async () => ({ status: 'error', http: -1, code: 'network' })) }));
@@ -406,22 +480,32 @@ describe('the device calls (online only, never queued)', () => {
 
   it('approve, decline and cancel report their slot and read the inbox again', async () => {
     const api = fakeApi({
+      getInbox: vi.fn(async () => inbox({ transfers: [req({ learnerState: 'pending' })] })),
       approveTransfer: vi.fn(async () => ({ status: 'ok', request: req() })),
       declineTransfer: vi.fn(async () => ({ status: 'ok', request: req({ status: 'declined' }) })),
       cancelTransfer: vi.fn(async () => ({ status: 'ok', request: req({ status: 'cancelled' }) })),
     });
     signedIn(api);
+    await store().refresh(L);
     expect(await store().approveMove(L, TID, consent)).toMatchObject({ ok: true });
     expect(api.approveTransfer).toHaveBeenCalledWith(L, TID, { consent }, { deviceId: 'device-test', secret: 'sec' });
     expect(await store().declineMove(L, TID)).toMatchObject({ ok: true, request: { status: 'declined' } });
     expect(await store().cancelMove(L, TID)).toMatchObject({ ok: true, request: { status: 'cancelled' } });
-    expect(api.getInbox).toHaveBeenCalledTimes(3);
+    expect(api.getInbox).toHaveBeenCalledTimes(4);
     expect(names()).toEqual([
       { name: 'space.transfer.consented', payload: { slot: 'learner', basis: 'device_attested' } },
       { name: 'space.transfer.declined', payload: { slot: 'learner' } },
       { name: 'space.transfer.cancelled', payload: {} },
     ]);
     expect(vi.mocked(track).mock.calls.every(([e]) => e.profileId === undefined)).toBe(true);
+  });
+
+  it('a resent approve that the Worker answers unchanged (the slot was already in) is not reported again', async () => {
+    const api = fakeApi({ getInbox: vi.fn(async () => inbox({ transfers: [req({ learnerState: 'consented' })] })), approveTransfer: vi.fn(async () => ({ status: 'ok', request: req() })) });
+    signedIn(api);
+    await store().refresh(L);
+    expect(await store().approveMove(L, TID, consent)).toMatchObject({ ok: true });
+    expect(names()).toEqual([]);
   });
 
   it('approve ties the consent to the sheet the inbox row carries (4.11), unless the caller already did', async () => {

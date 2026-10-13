@@ -164,20 +164,34 @@ describe('moveRule with no open request (classes-card.md, D16)', () => {
 
 describe('requestAction for an open request (classes-card.md table 1, app-sheets.md)', () => {
   it('route caregiver: a gated Review that opens the read-only sheet; its only action is the veto', () => {
-    expect(requestAction(req({ initiator: 'source', learnerState: 'pending', learnerRoute: 'caregiver' }), managed())).toEqual({ sheet: 'read_only', veto: 'decline', answerHere: false, cannotAnswerHere: false, gated: true, pinSetupFirst: false });
+    expect(requestAction(req({ initiator: 'source', learnerState: 'pending', learnerRoute: 'caregiver' }), managed())).toEqual({ sheet: 'read_only', veto: 'decline', answerHere: false, cannotAnswerHere: false, gated: true, pinSetupFirst: false, needs: null });
     expect(requestAction(req({ learnerState: 'pending', learnerRoute: 'caregiver' }), managed())).toMatchObject({ sheet: 'read_only', veto: 'cancel' });
   });
 
   it('route device with the learner consent reset: ApproveTransfer, when this device may still attest', () => {
-    expect(requestAction(req({ learnerState: 'pending' }), managed())).toEqual({ sheet: 'approve', attest: 'grown_up_pin', veto: 'decline', answerHere: true, cannotAnswerHere: false, gated: true, pinSetupFirst: false });
-    expect(requestAction(req({ learnerState: 'pending' }), selfOnly())).toEqual({ sheet: 'approve', attest: 'self', veto: 'decline', answerHere: true, cannotAnswerHere: false, gated: false, pinSetupFirst: false });
+    expect(requestAction(req({ learnerState: 'pending' }), managed())).toEqual({ sheet: 'approve', attest: 'grown_up_pin', veto: 'decline', answerHere: true, cannotAnswerHere: false, gated: true, pinSetupFirst: false, needs: null });
+    expect(requestAction(req({ learnerState: 'pending' }), selfOnly())).toEqual({ sheet: 'approve', attest: 'self', veto: 'decline', answerHere: true, cannotAnswerHere: false, gated: false, pinSetupFirst: false, needs: null });
     // A PIN made too recently, or a profile with no claim: the read-only sheet, never a dead-end yes.
     expect(requestAction(req({ learnerState: 'pending' }), managed({ pinCreatedAt: NOW }))).toMatchObject({ sheet: 'read_only', veto: 'cancel', answerHere: false });
     expect(requestAction(req({ learnerState: 'pending' }), selfOnly({ selfConsentAcceptedAt: null }))).toMatchObject({ sheet: 'read_only', veto: 'cancel' });
   });
 
+  it('route device on a teacher-started request never offers a yes: the read-only sheet with Not now (spec 4.11, 4.12)', () => {
+    expect(requestAction(req({ initiator: 'source', learnerState: 'pending', learnerRoute: 'device' }), managed())).toEqual({ sheet: 'read_only', veto: 'decline', answerHere: false, cannotAnswerHere: false, gated: true, pinSetupFirst: false, needs: null });
+  });
+
+  it('a reset learner-side request on route device that this device cannot claim says why: no PIN, or a PIN under a day old', () => {
+    expect(requestAction(req({ learnerState: 'pending' }), managed({ parentPinHash: null, pinCreatedAt: null }))).toMatchObject({ sheet: 'read_only', veto: 'cancel', needs: 'pin' });
+    expect(requestAction(req({ learnerState: 'pending' }), managed({ pinCreatedAt: NOW - HOUR }))).toMatchObject({ sheet: 'read_only', veto: 'cancel', needs: 'pin_age' });
+    // Nothing to explain when the slot is not waiting, on another route, or for a teacher request.
+    expect(requestAction(req(), managed({ parentPinHash: null, pinCreatedAt: null }))?.needs).toBeNull();
+    expect(requestAction(req({ learnerState: 'pending', learnerRoute: 'caregiver' }), managed({ parentPinHash: null, pinCreatedAt: null }))?.needs).toBeNull();
+    expect(requestAction(req({ initiator: 'source', learnerState: 'pending' }), managed({ pinCreatedAt: NOW - HOUR }))?.needs).toBeNull();
+    expect(requestAction(req({ learnerState: 'pending' }), selfOnly({ selfConsentAcceptedAt: null }))?.needs).toBeNull();
+  });
+
   it('route device in any other state: the read-only sheet with the veto (nothing to answer)', () => {
-    expect(requestAction(req(), managed())).toEqual({ sheet: 'read_only', veto: 'cancel', answerHere: false, cannotAnswerHere: false, gated: true, pinSetupFirst: false });
+    expect(requestAction(req(), managed())).toEqual({ sheet: 'read_only', veto: 'cancel', answerHere: false, cannotAnswerHere: false, gated: true, pinSetupFirst: false, needs: null });
   });
 
   it('route none: the read-only sheet, the veto, and "This move can\'t be answered here."', () => {
@@ -191,7 +205,8 @@ describe('requestAction for an open request (classes-card.md table 1, app-sheets
 
   it('a route this app does not know reads as none; an unknown initiator reads learner-side (Cancel the request)', () => {
     expect(requestAction(req({ learnerState: 'pending', learnerRoute: 'carrier-pigeon' }), managed())).toMatchObject({ sheet: 'read_only', cannotAnswerHere: true });
-    expect(requestAction(req({ initiator: 'principal', learnerState: 'pending', learnerRoute: 'device' }), managed())).toMatchObject({ sheet: 'approve', veto: 'decline' });
+    // A yes is offered only for a request known to be learner-started: an unknown initiator never yields one.
+    expect(requestAction(req({ initiator: 'principal', learnerState: 'pending', learnerRoute: 'device' }), managed())).toMatchObject({ sheet: 'read_only', veto: 'cancel', answerHere: false });
     expect(requestAction(req({ initiator: 'principal', learnerRoute: 'caregiver' }), managed())).toMatchObject({ sheet: 'read_only', veto: 'cancel' });
   });
 
@@ -208,9 +223,10 @@ describe('requestAction for an open request (classes-card.md table 1, app-sheets
       cannotAnswerHere: false,
       gated: true,
       pinSetupFirst: true,
+      needs: null,
     });
     expect(requestAction(req({ learnerState: 'pending', learnerRoute: 'device' }), managed({ parentPinHash: null, pinCreatedAt: null }))).toMatchObject({ sheet: 'read_only', pinSetupFirst: true });
-    expect(requestAction(req({ learnerRoute: 'caregiver' }), selfOnly())).toMatchObject({ gated: false, pinSetupFirst: false });
+    expect(requestAction(req({ learnerRoute: 'caregiver' }), selfOnly())).toMatchObject({ gated: false, pinSetupFirst: false, needs: null });
   });
 
   it('a request that is no longer open has no action', () => {

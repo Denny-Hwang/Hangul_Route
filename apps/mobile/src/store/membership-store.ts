@@ -170,10 +170,16 @@ export const useMembershipStore = create<State & Actions>((set, get) => {
       // After a move the old class's tablet is revoked (section 4.6): its classes are gone until it joins again.
       // Only while the inbox says moves are on, so nothing changes for a learner while transfers are locked.
       if (result.code === 'http_401' && (await transfersWereOn(learnerId)) && (await scopeOf(learnerId, creds)) === 'class') {
-        put(learnerId, []);
-        // Its class plans go with the classes: this device gets no other inbox to clear them.
-        await usePlanStore.getState().applyPlans(learnerId, []);
-        set((s) => ({ rejoinByLearner: { ...s.rejoinByLearner, [learnerId]: true }, transfersByLearner: withoutKey(s.transfersByLearner, learnerId) }));
+        // Only the transition is news: once the classes and plans are gone, later 401s change nothing and the
+        // one-off "Join your new class again." line stays dismissed.
+        const held = (get().byLearner[learnerId] ?? (await readJson<LearnerMembership[]>(key(learnerId))) ?? []).length > 0 || (usePlanStore.getState().byLearner[learnerId] ?? []).length > 0;
+        if (held) {
+          put(learnerId, []);
+          // Its class plans go with the classes: this device gets no other inbox to clear them.
+          await usePlanStore.getState().applyPlans(learnerId, []);
+          set((s) => ({ rejoinByLearner: { ...s.rejoinByLearner, [learnerId]: true } }));
+        }
+        set((s) => ({ transfersByLearner: withoutKey(s.transfersByLearner, learnerId) }));
       }
       return offline();
     }
@@ -198,18 +204,24 @@ export const useMembershipStore = create<State & Actions>((set, get) => {
    */
   async function applyTransfers(learnerId: string, inbox: SyncInbox, rows: LearnerMembership[], client: SyncApiClient, creds: DeviceCredentials, again: boolean): Promise<LearnerMembership[] | null> {
     // An older Worker (or a test double) may send none of these fields; read them as off and empty.
-    const raw = inbox as Partial<Pick<SyncInbox, 'transfers' | 'transfersEnabled' | 'transferDeviceConsent' | 'selfManaged'>>;
+    const raw = inbox as Partial<Pick<SyncInbox, 'transfers' | 'transfersEnabled' | 'transferDeviceConsent' | 'selfManaged' | 'deviceScope'>>;
     const all: readonly InboxTransfer[] = raw.transfers ?? [];
     const enabled = raw.transfersEnabled ?? false;
+    const deviceConsent = raw.transferDeviceConsent ?? false;
     let selfManaged = raw.selfManaged ?? false;
-    const scope = await scopeOf(learnerId, creds);
+    // The Worker says which credential this is (T-5c), so a tablet a class relinked before this build is known as one.
+    // An older Worker sends nothing (null): the marker stands as it is.
+    const marked = await scopeOf(learnerId, creds);
+    if (raw.deviceScope === 'class' && marked !== 'class') await writeJson(TRANSFER_SCOPE_KEY(learnerId), classScopeMarker(creds.secret));
+    if (raw.deviceScope === 'full' && marked === 'class') await writeJson(TRANSFER_SCOPE_KEY(learnerId), null);
+    const scope = raw.deviceScope ?? marked;
     const previous = get().transfersByLearner[learnerId];
     const before = previous?.requests ?? [];
     if (previous?.enabled !== enabled) await writeJson(TRANSFERS_ON_KEY(learnerId), enabled);
     set((s) => ({
       transfersByLearner: {
         ...s.transfersByLearner,
-        [learnerId]: { enabled, deviceConsent: raw.transferDeviceConsent ?? false, selfManaged, scope, requests: all.filter((t) => t.status !== 'executed') },
+        [learnerId]: { enabled, deviceConsent, selfManaged, scope, requests: all.filter((t) => t.status !== 'executed') },
       },
     }));
 
@@ -235,15 +247,22 @@ export const useMembershipStore = create<State & Actions>((set, get) => {
     const consentedSelf = profile?.learnerType === 'self' && useAccountStore.getState().selfConsentAcceptedAt !== null;
     const setHere = (await readJson<unknown>(TRANSFER_SELF_SET_KEY(learnerId))) === true;
     const wanted = consentedSelf ? true : setHere && profile !== undefined && profile.learnerType !== undefined ? false : null;
-    if (enabled && scope === 'full' && wanted !== null && wanted !== selfManaged) {
+    // The mark is written before the on switch is sent (and when the server already has it on for this consented self
+    // profile), so a lost answer never leaves this device unable to turn it off later.
+    if (enabled && scope === 'full' && consentedSelf && !setHere && (selfManaged || deviceConsent)) await writeJson(TRANSFER_SELF_SET_KEY(learnerId), true);
+    // On is accepted only while moves can be agreed on a device (T-5c); off always is.
+    const sendable = wanted === false || deviceConsent;
+    if (enabled && scope === 'full' && wanted !== null && wanted !== selfManaged && sendable) {
       const sent = await client.putTransferPrefs(learnerId, { selfManaged: wanted }, creds);
       if (sent.status === 'ok') {
         selfManaged = sent.selfManaged;
-        await writeJson(TRANSFER_SELF_SET_KEY(learnerId), wanted);
+        if (!wanted) await writeJson(TRANSFER_SELF_SET_KEY(learnerId), false);
         set((s) => {
           const current = s.transfersByLearner[learnerId];
           return current ? { transfersByLearner: { ...s.transfersByLearner, [learnerId]: { ...current, selfManaged } } } : {};
         });
+      } else {
+        await noteScopeLimited(learnerId, creds, sent);
       }
     }
 
@@ -277,7 +296,7 @@ export const useMembershipStore = create<State & Actions>((set, get) => {
   async function answerMove(
     learnerId: string,
     send: (client: SyncApiClient, creds: DeviceCredentials) => ReturnType<SyncApiClient['cancelTransfer']>,
-    event: Parameters<typeof track>[0],
+    event: Parameters<typeof track>[0] | ((request: InboxTransfer) => Parameters<typeof track>[0] | null),
   ): Promise<TransferRequestOutcome> {
     const ready = await moveClient(learnerId);
     if ('ok' in ready) return ready;
@@ -286,7 +305,8 @@ export const useMembershipStore = create<State & Actions>((set, get) => {
       await noteScopeLimited(learnerId, ready.creds, result);
       return failure(result);
     }
-    void track(event);
+    const report = typeof event === 'function' ? event(result.request) : event;
+    if (report) void track(report);
     await get().refresh(learnerId);
     return { ok: true, request: result.request };
   }
@@ -340,9 +360,14 @@ export const useMembershipStore = create<State & Actions>((set, get) => {
 
     approveMove: (learnerId, transferId, consent) => {
       // Tie the record to the sheet the device showed (4.11): the inbox row carries its digest while the slot is pending.
-      const shown = get().transfersByLearner[learnerId]?.requests.find((t) => t.id === transferId)?.termsDigest ?? null;
+      const row = get().transfersByLearner[learnerId]?.requests.find((t) => t.id === transferId);
+      const shown = row?.termsDigest ?? null;
       const tied: DeviceTransferConsent = consent.termsDigest === undefined && shown !== null ? { ...consent, termsDigest: shown } : consent;
-      return answerMove(learnerId, (client, creds) => client.approveTransfer(learnerId, transferId, { consent: tied }, creds), { name: 'space.transfer.consented', payload: { slot: 'learner', basis: 'device_attested' } });
+      // The Worker answers a resent approve unchanged (200, section 4.4): reported only when this call filled the slot.
+      const wasPending = row?.learnerState === 'pending';
+      return answerMove(learnerId, (client, creds) => client.approveTransfer(learnerId, transferId, { consent: tied }, creds), (request) =>
+        wasPending && request.learnerState === 'consented' ? { name: 'space.transfer.consented', payload: { slot: 'learner', basis: 'device_attested' } } : null,
+      );
     },
 
     declineMove: (learnerId, transferId) => answerMove(learnerId, (client, creds) => client.declineTransfer(learnerId, transferId, creds), { name: 'space.transfer.declined', payload: { slot: 'learner' } }),

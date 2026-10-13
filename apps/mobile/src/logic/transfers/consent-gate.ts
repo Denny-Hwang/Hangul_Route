@@ -139,6 +139,12 @@ export interface RequestAction {
   gated: boolean;
   /** A managed device with no PIN runs the existing PIN setup first, then the sheet (D24): the PIN guards the veto, never a yes. */
   pinSetupFirst: boolean;
+  /**
+   * Why a reset learner-started request on route `device` cannot get its yes here (classes-card.md (d), (d')):
+   * `pin` "A grown-up needs to set up a PIN first." with Set up PIN, `pin_age` "Moves open one day after the
+   * PIN is set."; null otherwise.
+   */
+  needs: 'pin' | 'pin_age' | null;
 }
 
 /**
@@ -155,8 +161,11 @@ export function requestAction(t: InboxTransfer, d: DeviceFacts): RequestAction |
   const learnerWaiting = t.learnerState === 'pending';
   const gated = gatedOn(d);
   const common = { gated, pinSetupFirst: gated && d.parentPinHash === null, cannotAnswerHere: route === 'none' && learnerWaiting };
-  if (t.status === 'approved') return { sheet: t.blockReason === null ? 'planned' : 'read_only', veto: 'cancel', answerHere: false, ...common };
+  if (t.status === 'approved') return { sheet: t.blockReason === null ? 'planned' : 'read_only', veto: 'cancel', answerHere: false, ...common, needs: null };
+  // Only a request known to be learner-started can get a yes on the device (guard 10); an unknown initiator never can.
+  const askedHere = route === 'device' && learnerWaiting && t.initiator === 'learner_side';
   const claim = deviceAttest(d);
-  if (route === 'device' && learnerWaiting && claim.kind === 'attest') return { sheet: 'approve', attest: claim.attest, veto: 'decline', answerHere: true, ...common };
-  return { sheet: 'read_only', veto: initiator === 'source' ? 'decline' : 'cancel', answerHere: false, ...common };
+  if (askedHere && claim.kind === 'attest') return { sheet: 'approve', attest: claim.attest, veto: 'decline', answerHere: true, ...common, needs: null };
+  const needs = !askedHere ? null : claim.kind === 'needs_pin' ? 'pin' : claim.kind === 'pin_too_new' ? 'pin_age' : null;
+  return { sheet: 'read_only', veto: initiator === 'source' ? 'decline' : 'cancel', answerHere: false, ...common, needs };
 }
