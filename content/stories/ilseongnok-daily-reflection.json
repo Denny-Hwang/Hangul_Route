@@ -2,13 +2,15 @@
   "v": 1,
   "id": "story:ilseongnok-daily-reflection",
   "state": "ready",
-  "contentVer": 2,
+  "contentVer": 3,
   "title": {
     "ko": "하루를 돌아본 정조의 일기, 일성록",
     "romanization": "Harureul dorabon Jeongjoui ilgi, Ilseongnok",
     "en": "King Jeongjo's Diary of Daily Reflection"
   },
   "summaryEn": "As a young royal heir, Jeongjo kept a diary to look back on each day. It grew into the Ilseongnok, an official record of the court from 1760 to 1910.",
+  "hoyaIntroEn": "Let's read about a young royal heir who looked back on each day in his diary.",
+  "hoyaOutroEn": "Looking back on each day helped Jeongjo. What went well for you today?",
   "theme": "letters",
   "kind": "documentary",
   "recommendedStage": 4,
@@ -513,8 +515,22 @@
     }
   ],
   "coverSceneId": "s1",
+  "rewardCardIds": {
+    "listen": "card:story-ilseongnok-daily-reflection"
+  },
+  "shelf": {
+    "category": "culture",
+    "order": 16,
+    "sampler": false,
+    "minutes": 4
+  },
   "pillarTags": [],
   "companionId": "hoya",
+  "card": {
+    "titleEn": "Daily Reflections",
+    "keywordId": "ilseongnok",
+    "factId": "f1"
+  },
   "facts": [
     {
       "id": "f1",

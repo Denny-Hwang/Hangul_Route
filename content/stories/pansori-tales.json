@@ -2,13 +2,15 @@
   "v": 1,
   "id": "story:pansori-tales",
   "state": "ready",
-  "contentVer": 3,
+  "contentVer": 4,
   "title": {
     "ko": "판소리로 듣는 흥부와 놀부, 토끼와 자라",
     "romanization": "Pansoriro deunneun Heungbuwa Nolbu, tokkiwa jara",
     "en": "Pansori Tales: Heungbu's Swallow and the Clever Rabbit (Traditional Tales)"
   },
   "summaryEn": "Hoya visits a pansori performance (UNESCO 2003/2008) and hears two traditional stories from its five surviving works: kind Heungbu and the grateful swallow, and the clever rabbit who escapes the Dragon King's palace. This Korean rabbit-and-turtle tale is a different story from Aesop's 'The Tortoise and the Hare'.",
+  "hoyaIntroEn": "Let's listen to pansori! One singer and one drummer tell two old tales.",
+  "hoyaOutroEn": "A kind brother, a grateful swallow and a clever rabbit. Eolssigu, what a show!",
   "theme": "crafts",
   "kind": "folk-tale",
   "recommendedStage": 2,
@@ -616,8 +618,22 @@
     }
   ],
   "coverSceneId": "s1",
+  "rewardCardIds": {
+    "listen": "card:story-pansori-tales"
+  },
+  "shelf": {
+    "category": "story-time",
+    "order": 6,
+    "sampler": false,
+    "minutes": 6
+  },
   "pillarTags": [],
   "companionId": "hoya",
+  "card": {
+    "titleEn": "Pansori",
+    "keywordId": "pansori",
+    "factId": "f1"
+  },
   "facts": [
     {
       "id": "f1",

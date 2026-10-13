@@ -2,13 +2,15 @@
   "v": 1,
   "id": "story:uigwe-royal-birthday",
   "state": "ready",
-  "contentVer": 2,
+  "contentVer": 3,
   "title": {
     "ko": "왕실 잔치를 그림으로 남긴 의궤",
     "romanization": "Wangsil janchireul geurimeuro namgin uigwe",
     "en": "A Picture Record of a Royal Birthday"
   },
   "summaryEn": "Uigwe were detailed reports, full of pictures, of royal ceremonies and projects. Hoya opens the Wonhaeng Eulmyo Jeongni Uigwe, the record of King Jeongjo's 1795 celebration for his mother's 60th birthday.",
+  "hoyaIntroEn": "Let's open a royal report full of pictures, made for a big birthday celebration!",
+  "hoyaOutroEn": "Words and pictures kept the royal celebration alive. Now you know what an uigwe is!",
   "theme": "rites",
   "kind": "documentary",
   "recommendedStage": 5,
@@ -575,8 +577,22 @@
     }
   ],
   "coverSceneId": "s1",
+  "rewardCardIds": {
+    "listen": "card:story-uigwe-royal-birthday"
+  },
+  "shelf": {
+    "category": "culture",
+    "order": 17,
+    "sampler": false,
+    "minutes": 5
+  },
   "pillarTags": [],
   "companionId": "hoya",
+  "card": {
+    "titleEn": "Royal Picture Record",
+    "keywordId": "uigwe",
+    "factId": "f1"
+  },
   "facts": [
     {
       "id": "f1",

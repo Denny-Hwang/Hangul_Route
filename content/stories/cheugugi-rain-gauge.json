@@ -2,13 +2,15 @@
   "v": 1,
   "id": "story:cheugugi-rain-gauge",
   "state": "ready",
-  "contentVer": 3,
+  "contentVer": 4,
   "title": {
     "ko": "비를 재는 그릇, 측우기",
     "romanization": "Bireul jaeneun geureut, cheugugi",
     "en": "The Bowl That Measured the Rain"
   },
   "summaryEn": "Hoya follows the Joseon crown prince's rain experiments to the 1442 rain gauge, the cheugugi, and meets the only Joseon rain-gauge vessel known to survive.",
+  "hoyaIntroEn": "Pitter-patter! Let's find out how Joseon measured the rain.",
+  "hoyaOutroEn": "Now you know how people in Joseon measured the rain. Listen for the raindrops next time it rains!",
   "theme": "crafts",
   "kind": "science",
   "recommendedStage": 1,
@@ -491,8 +493,22 @@
     }
   ],
   "coverSceneId": "s1",
+  "rewardCardIds": {
+    "listen": "card:story-cheugugi-rain-gauge"
+  },
+  "shelf": {
+    "category": "culture",
+    "order": 6,
+    "sampler": true,
+    "minutes": 4
+  },
   "pillarTags": [],
   "companionId": "hoya",
+  "card": {
+    "titleEn": "Rain Gauge",
+    "keywordId": "cheugugi",
+    "factId": "f2"
+  },
   "facts": [
     {
       "id": "f1",

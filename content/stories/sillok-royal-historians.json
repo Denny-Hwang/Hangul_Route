@@ -2,13 +2,15 @@
   "v": 1,
   "id": "story:sillok-royal-historians",
   "state": "ready",
-  "contentVer": 3,
+  "contentVer": 4,
   "title": {
     "ko": "호야, 사관을 만나다",
     "romanization": "Hoya, sagwaneul mannada",
     "en": "Hoya Meets the Royal Historians"
   },
   "summaryEn": "Hoya learns who wrote down the words of Joseon kings and why even the king could not read their notes. A real 1404 entry from the Annals shows how faithfully they recorded.",
+  "hoyaIntroEn": "How do we know what kings said long ago? Let's meet the people who wrote it all down!",
+  "hoyaOutroEn": "The historians wrote it all down, day after day. Now you know where the Annals came from!",
   "theme": "letters",
   "kind": "documentary",
   "recommendedStage": 1,
@@ -483,8 +485,22 @@
     }
   ],
   "coverSceneId": "s1",
+  "rewardCardIds": {
+    "listen": "card:story-sillok-royal-historians"
+  },
+  "shelf": {
+    "category": "culture",
+    "order": 5,
+    "sampler": false,
+    "minutes": 4
+  },
   "pillarTags": [],
   "companionId": "hoya",
+  "card": {
+    "titleEn": "Royal Historian",
+    "keywordId": "sagwan",
+    "factId": "f1"
+  },
   "facts": [
     {
       "id": "f1",

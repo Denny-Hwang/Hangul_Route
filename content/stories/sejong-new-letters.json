@@ -2,13 +2,15 @@
   "v": 1,
   "id": "story:sejong-new-letters",
   "state": "ready",
-  "contentVer": 2,
+  "contentVer": 3,
   "title": {
     "ko": "세종대왕의 새 글자",
     "romanization": "Sejongdaewangui sae geulja",
     "en": "King Sejong's New Letters"
   },
   "summaryEn": "Hoya travels back to Joseon to learn why King Sejong created 28 new letters in 1443, and how the book Hunminjeongeum explained them in 1446.",
+  "hoyaIntroEn": "Come with me to Joseon! Let's find out why King Sejong made new letters.",
+  "hoyaOutroEn": "Now you know where Hangul began. King Sejong made letters for everyone, and you are reading them!",
   "theme": "letters",
   "kind": "documentary",
   "recommendedStage": 1,
@@ -588,8 +590,22 @@
     }
   ],
   "coverSceneId": "s1",
+  "rewardCardIds": {
+    "listen": "card:story-sejong-new-letters"
+  },
+  "shelf": {
+    "category": "culture",
+    "order": 1,
+    "sampler": true,
+    "minutes": 4
+  },
   "pillarTags": [],
   "companionId": "hoya",
+  "card": {
+    "titleEn": "King Sejong",
+    "keywordId": "sejong-daewang",
+    "factId": "f1"
+  },
   "facts": [
     {
       "id": "f1",

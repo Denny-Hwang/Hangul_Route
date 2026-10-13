@@ -2,13 +2,15 @@
   "v": 1,
   "id": "story:hangeul-day",
   "state": "ready",
-  "contentVer": 2,
+  "contentVer": 3,
   "title": {
     "ko": "한글날을 축하해요!",
     "romanization": "Hangeullareul chukhahaeyo!",
     "en": "Happy Hangul Day!"
   },
   "summaryEn": "Hoya finds out why South Korea celebrates Hangul Day on October 9: it is based on a date written at the end of the 1446 Haerye book, which was found around 1940. The day began as 'Gagyanal' in 1926.",
+  "hoyaIntroEn": "Let's find out why Hangul has its own special day!",
+  "hoyaOutroEn": "Happy Hangul Day! Now you know why South Korea celebrates it every October.",
   "theme": "letters",
   "kind": "documentary",
   "recommendedStage": 1,
@@ -552,8 +554,22 @@
     }
   ],
   "coverSceneId": "s1",
+  "rewardCardIds": {
+    "listen": "card:story-hangeul-day"
+  },
+  "shelf": {
+    "category": "culture",
+    "order": 3,
+    "sampler": true,
+    "minutes": 4
+  },
   "pillarTags": [],
   "companionId": "hoya",
+  "card": {
+    "titleEn": "National Treasure",
+    "keywordId": "gukbo",
+    "factId": "f1"
+  },
   "facts": [
     {
       "id": "f1",

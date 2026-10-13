@@ -2,13 +2,15 @@
   "v": 1,
   "id": "story:chuseok-ganggangsullae",
   "state": "ready",
-  "contentVer": 3,
+  "contentVer": 4,
   "title": {
     "ko": "추석 송편과 보름달",
     "romanization": "Chuseok songpyeongwa boreumdal",
     "en": "Chuseok: Songpyeon and the Full Moon"
   },
   "summaryEn": "At Chuseok (Hangawi), Hoya joins a family going back to their hometown, makes songpyeon steamed on pine needles, and watches women dance Ganggangsullae hand in hand under the full moon.",
+  "hoyaIntroEn": "It's Chuseok! Let's make songpyeon and watch the full moon together.",
+  "hoyaOutroEn": "Songpyeon, the full moon and a circle dance. Happy Chuseok!",
   "theme": "rites",
   "kind": "intangible",
   "recommendedStage": 1,
@@ -640,8 +642,22 @@
     }
   ],
   "coverSceneId": "s1",
+  "rewardCardIds": {
+    "listen": "card:story-chuseok-ganggangsullae"
+  },
+  "shelf": {
+    "category": "story-time",
+    "order": 2,
+    "sampler": true,
+    "minutes": 5
+  },
   "pillarTags": [],
   "companionId": "hoya",
+  "card": {
+    "titleEn": "Circle Dance",
+    "keywordId": "ganggangsullae",
+    "factId": "f1"
+  },
   "facts": [
     {
       "id": "f1",

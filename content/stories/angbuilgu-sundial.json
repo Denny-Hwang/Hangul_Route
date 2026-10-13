@@ -2,13 +2,15 @@
   "v": 1,
   "id": "story:angbuilgu-sundial",
   "state": "ready",
-  "contentVer": 2,
+  "contentVer": 3,
   "title": {
     "ko": "하늘을 바라보는 해시계, 앙부일구",
     "romanization": "Haneureul baraboneun haesigye, angbuilgu",
     "en": "The Sky-Facing Pot That Told the Time"
   },
   "summaryEn": "Hoya discovers King Sejong's bowl-shaped sundials, set beside busy streets in 1434 with animal pictures so that people who could not read could still tell the time.",
+  "hoyaIntroEn": "Can a shadow tell the time? Let's look at a sundial shaped like a bowl!",
+  "hoyaOutroEn": "The sun's shadow told the time, even for people who could not read. Clever, right?",
   "theme": "nature",
   "kind": "science",
   "recommendedStage": 2,
@@ -468,8 +470,22 @@
     }
   ],
   "coverSceneId": "s1",
+  "rewardCardIds": {
+    "listen": "card:story-angbuilgu-sundial"
+  },
+  "shelf": {
+    "category": "culture",
+    "order": 11,
+    "sampler": false,
+    "minutes": 4
+  },
   "pillarTags": [],
   "companionId": "hoya",
+  "card": {
+    "titleEn": "Sundial",
+    "keywordId": "angbuilgu",
+    "factId": "f1"
+  },
   "facts": [
     {
       "id": "f1",

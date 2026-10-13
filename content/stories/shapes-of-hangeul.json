@@ -2,13 +2,15 @@
   "v": 1,
   "id": "story:shapes-of-hangeul",
   "state": "ready",
-  "contentVer": 3,
+  "contentVer": 4,
   "title": {
     "ko": "한글 모양의 비밀",
     "romanization": "Hangeul moyangui bimil",
     "en": "The Secret in the Shapes"
   },
   "summaryEn": "Hoya reads the 1446 Hunminjeongeum Haerye book and discovers that the five basic Hangul consonants copy the shapes of the tongue, mouth, teeth and throat, while the basic vowels come from the sky, the earth and a person.",
+  "hoyaIntroEn": "Did you know the letters hide secret shapes? Let's open an old book and find them!",
+  "hoyaOutroEn": "Tongue, mouth, teeth, throat, sky, earth and a person: you found the secrets in the shapes!",
   "theme": "letters",
   "kind": "documentary",
   "recommendedStage": 1,
@@ -616,8 +618,22 @@
     }
   ],
   "coverSceneId": "s1",
+  "rewardCardIds": {
+    "listen": "card:story-shapes-of-hangeul"
+  },
+  "shelf": {
+    "category": "culture",
+    "order": 2,
+    "sampler": false,
+    "minutes": 5
+  },
   "pillarTags": [],
   "companionId": "hoya",
+  "card": {
+    "titleEn": "Consonants",
+    "keywordId": "jaeum",
+    "factId": "f1"
+  },
   "facts": [
     {
       "id": "f1",

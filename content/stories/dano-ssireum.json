@@ -2,13 +2,15 @@
   "v": 1,
   "id": "story:dano-ssireum",
   "state": "ready",
-  "contentVer": 3,
+  "contentVer": 4,
   "title": {
     "ko": "단옷날의 그네, 탈, 씨름",
     "romanization": "Danonnarui geune, tal, ssireum",
     "en": "Dano Day: Swings, Masks and Ssireum"
   },
   "summaryEn": "Hoya celebrates Dano, Korea's early-summer holiday: hair washed in changpo water, high-flying swings, ssireum wrestling, and the UNESCO-listed Gangneung Danoje with its wordless Gwanno mask drama.",
+  "hoyaIntroEn": "Dano is here! Let's swing high, watch a mask play and cheer at ssireum.",
+  "hoyaOutroEn": "Swings, masks and ssireum: what a fun Dano Day!",
   "theme": "rites",
   "kind": "intangible",
   "recommendedStage": 2,
@@ -590,8 +592,22 @@
     }
   ],
   "coverSceneId": "s1",
+  "rewardCardIds": {
+    "listen": "card:story-dano-ssireum"
+  },
+  "shelf": {
+    "category": "story-time",
+    "order": 4,
+    "sampler": false,
+    "minutes": 5
+  },
   "pillarTags": [],
   "companionId": "hoya",
+  "card": {
+    "titleEn": "Dano",
+    "keywordId": "dano",
+    "factId": "f2"
+  },
   "facts": [
     {
       "id": "f1",

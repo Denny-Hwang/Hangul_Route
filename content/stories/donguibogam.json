@@ -2,13 +2,15 @@
   "v": 1,
   "id": "story:donguibogam",
   "state": "ready",
-  "contentVer": 3,
+  "contentVer": 4,
   "title": {
     "ko": "허준의 동의보감",
     "romanization": "Heojunui Donguibogam",
     "en": "Heo Jun's Treasured Mirror of Medicine"
   },
   "summaryEn": "Hoya learns how the royal doctor Heo Jun finished Donguibogam in 1610, a medical encyclopedia that valued staying healthy and wrote herb names in Hangul, now on UNESCO's Memory of the World Register.",
+  "hoyaIntroEn": "Let's meet a royal doctor who wrote a giant book about staying healthy.",
+  "hoyaOutroEn": "Heo Jun's book helped people care for their bodies. Stretch with me, and stay healthy!",
   "theme": "life",
   "kind": "documentary",
   "recommendedStage": 3,
@@ -523,8 +525,22 @@
     }
   ],
   "coverSceneId": "s1",
+  "rewardCardIds": {
+    "listen": "card:story-donguibogam"
+  },
+  "shelf": {
+    "category": "culture",
+    "order": 15,
+    "sampler": false,
+    "minutes": 5
+  },
   "pillarTags": [],
   "companionId": "hoya",
+  "card": {
+    "titleEn": "Medicine Book",
+    "keywordId": "donguibogam",
+    "factId": "f3"
+  },
   "facts": [
     {
       "id": "f1",

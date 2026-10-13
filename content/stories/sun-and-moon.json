@@ -2,13 +2,15 @@
   "v": 1,
   "id": "story:sun-and-moon",
   "state": "ready",
-  "contentVer": 3,
+  "contentVer": 4,
   "title": {
     "ko": "해님 달님",
     "romanization": "Haenim Dallim",
     "en": "The Sun and the Moon (A Traditional Tale)"
   },
   "summaryEn": "A gentle, simplified retelling of the traditional Korean folk tale Haenim Dallim: a brother and sister outwit a tricky tiger, climb a rope into the sky, and become the sun and the moon.",
+  "hoyaIntroEn": "Story time! Here is an old folk tale about a brother, a sister and a tricky tiger.",
+  "hoyaOutroEn": "The brother and sister are safe in the sky. That is the end of our tale!",
   "theme": "nature",
   "kind": "folk-tale",
   "recommendedStage": 1,
@@ -615,8 +617,22 @@
     }
   ],
   "coverSceneId": "s1",
+  "rewardCardIds": {
+    "listen": "card:story-sun-and-moon"
+  },
+  "shelf": {
+    "category": "story-time",
+    "order": 3,
+    "sampler": true,
+    "minutes": 5
+  },
   "pillarTags": [],
   "companionId": "hoya",
+  "card": {
+    "titleEn": "Strong Rope",
+    "keywordId": "dongajul",
+    "factId": "f5"
+  },
   "facts": [
     {
       "id": "f1",

@@ -2,13 +2,15 @@
   "v": 1,
   "id": "story:janggyeong-panjeon",
   "state": "ready",
-  "contentVer": 3,
+  "contentVer": 4,
   "title": {
     "ko": "바람이 지키는 장경판전",
     "romanization": "Barami jikineun Janggyeongpanjeon",
     "en": "Guarded by the Wind"
   },
   "summaryEn": "Hoya explores Janggyeong Panjeon, the 15th-century halls at Haeinsa whose clever windows and layered floors have protected the Tripitaka Koreana woodblocks for some 500 years.",
+  "hoyaIntroEn": "How do you keep old woodblocks safe? Let's ask the wind at Haeinsa!",
+  "hoyaOutroEn": "Windows, floors and fresh air keep the woodblocks safe. Thanks for exploring with me!",
   "theme": "crafts",
   "kind": "site",
   "recommendedStage": 2,
@@ -554,8 +556,22 @@
     }
   ],
   "coverSceneId": "s1",
+  "rewardCardIds": {
+    "listen": "card:story-janggyeong-panjeon"
+  },
+  "shelf": {
+    "category": "culture",
+    "order": 10,
+    "sampler": false,
+    "minutes": 5
+  },
   "pillarTags": [],
   "companionId": "hoya",
+  "card": {
+    "titleEn": "Wind",
+    "keywordId": "baram",
+    "factId": "f2"
+  },
   "facts": [
     {
       "id": "f1",

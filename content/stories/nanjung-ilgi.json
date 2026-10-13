@@ -2,13 +2,15 @@
   "v": 1,
   "id": "story:nanjung-ilgi",
   "state": "ready",
-  "contentVer": 3,
+  "contentVer": 4,
   "title": {
     "ko": "이순신 장군의 난중일기",
     "romanization": "Isunsin janggunui Nanjungilgi",
     "en": "Admiral Yi's Diary"
   },
   "summaryEn": "Hoya opens the diary that Admiral Yi Sunsin kept almost every day from 1592 to 1598, full of weather, feelings and everyday life, now a National Treasure and UNESCO Memory of the World.",
+  "hoyaIntroEn": "Do you keep a diary? Let's open the diary of Admiral Yi.",
+  "hoyaOutroEn": "Weather, feelings and everyday life: Admiral Yi wrote it all down. Maybe you can keep a diary too!",
   "theme": "letters",
   "kind": "documentary",
   "recommendedStage": 3,
@@ -506,8 +508,22 @@
     }
   ],
   "coverSceneId": "s1",
+  "rewardCardIds": {
+    "listen": "card:story-nanjung-ilgi"
+  },
+  "shelf": {
+    "category": "culture",
+    "order": 14,
+    "sampler": false,
+    "minutes": 4
+  },
   "pillarTags": [],
   "companionId": "hoya",
+  "card": {
+    "titleEn": "War Diary",
+    "keywordId": "nanjung-ilgi",
+    "factId": "f2"
+  },
   "facts": [
     {
       "id": "f1",

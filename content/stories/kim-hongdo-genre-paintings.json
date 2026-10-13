@@ -2,13 +2,15 @@
   "v": 1,
   "id": "story:kim-hongdo-genre-paintings",
   "state": "ready",
-  "contentVer": 3,
+  "contentVer": 4,
   "title": {
     "ko": "김홍도의 풍속화, 씨름과 서당",
     "romanization": "Gimhongdoui pungsokhwa, ssireumgwa seodang",
     "en": "Kim Hongdo's Pictures of Everyday Life"
   },
   "summaryEn": "Hoya looks closely at Ssireum and Seodang from Danwon's genre painting album at the National Museum of Korea, spotting a taffy seller, shoes that someone has taken off, and a sniffling schoolboy.",
+  "hoyaIntroEn": "Let's look closely at old pictures of everyday life. What can you spot?",
+  "hoyaOutroEn": "A taffy seller, shoes taken off, a sniffling schoolboy: you have sharp eyes!",
   "theme": "life",
   "kind": "art",
   "recommendedStage": 1,
@@ -526,8 +528,22 @@
     }
   ],
   "coverSceneId": "s1",
+  "rewardCardIds": {
+    "listen": "card:story-kim-hongdo-genre-paintings"
+  },
+  "shelf": {
+    "category": "culture",
+    "order": 7,
+    "sampler": false,
+    "minutes": 5
+  },
   "pillarTags": [],
   "companionId": "hoya",
+  "card": {
+    "titleEn": "Genre Painting",
+    "keywordId": "pungsokhwa",
+    "factId": "f1"
+  },
   "facts": [
     {
       "id": "f1",

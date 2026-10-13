@@ -2,13 +2,15 @@
   "v": 1,
   "id": "story:joseon-records-today",
   "state": "ready",
-  "contentVer": 3,
+  "contentVer": 4,
   "title": {
     "ko": "오래된 기록, 새로운 발견",
     "romanization": "Oraedoen girok, saeroun balgyeon",
     "en": "Old Records, New Discoveries"
   },
   "summaryEn": "How do Joseon records help people today? Hoya sees a fortress repaired from uigwe drawings, a festival that recreates a royal procession, scientists reading old weather notes, and the Annals open to everyone online.",
+  "hoyaIntroEn": "What do old records do for us today? Let's go and see!",
+  "hoyaOutroEn": "Records written long ago still help us today. What will you write down?",
   "theme": "letters",
   "kind": "documentary",
   "recommendedStage": 6,
@@ -590,8 +592,22 @@
     }
   ],
   "coverSceneId": "s1",
+  "rewardCardIds": {
+    "listen": "card:story-joseon-records-today"
+  },
+  "shelf": {
+    "category": "culture",
+    "order": 18,
+    "sampler": false,
+    "minutes": 4
+  },
   "pillarTags": [],
   "companionId": "hoya",
+  "card": {
+    "titleEn": "Hwaseong Fortress",
+    "keywordId": "hwaseong",
+    "factId": "f2"
+  },
   "facts": [
     {
       "id": "f1",

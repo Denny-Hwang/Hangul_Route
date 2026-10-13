@@ -2,13 +2,15 @@
   "v": 1,
   "id": "story:gimjang-arirang",
   "state": "ready",
-  "contentVer": 3,
+  "contentVer": 4,
   "title": {
     "ko": "김장하는 날과 아리랑",
     "romanization": "Gimjanghaneun nalgwa Arirang",
     "en": "Gimjang Day: Sharing Kimchi, Singing Arirang"
   },
   "summaryEn": "As winter comes, Hoya helps relatives and neighbors make and share kimchi for gimjang (UNESCO 2013), then hears Arirang, the folk song shared across Korea (South Korea's UNESCO entry, 2012).",
+  "hoyaIntroEn": "Winter is coming! Let's make kimchi with neighbors and hear a song shared across Korea.",
+  "hoyaOutroEn": "Making kimchi together and singing Arirang: sharing makes it special!",
   "theme": "life",
   "kind": "intangible",
   "recommendedStage": 2,
@@ -595,8 +597,22 @@
     }
   ],
   "coverSceneId": "s1",
+  "rewardCardIds": {
+    "listen": "card:story-gimjang-arirang"
+  },
+  "shelf": {
+    "category": "story-time",
+    "order": 5,
+    "sampler": false,
+    "minutes": 5
+  },
   "pillarTags": [],
   "companionId": "hoya",
+  "card": {
+    "titleEn": "Making Winter Kimchi",
+    "keywordId": "gimjang",
+    "factId": "f8"
+  },
   "facts": [
     {
       "id": "f1",

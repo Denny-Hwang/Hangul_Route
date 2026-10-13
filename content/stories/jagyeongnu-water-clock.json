@@ -2,13 +2,15 @@
   "v": 1,
   "id": "story:jagyeongnu-water-clock",
   "state": "ready",
-  "contentVer": 2,
+  "contentVer": 3,
   "title": {
     "ko": "장영실과 스스로 울리는 물시계, 자격루",
     "romanization": "Jangyeongsilgwa seuseuro ullineun mulsigye, jagyeongnu",
     "en": "Jang Yeongsil and the Clock That Rang by Itself"
   },
   "summaryEn": "Hoya meets Jang Yeongsil, the skilled craftsman King Sejong praised, and watches how flowing water, rolling balls and wooden figures made the jagyeongnu water clock strike the time.",
+  "hoyaIntroEn": "Drip, drip! Let's see a water clock that rang all by itself.",
+  "hoyaOutroEn": "Flowing water, rolling balls and little wooden figures told the time. What a clever clock!",
   "theme": "crafts",
   "kind": "science",
   "recommendedStage": 2,
@@ -495,8 +497,22 @@
     }
   ],
   "coverSceneId": "s1",
+  "rewardCardIds": {
+    "listen": "card:story-jagyeongnu-water-clock"
+  },
+  "shelf": {
+    "category": "culture",
+    "order": 12,
+    "sampler": false,
+    "minutes": 5
+  },
   "pillarTags": [],
   "companionId": "hoya",
+  "card": {
+    "titleEn": "Water Clock",
+    "keywordId": "jagyeongnu",
+    "factId": "f1"
+  },
   "facts": [
     {
       "id": "f1",

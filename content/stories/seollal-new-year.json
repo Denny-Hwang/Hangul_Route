@@ -2,13 +2,15 @@
   "v": 1,
   "id": "story:seollal-new-year",
   "state": "ready",
-  "contentVer": 3,
+  "contentVer": 4,
   "title": {
     "ko": "호야의 설날 아침",
     "romanization": "Hoyaui Seollal achim",
     "en": "Hoya's Seollal Morning"
   },
   "summaryEn": "Hoya spends Seollal, the Lunar New Year, with a family: new seolbim clothes, a New Year bow (sebae), a warm bowl of tteokguk, and a lively game of yunnori.",
+  "hoyaIntroEn": "Happy New Year! Spend Seollal morning with me and a family.",
+  "hoyaOutroEn": "New clothes, a New Year bow, a bowl of tteokguk and a game of yunnori. What a happy Seollal!",
   "theme": "rites",
   "kind": "intangible",
   "recommendedStage": 1,
@@ -595,8 +597,22 @@
     }
   ],
   "coverSceneId": "s1",
+  "rewardCardIds": {
+    "listen": "card:story-seollal-new-year"
+  },
+  "shelf": {
+    "category": "story-time",
+    "order": 1,
+    "sampler": true,
+    "minutes": 4
+  },
   "pillarTags": [],
   "companionId": "hoya",
+  "card": {
+    "titleEn": "Words of Blessing",
+    "keywordId": "deokdam",
+    "factId": "f2"
+  },
   "facts": [
     {
       "id": "f1",

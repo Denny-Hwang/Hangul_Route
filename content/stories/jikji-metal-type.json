@@ -2,13 +2,15 @@
   "v": 1,
   "id": "story:jikji-metal-type",
   "state": "ready",
-  "contentVer": 3,
+  "contentVer": 4,
   "title": {
     "ko": "직지, 금속활자로 찍은 책",
     "romanization": "Jikji, geumsokhwaljaro jjigeun chaek",
     "en": "Jikji: Printed with Metal Type"
   },
   "summaryEn": "Hoya visits Heungdeoksa Temple in Cheongju, where Jikji was printed with metal movable type in 1377. It is the world's oldest surviving book of its kind, and its one remaining volume is kept in Paris.",
+  "hoyaIntroEn": "Let's visit a temple where people printed a book with metal type!",
+  "hoyaOutroEn": "Now you know the story of Jikji and the metal type that printed it!",
   "theme": "letters",
   "kind": "documentary",
   "recommendedStage": 2,
@@ -587,8 +589,22 @@
     }
   ],
   "coverSceneId": "s1",
+  "rewardCardIds": {
+    "listen": "card:story-jikji-metal-type"
+  },
+  "shelf": {
+    "category": "culture",
+    "order": 9,
+    "sampler": false,
+    "minutes": 5
+  },
   "pillarTags": [],
   "companionId": "hoya",
+  "card": {
+    "titleEn": "Metal Type",
+    "keywordId": "geumsokhwalja",
+    "factId": "f1"
+  },
   "facts": [
     {
       "id": "f1",

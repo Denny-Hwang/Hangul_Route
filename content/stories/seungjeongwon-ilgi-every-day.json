@@ -2,13 +2,15 @@
   "v": 1,
   "id": "story:seungjeongwon-ilgi-every-day",
   "state": "ready",
-  "contentVer": 2,
+  "contentVer": 3,
   "title": {
     "ko": "날마다 쓴 승정원 일기",
     "romanization": "Nalmada sseun Seungjeongwon Ilgi",
     "en": "The Royal Secretariat's Everyday Diary"
   },
   "summaryEn": "At the Royal Secretariat, scribes wrote down the king's working day, every day, even the weather. Hoya learns why this giant diary is a treasure.",
+  "hoyaIntroEn": "Let's visit the Royal Secretariat, where the king's working day was written down.",
+  "hoyaOutroEn": "Even the weather went into the diary! Now you know why it is a treasure.",
   "theme": "letters",
   "kind": "documentary",
   "recommendedStage": 3,
@@ -557,8 +559,22 @@
     }
   ],
   "coverSceneId": "s1",
+  "rewardCardIds": {
+    "listen": "card:story-seungjeongwon-ilgi-every-day"
+  },
+  "shelf": {
+    "category": "culture",
+    "order": 13,
+    "sampler": false,
+    "minutes": 5
+  },
   "pillarTags": [],
   "companionId": "hoya",
+  "card": {
+    "titleEn": "Royal Secretariat",
+    "keywordId": "seungjeongwon",
+    "factId": "f1"
+  },
   "facts": [
     {
       "id": "f1",

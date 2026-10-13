@@ -2,13 +2,15 @@
   "v": 1,
   "id": "story:sillok-mountain-archives",
   "state": "ready",
-  "contentVer": 2,
+  "contentVer": 3,
   "title": {
     "ko": "산으로 간 실록",
     "romanization": "Saneuro gan sillok",
     "en": "The Annals Hide in the Mountains"
   },
   "summaryEn": "After a king died, officials turned the historians' notes into the Annals and guarded the books in archives far away in the mountains. Hoya follows the Annals from draft to mountain archive.",
+  "hoyaIntroEn": "Where did the Annals go to stay safe? Let's follow them into the mountains!",
+  "hoyaOutroEn": "From notes to books to mountain archives: you followed the Annals all the way!",
   "theme": "letters",
   "kind": "documentary",
   "recommendedStage": 2,
@@ -609,8 +611,22 @@
     }
   ],
   "coverSceneId": "s1",
+  "rewardCardIds": {
+    "listen": "card:story-sillok-mountain-archives"
+  },
+  "shelf": {
+    "category": "culture",
+    "order": 8,
+    "sampler": false,
+    "minutes": 5
+  },
   "pillarTags": [],
   "companionId": "hoya",
+  "card": {
+    "titleEn": "History Archive",
+    "keywordId": "sago",
+    "factId": "f1"
+  },
   "facts": [
     {
       "id": "f1",
