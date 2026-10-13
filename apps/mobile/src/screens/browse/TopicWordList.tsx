@@ -75,7 +75,7 @@ export function TopicWordList({ words, hear }: { words: readonly TopicWordFact[]
                 ...focusRing(focused, colors.brand.secondary),
               })}
             >
-              <Icon name="speaker" size={24} color={colors.brand.secondary} />
+              <Icon name="speaker" size={spacing.xl} color={colors.brand.secondary} />
             </Pressable>
           ) : null}
         </View>

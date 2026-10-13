@@ -562,6 +562,7 @@ BR-1, BR-3, BR-4, BR-5a, BR-5b and BR-5c can run in parallel. Merge BR-1's `tele
 - A closed topic (switch on, sampler pass) keeps every word, picture, romanization and gloss and drops only the Hear buttons (`topicHearShown`, design decision 23).
 - No flashcard preview yet: [[ Preview the flashcards ]] (`MinigameHost` mode `'preview'`) arrives once F-VOC-003's flashcards ship (its C-5); until then the topic page has no primary action.
 - The Korean chip keeps a Korean word whole on a narrow row: its romanization moves under the Korean instead (all catalogue chips).
+- Review of #519: stacked on BR-8 (#531), so the item page keeps BR-8's story rows (level pick, sources, preview wiring) with `TopicWordList` in place of the old topic rows; the Hear glyph is `spacing.xl`; `browse.spec.ts` compares the device only once playback has stopped writing (no change for 500 ms). A closed Words row mark and the switch-on topic page are checked once F-ENT-003's keys are on `main` (section 12).
 
 ## 12. Dependencies
 
@@ -637,3 +638,4 @@ BR-1, BR-3, BR-4, BR-5a, BR-5b and BR-5c can run in parallel. Merge BR-1's `tele
 - 2026-10-13: BR-8 as built (section 11 note): the preview routes and ports, the leave confirm, the end screen and its Next order, the preview events, the lesson, story and card e2e on the release build.
 - 2026-10-13: review of #531 (section 11 BR-8 note): a story's questions return to the story page, Read again keeps the level read.
 - 2026-10-13: BR-9 as built (section 11 note): the word topic list with Hear through `playPrompt`, no flashcard preview until F-VOC-003 C-5.
+- 2026-10-13: review of #519 (section 11 BR-9 note): stacked on BR-8, the settled no-write check, the Hear glyph token.
