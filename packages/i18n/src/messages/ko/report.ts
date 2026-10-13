@@ -1,0 +1,248 @@
+import type { DeepPartial, Messages } from '../../types';
+
+/**
+ * Korean progress reports (F-I18N-001 PR 16; F-REPORT-001 section 3.11). 해요체, warm and about the learner. A name
+ * (the roster's name or initials) stands before a colon, never before a particle that changes with the final
+ * consonant, so a third-person line reads "미나: 이번 주 3일 연습했어요." and its second-person twin drops the
+ * name ("이번 주 3일 연습했어요."). Korean has no grammatical plural: counts read "n일", "n분", "n개", "n명".
+ * Window words (`when`) carry no particle, so they read both inside a sentence and as a name in `a11y.report`.
+ * Taught letters and words arrive as one argument, used exactly once. No percentages, no ranking or comparison
+ * with anyone else, no word about speaking (`report-messages.test.ts`).
+ */
+const list = (items: readonly string[]): string => items.join(', ');
+const practicedDays = (name: string, days: number, when: string): string => `${name}: ${when} ${days}일 연습했어요.`;
+const youPracticedDays = (days: number, when: string): string => `${when} ${days}일 연습했어요.`;
+
+export const report = {
+  documentTitle: '리포트 - Hangul Route',
+  title: {
+    learner: (name: string) => `${name}: 리포트`,
+    class: (className: string) => `${className}: 반 리포트`,
+  },
+  chooser: { learner: '누구의 리포트를 볼까요?', class: '어느 반을 볼까요?' },
+  period: { day: '오늘', week: '이번 주', month: '이번 달', all: '전체' },
+  when: {
+    day: '오늘',
+    week: '이번 주',
+    month: '이번 달',
+    all: '지금까지',
+    prevDay: '어제',
+    prevWeek: '지난주',
+    prevMonth: '지난달',
+    onDay: (date: string) => `${date}`,
+    weekTo: (date: string) => `${date}까지 한 주 동안`,
+    inMonth: (month: string) => `${month}`,
+  },
+  step: {
+    prevDay: '어제',
+    prevWeek: '지난주',
+    prevMonth: '지난달',
+    next: '다음',
+    range: (from: string, to: string) => `${from}~${to}`,
+  },
+  back: {
+    home: '홈으로 돌아가기',
+    space: (space: string) => `돌아가기: ${space}`,
+  },
+  glance: {
+    nowOn: (n: number, stage: string) => `지금 ${n}단계: ${stage}`,
+    openRoute: '학습 루트 열기',
+    lastPractice: (date: string) => `마지막 연습: ${date}`,
+  },
+  headline: {
+    practiced: practicedDays,
+    practicedOn: (name: string, when: string) => `${name}: ${when} 연습했어요.`,
+    stageDone: (name: string, n: number, stage: string, when: string) => `${name}: ${when} ${n}단계 ${stage}, 다 끝냈어요!`,
+    stageDoneAll: (name: string, n: number, stage: string) => `${name}: ${n}단계 ${stage}, 다 끝냈어요!`,
+    noneYet: (when: string) => `${when} 아직 연습 기록이 없어요.`,
+    noneThen: (when: string) => `${when} 연습 기록이 없어요.`,
+    noneEver: '아직 연습 기록이 없어요.',
+    noneSaved: (name: string, when: string) => `${name}: ${when} 기기에서 저장된 기록이 아직 없어요.`,
+    noneSavedAfter: (name: string, date: string) => `${name}: ${date} 이후 기기에서 저장된 기록이 아직 없어요.`,
+    gettingStarted: (name: string) => `${name}: 이제 막 시작했어요.`,
+  },
+  horizon: (date: string) => `${date}까지의 기록이에요.`,
+  section: {
+    wentWell: '잘한 점',
+    practiceNext: '다음에 연습할 점',
+    thisPeriod: '이 기간',
+    moreDetail: '자세히 보기',
+  },
+  figure: {
+    days: '연습한 날',
+    minutes: '연습 시간',
+    quests: '새 퀘스트',
+    cards: '새 카드',
+    letters: '새 글자',
+    words: '새 낱말',
+    up: (previous: string) => `${previous}보다 많아요`,
+  },
+  previous: {
+    week: '지난주',
+    month: '지난달 전체',
+    weekBefore: '그 전 주',
+    monthBefore: '그 전 달 전체',
+  },
+  growth: {
+    quests: '퀘스트',
+    cards: '카드',
+    month: '월',
+    showTable: '표로 보기',
+    hideTable: '표 숨기기',
+    since: (date: string, days: number) => `${date}부터: 연습한 날 ${days}일`,
+  },
+  detail: {
+    lettersStrong: (name: string) => `${name}: 잘 아는 글자`,
+    lettersPractising: '연습하고 있는 글자',
+    lettersNew: '이 기간에 새로 배운 글자',
+    totals: (quests: number, cards: number) => `처음부터 지금까지: 퀘스트 ${quests}개, 카드 ${cards}장`,
+    milestones: '이정표',
+    milestone: (n: number, stage: string, date: string) => `${n}단계: ${stage}, ${date} 완료`,
+    levelCheck: '수준 확인',
+    levelCheckOn: (date: string) => `확인한 날: ${date}`,
+    strand: (strand: string, status: string) => `${strand}: ${status}`,
+    plan: '계획',
+    planRow: {
+      class: (done: number, ready: number) => `숙제: ${done}개 완료, ${ready}개 시작 가능`,
+      family: (done: number, ready: number) => `이번 주 계획: ${done}개 완료, ${ready}개 시작 가능`,
+      self: (done: number, ready: number) => `나만의 루트: ${done}개 완료, ${ready}개 시작 가능`,
+      device: (done: number, ready: number) => `계획과 숙제: ${done}개 완료, ${ready}개 시작 가능`,
+    },
+  },
+  insight: {
+    showed_up: practicedDays,
+    stage_done: (name: string, n: number, stage: string) => `${name}: ${n}단계 ${stage}, 다 끝냈어요.`,
+    letters_new: (name: string, letters: string) => `${name}: ${letters} 글자를 이제 잘 알아요.`,
+    practice_days: (name: string, days: number) => `${name}: ${days}일 연습했어요.`,
+    practice_day: (name: string) => `${name}: 시간을 내서 연습했어요.`,
+    minutes_up: (previous: string, minutes: number) => `${previous}보다 연습 시간이 늘었어요: ${minutes}분.`,
+    quests_new: (count: number) => `새 퀘스트 ${count}개를 끝냈어요.`,
+    cards_new: (count: number) => `새 문화 카드 ${count}장을 모았어요.`,
+    level_secure: (strands: readonly string[]) => `수준 확인: ${list(strands)} 영역이 탄탄해요.`,
+    plan_done: {
+      class: '이 계획의 숙제를 모두 끝냈어요.',
+      family: '이번 주 계획을 모두 끝냈어요.',
+    },
+    streak: (days: number) => `${days}일 연속이에요. 호야가 뿌듯해해요!`,
+    words_new: (count: number) => `새 낱말 ${count}개를 만났어요.`,
+    rhythm: '일주일에 이틀, 짧게 연습하는 것도 아주 좋은 시작이에요.',
+    letters_revisit: (letters: string) => `${letters}: 한 번 더 보면 좋아요.`,
+    strand_next: (strand: string) => `다음에 키울 영역: ${strand}.`,
+    plan_open: {
+      class: (count: number) => `바로 할 수 있는 숙제가 ${count}개 있어요.`,
+      family: (count: number) => `바로 할 수 있는 계획이 ${count}개 있어요.`,
+    },
+    next_in_plan: (quest: string) => `계획의 다음 퀘스트: ${quest}.`,
+    next_on_route: (quest: string) => `학습 루트의 다음 퀘스트: ${quest}.`,
+    free_days_done: (name: string) => `${name}: 무료 레슨을 모두 끝냈어요.`,
+    words_revisit: (words: string) => `${words}: 함께 한 번 더 보면 좋아요.`,
+  },
+  you: {
+    title: '내 리포트',
+    headline: {
+      practiced: youPracticedDays,
+      practicedOn: (when: string) => `${when} 연습했어요.`,
+      stageDone: (n: number, stage: string, when: string) => `${when} ${n}단계 ${stage}, 다 끝냈어요!`,
+      stageDoneAll: (n: number, stage: string) => `${n}단계 ${stage}, 다 끝냈어요!`,
+      noneSaved: (when: string) => `${when} 내 기기에 저장된 기록이 아직 없어요.`,
+      noneSavedAfter: (date: string) => `${date} 이후 내 기기에 저장된 기록이 아직 없어요.`,
+      gettingStarted: '이제 막 시작했어요.',
+    },
+    detail: {
+      lettersStrong: '내가 잘 아는 글자',
+    },
+    insight: {
+      showed_up: youPracticedDays,
+      stage_done: (n: number, stage: string) => `${n}단계 ${stage}, 다 끝냈어요.`,
+      letters_new: (letters: string) => `${letters} 글자를 이제 잘 알아요.`,
+      practice_days: (days: number) => `${days}일 연습했어요.`,
+      practice_day: '시간을 내서 연습했어요.',
+      free_days_done: '무료 레슨을 모두 끝냈어요.',
+      words_revisit: (words: string) => `${words}: 한 번 더 보면 좋아요.`,
+    },
+    state: {
+      empty: '아직 시작하지 않았어요. 처음 연습하고 나면 리포트가 채워져요.',
+    },
+    tip: {
+      'syllable-reading': '짧은 낱말을 읽어 봐요.',
+      sentences: '짧은 이야기를 읽어 봐요.',
+    },
+  },
+  tip: {
+    'hangul-recognition': (game: string) => `글자 게임이 도움이 돼요. 추천 게임: ${game}.`,
+    'sound-letter': (game: string) => `듣기 게임이 도움이 돼요. 추천 게임: ${game}.`,
+    'syllable-reading': '짧은 낱말을 함께 읽어 봐요.',
+    vocabulary: '낱말 카드가 도움이 돼요. 낱말 주제를 하나 골라 봐요.',
+    sentences: '짧은 이야기를 함께 읽어 봐요.',
+  },
+  action: {
+    addToPlan: '계획에 넣기',
+    openPlan: '계획 열기',
+    sendNote: '쪽지 보내기',
+    seeReport: '리포트 보기',
+  },
+  strand: {
+    status: {
+      secure: '탄탄해요',
+      'getting-there': '거의 다 왔어요',
+      'not-yet': '다음에 배울 것',
+      'not-tested': '아직 확인 안 함',
+    },
+  },
+  state: {
+    noData: (name: string) => `${name}: 기기에서 저장된 진도가 아직 없어요.`,
+    noDataAction: '그 기기에서 인터넷에 연결한 채로 Hangul Route를 열어 주세요.',
+    empty: (name: string) => `${name}: 아직 시작하지 않았어요. 처음 연습하고 나면 리포트가 채워져요.`,
+    legacy: '날짜별 기록은 아직 볼 수 없어요.',
+    updateAction: (name: string) => `${name}: 업데이트하려면 학습자의 기기에서 인터넷에 연결한 채로 Hangul Route를 열어 주세요.`,
+    stale: (date: string) => `마지막 저장: ${date}.`,
+    unavailable: '이 리포트는 볼 수 없어요.',
+    error: '지금은 리포트를 불러올 수 없어요.',
+    flagOff: '리포트는 아직 준비 중이에요.',
+    archived: {
+      family: '보관된 가족 공간이에요. 리포트는 보기만 할 수 있어요.',
+      class: '보관된 반이에요. 리포트는 보기만 할 수 있어요.',
+    },
+  },
+  class: {
+    headline: (count: number, total: number, when: string) => `학습자 ${total}명 중 ${count}명이 ${when} 연습했어요.`,
+    learners: (count: number) => `학습자 ${count}명`,
+    olderApp: (count: number) => `학습자 ${count}명은 앱이 예전 버전이에요. 업데이트하면 날짜별 기록이 보여요.`,
+    notSaved: (count: number) => `학습자 ${count}명은 마지막으로 저장한 지 7일이 넘었어요.`,
+    section: {
+      practiceTogether: '함께 연습해요',
+      daysPracticed: '연습한 날',
+      time: '시간',
+      levelCheck: '수준 확인 (확인을 한 학습자)',
+      homework: '숙제',
+    },
+    lettersNew: '반에서 잘 알게 된 글자',
+    revisit: '함께 다시 볼 글자',
+    questsNew: (count: number) => `새 퀘스트: ${count}`,
+    cardsNew: (count: number) => `새 카드: ${count}`,
+    milestones: (when: string) => `${when} 단계 이정표`,
+    milestone: (n: number, stage: string, count: number) => `${n}단계: ${stage}, 학습자 ${count}명 완료`,
+    band: {
+      none: '아직 없음',
+      practiced: '연습함',
+      range: (from: number, to: number) => `${from}~${to}일`,
+      atLeast: (from: number) => `${from}일 이상`,
+    },
+    count: (label: string, count: number) => `${label}: ${count}`,
+    minutesTotal: (minutes: number) => `전체 시간: ${minutes}분`,
+    medianMinutes: (minutes: number) => `연습한 학습자의 보통 시간: ${minutes}분`,
+    planLesson: '수업 계획하기',
+    link: '반 리포트',
+    planRow: (assigned: number, started: number, finished: number) => `받은 학습자 ${assigned}, 시작 ${started}, 완료 ${finished}`,
+    empty: '아직 학습자가 없어요.',
+    afterUpdate: '학습자의 앱이 업데이트되면 보여요.',
+  },
+  print: {
+    button: '인쇄 또는 PDF로 저장',
+    hint: '인쇄 창에서 머리글과 바닥글을 꺼 주세요.',
+    footer: (date: string) => `비공개: ${date}, Hangul Route에서 공유함.`,
+  },
+  nav: { reports: '리포트', classReports: '반 리포트' },
+  letter: (letter: string, romanization: string) => `${letter} (${romanization})`,
+  list,
+} satisfies DeepPartial<Messages['report']>;

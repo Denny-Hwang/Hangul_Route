@@ -89,6 +89,9 @@ export const ROMANIZATION_SCAN_IGNORE: readonly ScanIgnore[] = [
   { path: 'packages/i18n/src/messages/ko/learner.ts', reason: 'the whole ko UI overlay file (F-I18N-001 §3.10): Korean interface words, never taught Korean; a ko draft that adds keys here re-checks this' },
   { path: 'packages/i18n/src/messages/ko/a11y.ts', reason: 'the whole ko UI overlay file (F-I18N-001 §3.10): Korean interface words, never taught Korean; a ko draft that adds keys here re-checks this' },
   { path: 'packages/i18n/src/messages/ko/common.ts', reason: 'the whole ko UI overlay file (F-I18N-001 §3.10): Korean interface words, never taught Korean; a ko draft that adds keys here re-checks this' },
+  { path: 'packages/i18n/src/messages/ko/landing.ts', reason: 'the whole ko UI overlay file (F-I18N-001 §3.10, PR 16): Korean site words, never taught Korean (the hero letter and Hoya phrase arrive as arguments)' },
+  { path: 'packages/i18n/src/messages/ko/report.ts', reason: 'the whole ko UI overlay file (F-I18N-001 §3.10, PR 16): Korean report words, never taught Korean (letters and words arrive as arguments)' },
+  { path: 'packages/i18n/src/messages/ko/index.ts', reason: 'the ko overlay barrel (F-I18N-001 PR 16): a doc comment naming the Korean registers' },
   { path: 'content/stories/research/', reason: 'provenance data: `rr` keys and a hyphenated romanization R2 would reject (same skip as SKIPPED_DIRS in scripts/validate-content.mjs)' },
   { path: '*.md', reason: 'documentation, not shipped content' },
   // Generated from class A JSON; listed so they do not trip the check when stories and vocabulary ship.
@@ -96,6 +99,7 @@ export const ROMANIZATION_SCAN_IGNORE: readonly ScanIgnore[] = [
   { path: 'apps/mobile/src/content/__generated__/vocab.ts', reason: 'generated from content/vocab/*.json (scanned as class A) by scripts/build-vocab.mjs' },
   { path: 'apps/web/src/data/vocab-catalog.ts', reason: 'generated from content/vocab/*.json (scanned as class A) by scripts/build-vocab.mjs' },
   { path: 'apps/mobile/src/content/placement.generated.ts', reason: 'generated from content/placement/*.json (scanned as class A) by scripts/build-placement-bank.mjs' },
+  { path: 'packages/content-schema/src/i18n-overlays.generated.ts', reason: 'generated from content/i18n/<locale>/*.json (scanned as class A) by scripts/build-overlays.mjs; the ko overlays (F-I18N-001 PR 16) carry Korean glosses and sound hints; a ko sound hint quotes only its jamo\'s own example word or spoken syllable, which Discover shows through KoreanText (pinned by apps/mobile/src/content/__tests__/overlays.test.ts)' },
   // Scene-art library (F-STORY-002 PR 2.3b): Korean appears only in sourceRef citations (the cited page title and publisher, as in a fact source); alt and accuracyNote are Hangul-free, enforced by packages/design-system/src/scene-art/__tests__/registry.test.ts.
   { path: 'packages/design-system/src/scene-art/props/', reason: 'sourceRef citation titles and publishers (the cited Korean page), never drawn or taught; alt and accuracyNote stay Hangul-free (scene-art registry.test.ts)' },
   { path: 'packages/design-system/src/scene-art/settings/', reason: 'sourceRef citation titles and publishers (the cited Korean page), never drawn or taught; alt and accuracyNote stay Hangul-free (scene-art registry.test.ts)' },

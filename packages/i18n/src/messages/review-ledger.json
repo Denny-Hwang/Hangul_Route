@@ -36,5 +36,41 @@
       "reviewedAt": "2026-10-12"
     }
   },
-  "ko": {}
+  "ko": {
+    "common": {
+      "enSha": "1cc27ec985725b0941a961556f89c4405c2f1ad4ff896b1497ffad11fbcfc7b0",
+      "reviewedBy": "MAR",
+      "reviewedAt": "2026-10-12"
+    },
+    "a11y": {
+      "enSha": "6921972637bc1084f662be7e6d9b3481cdf3321d23dadfcb1d863261ebfb5dc8",
+      "reviewedBy": "MAR",
+      "reviewedAt": "2026-10-13"
+    },
+    "learner": {
+      "enSha": "6304a28a0d63eb2741edf73f197cccbf7c14e16214735a9157a46b4bddecf169",
+      "reviewedBy": "MAR",
+      "reviewedAt": "2026-10-13"
+    },
+    "caregiver": {
+      "enSha": "37969d708f0e96bd3f30c24e1111ccaf265f52afc5962539b94c0e01e604bc25",
+      "reviewedBy": "MAR",
+      "reviewedAt": "2026-10-13"
+    },
+    "console": {
+      "enSha": "c28a7df5687932f8c7ac3026817f997d34547b67b1ee3492a3b29ea3d44388e2",
+      "reviewedBy": "MAR",
+      "reviewedAt": "2026-10-13"
+    },
+    "landing": {
+      "enSha": "65940b890d7620e28b612abc5a23d3393a99b355fd3af5598b0add7ff9f957e2",
+      "reviewedBy": "MAR",
+      "reviewedAt": "2026-10-12"
+    },
+    "report": {
+      "enSha": "02e826a47ecba9b91356597d9c8bf9185dc261d8266f0668538182435fb75b77",
+      "reviewedBy": "MAR",
+      "reviewedAt": "2026-10-12"
+    }
+  }
 }
