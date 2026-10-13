@@ -793,6 +793,13 @@ describe('the P1 action group (RP-7a2)', () => {
     expect(line?.sentence.text).toBe('ㅂ (b) and ㅅ (s): worth another visit.');
     expect(line?.actions).toEqual([]);
   });
+
+  it('offers Add to a plan only for a quest the builder can add, never a closed one (RP-10)', () => {
+    const catalog = { ...CATALOG, cells: CATALOG.cells.map((cell) => (cell.episodeId === 'episode:stage1-life' ? { ...cell, status: 'preview' as const } : cell)) };
+    const line = view(STEADY, { kind: 'class', role: 'teacher', catalog }).practiceNext?.lines.find((row) => row.code === 'letters_revisit');
+    expect(line?.sentence.text).toBe('ㅂ (b) and ㅅ (s): worth another visit.');
+    expect(line?.actions).toEqual([]);
+  });
 });
 
 describe('the goal line under "Now on" (RP-7a2, LR-D)', () => {

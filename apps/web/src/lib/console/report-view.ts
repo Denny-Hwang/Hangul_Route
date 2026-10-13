@@ -27,6 +27,7 @@ import {
   type StageKey,
 } from '@hangul-route/content-schema';
 import { DEFAULT_LOCALE, formatDate, getMessages, type UiLocale } from '@hangul-route/i18n';
+import { plannableQuest } from '@/data/catalog';
 import type { ApiResult, LearnerReportBody } from './api';
 import type { LearningRouteGoal } from './learning-route-view';
 import { startingSpotLine } from './placement';
@@ -810,9 +811,9 @@ export function learnerReportView(input: LearnerReportViewInput): LearnerReportV
     const links = 'links' in line ? line.links : undefined;
     const actions: ReportLink[] = [];
     if (rights.planWrite && !archived && links) {
-      // A quest this build's catalogue lacks is never offered: the builder could not add it (design notes, RP-7a2).
+      // Only a quest the builder can add is offered (RP-10): never one this build's catalogue lacks or a closed one.
       if ('addToPlan' in links) {
-        if (questTitleOf(links.addToPlan, catalog) !== null) actions.push({ href: `${ROUTES.spacePlan(space.id, undefined, space.kind)}&add=${encodeURIComponent(links.addToPlan)}`, text: m.report.action.addToPlan });
+        if (plannableQuest(links.addToPlan, catalog)) actions.push({ href: ROUTES.spacePlan(space.id, undefined, space.kind, links.addToPlan), text: m.report.action.addToPlan });
       } else actions.push({ href: ROUTES.spacePlan(space.id, links.openPlan, space.kind), text: m.report.action.openPlan });
     }
     return { ...out, actions };
