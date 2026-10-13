@@ -330,6 +330,12 @@ button {
   box-shadow: none;
 }
 
+/* The 404 page: Next's body is an inline 100vh box; inside the site chrome it sizes to its content. */
+.hr-site-404 > div {
+  height: auto !important;
+  padding-block: var(--hr-site-xxl);
+}
+
 .hr-site-promises {
   padding-block: var(--hr-site-lg);
 }
