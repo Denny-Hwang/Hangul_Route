@@ -1,7 +1,7 @@
-import { BROWSE_PASS_SESSION_KEY, type BrowsePass } from '@hangul-route/content-schema';
+import { BROWSE_PASS_SESSION_KEY, CONSOLE_SESSION_KEY, UNLOCK_SESSION_KEY, type BrowsePass } from '@hangul-route/content-schema';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import * as nativeSession from '../browse';
-import { readSessionPass, removeSessionPass, writeSessionPass } from '../browse.web';
+import { clearGrownUpSession, readSessionPass, removeSessionPass, writeSessionPass } from '../browse.web';
 
 /**
  * F-BROWSE-001 §4.3 (BR-3): the browse root reads its pass from
@@ -159,12 +159,33 @@ describe('writeSessionPass / removeSessionPass (web)', () => {
   });
 });
 
+describe('clearGrownUpSession (web, BR-6 review)', () => {
+  it('removes only the grown-up unlock and the console session, and keeps the pass', () => {
+    storage.items.set(BROWSE_PASS_SESSION_KEY, JSON.stringify(pass));
+    storage.items.set(UNLOCK_SESSION_KEY, '{"v":1}');
+    storage.items.set(CONSOLE_SESSION_KEY, '{"v":1}');
+    clearGrownUpSession();
+    expect([...storage.items.keys()]).toEqual([BROWSE_PASS_SESSION_KEY]);
+    expect(storage.removeItem.mock.calls.map(([key]) => key)).toEqual([UNLOCK_SESSION_KEY, CONSOLE_SESSION_KEY]);
+  });
+
+  it('never throws when the storage refuses or is missing', () => {
+    storage.removeItem.mockImplementation(() => {
+      throw new Error('SecurityError');
+    });
+    expect(() => clearGrownUpSession()).not.toThrow();
+    vi.stubGlobal('sessionStorage', undefined);
+    expect(() => clearGrownUpSession()).not.toThrow();
+  });
+});
+
 describe('native stub (OD-10: web only)', () => {
   it('has no session pass and writes nothing', () => {
     storage.items.set(BROWSE_PASS_SESSION_KEY, JSON.stringify(pass));
     expect(nativeSession.readSessionPass()).toBeNull();
     expect(nativeSession.writeSessionPass(pass)).toBe(false);
     nativeSession.removeSessionPass();
+    nativeSession.clearGrownUpSession();
     expect(storage.getItem).not.toHaveBeenCalled();
     expect(storage.setItem).not.toHaveBeenCalled();
     expect(storage.removeItem).not.toHaveBeenCalled();

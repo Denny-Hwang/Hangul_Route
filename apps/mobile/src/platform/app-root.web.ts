@@ -22,7 +22,8 @@ import { track, type TelemetryEvent } from './telemetry';
  *   boot here: it reads no boot intent and clears neither the unlock nor the console session
  *   (F-BROWSE-001 BD1 and section 4.10: Browse touches `sessionStorage` only for its pass, and its
  *   [ Close ] goes back to the console page that opened it, which still needs both; F-APP-001
- *   section 6.4 as amended by F-BROWSE-001 BR-0b). `BrowseApp` does its own boot.
+ *   section 6.4 as amended by F-BROWSE-001 BR-0b). `BrowseApp` does its own boot, and removes both
+ *   itself in a tab with no earlier page to go back to (`platform/browse-start.ts`).
  * - **grown-up-bounce**: the host's single-page fallback answered a grown-up URL that has no
  *   file. Nothing mounts; `shell.path_bounced` names the prefix and the tab moves to the persona
  *   entry (`logic/shell/bounce.ts`). It clears nothing: the tab stays in the grown-up area.

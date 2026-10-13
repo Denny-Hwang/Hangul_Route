@@ -9,7 +9,7 @@ import type { AdultPersona, BrowsePass } from '@hangul-route/content-schema';
 import type { UiLocale } from '@hangul-route/i18n';
 import { flags, bundleOs, gatingActive } from './src/config/flags';
 import { useDocumentLang, useMessages } from './src/i18n/use-messages';
-import { entryStack, navigationCheck, readBootFragment, type BootFragment, type BrowseEntryRoute, type BrowseRouteName } from './src/logic/browse/boot';
+import { entryStack, lessonAfter, navigationCheck, readBootFragment, type BootFragment, type BrowseEntryRoute, type BrowseRouteName } from './src/logic/browse/boot';
 import { defaultBrowseBundle } from './src/logic/browse/bundle';
 import type { ResolvedPass } from './src/logic/browse/pass';
 import { resolveEntry } from './src/logic/browse/target';
@@ -21,10 +21,10 @@ import { BrowseSettingsProvider } from './src/screens/browse/BrowseSettings';
 import { canRenderPicture } from './src/screens/vocab/topic-data';
 import { installGestureUnlock } from './src/platform/audio';
 import { writeSessionPass } from './src/platform/browse';
-import { readLastPersonaInTime, resolveBrowseBoot, resolveSessionNow, type BrowseBoot } from './src/platform/browse-boot';
-import { isOnline, onFragmentChange, onPageVisible, takeFragment } from './src/platform/browse-env';
+import { readLastPersonaInTime, resolveBrowseBoot, type BrowseBoot } from './src/platform/browse-boot';
+import { isOnline, onFragmentChange, onPageVisible } from './src/platform/browse-env';
 import { announceBrowseOpened } from './src/platform/browse-opened';
-import { applyBrowseFences } from './src/platform/browse-fences';
+import { startBrowse as runBrowseStart, type BrowseStart } from './src/platform/browse-start';
 import { isOfflineReady, subscribePwa } from './src/platform/pwa';
 import { flushQueue } from './src/platform/telemetry';
 import { useAudioStore } from './src/store/audio-store';
@@ -39,33 +39,26 @@ import { useLocaleStore } from './src/store/locale-store';
  * the telemetry fence and the browse telemetry queue (BD3). It reads the link's
  * fragment and takes it out of the address, and resolves the pass: an active
  * session pass synchronously (nothing waits), else the kept pass and the last
- * grown-up persona. It hydrates only the audio settings and the device locale
+ * grown-up persona (`platform/browse-start.ts` holds the first steps' order). It hydrates only the audio settings and the device locale
  * (`hydrate([])`, no profile id), applies the pass's UI locale in memory, and
  * sends `browse.opened` from its own queue.
  *
  * It never mounts `PwaBanners` (no update applies during a preview), never
  * calls `hydrateLearnerData`, sync, the inbox, the plan derivation, the
  * progress persist listener, the audio level binding or `requestPersistence`,
- * and never touches the grown-up unlock or the console session (BD1).
+ * and keeps the grown-up unlock and the console session (BD1) only when the
+ * tab can go back to the page that opened it; a tab with nothing to go back to
+ * (a new tab, an address typed in) clears both at boot (BR-6 review).
  */
-
-interface BrowseStart {
-  fragment: BootFragment;
-  /** The session pass resolved before first paint, when it is active. */
-  fast: { session: BrowsePass; resolved: ResolvedPass } | null;
-}
 
 let started: BrowseStart | null = null;
 
 /** The pass's UI language for this tab only (memory, never stored; F-BROWSE-001 section 4.9). */
 const applyLocale = (locale: UiLocale): void => useLocaleStore.getState().setSessionLocale(locale);
 
-/** Runs once per page, during the first render: fences first, then the address and the session pass. */
+/** Runs once per page, during the first render (`platform/browse-start.ts`). */
 function startBrowse(): BrowseStart {
-  if (started) return started;
-  applyBrowseFences();
-  const fragment = readBootFragment(takeFragment());
-  started = { fragment, fast: resolveSessionNow(Date.now()) };
+  if (!started) started = runBrowseStart(Date.now());
   return started;
 }
 
@@ -105,7 +98,10 @@ export default function BrowseApp(): React.ReactElement {
   );
   // The pass as the navigation listeners must read it, without waiting for a render.
   const passRef = useRef<{ session: BrowsePass | null; resolved: ResolvedPass } | null>(start.fast);
+  // The screen shown last (`null` until the first one: a page load or a reload is not activity), and whether a
+  // lesson is under way (`lessonAfter`: by how the visit got there, not by the route name).
   const previousRoute = useRef<BrowseRouteName | null>(null);
+  const inLesson = useRef(false);
   // The latest link: a `hashchange` while the boot still reads the kept pass replaces the first fragment.
   const fragmentRef = useRef<BootFragment>(start.fragment);
   // The device locale read, which the pass's session language waits for.
@@ -178,12 +174,15 @@ export default function BrowseApp(): React.ReactElement {
   );
 
   // Every browse navigation refreshes a session pass's `seen`, or ends the visit when it ran out (section 4.3).
+  // The first screen of a page load only checks the pass: a reload is not activity.
   const onNavigate = useCallback(() => {
     const to = currentRoute();
     const pass = passRef.current;
     if (to === null || pass === null) return;
-    const check = navigationCheck({ resolved: pass.resolved, session: pass.session, now: Date.now(), from: previousRoute.current, to });
+    const activity = previousRoute.current !== null;
+    const check = navigationCheck({ resolved: pass.resolved, session: pass.session, now: Date.now(), inLesson: inLesson.current, to, activity });
     previousRoute.current = to;
+    inLesson.current = lessonAfter(inLesson.current, to);
     if (check.write && writeSessionPass(check.write)) passRef.current = { ...pass, session: check.write };
     if (check.expired) void reenter({ target: null, source: 'direct' }, 'expired');
   }, [reenter]);
@@ -198,7 +197,7 @@ export default function BrowseApp(): React.ReactElement {
         const pass = passRef.current;
         if (at === null || pass === null) return;
         if (expiring.current) return;
-        if (navigationCheck({ resolved: pass.resolved, session: pass.session, now: Date.now(), from: at, to: at }).expired) {
+        if (navigationCheck({ resolved: pass.resolved, session: pass.session, now: Date.now(), inLesson: inLesson.current, to: at, activity: false }).expired) {
           // Showing a tab fires both `visibilitychange` and `focus`: resolve once.
           expiring.current = true;
           void reenter({ target: null, source: 'direct' }, 'expired').finally(() => {
