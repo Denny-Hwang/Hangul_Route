@@ -1,0 +1,172 @@
+/*
+ * F-BILL-002 design pass for B-8a, B-8b and B-8c: static design mock of the billing home, the checkout return, the
+ * step-up dialog and the receipts page on app.hangulroute.com (not shipped code). Wireframes:
+ * design/wireframes/billing/billing-home.md, checkout-return.md, step-up.md, receipts.md.
+ *
+ * The pages link three sheets, in this order: ../../learning-route/mock/learning-route.css (the token custom
+ * properties, every value a token of packages/design-system/src/tokens.ts named after it: --spacing-xl is
+ * spacing.xl; the base rules; .notice, .panel, .pill, .back-link, .shell-placeholder, .skeleton, the board), then
+ * plan-status.css (B-9's sheet: .board-note), then this sheet. Nothing below redefines a token.
+ *
+ * Units: text in rem (token / 16), so the browser text size enlarges every line. The grown-up page switches layout
+ * in em (45em = the adult frame's phone / wide switch, F-APP-001 section 3.8; 70em = layout.maxWidth.full's wide
+ * gutter), mobile first (min-width only). Numbers that are not tokens are named once below and listed in
+ * ../README.md, "Constants".
+ */
+:root {
+  --plan-card-min: 22rem;       /* billing card column: one card per row on phones, two or three across from 45em */
+  --dialog-max: 28rem;          /* step-up dialog: the reading column of a confirm dialog; full width minus the gutters below it */
+  --receipt-amount-min: 6rem;   /* table layout: the amount column keeps "$153.00" on one line */
+  --receipts-table-min: 36rem;  /* the receipts table needs a 576 px column at the default text size (written out in the container query); narrower, rows reflow */
+}
+
+/* ------------------------------------------------------------------------------------------ */
+/* Adult frame placeholder: the real frame is F-APP-001 A-5a (design/screens/app-shell/adult-frame.md). */
+/* Drawn at its real height (phone: one header row + the tab row; wide: one header row + the nav row)  */
+/* so the first-screen budget is true. The billing page draws no header of its own (section 4.3).      */
+/* ------------------------------------------------------------------------------------------ */
+.frame-band { background: var(--colors-surface-paper); border-bottom: var(--border-width-thin) solid var(--colors-border-subtle); }
+.frame-row { max-width: var(--max-width-full); margin: 0 auto; padding: var(--spacing-sm) var(--gutter-compact); display: flex; }
+.frame-nav-row { padding-top: var(--spacing-none); padding-bottom: var(--spacing-none); }
+.frame-foot { background: var(--colors-surface-sunken); }
+.shell-placeholder.grow { flex: 1; min-width: 0; overflow-wrap: anywhere; font-family: var(--family-mono); }
+@media (min-width: 45em) { .frame-row { padding-left: var(--gutter-regular); padding-right: var(--gutter-regular); } }
+@media (min-width: 70em) { .frame-row { padding-left: var(--gutter-wide); padding-right: var(--gutter-wide); } }
+
+/* ------------------------------------------------------------------------------------------ */
+/* Grown-up controls, the values of the app-shell mock's .btn (#420, section 3.16): every control is at  */
+/* least touchTarget.min tall. Exactly one .btn-primary on a page (the first offer).                   */
+/* ------------------------------------------------------------------------------------------ */
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: var(--spacing-sm); min-height: var(--touch-min); padding: var(--spacing-sm) var(--spacing-xl); border-radius: var(--radii-pill); border: var(--border-width-thin) solid var(--colors-border-strong); background: var(--colors-surface-paper); color: var(--colors-text-primary); font: inherit; font-size: var(--size-body); font-weight: var(--weight-bold); line-height: var(--leading-tight); text-align: center; text-decoration: none; cursor: pointer; align-self: flex-start; }
+.btn-primary { background: var(--colors-brand-primary); border-color: var(--colors-brand-primary); color: var(--colors-text-onPrimary); }
+.btn-block { width: 100%; align-self: stretch; }
+.btn[disabled], .btn[aria-disabled="true"] { background: var(--colors-surface-sunken); border-color: var(--colors-surface-sunken); color: var(--colors-text-muted); cursor: default; }
+.btn:focus-visible, .disclosure > summary:focus-visible, .text-link:focus-visible, .back-link:focus-visible, .bill-card h3:focus-visible { outline: var(--border-width-thick) solid var(--colors-border-focus); outline-offset: var(--border-width-base); }
+.text-link { display: inline-flex; align-items: center; min-height: var(--touch-min); color: var(--colors-brand-secondaryDark); font-weight: var(--weight-semibold); text-decoration: underline; text-underline-offset: var(--spacing-xs); }
+.actions { display: flex; flex-wrap: wrap; gap: var(--spacing-sm); }
+@media (min-width: 45em) { .offer .btn-block { width: auto; align-self: flex-start; } }
+
+/* ------------------------------------------------------------------------------------------ */
+/* Billing page (console, app.hangulroute.com/account/billing)                                  */
+/* ------------------------------------------------------------------------------------------ */
+.bill { max-width: var(--max-width-full); margin: 0 auto; overflow-wrap: anywhere; padding: var(--spacing-lg) var(--gutter-compact) var(--spacing-jumbo); display: flex; flex-direction: column; gap: var(--spacing-lg); }
+.bill.reading-width { max-width: var(--max-width-reading); }
+/* The receipts table switches on the width of the page column it sits in (a container query), so a board column draws it as a phone does. */
+.bill { container: bill / inline-size; }
+@media (min-width: 45em) { .bill { padding-left: var(--gutter-regular); padding-right: var(--gutter-regular); } }
+@media (min-width: 70em) { .bill { padding-left: var(--gutter-wide); padding-right: var(--gutter-wide); } }
+.bill h1 { font-size: var(--size-title); line-height: var(--leading-tight); overflow-wrap: anywhere; }
+.bill-section { display: flex; flex-direction: column; gap: var(--spacing-md); }
+.bill-section > h2 { font-size: var(--size-bodyLg); line-height: var(--leading-tight); }
+
+/* Mode banner: one line, neutral (surface.sunken, text.secondary); never a warning colour. */
+.mode-banner { padding: var(--spacing-sm) var(--spacing-md); border-radius: var(--radii-md); background: var(--colors-surface-sunken); color: var(--colors-text-secondary); font-size: var(--size-bodySm); align-self: flex-start; }
+
+/* Notices: console Notice (role="status"): info tone for everything neutral, success tone for the done line only. */
+.notice { display: flex; flex-direction: column; gap: var(--spacing-sm); }
+.notice-line { display: flex; gap: var(--spacing-sm); align-items: flex-start; }
+.notice-line .icon { margin-top: var(--spacing-xxs); }
+.notice-success { background: var(--colors-feedback-successLight); }
+
+/* Offline and error panels: the console LoadErrorPanel look, no cards and no offers under them. */
+.fail-panel { display: flex; flex-direction: column; gap: var(--spacing-md); }
+
+/* Cards: one section per space, labelled by its h3. Payer cards first; the server's order inside each group. */
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, var(--plan-card-min)), 1fr)); gap: var(--spacing-lg); align-items: start; }
+.bill-card { display: flex; flex-direction: column; gap: var(--spacing-xs); padding: var(--spacing-lg); background: var(--colors-surface-paper); border: var(--border-width-thin) solid var(--colors-border-subtle); border-radius: var(--radii-lg); min-width: 0; }
+/* The card a checkout return waits on: a thick outline (shape, not colour alone) and the notice above names it. */
+.bill-card.marked { border: var(--border-width-thick) solid var(--colors-brand-secondary); padding: calc(var(--spacing-lg) - var(--border-width-thick) + var(--border-width-thin)); }
+.bill-card h3 { font-size: var(--size-bodyLg); line-height: var(--leading-tight); overflow-wrap: anywhere; }
+.plan-name { font-weight: var(--weight-semibold); }
+.card-line { color: var(--colors-text-secondary); font-size: var(--size-bodySm); }
+.read-only { color: var(--colors-text-secondary); font-size: var(--size-bodySm); padding-top: var(--spacing-sm); margin-top: var(--spacing-xs); border-top: var(--border-width-thin) solid var(--colors-border-subtle); }
+.card-actions { display: flex; flex-wrap: wrap; gap: var(--spacing-sm); margin-top: var(--spacing-sm); }
+.next-step { display: flex; flex-direction: column; gap: var(--spacing-sm); margin-top: var(--spacing-sm); padding-top: var(--spacing-sm); border-top: var(--border-width-thin) solid var(--colors-border-subtle); }
+.next-step p { font-weight: var(--weight-semibold); }
+
+/* The offer: inside the one buyable card, or a row of Add a plan. */
+.offer { display: flex; flex-direction: column; gap: var(--spacing-sm); }
+.bill-card .offer { margin-top: var(--spacing-sm); padding-top: var(--spacing-md); border-top: var(--border-width-thin) solid var(--colors-border-subtle); }
+.offer h4 { margin: var(--spacing-none); font-size: var(--size-body); line-height: var(--leading-tight); overflow-wrap: anywhere; }
+.includes { display: flex; flex-direction: column; gap: var(--spacing-xs); }
+.includes li { display: flex; gap: var(--spacing-sm); align-items: flex-start; font-size: var(--size-bodySm); }
+.includes .icon { margin-top: var(--spacing-xxs); }
+.price { font-size: var(--size-prompt); font-weight: var(--weight-bold); line-height: var(--leading-tight); overflow-wrap: anywhere; }
+.price.promo { font-size: var(--size-body); }
+.renew { color: var(--colors-text-secondary); font-size: var(--size-bodySm); }
+.add-plan { display: flex; flex-direction: column; gap: var(--spacing-lg); }
+.add-row { padding: var(--spacing-lg); background: var(--colors-surface-paper); border: var(--border-width-thin) solid var(--colors-border-subtle); border-radius: var(--radii-lg); }
+
+/* Disclosures (Receipts, Have a code?): native details / summary, the summary a full-height target. */
+.disclosure > summary { display: inline-flex; align-items: center; gap: var(--spacing-xs); min-height: var(--touch-min); color: var(--colors-brand-secondaryDark); font-weight: var(--weight-semibold); cursor: pointer; list-style: none; }
+.disclosure > summary::-webkit-details-marker { display: none; }
+.disclosure > summary .icon { transition: none; }
+.disclosure[open] > summary .icon { transform: rotate(90deg); }
+.disclosure-body { display: flex; flex-direction: column; gap: var(--spacing-sm); padding-bottom: var(--spacing-xs); }
+.promo-form { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--spacing-sm); }
+.field { display: flex; flex-direction: column; gap: var(--spacing-xxs); flex: 1 1 10rem; min-width: 0; }
+.field-label { font-size: var(--size-caption); color: var(--colors-text-muted); }
+.field-input { min-height: var(--touch-min); padding: var(--spacing-sm) var(--spacing-md); border-radius: var(--radii-md); border: var(--border-width-thin) solid var(--colors-border-strong); background: var(--colors-surface-paper); color: var(--colors-text-primary); font: inherit; font-size: var(--size-body); width: 100%; }
+.promo-note { font-size: var(--size-bodySm); color: var(--colors-text-secondary); }
+
+/* Receipt rows inline on a card: date, kind, amount; a "test" pill; no link. */
+.mini-receipts { display: flex; flex-direction: column; }
+.mini-receipts li { display: flex; flex-wrap: wrap; align-items: baseline; column-gap: var(--spacing-sm); row-gap: var(--spacing-xxs); padding: var(--spacing-xs) var(--spacing-none); border-top: var(--border-width-thin) solid var(--colors-border-subtle); font-size: var(--size-bodySm); }
+.mini-receipts li:first-child { border-top: none; }
+.mini-receipts .r-date { color: var(--colors-text-secondary); }
+.mini-receipts .r-amount { margin-left: auto; font-weight: var(--weight-semibold); }
+
+/* Help */
+.help p { color: var(--colors-text-secondary); }
+
+/* Loading: three grey card outlines, no numbers, no shimmer (nothing moves, reduced motion or not). */
+.skeleton-card { height: calc(var(--spacing-jumbo) * 2); border-radius: var(--radii-lg); background: var(--colors-surface-sunken); }
+.skeleton-line { height: var(--spacing-xl); width: 50%; border-radius: var(--radii-sm); background: var(--colors-surface-sunken); }
+
+/* ------------------------------------------------------------------------------------------ */
+/* Receipts page: one table; below a 36rem column each row reflows to a block (explicit ARIA roles keep the table */
+/* semantics when display changes), so 320 px has no sideways scroll.                                  */
+/* ------------------------------------------------------------------------------------------ */
+.receipts-table { width: 100%; border-collapse: separate; border-spacing: 0 var(--spacing-sm); }
+.receipts-table caption { text-align: left; font-size: var(--size-bodyLg); font-weight: var(--weight-bold); padding-bottom: var(--spacing-xs); }
+.receipts-table thead { position: absolute; width: var(--border-width-thin); height: var(--border-width-thin); overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.receipts-table tbody, .receipts-table tr, .receipts-table th, .receipts-table td { display: block; }
+.receipts-table tr { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: var(--spacing-md); row-gap: var(--spacing-xxs); padding: var(--spacing-md) var(--spacing-lg); margin-bottom: var(--spacing-sm); background: var(--colors-surface-paper); border: var(--border-width-thin) solid var(--colors-border-subtle); border-radius: var(--radii-lg); }
+.receipts-table th[scope="row"] { font-weight: var(--weight-regular); color: var(--colors-text-secondary); font-size: var(--size-bodySm); text-align: left; }
+.receipts-table .c-what { font-weight: var(--weight-semibold); text-align: right; display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: center; gap: var(--spacing-xs); }
+.receipts-table .c-plan { color: var(--colors-text-primary); }
+.receipts-table .c-amount { text-align: right; font-weight: var(--weight-semibold); white-space: nowrap; }
+.receipts-table .c-action { grid-column: 1 / -1; display: flex; flex-direction: column; gap: var(--spacing-xxs); }
+.receipts-table .c-action:empty { display: none; }
+.link-failed { font-size: var(--size-bodySm); color: var(--colors-text-secondary); }
+@container bill (min-width: 36rem) {
+  .receipts-table { border-spacing: 0; }
+  .receipts-table thead { position: static; width: auto; height: auto; overflow: visible; clip-path: none; white-space: normal; display: table-header-group; }
+  .receipts-table tbody { display: table-row-group; }
+  .receipts-table tr { display: table-row; padding: 0; margin: 0; background: none; border: none; border-radius: 0; }
+  .receipts-table th, .receipts-table td { display: table-cell; padding: var(--spacing-sm) var(--spacing-md); border-bottom: var(--border-width-thin) solid var(--colors-border-subtle); vertical-align: middle; text-align: left; }
+  .receipts-table thead th { font-size: var(--size-caption); color: var(--colors-text-muted); font-weight: var(--weight-semibold); }
+  .receipts-table tbody tr { background: var(--colors-surface-paper); }
+  .receipts-table .c-what { display: table-cell; text-align: left; }
+  .receipts-table .c-what .pill { margin-left: var(--spacing-xs); }
+  .receipts-table .c-amount { text-align: right; min-width: var(--receipt-amount-min); }
+  .receipts-table th[scope="row"] { white-space: nowrap; }
+  .receipts-table .c-action:empty { display: table-cell; }
+  .receipts-table .c-action .btn { align-self: flex-start; }
+}
+
+/* ------------------------------------------------------------------------------------------ */
+/* Step-up dialog: the page behind is dimmed (surface.overlay) and inert; the dialog traps focus.       */
+/* ------------------------------------------------------------------------------------------ */
+.stage { position: relative; overflow: hidden; }
+.stage .scrim { position: absolute; inset: 0; background: var(--colors-surface-overlay); z-index: var(--z-modal); display: flex; align-items: center; justify-content: center; padding: var(--spacing-lg) var(--gutter-compact); }
+.dialog { width: 100%; max-width: var(--dialog-max); display: flex; flex-direction: column; gap: var(--spacing-md); padding: var(--spacing-xl); background: var(--colors-surface-paper); border-radius: var(--radii-lg); box-shadow: var(--shadow-card); }
+.dialog h2 { font-size: var(--size-prompt); line-height: var(--leading-tight); }
+.dialog .reason { color: var(--colors-text-secondary); font-size: var(--size-bodySm); }
+.dialog .dialog-actions { display: flex; flex-direction: column; gap: var(--spacing-sm); margin-top: var(--spacing-sm); }
+.clerk-box { min-height: calc(var(--spacing-jumbo) * 3); overflow-wrap: anywhere; font-family: var(--family-mono); }
+.board-note { overflow-wrap: anywhere; }
+
+/* Board helpers (annotations, not UI) */
+.board-frame { border: var(--border-width-thin) solid var(--colors-border-strong); border-radius: var(--radii-md); overflow: hidden; background: var(--colors-surface-canvas); }
+.board-frame .bill { padding-top: var(--spacing-lg); padding-bottom: var(--spacing-xl); }
