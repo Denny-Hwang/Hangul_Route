@@ -33,6 +33,8 @@ export default function BillingPage(): JSX.Element {
   const [note, setNote] = useState<BillingActionNote | null>(null);
   const [codeInput, setCodeInput] = useState('');
   const [promo, setPromo] = useState<Promo | null>(null);
+  // The plan the code was checked for: only that plan's offers show the promo price and carry the code to checkout.
+  const [promoPlanKey, setPromoPlanKey] = useState<PurchasablePlanKey | null>(null);
   const [promoNote, setPromoNote] = useState<PromoNote | null>(null);
   const failureRef = useRef<Failure | null>(null);
   failureRef.current = failure;
@@ -69,7 +71,7 @@ export default function BillingPage(): JSX.Element {
     };
   }, [load]);
 
-  const view = useMemo(() => (summary ? billingHomeView(summary, { now: new Date(), locale, promo }) : null), [summary, locale, promo]);
+  const view = useMemo(() => (summary ? billingHomeView(summary, { now: new Date(), locale, promo, promoPlanKey }) : null), [summary, locale, promo, promoPlanKey]);
 
   if (!ready || !session) return <AdultFrame>{null}</AdultFrame>;
 
@@ -95,6 +97,7 @@ export default function BillingPage(): JSX.Element {
       return;
     }
     setPromo(result.data.promo);
+    setPromoPlanKey(firstOffer.planKey);
     setCodeInput(result.data.promo.code);
     setPromoNote({ kind: 'applied', code: result.data.promo.code, name: result.data.promo.name });
   };
@@ -103,7 +106,7 @@ export default function BillingPage(): JSX.Element {
     if (!api) return;
     setBusy(true);
     setNote(null);
-    const result = await api.checkout({ planKey, subjectKind: 'space', subjectId: spaceId, ...(promo ? { promoCode: promo.code } : {}) });
+    const result = await api.checkout({ planKey, subjectKind: 'space', subjectId: spaceId, ...(promo && promoPlanKey === planKey ? { promoCode: promo.code } : {}) });
     setBusy(false);
     if (result.ok) {
       window.location.assign(result.data.url);

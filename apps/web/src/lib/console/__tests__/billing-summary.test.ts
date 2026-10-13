@@ -228,6 +228,14 @@ describe('billingHomeView: order and offers', () => {
     const many = view(summary([fam, cls]), SITE_CLAIMS, promo);
     expect(many.addPlan?.offers.map((o) => o.price)).toEqual([promoPriceLine('family_lifetime', promo, 'en'), promoPriceLine('group_license', promo, 'en')]);
   });
+
+  it('a promo checked for one plan rewrites only that plan\'s price lines; the others keep the plain price', () => {
+    const promo: Promo = { id: 'promo_1', code: 'HOYA20', name: null, percentOff: 20, amountOffCents: null, duration: 'once' };
+    const many = billingHomeView(summary([fam, cls]), { now, locale: 'en', promo, promoPlanKey: 'family_lifetime' });
+    expect(many.addPlan?.offers.map((o) => o.price)).toEqual([promoPriceLine('family_lifetime', promo, 'en'), planPrice('group_license', 'en')]);
+    const single = billingHomeView(summary([cls]), { now, locale: 'en', promo, promoPlanKey: 'family_lifetime' });
+    expect(single.cards[0]?.offer?.price).toBe(planPrice('group_license', 'en'));
+  });
 });
 
 describe('includesLines: feature lines only while SITE_CLAIMS says the feature is live', () => {

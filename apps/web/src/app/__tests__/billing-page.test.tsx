@@ -4,7 +4,7 @@ import type { ReactNode } from 'react';
 import { act, create, type ReactTestInstance, type ReactTestRenderer } from 'react-test-renderer';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { findBannedWord } from '@/lib/console/banned-text';
-import { planPrice } from '@/lib/console/billing';
+import { planPrice, promoPriceLine } from '@/lib/console/billing';
 
 /**
  * F-BILL-002 B-8a: the billing home at `/account/billing` (`APP_ROUTES.billing`), drawn from B-7's view model
@@ -430,5 +430,27 @@ describe('buying', () => {
       buttonNamed(root, b.buy.family_lifetime.cta).props.onClick();
     });
     expect(calls.checkout).toEqual([{ planKey: 'family_lifetime', subjectKind: 'space', subjectId: 'space:fam', promoCode: 'HOYA20' }]);
+  });
+
+  it('a code checked for the Family Plan: the Group License row keeps the plain price and its checkout carries no code', async () => {
+    const classCard = card({ spaceId: 'space:cls', kind: 'class', name: 'Room 4', usage: { learners: 3, learnerCap: FREE_CLASS_STUDENT_CAP, teachers: null, teacherCap: null }, actions: { buy: 'group_license', manage: false, contact: false } });
+    calls.summaries = [ok(summary([card(), classCard]))];
+    const promo: Promo = { id: 'promo_1', code: 'HOYA20', name: null, percentOff: 20, amountOffCents: null, duration: 'once' };
+    calls.promoResult = { ok: true, data: { promo } };
+    const root = await render();
+    const input = root.find((n) => n.type === 'input' && n.props.name === 'promo');
+    act(() => input.props.onChange({ target: { value: 'HOYA20' } }));
+    await act(async () => {
+      root.find((n) => n.type === 'form').props.onSubmit({ preventDefault: () => undefined });
+    });
+    expect(calls.promo).toEqual([{ code: 'HOYA20', planKey: 'family_lifetime' }]);
+    const offers = byTestId(root, 'bill-offer');
+    expect(textOf(offers[0] as ReactTestInstance)).toContain(promoPriceLine('family_lifetime', promo, 'en') as string);
+    expect(textOf(offers[1] as ReactTestInstance)).toContain(planPrice('group_license', 'en'));
+    expect(textOf(offers[1] as ReactTestInstance)).not.toContain('HOYA20');
+    await act(async () => {
+      buttonNamed(root, b.buy.group_license.cta).props.onClick();
+    });
+    expect(calls.checkout).toEqual([{ planKey: 'group_license', subjectKind: 'space', subjectId: 'space:cls' }]);
   });
 });
