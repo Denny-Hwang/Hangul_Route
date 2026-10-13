@@ -175,20 +175,20 @@ describe('flags', () => {
     expect(src).toContain('process.env.EXPO_PUBLIC_AUDIO_CLIPS');
   });
 
-  it('myRouteEnabled (F-ROUTE-001 rollout) is OFF by default and flips on with "true" or "1"', async () => {
+  it('myRouteEnabled (F-ROUTE-001 R-10b beta flip) is ON by default and switches off with "false" or "0"', async () => {
     delete process.env.EXPO_PUBLIC_MY_ROUTE_ENABLED;
     let mod = await reload();
+    expect(mod.flags.myRouteEnabled).toBe(true);
+    expect(mod.launchDefaultFlags.myRouteEnabled).toBe(true);
+    process.env.EXPO_PUBLIC_MY_ROUTE_ENABLED = 'false';
+    mod = await reload();
     expect(mod.flags.myRouteEnabled).toBe(false);
-    expect(mod.launchDefaultFlags.myRouteEnabled).toBe(false);
-    process.env.EXPO_PUBLIC_MY_ROUTE_ENABLED = 'true';
+    process.env.EXPO_PUBLIC_MY_ROUTE_ENABLED = '0';
     mod = await reload();
-    expect(mod.flags.myRouteEnabled).toBe(true);
-    process.env.EXPO_PUBLIC_MY_ROUTE_ENABLED = '1';
-    mod = await reload();
-    expect(mod.flags.myRouteEnabled).toBe(true);
+    expect(mod.flags.myRouteEnabled).toBe(false);
     process.env.EXPO_PUBLIC_MY_ROUTE_ENABLED = 'maybe';
     mod = await reload();
-    expect(mod.flags.myRouteEnabled).toBe(false);
+    expect(mod.flags.myRouteEnabled).toBe(true);
   });
 
   it('myRouteEnabled is read by its literal name, so a web build can carry the override', () => {

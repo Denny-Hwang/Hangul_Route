@@ -99,8 +99,9 @@ export interface Flags {
 
   /**
    * My route (F-ROUTE-001): the "where am I in the whole journey" page and its
-   * entries (the Journey header button in R-3). OFF until R-10 flips it for
-   * the beta. The stage latch writer (R-1b) runs with it off.
+   * entries (the Journey header button in R-3). ON since R-10b flipped it for
+   * the beta; `EXPO_PUBLIC_MY_ROUTE_ENABLED=false` in a build switches it back
+   * off without a code change. The stage latch writer (R-1b) runs either way.
    */
   myRouteEnabled: boolean;
 
@@ -161,7 +162,7 @@ const launchDefaults: Flags = {
   showUnreviewedStories: false,
   placementEnabled: false,
   audioClips: true,
-  myRouteEnabled: false,
+  myRouteEnabled: true,
   vocabTopicsEnabled: false,
   vocabShowDrafts: false,
   grownUpHomeEnabled: false,
