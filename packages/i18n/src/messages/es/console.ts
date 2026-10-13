@@ -1307,4 +1307,31 @@ export const consoleMsgs = {
       },
     },
   },
+  /**
+   * Class moves (F-SPACE-002 T-6d): the consent sheet's frame only, so the sheet reads in one language when its
+   * own switch picks Spanish (the lines are content-schema's TRANSFER_CONSENT_TEXT.es). The rest of
+   * `console.transfer` falls back to English until the next Spanish draft.
+   */
+  transfer: {
+    lines: { notNowEnds: 'Ahora no termina esta solicitud. Puedes empezar un cambio tú cuando quieras.' },
+    consent: {
+      title: (name: string, destination: string) => `¿Cambiar a ${name} a ${destination}?`,
+      language: 'Idioma',
+      who: '¿Quién es la nueva clase?',
+      teacher: (owner: string) => `Docente: ${owner}`,
+      learners: (n: number) => plural('es', n, { one: `${n} estudiante`, other: `${n} estudiantes` }),
+      age: { days: 'Tiene menos de una semana', weeks: 'Tiene unas semanas', months: 'Tiene unos meses', years: 'Tiene más de un año' },
+      visibleClass: (space: string, owner: string) => `${space} (docente ${owner})`,
+      visibleYou: (family: string) => `${family} (tú)`,
+      visibleFamily: (family: string, owner: string) => `${family} (familia, ${owner})`,
+      readToEnd: 'Lee hasta el final para continuar.',
+      updated: 'Este texto cambió. Léelo de nuevo, por favor.',
+      unavailable: 'Aún no está disponible en tu idioma.',
+      yes: (name: string) => `Sí, cambiar a ${name}`,
+      notNow: { cta: 'Ahora no' },
+      tryAgain: { cta: 'Reintentar' },
+      failed: 'No se pudo enviar',
+    },
+    a11y: { close: 'Cerrar' },
+  },
 } satisfies DeepPartial<Messages['console']>;

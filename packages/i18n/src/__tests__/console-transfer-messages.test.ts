@@ -135,3 +135,41 @@ describe('console.transfer in every locale', () => {
     }
   });
 });
+
+describe('console.transfer.consent in Korean and Spanish (F-SPACE-002 T-6d: the sheet reads in one language)', () => {
+  const samples: Record<string, unknown[]> = {
+    title: ['Mina', 'Saturday Class B'],
+    teacher: ['Ms Park'],
+    learners: [3],
+    visibleClass: ['Sunday Class A', 'Mr Han'],
+    visibleYou: ['Kim family'],
+    visibleFamily: ['Lee family', 'Bo'],
+    yes: ['Mina'],
+  };
+  for (const locale of ['ko', 'es'] as const) {
+    it(`${locale}: every frame string is its own, caregiver-safe, and no Korean particle follows an argument`, () => {
+      const c = getMessages(locale).console.transfer.consent;
+      const english = getMessages('en').console.transfer.consent;
+      const texts: string[] = [];
+      for (const [key, value] of Object.entries(c)) {
+        if (typeof value === 'function') {
+          const args = samples[key] ?? [];
+          texts.push((value as (...a: unknown[]) => string)(...args));
+          expect((value as (...a: unknown[]) => string)(...args), key).not.toBe((english[key as keyof typeof english] as (...a: unknown[]) => string)(...args));
+        } else if (typeof value === 'string') {
+          texts.push(value);
+          expect(value, key).not.toBe(english[key as keyof typeof english]);
+        } else texts.push(...Object.values(value as Record<string, string>));
+      }
+      texts.push(getMessages(locale).console.transfer.lines.notNowEnds);
+      for (const text of texts) {
+        expect(findBannedWord(text, locale, 'caregiver'), text).toBeNull();
+        expect(EMOJI.test(text), text).toBe(false);
+      }
+      if (locale === 'ko') {
+        const raw = [c.title('{a}', '{b}'), c.teacher('{a}'), c.yes('{a}'), c.visibleYou('{a}')];
+        for (const text of raw) expect(text, text).not.toMatch(/\}[가-힣]/);
+      }
+    });
+  }
+});

@@ -431,14 +431,14 @@ export function StartMoveSheet({ spaceId, learner, api, online, onClose, onSent,
 // ---------------------------------------------------------------------------
 // The settings learner row's Move action (start-sheet.md, "Settings learner row")
 
-export function MoveRowAction({ name, online, onMove }: { name: string; online: boolean; onMove: () => void }): JSX.Element {
+export function MoveRowAction({ name, online, onMove, family }: { name: string; online: boolean; onMove: () => void; family?: boolean }): JSX.Element {
   const { messages } = useConsoleLocale();
   const t = messages.console.transfer;
   const helpId = useId();
   return (
     <>
-      <MoveButton label={t.a11y.moveRow(name)} waiting={!online} describedBy={online ? undefined : helpId} onClick={onMove} testId="move-row">
-        {t.start.move.class.cta}
+      <MoveButton label={family ? t.a11y.moveRowFamily(name) : t.a11y.moveRow(name)} waiting={!online} describedBy={online ? undefined : helpId} onClick={onMove} testId="move-row">
+        {family ? t.start.move.family.cta : t.start.move.class.cta}
       </MoveButton>
       {!online ? (
         <span id={helpId} style={{ flexBasis: '100%', fontSize: typography.size.bodySm, color: colors.text.secondary }}>
