@@ -100,6 +100,36 @@ test.describe('Home "Words are ready" card and the dashboard Words row (fixture 
     });
   }
 
+  test('a finished Speed Round of its topic collects the card, which keeps its slot', async ({ page }) => {
+    await learnerWithDueWords(page);
+    await page.getByTestId('home-vocab-card-open').click();
+    await expect(page.getByTestId('vocab-speed-sheet')).toBeVisible();
+    await page.getByTestId('vocab-speed-start').click();
+    const results = page.getByTestId('vocab-results');
+    // Any answers will do: tap the options in turn until the round reaches its results.
+    const options = page.locator('[data-testid^="vocab-question-option-"]');
+    for (let i = 0; i < 120 && !(await results.isVisible()); i += 1) {
+      const count = await options.count();
+      if (count > 0) await options.nth(i % count).click({ timeout: 1000 }).catch(() => undefined);
+      await page.waitForTimeout(150);
+    }
+    await expect(results).toBeVisible({ timeout: 5000 });
+    // Back to Home inside the same app session (the day's pin and the round record live in memory):
+    // Play again puts the start sheet in the results' place, right above Home, and its Go back pops it.
+    await page.getByTestId('vocab-results-play-again').click();
+    await expect(page.getByTestId('vocab-speed-sheet')).toBeVisible();
+    await page.getByRole('button', { name: 'Go back' }).first().click();
+    const card = page.getByTestId('home-vocab-card');
+    await expect(card).toBeVisible();
+    await expect(page.getByTestId('home-missions').locator(':scope > *').last()).toContainText('Words are ready');
+    await expect(page.getByTestId('home-vocab-card-open')).toHaveAccessibleName(
+      'Words are ready. 4 words would like another look. Collected. Opens a quick round.',
+    );
+    expect(await card.innerText()).not.toMatch(GUILT);
+    await card.scrollIntoViewIfNeeded();
+    await shot(page, 'voc5-p3-home-card-collected');
+  });
+
   test('the parent dashboard shows the Words row with the words to look at together', async ({ page }) => {
     const id = await learnerWithDueWords(page);
     await openGrownUpZone(page, 'Dami');
@@ -124,6 +154,11 @@ test.describe('Words off (release build)', () => {
   test('a learner with due words sees no vocabulary card, and the dashboard no Words row', async ({ page }) => {
     const id = await learnerWithDueWords(page);
     await expect(page.getByTestId('home-missions')).toBeVisible();
+    // The seeded words survived the app's own hydration and write: the card is absent because Words
+    // is off, not because no word was due.
+    const stored = await readStored<{ vocab?: { items: Array<{ id: string; due: string }> } }>(page, `progress:${id}`);
+    expect(stored?.vocab?.items.map((item) => item.id).sort()).toEqual([...DUE_FOOD].sort());
+    expect(stored?.vocab?.items.every((item) => item.due <= PAST)).toBe(true);
     await expect(page.getByTestId('home-vocab-card')).toHaveCount(0);
     await expect(page.getByText('Words are ready')).toHaveCount(0);
     await openGrownUpZone(page, 'Dami');
