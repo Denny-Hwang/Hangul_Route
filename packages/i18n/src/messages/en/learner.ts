@@ -1568,6 +1568,7 @@ export const learner = {
       startTitle: 'Starts',
       start: { today: 'Today', tomorrow: 'Tomorrow', pick: 'Pick a day' },
       pickDay: 'Pick the first day',
+      pickDayLabel: (weekday: string, date: string) => `${weekday}, ${date}`,
       changeDays: { cta: 'Change days and time' },
       hideDays: { cta: 'Hide days and time' },
       daysTitle: 'Which days?',

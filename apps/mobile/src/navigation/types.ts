@@ -3,6 +3,7 @@ import type { NavigatorScreenParams } from '@react-navigation/native';
 import type { AskFrom } from '../logic/access-copy';
 import type { PreviewFrom } from '../logic/episode-access';
 import type { PinResetMethod } from '../logic/profiles/pin-flow';
+import type { ProposalSource } from '../logic/route/proposal-flow';
 import type { GrownUpVia } from '../logic/shell/handoff-rules';
 import type { CellStoriesSource } from '../logic/story/cell-stories';
 import type { LibrarySectionId } from '../logic/story/library-sections';
@@ -35,7 +36,9 @@ export type GrownUpDestination =
   | 'NotesGrownUp'
   | 'NoteReport'
   /** F-REPORT-001 section 3.9 (RP-9): one learner's in-app report (`PinEntry.profileId`). */
-  | 'LearnerReport';
+  | 'LearnerReport'
+  /** F-PLAN-002 section 3.9 (P2-7a): a child profile's "Make a weekly plan" row, through the gate when the device needs it (`PinEntry.profileId`). */
+  | 'RouteProposal';
 
 export type RootStackParamList = {
   Onboarding: NavigatorScreenParams<OnboardingStackParamList>;
@@ -73,6 +76,13 @@ export type RootStackParamList = {
     /** Answers after a round's first one — telemetry only, never scored. */
     retries?: number;
   };
+  /**
+   * The weekly plan proposal (F-PLAN-002 section 3.9, wireframe journey/my-route-overview.md K1):
+   * Hoya's recommended plan for `profileId`, with pace, length, start day and days to change, then
+   * Start this plan or Not now. `source` is the door that opened it (`route.proposed.source`). The
+   * update after a retake (`mode: 'update'`, K3) arrives with F-PLC-001 P-7b.
+   */
+  RouteProposal: { source: ProposalSource; profileId: string };
   /** The Stage 1 prize ceremony (F-QUEST-002 §3.8), opened from Results on the run that completed the stage. */
   StageComplete: { stageKey: StageKey };
   /** The Hangul Check (F-QUEST-002 §3.9), from the ceremony and the Journey Stage 1 header; never gates anything. */

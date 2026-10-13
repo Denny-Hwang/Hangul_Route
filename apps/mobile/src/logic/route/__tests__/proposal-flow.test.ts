@@ -6,6 +6,7 @@ import {
   type DurationOption,
   type PlacementResult,
   type RouteProposal,
+  type RouteSeed,
 } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
 import {
@@ -170,7 +171,7 @@ describe('the proposal input (section 3.1a, F-PLC-001 AM-4)', () => {
       unlockedStages: ['stage1'],
       today: TODAY,
     });
-    expect(input.seed?.needsStage).toBe('stage2');
+    expect((input.seed as RouteSeed | null)?.needsStage).toBe('stage2');
   });
 
   it('safePropose returns the proposal, and null when the input breaks a cap', () => {
