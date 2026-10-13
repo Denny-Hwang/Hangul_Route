@@ -166,11 +166,12 @@ export interface HeaderView {
 
 /** Check: two fill-only dots and "Quick check"; every other mode: a bar and "n / N". */
 export function headerView(mode: HostMode, state: ListenPickFlowState, copy: MinigameCopy): HeaderView {
-  if (mode === 'check') {
+  if (mode === 'check' || mode === 'review') {
+    // The Check and the Hangul Check: fill-only dots, never "n / N" (D3); only the Check has a title.
     const finished = state.status === 'resolved' || state.status === 'done' ? 1 : 0;
     return {
       kind: 'dots',
-      title: copy.listenPick.checkTitle.pill,
+      title: mode === 'check' ? copy.listenPick.checkTitle.pill : undefined,
       value: Math.min(state.total, state.roundIdx + finished),
       max: state.total,
       label: undefined,

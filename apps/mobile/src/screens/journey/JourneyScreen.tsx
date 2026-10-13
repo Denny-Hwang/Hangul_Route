@@ -171,6 +171,7 @@ export function JourneyScreen(): React.ReactElement {
         quests={snapQuests}
         completeStages={doneStages}
         onOpenStagePrize={hasPrize ? () => navigation.navigate('StageComplete', { stageKey: PRIZE_STAGE }) : undefined}
+        onOpenHangulCheck={() => navigation.navigate('StageReview', { stageKey: 'stage1' })}
         // A stories-only cell opens its cell page on one pane and on two (F-STORY-005 §3.6).
         onOpenStories={(stage, theme) => navigation.navigate('CellStories', { stage, theme, source: 'cell' })}
         access={access}

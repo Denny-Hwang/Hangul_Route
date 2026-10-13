@@ -15,6 +15,7 @@ import {
 } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
 import { minigameScopes } from '../../logic/minigame-config';
+import { HANGUL_CHECK_WORDS, buildHangulCheck } from '../../logic/stage1/hangul-check';
 import { PAUSE_WORD } from '../../logic/lecture/content';
 import { AVATAR_PRESETS } from '../../logic/profiles/avatar-catalog';
 import { episodesAll } from '../episodes';
@@ -36,6 +37,7 @@ const F = {
   scopes: 'apps/mobile/src/logic/minigame-config.ts',
   avatars: 'apps/mobile/src/logic/profiles/avatar-catalog.ts',
   lecture: 'apps/mobile/src/logic/lecture/content.ts',
+  check: 'apps/mobile/src/logic/stage1/hangul-check.ts',
 } as const;
 const sources = new Map<string, string>(Object.values(F).map((p) => [p, read(p)]));
 const HANGUL = /[가-힣]/;
@@ -302,6 +304,26 @@ describe('romanization is consistent across sources (R5)', () => {
     const all = [...entries, ...jsonEntries('cards.json'), ...jsonEntries('jamo.json')];
     expect(all.length).toBeGreaterThan(100);
     const found = checkConsistency(all).map((i) => formatRomanizationFinding('apps/mobile/src/content', undefined, i));
+    expect(found).toEqual([]);
+  });
+});
+
+describe('Hangul Check romanization (B1, F-QUEST-002 §3.9)', () => {
+  it('every word, prompt and written option of the 35 items carries its romanization (R1 to R4, R7 for a lone symbol)', () => {
+    const found: string[] = [];
+    for (const w of HANGUL_CHECK_WORDS) {
+      note(F.check, w.text.ko, w.text.romanization);
+      found.push(...pair(F.check, w.text.ko, w.text.romanization).map((m) => `${w.id}: ${m}`));
+    }
+    for (const item of buildHangulCheck({ seed: 1 }).items) {
+      const { prompt, options } = item.round;
+      found.push(...pair(F.check, prompt.ko, prompt.romanization).map((m) => `${item.id}: ${m}`));
+      for (const o of options) {
+        if (o.text === undefined) continue;
+        if (isLoneJamo(o.text.ko)) found.push(...out(F.check, `'${o.text.ko}'`, checkJamoRomanization(o.text.ko, o.text.romanization)));
+        else found.push(...pair(F.check, o.text.ko, o.text.romanization).map((m) => `${item.id}: ${m}`));
+      }
+    }
     expect(found).toEqual([]);
   });
 });

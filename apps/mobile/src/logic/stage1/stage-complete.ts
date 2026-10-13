@@ -82,18 +82,19 @@ export function ownsStagePrize(
 }
 
 export interface CeremonyAction {
-  id: 'seeCards' | 'backHome';
+  id: 'hangulCheck' | 'seeCards' | 'backHome';
   tone: 'primary' | 'ghost';
   size: 'hero' | 'md';
 }
 
 /**
- * One primary, See my cards, until PR Q-10b puts the Hangul Check first; Back home is a ghost.
- * Never a purchase and never Premium (D5).
+ * One primary, Take the Hangul Check (PR Q-10b; never required, "you can skip it"); See my cards
+ * and Back home are ghost. Never a purchase and never Premium (D5).
  */
 export function stageCompleteActions(): CeremonyAction[] {
   return [
-    { id: 'seeCards', tone: 'primary', size: 'hero' },
+    { id: 'hangulCheck', tone: 'primary', size: 'hero' },
+    { id: 'seeCards', tone: 'ghost', size: 'md' },
     { id: 'backHome', tone: 'ghost', size: 'md' },
   ];
 }

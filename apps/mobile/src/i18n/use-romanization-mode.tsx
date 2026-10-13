@@ -15,8 +15,9 @@ const OverrideContext = createContext<RomanizationMode | null>(null);
 
 /**
  * Sets the mode for everything below it, whatever a profile chose: the All
- * lessons display setting, which has no learner profile. Learner screens are
- * never mounted under it.
+ * lessons display setting, which has no learner profile, and the Hangul Check's
+ * per-attempt "hide the romanization until I tap" switch (F-QUEST-002 §3.9).
+ * No other learner screen is mounted under it.
  */
 export function RomanizationModeOverride({
   mode,

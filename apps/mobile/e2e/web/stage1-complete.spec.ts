@@ -103,6 +103,9 @@ test('the last Stage 1 quest opens the prize: Hoya, every symbol lit, the legend
   expect(withoutWall).not.toMatch(/\d+\s*\/\s*\d+|%/);
   expect(copy).not.toMatch(/premium|price|upgrade|\$/i);
   await expect(page.getByRole('button', { name: 'See my cards' })).toBeVisible();
+  // PR Q-10b: the Hangul Check is the primary, and says it can be skipped.
+  await expect(page.getByRole('button', { name: 'Take the Hangul Check' })).toBeVisible();
+  await expect(page.getByText('About four minutes. You can skip it.')).toBeVisible();
   await shot(page, 'stage1-complete');
   await page.screenshot({ path: test.info().outputPath('stage1-complete.png'), fullPage: true });
   await wall.screenshot({ path: test.info().outputPath('stage1-complete-wall.png') });
@@ -169,6 +172,12 @@ test('the ceremony fits 320 wide with no sideways scroll', async ({ page }) => {
   }
   await shot(page, 'stage1-complete-320');
   await page.screenshot({ path: test.info().outputPath('stage1-complete-320.png'), fullPage: true });
+
+  // The ceremony opens the Hangul Check intro (PR Q-10b).
+  await page.getByRole('button', { name: 'Take the Hangul Check' }).click();
+  await expect(page.getByTestId('hangul-check-intro')).toBeVisible();
+  await page.getByRole('button', { name: 'Maybe later' }).click();
+  await expect(page.getByTestId('stage-complete')).toBeVisible();
 
   // A card opens its page.
   await page.getByRole('button', { name: 'Open card: Hangul Day' }).click();

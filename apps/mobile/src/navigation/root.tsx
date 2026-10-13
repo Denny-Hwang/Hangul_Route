@@ -24,6 +24,7 @@ import { HomeworkScreen } from '../screens/homework/HomeworkScreen';
 import { QuestPlayerScreen } from '../screens/quest/QuestPlayerScreen';
 import { ResultsScreen } from '../screens/results/ResultsScreen';
 import { StageCompleteScreen } from '../screens/results/StageCompleteScreen';
+import { StageReviewScreen } from '../screens/reviews/StageReviewScreen';
 import { MinigameScreen } from '../screens/minigames/MinigameScreen';
 import { StoryReaderScreen } from '../screens/story/StoryReaderScreen';
 import { StorySourcesScreen } from '../screens/story/StorySourcesScreen';
@@ -79,6 +80,7 @@ export function RootNavigator(): React.ReactElement {
         <Stack.Screen name="Minigame" component={MinigameScreen} />
         <Stack.Screen name="Results" component={ResultsScreen} options={{ animation: 'fade' }} />
         <Stack.Screen name="StageComplete" component={StageCompleteScreen} options={{ animation: 'fade' }} />
+        <Stack.Screen name="StageReview" component={StageReviewScreen} options={{ gestureEnabled: false }} />
         <Stack.Screen name="CardDetail" component={CardDetailModal} options={{ presentation: 'modal' }} />
         <Stack.Screen name="PinEntry" component={PinEntryModal} options={{ presentation: 'modal' }} />
         <Stack.Screen name="PinReset" component={PinResetModal} options={{ presentation: 'modal' }} />

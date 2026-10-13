@@ -123,10 +123,11 @@ describe('ownsStagePrize: the ceremony opens only for a learner who holds every 
 });
 
 describe('stageCompleteActions: the ceremony buttons', () => {
-  it('has one primary, See my cards, and Back home as a ghost; no purchase and no Premium', () => {
+  it('has one primary, Take the Hangul Check (PR Q-10b), with See my cards and Back home as ghosts; no purchase and no Premium', () => {
     const actions = stageCompleteActions();
     expect(actions).toEqual([
-      { id: 'seeCards', tone: 'primary', size: 'hero' },
+      { id: 'hangulCheck', tone: 'primary', size: 'hero' },
+      { id: 'seeCards', tone: 'ghost', size: 'md' },
       { id: 'backHome', tone: 'ghost', size: 'md' },
     ]);
     expect(actions.filter((a) => a.tone === 'primary')).toHaveLength(1);
@@ -135,7 +136,18 @@ describe('stageCompleteActions: the ceremony buttons', () => {
 
 describe('ceremony copy (D3, D5)', () => {
   const copy = m.learner.stageComplete;
-  const strings = [copy.title, copy.headline, copy.canDo, copy.wallTitle, copy.cardsTitle, copy.seeCards.cta, copy.backHome.cta, copy.notFound];
+  const strings = [
+    copy.title,
+    copy.headline,
+    copy.canDo,
+    copy.wallTitle,
+    copy.cardsTitle,
+    copy.seeCards.cta,
+    copy.backHome.cta,
+    copy.notFound,
+    copy.hangulCheck.cta,
+    copy.hangulCheck.note,
+  ];
 
   it('shows no number, fraction or percent on the learner screen', () => {
     for (const s of strings) expect(s, s).not.toMatch(/[0-9]|%|\//u);

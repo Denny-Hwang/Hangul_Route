@@ -1,4 +1,4 @@
-import { PlacementResultSchema, type PlacementResult, type ProgressSnapshot } from '@hangul-route/content-schema';
+import { PlacementResultSchema, ReviewEntrySchema, type PlacementResult, type ProgressSnapshot, type ReviewEntry } from '@hangul-route/content-schema';
 import { create } from 'zustand';
 import { episodesAll } from '../content/episodes';
 import { latchSnapshot } from '../logic/my-route/latch';
@@ -10,7 +10,7 @@ import type { DerivedAward } from '../logic/awards/types';
 import { latchQuests, recordBestQuest } from '../logic/quest-progress';
 import type { SessionOptions } from '../logic/sessions/hold';
 import { elapsedSeconds, lastStreakDay, newSessionId } from '../logic/sessions/session-log';
-import { mergePlacements, mergeSnapshots, withSnapshotDefaults } from '../logic/sync/merge';
+import { mergePlacements, mergeReview, mergeSnapshots, withSnapshotDefaults } from '../logic/sync/merge';
 import { notifyProgressPersisted } from '../logic/sync/persist-hook';
 import { applyVocabEvents, emptyVocab, vocabOf, type VocabEvent } from '../logic/vocab/progress';
 import { readJson, writeJson } from '../platform/storage';
@@ -212,6 +212,13 @@ interface Actions {
    * Worker that keeps the slice is deployed (section 3.3).
    */
   recordVocab: (profileId: string, events: readonly VocabEvent[], now?: Date) => void;
+  /**
+   * Save a finished Hangul Check (F-QUEST-002 §3.9) to `reviews` and nothing else, persisted and
+   * synced like any write: the caregiver channel. One entry per attempt; the same id again keeps
+   * the higher-star entry (`mergeReview`). An entry the schema refuses is never stored; returns
+   * whether it was.
+   */
+  recordReview: (profileId: string, entry: ReviewEntry) => boolean;
 }
 
 function blankSnapshot(profileId: string): ProgressSnapshot {
@@ -595,6 +602,20 @@ export const useProgressStore = create<State & Actions>((set, get) => ({
       placements: mergePlacements(snap.placements, [parsed.data]),
       updatedAt: new Date().toISOString(),
     };
+    set((s) => ({ byProfile: { ...s.byProfile, [profileId]: updated } }));
+    persist(profileId, updated);
+    return true;
+  },
+
+  recordReview: (profileId, entry) => {
+    const parsed = ReviewEntrySchema.safeParse(entry);
+    if (!parsed.success) return false;
+    const snap = withSnapshotDefaults(get().byProfile[profileId] ?? blankSnapshot(profileId));
+    const kept = snap.reviews.find((r) => r.id === parsed.data.id);
+    const reviews = kept
+      ? snap.reviews.map((r) => (r.id === parsed.data.id ? mergeReview(r, parsed.data) : r))
+      : [...snap.reviews, parsed.data];
+    const updated: ProgressSnapshot = { ...snap, reviews, updatedAt: new Date().toISOString() };
     set((s) => ({ byProfile: { ...s.byProfile, [profileId]: updated } }));
     persist(profileId, updated);
     return true;

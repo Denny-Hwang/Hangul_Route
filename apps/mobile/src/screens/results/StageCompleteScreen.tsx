@@ -40,7 +40,7 @@ import { CardArtThumb } from './CardArtThumb';
  * Opened from Results on the run that completed Stage 1, and again from the Journey Stage 1 header
  * (never automatically a second time). It shows only to a learner who holds the prize cards. Hoya cheering, the wall of all 30
  * symbols (every one lit, never counted, D3), the legendary cards (each opens its card), one
- * primary See my cards and Back home as a ghost. No Premium pill and no purchase (D5). It writes
+ * primary Take the Hangul Check (PR Q-10b; skippable), See my cards and Back home as ghosts. No Premium pill and no purchase (D5). It writes
  * nothing: the awards were written with the Results score.
  */
 
@@ -71,6 +71,8 @@ export function StageCompleteScreen({ route, navigation }: Props): React.ReactEl
   };
   // The Library opens on its Cards section, whichever section it was left on.
   const seeCards = (): void => navigation.navigate('Main', { screen: 'Library', params: { section: 'cards' } });
+  // The Hangul Check (F-QUEST-002 §3.9): never required; the note says it can be skipped.
+  const openCheck = (): void => navigation.navigate('StageReview', { stageKey });
 
   if (!ready) {
     return (
@@ -141,12 +143,21 @@ export function StageCompleteScreen({ route, navigation }: Props): React.ReactEl
       {stageCompleteActions().map((action) => (
         <View key={action.id} style={{ marginBottom: spacing.sm }}>
           <Button
-            label={action.id === 'seeCards' ? m.seeCards.cta : m.backHome.cta}
+            label={action.id === 'hangulCheck' ? m.hangulCheck.cta : action.id === 'seeCards' ? m.seeCards.cta : m.backHome.cta}
             tone={action.tone}
             size={action.size}
             fullWidth
-            onPress={action.id === 'seeCards' ? seeCards : goHome}
+            testID={`stage-complete-${action.id}`}
+            onPress={action.id === 'hangulCheck' ? openCheck : action.id === 'seeCards' ? seeCards : goHome}
           />
+          {action.id === 'hangulCheck' ? (
+            <>
+              <Spacer size="xs" />
+              <Caption tone="secondary" align="center">
+                {m.hangulCheck.note}
+              </Caption>
+            </>
+          ) : null}
         </View>
       ))}
       <Spacer size="lg" />

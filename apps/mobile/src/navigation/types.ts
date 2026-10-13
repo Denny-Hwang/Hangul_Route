@@ -66,6 +66,8 @@ export type RootStackParamList = {
   };
   /** The Stage 1 prize ceremony (F-QUEST-002 §3.8), opened from Results on the run that completed the stage. */
   StageComplete: { stageKey: StageKey };
+  /** The Hangul Check (F-QUEST-002 §3.9), from the ceremony and the Journey Stage 1 header; never gates anything. */
+  StageReview: { stageKey: StageKey };
   CardDetail: { cardId: string };
   /** Grown-up gate (PIN). `AddProfile` continues into Onboarding/CreateProfile. */
   PinEntry: {
