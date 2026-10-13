@@ -35,7 +35,7 @@ export const ACTIVITY_ROUTES = { learn: 'VocabCards', speed: 'VocabSpeedRound', 
  * `__tests__/caps.test.ts` fails while the two disagree.
  */
 export const VOCAB_SCREENS: Readonly<Record<keyof typeof ACTIVITY_ROUTES, boolean>> = {
-  learn: false,
+  learn: true,
   speed: true,
   match: false,
 };

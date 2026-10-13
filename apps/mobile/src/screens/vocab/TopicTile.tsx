@@ -10,7 +10,7 @@ export const TOPIC_TILE_PADDING = spacing.md;
 export const TOPIC_TILE_CHROME = 2 * (TOPIC_TILE_PADDING + borderWidth.base);
 
 /** The topic tint (`theme.*` or `stage.stage2`): a border accent only, never a text colour. */
-function tintColor(tint: VocabTopic['tint']): string {
+export function topicTintColor(tint: VocabTopic['tint']): string {
   switch (tint) {
     case 'theme.letters':
       return colors.theme.letters;
@@ -75,7 +75,7 @@ export function TopicTile({
         borderRadius: radii.lg,
         borderWidth: borderWidth.base,
         borderStyle: view.locked ? 'dotted' : 'solid',
-        borderColor: pressed ? colors.border.focus : view.locked ? colors.border.shape : tintColor(view.tint),
+        borderColor: pressed ? colors.border.focus : view.locked ? colors.border.shape : topicTintColor(view.tint),
       })}
     >
       <View style={{ alignItems: 'center' }}>

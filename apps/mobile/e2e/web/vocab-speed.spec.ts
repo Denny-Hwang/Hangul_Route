@@ -37,6 +37,7 @@ const FIVE = FOOD_IDS.slice(0, 5);
 interface ContentItem {
   id: string;
   ko: string;
+  romanization: string;
   en: string;
 }
 const FOOD: readonly ContentItem[] = (
@@ -262,8 +263,8 @@ test.describe('Speed Round, Relaxed (fixture bundle)', () => {
     const missed = FOOD.find((i) => i.id === second.id)!;
     await expect(page.getByTestId(`vocab-results-tile-${second.id}`)).toContainText(missed.ko);
     await expect(page.getByTestId(`vocab-results-tile-${second.id}`)).toContainText(missed.en);
-    // Practice these waits for the flashcards (C-5); Play again is the primary meanwhile.
-    await expect(page.getByTestId('vocab-results-practice')).toHaveCount(0);
+    // Practice these opens the flashcards (F-VOC-003 C-5) on the words to see again; it is the primary.
+    await expect(page.getByTestId('vocab-results-practice')).toBeVisible();
     await expect(page.getByTestId('vocab-results-play-again')).toBeVisible();
     await expect(page.getByTestId('vocab-results-back')).toBeVisible();
     await expectNoShame(page);
@@ -295,9 +296,14 @@ test.describe('Speed Round, Relaxed (fixture bundle)', () => {
     const stored = await readStored<StoredProgress>(page, `progress:${profileId}`);
     expect(stored?.vocab?.items.reduce((n, item) => n + item.seen, 0)).toBe(10);
 
-    // Back to topic.
-    await page.getByTestId('vocab-results-back').click();
-    await expect(page.getByTestId('vocab-topic')).toBeVisible();
+    // Practice these: only the words to see again, as flashcards (F-VOC-003 C-5, `VocabCards.ids`).
+    await page.getByTestId('vocab-results-practice').click();
+    await expect(page.getByTestId('vocab-cards')).toBeVisible();
+    await expect(page.getByTestId('vocab-card-flip')).toHaveAccessibleName(new RegExp(`^Korean: \\S+, ${missed.romanization}\\. Show meaning\\.$`));
+    await expect(page.getByTestId('vocab-cards-dots')).toBeAttached();
+    expect((await events(page)).filter((e) => e.name === 'vocab.cards.start').map((e) => e.payload)).toEqual([
+      expect.objectContaining({ topicKey: 'food', chunk: -1, words: 1 }),
+    ]);
     expect(errors).toEqual([]);
   });
 
@@ -368,8 +374,9 @@ test.describe('Speed Round, Relaxed (fixture bundle)', () => {
     await expect(page.getByTestId('vocab-speed-start')).toHaveCount(0);
     await expectFits(page);
     await shot(page, 'vocab-speed-learn-first');
-    await page.getByTestId('vocab-speed-back-to-topic').click();
-    await expect(page.getByTestId('vocab-topic')).toBeVisible();
+    // Learn opens the flashcards (F-VOC-003 C-5).
+    await page.getByTestId('vocab-speed-learn').click();
+    await expect(page.getByTestId('vocab-cards')).toBeVisible();
   });
 
   test('an unknown topic goes to "Topic not found"', async ({ page }) => {

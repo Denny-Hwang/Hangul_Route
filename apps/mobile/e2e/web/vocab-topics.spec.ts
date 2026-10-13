@@ -179,7 +179,7 @@ test.describe('Words picker and topic page (fixture bundle)', () => {
     expect(errors).toEqual([]);
   });
 
-  test('the topic page: count, Hoya, the wall with collected words and silhouettes, and nothing that goes nowhere', async ({ page }) => {
+  test('the topic page: count, Hoya, the wall with collected words and silhouettes, and only buttons that go somewhere', async ({ page }) => {
     const errors: string[] = [];
     page.on('pageerror', (e) => errors.push(String(e)));
     await newLearner(page);
@@ -203,9 +203,10 @@ test.describe('Words picker and topic page (fixture bundle)', () => {
       'vocab-wall-vocab:uyu',
       'vocab-wall-vocab:ppang',
     ]);
-    await expect(page.getByLabel('Korean: 사과, sagwa, apple')).toBeVisible();
-    await expect(page.getByLabel('Korean: 우유, uyu, milk')).toBeVisible();
-    await expect(page.getByLabel('Korean: 김치, gimchi, kimchi')).toBeVisible();
+    // A collected tile is one button named with the word, its romanization and its meaning (it opens the flashcard, C-5).
+    await expect(page.getByRole('button', { name: 'Korean: 사과, sagwa, apple' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Korean: 우유, uyu, milk' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Korean: 김치, gimchi, kimchi' })).toBeVisible();
     // A collected word carries its meaning in the UI language under the romanization (D2).
     await expect(page.getByTestId('vocab-wall-vocab:sagwa-apple')).toContainText('apple');
     await expect(page.getByTestId('vocab-wall-vocab:uyu')).toContainText('milk');
@@ -215,9 +216,11 @@ test.describe('Words picker and topic page (fixture bundle)', () => {
     await expect(page.getByTestId('vocab-wall-vocab:banana')).not.toContainText('banana');
     // The meter is hidden from screen readers; the count is text, never "3 of 12".
     await expect(page.getByRole('progressbar')).toHaveCount(0);
-    // C-4 ships no activity screen yet: no activity button and no tile button that would go nowhere.
-    await expect(page.getByTestId('vocab-topic-activities')).toHaveCount(0);
-    await expect(page.getByRole('button', { name: /^Korean: / })).toHaveCount(0);
+    // Only the activities whose screen is in the build (VOCAB_SCREENS): Learn since C-5, the suggestion with
+    // 3 words; the collected tiles open their flashcard, the silhouettes are not buttons.
+    await expect(page.getByTestId('vocab-activity-learn')).toBeVisible();
+    await expect(page.getByTestId('vocab-activity-match')).toHaveCount(0);
+    await expect(page.getByRole('button', { name: /^Korean: / })).toHaveCount(3);
 
     // 2 wall columns on a 393 dp phone: every word and its romanization stay whole.
     await expect.poll(() => columns(page, 'vocab-wall-')).toBe(2);
@@ -268,7 +271,7 @@ test.describe('Words picker and topic page (fixture bundle)', () => {
     await expect(page.getByTestId('vocab-wall-vocab:ppalgansaek')).not.toContainText('ppalgansaek');
     await expect(page.getByTestId('vocab-wall-vocab:ppalgansaek')).toContainText('red');
     // The meaning is never hidden: the screen reader name still carries the gloss.
-    await expect(page.getByLabel('Korean: 빨간색, ppalgansaek, red')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Korean: 빨간색, ppalgansaek, red' })).toBeVisible();
     await page.getByRole('button', { name: 'Show sound' }).click();
     await expect(page.getByTestId('vocab-topic-ko')).toContainText('saek');
     // The same Show sound reveals the wall's romanization: nothing on the page stays hidden for good.

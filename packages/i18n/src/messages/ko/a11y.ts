@@ -176,6 +176,13 @@ export const a11y = {
     letter: (letter: string, sound: string, state: string) => `${letter}, ${sound}. ${state}.`,
   },
   vocab: {
+    cards: {
+      word: (ko: string) => `한글: ${ko}`,
+      front: (word: string) => `${word}. 뜻 보기.`,
+      back: (word: string, gloss: string) => `${word}, ${gloss}. 낱말 보기.`,
+      turnedBack: (word: string, gloss: string) => `뜻: ${gloss}. ${word}.`,
+      turnedFront: (word: string) => `다시 낱말이에요. ${word}.`,
+    },
     question: {
       speaker: '낱말 다시 듣기',
       right: (gloss: string) => `맞아요. ${gloss}.`,

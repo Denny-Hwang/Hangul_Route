@@ -173,6 +173,13 @@ export const a11y = {
     letter: (letter: string, sound: string, state: string) => `${letter}, ${sound}. ${state}.`,
   },
   vocab: {
+    cards: {
+      word: (ko: string) => `Coreano: ${ko}`,
+      front: (word: string) => `${word}. Ver significado.`,
+      back: (word: string, gloss: string) => `${word}, ${gloss}. Ver palabra.`,
+      turnedBack: (word: string, gloss: string) => `Significado: ${gloss}. ${word}.`,
+      turnedFront: (word: string) => `De vuelta a la palabra. ${word}.`,
+    },
     question: {
       speaker: 'Escuchar la palabra otra vez',
       right: (gloss: string) => `Correcto. ${gloss.charAt(0).toUpperCase()}${gloss.slice(1)}.`,
