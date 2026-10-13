@@ -78,11 +78,7 @@ export const consoleMsgs = {
   anonymizeHint: 'Show initials instead of names on the roster and re-link list.',
   consentHint: 'Who consented for the children in this class. School mode lets you delete learner data yourself.',
   consentLocked: 'School mode opens after a legal review. Until then, a parent consents for each child.',
-  billingKidsLine: 'Kids never see billing — this page opens only after the grown-up gate.',
-  billingNotConfigured: 'Checkout is not set up on this deployment yet. Nothing was charged.',
   billingCancelled: 'Nothing was charged.',
-  billingSuccess: 'Thank you — the plan is active. Learners see it on their next sync.',
-  billingPastDue: "A payment didn't go through. Update your card in Manage subscription; learners keep premium for a week.",
   familyLine: 'Renews yearly. Cancel from Manage subscription any time.',
   groupLine: 'Renews yearly. Cancel from Manage subscription any time.',
   contactLine: 'More than 300 students or 10 teachers? Write to us for a contract.',
@@ -455,32 +451,10 @@ export const consoleMsgs = {
     cantCheck: "Can't check your plan right now.",
     checkoutFailed: "Couldn't start checkout. Try again.",
     portalFailed: "Couldn't open the billing portal.",
-    current: {
-      title: 'Current plan',
-      /** `cap` is content-schema `FREE_CLASS_STUDENT_CAP` (`billing.ts freePlanLine`). */
-      freeLine: (cap: number) => `Stage 1, local progress, Rescue Code, file backup. Classes hold up to ${cap} students.`,
-    },
-    yourAccount: 'your account',
-    /**
-     * How the plan was obtained (`sourceLine`) — never "paid": a 100%-off code costs nothing.
-     * One whole sentence per provider (§3.1); the provider names live inside it.
-     */
-    source: (provider: 'stripe' | 'apple' | 'google' | 'manual', code: string | null) =>
-      `via ${{ stripe: 'web (Stripe)', apple: 'App Store', google: 'Google Play', manual: 'contract' }[provider]}${code ? ` · code ${code}` : ''}`,
-    seats: (seats: number) => plural('en', seats, { one: `${seats} seat`, other: `${seats} seats` }),
     manage: { cta: 'Manage subscription' },
     planTitle: { free: 'Free', family_lifetime: 'Family Plan', group_license: 'Group License', school_seat: 'School Contract' },
-    includes: {
-      /** `cap` / `freeCap` are content-schema `FREE_CLASS_STUDENT_CAP`. */
-      free: (cap: number) => `Stage 1, local progress, Rescue Code, file backup; classes up to ${cap} students`,
-      family_lifetime: (learners: number) => `Every Stage, new ones included, for one family: up to ${learners} learners, cloud sync, grown-up dashboard and plans`,
-      group_license: (teachers: number, students: number, freeCap: number) =>
-        `A class or school: every student premium while enrolled, no ${freeCap}-student cap; a school holds up to ${teachers} teachers / ${students} students`,
-      school_seat: (students: number, teachers: number) => `Beyond ${students} students or ${teachers} teachers — seats by contract`,
-    },
     /** The price column of the contract row. */
     contactPrice: 'Contact us',
-    plans: { title: 'Plans' },
     promo: {
       formLabel: 'Promo code',
       placeholder: 'HOYA20',
@@ -491,13 +465,11 @@ export const consoleMsgs = {
       /** F-BILL-002 B-6: the collapsed promo box under the price line it rewrites. */
       disclosure: 'Have a code?',
     },
-    choose: { cta: 'Choose' },
     contact: {
       cta: 'Contact us',
       /** F-BILL-002 B-6: the subject of the school contract mail link (no space name or id in it). */
       mailSubject: 'Hangul Route school contract',
     },
-    isCurrent: { pill: 'current' },
 
     /*
      * F-BILL-002 B-6 (§6.1): the billing home on app.hangulroute.com (`APP_ROUTES.billing`), its
@@ -600,6 +572,8 @@ export const consoleMsgs = {
       view: { cta: 'View receipt' },
       viewA11y: (date: string) => `View receipt from ${date} (opens Stripe in a new tab)`,
       linkFailed: "Can't open this receipt right now.",
+      /** After step-up, when the browser blocked the new tab: one more tap opens it (the tap itself opens the tab). */
+      tapAgain: 'Confirmed. Tap View receipt again to open it.',
       pageTitle: (space: string) => `${space} · receipts`,
       notYours: 'This page is for the person who pays for this space.',
       cantLoad: "Can't load receipts right now.",
@@ -1810,7 +1784,8 @@ export const consoleMsgs = {
         lastChangedBy: (account: string) => `Last changed by ${account}`,
         lastChangedOnDevice: 'Last changed on a device',
         saved: 'Saved',
-        stopped: { title: 'Stopped senders', allowAgain: { cta: 'Allow again' } },
+        /** `former`: a stopped sender who shares no space with the learner any more (the blocks list's `role: 'former'`). */
+        stopped: { title: 'Stopped senders', allowAgain: { cta: 'Allow again' }, former: 'A former sender' },
       },
       disclosure: (learner: string) => `Teachers see the answer ${learner} picks on their notes. They do not see when a note was read.`,
       /** The one-time class-notes card; `mode` is a `settings.options` value. */

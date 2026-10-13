@@ -97,6 +97,11 @@ export const caregiver = {
       bodyDeviceOnly:
         '학습자의 별명과 진도는 이 기기에 저장돼요. 이 버전에는 클라우드 저장이 설정되어 있지 않으니, "파일로 백업하기"로 사본을 만들어 두세요. 제삼자와는 공유하지 않아요.',
     },
+    browse: {
+      open: { cta: '모든 레슨 열기' },
+      preview: { cta: '레슨 미리 보기' },
+      storageBlocked: '브라우저가 이 페이지의 저장 공간을 막았어요. 여기서는 레슨을 열 수 없어요.',
+    },
   },
 
   plan: {

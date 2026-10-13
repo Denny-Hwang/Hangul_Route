@@ -5,13 +5,15 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { SettingsSections } from '@/components/console/SettingsParts';
 import { FamilyStartFlow } from '@/components/console/FamilyTransferParts';
+import { NoteSendersPanel } from '@/components/console/FamilyNotesParts';
 import { StartMoveSheet, TransferSheet, useOnline, useTransfersShown } from '@/components/console/TransferParts';
 import { Button, LoadErrorPanel, Muted, Notice } from '@/components/console/ui';
 import { AdultFrame } from '@/components/console/AdultFrame';
 import { useConsole } from '@/components/console/use-console';
+import { useNotesApi } from '@/components/console/use-notes-api';
 import type { MemberView, Roster, TransferOption } from '@/lib/console/api';
 import { archiveConfirmText, archivePlanNote, settleWithin } from '@/lib/console/archive-plan-note';
-import { schoolConsentModeEnabled } from '@/lib/console/config';
+import { notesEnabled, schoolConsentModeEnabled } from '@/lib/console/config';
 import { personaHome, personaOfKind } from '@/lib/console/personas';
 import { ROUTES, isKnownSpaceKind, loadErrorKey, spaceIdFrom, type LoadError } from '@/lib/console/routing';
 import type { BillingSummary } from '@hangul-route/content-schema';
@@ -27,6 +29,7 @@ function SettingsInner(): JSX.Element {
   const spaceId = spaceIdFrom(useSearchParams());
   const router = useRouter();
   const { ready, session, api, signOut, m, locale } = useConsole();
+  const notesApi = useNotesApi();
   const c = m.console;
   const s = c.settings;
   const [roster, setRoster] = useState<Roster | null>(null);
@@ -162,6 +165,10 @@ function SettingsInner(): JSX.Element {
                     },
                   }
                 : undefined
+            }
+            notesPanel={
+              // Panel D (F-FEEDBACK-001 FB-12): who may send notes, behind the notes flag, on a family only.
+              space.kind === 'family' && notesEnabled() && notesApi ? <NoteSendersPanel notesApi={notesApi} familyId={spaceId} viewerAccountId={session.accountId} m={m} locale={locale} /> : undefined
             }
             onTypedName={setTypedName}
             onDelete={(member) =>

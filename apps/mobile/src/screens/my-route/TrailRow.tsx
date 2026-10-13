@@ -203,9 +203,14 @@ export interface StageRowItemProps {
    * at that stage), so it carries no expanded state and the stage never opens in place.
    */
   expandable?: boolean;
+  /**
+   * A control under the row header, outside its button: the grown-up read-only page's [ Preview lessons ]
+   * (F-BROWSE-001 BR-12a; the slot of `design/screens/learning-route/stage-list.md`). None by default.
+   */
+  action?: React.ReactNode;
 }
 
-export function StageRowItem({ row, open, look, reducedMotion, onToggle, onOpenEpisode, expandable = true }: StageRowItemProps): React.ReactElement {
+export function StageRowItem({ row, open, look, reducedMotion, onToggle, onOpenEpisode, expandable = true, action }: StageRowItemProps): React.ReactElement {
   const badge = useMediaSize(BADGE_SIZE);
   const accent = colors.stage[row.stage];
   return (
@@ -267,6 +272,7 @@ export function StageRowItem({ row, open, look, reducedMotion, onToggle, onOpenE
           </View>
         )}
       </Pressable>
+      {action === undefined ? null : <View style={{ marginLeft: badge + spacing.md, marginTop: spacing.sm }}>{action}</View>}
 
       {expandable && open ? (
         <View style={{ marginLeft: badge + spacing.md, marginTop: spacing.sm, gap: spacing.sm }}>

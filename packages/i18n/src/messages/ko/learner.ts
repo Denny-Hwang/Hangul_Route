@@ -964,6 +964,7 @@ export const learner = {
     },
     gains: { stars: '별', cards: '카드', stories: '읽은 이야기' },
     storiesNote: '문화 이야기는 언제든지 열려 있어요.',
+    plan: { open: '계획 열기' },
     home: {
       strip: {
         title: '학습 루트',

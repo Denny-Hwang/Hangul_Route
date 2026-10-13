@@ -1,6 +1,7 @@
 'use client';
 
 import { colors, spacing, typography } from '@hangul-route/design-system/tokens';
+import type { ReactNode } from 'react';
 import { MoveRowAction } from '@/components/console/TransferParts';
 import { Button, Field, Muted, panelStyle } from '@/components/console/ui';
 import type { MemberView, Roster } from '@/lib/console/api';
@@ -41,6 +42,8 @@ export interface SettingsSectionsProps {
    * `familyMovable` (T-6d): on a family, the learners in a live class, whose rows show **Move to a class**.
    */
   move?: { online: boolean; onMove: (member: MemberView) => void; familyMovable?: ReadonlySet<string> };
+  /** Panel D, who may send notes (F-FEEDBACK-001 FB-12, `console/family-notes.md` D): drawn after the learners, before the Danger zone. */
+  notesPanel?: ReactNode;
 }
 
 const h2Style = { fontSize: typography.size.bodyLg, margin: `0 0 ${spacing.xs}px` } as const;
@@ -65,6 +68,7 @@ export function SettingsSections({
   onTypedName,
   onDelete,
   move,
+  notesPanel,
 }: SettingsSectionsProps): JSX.Element {
   const { messages, locale } = useConsoleLocale();
   const c = messages.console;
@@ -147,6 +151,8 @@ export function SettingsSections({
           </div>
         ))}
       </section>
+
+      {notesPanel}
 
       <section style={{ ...panelStyle, marginBottom: spacing.lg, borderColor: colors.feedback.danger }} aria-label={s.danger.title}>
         <h2 style={{ ...h2Style, color: colors.feedback.danger }}>{s.danger.title}</h2>

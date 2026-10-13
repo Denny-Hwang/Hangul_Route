@@ -64,11 +64,7 @@ export const consoleMsgs = {
   anonymizeHint: 'Muestra iniciales en lugar de nombres en la lista y en la lista de reconexión.',
   consentHint: 'Quién dio el consentimiento para los estudiantes de esta clase. El modo escuela te permite borrar tú los datos de un estudiante.',
   consentLocked: 'El modo escuela se abre después de una revisión legal. Hasta entonces, la familia da el consentimiento por cada estudiante.',
-  billingKidsLine: 'Los estudiantes nunca ven la facturación: esta página se abre solo tras el control para adultos.',
-  billingNotConfigured: 'El pago aún no está configurado aquí. No se cobró nada.',
   billingCancelled: 'No se cobró nada.',
-  billingSuccess: 'Gracias: el plan está activo. Los estudiantes lo ven en su próxima sincronización.',
-  billingPastDue: 'Un pago no se realizó. Actualiza tu tarjeta en Gestionar suscripción; los estudiantes conservan el acceso completo una semana.',
   familyLine: 'Se renueva cada año. Cancela cuando quieras en Gestionar suscripción.',
   groupLine: 'Se renueva cada año. Cancela cuando quieras en Gestionar suscripción.',
   contactLine: '¿Más de 300 estudiantes o 10 docentes? Escríbenos para un contrato.',
@@ -351,26 +347,9 @@ export const consoleMsgs = {
     cantCheck: 'Ahora no se puede revisar tu plan.',
     checkoutFailed: 'No se pudo iniciar el pago. Reintenta.',
     portalFailed: 'No se pudo abrir el portal de facturación.',
-    current: {
-      title: 'Plan actual',
-      freeLine: (cap: number) => `Etapa 1, progreso local, código de rescate, copia en archivo. Las clases tienen hasta ${cap} estudiantes.`,
-    },
-    yourAccount: 'tu cuenta',
-    source: (provider: 'stripe' | 'apple' | 'google' | 'manual', code: string | null) =>
-      `por ${{ stripe: 'la web (Stripe)', apple: 'App Store', google: 'Google Play', manual: 'contrato' }[provider]}${code ? ` · código ${code}` : ''}`,
-    seats: (seats: number) => plural('es', seats, { one: `${seats} plaza`, other: `${seats} plazas` }),
     manage: { cta: 'Gestionar suscripción' },
     planTitle: { free: 'Gratis', family_lifetime: 'Plan Familiar', group_license: 'Licencia de Grupo', school_seat: 'Contrato Escolar' },
-    includes: {
-      free: (cap: number) => `Etapa 1, progreso local, código de rescate, copia en archivo; clases de hasta ${cap} estudiantes`,
-      family_lifetime: (learners: number) =>
-        `Todas las etapas, incluidas las nuevas, para una familia: hasta ${learners} estudiantes, sincronización en la nube, panel para adultos y planes`,
-      group_license: (teachers: number, students: number, freeCap: number) =>
-        `Una clase o escuela: acceso completo para cada estudiante inscrito, sin tope de ${freeCap} estudiantes; una escuela admite hasta ${teachers} docentes / ${students} estudiantes`,
-      school_seat: (students: number, teachers: number) => `Más de ${students} estudiantes o ${teachers} docentes: plazas por contrato`,
-    },
     contactPrice: 'Contáctanos',
-    plans: { title: 'Planes' },
     promo: {
       formLabel: 'Código promocional',
       placeholder: 'HOYA20',
@@ -379,12 +358,10 @@ export const consoleMsgs = {
       applied: (code: string, name: string | null) => `${code} aplicado${name ? ` · ${name}` : ''}.`,
       disclosure: '¿Tienes un código?',
     },
-    choose: { cta: 'Elegir' },
     contact: {
       cta: 'Contáctanos',
       mailSubject: 'Contrato escolar de Hangul Route',
     },
-    isCurrent: { pill: 'actual' },
 
     testMode: 'Modo de prueba: no se cobra ninguna tarjeta real.',
     notConfigured: 'Los pagos aún no están configurados. No se cobró nada.',
@@ -464,6 +441,7 @@ export const consoleMsgs = {
       view: { cta: 'Ver recibo' },
       viewA11y: (date: string) => `Ver el recibo del ${date} (abre Stripe en una pestaña nueva)`,
       linkFailed: 'Ahora no se puede abrir este recibo.',
+      tapAgain: 'Listo. Toca Ver recibo otra vez para abrirlo.',
       pageTitle: (space: string) => `${space} · recibos`,
       notYours: 'Esta página es para la persona que paga este espacio.',
       cantLoad: 'Ahora no se pueden cargar los recibos.',
@@ -1289,7 +1267,7 @@ export const consoleMsgs = {
         lastChangedBy: (account: string) => `Último cambio: ${account}`,
         lastChangedOnDevice: 'Último cambio en un dispositivo',
         saved: 'Guardado',
-        stopped: { title: 'Personas bloqueadas', allowAgain: { cta: 'Permitir otra vez' } },
+        stopped: { title: 'Personas bloqueadas', allowAgain: { cta: 'Permitir otra vez' }, former: 'Un remitente anterior' },
       },
       disclosure: (learner: string) => `Los docentes ven la respuesta que ${learner} elige en sus notas. No ven cuándo se leyó una nota.`,
       oneTimeCard: {
