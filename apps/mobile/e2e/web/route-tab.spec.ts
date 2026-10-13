@@ -128,6 +128,48 @@ test.describe('the Route tab (LR-4)', () => {
     });
   }
 
+  for (const locale of LOCALES) {
+    test(`320 x 568, ${locale}: at the native label cap (1.3 x caption) each label still fits its 80 px item on one line (assumption a)`, async ({ page }) => {
+      // Assumption a's worst case: with large text a native label grows to FOUR_TAB_LABEL_FIT's cap (1.3 x caption)
+      // and no further, so at 200 % text on a 320 dp phone each label is 1.3 x caption in an 80 dp item. The web
+      // label ignores the text size, so the cap is applied here by hand. Fitting at the cap means the native
+      // shrink-to-fit (down to 1.0 x, never below) is never needed.
+      await page.setViewportSize({ width: 320, height: 568 });
+      await learnerOnHome(page);
+      if (locale !== 'en') {
+        await seedStored(page, 'device:settings', { uiLocale: locale });
+        await page.reload();
+        await closeInstallGuide(page, locale);
+      }
+      await expect(page.locator('html')).toHaveAttribute('lang', new RegExp(`^${locale}`));
+      await expect(tabLinks(page)).toHaveCount(4);
+      const sizes = await page.evaluate((cap) =>
+        [...document.querySelectorAll('[role="tablist"] a')].map((item) => {
+          const leaves = [...item.querySelectorAll('div, span')].filter((el) => el.children.length === 0 && (el.textContent ?? '').trim() !== '');
+          const label = leaves[leaves.length - 1] as HTMLElement;
+          const base = Number.parseFloat(getComputedStyle(label).fontSize);
+          const lineHeight = Number.parseFloat(getComputedStyle(label).lineHeight);
+          label.style.fontSize = `${base * cap}px`;
+          if (Number.isFinite(lineHeight)) label.style.lineHeight = `${lineHeight * cap}px`;
+          return { base, item: Math.round(item.getBoundingClientRect().width), now: Number.parseFloat(getComputedStyle(label).fontSize) };
+        }),
+      1.3);
+      for (const s of sizes) {
+        expect(s.item).toBeLessThanOrEqual(80);
+        expect(s.now).toBeCloseTo(s.base * 1.3, 1);
+      }
+      const labels = await labelFit(page);
+      const m = getMessages(locale);
+      expect(labels.map((l) => l.text)).toEqual([m.a11y.tabs.home, m.a11y.tabs.route, m.a11y.tabs.journey, m.a11y.tabs.library]);
+      for (const label of labels) {
+        expect(label.fits, `${label.text} is cut off at 1.3 x caption`).toBe(true);
+        expect(label.inItem, `${label.text} at 1.3 x caption is wider than its item`).toBe(true);
+      }
+      expect(await noSideScroll(page)).toBe(true);
+      await shot(page, `route-tab-bar-320-cap-${locale}`);
+    });
+  }
+
   test('the tab is a root page: the name and the purpose line, no back button', async ({ page }) => {
     await page.setViewportSize({ width: 320, height: 568 });
     await learnerOnHome(page);
