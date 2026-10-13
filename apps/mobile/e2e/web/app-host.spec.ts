@@ -15,11 +15,11 @@ import { completeChildForm } from './helpers';
 const dist = join(__dirname, '..', '..', 'dist');
 
 /**
- * Console pages every merged build has today; A-4b added '/signin' and '/start'.
- * TODO(F-APP-001 A-5c): add '/account/billing'. Section 5 requires them; the walk below would also pick
- * them up, but only a name here fails the build when a page never reaches dist.
+ * Console pages every merged build has today; A-4b added '/signin' and '/start', A-5c '/account/billing'.
+ * Section 5 requires them; the walk below would also pick them up, but only a name here fails the
+ * build when a page never reaches dist.
  */
-const REQUIRED_PAGES = ['/teach', '/teach/home', '/parent', '/signin', '/start'];
+const REQUIRED_PAGES = ['/teach', '/teach/home', '/parent', '/signin', '/start', '/account/billing'];
 
 /** Section 3.17, as the Worker sends it for every grown-up path. */
 const GROWN_UP_HEADERS: Record<string, string> = {

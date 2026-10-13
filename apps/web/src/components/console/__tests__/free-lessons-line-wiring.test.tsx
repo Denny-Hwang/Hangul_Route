@@ -162,7 +162,7 @@ describe('the roster card with the free-plan switch', () => {
     if (!line) throw new Error('no line');
     expect(textOf(line)).toBe(`${en.planWaiting('Mina', 3, en.product.class)}${en.openBilling.cta}`);
     const [link] = line.findAllByType('a');
-    expect(link?.props.href).toBe('/teach/billing');
+    expect(link?.props.href).toBe('/account/billing');
     expect(link?.props['aria-describedby']).toBe(line.findByType('p').props.id);
   });
 

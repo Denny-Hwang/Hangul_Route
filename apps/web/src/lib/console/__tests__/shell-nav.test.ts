@@ -78,7 +78,7 @@ describe('navItemsFor', () => {
     const family = navItemsFor(ctx({ persona: 'parent', flags: ALL_ON }));
     expect(family.find((entry) => entry.id === 'home')?.target).toEqual({ href: '/parent' });
     expect(family.find((entry) => entry.id === 'lessons')?.target).toEqual({ href: '/browse', document: true });
-    expect(family.find((entry) => entry.id === 'billing')?.target).toEqual({ href: '/teach/billing' });
+    expect(family.find((entry) => entry.id === 'billing')?.target).toEqual({ href: '/account/billing' });
     const teacher = navItemsFor(ctx({ persona: 'teacher' }));
     expect(teacher.find((entry) => entry.id === 'classes')?.target).toEqual({ href: '/teach/home' });
   });

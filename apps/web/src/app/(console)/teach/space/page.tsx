@@ -145,7 +145,7 @@ function SpaceInner(): JSX.Element {
           {cap?.warning ? (
             <Notice tone="nudge">
               {cap.reached ? c.capReached : c.capWarning(cap.used, cap.total)}{' '}
-              <Link href="/teach/billing">{c.space.upgrade}</Link>
+              <Link href={ROUTES.billing}>{c.space.upgrade}</Link>
             </Notice>
           ) : null}
 

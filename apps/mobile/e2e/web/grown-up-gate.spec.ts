@@ -60,11 +60,21 @@ test('a grown-up URL the host has no page for bounces to its persona entry', asy
   await expect(page.getByRole('heading', { level: 1, name: 'Grown-ups sign in' })).toBeVisible();
   await expect(page.getByRole('button', { name: "Let's start" })).toHaveCount(0);
 
-  // `/signin` is a console page from A-4b: an unknown `/account` path (no billing page until A-5c) lands on it.
-  await page.goto('/account/billing?checkout=success');
+  // `/signin` is a console page from A-4b: an unknown `/account` path lands on it.
+  await page.goto('/account/does-not-exist?checkout=success');
   await expect(page).toHaveURL(/\/signin$/);
   await expect(page.getByRole('heading', { level: 1, name: 'Grown-ups sign in' })).toBeVisible();
   await expect(page.getByRole('button', { name: "Let's start" })).toHaveCount(0);
+
+  // `/account/billing` is a console page from A-5c: a signed-out visitor goes to /signin with the page and its query as next.
+  await page.goto('/account/billing?checkout=success');
+  await expect(page).toHaveURL(/\/signin\?next=%2Faccount%2Fbilling%3Fcheckout%3Dsuccess$/);
+  await expect(page.getByRole('heading', { level: 1, name: 'Grown-ups sign in' })).toBeVisible();
+
+  // The app host's legacy `/teach/billing` (A-5c) is a grown-up page too: signed out, its query travels in next,
+  // and after sign-in the redirect page forwards to `/account/billing` with it (as `/teach/start` does, A-4b).
+  await page.goto('/teach/billing?checkout=cancel');
+  await expect(page).toHaveURL(/\/signin\?next=%2Fteach%2Fbilling%3Fcheckout%3Dcancel$/);
 });
 
 test('a learner boot removes the grown-up unlock, the console session and the All lessons pass of its tab', async ({ page }) => {
