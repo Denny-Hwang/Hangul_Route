@@ -698,6 +698,7 @@ function growthView(report: LearnerReport, w: ReportWords): ReportGrowthView | n
   if (growth === null) return null;
   const g = w.m.report.growth;
   const days = report.figures?.days.count ?? 0;
+  const lastMonth = growth.months.at(-1);
   return {
     since: growth.since === null ? null : g.since(dayText(growth.since, w), days),
     quests: g.quests,
@@ -708,7 +709,7 @@ function growthView(report: LearnerReport, w: ReportWords): ReportGrowthView | n
     hideTable: g.hideTable,
     baseline: growth.baseline,
     rows: growth.months.map((row) => ({ ...row, label: monthText(`${row.m}-01`, w.locale), short: formatDate(w.locale, `${row.m}-01${DAY_KEY_TIME}`, 'monthShort', { utc: true }) })),
-    latest: growth.months.length ? { quests: (growth.months[growth.months.length - 1] as (typeof growth.months)[number]).quests, cards: (growth.months[growth.months.length - 1] as (typeof growth.months)[number]).cards } : growth.baseline,
+    latest: lastMonth ? { quests: lastMonth.quests, cards: lastMonth.cards } : growth.baseline,
   };
 }
 
