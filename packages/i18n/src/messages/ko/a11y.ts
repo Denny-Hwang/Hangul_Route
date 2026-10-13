@@ -160,7 +160,7 @@ export const a11y = {
       none: '준비되면 언제든지',
       some: '끝낸 퀘스트가 있고, 할 수 있는 퀘스트가 더 있어요',
       someDone: '끝낸 퀘스트가 있어요',
-      all: '여기 퀘스트를 모두 끝냈어요',
+      all: '여기 있는 퀘스트를 모두 끝냈어요',
     },
     skill: (label: string, detail: string) => `${label}. ${detail}.`,
     gain: (word: string, n: number) => `${word}: ${n}`,

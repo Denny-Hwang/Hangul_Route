@@ -15,7 +15,7 @@ const FAQ_ADULT = {
 } as const;
 const FAQ_KOREAN = {
   q: '한국어를 조금이라도 알아야 하나요?',
-  a: '아니요 — 처음부터 시작하는 분을 위해 만들었어요. 안내는 쉽고 짧은 말로 쓰여 있어요. 한국어는 배우는 내용으로만 나와요.',
+  a: '아니요 — 처음부터 시작하는 분을 위해 만들었어요. 안내는 쉽고 짧은 말로 쓰여 있고, 배우는 한국어에는 언제나 로마자 표기와 뜻이 함께 나와요.',
 } as const;
 /** The backup sentence, word for word wherever the site says where learning data lives (privacy-statements.test.ts). */
 const BACKUP_FIRST = '학습자의 별명과 진도는 기기에 저장되고, 복구 코드로 되찾을 수 있도록 저희 서버에도 백업돼요.';

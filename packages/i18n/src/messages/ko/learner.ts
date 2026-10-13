@@ -873,7 +873,7 @@ export const learner = {
       goal: '첫 목표: 한글 글자를 모두 읽기.',
       here: (n: number, title: string) => `지금 ${n}단계, ${title}에 있어요.`,
       next: (title: string) => `다음: ${title}`,
-      rest: '지금 열린 것을 모두 했어요. 더 많은 내용이 곧 와요.',
+      rest: '지금 열린 것을 모두 했어요. 더 많은 내용이 곧 나와요.',
       beyond: '정말 많이 알아요! 더 많은 모험이 곧 와요.',
       cta: { start: '시작', continue: '계속' },
       error: '호야가 학습 루트를 열지 못했어요.',
@@ -889,7 +889,7 @@ export const learner = {
       reachedStage: (n: number, title: string) => `${n}단계 · ${title} · 도착`,
       keepGoing: (title: string) => `계속 가 봐요: ${title}`,
       reachedHoya: '목표에 도착했어요. 호야가 뿌듯해해요!',
-      endOfRoad: '지금 열린 길의 끝까지 왔어요. 더 많은 내용이 곧 와요.',
+      endOfRoad: '지금 열린 길의 끝까지 왔어요. 더 많은 내용이 곧 나와요.',
       from: {
         class: '반의 주간 계획에서',
         school: '학교의 주간 계획에서',
@@ -1137,7 +1137,7 @@ export const learner = {
     result: {
       headline: { three: '정말 멋져요!', two: '잘했어요!', one: '해냈어요!' },
       cheer: '한글 글자를 하나도 빠짐없이 살펴봤어요. 호야가 뿌듯해해요.',
-      certificate: { title: '인증서', stage: '1단계: 한글' },
+      certificate: { title: '수료증', stage: '1단계: 한글' },
       wallTitle: '내 한글 카드',
       tipTitle: '호야의 팁',
       tryAgain: '다시 해 봐요:',
