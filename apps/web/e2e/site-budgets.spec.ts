@@ -40,6 +40,8 @@ const PERSONA = { phoneMax: 4060, phoneHeadroom: 3700, wideMax: 3200, words: 550
 
 const PAGES: readonly SitePageBudget[] = [
   { path: '/learners', h1: en.persona.learners.title, lead: en.persona.learners.lead, primary: en.nav.start, ...PERSONA },
+  { path: '/parents', h1: en.persona.parents.title, lead: en.persona.parents.lead, primary: en.persona.parents.signIn, ...PERSONA },
+  { path: '/teachers', h1: en.persona.teachers.title, lead: en.persona.teachers.lead, primary: en.persona.teachers.signIn, ...PERSONA },
 ];
 
 /** One row of 64 px targets plus padding (§3.11). */

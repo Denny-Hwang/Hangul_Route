@@ -13,12 +13,17 @@ import { LANDING_WIDTHS } from './landing-targets';
 const HEIGHT = 800;
 /**
  * Pages whose footer or body once pushed the document wider than the screen: the English site, `src/app/(en)/`
- * (F-I18N-001 PR 11b), and the layered site's persona pages as they ship (F-SITE-002 §3.11: `/learners` in S-4a).
+ * (F-I18N-001 PR 11b), and the layered site's persona pages (F-SITE-002 §3.11: `/learners` in S-4a, `/parents` and
+ * `/teachers` in S-4b).
  * `/es` and `/ko` render the same bodies and are not exported until they ship.
  */
-const PAGES = ['/', '/about', '/privacy', '/terms', '/learners'] as const;
+const PAGES = ['/', '/about', '/privacy', '/terms', '/learners', '/parents', '/teachers'] as const;
 /** The persona pages and the name of each one's primary action (F-SITE-002 §3.1 rule 1). */
-const PERSONA_PAGES = [{ path: '/learners', primary: 'Start learning' }] as const;
+const PERSONA_PAGES = [
+  { path: '/learners', primary: 'Start learning' },
+  { path: '/parents', primary: 'Sign in as a parent' },
+  { path: '/teachers', primary: 'Sign in as a teacher' },
+] as const;
 /** The hero and Meet Hoya stack to one column below this width (globals.css). */
 const STACK_BELOW = 720;
 
