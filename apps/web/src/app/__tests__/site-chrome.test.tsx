@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { getMessages } from '@hangul-route/i18n';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { SYSTEM_SANS } from '../../components/SiteDocument';
 import { SiteFooter } from '../../components/landing/SiteFooter';
 import { PERSONA_PAGES, SHIPPED_PERSONA_PAGES, SiteHeader } from '../../components/landing/SiteHeader';
 import { SiteShell } from '../../components/landing/SiteShell';
@@ -347,5 +348,19 @@ describe('globals.css: the site rules', () => {
 
   it('never reorder (focus order = visual order)', () => {
     expect(rules).not.toMatch(/(^|[^-\w])order\s*:/);
+  });
+});
+
+describe('the site font stack (F-SITE-002 §3.11 budgets measured on Linux CI)', () => {
+  it('names Arial-metric sans faces before system-ui, so Linux does not fall back to a wide default', () => {
+    const faces = SYSTEM_SANS.split(',').map((f) => f.trim());
+    expect(faces.slice(0, 3)).toEqual(['-apple-system', 'BlinkMacSystemFont', '"Segoe UI"']);
+    expect(faces.indexOf('Arial')).toBeGreaterThan(-1);
+    expect(faces.indexOf('Arial')).toBeLessThan(faces.indexOf('system-ui'));
+    expect(faces.at(-1)).toBe('sans-serif');
+  });
+
+  it('is the body font of every site document', () => {
+    expect(renderToStaticMarkup(<NotFoundPage />)).toContain(`font-family:${SYSTEM_SANS.replace(/"/g, '&quot;')}`);
   });
 });
