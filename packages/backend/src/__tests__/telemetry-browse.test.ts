@@ -37,6 +37,7 @@ describe('POST /api/telemetry, browse.* (F-BROWSE-001 §5.2)', () => {
     const cases: [string, Record<string, unknown>][] = [
       ['browse.opened', { source: 'report', scope: 'sampler', passFrom: 'kept', offlineReady: true }],
       ['browse.opened', { source: 'direct', scope: 'none', passFrom: 'none', offlineReady: false }],
+      ['browse.opened', { source: 'notes', scope: 'full', passFrom: 'account', offlineReady: false }],
       ['browse.item_viewed', { kind: 'episode', itemId: 'episode:stage1-letters', access: 'open' }],
       ['browse.item_viewed', { kind: 'quest', itemId: 'quest:stage1-letters-q1', access: 'closed' }],
       ['browse.item_viewed', { kind: 'story', itemId: 'story:sun-and-moon', access: 'open' }],
