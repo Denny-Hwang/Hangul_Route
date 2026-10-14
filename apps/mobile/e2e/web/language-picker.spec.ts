@@ -1,7 +1,7 @@
 import type { Page } from '@playwright/test';
 import { getMessages } from '@hangul-route/i18n';
 import { expect, test } from './fixtures';
-import { readStored, waitForSaved } from './helpers';
+import { answerForkNew, readStored, waitForSaved } from './helpers';
 
 /**
  * F-I18N-001 PR 5: the Welcome language row, the Profile Language card and the
@@ -37,6 +37,7 @@ async function onboardAndOpenProfile(page: Page): Promise<string> {
   await expect(page.getByText('PIN set')).toBeVisible();
   await page.getByRole('checkbox').click();
   await page.getByRole('button', { name: 'Continue' }).click();
+  await answerForkNew(page);
   await expect(page.getByText('Your first card is waiting.')).toBeVisible();
   await waitForSaved(page, ['profiles']);
   await page.goto('/');

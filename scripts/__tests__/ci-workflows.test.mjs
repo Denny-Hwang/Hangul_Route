@@ -398,11 +398,12 @@ describe("PWA e2e", () => {
     const dir = join(ROOT, "apps", "mobile", "e2e", "web");
     const routeSpecs = readdirSync(dir).filter((n) => n.endsWith(".spec.ts") && /process\.env\.E2E_ROUTE === '1'/.test(readFileSync(join(dir, n), "utf8")));
     // A spec that also needs STORY_FIXTURES=1 runs on the fixture bundle exported with the plan flag on
-    // (placement-plan.spec.ts, F-PLC-001 P-7b; P-10 adds it to the nightly run), not on dist-e2e-route/.
+    // (placement-plan.spec.ts, F-PLC-001 P-7b; since P-10 placement.spec.ts plays its flow on the release build),
+    // not on dist-e2e-route/. placement.spec.ts (P-10) runs its test-language case here.
     const needsFixtures = (n) => /process\.env\.STORY_FIXTURES === '1'/.test(readFileSync(join(dir, n), "utf8"));
     assert.deepEqual(routeSpecs.filter(needsFixtures).sort(), ["placement-plan.spec.ts"]);
     const gated = routeSpecs.filter((n) => !needsFixtures(n));
-    assert.deepEqual(gated.sort(), ["route-plan.spec.ts", "route-proposal.spec.ts", "route.spec.ts"]);
+    assert.deepEqual(gated.sort(), ["placement.spec.ts", "route-plan.spec.ts", "route-proposal.spec.ts", "route.spec.ts"]);
     for (const spec of gated) {
       const selectors = listed.filter((s) => `e2e/web/${spec}`.includes(s));
       assert.equal(selectors.length, 1, `exactly one selector of the weekly plan run matches ${spec}`);

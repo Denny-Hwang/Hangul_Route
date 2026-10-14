@@ -1,13 +1,12 @@
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { onboardChild, readStored, seedStored, waitForSaved } from './helpers';
+import { answerForkNew, onboardChild, readStored, seedStored, waitForSaved } from './helpers';
 import { shot } from './shots';
 
 /**
  * F-PLC-001 P-8: the grown-up report of the level check and "Choose a
- * different start". The entry points stay behind `flags.placementEnabled`
- * (off), so this suite reaches the report from the result screen's "For
- * grown-ups" link after a real check, or through the fixture bundle's
+ * different start". This suite reaches the report from the result screen's
+ * "For grown-ups" link after a real check, or through the fixture bundle's
  * `window.__hrPlacementE2E.openReport(profileId)` with a seeded result:
  *
  *   pnpm --filter @hangul-route/mobile build:web:fixtures
@@ -42,6 +41,7 @@ async function onboardSelf(page: Page): Promise<string> {
   await page.getByRole('radio', { name: /^Some reading/ }).click();
   await page.getByRole('checkbox').click();
   await page.getByRole('button', { name: 'Continue' }).click();
+  await answerForkNew(page);
   await page.getByRole('button', { name: 'Start my journey' }).click();
   await waitForSaved(page, ['profiles']);
   await page.goto('/');
