@@ -9,6 +9,7 @@ import {
   type UiLocale,
 } from '@hangul-route/content-schema';
 import { expandDeck, type LectureBundle } from '../lecture/deck-builder';
+import type { ItemAccess } from './access';
 
 /**
  * [ Present this ] on the All lessons item page (F-BROWSE-001 section 4.6
@@ -101,4 +102,29 @@ export function presentHref(deck: LectureDeck): string {
 export function presentThisShown(input: { scope: PassScope; presenterRoot: boolean; deck: LectureDeck | null; bundle: LectureBundle }): boolean {
   if (input.scope !== 'full' || !input.presenterRoot || input.deck === null) return false;
   return expandDeck(input.deck, input.bundle, { canPlayKorean: true }).slides.length > 0;
+}
+
+/** A check deck for the show rule only: a fixed clock and id, never opened. */
+const CHECK_ENV = { now: new Date(0), rng: () => 0 } as const;
+
+/**
+ * The item page's whole rule for [ Present this ] (BR-13): an item this build holds, a pass, an
+ * item the pass does not close, and `presentThisShown` on the item's own one-block deck. A story
+ * gives its English title (`title.gloss`), which is what the deck grammar can carry.
+ */
+export function presentItemShown(input: {
+  item: { kind: PresentItemKind; id: string; title: string } | null;
+  scope: PassScope | null;
+  access: ItemAccess;
+  presenterRoot: boolean;
+  uiLocale: UiLocale;
+  bundle: LectureBundle;
+}): boolean {
+  if (input.item === null || input.scope === null || input.access === 'closed') return false;
+  return presentThisShown({
+    scope: input.scope,
+    presenterRoot: input.presenterRoot,
+    deck: presentDeck(input.item, { ...CHECK_ENV, uiLocale: input.uiLocale }),
+    bundle: input.bundle,
+  });
 }

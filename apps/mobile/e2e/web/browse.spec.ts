@@ -2,6 +2,7 @@ import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
 import { answerCheckRounds, onboardChild, openGrownUpZone, passDiscover, unlockWithPin } from './helpers';
 import { shot } from './shots';
+import { PRESENTER_MOUNTED } from '../../src/platform/presenter-mount';
 import { nextPage, position } from './story-reader-helpers';
 
 /**
@@ -1036,9 +1037,13 @@ test('a word topic lists every word with its Hear button, keeps 64 targets at 32
 
 /* -------------------------------------------------------------------------------------------
  * BR-13: [ Present this ] on the item page (section 4.6 secondary action, OD-9; design
- * design/screens/presenter/present-this.md). A full pass, the presenter root, and a block the
- * presenter can draw: a lesson today, a story or a word topic only once their slides land.
+ * design/screens/presenter/present-this.md). A full pass, a presenter that index.ts really mounts
+ * (PRESENTER_MOUNTED, F-TCH-004 TD1), and a block the presenter can draw: a lesson today, a story
+ * or a word topic only once their slides land. Until PR 6 mounts PresenterApp the button stays
+ * hidden, and the cases that open the presenter wait for that mount.
  * ------------------------------------------------------------------------------------------- */
+
+const PRESENTER_PENDING = 'F-TCH-004 PR 6 has not mounted PresenterApp in index.ts yet (PRESENTER_MOUNTED is false)';
 
 /** Records every `window.open` address before it opens, so the deck can be read before the presenter strips it. */
 function recordOpens(page: Page): Promise<void> {
@@ -1053,12 +1058,44 @@ function recordOpens(page: Page): Promise<void> {
   });
 }
 
-test('BR-13: a lesson with a full pass shows Present this under the preview and opens a one-block deck at /present in a new tab', async ({ page, context }) => {
+function openedHrefs(page: Page): Promise<string[]> {
+  return page.evaluate(() => (window as unknown as { __opened: string[] }).__opened);
+}
+
+function decodeHref(page: Page, href: string): Promise<Record<string, unknown>> {
+  return page.evaluate((value) => {
+    const b64 = value.replace(/-/g, '+').replace(/_/g, '/');
+    const bin = atob(b64 + '='.repeat((4 - (b64.length % 4)) % 4));
+    return JSON.parse(new TextDecoder().decode(Uint8Array.from(bin, (c) => c.charCodeAt(0)))) as Record<string, unknown>;
+  }, href.slice('/present#d=1.'.length));
+}
+
+/** The learner's stored values, the presenter's own Recent lessons and the browse root's keys aside. */
+function learnerStored(all: Stored): Stored {
+  return Object.fromEntries(Object.entries(all).filter(([k]) => !k.includes('lecture:') && !k.startsWith('hr:browse:')));
+}
+
+test('BR-13: while index.ts does not mount PresenterApp, a full pass shows no Present this, so /present can never boot the learner app', async ({ page }) => {
+  test.skip(PRESENTER_MOUNTED, 'the presenter is mounted: the cases below cover the button');
+  await openLessonPage(page, 'quest:stage1-letters-q1');
+  await bootSettled(page);
+  await expect(page.getByTestId('browse-preview')).toBeVisible();
+  await expect(page.getByTestId('browse-present')).toHaveCount(0);
+});
+
+test('BR-13: a lesson with a full pass shows Present this under the preview and opens a one-block deck in the presenter, in a new tab that opens no learner', async ({ page, context }) => {
+  test.skip(!PRESENTER_MOUNTED, PRESENTER_PENDING);
+  await onboardChild(page, { name: 'Mina' });
+  await page.goto('/');
+  await expect(page.getByText('Hi, Mina!')).toBeVisible();
+  await putStored(page, LEARNER_QUEUE, SEEDED_QUEUE);
+  const learnerBefore = learnerStored(await readAllStored(page));
+
   await openLessonPage(page, 'quest:stage1-letters-q1');
   await bootSettled(page);
   const present = page.getByTestId('browse-present');
   await expect(present).toHaveAccessibleName('Present this');
-  await expect(present).toHaveAccessibleDescription("Opens the lesson as slides for a classroom screen or a TV. No one's progress changes.");
+  await expect(present).toHaveAccessibleDescription("Opens this as slides for a classroom screen or a TV. No one's progress changes.");
   // Under Preview this lesson, in the same action bar.
   const previewBox = await page.getByTestId('browse-preview').boundingBox();
   const presentBox = await present.boundingBox();
@@ -1068,16 +1105,11 @@ test('BR-13: a lesson with a full pass shows Present this under the preview and 
 
   await recordOpens(page);
   const [tab] = await Promise.all([context.waitForEvent('page'), present.click()]);
-  const opened = await page.evaluate(() => (window as unknown as { __opened: string[] }).__opened);
+  const opened = await openedHrefs(page);
   expect(opened).toHaveLength(1);
   const href = opened[0] ?? '';
   expect(href.startsWith('/present#d=1.')).toBe(true);
-  const deck = await page.evaluate((value) => {
-    const b64 = value.replace(/-/g, '+').replace(/_/g, '/');
-    const bin = atob(b64 + '='.repeat((4 - (b64.length % 4)) % 4));
-    return JSON.parse(new TextDecoder().decode(Uint8Array.from(bin, (c) => c.charCodeAt(0)))) as Record<string, unknown>;
-  }, href.slice('/present#d=1.'.length));
-  expect(deck).toMatchObject({
+  expect(await decodeHref(page, href)).toMatchObject({
     v: 1,
     title: 'Meet a, eo, g, n',
     blocks: [{ kind: 'quest', id: 'quest:stage1-letters-q1' }],
@@ -1085,13 +1117,29 @@ test('BR-13: a lesson with a full pass shows Present this under the preview and 
     source: 'catalogue',
     options: { uiLocale: 'en' },
   });
-  await tab.waitForLoadState('domcontentloaded');
+
+  // The tab is the presenter, not the learner app: its start screen, the deck taken out of the
+  // address, no learner greeting, no browse pass, no handle back to All lessons.
+  await expect(tab.getByTestId('presenter-start')).toBeVisible();
   expect(new URL(tab.url()).pathname).toBe('/present');
-  // No handle back to All lessons, so no roster can be handed over.
+  await expect.poll(() => tab.evaluate(() => window.location.hash)).toBe('');
+  await expect(tab.getByText('Hi, Mina!')).toHaveCount(0);
+  expect(await tab.evaluate((key) => sessionStorage.getItem(key), PASS_KEY)).toBeNull();
   expect(await tab.evaluate(() => window.opener)).toBeNull();
-  // The item page stays where it was.
-  await expect(page.getByTestId('browse-item')).toBeVisible();
+  // No learner value changed on the device: the presenter keeps only its own Recent lessons.
+  expect(learnerStored(await readAllStored(tab))).toEqual(learnerBefore);
+  expect((await readAllStored(tab))[LEARNER_QUEUE]).toBe(SEEDED_QUEUE);
   await tab.close();
+
+  // The item page stays where it was, and a second press is a fresh deck.
+  await expect(page.getByTestId('browse-item')).toBeVisible();
+  const [second] = await Promise.all([context.waitForEvent('page'), present.click()]);
+  const both = await openedHrefs(page);
+  expect(both).toHaveLength(2);
+  const firstDeck = await decodeHref(page, both[0] ?? '');
+  const secondDeck = await decodeHref(page, both[1] ?? '');
+  expect(secondDeck.id).not.toBe(firstDeck.id);
+  await second.close();
 });
 
 test('BR-13: Present this is not shown with a sampler pass, nor for a story whose slides have not landed', async ({ page }) => {
@@ -1107,6 +1155,7 @@ test('BR-13: Present this is not shown with a sampler pass, nor for a story whos
 });
 
 test('BR-13: at 1280 wide Present this sits under the preview inside the action width', async ({ page }) => {
+  test.skip(!PRESENTER_MOUNTED, PRESENTER_PENDING);
   await page.setViewportSize({ width: 1280, height: 900 });
   await openLessonPage(page, 'quest:stage1-letters-q1');
   const previewBox = await page.getByTestId('browse-preview').boundingBox();
@@ -1116,3 +1165,24 @@ test('BR-13: at 1280 wide Present this sits under the preview inside the action 
   expect(await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth)).toBe(false);
   await shot(page, 'br13-present-this-1280');
 });
+
+for (const size of [
+  { width: 320, height: 568 },
+  { width: 568, height: 320 },
+]) {
+  test(`BR-13: at ${size.width} x ${size.height} both buttons fit, the facts still scroll and nothing scrolls sideways`, async ({ page }) => {
+    test.skip(!PRESENTER_MOUNTED, PRESENTER_PENDING);
+    await page.setViewportSize(size);
+    await openLessonPage(page, 'quest:stage1-letters-q1');
+    const present = page.getByTestId('browse-present');
+    await expect(present).toBeVisible();
+    const previewBox = await page.getByTestId('browse-preview').boundingBox();
+    const presentBox = await present.boundingBox();
+    // The pinned footer (both buttons) stays under half the screen, so the facts keep their room.
+    const footerTop = previewBox?.y ?? 0;
+    const footerBottom = (presentBox?.y ?? 0) + (presentBox?.height ?? 0);
+    expect(footerBottom).toBeLessThanOrEqual(size.height);
+    expect(footerBottom - footerTop).toBeLessThan(size.height / 2);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth)).toBe(false);
+  });
+}

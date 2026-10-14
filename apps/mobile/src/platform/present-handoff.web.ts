@@ -1,4 +1,5 @@
 import { pickRoot } from './app-root.web';
+import { PRESENTER_MOUNTED } from './presenter-mount';
 
 /**
  * [ Present this ] hand-off on the web (F-BROWSE-001 BR-13, section 4.6;
@@ -8,9 +9,14 @@ import { pickRoot } from './app-root.web';
 
 const PRESENTER_PATH = '/present';
 
-/** True once the root chooser mounts the presenter for `/present` (F-TCH-004 PR 6). */
-export function presenterRootExists(): boolean {
-  return pickRoot({ pathname: PRESENTER_PATH }) === 'presenter';
+/**
+ * True only when a tab at `/present` really mounts `PresenterApp`: the root chooser picks the
+ * presenter root for it and `index.ts` hands that root to `PresenterApp` (`presenter-mount.ts`,
+ * F-TCH-004 TD1). A chosen root alone is not enough, because until PR 6 mounts `PresenterApp`
+ * that root boots the learner `App`, which must never open on a classroom screen.
+ */
+export function presenterRootExists(mounted: boolean = PRESENTER_MOUNTED): boolean {
+  return mounted && pickRoot({ pathname: PRESENTER_PATH }) === 'presenter';
 }
 
 type TabHandle = { opener: unknown } | null;

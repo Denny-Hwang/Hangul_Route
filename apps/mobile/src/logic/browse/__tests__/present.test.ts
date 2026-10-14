@@ -2,7 +2,7 @@ import { LECTURE_TITLE_RE, LectureDeckSchema, decodeDeck } from '@hangul-route/c
 import { describe, expect, it } from 'vitest';
 import { VOCAB_TOPICS } from '../../../content/__generated__/vocab';
 import { lectureBundle } from '../../lecture/content';
-import { PRESENT_PICKER, presentBlock, presentDeck, presentHref, presentThisShown, presentTitle } from '../present';
+import { PRESENT_PICKER, presentBlock, presentDeck, presentHref, presentItemShown, presentThisShown, presentTitle } from '../present';
 import { TALE_ID } from './browse-fixture';
 
 /**
@@ -71,6 +71,21 @@ describe('presentDeck', () => {
   });
 });
 
+describe('presentDeck per press', () => {
+  it('gives every press its own deck id and quiz seed', () => {
+    let state = 1;
+    // A small seeded generator stands in for Math.random.
+    const seeded = (): number => {
+      state = (state * 48_271) % 2_147_483_647;
+      return state / 2_147_483_647;
+    };
+    const first = presentDeck({ kind: 'quest', id: QUEST, title: 'Meet' }, { now: NOW, rng: seeded, uiLocale: 'en' });
+    const second = presentDeck({ kind: 'quest', id: QUEST, title: 'Meet' }, { now: NOW, rng: seeded, uiLocale: 'en' });
+    expect(first?.id).not.toBe(second?.id);
+    expect(first?.seed).not.toBe(second?.seed);
+  });
+});
+
 describe('presentHref', () => {
   it('is a same-origin /present link whose fragment decodes back to the deck', () => {
     const deck = deckOf('quest', QUEST);
@@ -118,5 +133,32 @@ describe('presentThisShown, per item kind', () => {
 
   it('hides when no deck could be made', () => {
     expect(presentThisShown({ ...full, deck: null })).toBe(false);
+  });
+});
+
+describe('presentItemShown, the item page rule', () => {
+  const page = { scope: 'full' as const, access: 'access' as const, presenterRoot: true, uiLocale: 'en' as const, bundle };
+  const quest = { kind: 'quest' as const, id: QUEST, title: 'Meet a, eo, g, n' };
+
+  it('shows for a lesson with a full pass the item is open to', () => {
+    expect(presentItemShown({ ...page, item: quest })).toBe(true);
+    expect(presentItemShown({ ...page, access: 'open', item: quest })).toBe(true);
+  });
+
+  it('hides for an item the pass closes, with no pass, and for an item this build does not hold', () => {
+    expect(presentItemShown({ ...page, access: 'closed', item: quest })).toBe(false);
+    expect(presentItemShown({ ...page, scope: null, item: quest })).toBe(false);
+    expect(presentItemShown({ ...page, item: null })).toBe(false);
+  });
+
+  it('hides with a sampler pass and while the presenter is not mounted', () => {
+    expect(presentItemShown({ ...page, scope: 'sampler', item: quest })).toBe(false);
+    expect(presentItemShown({ ...page, presenterRoot: false, item: quest })).toBe(false);
+  });
+
+  it('hides for a story and a word topic today, and for a title the deck grammar cannot carry', () => {
+    expect(presentItemShown({ ...page, item: { kind: 'story', id: TALE_ID, title: 'The tale' } })).toBe(false);
+    expect(presentItemShown({ ...page, item: { kind: 'vocab-topic', id: TOPIC, title: 'Food' } })).toBe(false);
+    expect(presentItemShown({ ...page, item: { ...quest, title: '&&' } })).toBe(false);
   });
 });

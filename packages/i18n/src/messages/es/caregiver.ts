@@ -704,7 +704,7 @@ export const caregiver = {
       previewStory: { cta: 'Vista previa de la historia' },
       previewQuestions: { cta: 'Vista previa: preguntas' },
       present: { cta: 'Proyectar' },
-      presentNote: 'Abre la lección como diapositivas para una pantalla de clase o un televisor. No cambia el progreso de nadie.',
+      presentNote: 'Abre esto como diapositivas para una pantalla de clase o un televisor. No cambia el progreso de nadie.',
       closed: 'Se abre con el Plan Familiar o una Licencia de Grupo',
       openBilling: { cta: 'Abrir facturación' },
       wordCount: (n: number) => plural('es', n, { one: `${n} palabra`, other: `${n} palabras` }),

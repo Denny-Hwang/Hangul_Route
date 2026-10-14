@@ -11,6 +11,7 @@ vi.mock('../locale', () => ({ deviceLanguages: () => [], takeLangHandoff: () => 
 
 import * as native from '../present-handoff';
 import * as web from '../present-handoff.web';
+import { PRESENTER_MOUNTED } from '../presenter-mount';
 
 /**
  * F-BROWSE-001 BR-13: [ Present this ] opens the presenter in a new tab of
@@ -22,8 +23,12 @@ type Tab = { opener: unknown };
 describe('platform/present-handoff (web)', () => {
   afterEach(() => vi.unstubAllGlobals());
 
-  it('knows the presenter root exists: the root chooser picks it for /present', () => {
-    expect(web.presenterRootExists()).toBe(true);
+  it('counts the presenter root only once index.ts mounts PresenterApp (F-TCH-004 TD1)', () => {
+    // The default reads PRESENTER_MOUNTED, which presenter-mount.test.ts keeps equal to the real mount.
+    expect(web.presenterRootExists()).toBe(PRESENTER_MOUNTED);
+    expect(web.presenterRootExists(false)).toBe(false);
+    // Mounted: the root chooser picks the presenter root for /present.
+    expect(web.presenterRootExists(true)).toBe(true);
   });
 
   it('opens the same-origin link in a new tab and clears its opener, so no handle comes back', () => {
@@ -41,6 +46,23 @@ describe('platform/present-handoff (web)', () => {
     vi.stubGlobal('open', () => {
       throw new Error('blocked');
     });
+    expect(web.openPresenter('/present#d=1.abc')).toBe(false);
+  });
+
+  it('counts the tab as opened when the browser will not let its opener be cleared', () => {
+    const tab = {};
+    Object.defineProperty(tab, 'opener', {
+      get: () => ({}),
+      set: () => {
+        throw new Error('read only');
+      },
+    });
+    vi.stubGlobal('open', () => tab);
+    expect(web.openPresenter('/present#d=1.abc')).toBe(true);
+  });
+
+  it('opens nothing where there is no window.open', () => {
+    vi.stubGlobal('open', undefined);
     expect(web.openPresenter('/present#d=1.abc')).toBe(false);
   });
 

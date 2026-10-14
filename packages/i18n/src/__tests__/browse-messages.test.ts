@@ -222,10 +222,10 @@ describe('caregiver.browse (BR-7)', () => {
 describe('caregiver.browse (BR-13)', () => {
   it('names [ Present this ] and says only what is true: no one\'s progress changes (Recent keeps the deck)', () => {
     expect(browse.item.present.cta).toBe('Present this');
-    expect(browse.item.presentNote).toBe('Opens the lesson as slides for a classroom screen or a TV. No one\'s progress changes.');
+    expect(browse.item.presentNote).toBe('Opens this as slides for a classroom screen or a TV. No one\'s progress changes.');
     expect(getMessages('es').caregiver.browse.item.present.cta).toBe('Proyectar');
     expect(getMessages('es').caregiver.browse.item.presentNote).toBe(
-      'Abre la lección como diapositivas para una pantalla de clase o un televisor. No cambia el progreso de nadie.',
+      'Abre esto como diapositivas para una pantalla de clase o un televisor. No cambia el progreso de nadie.',
     );
     expect(getMessages('ko').caregiver.browse.item.present.cta).toBe('큰 화면에 띄우기');
     expect(getMessages('ko').caregiver.browse.item.presentNote).toBe('교실 화면이나 TV에 슬라이드로 띄워요. 누구의 진도도 바뀌지 않아요.');
@@ -236,6 +236,8 @@ describe('caregiver.browse (BR-13)', () => {
       const item = getMessages(locale).caregiver.browse.item;
       expect(item.present.cta.length, locale).toBeLessThanOrEqual(28);
       expect(item.presentNote, locale).not.toMatch(/nothing is saved|no se guarda|저장되지 않/i);
+      // One note for every item kind: lessons now, stories and word topics once their slides land (F-TCH-004 PR 11, 12).
+      expect(item.presentNote, locale).not.toMatch(/lesson|story|topic|lecci|historia|tema|레슨|이야기|주제/i);
     }
   });
 });

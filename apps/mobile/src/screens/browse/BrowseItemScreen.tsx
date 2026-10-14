@@ -8,7 +8,7 @@ import { useLocale, useMessages } from '../../i18n/use-messages';
 import { episodeOfQuest } from '../../logic/browse/bundle';
 import { itemFacts, type ItemFacts, type QuestFacts, type StoryFacts } from '../../logic/browse/facts';
 import { accessOf, billingShown, itemViewedEvent, plansTappedEvent, stepsLine, whereLine } from '../../logic/browse/home-view';
-import { presentDeck, presentHref, presentThisShown } from '../../logic/browse/present';
+import { presentDeck, presentHref, presentItemShown } from '../../logic/browse/present';
 import { storyPreviewParams } from '../../logic/browse/preview';
 import { topicHearShown } from '../../logic/browse/topic-view';
 import { BROWSE_REGISTERED_ROUTES, type BrowseStackParamList } from '../../navigation/browse';
@@ -59,13 +59,12 @@ export function BrowseItemScreen({ route, navigation }: Props): React.ReactEleme
   const scope = pass?.scope ?? null;
   const presentShown = useMemo(
     () =>
-      hasFacts &&
-      scope !== null &&
-      access !== 'closed' &&
-      presentThisShown({
+      presentItemShown({
+        item: hasFacts ? { kind, id, title: presentTitleText } : null,
         scope,
+        access,
         presenterRoot: presenterRootExists(),
-        deck: presentDeck({ kind, id, title: presentTitleText }, { now: new Date(0), rng: () => 0, uiLocale: locale }),
+        uiLocale: locale,
         bundle: lectureBundle(locale),
       }),
     [hasFacts, scope, access, kind, id, presentTitleText, locale],
