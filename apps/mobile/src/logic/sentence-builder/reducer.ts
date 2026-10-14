@@ -10,7 +10,13 @@ import { FRESH_SCORE, isRightTile, scoreComplete, scoreMiss, type RoundScore } f
  * wrong tile slides to the slot and back, is marked "tried" and stays tappable; the second
  * miss on one slot rings the right tile. Taps wait while a tile slides back, and only the
  * first touch in a 50 ms window counts. A built sentence is heard once, then the next round
- * opens (`advance`); the last round completes the step.
+ * opens (`advance`); the last round completes the step. Skip (not in the Check) completes the
+ * step through the flow too, so the host hears `complete` at most once.
+ *
+ * Answers (wireframe "Interaction points", "Data needs"): every miss reports `answer(false)` for
+ * the round. The host scores only a round's first answer (`logic/first-try.ts`), so the first
+ * miss is the round's score and each later miss is a retry, counted apart and never moving the
+ * Check result. A round built with no miss reports one `answer(true)` at completion.
  */
 
 /** Touches inside this window after an accepted one are dropped (F-001 §3.4, as Listen & Pick). */
@@ -42,7 +48,9 @@ export type SbEvent =
   /** The wrong tile is back in the tray. */
   | { type: 'settle' }
   /** The built sentence has been heard (or the no-sound wait is over). */
-  | { type: 'advance' };
+  | { type: 'advance' }
+  /** The learner chose Skip: the step ends now, with nothing more recorded. */
+  | { type: 'skip' };
 
 export type SbEffect =
   | { type: 'answer'; roundKey: number; correct: boolean }
@@ -100,7 +108,8 @@ function tapStep(state: SbState, round: SbRound, event: Extract<SbEvent, { type:
   }
 
   const slotMisses = state.slotMisses + 1;
-  const { score, record } = scoreMiss(state.score);
+  // The first miss scores the round; a later one is a retry (the host counts it apart).
+  const { score } = scoreMiss(state.score);
   return {
     state: {
       ...state,
@@ -112,7 +121,7 @@ function tapStep(state: SbState, round: SbRound, event: Extract<SbEvent, { type:
       lastTapAt: event.at,
     },
     effects: [
-      ...(record === null ? [] : [{ type: 'answer', roundKey: state.roundIdx, correct: record } as const]),
+      { type: 'answer', roundKey: state.roundIdx, correct: false },
       { type: 'haptic', kind: 'nudge' },
       { type: 'schedule-settle' },
     ],
@@ -137,5 +146,7 @@ export function stepFlow(state: SbState, rounds: readonly SbRound[], event: SbEv
       return state.returning === null ? unchanged(state) : { state: { ...state, returning: null }, effects: [] };
     case 'advance':
       return advanceStep(state);
+    case 'skip':
+      return { state: { ...state, status: 'done', returning: null }, effects: [{ type: 'complete' }] };
   }
 }

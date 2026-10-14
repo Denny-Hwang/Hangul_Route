@@ -47,6 +47,7 @@ Values that are not tokens. Each one derives from a token or from code; G-1 and 
 | Meaning-card picture | 96 | `touchTarget.hero`, the size of DiscoverStep's `PictureArt` |
 | Narrowest slot and tile | 80 wide, 80 tall | `touchTarget.child`: a one-syllable word plus padding; every tile stays at least `touchTarget.min` in both directions |
 | Attached (particle) slot overlap | -2 | `-borderWidth.base`: the particle slot shares its border with the word before it |
+| Pressed tile scale | 1.04 | `Tile`'s pressed scale (`Tile.tsx`), so tiles press like every other tile; none under reduced motion (G-1) |
 | Read along / Stop button width | 128 min | `2 x touchTarget.min`, so the button does not jump when its label changes |
 | App breakpoints | 600, 900 | `layout.breakpoint` (written in px in media queries; the app's classes follow the window in dp) |
 | Font stack | the system stack | `typography.family.sans` is `'System'` (as in the app-shell mock) |
@@ -104,13 +105,15 @@ New keys only; existing keys are reused as named. Spanish follows the F-I18N-001
 | `miss` | Not that one yet. Try another word. | Esa todavía no. Prueba otra palabra. | 그건 아직 아니에요. 다른 낱말을 골라 봐요. |
 | `missLastWord` | In Korean, the doing or describing word comes last. | En coreano, la palabra que dice qué pasa o cómo es algo va al final. | 한국어에서는 동작이나 모습을 말하는 낱말이 맨 끝에 와요. |
 | `missParticle` | Look at how the word before it ends. | Mira cómo termina la palabra de antes. | 앞 낱말이 어떻게 끝나는지 봐요. |
-| `lookHere` | This one comes next. | Esta va ahora. | 다음은 이 낱말이에요. |
+| `lookHere` | This one comes next. | Esta va ahora. | 다음은 이거예요. |
 | `built` | You built the sentence! | ¡Armaste la oración! | 문장을 만들었어요! |
 | `empty` | Nothing to play here | No hay nada para jugar aquí | 여기에는 할 게임이 없어요 |
 | `a11y.slotEmpty(n, total)` | Place {n} of {total}, empty | Lugar {n} de {total}, vacío | {total}칸 중 {n}번째 칸, 비어 있어요 |
 | `a11y.slotFilled(n, total, word)` | Place {n} of {total}: {word} | Lugar {n} de {total}: {word} | {total}칸 중 {n}번째 칸: {word} |
 | `a11y.slotAttached(n, total)` | Place {n} of {total}, joins the word before it, empty | Lugar {n} de {total}, se une a la palabra de antes, vacío | {total}칸 중 {n}번째 칸, 앞 낱말에 붙어요, 비어 있어요 |
 | `a11y.tried(word)` | {word}, tried | {word}, ya probada | {word}, 이미 골라 봤어요 |
+| `a11y.slotNext(n, total)` (G-1) | Place {n} of {total}, empty, next | Lugar {n} de {total}, vacío, el siguiente | {total}칸 중 {n}번째 칸, 비어 있어요, 다음 칸이에요 |
+| `a11y.next(word)` (G-1, the ringed tile) | {word}, comes next | {word}, va ahora | {word}, 다음 차례예요 |
 
 Reused unchanged: `learner.minigame.progress.pill`, `learner.minigame.skip`, `learner.minigame.backToQuest`, `learner.minigame.listenPick.checkTitle` (the Check pill), `learner.audio.hearIt`, `learner.audio.soundIsOff` and `learner.audio.action.turn_on` (the `PromptPanel` status line).
 

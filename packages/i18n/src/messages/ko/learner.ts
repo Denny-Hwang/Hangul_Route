@@ -471,7 +471,7 @@ export const learner = {
       miss: '그건 아직 아니에요. 다른 낱말을 골라 봐요.',
       missLastWord: '한국어에서는 동작이나 모습을 말하는 낱말이 맨 끝에 와요.',
       missParticle: '앞 낱말이 어떻게 끝나는지 봐요.',
-      lookHere: '다음은 이 낱말이에요.',
+      lookHere: '다음은 이거예요.',
       built: '문장을 만들었어요!',
       empty: '여기에는 할 게임이 없어요',
     },

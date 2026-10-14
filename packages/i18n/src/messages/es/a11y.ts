@@ -107,9 +107,11 @@ export const a11y = {
     meaning: (gloss: string) => `Significado: ${gloss}`,
     sentenceBuilder: {
       slotEmpty: (n: number, total: number) => `Lugar ${n} de ${total}, vacío`,
+      slotNext: (n: number, total: number) => `Lugar ${n} de ${total}, vacío, el siguiente`,
       slotFilled: (n: number, total: number, word: string) => `Lugar ${n} de ${total}: ${word}`,
       slotAttached: (n: number, total: number) => `Lugar ${n} de ${total}, se une a la palabra de antes, vacío`,
       tried: (word: string) => `${word}, ya probada`,
+      next: (word: string) => `${word}, va ahora`,
     },
   },
   koreanItem: (item: { ko: string; romanization: string; gloss?: string }) =>

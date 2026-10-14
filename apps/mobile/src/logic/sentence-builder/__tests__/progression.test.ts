@@ -35,6 +35,21 @@ describe('buildRound: an order round', () => {
     expect(buildRound(EAT_RICE, 3)!.tray.find((t) => t.id === 'd0')).toEqual({ id: 'd0', ko: '물을', romanization: 'mureul' });
   });
 
+  it('drops a distractor that would look the same as a word tile or an earlier distractor', () => {
+    // Content the schema now refuses, built by hand: a second tile identical to a word would score as a miss.
+    const twin: OrderItRound = {
+      ...EAT_RICE,
+      distractors: [
+        { ko: '먹어요', romanization: 'meogeoyo', en: 'eat' },
+        { ko: '물을', romanization: 'mureul', en: 'water' },
+        { ko: '물을.', romanization: 'mureul.', en: 'water' },
+      ],
+    };
+    const round = buildRound(twin, 1)!;
+    expect(round.tray.map((t) => t.id).sort()).toEqual(['d1', 'w0', 'w1']);
+    expect(round.tray.filter((t) => t.ko === '먹어요')).toHaveLength(1);
+  });
+
   it('draws no romanization on the tiles when the romanization does not split one word per word', () => {
     const odd = { ...EAT_RICE, sentence: { ...EAT_RICE.sentence, romanization: 'babeulmeogeoyo' } };
     expect(buildRound(odd, 1)!.words.map((w) => w.romanization)).toEqual(['', '']);

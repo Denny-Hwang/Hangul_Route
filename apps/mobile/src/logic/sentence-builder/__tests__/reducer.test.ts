@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { buildRound, type SbRound } from '../progression';
 import { TOUCH_WINDOW_MS, missHint, startFlow, stepFlow, type SbEffect, type SbEvent, type SbState } from '../reducer';
 import { FRESH_SCORE, isRightTile, scoreComplete, scoreMiss } from '../scoring';
+import { EMPTY_TALLY, tallyAnswer } from '../../first-try';
 import { BOOK_PARTICLE, EAT_RICE, LIKE_TTEOKGUK } from './fixtures';
 
 const eat = buildRound(EAT_RICE, 1)!;
@@ -26,6 +27,10 @@ function play(rounds: readonly SbRound[], taps: readonly string[], state: SbStat
 }
 
 const answers = (effects: readonly SbEffect[]) => effects.filter((e) => e.type === 'answer');
+
+/** What the quest run store makes of the answers: the first per round scores, the rest are retries. */
+const tally = (effects: readonly SbEffect[]) =>
+  answers(effects).reduce((t, e) => (e.type === 'answer' ? tallyAnswer(t, String(e.roundKey), e.correct) : t), EMPTY_TALLY);
 
 describe('scoring', () => {
   it('records the first miss as the answer, and nothing after it', () => {
@@ -127,10 +132,19 @@ describe('a miss', () => {
     expect(state.tried).toEqual([idOf(like, '좋아해요')]);
   });
 
-  it('in the Check: miss, miss, ring, right records exactly one answer, false (G-1 test)', () => {
+  it('in the Check: miss, miss, ring, right scores exactly one answer, false, and one retry (G-1 test)', () => {
     const { effects, state } = play([like], ['떡국을', '좋아해요', '저는', '떡국을', '좋아해요']);
     expect(state.status).toBe('complete');
-    expect(answers(effects)).toEqual([{ type: 'answer', roundKey: 0, correct: false }]);
+    // Each miss is reported; the right taps that finish a missed round are not.
+    expect(answers(effects)).toEqual([
+      { type: 'answer', roundKey: 0, correct: false },
+      { type: 'answer', roundKey: 0, correct: false },
+    ]);
+    expect(tally(effects)).toEqual({ correct: 0, total: 1, retries: 1, scored: ['0'] });
+  });
+
+  it('a round built with no miss scores one right answer and no retry', () => {
+    expect(tally(play([eat], ['밥을', '먹어요']).effects)).toEqual({ correct: 1, total: 1, retries: 0, scored: ['0'] });
   });
 
   it('a particle miss points at the ending', () => {
@@ -139,6 +153,25 @@ describe('a miss', () => {
     const done = play([book], ['이'], state);
     expect(done.state.status).toBe('complete');
     expect(answers(done.effects)).toEqual([]);
+  });
+});
+
+describe('skip', () => {
+  it('ends the step once, while building or while the built sentence plays', () => {
+    const building = stepFlow(startFlow(2), [eat, like], { type: 'skip' });
+    expect(building.state.status).toBe('done');
+    expect(building.effects).toEqual([{ type: 'complete' }]);
+    // A second Skip, or the advance of a sentence that was still playing, completes nothing more.
+    expect(stepFlow(building.state, [eat, like], { type: 'skip' }).effects).toEqual([]);
+    const built = play([eat, like], ['밥을', '먹어요']).state;
+    const skipped = stepFlow(built, [eat, like], { type: 'skip' });
+    expect(skipped.effects).toEqual([{ type: 'complete' }]);
+    expect(stepFlow(skipped.state, [eat, like], { type: 'advance' }).effects).toEqual([]);
+  });
+
+  it('drops a tile that was sliding back', () => {
+    const missed = stepFlow(startFlow(1), [eat], { type: 'tap', tileId: 'd0', at: 1000 }).state;
+    expect(stepFlow(missed, [eat], { type: 'skip' }).state.returning).toBeNull();
   });
 });
 

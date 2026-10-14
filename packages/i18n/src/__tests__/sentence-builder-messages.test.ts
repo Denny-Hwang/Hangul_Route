@@ -34,6 +34,14 @@ describe('learner.minigame.sentenceBuilder (English)', () => {
     expect(a.slotFilled(1, 2, '밥을, babeul')).toBe('Place 1 of 2: 밥을, babeul');
     expect(a.slotAttached(1, 2)).toBe('Place 1 of 2, joins the word before it, empty');
     expect(a.tried('물을, mureul')).toBe('물을, mureul, tried');
+    expect(a.slotNext(1, 2)).toBe('Place 1 of 2, empty, next');
+    expect(a.next('저는, jeoneun')).toBe('저는, jeoneun, comes next');
+  });
+});
+
+describe('Sentence Builder in Korean', () => {
+  it('the look-here line names no word, since a particle round rings a piece (G-1 review)', () => {
+    expect(getMessages('ko').learner.minigame.sentenceBuilder.lookHere).toBe('다음은 이거예요.');
   });
 });
 
@@ -46,13 +54,15 @@ describe('Sentence Builder in every locale', () => {
       messages.a11y.minigame.sentenceBuilder.slotFilled(1, 2, 'x'),
       messages.a11y.minigame.sentenceBuilder.slotAttached(1, 2),
       messages.a11y.minigame.sentenceBuilder.tried('x'),
+      messages.a11y.minigame.sentenceBuilder.slotNext(1, 2),
+      messages.a11y.minigame.sentenceBuilder.next('x'),
     ];
 
     it(`${locale}: every key has its own value (no English fallback)`, () => {
       const missing = fallbackPaths(locale).filter((p) => p.includes('sentenceBuilder'));
       expect(missing).toEqual([]);
       const leaves = leafPaths(messages).filter((p) => p.includes('.sentenceBuilder.'));
-      expect(leaves.length).toBe(14);
+      expect(leaves.length).toBe(16);
     });
 
     it(`${locale}: never shames, names an age or uses emoji`, () => {
@@ -68,6 +78,8 @@ describe('Sentence Builder in every locale', () => {
       expect(a.slotEmpty(4, 5)).toContain('5');
       expect(a.slotFilled(1, 3, 'WORD')).toContain('WORD');
       expect(a.tried('WORD')).toContain('WORD');
+      expect(a.slotNext(4, 5)).toContain('4');
+      expect(a.next('WORD')).toContain('WORD');
     });
   }
 });

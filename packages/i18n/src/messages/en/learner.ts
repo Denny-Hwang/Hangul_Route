@@ -632,7 +632,7 @@ export const learner = {
     sentenceBuilder: {
       heading: 'Build the sentence',
       instruction: 'Tap the words in order.',
-      /** A round whose one open place is a particle (이 or 가, 을 or 를). */
+      /** A round whose one open place is a particle (i or ga, eul or reul). */
       particleInstruction: 'Tap the piece that fits.',
       /** The label over the sentence's meaning in the UI language. */
       meaning: 'Meaning',

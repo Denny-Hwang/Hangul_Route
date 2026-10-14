@@ -23,13 +23,14 @@ import {
   useMediaSize,
 } from '@hangul-route/design-system';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
-import Animated, { useAnimatedStyle, useSharedValue, withDelay, withSequence, withTiming } from 'react-native-reanimated';
+import { Platform, Pressable, Text, View, type TextStyle } from 'react-native';
+import Animated, { Easing, useAnimatedStyle, useSharedValue, withDelay, withSequence, withTiming } from 'react-native-reanimated';
 import { PromptPanel } from '../../components/PromptPanel';
 import { VoiceHelpSheet } from '../../components/VoiceHelpSheet';
 import { usePromptSlot } from '../../components/use-prompt-slot';
 import { useMessages } from '../../i18n/use-messages';
 import { useRomanizationMode } from '../../i18n/use-romanization-mode';
+import { cubicBezierPoints } from '../../logic/flip';
 import type { MinigameScope } from '../../logic/minigame-config';
 import { buildRounds, type SbRound, type SbTile } from '../../logic/sentence-builder/progression';
 import { startFlow, stepFlow, type SbEffect, type SbEvent, type SbState } from '../../logic/sentence-builder/reducer';
@@ -39,6 +40,7 @@ import {
   hintView,
   instructionOf,
   lineView,
+  placedAnnouncement,
   showSkip,
   trayView,
   widestTile,
@@ -85,8 +87,17 @@ const SLIDE_MS = motion.duration.base;
 const HOLD_MS = motion.duration.fast;
 const RETURN_MS = SLIDE_MS + HOLD_MS + SLIDE_MS;
 const NO_SOUND_ADVANCE_MS = motion.duration.crawl;
+/** The motion.easing.standard token; `Easing.ease` only if the token ever stops being a cubic-bezier. */
+const STANDARD = cubicBezierPoints(motion.easing.standard);
+const EASE = STANDARD ? Easing.bezier(...STANDARD) : Easing.ease;
+/** A pressed tile grows as the design system's `Tile` does (Tile.tsx); none under reduced motion. */
+const PRESS_SCALE = 1.04;
 
 const koreanSpeech = { accessibilityLanguage: 'ko', lang: 'ko' };
+/** One tile is one word: on the web its Korean never breaks inside the word (§3.14, word-break keep-all); native Text keeps a spaceless word whole. */
+const wholeWord = (Platform.OS === 'web' ? { whiteSpace: 'nowrap' } : {}) as unknown as TextStyle;
+/** Read by assistive tech, not drawn (a 1 px clipped box), as NotePage's live line. */
+const srOnly = { position: 'absolute', width: 1, height: 1, margin: -1, overflow: 'hidden' } as const;
 
 export function SentenceBuilderGame({ scope, host, patternNote, onBack }: Props): React.ReactElement {
   const [seed] = useState(() => Math.floor(Math.random() * 0x7fffffff));
@@ -97,6 +108,7 @@ export function SentenceBuilderGame({ scope, host, patternNote, onBack }: Props)
   const reducedMotion = useReducedMotion();
   const picture = useMediaSize(touchTarget.hero);
   const tileMin = useMediaSize(SLOT_MIN);
+  const attachedMin = useMediaSize(touchTarget.min);
   // On a phone Hear it spans the meaning card; from the regular window up it keeps its own width (mock F).
   const wideHear = useLayoutClass().windowWidth < layout.breakpoint.regular;
 
@@ -110,6 +122,7 @@ export function SentenceBuilderGame({ scope, host, patternNote, onBack }: Props)
   reducedRef.current = reducedMotion;
   const timers = useRef<Array<ReturnType<typeof setTimeout>>>([]);
   const mounted = useRef(true);
+  const completed = useRef(false);
   const dispatchRef = useRef<(event: SbEvent) => void>(() => undefined);
 
   const slot = usePromptSlot({ source: 'sentence-builder', textOnScreen: true });
@@ -158,6 +171,9 @@ export function SentenceBuilderGame({ scope, host, patternNote, onBack }: Props)
           return;
         }
         case 'complete':
+          // The flow emits it once; the guard keeps the host to one call whatever the timing.
+          if (completed.current) return;
+          completed.current = true;
           hostRef.current.complete();
           return;
       }
@@ -211,7 +227,8 @@ export function SentenceBuilderGame({ scope, host, patternNote, onBack }: Props)
   const tray = trayView(round, state, ctx, m.a11y.minigame);
   const hint = hintView(state, copy, patternNote);
   const done = doneView(round, state, copy);
-  const widest = widestTile(round);
+  const widest = widestTile(round, ctx);
+  const announcement = placedAnnouncement(round, state, m.a11y.minigame);
   const gloss = round.sentence.en;
 
   return (
@@ -266,10 +283,15 @@ export function SentenceBuilderGame({ scope, host, patternNote, onBack }: Props)
       <Spacer size="lg" />
       <View testID="sentence-builder-line" style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: spacing.md }}>
         {line.map((unit) => (
-          <LineUnit key={unit.key} unit={unit} widest={widest} tileMin={tileMin} complete={done !== null} />
+          <LineUnit key={unit.key} unit={unit} widest={widest} tileMin={tileMin} attachedMin={attachedMin} complete={done !== null} reducedMotion={reducedMotion} />
         ))}
         {done !== null ? <Icon name="check" size={spacing.xxl} color={colors.feedback.successDark} /> : null}
       </View>
+
+      {/* A right tile landing is announced by its place (wireframe "States", screen reader). */}
+      <Text testID="sentence-builder-live" style={srOnly} accessibilityLiveRegion="polite" {...{ 'aria-live': 'polite' }}>
+        {announcement}
+      </Text>
 
       {done === null ? (
         <>
@@ -308,11 +330,11 @@ export function SentenceBuilderGame({ scope, host, patternNote, onBack }: Props)
         ) : null}
       </View>
 
-      {showSkip(host.mode) ? (
+      {showSkip(host.mode) && state.status !== 'done' ? (
         <>
           <Spacer size="xl" />
           <View style={{ alignSelf: 'flex-start' }}>
-            <Button label={copy.skip.cta} tone="ghost" size="md" onPress={() => hostRef.current.complete()} testID="sentence-builder-skip" />
+            <Button label={copy.skip.cta} tone="ghost" size="md" onPress={() => dispatch({ type: 'skip' })} testID="sentence-builder-skip" />
           </View>
         </>
       ) : null}
@@ -328,6 +350,7 @@ function TileFace({ ko, romanization }: { ko: string; romanization: string }): R
       <Text
         {...koreanSpeech}
         style={{
+          ...wholeWord,
           fontFamily: typography.family.sansKr,
           fontSize: typography.size.prompt,
           fontWeight: typography.weight.bold,
@@ -366,10 +389,29 @@ function Mark({ name, color }: { name: 'check' | 'dash'; color: string }): React
   );
 }
 
-function LineUnit({ unit, widest, tileMin, complete }: { unit: LineUnitView; widest: SbTile | undefined; tileMin: number; complete: boolean }): React.ReactElement {
+interface LineUnitProps {
+  unit: LineUnitView;
+  widest: SbTile | undefined;
+  tileMin: number;
+  attachedMin: number;
+  complete: boolean;
+  reducedMotion: boolean;
+}
+
+/** A placed tile slides up from the tray into its place (`motion.duration.base`, `easing.standard`); reduced motion places it at once. */
+function SlideIn({ reducedMotion, children }: { reducedMotion: boolean; children: React.ReactNode }): React.ReactElement {
+  const offset = useSharedValue(reducedMotion ? 0 : RISE);
+  useEffect(() => {
+    offset.value = reducedMotion ? 0 : withTiming(0, { duration: SLIDE_MS, easing: EASE });
+  }, [offset, reducedMotion]);
+  const style = useAnimatedStyle(() => ({ transform: [{ translateY: offset.value }] }));
+  return <Animated.View style={style}>{children}</Animated.View>;
+}
+
+function LineUnit({ unit, widest, tileMin, attachedMin, complete, reducedMotion }: LineUnitProps): React.ReactElement {
   if (unit.kind !== 'slot') {
     const placed = unit.kind === 'placed';
-    return (
+    const box = (
       <View
         accessible
         accessibilityLabel={unit.accessibilityLabel}
@@ -385,6 +427,8 @@ function LineUnit({ unit, widest, tileMin, complete }: { unit: LineUnitView; wid
         {placed ? <Mark name="check" color={colors.feedback.successDark} /> : null}
       </View>
     );
+    // Only a tile the learner placed slides in; a word a particle round gives stands still.
+    return placed ? <SlideIn reducedMotion={reducedMotion}>{box}</SlideIn> : box;
   }
   const slotBox = (
     <View
@@ -392,7 +436,7 @@ function LineUnit({ unit, widest, tileMin, complete }: { unit: LineUnitView; wid
       accessibilityLabel={unit.accessibilityLabel}
       testID={unit.next ? 'sentence-builder-slot-next' : 'sentence-builder-slot'}
       style={{
-        ...tileBox(unit.attached ? touchTarget.min : tileMin),
+        ...tileBox(unit.attached ? attachedMin : tileMin),
         borderStyle: 'dashed',
         borderColor: unit.next ? colors.border.focus : colors.border.shape,
         backgroundColor: colors.surface.paper,
@@ -413,6 +457,7 @@ function LineUnit({ unit, widest, tileMin, complete }: { unit: LineUnitView; wid
       <View
         accessible
         accessibilityLabel={unit.stem}
+        {...koreanSpeech}
         testID="sentence-builder-stem"
         style={{
           ...tileBox(tileMin),
@@ -435,8 +480,8 @@ function TrayTile({ tile, tileMin, reducedMotion, onPress }: { tile: TileView; t
     if (!tile.returning || reducedMotion) return;
     // Slides toward the line, waits, slides back; reduced motion keeps it in place.
     rise.value = withSequence(
-      withTiming(-RISE, { duration: SLIDE_MS }),
-      withDelay(HOLD_MS, withTiming(0, { duration: SLIDE_MS })),
+      withTiming(-RISE, { duration: SLIDE_MS, easing: EASE }),
+      withDelay(HOLD_MS, withTiming(0, { duration: SLIDE_MS, easing: EASE })),
     );
   }, [tile.returning, reducedMotion, rise]);
   const style = useAnimatedStyle(() => ({ transform: [{ translateY: rise.value }] }));
@@ -444,7 +489,7 @@ function TrayTile({ tile, tileMin, reducedMotion, onPress }: { tile: TileView; t
   // The look-here ring: a focus-coloured frame around the tile (a transparent one otherwise, so nothing moves).
   return (
     <Animated.View
-      testID={tile.look === 'ring' ? 'sentence-builder-ring' : undefined}
+      testID={tile.look === 'ring' ? 'sentence-builder-ring' : tile.returning ? 'sentence-builder-returning' : undefined}
       style={[
         style,
         { padding: spacing.xs, margin: -spacing.xs, borderRadius: radii.lg, borderWidth: borderWidth.thick, borderColor: tile.look === 'ring' ? colors.border.focus : 'transparent' },
@@ -461,7 +506,7 @@ function TrayTile({ tile, tileMin, reducedMotion, onPress }: { tile: TileView; t
           paddingRight: tried ? spacing.xl : spacing.lg,
           borderColor: tried ? colors.feedback.nudge : colors.border.strong,
           backgroundColor: tried ? colors.feedback.nudgeLight : colors.surface.paper,
-          transform: [{ scale: pressed ? 1.04 : 1 }],
+          transform: [{ scale: pressed && !reducedMotion ? PRESS_SCALE : 1 }],
         })}
       >
         <TileFace ko={tile.ko} romanization={tile.romanization} />

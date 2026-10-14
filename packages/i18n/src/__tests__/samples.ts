@@ -795,4 +795,6 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'a11y.minigame.sentenceBuilder.slotFilled': [[1, 2, 'bap, babeul']],
   'a11y.minigame.sentenceBuilder.slotAttached': [[1, 2]],
   'a11y.minigame.sentenceBuilder.tried': [['mul, mureul']],
+  'a11y.minigame.sentenceBuilder.slotNext': [[1, 3], [6, 6]],
+  'a11y.minigame.sentenceBuilder.next': [['jeo, jeoneun']],
 };

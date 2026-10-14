@@ -1,6 +1,7 @@
-import { romanizeWord, type KoText, type Quest, type RomanizationMode } from '@hangul-route/content-schema';
+import type { KoText, Quest, RomanizationMode } from '@hangul-route/content-schema';
 import type { Messages } from '@hangul-route/i18n';
 import type { HostMode } from '../../screens/minigames/host';
+import { koTokenParts, type KoTokenPart } from '../ko-tokens';
 import type { SbRound, SbTile } from './progression';
 import type { SbState } from './reducer';
 import { isRightTile } from './scoring';
@@ -94,18 +95,32 @@ export function lineView(round: SbRound, state: SbState, ctx: LineContext, a11y:
       next,
       attached,
       stem: attached ? round.particle?.stem : undefined,
-      accessibilityLabel: attached ? say.slotAttached(i + 1, total) : say.slotEmpty(i + 1, total),
+      // The attached place is a particle round's only open one, so it is always the next.
+      accessibilityLabel: attached ? say.slotAttached(i + 1, total) : next ? say.slotNext(i + 1, total) : say.slotEmpty(i + 1, total),
     };
   });
 }
 
 /**
- * The tile an empty slot is as wide as: the round's longest, so no width gives a tile away.
- * The screen draws it invisibly inside every empty slot.
+ * What a screen reader hears when a right tile lands (wireframe "States", screen reader): the
+ * place just filled, "Place 1 of 2: Korean, romanization". Empty before the first placement.
  */
-export function widestTile(round: SbRound): SbTile | undefined {
+export function placedAnnouncement(round: SbRound, state: SbState, a11y: MinigameA11y): string {
+  const word = round.open[state.placed.length - 1];
+  const filled = word === undefined ? undefined : round.words[word];
+  if (word === undefined || filled === undefined) return '';
+  return a11y.sentenceBuilder.slotFilled(word + 1, round.words.length, wordLabel(filled.ko, filled.romanization));
+}
+
+/**
+ * The tile an empty slot is as big as: the round's longest, as the tray draws it (its romanization
+ * line only in `always` mode), so no size gives a tile away. The screen draws it invisibly inside
+ * every empty slot.
+ */
+export function widestTile(round: SbRound, ctx: LineContext): SbTile | undefined {
+  const shown = round.tray.map((t) => ({ ...t, romanization: shownRomanization(t.romanization, ctx.romanizationMode) }));
   const size = (t: SbTile): number => [...t.ko].length * 100 + t.romanization.length;
-  return round.tray.reduce<SbTile | undefined>((best, t) => (best === undefined || size(t) > size(best) ? t : best), undefined);
+  return shown.reduce<SbTile | undefined>((best, t) => (best === undefined || size(t) > size(best) ? t : best), undefined);
 }
 
 export type TileLook = 'idle' | 'tried' | 'ring';
@@ -131,36 +146,24 @@ export function trayView(round: SbRound, state: SbState, ctx: LineContext, a11y:
     .map((t) => {
       const look: TileLook = t.id === ringId ? 'ring' : state.tried.includes(t.id) ? 'tried' : 'idle';
       const name = wordLabel(t.ko, t.romanization);
+      // The ring is not only a colour: its tile's name says it comes next.
+      const label = look === 'ring' ? a11y.sentenceBuilder.next(name) : look === 'tried' ? a11y.sentenceBuilder.tried(name) : name;
       return {
         id: t.id,
         ko: t.ko,
         romanization: shownRomanization(t.romanization, ctx.romanizationMode),
         look,
         returning: state.returning === t.id,
-        accessibilityLabel: look === 'tried' ? a11y.sentenceBuilder.tried(name) : name,
+        accessibilityLabel: label,
       };
     });
 }
 
 /** A piece of a note line: plain UI text, or a `{ko:}` token drawn as taught Korean with its romanization. */
-export type NotePart = { text: string } | { ko: string; romanization: string };
+export type NotePart = KoTokenPart;
 
-const KO_TOKEN = /\{ko:([^}]*)\}/g;
-
-/** Splits a note around its `{ko:}` tokens (F-CURR-001 §3.4); never throws, an empty token is dropped. */
-export function noteParts(note: string): NotePart[] {
-  const parts: NotePart[] = [];
-  let at = 0;
-  for (const match of note.matchAll(KO_TOKEN)) {
-    const start = match.index as number;
-    if (start > at) parts.push({ text: note.slice(at, start) });
-    const ko = (match[1] as string).trim();
-    if (ko !== '') parts.push({ ko, romanization: romanizeWord(ko) ?? '' });
-    at = start + match[0].length;
-  }
-  if (at < note.length) parts.push({ text: note.slice(at) });
-  return parts;
-}
+/** Splits a note around its `{ko:}` tokens, with the parser the Discover pattern page shares (`logic/ko-tokens.ts`). */
+export const noteParts = (note: string): NotePart[] => koTokenParts(note);
 
 export interface HintView {
   line: string;

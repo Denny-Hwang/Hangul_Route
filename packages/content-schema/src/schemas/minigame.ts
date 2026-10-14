@@ -210,8 +210,11 @@ export const OrderItRoundSchema = z
     if (tiles.length < 2 || tiles.length > 6) {
       ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['sentence', 'ko'], message: 'a sentence builds from 2-6 word tiles' });
     }
+    // Compared without the sentence mark, as the game draws tiles: `먹어요` is the tile `먹어요.`.
+    const bare = (ko: string): string => ko.replace(/[.?!]+$/, '');
+    const words = tiles.map(bare);
     round.distractors.forEach((d, i) => {
-      if (tiles.includes(d.ko)) {
+      if (words.includes(bare(d.ko))) {
         ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['distractors', i, 'ko'], message: 'a distractor tile is also a tile of the sentence' });
       }
     });

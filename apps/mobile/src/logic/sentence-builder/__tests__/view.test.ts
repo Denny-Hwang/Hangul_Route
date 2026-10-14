@@ -10,6 +10,7 @@ import {
   instructionOf,
   lineView,
   noteParts,
+  placedAnnouncement,
   patternNoteOf,
   showSkip,
   trayView,
@@ -68,7 +69,7 @@ describe('lineView', () => {
   it('starts with one empty place per word, the first one next', () => {
     const line = lineView(eat, startFlow(1), always, a11y);
     expect(line).toEqual([
-      { kind: 'slot', key: 'word-0', next: true, attached: false, stem: undefined, accessibilityLabel: 'Place 1 of 2, empty' },
+      { kind: 'slot', key: 'word-0', next: true, attached: false, stem: undefined, accessibilityLabel: 'Place 1 of 2, empty, next' },
       { kind: 'slot', key: 'word-1', next: false, attached: false, stem: undefined, accessibilityLabel: 'Place 2 of 2, empty' },
     ]);
   });
@@ -83,7 +84,7 @@ describe('lineView', () => {
       accessibilityLabel: 'Place 1 of 2: 밥을, babeul',
     });
     expect(lineView(eat, state, tap, a11y)[0]).toMatchObject({ romanization: '', accessibilityLabel: 'Place 1 of 2: 밥을, babeul' });
-    expect(lineView(eat, state, always, a11y)[1]).toMatchObject({ kind: 'slot', next: true });
+    expect(lineView(eat, state, always, a11y)[1]).toMatchObject({ kind: 'slot', next: true, accessibilityLabel: 'Place 2 of 2, empty, next' });
   });
 
   it('a particle round: the other words are given, the particle place sits against its stem', () => {
@@ -105,15 +106,29 @@ describe('lineView', () => {
     const built = tapAll(eat, ['밥을', '먹어요']);
     expect(lineView(eat, built, always, a11y).every((u) => u.kind === 'placed')).toBe(true);
     const half = { ...tapAll(eat, ['밥을']), status: 'complete' as const };
-    expect(lineView(eat, half, always, a11y)[1]).toMatchObject({ kind: 'slot', next: false });
+    expect(lineView(eat, half, always, a11y)[1]).toMatchObject({ kind: 'slot', next: false, accessibilityLabel: 'Place 2 of 2, empty' });
+  });
+});
+
+describe('placedAnnouncement', () => {
+  it('names the place a right tile just filled, and nothing before the first one', () => {
+    expect(placedAnnouncement(eat, startFlow(1), a11y)).toBe('');
+    expect(placedAnnouncement(eat, tapAll(eat, ['밥을']), a11y)).toBe('Place 1 of 2: 밥을, babeul');
+    expect(placedAnnouncement(eat, tapAll(eat, ['밥을', '먹어요']), a11y)).toBe('Place 2 of 2: 먹어요, meogeoyo');
+    // A particle round announces the joined word.
+    expect(placedAnnouncement(book, tapAll(book, ['이']), a11y)).toBe('Place 1 of 2: 책이, chaegi');
   });
 });
 
 describe('widestTile', () => {
   it('is the tile with the most syllables, then the longest romanization', () => {
-    expect(widestTile(like)?.ko).toBe('좋아해요');
-    expect(widestTile(eat)?.ko).toBe('먹어요');
-    expect(widestTile({ ...eat, tray: [] })).toBeUndefined();
+    expect(widestTile(like, always)?.ko).toBe('좋아해요');
+    expect(widestTile(eat, always)).toMatchObject({ ko: '먹어요', romanization: 'meogeoyo' });
+    expect(widestTile({ ...eat, tray: [] }, always)).toBeUndefined();
+  });
+
+  it('carries the romanization line only when the tiles show one (tap mode: none)', () => {
+    expect(widestTile(eat, tap)).toMatchObject({ ko: '먹어요', romanization: '' });
   });
 });
 
@@ -141,7 +156,7 @@ describe('trayView', () => {
   it('rings the right tile after the second miss, and drops placed tiles', () => {
     const state = tapAll(like, ['좋아해요', '떡국을']);
     const tray = trayView(like, state, always, a11y);
-    expect(tray.find((t) => t.ko === '저는')?.look).toBe('ring');
+    expect(tray.find((t) => t.ko === '저는')).toMatchObject({ look: 'ring', accessibilityLabel: '저는, jeoneun, comes next' });
     expect(tray.find((t) => t.ko === '좋아해요')?.look).toBe('tried');
     const after = tapAll(like, ['저는'], state);
     expect(trayView(like, after, always, a11y).map((t) => t.ko).sort()).toEqual(['떡국을', '좋아해요']);

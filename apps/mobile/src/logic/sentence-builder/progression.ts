@@ -5,11 +5,13 @@ import { shuffle } from '../shuffle';
  * Sentence Builder rounds (F-CURR-001 §3.4, §3.7; wireframe minigame/sentence-builder.md,
  * "Data needs"): what one `order-it` round of the C-1 schema becomes on screen. Pure.
  *
- * - A word is one 어절 of `sentence.ko` split at its spaces, with the romanized word at the
+ * - A word is one eojeol (a spaced word) of `sentence.ko` split at its spaces, with the romanized word at the
  *   same index of `sentence.romanization` (nothing is computed). The sentence mark (. ? !)
  *   stays on the whole sentence and is left off the tiles.
  * - An order round opens every word; the tray holds the words and the distractors in a
- *   deranged order (never already the sentence).
+ *   deranged order (never already the sentence). A distractor that reads the same as a word of
+ *   the sentence once its mark is off (or as an earlier distractor) is dropped, so two tiles that
+ *   look alike never score differently.
  * - A round with `particle` is particle-only: every other word is pre-placed, the particle
  *   word shows its stem (Korean only) with one attached slot, and the tray holds the two
  *   choices in a random order. A particle round never carries distractors.
@@ -95,6 +97,17 @@ function particleOf(round: OrderItRound, words: readonly SbWord[]): SbParticle |
   return { word: particle.tile, stem: word.ko.slice(0, -answer.length), answer };
 }
 
+/** The distractor tiles, without any that would look the same as a word tile or an earlier distractor. */
+function distinctDistractors(round: OrderItRound, words: readonly SbWord[]): SbTile[] {
+  const seen = new Set(words.map((w) => w.ko));
+  return round.distractors.flatMap((d, i) => {
+    const ko = withoutMark(d.ko);
+    if (seen.has(ko)) return [];
+    seen.add(ko);
+    return [{ id: `d${i}`, ko, romanization: withoutMark(d.romanization) }];
+  });
+}
+
 /** One playable round, or null when the round cannot be played (the empty state, wireframe "States"). */
 export function buildRound(round: OrderItRound, seed: number): SbRound | null {
   const words = wordsOf(round.sentence);
@@ -113,7 +126,7 @@ export function buildRound(round: OrderItRound, seed: number): SbRound | null {
   }
   const tiles: SbTile[] = [
     ...words.map((w, i) => ({ id: `w${i}`, ko: w.ko, romanization: w.romanization })),
-    ...round.distractors.map((d, i) => ({ id: `d${i}`, ko: withoutMark(d.ko), romanization: withoutMark(d.romanization) })),
+    ...distinctDistractors(round, words),
   ];
   return { ...base, open: words.map((_, i) => i), tray: derange(tiles, words, seed) };
 }

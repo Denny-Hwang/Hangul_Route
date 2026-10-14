@@ -1,12 +1,13 @@
-import { OrderItRoundSchema, type OrderItRound } from '@hangul-route/content-schema';
 import { StackActions, useNavigation } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useEffect, useMemo } from 'react';
+import { RomanizationModeOverride } from '../i18n/use-romanization-mode';
 import { useLocale } from '../i18n/use-messages';
 import { localizeScope } from '../logic/content-locale';
 import type { MinigameScope } from '../logic/minigame-config';
 import type { HostMode, MinigameHost } from '../screens/minigames/host';
 import { SentenceBuilderGame } from '../screens/minigames/SentenceBuilderGame';
+import { CHECK, PATTERN_NOTE, PRACTICE } from './sentence-builder-e2e-fixtures';
 import type { RootStackParamList } from './types';
 
 /**
@@ -18,16 +19,21 @@ import type { RootStackParamList } from './types';
  * two-question Stage 7 Check.
  */
 
-export type SentenceE2eSet = 'practice' | 'check';
+/** `empty`: a scope with no playable round (the empty state and its way back). */
+export type SentenceE2eSet = 'practice' | 'check' | 'empty';
 
 export interface SentenceE2eParams {
   set: SentenceE2eSet;
   mode: Extract<HostMode, 'quest' | 'check'>;
+  /** `tap`: the reading-practice setting (no romanization line on the tiles). Default: the profile's mode. */
+  romanization?: 'tap';
 }
 
 export interface SentenceE2eLog {
   answers: Array<{ key: string; correct: boolean; itemId?: string }>;
   completes: number;
+  /** Presses of the empty state's way back. */
+  backs: number;
 }
 
 export interface SentenceE2eHandle {
@@ -36,50 +42,7 @@ export interface SentenceE2eHandle {
   log(): SentenceE2eLog;
 }
 
-const parse = (round: unknown): OrderItRound => OrderItRoundSchema.parse(round);
-
-/** Stage 3 practice: an order round with one extra tile, a particle round, a three-word round. */
-const PRACTICE: readonly OrderItRound[] = [
-  parse({
-    id: 'e2e-eat-rice',
-    sentence: { ko: '밥을 먹어요.', romanization: 'babeul meogeoyo', en: 'I eat rice.' },
-    pictureRef: 'card:rice',
-    distractors: [{ ko: '물을', romanization: 'mureul', en: 'water' }],
-  }),
-  parse({
-    id: 'e2e-book-i',
-    sentence: { ko: '책이 있어요.', romanization: 'chaegi isseoyo', en: 'There is a book.' },
-    pictureRef: 'card:book',
-    particle: {
-      tile: 0,
-      choices: [
-        { ko: '이', romanization: 'i', en: 'subject marker' },
-        { ko: '가', romanization: 'ga', en: 'subject marker' },
-      ],
-    },
-  }),
-  parse({
-    id: 'e2e-school',
-    sentence: { ko: '저는 학교에 가요.', romanization: 'jeoneun hakgyoe gayo', en: 'I go to school.' },
-  }),
-];
-
-/** The Stage 7 Check: exactly two rounds, no extra tile. */
-const CHECK: readonly OrderItRound[] = [
-  parse({
-    id: 'e2e-like-tteokguk',
-    sentence: { ko: '저는 떡국을 좋아해요.', romanization: 'jeoneun tteokgugeul joahaeyo', en: 'I like tteokguk.' },
-  }),
-  parse({
-    id: 'e2e-drink-milk',
-    sentence: { ko: '우유를 마셔요.', romanization: 'uyureul masyeoyo', en: 'I drink milk.' },
-  }),
-];
-
-/** The Discover note a Stage 3 particle quest would carry (shown again under a particle miss). */
-const PATTERN_NOTE = 'Use {ko:이} after a final consonant, {ko:가} after a vowel.';
-
-const log: SentenceE2eLog = { answers: [], completes: 0 };
+const log: SentenceE2eLog = { answers: [], completes: 0, backs: 0 };
 
 export function SentenceE2eHook(): null {
   const navigation = useNavigation();
@@ -87,7 +50,7 @@ export function SentenceE2eHook(): null {
     const g = globalThis as { __hrSentenceE2E?: SentenceE2eHandle };
     g.__hrSentenceE2E = {
       open: (params) => navigation.dispatch(StackActions.push('SentenceBuilderE2e', params)),
-      log: () => ({ answers: log.answers.map((a) => ({ ...a })), completes: log.completes }),
+      log: () => ({ answers: log.answers.map((a) => ({ ...a })), completes: log.completes, backs: log.backs }),
     };
     return () => {
       delete g.__hrSentenceE2E;
@@ -99,15 +62,16 @@ export function SentenceE2eHook(): null {
 type Props = NativeStackScreenProps<RootStackParamList, 'SentenceBuilderE2e'>;
 
 export function SentenceBuilderE2eScreen({ route }: Props): React.ReactElement {
-  const { set, mode } = route.params;
+  const { set, mode, romanization } = route.params;
   const locale = useLocale();
   const scope = useMemo<MinigameScope>(() => {
-    const rounds = set === 'check' ? CHECK : PRACTICE;
+    const rounds = set === 'check' ? CHECK : set === 'empty' ? [] : PRACTICE;
     return localizeScope({ kind: 'order-it', rounds: rounds.length, orderIt: { rounds: [...rounds] } }, 'minigame:e2e-sentence-builder', locale);
   }, [set, locale]);
   useEffect(() => {
     log.answers = [];
     log.completes = 0;
+    log.backs = 0;
   }, [route.params]);
   const host: MinigameHost = {
     mode,
@@ -116,5 +80,16 @@ export function SentenceBuilderE2eScreen({ route }: Props): React.ReactElement {
       log.completes += 1;
     },
   };
-  return <SentenceBuilderGame key={`${set}-${mode}`} scope={scope} host={host} patternNote={PATTERN_NOTE} />;
+  const game = (
+    <SentenceBuilderGame
+      key={`${set}-${mode}-${romanization ?? 'profile'}`}
+      scope={scope}
+      host={host}
+      patternNote={PATTERN_NOTE}
+      onBack={() => {
+        log.backs += 1;
+      }}
+    />
+  );
+  return romanization === 'tap' ? <RomanizationModeOverride mode="tap">{game}</RomanizationModeOverride> : game;
 }
