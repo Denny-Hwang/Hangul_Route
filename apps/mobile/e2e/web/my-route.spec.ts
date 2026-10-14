@@ -318,8 +318,9 @@ test.describe('the Route tab and its route card (LR-10)', () => {
     const [a, b] = await Promise.all([notOpen.boundingBox(), later.boundingBox()]);
     if (a === null || b === null) throw new Error('a legend line has no box');
     expect(a.y).toBeLessThan(b.y);
-    // A stage that is coming later says so on its own row, in its own words.
-    await expect(page.getByTestId('my-route-later-3').getByText(m.state.later, { exact: true })).toBeVisible();
+    // A stage that is coming later says so on its own row, in its own words (Stage 6: Stage 3 has a shipped cell
+    // since F-CURR-001 S3-4).
+    await expect(page.getByTestId('my-route-later-6').getByText(m.state.later, { exact: true })).toBeVisible();
     expect(await noSideScroll(page)).toBe(true);
     await shot(page, 'my-route-not-open-and-later-320');
   });
