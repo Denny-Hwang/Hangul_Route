@@ -77,7 +77,7 @@
                     "picture": "word:food-milk"
                   }
                 ],
-                "captionEn": "For drinks, the usual verb is 'drink'; for food, it is 'eat'."
+                "captionEn": "In these two sentences, water and milk go with 'drink'."
               }
             ]
           },
@@ -148,7 +148,7 @@
                 {
                   "ko": "빵을",
                   "romanization": "ppangeul",
-                  "en": "bread (as the thing eaten or drunk)"
+                  "en": "bread (as the thing eaten)"
                 }
               ]
             },
@@ -443,7 +443,7 @@
                       "romanization": "___i/ga masisseoyo",
                       "en": "The ___ is tasty."
                     },
-                    "noteEn": "Put {ko:이} after a final consonant or {ko:가} after a vowel on the thing you describe.",
+                    "noteEn": "Put {ko:이} after a final consonant or {ko:가} after a vowel on the thing you describe or like.",
                     "examples": [
                       {
                         "ko": "김밥이 맛있어요.",
@@ -480,7 +480,7 @@
                     "picture": "word:food-bread"
                   }
                 ],
-                "captionEn": "One Korean word can mean 'it is hot': no extra word for 'is'."
+                "captionEn": "In the first sentence, tteugeowoyo alone means 'it is hot': no extra word for 'is'."
               }
             ]
           },
@@ -533,9 +533,9 @@
               "pictureRef": "card:kimbap",
               "distractors": [
                 {
-                  "ko": "뜨거워요",
-                  "romanization": "tteugeowoyo",
-                  "en": "it is hot"
+                  "ko": "마셔요",
+                  "romanization": "masyeoyo",
+                  "en": "drink"
                 }
               ]
             },
@@ -549,9 +549,9 @@
               "pictureRef": "word:food-ramyeon",
               "distractors": [
                 {
-                  "ko": "사과가",
-                  "romanization": "sagwaga",
-                  "en": "the apple (as the one described)"
+                  "ko": "먹어요",
+                  "romanization": "meogeoyo",
+                  "en": "eat"
                 }
               ]
             },
@@ -860,7 +860,7 @@
                     ]
                   }
                 ],
-                "captionEn": "The small word after a place means 'to': where someone goes or comes."
+                "captionEn": "The small word after a place means 'to': where someone goes or comes to."
               },
               {
                 "items": [
@@ -882,7 +882,7 @@
                     "picture": "word:school-friend"
                   }
                 ],
-                "captionEn": "'Come' is moving toward the speaker. 'Go' is going from here to another place."
+                "captionEn": "'Come' is toward the speaker or the person in mind. 'Go' is from here to another place."
               }
             ]
           },
@@ -1249,20 +1249,27 @@
           "publisher": "표준국어대사전 (Standard Korean Language Dictionary), National Institute of Korean Language",
           "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%EB%AA%A9%EC%A0%81%EA%B2%A9%20%EC%A1%B0%EC%82%AC",
           "accessed": "2026-10-14",
-          "quoteOrLocator": "Headword 목적격 조사 『언어』: “문장 안에서, 체언이나 체언 구실을 하는 말 뒤에 붙어 목적어 자격을 가지게 하는 격 조사. ‘을/를’이 있다.” Also 를 「조사」 「1」: “동작이 미친 직접적 대상을 나타내는 격 조사.”"
+          "quoteOrLocator": "Headword 목적격 조사 『언어』: “문장 안에서, 체언이나 체언 구실을 하는 말 뒤에 붙어 목적어 자격을 가지게 하는 격 조사. ‘을/를’이 있다.”"
+        },
+        {
+          "title": "를, an entry of the Standard Korean Language Dictionary",
+          "publisher": "표준국어대사전 (Standard Korean Language Dictionary), National Institute of Korean Language",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%EB%A5%BC",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "Headword 를 「조사」 「1」: “동작이 미친 직접적 대상을 나타내는 격 조사.”"
         }
       ],
       "verification": {
         "passes": 3,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): both pages fetched. The dictionary names 을/를 as the object case particle (the thing the action is done to); the encyclopedia entry states that 을 follows a consonant-final noun and 를 a vowel-final noun. The note restates both in original English with no copied wording. Carried by: q1 Discover pattern noteEn and the particle hint of the q1 Sentence Builder rounds r4 and r5.\nLine 2 (pass 2b, independent fact check, 2026-10-14): both pages re-fetched and each quoteOrLocator found verbatim (encyclopedia entry 상보적 분포, last paragraph; dictionary 목적격 조사 and 를 「조사」 「1」). The dictionary supports 'marks the thing an action is done to' (direct object of the action); the encyclopedia states 을 after a consonant-final noun and 를 after a vowel-final noun. English wording is original, nothing copied. Outcome: confirmed, no change.\nLine 3 (pass 5, MAR culture review, final independent check, 2026-10-14): both sources reopened and each quoteOrLocator found verbatim; the consonant / vowel rule and 'the thing an action is done to' match. Carried by the q1 pattern noteEn and the particle hint of q1 r4, r5. Outcome: confirmed, no change."
+        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): both pages fetched. The dictionary names 을/를 as the object case particle (the thing the action is done to); the encyclopedia entry states that 을 follows a consonant-final noun and 를 a vowel-final noun. The note restates both in original English with no copied wording. Carried by: q1 Discover pattern noteEn and the particle hint of the q1 Sentence Builder rounds r4 and r5.\nLine 2 (pass 2b, independent fact check, 2026-10-14): both pages re-fetched and each quoteOrLocator found verbatim (encyclopedia entry 상보적 분포, last paragraph; dictionary 목적격 조사 and 를 「조사」 「1」). The dictionary supports 'marks the thing an action is done to' (direct object of the action); the encyclopedia states 을 after a consonant-final noun and 를 after a vowel-final noun. English wording is original, nothing copied. Outcome: confirmed, no change.\nLine 3 (pass 5, MAR culture review, final independent check, 2026-10-14): both sources reopened and each quoteOrLocator found verbatim; the consonant / vowel rule and 'the thing an action is done to' match. Carried by the q1 pattern noteEn and the particle hint of q1 r4, r5. Outcome: confirmed, no change. Pass 7 (MAR re-check of the PR head, 2026-10-14): the 목적격 조사 page does not show the 를 sense its locator also quoted, so that quote moved to its own source, the 를 entry (searchKeyword=를), where it was found verbatim. Outcome: confirmed after splitting a locator; note text unchanged."
       }
     },
     {
       "id": "n3",
       "kind": "language",
-      "textEn": "{ko:이} and {ko:가} mark the subject of a sentence, here the thing you describe. {ko:이} follows a final consonant; {ko:가} follows a vowel.",
+      "textEn": "{ko:이} and {ko:가} mark the subject of a sentence, here the thing you describe or like. {ko:이} follows a final consonant; {ko:가} follows a vowel.",
       "sources": [
         {
           "title": "상보적 분포, an entry of the Encyclopedia of Korean Culture",
@@ -1290,7 +1297,7 @@
         "passes": 3,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): both pages fetched. The dictionary names 이/가 as the subject case particle; the encyclopedia entry says 이 and 가 alternate for the same reason as 을/를, that is 이 after a consonant-final noun and 가 after a vowel-final noun. The note restates this in original English with no copied wording. Carried by: q2 Discover pattern noteEn and the particle hint of q2 rounds r4, r5 and q3 rounds r4, r5.\nLine 2 (pass 2b, independent fact check, 2026-10-14): both cited pages re-fetched and each quoteOrLocator found verbatim. The dictionary supports 'marks the subject'; the encyclopedia only says 이 and 가 are one morpheme for the same reason as 을/를, so it implies but does not state which form follows which. Fix: added a third source, the NIKL Online Ganada answer 320750 (www.korean.go.kr), which quotes the dictionary senses 이 「039」 (after a noun with a final consonant) and 가 「017」 (after a noun with no final consonant); its quote was found verbatim. With it the note's direction rule is stated by a source. Note text unchanged; English wording original, nothing copied. Outcome: confirmed after adding a source.\nLine 3 (pass 5, MAR culture review, final independent check, 2026-10-14): all three sources reopened and each quoteOrLocator found verbatim; the Online Ganada answer states the direction rule. The q3 particle rounds r4 and r5 became word-order rounds (their particle hint showed the q3 note about place words, pass 4), so the note is now carried by the q2 pattern noteEn and the particle hint of q2 r4, r5 only. Outcome: confirmed, no change to the note."
+        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): both pages fetched. The dictionary names 이/가 as the subject case particle; the encyclopedia entry says 이 and 가 alternate for the same reason as 을/를, that is 이 after a consonant-final noun and 가 after a vowel-final noun. The note restates this in original English with no copied wording. Carried by: q2 Discover pattern noteEn and the particle hint of q2 rounds r4, r5 and q3 rounds r4, r5.\nLine 2 (pass 2b, independent fact check, 2026-10-14): both cited pages re-fetched and each quoteOrLocator found verbatim. The dictionary supports 'marks the subject'; the encyclopedia only says 이 and 가 are one morpheme for the same reason as 을/를, so it implies but does not state which form follows which. Fix: added a third source, the NIKL Online Ganada answer 320750 (www.korean.go.kr), which quotes the dictionary senses 이 「039」 (after a noun with a final consonant) and 가 「017」 (after a noun with no final consonant); its quote was found verbatim. With it the note's direction rule is stated by a source. Note text unchanged; English wording original, nothing copied. Outcome: confirmed after adding a source.\nLine 3 (pass 5, MAR culture review, final independent check, 2026-10-14): all three sources reopened and each quoteOrLocator found verbatim; the Online Ganada answer states the direction rule. The q3 particle rounds r4 and r5 became word-order rounds (their particle hint showed the q3 note about place words, pass 4), so the note is now carried by the q2 pattern noteEn and the particle hint of q2 r4, r5 only. Outcome: confirmed, no change to the note. Pass 7 (MAR re-check of the PR head, 2026-10-14): with {ko:좋아요} the liked thing takes 이/가, and the gloss 'I like bread' could hide that it is the subject; the note and the q2 pattern noteEn now say 'the thing you describe or like'. Online Ganada 320750 quotes 이/가 as marking the thing that shows a state, which covers 빵이 좋아요. Outcome: note widened to match its sources; nothing copied."
       }
     },
     {
@@ -1323,7 +1330,7 @@
     {
       "id": "n5",
       "kind": "language",
-      "textEn": "{ko:에} after a place word marks where someone goes or comes to: {ko:가요} is go, {ko:와요} is come. Coming is toward the speaker.",
+      "textEn": "{ko:에} after a place word marks where someone goes or comes to: {ko:가요} is go, {ko:와요} is come. Coming is toward the speaker or toward the person you have in mind.",
       "sources": [
         {
           "title": "에, an entry of the Standard Korean Language Dictionary",
@@ -1358,7 +1365,7 @@
         "passes": 3,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): the three dictionary pages fetched. 에 (조사, sense 1) marks the word before it as a place adverbial; 오다 is moving toward the speaker or reference person; 가다 is moving from one place to another. The note says 'marks the place' and 'coming is toward the speaker', restated in original English with no copied wording. All three sources are from one public institution (NIKL); pass 2b may add an independent second publisher. Carried by: q3 Discover pattern noteEn and the q3 Discover page 2 caption.\nLine 2 (pass 2b, independent fact check, 2026-10-14): the three dictionary pages re-fetched and each quoteOrLocator found verbatim. 오다 (toward the speaker or reference person) and 가다 (moving to another place) support the note. Finding: the cited 에 sense 「1」 marks a location, while the note's use with 가요 and 와요 is the destination use. Fix: added the NIKL Online Ganada answer 317656 (www.korean.go.kr), which says 에 in 학교에 가다 is the case particle marking the adverbial of the direction of movement; its quote was found verbatim. Note text unchanged; English wording original, nothing copied. Outcome: confirmed after adding a source.\nLine 3 (pass 5, MAR culture review, final independent check, 2026-10-14): all four sources reopened and each quoteOrLocator found verbatim. Finding: the note said 에 'marks the place', while its strongest source (Online Ganada 317656) calls 에 in 학교에 가다 the marker of the direction of movement; the 에 sense 「1」 (location) stays as a secondary cite. The note now says 에 marks where someone goes or comes to. Finding: the q3 page 2 caption said 가요 is 'moving away', which no source supports (가다 「1」 is moving from one place to another); it now says going from here to another place, in en, es and ko. Outcome: note reworded to match its sources; nothing copied."
+        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): the three dictionary pages fetched. 에 (조사, sense 1) marks the word before it as a place adverbial; 오다 is moving toward the speaker or reference person; 가다 is moving from one place to another. The note says 'marks the place' and 'coming is toward the speaker', restated in original English with no copied wording. All three sources are from one public institution (NIKL); pass 2b may add an independent second publisher. Carried by: q3 Discover pattern noteEn and the q3 Discover page 2 caption.\nLine 2 (pass 2b, independent fact check, 2026-10-14): the three dictionary pages re-fetched and each quoteOrLocator found verbatim. 오다 (toward the speaker or reference person) and 가다 (moving to another place) support the note. Finding: the cited 에 sense 「1」 marks a location, while the note's use with 가요 and 와요 is the destination use. Fix: added the NIKL Online Ganada answer 317656 (www.korean.go.kr), which says 에 in 학교에 가다 is the case particle marking the adverbial of the direction of movement; its quote was found verbatim. Note text unchanged; English wording original, nothing copied. Outcome: confirmed after adding a source.\nLine 3 (pass 5, MAR culture review, final independent check, 2026-10-14): all four sources reopened and each quoteOrLocator found verbatim. Finding: the note said 에 'marks the place', while its strongest source (Online Ganada 317656) calls 에 in 학교에 가다 the marker of the direction of movement; the 에 sense 「1」 (location) stays as a secondary cite. The note now says 에 marks where someone goes or comes to. Finding: the q3 page 2 caption said 가요 is 'moving away', which no source supports (가다 「1」 is moving from one place to another); it now says going from here to another place, in en, es and ko. Outcome: note reworded to match its sources; nothing copied. Pass 7 (MAR re-check of the PR head, 2026-10-14): 오다 「1」 reopened; it says toward the speaker or the reference person, and the note had dropped the second half, which clashed with the shown example 'I come home'. The note, the q3 page 2 caption (en, es, ko) and the ko gloss of the 와요 distractor now say toward the speaker or toward the person you have in mind. Outcome: note widened to match its source; nothing copied."
       }
     }
   ],
@@ -1368,8 +1375,8 @@
     "reviewedBy": "MAR",
     "reviewedAt": "2026-10-14",
     "notes": [
-      "Pass 4 language review (MAR, 2026-10-14; lenses Korean naturalness and register, standard spelling, learner pedagogy, en / es / ko glosses): the q3 particle rounds became word-order rounds, 좋아요 reads 'I like ...' in all three languages, plain non-echo ko glosses, natural distractors removed, Let's in Hoya lines and 'My friend' throughout; findings and outcomes in PR #651.",
-      "Pass 5 culture review (MAR, 2026-10-14; lenses heritage accuracy against the sources, sensitivity and inclusion, audience any age): five language notes, no culture claim; n5 reworded to the direction use of 에, the 가요 caption no longer says 'moving away', one locator narrowed; verification line 3 on every note."
+      "Pass 4 and 7 language review (MAR, 2026-10-14; Korean naturalness and register, spelling, pedagogy, en / es / ko glosses): q3 particle rounds became word-order rounds, 좋아요 reads 'I like ...', plain non-echo ko glosses, no distractor builds a sentence in q1-q2, the q2 caption names 뜨거워요, es 'Vengo a casa'; findings and outcomes in PR #651.",
+      "Pass 5 and 7 culture review (MAR, 2026-10-14; heritage accuracy against the sources, sensitivity, audience any age): five language notes, no culture claim; n5 says where someone goes or comes to and keeps the source's 'or the person in mind', n3 covers the thing you like, n2's 를 quote has its own page; verification line 3 on every note."
     ]
   },
   "contentVer": 1
