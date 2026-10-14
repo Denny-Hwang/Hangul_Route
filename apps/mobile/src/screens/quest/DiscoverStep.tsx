@@ -588,8 +588,10 @@ function ExchangeLine({
             ) : null}
             <Body weight="semibold">{line.speaker}</Body>
           </View>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
-            <View style={{ flex: 1, alignItems: 'flex-start' }}>
+          {/* The speaker button wraps under the line when the two do not fit side by side (320 px), so a
+              Korean word never breaks inside itself (F-CURR-001 §3.14 layout). */}
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: spacing.md }}>
+            <View style={{ flexGrow: 1, flexShrink: 1, minWidth: '60%', alignItems: 'flex-start' }}>
               <KoreanText
                 ko={line.ko}
                 romanization={line.romanization}
