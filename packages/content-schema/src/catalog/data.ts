@@ -19,8 +19,9 @@ import type { Catalog, CatalogCell, CatalogQuest, CatalogStory, CatalogTopic } f
  * `CATALOG_QUEST_ADDITIONS` (`versions.ts`), so a placement result stored earlier skips them by its level.
  * Version 9 (F-CURR-001 S4-1): the Stage 4 Read Along cell ships (three lesson quests).
  * Version 10 (F-CURR-001 S3-1): the Stage 3 First Sentences cell ships (three lesson quests).
+ * Version 11 (F-CURR-001 S6-3): the Stage 6 Travel for Chuseok cell ships (three lesson quests).
  */
-export const CATALOG_VERSION = 10;
+export const CATALOG_VERSION = 11;
 
 const cell = (
   stage: StageKey,
@@ -87,7 +88,7 @@ const cells: CatalogCell[] = [
   ]),
   soon('stage6', 'letters', 'Read the Menu'),
   soon('stage6', 'life', 'Order Food'),
-  soon('stage6', 'rites', 'Travel for Chuseok'),
+  cell('stage6', 'rites', 'Travel for Chuseok', 'shipped', 15, ['quest:stage6-rites-q1', 'quest:stage6-rites-q2', 'quest:stage6-rites-q3']),
   soon('stage6', 'nature', 'Hike & Ask'),
   soon('stage6', 'crafts', 'Buy at Market'),
   soon('stage7', 'letters', 'Write Your Name'),
@@ -129,6 +130,9 @@ const lessonQuests: CatalogQuest[] = [
   lesson('stage4-letters-q1', 'stage4', 'letters', 'What Is This?', 4),
   lesson('stage4-letters-q2', 'stage4', 'letters', 'Where Is It?', 4),
   lesson('stage4-letters-q3', 'stage4', 'letters', 'Thank You, Teacher', 4),
+  lesson('stage6-rites-q1', 'stage6', 'rites', 'The Train Ticket', 5),
+  lesson('stage6-rites-q2', 'stage6', 'rites', 'Train Times', 5),
+  lesson('stage6-rites-q3', 'stage6', 'rites', "Hoya's Trip", 5),
   // The Stage 5 books (F-STORY-005 PR 5.6): grid quests that play their stories at the read level.
   lesson('story-sejong-new-letters-read', 'stage5', 'letters', "King Sejong's New Letters", 4),
   lesson('story-shapes-of-hangeul-read', 'stage5', 'letters', 'The Secret in the Shapes', 5),

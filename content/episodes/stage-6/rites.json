@@ -2,7 +2,7 @@
   "id": "episode:stage6-rites",
   "stage": "stage6",
   "theme": "rites",
-  "status": "draft",
+  "status": "ready",
   "titleEn": "Travel for Chuseok",
   "subtitleEn": "Read a train ticket, a station board and a trip plan.",
   "hoyaIntroEn": "Hoya is taking the train to Grandma's home for Chuseok. Let's read the way!",
@@ -75,7 +75,7 @@
                     "noteEn": "Where the train gets in"
                   }
                 ],
-                "captionEn": "Every ticket shows these two words."
+                "captionEn": "This ticket shows these two words."
               }
             ]
           },
@@ -109,7 +109,7 @@
           "id": "s6",
           "kind": "reward",
           "titleEn": "Ticket Read!",
-          "hoyaLineEn": "You read a real train ticket. Departure and arrival, both found!",
+          "hoyaLineEn": "You read a train ticket. Departure and arrival, both found!",
           "durationSeconds": 8
         }
       ],
@@ -126,6 +126,14 @@
               "en": "train ticket"
             },
             "entries": [
+              {
+                "id": "train",
+                "text": {
+                  "ko": "기차",
+                  "romanization": "gicha",
+                  "en": "train"
+                }
+              },
               {
                 "id": "dep",
                 "text": {
@@ -153,7 +161,7 @@
                 }
               }
             ],
-            "altEn": "A train ticket that leaves from Seoul and arrives in Busan"
+            "altEn": "A train ticket: the train leaves from Seoul and arrives in Busan"
           },
           "rounds": [
             {
@@ -171,6 +179,14 @@
                     "ko": "서울",
                     "romanization": "Seoul",
                     "en": "Seoul (a city)"
+                  }
+                },
+                {
+                  "id": "daejeon",
+                  "text": {
+                    "ko": "대전",
+                    "romanization": "Daejeon",
+                    "en": "Daejeon (a city)"
                   }
                 },
                 {
@@ -232,6 +248,14 @@
                     "ko": "부산",
                     "romanization": "Busan",
                     "en": "Busan (a city)"
+                  }
+                },
+                {
+                  "id": "daejeon",
+                  "text": {
+                    "ko": "대전",
+                    "romanization": "Daejeon",
+                    "en": "Daejeon (a city)"
                   }
                 },
                 {
@@ -299,7 +323,7 @@
                 }
               ],
               "answerId": "train",
-              "answerEntryId": "dep"
+              "answerEntryId": "train"
             }
           ]
         },
@@ -416,7 +440,7 @@
           "id": "s1",
           "kind": "intro",
           "titleEn": "Train Times",
-          "hoyaLineEn": "Lots of trains leave today. Let's find the right time on the board!",
+          "hoyaLineEn": "Lots of trains leave today. Let's read the board!",
           "durationSeconds": 7
         },
         {
@@ -446,7 +470,7 @@
                     "noteEn": "Minutes: sip, isip, samsip, sasip"
                   }
                 ],
-                "captionEn": "Hours count han, du, se. Minutes count il, i, sam."
+                "captionEn": "Hours use han, du, se. Minutes use il, i, sam."
               },
               {
                 "items": [
@@ -565,11 +589,11 @@
                 }
               },
               {
-                "id": "seoul",
+                "id": "daegu",
                 "text": {
-                  "ko": "서울",
-                  "romanization": "Seoul",
-                  "en": "Seoul (a city)"
+                  "ko": "대구",
+                  "romanization": "Daegu",
+                  "en": "Daegu (a city)"
                 },
                 "value": {
                   "ko": "네 시 이십 분",
@@ -578,7 +602,7 @@
                 }
               }
             ],
-            "altEn": "A station departure board: trains to Daejeon, Busan and Seoul, each with its time"
+            "altEn": "A station departure board: trains to Daejeon, Busan and Daegu, each with its time"
           },
           "rounds": [
             {
@@ -628,11 +652,11 @@
               },
               "options": [
                 {
-                  "id": "daseot",
+                  "id": "du",
                   "text": {
-                    "ko": "다섯 시",
-                    "romanization": "daseot si",
-                    "en": "five o'clock"
+                    "ko": "두 시",
+                    "romanization": "du si",
+                    "en": "two o'clock"
                   }
                 },
                 {
@@ -702,11 +726,11 @@
               },
               "options": [
                 {
-                  "id": "seoul",
+                  "id": "daegu",
                   "text": {
-                    "ko": "서울",
-                    "romanization": "Seoul",
-                    "en": "Seoul (a city)"
+                    "ko": "대구",
+                    "romanization": "Daegu",
+                    "en": "Daegu (a city)"
                   }
                 },
                 {
@@ -731,11 +755,11 @@
             },
             {
               "id": "r5",
-              "questionEn": "What time does the train to Seoul leave?",
+              "questionEn": "What time does the train to Daegu leave?",
               "key": {
-                "ko": "서울",
-                "romanization": "Seoul",
-                "en": "Seoul (a city)"
+                "ko": "대구",
+                "romanization": "Daegu",
+                "en": "Daegu (a city)"
               },
               "options": [
                 {
@@ -752,7 +776,7 @@
                 }
               ],
               "answerId": "t420",
-              "answerEntryId": "seoul"
+              "answerEntryId": "daegu"
             }
           ]
         },
@@ -905,7 +929,7 @@
                       "romanization": "gohyang",
                       "en": "hometown"
                     },
-                    "noteEn": "The place where someone grew up"
+                    "noteEn": "The place where someone, or their family, comes from"
                   }
                 ],
                 "captionEn": "At Chuseok, many people travel to their hometowns."
@@ -920,6 +944,16 @@
                         "ko": "할머니 댁",
                         "romanization": "halmeoni daek",
                         "en": "Grandma's home"
+                      },
+                      {
+                        "ko": "다섯 시",
+                        "romanization": "daseot si",
+                        "en": "five o'clock"
+                      },
+                      {
+                        "ko": "여섯 시",
+                        "romanization": "yeoseot si",
+                        "en": "six o'clock"
                       }
                     ],
                     "captionEn": "Daek is a polite word for someone's home."
@@ -1347,23 +1381,23 @@
         }
       ],
       "verification": {
-        "passes": 2,
+        "passes": 3,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "Line 1 (passes: 1, author sourcing, 2026-10-14): all three pages opened and each quoteOrLocator found on its page. 'Public holiday' and 'many people travel to their hometowns, so roads get busy' = encykorea 추석, 개설 (공휴일로 제정, 많은 사람들이 고향으로 돌아가기 때문에 교통혼잡); 'trains get busy and extra trains and buses run' = MOLIT 2024 special transport measures (버스·철도 운행 횟수와 좌석을 평시 대비 늘리고); 'some families travel the other way, to the city' = MOLIT 2014 survey (역귀성 share rising; 역귀성 is the trip from the hometown to where the children live). The note says 'many' and 'some', never everyone; it names no ancestral rite (OD-9, the encyclopedia's reason for the trip is left out), no number, no living person, shop, brand or price, and copies no source wording (English restatement of Korean sources). Carried by: q1 intro Hoya line (the holiday trip, Hoya's own story), q3 Discover page 1 caption.\nLine 2 (passes: 2, independent fact-check, 2026-10-14): all three cited pages reopened and every quoteOrLocator found word for word. 'Public holiday' and 'many people travel to their hometowns, so roads get busy': Encyclopedia of Korean Culture, 추석, 개설 (공휴일로 제정; 많은 사람들이 고향으로 돌아가기 때문에 교통혼잡) - passes. 'Trains get busy and extra trains and buses run': MOLIT 2024-09-10 (대중교통 증가에 대비해 버스·철도 운행 횟수와 좌석을 평시 대비 각각 늘리고; 특별교통대책기간) - passes; the note gives no figure. 'Some families travel the other way, to the city': FAILED as worded. The MOLIT 2014 survey only gives the rising 역귀성 share (8.6% to 13.8%) and does not define the word or name a destination; the 2024 page only names KTX/SRT 역귀성 fares; neither source says 'to the city'. Fixed: the sentence now reads 'In some families, the parents travel the other way, to where their children live.', and the Standard Korean Language Dictionary entry 역귀성 was added as a source (parents going to the children who live away from the hometown, the reverse of the usual trip); 'some' stays supported by the 2014 share (a minority, rising). The note has no number, no everyone claim, no rite, no living person, shop, brand or price; it is an English restatement with no source wording copied. All four sources are on hosts in SOURCE_HOST_ALLOWLIST; three are Korean public institutions (MOLIT on www.korea.kr twice, the National Institute of Korean Language on stdict.korean.go.kr) and the fourth is the Academy of Korean Studies encyclopedia. No es/ko overlay carries this note, so no overlay change."
+        "notes": "Line 1 (passes: 1, author sourcing, 2026-10-14): all three pages opened and each quoteOrLocator found on its page. 'Public holiday' and 'many people travel to their hometowns, so roads get busy' = encykorea 추석, 개설 (공휴일로 제정, 많은 사람들이 고향으로 돌아가기 때문에 교통혼잡); 'trains get busy and extra trains and buses run' = MOLIT 2024 special transport measures (버스·철도 운행 횟수와 좌석을 평시 대비 늘리고); 'some families travel the other way, to the city' = MOLIT 2014 survey (역귀성 share rising; 역귀성 is the trip from the hometown to where the children live). The note says 'many' and 'some', never everyone; it names no ancestral rite (OD-9, the encyclopedia's reason for the trip is left out), no number, no living person, shop, brand or price, and copies no source wording (English restatement of Korean sources). Carried by: q1 intro Hoya line (the holiday trip, Hoya's own story), q3 Discover page 1 caption.\nLine 2 (passes: 2, independent fact-check, 2026-10-14): all cited pages reopened. 'Public holiday' and 'many people travel to their hometowns, so roads get busy': Encyclopedia of Korean Culture, 추석, 개설 - passes. 'Trains get busy and extra trains and buses run': MOLIT 2024-09-10 (버스·철도 운행 횟수와 좌석을 늘리고; 특별교통대책기간) - passes; no figure in the note. 'Some families travel the other way, to the city': FAILED as worded; the MOLIT 2014 survey gives only the rising 역귀성 share (8.6% to 13.8%) and names no destination. Fixed: 'In some families, the parents travel the other way, to where their children live.', with the Standard Korean Language Dictionary entry 역귀성 added as a source; 'some' stays supported by the 2014 share. No number, no everyone claim, no rite, no living person, shop, brand or price, no copied wording; all hosts in SOURCE_HOST_ALLOWLIST. No es/ko overlay carries this note.\nLine 3 (passes: 3, MAR culture review, 2026-10-14): all four cited pages re-checked. Encyclopedia 추석 개설 (holiday, return home, congestion), MOLIT 2024 (extra bus and rail runs and seats), MOLIT 2014 (역귀성 share 8.6% to 13.8%, supports 'some') and the dictionary 역귀성 (parents go to the children living away) each say what the note says - passes. The ancestral-rite reason stays out (OD-9). The trip is Hoya's own story; no question asks about the learner's holiday; 'many' and 'some' only; no rite, real person, shop, brand or price; no copied wording. Outcome: passes."
       }
     },
     {
       "id": "n2",
       "kind": "language",
-      "textEn": "Clock hours count with {ko:한}, {ko:두}, {ko:세}, {ko:네}, the short forms of {ko:하나}, {ko:둘}, {ko:셋}, {ko:넷}. Minutes count with {ko:일}, {ko:이}, {ko:삼}: {ko:두 시 삼십 분} is 2:30.",
+      "textEn": "Clock hours use native numbers, in the short forms {ko:한}, {ko:두}, {ko:세}, {ko:네} (from {ko:하나}, {ko:둘}, {ko:셋}, {ko:넷}). Minutes use {ko:일}, {ko:이}, {ko:삼}: {ko:두 시 삼십 분} is 2:30.",
       "sources": [
         {
           "title": "한글 맞춤법 제5장 제2절 제43항",
           "publisher": "국립국어원 (National Institute of Korean Language)",
           "url": "https://korean.go.kr/kornorms/regltn/regltnView.do?regltn_code=0001&regltn_no=263",
           "accessed": "2026-10-14",
-          "quoteOrLocator": "Article 43 (단위를 나타내는 명사는 띄어 쓴다), the example under 다만: “두 시 삼십 분 오 초”; the counting examples above it include “한 개” and “소 한 마리”."
+          "quoteOrLocator": "Article 43 (단위를 나타내는 명사는 띄어 쓴다), main rule with the counting examples “한 개” and “소 한 마리”; the example under 다만 (attached spelling allowed with numerals): “두시 삼십분 오초”."
         },
         {
           "title": "세",
@@ -1381,17 +1415,22 @@
         }
       ],
       "verification": {
-        "passes": 2,
+        "passes": 3,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "Line 1 (passes: 1, author sourcing, 2026-10-14): all three pages opened and each quoteOrLocator found. The orthography's own example of a clock time, 두 시 삼십 분 오 초, writes the hour with the native counting form 두 and the minutes with the Sino-Korean 삼십; its counting examples (한 개, 소 한 마리) show the short native forms before a unit; the dictionary gives 세 as the determiner form meaning three, and 분 as the unit of one sixtieth of an hour. The note states only this one pattern of clock times and copies no source wording. Carried by: q2 Discover page 1 caption and the two word notes (Hours: han, du, se ...; Minutes: sip, isip, samsip ...); q2 practice and Check never mix the two sets in one question's options.\nLine 2 (passes: 2, independent fact-check, 2026-10-14): all three cited pages reopened and every quoteOrLocator found word for word. Hangul orthography (한글 맞춤법) Article 43, korean.go.kr: the 다만 example is 두 시 삼십 분 오 초 and the examples above it include 한 개 and 소 한 마리; this supports 'clock hours count with the native short forms' (두 시) and 'minutes count with 일, 이, 삼' (삼십 분), and 두 시 삼십 분 = 2:30 - passes. Standard Korean Language Dictionary 세1 「관형사」 (그 수량이 셋임을 나타내는 말) supports 세 as the determiner form of 셋, i.e. the short form before a unit - passes. Dictionary 분6 [Ⅰ]「1」 (한 시간의 60분의 1에 해당하는 시간) supports 분 as the minute unit - passes. The only words shared with a source are the Korean example 두 시 삼십 분, a short standard phrase used as a language example, not source prose; the English is a restatement. The note claims one clock pattern only and nothing about age, people or places. Outcome: passes, no change."
+        "notes": "Line 1 (passes: 1, author sourcing, 2026-10-14): all three pages opened and each quoteOrLocator found. The orthography's own example of a clock time (under 다만, written attached: 두시 삼십분 오초) writes the hour with the native counting form 두 and the minutes with the Sino-Korean 삼십; its counting examples (한 개, 소 한 마리) show the short native forms before a unit; the dictionary gives 세 as the determiner form meaning three, and 분 as the unit of one sixtieth of an hour. The note states only this one pattern of clock times and copies no source wording. Carried by: q2 Discover page 1 caption and the two word notes (Hours: han, du, se ...; Minutes: sip, isip, samsip ...); q2 practice and Check never mix the two sets in one question's options.\nLine 2 (passes: 2, independent fact-check, 2026-10-14): all three cited pages reopened. Hangul orthography (한글 맞춤법) Article 43, korean.go.kr: the 다만 example (as corrected in line 3, the attached 두시 삼십분 오초) and the examples above it include 한 개 and 소 한 마리; this supports 'clock hours count with the native short forms' (두 시) and 'minutes count with 일, 이, 삼' (삼십 분), and 두 시 삼십 분 = 2:30 - passes. Standard Korean Language Dictionary 세1 「관형사」 (그 수량이 셋임을 나타내는 말) supports 세 as the determiner form of 셋, i.e. the short form before a unit - passes. Dictionary 분6 [Ⅰ]「1」 (한 시간의 60분의 1에 해당하는 시간) supports 분 as the minute unit - passes. The note's Korean example 두 시 삼십 분 is the spaced spelling of the main rule, a short standard phrase, not source prose; the English is a restatement. The note claims one clock pattern only and nothing about age, people or places. Outcome: passes, no change.\nLine 3 (passes: 3, MAR culture review, 2026-10-14): all three cited pages re-checked. Correction: the Article 43 example under 다만 is written attached, 두시 삼십분 오초 (the exception that allows unit nouns to be attached after numerals), not spaced; sources[0].quoteOrLocator and lines 1-2 now quote it exactly and no longer claim a word-for-word spaced match. The claim stands: the example writes the hour with native 두 and the minutes with Sino-Korean 삼십, and the spaced spelling the lesson teaches follows the main rule (단위를 나타내는 명사는 띄어 쓴다; 한 개, 소 한 마리). 세1 「관형사」 and 분6 [Ⅰ]「1」 - passes. Wording now says hours use native numbers in their short forms, so it no longer reads as if only four forms exist. Outcome: passes after the locator fix."
       }
     }
   ],
   "review": {
-    "language": "draft",
-    "culture": "draft",
-    "notes": []
+    "language": "native-reviewed",
+    "culture": "culture-reviewed",
+    "reviewedBy": "MAR",
+    "reviewedAt": "2026-10-14",
+    "notes": [
+      "Language pass 4 (MAR): 해요체, spacing and RR clean; hour and minute number sets never mixed in one option set; applied: the board names Daegu not Seoul and is not called Hoya's train, 다섯 시 / 여섯 시 shown in Hangul in q3 Discover, a third city in q1 r1/r3, 'Hours use ...' wording, dictionary-based ko glosses for 출발 / 도착.",
+      "Culture pass 5 (MAR): n1 and n2 re-checked against every source (passes: 3); n2's orthography locator corrected to the attached 두시 삼십분 오초; the drawn ticket is no longer called real or every ticket; 고향 glossed as where someone or their family comes from; 'many' and 'some' only, no rite, no real person, shop, brand or price, no age wording."
+    ]
   },
   "contentVer": 1
 }

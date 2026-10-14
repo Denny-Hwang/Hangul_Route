@@ -49,7 +49,7 @@ describe('the shipped catalogue data', () => {
     for (const cell of CATALOG.cells) expect(cell.episodeId).toBe(`episode:${cell.stage}-${cell.theme}`);
   });
 
-  it('has Stage 1 shipped, three taste cells, First Sentences (F-CURR-001 S3-1), Read Along (S4-1) and the five Stage 5 books (F-STORY-005 PR 5.6) shipped elsewhere, and the other 20 as previews', () => {
+  it('has Stage 1 shipped, three taste cells, First Sentences (F-CURR-001 S3-1), Read Along (S4-1), Travel for Chuseok (S6-3) and the five Stage 5 books (F-STORY-005 PR 5.6) shipped elsewhere, and the other 19 as previews', () => {
     const shipped = CATALOG.cells.filter((c) => c.status === 'shipped').map((c) => c.episodeId);
     expect(shipped).toEqual([
       'episode:stage1-letters',
@@ -67,9 +67,10 @@ describe('the shipped catalogue data', () => {
       'episode:stage5-rites',
       'episode:stage5-nature',
       'episode:stage5-crafts',
+      'episode:stage6-rites',
     ]);
     const previews = CATALOG.cells.filter((c) => c.status === 'preview');
-    expect(previews).toHaveLength(20);
+    expect(previews).toHaveLength(19);
     for (const cell of previews) expect(cell.questIds).toEqual([]);
   });
 
@@ -94,8 +95,8 @@ describe('the shipped catalogue data', () => {
     ]);
     expect(CATALOG.quests.filter((q) => q.kind === 'lesson').map((q) => q.id)).toContain('quest:stage4-rites-q1');
     // 15 Stage 1 + 3 taste quests + the 14 read quests of the five Stage 5 books (F-STORY-005 PR 5.6)
-    // + the 3 Read Along quests (F-CURR-001 S4-1) + the 3 First Sentences quests (S3-1).
-    expect(CATALOG.quests.filter((q) => q.kind === 'lesson')).toHaveLength(38);
+    // + the 3 Read Along quests (F-CURR-001 S4-1) + the 3 First Sentences quests (S3-1) + the 3 Travel for Chuseok quests (S6-3).
+    expect(CATALOG.quests.filter((q) => q.kind === 'lesson')).toHaveLength(41);
   });
 
   it('has 24 stories adding up to 112 minutes, each with a listen quest on its shelf episode', () => {
@@ -433,6 +434,9 @@ describe('routeCatalogOf', () => {
       'quest:story-cheugugi-rain-gauge-read',
       'quest:story-jagyeongnu-water-clock-read',
       'quest:story-pansori-tales-read',
+      'quest:stage6-rites-q1',
+      'quest:stage6-rites-q2',
+      'quest:stage6-rites-q3',
     ]);
     expect(route.quests.slice(0, lessons.length).every((q) => q.grid)).toBe(true);
     const stories = route.quests.filter((q) => !q.grid);

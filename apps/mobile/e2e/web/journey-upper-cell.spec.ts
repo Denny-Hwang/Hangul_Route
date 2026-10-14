@@ -1,4 +1,5 @@
 import type { Page } from '@playwright/test';
+import { keysFor } from '@hangul-route/content-schema';
 import { LESSON_EPISODES } from '../../src/content/__generated__/lessons-index';
 import { expect, test } from './fixtures';
 import { completeChildForm, journeyCellName, keepSidewaysIfAsked, passDiscover, playCheckByIds, waitForNextListenPickRound } from './helpers';
@@ -69,6 +70,34 @@ async function pickByIds(page: Page, ids: readonly string[]): Promise<void> {
   }
 }
 
+/** Realia Read: answer each round by option id once its question shows (a right answer moves on by itself). */
+async function readRealia(page: Page, rounds: ReadonlyArray<readonly [question: string, optionId: string]>): Promise<void> {
+  for (const [question, optionId] of rounds) {
+    await expect(page.getByTestId('realia-read-question')).toHaveText(question, { timeout: 5_000 });
+    await page.getByTestId(`realia-read-option-${optionId}`).click();
+  }
+}
+
+/** Shifted letters on the in-app keyboard and the joined jamo it types with two keys (KS X 5002). */
+const SHIFTED: Record<string, string> = { 'ㅃ': 'ㅂ', 'ㅉ': 'ㅈ', 'ㄸ': 'ㄷ', 'ㄲ': 'ㄱ', 'ㅆ': 'ㅅ', 'ㅒ': 'ㅐ', 'ㅖ': 'ㅔ' };
+const SPLIT: Record<string, string> = { 'ㅘ': 'ㅗㅏ', 'ㅙ': 'ㅗㅐ', 'ㅚ': 'ㅗㅣ', 'ㅝ': 'ㅜㅓ', 'ㅞ': 'ㅜㅔ', 'ㅟ': 'ㅜㅣ', 'ㅢ': 'ㅡㅣ' };
+
+/** Type Hangul: tap the keys for each word, then Done; a typed word moves on by itself. */
+async function typeWords(page: Page, words: readonly string[]): Promise<void> {
+  for (const [i, word] of words.entries()) {
+    await expect(page.getByText(`${i + 1} / ${words.length}`)).toBeVisible({ timeout: 5_000 });
+    for (const jamo of keysFor(word).flatMap((j) => [...(SPLIT[j] ?? j)])) {
+      if (jamo === ' ') await page.getByTestId('hangul-key-space').click();
+      else if (SHIFTED[jamo]) {
+        await page.getByTestId('hangul-key-shift').click();
+        await page.getByTestId(`hangul-key-${SHIFTED[jamo]}`).click();
+      } else await page.getByTestId(`hangul-key-${jamo}`).click();
+    }
+    await page.getByTestId('type-hangul-done').click();
+    await expect(page.getByText('You typed it!')).toBeVisible();
+  }
+}
+
 /** Each cell row appends its cell here (S2-1 onward). */
 const CELLS: readonly UpperCell[] = [
   // F-CURR-001 S3-1: First Sentences, q1 "It Is a Book" played through its real games.
@@ -129,6 +158,35 @@ const CELLS: readonly UpperCell[] = [
       await page.getByText('Learning Route', { exact: true }).last().click();
       await page.getByRole('button', { name: /^Stage 4, Dialogue\./ }).click();
       await expect(page.getByRole('button', { name: /^Letters & Books: Read Along\./ })).toBeVisible();
+    },
+  },
+  // F-CURR-001 S6-3: Travel for Chuseok, q1 "The Train Ticket" played through its real games.
+  {
+    episodeId: 'episode:stage6-rites',
+    cellButton: journeyCellName(6, 'Holidays & Traditions'),
+    title: 'Travel for Chuseok',
+    playFirstQuest: async (page) => {
+      await page.getByRole('button', { name: 'Start', exact: true }).first().click();
+      await page.getByRole('button', { name: 'Continue' }).click();
+      await passDiscover(page);
+      await page.getByRole('button', { name: 'Play minigame' }).click();
+      await readRealia(page, [
+        ['Where does the train leave from?', 'seoul'],
+        ['Which word on the ticket means arrival?', 'dochak'],
+        ['Where does the train arrive?', 'busan'],
+        ['Which word on the ticket means departure?', 'chulbal'],
+        ['What is this ticket for?', 'train'],
+      ]);
+      await page.getByRole('button', { name: 'Play minigame' }).click();
+      await typeWords(page, ['기차', '출발', '도착']);
+      await playCheckByIds(page, [{ answer: 'b' }, { answer: 'a' }]);
+      await expect(page.getByText('Finish', { exact: true }).first()).toBeVisible();
+    },
+    expectRouteDay: async (page) => {
+      await page.goto('/');
+      await page.getByText('Learning Route', { exact: true }).last().click();
+      await page.getByRole('button', { name: /^Stage 6, Real-use\./ }).click();
+      await expect(page.getByRole('button', { name: /^Holidays & Traditions: Travel for Chuseok\./ })).toBeVisible();
     },
   },
 ];

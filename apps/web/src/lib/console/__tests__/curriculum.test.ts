@@ -564,8 +564,8 @@ describe('re-pace from today (console mode shift, section 3.7)', () => {
     return { id: 'plan:route', meta: toMeta(draft), items: toPlanItems(draft) };
   }
 
-  it('offers Refresh route on every route saved from catalogue version 1 to 9 (F-QUEST-002 Q-6a bumps it to 2, Q-6b to 3, Q-7b to 4, Q-8 to 5, F-STORY-001 PR 1.9 to 6, F-STORY-005 PR 5.6 to 7 for the rites book and to 8 for the other four books, F-CURR-001 S4-1 to 9 for Read Along, S3-1 to 10 for First Sentences)', () => {
-    expect(CATALOG.version).toBe(10);
+  it('offers Refresh route on every route saved from catalogue version 1 to 10 (F-QUEST-002 Q-6a bumps it to 2, Q-6b to 3, Q-7b to 4, Q-8 to 5, F-STORY-001 PR 1.9 to 6, F-STORY-005 PR 5.6 to 7 for the rites book and to 8 for the other four books, F-CURR-001 S4-1 to 9 for Read Along, S3-1 to 10 for First Sentences, S6-3 to 11 for Travel for Chuseok)', () => {
+    expect(CATALOG.version).toBe(11);
     expect(v1Plan('brand-new').meta.catalogVersion).toBe(1);
     expect(isStaleCatalog(v1Plan('brand-new').meta)).toBe(true);
     expect(isStaleCatalog(v1Plan('some-letters').meta)).toBe(true);
@@ -585,6 +585,8 @@ describe('re-pace from today (console mode shift, section 3.7)', () => {
     expect(isStaleCatalog({ ...v1Plan('brand-new').meta, catalogVersion: 8 })).toBe(true);
     // A route saved before First Sentences shipped (version 9) asks once too.
     expect(isStaleCatalog({ ...v1Plan('brand-new').meta, catalogVersion: 9 })).toBe(true);
+    // A route saved before Travel for Chuseok shipped (version 10) asks once too.
+    expect(isStaleCatalog({ ...v1Plan('brand-new').meta, catalogVersion: 10 })).toBe(true);
   });
 
   it('a new route on the shipped catalogue can schedule the new nature and crafts quests after their q1 (F-QUEST-002 Q-8)', () => {
@@ -1098,8 +1100,14 @@ describe('Update the plan: a family learner card after a newer level check (rese
     expect(planUpdateOffer('family', check, [newer, older], LATER, FROZEN)?.plan.id).toBe('plan:older');
   });
 
-  it('every placement level places out no more lessons than the params hold (40), so the seed never throws', () => {
-    for (const stage of StageKeySchema.options) {
+  // A seed's level is a starting point (STARTING_LEVELS, at most stage3 band 0) or a stored placement
+  // result (no mode goes above stage3, route-skip.test.ts). Levels of Stage 4 and up are reached by
+  // neither, and with the upper-stage cells shipping (F-CURR-001 S6-3) they would place out more than 40.
+  it('every placement level a seed can carry (Stages 1-3) places out no more lessons than the params hold (40), so the seed never throws', () => {
+    for (const level of Object.values(STARTING_LEVELS)) {
+      expect(questsPlacedOutAtLevel(level, routeCatalogOf(CATALOG)).length).toBeLessThanOrEqual(40);
+    }
+    for (const stage of ['stage1', 'stage2', 'stage3'] as const) {
       for (const band of [0, 1, 2, 3]) {
         expect(questsPlacedOutAtLevel({ stage, band }, routeCatalogOf(CATALOG)).length).toBeLessThanOrEqual(40);
       }

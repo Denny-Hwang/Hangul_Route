@@ -150,6 +150,25 @@ const LIVE_ROUTE_DAYS: Partial<Record<number, readonly (readonly [string, number
     ['episode:stage5-nature', 9],
     ['episode:stage5-crafts', 15],
   ],
+  // F-CURR-001 S6-3: Travel for Chuseok is a grid cell with three lesson quests (5 minutes each).
+  11: [
+    ['episode:stage1-letters', 15],
+    ['episode:stage1-life', 12],
+    ['episode:stage1-rites', 14],
+    ['episode:stage1-nature', 12],
+    ['episode:stage1-crafts', 12],
+    ['episode:stage2-life', 5],
+    ['episode:stage2-nature', 5],
+    ['episode:stage3-letters', 15],
+    ['episode:stage4-letters', 12],
+    ['episode:stage4-rites', 4],
+    ['episode:stage5-letters', 13],
+    ['episode:stage5-life', 15],
+    ['episode:stage5-rites', 14],
+    ['episode:stage5-nature', 9],
+    ['episode:stage5-crafts', 15],
+    ['episode:stage6-rites', 15],
+  ],
 };
 const LIVE_FREE_FACTS: Partial<Record<number, FreeLessonsFacts>> = {
   3: {
@@ -250,6 +269,20 @@ const LIVE_FREE_FACTS: Partial<Record<number, FreeLessonsFacts>> = {
   },
   // F-CURR-001 S3-1: an upper-stage cell is not free content (all of Stage 1 is), so nothing moves.
   10: {
+    lessons: 15,
+    letters: 24,
+    minutes: 65,
+    days: 5,
+    episodeIds: [
+      'episode:stage1-letters',
+      'episode:stage1-life',
+      'episode:stage1-rites',
+      'episode:stage1-nature',
+      'episode:stage1-crafts',
+    ],
+  },
+  // F-CURR-001 S6-3: an upper-stage cell is not free content (all of Stage 1 is), so nothing moves.
+  11: {
     lessons: 15,
     letters: 24,
     minutes: 65,
