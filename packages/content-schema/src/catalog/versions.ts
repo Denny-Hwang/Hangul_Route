@@ -91,6 +91,8 @@ export const CATALOG_QUEST_ADDITIONS: Readonly<Record<number, readonly string[]>
   11: Object.freeze(['quest:stage2-crafts-q1', 'quest:stage2-crafts-q2', 'quest:stage2-crafts-q3']),
   // F-CURR-001 S3-3: Festival Sentences.
   12: Object.freeze(['quest:stage3-rites-q1', 'quest:stage3-rites-q2', 'quest:stage3-rites-q3']),
+  // F-CURR-001 S3-5: Game Sentences.
+  13: Object.freeze(['quest:stage3-crafts-q1', 'quest:stage3-crafts-q2', 'quest:stage3-crafts-q3']),
 });
 
 /** The quest ids the catalogue held at `version` (versions before 8 read as 8). */

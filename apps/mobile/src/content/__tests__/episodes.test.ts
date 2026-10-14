@@ -165,17 +165,17 @@ describe('previewEpisodesFor', () => {
   });
 
   it('drops the preview of a cell once a hand-written episode claims it, with no exclusion list to edit', () => {
-    const stage3Crafts = episode('episode:stage3-crafts-new', { stage: 'stage3', theme: 'crafts', order: 5 });
+    const stage7Crafts = episode('episode:stage7-crafts-new', { stage: 'stage7', theme: 'crafts', order: 5 });
     const before = previewEpisodesFor(handWritten).map((e) => e.id);
-    const after = previewEpisodesFor([...handWritten, stage3Crafts]).map((e) => e.id);
-    expect(before).toContain('episode:stage3-crafts');
-    expect(after).not.toContain('episode:stage3-crafts');
-    expect(after).toEqual(before.filter((id) => id !== 'episode:stage3-crafts'));
+    const after = previewEpisodesFor([...handWritten, stage7Crafts]).map((e) => e.id);
+    expect(before).toContain('episode:stage7-crafts');
+    expect(after).not.toContain('episode:stage7-crafts');
+    expect(after).toEqual(before.filter((id) => id !== 'episode:stage7-crafts'));
   });
 
   it('ignores shelf episodes when deciding which cells are claimed', () => {
-    const shelfAtStage3 = episode('episode:shelf-x', { stage: 'stage3', theme: 'crafts', placement: 'shelf' });
-    expect(previewEpisodesFor([...handWritten, shelfAtStage3]).map((e) => e.id)).toContain('episode:stage3-crafts');
+    const shelfAtStage7 = episode('episode:shelf-x', { stage: 'stage7', theme: 'crafts', placement: 'shelf' });
+    expect(previewEpisodesFor([...handWritten, shelfAtStage7]).map((e) => e.id)).toContain('episode:stage7-crafts');
   });
 });
 
@@ -251,6 +251,8 @@ describe('grid golden (F-STORY-005 §3.1 rule 2)', () => {
       { id: 'episode:stage4-rites', order: 3, questIds: ['quest:stage4-rites-q1'], status: 'shipped' },
       // F-CURR-001 S2-3: Playground Words (generated, after the hand-written lessons, in stage order).
       { id: 'episode:stage2-crafts', order: 5, questIds: ['quest:stage2-crafts-q1', 'quest:stage2-crafts-q2', 'quest:stage2-crafts-q3'], status: 'shipped' },
+      // F-CURR-001 S3-5: Game Sentences (generated; within a stage by file name, so crafts.json before letters.json).
+      { id: 'episode:stage3-crafts', order: 5, questIds: ['quest:stage3-crafts-q1', 'quest:stage3-crafts-q2', 'quest:stage3-crafts-q3'], status: 'shipped' },
       // F-CURR-001 S3-1: First Sentences (generated, after the hand-written lessons, in stage order).
       {
         id: 'episode:stage3-letters',
@@ -337,6 +339,8 @@ describe('pillar tags of the shipped lessons (F-STORY-005 §3.2)', () => {
       'episode:stage4-letters': ['A1'],
       // F-CURR-001 S3-3 (generated from content/episodes/stage-3/rites.json).
       'episode:stage3-rites': ['B5'],
+      // F-CURR-001 S3-5 (generated from content/episodes/stage-3/crafts.json).
+      'episode:stage3-crafts': ['B5'],
       'episode:stage5-letters': ['A1'],
       'episode:stage5-life': ['B1', 'B5', 'E4'],
       'episode:stage5-rites': ['B5'],
@@ -368,7 +372,7 @@ const GRID_GOLDEN: Record<string, string> = {
   'stage3:life': 'episode:stage3-life | Daily Mini-Sentences | preview',
   'stage3:rites': 'episode:stage3-rites | Festival Sentences | shipped',
   'stage3:nature': 'episode:stage3-nature | Animal Sentences | preview',
-  'stage3:crafts': 'episode:stage3-crafts | Game Sentences | preview',
+  'stage3:crafts': 'episode:stage3-crafts | Game Sentences | shipped',
   'stage4:letters': 'episode:stage4-letters | Read Along | shipped',
   'stage4:life': 'episode:stage4-life | Kitchen Talk | preview',
   'stage4:rites': 'episode:stage4-rites | Greeting Dialogues | shipped',
