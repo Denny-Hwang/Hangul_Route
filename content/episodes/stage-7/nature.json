@@ -1,0 +1,1068 @@
+{
+  "id": "episode:stage7-nature",
+  "stage": "stage7",
+  "theme": "nature",
+  "status": "draft",
+  "titleEn": "My Favorite Animal",
+  "subtitleEn": "Write about the animals you like, in sentences of your own.",
+  "hoyaIntroEn": "I am a tiger, and I love animals. Let us write about them!",
+  "order": 4,
+  "pillarTags": [
+    "D5",
+    "D2"
+  ],
+  "rewardCardIds": [],
+  "quests": [
+    {
+      "id": "quest:stage7-nature-q1",
+      "titleEn": "Animals I Like",
+      "blurbEn": "Trace and type animal words, and write which ones you like.",
+      "teaserEn": "Next: write how animals look.",
+      "estimatedMinutes": 5,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "Animals I Like",
+          "hoyaLineEn": "Let us write the names of animals you like!",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "I Like ...",
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "pattern",
+                    "frame": {
+                      "ko": "___이/가 좋아요.",
+                      "romanization": "___i/ga joayo",
+                      "en": "I like ___."
+                    },
+                    "noteEn": "Put the animal first, then {ko:이} after a final consonant or {ko:가} after a vowel.",
+                    "examples": [
+                      {
+                        "ko": "곰이 좋아요.",
+                        "romanization": "gomi joayo",
+                        "en": "I like bears."
+                      },
+                      {
+                        "ko": "고양이가 좋아요.",
+                        "romanization": "goyangiga joayo",
+                        "en": "I like cats."
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "Name what you like, then add the ending."
+              },
+              {
+                "items": [
+                  {
+                    "type": "sentence",
+                    "sentence": {
+                      "ko": "동물이 좋아요.",
+                      "romanization": "dongmuri joayo",
+                      "en": "I like animals."
+                    }
+                  },
+                  {
+                    "type": "sentence",
+                    "sentence": {
+                      "ko": "토끼가 좋아요.",
+                      "romanization": "tokkiga joayo",
+                      "en": "I like rabbits."
+                    },
+                    "picture": "word:animal-rabbit"
+                  }
+                ],
+                "captionEn": "Swap in any animal you like."
+              }
+            ]
+          },
+          "durationSeconds": 60
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Trace the Animal",
+          "minigameKind": "trace-word",
+          "minigameRef": "minigame:s7-nature-q1-practice",
+          "durationSeconds": 85
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Type It",
+          "minigameKind": "type-hangul",
+          "minigameRef": "minigame:s7-nature-q1-apply",
+          "durationSeconds": 85
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Two Quick Ones",
+          "minigameKind": "order-it",
+          "minigameRef": "minigame:s7-nature-q1-check",
+          "durationSeconds": 40
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "You Wrote It!",
+          "hoyaLineEn": "You wrote animal words in Korean!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s7-nature-q1-practice",
+          "kind": "trace-word",
+          "rounds": [
+            {
+              "id": "t1",
+              "word": {
+                "ko": "곰",
+                "romanization": "gom",
+                "en": "bear"
+              }
+            },
+            {
+              "id": "t2",
+              "word": {
+                "ko": "새",
+                "romanization": "sae",
+                "en": "bird"
+              }
+            },
+            {
+              "id": "t3",
+              "word": {
+                "ko": "토끼",
+                "romanization": "tokki",
+                "en": "rabbit"
+              }
+            },
+            {
+              "id": "t4",
+              "word": {
+                "ko": "동물",
+                "romanization": "dongmul",
+                "en": "animal"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s7-nature-q1-apply",
+          "kind": "type-hangul",
+          "rounds": [
+            {
+              "id": "y1",
+              "promptEn": "Type the animal in the picture.",
+              "pictureRef": "card:tiger",
+              "target": {
+                "ko": "호랑이",
+                "romanization": "horangi",
+                "en": "tiger"
+              }
+            },
+            {
+              "id": "y2",
+              "promptEn": "Type the animal in the picture.",
+              "pictureRef": "word:animal-cat",
+              "target": {
+                "ko": "고양이",
+                "romanization": "goyangi",
+                "en": "cat"
+              }
+            },
+            {
+              "id": "y3",
+              "promptEn": "Type: I like bears.",
+              "pictureRef": "word:animal-bear",
+              "target": {
+                "ko": "곰이 좋아요",
+                "romanization": "gomi joayo",
+                "en": "I like bears"
+              }
+            },
+            {
+              "id": "y4",
+              "promptEn": "Type: I like birds.",
+              "pictureRef": "word:animal-bird",
+              "target": {
+                "ko": "새가 좋아요",
+                "romanization": "saega joayo",
+                "en": "I like birds"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s7-nature-q1-check",
+          "kind": "order-it",
+          "rounds": [
+            {
+              "id": "c1",
+              "sentence": {
+                "ko": "고양이가 좋아요.",
+                "romanization": "goyangiga joayo",
+                "en": "I like cats."
+              },
+              "pictureRef": "word:animal-cat",
+              "distractors": [],
+              "particle": {
+                "tile": 0,
+                "choices": [
+                  {
+                    "ko": "이",
+                    "romanization": "i",
+                    "en": "subject marker (after a final consonant)"
+                  },
+                  {
+                    "ko": "가",
+                    "romanization": "ga",
+                    "en": "subject marker (after a vowel)"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "c2",
+              "sentence": {
+                "ko": "호랑이가 좋아요.",
+                "romanization": "horangiga joayo",
+                "en": "I like tigers."
+              },
+              "pictureRef": "card:tiger",
+              "distractors": [
+                {
+                  "ko": "곰이",
+                  "romanization": "gomi",
+                  "en": "bear (as the subject)"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "quest:stage7-nature-q2",
+      "titleEn": "Big Tiger, Cute Cat",
+      "blurbEn": "Write sentences that say how animals look.",
+      "teaserEn": "Next: write about your favorite animal.",
+      "estimatedMinutes": 5,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "Big Tiger, Cute Cat",
+          "hoyaLineEn": "In an old Korean tale, a tiger asks for rice cakes. Let us write about tigers!",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "Tigers Are ...",
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "pattern",
+                    "frame": {
+                      "ko": "___은/는 커요.",
+                      "romanization": "___eun/neun keoyo",
+                      "en": "___ are big."
+                    },
+                    "noteEn": "{ko:은} after a final consonant, {ko:는} after a vowel: it marks what you are talking about.",
+                    "examples": [
+                      {
+                        "ko": "호랑이는 커요.",
+                        "romanization": "horangineun keoyo",
+                        "en": "Tigers are big."
+                      },
+                      {
+                        "ko": "곰은 커요.",
+                        "romanization": "gomeun keoyo",
+                        "en": "Bears are big."
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "Say what you are talking about first."
+              },
+              {
+                "items": [
+                  {
+                    "type": "sentence",
+                    "sentence": {
+                      "ko": "고양이는 귀여워요.",
+                      "romanization": "goyangineun gwiyeowoyo",
+                      "en": "Cats are cute."
+                    },
+                    "picture": "word:animal-cat"
+                  },
+                  {
+                    "type": "sentence",
+                    "sentence": {
+                      "ko": "토끼는 작아요.",
+                      "romanization": "tokkineun jagayo",
+                      "en": "Rabbits are small."
+                    },
+                    "picture": "word:animal-rabbit"
+                  }
+                ],
+                "captionEn": "Then say how it looks."
+              }
+            ]
+          },
+          "durationSeconds": 65
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Build the Sentence",
+          "minigameKind": "order-it",
+          "minigameRef": "minigame:s7-nature-q2-practice",
+          "durationSeconds": 90
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Type It",
+          "minigameKind": "type-hangul",
+          "minigameRef": "minigame:s7-nature-q2-apply",
+          "durationSeconds": 80
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Two Quick Ones",
+          "minigameKind": "order-it",
+          "minigameRef": "minigame:s7-nature-q2-check",
+          "durationSeconds": 40
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "You Described Them!",
+          "hoyaLineEn": "You wrote how animals look. Great writing!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s7-nature-q2-practice",
+          "kind": "order-it",
+          "rounds": [
+            {
+              "id": "r1",
+              "sentence": {
+                "ko": "호랑이는 커요.",
+                "romanization": "horangineun keoyo",
+                "en": "Tigers are big."
+              },
+              "pictureRef": "card:tiger",
+              "distractors": [],
+              "particle": {
+                "tile": 0,
+                "choices": [
+                  {
+                    "ko": "은",
+                    "romanization": "eun",
+                    "en": "topic marker (after a final consonant)"
+                  },
+                  {
+                    "ko": "는",
+                    "romanization": "neun",
+                    "en": "topic marker (after a vowel)"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "r2",
+              "sentence": {
+                "ko": "곰은 커요.",
+                "romanization": "gomeun keoyo",
+                "en": "Bears are big."
+              },
+              "pictureRef": "word:animal-bear",
+              "distractors": [],
+              "particle": {
+                "tile": 0,
+                "choices": [
+                  {
+                    "ko": "은",
+                    "romanization": "eun",
+                    "en": "topic marker (after a final consonant)"
+                  },
+                  {
+                    "ko": "는",
+                    "romanization": "neun",
+                    "en": "topic marker (after a vowel)"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "r3",
+              "sentence": {
+                "ko": "토끼는 작아요.",
+                "romanization": "tokkineun jagayo",
+                "en": "Rabbits are small."
+              },
+              "pictureRef": "word:animal-rabbit",
+              "distractors": [
+                {
+                  "ko": "커요",
+                  "romanization": "keoyo",
+                  "en": "it is big"
+                }
+              ]
+            },
+            {
+              "id": "r4",
+              "sentence": {
+                "ko": "고양이는 귀여워요.",
+                "romanization": "goyangineun gwiyeowoyo",
+                "en": "Cats are cute."
+              },
+              "pictureRef": "word:animal-cat",
+              "distractors": [],
+              "particle": {
+                "tile": 0,
+                "choices": [
+                  {
+                    "ko": "은",
+                    "romanization": "eun",
+                    "en": "topic marker (after a final consonant)"
+                  },
+                  {
+                    "ko": "는",
+                    "romanization": "neun",
+                    "en": "topic marker (after a vowel)"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s7-nature-q2-apply",
+          "kind": "type-hangul",
+          "rounds": [
+            {
+              "id": "y1",
+              "promptEn": "Type: Tigers are big.",
+              "pictureRef": "card:tiger",
+              "target": {
+                "ko": "호랑이는 커요",
+                "romanization": "horangineun keoyo",
+                "en": "tigers are big"
+              }
+            },
+            {
+              "id": "y2",
+              "promptEn": "Type: Cats are cute.",
+              "pictureRef": "word:animal-cat",
+              "target": {
+                "ko": "고양이는 귀여워요",
+                "romanization": "goyangineun gwiyeowoyo",
+                "en": "cats are cute"
+              }
+            },
+            {
+              "id": "y3",
+              "promptEn": "Type: Rabbits are small.",
+              "pictureRef": "word:animal-rabbit",
+              "target": {
+                "ko": "토끼는 작아요",
+                "romanization": "tokkineun jagayo",
+                "en": "rabbits are small"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s7-nature-q2-check",
+          "kind": "order-it",
+          "rounds": [
+            {
+              "id": "c1",
+              "sentence": {
+                "ko": "새는 작아요.",
+                "romanization": "saeneun jagayo",
+                "en": "Birds are small."
+              },
+              "pictureRef": "word:animal-bird",
+              "distractors": [],
+              "particle": {
+                "tile": 0,
+                "choices": [
+                  {
+                    "ko": "은",
+                    "romanization": "eun",
+                    "en": "topic marker (after a final consonant)"
+                  },
+                  {
+                    "ko": "는",
+                    "romanization": "neun",
+                    "en": "topic marker (after a vowel)"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "c2",
+              "sentence": {
+                "ko": "곰은 귀여워요.",
+                "romanization": "gomeun gwiyeowoyo",
+                "en": "Bears are cute."
+              },
+              "pictureRef": "word:animal-bear",
+              "distractors": [
+                {
+                  "ko": "작아요",
+                  "romanization": "jagayo",
+                  "en": "it is small"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "quest:stage7-nature-q3",
+      "titleEn": "My Favorite Animal",
+      "blurbEn": "Write about your favorite animal in sentences of your own.",
+      "estimatedMinutes": 5,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "My Favorite Animal",
+          "hoyaLineEn": "Which animal do you like best? Any answer is a good one!",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "My Favorite ...",
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "pattern",
+                    "frame": {
+                      "ko": "제가 좋아하는 동물은 ___이에요/예요.",
+                      "romanization": "jega joahaneun dongmureun ___ieyo/yeyo",
+                      "en": "My favorite animal is ___."
+                    },
+                    "noteEn": "{ko:제가 좋아하는 동물} is the animal I like. Then {ko:이에요} after a final consonant, {ko:예요} after a vowel.",
+                    "examples": [
+                      {
+                        "ko": "제가 좋아하는 동물은 곰이에요.",
+                        "romanization": "jega joahaneun dongmureun gomieyo",
+                        "en": "My favorite animal is the bear."
+                      },
+                      {
+                        "ko": "제가 좋아하는 동물은 토끼예요.",
+                        "romanization": "jega joahaneun dongmureun tokkiyeyo",
+                        "en": "My favorite animal is the rabbit."
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "Name your favorite, then add the ending."
+              },
+              {
+                "items": [
+                  {
+                    "type": "sentence",
+                    "sentence": {
+                      "ko": "제가 좋아하는 동물은 호랑이예요.",
+                      "romanization": "jega joahaneun dongmureun horangiyeyo",
+                      "en": "My favorite animal is the tiger."
+                    },
+                    "picture": "card:tiger"
+                  },
+                  {
+                    "type": "sentence",
+                    "sentence": {
+                      "ko": "정말 귀여워요.",
+                      "romanization": "jeongmal gwiyeowoyo",
+                      "en": "It is really cute."
+                    }
+                  }
+                ],
+                "captionEn": "The first word is a polite I. Add one more sentence about it."
+              }
+            ]
+          },
+          "durationSeconds": 65
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Build the Sentence",
+          "minigameKind": "order-it",
+          "minigameRef": "minigame:s7-nature-q3-practice",
+          "durationSeconds": 80
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Write Your Sentence",
+          "minigameKind": "write-frame",
+          "minigameRef": "minigame:s7-nature-q3-apply",
+          "durationSeconds": 95
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Two Quick Ones",
+          "minigameKind": "order-it",
+          "minigameRef": "minigame:s7-nature-q3-check",
+          "durationSeconds": 40
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Your Own Sentences!",
+          "hoyaLineEn": "You wrote about your favorite animal, in your own Korean!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s7-nature-q3-practice",
+          "kind": "order-it",
+          "rounds": [
+            {
+              "id": "r1",
+              "sentence": {
+                "ko": "제가 좋아하는 동물은 호랑이예요.",
+                "romanization": "jega joahaneun dongmureun horangiyeyo",
+                "en": "My favorite animal is the tiger."
+              },
+              "pictureRef": "card:tiger",
+              "distractors": [],
+              "particle": {
+                "tile": 3,
+                "choices": [
+                  {
+                    "ko": "이에요",
+                    "romanization": "ieyo",
+                    "en": "it is (after a final consonant)"
+                  },
+                  {
+                    "ko": "예요",
+                    "romanization": "yeyo",
+                    "en": "it is (after a vowel)"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "r2",
+              "sentence": {
+                "ko": "제가 좋아하는 동물은 곰이에요.",
+                "romanization": "jega joahaneun dongmureun gomieyo",
+                "en": "My favorite animal is the bear."
+              },
+              "pictureRef": "word:animal-bear",
+              "distractors": [],
+              "particle": {
+                "tile": 3,
+                "choices": [
+                  {
+                    "ko": "이에요",
+                    "romanization": "ieyo",
+                    "en": "it is (after a final consonant)"
+                  },
+                  {
+                    "ko": "예요",
+                    "romanization": "yeyo",
+                    "en": "it is (after a vowel)"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "r3",
+              "sentence": {
+                "ko": "정말 귀여워요.",
+                "romanization": "jeongmal gwiyeowoyo",
+                "en": "It is really cute."
+              },
+              "pictureRef": "word:animal-cat",
+              "distractors": [
+                {
+                  "ko": "커요",
+                  "romanization": "keoyo",
+                  "en": "it is big"
+                }
+              ]
+            },
+            {
+              "id": "r4",
+              "sentence": {
+                "ko": "제가 좋아하는 동물은 고양이예요.",
+                "romanization": "jega joahaneun dongmureun goyangiyeyo",
+                "en": "My favorite animal is the cat."
+              },
+              "pictureRef": "word:animal-cat",
+              "distractors": [
+                {
+                  "ko": "토끼예요",
+                  "romanization": "tokkiyeyo",
+                  "en": "it is a rabbit"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s7-nature-q3-apply",
+          "kind": "write-frame",
+          "rounds": [
+            {
+              "id": "w1",
+              "frame": {
+                "ko": "___이/가 좋아요.",
+                "romanization": "___i/ga joayo",
+                "en": "I like the ___."
+              },
+              "slots": [
+                {
+                  "id": "animal",
+                  "bank": [
+                    {
+                      "ko": "호랑이",
+                      "romanization": "horangi",
+                      "en": "tiger"
+                    },
+                    {
+                      "ko": "고양이",
+                      "romanization": "goyangi",
+                      "en": "cat"
+                    },
+                    {
+                      "ko": "토끼",
+                      "romanization": "tokki",
+                      "en": "rabbit"
+                    },
+                    {
+                      "ko": "곰",
+                      "romanization": "gom",
+                      "en": "bear"
+                    },
+                    {
+                      "ko": "새",
+                      "romanization": "sae",
+                      "en": "bird"
+                    }
+                  ]
+                }
+              ],
+              "entry": "type"
+            },
+            {
+              "id": "w2",
+              "frame": {
+                "ko": "제가 좋아하는 동물은 ___이에요/예요.",
+                "romanization": "jega joahaneun dongmureun ___ieyo/yeyo",
+                "en": "My favorite animal is the ___."
+              },
+              "slots": [
+                {
+                  "id": "animal",
+                  "bank": [
+                    {
+                      "ko": "호랑이",
+                      "romanization": "horangi",
+                      "en": "tiger"
+                    },
+                    {
+                      "ko": "고양이",
+                      "romanization": "goyangi",
+                      "en": "cat"
+                    },
+                    {
+                      "ko": "토끼",
+                      "romanization": "tokki",
+                      "en": "rabbit"
+                    },
+                    {
+                      "ko": "곰",
+                      "romanization": "gom",
+                      "en": "bear"
+                    },
+                    {
+                      "ko": "새",
+                      "romanization": "sae",
+                      "en": "bird"
+                    }
+                  ]
+                }
+              ],
+              "entry": "type"
+            },
+            {
+              "id": "w3",
+              "frame": {
+                "ko": "___은/는 정말 ___.",
+                "romanization": "___eun/neun jeongmal ___",
+                "en": "The ___ is really ___."
+              },
+              "slots": [
+                {
+                  "id": "animal",
+                  "bank": [
+                    {
+                      "ko": "호랑이",
+                      "romanization": "horangi",
+                      "en": "tiger"
+                    },
+                    {
+                      "ko": "고양이",
+                      "romanization": "goyangi",
+                      "en": "cat"
+                    },
+                    {
+                      "ko": "토끼",
+                      "romanization": "tokki",
+                      "en": "rabbit"
+                    },
+                    {
+                      "ko": "곰",
+                      "romanization": "gom",
+                      "en": "bear"
+                    },
+                    {
+                      "ko": "새",
+                      "romanization": "sae",
+                      "en": "bird"
+                    }
+                  ]
+                },
+                {
+                  "id": "looks",
+                  "bank": [
+                    {
+                      "ko": "귀여워요",
+                      "romanization": "gwiyeowoyo",
+                      "en": "cute"
+                    },
+                    {
+                      "ko": "커요",
+                      "romanization": "keoyo",
+                      "en": "big"
+                    },
+                    {
+                      "ko": "작아요",
+                      "romanization": "jagayo",
+                      "en": "small"
+                    }
+                  ]
+                }
+              ],
+              "entry": "type"
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s7-nature-q3-check",
+          "kind": "order-it",
+          "rounds": [
+            {
+              "id": "c1",
+              "sentence": {
+                "ko": "제가 좋아하는 동물은 새예요.",
+                "romanization": "jega joahaneun dongmureun saeyeyo",
+                "en": "My favorite animal is the bird."
+              },
+              "pictureRef": "word:animal-bird",
+              "distractors": [],
+              "particle": {
+                "tile": 3,
+                "choices": [
+                  {
+                    "ko": "이에요",
+                    "romanization": "ieyo",
+                    "en": "it is (after a final consonant)"
+                  },
+                  {
+                    "ko": "예요",
+                    "romanization": "yeyo",
+                    "en": "it is (after a vowel)"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "c2",
+              "sentence": {
+                "ko": "토끼는 정말 귀여워요.",
+                "romanization": "tokkineun jeongmal gwiyeowoyo",
+                "en": "Rabbits are really cute."
+              },
+              "pictureRef": "word:animal-rabbit",
+              "distractors": [
+                {
+                  "ko": "커요",
+                  "romanization": "keoyo",
+                  "en": "it is big"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "culture": [
+    {
+      "id": "n1",
+      "kind": "language",
+      "textEn": "With {ko:좋아요}, the thing you like takes {ko:이} after a final consonant or {ko:가} after a vowel: {ko:곰이 좋아요}, {ko:고양이가 좋아요}.",
+      "sources": [
+        {
+          "title": "좋다 (형용사)",
+          "publisher": "국립국어원 표준국어대사전 (Standard Korean Language Dictionary)",
+          "url": "https://stdict.korean.go.kr/search/searchView.do?word_no=302141&searchKeywordTo=3",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "표제어 ‘좋다’(word_no 302141) 「형용사」 1 「1」: “어떤 일이나 대상이 마음에 들 만큼 흡족하다.” 용례 ‘저는 그 아가씨가 좋습니다.’"
+        },
+        {
+          "title": "이 (조사)",
+          "publisher": "국립국어원 표준국어대사전 (Standard Korean Language Dictionary)",
+          "url": "https://stdict.korean.go.kr/search/searchView.do?word_no=471254&searchKeywordTo=3",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "표제어 ‘이 25’(word_no 471254) 「조사」 1: “((받침 있는 체언 뒤에 붙어))” … 「1」 “문법적으로는 앞말이 서술어와 호응하는 주어임을 나타낸다.” 용례 ‘산이 높다.’"
+        },
+        {
+          "title": "가 (조사)",
+          "publisher": "국립국어원 표준국어대사전 (Standard Korean Language Dictionary)",
+          "url": "https://stdict.korean.go.kr/search/searchView.do?word_no=382734&searchKeywordTo=3",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "표제어 ‘가 11’(word_no 382734) 「조사」 1: “((받침 없는 체언 뒤에 붙어))” … 「1」 “문법적으로는 앞말이 서술어와 호응하는 주어임을 나타낸다.” 용례 ‘제가 반장입니다.’"
+        }
+      ],
+      "verification": {
+        "passes": 1,
+        "checkedAt": "2026-10-14",
+        "scope": "lesson",
+        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): the three stdict entries opened (contentViewOne.do, HTTP 200). 좋다 1「1」 is liking something, with the thing liked as the subject in its example (그 아가씨가 좋습니다); 이 25 and 가 11 are the subject marker, 이 after a final consonant and 가 after none. The note restates this in its own words with this cell's words (곰, 고양이); nothing copied. Carried by: q1 Discover pattern noteEn, the 이/가 rounds of q1 and the q3 frame w1."
+      }
+    },
+    {
+      "id": "n2",
+      "kind": "language",
+      "textEn": "{ko:은} after a final consonant and {ko:는} after a vowel mark what a sentence is about: {ko:곰은 커요}, {ko:호랑이는 커요}.",
+      "sources": [
+        {
+          "title": "은 (조사)",
+          "publisher": "국립국어원 표준국어대사전 (Standard Korean Language Dictionary)",
+          "url": "https://stdict.korean.go.kr/search/searchView.do?word_no=467516&searchKeywordTo=3",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "표제어 ‘은 4’(word_no 467516) 「조사」 「2」: “((받침 있는 체언 뒤에 붙어)) 문장 속에서 어떤 대상이 화제임을 나타내는 보조사.” 용례 ‘오늘은 금요일이다.’"
+        },
+        {
+          "title": "는 (조사)",
+          "publisher": "국립국어원 표준국어대사전 (Standard Korean Language Dictionary)",
+          "url": "https://stdict.korean.go.kr/search/searchView.do?word_no=406525&searchKeywordTo=3",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "표제어 ‘는 1’(word_no 406525) 「조사」 「2」: “((받침 없는 체언 뒤에 붙어)) 문장 속에서 어떤 대상이 화제임을 나타내는 보조사.” 용례 ‘나는 학생이다.’"
+        }
+      ],
+      "verification": {
+        "passes": 1,
+        "checkedAt": "2026-10-14",
+        "scope": "lesson",
+        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): stdict 은 4 and 는 1 opened (contentViewOne.do, HTTP 200). Sense 「2」 of each marks the topic of the sentence (화제), 은 after a final consonant and 는 after none; sense 「1」 (contrast) is not taught here. The note restates the topic use in its own words; nothing copied. Carried by: q2 Discover pattern noteEn, the 은/는 rounds of q2 and q3, and the q3 frame w3."
+      }
+    },
+    {
+      "id": "n3",
+      "kind": "language",
+      "textEn": "The ending {ko:이에요} follows a word that ends in a final consonant, and {ko:예요} a word that ends in a vowel: {ko:곰이에요}, {ko:토끼예요}.",
+      "sources": [
+        {
+          "title": "표준어 규정 제1부 제26항 해설 (복수 표준어 ‘-이에요/-이어요’)",
+          "publisher": "국립국어원 (National Institute of Korean Language)",
+          "url": "https://korean.go.kr/kornorms/regltn/regltnView.do?regltn_code=0002&regltn_no=191",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "제1부 제26항 해설 ⑰: “‘이에요’와 ‘이어요’는 체언 뒤에 붙는데 받침이 없는 체언에 붙을 때는 ‘예요’, ‘여요’로 줄어든다.”"
+        },
+        {
+          "title": "이다 (조사), 한 걸음 더",
+          "publisher": "국립국어원 표준국어대사전 (Standard Korean Language Dictionary)",
+          "url": "https://stdict.korean.go.kr/search/searchView.do?word_no=469673&searchKeywordTo=3",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "표제어 ‘이다 3’(word_no 469673) 「조사」, 한 걸음 더: “‘-이에요’와 ‘-이어요’는 체언 뒤에 붙는데 받침이 없는 체언에 붙을 때는 ‘-예요’, ‘-여요’로 줄어들기도 한다.” 예: ‘지우개예요’, ‘연필이에요’."
+        }
+      ],
+      "verification": {
+        "passes": 1,
+        "checkedAt": "2026-10-14",
+        "scope": "lesson",
+        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): the NIKL commentary to standard language rule article 26 (item 17) and the 한 걸음 더 box of stdict 이다 3 both opened (HTTP 200); both say 이에요 attaches to a noun and shortens to 예요 after a noun with no final consonant. Restated in own words with this cell's nouns; nothing copied. Carried by: q3 Discover pattern noteEn, the 이에요/예요 rounds of q3 and the q3 frame w2. The same sources back stage3-letters n1."
+      }
+    },
+    {
+      "id": "n4",
+      "kind": "language",
+      "textEn": "{ko:제가} is the polite word for I, {ko:저}, in the form it takes before {ko:가}.",
+      "sources": [
+        {
+          "title": "제 (대명사)",
+          "publisher": "국립국어원 표준국어대사전 (Standard Korean Language Dictionary)",
+          "url": "https://stdict.korean.go.kr/search/searchView.do?word_no=294283&searchKeywordTo=3",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "표제어 ‘제 1’(word_no 294283) 「대명사」 「1」: “‘저’에 주격 조사 ‘가’나 보격 조사 ‘가’가 붙을 때의 형태.” 용례 ‘제가 그 일을 하겠습니다.’"
+        },
+        {
+          "title": "저 (대명사)",
+          "publisher": "국립국어원 표준국어대사전 (Standard Korean Language Dictionary)",
+          "url": "https://stdict.korean.go.kr/search/searchView.do?word_no=473730&searchKeywordTo=3",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "표제어 ‘저 3’(word_no 473730) 「대명사」 「1」: “말하는 이가 윗사람이나 그다지 가깝지 아니한 사람을 상대하여 자기를 낮추어 가리키는 일인칭 대명사. 주격 조사 ‘가’나 보격 조사 ‘가’가 붙으면 ‘제’가 된다.”"
+        }
+      ],
+      "verification": {
+        "passes": 1,
+        "checkedAt": "2026-10-14",
+        "scope": "lesson",
+        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): stdict 제 1 and 저 3 opened (contentViewOne.do, HTTP 200). 제 1 「1」 is the form of 저 when the subject marker 가 follows; 저 3 「1」 is the humble first-person pronoun used with a senior or someone not close, and says it becomes 제 before 가. 'Polite word for I' is the cell's short gloss of that humble pronoun (stage3-letters n4 carries the fuller 저 / 나 note). Own words; nothing copied. Carried by: q3 Discover page 2 captionEn ('The first word is a polite I')."
+      }
+    },
+    {
+      "id": "n5",
+      "kind": "culture",
+      "textEn": "In the folk tale of the brother and sister who became the sun and the moon, a tiger stops their mother on her way home and asks for her rice cakes.",
+      "factRef": "story:sun-and-moon#f2",
+      "verification": {
+        "passes": 1,
+        "checkedAt": "2026-10-14",
+        "scope": "lesson",
+        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): restates fact f2 of the reviewed story sun-and-moon (ready, MAR-signed 2026-10-13), whose sources are the Encyclopedia of Korean Culture article E0062663 and the National Folk Museum folk-literature entry 6006. The AKS article re-opened (HTTP 200): its 내용 says a mother on her way home from day work meets a tiger at the hill passes, and it asks for rice cakes first. No new fact, no new source (section 3.9 Reuse). Carried by: q2 intro hoyaLineEn ('In an old Korean tale, a tiger asks for rice cakes'). No 'all Koreans' claim, no living person."
+      }
+    }
+  ],
+  "review": {
+    "language": "draft",
+    "culture": "draft",
+    "notes": []
+  },
+  "contentVer": 1
+}
