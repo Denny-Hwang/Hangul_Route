@@ -2,7 +2,7 @@ import { APP_ROUTES, type StageKey, type StoryLevel } from '@hangul-route/conten
 import { Body, Button, Card, Heading, Pill, Screen, Spacer, borderWidth, colors, radii, spacing, touchTarget, typography, useLayoutClass } from '@hangul-route/design-system';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useEffect, useMemo, useState } from 'react';
-import { Pressable, Text, View, useWindowDimensions } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 import { cardById } from '../../content';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { episodeOfQuest } from '../../logic/browse/bundle';
@@ -55,8 +55,10 @@ export function BrowseItemScreen({ route, navigation }: Props): React.ReactEleme
   // The browser gave no new tab for the last Present this (a pop-up blocker): one line says what to do.
   const [presentBlocked, setPresentBlocked] = useState(false);
   useEffect(() => setPresentBlocked(false), [kind, id]);
-  const compact = useLayoutClass().width === 'compact';
-  const windowHeight = useWindowDimensions().height;
+  const layoutClass = useLayoutClass();
+  const compact = layoutClass.width === 'compact';
+  // A short window (below `layout.shortHeight`, a phone in landscape; an unknown first-frame height is not short).
+  const short = layoutClass.short;
   const presentTitleText = facts ? (facts.kind === 'story' ? facts.title.gloss : facts.title) : '';
   // Drawn only when the presenter can show at least one slide of this item (BR-13): a check deck, never opened.
   const hasFacts = facts !== null;
@@ -163,7 +165,7 @@ export function BrowseItemScreen({ route, navigation }: Props): React.ReactEleme
 
   // On a short phone window (landscape) the pinned footer keeps only the preview; Present this
   // moves to the end of the page, so the facts keep their room (review of #590).
-  const placement = presentPlacement({ compact, closed, canPreview, presentShown, windowHeight });
+  const placement = presentPlacement({ compact, closed, canPreview, presentShown, short });
   const footerAction = actionBar(placement.footer);
   const inlineAction = actionBar(placement.inline);
 

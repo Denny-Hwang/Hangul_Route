@@ -1,4 +1,5 @@
 import { LECTURE_TITLE_RE, LectureDeckSchema, decodeDeck } from '@hangul-route/content-schema';
+import { layoutClassFor } from '@hangul-route/design-system/layout';
 import { describe, expect, it } from 'vitest';
 import { VOCAB_TOPICS } from '../../../content/__generated__/vocab';
 import { lectureBundle } from '../../lecture/content';
@@ -171,28 +172,30 @@ describe('presentHref', () => {
 });
 
 describe('presentPlacement (the item page action bar, review of #590)', () => {
-  const base = { compact: true, closed: false, canPreview: true, presentShown: true, windowHeight: 568 };
+  const base = { compact: true, closed: false, canPreview: true, presentShown: true, short: false };
 
-  it('pins the preview and Present this together on a phone of 480 or taller', () => {
+  it('pins the preview and Present this together on a phone window that is not short', () => {
     expect(presentPlacement(base)).toEqual({ footer: { preview: true, present: true, main: true }, inline: null });
   });
 
   it('pins only the preview on a short phone window and ends the page with Present this', () => {
-    expect(presentPlacement({ ...base, windowHeight: 320 })).toEqual({
+    expect(presentPlacement({ ...base, short: true })).toEqual({
       footer: { preview: true, present: false, main: true },
       inline: { preview: false, present: true, main: false },
     });
   });
 
-  it('treats a first frame with no height yet (0) as tall, so the button does not jump into the footer', () => {
-    expect(presentPlacement({ ...base, windowHeight: 0 })).toEqual(presentPlacement(base));
+  it('reads the layout class: a first frame with no height yet is not short, so nothing jumps', () => {
+    expect(layoutClassFor({ width: 320, height: 0 }).short).toBe(false);
+    expect(layoutClassFor({ width: 568, height: 320 }).short).toBe(true);
+    expect(layoutClassFor({ width: 320, height: 568 }).short).toBe(false);
   });
 
   it('draws Present this alone, with no preview, when this build cannot preview the item', () => {
     expect(presentPlacement({ ...base, canPreview: false })).toEqual({ footer: { preview: false, present: true, main: true }, inline: null });
     expect(presentPlacement({ ...base, canPreview: false, compact: false })).toEqual({ footer: null, inline: { preview: false, present: true, main: true } });
     // Nothing to pin on a short window: Present this ends the page as the one group, a story's questions with it.
-    expect(presentPlacement({ ...base, canPreview: false, windowHeight: 320 })).toEqual({ footer: null, inline: { preview: false, present: true, main: true } });
+    expect(presentPlacement({ ...base, canPreview: false, short: true })).toEqual({ footer: null, inline: { preview: false, present: true, main: true } });
   });
 
   it('puts the whole bar inline from the regular class', () => {

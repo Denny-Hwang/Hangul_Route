@@ -27,10 +27,3 @@ export const BROWSE_LABEL_COLUMN = 128;
 
 /** A centred dialog sheet (Lesson display, Leave preview) from the regular class: at most 32rem. */
 export const BROWSE_DIALOG_MAX = 512;
-
-/**
- * The window height from which a phone's pinned action bar also holds [ Present this ] (BR-13): the
- * two `lg` buttons and their gap measure 168 on the mock, and pinned they stay at most 35 % of the
- * window. Below it (a phone in landscape) only the preview stays pinned and Present this ends the page.
- */
-export const BROWSE_PIN_SECONDARY_MIN_HEIGHT = 480;

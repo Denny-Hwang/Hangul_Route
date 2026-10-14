@@ -11,7 +11,6 @@ import {
 import { PRESENTER_PATH } from '../../platform/presenter';
 import { expandDeck, type LectureBundle } from '../lecture/deck-builder';
 import type { ItemAccess } from './access';
-import { BROWSE_PIN_SECONDARY_MIN_HEIGHT } from './layout';
 
 /**
  * [ Present this ] on the All lessons item page (F-BROWSE-001 section 4.6
@@ -140,9 +139,9 @@ export interface PresentSlot {
 
 /**
  * Where the item page draws its actions (BR-13, D16; review of #590). A phone pins them to the
- * bottom edge; a short phone window (below `BROWSE_PIN_SECONDARY_MIN_HEIGHT`, a phone in
- * landscape) pins only the preview and ends the page with Present this. A height of 0 is a first
- * frame with no size yet and counts as tall, the usual case, so nothing jumps. From the regular
+ * bottom edge; a short phone window (`LayoutClass.short`: below `layout.shortHeight`, 480, a phone
+ * in landscape) pins only the preview and ends the page with Present this. The layout class counts
+ * a first frame with no height yet as not short, the usual case, so nothing jumps. From the regular
  * class the bar is inline. A closed item shows its closed line inline instead.
  */
 export function presentPlacement(input: {
@@ -150,12 +149,12 @@ export function presentPlacement(input: {
   closed: boolean;
   canPreview: boolean;
   presentShown: boolean;
-  windowHeight: number;
+  short: boolean;
 }): { footer: PresentSlot | 'closed' | null; inline: PresentSlot | 'closed' | null } {
   if (input.closed) return { footer: null, inline: 'closed' };
   const slot = (present: boolean): PresentSlot | null => (input.canPreview || present ? { preview: input.canPreview, present, main: true } : null);
   if (!input.compact) return { footer: null, inline: slot(input.presentShown) };
-  const pinPresent = input.windowHeight === 0 || input.windowHeight >= BROWSE_PIN_SECONDARY_MIN_HEIGHT;
+  const pinPresent = !input.short;
   const overflow = input.presentShown && !pinPresent;
   return {
     footer: slot(input.presentShown && pinPresent),
