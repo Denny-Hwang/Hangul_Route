@@ -11,7 +11,8 @@ import { ChipRadios, Cover, ToolButton, type ChipOption } from './OverlayParts';
 /**
  * Keys and controls (H or ?; design/screens/presenter/overlays.md "Help", README D13): every key
  * of section 3.5 as key caps beside what it does, two columns from `layout.breakpoint.wide`; the
- * clicker line; the Romanization switch (flips the deck's option live, section 3.7); the Presenter
+ * clicker line; the Romanization switch (flips the deck's option live, section 3.7; not drawn when
+ * opened from the presenter home, where no lesson is open); the Presenter
  * language chips (section 3.12: session only, the device locale is never written; drawn only when
  * the build offers two or more locales); Keep controls visible (section 3.5); Close. Real pixels; it scrolls inside the stage box when taller.
  */
@@ -25,7 +26,8 @@ export function HelpOverlay({
   onKeepVisible,
   onClose,
 }: {
-  romanization: RomanizationMode;
+  /** The open lesson's romanization; null (Help opened from the home, no lesson open) draws no switch. */
+  romanization: RomanizationMode | null;
   onRomanization: (mode: RomanizationMode) => void;
   /** The language chips (`helpLanguageChips`); null draws none. */
   languages: readonly ChipOption<UiLocale>[] | null;
@@ -84,19 +86,21 @@ export function HelpOverlay({
             ))}
           </View>
           <Text style={{ fontSize: typography.size.body, color: colors.text.secondary }}>{m.clicker}</Text>
-          <View style={{ gap: spacing.sm }}>
-            <Text style={{ fontSize: typography.size.body, fontWeight: typography.weight.bold, color: colors.text.primary }}>{m.romanization}</Text>
-            <ChipRadios
-              testID="presenter-help-romanization"
-              label={m.romanization}
-              options={[
-                { value: 'always', label: m.romanizationAlways },
-                { value: 'tap', label: m.romanizationTap },
-              ]}
-              selected={romanization}
-              onSelect={onRomanization}
-            />
-          </View>
+          {romanization !== null ? (
+            <View style={{ gap: spacing.sm }}>
+              <Text style={{ fontSize: typography.size.body, fontWeight: typography.weight.bold, color: colors.text.primary }}>{m.romanization}</Text>
+              <ChipRadios
+                testID="presenter-help-romanization"
+                label={m.romanization}
+                options={[
+                  { value: 'always', label: m.romanizationAlways },
+                  { value: 'tap', label: m.romanizationTap },
+                ]}
+                selected={romanization}
+                onSelect={onRomanization}
+              />
+            </View>
+          ) : null}
           {languages !== null ? (
             <View style={{ gap: spacing.sm }}>
               <Text style={{ fontSize: typography.size.body, fontWeight: typography.weight.bold, color: colors.text.primary }}>{messages.learner.presenter.language.title}</Text>

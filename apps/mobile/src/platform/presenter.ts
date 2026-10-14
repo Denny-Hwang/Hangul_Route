@@ -56,7 +56,7 @@ export function listenForRoster(_deck: Pick<LectureDeck, 'id' | 'picker'>, _onRo
   return () => undefined;
 }
 
-export function subscribeKeys(_handler: (command: KeyCommand) => void): () => void {
+export function subscribeKeys(_handler: (command: KeyCommand) => boolean | void): () => void {
   return () => undefined;
 }
 
@@ -110,6 +110,10 @@ export async function releaseScreenAwake(): Promise<void> {
 
 export async function lockLandscape(): Promise<void> {
   // Native orientation follows the app config.
+}
+
+export async function enterFullscreenLandscape(): Promise<boolean> {
+  return false;
 }
 
 export function unlockOrientation(): void {

@@ -37,7 +37,7 @@ const DEPS: CardArtDeps = {
 // Speech language for the Korean word; `lang` is forwarded to the DOM on the web.
 const koreanSpeech = { accessibilityLanguage: KOREAN_LANGUAGE, lang: KOREAN_LANGUAGE };
 
-function CardWord({ word, size }: { word: string; size: number }): React.ReactElement {
+function CardWord({ word, size, fontFamily }: { word: string; size: number; fontFamily?: string }): React.ReactElement {
   const fontSize = cardWordFontSize(size, word, typography.size.caption);
   return (
     <Text
@@ -48,7 +48,7 @@ function CardWord({ word, size }: { word: string; size: number }): React.ReactEl
       adjustsFontSizeToFit
       minimumFontScale={0.5}
       style={{
-        fontFamily: typography.family.sansKr,
+        fontFamily: fontFamily ?? typography.family.sansKr,
         fontSize,
         lineHeight: fontSize * typography.leading.tight,
         fontWeight: typography.weight.bold,
@@ -79,6 +79,7 @@ export function CardArt({
   accessibilityLabel,
   style,
   testID,
+  wordFontFamily,
 }: {
   card: HeritageCard;
   size: number;
@@ -86,6 +87,8 @@ export function CardArt({
   /** Corner radius and placement from the screen; size, background and clipping always stay the face's own. */
   style?: CardArtStyle;
   testID?: string;
+  /** The Korean word face's font family (the presenter's taught-Korean font); the system Korean stack when absent. */
+  wordFontFamily?: string;
 }): React.ReactElement {
   const source = useMemo(() => cardArtSource(card, DEPS), [card]);
   const labelled = accessibilityLabel !== undefined;
@@ -111,9 +114,9 @@ export function CardArt({
       ]}
     >
       {source.kind === 'heritage' ? <HeritageCardArt cardId={source.cardId} size={size} accessibilityLabel="" /> : null}
-      {source.kind === 'word' ? <CardWord word={source.word} size={size} /> : null}
-      {source.kind === 'cover' ? <CoverCrop source={source} size={size} /> : null}
-      {source.kind === 'plate' ? <CollectionPlate members={source.members} card={card} size={size} /> : null}
+      {source.kind === 'word' ? <CardWord word={source.word} size={size} fontFamily={wordFontFamily} /> : null}
+      {source.kind === 'cover' ? <CoverCrop source={source} size={size} fontFamily={wordFontFamily} /> : null}
+      {source.kind === 'plate' ? <CollectionPlate members={source.members} card={card} size={size} fontFamily={wordFontFamily} /> : null}
     </View>
   );
 }
@@ -121,9 +124,11 @@ export function CardArt({
 function CoverCrop({
   source,
   size,
+  fontFamily,
 }: {
   source: Extract<ReturnType<typeof cardArtSource>, { kind: 'cover' }>;
   size: number;
+  fontFamily?: string;
 }): React.ReactElement {
   const { sceneWidth, offsetX } = cardCoverCrop(size);
   return (
@@ -134,7 +139,7 @@ function CoverCrop({
         variant={storyCoverVariant(sceneWidth)}
         width={sceneWidth}
         decorative
-        fallback={<CardWord word={source.word} size={size} />}
+        fallback={<CardWord word={source.word} size={size} fontFamily={fontFamily} />}
       />
     </View>
   );
@@ -144,10 +149,12 @@ function CollectionPlate({
   members,
   card,
   size,
+  fontFamily,
 }: {
   members: readonly HeritageCard[];
   card: HeritageCard;
   size: number;
+  fontFamily?: string;
 }): React.ReactElement {
   const plate = cardPlateLayout(size);
   const frame = plate.inset / 2;
@@ -173,6 +180,7 @@ function CollectionPlate({
             key={member.id}
             card={member}
             size={plate.cell}
+            wordFontFamily={fontFamily}
             style={{ position: 'absolute', top: cell.y, left: cell.x, borderRadius: radii.sm }}
           />
         ) : (
