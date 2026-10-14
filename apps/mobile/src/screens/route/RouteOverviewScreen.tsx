@@ -93,7 +93,8 @@ export function RouteOverviewScreen({ route, navigation }: Props): React.ReactEl
   const view = useMemo(() => (active === null ? null : planOverview(active, today)), [active, today]);
   const offer = useCheckInOffer({ route: active, quests: snapshot?.quests, today, ready: ui !== undefined, answeredFor: ui?.checkInFor, changesOpen });
   const [shownOffer, closeOffer] = useShownOffer(offer, `${profileId}|${active?.id ?? ''}`);
-  const stale = active !== null && active.meta.catalogVersion !== CATALOG.version;
+  // Older only: a route synced from a device on a newer catalogue is not stale here (no refresh ping-pong).
+  const stale = active !== null && active.meta.catalogVersion < CATALOG.version;
 
   const leave = (): void => {
     if (navigation.canGoBack()) navigation.goBack();

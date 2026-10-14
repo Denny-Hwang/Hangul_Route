@@ -203,7 +203,9 @@ export function EpisodeDetailView({
     );
   }
 
-  if (storyEntries) {
+  // A closed quest (a Stage 5 book on the free plan, switch on) has no Start: the quest list in
+  // preview shows Not open yet and the preview card instead (F-ENT-003 section 3.7).
+  if (storyEntries && !preview) {
     return (
       <StoryEpisodeDetail
         episode={episode}
@@ -213,6 +215,8 @@ export function EpisodeDetailView({
         onOpenSources={onOpenSources}
         onOpenCultureNotes={onOpenCultureNotes}
         onOpenCellStories={(stage, theme) => onOpenCellStories(stage, theme, 'story-pill')}
+        cellStoryCount={cellStoryCount}
+        onOpenCellStoriesRow={() => onOpenCellStories(episode.stage, episode.theme, 'lesson-row')}
         onBack={onBack}
       />
     );
