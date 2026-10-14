@@ -22,7 +22,8 @@ describe('batch W-6 (§3.12)', () => {
   });
 
   it('completes the travel, sport, culture and science families with the earlier samples', () => {
-    const of = (f: string) => WORD_ART_KEYS.filter((k) => k.startsWith(`${f}-`)).sort();
+    // the reserved lesson pictures (registry-lessons.test.ts) are not part of the batch
+    const of = (f: string) => WORD_ART_KEYS.filter((k) => k.startsWith(`${f}-`) && WORD_ART[k]!.meta.reserved !== true).sort();
     expect(of('travel')).toEqual(['travel-bus', ...W6_TRAVEL].sort());
     expect(of('sport')).toEqual(['sport-soccer', ...W6_SPORT].sort());
     expect(of('culture')).toEqual([...W6_CULTURE].sort());

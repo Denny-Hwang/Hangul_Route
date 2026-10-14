@@ -3,8 +3,11 @@
  * sample `sport-soccer`; batch W-6 draws the other eleven. Keys are written
  * without the `word:` prefix. The people in motion are drawn from the parts in
  * `pose.ts` (limbs, a head, hands); the jump rope uses the standing `figure()`.
+ * The playground swing and slide are lesson pictures for Stage 2 Playground
+ * Words (F-CURR-001 S2-3), outside the vocabulary topics, so they are
+ * registered `reserved` (F-VOC-002 §3.9).
  */
-import { circle, curve, ellipse, face, groundShadow, leaf, line, path, poly, pts } from '../builders';
+import { circle, curve, ellipse, face, groundShadow, leaf, line, path, poly, pts, rect } from '../builders';
 import { figure } from '../generated/figure';
 import { formatNumber as n } from '../path';
 import type { WordArtGlyph, WordArtShape } from '../types';
@@ -226,5 +229,28 @@ export const SPORT_GLYPHS: Readonly<Record<string, WordArtGlyph>> = {
     path('M 21.8 62 Q 50 71 78.2 62 L 74.5 69 Q 50 77 25.5 69 Z', { f: 'vocab.blue', ...DETAIL }),
     leaf(32, 28, 44, 22, 3, { f: 'surface.paper', o: 0.55 }),
     rim(50, 49, 31),
+  ],
+
+  // playground swing, front view: a blue frame on two A-shaped leg pairs, two ropes and a red seat
+  'sport-swing': [
+    groundShadow(50, 84, 34),
+    limb([22, 20], [15, 82], 5, { f: 'vocab.blue', ...DETAIL }),
+    limb([22, 20], [30, 82], 5, { f: 'vocab.blue', ...DETAIL }),
+    limb([78, 20], [85, 82], 5, { f: 'vocab.blue', ...DETAIL }),
+    limb([78, 20], [70, 82], 5, { f: 'vocab.blue', ...DETAIL }),
+    path('M 41 22 V 63 M 59 22 V 63', DETAIL),
+    rect(16, 16, 68, 7, 3, { f: 'vocab.blue', ...INK }),
+    rect(36, 61, 28, 7, 2, { f: 'vocab.red', ...INK }),
+  ],
+
+  // playground slide, side view: a ladder up to the top, a yellow chute curving down to the ground
+  'sport-slide': [
+    groundShadow(50, 86, 34),
+    limb([18, 84], [26, 28], 4.5, { f: 'vocab.blue', ...DETAIL }),
+    limb([30, 84], [38, 28], 4.5, { f: 'vocab.blue', ...DETAIL }),
+    path('M 20.4 72 H 32.4 M 22.1 60 H 34.1 M 23.9 48 H 35.9 M 25.6 36 H 37.6', DETAIL),
+    rect(22, 24, 24, 6, 2, { f: 'vocab.blue', ...INK }),
+    path('M 42 24 H 48 Q 58 24 66 50 Q 72 72 84 76 V 84 Q 66 84 58 56 Q 52 32 42 32 Z', { f: 'vocab.yellow', ...INK }),
+    path('M 49 28 Q 57 30 63 52 Q 69 74 82 80', { s: 'surface.paper', sw: 2 }),
   ],
 };

@@ -75,7 +75,7 @@ export interface WordArtMeta {
   maxTones?: number;      // allowlist above 4 fill tones (§3.3); needs `reason`
   bboxWaived?: boolean;   // C2 waiver; needs `reason`
   reason?: string;        // why a waiver is granted (a test requires it with either waiver)
-  reserved?: boolean;     // key exists for v1.1, unused at launch
+  reserved?: boolean;     // used by no vocabulary topic: a key kept for v1.1, or a lesson picture outside the topics (F-CURR-001)
 }
 export type WordArtFamily = 'food'|'animal'|'family'|'school'|'nature'|'travel'|'sport'|'culture'|'science'|'color'|'count'|'body'|'prop';
 ```
@@ -246,7 +246,7 @@ Files: `glyphs/{food,animal,family,school,nature,travel,sport,culture,science,pr
 
 - every item `visual` of the form `word:<key>` has `<key>` in `WORD_ART_KEYS`;
 - every item `visual` of the form `card:<id>` is in `supportedCardIds`;
-- every `WORD_ART_KEYS` entry of family other than `prop` is used by exactly one item, or is flagged `meta.reserved` — **checked per topic file that exists**: while a topic's JSON has not been merged (F-VOC-001 V-2b..V-6b), the glyphs of its families are checked for validity only (tones, grammar, bbox), so the system PRs W-1b/W-1c and the art batches may land before the data they will serve;
+- every `WORD_ART_KEYS` entry of family other than `prop` is used by exactly one item, or is flagged `meta.reserved` (a lesson picture outside the topics is registered this way: `sport-swing`, `sport-slide` and `nature-sand` for Stage 2 Playground Words, F-CURR-001 S2-3; a reserved key is outside the family plan of `registry.test.ts`) — **checked per topic file that exists**: while a topic's JSON has not been merged (F-VOC-001 V-2b..V-6b), the glyphs of its families are checked for validity only (tones, grammar, bbox), so the system PRs W-1b/W-1c and the art batches may land before the data they will serve;
 - every `prop` key is referenced by a colour generator;
 - **while the art lags the data** (amended at W-1b: F-VOC-001 merged `food`, `animals`, `colors` and `numbers` before any batch, leaving 42 `word:` visuals without a glyph): the test keeps an `AWAITING_ART` map from each family to the PR that draws it (W-3 food, color, count; W-4 animal, body; W-5 family, school, nature; W-6 travel, sport, culture, science). For a served family it pins how many visuals are still missing, so a misspelled key in a topic file raises the count and fails at once; a family whose count reaches 0 must leave the map. A batch PR deletes its families from the map, which turns on the full first rule for them; a topic PR that serves a family in the map pins its count. Until the last batch, behaviour 1 holds for every family outside the map;
 - the `COLOR_CONFUSION_PAIRS` constant matches the recomputed list (§3.4).
@@ -340,7 +340,7 @@ New server-rendered page `apps/web/src/app/design-preview/word-art/page.tsx` (F-
 | `.../glyphs.test.ts` | unit | for **every registry glyph**: tones valid, at most `maxTones` fill tones, path grammar, coordinates in range, shape count limits, `sw` in {2,3} (generated 1.5 and the paper halo of width 7 allowed, amended at W-1c), bbox 60-70 % (waivers listed), distinct data, no `text`/`image` kinds |
 | `.../render.test.ts` | unit, 100 % | `toRenderList` defaults, `mono`, opacity floor; `glyphToSvgString` golden strings for 3 glyphs |
 | `.../generated.test.ts` | unit, 100 % | `swatch` places the sticker in the lower right and keeps 9+ shapes; `count(n)` has n dots for 0..10 and 20, left-to-right; `bodyPart` anchors inside the viewBox; `figure` variants differ; the four sibling glyphs differ |
-| `.../registry.test.ts` | unit | no duplicate keys; key grammar; family matches its source; deep freeze; every family has the planned count (food 9, animal 11, family 12, school 11, nature 9, travel 12, sport 12, culture 7, science 12, color 12, count 12, body 12, prop 4) — at most the plan until its batch lists it in `COMPLETE_FAMILIES`, exactly the plan after, and a family that reaches the plan must be listed; `getWordArt`, `wordArtKeyOf` |
+| `.../registry.test.ts` | unit | no duplicate keys; key grammar; family matches its source; deep freeze; every family has the planned count, reserved keys not counted (food 9, animal 11, family 12, school 11, nature 9, travel 12, sport 12, culture 7, science 12, color 12, count 12, body 12, prop 4) — at most the plan until its batch lists it in `COMPLETE_FAMILIES`, exactly the plan after, and a family that reaches the plan must be listed; `getWordArt`, `wordArtKeyOf` |
 | `.../color-science.test.ts` | unit | the Lab / Machado helpers on known reference colours; `COLOR_CONFUSION_PAIRS` matches the recomputed list; non-text contrast of the outline on canvas is at least 3:1 |
 | `.../import-guard.test.ts` | integration (source scan) | `colors.vocab` / `'vocab.'` tones appear only under `src/word-art/` and `components/WordArt/` |
 | `.../budget.test.ts` | integration | raw and gzip size limits (W7) |
