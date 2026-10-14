@@ -297,18 +297,18 @@ describe('flags', () => {
     expect(src).toContain('process.env.EXPO_PUBLIC_GROWN_UP_HOME');
   });
 
-  it('notesEnabled (F-FEEDBACK-001 section 6.5) is OFF by default and flips on with "true" or "1"', async () => {
+  it('notesEnabled (F-FEEDBACK-001 section 6.5) is ON by default since FB-14 and switches off with "false" or "0"', async () => {
     delete process.env.EXPO_PUBLIC_NOTES_ENABLED;
     let mod = await reload();
-    expect(mod.flags.notesEnabled).toBe(false);
-    expect(mod.launchDefaultFlags.notesEnabled).toBe(false);
+    expect(mod.flags.notesEnabled).toBe(true);
+    expect(mod.launchDefaultFlags.notesEnabled).toBe(true);
     process.env.EXPO_PUBLIC_NOTES_ENABLED = 'true';
     mod = await reload();
     expect(mod.flags.notesEnabled).toBe(true);
-    process.env.EXPO_PUBLIC_NOTES_ENABLED = '1';
-    mod = await reload();
-    expect(mod.flags.notesEnabled).toBe(true);
     process.env.EXPO_PUBLIC_NOTES_ENABLED = 'false';
+    mod = await reload();
+    expect(mod.flags.notesEnabled).toBe(false);
+    process.env.EXPO_PUBLIC_NOTES_ENABLED = '0';
     mod = await reload();
     expect(mod.flags.notesEnabled).toBe(false);
   });

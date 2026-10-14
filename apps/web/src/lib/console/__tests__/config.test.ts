@@ -93,12 +93,17 @@ describe('notesEnabled', () => {
     vi.unstubAllEnvs();
   });
 
-  it('is off unless NEXT_PUBLIC_NOTES_ENABLED is "true" or "1"', () => {
-    expect(notesEnabled({})).toBe(false);
-    expect(notesEnabled({ NEXT_PUBLIC_NOTES_ENABLED: 'true' })).toBe(true);
-    expect(notesEnabled({ NEXT_PUBLIC_NOTES_ENABLED: '1' })).toBe(true);
-    for (const off of ['false', '0', 'enabled', 'TRUE', '', ' true']) expect(notesEnabled({ NEXT_PUBLIC_NOTES_ENABLED: off }), off).toBe(false);
+  it('is on by default since FB-14 (owner decision 2026-10-13) and only "false" or "0" switches it off', () => {
+    expect(notesEnabled({})).toBe(true);
+    for (const on of ['true', '1', 'enabled', 'TRUE', '', ' true']) expect(notesEnabled({ NEXT_PUBLIC_NOTES_ENABLED: on }), on).toBe(true);
+    expect(notesEnabled({ NEXT_PUBLIC_NOTES_ENABLED: 'false' })).toBe(false);
+    expect(notesEnabled({ NEXT_PUBLIC_NOTES_ENABLED: '0' })).toBe(false);
     expect(typeof notesEnabled()).toBe('boolean');
+  });
+
+  it('the off switch reaches the build: NEXT_PUBLIC_NOTES_ENABLED=false turns it off', () => {
+    vi.stubEnv('NEXT_PUBLIC_NOTES_ENABLED', 'false');
+    expect(notesEnabled()).toBe(false);
   });
 
   it('reads the build value by its literal name', () => {

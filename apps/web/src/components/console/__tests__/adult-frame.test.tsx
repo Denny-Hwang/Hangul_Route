@@ -114,6 +114,8 @@ beforeEach(() => {
   // Reports (F-REPORT-001 RP-11) and Lessons (F-BROWSE-001 BR-14) are on by default; these cases start from every
   // sibling flag off and switch on what they need.
   vi.stubEnv('NEXT_PUBLIC_REPORTS_ENABLED', 'false');
+  // Notes are on by default since FB-14; this suite's baseline is every sibling flag off.
+  vi.stubEnv('NEXT_PUBLIC_NOTES_ENABLED', 'false');
   vi.stubEnv('NEXT_PUBLIC_BROWSE', 'false');
 });
 afterEach(() => {

@@ -180,9 +180,9 @@ const rowOf = (over: Partial<Extract<SentNoteRow, { to: 'learner' }>> = {}): Sen
   ...over,
 });
 
-describe('flag off (the default until FB-14)', () => {
+describe('flag switched off (NEXT_PUBLIC_NOTES_ENABLED=false; on by default since FB-14)', () => {
   it('renders nothing, asks the Worker nothing and goes back to the space page', async () => {
-    vi.stubEnv('NEXT_PUBLIC_NOTES_ENABLED', '');
+    vi.stubEnv('NEXT_PUBLIC_NOTES_ENABLED', 'false');
     const root = await page('id=space%3Ac1');
     expect(byText(root, 'button', n.newNote.cta)).toHaveLength(0);
     expect(calls).toHaveLength(0);
@@ -190,7 +190,7 @@ describe('flag off (the default until FB-14)', () => {
   });
 
   it('the family twin goes back to the family page', async () => {
-    vi.stubEnv('NEXT_PUBLIC_NOTES_ENABLED', '');
+    vi.stubEnv('NEXT_PUBLIC_NOTES_ENABLED', 'false');
     await page('id=space%3Af1', '/parent/space/notes');
     expect(nav.replaced).toEqual(['/parent/space?id=space%3Af1']);
   });

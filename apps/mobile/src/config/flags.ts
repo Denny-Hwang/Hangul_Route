@@ -135,8 +135,8 @@ export interface Flags {
 
   /**
    * Notes from grown-ups (F-FEEDBACK-001): the Home card, My notes, the note page and the
-   * grown-up zone rows; with it off the inbox's notes are neither flushed nor applied. OFF until
-   * FB-14 flips it, after the Worker's note routes are deployed.
+   * grown-up zone rows; with it off the inbox's notes are neither flushed nor applied. ON since
+   * FB-14 (owner decision 2026-10-13, OD-19); `EXPO_PUBLIC_NOTES_ENABLED=false` switches it off.
    */
   notesEnabled: boolean;
 
@@ -173,7 +173,7 @@ const launchDefaults: Flags = {
   vocabTopicsEnabled: !isNativeBundle(),
   vocabShowDrafts: false,
   grownUpHomeEnabled: false,
-  notesEnabled: false,
+  notesEnabled: true,
   reportsEnabled: true,
   routeEnabled: true,
 };
