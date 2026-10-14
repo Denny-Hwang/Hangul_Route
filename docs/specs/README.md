@@ -112,7 +112,7 @@ F-XXX-<slug>.md
   - wireframes `design/wireframes/site/{home,learners,parents,teachers,header-footer}.md`
 
 ### Spec wave 2026-10-13 (owner decision: the 22 "Coming later" cells)
-- `F-CURR-001-upper-stage-content.md` — content of the 22 placeholder cells of Stages 2, 3, 4, 6 and 7: per-stage goals and can-do lines, scope, six-step quests per cell, five new games (Sentence Builder, Realia Read, Type Hangul, Trace a Word, Write Frame), writing without speaking, sourced culture notes, the MAR language and culture passes, a per-cell JSON pipeline with its own bundle budget, Stage 2+ paid · **ready**
+- `F-CURR-001-upper-stage-content.md` — content of the 22 placeholder cells of Stages 2, 3, 4, 6 and 7: per-stage goals and can-do lines, scope, six-step quests per cell, five new games (Sentence Builder, Realia Read, Type Hangul, Trace a Word, Write Frame), writing without speaking, sourced culture notes, the MAR language and culture passes, a per-cell JSON pipeline with its own bundle budget, Stage 2+ paid · **shipped** (all 35 rows, #617 to #678)
 
 ### Phase 2 / planned
 - `F-PROF-001-device-profiles.md` — multi-learner · **draft** (code shipped PR #13, full spec covers cloud sync)

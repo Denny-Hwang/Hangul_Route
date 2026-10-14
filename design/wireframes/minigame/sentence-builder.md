@@ -211,10 +211,11 @@ Exit to: `quest/player` (step complete, via `goBack`) · empty scope -> `quest/p
 ## Data needs
 
 - reads: `scopeFor(ref)` -> `orderIt.rounds[]`, the C-1 `OrderItRoundSchema` (PR #629) as it is:
+  - `id`: the round's id (unique in the scope);
   - `sentence`: `KoText` of the whole sentence. Its `en` (with `es` / `ko` from the lesson overlay) is the meaning card's gloss; it is the audio of Hear it; its `romanization` is shown in D;
   - tiles: `sentence.ko.split(' ')` in the right order (2-6), each with the word at the same index of `sentence.romanization.split(' ')`;
   - `pictureRef?`: the meaning card's decorative picture;
-  - `distractors` (0-2 `KoText`): the extra tiles, never a word of the sentence;
+  - `distractors` (0-2 `KoText`): the extra tiles, never a word of the sentence (C-1 compares them with the sentence mark removed, so `먹어요` is a tile of `... 먹어요.`);
   - `particle?: { tile, choices: [KoText, KoText] }`: makes the round a particle round (C): the stem is `tiles[tile]` minus the choice it ends with, the other tiles are pre-placed, exactly one choice ends the tile (C-1 checks it).
   The particle hint's note is not round data: it is the `noteEn` of the first `pattern` item of the quest's own Discover step.
   `romanizationMode` (F-I18N-001); `layoutClass` (F-LAYOUT-001).
