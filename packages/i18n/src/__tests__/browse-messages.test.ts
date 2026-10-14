@@ -121,6 +121,9 @@ const BR8_KEYS = [
 /** BR-9: the word topic page's Hear button. */
 const BR9_KEYS = ['topic.hearA11y'];
 
+/** BR-13: [ Present this ] on the item page and its accessible description (presenter README, Strings). */
+const BR13_KEYS = ['item.present.cta', 'item.presentNote', 'item.presentBlocked'];
+
 describe('caregiver.browse (BR-6)', () => {
   it('names the tab, the page and the preview strip as OD-8 says', () => {
     expect(browse.documentTitle).toBe('Hangul Route lessons');
@@ -168,6 +171,7 @@ describe('caregiver.browse (BR-6)', () => {
         ...BR7_KEYS,
         ...BR8_KEYS,
         ...BR9_KEYS,
+        ...BR13_KEYS,
       ].sort(),
     );
   });
@@ -212,6 +216,37 @@ describe('caregiver.browse (BR-7)', () => {
     expect(browse.minutes(5)).toBe('About 5 minutes');
     expect(browse.minutes(1)).toBe('About 1 minute');
     expect(browse.display.note).toBe("These choices change only this preview. No learner's settings change.");
+  });
+});
+
+describe('caregiver.browse (BR-13)', () => {
+  it('names [ Present this ] and says only what is true: no one\'s progress changes (Recent keeps the deck)', () => {
+    expect(browse.item.present.cta).toBe('Present this');
+    expect(browse.item.presentNote).toBe('Opens this as slides for a classroom screen or a TV. No one\'s progress changes.');
+    expect(getMessages('es').caregiver.browse.item.present.cta).toBe('Proyectar');
+    expect(getMessages('es').caregiver.browse.item.presentNote).toBe(
+      'Abre esto como diapositivas para una pantalla de clase o un televisor. No cambia el progreso de nadie.',
+    );
+    expect(getMessages('ko').caregiver.browse.item.present.cta).toBe('큰 화면에 띄우기');
+    expect(getMessages('ko').caregiver.browse.item.presentNote).toBe('교실 화면이나 TV에 슬라이드로 띄워요. 누구의 진도도 바뀌지 않아요.');
+  });
+
+  it('never claims nothing is saved, and keeps the cta inside its 28-character budget in every locale', () => {
+    for (const locale of ['en', 'es', 'ko'] as const) {
+      const item = getMessages(locale).caregiver.browse.item;
+      expect(item.present.cta.length, locale).toBeLessThanOrEqual(28);
+      expect(item.presentNote, locale).not.toMatch(/nothing is saved|no se guarda|저장되지 않/i);
+      // One note for every item kind: lessons now, stories and word topics once their slides land (F-TCH-004 PR 11, 12).
+      expect(item.presentNote, locale).not.toMatch(/lesson|story|topic|lecci|historia|tema|레슨|이야기|주제/i);
+    }
+  });
+
+  it('says what to do when the browser gave no new tab, without blame (review of #590)', () => {
+    expect(browse.item.presentBlocked).toBe('The new tab did not open. Allow pop-ups for this site, then try again.');
+    expect(getMessages('es').caregiver.browse.item.presentBlocked).toBe(
+      'La pestaña nueva no se abrió. Permite las ventanas emergentes de este sitio y vuelve a intentarlo.',
+    );
+    expect(getMessages('ko').caregiver.browse.item.presentBlocked).toBe('새 탭이 열리지 않았어요. 이 사이트의 팝업을 허용한 뒤 다시 눌러 주세요.');
   });
 });
 
