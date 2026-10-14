@@ -350,3 +350,26 @@ describe("overlay-rules: overlay-missing", () => {
     assert.deepEqual(checkOverlayTree(new Map()), { violations: [], warnings: [], missing: { es: 0, ko: 0 } });
   });
 });
+
+describe("overlay-rules: overlay-ko-copula (F-CURR-001 section 3.8 pass 6)", () => {
+  const field = "steps.s2.discover.pages.0.items.0.examples.chaegieyo.gloss";
+  const lesson = (text, domain = "lessons-stage3-letters") => base(ko({ "quest:stage3-letters-q1": { [field]: text } }, domain));
+
+  test("'라는' straight after a syllable with a final consonant needs '이라는' in a ko lesson overlay", () => {
+    assert.deepEqual(rules(lesson("읽는 물건라는 뜻")), ["overlay-ko-copula"]);
+    assert.deepEqual(rules(lesson("{ko:책}라는 낱말")), ["overlay-ko-copula"]);
+    const v = checkOverlayTree(lesson("읽는 물건라는 뜻")).violations[0];
+    assert.equal(v.path, `entries.quest:stage3-letters-q1.${field}`);
+    assert.match(v.rule, /overlay-ko-copula: .*물건이라는/);
+  });
+
+  test("'이라는', '라는' after a vowel, and verb forms after a final ㄹ (달라는) pass", () => {
+    assert.deepEqual(rules(lesson("읽는 물건이라는 뜻")), []);
+    assert.deepEqual(rules(lesson("나무라는 뜻, {ko:사과}라는 낱말")), []);
+    assert.deepEqual(rules(lesson("김에 만 밥을 달라는 말")), []);
+  });
+
+  test("only ko lesson overlays: Spanish and other ko domains are not read by this rule", () => {
+    assert.deepEqual(rules(base(ko({ "card:gangaji": { blurb: "물건라는 뜻" } }, "cards"))), []);
+  });
+});

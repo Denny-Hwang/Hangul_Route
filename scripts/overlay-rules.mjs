@@ -19,6 +19,9 @@
 //   overlay-circular-gloss   a ko gloss equal to the Korean it glosses (warning when it only
 //                            wraps it in spaces or punctuation)
 //   overlay-token-mismatch   a story narration whose {kw:id} tokens are not the base multiset
+//   overlay-ko-copula        a ko lesson overlay (lessons-*.json) with '라는' straight after a
+//                            syllable that ends in a final consonant ('물건라는' for '물건이라는');
+//                            a final ㄹ is left alone, where '라는' is a verb form ('달라는')
 //   banned-on-learner-surface  a learner-banned word of the locale (banned-words.json)
 //   overlay-missing          warning (error for HANGUL_ROUTE_STRICT_LOCALES): a translatable
 //                            English field of a base entity that the locale lacks
@@ -107,6 +110,26 @@ function baseEntities(tree) {
   return out;
 }
 
+/**
+ * F-CURR-001 §3.8 pass 6: the quoted copula is '이라는' after a final consonant and '라는'
+ * after a vowel. Returns the first wrong word ("물건라는", "{ko:책}라는") of `text`, or null. The syllable
+ * before '라는' is the one in the text, or the last one of a `{ko:...}` token right before
+ * it. A final ㄹ (jongseong 8) is skipped: there '라는' is mostly a verb form ('달라는' from
+ * 달라 "give me", '놀라는'), which a text rule cannot tell from a noun.
+ */
+const FINAL_RIEUL = 8;
+export function koCopulaSlip(text) {
+  for (const m of text.matchAll(/(\{ko:[^}]*\}|[가-힣]+)라는/g)) {
+    const before = m[1].startsWith("{ko:") ? m[1].slice(4, -1) : m[1];
+    const last = before.slice(-1);
+    if (!/[가-힣]/.test(last)) continue;
+    const jong = (last.charCodeAt(0) - 0xac00) % 28;
+    if (jong !== 0 && jong !== FINAL_RIEUL) return `${m[1]}라는`;
+  }
+  return null;
+}
+const isKoLessonOverlay = (rel) => /^content\/i18n\/ko\/lessons-[^/]+\.json$/.test(rel);
+
 // ---- one overlay file ------------------------------------------------------------------
 
 function checkFile(rel, body, ctx) {
@@ -161,6 +184,10 @@ function checkField(locale, id, field, value, base, add, ctx) {
   if (HANGUL.test(shown) && (locale === "es" || !allowed)) add("korean-in-ui-field");
   const banned = bannedWordIn(value, locale);
   if (banned !== null) add(`banned-on-learner-surface: "${banned}"`);
+  if (locale === "ko" && isKoLessonOverlay(ctx.current)) {
+    const slip = koCopulaSlip(value);
+    if (slip !== null) add(`overlay-ko-copula: "${slip}" needs 이라는 after a final consonant (${slip.slice(0, -2)}이라는)`);
+  }
   if (!allowed || base === undefined) return;
 
   const missing = missingSelector(base, field);
