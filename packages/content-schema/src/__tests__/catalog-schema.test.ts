@@ -125,7 +125,8 @@ describe('the shipped catalogue data', () => {
     // + Hike & Ask (S6-4): +3 lesson quests.
     // + Buy at Market (S6-5): +3 lesson quests.
     // + Animal Sentences (S3-4): +3 lesson quests.
-    expect(CATALOG.quests.filter((q) => q.kind === 'lesson')).toHaveLength(88);
+    // + Lunch Box Words and Outdoor Words q2-q3 (T-1): +4 lesson quests.
+    expect(CATALOG.quests.filter((q) => q.kind === 'lesson')).toHaveLength(92);
   });
 
   it('has 24 stories adding up to 112 minutes, each with a listen quest on its shelf episode', () => {
@@ -447,10 +448,14 @@ describe('routeCatalogOf', () => {
       'quest:stage2-letters-q5',
       'quest:stage2-letters-q6',
       'quest:stage2-life-q1',
+      'quest:stage2-life-q2',
+      'quest:stage2-life-q3',
       'quest:stage2-rites-q1',
       'quest:stage2-rites-q2',
       'quest:stage2-rites-q3',
       'quest:stage2-nature-q1',
+      'quest:stage2-nature-q2',
+      'quest:stage2-nature-q3',
       'quest:stage2-crafts-q1',
       'quest:stage2-crafts-q2',
       'quest:stage2-crafts-q3',

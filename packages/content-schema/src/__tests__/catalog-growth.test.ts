@@ -149,9 +149,13 @@ describe('placedOutGrowth', () => {
     const shippedSince = CATALOG.quests.filter((q) => !V8.has(q.id) && q.stage === 'stage2').map((q) => q.id);
     expect(shippedSince).toEqual([
       ...WB,
+      'quest:stage2-life-q2',
+      'quest:stage2-life-q3',
       'quest:stage2-rites-q1',
       'quest:stage2-rites-q2',
       'quest:stage2-rites-q3',
+      'quest:stage2-nature-q2',
+      'quest:stage2-nature-q3',
       'quest:stage2-crafts-q1',
       'quest:stage2-crafts-q2',
       'quest:stage2-crafts-q3',

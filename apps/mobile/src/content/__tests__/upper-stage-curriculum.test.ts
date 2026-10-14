@@ -168,8 +168,9 @@ describe('the lesson cell files (F-CURR-001 section 3.10)', () => {
   });
 
   it('only an allow-listed cell ships with no pillar tag (LessonCellSchema accepts [] for the shipped Lunch Box Words)', () => {
-    // Lunch Box Words kept its shipped [] (T-1): no sub-theme fits. Every other cell names at least one tag.
-    const NO_TAG_ALLOWED: ReadonlySet<string> = new Set(['episode:stage2-life']);
+    // Lunch Box Words kept its shipped [] (T-1) and Daily Mini-Sentences ships [] (S3-2): everyday eating
+    // and going out fit no sub-theme. Every other cell names at least one tag.
+    const NO_TAG_ALLOWED: ReadonlySet<string> = new Set(['episode:stage2-life', 'episode:stage3-life']);
     for (const { cell } of CELLS) if (!NO_TAG_ALLOWED.has(cell.id)) expect(cell.pillarTags.length, cell.id).toBeGreaterThan(0);
   });
 

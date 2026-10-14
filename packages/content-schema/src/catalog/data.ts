@@ -35,8 +35,9 @@ import type { Catalog, CatalogCell, CatalogQuest, CatalogStory, CatalogTopic } f
  * Version 24 (F-CURR-001 S6-4): Hike & Ask ships (Stage 6 nature, 3 lesson quests).
  * Version 25 (F-CURR-001 S6-5): Buy at Market ships (Stage 6 crafts, 3 lesson quests); Stage 6 opens.
  * Version 26 (F-CURR-001 S3-4): Animal Sentences ships (Stage 3 nature, 3 lesson quests); Stage 3 opens.
+ * Version 27 (F-CURR-001 T-1): Lunch Box Words and Outdoor Words adopt Discover and Check and grow to three quests each.
  */
-export const CATALOG_VERSION = 26;
+export const CATALOG_VERSION = 27;
 
 const cell = (
   stage: StageKey,
@@ -66,9 +67,9 @@ const cells: CatalogCell[] = [
   cell('stage1', 'nature', 'Tigers, Mountains, Moon', 'shipped', 12, ['quest:stage1-nature-q1', 'quest:stage1-nature-q2', 'quest:stage1-nature-q3']),
   cell('stage1', 'crafts', 'Yut, Kites & Paper', 'shipped', 12, ['quest:stage1-crafts-q1', 'quest:stage1-crafts-q2', 'quest:stage1-crafts-q3']),
   cell('stage2', 'letters', 'Word Builder', 'shipped', 25, ['quest:stage2-letters-q1', 'quest:stage2-letters-q2', 'quest:stage2-letters-q3', 'quest:stage2-letters-q4', 'quest:stage2-letters-q5', 'quest:stage2-letters-q6']),
-  cell('stage2', 'life', 'Lunch Box Words', 'shipped', 6, ['quest:stage2-life-q1']),
+  cell('stage2', 'life', 'Lunch Box Words', 'shipped', 13, ['quest:stage2-life-q1', 'quest:stage2-life-q2', 'quest:stage2-life-q3']),
   cell('stage2', 'rites', 'Holiday Words', 'shipped', 13, ['quest:stage2-rites-q1', 'quest:stage2-rites-q2', 'quest:stage2-rites-q3']),
-  cell('stage2', 'nature', 'Outdoor Words', 'shipped', 6, ['quest:stage2-nature-q1']),
+  cell('stage2', 'nature', 'Outdoor Words', 'shipped', 13, ['quest:stage2-nature-q1', 'quest:stage2-nature-q2', 'quest:stage2-nature-q3']),
   cell('stage2', 'crafts', 'Playground Words', 'shipped', 12, ['quest:stage2-crafts-q1', 'quest:stage2-crafts-q2', 'quest:stage2-crafts-q3']),
   cell('stage3', 'letters', 'First Sentences', 'shipped', 14, ['quest:stage3-letters-q1', 'quest:stage3-letters-q2', 'quest:stage3-letters-q3']),
   cell('stage3', 'life', 'Daily Mini-Sentences', 'shipped', 14, ['quest:stage3-life-q1', 'quest:stage3-life-q2', 'quest:stage3-life-q3']),
@@ -142,11 +143,15 @@ const lessonQuests: CatalogQuest[] = [
   lesson('stage2-letters-q4', 'stage2', 'letters', 'Joined Vowels oe, wae, we', 4, ['ㅚ', 'ㅙ', 'ㅞ']),
   lesson('stage2-letters-q5', 'stage2', 'letters', 'One Sound for Six Letters', 4, ['ㅅ/final', 'ㅈ/final', 'ㅊ/final', 'ㅌ/final', 'ㄷ/final', 'ㅆ/final']),
   lesson('stage2-letters-q6', 'stage2', 'letters', 'More Letters for k and p', 4, ['ㅋ/final', 'ㄲ/final', 'ㅍ/final']),
-  lesson('stage2-life-q1', 'stage2', 'life', 'Lunch Box Words', 5),
+  lesson('stage2-life-q1', 'stage2', 'life', 'Lunch Box Words', 4),
+  lesson('stage2-life-q2', 'stage2', 'life', 'Fruit and Snacks', 4),
+  lesson('stage2-life-q3', 'stage2', 'life', 'At the Table', 4),
   lesson('stage2-rites-q1', 'stage2', 'rites', 'Seollal Words', 4),
   lesson('stage2-rites-q2', 'stage2', 'rites', 'Chuseok Words', 4),
   lesson('stage2-rites-q3', 'stage2', 'rites', 'Holiday Play and Gifts', 4),
-  lesson('stage2-nature-q1', 'stage2', 'nature', 'Outdoor Words', 5),
+  lesson('stage2-nature-q1', 'stage2', 'nature', 'Outdoor Words', 4),
+  lesson('stage2-nature-q2', 'stage2', 'nature', 'Rain and Snow', 4),
+  lesson('stage2-nature-q3', 'stage2', 'nature', 'Rivers and Seas', 4),
   lesson('stage2-crafts-q1', 'stage2', 'crafts', 'At the Playground', 4),
   lesson('stage2-crafts-q2', 'stage2', 'crafts', 'Traditional Games', 4),
   lesson('stage2-crafts-q3', 'stage2', 'crafts', 'Playing Together', 4),

@@ -246,14 +246,16 @@ describe('grid golden (F-STORY-005 §3.1 rule 2)', () => {
       // F-QUEST-002 Q-8 appends nature q2-q3 and crafts q2-q3 on purpose (the same re-scope migration).
       { id: 'episode:stage1-nature', order: 4, questIds: ['quest:stage1-nature-q1', 'quest:stage1-nature-q2', 'quest:stage1-nature-q3'], status: 'shipped' },
       { id: 'episode:stage1-crafts', order: 5, questIds: ['quest:stage1-crafts-q1', 'quest:stage1-crafts-q2', 'quest:stage1-crafts-q3'], status: 'shipped' },
-      { id: 'episode:stage2-life', order: 2, questIds: ['quest:stage2-life-q1'], status: 'shipped' },
-      { id: 'episode:stage2-nature', order: 4, questIds: ['quest:stage2-nature-q1'], status: 'shipped' },
       // F-CURR-001 generated lesson cells, after the hand-written lessons: by stage, then in grid theme order
       // (letters, life, rites, nature, crafts), the order build-lessons writes them in.
       // S2-1 Word Builder.
       { id: 'episode:stage2-letters', order: 1, questIds: ['quest:stage2-letters-q1', 'quest:stage2-letters-q2', 'quest:stage2-letters-q3', 'quest:stage2-letters-q4', 'quest:stage2-letters-q5', 'quest:stage2-letters-q6'], status: 'shipped' },
+      // T-1: the Lunch Box Words taste moved into its generated cell (same id, three quests).
+      { id: 'episode:stage2-life', order: 2, questIds: ['quest:stage2-life-q1', 'quest:stage2-life-q2', 'quest:stage2-life-q3'], status: 'shipped' },
       // S2-2 Holiday Words.
       { id: 'episode:stage2-rites', order: 3, questIds: ['quest:stage2-rites-q1', 'quest:stage2-rites-q2', 'quest:stage2-rites-q3'], status: 'shipped' },
+      // T-1: the Outdoor Words taste moved into its generated cell (same id, three quests).
+      { id: 'episode:stage2-nature', order: 4, questIds: ['quest:stage2-nature-q1', 'quest:stage2-nature-q2', 'quest:stage2-nature-q3'], status: 'shipped' },
       // S2-3 Playground Words.
       { id: 'episode:stage2-crafts', order: 5, questIds: ['quest:stage2-crafts-q1', 'quest:stage2-crafts-q2', 'quest:stage2-crafts-q3'], status: 'shipped' },
       // S3-1 First Sentences.

@@ -25,6 +25,61 @@ interface UpperCell {
   expectRouteDay: (page: Page) => Promise<void>;
 }
 
+const LUNCH_BOX_Q1_BOARDS = [
+  ['gimbap', 'uyu', 'dalgyal'],
+  ['uyu', 'bap', 'mul'],
+  ['dalgyal', 'gimchi', 'banana'],
+  ['gimbap', 'ramyeon', 'uyu'],
+  ['dalgyal', 'gimbap', 'mul'],
+  ['gimchi', 'uyu', 'gimbap'],
+] as const;
+const OUTDOOR_Q1_BOARDS = [
+  ['haneul', 'byeol', 'namu'],
+  ['san', 'dal', 'haneul'],
+  ['namu', 'bada', 'byeol'],
+  ['haneul', 'gang', 'san'],
+  ['byeol', 'namu', 'dal'],
+  ['bada', 'haneul', 'namu'],
+] as const;
+
+/** A refreshed Stage 2 taste (F-CURR-001 T-1): Discover, six Pic-Word boards, the Apply game skipped, the Check by id. */
+async function playTasteQ1(
+  page: Page,
+  shot: string,
+  firstWord: string,
+  boards: readonly (readonly string[])[],
+  check: readonly [string, string],
+): Promise<void> {
+  await startFirstQuest(page);
+  await expect(page.getByText(firstWord, { exact: true }).first()).toBeVisible();
+  await page.screenshot({ path: test.info().outputPath(`${shot}-q1-discover.png`), fullPage: true });
+  await passDiscover(page);
+  await page.getByRole('button', { name: 'Play minigame' }).click();
+  for (const [n, board] of boards.entries()) {
+    for (const id of board) await expect(page.getByTestId(`pic-word-picture-${id}`).locator('svg').first()).toBeVisible();
+    if (n === 0) await page.screenshot({ path: test.info().outputPath(`${shot}-q1-pic-word.png`), fullPage: true });
+    for (const id of board) {
+      await page.getByTestId(`pic-word-picture-${id}`).click();
+      await page.getByTestId(`pic-word-word-${id}`).click();
+    }
+  }
+  await page.getByRole('button', { name: 'Skip for now' }).click();
+  await playCheckByIds(page, [{ answer: check[0] }, { answer: check[1] }]);
+  await page.getByRole('button', { name: 'See results' }).click();
+  await expect(page.getByText('Next up')).toBeVisible();
+  await page.screenshot({ path: test.info().outputPath(`${shot}-q1-results.png`), fullPage: true });
+}
+
+/** The Learning Route tab: the cell's stage row, opened, lists the cell by its title. */
+async function expectCellOnRoute(page: Page, stage: number, title: string): Promise<void> {
+  await page.getByRole('tablist').getByRole('link', { name: 'Learning Route' }).click();
+  const row = page.getByTestId(`my-route-stage-${stage}`);
+  await expect(row).toBeVisible();
+  const cell = row.getByRole('button', { name: new RegExp(`: ${title.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\.`) }).first();
+  if (!(await cell.isVisible())) await row.getByRole('button', { name: new RegExp(`^Stage ${stage}, `) }).first().click();
+  await expect(cell).toBeVisible();
+}
+
 /** Type Hangul: tap the keys that type `text` (no tense or two-key letters in these targets), then Done. */
 async function typeAnswer(page: Page, text: string): Promise<void> {
   await expect(page.getByTestId('type-hangul-field')).toBeVisible();
@@ -739,6 +794,31 @@ const CELLS: readonly UpperCell[] = [
       await page.getByText('Learning Route', { exact: true }).last().click();
       await page.getByRole('button', { name: /^Stage 3, / }).click();
       await expect(page.getByRole('button', { name: /^Nature & Animals: Animal Sentences\./ })).toBeVisible();
+    },
+  },
+  // F-CURR-001 T-1: Lunch Box Words. q1 keeps its id and its card; its Card Match is skipped, the Check is the
+  // gimbap picture, then the written 도시락.
+  {
+    episodeId: 'episode:stage2-life',
+    cellButton: journeyCellName(2, 'Food & Daily Life'),
+    title: 'Lunch Box Words',
+    playFirstQuest: (page) => playTasteQ1(page, 'stage2-life', '도시락', LUNCH_BOX_Q1_BOARDS, ['gimbap', 'dosirak']),
+    expectRouteDay: async (page) => {
+      await page.context().setOffline(false);
+      await page.goto('/');
+      await expectCellOnRoute(page, 2, 'Lunch Box Words');
+    },
+  },
+  // F-CURR-001 T-1: Outdoor Words. q1's Build the Word is skipped; the Check is the star picture, then the written 나무.
+  {
+    episodeId: 'episode:stage2-nature',
+    cellButton: journeyCellName(2, 'Nature & Animals'),
+    title: 'Outdoor Words',
+    playFirstQuest: (page) => playTasteQ1(page, 'stage2-nature', '하늘', OUTDOOR_Q1_BOARDS, ['byeol', 'namu']),
+    expectRouteDay: async (page) => {
+      await page.context().setOffline(false);
+      await page.goto('/');
+      await expectCellOnRoute(page, 2, 'Outdoor Words');
     },
   },
 ];
