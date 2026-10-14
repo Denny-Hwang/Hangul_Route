@@ -277,8 +277,8 @@ A-3 이 아니라 **A-4b 머지 후**에 한다: A-4b 의 공통 어른 레이�
 **확인 1**: 학습자 프로필이 없는 시크릿 창에서 https://app.hangulroute.com 을 연다. Welcome 에 "Here to support a learner?" 행이 보이고 **Parent or caregiver** 가 `/signin?persona=parent` 로 간다. 학습자 프로필이 있는 기기에서 Profile → **Grown-up home** → PIN → 어른 영역이 열리고, **Back to learning** 이 학습자 앱으로 돌아온다. 학습자 앱의 Privacy 링크 (Profile 또는 Welcome) 는 `https://hangulroute.com/privacy` 로 간다.
 **확인 2 (설치한 앱 창, iPhone 또는 iPad 와 Android)**: 설치한 앱을 연다 (업데이트 배너가 뜨면 누른다) → Profile → Grown-up home (또는 Welcome 의 행) → 로그인 (Google 한 번, 이메일 코드 한 번) → 학급 · `/parent` · `/account/billing` 을 연다 → **Back to learning** 으로 학습자 화면에 돌아온다.
 **확인 2 가 실패하면** (예: iOS 설치한 앱 창에서 로그인이 끝나지 않음): 아래 되돌리기를 하고 S-3b · S-3c 로 가지 않는다. 기기 · 방식 · 화면 캡처를 보낸다.
-**되돌리기**: `EXPO_PUBLIC_GROWN_UP_HOME` 을 `false` → Retry deployment (A-10, 2026-10-14 부터 지우는 것은 되돌리기가 아니다: 기본값이 켜짐). 진입점만 사라지고 학습 기록 · PIN · 프로필은 그대로다.
-**A-10 완료 (2026-10-14)**: `grownUpHomeEnabled` 가 코드 기본값으로 켜졌다 (`grown-up-shell.spec.ts` 가 실제 잠금 · PIN 경로 · 어른 홈을 확인). 대시보드에서 할 일은 없다.
+**되돌리기**: `EXPO_PUBLIC_GROWN_UP_HOME` 을 `false` (대소문자 무관, `0` 도 같다) → Retry deployment (A-10, 2026-10-14 부터 지우는 것은 되돌리기가 아니다: 기본값이 켜짐). 진입점만 사라지고 학습 기록 · PIN · 프로필은 그대로다.
+**A-10 완료 (2026-10-14)**: `grownUpHomeEnabled` 가 코드 기본값으로 켜졌다 (`grown-up-shell.spec.ts` 가 실제 잠금 · PIN 경로 · 어른 홈을 확인). 대시보드에서 할 일은 없다. CI 는 끄는 스위치도 확인한다 (`EXPO_PUBLIC_GROWN_UP_HOME=false` 빌드에서 어른 진입점이 없는지).
 
 ### 5. S-3b — 사이트의 어른 링크와 옛 주소 리다이렉트 (5분, 3a 확인 뒤 같은 날)
 1. **`hangul-route-web`** → Settings → Build → Variables and Secrets → **Add** → Name `CONSOLE_ORIGIN` (접두어 없음, `NEXT_PUBLIC_` 아님), Value `https://app.hangulroute.com` (끝에 `/` 나 경로 없이) → Save. 값이 `hangulroute.com` (또는 그 서브도메인) 의 https 주소가 아니면 (예: `https://app.hangulroute.co` 같은 오타) 빌드가 일부러 실패하고 이전 배포가 그대로 남는다.

@@ -13,7 +13,7 @@ import { shot } from './shots';
  * sign-in form stays off). Every learner boot clears that session from its tab (section 3.9), so an init script puts
  * it back on grown-up pages only, the way a Clerk session outlives a visit to the learner app.
  *
- * - Always (the release build, `build:web` with no API address): behaviours 1 and 2 (Welcome row, Teacher to the real
+ * - On the release build (`build:web` with no API address; the offline e2e shards): behaviours 1 and 2 (Welcome row, Teacher to the real
  *   `/signin` with the teacher intro and no sign-up), 6 and 7 (the lock on a family device, the PIN path back to the
  *   page), 8 (15 idle minutes lock again), 9 (Back to learning, then the browser's Back shows the lock and no page
  *   content), 15 (an unknown grown-up path bounces to the real console page), 19 (no PIN: Sign in again and Back to learning
@@ -26,8 +26,9 @@ import { shot } from './shots';
  * - With an API address (`GROWN_UP_SHELL_E2E=1`, the API mocked by `page.route`): behaviour 23 to the end (the
  *   Profile row, the PIN, then the family home), behaviours 24 to 26 on `/parent`,
  *   the family home's first-screen budget at 375 x 667, and home, then a space, then Back in the same document (the
- *   RSC payload case moved here from app-host.spec.ts). No CI lane builds such a bundle yet (adding this file to the
- *   billing and grown-up home lane is a workflow change), so the PR that touches the family home runs it locally:
+ *   RSC payload case moved here from app-host.spec.ts), and behaviour 7 against real calls (the lock makes no API call;
+ *   the PIN then lets the family home ask for its spaces). CI runs this group in the billing and grown-up home lane of
+ *   web-app.yml (its app-host build has the API base at a mock host); the release group skips there. Locally:
  *
  *   EXPO_PUBLIC_API_BASE_URL=https://api.shell-e2e.test pnpm --filter @hangul-route/mobile build:web
  *   GROWN_UP_SHELL_E2E=1 pnpm --filter @hangul-route/mobile exec playwright test grown-up-shell
@@ -89,11 +90,23 @@ async function familyDevice(page: Page, opts: { trusted: 'current' | 'older' } =
   return pinSetAt;
 }
 
-/** Every request a page makes to an API (any host, the learner's or the console's), counted. */
-function countApiCalls(page: Page): { readonly count: number } {
+const GROWN_UP_PAGE = /^\/(signin|parent|teach|account|start)(\/|$)/;
+
+/**
+ * Every request a grown-up page makes to an API (any host), counted. A request a learner page queued before the
+ * navigation (telemetry, backup) is not the console's and is left out.
+ */
+function countConsoleApiCalls(page: Page): { readonly count: number } {
   const seen = { count: 0 };
   page.on('request', (r) => {
-    if (new URL(r.url()).pathname.startsWith('/api/')) seen.count += 1;
+    if (!new URL(r.url()).pathname.startsWith('/api/')) return;
+    let from = '';
+    try {
+      from = new URL(r.frame().url()).pathname;
+    } catch {
+      return;
+    }
+    if (GROWN_UP_PAGE.test(from)) seen.count += 1;
   });
   return seen;
 }
@@ -116,14 +129,17 @@ function noSidewaysScroll(page: Page): Promise<boolean> {
 async function openProfile(page: Page): Promise<void> {
   await page.goto('/');
   await expect(page.getByText('Hi, Mina!')).toBeVisible();
-  const guide = page.getByTestId('install-guide');
-  await page.waitForTimeout(800);
-  if (await guide.isVisible()) await guide.getByRole('button', { name: 'Not now' }).click();
+  // The install guide shows from the third cached open, whenever it is ready (also after a clock jump), and covers
+  // the Home tabs and the zone: dismiss it whenever it appears.
+  await page.addLocatorHandler(page.getByTestId('install-guide'), async (guide) => {
+    await guide.getByRole('button', { name: 'Not now' }).click();
+  });
   await page.getByRole('button', { name: 'Profile and settings' }).click();
   await expect(page.getByRole('button', { name: /^Grown-up zone/ })).toBeVisible();
 }
 
 test.describe('the grown-up shell on the release build (flag on by default, A-10)', () => {
+  test.skip(WITH_API, 'runs on the release build (the offline e2e shards); this run is the API group');
   test.use({ viewport: { width: 375, height: 667 } });
 
   test.beforeEach(async ({ context }) => {
@@ -152,16 +168,16 @@ test.describe('the grown-up shell on the release build (flag on by default, A-10
     await shot(page, 'a10-signin-teacher-375');
   });
 
-  test('6, 7: a family device locks the family home with no API call; the PIN brings the page back', async ({ page, context }) => {
+  test('6, 7: a family device locks the family home; the PIN brings the page back', async ({ page, context }) => {
     await signedInOnGrownUpPages(context);
     const pinSetAt = await familyDevice(page);
-    const api = countApiCalls(page);
 
     await page.goto('/parent');
     await expect(lockTitle(page)).toBeVisible();
     await expect(page.getByText(lock.line)).toBeVisible();
+    // The lock renders before the page body (this build has no API address, so the zero-call half of behaviour 7 is
+    // the API group's "7: the lock makes no API call" case).
     await expect(page.getByText(en.console.shell.noApi)).toHaveCount(0);
-    expect(api.count).toBe(0);
     expect(await noSidewaysScroll(page)).toBe(true);
     await shot(page, 'a10-lock-375');
 
@@ -183,7 +199,8 @@ test.describe('the grown-up shell on the release build (flag on by default, A-10
     await expectOpen(page);
 
     await page.clock.fastForward(GROWN_UP_IDLE_MS + 30_000);
-    await page.mouse.click(5, 300);
+    // A tap on an inert element (the page's text, never a link or a button): the lock listens on the window.
+    await page.getByRole('main').getByText(en.console.shell.noApi).click();
     await expect(lockTitle(page)).toBeVisible();
     await expect(page.getByRole('button', { name: lock.usePin.cta }).or(page.getByRole('link', { name: lock.usePin.cta }))).toBeVisible();
   });
@@ -339,6 +356,25 @@ test.describe('the family home with data (an API address, GROWN_UP_SHELL_E2E=1)'
   test.beforeEach(async ({ context }) => {
     // A browser with no learner profile unless a case adds one: the lock stays open (section 3.9), as on a grown-up's own phone.
     await signedInOnGrownUpPages(context);
+  });
+
+  test('7: the lock makes no API call; after the PIN the family home asks for its spaces', async ({ page }) => {
+    await mockApi(page, { spaces: [FAMILY], learners: [SAM(42, '2026-10-12T08:00:00Z')] });
+    await familyDevice(page);
+    const api = countConsoleApiCalls(page);
+
+    await page.goto('/parent');
+    await expect(lockTitle(page)).toBeVisible();
+    await expect(page.getByText(lock.line)).toBeVisible();
+    expect(api.count).toBe(0);
+
+    const spaces = page.waitForRequest((r) => new URL(r.url()).pathname === '/api/spaces');
+    await page.getByRole('button', { name: lock.usePin.cta }).or(page.getByRole('link', { name: lock.usePin.cta })).click();
+    await unlockWithPin(page);
+    await expect(page).toHaveURL(/\/parent$/);
+    await spaces;
+    await expect(page.getByTestId('learner-card')).toHaveCount(1);
+    expect(api.count).toBeGreaterThan(0);
   });
 
   test('24: a teacher-only account on /parent sees the no-family state with Set up my family and Go to Classes', async ({ page }) => {

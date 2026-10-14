@@ -31,6 +31,19 @@ function parseBool(raw: string | undefined, fallback: boolean): boolean {
 }
 
 /**
+ * An on-by-default flag whose env value is the owner's kill switch: trimmed and read in any case, `false`, `0`,
+ * `off` and `no` turn it off; anything else (unset, `true`, a typo) leaves the default. Wider than `parseBool` so a
+ * rollback typed as `FALSE` or ` false ` still rolls back (F-APP-001 A-10).
+ */
+function parseKillSwitch(raw: string | undefined, fallback: boolean): boolean {
+  if (raw === undefined) return fallback;
+  const v = raw.trim().toLowerCase();
+  if (v === 'false' || v === '0' || v === 'off' || v === 'no') return false;
+  if (v === 'true' || v === '1' || v === 'on' || v === 'yes') return true;
+  return fallback;
+}
+
+/**
  * True in a development build only: React Native and Metro set the global
  * `__DEV__`; elsewhere (tests, scripts) a non-production `NODE_ENV` counts.
  */
@@ -132,7 +145,7 @@ export interface Flags {
    * The learner app's entries to the grown-up area on app.hangulroute.com (F-APP-001 section
    * 3.6): the Welcome persona row, the Profile "Grown-up home" row, the dashboard card and the
    * Plan screen's same-tab billing hand-off (A-7). ON since A-10 (2026-10-14, after M3; owner
-   * decision: no 14-day wait); `EXPO_PUBLIC_GROWN_UP_HOME=false` switches it off. Web only, and
+   * decision: no 14-day wait); `EXPO_PUBLIC_GROWN_UP_HOME=false` (or `0`, `off`, `no`, any case) switches it off. Web only, and
    * native builds never show them (OD-6). The device gate marker, the bounce and the lock's PIN
    * path run with it off.
    */
@@ -202,7 +215,7 @@ export const flags: Flags = {
   vocabTopicsEnabled: parseBool(process.env.EXPO_PUBLIC_VOCAB_TOPICS_ENABLED, launchDefaults.vocabTopicsEnabled),
   vocabShowDrafts:
     isDevBuild() && parseBool(process.env.EXPO_PUBLIC_VOCAB_SHOW_DRAFTS, launchDefaults.vocabShowDrafts),
-  grownUpHomeEnabled: parseBool(process.env.EXPO_PUBLIC_GROWN_UP_HOME, launchDefaults.grownUpHomeEnabled),
+  grownUpHomeEnabled: parseKillSwitch(process.env.EXPO_PUBLIC_GROWN_UP_HOME, launchDefaults.grownUpHomeEnabled),
   notesEnabled: parseBool(process.env.EXPO_PUBLIC_NOTES_ENABLED, launchDefaults.notesEnabled),
   reportsEnabled: parseBool(process.env.EXPO_PUBLIC_REPORTS_ENABLED, launchDefaults.reportsEnabled),
   routeEnabled: parseBool(process.env.EXPO_PUBLIC_ROUTE_ENABLED, launchDefaults.routeEnabled),

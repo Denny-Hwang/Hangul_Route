@@ -13,7 +13,7 @@ import { shot } from './shots';
  *   E2E_GROWN_UP_HOME=1 pnpm --filter @hangul-route/mobile exec playwright test grown-up-entries
  *
  * The kill switch (a build made with `EXPO_PUBLIC_GROWN_UP_HOME=false`, run with `E2E_GROWN_UP_HOME=0`) checks that
- * Welcome, Profile and the dashboard show no entry.
+ * Welcome, Profile and the dashboard show no entry; CI runs it in the same lane, on a kill-switch rebuild (A-10).
  *
  * The sign-in page the entries open is a stand-in served by the test (no Clerk session here), and
  * the service worker is blocked so the stand-in is what the navigation gets. The Join prefill

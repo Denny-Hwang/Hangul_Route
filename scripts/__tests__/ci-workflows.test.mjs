@@ -608,7 +608,35 @@ describe("billing and grown-up home e2e (F-BILL-002 B-14)", () => {
     }
     const flagOn = mentions.filter((n) => !SKIP_ONLY_WHEN_ON.includes(n));
     assert.deepEqual(flagOn.sort(), ["grown-up-entries.spec.ts", "plan-screen-same-tab.spec.ts", "plan-status.spec.ts"]);
-    assert.deepEqual(listed.sort(), flagOn.map((n) => `e2e/web/${n}`).sort());
+    // F-APP-001 A-10: the grown-up shell's API group (test.skip(!WITH_API)) runs here too, on this dist with the
+    // API base at the mock host.
+    assert.match(run, /GROWN_UP_SHELL_E2E: "1"/);
+    const shell = readFileSync(join(dir, "grown-up-shell.spec.ts"), "utf8");
+    assert.match(shell, /const WITH_API = process\.env\.GROWN_UP_SHELL_E2E === '1';/);
+    assert.match(shell, /test\.skip\(\s*!WITH_API\b/);
+    assert.match(shell, /test\.skip\(\s*WITH_API\b/, "the release-build group skips on this API build");
+    assert.deepEqual(listed.sort(), [...flagOn, "grown-up-shell.spec.ts"].map((n) => `e2e/web/${n}`).sort());
+  });
+
+  test("the kill switch (F-APP-001 A-10): a flag-off build with no API base runs every spec with a flag-off block (test.skip(!OFF)) with E2E_GROWN_UP_HOME=0", () => {
+    const build = step("Build the kill-switch bundle");
+    assert.match(build, /if: \$\{\{ !cancelled\(\) \}\}/);
+    assert.match(build, /EXPO_PUBLIC_GROWN_UP_HOME: "false"/);
+    assert.doesNotMatch(build, /EXPO_PUBLIC_API_BASE_URL/, "the release values: no API base");
+    assert.match(build, /export TMPDIR="\$RUNNER_TEMP\/kill-switch-tmp"/, "a fresh Metro cache, never a flag-on transform");
+    assert.match(build, /pnpm --filter @hangul-route\/mobile build:web$/m);
+    // The kill-switch build replaces dist/, so it comes after every run on the app-host build.
+    assert.ok(lane.text.indexOf("- name: Build the kill-switch bundle") > lane.text.indexOf("- name: Grown-up home e2e (flag-on PWA specs"));
+    const run = step("Kill-switch e2e (flag-off PWA specs");
+    assert.match(run, /if: \$\{\{ !cancelled\(\) \}\}/);
+    assert.match(run, /working-directory: apps\/mobile/);
+    assert.match(run, /E2E_GROWN_UP_HOME: "0"/);
+    assert.match(run, /--output test-results\/kill-switch/);
+    assert.doesNotMatch(run, /STORY_FIXTURES|E2E_ROUTE|GROWN_UP_SHELL_E2E/);
+    const dir = join(ROOT, "apps", "mobile", "e2e", "web");
+    const flagOff = readdirSync(dir).filter((n) => n.endsWith(".spec.ts") && /test\.skip\(\s*!OFF\b/.test(readFileSync(join(dir, n), "utf8")));
+    assert.deepEqual(flagOff.sort(), ["grown-up-entries.spec.ts", "plan-screen.spec.ts"]);
+    assert.deepEqual(specArgs(run).sort(), flagOff.map((n) => `e2e/web/${n}`).sort());
   });
 
   test("apps/web and apps/mobile pin the same @playwright/test (the lane installs one Chromium for both runs)", () => {

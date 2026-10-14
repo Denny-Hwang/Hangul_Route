@@ -22,7 +22,8 @@ const BILLING_URL = 'https://hangulroute.com/teach/billing';
 /**
  * Since F-APP-001 A-10 the grown-up home flag is on by default and Open billing hands off in the same tab
  * (plan-screen-same-tab.spec.ts). This new-tab path is the kill switch's: a build made with
- * `EXPO_PUBLIC_GROWN_UP_HOME=false`, run with `E2E_GROWN_UP_HOME=0`.
+ * `EXPO_PUBLIC_GROWN_UP_HOME=false`, run with `E2E_GROWN_UP_HOME=0` (CI: the kill-switch run of the billing and
+ * grown-up home lane).
  */
 const OFF = process.env.E2E_GROWN_UP_HOME === '0';
 

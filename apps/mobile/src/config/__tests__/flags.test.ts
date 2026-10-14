@@ -298,17 +298,17 @@ describe('flags', () => {
     expect(src).toContain('process.env.EXPO_PUBLIC_VOCAB_SHOW_DRAFTS');
   });
 
-  it('grownUpHomeEnabled (F-APP-001 A-10) is ON by default; "false" or "0" is the kill switch', async () => {
+  it('grownUpHomeEnabled (F-APP-001 A-10) is ON by default; "false", "0", "off" or "no" in any case, trimmed, is the kill switch', async () => {
     delete process.env.EXPO_PUBLIC_GROWN_UP_HOME;
     let mod = await reload();
     expect(mod.flags.grownUpHomeEnabled).toBe(true);
     expect(mod.launchDefaultFlags.grownUpHomeEnabled).toBe(true);
-    for (const off of ['false', '0']) {
+    for (const off of ['false', '0', 'FALSE', 'False', ' false ', 'off', 'OFF', 'no', ' 0']) {
       process.env.EXPO_PUBLIC_GROWN_UP_HOME = off;
       mod = await reload();
       expect(mod.flags.grownUpHomeEnabled, off).toBe(false);
     }
-    for (const on of ['true', '1']) {
+    for (const on of ['true', '1', 'TRUE', ' on ', 'yes', '']) {
       process.env.EXPO_PUBLIC_GROWN_UP_HOME = on;
       mod = await reload();
       expect(mod.flags.grownUpHomeEnabled, on).toBe(true);
