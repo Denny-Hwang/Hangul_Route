@@ -125,5 +125,7 @@ describe('no direct speak from screens', () => {
     expect(file!.source).toMatch(
       /usePromptSlot\(\{\s*source: 'sentence-builder',\s*hasClip: hasClip\(rounds\[state\.roundIdx\]\?\.sentence\.audioRef\),\s*textOnScreen: true\s*\}\)/,
     );
+    expect(audioImports(file!.source)).toContain('warmClips');
+    expect(file!.source).toMatch(/warmClips\(clipRefsOf\(rounds\.map\(\(r\) => r\.sentence\)\)\)/);
   });
 });
