@@ -5,7 +5,7 @@ import type { BootIntent } from '../logic/shell/boot-intent';
  * builds have one root, the learner app, no address to read a boot intent from and no
  * `sessionStorage` to clear. The web variant is `app-root.web.ts`.
  */
-export type AppRoot = 'browse' | 'grown-up-bounce' | 'app';
+export type AppRoot = 'presenter' | 'browse' | 'grown-up-bounce' | 'app';
 
 export function pickRoot(_location?: { pathname: string }): AppRoot {
   return 'app';

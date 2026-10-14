@@ -7,8 +7,8 @@ import { track, type TelemetryEvent } from './telemetry';
 /**
  * Which root of the learner web build mounts, and what it does first (F-APP-001 sections 3.4,
  * 3.9 and 3.11; F-BROWSE-001 section 4.1). `index.ts` calls `bootRoot()` before anything mounts,
- * so a root other than the app runs none of the learner boot. Order: `/present` (F-TCH-004 PR 6
- * adds its branch), `/browse`, the grown-up bounce, else the app.
+ * so a root other than the app runs none of the learner boot. Order: `/present` (F-TCH-004 PR 6),
+ * `/browse`, the grown-up bounce, else the app.
  *
  * - **app**: reads the boot intent once and takes it out of the address (`history.replaceState`,
  *   keeping every other key, `?lang=` included). It removes the grown-up unlock and the console
@@ -25,12 +25,17 @@ import { track, type TelemetryEvent } from './telemetry';
  *   F-BROWSE-001 BR-0b). `BrowseApp` does its own boot, and removes both itself in a tab with no
  *   earlier page to go back to (`platform/browse-start.ts`); otherwise it touches `sessionStorage`
  *   only for its pass.
+ * - **presenter**: `/present` mounts `PresenterApp` (F-TCH-004 section 3.1), which runs none of
+ *   the learner boot. The chooser removes the grown-up unlock and the console session of its tab
+ *   (F-APP-001 section 3.9: a classroom screen holds no grown-up access) and reads no boot intent;
+ *   the deck fragment is the presenter's own to read and strip (`platform/presenter.web.ts`).
  * - **grown-up-bounce**: the host's single-page fallback answered a grown-up URL that has no
  *   file. Nothing mounts; `shell.path_bounced` names the prefix and the tab moves to the persona
  *   entry (`logic/shell/bounce.ts`). It clears nothing: the tab stays in the grown-up area.
  */
-export type AppRoot = 'browse' | 'grown-up-bounce' | 'app';
+export type AppRoot = 'presenter' | 'browse' | 'grown-up-bounce' | 'app';
 
+const PRESENTER_ROOT = '/present';
 const BROWSE_ROOT = '/browse';
 
 /** Roots that mount the learner `App`, and so boot as it does. `browse` mounts `BrowseApp` instead. */
@@ -39,6 +44,7 @@ const LEARNER_APP_ROOTS: ReadonlySet<AppRoot> = new Set<AppRoot>(['app']);
 export function pickRoot(location: { pathname: string }): AppRoot {
   const { pathname } = location;
   // `isLearnerRoot` owns the prefix rule (end, `/`, `?` or `.` after the root), so `/browsex` stays the app.
+  if (pathname.startsWith(PRESENTER_ROOT) && isLearnerRoot(pathname)) return 'presenter';
   if (pathname.startsWith(BROWSE_ROOT) && isLearnerRoot(pathname)) return 'browse';
   if (bounceFor(pathname) !== null) return 'grown-up-bounce';
   return 'app';
@@ -111,6 +117,8 @@ export function bootRoot(env: RootEnv = browserEnv()): AppRoot {
   const root = pickRoot(location);
   if (LEARNER_APP_ROOTS.has(root)) {
     bootLearnerApp(env, location, root);
+  } else if (root === 'presenter') {
+    clearGrownUpTab(env.area());
   } else if (root === 'grown-up-bounce') {
     const bounce = bounceFor(location.pathname, location.search);
     if (bounce) {
