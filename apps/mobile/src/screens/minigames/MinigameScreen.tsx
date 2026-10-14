@@ -29,6 +29,7 @@ import { StoryReadGame } from './StoryReadGame';
 import { StorySequenceGame } from './StorySequenceGame';
 import { TapRespondGame } from './TapRespondGame';
 import { TraceStrokeGame } from './TraceStrokeGame';
+import { TraceWordGame } from './TraceWordGame';
 import { TypeHangulGame } from './TypeHangulGame';
 import { VoiceEchoGame } from './VoiceEchoGame';
 import { WriteFrameGame } from './WriteFrameGame';
@@ -147,6 +148,8 @@ export function MinigameScreen({ route, navigation, onOpenCultureNote, inPreview
       return <RealiaReadGame scope={scope} host={host} onBack={exits.back} />;
     case 'type-hangul':
       return <TypeHangulGame scope={scope} host={host} onBack={exits.back} />;
+    case 'trace-word':
+      return <TraceWordGame scope={scope} host={host} onBack={exits.back} />;
     case 'write-frame':
       return <WriteFrameGame scope={scope} host={host} onBack={exits.back} inPreview={inPreview} />;
     default:

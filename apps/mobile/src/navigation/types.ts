@@ -14,6 +14,7 @@ import type { RealiaReadE2eParams } from './realia-read-e2e';
 import type { VocabQuestionE2eParams } from './vocab-question-e2e';
 import type { SentenceE2eParams } from './sentence-builder-e2e';
 import type { TypeHangulE2eParams } from './type-hangul-e2e';
+import type { TraceWordE2eParams } from './trace-word-e2e';
 import type { WriteFrameE2eParams } from './write-frame-e2e';
 
 /**
@@ -278,6 +279,8 @@ export type RootStackParamList = {
   RealiaReadE2e: RealiaReadE2eParams;
   /** Fixture builds only (`navigation/type-hangul-e2e.tsx`): Type Hangul on fixture rounds (F-CURR-001 G-3). */
   TypeHangulE2e: TypeHangulE2eParams;
+  /** Fixture builds only (`navigation/trace-word-e2e.tsx`): Trace a Word on the spec's Stage 7 words. */
+  TraceWordE2e: TraceWordE2eParams;
   /** Fixture builds only (`navigation/write-frame-e2e.tsx`): Write Frame on fixture rounds (F-CURR-001 G-5). */
   WriteFrameE2e: WriteFrameE2eParams;
 };

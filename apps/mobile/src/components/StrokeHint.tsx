@@ -42,6 +42,11 @@ interface Props {
    * its own, in the deck's language (F-TCH-004 section 3.12).
    */
   strokeOrder?: Messages['a11y']['minigame']['strokeOrder'];
+  /**
+   * The still diagram's stroke order read aloud, in place of the plain list of strokes: Trace a
+   * Word reads a block letter by letter. Default `describeStrokeOrder(target)`.
+   */
+  orderLabel?: string;
 }
 
 /**
@@ -65,6 +70,7 @@ export function StrokeHint({
   onComplete,
   playToken,
   strokeOrder: strokeOrderOverride,
+  orderLabel,
 }: Props): React.ReactElement | null {
   const appStrokeOrder = useMessages().a11y.minigame.strokeOrder;
   const strokeOrder = strokeOrderOverride ?? appStrokeOrder;
@@ -145,7 +151,7 @@ export function StrokeHint({
     return (
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel={strokeOrder.close(describeStrokeOrder(target, strokeOrder))}
+        accessibilityLabel={strokeOrder.close(orderLabel ?? describeStrokeOrder(target, strokeOrder))}
         onPress={dismissStill}
         style={{ position: 'absolute', top: 0, left: 0, width: size, height: size }}
       >

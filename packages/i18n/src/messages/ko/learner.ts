@@ -427,6 +427,13 @@ export const learner = {
         start: '다시 해 봐요 — 위에서부터 시작해요!',
       },
     },
+    traceWord: {
+      heading: '낱말 따라 쓰기',
+      idle: '글자 덩어리를 하나씩 써 봐요. 첫 글자부터 시작해요.',
+      letterIdle: '밝은 칸에 있는 글자를 따라 써 봐요.',
+      blockDone: '글자 덩어리 하나를 다 썼어요! 이제 다음 덩어리예요.',
+      wordDone: '낱말을 끝까지 다 썼어요!',
+    },
     picWord: {
       heading: '그림과 낱말을 짝지어요',
       instruction: '그림을 누르고, 그다음 낱말을 눌러요.',

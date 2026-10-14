@@ -355,6 +355,8 @@ jobs:
             # card, resume, Library Story Time and Culture, the story episode page, Culture notes).
             # Anchored on ".spec" so a later story-shelf-*.spec.ts (row 4.8b) is not pulled in here.
             story-shelf.spec
+            # F-CURR-001 G-4: Trace a Word, through the __hrTraceWordE2E hook.
+            trace-word
           )
           list() { pnpm exec playwright test --list "$@"; }
           {

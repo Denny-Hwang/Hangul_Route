@@ -56,6 +56,7 @@ import { VocabE2eHook, VocabQuestionE2eScreen } from './vocab-question-e2e';
 import { SentenceBuilderE2eScreen, SentenceE2eHook } from './sentence-builder-e2e';
 import { RealiaE2eHook, RealiaReadE2eScreen } from './realia-read-e2e';
 import { TypeHangulE2eHook, TypeHangulE2eScreen } from './type-hangul-e2e';
+import { TraceWordE2eHook, TraceWordE2eScreen } from './trace-word-e2e';
 import { WriteFrameE2eHook, WriteFrameE2eScreen } from './write-frame-e2e';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -90,6 +91,7 @@ export function RootNavigator(): React.ReactElement {
       {STORY_FIXTURES_BUILD ? <SentenceE2eHook /> : null}
       {STORY_FIXTURES_BUILD ? <RealiaE2eHook /> : null}
       {STORY_FIXTURES_BUILD ? <TypeHangulE2eHook /> : null}
+      {STORY_FIXTURES_BUILD ? <TraceWordE2eHook /> : null}
       {STORY_FIXTURES_BUILD ? <WriteFrameE2eHook /> : null}
       <Stack.Navigator
         screenOptions={{ headerShown: false, animation: 'fade_from_bottom' }}
@@ -152,6 +154,7 @@ export function RootNavigator(): React.ReactElement {
         {STORY_FIXTURES_BUILD ? <Stack.Screen name="SentenceBuilderE2e" component={SentenceBuilderE2eScreen} /> : null}
         {STORY_FIXTURES_BUILD ? <Stack.Screen name="RealiaReadE2e" component={RealiaReadE2eScreen} /> : null}
         {STORY_FIXTURES_BUILD ? <Stack.Screen name="TypeHangulE2e" component={TypeHangulE2eScreen} /> : null}
+        {STORY_FIXTURES_BUILD ? <Stack.Screen name="TraceWordE2e" component={TraceWordE2eScreen} /> : null}
         {STORY_FIXTURES_BUILD ? <Stack.Screen name="WriteFrameE2e" component={WriteFrameE2eScreen} /> : null}
       </Stack.Navigator>
       {/* After the stack, so the navigator is registered when the boot intent opens the PIN screen (F-APP-001 section 3.9). */}

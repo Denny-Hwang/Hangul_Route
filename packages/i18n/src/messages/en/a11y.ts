@@ -108,6 +108,18 @@ export const a11y = {
     /** The trace heading over a final consonant (a `*-batchim` jamo). */
     traceFinal: (romanization: string) => `Trace the final ${romanization}`,
     traceCanvas: (romanization: string) => `Draw the letter ${romanization} with your finger`,
+    /** Trace a Word's heading: the word's romanization and gloss (row G-4). */
+    traceWord: (romanization: string, gloss: string) => `Trace the word ${romanization}, ${gloss}`,
+    /** Trace a Word's canvas: the live block's romanization and where it is in the word. */
+    traceBlock: (romanization: string, block: number, total: number) =>
+      `Draw ${romanization}, block ${block} of ${total}, with your finger`,
+    /** Letter by letter (`mode: 'letter'`): the canvas also names the live letter of the block. */
+    traceBlockLetter: (romanization: string, block: number, total: number, letter: number, letters: number) =>
+      `Draw ${romanization}, block ${block} of ${total}, letter ${letter} of ${letters}, with your finger`,
+    /** Show me over a block: one letter's stroke order (`strokeOrder.summary`), read letter by letter. */
+    traceWordLetterOrder: (letter: number, letters: number, summary: string) => `Letter ${letter} of ${letters}. ${summary}`,
+    /** A traced block's chip in the word strip (a chip still to trace reads `hear`). */
+    hearBlockDone: (romanization: string) => `Hear ${romanization}, done`,
     /** The still stroke-order diagram read aloud: "Stroke order. 1: right, then down. 2: a loop." */
     strokeOrder: {
       guide: 'Stroke order guide',

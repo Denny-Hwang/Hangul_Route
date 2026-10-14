@@ -577,6 +577,18 @@ export const learner = {
         start: 'Try again — start at the top!',
       },
     },
+    /**
+     * Trace a Word (F-CURR-001 §3.7, row G-4): a word block by block over a ghost. The word itself is
+     * taught Korean drawn beside the heading, never typed into it; the pass and retry lines reuse `trace`.
+     */
+    traceWord: {
+      heading: 'Trace the word',
+      idle: 'Write each block. Start with the first letter.',
+      /** Letter-by-letter mode: one letter's box is lit at a time. */
+      letterIdle: 'Trace the letter in the bright box.',
+      blockDone: 'One block done! Now the next one.',
+      wordDone: 'You wrote the whole word!',
+    },
     /** Pic-Word Match (F-QUEST-002 §3.11): Skip is `skip`, the way out `backToQuest`. */
     picWord: {
       heading: 'Match each picture',

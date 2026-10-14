@@ -31,8 +31,9 @@ vi.mock('@react-navigation/native', async () => {
     useNavigation: () => ({ goBack: () => undefined, navigate: () => undefined }),
   };
 });
-// The stroke game draws with the native gesture handler, which has no build that loads in Node; this suite never plays it.
+// The stroke games (Trace a Letter, Trace a Word) draw with the native gesture handler, which has no build that loads in Node; this suite plays neither.
 vi.mock('../TraceStrokeGame', () => ({ TraceStrokeGame: () => null }));
+vi.mock('../TraceWordGame', () => ({ TraceWordGame: () => null }));
 vi.mock('../../use-practice-session', () => ({ usePracticeSession: () => undefined }));
 vi.mock('../../../content', () => ({
   questById: (id: string) => (id === 'q-write' ? { id, steps: [{ kind: 'minigame', minigameRef: 'mg-write-frame' }] } : undefined),
