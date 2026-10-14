@@ -10,6 +10,7 @@ import type { CellStoriesSource } from '../logic/story/cell-stories';
 import type { LibrarySectionId } from '../logic/story/library-sections';
 import type { SourcesRouteParams } from '../logic/story/source-link';
 import type { RoundSummary } from '../logic/vocab/stars';
+import type { RealiaReadE2eParams } from './realia-read-e2e';
 import type { VocabQuestionE2eParams } from './vocab-question-e2e';
 
 /**
@@ -268,6 +269,8 @@ export type RootStackParamList = {
   NotesGrownUp: { profileId: string };
   /** Fixture builds only (`navigation/vocab-question-e2e.tsx`): the shared vocabulary question view on catalogue words. */
   VocabQuestionE2e: VocabQuestionE2eParams;
+  /** Realia Read on a D-2 fixture realia (fixture builds only, F-CURR-001 G-2). */
+  RealiaReadE2e: RealiaReadE2eParams;
 };
 
 /** The level check's screens (F-PLC-001 section 3.1); the flow state machine decides which one shows. */

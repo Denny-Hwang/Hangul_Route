@@ -20,6 +20,7 @@ import { ListenPickGame } from './ListenPickGame';
 import { MatchSoundGame } from './MatchSoundGame';
 import { OddOneOutGame } from './OddOneOutGame';
 import { PicWordMatchGame } from './PicWordMatchGame';
+import { RealiaReadGame } from './RealiaReadGame';
 import { StoryCheckGame } from './StoryCheckGame';
 import { StoryReadGame } from './StoryReadGame';
 import { StorySequenceGame } from './StorySequenceGame';
@@ -132,6 +133,8 @@ export function MinigameScreen({ route, navigation, onOpenCultureNote, ...exitPr
       return <StoryReadGame scope={scope} onFinish={close} onBack={exits.back} onOpenCultureNote={openCultureNote} />;
     case 'story-check':
       return <StoryCheckGame scope={scope} onFinish={close} onBack={exits.back} />;
+    case 'realia-read':
+      return <RealiaReadGame scope={scope} host={host} onBack={exits.back} />;
     default:
       return fallback(copy.comingSoon);
   }
