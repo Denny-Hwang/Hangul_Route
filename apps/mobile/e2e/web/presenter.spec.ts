@@ -1304,6 +1304,7 @@ test.describe('PR 9 quiz and class tools at 1280 x 720, with a Korean voice', ()
     await expect(page.getByTestId('presenter-help-language-es')).toBeFocused();
     await expect(page.getByTestId('presenter-help-close')).toHaveAccessibleName('Cerrar');
     expect(await readStored(page, 'device:settings')).toBeNull();
+    await shot(page, 'presenter-help-language-1280x720');
     await page.keyboard.press('Escape');
     await expect(page.getByTestId('presenter-help')).toHaveCount(0);
   });
