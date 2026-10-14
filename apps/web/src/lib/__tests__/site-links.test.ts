@@ -28,9 +28,9 @@ describe('SITE_DEFAULT_CONSOLE_ORIGIN (S-10)', () => {
     expect(SITE_DEFAULT_CONSOLE_ORIGIN).toBe(APP_ORIGIN);
   });
 
-  it('keeps the kill switch: false or 0 (any case, trimmed) means the site\'s own origin', () => {
-    expect(CONSOLE_ORIGIN_OFF).toEqual(['false', '0']);
-    for (const off of ['false', '0', 'FALSE', ' False ', ' 0 ']) {
+  it('keeps the kill switch: false, 0, off or no (any case, trimmed, as the app\'s parseKillSwitch) means the site\'s own origin', () => {
+    expect(CONSOLE_ORIGIN_OFF).toEqual(['false', '0', 'off', 'no']);
+    for (const off of ['false', '0', 'FALSE', ' False ', ' 0 ', 'off', 'OFF', ' Off ', 'no', 'NO', ' No ']) {
       expect(grownUpOrigin({ CONSOLE_ORIGIN: off }), off).toBe('');
     }
   });
@@ -198,7 +198,7 @@ describe('next.config.js passes CONSOLE_ORIGIN to server and client code', () =>
     expect(freshConfig().env).toEqual({ CONSOLE_ORIGIN: '  ' });
   });
 
-  it.each(['false', '0', ' FALSE '])('inlines the kill switch %j as it is (grownUpOrigin reads it as the site)', (value) => {
+  it.each(['false', '0', ' FALSE ', 'off', ' OFF ', 'no', ' No '])('inlines the kill switch %j as it is (grownUpOrigin reads it as the site)', (value) => {
     vi.stubEnv('CONSOLE_ORIGIN', value);
     expect(freshConfig().env).toEqual({ CONSOLE_ORIGIN: value });
   });
@@ -231,6 +231,11 @@ describe('next.config.js passes CONSOLE_ORIGIN to server and client code', () =>
     'false',
     ' 0 ',
     'off',
+    ' OFF ',
+    'no',
+    ' No ',
+    'yes',
+    'disabled',
   ])('agrees with parseConsoleOrigin on %j', (value) => {
     vi.stubEnv('CONSOLE_ORIGIN', value);
     const ignored = parseConsoleOrigin(value) === undefined;
