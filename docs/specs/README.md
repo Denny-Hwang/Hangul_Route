@@ -111,6 +111,9 @@ F-XXX-<slug>.md
 - `F-SITE-002-marketing-site-layered.md` — hangulroute.com becomes a short, layered intro site: one-screen hero, persona chooser, `/learners`, `/parents`, `/teachers`, no billing or console links, feature lines tied to a claims table; old grown-up URLs are F-APP-001's · **ready**
   - wireframes `design/wireframes/site/{home,learners,parents,teachers,header-footer}.md`
 
+### Spec wave 2026-10-13 (owner decision: the 22 "Coming later" cells)
+- `F-CURR-001-upper-stage-content.md` — content of the 22 placeholder cells of Stages 2, 3, 4, 6 and 7: per-stage goals and can-do lines, scope, six-step quests per cell, five new games (Sentence Builder, Realia Read, Type Hangul, Trace a Word, Write Frame), writing without speaking, sourced culture notes, the MAR language and culture passes, a per-cell JSON pipeline with its own bundle budget, Stage 2+ paid · **ready**
+
 ### Phase 2 / planned
 - `F-PROF-001-device-profiles.md` — multi-learner · **draft** (code shipped PR #13, full spec covers cloud sync)
 - `F-HW-001-homework-page.md` — Homework tab · **draft**
