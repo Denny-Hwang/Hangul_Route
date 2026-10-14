@@ -59,9 +59,16 @@ export interface BrowseOpener {
 
 /**
  * One entry's hand-off: its target and source, and the line it shows when it cannot open. `onOpen` runs just before
- * a hand-off starts (a host with unsaved input keeps it there, FB-15's composer).
+ * a hand-off starts (a host with unsaved input keeps it there, FB-15's composer); `onStay` runs when it ends without
+ * navigating (the check failed or the storage was blocked), so the host can drop what it kept for the trip.
  */
-export function useBrowseOpener(target: BrowseTarget | undefined, source: BrowseSource, env?: BrowseOpenerEnv, onOpen?: () => void): BrowseOpener {
+export function useBrowseOpener(
+  target: BrowseTarget | undefined,
+  source: BrowseSource,
+  env?: BrowseOpenerEnv,
+  onOpen?: () => void,
+  onStay?: () => void,
+): BrowseOpener {
   const { api, locale, session } = useConsole();
   const [browser] = useState<BrowseOpenerEnv>(() => env ?? browserOpenerEnv());
   const [notice, setNotice] = useState<BrowseNotice>(null);
@@ -78,6 +85,7 @@ export function useBrowseOpener(target: BrowseTarget | undefined, source: Browse
   });
   const settle = (result: OpenBrowseResult): void => {
     setNotice(result === 'opened' ? null : result);
+    if (result !== 'opened') onStay?.();
   };
   const open = (): void => {
     if (busy.current) return;
@@ -187,6 +195,7 @@ export function BrowseLink({
   style,
   children,
   onOpen,
+  onStay,
 }: {
   target: BrowseTarget;
   source: BrowseSource;
@@ -202,8 +211,10 @@ export function BrowseLink({
   children?: ReactNode;
   /** Runs just before a plain click (or Try again, or Open free lessons) hands off to All lessons. */
   onOpen?: () => void;
+  /** Runs when that hand-off ends without navigating (the check failed or the storage was blocked). */
+  onStay?: () => void;
 }): JSX.Element {
-  const opener = useBrowseOpener(target, source, env, onOpen);
+  const opener = useBrowseOpener(target, source, env, onOpen, onStay);
   return (
     <span style={{ display: 'inline-flex', flexWrap: 'wrap', alignItems: 'center' }}>
       <a

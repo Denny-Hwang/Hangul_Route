@@ -276,3 +276,47 @@ describe('composer [ Preview ]: the note being written is kept (FB-15)', () => {
     act(() => r.unmount());
   });
 });
+
+describe('composer [ Preview ]: a hand-off that stays leaves no draft behind (#558 follow-up 1)', () => {
+  it('a failed plan check drops the draft it kept, so it never comes back within the hour', async () => {
+    consoleApi.current = { browseScope: async () => ({ ok: false, error: 'unknown', status: 500 }) };
+    const kept = fakeStorage();
+    const assigned: string[] = [];
+    const r = await mount({ prefillQuest: QUEST, preview: true, draftStorage: () => kept, browseEnv: envWith(fakeStorage(), assigned) });
+    await writeSomething(r);
+    await clickPreview(r);
+    expect(assigned).toHaveLength(0);
+    expect(kept.map.has(composerDraftKey('space:c1'))).toBe(false);
+    act(() => r.unmount());
+  });
+
+  it('blocked pass storage drops the draft it kept', async () => {
+    consoleApi.current = { browseScope: async () => ({ ok: true, data: { scope: 'full' } }) };
+    const kept = fakeStorage();
+    const env: BrowseOpenerEnv = { origin: () => 'https://app.hangulroute.com', now: () => Date.now(), storage: () => null, assign: () => undefined };
+    const r = await mount({ prefillQuest: QUEST, preview: true, draftStorage: () => kept, browseEnv: env });
+    await writeSomething(r);
+    await clickPreview(r);
+    expect(kept.map.has(composerDraftKey('space:c1'))).toBe(false);
+    act(() => r.unmount());
+  });
+
+  it('Try again after a failed check keeps the draft again before it opens', async () => {
+    let fail = true;
+    consoleApi.current = { browseScope: async () => (fail ? { ok: false, error: 'unknown', status: 500 } : { ok: true, data: { scope: 'full' } }) };
+    const kept = fakeStorage();
+    const assigned: string[] = [];
+    const r = await mount({ prefillQuest: QUEST, preview: true, draftStorage: () => kept, browseEnv: envWith(fakeStorage(), assigned) });
+    await writeSomething(r);
+    await clickPreview(r);
+    expect(kept.map.has(composerDraftKey('space:c1'))).toBe(false);
+    fail = false;
+    await act(async () => {
+      byTestId(r, 'compose-quest-preview-retry').props.onClick();
+    });
+    await act(async () => undefined);
+    expect(assigned).toHaveLength(1);
+    expect(kept.map.has(composerDraftKey('space:c1'))).toBe(true);
+    act(() => r.unmount());
+  });
+});

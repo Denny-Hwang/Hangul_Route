@@ -373,6 +373,11 @@ export function NoteComposer({
   const keepDraft = (): void => {
     saveComposerDraft(draftStore(), space.id, { mode, picked, presetId, text, questId, label }, Date.now());
   };
+  // A hand-off that stays on this page (the check failed or the storage was blocked) drops the draft it kept: the
+  // form is still open here, and a draft left behind would come back within the hour after the adult left.
+  const dropDraft = (): void => {
+    clearComposerDraft(draftStore(), space.id);
+  };
   const rows = recipients ? recipientRows(recipients, space.kind, locale) : [];
   const check = composerCheck({ spaceKind: space.kind, to: mode === 'everyone' ? { kind: 'everyone' } : { kind: 'learners', ids: picked }, presetId, text, questId, label: side === 'family' ? label : null }, locale);
   const counter = textCounter(text, locale);
@@ -582,7 +587,7 @@ export function NoteComposer({
                 {questTitleOf(questId)}
               </span>
               {previewShown ? (
-                <BrowseLink target={{ kind: 'quest', id: questId }} source="notes" label={m.console.browse.preview.cta} describedBy={`${ids}-quest`} testId="compose-quest-preview" env={browseEnv} onOpen={keepDraft} />
+                <BrowseLink target={{ kind: 'quest', id: questId }} source="notes" label={m.console.browse.preview.cta} describedBy={`${ids}-quest`} testId="compose-quest-preview" env={browseEnv} onOpen={keepDraft} onStay={dropDraft} />
               ) : null}
               <button type="button" className="hr-notes-btn" onClick={() => setQuestId(null)}>
                 {c.quest.remove.cta}
