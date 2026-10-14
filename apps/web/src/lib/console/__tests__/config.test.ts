@@ -166,10 +166,16 @@ describe('reportsEnabled', () => {
 });
 
 describe('browseEnabled and browseEntryShown (F-BROWSE-001 section 5.4; F-APP-001 section 3.8, amended by BR-0b)', () => {
+  afterEach(() => vi.unstubAllEnvs());
+
   it('is on by default since BR-14 (owner decision 2026-10-13); only false, 0 or disabled switch it off', () => {
     expect(browseEnabled({})).toBe(true);
-    for (const raw of ['enabled', 'true', '1', 'Enabled', '', 'FALSE', 'off']) expect(browseEnabled({ NEXT_PUBLIC_BROWSE: raw })).toBe(true);
+    for (const raw of ['enabled', 'true', '1', 'Enabled', '', ' ', 'off', 'no']) expect(browseEnabled({ NEXT_PUBLIC_BROWSE: raw })).toBe(true);
     for (const raw of ['false', '0', 'disabled']) expect(browseEnabled({ NEXT_PUBLIC_BROWSE: raw })).toBe(false);
+  });
+
+  it('ignores case and surrounding spaces in the off values, so a pasted rollback value still works', () => {
+    for (const raw of ['FALSE', 'False', 'false ', ' 0', 'Disabled', 'DISABLED\n']) expect(browseEnabled({ NEXT_PUBLIC_BROWSE: raw })).toBe(false);
   });
 
   it('reads the build value through buildEnv(): unset is on, false is off', () => {
@@ -177,7 +183,6 @@ describe('browseEnabled and browseEntryShown (F-BROWSE-001 section 5.4; F-APP-00
     expect(browseEnabled()).toBe(true);
     vi.stubEnv('NEXT_PUBLIC_BROWSE', 'false');
     expect(browseEnabled()).toBe(false);
-    vi.unstubAllEnvs();
   });
 
   it('shows a Lessons entry only on the app origin', () => {

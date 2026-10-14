@@ -23,7 +23,7 @@ export type NavTarget = { href: string; document?: true };
 /** All lessons, a learner root of the app origin (F-APP-001 section 3.2, `LEARNER_ROOTS`). */
 export const BROWSE_PATH = '/browse';
 
-/** The sibling predicates the registry reads (section 3.8), each off by default. */
+/** The sibling predicates the registry reads (section 3.8): Reports and Lessons are on by default (RP-11, BR-14); Notes is off by default. */
 export interface NavFlags {
   reports: boolean;
   notes: boolean;

@@ -2,7 +2,7 @@ import { readFileSync, readdirSync } from 'node:fs';
 import { dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { en, UI_LOCALES } from '@hangul-route/i18n';
-import { REPORT_REVIEWED_LOCALES } from '../../lib/console/config';
+import { REPORT_REVIEWED_LOCALES, browseEnabled } from '../../lib/console/config';
 import { describe, expect, expectTypeOf, it } from 'vitest';
 import { CLAIM_LOCALES, CLAIM_REQUIRES_PAID, SITE_CLAIMS, claimLiveIn, showsClaim, type BooleanClaimKey, type SiteClaims } from '../site-claims';
 import { ALL_CLAIMS_OFF, ALL_CLAIMS_ON } from './site-claims-fixtures';
@@ -59,9 +59,7 @@ describe('SITE_CLAIMS (what the site says today)', () => {
   });
 
   it('turns the All lessons line on only with the console Lessons switch on by default (F-BROWSE-001 BR-14)', () => {
-    const root = join(dirname(fileURLToPath(import.meta.url)), '..', '..', '..', '..');
-    const consoleConfig = readFileSync(join(root, 'web', 'src', 'lib', 'console', 'config.ts'), 'utf8');
-    expect(!SITE_CLAIMS.browseAsLearner || /const BROWSE_LAUNCH_DEFAULT = true;/.test(consoleConfig)).toBe(true);
+    expect(!SITE_CLAIMS.browseAsLearner || browseEnabled({})).toBe(true);
   });
 
   it('keeps the All lessons line a paid line: on, yet off the site while paid plans are coming (F-BROWSE-001 BR-14)', () => {

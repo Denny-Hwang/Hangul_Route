@@ -17,7 +17,7 @@ export interface ConsoleEnv {
   NEXT_PUBLIC_LEARNING_ROUTE_ENABLED?: string;
   /** Progress reports (F-REPORT-001), the console twin of the learner app's `EXPO_PUBLIC_REPORTS_ENABLED`; on unless `'false'` or `'0'`. */
   NEXT_PUBLIC_REPORTS_ENABLED?: string;
-  /** All lessons, the grown-up Lessons entry (F-BROWSE-001 section 5.4; F-APP-001 section 3.8); on unless `'false'`, `'0'` or `'disabled'` (BR-14). */
+  /** All lessons, the grown-up Lessons entry (F-BROWSE-001 section 5.4; F-APP-001 section 3.8); on unless `'false'`, `'0'` or `'disabled'`, case and spaces ignored (BR-14). */
   NEXT_PUBLIC_BROWSE?: string;
   /** Class moves (F-SPACE-002 section 4.8), `enabled` to show the entry points; default off, flipped by the owner after the Worker's `CLASS_TRANSFER`. */
   NEXT_PUBLIC_CLASS_TRANSFER?: string;
@@ -149,12 +149,13 @@ const BROWSE_OFF_VALUES: readonly string[] = ['false', '0', 'disabled'];
 
 /**
  * All lessons (F-BROWSE-001 section 5.4; the one predicate of F-APP-001 section 3.8, amended by F-BROWSE-001 BR-0b):
- * on by default since BR-14. `NEXT_PUBLIC_BROWSE` set to exactly `false`, `0` or `disabled` switches every Lessons
- * entry and Preview link off (not drawn); any other value, `enabled` included, or none is the launch default, on.
+ * on by default since BR-14. `NEXT_PUBLIC_BROWSE` set to `false`, `0` or `disabled` (case and surrounding spaces ignored,
+ * so a pasted `FALSE ` still works as the rollback) switches every Lessons entry and Preview link off (not drawn); any
+ * other value, `enabled` included, or none is the launch default, on.
  * The entries still render only on the app origin (`browseEntryShown`, `browseLinksShown`), never on the site.
  */
 export function browseEnabled(env: ConsoleEnv = buildEnv()): boolean {
-  const raw = env.NEXT_PUBLIC_BROWSE;
+  const raw = env.NEXT_PUBLIC_BROWSE?.trim().toLowerCase();
   return raw !== undefined && BROWSE_OFF_VALUES.includes(raw) ? false : BROWSE_LAUNCH_DEFAULT;
 }
 
