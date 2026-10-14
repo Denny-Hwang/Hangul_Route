@@ -1,4 +1,5 @@
 import type { Page } from '@playwright/test';
+import { keysFor } from '@hangul-route/content-schema';
 import { LESSON_EPISODES } from '../../src/content/__generated__/lessons-index';
 import { expect, test } from './fixtures';
 import { completeChildForm, journeyCellName, keepSidewaysIfAsked, passDiscover, playCheckByIds, waitForNextListenPickRound } from './helpers';
@@ -54,6 +55,45 @@ async function build(page: Page, n: number, total: number, tiles: readonly strin
     await tray.getByRole('button', { name, exact: true }).click();
   }
   await expect(page.getByTestId('sentence-builder-done')).toBeVisible();
+}
+
+/** The shifted letters and the key that types each with Shift (KS X 5002), as in type-hangul.spec.ts. */
+const SHIFTED: Record<string, string> = { 'ㅃ': 'ㅂ', 'ㅉ': 'ㅈ', 'ㄸ': 'ㄷ', 'ㄲ': 'ㄱ', 'ㅆ': 'ㅅ', 'ㅒ': 'ㅐ', 'ㅖ': 'ㅔ' };
+/** Two-key vowels and finals: `keysFor` gives the joined jamo, the keyboard types its two keys. */
+const SPLIT: Record<string, string> = {
+  'ㅘ': 'ㅗㅏ', 'ㅙ': 'ㅗㅐ', 'ㅚ': 'ㅗㅣ', 'ㅝ': 'ㅜㅓ', 'ㅞ': 'ㅜㅔ', 'ㅟ': 'ㅜㅣ', 'ㅢ': 'ㅡㅣ',
+  'ㄳ': 'ㄱㅅ', 'ㄵ': 'ㄴㅈ', 'ㄶ': 'ㄴㅎ', 'ㄺ': 'ㄹㄱ', 'ㄻ': 'ㄹㅁ', 'ㄼ': 'ㄹㅂ', 'ㄽ': 'ㄹㅅ', 'ㄾ': 'ㄹㅌ', 'ㄿ': 'ㄹㅍ', 'ㅀ': 'ㄹㅎ', 'ㅄ': 'ㅂㅅ',
+};
+
+/**
+ * Type Hangul: round `n` of `total`, typed on the in-app keyboard the way a learner would
+ * (Shift for a tense letter, two keys for a joined one), then Done; a typed match moves on by itself.
+ */
+async function typeRound(page: Page, n: number, total: number, text: string): Promise<void> {
+  await expect(page.getByText(`${n} / ${total}`, { exact: true })).toBeVisible({ timeout: 5_000 });
+  const key = (id: string) => page.getByTestId(`hangul-key-${id}`);
+  for (const jamo of keysFor(text).flatMap((j) => [...(SPLIT[j] ?? j)])) {
+    if (jamo === ' ') {
+      await key('space').click();
+    } else if (SHIFTED[jamo]) {
+      await key('shift').click();
+      await key(SHIFTED[jamo]).click();
+    } else {
+      await key(jamo).click();
+    }
+  }
+  await page.getByTestId('type-hangul-done').click();
+  await expect(page.getByText('You typed it!')).toBeVisible();
+}
+
+/** Sentence Builder as the Stage 7 Check (no round counter): tap the tiles in order, past the touch window. */
+async function buildCheck(page: Page, tiles: readonly string[]): Promise<void> {
+  const tray = page.getByTestId('sentence-builder-tray');
+  for (const name of tiles) {
+    await page.waitForTimeout(120);
+    await expect(tray.getByRole('button', { name, exact: true })).toBeVisible({ timeout: 5_000 });
+    await tray.getByRole('button', { name, exact: true }).click();
+  }
 }
 
 /** Listen & Pick (not the Check): each round's option by id, round by round. */
@@ -199,6 +239,44 @@ const CELLS: readonly UpperCell[] = [
       await page.getByText('Learning Route', { exact: true }).last().click();
       await page.getByRole('button', { name: /^Stage 4, Dialogue\./ }).click();
       await expect(page.getByRole('button', { name: /^Letters & Books: Read Along\./ })).toBeVisible();
+    },
+  },
+  // F-CURR-001 S7-5: Make & Share, q1 "Fold, Cut, Draw" played through its real games at 320 px.
+  {
+    episodeId: 'episode:stage7-crafts',
+    cellButton: journeyCellName(7, 'Play & Crafts'),
+    title: 'Make & Share',
+    playFirstQuest: async (page) => {
+      await page.setViewportSize({ width: 320, height: 720 });
+      await page.getByRole('button', { name: 'Start', exact: true }).first().click();
+      await page.getByRole('button', { name: 'Continue' }).click();
+      // Discover: the frame page (fold) and the sentence page (cut with scissors, draw).
+      await expect(page.getByText('Look and learn', { exact: true })).toBeVisible();
+      await shot(page, 'make-share-q1-discover-320');
+      await passDiscover(page);
+      await page.getByRole('button', { name: 'Play minigame' }).click();
+      // Type Hangul on the in-app keyboard: fold, cut, draw, plane.
+      await typeRound(page, 1, 4, '접어요');
+      await shot(page, 'make-share-q1-typed-320');
+      await typeRound(page, 2, 4, '잘라요');
+      await typeRound(page, 3, 4, '그려요');
+      await typeRound(page, 4, 4, '비행기');
+      await page.getByRole('button', { name: 'Play minigame' }).click();
+      // Sentence Builder: a particle round (를 after a vowel), then two built sentences.
+      await build(page, 1, 3, ['를, reul']);
+      await build(page, 2, 3, ['꽃을, kkocheul', '그려요, geuryeoyo']);
+      await build(page, 3, 3, ['가위로, gawiro', '잘라요, jallayo']);
+      // The Stage 7 Check is two Sentence Builder rounds: 을 after a final consonant, then one sentence.
+      await page.getByRole('button', { name: 'Go', exact: true }).click();
+      await buildCheck(page, ['을, eul']);
+      await buildCheck(page, ['별을, byeoreul', '그려요, geuryeoyo']);
+      await expect(page.getByText('Finish', { exact: true }).first()).toBeVisible();
+    },
+    expectRouteDay: async (page) => {
+      await page.goto('/');
+      await page.getByText('Learning Route', { exact: true }).last().click();
+      await page.getByRole('button', { name: /^Stage 7, Self-expression\./ }).click();
+      await expect(page.getByRole('button', { name: /^Play & Crafts: Make & Share\./ })).toBeVisible();
     },
   },
 ];
