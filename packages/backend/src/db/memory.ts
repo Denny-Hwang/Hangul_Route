@@ -1,4 +1,4 @@
-import { TRANSFER_COOLING_OFF_MS, type BillingEvent, type BillingEventKind, type Entitlement, type EntitlementApply, type MemberKind, type Membership, type Plan, type Space, type TransferBlockReason, type TransferEndReason, type TransferSlot } from '@hangul-route/content-schema';
+import { TRANSFER_COOLING_OFF_MS, type BillingEvent, type ClassMoveEndReason, type BillingEventKind, type Entitlement, type EntitlementApply, type MemberKind, type Membership, type Plan, type Space, type TransferBlockReason, type TransferEndReason, type TransferSlot } from '@hangul-route/content-schema';
 import { id, type Account, type Learner, type LearnerDevice, type SnapshotRecord } from '../store';
 import { assertBillingLimit, billingEventFields, newestBillingEvent, REFUNDABLE_BILLING_KINDS } from './billing-rules';
 import { assertNoteChecks, assertOneSender } from './feedback-rules';
@@ -20,6 +20,7 @@ import {
   type StoredSenderBlock,
   type StoredSenderHold,
 } from './feedback-types';
+import { assertNewClassMove, type ClassMoveDecider, type ClassMoveEndStatus, type ExecuteClassMoveInput, type ExecuteClassMoveResult, type StoredClassMove, type StoredClassScopeAck } from './class-move-types';
 import { allSlotsIn, assertNewTransfer, assertTransferChecks, assertTransferEventChecks, assertTransferPrefKey, assertTransferSlot, consentedLearnerSlot, finiteCap, isEndedTransfer, isOpenTransfer, teacherSlotsOf } from './transfer-rules';
 import {
   learnerRateKeys,
@@ -66,6 +67,8 @@ const newestNoteFirst = (a: StoredNote, b: StoredNote): number => (a.createdAt =
 const oldestNoteFirst = (a: StoredNote, b: StoredNote): number => -newestNoteFirst(a, b);
 const beforeCursor = (n: StoredNote, c: NoteCursor | null): boolean => c === null || n.createdAt < c.createdAt || (n.createdAt === c.createdAt && n.id < c.id);
 const pairKey = (a: string, b: string): string => `${a}|${b}`;
+/** Newest first, ties by id descending (`ORDER BY created_at DESC, id DESC`). */
+const newestMoveFirst = (a: StoredClassMove, b: StoredClassMove): number => (a.createdAt === b.createdAt ? (a.id < b.id ? 1 : a.id > b.id ? -1 : 0) : a.createdAt < b.createdAt ? 1 : -1);
 const EMPTY_LEARNER_SLOT: StoredTransfer['learner'] = { state: 'pending', at: null, basis: null, attest: null, evidence: null, role: null, textVersion: null, locale: null, shown: null, terms: null };
 
 /**
@@ -98,6 +101,9 @@ export class MemoryDb implements Db {
   private senderBlocks = new Map<string, StoredSenderBlock>();
   /** Keyed `spaceId|accountId`. */
   private sendGrants = new Map<string, StoredSendGrant>();
+  /** [TV] migration 0009. */
+  private classScopeAcks = new Map<string, StoredClassScopeAck>();
+  private classMoves = new Map<string, StoredClassMove>();
 
   async getAccount(accountId: string): Promise<Account | null> {
     return clone(this.accounts.get(accountId) ?? null);
@@ -124,6 +130,8 @@ export class MemoryDb implements Db {
     this.transferEventRows = this.transferEventRows.filter((e) => !transferIds.has(e.transferId));
     for (const transferId of transferIds) this.transfers.delete(transferId);
     this.transferPrefs.delete(learnerId);
+    this.classScopeAcks.delete(learnerId);
+    for (const [k, m] of this.classMoves) if (m.learnerId === learnerId) this.classMoves.delete(k);
     for (const [k, r] of this.noteReports) if (r.learnerId === learnerId) this.noteReports.delete(k);
     for (const [k, n] of this.notes) if (n.learnerId === learnerId) this.deleteNoteRow(k);
     this.notePrefs.delete(learnerId);
@@ -399,6 +407,17 @@ export class MemoryDb implements Db {
     if (!gate || !row) return { executed: false, devicesRevoked: 0, relinksClosed: 0 };
 
     this.transfers.set(transferId, { ...row, status: 'executed', executedAt: at, blockReason: null, updatedAt: at, rev: row.rev + 1 });
+    const swapped = this.swapClassMembership(learnerId, source, dest, at);
+    this.pushTransferEvent({ transferId, at, actorKind: 'system', actorRef: null, event: 'executed', slot: null, detail: null });
+    return { executed: true, ...swapped };
+  }
+
+  /**
+   * The writes of a class swap after its gate (F-SPACE-002 section 4.6, shared by [TV] teacher moves): the destination
+   * membership, the source membership, the source's re-links and class devices, and the source's notes.
+   */
+  private swapClassMembership(learnerId: string, source: string, dest: string, at: string): { devicesRevoked: number; relinksClosed: number } {
+    const isMember = (spaceId: string): boolean => this.memberships.has(membershipKey(spaceId, 'learner', learnerId));
     if (!isMember(dest)) this.memberships.set(membershipKey(dest, 'learner', learnerId), { spaceId: dest, memberKind: 'learner', memberId: learnerId, role: 'student', joinedAt: at });
     this.memberships.delete(membershipKey(source, 'learner', learnerId));
     let relinksClosed = 0;
@@ -420,8 +439,7 @@ export class MemoryDb implements Db {
     }
     // F-FEEDBACK-001 section 7.5: the source membership ended, so its live, hidden and withdrawn notes go (not one a report row names).
     for (const n of [...this.notes.values()]) if (n.learnerId === learnerId && n.spaceId === source && n.status !== 'reported' && !this.hasReportRow(n.id)) this.deleteNoteRow(n.id);
-    this.pushTransferEvent({ transferId, at, actorKind: 'system', actorRef: null, event: 'executed', slot: null, detail: null });
-    return { executed: true, devicesRevoked, relinksClosed };
+    return { devicesRevoked, relinksClosed };
   }
 
   async getTransfer(transferId: string): Promise<StoredTransfer | null> {
@@ -836,8 +854,104 @@ export class MemoryDb implements Db {
     return old.length + stale.length + reports.length + holds.length;
   }
 
+  // ---- [TV] class-scope acknowledgements and teacher moves (AMENDMENTS-TEACHER-VISIBILITY-TRANSFER section 4.2) ----
+
+  async getClassScopeAck(learnerId: string): Promise<StoredClassScopeAck | null> {
+    return clone(this.classScopeAcks.get(learnerId) ?? null);
+  }
+  async classScopeAcksOf(learnerIds: readonly string[]): Promise<StoredClassScopeAck[]> {
+    return clone([...new Set(learnerIds)].flatMap((id) => {
+      const ack = this.classScopeAcks.get(id);
+      return ack ? [ack] : [];
+    }));
+  }
+  async putClassScopeAck(ack: StoredClassScopeAck): Promise<void> {
+    this.classScopeAcks.set(ack.learnerId, clone(ack));
+  }
+  async createClassMove(row: StoredClassMove): Promise<'created' | 'already_open'> {
+    assertNewClassMove(row);
+    if ([...this.classMoves.values()].some((m) => m.learnerId === row.learnerId && m.status === 'requested')) return 'already_open';
+    if (this.classMoves.has(row.id)) throw new Error('createClassMove: duplicate id');
+    this.classMoves.set(row.id, clone(row));
+    return 'created';
+  }
+  async getClassMove(id: string): Promise<StoredClassMove | null> {
+    return clone(this.classMoves.get(id) ?? null);
+  }
+  async classMovesOfSpace(spaceId: string, role: 'source' | 'destination', limit: number): Promise<StoredClassMove[]> {
+    const rows = [...this.classMoves.values()].filter((m) => (role === 'source' ? m.sourceSpaceId : m.destSpaceId) === spaceId);
+    return clone(rows.sort(newestMoveFirst).slice(0, limit));
+  }
+  async openClassMoveOf(learnerId: string): Promise<StoredClassMove | null> {
+    return clone([...this.classMoves.values()].find((m) => m.learnerId === learnerId && m.status === 'requested') ?? null);
+  }
+  async executedClassMovesOf(learnerIds: readonly string[], since: Date): Promise<StoredClassMove[]> {
+    const ids = new Set(learnerIds);
+    const from = since.toISOString();
+    const rows = [...this.classMoves.values()].filter((m) => ids.has(m.learnerId) && m.status === 'executed' && m.executedAt !== null && m.executedAt >= from);
+    return clone(rows.sort((a, b) => ((a.executedAt ?? '') === (b.executedAt ?? '') ? (a.id < b.id ? 1 : -1) : (a.executedAt ?? '') < (b.executedAt ?? '') ? 1 : -1)));
+  }
+  async endClassMove(id: string, status: ClassMoveEndStatus, reason: ClassMoveEndReason, decider: ClassMoveDecider | null, now: Date): Promise<number> {
+    const at = now.toISOString();
+    const row = this.classMoves.get(id);
+    if (!row || row.status !== 'requested' || (status === 'expired' && row.expiresAt > at)) return 0;
+    this.classMoves.set(id, { ...row, status, endReason: reason, endedAt: at, updatedAt: at, decidedAccountId: decider?.accountId ?? row.decidedAccountId, decidedVia: decider?.via ?? row.decidedVia });
+    return 1;
+  }
+  async markClassMoveSeen(id: string, now: Date): Promise<number> {
+    const row = this.classMoves.get(id);
+    if (!row || row.status !== 'executed' || row.familySeenAt !== null) return 0;
+    this.classMoves.set(id, { ...row, familySeenAt: now.toISOString() });
+    return 1;
+  }
+  async executeClassMove(input: ExecuteClassMoveInput): Promise<ExecuteClassMoveResult> {
+    const at = input.now.toISOString();
+    const { id, learnerId, sourceSpaceId: source, destSpaceId: dest } = input;
+    const row = this.classMoves.get(id);
+    const sourceSpace = this.spaces.get(source);
+    const destSpace = this.spaces.get(dest);
+    const isMember = (spaceId: string): boolean => this.memberships.has(membershipKey(spaceId, 'learner', learnerId));
+    const learnersIn = (spaceId: string): number => [...this.memberships.values()].filter((m) => m.spaceId === spaceId && m.memberKind === 'learner').length;
+    const otherLiveClasses = [...this.memberships.values()].filter((m) => {
+      const s = this.spaces.get(m.spaceId);
+      return m.memberKind === 'learner' && m.memberId === learnerId && s?.kind === 'class' && s.archivedAt === null && m.spaceId !== source;
+    }).length;
+    // The gate of section 4.2, on the live maps with no await between check and write.
+    const gate =
+      !!row &&
+      row.learnerId === learnerId &&
+      row.sourceSpaceId === source &&
+      row.destSpaceId === dest &&
+      source !== dest &&
+      row.status === 'requested' &&
+      row.expiresAt > at &&
+      this.learners.has(learnerId) &&
+      isMember(source) &&
+      sourceSpace?.kind === 'class' &&
+      destSpace?.kind === 'class' &&
+      destSpace.archivedAt === null &&
+      (isMember(dest) || (learnersIn(dest) < finiteCap(input.destCap) && otherLiveClasses < finiteCap(input.learnerCap)));
+    if (!gate || !row) return { executed: false, devicesRevoked: 0, relinksClosed: 0 };
+    this.classMoves.set(id, { ...row, status: 'executed', executedAt: at, updatedAt: at, decidedAccountId: input.decider.accountId, decidedVia: input.decider.via });
+    return { executed: true, ...this.swapClassMembership(learnerId, source, dest, at) };
+  }
+  async purgeClassMoves(endedBefore: Date, executedBefore: Date, limit: number): Promise<number> {
+    const ended = endedBefore.toISOString();
+    const executed = executedBefore.toISOString();
+    let removed = 0;
+    for (const [k, m] of this.classMoves) {
+      if (removed >= limit) break;
+      const old = (m.endedAt !== null && m.endedAt < ended) || (m.status === 'executed' && m.executedAt !== null && m.executedAt < executed);
+      if (old) {
+        this.classMoves.delete(k);
+        removed += 1;
+      }
+    }
+    return removed;
+  }
+
   async reset(): Promise<void> {
-    for (const m of [this.accounts, this.learners, this.devices, this.snapshots, this.spaces, this.memberships, this.plans, this.relinks, this.entitlements, this.waitlist, this.transfers, this.transferPrefs, this.billingEvents, this.notes, this.noteReports, this.senderHolds, this.notePrefs, this.senderBlocks, this.sendGrants]) m.clear();
+    for (const m of [this.accounts, this.learners, this.devices, this.snapshots, this.spaces, this.memberships, this.plans, this.relinks, this.entitlements, this.waitlist, this.transfers, this.transferPrefs, this.billingEvents, this.notes, this.noteReports, this.senderHolds, this.notePrefs, this.senderBlocks, this.sendGrants, this.classScopeAcks, this.classMoves]) m.clear();
     this.transferEventRows = [];
     this.rateHits = [];
   }

@@ -11,6 +11,7 @@ import { inboxNoteView, notePrefsView } from '../lib/note-views';
 import type { TransferEnv } from '../lib/transfer';
 import { id, type Learner, type SnapshotRecord } from '../store';
 import { inboxPlansFor } from './plans';
+import { inboxClassFields } from './class-moves';
 import { inboxTransfers } from './transfer-device';
 import { learnerMembershipRows } from './spaces';
 
@@ -131,6 +132,8 @@ syncRoutes.get('/learners/:id/inbox', async (c) => {
   const memberships = await learnerMembershipRows(db, learnerId);
   // Notes from grown-ups (F-FEEDBACK-001 section 6.8): delivery rules 1-7 and the prefs row in one query.
   const notes = await db.notesForLearner(learnerId, classScoped ? 'class' : 'full', now, NOTE_INBOX_LIMIT);
+  // [TV] the class-scope update and the one-time move notices (AMENDMENTS-TEACHER-VISIBILITY-TRANSFER section 4.3); never on a class tablet.
+  const classFields = await inboxClassFields(db, learnerId, classScoped ? 'class' : 'full', memberships.some((m) => m.kind === 'class'), c.env as TransferEnv | undefined, now);
   return ok(c, {
     rev: (await db.getSnapshot(learnerId))?.rev ?? 0,
     plans: classScoped ? plans.filter((p) => p.spaceKind !== 'family') : plans,
@@ -142,6 +145,7 @@ syncRoutes.get('/learners/:id/inbox', async (c) => {
     notes: notes.notes.map(inboxNoteView),
     notePrefs: notePrefsView(notes.prefs),
     ...transfers,
+    ...classFields,
     // The calling device's own scope (F-SPACE-002 section 4.12): a tablet a class relinked before the app kept a
     // marker learns it here, locked or not (no extra read).
     deviceScope: classScoped ? 'class' : 'full',

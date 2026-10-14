@@ -3,6 +3,10 @@ import {
   BrowseScopeSchema,
   BrowseSourceSchema,
   BrowseTargetSchema,
+  CLASS_MOVE_TELEMETRY_PREFIX,
+  CLASS_SCOPE_TELEMETRY_PREFIX,
+  ClassMoveCompletedViaSchema,
+  ClassScopeBasisSchema,
   LearnerBasisSchema,
   NOTES_MODES,
   NOTE_PRESET_IDS,
@@ -53,6 +57,14 @@ const TRANSFER_PAYLOAD_VALUES = valuesOf({
 });
 
 /**
+ * [TV] Teacher moves and the class-scope update (AMENDMENTS-TEACHER-VISIBILITY-TRANSFER
+ * section 4.4): codes only, no profile id. `space.move.*` keeps `via`
+ * (`direct` | `accepted`), `space.scope.*` keeps `basis` (`caregiver` | `device`).
+ */
+const CLASS_MOVE_PAYLOAD_VALUES = valuesOf({ via: ClassMoveCompletedViaSchema.options });
+const CLASS_SCOPE_PAYLOAD_VALUES = valuesOf({ basis: ClassScopeBasisSchema.options });
+
+/**
  * App-shell events (F-APP-001 section 3.18) carry codes only too: per event,
  * the keys and values in `SHELL_TELEMETRY_PAYLOADS`, and no profile id. A
  * `shell.*` name without an entry keeps no payload at all.
@@ -71,6 +83,8 @@ const REPORT_PAYLOAD_VALUES = valuesOf(REPORT_TELEMETRY_PAYLOAD);
 /** The only payload keys and values kept for a codes-only event, or `null` for an ordinary event. */
 function codesOnlyValues(name: string): PayloadValues | null {
   if (name.startsWith(TRANSFER_EVENT_PREFIX)) return TRANSFER_PAYLOAD_VALUES;
+  if (name.startsWith(CLASS_MOVE_TELEMETRY_PREFIX)) return CLASS_MOVE_PAYLOAD_VALUES;
+  if (name.startsWith(CLASS_SCOPE_TELEMETRY_PREFIX)) return CLASS_SCOPE_PAYLOAD_VALUES;
   if (name.startsWith(SHELL_TELEMETRY_PREFIX)) return SHELL_PAYLOAD_VALUES[name] ?? {};
   if (name.startsWith(REPORT_TELEMETRY_PREFIX)) return REPORT_PAYLOAD_VALUES;
   return null;

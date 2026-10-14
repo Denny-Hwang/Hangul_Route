@@ -12,6 +12,7 @@ import {
 import { Hono } from 'hono';
 import { dbFor } from '../db';
 import { fail, ok } from '../envelope';
+import { learnerScope, learnerScopes, learnerSettingsOf } from '../lib/class-scope';
 import { rosterSummary, type FamilyVisibleSummary } from '../lib/roster-summary';
 import { recordServerEvent } from '../lib/server-events';
 import { findSpace, publicSpace, requireCan, rosterName } from './spaces';
@@ -90,6 +91,8 @@ spaceReportRoutes.get('/:id/learners/:learnerId/report', async (c) => {
   ]);
   if (!membership || !learner) return fail(c, 'not_member', 'This learner is not in this space', 404);
   const planIds = new Set(plans.map((p) => p.id));
+  // [TV] AMENDMENTS-TEACHER-VISIBILITY-TRANSFER section 2: the learner report is a student's detail view (firstTryRate kept); the scope decides the rest.
+  const scope = await learnerScope(db, space.kind, learner.id);
   const body: LearnerReportResponse = {
     space: publicSpace(space),
     // No ageGroup: no report block uses it (section 3.8, data minimisation).
@@ -101,9 +104,11 @@ spaceReportRoutes.get('/:id/learners/:learnerId/report', async (c) => {
       lastActiveAt: learner.lastActiveAt,
     },
     // The roster's projection for this kind and this membership: selfRoute for a family only, no activity day before joinedAt for a class.
-    summary: reportSummaryOf(rosterSummary(stored?.summary, planIds, space.kind, { joinedAt: membership.joinedAt })),
+    summary: reportSummaryOf(rosterSummary(stored?.summary, planIds, space.kind, { joinedAt: membership.joinedAt, scope, detail: true })),
     lastSyncedAt: stored?.updatedAt ?? null,
     serverTime: new Date().toISOString(),
+    scope,
+    settings: scope === 'full' ? await learnerSettingsOf(db, learner.id) : null,
   };
   // One event per report a grown-up actually views: a HEAD (Hono answers it with this GET handler) records nothing.
   if (c.req.method === 'GET') recordServerEvent('report.viewed', { scope: 'learner', space: space.kind, period: reportPeriodOf(c.req.query('period')) });
@@ -144,12 +149,14 @@ spaceReportRoutes.get('/:id/class-report', async (c) => {
   const memberIds = [...joinedAt.keys()];
   const [learnerIds, stored] = await Promise.all([db.learnersOf(memberIds), db.summariesOf(memberIds)]);
   const summaries = new Map(stored.map((row) => [row.learnerId, row]));
+  // [TV] each learner counts with its own scope, so a base-scope learner's words never reach a class total
+  const scopes = await learnerScopes(db, space.kind, learnerIds);
   // planProgress keeps this class's own plans only (archived ones included), as on the roster.
   const planIds = new Set(plans.map((p) => p.id));
   const learners = learnerIds.map((learnerId) => {
     const row = summaries.get(learnerId);
     const joined = joinedAt.get(learnerId) ?? null;
-    return { summary: reportSummaryOf(rosterSummary(row?.summary, planIds, space.kind, { joinedAt: joined })), lastSyncedAt: row?.updatedAt ?? null, joinedAt: joined };
+    return { summary: reportSummaryOf(rosterSummary(row?.summary, planIds, space.kind, { joinedAt: joined, scope: scopes.get(learnerId) })), lastSyncedAt: row?.updatedAt ?? null, joinedAt: joined };
   });
 
   const period = reportPeriodOf(c.req.query('period'));

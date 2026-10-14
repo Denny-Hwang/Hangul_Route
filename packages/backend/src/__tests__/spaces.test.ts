@@ -326,7 +326,8 @@ describe('leave, remove, roster (§3.3, §3.4)', () => {
       expect(rows).toHaveLength(1);
       return rows[0] as Row;
     };
-    const allowedRowKeys = new Set<string>([...Object.keys(TEACHER_VISIBLE_ROSTER_FIELDS), ...TEACHER_ROSTER_ADDRESS_FIELDS, 'summary']);
+    // [TV] `scope` says which projection the row carries (AMENDMENTS-TEACHER-VISIBILITY-TRANSFER section 4.3); it is not learner data.
+    const allowedRowKeys = new Set<string>([...Object.keys(TEACHER_VISIBLE_ROSTER_FIELDS), ...TEACHER_ROSTER_ADDRESS_FIELDS, 'summary', 'scope']);
     const allowedSummaryKeys: readonly string[] = TEACHER_VISIBLE_SUMMARY_KEYS;
 
     const rowA = await rowOf(a.space.id, 'teacher');
@@ -342,7 +343,10 @@ describe('leave, remove, roster (§3.3, §3.4)', () => {
     // The family roster goes through the same route and the same projection.
     const famRow = await rowOf(fam.space.id, 'mom');
     expect(famRow.summary.planProgress).toEqual({ [planFam]: progress(0) });
-    expect(famRow.summary).not.toHaveProperty('stage1Anchor');
+    // [TV] a family reads the full scope: the Hangul Check too (AMENDMENTS-TEACHER-VISIBILITY-TRANSFER section 2)
+    expect(famRow.summary).toHaveProperty('stage1Anchor');
+    expect(famRow.scope).toBe('full');
+    expect(rowA.scope).toBe('base');
   });
 
   it('returns the self-route counts to the family roster only, never to a class or a school admin (F-PLAN-002 section 3.10)', async () => {
@@ -584,12 +588,8 @@ describe('summary.activity on the roster (F-REPORT-001 section 3.8, RP-W2: the r
     expect(upload.status).toBe(200);
 
     const zeroW = <T extends { w: number }>(row: T): T => ({ ...row, w: 0 });
-    expect((await rowOf(fam.space.id, 'mom')).summary.activity).toEqual({
-      ...activity,
-      days: activity.days.map(zeroW),
-      months: activity.months.map(zeroW),
-      total: zeroW(activity.total),
-    });
+    // [TV] a family reads the whole activity, word counts included; a base-scope class reads them as 0
+    expect((await rowOf(fam.space.id, 'mom')).summary.activity).toEqual(activity);
 
     const clipped = {
       v: 1,

@@ -33,6 +33,7 @@ import { requireAccount, spaceContext } from '../lib/access';
 import { can, type AccountActor } from '../lib/can';
 import { isJoinCodeLive } from '../lib/join-code';
 import { createRateLimiter } from '../lib/rate-limit';
+import { ackFromTransferConsent } from '../lib/class-scope';
 import { classSeatCheck } from '../lib/seats';
 import {
   classTransferEnabled,
@@ -350,6 +351,8 @@ async function startMove(c: Ctx, mode: 'preview' | 'create'): Promise<Response> 
     if (winner && isOwn(winner)) return ok(c, { request: await startedView(db, side, winner, env, now) });
     return winner ? alreadyOpen(winner) : fail(c, 'already_open', 'A move is already open for this learner', 409);
   }
+  // [TV] TV-D4: a guardian's consent at the current text also acknowledges the class-scope update.
+  if (side.kind === 'family' && side.consent) await ackFromTransferConsent(db, learnerId, account.id, side.consent.textVersion, now);
   const stored = (await db.getTransfer(row.id)) ?? row;
   return ok(c, { request: await startedView(db, side, stored, env, now) }, 201);
 }
@@ -706,6 +709,8 @@ async function approveLearnerSlot(c: Ctx, db: Db, account: Account, family: Spac
     terms: shown.terms,
   };
   const changed = await db.consentSlot(row.id, { kind: 'learner', record, introduce: body.introduce }, now, [consentedEvent(account.id, 'learner', { basis: 'caregiver' }, now)]);
+  // [TV] TV-D4: a guardian's consent at the current text also acknowledges the class-scope update.
+  if (changed === 1) await ackFromTransferConsent(db, row.learnerId, account.id, consent.textVersion, now);
   if (changed === 0) {
     // Lost a race: another guardian answered first (200 unchanged), or the request ended meanwhile.
     const after = await db.getTransfer(row.id);

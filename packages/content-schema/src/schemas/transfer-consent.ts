@@ -30,8 +30,8 @@ export const TRANSFER_CONSENT_LINE_IDS = [
   'school_delete',
   'device_relink',
   'homework_drops',
-  'cannot_undo',
   'teacher_moves',
+  'cannot_undo',
   'introduce',
 ] as const;
 export type TransferConsentLineId = (typeof TRANSFER_CONSENT_LINE_IDS)[number];
@@ -69,9 +69,9 @@ export const TRANSFER_CONSENT_LINES: readonly TransferConsentLine[] = [
   { id: 'school_delete', when: 'school_consent_mode', kind: 'statement' },
   { id: 'device_relink', when: 'relink_affected', kind: 'statement' },
   { id: 'homework_drops', when: 'source_plans_affected', kind: 'statement' },
-  { id: 'cannot_undo', when: 'always', kind: 'statement' },
-  /** [TV] TV-D6: a teacher may move the learner later, at the teacher's discretion (owner decision 2026-10-14). */
+  /** [TV] TV-D6: a teacher may move the learner later, at the teacher's discretion (owner decision 2026-10-14). Before cannot_undo, which stays the last line (the end marker follows it). */
   { id: 'teacher_moves', when: 'always', kind: 'statement' },
+  { id: 'cannot_undo', when: 'always', kind: 'statement' },
   { id: 'introduce', when: 'always', kind: 'option' },
 ];
 

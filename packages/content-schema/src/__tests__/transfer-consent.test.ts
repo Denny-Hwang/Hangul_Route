@@ -50,9 +50,9 @@ const PINNED_HASHES: Record<string, Partial<Record<TransferConsentLocale, string
   },
   // [TV] AMENDMENTS-TEACHER-VISIBILITY-TRANSFER TV-D6: the full-scope items and the teacher_moves line, over the 10c text.
   'transfer-2026-10d': {
-    en: '4ed46badade75131c0aef027381a53a6c30e6be0a5765198ffeef8a193d5ae82',
-    ko: 'a8b82a74354e68458769fdfd5a82efa568fcc78b9b7aa8d6d47639e650ea8c99',
-    es: '09daff0441195c0d506558872dc03a2fc45aeff884b1bb9af84052e360538b46',
+    en: 'f5a5c2df08940dd5ef3b2700854f65eb848bda602aedac1be403a6c8fe248089',
+    ko: '5caf7703e8eb5d4a27ab750985d20b97b330532dbf59c4999fff04ede8459fd4',
+    es: 'af2bab56c9e6e86511c7bdf717acfecc48d60d3fb2573e0a64b885c447bb7ef2',
   },
 };
 
@@ -121,8 +121,8 @@ describe('consent lines (F-SPACE-002 §4.11)', () => {
       'school_delete',
       'device_relink',
       'homework_drops',
-      'cannot_undo',
       'teacher_moves',
+      'cannot_undo',
       'introduce',
     ]);
     expect(new Set(TRANSFER_CONSENT_LINE_IDS).size).toBe(TRANSFER_CONSENT_LINE_IDS.length);

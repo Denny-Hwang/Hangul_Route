@@ -121,7 +121,10 @@ describe('GET /api/spaces/:id/learners/:learnerId/report (F-REPORT-001 section 3
       expect(raw).not.toContain('joinCode');
       expect(raw).not.toContain('ownerAccountId');
       const summary = (r.body.data as { summary: Record<string, unknown> }).summary;
-      for (const hidden of ['schemaVersion', 'stage1Anchor', 'vocab', 'routeGoal', 'payload']) expect(summary, hidden).not.toHaveProperty(hidden);
+      for (const hidden of ['schemaVersion', 'routeGoal', 'payload']) expect(summary, hidden).not.toHaveProperty(hidden);
+      // [TV] a family reads the full scope, with the learner's settings (AMENDMENTS-TEACHER-VISIBILITY-TRANSFER section 2)
+      expect(body.scope).toBe('full');
+      expect(body.settings).toEqual({ classNotes: 'all' });
       expect(Object.keys(summary).every((key) => key in ReportSummarySchema.shape)).toBe(true);
     }
   });
@@ -737,13 +740,15 @@ describe('GET /api/spaces/:id/class-report (F-REPORT-001 sections 3.7 and 3.8, R
       expect(big.body.report.headline).toMatchObject({ practiced: 300, learners: 300 });
 
       const on = (table: string, sql: Array<{ sql: string }>) => sql.filter((s) => new RegExp(`\\bFROM ${table}\\b`).test(s.sql));
-      // 300 members: 3 learner chunks and 3 summary chunks; everything else is the same as for 1 member.
+      // 300 members: 3 learner chunks, 3 summary chunks and ([TV]) 3 class-scope chunks; everything else is the same as for 1 member.
       expect(on('learners', big.sql)).toHaveLength(3);
       expect(on('snapshots', big.sql)).toHaveLength(3);
+      expect(on('class_scope_acks', big.sql)).toHaveLength(3);
       expect(on('learners', one.sql)).toHaveLength(1);
       expect(on('snapshots', one.sql)).toHaveLength(1);
-      expect(big.sql.length - one.sql.length).toBe(4);
-      expect(big.sql.length).toBeLessThanOrEqual(16);
+      expect(on('class_scope_acks', one.sql)).toHaveLength(1);
+      expect(big.sql.length - one.sql.length).toBe(6);
+      expect(big.sql.length).toBeLessThanOrEqual(19);
       for (const s of big.sql) {
         expect(s.params, s.sql).toBeLessThanOrEqual(100);
         expect(s.sql).not.toContain('payload_json');
