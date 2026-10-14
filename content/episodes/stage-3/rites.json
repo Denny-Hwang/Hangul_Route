@@ -2,7 +2,7 @@
   "id": "episode:stage3-rites",
   "stage": "stage3",
   "theme": "rites",
-  "status": "draft",
+  "status": "ready",
   "titleEn": "Festival Sentences",
   "subtitleEn": "Short sentences about Seollal and Chuseok",
   "hoyaIntroEn": "Festival days are fun! Let's read and build sentences about them.",
@@ -94,14 +94,14 @@
                 ]
               },
               {
-                "captionEn": "Who is here?",
+                "captionEn": "Who do I have?",
                 "items": [
                   {
                     "type": "sentence",
                     "sentence": {
                       "ko": "할머니하고 할아버지가 있어요.",
                       "romanization": "halmeonihago harabeojiga isseoyo",
-                      "en": "Grandma and Grandpa are here."
+                      "en": "I have a grandma and a grandpa."
                     }
                   },
                   {
@@ -109,7 +109,7 @@
                     "sentence": {
                       "ko": "엄마하고 할머니가 있어요.",
                       "romanization": "eommahago halmeoniga isseoyo",
-                      "en": "Mom and Grandma are here."
+                      "en": "I have a mom and a grandma."
                     }
                   }
                 ]
@@ -176,7 +176,7 @@
               "sentence": {
                 "ko": "할머니하고 할아버지가 있어요.",
                 "romanization": "halmeonihago harabeojiga isseoyo",
-                "en": "Grandma and Grandpa are here."
+                "en": "I have a grandma and a grandpa."
               },
               "distractors": [
                 {
@@ -184,22 +184,7 @@
                   "romanization": "meogeoyo",
                   "en": "eat"
                 }
-              ],
-              "particle": {
-                "tile": 1,
-                "choices": [
-                  {
-                    "ko": "이",
-                    "romanization": "i",
-                    "en": "subject marker after a final consonant"
-                  },
-                  {
-                    "ko": "가",
-                    "romanization": "ga",
-                    "en": "subject marker after a vowel"
-                  }
-                ]
-              }
+              ]
             },
             {
               "id": "r3",
@@ -215,52 +200,22 @@
                   "romanization": "isseoyo",
                   "en": "is here, there is"
                 }
-              ],
-              "particle": {
-                "tile": 1,
-                "choices": [
-                  {
-                    "ko": "을",
-                    "romanization": "eul",
-                    "en": "object marker after a final consonant"
-                  },
-                  {
-                    "ko": "를",
-                    "romanization": "reul",
-                    "en": "object marker after a vowel"
-                  }
-                ]
-              }
+              ]
             },
             {
               "id": "r4",
               "sentence": {
                 "ko": "엄마하고 할머니가 있어요.",
                 "romanization": "eommahago halmeoniga isseoyo",
-                "en": "Mom and Grandma are here."
+                "en": "I have a mom and a grandma."
               },
               "distractors": [
                 {
                   "ko": "떡을",
                   "romanization": "tteogeul",
-                  "en": "rice cake (what is eaten)"
+                  "en": "rice cake (as the object)"
                 }
-              ],
-              "particle": {
-                "tile": 1,
-                "choices": [
-                  {
-                    "ko": "이",
-                    "romanization": "i",
-                    "en": "subject marker after a final consonant"
-                  },
-                  {
-                    "ko": "가",
-                    "romanization": "ga",
-                    "en": "subject marker after a vowel"
-                  }
-                ]
-              }
+              ]
             },
             {
               "id": "r5",
@@ -275,22 +230,7 @@
                   "romanization": "isseoyo",
                   "en": "is here, there is"
                 }
-              ],
-              "particle": {
-                "tile": 1,
-                "choices": [
-                  {
-                    "ko": "을",
-                    "romanization": "eul",
-                    "en": "object marker after a final consonant"
-                  },
-                  {
-                    "ko": "를",
-                    "romanization": "reul",
-                    "en": "object marker after a vowel"
-                  }
-                ]
-              }
+              ]
             }
           ]
         },
@@ -303,7 +243,7 @@
               "prompt": {
                 "ko": "할머니하고 할아버지가 있어요.",
                 "romanization": "halmeonihago harabeojiga isseoyo",
-                "en": "Grandma and Grandpa are here."
+                "en": "I have a grandma and a grandpa."
               },
               "options": [
                 {
@@ -311,7 +251,7 @@
                   "text": {
                     "ko": "할머니하고 할아버지가 있어요.",
                     "romanization": "halmeonihago harabeojiga isseoyo",
-                    "en": "Grandma and Grandpa are here."
+                    "en": "I have a grandma and a grandpa."
                   }
                 },
                 {
@@ -319,7 +259,7 @@
                   "text": {
                     "ko": "엄마하고 할머니가 있어요.",
                     "romanization": "eommahago halmeoniga isseoyo",
-                    "en": "Mom and Grandma are here."
+                    "en": "I have a mom and a grandma."
                   }
                 },
                 {
@@ -404,7 +344,7 @@
               "prompt": {
                 "ko": "엄마하고 할머니가 있어요.",
                 "romanization": "eommahago halmeoniga isseoyo",
-                "en": "Mom and Grandma are here."
+                "en": "I have a mom and a grandma."
               },
               "options": [
                 {
@@ -441,7 +381,7 @@
               "prompt": {
                 "ko": "할머니하고 할아버지가 있어요.",
                 "romanization": "halmeonihago harabeojiga isseoyo",
-                "en": "Grandma and Grandpa are here."
+                "en": "I have a grandma and a grandpa."
               },
               "options": [
                 {
@@ -504,7 +444,7 @@
                   "text": {
                     "ko": "할머니하고 할아버지가 있어요.",
                     "romanization": "halmeonihago harabeojiga isseoyo",
-                    "en": "Grandma and Grandpa are here."
+                    "en": "I have a grandma and a grandpa."
                   }
                 }
               ],
@@ -519,7 +459,7 @@
       "titleEn": "Pretty and Tasty",
       "blurbEn": "Read how festival things look and taste.",
       "teaserEn": "Next: the New Year's bow and the full moon",
-      "estimatedMinutes": 4,
+      "estimatedMinutes": 5,
       "steps": [
         {
           "id": "s1",
@@ -721,15 +661,15 @@
             {
               "id": "r4",
               "sentence": {
-                "ko": "할머니 한복이 예뻐요.",
-                "romanization": "halmeoni hanbogi yeppeoyo",
-                "en": "Grandma's hanbok is pretty."
+                "ko": "사과하고 떡이 맛있어요.",
+                "romanization": "sagwahago tteogi masisseoyo",
+                "en": "The apple and rice cake are tasty."
               },
               "distractors": [
                 {
-                  "ko": "떡이",
-                  "romanization": "tteogi",
-                  "en": "rice cake (who or what)"
+                  "ko": "예뻐요.",
+                  "romanization": "yeppeoyo",
+                  "en": "is pretty"
                 }
               ]
             },
@@ -993,7 +933,7 @@
         {
           "id": "s2",
           "kind": "discover",
-          "titleEn": "Things We Do",
+          "titleEn": "Things People Do",
           "hoyaLineEn": "Sebae is a bow to elders at the New Year. Chuseok has a big, bright full moon.",
           "discover": {
             "pages": [
@@ -1168,9 +1108,9 @@
             {
               "id": "r4",
               "sentence": {
-                "ko": "할머니하고 할아버지가 보름달을 봐요.",
-                "romanization": "halmeonihago harabeojiga boreumdareul bwayo",
-                "en": "Grandma and Grandpa look at the full moon."
+                "ko": "엄마하고 아빠가 보름달을 봐요.",
+                "romanization": "eommahago appaga boreumdareul bwayo",
+                "en": "Mom and Dad look at the full moon."
               },
               "distractors": [
                 {
@@ -1339,17 +1279,17 @@
             {
               "id": "r4",
               "prompt": {
-                "ko": "할머니하고 할아버지가 보름달을 봐요.",
-                "romanization": "halmeonihago harabeojiga boreumdareul bwayo",
-                "en": "Grandma and Grandpa look at the full moon."
+                "ko": "엄마하고 아빠가 보름달을 봐요.",
+                "romanization": "eommahago appaga boreumdareul bwayo",
+                "en": "Mom and Dad look at the full moon."
               },
               "options": [
                 {
                   "id": "o1",
                   "text": {
-                    "ko": "할머니하고 할아버지가 보름달을 봐요.",
-                    "romanization": "halmeonihago harabeojiga boreumdareul bwayo",
-                    "en": "Grandma and Grandpa look at the full moon."
+                    "ko": "엄마하고 아빠가 보름달을 봐요.",
+                    "romanization": "eommahago appaga boreumdareul bwayo",
+                    "en": "Mom and Dad look at the full moon."
                   }
                 },
                 {
@@ -1357,15 +1297,15 @@
                   "text": {
                     "ko": "할머니하고 할아버지가 있어요.",
                     "romanization": "halmeonihago harabeojiga isseoyo",
-                    "en": "Grandma and Grandpa are here."
+                    "en": "I have a grandma and a grandpa."
                   }
                 },
                 {
                   "id": "o3",
                   "text": {
-                    "ko": "할머니 한복이 예뻐요.",
-                    "romanization": "halmeoni hanbogi yeppeoyo",
-                    "en": "Grandma's hanbok is pretty."
+                    "ko": "보름달이 예뻐요.",
+                    "romanization": "boreumdari yeppeoyo",
+                    "en": "The full moon is pretty."
                   }
                 }
               ],
@@ -1460,7 +1400,7 @@
     {
       "id": "n1",
       "kind": "culture",
-      "textEn": "Sebae is the New Year's bow. At the start of the year, younger family members bow to grandparents, parents and other elders, and the elders answer with kind wishes.",
+      "textEn": "Sebae is the New Year's bow. By custom, at the start of the year younger family members bow to grandparents, parents and other elders, and the elders answer with kind wishes.",
       "sources": [
         {
           "title": "세배",
@@ -1478,10 +1418,10 @@
         }
       ],
       "verification": {
-        "passes": 2,
+        "passes": 3,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "pass 1 (author sourcing, 2026-10-14): 'the New Year's bow' and 'at the start of the year' = encykorea 세배 정의 (정월 초하룻날 … 새해의 첫인사) and stdict 세배 (섣달그믐이나 정초에 웃어른께 인사로 하는 절); 'younger family members bow to grandparents, parents and other elders' = encykorea 세배 (조부모·부모에게 먼저 절하고 … 아랫사람이 윗사람에게); 'elders answer with kind wishes' = encykorea 세배 (세배를 받는 이도 … 덕담을 한다). Restated in own words; no ancestral rite named (the encykorea sentence on 차례 is not quoted). Same fact as Holiday Words n2 and n8. Used in: q3 Discover Hoya line, q3 Discover page 1 caption, q3 practice r1 and apply r1 (sebae sentence).\npass 2b (independent fact check, 2026-10-14): re-opened encykorea E0029802 and stdict 세배. 정의 '정월 초하룻날 윗사람에게 절을 하는 새해의 첫인사' supports 'the New Year's bow' and 'at the start of the year'; 내용 '조부모·부모에게 먼저 절하고, 형·누나 등 차례로 아랫사람이 윗사람에게 절을' and the later visits to 일가친척과 이웃어른 support 'younger family members bow to grandparents, parents and other elders'; '세배를 받는 이도 … 한마디씩 덕담을 한다' supports 'elders answer with kind wishes'; stdict '섣달그믐이나 정초에 웃어른께 인사로 하는 절' matches. All quoteOrLocator strings found verbatim on the pages. textEn is a restatement, not a translation of any source sentence; no copy found. Outcome: pass, no change."
+        "notes": "pass 1 (author sourcing, 2026-10-14): 'the New Year's bow' and 'at the start of the year' = encykorea 세배 정의 (정월 초하룻날 … 새해의 첫인사) and stdict 세배 (섣달그믐이나 정초에 웃어른께 인사로 하는 절); 'younger family members bow to grandparents, parents and other elders' = encykorea 세배 (조부모·부모에게 먼저 절하고 … 아랫사람이 윗사람에게); 'elders answer with kind wishes' = encykorea 세배 (세배를 받는 이도 … 덕담을 한다). Restated in own words; no ancestral rite named (the encykorea sentence on 차례 is not quoted). Same fact as Holiday Words n2 and n8. Used in: q3 Discover Hoya line, q3 Discover page 1 caption, q3 practice r1 and apply r1 (sebae sentence).\npass 2b (independent fact check, 2026-10-14): re-opened encykorea E0029802 and stdict 세배. 정의 '정월 초하룻날 윗사람에게 절을 하는 새해의 첫인사' supports 'the New Year's bow' and 'at the start of the year'; 내용 '조부모·부모에게 먼저 절하고, 형·누나 등 차례로 아랫사람이 윗사람에게 절을' and the later visits to 일가친척과 이웃어른 support 'younger family members bow to grandparents, parents and other elders'; '세배를 받는 이도 … 한마디씩 덕담을 한다' supports 'elders answer with kind wishes'; stdict '섣달그믐이나 정초에 웃어른께 인사로 하는 절' matches. All quoteOrLocator strings found verbatim on the pages. textEn is a restatement, not a translation of any source sentence; no copy found. Outcome: pass, no change.\npass 5 (MAR culture review, final independent pass, 2026-10-14): re-opened encykorea E0029802 and stdict 세배; every quoteOrLocator string found verbatim. 'New Year's bow', 'at the start of the year', 'younger family members bow to grandparents, parents and other elders' and 'elders answer with kind wishes' are each supported as recorded in passes 1 and 2b. textEn now opens the custom with 'By custom,' (the source describes a custom, not what every family does; no new fact). No run of words shared with a source; no designation number; no ancestral rite named. Outcome: pass, hedge applied."
       }
     },
     {
@@ -1512,17 +1452,23 @@
         }
       ],
       "verification": {
-        "passes": 2,
+        "passes": 3,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "pass 1 (author sourcing, 2026-10-14): 'day 15 of the eighth lunar month' = encykorea 추석 정의 (음력 8월 15일) and stdict 추석 (음력 팔월 보름날이다); 'a full-moon day' = stdict 보름달 (음력 보름날 밤에 뜨는 둥근달) with the 보름날 date; 'known as a festival of the moon' = encykorea 추석 내용 요약 (1년 중 가장 큰 보름달을 맞이하는 달의 명절); 'families may gather under the bright moon to make songpyeon' = encykorea 추석 절식 (밝은 달을 보면서 가족들이 모여 송편을 만든다), hedged with 'may'. The stdict 추석 quote is trimmed before its 차례 clause (OD-9). Restated in own words. Used in: q3 Discover Hoya line ('Chuseok has a big, bright full moon'), q3 Discover page 2 caption, q2 Discover page 2 and q3 sentences with 보름달.\npass 2b (independent fact check, 2026-10-14): re-opened encykorea E0057862, stdict 추석 and stdict 보름달. 정의 '음력 8월 15일' and stdict '음력 팔월 보름날이다' support 'day 15 of the eighth lunar month'; stdict 보름달 '음력 보름날 밤에 뜨는 둥근달' supports 'a full-moon day'; 내용 요약 '1년 중 가장 큰 보름달을 맞이하는 달의 명절' supports 'known as a festival of the moon'; 추석 절식 '열 나흗날 저녁 밝은 달을 보면서 가족들이 모여 송편을 만든다' supports 'families may gather under the bright moon to make songpyeon' (the source places this on the evening of day 14; the note gives no day for it and hedges with 'may', so it stays accurate). All quoteOrLocator strings found verbatim on the pages. No source wording copied. Outcome: pass, no change."
+        "notes": "pass 1 (author sourcing, 2026-10-14): 'day 15 of the eighth lunar month' = encykorea 추석 정의 (음력 8월 15일) and stdict 추석 (음력 팔월 보름날이다); 'a full-moon day' = stdict 보름달 (음력 보름날 밤에 뜨는 둥근달) with the 보름날 date; 'known as a festival of the moon' = encykorea 추석 내용 요약 (1년 중 가장 큰 보름달을 맞이하는 달의 명절); 'families may gather under the bright moon to make songpyeon' = encykorea 추석 절식 (밝은 달을 보면서 가족들이 모여 송편을 만든다), hedged with 'may'. The stdict 추석 quote is trimmed before its 차례 clause (OD-9). Restated in own words. Used in: q3 Discover Hoya line ('Chuseok has a big, bright full moon'), q3 Discover page 2 caption, q2 Discover page 2 and q3 sentences with 보름달.\npass 2b (independent fact check, 2026-10-14): re-opened encykorea E0057862, stdict 추석 and stdict 보름달. 정의 '음력 8월 15일' and stdict '음력 팔월 보름날이다' support 'day 15 of the eighth lunar month'; stdict 보름달 '음력 보름날 밤에 뜨는 둥근달' supports 'a full-moon day'; 내용 요약 '1년 중 가장 큰 보름달을 맞이하는 달의 명절' supports 'known as a festival of the moon'; 추석 절식 '열 나흗날 저녁 밝은 달을 보면서 가족들이 모여 송편을 만든다' supports 'families may gather under the bright moon to make songpyeon' (the source places this on the evening of day 14; the note gives no day for it and hedges with 'may', so it stays accurate). All quoteOrLocator strings found verbatim on the pages. No source wording copied. Outcome: pass, no change.\npass 5 (MAR culture review, final independent pass, 2026-10-14): re-opened encykorea E0057862, stdict 추석 and stdict 보름달; every quoteOrLocator string found verbatim, the stdict 추석 quote ends before its 차례 clause (OD-9). 'day 15 of the eighth lunar month', 'a full-moon day', 'known as a festival of the moon' and 'families may gather under the bright moon to make songpyeon' (hedged, no day given) are each supported. The q3 Hoya line ('Chuseok has a big, bright full moon') rests on the same 내용 요약. No run of words shared with a source. Outcome: pass, no change."
       }
     }
   ],
   "review": {
-    "language": "draft",
-    "culture": "draft",
-    "notes": []
+    "language": "native-reviewed",
+    "culture": "culture-reviewed",
+    "reviewedBy": "MAR",
+    "reviewedAt": "2026-10-14",
+    "notes": [
+      "pass 4 language (MAR, 2026-10-14): applied: 하고 as a joining particle (ko), no aspect drift in ko glosses, 'hago' marked as Korean in es, 있어요 with grandparents glossed as possession, q3 r4 now 엄마하고 아빠가, no untaught N N possessive, no q1 particle choice, 떡 role labels; rejected: 송편/떡 gloss (spec 3.4), read-to-picture Check (no schema mode).",
+      "pass 5 culture (MAR, 2026-10-14): n1 and n2 re-checked against all five sources, passes 3; applied: q3 Discover title 'Things People Do', the ko q2 Hoya line no longer a flat claim, 'By custom' on n1; no stereotype, no 'all Koreans' claim, no real person, shop, brand or price; reads for any age.",
+      "pass 6 translation (MAR, 2026-10-14): es and ko 1:1 with the cell; applied: ko glosses define, not echo (둥근 달, 반달 모양으로 빚은 떡, 윷가락), q2 frame gloss matches its examples, 떡 definitions, 'Dos palabras de familia', Check title as the dictionary heading; rejected: es verb-form uniformity (mirrors en), {ko:} tokens in es notes (pipeline rule pending)."
+    ]
   },
   "contentVer": 1
 }
