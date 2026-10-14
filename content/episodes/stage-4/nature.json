@@ -53,7 +53,7 @@
                         "line": {
                           "ko": "네, 좋아요!",
                           "romanization": "ne joayo",
-                          "en": "Yes, good!"
+                          "en": "Yes, it is!"
                         }
                       }
                     ]
@@ -159,9 +159,9 @@
                 {
                   "id": "r3",
                   "text": {
-                    "ko": "밥을 먹어요.",
-                    "romanization": "babeul meogeoyo",
-                    "en": "I eat rice."
+                    "ko": "우유를 마셔요.",
+                    "romanization": "uyureul masyeoyo",
+                    "en": "I drink milk."
                   },
                   "correct": false
                 }
@@ -180,7 +180,7 @@
                   "text": {
                     "ko": "네, 좋아요!",
                     "romanization": "ne joayo",
-                    "en": "Yes, good!"
+                    "en": "Yes, it is!"
                   },
                   "correct": true
                 },
@@ -196,9 +196,9 @@
                 {
                   "id": "r3",
                   "text": {
-                    "ko": "책이에요.",
-                    "romanization": "chaegieyo",
-                    "en": "It is a book."
+                    "ko": "저는 호야예요.",
+                    "romanization": "jeoneun hoyayeyo",
+                    "en": "I am Hoya."
                   },
                   "correct": false
                 }
@@ -251,36 +251,36 @@
               "id": "l1",
               "speakerEn": "Friend",
               "line": {
-                "ko": "안녕하세요!",
-                "romanization": "annyeonghaseyo",
-                "en": "Hello!"
-              }
-            },
-            {
-              "id": "l2",
-              "speakerEn": "Hoya",
-              "line": {
                 "ko": "날씨가 좋아요!",
                 "romanization": "nalssiga joayo",
                 "en": "The weather is nice!"
               }
             },
             {
-              "id": "l3",
-              "speakerEn": "Friend",
+              "id": "l2",
+              "speakerEn": "Hoya",
               "line": {
                 "ko": "네, 좋아요!",
                 "romanization": "ne joayo",
-                "en": "Yes, good!"
+                "en": "Yes, it is!"
+              }
+            },
+            {
+              "id": "l3",
+              "speakerEn": "Friend",
+              "line": {
+                "ko": "비가 와요!",
+                "romanization": "biga wayo",
+                "en": "It is raining!"
               }
             },
             {
               "id": "l4",
               "speakerEn": "Hoya",
               "line": {
-                "ko": "비가 와요!",
-                "romanization": "biga wayo",
-                "en": "It is raining!"
+                "ko": "집에 가요!",
+                "romanization": "jibe gayo",
+                "en": "I am going home!"
               }
             }
           ]
@@ -302,7 +302,7 @@
                   "text": {
                     "ko": "네, 좋아요!",
                     "romanization": "ne joayo",
-                    "en": "Yes, good!"
+                    "en": "Yes, it is!"
                   }
                 },
                 {
@@ -311,14 +311,6 @@
                     "ko": "책이에요.",
                     "romanization": "chaegieyo",
                     "en": "It is a book."
-                  }
-                },
-                {
-                  "id": "c",
-                  "text": {
-                    "ko": "밥을 먹어요.",
-                    "romanization": "babeul meogeoyo",
-                    "en": "I eat rice."
                   }
                 }
               ],
@@ -343,17 +335,9 @@
                 {
                   "id": "b",
                   "text": {
-                    "ko": "맛있어요.",
-                    "romanization": "masisseoyo",
-                    "en": "It is tasty."
-                  }
-                },
-                {
-                  "id": "c",
-                  "text": {
-                    "ko": "저는 호야예요.",
-                    "romanization": "jeoneun hoyayeyo",
-                    "en": "I am Hoya."
+                    "ko": "밥을 먹어요.",
+                    "romanization": "babeul meogeoyo",
+                    "en": "I eat rice."
                   }
                 }
               ],
@@ -381,7 +365,7 @@
           "id": "s2",
           "kind": "discover",
           "titleEn": "Talking About Later",
-          "hoyaLineEn": "Listen for geoyeyo. It means \"is going to\".",
+          "hoyaLineEn": "Listen for -(eu)l geoyeyo. It means \"is going to\".",
           "discover": {
             "pages": [
               {
@@ -410,7 +394,7 @@
                     ]
                   }
                 ],
-                "captionEn": "Gray clouds over the park."
+                "captionEn": "Looking at gray clouds from home."
               },
               {
                 "items": [
@@ -521,9 +505,9 @@
             {
               "speakerEn": "Friend",
               "line": {
-                "ko": "내일 공원에 갈 거예요?",
-                "romanization": "naeil gongwone gal geoyeyo",
-                "en": "Will you go to the park tomorrow?"
+                "ko": "내일 갈 거예요?",
+                "romanization": "naeil gal geoyeyo",
+                "en": "Will you go tomorrow?"
               },
               "replies": [
                 {
@@ -547,9 +531,9 @@
                 {
                   "id": "r3",
                   "text": {
-                    "ko": "저는 호야예요.",
-                    "romanization": "jeoneun hoyayeyo",
-                    "en": "I am Hoya."
+                    "ko": "우유를 마셔요.",
+                    "romanization": "uyureul masyeoyo",
+                    "en": "I drink milk."
                   },
                   "correct": false
                 }
@@ -575,18 +559,18 @@
                 {
                   "id": "r2",
                   "text": {
-                    "ko": "안녕하세요!",
-                    "romanization": "annyeonghaseyo",
-                    "en": "Hello!"
+                    "ko": "밥을 먹어요.",
+                    "romanization": "babeul meogeoyo",
+                    "en": "I eat rice."
                   },
                   "correct": false
                 },
                 {
                   "id": "r3",
                   "text": {
-                    "ko": "밥을 먹어요.",
-                    "romanization": "babeul meogeoyo",
-                    "en": "I eat rice."
+                    "ko": "저는 호야예요.",
+                    "romanization": "jeoneun hoyayeyo",
+                    "en": "I am Hoya."
                   },
                   "correct": false
                 }
@@ -663,14 +647,6 @@
                     "romanization": "chaegieyo",
                     "en": "It is a book."
                   }
-                },
-                {
-                  "id": "c",
-                  "text": {
-                    "ko": "저는 호야예요.",
-                    "romanization": "jeoneun hoyayeyo",
-                    "en": "I am Hoya."
-                  }
                 }
               ],
               "answerId": "a"
@@ -693,14 +669,6 @@
                 },
                 {
                   "id": "b",
-                  "text": {
-                    "ko": "안녕하세요!",
-                    "romanization": "annyeonghaseyo",
-                    "en": "Hello!"
-                  }
-                },
-                {
-                  "id": "c",
                   "text": {
                     "ko": "밥을 먹어요.",
                     "romanization": "babeul meogeoyo",
@@ -782,7 +750,7 @@
                         "line": {
                           "ko": "네, 좋아요!",
                           "romanization": "ne joayo",
-                          "en": "Yes, good!"
+                          "en": "Yes, sounds good!"
                         }
                       }
                     ]
@@ -853,7 +821,7 @@
                   "text": {
                     "ko": "네, 좋아요!",
                     "romanization": "ne joayo",
-                    "en": "Yes, good!"
+                    "en": "Yes, sounds good!"
                   },
                   "correct": false
                 },
@@ -881,7 +849,7 @@
                   "text": {
                     "ko": "네, 좋아요!",
                     "romanization": "ne joayo",
-                    "en": "Yes, good!"
+                    "en": "Yes, sounds good!"
                   },
                   "correct": true
                 },
@@ -918,7 +886,7 @@
                   "text": {
                     "ko": "그럼 집에 가요.",
                     "romanization": "geureom jibe gayo",
-                    "en": "Then let us go home."
+                    "en": "Then I am going home."
                   },
                   "correct": true
                 },
@@ -934,9 +902,9 @@
                 {
                   "id": "r3",
                   "text": {
-                    "ko": "맛있어요.",
-                    "romanization": "masisseoyo",
-                    "en": "It is tasty."
+                    "ko": "밥을 먹어요.",
+                    "romanization": "babeul meogeoyo",
+                    "en": "I eat rice."
                   },
                   "correct": false
                 }
@@ -981,7 +949,7 @@
               "line": {
                 "ko": "네, 좋아요!",
                 "romanization": "ne joayo",
-                "en": "Yes, good!"
+                "en": "Yes, sounds good!"
               }
             }
           ]
@@ -1009,17 +977,9 @@
                 {
                   "id": "b",
                   "text": {
-                    "ko": "네, 좋아요!",
-                    "romanization": "ne joayo",
-                    "en": "Yes, good!"
-                  }
-                },
-                {
-                  "id": "c",
-                  "text": {
-                    "ko": "책이에요.",
-                    "romanization": "chaegieyo",
-                    "en": "It is a book."
+                    "ko": "우유를 마셔요.",
+                    "romanization": "uyureul masyeoyo",
+                    "en": "I drink milk."
                   }
                 }
               ],
@@ -1038,7 +998,7 @@
                   "text": {
                     "ko": "네, 좋아요!",
                     "romanization": "ne joayo",
-                    "en": "Yes, good!"
+                    "en": "Yes, sounds good!"
                   }
                 },
                 {
@@ -1047,14 +1007,6 @@
                     "ko": "저는 호야예요.",
                     "romanization": "jeoneun hoyayeyo",
                     "en": "I am Hoya."
-                  }
-                },
-                {
-                  "id": "c",
-                  "text": {
-                    "ko": "밥을 먹어요.",
-                    "romanization": "babeul meogeoyo",
-                    "en": "I eat rice."
                   }
                 }
               ],
