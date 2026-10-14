@@ -120,7 +120,8 @@ const MATRIX: Record<StageKey, Record<ThemeKey, string>> = {
   stage4: { letters: 'L+1', life: '-', rites: 'L+0', nature: '-', crafts: '-' },
   stage5: { letters: '-', life: '-', rites: 'S1', nature: '-', crafts: '-' },
   stage6: { letters: 'S1', life: '-', rites: '-', nature: '-', crafts: '-' },
-  stage7: { letters: '-', life: '-', rites: '-', nature: '-', crafts: '-' },
+  // F-CURR-001 S7-5: Make & Share is a lesson cell with no story.
+  stage7: { letters: '-', life: '-', rites: '-', nature: '-', crafts: 'L+0' },
 };
 
 /** F-STORY-004 §3.9: the intended free sampler. */

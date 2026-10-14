@@ -20,8 +20,9 @@ import type { Catalog, CatalogCell, CatalogQuest, CatalogStory, CatalogTopic } f
  * Version 9 (F-CURR-001 S4-1): the Stage 4 Read Along cell ships (three lesson quests).
  * Version 10 (F-CURR-001 S3-1): the Stage 3 First Sentences cell ships (three lesson quests).
  * Version 11 (F-CURR-001 S2-3): Playground Words ships (Stage 2 crafts, three lesson quests).
+ * Version 12 (F-CURR-001 S7-5): the Stage 7 Make & Share cell ships (three lesson quests).
  */
-export const CATALOG_VERSION = 11;
+export const CATALOG_VERSION = 12;
 
 const cell = (
   stage: StageKey,
@@ -95,7 +96,7 @@ const cells: CatalogCell[] = [
   soon('stage7', 'life', 'My Day in Korean'),
   soon('stage7', 'rites', 'My Holiday Memory'),
   soon('stage7', 'nature', 'My Favorite Animal'),
-  soon('stage7', 'crafts', 'Make & Share'),
+  cell('stage7', 'crafts', 'Make & Share', 'shipped', 15, ['quest:stage7-crafts-q1', 'quest:stage7-crafts-q2', 'quest:stage7-crafts-q3']),
 ];
 
 /**
@@ -133,6 +134,9 @@ const lessonQuests: CatalogQuest[] = [
   lesson('stage4-letters-q1', 'stage4', 'letters', 'What Is This?', 4),
   lesson('stage4-letters-q2', 'stage4', 'letters', 'Where Is It?', 4),
   lesson('stage4-letters-q3', 'stage4', 'letters', 'Thank You, Teacher', 4),
+  lesson('stage7-crafts-q1', 'stage7', 'crafts', 'Fold, Cut, Draw', 5),
+  lesson('stage7-crafts-q2', 'stage7', 'crafts', 'First, Next, Last', 5),
+  lesson('stage7-crafts-q3', 'stage7', 'crafts', 'My Making Page', 5),
   // The Stage 5 books (F-STORY-005 PR 5.6): grid quests that play their stories at the read level.
   lesson('story-sejong-new-letters-read', 'stage5', 'letters', "King Sejong's New Letters", 4),
   lesson('story-shapes-of-hangeul-read', 'stage5', 'letters', 'The Secret in the Shapes', 5),
