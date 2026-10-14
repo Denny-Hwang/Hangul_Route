@@ -118,7 +118,7 @@
       "steps.s2.discover.pages.1.items.0.example.gloss": "얼굴이 향하는 쪽",
       "steps.s2.discover.pages.1.items.1.word.gloss": "나무가 빽빽하게 우거진 곳",
       "steps.s2.discover.pages.2.caption": "이제 읽을 수 있는 낱말",
-      "steps.s2.discover.pages.2.items.0.word.gloss": "풀이나 나무의 줄기에 달린 납작하고 푸른 부분"
+      "steps.s2.discover.pages.2.items.0.word.gloss": "풀이나 나무에 달린 푸르고 납작한 것"
     },
     "minigame:s2-letters-q1-apply": {
       "cardPairs.gae.gloss": "사람과 함께 살며 멍멍 짖는 동물",
@@ -177,7 +177,7 @@
       "cardPairs.sup.gloss": "나무가 빽빽하게 우거진 곳"
     },
     "minigame:s2-letters-q6-check": {
-      "listenPick.rounds.see-ip.prompt": "풀이나 나무의 줄기에 달린 납작하고 푸른 부분",
+      "listenPick.rounds.see-ip.prompt": "풀이나 나무에 달린 푸르고 납작한 것",
       "listenPick.rounds.read-ap.prompt": "얼굴이 향하는 쪽"
     },
     "minigame:s2-letters-q1-practice": {

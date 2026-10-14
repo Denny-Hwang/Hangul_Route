@@ -9,6 +9,7 @@ export interface OverlayFinding {
 }
 export function bannedWordIn(text: string, locale: string): string | null;
 export function koCopulaSlip(text: string): string | null;
+export function koParticleSlip(text: string): string | null;
 export function checkOverlayTree(
   tree: Map<string, unknown>,
   options?: { strictLocales?: readonly string[] },

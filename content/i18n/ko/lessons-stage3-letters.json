@@ -46,7 +46,7 @@
       "steps.s2.discover.pages.1.items.0.sentence.gloss": "물건을 넣어 메는 것이 이곳에 존재한다는 뜻",
       "steps.s2.discover.pages.1.items.1.sentence.gloss": "글씨 쓰는 도구가 이곳에 존재하지 않는다는 뜻",
       "steps.s2.discover.pages.0.items.0.frame.gloss": "무언가가 존재한다는 틀",
-      "steps.s2.discover.pages.0.items.0.examples.chaegi-isseoyo.gloss": "읽는 물건가 이곳에 존재한다는 뜻",
+      "steps.s2.discover.pages.0.items.0.examples.chaegi-isseoyo.gloss": "읽는 물건이 이곳에 존재한다는 뜻",
       "steps.s2.discover.pages.0.items.0.examples.chinguga-isseoyo.gloss": "가깝게 지내는 사람을 두고 있다는 뜻"
     },
     "quest:stage3-letters-q3": {
@@ -94,11 +94,11 @@
       "listenPick.rounds.c2.prompt": "맞다고 하며, 읽는 물건이라는 뜻"
     },
     "minigame:s3-letters-q2-practice": {
-      "orderIt.rounds.r1.sentence.gloss": "읽는 물건가 이곳에 존재한다는 뜻",
+      "orderIt.rounds.r1.sentence.gloss": "읽는 물건이 이곳에 존재한다는 뜻",
       "orderIt.rounds.r2.sentence.gloss": "가깝게 지내는 사람을 두고 있다는 뜻",
       "orderIt.rounds.r3.sentence.gloss": "글씨 쓰는 도구가 이곳에 존재한다는 뜻",
       "orderIt.rounds.r4.sentence.gloss": "물건을 넣어 메는 것이 이곳에 존재한다는 뜻",
-      "orderIt.rounds.r5.sentence.gloss": "맞다고 하며, 읽는 물건가 이곳에 존재한다는 뜻",
+      "orderIt.rounds.r5.sentence.gloss": "맞다고 하며, 읽는 물건이 이곳에 존재한다는 뜻",
       "orderIt.rounds.r1.distractors.gabangi.gloss": "물건을 넣어 메는 것 (문장의 주어)",
       "orderIt.rounds.r5.distractors.yeonpiri.gloss": "글씨 쓰는 도구 (문장의 주어)",
       "orderIt.rounds.r2.particle.choices.i.gloss": "주어를 나타내는 조사 (받침 있는 말 뒤)",
@@ -111,12 +111,12 @@
     "minigame:s3-letters-q2-apply": {
       "listenPick.rounds.a1.prompt": "가깝게 지내는 사람을 두고 있다는 뜻",
       "listenPick.rounds.a2.prompt": "글씨 쓰는 도구가 이곳에 존재한다는 뜻",
-      "listenPick.rounds.a3.prompt": "읽는 물건가 이곳에 존재한다는 뜻",
+      "listenPick.rounds.a3.prompt": "읽는 물건이 이곳에 존재한다는 뜻",
       "listenPick.rounds.a4.prompt": "맞다고 하며, 글씨 쓰는 도구가 이곳에 존재한다는 뜻"
     },
     "minigame:s3-letters-q2-check": {
       "listenPick.rounds.c1.prompt": "물건을 넣어 메는 것이 이곳에 존재한다는 뜻",
-      "listenPick.rounds.c2.prompt": "맞다고 하며, 읽는 물건가 이곳에 존재한다는 뜻"
+      "listenPick.rounds.c2.prompt": "맞다고 하며, 읽는 물건이 이곳에 존재한다는 뜻"
     },
     "minigame:s3-letters-q3-practice": {
       "orderIt.rounds.r1.sentence.gloss": "가까이 있는 것이 읽는 물건이라는 뜻",

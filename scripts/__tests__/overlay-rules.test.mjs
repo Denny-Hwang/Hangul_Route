@@ -371,5 +371,43 @@ describe("overlay-rules: overlay-ko-copula (F-CURR-001 section 3.8 pass 6)", () 
 
   test("only ko lesson overlays: Spanish and other ko domains are not read by this rule", () => {
     assert.deepEqual(rules(base(ko({ "card:gangaji": { blurb: "물건라는 뜻" } }, "cards"))), []);
+    const esField = "steps.s2.discover.pages.0.items.0.examples.chaegieyo.gloss";
+    const esRules = rules(base(es({ "quest:stage3-letters-q1": { [esField]: "{ko:책}라는, {ko:책}와" } }, "lessons-stage3-letters")));
+    assert.deepEqual(esRules.filter((r) => r.startsWith("overlay-ko-")), []);
+  });
+
+  test("a {ko:} token ending in ㄹ is skipped, and a later slip after a correct '라는' is still found", () => {
+    assert.deepEqual(rules(lesson("{ko:달}라는 낱말")), []);
+    assert.deepEqual(rules(lesson("나무라는 뜻, 물건라는 뜻")), ["overlay-ko-copula"]);
+  });
+
+  test("'라고' and '예요' after a final consonant are the same slip; place names in 라 pass", () => {
+    assert.deepEqual(rules(lesson("{ko:책}라고 해요")), ["overlay-ko-copula"]);
+    assert.deepEqual(rules(lesson("이건 책예요")), ["overlay-ko-copula"]);
+    assert.match(checkOverlayTree(lesson("이건 책예요")).violations[0].rule, /책이에요/);
+    assert.deepEqual(rules(lesson("이건 책이에요, 나무예요, 놀라고, 달라고")), []);
+    assert.deepEqual(rules(lesson("신라는 오래된 나라예요")), []);
+    assert.deepEqual(rules(lesson("전라는 남쪽 땅이에요")), []);
+  });
+});
+
+describe("overlay-rules: overlay-ko-particle (F-CURR-001 section 3.8 pass 6)", () => {
+  const field = "steps.s2.discover.pages.0.items.0.examples.chaegi-isseoyo.gloss";
+  const lesson = (text, domain = "lessons-stage3-letters") => base(ko({ "quest:stage3-letters-q1": { [field]: text } }, domain));
+
+  test("가 after a gloss head noun with a final consonant needs 이", () => {
+    assert.deepEqual(rules(lesson("읽는 물건가 이곳에 존재한다는 뜻")), ["overlay-ko-particle"]);
+    assert.match(checkOverlayTree(lesson("읽는 물건가 이곳에 존재한다는 뜻")).violations[0].rule, /물건이/);
+    assert.deepEqual(rules(lesson("읽는 물건이 이곳에 존재한다는 뜻")), []);
+  });
+
+  test("를 and 와 after any final consonant need 을 and 과", () => {
+    assert.deepEqual(rules(lesson("읽는 물건를 찾는다는 뜻")), ["overlay-ko-particle"]);
+    assert.deepEqual(rules(lesson("{ko:책}와 연필")), ["overlay-ko-particle"]);
+    assert.deepEqual(rules(lesson("사과를 먹고 나무와 꽃을 본다는 뜻")), []);
+  });
+
+  test("real words that end in a final consonant + 가 pass", () => {
+    assert.deepEqual(rules(lesson("작가와 화가, 국가, 누군가, 무엇인가")), []);
   });
 });

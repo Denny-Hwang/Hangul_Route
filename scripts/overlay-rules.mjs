@@ -19,9 +19,12 @@
 //   overlay-circular-gloss   a ko gloss equal to the Korean it glosses (warning when it only
 //                            wraps it in spaces or punctuation)
 //   overlay-token-mismatch   a story narration whose {kw:id} tokens are not the base multiset
-//   overlay-ko-copula        a ko lesson overlay (lessons-*.json) with '라는' straight after a
-//                            syllable that ends in a final consonant ('물건라는' for '물건이라는');
-//                            a final ㄹ is left alone, where '라는' is a verb form ('달라는')
+//   overlay-ko-copula        a ko lesson overlay (lessons-*.json) with '라는' / '라고' / '예요'
+//                            straight after a syllable that ends in a final consonant ('물건라는'
+//                            for '물건이라는'); a final ㄹ is left alone, where '라는' is a verb form
+//                            ('달라는'), and so are place names in 라 ('신라는')
+//   overlay-ko-particle      a ko lesson overlay with 를 / 와 after a final consonant, or 가 after
+//                            a gloss head noun with one ('물건가' for '물건이')
 //   banned-on-learner-surface  a learner-banned word of the locale (banned-words.json)
 //   overlay-missing          warning (error for HANGUL_ROUTE_STRICT_LOCALES): a translatable
 //                            English field of a base entity that the locale lacks
@@ -111,22 +114,44 @@ function baseEntities(tree) {
 }
 
 /**
- * F-CURR-001 §3.8 pass 6: the quoted copula is '이라는' after a final consonant and '라는'
- * after a vowel. Returns the first wrong word ("물건라는", "{ko:책}라는") of `text`, or null. The syllable
- * before '라는' is the one in the text, or the last one of a `{ko:...}` token right before
- * it. A final ㄹ (jongseong 8) is skipped: there '라는' is mostly a verb form ('달라는' from
- * 달라 "give me", '놀라는'), which a text rule cannot tell from a noun.
+ * F-CURR-001 §3.8 pass 6: the copula is '이라는' / '이라고' / '이에요' after a final consonant and
+ * '라는' / '라고' / '예요' after a vowel. Returns the first wrong word ("물건라는", "{ko:책}라는",
+ * "책예요") of `text`, or null. The syllable before the ending is the one in the text, or the
+ * last one of a `{ko:...}` token right before it. A final ㄹ (jongseong 8) is skipped: there
+ * '라는' / '라고' is mostly a verb form ('달라는' from 달라 "give me", '놀라고'), which a text rule
+ * cannot tell from a noun. Place names that end in 라 ('신라는' is 신라 + 는) are skipped too.
  */
 const FINAL_RIEUL = 8;
+const KO_NOUNS_ENDING_IN_RA = ["신라", "전라"];
+const jongseong = (syllable) => (syllable.charCodeAt(0) - 0xac00) % 28;
 export function koCopulaSlip(text) {
-  for (const m of text.matchAll(/(\{ko:[^}]*\}|[가-힣]+)라는/g)) {
+  for (const m of text.matchAll(/(\{ko:[^}]*\}|[가-힣]+)(라는|라고|예요)/g)) {
     const before = m[1].startsWith("{ko:") ? m[1].slice(4, -1) : m[1];
     const last = before.slice(-1);
     if (!/[가-힣]/.test(last)) continue;
-    const jong = (last.charCodeAt(0) - 0xac00) % 28;
-    if (jong !== 0 && jong !== FINAL_RIEUL) return `${m[1]}라는`;
+    if (m[2] !== "예요" && KO_NOUNS_ENDING_IN_RA.some((noun) => `${before}라`.endsWith(noun))) continue;
+    const jong = jongseong(last);
+    if (jong !== 0 && jong !== FINAL_RIEUL) return `${m[1]}${m[2]}`;
   }
   return null;
+}
+
+/**
+ * F-CURR-001 §3.8 pass 6 follow-up: after a final consonant the subject, object and "and"
+ * particles are 이 / 을 / 과, not 가 / 를 / 와. Returns the first wrong word ("물건가", "책를") of
+ * `text`, or null. 를 and 와 are flagged after any final consonant at the end of a word. 가 is
+ * flagged only after the head nouns that ko glosses define with ("읽는 물건", "...하는 동물"),
+ * because many real words end in a final consonant + 가 (작가, 국가, 누군가, 있는가).
+ */
+const KO_GLOSS_HEAD_NOUNS = ["물건", "동물", "음식", "사람", "과일", "운동"];
+export function koParticleSlip(text) {
+  for (const m of text.matchAll(/(\{ko:[^}]*\}|[가-힣]+)(를|와)(?![가-힣])/g)) {
+    const before = m[1].startsWith("{ko:") ? m[1].slice(4, -1) : m[1];
+    const last = before.slice(-1);
+    if (/[가-힣]/.test(last) && jongseong(last) !== 0) return `${m[1]}${m[2]}`;
+  }
+  const head = new RegExp(`(?<![가-힣])(${KO_GLOSS_HEAD_NOUNS.join("|")})가(?![가-힣])`).exec(text);
+  return head === null ? null : `${head[1]}가`;
 }
 const isKoLessonOverlay = (rel) => /^content\/i18n\/ko\/lessons-[^/]+\.json$/.test(rel);
 
@@ -186,7 +211,12 @@ function checkField(locale, id, field, value, base, add, ctx) {
   if (banned !== null) add(`banned-on-learner-surface: "${banned}"`);
   if (locale === "ko" && isKoLessonOverlay(ctx.current)) {
     const slip = koCopulaSlip(value);
-    if (slip !== null) add(`overlay-ko-copula: "${slip}" needs 이라는 after a final consonant (${slip.slice(0, -2)}이라는)`);
+    if (slip !== null) add(`overlay-ko-copula: "${slip}" needs 이 after a final consonant (${slip.slice(0, -2)}이${slip.endsWith("예요") ? "에요" : slip.slice(-2)})`);
+    const particle = koParticleSlip(value);
+    if (particle !== null) {
+      const right = { 가: "이", 를: "을", 와: "과" }[particle.slice(-1)];
+      add(`overlay-ko-particle: "${particle}" needs ${right} after a final consonant (${particle.slice(0, -1)}${right})`);
+    }
   }
   if (!allowed || base === undefined) return;
 
