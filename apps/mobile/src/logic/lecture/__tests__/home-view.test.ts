@@ -1,7 +1,7 @@
 import { LectureDeckSchema } from '@hangul-route/content-schema';
-import { describe, expect, it, vi } from 'vitest';
-import { loadRecentState, radioAfter, recentDayLabel, removeRecent } from '../home-view';
-import { RECENT_KEY, emptyRecent, parseRecent } from '../recent';
+import { describe, expect, it } from 'vitest';
+import { radioAfter, recentDayLabel, recentView } from '../home-view';
+import { commitRecent, emptyRecent, forgetDeck, parseRecent, readRecent } from '../recent';
 
 const words = { today: 'Today', yesterday: 'Yesterday' };
 const now = new Date(2026, 9, 13, 15, 0);
@@ -39,7 +39,7 @@ describe('radioAfter (D19: arrows move and select in a chip radiogroup)', () => 
   });
 });
 
-describe('Recent on the home: storage on, empty, corrupt and off', () => {
+describe('recentView (Recent on the home: loading, a list, and storage off)', () => {
   const deck = LectureDeckSchema.parse({
     v: 1,
     id: 'lecture:abcdef1234',
@@ -49,42 +49,29 @@ describe('Recent on the home: storage on, empty, corrupt and off', () => {
     blocks: [{ kind: 'quest', id: 'quest:stage1-letters-q1' }],
   });
   const stored = { v: 1, items: [{ deck, savedAt: '2026-10-11T09:00:00Z' }] };
+  const store = (read: () => Promise<unknown>) => ({ readJson: read, writeJson: async () => undefined });
 
-  it('reads the saved list', async () => {
-    const state = await loadRecentState({ readJson: async () => stored, writeJson: async () => undefined });
-    expect(state).toEqual({ status: 'ready', list: parseRecent(stored) });
+  it('is loading until the boot read lands', () => {
+    expect(recentView(null)).toEqual({ status: 'loading' });
   });
 
-  it('reads nothing stored or corrupt data as an empty list', async () => {
-    expect(await loadRecentState({ readJson: async () => null, writeJson: async () => undefined })).toEqual({ status: 'ready', list: emptyRecent() });
-    expect(await loadRecentState({ readJson: async () => ({ v: 9 }), writeJson: async () => undefined })).toEqual({ status: 'ready', list: emptyRecent() });
+  it('shows the saved list', async () => {
+    const loaded = await readRecent(store(async () => stored));
+    expect(recentView(loaded)).toEqual({ status: 'ready', list: parseRecent(stored) });
   });
 
-  it('reports storage off when the read fails', async () => {
-    const state = await loadRecentState({
-      readJson: async () => {
-        throw new Error('blocked');
-      },
-      writeJson: async () => undefined,
+  it('shows nothing stored or corrupt data as an empty list', async () => {
+    expect(recentView(await readRecent(store(async () => null)))).toEqual({ status: 'ready', list: emptyRecent() });
+    expect(recentView(await readRecent(store(async () => ({ v: 9 }))))).toEqual({ status: 'ready', list: emptyRecent() });
+  });
+
+  it('shows storage off when the read failed, also after a later change', async () => {
+    const failing = store(async () => {
+      throw new Error('blocked');
     });
-    expect(state).toEqual({ status: 'off' });
-  });
-
-  it('removes a deck and saves the shorter list; a failed write still removes it here', async () => {
-    const writeJson = vi.fn(async () => undefined);
-    const list = parseRecent(stored);
-    expect(await removeRecent({ readJson: async () => stored, writeJson }, list, deck.id)).toEqual({ status: 'ready', list: emptyRecent() });
-    expect(writeJson).toHaveBeenCalledWith(RECENT_KEY, emptyRecent());
-    const failing = await removeRecent(
-      {
-        readJson: async () => stored,
-        writeJson: async () => {
-          throw new Error('full');
-        },
-      },
-      list,
-      deck.id,
-    );
-    expect(failing).toEqual({ status: 'ready', list: emptyRecent() });
+    const loaded = await readRecent(failing);
+    expect(recentView(loaded)).toEqual({ status: 'off' });
+    const after = await commitRecent(failing, loaded, (list) => forgetDeck(list, deck.id));
+    expect(recentView(after)).toEqual({ status: 'off' });
   });
 });

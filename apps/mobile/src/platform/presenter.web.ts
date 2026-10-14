@@ -182,6 +182,15 @@ export function forgetOpenDeck(env: PresenterEnv = browserEnv()): void {
 }
 
 /**
+ * Holds a deck started from the presenter home (Resume, Start over, Build lesson) in this tab's
+ * history entry, the same state a `#d=` link leaves, so a reload reopens that lesson; the address
+ * stays `/present` and the state holds only the encoded deck (no name, TD3).
+ */
+export function holdOpenDeck(raw: string, env: PresenterEnv = browserEnv()): void {
+  replaceAddress(env, { [DECK_STATE]: raw });
+}
+
+/**
  * A new deck link typed into this tab while it is open (`hashchange` with `#d=`) reloads the page,
  * so the boot reads it like any link; the console always opens a new tab, so this is rare.
  */

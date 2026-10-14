@@ -31,6 +31,10 @@ export function forgetOpenDeck(): void {
   // No history on native.
 }
 
+export function holdOpenDeck(_raw: string): void {
+  // No history on native.
+}
+
 export function reloadOnDeckLink(): () => void {
   return () => undefined;
 }

@@ -14,6 +14,8 @@ import {
   endLetters,
   fitShown,
   gestureCommand,
+  homeStart,
+  presenterLocale,
   resolveBoot,
   runDeck,
   slideDetail,
@@ -413,5 +415,36 @@ describe('stroke guide play (going back to a complete slide is silent)', () => {
     expect(strokeTokenFor(playing, 'b')).toBe(0);
     expect(strokeTokenFor(playing, undefined)).toBe(0);
     expect(strokeTokenFor(null, 'a')).toBe(0);
+  });
+});
+
+describe('homeStart and presenterLocale (the presenter home, F-TCH-004 PR 8)', () => {
+  const deck = deckOf([{ kind: 'episode', id: 'episode:stage1-letters' }]);
+  const item = { deck, savedAt: '2026-10-13T09:00:00Z', lastSlideKey: 'episode:stage1-letters/x' };
+
+  it('Resume opens the start screen at the saved slide, as a Recent start', () => {
+    expect(homeStart({ kind: 'resume', item })).toEqual({ kind: 'ready', deck, source: 'recent', resumeKey: 'episode:stage1-letters/x' });
+    const { lastSlideKey: _unused, ...never } = item;
+    expect(homeStart({ kind: 'resume', item: never })).toEqual({ kind: 'ready', deck, source: 'recent' });
+  });
+
+  it('Start over opens the same deck from its first slide', () => {
+    expect(homeStart({ kind: 'start-over', item })).toEqual({ kind: 'ready', deck, source: 'recent' });
+  });
+
+  it('Build lesson opens the Quick lesson deck as a quick start', () => {
+    const quick = deckOf([{ kind: 'jamo-set', jamoIds: ['jamo:giyeok'] }], { source: 'quick' });
+    expect(homeStart({ kind: 'quick', deck: quick })).toEqual({ kind: 'ready', deck: quick, source: 'quick' });
+  });
+
+  it('the session chip wins, then the deck language, then the device locale', () => {
+    const es = deckOf([{ kind: 'episode', id: 'episode:stage1-letters' }], { options: { uiLocale: 'es' } });
+    const available = ['en', 'es', 'ko'] as const;
+    expect(presenterLocale({ deck: null, session: null, device: 'en', available })).toBe('en');
+    expect(presenterLocale({ deck: es, session: null, device: 'en', available })).toBe('es');
+    expect(presenterLocale({ deck: es, session: 'ko', device: 'en', available })).toBe('ko');
+    expect(presenterLocale({ deck: null, session: 'ko', device: 'en', available })).toBe('ko');
+    // A chip for a locale this build does not offer is ignored.
+    expect(presenterLocale({ deck: null, session: 'ko', device: 'en', available: ['en'] })).toBe('en');
   });
 });

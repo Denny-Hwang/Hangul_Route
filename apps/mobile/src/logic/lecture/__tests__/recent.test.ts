@@ -165,9 +165,11 @@ describe('readRecent and commitRecent (a failed read never overwrites Recent)', 
       writeJson: vi.fn(async () => undefined),
     };
     const loaded = await readRecent(store);
-    expect(loaded).toEqual({ list: emptyRecent(), writable: false });
+    // `off`: the home shows the storage-off line instead of an empty list (design home.md).
+    expect(loaded).toEqual({ list: emptyRecent(), writable: false, off: true });
     const after = await commitRecent(store, loaded, (list) => rememberDeck(list, deck(1), at(1)));
     expect(after.list.items).toHaveLength(1);
+    expect(after.off).toBe(true);
     expect(store.writeJson).not.toHaveBeenCalled();
   });
 

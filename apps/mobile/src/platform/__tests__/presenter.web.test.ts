@@ -8,6 +8,7 @@ import {
   enterFullscreen,
   exitFullscreen,
   forgetOpenDeck,
+  holdOpenDeck,
   fullscreenSupported,
   hasOpener,
   isFullscreen,
@@ -85,6 +86,7 @@ describe('route', () => {
     expect(native.hasOpener()).toBe(false);
     expect(native.wakeLockSupported()).toBe(false);
     native.forgetOpenDeck();
+    native.holdOpenDeck('1.abc');
     native.reloadOnDeckLink()();
     expect(native.isFullscreen()).toBe(false);
     expect(await native.waitForPresenterFont(1, 'HR Presenter KR')).toBe(false);
@@ -175,6 +177,13 @@ describe('takeDeckFragment', () => {
   it('ignores a state that is not a deck', () => {
     expect(takeDeckFragment(addressEnv({ pathname: '/present', hash: '' }, { hrLectureFragment: 3 }).e)).toBeNull();
     expect(takeDeckFragment(addressEnv({ pathname: '/present', hash: '' }, 'x').e)).toBeNull();
+  });
+
+  it('holdOpenDeck keeps a deck started from the home in this tab, so a reload reopens it', () => {
+    const { e, history } = addressEnv({ pathname: '/present', hash: '' }, null);
+    holdOpenDeck('1.abc', e);
+    expect(history.state).toEqual({ hrLectureFragment: '1.abc' });
+    expect(takeDeckFragment(e)).toEqual({ raw: '1.abc', reloaded: true });
   });
 
   it('forgetOpenDeck clears the held deck', () => {

@@ -1,10 +1,11 @@
 import { decodeDeck, type ActivityPreset, type LectureDeck, type LectureDecodeFailure } from '@hangul-route/content-schema';
+import { decodeDeck, type LectureDeck, type LectureDecodeFailure, type UiLocale } from '@hangul-route/content-schema';
 import type { AudioCapability } from '../audio/capability';
 import { canPlayKorean } from '../audio/capability';
 import type { KoLine, SlideKind } from './build-steps';
 import { blockKeyOf, type ExpandedDeck, type Slide, type SkipReason } from './deck-builder';
 import type { PresenterState } from './controls';
-import type { RecentList } from './recent';
+import type { RecentItem, RecentList } from './recent';
 import { SWIPE_MIN, SWIPE_RATIO, TAP_BACK_FRACTION } from './stage-constants';
 
 /**
@@ -38,6 +39,28 @@ export function resolveBoot(address: { raw: string; reloaded: boolean } | null, 
   const open = address.reloaded ? recent.items.find((item) => item.deck.id === deck.id && item.lastSlideKey !== undefined) : undefined;
   if (!open?.lastSlideKey) return { kind: 'deck', deck, source: linked };
   return { kind: 'deck', deck, source: 'recent', resumeKey: open.lastSlideKey };
+}
+
+// --- the presenter home (PR 8) ---------------------------------------------------------------------
+
+/** A start from the presenter home: a Recent row's Resume or Start over, or Build lesson (section 3.12). */
+export type HomeChoice = { kind: 'resume'; item: RecentItem } | { kind: 'start-over'; item: RecentItem } | { kind: 'quick'; deck: LectureDeck };
+
+/** The start screen a home choice opens; Resume carries the row's saved slide, Start over drops it. */
+export function homeStart(choice: HomeChoice): { kind: 'ready'; deck: LectureDeck; source: StartSource; resumeKey?: string } {
+  if (choice.kind === 'quick') return { kind: 'ready', deck: choice.deck, source: 'quick' };
+  const { deck, lastSlideKey } = choice.item;
+  if (choice.kind === 'resume' && lastSlideKey !== undefined) return { kind: 'ready', deck, source: 'recent', resumeKey: lastSlideKey };
+  return { kind: 'ready', deck, source: 'recent' };
+}
+
+/**
+ * The presenter's language (section 3.12): a language chip chosen in this session (memory only,
+ * the device locale is never written), else the deck's `options.uiLocale`, else the device locale.
+ */
+export function presenterLocale(input: { deck: LectureDeck | null; session: UiLocale | null; device: UiLocale; available: readonly UiLocale[] }): UiLocale {
+  if (input.session !== null && input.available.includes(input.session)) return input.session;
+  return input.deck?.options.uiLocale ?? input.device;
 }
 
 // --- the slides this build draws ------------------------------------------------------------------

@@ -1,5 +1,5 @@
 import { formatDate, type UiLocale } from '@hangul-route/i18n';
-import { RECENT_KEY, forgetDeck, parseRecent, saveRecent, type RecentList, type RecentStore } from './recent';
+import type { LoadedRecent, RecentList } from './recent';
 
 /**
  * When a Recent lesson was saved (design `home.md`): "Today" / "Yesterday"
@@ -46,23 +46,8 @@ export function radioAfter<T>(options: readonly T[], current: T, key: string): T
 /** Recent as the home draws it: the list, or `off` when this device's storage cannot be read. */
 export type RecentState = { status: 'loading' } | { status: 'ready'; list: RecentList } | { status: 'off' };
 
-/**
- * Reads `lecture:recent` through a store whose read throws when storage is
- * blocked (the presenter passes `readJsonStrict`), so a private window or a
- * locked-down device shows the storage-off line instead of a list that looks
- * empty; nothing stored or corrupt data is an empty list (section 3.12).
- */
-export async function loadRecentState(store: RecentStore): Promise<RecentState> {
-  try {
-    return { status: 'ready', list: parseRecent(await store.readJson(RECENT_KEY)) };
-  } catch {
-    return { status: 'off' };
-  }
-}
-
-/** Drops a deck from Recent; the row goes even when the write fails (the next load may show it again). */
-export async function removeRecent(store: RecentStore, list: RecentList, deckId: string): Promise<RecentState> {
-  const next = forgetDeck(list, deckId);
-  await saveRecent(store, next);
-  return { status: 'ready', list: next };
+/** What the home draws from the boot read of `lecture:recent` (`readRecent`): null while it is in flight. */
+export function recentView(loaded: LoadedRecent | null): RecentState {
+  if (loaded === null) return { status: 'loading' };
+  return loaded.off ? { status: 'off' } : { status: 'ready', list: loaded.list };
 }
