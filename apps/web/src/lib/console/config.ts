@@ -19,7 +19,7 @@ export interface ConsoleEnv {
   NEXT_PUBLIC_REPORTS_ENABLED?: string;
   /** All lessons, the grown-up Lessons entry (F-BROWSE-001 section 5.4; F-APP-001 section 3.8); on unless `'false'`, `'0'` or `'disabled'`, case and spaces ignored (BR-14). */
   NEXT_PUBLIC_BROWSE?: string;
-  /** Class moves (F-SPACE-002 section 4.8), `enabled` to show the entry points; default off, flipped by the owner after the Worker's `CLASS_TRANSFER`. */
+  /** Class moves (F-SPACE-002 section 4.8; [TV] TV-D13): on unless `false`, `0`, `off` or `disabled`. */
   NEXT_PUBLIC_CLASS_TRANSFER?: string;
   NODE_ENV?: string;
 }
@@ -173,13 +173,15 @@ export function browseEntryShown(origin: string, env: ConsoleEnv = buildEnv()): 
 }
 
 /**
- * Class moves (F-SPACE-002 section 4.8, flag handling): the Move action, the start sheet, the requests and family
- * pages and every count render only with `NEXT_PUBLIC_CLASS_TRANSFER=enabled` (the `lectureModeEnabled()` pattern).
- * Off by default; the owner sets it after the Worker's `CLASS_TRANSFER` and every flip gate of section 7, never a PR.
- * The first `422 transfers_locked` hides them for the session too (`transfer-lock.ts`).
+ * Class moves (F-SPACE-002 section 4.8, flag handling; [TV] AMENDMENTS-TEACHER-VISIBILITY-TRANSFER TV-D13): the Move
+ * action, the move sheets, the class moves pages and every count. On by default since the owner's decision of
+ * 2026-10-14 (the reports pattern): exactly `false`, `0`, `off` or `disabled` (case and spaces ignored) switches them
+ * off on a build. The Worker's own kill switch (`CLASS_TRANSFER=disabled`) is instant: the first `422 transfers_locked`
+ * hides them for the session too (`transfer-lock.ts`).
  */
 export function classTransferEnabled(env: ConsoleEnv = buildEnv()): boolean {
-  return env.NEXT_PUBLIC_CLASS_TRANSFER === 'enabled';
+  const value = env.NEXT_PUBLIC_CLASS_TRANSFER?.trim().toLowerCase();
+  return !(value === 'false' || value === '0' || value === 'off' || value === 'disabled');
 }
 
 export const DEFAULT_APP_URL = 'https://app.hangulroute.com';

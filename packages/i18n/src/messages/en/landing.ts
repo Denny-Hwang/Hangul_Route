@@ -421,7 +421,7 @@ export const landing = {
     draft: 'Draft for review. This document is a working draft pending review by qualified legal counsel before public launch.',
     privacy: {
       title: 'Privacy Policy',
-      effective: 'Effective October 12, 2026',
+      effective: 'Effective October 14, 2026',
       /** Footer link to the other document. */
       otherDocument: 'Terms of Service',
       sections: {
@@ -445,9 +445,13 @@ export const landing = {
               `Learner profile: a display nickname and a starting level the learner picks (${levels}). It describes how much the learner reads, not how old they are, and we do not need a birth date to use it. A real name is optional and only stored if a parent enters it.`,
             progress:
               "Learning progress: quests completed, stars earned, cards unlocked, streaks, and which jamo a learner recognizes — so the journey can resume and a parent can see progress. For progress reports we also keep: for the last 35 days, which days were practiced, with minutes, quests, cards and words for each day; monthly totals for up to 24 months; all-time totals since the first practice day; the day each stage was finished; the letters that became strong each day; the next lesson and one lesson to revisit; and the device's time zone, so days are counted in the learner's local time.",
-            /** F-REPORT-001 section 3.10: who can see the progress above and the reports built from it. */
+            /**
+             * F-REPORT-001 section 3.10: who can see the progress above and the reports built from it. [TV] Rewritten for
+             * AMENDMENTS-TEACHER-VISIBILITY-TRANSFER TV-D1 to TV-D5 and TV-D12, the owner's decision of 2026-10-14 (not
+             * reviewed by counsel; the draft banner above the document stays).
+             */
             progressWho:
-              "Who can see progress and reports: the learner's family caregivers, who can also recover the full saved progress; the teacher of a class the learner joined; and the owner and admins of that class's school. A class sees day-by-day history only from the day the learner joined, and all-time totals without the first practice day.",
+              "Who can see progress and reports: the learner's family caregivers, who can also recover the full saved progress, see all of it, words included. Once the family has read a short update about classes in the app or the console, the teacher of a class the learner joined, and the owner and admins of that class's school, see the same progress, words included, and whether the learner gets notes from the class. We record when that update was read and whether it was read in the console or on the learner's device. Until then a class sees what it saw before: day-by-day history only from the day the learner joined, all-time totals without the first practice day, and no words.",
             /**
              * F-FEEDBACK-001 section 8.7 (FB-13): notes from grown-ups. Who can send (6.1, OD-17), the learner's only
              * answer (6.6, four fixed reactions), what a class sender sees (8.2, OD-8, reaction only in `all` mode),
@@ -455,6 +459,9 @@ export const landing = {
              */
             notes: ({ email }: LegalValues) =>
               `Notes from grown-ups: the learner's family, and the teacher of a class the learner joined, can send the learner short notes that start from a set of reviewed messages. In a family, only the family owner and the adults the owner allows can send. The learner cannot write back: they can only pick one of four fixed answers, such as "Thank you". A teacher sees the notes sent in their class and, unless the family limits class notes, that answer, but never whether a note was opened. The learner's family caregivers see every note to the learner, and which family adult sent a note from home, and can hide or report a note or stop notes from one sender. A note can also be put away or reported from the learner's device. A sender can take a note back at any time: it leaves the learner's devices, and the learner's family can still see it. We keep notes for 180 days, and a reported note until 90 days after its last report so we can review it. To have a note deleted sooner, the learner's family can email ${email}.`,
+            /** [TV] AMENDMENTS-TEACHER-VISIBILITY-TRANSFER TV-D7 to TV-D11, the owner's decision of 2026-10-14. */
+            classMoves:
+              "Class moves: a teacher may move a learner from one class to another without asking the family first. When the teacher runs both classes, or is an admin of their school, the move happens at once; otherwise the receiving class has to accept it. Until it accepts, the receiving class sees only the learner's initials, picture and level. The family then sees a one-time notice in the app and in the console. Cards, stars and finished lessons always stay with the learner. A family can also start a move itself, and a learner can leave a class from Profile at any time. We keep a record of each move (which classes, which teacher account moved the learner and when, never a name) for 90 days after it happens.",
             contact: 'Account contact: a parent email, used for sign-in, receipts, and account recovery.',
             device: 'Basic device and diagnostic data: app version, device type, and crash logs, to keep the app stable.',
           },
@@ -555,7 +562,7 @@ export const landing = {
     },
     terms: {
       title: 'Terms of Service',
-      effective: 'Effective October 12, 2026',
+      effective: 'Effective October 14, 2026',
       otherDocument: 'Privacy Policy',
       sections: {
         accepting: {
@@ -568,6 +575,13 @@ export const landing = {
           heading: 'Accounts and parental responsibility',
           paragraphs: {
             p1: 'The account holder (a parent or legal guardian when the learner is a child) creates and supervises the account, keeps sign-in details secure, and is responsible for activity under it. A child may use the app under that supervision. Account changes, purchases, and other sensitive actions sit behind a parent-gate.',
+          },
+        },
+        /** [TV] AMENDMENTS-TEACHER-VISIBILITY-TRANSFER TV-D2, TV-D7, TV-D8: the owner's decision of 2026-10-14. */
+        classes: {
+          heading: 'Classes and teachers',
+          paragraphs: {
+            p1: 'When a learner joins a class, the teacher of that class and the owner and admins of its school can see the learner’s progress as our Privacy Policy describes. A teacher may move a learner to another class they teach, or to another class that accepts the learner, without asking the family first; the family is told afterwards. A family can leave a class at any time. Teachers and school admins agree to use what they see only to teach and support their learners, and never to share it outside the class or school.',
           },
         },
         billing: {

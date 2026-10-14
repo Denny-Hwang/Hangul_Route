@@ -72,7 +72,7 @@ describe('privacy policy', () => {
   });
 
   it('says the privacy page was last updated 2026-10-12 (the backup sentences, privacy-statements.test.tsx)', () => {
-    expect(privacy).toContain('Effective October 12, 2026');
+    expect(privacy).toContain('Effective October 14, 2026');
   });
 
   describe('launch-news email list', () => {
@@ -147,7 +147,19 @@ describe('privacy policy', () => {
       expect(privacy).toContain('who can also recover the full saved progress');
       expect(privacy).toContain('the teacher of a class the learner joined');
       expect(privacy).toContain("the owner and admins of that class's school");
-      expect(privacy).toContain('only from the day the learner joined, and all-time totals without the first practice day');
+      // [TV] TV-D14: the earlier scope until the family has read the update; then the full progress, words included
+      expect(privacy).toContain('only from the day the learner joined, all-time totals without the first practice day, and no words');
+      expect(privacy).toContain('Once the family has read a short update about classes');
+    });
+
+    it('[TV] says that a teacher may move a learner without asking the family first, and that the family is told', () => {
+      expect(privacy).toContain('a teacher may move a learner from one class to another without asking the family first');
+      expect(privacy).toContain('the receiving class has to accept it');
+      expect(privacy).toContain('one-time notice');
+      expect(terms).toContain('Classes and teachers');
+      expect(terms).toContain('without asking the family first; the family is told afterwards');
+      // the owner's decision: the document claims no legal review, and keeps the draft banner
+      expect(`${privacy} ${terms}`).not.toMatch(/reviewed by (counsel|a lawyer|legal)|legally reviewed|approved by counsel/i);
     });
 
     it('puts both lines in "What we collect", progress first', () => {
@@ -370,9 +382,9 @@ describe('payment facts (F-SITE-002 S-7)', () => {
     });
 
     it('Terms of Service: the effective date moves to 2026-10-12 with the payment facts; the Privacy Policy keeps 2026-10-12', () => {
-      expect(terms).toContain('Effective October 12, 2026');
+      expect(terms).toContain('Effective October 14, 2026');
       expect(terms).not.toContain('Effective May 22, 2026');
-      expect(privacy).toContain('Effective October 12, 2026');
+      expect(privacy).toContain('Effective October 14, 2026');
     });
 
     it.each(['es', 'ko'] as const)('%s: shows the same English payment facts under the English-authoritative notice (L10)', (locale) => {

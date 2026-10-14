@@ -73,7 +73,8 @@ describe('privacy: progress report lines (F-REPORT-001 RP-0b)', () => {
 
   it('says who can see progress and reports, right after the progress bullet', () => {
     expect(bullets.progressWho).toBe(
-      "Who can see progress and reports: the learner's family caregivers, who can also recover the full saved progress; the teacher of a class the learner joined; and the owner and admins of that class's school. A class sees day-by-day history only from the day the learner joined, and all-time totals without the first practice day.",
+      // [TV] AMENDMENTS-TEACHER-VISIBILITY-TRANSFER TV-D14: the owner's decision of 2026-10-14
+      "Who can see progress and reports: the learner's family caregivers, who can also recover the full saved progress, see all of it, words included. Once the family has read a short update about classes in the app or the console, the teacher of a class the learner joined, and the owner and admins of that class's school, see the same progress, words included, and whether the learner gets notes from the class. We record when that update was read and whether it was read in the console or on the learner's device. Until then a class sees what it saw before: day-by-day history only from the day the learner joined, all-time totals without the first practice day, and no words.",
     );
     const keys = Object.keys(bullets);
     expect(keys.indexOf('progressWho')).toBe(keys.indexOf('progress') + 1);
@@ -170,9 +171,10 @@ describe('landing: the lines other PRs rely on stay byte-identical', () => {
 
   it('keeps the legal effective dates and the draft notice (#149)', () => {
     // October 12, 2026: the backup sentences replace "until … sign in" (privacy-statements.test.ts).
-    expect(l.legal.privacy.effective).toBe('Effective October 12, 2026');
+    expect(l.legal.privacy.effective).toBe('Effective October 14, 2026');
     // October 12, 2026: the payment facts of F-SITE-002 S-7 (both channels, the web renewal, store terms marked in-app).
-    expect(l.legal.terms.effective).toBe('Effective October 12, 2026');
+    expect(l.legal.terms.effective).toBe('Effective October 14, 2026');
+    // October 14, 2026 ([TV] TV-D14): who sees progress, class moves and the Classes and teachers section, as the owner's decision.
     expect(l.legal.draft).toBe('Draft for review. This document is a working draft pending review by qualified legal counsel before public launch.');
   });
 });

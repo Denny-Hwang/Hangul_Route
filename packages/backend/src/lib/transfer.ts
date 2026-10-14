@@ -41,15 +41,23 @@ export { tierAfterMove };
 // ---------------------------------------------------------------------------
 // Release locks (T15)
 
-/** The Worker vars of the two locks; only the exact value `enabled` opens one. */
+/**
+ * The Worker vars of the two locks. `CLASS_TRANSFER` is on by default ([TV] TV-D13, owner decision 2026-10-14):
+ * unset, empty or `enabled` opens class moves; any other value (the kill switch is `disabled`) locks them.
+ * `CLASS_TRANSFER_DEVICE_CONSENT` is unchanged: only the exact value `enabled` opens it (gate G6).
+ */
 export interface TransferEnv {
   CLASS_TRANSFER?: string;
   CLASS_TRANSFER_DEVICE_CONSENT?: string;
 }
 
-/** Every transfer route and `settle` check this first; unset = locked (the rollback). */
+/**
+ * Every transfer and teacher-move route and `settle` check this first. On unless the Worker var holds any value other
+ * than `enabled` (fail closed on a typo); setting `CLASS_TRANSFER=disabled` in the dashboard is the instant rollback.
+ */
 export function classTransferEnabled(env: TransferEnv | undefined): boolean {
-  return env?.CLASS_TRANSFER === 'enabled';
+  const value = env?.CLASS_TRANSFER?.trim();
+  return value === undefined || value === '' || value === 'enabled';
 }
 
 /** The separate lock on every route that lets a learner's device fill the consent slot (decision A4, gate G6). */

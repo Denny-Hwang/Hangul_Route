@@ -69,7 +69,7 @@ describe('healthReport (booleans only)', () => {
       environment: 'production',
       devFallbacks: false,
       bindings: { db: false, clerk: false, stripe: false, stripeWebhook: false, rescuePepper: false, stripeLive: false, billingLiveAllowed: false },
-      features: { notesSend: false, classScopeFull: true },
+      features: { notesSend: false, classScopeFull: true, classTransfer: true },
     });
     expect(healthReport({ DB: {} }).status).toBe('misconfigured');
     expect(healthReport({ CLERK_SECRET_KEY: 'sk_live_secret' }).status).toBe('misconfigured');
@@ -83,10 +83,10 @@ describe('healthReport (booleans only)', () => {
       environment: 'production',
       devFallbacks: false,
       bindings: { db: true, clerk: true, stripe: true, stripeWebhook: true, rescuePepper: true, stripeLive: true, billingLiveAllowed: false }, // 'sk_stripe' has no test prefix: read as live (fail closed)
-      features: { notesSend: false, classScopeFull: true },
+      features: { notesSend: false, classScopeFull: true, classTransfer: true },
     });
     // the owner's NOTES_SEND switch (F-FEEDBACK-001 section 7.8), as a boolean only
-    expect(healthReport({ DB: {}, CLERK_SECRET_KEY: 'sk', NOTES_SEND: 'enabled' }).features).toEqual({ notesSend: true, classScopeFull: true });
+    expect(healthReport({ DB: {}, CLERK_SECRET_KEY: 'sk', NOTES_SEND: 'enabled' }).features).toEqual({ notesSend: true, classScopeFull: true, classTransfer: true });
     // [TV] TV-D15: full-scope teacher visibility is on unless the kill switch is set; any other value fails closed.
     expect(healthReport({ DB: {}, CLERK_SECRET_KEY: 'sk', CLASS_SCOPE_FULL: 'disabled' }).features.classScopeFull).toBe(false);
     expect(healthReport({ DB: {}, CLERK_SECRET_KEY: 'sk', CLASS_SCOPE_FULL: 'typo' }).features.classScopeFull).toBe(false);
@@ -152,5 +152,12 @@ describe('rescuePepper (SEC-5)', () => {
     expect(without.bindings.rescuePepper).toBe(false);
     expect(healthReport({ DB: {}, CLERK_SECRET_KEY: 'sk', RESCUE_PEPPER: 'p' }).bindings.rescuePepper).toBe(true);
     expect(healthReport({ DB: {}, CLERK_SECRET_KEY: 'sk', RESCUE_PEPPER: '' }).bindings.rescuePepper).toBe(false);
+  });
+});
+
+describe('[TV] GET /health shows whether class moves are open (TV-D13)', () => {
+  it('on by default, off with the kill switch', () => {
+    expect(healthReport(undefined).features.classTransfer).toBe(true);
+    expect(healthReport({ CLASS_TRANSFER: 'disabled' } as never).features.classTransfer).toBe(false);
   });
 });

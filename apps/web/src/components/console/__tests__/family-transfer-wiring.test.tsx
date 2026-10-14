@@ -93,6 +93,7 @@ const textOf = (node: ReactTestInstance): string => node.findAll((n) => typeof n
 
 describe('the class-moves page (T-6d family variant)', () => {
   it('without the flag: "Class moves aren\'t available yet." and no call to the Worker', async () => {
+    vi.stubEnv('NEXT_PUBLIC_CLASS_TRANSFER', 'disabled');
     const root = await render(<TransfersPage />);
     expect(textOf(root)).toContain(t.states.locked);
     expect(state.calls).toEqual([]);
@@ -163,6 +164,7 @@ describe('the settings family row (T-6d)', () => {
   });
 
   it('no Move on a family without the flag, and no class-moves call', async () => {
+    vi.stubEnv('NEXT_PUBLIC_CLASS_TRANSFER', 'disabled');
     const root = await render(<SettingsPage />);
     expect(root.findAll((n) => n.type === 'button' && n.props['data-testid'] === 'move-row')).toHaveLength(0);
     expect(state.calls).not.toContain('transferRequests');
@@ -171,6 +173,7 @@ describe('the settings family row (T-6d)', () => {
 
 describe('the family roster page (T-6d)', () => {
   it('a permanent Class moves button next to Settings, only with the flag', async () => {
+    vi.stubEnv('NEXT_PUBLIC_CLASS_TRANSFER', 'disabled');
     let root = await render(<SpacePage />);
     expect(root.findAll((n) => n.type === 'button' && n.props['data-testid'] === 'family-moves')).toHaveLength(0);
     act(() => renderer?.unmount());

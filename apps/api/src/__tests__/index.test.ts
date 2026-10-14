@@ -41,7 +41,7 @@ describe("apps/api router", () => {
     expect(JSON.parse(text)).toMatchObject({ status: "ok", bindings: { db: true, clerk: true } });
   });
 
-  it("mounts the class-move routes locked: 422 transfers_locked without CLASS_TRANSFER, before any binding is needed (F-SPACE-002 T-5a, T-5b)", async () => {
+  it("mounts the class-move routes behind the kill switch: 422 transfers_locked with CLASS_TRANSFER=disabled, before any binding is needed (F-SPACE-002 T-5a, T-5b; [TV] TV-D13)", async () => {
     for (const [method, path] of [
       ["POST", "/api/spaces/space:a/transfer-requests/preview"],
       ["POST", "/api/spaces/space:a/transfer-requests"],
@@ -51,14 +51,16 @@ describe("apps/api router", () => {
       ["POST", "/api/spaces/space:a/transfer-requests/transfer:x/approve"],
       ["POST", "/api/spaces/space:a/transfer-requests/transfer:x/retry"],
       ["PUT", "/api/spaces/space:a/learners/profile:x/transfer-prefs"],
+      ["POST", "/api/spaces/space:a/class-moves"],
+      ["GET", "/api/spaces/space:a/class-moves"],
     ]) {
-      const res = await app.request(path, { method });
+      const res = await app.request(path, { method }, { CLASS_TRANSFER: "disabled" });
       expect(res.status, `${method} ${path}`).toBe(422);
       expect(await res.json()).toMatchObject({ ok: false, error: { code: "transfers_locked" } });
     }
   });
 
-  it("mounts the learner device class-move routes locked: 422 transfers_locked without CLASS_TRANSFER, device_consent_locked for create and approve without CLASS_TRANSFER_DEVICE_CONSENT (F-SPACE-002 T-5c)", async () => {
+  it("mounts the learner device class-move routes: 422 transfers_locked with CLASS_TRANSFER=disabled, device_consent_locked for create and approve without CLASS_TRANSFER_DEVICE_CONSENT (F-SPACE-002 T-5c)", async () => {
     const routes: Array<[string, string]> = [
       ["POST", "/api/sync/learners/profile:x/transfer-requests/preview"],
       ["POST", "/api/sync/learners/profile:x/transfer-requests"],
@@ -68,13 +70,18 @@ describe("apps/api router", () => {
       ["PUT", "/api/sync/learners/profile:x/transfer-prefs"],
     ];
     for (const [method, path] of routes) {
-      const res = await app.request(path, { method });
+      const res = await app.request(path, { method }, { CLASS_TRANSFER: "disabled" });
       expect(res.status, `${method} ${path}`).toBe(422);
       expect(await res.json()).toMatchObject({ ok: false, error: { code: "transfers_locked" } });
     }
     for (const [method, path] of routes.filter(([, p]) => p.endsWith("/transfer-requests") || p.endsWith("/approve"))) {
       const res = await app.request(path, { method }, { CLASS_TRANSFER: "enabled" });
       expect(res.status, `${method} ${path}`).toBe(422);
+      expect(await res.json()).toMatchObject({ ok: false, error: { code: "device_consent_locked" } });
+    }
+    // [TV] TV-D13: unset is on; device consent stays locked (gate G6)
+    for (const [method, path] of routes.filter(([, p]) => p.endsWith("/transfer-requests") || p.endsWith("/approve"))) {
+      const res = await app.request(path, { method });
       expect(await res.json()).toMatchObject({ ok: false, error: { code: "device_consent_locked" } });
     }
   });

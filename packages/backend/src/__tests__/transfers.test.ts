@@ -74,7 +74,7 @@ beforeEach(async () => {
 afterEach(() => vi.useRealTimers());
 
 describe('the release lock (T15)', () => {
-  it('every route answers 422 transfers_locked while CLASS_TRANSFER is unset, before auth or body checks', async () => {
+  it('every route answers 422 transfers_locked while CLASS_TRANSFER is switched off ([TV] the kill switch), before auth or body checks', async () => {
     const tid = 'transfer:00000000-0000-4000-8000-000000000000';
     const routes: Array<[string, string]> = [
       ['POST', `${base(A)}/preview`],
@@ -85,7 +85,7 @@ describe('the release lock (T15)', () => {
       ['PUT', `/api/spaces/${FAMILY}/learners/${SUNI}/transfer-prefs`],
     ];
     for (const [method, path] of routes) {
-      for (const env of [LOCKED, { CLASS_TRANSFER: 'true' }, { CLASS_TRANSFER_DEVICE_CONSENT: 'enabled' }] as Array<Record<string, string> | typeof LOCKED>) {
+      for (const env of [LOCKED, { CLASS_TRANSFER: 'true' }, { CLASS_TRANSFER: 'off', CLASS_TRANSFER_DEVICE_CONSENT: 'enabled' }] as Array<Record<string, string> | typeof LOCKED>) {
         const r = await call(method, path, json, method === 'GET' ? undefined : { junk: 1 }, env);
         expect(r.status, `${method} ${path}`).toBe(422);
         expect(r.body.error?.code).toBe('transfers_locked');
