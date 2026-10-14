@@ -66,6 +66,16 @@ export function initialEditDraft(p: Profile): EditDraft {
   };
 }
 
+/**
+ * "I'm under 13" under the "13 or older" box (F-LEARN-001 §3.15.6): the who row
+ * goes back to someone a grown-up looks after. Becoming "Me" starts only from
+ * that answer, so the who change (and the consent it asked for) goes away;
+ * every other edit in the draft is kept.
+ */
+export function keepWithGrownUp(draft: EditDraft): EditDraft {
+  return { ...draft, learnerType: 'child' };
+}
+
 export function editPlan(s: EditState): EditPlan {
   const before = effectiveLearnerType(s.original);
   const after = s.draft.learnerType;

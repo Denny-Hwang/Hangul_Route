@@ -57,16 +57,8 @@ export function formPlan(s: FormState): FormPlan | null {
   };
 }
 
+/** The calm line under a disabled Continue is `learner.createProfile.missing[step]` (audit UX-27). */
 export type MissingStep = 'who' | 'name' | 'agree' | 'pin' | 'email';
-
-/** The calm line under a disabled Continue, one per missing step (audit UX-27). */
-export const MISSING_STEP_CAPTION: Readonly<Record<MissingStep, string>> = {
-  who: 'Choose who is learning',
-  name: 'Type a name',
-  agree: 'Tick the box to agree',
-  pin: 'Create the PIN',
-  email: 'Check the email, or leave it empty',
-};
 
 /** The next thing the form still needs, in the order the caption names them; `null` when it is complete. */
 export function missingStep(s: FormState): MissingStep | null {

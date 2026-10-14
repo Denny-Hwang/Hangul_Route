@@ -4,6 +4,7 @@ import {
   editMissing,
   editPlan,
   initialEditDraft,
+  keepWithGrownUp,
   levelEditable,
   submitEdit,
   type EditDeps,
@@ -248,5 +249,21 @@ describe('submitEdit: Save', () => {
     expect(await submitEdit(state(), d)).toEqual({ ok: false, reason: 'incomplete' });
     expect(await submitEdit(withDraft(state(), { learnerType: 'self' }), d)).toEqual({ ok: false, reason: 'incomplete' });
     expect(d.calls).toEqual([]);
+  });
+});
+
+describe('keepWithGrownUp: "I\'m under 13" in the Privacy block (F-LEARN-001 §3.15.6)', () => {
+  it('puts the who row back on someone looked after, so the change and its consent go away', () => {
+    const toSelf = withDraft(state(), { learnerType: 'self' });
+    expect(editPlan(toSelf).consent).toBe('self');
+    const kept = { ...toSelf, draft: keepWithGrownUp(toSelf.draft) };
+    expect(kept.draft.learnerType).toBe('child');
+    expect(editPlan(kept)).toMatchObject({ whoChange: null, consent: null, pinRequired: false });
+    expect(editMissing(kept)).toBe('unchanged');
+  });
+
+  it('keeps every other edit in the draft', () => {
+    const draft = { ...initialEditDraft(profile()), name: 'Sam', avatar: 'hoya-blue' as const, learnerType: 'self' as const };
+    expect(keepWithGrownUp(draft)).toEqual({ ...draft, learnerType: 'child' });
   });
 });

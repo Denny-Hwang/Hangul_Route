@@ -30,6 +30,7 @@ import {
   editMissing,
   editPlan,
   initialEditDraft,
+  keepWithGrownUp,
   levelEditable,
   submitEdit,
   type EditDraft,
@@ -54,7 +55,8 @@ const CHECKBOX_SIZE = spacing.xl + spacing.xs;
  * gate is required; ProfileScreen decides). A change of who is learning asks
  * the consent the create form would, and a PIN for a child on a device with
  * none. Edits stay on the device until a server route exists (§3.11).
- * Design reference: design/wireframes/onboarding/all-ages-onboarding.md, I.
+ * Design reference: design/wireframes/onboarding/all-ages-onboarding.md, I, and
+ * onboarding/setup-steps.md, G (the Privacy block and "I'm under 13", F-LEARN-001 §3.15.6).
  * Rules live in logic/profiles/edit-profile (tested); this file paints them.
  */
 export function EditProfileScreen({ navigation, route }: Props): React.ReactElement {
@@ -80,6 +82,8 @@ export function EditProfileScreen({ navigation, route }: Props): React.ReactElem
   const [linkNote, setLinkNote] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  /** "I'm under 13" put the who row back: say the profile stays with a grown-up. */
+  const [kept, setKept] = useState(false);
   // `busy` is React state, so two taps before the re-render would both read `false`;
   // this ref closes Save on the first tap (one hash, one consent, one goBack).
   const submitting = useRef(false);
@@ -141,6 +145,15 @@ export function EditProfileScreen({ navigation, route }: Props): React.ReactElem
     setAgreed(false);
     setPinSetup(PIN_SETUP_START);
     setPinError(null);
+    setKept(false);
+  };
+
+  const underThirteen = (): void => {
+    change(keepWithGrownUp(draft));
+    setAgreed(false);
+    setPinSetup(PIN_SETUP_START);
+    setPinError(null);
+    setKept(true);
   };
 
   const openPrivacy = async (): Promise<void> => {
@@ -293,12 +306,24 @@ export function EditProfileScreen({ navigation, route }: Props): React.ReactElem
               onPress={() => chooseWho('child')}
             />
           </View>
+          <Spacer size="xs" />
+          <Caption tone="secondary">{e.who.lessons}</Caption>
+          {kept ? (
+            <>
+              <Spacer size="xs" />
+              <View accessibilityLiveRegion="polite">
+                <Caption tone="secondary">{e.privacy.kept}</Caption>
+              </View>
+            </>
+          ) : null}
         </>
       ) : null}
 
       {showCard ? (
         <>
-          <Spacer size="lg" />
+          <Spacer size="xl" />
+          <Body weight="semibold">{e.privacy.heading}</Body>
+          <Spacer size="sm" />
           <Card padding="md" tone="sunken">
             {plan.whoChange === 'to-child' ? (
               <>
@@ -369,6 +394,20 @@ export function EditProfileScreen({ navigation, route }: Props): React.ReactElem
               </>
             ) : null}
           </Card>
+          {plan.whoChange === 'to-self' ? (
+            <Pressable
+              onPress={underThirteen}
+              accessibilityRole="button"
+              accessibilityLabel={e.privacy.under13}
+              style={{ minHeight: touchTarget.min, justifyContent: 'center', alignSelf: 'flex-start' }}
+            >
+              <Body size="sm" tone="secondary">
+                {e.privacy.under13}
+              </Body>
+            </Pressable>
+          ) : null}
+          <Spacer size="xs" />
+          <Caption tone="secondary">{e.privacy.lessons}</Caption>
         </>
       ) : null}
 

@@ -58,6 +58,10 @@ const ES_LENGTH_ALLOW_LIST: Readonly<Record<string, string>> = {
   'learner.presenter.timer.reset.cta': 'the standard Spanish button word "Reiniciar", one letter over; inside the 28-character cta budget',
   // F-CURR-001 G-1: the Sentence Builder meaning card's label.
   'learner.minigame.sentenceBuilder.meaning': 'the one word "Significado" (11) against "Meaning" (7), the same word as a11y.minigame.meaning; a card label that wraps',
+  // F-LEARN-001 §3.15: the Privacy step's text button and the policy link's accessible name.
+  'learner.createProfile.privacy.under13': '"Tengo menos de 13 años" is the natural statement; a full-width text button that wraps',
+  'learner.editProfile.privacy.under13': '"Tengo menos de 13 años" is the natural statement; a full-width text button that wraps',
+  'learner.createProfile.privacyLinkName': 'the policy\'s own name "Política de privacidad", one letter over; read aloud as the link name, never drawn',
 };
 
 const BUDGETS: Readonly<Record<string, number>> = { tab: 12, pill: 24, cta: 28 };
