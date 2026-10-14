@@ -327,7 +327,7 @@ export const landing = {
     noticesTitle: 'Archivos NOTICE',
     fullText: 'Texto de la licencia',
     usedIn: 'Se usa en',
-    where: { app: 'App', web: 'Sitio web', server: 'Servidor', ios: 'App para iOS' },
+    where: { app: 'App', web: 'Sitio web', server: 'Servidor', ios: 'App de iOS' },
   },
   notFound: {
     body: 'No encontramos esta página.',
