@@ -4,7 +4,7 @@ Spec: `docs/specs/F-VOC-003-topic-picker-flashcards.md` T1, T8, §3.1 (flag, rou
 Wireframe: `design/wireframes/vocab/topics.md` A (Library entry, as built: the Words tab), B (picker), D (empty).
 Code: `apps/mobile/src/screens/library/LibraryScreen.tsx` (the `theme-packs` section, "Words"), `apps/mobile/src/screens/vocab/{VocabTopicsScreen,TopicGrid,TopicTile,WordsSection}.tsx` (render only), `apps/mobile/src/screens/vocab/topic-data.ts` (the bundle binding); decisions in `apps/mobile/src/logic/vocab/{topics,topic-view}.ts` and `apps/mobile/src/logic/story/library-sections.ts` (100 % covered).
 Components: `KoreanText` (`sm`), `Progress` (`bar`), `Heading`, `Body`, `Caption`, `Button`, `Card`, `Icon` (design system), `PictureArt` (app, F-VOC-002 W-7).
-Screenshots: build with `EXPO_PUBLIC_VOCAB_TOPICS_ENABLED=1` and run `E2E_VOCAB_TOPICS=1 HR_SHOTS=1 playwright test vocab-topics` (Library tab), or the fixture bundle with `STORY_FIXTURES=1 HR_SHOTS=1 playwright test vocab-topics` (picker and topic page through `window.__hrVocabE2E`); PNGs land in `apps/mobile/e2e/web/__shots__/vocab-topics-*.png` (git-ignored).
+Screenshots: build the release bundle with the default flags (Words is on since C-7) and run `HR_SHOTS=1 playwright test vocab-topics` (Library tab; for the off-switch shots build with `EXPO_PUBLIC_VOCAB_TOPICS_ENABLED=false` and run with `E2E_VOCAB_TOPICS=0`), or the fixture bundle with `STORY_FIXTURES=1 HR_SHOTS=1 playwright test vocab-topics` (picker and topic page through `window.__hrVocabE2E`); PNGs land in `apps/mobile/e2e/web/__shots__/vocab-topics-*.png` (git-ignored).
 
 ## Where Words lives (T1)
 

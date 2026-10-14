@@ -10,8 +10,8 @@ import { controlsPastEdge, expectNoHorizontalOverflow } from './viewport';
 /**
  * F-VOC-004 S-5: the Speed Round, Relaxed (design/screens/vocab/speed-round.md, results.md).
  *
- * Words stays behind `flags.vocabTopicsEnabled` (off until F-VOC-003 C-7), so the suite runs in the
- * fixture bundle (`STORY_FIXTURES=1`, served from dist-e2e/), which offers Words with the flag off:
+ * Words is behind `flags.vocabTopicsEnabled`, ON by default since F-VOC-003 C-7 (owner decision
+ * 2026-10-13). The rounds run in the fixture bundle (`STORY_FIXTURES=1`, served from dist-e2e/):
  * words are collected with `window.__hrVocabE2E.collect(ids)`, the topic page opens with
  * `openTopic(key)` and the learner taps **Speed round**; `openSpeed(key)` opens the start sheet where
  * the topic page would not offer it (too few words).
@@ -716,8 +716,23 @@ test.describe('Speed Round, Challenge (fixture bundle)', () => {
   });
 });
 
-test.describe('Speed Round with the flag off (the release build, dist/)', () => {
-  test.skip(FIXTURE_BUILD || process.env.E2E_VOCAB_TOPICS === '1', 'the fixture bundle and the Words build offer Words');
+test.describe('Speed Round on the release build (on by default since C-7)', () => {
+  test.skip(FIXTURE_BUILD || process.env.E2E_VOCAB_TOPICS === '0', 'runs on the release build (dist/) made with the default flags');
+
+  test('Profile shows the Challenge card, off by default', async ({ page }) => {
+    await newLearner(page);
+    await page.getByRole('button', { name: 'Profile and settings' }).click();
+    const challenge = page.getByTestId('profile-challenge');
+    await expect(challenge).toBeVisible();
+    await expect(page.getByTestId('profile-challenge-switch')).toHaveAttribute('aria-checked', 'false');
+    await challenge.scrollIntoViewIfNeeded();
+    await expectNoHorizontalOverflow(page);
+    await shot(page, 'vocab-c7-release-profile-challenge');
+  });
+});
+
+test.describe('Speed Round with the flag off (a build made with EXPO_PUBLIC_VOCAB_TOPICS_ENABLED=false)', () => {
+  test.skip(FIXTURE_BUILD || process.env.E2E_VOCAB_TOPICS !== '0', 'needs a build made with EXPO_PUBLIC_VOCAB_TOPICS_ENABLED=false, then E2E_VOCAB_TOPICS=0');
 
   test('no way in: Profile has no Challenge card (the Library has no Words tab, vocab-topics.spec)', async ({ page }) => {
     await newLearner(page);

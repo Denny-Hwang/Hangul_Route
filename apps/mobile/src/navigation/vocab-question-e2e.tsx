@@ -26,8 +26,8 @@ import type { RootStackParamList } from './types';
  * through `window.__hrVocabE2E.openQuestion(...)`, on real catalogue words.
  *
  * The Words picker and topic page (F-VOC-003 C-4) are reachable in a learner
- * build only with `flags.vocabTopicsEnabled`, which stays off until C-7; their
- * e2e opens them with `openTopics()` / `openTopic(key)` and collects words with
+ * build only with `flags.vocabTopicsEnabled` (on by default since C-7); their
+ * fixture e2e opens them with `openTopics()` / `openTopic(key)` and collects words with
  * `collect(ids)` (the `introduced` event the flashcards will write, C-5).
  */
 
