@@ -169,6 +169,7 @@ The round says what the learner types from (round schema, C-1); every mode shows
 | `hear` | [speaker, hero size] (Type the word you hear) (hoya) · (Hoya) | hear and spell; the Korean is hidden until the result panel |
 | `picture` | [WordArt picture] (Type the word for the picture) (gimbap) · (gimbap) | Stage 6 apply ("type the dish you want to order") |
 
+- `hear` shows the romanization on purpose (CLAUDE.md §1: taught Korean always carries it, and the no-voice fallback needs it), so a `hear` round is answerable from the romanization by design; the audio adds the sound, it is not the only route. Whether `hear` should hide the romanization until a replay is open question 4, decided in G-3.
 - `hear` without a Korean voice (F-AUDIO-004): the speaker is replaced by the existing no-sound line of `audio-fallback.md` and the romanization and gloss stay; the round is still answerable from the romanization.
 - In every mode the Korean target is shown in the result panel after Done; before Done only `see` shows it.
 
@@ -201,7 +202,7 @@ Exit to: `quest/player` (always, via goBack).
 
 ## Accessibility
 
-- Every key is a button (`accessibilityRole="button"`) whose name is the jamo and its sound value read as words: "ㄱ, g or k", "ㅇ, silent or ng" (`a11yRomanization`, the rule of `logic/korean-labels.ts`). Shifted keys read their shifted letter while Shift is on ("ㄲ, kk"). Shift is a toggle with its state ("Shift, double letters, on"); Del reads "Delete the last letter"; Space reads "Space".
+- Every key is a button (`accessibilityRole="button"`) whose name is the jamo and its sound value read as words: "ㄱ, g or k", "ㅇ, silent or ng" (`a11yRomanization`, the rule of `logic/korean-labels.ts`). Shifted keys read their shifted letter while Shift is on ("ㄲ, kk"). Shift is a toggle with its state ("Shift, more letters, on"); Del reads "Delete the last letter"; Space reads "Space".
 - The field is a live region (polite): after each finished block and after Del it reads the text so far, then its romanization ("호, ho" ... "호야, hoya"); it does not read every jamo while a block is open, so typing is not drowned in speech.
 - Focus order: prompt, field, Done, keys in reading order (row by row, the consonant half first in split), Skip. Every key is reachable by keyboard focus on the web and by switch access; Enter or Space on a focused key types it.
 - The result panel takes focus when it opens; its first line is Hoya's line, then the two rows, read block by block ("You typed: 호, 여. The word: 호, 야. Block 2 is different.").
@@ -230,7 +231,7 @@ No `packages/i18n` key is added by this design row. G-3 adds these under `learne
 | `typeHangul.targetLabel` | The word |
 | `typeHangul.fixIt.cta` | Fix it |
 | `keyboard.key(jamo, sound)` | {jamo}, {sound} |
-| `keyboard.shift(on)` | Shift, double letters |
+| `keyboard.shift(on)` | Shift, more letters |
 | `keyboard.delete` | Delete the last letter |
 | `keyboard.space` | Space |
 | `keyboard.field(text, romanization)` | You typed: {text}, {romanization} |
@@ -240,6 +241,7 @@ No `packages/i18n` key is added by this design row. G-3 adds these under `learne
 
 1. **Sound values of nine keys.** `JAMO_SOUND_VALUES` holds the 24 basic letters; the keyboard also shows ㄲ ㄸ ㅃ ㅆ ㅉ ㅐ ㅔ ㅒ ㅖ. Proposal for C-1 or G-3: add them additively (`kk`, `tt`, `pp`, `ss`, `jj`, `ae`, `e`, `yae`, `ye`; Revised Romanization), checked by the romanization suite. Owner of the decision: C-1.
 2. **Physical keyboard.** OD-10 rules out the system Korean keyboard. A hardware keyboard on the web or a tablet could type through the same two-set positions (Q -> ㅂ, W -> ㅈ ...) without any Korean input method. Not in G-3 by default; proposed as a follow-up for keyboard-only learners, since every on-screen key is already focusable.
-3. **The `silent/ng` face.** At 320 the visible key is 60 wide; "silent/ng" at caption size is the longest face and fits in the mock (checked in `shots/keyboard-320.png`). If a locale ever needs a longer face, the face shows the letter only and the sound stays in the accessible name.
+3. **The `silent/ng` face.** At 320 the visible key is 60 wide; "silent/ng" at caption size is the longest face and fits in the mock (checked in `shots/keyboard-board.png`, board K1). If a locale ever needs a longer face, the face shows the letter only and the sound stays in the accessible name.
 4. **Hear a key.** Long-press to hear a letter's sound is not in G-3 (no key sounds). Revisit after the first Stage 7 lessons ship.
 5. **Assumption to test in G-3**: split rows are learnable at the speed Stage 7 needs (two to five blocks per answer). The Playwright spec times a scripted entry only for regressions; real speed comes from the first lessons.
+4. **Romanization in `hear` mode.** This design keeps it visible (see the input modes). G-3 may instead show it only after the first replay, or only in the no-voice fallback state, if playtests show learners skip the audio; the choice and its reason go in the G-3 PR, with the e2e updated to match.

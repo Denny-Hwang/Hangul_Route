@@ -15,9 +15,10 @@ Code (planned): `apps/mobile/src/screens/minigames/WriteFrameGame.tsx`; `logic/w
 
 ## States (board)
 
-F1 pick · F2 type after a pick · F3 near miss against the pick · F4 finished sentence · F5 trace after a pick · F6 two slots · F7 My page · F8 name round, Blocks · F9 name round, Keyboard. F8 and F9 are drawn taller (700, 760) to show the whole panel; at 320 x 568 the sound panel scrolls inside its height and the keyboard is the same as T2.
+F1 pick · F2 type after a pick · F3 near miss against the pick · F4 finished sentence · F5 trace after a pick · F6 two slots · F7 My page (illustrative: the frames of F1 and F5 shown as one step; in content a step's My page lists only that step's own frames) · F8 name round, Blocks · F9 name round, Keyboard. F8 and F9 are drawn taller (700, 760) to show the whole panel; at 320 x 568 the sound panel scrolls inside its height and the keyboard is the same as T2.
 
 ## Notes for G-5
 
 - The name and every typed or picked word live in the renderer's React state only; Playwright and screenshots use 호야.
-- My page is the step's closing panel (wireframe open question 1): G-5 records the spec wording change in its PR.
+- My page is the step's closing panel; spec §3.7 says so (amended by D-3).
+- The name round's Done needs every block to be a full syllable (wireframe "The name round").

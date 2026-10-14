@@ -1,6 +1,6 @@
 # Minigame/Write Frame: my own sentence from a word bank, and My page (wireframe v1)
 
-Spec: `docs/specs/F-CURR-001-upper-stage-content.md` §3.7 (Write Frame, the allomorph rule, "My page", the free-entry data rule of Write Your Name q3), §3.15 behaviours 4 and 10, §5 test P-1, OD-6 (nothing kept), row **D-3** (this file), built in row **G-5** (and S7-1 for the name round's content and test) · embeds `design/wireframes/minigame/type-hangul.md` (keyboard, field, result panel) and `design/wireframes/minigame/trace-word.md` (word strip, canvas) · extends `design/wireframes/minigame/shell.md`
+Spec: `docs/specs/F-CURR-001-upper-stage-content.md` §3.7 (Write Frame, the allomorph rule, "My page" at the end of the Write Frame step, the free-entry data rule of Write Your Name q3), §3.15 behaviours 4 and 10, §5 test P-1, OD-6 (nothing kept), row **D-3** (this file), built in row **G-5** (and S7-1 for the name round's content and test) · embeds `design/wireframes/minigame/type-hangul.md` (keyboard, field, result panel) and `design/wireframes/minigame/trace-word.md` (word strip, canvas) · extends `design/wireframes/minigame/shell.md`
 Audience: **any learner, any age** (CLAUDE.md §1). Wireframe level: structure, flow, interaction points. No colours, fonts or final copy; text in (parentheses) is a placeholder.
 Mock: `design/screens/minigame-writing/` (`write-frame.md`, `mock/write-frame.html`)
 Code (planned, G-5): renderer `apps/mobile/src/screens/minigames/WriteFrameGame.tsx`; round flow `apps/mobile/src/logic/write-frame/` (reducer: pick -> write -> sentence; the name round's unscored path); the allomorph helper and `composeTyped` in `packages/content-schema` (C-1); the keyboard and field of G-3; the canvas of G-4
@@ -84,7 +84,7 @@ Phase 3, the finished sentence (after the writing passes, or after Fix it and a 
 +--------------------------------+
 ```
 
-Closing panel, **My page** (after the last frame of the step; the step's own last screen):
+Closing panel, **My page** (after the last frame of the step; the step's own last screen; the two sentences drawn are illustrative, from two example frames):
 
 ```
 +--------------------------------+
@@ -108,7 +108,7 @@ Closing panel, **My page** (after the last frame of the step; the step's own las
 ```
 
 - No share, save, print, export or copy control; no "send to a grown-up"; the page is not a card, a screenshot or a thumbnail the app saves. Make & Share's "share" means showing the screen to someone next to you (spec §3.7).
-- **Where My page sits.** The spec places My page on the quest's reward step. The reward step is a different screen, two steps later (Check comes between), and the data rule keeps the name in the round component's own state, so the design draws My page as the **closing panel of the Write Frame step**, in the reward look (Hoya cheering, title, Continue), and the quest's reward step is unchanged. Nothing has to leave the renderer. See open question 1.
+- **Where My page sits** (design decision of this row, written into spec §3.7 in the same PR). My page is the **closing panel of the Write Frame step**, in the reward look (Hoya cheering, title, Continue); the quest's reward step is unchanged. The reward step is a different screen two steps later (Check comes between), and the data rule keeps the name in the round component's own state, so showing the page at the end of the Write Frame step means nothing has to leave the renderer.
 
 ### The name round (Write Your Name q3, free entry, unscored)
 
@@ -117,11 +117,12 @@ Closing panel, **My page** (after the last frame of the step; the step's own las
 | [==========] (1 / 1)  [ Skip ] |
 |  (Write your name in Hangul)   |
 |  제 이름은 [호야]예요.           |  <- the frame; the ending follows the last block live:
-|  (je ireumeun hoyayeyo)        |     예요 after a vowel, 이에요 after a final consonant
+|  (je ireumeun hoyayeyo)        |     예요 after a vowel, 이에요 after a final consonant;
+|                                |     both forms (이에요/예요) while the last block is unfinished
 |  (There is no wrong way to     |  <- Hoya line (idle), always shown
 |   write your name.)            |
 | +----------------------+ +----+|
-| | 호야|                | |Done||  <- the field; Done is on as soon as one block exists
+| | 호야|                | |Done||  <- the field; Done is on when every block is a full syllable
 | +----------------------+ +----+|
 |  ( Blocks | Keyboard )         |  <- SectionTabs: two ways to build the same field
 |+------------------------------+|
@@ -135,7 +136,8 @@ Closing panel, **My page** (after the last frame of the step; the step's own las
 ```
 
 - **Blocks** and **Keyboard** edit the same field through `composeTyped`; switching tabs keeps the field. The panel has the keyboard's height, so switching does not move the field. Blocks is the first tab: a learner can write a name without knowing the keyboard.
-- **Unscored**: Done accepts any name with at least one block; no compare panel, no nudge, no "near miss". The finished sentence and My page follow as for the other frames. Nothing about the round reaches progress except the quest completion.
+- **Done needs whole syllables.** Done is on only when the field has at least one block and **every** block is a full syllable (an initial plus a vowel, with or without a final). A lone consonant (ㅎ from the Keyboard tab, or left by Del) or a lone vowel keeps Done off and shows the helper line "Finish the last block." (draft below) under the field; the field's text is kept. While the last block is unfinished, the live ending shows both forms (이에요/예요), as before a pick; `fitParticle` is only called with a name whose last character is a full syllable, so the finished sentence and My page are always correct Korean. G-5 tests: a name ending in a lone consonant, a lone vowel, and a full syllable after Del.
+- **Unscored**: Done accepts any name made of whole syllables; no compare panel, no nudge, no "near miss". The finished sentence and My page follow as for the other frames. Nothing about the round reaches progress except the quest completion.
 - **Length**: up to 8 blocks (the frame stays on one line at 320); a ninth block is not added and the field's helper line says the name is at its longest (draft below).
 - **The data rule** (spec §3.7, test P-1): the name exists only in this renderer's React state. It is never written to a zustand store, a `persist` slice, the quest-run store, the quest-state snapshot, a storage key, navigation params or the URL; it is excluded from telemetry payloads, breadcrumbs and logs; it is cleared when the renderer unmounts (Continue, Skip, the quest's quit, the app going to the background and being killed). My page renders it from that same state, with no cache.
 - **Grown-up preview** (F-BROWSE-001): the field is prefilled with the cast name 호야 and the round plays as for a learner with that name; the preview never shows or keeps an entry. **Screenshots and e2e** use 호야 only, never a real name.
@@ -145,7 +147,7 @@ Closing panel, **My page** (after the last frame of the step; the step's own las
 - **Word card tap** (phase 1) -> the pick; the slot and the particle update at once; phase 2 opens. Any pick is accepted: no wrong look on a card, ever.
 - **Type part**: the keyboard, field, Done and the result panel of Type Hangul, checked against the **picked** word. A near miss shows "You typed / The word" with the picked word; [[ Fix it ]] as there.
 - **Trace part**: the word strip and canvas of Trace a Word, blocks of the picked word.
-- **Scoring** (word-bank frames): the write part scores on its first Done, as in Type Hangul or Trace a Word; the pick itself is never scored. The name round is unscored (`answerRound` is not called for it).
+- **Scoring** (word-bank frames): the write part scores on its first Done, as in Type Hangul or Trace a Word; the pick itself is never scored. `answerRound(roundIdx, correct)` fires **once per frame**, after its last slot; a frame is correct only if every slot's write part passed on its first Done or evaluation (a two-slot frame with one first-try miss is a missed round). G-5 reducer tests cover the two-slot branch (both pass, either one missed). The name round is unscored (`answerRound` is not called for it).
 - **[ Change word ]** -> phase 1, until the first Done.
 - **[ Skip ]** -> `markStepComplete()` + `onFinish()`; My page is not shown and the state is cleared.
 - **[[ Continue ]]** on My page -> `markStepComplete()` + `onFinish()`.
@@ -161,7 +163,7 @@ Exit to: `quest/player` (via goBack) after My page or Skip. The quest's own rewa
 - **pick** / **write (type)** / **write (trace)** / **sentence done** / **My page**: as drawn.
 - **near miss** (type part): the Type Hangul result panel with the picked word.
 - **two slots**: the current slot marked; the sentence-done panel only after the last slot.
-- **name round**: Blocks (default) and Keyboard tabs; empty field: Done disabled, the field shows its placeholder; at 8 blocks: the helper line.
+- **name round**: Blocks (default) and Keyboard tabs; empty field: Done disabled, the field shows its placeholder; last block unfinished: Done disabled, the "Finish the last block." helper line, the ending shown in both forms; at 8 blocks: the longest-name helper line.
 - **word without a picture**: the card shows the Korean, romanization and gloss only (spec §9 assumption 4); the card keeps its size.
 - **no rounds** / **error**: the shell's states.
 - **large text (200 %)**: phase 1 scrolls; in phase 2 the frame line wraps and the part above the keyboard scrolls; the field and keyboard stay.
@@ -179,7 +181,7 @@ Exit to: `quest/player` (via goBack) after My page or Skip. The quest's own rewa
 ## Data needs
 
 - reads: the `write-frame` scope's rounds (C-1 round schema): per round `{ frame: { ko with slot markers and explicit particle slots (___을/를, ___이에요/예요, ___에), romanization with ___, en with ___ }, slots: [{ bank: wordRef[], write: 'type' | 'trace' }] }`; the name round `{ kind: 'name', frame, soundTable }` (S7-1 content); words from the lesson and vocabulary data (KoText, `pictureRef`).
-- logic: the allomorph helper `fitParticle(word, slotForms)` (C-1); `composeTyped` (C-1); the converter for the finished sentence's romanization (`packages/content-schema` romanization); the write-frame reducer (G-5, 100 %).
+- logic: the allomorph helper `fitParticle(word, slotForms)` (C-1; called only with a word whose last character is a full syllable, the name round's Done rule guarantees it); `composeTyped` (C-1); the converter for the finished sentence's romanization (`packages/content-schema` romanization); the write-frame reducer (G-5, 100 %).
 - writes: `answerRound` for the write part of word-bank frames only; `markStepComplete`. Picks, typed text, the name and the sentences stay in the renderer's React state and are cleared on unmount (P-1).
 - telemetry: none new; `minigame.finished` `{ kind, questId, stepIndex }` only (no pick, no text, no count of blocks of a name).
 
@@ -202,11 +204,11 @@ Reused: the Type Hangul and Trace a Word strings, `skip.cta`, `progress.pill`, `
 | `learner.minigame.writeFrame.name.sounds` | Sounds |
 | `learner.minigame.writeFrame.name.atTheEnd` | At the end |
 | `learner.minigame.writeFrame.name.longest` | That is the longest name that fits here. |
+| `learner.minigame.writeFrame.name.finishBlock` | Finish the last block. |
 | `a11y.minigame.frameBlank` | blank |
 | `a11y.minigame.particleFits(particle, word)` | {particle} after {word} |
 
 ## Open questions
 
-1. **My page placement (needs a one-line spec wording change).** Spec §3.7 says "shown on the reward step"; this design shows it as the Write Frame step's closing panel, because the reward step comes after the Check and the name may not leave the renderer's state. G-5 writes the wording change into the spec with its PR ("shown at the end of the Write Frame step, in the reward look"), unless the owner prefers the reward step and accepts holding the page in the quest player's own React state (still component state, never a store).
-2. **Sound table content** is S7-1's: which sounds, how many tiles, and the loanword spelling note. The design fixes only the panel: grouped tiles, one Del, the keyboard's height.
-3. **Make & Share q3** writes three steps in order, two joined with -고: a three-slot frame drawn as three one-slot sentences, the -고 form shown in place like a particle (the helper's job). If S7-5 needs a different frame shape, it adds a board to the mock.
+1. **Sound table content** is S7-1's: which sounds, how many tiles, and the loanword spelling note. The design fixes only the panel: grouped tiles, one Del, the keyboard's height.
+2. **Make & Share q3** writes three steps in order, two joined with -고: a three-slot frame drawn as three one-slot sentences, the -고 form shown in place like a particle (the helper's job). If S7-5 needs a different frame shape, it adds a board to the mock.
