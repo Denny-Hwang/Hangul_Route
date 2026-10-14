@@ -93,7 +93,8 @@ const codeInput = (root: ReactTestInstance) => root.find((n) => n.type === 'inpu
 const textOf = (node: ReactTestInstance): string => node.findAll((n) => typeof n.type === 'string').map((n) => n.children.filter((c) => typeof c === 'string').join('')).join(' ');
 
 describe('settings Move action (T-6c)', () => {
-  it('renders nothing while NEXT_PUBLIC_CLASS_TRANSFER is unset', async () => {
+  it('renders nothing while NEXT_PUBLIC_CLASS_TRANSFER is switched off ([TV] on by default since TV-D13)', async () => {
+    vi.stubEnv('NEXT_PUBLIC_CLASS_TRANSFER', 'disabled');
     const root = await renderPage();
     expect(textOf(root)).toContain('Remove from class');
     expect(moveButtons(root)).toHaveLength(0);

@@ -64,7 +64,7 @@ const suniTablet = deviceHeader(TABLET, TABLET_SECRET);
 const junPhone = deviceHeader(JUN_PHONE, JUN_SECRET);
 
 async function dcall(method: string, path: string, headers: Record<string, string>, body?: unknown, env: Env = DEVICE_ON) {
-  const res = await app.request(path, { method, headers, body: body === undefined ? undefined : JSON.stringify(body) }, env === 'locked' ? undefined : env);
+  const res = await app.request(path, { method, headers, body: body === undefined ? undefined : JSON.stringify(body) }, env === 'locked' ? { CLASS_TRANSFER: 'disabled' } : env);
   return { status: res.status, body: (await res.json()) as Envelope };
 }
 
@@ -111,9 +111,9 @@ const DEVICE_ROUTES: Array<[string, string]> = [
 ];
 
 describe('the release locks (T15, decision A4)', () => {
-  it('every device route answers 422 transfers_locked while CLASS_TRANSFER is unset, before credentials or the body are read', async () => {
+  it('every device route answers 422 transfers_locked while CLASS_TRANSFER is switched off ([TV] the kill switch), before credentials or the body are read', async () => {
     for (const [method, path] of DEVICE_ROUTES) {
-      for (const env of ['locked', { CLASS_TRANSFER: 'true' }, { CLASS_TRANSFER_DEVICE_CONSENT: 'enabled' }] as Env[]) {
+      for (const env of ['locked', { CLASS_TRANSFER: 'true' }, { CLASS_TRANSFER: 'off', CLASS_TRANSFER_DEVICE_CONSENT: 'enabled' }] as Env[]) {
         const r = await dcall(method, path, { 'content-type': 'application/json' }, { junk: 1 }, env);
         expect([r.status, r.body.error?.code], `${method} ${path}`).toEqual([422, 'transfers_locked']);
       }

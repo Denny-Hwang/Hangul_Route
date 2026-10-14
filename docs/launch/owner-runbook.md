@@ -497,8 +497,34 @@ DELETE FROM feedback_notes WHERE id = '<note_id>' AND NOT EXISTS (SELECT 1 FROM 
 
 **되돌리기**: 세 변수를 `false` 로 (또는 삭제): `hangul-route-app` 의 `EXPO_PUBLIC_CONTENT_GATING_ENABLED` 와 `NEXT_PUBLIC_CONTENT_GATING_ENABLED`, `hangul-route-web` 의 `NEXT_PUBLIC_CONTENT_GATING_ENABLED` → 두 프로젝트 (`hangul-route-app`, `hangul-route-web`) 모두 Retry deployment. 학습자가 끝낸 레슨·카드·별은 어느 방향으로도 바뀌지 않는다.
 
+## H. 반 옮기기와 교사가 보는 범위 (AMENDMENTS-TEACHER-VISIBILITY-TRANSFER, 2026-10-14 오너 결정)
+
+> 2026-10-14 오너 결정: 교사·부모는 학생의 진도 전체 (낱말 포함) 를 본다 (교사는 가족이 반 안내를 한 번 읽은 뒤부터). 반 옮기기는 교사 재량이다. 두 반을 모두 맡은 교사 (또는 학교 관리자) 는 바로 옮기고, 다른 교사의 반으로 옮길 때는 받는 반의 수락만 필요하다. 가족에게는 옮긴 뒤 한 번 안내가 간다. 개인정보처리방침과 이용약관은 이 내용을 오너의 결정으로 적었고, **법률 검토를 받았다고 쓰지 않았다** (문서 위의 초안 배너는 그대로 둔다).
+
+### H-1. `CLASS_TRANSFER` 는 기본으로 켜져 있다 (배포 불필요)
+
+- API Worker `hangul-route-api`: 변수 `CLASS_TRANSFER` 가 **없거나** 값이 `enabled` 이면 반 옮기기가 열린다. 다른 값이면 (예: `disabled`) 닫힌다.
+- 콘솔 빌드 변수 `NEXT_PUBLIC_CLASS_TRANSFER`: 없으면 켜짐. `false`, `0`, `off`, `disabled` 이면 콘솔의 반 옮기기 버튼이 숨는다.
+- 확인 (운영 요청은 이것 하나만): `https://api.hangulroute.com/health` 의 `features.classTransfer` 가 `true`.
+- 학습자 기기의 동의 경로 `CLASS_TRANSFER_DEVICE_CONSENT` 는 **그대로 꺼 둔다** (gate G6, 변경 없음).
+
+### H-2. 즉시 끄기 (kill switch, 1분)
+
+1. Cloudflare 대시보드 → **Workers & Pages** → `hangul-route-api` → Settings → **Variables and Secrets** → Add → Type **Text**, 이름 `CLASS_TRANSFER`, 값 `disabled` → **Deploy**. (`keep_vars = true` 라서 이후 배포에도 남는다.) 모든 반 옮기기 경로가 `422 transfers_locked` 를 답하고, 받는 반의 수락을 기다리던 요청도 멈춘다. 콘솔은 첫 응답을 받는 순간 버튼을 숨긴다.
+2. (선택) 콘솔에서도 처음부터 숨기려면: `hangul-route-app` 과 `hangul-route-web` 빌드 변수 `NEXT_PUBLIC_CLASS_TRANSFER=disabled` → Retry deployment.
+3. 확인: `/health` 의 `features.classTransfer` 가 `false`.
+4. 다시 켜기: `CLASS_TRANSFER` 변수를 지우고 Deploy (콘솔 변수도 지웠으면 Retry deployment).
+
+끄더라도 이미 끝난 이동, 학습 기록, 카드와 별은 바뀌지 않는다. 가족의 반 안내 확인 (class-scope acknowledgement) 은 스위치와 무관하게 계속 동작한다.
+
+### H-3. 반 안내를 읽은 학습자 수 보기 (선택, D1 Console)
+
+```sql
+SELECT text_version, basis, COUNT(*) AS learners FROM class_scope_acks GROUP BY text_version, basis;
+```
+
 ## 나중에 (법률 검토 후)
-변호사에게 넘길 검토 자료: `docs/legal/counsel-packet-2026-10.md` (영문 초안 — 반 이동 T-8 · G2/G6 와 낱말 동의 항목 P-4b 의 질문·초안 문구·요약표). 아직 법률 검토를 받지 않은 초안이며, 검토가 끝나기 전에는 `CLASS_TRANSFER` 를 켜지 않고 P-4b 를 머지하지 않는다.
+변호사에게 넘길 검토 자료: `docs/legal/counsel-packet-2026-10.md` (영문 — 반 이동 T-8 · G2/G6 와 낱말 동의 항목 P-4b 의 질문·초안 문구·요약표). 2026-10-14 오너 결정으로 T-8 과 P-4b 는 법률 검토 없이 진행했다 (위 §H). 변호사 답을 받으면 새 문구 버전 (`class-scope-…`, `transfer-…`) 으로 반영한다.
 
 학교 동의 모드 (c) 를 열 때만: `hangul-route-api` 런타임 변수 `SCHOOL_CONSENT_MODE=enabled` + `hangul-route-web` 빌드 변수 `NEXT_PUBLIC_SCHOOL_CONSENT_MODE=enabled` (Retry deployment). 그 전엔 콘솔에서 선택 불가로 잠겨 있다.
 
