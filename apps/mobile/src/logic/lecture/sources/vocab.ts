@@ -1,5 +1,4 @@
 import { localize, type Overlays, type RuntimeVocabItem, type UiLocale, type VocabTopic } from '@hangul-route/content-schema';
-import { wordArtKeyOf } from '@hangul-route/design-system/word-art';
 import { VOCAB_ITEMS, VOCAB_TOPICS } from '../../../content/__generated__/vocab';
 import { createVocabCatalog, localizedGloss } from '../../vocab/catalog';
 import type { LectureVocabTopic } from '../deck-builder';
@@ -16,7 +15,8 @@ import type { LectureVocabTopic } from '../deck-builder';
  *
  * A word's picture comes from its `visual`: `card:<id>` is the heritage card,
  * `word:<key>` its WordArt key (README D9: the `art` build after the gloss);
- * anything else (a colour swatch) leaves the slide text only.
+ * anything else (a colour swatch) leaves the slide text only, and so does a
+ * WordArt key the registry has no glyph for (`vocabArt`).
  *
  * Topic text (title, Hoya line) and glosses follow the presenter's language
  * (overlays, F-I18N-001 §3.6); taught Korean and its romanization never change.
@@ -26,6 +26,8 @@ export interface LectureVocabSource {
   vocabTopic(id: string): LectureVocabTopic | 'not-ready' | undefined;
 }
 
+const WORD_REF = 'word:';
+
 const EXPANDABLE: ReadonlySet<VocabTopic['status']> = new Set(['ready', 'shipped']);
 
 type LectureWord = LectureVocabTopic['words'][number];
@@ -33,8 +35,8 @@ type LectureWord = LectureVocabTopic['words'][number];
 function wordOf(item: RuntimeVocabItem, locale: UiLocale): LectureWord {
   const word: LectureWord = { id: item.id, ko: item.ko, romanization: item.romanization, gloss: localizedGloss(item, locale) };
   if (item.visual.startsWith('card:')) return { ...word, cardId: item.visual };
-  const key = wordArtKeyOf(item.visual);
-  return key === null ? word : { ...word, wordArt: key };
+  // The slide draws the key only when the WordArt registry has its glyph (`vocabArt`, slide-view.ts).
+  return item.visual.startsWith(WORD_REF) ? { ...word, wordArt: item.visual.slice(WORD_REF.length) } : word;
 }
 
 /** The adapter over given topics and items (tests pass their own; the app binds the bundle below). */

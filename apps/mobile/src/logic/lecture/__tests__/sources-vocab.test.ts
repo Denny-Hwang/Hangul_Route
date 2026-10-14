@@ -90,11 +90,11 @@ describe('lectureVocabTopics (F-TCH-004 PR 12)', () => {
     expect(source.vocabTopic('vocab-topic:food')).toBeUndefined();
   });
 
-  it('a shipped topic expands; a topic without a Hoya line has none; a picture it cannot name is left out', () => {
+  it('a shipped topic expands; a topic without a Hoya line has none; a swatch picture is left out', () => {
     const shipped = topic({ status: 'shipped', hoyaIntroEn: undefined });
     const items = [
       item({ id: 'vocab:one', visual: 'word:food-apple' }),
-      item({ id: 'vocab:two', visual: 'word:NOT A KEY' }),
+      item({ id: 'vocab:two', visual: 'card:rice' }),
       item({ id: 'vocab:three', visual: 'swatch:theme.life' }),
     ];
     const got = lectureVocabTopicsFrom([shipped], items, 'en').vocabTopic('vocab-topic:food');
@@ -102,7 +102,7 @@ describe('lectureVocabTopics (F-TCH-004 PR 12)', () => {
     expect('hoyaLine' in got).toBe(false);
     expect(got.words.map((w) => [w.id, w.wordArt, w.cardId])).toEqual([
       ['vocab:one', 'food-apple', undefined],
-      ['vocab:two', undefined, undefined],
+      ['vocab:two', undefined, 'card:rice'],
       ['vocab:three', undefined, undefined],
     ]);
   });
