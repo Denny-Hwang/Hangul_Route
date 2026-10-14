@@ -1,4 +1,5 @@
-import { OVERLAYS, type Overlays } from '@hangul-route/content-schema';
+import type { Overlays } from '@hangul-route/content-schema';
+import { OVERLAYS } from '@hangul-route/content-schema/overlays';
 import { describe, expect, it } from 'vitest';
 import { cardById, episodeById, findJamo, questById, stages, themes } from '../../content';
 import {
