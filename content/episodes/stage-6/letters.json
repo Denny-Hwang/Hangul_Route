@@ -1,0 +1,1109 @@
+{
+  "id": "episode:stage6-letters",
+  "stage": "stage6",
+  "theme": "letters",
+  "status": "draft",
+  "titleEn": "Read the Menu",
+  "subtitleEn": "Read dishes, prices and drinks on a menu board.",
+  "hoyaIntroEn": "A menu board! Let's read the dishes, the prices and the drinks.",
+  "order": 1,
+  "pillarTags": [
+    "A1"
+  ],
+  "rewardCardIds": [],
+  "quests": [
+    {
+      "id": "quest:stage6-letters-q1",
+      "titleEn": "Dishes on the Menu",
+      "blurbEn": "Read the names of four dishes on a menu board.",
+      "teaserEn": "Next: read the prices.",
+      "estimatedMinutes": 5,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "Dishes on the Menu",
+          "hoyaLineEn": "A menu board! Let's read what the dishes are.",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "Four Dishes",
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "realia",
+                    "realiaRef": "realia:menu-dishes",
+                    "keyWords": [
+                      {
+                        "ko": "김밥",
+                        "romanization": "gimbap",
+                        "en": "rice rolls"
+                      },
+                      {
+                        "ko": "떡볶이",
+                        "romanization": "tteokbokki",
+                        "en": "spicy rice cakes"
+                      },
+                      {
+                        "ko": "라면",
+                        "romanization": "ramyeon",
+                        "en": "instant noodles"
+                      },
+                      {
+                        "ko": "비빔밥",
+                        "romanization": "bibimbap",
+                        "en": "mixed rice"
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "A menu lists the dishes. Read each name one block at a time."
+              }
+            ]
+          },
+          "durationSeconds": 60
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Read the Menu",
+          "minigameKind": "realia-read",
+          "minigameRef": "minigame:s6-letters-q1-practice",
+          "durationSeconds": 100
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Type a Dish",
+          "minigameKind": "type-hangul",
+          "minigameRef": "minigame:s6-letters-q1-apply",
+          "durationSeconds": 75
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Two Quick Ones",
+          "minigameKind": "listen-pick",
+          "minigameRef": "minigame:s6-letters-q1-check",
+          "durationSeconds": 40
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Menu Reader!",
+          "hoyaLineEn": "You read four dishes on a real menu board!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s6-letters-q1-practice",
+          "kind": "realia-read",
+          "realia": {
+            "ref": "realia:menu-dishes",
+            "kind": "menu",
+            "entries": [
+              {
+                "id": "e1",
+                "text": {
+                  "ko": "김밥",
+                  "romanization": "gimbap",
+                  "en": "rice rolls"
+                }
+              },
+              {
+                "id": "e2",
+                "text": {
+                  "ko": "떡볶이",
+                  "romanization": "tteokbokki",
+                  "en": "spicy rice cakes"
+                }
+              },
+              {
+                "id": "e3",
+                "text": {
+                  "ko": "라면",
+                  "romanization": "ramyeon",
+                  "en": "instant noodles"
+                }
+              },
+              {
+                "id": "e4",
+                "text": {
+                  "ko": "비빔밥",
+                  "romanization": "bibimbap",
+                  "en": "mixed rice"
+                }
+              }
+            ],
+            "altEn": "A snack-bar menu of four dishes"
+          },
+          "rounds": [
+            {
+              "id": "r1",
+              "questionEn": "Which one is on the menu?",
+              "options": [
+                {
+                  "id": "a",
+                  "pictureRef": "word:food-bread",
+                  "labelEn": "bread"
+                },
+                {
+                  "id": "b",
+                  "pictureRef": "card:kimbap",
+                  "labelEn": "rice rolls"
+                },
+                {
+                  "id": "c",
+                  "pictureRef": "word:food-banana",
+                  "labelEn": "banana"
+                }
+              ],
+              "answerId": "b",
+              "answerEntryId": "e1"
+            },
+            {
+              "id": "r2",
+              "questionEn": "Which dish is noodles?",
+              "options": [
+                {
+                  "id": "a",
+                  "text": {
+                    "ko": "라면",
+                    "romanization": "ramyeon",
+                    "en": "instant noodles"
+                  }
+                },
+                {
+                  "id": "b",
+                  "text": {
+                    "ko": "떡볶이",
+                    "romanization": "tteokbokki",
+                    "en": "spicy rice cakes"
+                  }
+                }
+              ],
+              "answerId": "a",
+              "answerEntryId": "e3"
+            },
+            {
+              "id": "r3",
+              "questionEn": "Which dish is spicy rice cakes?",
+              "options": [
+                {
+                  "id": "a",
+                  "text": {
+                    "ko": "비빔밥",
+                    "romanization": "bibimbap",
+                    "en": "mixed rice"
+                  }
+                },
+                {
+                  "id": "b",
+                  "text": {
+                    "ko": "떡볶이",
+                    "romanization": "tteokbokki",
+                    "en": "spicy rice cakes"
+                  }
+                }
+              ],
+              "answerId": "b",
+              "answerEntryId": "e2"
+            },
+            {
+              "id": "r4",
+              "questionEn": "Which dish is mixed rice?",
+              "options": [
+                {
+                  "id": "a",
+                  "text": {
+                    "ko": "비빔밥",
+                    "romanization": "bibimbap",
+                    "en": "mixed rice"
+                  }
+                },
+                {
+                  "id": "b",
+                  "text": {
+                    "ko": "김밥",
+                    "romanization": "gimbap",
+                    "en": "rice rolls"
+                  }
+                }
+              ],
+              "answerId": "a",
+              "answerEntryId": "e4"
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s6-letters-q1-apply",
+          "kind": "type-hangul",
+          "rounds": [
+            {
+              "id": "t1",
+              "promptEn": "Type the dish name",
+              "target": {
+                "ko": "김밥",
+                "romanization": "gimbap",
+                "en": "rice rolls"
+              }
+            },
+            {
+              "id": "t2",
+              "promptEn": "Type the dish to order",
+              "pictureRef": "word:food-ramyeon",
+              "target": {
+                "ko": "라면",
+                "romanization": "ramyeon",
+                "en": "instant noodles"
+              }
+            },
+            {
+              "id": "t3",
+              "promptEn": "Type the dish to order",
+              "pictureRef": "word:culture-bibimbap",
+              "target": {
+                "ko": "비빔밥",
+                "romanization": "bibimbap",
+                "en": "mixed rice"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s6-letters-q1-check",
+          "kind": "listen-pick",
+          "rounds": [
+            {
+              "id": "c1",
+              "prompt": {
+                "ko": "라면",
+                "romanization": "ramyeon",
+                "en": "instant noodles"
+              },
+              "options": [
+                {
+                  "id": "a",
+                  "pictureRef": "word:culture-bibimbap",
+                  "labelEn": "mixed rice"
+                },
+                {
+                  "id": "b",
+                  "pictureRef": "word:food-ramyeon",
+                  "labelEn": "instant noodles"
+                },
+                {
+                  "id": "c",
+                  "pictureRef": "card:kimbap",
+                  "labelEn": "rice rolls"
+                }
+              ],
+              "answerId": "b"
+            },
+            {
+              "id": "c2",
+              "prompt": {
+                "ko": "떡볶이",
+                "romanization": "tteokbokki",
+                "en": "spicy rice cakes"
+              },
+              "options": [
+                {
+                  "id": "a",
+                  "pictureRef": "word:culture-tteokbokki",
+                  "labelEn": "spicy rice cakes"
+                },
+                {
+                  "id": "b",
+                  "pictureRef": "card:kimbap",
+                  "labelEn": "rice rolls"
+                }
+              ],
+              "answerId": "a"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "quest:stage6-letters-q2",
+      "titleEn": "How Much Is It?",
+      "blurbEn": "Read prices in won with the numbers il to o.",
+      "teaserEn": "Next: spicy dishes and drinks.",
+      "estimatedMinutes": 5,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "How Much Is It?",
+          "hoyaLineEn": "Every dish has a price. Let's read the numbers!",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "Numbers and Won",
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "realia",
+                    "realiaRef": "realia:menu-prices",
+                    "keyWords": [
+                      {
+                        "ko": "일 이 삼 사 오",
+                        "romanization": "il i sam sa o",
+                        "en": "one, two, three, four, five"
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "Prices use the Sino-Korean numbers il, i, sam, sa, o."
+              },
+              {
+                "items": [
+                  {
+                    "type": "realia",
+                    "realiaRef": "realia:menu-prices",
+                    "keyWords": [
+                      {
+                        "ko": "천",
+                        "romanization": "cheon",
+                        "en": "thousand"
+                      },
+                      {
+                        "ko": "원",
+                        "romanization": "won",
+                        "en": "won, Korean money"
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "Won is Korean money and cheon is a thousand: ocheon won is 5,000."
+              }
+            ]
+          },
+          "durationSeconds": 60
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Read the Prices",
+          "minigameKind": "realia-read",
+          "minigameRef": "minigame:s6-letters-q2-practice",
+          "durationSeconds": 100
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Type a Price",
+          "minigameKind": "type-hangul",
+          "minigameRef": "minigame:s6-letters-q2-apply",
+          "durationSeconds": 75
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Two Quick Ones",
+          "minigameKind": "listen-pick",
+          "minigameRef": "minigame:s6-letters-q2-check",
+          "durationSeconds": 40
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Price Reader!",
+          "hoyaLineEn": "You read prices in won. Great number reading!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s6-letters-q2-practice",
+          "kind": "realia-read",
+          "realia": {
+            "ref": "realia:menu-prices",
+            "kind": "menu",
+            "entries": [
+              {
+                "id": "e1",
+                "text": {
+                  "ko": "김밥",
+                  "romanization": "gimbap",
+                  "en": "rice rolls"
+                },
+                "value": {
+                  "ko": "이천 원",
+                  "romanization": "icheon won",
+                  "en": "2,000 won"
+                }
+              },
+              {
+                "id": "e2",
+                "text": {
+                  "ko": "떡볶이",
+                  "romanization": "tteokbokki",
+                  "en": "spicy rice cakes"
+                },
+                "value": {
+                  "ko": "삼천 원",
+                  "romanization": "samcheon won",
+                  "en": "3,000 won"
+                }
+              },
+              {
+                "id": "e3",
+                "text": {
+                  "ko": "라면",
+                  "romanization": "ramyeon",
+                  "en": "instant noodles"
+                },
+                "value": {
+                  "ko": "사천 원",
+                  "romanization": "sacheon won",
+                  "en": "4,000 won"
+                }
+              },
+              {
+                "id": "e4",
+                "text": {
+                  "ko": "비빔밥",
+                  "romanization": "bibimbap",
+                  "en": "mixed rice"
+                },
+                "value": {
+                  "ko": "오천 원",
+                  "romanization": "ocheon won",
+                  "en": "5,000 won"
+                }
+              }
+            ],
+            "altEn": "A snack-bar menu of four dishes with prices in won"
+          },
+          "rounds": [
+            {
+              "id": "r1",
+              "questionEn": "How much is this?",
+              "key": {
+                "ko": "김밥",
+                "romanization": "gimbap",
+                "en": "rice rolls"
+              },
+              "options": [
+                {
+                  "id": "a",
+                  "figure": "1,000"
+                },
+                {
+                  "id": "b",
+                  "figure": "2,000"
+                },
+                {
+                  "id": "c",
+                  "figure": "5,000"
+                }
+              ],
+              "answerId": "b",
+              "answerEntryId": "e1"
+            },
+            {
+              "id": "r2",
+              "questionEn": "Which one costs this?",
+              "key": {
+                "ko": "삼천 원",
+                "romanization": "samcheon won",
+                "en": "3,000 won"
+              },
+              "options": [
+                {
+                  "id": "a",
+                  "pictureRef": "card:kimbap",
+                  "labelEn": "rice rolls"
+                },
+                {
+                  "id": "b",
+                  "pictureRef": "word:culture-tteokbokki",
+                  "labelEn": "spicy rice cakes"
+                },
+                {
+                  "id": "c",
+                  "pictureRef": "word:food-ramyeon",
+                  "labelEn": "instant noodles"
+                }
+              ],
+              "answerId": "b",
+              "answerEntryId": "e2"
+            },
+            {
+              "id": "r3",
+              "questionEn": "How much is this?",
+              "key": {
+                "ko": "라면",
+                "romanization": "ramyeon",
+                "en": "instant noodles"
+              },
+              "options": [
+                {
+                  "id": "a",
+                  "figure": "2,000"
+                },
+                {
+                  "id": "b",
+                  "figure": "3,000"
+                },
+                {
+                  "id": "c",
+                  "figure": "4,000"
+                }
+              ],
+              "answerId": "c",
+              "answerEntryId": "e3"
+            },
+            {
+              "id": "r4",
+              "questionEn": "Which one costs this?",
+              "key": {
+                "ko": "오천 원",
+                "romanization": "ocheon won",
+                "en": "5,000 won"
+              },
+              "options": [
+                {
+                  "id": "a",
+                  "pictureRef": "word:food-ramyeon",
+                  "labelEn": "instant noodles"
+                },
+                {
+                  "id": "b",
+                  "pictureRef": "word:culture-bibimbap",
+                  "labelEn": "mixed rice"
+                }
+              ],
+              "answerId": "b",
+              "answerEntryId": "e4"
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s6-letters-q2-apply",
+          "kind": "type-hangul",
+          "rounds": [
+            {
+              "id": "t1",
+              "promptEn": "Type the price",
+              "target": {
+                "ko": "천 원",
+                "romanization": "cheon won",
+                "en": "1,000 won"
+              }
+            },
+            {
+              "id": "t2",
+              "promptEn": "Type the price",
+              "target": {
+                "ko": "오천 원",
+                "romanization": "ocheon won",
+                "en": "5,000 won"
+              }
+            },
+            {
+              "id": "t3",
+              "promptEn": "Type the price",
+              "target": {
+                "ko": "삼천 원",
+                "romanization": "samcheon won",
+                "en": "3,000 won"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s6-letters-q2-check",
+          "kind": "listen-pick",
+          "rounds": [
+            {
+              "id": "c1",
+              "prompt": {
+                "ko": "오천 원",
+                "romanization": "ocheon won",
+                "en": "5,000 won"
+              },
+              "options": [
+                {
+                  "id": "a",
+                  "text": {
+                    "ko": "오천 원",
+                    "romanization": "ocheon won",
+                    "en": "5,000 won"
+                  }
+                },
+                {
+                  "id": "b",
+                  "text": {
+                    "ko": "이천 원",
+                    "romanization": "icheon won",
+                    "en": "2,000 won"
+                  }
+                }
+              ],
+              "answerId": "a"
+            },
+            {
+              "id": "c2",
+              "prompt": {
+                "ko": "이천 원",
+                "romanization": "icheon won",
+                "en": "2,000 won"
+              },
+              "options": [
+                {
+                  "id": "a",
+                  "text": {
+                    "ko": "사천 원",
+                    "romanization": "sacheon won",
+                    "en": "4,000 won"
+                  }
+                },
+                {
+                  "id": "b",
+                  "text": {
+                    "ko": "이천 원",
+                    "romanization": "icheon won",
+                    "en": "2,000 won"
+                  }
+                }
+              ],
+              "answerId": "b"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "quest:stage6-letters-q3",
+      "titleEn": "Spicy or Not?",
+      "blurbEn": "Find the spicy choice and the drinks, and read bigger prices.",
+      "estimatedMinutes": 5,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "Spicy or Not?",
+          "hoyaLineEn": "This menu has a spicy choice and drinks. Let's read it all!",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "More Numbers, Spice and Drinks",
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "realia",
+                    "realiaRef": "realia:menu-drinks",
+                    "keyWords": [
+                      {
+                        "ko": "육 칠 팔 구 십",
+                        "romanization": "yuk chil pal gu sip",
+                        "en": "six, seven, eight, nine, ten"
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "More Sino-Korean numbers for prices: yuk, chil, pal, gu, sip."
+              },
+              {
+                "items": [
+                  {
+                    "type": "realia",
+                    "realiaRef": "realia:menu-drinks",
+                    "keyWords": [
+                      {
+                        "ko": "매운맛",
+                        "romanization": "maeunmat",
+                        "en": "spicy flavour"
+                      },
+                      {
+                        "ko": "물",
+                        "romanization": "mul",
+                        "en": "water"
+                      },
+                      {
+                        "ko": "차",
+                        "romanization": "cha",
+                        "en": "tea"
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "A spicy flavour, water and tea: words for choosing."
+              }
+            ]
+          },
+          "durationSeconds": 60
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Read the Menu",
+          "minigameKind": "realia-read",
+          "minigameRef": "minigame:s6-letters-q3-practice",
+          "durationSeconds": 100
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Type Your Choice",
+          "minigameKind": "type-hangul",
+          "minigameRef": "minigame:s6-letters-q3-apply",
+          "durationSeconds": 75
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Two Quick Ones",
+          "minigameKind": "listen-pick",
+          "minigameRef": "minigame:s6-letters-q3-check",
+          "durationSeconds": 40
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Menu Master!",
+          "hoyaLineEn": "You read the spicy choice, the drinks and the prices. Well read!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s6-letters-q3-practice",
+          "kind": "realia-read",
+          "realia": {
+            "ref": "realia:menu-drinks",
+            "kind": "menu",
+            "entries": [
+              {
+                "id": "e1",
+                "text": {
+                  "ko": "떡볶이",
+                  "romanization": "tteokbokki",
+                  "en": "spicy rice cakes"
+                },
+                "value": {
+                  "ko": "육천 원",
+                  "romanization": "yukcheon won",
+                  "en": "6,000 won"
+                }
+              },
+              {
+                "id": "e2",
+                "text": {
+                  "ko": "매운맛 떡볶이",
+                  "romanization": "maeunmat tteokbokki",
+                  "en": "spicy-flavour rice cakes"
+                },
+                "value": {
+                  "ko": "칠천 원",
+                  "romanization": "chilcheon won",
+                  "en": "7,000 won"
+                }
+              },
+              {
+                "id": "e3",
+                "text": {
+                  "ko": "차",
+                  "romanization": "cha",
+                  "en": "tea"
+                },
+                "value": {
+                  "ko": "이천 원",
+                  "romanization": "icheon won",
+                  "en": "2,000 won"
+                }
+              },
+              {
+                "id": "e4",
+                "text": {
+                  "ko": "물",
+                  "romanization": "mul",
+                  "en": "water"
+                }
+              }
+            ],
+            "altEn": "A snack-bar menu with a spicy choice and two drinks"
+          },
+          "rounds": [
+            {
+              "id": "r1",
+              "questionEn": "How much is this?",
+              "key": {
+                "ko": "매운맛 떡볶이",
+                "romanization": "maeunmat tteokbokki",
+                "en": "spicy-flavour rice cakes"
+              },
+              "options": [
+                {
+                  "id": "a",
+                  "figure": "6,000"
+                },
+                {
+                  "id": "b",
+                  "figure": "7,000"
+                },
+                {
+                  "id": "c",
+                  "figure": "8,000"
+                }
+              ],
+              "answerId": "b",
+              "answerEntryId": "e2"
+            },
+            {
+              "id": "r2",
+              "questionEn": "How much is this?",
+              "key": {
+                "ko": "떡볶이",
+                "romanization": "tteokbokki",
+                "en": "spicy rice cakes"
+              },
+              "options": [
+                {
+                  "id": "a",
+                  "figure": "8,000"
+                },
+                {
+                  "id": "b",
+                  "figure": "7,000"
+                },
+                {
+                  "id": "c",
+                  "figure": "6,000"
+                }
+              ],
+              "answerId": "c",
+              "answerEntryId": "e1"
+            },
+            {
+              "id": "r3",
+              "questionEn": "Which one is tea?",
+              "options": [
+                {
+                  "id": "a",
+                  "text": {
+                    "ko": "물",
+                    "romanization": "mul",
+                    "en": "water"
+                  }
+                },
+                {
+                  "id": "b",
+                  "text": {
+                    "ko": "차",
+                    "romanization": "cha",
+                    "en": "tea"
+                  }
+                }
+              ],
+              "answerId": "b",
+              "answerEntryId": "e3"
+            },
+            {
+              "id": "r4",
+              "questionEn": "Which drink is on the menu?",
+              "options": [
+                {
+                  "id": "a",
+                  "pictureRef": "word:food-milk",
+                  "labelEn": "milk"
+                },
+                {
+                  "id": "b",
+                  "pictureRef": "word:food-strawberry",
+                  "labelEn": "strawberry"
+                },
+                {
+                  "id": "c",
+                  "pictureRef": "word:food-water",
+                  "labelEn": "water"
+                }
+              ],
+              "answerId": "c",
+              "answerEntryId": "e4"
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s6-letters-q3-apply",
+          "kind": "type-hangul",
+          "rounds": [
+            {
+              "id": "t1",
+              "promptEn": "Type the flavour you want",
+              "target": {
+                "ko": "매운맛",
+                "romanization": "maeunmat",
+                "en": "spicy flavour"
+              }
+            },
+            {
+              "id": "t2",
+              "promptEn": "Type the drink you want",
+              "pictureRef": "word:food-water",
+              "target": {
+                "ko": "물",
+                "romanization": "mul",
+                "en": "water"
+              }
+            },
+            {
+              "id": "t3",
+              "promptEn": "Type the drink you want",
+              "target": {
+                "ko": "차",
+                "romanization": "cha",
+                "en": "tea"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s6-letters-q3-check",
+          "kind": "listen-pick",
+          "rounds": [
+            {
+              "id": "c1",
+              "prompt": {
+                "ko": "매운맛",
+                "romanization": "maeunmat",
+                "en": "spicy flavour"
+              },
+              "options": [
+                {
+                  "id": "a",
+                  "text": {
+                    "ko": "차",
+                    "romanization": "cha",
+                    "en": "tea"
+                  }
+                },
+                {
+                  "id": "b",
+                  "text": {
+                    "ko": "매운맛",
+                    "romanization": "maeunmat",
+                    "en": "spicy flavour"
+                  }
+                }
+              ],
+              "answerId": "b"
+            },
+            {
+              "id": "c2",
+              "prompt": {
+                "ko": "칠천 원",
+                "romanization": "chilcheon won",
+                "en": "7,000 won"
+              },
+              "options": [
+                {
+                  "id": "a",
+                  "text": {
+                    "ko": "칠천 원",
+                    "romanization": "chilcheon won",
+                    "en": "7,000 won"
+                  }
+                },
+                {
+                  "id": "b",
+                  "text": {
+                    "ko": "팔천 원",
+                    "romanization": "palcheon won",
+                    "en": "8,000 won"
+                  }
+                }
+              ],
+              "answerId": "a"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "culture": [
+    {
+      "id": "n1",
+      "kind": "culture",
+      "textEn": "Prices in Korea are in won, written {ko:원}. Won has been the unit of Korean money since 1962, and its sign is ₩.",
+      "sources": [
+        {
+          "title": "원 (won), entry 원1 of the Standard Korean Language Dictionary",
+          "publisher": "표준국어대사전 (Standard Korean Language Dictionary), National Institute of Korean Language",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?pageSize=10&searchKeyword=%EC%9B%90",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "Headword 원1 「의존 명사」: “우리나라의 화폐 단위. 1원은 1전의 100배이다. 1962년 6월 10일부터 시행되었다. 기호는 ￦.” Examples in the full entry: “용돈으로 만 원을 받다.”, “천 원으로 과자를 사 먹었다.”"
+        },
+        {
+          "title": "화폐 단위, the Encyclopedia of Korean Culture entry on units of money",
+          "publisher": "한국민족문화대백과사전 (Encyclopedia of Korean Culture), Academy of Korean Studies",
+          "url": "https://encykorea.aks.ac.kr/Article/E0064924",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "Entry 화폐 단위, section 내용, on the reform of 1962: “‘1953년의 통화개혁’이 단행된 지 10년도 되지 않은 1962년 6월 12일에 다시 ‘1962년의 통화개혁’이 단행되었다.” and “이 개혁에 따라 우리나라는 유사 이래 처음으로 한글로 된 ‘원’이라는 화폐 단위를 채택하게 되었다”"
+        }
+      ],
+      "verification": {
+        "passes": 1,
+        "checkedAt": "2026-10-14",
+        "scope": "lesson",
+        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): both pages fetched. The Standard Korean Language Dictionary (NIKL) defines 원 as the money unit of the country, in force since 1962, with the sign ₩, and gives 천 원 as an example; the AKS Encyclopedia of Korean Culture entry on units of money says the reform of 1962 adopted the unit 원. The two give different days in June 1962, so the note names the year only. The note is original English and copies no source wording; no group-wide claim, stereotype, living person, shop, brand or real price (the menu amounts are round practice amounts in a drawn scene, OD-11). Carried by: q2 Discover page 2 caption ('Won is Korean money') and the q2 key word 원."
+      }
+    },
+    {
+      "id": "n2",
+      "kind": "language",
+      "textEn": "Prices are read with the Sino-Korean numbers ({ko:일}, {ko:이}, {ko:삼}), and {ko:천} is a thousand, so {ko:천 원} is 1,000 won.",
+      "sources": [
+        {
+          "title": "숫자의 발음, an article on pronouncing numbers in the series on the standard pronunciation rules",
+          "publisher": "새국어소식 (Saegugeo Sosik), August 2004, National Institute of Korean Language",
+          "url": "https://korean.go.kr/nkview/nknews/200408/73_5.html",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "Opening paragraph: “수사는 어원적으로 ‘하나, 둘, 셋’과 같은 고유어계 수사와 ‘일, 이, 삼’과 같은 한자어계 수사로 나뉜다.”"
+        },
+        {
+          "title": "천 (cheon, thousand) and 오 (o, five), entries of the Standard Korean Language Dictionary",
+          "publisher": "표준국어대사전 (Standard Korean Language Dictionary), National Institute of Korean Language",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?pageSize=10&searchKeyword=%EC%B2%9C",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "Headword 천3(千) [Ⅰ]「수사」: “백의 열 배가 되는 수.≒일천.” The same dictionary lists 오4(五) [Ⅰ]「수사」: “사에 일을 더한 수.” (search 오); both carry their Chinese character (千, 五) as the word's origin."
+        },
+        {
+          "title": "원 (won), entry 원1 of the Standard Korean Language Dictionary",
+          "publisher": "표준국어대사전 (Standard Korean Language Dictionary), National Institute of Korean Language",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?pageSize=10&searchKeyword=%EC%9B%90",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "Headword 원1 「의존 명사」: “우리나라의 화폐 단위. 1원은 1전의 100배이다. 1962년 6월 10일부터 시행되었다. 기호는 ￦.” Examples in the full entry: “용돈으로 만 원을 받다.”, “천 원으로 과자를 사 먹었다.”"
+        }
+      ],
+      "verification": {
+        "passes": 1,
+        "checkedAt": "2026-10-14",
+        "scope": "lesson",
+        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): all three pages fetched. The NIKL Saegugeo Sosik article splits Korean numbers into a native series (hana, dul, set) and a Sino-Korean series (il, i, sam); the Standard Korean Language Dictionary lists 천 (千) and 오 (五) as numerals of Chinese-character origin, 천 defined as ten hundreds, and its entry 원 gives the example 천 원, a Sino-Korean number before 원. The note and the captions say only what these pages show; nothing is copied. Carried by: q2 Discover page 1 caption ('Prices use the Sino-Korean numbers il, i, sam, sa, o'), q2 page 2 caption ('cheon is a thousand: ocheon won is 5,000') and q3 Discover page 1 caption."
+      }
+    }
+  ],
+  "review": {
+    "language": "draft",
+    "culture": "draft",
+    "notes": []
+  },
+  "contentVer": 1
+}
