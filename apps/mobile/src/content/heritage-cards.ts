@@ -28,7 +28,7 @@ const make = (
 
 export const stage1Cards: HeritageCard[] = [
   // Letters & Books
-  make('book', 'Book', '책', 'chaek', 'A book waiting to be read.', 'Korean kids first learn to read books printed left-to-right, top-to-bottom — same as English.', 'letters', 'stage1', 'common', 'episode:stage1-letters'),
+  make('book', 'Book', '책', 'chaek', 'A book waiting to be read.', 'Most Korean books today are printed left-to-right, top-to-bottom — the same as English.', 'letters', 'stage1', 'common', 'episode:stage1-letters'),
   make('hanji', 'Hanji Paper', '한지', 'hanji', 'Traditional Korean paper, soft and strong.', 'Hanji is made from mulberry bark and can last over 1,000 years.', 'letters', 'stage1', 'uncommon', 'episode:stage1-letters'),
   make('brush', 'Calligraphy Brush', '붓', 'but', 'A brush that writes the most beautiful letters.', 'Korean calligraphy is called seoye (서예).', 'letters', 'stage1', 'uncommon', 'episode:stage1-letters'),
   make('ink', 'Ink Stick', '먹', 'meok', 'Black ink for writing big, bold letters.', 'You grind a meok stick with water to make ink — fresh every day.', 'letters', 'stage1', 'common', 'episode:stage1-letters'),
@@ -44,7 +44,7 @@ export const stage1Cards: HeritageCard[] = [
   make('family-table', 'Family Table', '가족 식탁', 'gajok siktak', 'Where everyone gathers to eat.', 'Koreans share many small side dishes called banchan.', 'life', 'stage1', 'uncommon', 'episode:stage1-life'),
 
   // Holidays & Traditions
-  make('seollal', 'Lunar New Year', '설날', 'seollal', 'The new year — bows, hanbok, tteokguk.', 'Children bow and receive sebaetdon (lucky money).', 'rites', 'stage1', 'rare', 'episode:stage1-rites'),
+  make('seollal', 'Lunar New Year', '설날', 'seollal', 'The new year — bows, hanbok, tteokguk.', 'People bow to their elders, and the elders often give sebaetdon (lucky money).', 'rites', 'stage1', 'rare', 'episode:stage1-rites'),
   make('chuseok', 'Harvest Festival', '추석', 'chuseok', 'A harvest moon and a family feast.', 'Families share songpyeon — half-moon rice cakes.', 'rites', 'stage1', 'rare', 'episode:stage1-rites'),
   make('tteokguk', 'Rice Cake Soup', '떡국', 'tteokguk', 'On New Year, eat tteokguk to grow one year older.', 'Sliced rice cakes look like coins for good luck.', 'rites', 'stage1', 'uncommon', 'episode:stage1-rites'),
   make('songpyeon', 'Songpyeon', '송편', 'songpyeon', 'Half-moon rice cakes filled with sweet fillings.', 'They are steamed on pine needles for fragrance.', 'rites', 'stage1', 'uncommon', 'episode:stage1-rites'),
