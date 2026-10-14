@@ -5,7 +5,7 @@ import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp, NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, View } from 'react-native';
-import { bundleOs, flags, gatingActive } from '../../config/flags';
+import { bundleOs, flags, gatingActive, routeEnabledFor } from '../../config/flags';
 import { episodesAll, questsAll } from '../../content';
 import { vocabTopics } from '../../content/vocab';
 import { useLocale, useMessages } from '../../i18n/use-messages';
@@ -33,7 +33,7 @@ import { useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
 import { questOpenFor, useAccessTier, useQuestAccess } from '../../store/tier-store';
 import { useUiStore } from '../../store/ui-store';
-import { LinkButton } from '../placement/parts';
+import { LinkButton } from '../../components/LinkButton';
 import { GainsCard, StoriesNote } from './GainsCard';
 import { RouteCard } from './RouteCard';
 import { SkillsCard } from './SkillsCard';
@@ -225,8 +225,8 @@ function MyRouteBody({ profileId, readOnly, variant, navigation }: BodyProps): R
       firstReached,
       letterWall: routeLetterWall(model),
       week,
-      // Open plan (R-7d) needs F-PLAN-002's RouteOverview, which the navigator mounts only behind this flag.
-      planOverview: flags.routeEnabled,
+      // Open plan (R-7d) is a weekly plan entry: it follows the UI locale's review (P2-8b), as Home and Profile do.
+      planOverview: routeEnabledFor(locale),
       // "Plan ends {date}" on the grown-up card only (LR-OD-7); a plan day is a UTC calendar day.
       formatDay: (day) => formatDate(locale, `${day}T00:00:00.000Z`, 'monthDay', { utc: true }),
     });

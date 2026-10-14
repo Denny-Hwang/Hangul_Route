@@ -173,6 +173,9 @@ export const learner = {
       line: (count: number) => `이미 받은 카드 ${count}장을 호야가 찾았어요!`,
       cta: '내 카드 보기',
     },
+    lockedCard: {
+      a11y: (cardLabel: string) => `${cardLabel} 아직 안 열렸어요.`,
+    },
   },
 
   journey: {
@@ -1159,6 +1162,7 @@ export const learner = {
   },
   access: {
     notOpen: '아직 안 열렸어요',
+    ask: { family: '어른에게 물어봐요', class: '선생님이나 어른에게 물어봐요', self: '여는 방법 보기' },
     openForYou: '지금 열린 퀘스트를 모두 했어요.',
     practiceWords: { cta: '낱말 연습하기' },
   },

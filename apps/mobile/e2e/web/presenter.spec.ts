@@ -188,9 +188,11 @@ test.describe('presenter at 1280 x 720', () => {
 
     await page.goto(link());
     await expect(page.getByTestId('presenter-start')).toBeVisible();
-    // The deck left the address and the history entry; the tab title is fixed (section 3.2).
+    // The deck left the address and the entry's URL and stays only in this tab's history state,
+    // for a reload; the tab title is fixed (section 3.2).
     expect(new URL(page.url()).pathname).toBe('/present');
     expect(new URL(page.url()).hash).toBe('');
+    expect(await page.evaluate(() => Object.keys((history.state ?? {}) as object))).toEqual(['hrLectureFragment']);
     await expect(page).toHaveTitle('Hangul Route lecture');
     // `#root` is not capped (F-LAYOUT-001).
     expect(await page.evaluate(() => document.getElementById('root')?.getBoundingClientRect().width)).toBe(1280);
@@ -250,6 +252,8 @@ test.describe('presenter at 1280 x 720', () => {
     await page.getByTestId('presenter-exit').click();
     await page.getByTestId('presenter-exit-confirm').click();
     await expect(page.getByTestId('presenter-home')).toBeVisible();
+    // Exit forgets the open deck: the history entry holds none after the lesson (section 3.2).
+    expect(await page.evaluate(() => history.state)).toBeNull();
 
     // Only the allowed keys were added (section 3.9).
     await expect.poll(async () => (await storedKeys(page)).includes('hr:lecture:recent')).toBe(true);
@@ -544,6 +548,42 @@ test.describe('PR 7 teaching slides at 1280 x 720', () => {
     // No slide overflows the stage, and the page never scrolls sideways.
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(1280);
     expect(errors).toEqual([]);
+  });
+
+  test('a bundled card the heritage art cannot draw still shows a face, never an empty art build', async ({ page }) => {
+    // card:sagwa is bundled but has no HeritageCardArt drawing: the card face falls back (CardArt, F-STORY-006 D7).
+    await page.goto(
+      link({ ...DECK, id: 'lecture:e2e019', title: 'Apple card', blocks: [{ kind: 'cards', cardIds: ['card:sagwa'] }], options: { romanization: 'tap' } }),
+    );
+    await startLesson(page);
+    await forwardTo(page, 'Card');
+    await expect(page.getByRole('heading', { name: 'Apple' })).toBeVisible();
+    const art = page.getByTestId('presenter-card-art');
+    await expect(art).toBeVisible();
+    await expect(art).toHaveAccessibleName('Apple');
+    // The word face is taught Korean, so it is set in the presenter font like the chip (section 3.6).
+    const word = art.locator('[lang="ko"]');
+    await expect(word).toHaveText('사과');
+    await expect(word).toHaveCSS('font-family', /HR Presenter KR/);
+    // The art build keeps its place: on landing the chip romanization and the fact wait for their own builds.
+    await expectDrawn(page, 'presenter-card-chip-rom', false);
+    await expectDrawn(page, 'presenter-card-fact', false);
+    await page.keyboard.press('PageDown');
+    await expectDrawn(page, 'presenter-card-chip-rom', true);
+    await expectDrawn(page, 'presenter-card-fact', false);
+    await page.keyboard.press('PageDown');
+    await expectDrawn(page, 'presenter-card-fact', true);
+    await shot(page, 'presenter-card-fallback-1280x720');
+  });
+
+  test('a card the heritage art draws shows it through the same card face', async ({ page }) => {
+    await page.goto(link({ ...DECK, id: 'lecture:e2e020', title: 'Book card', blocks: [{ kind: 'cards', cardIds: ['card:book'] }] }));
+    await startLesson(page);
+    await forwardTo(page, 'Card');
+    const art = page.getByTestId('presenter-card-art');
+    await expect(art).toBeVisible();
+    await expect(art.locator('svg').first()).toBeVisible();
+    await expect(art.locator('[lang="ko"]')).toHaveCount(0);
   });
 
   test('with Shift+R the card, the word and the order slide give romanization its own build', async ({ page }) => {
@@ -878,7 +918,22 @@ test.describe('presenter story slides at 1280 x 720 (PR 11)', () => {
     await startLesson(page);
     await goToSlide(page, 5);
     await expect(page.getByTestId('presenter-live')).toHaveText('Slide 5 of 13, Story, He names them Hunminjeongeum');
-    expect(await revealAll(page)).toBe(3);
+    // Before the romanization reveal the chips and the Korean line name only the Korean: a screen
+    // reader never says the hidden romanization early, and the hidden text is aria-hidden too.
+    const chip = page.getByTestId('presenter-story-chip').filter({ hasText: 'baekseong' });
+    const line = page.getByTestId('presenter-story-korean-line');
+    for (let i = 0; i < 2; i++) await page.keyboard.press('PageDown');
+    await expect(page.getByTestId('presenter-story-narration')).toHaveCSS('opacity', '1');
+    await expect(chip.getByText('baekseong')).toHaveCSS('opacity', '0');
+    await expect(chip.getByText('baekseong')).toHaveAttribute('aria-hidden', 'true');
+    await expect(chip).not.toHaveAttribute('aria-label', /baekseong/);
+    await expect(line).not.toHaveAttribute('aria-label', /Hunminjeongeum/);
+    await expect(line.getByText('Hunminjeongeum', { exact: true })).toHaveAttribute('aria-hidden', 'true');
+    await page.keyboard.press('PageDown');
+    await expect(chip.getByText('baekseong')).toHaveCSS('opacity', '1');
+    await expect(chip.getByText('baekseong')).not.toHaveAttribute('aria-hidden', 'true');
+    await expect(chip).toHaveAttribute('aria-label', /, baekseong$/);
+    await expect(line).toHaveAttribute('aria-label', /, Hunminjeongeum$/);
     await expect(page.getByTestId('presenter-story-korean').getByText('Hunminjeongeum', { exact: true })).toHaveCSS('opacity', '1');
     await page.keyboard.press('ArrowLeft');
     await expect(page.getByTestId('presenter-story-korean').getByText('Hunminjeongeum', { exact: true })).toHaveCSS('opacity', '0');
@@ -978,7 +1033,11 @@ test.describe('presenter Read-to-me and the projected check at 1280 x 720 (PR 11
     await expect(gloss).toHaveText('rain gauge');
     await expect(gloss).toHaveCSS('opacity', '0');
     await expect(gloss).toHaveAttribute('aria-hidden', 'true');
+    // The target chip names its romanization only once it shows (romanization on tap).
+    const target = page.getByTestId('presenter-check-target').first();
+    await expect(target).toHaveAttribute('aria-label', '측우기');
     await page.keyboard.press('PageDown');
+    await expect(target).toHaveAttribute('aria-label', '측우기, cheugugi');
     await expect(gloss).toHaveCSS('opacity', '1');
     await expect(gloss).not.toHaveAttribute('aria-hidden', 'true');
     await expect(page.getByTestId('presenter-check-explain')).toHaveCSS('opacity', '1');

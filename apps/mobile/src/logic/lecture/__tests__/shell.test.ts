@@ -145,6 +145,16 @@ describe('runDeck: the slides this build draws', () => {
     expect(runDeck(deck, { slides: [undrawn, end], skipped: [], taught: [], minutes: 2 }, SHELL_SLIDE_KINDS, ['card:book']).slides[0]).toEqual(undrawn);
   });
 
+  it('regression pin: a card slide keeps its art build even when the heritage art cannot draw it (CardSlide shows the CardArt face; covered in presenter.spec.ts)', () => {
+    const end: Slide = { kind: 'end', letters: [], words: [], key: 'end', builds: ['summary'] };
+    // Dropping `art` would make the chip romanization build 0, shown on landing even with romanization on tap.
+    const undrawn: Slide = { kind: 'card', cardId: 'card:sagwa', title: 'Sagwa', ko: 'sagwa-ko', romanization: 'sagwa', fact: 'f', key: 'c/1', builds: ['art', 'rom', 'fact'] };
+    const deck = deckOf([{ kind: 'cards', cardIds: ['card:sagwa'] }]);
+    const run = runDeck(deck, { slides: [undrawn, end], skipped: [], taught: [], minutes: 1 }, SHELL_SLIDE_KINDS, ['card:book'], ['apple']);
+    expect(run.slides[0]).toEqual(undrawn);
+    expect(run.parts).toEqual([]);
+  });
+
   it('a quiz block is drawn (PR 9): its slides and minutes stay', () => {
     const deck = deckOf([
       { kind: 'episode', id: 'episode:stage1-letters' },

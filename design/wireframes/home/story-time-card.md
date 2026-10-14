@@ -68,6 +68,7 @@ Exit to: `quest/player` (resumed at the bookmarked scene for continue) · `story
 - **empty**: no playable story (none reviewed, or all locked): F2, the explore card (the old mislabelled "Story time" episode card is gone).
 - **error**: a story id that no longer resolves after a content update: the pinned card falls back to the explore card for the rest of the day; unreadable bookmarks: no continue card.
 - **collected**: the card shows the collected look after its quest completes today.
+- **not open** (switch on only, F-STORY-004 PR 4.8f): a card pinned this morning whose story locked, or whose quest closed, since the pin keeps its slot, title and line, takes the sunken tone and shows the dotted ring with "Not open yet" under its line (never a lock glyph or the word "locked"); its label ends "Not open yet." and its hint is the ask; a tap opens the grown-up gate (PR 4.8e). A card that is both collected and no longer open keeps the **collected** look (collected wins; no ring, no Not open yet word), with the ask as its hint, since a tap still opens the gate.
 - **offline**: built from bundled content and local progress.
 - **wide window**: missions sit in the left column (`layout/wide.md` B); slot order never changes.
 

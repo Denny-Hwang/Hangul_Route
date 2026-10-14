@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import type { StoryIndexEntry } from '../../story/story-index';
 import { questId, story } from '../../story/__tests__/shelf-fixture';
-import { homeCardLock, type HomeCardAccessInput } from '../home-card-access';
+import { homeCardLock, homeTileLook, isHomeCardLocked, type HomeCardAccessInput } from '../home-card-access';
 import type { MissionCard } from '../mission-builder';
 
 /**
@@ -105,6 +105,54 @@ describe('homeCardLock (F-STORY-004 PR 4.8e)', () => {
   });
 });
 
+describe('isHomeCardLocked (F-STORY-004 PR 4.8f: the locked look of a pinned card)', () => {
+  const look = (patch: Partial<HomeCardAccessInput>): boolean => {
+    const { opensDirectly: _gate, ...rest } = input(patch);
+    return isHomeCardLocked(rest);
+  };
+
+  it('is false for open cards (gating off: nothing is closed, so Home looks as before)', () => {
+    expect(look({})).toBe(false);
+    expect(look({ card: storyCard })).toBe(false);
+  });
+
+  it('is true exactly when a tap would take the locked path', () => {
+    expect(look({ isQuestOpen: () => false })).toBe(true);
+    expect(look({ card: storyCard, isStoryLocked: () => true })).toBe(true);
+    expect(look({ card: storyCard, entries: [], isQuestOpen: () => false })).toBe(true);
+    expect(look({ card: { ...questCard, collected: true }, isQuestOpen: () => false })).toBe(true);
+  });
+
+  it('follows the story lock alone for a story card in the index, as the tap does', () => {
+    expect(look({ card: storyCard, isQuestOpen: () => false })).toBe(false);
+  });
+
+  it('never marks a card that opens no quest player or reader', () => {
+    const explore = card({ slot: 3, kind: 'explore', subtitle: 'explore', episodeId: 'episode:s1-e3' });
+    const topic = card({ slot: 3, kind: 'practice', subtitle: 'practice', topicKey: 'food', practiceKind: 'topic' });
+    const dailyTest = card({ slot: 3, kind: 'daily-test', titleEn: null, subtitle: 'dailyTest' });
+    for (const c of [explore, topic, dailyTest]) {
+      expect(look({ card: c, isQuestOpen: () => false, isStoryLocked: () => true })).toBe(false);
+    }
+  });
+
+  it('does not depend on how the gate opens (PIN entry or the Plan screen directly)', () => {
+    const cases: Partial<HomeCardAccessInput>[] = [
+      {},
+      { isQuestOpen: () => false },
+      { card: storyCard },
+      { card: storyCard, isStoryLocked: () => true },
+      { card: storyCard, entries: [] },
+      { card: storyCard, entries: [], isQuestOpen: () => false },
+    ];
+    for (const c of cases) {
+      for (const opensDirectly of [false, true]) {
+        expect(look(c)).toBe(homeCardLock(input({ ...c, opensDirectly })) !== null);
+      }
+    }
+  });
+});
+
 describe('Home wires the tap-time check (source guard: the mobile lane does not render screens)', () => {
   const src = readFileSync(join(__dirname, '..', '..', '..', 'screens', 'home', 'HomeScreen.tsx'), 'utf8');
   const start = src.indexOf('const openCard = ');
@@ -120,5 +168,62 @@ describe('Home wires the tap-time check (source guard: the mobile lane does not 
   it('judges with the same story lock the mission was built with', () => {
     expect(src).toContain('homeCardLock(');
     expect(src).toMatch(/isStoryLocked\b[\s\S]*isLocked: isStoryLocked/);
+  });
+});
+
+describe('homeTileLook (PR 4.8f: what a Home tile draws)', () => {
+  const base = { label: 'A short story. Read it.', lockedLabel: (l: string) => `${l} Not open yet.`, askHint: 'Ask a grown-up' };
+
+  it('an open card that is not collected: paper, no ring, no hint', () => {
+    expect(homeTileLook({ ...base, collected: false, locked: false })).toEqual({
+      tone: 'paper',
+      notOpen: false,
+      sparkle: false,
+      accessibilityLabel: 'A short story. Read it.',
+      accessibilityHint: undefined,
+    });
+  });
+
+  it('a collected open card: the collected look (F-HW-001 section 3.2)', () => {
+    expect(homeTileLook({ ...base, collected: true, locked: false })).toEqual({
+      tone: 'success',
+      notOpen: false,
+      sparkle: true,
+      accessibilityLabel: 'A short story. Read it.',
+      accessibilityHint: undefined,
+    });
+  });
+
+  it('a locked card: sunken, the ring and the word, in the label too, with the ask as the hint', () => {
+    expect(homeTileLook({ ...base, collected: false, locked: true })).toEqual({
+      tone: 'sunken',
+      notOpen: true,
+      sparkle: false,
+      accessibilityLabel: 'A short story. Read it. Not open yet.',
+      accessibilityHint: 'Ask a grown-up',
+    });
+  });
+
+  it('collected wins the look: a card finished today never reads Not open yet; the hint still says where a tap goes', () => {
+    expect(homeTileLook({ ...base, collected: true, locked: true })).toEqual({
+      tone: 'success',
+      notOpen: false,
+      sparkle: true,
+      accessibilityLabel: 'A short story. Read it.',
+      accessibilityHint: 'Ask a grown-up',
+    });
+  });
+});
+
+describe('Home draws a pinned card that became locked (loose source guard, PR 4.8f)', () => {
+  const src = readFileSync(join(__dirname, '..', '..', '..', 'screens', 'home', 'HomeScreen.tsx'), 'utf8');
+  const tileStart = src.indexOf('function MissionTile(');
+  const tile = tileStart < 0 ? '' : src.slice(tileStart, src.indexOf('\nfunction ', tileStart + 1));
+
+  it('derives the look from isHomeCardLocked and homeTileLook, with no lock glyph', () => {
+    expect(src).toMatch(/isHomeCardLocked\(\{\s*card,\s*entries: storyIndex,\s*isQuestOpen: questOpen,\s*isStoryLocked\s*\}\)/);
+    expect(tile).toMatch(/homeTileLook\(/);
+    expect(tile).toMatch(/TagMark kind="notOpen"/);
+    expect(tile).not.toMatch(/name=["']lock["']/);
   });
 });

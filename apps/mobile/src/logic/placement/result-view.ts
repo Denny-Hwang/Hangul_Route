@@ -65,7 +65,7 @@ export interface ResultViewInput {
   completedQuestIds: ReadonlySet<string>;
   /** `effectiveLearnerType(profile)`. */
   profileType: 'self' | 'child';
-  /** `flags.routeEnabled` (F-PLAN-002 P2-7a). */
+  /** The entry's weekly plan switch, `routeEnabledFor(locale)` (F-PLAN-002 P2-7a, P2-8b). */
   routeEnabled: boolean;
   /** `flags.myRouteEnabled` (F-ROUTE-001): "See Learning Route", else "See the whole map". */
   myRouteEnabled: boolean;

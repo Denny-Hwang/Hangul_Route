@@ -194,6 +194,40 @@ describe('/parent/learner without a learner: the parent chooser (RP-7c)', () => 
     expect(rows(root)).toHaveLength(2);
   });
 
+  it('a spaces read that throws: the error with Try again, never the skeleton forever', async () => {
+    let fail = true;
+    responses.spaces = () => {
+      if (fail) throw new Error('client failure');
+      return ok([family('space:a')]);
+    };
+    const root = await page();
+    expect(h1s(root)).toEqual([en.report.state.error]);
+    expect(byTestId(root, 'report-retry')).toHaveLength(1);
+    fail = false;
+    await act(async () => byTestId(root, 'report-retry')[0]?.props.onClick());
+    expect(rows(root)).toHaveLength(2);
+  });
+
+  it('a roster read that throws: the error with Try again, which reads again', async () => {
+    let thrown = false;
+    responses.rosters = {
+      'space:a': () => {
+        if (!thrown) {
+          thrown = true;
+          throw new Error('client failure');
+        }
+        return (DEFAULT_ROSTERS['space:a'] as () => Result)();
+      },
+    };
+    responses.spaces = () => ok([family('space:a')]);
+    const root = await page();
+    expect(h1s(root)).toEqual([en.report.state.error]);
+    expect(byTestId(root, 'report-retry')).toHaveLength(1);
+    await act(async () => byTestId(root, 'report-retry')[0]?.props.onClick());
+    expect(rows(root)).toHaveLength(2);
+    expect(byTestId(root, 'report-retry')).toHaveLength(0);
+  });
+
   it('a family whose roster failed: the others stay, with the error and Try again under them, which reads again', async () => {
     responses.rosters = { 'space:a': DEFAULT_ROSTERS['space:a'] as () => Result };
     const root = await page();

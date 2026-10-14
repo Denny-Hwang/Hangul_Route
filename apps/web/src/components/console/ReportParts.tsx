@@ -696,7 +696,9 @@ export function ReportGrowthBlock({ growth }: { growth: ReportGrowthView }): JSX
     points.map((p, index) => <circle key={`${key}-${index}`} cx={p.x} cy={p.y} r={GROWTH_MARKER_R} fill={color} stroke={colors.surface.paper} strokeWidth={GROWTH_LINE} />);
   return (
     <div className="hr-report-growth" data-testid="report-growth">
-      <ul className="hr-report-growth-legend" aria-hidden="true">
+      {/* With month rows the chart and table carry these values; without, the legend is the only place the baseline
+          totals appear, so assistive technology reads it. */}
+      <ul className="hr-report-growth-legend" aria-hidden={growth.rows.length > 0 ? 'true' : undefined}>
         <li>
           <span className="hr-report-swatch" />
           {growth.quests} <b>{growth.latest.quests}</b>

@@ -175,6 +175,9 @@ export const learner = {
         plural('es', count, { one: '¡Hoya encontró 1 tarjeta que ya ganaste!', other: `¡Hoya encontró ${count} tarjetas que ya ganaste!` }),
       cta: 'Ver mis tarjetas',
     },
+    lockedCard: {
+      a11y: (cardLabel: string) => `${cardLabel} Aún sin abrir.`,
+    },
   },
 
   journey: {
@@ -1072,7 +1075,7 @@ export const learner = {
           twice: 'El doble',
         },
         stopsLine: 'El reloj se detiene mientras lees la respuesta.',
-        screenReaderLine: 'Ya elegimos El doble para ti. Puedes cambiarlo.',
+        screenReaderLine: 'Ya elegimos «El doble» para ti. Puedes cambiarlo.',
         pause: 'Pausa',
         paused: 'En pausa',
         resume: 'Seguir',
@@ -1178,6 +1181,7 @@ export const learner = {
   },
   access: {
     notOpen: 'Aún sin abrir',
+    ask: { family: 'Pregunta a un adulto', class: 'Pregunta a tu docente o a un adulto', self: 'Mira cómo se abre' },
   },
   /**
    * The learner's own weekly plan (F-PLAN-002 P2-7a, P2-7b). "Plan semanal", never "ruta"; the pace names match

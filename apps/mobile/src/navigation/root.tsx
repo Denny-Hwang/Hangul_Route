@@ -118,9 +118,9 @@ export function RootNavigator(): React.ReactElement {
         <Stack.Screen name="PlacementReport" component={PlacementReportScreen} />
         {/* F-REPORT-001 section 3.9 (RP-9): registered only with the reports flag on. */}
         {flags.reportsEnabled ? <Stack.Screen name="LearnerReport" component={LearnerReportScreen} /> : null}
-        {/* The weekly plan proposal (F-PLAN-002 P2-7a): its entries (Home prompt, Profile row) need flags.routeEnabled. */}
+        {/* The weekly plan screens (F-PLAN-002 P2-7a, P2-7b) register on the raw flag; the entries gate (P2-8b): Home's
+            plan slot, the Profile row, Open plan, the placement strip and the report card read routeEnabledFor(locale). */}
         {flags.routeEnabled ? <Stack.Screen name="RouteProposal" component={RouteProposalScreen} /> : null}
-        {/* Set-up steps, preview and overview (F-PLAN-002 P2-7b): same flag. */}
         {flags.routeEnabled ? <Stack.Screen name="RouteSetup" component={RouteSetupScreen} /> : null}
         {flags.routeEnabled ? <Stack.Screen name="RoutePreview" component={RoutePreviewScreen} /> : null}
         {flags.routeEnabled ? <Stack.Screen name="RouteOverview" component={RouteOverviewScreen} /> : null}

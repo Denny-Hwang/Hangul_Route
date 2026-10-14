@@ -565,6 +565,7 @@ export const caregiver = {
       cardSlotA11y: (rarity: string, title: string, ko: string, romanization: string) => `${rarity}, ${title}, ${ko} ${romanization}. 카드를 열어요.`,
       wordCount: (n: number) => `· 낱말 ${n}개`,
       wordsRowA11y: (topic: string, n: number) => `${topic}, 낱말 ${n}개. 주제를 열어요.`,
+      wordsRowClosedA11y: (topic: string, n: number) => `${topic}, 낱말 ${n}개. 아직 안 열렸어요. 주제를 열어요.`,
       storyTileA11y: (title: string, minutes: number) => `${title}. 약 ${minutes}분.`,
     },
     keep: {

@@ -33,7 +33,7 @@ Every covering overlay sits over the stage box (the bar stays), on `surface.pape
 
 ## Help (H or ?)
 
-- "Keys and controls": each key of section 3.5 as key caps (Next: right arrow, down arrow, Space, PageDown, Enter; Back: left arrow, up arrow, PageUp, Backspace; the up and down caps are the arrow glyph rotated, no new icon) and what it does, two columns from 900 px; "A presentation clicker works with no setup."; the Romanization switch (always / hide until tapped; flips the deck's option live); the Presenter language chips (session only); **Keep controls visible**; Close. It scrolls inside the stage box when taller (1280 x 720).
+- "Keys and controls": each key of section 3.5 as key caps (Next: right arrow, down arrow, Space, PageDown, Enter; Back: left arrow, up arrow, PageUp, Backspace; the up and down caps are the arrow glyph rotated, no new icon) and what it does, two columns from 900 px; "A presentation clicker works with no setup."; the Romanization switch (always / hide until tapped; flips the deck's option live; not drawn when Help is opened from the presenter home's **Keys and help**, where no lesson is open); the Presenter language chips (session only); **Keep controls visible**; Close. It scrolls inside the stage box when taller (1280 x 720).
 
 ## Exit (PR 6)
 

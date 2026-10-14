@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react';
 import { AvatarChip } from '@/components/AvatarChip';
+import { BrowseLink } from '@/components/console/BrowseLink';
 import { AdultFrame, type FrameSpaces } from '@/components/console/AdultFrame';
 import { FreeLessonsLine } from '@/components/console/FreeLessonsParts';
 import { Button, Muted, buttonBase, panelStyle } from '@/components/console/ui';
@@ -21,7 +22,6 @@ import { dateKey, livePublished } from '@/lib/console/plans';
 import { codeExpiry, relativeDay } from '@/lib/console/rollup';
 import { ROUTES, spaceErrorText } from '@/lib/console/routing';
 import { writeLastPersona } from '@/lib/console/shell-store';
-import { BROWSE_PATH } from '@/lib/console/shell-nav';
 import { START_CLASS, START_FAMILY } from '@/lib/console/teacher-home';
 
 /**
@@ -304,9 +304,7 @@ export default function ParentHomePage(): JSX.Element {
     const actions = (
       <div className="hr-ph-actions">
         {lessons ? (
-          <a href={BROWSE_PATH} style={button} data-testid="family-lessons">
-            {p.actions.lessons}
-          </a>
+          <BrowseLink source="nav" label={p.actions.lessons} testId="family-lessons" style={{ ...button, flex: '1 1 auto' }} />
         ) : null}
         {archived ? null : (
           <>

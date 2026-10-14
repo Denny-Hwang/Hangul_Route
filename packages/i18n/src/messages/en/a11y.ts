@@ -4,10 +4,18 @@ import { plural } from '../../plural';
  * Accessibility labels (F-I18N-001 §3.4). The design system takes these as props
  * with its own English default, so it needs no i18n dependency.
  */
+/**
+ * The spoken word of each Hoya pose (the design system's `HoyaPose` union), so `hoya(pose)` never
+ * puts an English pose token into another locale (review of #594). English keeps its shipped words.
+ */
+const hoyaPose = { idle: 'idle', cheering: 'cheering', thinking: 'thinking', reading: 'reading', waving: 'waving' };
+
 export const a11y = {
   tile: (label: string) => `Korean letter ${label}, tap to select`,
   stars: (earned: number) => `${earned} of 3 stars earned`,
-  hoya: (pose: string) => `Hoya the tiger, ${pose}`,
+  /** Hoya's label with the pose word of `hoyaPose`; a pose missing from the map is read as given. */
+  hoya: (pose: string) => `Hoya the tiger, ${Object.prototype.hasOwnProperty.call(hoyaPose, pose) ? hoyaPose[pose as keyof typeof hoyaPose] : pose}`,
+  hoyaPose,
   dismissHoya: 'Close Hoya message',
   goBack: 'Go back',
   /**
