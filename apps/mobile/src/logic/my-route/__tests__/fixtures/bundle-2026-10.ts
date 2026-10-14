@@ -22,6 +22,8 @@ import {
  * `catalog-2026-10.ts`). Counts in the my-route tests are asserted on these
  * fixtures, never on the live bundle, so they stay true while content grows.
  * Never edit to follow the content; add a new dated fixture instead.
+ * One display rename only (F-STORY-005 row 5.6c, owner decision 2026-10-14): the
+ * Stage 5 nature cell reads Nature Tales (was Tiger Folktales); no id or count changed.
  */
 
 export interface Bundle {
@@ -91,7 +93,7 @@ const PREVIEW_TITLES: Record<string, readonly string[]> = {
   stage2: ['Word Builder', 'Lunch Box Words', 'Holiday Words', 'Outdoor Words', 'Playground Words'],
   stage3: ['First Sentences', 'Daily Mini-Sentences', 'Festival Sentences', 'Animal Sentences', 'Game Sentences'],
   stage4: ['Reading Aloud', 'Kitchen Talk', 'Greeting Dialogues', 'Park Conversations', 'Playdate Talk'],
-  stage5: ['Short Stories', 'Family Stories', 'Festival Tales', 'Tiger Folktales', 'Craft Stories'],
+  stage5: ['Short Stories', 'Family Stories', 'Festival Tales', 'Nature Tales', 'Craft Stories'],
   stage6: ['Read the Menu', 'Order Food', 'Travel for Chuseok', 'Hike & Ask', 'Buy at Market'],
   stage7: ['Write Your Name', 'My Day in Korean', 'My Holiday Memory', 'My Favorite Animal', 'Make & Share'],
 };
