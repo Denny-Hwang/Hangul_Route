@@ -1203,10 +1203,10 @@
         }
       ],
       "verification": {
-        "passes": 1,
+        "passes": 2,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "pass 2 (author sourcing, 2026-10-14): '에 after a place word tells where' = stdict 에4 「조사」 「1」 (앞말이 처소의 부사어임을 나타내는 격 조사) and encykorea 조사 (처격(에)); 'in, on or at' is the English gloss of that locative use. '있어요 says an animal or a thing is there' = stdict 있다1 「동사」 「1」 (사람이나 동물이 어느 곳에서 … 머물다). Pages opened 2026-10-14, HTTP 200. English is a paraphrase, nothing copied. Used in: q1 Discover pattern noteEn, q1 Sentence Builder particle hint."
+        "notes": "pass 2 (author sourcing, 2026-10-14): '에 after a place word tells where' = stdict 에4 「조사」 「1」 (앞말이 처소의 부사어임을 나타내는 격 조사) and encykorea 조사 (처격(에)); 'in, on or at' is the English gloss of that locative use. '있어요 says an animal or a thing is there' = stdict 있다1 「동사」 「1」 (사람이나 동물이 어느 곳에서 … 머물다). Pages opened 2026-10-14, HTTP 200. English is a paraphrase, nothing copied. Used in: q1 Discover pattern noteEn, q1 Sentence Builder particle hint.\npass 2b (independent fact-check, 2026-10-14): re-opened stdict 에 and 있다 search results and encykorea 조사 (E0051845); 에4 「조사」 「1」 (처소의 부사어 격 조사), 있다1 「동사」 「1」 (사람이나 동물이 어느 곳에 머물다) and 처격(에) found on the pages as quoted. 'in, on or at' is a fair English gloss of the locative use; 'an animal or a thing is there' is supported (stdict covers people and animals; the thing reading is the ordinary 있다 existence use). English and the ko/es noteEn are paraphrases; no source wording copied. Outcome: confirmed, no change."
       }
     },
     {
@@ -1230,10 +1230,10 @@
         }
       ],
       "verification": {
-        "passes": 1,
+        "passes": 2,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "pass 2 (author sourcing, 2026-10-14): the two forms and their condition = NIKL 새국어생활 1998 봄호, 유동석 「조사의 사전적 처리」 3절 (가: 모음으로 끝나는 체언에 붙어 … 주격 / 이: 자음으로 끝나는 체언에 붙어 … 주격) and encykorea 조사 특징 (3) (이형태 by 선행체언의 음운론적 조건, ‘이·가’). Pages opened 2026-10-14, HTTP 200. Paraphrased, nothing copied. Used in: the pattern noteEn of q1, q2 and q3, the particle rounds r4 and r5 of each quest."
+        "notes": "pass 2 (author sourcing, 2026-10-14): the two forms and their condition = NIKL 새국어생활 1998 봄호, 유동석 「조사의 사전적 처리」 3절 (가: 모음으로 끝나는 체언에 붙어 … 주격 / 이: 자음으로 끝나는 체언에 붙어 … 주격) and encykorea 조사 특징 (3) (이형태 by 선행체언의 음운론적 조건, ‘이·가’). Pages opened 2026-10-14, HTTP 200. Paraphrased, nothing copied. Used in: the pattern noteEn of q1, q2 and q3, the particle rounds r4 and r5 of each quest.\npass 2b (independent fact-check, 2026-10-14): re-opened the 새국어생활 article (유동석, 「조사의 사전적 처리」); both quoted dictionary entries (가: 주로 모음으로 끝나는 체언 / 이: 자음으로 끝나는 체언, 주격) found in section 3; encykorea 조사 특징 (3) 이형태 ‘이·가’ found. Consonant/vowel condition matches the note. Paraphrased; ko gloss (받침 뒤 이, 모음 뒤 가) does not reuse source wording. Outcome: confirmed, no change."
       }
     },
     {
@@ -1257,10 +1257,10 @@
         }
       ],
       "verification": {
-        "passes": 1,
+        "passes": 2,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "pass 2 (author sourcing, 2026-10-14): 'comes at the end' = encykorea 문장 (기본어순 주어·(보어)·(목적어)·서술어; 서술어가 문장 끝위치에 고정); 'says what the subject does or is like' and 'after the subject' = encykorea 서술어 정의 (주어의 동작·상태·성질 등을 설명) and 내용 (서술어는 주어의 뒤에 놓이며). Pages opened 2026-10-14, HTTP 200. Paraphrased, nothing copied. Used in: q2 and q3 Discover pattern noteEn ('The describing word comes last', 'The action word comes last')."
+        "notes": "pass 2 (author sourcing, 2026-10-14): 'comes at the end' = encykorea 문장 (기본어순 주어·(보어)·(목적어)·서술어; 서술어가 문장 끝위치에 고정); 'says what the subject does or is like' and 'after the subject' = encykorea 서술어 정의 (주어의 동작·상태·성질 등을 설명) and 내용 (서술어는 주어의 뒤에 놓이며). Pages opened 2026-10-14, HTTP 200. Paraphrased, nothing copied. Used in: q2 and q3 Discover pattern noteEn ('The describing word comes last', 'The action word comes last').\npass 2b (independent fact-check, 2026-10-14): re-opened encykorea 문장 (E0019645) and 서술어 (E0027885); 기본어순 ‘주어·(보어)·(목적어)·서술어’, 서술어가 문장 끝위치에 고정, 서술어 정의 (주어의 동작·상태·성질 등을 설명) and 서술어는 주어의 뒤에 놓이며 found as quoted. The note matches; it makes no free-word-order claim beyond the predicate. Paraphrased, nothing copied. Outcome: confirmed, no change."
       }
     }
   ],
