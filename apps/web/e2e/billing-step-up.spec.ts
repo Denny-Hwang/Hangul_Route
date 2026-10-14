@@ -2,10 +2,17 @@ import { expect, test, type Page, type Route } from '@playwright/test';
 
 /**
  * F-BILL-002 B-8b review round: the step-up dialog in a real browser, on the static export with the API mocked by
- * `page.route` (the unit tests use react-test-renderer, which has no layout and no DOM). It needs an export built
- * with `NEXT_PUBLIC_API_BASE_URL=https://api.billing-e2e.test` and `NEXT_PUBLIC_CONSOLE_DEV_AUTH=true`, run with
- * `BILLING_E2E=1`; on the default export (the preview gate's) it is skipped. B-11's `billing.spec.ts` carries the
- * whole billing journey.
+ * `page.route` (the unit tests use react-test-renderer, which has no layout and no DOM). It needs a build whose API
+ * base is `https://api.billing-e2e.test`, run with `BILLING_E2E=1`; on the default export (the preview gate's) it is
+ * skipped. CI's `billing-e2e` job (B-14) runs it, as `billing.spec.ts`, on F-APP-001's merged app-host dist:
+ *
+ *   EXPO_PUBLIC_API_BASE_URL=https://api.billing-e2e.test pnpm --filter @hangul-route/mobile build:web
+ *   BILLING_E2E=1 E2E_OUT=../mobile/dist pnpm --filter @hangul-route/web exec playwright test billing-step-up.spec
+ *
+ * The merged dist always has the dev sign-in form off (merge-console.mjs), so the test seeds the console session in
+ * `sessionStorage` (the dev bridge) and needs no dev auth; the console-only export built with
+ * `NEXT_PUBLIC_API_BASE_URL` set and `NEXT_PUBLIC_CONSOLE_DEV_AUTH=true` runs it too. B-11's `billing.spec.ts`
+ * carries the whole billing journey.
  *
  * Dev auth has no Clerk, so Continue reruns the request at once (the Worker skips step-up there, section 4.4); the
  * mocked checkout answers the reverification hint the first time, as B-5 does on a stale sign-in. A stand-in for
