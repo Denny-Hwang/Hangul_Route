@@ -98,6 +98,11 @@ export function composeTyped(keys: readonly string[]): string {
   return out;
 }
 
+/** A letter that closes a block and is one key on the two-set keyboard (ㄴ, ㄲ; not a double final like ㄳ). */
+export function isOneKeyFinal(jamo: string): boolean {
+  return jamo !== '' && FINAL_JAMO.includes(jamo) && SPLIT_FINAL[jamo] === undefined;
+}
+
 /**
  * The keys that type `text` on the two-set keyboard: each syllable block as
  * its initial, its vowel (a joined vowel as its two keys) and its final (a

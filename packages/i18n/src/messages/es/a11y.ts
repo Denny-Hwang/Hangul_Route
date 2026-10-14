@@ -138,6 +138,12 @@ export const a11y = {
       wordBlocks: (blocks: readonly string[]) => `La palabra: ${blocks.join(', ')}.`,
       different: (n: number) => `El bloque ${n} es diferente.`,
     },
+    writeFrame: {
+      blank: 'espacio',
+      either: (a: string, b: string) => `${a} o ${b}`,
+      particleFits: (particle: string, word: string) => `${particle} después de ${word}`,
+      tile: (block: string, sound: string) => `${block}, ${sound}`,
+    },
   },
   koreanItem: (item: { ko: string; romanization: string; gloss?: string }) =>
     item.gloss === undefined ? `Coreano: ${item.ko}, ${item.romanization}` : `Coreano: ${item.ko}, ${item.romanization}, ${item.gloss}`,

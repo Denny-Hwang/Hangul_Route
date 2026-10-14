@@ -292,6 +292,34 @@ describe('WriteFrameRoundSchema', () => {
     expect(ok(WriteFrameRoundSchema, { id: 'r', frame: two, slots: [{ id: 'a' }, { id: 'b' }], entry: 'type', freeEntry: true })).toBe(false);
     expect(WriteFrameRoundSchema.parse({ id: 'r', frame, slots: [{ id: 'what', bank }], entry: 'type' }).freeEntry).toBe(false);
   });
+
+  it('a free-entry round may carry a sound table of whole blocks and finals (row G-5)', () => {
+    const name = kt('제 이름은 ___이에요/예요', 'je ireumeun ___ieyo/yeyo', 'my name is ___');
+    const base = { id: 'r', frame: name, slots: [{ id: 'name' }], entry: 'type', freeEntry: true };
+    const soundTable = {
+      groups: [
+        [{ ko: '아', romanization: 'a' }, { ko: '오', romanization: 'o' }],
+        [{ ko: '마', romanization: 'ma' }],
+      ],
+      finals: [{ ko: 'ㄴ', romanization: 'n' }, { ko: 'ㅇ', romanization: 'ng' }],
+    };
+    expect(ok(WriteFrameRoundSchema, { ...base, soundTable })).toBe(true);
+    expect(ok(WriteFrameRoundSchema, { ...base, soundTable: { ...soundTable, finals: [] } })).toBe(true);
+    // A block tile is one whole syllable; a final tile is a letter that can close a block.
+    expect(ok(WriteFrameRoundSchema, { ...base, soundTable: { ...soundTable, groups: [[{ ko: '마나', romanization: 'mana' }]] } })).toBe(false);
+    expect(ok(WriteFrameRoundSchema, { ...base, soundTable: { ...soundTable, groups: [[{ ko: 'ㅁ', romanization: 'm' }]] } })).toBe(false);
+    expect(ok(WriteFrameRoundSchema, { ...base, soundTable: { ...soundTable, finals: [{ ko: 'ㄸ', romanization: 'tt' }] } })).toBe(false);
+    expect(ok(WriteFrameRoundSchema, { ...base, soundTable: { ...soundTable, finals: [{ ko: '안', romanization: 'an' }] } })).toBe(false);
+    // A double final is two keys; the tile sends one.
+    expect(ok(WriteFrameRoundSchema, { ...base, soundTable: { ...soundTable, finals: [{ ko: 'ㄳ', romanization: 'k' }] } })).toBe(false);
+    expect(ok(WriteFrameRoundSchema, { ...base, soundTable: { ...soundTable, finals: [{ ko: 'ㄺ', romanization: 'k' }] } })).toBe(false);
+    // Every tile once, across the groups and the finals.
+    const twice = { ...soundTable, groups: [...soundTable.groups, [soundTable.groups[0]![0]!]] };
+    expect(ok(WriteFrameRoundSchema, { ...base, soundTable: twice })).toBe(false);
+    expect(ok(WriteFrameRoundSchema, { ...base, soundTable: { groups: [], finals: [] } })).toBe(false);
+    // Only the free-entry round has one.
+    expect(ok(WriteFrameRoundSchema, { id: 'r', frame, slots: [{ id: 'what', bank }], entry: 'type', soundTable })).toBe(false);
+  });
 });
 
 describe('Trace a Word mode (row G-4, §9 assumption 3)', () => {

@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { ALLOMORPH_PAIRS, allomorph, slotEndingIssues } from '../hangul/allomorph';
+import { isOneKeyFinal } from '../hangul/compose-typed';
 import { KoTextSchema, PictureRefSchema } from './ko-text';
 
 /**
@@ -383,6 +384,43 @@ export const TraceWordRoundSchema = z.object({
 });
 export type TraceWordRound = z.infer<typeof TraceWordRoundSchema>;
 
+/** One tile of the name round's sound table: a whole syllable block, or a final letter (F-CURR-001 §3.7, row G-5). */
+const SoundTileSchema = z.object({ ko: z.string().min(1), romanization: z.string().trim().min(1).max(12) });
+
+/**
+ * The short sound table of the free-entry name round (Write Your Name q3, design/wireframes/minigame/write-frame.md):
+ * groups of whole syllable blocks, each tile adding its block to the name, and the "at the end" letters, each adding
+ * a final to the last block. The content (which sounds) is row S7-1's; the shape is G-5's.
+ */
+export const SoundTableSchema = z.object({
+  groups: z
+    .array(
+      z
+        .array(SoundTileSchema.refine((t) => /^[가-힣]$/.test(t.ko), { message: 'a block tile is one Hangul syllable block', path: ['ko'] }))
+        .min(1)
+        .max(14),
+    )
+    .min(1)
+    .max(6),
+  finals: z
+    .array(
+      // One keyboard letter that can close a block: the tile sends that one key, so a double final (ㄳ, ㄺ) is two tiles' worth.
+      SoundTileSchema.refine((t) => isOneKeyFinal(t.ko), {
+        message: 'a final tile is one keyboard letter that can close a block',
+        path: ['ko'],
+      }),
+    )
+    .max(8),
+}).superRefine((table, ctx) => {
+  // Every tile once: a tile is named (and found) by its Korean.
+  const seen = new Set<string>();
+  [...table.groups.flat(), ...table.finals].forEach((t) => {
+    if (seen.has(t.ko)) ctx.addIssue({ code: z.ZodIssueCode.custom, message: `the sound table lists ${t.ko} twice` });
+    seen.add(t.ko);
+  });
+});
+export type SoundTable = z.infer<typeof SoundTableSchema>;
+
 /**
  * Write Frame: a frame with one or two slots (`___`, each written with its
  * particle or ending, e.g. `___을/를`, `___이에요/예요`, `___에`), a word bank per
@@ -400,6 +438,8 @@ export const WriteFrameRoundSchema = z
       .max(2),
     entry: z.enum(['type', 'trace', 'pick']),
     freeEntry: z.boolean().default(false),
+    /** The name round's Blocks tab; only a free-entry round has one. */
+    soundTable: SoundTableSchema.optional(),
   })
   .superRefine((round, ctx) => {
     const issue = (path: (string | number)[], message: string) =>
@@ -417,6 +457,7 @@ export const WriteFrameRoundSchema = z
       });
     });
     if (round.freeEntry && round.slots.length !== 1) issue(['slots'], 'a free-entry round has exactly one slot');
+    if (!round.freeEntry && round.soundTable !== undefined) issue(['soundTable'], 'only a free-entry round has a sound table');
     // Each slot is followed by a known pair, a single form or nothing, and every bank word is
     // Hangul syllables (above), so `fillFrame` fills every pick as correct Korean: the form of a
     // pair is chosen from the pick's last syllable (a test fills every bank word of a sound frame).

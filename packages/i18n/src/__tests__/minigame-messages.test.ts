@@ -29,7 +29,9 @@ describe('learner.minigame shell (English wording as shipped)', () => {
   });
 
   it('never uses age words, failure language or emoji', () => {
-    expect(JSON.stringify(g)).not.toMatch(NO_AGE_OR_FAILURE);
+    // Write Frame's "There is no wrong way to write your name." is the one approved use (checked in its own block below).
+    const shell = { ...g, writeFrame: { ...g.writeFrame, name: { ...g.writeFrame.name, noWrong: '' } } };
+    expect(JSON.stringify(shell)).not.toMatch(NO_AGE_OR_FAILURE);
   });
 });
 
@@ -461,5 +463,49 @@ describe('Type Hangul and the Hangul keyboard (F-CURR-001 G-3, English wording)'
       expect(JSON.stringify(msgs.learner.minigame.typeHangul)).not.toMatch(NO_AGE_OR_FAILURE);
       expect(msgs.a11y.minigame.keyboard.different(1)).not.toMatch(NO_AGE_OR_FAILURE);
     }
+  });
+});
+
+describe('Write Frame and My page (F-CURR-001 G-5, English wording)', () => {
+  const w = m.learner.minigame.writeFrame;
+  const a = m.a11y.minigame.writeFrame;
+
+  it('keeps the wireframe wording', () => {
+    expect([w.heading, w.pick, w.changeWord.cta, w.sentenceDone]).toEqual([
+      'Make your own sentence',
+      'Pick a word. Any word works.',
+      'Change word',
+      'You wrote a sentence!',
+    ]);
+    expect(w.myPage).toEqual({ title: 'My page', notKept: 'This page is just for now. It is not saved.' });
+    expect(w.name).toEqual({
+      heading: 'Write your name in Hangul',
+      noWrong: 'There is no wrong way to write your name.',
+      tabs: { blocks: 'Blocks', keyboard: 'Keyboard' },
+      sounds: 'Sounds',
+      atTheEnd: 'At the end',
+      longest: 'That is the longest name that fits here.',
+      finishBlock: 'Finish the last block.',
+    });
+  });
+
+  it('reads the frame, the fitted ending and a tile', () => {
+    expect([a.blank, a.either('을', '를'), a.particleFits('를', '떡볶이'), a.tile('마', 'ma')]).toEqual(['blank', '을 or 를', '를 after 떡볶이', '마, ma']);
+  });
+
+  it('every locale has every key, with no age word, failure word or emoji, and never attaches a Korean particle to a variable', () => {
+    for (const locale of LOCALES) {
+      const msgs = getMessages(locale);
+      for (const path of leafPaths(m.learner.minigame.writeFrame)) {
+        expect(typeof lookup(msgs.learner.minigame.writeFrame, path), `${locale}:${path}`).toBe('string');
+      }
+      // "There is no wrong way to write your name." is the one approved use of the word (spec §3.7, wireframe D-3).
+      const { noWrong, ...nameRest } = msgs.learner.minigame.writeFrame.name;
+      expect(JSON.stringify({ ...msgs.learner.minigame.writeFrame, name: nameRest })).not.toMatch(NO_AGE_OR_FAILURE);
+      expect(noWrong).not.toMatch(/\b(kids?|child(ren)?|ages?|fail\w*)\b|\p{Extended_Pictographic}/iu);
+      // The page is not kept: no locale may promise a save or a share.
+      expect(msgs.learner.minigame.writeFrame.myPage.notKept).not.toMatch(/\b(share|compart)/i);
+    }
+    expect(getMessages('ko').a11y.minigame.writeFrame.particleFits('를', '떡볶이')).toBe('떡볶이 다음: 를');
   });
 });

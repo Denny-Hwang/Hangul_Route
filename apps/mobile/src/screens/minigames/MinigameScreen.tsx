@@ -32,6 +32,7 @@ import { TraceStrokeGame } from './TraceStrokeGame';
 import { TraceWordGame } from './TraceWordGame';
 import { TypeHangulGame } from './TypeHangulGame';
 import { VoiceEchoGame } from './VoiceEchoGame';
+import { WriteFrameGame } from './WriteFrameGame';
 
 /**
  * The learner stack passes `route` and `navigation`; another host (All lessons, F-BROWSE-001 §4.7)
@@ -46,9 +47,14 @@ type Props = {
    * `null`, or no learner stack, draws no button.
    */
   onOpenCultureNote?: ((noteId: string) => void) | null;
+  /**
+   * The grown-up preview (All lessons, F-BROWSE-001) hosts the game: the games keep their quest or
+   * Check host mode, and Write Frame opens its name round on the cast name (F-CURR-001 §3.7).
+   */
+  inPreview?: boolean;
 } & ScreenExitProps;
 
-export function MinigameScreen({ route, navigation, onOpenCultureNote, ...exitProps }: Props): React.ReactElement {
+export function MinigameScreen({ route, navigation, onOpenCultureNote, inPreview = false, ...exitProps }: Props): React.ReactElement {
   const { questId, stepIndex } = route.params;
   const quest = questById(questId);
   const step = quest?.steps[stepIndex];
@@ -144,6 +150,8 @@ export function MinigameScreen({ route, navigation, onOpenCultureNote, ...exitPr
       return <TypeHangulGame scope={scope} host={host} onBack={exits.back} />;
     case 'trace-word':
       return <TraceWordGame scope={scope} host={host} onBack={exits.back} />;
+    case 'write-frame':
+      return <WriteFrameGame scope={scope} host={host} onBack={exits.back} inPreview={inPreview} />;
     default:
       return fallback(copy.comingSoon);
   }
