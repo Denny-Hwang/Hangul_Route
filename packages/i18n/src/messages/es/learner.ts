@@ -983,6 +983,10 @@ export const learner = {
       picWordMatch: 'Une una imagen con su palabra',
       storyRead: 'Lee una historia',
       traceStroke: 'Traza una letra',
+      realiaRead: 'Lee un menú, un letrero o un boleto',
+      typeHangul: 'Teclea en hangul',
+      traceWord: 'Traza una palabra',
+      writeFrame: 'Completa tu propia oración',
     },
     legend: {
       title: 'Qué significan las formas',

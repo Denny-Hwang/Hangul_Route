@@ -33,6 +33,11 @@ export const SKILL_OF_KIND: Readonly<Record<MinigameKind, readonly Skill[]>> = {
   // Enum only, no renderer.
   'tap-rhythm': [],
   'order-it': [],
+  // F-CURR-001 §3.11 (row C-1): reading real-world texts, and writing by typing, tracing and sentence frames.
+  'realia-read': ['read'],
+  'type-hangul': ['write'],
+  'trace-word': ['write'],
+  'write-frame': ['write'],
 };
 
 export const TILE_KINDS: ReadonlySet<MinigameKind> = new Set<MinigameKind>(['build-letter', 'syllable-build']);

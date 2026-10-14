@@ -101,7 +101,7 @@ export const VerificationSchema = z
   .object({
     passes: z.number().int().min(0).max(9),
     checkedAt: IsoDateSchema,
-    scope: z.enum(['story', 'cluster']).default('story'),
+    scope: z.enum(['story', 'cluster', 'lesson']).default('story'), // 'lesson': F-CURR-001 §3.9 (additive)
     notes: z.string().trim().min(1).max(3000),
   })
   .strict();
