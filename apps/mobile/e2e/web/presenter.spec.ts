@@ -579,8 +579,16 @@ test.describe('presenter on a 4:3 projector, 1024 x 768', () => {
     // 1024 x 768 minus the band: with one row of controls a 1024 x 648 box (unit 0.8, logical stage
     // 1280 x 810); where the labels are wider and the controls wrap, the band grows and the stage
     // takes the rest (D1), still at unit 0.8 and the full width.
-    const box = (await page.getByTestId('presenter-stage').boundingBox())!;
-    const band = (await page.getByRole('toolbar').locator('..').boundingBox())!;
+    // The band is measured after the first layout (`onBandHeight`): wait until the stage has settled into the rest.
+    const measure = async () => ({
+      box: (await page.getByTestId('presenter-stage').boundingBox())!,
+      band: (await page.getByRole('toolbar').locator('..').boundingBox())!,
+    });
+    await expect.poll(async () => {
+      const { box, band } = await measure();
+      return box.height + band.height;
+    }).toBe(768);
+    const { box, band } = await measure();
     expect(band.height).toBeGreaterThanOrEqual(120);
     expect(box.width).toBe(1024);
     expect(box.height).toBe(768 - band.height);

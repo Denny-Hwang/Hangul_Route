@@ -102,6 +102,28 @@ test.describe('presenter home, wide (two columns)', () => {
     await expect(page.getByRole('status')).toHaveText('1 chosen');
     await build.click();
     await expect(page.getByTestId('presenter-home')).toHaveCount(0);
+    await expect(page.getByTestId('presenter-start')).toBeVisible();
+    // The tab holds the built deck, as a link does: a reload reopens it, and the address stays /present.
+    await page.reload();
+    await expect(page.getByTestId('presenter-start')).toBeVisible();
+    expect(new URL(page.url()).pathname).toBe('/present');
+  });
+
+  test('Resume opens the start screen; after Exit the home has focus on its h1', async ({ page }) => {
+    await seedRecent(page, RECENT);
+    await page.getByTestId('presenter-recent-resume-lecture:week3abcde').click();
+    await expect(page.getByTestId('presenter-start')).toBeVisible();
+    await expect(page.getByTestId('presenter-start').getByText('Week 3 letters')).toBeVisible();
+    const start = page.getByTestId('presenter-start-button');
+    await expect(start).toBeEnabled({ timeout: 10_000 });
+    await start.click();
+    await expect(page.getByTestId('presenter-stage')).toBeVisible();
+    await page.keyboard.press('Escape');
+    await page.getByTestId('presenter-exit-confirm').click();
+    await expect(page.getByTestId('presenter-home-title')).toBeFocused();
+    // Start over opens the same deck again.
+    await page.getByTestId('presenter-recent-startover-lecture:week3abcde').click();
+    await expect(page.getByTestId('presenter-start').getByText('Week 3 letters')).toBeVisible();
   });
 
   test('language chips: one tab stop, arrows move and select, the device locale is not written', async ({ page }) => {
@@ -112,7 +134,10 @@ test.describe('presenter home, wide (two columns)', () => {
     await expect(english).toHaveAttribute('aria-checked', 'true');
     await english.focus();
     await page.keyboard.press('ArrowRight');
-    await expect(group.getByRole('radio', { name: 'Español' })).toHaveAttribute('aria-checked', 'true');
+    // The group's own name is now Spanish too, so it is found by its test id.
+    const chips = page.getByTestId('presenter-home-language');
+    await expect(chips.getByRole('radio', { name: 'Español' })).toHaveAttribute('aria-checked', 'true');
+    await expect(chips.getByRole('radio', { name: 'Español' })).toBeFocused();
     await expect(page.getByRole('heading', { level: 1, name: 'Proyección' })).toBeVisible();
     expect(await readStored(page, 'device:settings')).toBeNull();
   });
