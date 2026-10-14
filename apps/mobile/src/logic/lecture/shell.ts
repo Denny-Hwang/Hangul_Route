@@ -1,5 +1,4 @@
-import { decodeDeck, type ActivityPreset, type LectureDeck, type LectureDecodeFailure } from '@hangul-route/content-schema';
-import { decodeDeck, type LectureDeck, type LectureDecodeFailure, type UiLocale } from '@hangul-route/content-schema';
+import { decodeDeck, type ActivityPreset, type LectureDeck, type LectureDecodeFailure, type UiLocale } from '@hangul-route/content-schema';
 import type { AudioCapability } from '../audio/capability';
 import { canPlayKorean } from '../audio/capability';
 import type { KoLine, SlideKind } from './build-steps';

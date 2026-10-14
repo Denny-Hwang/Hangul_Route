@@ -1,7 +1,4 @@
 import { colors, presenter, supportedCardIds } from '@hangul-route/design-system';
-import { LOCALE_META, dictionaryLocale, getMessages, type UiLocale } from '@hangul-route/i18n';
-import type { LectureDeck } from '@hangul-route/content-schema';
-import { colors, presenter } from '@hangul-route/design-system';
 import { LOCALE_META, availableLocales, dictionaryLocale, getMessages, type UiLocale } from '@hangul-route/i18n';
 import { encodeDeck, type LectureDeck } from '@hangul-route/content-schema';
 import { StatusBar } from 'expo-status-bar';
