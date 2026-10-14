@@ -1,0 +1,1196 @@
+{
+  "id": "episode:stage7-letters",
+  "stage": "stage7",
+  "theme": "letters",
+  "status": "draft",
+  "titleEn": "Write Your Name",
+  "subtitleEn": "Write names in Hangul: Hoya's first, then your own.",
+  "hoyaIntroEn": "Names are fun to write. Let's write mine, then yours!",
+  "order": 1,
+  "pillarTags": [
+    "A1"
+  ],
+  "rewardCardIds": [],
+  "quests": [
+    {
+      "id": "quest:stage7-letters-q1",
+      "titleEn": "Hoya's Name",
+      "blurbEn": "Trace and type Hoya's name, and the word for name.",
+      "teaserEn": "Next: write your name in a whole sentence.",
+      "estimatedMinutes": 5,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "Hoya's Name",
+          "hoyaLineEn": "Let's write a name in Hangul. Mine first!",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "Name It",
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "pattern",
+                    "frame": {
+                      "ko": "이건 ___이에요/예요.",
+                      "romanization": "igeon ___ieyo/yeyo",
+                      "en": "This is ___."
+                    },
+                    "noteEn": "Use {ko:이에요} after a final consonant and {ko:예요} after a vowel.",
+                    "examples": [
+                      {
+                        "ko": "이건 이름이에요.",
+                        "romanization": "igeon ireumieyo",
+                        "en": "This is a name."
+                      },
+                      {
+                        "ko": "이건 한글이에요.",
+                        "romanization": "igeon hangeurieyo",
+                        "en": "This is Hangul."
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "Name a thing with this frame."
+              },
+              {
+                "items": [
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "이름",
+                      "romanization": "ireum",
+                      "en": "name"
+                    }
+                  },
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "호야",
+                      "romanization": "Hoya",
+                      "en": "Hoya"
+                    },
+                    "noteEn": "My name, in two blocks."
+                  }
+                ],
+                "captionEn": "A name is written block by block, like any word."
+              }
+            ]
+          },
+          "durationSeconds": 60
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Trace the Name",
+          "minigameKind": "trace-word",
+          "minigameRef": "minigame:s7-letters-q1-practice",
+          "durationSeconds": 90
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Type the Word",
+          "minigameKind": "type-hangul",
+          "minigameRef": "minigame:s7-letters-q1-apply",
+          "durationSeconds": 90
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Two Quick Ones",
+          "minigameKind": "order-it",
+          "minigameRef": "minigame:s7-letters-q1-check",
+          "durationSeconds": 40
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Name Writer!",
+          "hoyaLineEn": "You wrote my name in Hangul. Thank you!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s7-letters-q1-practice",
+          "kind": "trace-word",
+          "rounds": [
+            {
+              "id": "t1",
+              "word": {
+                "ko": "호야",
+                "romanization": "Hoya",
+                "en": "Hoya"
+              }
+            },
+            {
+              "id": "t2",
+              "word": {
+                "ko": "이름",
+                "romanization": "ireum",
+                "en": "name"
+              }
+            },
+            {
+              "id": "t3",
+              "word": {
+                "ko": "한글",
+                "romanization": "hangeul",
+                "en": "Hangul, the Korean alphabet"
+              }
+            },
+            {
+              "id": "t4",
+              "word": {
+                "ko": "책",
+                "romanization": "chaek",
+                "en": "book"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s7-letters-q1-apply",
+          "kind": "type-hangul",
+          "rounds": [
+            {
+              "id": "y1",
+              "promptEn": "Type Hoya's name.",
+              "target": {
+                "ko": "호야",
+                "romanization": "Hoya",
+                "en": "Hoya"
+              }
+            },
+            {
+              "id": "y2",
+              "promptEn": "Type the word for name.",
+              "target": {
+                "ko": "이름",
+                "romanization": "ireum",
+                "en": "name"
+              }
+            },
+            {
+              "id": "y3",
+              "promptEn": "Type the word for the Korean alphabet.",
+              "target": {
+                "ko": "한글",
+                "romanization": "hangeul",
+                "en": "Hangul, the Korean alphabet"
+              }
+            },
+            {
+              "id": "y4",
+              "promptEn": "Type: This is a name.",
+              "target": {
+                "ko": "이건 이름이에요",
+                "romanization": "igeon ireumieyo",
+                "en": "This is a name."
+              }
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s7-letters-q1-check",
+          "kind": "order-it",
+          "rounds": [
+            {
+              "id": "c1",
+              "sentence": {
+                "ko": "이건 이름이에요.",
+                "romanization": "igeon ireumieyo",
+                "en": "This is a name."
+              },
+              "distractors": [
+                {
+                  "ko": "책",
+                  "romanization": "chaek",
+                  "en": "book"
+                }
+              ]
+            },
+            {
+              "id": "c2",
+              "sentence": {
+                "ko": "이건 한글이에요.",
+                "romanization": "igeon hangeurieyo",
+                "en": "This is Hangul."
+              },
+              "distractors": [
+                {
+                  "ko": "이름",
+                  "romanization": "ireum",
+                  "en": "name"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "quest:stage7-letters-q2",
+      "titleEn": "My Name Is ...",
+      "blurbEn": "Write who you are in two polite ways.",
+      "teaserEn": "Next: write your own name in Hangul.",
+      "estimatedMinutes": 5,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "My Name Is ...",
+          "hoyaLineEn": "Let's tell who we are, in writing!",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "My Name",
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "pattern",
+                    "frame": {
+                      "ko": "제 이름은 ___이에요/예요.",
+                      "romanization": "je ireumeun ___ieyo/yeyo",
+                      "en": "My name is ___."
+                    },
+                    "noteEn": "{ko:제} means my, said politely. {ko:은} marks what you talk about.",
+                    "examples": [
+                      {
+                        "ko": "제 이름은 호야예요.",
+                        "romanization": "je ireumeun Hoyayeyo",
+                        "en": "My name is Hoya."
+                      },
+                      {
+                        "ko": "제 가방이에요.",
+                        "romanization": "je gabangieyo",
+                        "en": "It is my bag."
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "Put a name in the slot to tell what your name is."
+              },
+              {
+                "items": [
+                  {
+                    "type": "sentence",
+                    "sentence": {
+                      "ko": "저는 호야예요.",
+                      "romanization": "jeoneun Hoyayeyo",
+                      "en": "I am Hoya."
+                    }
+                  }
+                ],
+                "captionEn": "Another polite way to tell who you are."
+              }
+            ]
+          },
+          "durationSeconds": 65
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Build the Sentence",
+          "minigameKind": "order-it",
+          "minigameRef": "minigame:s7-letters-q2-practice",
+          "durationSeconds": 90
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Type the Sentence",
+          "minigameKind": "type-hangul",
+          "minigameRef": "minigame:s7-letters-q2-apply",
+          "durationSeconds": 85
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Two Quick Ones",
+          "minigameKind": "order-it",
+          "minigameRef": "minigame:s7-letters-q2-check",
+          "durationSeconds": 40
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Nice to Meet You!",
+          "hoyaLineEn": "You wrote who I am, two ways. Great writing!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s7-letters-q2-practice",
+          "kind": "order-it",
+          "rounds": [
+            {
+              "id": "r1",
+              "sentence": {
+                "ko": "제 이름은 호야예요.",
+                "romanization": "je ireumeun Hoyayeyo",
+                "en": "My name is Hoya."
+              },
+              "distractors": [
+                {
+                  "ko": "저는",
+                  "romanization": "jeoneun",
+                  "en": "I (polite)"
+                }
+              ]
+            },
+            {
+              "id": "r2",
+              "sentence": {
+                "ko": "저는 호야예요.",
+                "romanization": "jeoneun Hoyayeyo",
+                "en": "I am Hoya."
+              },
+              "distractors": [
+                {
+                  "ko": "이름은",
+                  "romanization": "ireumeun",
+                  "en": "the name (topic)"
+                }
+              ]
+            },
+            {
+              "id": "r3",
+              "sentence": {
+                "ko": "이건 제 책이에요.",
+                "romanization": "igeon je chaegieyo",
+                "en": "This is my book."
+              }
+            },
+            {
+              "id": "r4",
+              "sentence": {
+                "ko": "제 이름은 호야예요.",
+                "romanization": "je ireumeun Hoyayeyo",
+                "en": "My name is Hoya."
+              },
+              "particle": {
+                "tile": 1,
+                "choices": [
+                  {
+                    "ko": "은",
+                    "romanization": "eun",
+                    "en": "topic marker after a final consonant"
+                  },
+                  {
+                    "ko": "는",
+                    "romanization": "neun",
+                    "en": "topic marker after a vowel"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s7-letters-q2-apply",
+          "kind": "type-hangul",
+          "rounds": [
+            {
+              "id": "y1",
+              "promptEn": "Type: my name.",
+              "target": {
+                "ko": "제 이름",
+                "romanization": "je ireum",
+                "en": "my name"
+              }
+            },
+            {
+              "id": "y2",
+              "promptEn": "Type: I am Hoya.",
+              "target": {
+                "ko": "저는 호야예요",
+                "romanization": "jeoneun Hoyayeyo",
+                "en": "I am Hoya."
+              }
+            },
+            {
+              "id": "y3",
+              "promptEn": "Type: My name is Hoya.",
+              "target": {
+                "ko": "제 이름은 호야예요",
+                "romanization": "je ireumeun Hoyayeyo",
+                "en": "My name is Hoya."
+              }
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s7-letters-q2-check",
+          "kind": "order-it",
+          "rounds": [
+            {
+              "id": "c1",
+              "sentence": {
+                "ko": "제 이름은 호야예요.",
+                "romanization": "je ireumeun Hoyayeyo",
+                "en": "My name is Hoya."
+              },
+              "distractors": [
+                {
+                  "ko": "이건",
+                  "romanization": "igeon",
+                  "en": "this (topic)"
+                }
+              ]
+            },
+            {
+              "id": "c2",
+              "sentence": {
+                "ko": "저는 호야예요.",
+                "romanization": "jeoneun Hoyayeyo",
+                "en": "I am Hoya."
+              },
+              "distractors": [
+                {
+                  "ko": "제",
+                  "romanization": "je",
+                  "en": "my (polite)"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "quest:stage7-letters-q3",
+      "titleEn": "Your Name in Hangul",
+      "blurbEn": "Build the blocks of your own name from its sounds.",
+      "teaserEn": "You finished Write Your Name!",
+      "estimatedMinutes": 5,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "Your Name in Hangul",
+          "hoyaLineEn": "Now your name! There is no wrong way to write your name.",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "Sounds and Letters",
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "sentence",
+                    "sentence": {
+                      "ko": "제 이름은 호야예요.",
+                      "romanization": "je ireumeun Hoyayeyo",
+                      "en": "My name is Hoya."
+                    }
+                  }
+                ],
+                "captionEn": "Your own name goes where mine is."
+              },
+              {
+                "items": [
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "소리",
+                      "romanization": "sori",
+                      "en": "sound"
+                    }
+                  },
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "글자",
+                      "romanization": "geulja",
+                      "en": "letter, written character"
+                    }
+                  }
+                ],
+                "captionEn": "Think of the sounds in your name. Each sound gets a block."
+              }
+            ]
+          },
+          "durationSeconds": 60
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Trace the Words",
+          "minigameKind": "trace-word",
+          "minigameRef": "minigame:s7-letters-q3-practice",
+          "durationSeconds": 85
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Write Your Name",
+          "minigameKind": "write-frame",
+          "minigameRef": "minigame:s7-letters-q3-apply",
+          "durationSeconds": 100
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Two Quick Ones",
+          "minigameKind": "order-it",
+          "minigameRef": "minigame:s7-letters-q3-check",
+          "durationSeconds": 40
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Your Name!",
+          "hoyaLineEn": "You wrote your name in Hangul. It looks great!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s7-letters-q3-practice",
+          "kind": "trace-word",
+          "rounds": [
+            {
+              "id": "t1",
+              "word": {
+                "ko": "소리",
+                "romanization": "sori",
+                "en": "sound"
+              }
+            },
+            {
+              "id": "t2",
+              "word": {
+                "ko": "글자",
+                "romanization": "geulja",
+                "en": "letter, written character"
+              }
+            },
+            {
+              "id": "t3",
+              "word": {
+                "ko": "이름",
+                "romanization": "ireum",
+                "en": "name"
+              }
+            },
+            {
+              "id": "t4",
+              "word": {
+                "ko": "제",
+                "romanization": "je",
+                "en": "my (polite)"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s7-letters-q3-apply",
+          "kind": "write-frame",
+          "rounds": [
+            {
+              "id": "w1",
+              "frame": {
+                "ko": "이건 ___이에요/예요.",
+                "romanization": "igeon ___ieyo/yeyo",
+                "en": "This is ___."
+              },
+              "slots": [
+                {
+                  "id": "what",
+                  "bank": [
+                    {
+                      "ko": "한글",
+                      "romanization": "hangeul",
+                      "en": "Hangul, the Korean alphabet"
+                    },
+                    {
+                      "ko": "이름",
+                      "romanization": "ireum",
+                      "en": "name"
+                    },
+                    {
+                      "ko": "소리",
+                      "romanization": "sori",
+                      "en": "sound"
+                    },
+                    {
+                      "ko": "글자",
+                      "romanization": "geulja",
+                      "en": "letter, written character"
+                    }
+                  ]
+                }
+              ],
+              "entry": "type",
+              "freeEntry": false
+            },
+            {
+              "id": "w2",
+              "frame": {
+                "ko": "제 ___이에요/예요.",
+                "romanization": "je ___ieyo/yeyo",
+                "en": "It is my ___."
+              },
+              "slots": [
+                {
+                  "id": "what",
+                  "bank": [
+                    {
+                      "ko": "책",
+                      "romanization": "chaek",
+                      "en": "book"
+                    },
+                    {
+                      "ko": "가방",
+                      "romanization": "gabang",
+                      "en": "bag"
+                    },
+                    {
+                      "ko": "연필",
+                      "romanization": "yeonpil",
+                      "en": "pencil"
+                    }
+                  ]
+                }
+              ],
+              "entry": "trace",
+              "freeEntry": false
+            },
+            {
+              "id": "w3",
+              "frame": {
+                "ko": "제 이름은 ___이에요/예요.",
+                "romanization": "je ireumeun ___ieyo/yeyo",
+                "en": "My name is ___."
+              },
+              "slots": [
+                {
+                  "id": "name",
+                  "bank": []
+                }
+              ],
+              "entry": "type",
+              "freeEntry": true,
+              "soundTable": {
+                "groups": [
+                  [
+                    {
+                      "ko": "아",
+                      "romanization": "a",
+                      "en": "the block a"
+                    },
+                    {
+                      "ko": "에",
+                      "romanization": "e",
+                      "en": "the block e"
+                    },
+                    {
+                      "ko": "이",
+                      "romanization": "i",
+                      "en": "the block i"
+                    },
+                    {
+                      "ko": "오",
+                      "romanization": "o",
+                      "en": "the block o"
+                    },
+                    {
+                      "ko": "우",
+                      "romanization": "u",
+                      "en": "the block u"
+                    },
+                    {
+                      "ko": "어",
+                      "romanization": "eo",
+                      "en": "the block eo"
+                    },
+                    {
+                      "ko": "으",
+                      "romanization": "eu",
+                      "en": "the block eu"
+                    }
+                  ],
+                  [
+                    {
+                      "ko": "가",
+                      "romanization": "ga",
+                      "en": "the block ga"
+                    },
+                    {
+                      "ko": "나",
+                      "romanization": "na",
+                      "en": "the block na"
+                    },
+                    {
+                      "ko": "다",
+                      "romanization": "da",
+                      "en": "the block da"
+                    },
+                    {
+                      "ko": "라",
+                      "romanization": "ra",
+                      "en": "the block ra"
+                    },
+                    {
+                      "ko": "마",
+                      "romanization": "ma",
+                      "en": "the block ma"
+                    },
+                    {
+                      "ko": "바",
+                      "romanization": "ba",
+                      "en": "the block ba"
+                    },
+                    {
+                      "ko": "사",
+                      "romanization": "sa",
+                      "en": "the block sa"
+                    },
+                    {
+                      "ko": "자",
+                      "romanization": "ja",
+                      "en": "the block ja"
+                    },
+                    {
+                      "ko": "차",
+                      "romanization": "cha",
+                      "en": "the block cha"
+                    },
+                    {
+                      "ko": "카",
+                      "romanization": "ka",
+                      "en": "the block ka"
+                    },
+                    {
+                      "ko": "타",
+                      "romanization": "ta",
+                      "en": "the block ta"
+                    },
+                    {
+                      "ko": "파",
+                      "romanization": "pa",
+                      "en": "the block pa"
+                    },
+                    {
+                      "ko": "하",
+                      "romanization": "ha",
+                      "en": "the block ha"
+                    }
+                  ],
+                  [
+                    {
+                      "ko": "기",
+                      "romanization": "gi",
+                      "en": "the block gi"
+                    },
+                    {
+                      "ko": "니",
+                      "romanization": "ni",
+                      "en": "the block ni"
+                    },
+                    {
+                      "ko": "디",
+                      "romanization": "di",
+                      "en": "the block di"
+                    },
+                    {
+                      "ko": "리",
+                      "romanization": "ri",
+                      "en": "the block ri"
+                    },
+                    {
+                      "ko": "미",
+                      "romanization": "mi",
+                      "en": "the block mi"
+                    },
+                    {
+                      "ko": "비",
+                      "romanization": "bi",
+                      "en": "the block bi"
+                    },
+                    {
+                      "ko": "시",
+                      "romanization": "si",
+                      "en": "the block si"
+                    },
+                    {
+                      "ko": "지",
+                      "romanization": "ji",
+                      "en": "the block ji"
+                    },
+                    {
+                      "ko": "키",
+                      "romanization": "ki",
+                      "en": "the block ki"
+                    },
+                    {
+                      "ko": "티",
+                      "romanization": "ti",
+                      "en": "the block ti"
+                    },
+                    {
+                      "ko": "피",
+                      "romanization": "pi",
+                      "en": "the block pi"
+                    },
+                    {
+                      "ko": "히",
+                      "romanization": "hi",
+                      "en": "the block hi"
+                    }
+                  ],
+                  [
+                    {
+                      "ko": "고",
+                      "romanization": "go",
+                      "en": "the block go"
+                    },
+                    {
+                      "ko": "노",
+                      "romanization": "no",
+                      "en": "the block no"
+                    },
+                    {
+                      "ko": "도",
+                      "romanization": "do",
+                      "en": "the block do"
+                    },
+                    {
+                      "ko": "로",
+                      "romanization": "ro",
+                      "en": "the block ro"
+                    },
+                    {
+                      "ko": "모",
+                      "romanization": "mo",
+                      "en": "the block mo"
+                    },
+                    {
+                      "ko": "보",
+                      "romanization": "bo",
+                      "en": "the block bo"
+                    },
+                    {
+                      "ko": "소",
+                      "romanization": "so",
+                      "en": "the block so"
+                    },
+                    {
+                      "ko": "조",
+                      "romanization": "jo",
+                      "en": "the block jo"
+                    },
+                    {
+                      "ko": "코",
+                      "romanization": "ko",
+                      "en": "the block ko"
+                    },
+                    {
+                      "ko": "토",
+                      "romanization": "to",
+                      "en": "the block to"
+                    },
+                    {
+                      "ko": "포",
+                      "romanization": "po",
+                      "en": "the block po"
+                    },
+                    {
+                      "ko": "호",
+                      "romanization": "ho",
+                      "en": "the block ho"
+                    }
+                  ],
+                  [
+                    {
+                      "ko": "구",
+                      "romanization": "gu",
+                      "en": "the block gu"
+                    },
+                    {
+                      "ko": "누",
+                      "romanization": "nu",
+                      "en": "the block nu"
+                    },
+                    {
+                      "ko": "두",
+                      "romanization": "du",
+                      "en": "the block du"
+                    },
+                    {
+                      "ko": "루",
+                      "romanization": "ru",
+                      "en": "the block ru"
+                    },
+                    {
+                      "ko": "무",
+                      "romanization": "mu",
+                      "en": "the block mu"
+                    },
+                    {
+                      "ko": "부",
+                      "romanization": "bu",
+                      "en": "the block bu"
+                    },
+                    {
+                      "ko": "수",
+                      "romanization": "su",
+                      "en": "the block su"
+                    },
+                    {
+                      "ko": "주",
+                      "romanization": "ju",
+                      "en": "the block ju"
+                    },
+                    {
+                      "ko": "쿠",
+                      "romanization": "ku",
+                      "en": "the block ku"
+                    },
+                    {
+                      "ko": "투",
+                      "romanization": "tu",
+                      "en": "the block tu"
+                    },
+                    {
+                      "ko": "푸",
+                      "romanization": "pu",
+                      "en": "the block pu"
+                    },
+                    {
+                      "ko": "후",
+                      "romanization": "hu",
+                      "en": "the block hu"
+                    }
+                  ],
+                  [
+                    {
+                      "ko": "야",
+                      "romanization": "ya",
+                      "en": "the block ya"
+                    },
+                    {
+                      "ko": "여",
+                      "romanization": "yeo",
+                      "en": "the block yeo"
+                    },
+                    {
+                      "ko": "요",
+                      "romanization": "yo",
+                      "en": "the block yo"
+                    },
+                    {
+                      "ko": "유",
+                      "romanization": "yu",
+                      "en": "the block yu"
+                    },
+                    {
+                      "ko": "와",
+                      "romanization": "wa",
+                      "en": "the block wa"
+                    },
+                    {
+                      "ko": "워",
+                      "romanization": "wo",
+                      "en": "the block wo"
+                    },
+                    {
+                      "ko": "위",
+                      "romanization": "wi",
+                      "en": "the block wi"
+                    },
+                    {
+                      "ko": "네",
+                      "romanization": "ne",
+                      "en": "the block ne"
+                    },
+                    {
+                      "ko": "데",
+                      "romanization": "de",
+                      "en": "the block de"
+                    },
+                    {
+                      "ko": "레",
+                      "romanization": "re",
+                      "en": "the block re"
+                    },
+                    {
+                      "ko": "메",
+                      "romanization": "me",
+                      "en": "the block me"
+                    },
+                    {
+                      "ko": "세",
+                      "romanization": "se",
+                      "en": "the block se"
+                    },
+                    {
+                      "ko": "케",
+                      "romanization": "ke",
+                      "en": "the block ke"
+                    },
+                    {
+                      "ko": "테",
+                      "romanization": "te",
+                      "en": "the block te"
+                    }
+                  ]
+                ],
+                "finals": [
+                  {
+                    "ko": "ㄴ",
+                    "romanization": "n",
+                    "en": "final n"
+                  },
+                  {
+                    "ko": "ㄹ",
+                    "romanization": "l",
+                    "en": "final l"
+                  },
+                  {
+                    "ko": "ㅁ",
+                    "romanization": "m",
+                    "en": "final m"
+                  },
+                  {
+                    "ko": "ㅇ",
+                    "romanization": "ng",
+                    "en": "final ng"
+                  },
+                  {
+                    "ko": "ㄱ",
+                    "romanization": "k",
+                    "en": "final k"
+                  },
+                  {
+                    "ko": "ㅂ",
+                    "romanization": "p",
+                    "en": "final p"
+                  },
+                  {
+                    "ko": "ㅅ",
+                    "romanization": "t",
+                    "en": "final t"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s7-letters-q3-check",
+          "kind": "order-it",
+          "rounds": [
+            {
+              "id": "c1",
+              "sentence": {
+                "ko": "이건 제 이름이에요.",
+                "romanization": "igeon je ireumieyo",
+                "en": "This is my name."
+              },
+              "distractors": [
+                {
+                  "ko": "소리",
+                  "romanization": "sori",
+                  "en": "sound"
+                }
+              ]
+            },
+            {
+              "id": "c2",
+              "sentence": {
+                "ko": "이건 한글 글자예요.",
+                "romanization": "igeon hangeul geuljayeyo",
+                "en": "This is a Hangul letter."
+              },
+              "distractors": [
+                {
+                  "ko": "제",
+                  "romanization": "je",
+                  "en": "my (polite)"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "culture": [
+    {
+      "id": "n1",
+      "kind": "language",
+      "textEn": "Names from other languages are written with Hangul's own letters, so some sounds share one letter: f and p are both {ko:ㅍ}, and l and r are both {ko:ㄹ}.",
+      "sources": [
+        {
+          "title": "외래어 표기법, 제1장 표기의 원칙",
+          "publisher": "National Institute of Korean Language",
+          "url": "https://www.korean.go.kr/front/page/pageView.do?page_id=P000104&mn_id=97",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "Chapter 1, articles 1-5 (제1장 표기의 원칙): article 1, the current 24 letters only; article 3, the final letters allowed; article 5, settled spellings are kept."
+        },
+        {
+          "title": "외래어 표기법의 이해",
+          "publisher": "National Institute of Korean Language, 새국어소식 March 2002",
+          "url": "https://www.korean.go.kr/nkview/nknews/200203/44_4.html",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "Opening paragraphs: [p] and [f] are both spelled with ㅍ and [l] and [r] with ㄹ; the purpose of the rules is one agreed spelling for use in Korean, not teaching foreign pronunciation."
+        }
+      ],
+      "verification": {
+        "passes": 1,
+        "checkedAt": "2026-10-14",
+        "scope": "lesson",
+        "notes": "Pass 2 (author, 2026-10-14): each sentence checked against the cited locators; wording is the author's own, no run of words shared with a source."
+      }
+    },
+    {
+      "id": "n2",
+      "kind": "language",
+      "textEn": "The National Institute of Korean Language sets loanword spelling rules, yet one word is often written more than one way. A name can have more than one Hangul spelling.",
+      "sources": [
+        {
+          "title": "외래어 표기법, 제1장 표기의 원칙",
+          "publisher": "National Institute of Korean Language",
+          "url": "https://www.korean.go.kr/front/page/pageView.do?page_id=P000104&mn_id=97",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "Chapter 1, articles 1-5 (제1장 표기의 원칙): article 1, the current 24 letters only; article 3, the final letters allowed; article 5, settled spellings are kept."
+        },
+        {
+          "title": "외래어 표기의 변천과 실태",
+          "publisher": "National Institute of Korean Language, 새국어생활 1990 no. 4",
+          "url": "https://www.korean.go.kr/nkview/nklife/1990_4/23_10.html",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "Section on consonants, items (4)-(6): counts of one foreign word written in several Hangul spellings in actual use."
+        }
+      ],
+      "verification": {
+        "passes": 1,
+        "checkedAt": "2026-10-14",
+        "scope": "lesson",
+        "notes": "Pass 2 (author, 2026-10-14): each sentence checked against the cited locators; wording is the author's own, no run of words shared with a source."
+      }
+    }
+  ],
+  "review": {
+    "language": "draft",
+    "culture": "draft",
+    "notes": []
+  },
+  "contentVer": 1
+}
