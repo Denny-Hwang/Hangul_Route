@@ -17,7 +17,7 @@ export interface OnboardOptions {
   name: string;
   /** Visible label of the cub to pick; the form's default (Book Tiger) when omitted. */
   avatar?: TigerLabel;
-  /** The grown-up PIN a "My child or a student" learner creates. */
+  /** The grown-up PIN a "Someone I look after" learner creates. */
   pin?: string;
   /** Press "Start my journey" on the first-quest preview (default true). */
   startJourney?: boolean;
@@ -108,19 +108,39 @@ export function waitForSaved(page: Page, keys: string[]): Promise<unknown> {
   );
 }
 
-/** From the Welcome screen's "Let's start" to the first-quest preview, answering "My child or a student". */
-async function fillForm(page: Page, who: 'child' | 'self', o: OnboardOptions): Promise<void> {
-  await page.getByRole('radio', { name: who === 'child' ? /^My child or a student/ : /^Me\./ }).click();
+/** The "Who is learning?" cards (F-LEARN-001 §3.15.2): "Me", or someone a grown-up looks after. */
+export const WHO_SELF = /^Me\./;
+export const WHO_CHILD = /^Someone I look after/;
+
+/**
+ * Steps 1 and 2 of the setup (F-LEARN-001 §3.15): the answer, Continue, the name and cub,
+ * Continue. Leaves the form on the Privacy step (or on the created profile when the device
+ * already holds what the answer needs).
+ */
+export async function fillWhoAndProfile(page: Page, who: 'child' | 'self', o: Pick<OnboardOptions, 'name' | 'avatar' | 'readingLevel'>): Promise<void> {
+  await page.getByRole('radio', { name: who === 'child' ? WHO_CHILD : WHO_SELF }).click();
+  await page.getByRole('button', { name: 'Continue' }).click();
   await page.getByPlaceholder('Type a name').fill(o.name);
   if (o.avatar) await page.getByRole('radio', { name: o.avatar }).click();
   if (o.readingLevel) await page.getByRole('radio', { name: new RegExp(`^${o.readingLevel}`) }).click();
+  await page.getByRole('button', { name: 'Continue' }).click();
+}
+
+/** Step 3, Privacy: the grown-up PIN twice for someone looked after, then the box. Does not press Continue. */
+export async function agreeOnPrivacy(page: Page, who: 'child' | 'self', pin: string = E2E_PIN): Promise<void> {
+  await expect(page.getByRole('heading', { name: 'Privacy' })).toBeVisible();
   if (who === 'child') {
-    const pin = o.pin ?? E2E_PIN;
     await typeDigits(page, pin); // create
     await typeDigits(page, pin); // type it again
     await expect(page.getByText('PIN set')).toBeVisible();
   }
   await page.getByRole('checkbox').click();
+}
+
+/** From the Welcome screen's "Let's start" to the first-quest preview, through the three steps. */
+async function fillForm(page: Page, who: 'child' | 'self', o: OnboardOptions): Promise<void> {
+  await fillWhoAndProfile(page, who, o);
+  await agreeOnPrivacy(page, who, o.pin ?? E2E_PIN);
   await page.getByRole('button', { name: 'Continue' }).click();
   if (o.levelCheck === 'stop') {
     await expect(page.getByTestId('placement-invite')).toBeVisible();
@@ -139,13 +159,13 @@ async function finish(page: Page, who: 'child' | 'self', o: OnboardOptions): Pro
   await waitForSaved(page, ['profiles', ...(who === 'child' ? ['account:parentPinHash'] : [])]);
 }
 
-/** Continue from the Welcome screen: a child or student, grown-up PIN created in the form. */
+/** Continue from the Welcome screen: someone a grown-up looks after, grown-up PIN created on the Privacy step. */
 export async function completeChildForm(page: Page, o: OnboardOptions): Promise<void> {
   await fillForm(page, 'child', o);
   await finish(page, 'child', o);
 }
 
-/** Continue from the Welcome screen: a learner who is 13 or older, no PIN. */
+/** Continue from the Welcome screen: "Me", the "13 or older" box on the Privacy step, no PIN. */
 export async function completeSelfForm(page: Page, o: OnboardOptions): Promise<void> {
   await fillForm(page, 'self', o);
   await finish(page, 'self', o);
@@ -179,7 +199,7 @@ export async function keepSidewaysIfAsked(page: Page): Promise<void> {
   await waitForSaved(page, ['device:layout']);
 }
 
-/** Cold start to the first-quest preview (or Home with `startJourney: false` left out): "My child or a student", PIN `E2E_PIN`. */
+/** Cold start to the first-quest preview (or Home with `startJourney: false` left out): "Someone I look after", PIN `E2E_PIN`. */
 export async function onboardChild(page: Page, o: OnboardOptions): Promise<void> {
   await page.goto('/');
   await keepSidewaysIfAsked(page);

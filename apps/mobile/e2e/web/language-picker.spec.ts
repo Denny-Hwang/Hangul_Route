@@ -29,8 +29,10 @@ const ko = getMessages('ko').learner.language;
 /** Welcome to Home for one child profile (PIN 1234), then the Profile screen. */
 async function onboardAndOpenProfile(page: Page): Promise<string> {
   await page.getByRole('button', { name: "Let's start" }).click();
-  await page.getByRole('radio', { name: /^My child or a student/ }).click();
+  await page.getByRole('radio', { name: /^Someone I look after/ }).click();
+  await page.getByRole('button', { name: 'Continue' }).click();
   await page.getByPlaceholder('Type a name').fill('Dani');
+  await page.getByRole('button', { name: 'Continue' }).click();
   for (let round = 0; round < 2; round++) {
     for (const d of '1234') await page.getByRole('button', { name: `Digit ${d}`, exact: true }).click();
   }

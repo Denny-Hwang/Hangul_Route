@@ -12,6 +12,7 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'learner.language.confirmUse': [['English']],
   'learner.language.confirmBack': [['English']],
   'learner.createProfile.nameHint.tooLong': [[12]],
+  'learner.createProfile.step': [[1, 3], [2, 2]],
   'learner.firstQuest.summary': [[1, 1, 1], [3, 12, 2]],
   'learner.firstQuest.questLine': [['Title', null], ['Title', 'Blurb']],
   'learner.profile.switchTo': [['Suni']],

@@ -50,11 +50,90 @@ export const learner = {
     confirmBack: (endonym: string) => `Back to ${endonym}`,
   },
 
-  /** Only the strings that were not already owned by `logic/onboarding/create-profile-copy.ts` (F-I18N-001 PR 5 row). */
+  /**
+   * Create a profile, in three steps (F-LEARN-001 §3.2, §3.3, §3.15): Who is learning, the profile
+   * (name, reading level, cub) and Privacy. Step 1 names no age: the "13 or older" statement lives
+   * only in the Privacy step's checkbox. Level labels come from `LEARNER_LEVELS`, cub labels from `avatars`.
+   */
   createProfile: {
     nameHint: {
       tooLong: (max: number) => `Names can be up to ${max} letters.`,
       unsupportedCharacter: "Please use letters, numbers, spaces, ' or -.",
+    },
+    /** Above each step's heading. */
+    step: (n: number, total: number) => `Step ${n} of ${total}`,
+    title: 'Who is learning?',
+    /** The sub-lines say who sets the profile up, never an age. */
+    who: {
+      self: { label: 'Me', sub: "I'm setting this up for myself." },
+      child: { label: 'Someone I look after (a child or a student)', sub: "I'm a parent, guardian or teacher, setting it up for them." },
+      /** Under the cards after "I'm under 13": "Me" stays closed for this form (§3.15.3). */
+      latched: 'A grown-up finishes setting this up.',
+    },
+    /** Under the two cards. `plain` on a build where the level check is off. */
+    lessons: {
+      withCheck: "This doesn't change the lessons. The level check comes next and sets them.",
+      plain: "This doesn't change the lessons.",
+    },
+    /** Step 2, worded for the answer: first person for "Me", third for someone looked after. */
+    profile: {
+      self: { title: 'Your profile', nameLabel: 'Your name', levelHeading: 'How do you like to learn?' },
+      child: { title: 'Their profile', nameLabel: 'Their name', levelHeading: 'How do they like to learn?' },
+    },
+    namePlaceholder: 'Type a name',
+    levelHelper: 'You can change this any time in Profile.',
+    avatarHeading: 'Pick a Hoya',
+    /** Step 3. */
+    privacy: {
+      title: 'Privacy',
+      lessons: "Agreeing doesn't change the lessons.",
+      /** Under the "Me" card: hands the step to a grown-up, keeping name and cub. */
+      under13: "I'm under 13",
+      switchedNote: 'A grown-up finishes this step: they agree and create a PIN. The name and Hoya stay the same.',
+    },
+    guardian: {
+      heading: 'For a grown-up',
+      body: 'A parent, guardian or teacher sets up the account. We collect as little as possible and never show ads.',
+      pinHeading: 'Create a grown-up PIN',
+      agree: "I'm a parent or guardian of this learner (or I set it up for them) and I agree to the Privacy Policy.",
+    },
+    self: {
+      heading: 'Before you start',
+      body: 'We collect as little as possible and never show ads.',
+      pinRow: 'Protect settings with a PIN (optional)',
+      pinHeading: 'Create a PIN',
+      agree: "I'm 13 or older and I agree to the Privacy Policy.",
+    },
+    email: {
+      label: 'Email (optional)',
+      /** The email is saved on the device only (`account-store`); the backup never uses it, so the caption does not tie them. */
+      caption: 'Kept on this device. Learning and backup work without it.',
+      placeholder: 'name@email.com',
+      invalid: 'That email looks off. Check the spelling.',
+    },
+    pinFailed: "Couldn't set the PIN. Try again.",
+    privacyLink: 'Read the Privacy Policy',
+    /** The link's accessible name. */
+    privacyLinkName: 'Privacy Policy',
+    privacyFallback: 'Open hangulroute.com/privacy in a browser.',
+    ready: {
+      heading: 'Ready to go!',
+      /**
+       * With no sign-in, the app sends the name, level and cub the first time it saves the learner, then backs up the
+       * progress on start and after each change (F-SYNC-002). Shown on a build with cloud saving on.
+       */
+      line: 'Your name and choices are saved on this device and backed up to our servers. No sign-in needed.',
+      /** A build with cloud saving off (no API, or `flags.syncEnabled` off) backs nothing up, so it says only this. */
+      lineDeviceOnly: 'Your name and choices are saved on this device.',
+    },
+    cta: 'Continue',
+    /** The calm line under a disabled Continue, one per missing step (audit UX-27). */
+    missing: {
+      who: 'Choose who is learning',
+      name: 'Type a name',
+      agree: 'Tick the box to agree',
+      pin: 'Create the PIN',
+      email: 'Check the email, or leave it empty',
     },
   },
 
@@ -142,10 +221,20 @@ export const learner = {
     avatarHeading: 'Pick a Hoya',
     who: {
       heading: 'Who is learning?',
-      self: { label: 'Me', sub: "I'm 13 or older" },
-      child: { label: 'My child or a student', sub: 'A grown-up sets it up' },
+      self: { label: 'Me', sub: "I'm setting this up for myself." },
+      child: { label: 'Someone I look after (a child or a student)', sub: "I'm a parent, guardian or teacher, setting it up for them." },
+      /** Under the who row (F-LEARN-001 §3.15.6). */
+      lessons: "This doesn't change the lessons.",
     },
     self: { agree: "I'm 13 or older and I agree to the Privacy Policy." },
+    /** The block a change of who is learning brings (§3.15.6). */
+    privacy: {
+      heading: 'Privacy',
+      lessons: "Agreeing doesn't change the lessons.",
+      under13: "I'm under 13",
+      /** After "I'm under 13": the who row is back on the stored answer. */
+      kept: 'This profile stays with a grown-up.',
+    },
     guardian: {
       heading: 'For a grown-up',
       body: 'A parent, guardian or teacher sets up the account. We collect as little as possible and never show ads.',

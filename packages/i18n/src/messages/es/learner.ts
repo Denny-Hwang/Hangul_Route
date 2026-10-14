@@ -40,6 +40,69 @@ export const learner = {
       tooLong: (max: number) => `Los nombres pueden tener hasta ${max} letras.`,
       unsupportedCharacter: "Usa letras, números, espacios, ' o -.",
     },
+    step: (n: number, total: number) => `Paso ${n} de ${total}`,
+    title: '¿Quién aprende?',
+    who: {
+      self: { label: 'Yo', sub: 'Lo configuro para mí.' },
+      child: {
+        label: 'Alguien a quien cuido (un niño, una niña o un estudiante)',
+        sub: 'Soy madre, padre, tutor legal o docente, y lo configuro para esa persona.',
+      },
+      latched: 'Un adulto termina de configurarlo.',
+    },
+    lessons: {
+      withCheck: 'Esto no cambia las lecciones. Después viene la prueba de nivel, que las ajusta.',
+      plain: 'Esto no cambia las lecciones.',
+    },
+    profile: {
+      self: { title: 'Tu perfil', nameLabel: 'Tu nombre', levelHeading: '¿Cómo te gusta aprender?' },
+      child: { title: 'Su perfil', nameLabel: 'Su nombre', levelHeading: '¿Cómo le gusta aprender?' },
+    },
+    namePlaceholder: 'Escribe un nombre',
+    levelHelper: 'Puedes cambiarlo cuando quieras en Perfil.',
+    avatarHeading: 'Elige un Hoya',
+    privacy: {
+      title: 'Privacidad',
+      lessons: 'Aceptar no cambia las lecciones.',
+      under13: 'Tengo menos de 13 años',
+      switchedNote: 'Un adulto termina este paso: acepta y crea un PIN. El nombre y el Hoya no cambian.',
+    },
+    guardian: {
+      heading: 'Para un adulto',
+      body: 'La cuenta la configura una madre, un padre, un tutor legal o un docente. Pedimos lo mínimo y nunca mostramos anuncios.',
+      pinHeading: 'Crea un PIN de adultos',
+      agree: 'Soy madre, padre o tutor legal de esta persona (o configuro la cuenta en su nombre) y acepto la Política de privacidad.',
+    },
+    self: {
+      heading: 'Antes de empezar',
+      body: 'Pedimos lo mínimo y nunca mostramos anuncios.',
+      pinRow: 'Protege los ajustes con un PIN (opcional)',
+      pinHeading: 'Crea un PIN',
+      agree: 'Tengo 13 años o más y acepto la Política de privacidad.',
+    },
+    email: {
+      label: 'Correo (opcional)',
+      caption: 'Se guarda en este dispositivo. Puedes aprender y hacer copias de seguridad sin él.',
+      placeholder: 'nombre@correo.com',
+      invalid: 'Ese correo no parece correcto. Revisa cómo está escrito.',
+    },
+    pinFailed: 'No se pudo crear el PIN. Reintenta.',
+    privacyLink: 'Leer la Política de privacidad',
+    privacyLinkName: 'Política de privacidad',
+    privacyFallback: 'Abre hangulroute.com/privacy en un navegador.',
+    ready: {
+      heading: '¡Todo listo!',
+      line: 'Tu nombre y tus elecciones se guardan en este dispositivo y se respaldan en nuestros servidores. No hace falta iniciar sesión.',
+      lineDeviceOnly: 'Tu nombre y tus elecciones se guardan en este dispositivo.',
+    },
+    cta: 'Continuar',
+    missing: {
+      who: 'Elige quién aprende',
+      name: 'Escribe un nombre',
+      agree: 'Marca la casilla para aceptar',
+      pin: 'Crea el PIN',
+      email: 'Revisa el correo o déjalo vacío',
+    },
   },
 
   avatars: {
@@ -108,10 +171,20 @@ export const learner = {
     avatarHeading: 'Elige un Hoya',
     who: {
       heading: '¿Quién aprende?',
-      self: { label: 'Yo', sub: 'Tengo 13 años o más' },
-      child: { label: 'Mi hijo, hija o estudiante', sub: 'Lo configura un adulto' },
+      self: { label: 'Yo', sub: 'Lo configuro para mí.' },
+      child: {
+        label: 'Alguien a quien cuido (un niño, una niña o un estudiante)',
+        sub: 'Soy madre, padre, tutor legal o docente, y lo configuro para esa persona.',
+      },
+      lessons: 'Esto no cambia las lecciones.',
     },
     self: { agree: 'Tengo 13 años o más y acepto la Política de privacidad.' },
+    privacy: {
+      heading: 'Privacidad',
+      lessons: 'Aceptar no cambia las lecciones.',
+      under13: 'Tengo menos de 13 años',
+      kept: 'Este perfil sigue a cargo de un adulto.',
+    },
     guardian: {
       heading: 'Para un adulto',
       body: 'La cuenta la configura una madre, un padre, un tutor legal o un docente. Pedimos lo mínimo y nunca mostramos anuncios.',

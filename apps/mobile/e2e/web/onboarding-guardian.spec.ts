@@ -1,10 +1,10 @@
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { answerForkNew, E2E_PIN, onboardChild, openGrownUpZone, readStored, seedRescueCode, typeDigits, unlockWithPin } from './helpers';
+import { answerForkNew, E2E_PIN, WHO_CHILD, onboardChild, openGrownUpZone, readStored, seedRescueCode, typeDigits, unlockWithPin } from './helpers';
 
 /**
- * F-LEARN-001 §3.3, §3.4, §3.14: the "My child or a student" path. The
- * grown-up card collects the consent, an optional email and a PIN typed twice
+ * F-LEARN-001 §3.3, §3.4, §3.14, §3.15: the "Someone I look after" path. On
+ * the Privacy step (step 3) the grown-up card collects the consent, an optional email and a PIN typed twice
  * (a mismatch starts over, calmly); the PIN then guards the grown-up pages from
  * the first tap, and no setup screen is shown. Forgot PIN is PR 6.
  */
@@ -33,14 +33,26 @@ for (const vp of VIEWPORTS) {
       await captureOpenedLinks(page);
       await page.goto('/');
       await page.getByRole('button', { name: "Let's start" }).click();
-      await page.getByRole('radio', { name: /^My child or a student/ }).click();
+      await page.getByRole('radio', { name: WHO_CHILD }).click();
+      const next = page.getByRole('button', { name: 'Continue' });
+      await next.click();
 
+      // Step 2, worded for someone else.
+      await expect(page.getByText('Step 2 of 3')).toBeVisible();
+      await expect(page.getByRole('heading', { name: 'Their profile' })).toBeVisible();
       await expect(page.getByText('Their name', { exact: true })).toBeVisible();
       await expect(page.getByText('How do they like to learn?')).toBeVisible();
       await page.getByPlaceholder('Type a name').fill('수니');
-      const next = page.getByRole('button', { name: 'Continue' });
+      await next.click();
+
+      // Step 3, Privacy: the box comes first in the caption.
+      await expect(page.getByText('Step 3 of 3')).toBeVisible();
+      await expect(page.getByRole('heading', { name: 'Privacy' })).toBeVisible();
       await expect(next).toBeDisabled();
       await expect(page.getByText('Tick the box to agree')).toBeVisible();
+      await expect(page.getByText("Agreeing doesn't change the lessons.")).toBeAttached();
+      // The under-13 hand-over belongs to the "Me" path only.
+      await expect(page.getByRole('button', { name: "I'm under 13" })).toHaveCount(0);
 
       // The grown-up card: heading, the consent sentence, a policy link, and an optional email.
       await expect(page.getByText('For a grown-up')).toBeVisible();
@@ -86,6 +98,42 @@ for (const vp of VIEWPORTS) {
       await next.click();
       await answerForkNew(page);
       await expect(page.getByText('Your first card is waiting.')).toBeVisible();
+    });
+
+    test('family device: adding someone looked after is two steps, with no Privacy step (§3.15.1)', async ({ page }) => {
+      await onboardChild(page, { name: 'Mina' });
+      await page.goto('/');
+      await expect(page.getByText('Hi, Mina!')).toBeVisible();
+      // The install guide shows from the third cached open and covers the Home tabs.
+      const guide = page.getByTestId('install-guide');
+      await page.waitForTimeout(800);
+      if (await guide.isVisible()) await guide.getByRole('button', { name: 'Not now' }).click();
+      await page.getByRole('button', { name: 'Profile and settings' }).click();
+      const add = page.getByRole('button', { name: 'Add a profile (PIN required)' });
+      await add.scrollIntoViewIfNeeded();
+      await add.click();
+      await unlockWithPin(page, E2E_PIN);
+
+      await expect(page.getByRole('heading', { name: 'Who is learning?' })).toBeVisible();
+      await page.getByRole('radio', { name: WHO_CHILD }).click();
+      await expect(page.getByText('Step 1 of 2')).toBeVisible();
+      const next = page.getByRole('button', { name: 'Continue' });
+      await next.click();
+
+      // The device already holds the consent and the PIN: step 2 is the last one.
+      await expect(page.getByText('Step 2 of 2')).toBeVisible();
+      await expect(page.getByText('Ready to go!')).toBeVisible();
+      await expect(page.getByRole('heading', { name: 'Privacy' })).toHaveCount(0);
+      await expect(page.getByRole('checkbox')).toHaveCount(0);
+      await page.getByPlaceholder('Type a name').fill('Jun');
+      await next.click();
+
+      await expect.poll(async () => ((await readStored<Array<{ displayName: string }>>(page, 'profiles')) ?? []).map((p) => p.displayName)).toEqual([
+        'Mina',
+        'Jun',
+      ]);
+      const profiles = await readStored<Array<{ displayName: string; learnerType?: string }>>(page, 'profiles');
+      expect(profiles![1]).toMatchObject({ displayName: 'Jun', learnerType: 'child' });
     });
 
     test('the PIN made in the form guards the grown-up zone from the first tap, with no setup screen', async ({ page }) => {

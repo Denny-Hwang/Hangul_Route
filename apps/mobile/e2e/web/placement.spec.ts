@@ -211,7 +211,9 @@ test.describe('the level check end to end (release build, flag on by default)', 
     await page.getByRole('button', { name: en.caregiver.audience.gated(en.learner.profile.addProfileName, true) }).click();
     await unlockWithPin(page);
     // An added profile (no agreement box: the device already has one) goes through the same fork (section 3.10).
+    // Two setup steps here (F-LEARN-001 §3.15): the question, then the profile; no Privacy step.
     await page.getByRole('radio', { name: /^Me\./ }).click();
+    await page.getByRole('button', { name: 'Continue' }).click();
     await page.getByPlaceholder('Type a name').fill('Rae');
     await page.getByRole('button', { name: 'Continue' }).click();
     await expect(page.getByTestId('placement-invite')).toBeVisible();

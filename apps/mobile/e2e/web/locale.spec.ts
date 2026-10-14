@@ -206,10 +206,12 @@ async function smallControls(page: Page, screen: MatrixScreen): Promise<Array<{ 
  * ScrollView clips a too-wide child instead of widening the page), no small control beyond the listed ones
  * (and no listed one that has been fixed), and the primary CTA fully on screen once the learner scrolls to it.
  */
-async function checkScreen(page: Page, locale: MatrixLocale, screen: MatrixScreen, cta: Locator): Promise<void> {
+/** `part` names a step of a screen that has several (CreateProfile, F-LEARN-001 §3.15); the allow lists stay per screen. */
+async function checkScreen(page: Page, locale: MatrixLocale, screen: MatrixScreen, cta: Locator, part?: string): Promise<void> {
   const vp = page.viewportSize() ?? { width: 0, height: 0 };
   const width = vp.width;
-  const where = `${screen} in ${locale} at ${width}px`;
+  const name = part === undefined ? screen : `${screen}-${part}`;
+  const where = `${name} in ${locale} at ${width}px`;
   await expect(cta, `${where}: primary CTA`).toBeVisible();
   await expectNoHorizontalOverflow(page, `${where} scrolls sideways`);
   const small = await smallControls(page, screen);
@@ -223,7 +225,7 @@ async function checkScreen(page: Page, locale: MatrixLocale, screen: MatrixScree
     fixedButListed(screen, locale, matrixList, small.map((t) => t.key)),
     `${where}: no longer under ${TARGET_MIN}; remove these lines from fixtures/locale-matrix-allowlist.json`,
   ).toEqual([]);
-  await shot(page, `locale-${locale}-${width}-${screen}`);
+  await shot(page, `locale-${locale}-${width}-${name}`);
   await expectReachable(page, cta);
 }
 
@@ -258,15 +260,21 @@ async function walkMatrix(page: Page, locale: MatrixLocale): Promise<void> {
   await checkScreen(page, locale, 'Welcome', start);
   await start.click();
 
-  // CreateProfile, filled in: "My child or a student", a name, the grown-up PIN twice, consent.
-  await page.getByRole('radio', { name: prefixIn(locale, (m) => () => m.learner.editProfile.who.child.label) }).click();
-  await page.getByPlaceholder(n((m) => m.learner.editProfile.namePlaceholder)).fill('Dani');
+  // CreateProfile in its three steps (F-LEARN-001 §3.15): "Someone I look after", a name, then on
+  // the Privacy step the grown-up PIN twice and consent.
+  const cont = button((m) => m.learner.createProfile.cta);
+  // Steps 1 and 2 carry the longest new lines (the who cards and their sub-lines), so each is checked too.
+  await page.getByRole('radio', { name: prefixIn(locale, (m) => () => m.learner.createProfile.who.child.label) }).click();
+  await checkScreen(page, locale, 'CreateProfile', cont, 'who');
+  await cont.click();
+  await page.getByPlaceholder(n((m) => m.learner.createProfile.namePlaceholder)).fill('Dani');
+  await checkScreen(page, locale, 'CreateProfile', cont, 'profile');
+  await cont.click();
   for (let round = 0; round < 2; round += 1) {
     for (const d of [1, 2, 3, 4]) await button((m) => m.a11y.pinDigit(d)).click();
   }
   await expect(page.getByText(n((m) => m.caregiver.pin.setup.set))).toBeVisible();
   await page.getByRole('checkbox').click();
-  const cont = button((m) => m.learner.quest.continue.cta);
   await checkScreen(page, locale, 'CreateProfile', cont);
   await cont.click();
   // The level check's fork (F-PLC-001, on since P-10): "I am new to Korean" goes on to the first-quest preview.

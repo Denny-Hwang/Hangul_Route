@@ -1,7 +1,6 @@
 import { getMessages } from '@hangul-route/i18n';
 import { describe, expect, it } from 'vitest';
 import {
-  MISSING_STEP_CAPTION,
   formPlan,
   missingStep,
   nameHint,
@@ -120,12 +119,14 @@ describe('missingStep: what the disabled Continue names (UX-27)', () => {
     expect(missingStep({ ...base, ...device, email: 'nope' })).toBeNull();
   });
 
-  it('has the four captions the spec names, calm and in order', () => {
-    expect(MISSING_STEP_CAPTION.who).toBe('Choose who is learning');
-    expect(MISSING_STEP_CAPTION.name).toBe('Type a name');
-    expect(MISSING_STEP_CAPTION.agree).toBe('Tick the box to agree');
-    expect(MISSING_STEP_CAPTION.pin).toBe('Create the PIN');
-    expect(MISSING_STEP_CAPTION.email).toBe('Check the email, or leave it empty');
+  it('has the five captions the spec names, calm and in order (dictionary learner.createProfile.missing)', () => {
+    expect(getMessages('en').learner.createProfile.missing).toEqual({
+      who: 'Choose who is learning',
+      name: 'Type a name',
+      agree: 'Tick the box to agree',
+      pin: 'Create the PIN',
+      email: 'Check the email, or leave it empty',
+    });
   });
 });
 

@@ -34,6 +34,8 @@ const legal = en.landing.legal.privacy.sections;
 const ALLOWED: Readonly<Record<string, readonly string[]>> = {
   'caregiver.sync.status.deviceOnly': ['"on this device only"'],
   'caregiver.dashboard.privacy.bodyDeviceOnly': ['progress "saved on the device" with no word of the backup'],
+  // The create-profile form's ready line on a build with cloud saving off (F-LEARN-001 §3.2 item 6, `readyLine`).
+  'learner.createProfile.ready.lineDeviceOnly': ['progress "saved on the device" with no word of the backup'],
 };
 
 /** Every rendered output of every English message: strings, array items, and one output per SAMPLES row. */
