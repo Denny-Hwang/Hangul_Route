@@ -1,4 +1,4 @@
-import type { RomanizationMode, SpeechLang } from '@hangul-route/content-schema';
+import type { SpeechLang } from '@hangul-route/content-schema';
 import type { PlaySpec } from '../audio/controller';
 import type { AudioRunnerPlayOptions } from '../story/audio-runner';
 import { stepsForVoice } from '../story/reader-effects';
@@ -69,19 +69,6 @@ export function readToMePlan(slide: { kind: string; narration?: readonly Narrati
  */
 export function romShown(builds: readonly BuildName[], shown: ReadonlySet<BuildName>, base: BuildName): boolean {
   return builds.includes('rom') ? shown.has('rom') : shown.has(base);
-}
-
-/** A quiz option's romanization: at once by default, at the answer build with `tap` (section 3.4). */
-export function quizOptionRomShown(mode: RomanizationMode, shown: ReadonlySet<BuildName>): boolean {
-  return mode === 'tap' ? shown.has('answer') : true;
-}
-
-export const QUIZ_MARKERS = ['circle', 'triangle', 'square', 'star'] as const;
-export type QuizMarkerShape = (typeof QUIZ_MARKERS)[number];
-
-/** The marker of the option at `index`: circle 1, triangle 2, square 3, star 4 (section 3.4). */
-export function quizMarker(index: number): { shape: QuizMarkerShape; n: number } {
-  return { shape: QUIZ_MARKERS[index % QUIZ_MARKERS.length]!, n: index + 1 };
 }
 
 export type CheckPromptPart = { text: string } | { target: KoLine };
