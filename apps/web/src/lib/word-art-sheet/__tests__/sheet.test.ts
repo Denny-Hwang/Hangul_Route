@@ -20,6 +20,12 @@ describe('buildWordArtSheet (F-VOC-002 §3.10)', () => {
     expect(sheet.cards[1]!.shapes).toBe(2);
   });
 
+  it('marks a reserved key, and only that one', () => {
+    const swing: WordArtEntry = { glyph: apple.glyph, meta: { family: 'sport', status: 'approved', reserved: true } };
+    const sheet = buildWordArtSheet({ ...registry, 'sport-swing': swing }, catalog);
+    expect(sheet.cards.filter((c) => c.reserved).map((c) => c.key)).toEqual(['sport-swing']);
+  });
+
   it('reads the Korean word, romanization and gloss from the catalog entry whose visual is word:<key>', () => {
     const sheet = buildWordArtSheet(registry, catalog);
     expect(sheet.cards[0]!.words).toEqual([{ id: 'vocab:x', ko: '사과', romanization: 'sagwa', en: 'apple', topic: 'food' }]);

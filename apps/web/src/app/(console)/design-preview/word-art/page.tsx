@@ -114,7 +114,8 @@ function WordLines({ words }: { words: readonly SheetWord[] }): JSX.Element {
 
 function Words({ card }: { card: WordArtCard }): JSX.Element {
   if (card.words.length > 0) return <WordLines words={card.words} />;
-  return <p style={{ ...muted, margin: 0 }}>{card.family === 'prop' ? 'prop: drawn inside a colour swatch, not a vocabulary picture' : 'no vocabulary item yet'}</p>;
+  const note = card.family === 'prop' ? 'prop: drawn inside a colour swatch, not a vocabulary picture' : card.reserved ? 'reserved: used by no vocabulary topic' : 'no vocabulary item yet';
+  return <p style={{ ...muted, margin: 0 }}>{note}</p>;
 }
 
 function Cell({ children, label }: { children: JSX.Element; label: string }): JSX.Element {

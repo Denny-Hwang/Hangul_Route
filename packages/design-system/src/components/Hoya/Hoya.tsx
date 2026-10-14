@@ -8,9 +8,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import Svg, { Circle, Ellipse, G, Line, Path, Rect } from 'react-native-svg';
-import { hoyaFigure, type HoyaPart } from '../../scene-art/hoya';
-import { resolveColor } from '../../scene-art/tokens-map';
-import type { ColorToken } from '../../scene-art/types';
+import { hoyaFigure, hoyaPaintProps, type HoyaFur, type HoyaPart } from '../../scene-art/hoya';
 import { hoyaVariantColors } from '../../tokens';
 import type { HoyaPose, HoyaProps } from './types';
 
@@ -29,7 +27,7 @@ import type { HoyaPose, HoyaProps } from './types';
  *   - No sharp teeth, no narrowed angry eyes, no pure black anywhere.
  */
 
-type Fur = { fur: string; furDark: string };
+type Fur = HoyaFur;
 
 /** `hoyaFigure` is pure, so each pose's part tree is built once and reused across renders. */
 const figureCache = new Map<HoyaPose, readonly HoyaPart[]>();
@@ -42,28 +40,8 @@ function figureOf(pose: HoyaPose): readonly HoyaPart[] {
   return parts;
 }
 
-/** A token's colour, with the gold cub's fur pair swapped for the learner's variant. */
-function colorOf(token: ColorToken | 'none', fur: Fur): string {
-  if (token === 'none') return 'none';
-  if (token === 'hoya.fur') return fur.fur;
-  if (token === 'hoya.furDark') return fur.furDark;
-  return resolveColor(token);
-}
-
-/** The svg paint props a part sets, and only those. */
-function paintProps(part: HoyaPart, fur: Fur): Record<string, string | number> {
-  const props: Record<string, string | number> = {};
-  if (part.fill !== undefined) props.fill = colorOf(part.fill, fur);
-  if (part.stroke !== undefined) props.stroke = colorOf(part.stroke, fur);
-  if (part.strokeWidth !== undefined) props.strokeWidth = part.strokeWidth;
-  if (part.strokeLinecap !== undefined) props.strokeLinecap = part.strokeLinecap;
-  if (part.strokeLinejoin !== undefined) props.strokeLinejoin = part.strokeLinejoin;
-  if (part.opacity !== undefined) props.opacity = part.opacity;
-  return props;
-}
-
 function renderPart(part: HoyaPart, key: number, fur: Fur): React.ReactElement {
-  const paint = paintProps(part, fur);
+  const paint = hoyaPaintProps(part, fur);
   switch (part.t) {
     case 'group':
       return (

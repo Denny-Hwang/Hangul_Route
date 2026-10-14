@@ -34,6 +34,8 @@ export interface WordArtCard {
   bytes: number;
   /** Vocabulary items whose visual is `word:<key>`: one for a shipped word, none for a prop or a key whose topic is not merged. */
   words: SheetWord[];
+  /** `meta.reserved`: a key no vocabulary topic uses (a lesson picture outside the topics, F-VOC-002 §3.9). */
+  reserved: boolean;
 }
 
 export interface WordArtSheet {
@@ -76,7 +78,7 @@ export function buildWordArtSheet(registry: Readonly<Record<string, WordArtEntry
   }
   const familyOrder = (f: WordArtFamily): number => WORD_ART_FAMILIES.indexOf(f);
   const cards = Object.entries(registry)
-    .map(([key, { glyph, meta }]) => ({ key, family: meta.family, status: meta.status, glyph, shapes: glyph.length, bytes: glyphBytes(glyph), words: wordsByKey.get(key) ?? [] }))
+    .map(([key, { glyph, meta }]) => ({ key, family: meta.family, status: meta.status, glyph, shapes: glyph.length, bytes: glyphBytes(glyph), words: wordsByKey.get(key) ?? [], reserved: meta.reserved === true }))
     .sort((a, b) => familyOrder(a.family) - familyOrder(b.family));
   const byStatus: Record<WordArtStatus, number> = { draft: 0, review: 0, approved: 0 };
   const perFamily = new Map<WordArtFamily, number>();

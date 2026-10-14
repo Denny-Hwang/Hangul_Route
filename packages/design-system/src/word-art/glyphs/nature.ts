@@ -2,11 +2,14 @@
  * WordArt nature glyphs (F-VOC-002 §3.9, briefs in §3.12). PR W-1b draws the
  * sample `nature-cloud` (also the sky-blue swatch object, §3.6.1); batch W-3
  * draws `nature-flower` and W-5 the other seven. Keys are written without
- * the `word:` prefix.
+ * the `word:` prefix. `nature-sand` is a lesson picture for Stage 2
+ * Playground Words (F-CURR-001 S2-3), outside the vocabulary topics, so it is
+ * registered `reserved` (F-VOC-002 §3.9).
  */
 import { blob, circle, curve, drop, face, groundShadow, leaf, path, poly, pts, rect, star } from '../builders';
 import type { Pt } from '../builders';
 import type { WordArtGlyph, WordArtPaint, WordArtShape } from '../types';
+import { limb } from './pose';
 
 const INK = { s: 'text.primary', sw: 3 } as const;
 const DETAIL = { s: 'text.primary', sw: 2 } as const;
@@ -169,5 +172,16 @@ export const NATURE_GLYPHS: Readonly<Record<string, WordArtGlyph>> = {
     curve(pts(55, 47, 58, 45, 61, 47), { s: 'surface.paper', sw: 2 }),
     circle(30, 30, 6, { f: 'vocab.green', ...DETAIL }),
     circle(74, 70, 7, { f: 'vocab.green', ...DETAIL }),
+  ],
+
+  // a mound of pale sand with grains, a spade dug into it and a red bucket beside it
+  'nature-sand': [
+    groundShadow(50, 82, 36),
+    limb([62, 58], [68, 26], 5, { f: 'vocab.blue', ...DETAIL }),
+    limb([62, 24], [74, 24], 5, { f: 'vocab.blue', ...DETAIL }),
+    path('M 14 80 Q 22 58 40 52 Q 56 46 70 56 Q 84 64 88 80 Z', { f: 'feedback.nudgeLight', ...INK }),
+    ...pts(30, 70, 40, 62, 48, 72, 62, 70, 74, 74, 36, 76).map(([x, y]) => circle(x, y, 1.5, { f: 'stage.stage2' })),
+    path('M 16 64 H 34 L 31 84 H 19 Z', { f: 'vocab.red', ...INK }),
+    path('M 18 64 Q 25 54 32 64', DETAIL),
   ],
 };

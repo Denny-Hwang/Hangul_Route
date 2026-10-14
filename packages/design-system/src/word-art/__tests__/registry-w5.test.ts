@@ -18,7 +18,8 @@ describe('batch W-5 (§3.12)', () => {
   });
 
   it('completes the family, school and nature families with the earlier samples', () => {
-    const of = (f: string) => WORD_ART_KEYS.filter((k) => k.startsWith(`${f}-`)).sort();
+    // the reserved lesson pictures (registry-lessons.test.ts) are not part of the batch
+    const of = (f: string) => WORD_ART_KEYS.filter((k) => k.startsWith(`${f}-`) && WORD_ART[k]!.meta.reserved !== true).sort();
     expect(of('family')).toEqual([...W5_FAMILY].sort());
     expect(of('school')).toEqual(['school-chair', ...W5_SCHOOL].sort());
     expect(of('nature')).toEqual(['nature-cloud', 'nature-flower', ...W5_NATURE].sort());
