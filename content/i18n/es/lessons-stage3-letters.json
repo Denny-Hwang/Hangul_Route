@@ -47,7 +47,7 @@
       "steps.s2.discover.pages.1.items.1.sentence.gloss": "No hay lápiz.",
       "steps.s2.discover.pages.0.items.0.frame.gloss": "Hay ___.",
       "steps.s2.discover.pages.0.items.0.examples.chaegi-isseoyo.gloss": "Hay un libro.",
-      "steps.s2.discover.pages.0.items.0.examples.chinguga-isseoyo.gloss": "Tengo un amigo."
+      "steps.s2.discover.pages.0.items.0.examples.chinguga-isseoyo.gloss": "Tengo un amigo o una amiga."
     },
     "quest:stage3-letters-q3": {
       "title": "Esto es hangul",
@@ -91,11 +91,11 @@
     },
     "minigame:s3-letters-q1-check": {
       "listenPick.rounds.c1.prompt": "Sí, es una mochila.",
-      "listenPick.rounds.c2.prompt": "Es una escuela."
+      "listenPick.rounds.c2.prompt": "Sí, es un libro."
     },
     "minigame:s3-letters-q2-practice": {
       "orderIt.rounds.r1.sentence.gloss": "Hay un libro.",
-      "orderIt.rounds.r2.sentence.gloss": "Tengo un amigo.",
+      "orderIt.rounds.r2.sentence.gloss": "Tengo un amigo o una amiga.",
       "orderIt.rounds.r3.sentence.gloss": "Hay un lápiz.",
       "orderIt.rounds.r4.sentence.gloss": "Hay una mochila.",
       "orderIt.rounds.r5.sentence.gloss": "Sí, hay un libro.",
@@ -109,7 +109,7 @@
       "orderIt.rounds.r4.particle.choices.ga.gloss": "marca de sujeto (después de una vocal)"
     },
     "minigame:s3-letters-q2-apply": {
-      "listenPick.rounds.a1.prompt": "Tengo un amigo.",
+      "listenPick.rounds.a1.prompt": "Tengo un amigo o una amiga.",
       "listenPick.rounds.a2.prompt": "Hay un lápiz.",
       "listenPick.rounds.a3.prompt": "Hay un libro.",
       "listenPick.rounds.a4.prompt": "Sí, hay un lápiz."
@@ -125,7 +125,7 @@
       "orderIt.rounds.r4.sentence.gloss": "Esto es una mochila.",
       "orderIt.rounds.r5.sentence.gloss": "Sí, esto es un lápiz.",
       "orderIt.rounds.r1.distractors.isseoyo.gloss": "hay",
-      "orderIt.rounds.r5.distractors.chinguga.gloss": "amigo (como sujeto)",
+      "orderIt.rounds.r5.distractors.chinguga.gloss": "amigo o amiga (como sujeto)",
       "orderIt.rounds.r2.particle.choices.ieyo.gloss": "es (después de una consonante final)",
       "orderIt.rounds.r2.particle.choices.yeyo.gloss": "es (después de una vocal)",
       "orderIt.rounds.r3.particle.choices.ieyo.gloss": "es (después de una consonante final)",

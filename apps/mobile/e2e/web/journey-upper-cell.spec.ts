@@ -94,7 +94,7 @@ const CELLS: readonly UpperCell[] = [
       await build(page, 5, 5, ['이에요, ieyo']);
       await page.getByRole('button', { name: 'Play minigame' }).click();
       await pickByIds(page, ['school-bag', 'school-school', 'book', 'school-school']);
-      await playCheckByIds(page, [{ answer: 'school-bag' }, { answer: 'b' }]);
+      await playCheckByIds(page, [{ answer: 'school-bag' }, { answer: 'a' }]);
       await expect(page.getByText('Finish', { exact: true }).first()).toBeVisible();
     },
     expectRouteDay: async (page) => {

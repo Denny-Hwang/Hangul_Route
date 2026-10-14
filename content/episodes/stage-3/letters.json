@@ -374,37 +374,37 @@
             {
               "id": "c2",
               "prompt": {
-                "ko": "학교예요.",
-                "romanization": "hakgyoyeyo",
-                "en": "It is a school."
+                "ko": "네, 책이에요.",
+                "romanization": "ne chaegieyo",
+                "en": "Yes, it is a book."
               },
               "options": [
                 {
                   "id": "a",
                   "text": {
-                    "ko": "책이에요.",
-                    "romanization": "chaegieyo",
-                    "en": "It is a book."
+                    "ko": "네, 책이에요.",
+                    "romanization": "ne chaegieyo",
+                    "en": "Yes, it is a book."
                   }
                 },
                 {
                   "id": "b",
                   "text": {
-                    "ko": "학교예요.",
-                    "romanization": "hakgyoyeyo",
-                    "en": "It is a school."
+                    "ko": "네, 학교예요.",
+                    "romanization": "ne hakgyoyeyo",
+                    "en": "Yes, it is a school."
                   }
                 },
                 {
                   "id": "c",
                   "text": {
-                    "ko": "가방이에요.",
-                    "romanization": "gabangieyo",
-                    "en": "It is a bag."
+                    "ko": "네, 가방이에요.",
+                    "romanization": "ne gabangieyo",
+                    "en": "Yes, it is a bag."
                   }
                 }
               ],
-              "answerId": "b"
+              "answerId": "a"
             }
           ]
         }
@@ -1295,7 +1295,7 @@
     {
       "id": "n4",
       "kind": "language",
-      "textEn": "{ko:저} is a humble, polite word for I, used with people you are not close to or want to show respect to; {ko:나} is the plain word for I among equals.",
+      "textEn": "{ko:저} is a humble, polite word for I, used with people senior to you or people you are not close to; {ko:나} is the plain word for I among equals.",
       "sources": [
         {
           "title": "저 (대명사)",
@@ -1316,7 +1316,7 @@
         "passes": 3,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): both entries fetched. The dictionary defines 저 as the first-person pronoun a speaker uses to lower themselves toward a senior or someone not close, and 나 as the one used toward an equal or a junior. The note says this in its own words, names no age range for the learner and copies no wording. Carried by: q3 Discover page 2 caption (a polite way to say who you are) and the 저는 호야예요 rounds.\nLine 2 (pass 2b, independent fact check, 2026-10-14): both entries re-fetched. 저 3 sense 1 is the first-person pronoun a speaker uses to lower themselves toward a senior or someone not very close; the note's 'people you are not close to or want to show respect to' matches. The entry for 나 is headword 나 3 (sense [I], pronoun), used toward an equal or a junior; the note's 'among equals' is a true subset. Locator fixed: the headword read 나 and now reads 나 3. No wording is copied; no age range is named. Outcome: pass, locator corrected.\nLine 3 (pass 5, MAR culture review, 2026-10-14): 저 3 sense 1 and 나 3 [I] re-fetched; the note matches both. Each half of the register claim rests on one entry of the same NIKL dictionary; the note has the two sources section 3.9 asks for and the cell accepts this. No wording copied; no age range named. Outcome: pass, no change."
+        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): both entries fetched. The dictionary defines 저 as the first-person pronoun a speaker uses to lower themselves toward a senior or someone not close, and 나 as the one used toward an equal or a junior. The note says this in its own words, names no age range for the learner and copies no wording. Carried by: q3 Discover page 2 caption (a polite way to say who you are) and the 저는 호야예요 rounds.\nLine 2 (pass 2b, independent fact check, 2026-10-14): both entries re-fetched. 저 3 sense 1 is the first-person pronoun a speaker uses to lower themselves toward a senior or someone not very close; the note's 'people you are not close to or want to show respect to' matches. The entry for 나 is headword 나 3 (sense [I], pronoun), used toward an equal or a junior; the note's 'among equals' is a true subset. Locator fixed: the headword read 나 and now reads 나 3. No wording is copied; no age range is named. Outcome: pass, locator corrected.\nLine 3 (pass 5, MAR culture review, 2026-10-14): 저 3 sense 1 and 나 3 [I] re-fetched; the note matches both. Each half of the register claim rests on one entry of the same NIKL dictionary; the note has the two sources section 3.9 asks for and the cell accepts this. No wording copied; no age range named. Outcome: pass, no change. Pass 6 adjudication (2026-10-14): wording narrowed to the source's 윗사람 (people senior to you) in place of 'want to show respect to'; still true to 저 3 「1」."
       }
     }
   ],
@@ -1326,8 +1326,8 @@
     "reviewedBy": "MAR",
     "reviewedAt": "2026-10-14",
     "notes": [
-      "Language pass 4 (MAR): 해요체, spacing, marks, spelling and 이에요/예요, 이/가 clean; applied: no 없어요 in a scored reading round (q2 a4, c2), no untaught vocative in q1 practice, Checks repeat no apply sentence, Hoya capitalised, ko titles, captions and 받침 labels, ko glosses as definitions (no echo), en/es wording.",
-      "Culture pass 5 (MAR): no culture claim (section 3.9); the four language notes re-checked against all nine cited NIKL and AKS pages, two or three sources each, nothing copied; no real person, brand or price; no age wording; Hoya is the cast name."
+      "Language pass 4 (MAR): 해요체, spacing, marks, 이에요/예요 and 이/가 clean; applied: no 없어요 in scored reading, Checks repeat no apply sentence (q1 c2), ko glosses as definitions matching stage 4, one ko term each for 네 and 이에요/예요, es friend wording without gender; 저는 is an unanalysed chunk until a later 은/는 cell.",
+      "Culture pass 5 (MAR): no culture claim (section 3.9); the four language notes re-checked against all nine cited NIKL and AKS pages, two or three sources each, nothing copied, n4 worded as the source's 윗사람; no real person, brand or price; no age wording; Hoya is the cast name."
     ]
   },
   "contentVer": 1

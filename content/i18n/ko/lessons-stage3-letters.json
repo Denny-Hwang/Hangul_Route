@@ -4,7 +4,7 @@
   "entries": {
     "episode:stage3-letters": {
       "title": "첫 문장",
-      "subtitle": "물건 이름과 있는 것, 내가 누구인지 알려 줘요.",
+      "subtitle": "무엇인지, 무엇이 있는지, 내가 누구인지 알려 주는 문장이에요.",
       "hoyaIntro": "이제 낱말을 읽을 수 있어요. 낱말을 이어서 문장을 만들어 봐요!"
     },
     "quest:stage3-letters-q1": {
@@ -19,18 +19,18 @@
       "steps.s6.title": "문장을 완성했어요!",
       "steps.s1.hoyaLine": "물건 이름을 완전한 문장으로 만들어 봐요!",
       "steps.s6.hoyaLine": "한국어로 완전한 문장을 만들었어요!",
-      "steps.s2.discover.pages.0.caption": "물건 이름 뒤에 문장을 끝맺는 말을 붙여요.",
-      "steps.s2.discover.pages.1.caption": "대답할 때는 앞에 그렇다는 말을 붙여요.",
+      "steps.s2.discover.pages.0.caption": "물건 이름 뒤에 무엇이라고 알려 주는 말끝을 붙여요.",
+      "steps.s2.discover.pages.1.caption": "대답할 때는 앞에 맞다는 말을 붙여요.",
       "steps.s2.discover.pages.0.items.0.note": "받침이 있는 말 뒤에는 {ko:이에요}, 받침이 없는 말 뒤에는 {ko:예요}를 써요.",
-      "steps.s2.discover.pages.1.items.0.sentence.gloss": "물건을 넣어 들거나 메는 것이라는 뜻",
-      "steps.s2.discover.pages.1.items.1.sentence.gloss": "맞다고 하며, 종이를 묶어 만든 읽을거리라는 뜻",
+      "steps.s2.discover.pages.1.items.0.sentence.gloss": "물건을 넣어 메는 것이라는 뜻",
+      "steps.s2.discover.pages.1.items.1.sentence.gloss": "맞다고 하며, 읽는 물건라는 뜻",
       "steps.s2.discover.pages.0.items.0.frame.gloss": "무엇인지 알려 주는 틀",
-      "steps.s2.discover.pages.0.items.0.examples.chaegieyo.gloss": "종이를 묶어 만든 읽을거리라는 뜻",
+      "steps.s2.discover.pages.0.items.0.examples.chaegieyo.gloss": "읽는 물건라는 뜻",
       "steps.s2.discover.pages.0.items.0.examples.hakgyoyeyo.gloss": "배우러 다니는 곳이라는 뜻"
     },
     "quest:stage3-letters-q2": {
       "title": "책이 있다는 문장",
-      "blurb": "무엇이 있고 무엇이 없는지 알려 줘요.",
+      "blurb": "무엇이 있고 무엇이 없는지 읽어요.",
       "teaser": "다음: 가까이 있는 물건을 가리켜 이름을 알려 줘요.",
       "steps.s1.title": "책이 있다는 문장",
       "steps.s2.title": "있는 것 알려 주기",
@@ -43,15 +43,15 @@
       "steps.s2.discover.pages.0.caption": "같은 말로 나에게 무엇이 있는지도 알려 줄 수 있어요.",
       "steps.s2.discover.pages.1.caption": "마지막 낱말을 바꾸면 없다는 뜻이 돼요.",
       "steps.s2.discover.pages.0.items.0.note": "받침이 있는 말 뒤에는 {ko:이}, 받침이 없는 말 뒤에는 {ko:가}를 써요.",
-      "steps.s2.discover.pages.1.items.0.sentence.gloss": "물건을 넣어 들거나 메는 것이 이곳에 존재한다는 뜻",
-      "steps.s2.discover.pages.1.items.1.sentence.gloss": "글씨를 쓰는 도구가 이곳에 존재하지 않는다는 뜻",
+      "steps.s2.discover.pages.1.items.0.sentence.gloss": "물건을 넣어 메는 것이 이곳에 존재한다는 뜻",
+      "steps.s2.discover.pages.1.items.1.sentence.gloss": "글씨 쓰는 도구가 이곳에 존재하지 않는다는 뜻",
       "steps.s2.discover.pages.0.items.0.frame.gloss": "무언가가 존재한다는 틀",
-      "steps.s2.discover.pages.0.items.0.examples.chaegi-isseoyo.gloss": "종이를 묶어 만든 읽을거리가 이곳에 존재한다는 뜻",
-      "steps.s2.discover.pages.0.items.0.examples.chinguga-isseoyo.gloss": "가깝게 지내는 사람을 두었다는 뜻"
+      "steps.s2.discover.pages.0.items.0.examples.chaegi-isseoyo.gloss": "읽는 물건가 이곳에 존재한다는 뜻",
+      "steps.s2.discover.pages.0.items.0.examples.chinguga-isseoyo.gloss": "가깝게 지내는 사람을 두고 있다는 뜻"
     },
     "quest:stage3-letters-q3": {
       "title": "한글을 가리키는 문장",
-      "blurb": "가까이 있는 물건을 가리켜 이름을 알려 주고, 내가 누구인지 알려 줘요.",
+      "blurb": "가까이 있는 물건을 가리켜 이름을 알려 주고, 나를 소개해 봐요.",
       "steps.s1.title": "한글을 가리키는 문장",
       "steps.s2.title": "가까운 것 가리키기",
       "steps.s3.title": "문장 만들기",
@@ -63,18 +63,18 @@
       "steps.s2.discover.pages.0.caption": "가까이 있는 물건을 가리키고 이름을 알려 줘요.",
       "steps.s2.discover.pages.1.caption": "내가 누구인지 공손하게 알려 주는 말이에요.",
       "steps.s2.discover.pages.0.items.0.note": "{ko:이건}은 {ko:이것은}을 줄인 말로, 가까이 있는 물건을 가리켜요.",
-      "steps.s2.discover.pages.1.items.0.sentence.gloss": "자신을 낮추어 이름을 밝힌다는 뜻",
+      "steps.s2.discover.pages.1.items.0.sentence.gloss": "자기 이름을 공손하게 밝힌다는 뜻",
       "steps.s2.discover.pages.0.items.0.frame.gloss": "가까이 있는 것이 무엇인지 알려 주는 틀",
-      "steps.s2.discover.pages.0.items.0.examples.igeon-chaegieyo.gloss": "가까이 있는 이것이 종이를 묶어 만든 읽을거리라는 뜻",
-      "steps.s2.discover.pages.0.items.0.examples.igeon-hangeurieyo.gloss": "가까이 있는 이것이 한국어를 적는 글자라는 뜻"
+      "steps.s2.discover.pages.0.items.0.examples.igeon-chaegieyo.gloss": "가까이 있는 것이 읽는 물건라는 뜻",
+      "steps.s2.discover.pages.0.items.0.examples.igeon-hangeurieyo.gloss": "가까이 있는 것이 한국어를 적는 글자라는 뜻"
     },
     "minigame:s3-letters-q1-practice": {
-      "orderIt.rounds.r1.sentence.gloss": "맞다고 하며, 종이를 묶어 만든 읽을거리라는 뜻",
-      "orderIt.rounds.r2.sentence.gloss": "맞다고 하며, 물건을 넣어 들거나 메는 것이라는 뜻",
+      "orderIt.rounds.r1.sentence.gloss": "맞다고 하며, 읽는 물건라는 뜻",
+      "orderIt.rounds.r2.sentence.gloss": "맞다고 하며, 물건을 넣어 메는 것이라는 뜻",
       "orderIt.rounds.r3.sentence.gloss": "맞다고 하며, 배우러 다니는 곳이라는 뜻",
-      "orderIt.rounds.r4.sentence.gloss": "맞다고 하며, 물건을 넣어 들거나 메는 것이라는 뜻",
-      "orderIt.rounds.r5.sentence.gloss": "맞다고 하며, 종이를 묶어 만든 읽을거리라는 뜻",
-      "orderIt.rounds.r1.distractors.gabangieyo.gloss": "물건을 넣어 들거나 메는 것이라는 뜻",
+      "orderIt.rounds.r4.sentence.gloss": "맞다고 하며, 물건을 넣어 메는 것이라는 뜻",
+      "orderIt.rounds.r5.sentence.gloss": "맞다고 하며, 읽는 물건라는 뜻",
+      "orderIt.rounds.r1.distractors.gabangieyo.gloss": "물건을 넣어 메는 것이라는 뜻",
       "orderIt.rounds.r4.distractors.hakgyoyeyo.gloss": "배우러 다니는 곳이라는 뜻",
       "orderIt.rounds.r2.particle.choices.ieyo.gloss": "무엇이라고 알려 주는 말끝 (받침 있는 말 뒤)",
       "orderIt.rounds.r2.particle.choices.yeyo.gloss": "무엇이라고 알려 주는 말끝 (받침 없는 말 뒤)",
@@ -84,23 +84,23 @@
       "orderIt.rounds.r5.particle.choices.yeyo.gloss": "무엇이라고 알려 주는 말끝 (받침 없는 말 뒤)"
     },
     "minigame:s3-letters-q1-apply": {
-      "listenPick.rounds.a1.prompt": "물건을 넣어 들거나 메는 것이라는 뜻",
+      "listenPick.rounds.a1.prompt": "물건을 넣어 메는 것이라는 뜻",
       "listenPick.rounds.a2.prompt": "배우러 다니는 곳이라는 뜻",
-      "listenPick.rounds.a3.prompt": "종이를 묶어 만든 읽을거리라는 뜻",
+      "listenPick.rounds.a3.prompt": "읽는 물건라는 뜻",
       "listenPick.rounds.a4.prompt": "맞다고 하며, 배우러 다니는 곳이라는 뜻"
     },
     "minigame:s3-letters-q1-check": {
-      "listenPick.rounds.c1.prompt": "맞다고 하며, 물건을 넣어 들거나 메는 것이라는 뜻",
-      "listenPick.rounds.c2.prompt": "배우러 다니는 곳이라는 뜻"
+      "listenPick.rounds.c1.prompt": "맞다고 하며, 물건을 넣어 메는 것이라는 뜻",
+      "listenPick.rounds.c2.prompt": "맞다고 하며, 읽는 물건라는 뜻"
     },
     "minigame:s3-letters-q2-practice": {
-      "orderIt.rounds.r1.sentence.gloss": "종이를 묶어 만든 읽을거리가 이곳에 존재한다는 뜻",
-      "orderIt.rounds.r2.sentence.gloss": "가깝게 지내는 사람을 두었다는 뜻",
-      "orderIt.rounds.r3.sentence.gloss": "글씨를 쓰는 도구가 이곳에 존재한다는 뜻",
-      "orderIt.rounds.r4.sentence.gloss": "물건을 넣어 들거나 메는 것이 이곳에 존재한다는 뜻",
-      "orderIt.rounds.r5.sentence.gloss": "맞다고 하며, 종이를 묶어 만든 읽을거리가 이곳에 존재한다는 뜻",
-      "orderIt.rounds.r1.distractors.gabangi.gloss": "물건을 넣어 들거나 메는 것 (문장의 주어)",
-      "orderIt.rounds.r5.distractors.yeonpiri.gloss": "글씨를 쓰는 도구 (문장의 주어)",
+      "orderIt.rounds.r1.sentence.gloss": "읽는 물건가 이곳에 존재한다는 뜻",
+      "orderIt.rounds.r2.sentence.gloss": "가깝게 지내는 사람을 두고 있다는 뜻",
+      "orderIt.rounds.r3.sentence.gloss": "글씨 쓰는 도구가 이곳에 존재한다는 뜻",
+      "orderIt.rounds.r4.sentence.gloss": "물건을 넣어 메는 것이 이곳에 존재한다는 뜻",
+      "orderIt.rounds.r5.sentence.gloss": "맞다고 하며, 읽는 물건가 이곳에 존재한다는 뜻",
+      "orderIt.rounds.r1.distractors.gabangi.gloss": "물건을 넣어 메는 것 (문장의 주어)",
+      "orderIt.rounds.r5.distractors.yeonpiri.gloss": "글씨 쓰는 도구 (문장의 주어)",
       "orderIt.rounds.r2.particle.choices.i.gloss": "주어를 나타내는 조사 (받침 있는 말 뒤)",
       "orderIt.rounds.r2.particle.choices.ga.gloss": "주어를 나타내는 조사 (받침 없는 말 뒤)",
       "orderIt.rounds.r3.particle.choices.i.gloss": "주어를 나타내는 조사 (받침 있는 말 뒤)",
@@ -109,21 +109,21 @@
       "orderIt.rounds.r4.particle.choices.ga.gloss": "주어를 나타내는 조사 (받침 없는 말 뒤)"
     },
     "minigame:s3-letters-q2-apply": {
-      "listenPick.rounds.a1.prompt": "가깝게 지내는 사람을 두었다는 뜻",
-      "listenPick.rounds.a2.prompt": "글씨를 쓰는 도구가 이곳에 존재한다는 뜻",
-      "listenPick.rounds.a3.prompt": "종이를 묶어 만든 읽을거리가 이곳에 존재한다는 뜻",
-      "listenPick.rounds.a4.prompt": "맞다고 하며, 글씨를 쓰는 도구가 이곳에 존재한다는 뜻"
+      "listenPick.rounds.a1.prompt": "가깝게 지내는 사람을 두고 있다는 뜻",
+      "listenPick.rounds.a2.prompt": "글씨 쓰는 도구가 이곳에 존재한다는 뜻",
+      "listenPick.rounds.a3.prompt": "읽는 물건가 이곳에 존재한다는 뜻",
+      "listenPick.rounds.a4.prompt": "맞다고 하며, 글씨 쓰는 도구가 이곳에 존재한다는 뜻"
     },
     "minigame:s3-letters-q2-check": {
-      "listenPick.rounds.c1.prompt": "물건을 넣어 들거나 메는 것이 이곳에 존재한다는 뜻",
-      "listenPick.rounds.c2.prompt": "맞다고 하며, 종이를 묶어 만든 읽을거리가 이곳에 존재한다는 뜻"
+      "listenPick.rounds.c1.prompt": "물건을 넣어 메는 것이 이곳에 존재한다는 뜻",
+      "listenPick.rounds.c2.prompt": "맞다고 하며, 읽는 물건가 이곳에 존재한다는 뜻"
     },
     "minigame:s3-letters-q3-practice": {
-      "orderIt.rounds.r1.sentence.gloss": "가까이 있는 이것이 종이를 묶어 만든 읽을거리라는 뜻",
-      "orderIt.rounds.r2.sentence.gloss": "가까이 있는 이것이 한국어를 적는 글자라는 뜻",
-      "orderIt.rounds.r3.sentence.gloss": "자신을 낮추어 이름을 밝힌다는 뜻",
-      "orderIt.rounds.r4.sentence.gloss": "가까이 있는 이것이 물건을 넣어 들거나 메는 것이라는 뜻",
-      "orderIt.rounds.r5.sentence.gloss": "맞다고 하며, 가까이 있는 이것이 글씨를 쓰는 도구라는 뜻",
+      "orderIt.rounds.r1.sentence.gloss": "가까이 있는 것이 읽는 물건라는 뜻",
+      "orderIt.rounds.r2.sentence.gloss": "가까이 있는 것이 한국어를 적는 글자라는 뜻",
+      "orderIt.rounds.r3.sentence.gloss": "자기 이름을 공손하게 밝힌다는 뜻",
+      "orderIt.rounds.r4.sentence.gloss": "가까이 있는 것이 물건을 넣어 메는 것이라는 뜻",
+      "orderIt.rounds.r5.sentence.gloss": "맞다고 하며, 가까이 있는 것이 글씨 쓰는 도구라는 뜻",
       "orderIt.rounds.r1.distractors.isseoyo.gloss": "어떤 곳에 무엇이 존재한다는 말",
       "orderIt.rounds.r5.distractors.chinguga.gloss": "가깝게 지내는 사람 (문장의 주어)",
       "orderIt.rounds.r2.particle.choices.ieyo.gloss": "무엇이라고 알려 주는 말끝 (받침 있는 말 뒤)",
@@ -134,14 +134,14 @@
       "orderIt.rounds.r4.particle.choices.yeyo.gloss": "무엇이라고 알려 주는 말끝 (받침 없는 말 뒤)"
     },
     "minigame:s3-letters-q3-apply": {
-      "listenPick.rounds.a1.prompt": "가까이 있는 이것이 한국어를 적는 글자라는 뜻",
-      "listenPick.rounds.a2.prompt": "가까이 있는 이것이 글씨를 쓰는 도구라는 뜻",
-      "listenPick.rounds.a3.prompt": "가까이 있는 이것이 종이를 묶어 만든 읽을거리라는 뜻",
-      "listenPick.rounds.a4.prompt": "가까이 있는 이것이 물건을 넣어 들거나 메는 것이라는 뜻"
+      "listenPick.rounds.a1.prompt": "가까이 있는 것이 한국어를 적는 글자라는 뜻",
+      "listenPick.rounds.a2.prompt": "가까이 있는 것이 글씨 쓰는 도구라는 뜻",
+      "listenPick.rounds.a3.prompt": "가까이 있는 것이 읽는 물건라는 뜻",
+      "listenPick.rounds.a4.prompt": "가까이 있는 것이 물건을 넣어 메는 것이라는 뜻"
     },
     "minigame:s3-letters-q3-check": {
-      "listenPick.rounds.c1.prompt": "맞다고 하며, 가까이 있는 이것이 글씨를 쓰는 도구라는 뜻",
-      "listenPick.rounds.c2.prompt": "자신을 낮추어 이름을 밝힌다는 뜻"
+      "listenPick.rounds.c1.prompt": "맞다고 하며, 가까이 있는 것이 글씨 쓰는 도구라는 뜻",
+      "listenPick.rounds.c2.prompt": "자기 이름을 공손하게 밝힌다는 뜻"
     }
   }
 }
