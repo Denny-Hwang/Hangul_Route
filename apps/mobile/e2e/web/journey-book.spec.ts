@@ -78,6 +78,26 @@ test.describe('the Stage 5 rites book (regular build)', () => {
     await expect(page.getByTestId('story-episode-title')).toHaveText('Festival Tales');
   });
 
+  for (const viewport of [
+    { width: 320, height: 640 },
+    { width: 1180, height: 820 },
+  ] as const) {
+    test(`at ${viewport.width}: the book page row and the cell page book row fit with no side scroll`, async ({ page }) => {
+      await page.setViewportSize(viewport);
+      await openBook(page);
+      const row = page.getByTestId('story-episode-cell-stories-row');
+      await expect(row).toContainText('Heritage stories for this cell');
+      await expectNoHorizontalOverflow(page);
+      await page.getByRole('button', { name: ROW, exact: true }).click();
+      const book = page.getByTestId('cell-stories-lesson');
+      // The full label shows (it wraps, never cut with an ellipsis).
+      await expect(book).toHaveText('Festival Tales — the book for this cell');
+      const clipped = await book.evaluate((el) => el.scrollWidth > el.clientWidth + 1);
+      expect(clipped).toBe(false);
+      await expectNoHorizontalOverflow(page);
+    });
+  }
+
   test('a book quest reads its story at the read level: a short Korean sentence and a caption', async ({ page }) => {
     await openBook(page);
     await page.getByTestId('story-episode-start-story:seollal-new-year').click();
