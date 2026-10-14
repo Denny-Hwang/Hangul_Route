@@ -207,6 +207,8 @@ describe('the family home (F-APP-001 A-5b)', () => {
     vi.stubGlobal('window', { location: { origin: 'https://app.hangulroute.com' } });
     r = await render([family]);
     expect(byTestId(r, 'family-lessons')[0]?.props.href).toBe('/browse#s=nav');
+    // The action grid's cell is the link's wrapper: the link grows to fill it, as the other actions do.
+    expect(byTestId(r, 'family-lessons')[0]?.props.style).toMatchObject({ flex: '1 1 auto' });
     vi.unstubAllGlobals();
   });
 

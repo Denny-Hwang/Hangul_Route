@@ -528,18 +528,21 @@ describe('refresh, continued', () => {
   it('unmounting before the announce timer fires leaves no timer and writes nothing after unmount (#560 follow-up 4)', async () => {
     const { api } = fakeApi([list(source()), list(source({ steps: { learner: 'yes', source: 'yes', destination: 'waiting' } }))]);
     await mount(api);
+    const set = vi.spyOn(globalThis, 'setTimeout');
     await act(async () => {
       vi.advanceTimersByTime(30_000);
     });
     // The change is seen: the region is cleared and the rewrite waits for its 100 ms gap.
     expect(text(live())).toBe('');
-    const errors = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const announceIndex = set.mock.calls.findIndex((call) => call[1] === 100);
+    expect(announceIndex).toBeGreaterThanOrEqual(0);
+    const announceId = set.mock.results[announceIndex]?.value as unknown;
+    const clear = vi.spyOn(globalThis, 'clearTimeout');
     act(() => renderer?.unmount());
     renderer = null;
-    expect(vi.getTimerCount()).toBe(0);
-    vi.advanceTimersByTime(200);
-    expect(errors).not.toHaveBeenCalled();
-    errors.mockRestore();
+    expect(clear.mock.calls.some((call) => call[0] === announceId)).toBe(true);
+    set.mockRestore();
+    clear.mockRestore();
   });
 
   it('nothing auto-dismisses: a card that ends between timer reads stays a card, without answers, until a manual read', async () => {

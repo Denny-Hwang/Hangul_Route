@@ -94,6 +94,9 @@ export function useBrowseOpener(
     onOpen?.();
     void openBrowse(target, source, deps())
       .then(settle)
+      // An unexpected throw in the hand-off (the scope read, the storage write) is a failed check: Try again shows
+      // and the host drops what it kept, as for any other stay.
+      .catch(() => settle('check_failed'))
       .finally(() => {
         busy.current = false;
         setChecking(false);

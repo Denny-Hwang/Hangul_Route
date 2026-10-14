@@ -301,6 +301,26 @@ describe('composer [ Preview ]: a hand-off that stays leaves no draft behind (#5
     act(() => r.unmount());
   });
 
+  it('a hand-off that throws is a failed check: Try again shows and the kept draft is dropped', async () => {
+    consoleApi.current = { browseScope: async () => ({ ok: true, data: { scope: 'full' } }) };
+    const kept = fakeStorage();
+    const env: BrowseOpenerEnv = {
+      origin: () => 'https://app.hangulroute.com',
+      now: () => Date.now(),
+      storage: () => fakeStorage(),
+      assign: () => {
+        throw new Error('navigation refused');
+      },
+    };
+    const r = await mount({ prefillQuest: QUEST, preview: true, draftStorage: () => kept, browseEnv: env });
+    await writeSomething(r);
+    await clickPreview(r);
+    expect(text(byTestId(r, 'compose-quest-preview-notice'))).toContain(m.console.browse.checkFailed);
+    expect(r.root.findAll((n) => n.props['data-testid'] === 'compose-quest-preview-retry' && n.type === 'button')).toHaveLength(1);
+    expect(kept.map.has(composerDraftKey('space:c1'))).toBe(false);
+    act(() => r.unmount());
+  });
+
   it('Try again after a failed check keeps the draft again before it opens', async () => {
     let fail = true;
     consoleApi.current = { browseScope: async () => (fail ? { ok: false, error: 'unknown', status: 500 } : { ok: true, data: { scope: 'full' } }) };

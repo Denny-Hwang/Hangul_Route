@@ -373,8 +373,9 @@ export function NoteComposer({
   const keepDraft = (): void => {
     saveComposerDraft(draftStore(), space.id, { mode, picked, presetId, text, questId, label }, Date.now());
   };
-  // A hand-off that stays on this page (the check failed or the storage was blocked) drops the draft it kept: the
-  // form is still open here, and a draft left behind would come back within the hour after the adult left.
+  // A hand-off that stays on this page (the check failed or the storage was blocked) drops the stored draft, kept
+  // for this trip or restored on mount alike: the form is still open here with every value, Try again keeps it again
+  // before it opens, and a draft left behind would come back within the hour after the adult left.
   const dropDraft = (): void => {
     clearComposerDraft(draftStore(), space.id);
   };

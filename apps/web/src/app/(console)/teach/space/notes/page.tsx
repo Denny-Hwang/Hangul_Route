@@ -81,6 +81,8 @@ function NotesInner(): JSX.Element {
   const loadRoster = useCallback(async (): Promise<void> => {
     if (!api || !enabled) return;
     setRosterError(null);
+    // Another space's role never decides this one: unknown again until this space's reads answer.
+    setCanSend(null);
     // The closed-quest mark needs the free-plan switch and this viewer's view of the space's plan (F-ENT-003); the
     // spaces read also gives this viewer's role, which decides whether the page offers sending at all.
     const gate = contentGatingEnabled();

@@ -304,7 +304,7 @@ export default function ParentHomePage(): JSX.Element {
     const actions = (
       <div className="hr-ph-actions">
         {lessons ? (
-          <BrowseLink source="nav" label={p.actions.lessons} testId="family-lessons" style={button} />
+          <BrowseLink source="nav" label={p.actions.lessons} testId="family-lessons" style={{ ...button, flex: '1 1 auto' }} />
         ) : null}
         {archived ? null : (
           <>

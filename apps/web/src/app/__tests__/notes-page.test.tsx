@@ -454,6 +454,24 @@ describe('review follow-ups: who sees what, and the list states', () => {
     expect(newNote(root)).toHaveLength(1);
   });
 
+  it('moving to another space: the earlier space role never shows New note while the new reads load', async () => {
+    const root = await page('id=space%3Ac1');
+    expect(newNote(root)).toHaveLength(1);
+    role = 'admin';
+    let release: () => void = () => undefined;
+    rosterGate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    nav.query = 'id=space%3Ac2';
+    await act(async () => mounted?.update(<Page />));
+    await act(async () => undefined);
+    expect(newNote(root)).toHaveLength(0);
+    expect(byText(root, 'button', n.newNote.cta)).toHaveLength(0);
+    await act(async () => release());
+    await act(async () => undefined);
+    expect(newNote(root)).toHaveLength(0);
+  });
+
   it('a roster the viewer cannot open: the access line only, no send action, no tabs and no sent list', async () => {
     rosterFailure = 'forbidden';
     const root = await page('id=space%3Ac1');
