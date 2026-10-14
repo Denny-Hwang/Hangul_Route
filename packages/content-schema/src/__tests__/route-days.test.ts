@@ -87,6 +87,18 @@ const LIVE_ROUTE_DAYS: Partial<Record<number, readonly (readonly [string, number
     ['episode:stage2-nature', 5],
     ['episode:stage4-rites', 4],
   ],
+  // F-STORY-005 PR 5.6: the Stage 5 rites book is a grid cell with three read quests (14 minutes).
+  7: [
+    ['episode:stage1-letters', 15],
+    ['episode:stage1-life', 12],
+    ['episode:stage1-rites', 14],
+    ['episode:stage1-nature', 12],
+    ['episode:stage1-crafts', 12],
+    ['episode:stage2-life', 5],
+    ['episode:stage2-nature', 5],
+    ['episode:stage4-rites', 4],
+    ['episode:stage5-rites', 14],
+  ],
 };
 const LIVE_FREE_FACTS: Partial<Record<number, FreeLessonsFacts>> = {
   3: {
@@ -131,6 +143,20 @@ const LIVE_FREE_FACTS: Partial<Record<number, FreeLessonsFacts>> = {
   },
   // F-STORY-001 PR 1.9: stories are not lessons, so the free lesson figures stay as at version 5.
   6: {
+    lessons: 15,
+    letters: 24,
+    minutes: 65,
+    days: 5,
+    episodeIds: [
+      'episode:stage1-letters',
+      'episode:stage1-life',
+      'episode:stage1-rites',
+      'episode:stage1-nature',
+      'episode:stage1-crafts',
+    ],
+  },
+  // F-STORY-005 PR 5.6: the Stage 5 book is not free content (all of Stage 1 is), so nothing moves.
+  7: {
     lessons: 15,
     letters: 24,
     minutes: 65,

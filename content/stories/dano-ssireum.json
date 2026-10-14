@@ -2,7 +2,7 @@
   "v": 1,
   "id": "story:dano-ssireum",
   "state": "ready",
-  "contentVer": 4,
+  "contentVer": 5,
   "title": {
     "ko": "단옷날의 그네, 탈, 씨름",
     "romanization": "Danonnarui geune, tal, ssireum",
@@ -591,6 +591,437 @@
         "ssireum",
         "jangsa"
       ]
+    },
+    {
+      "level": "read",
+      "scenes": [
+        {
+          "id": "s1",
+          "narrationEn": "{kw:dano} falls on the fifth day of the fifth lunar month. It is a summer holiday full of games.",
+          "captionEn": "Dano, the fifth day of the fifth lunar month",
+          "line": {
+            "ko": "단오는 음력 오월 오일이에요.",
+            "romanization": "Danoneun eumnyeok owol oirieyo.",
+            "en": "Dano is the fifth day of the fifth lunar month.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f1"
+          ],
+          "framing": false,
+          "approximations": [],
+          "art": {
+            "setting": "scene:countryside",
+            "layers": [
+              {
+                "ref": "prop:rice-field",
+                "x": 200,
+                "y": 300,
+                "s": 1.0,
+                "tint": "feedback.successLight"
+              },
+              {
+                "ref": "prop:leafy-tree",
+                "x": 336,
+                "y": 238,
+                "s": 1.0
+              },
+              {
+                "ref": "hoya:waving",
+                "x": 200,
+                "y": 280,
+                "s": 1.0
+              }
+            ],
+            "altEn": "Hoya waves on a green hillside in early summer, above rice paddies freshly planted, as Dano comes."
+          }
+        },
+        {
+          "id": "s2",
+          "narrationEn": "Long ago on Dano, people washed their hair in water boiled with {kw:changpo}, a fragrant plant.",
+          "captionEn": "Washing hair in changpo water",
+          "line": {
+            "ko": "옛날에는 창포물에 머리를 감았어요.",
+            "romanization": "Yennareneun changpomure meorireul gamasseoyo.",
+            "en": "Long ago, people washed their hair in changpo water.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f2"
+          ],
+          "framing": false,
+          "approximations": [],
+          "art": {
+            "setting": "scene:mountain-stream",
+            "layers": [
+              {
+                "ref": "prop:changpo",
+                "x": 140,
+                "y": 282,
+                "s": 1.1
+              },
+              {
+                "ref": "prop:fig-woman",
+                "x": 250,
+                "y": 286,
+                "s": 1.15,
+                "tint": "brand.secondaryLight"
+              },
+              {
+                "ref": "hoya:idle",
+                "x": 56,
+                "y": 294,
+                "s": 0.6
+              }
+            ],
+            "altEn": "By a stream a woman stands beside tall sweet flag, the plant once boiled for Dano hair washing, and Hoya stands nearby."
+          }
+        },
+        {
+          "id": "s3",
+          "narrationEn": "Swinging, {kw:geunettwigi}, has long been a favorite Dano game.",
+          "captionEn": "Swinging, a Dano game",
+          "line": {
+            "ko": "그네뛰기는 단오 놀이예요.",
+            "romanization": "Geunettwigineun dano noriyeyo.",
+            "en": "Swinging is a Dano game.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f3"
+          ],
+          "framing": false,
+          "approximations": [],
+          "art": {
+            "setting": "scene:countryside",
+            "layers": [
+              {
+                "ref": "prop:leafy-tree",
+                "x": 70,
+                "y": 262,
+                "s": 2.1,
+                "z": "back"
+              },
+              {
+                "ref": "prop:swing",
+                "x": 196,
+                "y": 276,
+                "s": 1.3
+              },
+              {
+                "ref": "hoya:cheering",
+                "x": 330,
+                "y": 294,
+                "s": 0.8
+              }
+            ],
+            "altEn": "A woman in hanbok swings high on a rope swing hung from a big tree, and Hoya cheers below."
+          }
+        },
+        {
+          "id": "s4",
+          "narrationEn": "In {kw:ssireum}, Korean wrestling, the two wrestlers grip each other's {kw:satba}, a cloth belt.",
+          "captionEn": "Two wrestlers grip the satba",
+          "line": {
+            "ko": "씨름할 때 두 사람이 샅바를 잡아요.",
+            "romanization": "Ssireumhal ttae du sarami satbareul jabayo.",
+            "en": "In ssireum, the two wrestlers grip the satba belts.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f4",
+            "f5"
+          ],
+          "framing": false,
+          "approximations": [],
+          "art": {
+            "setting": "scene:countryside",
+            "layers": [
+              {
+                "ref": "prop:sand-ring",
+                "x": 200,
+                "y": 292,
+                "s": 1.4
+              },
+              {
+                "ref": "prop:fig-wrestlers",
+                "x": 200,
+                "y": 264,
+                "s": 1.6
+              },
+              {
+                "ref": "hoya:idle",
+                "x": 338,
+                "y": 294,
+                "s": 0.7
+              }
+            ],
+            "altEn": "Two wrestlers grip each other's satba belts in a sand ring for ssireum, and Hoya watches closely like a referee."
+          }
+        },
+        {
+          "id": "s5",
+          "narrationEn": "The ssireum champion is called {kw:jangsa}, a very strong person.",
+          "captionEn": "The champion is called jangsa",
+          "line": {
+            "ko": "우승한 사람을 장사라고 불러요.",
+            "romanization": "Useunghan sarameul jangsarago bulleoyo.",
+            "en": "The champion is called jangsa.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f6"
+          ],
+          "framing": false,
+          "approximations": [],
+          "art": {
+            "setting": "scene:countryside",
+            "layers": [
+              {
+                "ref": "prop:sand-ring",
+                "x": 200,
+                "y": 296,
+                "s": 1.5
+              },
+              {
+                "ref": "prop:crowd-seated",
+                "x": 76,
+                "y": 240,
+                "s": 0.8,
+                "z": "back",
+                "tint": "feedback.nudgeLight"
+              },
+              {
+                "ref": "prop:ox",
+                "x": 190,
+                "y": 286,
+                "s": 1.5
+              },
+              {
+                "ref": "prop:fig-villager",
+                "x": 310,
+                "y": 286,
+                "s": 1.0,
+                "tint": "feedback.nudgeLight"
+              },
+              {
+                "ref": "hoya:cheering",
+                "x": 366,
+                "y": 298,
+                "s": 0.55
+              }
+            ],
+            "altEn": "The ssireum champion, the jangsa, stands beside his prize ox, a symbol of plenty, while villagers and Hoya cheer."
+          }
+        },
+        {
+          "id": "s6",
+          "narrationEn": "The city of Gangneung holds a big Dano festival, {kw:gangneung-danoje}.",
+          "captionEn": "Gangneung's big Dano festival",
+          "line": {
+            "ko": "강릉에서 큰 단오제가 열려요.",
+            "romanization": "Gangneungeseo keun danojega yeollyeoyo.",
+            "en": "A big Dano festival is held in Gangneung.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f7"
+          ],
+          "framing": false,
+          "approximations": [],
+          "art": {
+            "setting": "scene:mountains",
+            "layers": [
+              {
+                "ref": "prop:lanterns",
+                "x": 200,
+                "y": 300,
+                "s": 1.0
+              },
+              {
+                "ref": "prop:feast-table",
+                "x": 200,
+                "y": 272,
+                "s": 1.6
+              },
+              {
+                "ref": "hoya:waving",
+                "x": 320,
+                "y": 294,
+                "s": 0.75
+              }
+            ],
+            "altEn": "Paper lanterns hang over a festival ground by the mountains for Gangneung Danoje, with a table of offerings, and Hoya joins in."
+          }
+        },
+        {
+          "id": "s7",
+          "narrationEn": "In the Gwanno mask drama, performers in masks, {kw:tal}, make people laugh without a single word.",
+          "captionEn": "Masks and laughter, with no words",
+          "line": {
+            "ko": "탈을 쓰고 말없이 관객을 웃겨요.",
+            "romanization": "Tareul sseugo mareopsi gwangaegeul utgyeoyo.",
+            "en": "Wearing masks, they make the audience laugh without words.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f8"
+          ],
+          "framing": false,
+          "approximations": [],
+          "art": {
+            "setting": "scene:countryside",
+            "layers": [
+              {
+                "ref": "prop:fig-yangban-mask",
+                "x": 156,
+                "y": 262,
+                "s": 1.3
+              },
+              {
+                "ref": "prop:fig-woman",
+                "x": 248,
+                "y": 262,
+                "s": 1.15
+              },
+              {
+                "ref": "prop:crowd-seated",
+                "x": 200,
+                "y": 300,
+                "s": 1.3,
+                "z": "front",
+                "tint": "surface.paper"
+              },
+              {
+                "ref": "hoya:cheering",
+                "x": 352,
+                "y": 296,
+                "s": 0.62
+              }
+            ],
+            "altEn": "In the Gwanno mask play a long-bearded nobleman and a young lady act without words, and the crowd and Hoya laugh."
+          }
+        }
+      ],
+      "checks": [
+        {
+          "id": "r1",
+          "kind": "pick-meaning",
+          "promptEn": "What does {target} mean?",
+          "target": {
+            "ko": "샅바",
+            "romanization": "satba",
+            "en": "ssireum cloth belt"
+          },
+          "options": [
+            {
+              "id": "a",
+              "en": "A swing",
+              "isCorrect": false
+            },
+            {
+              "id": "b",
+              "en": "A mask",
+              "isCorrect": false
+            },
+            {
+              "id": "c",
+              "en": "A cloth belt for ssireum",
+              "isCorrect": true
+            },
+            {
+              "id": "d",
+              "en": "A fragrant plant",
+              "isCorrect": false
+            }
+          ],
+          "explainEn": "A satba is the cloth belt that ssireum wrestlers grip.",
+          "factIds": [
+            "f5"
+          ]
+        },
+        {
+          "id": "r2",
+          "kind": "pick-meaning",
+          "promptEn": "What does {target} mean?",
+          "target": {
+            "ko": "탈",
+            "romanization": "tal",
+            "en": "mask"
+          },
+          "options": [
+            {
+              "id": "a",
+              "en": "Mask",
+              "isCorrect": true
+            },
+            {
+              "id": "b",
+              "en": "Belt",
+              "isCorrect": false
+            },
+            {
+              "id": "c",
+              "en": "Swing",
+              "isCorrect": false
+            },
+            {
+              "id": "d",
+              "en": "Festival",
+              "isCorrect": false
+            }
+          ],
+          "explainEn": "Tal means mask. In the Gwanno mask drama, masked performers use gestures, not words.",
+          "factIds": [
+            "f8"
+          ]
+        },
+        {
+          "id": "r3",
+          "kind": "detail",
+          "promptEn": "In the story, what is the ssireum winner called?",
+          "options": [
+            {
+              "id": "a",
+              "en": "Satba",
+              "isCorrect": false
+            },
+            {
+              "id": "b",
+              "en": "Geune",
+              "isCorrect": false
+            },
+            {
+              "id": "c",
+              "en": "Changpo",
+              "isCorrect": false
+            },
+            {
+              "id": "d",
+              "en": "Jangsa",
+              "isCorrect": true
+            }
+          ],
+          "explainEn": "The ssireum champion is called jangsa, which means a very strong person.",
+          "factIds": [
+            "f6"
+          ]
+        }
+      ],
+      "checkpoints": [],
+      "sequenceSceneIds": [
+        "s1",
+        "s3",
+        "s5",
+        "s7"
+      ],
+      "newKeywordIds": [
+        "dano",
+        "changpo",
+        "ssireum",
+        "jangsa"
+      ],
+      "grammarFocusEn": "Past -asseoyo for old customs; -go to join two actions"
     }
   ],
   "coverSceneId": "s1",
@@ -910,8 +1341,8 @@
     "passes": 3,
     "checkedAt": "2026-10-10",
     "scope": "cluster",
-    "notes": "Third independent pass over 6 episodes / 61 facts / 161 source entries (70 unique URLs). Every URL was re-fetched with my own scripts (UNESCO pages via Wayback copies; heritage.go.kr descriptions via the portal ajax html and khs.go.kr open API; folkency via its JSON API) and each quote or locator was machine-matched to the page text; the few non-matching strings were checked by hand (portal metadata fields, hanja or footnote punctuation, label text). Corrections: (1) pansori scene 2 now gives both UNESCO steps (2003 masterpiece proclamation, 2008 Representative List); (2) pansori f11 states the Aesop title as in the cited Townsend text and the common alternate title; (3) added sources: NFM 놀보박타령 for 'greedy' (f5), 표준국어대사전 타다 for 'sawed' (f6), 한국민족문화대백과사전 선도해 for the Samguk sagi tale (f12); (4) Seollal f9/f10 designation-date locators now cite the KHS open API field. No other change. See seasons-tales.signoff.md. MAR 2026-10-13 language review (F-STORY-001 PR 1.9): Korean strings, romanization and glosses read; findings and outcomes in the PR. MAR 2026-10-13 culture review (F-STORY-001 PR 1.9): heritage accuracy, framing, tone and advisories read; review.advisory confirmed; findings and outcomes in the PR."
+    "notes": "Third independent pass over 6 episodes / 61 facts / 161 source entries (70 unique URLs). Every URL was re-fetched with my own scripts (UNESCO pages via Wayback copies; heritage.go.kr descriptions via the portal ajax html and khs.go.kr open API; folkency via its JSON API) and each quote or locator was machine-matched to the page text; the few non-matching strings were checked by hand (portal metadata fields, hanja or footnote punctuation, label text). Corrections: (1) pansori scene 2 now gives both UNESCO steps (2003 masterpiece proclamation, 2008 Representative List); (2) pansori f11 states the Aesop title as in the cited Townsend text and the common alternate title; (3) added sources: NFM 놀보박타령 for 'greedy' (f5), 표준국어대사전 타다 for 'sawed' (f6), 한국민족문화대백과사전 선도해 for the Samguk sagi tale (f12); (4) Seollal f9/f10 designation-date locators now cite the KHS open API field. No other change. See seasons-tales.signoff.md. MAR 2026-10-13 language review (F-STORY-001 PR 1.9): Korean strings, romanization and glosses read; findings and outcomes in the PR. MAR 2026-10-13 culture review (F-STORY-001 PR 1.9): heritage accuracy, framing, tone and advisories read; review.advisory confirmed; findings and outcomes in the PR. MAR 2026-10-13 language review of the read tier (F-STORY-005 PR 5.6): 7 Korean lines, their romanization (machine-checked) and glosses read for spelling, naturalness and Stage 5 level; 3 changes (s5 useunghan saram for the champion, s6 keun danoje, s7 gwangaegeul utgyeoyo with an object); findings and outcomes in the PR. MAR 2026-10-13 culture review of the read tier (F-STORY-005 PR 5.6): every line and check compared with its cited facts (no new claim), framing, tone and respectful wording read; review.advisory unchanged; findings and outcomes in the PR."
   },
-  "authorNotes": "Left out on purpose: the story that Dano comes from China (Qu Yuan), folk etymology of 수릿날, the 석전 (stone fight) custom, shamanic (굿) details, the festival's deities by name (김유신, 범일국사, 정씨 처녀), and how long the festival lasts. Sources describe its length differently (UNESCO says four weeks; the 국가유산포털 says 5 days of rites at the 단오장). The 'only silent mask drama' claim comes from one official source (국가유산청 국가유산포털), so the narration hedges it as 'known as'. The knee rule describes modern competition ssireum (Encyclopedia of Korean Culture). The narration uses 'east coast' and doesn't name the sea. 단오 was also designated National Intangible Heritage on 2023-12-18. That's covered in the Seollal episode and not repeated here. The 2023 Dano designation (KHS press release) is available if wanted. Standard spelling note: 단옷날 (with 사이시옷) is the dictionary form, and the title now uses it: 단옷날의 그네, 탈, 씨름 (Danonnarui geune, tal, ssireum), matching the English title. REVISION 2026-10-10: \"four great holidays\" now dated to the late-Joseon Dongguk sesigi (1518 list had three); knee rule labelled modern competition rule and phrased \"from the knee up\"; Gwanno illustration now nobleman (yangban) mask + young-lady (somae-gaksi) mask; \"only silent mask drama\" kept hedged and now has two sources (KHS portal; 국립민속박물관 한국세시풍속사전). UNESCO: Danoje proclaimed 2005, inscribed 2008 (stated both). Ox: UNESCO says ox; encykorea says 황소 (bull) - narration follows UNESCO. Check 3 changed to a question that does not rely on \"from Gangneung\". AUTHORING 2026-10-11 (F-STORY-001 PR 1.8d): title romanization, scene captions and check explanations written from the cited facts; every scene is artPending (text-only tile) until the art PRs; no claim or source changed. Korean spacing: learner terms are written 강릉 단오제 and 인류 무형 유산 (spaced by word, 한글 맞춤법 제49항/제50항) so each word lines up with Gangneung Danoje and illyu muhyeong yusan; the facts keep the official spellings. REVIEW 2026-10-11 (PR 1.8d review fixes): the learner keyword stays 인류 무형 유산 (illyu muhyeong yusan, the Korea Heritage Service's current term, spaced by word) with the gloss 'Intangible Heritage of Humanity (UNESCO list)'; f9 and f10 keep the researched 인류무형문화유산. s8 is rewritten in short sentences with the same years; check options are of even length; geune and chukje are used as tokens; learning goals use receptive verbs.",
+  "authorNotes": "Left out on purpose: the story that Dano comes from China (Qu Yuan), folk etymology of 수릿날, the 석전 (stone fight) custom, shamanic (굿) details, the festival's deities by name (김유신, 범일국사, 정씨 처녀), and how long the festival lasts. Sources describe its length differently (UNESCO says four weeks; the 국가유산포털 says 5 days of rites at the 단오장). The 'only silent mask drama' claim comes from one official source (국가유산청 국가유산포털), so the narration hedges it as 'known as'. The knee rule describes modern competition ssireum (Encyclopedia of Korean Culture). The narration uses 'east coast' and doesn't name the sea. 단오 was also designated National Intangible Heritage on 2023-12-18. That's covered in the Seollal episode and not repeated here. The 2023 Dano designation (KHS press release) is available if wanted. Standard spelling note: 단옷날 (with 사이시옷) is the dictionary form, and the title now uses it: 단옷날의 그네, 탈, 씨름 (Danonnarui geune, tal, ssireum), matching the English title. REVISION 2026-10-10: \"four great holidays\" now dated to the late-Joseon Dongguk sesigi (1518 list had three); knee rule labelled modern competition rule and phrased \"from the knee up\"; Gwanno illustration now nobleman (yangban) mask + young-lady (somae-gaksi) mask; \"only silent mask drama\" kept hedged and now has two sources (KHS portal; 국립민속박물관 한국세시풍속사전). UNESCO: Danoje proclaimed 2005, inscribed 2008 (stated both). Ox: UNESCO says ox; encykorea says 황소 (bull) - narration follows UNESCO. Check 3 changed to a question that does not rely on \"from Gangneung\". AUTHORING 2026-10-11 (F-STORY-001 PR 1.8d): title romanization, scene captions and check explanations written from the cited facts; every scene is artPending (text-only tile) until the art PRs; no claim or source changed. Korean spacing: learner terms are written 강릉 단오제 and 인류 무형 유산 (spaced by word, 한글 맞춤법 제49항/제50항) so each word lines up with Gangneung Danoje and illyu muhyeong yusan; the facts keep the official spellings. REVIEW 2026-10-11 (PR 1.8d review fixes): the learner keyword stays 인류 무형 유산 (illyu muhyeong yusan, the Korea Heritage Service's current term, spaced by word) with the gloss 'Intangible Heritage of Humanity (UNESCO list)'; f9 and f10 keep the researched 인류무형문화유산. s8 is rewritten in short sentences with the same years; check options are of even length; geune and chukje are used as tokens; learning goals use receptive verbs. READ TIER 2026-10-13 (F-STORY-005 PR 5.6): short Korean sentences retell facts already cited; no new fact, claim or source; art reused from the listen scene with the same id.",
   "errata": []
 }

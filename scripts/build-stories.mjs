@@ -45,9 +45,11 @@ export const GENERATED_HEADER =
  * (F-STORY-002 §3.9.7): the compact JSON of every bundled scene's `art`.
  * `totalRaw` was 1.0 MB until PR 1.9 gave all 24 stories a shelf block: their
  * derived shelf episodes and quests add about 50 KB raw (gzip stays in budget).
+ * 1.2 MB since F-STORY-005 PR 5.6: the first Stage 5 book adds a `read` tier to
+ * three stories (about 41 KB raw; gzip about 235 KB, still under 260 KB).
  */
 export const BUDGET = Object.freeze({
-  totalRaw: 1_100_000,
+  totalRaw: 1_200_000,
   totalGzip: 260_000,
   perStoryRaw: 60_000,
   artRaw: 130_000,

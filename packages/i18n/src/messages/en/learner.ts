@@ -264,6 +264,8 @@ export const learner = {
       subtitle: 'Heritage stories for this cell',
       /** The secondary row to the cell's lesson or book, listed before the stories. */
       lessonRow: (title: string) => `${title} — the lesson for this cell`,
+      /** The same row for a Stage 5 book cell (F-STORY-005 PR 5.6). */
+      bookRow: (title: string) => `${title} — the book for this cell`,
       /** Only through a stale link: the map never opens an empty cell. */
       empty: 'Nothing here yet',
       /** The lesson page row: a plain count of the cell's stories, never "N of M". */

@@ -38,25 +38,28 @@ describe('cellStoriesView', () => {
   it('a lesson cell: the lesson first, then its stories in shelf order', () => {
     const view = cellStoriesView({ stage: 'stage1', theme: 'letters', episodes: EPISODES, index: INDEX });
     expect(view.lessonEpisodeId).toBe('episode:s1-letters');
+    expect(view.lessonKind).toBe('lesson');
     expect(view.entries.map((e) => e.storyId)).toEqual(['story:hangeul-day', 'story:sejong-new-letters']);
   });
 
   it('a stories-only cell has no lesson row', () => {
     const view = cellStoriesView({ stage: 'stage2', theme: 'letters', episodes: EPISODES, index: INDEX });
     expect(view.lessonEpisodeId).toBeNull();
+    expect(view.lessonKind).toBeNull();
     expect(view.entries.map((e) => e.storyId)).toEqual(['story:jikji-metal-type']);
   });
 
-  it('a book cell names the book as its lesson', () => {
+  it('a book cell lists its book first, as a book (PR 5.6: "<title> — the book for this cell")', () => {
     const book = bookEpisode('episode:stage5-letters', [questId('x', 'read-along')]);
     const view = cellStoriesView({ stage: 'stage5', theme: 'letters', episodes: [book], index: INDEX });
     expect(view.lessonEpisodeId).toBe('episode:stage5-letters');
+    expect(view.lessonKind).toBe('book');
     expect(view.entries).toEqual([]);
   });
 
   it('a stale link to an empty cell: no lesson, no story', () => {
     const view = cellStoriesView({ stage: 'stage7', theme: 'crafts', episodes: EPISODES, index: INDEX });
-    expect(view).toEqual({ stage: 'stage7', theme: 'crafts', lessonEpisodeId: null, entries: [] });
+    expect(view).toEqual({ stage: 'stage7', theme: 'crafts', lessonEpisodeId: null, lessonKind: null, entries: [] });
   });
 });
 
@@ -106,6 +109,14 @@ describe('lessonRowCount', () => {
 
   it('applies the review gate of the index', () => {
     expect(lessonRowCount(S1_LETTERS, [])).toBe(0);
+  });
+
+  it('a Stage 5 book page counts the shelf stories whose home is its cell (PR 5.6)', () => {
+    const uigwe = story('uigwe-royal-birthday', { recommendedStage: 5, theme: 'rites', shelf: { order: 4 } });
+    const book = bookEpisode('episode:stage5-rites', [questId('uigwe-royal-birthday', 'read')], { theme: 'rites' });
+    const index = shelfIndex([uigwe], { episodes: [book] });
+    expect(lessonRowCount(book, index)).toBe(1);
+    expect(lessonRowCount(bookEpisode('episode:stage5-letters', [], { theme: 'letters' }), index)).toBe(0);
   });
 });
 
@@ -301,6 +312,18 @@ describe('cell page sources (screens are covered by Playwright; these pin the wi
     expect(detail).toMatch(/onOpenCellStories\([^)]*'lesson-row'\)/);
     expect(detail).toMatch(/onOpenCellStories\([^)]*'story-pill'\)/);
     expect(read('screens/episode/StoryEpisodeDetail.tsx')).toContain('homeCellLink(');
+  });
+
+  it('the Stage 5 book doors (PR 5.6): the book page has the stories row, the cell page names the book', () => {
+    const book = read('screens/episode/StoryEpisodeDetail.tsx');
+    expect(book).toContain('<CellLinkRow');
+    expect(book).toContain('cellStoryCount > 0');
+    expect(book).toContain('testID="story-episode-cell-stories-row"');
+    const detail = read('screens/episode/EpisodeDetailView.tsx');
+    const host = detail.slice(detail.indexOf('<StoryEpisodeDetail'));
+    expect(host.slice(0, host.indexOf('/>'))).toContain('cellStoryCount={cellStoryCount}');
+    expect(detail).toMatch(/onOpenCellStoriesRow=\{\(\) => onOpenCellStories\(episode\.stage, episode\.theme, 'lesson-row'\)\}/);
+    expect(screen).toContain("view.lessonKind === 'book' ? m.bookRow(lesson.titleEn) : m.lessonRow(lesson.titleEn)");
   });
 
   it('one playable rule: the lesson-page row counts only on a page the map would open (review of PR 5.5b)', () => {

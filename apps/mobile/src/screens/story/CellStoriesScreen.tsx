@@ -115,7 +115,7 @@ export function CellStoriesScreen({ route, navigation }: Props): React.ReactElem
           <>
             <Spacer size="lg" />
             <CellLinkRow
-              label={m.lessonRow(lesson.titleEn)}
+              label={view.lessonKind === 'book' ? m.bookRow(lesson.titleEn) : m.lessonRow(lesson.titleEn)}
               onPress={() => openEpisode(lesson.id)}
               testID="cell-stories-lesson"
             />

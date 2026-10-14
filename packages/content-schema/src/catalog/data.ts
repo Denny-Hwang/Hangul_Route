@@ -13,8 +13,9 @@ import type { Catalog, CatalogCell, CatalogQuest, CatalogStory, CatalogTopic } f
  * A story is a `draft` until its language and culture review sign it and the bundle
  * holds its `shelf` block; flipping a story to `ready` is that review's change.
  * Version 6 (F-STORY-001 PR 1.9): all 24 stories are `ready`.
+ * Version 7 (F-STORY-005 PR 5.6): the Stage 5 rites book ships with three read quests.
  */
-export const CATALOG_VERSION = 6;
+export const CATALOG_VERSION = 7;
 
 const cell = (
   stage: StageKey,
@@ -60,7 +61,11 @@ const cells: CatalogCell[] = [
   soon('stage4', 'crafts', 'Playdate Talk'),
   soon('stage5', 'letters', 'Short Stories'),
   soon('stage5', 'life', 'Family Stories'),
-  soon('stage5', 'rites', 'Festival Tales'),
+  cell('stage5', 'rites', 'Festival Tales', 'shipped', 14, [
+    'quest:story-seollal-new-year-read',
+    'quest:story-dano-ssireum-read',
+    'quest:story-chuseok-ganggangsullae-read',
+  ]),
   soon('stage5', 'nature', 'Tiger Folktales'),
   soon('stage5', 'crafts', 'Craft Stories'),
   soon('stage6', 'letters', 'Read the Menu'),
@@ -100,6 +105,10 @@ const lessonQuests: CatalogQuest[] = [
   lesson('stage2-life-q1', 'stage2', 'life', 'Lunch Box Words', 5),
   lesson('stage2-nature-q1', 'stage2', 'nature', 'Outdoor Words', 5),
   lesson('stage4-rites-q1', 'stage4', 'rites', 'Greeting Dialogues', 4),
+  // The Stage 5 rites book (F-STORY-005 PR 5.6): grid quests that play three stories at the read level.
+  lesson('story-seollal-new-year-read', 'stage5', 'rites', "Hoya's Seollal Morning", 4),
+  lesson('story-dano-ssireum-read', 'stage5', 'rites', 'Dano Day: Swings, Masks and Ssireum', 5),
+  lesson('story-chuseok-ganggangsullae-read', 'stage5', 'rites', 'Chuseok: Songpyeon and the Full Moon', 5),
 ];
 
 type StoryRow = [slug: string, title: string, stage: number, theme: ThemeKey, minutes: number, anchor?: CatalogStory['anchor'], sampler?: true];

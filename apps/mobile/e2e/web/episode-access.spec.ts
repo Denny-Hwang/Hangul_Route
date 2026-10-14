@@ -118,6 +118,22 @@ test.describe('free plan switch on (web)', () => {
     await expect(page.getByText("You're on the free plan.")).toBeVisible();
   });
 
+  test('the Stage 5 book on the free plan is a preview, not the story page with a Start (F-STORY-005 PR 5.6)', async ({ page }) => {
+    const errors: string[] = [];
+    page.on('pageerror', (e) => errors.push(String(e)));
+    await onboardChild(page, { name: 'Dami', startJourney: false });
+    await home(page, 'Dami');
+    await page.getByText('Journey', { exact: true }).last().click();
+    await page.getByRole('button', { name: /^Stage 5 Stories, Holidays & Traditions: story book/ }).click();
+    await expect(page.getByRole('heading', { name: 'Festival Tales' })).toBeVisible();
+    await expect(page.getByTestId('story-episode-title')).toHaveCount(0);
+    await expect(page.getByTestId('episode-quest-not-open').first()).toHaveText(access.notOpen);
+    await expect(page.getByRole('button', { name: 'Start', exact: true })).toHaveCount(0);
+    await expect(page.getByTestId('episode-preview-card').getByText(access.preview.line)).toBeVisible();
+    expect(await noSideScroll(page)).toBe(true);
+    expect(errors).toEqual([]);
+  });
+
   test('Stage 1 lessons are never a preview', async ({ page }) => {
     await onboardChild(page, { name: 'Dami', startJourney: false });
     await home(page, 'Dami');
