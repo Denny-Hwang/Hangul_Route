@@ -199,11 +199,15 @@ test.describe('the learner, over the inbox', () => {
     await shot(page, 'notes-api-offline-pick');
 
     // Back online, the next sync flushes the queue before it reads the inbox: one write, the last reaction wins.
+    const before = stateWrites(mocks).length;
     await context.setOffline(false);
     await home(page);
-    await expect.poll(() => stateWrites(mocks).length, { timeout: 15_000 }).toBeGreaterThan(0);
-    expect(stateWrites(mocks).at(-1)?.body).toEqual({ read: true, reaction: 'did_it' });
-    expect(stateWrites(mocks).map((c) => c.path)).toEqual(stateWrites(mocks).map(() => expect.stringContaining('/notes/note:aaaaaaaa/state')));
+    await expect.poll(() => stateWrites(mocks).length, { timeout: 15_000 }).toBeGreaterThan(before);
+    // The offline queue collapses into exactly one write that carries the last reaction.
+    const flushed = stateWrites(mocks).slice(before);
+    expect(flushed).toHaveLength(1);
+    expect(flushed[0]?.body).toEqual({ read: true, reaction: 'did_it' });
+    expect(flushed[0]?.path).toContain('/notes/note:aaaaaaaa/state');
     await expect.poll(async () => (await storedNotes(page, id))?.queue ?? null).toEqual([]);
     // Read and answered: no Home card.
     await expect(page.getByTestId('home-notes-card')).toHaveCount(0);

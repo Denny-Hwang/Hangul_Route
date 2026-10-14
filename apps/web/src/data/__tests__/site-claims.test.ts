@@ -71,6 +71,14 @@ describe('SITE_CLAIMS (what the site says today)', () => {
       }
     }
     expect(en.landing.persona.parents.follow.notes).toBe('Send a short note of encouragement that your learner sees in the app.');
+    expect(en.landing.persona.teachers.class.notes).toBe('Send students a short note of encouragement.');
+    // The reviewed FB-5b es and ko lines, pinned word for word (ko written as escapes: no Hangul in this file).
+    const es = getMessages('es').landing.persona;
+    expect(es.parents.follow.notes).toBe('Envía una nota corta de ánimo que tu estudiante ve en la app.');
+    expect(es.teachers.class.notes).toBe('Envía a tus estudiantes una nota corta de ánimo.');
+    const ko = getMessages('ko').landing.persona;
+    expect(ko.parents.follow.notes).toBe('학습자가 앱에서 보는 짧은 격려 쪽지를 보내요.');
+    expect(ko.teachers.class.notes).toBe('학생에게 짧은 격려 쪽지를 보내요.');
   });
 
   it('turns the reports lines on only with the report flags on by default in both apps (F-REPORT-001 RP-11)', () => {
