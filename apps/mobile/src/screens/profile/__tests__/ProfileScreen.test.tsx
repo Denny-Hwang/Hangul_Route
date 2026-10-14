@@ -9,7 +9,7 @@ import { useLocaleStore } from '../../../store/locale-store';
 import { useProfileStore } from '../../../store/profile-store';
 import { useTierStore } from '../../../store/tier-store';
 import { useUiStore } from '../../../store/ui-store';
-import { PURCHASE } from '../../../test-support/copy-words';
+import { PURCHASE } from '../../../test-support/__tests__/copy-words';
 import { buttonsNamed, press, render, resetPlatform, screenTexts, setPlatform, unmount, type RenderPlatform } from '../../../test-support/render';
 import { ProfileScreen } from '../ProfileScreen';
 

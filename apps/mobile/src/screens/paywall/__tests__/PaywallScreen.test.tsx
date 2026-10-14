@@ -9,7 +9,7 @@ import { useLocaleStore } from '../../../store/locale-store';
 import { useProfileStore } from '../../../store/profile-store';
 import { useTierStore } from '../../../store/tier-store';
 import { useUiStore } from '../../../store/ui-store';
-import { PRICE, PURCHASE } from '../../../test-support/copy-words';
+import { PRICE, PURCHASE } from '../../../test-support/__tests__/copy-words';
 import {
   buttonsNamed,
   byTestId,
