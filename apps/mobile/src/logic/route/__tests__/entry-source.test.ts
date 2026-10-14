@@ -30,3 +30,11 @@ describe('weekly plan entries follow routeEnabledFor(locale) (P2-8b)', () => {
     }
   });
 });
+
+describe('the overview offers Refresh route only for an older catalogue (F-STORY-005 PR 5.6)', () => {
+  it('a route saved on a newer catalogue (another device on a newer build) is not stale', () => {
+    const overview = src('screens/route/RouteOverviewScreen.tsx');
+    expect(overview).toContain('active.meta.catalogVersion < CATALOG.version');
+    expect(overview).not.toContain('active.meta.catalogVersion !== CATALOG.version');
+  });
+});
