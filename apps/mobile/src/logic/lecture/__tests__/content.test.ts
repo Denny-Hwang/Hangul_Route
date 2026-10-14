@@ -6,6 +6,8 @@ import { buildStoryIndex } from '../../story/story-index';
 import { scopeFor } from '../../minigame-config';
 import { expandDeck } from '../deck-builder';
 import { PAUSE_WORD, lectureBundle } from '../content';
+// The console's story list (scripts/build-lecture-catalogue.mjs), checked against the presenter's gate below.
+import { LECTURE_STORIES } from '../../../../../web/src/data/lecture-catalogue.generated';
 
 const deck = (blocks: LectureBlock[]) =>
   LectureDeckSchema.parse({ v: 1, id: 'lecture:ship01', title: 'All of it', createdAt: '2026-10-11T09:00:00Z', seed: 1, blocks });
@@ -179,5 +181,15 @@ describe('the presenter content bundle (F-TCH-004 §3.3, §3.13)', () => {
     expect(b.jamoAll).not.toBe(jamoAll);
     const giyeok = b.jamoAll.find((j) => j.id === 'jamo:giyeok')!;
     expect(giyeok).toMatchObject({ char: 'ㄱ', exampleWordKo: '가족', exampleWordRomanization: 'gajok', exampleWordEn: 'familia' });
+  });
+});
+
+describe('the console story catalogue and the presenter gate (F-TCH-004 PR 11)', () => {
+  it('the console offers exactly the stories the presenter shows as slides', () => {
+    // Two gates in two places: the catalogue script's review rule and the Library story index the
+    // presenter expands through. A story the console offers is never skipped as not ready.
+    expect(LECTURE_STORIES.map((s) => s.id).sort()).toEqual([...listedStoryIds].sort());
+    const expanded = expandDeck(deck(LECTURE_STORIES.map((s) => ({ kind: 'story', storyId: s.id, checks: true }))), lectureBundle('en'), { canPlayKorean: true });
+    expect(expanded.skipped.filter((p) => p.reason === 'not-ready' || p.reason === 'unknown-id')).toEqual([]);
   });
 });
