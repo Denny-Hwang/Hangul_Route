@@ -20,6 +20,7 @@ import { minigameScopes } from '../../logic/minigame-config';
 import { HANGUL_CHECK_WORDS, buildHangulCheck } from '../../logic/stage1/hangul-check';
 import { PAUSE_WORD } from '../../logic/lecture/content';
 import { AVATAR_PRESETS } from '../../logic/profiles/avatar-catalog';
+import { CHECK as SENTENCE_E2E_CHECK, PRACTICE as SENTENCE_E2E_PRACTICE } from '../../navigation/sentence-builder-e2e-fixtures';
 import { episodesAll } from '../episodes';
 import { heritageCardsAll } from '../heritage-cards';
 import { jamoAll } from '../jamo';
@@ -42,6 +43,7 @@ const F = {
   avatars: 'apps/mobile/src/logic/profiles/avatar-catalog.ts',
   lecture: 'apps/mobile/src/logic/lecture/content.ts',
   check: 'apps/mobile/src/logic/stage1/hangul-check.ts',
+  sentenceE2e: 'apps/mobile/src/navigation/sentence-builder-e2e-fixtures.ts',
 } as const;
 const sources = new Map<string, string>(Object.values(F).map((p) => [p, read(p)]));
 const HANGUL = /[가-힣]/;
@@ -356,6 +358,18 @@ describe('Hangul Check romanization (B1, F-QUEST-002 §3.9)', () => {
         else found.push(...pair(F.check, o.text.ko, o.text.romanization).map((m) => `${item.id}: ${m}`));
       }
     }
+    expect(found).toEqual([]);
+  });
+});
+
+describe('Sentence Builder e2e rounds romanization (B1, F-CURR-001 G-1)', () => {
+  it('every sentence, extra tile and particle choice carries its romanization (R1 to R4)', () => {
+    const found: string[] = [];
+    for (const round of [...SENTENCE_E2E_PRACTICE, ...SENTENCE_E2E_CHECK]) {
+      const texts = [round.sentence, ...round.distractors, ...(round.particle?.choices ?? [])];
+      for (const t of texts) found.push(...pair(F.sentenceE2e, t.ko, t.romanization).map((m) => `${round.id}: ${m}`));
+    }
+    expect(SENTENCE_E2E_PRACTICE.length + SENTENCE_E2E_CHECK.length).toBe(5);
     expect(found).toEqual([]);
   });
 });
