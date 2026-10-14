@@ -247,124 +247,284 @@ export const OVERLAYS: Overlays = {
       "listenPick.rounds.lp-sym-jamo-yu.prompt": "la letra yu"
     },
     "pitem:recog-odd-a-eo": {
-      "gloss": "Encuentra la diferente: a entre eo"
+      "gloss": "Encuentra la diferente: a entre eo",
+      "options.t1.gloss": "letra eo",
+      "options.t2.gloss": "letra eo",
+      "options.t3.gloss": "letra a",
+      "options.t4.gloss": "letra eo"
     },
     "pitem:recog-odd-a-ya": {
-      "gloss": "Encuentra la diferente: a entre ya"
+      "gloss": "Encuentra la diferente: a entre ya",
+      "options.t1.gloss": "letra ya",
+      "options.t2.gloss": "letra ya",
+      "options.t3.gloss": "letra a",
+      "options.t4.gloss": "letra ya"
     },
     "pitem:recog-odd-bieup-mieum": {
-      "gloss": "Encuentra la diferente: bieup entre mieum"
+      "gloss": "Encuentra la diferente: bieup entre mieum",
+      "options.t1.gloss": "letra mieum",
+      "options.t2.gloss": "letra mieum",
+      "options.t3.gloss": "letra bieup",
+      "options.t4.gloss": "letra mieum"
     },
     "pitem:recog-odd-chieut-jieut": {
-      "gloss": "Encuentra la diferente: chieut entre jieut"
+      "gloss": "Encuentra la diferente: chieut entre jieut",
+      "options.t1.gloss": "letra jieut",
+      "options.t2.gloss": "letra jieut",
+      "options.t3.gloss": "letra chieut",
+      "options.t4.gloss": "letra jieut"
     },
     "pitem:recog-odd-digeut-nieun": {
-      "gloss": "Encuentra la diferente: digeut entre nieun"
+      "gloss": "Encuentra la diferente: digeut entre nieun",
+      "options.t1.gloss": "letra nieun",
+      "options.t2.gloss": "letra nieun",
+      "options.t3.gloss": "letra digeut",
+      "options.t4.gloss": "letra nieun"
     },
     "pitem:recog-odd-digeut-rieul": {
-      "gloss": "Encuentra la diferente: digeut entre rieul"
+      "gloss": "Encuentra la diferente: digeut entre rieul",
+      "options.t1.gloss": "letra rieul",
+      "options.t2.gloss": "letra rieul",
+      "options.t3.gloss": "letra digeut",
+      "options.t4.gloss": "letra rieul"
     },
     "pitem:recog-odd-digeut-tieut": {
-      "gloss": "Encuentra la diferente: digeut entre tieut"
+      "gloss": "Encuentra la diferente: digeut entre tieut",
+      "options.t1.gloss": "letra tieut",
+      "options.t2.gloss": "letra tieut",
+      "options.t3.gloss": "letra digeut",
+      "options.t4.gloss": "letra tieut"
     },
     "pitem:recog-odd-eo-a": {
-      "gloss": "Encuentra la diferente: eo entre a"
+      "gloss": "Encuentra la diferente: eo entre a",
+      "options.t1.gloss": "letra a",
+      "options.t2.gloss": "letra a",
+      "options.t3.gloss": "letra eo",
+      "options.t4.gloss": "letra a"
     },
     "pitem:recog-odd-eo-yeo": {
-      "gloss": "Encuentra la diferente: eo entre yeo"
+      "gloss": "Encuentra la diferente: eo entre yeo",
+      "options.t1.gloss": "letra yeo",
+      "options.t2.gloss": "letra yeo",
+      "options.t3.gloss": "letra eo",
+      "options.t4.gloss": "letra yeo"
     },
     "pitem:recog-odd-eu-i": {
-      "gloss": "Encuentra la diferente: eu entre i"
+      "gloss": "Encuentra la diferente: eu entre i",
+      "options.t1.gloss": "letra i",
+      "options.t2.gloss": "letra i",
+      "options.t3.gloss": "letra eu",
+      "options.t4.gloss": "letra i"
     },
     "pitem:recog-odd-giyeok-kieuk": {
-      "gloss": "Encuentra la diferente: giyeok entre kieuk"
+      "gloss": "Encuentra la diferente: giyeok entre kieuk",
+      "options.t1.gloss": "letra kieuk",
+      "options.t2.gloss": "letra kieuk",
+      "options.t3.gloss": "letra giyeok",
+      "options.t4.gloss": "letra kieuk"
     },
     "pitem:recog-odd-giyeok-nieun": {
-      "gloss": "Encuentra la diferente: giyeok entre nieun"
+      "gloss": "Encuentra la diferente: giyeok entre nieun",
+      "options.t1.gloss": "letra nieun",
+      "options.t2.gloss": "letra nieun",
+      "options.t3.gloss": "letra giyeok",
+      "options.t4.gloss": "letra nieun"
     },
     "pitem:recog-odd-hieut-ieung": {
-      "gloss": "Encuentra la diferente: hieut entre ieung"
+      "gloss": "Encuentra la diferente: hieut entre ieung",
+      "options.t1.gloss": "letra ieung",
+      "options.t2.gloss": "letra ieung",
+      "options.t3.gloss": "letra hieut",
+      "options.t4.gloss": "letra ieung"
     },
     "pitem:recog-odd-i-eu": {
-      "gloss": "Encuentra la diferente: i entre eu"
+      "gloss": "Encuentra la diferente: i entre eu",
+      "options.t1.gloss": "letra eu",
+      "options.t2.gloss": "letra eu",
+      "options.t3.gloss": "letra i",
+      "options.t4.gloss": "letra eu"
     },
     "pitem:recog-odd-ieung-hieut": {
-      "gloss": "Encuentra la diferente: ieung entre hieut"
+      "gloss": "Encuentra la diferente: ieung entre hieut",
+      "options.t1.gloss": "letra hieut",
+      "options.t2.gloss": "letra hieut",
+      "options.t3.gloss": "letra ieung",
+      "options.t4.gloss": "letra hieut"
     },
     "pitem:recog-odd-ieung-mieum": {
-      "gloss": "Encuentra la diferente: ieung entre mieum"
+      "gloss": "Encuentra la diferente: ieung entre mieum",
+      "options.t1.gloss": "letra mieum",
+      "options.t2.gloss": "letra mieum",
+      "options.t3.gloss": "letra ieung",
+      "options.t4.gloss": "letra mieum"
     },
     "pitem:recog-odd-ieung-siot": {
-      "gloss": "Encuentra la diferente: ieung entre siot"
+      "gloss": "Encuentra la diferente: ieung entre siot",
+      "options.t1.gloss": "letra siot",
+      "options.t2.gloss": "letra siot",
+      "options.t3.gloss": "letra ieung",
+      "options.t4.gloss": "letra siot"
     },
     "pitem:recog-odd-jieut-chieut": {
-      "gloss": "Encuentra la diferente: jieut entre chieut"
+      "gloss": "Encuentra la diferente: jieut entre chieut",
+      "options.t1.gloss": "letra chieut",
+      "options.t2.gloss": "letra chieut",
+      "options.t3.gloss": "letra jieut",
+      "options.t4.gloss": "letra chieut"
     },
     "pitem:recog-odd-jieut-siot": {
-      "gloss": "Encuentra la diferente: jieut entre siot"
+      "gloss": "Encuentra la diferente: jieut entre siot",
+      "options.t1.gloss": "letra siot",
+      "options.t2.gloss": "letra siot",
+      "options.t3.gloss": "letra jieut",
+      "options.t4.gloss": "letra siot"
     },
     "pitem:recog-odd-kieuk-giyeok": {
-      "gloss": "Encuentra la diferente: kieuk entre giyeok"
+      "gloss": "Encuentra la diferente: kieuk entre giyeok",
+      "options.t1.gloss": "letra giyeok",
+      "options.t2.gloss": "letra giyeok",
+      "options.t3.gloss": "letra kieuk",
+      "options.t4.gloss": "letra giyeok"
     },
     "pitem:recog-odd-mieum-bieup": {
-      "gloss": "Encuentra la diferente: mieum entre bieup"
+      "gloss": "Encuentra la diferente: mieum entre bieup",
+      "options.t1.gloss": "letra bieup",
+      "options.t2.gloss": "letra bieup",
+      "options.t3.gloss": "letra mieum",
+      "options.t4.gloss": "letra bieup"
     },
     "pitem:recog-odd-mieum-ieung": {
-      "gloss": "Encuentra la diferente: mieum entre ieung"
+      "gloss": "Encuentra la diferente: mieum entre ieung",
+      "options.t1.gloss": "letra ieung",
+      "options.t2.gloss": "letra ieung",
+      "options.t3.gloss": "letra mieum",
+      "options.t4.gloss": "letra ieung"
     },
     "pitem:recog-odd-nieun-digeut": {
-      "gloss": "Encuentra la diferente: nieun entre digeut"
+      "gloss": "Encuentra la diferente: nieun entre digeut",
+      "options.t1.gloss": "letra digeut",
+      "options.t2.gloss": "letra digeut",
+      "options.t3.gloss": "letra nieun",
+      "options.t4.gloss": "letra digeut"
     },
     "pitem:recog-odd-nieun-giyeok": {
-      "gloss": "Encuentra la diferente: nieun entre giyeok"
+      "gloss": "Encuentra la diferente: nieun entre giyeok",
+      "options.t1.gloss": "letra giyeok",
+      "options.t2.gloss": "letra giyeok",
+      "options.t3.gloss": "letra nieun",
+      "options.t4.gloss": "letra giyeok"
     },
     "pitem:recog-odd-o-u": {
-      "gloss": "Encuentra la diferente: o entre u"
+      "gloss": "Encuentra la diferente: o entre u",
+      "options.t1.gloss": "letra u",
+      "options.t2.gloss": "letra u",
+      "options.t3.gloss": "letra o",
+      "options.t4.gloss": "letra u"
     },
     "pitem:recog-odd-o-yo": {
-      "gloss": "Encuentra la diferente: o entre yo"
+      "gloss": "Encuentra la diferente: o entre yo",
+      "options.t1.gloss": "letra yo",
+      "options.t2.gloss": "letra yo",
+      "options.t3.gloss": "letra o",
+      "options.t4.gloss": "letra yo"
     },
     "pitem:recog-odd-rieul-digeut": {
-      "gloss": "Encuentra la diferente: rieul entre digeut"
+      "gloss": "Encuentra la diferente: rieul entre digeut",
+      "options.t1.gloss": "letra digeut",
+      "options.t2.gloss": "letra digeut",
+      "options.t3.gloss": "letra rieul",
+      "options.t4.gloss": "letra digeut"
     },
     "pitem:recog-odd-siot-ieung": {
-      "gloss": "Encuentra la diferente: siot entre ieung"
+      "gloss": "Encuentra la diferente: siot entre ieung",
+      "options.t1.gloss": "letra ieung",
+      "options.t2.gloss": "letra ieung",
+      "options.t3.gloss": "letra siot",
+      "options.t4.gloss": "letra ieung"
     },
     "pitem:recog-odd-siot-jieut": {
-      "gloss": "Encuentra la diferente: siot entre jieut"
+      "gloss": "Encuentra la diferente: siot entre jieut",
+      "options.t1.gloss": "letra jieut",
+      "options.t2.gloss": "letra jieut",
+      "options.t3.gloss": "letra siot",
+      "options.t4.gloss": "letra jieut"
     },
     "pitem:recog-odd-tieut-digeut": {
-      "gloss": "Encuentra la diferente: tieut entre digeut"
+      "gloss": "Encuentra la diferente: tieut entre digeut",
+      "options.t1.gloss": "letra digeut",
+      "options.t2.gloss": "letra digeut",
+      "options.t3.gloss": "letra tieut",
+      "options.t4.gloss": "letra digeut"
     },
     "pitem:recog-odd-u-o": {
-      "gloss": "Encuentra la diferente: u entre o"
+      "gloss": "Encuentra la diferente: u entre o",
+      "options.t1.gloss": "letra o",
+      "options.t2.gloss": "letra o",
+      "options.t3.gloss": "letra u",
+      "options.t4.gloss": "letra o"
     },
     "pitem:recog-odd-u-yu": {
-      "gloss": "Encuentra la diferente: u entre yu"
+      "gloss": "Encuentra la diferente: u entre yu",
+      "options.t1.gloss": "letra yu",
+      "options.t2.gloss": "letra yu",
+      "options.t3.gloss": "letra u",
+      "options.t4.gloss": "letra yu"
     },
     "pitem:recog-odd-ya-a": {
-      "gloss": "Encuentra la diferente: ya entre a"
+      "gloss": "Encuentra la diferente: ya entre a",
+      "options.t1.gloss": "letra a",
+      "options.t2.gloss": "letra a",
+      "options.t3.gloss": "letra ya",
+      "options.t4.gloss": "letra a"
     },
     "pitem:recog-odd-ya-yeo": {
-      "gloss": "Encuentra la diferente: ya entre yeo"
+      "gloss": "Encuentra la diferente: ya entre yeo",
+      "options.t1.gloss": "letra yeo",
+      "options.t2.gloss": "letra yeo",
+      "options.t3.gloss": "letra ya",
+      "options.t4.gloss": "letra yeo"
     },
     "pitem:recog-odd-yeo-eo": {
-      "gloss": "Encuentra la diferente: yeo entre eo"
+      "gloss": "Encuentra la diferente: yeo entre eo",
+      "options.t1.gloss": "letra eo",
+      "options.t2.gloss": "letra eo",
+      "options.t3.gloss": "letra yeo",
+      "options.t4.gloss": "letra eo"
     },
     "pitem:recog-odd-yeo-ya": {
-      "gloss": "Encuentra la diferente: yeo entre ya"
+      "gloss": "Encuentra la diferente: yeo entre ya",
+      "options.t1.gloss": "letra ya",
+      "options.t2.gloss": "letra ya",
+      "options.t3.gloss": "letra yeo",
+      "options.t4.gloss": "letra ya"
     },
     "pitem:recog-odd-yo-o": {
-      "gloss": "Encuentra la diferente: yo entre o"
+      "gloss": "Encuentra la diferente: yo entre o",
+      "options.t1.gloss": "letra o",
+      "options.t2.gloss": "letra o",
+      "options.t3.gloss": "letra yo",
+      "options.t4.gloss": "letra o"
     },
     "pitem:recog-odd-yo-yu": {
-      "gloss": "Encuentra la diferente: yo entre yu"
+      "gloss": "Encuentra la diferente: yo entre yu",
+      "options.t1.gloss": "letra yu",
+      "options.t2.gloss": "letra yu",
+      "options.t3.gloss": "letra yo",
+      "options.t4.gloss": "letra yu"
     },
     "pitem:recog-odd-yu-u": {
-      "gloss": "Encuentra la diferente: yu entre u"
+      "gloss": "Encuentra la diferente: yu entre u",
+      "options.t1.gloss": "letra u",
+      "options.t2.gloss": "letra u",
+      "options.t3.gloss": "letra yu",
+      "options.t4.gloss": "letra u"
     },
     "pitem:recog-odd-yu-yo": {
-      "gloss": "Encuentra la diferente: yu entre yo"
+      "gloss": "Encuentra la diferente: yu entre yo",
+      "options.t1.gloss": "letra yo",
+      "options.t2.gloss": "letra yo",
+      "options.t3.gloss": "letra yu",
+      "options.t4.gloss": "letra yo"
     },
     "pitem:sent-n-hear-badayeyo": {
       "gloss": "Es el mar. (escuchar)",
@@ -735,37 +895,81 @@ export const OVERLAYS: Overlays = {
       "options.songpyeon.gloss": "Songpyeon"
     },
     "pitem:sound-basic-hear-a": {
-      "gloss": "Escucha \"a\": elige la letra a"
+      "gloss": "Escucha \"a\": elige la letra a",
+      "options.a.gloss": "letra a",
+      "options.eo.gloss": "letra eo",
+      "options.i.gloss": "letra i",
+      "options.ya.gloss": "letra ya"
     },
     "pitem:sound-basic-hear-digeut": {
-      "gloss": "Escucha \"da\": elige la letra digeut"
+      "gloss": "Escucha \"da\": elige la letra digeut",
+      "options.digeut.gloss": "letra digeut",
+      "options.nieun.gloss": "letra nieun",
+      "options.rieul.gloss": "letra rieul",
+      "options.tieut.gloss": "letra tieut"
     },
     "pitem:sound-basic-hear-eo": {
-      "gloss": "Escucha \"eo\": elige la letra eo"
+      "gloss": "Escucha \"eo\": elige la letra eo",
+      "options.a.gloss": "letra a",
+      "options.eo.gloss": "letra eo",
+      "options.o.gloss": "letra o",
+      "options.yeo.gloss": "letra yeo"
     },
     "pitem:sound-basic-hear-eu": {
-      "gloss": "Escucha \"eu\": elige la letra eu"
+      "gloss": "Escucha \"eu\": elige la letra eu",
+      "options.eo.gloss": "letra eo",
+      "options.eu.gloss": "letra eu",
+      "options.i.gloss": "letra i",
+      "options.u.gloss": "letra u"
     },
     "pitem:sound-basic-hear-giyeok": {
-      "gloss": "Escucha \"ga\": elige la letra giyeok"
+      "gloss": "Escucha \"ga\": elige la letra giyeok",
+      "options.digeut.gloss": "letra digeut",
+      "options.giyeok.gloss": "letra giyeok",
+      "options.kieuk.gloss": "letra kieuk",
+      "options.nieun.gloss": "letra nieun"
     },
     "pitem:sound-basic-hear-i": {
-      "gloss": "Escucha \"i\": elige la letra i"
+      "gloss": "Escucha \"i\": elige la letra i",
+      "options.a.gloss": "letra a",
+      "options.eo.gloss": "letra eo",
+      "options.eu.gloss": "letra eu",
+      "options.i.gloss": "letra i"
     },
     "pitem:sound-basic-hear-mieum": {
-      "gloss": "Escucha \"ma\": elige la letra mieum"
+      "gloss": "Escucha \"ma\": elige la letra mieum",
+      "options.bieup.gloss": "letra bieup",
+      "options.ieung.gloss": "letra ieung",
+      "options.mieum.gloss": "letra mieum",
+      "options.nieun.gloss": "letra nieun"
     },
     "pitem:sound-basic-hear-nieun": {
-      "gloss": "Escucha \"na\": elige la letra nieun"
+      "gloss": "Escucha \"na\": elige la letra nieun",
+      "options.digeut.gloss": "letra digeut",
+      "options.giyeok.gloss": "letra giyeok",
+      "options.nieun.gloss": "letra nieun",
+      "options.rieul.gloss": "letra rieul"
     },
     "pitem:sound-basic-hear-o": {
-      "gloss": "Escucha \"o\": elige la letra o"
+      "gloss": "Escucha \"o\": elige la letra o",
+      "options.eo.gloss": "letra eo",
+      "options.o.gloss": "letra o",
+      "options.u.gloss": "letra u",
+      "options.yo.gloss": "letra yo"
     },
     "pitem:sound-basic-hear-rieul": {
-      "gloss": "Escucha \"ra\": elige la letra rieul"
+      "gloss": "Escucha \"ra\": elige la letra rieul",
+      "options.digeut.gloss": "letra digeut",
+      "options.mieum.gloss": "letra mieum",
+      "options.nieun.gloss": "letra nieun",
+      "options.rieul.gloss": "letra rieul"
     },
     "pitem:sound-basic-hear-u": {
-      "gloss": "Escucha \"u\": elige la letra u"
+      "gloss": "Escucha \"u\": elige la letra u",
+      "options.eu.gloss": "letra eu",
+      "options.o.gloss": "letra o",
+      "options.u.gloss": "letra u",
+      "options.yu.gloss": "letra yu"
     },
     "pitem:sound-basic-see-a": {
       "gloss": "Mira la letra a: elige \"a\""
@@ -801,40 +1005,88 @@ export const OVERLAYS: Overlays = {
       "gloss": "Mira la letra u: elige \"u\""
     },
     "pitem:sound-rest-hear-bieup": {
-      "gloss": "Escucha \"ba\": elige la letra bieup"
+      "gloss": "Escucha \"ba\": elige la letra bieup",
+      "options.bieup.gloss": "letra bieup",
+      "options.mieum.gloss": "letra mieum",
+      "options.pieup.gloss": "letra pieup",
+      "options.siot.gloss": "letra siot"
     },
     "pitem:sound-rest-hear-chieut": {
-      "gloss": "Escucha \"cha\": elige la letra chieut"
+      "gloss": "Escucha \"cha\": elige la letra chieut",
+      "options.chieut.gloss": "letra chieut",
+      "options.hieut.gloss": "letra hieut",
+      "options.jieut.gloss": "letra jieut",
+      "options.siot.gloss": "letra siot"
     },
     "pitem:sound-rest-hear-hieut": {
-      "gloss": "Escucha \"ha\": elige la letra hieut"
+      "gloss": "Escucha \"ha\": elige la letra hieut",
+      "options.chieut.gloss": "letra chieut",
+      "options.hieut.gloss": "letra hieut",
+      "options.ieung.gloss": "letra ieung",
+      "options.siot.gloss": "letra siot"
     },
     "pitem:sound-rest-hear-jieut": {
-      "gloss": "Escucha \"ja\": elige la letra jieut"
+      "gloss": "Escucha \"ja\": elige la letra jieut",
+      "options.chieut.gloss": "letra chieut",
+      "options.giyeok.gloss": "letra giyeok",
+      "options.jieut.gloss": "letra jieut",
+      "options.siot.gloss": "letra siot"
     },
     "pitem:sound-rest-hear-kieuk": {
-      "gloss": "Escucha \"ka\": elige la letra kieuk"
+      "gloss": "Escucha \"ka\": elige la letra kieuk",
+      "options.giyeok.gloss": "letra giyeok",
+      "options.kieuk.gloss": "letra kieuk",
+      "options.pieup.gloss": "letra pieup",
+      "options.tieut.gloss": "letra tieut"
     },
     "pitem:sound-rest-hear-pieup": {
-      "gloss": "Escucha \"pa\": elige la letra pieup"
+      "gloss": "Escucha \"pa\": elige la letra pieup",
+      "options.bieup.gloss": "letra bieup",
+      "options.kieuk.gloss": "letra kieuk",
+      "options.pieup.gloss": "letra pieup",
+      "options.tieut.gloss": "letra tieut"
     },
     "pitem:sound-rest-hear-siot": {
-      "gloss": "Escucha \"sa\": elige la letra siot"
+      "gloss": "Escucha \"sa\": elige la letra siot",
+      "options.chieut.gloss": "letra chieut",
+      "options.ieung.gloss": "letra ieung",
+      "options.jieut.gloss": "letra jieut",
+      "options.siot.gloss": "letra siot"
     },
     "pitem:sound-rest-hear-tieut": {
-      "gloss": "Escucha \"ta\": elige la letra tieut"
+      "gloss": "Escucha \"ta\": elige la letra tieut",
+      "options.digeut.gloss": "letra digeut",
+      "options.kieuk.gloss": "letra kieuk",
+      "options.pieup.gloss": "letra pieup",
+      "options.tieut.gloss": "letra tieut"
     },
     "pitem:sound-rest-hear-ya": {
-      "gloss": "Escucha \"ya\": elige la letra ya"
+      "gloss": "Escucha \"ya\": elige la letra ya",
+      "options.a.gloss": "letra a",
+      "options.ya.gloss": "letra ya",
+      "options.yeo.gloss": "letra yeo",
+      "options.yo.gloss": "letra yo"
     },
     "pitem:sound-rest-hear-yeo": {
-      "gloss": "Escucha \"yeo\": elige la letra yeo"
+      "gloss": "Escucha \"yeo\": elige la letra yeo",
+      "options.eo.gloss": "letra eo",
+      "options.ya.gloss": "letra ya",
+      "options.yeo.gloss": "letra yeo",
+      "options.yu.gloss": "letra yu"
     },
     "pitem:sound-rest-hear-yo": {
-      "gloss": "Escucha \"yo\": elige la letra yo"
+      "gloss": "Escucha \"yo\": elige la letra yo",
+      "options.o.gloss": "letra o",
+      "options.ya.gloss": "letra ya",
+      "options.yo.gloss": "letra yo",
+      "options.yu.gloss": "letra yu"
     },
     "pitem:sound-rest-hear-yu": {
-      "gloss": "Escucha \"yu\": elige la letra yu"
+      "gloss": "Escucha \"yu\": elige la letra yu",
+      "options.u.gloss": "letra u",
+      "options.yeo.gloss": "letra yeo",
+      "options.yo.gloss": "letra yo",
+      "options.yu.gloss": "letra yu"
     },
     "pitem:sound-rest-see-bieup": {
       "gloss": "Mira la letra bieup: elige \"ba\""
@@ -873,76 +1125,172 @@ export const OVERLAYS: Overlays = {
       "gloss": "Mira la letra yu: elige \"yu\""
     },
     "pitem:syl-cv-build-da": {
-      "gloss": "Forma la sílaba da"
+      "gloss": "Forma la sílaba da",
+      "options.a.gloss": "sílaba a",
+      "options.da.gloss": "sílaba da",
+      "options.du.gloss": "sílaba du",
+      "options.ra.gloss": "sílaba ra"
     },
     "pitem:syl-cv-build-ga": {
-      "gloss": "Forma la sílaba ga"
+      "gloss": "Forma la sílaba ga",
+      "options.ga.gloss": "sílaba ga",
+      "options.geo.gloss": "sílaba geo",
+      "options.na.gloss": "sílaba na",
+      "options.ra.gloss": "sílaba ra"
     },
     "pitem:syl-cv-build-gu": {
-      "gloss": "Forma la sílaba gu"
+      "gloss": "Forma la sílaba gu",
+      "options.ga.gloss": "sílaba ga",
+      "options.go.gloss": "sílaba go",
+      "options.gu.gloss": "sílaba gu",
+      "options.nu.gloss": "sílaba nu"
     },
     "pitem:syl-cv-build-ma": {
-      "gloss": "Forma la sílaba ma"
+      "gloss": "Forma la sílaba ma",
+      "options.ma.gloss": "sílaba ma",
+      "options.meo.gloss": "sílaba meo",
+      "options.meu.gloss": "sílaba meu",
+      "options.ra.gloss": "sílaba ra"
     },
     "pitem:syl-cv-build-mo": {
-      "gloss": "Forma la sílaba mo"
+      "gloss": "Forma la sílaba mo",
+      "options.mi.gloss": "sílaba mi",
+      "options.mo.gloss": "sílaba mo",
+      "options.no.gloss": "sílaba no",
+      "options.o.gloss": "sílaba o"
     },
     "pitem:syl-cv-build-na": {
-      "gloss": "Forma la sílaba na"
+      "gloss": "Forma la sílaba na",
+      "options.da.gloss": "sílaba da",
+      "options.na.gloss": "sílaba na",
+      "options.neu.gloss": "sílaba neu",
+      "options.no.gloss": "sílaba no"
     },
     "pitem:syl-cv-hear-da": {
-      "gloss": "Escucha la sílaba da"
+      "gloss": "Escucha la sílaba da",
+      "options.da.gloss": "sílaba da",
+      "options.deu.gloss": "sílaba deu",
+      "options.ga.gloss": "sílaba ga",
+      "options.ma.gloss": "sílaba ma"
     },
     "pitem:syl-cv-hear-deo": {
-      "gloss": "Escucha la sílaba deo"
+      "gloss": "Escucha la sílaba deo",
+      "options.deo.gloss": "sílaba deo",
+      "options.di.gloss": "sílaba di",
+      "options.do.gloss": "sílaba do",
+      "options.eo.gloss": "sílaba eo"
     },
     "pitem:syl-cv-hear-do": {
-      "gloss": "Escucha la sílaba do"
+      "gloss": "Escucha la sílaba do",
+      "options.da.gloss": "sílaba da",
+      "options.do.gloss": "sílaba do",
+      "options.go.gloss": "sílaba go",
+      "options.ro.gloss": "sílaba ro"
     },
     "pitem:syl-cv-hear-du": {
-      "gloss": "Escucha la sílaba du"
+      "gloss": "Escucha la sílaba du",
+      "options.deo.gloss": "sílaba deo",
+      "options.deu.gloss": "sílaba deu",
+      "options.du.gloss": "sílaba du",
+      "options.nu.gloss": "sílaba nu"
     },
     "pitem:syl-cv-hear-ga": {
-      "gloss": "Escucha la sílaba ga"
+      "gloss": "Escucha la sílaba ga",
+      "options.ga.gloss": "sílaba ga",
+      "options.geo.gloss": "sílaba geo",
+      "options.na.gloss": "sílaba na",
+      "options.ra.gloss": "sílaba ra"
     },
     "pitem:syl-cv-hear-geo": {
-      "gloss": "Escucha la sílaba geo"
+      "gloss": "Escucha la sílaba geo",
+      "options.deo.gloss": "sílaba deo",
+      "options.geo.gloss": "sílaba geo",
+      "options.geu.gloss": "sílaba geu",
+      "options.go.gloss": "sílaba go"
     },
     "pitem:syl-cv-hear-go": {
-      "gloss": "Escucha la sílaba go"
+      "gloss": "Escucha la sílaba go",
+      "options.go.gloss": "sílaba go",
+      "options.gu.gloss": "sílaba gu",
+      "options.o.gloss": "sílaba o",
+      "options.ro.gloss": "sílaba ro"
     },
     "pitem:syl-cv-hear-gu": {
-      "gloss": "Escucha la sílaba gu"
+      "gloss": "Escucha la sílaba gu",
+      "options.ga.gloss": "sílaba ga",
+      "options.geu.gloss": "sílaba geu",
+      "options.gu.gloss": "sílaba gu",
+      "options.mu.gloss": "sílaba mu"
     },
     "pitem:syl-cv-hear-i": {
-      "gloss": "Escucha la sílaba i"
+      "gloss": "Escucha la sílaba i",
+      "options.di.gloss": "sílaba di",
+      "options.eu.gloss": "sílaba eu",
+      "options.i.gloss": "sílaba i",
+      "options.o.gloss": "sílaba o"
     },
     "pitem:syl-cv-hear-ma": {
-      "gloss": "Escucha la sílaba ma"
+      "gloss": "Escucha la sílaba ma",
+      "options.a.gloss": "sílaba a",
+      "options.da.gloss": "sílaba da",
+      "options.ma.gloss": "sílaba ma",
+      "options.mu.gloss": "sílaba mu"
     },
     "pitem:syl-cv-hear-meo": {
-      "gloss": "Escucha la sílaba meo"
+      "gloss": "Escucha la sílaba meo",
+      "options.ma.gloss": "sílaba ma",
+      "options.meo.gloss": "sílaba meo",
+      "options.meu.gloss": "sílaba meu",
+      "options.reo.gloss": "sílaba reo"
     },
     "pitem:syl-cv-hear-mo": {
-      "gloss": "Escucha la sílaba mo"
+      "gloss": "Escucha la sílaba mo",
+      "options.mi.gloss": "sílaba mi",
+      "options.mo.gloss": "sílaba mo",
+      "options.no.gloss": "sílaba no",
+      "options.o.gloss": "sílaba o"
     },
     "pitem:syl-cv-hear-mu": {
-      "gloss": "Escucha la sílaba mu"
+      "gloss": "Escucha la sílaba mu",
+      "options.gu.gloss": "sílaba gu",
+      "options.ma.gloss": "sílaba ma",
+      "options.mo.gloss": "sílaba mo",
+      "options.mu.gloss": "sílaba mu"
     },
     "pitem:syl-cv-hear-na": {
-      "gloss": "Escucha la sílaba na"
+      "gloss": "Escucha la sílaba na",
+      "options.a.gloss": "sílaba a",
+      "options.da.gloss": "sílaba da",
+      "options.na.gloss": "sílaba na",
+      "options.ni.gloss": "sílaba ni"
     },
     "pitem:syl-cv-hear-neo": {
-      "gloss": "Escucha la sílaba neo"
+      "gloss": "Escucha la sílaba neo",
+      "options.geo.gloss": "sílaba geo",
+      "options.na.gloss": "sílaba na",
+      "options.neo.gloss": "sílaba neo",
+      "options.nu.gloss": "sílaba nu"
     },
     "pitem:syl-cv-hear-no": {
-      "gloss": "Escucha la sílaba no"
+      "gloss": "Escucha la sílaba no",
+      "options.do.gloss": "sílaba do",
+      "options.mo.gloss": "sílaba mo",
+      "options.neo.gloss": "sílaba neo",
+      "options.no.gloss": "sílaba no"
     },
     "pitem:syl-cv-hear-nu": {
-      "gloss": "Escucha la sílaba nu"
+      "gloss": "Escucha la sílaba nu",
+      "options.ni.gloss": "sílaba ni",
+      "options.no.gloss": "sílaba no",
+      "options.nu.gloss": "sílaba nu",
+      "options.ru.gloss": "sílaba ru"
     },
     "pitem:syl-cv-hear-ra": {
-      "gloss": "Escucha la sílaba ra"
+      "gloss": "Escucha la sílaba ra",
+      "options.ma.gloss": "sílaba ma",
+      "options.na.gloss": "sílaba na",
+      "options.ra.gloss": "sílaba ra",
+      "options.ro.gloss": "sílaba ro"
     },
     "pitem:syl-cv-see-a": {
       "gloss": "Mira la sílaba a y elige su sonido"
@@ -981,76 +1329,172 @@ export const OVERLAYS: Overlays = {
       "gloss": "Mira la sílaba u y elige su sonido"
     },
     "pitem:syl-cvc-build-dal": {
-      "gloss": "Forma la sílaba dal"
+      "gloss": "Forma la sílaba dal",
+      "options.dak.gloss": "sílaba dak",
+      "options.dal.gloss": "sílaba dal",
+      "options.dan.gloss": "sílaba dan",
+      "options.deol.gloss": "sílaba deol"
     },
     "pitem:syl-cvc-build-gang": {
-      "gloss": "Forma la sílaba gang"
+      "gloss": "Forma la sílaba gang",
+      "options.gal.gloss": "sílaba gal",
+      "options.gang.gloss": "sílaba gang",
+      "options.gap.gloss": "sílaba gap",
+      "options.ging.gloss": "sílaba ging"
     },
     "pitem:syl-cvc-build-gom": {
-      "gloss": "Forma la sílaba gom"
+      "gloss": "Forma la sílaba gom",
+      "options.gam.gloss": "sílaba gam",
+      "options.gom.gloss": "sílaba gom",
+      "options.gon.gloss": "sílaba gon",
+      "options.gong.gloss": "sílaba gong"
     },
     "pitem:syl-cvc-build-mul": {
-      "gloss": "Forma la sílaba mul"
+      "gloss": "Forma la sílaba mul",
+      "options.meol.gloss": "sílaba meol",
+      "options.mul.gloss": "sílaba mul",
+      "options.mum.gloss": "sílaba mum",
+      "options.mung.gloss": "sílaba mung"
     },
     "pitem:syl-cvc-build-mun": {
-      "gloss": "Forma la sílaba mun"
+      "gloss": "Forma la sílaba mun",
+      "options.mon.gloss": "sílaba mon",
+      "options.muk.gloss": "sílaba muk",
+      "options.mun.gloss": "sílaba mun",
+      "options.mup.gloss": "sílaba mup"
     },
     "pitem:syl-cvc-build-san": {
-      "gloss": "Forma la sílaba san"
+      "gloss": "Forma la sílaba san",
+      "options.sal.gloss": "sílaba sal",
+      "options.sam.gloss": "sílaba sam",
+      "options.san.gloss": "sílaba san",
+      "options.seun.gloss": "sílaba seun"
     },
     "pitem:syl-cvc-hear-bap": {
-      "gloss": "Escucha la sílaba bap"
+      "gloss": "Escucha la sílaba bap",
+      "options.bak.gloss": "sílaba bak",
+      "options.bal.gloss": "sílaba bal",
+      "options.bap.gloss": "sílaba bap",
+      "options.bop.gloss": "sílaba bop"
     },
     "pitem:syl-cvc-hear-bom": {
-      "gloss": "Escucha la sílaba bom"
+      "gloss": "Escucha la sílaba bom",
+      "options.beum.gloss": "sílaba beum",
+      "options.bok.gloss": "sílaba bok",
+      "options.bom.gloss": "sílaba bom",
+      "options.bon.gloss": "sílaba bon"
     },
     "pitem:syl-cvc-hear-byeol": {
-      "gloss": "Escucha la sílaba byeol"
+      "gloss": "Escucha la sílaba byeol",
+      "options.bul.gloss": "sílaba bul",
+      "options.byeol.gloss": "sílaba byeol",
+      "options.byeong.gloss": "sílaba byeong",
+      "options.byeop.gloss": "sílaba byeop"
     },
     "pitem:syl-cvc-hear-dal": {
-      "gloss": "Escucha la sílaba dal"
+      "gloss": "Escucha la sílaba dal",
+      "options.dak.gloss": "sílaba dak",
+      "options.dal.gloss": "sílaba dal",
+      "options.dan.gloss": "sílaba dan",
+      "options.deol.gloss": "sílaba deol"
     },
     "pitem:syl-cvc-hear-gang": {
-      "gloss": "Escucha la sílaba gang"
+      "gloss": "Escucha la sílaba gang",
+      "options.gal.gloss": "sílaba gal",
+      "options.gang.gloss": "sílaba gang",
+      "options.gap.gloss": "sílaba gap",
+      "options.ging.gloss": "sílaba ging"
     },
     "pitem:syl-cvc-hear-gom": {
-      "gloss": "Escucha la sílaba gom"
+      "gloss": "Escucha la sílaba gom",
+      "options.gam.gloss": "sílaba gam",
+      "options.gom.gloss": "sílaba gom",
+      "options.gon.gloss": "sílaba gon",
+      "options.gong.gloss": "sílaba gong"
     },
     "pitem:syl-cvc-hear-gong": {
-      "gloss": "Escucha la sílaba gong"
+      "gloss": "Escucha la sílaba gong",
+      "options.gang.gloss": "sílaba gang",
+      "options.gok.gloss": "sílaba gok",
+      "options.gon.gloss": "sílaba gon",
+      "options.gong.gloss": "sílaba gong"
     },
     "pitem:syl-cvc-hear-guk": {
-      "gloss": "Escucha la sílaba guk"
+      "gloss": "Escucha la sílaba guk",
+      "options.gik.gloss": "sílaba gik",
+      "options.guk.gloss": "sílaba guk",
+      "options.gul.gloss": "sílaba gul",
+      "options.gup.gloss": "sílaba gup"
     },
     "pitem:syl-cvc-hear-hak": {
-      "gloss": "Escucha la sílaba hak"
+      "gloss": "Escucha la sílaba hak",
+      "options.hak.gloss": "sílaba hak",
+      "options.han.gloss": "sílaba han",
+      "options.hang.gloss": "sílaba hang",
+      "options.heok.gloss": "sílaba heok"
     },
     "pitem:syl-cvc-hear-han": {
-      "gloss": "Escucha la sílaba han"
+      "gloss": "Escucha la sílaba han",
+      "options.hal.gloss": "sílaba hal",
+      "options.ham.gloss": "sílaba ham",
+      "options.han.gloss": "sílaba han",
+      "options.heun.gloss": "sílaba heun"
     },
     "pitem:syl-cvc-hear-ip": {
-      "gloss": "Escucha la sílaba ip"
+      "gloss": "Escucha la sílaba ip",
+      "options.im.gloss": "sílaba im",
+      "options.ing.gloss": "sílaba ing",
+      "options.ip.gloss": "sílaba ip",
+      "options.op.gloss": "sílaba op"
     },
     "pitem:syl-cvc-hear-jip": {
-      "gloss": "Escucha la sílaba jip"
+      "gloss": "Escucha la sílaba jip",
+      "options.jim.gloss": "sílaba jim",
+      "options.jing.gloss": "sílaba jing",
+      "options.jip.gloss": "sílaba jip",
+      "options.jop.gloss": "sílaba jop"
     },
     "pitem:syl-cvc-hear-jul": {
-      "gloss": "Escucha la sílaba jul"
+      "gloss": "Escucha la sílaba jul",
+      "options.jeol.gloss": "sílaba jeol",
+      "options.jul.gloss": "sílaba jul",
+      "options.jum.gloss": "sílaba jum",
+      "options.jung.gloss": "sílaba jung"
     },
     "pitem:syl-cvc-hear-mul": {
-      "gloss": "Escucha la sílaba mul"
+      "gloss": "Escucha la sílaba mul",
+      "options.meol.gloss": "sílaba meol",
+      "options.mul.gloss": "sílaba mul",
+      "options.mum.gloss": "sílaba mum",
+      "options.mung.gloss": "sílaba mung"
     },
     "pitem:syl-cvc-hear-mun": {
-      "gloss": "Escucha la sílaba mun"
+      "gloss": "Escucha la sílaba mun",
+      "options.mon.gloss": "sílaba mon",
+      "options.muk.gloss": "sílaba muk",
+      "options.mun.gloss": "sílaba mun",
+      "options.mup.gloss": "sílaba mup"
     },
     "pitem:syl-cvc-hear-nun": {
-      "gloss": "Escucha la sílaba nun"
+      "gloss": "Escucha la sílaba nun",
+      "options.neon.gloss": "sílaba neon",
+      "options.num.gloss": "sílaba num",
+      "options.nun.gloss": "sílaba nun",
+      "options.nung.gloss": "sílaba nung"
     },
     "pitem:syl-cvc-hear-san": {
-      "gloss": "Escucha la sílaba san"
+      "gloss": "Escucha la sílaba san",
+      "options.sal.gloss": "sílaba sal",
+      "options.sam.gloss": "sílaba sam",
+      "options.san.gloss": "sílaba san",
+      "options.seun.gloss": "sílaba seun"
     },
     "pitem:syl-cvc-hear-yeon": {
-      "gloss": "Escucha la sílaba yeon"
+      "gloss": "Escucha la sílaba yeon",
+      "options.an.gloss": "sílaba an",
+      "options.yeok.gloss": "sílaba yeok",
+      "options.yeon.gloss": "sílaba yeon",
+      "options.yeop.gloss": "sílaba yeop"
     },
     "pitem:syl-cvc-see-bap": {
       "gloss": "Mira la sílaba bap y elige su sonido"
@@ -2298,6 +2742,924 @@ export const OVERLAYS: Overlays = {
       "listenPick.rounds.lp-sym-jamo-hieut.prompt": "글자 hieut",
       "listenPick.rounds.lp-sym-jamo-yo.prompt": "글자 yo",
       "listenPick.rounds.lp-sym-jamo-yu.prompt": "글자 yu"
+    },
+    "pitem:recog-odd-a-eo": {
+      "gloss": "다른 하나를 찾아요: 모음 어 사이에 있는 아",
+      "options.t1.gloss": "모음 어",
+      "options.t2.gloss": "모음 어",
+      "options.t3.gloss": "모음 아",
+      "options.t4.gloss": "모음 어"
+    },
+    "pitem:recog-odd-a-ya": {
+      "gloss": "다른 하나를 찾아요: 모음 야 사이에 있는 아",
+      "options.t1.gloss": "모음 야",
+      "options.t2.gloss": "모음 야",
+      "options.t3.gloss": "모음 아",
+      "options.t4.gloss": "모음 야"
+    },
+    "pitem:recog-odd-bieup-mieum": {
+      "gloss": "다른 하나를 찾아요: 자음 미음 사이에 있는 비읍",
+      "options.t1.gloss": "자음 미음",
+      "options.t2.gloss": "자음 미음",
+      "options.t3.gloss": "자음 비읍",
+      "options.t4.gloss": "자음 미음"
+    },
+    "pitem:recog-odd-chieut-jieut": {
+      "gloss": "다른 하나를 찾아요: 자음 지읒 사이에 있는 치읓",
+      "options.t1.gloss": "자음 지읒",
+      "options.t2.gloss": "자음 지읒",
+      "options.t3.gloss": "자음 치읓",
+      "options.t4.gloss": "자음 지읒"
+    },
+    "pitem:recog-odd-digeut-nieun": {
+      "gloss": "다른 하나를 찾아요: 자음 니은 사이에 있는 디귿",
+      "options.t1.gloss": "자음 니은",
+      "options.t2.gloss": "자음 니은",
+      "options.t3.gloss": "자음 디귿",
+      "options.t4.gloss": "자음 니은"
+    },
+    "pitem:recog-odd-digeut-rieul": {
+      "gloss": "다른 하나를 찾아요: 자음 리을 사이에 있는 디귿",
+      "options.t1.gloss": "자음 리을",
+      "options.t2.gloss": "자음 리을",
+      "options.t3.gloss": "자음 디귿",
+      "options.t4.gloss": "자음 리을"
+    },
+    "pitem:recog-odd-digeut-tieut": {
+      "gloss": "다른 하나를 찾아요: 자음 티읕 사이에 있는 디귿",
+      "options.t1.gloss": "자음 티읕",
+      "options.t2.gloss": "자음 티읕",
+      "options.t3.gloss": "자음 디귿",
+      "options.t4.gloss": "자음 티읕"
+    },
+    "pitem:recog-odd-eo-a": {
+      "gloss": "다른 하나를 찾아요: 모음 아 사이에 있는 어",
+      "options.t1.gloss": "모음 아",
+      "options.t2.gloss": "모음 아",
+      "options.t3.gloss": "모음 어",
+      "options.t4.gloss": "모음 아"
+    },
+    "pitem:recog-odd-eo-yeo": {
+      "gloss": "다른 하나를 찾아요: 모음 여 사이에 있는 어",
+      "options.t1.gloss": "모음 여",
+      "options.t2.gloss": "모음 여",
+      "options.t3.gloss": "모음 어",
+      "options.t4.gloss": "모음 여"
+    },
+    "pitem:recog-odd-eu-i": {
+      "gloss": "다른 하나를 찾아요: 모음 이 사이에 있는 으",
+      "options.t1.gloss": "모음 이",
+      "options.t2.gloss": "모음 이",
+      "options.t3.gloss": "모음 으",
+      "options.t4.gloss": "모음 이"
+    },
+    "pitem:recog-odd-giyeok-kieuk": {
+      "gloss": "다른 하나를 찾아요: 자음 키읔 사이에 있는 기역",
+      "options.t1.gloss": "자음 키읔",
+      "options.t2.gloss": "자음 키읔",
+      "options.t3.gloss": "자음 기역",
+      "options.t4.gloss": "자음 키읔"
+    },
+    "pitem:recog-odd-giyeok-nieun": {
+      "gloss": "다른 하나를 찾아요: 자음 니은 사이에 있는 기역",
+      "options.t1.gloss": "자음 니은",
+      "options.t2.gloss": "자음 니은",
+      "options.t3.gloss": "자음 기역",
+      "options.t4.gloss": "자음 니은"
+    },
+    "pitem:recog-odd-hieut-ieung": {
+      "gloss": "다른 하나를 찾아요: 자음 이응 사이에 있는 히읗",
+      "options.t1.gloss": "자음 이응",
+      "options.t2.gloss": "자음 이응",
+      "options.t3.gloss": "자음 히읗",
+      "options.t4.gloss": "자음 이응"
+    },
+    "pitem:recog-odd-i-eu": {
+      "gloss": "다른 하나를 찾아요: 모음 으 사이에 있는 이",
+      "options.t1.gloss": "모음 으",
+      "options.t2.gloss": "모음 으",
+      "options.t3.gloss": "모음 이",
+      "options.t4.gloss": "모음 으"
+    },
+    "pitem:recog-odd-ieung-hieut": {
+      "gloss": "다른 하나를 찾아요: 자음 히읗 사이에 있는 이응",
+      "options.t1.gloss": "자음 히읗",
+      "options.t2.gloss": "자음 히읗",
+      "options.t3.gloss": "자음 이응",
+      "options.t4.gloss": "자음 히읗"
+    },
+    "pitem:recog-odd-ieung-mieum": {
+      "gloss": "다른 하나를 찾아요: 자음 미음 사이에 있는 이응",
+      "options.t1.gloss": "자음 미음",
+      "options.t2.gloss": "자음 미음",
+      "options.t3.gloss": "자음 이응",
+      "options.t4.gloss": "자음 미음"
+    },
+    "pitem:recog-odd-ieung-siot": {
+      "gloss": "다른 하나를 찾아요: 자음 시옷 사이에 있는 이응",
+      "options.t1.gloss": "자음 시옷",
+      "options.t2.gloss": "자음 시옷",
+      "options.t3.gloss": "자음 이응",
+      "options.t4.gloss": "자음 시옷"
+    },
+    "pitem:recog-odd-jieut-chieut": {
+      "gloss": "다른 하나를 찾아요: 자음 치읓 사이에 있는 지읒",
+      "options.t1.gloss": "자음 치읓",
+      "options.t2.gloss": "자음 치읓",
+      "options.t3.gloss": "자음 지읒",
+      "options.t4.gloss": "자음 치읓"
+    },
+    "pitem:recog-odd-jieut-siot": {
+      "gloss": "다른 하나를 찾아요: 자음 시옷 사이에 있는 지읒",
+      "options.t1.gloss": "자음 시옷",
+      "options.t2.gloss": "자음 시옷",
+      "options.t3.gloss": "자음 지읒",
+      "options.t4.gloss": "자음 시옷"
+    },
+    "pitem:recog-odd-kieuk-giyeok": {
+      "gloss": "다른 하나를 찾아요: 자음 기역 사이에 있는 키읔",
+      "options.t1.gloss": "자음 기역",
+      "options.t2.gloss": "자음 기역",
+      "options.t3.gloss": "자음 키읔",
+      "options.t4.gloss": "자음 기역"
+    },
+    "pitem:recog-odd-mieum-bieup": {
+      "gloss": "다른 하나를 찾아요: 자음 비읍 사이에 있는 미음",
+      "options.t1.gloss": "자음 비읍",
+      "options.t2.gloss": "자음 비읍",
+      "options.t3.gloss": "자음 미음",
+      "options.t4.gloss": "자음 비읍"
+    },
+    "pitem:recog-odd-mieum-ieung": {
+      "gloss": "다른 하나를 찾아요: 자음 이응 사이에 있는 미음",
+      "options.t1.gloss": "자음 이응",
+      "options.t2.gloss": "자음 이응",
+      "options.t3.gloss": "자음 미음",
+      "options.t4.gloss": "자음 이응"
+    },
+    "pitem:recog-odd-nieun-digeut": {
+      "gloss": "다른 하나를 찾아요: 자음 디귿 사이에 있는 니은",
+      "options.t1.gloss": "자음 디귿",
+      "options.t2.gloss": "자음 디귿",
+      "options.t3.gloss": "자음 니은",
+      "options.t4.gloss": "자음 디귿"
+    },
+    "pitem:recog-odd-nieun-giyeok": {
+      "gloss": "다른 하나를 찾아요: 자음 기역 사이에 있는 니은",
+      "options.t1.gloss": "자음 기역",
+      "options.t2.gloss": "자음 기역",
+      "options.t3.gloss": "자음 니은",
+      "options.t4.gloss": "자음 기역"
+    },
+    "pitem:recog-odd-o-u": {
+      "gloss": "다른 하나를 찾아요: 모음 우 사이에 있는 오",
+      "options.t1.gloss": "모음 우",
+      "options.t2.gloss": "모음 우",
+      "options.t3.gloss": "모음 오",
+      "options.t4.gloss": "모음 우"
+    },
+    "pitem:recog-odd-o-yo": {
+      "gloss": "다른 하나를 찾아요: 모음 요 사이에 있는 오",
+      "options.t1.gloss": "모음 요",
+      "options.t2.gloss": "모음 요",
+      "options.t3.gloss": "모음 오",
+      "options.t4.gloss": "모음 요"
+    },
+    "pitem:recog-odd-rieul-digeut": {
+      "gloss": "다른 하나를 찾아요: 자음 디귿 사이에 있는 리을",
+      "options.t1.gloss": "자음 디귿",
+      "options.t2.gloss": "자음 디귿",
+      "options.t3.gloss": "자음 리을",
+      "options.t4.gloss": "자음 디귿"
+    },
+    "pitem:recog-odd-siot-ieung": {
+      "gloss": "다른 하나를 찾아요: 자음 이응 사이에 있는 시옷",
+      "options.t1.gloss": "자음 이응",
+      "options.t2.gloss": "자음 이응",
+      "options.t3.gloss": "자음 시옷",
+      "options.t4.gloss": "자음 이응"
+    },
+    "pitem:recog-odd-siot-jieut": {
+      "gloss": "다른 하나를 찾아요: 자음 지읒 사이에 있는 시옷",
+      "options.t1.gloss": "자음 지읒",
+      "options.t2.gloss": "자음 지읒",
+      "options.t3.gloss": "자음 시옷",
+      "options.t4.gloss": "자음 지읒"
+    },
+    "pitem:recog-odd-tieut-digeut": {
+      "gloss": "다른 하나를 찾아요: 자음 디귿 사이에 있는 티읕",
+      "options.t1.gloss": "자음 디귿",
+      "options.t2.gloss": "자음 디귿",
+      "options.t3.gloss": "자음 티읕",
+      "options.t4.gloss": "자음 디귿"
+    },
+    "pitem:recog-odd-u-o": {
+      "gloss": "다른 하나를 찾아요: 모음 오 사이에 있는 우",
+      "options.t1.gloss": "모음 오",
+      "options.t2.gloss": "모음 오",
+      "options.t3.gloss": "모음 우",
+      "options.t4.gloss": "모음 오"
+    },
+    "pitem:recog-odd-u-yu": {
+      "gloss": "다른 하나를 찾아요: 모음 유 사이에 있는 우",
+      "options.t1.gloss": "모음 유",
+      "options.t2.gloss": "모음 유",
+      "options.t3.gloss": "모음 우",
+      "options.t4.gloss": "모음 유"
+    },
+    "pitem:recog-odd-ya-a": {
+      "gloss": "다른 하나를 찾아요: 모음 아 사이에 있는 야",
+      "options.t1.gloss": "모음 아",
+      "options.t2.gloss": "모음 아",
+      "options.t3.gloss": "모음 야",
+      "options.t4.gloss": "모음 아"
+    },
+    "pitem:recog-odd-ya-yeo": {
+      "gloss": "다른 하나를 찾아요: 모음 여 사이에 있는 야",
+      "options.t1.gloss": "모음 여",
+      "options.t2.gloss": "모음 여",
+      "options.t3.gloss": "모음 야",
+      "options.t4.gloss": "모음 여"
+    },
+    "pitem:recog-odd-yeo-eo": {
+      "gloss": "다른 하나를 찾아요: 모음 어 사이에 있는 여",
+      "options.t1.gloss": "모음 어",
+      "options.t2.gloss": "모음 어",
+      "options.t3.gloss": "모음 여",
+      "options.t4.gloss": "모음 어"
+    },
+    "pitem:recog-odd-yeo-ya": {
+      "gloss": "다른 하나를 찾아요: 모음 야 사이에 있는 여",
+      "options.t1.gloss": "모음 야",
+      "options.t2.gloss": "모음 야",
+      "options.t3.gloss": "모음 여",
+      "options.t4.gloss": "모음 야"
+    },
+    "pitem:recog-odd-yo-o": {
+      "gloss": "다른 하나를 찾아요: 모음 오 사이에 있는 요",
+      "options.t1.gloss": "모음 오",
+      "options.t2.gloss": "모음 오",
+      "options.t3.gloss": "모음 요",
+      "options.t4.gloss": "모음 오"
+    },
+    "pitem:recog-odd-yo-yu": {
+      "gloss": "다른 하나를 찾아요: 모음 유 사이에 있는 요",
+      "options.t1.gloss": "모음 유",
+      "options.t2.gloss": "모음 유",
+      "options.t3.gloss": "모음 요",
+      "options.t4.gloss": "모음 유"
+    },
+    "pitem:recog-odd-yu-u": {
+      "gloss": "다른 하나를 찾아요: 모음 우 사이에 있는 유",
+      "options.t1.gloss": "모음 우",
+      "options.t2.gloss": "모음 우",
+      "options.t3.gloss": "모음 유",
+      "options.t4.gloss": "모음 우"
+    },
+    "pitem:recog-odd-yu-yo": {
+      "gloss": "다른 하나를 찾아요: 모음 요 사이에 있는 유",
+      "options.t1.gloss": "모음 요",
+      "options.t2.gloss": "모음 요",
+      "options.t3.gloss": "모음 유",
+      "options.t4.gloss": "모음 요"
+    },
+    "pitem:sound-basic-hear-a": {
+      "gloss": "‘a’ 소리를 듣고 모음 아를 골라요",
+      "options.a.gloss": "모음 아",
+      "options.eo.gloss": "모음 어",
+      "options.i.gloss": "모음 이",
+      "options.ya.gloss": "모음 야"
+    },
+    "pitem:sound-basic-hear-digeut": {
+      "gloss": "‘da’ 소리를 듣고 자음 디귿을 골라요",
+      "options.digeut.gloss": "자음 디귿",
+      "options.nieun.gloss": "자음 니은",
+      "options.rieul.gloss": "자음 리을",
+      "options.tieut.gloss": "자음 티읕"
+    },
+    "pitem:sound-basic-hear-eo": {
+      "gloss": "‘eo’ 소리를 듣고 모음 어를 골라요",
+      "options.a.gloss": "모음 아",
+      "options.eo.gloss": "모음 어",
+      "options.o.gloss": "모음 오",
+      "options.yeo.gloss": "모음 여"
+    },
+    "pitem:sound-basic-hear-eu": {
+      "gloss": "‘eu’ 소리를 듣고 모음 으를 골라요",
+      "options.eo.gloss": "모음 어",
+      "options.eu.gloss": "모음 으",
+      "options.i.gloss": "모음 이",
+      "options.u.gloss": "모음 우"
+    },
+    "pitem:sound-basic-hear-giyeok": {
+      "gloss": "‘ga’ 소리를 듣고 자음 기역을 골라요",
+      "options.digeut.gloss": "자음 디귿",
+      "options.giyeok.gloss": "자음 기역",
+      "options.kieuk.gloss": "자음 키읔",
+      "options.nieun.gloss": "자음 니은"
+    },
+    "pitem:sound-basic-hear-i": {
+      "gloss": "‘i’ 소리를 듣고 모음 이를 골라요",
+      "options.a.gloss": "모음 아",
+      "options.eo.gloss": "모음 어",
+      "options.eu.gloss": "모음 으",
+      "options.i.gloss": "모음 이"
+    },
+    "pitem:sound-basic-hear-mieum": {
+      "gloss": "‘ma’ 소리를 듣고 자음 미음을 골라요",
+      "options.bieup.gloss": "자음 비읍",
+      "options.ieung.gloss": "자음 이응",
+      "options.mieum.gloss": "자음 미음",
+      "options.nieun.gloss": "자음 니은"
+    },
+    "pitem:sound-basic-hear-nieun": {
+      "gloss": "‘na’ 소리를 듣고 자음 니은을 골라요",
+      "options.digeut.gloss": "자음 디귿",
+      "options.giyeok.gloss": "자음 기역",
+      "options.nieun.gloss": "자음 니은",
+      "options.rieul.gloss": "자음 리을"
+    },
+    "pitem:sound-basic-hear-o": {
+      "gloss": "‘o’ 소리를 듣고 모음 오를 골라요",
+      "options.eo.gloss": "모음 어",
+      "options.o.gloss": "모음 오",
+      "options.u.gloss": "모음 우",
+      "options.yo.gloss": "모음 요"
+    },
+    "pitem:sound-basic-hear-rieul": {
+      "gloss": "‘ra’ 소리를 듣고 자음 리을을 골라요",
+      "options.digeut.gloss": "자음 디귿",
+      "options.mieum.gloss": "자음 미음",
+      "options.nieun.gloss": "자음 니은",
+      "options.rieul.gloss": "자음 리을"
+    },
+    "pitem:sound-basic-hear-u": {
+      "gloss": "‘u’ 소리를 듣고 모음 우를 골라요",
+      "options.eu.gloss": "모음 으",
+      "options.o.gloss": "모음 오",
+      "options.u.gloss": "모음 우",
+      "options.yu.gloss": "모음 유"
+    },
+    "pitem:sound-basic-see-a": {
+      "gloss": "모음 아를 보고 ‘a’ 소리를 골라요"
+    },
+    "pitem:sound-basic-see-digeut": {
+      "gloss": "자음 디귿을 보고 ‘da’ 소리를 골라요"
+    },
+    "pitem:sound-basic-see-eo": {
+      "gloss": "모음 어를 보고 ‘eo’ 소리를 골라요"
+    },
+    "pitem:sound-basic-see-eu": {
+      "gloss": "모음 으를 보고 ‘eu’ 소리를 골라요"
+    },
+    "pitem:sound-basic-see-giyeok": {
+      "gloss": "자음 기역을 보고 ‘ga’ 소리를 골라요"
+    },
+    "pitem:sound-basic-see-i": {
+      "gloss": "모음 이를 보고 ‘i’ 소리를 골라요"
+    },
+    "pitem:sound-basic-see-mieum": {
+      "gloss": "자음 미음을 보고 ‘ma’ 소리를 골라요"
+    },
+    "pitem:sound-basic-see-nieun": {
+      "gloss": "자음 니은을 보고 ‘na’ 소리를 골라요"
+    },
+    "pitem:sound-basic-see-o": {
+      "gloss": "모음 오를 보고 ‘o’ 소리를 골라요"
+    },
+    "pitem:sound-basic-see-rieul": {
+      "gloss": "자음 리을을 보고 ‘ra’ 소리를 골라요"
+    },
+    "pitem:sound-basic-see-u": {
+      "gloss": "모음 우를 보고 ‘u’ 소리를 골라요"
+    },
+    "pitem:sound-rest-hear-bieup": {
+      "gloss": "‘ba’ 소리를 듣고 자음 비읍을 골라요",
+      "options.bieup.gloss": "자음 비읍",
+      "options.mieum.gloss": "자음 미음",
+      "options.pieup.gloss": "자음 피읖",
+      "options.siot.gloss": "자음 시옷"
+    },
+    "pitem:sound-rest-hear-chieut": {
+      "gloss": "‘cha’ 소리를 듣고 자음 치읓을 골라요",
+      "options.chieut.gloss": "자음 치읓",
+      "options.hieut.gloss": "자음 히읗",
+      "options.jieut.gloss": "자음 지읒",
+      "options.siot.gloss": "자음 시옷"
+    },
+    "pitem:sound-rest-hear-hieut": {
+      "gloss": "‘ha’ 소리를 듣고 자음 히읗을 골라요",
+      "options.chieut.gloss": "자음 치읓",
+      "options.hieut.gloss": "자음 히읗",
+      "options.ieung.gloss": "자음 이응",
+      "options.siot.gloss": "자음 시옷"
+    },
+    "pitem:sound-rest-hear-jieut": {
+      "gloss": "‘ja’ 소리를 듣고 자음 지읒을 골라요",
+      "options.chieut.gloss": "자음 치읓",
+      "options.giyeok.gloss": "자음 기역",
+      "options.jieut.gloss": "자음 지읒",
+      "options.siot.gloss": "자음 시옷"
+    },
+    "pitem:sound-rest-hear-kieuk": {
+      "gloss": "‘ka’ 소리를 듣고 자음 키읔을 골라요",
+      "options.giyeok.gloss": "자음 기역",
+      "options.kieuk.gloss": "자음 키읔",
+      "options.pieup.gloss": "자음 피읖",
+      "options.tieut.gloss": "자음 티읕"
+    },
+    "pitem:sound-rest-hear-pieup": {
+      "gloss": "‘pa’ 소리를 듣고 자음 피읖을 골라요",
+      "options.bieup.gloss": "자음 비읍",
+      "options.kieuk.gloss": "자음 키읔",
+      "options.pieup.gloss": "자음 피읖",
+      "options.tieut.gloss": "자음 티읕"
+    },
+    "pitem:sound-rest-hear-siot": {
+      "gloss": "‘sa’ 소리를 듣고 자음 시옷을 골라요",
+      "options.chieut.gloss": "자음 치읓",
+      "options.ieung.gloss": "자음 이응",
+      "options.jieut.gloss": "자음 지읒",
+      "options.siot.gloss": "자음 시옷"
+    },
+    "pitem:sound-rest-hear-tieut": {
+      "gloss": "‘ta’ 소리를 듣고 자음 티읕을 골라요",
+      "options.digeut.gloss": "자음 디귿",
+      "options.kieuk.gloss": "자음 키읔",
+      "options.pieup.gloss": "자음 피읖",
+      "options.tieut.gloss": "자음 티읕"
+    },
+    "pitem:sound-rest-hear-ya": {
+      "gloss": "‘ya’ 소리를 듣고 모음 야를 골라요",
+      "options.a.gloss": "모음 아",
+      "options.ya.gloss": "모음 야",
+      "options.yeo.gloss": "모음 여",
+      "options.yo.gloss": "모음 요"
+    },
+    "pitem:sound-rest-hear-yeo": {
+      "gloss": "‘yeo’ 소리를 듣고 모음 여를 골라요",
+      "options.eo.gloss": "모음 어",
+      "options.ya.gloss": "모음 야",
+      "options.yeo.gloss": "모음 여",
+      "options.yu.gloss": "모음 유"
+    },
+    "pitem:sound-rest-hear-yo": {
+      "gloss": "‘yo’ 소리를 듣고 모음 요를 골라요",
+      "options.o.gloss": "모음 오",
+      "options.ya.gloss": "모음 야",
+      "options.yo.gloss": "모음 요",
+      "options.yu.gloss": "모음 유"
+    },
+    "pitem:sound-rest-hear-yu": {
+      "gloss": "‘yu’ 소리를 듣고 모음 유를 골라요",
+      "options.u.gloss": "모음 우",
+      "options.yeo.gloss": "모음 여",
+      "options.yo.gloss": "모음 요",
+      "options.yu.gloss": "모음 유"
+    },
+    "pitem:sound-rest-see-bieup": {
+      "gloss": "자음 비읍을 보고 ‘ba’ 소리를 골라요"
+    },
+    "pitem:sound-rest-see-chieut": {
+      "gloss": "자음 치읓을 보고 ‘cha’ 소리를 골라요"
+    },
+    "pitem:sound-rest-see-hieut": {
+      "gloss": "자음 히읗을 보고 ‘ha’ 소리를 골라요"
+    },
+    "pitem:sound-rest-see-jieut": {
+      "gloss": "자음 지읒을 보고 ‘ja’ 소리를 골라요"
+    },
+    "pitem:sound-rest-see-kieuk": {
+      "gloss": "자음 키읔을 보고 ‘ka’ 소리를 골라요"
+    },
+    "pitem:sound-rest-see-pieup": {
+      "gloss": "자음 피읖을 보고 ‘pa’ 소리를 골라요"
+    },
+    "pitem:sound-rest-see-siot": {
+      "gloss": "자음 시옷을 보고 ‘sa’ 소리를 골라요"
+    },
+    "pitem:sound-rest-see-tieut": {
+      "gloss": "자음 티읕을 보고 ‘ta’ 소리를 골라요"
+    },
+    "pitem:sound-rest-see-ya": {
+      "gloss": "모음 야를 보고 ‘ya’ 소리를 골라요"
+    },
+    "pitem:sound-rest-see-yeo": {
+      "gloss": "모음 여를 보고 ‘yeo’ 소리를 골라요"
+    },
+    "pitem:sound-rest-see-yo": {
+      "gloss": "모음 요를 보고 ‘yo’ 소리를 골라요"
+    },
+    "pitem:sound-rest-see-yu": {
+      "gloss": "모음 유를 보고 ‘yu’ 소리를 골라요"
+    },
+    "pitem:syl-cv-build-da": {
+      "gloss": "‘da’ 음절을 만들어요",
+      "options.a.gloss": "소리 없는 이응과 모음 아를 합친 음절",
+      "options.da.gloss": "자음 디귿과 모음 아를 합친 음절",
+      "options.du.gloss": "자음 디귿과 모음 우를 합친 음절",
+      "options.ra.gloss": "자음 리을과 모음 아를 합친 음절"
+    },
+    "pitem:syl-cv-build-ga": {
+      "gloss": "‘ga’ 음절을 만들어요",
+      "options.ga.gloss": "자음 기역과 모음 아를 합친 음절",
+      "options.geo.gloss": "자음 기역과 모음 어를 합친 음절",
+      "options.na.gloss": "자음 니은과 모음 아를 합친 음절",
+      "options.ra.gloss": "자음 리을과 모음 아를 합친 음절"
+    },
+    "pitem:syl-cv-build-gu": {
+      "gloss": "‘gu’ 음절을 만들어요",
+      "options.ga.gloss": "자음 기역과 모음 아를 합친 음절",
+      "options.go.gloss": "자음 기역과 모음 오를 합친 음절",
+      "options.gu.gloss": "자음 기역과 모음 우를 합친 음절",
+      "options.nu.gloss": "자음 니은과 모음 우를 합친 음절"
+    },
+    "pitem:syl-cv-build-ma": {
+      "gloss": "‘ma’ 음절을 만들어요",
+      "options.ma.gloss": "자음 미음과 모음 아를 합친 음절",
+      "options.meo.gloss": "자음 미음과 모음 어를 합친 음절",
+      "options.meu.gloss": "자음 미음과 모음 으를 합친 음절",
+      "options.ra.gloss": "자음 리을과 모음 아를 합친 음절"
+    },
+    "pitem:syl-cv-build-mo": {
+      "gloss": "‘mo’ 음절을 만들어요",
+      "options.mi.gloss": "자음 미음과 모음 이를 합친 음절",
+      "options.mo.gloss": "자음 미음과 모음 오를 합친 음절",
+      "options.no.gloss": "자음 니은과 모음 오를 합친 음절",
+      "options.o.gloss": "소리 없는 이응과 모음 오를 합친 음절"
+    },
+    "pitem:syl-cv-build-na": {
+      "gloss": "‘na’ 음절을 만들어요",
+      "options.da.gloss": "자음 디귿과 모음 아를 합친 음절",
+      "options.na.gloss": "자음 니은과 모음 아를 합친 음절",
+      "options.neu.gloss": "자음 니은과 모음 으를 합친 음절",
+      "options.no.gloss": "자음 니은과 모음 오를 합친 음절"
+    },
+    "pitem:syl-cv-hear-da": {
+      "gloss": "‘da’ 음절을 들어요",
+      "options.da.gloss": "자음 디귿과 모음 아를 합친 음절",
+      "options.deu.gloss": "자음 디귿과 모음 으를 합친 음절",
+      "options.ga.gloss": "자음 기역과 모음 아를 합친 음절",
+      "options.ma.gloss": "자음 미음과 모음 아를 합친 음절"
+    },
+    "pitem:syl-cv-hear-deo": {
+      "gloss": "‘deo’ 음절을 들어요",
+      "options.deo.gloss": "자음 디귿과 모음 어를 합친 음절",
+      "options.di.gloss": "자음 디귿과 모음 이를 합친 음절",
+      "options.do.gloss": "자음 디귿과 모음 오를 합친 음절",
+      "options.eo.gloss": "소리 없는 이응과 모음 어를 합친 음절"
+    },
+    "pitem:syl-cv-hear-do": {
+      "gloss": "‘do’ 음절을 들어요",
+      "options.da.gloss": "자음 디귿과 모음 아를 합친 음절",
+      "options.do.gloss": "자음 디귿과 모음 오를 합친 음절",
+      "options.go.gloss": "자음 기역과 모음 오를 합친 음절",
+      "options.ro.gloss": "자음 리을과 모음 오를 합친 음절"
+    },
+    "pitem:syl-cv-hear-du": {
+      "gloss": "‘du’ 음절을 들어요",
+      "options.deo.gloss": "자음 디귿과 모음 어를 합친 음절",
+      "options.deu.gloss": "자음 디귿과 모음 으를 합친 음절",
+      "options.du.gloss": "자음 디귿과 모음 우를 합친 음절",
+      "options.nu.gloss": "자음 니은과 모음 우를 합친 음절"
+    },
+    "pitem:syl-cv-hear-ga": {
+      "gloss": "‘ga’ 음절을 들어요",
+      "options.ga.gloss": "자음 기역과 모음 아를 합친 음절",
+      "options.geo.gloss": "자음 기역과 모음 어를 합친 음절",
+      "options.na.gloss": "자음 니은과 모음 아를 합친 음절",
+      "options.ra.gloss": "자음 리을과 모음 아를 합친 음절"
+    },
+    "pitem:syl-cv-hear-geo": {
+      "gloss": "‘geo’ 음절을 들어요",
+      "options.deo.gloss": "자음 디귿과 모음 어를 합친 음절",
+      "options.geo.gloss": "자음 기역과 모음 어를 합친 음절",
+      "options.geu.gloss": "자음 기역과 모음 으를 합친 음절",
+      "options.go.gloss": "자음 기역과 모음 오를 합친 음절"
+    },
+    "pitem:syl-cv-hear-go": {
+      "gloss": "‘go’ 음절을 들어요",
+      "options.go.gloss": "자음 기역과 모음 오를 합친 음절",
+      "options.gu.gloss": "자음 기역과 모음 우를 합친 음절",
+      "options.o.gloss": "소리 없는 이응과 모음 오를 합친 음절",
+      "options.ro.gloss": "자음 리을과 모음 오를 합친 음절"
+    },
+    "pitem:syl-cv-hear-gu": {
+      "gloss": "‘gu’ 음절을 들어요",
+      "options.ga.gloss": "자음 기역과 모음 아를 합친 음절",
+      "options.geu.gloss": "자음 기역과 모음 으를 합친 음절",
+      "options.gu.gloss": "자음 기역과 모음 우를 합친 음절",
+      "options.mu.gloss": "자음 미음과 모음 우를 합친 음절"
+    },
+    "pitem:syl-cv-hear-i": {
+      "gloss": "‘i’ 음절을 들어요",
+      "options.di.gloss": "자음 디귿과 모음 이를 합친 음절",
+      "options.eu.gloss": "소리 없는 이응과 모음 으를 합친 음절",
+      "options.i.gloss": "소리 없는 이응과 모음 이를 합친 음절",
+      "options.o.gloss": "소리 없는 이응과 모음 오를 합친 음절"
+    },
+    "pitem:syl-cv-hear-ma": {
+      "gloss": "‘ma’ 음절을 들어요",
+      "options.a.gloss": "소리 없는 이응과 모음 아를 합친 음절",
+      "options.da.gloss": "자음 디귿과 모음 아를 합친 음절",
+      "options.ma.gloss": "자음 미음과 모음 아를 합친 음절",
+      "options.mu.gloss": "자음 미음과 모음 우를 합친 음절"
+    },
+    "pitem:syl-cv-hear-meo": {
+      "gloss": "‘meo’ 음절을 들어요",
+      "options.ma.gloss": "자음 미음과 모음 아를 합친 음절",
+      "options.meo.gloss": "자음 미음과 모음 어를 합친 음절",
+      "options.meu.gloss": "자음 미음과 모음 으를 합친 음절",
+      "options.reo.gloss": "자음 리을과 모음 어를 합친 음절"
+    },
+    "pitem:syl-cv-hear-mo": {
+      "gloss": "‘mo’ 음절을 들어요",
+      "options.mi.gloss": "자음 미음과 모음 이를 합친 음절",
+      "options.mo.gloss": "자음 미음과 모음 오를 합친 음절",
+      "options.no.gloss": "자음 니은과 모음 오를 합친 음절",
+      "options.o.gloss": "소리 없는 이응과 모음 오를 합친 음절"
+    },
+    "pitem:syl-cv-hear-mu": {
+      "gloss": "‘mu’ 음절을 들어요",
+      "options.gu.gloss": "자음 기역과 모음 우를 합친 음절",
+      "options.ma.gloss": "자음 미음과 모음 아를 합친 음절",
+      "options.mo.gloss": "자음 미음과 모음 오를 합친 음절",
+      "options.mu.gloss": "자음 미음과 모음 우를 합친 음절"
+    },
+    "pitem:syl-cv-hear-na": {
+      "gloss": "‘na’ 음절을 들어요",
+      "options.a.gloss": "소리 없는 이응과 모음 아를 합친 음절",
+      "options.da.gloss": "자음 디귿과 모음 아를 합친 음절",
+      "options.na.gloss": "자음 니은과 모음 아를 합친 음절",
+      "options.ni.gloss": "자음 니은과 모음 이를 합친 음절"
+    },
+    "pitem:syl-cv-hear-neo": {
+      "gloss": "‘neo’ 음절을 들어요",
+      "options.geo.gloss": "자음 기역과 모음 어를 합친 음절",
+      "options.na.gloss": "자음 니은과 모음 아를 합친 음절",
+      "options.neo.gloss": "자음 니은과 모음 어를 합친 음절",
+      "options.nu.gloss": "자음 니은과 모음 우를 합친 음절"
+    },
+    "pitem:syl-cv-hear-no": {
+      "gloss": "‘no’ 음절을 들어요",
+      "options.do.gloss": "자음 디귿과 모음 오를 합친 음절",
+      "options.mo.gloss": "자음 미음과 모음 오를 합친 음절",
+      "options.neo.gloss": "자음 니은과 모음 어를 합친 음절",
+      "options.no.gloss": "자음 니은과 모음 오를 합친 음절"
+    },
+    "pitem:syl-cv-hear-nu": {
+      "gloss": "‘nu’ 음절을 들어요",
+      "options.ni.gloss": "자음 니은과 모음 이를 합친 음절",
+      "options.no.gloss": "자음 니은과 모음 오를 합친 음절",
+      "options.nu.gloss": "자음 니은과 모음 우를 합친 음절",
+      "options.ru.gloss": "자음 리을과 모음 우를 합친 음절"
+    },
+    "pitem:syl-cv-hear-ra": {
+      "gloss": "‘ra’ 음절을 들어요",
+      "options.ma.gloss": "자음 미음과 모음 아를 합친 음절",
+      "options.na.gloss": "자음 니은과 모음 아를 합친 음절",
+      "options.ra.gloss": "자음 리을과 모음 아를 합친 음절",
+      "options.ro.gloss": "자음 리을과 모음 오를 합친 음절"
+    },
+    "pitem:syl-cv-see-a": {
+      "gloss": "‘a’ 음절을 보고 소리를 골라요"
+    },
+    "pitem:syl-cv-see-deu": {
+      "gloss": "‘deu’ 음절을 보고 소리를 골라요"
+    },
+    "pitem:syl-cv-see-di": {
+      "gloss": "‘di’ 음절을 보고 소리를 골라요"
+    },
+    "pitem:syl-cv-see-eo": {
+      "gloss": "‘eo’ 음절을 보고 소리를 골라요"
+    },
+    "pitem:syl-cv-see-geu": {
+      "gloss": "‘geu’ 음절을 보고 소리를 골라요"
+    },
+    "pitem:syl-cv-see-gi": {
+      "gloss": "‘gi’ 음절을 보고 소리를 골라요"
+    },
+    "pitem:syl-cv-see-meu": {
+      "gloss": "‘meu’ 음절을 보고 소리를 골라요"
+    },
+    "pitem:syl-cv-see-mi": {
+      "gloss": "‘mi’ 음절을 보고 소리를 골라요"
+    },
+    "pitem:syl-cv-see-neu": {
+      "gloss": "‘neu’ 음절을 보고 소리를 골라요"
+    },
+    "pitem:syl-cv-see-ni": {
+      "gloss": "‘ni’ 음절을 보고 소리를 골라요"
+    },
+    "pitem:syl-cv-see-o": {
+      "gloss": "‘o’ 음절을 보고 소리를 골라요"
+    },
+    "pitem:syl-cv-see-u": {
+      "gloss": "‘u’ 음절을 보고 소리를 골라요"
+    },
+    "pitem:syl-cvc-build-dal": {
+      "gloss": "‘dal’ 음절을 만들어요",
+      "options.dak.gloss": "자음 디귿, 모음 아, 받침 기역을 합친 음절",
+      "options.dal.gloss": "자음 디귿, 모음 아, 받침 리을을 합친 음절",
+      "options.dan.gloss": "자음 디귿, 모음 아, 받침 니은을 합친 음절",
+      "options.deol.gloss": "자음 디귿, 모음 어, 받침 리을을 합친 음절"
+    },
+    "pitem:syl-cvc-build-gang": {
+      "gloss": "‘gang’ 음절을 만들어요",
+      "options.gal.gloss": "자음 기역, 모음 아, 받침 리을을 합친 음절",
+      "options.gang.gloss": "자음 기역, 모음 아, 받침 이응을 합친 음절",
+      "options.gap.gloss": "자음 기역, 모음 아, 받침 비읍을 합친 음절",
+      "options.ging.gloss": "자음 기역, 모음 이, 받침 이응을 합친 음절"
+    },
+    "pitem:syl-cvc-build-gom": {
+      "gloss": "‘gom’ 음절을 만들어요",
+      "options.gam.gloss": "자음 기역, 모음 아, 받침 미음을 합친 음절",
+      "options.gom.gloss": "자음 기역, 모음 오, 받침 미음을 합친 음절",
+      "options.gon.gloss": "자음 기역, 모음 오, 받침 니은을 합친 음절",
+      "options.gong.gloss": "자음 기역, 모음 오, 받침 이응을 합친 음절"
+    },
+    "pitem:syl-cvc-build-mul": {
+      "gloss": "‘mul’ 음절을 만들어요",
+      "options.meol.gloss": "자음 미음, 모음 어, 받침 리을을 합친 음절",
+      "options.mul.gloss": "자음 미음, 모음 우, 받침 리을을 합친 음절",
+      "options.mum.gloss": "자음 미음, 모음 우, 받침 미음을 합친 음절",
+      "options.mung.gloss": "자음 미음, 모음 우, 받침 이응을 합친 음절"
+    },
+    "pitem:syl-cvc-build-mun": {
+      "gloss": "‘mun’ 음절을 만들어요",
+      "options.mon.gloss": "자음 미음, 모음 오, 받침 니은을 합친 음절",
+      "options.muk.gloss": "자음 미음, 모음 우, 받침 기역을 합친 음절",
+      "options.mun.gloss": "자음 미음, 모음 우, 받침 니은을 합친 음절",
+      "options.mup.gloss": "자음 미음, 모음 우, 받침 비읍을 합친 음절"
+    },
+    "pitem:syl-cvc-build-san": {
+      "gloss": "‘san’ 음절을 만들어요",
+      "options.sal.gloss": "자음 시옷, 모음 아, 받침 리을을 합친 음절",
+      "options.sam.gloss": "자음 시옷, 모음 아, 받침 미음을 합친 음절",
+      "options.san.gloss": "자음 시옷, 모음 아, 받침 니은을 합친 음절",
+      "options.seun.gloss": "자음 시옷, 모음 으, 받침 니은을 합친 음절"
+    },
+    "pitem:syl-cvc-hear-bap": {
+      "gloss": "‘bap’ 음절을 들어요",
+      "options.bak.gloss": "자음 비읍, 모음 아, 받침 기역을 합친 음절",
+      "options.bal.gloss": "자음 비읍, 모음 아, 받침 리을을 합친 음절",
+      "options.bap.gloss": "자음 비읍, 모음 아, 받침 비읍을 합친 음절",
+      "options.bop.gloss": "자음 비읍, 모음 오, 받침 비읍을 합친 음절"
+    },
+    "pitem:syl-cvc-hear-bom": {
+      "gloss": "‘bom’ 음절을 들어요",
+      "options.beum.gloss": "자음 비읍, 모음 으, 받침 미음을 합친 음절",
+      "options.bok.gloss": "자음 비읍, 모음 오, 받침 기역을 합친 음절",
+      "options.bom.gloss": "자음 비읍, 모음 오, 받침 미음을 합친 음절",
+      "options.bon.gloss": "자음 비읍, 모음 오, 받침 니은을 합친 음절"
+    },
+    "pitem:syl-cvc-hear-byeol": {
+      "gloss": "‘byeol’ 음절을 들어요",
+      "options.bul.gloss": "자음 비읍, 모음 우, 받침 리을을 합친 음절",
+      "options.byeol.gloss": "자음 비읍, 모음 여, 받침 리을을 합친 음절",
+      "options.byeong.gloss": "자음 비읍, 모음 여, 받침 이응을 합친 음절",
+      "options.byeop.gloss": "자음 비읍, 모음 여, 받침 비읍을 합친 음절"
+    },
+    "pitem:syl-cvc-hear-dal": {
+      "gloss": "‘dal’ 음절을 들어요",
+      "options.dak.gloss": "자음 디귿, 모음 아, 받침 기역을 합친 음절",
+      "options.dal.gloss": "자음 디귿, 모음 아, 받침 리을을 합친 음절",
+      "options.dan.gloss": "자음 디귿, 모음 아, 받침 니은을 합친 음절",
+      "options.deol.gloss": "자음 디귿, 모음 어, 받침 리을을 합친 음절"
+    },
+    "pitem:syl-cvc-hear-gang": {
+      "gloss": "‘gang’ 음절을 들어요",
+      "options.gal.gloss": "자음 기역, 모음 아, 받침 리을을 합친 음절",
+      "options.gang.gloss": "자음 기역, 모음 아, 받침 이응을 합친 음절",
+      "options.gap.gloss": "자음 기역, 모음 아, 받침 비읍을 합친 음절",
+      "options.ging.gloss": "자음 기역, 모음 이, 받침 이응을 합친 음절"
+    },
+    "pitem:syl-cvc-hear-gom": {
+      "gloss": "‘gom’ 음절을 들어요",
+      "options.gam.gloss": "자음 기역, 모음 아, 받침 미음을 합친 음절",
+      "options.gom.gloss": "자음 기역, 모음 오, 받침 미음을 합친 음절",
+      "options.gon.gloss": "자음 기역, 모음 오, 받침 니은을 합친 음절",
+      "options.gong.gloss": "자음 기역, 모음 오, 받침 이응을 합친 음절"
+    },
+    "pitem:syl-cvc-hear-gong": {
+      "gloss": "‘gong’ 음절을 들어요",
+      "options.gang.gloss": "자음 기역, 모음 아, 받침 이응을 합친 음절",
+      "options.gok.gloss": "자음 기역, 모음 오, 받침 기역을 합친 음절",
+      "options.gon.gloss": "자음 기역, 모음 오, 받침 니은을 합친 음절",
+      "options.gong.gloss": "자음 기역, 모음 오, 받침 이응을 합친 음절"
+    },
+    "pitem:syl-cvc-hear-guk": {
+      "gloss": "‘guk’ 음절을 들어요",
+      "options.gik.gloss": "자음 기역, 모음 이, 받침 기역을 합친 음절",
+      "options.guk.gloss": "자음 기역, 모음 우, 받침 기역을 합친 음절",
+      "options.gul.gloss": "자음 기역, 모음 우, 받침 리을을 합친 음절",
+      "options.gup.gloss": "자음 기역, 모음 우, 받침 비읍을 합친 음절"
+    },
+    "pitem:syl-cvc-hear-hak": {
+      "gloss": "‘hak’ 음절을 들어요",
+      "options.hak.gloss": "자음 히읗, 모음 아, 받침 기역을 합친 음절",
+      "options.han.gloss": "자음 히읗, 모음 아, 받침 니은을 합친 음절",
+      "options.hang.gloss": "자음 히읗, 모음 아, 받침 이응을 합친 음절",
+      "options.heok.gloss": "자음 히읗, 모음 어, 받침 기역을 합친 음절"
+    },
+    "pitem:syl-cvc-hear-han": {
+      "gloss": "‘han’ 음절을 들어요",
+      "options.hal.gloss": "자음 히읗, 모음 아, 받침 리을을 합친 음절",
+      "options.ham.gloss": "자음 히읗, 모음 아, 받침 미음을 합친 음절",
+      "options.han.gloss": "자음 히읗, 모음 아, 받침 니은을 합친 음절",
+      "options.heun.gloss": "자음 히읗, 모음 으, 받침 니은을 합친 음절"
+    },
+    "pitem:syl-cvc-hear-ip": {
+      "gloss": "‘ip’ 음절을 들어요",
+      "options.im.gloss": "소리 없는 이응, 모음 이, 받침 미음을 합친 음절",
+      "options.ing.gloss": "소리 없는 이응, 모음 이, 받침 이응을 합친 음절",
+      "options.ip.gloss": "소리 없는 이응, 모음 이, 받침 비읍을 합친 음절",
+      "options.op.gloss": "소리 없는 이응, 모음 오, 받침 비읍을 합친 음절"
+    },
+    "pitem:syl-cvc-hear-jip": {
+      "gloss": "‘jip’ 음절을 들어요",
+      "options.jim.gloss": "자음 지읒, 모음 이, 받침 미음을 합친 음절",
+      "options.jing.gloss": "자음 지읒, 모음 이, 받침 이응을 합친 음절",
+      "options.jip.gloss": "자음 지읒, 모음 이, 받침 비읍을 합친 음절",
+      "options.jop.gloss": "자음 지읒, 모음 오, 받침 비읍을 합친 음절"
+    },
+    "pitem:syl-cvc-hear-jul": {
+      "gloss": "‘jul’ 음절을 들어요",
+      "options.jeol.gloss": "자음 지읒, 모음 어, 받침 리을을 합친 음절",
+      "options.jul.gloss": "자음 지읒, 모음 우, 받침 리을을 합친 음절",
+      "options.jum.gloss": "자음 지읒, 모음 우, 받침 미음을 합친 음절",
+      "options.jung.gloss": "자음 지읒, 모음 우, 받침 이응을 합친 음절"
+    },
+    "pitem:syl-cvc-hear-mul": {
+      "gloss": "‘mul’ 음절을 들어요",
+      "options.meol.gloss": "자음 미음, 모음 어, 받침 리을을 합친 음절",
+      "options.mul.gloss": "자음 미음, 모음 우, 받침 리을을 합친 음절",
+      "options.mum.gloss": "자음 미음, 모음 우, 받침 미음을 합친 음절",
+      "options.mung.gloss": "자음 미음, 모음 우, 받침 이응을 합친 음절"
+    },
+    "pitem:syl-cvc-hear-mun": {
+      "gloss": "‘mun’ 음절을 들어요",
+      "options.mon.gloss": "자음 미음, 모음 오, 받침 니은을 합친 음절",
+      "options.muk.gloss": "자음 미음, 모음 우, 받침 기역을 합친 음절",
+      "options.mun.gloss": "자음 미음, 모음 우, 받침 니은을 합친 음절",
+      "options.mup.gloss": "자음 미음, 모음 우, 받침 비읍을 합친 음절"
+    },
+    "pitem:syl-cvc-hear-nun": {
+      "gloss": "‘nun’ 음절을 들어요",
+      "options.neon.gloss": "자음 니은, 모음 어, 받침 니은을 합친 음절",
+      "options.num.gloss": "자음 니은, 모음 우, 받침 미음을 합친 음절",
+      "options.nun.gloss": "자음 니은, 모음 우, 받침 니은을 합친 음절",
+      "options.nung.gloss": "자음 니은, 모음 우, 받침 이응을 합친 음절"
+    },
+    "pitem:syl-cvc-hear-san": {
+      "gloss": "‘san’ 음절을 들어요",
+      "options.sal.gloss": "자음 시옷, 모음 아, 받침 리을을 합친 음절",
+      "options.sam.gloss": "자음 시옷, 모음 아, 받침 미음을 합친 음절",
+      "options.san.gloss": "자음 시옷, 모음 아, 받침 니은을 합친 음절",
+      "options.seun.gloss": "자음 시옷, 모음 으, 받침 니은을 합친 음절"
+    },
+    "pitem:syl-cvc-hear-yeon": {
+      "gloss": "‘yeon’ 음절을 들어요",
+      "options.an.gloss": "소리 없는 이응, 모음 아, 받침 니은을 합친 음절",
+      "options.yeok.gloss": "소리 없는 이응, 모음 여, 받침 기역을 합친 음절",
+      "options.yeon.gloss": "소리 없는 이응, 모음 여, 받침 니은을 합친 음절",
+      "options.yeop.gloss": "소리 없는 이응, 모음 여, 받침 비읍을 합친 음절"
+    },
+    "pitem:syl-cvc-see-bap": {
+      "gloss": "‘bap’ 음절을 보고 소리를 골라요"
+    },
+    "pitem:syl-cvc-see-bom": {
+      "gloss": "‘bom’ 음절을 보고 소리를 골라요"
+    },
+    "pitem:syl-cvc-see-byeol": {
+      "gloss": "‘byeol’ 음절을 보고 소리를 골라요"
+    },
+    "pitem:syl-cvc-see-dal": {
+      "gloss": "‘dal’ 음절을 보고 소리를 골라요"
+    },
+    "pitem:syl-cvc-see-gang": {
+      "gloss": "‘gang’ 음절을 보고 소리를 골라요"
+    },
+    "pitem:syl-cvc-see-gom": {
+      "gloss": "‘gom’ 음절을 보고 소리를 골라요"
+    },
+    "pitem:syl-cvc-see-gong": {
+      "gloss": "‘gong’ 음절을 보고 소리를 골라요"
+    },
+    "pitem:syl-cvc-see-han": {
+      "gloss": "‘han’ 음절을 보고 소리를 골라요"
+    },
+    "pitem:syl-cvc-see-jip": {
+      "gloss": "‘jip’ 음절을 보고 소리를 골라요"
+    },
+    "pitem:syl-cvc-see-mul": {
+      "gloss": "‘mul’ 음절을 보고 소리를 골라요"
+    },
+    "pitem:syl-cvc-see-mun": {
+      "gloss": "‘mun’ 음절을 보고 소리를 골라요"
+    },
+    "pitem:syl-cvc-see-san": {
+      "gloss": "‘san’ 음절을 보고 소리를 골라요"
     },
     "quest:stage1-crafts-q1": {
       "steps.s2.discover.pages.0.items.0.word.gloss": "바람에 날리는 종이 장난감",
