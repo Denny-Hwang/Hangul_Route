@@ -19,20 +19,20 @@
       "steps.s6.title": "¡Lo lograste!",
       "steps.s1.hoyaLine": "¡Vamos a crear algo con papel y a escribir lo que hacemos!",
       "steps.s6.hoyaLine": "¡Escribiste tres palabras para crear en coreano!",
-      "steps.s2.discover.pages.0.caption": "Doblar papel para hacer un avión o un barco se llama «jongijeopgi».",
-      "steps.s2.discover.pages.1.caption": "Dos palabras más para crear: cortar y dibujar.",
+      "steps.s2.discover.pages.0.caption": "Doblar papel para hacer formas, como un avión o un barco, se llama «jongijeopgi».",
+      "steps.s2.discover.pages.1.caption": "Dos palabras más para crear: cortar y dibujar. «Gawiro» significa con tijeras.",
       "steps.s2.discover.pages.0.items.0.note": "Usa {ko:을} después de una consonante final y {ko:를} después de una vocal, como en tus oraciones anteriores.",
       "steps.s2.discover.pages.1.items.0.sentence.gloss": "Corto con tijeras.",
       "steps.s2.discover.pages.1.items.1.sentence.gloss": "Dibujo una flor.",
       "steps.s2.discover.pages.0.items.0.frame.gloss": "Doblo ___.",
-      "steps.s2.discover.pages.0.items.0.examples.bihaenggireul-jeobeoyo.gloss": "Doblo un avión.",
-      "steps.s2.discover.pages.0.items.0.examples.baereul-jeobeoyo.gloss": "Doblo un barco."
+      "steps.s2.discover.pages.0.items.0.examples.bihaenggireul-jeobeoyo.gloss": "Doblo un avión de papel.",
+      "steps.s2.discover.pages.0.items.0.examples.baereul-jeobeoyo.gloss": "Doblo un barco de papel."
     },
     "quest:stage7-crafts-q2": {
-      "title": "Primero, después, por último",
+      "title": "Primero, luego, al final",
       "blurb": "Ordena los pasos de una manualidad de papel.",
       "teaser": "Siguiente: une dos pasos en una oración.",
-      "steps.s1.title": "Primero, después, por último",
+      "steps.s1.title": "Primero, luego, al final",
       "steps.s2.title": "Pasos en orden",
       "steps.s3.title": "Escribe la palabra",
       "steps.s4.title": "Arma los pasos",
@@ -44,7 +44,7 @@
       "steps.s2.discover.pages.1.caption": "La palabra de orden va al principio de la oración.",
       "steps.s2.discover.pages.0.items.0.note": "Empieza con {ko:먼저}, sigue con {ko:그다음에} y termina con {ko:마지막으로}.",
       "steps.s2.discover.pages.1.items.0.sentence.gloss": "Por último, dibujo.",
-      "steps.s2.discover.pages.1.items.1.sentence.gloss": "Primero, doblo un avión.",
+      "steps.s2.discover.pages.1.items.1.sentence.gloss": "Primero, doblo un avión de papel.",
       "steps.s2.discover.pages.0.items.0.frame.gloss": "Primero, ___.",
       "steps.s2.discover.pages.0.items.0.examples.meonjeo-jeobeoyo.gloss": "Primero, doblo.",
       "steps.s2.discover.pages.0.items.0.examples.geudaeume-jallayo.gloss": "Después, corto."
@@ -59,10 +59,10 @@
       "steps.s5.title": "Dos preguntas rápidas",
       "steps.s6.title": "¡Tu página está lista!",
       "steps.s1.hoyaLine": "¡Ahora escribe los pasos de tu propia manualidad de papel!",
-      "steps.s6.hoyaLine": "Escribiste tus propios pasos. ¡Muestra tu página a alguien que esté a tu lado!",
+      "steps.s6.hoyaLine": "Escribiste tus propios pasos. ¿Hay alguien contigo? ¡Muéstrale tu página!",
       "steps.s2.discover.pages.0.caption": "Una oración, dos pasos en orden.",
-      "steps.s2.discover.pages.1.caption": "El papel puede ser «hanji», papel coreano hecho a mano con corteza de árbol.",
-      "steps.s2.discover.pages.0.items.0.note": "Pon {ko:고} en la primera acción para unirla con la siguiente: {ko:접고 잘라요}.",
+      "steps.s2.discover.pages.1.caption": "El papel puede ser «hanji», papel coreano hecho a mano con corteza de morera de papel.",
+      "steps.s2.discover.pages.0.items.0.note": "Quita {ko:어요} de {ko:접어요} y añade {ko:고}: {ko:접고 잘라요}.",
       "steps.s2.discover.pages.1.items.0.sentence.gloss": "Doblo el papel y luego lo corto.",
       "steps.s2.discover.pages.1.items.1.sentence.gloss": "Primero, doblo y luego dibujo.",
       "steps.s2.discover.pages.0.items.0.frame.gloss": "Doblo y luego ___.",
@@ -80,7 +80,7 @@
       "typeHangul.rounds.t4.target.gloss": "avión"
     },
     "minigame:s7-crafts-q1-apply": {
-      "orderIt.rounds.r1.sentence.gloss": "Doblo un avión.",
+      "orderIt.rounds.r1.sentence.gloss": "Doblo un avión de papel.",
       "orderIt.rounds.r2.sentence.gloss": "Dibujo una flor.",
       "orderIt.rounds.r3.sentence.gloss": "Corto con tijeras.",
       "orderIt.rounds.r2.distractors.jallayo.gloss": "corto",
@@ -89,7 +89,7 @@
       "orderIt.rounds.r1.particle.choices.reul.gloss": "marca de objeto (después de una vocal)"
     },
     "minigame:s7-crafts-q1-check": {
-      "orderIt.rounds.c1.sentence.gloss": "Doblo un barco.",
+      "orderIt.rounds.c1.sentence.gloss": "Doblo una flor de papel.",
       "orderIt.rounds.c2.sentence.gloss": "Dibujo una estrella.",
       "orderIt.rounds.c2.distractors.jeobeoyo.gloss": "doblo",
       "orderIt.rounds.c1.particle.choices.eul.gloss": "marca de objeto (después de una consonante final)",
@@ -106,7 +106,7 @@
       "typeHangul.rounds.t4.target.gloss": "corto"
     },
     "minigame:s7-crafts-q2-apply": {
-      "orderIt.rounds.r1.sentence.gloss": "Primero, doblo un barco.",
+      "orderIt.rounds.r1.sentence.gloss": "Primero, doblo un barco de papel.",
       "orderIt.rounds.r2.sentence.gloss": "Después, corto con tijeras.",
       "orderIt.rounds.r3.sentence.gloss": "Por último, dibujo una flor.",
       "orderIt.rounds.r2.distractors.majimageuro.gloss": "por último",
@@ -116,7 +116,7 @@
     },
     "minigame:s7-crafts-q2-check": {
       "orderIt.rounds.c1.sentence.gloss": "Después, dibujo una estrella.",
-      "orderIt.rounds.c2.sentence.gloss": "Por último, corto con tijeras.",
+      "orderIt.rounds.c2.sentence.gloss": "Por último, doblo un avión de papel.",
       "orderIt.rounds.c2.distractors.meonjeo.gloss": "primero",
       "orderIt.rounds.c1.particle.choices.eul.gloss": "marca de objeto (después de una consonante final)",
       "orderIt.rounds.c1.particle.choices.reul.gloss": "marca de objeto (después de una vocal)"
@@ -134,7 +134,7 @@
     "minigame:s7-crafts-q3-apply": {
       "writeFrame.rounds.w1.frame.gloss": "Primero, ___ el papel.",
       "writeFrame.rounds.w2.frame.gloss": "Después, doblo y luego ___.",
-      "writeFrame.rounds.w3.frame.gloss": "Por último, dibujo ___.",
+      "writeFrame.rounds.w3.frame.gloss": "Por último, dibujo una ___.",
       "writeFrame.rounds.w1.slots.act.bank.jeobeoyo.gloss": "doblo",
       "writeFrame.rounds.w1.slots.act.bank.jallayo.gloss": "corto",
       "writeFrame.rounds.w2.slots.act.bank.jallayo.gloss": "corto",

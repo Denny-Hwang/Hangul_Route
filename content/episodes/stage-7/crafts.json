@@ -2,7 +2,7 @@
   "id": "episode:stage7-crafts",
   "stage": "stage7",
   "theme": "crafts",
-  "status": "draft",
+  "status": "ready",
   "titleEn": "Make & Share",
   "subtitleEn": "Write the steps of making a paper craft.",
   "hoyaIntroEn": "Fold, cut and draw with me, then write down how we made it!",
@@ -46,17 +46,17 @@
                       {
                         "ko": "비행기를 접어요.",
                         "romanization": "bihaenggireul jeobeoyo",
-                        "en": "I fold a plane."
+                        "en": "I fold a paper plane."
                       },
                       {
                         "ko": "배를 접어요.",
                         "romanization": "baereul jeobeoyo",
-                        "en": "I fold a boat."
+                        "en": "I fold a paper boat."
                       }
                     ]
                   }
                 ],
-                "captionEn": "Folding paper into a plane or a boat is called {ko:종이접기}."
+                "captionEn": "Folding paper into shapes, like a plane or a boat, is called jongijeopgi."
               },
               {
                 "items": [
@@ -79,7 +79,7 @@
                     "picture": "word:nature-flower"
                   }
                 ],
-                "captionEn": "Two more making words: cut and draw."
+                "captionEn": "Two more making words: cut and draw. Gawiro means with scissors."
               }
             ]
           },
@@ -125,7 +125,6 @@
             {
               "id": "t1",
               "promptEn": "Type the word for fold.",
-              "pictureRef": "word:travel-airplane",
               "target": {
                 "ko": "접어요",
                 "romanization": "jeobeoyo",
@@ -145,7 +144,6 @@
             {
               "id": "t3",
               "promptEn": "Type the word for draw.",
-              "pictureRef": "word:nature-flower",
               "target": {
                 "ko": "그려요",
                 "romanization": "geuryeoyo",
@@ -173,7 +171,7 @@
               "sentence": {
                 "ko": "비행기를 접어요.",
                 "romanization": "bihaenggireul jeobeoyo",
-                "en": "I fold a plane."
+                "en": "I fold a paper plane."
               },
               "pictureRef": "word:travel-airplane",
               "distractors": [],
@@ -234,11 +232,11 @@
             {
               "id": "c1",
               "sentence": {
-                "ko": "배를 접어요.",
-                "romanization": "baereul jeobeoyo",
-                "en": "I fold a boat."
+                "ko": "꽃을 접어요.",
+                "romanization": "kkocheul jeobeoyo",
+                "en": "I fold a paper flower."
               },
-              "pictureRef": "word:travel-boat",
+              "pictureRef": "word:nature-flower",
               "distractors": [],
               "particle": {
                 "tile": 0,
@@ -338,7 +336,7 @@
                     "sentence": {
                       "ko": "먼저 비행기를 접어요.",
                       "romanization": "meonjeo bihaenggireul jeobeoyo",
-                      "en": "First, I fold a plane."
+                      "en": "First, I fold a paper plane."
                     },
                     "picture": "word:travel-airplane"
                   }
@@ -434,7 +432,7 @@
               "sentence": {
                 "ko": "먼저 배를 접어요.",
                 "romanization": "meonjeo baereul jeobeoyo",
-                "en": "First, I fold a boat."
+                "en": "First, I fold a paper boat."
               },
               "pictureRef": "word:travel-boat",
               "distractors": [],
@@ -520,11 +518,11 @@
             {
               "id": "c2",
               "sentence": {
-                "ko": "마지막으로 가위로 잘라요.",
-                "romanization": "majimageuro gawiro jallayo",
-                "en": "Last, I cut with scissors."
+                "ko": "마지막으로 비행기를 접어요.",
+                "romanization": "majimageuro bihaenggireul jeobeoyo",
+                "en": "Last, I fold a paper plane."
               },
-              "pictureRef": "word:school-scissors",
+              "pictureRef": "word:travel-airplane",
               "distractors": [
                 {
                   "ko": "먼저",
@@ -565,7 +563,7 @@
                       "romanization": "jeopgo ___",
                       "en": "I fold and then ___."
                     },
-                    "noteEn": "Put {ko:고} on the first action to join it to the next one: {ko:접고 잘라요}.",
+                    "noteEn": "Take {ko:어요} off {ko:접어요} and add {ko:고}: {ko:접고 잘라요}.",
                     "examples": [
                       {
                         "ko": "접고 잘라요.",
@@ -602,7 +600,7 @@
                     "picture": "word:nature-flower"
                   }
                 ],
-                "captionEn": "Paper can be {ko:한지}, Korean paper made by hand from tree bark."
+                "captionEn": "Paper can be hanji, Korean paper made by hand from paper-mulberry bark."
               }
             ]
           },
@@ -636,7 +634,7 @@
           "id": "s6",
           "kind": "reward",
           "titleEn": "Your Page Is Ready!",
-          "hoyaLineEn": "You wrote your own steps. Show your page to someone next to you!",
+          "hoyaLineEn": "You wrote your own steps. If someone is with you, show them your page!",
           "durationSeconds": 8
         }
       ],
@@ -843,16 +841,16 @@
         }
       ],
       "verification": {
-        "passes": 2,
+        "passes": 3,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): both pages fetched. The AKS entry 종이접기 defines it as folding paper by hand into many shapes, lists boats and planes among them, names a basic fold for the crane, and says white paper, colored paper and foil are used; the dictionary entry 종이-접기 defines it as folding paper into the shape of a crane, a boat, a plane and the like. The note restates this in its own words; the AKS definition also calls it a children's game, which the note leaves out (audience any age, no age wording). Nothing is copied. Carried by: q1 Discover page 1 caption, and the plane and boat sentences of q1 and q2.\nLine 2 (pass 2b, independent fact check, 2026-10-14): both pages re-fetched (the stdict entry body via contentViewOne.do). The AKS entry 종이접기 carries the quoted definition (folding paper by hand into many shapes), lists boats and planes among the things made, names a basic fold for the crane, and says white paper as well as colored paper and foil are used; the dictionary entry 종이-접기 (word_no 516424) defines it as folding paper into the shape of a crane, a boat, a plane and the like. The note matches both: by hand, crane / boat / plane, plain or colored paper ('plain' renders 흰 종이). The AKS framing as a children's game is left out, which narrows nothing that is true. The q1 caption (a plane or a boat) stays inside the sources. The English is the author's own; no wording is copied. Outcome: pass, no change."
+        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): both pages fetched. The AKS entry 종이접기 defines it as folding paper by hand into many shapes, lists boats and planes among them, names a basic fold for the crane, and says white paper, colored paper and foil are used; the dictionary entry 종이-접기 defines it as folding paper into the shape of a crane, a boat, a plane and the like. The note restates this in its own words; the AKS definition also calls it a children's game, which the note leaves out (audience any age, no age wording). Nothing is copied. Carried by: q1 Discover page 1 caption, and the plane and boat sentences of q1 and q2.\nLine 2 (pass 2b, independent fact check, 2026-10-14): both pages re-fetched (the stdict entry body via contentViewOne.do). The AKS entry 종이접기 carries the quoted definition (folding paper by hand into many shapes), lists boats and planes among the things made, names a basic fold for the crane, and says white paper as well as colored paper and foil are used; the dictionary entry 종이-접기 (word_no 516424) defines it as folding paper into the shape of a crane, a boat, a plane and the like. The note matches both: by hand, crane / boat / plane, plain or colored paper ('plain' renders 흰 종이). The AKS framing as a children's game is left out, which narrows nothing that is true. The q1 caption (a plane or a boat) stays inside the sources. The English is the author's own; no wording is copied. Outcome: pass, no change.\nLine 3 (pass 5, MAR culture review, final independent check, 2026-10-14): both pages re-fetched (AKS E0052997; NIKL word_no 516424, body via contentViewOne.do) and both quoteOrLocator entries match the live pages word for word. The note holds: by hand, crane / boat / plane, plain or colored paper; the AKS framing as a children's game stays out (audience any age). The q1 caption now reads 'into shapes, like a plane or a boat', so it no longer narrows the term to two shapes. No wording is copied, no stereotype, no real person, shop or brand. Outcome: pass."
       }
     },
     {
       "id": "n2",
       "kind": "culture",
-      "textEn": "{ko:한지} is Korean paper made by hand in the traditional way, mainly from the bark of the paper mulberry tree.",
+      "textEn": "{ko:한지} is Korean paper made by hand in the traditional way, mainly from the bark of the paper mulberry.",
       "sources": [
         {
           "title": "한지 (Hanji), an entry of the Encyclopedia of Korean Culture",
@@ -870,10 +868,10 @@
         }
       ],
       "verification": {
-        "passes": 2,
+        "passes": 3,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): both pages fetched. The AKS entry 한지 defines it as traditional Korean paper made by hand and says the traditional paper made from the bark of the paper mulberry (닥나무) is called hanji today; the dictionary entry 한지 7 defines it as paper made by Korea's own method from fibres such as paper-mulberry bark. The note says 'mainly' because the dictionary says 'such as'. Own wording, nothing copied, no heritage designation number. Carried by: q3 Discover page 2 caption.\nLine 2 (pass 2b, independent fact check, 2026-10-14): both pages re-fetched (the stdict entry body via contentViewOne.do). The AKS entry 한지 defines it as Korea's traditional paper made by hand (손으로 떠서) and says the traditional paper made from paper-mulberry (닥나무) bark is today called hanji; the dictionary entry 한지 7 (韓紙, word_no 365052) defines it as paper made by Korea's own method from fibres such as paper-mulberry bark. The note matches: made by hand in the traditional way, mainly from paper-mulberry bark ('mainly' is a fair reading of the dictionary's 'such as'). The q3 caption ('made by hand from tree bark') stays inside the sources. No heritage designation number. The English is the author's own; no wording is copied. Outcome: pass, no change."
+        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): both pages fetched. The AKS entry 한지 defines it as traditional Korean paper made by hand and says the traditional paper made from the bark of the paper mulberry (닥나무) is called hanji today; the dictionary entry 한지 7 defines it as paper made by Korea's own method from fibres such as paper-mulberry bark. The note says 'mainly' because the dictionary says 'such as'. Own wording, nothing copied, no heritage designation number. Carried by: q3 Discover page 2 caption.\nLine 2 (pass 2b, independent fact check, 2026-10-14): both pages re-fetched (the stdict entry body via contentViewOne.do). The AKS entry 한지 defines it as Korea's traditional paper made by hand (손으로 떠서) and says the traditional paper made from paper-mulberry (닥나무) bark is today called hanji; the dictionary entry 한지 7 (韓紙, word_no 365052) defines it as paper made by Korea's own method from fibres such as paper-mulberry bark. The note matches: made by hand in the traditional way, mainly from paper-mulberry bark ('mainly' is a fair reading of the dictionary's 'such as'). The q3 caption ('made by hand from tree bark') stays inside the sources. No heritage designation number. The English is the author's own; no wording is copied. Outcome: pass, no change.\nLine 3 (pass 5, MAR culture review, final independent check, 2026-10-14): both pages re-fetched (AKS E0061987; NIKL word_no 365052, body via contentViewOne.do) and both quoteOrLocator entries match word for word. Change: 'tree' is dropped from the note and from the en / es q3 captions, because the sources name only 닥나무 (paper mulberry) bark and the dictionary classes 닥나무 as a shrub; the ko caption now says 닥나무 껍질 and 한국 전통 종이 instead of the in-group 우리 종이. The note now says made by hand, the traditional way, mainly from paper-mulberry bark, all inside the sources. No designation number, nothing copied. Outcome: pass after the change."
       }
     },
     {
@@ -897,17 +895,22 @@
         }
       ],
       "verification": {
-        "passes": 2,
+        "passes": 3,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): both pages fetched (the dictionary body via contentViewOne.do). Sense 1 of -고 25 joins two or more facts side by side; sense 2, after a verb stem, marks a sequential (계기적) relation between the two clauses. The AKS entry 어말어미 says a connective ending joins one sentence to another and lists -고 among them. The note keeps to these two points in its own words ('can show', since sense 1 also exists); nothing copied. Carried by: q3 Discover pattern noteEn, q3 practice, apply and Check.\nLine 2 (pass 2b, independent fact check, 2026-10-14): both pages re-fetched (the stdict entry body via contentViewOne.do). The dictionary entry -고 25 (word_no 394721) 「어미」 carries sense 1 (a connective ending that sets two or more facts side by side) and sense 2 (after a verb stem, a connective ending marking a sequential relation between the two clauses), as quoted; the AKS entry 어말어미 says a connective ending joins one sentence to another and lists -고 among the coordinating connective endings. The note matches: -고 joins one action to the next, and after an action word it can show one step and then the next ('can', since sense 1 also exists); 접고 잘라요 is a verb stem plus -고, so sense 2 applies. The q3 pattern noteEn stays inside the sources. The English is the author's own; no wording is copied. Outcome: pass, no change."
+        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): both pages fetched (the dictionary body via contentViewOne.do). Sense 1 of -고 25 joins two or more facts side by side; sense 2, after a verb stem, marks a sequential (계기적) relation between the two clauses. The AKS entry 어말어미 says a connective ending joins one sentence to another and lists -고 among them. The note keeps to these two points in its own words ('can show', since sense 1 also exists); nothing copied. Carried by: q3 Discover pattern noteEn, q3 practice, apply and Check.\nLine 2 (pass 2b, independent fact check, 2026-10-14): both pages re-fetched (the stdict entry body via contentViewOne.do). The dictionary entry -고 25 (word_no 394721) 「어미」 carries sense 1 (a connective ending that sets two or more facts side by side) and sense 2 (after a verb stem, a connective ending marking a sequential relation between the two clauses), as quoted; the AKS entry 어말어미 says a connective ending joins one sentence to another and lists -고 among the coordinating connective endings. The note matches: -고 joins one action to the next, and after an action word it can show one step and then the next ('can', since sense 1 also exists); 접고 잘라요 is a verb stem plus -고, so sense 2 applies. The q3 pattern noteEn stays inside the sources. The English is the author's own; no wording is copied. Outcome: pass, no change.\nLine 3 (pass 5, MAR culture review, final independent check, 2026-10-14): both pages re-fetched (NIKL word_no 394721, body via contentViewOne.do; AKS E0066610) and both quoteOrLocator entries match word for word. The note holds: -고 joins one action to the next, and after a verb stem it can show one step and then the next (sense 2); in a craft 접고 잘라요 can also read as sense 3 (cutting while the paper stays folded), which the note's 'can show' leaves true. The q3 pattern note now shows the stem rule (어요 off 접어요, add 고), which is grammar, not a new claim. Nothing copied. Outcome: pass."
       }
     }
   ],
   "review": {
-    "language": "draft",
-    "culture": "draft",
-    "notes": []
+    "language": "native-reviewed",
+    "culture": "culture-reviewed",
+    "reviewedBy": "MAR",
+    "reviewedAt": "2026-10-14",
+    "notes": [
+      "Language (pass 4, MAR, 2026-10-14): Hoya in 해요체 throughout the ko overlay; the -고 note shows the stem rule (접어요 -> 접 + 고); 가위로 is a fixed chunk glossed 'with scissors' on its Discover page, and q2 Check no longer pairs it with 마지막으로; ko glosses define 접어요 / 잘라요 / 그려요 without echoing them; 을/를 answers rebalanced.",
+      "Culture (pass 5, MAR, 2026-10-14): all six cited pages re-fetched, every locator matches; 'tree' dropped from the hanji note and captions, ko 우리 종이 -> 한국 전통 종이, the Share line is conditional so a learner alone has a true reading; no stereotype, no age wording, no real person, shop, brand or price."
+    ]
   },
   "contentVer": 1
 }
