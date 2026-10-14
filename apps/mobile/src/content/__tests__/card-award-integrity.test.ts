@@ -28,6 +28,7 @@ import { obtainableCards } from '../../logic/awards/obtainable';
 import { parseUnlockedBy } from '../../logic/awards/rules';
 import { buildStoryCards } from '../../logic/awards/story-cards';
 import { cardArtSource } from '../../logic/card-art';
+import { LESSON_EPISODES, LESSON_QUESTS } from '../__generated__/lessons-index';
 import { cardCitationView } from '../../logic/library/card-citation';
 import { storyCoverArt } from '../../logic/story/scene-view';
 import type { AwardWorld } from '../../logic/awards/types';
@@ -308,6 +309,40 @@ describe('refreshed taste cells keep their card awards (F-CURR-001 section 3.12 
       ['quest:stage4-rites-q2', undefined],
       ['quest:stage4-rites-q3', undefined],
     ]);
+  });
+});
+
+describe('refreshed taste cells keep their card awards (F-CURR-001 section 3.12 Cards, T-1)', () => {
+  const readCell = (theme: string) =>
+    JSON.parse(readFileSync(join(REPO, `content/episodes/stage-2/${theme}.json`), 'utf8')) as {
+      rewardCardIds: string[];
+      quests: { id: string; rewardCardId?: string }[];
+    };
+  const cases = [
+    { theme: 'life', card: 'card:dosirak', cards: ['card:sagwa', 'card:uyu', 'card:ppang', 'card:dosirak'] },
+    { theme: 'nature', card: 'card:byeol', cards: ['card:haneul', 'card:kkot', 'card:namu', 'card:byeol'] },
+  ] as const;
+
+  it.each(cases)('$card still resolves to quest:stage2-$theme-q1, and its episode keeps its rewardCardIds', ({ theme, card, cards }) => {
+    expect(questsAll.find((q) => q.id === `quest:stage2-${theme}-q1`)?.rewardCardId).toBe(card);
+    const episode = episodesAll.find((e) => e.id === `episode:stage2-${theme}`);
+    expect(episode?.rewardCardIds).toEqual(cards);
+    expect(episode?.questIds).toContain(`quest:stage2-${theme}-q1`);
+  });
+
+  it.each(cases)('the stage2-$theme cell file keeps the same awards: $card on q1, no card on q2 and q3', ({ theme, card, cards }) => {
+    const cell = readCell(theme);
+    expect(cell.rewardCardIds).toEqual(cards);
+    expect(cell.quests.map((q) => [q.id, q.rewardCardId])).toEqual([
+      [`quest:stage2-${theme}-q1`, card],
+      [`quest:stage2-${theme}-q2`, undefined],
+      [`quest:stage2-${theme}-q3`, undefined],
+    ]);
+  });
+
+  it.each(cases)('the generated stage2-$theme cell carries the same awards: $card on q1, no card on q2 and q3', ({ theme, card, cards }) => {
+    expect(LESSON_EPISODES.find((e) => e.id === `episode:stage2-${theme}`)?.rewardCardIds).toEqual(cards);
+    expect([1, 2, 3].map((k) => LESSON_QUESTS.find((q) => q.id === `quest:stage2-${theme}-q${k}`)?.rewardCardId)).toEqual([card, undefined, undefined]);
   });
 });
 

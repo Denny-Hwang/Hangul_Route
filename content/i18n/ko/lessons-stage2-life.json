@@ -1,0 +1,91 @@
+{
+  "locale": "ko",
+  "domain": "lessons-stage2-life",
+  "entries": {
+    "episode:stage2-life": {
+      "title": "도시락 낱말",
+      "subtitle": "음식과 식사에 관한 한국어 낱말을 읽어요.",
+      "hoyaIntro": "이제 글자를 알아요. 음식 낱말을 읽어 봐요!"
+    },
+    "quest:stage2-life-q1": {
+      "title": "도시락 낱말",
+      "blurb": "처음 읽는 음식 낱말: 도시락, 김밥, 우유, 달걀.",
+      "teaser": "다음: 과일과 간식.",
+      "steps.s1.title": "도시락을 열어요",
+      "steps.s2.title": "도시락 낱말",
+      "steps.s3.title": "그림과 낱말",
+      "steps.s4.title": "카드 짝짓기",
+      "steps.s5.title": "듣고 읽기",
+      "steps.s6.title": "도시락 카드!",
+      "steps.s1.hoyaLine": "도시락에 무엇이 있을까요? 진짜 낱말을 읽어 봐요!",
+      "steps.s2.hoyaLine": "‘들어 보기’를 누르고, 낱말을 하나씩 직접 읽어 봐요.",
+      "steps.s6.hoyaLine": "도시락 낱말을 읽었어요. 카드를 받아요!",
+      "steps.s2.discover.pages.2.caption": "보고 듣기만 해요. 이 글자는 「낱말 만들기」에서 배워요.",
+      "steps.s2.discover.pages.0.items.0.word.gloss": "밖에서 먹으려고 그릇에 담아 가는 밥",
+      "steps.s2.discover.pages.0.items.1.word.gloss": "김에 밥과 재료를 넣고 말아 만든 음식",
+      "steps.s2.discover.pages.1.items.0.word.gloss": "소에게서 얻는 하얀 마실 것",
+      "steps.s2.discover.pages.1.items.1.word.gloss": "닭이 낳는 둥근 알",
+      "steps.s2.discover.pages.2.items.0.word.gloss": "빨갛거나 푸른 껍질의 둥글고 아삭한 열매",
+      "steps.s2.discover.pages.2.items.1.word.gloss": "밀가루 반죽을 구워 만든 음식"
+    },
+    "quest:stage2-life-q2": {
+      "title": "과일과 간식",
+      "blurb": "과일과 간식 낱말: 간식, 바나나, 수박, 귤.",
+      "teaser": "다음: 밥과 국과 반찬.",
+      "steps.s1.title": "간식 시간!",
+      "steps.s2.title": "과일과 간식 낱말",
+      "steps.s3.title": "그림과 낱말",
+      "steps.s4.title": "낱말 완성하기",
+      "steps.s5.title": "듣고 읽기",
+      "steps.s6.title": "간식 낱말!",
+      "steps.s1.hoyaLine": "간식 시간이에요! 과일 낱말을 읽어 봐요.",
+      "steps.s2.hoyaLine": "‘들어 보기’를 누르고, 낱말을 하나씩 직접 읽어 봐요.",
+      "steps.s6.hoyaLine": "과일과 간식 낱말을 읽었어요. 잘했어요!",
+      "steps.s2.discover.pages.0.items.0.word.gloss": "끼니 사이에 먹는 가벼운 음식",
+      "steps.s2.discover.pages.0.items.1.word.gloss": "껍질이 노랗고 길쭉한 과일",
+      "steps.s2.discover.pages.1.items.0.word.gloss": "겉은 초록색이고 속은 빨간 커다란 여름 과일",
+      "steps.s2.discover.pages.1.items.1.word.gloss": "껍질을 손으로 까서 먹는 작은 주황색 과일"
+    },
+    "quest:stage2-life-q3": {
+      "title": "밥상에서",
+      "blurb": "밥상 낱말: 국, 반찬, 두부, 나물.",
+      "steps.s1.title": "밥 먹을 시간",
+      "steps.s2.title": "밥상 낱말",
+      "steps.s3.title": "그림과 낱말",
+      "steps.s4.title": "카드 짝짓기",
+      "steps.s5.title": "듣고 읽기",
+      "steps.s6.title": "밥상 낱말!",
+      "steps.s1.hoyaLine": "밥상이 차려졌어요. 무엇이 있는지 읽어 봐요!",
+      "steps.s2.hoyaLine": "밥, 국, 반찬이에요. ‘들어 보기’를 누르고 낱말을 하나씩 읽어 봐요.",
+      "steps.s6.hoyaLine": "밥상 가득 낱말을 읽었어요. 정말 잘했어요!",
+      "steps.s2.discover.pages.0.items.0.word.gloss": "물에 고기나 채소를 넣고 끓여 떠먹는 음식",
+      "steps.s2.discover.pages.0.items.1.word.gloss": "밥에 곁들여 먹는 여러 가지 음식",
+      "steps.s2.discover.pages.1.items.0.word.gloss": "콩으로 만든 하얗고 부드러운 음식",
+      "steps.s2.discover.pages.1.items.1.word.gloss": "먹을 수 있는 풀이나 잎을 데치거나 볶아 양념한 음식"
+    },
+    "minigame:s2-life-q1-apply": {
+      "cardPairs.dosirak.gloss": "밖에서 먹으려고 그릇에 담아 가는 밥",
+      "cardPairs.gimbap.gloss": "김에 밥과 재료를 넣고 말아 만든 음식",
+      "cardPairs.uyu.gloss": "소에게서 얻는 하얀 마실 것",
+      "cardPairs.dalgyal.gloss": "닭이 낳는 둥근 알"
+    },
+    "minigame:s2-life-q1-check": {
+      "listenPick.rounds.pic-gimbap.prompt": "김에 밥과 재료를 넣고 말아 만든 음식",
+      "listenPick.rounds.read-dosirak.prompt": "밖에서 먹으려고 그릇에 담아 가는 밥"
+    },
+    "minigame:s2-life-q2-check": {
+      "listenPick.rounds.pic-banana.prompt": "껍질이 노랗고 길쭉한 과일",
+      "listenPick.rounds.read-subak.prompt": "겉은 초록색이고 속은 빨간 커다란 여름 과일"
+    },
+    "minigame:s2-life-q3-apply": {
+      "cardPairs.guk.gloss": "물에 고기나 채소를 넣고 끓여 떠먹는 음식",
+      "cardPairs.banchan.gloss": "밥에 곁들여 먹는 여러 가지 음식",
+      "cardPairs.dubu.gloss": "콩으로 만든 하얗고 부드러운 음식",
+      "cardPairs.namul.gloss": "먹을 수 있는 풀이나 잎을 데치거나 볶아 양념한 음식"
+    },
+    "minigame:s2-life-q3-check": {
+      "listenPick.rounds.pic-bibimbap.prompt": "밥 위에 채소와 고명을 올려 비벼 먹는 음식",
+      "listenPick.rounds.read-banchan.prompt": "밥에 곁들여 먹는 여러 가지 음식"
+    }
+  }
+}

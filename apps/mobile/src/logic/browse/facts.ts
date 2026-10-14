@@ -190,7 +190,7 @@ function scopeWords(
   const syllables: SyllableFact[] = [];
   for (const pair of scope.cardPairs ?? []) words.push(...glossed(pair.ko, pair.romanization, pair.en));
   for (const s of scope.syllables ?? []) {
-    // A built block that is a bundle word (Lunch Box Words: san, gom) is taught as that word, with its gloss.
+    // A built block that is a bundle word the quest shows (Rivers and Seas: gang) is taught as that word, with its gloss.
     const word = wordFor(s.ko);
     if (word) words.push(word);
     else syllables.push({ ko: s.ko, romanization: s.romanization });
@@ -227,7 +227,8 @@ function lettersOf(quest: Quest, bundle: BrowseBundle): LetterFact[] {
  * language; `null` keeps it a syllable. Matching is by Korean only, so it is strict (heritage accuracy):
  * never in Stage 1, where a built block is a sound and not a word (it may spell a word of another
  * topic by chance), and only when exactly one bundle word has that Korean and it is not one sense of
- * a homonym (`senseGroup`), so no block is glossed with a meaning the lesson never meant.
+ * a homonym (`senseGroup`), so no block is glossed with a meaning the lesson never meant. `wordsOf`
+ * asks it only for a block the quest also shows as a word.
  */
 function bundleWord(bundle: BrowseBundle, locale: UiLocale, stage: string | undefined): (ko: string) => WordFact | null {
   return (ko) => {
@@ -250,6 +251,7 @@ function wordsOf(quest: Quest, bundle: BrowseBundle, locale: UiLocale): { words:
       for (const item of page.items) words.push(...discoverItemTexts(item).map(wordOf));
     }
   }
+  const scoped: { ref: string; scope: MinigameScope }[] = [];
   for (const { minigameRef: ref } of local.steps) {
     if (!ref) continue;
     const story = parseStoryMinigameRef(ref);
@@ -258,8 +260,13 @@ function wordsOf(quest: Quest, bundle: BrowseBundle, locale: UiLocale): { words:
       continue;
     }
     const scope = bundle.scopeFor(ref);
-    if (!scope) continue;
-    const found = scopeWords(localizeScope(scope, ref, locale), scope, wordFor);
+    if (scope) scoped.push({ ref, scope });
+  }
+  // A built block is a word only when the quest itself shows that word (Discover or a game): a block of a
+  // longer built word (na of namu, F-CURR-001 T-1) is never glossed as a word of its own.
+  const shown = new Set([...words, ...scoped.flatMap(({ ref, scope }) => scopeWords(localizeScope(scope, ref, locale), scope, () => null).words)].map((w) => koKey(w.ko)));
+  for (const { ref, scope } of scoped) {
+    const found = scopeWords(localizeScope(scope, ref, locale), scope, (ko) => (shown.has(koKey(ko)) ? wordFor(ko) : null));
     words.push(...found.words);
     syllables.push(...found.syllables);
   }

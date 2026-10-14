@@ -1,0 +1,83 @@
+{
+  "locale": "ko",
+  "domain": "lessons-stage2-nature",
+  "entries": {
+    "episode:stage2-nature": {
+      "title": "바깥 낱말",
+      "subtitle": "하늘과 날씨와 물에 관한 낱말을 읽어요.",
+      "hoyaIntro": "함께 밖으로 나가요. 우리 주변 세상을 읽어 봐요!"
+    },
+    "quest:stage2-nature-q1": {
+      "title": "바깥 낱말",
+      "blurb": "하늘, 별, 나무를 읽고, 꽃이라는 낱말도 봐요.",
+      "teaser": "다음: 비, 눈, 구름, 바람.",
+      "steps.s1.title": "밖으로 나가요",
+      "steps.s2.title": "바깥 낱말",
+      "steps.s3.title": "그림과 낱말",
+      "steps.s4.title": "낱말 완성하기",
+      "steps.s5.title": "듣고 읽기",
+      "steps.s6.title": "별 카드!",
+      "steps.s1.hoyaLine": "밖에서 보이는 것을 읽어 봐요!",
+      "steps.s2.hoyaLine": "‘들어 보기’를 누르고, 낱말을 하나씩 직접 읽어 봐요.",
+      "steps.s6.hoyaLine": "바깥 낱말을 읽었어요. 별 카드를 받아요!",
+      "steps.s2.discover.pages.2.caption": "보고 듣기만 해요. 이 글자는 「낱말 만들기」에서 배워요.",
+      "steps.s2.discover.pages.0.items.0.word.gloss": "머리 위로 보이는 높고 넓은 곳",
+      "steps.s2.discover.pages.0.items.1.word.gloss": "밤하늘에 반짝이는 작은 빛",
+      "steps.s2.discover.pages.1.items.0.word.gloss": "줄기와 가지, 잎이 있는 키 큰 식물",
+      "steps.s2.discover.pages.2.items.0.word.gloss": "식물에 피어나는 빛깔이 고운 부분"
+    },
+    "quest:stage2-nature-q2": {
+      "title": "비와 눈",
+      "blurb": "날씨 낱말: 비, 눈, 구름, 바람.",
+      "teaser": "다음: 강, 호수, 바다.",
+      "steps.s1.title": "위를 봐요!",
+      "steps.s2.title": "날씨 낱말",
+      "steps.s3.title": "그림과 낱말",
+      "steps.s4.title": "카드 짝짓기",
+      "steps.s5.title": "듣고 읽기",
+      "steps.s6.title": "날씨 낱말!",
+      "steps.s1.hoyaLine": "하늘을 올려다봐요. 날씨가 어때요?",
+      "steps.s2.hoyaLine": "‘들어 보기’를 누르고, 낱말을 하나씩 직접 읽어 봐요.",
+      "steps.s6.hoyaLine": "비, 눈, 구름, 바람을 모두 읽었어요!",
+      "steps.s2.discover.pages.0.items.0.word.gloss": "구름에서 떨어지는 물방울",
+      "steps.s2.discover.pages.0.items.1.word.gloss": "겨울에 하늘에서 내리는 하얀 것",
+      "steps.s2.discover.pages.1.items.0.word.gloss": "하늘에 떠 있는 하얗거나 회색인 덩어리",
+      "steps.s2.discover.pages.1.items.1.word.gloss": "움직이는 공기"
+    },
+    "quest:stage2-nature-q3": {
+      "title": "강과 바다",
+      "blurb": "물 낱말: 강, 호수, 섬, 바다.",
+      "steps.s1.title": "물가로 가요",
+      "steps.s2.title": "물 낱말",
+      "steps.s3.title": "그림과 낱말",
+      "steps.s4.title": "낱말 완성하기",
+      "steps.s5.title": "듣고 읽기",
+      "steps.s6.title": "물 낱말!",
+      "steps.s1.hoyaLine": "물이 있는 곳으로 가 봐요!",
+      "steps.s2.hoyaLine": "‘들어 보기’를 누르고, 낱말을 하나씩 직접 읽어 봐요.",
+      "steps.s6.hoyaLine": "강, 호수, 섬, 바다를 모두 읽었어요. 잘했어요!",
+      "steps.s2.discover.pages.0.items.0.word.gloss": "길게 흐르는 큰 물줄기",
+      "steps.s2.discover.pages.0.items.1.word.gloss": "땅으로 둘러싸인 넓고 깊은 물",
+      "steps.s2.discover.pages.1.items.0.word.gloss": "사방이 물로 둘러싸인 땅",
+      "steps.s2.discover.pages.1.items.1.word.gloss": "넓고 짠 물"
+    },
+    "minigame:s2-nature-q1-check": {
+      "listenPick.rounds.pic-byeol.prompt": "밤하늘에 반짝이는 작은 빛",
+      "listenPick.rounds.read-namu.prompt": "줄기와 가지, 잎이 있는 키 큰 식물"
+    },
+    "minigame:s2-nature-q2-apply": {
+      "cardPairs.bi.gloss": "구름에서 떨어지는 물방울",
+      "cardPairs.nun.gloss": "겨울에 하늘에서 내리는 하얀 것",
+      "cardPairs.gureum.gloss": "하늘에 떠 있는 하얗거나 회색인 덩어리",
+      "cardPairs.baram.gloss": "움직이는 공기"
+    },
+    "minigame:s2-nature-q2-check": {
+      "listenPick.rounds.pic-gureum.prompt": "하늘에 떠 있는 하얗거나 회색인 덩어리",
+      "listenPick.rounds.read-baram.prompt": "움직이는 공기"
+    },
+    "minigame:s2-nature-q3-check": {
+      "listenPick.rounds.pic-bada.prompt": "넓고 짠 물",
+      "listenPick.rounds.read-hosu.prompt": "땅으로 둘러싸인 넓고 깊은 물"
+    }
+  }
+}

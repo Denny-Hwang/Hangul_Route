@@ -1,0 +1,1307 @@
+{
+  "id": "episode:stage2-life",
+  "stage": "stage2",
+  "theme": "life",
+  "status": "ready",
+  "titleEn": "Lunch Box Words",
+  "subtitleEn": "Read Korean words for food and meals.",
+  "hoyaIntroEn": "You know the letters now. Let us read food words!",
+  "order": 2,
+  "pillarTags": [],
+  "rewardCardIds": [
+    "card:sagwa",
+    "card:uyu",
+    "card:ppang",
+    "card:dosirak"
+  ],
+  "quests": [
+    {
+      "id": "quest:stage2-life-q1",
+      "titleEn": "Lunch Box Words",
+      "blurbEn": "Read your first food words: lunch box, gimbap, milk and egg.",
+      "teaserEn": "Next: fruit and snacks.",
+      "estimatedMinutes": 4,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "Open the Lunch Box",
+          "hoyaLineEn": "What is in the lunch box? Let us read real words!",
+          "durationSeconds": 8
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "Lunch Box Words",
+          "hoyaLineEn": "Tap Hear it, then read each word yourself.",
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "도시락",
+                      "romanization": "dosirak",
+                      "en": "lunch box",
+                      "syllables": [
+                        "do",
+                        "si",
+                        "rak"
+                      ]
+                    }
+                  },
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "김밥",
+                      "romanization": "gimbap",
+                      "en": "gimbap (seaweed rice roll)",
+                      "syllables": [
+                        "gim",
+                        "bap"
+                      ]
+                    },
+                    "picture": "card:kimbap"
+                  }
+                ]
+              },
+              {
+                "items": [
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "우유",
+                      "romanization": "uyu",
+                      "en": "milk",
+                      "syllables": [
+                        "u",
+                        "yu"
+                      ]
+                    },
+                    "picture": "word:food-milk"
+                  },
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "달걀",
+                      "romanization": "dalgyal",
+                      "en": "egg",
+                      "syllables": [
+                        "dal",
+                        "gyal"
+                      ]
+                    },
+                    "picture": "word:food-egg"
+                  }
+                ]
+              },
+              {
+                "captionEn": "Just look and listen: you learn these letters in Word Builder.",
+                "items": [
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "사과",
+                      "romanization": "sagwa",
+                      "en": "apple",
+                      "syllables": [
+                        "sa",
+                        "gwa"
+                      ]
+                    },
+                    "picture": "word:food-apple"
+                  },
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "빵",
+                      "romanization": "ppang",
+                      "en": "bread"
+                    },
+                    "picture": "word:food-bread"
+                  }
+                ]
+              }
+            ]
+          },
+          "durationSeconds": 55
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Picture and Word",
+          "minigameKind": "pic-word-match",
+          "minigameRef": "minigame:s2-life-q1-practice",
+          "durationSeconds": 85
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Match the Cards",
+          "minigameKind": "card-match",
+          "minigameRef": "minigame:s2-life-q1-apply",
+          "durationSeconds": 65
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Listen and Read",
+          "minigameKind": "listen-pick",
+          "minigameRef": "minigame:s2-life-q1-check",
+          "durationSeconds": 35
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Lunch Box Card!",
+          "hoyaLineEn": "You read lunch box words. Here is a card!",
+          "durationSeconds": 8
+        }
+      ],
+      "rewardCardId": "card:dosirak",
+      "scopes": [
+        {
+          "ref": "minigame:s2-life-q1-practice",
+          "kind": "pic-word-match",
+          "boards": [
+            {
+              "pairs": [
+                {
+                  "id": "gimbap",
+                  "pictureRef": "card:kimbap",
+                  "word": {
+                    "ko": "김밥",
+                    "romanization": "gimbap",
+                    "en": "gimbap (seaweed rice roll)"
+                  }
+                },
+                {
+                  "id": "uyu",
+                  "pictureRef": "word:food-milk",
+                  "word": {
+                    "ko": "우유",
+                    "romanization": "uyu",
+                    "en": "milk"
+                  }
+                },
+                {
+                  "id": "dalgyal",
+                  "pictureRef": "word:food-egg",
+                  "word": {
+                    "ko": "달걀",
+                    "romanization": "dalgyal",
+                    "en": "egg"
+                  }
+                }
+              ]
+            },
+            {
+              "pairs": [
+                {
+                  "id": "uyu",
+                  "pictureRef": "word:food-milk",
+                  "word": {
+                    "ko": "우유",
+                    "romanization": "uyu",
+                    "en": "milk"
+                  }
+                },
+                {
+                  "id": "bap",
+                  "pictureRef": "card:rice",
+                  "word": {
+                    "ko": "밥",
+                    "romanization": "bap",
+                    "en": "cooked rice"
+                  }
+                },
+                {
+                  "id": "mul",
+                  "pictureRef": "word:food-water",
+                  "word": {
+                    "ko": "물",
+                    "romanization": "mul",
+                    "en": "water"
+                  }
+                }
+              ]
+            },
+            {
+              "pairs": [
+                {
+                  "id": "dalgyal",
+                  "pictureRef": "word:food-egg",
+                  "word": {
+                    "ko": "달걀",
+                    "romanization": "dalgyal",
+                    "en": "egg"
+                  }
+                },
+                {
+                  "id": "gimchi",
+                  "pictureRef": "card:kimchi",
+                  "word": {
+                    "ko": "김치",
+                    "romanization": "gimchi",
+                    "en": "kimchi"
+                  }
+                },
+                {
+                  "id": "banana",
+                  "pictureRef": "word:food-banana",
+                  "word": {
+                    "ko": "바나나",
+                    "romanization": "banana",
+                    "en": "banana"
+                  }
+                }
+              ]
+            },
+            {
+              "pairs": [
+                {
+                  "id": "gimbap",
+                  "pictureRef": "card:kimbap",
+                  "word": {
+                    "ko": "김밥",
+                    "romanization": "gimbap",
+                    "en": "gimbap (seaweed rice roll)"
+                  }
+                },
+                {
+                  "id": "ramyeon",
+                  "pictureRef": "word:food-ramyeon",
+                  "word": {
+                    "ko": "라면",
+                    "romanization": "ramyeon",
+                    "en": "instant noodles"
+                  }
+                },
+                {
+                  "id": "uyu",
+                  "pictureRef": "word:food-milk",
+                  "word": {
+                    "ko": "우유",
+                    "romanization": "uyu",
+                    "en": "milk"
+                  }
+                }
+              ]
+            },
+            {
+              "pairs": [
+                {
+                  "id": "dalgyal",
+                  "pictureRef": "word:food-egg",
+                  "word": {
+                    "ko": "달걀",
+                    "romanization": "dalgyal",
+                    "en": "egg"
+                  }
+                },
+                {
+                  "id": "gimbap",
+                  "pictureRef": "card:kimbap",
+                  "word": {
+                    "ko": "김밥",
+                    "romanization": "gimbap",
+                    "en": "gimbap (seaweed rice roll)"
+                  }
+                },
+                {
+                  "id": "mul",
+                  "pictureRef": "word:food-water",
+                  "word": {
+                    "ko": "물",
+                    "romanization": "mul",
+                    "en": "water"
+                  }
+                }
+              ]
+            },
+            {
+              "pairs": [
+                {
+                  "id": "gimchi",
+                  "pictureRef": "card:kimchi",
+                  "word": {
+                    "ko": "김치",
+                    "romanization": "gimchi",
+                    "en": "kimchi"
+                  }
+                },
+                {
+                  "id": "uyu",
+                  "pictureRef": "word:food-milk",
+                  "word": {
+                    "ko": "우유",
+                    "romanization": "uyu",
+                    "en": "milk"
+                  }
+                },
+                {
+                  "id": "gimbap",
+                  "pictureRef": "card:kimbap",
+                  "word": {
+                    "ko": "김밥",
+                    "romanization": "gimbap",
+                    "en": "gimbap (seaweed rice roll)"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s2-life-q1-apply",
+          "kind": "card-match",
+          "pairs": [
+            {
+              "ko": "도시락",
+              "romanization": "dosirak",
+              "en": "lunch box"
+            },
+            {
+              "ko": "김밥",
+              "romanization": "gimbap",
+              "en": "gimbap (seaweed rice roll)"
+            },
+            {
+              "ko": "우유",
+              "romanization": "uyu",
+              "en": "milk"
+            },
+            {
+              "ko": "달걀",
+              "romanization": "dalgyal",
+              "en": "egg"
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s2-life-q1-check",
+          "kind": "listen-pick",
+          "rounds": [
+            {
+              "id": "pic-gimbap",
+              "prompt": {
+                "ko": "김밥",
+                "romanization": "gimbap",
+                "en": "gimbap (seaweed rice roll)"
+              },
+              "options": [
+                {
+                  "id": "gimbap",
+                  "pictureRef": "card:kimbap",
+                  "labelEn": "gimbap"
+                },
+                {
+                  "id": "uyu",
+                  "pictureRef": "word:food-milk",
+                  "labelEn": "milk"
+                },
+                {
+                  "id": "dalgyal",
+                  "pictureRef": "word:food-egg",
+                  "labelEn": "egg"
+                },
+                {
+                  "id": "bap",
+                  "pictureRef": "card:rice",
+                  "labelEn": "cooked rice"
+                }
+              ],
+              "answerId": "gimbap"
+            },
+            {
+              "id": "read-dosirak",
+              "prompt": {
+                "ko": "도시락",
+                "romanization": "dosirak",
+                "en": "lunch box"
+              },
+              "options": [
+                {
+                  "id": "dosirak",
+                  "text": {
+                    "ko": "도시락",
+                    "romanization": "dosirak",
+                    "en": "lunch box"
+                  }
+                },
+                {
+                  "id": "dojagi",
+                  "text": {
+                    "ko": "도자기",
+                    "romanization": "dojagi",
+                    "en": "pottery"
+                  }
+                },
+                {
+                  "id": "sarang",
+                  "text": {
+                    "ko": "사랑",
+                    "romanization": "sarang",
+                    "en": "love"
+                  }
+                }
+              ],
+              "answerId": "dosirak"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "quest:stage2-life-q2",
+      "titleEn": "Fruit and Snacks",
+      "blurbEn": "Read fruit and snack words: snack, banana, watermelon, mandarin.",
+      "teaserEn": "Next: rice, soup and side dishes.",
+      "estimatedMinutes": 4,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "Snack Time!",
+          "hoyaLineEn": "Snack time! Let us read some fruit words.",
+          "durationSeconds": 8
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "Fruit and Snack Words",
+          "hoyaLineEn": "Tap Hear it, then read each word yourself.",
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "간식",
+                      "romanization": "gansik",
+                      "en": "snack",
+                      "syllables": [
+                        "gan",
+                        "sik"
+                      ]
+                    }
+                  },
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "바나나",
+                      "romanization": "banana",
+                      "en": "banana",
+                      "syllables": [
+                        "ba",
+                        "na",
+                        "na"
+                      ]
+                    },
+                    "picture": "word:food-banana"
+                  }
+                ]
+              },
+              {
+                "items": [
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "수박",
+                      "romanization": "subak",
+                      "en": "watermelon",
+                      "syllables": [
+                        "su",
+                        "bak"
+                      ]
+                    }
+                  },
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "귤",
+                      "romanization": "gyul",
+                      "en": "mandarin orange"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "durationSeconds": 50
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Picture and Word",
+          "minigameKind": "pic-word-match",
+          "minigameRef": "minigame:s2-life-q2-practice",
+          "durationSeconds": 85
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Build the Word",
+          "minigameKind": "build-letter",
+          "minigameRef": "minigame:s2-life-q2-apply",
+          "durationSeconds": 70
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Listen and Read",
+          "minigameKind": "listen-pick",
+          "minigameRef": "minigame:s2-life-q2-check",
+          "durationSeconds": 35
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Snack Words!",
+          "hoyaLineEn": "You read fruit and snack words. Well done!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s2-life-q2-practice",
+          "kind": "pic-word-match",
+          "boards": [
+            {
+              "pairs": [
+                {
+                  "id": "banana",
+                  "pictureRef": "word:food-banana",
+                  "word": {
+                    "ko": "바나나",
+                    "romanization": "banana",
+                    "en": "banana"
+                  }
+                },
+                {
+                  "id": "uyu",
+                  "pictureRef": "word:food-milk",
+                  "word": {
+                    "ko": "우유",
+                    "romanization": "uyu",
+                    "en": "milk"
+                  }
+                },
+                {
+                  "id": "ramyeon",
+                  "pictureRef": "word:food-ramyeon",
+                  "word": {
+                    "ko": "라면",
+                    "romanization": "ramyeon",
+                    "en": "instant noodles"
+                  }
+                }
+              ]
+            },
+            {
+              "pairs": [
+                {
+                  "id": "banana",
+                  "pictureRef": "word:food-banana",
+                  "word": {
+                    "ko": "바나나",
+                    "romanization": "banana",
+                    "en": "banana"
+                  }
+                },
+                {
+                  "id": "dalgyal",
+                  "pictureRef": "word:food-egg",
+                  "word": {
+                    "ko": "달걀",
+                    "romanization": "dalgyal",
+                    "en": "egg"
+                  }
+                },
+                {
+                  "id": "mul",
+                  "pictureRef": "word:food-water",
+                  "word": {
+                    "ko": "물",
+                    "romanization": "mul",
+                    "en": "water"
+                  }
+                }
+              ]
+            },
+            {
+              "pairs": [
+                {
+                  "id": "ramyeon",
+                  "pictureRef": "word:food-ramyeon",
+                  "word": {
+                    "ko": "라면",
+                    "romanization": "ramyeon",
+                    "en": "instant noodles"
+                  }
+                },
+                {
+                  "id": "gimbap",
+                  "pictureRef": "card:kimbap",
+                  "word": {
+                    "ko": "김밥",
+                    "romanization": "gimbap",
+                    "en": "gimbap (seaweed rice roll)"
+                  }
+                },
+                {
+                  "id": "banana",
+                  "pictureRef": "word:food-banana",
+                  "word": {
+                    "ko": "바나나",
+                    "romanization": "banana",
+                    "en": "banana"
+                  }
+                }
+              ]
+            },
+            {
+              "pairs": [
+                {
+                  "id": "uyu",
+                  "pictureRef": "word:food-milk",
+                  "word": {
+                    "ko": "우유",
+                    "romanization": "uyu",
+                    "en": "milk"
+                  }
+                },
+                {
+                  "id": "mul",
+                  "pictureRef": "word:food-water",
+                  "word": {
+                    "ko": "물",
+                    "romanization": "mul",
+                    "en": "water"
+                  }
+                },
+                {
+                  "id": "bap",
+                  "pictureRef": "card:rice",
+                  "word": {
+                    "ko": "밥",
+                    "romanization": "bap",
+                    "en": "cooked rice"
+                  }
+                }
+              ]
+            },
+            {
+              "pairs": [
+                {
+                  "id": "banana",
+                  "pictureRef": "word:food-banana",
+                  "word": {
+                    "ko": "바나나",
+                    "romanization": "banana",
+                    "en": "banana"
+                  }
+                },
+                {
+                  "id": "gimchi",
+                  "pictureRef": "card:kimchi",
+                  "word": {
+                    "ko": "김치",
+                    "romanization": "gimchi",
+                    "en": "kimchi"
+                  }
+                },
+                {
+                  "id": "dalgyal",
+                  "pictureRef": "word:food-egg",
+                  "word": {
+                    "ko": "달걀",
+                    "romanization": "dalgyal",
+                    "en": "egg"
+                  }
+                }
+              ]
+            },
+            {
+              "pairs": [
+                {
+                  "id": "ramyeon",
+                  "pictureRef": "word:food-ramyeon",
+                  "word": {
+                    "ko": "라면",
+                    "romanization": "ramyeon",
+                    "en": "instant noodles"
+                  }
+                },
+                {
+                  "id": "uyu",
+                  "pictureRef": "word:food-milk",
+                  "word": {
+                    "ko": "우유",
+                    "romanization": "uyu",
+                    "en": "milk"
+                  }
+                },
+                {
+                  "id": "banana",
+                  "pictureRef": "word:food-banana",
+                  "word": {
+                    "ko": "바나나",
+                    "romanization": "banana",
+                    "en": "banana"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s2-life-q2-apply",
+          "kind": "build-letter",
+          "words": [
+            {
+              "ko": "수박",
+              "romanization": "subak",
+              "en": "watermelon",
+              "syllables": [
+                "su",
+                "bak"
+              ]
+            },
+            {
+              "ko": "간식",
+              "romanization": "gansik",
+              "en": "snack",
+              "syllables": [
+                "gan",
+                "sik"
+              ]
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s2-life-q2-check",
+          "kind": "listen-pick",
+          "rounds": [
+            {
+              "id": "pic-banana",
+              "prompt": {
+                "ko": "바나나",
+                "romanization": "banana",
+                "en": "banana"
+              },
+              "options": [
+                {
+                  "id": "banana",
+                  "pictureRef": "word:food-banana",
+                  "labelEn": "banana"
+                },
+                {
+                  "id": "ramyeon",
+                  "pictureRef": "word:food-ramyeon",
+                  "labelEn": "instant noodles"
+                },
+                {
+                  "id": "uyu",
+                  "pictureRef": "word:food-milk",
+                  "labelEn": "milk"
+                },
+                {
+                  "id": "mul",
+                  "pictureRef": "word:food-water",
+                  "labelEn": "water"
+                }
+              ],
+              "answerId": "banana"
+            },
+            {
+              "id": "read-subak",
+              "prompt": {
+                "ko": "수박",
+                "romanization": "subak",
+                "en": "watermelon"
+              },
+              "options": [
+                {
+                  "id": "subak",
+                  "text": {
+                    "ko": "수박",
+                    "romanization": "subak",
+                    "en": "watermelon"
+                  }
+                },
+                {
+                  "id": "suyeong",
+                  "text": {
+                    "ko": "수영",
+                    "romanization": "suyeong",
+                    "en": "swimming"
+                  }
+                },
+                {
+                  "id": "gabang",
+                  "text": {
+                    "ko": "가방",
+                    "romanization": "gabang",
+                    "en": "bag"
+                  }
+                }
+              ],
+              "answerId": "subak"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "quest:stage2-life-q3",
+      "titleEn": "At the Table",
+      "blurbEn": "Read table words: soup, side dishes, tofu and vegetables.",
+      "estimatedMinutes": 4,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "Time to Eat",
+          "hoyaLineEn": "The table is ready. Let us read what is on it!",
+          "durationSeconds": 8
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "Table Words",
+          "hoyaLineEn": "Rice, soup and side dishes: tap Hear it, then read each word.",
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "국",
+                      "romanization": "guk",
+                      "en": "soup"
+                    }
+                  },
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "반찬",
+                      "romanization": "banchan",
+                      "en": "side dishes",
+                      "syllables": [
+                        "ban",
+                        "chan"
+                      ]
+                    }
+                  }
+                ]
+              },
+              {
+                "items": [
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "두부",
+                      "romanization": "dubu",
+                      "en": "tofu",
+                      "syllables": [
+                        "du",
+                        "bu"
+                      ]
+                    }
+                  },
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "나물",
+                      "romanization": "namul",
+                      "en": "seasoned vegetables",
+                      "syllables": [
+                        "na",
+                        "mul"
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "durationSeconds": 50
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Picture and Word",
+          "minigameKind": "pic-word-match",
+          "minigameRef": "minigame:s2-life-q3-practice",
+          "durationSeconds": 85
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Match the Cards",
+          "minigameKind": "card-match",
+          "minigameRef": "minigame:s2-life-q3-apply",
+          "durationSeconds": 65
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Listen and Read",
+          "minigameKind": "listen-pick",
+          "minigameRef": "minigame:s2-life-q3-check",
+          "durationSeconds": 35
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Table Words!",
+          "hoyaLineEn": "You read a whole table of words. Great job!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s2-life-q3-practice",
+          "kind": "pic-word-match",
+          "boards": [
+            {
+              "pairs": [
+                {
+                  "id": "bap",
+                  "pictureRef": "card:rice",
+                  "word": {
+                    "ko": "밥",
+                    "romanization": "bap",
+                    "en": "cooked rice"
+                  }
+                },
+                {
+                  "id": "gimchi",
+                  "pictureRef": "card:kimchi",
+                  "word": {
+                    "ko": "김치",
+                    "romanization": "gimchi",
+                    "en": "kimchi"
+                  }
+                },
+                {
+                  "id": "mul",
+                  "pictureRef": "word:food-water",
+                  "word": {
+                    "ko": "물",
+                    "romanization": "mul",
+                    "en": "water"
+                  }
+                }
+              ]
+            },
+            {
+              "pairs": [
+                {
+                  "id": "bibimbap",
+                  "pictureRef": "word:culture-bibimbap",
+                  "word": {
+                    "ko": "비빔밥",
+                    "romanization": "bibimbap",
+                    "en": "bibimbap (mixed rice bowl)"
+                  }
+                },
+                {
+                  "id": "gimbap",
+                  "pictureRef": "card:kimbap",
+                  "word": {
+                    "ko": "김밥",
+                    "romanization": "gimbap",
+                    "en": "gimbap (seaweed rice roll)"
+                  }
+                },
+                {
+                  "id": "ramyeon",
+                  "pictureRef": "word:food-ramyeon",
+                  "word": {
+                    "ko": "라면",
+                    "romanization": "ramyeon",
+                    "en": "instant noodles"
+                  }
+                }
+              ]
+            },
+            {
+              "pairs": [
+                {
+                  "id": "bap",
+                  "pictureRef": "card:rice",
+                  "word": {
+                    "ko": "밥",
+                    "romanization": "bap",
+                    "en": "cooked rice"
+                  }
+                },
+                {
+                  "id": "dalgyal",
+                  "pictureRef": "word:food-egg",
+                  "word": {
+                    "ko": "달걀",
+                    "romanization": "dalgyal",
+                    "en": "egg"
+                  }
+                },
+                {
+                  "id": "gimchi",
+                  "pictureRef": "card:kimchi",
+                  "word": {
+                    "ko": "김치",
+                    "romanization": "gimchi",
+                    "en": "kimchi"
+                  }
+                }
+              ]
+            },
+            {
+              "pairs": [
+                {
+                  "id": "bibimbap",
+                  "pictureRef": "word:culture-bibimbap",
+                  "word": {
+                    "ko": "비빔밥",
+                    "romanization": "bibimbap",
+                    "en": "bibimbap (mixed rice bowl)"
+                  }
+                },
+                {
+                  "id": "mul",
+                  "pictureRef": "word:food-water",
+                  "word": {
+                    "ko": "물",
+                    "romanization": "mul",
+                    "en": "water"
+                  }
+                },
+                {
+                  "id": "uyu",
+                  "pictureRef": "word:food-milk",
+                  "word": {
+                    "ko": "우유",
+                    "romanization": "uyu",
+                    "en": "milk"
+                  }
+                }
+              ]
+            },
+            {
+              "pairs": [
+                {
+                  "id": "gimchi",
+                  "pictureRef": "card:kimchi",
+                  "word": {
+                    "ko": "김치",
+                    "romanization": "gimchi",
+                    "en": "kimchi"
+                  }
+                },
+                {
+                  "id": "ramyeon",
+                  "pictureRef": "word:food-ramyeon",
+                  "word": {
+                    "ko": "라면",
+                    "romanization": "ramyeon",
+                    "en": "instant noodles"
+                  }
+                },
+                {
+                  "id": "bap",
+                  "pictureRef": "card:rice",
+                  "word": {
+                    "ko": "밥",
+                    "romanization": "bap",
+                    "en": "cooked rice"
+                  }
+                }
+              ]
+            },
+            {
+              "pairs": [
+                {
+                  "id": "gimbap",
+                  "pictureRef": "card:kimbap",
+                  "word": {
+                    "ko": "김밥",
+                    "romanization": "gimbap",
+                    "en": "gimbap (seaweed rice roll)"
+                  }
+                },
+                {
+                  "id": "bibimbap",
+                  "pictureRef": "word:culture-bibimbap",
+                  "word": {
+                    "ko": "비빔밥",
+                    "romanization": "bibimbap",
+                    "en": "bibimbap (mixed rice bowl)"
+                  }
+                },
+                {
+                  "id": "dalgyal",
+                  "pictureRef": "word:food-egg",
+                  "word": {
+                    "ko": "달걀",
+                    "romanization": "dalgyal",
+                    "en": "egg"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s2-life-q3-apply",
+          "kind": "card-match",
+          "pairs": [
+            {
+              "ko": "국",
+              "romanization": "guk",
+              "en": "soup"
+            },
+            {
+              "ko": "반찬",
+              "romanization": "banchan",
+              "en": "side dishes"
+            },
+            {
+              "ko": "두부",
+              "romanization": "dubu",
+              "en": "tofu"
+            },
+            {
+              "ko": "나물",
+              "romanization": "namul",
+              "en": "seasoned vegetables"
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s2-life-q3-check",
+          "kind": "listen-pick",
+          "rounds": [
+            {
+              "id": "pic-bibimbap",
+              "prompt": {
+                "ko": "비빔밥",
+                "romanization": "bibimbap",
+                "en": "bibimbap (mixed rice bowl)"
+              },
+              "options": [
+                {
+                  "id": "bibimbap",
+                  "pictureRef": "word:culture-bibimbap",
+                  "labelEn": "bibimbap"
+                },
+                {
+                  "id": "bap",
+                  "pictureRef": "card:rice",
+                  "labelEn": "cooked rice"
+                },
+                {
+                  "id": "gimchi",
+                  "pictureRef": "card:kimchi",
+                  "labelEn": "kimchi"
+                },
+                {
+                  "id": "gimbap",
+                  "pictureRef": "card:kimbap",
+                  "labelEn": "gimbap"
+                }
+              ],
+              "answerId": "bibimbap"
+            },
+            {
+              "id": "read-banchan",
+              "prompt": {
+                "ko": "반찬",
+                "romanization": "banchan",
+                "en": "side dishes"
+              },
+              "options": [
+                {
+                  "id": "banchan",
+                  "text": {
+                    "ko": "반찬",
+                    "romanization": "banchan",
+                    "en": "side dishes"
+                  }
+                },
+                {
+                  "id": "banji",
+                  "text": {
+                    "ko": "반지",
+                    "romanization": "banji",
+                    "en": "ring"
+                  }
+                },
+                {
+                  "id": "baji",
+                  "text": {
+                    "ko": "바지",
+                    "romanization": "baji",
+                    "en": "pants, trousers"
+                  }
+                }
+              ],
+              "answerId": "banchan"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "culture": [
+    {
+      "id": "n1",
+      "kind": "culture",
+      "textEn": "In a traditional everyday Korean meal, rice ({ko:밥}) is served with side dishes, called {ko:반찬}, and with soup ({ko:국}) or stew.",
+      "sources": [
+        {
+          "title": "반상(飯床)",
+          "publisher": "한국학중앙연구원 한국민족문화대백과사전 (Encyclopedia of Korean Culture)",
+          "url": "https://encykorea.aks.ac.kr/Article/E0021491",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "Entry 반상, sections 정의 and 내용: the definition (a table setting of rice and side dishes) and 내용 paragraph 1 (rice as the staple, side dishes alongside, and soup or stew set with them)."
+        },
+        {
+          "title": "반상기(飯床器)",
+          "publisher": "한국학중앙연구원 한국민족문화대백과사전 (Encyclopedia of Korean Culture)",
+          "url": "https://encykorea.aks.ac.kr/Article/E0021492",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "Entry 반상기, section 내용, first sentence: the dishes a 반상 is made of, listing rice, soup, stew, kimchi, sauces and side dishes."
+        },
+        {
+          "title": "반찬",
+          "publisher": "국립국어원 표준국어대사전 (National Institute of Korean Language, Standard Korean Language Dictionary)",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%EB%B0%98%EC%B0%AC",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "Headword 반찬(飯饌) 「명사」, the definition (its only sense): the general word for the foods eaten along with rice."
+        }
+      ],
+      "verification": {
+        "passes": 3,
+        "checkedAt": "2026-10-14",
+        "scope": "lesson",
+        "notes": "Pass 1 (author sourcing, 2026-10-14): all three pages opened. The Encyclopedia of Korean Culture entry 반상 defines it as a setting of rice and side dishes, says rice is the staple with side dishes alongside, and that soup or stew is set with them; the entry 반상기 lists rice, soup, stew, kimchi, sauces and side dishes as what a 반상 holds; the Standard Korean Language Dictionary defines 반찬 as the foods eaten with rice. Backs the note and the q3 Discover line. The note says traditional everyday meal (the 반상 the sources describe), not what every household eats. English paraphrase, no wording copied.\nPass 2b (independent fact check, 2026-10-14): all three pages re-opened. Encyclopedia of Korean Culture 반상: the definition is a setting made of rice and side dishes, and 내용 paragraph 1 calls it the everyday meal setting, with rice as the staple, side dishes as the accompaniment, and soup or stew set alongside them. 반상기 내용 sentence 1 lists rice, soup, stew, kimchi, the sauces and side dishes. The Standard Korean Language Dictionary entry 반찬(飯饌) has one sense: a general word for the food eaten with rice. Locators match. The note's 'traditional everyday meal' follows the encyclopedia's own framing and makes no claim about every household. Claim holds. The note is an English paraphrase and shares no wording with the sources. Both hosts are on SOURCE_HOST_ALLOWLIST, and both publishers are Korean public institutions.\nPass 5 (MAR culture review, independent final check, 2026-10-14): the Encyclopedia of Korean Culture entries 반상 and 반상기 and the Standard Korean Language Dictionary entry 반찬(飯饌) re-read. 반상 is a setting of rice and side dishes with soup or stew alongside, the everyday native meal; 반상기 lists rice, soup, stew, kimchi, sauces and side dishes; 반찬 has one sense, the foods eaten with rice, and its locator now says so. Claim holds as the traditional everyday meal, not what every household eats. No wording shared with the sources."
+      }
+    }
+  ],
+  "review": {
+    "language": "native-reviewed",
+    "culture": "culture-reviewed",
+    "reviewedBy": "MAR",
+    "reviewedAt": "2026-10-14",
+    "notes": [
+      "Language (pass 4, MAR 2026-10-14): spelling, 해요체 and RR clean; scored reading decodable. ko: Hoya names the '들어 보기' button; Build the Word is '낱말 완성하기'; caption points to 「낱말 만들기」; 나물 and 국 glosses no longer echo the word; 사과, 빵 match Word Builder. es: lonchera, 'plátano, banana', sazonadas, tazón. 바나나 (q1) and 사랑 stay: Stage 1 words.",
+      "Culture (pass 5, MAR 2026-10-14): n1 re-checked against all three sources (verification line 3); the 반찬 locator names its single sense. The meal is framed as the traditional everyday 반상, not what every household eats. No person, brand, shop or price, no holiday content, no age wording."
+    ]
+  },
+  "contentVer": 1
+}
