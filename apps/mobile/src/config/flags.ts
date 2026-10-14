@@ -88,8 +88,9 @@ export interface Flags {
    * the Profile row and the report entry. ON on every platform since P-10 (the
    * beta flip, owner decision 2026-10-14: no native build has been released
    * to any store or TestFlight, so the store-build gate of section 3.8 has no
-   * older released build to protect). `EXPO_PUBLIC_PLACEMENT_ENABLED=false` (or `0`) in a build is the
-   * kill switch; it is read by its literal name so the web bundle inlines it.
+   * older released build to protect). `EXPO_PUBLIC_PLACEMENT_ENABLED=false`
+   * (or `0`) in a build is the kill switch; it is read by its literal name so
+   * the web bundle inlines it.
    */
   placementEnabled: boolean;
 
