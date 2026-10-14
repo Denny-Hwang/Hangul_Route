@@ -193,7 +193,7 @@ describe('myRouteView: wireframe A (Appendix C, today mid-progress)', () => {
     ]);
     expect(v.skills[0]?.a11yLabel).toBe('Read. In 4 quests you finished.');
     expect(v.skills.map((s) => s.icon)).toEqual(['book', 'ear', 'pencil']);
-    expect(v.skills[2]?.sheet).toEqual({ title: 'Games that count for Write', note: 'A finished quest counts here when it has one of these games.', games: ['Trace a letter'] });
+    expect(v.skills[2]?.sheet).toEqual({ title: 'Games that count for Write', note: 'A finished quest counts here when it has one of these games.', games: ['Trace a letter', 'Build a sentence'] });
     expect(new Set(v.skills.flatMap((s) => s.marks.map((p) => p.key))).size).toBe(9);
     expect(v.skillsNote).toBeNull();
     expect(v.tiles).toBeNull();
@@ -349,17 +349,18 @@ describe('the pieces', () => {
       if (SKILL_OF_KIND[kind].length > 0) expect(GAME_NAME_KEY[kind], kind).toBeDefined();
     }
     const games = EN.learner.myRoute.games;
-    // Only kinds the app can play are named: match-shape and the F-CURR-001 games (realia-read,
-    // type-hangul, trace-word, write-frame) have no screen yet.
+    // Only kinds the app can play are named: match-shape and the F-CURR-001 games still to land (realia-read,
+    // type-hangul, trace-word, write-frame) have no screen yet; Sentence Builder (order-it, G-1) has one.
     expect(gamesFor('read', games)).toEqual([
       'Hear a sound, find its letter',
       'Hear it, then tap the answer',
       'Find the one that is different',
       'Match a picture to its word',
       'Read a story',
+      'Build a sentence',
     ]);
     expect(gamesFor('listen', games)).toEqual(['Hear a sound, find its letter', 'Hear it, then tap the answer', 'Listen and pick']);
-    expect(gamesFor('write', games)).toEqual(['Trace a letter']);
+    expect(gamesFor('write', games)).toEqual(['Trace a letter', 'Build a sentence']);
   });
 
   it('gamesFor names a game once its kind is playable', () => {
@@ -367,7 +368,7 @@ describe('the pieces', () => {
     const all = new Set(MinigameKindSchema.options);
     expect(gamesFor('read', games, all)).toContain('Read a menu, sign or ticket');
     expect(gamesFor('read', games, all)).toContain('Match the shapes');
-    expect(gamesFor('write', games, all)).toEqual(['Trace a letter', 'Type in Hangul', 'Trace a word', 'Finish a sentence of your own']);
+    expect(gamesFor('write', games, all)).toEqual(['Trace a letter', 'Build a sentence', 'Type in Hangul', 'Trace a word', 'Finish a sentence of your own']);
   });
 });
 

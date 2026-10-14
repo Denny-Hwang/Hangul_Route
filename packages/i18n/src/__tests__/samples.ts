@@ -790,4 +790,9 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'learner.presenter.timer.minutes': [[1], [5]],
   'learner.presenter.timer.seconds': [[30]],
   'a11y.presenter.timerLeft': [['2:45']],
+  // F-CURR-001 G-1: Sentence Builder's places and tried tiles (`word` is "Korean, romanization").
+  'a11y.minigame.sentenceBuilder.slotEmpty': [[1, 3], [6, 6]],
+  'a11y.minigame.sentenceBuilder.slotFilled': [[1, 2, 'bap, babeul']],
+  'a11y.minigame.sentenceBuilder.slotAttached': [[1, 2]],
+  'a11y.minigame.sentenceBuilder.tried': [['mul, mureul']],
 };

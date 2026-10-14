@@ -56,6 +56,8 @@ const ES_LENGTH_ALLOW_LIST: Readonly<Record<string, string>> = {
   'learner.presenter.slide.activity.startTimer.cta': '"temporizador" again; inside the 28-character cta budget, a stage button that wraps',
   // F-TCH-004 PR 9 (design/screens/presenter/README.md "Length budget"): the class timer's buttons.
   'learner.presenter.timer.reset.cta': 'the standard Spanish button word "Reiniciar", one letter over; inside the 28-character cta budget',
+  // F-CURR-001 G-1: the Sentence Builder meaning card's label.
+  'learner.minigame.sentenceBuilder.meaning': 'the one word "Significado" (11) against "Meaning" (7), the same word as a11y.minigame.meaning; a card label that wraps',
 };
 
 const BUDGETS: Readonly<Record<string, number>> = { tab: 12, pill: 24, cta: 28 };
