@@ -1,6 +1,7 @@
 import {
   StoryLevelSchema,
   decomposeSyllable,
+  discoverItemTexts,
   localize,
   type Episode,
   type KoText,
@@ -246,7 +247,7 @@ function wordsOf(quest: Quest, bundle: BrowseBundle, locale: UiLocale): { words:
   const syllables: SyllableFact[] = [];
   for (const step of local.steps) {
     for (const page of step.discover?.pages ?? []) {
-      for (const item of page.items) words.push(wordOf(item.type === 'jamo' ? item.example : item.word));
+      for (const item of page.items) words.push(...discoverItemTexts(item).map(wordOf));
     }
   }
   for (const { minigameRef: ref } of local.steps) {

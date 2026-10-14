@@ -438,3 +438,39 @@ describe('copy comes from the message subtree it is given (F-I18N-001 §3.4 rule
     );
   });
 });
+
+describe('upper-stage Discover items (F-CURR-001 §3.10) before their own views (row D-1)', () => {
+  it('shows each taught text of a sentence, pattern, exchange or realia item as a word card', () => {
+    const page: DiscoverPage = {
+      items: [
+        { type: 'sentence', sentence: ko('책이 있어요.', 'chaegi isseoyo', 'there is a book'), picture: 'word:book' },
+        {
+          type: 'exchange',
+          lines: [
+            { speaker: 'a', speakerEn: 'Hoya', line: ko('이게 뭐예요?', 'ige mwoyeyo', 'what is this?') },
+            { speaker: 'b', speakerEn: 'Teacher', line: ko('책이에요.', 'chaegieyo', 'it is a book') },
+          ],
+        },
+      ],
+    };
+    const pattern: DiscoverPage = {
+      items: [
+        {
+          type: 'pattern',
+          frame: ko('___이에요/예요', '___ieyo/yeyo', 'it is ___'),
+          noteEn: 'Use {ko:이에요} after a final consonant.',
+          examples: [ko('책이에요', 'chaegieyo', 'it is a book'), ko('학교예요', 'hakgyoyeyo', 'it is a school')],
+        },
+        { type: 'realia', realiaRef: 'realia:snack-menu', keyWords: [ko('김밥', 'gimbap', 'gimbap')] },
+      ],
+    };
+    const [one, two] = buildDiscover([page, pattern]).pages;
+    expect(one?.items.map((i) => [i.kind, i.glyph, i.picture ?? null])).toEqual([
+      ['word', '책이 있어요.', 'word:book'],
+      ['word', '이게 뭐예요?', null],
+      ['word', '책이에요.', null],
+    ]);
+    expect(two?.items.map((i) => i.glyph)).toEqual(['책이에요', '학교예요', '김밥']);
+    expect(two?.items.map((i) => i.key)).toEqual(['word:책이에요', 'word:학교예요', 'word:김밥']);
+  });
+});

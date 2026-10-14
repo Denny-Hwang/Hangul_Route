@@ -278,6 +278,10 @@ export const GAME_NAME_KEY: Readonly<Partial<Record<MinigameKind, GameKey>>> = {
   'pic-word-match': 'picWordMatch',
   'story-read': 'storyRead',
   'trace-stroke': 'traceStroke',
+  'realia-read': 'realiaRead',
+  'type-hangul': 'typeHangul',
+  'trace-word': 'traceWord',
+  'write-frame': 'writeFrame',
 };
 
 export function gamesFor(skill: Skill, games: Messages['learner']['myRoute']['games']): string[] {

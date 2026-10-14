@@ -32,6 +32,11 @@ export const MinigameKindSchema = z.enum([
   'pic-word-match', // Recognition · ② (F-QUEST-002)
   'story-read', // Discovery · story reader (F-STORY-002); a read, records no round
   'story-check', // Discovery · story comprehension check (F-STORY-003); data is StoryCheckSchema, not a Round
+  // F-CURR-001 §3.10 (row C-1), additive. Sentence Builder is the existing `order-it`.
+  'realia-read', // Discovery · find information in a drawn menu, ticket, sign or price card
+  'type-hangul', // Construction · type on the in-app two-set Hangul keyboard
+  'trace-word', // Construction · trace a whole syllable block or a two-syllable word
+  'write-frame', // Construction · fill a sentence frame from a word bank ("my own sentence")
 ]);
 export type MinigameKind = z.infer<typeof MinigameKindSchema>;
 
@@ -174,6 +179,159 @@ export const PicWordRoundSchema = z
   });
 export type PicWordRound = z.infer<typeof PicWordRoundSchema>;
 
+// ---- upper-stage rounds (F-CURR-001 §3.4, §3.6, §3.7; row C-1) -------------------------------
+
+/** Hangul syllable blocks and single spaces only, no edge spaces: what a learner can compose on the keyboard. */
+const COMPOSABLE_RE = /^[가-힣]+( [가-힣]+)*$/;
+const isComposable = (ko: string): boolean => COMPOSABLE_RE.test(ko);
+
+/**
+ * Sentence Builder (`order-it`): the sentence's word tiles (어절, split at spaces)
+ * tapped into order, with up to two distractor tiles and, in some rounds, a
+ * particle choice on one tile (이 or 가, 을 or 를).
+ */
+export const OrderItRoundSchema = z
+  .object({
+    id: z.string().min(1),
+    sentence: KoTextSchema,
+    pictureRef: PictureRefSchema.optional(),
+    distractors: z.array(KoTextSchema).max(2).default([]),
+    particle: z
+      .object({
+        /** The tile (0-based, in sentence order) whose ending the learner picks. */
+        tile: z.number().int().min(0),
+        choices: z.tuple([KoTextSchema, KoTextSchema]),
+      })
+      .optional(),
+  })
+  .superRefine((round, ctx) => {
+    const tiles = round.sentence.ko.split(' ');
+    if (tiles.length < 2 || tiles.length > 6) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['sentence', 'ko'], message: 'a sentence builds from 2-6 word tiles' });
+    }
+    round.distractors.forEach((d, i) => {
+      if (tiles.includes(d.ko)) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['distractors', i, 'ko'], message: 'a distractor tile is also a tile of the sentence' });
+      }
+    });
+    const { particle } = round;
+    if (particle) {
+      const tile = tiles[particle.tile];
+      const [a, b] = particle.choices;
+      const fits = (c: string) => tile !== undefined && tile.replace(/[.?!]$/, '').endsWith(c);
+      if (a.ko === b.ko || fits(a.ko) === fits(b.ko)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['particle'],
+          message: 'exactly one particle choice ends the chosen tile',
+        });
+      }
+    }
+  });
+export type OrderItRound = z.infer<typeof OrderItRoundSchema>;
+
+/** A drawn real-world text; every entry is also real text for the accessibility tree (F-CURR-001 §3.14). */
+export const RealiaSchema = z.object({
+  ref: z.string().regex(/^realia:[a-z0-9-]+$/),
+  title: KoTextSchema.optional(),
+  /** E.g. a menu line and its price; read in order by a screen reader. */
+  entries: z
+    .array(z.object({ id: z.string().min(1), text: KoTextSchema, value: KoTextSchema.optional() }))
+    .min(1)
+    .max(12),
+  altEn: z.string().trim().min(1).max(140),
+});
+export type Realia = z.infer<typeof RealiaSchema>;
+
+/** One Realia Read option: a Korean answer, a plain figure (no Hangul, e.g. "5,000") or a picture. */
+export const RealiaOptionSchema = z
+  .object({
+    id: z.string().min(1),
+    text: KoTextSchema.optional(),
+    figure: z.string().trim().min(1).max(16).regex(/^[^ㄱ-ㆎ가-힣]+$/, 'a figure carries no Hangul; use text').optional(),
+    pictureRef: PictureRefSchema.optional(),
+  })
+  .refine((o) => [o.text, o.figure, o.pictureRef].filter((v) => v !== undefined).length === 1, 'an option is exactly one of text, figure or picture');
+
+/** Realia Read: a question about the drawn text, answered by picking (F-CURR-001 §3.6). */
+export const RealiaReadRoundSchema = z
+  .object({
+    id: z.string().min(1),
+    questionEn: z.string().trim().min(1).max(90),
+    options: z.array(RealiaOptionSchema).min(2).max(4),
+    answerId: z.string(),
+  })
+  .superRefine((round, ctx) => {
+    const ids = round.options.map((o) => o.id);
+    if (new Set(ids).size !== ids.length) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['options'], message: 'option ids must be unique' });
+    }
+    if (!ids.includes(round.answerId)) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['answerId'], message: 'answerId must be one of the option ids' });
+    }
+  });
+export type RealiaReadRound = z.infer<typeof RealiaReadRoundSchema>;
+
+/** Type Hangul: type a short word or phrase on the in-app keyboard; checked by syllable after Done (F-CURR-001 §3.7). */
+export const TypeHangulRoundSchema = z.object({
+  id: z.string().min(1),
+  promptEn: z.string().trim().min(1).max(90),
+  pictureRef: PictureRefSchema.optional(),
+  target: KoTextSchema.refine((t) => isComposable(t.ko) && t.ko.length <= 12, {
+    message: 'a typed target is 1-12 characters of Hangul syllables and single spaces',
+    path: ['ko'],
+  }),
+});
+export type TypeHangulRound = z.infer<typeof TypeHangulRoundSchema>;
+
+/** Trace a Word: one syllable block or a two-syllable word over a ghost, at the relaxed tolerance. */
+export const TraceWordRoundSchema = z.object({
+  id: z.string().min(1),
+  word: KoTextSchema.refine((t) => /^[가-힣]{1,2}$/.test(t.ko), {
+    message: 'a traced word is one or two Hangul syllable blocks',
+    path: ['ko'],
+  }),
+  tolerancePx: z.number().int().positive().optional(),
+});
+export type TraceWordRound = z.infer<typeof TraceWordRoundSchema>;
+
+/**
+ * Write Frame: a frame with one or two slots (`___`, each written with its
+ * particle or ending, e.g. `___을/를`, `___이에요/예요`, `___에`), a word bank per
+ * slot (any pick is right), then the picked word typed or traced. `freeEntry`
+ * marks the one round composed without a bank (Write Your Name q3): unscored,
+ * held in component state only (F-CURR-001 §3.7).
+ */
+export const WriteFrameRoundSchema = z
+  .object({
+    id: z.string().min(1),
+    frame: KoTextSchema,
+    slots: z
+      .array(z.object({ id: z.string().min(1), bank: z.array(KoTextSchema).max(6).default([]) }))
+      .min(1)
+      .max(2),
+    entry: z.enum(['type', 'trace', 'pick']),
+    freeEntry: z.boolean().default(false),
+  })
+  .superRefine((round, ctx) => {
+    const issue = (path: (string | number)[], message: string) =>
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path, message });
+    const slots = round.frame.ko.split('___').length - 1;
+    if (slots !== round.slots.length) issue(['frame', 'ko'], `the frame has ${slots} slot(s) but ${round.slots.length} slot entries`);
+    round.slots.forEach((slot, i) => {
+      if (round.freeEntry) {
+        if (slot.bank.length > 0) issue(['slots', i, 'bank'], 'a free-entry slot has no word bank');
+      } else if (slot.bank.length < 2) {
+        issue(['slots', i, 'bank'], 'a word bank holds 2-6 taught words');
+      }
+      slot.bank.forEach((w, j) => {
+        if (!isComposable(w.ko)) issue(['slots', i, 'bank', j, 'ko'], 'a bank word is Hangul syllables only');
+      });
+    });
+    if (round.freeEntry && round.slots.length !== 1) issue(['slots'], 'a free-entry round has exactly one slot');
+  });
+export type WriteFrameRound = z.infer<typeof WriteFrameRoundSchema>;
+
 export const RoundSchema = z.discriminatedUnion('kind', [
   z.object({ kind: z.literal('match-sound'), data: MatchSoundRoundSchema }),
   z.object({ kind: z.literal('build-letter'), data: BuildLetterRoundSchema }),
@@ -183,6 +341,11 @@ export const RoundSchema = z.discriminatedUnion('kind', [
   z.object({ kind: z.literal('story-sequence'), data: StorySequenceRoundSchema }),
   z.object({ kind: z.literal('listen-pick'), data: ListenPickRoundSchema }),
   z.object({ kind: z.literal('pic-word-match'), data: PicWordRoundSchema }),
+  z.object({ kind: z.literal('order-it'), data: OrderItRoundSchema }),
+  z.object({ kind: z.literal('realia-read'), data: RealiaReadRoundSchema }),
+  z.object({ kind: z.literal('type-hangul'), data: TypeHangulRoundSchema }),
+  z.object({ kind: z.literal('trace-word'), data: TraceWordRoundSchema }),
+  z.object({ kind: z.literal('write-frame'), data: WriteFrameRoundSchema }),
 ]);
 export type Round = z.infer<typeof RoundSchema>;
 
