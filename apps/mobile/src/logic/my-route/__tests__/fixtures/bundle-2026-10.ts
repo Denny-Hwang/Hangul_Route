@@ -24,6 +24,8 @@ import {
  * Never edit to follow the content; add a new dated fixture instead.
  * One display rename only (F-STORY-005 row 5.6c, owner decision 2026-10-14): the
  * Stage 5 nature cell reads Nature Tales (was Tiger Folktales); no id or count changed.
+ * Such an owner-decided display-only rename is the only edit this contract allows:
+ * any id, count, status or minutes change still needs a new dated fixture.
  */
 
 export interface Bundle {
