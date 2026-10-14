@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Control bar with every status chip (F-TCH-004 PR 6 and PR 9) - design mock</title>
+<link rel="stylesheet" href="presenter.css">
+</head>
+<body>
+<!-- Design mock (F-TCH-004 design pass), not shipped code. Every UI string is a dictionary value or a new key listed in ../README.md "Strings"; Korean, romanization, glosses and titles are the shipped bundle read through expandDeck. -->
+<div class="presenter">
+<div class="stage-box">
+<section class="stage" role="main" tabindex="-1" aria-label="Slide 5 of 71, Letter, ㄱ, g/k">
+<p class="visually-hidden" aria-live="polite">Slide 5 of 71, Letter, ㄱ, g/k</p>
+<span class="counter" aria-hidden="true">5 / 71</span>
+<div class="slide slide-letter">
+<div class="col glyph-col" data-b="0"><span class="glyph ko" lang="ko">ㄱ</span><span class="glyph-rom">g/k</span></div>
+<figure class="stroke-panel" data-b="1"><svg viewBox="0 0 200 200" aria-hidden="true" focusable="false"><path d="M40 50 L160 50 L160 150" fill="none" stroke="var(--colors-text-primary)" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/><circle cx="40" cy="50" r="14" fill="var(--colors-surface-paper)" stroke="var(--colors-brand-secondaryDark)" stroke-width="4"/><text x="40" y="56" text-anchor="middle" font-size="18" font-weight="700" fill="var(--colors-text-primary)" font-family="system-ui, sans-serif">1</text></svg><figcaption class="s-caption">Simplified stroke guide</figcaption></figure>
+<div class="col facts">
+<div class="speak-row" data-b="2"><button class="stage-btn" type="button" aria-label="Play the sound"><svg class="icon"  width="48" height="48" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 9 H8 L13 5 V19 L8 15 H4 Z" fill="var(--colors-brand-secondaryDark)"/><path d="M16.5 9 Q18.5 12 16.5 15" fill="none" stroke="var(--colors-brand-secondaryDark)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M19 7 Q22 12 19 17" fill="none" stroke="var(--colors-brand-secondaryDark)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button><span class="kt"><span class="ko" lang="ko">가</span><span class="rom">ga</span></span></div>
+<div class="col" data-b="3"><p class="s-body"><b>Letter name: giyeok</b></p><p class="s-body t-secondary">a soft, light g (between g and k)</p></div>
+<p class="s-prompt" data-b="4"><span class="kt"><span class="kt-chip"><span class="ko" lang="ko">가족</span><span class="rom">gajok</span></span><span class="gloss">family</span></span></p>
+</div>
+</div>
+</section>
+
+</div>
+<div class="bar" role="toolbar" aria-label="Lesson controls">
+<div class="status"><span class="chip"><svg class="icon"  width="24" height="24" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 9 H8 L13 5 V19 L8 15 H4 Z" fill="var(--colors-text-primary)"/><path d="M16 9.5 L21 14.5" fill="none" stroke="var(--colors-text-primary)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M21 9.5 L16 14.5" fill="none" stroke="var(--colors-text-primary)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>Sound is off.<button class="chip-btn" type="button">Turn sound on</button></span><span class="chip">Offline. Everything still works.</span><span class="chip">Update ready. It applies when you exit.</span></div>
+<div class="controls"><button class="ctl " type="button"><svg class="icon"  width="28" height="28" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14.5 6 L8.5 12 L14.5 18" fill="none" stroke="var(--colors-text-primary)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Back</span></button><button class="ctl primary" type="button" data-focused="true" data-reveal="Reveal" data-next="Next"><svg class="icon"  width="28" height="28" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M9.5 6 L15.5 12 L9.5 18" fill="none" stroke="var(--colors-text-onPrimary)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Next</span></button><button class="ctl " type="button"><svg class="icon"  width="28" height="28" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 9 H8 L13 5 V19 L8 15 H4 Z" fill="var(--colors-text-primary)"/><path d="M16 9.5 L21 14.5" fill="none" stroke="var(--colors-text-primary)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M21 9.5 L16 14.5" fill="none" stroke="var(--colors-text-primary)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Sound</span></button><button class="ctl " type="button"><span>Timer</span></button><button class="ctl " type="button"><span>Helper</span></button><button class="ctl " type="button"><span>Blank</span></button><button class="ctl " type="button"><span>Slides</span></button><button class="ctl " type="button" aria-pressed="true"><span>Full screen</span></button><button class="ctl " type="button"><svg class="icon"  width="28" height="28" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6.5 6.5 L17.5 17.5" fill="none" stroke="var(--colors-text-primary)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M17.5 6.5 L6.5 17.5" fill="none" stroke="var(--colors-text-primary)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Exit</span></button></div>
+</div>
+</div>
+<script src="presenter.js"></script>
+</body>
+</html>
