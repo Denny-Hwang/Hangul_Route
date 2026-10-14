@@ -1106,7 +1106,7 @@
                       "romanization": "jal meokgetseumnida",
                       "en": "I will eat well. (said before eating)"
                     },
-                    "noteEn": "Many people say this just before they start to eat.",
+                    "noteEn": "Some people say this just before they start to eat.",
                     "picture": "card:rice"
                   }
                 ],
@@ -1638,16 +1638,16 @@
         }
       ],
       "verification": {
-        "passes": 1,
+        "passes": 2,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): both pages fetched; the NIKL Online Ganada answer quotes the institute's own address guide: 여기요 and 저기요 are already in common use to call staff at restaurants, salons and shops, and are comfortable for both sides because they do not show the customer-staff relationship; the MCST card news (student reporters, NIKL cards) calls them appropriate for service staff and says they do not show a social relationship. The note says 'often', makes no group-wide claim and restates the passages in new English words. Carried by: q1 Discover page 2 word note, q1 apply prompt t1, the gloss of 여기요."
+        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): both pages fetched; the NIKL Online Ganada answer quotes the institute's own address guide: 여기요 and 저기요 are already in common use to call staff at restaurants, salons and shops, and are comfortable for both sides because they do not show the customer-staff relationship; the MCST card news (student reporters, NIKL cards) calls them appropriate for service staff and says they do not show a social relationship. The note says 'often', makes no group-wide claim and restates the passages in new English words. Carried by: q1 Discover page 2 word note, q1 apply prompt t1, the gloss of 여기요.\nLine 2 (pass 2b, independent fact check, 2026-10-14): both pages re-fetched by a session that did not author the cell; the NIKL Online Ganada answer of 2025-12-22 says 여기요 and 저기요 are already in common use to call staff at restaurants, salons and shops and do not directly show the customer-staff relationship, and the MCST card news (cards marked NIKL) calls them fitting for service staff and puts treating a person as a person ahead of age or social standing; 'often' and 'does not point to age or rank' match both. No wording copied. Outcome: pass, unchanged."
       }
     },
     {
       "id": "n2",
       "kind": "culture",
-      "textEn": "Many people say {ko:잘 먹겠습니다} (I will eat well) just before they start a meal. No rule says it must be said, and it is never wrong to say it.",
+      "textEn": "Some people say {ko:잘 먹겠습니다} (I will eat well) just before they start a meal. No rule settles whether saying it is right or wrong.",
       "sources": [
         {
           "title": "Online Ganada question and answer on the meal phrase, titled 잘먹겠습니다",
@@ -1665,10 +1665,10 @@
         }
       ],
       "verification": {
-        "passes": 1,
+        "passes": 2,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): both pages fetched; the newspaper describes the phrase as what is said at a laid table before lifting the spoon, used often by some people, with views differing on when it fits; the NIKL Online Ganada answer says no rule governs it and there is no ground to call it wrong. The note says 'many people', avoids any claim about origin, about who pays or about everyone, and copies no wording. Carried by: q3 Discover page 3 word note and gloss, q3 apply turn 1, q3 check c1 option."
+        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): both pages fetched; the newspaper describes the phrase as what is said at a laid table before lifting the spoon, used often by some people, with views differing on when it fits; the NIKL Online Ganada answer says no rule governs it and there is no ground to call it wrong. The note says 'many people', avoids any claim about origin, about who pays or about everyone, and copies no wording. Carried by: q3 Discover page 3 word note and gloss, q3 apply turn 1, q3 check c1 option.\nLine 2 (pass 2b, independent fact check, 2026-10-14): both pages re-fetched by a session that did not author the cell; the NIKL answer of 2026-01-13 says no rule settles the matter, so right or wrong is hard to say, and finds no clear ground to call the phrase wrong in the situation asked about; the newspaper says some people use it often and reports differing views. Two overstatements fixed: 'never wrong to say it' (the institute only found no clear ground, and the article reports people who disagree) became 'No rule settles whether saying it is right or wrong', and 'Many people' (not quantified by either source) became 'Some people', here and in the q3 word note with its es and ko overlays. No wording copied. Outcome: fixed."
       }
     },
     {
@@ -1699,10 +1699,10 @@
         }
       ],
       "verification": {
-        "passes": 1,
+        "passes": 2,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): the three pages fetched; the dictionary defines 원 as the country's currency unit, the encyclopedia as the currency unit used since the 1962 currency reform to this day (the two sources give June 10 and June 12 for the date; the note states no date); the dictionary's numeral entries give 천 as a thousand and 이, 삼 as two and three, the Sino-Korean numerals (hanja 千, 二, 三). Prices in the cell are round practice amounts in a drawn menu (OD-11), no shop, brand or product price. Carried by: q3 Discover page 1 caption and key words, q3 practice and check rounds, the menu realia values."
+        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): the three pages fetched; the dictionary defines 원 as the country's currency unit, the encyclopedia as the currency unit used since the 1962 currency reform to this day (the two sources give June 10 and June 12 for the date; the note states no date); the dictionary's numeral entries give 천 as a thousand and 이, 삼 as two and three, the Sino-Korean numerals (hanja 千, 二, 三). Prices in the cell are round practice amounts in a drawn menu (OD-11), no shop, brand or product price. Carried by: q3 Discover page 1 caption and key words, q3 practice and check rounds, the menu realia values.\nLine 2 (pass 2b, independent fact check, 2026-10-14): the dictionary entries 원 1, 천 3, 이 7 and 삼 6 and the Encyclopedia of Korean Culture entry 원 re-fetched by a session that did not author the cell; 원 is the country's currency unit (the encyclopedia: in use since the 1962 reform), and 이, 삼, 천 are the numerals two, three and a thousand, so 이천 원 reads 2,000 won. The note states no date, so the June 10 and June 12 difference does not touch it. No wording copied. Outcome: pass, unchanged."
       }
     },
     {
@@ -1733,10 +1733,10 @@
         }
       ],
       "verification": {
-        "passes": 1,
+        "passes": 2,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): the dictionary result pages fetched; 한, 두, 세 are determiners meaning a quantity of one, two and three (하나, 둘, 셋), used before a noun or counter, and 개 is the counter for single things. The cell never pairs 네 (four) with 개 because 네 is also 'yes'. Carried by: q2 Discover page 2 caption and word notes, q2 practice options, q2 apply and check lines."
+        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): the dictionary result pages fetched; 한, 두, 세 are determiners meaning a quantity of one, two and three (하나, 둘, 셋), used before a noun or counter, and 개 is the counter for single things. The cell never pairs 네 (four) with 개 because 네 is also 'yes'. Carried by: q2 Discover page 2 caption and word notes, q2 practice options, q2 apply and check lines.\nLine 2 (pass 2b, independent fact check, 2026-10-14): the dictionary entries 한 1, 두 1, 세 1 (determiners: a quantity of one, two, three) and 개 7 (the counter for single things) re-fetched by a session that did not author the cell; they support the short forms before a counter and the example 두 개. No wording copied. Outcome: pass, unchanged."
       }
     }
   ],
