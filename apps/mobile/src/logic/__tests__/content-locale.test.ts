@@ -1,4 +1,5 @@
 import type { Overlays } from '@hangul-route/content-schema';
+import { OVERLAYS } from '@hangul-route/content-schema/overlays';
 import { describe, expect, it } from 'vitest';
 import { cardById, episodeById, findJamo, questById, stages, themes } from '../../content';
 import {
@@ -184,7 +185,11 @@ describe('content-locale: one helper per kind of shipped content', () => {
   });
 
   it('defaults to the generated overlays', () => {
-    expect(localizeCard(card, 'es')).toEqual(card);
-    expect(localizeMissionCard({ slot: 2, kind: 'new', subtitle: 'new', collected: false, titleEn: 'x', questId: quest.id }, 'es').titleEn).toBe('x');
+    // State-independent: whatever the generated overlays translate today, the default is exactly them.
+    expect(localizeCard(card, 'es')).toEqual(localizeCard(card, 'es', OVERLAYS));
+    expect(localizeCard(card, 'en')).toEqual(card);
+    const mission: MissionCard = { slot: 2, kind: 'new', subtitle: 'new', collected: false, titleEn: 'x', questId: quest.id };
+    expect(localizeMissionCard(mission, 'es').titleEn).toBe(OVERLAYS.es[quest.id]?.title ?? 'x');
+    expect(localizeMissionCard(mission, 'en').titleEn).toBe('x');
   });
 });

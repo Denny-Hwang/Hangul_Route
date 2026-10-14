@@ -130,6 +130,30 @@
     "minigame:s1-crafts-q3-check": {
       "listenPick.rounds.0.prompt": "한국의 글자",
       "listenPick.rounds.1.prompt": "친구를 만나거나 헤어질 때 하는 인사"
+    },
+    "minigame:s1-life-q1-apply": {
+      "picWord.boards.0.pairs.gimchi.word.gloss": "고춧가루로 버무린 매운 배추 반찬",
+      "picWord.boards.0.pairs.bap.word.gloss": "쌀로 지어 먹는 음식",
+      "picWord.boards.0.pairs.gimbap.word.gloss": "김에 밥과 재료를 넣고 만 음식",
+      "picWord.boards.0.pairs.jeotgarak.word.gloss": "음식을 집는 가느다란 막대 한 쌍"
+    },
+    "minigame:s1-nature-q1-apply": {
+      "picWord.boards.0.pairs.horangi.word.gloss": "줄무늬가 있는 크고 힘센 동물",
+      "picWord.boards.0.pairs.kkachi.word.gloss": "검은색과 흰색 깃털의 새",
+      "picWord.boards.0.pairs.dal.word.gloss": "밤하늘에 뜨는 둥근 빛",
+      "picWord.boards.0.pairs.san.word.gloss": "땅이 높이 솟은 곳"
+    },
+    "minigame:s1-crafts-q1-apply": {
+      "picWord.boards.0.pairs.yut.word.gloss": "놀이할 때 던지는 나무 막대 네 개",
+      "picWord.boards.0.pairs.yeon.word.gloss": "바람에 날리는 종이 장난감",
+      "picWord.boards.0.pairs.paengi.word.gloss": "빙글빙글 도는 나무 놀잇감",
+      "picWord.boards.0.pairs.jegi.word.gloss": "발로 차며 노는 깃털 달린 놀잇감"
+    },
+    "minigame:s1-crafts-q2-apply": {
+      "picWord.boards.0.pairs.hanji.word.gloss": "닥나무로 만든 한국 전통 종이",
+      "picWord.boards.0.pairs.cheongja.word.gloss": "푸른빛이 도는 한국의 옛 도자기",
+      "picWord.boards.0.pairs.but.word.gloss": "먹물을 묻혀 글씨를 쓰는 도구",
+      "picWord.boards.0.pairs.jongijeopgi.word.gloss": "네모난 한 장으로 학이나 배 모양을 만드는 놀이"
     }
   }
 }

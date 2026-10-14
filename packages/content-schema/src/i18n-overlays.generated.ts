@@ -3,6 +3,266 @@ import type { Overlays } from './schemas/locale-overlay';
 
 export const OVERLAYS: Overlays = {
   "es": {
+    "card:annyeong": {
+      "blurb": "Un saludo amistoso.",
+      "fact": "Entre amistades, annyeong significa «hola» y también «adiós».",
+      "title": "Hola"
+    },
+    "card:arirang": {
+      "blurb": "Una canción sobre extrañar el hogar. En Corea, mucha gente conoce el primer verso.",
+      "fact": "En 2012, la UNESCO incluyó el Arirang en su lista del patrimonio cultural inmaterial.",
+      "title": "Arirang"
+    },
+    "card:bap": {
+      "blurb": "En Corea, una comida no está completa sin arroz en el centro de la mesa.",
+      "fact": "«¿Comiste bap?» es la forma en que las abuelas y los abuelos coreanos dicen «¿Cómo estás?».",
+      "title": "Bap"
+    },
+    "card:book": {
+      "blurb": "Un libro que espera ser leído.",
+      "fact": "Hoy, la mayoría de los libros coreanos se imprimen de izquierda a derecha y de arriba abajo, igual que en español.",
+      "title": "Libro"
+    },
+    "card:boreumdal": {
+      "blurb": "La luna más brillante del año sale en Chuseok, la fiesta coreana de la cosecha.",
+      "fact": "Las familias comparten songpyeon, pasteles de arroz con forma de pequeñas medias lunas.",
+      "title": "Luna llena"
+    },
+    "card:brush": {
+      "blurb": "Un pincel que escribe las letras más bonitas.",
+      "fact": "La caligrafía coreana se llama seoye.",
+      "title": "Pincel de caligrafía"
+    },
+    "card:byeol": {
+      "blurb": "Una estrella que titila de noche.",
+      "fact": "Hace mucho tiempo, en Corea se rezaba a las siete estrellas de la Osa Mayor (Chilseong) para tener una vida larga.",
+      "title": "Estrella"
+    },
+    "card:chaek": {
+      "blurb": "A Corea le gustan tanto los libros que tiene festivales del libro cada año.",
+      "fact": "El hangul se creó para que cualquier persona pudiera aprender a leer y escribir.",
+      "title": "Libro"
+    },
+    "card:chingu": {
+      "blurb": "Una buena amistad a quien saludar.",
+      "fact": "A las amistades cercanas de la misma edad se les llama chingu.",
+      "title": "Amigo, amiga"
+    },
+    "card:chopsticks": {
+      "blurb": "Palillos de metal delgados: pruébalos con kimbap.",
+      "fact": "Los palillos coreanos suelen ser de metal y planos, no de madera y redondos.",
+      "title": "Palillos"
+    },
+    "card:chuseok": {
+      "blurb": "Una luna de cosecha y un banquete familiar.",
+      "fact": "Las familias comparten songpyeon: pasteles de arroz en forma de media luna.",
+      "title": "Fiesta de la cosecha"
+    },
+    "card:dosirak": {
+      "blurb": "Un almuerzo empacado para compartir con tus amistades.",
+      "fact": "Agitar un dosirak para mezclarlo es una divertida tradición coreana.",
+      "title": "Lonchera"
+    },
+    "card:eomuk": {
+      "blurb": "Un bocado de invierno que compras en la calle, con caldo caliente.",
+      "fact": "En los días fríos, el vaso de caldo es lo mejor.",
+      "title": "Eomuk"
+    },
+    "card:family-table": {
+      "blurb": "Donde toda la familia se reúne para comer.",
+      "fact": "En Corea se comparten muchos platillos pequeños llamados banchan.",
+      "title": "Mesa familiar"
+    },
+    "card:gamsa": {
+      "blurb": "Un agradecimiento cortés.",
+      "fact": "Gamsahamnida es la forma completa y cortés.",
+      "title": "Gracias"
+    },
+    "card:gangaji": {
+      "blurb": "Un perrito simpático. Una de las primeras palabras que se oyen en muchos hogares coreanos.",
+      "fact": "¡Las familias coreanas suelen llamar gangaji a todos los perros pequeños, aunque crezcan!",
+      "title": "Cachorro"
+    },
+    "card:gayageum": {
+      "blurb": "Una cítara coreana de 12 cuerdas, suave como la lluvia.",
+      "fact": "El gayageum tiene más de 1400 años.",
+      "title": "Cítara gayageum"
+    },
+    "card:geune": {
+      "blurb": "En pinturas antiguas, las mujeres coreanas se mecen en columpios gigantes durante la fiesta de Dano.",
+      "fact": "En los concursos de columpio de Dano, se pateaba una campanilla colgada en lo alto para mostrar la altura alcanzada.",
+      "title": "Geune"
+    },
+    "card:hanbok": {
+      "blurb": "Un hermoso traje tradicional.",
+      "fact": "El hanbok se usa en Seollal y Chuseok.",
+      "title": "Hanbok"
+    },
+    "card:haneul": {
+      "blurb": "El amplio cielo azul.",
+      "fact": "En canciones coreanas antiguas, haneul también significa «paraíso».",
+      "title": "Cielo"
+    },
+    "card:hangul-day": {
+      "blurb": "9 de octubre: el cumpleaños de las letras coreanas.",
+      "fact": "El rey Sejong creó el hangul en 1443 para que todo el mundo pudiera leer.",
+      "title": "Día del Hangul"
+    },
+    "card:hanji": {
+      "blurb": "Papel tradicional coreano, suave y resistente.",
+      "fact": "El hanji se hace con corteza de morera y puede durar más de 1000 años.",
+      "title": "Papel hanji"
+    },
+    "card:horangi": {
+      "blurb": "Muchos cuentos populares coreanos empiezan con «Hace mucho tiempo, cuando los tigres fumaban tabaco...».",
+      "fact": "Se dice que la forma de Corea en el mapa parece un tigre.",
+      "title": "Tigre"
+    },
+    "card:ibul": {
+      "blurb": "En muchos hogares coreanos, la gente duerme en un piso cálido bajo mantas acolchadas y de colores llamadas ibul.",
+      "fact": "Las abuelas y los abuelos doblan los ibul en pilas ordenadas cada mañana.",
+      "title": "Ibul"
+    },
+    "card:inhyeong": {
+      "blurb": "Desde muñecas de tela hechas a mano hasta figuras de K-pop, a Corea le encantan sus muñecas.",
+      "fact": "Hace mucho tiempo, las muñecas coreanas solían hacerse de paja, papel o tela.",
+      "title": "Muñeca"
+    },
+    "card:ink": {
+      "blurb": "Tinta negra para escribir letras grandes y firmes.",
+      "fact": "Se frota una barra de meok con agua para hacer tinta, fresca cada día.",
+      "title": "Barra de tinta"
+    },
+    "card:insa": {
+      "blurb": "Una reverencia o un hola: un saludo.",
+      "fact": "Una pequeña reverencia es un saludo cortés en Corea.",
+      "title": "Saludo"
+    },
+    "card:jamjari": {
+      "blurb": "Alas rápidas y transparentes que zumban sobre los estanques en verano.",
+      "fact": "Atrapar libélulas con una red de mango largo es un pasatiempo antiguo en Corea.",
+      "title": "Libélula"
+    },
+    "card:jegi": {
+      "blurb": "Patea la pesita con plumas tantas veces como puedas.",
+      "fact": "El jegichagi es un juego favorito del invierno en el patio.",
+      "title": "Volante para patear"
+    },
+    "card:kimbap": {
+      "blurb": "Arroz y verduras enrollados en alga.",
+      "fact": "Kimbap significa «arroz con alga»: perfecto para un pícnic.",
+      "title": "Kimbap"
+    },
+    "card:kimchi": {
+      "blurb": "Repollo picante, rojo de chile: Corea en un plato.",
+      "fact": "Hay más de 200 tipos de kimchi.",
+      "title": "Kimchi"
+    },
+    "card:kite": {
+      "blurb": "Una cometa en forma de rombo pintada con la cara de un tigre.",
+      "fact": "El bangpaeyeon, la cometa escudo, tiene un agujero en el centro para dirigirla.",
+      "title": "Cometa"
+    },
+    "card:kkot": {
+      "blurb": "Una flor de colores vivos en el campo.",
+      "fact": "Corea celebra los cerezos en flor, beotkkot, cada primavera.",
+      "title": "Flor"
+    },
+    "card:kpop": {
+      "blurb": "Grandes canciones, grandes bailes. Con el K-pop, el mundo oye coreano cada día.",
+      "fact": "Se suele decir que el K-pop moderno empezó en 1992.",
+      "title": "K-pop"
+    },
+    "card:lantern": {
+      "blurb": "Un farol de papel que brilla en las fiestas.",
+      "fact": "El Yeondeunghoe es un festival de faroles reconocido por la UNESCO.",
+      "title": "Farol de papel"
+    },
+    "card:magpie": {
+      "blurb": "Un pájaro blanco y negro que trae buenas noticias.",
+      "fact": "Oír una urraca por la mañana significa que llegan visitas.",
+      "title": "Urraca"
+    },
+    "card:moon": {
+      "blurb": "Una luna que brilla sobre las montañas.",
+      "fact": "Un cuento popular coreano dice que en la luna vive un conejo.",
+      "title": "Luna"
+    },
+    "card:mountain": {
+      "blurb": "Corea está llena de montañas verdes.",
+      "fact": "Cerca del 70 % del territorio coreano es montañoso.",
+      "title": "Montaña"
+    },
+    "card:mugunghwa": {
+      "blurb": "La flor nacional de Corea: florece todo el verano.",
+      "fact": "Mugunghwa significa «flor eterna».",
+      "title": "Rosa de Siria"
+    },
+    "card:nabi": {
+      "blurb": "Una florecita voladora que revolotea en muchas canciones coreanas.",
+      "fact": "La melodía de la canción «Nabi-ya, nabi-ya» viene de una vieja canción popular alemana.",
+      "title": "Mariposa"
+    },
+    "card:namu": {
+      "blurb": "Un árbol alto y verde.",
+      "fact": "El árbol más antiguo de Corea, un ginkgo, tiene más de 1000 años.",
+      "title": "Árbol"
+    },
+    "card:ori": {
+      "blurb": "Patos marrones caminan bamboleándose por los estanques coreanos. Les encantan las sobras de arroz.",
+      "fact": "A las parejas que se casan se les suele regalar un par de patos mandarines de madera, símbolo de un matrimonio feliz.",
+      "title": "Ori"
+    },
+    "card:origami": {
+      "blurb": "Papel doblado en formas mágicas.",
+      "fact": "Una grulla de papel se llama jongihak.",
+      "title": "Plegado de papel"
+    },
+    "card:paengi": {
+      "blurb": "Trompos de madera que giran sobre el hielo en invierno.",
+      "fact": "Para que un paengi siga girando, se le da con un pequeño látigo de cuerda.",
+      "title": "Paengi"
+    },
+    "card:pottery": {
+      "blurb": "Una vasija coreana verde jade de hace 1000 años.",
+      "fact": "El cheongja de Goryeo es famoso en todo el mundo por su color.",
+      "title": "Cerámica celadón"
+    },
+    "card:ppang": {
+      "blurb": "Pan suave recién salido de la panadería.",
+      "fact": "La palabra ppang viene del portugués «pão».",
+      "title": "Pan"
+    },
+    "card:ramyeon": {
+      "blurb": "Fideos humeantes en un tazón rojo y picante. La merienda más querida de Corea.",
+      "fact": "En Corea, cada persona come más de 70 paquetes de ramyeon al año.",
+      "title": "Ramyeon"
+    },
+    "card:rice": {
+      "blurb": "Un tazón de arroz caliente: aquí empieza cada comida.",
+      "fact": "«¿Ya comiste arroz?» es un saludo entre amistades.",
+      "title": "Arroz"
+    },
+    "card:sagwa": {
+      "blurb": "Una manzana roja y dulce para tu lonchera.",
+      "fact": "Corea cultiva manzanas famosas en Daegu.",
+      "title": "Manzana"
+    },
+    "card:sea": {
+      "blurb": "El mar azul en tres lados de Corea.",
+      "fact": "Corea tiene el mar del Este, el del Oeste y el del Sur.",
+      "title": "Mar"
+    },
+    "card:sebae": {
+      "blurb": "Una reverencia respetuosa a las abuelas y los abuelos.",
+      "fact": "Después de la reverencia, recibes sebaetdon: dinero de la suerte.",
+      "title": "Reverencia de Año Nuevo"
+    },
+    "card:seollal": {
+      "blurb": "El año nuevo: reverencias, hanbok, tteokguk.",
+      "fact": "La gente hace reverencias a las personas mayores, que a menudo dan sebaetdon (dinero de la suerte).",
+      "title": "Año Nuevo lunar"
+    },
     "card:set-hangul-printing": {
       "blurb": "Seis historias, una colección.",
       "title": "Impresión"
@@ -18,6 +278,11 @@ export const OVERLAYS: Overlays = {
     "card:set-seasons-tales": {
       "blurb": "Seis historias, una colección.",
       "title": "Arirang"
+    },
+    "card:songpyeon": {
+      "blurb": "Pasteles de arroz en forma de media luna con relleno dulce.",
+      "fact": "Se cocinan al vapor sobre agujas de pino para darles aroma.",
+      "title": "Songpyeon"
     },
     "card:story-chuseok-ganggangsullae": {
       "blurb": "En Chuseok (Hangawi), Hoya acompaña a una familia que vuelve a su pueblo natal, prepara songpyeon cocidos al vapor sobre agujas de pino y mira a las mujeres bailar el Ganggangsullae de la mano bajo la luna llena.",
@@ -124,6 +389,56 @@ export const OVERLAYS: Overlays = {
       "fact": "Los uigwe registran, con texto e ilustraciones, grandes ceremonias reales y proyectos del Estado, como bodas reales, banquetes, funerales, recepciones de enviados y la reconstrucción de palacios.",
       "title": "Registro real en imágenes"
     },
+    "card:taegeukgi": {
+      "blurb": "Un remolino rojo y azul con cuatro símbolos negros. La bandera de Corea.",
+      "fact": "El remolino del centro significa «yin y yang»: equilibrio.",
+      "title": "Taegeukgi"
+    },
+    "card:tiger": {
+      "blurb": "El orgulloso tigre coreano. ¡Hoya es uno!",
+      "fact": "Los tigres aparecen en muchos cuentos populares coreanos.",
+      "title": "Tigre"
+    },
+    "card:top": {
+      "blurb": "Un trompo de madera que gira sobre el hielo.",
+      "fact": "Hacer girar trompos en estanques congelados es una tradición de invierno.",
+      "title": "Trompo"
+    },
+    "card:tteokguk": {
+      "blurb": "En Año Nuevo, come tteokguk para cumplir un año más.",
+      "fact": "Las rodajas de pastel de arroz parecen monedas y traen buena suerte.",
+      "title": "Sopa de pastel de arroz"
+    },
+    "card:usan": {
+      "blurb": "La temporada de lluvias en Corea dura cerca de un mes. Ten un paraguas junto a la puerta.",
+      "fact": "Los paraguas coreanos antiguos se hacían de papel aceitado y bambú.",
+      "title": "Usan"
+    },
+    "card:uyu": {
+      "blurb": "Un vaso de leche fría para beber.",
+      "fact": "La leche con sabor a plátano es una de las favoritas en Corea.",
+      "title": "Leche"
+    },
+    "card:yagu": {
+      "blurb": "El deporte más ruidoso de Corea. La afición lleva tambores y anima durante nueve entradas seguidas.",
+      "fact": "Los equipos de béisbol coreanos tienen líderes de ánimo oficiales que guían los cánticos de la afición.",
+      "title": "Yagu"
+    },
+    "card:yeou": {
+      "blurb": "Los zorros de los cuentos coreanos antiguos son astutos y un poco mágicos.",
+      "fact": "Un zorro de nueve colas se llama «gumiho» y es famoso en los K-dramas.",
+      "title": "Zorro"
+    },
+    "card:yong": {
+      "blurb": "Los dragones coreanos viven en los ríos y traen lluvia cuando la tierra está seca.",
+      "fact": "No echan fuego: hacen girar el agua y el viento.",
+      "title": "Dragón"
+    },
+    "card:yutnori": {
+      "blurb": "Lanza los cuatro palitos: ¡yut!",
+      "fact": "El yunnori, que también se escribe yutnori, se juega el día de Año Nuevo.",
+      "title": "Juego de yut"
+    },
     "episode:shelf-chuseok-ganggangsullae": {
       "hoyaIntro": "¡Es Chuseok! Hagamos songpyeon y miremos la luna llena.",
       "title": "Chuseok: songpyeon y la luna llena"
@@ -208,12 +523,59 @@ export const OVERLAYS: Overlays = {
       "hoyaIntro": "¡Vamos a abrir un informe real lleno de imágenes, hecho para una gran fiesta de cumpleaños!",
       "title": "Un registro en imágenes de un cumpleaños real"
     },
+    "episode:stage1-crafts": {
+      "hoyaIntro": "Juguemos al yunnori. ¡Lanza los palitos!",
+      "subtitle": "Juegos y artesanías coreanas para probar.",
+      "title": "Yut, cometas y papel"
+    },
+    "episode:stage1-letters": {
+      "hoyaIntro": "¡Hola! Soy Hoya. ¿Quieres conocer mis letras coreanas favoritas?",
+      "subtitle": "Doce letras y tus primeras palabras de verdad.",
+      "title": "Conoce las letras"
+    },
+    "episode:stage1-life": {
+      "hoyaIntro": "¡Hora de comer! Te muestro lo que como.",
+      "subtitle": "Arroz, kimchi y familia, dichos en coreano.",
+      "title": "En la mesa coreana"
+    },
+    "episode:stage1-nature": {
+      "hoyaIntro": "¡Soy un tigre! ¿Quieres ver dónde vivo?",
+      "subtitle": "Corea es salvaje y hermosa.",
+      "title": "Tigres, montañas, luna"
+    },
+    "episode:stage1-rites": {
+      "hoyaIntro": "¡Es tiempo de fiestas! Haz una reverencia en Seollal y comparte pasteles de arroz en Chuseok.",
+      "subtitle": "Seollal y Chuseok: haz una reverencia, come y comparte pasteles de arroz.",
+      "title": "Año Nuevo y fiestas"
+    },
+    "episode:stage5-crafts": {
+      "hoyaIntro": "Leamos en coreano historias de manos ingeniosas y cuentos antiguos, una oración corta a la vez.",
+      "title": "Historias de artesanía"
+    },
+    "episode:stage5-letters": {
+      "hoyaIntro": "Leamos en coreano historias sobre el hangul, una oración corta a la vez.",
+      "title": "Historias de letras"
+    },
+    "episode:stage5-life": {
+      "hoyaIntro": "Leamos en coreano historias de la vida diaria, una oración corta a la vez.",
+      "title": "Historias de familia"
+    },
+    "episode:stage5-nature": {
+      "hoyaIntro": "Leamos en coreano historias del sol y el cielo, una oración corta a la vez.",
+      "title": "Cuentos de naturaleza"
+    },
+    "episode:stage5-rites": {
+      "hoyaIntro": "Leamos en coreano historias de fiestas, una oración corta a la vez.",
+      "title": "Cuentos de fiestas"
+    },
     "jamo:a": {
       "exampleWord.gloss": "papá",
+      "gloss": "A: suena como la a de «casa»",
       "soundHint": "como la a de «casa»"
     },
     "jamo:bieup": {
       "exampleWord.gloss": "arroz",
+      "gloss": "B: suena como el inicio de «bebé»",
       "soundHint": "una b suave y ligera, entre la b de «bebé» y la p de «papá»"
     },
     "jamo:bieup-batchim": {
@@ -221,22 +583,27 @@ export const OVERLAYS: Overlays = {
     },
     "jamo:chieut": {
       "exampleWord.gloss": "libro",
+      "gloss": "CH: como la ch de «chocolate», con un soplo de aire",
       "soundHint": "como la ch de «chocolate», con un soplo de aire"
     },
     "jamo:digeut": {
       "exampleWord.gloss": "luna",
+      "gloss": "D: suena como el inicio de «dedo»",
       "soundHint": "una d suave y ligera, entre la d de «dedo» y la t de «taza»"
     },
     "jamo:eo": {
       "exampleWord.gloss": "mamá",
+      "gloss": "EO: entre la o y la a, con la boca abierta",
       "soundHint": "entre la o y la a, con la boca bien abierta"
     },
     "jamo:eu": {
       "exampleWord.gloss": "lo mejor, lo primero",
+      "gloss": "EU: un sonido suave entre la u y la i",
       "soundHint": "di «u» con los labios estirados, sin redondear"
     },
     "jamo:giyeok": {
       "exampleWord.gloss": "familia",
+      "gloss": "G: suena como el inicio de «gato»",
       "soundHint": "una g suave y ligera, entre la g de «gato» y la c de «casa»"
     },
     "jamo:giyeok-batchim": {
@@ -244,14 +611,17 @@ export const OVERLAYS: Overlays = {
     },
     "jamo:hieut": {
       "exampleWord.gloss": "cielo",
+      "gloss": "H: como una j muy suave, casi solo aire",
       "soundHint": "como una j muy suave, casi solo aire"
     },
     "jamo:i": {
       "exampleWord.gloss": "nombre",
+      "gloss": "I: suena como la i de «isla»",
       "soundHint": "como la i de «isla»"
     },
     "jamo:ieung": {
       "exampleWord.gloss": "niño o niña",
+      "gloss": "Forma de círculo: muda al inicio, «ng» al final",
       "soundHint": "muda al inicio de un bloque; al final suena como la n de «tengo»"
     },
     "jamo:ieung-batchim": {
@@ -259,14 +629,17 @@ export const OVERLAYS: Overlays = {
     },
     "jamo:jieut": {
       "exampleWord.gloss": "casa",
+      "gloss": "J: suena como una ch suave, sin soplo de aire",
       "soundHint": "una ch suave y ligera, sin soplo de aire"
     },
     "jamo:kieuk": {
       "exampleWord.gloss": "nariz",
+      "gloss": "K: como la c de «casa», con un soplo de aire",
       "soundHint": "como la c de «casa», con un soplo de aire"
     },
     "jamo:mieum": {
       "exampleWord.gloss": "agua",
+      "gloss": "M: suena como el inicio de «mamá»",
       "soundHint": "como la m de «mamá»"
     },
     "jamo:mieum-batchim": {
@@ -274,6 +647,7 @@ export const OVERLAYS: Overlays = {
     },
     "jamo:nieun": {
       "exampleWord.gloss": "árbol",
+      "gloss": "N: suena como el inicio de «nube»",
       "soundHint": "como la n de «nube»"
     },
     "jamo:nieun-batchim": {
@@ -281,14 +655,17 @@ export const OVERLAYS: Overlays = {
     },
     "jamo:o": {
       "exampleWord.gloss": "pato",
+      "gloss": "O: suena como la o de «oso»",
       "soundHint": "como la o de «oso», con los labios redondos"
     },
     "jamo:pieup": {
       "exampleWord.gloss": "uva",
+      "gloss": "P: como la p de «papá», con un soplo de aire",
       "soundHint": "como la p de «papá», con un soplo de aire"
     },
     "jamo:rieul": {
       "exampleWord.gloss": "ramen coreano",
+      "gloss": "R o L: un sonido suave entre la r y la l",
       "soundHint": "un toque rápido de la lengua, como la r de «cara»"
     },
     "jamo:rieul-batchim": {
@@ -296,35 +673,54 @@ export const OVERLAYS: Overlays = {
     },
     "jamo:siot": {
       "exampleWord.gloss": "montaña",
+      "gloss": "S: suena como el inicio de «sol»",
       "soundHint": "como la s de «sol»"
     },
     "jamo:tieut": {
       "exampleWord.gloss": "conejo",
+      "gloss": "T: como la t de «taza», con un soplo de aire",
       "soundHint": "como la t de «taza», con un soplo de aire"
     },
     "jamo:u": {
       "exampleWord.gloss": "leche",
+      "gloss": "U: suena como la u de «luna»",
       "soundHint": "como la u de «luna»"
     },
     "jamo:ya": {
       "exampleWord.gloss": "béisbol",
+      "gloss": "YA: suena como el inicio de «yate»",
       "soundHint": "como «ya» en «yate»"
     },
     "jamo:yeo": {
       "exampleWord.gloss": "zorro",
+      "gloss": "YEO: como «yo», con la boca bien abierta",
       "soundHint": "como «yo», con la boca bien abierta"
     },
     "jamo:yo": {
       "exampleWord.gloss": "cocinar, platillo",
+      "gloss": "YO: suena como el inicio de «yogur»",
       "soundHint": "como «yo» en «yogur»"
     },
     "jamo:yu": {
       "exampleWord.gloss": "vidrio",
+      "gloss": "YU: suena como el inicio de «yuca»",
       "soundHint": "como «yu» en «yuca»"
+    },
+    "minigame:s1-crafts-q1-apply": {
+      "picWord.boards.0.pairs.jegi.word.gloss": "volante para patear",
+      "picWord.boards.0.pairs.paengi.word.gloss": "trompo",
+      "picWord.boards.0.pairs.yeon.word.gloss": "cometa",
+      "picWord.boards.0.pairs.yut.word.gloss": "palitos de yut"
     },
     "minigame:s1-crafts-q1-check": {
       "listenPick.rounds.0.prompt": "cometa",
       "listenPick.rounds.1.prompt": "juego"
+    },
+    "minigame:s1-crafts-q2-apply": {
+      "picWord.boards.0.pairs.but.word.gloss": "pincel",
+      "picWord.boards.0.pairs.cheongja.word.gloss": "cerámica celadón",
+      "picWord.boards.0.pairs.hanji.word.gloss": "papel coreano",
+      "picWord.boards.0.pairs.jongijeopgi.word.gloss": "plegado de papel"
     },
     "minigame:s1-crafts-q2-check": {
       "listenPick.rounds.0.prompt": "cerámica celadón",
@@ -340,12 +736,12 @@ export const OVERLAYS: Overlays = {
     },
     "minigame:s1-crafts-q3-check": {
       "listenPick.rounds.0.prompt": "el alfabeto coreano",
-      "listenPick.rounds.1.prompt": "hola, adiós (entre amigos)"
+      "listenPick.rounds.1.prompt": "hola, adiós (entre amistades)"
     },
     "minigame:s1-crafts-q3-play": {
       "listenPick.rounds.0.prompt": "el alfabeto coreano",
       "listenPick.rounds.1.prompt": "Hoya, el tigre",
-      "listenPick.rounds.2.prompt": "hola, adiós (entre amigos)",
+      "listenPick.rounds.2.prompt": "hola, adiós (entre amistades)",
       "listenPick.rounds.3.prompt": "amor",
       "listenPick.rounds.4.prompt": "Corea",
       "listenPick.rounds.5.prompt": "hanbok, ropa tradicional"
@@ -361,6 +757,12 @@ export const OVERLAYS: Overlays = {
     "minigame:s1-letters-q3-check": {
       "listenPick.rounds.1.prompt": "pierna, puente",
       "listenPick.rounds.lp-sym-jamo-eu.prompt": "la letra eu"
+    },
+    "minigame:s1-life-q1-apply": {
+      "picWord.boards.0.pairs.bap.word.gloss": "arroz",
+      "picWord.boards.0.pairs.gimbap.word.gloss": "kimbap",
+      "picWord.boards.0.pairs.gimchi.word.gloss": "kimchi",
+      "picWord.boards.0.pairs.jeotgarak.word.gloss": "palillos"
     },
     "minigame:s1-life-q1-check": {
       "listenPick.rounds.1.prompt": "queso",
@@ -380,6 +782,12 @@ export const OVERLAYS: Overlays = {
     "minigame:s1-life-q3-check": {
       "listenPick.rounds.1.prompt": "tomate",
       "listenPick.rounds.lp-sym-jamo-kieuk.prompt": "la letra kieuk"
+    },
+    "minigame:s1-nature-q1-apply": {
+      "picWord.boards.0.pairs.dal.word.gloss": "luna",
+      "picWord.boards.0.pairs.horangi.word.gloss": "tigre",
+      "picWord.boards.0.pairs.kkachi.word.gloss": "urraca",
+      "picWord.boards.0.pairs.san.word.gloss": "montaña"
     },
     "minigame:s1-nature-q1-check": {
       "listenPick.rounds.0.prompt": "oso",
@@ -431,11 +839,11 @@ export const OVERLAYS: Overlays = {
     },
     "minigame:s1-rites-q2-check": {
       "listenPick.rounds.0.prompt": "la sílaba song",
-      "listenPick.rounds.1.prompt": "masa de arroz en media luna"
+      "listenPick.rounds.1.prompt": "pastel de arroz en media luna"
     },
     "minigame:s1-rites-q3-apply": {
       "storySteps.a.label": "Ponerse el hanbok",
-      "storySteps.b.label": "Saludar a los mayores con una reverencia",
+      "storySteps.b.label": "Hacer una reverencia a las personas mayores",
       "storySteps.c.label": "Comer tteokguk",
       "storySteps.d.label": "Recibir dinero de la suerte"
     },
@@ -2081,100 +2489,270 @@ export const OVERLAYS: Overlays = {
       "options.tiger.gloss": "Tigre"
     },
     "quest:stage1-crafts-q1": {
+      "blurb": "Lee palabras de juegos: cometa, pelota, cuerda y más.",
+      "steps.s1.hoyaLine": "En Seollal, el Año Nuevo coreano, las familias juegan al yut y vuelan cometas. ¡Leamos palabras de juegos!",
+      "steps.s1.title": "¡Hora de jugar!",
       "steps.s2.discover.pages.0.items.0.word.gloss": "cometa",
       "steps.s2.discover.pages.0.items.1.word.gloss": "pelota",
       "steps.s2.discover.pages.1.items.0.word.gloss": "cuerda",
-      "steps.s2.discover.pages.1.items.1.word.gloss": "juego"
+      "steps.s2.discover.pages.1.items.1.note": "Léelo de corrido: nol + i suena como nori.",
+      "steps.s2.discover.pages.1.items.1.word.gloss": "juego",
+      "steps.s2.hoyaLine": "Toca Escuchar y luego lee cada palabra por tu cuenta.",
+      "steps.s2.title": "Palabras de juegos",
+      "steps.s3.title": "Arma un bloque",
+      "steps.s4.title": "Imagen y palabra",
+      "steps.s5.title": "Escucha y lee",
+      "steps.s6.hoyaLine": "¡Una tarjeta del juego de yut llega a tu colección!",
+      "steps.s6.title": "¡Tarjeta del juego de yut!",
+      "title": "Yut, cometa, trompo"
     },
     "quest:stage1-crafts-q2": {
+      "blurb": "Lee palabras de artesanía: papel coreano y cerámica celadón.",
+      "steps.s1.hoyaLine": "En Corea se hace a mano papel resistente y cerámica verde jade. ¡Leamos palabras de artesanía!",
+      "steps.s1.title": "¡Hora de manualidades!",
       "steps.s2.discover.pages.0.items.0.word.gloss": "papel coreano",
       "steps.s2.discover.pages.0.items.1.word.gloss": "papel",
       "steps.s2.discover.pages.1.items.0.word.gloss": "cerámica celadón",
-      "steps.s2.discover.pages.1.items.1.word.gloss": "cerámica"
+      "steps.s2.discover.pages.1.items.1.word.gloss": "cerámica",
+      "steps.s2.hoyaLine": "Toca Escuchar y luego lee cada palabra por tu cuenta.",
+      "steps.s2.title": "Palabras de artesanía",
+      "steps.s3.title": "Encuentra la palabra",
+      "steps.s4.title": "Imagen y palabra",
+      "steps.s5.title": "Escucha y lee",
+      "steps.s6.hoyaLine": "¡Una tarjeta de la cerámica celadón llega a tu colección!",
+      "steps.s6.title": "¡Tarjeta del celadón!",
+      "title": "Papel y cerámica"
     },
     "quest:stage1-crafts-q3": {
+      "blurb": "Junta todo y lee palabras en hangul por tu cuenta.",
+      "steps.s1.hoyaLine": "El rey Sejong creó el hangul para que todo el mundo pudiera leer. ¡Ahora tú también puedes leerlo!",
+      "steps.s1.title": "¡Ya sabes leer!",
       "steps.s2.discover.pages.0.items.0.word.gloss": "el alfabeto coreano",
       "steps.s2.discover.pages.0.items.1.word.gloss": "Hoya, el tigre",
-      "steps.s2.discover.pages.1.items.0.word.gloss": "hola, adiós (entre amigos)",
-      "steps.s2.discover.pages.1.items.1.word.gloss": "amor"
+      "steps.s2.discover.pages.1.items.0.word.gloss": "hola, adiós (entre amistades)",
+      "steps.s2.discover.pages.1.items.1.word.gloss": "amor",
+      "steps.s2.hoyaLine": "Toca Escuchar y luego lee cada palabra por tu cuenta.",
+      "steps.s2.title": "Palabras en hangul",
+      "steps.s3.title": "Encuentra la palabra",
+      "steps.s4.title": "Arma un bloque",
+      "steps.s5.title": "Escucha y lee",
+      "steps.s6.hoyaLine": "¡Una tarjeta de la cometa llega a tu colección!",
+      "steps.s6.title": "¡Tarjeta de la cometa!",
+      "title": "¡Lee hangul!"
     },
     "quest:stage1-letters-q1": {
+      "blurb": "Dos vocales, dos consonantes y tus primeras sílabas.",
+      "steps.s1.hoyaLine": "Las letras coreanas se juntan en bloques. ¡Conozcamos cuatro!",
+      "steps.s1.title": "Hoya te saluda",
       "steps.s2.discover.pages.0.items.0.example.gloss": "yo",
       "steps.s2.discover.pages.0.items.1.example.gloss": "tú",
       "steps.s2.discover.pages.1.items.0.example.gloss": "el sonido ga",
-      "steps.s2.discover.pages.1.items.1.example.gloss": "yo"
+      "steps.s2.discover.pages.1.items.1.example.gloss": "yo",
+      "steps.s2.hoyaLine": "Toca Escuchar para oír cada una.",
+      "steps.s2.title": "Cuatro letras nuevas",
+      "steps.s3.title": "Une el sonido",
+      "steps.s4.title": "Arma una letra",
+      "steps.s5.title": "Escucha y lee",
+      "steps.s6.hoyaLine": "¡Ganaste una tarjeta del patrimonio!",
+      "steps.s6.title": "¡Tarjeta ganada!",
+      "title": "Conoce a, eo, g y n"
     },
     "quest:stage1-letters-q2": {
+      "blurb": "Dos vocales redondas, la m y la letra del círculo.",
+      "steps.s1.hoyaLine": "¡Hola de nuevo! Hoy, cuatro letras más.",
+      "steps.s1.title": "Segunda ronda",
       "steps.s2.discover.pages.0.items.0.example.gloss": "cinco",
       "steps.s2.discover.pages.0.items.1.example.gloss": "árbol",
       "steps.s2.discover.pages.1.items.0.example.gloss": "árbol",
-      "steps.s2.discover.pages.1.items.1.example.gloss": "cinco"
+      "steps.s2.discover.pages.1.items.1.example.gloss": "cinco",
+      "steps.s2.hoyaLine": "Toca Escuchar para oír cada una.",
+      "steps.s2.title": "Cuatro letras nuevas",
+      "steps.s3.title": "Une el sonido",
+      "steps.s4.title": "Traza cada letra",
+      "steps.s5.title": "Escucha y lee",
+      "steps.s6.hoyaLine": "¡Una tarjeta más para tu colección!",
+      "steps.s6.title": "¡Muy bien!",
+      "title": "Conoce o, u, m y el círculo"
     },
     "quest:stage1-letters-q3": {
+      "blurb": "Cuatro letras más y palabras de verdad para leer.",
+      "steps.s1.hoyaLine": "¡Cuatro letras más y ya puedes leer palabras de verdad!",
+      "steps.s1.title": "Ahora, palabras de verdad",
       "steps.s2.discover.pages.0.items.0.example.gloss": "drama, serie",
       "steps.s2.discover.pages.0.items.1.example.gloss": "niño o niña",
       "steps.s2.discover.pages.1.items.0.example.gloss": "pierna, puente",
-      "steps.s2.discover.pages.1.items.1.example.gloss": "drama, serie"
+      "steps.s2.discover.pages.1.items.1.example.gloss": "drama, serie",
+      "steps.s2.hoyaLine": "Toca Escuchar para oír cada una.",
+      "steps.s2.title": "Cuatro letras nuevas",
+      "steps.s3.title": "Une el sonido",
+      "steps.s4.title": "Encuentra la diferente",
+      "steps.s5.title": "Escucha y lee",
+      "steps.s6.hoyaLine": "¡Tu colección está creciendo!",
+      "steps.s6.title": "Pincel ganado",
+      "title": "Conoce eu, i, d y r"
     },
     "quest:stage1-life-q1": {
+      "blurb": "Dos letras nuevas, j y ch, y palabras de comida de la mesa.",
+      "steps.s1.hoyaLine": "¡Hora de comer! Hoy hay dos letras nuevas en la mesa.",
+      "steps.s1.title": "¡Hora de comer!",
       "steps.s2.discover.pages.0.items.0.example.gloss": "ciruela",
       "steps.s2.discover.pages.0.items.1.example.gloss": "queso",
       "steps.s2.discover.pages.1.items.0.word.gloss": "chile, ají",
-      "steps.s2.discover.pages.1.items.1.word.gloss": "té"
+      "steps.s2.discover.pages.1.items.1.word.gloss": "té",
+      "steps.s2.hoyaLine": "Toca Escuchar para oír cada una.",
+      "steps.s2.title": "Dos letras nuevas",
+      "steps.s3.title": "Une el sonido",
+      "steps.s4.title": "Imagen y palabra",
+      "steps.s5.title": "Escucha y lee",
+      "steps.s6.hoyaLine": "¡Una tarjeta del kimchi llega a tu colección!",
+      "steps.s6.title": "¡Tarjeta del kimchi!",
+      "title": "Hola, kimchi y arroz"
     },
     "quest:stage1-life-q2": {
+      "blurb": "Dos letras nuevas, b y s, y palabras de familia para leer.",
+      "steps.s1.hoyaLine": "Toda la familia está a la mesa. ¡Leamos las palabras de familia!",
+      "steps.s1.title": "¡Familia!",
       "steps.s2.discover.pages.0.items.0.example.gloss": "plátano, banana",
       "steps.s2.discover.pages.0.items.1.example.gloss": "león",
       "steps.s2.discover.pages.1.items.0.word.gloss": "padre",
       "steps.s2.discover.pages.1.items.1.word.gloss": "bebé",
+      "steps.s2.discover.pages.2.caption": "Palabras de familia",
       "steps.s2.discover.pages.2.items.0.word.gloss": "mamá",
-      "steps.s2.discover.pages.2.items.1.word.gloss": "familia"
+      "steps.s2.discover.pages.2.items.1.word.gloss": "familia",
+      "steps.s2.hoyaLine": "Toca Escuchar para oír cada una.",
+      "steps.s2.title": "Dos letras nuevas",
+      "steps.s3.title": "Une el sonido",
+      "steps.s4.title": "Arma una letra",
+      "steps.s5.title": "Escucha y lee",
+      "steps.s6.hoyaLine": "¡La mesa familiar llega a tu colección!",
+      "steps.s6.title": "¡Tarjeta de la familia!",
+      "title": "La familia a la mesa"
     },
     "quest:stage1-life-q3": {
+      "blurb": "Dos letras con soplo de aire, k y t, y meriendas de pícnic para leer.",
+      "steps.s1.hoyaLine": "¡Hora del pícnic! ¿Qué meriendas llevamos?",
+      "steps.s1.title": "¡Hora del pícnic!",
       "steps.s2.discover.pages.0.items.0.example.gloss": "galleta",
       "steps.s2.discover.pages.0.items.1.example.gloss": "tomate",
       "steps.s2.discover.pages.1.items.0.word.gloss": "cacao",
-      "steps.s2.discover.pages.1.items.1.word.gloss": "pan tostado"
+      "steps.s2.discover.pages.1.items.1.word.gloss": "pan tostado",
+      "steps.s2.hoyaLine": "Toca Escuchar: la k es como la g con un soplo de aire, y la t es como la d con un soplo de aire.",
+      "steps.s2.title": "Dos letras nuevas",
+      "steps.s3.title": "Une el sonido",
+      "steps.s4.title": "¿Qué significa?",
+      "steps.s5.title": "Escucha y lee",
+      "steps.s6.hoyaLine": "¡El kimbap, el favorito del pícnic, llega a tu colección!",
+      "steps.s6.title": "¡Tarjeta del kimbap!",
+      "title": "Meriendas de pícnic"
     },
     "quest:stage1-nature-q1": {
+      "blurb": "Dos letras finales más, m y p, y palabras que ya puedes leer.",
+      "steps.s1.hoyaLine": "Las pinturas coreanas antiguas suelen mostrar un tigre con una urraca. ¡Hoy, dos letras finales nuevas!",
+      "steps.s1.title": "Tigre y urraca",
       "steps.s2.discover.pages.0.items.0.example.gloss": "oso",
       "steps.s2.discover.pages.0.items.1.example.gloss": "casa",
       "steps.s2.discover.pages.1.items.0.word.gloss": "primavera (estación)",
       "steps.s2.discover.pages.1.items.1.word.gloss": "arroz",
+      "steps.s2.discover.pages.2.caption": "¡Ya puedes leer estas!",
       "steps.s2.discover.pages.2.items.0.word.gloss": "kimchi",
-      "steps.s2.discover.pages.2.items.1.word.gloss": "mamá"
+      "steps.s2.discover.pages.2.items.1.word.gloss": "mamá",
+      "steps.s2.hoyaLine": "Toca Escuchar para oír. Las letras m y p también pueden ir debajo de un bloque.",
+      "steps.s2.title": "Dos finales más",
+      "steps.s3.title": "Escucha la final",
+      "steps.s4.title": "Imagen y palabra",
+      "steps.s5.title": "Escucha y lee",
+      "steps.s6.hoyaLine": "¡Una tarjeta de la urraca llega a tu colección!",
+      "steps.s6.title": "¡Tarjeta de la urraca!",
+      "title": "Tigre, urraca, luna"
     },
     "quest:stage1-nature-q2": {
+      "blurb": "Lee palabras de la naturaleza: montaña, río, mar y cielo.",
+      "steps.s1.hoyaLine": "Corea tiene muchas montañas y mar por tres lados. ¡Leamos palabras de la naturaleza!",
+      "steps.s1.title": "Hacia las colinas",
       "steps.s2.discover.pages.0.items.0.word.gloss": "montaña",
       "steps.s2.discover.pages.0.items.1.word.gloss": "río",
       "steps.s2.discover.pages.1.items.0.word.gloss": "mar",
-      "steps.s2.discover.pages.1.items.1.word.gloss": "cielo"
+      "steps.s2.discover.pages.1.items.1.word.gloss": "cielo",
+      "steps.s2.hoyaLine": "Toca Escuchar y luego lee cada palabra por tu cuenta.",
+      "steps.s2.title": "Palabras de la naturaleza",
+      "steps.s3.title": "Encuentra la palabra",
+      "steps.s4.title": "Arma un bloque",
+      "steps.s5.title": "Escucha y lee",
+      "steps.s6.hoyaLine": "¡Una tarjeta de la montaña llega a tu colección!",
+      "steps.s6.title": "¡Tarjeta de la montaña!",
+      "title": "Montaña, río, mar"
     },
     "quest:stage1-nature-q3": {
+      "blurb": "Lee el cielo de noche: luna, estrellas y luna llena.",
+      "steps.s1.hoyaLine": "En la noche de Chuseok, las familias miran la luna llena y piden un deseo.",
+      "steps.s1.title": "Cielo de noche",
       "steps.s2.discover.pages.0.items.0.word.gloss": "luna",
       "steps.s2.discover.pages.0.items.1.word.gloss": "estrella",
       "steps.s2.discover.pages.1.items.0.word.gloss": "noche",
-      "steps.s2.discover.pages.1.items.1.word.gloss": "luna llena"
+      "steps.s2.discover.pages.1.items.1.word.gloss": "luna llena",
+      "steps.s2.hoyaLine": "Toca Escuchar y luego lee cada palabra por tu cuenta.",
+      "steps.s2.title": "Palabras del cielo de noche",
+      "steps.s3.title": "Encuentra la palabra",
+      "steps.s4.title": "Traza las finales",
+      "steps.s5.title": "Escucha y lee",
+      "steps.s6.hoyaLine": "¡Una tarjeta de la luna llega a tu colección!",
+      "steps.s6.title": "¡Tarjeta de la luna!",
+      "title": "Luna, estrellas y noche"
     },
     "quest:stage1-rites-q1": {
+      "blurb": "Tus primeras letras finales, n y l, y las palabras del Seollal.",
+      "steps.s1.hoyaLine": "¡Feliz Año Nuevo! Aprendamos el saludo.",
+      "steps.s1.title": "¡Feliz Año Nuevo!",
       "steps.s2.discover.pages.0.items.0.example.gloss": "puerta",
       "steps.s2.discover.pages.0.items.1.example.gloss": "luna",
+      "steps.s2.discover.pages.1.caption": "Palabras del Seollal",
       "steps.s2.discover.pages.1.items.0.word.gloss": "Año Nuevo lunar",
-      "steps.s2.discover.pages.1.items.1.word.gloss": "sopa de masa de arroz"
+      "steps.s2.discover.pages.1.items.1.word.gloss": "sopa de pastel de arroz",
+      "steps.s2.hoyaLine": "Toca Escuchar para oír. Una letra final va debajo del bloque.",
+      "steps.s2.title": "Letras abajo",
+      "steps.s3.title": "Escucha la final",
+      "steps.s4.title": "Arma un bloque",
+      "steps.s5.title": "Escucha y lee",
+      "steps.s6.hoyaLine": "¡Una tarjeta del Año Nuevo lunar llega a tu colección!",
+      "steps.s6.title": "¡Tarjeta del Seollal!",
+      "title": "Reverencia y tteokguk"
     },
     "quest:stage1-rites-q2": {
+      "blurb": "Dos vocales nuevas, ya y yeo, la letra p y la final ng.",
+      "steps.s1.hoyaLine": "Es Chuseok, la fiesta de la cosecha. ¡Las familias hacen pasteles de arroz juntas!",
+      "steps.s1.title": "¡Chuseok!",
       "steps.s2.discover.pages.0.items.0.example.gloss": "béisbol",
       "steps.s2.discover.pages.0.items.1.example.gloss": "zorro",
       "steps.s2.discover.pages.1.items.0.example.gloss": "uva",
-      "steps.s2.discover.pages.1.items.1.example.gloss": "masa de arroz en media luna",
+      "steps.s2.discover.pages.1.items.1.example.gloss": "pastel de arroz en media luna",
+      "steps.s2.discover.pages.2.caption": "Palabras del Chuseok",
       "steps.s2.discover.pages.2.items.0.word.gloss": "fiesta de la cosecha",
-      "steps.s2.discover.pages.2.items.1.word.gloss": "masa de arroz en media luna"
+      "steps.s2.discover.pages.2.items.1.word.gloss": "pastel de arroz en media luna",
+      "steps.s2.hoyaLine": "Toca Escuchar para oír cada una.",
+      "steps.s2.title": "Cuatro letras nuevas",
+      "steps.s3.title": "Une el sonido",
+      "steps.s4.title": "Arma una letra",
+      "steps.s5.title": "Escucha y lee",
+      "steps.s6.hoyaLine": "¡Una tarjeta de la fiesta de la cosecha llega a tu colección!",
+      "steps.s6.title": "¡Tarjeta del Chuseok!",
+      "title": "Pasteles del Chuseok"
     },
     "quest:stage1-rites-q3": {
+      "blurb": "Dos vocales nuevas, yo y yu, la letra h y la final k.",
+      "steps.s1.hoyaLine": "En Año Nuevo nos ponemos hanbok y hacemos una reverencia a las abuelas y los abuelos.",
+      "steps.s1.title": "¡A vestirse!",
       "steps.s2.discover.pages.0.items.0.example.gloss": "respeto a los padres",
       "steps.s2.discover.pages.0.items.1.example.gloss": "leche",
       "steps.s2.discover.pages.1.items.0.example.gloss": "hanbok, ropa tradicional",
-      "steps.s2.discover.pages.1.items.1.example.gloss": "Corea"
+      "steps.s2.discover.pages.1.items.1.example.gloss": "Corea",
+      "steps.s2.hoyaLine": "Toca Escuchar para oír cada una.",
+      "steps.s2.title": "Cuatro letras nuevas",
+      "steps.s3.title": "Escucha y elige",
+      "steps.s4.title": "Orden del Año Nuevo",
+      "steps.s5.title": "Escucha y lee",
+      "steps.s6.hoyaLine": "¡Una tarjeta de la reverencia de Año Nuevo llega a tu colección!",
+      "steps.s6.title": "¡Tarjeta de la reverencia!",
+      "title": "El hanbok y la reverencia"
     },
     "quest:story-chuseok-ganggangsullae-listen": {
       "steps.s1.hoyaLine": "¡Es Chuseok! Hagamos songpyeon y miremos la luna llena.",
@@ -2495,6 +3073,41 @@ export const OVERLAYS: Overlays = {
       "steps.s5.hoyaLine": "Las palabras y las imágenes mantuvieron viva la celebración real. ¡Ahora sabes qué es un uigwe!",
       "steps.s5.title": "Muy bien",
       "title": "Un registro en imágenes de un cumpleaños real"
+    },
+    "stage:stage1": {
+      "anchorSkill": "Reconoce 24 jamo y 6 batchim con ≥90 % de acierto",
+      "oneLiner": "Conoce cada letra coreana y su sonido.",
+      "title": "Hangul"
+    },
+    "stage:stage2": {
+      "anchorSkill": "Lee y pronuncia 60 palabras clave de temas diarios",
+      "oneLiner": "Junta letras y forma tus primeras 60 palabras en coreano.",
+      "title": "Palabras"
+    },
+    "stage:stage3": {
+      "anchorSkill": "Forma oraciones de sujeto y verbo en presente",
+      "oneLiner": "Une palabras en oraciones cortas y útiles.",
+      "title": "Oraciones"
+    },
+    "stage:stage4": {
+      "anchorSkill": "Mantén un diálogo de 4 turnos con saludo y pregunta",
+      "oneLiner": "Practica tus primeras conversaciones cortas de la vida real.",
+      "title": "Diálogo"
+    },
+    "stage:stage5": {
+      "anchorSkill": "Lee una historia de 5 oraciones y entiende el 80 % o más",
+      "oneLiner": "Lee relatos cortos y cuentos populares coreanos con Hoya.",
+      "title": "Historias"
+    },
+    "stage:stage6": {
+      "anchorSkill": "Pide comida, pregunta cómo llegar y escribe a tu primo o prima",
+      "oneLiner": "Lleva el coreano al mundo: menús, letreros, llamadas.",
+      "title": "Uso real"
+    },
+    "stage:stage7": {
+      "anchorSkill": "Graba una presentación personal de 1 minuto",
+      "oneLiner": "Di lo que piensas, sientes y creas, en coreano.",
+      "title": "Expresión personal"
     },
     "story:chuseok-ganggangsullae": {
       "checks.c1.explain": "Los songpyeon se cuecen al vapor sobre una capa de agujas de pino. Se dice que el aroma del pino los hace más sabrosos.",
@@ -4349,6 +4962,266 @@ export const OVERLAYS: Overlays = {
     }
   },
   "ko": {
+    "card:annyeong": {
+      "blurb": "다정한 인사예요.",
+      "fact": "친구 사이에서 ‘안녕’은 만날 때도, 헤어질 때도 써요.",
+      "title": "안녕"
+    },
+    "card:arirang": {
+      "blurb": "고향을 그리워하는 노래예요. 많은 한국 사람이 첫 줄을 알아요.",
+      "fact": "2012년에 유네스코는 아리랑을 인류무형문화유산으로 올렸어요.",
+      "title": "아리랑"
+    },
+    "card:bap": {
+      "blurb": "한국에서는 식탁 가운데에 밥이 없으면 제대로 된 식사가 아니에요.",
+      "fact": "‘밥 먹었니?’는 한국 할머니, 할아버지가 ‘잘 지내니?’ 하고 묻는 말이에요.",
+      "title": "밥"
+    },
+    "card:book": {
+      "blurb": "누군가 읽어 주기를 기다리는 책이에요.",
+      "fact": "오늘날 한국 책은 대부분 가로쓰기라서 왼쪽에서 오른쪽으로, 위에서 아래로 읽어요.",
+      "title": "책"
+    },
+    "card:boreumdal": {
+      "blurb": "한 해 중 가장 밝은 달이 한국의 수확 명절인 추석에 떠요.",
+      "fact": "가족이 작은 반달 모양 떡인 송편을 나눠 먹어요.",
+      "title": "보름달"
+    },
+    "card:brush": {
+      "blurb": "가장 아름다운 글씨를 쓰는 붓이에요.",
+      "fact": "한국의 붓글씨는 서예라고 해요.",
+      "title": "붓"
+    },
+    "card:byeol": {
+      "blurb": "밤에 반짝이는 별이에요.",
+      "fact": "옛날 한국 사람들은 북두칠성에 오래 살게 해 달라고 빌었어요.",
+      "title": "별"
+    },
+    "card:chaek": {
+      "blurb": "한국은 책을 무척 좋아해서 해마다 책 축제를 열어요.",
+      "fact": "한글은 누구나 읽고 쓰기를 배울 수 있도록 만들어졌어요.",
+      "title": "책"
+    },
+    "card:chingu": {
+      "blurb": "반갑게 인사하는 좋은 친구예요.",
+      "fact": "나이가 같은 가까운 사이를 친구라고 해요.",
+      "title": "친구"
+    },
+    "card:chopsticks": {
+      "blurb": "가느다란 쇠젓가락이에요. 김밥이랑 먹어 봐요.",
+      "fact": "한국 젓가락은 보통 둥근 나무가 아니라 납작한 쇠로 만들어요.",
+      "title": "젓가락"
+    },
+    "card:chuseok": {
+      "blurb": "한가위 보름달 아래 가족이 모여 잔치를 해요.",
+      "fact": "가족이 반달 모양 떡인 송편을 나눠 먹어요.",
+      "title": "추석"
+    },
+    "card:dosirak": {
+      "blurb": "친구와 나눠 먹는 도시락이에요.",
+      "fact": "도시락을 흔들어 섞어 먹는 건 재미있는 한국 전통이에요.",
+      "title": "도시락"
+    },
+    "card:eomuk": {
+      "blurb": "길에서 사 먹는 따뜻한 겨울 간식이에요. 뜨거운 국물과 함께 나와요.",
+      "fact": "추운 날에는 국물 한 컵이 가장 좋아요.",
+      "title": "어묵"
+    },
+    "card:family-table": {
+      "blurb": "모두 모여 밥을 먹는 곳이에요.",
+      "fact": "한국 사람들은 반찬이라는 작은 음식을 여러 가지 나눠 먹어요.",
+      "title": "가족 식탁"
+    },
+    "card:gamsa": {
+      "blurb": "공손하게 고마움을 전하는 말이에요.",
+      "fact": "‘감사합니다’는 줄이지 않은 공손한 표현이에요.",
+      "title": "감사"
+    },
+    "card:gangaji": {
+      "blurb": "다정한 작은 개예요. 많은 한국 가정에서 처음 듣는 낱말 가운데 하나예요.",
+      "fact": "한국 가족은 작은 개를 다 자라도 강아지라고 부르곤 해요!",
+      "title": "강아지"
+    },
+    "card:gayageum": {
+      "blurb": "빗소리처럼 부드러운 12줄 한국 현악기예요.",
+      "fact": "가야금의 역사는 1,400년이 넘어요.",
+      "title": "가야금"
+    },
+    "card:geune": {
+      "blurb": "옛 그림 속 한국 여인들은 단오에 커다란 그네를 타요.",
+      "fact": "단오 그네 겨루기에서는 높이 매단 방울을 발로 차서 얼마나 높이 올랐는지 겨뤘어요.",
+      "title": "그네"
+    },
+    "card:hanbok": {
+      "blurb": "아름다운 전통 옷이에요.",
+      "fact": "설날과 추석에 한복을 입어요.",
+      "title": "한복"
+    },
+    "card:haneul": {
+      "blurb": "위로 넓게 펼쳐진 파란 하늘이에요.",
+      "fact": "옛 한국 노래에서 ‘하늘’은 하늘나라라는 뜻도 있어요.",
+      "title": "하늘"
+    },
+    "card:hangul-day": {
+      "blurb": "10월 9일, 한글의 생일이에요.",
+      "fact": "세종대왕은 모두가 글을 읽을 수 있도록 1443년에 한글을 만들었어요.",
+      "title": "한글날"
+    },
+    "card:hanji": {
+      "blurb": "부드럽고 튼튼한 한국의 전통 종이예요.",
+      "fact": "한지는 닥나무 껍질로 만들고, 1,000년 넘게 보존될 수 있어요.",
+      "title": "한지"
+    },
+    "card:horangi": {
+      "blurb": "많은 한국 옛이야기는 ‘옛날 옛적 호랑이 담배 피우던 시절에…’로 시작해요.",
+      "fact": "지도에서 한국의 모양이 호랑이를 닮았다고 해요.",
+      "title": "호랑이"
+    },
+    "card:ibul": {
+      "blurb": "많은 한국 집에서는 따뜻한 바닥에서 알록달록 도톰한 이불을 덮고 자요.",
+      "fact": "할머니, 할아버지는 아침마다 이불을 가지런히 개어 쌓아요.",
+      "title": "이불"
+    },
+    "card:inhyeong": {
+      "blurb": "손으로 만든 천 인형부터 케이팝 피규어까지, 한국은 인형을 사랑해요.",
+      "fact": "옛날 한국 인형은 짚이나 종이, 천으로 만들 때가 많았어요.",
+      "title": "인형"
+    },
+    "card:ink": {
+      "blurb": "크고 굵은 글씨를 쓰는 검은 먹이에요.",
+      "fact": "먹을 물에 갈아서 먹물을 만들어요. 날마다 새로 갈아요.",
+      "title": "먹"
+    },
+    "card:insa": {
+      "blurb": "고개를 숙이거나 ‘안녕’ 하고 말하는 것, 모두 인사예요.",
+      "fact": "가볍게 고개를 숙이는 것은 한국의 공손한 인사예요.",
+      "title": "인사"
+    },
+    "card:jamjari": {
+      "blurb": "투명한 날개로 여름 연못 위를 쌩쌩 날아요.",
+      "fact": "긴 잠자리채로 잠자리를 잡는 건 한국의 오래된 놀이예요.",
+      "title": "잠자리"
+    },
+    "card:jegi": {
+      "blurb": "깃털 달린 제기를 최대한 여러 번 차 봐요.",
+      "fact": "제기차기는 겨울에 즐겨 하는 놀이예요.",
+      "title": "제기"
+    },
+    "card:kimbap": {
+      "blurb": "밥과 채소를 김으로 돌돌 말았어요.",
+      "fact": "김밥은 ‘김’과 ‘밥’을 합친 말이에요. 소풍에 딱 좋아요.",
+      "title": "김밥"
+    },
+    "card:kimchi": {
+      "blurb": "빨갛고 매운 배추, 한국을 대표하는 맛이에요.",
+      "fact": "김치는 200가지가 넘어요.",
+      "title": "김치"
+    },
+    "card:kite": {
+      "blurb": "호랑이 얼굴을 그린 마름모꼴 연이에요.",
+      "fact": "방패연은 가운데에 구멍이 있어서 방향을 잡기 좋아요.",
+      "title": "연"
+    },
+    "card:kkot": {
+      "blurb": "들판에 핀 환한 꽃이에요.",
+      "fact": "한국에서는 봄마다 벚꽃을 즐겨요.",
+      "title": "꽃"
+    },
+    "card:kpop": {
+      "blurb": "신나는 노래, 멋진 춤. 세계는 케이팝으로 날마다 한국어를 들어요.",
+      "fact": "오늘날 케이팝은 흔히 1992년에 시작되었다고 해요.",
+      "title": "케이팝"
+    },
+    "card:lantern": {
+      "blurb": "축제 때 환하게 빛나는 종이 등이에요.",
+      "fact": "연등회는 유네스코에 등재된 등불 축제예요.",
+      "title": "연등"
+    },
+    "card:magpie": {
+      "blurb": "좋은 소식을 가져오는 검은색과 흰색의 새예요.",
+      "fact": "아침에 까치 소리를 들으면 손님이 온다는 뜻이에요.",
+      "title": "까치"
+    },
+    "card:moon": {
+      "blurb": "산 위에 환하게 뜬 달이에요.",
+      "fact": "한국 옛이야기에서는 달에 토끼가 산다고 해요.",
+      "title": "달"
+    },
+    "card:mountain": {
+      "blurb": "한국에는 푸른 산이 가득해요.",
+      "fact": "한국 땅의 약 70%가 산이에요.",
+      "title": "산"
+    },
+    "card:mugunghwa": {
+      "blurb": "한국의 나라꽃이에요. 여름 내내 피어요.",
+      "fact": "무궁화는 ‘영원히 피는 꽃’이라는 뜻이에요.",
+      "title": "무궁화"
+    },
+    "card:nabi": {
+      "blurb": "많은 한국 노래 속을 팔랑팔랑 나는 작은 꽃 같아요.",
+      "fact": "‘나비야 나비야’의 가락은 옛 독일 민요에서 왔어요.",
+      "title": "나비"
+    },
+    "card:namu": {
+      "blurb": "키 크고 푸른 나무예요.",
+      "fact": "한국에서 가장 오래된 나무는 은행나무로, 1,000살이 넘었어요.",
+      "title": "나무"
+    },
+    "card:ori": {
+      "blurb": "갈색 오리가 한국 연못가를 뒤뚱뒤뚱 걸어요. 남은 밥알을 아주 좋아해요.",
+      "fact": "결혼하는 부부에게 나무로 깎은 원앙 한 쌍을 선물하곤 해요. 행복한 부부를 뜻해요.",
+      "title": "오리"
+    },
+    "card:origami": {
+      "blurb": "종이를 접어 신기한 모양을 만들어요.",
+      "fact": "종이로 접은 학은 종이학이라고 해요.",
+      "title": "종이접기"
+    },
+    "card:paengi": {
+      "blurb": "겨울에 얼음 위에서 돌리는 나무 팽이예요.",
+      "fact": "팽이채로 쳐서 팽이가 계속 돌게 해요.",
+      "title": "팽이"
+    },
+    "card:pottery": {
+      "blurb": "1,000년 된 옥빛 한국 도자기예요.",
+      "fact": "고려청자는 빛깔로 세계에 이름났어요.",
+      "title": "청자"
+    },
+    "card:ppang": {
+      "blurb": "빵집에서 막 나온 부드러운 빵이에요.",
+      "fact": "‘빵’이라는 말은 포르투갈어 ‘pão’에서 왔어요.",
+      "title": "빵"
+    },
+    "card:ramyeon": {
+      "blurb": "빨갛고 뜨거운 그릇에 김이 나는 면이에요. 한국에서 가장 사랑받는 간식이에요.",
+      "fact": "한국 사람은 한 해에 한 사람당 라면을 70봉지 넘게 먹어요.",
+      "title": "라면"
+    },
+    "card:rice": {
+      "blurb": "따뜻한 밥 한 그릇, 모든 식사는 여기서 시작해요.",
+      "fact": "‘밥 먹었어?’는 친구끼리 나누는 인사예요.",
+      "title": "밥"
+    },
+    "card:sagwa": {
+      "blurb": "도시락에 넣을 달콤한 빨간 사과예요.",
+      "fact": "대구는 맛있는 사과로 유명해요.",
+      "title": "사과"
+    },
+    "card:sea": {
+      "blurb": "한국의 삼면을 둘러싼 파란 바다예요.",
+      "fact": "한국에는 동해, 서해, 남해가 있어요.",
+      "title": "바다"
+    },
+    "card:sebae": {
+      "blurb": "할머니, 할아버지께 드리는 공손한 절이에요.",
+      "fact": "세배를 하고 나면 세뱃돈을 받아요.",
+      "title": "세배"
+    },
+    "card:seollal": {
+      "blurb": "새해 첫날이에요. 세배, 한복, 떡국이 있어요.",
+      "fact": "어른께 세배하면 어른이 세뱃돈을 주실 때가 많아요.",
+      "title": "설날"
+    },
     "card:set-hangul-printing": {
       "blurb": "이야기 여섯 편이 한 묶음이에요.",
       "title": "글자를 찍어 내는 일"
@@ -4364,6 +5237,11 @@ export const OVERLAYS: Overlays = {
     "card:set-seasons-tales": {
       "blurb": "이야기 여섯 편을 한데 모았어요.",
       "title": "아리랑"
+    },
+    "card:songpyeon": {
+      "blurb": "달콤한 소를 넣은 반달 모양 떡이에요.",
+      "fact": "향이 좋도록 솔잎을 깔고 쪄요.",
+      "title": "송편"
     },
     "card:story-chuseok-ganggangsullae": {
       "blurb": "추석(한가위)에 호야는 고향에 가는 가족과 함께해요. 솔잎을 깔고 찌는 송편을 빚고, 보름달 아래에서 여성들이 손을 잡고 강강술래를 추는 모습을 봐요.",
@@ -4470,6 +5348,56 @@ export const OVERLAYS: Overlays = {
       "fact": "의궤는 왕실 혼례, 잔치, 장례, 사신 접대, 궁궐 중건 같은 왕실의 큰 의식과 나라의 큰일을 글과 그림으로 기록해요.",
       "title": "왕실 그림 기록"
     },
+    "card:taegeukgi": {
+      "blurb": "빨강과 파랑 소용돌이에 검은 무늬 네 개가 있어요. 한국의 국기예요.",
+      "fact": "가운데 소용돌이는 ‘음과 양’, 곧 균형을 뜻해요.",
+      "title": "태극기"
+    },
+    "card:tiger": {
+      "blurb": "늠름한 한국 호랑이예요. 호야도 호랑이예요!",
+      "fact": "호랑이는 한국 옛이야기에 자주 나와요.",
+      "title": "호랑이"
+    },
+    "card:top": {
+      "blurb": "얼음 위에서 빙글빙글 도는 나무 팽이예요.",
+      "fact": "꽁꽁 언 연못에서 팽이를 돌리는 건 겨울 전통이에요.",
+      "title": "팽이"
+    },
+    "card:tteokguk": {
+      "blurb": "새해에 떡국을 먹으면 한 살 더 먹어요.",
+      "fact": "얇게 썬 떡이 동전처럼 생겨서 복을 불러온다고 해요.",
+      "title": "떡국"
+    },
+    "card:usan": {
+      "blurb": "한국의 장마는 한 달쯤 이어져요. 문 옆에 우산을 놓아 둬요.",
+      "fact": "옛 한국 우산은 기름 먹인 종이와 대나무로 만들었어요.",
+      "title": "우산"
+    },
+    "card:uyu": {
+      "blurb": "시원하게 마시는 우유 한 잔이에요.",
+      "fact": "바나나 맛 우유는 한국 사람들이 좋아하는 음료예요.",
+      "title": "우유"
+    },
+    "card:yagu": {
+      "blurb": "한국에서 가장 시끄러운 운동이에요. 팬들은 북을 들고 9회 내내 응원해요.",
+      "fact": "한국 야구팀에는 팬들의 응원을 이끄는 공식 ‘응원단장’이 있어요.",
+      "title": "야구"
+    },
+    "card:yeou": {
+      "blurb": "한국 옛이야기 속 여우는 영리하고 조금 신비로워요.",
+      "fact": "꼬리가 아홉 달린 여우를 구미호라고 해요. 한국 드라마에서 유명해요.",
+      "title": "여우"
+    },
+    "card:yong": {
+      "blurb": "한국의 용은 강에 살고, 땅이 마르면 비를 내려요.",
+      "fact": "용은 불을 뿜지 않고, 물과 바람을 휘감아요.",
+      "title": "용"
+    },
+    "card:yutnori": {
+      "blurb": "막대 네 개를 던져요. 윷!",
+      "fact": "윷놀이는 로마자로 yunnori라고도, yutnori라고도 써요. 설날에 하는 놀이예요.",
+      "title": "윷놀이"
+    },
     "episode:shelf-chuseok-ganggangsullae": {
       "hoyaIntro": "추석이에요! 같이 송편을 빚고 보름달을 봐요.",
       "title": "추석에 빚는 송편과 둥근 보름달"
@@ -4554,12 +5482,59 @@ export const OVERLAYS: Overlays = {
       "hoyaIntro": "큰 생일잔치를 기록한, 그림이 가득한 왕실 보고서를 펼쳐 봐요!",
       "title": "예순 번째 생일을 담은 왕실 보고서"
     },
+    "episode:stage1-crafts": {
+      "hoyaIntro": "같이 윷놀이해요! 윷가락을 던져 봐요!",
+      "subtitle": "해 볼 만한 한국의 놀이와 공예",
+      "title": "윷, 연, 종이"
+    },
+    "episode:stage1-letters": {
+      "hoyaIntro": "안녕하세요! 저는 호야예요. 제가 좋아하는 한글 글자를 만나 볼래요?",
+      "subtitle": "글자 열두 개와 처음 읽는 진짜 낱말",
+      "title": "글자 만나기"
+    },
+    "episode:stage1-life": {
+      "hoyaIntro": "점심시간이에요! 제가 뭘 먹는지 보여 줄게요.",
+      "subtitle": "한국어로 말하는 밥, 김치, 가족",
+      "title": "한국의 식탁에서"
+    },
+    "episode:stage1-nature": {
+      "hoyaIntro": "저는 호랑이예요! 제가 사는 곳을 보러 갈래요?",
+      "subtitle": "한국의 자연은 거칠고 아름다워요.",
+      "title": "호랑이, 산, 달"
+    },
+    "episode:stage1-rites": {
+      "hoyaIntro": "명절이에요! 설날에는 세배하고, 추석에는 떡을 나눠 먹어요.",
+      "subtitle": "설날과 추석: 세배하고, 먹고, 떡을 나눠요.",
+      "title": "새해와 명절"
+    },
+    "episode:stage5-crafts": {
+      "hoyaIntro": "솜씨 좋은 장인과 옛이야기를 짧은 문장 하나씩 한국어로 읽어 봐요.",
+      "title": "공예 이야기"
+    },
+    "episode:stage5-letters": {
+      "hoyaIntro": "한글에 관한 이야기를 짧은 문장 하나씩 한국어로 읽어 봐요.",
+      "title": "글자 이야기"
+    },
+    "episode:stage5-life": {
+      "hoyaIntro": "일상 이야기를 짧은 문장 하나씩 한국어로 읽어 봐요.",
+      "title": "가족 이야기"
+    },
+    "episode:stage5-nature": {
+      "hoyaIntro": "해와 하늘 이야기를 짧은 문장 하나씩 한국어로 읽어 봐요.",
+      "title": "자연 이야기"
+    },
+    "episode:stage5-rites": {
+      "hoyaIntro": "명절 이야기를 짧은 문장 하나씩 한국어로 읽어 봐요.",
+      "title": "명절 이야기"
+    },
     "jamo:a": {
       "exampleWord.gloss": "아버지를 다정하게 부르는 말",
+      "gloss": "a 소리: 입을 크게 벌리는 소리예요.",
       "soundHint": "‘아빠’의 아 소리. 입을 크게 벌려요."
     },
     "jamo:bieup": {
       "exampleWord.gloss": "쌀로 지어 먹는 음식",
+      "gloss": "b 소리: b와 p 사이의 부드러운 소리예요.",
       "soundHint": "‘밥’의 첫소리. b와 p 사이의 부드러운 소리예요."
     },
     "jamo:bieup-batchim": {
@@ -4567,22 +5542,27 @@ export const OVERLAYS: Overlays = {
     },
     "jamo:chieut": {
       "exampleWord.gloss": "글과 그림을 묶어 만든 읽을거리",
+      "gloss": "ch 소리: 바람을 세게 내보내는 소리예요.",
       "soundHint": "‘책’의 첫소리. ch 소리에 바람을 세게 내보내요."
     },
     "jamo:digeut": {
       "exampleWord.gloss": "밤하늘에 뜨는 둥근 빛",
+      "gloss": "d 소리: d와 t 사이의 부드러운 소리예요.",
       "soundHint": "‘달’의 첫소리. d와 t 사이의 부드러운 소리예요."
     },
     "jamo:eo": {
       "exampleWord.gloss": "어머니를 다정하게 부르는 말",
+      "gloss": "eo 소리: 입을 벌리고 혀를 조금 뒤로 당기는 소리예요.",
       "soundHint": "‘엄마’의 어 소리. 입을 벌리고 혀를 조금 뒤로 당겨요."
     },
     "jamo:eu": {
       "exampleWord.gloss": "가장 좋거나 첫째가는 것",
+      "gloss": "eu 소리: u와 i 사이의 부드러운 소리예요.",
       "soundHint": "‘으뜸’의 으 소리. 입술을 옆으로 펴요."
     },
     "jamo:giyeok": {
       "exampleWord.gloss": "함께 사는 엄마, 아빠, 형제 같은 사람들",
+      "gloss": "g 소리: g와 k 사이의 부드러운 소리예요.",
       "soundHint": "‘가족’의 첫소리. g와 k 사이의 부드러운 소리예요."
     },
     "jamo:giyeok-batchim": {
@@ -4590,14 +5570,17 @@ export const OVERLAYS: Overlays = {
     },
     "jamo:hieut": {
       "exampleWord.gloss": "머리 위로 보이는 높고 넓은 곳",
+      "gloss": "h 소리: 숨을 내쉬는 소리예요.",
       "soundHint": "‘하늘’의 첫소리. 숨을 내쉬는 h 소리예요."
     },
     "jamo:i": {
       "exampleWord.gloss": "사람이나 물건을 부르는 말",
+      "gloss": "i 소리: 입꼬리를 옆으로 당기는 소리예요.",
       "soundHint": "‘이름’의 이 소리. 입꼬리를 옆으로 당겨요."
     },
     "jamo:ieung": {
       "exampleWord.gloss": "나이가 어린 사람",
+      "gloss": "동그라미 모양: 맨 앞에서는 소리가 없고, 받침에서는 ng 소리예요.",
       "soundHint": "글자 맨 앞에서는 소리가 없어요(‘아이’). 받침에서는 ng 소리예요."
     },
     "jamo:ieung-batchim": {
@@ -4605,14 +5588,17 @@ export const OVERLAYS: Overlays = {
     },
     "jamo:jieut": {
       "exampleWord.gloss": "사람이 사는 건물",
+      "gloss": "j 소리: 바람을 세게 내지 않는 부드러운 소리예요.",
       "soundHint": "‘집’의 첫소리. 바람을 세게 내지 않는 부드러운 j 소리예요."
     },
     "jamo:kieuk": {
       "exampleWord.gloss": "얼굴 가운데에서 냄새를 맡는 곳",
+      "gloss": "k 소리: 바람을 세게 내보내는 강한 소리예요.",
       "soundHint": "‘코’의 첫소리. k 소리에 바람을 세게 내보내요."
     },
     "jamo:mieum": {
       "exampleWord.gloss": "마시거나 씻을 때 쓰는 맑은 액체",
+      "gloss": "m 소리: 입술을 붙였다 떼는 소리예요.",
       "soundHint": "‘물’의 첫소리. 입술을 붙였다 떼는 m 소리예요."
     },
     "jamo:mieum-batchim": {
@@ -4620,6 +5606,7 @@ export const OVERLAYS: Overlays = {
     },
     "jamo:nieun": {
       "exampleWord.gloss": "줄기와 가지, 잎이 있는 키 큰 식물",
+      "gloss": "n 소리: 혀끝을 윗잇몸에 대는 소리예요.",
       "soundHint": "‘나무’의 첫소리. 혀끝을 윗잇몸에 대는 n 소리예요."
     },
     "jamo:nieun-batchim": {
@@ -4627,14 +5614,17 @@ export const OVERLAYS: Overlays = {
     },
     "jamo:o": {
       "exampleWord.gloss": "물에서 헤엄치고 꽥꽥 우는 새",
+      "gloss": "o 소리: 입술을 동그랗게 모으는 소리예요.",
       "soundHint": "‘오리’의 오 소리. 입술을 동그랗게 모아요."
     },
     "jamo:pieup": {
       "exampleWord.gloss": "작고 동그란 열매가 송이로 달리는 과일",
+      "gloss": "p 소리: 입술을 떼며 바람을 세게 내보내는 소리예요.",
       "soundHint": "‘포도’의 첫소리. p 소리에 바람을 세게 내보내요."
     },
     "jamo:rieul": {
       "exampleWord.gloss": "꼬불꼬불한 면을 끓여 먹는 음식",
+      "gloss": "r 또는 l 소리: r과 l 사이의 부드러운 소리예요.",
       "soundHint": "‘라면’의 첫소리. 혀끝으로 윗잇몸을 가볍게 튕겨요."
     },
     "jamo:rieul-batchim": {
@@ -4642,35 +5632,54 @@ export const OVERLAYS: Overlays = {
     },
     "jamo:siot": {
       "exampleWord.gloss": "땅이 높이 솟은 곳",
+      "gloss": "s 소리: 혀와 이 사이로 바람이 새어 나가는 소리예요.",
       "soundHint": "‘산’의 첫소리. s 소리예요."
     },
     "jamo:tieut": {
       "exampleWord.gloss": "귀가 길고 깡충깡충 뛰는 동물",
+      "gloss": "t 소리: 혀끝을 떼며 바람을 세게 내보내는 소리예요.",
       "soundHint": "‘토끼’의 첫소리. t 소리에 바람을 세게 내보내요."
     },
     "jamo:u": {
       "exampleWord.gloss": "소에게서 얻는 하얀 마실 것",
+      "gloss": "u 소리: 입술을 앞으로 쭉 내미는 소리예요.",
       "soundHint": "‘우유’의 우 소리. 입술을 앞으로 쭉 내밀어요."
     },
     "jamo:ya": {
       "exampleWord.gloss": "방망이로 공을 치고 달리는 운동",
+      "gloss": "ya 소리: a 앞에 y를 붙인 소리예요.",
       "soundHint": "‘야구’의 야 소리예요."
     },
     "jamo:yeo": {
       "exampleWord.gloss": "꼬리가 풍성하고 꾀가 많은 동물",
+      "gloss": "yeo 소리: eo 앞에 y를 붙인 소리예요.",
       "soundHint": "‘여우’의 여 소리예요."
     },
     "jamo:yo": {
       "exampleWord.gloss": "음식을 만드는 일, 또는 그 음식",
+      "gloss": "yo 소리: o 앞에 y를 붙인 소리예요.",
       "soundHint": "‘요리’의 요 소리예요."
     },
     "jamo:yu": {
       "exampleWord.gloss": "창문이나 컵에 쓰는 투명하고 단단한 것",
+      "gloss": "yu 소리: u 앞에 y를 붙인 소리예요.",
       "soundHint": "‘유리’의 유 소리예요."
+    },
+    "minigame:s1-crafts-q1-apply": {
+      "picWord.boards.0.pairs.jegi.word.gloss": "발로 차며 노는 깃털 달린 놀잇감",
+      "picWord.boards.0.pairs.paengi.word.gloss": "빙글빙글 도는 나무 놀잇감",
+      "picWord.boards.0.pairs.yeon.word.gloss": "바람에 날리는 종이 장난감",
+      "picWord.boards.0.pairs.yut.word.gloss": "놀이할 때 던지는 나무 막대 네 개"
     },
     "minigame:s1-crafts-q1-check": {
       "listenPick.rounds.0.prompt": "바람에 날리는 종이 장난감",
       "listenPick.rounds.1.prompt": "재미있게 노는 일"
+    },
+    "minigame:s1-crafts-q2-apply": {
+      "picWord.boards.0.pairs.but.word.gloss": "먹물을 묻혀 글씨를 쓰는 도구",
+      "picWord.boards.0.pairs.cheongja.word.gloss": "푸른빛이 도는 한국의 옛 도자기",
+      "picWord.boards.0.pairs.hanji.word.gloss": "닥나무로 만든 한국 전통 종이",
+      "picWord.boards.0.pairs.jongijeopgi.word.gloss": "네모난 한 장으로 학이나 배 모양을 만드는 놀이"
     },
     "minigame:s1-crafts-q2-check": {
       "listenPick.rounds.0.prompt": "푸른빛이 도는 옛 도자기",
@@ -4708,6 +5717,12 @@ export const OVERLAYS: Overlays = {
       "listenPick.rounds.1.prompt": "걸을 때 쓰는 몸의 부분, 또는 강 위를 건너는 길",
       "listenPick.rounds.lp-sym-jamo-eu.prompt": "글자 eu"
     },
+    "minigame:s1-life-q1-apply": {
+      "picWord.boards.0.pairs.bap.word.gloss": "쌀로 지어 먹는 음식",
+      "picWord.boards.0.pairs.gimbap.word.gloss": "김에 밥과 재료를 넣고 만 음식",
+      "picWord.boards.0.pairs.gimchi.word.gloss": "고춧가루로 버무린 매운 배추 반찬",
+      "picWord.boards.0.pairs.jeotgarak.word.gloss": "음식을 집는 가느다란 막대 한 쌍"
+    },
     "minigame:s1-life-q1-check": {
       "listenPick.rounds.1.prompt": "우유로 만든 고소한 음식",
       "listenPick.rounds.lp-sym-jamo-chieut.prompt": "글자 chieut"
@@ -4726,6 +5741,12 @@ export const OVERLAYS: Overlays = {
     "minigame:s1-life-q3-check": {
       "listenPick.rounds.1.prompt": "빨갛고 동그란 열매 채소",
       "listenPick.rounds.lp-sym-jamo-kieuk.prompt": "글자 kieuk"
+    },
+    "minigame:s1-nature-q1-apply": {
+      "picWord.boards.0.pairs.dal.word.gloss": "밤하늘에 뜨는 둥근 빛",
+      "picWord.boards.0.pairs.horangi.word.gloss": "줄무늬가 있는 크고 힘센 동물",
+      "picWord.boards.0.pairs.kkachi.word.gloss": "검은색과 흰색 깃털의 새",
+      "picWord.boards.0.pairs.san.word.gloss": "땅이 높이 솟은 곳"
     },
     "minigame:s1-nature-q1-check": {
       "listenPick.rounds.0.prompt": "몸집이 크고 털이 많은 동물",
@@ -6427,100 +7448,270 @@ export const OVERLAYS: Overlays = {
       "options.tiger.gloss": "줄무늬가 있는 크고 힘센 동물"
     },
     "quest:stage1-crafts-q1": {
+      "blurb": "놀이 낱말을 읽어요. 연, 공, 줄 같은 낱말이에요.",
+      "steps.s1.hoyaLine": "설날에는 가족이 윷놀이를 하고 연을 날려요. 놀이 낱말을 읽어 봐요!",
+      "steps.s1.title": "놀이 시간이에요!",
       "steps.s2.discover.pages.0.items.0.word.gloss": "바람에 날리는 종이 장난감",
       "steps.s2.discover.pages.0.items.1.word.gloss": "차거나 던지며 노는 둥근 물건",
       "steps.s2.discover.pages.1.items.0.word.gloss": "길고 가는 끈",
-      "steps.s2.discover.pages.1.items.1.word.gloss": "재미있게 노는 일"
+      "steps.s2.discover.pages.1.items.1.note": "이어서 읽어요. nol + i는 nori처럼 소리 나요.",
+      "steps.s2.discover.pages.1.items.1.word.gloss": "재미있게 노는 일",
+      "steps.s2.hoyaLine": "‘들어 보기’를 누른 다음, 낱말을 하나씩 직접 읽어 봐요.",
+      "steps.s2.title": "놀이 낱말",
+      "steps.s3.title": "블록 만들기",
+      "steps.s4.title": "그림과 낱말",
+      "steps.s5.title": "듣고 읽기",
+      "steps.s6.hoyaLine": "윷놀이 카드가 라이브러리에 들어왔어요!",
+      "steps.s6.title": "윷놀이 카드!",
+      "title": "윷, 연, 팽이"
     },
     "quest:stage1-crafts-q2": {
+      "blurb": "공예 낱말을 읽어요. 한국 종이와 푸른 도자기예요.",
+      "steps.s1.hoyaLine": "한국 사람들은 손으로 튼튼한 종이와 옥빛 도자기를 만들어요. 공예 낱말을 읽어 봐요!",
+      "steps.s1.title": "만들기 시간이에요!",
       "steps.s2.discover.pages.0.items.0.word.gloss": "닥나무로 만든 한국 전통 종이",
       "steps.s2.discover.pages.0.items.1.word.gloss": "글을 쓰거나 그림을 그리는 얇은 것",
       "steps.s2.discover.pages.1.items.0.word.gloss": "푸른빛이 도는 옛 도자기",
-      "steps.s2.discover.pages.1.items.1.word.gloss": "흙으로 빚어 구운 그릇"
+      "steps.s2.discover.pages.1.items.1.word.gloss": "흙으로 빚어 구운 그릇",
+      "steps.s2.hoyaLine": "‘들어 보기’를 누른 다음, 낱말을 하나씩 직접 읽어 봐요.",
+      "steps.s2.title": "공예 낱말",
+      "steps.s3.title": "낱말 찾기",
+      "steps.s4.title": "그림과 낱말",
+      "steps.s5.title": "듣고 읽기",
+      "steps.s6.hoyaLine": "청자 카드가 라이브러리에 들어왔어요!",
+      "steps.s6.title": "청자 카드!",
+      "title": "종이와 도자기"
     },
     "quest:stage1-crafts-q3": {
+      "blurb": "배운 것을 모두 모아 한글 낱말을 혼자 읽어요.",
+      "steps.s1.hoyaLine": "세종대왕은 모두가 글을 읽을 수 있도록 한글을 만들었어요. 이제 여러분도 한글을 읽을 수 있어요!",
+      "steps.s1.title": "읽을 수 있어요!",
       "steps.s2.discover.pages.0.items.0.word.gloss": "한국의 글자",
       "steps.s2.discover.pages.0.items.1.word.gloss": "이 앱의 호랑이 친구",
       "steps.s2.discover.pages.1.items.0.word.gloss": "친구를 만나거나 헤어질 때 하는 인사",
-      "steps.s2.discover.pages.1.items.1.word.gloss": "아끼고 좋아하는 마음"
+      "steps.s2.discover.pages.1.items.1.word.gloss": "아끼고 좋아하는 마음",
+      "steps.s2.hoyaLine": "‘들어 보기’를 누른 다음, 낱말을 하나씩 직접 읽어 봐요.",
+      "steps.s2.title": "한글 낱말",
+      "steps.s3.title": "낱말 찾기",
+      "steps.s4.title": "블록 만들기",
+      "steps.s5.title": "듣고 읽기",
+      "steps.s6.hoyaLine": "연 카드가 라이브러리에 들어왔어요!",
+      "steps.s6.title": "연 카드!",
+      "title": "한글을 읽어요!"
     },
     "quest:stage1-letters-q1": {
+      "blurb": "모음 두 개, 자음 두 개를 배우고 첫 음절을 읽어요.",
+      "steps.s1.hoyaLine": "한글 글자는 모여서 블록이 돼요. 네 글자를 만나 봐요!",
+      "steps.s1.title": "호야의 인사",
       "steps.s2.discover.pages.0.items.0.example.gloss": "말하는 사람 자신",
       "steps.s2.discover.pages.0.items.1.example.gloss": "말을 듣는 친구를 가리키는 말",
       "steps.s2.discover.pages.1.items.0.example.gloss": "ga 소리",
-      "steps.s2.discover.pages.1.items.1.example.gloss": "말하는 사람 자신"
+      "steps.s2.discover.pages.1.items.1.example.gloss": "말하는 사람 자신",
+      "steps.s2.hoyaLine": "‘들어 보기’를 눌러 하나씩 들어 봐요.",
+      "steps.s2.title": "새 글자 네 개",
+      "steps.s3.title": "소리 짝 맞추기",
+      "steps.s4.title": "글자 만들기",
+      "steps.s5.title": "듣고 읽기",
+      "steps.s6.hoyaLine": "문화 카드를 받았어요!",
+      "steps.s6.title": "카드를 받았어요!",
+      "title": "a, eo, g, n 만나기"
     },
     "quest:stage1-letters-q2": {
+      "blurb": "둥근 모음 두 개, m, 그리고 동그라미 글자예요.",
+      "steps.s1.hoyaLine": "다시 왔네요! 오늘은 네 글자를 더 배워요.",
+      "steps.s1.title": "두 번째 시간",
       "steps.s2.discover.pages.0.items.0.example.gloss": "숫자 5, 다섯",
       "steps.s2.discover.pages.0.items.1.example.gloss": "줄기와 가지, 잎이 있는 키 큰 식물",
       "steps.s2.discover.pages.1.items.0.example.gloss": "줄기와 가지, 잎이 있는 키 큰 식물",
-      "steps.s2.discover.pages.1.items.1.example.gloss": "숫자 5, 다섯"
+      "steps.s2.discover.pages.1.items.1.example.gloss": "숫자 5, 다섯",
+      "steps.s2.hoyaLine": "‘들어 보기’를 눌러 하나씩 들어 봐요.",
+      "steps.s2.title": "새 글자 네 개",
+      "steps.s3.title": "소리 짝 맞추기",
+      "steps.s4.title": "글자 따라 쓰기",
+      "steps.s5.title": "듣고 읽기",
+      "steps.s6.hoyaLine": "라이브러리에 카드가 하나 더 생겼어요!",
+      "steps.s6.title": "잘했어요!",
+      "title": "o, u, m, 동그라미 글자 만나기"
     },
     "quest:stage1-letters-q3": {
+      "blurb": "글자 네 개를 더 배우고 진짜 낱말을 읽어요.",
+      "steps.s1.hoyaLine": "네 글자만 더 배우면 진짜 낱말을 읽을 수 있어요!",
+      "steps.s1.title": "이제 진짜 낱말",
       "steps.s2.discover.pages.0.items.0.example.gloss": "TV에서 보는 이야기",
       "steps.s2.discover.pages.0.items.1.example.gloss": "나이가 어린 사람",
       "steps.s2.discover.pages.1.items.0.example.gloss": "걸을 때 쓰는 몸의 부분, 또는 강 위를 건너는 길",
-      "steps.s2.discover.pages.1.items.1.example.gloss": "TV에서 보는 이야기"
+      "steps.s2.discover.pages.1.items.1.example.gloss": "TV에서 보는 이야기",
+      "steps.s2.hoyaLine": "‘들어 보기’를 눌러 하나씩 들어 봐요.",
+      "steps.s2.title": "새 글자 네 개",
+      "steps.s3.title": "소리 짝 맞추기",
+      "steps.s4.title": "다른 하나 찾기",
+      "steps.s5.title": "듣고 읽기",
+      "steps.s6.hoyaLine": "라이브러리가 점점 커지고 있어요!",
+      "steps.s6.title": "붓을 받았어요",
+      "title": "eu, i, d, r 만나기"
     },
     "quest:stage1-life-q1": {
+      "blurb": "새 글자 j, ch 두 개와 식탁의 음식 낱말을 배워요.",
+      "steps.s1.hoyaLine": "점심시간이에요! 오늘 식탁에는 새 글자 두 개가 있어요.",
+      "steps.s1.title": "점심시간이에요!",
       "steps.s2.discover.pages.0.items.0.example.gloss": "새콤달콤한 붉은 과일",
       "steps.s2.discover.pages.0.items.1.example.gloss": "우유로 만든 고소한 음식",
       "steps.s2.discover.pages.1.items.0.word.gloss": "매운맛이 나는 길쭉한 채소",
-      "steps.s2.discover.pages.1.items.1.word.gloss": "잎을 우려 마시는 따뜻한 음료"
+      "steps.s2.discover.pages.1.items.1.word.gloss": "잎을 우려 마시는 따뜻한 음료",
+      "steps.s2.hoyaLine": "‘들어 보기’를 눌러 하나씩 들어 봐요.",
+      "steps.s2.title": "새 글자 두 개",
+      "steps.s3.title": "소리 짝 맞추기",
+      "steps.s4.title": "그림과 낱말",
+      "steps.s5.title": "듣고 읽기",
+      "steps.s6.hoyaLine": "김치 카드가 라이브러리에 들어왔어요!",
+      "steps.s6.title": "김치 카드!",
+      "title": "안녕, 김치와 밥"
     },
     "quest:stage1-life-q2": {
+      "blurb": "새 글자 b, s 두 개와 가족 낱말을 읽어요.",
+      "steps.s1.hoyaLine": "모두 식탁에 모였어요. 가족 낱말을 읽어 봐요!",
+      "steps.s1.title": "가족이에요!",
       "steps.s2.discover.pages.0.items.0.example.gloss": "껍질이 노랗고 길쭉한 과일",
       "steps.s2.discover.pages.0.items.1.example.gloss": "갈기가 있는 큰 동물",
       "steps.s2.discover.pages.1.items.0.word.gloss": "아빠를 높여 부르는 말",
       "steps.s2.discover.pages.1.items.1.word.gloss": "아주 어린 아이",
+      "steps.s2.discover.pages.2.caption": "가족 낱말",
       "steps.s2.discover.pages.2.items.0.word.gloss": "어머니를 다정하게 부르는 말",
-      "steps.s2.discover.pages.2.items.1.word.gloss": "함께 사는 엄마, 아빠, 형제 같은 사람들"
+      "steps.s2.discover.pages.2.items.1.word.gloss": "함께 사는 엄마, 아빠, 형제 같은 사람들",
+      "steps.s2.hoyaLine": "‘들어 보기’를 눌러 하나씩 들어 봐요.",
+      "steps.s2.title": "새 글자 두 개",
+      "steps.s3.title": "소리 짝 맞추기",
+      "steps.s4.title": "글자 만들기",
+      "steps.s5.title": "듣고 읽기",
+      "steps.s6.hoyaLine": "가족 식탁이 라이브러리에 들어왔어요!",
+      "steps.s6.title": "가족 카드!",
+      "title": "식탁에 모인 가족"
     },
     "quest:stage1-life-q3": {
+      "blurb": "바람을 세게 내는 글자 k, t와 소풍 간식 낱말을 읽어요.",
+      "steps.s1.hoyaLine": "소풍 시간이에요! 어떤 간식을 챙겼을까요?",
+      "steps.s1.title": "소풍 가요!",
       "steps.s2.discover.pages.0.items.0.example.gloss": "작고 바삭한 과자",
       "steps.s2.discover.pages.0.items.1.example.gloss": "빨갛고 동그란 열매 채소",
       "steps.s2.discover.pages.1.items.0.word.gloss": "초콜릿 맛이 나는 따뜻한 음료",
-      "steps.s2.discover.pages.1.items.1.word.gloss": "노릇하게 구운 빵"
+      "steps.s2.discover.pages.1.items.1.word.gloss": "노릇하게 구운 빵",
+      "steps.s2.hoyaLine": "‘들어 보기’를 눌러요. k는 g에 바람을 세게 더한 소리, t는 d에 바람을 세게 더한 소리예요.",
+      "steps.s2.title": "새 글자 두 개",
+      "steps.s3.title": "소리 짝 맞추기",
+      "steps.s4.title": "무슨 뜻일까요?",
+      "steps.s5.title": "듣고 읽기",
+      "steps.s6.hoyaLine": "소풍에 빠질 수 없는 김밥이 라이브러리에 들어왔어요!",
+      "steps.s6.title": "김밥 카드!",
+      "title": "소풍 간식"
     },
     "quest:stage1-nature-q1": {
+      "blurb": "받침 m, p를 더 배우고, 이제 읽을 수 있는 낱말을 읽어요.",
+      "steps.s1.hoyaLine": "옛 한국 그림에는 호랑이와 까치가 함께 자주 나와요. 오늘은 새 받침 두 개를 배워요!",
+      "steps.s1.title": "호랑이와 까치",
       "steps.s2.discover.pages.0.items.0.example.gloss": "몸집이 크고 털이 많은 동물",
       "steps.s2.discover.pages.0.items.1.example.gloss": "사람이 사는 건물",
       "steps.s2.discover.pages.1.items.0.word.gloss": "꽃이 피는 따뜻한 계절",
       "steps.s2.discover.pages.1.items.1.word.gloss": "쌀로 지어 먹는 음식",
+      "steps.s2.discover.pages.2.caption": "이제 이 낱말을 읽을 수 있어요!",
       "steps.s2.discover.pages.2.items.0.word.gloss": "배추를 맵게 절인 한국 음식",
-      "steps.s2.discover.pages.2.items.1.word.gloss": "어머니를 다정하게 부르는 말"
+      "steps.s2.discover.pages.2.items.1.word.gloss": "어머니를 다정하게 부르는 말",
+      "steps.s2.hoyaLine": "‘들어 보기’를 눌러 들어 봐요. 글자 m과 p도 블록 아래에 올 수 있어요.",
+      "steps.s2.title": "받침 두 개 더",
+      "steps.s3.title": "받침 소리 듣기",
+      "steps.s4.title": "그림과 낱말",
+      "steps.s5.title": "듣고 읽기",
+      "steps.s6.hoyaLine": "까치 카드가 라이브러리에 들어왔어요!",
+      "steps.s6.title": "까치 카드!",
+      "title": "호랑이, 까치, 달"
     },
     "quest:stage1-nature-q2": {
+      "blurb": "자연 낱말을 읽어요. 산, 강, 바다, 하늘이에요.",
+      "steps.s1.hoyaLine": "한국은 산이 많고 삼면이 바다예요. 자연 낱말을 읽어 봐요!",
+      "steps.s1.title": "언덕으로 가요",
       "steps.s2.discover.pages.0.items.0.word.gloss": "땅이 높이 솟은 곳",
       "steps.s2.discover.pages.0.items.1.word.gloss": "길게 흐르는 큰 물줄기",
       "steps.s2.discover.pages.1.items.0.word.gloss": "넓고 짠 물",
-      "steps.s2.discover.pages.1.items.1.word.gloss": "머리 위로 보이는 높고 넓은 곳"
+      "steps.s2.discover.pages.1.items.1.word.gloss": "머리 위로 보이는 높고 넓은 곳",
+      "steps.s2.hoyaLine": "‘들어 보기’를 누른 다음, 낱말을 하나씩 직접 읽어 봐요.",
+      "steps.s2.title": "자연 낱말",
+      "steps.s3.title": "낱말 찾기",
+      "steps.s4.title": "블록 만들기",
+      "steps.s5.title": "듣고 읽기",
+      "steps.s6.hoyaLine": "산 카드가 라이브러리에 들어왔어요!",
+      "steps.s6.title": "산 카드!",
+      "title": "산, 강, 바다"
     },
     "quest:stage1-nature-q3": {
+      "blurb": "밤하늘을 읽어요. 달, 별, 보름달이에요.",
+      "steps.s1.hoyaLine": "추석 밤에는 가족이 보름달을 보며 소원을 빌어요.",
+      "steps.s1.title": "밤하늘",
       "steps.s2.discover.pages.0.items.0.word.gloss": "밤하늘에 뜨는 둥근 빛",
       "steps.s2.discover.pages.0.items.1.word.gloss": "밤하늘에 반짝이는 작은 빛",
       "steps.s2.discover.pages.1.items.0.word.gloss": "해가 진 뒤 어두운 때",
-      "steps.s2.discover.pages.1.items.1.word.gloss": "가장 둥글게 꽉 찬 달"
+      "steps.s2.discover.pages.1.items.1.word.gloss": "가장 둥글게 꽉 찬 달",
+      "steps.s2.hoyaLine": "‘들어 보기’를 누른 다음, 낱말을 하나씩 직접 읽어 봐요.",
+      "steps.s2.title": "밤하늘 낱말",
+      "steps.s3.title": "낱말 찾기",
+      "steps.s4.title": "받침 따라 쓰기",
+      "steps.s5.title": "듣고 읽기",
+      "steps.s6.hoyaLine": "달 카드가 라이브러리에 들어왔어요!",
+      "steps.s6.title": "달 카드!",
+      "title": "달, 별, 밤"
     },
     "quest:stage1-rites-q1": {
+      "blurb": "처음 배우는 받침 n과 l, 그리고 설날 낱말이에요.",
+      "steps.s1.hoyaLine": "새해 축하해요! 새해 인사를 배워 봐요.",
+      "steps.s1.title": "새해 축하해요!",
       "steps.s2.discover.pages.0.items.0.example.gloss": "드나들 때 여닫는 것",
       "steps.s2.discover.pages.0.items.1.example.gloss": "밤하늘에 뜨는 둥근 빛",
+      "steps.s2.discover.pages.1.caption": "설날 낱말",
       "steps.s2.discover.pages.1.items.0.word.gloss": "음력으로 새해 첫날",
-      "steps.s2.discover.pages.1.items.1.word.gloss": "설날에 먹는, 떡을 넣은 국"
+      "steps.s2.discover.pages.1.items.1.word.gloss": "설날에 먹는, 떡을 넣은 국",
+      "steps.s2.hoyaLine": "‘들어 보기’를 눌러 들어 봐요. 받침은 블록 맨 아래에 와요.",
+      "steps.s2.title": "아래에 오는 글자",
+      "steps.s3.title": "받침 소리 듣기",
+      "steps.s4.title": "블록 만들기",
+      "steps.s5.title": "듣고 읽기",
+      "steps.s6.hoyaLine": "설날 카드가 라이브러리에 들어왔어요!",
+      "steps.s6.title": "설날 카드!",
+      "title": "세배하고 떡국 먹기"
     },
     "quest:stage1-rites-q2": {
+      "blurb": "새 모음 ya, yeo와 글자 p, 그리고 받침 ng예요.",
+      "steps.s1.hoyaLine": "수확을 기뻐하는 명절, 추석이에요. 가족이 함께 떡을 만들어요!",
+      "steps.s1.title": "추석이에요!",
       "steps.s2.discover.pages.0.items.0.example.gloss": "방망이로 공을 치고 달리는 운동",
       "steps.s2.discover.pages.0.items.1.example.gloss": "꼬리가 풍성하고 꾀가 많은 동물",
       "steps.s2.discover.pages.1.items.0.example.gloss": "작고 동그란 열매가 송이로 달리는 과일",
       "steps.s2.discover.pages.1.items.1.example.gloss": "추석에 빚는 반달 모양 떡",
+      "steps.s2.discover.pages.2.caption": "추석 낱말",
       "steps.s2.discover.pages.2.items.0.word.gloss": "가을에 한 해 수확을 기뻐하는 명절",
-      "steps.s2.discover.pages.2.items.1.word.gloss": "추석에 빚는 반달 모양 떡"
+      "steps.s2.discover.pages.2.items.1.word.gloss": "추석에 빚는 반달 모양 떡",
+      "steps.s2.hoyaLine": "‘들어 보기’를 눌러 하나씩 들어 봐요.",
+      "steps.s2.title": "새 글자 네 개",
+      "steps.s3.title": "소리 짝 맞추기",
+      "steps.s4.title": "글자 만들기",
+      "steps.s5.title": "듣고 읽기",
+      "steps.s6.hoyaLine": "추석 명절 카드가 라이브러리에 들어왔어요!",
+      "steps.s6.title": "추석 카드!",
+      "title": "추석 떡"
     },
     "quest:stage1-rites-q3": {
+      "blurb": "새 모음 yo, yu와 글자 h, 그리고 받침 k예요.",
+      "steps.s1.hoyaLine": "새해에는 한복을 입고 할머니, 할아버지께 세배해요.",
+      "steps.s1.title": "옷을 차려입어요!",
       "steps.s2.discover.pages.0.items.0.example.gloss": "부모님을 공경하고 잘 모시는 일",
       "steps.s2.discover.pages.0.items.1.example.gloss": "소에게서 얻는 하얀 마실 것",
       "steps.s2.discover.pages.1.items.0.example.gloss": "한국의 전통 옷",
-      "steps.s2.discover.pages.1.items.1.example.gloss": "한반도에 있는 나라"
+      "steps.s2.discover.pages.1.items.1.example.gloss": "한반도에 있는 나라",
+      "steps.s2.hoyaLine": "‘들어 보기’를 눌러 하나씩 들어 봐요.",
+      "steps.s2.title": "새 글자 네 개",
+      "steps.s3.title": "듣고 고르기",
+      "steps.s4.title": "새해 순서",
+      "steps.s5.title": "듣고 읽기",
+      "steps.s6.hoyaLine": "세배 카드가 라이브러리에 들어왔어요!",
+      "steps.s6.title": "세배 카드!",
+      "title": "한복과 세배"
     },
     "quest:story-chuseok-ganggangsullae-listen": {
       "steps.s1.hoyaLine": "추석이에요! 같이 송편을 빚고 보름달을 봐요.",
@@ -6841,6 +8032,41 @@ export const OVERLAYS: Overlays = {
       "steps.s5.hoyaLine": "글과 그림 덕분에 왕실 잔치가 지금도 살아 있어요. 이제 의궤가 무엇인지 알게 됐어요!",
       "steps.s5.title": "잘했어요",
       "title": "예순 번째 생일을 담은 왕실 보고서"
+    },
+    "stage:stage1": {
+      "anchorSkill": "자모 24개와 받침 6개를 90% 이상 알아보기",
+      "oneLiner": "모든 한글 글자와 그 소리를 만나요.",
+      "title": "한글"
+    },
+    "stage:stage2": {
+      "anchorSkill": "일상 주제의 핵심 낱말 60개 읽고 발음하기",
+      "oneLiner": "글자를 모아 처음 배우는 한국어 낱말 60개를 만들어요.",
+      "title": "낱말"
+    },
+    "stage:stage3": {
+      "anchorSkill": "현재 시제로 주어와 동사가 있는 문장 만들기",
+      "oneLiner": "낱말을 이어 짧고 쓸모 있는 문장을 만들어요.",
+      "title": "문장"
+    },
+    "stage:stage4": {
+      "anchorSkill": "인사와 질문으로 4번 주고받는 대화하기",
+      "oneLiner": "실생활에서 쓰는 첫 짧은 대화를 나눠요.",
+      "title": "대화"
+    },
+    "stage:stage5": {
+      "anchorSkill": "5문장 이야기를 읽고 80% 이상 이해하기",
+      "oneLiner": "호야와 함께 짧은 이야기와 한국 옛이야기를 읽어요.",
+      "title": "이야기"
+    },
+    "stage:stage6": {
+      "anchorSkill": "음식 주문하기, 길 묻기, 사촌에게 메시지 보내기",
+      "oneLiner": "메뉴, 표지판, 전화까지, 한국어를 밖에서 써 봐요.",
+      "title": "실생활"
+    },
+    "stage:stage7": {
+      "anchorSkill": "1분 자기소개 녹음하기",
+      "oneLiner": "생각하고 느끼고 만든 것을 한국어로 말해요.",
+      "title": "자기표현"
     },
     "story:chuseok-ganggangsullae": {
       "checks.c1.explain": "송편은 솔잎을 깔고 쪄요. 소나무 향이 송편을 더 맛있게 한다고 해요.",

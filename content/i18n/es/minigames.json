@@ -47,7 +47,7 @@
     },
     "minigame:s1-rites-q2-check": {
       "listenPick.rounds.0.prompt": "la sílaba song",
-      "listenPick.rounds.1.prompt": "masa de arroz en media luna"
+      "listenPick.rounds.1.prompt": "pastel de arroz en media luna"
     },
     "minigame:s1-rites-q3-play": {
       "listenPick.rounds.lp-sym-jamo-hieut.prompt": "la letra hieut",
@@ -59,7 +59,7 @@
     },
     "minigame:s1-rites-q3-apply": {
       "storySteps.a.label": "Ponerse el hanbok",
-      "storySteps.b.label": "Saludar a los mayores con una reverencia",
+      "storySteps.b.label": "Hacer una reverencia a las personas mayores",
       "storySteps.c.label": "Comer tteokguk",
       "storySteps.d.label": "Recibir dinero de la suerte"
     },
@@ -122,14 +122,38 @@
     "minigame:s1-crafts-q3-play": {
       "listenPick.rounds.0.prompt": "el alfabeto coreano",
       "listenPick.rounds.1.prompt": "Hoya, el tigre",
-      "listenPick.rounds.2.prompt": "hola, adiós (entre amigos)",
+      "listenPick.rounds.2.prompt": "hola, adiós (entre amistades)",
       "listenPick.rounds.3.prompt": "amor",
       "listenPick.rounds.4.prompt": "Corea",
       "listenPick.rounds.5.prompt": "hanbok, ropa tradicional"
     },
     "minigame:s1-crafts-q3-check": {
       "listenPick.rounds.0.prompt": "el alfabeto coreano",
-      "listenPick.rounds.1.prompt": "hola, adiós (entre amigos)"
+      "listenPick.rounds.1.prompt": "hola, adiós (entre amistades)"
+    },
+    "minigame:s1-life-q1-apply": {
+      "picWord.boards.0.pairs.gimchi.word.gloss": "kimchi",
+      "picWord.boards.0.pairs.bap.word.gloss": "arroz",
+      "picWord.boards.0.pairs.gimbap.word.gloss": "kimbap",
+      "picWord.boards.0.pairs.jeotgarak.word.gloss": "palillos"
+    },
+    "minigame:s1-nature-q1-apply": {
+      "picWord.boards.0.pairs.horangi.word.gloss": "tigre",
+      "picWord.boards.0.pairs.kkachi.word.gloss": "urraca",
+      "picWord.boards.0.pairs.dal.word.gloss": "luna",
+      "picWord.boards.0.pairs.san.word.gloss": "montaña"
+    },
+    "minigame:s1-crafts-q1-apply": {
+      "picWord.boards.0.pairs.yut.word.gloss": "palitos de yut",
+      "picWord.boards.0.pairs.yeon.word.gloss": "cometa",
+      "picWord.boards.0.pairs.paengi.word.gloss": "trompo",
+      "picWord.boards.0.pairs.jegi.word.gloss": "volante para patear"
+    },
+    "minigame:s1-crafts-q2-apply": {
+      "picWord.boards.0.pairs.hanji.word.gloss": "papel coreano",
+      "picWord.boards.0.pairs.cheongja.word.gloss": "cerámica celadón",
+      "picWord.boards.0.pairs.but.word.gloss": "pincel",
+      "picWord.boards.0.pairs.jongijeopgi.word.gloss": "plegado de papel"
     }
   }
 }

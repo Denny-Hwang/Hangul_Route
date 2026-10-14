@@ -25,6 +25,7 @@ import { useLocale, useMessages } from '../../i18n/use-messages';
 import { useRomanizationMode } from '../../i18n/use-romanization-mode';
 import { browseLibrary, browseRouteTrail, stageOneLiners, type BrowseLibraryGroup, type BrowseSection } from '../../logic/browse/catalogue';
 import { accessOf, browseGridAccess, browseGridEpisodes, itemViewedEvent, sectionAfter } from '../../logic/browse/home-view';
+import { cardKoLine, cardTitleIsKo } from '../../logic/card-art';
 import { localizeCard, localizeStage, localizeStory, localizeTheme } from '../../logic/content-locale';
 import { themeColumnLabel } from '../../logic/journey';
 import { sectionTitle, shelfCopy } from '../../logic/story/shelf-copy';
@@ -362,7 +363,7 @@ function CardSlot({ card: source, basis, onPress }: { card: HeritageCard; basis:
       onPress={onPress}
       onLayout={onLayout}
       accessibilityRole="button"
-      accessibilityLabel={messages.caregiver.browse.home.cardSlotA11y(rarity, card.titleEn, card.subtitleKo ?? '', card.romanization ?? '')}
+      accessibilityLabel={messages.caregiver.browse.home.cardSlotA11y(rarity, card.titleEn, cardKoLine(card) ?? '', card.romanization ?? '')}
       testID={`browse-card-${card.id}`}
       style={({ focused }: FocusState) => ({
         flexBasis: basis,
@@ -389,9 +390,11 @@ function CardSlot({ card: source, basis, onPress }: { card: HeritageCard; basis:
           {card.romanization}
         </Caption>
       ) : null}
-      <Body size="sm" tone="secondary">
-        {card.titleEn}
-      </Body>
+      {cardTitleIsKo(card) ? null : (
+        <Body size="sm" tone="secondary">
+          {card.titleEn}
+        </Body>
+      )}
     </Pressable>
   );
 }

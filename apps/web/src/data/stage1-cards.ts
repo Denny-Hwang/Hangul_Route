@@ -41,8 +41,8 @@ export const stage1Cards: LandingCard[] = [
   { id: 'card:kpop', title: 'K-pop', ko: '케이팝', romanization: 'keipap', en: 'K-pop music', blurb: 'Big songs, big dances. How the world hears Korean daily.', theme: 'letters', rarity: 'rare', unlockedBy: 'jamo:kieuk' },
   { id: 'card:taegeukgi', title: 'Taegeukgi', ko: '태극기', romanization: 'taegeukgi', en: 'The Korean flag', blurb: 'A red-and-blue swirl with four black symbols.', theme: 'rites', rarity: 'rare', unlockedBy: 'jamo:tieut' },
   { id: 'card:paengi', title: 'Paengi', ko: '팽이', romanization: 'paengi', en: 'Spinning top', blurb: 'Wooden tops spun on the ice in winter.', theme: 'crafts', rarity: 'uncommon', unlockedBy: 'jamo:pieup' },
-  { id: 'card:horangi', title: 'Tiger', ko: '호랑이', romanization: 'horangi', en: 'Tiger — like Hoya!', blurb: 'Korea’s old tales all start with "Long ago, when tigers smoked tobacco..."', theme: 'letters', rarity: 'legendary', unlockedBy: 'jamo:hieut' },
-  { id: 'card:arirang', title: 'Arirang', ko: '아리랑', romanization: 'arirang', en: 'Korea’s most loved folk song', blurb: 'A song about missing home. UNESCO world heritage.', theme: 'rites', rarity: 'rare', unlockedBy: 'jamo:a' },
+  { id: 'card:horangi', title: 'Tiger', ko: '호랑이', romanization: 'horangi', en: 'Tiger — like Hoya!', blurb: 'Many of Korea’s old tales start with "Long ago, when tigers smoked tobacco..."', theme: 'letters', rarity: 'legendary', unlockedBy: 'jamo:hieut' },
+  { id: 'card:arirang', title: 'Arirang', ko: '아리랑', romanization: 'arirang', en: 'Korea’s most loved folk song', blurb: 'A song about missing home, on UNESCO’s intangible heritage list.', theme: 'rites', rarity: 'rare', unlockedBy: 'jamo:a' },
   { id: 'card:yagu', title: 'Yagu', ko: '야구', romanization: 'yagu', en: 'Baseball', blurb: 'Korea’s loudest sport. Fans bring drums.', theme: 'crafts', rarity: 'common', unlockedBy: 'jamo:ya' },
   { id: 'card:eomuk', title: 'Eomuk', ko: '어묵', romanization: 'eomuk', en: 'Fish cake on a stick', blurb: 'A warm winter street snack served with hot broth.', theme: 'life', rarity: 'common', unlockedBy: 'jamo:eo' },
   { id: 'card:yeou', title: 'Fox', ko: '여우', romanization: 'yeou', en: 'Fox', blurb: 'Clever and a little bit magic in old Korean tales.', theme: 'nature', rarity: 'uncommon', unlockedBy: 'jamo:yeo' },
@@ -50,7 +50,7 @@ export const stage1Cards: LandingCard[] = [
   { id: 'card:yong', title: 'Dragon', ko: '용', romanization: 'yong', en: 'Sky-flying water spirit', blurb: 'Korean dragons live in rivers and bring the rain.', theme: 'nature', rarity: 'legendary', unlockedBy: 'jamo:yo' },
   { id: 'card:usan', title: 'Usan', ko: '우산', romanization: 'usan', en: 'Umbrella', blurb: 'Korea’s rainy season lasts about a month. Keep one by the door.', theme: 'life', rarity: 'common', unlockedBy: 'jamo:u' },
   { id: 'card:yutnori', title: 'Yutnori', ko: '윷놀이', romanization: 'yunnori', en: 'Traditional New Year’s board game', blurb: 'Four wooden sticks instead of dice. A Seollal favourite.', theme: 'crafts', rarity: 'rare', unlockedBy: 'jamo:yu' },
-  { id: 'card:geune', title: 'Geune', ko: '그네', romanization: 'geune', en: 'Swing', blurb: 'Girls in old paintings ride giant swings on Dano festival.', theme: 'crafts', rarity: 'uncommon', unlockedBy: 'jamo:eu' },
+  { id: 'card:geune', title: 'Geune', ko: '그네', romanization: 'geune', en: 'Swing', blurb: 'Women in old paintings ride giant swings on Dano festival.', theme: 'crafts', rarity: 'uncommon', unlockedBy: 'jamo:eu' },
   { id: 'card:ibul', title: 'Ibul', ko: '이불', romanization: 'ibul', en: 'Warm Korean blanket', blurb: 'Many Korean homes spread padded blankets on a warm floor to sleep.', theme: 'rites', rarity: 'common', unlockedBy: 'jamo:i' },
 ];
 

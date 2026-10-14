@@ -38,6 +38,7 @@ import { cardById, episodeById, episodesAll, questById, questsAll } from '../../
 import { storyById } from '../../content/stories';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { localizeCard, localizeEpisode, localizeStory } from '../../logic/content-locale';
+import { cardKoLine } from '../../logic/card-art';
 import { cursorContext } from '../../logic/cursor-context';
 import {
   resultsActions,
@@ -636,7 +637,7 @@ function CardUnlockBanner({
               <Body weight="bold" size="lg">
                 {card.titleEn}
               </Body>
-              {card.subtitleKo ? (
+              {cardKoLine(card) ? (
                 <Heading level="title" tone="brand">
                   {card.subtitleKo}
                 </Heading>

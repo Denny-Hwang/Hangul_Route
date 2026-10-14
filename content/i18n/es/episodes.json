@@ -1,0 +1,51 @@
+{
+  "locale": "es",
+  "domain": "episodes",
+  "entries": {
+    "episode:stage1-letters": {
+      "title": "Conoce las letras",
+      "subtitle": "Doce letras y tus primeras palabras de verdad.",
+      "hoyaIntro": "¡Hola! Soy Hoya. ¿Quieres conocer mis letras coreanas favoritas?"
+    },
+    "episode:stage1-life": {
+      "title": "En la mesa coreana",
+      "subtitle": "Arroz, kimchi y familia, dichos en coreano.",
+      "hoyaIntro": "¡Hora de comer! Te muestro lo que como."
+    },
+    "episode:stage1-rites": {
+      "title": "Año Nuevo y fiestas",
+      "subtitle": "Seollal y Chuseok: haz una reverencia, come y comparte pasteles de arroz.",
+      "hoyaIntro": "¡Es tiempo de fiestas! Haz una reverencia en Seollal y comparte pasteles de arroz en Chuseok."
+    },
+    "episode:stage1-nature": {
+      "title": "Tigres, montañas, luna",
+      "subtitle": "Corea es salvaje y hermosa.",
+      "hoyaIntro": "¡Soy un tigre! ¿Quieres ver dónde vivo?"
+    },
+    "episode:stage1-crafts": {
+      "title": "Yut, cometas y papel",
+      "subtitle": "Juegos y artesanías coreanas para probar.",
+      "hoyaIntro": "Juguemos al yunnori. ¡Lanza los palitos!"
+    },
+    "episode:stage5-letters": {
+      "title": "Historias de letras",
+      "hoyaIntro": "Leamos en coreano historias sobre el hangul, una oración corta a la vez."
+    },
+    "episode:stage5-life": {
+      "title": "Historias de familia",
+      "hoyaIntro": "Leamos en coreano historias de la vida diaria, una oración corta a la vez."
+    },
+    "episode:stage5-rites": {
+      "title": "Cuentos de fiestas",
+      "hoyaIntro": "Leamos en coreano historias de fiestas, una oración corta a la vez."
+    },
+    "episode:stage5-nature": {
+      "title": "Cuentos de naturaleza",
+      "hoyaIntro": "Leamos en coreano historias del sol y el cielo, una oración corta a la vez."
+    },
+    "episode:stage5-crafts": {
+      "title": "Historias de artesanía",
+      "hoyaIntro": "Leamos en coreano historias de manos ingeniosas y cuentos antiguos, una oración corta a la vez."
+    }
+  }
+}

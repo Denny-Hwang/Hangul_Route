@@ -1,0 +1,41 @@
+{
+  "locale": "es",
+  "domain": "stages",
+  "entries": {
+    "stage:stage1": {
+      "title": "Hangul",
+      "oneLiner": "Conoce cada letra coreana y su sonido.",
+      "anchorSkill": "Reconoce 24 jamo y 6 batchim con ≥90 % de acierto"
+    },
+    "stage:stage2": {
+      "title": "Palabras",
+      "oneLiner": "Junta letras y forma tus primeras 60 palabras en coreano.",
+      "anchorSkill": "Lee y pronuncia 60 palabras clave de temas diarios"
+    },
+    "stage:stage3": {
+      "title": "Oraciones",
+      "oneLiner": "Une palabras en oraciones cortas y útiles.",
+      "anchorSkill": "Forma oraciones de sujeto y verbo en presente"
+    },
+    "stage:stage4": {
+      "title": "Diálogo",
+      "oneLiner": "Practica tus primeras conversaciones cortas de la vida real.",
+      "anchorSkill": "Mantén un diálogo de 4 turnos con saludo y pregunta"
+    },
+    "stage:stage5": {
+      "title": "Historias",
+      "oneLiner": "Lee relatos cortos y cuentos populares coreanos con Hoya.",
+      "anchorSkill": "Lee una historia de 5 oraciones y entiende el 80 % o más"
+    },
+    "stage:stage6": {
+      "title": "Uso real",
+      "oneLiner": "Lleva el coreano al mundo: menús, letreros, llamadas.",
+      "anchorSkill": "Pide comida, pregunta cómo llegar y escribe a tu primo o prima"
+    },
+    "stage:stage7": {
+      "title": "Expresión personal",
+      "oneLiner": "Di lo que piensas, sientes y creas, en coreano.",
+      "anchorSkill": "Graba una presentación personal de 1 minuto"
+    }
+  }
+}

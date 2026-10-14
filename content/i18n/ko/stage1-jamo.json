@@ -4,99 +4,123 @@
   "entries": {
     "jamo:giyeok": {
       "soundHint": "‘가족’의 첫소리. g와 k 사이의 부드러운 소리예요.",
-      "exampleWord.gloss": "함께 사는 엄마, 아빠, 형제 같은 사람들"
+      "exampleWord.gloss": "함께 사는 엄마, 아빠, 형제 같은 사람들",
+      "gloss": "g 소리: g와 k 사이의 부드러운 소리예요."
     },
     "jamo:nieun": {
       "soundHint": "‘나무’의 첫소리. 혀끝을 윗잇몸에 대는 n 소리예요.",
-      "exampleWord.gloss": "줄기와 가지, 잎이 있는 키 큰 식물"
+      "exampleWord.gloss": "줄기와 가지, 잎이 있는 키 큰 식물",
+      "gloss": "n 소리: 혀끝을 윗잇몸에 대는 소리예요."
     },
     "jamo:digeut": {
       "soundHint": "‘달’의 첫소리. d와 t 사이의 부드러운 소리예요.",
-      "exampleWord.gloss": "밤하늘에 뜨는 둥근 빛"
+      "exampleWord.gloss": "밤하늘에 뜨는 둥근 빛",
+      "gloss": "d 소리: d와 t 사이의 부드러운 소리예요."
     },
     "jamo:rieul": {
       "soundHint": "‘라면’의 첫소리. 혀끝으로 윗잇몸을 가볍게 튕겨요.",
-      "exampleWord.gloss": "꼬불꼬불한 면을 끓여 먹는 음식"
+      "exampleWord.gloss": "꼬불꼬불한 면을 끓여 먹는 음식",
+      "gloss": "r 또는 l 소리: r과 l 사이의 부드러운 소리예요."
     },
     "jamo:mieum": {
       "soundHint": "‘물’의 첫소리. 입술을 붙였다 떼는 m 소리예요.",
-      "exampleWord.gloss": "마시거나 씻을 때 쓰는 맑은 액체"
+      "exampleWord.gloss": "마시거나 씻을 때 쓰는 맑은 액체",
+      "gloss": "m 소리: 입술을 붙였다 떼는 소리예요."
     },
     "jamo:bieup": {
       "soundHint": "‘밥’의 첫소리. b와 p 사이의 부드러운 소리예요.",
-      "exampleWord.gloss": "쌀로 지어 먹는 음식"
+      "exampleWord.gloss": "쌀로 지어 먹는 음식",
+      "gloss": "b 소리: b와 p 사이의 부드러운 소리예요."
     },
     "jamo:siot": {
       "soundHint": "‘산’의 첫소리. s 소리예요.",
-      "exampleWord.gloss": "땅이 높이 솟은 곳"
+      "exampleWord.gloss": "땅이 높이 솟은 곳",
+      "gloss": "s 소리: 혀와 이 사이로 바람이 새어 나가는 소리예요."
     },
     "jamo:ieung": {
       "soundHint": "글자 맨 앞에서는 소리가 없어요(‘아이’). 받침에서는 ng 소리예요.",
-      "exampleWord.gloss": "나이가 어린 사람"
+      "exampleWord.gloss": "나이가 어린 사람",
+      "gloss": "동그라미 모양: 맨 앞에서는 소리가 없고, 받침에서는 ng 소리예요."
     },
     "jamo:jieut": {
       "soundHint": "‘집’의 첫소리. 바람을 세게 내지 않는 부드러운 j 소리예요.",
-      "exampleWord.gloss": "사람이 사는 건물"
+      "exampleWord.gloss": "사람이 사는 건물",
+      "gloss": "j 소리: 바람을 세게 내지 않는 부드러운 소리예요."
     },
     "jamo:chieut": {
       "soundHint": "‘책’의 첫소리. ch 소리에 바람을 세게 내보내요.",
-      "exampleWord.gloss": "글과 그림을 묶어 만든 읽을거리"
+      "exampleWord.gloss": "글과 그림을 묶어 만든 읽을거리",
+      "gloss": "ch 소리: 바람을 세게 내보내는 소리예요."
     },
     "jamo:kieuk": {
       "soundHint": "‘코’의 첫소리. k 소리에 바람을 세게 내보내요.",
-      "exampleWord.gloss": "얼굴 가운데에서 냄새를 맡는 곳"
+      "exampleWord.gloss": "얼굴 가운데에서 냄새를 맡는 곳",
+      "gloss": "k 소리: 바람을 세게 내보내는 강한 소리예요."
     },
     "jamo:tieut": {
       "soundHint": "‘토끼’의 첫소리. t 소리에 바람을 세게 내보내요.",
-      "exampleWord.gloss": "귀가 길고 깡충깡충 뛰는 동물"
+      "exampleWord.gloss": "귀가 길고 깡충깡충 뛰는 동물",
+      "gloss": "t 소리: 혀끝을 떼며 바람을 세게 내보내는 소리예요."
     },
     "jamo:pieup": {
       "soundHint": "‘포도’의 첫소리. p 소리에 바람을 세게 내보내요.",
-      "exampleWord.gloss": "작고 동그란 열매가 송이로 달리는 과일"
+      "exampleWord.gloss": "작고 동그란 열매가 송이로 달리는 과일",
+      "gloss": "p 소리: 입술을 떼며 바람을 세게 내보내는 소리예요."
     },
     "jamo:hieut": {
       "soundHint": "‘하늘’의 첫소리. 숨을 내쉬는 h 소리예요.",
-      "exampleWord.gloss": "머리 위로 보이는 높고 넓은 곳"
+      "exampleWord.gloss": "머리 위로 보이는 높고 넓은 곳",
+      "gloss": "h 소리: 숨을 내쉬는 소리예요."
     },
     "jamo:a": {
       "soundHint": "‘아빠’의 아 소리. 입을 크게 벌려요.",
-      "exampleWord.gloss": "아버지를 다정하게 부르는 말"
+      "exampleWord.gloss": "아버지를 다정하게 부르는 말",
+      "gloss": "a 소리: 입을 크게 벌리는 소리예요."
     },
     "jamo:ya": {
       "soundHint": "‘야구’의 야 소리예요.",
-      "exampleWord.gloss": "방망이로 공을 치고 달리는 운동"
+      "exampleWord.gloss": "방망이로 공을 치고 달리는 운동",
+      "gloss": "ya 소리: a 앞에 y를 붙인 소리예요."
     },
     "jamo:eo": {
       "soundHint": "‘엄마’의 어 소리. 입을 벌리고 혀를 조금 뒤로 당겨요.",
-      "exampleWord.gloss": "어머니를 다정하게 부르는 말"
+      "exampleWord.gloss": "어머니를 다정하게 부르는 말",
+      "gloss": "eo 소리: 입을 벌리고 혀를 조금 뒤로 당기는 소리예요."
     },
     "jamo:yeo": {
       "soundHint": "‘여우’의 여 소리예요.",
-      "exampleWord.gloss": "꼬리가 풍성하고 꾀가 많은 동물"
+      "exampleWord.gloss": "꼬리가 풍성하고 꾀가 많은 동물",
+      "gloss": "yeo 소리: eo 앞에 y를 붙인 소리예요."
     },
     "jamo:o": {
       "soundHint": "‘오리’의 오 소리. 입술을 동그랗게 모아요.",
-      "exampleWord.gloss": "물에서 헤엄치고 꽥꽥 우는 새"
+      "exampleWord.gloss": "물에서 헤엄치고 꽥꽥 우는 새",
+      "gloss": "o 소리: 입술을 동그랗게 모으는 소리예요."
     },
     "jamo:yo": {
       "soundHint": "‘요리’의 요 소리예요.",
-      "exampleWord.gloss": "음식을 만드는 일, 또는 그 음식"
+      "exampleWord.gloss": "음식을 만드는 일, 또는 그 음식",
+      "gloss": "yo 소리: o 앞에 y를 붙인 소리예요."
     },
     "jamo:u": {
       "soundHint": "‘우유’의 우 소리. 입술을 앞으로 쭉 내밀어요.",
-      "exampleWord.gloss": "소에게서 얻는 하얀 마실 것"
+      "exampleWord.gloss": "소에게서 얻는 하얀 마실 것",
+      "gloss": "u 소리: 입술을 앞으로 쭉 내미는 소리예요."
     },
     "jamo:yu": {
       "soundHint": "‘유리’의 유 소리예요.",
-      "exampleWord.gloss": "창문이나 컵에 쓰는 투명하고 단단한 것"
+      "exampleWord.gloss": "창문이나 컵에 쓰는 투명하고 단단한 것",
+      "gloss": "yu 소리: u 앞에 y를 붙인 소리예요."
     },
     "jamo:eu": {
       "soundHint": "‘으뜸’의 으 소리. 입술을 옆으로 펴요.",
-      "exampleWord.gloss": "가장 좋거나 첫째가는 것"
+      "exampleWord.gloss": "가장 좋거나 첫째가는 것",
+      "gloss": "eu 소리: u와 i 사이의 부드러운 소리예요."
     },
     "jamo:i": {
       "soundHint": "‘이름’의 이 소리. 입꼬리를 옆으로 당겨요.",
-      "exampleWord.gloss": "사람이나 물건을 부르는 말"
+      "exampleWord.gloss": "사람이나 물건을 부르는 말",
+      "gloss": "i 소리: 입꼬리를 옆으로 당기는 소리예요."
     },
     "jamo:giyeok-batchim": {
       "soundHint": "‘악’의 끝소리. 짧게 막고 소리를 터뜨리지 않아요."

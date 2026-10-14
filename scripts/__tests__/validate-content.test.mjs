@@ -529,6 +529,23 @@ describe("validate-content.mjs: locale overlays (F-I18N-001 §3.7)", () => {
     }
   });
 
+  // The mobile overlay test skips the fields of JSON-only Stage 1 cards and jamo glosses
+  // (apps/mobile/src/content/__tests__/overlays.test.ts `jsonBaseField`); this validator is what checks them.
+  test("a JSON-only Stage 1 card overlay with a field off the allow-list fails with overlay-forbidden-field", () => {
+    const root = makeRoot();
+    try {
+      writeContent(root, "episodes/stage-1/cards.json", [
+        { id: "card:gangaji", ko: "강아지", romanization: "gangaji", en: "Puppy", blurb: "A friendly little dog.", fact: "Small dogs are often called gangaji.", theme: "nature", stage: "stage1", rarity: "common", unlockedBy: "jamo:giyeok" },
+      ]);
+      writeContent(root, "i18n/es/stage1-cards.json", overlay("es", { "card:gangaji": { title: "Perrito", nope: "x" } }, "stage1-cards"));
+      const r = run(root);
+      assert.match(r.stdout, /content\/i18n\/es\/stage1-cards\.json::overlay-forbidden-field: nope cannot be translated on card:gangaji/);
+      assert.doesNotMatch(r.stdout, /forbidden-field: title/);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
   // F-CURR-001 section 5: the lesson rules of content/episodes/stage-<n>/*.json.
   const kt = (ko, romanization, en) => ({ ko, romanization, en });
   const src = (url, title = "Standard Korean Language Dictionary") => ({
