@@ -44,6 +44,11 @@ describe('LessonCellSchema (F-CURR-001 §3.10)', () => {
     expect(messages(lessonCell('stage1', 'letters')).some((m) => m.startsWith('id:'))).toBe(true);
   });
 
+  it('takes no pillar tag when no sub-theme fits (a wrong tag is worse than none), but never an unknown one', () => {
+    expect(messages(lessonCell('stage3', 'life', { pillarTags: [] }))).toEqual([]);
+    expect(messages(lessonCell('stage3', 'life', { pillarTags: ['Z1'] }))).toEqual([expect.stringMatching(/^pillarTags\.0:/)]);
+  });
+
   it('is strict: an unknown key is an error', () => {
     expect(messages({ ...lessonCell(), estimatedMinutes: 13 })).toEqual([expect.stringContaining('Unrecognized key')]);
   });

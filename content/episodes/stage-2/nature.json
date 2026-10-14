@@ -1,0 +1,1234 @@
+{
+  "id": "episode:stage2-nature",
+  "stage": "stage2",
+  "theme": "nature",
+  "status": "draft",
+  "titleEn": "Outdoor Words",
+  "subtitleEn": "Read words for the sky, the weather and the water.",
+  "hoyaIntroEn": "Come outside with me. Let us read the world around us!",
+  "order": 4,
+  "pillarTags": [
+    "D2"
+  ],
+  "rewardCardIds": [
+    "card:haneul",
+    "card:kkot",
+    "card:namu",
+    "card:byeol"
+  ],
+  "quests": [
+    {
+      "id": "quest:stage2-nature-q1",
+      "titleEn": "Outdoor Words",
+      "blurbEn": "Read sky, star and tree, and see the word for flower.",
+      "teaserEn": "Next: rain, snow, clouds and wind.",
+      "estimatedMinutes": 4,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "Step Outside",
+          "hoyaLineEn": "Let us read what we see outside!",
+          "durationSeconds": 8
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "Outdoor Words",
+          "hoyaLineEn": "Tap Hear it, then read each word yourself.",
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "하늘",
+                      "romanization": "haneul",
+                      "en": "sky",
+                      "syllables": [
+                        "ha",
+                        "neul"
+                      ]
+                    },
+                    "picture": "word:nature-sky"
+                  },
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "별",
+                      "romanization": "byeol",
+                      "en": "star"
+                    },
+                    "picture": "word:nature-star"
+                  }
+                ]
+              },
+              {
+                "items": [
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "나무",
+                      "romanization": "namu",
+                      "en": "tree",
+                      "syllables": [
+                        "na",
+                        "mu"
+                      ]
+                    },
+                    "picture": "word:nature-tree"
+                  }
+                ]
+              },
+              {
+                "caption": "Just look and listen: you read these letters in Word Builder.",
+                "items": [
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "꽃",
+                      "romanization": "kkot",
+                      "en": "flower"
+                    },
+                    "picture": "word:nature-flower"
+                  }
+                ]
+              }
+            ]
+          },
+          "durationSeconds": 55
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Picture and Word",
+          "minigameKind": "pic-word-match",
+          "minigameRef": "minigame:s2-nature-q1-practice",
+          "durationSeconds": 85
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Build the Word",
+          "minigameKind": "build-letter",
+          "minigameRef": "minigame:s2-nature-q1-apply",
+          "durationSeconds": 70
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Listen and Read",
+          "minigameKind": "listen-pick",
+          "minigameRef": "minigame:s2-nature-q1-check",
+          "durationSeconds": 35
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Star Card!",
+          "hoyaLineEn": "You read the outdoors. Here is a star!",
+          "durationSeconds": 8
+        }
+      ],
+      "rewardCardId": "card:byeol",
+      "scopes": [
+        {
+          "ref": "minigame:s2-nature-q1-practice",
+          "kind": "pic-word-match",
+          "boards": [
+            {
+              "pairs": [
+                {
+                  "id": "haneul",
+                  "pictureRef": "word:nature-sky",
+                  "word": {
+                    "ko": "하늘",
+                    "romanization": "haneul",
+                    "en": "sky"
+                  }
+                },
+                {
+                  "id": "byeol",
+                  "pictureRef": "word:nature-star",
+                  "word": {
+                    "ko": "별",
+                    "romanization": "byeol",
+                    "en": "star"
+                  }
+                },
+                {
+                  "id": "namu",
+                  "pictureRef": "word:nature-tree",
+                  "word": {
+                    "ko": "나무",
+                    "romanization": "namu",
+                    "en": "tree"
+                  }
+                }
+              ]
+            },
+            {
+              "pairs": [
+                {
+                  "id": "san",
+                  "pictureRef": "card:mountain",
+                  "word": {
+                    "ko": "산",
+                    "romanization": "san",
+                    "en": "mountain"
+                  }
+                },
+                {
+                  "id": "dal",
+                  "pictureRef": "card:moon",
+                  "word": {
+                    "ko": "달",
+                    "romanization": "dal",
+                    "en": "moon"
+                  }
+                },
+                {
+                  "id": "haneul",
+                  "pictureRef": "word:nature-sky",
+                  "word": {
+                    "ko": "하늘",
+                    "romanization": "haneul",
+                    "en": "sky"
+                  }
+                }
+              ]
+            },
+            {
+              "pairs": [
+                {
+                  "id": "namu",
+                  "pictureRef": "word:nature-tree",
+                  "word": {
+                    "ko": "나무",
+                    "romanization": "namu",
+                    "en": "tree"
+                  }
+                },
+                {
+                  "id": "bada",
+                  "pictureRef": "card:sea",
+                  "word": {
+                    "ko": "바다",
+                    "romanization": "bada",
+                    "en": "sea"
+                  }
+                },
+                {
+                  "id": "byeol",
+                  "pictureRef": "word:nature-star",
+                  "word": {
+                    "ko": "별",
+                    "romanization": "byeol",
+                    "en": "star"
+                  }
+                }
+              ]
+            },
+            {
+              "pairs": [
+                {
+                  "id": "haneul",
+                  "pictureRef": "word:nature-sky",
+                  "word": {
+                    "ko": "하늘",
+                    "romanization": "haneul",
+                    "en": "sky"
+                  }
+                },
+                {
+                  "id": "gang",
+                  "pictureRef": "word:nature-river",
+                  "word": {
+                    "ko": "강",
+                    "romanization": "gang",
+                    "en": "river"
+                  }
+                },
+                {
+                  "id": "san",
+                  "pictureRef": "card:mountain",
+                  "word": {
+                    "ko": "산",
+                    "romanization": "san",
+                    "en": "mountain"
+                  }
+                }
+              ]
+            },
+            {
+              "pairs": [
+                {
+                  "id": "byeol",
+                  "pictureRef": "word:nature-star",
+                  "word": {
+                    "ko": "별",
+                    "romanization": "byeol",
+                    "en": "star"
+                  }
+                },
+                {
+                  "id": "namu",
+                  "pictureRef": "word:nature-tree",
+                  "word": {
+                    "ko": "나무",
+                    "romanization": "namu",
+                    "en": "tree"
+                  }
+                },
+                {
+                  "id": "dal",
+                  "pictureRef": "card:moon",
+                  "word": {
+                    "ko": "달",
+                    "romanization": "dal",
+                    "en": "moon"
+                  }
+                }
+              ]
+            },
+            {
+              "pairs": [
+                {
+                  "id": "bada",
+                  "pictureRef": "card:sea",
+                  "word": {
+                    "ko": "바다",
+                    "romanization": "bada",
+                    "en": "sea"
+                  }
+                },
+                {
+                  "id": "haneul",
+                  "pictureRef": "word:nature-sky",
+                  "word": {
+                    "ko": "하늘",
+                    "romanization": "haneul",
+                    "en": "sky"
+                  }
+                },
+                {
+                  "id": "namu",
+                  "pictureRef": "word:nature-tree",
+                  "word": {
+                    "ko": "나무",
+                    "romanization": "namu",
+                    "en": "tree"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s2-nature-q1-apply",
+          "kind": "build-letter",
+          "words": [
+            {
+              "ko": "하늘",
+              "romanization": "haneul",
+              "en": "sky",
+              "syllables": [
+                "ha",
+                "neul"
+              ]
+            },
+            {
+              "ko": "나무",
+              "romanization": "namu",
+              "en": "tree",
+              "syllables": [
+                "na",
+                "mu"
+              ]
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s2-nature-q1-check",
+          "kind": "listen-pick",
+          "rounds": [
+            {
+              "id": "pic-byeol",
+              "prompt": {
+                "ko": "별",
+                "romanization": "byeol",
+                "en": "star"
+              },
+              "options": [
+                {
+                  "id": "byeol",
+                  "pictureRef": "word:nature-star",
+                  "labelEn": "star"
+                },
+                {
+                  "id": "dal",
+                  "pictureRef": "card:moon",
+                  "labelEn": "moon"
+                },
+                {
+                  "id": "haneul",
+                  "pictureRef": "word:nature-sky",
+                  "labelEn": "sky"
+                },
+                {
+                  "id": "namu",
+                  "pictureRef": "word:nature-tree",
+                  "labelEn": "tree"
+                }
+              ],
+              "answerId": "byeol"
+            },
+            {
+              "id": "read-namu",
+              "prompt": {
+                "ko": "나무",
+                "romanization": "namu",
+                "en": "tree"
+              },
+              "options": [
+                {
+                  "id": "namu",
+                  "text": {
+                    "ko": "나무",
+                    "romanization": "namu",
+                    "en": "tree"
+                  }
+                },
+                {
+                  "id": "nabi",
+                  "text": {
+                    "ko": "나비",
+                    "romanization": "nabi",
+                    "en": "butterfly"
+                  }
+                },
+                {
+                  "id": "bada",
+                  "text": {
+                    "ko": "바다",
+                    "romanization": "bada",
+                    "en": "sea"
+                  }
+                }
+              ],
+              "answerId": "namu"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "quest:stage2-nature-q2",
+      "titleEn": "Rain and Snow",
+      "blurbEn": "Read weather words: rain, snow, cloud and wind.",
+      "teaserEn": "Next: rivers, lakes and the sea.",
+      "estimatedMinutes": 4,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "Look Up!",
+          "hoyaLineEn": "Look up at the sky. What is the weather doing?",
+          "durationSeconds": 8
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "Weather Words",
+          "hoyaLineEn": "Tap Hear it, then read each word yourself.",
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "비",
+                      "romanization": "bi",
+                      "en": "rain"
+                    },
+                    "picture": "word:nature-rain"
+                  },
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "눈",
+                      "romanization": "nun",
+                      "en": "snow"
+                    },
+                    "picture": "word:nature-snow"
+                  }
+                ]
+              },
+              {
+                "items": [
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "구름",
+                      "romanization": "gureum",
+                      "en": "cloud",
+                      "syllables": [
+                        "gu",
+                        "reum"
+                      ]
+                    },
+                    "picture": "word:nature-cloud"
+                  },
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "바람",
+                      "romanization": "baram",
+                      "en": "wind",
+                      "syllables": [
+                        "ba",
+                        "ram"
+                      ]
+                    },
+                    "picture": "word:science-wind"
+                  }
+                ]
+              }
+            ]
+          },
+          "durationSeconds": 50
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Picture and Word",
+          "minigameKind": "pic-word-match",
+          "minigameRef": "minigame:s2-nature-q2-practice",
+          "durationSeconds": 85
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Match the Cards",
+          "minigameKind": "card-match",
+          "minigameRef": "minigame:s2-nature-q2-apply",
+          "durationSeconds": 65
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Listen and Read",
+          "minigameKind": "listen-pick",
+          "minigameRef": "minigame:s2-nature-q2-check",
+          "durationSeconds": 35
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Weather Words!",
+          "hoyaLineEn": "Rain, snow, clouds and wind: you read them all!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s2-nature-q2-practice",
+          "kind": "pic-word-match",
+          "boards": [
+            {
+              "pairs": [
+                {
+                  "id": "bi",
+                  "pictureRef": "word:nature-rain",
+                  "word": {
+                    "ko": "비",
+                    "romanization": "bi",
+                    "en": "rain"
+                  }
+                },
+                {
+                  "id": "nun",
+                  "pictureRef": "word:nature-snow",
+                  "word": {
+                    "ko": "눈",
+                    "romanization": "nun",
+                    "en": "snow"
+                  }
+                },
+                {
+                  "id": "gureum",
+                  "pictureRef": "word:nature-cloud",
+                  "word": {
+                    "ko": "구름",
+                    "romanization": "gureum",
+                    "en": "cloud"
+                  }
+                }
+              ]
+            },
+            {
+              "pairs": [
+                {
+                  "id": "baram",
+                  "pictureRef": "word:science-wind",
+                  "word": {
+                    "ko": "바람",
+                    "romanization": "baram",
+                    "en": "wind"
+                  }
+                },
+                {
+                  "id": "haneul",
+                  "pictureRef": "word:nature-sky",
+                  "word": {
+                    "ko": "하늘",
+                    "romanization": "haneul",
+                    "en": "sky"
+                  }
+                },
+                {
+                  "id": "bi",
+                  "pictureRef": "word:nature-rain",
+                  "word": {
+                    "ko": "비",
+                    "romanization": "bi",
+                    "en": "rain"
+                  }
+                }
+              ]
+            },
+            {
+              "pairs": [
+                {
+                  "id": "gureum",
+                  "pictureRef": "word:nature-cloud",
+                  "word": {
+                    "ko": "구름",
+                    "romanization": "gureum",
+                    "en": "cloud"
+                  }
+                },
+                {
+                  "id": "byeol",
+                  "pictureRef": "word:nature-star",
+                  "word": {
+                    "ko": "별",
+                    "romanization": "byeol",
+                    "en": "star"
+                  }
+                },
+                {
+                  "id": "nun",
+                  "pictureRef": "word:nature-snow",
+                  "word": {
+                    "ko": "눈",
+                    "romanization": "nun",
+                    "en": "snow"
+                  }
+                }
+              ]
+            },
+            {
+              "pairs": [
+                {
+                  "id": "bi",
+                  "pictureRef": "word:nature-rain",
+                  "word": {
+                    "ko": "비",
+                    "romanization": "bi",
+                    "en": "rain"
+                  }
+                },
+                {
+                  "id": "namu",
+                  "pictureRef": "word:nature-tree",
+                  "word": {
+                    "ko": "나무",
+                    "romanization": "namu",
+                    "en": "tree"
+                  }
+                },
+                {
+                  "id": "baram",
+                  "pictureRef": "word:science-wind",
+                  "word": {
+                    "ko": "바람",
+                    "romanization": "baram",
+                    "en": "wind"
+                  }
+                }
+              ]
+            },
+            {
+              "pairs": [
+                {
+                  "id": "nun",
+                  "pictureRef": "word:nature-snow",
+                  "word": {
+                    "ko": "눈",
+                    "romanization": "nun",
+                    "en": "snow"
+                  }
+                },
+                {
+                  "id": "dal",
+                  "pictureRef": "card:moon",
+                  "word": {
+                    "ko": "달",
+                    "romanization": "dal",
+                    "en": "moon"
+                  }
+                },
+                {
+                  "id": "gureum",
+                  "pictureRef": "word:nature-cloud",
+                  "word": {
+                    "ko": "구름",
+                    "romanization": "gureum",
+                    "en": "cloud"
+                  }
+                }
+              ]
+            },
+            {
+              "pairs": [
+                {
+                  "id": "baram",
+                  "pictureRef": "word:science-wind",
+                  "word": {
+                    "ko": "바람",
+                    "romanization": "baram",
+                    "en": "wind"
+                  }
+                },
+                {
+                  "id": "bi",
+                  "pictureRef": "word:nature-rain",
+                  "word": {
+                    "ko": "비",
+                    "romanization": "bi",
+                    "en": "rain"
+                  }
+                },
+                {
+                  "id": "haneul",
+                  "pictureRef": "word:nature-sky",
+                  "word": {
+                    "ko": "하늘",
+                    "romanization": "haneul",
+                    "en": "sky"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s2-nature-q2-apply",
+          "kind": "card-match",
+          "pairs": [
+            {
+              "ko": "비",
+              "romanization": "bi",
+              "en": "rain"
+            },
+            {
+              "ko": "눈",
+              "romanization": "nun",
+              "en": "snow"
+            },
+            {
+              "ko": "구름",
+              "romanization": "gureum",
+              "en": "cloud"
+            },
+            {
+              "ko": "바람",
+              "romanization": "baram",
+              "en": "wind"
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s2-nature-q2-check",
+          "kind": "listen-pick",
+          "rounds": [
+            {
+              "id": "pic-gureum",
+              "prompt": {
+                "ko": "구름",
+                "romanization": "gureum",
+                "en": "cloud"
+              },
+              "options": [
+                {
+                  "id": "gureum",
+                  "pictureRef": "word:nature-cloud",
+                  "labelEn": "cloud"
+                },
+                {
+                  "id": "bi",
+                  "pictureRef": "word:nature-rain",
+                  "labelEn": "rain"
+                },
+                {
+                  "id": "nun",
+                  "pictureRef": "word:nature-snow",
+                  "labelEn": "snow"
+                },
+                {
+                  "id": "baram",
+                  "pictureRef": "word:science-wind",
+                  "labelEn": "wind"
+                }
+              ],
+              "answerId": "gureum"
+            },
+            {
+              "id": "read-baram",
+              "prompt": {
+                "ko": "바람",
+                "romanization": "baram",
+                "en": "wind"
+              },
+              "options": [
+                {
+                  "id": "baram",
+                  "text": {
+                    "ko": "바람",
+                    "romanization": "baram",
+                    "en": "wind"
+                  }
+                },
+                {
+                  "id": "bada",
+                  "text": {
+                    "ko": "바다",
+                    "romanization": "bada",
+                    "en": "sea"
+                  }
+                },
+                {
+                  "id": "gabang",
+                  "text": {
+                    "ko": "가방",
+                    "romanization": "gabang",
+                    "en": "bag"
+                  }
+                }
+              ],
+              "answerId": "baram"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "quest:stage2-nature-q3",
+      "titleEn": "Rivers and Seas",
+      "blurbEn": "Read water words: river, lake, island and sea.",
+      "estimatedMinutes": 4,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "To the Water",
+          "hoyaLineEn": "Let us go where the water is!",
+          "durationSeconds": 8
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "Water Words",
+          "hoyaLineEn": "Tap Hear it, then read each word yourself.",
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "강",
+                      "romanization": "gang",
+                      "en": "river"
+                    },
+                    "picture": "word:nature-river"
+                  },
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "호수",
+                      "romanization": "hosu",
+                      "en": "lake",
+                      "syllables": [
+                        "ho",
+                        "su"
+                      ]
+                    }
+                  }
+                ]
+              },
+              {
+                "items": [
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "섬",
+                      "romanization": "seom",
+                      "en": "island"
+                    }
+                  },
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "바다",
+                      "romanization": "bada",
+                      "en": "sea",
+                      "syllables": [
+                        "ba",
+                        "da"
+                      ]
+                    },
+                    "picture": "card:sea"
+                  }
+                ]
+              }
+            ]
+          },
+          "durationSeconds": 50
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Picture and Word",
+          "minigameKind": "pic-word-match",
+          "minigameRef": "minigame:s2-nature-q3-practice",
+          "durationSeconds": 85
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Build the Word",
+          "minigameKind": "build-letter",
+          "minigameRef": "minigame:s2-nature-q3-apply",
+          "durationSeconds": 70
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Listen and Read",
+          "minigameKind": "listen-pick",
+          "minigameRef": "minigame:s2-nature-q3-check",
+          "durationSeconds": 35
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Water Words!",
+          "hoyaLineEn": "Rivers, lakes and seas: you read them all. Well done!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s2-nature-q3-practice",
+          "kind": "pic-word-match",
+          "boards": [
+            {
+              "pairs": [
+                {
+                  "id": "gang",
+                  "pictureRef": "word:nature-river",
+                  "word": {
+                    "ko": "강",
+                    "romanization": "gang",
+                    "en": "river"
+                  }
+                },
+                {
+                  "id": "bada",
+                  "pictureRef": "card:sea",
+                  "word": {
+                    "ko": "바다",
+                    "romanization": "bada",
+                    "en": "sea"
+                  }
+                },
+                {
+                  "id": "san",
+                  "pictureRef": "card:mountain",
+                  "word": {
+                    "ko": "산",
+                    "romanization": "san",
+                    "en": "mountain"
+                  }
+                }
+              ]
+            },
+            {
+              "pairs": [
+                {
+                  "id": "mulgogi",
+                  "pictureRef": "word:animal-fish",
+                  "word": {
+                    "ko": "물고기",
+                    "romanization": "mulgogi",
+                    "en": "fish"
+                  }
+                },
+                {
+                  "id": "mul",
+                  "pictureRef": "word:food-water",
+                  "word": {
+                    "ko": "물",
+                    "romanization": "mul",
+                    "en": "water"
+                  }
+                },
+                {
+                  "id": "gang",
+                  "pictureRef": "word:nature-river",
+                  "word": {
+                    "ko": "강",
+                    "romanization": "gang",
+                    "en": "river"
+                  }
+                }
+              ]
+            },
+            {
+              "pairs": [
+                {
+                  "id": "bada",
+                  "pictureRef": "card:sea",
+                  "word": {
+                    "ko": "바다",
+                    "romanization": "bada",
+                    "en": "sea"
+                  }
+                },
+                {
+                  "id": "dol",
+                  "pictureRef": "word:science-stone",
+                  "word": {
+                    "ko": "돌",
+                    "romanization": "dol",
+                    "en": "stone"
+                  }
+                },
+                {
+                  "id": "namu",
+                  "pictureRef": "word:nature-tree",
+                  "word": {
+                    "ko": "나무",
+                    "romanization": "namu",
+                    "en": "tree"
+                  }
+                }
+              ]
+            },
+            {
+              "pairs": [
+                {
+                  "id": "gang",
+                  "pictureRef": "word:nature-river",
+                  "word": {
+                    "ko": "강",
+                    "romanization": "gang",
+                    "en": "river"
+                  }
+                },
+                {
+                  "id": "haneul",
+                  "pictureRef": "word:nature-sky",
+                  "word": {
+                    "ko": "하늘",
+                    "romanization": "haneul",
+                    "en": "sky"
+                  }
+                },
+                {
+                  "id": "mulgogi",
+                  "pictureRef": "word:animal-fish",
+                  "word": {
+                    "ko": "물고기",
+                    "romanization": "mulgogi",
+                    "en": "fish"
+                  }
+                }
+              ]
+            },
+            {
+              "pairs": [
+                {
+                  "id": "san",
+                  "pictureRef": "card:mountain",
+                  "word": {
+                    "ko": "산",
+                    "romanization": "san",
+                    "en": "mountain"
+                  }
+                },
+                {
+                  "id": "bada",
+                  "pictureRef": "card:sea",
+                  "word": {
+                    "ko": "바다",
+                    "romanization": "bada",
+                    "en": "sea"
+                  }
+                },
+                {
+                  "id": "mul",
+                  "pictureRef": "word:food-water",
+                  "word": {
+                    "ko": "물",
+                    "romanization": "mul",
+                    "en": "water"
+                  }
+                }
+              ]
+            },
+            {
+              "pairs": [
+                {
+                  "id": "dol",
+                  "pictureRef": "word:science-stone",
+                  "word": {
+                    "ko": "돌",
+                    "romanization": "dol",
+                    "en": "stone"
+                  }
+                },
+                {
+                  "id": "gang",
+                  "pictureRef": "word:nature-river",
+                  "word": {
+                    "ko": "강",
+                    "romanization": "gang",
+                    "en": "river"
+                  }
+                },
+                {
+                  "id": "bada",
+                  "pictureRef": "card:sea",
+                  "word": {
+                    "ko": "바다",
+                    "romanization": "bada",
+                    "en": "sea"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s2-nature-q3-apply",
+          "kind": "build-letter",
+          "words": [
+            {
+              "ko": "호수",
+              "romanization": "hosu",
+              "en": "lake",
+              "syllables": [
+                "ho",
+                "su"
+              ]
+            },
+            {
+              "ko": "섬",
+              "romanization": "seom",
+              "en": "island"
+            },
+            {
+              "ko": "강",
+              "romanization": "gang",
+              "en": "river"
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s2-nature-q3-check",
+          "kind": "listen-pick",
+          "rounds": [
+            {
+              "id": "pic-bada",
+              "prompt": {
+                "ko": "바다",
+                "romanization": "bada",
+                "en": "sea"
+              },
+              "options": [
+                {
+                  "id": "bada",
+                  "pictureRef": "card:sea",
+                  "labelEn": "sea"
+                },
+                {
+                  "id": "gang",
+                  "pictureRef": "word:nature-river",
+                  "labelEn": "river"
+                },
+                {
+                  "id": "san",
+                  "pictureRef": "card:mountain",
+                  "labelEn": "mountain"
+                },
+                {
+                  "id": "mulgogi",
+                  "pictureRef": "word:animal-fish",
+                  "labelEn": "fish"
+                }
+              ],
+              "answerId": "bada"
+            },
+            {
+              "id": "read-hosu",
+              "prompt": {
+                "ko": "호수",
+                "romanization": "hosu",
+                "en": "lake"
+              },
+              "options": [
+                {
+                  "id": "hosu",
+                  "text": {
+                    "ko": "호수",
+                    "romanization": "hosu",
+                    "en": "lake"
+                  }
+                },
+                {
+                  "id": "suyeong",
+                  "text": {
+                    "ko": "수영",
+                    "romanization": "suyeong",
+                    "en": "swimming"
+                  }
+                },
+                {
+                  "id": "ori",
+                  "text": {
+                    "ko": "오리",
+                    "romanization": "ori",
+                    "en": "duck"
+                  }
+                }
+              ],
+              "answerId": "hosu"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "culture": [],
+  "review": {
+    "language": "draft",
+    "culture": "draft",
+    "notes": []
+  },
+  "contentVer": 1
+}

@@ -1,0 +1,83 @@
+{
+  "locale": "es",
+  "domain": "lessons-stage2-nature",
+  "entries": {
+    "episode:stage2-nature": {
+      "title": "Palabras de afuera",
+      "subtitle": "Lee palabras del cielo, el tiempo y el agua.",
+      "hoyaIntro": "Sal conmigo. ¡Leamos el mundo que nos rodea!"
+    },
+    "quest:stage2-nature-q1": {
+      "title": "Palabras de afuera",
+      "blurb": "Lee cielo, estrella y árbol, y mira la palabra flor.",
+      "teaser": "Siguiente: lluvia, nieve, nubes y viento.",
+      "steps.s1.title": "Sal afuera",
+      "steps.s2.title": "Palabras de afuera",
+      "steps.s3.title": "Imagen y palabra",
+      "steps.s4.title": "Arma la palabra",
+      "steps.s5.title": "Escucha y lee",
+      "steps.s6.title": "¡Tarjeta de estrella!",
+      "steps.s1.hoyaLine": "¡Leamos lo que vemos afuera!",
+      "steps.s2.hoyaLine": "Toca Escuchar y luego lee tú cada palabra.",
+      "steps.s6.hoyaLine": "Leíste lo que hay afuera. ¡Aquí tienes una estrella!",
+      "steps.s2.discover.pages.2.caption": "Solo mira y escucha: estas letras las lees en Constructor de palabras.",
+      "steps.s2.discover.pages.0.items.0.word.gloss": "cielo",
+      "steps.s2.discover.pages.0.items.1.word.gloss": "estrella",
+      "steps.s2.discover.pages.1.items.0.word.gloss": "árbol",
+      "steps.s2.discover.pages.2.items.0.word.gloss": "flor"
+    },
+    "quest:stage2-nature-q2": {
+      "title": "Lluvia y nieve",
+      "blurb": "Lee palabras del tiempo: lluvia, nieve, nube y viento.",
+      "teaser": "Siguiente: ríos, lagos y el mar.",
+      "steps.s1.title": "¡Mira arriba!",
+      "steps.s2.title": "Palabras del tiempo",
+      "steps.s3.title": "Imagen y palabra",
+      "steps.s4.title": "Une las tarjetas",
+      "steps.s5.title": "Escucha y lee",
+      "steps.s6.title": "¡Palabras del tiempo!",
+      "steps.s1.hoyaLine": "Mira el cielo. ¿Cómo está el tiempo?",
+      "steps.s2.hoyaLine": "Toca Escuchar y luego lee tú cada palabra.",
+      "steps.s6.hoyaLine": "Lluvia, nieve, nubes y viento: ¡los leíste todos!",
+      "steps.s2.discover.pages.0.items.0.word.gloss": "lluvia",
+      "steps.s2.discover.pages.0.items.1.word.gloss": "nieve",
+      "steps.s2.discover.pages.1.items.0.word.gloss": "nube",
+      "steps.s2.discover.pages.1.items.1.word.gloss": "viento"
+    },
+    "quest:stage2-nature-q3": {
+      "title": "Ríos y mares",
+      "blurb": "Lee palabras del agua: río, lago, isla y mar.",
+      "steps.s1.title": "Hacia el agua",
+      "steps.s2.title": "Palabras del agua",
+      "steps.s3.title": "Imagen y palabra",
+      "steps.s4.title": "Arma la palabra",
+      "steps.s5.title": "Escucha y lee",
+      "steps.s6.title": "¡Palabras del agua!",
+      "steps.s1.hoyaLine": "¡Vamos adonde está el agua!",
+      "steps.s2.hoyaLine": "Toca Escuchar y luego lee tú cada palabra.",
+      "steps.s6.hoyaLine": "Ríos, lagos y mares: los leíste todos. ¡Muy bien!",
+      "steps.s2.discover.pages.0.items.0.word.gloss": "río",
+      "steps.s2.discover.pages.0.items.1.word.gloss": "lago",
+      "steps.s2.discover.pages.1.items.0.word.gloss": "isla",
+      "steps.s2.discover.pages.1.items.1.word.gloss": "mar"
+    },
+    "minigame:s2-nature-q1-check": {
+      "listenPick.rounds.pic-byeol.prompt": "estrella",
+      "listenPick.rounds.read-namu.prompt": "árbol"
+    },
+    "minigame:s2-nature-q2-apply": {
+      "cardPairs.bi.gloss": "lluvia",
+      "cardPairs.nun.gloss": "nieve",
+      "cardPairs.gureum.gloss": "nube",
+      "cardPairs.baram.gloss": "viento"
+    },
+    "minigame:s2-nature-q2-check": {
+      "listenPick.rounds.pic-gureum.prompt": "nube",
+      "listenPick.rounds.read-baram.prompt": "viento"
+    },
+    "minigame:s2-nature-q3-check": {
+      "listenPick.rounds.pic-bada.prompt": "mar",
+      "listenPick.rounds.read-hosu.prompt": "lago"
+    }
+  }
+}

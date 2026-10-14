@@ -288,6 +288,35 @@ function heldOf(story: Story): HeldStoryCard {
 const REPO = join(__dirname, '../../../../..');
 const FIXTURE_DIR = join(REPO, 'packages/content-schema/src/__fixtures__/story');
 
+describe('refreshed taste cells keep their card awards (F-CURR-001 section 3.12 Cards, T-1)', () => {
+  const readCell = (theme: string) =>
+    JSON.parse(readFileSync(join(REPO, `content/episodes/stage-2/${theme}.json`), 'utf8')) as {
+      rewardCardIds: string[];
+      quests: { id: string; rewardCardId?: string }[];
+    };
+  const cases = [
+    { theme: 'life', card: 'card:dosirak', cards: ['card:sagwa', 'card:uyu', 'card:ppang', 'card:dosirak'] },
+    { theme: 'nature', card: 'card:byeol', cards: ['card:haneul', 'card:kkot', 'card:namu', 'card:byeol'] },
+  ] as const;
+
+  it.each(cases)('$card still resolves to quest:stage2-$theme-q1, and its episode keeps its rewardCardIds', ({ theme, card, cards }) => {
+    expect(questsAll.find((q) => q.id === `quest:stage2-${theme}-q1`)?.rewardCardId).toBe(card);
+    const episode = episodesAll.find((e) => e.id === `episode:stage2-${theme}`);
+    expect(episode?.rewardCardIds).toEqual(cards);
+    expect(episode?.questIds).toContain(`quest:stage2-${theme}-q1`);
+  });
+
+  it.each(cases)('the stage2-$theme cell file keeps the same awards: $card on q1, no card on q2 and q3', ({ theme, card, cards }) => {
+    const cell = readCell(theme);
+    expect(cell.rewardCardIds).toEqual(cards);
+    expect(cell.quests.map((q) => [q.id, q.rewardCardId])).toEqual([
+      [`quest:stage2-${theme}-q1`, card],
+      [`quest:stage2-${theme}-q2`, undefined],
+      [`quest:stage2-${theme}-q3`, undefined],
+    ]);
+  });
+});
+
 describe('heritage story cards (F-STORY-006 T-AWARD-6, T-AWARD-7)', () => {
   it('the bundle holds one card per reviewed shelf story with a card block (none until 6.8), and every set is complete', () => {
     const carded = storiesAll.filter((s) => s.state === 'ready' && s.shelf !== undefined && s.card !== undefined);

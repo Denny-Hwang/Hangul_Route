@@ -220,7 +220,18 @@ export const cellKey = (e: Pick<Episode, 'stage' | 'theme'>): string => `${e.sta
  * lesson cells (F-CURR-001 §3.10, `lessons.ts`) and the Stage 5 books (`books.ts`). A
  * generated cell replaces its "Coming later" preview through `previewEpisodesFor`.
  */
-export const handWrittenEpisodes: readonly Episode[] = [...stage1Episodes, ...stage2Episodes, ...stage4Episodes, ...lessonEpisodes, ...bookEpisodes];
+export const handWrittenEpisodes: readonly Episode[] = [...stage1Episodes, ...tasteEpisodesStillShipped(), ...lessonEpisodes, ...bookEpisodes];
+
+/**
+ * The three hand-written taste cells (Lunch Box Words, Outdoor Words, Greeting Dialogues) move
+ * into lesson cell files that keep their ids (F-CURR-001 rows T-1 / T-2, OD-3). A taste stays
+ * here until its cell file is ready; then the generated episode, with the same card awards,
+ * takes its place.
+ */
+function tasteEpisodesStillShipped(): Episode[] {
+  const generated = new Set<string>(lessonEpisodes.map((e) => e.id));
+  return [...stage2Episodes, ...stage4Episodes].filter((e) => !generated.has(e.id));
+}
 
 /**
  * The cells of `list` holding more grid episodes than `max` (F-STORY-005 §3.1
