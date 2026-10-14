@@ -229,6 +229,37 @@ test.describe('Type Hangul: the in-app two-set keyboard (F-CURR-001 G-3)', () =>
     await shot(page, 'type-hangul-320-far');
   });
 
+  test('320 x 568: a long wrong guess wraps the compare into lines, every marked block inside the window (G-3 follow-up 1)', async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 568 });
+    await open(page, ['hoya']);
+    // 14 blocks against the 2 of 호야: before the wrap, blocks past the ninth sat off the right edge.
+    await typeText(page, '가나다라마바사아자차카타파하');
+    await page.getByTestId('type-hangul-done').click();
+    await expect(page.getByText('Here is how it is written. Try again.')).toBeVisible();
+    await expectNoHorizontalOverflow(page);
+    for (const side of ['typed', 'target'] as const) {
+      const marked = page.getByTestId(`type-hangul-${side}-marked`);
+      const count = await marked.count();
+      expect(count, side).toBeGreaterThan(0);
+      for (let i = 0; i < count; i += 1) {
+        const block = marked.nth(i);
+        await block.scrollIntoViewIfNeeded();
+        const b = (await block.boundingBox())!;
+        expect(b.x, `${side} ${i} left`).toBeGreaterThanOrEqual(0);
+        expect(b.x + b.width, `${side} ${i} right`).toBeLessThanOrEqual(320);
+        expect(b.y, `${side} ${i} top`).toBeGreaterThanOrEqual(0);
+        expect(b.y + b.height, `${side} ${i} bottom`).toBeLessThanOrEqual(568);
+      }
+    }
+    // Typed and word lines pair up: each typed line has a word line of the same length under it.
+    const typedRows = page.getByTestId('type-hangul-typed-row');
+    const targetRows = page.getByTestId('type-hangul-target-row');
+    expect(await typedRows.count()).toBeGreaterThan(1);
+    await expect(targetRows).toHaveCount(await typedRows.count());
+    await page.getByTestId('type-hangul-compare').scrollIntoViewIfNeeded();
+    await shot(page, 'type-hangul-320-long-guess');
+  });
+
   test('768 x 1024: the standard KS X 5002 rows in the reading column, Done and Skip under the keyboard', async ({ page }) => {
     await page.setViewportSize({ width: 768, height: 1024 });
     await open(page, ['hoya']);

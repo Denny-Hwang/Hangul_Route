@@ -8,7 +8,8 @@ import { FIXTURE_ROUNDS } from '../../../logic/type-hangul/e2e-rounds';
 import { PASS_PAUSE_MS } from '../../../logic/type-hangul/flow';
 import { byTestId, press, resetPlatform, screenTexts, setPlatform } from '../../../test-support/render';
 import type { MinigameHost } from '../host';
-import { TypeHangulGame } from '../TypeHangulGame';
+import { ResultPanel, TypeHangulGame } from '../TypeHangulGame';
+import { scoreTyped } from '../../../logic/type-hangul/score';
 
 /**
  * F-CURR-001 G-3 (design/wireframes/minigame/type-hangul.md, review of #646): Type Hangul rendered
@@ -213,5 +214,62 @@ describe('Type Hangul: the romanization setting', () => {
     const { r } = await play(['hoya'], { width: 375, height: 667 });
     expect(screenTexts(byTestId(root(r), 'type-hangul-prompt')[0]!)).toContain('hoya');
     expect(byTestId(root(r), 'type-hangul-reveal')).toHaveLength(0);
+  });
+});
+
+describe('Type Hangul: the block compare stays on screen at 320 px (G-3 follow-up 1)', () => {
+  /** Composite views (the React Native props, before react-native-web) carrying `testID`. */
+  const views = (r: ReactTestRenderer, id: string): ReactTestInstance[] =>
+    root(r).findAll((n) => typeof n.type !== 'string' && n.props.testID === id && n.props.style !== undefined);
+  const flat = (style: unknown): Record<string, number> =>
+    Object.assign({}, ...(Array.isArray(style) ? style.flat(Infinity) : [style]).filter(Boolean)) as Record<string, number>;
+
+  it('a 24-block guess on a 320-wide panel wraps into lines inside the width, typed and word in one column, every mark drawn', async () => {
+    const width = 320;
+    const gutter = 16;
+    const inner = width - 2 * gutter;
+    const typed = '가나다라마바사아자차카타파하거너더러머버서어저처';
+    const score = scoreTyped(typed, '비빔밥');
+    expect(score.blocks).toHaveLength(24);
+    let r!: ReactTestRenderer;
+    await act(async () => {
+      r = TestRenderer.create(
+        <LayoutProvider value={layoutClassFor({ width, height: 568 })}>
+          <ResultPanel
+            state={{ score, phase: 'miss' as const }}
+            round={{ target: FIXTURE_ROUNDS.bibimbap.target as TypeHangulRound['target'] }}
+            width={width}
+            height={400}
+            gutter={gutter}
+            panelRef={{ current: null }}
+            onFix={() => undefined}
+          />
+        </LayoutProvider>,
+      );
+    });
+    mounted.push(r);
+    const typedRows = views(r, 'type-hangul-typed-row');
+    const targetRows = views(r, 'type-hangul-target-row');
+    expect(typedRows.length).toBeGreaterThan(1);
+    expect(targetRows).toHaveLength(typedRows.length);
+    const gap = flat(typedRows[0]!.props.style).gap!;
+    // A block cell is the one view in the row with a border style (solid, or dashed where a side has no block).
+    const cellsOf = (row: ReactTestInstance): ReactTestInstance[] =>
+      row.findAll((n) => typeof n.type !== 'string' && n !== row && typeof n.props.style === 'object' && n.props.style?.borderStyle !== undefined);
+    let typedCount = 0;
+    typedRows.forEach((row, i) => {
+      const cells = cellsOf(row);
+      const cell = flat(cells[0]!.props.style).width!;
+      expect(cells.length * cell + (cells.length - 1) * gap, `line ${i}`).toBeLessThanOrEqual(inner);
+      // The pair stays aligned: the word line under it has the same columns.
+      expect(cellsOf(targetRows[i]!)).toHaveLength(cells.length);
+      typedCount += cells.length;
+    });
+    expect(typedCount).toBe(24);
+    const marked = score.blocks.filter((b) => b.status !== 'same');
+    expect(views(r, 'type-hangul-typed-marked')).toHaveLength(marked.length);
+    expect(views(r, 'type-hangul-target-marked')).toHaveLength(marked.length);
+    // The readout is one item, unchanged by the wrap.
+    expect(views(r, 'type-hangul-compare')).toHaveLength(1);
   });
 });
