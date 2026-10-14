@@ -4,8 +4,8 @@
   "entries": {
     "episode:stage4-rites": {
       "title": "Diálogos de saludo",
-      "subtitle": "Conoce a alguien, ponte al día y saluda el Año Nuevo.",
-      "hoyaIntro": "¡Vamos a practicar saludos con amistades nuevas y de siempre!"
+      "subtitle": "Conoce a alguien, ponte al día y celebra el Año Nuevo.",
+      "hoyaIntro": "¡Practiquemos saludos: al conocer a alguien, al reencontrarse y en Año Nuevo!"
     },
     "quest:stage4-rites-q1": {
       "title": "Mucho gusto",
@@ -23,12 +23,12 @@
       "steps.s2.discover.pages.1.items.0.lines.0.line.gloss": "Mucho gusto.",
       "steps.s2.discover.pages.1.items.0.lines.1.speaker": "Mina",
       "steps.s2.discover.pages.1.items.0.lines.1.line.gloss": "Igualmente, mucho gusto.",
-      "steps.s2.discover.pages.1.caption": "Cuando conoces a alguien, dile que te alegra conocerlo.",
+      "steps.s2.discover.pages.1.caption": "Cuando conoces a alguien nuevo, di que te alegra el encuentro.",
       "steps.s3.title": "Elige la respuesta",
       "steps.s4.title": "Ordena la conversación",
       "steps.s5.title": "Dos preguntas rápidas",
-      "steps.s6.title": "¡Carta de saludo!",
-      "steps.s6.hoyaLine": "¡Tuviste una conversación de verdad! Aquí tienes una carta de saludo."
+      "steps.s6.title": "¡Tarjeta de saludo!",
+      "steps.s6.hoyaLine": "¡Tuviste una conversación de verdad! Aquí tienes una tarjeta de saludo."
     },
     "minigame:s4-rites-q1-practice": {
       "dialogue.0.npc": "¡Hola!",
@@ -45,10 +45,10 @@
       "dialogue.2.options.ireumi-mwoyeyo.gloss": "¿Cómo te llamas?"
     },
     "minigame:s4-rites-q1-apply": {
-      "storySteps.l1.label": "¡Hola!",
-      "storySteps.l2.label": "¡Hola! ¿Cómo te llamas?",
-      "storySteps.l3.label": "Soy Hoya.",
-      "storySteps.l4.label": "Mucho gusto."
+      "storySteps.l1.label": "¡Hola! ¿Cómo te llamas?",
+      "storySteps.l2.label": "Soy Hoya.",
+      "storySteps.l3.label": "Mucho gusto.",
+      "storySteps.l4.label": "Igualmente, mucho gusto."
     },
     "minigame:s4-rites-q1-check": {
       "listenPick.rounds.c1.prompt": "¿Cómo te llamas?",
@@ -57,10 +57,10 @@
     "quest:stage4-rites-q2": {
       "title": "Cuánto tiempo",
       "blurb": "Saluda a tu docente después de mucho tiempo.",
-      "teaser": "Siguiente: desea a todos un feliz Año Nuevo.",
+      "teaser": "Siguiente: desea a todo el mundo un feliz Año Nuevo.",
       "steps.s1.title": "De vuelta",
-      "steps.s1.hoyaLine": "Hoya vuelve a ver a su docente tras un largo descanso. ¡Vamos a saludar!",
-      "steps.s2.title": "Cuánto tiempo",
+      "steps.s1.hoyaLine": "Hoya vuelve a ver a su docente después de unas vacaciones largas. ¡Vamos a saludar!",
+      "steps.s2.title": "Ha pasado un tiempo",
       "steps.s2.discover.pages.0.items.0.lines.0.speaker": "Docente",
       "steps.s2.discover.pages.0.items.0.lines.0.line.gloss": "¡Hoya, cuánto tiempo!",
       "steps.s2.discover.pages.0.items.0.lines.1.speaker": "Hoya",
@@ -70,11 +70,11 @@
       "steps.s2.discover.pages.1.items.0.lines.0.line.gloss": "¿Qué tal has estado?",
       "steps.s2.discover.pages.1.items.0.lines.1.speaker": "Hoya",
       "steps.s2.discover.pages.1.items.0.lines.1.line.gloss": "Sí, he estado bien.",
-      "steps.s2.discover.pages.1.caption": "Pregunta qué tal ha estado. La respuesta mira atrás, así que va en pasado.",
+      "steps.s2.discover.pages.1.caption": "Pregunta qué tal ha estado. Las dos frases miran atrás, así que van en pasado.",
       "steps.s3.title": "Elige la respuesta",
       "steps.s4.title": "Ordena la conversación",
       "steps.s5.title": "Dos preguntas rápidas",
-      "steps.s6.title": "¡Bienvenida de vuelta!",
+      "steps.s6.title": "¡Hola otra vez!",
       "steps.s6.hoyaLine": "Te pusiste al día con tu docente. ¡Qué saludo tan cálido!"
     },
     "minigame:s4-rites-q2-practice": {
@@ -92,8 +92,8 @@
       "dialogue.2.options.ne-jal-jinaesseoyo.gloss": "Sí, he estado bien."
     },
     "minigame:s4-rites-q2-apply": {
-      "storySteps.l1.label": "¡Hola, docente!",
-      "storySteps.l2.label": "¡Hoya, cuánto tiempo!",
+      "storySteps.l1.label": "¡Hoya, cuánto tiempo!",
+      "storySteps.l2.label": "¡Sí, docente! Cuánto tiempo.",
       "storySteps.l3.label": "¿Qué tal has estado?",
       "storySteps.l4.label": "Sí, he estado bien."
     },
@@ -103,9 +103,9 @@
     },
     "quest:stage4-rites-q3": {
       "title": "Feliz Año Nuevo",
-      "blurb": "Desea un feliz Seollal a tu docente y a una amiga.",
+      "blurb": "Desea un feliz Seollal a tu docente y a Mina.",
       "steps.s1.title": "Mañana de Seollal",
-      "steps.s1.hoyaLine": "¡Es Seollal, el Año Nuevo lunar! Vamos a desear lo mejor a todos.",
+      "steps.s1.hoyaLine": "¡Es Seollal, el Año Nuevo lunar coreano! Vamos a desear lo mejor a todo el mundo.",
       "steps.s2.title": "Deseos de Año Nuevo",
       "steps.s2.discover.pages.0.items.0.lines.0.speaker": "Hoya",
       "steps.s2.discover.pages.0.items.0.lines.0.line.gloss": "¡Feliz Año Nuevo, docente!",
@@ -121,27 +121,27 @@
       "steps.s4.title": "Ordena la conversación",
       "steps.s5.title": "Dos preguntas rápidas",
       "steps.s6.title": "¡Feliz Año Nuevo!",
-      "steps.s6.hoyaLine": "¡Deseaste a todos un feliz Año Nuevo en coreano!"
+      "steps.s6.hoyaLine": "¡Deseaste a todo el mundo un feliz Año Nuevo en coreano!"
     },
     "minigame:s4-rites-q3-practice": {
       "dialogue.0.npc": "¡Hola, Hoya!",
       "dialogue.0.options.jeoneun-minayeyo.gloss": "Soy Mina.",
-      "dialogue.0.options.seonsaengnim-saehae-bok-mani-badeuseyo.gloss": "¡Feliz Año Nuevo, docente!",
+      "dialogue.0.options.seonsaengnim-annyeonghaseyo-saehae-bok-mani-badeuseyo.gloss": "¡Hola, docente! ¡Feliz Año Nuevo!",
       "dialogue.0.options.chaegieyo.gloss": "Es un libro.",
       "dialogue.1.npc": "¡Feliz Año Nuevo!",
       "dialogue.1.options.jeoneun-hoyayeyo.gloss": "Soy Hoya.",
       "dialogue.1.options.chaegieyo.gloss": "Es un libro.",
       "dialogue.1.options.gomawoyo-minado-saehae-bok-mani-badeuseyo.gloss": "Gracias. ¡Feliz Año Nuevo también para ti, Mina!",
-      "dialogue.2.npc": "Cuánto tiempo. ¿Qué tal has estado?",
+      "dialogue.2.npc": "¿Qué tal has estado?",
       "dialogue.2.options.ne-jal-jinaesseoyo.gloss": "Sí, he estado bien.",
       "dialogue.2.options.ireumi-mwoyeyo.gloss": "¿Cómo te llamas?",
       "dialogue.2.options.jeoneun-minayeyo.gloss": "Soy Mina."
     },
     "minigame:s4-rites-q3-apply": {
-      "storySteps.l1.label": "¡Hola, docente!",
-      "storySteps.l2.label": "¡Feliz Año Nuevo!",
-      "storySteps.l3.label": "Gracias.",
-      "storySteps.l4.label": "¡Feliz Año Nuevo también para ti, Hoya!"
+      "storySteps.l1.label": "¡Hola, Hoya!",
+      "storySteps.l2.label": "¡Hola, docente! ¡Feliz Año Nuevo!",
+      "storySteps.l3.label": "Gracias. ¡Feliz Año Nuevo también para ti, Hoya!",
+      "storySteps.l4.label": "¡Gracias, docente!"
     },
     "minigame:s4-rites-q3-check": {
       "listenPick.rounds.c1.prompt": "¡Feliz Año Nuevo!",

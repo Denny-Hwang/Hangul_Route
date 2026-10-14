@@ -158,34 +158,6 @@
       "cardPairs.gang.gloss": "Río",
       "cardPairs.bom.gloss": "Primavera",
       "cardPairs.nun.gloss": "Nieve"
-    },
-    "minigame:s4-rites-respond-1": {
-      "dialogue.0.npc": "¡Hola!",
-      "dialogue.1.npc": "¿Cómo te llamas?",
-      "dialogue.2.npc": "¡Mucho gusto!",
-      "dialogue.0.options.annyeonghaseyo.gloss": "Hola",
-      "dialogue.0.options.jal-gayo.gloss": "Adiós",
-      "dialogue.0.options.gomawoyo.gloss": "Gracias",
-      "dialogue.1.options.jeoneun-hoyayeyo.gloss": "Soy Hoya",
-      "dialogue.1.options.ne-joayo.gloss": "Sí, está bien",
-      "dialogue.1.options.sagwa-juseyo.gloss": "Una manzana, por favor",
-      "dialogue.2.options.jeodo-bangawoyo.gloss": "Igualmente, mucho gusto",
-      "dialogue.2.options.aniyo.gloss": "No",
-      "dialogue.2.options.mollayo.gloss": "No sé"
-    },
-    "minigame:s4-rites-card-1": {
-      "cardPairs.annyeong.gloss": "Hola",
-      "cardPairs.gamsa.gloss": "Gracias",
-      "cardPairs.chingu.gloss": "Amigo, amiga",
-      "cardPairs.ireum.gloss": "Nombre",
-      "cardPairs.insa.gloss": "Saludo"
-    },
-    "minigame:s4-rites-quiz-1": {
-      "cardPairs.annyeong.gloss": "Hola",
-      "cardPairs.gamsa.gloss": "Gracias",
-      "cardPairs.chingu.gloss": "Amigo, amiga",
-      "cardPairs.ireum.gloss": "Nombre",
-      "cardPairs.insa.gloss": "Saludo"
     }
   }
 }

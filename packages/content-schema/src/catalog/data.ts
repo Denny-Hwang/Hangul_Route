@@ -18,8 +18,9 @@ import type { Catalog, CatalogCell, CatalogQuest, CatalogStory, CatalogTopic } f
  * From version 9 on (F-CURR-001 §3.13), a bump that adds quests lists them under the new version in
  * `CATALOG_QUEST_ADDITIONS` (`versions.ts`), so a placement result stored earlier skips them by its level.
  * Version 9 (F-CURR-001 S4-1): the Stage 4 Read Along cell ships (three lesson quests).
+ * Version 10 (F-CURR-001 T-2): Greeting Dialogues adopts Discover and Check and grows to three quests.
  */
-export const CATALOG_VERSION = 9;
+export const CATALOG_VERSION = 10;
 
 const cell = (
   stage: StageKey,
@@ -60,7 +61,7 @@ const cells: CatalogCell[] = [
   soon('stage3', 'crafts', 'Game Sentences'),
   cell('stage4', 'letters', 'Read Along', 'shipped', 13, ['quest:stage4-letters-q1', 'quest:stage4-letters-q2', 'quest:stage4-letters-q3']),
   soon('stage4', 'life', 'Kitchen Talk'),
-  cell('stage4', 'rites', 'Greeting Dialogues', 'shipped', 5, ['quest:stage4-rites-q1']),
+  cell('stage4', 'rites', 'Greeting Dialogues', 'shipped', 13, ['quest:stage4-rites-q1', 'quest:stage4-rites-q2', 'quest:stage4-rites-q3']),
   soon('stage4', 'nature', 'Park Conversations'),
   soon('stage4', 'crafts', 'Playdate Talk'),
   cell('stage5', 'letters', 'Stories of Letters', 'shipped', 13, [
@@ -120,11 +121,14 @@ const lessonQuests: CatalogQuest[] = [
   lesson('stage1-crafts-q3', 'stage1', 'crafts', 'Read Hangul!', 4),
   lesson('stage2-life-q1', 'stage2', 'life', 'Lunch Box Words', 5),
   lesson('stage2-nature-q1', 'stage2', 'nature', 'Outdoor Words', 5),
-  lesson('stage4-rites-q1', 'stage4', 'rites', 'Greeting Dialogues', 4),
+  lesson('stage4-rites-q1', 'stage4', 'rites', 'Nice to Meet You', 4),
   // F-CURR-001 upper-stage cells: they teach no symbol, so `teaches` is [].
   lesson('stage4-letters-q1', 'stage4', 'letters', 'What Is This?', 4),
   lesson('stage4-letters-q2', 'stage4', 'letters', 'Where Is It?', 4),
   lesson('stage4-letters-q3', 'stage4', 'letters', 'Thank You, Teacher', 4),
+  // F-CURR-001 T-2: the taste quest keeps its id and moves into the cell file with q2 and q3.
+  lesson('stage4-rites-q2', 'stage4', 'rites', 'Long Time No See', 4),
+  lesson('stage4-rites-q3', 'stage4', 'rites', 'Happy New Year', 4),
   // The Stage 5 books (F-STORY-005 PR 5.6): grid quests that play their stories at the read level.
   lesson('story-sejong-new-letters-read', 'stage5', 'letters', "King Sejong's New Letters", 4),
   lesson('story-shapes-of-hangeul-read', 'stage5', 'letters', 'The Secret in the Shapes', 5),

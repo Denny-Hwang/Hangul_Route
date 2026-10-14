@@ -93,8 +93,8 @@ describe('the shipped catalogue data', () => {
     ]);
     expect(CATALOG.quests.filter((q) => q.kind === 'lesson').map((q) => q.id)).toContain('quest:stage4-rites-q1');
     // 15 Stage 1 + 3 taste quests + the 14 read quests of the five Stage 5 books (F-STORY-005 PR 5.6)
-    // + the 3 Read Along quests (F-CURR-001 S4-1).
-    expect(CATALOG.quests.filter((q) => q.kind === 'lesson')).toHaveLength(35);
+    // + the 3 Read Along quests (F-CURR-001 S4-1) + Greeting Dialogues q2-q3 (F-CURR-001 T-2).
+    expect(CATALOG.quests.filter((q) => q.kind === 'lesson')).toHaveLength(37);
   });
 
   it('has 24 stories adding up to 112 minutes, each with a listen quest on its shelf episode', () => {
@@ -415,6 +415,8 @@ describe('routeCatalogOf', () => {
       'quest:stage4-letters-q2',
       'quest:stage4-letters-q3',
       'quest:stage4-rites-q1',
+      'quest:stage4-rites-q2',
+      'quest:stage4-rites-q3',
       'quest:story-sejong-new-letters-read',
       'quest:story-shapes-of-hangeul-read',
       'quest:story-hangeul-day-read',

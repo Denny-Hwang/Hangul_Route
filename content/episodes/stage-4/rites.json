@@ -2,10 +2,10 @@
   "id": "episode:stage4-rites",
   "stage": "stage4",
   "theme": "rites",
-  "status": "draft",
+  "status": "ready",
   "titleEn": "Greeting Dialogues",
   "subtitleEn": "Meet a friend, catch up, and greet the New Year.",
-  "hoyaIntroEn": "Let's practice saying hello to new and old friends!",
+  "hoyaIntroEn": "Let's practice greetings: meeting someone, catching up, and the New Year!",
   "order": 3,
   "pillarTags": [
     "B5"
@@ -254,15 +254,6 @@
           "lines": [
             {
               "id": "l1",
-              "speakerEn": "Hoya",
-              "line": {
-                "ko": "안녕하세요!",
-                "romanization": "annyeonghaseyo",
-                "en": "Hello!"
-              }
-            },
-            {
-              "id": "l2",
               "speakerEn": "Mina",
               "line": {
                 "ko": "안녕하세요! 이름이 뭐예요?",
@@ -271,7 +262,7 @@
               }
             },
             {
-              "id": "l3",
+              "id": "l2",
               "speakerEn": "Hoya",
               "line": {
                 "ko": "저는 호야예요.",
@@ -280,12 +271,21 @@
               }
             },
             {
-              "id": "l4",
+              "id": "l3",
               "speakerEn": "Mina",
               "line": {
                 "ko": "만나서 반가워요.",
                 "romanization": "mannaseo bangawoyo",
                 "en": "Nice to meet you."
+              }
+            },
+            {
+              "id": "l4",
+              "speakerEn": "Hoya",
+              "line": {
+                "ko": "저도 반가워요.",
+                "romanization": "jeodo bangawoyo",
+                "en": "Nice to meet you too."
               }
             }
           ]
@@ -442,7 +442,7 @@
                     ]
                   }
                 ],
-                "captionEn": "Ask how someone has been. The answer looks back, so it is in the past."
+                "captionEn": "Ask how someone has been. You both look back, so question and answer are in the past."
               }
             ]
           },
@@ -604,20 +604,20 @@
           "lines": [
             {
               "id": "l1",
-              "speakerEn": "Hoya",
-              "line": {
-                "ko": "선생님, 안녕하세요!",
-                "romanization": "seonsaengnim annyeonghaseyo",
-                "en": "Hello, Teacher!"
-              }
-            },
-            {
-              "id": "l2",
               "speakerEn": "Teacher",
               "line": {
                 "ko": "호야, 오랜만이에요!",
                 "romanization": "hoya oraenmanieyo",
                 "en": "Hoya, it has been a while!"
+              }
+            },
+            {
+              "id": "l2",
+              "speakerEn": "Hoya",
+              "line": {
+                "ko": "네, 선생님! 오랜만이에요.",
+                "romanization": "ne seonsaengnim oraenmanieyo",
+                "en": "Yes, Teacher! It has been a while."
               }
             },
             {
@@ -728,7 +728,7 @@
           "id": "s1",
           "kind": "intro",
           "titleEn": "Seollal Morning",
-          "hoyaLineEn": "It's Seollal, the Lunar New Year! Let's wish everyone well.",
+          "hoyaLineEn": "It's Seollal, the Korean Lunar New Year! Let's wish everyone well.",
           "durationSeconds": 7
         },
         {
@@ -854,9 +854,9 @@
                 {
                   "id": "r2",
                   "text": {
-                    "ko": "선생님, 새해 복 많이 받으세요!",
-                    "romanization": "seonsaengnim saehae bok mani badeuseyo",
-                    "en": "Happy New Year, Teacher!"
+                    "ko": "선생님, 안녕하세요! 새해 복 많이 받으세요!",
+                    "romanization": "seonsaengnim annyeonghaseyo saehae bok mani badeuseyo",
+                    "en": "Hello, Teacher! Happy New Year!"
                   },
                   "correct": true
                 },
@@ -911,9 +911,9 @@
             {
               "speakerEn": "Teacher",
               "line": {
-                "ko": "오랜만이에요. 잘 지냈어요?",
-                "romanization": "oraenmanieyo jal jinaesseoyo",
-                "en": "It has been a while. Have you been well?"
+                "ko": "잘 지냈어요?",
+                "romanization": "jal jinaesseoyo",
+                "en": "Have you been well?"
               },
               "replies": [
                 {
@@ -953,38 +953,38 @@
           "lines": [
             {
               "id": "l1",
-              "speakerEn": "Hoya",
+              "speakerEn": "Teacher",
               "line": {
-                "ko": "선생님, 안녕하세요!",
-                "romanization": "seonsaengnim annyeonghaseyo",
-                "en": "Hello, Teacher!"
+                "ko": "호야, 안녕하세요!",
+                "romanization": "hoya annyeonghaseyo",
+                "en": "Hello, Hoya!"
               }
             },
             {
               "id": "l2",
               "speakerEn": "Hoya",
               "line": {
-                "ko": "새해 복 많이 받으세요!",
-                "romanization": "saehae bok mani badeuseyo",
-                "en": "Happy New Year!"
+                "ko": "선생님, 안녕하세요! 새해 복 많이 받으세요!",
+                "romanization": "seonsaengnim annyeonghaseyo saehae bok mani badeuseyo",
+                "en": "Hello, Teacher! Happy New Year!"
               }
             },
             {
               "id": "l3",
               "speakerEn": "Teacher",
               "line": {
-                "ko": "고마워요.",
-                "romanization": "gomawoyo",
-                "en": "Thank you."
+                "ko": "고마워요. 호야도 새해 복 많이 받으세요!",
+                "romanization": "gomawoyo hoyado saehae bok mani badeuseyo",
+                "en": "Thank you. Happy New Year to you too, Hoya!"
               }
             },
             {
               "id": "l4",
-              "speakerEn": "Teacher",
+              "speakerEn": "Hoya",
               "line": {
-                "ko": "호야도 새해 복 많이 받으세요!",
-                "romanization": "hoyado saehae bok mani badeuseyo",
-                "en": "Happy New Year to you too, Hoya!"
+                "ko": "고마워요, 선생님!",
+                "romanization": "gomawoyo seonsaengnim",
+                "en": "Thank you, Teacher!"
               }
             }
           ]
@@ -1012,9 +1012,9 @@
                 {
                   "id": "b",
                   "text": {
-                    "ko": "고마워요. 새해 복 많이 받으세요!",
-                    "romanization": "gomawoyo saehae bok mani badeuseyo",
-                    "en": "Thank you. Happy New Year to you too!"
+                    "ko": "고마워요. 미나도 새해 복 많이 받으세요!",
+                    "romanization": "gomawoyo minado saehae bok mani badeuseyo",
+                    "en": "Thank you. Happy New Year to you too, Mina!"
                   }
                 },
                 {
@@ -1055,9 +1055,9 @@
                 {
                   "id": "c",
                   "text": {
-                    "ko": "선생님, 새해 복 많이 받으세요!",
-                    "romanization": "seonsaengnim saehae bok mani badeuseyo",
-                    "en": "Happy New Year, Teacher!"
+                    "ko": "선생님, 안녕하세요! 새해 복 많이 받으세요!",
+                    "romanization": "seonsaengnim annyeonghaseyo saehae bok mani badeuseyo",
+                    "en": "Hello, Teacher! Happy New Year!"
                   }
                 }
               ],
@@ -1072,7 +1072,7 @@
     {
       "id": "n1",
       "kind": "culture",
-      "textEn": "{ko:설날} (Seollal) is the Lunar New Year. A common greeting then is {ko:새해 복 많이 받으세요}, a wish that the other person has a lucky year ahead.",
+      "textEn": "{ko:설날} (Seollal) is the Korean Lunar New Year. A common greeting then is {ko:새해 복 많이 받으세요}, a wish that the other person has a year full of blessings.",
       "sources": [
         {
           "title": "설, an entry of the Encyclopedia of Korean Culture",
@@ -1097,17 +1097,22 @@
         }
       ],
       "verification": {
-        "passes": 2,
+        "passes": 3,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "Line 1 (passes: 1, author sourcing, 2026-10-14): all three pages fetched. The claim is that Seollal is the Lunar New Year and that 새해 복 많이 받으세요 is a common greeting then. Encyclopedia of Korean Culture, 설: the definition names it the first day of the lunar year, the same as 설날; the 세시풍속 section calls 새해 복 많이 받으십시오 a modern New Year greeting, so the note says 'common' and never 'traditional'. Encyclopedia of Korean Culture, 인사, item ⑤: the Seollal greeting 새해에 복 많이 받으십시오. National Institute of Korean Language column: 새해 복 많이 받으십시오 is a suitable New Year greeting; the bow itself greets, so no line in the cell is said during a bow (no bow is shown). The cell uses the polite 해요체 form 받으세요 (the cell's register); the formal 받으십시오 of the sources is the same wish. The note says 'a common greeting', names no group as a whole and copies no wording (English note, Korean locators). Carried by: q3 intro Hoya line, q3 Discover page 1 caption, q3 blurb. Line 2 (passes: 2, independent fact check, pass 2b, 2026-10-14): a session that did not author the cell fetched all three sources again. Encyclopedia of Korean Culture, 설: the 정의 sentence names 설 as the first day of the lunar year, the same as 설날: confirmed. The sentence calling 새해 복 많이 받으십시오 a modern rather than traditional New Year greeting is there, and the paragraph just before it says that today this greeting is said twice a year, once for the solar and once for the lunar new year, which backs 'common': confirmed. The locator named the section 설의 세시풍속; the quoted sentence is in 특징과 의의, so the locator now names that section. The page also suggests the older 과세 greetings for Seollal itself; the note claims only that 새해 복 많이 받으세요 is common, not that it is the only or traditional one, so it stands. Encyclopedia of Korean Culture, 인사, 내용, (1) 말로 하는 인사, ⑤: for the Seollal 세배 it gives 새해에 복 많이 받으십시오 first among four wishes, 오래오래 건강하십시오 among them: confirmed. National Institute of Korean Language, 송년과 신년의 언어 예절 by 허철구: 과세 안녕하십니까 and 새해 복 많이 받으십시오 as suitable greetings to an elder, 새해 복 많이 받게 among elders' replies, and the bow itself as the greeting with no words during it: confirmed. The two encyclopedia entries differ on whether words go with the bow; the cell shows no bow, so the difference does not touch it. Note text unchanged. The note is English and shares no run of words with any source; the Korean quotations sit only in the locators. All three hosts are in SOURCE_HOST_ALLOWLIST and two are Korean public institutions (Academy of Korean Studies, National Institute of Korean Language). The note names no group as a whole, no real person, shop, brand or price."
+        "notes": "Line 1 (passes: 1, author sourcing, 2026-10-14): all three pages fetched. The claim is that Seollal is the Lunar New Year and that 새해 복 많이 받으세요 is a common greeting then. Encyclopedia of Korean Culture, 설: the definition names it the first day of the lunar year, the same as 설날; the 세시풍속 section calls 새해 복 많이 받으십시오 a modern New Year greeting, so the note says 'common' and never 'traditional'. Encyclopedia of Korean Culture, 인사, item ⑤: the Seollal greeting 새해에 복 많이 받으십시오. National Institute of Korean Language column: 새해 복 많이 받으십시오 is a suitable New Year greeting; the bow itself greets, so no line in the cell is said during a bow (no bow is shown). The cell uses the polite 해요체 form 받으세요 (the cell's register); the formal 받으십시오 of the sources is the same wish. The note says 'a common greeting', names no group as a whole and copies no wording (English note, Korean locators). Carried by: q3 intro Hoya line, q3 Discover page 1 caption, q3 blurb. Line 2 (passes: 2, independent fact check, pass 2b, 2026-10-14): a session that did not author the cell fetched all three sources again. Encyclopedia of Korean Culture, 설: the 정의 sentence names 설 as the first day of the lunar year, the same as 설날: confirmed. The sentence calling 새해 복 많이 받으십시오 a modern rather than traditional New Year greeting is there, and the paragraph just before it says that today this greeting is said twice a year, once for the solar and once for the lunar new year, which backs 'common': confirmed. The locator named the section 설의 세시풍속; the quoted sentence is in 특징과 의의, so the locator now names that section. The page also suggests the older 과세 greetings for Seollal itself; the note claims only that 새해 복 많이 받으세요 is common, not that it is the only or traditional one, so it stands. Encyclopedia of Korean Culture, 인사, 내용, (1) 말로 하는 인사, ⑤: for the Seollal 세배 it gives 새해에 복 많이 받으십시오 first among four wishes, 오래오래 건강하십시오 among them: confirmed. National Institute of Korean Language, 송년과 신년의 언어 예절 by 허철구: 과세 안녕하십니까 and 새해 복 많이 받으십시오 as suitable greetings to an elder, 새해 복 많이 받게 among elders' replies, and the bow itself as the greeting with no words during it: confirmed. The two encyclopedia entries differ on whether words go with the bow; the cell shows no bow, so the difference does not touch it. Note text unchanged. The note is English and shares no run of words with any source; the Korean quotations sit only in the locators. All three hosts are in SOURCE_HOST_ALLOWLIST and two are Korean public institutions (Academy of Korean Studies, National Institute of Korean Language). The note names no group as a whole, no real person, shop, brand or price. Line 3 (passes: 3, MAR culture pass 5, 2026-10-14): all three sources re-fetched; 설 정의, the 특징과 의의 modern-greeting sentence (Line 2's section; Line 1's 세시풍속 superseded), 인사 ⑤ and the NIKL column confirmed. Note now says 'Korean Lunar New Year' and 'a year full of blessings', both within the sources; no copied wording."
       }
     }
   ],
   "review": {
-    "language": "draft",
-    "culture": "draft",
-    "notes": []
+    "language": "native-reviewed",
+    "culture": "culture-reviewed",
+    "reviewedBy": "MAR",
+    "reviewedAt": "2026-10-14",
+    "notes": [
+      "Language pass 4 (MAR): spelling, spacing, 해요체 and romanization clean; applied one-order Story Sequences (q2 follows Discover, the teacher opens), the q2 past caption covering question and answer, Hoya returning the teacher's greeting in q3, 미나도 in the q3 Check reply as glossed, no late 오랜만이에요 in q3 practice, the intro naming the three scenes, one wording for 복.",
+      "Culture pass 5 (MAR): the Seollal note re-checked against its three sources (verification line 3); 'Korean Lunar New Year' and 'a year full of blessings' applied; cast is Hoya, Mina and an unnamed teacher; no stereotype, no group named as a whole, no real person, brand or price, no age wording."
+    ]
   },
   "contentVer": 1
 }

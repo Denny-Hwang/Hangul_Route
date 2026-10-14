@@ -248,12 +248,18 @@ describe('grid golden (F-STORY-005 §3.1 rule 2)', () => {
       { id: 'episode:stage1-crafts', order: 5, questIds: ['quest:stage1-crafts-q1', 'quest:stage1-crafts-q2', 'quest:stage1-crafts-q3'], status: 'shipped' },
       { id: 'episode:stage2-life', order: 2, questIds: ['quest:stage2-life-q1'], status: 'shipped' },
       { id: 'episode:stage2-nature', order: 4, questIds: ['quest:stage2-nature-q1'], status: 'shipped' },
-      { id: 'episode:stage4-rites', order: 3, questIds: ['quest:stage4-rites-q1'], status: 'shipped' },
       // F-CURR-001 S4-1: the first upper-stage lesson cell (generated, after the hand-written lessons).
       {
         id: 'episode:stage4-letters',
         order: 1,
         questIds: ['quest:stage4-letters-q1', 'quest:stage4-letters-q2', 'quest:stage4-letters-q3'],
+        status: 'shipped',
+      },
+      // F-CURR-001 T-2: the Greeting Dialogues taste moved into its generated cell (same id, three quests).
+      {
+        id: 'episode:stage4-rites',
+        order: 3,
+        questIds: ['quest:stage4-rites-q1', 'quest:stage4-rites-q2', 'quest:stage4-rites-q3'],
         status: 'shipped',
       },
       // F-STORY-005 PR 5.6: the five Stage 5 books (books.ts), each cell's placeholder id kept.
@@ -317,9 +323,10 @@ describe('pillar tags of the shipped lessons (F-STORY-005 §3.2)', () => {
       'episode:stage1-crafts': ['E1'],
       'episode:stage2-life': [],
       'episode:stage2-nature': ['D2'],
-      'episode:stage4-rites': [],
       // F-CURR-001 S4-1 (generated from content/episodes/stage-4/letters.json).
       'episode:stage4-letters': ['A1'],
+      // F-CURR-001 T-2 (generated from content/episodes/stage-4/rites.json): q3 is a Seollal custom.
+      'episode:stage4-rites': ['B5'],
       'episode:stage5-letters': ['A1'],
       'episode:stage5-life': ['B1', 'B5', 'E4'],
       'episode:stage5-rites': ['B5'],

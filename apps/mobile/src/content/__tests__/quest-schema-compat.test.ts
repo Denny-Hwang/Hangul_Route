@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { bookQuests } from '../books';
 import { lessonQuests } from '../lessons';
 import { jamoAll } from '../jamo';
-import { questsAll, stage1Quests, stage2Quests, stage4Quests } from '../quests';
+import { questsAll, stage1Quests, stage2Quests } from '../quests';
 import { storyQuests } from '../stories';
 
 /**
@@ -12,13 +12,11 @@ import { storyQuests } from '../stories';
  * (Until now no test parsed app content with the schema, audit story-mode #1.)
  */
 describe('shipped content still parses after the F-QUEST-002 schema changes', () => {
-  it('has Stage 1, Stage 2 and Stage 4 quests to check, plus the generated story, book and lesson quests', () => {
+  it('has Stage 1 and Stage 2 quests to check, plus the generated story, book and lesson quests (Stage 4 is generated since F-CURR-001 T-2)', () => {
     expect(stage1Quests.length).toBeGreaterThan(0);
     expect(stage2Quests.length).toBeGreaterThan(0);
-    expect(stage4Quests.length).toBeGreaterThan(0);
-    expect(questsAll).toHaveLength(
-      stage1Quests.length + stage2Quests.length + stage4Quests.length + storyQuests.length + bookQuests.length + lessonQuests.length,
-    );
+    expect(lessonQuests.map((q) => q.id)).toContain('quest:stage4-rites-q1');
+    expect(questsAll).toHaveLength(stage1Quests.length + stage2Quests.length + storyQuests.length + bookQuests.length + lessonQuests.length);
   });
 
   it.each(questsAll.map((q) => [q.id, q] as const))('%s passes QuestSchema', (_id, quest) => {
@@ -26,14 +24,14 @@ describe('shipped content still parses after the F-QUEST-002 schema changes', ()
     expect(result.success, result.success ? '' : JSON.stringify(result.error.issues)).toBe(true);
   });
 
-  it('adds discover and check steps only to Stage 1 and the upper-stage lesson quests; the Stage 2 and Stage 4 tastes keep five steps and present', () => {
+  it('adds discover and check steps only to Stage 1 and the upper-stage lesson quests; the Stage 2 tastes keep five steps and present', () => {
     // F-CURR-001 lesson cells (generated) have the six-step shape of F-QUEST-002 R4 too.
     const sixSteps = new Set([...stage1Quests, ...lessonQuests].map((q) => q.id));
     for (const quest of questsAll) {
       if (sixSteps.has(quest.id)) continue;
       for (const step of quest.steps) expect(['discover', 'check'], `${quest.id}/${step.id}`).not.toContain(step.kind);
     }
-    for (const quest of [...stage2Quests, ...stage4Quests]) {
+    for (const quest of stage2Quests) {
       expect(quest.steps.map((s) => s.kind), quest.id).toEqual(['intro', 'present', 'practice', 'apply', 'reward']);
     }
   });

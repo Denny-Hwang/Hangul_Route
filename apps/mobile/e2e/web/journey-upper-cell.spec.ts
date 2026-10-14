@@ -69,6 +69,31 @@ const CELLS: readonly UpperCell[] = [
       await expect(page.getByRole('button', { name: /^Letters & Books: Read Along\./ })).toBeVisible();
     },
   },
+  // F-CURR-001 T-2: Greeting Dialogues, q1 "Nice to Meet You" (the taste quest's id, now a six-step lesson).
+  {
+    episodeId: 'episode:stage4-rites',
+    cellButton: journeyCellName(4, 'Holidays & Traditions'),
+    title: 'Greeting Dialogues',
+    playFirstQuest: async (page) => {
+      await page.getByRole('button', { name: 'Start', exact: true }).first().click();
+      await page.getByRole('button', { name: 'Continue' }).click();
+      await passDiscover(page);
+      await page.getByRole('button', { name: 'Play minigame' }).click();
+      await reply(page, '안녕하세요!');
+      await reply(page, '저는 호야예요.');
+      await reply(page, '저도 반가워요.');
+      await page.getByRole('button', { name: 'Play minigame' }).click();
+      await orderLines(page, ['l1', 'l2', 'l3', 'l4']);
+      await playCheckByIds(page, [{ answer: 'a' }, { answer: 'b' }]);
+      await expect(page.getByText('Finish', { exact: true }).first()).toBeVisible();
+    },
+    expectRouteDay: async (page) => {
+      await page.goto('/');
+      await page.getByText('Learning Route', { exact: true }).last().click();
+      await page.getByRole('button', { name: /^Stage 4, Dialogue\./ }).click();
+      await expect(page.getByRole('button', { name: /^Holidays & Traditions: Greeting Dialogues\./ })).toBeVisible();
+    },
+  },
 ];
 
 async function openJourney(page: Page): Promise<void> {

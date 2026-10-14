@@ -127,23 +127,6 @@ const stage2Episodes: Episode[] = [
   },
 ];
 
-const stage4Episodes: Episode[] = [
-  {
-    id: 'episode:stage4-rites',
-    stage: 'stage4',
-    theme: 'rites',
-    order: 3,
-    titleEn: 'Greeting Dialogues',
-    subtitleEn: 'Say hello and meet a new friend.',
-    hoyaIntroEn: 'Let us practice saying hello to new friends!',
-    questIds: ['quest:stage4-rites-q1'],
-    rewardCardIds: ['card:annyeong', 'card:gamsa', 'card:chingu', 'card:insa'],
-    estimatedMinutes: 5,
-    pillarTags: [],
-    status: 'shipped',
-  },
-];
-
 function makePreviewEpisode(stage: string, theme: string, order: number, titleEn: string): Episode {
   return {
     id: `episode:${stage}-${theme}` as Episode['id'],
@@ -223,14 +206,14 @@ export const cellKey = (e: Pick<Episode, 'stage' | 'theme'>): string => `${e.sta
 export const handWrittenEpisodes: readonly Episode[] = [...stage1Episodes, ...tasteEpisodesStillShipped(), ...lessonEpisodes, ...bookEpisodes];
 
 /**
- * The three hand-written taste cells (Lunch Box Words, Outdoor Words, Greeting Dialogues) move
- * into lesson cell files that keep their ids (F-CURR-001 rows T-1 / T-2, OD-3). A taste stays
- * here until its cell file is ready; then the generated episode, with the same card awards,
- * takes its place.
+ * The hand-written taste cells move into lesson cell files that keep their ids (F-CURR-001
+ * rows T-1 / T-2, OD-3). A taste stays here until its cell file is ready; then the generated
+ * episode, with the same card awards, takes its place. Greeting Dialogues (T-2) now comes
+ * only from `content/episodes/stage-4/rites.json`.
  */
 function tasteEpisodesStillShipped(): Episode[] {
   const generated = new Set<string>(lessonEpisodes.map((e) => e.id));
-  return [...stage2Episodes, ...stage4Episodes].filter((e) => !generated.has(e.id));
+  return stage2Episodes.filter((e) => !generated.has(e.id));
 }
 
 /**

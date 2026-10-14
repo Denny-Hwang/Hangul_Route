@@ -570,6 +570,573 @@ export const LESSON_SCOPES: Readonly<Record<string, MinigameScope>> = {
         ]
       }
     ]
+  },
+  "minigame:s4-rites-q1-apply": {
+    "kind": "story-sequence",
+    "rounds": 1,
+    "storySteps": [
+      {
+        "id": "l1",
+        "labelEn": "Hello! What is your name?",
+        "labelKo": "안녕하세요! 이름이 뭐예요?",
+        "romanization": "annyeonghaseyo ireumi mwoyeyo"
+      },
+      {
+        "id": "l2",
+        "labelEn": "I am Hoya.",
+        "labelKo": "저는 호야예요.",
+        "romanization": "jeoneun hoyayeyo"
+      },
+      {
+        "id": "l3",
+        "labelEn": "Nice to meet you.",
+        "labelKo": "만나서 반가워요.",
+        "romanization": "mannaseo bangawoyo"
+      },
+      {
+        "id": "l4",
+        "labelEn": "Nice to meet you too.",
+        "labelKo": "저도 반가워요.",
+        "romanization": "jeodo bangawoyo"
+      }
+    ]
+  },
+  "minigame:s4-rites-q1-check": {
+    "kind": "listen-pick",
+    "rounds": 2,
+    "listenPick": {
+      "rounds": [
+        {
+          "id": "c1",
+          "prompt": {
+            "ko": "이름이 뭐예요?",
+            "romanization": "ireumi mwoyeyo",
+            "en": "What is your name?"
+          },
+          "options": [
+            {
+              "id": "a",
+              "text": {
+                "ko": "저는 미나예요.",
+                "romanization": "jeoneun minayeyo",
+                "en": "I am Mina."
+              }
+            },
+            {
+              "id": "b",
+              "text": {
+                "ko": "책이에요.",
+                "romanization": "chaegieyo",
+                "en": "It is a book."
+              }
+            },
+            {
+              "id": "c",
+              "text": {
+                "ko": "만나서 반가워요.",
+                "romanization": "mannaseo bangawoyo",
+                "en": "Nice to meet you."
+              }
+            }
+          ],
+          "answerId": "a"
+        },
+        {
+          "id": "c2",
+          "prompt": {
+            "ko": "만나서 반가워요.",
+            "romanization": "mannaseo bangawoyo",
+            "en": "Nice to meet you."
+          },
+          "options": [
+            {
+              "id": "a",
+              "text": {
+                "ko": "아니요.",
+                "romanization": "aniyo",
+                "en": "No."
+              }
+            },
+            {
+              "id": "b",
+              "text": {
+                "ko": "저도 반가워요.",
+                "romanization": "jeodo bangawoyo",
+                "en": "Nice to meet you too."
+              }
+            },
+            {
+              "id": "c",
+              "text": {
+                "ko": "책이에요.",
+                "romanization": "chaegieyo",
+                "en": "It is a book."
+              }
+            }
+          ],
+          "answerId": "b"
+        }
+      ]
+    }
+  },
+  "minigame:s4-rites-q1-practice": {
+    "kind": "tap-respond",
+    "rounds": 3,
+    "dialogue": [
+      {
+        "npcKo": "안녕하세요!",
+        "npcRomanization": "annyeonghaseyo",
+        "npcEn": "Hello!",
+        "options": [
+          {
+            "ko": "책이에요.",
+            "romanization": "chaegieyo",
+            "en": "It is a book.",
+            "isCorrect": false
+          },
+          {
+            "ko": "안녕하세요!",
+            "romanization": "annyeonghaseyo",
+            "en": "Hello!",
+            "isCorrect": true
+          },
+          {
+            "ko": "저도 반가워요.",
+            "romanization": "jeodo bangawoyo",
+            "en": "Nice to meet you too.",
+            "isCorrect": false
+          }
+        ]
+      },
+      {
+        "npcKo": "이름이 뭐예요?",
+        "npcRomanization": "ireumi mwoyeyo",
+        "npcEn": "What is your name?",
+        "options": [
+          {
+            "ko": "안녕하세요!",
+            "romanization": "annyeonghaseyo",
+            "en": "Hello!",
+            "isCorrect": false
+          },
+          {
+            "ko": "아니요.",
+            "romanization": "aniyo",
+            "en": "No.",
+            "isCorrect": false
+          },
+          {
+            "ko": "저는 호야예요.",
+            "romanization": "jeoneun hoyayeyo",
+            "en": "I am Hoya.",
+            "isCorrect": true
+          }
+        ]
+      },
+      {
+        "npcKo": "만나서 반가워요!",
+        "npcRomanization": "mannaseo bangawoyo",
+        "npcEn": "Nice to meet you!",
+        "options": [
+          {
+            "ko": "저도 반가워요.",
+            "romanization": "jeodo bangawoyo",
+            "en": "Nice to meet you too.",
+            "isCorrect": true
+          },
+          {
+            "ko": "아니요.",
+            "romanization": "aniyo",
+            "en": "No.",
+            "isCorrect": false
+          },
+          {
+            "ko": "이름이 뭐예요?",
+            "romanization": "ireumi mwoyeyo",
+            "en": "What is your name?",
+            "isCorrect": false
+          }
+        ]
+      }
+    ]
+  },
+  "minigame:s4-rites-q2-apply": {
+    "kind": "story-sequence",
+    "rounds": 1,
+    "storySteps": [
+      {
+        "id": "l1",
+        "labelEn": "Hoya, it has been a while!",
+        "labelKo": "호야, 오랜만이에요!",
+        "romanization": "hoya oraenmanieyo"
+      },
+      {
+        "id": "l2",
+        "labelEn": "Yes, Teacher! It has been a while.",
+        "labelKo": "네, 선생님! 오랜만이에요.",
+        "romanization": "ne seonsaengnim oraenmanieyo"
+      },
+      {
+        "id": "l3",
+        "labelEn": "Have you been well?",
+        "labelKo": "잘 지냈어요?",
+        "romanization": "jal jinaesseoyo"
+      },
+      {
+        "id": "l4",
+        "labelEn": "Yes, I have been well.",
+        "labelKo": "네, 잘 지냈어요.",
+        "romanization": "ne jal jinaesseoyo"
+      }
+    ]
+  },
+  "minigame:s4-rites-q2-check": {
+    "kind": "listen-pick",
+    "rounds": 2,
+    "listenPick": {
+      "rounds": [
+        {
+          "id": "c1",
+          "prompt": {
+            "ko": "잘 지냈어요?",
+            "romanization": "jal jinaesseoyo",
+            "en": "Have you been well?"
+          },
+          "options": [
+            {
+              "id": "a",
+              "text": {
+                "ko": "네, 잘 지냈어요.",
+                "romanization": "ne jal jinaesseoyo",
+                "en": "Yes, I have been well."
+              }
+            },
+            {
+              "id": "b",
+              "text": {
+                "ko": "이름이 뭐예요?",
+                "romanization": "ireumi mwoyeyo",
+                "en": "What is your name?"
+              }
+            },
+            {
+              "id": "c",
+              "text": {
+                "ko": "책이에요.",
+                "romanization": "chaegieyo",
+                "en": "It is a book."
+              }
+            }
+          ],
+          "answerId": "a"
+        },
+        {
+          "id": "c2",
+          "prompt": {
+            "ko": "호야, 오랜만이에요!",
+            "romanization": "hoya oraenmanieyo",
+            "en": "Hoya, it has been a while!"
+          },
+          "options": [
+            {
+              "id": "a",
+              "text": {
+                "ko": "저는 미나예요.",
+                "romanization": "jeoneun minayeyo",
+                "en": "I am Mina."
+              }
+            },
+            {
+              "id": "b",
+              "text": {
+                "ko": "이름이 뭐예요?",
+                "romanization": "ireumi mwoyeyo",
+                "en": "What is your name?"
+              }
+            },
+            {
+              "id": "c",
+              "text": {
+                "ko": "선생님, 오랜만이에요!",
+                "romanization": "seonsaengnim oraenmanieyo",
+                "en": "Teacher, it has been a while!"
+              }
+            }
+          ],
+          "answerId": "c"
+        }
+      ]
+    }
+  },
+  "minigame:s4-rites-q2-practice": {
+    "kind": "tap-respond",
+    "rounds": 3,
+    "dialogue": [
+      {
+        "npcKo": "호야, 안녕하세요!",
+        "npcRomanization": "hoya annyeonghaseyo",
+        "npcEn": "Hello, Hoya!",
+        "options": [
+          {
+            "ko": "선생님, 안녕하세요!",
+            "romanization": "seonsaengnim annyeonghaseyo",
+            "en": "Hello, Teacher!",
+            "isCorrect": true
+          },
+          {
+            "ko": "책이에요.",
+            "romanization": "chaegieyo",
+            "en": "It is a book.",
+            "isCorrect": false
+          },
+          {
+            "ko": "저는 미나예요.",
+            "romanization": "jeoneun minayeyo",
+            "en": "I am Mina.",
+            "isCorrect": false
+          }
+        ]
+      },
+      {
+        "npcKo": "호야, 오랜만이에요!",
+        "npcRomanization": "hoya oraenmanieyo",
+        "npcEn": "Hoya, it has been a while!",
+        "options": [
+          {
+            "ko": "이름이 뭐예요?",
+            "romanization": "ireumi mwoyeyo",
+            "en": "What is your name?",
+            "isCorrect": false
+          },
+          {
+            "ko": "선생님, 오랜만이에요!",
+            "romanization": "seonsaengnim oraenmanieyo",
+            "en": "Teacher, it has been a while!",
+            "isCorrect": true
+          },
+          {
+            "ko": "아니요.",
+            "romanization": "aniyo",
+            "en": "No.",
+            "isCorrect": false
+          }
+        ]
+      },
+      {
+        "npcKo": "잘 지냈어요?",
+        "npcRomanization": "jal jinaesseoyo",
+        "npcEn": "Have you been well?",
+        "options": [
+          {
+            "ko": "저는 미나예요.",
+            "romanization": "jeoneun minayeyo",
+            "en": "I am Mina.",
+            "isCorrect": false
+          },
+          {
+            "ko": "이름이 뭐예요?",
+            "romanization": "ireumi mwoyeyo",
+            "en": "What is your name?",
+            "isCorrect": false
+          },
+          {
+            "ko": "네, 잘 지냈어요.",
+            "romanization": "ne jal jinaesseoyo",
+            "en": "Yes, I have been well.",
+            "isCorrect": true
+          }
+        ]
+      }
+    ]
+  },
+  "minigame:s4-rites-q3-apply": {
+    "kind": "story-sequence",
+    "rounds": 1,
+    "storySteps": [
+      {
+        "id": "l1",
+        "labelEn": "Hello, Hoya!",
+        "labelKo": "호야, 안녕하세요!",
+        "romanization": "hoya annyeonghaseyo"
+      },
+      {
+        "id": "l2",
+        "labelEn": "Hello, Teacher! Happy New Year!",
+        "labelKo": "선생님, 안녕하세요! 새해 복 많이 받으세요!",
+        "romanization": "seonsaengnim annyeonghaseyo saehae bok mani badeuseyo"
+      },
+      {
+        "id": "l3",
+        "labelEn": "Thank you. Happy New Year to you too, Hoya!",
+        "labelKo": "고마워요. 호야도 새해 복 많이 받으세요!",
+        "romanization": "gomawoyo hoyado saehae bok mani badeuseyo"
+      },
+      {
+        "id": "l4",
+        "labelEn": "Thank you, Teacher!",
+        "labelKo": "고마워요, 선생님!",
+        "romanization": "gomawoyo seonsaengnim"
+      }
+    ]
+  },
+  "minigame:s4-rites-q3-check": {
+    "kind": "listen-pick",
+    "rounds": 2,
+    "listenPick": {
+      "rounds": [
+        {
+          "id": "c1",
+          "prompt": {
+            "ko": "새해 복 많이 받으세요!",
+            "romanization": "saehae bok mani badeuseyo",
+            "en": "Happy New Year!"
+          },
+          "options": [
+            {
+              "id": "a",
+              "text": {
+                "ko": "책이에요.",
+                "romanization": "chaegieyo",
+                "en": "It is a book."
+              }
+            },
+            {
+              "id": "b",
+              "text": {
+                "ko": "고마워요. 미나도 새해 복 많이 받으세요!",
+                "romanization": "gomawoyo minado saehae bok mani badeuseyo",
+                "en": "Thank you. Happy New Year to you too, Mina!"
+              }
+            },
+            {
+              "id": "c",
+              "text": {
+                "ko": "이름이 뭐예요?",
+                "romanization": "ireumi mwoyeyo",
+                "en": "What is your name?"
+              }
+            }
+          ],
+          "answerId": "b"
+        },
+        {
+          "id": "c2",
+          "prompt": {
+            "ko": "호야, 안녕하세요!",
+            "romanization": "hoya annyeonghaseyo",
+            "en": "Hello, Hoya!"
+          },
+          "options": [
+            {
+              "id": "a",
+              "text": {
+                "ko": "저는 미나예요.",
+                "romanization": "jeoneun minayeyo",
+                "en": "I am Mina."
+              }
+            },
+            {
+              "id": "b",
+              "text": {
+                "ko": "책이에요.",
+                "romanization": "chaegieyo",
+                "en": "It is a book."
+              }
+            },
+            {
+              "id": "c",
+              "text": {
+                "ko": "선생님, 안녕하세요! 새해 복 많이 받으세요!",
+                "romanization": "seonsaengnim annyeonghaseyo saehae bok mani badeuseyo",
+                "en": "Hello, Teacher! Happy New Year!"
+              }
+            }
+          ],
+          "answerId": "c"
+        }
+      ]
+    }
+  },
+  "minigame:s4-rites-q3-practice": {
+    "kind": "tap-respond",
+    "rounds": 3,
+    "dialogue": [
+      {
+        "npcKo": "호야, 안녕하세요!",
+        "npcRomanization": "hoya annyeonghaseyo",
+        "npcEn": "Hello, Hoya!",
+        "options": [
+          {
+            "ko": "저는 미나예요.",
+            "romanization": "jeoneun minayeyo",
+            "en": "I am Mina.",
+            "isCorrect": false
+          },
+          {
+            "ko": "선생님, 안녕하세요! 새해 복 많이 받으세요!",
+            "romanization": "seonsaengnim annyeonghaseyo saehae bok mani badeuseyo",
+            "en": "Hello, Teacher! Happy New Year!",
+            "isCorrect": true
+          },
+          {
+            "ko": "책이에요.",
+            "romanization": "chaegieyo",
+            "en": "It is a book.",
+            "isCorrect": false
+          }
+        ]
+      },
+      {
+        "npcKo": "새해 복 많이 받으세요!",
+        "npcRomanization": "saehae bok mani badeuseyo",
+        "npcEn": "Happy New Year!",
+        "options": [
+          {
+            "ko": "저는 호야예요.",
+            "romanization": "jeoneun hoyayeyo",
+            "en": "I am Hoya.",
+            "isCorrect": false
+          },
+          {
+            "ko": "책이에요.",
+            "romanization": "chaegieyo",
+            "en": "It is a book.",
+            "isCorrect": false
+          },
+          {
+            "ko": "고마워요. 미나도 새해 복 많이 받으세요!",
+            "romanization": "gomawoyo minado saehae bok mani badeuseyo",
+            "en": "Thank you. Happy New Year to you too, Mina!",
+            "isCorrect": true
+          }
+        ]
+      },
+      {
+        "npcKo": "잘 지냈어요?",
+        "npcRomanization": "jal jinaesseoyo",
+        "npcEn": "Have you been well?",
+        "options": [
+          {
+            "ko": "네, 잘 지냈어요.",
+            "romanization": "ne jal jinaesseoyo",
+            "en": "Yes, I have been well.",
+            "isCorrect": true
+          },
+          {
+            "ko": "이름이 뭐예요?",
+            "romanization": "ireumi mwoyeyo",
+            "en": "What is your name?",
+            "isCorrect": false
+          },
+          {
+            "ko": "저는 미나예요.",
+            "romanization": "jeoneun minayeyo",
+            "en": "I am Mina.",
+            "isCorrect": false
+          }
+        ]
+      }
+    ]
   }
 };
 
@@ -646,6 +1213,78 @@ export const LESSON_SCOPE_OVERLAYS: Overlays = {
       "dialogue.2.options.annyeonghaseyo.gloss": "Hola.",
       "dialogue.2.options.gamsahamnida.gloss": "¡Gracias!",
       "dialogue.2.options.nuguyeyo.gloss": "¿Quién es?"
+    },
+    "minigame:s4-rites-q1-apply": {
+      "storySteps.l1.label": "¡Hola! ¿Cómo te llamas?",
+      "storySteps.l2.label": "Soy Hoya.",
+      "storySteps.l3.label": "Mucho gusto.",
+      "storySteps.l4.label": "Igualmente, mucho gusto."
+    },
+    "minigame:s4-rites-q1-check": {
+      "listenPick.rounds.c1.prompt": "¿Cómo te llamas?",
+      "listenPick.rounds.c2.prompt": "Mucho gusto."
+    },
+    "minigame:s4-rites-q1-practice": {
+      "dialogue.0.npc": "¡Hola!",
+      "dialogue.0.options.annyeonghaseyo.gloss": "¡Hola!",
+      "dialogue.0.options.chaegieyo.gloss": "Es un libro.",
+      "dialogue.0.options.jeodo-bangawoyo.gloss": "Igualmente, mucho gusto.",
+      "dialogue.1.npc": "¿Cómo te llamas?",
+      "dialogue.1.options.aniyo.gloss": "No.",
+      "dialogue.1.options.annyeonghaseyo.gloss": "¡Hola!",
+      "dialogue.1.options.jeoneun-hoyayeyo.gloss": "Soy Hoya.",
+      "dialogue.2.npc": "¡Mucho gusto!",
+      "dialogue.2.options.aniyo.gloss": "No.",
+      "dialogue.2.options.ireumi-mwoyeyo.gloss": "¿Cómo te llamas?",
+      "dialogue.2.options.jeodo-bangawoyo.gloss": "Igualmente, mucho gusto."
+    },
+    "minigame:s4-rites-q2-apply": {
+      "storySteps.l1.label": "¡Hoya, cuánto tiempo!",
+      "storySteps.l2.label": "¡Sí, docente! Cuánto tiempo.",
+      "storySteps.l3.label": "¿Qué tal has estado?",
+      "storySteps.l4.label": "Sí, he estado bien."
+    },
+    "minigame:s4-rites-q2-check": {
+      "listenPick.rounds.c1.prompt": "¿Qué tal has estado?",
+      "listenPick.rounds.c2.prompt": "¡Hoya, cuánto tiempo!"
+    },
+    "minigame:s4-rites-q2-practice": {
+      "dialogue.0.npc": "¡Hola, Hoya!",
+      "dialogue.0.options.chaegieyo.gloss": "Es un libro.",
+      "dialogue.0.options.jeoneun-minayeyo.gloss": "Soy Mina.",
+      "dialogue.0.options.seonsaengnim-annyeonghaseyo.gloss": "¡Hola, docente!",
+      "dialogue.1.npc": "¡Hoya, cuánto tiempo!",
+      "dialogue.1.options.aniyo.gloss": "No.",
+      "dialogue.1.options.ireumi-mwoyeyo.gloss": "¿Cómo te llamas?",
+      "dialogue.1.options.seonsaengnim-oraenmanieyo.gloss": "¡Docente, cuánto tiempo!",
+      "dialogue.2.npc": "¿Qué tal has estado?",
+      "dialogue.2.options.ireumi-mwoyeyo.gloss": "¿Cómo te llamas?",
+      "dialogue.2.options.jeoneun-minayeyo.gloss": "Soy Mina.",
+      "dialogue.2.options.ne-jal-jinaesseoyo.gloss": "Sí, he estado bien."
+    },
+    "minigame:s4-rites-q3-apply": {
+      "storySteps.l1.label": "¡Hola, Hoya!",
+      "storySteps.l2.label": "¡Hola, docente! ¡Feliz Año Nuevo!",
+      "storySteps.l3.label": "Gracias. ¡Feliz Año Nuevo también para ti, Hoya!",
+      "storySteps.l4.label": "¡Gracias, docente!"
+    },
+    "minigame:s4-rites-q3-check": {
+      "listenPick.rounds.c1.prompt": "¡Feliz Año Nuevo!",
+      "listenPick.rounds.c2.prompt": "¡Hola, Hoya!"
+    },
+    "minigame:s4-rites-q3-practice": {
+      "dialogue.0.npc": "¡Hola, Hoya!",
+      "dialogue.0.options.chaegieyo.gloss": "Es un libro.",
+      "dialogue.0.options.jeoneun-minayeyo.gloss": "Soy Mina.",
+      "dialogue.0.options.seonsaengnim-annyeonghaseyo-saehae-bok-mani-badeuseyo.gloss": "¡Hola, docente! ¡Feliz Año Nuevo!",
+      "dialogue.1.npc": "¡Feliz Año Nuevo!",
+      "dialogue.1.options.chaegieyo.gloss": "Es un libro.",
+      "dialogue.1.options.gomawoyo-minado-saehae-bok-mani-badeuseyo.gloss": "Gracias. ¡Feliz Año Nuevo también para ti, Mina!",
+      "dialogue.1.options.jeoneun-hoyayeyo.gloss": "Soy Hoya.",
+      "dialogue.2.npc": "¿Qué tal has estado?",
+      "dialogue.2.options.ireumi-mwoyeyo.gloss": "¿Cómo te llamas?",
+      "dialogue.2.options.jeoneun-minayeyo.gloss": "Soy Mina.",
+      "dialogue.2.options.ne-jal-jinaesseoyo.gloss": "Sí, he estado bien."
     }
   },
   "ko": {
@@ -720,6 +1359,78 @@ export const LESSON_SCOPE_OVERLAYS: Overlays = {
       "dialogue.2.options.annyeonghaseyo.gloss": "만났을 때 하는 공손한 인사",
       "dialogue.2.options.gamsahamnida.gloss": "고마움을 전하는 인사",
       "dialogue.2.options.nuguyeyo.gloss": "사람을 묻는 말"
+    },
+    "minigame:s4-rites-q1-apply": {
+      "storySteps.l1.label": "인사하고 상대의 이름을 묻는 말",
+      "storySteps.l2.label": "자기 이름을 알려 주는 답",
+      "storySteps.l3.label": "처음 보게 되어 기쁘다는 인사",
+      "storySteps.l4.label": "나도 같은 마음이라는 답"
+    },
+    "minigame:s4-rites-q1-check": {
+      "listenPick.rounds.c1.prompt": "상대의 이름을 묻는 말",
+      "listenPick.rounds.c2.prompt": "처음 보게 되어 기쁘다는 인사"
+    },
+    "minigame:s4-rites-q1-practice": {
+      "dialogue.0.npc": "만났을 때 하는 공손한 인사",
+      "dialogue.0.options.annyeonghaseyo.gloss": "만났을 때 하는 공손한 인사",
+      "dialogue.0.options.chaegieyo.gloss": "읽는 물건이라는 답",
+      "dialogue.0.options.jeodo-bangawoyo.gloss": "나도 같은 마음이라는 답",
+      "dialogue.1.npc": "상대의 이름을 묻는 말",
+      "dialogue.1.options.aniyo.gloss": "아니라고 대답하는 말",
+      "dialogue.1.options.annyeonghaseyo.gloss": "만났을 때 하는 공손한 인사",
+      "dialogue.1.options.jeoneun-hoyayeyo.gloss": "자기 이름을 알려 주는 답",
+      "dialogue.2.npc": "처음 보게 되어 기쁘다는 인사",
+      "dialogue.2.options.aniyo.gloss": "아니라고 대답하는 말",
+      "dialogue.2.options.ireumi-mwoyeyo.gloss": "상대의 이름을 묻는 말",
+      "dialogue.2.options.jeodo-bangawoyo.gloss": "나도 같은 마음이라는 답"
+    },
+    "minigame:s4-rites-q2-apply": {
+      "storySteps.l1.label": "오래 못 본 사람을 다시 보고 하는 인사",
+      "storySteps.l2.label": "선생님 말에 그렇다고 하며 반갑게 받는 인사",
+      "storySteps.l3.label": "그동안 별일 없었는지 묻는 말",
+      "storySteps.l4.label": "그동안 별일 없었다는 답"
+    },
+    "minigame:s4-rites-q2-check": {
+      "listenPick.rounds.c1.prompt": "그동안 별일 없었는지 묻는 말",
+      "listenPick.rounds.c2.prompt": "오래 못 본 사람을 다시 보고 하는 인사"
+    },
+    "minigame:s4-rites-q2-practice": {
+      "dialogue.0.npc": "이름을 부르며 하는 공손한 인사",
+      "dialogue.0.options.chaegieyo.gloss": "읽는 물건이라는 답",
+      "dialogue.0.options.jeoneun-minayeyo.gloss": "자기 이름을 알려 주는 답",
+      "dialogue.0.options.seonsaengnim-annyeonghaseyo.gloss": "가르쳐 주시는 분께 하는 인사",
+      "dialogue.1.npc": "오래 못 본 사람을 다시 보고 하는 인사",
+      "dialogue.1.options.aniyo.gloss": "아니라고 대답하는 말",
+      "dialogue.1.options.ireumi-mwoyeyo.gloss": "상대의 이름을 묻는 말",
+      "dialogue.1.options.seonsaengnim-oraenmanieyo.gloss": "오래 못 뵌 분께 다시 뵙고 하는 인사",
+      "dialogue.2.npc": "그동안 별일 없었는지 묻는 말",
+      "dialogue.2.options.ireumi-mwoyeyo.gloss": "상대의 이름을 묻는 말",
+      "dialogue.2.options.jeoneun-minayeyo.gloss": "자기 이름을 알려 주는 답",
+      "dialogue.2.options.ne-jal-jinaesseoyo.gloss": "그동안 별일 없었다는 답"
+    },
+    "minigame:s4-rites-q3-apply": {
+      "storySteps.l1.label": "이름을 부르며 하는 공손한 인사",
+      "storySteps.l2.label": "가르쳐 주시는 분께 인사하고 새해에 좋은 일이 많기를 비는 말",
+      "storySteps.l3.label": "고맙다고 하고 상대에게도 새해에 좋은 일이 많기를 비는 답",
+      "storySteps.l4.label": "가르쳐 주시는 분께 고마운 마음을 전하는 말"
+    },
+    "minigame:s4-rites-q3-check": {
+      "listenPick.rounds.c1.prompt": "새해에 좋은 일이 많기를 비는 인사",
+      "listenPick.rounds.c2.prompt": "이름을 부르며 하는 공손한 인사"
+    },
+    "minigame:s4-rites-q3-practice": {
+      "dialogue.0.npc": "이름을 부르며 하는 공손한 인사",
+      "dialogue.0.options.chaegieyo.gloss": "읽는 물건이라는 답",
+      "dialogue.0.options.jeoneun-minayeyo.gloss": "자기 이름을 알려 주는 답",
+      "dialogue.0.options.seonsaengnim-annyeonghaseyo-saehae-bok-mani-badeuseyo.gloss": "가르쳐 주시는 분께 인사하고 새해에 좋은 일이 많기를 비는 말",
+      "dialogue.1.npc": "새해에 좋은 일이 많기를 비는 인사",
+      "dialogue.1.options.chaegieyo.gloss": "읽는 물건이라는 답",
+      "dialogue.1.options.gomawoyo-minado-saehae-bok-mani-badeuseyo.gloss": "고맙다고 하고 상대에게도 새해에 좋은 일이 많기를 비는 답",
+      "dialogue.1.options.jeoneun-hoyayeyo.gloss": "자기 이름을 알려 주는 답",
+      "dialogue.2.npc": "그동안 별일 없었는지 묻는 말",
+      "dialogue.2.options.ireumi-mwoyeyo.gloss": "상대의 이름을 묻는 말",
+      "dialogue.2.options.jeoneun-minayeyo.gloss": "자기 이름을 알려 주는 답",
+      "dialogue.2.options.ne-jal-jinaesseoyo.gloss": "그동안 별일 없었다는 답"
     }
   }
 };
