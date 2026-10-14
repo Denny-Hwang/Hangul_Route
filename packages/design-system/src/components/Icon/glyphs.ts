@@ -165,7 +165,7 @@ export const iconGlyphs: Record<IconName, readonly IconGlyphPart[]> = {
   // The Heritage Journey theme glyphs (design/components/Icon/theme-glyphs.md): the art of a grid cell
   // and the mark beside each column label, one per theme. Decorative: the theme's words are always in
   // the cell's label and the column header. Every separate part keeps a visible gap at 20 dp.
-  // Letters & Books: a letter tile with the syllable 가 (giyeok, then the vowel a), never a romanized letter.
+  // Letters & Books: a letter tile with the syllable ga (U+AC00: giyeok, then the vowel a), never a romanized letter.
   'hangul-tile': [
     stroke('M6 3 H18 A3 3 0 0 1 21 6 V18 A3 3 0 0 1 18 21 H6 A3 3 0 0 1 3 18 V6 A3 3 0 0 1 6 3 Z'),
     stroke('M6.5 7.5 H11 C11 11.5 9.5 14.5 7 16.5', 2.2),
@@ -175,7 +175,7 @@ export const iconGlyphs: Record<IconName, readonly IconGlyphPart[]> = {
   // Food & Daily Life: a solid rice bowl, the mound of rice above its rim and its foot below.
   'rice-bowl': [
     fill('M3 11 H21 C21 16 17 19.5 12 19.5 C7 19.5 3 16 3 11 Z'),
-    stroke('M5.5 9 C6 5 10 4.5 12 6 C14 4.5 18 5 18.5 9'),
+    stroke('M5.5 9 C6.5 5 10 4.5 12 6 C14 4.5 17.5 5 18.5 9'),
     stroke('M9 21.8 H15', 2.2),
   ],
   // Holidays & Traditions: a hanging lantern (a hook, a cap, the round body, a base, a tassel); no rib
@@ -187,17 +187,18 @@ export const iconGlyphs: Record<IconName, readonly IconGlyphPart[]> = {
     fill('M9.5 19.5 H14.5 V21 H9.5 Z'),
     stroke('M12 21 V22.5'),
   ],
-  // Nature & Animals: one leaf on the diagonal, its vein and a short stem.
+  // Nature & Animals: one leaf on the diagonal, its vein and a short stem. The tip points up-left and the
+  // stem down-right, so the story count mark (top-right of a 320 px cell) never covers the tip.
   leaf: [
-    stroke('M4.5 19.5 C4 11 9 4.5 20 4 C20 14 13.5 20 4.5 19.5 Z', 2.2),
-    stroke('M4.5 19.5 L15 9'),
-    stroke('M4.5 19.5 L2.5 21.5', 2.2),
+    stroke('M19.5 19.5 C20 11 15 4.5 4 4 C4 14 10.5 20 19.5 19.5 Z', 2.2),
+    stroke('M19.5 19.5 L9 9'),
+    stroke('M19.5 19.5 L21.5 21.5', 2.2),
   ],
-  // Play & Crafts: a spinning top (paengi), a solid rim over a solid cone with a band between them.
+  // Play & Crafts: a whip top (paengi): a solid flat top over a solid cone, with a clear gap between them
+  // and no handle (a paengi is spun by a whip, not by a stem).
   'spinning-top': [
-    fill('M4 5 H20 V8 H4 Z'),
-    fill('M4.5 10 H19.5 C19 14.5 15.5 18.5 12 22 C8.5 18.5 5 14.5 4.5 10 Z'),
-    stroke('M12 1.5 V3', 2.4),
+    fill('M4 3.5 H20 V6.5 H4 Z'),
+    fill('M4.5 8.5 H19.5 C19 13 15.5 17 12 20.5 C8.5 17 5 13 4.5 8.5 Z'),
   ],
 };
 

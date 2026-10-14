@@ -49,7 +49,7 @@
   - One-liner: `caption` muted
   - Open/Soon pill on the right
 - Grid row: 5 square cells per stage, equal flex
-  - Stage 1 cells: paper fill, 2px stage1 border, big theme initial
+  - Stage 1 cells: paper fill, 2px stage1 border, theme glyph (`design/components/Icon/theme-glyphs.md`)
   - Locked cells: `surface.sunken` fill, lock icon, no border emphasis
   - Completed cells: success-light fill + success border + check inside
 - Theme column headers (small caption, muted) above the first stage row
@@ -166,7 +166,7 @@ Spec: `docs/specs/F-STORY-005-episode-catalogue-grid.md` §3.6 · wireframe: `de
 With heritage stories in the bundle the grid gains two cell looks and one mark; everything above this section is unchanged. Without a reviewed story the grid is exactly as above.
 
 - **Count mark** (`#n`): a small circle (about 20 dp) in a cell's top-right corner: `surface.sunken` fill, `border.subtle` ring, the number in caption size `text.primary`; "5+" from six stories. It is part of the cell (not a separate button) and its number is read inside the cell's label.
-- **Lesson cell with stories**: today's lesson cell (theme initial, stage-tinted border, success tint when complete) plus the count mark.
+- **Lesson cell with stories**: today's lesson cell (theme glyph (`design/components/Icon/theme-glyphs.md`), stage-tinted border, success tint when complete) plus the count mark.
 - **Stories-only cell**: no lesson there yet, but stories: `Icon library` plus the count mark, `border.subtle` border, `surface.paper` fill, tappable. It does not change the stage pill (Open / Taste / Soon still reflects lessons and books only) and is never routed through the grown-up PIN.
 - **Book cell** (Stage 5, later): drawn like a lesson cell.
 - **Placeholder**: unchanged (lock, disabled, "coming soon").

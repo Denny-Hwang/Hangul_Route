@@ -601,6 +601,30 @@ describe('theme glyphs (Heritage Journey grid; design/components/Icon/theme-glyp
     expect(gap(base as IconGlyphPart, body as IconGlyphPart)).toBeGreaterThanOrEqual(GAP);
   });
 
+  /**
+   * Where the story count mark sits over a cell's glyph on the narrowest grid (320 px, 24 dp glyph),
+   * in glyph units: a 20 dp mark centred at (25.2, -1.2), measured by journey-theme-glyphs.spec.ts.
+   * The corner of a frame (the tile, the flat top) may sit under it; the part that names the theme may not.
+   */
+  const COUNT_MARK_CENTRE: Point = [25.2, -1.2];
+  const COUNT_MARK_RADIUS = 10;
+  const clearOfCountMark = (p: IconGlyphPart): number =>
+    Math.min(...outline(p).map(([x, y]) => Math.hypot(x - COUNT_MARK_CENTRE[0], y - COUNT_MARK_CENTRE[1]))) - widthOf(p) / 2 - COUNT_MARK_RADIUS;
+
+  it('keeps the part that names each theme clear of the story count mark at 320 px (the leaf tip points up-left)', () => {
+    const [blade, vein] = strokes('leaf');
+    const tip = outline(blade as IconGlyphPart).reduce((top, point) => (point[1] < top[1] ? point : top));
+    expect(tip[0]).toBeLessThan(12);
+    expect(clearOfCountMark(blade as IconGlyphPart)).toBeGreaterThan(0);
+    expect(clearOfCountMark(vein as IconGlyphPart)).toBeGreaterThan(0);
+    // the letter inside the tile, the lantern, and the bowl with its rice
+    for (const stroke of strokes('hangul-tile').slice(1)) expect(clearOfCountMark(stroke)).toBeGreaterThan(0);
+    for (const p of iconGlyphs.lantern) expect(clearOfCountMark(p), p.d).toBeGreaterThan(0);
+    for (const p of iconGlyphs['rice-bowl']) expect(clearOfCountMark(p), p.d).toBeGreaterThan(0);
+    // the cone of the top
+    expect(clearOfCountMark(fills('spinning-top')[1] as IconGlyphPart)).toBeGreaterThan(0);
+  });
+
   it('leaf is one closed outline with its vein inside it, on the diagonal (never a ring like check-circle)', () => {
     const [blade, vein] = strokes('leaf');
     expect(blade?.d).toMatch(/Z$/);
@@ -613,13 +637,16 @@ describe('theme glyphs (Heritage Journey grid; design/components/Icon/theme-glyp
     expect(box.bottom - box.top).toBeGreaterThanOrEqual(14);
   });
 
-  it('spinning-top is a solid rim and a solid cone that comes to one point at the bottom, with a band between them', () => {
+  it('spinning-top is a whip top (paengi): a solid flat top and a solid cone that comes to one point, a clear gap between them, no handle', () => {
+    // exactly the two solid parts: a paengi is spun by a whip, so no stem or handle is drawn on top
+    expect(iconGlyphs['spinning-top']).toHaveLength(2);
     expect(fills('spinning-top')).toHaveLength(2);
     const [rim, cone] = fills('spinning-top');
     const rimBox = bounds(outline(rim as IconGlyphPart));
     const coneBox = bounds(outline(cone as IconGlyphPart));
     expect(rimBox.bottom).toBeLessThan(coneBox.top);
-    expect(gap(rim as IconGlyphPart, cone as IconGlyphPart)).toBeGreaterThanOrEqual(1);
+    // the gap between the flat top and the cone stays clear at 20 dp
+    expect(gap(rim as IconGlyphPart, cone as IconGlyphPart)).toBeGreaterThanOrEqual(1.5);
     // the flat top (a rim wider than it is tall) keeps it apart from the round-headed pin
     expect(rimBox.right - rimBox.left).toBeGreaterThan(3 * (rimBox.bottom - rimBox.top));
     // the cone's tip: its lowest sampled point is on the centre line

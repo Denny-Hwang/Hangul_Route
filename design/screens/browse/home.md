@@ -39,7 +39,7 @@ The learner Learning Route trail (`TrailRow` via `browseRouteTrail`) in the brow
 The learner Journey grid (`JourneyGrid` via `browseJourneyRows`), with no learner marks: no completed fill, no stars, no sparkle, no Next triangle, no "In your plan" ring, no start pin.
 
 - Column labels, then per stage the ring, title, one-liner and availability pill, then five cells.
-- **Open cell**: the theme initial on paper with the stage-coloured border. **Coming later**: an empty sunken cell, no glyph (E3-D D5). **Closed** (sampler, switch on only): the open look plus the dotted ring (40, 48 or 56 by class), labelled "{episode}: not open yet. Opens the lesson page." (F-ENT-003's `a11y.access.notOpen(title)`, by reference; it arrives with E3-5)
+- **Open cell**: the theme glyph (`design/components/Icon/theme-glyphs.md`) on paper with the stage-coloured border. **Coming later**: an empty sunken cell, no glyph (E3-D D5). **Closed** (sampler, switch on only): the open look plus the dotted ring (40, 48 or 56 by class), labelled "{episode}: not open yet. Opens the lesson page." (F-ENT-003's `a11y.access.notOpen(title)`, by reference; it arrives with E3-5)
 - The legend line "Not open yet" appears only while a ring is drawn.
 - The taste note appears only on a row with an open cell (E3-D D11).
 - A cell is a button to the episode outline. A later cell does nothing on one pane.

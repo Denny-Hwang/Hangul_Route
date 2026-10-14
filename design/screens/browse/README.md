@@ -94,7 +94,7 @@ Values that are not tokens. Each derives from code or a token. The PRs that buil
 | Card on the end screen | 96 (`touchTarget.hero`) wrapper, `borderWidth.thick` rarity border, 90 face | CardArt's `CardArtThumb` (Results), unchanged |
 | Lesson number disc | 44 | `EpisodeDetailView`'s disc, unchanged (RouteMarkers) |
 | Trail badge | 40 | `BADGE_SIZE`, `screens/my-route/StageBadge.tsx` |
-| Journey cell initial | 28 dp (`typography.size.title`, not scaled) | the cell initial is cell art (RouteMarkers) |
+| Journey cell theme glyph | `spacing.xl` (24), scaled by `useMediaSize` (29 regular, 34 wide) | decorative cell art (`design/components/Icon/theme-glyphs.md`; it replaced the cell initial on 2026-10-14) |
 | Word-face text on a card | `min(0.4 x size, 0.8 x size / glyphs)`, never under `caption` | CardArt spec, "Korean word" face |
 | App breakpoints | 600 px, 900 px | `layout.breakpoint` (F-LAYOUT-001) |
 | Shadows | `0 2 8` at 0.06; `0 12 32` at 0.18 | `shadows.card`, `shadows.modal` (shadowColor `text.primary`) |

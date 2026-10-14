@@ -77,6 +77,29 @@ for (const [width, height] of [
       }
     }
 
+    // The story count mark sits on the cell's top-right corner. At 320 px it may cover only the glyph's
+    // corner (at most 9 x 9 of its 24 x 24 box, where no glyph draws the part that names its theme; the
+    // leaf's tip points up-left); at 768 px it clears the glyph.
+    for (const theme of THEMES) {
+      const mark = page.getByTestId(`journey-count-stage1-${theme.key}`);
+      if ((await mark.count()) === 0) continue;
+      const [m, g] = await Promise.all([mark.boundingBox(), page.getByTestId(`journey-glyph-stage1-${theme.key}`).boundingBox()]);
+      expect(m && g).toBeTruthy();
+      if (!m || !g) continue;
+      const overlapX = Math.max(0, Math.min(m.x + m.width, g.x + g.width) - Math.max(m.x, g.x));
+      const overlapY = Math.max(0, Math.min(m.y + m.height, g.y + g.height) - Math.max(m.y, g.y));
+      if (width === 320) {
+        expect(overlapX, theme.key).toBeLessThanOrEqual(9);
+        expect(overlapY, theme.key).toBeLessThanOrEqual(9);
+        // only the top-right corner: the mark starts right of the glyph's centre and ends above it
+        expect(m.x, theme.key).toBeGreaterThan(g.x + g.width / 2);
+        expect(m.y + m.height, theme.key).toBeLessThan(g.y + g.height / 2);
+      } else {
+        expect(overlapX * overlapY, theme.key).toBe(0);
+      }
+    }
+    await expect(page.getByTestId('journey-count-stage1-nature')).toBeVisible();
+
     // No cell anywhere on the grid shows a bare letter.
     const cellTexts = await page.getByRole('button', { name: /^Stage \d / }).allInnerTexts();
     expect(cellTexts.length).toBeGreaterThanOrEqual(35);
