@@ -2,14 +2,12 @@
   "id": "episode:stage3-life",
   "stage": "stage3",
   "theme": "life",
-  "status": "draft",
+  "status": "ready",
   "titleEn": "Daily Mini-Sentences",
   "subtitleEn": "Short sentences about eating, drinking and going out.",
-  "hoyaIntroEn": "Eat, drink, go and come: let us build little sentences about a day!",
+  "hoyaIntroEn": "Eat, drink, go and come: let's build little sentences about a day!",
   "order": 2,
-  "pillarTags": [
-    "B5"
-  ],
+  "pillarTags": [],
   "rewardCardIds": [],
   "quests": [
     {
@@ -23,7 +21,7 @@
           "id": "s1",
           "kind": "intro",
           "titleEn": "Eat and Drink",
-          "hoyaLineEn": "Breakfast time! Let us say what we eat and drink.",
+          "hoyaLineEn": "Breakfast time! Let's say what we eat and drink.",
           "durationSeconds": 7
         },
         {
@@ -56,7 +54,7 @@
                     ]
                   }
                 ],
-                "captionEn": "A sentence that ends in {ko:요} is polite: the style used most in everyday talk."
+                "captionEn": "These sentences use the polite style people use most in everyday talk."
               },
               {
                 "items": [
@@ -79,7 +77,7 @@
                     "picture": "word:food-milk"
                   }
                 ],
-                "captionEn": "For drinks, use {ko:마셔요}, drink. For food, use {ko:먹어요}, eat."
+                "captionEn": "For drinks, the usual verb is 'drink'; for food, it is 'eat'."
               }
             ]
           },
@@ -132,9 +130,9 @@
               "pictureRef": "card:rice",
               "distractors": [
                 {
-                  "ko": "물을",
-                  "romanization": "mureul",
-                  "en": "water (as the thing eaten or drunk)"
+                  "ko": "마셔요",
+                  "romanization": "masyeoyo",
+                  "en": "drink"
                 }
               ]
             },
@@ -148,9 +146,9 @@
               "pictureRef": "word:food-water",
               "distractors": [
                 {
-                  "ko": "먹어요",
-                  "romanization": "meogeoyo",
-                  "en": "eat"
+                  "ko": "빵을",
+                  "romanization": "ppangeul",
+                  "en": "bread (as the thing eaten or drunk)"
                 }
               ]
             },
@@ -419,7 +417,7 @@
     {
       "id": "quest:stage3-life-q2",
       "titleEn": "Tasty and Hot",
-      "blurbEn": "Say how food is: tasty, hot or good.",
+      "blurbEn": "Say how food tastes, if it is hot, and what you like.",
       "teaserEn": "Next: say where you go.",
       "estimatedMinutes": 5,
       "steps": [
@@ -427,7 +425,7 @@
           "id": "s1",
           "kind": "intro",
           "titleEn": "How Is It?",
-          "hoyaLineEn": "Mmm, that smells good! Let us say how the food is.",
+          "hoyaLineEn": "Mmm, that smells good! Let's say how the food is.",
           "durationSeconds": 7
         },
         {
@@ -477,12 +475,12 @@
                     "sentence": {
                       "ko": "빵이 좋아요.",
                       "romanization": "ppangi joayo",
-                      "en": "The bread is good."
+                      "en": "I like bread."
                     },
                     "picture": "word:food-bread"
                   }
                 ],
-                "captionEn": "{ko:뜨거워요} already means 'it is hot': no extra word for 'is'."
+                "captionEn": "One Korean word can mean 'it is hot': no extra word for 'is'."
               }
             ]
           },
@@ -562,7 +560,7 @@
               "sentence": {
                 "ko": "빵이 좋아요.",
                 "romanization": "ppangi joayo",
-                "en": "The bread is good."
+                "en": "I like bread."
               },
               "pictureRef": "word:food-bread",
               "distractors": [
@@ -653,7 +651,7 @@
                   "word": {
                     "ko": "빵이 좋아요.",
                     "romanization": "ppangi joayo",
-                    "en": "The bread is good."
+                    "en": "I like bread."
                   }
                 }
               ]
@@ -684,7 +682,7 @@
                   "word": {
                     "ko": "우유가 좋아요.",
                     "romanization": "uyuga joayo",
-                    "en": "The milk is good."
+                    "en": "I like milk."
                   }
                 }
               ]
@@ -702,11 +700,11 @@
                 },
                 {
                   "id": "p2",
-                  "pictureRef": "word:food-water",
+                  "pictureRef": "word:food-ramyeon",
                   "word": {
-                    "ko": "물이 뜨거워요.",
-                    "romanization": "muri tteugeowoyo",
-                    "en": "The water is hot."
+                    "ko": "라면이 뜨거워요.",
+                    "romanization": "ramyeoni tteugeowoyo",
+                    "en": "The ramyeon is hot."
                   }
                 },
                 {
@@ -737,7 +735,7 @@
                   "word": {
                     "ko": "사과가 좋아요.",
                     "romanization": "sagwaga joayo",
-                    "en": "The apple is good."
+                    "en": "I like apples."
                   }
                 },
                 {
@@ -809,7 +807,7 @@
                   "text": {
                     "ko": "빵이 좋아요.",
                     "romanization": "ppangi joayo",
-                    "en": "The bread is good."
+                    "en": "I like bread."
                   }
                 }
               ],
@@ -829,7 +827,7 @@
           "id": "s1",
           "kind": "intro",
           "titleEn": "Going Out",
-          "hoyaLineEn": "Shoes on! Let us say where we go and who comes.",
+          "hoyaLineEn": "Shoes on! Let's say where we go and who comes.",
           "durationSeconds": 7
         },
         {
@@ -861,7 +859,8 @@
                       }
                     ]
                   }
-                ]
+                ],
+                "captionEn": "The small word after a place means 'to': where someone goes or comes."
               },
               {
                 "items": [
@@ -878,12 +877,12 @@
                     "sentence": {
                       "ko": "친구가 와요.",
                       "romanization": "chinguga wayo",
-                      "en": "A friend comes."
+                      "en": "My friend comes."
                     },
                     "picture": "word:school-friend"
                   }
                 ],
-                "captionEn": "{ko:와요} is moving toward the speaker. {ko:가요} is moving away."
+                "captionEn": "'Come' is moving toward the speaker. 'Go' is going from here to another place."
               }
             ]
           },
@@ -982,21 +981,13 @@
                 "en": "My friend goes to the mountain."
               },
               "pictureRef": "card:mountain",
-              "particle": {
-                "tile": 0,
-                "choices": [
-                  {
-                    "ko": "이",
-                    "romanization": "i",
-                    "en": "subject marker, after a final consonant"
-                  },
-                  {
-                    "ko": "가",
-                    "romanization": "ga",
-                    "en": "subject marker, after a vowel"
-                  }
-                ]
-              }
+              "distractors": [
+                {
+                  "ko": "와요",
+                  "romanization": "wayo",
+                  "en": "come"
+                }
+              ]
             },
             {
               "id": "r5",
@@ -1006,21 +997,13 @@
                 "en": "My little sibling goes to school."
               },
               "pictureRef": "word:school-school",
-              "particle": {
-                "tile": 0,
-                "choices": [
-                  {
-                    "ko": "이",
-                    "romanization": "i",
-                    "en": "subject marker, after a final consonant"
-                  },
-                  {
-                    "ko": "가",
-                    "romanization": "ga",
-                    "en": "subject marker, after a vowel"
-                  }
-                ]
-              }
+              "distractors": [
+                {
+                  "ko": "바다에",
+                  "romanization": "badae",
+                  "en": "to the sea"
+                }
+              ]
             }
           ]
         },
@@ -1067,7 +1050,7 @@
                   "word": {
                     "ko": "친구가 와요.",
                     "romanization": "chinguga wayo",
-                    "en": "A friend comes."
+                    "en": "My friend comes."
                   }
                 },
                 {
@@ -1186,7 +1169,7 @@
               "prompt": {
                 "ko": "친구가 와요.",
                 "romanization": "chinguga wayo",
-                "en": "A friend comes."
+                "en": "My friend comes."
               },
               "options": [
                 {
@@ -1194,7 +1177,7 @@
                   "text": {
                     "ko": "친구가 와요.",
                     "romanization": "chinguga wayo",
-                    "en": "A friend comes."
+                    "en": "My friend comes."
                   }
                 },
                 {
@@ -1210,7 +1193,7 @@
                   "text": {
                     "ko": "친구가 가요.",
                     "romanization": "chinguga gayo",
-                    "en": "A friend goes."
+                    "en": "My friend goes."
                   }
                 }
               ],
@@ -1243,10 +1226,10 @@
         }
       ],
       "verification": {
-        "passes": 2,
+        "passes": 3,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): both pages fetched. The encyclopedia entry calls 해요체 a polite speech level and the one used most widely in everyday conversation today; the dictionary defines 해요체 as the non-formal polite ending style, with examples ending in -요. The note says 'polite' and 'used most in everyday talk', restates both in original English and copies no source wording. Carried by: q1 Discover page 1 caption.\nLine 2 (pass 2b, independent fact check, 2026-10-14): both pages re-fetched and each quoteOrLocator found verbatim (encyclopedia entry 공손법, paragraph on 해요체; dictionary headword 해요-체). The encyclopedia calls 해요체 a representative polite style and the level used most widely in everyday conversation today; the dictionary defines it as the non-formal polite ending style with -요 examples. The note matches both; its English wording is original and copies no source text. Outcome: confirmed, no change."
+        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): both pages fetched. The encyclopedia entry calls 해요체 a polite speech level and the one used most widely in everyday conversation today; the dictionary defines 해요체 as the non-formal polite ending style, with examples ending in -요. The note says 'polite' and 'used most in everyday talk', restates both in original English and copies no source wording. Carried by: q1 Discover page 1 caption.\nLine 2 (pass 2b, independent fact check, 2026-10-14): both pages re-fetched and each quoteOrLocator found verbatim (encyclopedia entry 공손법, paragraph on 해요체; dictionary headword 해요-체). The encyclopedia calls 해요체 a representative polite style and the level used most widely in everyday conversation today; the dictionary defines it as the non-formal polite ending style with -요 examples. The note matches both; its English wording is original and copies no source text. Outcome: confirmed, no change.\nLine 3 (pass 5, MAR culture review, final independent check, 2026-10-14): both sources reopened and each quoteOrLocator found verbatim. The note matches both; nothing copied. The q1 page 1 caption now carries it without Korean ('the polite style people use most in everyday talk'), because a page caption renders as plain text. Outcome: confirmed, no change to the note."
       }
     },
     {
@@ -1270,10 +1253,10 @@
         }
       ],
       "verification": {
-        "passes": 2,
+        "passes": 3,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): both pages fetched. The dictionary names 을/를 as the object case particle (the thing the action is done to); the encyclopedia entry states that 을 follows a consonant-final noun and 를 a vowel-final noun. The note restates both in original English with no copied wording. Carried by: q1 Discover pattern noteEn and the particle hint of the q1 Sentence Builder rounds r4 and r5.\nLine 2 (pass 2b, independent fact check, 2026-10-14): both pages re-fetched and each quoteOrLocator found verbatim (encyclopedia entry 상보적 분포, last paragraph; dictionary 목적격 조사 and 를 「조사」 「1」). The dictionary supports 'marks the thing an action is done to' (direct object of the action); the encyclopedia states 을 after a consonant-final noun and 를 after a vowel-final noun. English wording is original, nothing copied. Outcome: confirmed, no change."
+        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): both pages fetched. The dictionary names 을/를 as the object case particle (the thing the action is done to); the encyclopedia entry states that 을 follows a consonant-final noun and 를 a vowel-final noun. The note restates both in original English with no copied wording. Carried by: q1 Discover pattern noteEn and the particle hint of the q1 Sentence Builder rounds r4 and r5.\nLine 2 (pass 2b, independent fact check, 2026-10-14): both pages re-fetched and each quoteOrLocator found verbatim (encyclopedia entry 상보적 분포, last paragraph; dictionary 목적격 조사 and 를 「조사」 「1」). The dictionary supports 'marks the thing an action is done to' (direct object of the action); the encyclopedia states 을 after a consonant-final noun and 를 after a vowel-final noun. English wording is original, nothing copied. Outcome: confirmed, no change.\nLine 3 (pass 5, MAR culture review, final independent check, 2026-10-14): both sources reopened and each quoteOrLocator found verbatim; the consonant / vowel rule and 'the thing an action is done to' match. Carried by the q1 pattern noteEn and the particle hint of q1 r4, r5. Outcome: confirmed, no change."
       }
     },
     {
@@ -1304,10 +1287,10 @@
         }
       ],
       "verification": {
-        "passes": 2,
+        "passes": 3,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): both pages fetched. The dictionary names 이/가 as the subject case particle; the encyclopedia entry says 이 and 가 alternate for the same reason as 을/를, that is 이 after a consonant-final noun and 가 after a vowel-final noun. The note restates this in original English with no copied wording. Carried by: q2 Discover pattern noteEn and the particle hint of q2 rounds r4, r5 and q3 rounds r4, r5.\nLine 2 (pass 2b, independent fact check, 2026-10-14): both cited pages re-fetched and each quoteOrLocator found verbatim. The dictionary supports 'marks the subject'; the encyclopedia only says 이 and 가 are one morpheme for the same reason as 을/를, so it implies but does not state which form follows which. Fix: added a third source, the NIKL Online Ganada answer 320750 (www.korean.go.kr), which quotes the dictionary senses 이 「039」 (after a noun with a final consonant) and 가 「017」 (after a noun with no final consonant); its quote was found verbatim. With it the note's direction rule is stated by a source. Note text unchanged; English wording original, nothing copied. Outcome: confirmed after adding a source."
+        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): both pages fetched. The dictionary names 이/가 as the subject case particle; the encyclopedia entry says 이 and 가 alternate for the same reason as 을/를, that is 이 after a consonant-final noun and 가 after a vowel-final noun. The note restates this in original English with no copied wording. Carried by: q2 Discover pattern noteEn and the particle hint of q2 rounds r4, r5 and q3 rounds r4, r5.\nLine 2 (pass 2b, independent fact check, 2026-10-14): both cited pages re-fetched and each quoteOrLocator found verbatim. The dictionary supports 'marks the subject'; the encyclopedia only says 이 and 가 are one morpheme for the same reason as 을/를, so it implies but does not state which form follows which. Fix: added a third source, the NIKL Online Ganada answer 320750 (www.korean.go.kr), which quotes the dictionary senses 이 「039」 (after a noun with a final consonant) and 가 「017」 (after a noun with no final consonant); its quote was found verbatim. With it the note's direction rule is stated by a source. Note text unchanged; English wording original, nothing copied. Outcome: confirmed after adding a source.\nLine 3 (pass 5, MAR culture review, final independent check, 2026-10-14): all three sources reopened and each quoteOrLocator found verbatim; the Online Ganada answer states the direction rule. The q3 particle rounds r4 and r5 became word-order rounds (their particle hint showed the q3 note about place words, pass 4), so the note is now carried by the q2 pattern noteEn and the particle hint of q2 r4, r5 only. Outcome: confirmed, no change to the note."
       }
     },
     {
@@ -1327,20 +1310,20 @@
           "publisher": "표준국어대사전 (Standard Korean Language Dictionary), National Institute of Korean Language",
           "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%ED%98%95%EC%9A%A9%EC%82%AC",
           "accessed": "2026-10-14",
-          "quoteOrLocator": "Headword 형용-사 「명사」 『언어』: “사물의 성질이나 상태를 나타내는 품사. 활용할 수 있어 동사와 함께 용언에 속한다.” See also 맛-있다 「형용사」: “음식의 맛이 좋다.”"
+          "quoteOrLocator": "Headword 형용-사 「명사」 『언어』: “사물의 성질이나 상태를 나타내는 품사. 활용할 수 있어 동사와 함께 용언에 속한다.”"
         }
       ],
       "verification": {
-        "passes": 2,
+        "passes": 3,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): both pages fetched. The encyclopedia entry says a Korean adjective serves as a predicate alone, unlike an English adjective that needs be; the dictionary defines the adjective as a word of state that inflects like a verb. The note restates this in original English with no copied wording. Carried by: q2 Discover page 2 caption.\nLine 2 (pass 2b, independent fact check, 2026-10-14): both pages re-fetched and each quoteOrLocator found verbatim (encyclopedia entry 형용사, section 내용, first paragraph; dictionary 형용-사, and 맛-있다 「형용사」). The encyclopedia says a Korean adjective can be a predicate alone, unlike an English adjective that needs be, which is what the note says; the dictionary confirms the adjective is an inflecting state word. English wording is original, nothing copied. Outcome: confirmed, no change."
+        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): both pages fetched. The encyclopedia entry says a Korean adjective serves as a predicate alone, unlike an English adjective that needs be; the dictionary defines the adjective as a word of state that inflects like a verb. The note restates this in original English with no copied wording. Carried by: q2 Discover page 2 caption.\nLine 2 (pass 2b, independent fact check, 2026-10-14): both pages re-fetched and each quoteOrLocator found verbatim (encyclopedia entry 형용사, section 내용, first paragraph; dictionary 형용-사, and 맛-있다 「형용사」). The encyclopedia says a Korean adjective can be a predicate alone, unlike an English adjective that needs be, which is what the note says; the dictionary confirms the adjective is an inflecting state word. English wording is original, nothing copied. Outcome: confirmed, no change.\nLine 3 (pass 5, MAR culture review, final independent check, 2026-10-14): both sources reopened and each quoteOrLocator found verbatim. The 맛-있다 see-also was removed from the dictionary locator because that entry is not on the cited search page. The q2 page 2 caption carries the note without Korean. Outcome: confirmed after narrowing a locator; note text unchanged."
       }
     },
     {
       "id": "n5",
       "kind": "language",
-      "textEn": "{ko:에} after a place word marks the place: where you go with {ko:가요} or where you come with {ko:와요}. Coming is toward the speaker.",
+      "textEn": "{ko:에} after a place word marks where someone goes or comes to: {ko:가요} is go, {ko:와요} is come. Coming is toward the speaker.",
       "sources": [
         {
           "title": "에, an entry of the Standard Korean Language Dictionary",
@@ -1372,17 +1355,22 @@
         }
       ],
       "verification": {
-        "passes": 2,
+        "passes": 3,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): the three dictionary pages fetched. 에 (조사, sense 1) marks the word before it as a place adverbial; 오다 is moving toward the speaker or reference person; 가다 is moving from one place to another. The note says 'marks the place' and 'coming is toward the speaker', restated in original English with no copied wording. All three sources are from one public institution (NIKL); pass 2b may add an independent second publisher. Carried by: q3 Discover pattern noteEn and the q3 Discover page 2 caption.\nLine 2 (pass 2b, independent fact check, 2026-10-14): the three dictionary pages re-fetched and each quoteOrLocator found verbatim. 오다 (toward the speaker or reference person) and 가다 (moving to another place) support the note. Finding: the cited 에 sense 「1」 marks a location, while the note's use with 가요 and 와요 is the destination use. Fix: added the NIKL Online Ganada answer 317656 (www.korean.go.kr), which says 에 in 학교에 가다 is the case particle marking the adverbial of the direction of movement; its quote was found verbatim. Note text unchanged; English wording original, nothing copied. Outcome: confirmed after adding a source."
+        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): the three dictionary pages fetched. 에 (조사, sense 1) marks the word before it as a place adverbial; 오다 is moving toward the speaker or reference person; 가다 is moving from one place to another. The note says 'marks the place' and 'coming is toward the speaker', restated in original English with no copied wording. All three sources are from one public institution (NIKL); pass 2b may add an independent second publisher. Carried by: q3 Discover pattern noteEn and the q3 Discover page 2 caption.\nLine 2 (pass 2b, independent fact check, 2026-10-14): the three dictionary pages re-fetched and each quoteOrLocator found verbatim. 오다 (toward the speaker or reference person) and 가다 (moving to another place) support the note. Finding: the cited 에 sense 「1」 marks a location, while the note's use with 가요 and 와요 is the destination use. Fix: added the NIKL Online Ganada answer 317656 (www.korean.go.kr), which says 에 in 학교에 가다 is the case particle marking the adverbial of the direction of movement; its quote was found verbatim. Note text unchanged; English wording original, nothing copied. Outcome: confirmed after adding a source.\nLine 3 (pass 5, MAR culture review, final independent check, 2026-10-14): all four sources reopened and each quoteOrLocator found verbatim. Finding: the note said 에 'marks the place', while its strongest source (Online Ganada 317656) calls 에 in 학교에 가다 the marker of the direction of movement; the 에 sense 「1」 (location) stays as a secondary cite. The note now says 에 marks where someone goes or comes to. Finding: the q3 page 2 caption said 가요 is 'moving away', which no source supports (가다 「1」 is moving from one place to another); it now says going from here to another place, in en, es and ko. Outcome: note reworded to match its sources; nothing copied."
       }
     }
   ],
   "review": {
-    "language": "draft",
-    "culture": "draft",
-    "notes": []
+    "language": "native-reviewed",
+    "culture": "culture-reviewed",
+    "reviewedBy": "MAR",
+    "reviewedAt": "2026-10-14",
+    "notes": [
+      "Pass 4 language review (MAR, 2026-10-14; lenses Korean naturalness and register, standard spelling, learner pedagogy, en / es / ko glosses): the q3 particle rounds became word-order rounds, 좋아요 reads 'I like ...' in all three languages, plain non-echo ko glosses, natural distractors removed, Let's in Hoya lines and 'My friend' throughout; findings and outcomes in PR #651.",
+      "Pass 5 culture review (MAR, 2026-10-14; lenses heritage accuracy against the sources, sensitivity and inclusion, audience any age): five language notes, no culture claim; n5 reworded to the direction use of 에, the 가요 caption no longer says 'moving away', one locator narrowed; verification line 3 on every note."
+    ]
   },
   "contentVer": 1
 }

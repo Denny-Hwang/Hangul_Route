@@ -248,12 +248,26 @@ describe("overlay-rules: {ko:} tokens of a lesson cell (F-CURR-001 section 3.4)"
   const lessonQuest = {
     id: "quest:stage3-life-q1",
     titleEn: "I Eat",
-    steps: [{ id: "s2", kind: "discover", titleEn: "What I Eat", discover: { pages: [{ items: [], captionEn: "Use {ko:을} after a consonant, {ko:를} after a vowel." }] } }],
+    steps: [
+      {
+        id: "s2",
+        kind: "discover",
+        titleEn: "What I Eat",
+        discover: {
+          pages: [
+            {
+              items: [{ type: "pattern", noteEn: "Use {ko:을} after a consonant, {ko:를} after a vowel." }],
+              captionEn: "A polite sentence ends this way.",
+            },
+          ],
+        },
+      },
+    ],
   };
-  const lessonTree = (locale, value) =>
+  const lessonTree = (locale, value, field = "steps.s2.discover.pages.0.items.0.note") =>
     base({
       "content/episodes/stage-3/life.json": { id: "episode:stage3-life", quests: [lessonQuest] },
-      ...(locale === "es" ? es : ko)({ "quest:stage3-life-q1": { "steps.s2.discover.pages.0.caption": value } }, "lessons-stage3-life"),
+      ...(locale === "es" ? es : ko)({ "quest:stage3-life-q1": { [field]: value } }, "lessons-stage3-life"),
     });
   test("a lesson value may carry the Hangul of exactly its source's {ko:} tokens", () => {
     assert.deepEqual(rules(lessonTree("es", "Usa {ko:을} tras consonante y {ko:를} tras vocal.")), []);
@@ -263,6 +277,12 @@ describe("overlay-rules: {ko:} tokens of a lesson cell (F-CURR-001 section 3.4)"
     assert.deepEqual(rules(lessonTree("es", "Usa 을 tras consonante y {ko:를} tras vocal.")), ["korean-in-ui-field", "overlay-token-mismatch"]);
     assert.deepEqual(rules(lessonTree("es", "Usa {ko:을} tras consonante.")), ["overlay-token-mismatch"]);
     assert.deepEqual(rules(lessonTree("ko", "받침 뒤에는 {ko:이}를 써요.")), ["overlay-token-mismatch"]);
+  });
+  test("only a Discover note carries tokens: a token in a caption is Hangul in Spanish and differs from the source", () => {
+    const caption = "steps.s2.discover.pages.0.caption";
+    assert.deepEqual(rules(lessonTree("es", "Una frase cortés termina así.", caption)), []);
+    assert.deepEqual(rules(lessonTree("es", "Una frase cortés termina en {ko:요}.", caption)), ["korean-in-ui-field", "overlay-token-mismatch"]);
+    assert.deepEqual(rules(lessonTree("ko", "공손한 문장은 {ko:요}로 끝나요.", caption)), ["overlay-token-mismatch"]);
   });
   test("a token outside a lesson cell is still Hangul in a Spanish value", () => {
     assert.deepEqual(rules(base(es({ "vocab:sagwa": { gloss: "manzana {ko:사과}" } }))), ["korean-in-ui-field"]);

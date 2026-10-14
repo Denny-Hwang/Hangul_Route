@@ -20,7 +20,8 @@
 //                            wraps it in spaces or punctuation)
 //   overlay-token-mismatch   a story narration whose {kw:id} tokens are not the base multiset;
 //                            a lesson field (content/episodes/stage-<n>/) whose {ko:...} tokens
-//                            are not its English source's (F-CURR-001 §3.4)
+//                            are not its English source's (F-CURR-001 §3.4; only a Discover
+//                            note may carry them, so any other lesson field needs none)
 //   banned-on-learner-surface  a learner-banned word of the locale (banned-words.json)
 //   overlay-missing          warning (error for HANGUL_ROUTE_STRICT_LOCALES): a translatable
 //                            English field of a base entity that the locale lacks
@@ -78,13 +79,15 @@ const bare = (s) => s.replace(/[^ㄱ-㆏가-힣a-z0-9]/gi, "");
 const tokenList = (text) => Array.from(text.matchAll(TOKEN), (m) => m[1]).sort();
 
 /**
- * F-CURR-001 §3.4: a lesson cell's English note or caption may carry taught Korean as
- * `{ko:...}` tokens (rendered through KoreanText with its romanization, not UI text), so
- * its es / ko value carries the same tokens. Only there is a token's Hangul lifted from
- * `korean-in-ui-field`; everywhere else Hangul in a Spanish value still fails.
+ * F-CURR-001 §3.4: a lesson cell's Discover note (`noteEn`) may carry taught Korean as
+ * `{ko:...}` tokens (rendered with its romanization, not as UI text), so its es / ko value
+ * carries the same tokens. Only there is a token's Hangul lifted from `korean-in-ui-field`;
+ * a caption, title or gloss renders as plain text and keeps the rule, and everywhere else
+ * Hangul in a Spanish value still fails.
  */
 const KO_TOKEN = /\{ko:([^}]*)\}/g;
 const LESSON_BASE = /^content\/episodes\/stage-[2-467]\/[a-z]+\.json$/;
+const LESSON_NOTE = /^steps\.[^.]+\.discover\.pages\.[^.]+\.items\.[^.]+\.note$/;
 const koTokenList = (text) => Array.from(String(text).matchAll(KO_TOKEN), (m) => m[1]).sort();
 const withoutKoTokens = (text) => text.replace(KO_TOKEN, " ");
 
@@ -161,7 +164,7 @@ function checkField(locale, id, field, value, base, add, ctx) {
   const allowed = isOverlayFieldAllowed(id, field);
   if (!allowed) add(`overlay-forbidden-field: ${field} cannot be translated on ${id}`);
   const lesson = LESSON_BASE.test(ctx.base.get(id)?.file ?? "");
-  const shown = lesson && allowed ? withoutKoTokens(value) : value;
+  const shown = lesson && allowed && LESSON_NOTE.test(field) ? withoutKoTokens(value) : value;
   if (HANGUL.test(shown) && (locale === "es" || !allowed)) add("korean-in-ui-field");
   const banned = bannedWordIn(value, locale);
   if (banned !== null) add(`banned-on-learner-surface: "${banned}"`);
