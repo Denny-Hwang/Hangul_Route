@@ -19,3 +19,9 @@ app — see [`docs/build-v1-prototype.md`](./docs/build-v1-prototype.md).
 Turborepo + pnpm workspaces · Expo React Native · Next.js · Cloudflare Workers (D1 / R2) · TypeScript strict · vitest (TDD).
 
 See `docs/blueprints/03-engineering-blueprint-v2.md` for rationale.
+
+## License
+
+Proprietary. Copyright (c) 2026 Sungjoo Hwang. All rights reserved. The code, the content (lessons, stories, art, audio, translations) and the Hangul Route and Hoya trademarks are not licensed for copying, modification, distribution or other use except under a separate written agreement, or, for end users of the service, under the published [Terms of Service](https://hangulroute.com/terms). See [`LICENSE`](./LICENSE).
+
+Third-party open-source components and the bundled Noto Sans KR font keep their own licenses: see [`THIRD_PARTY_NOTICES.md`](./THIRD_PARTY_NOTICES.md), also shown to users at [hangulroute.com/licenses](https://hangulroute.com/licenses). Regenerate it with `node scripts/third-party-notices.mjs` after a dependency change; `pnpm run test:scripts` (CI) runs `--check`, which fails when the file is stale or a production dependency has a copyleft or unknown license.

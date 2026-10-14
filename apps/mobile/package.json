@@ -2,6 +2,7 @@
   "name": "@hangul-route/mobile",
   "version": "0.0.0",
   "private": true,
+  "license": "UNLICENSED",
   "description": "Hangul Route mobile app (Expo React Native)",
   "main": "index.ts",
   "scripts": {
