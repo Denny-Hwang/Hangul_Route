@@ -56,7 +56,7 @@ const row = (over: Partial<InboxTransfer> = {}): InboxTransfer => ({
 describe('consentLines', () => {
   it('draws the always lines word for word in canonical order, names filled in', () => {
     const lines = consentLines(data(), 'en');
-    expect(lines?.map((l) => l.id)).toEqual(['moving', 'new_teacher', 'old_teacher', 'keeps', 'cooling_off', 'visible_list', 'nothing_else', 'visible_today', 'typed_names', 'cannot_undo', 'introduce']);
+    expect(lines?.map((l) => l.id)).toEqual(['moving', 'new_teacher', 'old_teacher', 'keeps', 'cooling_off', 'visible_list', 'nothing_else', 'visible_today', 'typed_names', 'teacher_moves', 'cannot_undo', 'introduce']);
     expect(lines?.[0]?.text).toBe('Mina would move from Sunday Class A to Saturday Class B.');
     expect(lines?.find((l) => l.id === 'introduce')?.kind).toBe('option');
   });

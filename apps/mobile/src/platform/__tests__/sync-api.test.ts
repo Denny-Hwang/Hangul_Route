@@ -164,6 +164,9 @@ describe('platform/sync-api — spaces (F-SPACE-001)', () => {
         selfManaged: false,
         transfers: [],
         deviceScope: null,
+        // [TV] AMENDMENTS-TEACHER-VISIBILITY-TRANSFER section 4.3: lenient defaults when an older Worker omits them
+        classScope: null,
+        classMoves: [],
         notes: [],
         notePrefs: { classes: 'all', acknowledged: false },
       },
