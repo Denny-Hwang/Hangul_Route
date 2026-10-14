@@ -449,7 +449,7 @@ const GRID_GOLDEN: Record<string, string> = {
   'stage5:letters': 'episode:stage5-letters | Stories of Letters | shipped',
   'stage5:life': 'episode:stage5-life | Family Stories | shipped',
   'stage5:rites': 'episode:stage5-rites | Festival Tales | shipped',
-  'stage5:nature': 'episode:stage5-nature | Tiger Folktales | shipped',
+  'stage5:nature': 'episode:stage5-nature | Nature Tales | shipped',
   'stage5:crafts': 'episode:stage5-crafts | Craft Stories | shipped',
   'stage6:letters': 'episode:stage6-letters | Read the Menu | shipped',
   'stage6:life': 'episode:stage6-life | Order Food | shipped',

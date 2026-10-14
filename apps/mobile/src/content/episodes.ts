@@ -138,7 +138,7 @@ const upperStageTitles: Record<string, Record<string, string>> = {
     letters: 'Stories of Letters',
     life: 'Family Stories',
     rites: 'Festival Tales',
-    nature: 'Tiger Folktales',
+    nature: 'Nature Tales',
     crafts: 'Craft Stories',
   },
   stage6: {

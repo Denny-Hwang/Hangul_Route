@@ -9,6 +9,10 @@ import type { StageKey, ThemeKey } from '../../schemas/heritage-card';
  * of the generator run against this file, so they stay true while the real
  * catalogue (`catalog/data.ts`) grows. Never edit it to follow the content;
  * add a new dated fixture instead. It imports types only, never the data.
+ * One display rename only (F-STORY-005 row 5.6c, owner decision 2026-10-14): the
+ * Stage 5 nature cell reads Nature Tales (was Tiger Folktales); no id or count changed.
+ * Such an owner-decided display-only rename is the only edit this contract allows:
+ * any id, count, status or minutes change still needs a new dated fixture.
  */
 
 const THEMES: readonly ThemeKey[] = ['letters', 'life', 'rites', 'nature', 'crafts'];
@@ -55,7 +59,7 @@ const cells: CatalogCell[] = [
   cell('stage4', 'rites', 'Greeting Dialogues', 'shipped', 5, ['quest:stage4-rites-q1']),
   cell('stage4', 'nature', 'Park Conversations', 'preview', 10, []),
   cell('stage4', 'crafts', 'Playdate Talk', 'preview', 10, []),
-  ...preview('stage5', ['Short Stories', 'Family Stories', 'Festival Tales', 'Tiger Folktales', 'Craft Stories']),
+  ...preview('stage5', ['Short Stories', 'Family Stories', 'Festival Tales', 'Nature Tales', 'Craft Stories']),
   ...preview('stage6', ['Read the Menu', 'Order Food', 'Travel for Chuseok', 'Hike & Ask', 'Buy at Market']),
   ...preview('stage7', ['Write Your Name', 'My Day in Korean', 'My Holiday Memory', 'My Favorite Animal', 'Make & Share']),
 ];
