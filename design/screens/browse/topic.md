@@ -11,6 +11,6 @@ Data: `itemFacts({ kind: 'vocab-topic', id })`. Until F-VOC-003's screens ship, 
 | Kicker | the pill "Words" and "12 words" |
 | What this teaches | a paper `Card` list with one row per word, rows split by `border.subtle` |
 | Row | the 64 picture tile (PictureArt: `WordArt` or `HeritageCardArt` on paper with a `border.subtle` edge; a key with no drawing shows the text tile, the gloss on `surface.sunken`); the Korean with romanization; the gloss (Body `text.secondary`); a 64 Hear button (`speaker` glyph in a `brand.secondary` outline, "Hear {romanization}", learner audio through `playPrompt`, writes nothing) |
-| Primary | none today. Once F-VOC-003 ships: [[ ▶ Preview the flashcards ]] (host mode `'preview'`), pinned like the item page's primary |
+| Primary | none until F-BROWSE-001 BR-9b. F-VOC-003's flashcards have shipped (C-5, #584); BR-9b adds [[ ▶ Preview the flashcards ]] (host mode `'preview'`), pinned like the item page's primary |
 
 **Closed** (sampler, switch on; every shipped topic is free today, so none is closed): the words, pictures, romanization and glosses stay; the Hear buttons go, because until F-VOC-003 ships the audio is the topic's preview (spec §4.7) and closed means everything except the preview (§4.2; README decision 23); the item page's closed box replaces the primary (`item.md`).
