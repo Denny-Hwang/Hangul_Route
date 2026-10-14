@@ -123,7 +123,7 @@ const MATRIX: Record<StageKey, Record<ThemeKey, string>> = {
   stage3: { letters: 'L+2', life: 'L+1', rites: 'L+0', nature: '-', crafts: 'L+0' },
   stage4: { letters: 'L+1', life: 'L+0', rites: 'L+0', nature: 'L+0', crafts: 'L+0' },
   stage5: { letters: '-', life: '-', rites: 'S1', nature: '-', crafts: '-' },
-  stage6: { letters: 'L+1', life: 'L+0', rites: '-', nature: '-', crafts: '-' },
+  stage6: { letters: 'L+1', life: 'L+0', rites: 'L+0', nature: '-', crafts: '-' },
   stage7: { letters: '-', life: '-', rites: '-', nature: '-', crafts: '-' },
 };
 

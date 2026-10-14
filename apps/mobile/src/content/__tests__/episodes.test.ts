@@ -278,6 +278,8 @@ describe('grid golden (F-STORY-005 §3.1 rule 2)', () => {
       { id: 'episode:stage6-letters', order: 1, questIds: ['quest:stage6-letters-q1', 'quest:stage6-letters-q2', 'quest:stage6-letters-q3'], status: 'shipped' },
       // S6-2 Order Food.
       { id: 'episode:stage6-life', order: 2, questIds: ['quest:stage6-life-q1', 'quest:stage6-life-q2', 'quest:stage6-life-q3'], status: 'shipped' },
+      // S6-3 Travel for Chuseok.
+      { id: 'episode:stage6-rites', order: 3, questIds: ['quest:stage6-rites-q1', 'quest:stage6-rites-q2', 'quest:stage6-rites-q3'], status: 'shipped' },
       // F-STORY-005 PR 5.6: the five Stage 5 books (books.ts), each cell's placeholder id kept.
       {
         id: 'episode:stage5-letters',
@@ -367,6 +369,8 @@ describe('pillar tags of the shipped lessons (F-STORY-005 §3.2)', () => {
       'episode:stage6-letters': ['A1'],
       // F-CURR-001 S6-2 (generated from content/episodes/stage-6/life.json).
       'episode:stage6-life': ['B2'],
+      // F-CURR-001 S6-3 (generated from content/episodes/stage-6/rites.json).
+      'episode:stage6-rites': ['B5'],
       'episode:stage5-letters': ['A1'],
       'episode:stage5-life': ['B1', 'B5', 'E4'],
       'episode:stage5-rites': ['B5'],
@@ -411,7 +415,7 @@ const GRID_GOLDEN: Record<string, string> = {
   'stage5:crafts': 'episode:stage5-crafts | Craft Stories | shipped',
   'stage6:letters': 'episode:stage6-letters | Read the Menu | shipped',
   'stage6:life': 'episode:stage6-life | Order Food | shipped',
-  'stage6:rites': 'episode:stage6-rites | Travel for Chuseok | preview',
+  'stage6:rites': 'episode:stage6-rites | Travel for Chuseok | shipped',
   'stage6:nature': 'episode:stage6-nature | Hike & Ask | preview',
   'stage6:crafts': 'episode:stage6-crafts | Buy at Market | preview',
   'stage7:letters': 'episode:stage7-letters | Write Your Name | preview',

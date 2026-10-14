@@ -630,6 +630,35 @@ const CELLS: readonly UpperCell[] = [
       await expect(page.getByRole('button', { name: /^Food & Daily Life: Order Food\./ })).toBeVisible();
     },
   },
+  // F-CURR-001 S6-3: Travel for Chuseok, q1 "The Train Ticket" played through its real games.
+  {
+    episodeId: 'episode:stage6-rites',
+    cellButton: journeyCellName(6, 'Holidays & Traditions'),
+    title: 'Travel for Chuseok',
+    playFirstQuest: async (page) => {
+      await page.getByRole('button', { name: 'Start', exact: true }).first().click();
+      await page.getByRole('button', { name: 'Continue' }).click();
+      await passDiscover(page);
+      await page.getByRole('button', { name: 'Play minigame' }).click();
+      await readRealia(page, [
+        ['Where does the train leave from?', 'seoul'],
+        ['Which word on the ticket means arrival?', 'dochak'],
+        ['Where does the train arrive?', 'busan'],
+        ['Which word on the ticket means departure?', 'chulbal'],
+        ['What is this ticket for?', 'train'],
+      ]);
+      await page.getByRole('button', { name: 'Play minigame' }).click();
+      await typeWords(page, ['기차', '출발', '도착']);
+      await playCheckByIds(page, [{ answer: 'b' }, { answer: 'a' }]);
+      await expect(page.getByText('Finish', { exact: true }).first()).toBeVisible();
+    },
+    expectRouteDay: async (page) => {
+      await page.goto('/');
+      await page.getByText('Learning Route', { exact: true }).last().click();
+      await page.getByRole('button', { name: /^Stage 6, Real-use\./ }).click();
+      await expect(page.getByRole('button', { name: /^Holidays & Traditions: Travel for Chuseok\./ })).toBeVisible();
+    },
+  },
 ];
 
 async function openJourney(page: Page): Promise<void> {
