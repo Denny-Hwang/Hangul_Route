@@ -2,7 +2,7 @@ import type { Quest, Story } from '@hangul-route/content-schema';
 import { VOCAB_ITEMS, VOCAB_TOPICS } from '../../../content/__generated__/vocab';
 import { episodesAll } from '../../../content/episodes';
 import { heritageCardsAll } from '../../../content/heritage-cards';
-import { jamoAll } from '../../../content/jamo';
+import { jamoKnown } from '../../../content/jamo';
 import { questsAll } from '../../../content/quests';
 import { stages, themes } from '../../../content/stages';
 import { scopeFor } from '../../minigame-config';
@@ -35,7 +35,7 @@ export function fixtureInput(stories: Story[] = fixtureStories()): BrowseBundleI
     themes,
     episodes: [...episodesAll, ...stories.map((s) => shelfEpisode(s))],
     quests: [...questsAll, ...storyQuests],
-    jamo: jamoAll,
+    jamo: jamoKnown,
     cards: heritageCardsAll,
     stories,
     vocabTopics: VOCAB_TOPICS.map((t) => ({ ...t, status: 'ready' as const })),

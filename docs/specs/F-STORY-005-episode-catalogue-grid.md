@@ -121,8 +121,8 @@ Columns: shelf id = `episode:shelf-<slug>`; **home cell** = `<recommendedStage>-
 | 8 | chuseok-ganggangsullae | Chuseok: Songpyeon and the Full Moon | stage1-rites | rites | 1 | 5 | L | story-time 2 | S | B5, C4 | seasons-tales |
 | 9 | sun-and-moon | The Sun and the Moon (A Traditional Tale) | stage1-nature | nature | 1 | 5 | L | story-time 3 | S | D5*, D2 | seasons-tales |
 | 10 | cheugugi-rain-gauge | The Bowl That Measured the Rain | stage1-crafts | crafts | 1 | 4 | L | culture 6 | S | E3 | science-art-life |
-| 11 | sillok-mountain-archives | The Annals Hide in the Mountains | stage2-letters | letters | 2 | 5 | – | culture 8 |  | A3 | records-joseon |
-| 12 | jikji-metal-type | Jikji: Printed with Metal Type | stage2-letters | letters | 2 | 5 | – | culture 9 |  | A5 | hangul-printing |
+| 11 | sillok-mountain-archives | The Annals Hide in the Mountains | stage2-letters | letters | 2 | 5 | L | culture 8 |  | A3 | records-joseon |
+| 12 | jikji-metal-type | Jikji: Printed with Metal Type | stage2-letters | letters | 2 | 5 | L | culture 9 |  | A5 | hangul-printing |
 | 13 | gimjang-arirang | Gimjang Day: Sharing Kimchi, Singing Arirang | stage2-life | life | 2 | 5 | L | story-time 5 |  | B5, C4 | seasons-tales |
 | 14 | dano-ssireum | Dano Day: Swings, Masks and Ssireum | stage2-rites | rites | 2 | 5 | – | story-time 4 |  | B5, C4 | seasons-tales |
 | 15 | angbuilgu-sundial | The Sky-Facing Pot That Told the Time | stage2-nature | nature | 2 | 4 | L | culture 11 |  | E3, E5 | science-art-life |
@@ -136,16 +136,16 @@ Columns: shelf id = `episode:shelf-<slug>`; **home cell** = `<recommendedStage>-
 | 23 | uigwe-royal-birthday | A Picture Record of a Royal Birthday | stage5-rites | rites | 5 | 5 | – (book later) | culture 17 |  | C2, A3 | records-joseon |
 | 24 | joseon-records-today | Old Records, New Discoveries | stage6-letters | letters | 6 | 4 | – | culture 18 |  | A3 | records-joseon |
 
-Totals: 112 minutes; 18 stories in cells that hold a lesson (rows 1-10, 13, 15, 22 since F-CURR-001 S4-1, 19-20 since S3-1, and 16-18 since S2-3), 6 in cells that would otherwise be placeholders; story-time 6, culture 18; sampler 6 (the F-STORY-004 §3.9 list, re-verified: all six are `recommended_stage` 1 and 4-5 minutes). Orders are data on the story (`shelf.order`); changing them is a content change.
+Totals: 112 minutes; 22 stories in cells that hold a lesson (every Stage 1 cell; at Stage 2 the two taste cells, Word Builder's letters cell since F-CURR-001 S2-1, Holiday Words' rites cell since S2-2 and Playground Words' crafts cell since S2-3; at Stage 3 the letters cell since S3-1 and the life cell since S3-2; at Stage 4 the letters cell since S4-1), 2 in cells without a lesson (Stage 5 rites, its book later, and Stage 6 letters); story-time 6, culture 18; sampler 6 (the F-STORY-004 §3.9 list, re-verified: all six are `recommended_stage` 1 and 4-5 minutes). Orders are data on the story (`shelf.order`); changing them is a content change.
 
 **Derived matrix** (L = lesson, number = stories whose home cell this is; "S-only" = a stories-only cell):
 
 | | letters | life | rites | nature | crafts |
 |---|---|---|---|---|---|
 | Stage 1 | L + 5 | L + 1 | L + 2 | L + 1 | L + 1 |
-| Stage 2 | S-only 2 | L + 1 | S-only 1 | L + 1 | L + 3 |
-| Stage 3 | L + 2 | S-only 1 | placeholder | placeholder | placeholder |
-| Stage 4 | L + 1 | placeholder | L + 0 | placeholder | placeholder |
+| Stage 2 | L + 2 | L + 1 | L + 1 | L + 1 | L + 3 |
+| Stage 3 | L + 2 | L + 1 | L + 0 | placeholder | L + 0 |
+| Stage 4 | L + 1 | L + 0 | L + 0 | L + 0 | L + 0 |
 | Stage 5 | book later | book later | S-only 1 → book later | book later | book later |
 | Stage 6 | S-only 1 | placeholder | placeholder | placeholder | placeholder |
 | Stage 7 | placeholder | placeholder | placeholder | placeholder | placeholder |

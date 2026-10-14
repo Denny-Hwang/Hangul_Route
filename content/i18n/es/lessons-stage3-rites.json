@@ -1,0 +1,161 @@
+{
+  "locale": "es",
+  "domain": "lessons-stage3-rites",
+  "entries": {
+    "episode:stage3-rites": {
+      "title": "Oraciones de fiesta",
+      "subtitle": "Oraciones cortas sobre Seollal y Chuseok",
+      "hoyaIntro": "¡Los días de fiesta son divertidos! Vamos a leer y armar oraciones sobre ellos."
+    },
+    "quest:stage3-rites-q1": {
+      "title": "La abuela y el abuelo",
+      "blurb": "Une dos cosas con la palabra coreana hago, \"y\", en oraciones de fiesta.",
+      "teaser": "Después: cosas bonitas y ricas",
+      "steps.s1.title": "Familia y comida de fiesta",
+      "steps.s2.title": "A y B",
+      "steps.s3.title": "Arma las oraciones",
+      "steps.s4.title": "Escucha y elige",
+      "steps.s5.title": "Dos preguntas rápidas",
+      "steps.s6.title": "¡A y B!",
+      "steps.s1.hoyaLine": "¡Vamos a leer oraciones que unen dos cosas con una palabra pequeña!",
+      "steps.s2.hoyaLine": "Toca Escuchar para oír cada palabra y cada oración.",
+      "steps.s6.hoyaLine": "Uniste dos cosas en una oración. ¡Muy bien!",
+      "steps.s2.discover.pages.0.caption": "Dos palabras de familia",
+      "steps.s2.discover.pages.1.caption": "Unir dos cosas",
+      "steps.s2.discover.pages.2.caption": "Oraciones de familia",
+      "steps.s2.discover.pages.0.items.0.word.gloss": "abuela",
+      "steps.s2.discover.pages.0.items.1.word.gloss": "abuelo",
+      "steps.s2.discover.pages.1.items.0.note": "La palabra coreana {ko:하고} significa \"y\". Va justo después de la primera cosa: A{ko:하고} B.",
+      "steps.s2.discover.pages.2.items.0.sentence.gloss": "Tengo una abuela y un abuelo.",
+      "steps.s2.discover.pages.2.items.1.sentence.gloss": "Tengo una mamá y una abuela.",
+      "steps.s2.discover.pages.1.items.0.frame.gloss": "Como ___ y pastel de arroz.",
+      "steps.s2.discover.pages.1.items.0.examples.songpyeonhago-tteogeul-meogeoyo.gloss": "Como songpyeon y pastel de arroz.",
+      "steps.s2.discover.pages.1.items.0.examples.sagwahago-tteogeul-meogeoyo.gloss": "Como una manzana y pastel de arroz."
+    },
+    "minigame:s3-rites-q1-practice": {
+      "orderIt.rounds.r1.sentence.gloss": "Como songpyeon y pastel de arroz.",
+      "orderIt.rounds.r2.sentence.gloss": "Tengo una abuela y un abuelo.",
+      "orderIt.rounds.r3.sentence.gloss": "Como una manzana y pastel de arroz.",
+      "orderIt.rounds.r4.sentence.gloss": "Tengo una mamá y una abuela.",
+      "orderIt.rounds.r5.sentence.gloss": "Como songpyeon y una manzana.",
+      "orderIt.rounds.r1.distractors.isseoyo.gloss": "tener, hay",
+      "orderIt.rounds.r2.distractors.meogeoyo.gloss": "comer",
+      "orderIt.rounds.r3.distractors.isseoyo.gloss": "tener, hay",
+      "orderIt.rounds.r4.distractors.tteogeul.gloss": "pastel de arroz (como objeto)",
+      "orderIt.rounds.r5.distractors.isseoyo.gloss": "tener, hay"
+    },
+    "minigame:s3-rites-q1-apply": {
+      "listenPick.rounds.r1.prompt": "Tengo una abuela y un abuelo.",
+      "listenPick.rounds.r2.prompt": "Como songpyeon y pastel de arroz.",
+      "listenPick.rounds.r3.prompt": "Como una manzana y pastel de arroz.",
+      "listenPick.rounds.r4.prompt": "Tengo una mamá y una abuela."
+    },
+    "minigame:s3-rites-q1-check": {
+      "listenPick.rounds.r1.prompt": "Tengo una abuela y un abuelo.",
+      "listenPick.rounds.r2.prompt": "Como songpyeon y una manzana."
+    },
+    "quest:stage3-rites-q2": {
+      "title": "Bonito y rico",
+      "blurb": "Lee cómo se ven y saben las cosas de fiesta.",
+      "teaser": "Después: la reverencia de Año Nuevo y la luna llena",
+      "steps.s1.title": "Bonito y rico",
+      "steps.s2.title": "¿Cómo es?",
+      "steps.s3.title": "Arma las oraciones",
+      "steps.s4.title": "Escucha y elige",
+      "steps.s5.title": "Dos preguntas rápidas",
+      "steps.s6.title": "¡Bonito y rico!",
+      "steps.s1.hoyaLine": "Las cosas de fiesta pueden ser bonitas y ricas. ¡Vamos a leer sobre ellas!",
+      "steps.s2.hoyaLine": "Toca Escuchar para oír cada oración.",
+      "steps.s6.hoyaLine": "Leíste cómo se ven y saben las cosas de fiesta. ¡Qué buen trabajo!",
+      "steps.s2.discover.pages.0.caption": "Está rico",
+      "steps.s2.discover.pages.1.caption": "Es bonito",
+      "steps.s2.discover.pages.0.items.0.note": "Usa {ko:이} después de una consonante final y {ko:가} después de una vocal.",
+      "steps.s2.discover.pages.1.items.0.sentence.gloss": "El hanbok es bonito.",
+      "steps.s2.discover.pages.1.items.1.sentence.gloss": "La luna llena es bonita.",
+      "steps.s2.discover.pages.0.items.0.frame.gloss": "___ está rico.",
+      "steps.s2.discover.pages.0.items.0.examples.songpyeoni-masisseoyo.gloss": "El songpyeon está rico.",
+      "steps.s2.discover.pages.0.items.0.examples.sagwaga-masisseoyo.gloss": "La manzana está rica."
+    },
+    "minigame:s3-rites-q2-practice": {
+      "orderIt.rounds.r1.sentence.gloss": "El songpyeon está rico.",
+      "orderIt.rounds.r2.sentence.gloss": "El hanbok es bonito.",
+      "orderIt.rounds.r3.sentence.gloss": "La manzana está rica.",
+      "orderIt.rounds.r4.sentence.gloss": "La manzana y el pastel de arroz están ricos.",
+      "orderIt.rounds.r5.sentence.gloss": "El songpyeon y el pastel de arroz están ricos.",
+      "orderIt.rounds.r1.distractors.yeppeoyo.gloss": "es bonito",
+      "orderIt.rounds.r2.distractors.masisseoyo.gloss": "está rico",
+      "orderIt.rounds.r3.distractors.yeppeoyo.gloss": "es bonito",
+      "orderIt.rounds.r5.distractors.yeppeoyo.gloss": "es bonito",
+      "orderIt.rounds.r1.particle.choices.i.gloss": "marca de sujeto, tras consonante final",
+      "orderIt.rounds.r1.particle.choices.ga.gloss": "marca de sujeto, tras vocal",
+      "orderIt.rounds.r2.particle.choices.i.gloss": "marca de sujeto, tras consonante final",
+      "orderIt.rounds.r2.particle.choices.ga.gloss": "marca de sujeto, tras vocal",
+      "orderIt.rounds.r3.particle.choices.i.gloss": "marca de sujeto, tras consonante final",
+      "orderIt.rounds.r3.particle.choices.ga.gloss": "marca de sujeto, tras vocal",
+      "orderIt.rounds.r5.particle.choices.i.gloss": "marca de sujeto, tras consonante final",
+      "orderIt.rounds.r5.particle.choices.ga.gloss": "marca de sujeto, tras vocal",
+      "orderIt.rounds.r4.distractors.yeppeoyo.gloss": "es bonito"
+    },
+    "minigame:s3-rites-q2-apply": {
+      "listenPick.rounds.r1.prompt": "El hanbok es bonito.",
+      "listenPick.rounds.r2.prompt": "La manzana está rica.",
+      "listenPick.rounds.r3.prompt": "La luna llena es bonita.",
+      "listenPick.rounds.r4.prompt": "El pastel de arroz está rico."
+    },
+    "minigame:s3-rites-q2-check": {
+      "listenPick.rounds.r1.prompt": "El songpyeon está rico.",
+      "listenPick.rounds.r2.prompt": "El hanbok es bonito."
+    },
+    "quest:stage3-rites-q3": {
+      "title": "Días de fiesta",
+      "blurb": "Lee oraciones sobre la reverencia de Año Nuevo y la luna llena.",
+      "steps.s1.title": "Días de fiesta",
+      "steps.s2.title": "Lo que se hace",
+      "steps.s3.title": "Arma las oraciones",
+      "steps.s4.title": "Escucha y elige",
+      "steps.s5.title": "Dos preguntas rápidas",
+      "steps.s6.title": "¡Oraciones de fiesta!",
+      "steps.s1.hoyaLine": "Los días de fiesta tienen cosas especiales que hacer. ¡Vamos a leerlas!",
+      "steps.s2.hoyaLine": "Sebae es una reverencia a los mayores en Seollal, el Año Nuevo lunar. En Chuseok hay una luna llena grande y brillante.",
+      "steps.s6.hoyaLine": "Leíste lo que se hace en los días de fiesta. ¡Genial!",
+      "steps.s2.discover.pages.0.caption": "La reverencia de Año Nuevo",
+      "steps.s2.discover.pages.1.caption": "Bajo la luna llena",
+      "steps.s2.discover.pages.0.items.0.note": "Usa {ko:을} después de una consonante final y {ko:를} después de una vocal. La forma {ko:해요} viene del verbo \"hacer\".",
+      "steps.s2.discover.pages.1.items.0.sentence.gloss": "Miro la luna llena.",
+      "steps.s2.discover.pages.1.items.1.sentence.gloss": "Como songpyeon.",
+      "steps.s2.discover.pages.0.items.0.frame.gloss": "Hago ___.",
+      "steps.s2.discover.pages.0.items.0.examples.sebaereul-haeyo.gloss": "Hago la reverencia de Año Nuevo.",
+      "steps.s2.discover.pages.0.items.0.examples.yunnorireul-haeyo.gloss": "Juego al yut."
+    },
+    "minigame:s3-rites-q3-practice": {
+      "orderIt.rounds.r1.sentence.gloss": "Hago la reverencia de Año Nuevo.",
+      "orderIt.rounds.r2.sentence.gloss": "Miro la luna llena.",
+      "orderIt.rounds.r3.sentence.gloss": "Juego al yut.",
+      "orderIt.rounds.r4.sentence.gloss": "Mamá y papá miran la luna llena.",
+      "orderIt.rounds.r5.sentence.gloss": "Como songpyeon.",
+      "orderIt.rounds.r1.distractors.bwayo.gloss": "mirar, ver",
+      "orderIt.rounds.r2.distractors.haeyo.gloss": "hacer",
+      "orderIt.rounds.r3.distractors.meogeoyo.gloss": "comer",
+      "orderIt.rounds.r4.distractors.haeyo.gloss": "hacer",
+      "orderIt.rounds.r5.distractors.bwayo.gloss": "mirar, ver",
+      "orderIt.rounds.r1.particle.choices.eul.gloss": "marca de objeto, tras consonante final",
+      "orderIt.rounds.r1.particle.choices.reul.gloss": "marca de objeto, tras vocal",
+      "orderIt.rounds.r2.particle.choices.eul.gloss": "marca de objeto, tras consonante final",
+      "orderIt.rounds.r2.particle.choices.reul.gloss": "marca de objeto, tras vocal",
+      "orderIt.rounds.r4.particle.choices.eul.gloss": "marca de objeto, tras consonante final",
+      "orderIt.rounds.r4.particle.choices.reul.gloss": "marca de objeto, tras vocal",
+      "orderIt.rounds.r5.particle.choices.eul.gloss": "marca de objeto, tras consonante final",
+      "orderIt.rounds.r5.particle.choices.reul.gloss": "marca de objeto, tras vocal"
+    },
+    "minigame:s3-rites-q3-apply": {
+      "listenPick.rounds.r1.prompt": "Hago la reverencia de Año Nuevo.",
+      "listenPick.rounds.r2.prompt": "Miro la luna llena.",
+      "listenPick.rounds.r3.prompt": "Juego al yut.",
+      "listenPick.rounds.r4.prompt": "Mamá y papá miran la luna llena."
+    },
+    "minigame:s3-rites-q3-check": {
+      "listenPick.rounds.r1.prompt": "Juego al yut.",
+      "listenPick.rounds.r2.prompt": "Miro la luna llena."
+    }
+  }
+}

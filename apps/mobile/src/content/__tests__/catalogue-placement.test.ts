@@ -82,10 +82,12 @@ const PLACEMENT: readonly PlacementRow[] = [
   row('chuseok-ganggangsullae', 'Chuseok: Songpyeon and the Full Moon', 'rites', 1, 5, 'L', 'story-time', 2, 'S', ['B5', 'C4'], 'seasons-tales'),
   row('sun-and-moon', 'The Sun and the Moon (A Traditional Tale)', 'nature', 1, 5, 'L', 'story-time', 3, 'S', ['D5', 'D2'], 'seasons-tales'),
   row('cheugugi-rain-gauge', 'The Bowl That Measured the Rain', 'crafts', 1, 4, 'L', 'culture', 6, 'S', ['E3'], 'science-art-life'),
-  row('sillok-mountain-archives', 'The Annals Hide in the Mountains', 'letters', 2, 5, '-', 'culture', 8, '', ['A3'], 'records-joseon'),
-  row('jikji-metal-type', 'Jikji: Printed with Metal Type', 'letters', 2, 5, '-', 'culture', 9, '', ['A5'], 'hangul-printing'),
+  // F-CURR-001 S2-1: Word Builder ships into these two stories' home cell.
+  row('sillok-mountain-archives', 'The Annals Hide in the Mountains', 'letters', 2, 5, 'L', 'culture', 8, '', ['A3'], 'records-joseon'),
+  row('jikji-metal-type', 'Jikji: Printed with Metal Type', 'letters', 2, 5, 'L', 'culture', 9, '', ['A5'], 'hangul-printing'),
   row('gimjang-arirang', 'Gimjang Day: Sharing Kimchi, Singing Arirang', 'life', 2, 5, 'L', 'story-time', 5, '', ['B5', 'C4'], 'seasons-tales'),
-  row('dano-ssireum', 'Dano Day: Swings, Masks and Ssireum', 'rites', 2, 5, '-', 'story-time', 4, '', ['B5', 'C4'], 'seasons-tales'),
+  // F-CURR-001 S2-2: Holiday Words ships into this story's home cell.
+  row('dano-ssireum', 'Dano Day: Swings, Masks and Ssireum', 'rites', 2, 5, 'L', 'story-time', 4, '', ['B5', 'C4'], 'seasons-tales'),
   row('angbuilgu-sundial', 'The Sky-Facing Pot That Told the Time', 'nature', 2, 4, 'L', 'culture', 11, '', ['E3', 'E5'], 'science-art-life'),
   row('janggyeong-panjeon', 'Guarded by the Wind', 'crafts', 2, 5, 'L', 'culture', 10, '', ['A2', 'D3'], 'hangul-printing'),
   row('jagyeongnu-water-clock', 'Jang Yeongsil and the Clock That Rang by Itself', 'crafts', 2, 5, 'L', 'culture', 12, '', ['E3'], 'science-art-life'),
@@ -105,7 +107,8 @@ const PLACEMENT: readonly PlacementRow[] = [
   // F-CURR-001 S3-1: First Sentences ships into these two stories' home cell.
   row('seungjeongwon-ilgi-every-day', "The Royal Secretariat's Everyday Diary", 'letters', 3, 5, 'L', 'culture', 13, '', ['A4'], 'records-joseon'),
   row('nanjung-ilgi', "Admiral Yi's Diary", 'letters', 3, 4, 'L', 'culture', 14, '', ['A4'], 'science-art-life'),
-  row('donguibogam', "Heo Jun's Treasured Mirror of Medicine", 'life', 3, 5, '-', 'culture', 15, '', ['E4'], 'science-art-life'),
+  // F-CURR-001 S3-2: Daily Mini-Sentences ships into this story's home cell.
+  row('donguibogam', "Heo Jun's Treasured Mirror of Medicine", 'life', 3, 5, 'L', 'culture', 15, '', ['E4'], 'science-art-life'),
   // F-CURR-001 S4-1: Read Along ships into this story's home cell.
   row('ilseongnok-daily-reflection', "King Jeongjo's Diary of Daily Reflection", 'letters', 4, 4, 'L', 'culture', 16, '', ['A4'], 'records-joseon'),
   row('uigwe-royal-birthday', 'A Picture Record of a Royal Birthday', 'rites', 5, 5, '-', 'culture', 17, '', ['C2', 'A3'], 'records-joseon'),
@@ -115,9 +118,9 @@ const PLACEMENT: readonly PlacementRow[] = [
 /** The derived matrix of §3.3: L = lesson, a number = stories whose home cell this is. */
 const MATRIX: Record<StageKey, Record<ThemeKey, string>> = {
   stage1: { letters: 'L+5', life: 'L+1', rites: 'L+2', nature: 'L+1', crafts: 'L+1' },
-  stage2: { letters: 'S2', life: 'L+1', rites: 'S1', nature: 'L+1', crafts: 'L+3' },
-  stage3: { letters: 'L+2', life: 'S1', rites: '-', nature: '-', crafts: '-' },
-  stage4: { letters: 'L+1', life: '-', rites: 'L+0', nature: '-', crafts: '-' },
+  stage2: { letters: 'L+2', life: 'L+1', rites: 'L+1', nature: 'L+1', crafts: 'L+3' },
+  stage3: { letters: 'L+2', life: 'L+1', rites: 'L+0', nature: '-', crafts: 'L+0' },
+  stage4: { letters: 'L+1', life: 'L+0', rites: 'L+0', nature: 'L+0', crafts: 'L+0' },
   stage5: { letters: '-', life: '-', rites: 'S1', nature: '-', crafts: '-' },
   stage6: { letters: 'S1', life: '-', rites: '-', nature: '-', crafts: '-' },
   stage7: { letters: '-', life: '-', rites: '-', nature: '-', crafts: '-' },
@@ -208,11 +211,11 @@ describe('placement table (F-STORY-005 §3.3) against the story files', () => {
     }
   });
 
-  it('totals 112 minutes, 18 stories in lesson cells and 6 in cells without a lesson (Read Along S4-1, First Sentences S3-1, Playground Words S2-3)', () => {
+  it('totals 112 minutes, 22 stories in lesson cells and 2 in cells without a lesson (Read Along S4-1, First Sentences S3-1, Playground Words S2-3, Daily Mini-Sentences S3-2, Word Builder S2-1, Holiday Words S2-2)', () => {
     expect(storyFiles.reduce((sum, story) => sum + story.minutes, 0)).toBe(112);
     const inLessonCells = storyFiles.filter((story) => lessonCells.has(homeKey(story)));
-    expect(inLessonCells, GRID_HINT).toHaveLength(18);
-    expect(storyFiles.length - inLessonCells.length, GRID_HINT).toBe(6);
+    expect(inLessonCells, GRID_HINT).toHaveLength(22);
+    expect(storyFiles.length - inLessonCells.length, GRID_HINT).toBe(2);
   });
 
   it('gives every row the "cell holds" of the shipped grid', () => {

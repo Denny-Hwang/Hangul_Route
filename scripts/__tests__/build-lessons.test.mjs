@@ -120,8 +120,21 @@ describe("build-lessons.mjs: cells", () => {
     assert.doesNotMatch(index, /"scopes"|stage2-crafts|"sources"|stdict/);
     const stage2 = read(root, "lessons-stage2.ts");
     assert.match(stage2, /"minigame:s2-rites-q1-practice":\{"kind":"card-match"/);
+    // Compact literals (S4-4): one line per export, no pretty-printing.
+    assert.doesNotMatch(index, /\n  "/);
     assert.doesNotMatch(stage2, /stage2-crafts/);
     assert.match(read(root, "lessons-stage3.ts"), /= \{\};/);
+  });
+
+  test("cells are written in grid theme order (letters, life, rites, nature, crafts), not file-name order", () => {
+    const root = makeRoot();
+    put(root, "content/episodes/stage-2/crafts.json", cell("stage2", "crafts", "ready", { order: 5 }));
+    put(root, "content/episodes/stage-2/nature.json", cell("stage2", "nature", "ready", { order: 4 }));
+    put(root, "content/episodes/stage-2/rites.json", cell("stage2", "rites"));
+    const r = run(root);
+    assert.equal(r.status, 0, r.stdout + r.stderr);
+    const ids = [...read(root, "lessons-index.ts").matchAll(/"id":"(episode:[^"]+)"/g)].map((m) => m[1]);
+    assert.deepEqual(ids, ["episode:stage2-rites", "episode:stage2-nature", "episode:stage2-crafts"]);
   });
 
   test("a ready cell without both review sign-offs fails the build; a draft does not need them (§3.8)", () => {
@@ -219,7 +232,15 @@ describe("build-lessons.mjs: runtime scopes (the app's MinigameScope)", () => {
       [{ kind: "listen-pick", rounds: [lp("a")] }, { kind: "listen-pick", rounds: 1, listenPick: { rounds: [lp("a")] } }],
       [{ kind: "pic-word-match", boards: [{ pairs: [] }] }, { kind: "pic-word-match", rounds: 1, picWord: { boards: [{ pairs: [] }] } }],
       [{ kind: "card-match", pairs: [kt("연", "yeon", "kite", { audioRef: "x" })] }, { kind: "card-match", rounds: 1, cardPairs: [kt("연", "yeon", "kite")] }],
-      [{ kind: "order-it", rounds: [1, 2] }, { kind: "order-it", rounds: 2, orderIt: { rounds: [1, 2] } }],
+      // A particle round may leave out its distractors (the schema default): the game reads [].
+      [
+        { kind: "order-it", rounds: [{ id: "r1", distractors: [kt("물을", "mureul", "water")] }, { id: "r2", particle: { tile: 0 } }] },
+        {
+          kind: "order-it",
+          rounds: 2,
+          orderIt: { rounds: [{ id: "r1", distractors: [kt("물을", "mureul", "water")] }, { id: "r2", particle: { tile: 0 }, distractors: [] }] },
+        },
+      ],
       [{ kind: "realia-read", realia, rounds: [1] }, { kind: "realia-read", rounds: 1, realiaRead: { realia, rounds: [1] } }],
       [{ kind: "type-hangul", rounds: [1] }, { kind: "type-hangul", rounds: 1, typeHangul: { rounds: [1] } }],
       [{ kind: "trace-word", rounds: [1, 2, 3] }, { kind: "trace-word", rounds: 3, traceWord: { rounds: [1, 2, 3] } }],

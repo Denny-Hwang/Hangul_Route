@@ -1,0 +1,1126 @@
+{
+  "id": "episode:stage4-crafts",
+  "stage": "stage4",
+  "theme": "crafts",
+  "status": "ready",
+  "titleEn": "Playdate Talk",
+  "subtitleEn": "Friends pick a game and take turns.",
+  "hoyaIntroEn": "Mina and I are playing a game. Come and read what we say!",
+  "order": 5,
+  "pillarTags": [
+    "B5"
+  ],
+  "rewardCardIds": [],
+  "quests": [
+    {
+      "id": "quest:stage4-crafts-q1",
+      "titleEn": "What Shall We Play?",
+      "blurbEn": "Read how two friends ask each other to play.",
+      "teaserEn": "Next: take turns in a game of yut.",
+      "estimatedMinutes": 5,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "Time to Play",
+          "hoyaLineEn": "Mina wants to play. Let's read what she says!",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "Friends Talk",
+          "hoyaLineEn": "Tap Hear it to listen to each line.",
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "exchange",
+                    "lines": [
+                      {
+                        "speaker": "a",
+                        "speakerEn": "Mina",
+                        "line": {
+                          "ko": "같이 놀자!",
+                          "romanization": "gachi nolja",
+                          "en": "let's play together!"
+                        }
+                      },
+                      {
+                        "speaker": "b",
+                        "speakerEn": "Hoya",
+                        "line": {
+                          "ko": "좋아!",
+                          "romanization": "joa",
+                          "en": "okay, sounds good!"
+                        }
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "Close friends often talk casually, without the polite ending -yo."
+              },
+              {
+                "items": [
+                  {
+                    "type": "exchange",
+                    "lines": [
+                      {
+                        "speaker": "a",
+                        "speakerEn": "Hoya",
+                        "line": {
+                          "ko": "뭐 하고 놀까?",
+                          "romanization": "mwo hago nolkka",
+                          "en": "what shall we play?"
+                        }
+                      },
+                      {
+                        "speaker": "b",
+                        "speakerEn": "Mina",
+                        "line": {
+                          "ko": "윷놀이 하자!",
+                          "romanization": "yunnori haja",
+                          "en": "let's play yut!"
+                        }
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "Hoya asks what (mwo) to play. Mina picks yut, a game of throwing sticks."
+              }
+            ]
+          },
+          "durationSeconds": 65
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Pick Hoya's Reply",
+          "minigameKind": "tap-respond",
+          "minigameRef": "minigame:s4-crafts-q1-practice",
+          "durationSeconds": 90
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Put the Talk in Order",
+          "minigameKind": "story-sequence",
+          "minigameRef": "minigame:s4-crafts-q1-apply",
+          "durationSeconds": 75
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Listen and Reply",
+          "minigameKind": "listen-pick",
+          "minigameRef": "minigame:s4-crafts-q1-check",
+          "durationSeconds": 40
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Ready to Play!",
+          "hoyaLineEn": "You followed a real chat between friends!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s4-crafts-q1-practice",
+          "kind": "tap-respond",
+          "turns": [
+            {
+              "speakerEn": "Mina",
+              "line": {
+                "ko": "같이 놀자!",
+                "romanization": "gachi nolja",
+                "en": "let's play together!"
+              },
+              "replies": [
+                {
+                  "id": "b",
+                  "text": {
+                    "ko": "책이에요.",
+                    "romanization": "chaegieyo",
+                    "en": "it is a book."
+                  },
+                  "correct": false
+                },
+                {
+                  "id": "c",
+                  "text": {
+                    "ko": "학교에 가요.",
+                    "romanization": "hakgyoe gayo",
+                    "en": "I go to school."
+                  },
+                  "correct": false
+                },
+                {
+                  "id": "a",
+                  "text": {
+                    "ko": "좋아!",
+                    "romanization": "joa",
+                    "en": "okay, sounds good!"
+                  },
+                  "correct": true
+                }
+              ]
+            },
+            {
+              "speakerEn": "Mina",
+              "line": {
+                "ko": "뭐 하고 놀까?",
+                "romanization": "mwo hago nolkka",
+                "en": "what shall we play?"
+              },
+              "replies": [
+                {
+                  "id": "a",
+                  "text": {
+                    "ko": "윷놀이 하자!",
+                    "romanization": "yunnori haja",
+                    "en": "let's play yut!"
+                  },
+                  "correct": true
+                },
+                {
+                  "id": "b",
+                  "text": {
+                    "ko": "좋아!",
+                    "romanization": "joa",
+                    "en": "okay, sounds good!"
+                  },
+                  "correct": false
+                },
+                {
+                  "id": "c",
+                  "text": {
+                    "ko": "물을 마셔요.",
+                    "romanization": "mureul masyeoyo",
+                    "en": "I drink water."
+                  },
+                  "correct": false
+                }
+              ]
+            },
+            {
+              "speakerEn": "Mina",
+              "line": {
+                "ko": "윷놀이 하자!",
+                "romanization": "yunnori haja",
+                "en": "let's play yut!"
+              },
+              "replies": [
+                {
+                  "id": "b",
+                  "text": {
+                    "ko": "뭐 하고 놀까?",
+                    "romanization": "mwo hago nolkka",
+                    "en": "what shall we play?"
+                  },
+                  "correct": false
+                },
+                {
+                  "id": "a",
+                  "text": {
+                    "ko": "좋아!",
+                    "romanization": "joa",
+                    "en": "okay, sounds good!"
+                  },
+                  "correct": true
+                },
+                {
+                  "id": "c",
+                  "text": {
+                    "ko": "물을 마셔요.",
+                    "romanization": "mureul masyeoyo",
+                    "en": "I drink water."
+                  },
+                  "correct": false
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s4-crafts-q1-apply",
+          "kind": "story-sequence",
+          "lines": [
+            {
+              "id": "l1",
+              "speakerEn": "Mina",
+              "line": {
+                "ko": "같이 놀자!",
+                "romanization": "gachi nolja",
+                "en": "let's play together!"
+              }
+            },
+            {
+              "id": "l2",
+              "speakerEn": "Hoya",
+              "line": {
+                "ko": "좋아! 뭐 하고 놀까?",
+                "romanization": "joa mwo hago nolkka",
+                "en": "okay! what shall we play?"
+              }
+            },
+            {
+              "id": "l3",
+              "speakerEn": "Mina",
+              "line": {
+                "ko": "윷놀이 하자!",
+                "romanization": "yunnori haja",
+                "en": "let's play yut!"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s4-crafts-q1-check",
+          "kind": "listen-pick",
+          "rounds": [
+            {
+              "id": "r1",
+              "prompt": {
+                "ko": "윷놀이 하자!",
+                "romanization": "yunnori haja",
+                "en": "let's play yut!"
+              },
+              "options": [
+                {
+                  "id": "a",
+                  "text": {
+                    "ko": "좋아!",
+                    "romanization": "joa",
+                    "en": "okay, sounds good!"
+                  }
+                },
+                {
+                  "id": "b",
+                  "text": {
+                    "ko": "뭐 하고 놀까?",
+                    "romanization": "mwo hago nolkka",
+                    "en": "what shall we play?"
+                  }
+                },
+                {
+                  "id": "c",
+                  "text": {
+                    "ko": "책이에요.",
+                    "romanization": "chaegieyo",
+                    "en": "it is a book."
+                  }
+                }
+              ],
+              "answerId": "a"
+            },
+            {
+              "id": "r2",
+              "prompt": {
+                "ko": "뭐 하고 놀까?",
+                "romanization": "mwo hago nolkka",
+                "en": "what shall we play?"
+              },
+              "options": [
+                {
+                  "id": "a",
+                  "text": {
+                    "ko": "윷놀이 하자!",
+                    "romanization": "yunnori haja",
+                    "en": "let's play yut!"
+                  }
+                },
+                {
+                  "id": "b",
+                  "text": {
+                    "ko": "좋아!",
+                    "romanization": "joa",
+                    "en": "okay, sounds good!"
+                  }
+                },
+                {
+                  "id": "c",
+                  "text": {
+                    "ko": "토끼가 작아요.",
+                    "romanization": "tokkiga jagayo",
+                    "en": "the rabbit is small."
+                  }
+                }
+              ],
+              "answerId": "a"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "quest:stage4-crafts-q2",
+      "titleEn": "My Turn, Your Turn",
+      "blurbEn": "Take turns with Mina in a game of yut.",
+      "teaserEn": "Next: the polite way and the friendly way.",
+      "estimatedMinutes": 5,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "Whose Turn?",
+          "hoyaLineEn": "We are playing yut. Let's take turns!",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "Taking Turns",
+          "hoyaLineEn": "Tap Hear it to listen to each line.",
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "exchange",
+                    "lines": [
+                      {
+                        "speaker": "a",
+                        "speakerEn": "Hoya",
+                        "line": {
+                          "ko": "내 차례야!",
+                          "romanization": "nae charyeya",
+                          "en": "it's my turn!"
+                        }
+                      },
+                      {
+                        "speaker": "b",
+                        "speakerEn": "Mina",
+                        "line": {
+                          "ko": "좋아!",
+                          "romanization": "joa",
+                          "en": "okay, sounds good!"
+                        }
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "Between friends, a line can end in -ya or -eo with no -yo: nae charyeya, gomawo."
+              },
+              {
+                "items": [
+                  {
+                    "type": "exchange",
+                    "lines": [
+                      {
+                        "speaker": "a",
+                        "speakerEn": "Mina",
+                        "line": {
+                          "ko": "잘했어!",
+                          "romanization": "jalhaesseo",
+                          "en": "well done!"
+                        }
+                      },
+                      {
+                        "speaker": "b",
+                        "speakerEn": "Hoya",
+                        "line": {
+                          "ko": "고마워! 이제 너야!",
+                          "romanization": "gomawo ije neoya",
+                          "en": "thanks! now it's your go!"
+                        }
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "Mina cheers, and Hoya passes the turn."
+              }
+            ]
+          },
+          "durationSeconds": 65
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Pick Hoya's Reply",
+          "minigameKind": "tap-respond",
+          "minigameRef": "minigame:s4-crafts-q2-practice",
+          "durationSeconds": 90
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Put the Talk in Order",
+          "minigameKind": "story-sequence",
+          "minigameRef": "minigame:s4-crafts-q2-apply",
+          "durationSeconds": 75
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Listen and Reply",
+          "minigameKind": "listen-pick",
+          "minigameRef": "minigame:s4-crafts-q2-check",
+          "durationSeconds": 40
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Good Game!",
+          "hoyaLineEn": "You took turns like a real player!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s4-crafts-q2-practice",
+          "kind": "tap-respond",
+          "turns": [
+            {
+              "speakerEn": "Mina",
+              "line": {
+                "ko": "이제 너야!",
+                "romanization": "ije neoya",
+                "en": "now it's your go!"
+              },
+              "replies": [
+                {
+                  "id": "a",
+                  "text": {
+                    "ko": "좋아! 내 차례야!",
+                    "romanization": "joa nae charyeya",
+                    "en": "okay! it's my turn!"
+                  },
+                  "correct": true
+                },
+                {
+                  "id": "b",
+                  "text": {
+                    "ko": "잘했어!",
+                    "romanization": "jalhaesseo",
+                    "en": "well done!"
+                  },
+                  "correct": false
+                },
+                {
+                  "id": "c",
+                  "text": {
+                    "ko": "학교에 가요.",
+                    "romanization": "hakgyoe gayo",
+                    "en": "I go to school."
+                  },
+                  "correct": false
+                }
+              ]
+            },
+            {
+              "speakerEn": "Mina",
+              "line": {
+                "ko": "잘했어!",
+                "romanization": "jalhaesseo",
+                "en": "well done!"
+              },
+              "replies": [
+                {
+                  "id": "b",
+                  "text": {
+                    "ko": "내 차례야!",
+                    "romanization": "nae charyeya",
+                    "en": "it's my turn!"
+                  },
+                  "correct": false
+                },
+                {
+                  "id": "a",
+                  "text": {
+                    "ko": "고마워!",
+                    "romanization": "gomawo",
+                    "en": "thanks!"
+                  },
+                  "correct": true
+                },
+                {
+                  "id": "c",
+                  "text": {
+                    "ko": "책이에요.",
+                    "romanization": "chaegieyo",
+                    "en": "it is a book."
+                  },
+                  "correct": false
+                }
+              ]
+            },
+            {
+              "speakerEn": "Mina",
+              "line": {
+                "ko": "내 차례야!",
+                "romanization": "nae charyeya",
+                "en": "it's my turn!"
+              },
+              "replies": [
+                {
+                  "id": "b",
+                  "text": {
+                    "ko": "고마워!",
+                    "romanization": "gomawo",
+                    "en": "thanks!"
+                  },
+                  "correct": false
+                },
+                {
+                  "id": "c",
+                  "text": {
+                    "ko": "물을 마셔요.",
+                    "romanization": "mureul masyeoyo",
+                    "en": "I drink water."
+                  },
+                  "correct": false
+                },
+                {
+                  "id": "a",
+                  "text": {
+                    "ko": "좋아!",
+                    "romanization": "joa",
+                    "en": "okay, sounds good!"
+                  },
+                  "correct": true
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s4-crafts-q2-apply",
+          "kind": "story-sequence",
+          "lines": [
+            {
+              "id": "l1",
+              "speakerEn": "Mina",
+              "line": {
+                "ko": "윷놀이 하자!",
+                "romanization": "yunnori haja",
+                "en": "let's play yut!"
+              }
+            },
+            {
+              "id": "l2",
+              "speakerEn": "Hoya",
+              "line": {
+                "ko": "좋아! 내 차례야!",
+                "romanization": "joa nae charyeya",
+                "en": "okay! it's my turn!"
+              }
+            },
+            {
+              "id": "l3",
+              "speakerEn": "Mina",
+              "line": {
+                "ko": "잘했어!",
+                "romanization": "jalhaesseo",
+                "en": "well done!"
+              }
+            },
+            {
+              "id": "l4",
+              "speakerEn": "Hoya",
+              "line": {
+                "ko": "고마워! 이제 너야!",
+                "romanization": "gomawo ije neoya",
+                "en": "thanks! now it's your go!"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s4-crafts-q2-check",
+          "kind": "listen-pick",
+          "rounds": [
+            {
+              "id": "r1",
+              "prompt": {
+                "ko": "잘했어!",
+                "romanization": "jalhaesseo",
+                "en": "well done!"
+              },
+              "options": [
+                {
+                  "id": "a",
+                  "text": {
+                    "ko": "고마워!",
+                    "romanization": "gomawo",
+                    "en": "thanks!"
+                  }
+                },
+                {
+                  "id": "b",
+                  "text": {
+                    "ko": "내 차례야!",
+                    "romanization": "nae charyeya",
+                    "en": "it's my turn!"
+                  }
+                },
+                {
+                  "id": "c",
+                  "text": {
+                    "ko": "물을 마셔요.",
+                    "romanization": "mureul masyeoyo",
+                    "en": "I drink water."
+                  }
+                }
+              ],
+              "answerId": "a"
+            },
+            {
+              "id": "r2",
+              "prompt": {
+                "ko": "이제 너야!",
+                "romanization": "ije neoya",
+                "en": "now it's your go!"
+              },
+              "options": [
+                {
+                  "id": "a",
+                  "text": {
+                    "ko": "좋아! 내 차례야!",
+                    "romanization": "joa nae charyeya",
+                    "en": "okay! it's my turn!"
+                  }
+                },
+                {
+                  "id": "b",
+                  "text": {
+                    "ko": "잘했어!",
+                    "romanization": "jalhaesseo",
+                    "en": "well done!"
+                  }
+                },
+                {
+                  "id": "c",
+                  "text": {
+                    "ko": "토끼가 작아요.",
+                    "romanization": "tokkiga jagayo",
+                    "en": "the rabbit is small."
+                  }
+                }
+              ],
+              "answerId": "a"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "quest:stage4-crafts-q3",
+      "titleEn": "Shall We Play Together?",
+      "blurbEn": "Read the polite way and the friendly way to ask.",
+      "estimatedMinutes": 5,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "Two Ways to Ask",
+          "hoyaLineEn": "Dami wants to play too. Let's see how she asks!",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "Polite and Casual",
+          "hoyaLineEn": "Tap Hear it to listen to each line.",
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "exchange",
+                    "lines": [
+                      {
+                        "speaker": "a",
+                        "speakerEn": "Mina",
+                        "line": {
+                          "ko": "같이 할까?",
+                          "romanization": "gachi halkka",
+                          "en": "shall we do it together? (casual)"
+                        }
+                      },
+                      {
+                        "speaker": "b",
+                        "speakerEn": "Hoya",
+                        "line": {
+                          "ko": "좋아!",
+                          "romanization": "joa",
+                          "en": "okay, sounds good!"
+                        }
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "With his close friend Mina, Hoya talks casually."
+              },
+              {
+                "items": [
+                  {
+                    "type": "exchange",
+                    "lines": [
+                      {
+                        "speaker": "a",
+                        "speakerEn": "Dami",
+                        "line": {
+                          "ko": "같이 할까요?",
+                          "romanization": "gachi halkkayo",
+                          "en": "shall we do it together? (polite)"
+                        }
+                      },
+                      {
+                        "speaker": "b",
+                        "speakerEn": "Hoya",
+                        "line": {
+                          "ko": "좋아요!",
+                          "romanization": "joayo",
+                          "en": "okay, sounds good! (polite)"
+                        }
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "Hoya and Dami add the polite -yo when they talk to each other."
+              }
+            ]
+          },
+          "durationSeconds": 65
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Pick Hoya's Reply",
+          "minigameKind": "tap-respond",
+          "minigameRef": "minigame:s4-crafts-q3-practice",
+          "durationSeconds": 90
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Put the Talk in Order",
+          "minigameKind": "story-sequence",
+          "minigameRef": "minigame:s4-crafts-q3-apply",
+          "durationSeconds": 75
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Listen and Reply",
+          "minigameKind": "listen-pick",
+          "minigameRef": "minigame:s4-crafts-q3-check",
+          "durationSeconds": 40
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Playdate Done!",
+          "hoyaLineEn": "You can read polite and casual talk. I'm so proud of you!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s4-crafts-q3-practice",
+          "kind": "tap-respond",
+          "turns": [
+            {
+              "speakerEn": "Mina",
+              "line": {
+                "ko": "같이 할까?",
+                "romanization": "gachi halkka",
+                "en": "shall we do it together? (casual)"
+              },
+              "replies": [
+                {
+                  "id": "b",
+                  "text": {
+                    "ko": "잘했어!",
+                    "romanization": "jalhaesseo",
+                    "en": "well done!"
+                  },
+                  "correct": false
+                },
+                {
+                  "id": "a",
+                  "text": {
+                    "ko": "좋아!",
+                    "romanization": "joa",
+                    "en": "okay, sounds good!"
+                  },
+                  "correct": true
+                },
+                {
+                  "id": "c",
+                  "text": {
+                    "ko": "학교에 가요.",
+                    "romanization": "hakgyoe gayo",
+                    "en": "I go to school."
+                  },
+                  "correct": false
+                }
+              ]
+            },
+            {
+              "speakerEn": "Mina",
+              "line": {
+                "ko": "뭐 하고 놀까?",
+                "romanization": "mwo hago nolkka",
+                "en": "what shall we play?"
+              },
+              "replies": [
+                {
+                  "id": "b",
+                  "text": {
+                    "ko": "좋아!",
+                    "romanization": "joa",
+                    "en": "okay, sounds good!"
+                  },
+                  "correct": false
+                },
+                {
+                  "id": "c",
+                  "text": {
+                    "ko": "토끼가 작아요.",
+                    "romanization": "tokkiga jagayo",
+                    "en": "the rabbit is small."
+                  },
+                  "correct": false
+                },
+                {
+                  "id": "a",
+                  "text": {
+                    "ko": "윷놀이 하자!",
+                    "romanization": "yunnori haja",
+                    "en": "let's play yut!"
+                  },
+                  "correct": true
+                }
+              ]
+            },
+            {
+              "speakerEn": "Dami",
+              "line": {
+                "ko": "같이 할까요?",
+                "romanization": "gachi halkkayo",
+                "en": "shall we do it together? (polite)"
+              },
+              "replies": [
+                {
+                  "id": "a",
+                  "text": {
+                    "ko": "좋아요!",
+                    "romanization": "joayo",
+                    "en": "okay, sounds good! (polite)"
+                  },
+                  "correct": true
+                },
+                {
+                  "id": "b",
+                  "text": {
+                    "ko": "내 차례야!",
+                    "romanization": "nae charyeya",
+                    "en": "it's my turn!"
+                  },
+                  "correct": false
+                },
+                {
+                  "id": "c",
+                  "text": {
+                    "ko": "책이에요.",
+                    "romanization": "chaegieyo",
+                    "en": "it is a book."
+                  },
+                  "correct": false
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s4-crafts-q3-apply",
+          "kind": "story-sequence",
+          "lines": [
+            {
+              "id": "l1",
+              "speakerEn": "Mina",
+              "line": {
+                "ko": "같이 할까?",
+                "romanization": "gachi halkka",
+                "en": "shall we do it together? (casual)"
+              }
+            },
+            {
+              "id": "l2",
+              "speakerEn": "Hoya",
+              "line": {
+                "ko": "좋아! 뭐 하고 놀까?",
+                "romanization": "joa mwo hago nolkka",
+                "en": "okay! what shall we play?"
+              }
+            },
+            {
+              "id": "l3",
+              "speakerEn": "Mina",
+              "line": {
+                "ko": "윷놀이 하자!",
+                "romanization": "yunnori haja",
+                "en": "let's play yut!"
+              }
+            },
+            {
+              "id": "l4",
+              "speakerEn": "Hoya",
+              "line": {
+                "ko": "좋아! 내 차례야!",
+                "romanization": "joa nae charyeya",
+                "en": "okay! it's my turn!"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s4-crafts-q3-check",
+          "kind": "listen-pick",
+          "rounds": [
+            {
+              "id": "r1",
+              "prompt": {
+                "ko": "같이 할까요?",
+                "romanization": "gachi halkkayo",
+                "en": "shall we do it together? (polite)"
+              },
+              "options": [
+                {
+                  "id": "a",
+                  "text": {
+                    "ko": "좋아요!",
+                    "romanization": "joayo",
+                    "en": "okay, sounds good! (polite)"
+                  }
+                },
+                {
+                  "id": "b",
+                  "text": {
+                    "ko": "잘했어!",
+                    "romanization": "jalhaesseo",
+                    "en": "well done!"
+                  }
+                },
+                {
+                  "id": "c",
+                  "text": {
+                    "ko": "물을 마셔요.",
+                    "romanization": "mureul masyeoyo",
+                    "en": "I drink water."
+                  }
+                }
+              ],
+              "answerId": "a"
+            },
+            {
+              "id": "r2",
+              "prompt": {
+                "ko": "같이 할까?",
+                "romanization": "gachi halkka",
+                "en": "shall we do it together? (casual)"
+              },
+              "options": [
+                {
+                  "id": "a",
+                  "text": {
+                    "ko": "좋아!",
+                    "romanization": "joa",
+                    "en": "okay, sounds good!"
+                  }
+                },
+                {
+                  "id": "b",
+                  "text": {
+                    "ko": "내 차례야!",
+                    "romanization": "nae charyeya",
+                    "en": "it's my turn!"
+                  }
+                },
+                {
+                  "id": "c",
+                  "text": {
+                    "ko": "학교에 가요.",
+                    "romanization": "hakgyoe gayo",
+                    "en": "I go to school."
+                  }
+                }
+              ],
+              "answerId": "a"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "culture": [
+    {
+      "id": "n1",
+      "kind": "language",
+      "textEn": "Close friends often talk to each other in casual speech, {ko:반말} (banmal). In this cell the polite lines end in {ko:요} (yo); the casual lines between Hoya and Mina do not.",
+      "sources": [
+        {
+          "title": "경어(敬語)",
+          "publisher": "한국학중앙연구원 한국민족문화대백과사전 (Encyclopedia of Korean Culture)",
+          "url": "https://encykorea.aks.ac.kr/Article/E0002676",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "상대경어법 단락: 격식이 필요 없는 가까운 관계에서는 비격식 등급을 쓰고, 이를 해요체(두루높임)와 해체(두루낮춤)로 나누며 해체를 반말로도 부른다는 설명."
+        },
+        {
+          "title": "반말(半말)",
+          "publisher": "국립국어원 (National Institute of Korean Language) — 표준국어대사전",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%EB%B0%98%EB%A7%90",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "반말 「1」 뜻풀이: 관계가 뚜렷하지 않거나 아주 가까운 사이에서 쓰는, 상대를 올리지도 내리지도 않는 등급의 말; 종결 어미 -아(어), -지 등의 용례가 붙어 있음."
+        }
+      ],
+      "verification": {
+        "passes": 3,
+        "checkedAt": "2026-10-14",
+        "scope": "lesson",
+        "notes": "Line 1 (passes: 1, author sourcing, 2026-10-14): the claim is that close friends often use casual speech (banmal) and that the polite lines of this cell end in yo while the casual ones do not. Encyclopedia of Korean Culture, 경어, the 상대경어법 paragraph, places the informal levels in close relationships and names the casual level 해체, also called 반말; the Standard Korean Language Dictionary entry 반말 sense 1 describes it as the speech of a very close relationship. The note says \"often\", not always, and names no age range. Nothing is copied: the note is English, the locators are Korean summaries. Both sources resolved on 2026-10-14.\nLine 2 (passes: 2, independent fact-check, 2026-10-14): both sources reopened and resolved. Encyclopedia of Korean Culture, 경어, 상대경어법 paragraph: the informal use is for relationships close enough to drop formality, split into 해요체 and 해체, and 해체 is also called 반말; this supports \"close friends often\" use 반말 (the note says often, not always). Standard Korean Language Dictionary, 반말 sense 1: speech used when the relationship is unclear or very close, neither raising nor lowering, with endings such as -아(어) and -지; consistent with the note. The second sentence describes this cell and was checked against the file: the polite lines (같이 할까요?, 좋아요! and the Stage 3 distractor sentences) end in 요, and no casual line between Hoya and Mina does. Both locators match their sources. No run of words is shared between the English note and either source. No age wording, no all-Koreans claim. Outcome: pass, unchanged.\nLine 3 (passes: 3, MAR culture review, final independent check, 2026-10-14): both sources reopened and resolved. Encyclopedia of Korean Culture, 경어, 상대경어법 paragraph: the informal use belongs to relationships close enough to drop formality, splits into 해요체 and 해체, and 해체 is also called 반말; supports \"close friends often\" use 반말. Standard Korean Language Dictionary, 반말 sense 1: speech for a relationship that is unclear or very close, neither raising nor lowering, endings -아(어), -지; consistent. The locators were rewritten as paraphrases in this pass (the dictionary locator had repeated the definition word for word); both still match their sources. The second sentence was re-checked against the revised cell: every polite line (같이 할까요?, 좋아요! and the Stage 3 distractors) ends in 요, no casual line does. The q3 caption no longer states a rule about people who have just met; it now describes the scene only. No shared run of words with either source, no age wording, no all-Koreans claim. Outcome: pass."
+      }
+    },
+    {
+      "id": "n2",
+      "kind": "language",
+      "textEn": "{ko:같이 할까요?} and {ko:같이 할까?} ask the same thing, shall we do it together. The ending {ko:요} makes the first one polite; the second one is casual.",
+      "sources": [
+        {
+          "title": "경어(敬語)",
+          "publisher": "한국학중앙연구원 한국민족문화대백과사전 (Encyclopedia of Korean Culture)",
+          "url": "https://encykorea.aks.ac.kr/Article/E0002676",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "상대경어법 단락: 비격식체는 두루높임(해요체)과 두루낮춤(해체)의 두 등급으로 나뉘며, 현대어 대화에서 해요체와 해체가 짝을 이루어 쓰인다고 설명함."
+        },
+        {
+          "title": "반말(半말)",
+          "publisher": "국립국어원 (National Institute of Korean Language) — 표준국어대사전",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%EB%B0%98%EB%A7%90",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "반말 「1」 뜻풀이와 용례: 상대를 올리지도 내리지도 않는 등급의 말이며, 용례 문장은 -아(어), -지 같은 어미로 끝나고 요가 붙지 않음."
+        }
+      ],
+      "verification": {
+        "passes": 3,
+        "checkedAt": "2026-10-14",
+        "scope": "lesson",
+        "notes": "Line 1 (passes: 1, author sourcing, 2026-10-14): the claim is that 같이 할까요? and 같이 할까? ask the same thing and that the yo ending marks the polite form. Encyclopedia of Korean Culture, 경어, pairs the informal polite level 해요체 with the casual level 해체 (반말); the Standard Korean Language Dictionary entry 반말 sense 1 gives casual examples whose endings carry no yo. The suggestion ending -(eu)lkka(yo) itself is a plain gloss, checked in pass 4 against the dictionary. Nothing is copied from either source. Both sources resolved on 2026-10-14.\nLine 2 (passes: 2, independent fact-check, 2026-10-14): both sources reopened and resolved. Encyclopedia of Korean Culture, 경어, 상대경어법 paragraph: the informal levels are 두루높임 (해요체) and 두루낮춤 (해체, 반말), and in present-day conversation 해요체 and 해체 are used as a pair; this supports reading 할까요? as the polite member and 할까? as the casual member of one pair. Standard Korean Language Dictionary, 반말 sense 1: casual examples end in -아(어), -지 with no 요; consistent. Extra check (not added as a source): the dictionary entry -ㄹ까 sense 1 labels it an ending used at the 해할 level, so the form without 요 is the casual one. The \"shall we\" meaning stays a plain gloss for pass 4. Both locators match their sources. No run of words is shared between the English note and either source. Outcome: pass, unchanged.\nLine 3 (passes: 3, MAR culture review, final independent check, 2026-10-14): both sources reopened and resolved. Encyclopedia of Korean Culture, 경어: the informal levels are 두루높임 (해요체) and 두루낮춤 (해체, 반말), used as a pair in present-day conversation; supports 할까요? as the polite and 할까? as the casual member of one pair. Standard Korean Language Dictionary, 반말 sense 1: the casual examples end in -아(어), -지 with no 요; consistent. The dictionary locator was rewritten as a paraphrase in this pass and still matches. The cell still shows the two forms side by side (q3 Discover pages 1 and 2, Check r1 and r2). No shared run of words with either source. Outcome: pass."
+      }
+    }
+  ],
+  "review": {
+    "language": "native-reviewed",
+    "culture": "culture-reviewed",
+    "reviewedBy": "MAR",
+    "reviewedAt": "2026-10-14",
+    "notes": [
+      "Language (pass 4, MAR, 2026-10-14): spelling, spacing, romanization and register checked; distractors now include casual lines of the cell that cannot answer the line, so the -yo ending is no longer an answer cue; q2 turns reordered; new items per quest within the rule 4 cap; English glosses tidied.",
+      "Culture (pass 5, MAR, 2026-10-14): both notes re-checked against both sources (verification line 3); the q3 caption now describes the scene only, with no unsourced rule about people who have just met; yut is glossed in q1; no age wording, stereotype, real person, shop, brand or price."
+    ]
+  },
+  "contentVer": 1
+}

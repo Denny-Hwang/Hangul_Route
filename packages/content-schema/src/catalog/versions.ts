@@ -89,6 +89,24 @@ export const CATALOG_QUEST_ADDITIONS: Readonly<Record<number, readonly string[]>
   10: Object.freeze(['quest:stage3-letters-q1', 'quest:stage3-letters-q2', 'quest:stage3-letters-q3']),
   // F-CURR-001 S2-3: Playground Words.
   11: Object.freeze(['quest:stage2-crafts-q1', 'quest:stage2-crafts-q2', 'quest:stage2-crafts-q3']),
+  // F-CURR-001 S3-3: Festival Sentences.
+  12: Object.freeze(['quest:stage3-rites-q1', 'quest:stage3-rites-q2', 'quest:stage3-rites-q3']),
+  // F-CURR-001 S3-5: Game Sentences.
+  13: Object.freeze(['quest:stage3-crafts-q1', 'quest:stage3-crafts-q2', 'quest:stage3-crafts-q3']),
+  // F-CURR-001 S3-2: Daily Mini-Sentences.
+  14: Object.freeze(['quest:stage3-life-q1', 'quest:stage3-life-q2', 'quest:stage3-life-q3']),
+  // F-CURR-001 T-2: Greeting Dialogues q2 and q3 (q1 is the shipped taste quest, already in version 8).
+  15: Object.freeze(['quest:stage4-rites-q2', 'quest:stage4-rites-q3']),
+  // F-CURR-001 S2-1: Word Builder.
+  16: Object.freeze(['quest:stage2-letters-q1', 'quest:stage2-letters-q2', 'quest:stage2-letters-q3', 'quest:stage2-letters-q4', 'quest:stage2-letters-q5', 'quest:stage2-letters-q6']),
+  // F-CURR-001 S2-2: Holiday Words.
+  17: Object.freeze(['quest:stage2-rites-q1', 'quest:stage2-rites-q2', 'quest:stage2-rites-q3']),
+  // F-CURR-001 S4-2: Kitchen Talk.
+  18: Object.freeze(['quest:stage4-life-q1', 'quest:stage4-life-q2', 'quest:stage4-life-q3']),
+  // F-CURR-001 S4-3: Park Conversations.
+  19: Object.freeze(['quest:stage4-nature-q1', 'quest:stage4-nature-q2', 'quest:stage4-nature-q3']),
+  // F-CURR-001 S4-4: Playdate Talk.
+  20: Object.freeze(['quest:stage4-crafts-q1', 'quest:stage4-crafts-q2', 'quest:stage4-crafts-q3']),
 });
 
 /** The quest ids the catalogue held at `version` (versions before 8 read as 8). */

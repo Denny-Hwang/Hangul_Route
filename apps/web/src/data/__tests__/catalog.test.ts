@@ -14,7 +14,7 @@ describe('console catalogue adapter over the shared catalogue', () => {
   });
 
   it('labels an episode that is not released yet as coming soon, never as "0 quests"', () => {
-    expect(catalogLabel('episode', 'episode:stage2-letters')).toBe('Word Builder (coming soon)');
+    expect(catalogLabel('episode', 'episode:stage7-crafts')).toBe('Make & Share (coming soon)');
   });
 
   it('falls back to the id for an id this build does not know', () => {
@@ -38,7 +38,7 @@ describe('console catalogue adapter over the shared catalogue', () => {
       ['Picnic Snacks', 4],
     ]);
     expect(questsOf('episode:stage1-letters').map((q) => q.minutes)).toEqual([5, 5, 5]);
-    expect(questsOf('episode:stage2-letters')).toEqual([]);
+    expect(questsOf('episode:stage7-crafts')).toEqual([]);
     expect(questsOf('episode:nope')).toEqual([]);
   });
 
@@ -50,14 +50,16 @@ describe('console catalogue adapter over the shared catalogue', () => {
       'episode:stage1-nature',
       'episode:stage1-crafts',
     ]);
-    expect(builderEpisodes('stage2').map((cell) => cell.episodeId)).toEqual(['episode:stage2-life', 'episode:stage2-nature', 'episode:stage2-crafts']);
+    expect(builderEpisodes('stage2').map((cell) => cell.episodeId)).toEqual(['episode:stage2-letters', 'episode:stage2-life', 'episode:stage2-rites', 'episode:stage2-nature', 'episode:stage2-crafts']);
   });
 
   it('sorts an item into lesson, story, coming soon or unknown', () => {
     expect(itemCategory('quest', 'quest:stage1-letters-q1')).toBe('lesson');
     expect(itemCategory('episode', 'episode:stage1-letters')).toBe('lesson');
     expect(itemCategory('quest', 'quest:story-sejong-new-letters-listen')).toBe('story');
-    expect(itemCategory('episode', 'episode:stage3-life')).toBe('coming-soon');
+    expect(itemCategory('episode', 'episode:stage3-nature')).toBe('coming-soon');
+    // F-CURR-001 S3-2: Daily Mini-Sentences shipped, so its cell is a lesson.
+    expect(itemCategory('episode', 'episode:stage3-life')).toBe('lesson');
     expect(itemCategory('quest', 'quest:nope')).toBe('unknown');
     expect(itemCategory('episode', 'episode:nope')).toBe('unknown');
     expect(itemTitle('quest', 'quest:story-sejong-new-letters-listen')).toBe("King Sejong's New Letters");

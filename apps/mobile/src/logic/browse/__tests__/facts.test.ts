@@ -81,6 +81,15 @@ describe('itemFacts: quest', () => {
     expect(without.letters).toEqual(rest.map(letterOf));
   });
 
+  it('a Word Builder quest lists its new letters too (F-CURR-001 section 3.13)', () => {
+    expect(questFacts('quest:stage2-letters-q1').letters.map((l) => l.char)).toEqual(['ㅐ', 'ㅔ', 'ㅒ', 'ㅖ']);
+    expect(questFacts('quest:stage2-letters-q6').letters).toEqual([
+      { jamoId: 'jamo:kieuk-batchim', char: 'ㅋ', romanization: 'k' },
+      { jamoId: 'jamo:ssanggiyeok-batchim', char: 'ㄲ', romanization: 'k' },
+      { jamoId: 'jamo:pieup-batchim', char: 'ㅍ', romanization: 'p' },
+    ]);
+  });
+
   it("words from Discover first (each letter's example word and every word item), then the game scopes, once each, with romanization and gloss", () => {
     const discover = discoverOf(quest(Q1));
     expect(discover.length).toBeGreaterThan(0);

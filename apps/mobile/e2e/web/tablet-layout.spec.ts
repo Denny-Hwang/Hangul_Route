@@ -226,9 +226,9 @@ test.describe('Journey at 1180x820: two panes', () => {
 
   test('a coming-soon cell shows the coming-soon content in the pane, not a lock or a paywall', async ({ page }) => {
     await openJourney(page);
-    // Stage 3 Holidays has no lesson and no story yet (Stage 2 Letters holds two heritage stories since F-STORY-001 PR 1.9).
-    await cell(page, 'Holidays & Traditions', 3).click();
-    await expect(cell(page, 'Holidays & Traditions', 3)).toHaveAttribute('aria-selected', 'true');
+    // Stage 3 Nature has no lesson and no story yet (Stage 3 Holidays ships Festival Sentences, F-CURR-001 S3-3).
+    await cell(page, 'Nature & Animals', 3).click();
+    await expect(cell(page, 'Nature & Animals', 3)).toHaveAttribute('aria-selected', 'true');
     await expect(detailPane(page).getByText('Coming soon', { exact: true }).first()).toBeVisible();
     await expect(detailPane(page).getByRole('button', { name: 'Start', exact: true })).toHaveCount(0);
     // The stage pill shows the availability word, never a commerce word (F-ROUTE-001 R-J, OD-8).

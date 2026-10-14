@@ -1,0 +1,1032 @@
+{
+  "id": "episode:stage4-nature",
+  "stage": "stage4",
+  "theme": "nature",
+  "status": "ready",
+  "titleEn": "Park Conversations",
+  "subtitleEn": "Talk about the weather and plans with a friend.",
+  "hoyaIntroEn": "Let us go to the park! We can talk about the sky, the rain and our plans.",
+  "order": 4,
+  "pillarTags": [
+    "D2"
+  ],
+  "rewardCardIds": [],
+  "quests": [
+    {
+      "id": "quest:stage4-nature-q1",
+      "titleEn": "Sky Watching",
+      "blurbEn": "Talk about the weather with a friend at the park.",
+      "teaserEn": "Next: plans for tomorrow.",
+      "estimatedMinutes": 5,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "At the Park",
+          "hoyaLineEn": "Look at the sky! Let us talk about the weather.",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "Two Short Talks",
+          "hoyaLineEn": "Tap each line to hear it.",
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "exchange",
+                    "lines": [
+                      {
+                        "speaker": "a",
+                        "speakerEn": "Friend",
+                        "line": {
+                          "ko": "날씨가 좋아요!",
+                          "romanization": "nalssiga joayo",
+                          "en": "The weather is nice!"
+                        }
+                      },
+                      {
+                        "speaker": "b",
+                        "speakerEn": "Hoya",
+                        "line": {
+                          "ko": "네, 좋아요!",
+                          "romanization": "ne joayo",
+                          "en": "Yes, it is!"
+                        }
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "A sunny day at the park."
+              },
+              {
+                "items": [
+                  {
+                    "type": "exchange",
+                    "lines": [
+                      {
+                        "speaker": "a",
+                        "speakerEn": "Friend",
+                        "line": {
+                          "ko": "비가 와요!",
+                          "romanization": "biga wayo",
+                          "en": "It is raining!"
+                        }
+                      },
+                      {
+                        "speaker": "b",
+                        "speakerEn": "Hoya",
+                        "line": {
+                          "ko": "집에 가요!",
+                          "romanization": "jibe gayo",
+                          "en": "I am going home!"
+                        }
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "Clouds roll in, and the rain starts."
+              }
+            ]
+          },
+          "durationSeconds": 60
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Pick a Reply",
+          "minigameKind": "tap-respond",
+          "minigameRef": "minigame:s4-nature-q1-play",
+          "durationSeconds": 90
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Put the Talk in Order",
+          "minigameKind": "story-sequence",
+          "minigameRef": "minigame:s4-nature-q1-apply",
+          "durationSeconds": 75
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Two Quick Ones",
+          "minigameKind": "listen-pick",
+          "minigameRef": "minigame:s4-nature-q1-check",
+          "durationSeconds": 40
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Sky Talk Done!",
+          "hoyaLineEn": "You talked about the weather in Korean!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s4-nature-q1-play",
+          "kind": "tap-respond",
+          "turns": [
+            {
+              "speakerEn": "Friend",
+              "line": {
+                "ko": "안녕하세요!",
+                "romanization": "annyeonghaseyo",
+                "en": "Hello!"
+              },
+              "replies": [
+                {
+                  "id": "r2",
+                  "text": {
+                    "ko": "책이에요.",
+                    "romanization": "chaegieyo",
+                    "en": "It is a book."
+                  },
+                  "correct": false
+                },
+                {
+                  "id": "r1",
+                  "text": {
+                    "ko": "안녕하세요!",
+                    "romanization": "annyeonghaseyo",
+                    "en": "Hello!"
+                  },
+                  "correct": true
+                },
+                {
+                  "id": "r3",
+                  "text": {
+                    "ko": "우유를 마셔요.",
+                    "romanization": "uyureul masyeoyo",
+                    "en": "I drink milk."
+                  },
+                  "correct": false
+                }
+              ]
+            },
+            {
+              "speakerEn": "Friend",
+              "line": {
+                "ko": "날씨가 좋아요!",
+                "romanization": "nalssiga joayo",
+                "en": "The weather is nice!"
+              },
+              "replies": [
+                {
+                  "id": "r2",
+                  "text": {
+                    "ko": "밥을 먹어요.",
+                    "romanization": "babeul meogeoyo",
+                    "en": "I eat rice."
+                  },
+                  "correct": false
+                },
+                {
+                  "id": "r3",
+                  "text": {
+                    "ko": "저는 호야예요.",
+                    "romanization": "jeoneun hoyayeyo",
+                    "en": "I am Hoya."
+                  },
+                  "correct": false
+                },
+                {
+                  "id": "r1",
+                  "text": {
+                    "ko": "네, 좋아요!",
+                    "romanization": "ne joayo",
+                    "en": "Yes, it is!"
+                  },
+                  "correct": true
+                }
+              ]
+            },
+            {
+              "speakerEn": "Friend",
+              "line": {
+                "ko": "비가 와요!",
+                "romanization": "biga wayo",
+                "en": "It is raining!"
+              },
+              "replies": [
+                {
+                  "id": "r1",
+                  "text": {
+                    "ko": "집에 가요!",
+                    "romanization": "jibe gayo",
+                    "en": "I am going home!"
+                  },
+                  "correct": true
+                },
+                {
+                  "id": "r2",
+                  "text": {
+                    "ko": "우유를 마셔요.",
+                    "romanization": "uyureul masyeoyo",
+                    "en": "I drink milk."
+                  },
+                  "correct": false
+                },
+                {
+                  "id": "r3",
+                  "text": {
+                    "ko": "저는 호야예요.",
+                    "romanization": "jeoneun hoyayeyo",
+                    "en": "I am Hoya."
+                  },
+                  "correct": false
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s4-nature-q1-apply",
+          "kind": "story-sequence",
+          "lines": [
+            {
+              "id": "l1",
+              "speakerEn": "Friend",
+              "line": {
+                "ko": "날씨가 좋아요!",
+                "romanization": "nalssiga joayo",
+                "en": "The weather is nice!"
+              }
+            },
+            {
+              "id": "l2",
+              "speakerEn": "Hoya",
+              "line": {
+                "ko": "네, 좋아요!",
+                "romanization": "ne joayo",
+                "en": "Yes, it is!"
+              }
+            },
+            {
+              "id": "l3",
+              "speakerEn": "Friend",
+              "line": {
+                "ko": "비가 와요!",
+                "romanization": "biga wayo",
+                "en": "It is raining!"
+              }
+            },
+            {
+              "id": "l4",
+              "speakerEn": "Hoya",
+              "line": {
+                "ko": "집에 가요!",
+                "romanization": "jibe gayo",
+                "en": "I am going home!"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s4-nature-q1-check",
+          "kind": "listen-pick",
+          "rounds": [
+            {
+              "id": "c1",
+              "prompt": {
+                "ko": "날씨가 좋아요!",
+                "romanization": "nalssiga joayo",
+                "en": "The weather is nice!"
+              },
+              "options": [
+                {
+                  "id": "a",
+                  "text": {
+                    "ko": "네, 좋아요!",
+                    "romanization": "ne joayo",
+                    "en": "Yes, it is!"
+                  }
+                },
+                {
+                  "id": "b",
+                  "text": {
+                    "ko": "책이에요.",
+                    "romanization": "chaegieyo",
+                    "en": "It is a book."
+                  }
+                }
+              ],
+              "answerId": "a"
+            },
+            {
+              "id": "c2",
+              "prompt": {
+                "ko": "비가 와요!",
+                "romanization": "biga wayo",
+                "en": "It is raining!"
+              },
+              "options": [
+                {
+                  "id": "a",
+                  "text": {
+                    "ko": "집에 가요!",
+                    "romanization": "jibe gayo",
+                    "en": "I am going home!"
+                  }
+                },
+                {
+                  "id": "b",
+                  "text": {
+                    "ko": "밥을 먹어요.",
+                    "romanization": "babeul meogeoyo",
+                    "en": "I eat rice."
+                  }
+                }
+              ],
+              "answerId": "a"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "quest:stage4-nature-q2",
+      "titleEn": "Rain Later",
+      "blurbEn": "Say what is going to happen today and tomorrow.",
+      "teaserEn": "Next: where are you going?",
+      "estimatedMinutes": 5,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "Clouds Coming",
+          "hoyaLineEn": "Those clouds look heavy. What will happen next?",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "Talking About Later",
+          "hoyaLineEn": "Listen for -(eu)l geoyeyo. It means \"is going to\".",
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "exchange",
+                    "lines": [
+                      {
+                        "speaker": "a",
+                        "speakerEn": "Friend",
+                        "line": {
+                          "ko": "오늘 비가 올 거예요.",
+                          "romanization": "oneul biga ol geoyeyo",
+                          "en": "It is going to rain today."
+                        }
+                      },
+                      {
+                        "speaker": "b",
+                        "speakerEn": "Hoya",
+                        "line": {
+                          "ko": "그럼 내일 갈 거예요.",
+                          "romanization": "geureom naeil gal geoyeyo",
+                          "en": "Then I will go tomorrow."
+                        }
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "Looking at gray clouds from home."
+              },
+              {
+                "items": [
+                  {
+                    "type": "exchange",
+                    "lines": [
+                      {
+                        "speaker": "a",
+                        "speakerEn": "Friend",
+                        "line": {
+                          "ko": "내일 날씨가 좋을 거예요.",
+                          "romanization": "naeil nalssiga joeul geoyeyo",
+                          "en": "The weather will be nice tomorrow."
+                        }
+                      },
+                      {
+                        "speaker": "b",
+                        "speakerEn": "Hoya",
+                        "line": {
+                          "ko": "네, 같이 가요!",
+                          "romanization": "ne gachi gayo",
+                          "en": "Yes, let us go together!"
+                        }
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "Making a plan for tomorrow."
+              }
+            ]
+          },
+          "durationSeconds": 60
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Pick a Reply",
+          "minigameKind": "tap-respond",
+          "minigameRef": "minigame:s4-nature-q2-play",
+          "durationSeconds": 90
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Put the Talk in Order",
+          "minigameKind": "story-sequence",
+          "minigameRef": "minigame:s4-nature-q2-apply",
+          "durationSeconds": 75
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Two Quick Ones",
+          "minigameKind": "listen-pick",
+          "minigameRef": "minigame:s4-nature-q2-check",
+          "durationSeconds": 40
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Plans Made!",
+          "hoyaLineEn": "You talked about tomorrow in Korean!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s4-nature-q2-play",
+          "kind": "tap-respond",
+          "turns": [
+            {
+              "speakerEn": "Friend",
+              "line": {
+                "ko": "오늘 비가 올 거예요.",
+                "romanization": "oneul biga ol geoyeyo",
+                "en": "It is going to rain today."
+              },
+              "replies": [
+                {
+                  "id": "r2",
+                  "text": {
+                    "ko": "안녕하세요!",
+                    "romanization": "annyeonghaseyo",
+                    "en": "Hello!"
+                  },
+                  "correct": false
+                },
+                {
+                  "id": "r3",
+                  "text": {
+                    "ko": "저는 호야예요.",
+                    "romanization": "jeoneun hoyayeyo",
+                    "en": "I am Hoya."
+                  },
+                  "correct": false
+                },
+                {
+                  "id": "r1",
+                  "text": {
+                    "ko": "그럼 내일 갈 거예요.",
+                    "romanization": "geureom naeil gal geoyeyo",
+                    "en": "Then I will go tomorrow."
+                  },
+                  "correct": true
+                }
+              ]
+            },
+            {
+              "speakerEn": "Friend",
+              "line": {
+                "ko": "내일 갈 거예요?",
+                "romanization": "naeil gal geoyeyo",
+                "en": "Will you go tomorrow?"
+              },
+              "replies": [
+                {
+                  "id": "r1",
+                  "text": {
+                    "ko": "네, 갈 거예요.",
+                    "romanization": "ne gal geoyeyo",
+                    "en": "Yes, I will go."
+                  },
+                  "correct": true
+                },
+                {
+                  "id": "r2",
+                  "text": {
+                    "ko": "책이에요.",
+                    "romanization": "chaegieyo",
+                    "en": "It is a book."
+                  },
+                  "correct": false
+                },
+                {
+                  "id": "r3",
+                  "text": {
+                    "ko": "우유를 마셔요.",
+                    "romanization": "uyureul masyeoyo",
+                    "en": "I drink milk."
+                  },
+                  "correct": false
+                }
+              ]
+            },
+            {
+              "speakerEn": "Friend",
+              "line": {
+                "ko": "내일 날씨가 좋을 거예요.",
+                "romanization": "naeil nalssiga joeul geoyeyo",
+                "en": "The weather will be nice tomorrow."
+              },
+              "replies": [
+                {
+                  "id": "r2",
+                  "text": {
+                    "ko": "밥을 먹어요.",
+                    "romanization": "babeul meogeoyo",
+                    "en": "I eat rice."
+                  },
+                  "correct": false
+                },
+                {
+                  "id": "r1",
+                  "text": {
+                    "ko": "네, 같이 가요!",
+                    "romanization": "ne gachi gayo",
+                    "en": "Yes, let us go together!"
+                  },
+                  "correct": true
+                },
+                {
+                  "id": "r3",
+                  "text": {
+                    "ko": "저는 호야예요.",
+                    "romanization": "jeoneun hoyayeyo",
+                    "en": "I am Hoya."
+                  },
+                  "correct": false
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s4-nature-q2-apply",
+          "kind": "story-sequence",
+          "lines": [
+            {
+              "id": "l1",
+              "speakerEn": "Friend",
+              "line": {
+                "ko": "오늘 비가 올 거예요.",
+                "romanization": "oneul biga ol geoyeyo",
+                "en": "It is going to rain today."
+              }
+            },
+            {
+              "id": "l2",
+              "speakerEn": "Hoya",
+              "line": {
+                "ko": "그럼 내일 갈 거예요.",
+                "romanization": "geureom naeil gal geoyeyo",
+                "en": "Then I will go tomorrow."
+              }
+            },
+            {
+              "id": "l3",
+              "speakerEn": "Friend",
+              "line": {
+                "ko": "내일 날씨가 좋을 거예요.",
+                "romanization": "naeil nalssiga joeul geoyeyo",
+                "en": "The weather will be nice tomorrow."
+              }
+            },
+            {
+              "id": "l4",
+              "speakerEn": "Hoya",
+              "line": {
+                "ko": "네, 같이 가요!",
+                "romanization": "ne gachi gayo",
+                "en": "Yes, let us go together!"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s4-nature-q2-check",
+          "kind": "listen-pick",
+          "rounds": [
+            {
+              "id": "c1",
+              "prompt": {
+                "ko": "오늘 비가 올 거예요.",
+                "romanization": "oneul biga ol geoyeyo",
+                "en": "It is going to rain today."
+              },
+              "options": [
+                {
+                  "id": "a",
+                  "text": {
+                    "ko": "그럼 내일 갈 거예요.",
+                    "romanization": "geureom naeil gal geoyeyo",
+                    "en": "Then I will go tomorrow."
+                  }
+                },
+                {
+                  "id": "b",
+                  "text": {
+                    "ko": "책이에요.",
+                    "romanization": "chaegieyo",
+                    "en": "It is a book."
+                  }
+                }
+              ],
+              "answerId": "a"
+            },
+            {
+              "id": "c2",
+              "prompt": {
+                "ko": "내일 날씨가 좋을 거예요.",
+                "romanization": "naeil nalssiga joeul geoyeyo",
+                "en": "The weather will be nice tomorrow."
+              },
+              "options": [
+                {
+                  "id": "a",
+                  "text": {
+                    "ko": "네, 같이 가요!",
+                    "romanization": "ne gachi gayo",
+                    "en": "Yes, let us go together!"
+                  }
+                },
+                {
+                  "id": "b",
+                  "text": {
+                    "ko": "밥을 먹어요.",
+                    "romanization": "babeul meogeoyo",
+                    "en": "I eat rice."
+                  }
+                }
+              ],
+              "answerId": "a"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "quest:stage4-nature-q3",
+      "titleEn": "Where To?",
+      "blurbEn": "Ask a friend where they are going, and answer.",
+      "estimatedMinutes": 5,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "On the Path",
+          "hoyaLineEn": "A friend is walking by. Let us ask where they are going.",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "Where Are You Going?",
+          "hoyaLineEn": "Tap each line to hear it.",
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "exchange",
+                    "lines": [
+                      {
+                        "speaker": "a",
+                        "speakerEn": "Friend",
+                        "line": {
+                          "ko": "호야, 어디 가요?",
+                          "romanization": "hoya eodi gayo",
+                          "en": "Hoya, where are you going?"
+                        }
+                      },
+                      {
+                        "speaker": "b",
+                        "speakerEn": "Hoya",
+                        "line": {
+                          "ko": "공원에 가요.",
+                          "romanization": "gongwone gayo",
+                          "en": "I am going to the park."
+                        }
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "Two friends meet on a path."
+              },
+              {
+                "items": [
+                  {
+                    "type": "exchange",
+                    "lines": [
+                      {
+                        "speaker": "a",
+                        "speakerEn": "Friend",
+                        "line": {
+                          "ko": "같이 가요!",
+                          "romanization": "gachi gayo",
+                          "en": "Let us go together!"
+                        }
+                      },
+                      {
+                        "speaker": "b",
+                        "speakerEn": "Hoya",
+                        "line": {
+                          "ko": "네, 좋아요!",
+                          "romanization": "ne joayo",
+                          "en": "Yes, sounds good!"
+                        }
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "Off to the park together."
+              }
+            ]
+          },
+          "durationSeconds": 60
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Pick a Reply",
+          "minigameKind": "tap-respond",
+          "minigameRef": "minigame:s4-nature-q3-play",
+          "durationSeconds": 90
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Put the Talk in Order",
+          "minigameKind": "story-sequence",
+          "minigameRef": "minigame:s4-nature-q3-apply",
+          "durationSeconds": 75
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Two Quick Ones",
+          "minigameKind": "listen-pick",
+          "minigameRef": "minigame:s4-nature-q3-check",
+          "durationSeconds": 40
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Park Pal!",
+          "hoyaLineEn": "You asked and answered in Korean. Great talking!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s4-nature-q3-play",
+          "kind": "tap-respond",
+          "turns": [
+            {
+              "speakerEn": "Friend",
+              "line": {
+                "ko": "호야, 어디 가요?",
+                "romanization": "hoya eodi gayo",
+                "en": "Hoya, where are you going?"
+              },
+              "replies": [
+                {
+                  "id": "r1",
+                  "text": {
+                    "ko": "공원에 가요.",
+                    "romanization": "gongwone gayo",
+                    "en": "I am going to the park."
+                  },
+                  "correct": true
+                },
+                {
+                  "id": "r2",
+                  "text": {
+                    "ko": "네, 좋아요!",
+                    "romanization": "ne joayo",
+                    "en": "Yes, sounds good!"
+                  },
+                  "correct": false
+                },
+                {
+                  "id": "r3",
+                  "text": {
+                    "ko": "책이에요.",
+                    "romanization": "chaegieyo",
+                    "en": "It is a book."
+                  },
+                  "correct": false
+                }
+              ]
+            },
+            {
+              "speakerEn": "Friend",
+              "line": {
+                "ko": "같이 가요!",
+                "romanization": "gachi gayo",
+                "en": "Let us go together!"
+              },
+              "replies": [
+                {
+                  "id": "r2",
+                  "text": {
+                    "ko": "저는 호야예요.",
+                    "romanization": "jeoneun hoyayeyo",
+                    "en": "I am Hoya."
+                  },
+                  "correct": false
+                },
+                {
+                  "id": "r1",
+                  "text": {
+                    "ko": "네, 좋아요!",
+                    "romanization": "ne joayo",
+                    "en": "Yes, sounds good!"
+                  },
+                  "correct": true
+                },
+                {
+                  "id": "r3",
+                  "text": {
+                    "ko": "우유를 마셔요.",
+                    "romanization": "uyureul masyeoyo",
+                    "en": "I drink milk."
+                  },
+                  "correct": false
+                }
+              ]
+            },
+            {
+              "speakerEn": "Friend",
+              "line": {
+                "ko": "비가 올 거예요.",
+                "romanization": "biga ol geoyeyo",
+                "en": "It is going to rain."
+              },
+              "replies": [
+                {
+                  "id": "r2",
+                  "text": {
+                    "ko": "안녕하세요!",
+                    "romanization": "annyeonghaseyo",
+                    "en": "Hello!"
+                  },
+                  "correct": false
+                },
+                {
+                  "id": "r3",
+                  "text": {
+                    "ko": "밥을 먹어요.",
+                    "romanization": "babeul meogeoyo",
+                    "en": "I eat rice."
+                  },
+                  "correct": false
+                },
+                {
+                  "id": "r1",
+                  "text": {
+                    "ko": "그럼 집에 가요.",
+                    "romanization": "geureom jibe gayo",
+                    "en": "Then I am going home."
+                  },
+                  "correct": true
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s4-nature-q3-apply",
+          "kind": "story-sequence",
+          "lines": [
+            {
+              "id": "l1",
+              "speakerEn": "Friend",
+              "line": {
+                "ko": "호야, 어디 가요?",
+                "romanization": "hoya eodi gayo",
+                "en": "Hoya, where are you going?"
+              }
+            },
+            {
+              "id": "l2",
+              "speakerEn": "Hoya",
+              "line": {
+                "ko": "공원에 가요.",
+                "romanization": "gongwone gayo",
+                "en": "I am going to the park."
+              }
+            },
+            {
+              "id": "l3",
+              "speakerEn": "Friend",
+              "line": {
+                "ko": "같이 가요!",
+                "romanization": "gachi gayo",
+                "en": "Let us go together!"
+              }
+            },
+            {
+              "id": "l4",
+              "speakerEn": "Hoya",
+              "line": {
+                "ko": "네, 좋아요!",
+                "romanization": "ne joayo",
+                "en": "Yes, sounds good!"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s4-nature-q3-check",
+          "kind": "listen-pick",
+          "rounds": [
+            {
+              "id": "c1",
+              "prompt": {
+                "ko": "어디 가요?",
+                "romanization": "eodi gayo",
+                "en": "Where are you going?"
+              },
+              "options": [
+                {
+                  "id": "a",
+                  "text": {
+                    "ko": "공원에 가요.",
+                    "romanization": "gongwone gayo",
+                    "en": "I am going to the park."
+                  }
+                },
+                {
+                  "id": "b",
+                  "text": {
+                    "ko": "우유를 마셔요.",
+                    "romanization": "uyureul masyeoyo",
+                    "en": "I drink milk."
+                  }
+                }
+              ],
+              "answerId": "a"
+            },
+            {
+              "id": "c2",
+              "prompt": {
+                "ko": "같이 가요!",
+                "romanization": "gachi gayo",
+                "en": "Let us go together!"
+              },
+              "options": [
+                {
+                  "id": "a",
+                  "text": {
+                    "ko": "네, 좋아요!",
+                    "romanization": "ne joayo",
+                    "en": "Yes, sounds good!"
+                  }
+                },
+                {
+                  "id": "b",
+                  "text": {
+                    "ko": "저는 호야예요.",
+                    "romanization": "jeoneun hoyayeyo",
+                    "en": "I am Hoya."
+                  }
+                }
+              ],
+              "answerId": "a"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "culture": [],
+  "review": {
+    "language": "native-reviewed",
+    "culture": "culture-reviewed",
+    "reviewedBy": "MAR",
+    "reviewedAt": "2026-10-14",
+    "notes": [
+      "Language and translation passes 4 and 6 (MAR, #637): no distractor borrows a sibling cell's Discover item; q2 asks only its own words; ko glosses are definitions with no echo (가겠다고 대답하는 말, 공원으로 간다는 대답); the q1 Story Sequence keeps speaker turns; es names no gendered friend; romanization follows checkRomanization.",
+      "Culture pass 5 (MAR, #637): no culture claim and no sourced language note (culture: []), so no verification record; no real person, shop, brand or price; no age wording; the friend is never gendered in es."
+    ]
+  },
+  "contentVer": 1
+}

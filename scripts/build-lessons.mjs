@@ -144,7 +144,8 @@ export function runtimeScope(scope, where) {
         storySteps: scope.lines.map((l) => ({ id: l.id, labelEn: l.line.en, labelKo: l.line.ko, romanization: l.line.romanization })),
       };
     case "order-it":
-      return { kind, rounds: scope.rounds.length, orderIt: { rounds: scope.rounds } };
+      // OrderItRoundSchema's default: a particle round may leave out its distractor tiles; the game reads [].
+      return { kind, rounds: scope.rounds.length, orderIt: { rounds: scope.rounds.map((r) => ({ ...r, distractors: r.distractors ?? [] })) } };
     case "realia-read":
       return { kind, rounds: scope.rounds.length, realiaRead: { realia: scope.realia, rounds: scope.rounds } };
     case "type-hangul":
@@ -355,7 +356,14 @@ export function readCells(root) {
   for (const n of LESSON_STAGES) {
     const dir = join(root, "content", "episodes", `stage-${n}`);
     if (!existsSync(dir) || !statSync(dir).isDirectory()) continue;
-    for (const name of readdirSync(dir).filter((f) => f.endsWith(".json")).sort()) {
+    // Grid theme order (letters, life, rites, nature, crafts), not file-name order: the app's quest cursor
+    // walks a stage's generated cells in this order, so a stage starts at its letters cell (F-CURR-001 T-2).
+    const rank = (f) => {
+      const i = THEMES.indexOf(f.replace(/\.json$/, ""));
+      return i === -1 ? THEMES.length : i;
+    };
+    const names = readdirSync(dir).filter((f) => f.endsWith(".json")).sort((a, b) => rank(a) - rank(b) || (a < b ? -1 : a > b ? 1 : 0));
+    for (const name of names) {
       const theme = name.replace(/\.json$/, "");
       const { rel, json } = readJson(root, join(dir, name));
       if (!THEMES.includes(theme)) throw new ContentError(`a lesson cell file is named after its theme (${THEMES.join(", ")})`, rel);

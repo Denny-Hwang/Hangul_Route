@@ -288,6 +288,29 @@ function heldOf(story: Story): HeldStoryCard {
 const REPO = join(__dirname, '../../../../..');
 const FIXTURE_DIR = join(REPO, 'packages/content-schema/src/__fixtures__/story');
 
+describe('refreshed taste cells keep their card awards (F-CURR-001 section 3.12 Cards, T-2)', () => {
+  const rites = JSON.parse(readFileSync(join(REPO, 'content/episodes/stage-4/rites.json'), 'utf8')) as {
+    rewardCardIds: string[];
+    quests: { id: string; rewardCardId?: string }[];
+  };
+  const greetingCards = ['card:annyeong', 'card:gamsa', 'card:chingu', 'card:insa'];
+
+  it('card:insa still resolves to quest:stage4-rites-q1, and Greeting Dialogues keeps its rewardCardIds', () => {
+    expect(questsAll.find((q) => q.id === 'quest:stage4-rites-q1')?.rewardCardId).toBe('card:insa');
+    expect(episodeById.get('episode:stage4-rites')?.rewardCardIds).toEqual(greetingCards);
+    expect(episodeOfQuest.get('quest:stage4-rites-q1')?.id).toBe('episode:stage4-rites');
+  });
+
+  it('the Greeting Dialogues cell file keeps the same awards: card:insa on q1, no card on q2 and q3', () => {
+    expect(rites.rewardCardIds).toEqual(greetingCards);
+    expect(rites.quests.map((q) => [q.id, q.rewardCardId])).toEqual([
+      ['quest:stage4-rites-q1', 'card:insa'],
+      ['quest:stage4-rites-q2', undefined],
+      ['quest:stage4-rites-q3', undefined],
+    ]);
+  });
+});
+
 describe('heritage story cards (F-STORY-006 T-AWARD-6, T-AWARD-7)', () => {
   it('the bundle holds one card per reviewed shelf story with a card block (none until 6.8), and every set is complete', () => {
     const carded = storiesAll.filter((s) => s.state === 'ready' && s.shelf !== undefined && s.card !== undefined);

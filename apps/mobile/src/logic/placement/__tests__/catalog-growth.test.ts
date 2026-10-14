@@ -17,7 +17,8 @@ import {
 import { describe, expect, it } from 'vitest';
 import { bookQuests } from '../../../content/books';
 import { episodesAll, previewEpisodesFor, handWrittenEpisodes } from '../../../content/episodes';
-import { questsAll, stage1Quests, stage2Quests, stage4Quests } from '../../../content/quests';
+import { lessonQuests } from '../../../content/lessons';
+import { questsAll, stage1Quests, stage2Quests } from '../../../content/quests';
 import { storyEpisodes, storyQuests } from '../../../content/stories';
 import { questsInCursorOrder } from '../../lessons/lesson-lookup';
 import { nextQuestAfter, offerableQuests } from '../../next-quest';
@@ -44,12 +45,20 @@ const lessonEpisodes: Episode[] = [
   episodeOf('episode:stage2-letters', WB, { stage: 'stage2', theme: 'letters', order: 1, status: 'shipped' }),
   episodeOf('episode:stage3-letters', FS, { stage: 'stage3', theme: 'letters', order: 1, status: 'shipped' }),
 ];
+/** The episodes the bundle held before these cells (Word Builder itself shipped at version 9, F-CURR-001 S2-1). */
+const shippedBefore = handWrittenEpisodes.filter((e) => !lessonEpisodes.some((l) => l.id === e.id));
+const LATER = new Set([...WB, ...FS]);
+/** The version 8 bundle: the stored placement result fixed its set against it. */
+const EPISODES_8: Episode[] = [...shippedBefore, ...storyEpisodes, ...previewEpisodesFor(shippedBefore)];
+const QUESTS_8: Quest[] = questsAll.filter((q) => !LATER.has(q.id));
 /** The version 9 bundle, put together the way content/episodes.ts and content/quests.ts do. */
-const claimers = [...handWrittenEpisodes, ...lessonEpisodes];
+const claimers = [...shippedBefore, ...lessonEpisodes];
 const EPISODES_9: Episode[] = [...claimers, ...storyEpisodes, ...previewEpisodesFor(claimers)];
 const QUESTS_9: Quest[] = questsInCursorOrder({
-  early: [...stage1Quests, ...stage2Quests, ...stage4Quests],
-  lessons: [...WB, ...FS].map(plainQuest),
+  early: [...stage1Quests, ...stage2Quests],
+  // The shipped Stage 4 cells (Read Along, Greeting Dialogues: generated) plus the two fake cells; the
+  // other generated cells stay out, so the fixture is the version 9 bundle it names.
+  lessons: [...lessonQuests.filter((q) => q.id.startsWith('quest:stage4-')), ...[...WB, ...FS].map(plainQuest)],
   middle: [...storyQuests, ...bookQuests],
   episodes: claimers,
 });
@@ -60,7 +69,7 @@ const HISTORY_WITHOUT_RULE: CatalogHistory = { version: 8, idsAt: HISTORY_9.idsA
 const stored = placementResult({
   level: STAGE3,
   beyondContent: true,
-  placedOutQuestIds: questsPlacedOutAtLevel(STAGE3, appRouteCatalog(questsAll, episodesAll)),
+  placedOutQuestIds: questsPlacedOutAtLevel(STAGE3, appRouteCatalog(QUESTS_8, EPISODES_8)),
 });
 const next = (skip: ReadonlySet<string> | undefined) =>
   nextQuestAfter({ snapshot: snapshotWith([]), quests: QUESTS_9, episodes: EPISODES_9, ...(skip ? { skipQuestIds: skip } : {}) })?.id;

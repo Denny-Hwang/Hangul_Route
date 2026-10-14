@@ -1,0 +1,1118 @@
+{
+  "id": "episode:stage4-rites",
+  "stage": "stage4",
+  "theme": "rites",
+  "status": "ready",
+  "titleEn": "Greeting Dialogues",
+  "subtitleEn": "Meet a friend, catch up, and greet the New Year.",
+  "hoyaIntroEn": "Let's practice greetings: meeting someone, catching up, and the New Year!",
+  "order": 3,
+  "pillarTags": [
+    "B5"
+  ],
+  "rewardCardIds": [
+    "card:annyeong",
+    "card:gamsa",
+    "card:chingu",
+    "card:insa"
+  ],
+  "quests": [
+    {
+      "id": "quest:stage4-rites-q1",
+      "titleEn": "Nice to Meet You",
+      "blurbEn": "Say hello, ask a name and meet a new friend.",
+      "teaserEn": "Next: greet someone you have not seen in a while.",
+      "estimatedMinutes": 4,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "Meet Someone New",
+          "hoyaLineEn": "Someone new is here. Let's say hello!",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "Hello and Your Name",
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "exchange",
+                    "lines": [
+                      {
+                        "speaker": "a",
+                        "speakerEn": "Hoya",
+                        "line": {
+                          "ko": "안녕하세요! 이름이 뭐예요?",
+                          "romanization": "annyeonghaseyo ireumi mwoyeyo",
+                          "en": "Hello! What is your name?"
+                        }
+                      },
+                      {
+                        "speaker": "b",
+                        "speakerEn": "Mina",
+                        "line": {
+                          "ko": "저는 미나예요.",
+                          "romanization": "jeoneun minayeyo",
+                          "en": "I am Mina."
+                        }
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "Say hello, then ask the other person's name."
+              },
+              {
+                "items": [
+                  {
+                    "type": "exchange",
+                    "lines": [
+                      {
+                        "speaker": "a",
+                        "speakerEn": "Hoya",
+                        "line": {
+                          "ko": "만나서 반가워요.",
+                          "romanization": "mannaseo bangawoyo",
+                          "en": "Nice to meet you."
+                        }
+                      },
+                      {
+                        "speaker": "b",
+                        "speakerEn": "Mina",
+                        "line": {
+                          "ko": "저도 반가워요.",
+                          "romanization": "jeodo bangawoyo",
+                          "en": "Nice to meet you too."
+                        }
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "When you meet someone new, say you are glad to meet them."
+              }
+            ]
+          },
+          "durationSeconds": 60
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Pick the Reply",
+          "minigameKind": "tap-respond",
+          "minigameRef": "minigame:s4-rites-q1-practice",
+          "durationSeconds": 80
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Put the Talk in Order",
+          "minigameKind": "story-sequence",
+          "minigameRef": "minigame:s4-rites-q1-apply",
+          "durationSeconds": 70
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Two Quick Ones",
+          "minigameKind": "listen-pick",
+          "minigameRef": "minigame:s4-rites-q1-check",
+          "durationSeconds": 40
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Greeting Card!",
+          "hoyaLineEn": "You had a real conversation! Here is a greeting card.",
+          "durationSeconds": 8
+        }
+      ],
+      "rewardCardId": "card:insa",
+      "scopes": [
+        {
+          "ref": "minigame:s4-rites-q1-practice",
+          "kind": "tap-respond",
+          "turns": [
+            {
+              "speakerEn": "Mina",
+              "line": {
+                "ko": "안녕하세요!",
+                "romanization": "annyeonghaseyo",
+                "en": "Hello!"
+              },
+              "replies": [
+                {
+                  "id": "r1",
+                  "text": {
+                    "ko": "책이에요.",
+                    "romanization": "chaegieyo",
+                    "en": "It is a book."
+                  },
+                  "correct": false
+                },
+                {
+                  "id": "r2",
+                  "text": {
+                    "ko": "안녕하세요!",
+                    "romanization": "annyeonghaseyo",
+                    "en": "Hello!"
+                  },
+                  "correct": true
+                },
+                {
+                  "id": "r3",
+                  "text": {
+                    "ko": "저도 반가워요.",
+                    "romanization": "jeodo bangawoyo",
+                    "en": "Nice to meet you too."
+                  },
+                  "correct": false
+                }
+              ]
+            },
+            {
+              "speakerEn": "Mina",
+              "line": {
+                "ko": "이름이 뭐예요?",
+                "romanization": "ireumi mwoyeyo",
+                "en": "What is your name?"
+              },
+              "replies": [
+                {
+                  "id": "r1",
+                  "text": {
+                    "ko": "안녕하세요!",
+                    "romanization": "annyeonghaseyo",
+                    "en": "Hello!"
+                  },
+                  "correct": false
+                },
+                {
+                  "id": "r2",
+                  "text": {
+                    "ko": "아니요.",
+                    "romanization": "aniyo",
+                    "en": "No."
+                  },
+                  "correct": false
+                },
+                {
+                  "id": "r3",
+                  "text": {
+                    "ko": "저는 호야예요.",
+                    "romanization": "jeoneun hoyayeyo",
+                    "en": "I am Hoya."
+                  },
+                  "correct": true
+                }
+              ]
+            },
+            {
+              "speakerEn": "Mina",
+              "line": {
+                "ko": "만나서 반가워요!",
+                "romanization": "mannaseo bangawoyo",
+                "en": "Nice to meet you!"
+              },
+              "replies": [
+                {
+                  "id": "r1",
+                  "text": {
+                    "ko": "저도 반가워요.",
+                    "romanization": "jeodo bangawoyo",
+                    "en": "Nice to meet you too."
+                  },
+                  "correct": true
+                },
+                {
+                  "id": "r2",
+                  "text": {
+                    "ko": "아니요.",
+                    "romanization": "aniyo",
+                    "en": "No."
+                  },
+                  "correct": false
+                },
+                {
+                  "id": "r3",
+                  "text": {
+                    "ko": "이름이 뭐예요?",
+                    "romanization": "ireumi mwoyeyo",
+                    "en": "What is your name?"
+                  },
+                  "correct": false
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s4-rites-q1-apply",
+          "kind": "story-sequence",
+          "lines": [
+            {
+              "id": "l1",
+              "speakerEn": "Mina",
+              "line": {
+                "ko": "안녕하세요! 이름이 뭐예요?",
+                "romanization": "annyeonghaseyo ireumi mwoyeyo",
+                "en": "Hello! What is your name?"
+              }
+            },
+            {
+              "id": "l2",
+              "speakerEn": "Hoya",
+              "line": {
+                "ko": "저는 호야예요.",
+                "romanization": "jeoneun hoyayeyo",
+                "en": "I am Hoya."
+              }
+            },
+            {
+              "id": "l3",
+              "speakerEn": "Mina",
+              "line": {
+                "ko": "만나서 반가워요.",
+                "romanization": "mannaseo bangawoyo",
+                "en": "Nice to meet you."
+              }
+            },
+            {
+              "id": "l4",
+              "speakerEn": "Hoya",
+              "line": {
+                "ko": "저도 반가워요.",
+                "romanization": "jeodo bangawoyo",
+                "en": "Nice to meet you too."
+              }
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s4-rites-q1-check",
+          "kind": "listen-pick",
+          "rounds": [
+            {
+              "id": "c1",
+              "prompt": {
+                "ko": "이름이 뭐예요?",
+                "romanization": "ireumi mwoyeyo",
+                "en": "What is your name?"
+              },
+              "options": [
+                {
+                  "id": "a",
+                  "text": {
+                    "ko": "저는 미나예요.",
+                    "romanization": "jeoneun minayeyo",
+                    "en": "I am Mina."
+                  }
+                },
+                {
+                  "id": "b",
+                  "text": {
+                    "ko": "책이에요.",
+                    "romanization": "chaegieyo",
+                    "en": "It is a book."
+                  }
+                },
+                {
+                  "id": "c",
+                  "text": {
+                    "ko": "만나서 반가워요.",
+                    "romanization": "mannaseo bangawoyo",
+                    "en": "Nice to meet you."
+                  }
+                }
+              ],
+              "answerId": "a"
+            },
+            {
+              "id": "c2",
+              "prompt": {
+                "ko": "만나서 반가워요.",
+                "romanization": "mannaseo bangawoyo",
+                "en": "Nice to meet you."
+              },
+              "options": [
+                {
+                  "id": "a",
+                  "text": {
+                    "ko": "아니요.",
+                    "romanization": "aniyo",
+                    "en": "No."
+                  }
+                },
+                {
+                  "id": "b",
+                  "text": {
+                    "ko": "저도 반가워요.",
+                    "romanization": "jeodo bangawoyo",
+                    "en": "Nice to meet you too."
+                  }
+                },
+                {
+                  "id": "c",
+                  "text": {
+                    "ko": "책이에요.",
+                    "romanization": "chaegieyo",
+                    "en": "It is a book."
+                  }
+                }
+              ],
+              "answerId": "b"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "quest:stage4-rites-q2",
+      "titleEn": "Long Time No See",
+      "blurbEn": "Greet the teacher after a long time apart.",
+      "teaserEn": "Next: wish everyone a happy New Year.",
+      "estimatedMinutes": 4,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "Back Again",
+          "hoyaLineEn": "Hoya sees the teacher again after a long break. Let's say hello!",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "It Has Been a While",
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "exchange",
+                    "lines": [
+                      {
+                        "speaker": "a",
+                        "speakerEn": "Teacher",
+                        "line": {
+                          "ko": "호야, 오랜만이에요!",
+                          "romanization": "hoya oraenmanieyo",
+                          "en": "Hoya, it has been a while!"
+                        }
+                      },
+                      {
+                        "speaker": "b",
+                        "speakerEn": "Hoya",
+                        "line": {
+                          "ko": "선생님, 오랜만이에요!",
+                          "romanization": "seonsaengnim oraenmanieyo",
+                          "en": "Teacher, it has been a while!"
+                        }
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "After a long time apart, say that it has been a while."
+              },
+              {
+                "items": [
+                  {
+                    "type": "exchange",
+                    "lines": [
+                      {
+                        "speaker": "a",
+                        "speakerEn": "Teacher",
+                        "line": {
+                          "ko": "잘 지냈어요?",
+                          "romanization": "jal jinaesseoyo",
+                          "en": "Have you been well?"
+                        }
+                      },
+                      {
+                        "speaker": "b",
+                        "speakerEn": "Hoya",
+                        "line": {
+                          "ko": "네, 잘 지냈어요.",
+                          "romanization": "ne jal jinaesseoyo",
+                          "en": "Yes, I have been well."
+                        }
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "Ask how someone has been. You both look back, so question and answer are in the past."
+              }
+            ]
+          },
+          "durationSeconds": 65
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Pick the Reply",
+          "minigameKind": "tap-respond",
+          "minigameRef": "minigame:s4-rites-q2-practice",
+          "durationSeconds": 80
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Put the Talk in Order",
+          "minigameKind": "story-sequence",
+          "minigameRef": "minigame:s4-rites-q2-apply",
+          "durationSeconds": 70
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Two Quick Ones",
+          "minigameKind": "listen-pick",
+          "minigameRef": "minigame:s4-rites-q2-check",
+          "durationSeconds": 40
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Welcome Back!",
+          "hoyaLineEn": "You caught up with the teacher. What a warm greeting!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s4-rites-q2-practice",
+          "kind": "tap-respond",
+          "turns": [
+            {
+              "speakerEn": "Teacher",
+              "line": {
+                "ko": "호야, 안녕하세요!",
+                "romanization": "hoya annyeonghaseyo",
+                "en": "Hello, Hoya!"
+              },
+              "replies": [
+                {
+                  "id": "r1",
+                  "text": {
+                    "ko": "선생님, 안녕하세요!",
+                    "romanization": "seonsaengnim annyeonghaseyo",
+                    "en": "Hello, Teacher!"
+                  },
+                  "correct": true
+                },
+                {
+                  "id": "r2",
+                  "text": {
+                    "ko": "책이에요.",
+                    "romanization": "chaegieyo",
+                    "en": "It is a book."
+                  },
+                  "correct": false
+                },
+                {
+                  "id": "r3",
+                  "text": {
+                    "ko": "저는 미나예요.",
+                    "romanization": "jeoneun minayeyo",
+                    "en": "I am Mina."
+                  },
+                  "correct": false
+                }
+              ]
+            },
+            {
+              "speakerEn": "Teacher",
+              "line": {
+                "ko": "호야, 오랜만이에요!",
+                "romanization": "hoya oraenmanieyo",
+                "en": "Hoya, it has been a while!"
+              },
+              "replies": [
+                {
+                  "id": "r1",
+                  "text": {
+                    "ko": "이름이 뭐예요?",
+                    "romanization": "ireumi mwoyeyo",
+                    "en": "What is your name?"
+                  },
+                  "correct": false
+                },
+                {
+                  "id": "r2",
+                  "text": {
+                    "ko": "선생님, 오랜만이에요!",
+                    "romanization": "seonsaengnim oraenmanieyo",
+                    "en": "Teacher, it has been a while!"
+                  },
+                  "correct": true
+                },
+                {
+                  "id": "r3",
+                  "text": {
+                    "ko": "아니요.",
+                    "romanization": "aniyo",
+                    "en": "No."
+                  },
+                  "correct": false
+                }
+              ]
+            },
+            {
+              "speakerEn": "Teacher",
+              "line": {
+                "ko": "잘 지냈어요?",
+                "romanization": "jal jinaesseoyo",
+                "en": "Have you been well?"
+              },
+              "replies": [
+                {
+                  "id": "r1",
+                  "text": {
+                    "ko": "저는 미나예요.",
+                    "romanization": "jeoneun minayeyo",
+                    "en": "I am Mina."
+                  },
+                  "correct": false
+                },
+                {
+                  "id": "r2",
+                  "text": {
+                    "ko": "이름이 뭐예요?",
+                    "romanization": "ireumi mwoyeyo",
+                    "en": "What is your name?"
+                  },
+                  "correct": false
+                },
+                {
+                  "id": "r3",
+                  "text": {
+                    "ko": "네, 잘 지냈어요.",
+                    "romanization": "ne jal jinaesseoyo",
+                    "en": "Yes, I have been well."
+                  },
+                  "correct": true
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s4-rites-q2-apply",
+          "kind": "story-sequence",
+          "lines": [
+            {
+              "id": "l1",
+              "speakerEn": "Teacher",
+              "line": {
+                "ko": "호야, 오랜만이에요!",
+                "romanization": "hoya oraenmanieyo",
+                "en": "Hoya, it has been a while!"
+              }
+            },
+            {
+              "id": "l2",
+              "speakerEn": "Hoya",
+              "line": {
+                "ko": "네, 선생님! 오랜만이에요.",
+                "romanization": "ne seonsaengnim oraenmanieyo",
+                "en": "Yes, Teacher! It has been a while."
+              }
+            },
+            {
+              "id": "l3",
+              "speakerEn": "Teacher",
+              "line": {
+                "ko": "잘 지냈어요?",
+                "romanization": "jal jinaesseoyo",
+                "en": "Have you been well?"
+              }
+            },
+            {
+              "id": "l4",
+              "speakerEn": "Hoya",
+              "line": {
+                "ko": "네, 잘 지냈어요.",
+                "romanization": "ne jal jinaesseoyo",
+                "en": "Yes, I have been well."
+              }
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s4-rites-q2-check",
+          "kind": "listen-pick",
+          "rounds": [
+            {
+              "id": "c1",
+              "prompt": {
+                "ko": "잘 지냈어요?",
+                "romanization": "jal jinaesseoyo",
+                "en": "Have you been well?"
+              },
+              "options": [
+                {
+                  "id": "a",
+                  "text": {
+                    "ko": "네, 잘 지냈어요.",
+                    "romanization": "ne jal jinaesseoyo",
+                    "en": "Yes, I have been well."
+                  }
+                },
+                {
+                  "id": "b",
+                  "text": {
+                    "ko": "이름이 뭐예요?",
+                    "romanization": "ireumi mwoyeyo",
+                    "en": "What is your name?"
+                  }
+                },
+                {
+                  "id": "c",
+                  "text": {
+                    "ko": "책이에요.",
+                    "romanization": "chaegieyo",
+                    "en": "It is a book."
+                  }
+                }
+              ],
+              "answerId": "a"
+            },
+            {
+              "id": "c2",
+              "prompt": {
+                "ko": "호야, 오랜만이에요!",
+                "romanization": "hoya oraenmanieyo",
+                "en": "Hoya, it has been a while!"
+              },
+              "options": [
+                {
+                  "id": "a",
+                  "text": {
+                    "ko": "저는 미나예요.",
+                    "romanization": "jeoneun minayeyo",
+                    "en": "I am Mina."
+                  }
+                },
+                {
+                  "id": "b",
+                  "text": {
+                    "ko": "이름이 뭐예요?",
+                    "romanization": "ireumi mwoyeyo",
+                    "en": "What is your name?"
+                  }
+                },
+                {
+                  "id": "c",
+                  "text": {
+                    "ko": "선생님, 오랜만이에요!",
+                    "romanization": "seonsaengnim oraenmanieyo",
+                    "en": "Teacher, it has been a while!"
+                  }
+                }
+              ],
+              "answerId": "c"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "quest:stage4-rites-q3",
+      "titleEn": "Happy New Year",
+      "blurbEn": "Wish the teacher and a friend a happy Seollal.",
+      "estimatedMinutes": 4,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "Seollal Morning",
+          "hoyaLineEn": "It's Seollal, the Korean Lunar New Year! Let's wish everyone well.",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "New Year Wishes",
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "exchange",
+                    "lines": [
+                      {
+                        "speaker": "a",
+                        "speakerEn": "Hoya",
+                        "line": {
+                          "ko": "선생님, 새해 복 많이 받으세요!",
+                          "romanization": "seonsaengnim saehae bok mani badeuseyo",
+                          "en": "Happy New Year, Teacher!"
+                        }
+                      },
+                      {
+                        "speaker": "b",
+                        "speakerEn": "Teacher",
+                        "line": {
+                          "ko": "고마워요. 호야도 새해 복 많이 받으세요!",
+                          "romanization": "gomawoyo hoyado saehae bok mani badeuseyo",
+                          "en": "Thank you. Happy New Year to you too, Hoya!"
+                        }
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "At the Lunar New Year, people often wish each other many blessings."
+              },
+              {
+                "items": [
+                  {
+                    "type": "exchange",
+                    "lines": [
+                      {
+                        "speaker": "a",
+                        "speakerEn": "Mina",
+                        "line": {
+                          "ko": "호야, 새해 복 많이 받으세요!",
+                          "romanization": "hoya saehae bok mani badeuseyo",
+                          "en": "Happy New Year, Hoya!"
+                        }
+                      },
+                      {
+                        "speaker": "b",
+                        "speakerEn": "Hoya",
+                        "line": {
+                          "ko": "고마워요. 미나도 새해 복 많이 받으세요!",
+                          "romanization": "gomawoyo minado saehae bok mani badeuseyo",
+                          "en": "Thank you. Happy New Year to you too, Mina!"
+                        }
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "When someone wishes you well, say thanks and wish them the same."
+              }
+            ]
+          },
+          "durationSeconds": 65
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Pick the Reply",
+          "minigameKind": "tap-respond",
+          "minigameRef": "minigame:s4-rites-q3-practice",
+          "durationSeconds": 80
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Put the Talk in Order",
+          "minigameKind": "story-sequence",
+          "minigameRef": "minigame:s4-rites-q3-apply",
+          "durationSeconds": 70
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Two Quick Ones",
+          "minigameKind": "listen-pick",
+          "minigameRef": "minigame:s4-rites-q3-check",
+          "durationSeconds": 40
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Happy New Year!",
+          "hoyaLineEn": "You wished everyone a happy New Year in Korean!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s4-rites-q3-practice",
+          "kind": "tap-respond",
+          "turns": [
+            {
+              "speakerEn": "Teacher",
+              "line": {
+                "ko": "호야, 안녕하세요!",
+                "romanization": "hoya annyeonghaseyo",
+                "en": "Hello, Hoya!"
+              },
+              "replies": [
+                {
+                  "id": "r1",
+                  "text": {
+                    "ko": "저는 미나예요.",
+                    "romanization": "jeoneun minayeyo",
+                    "en": "I am Mina."
+                  },
+                  "correct": false
+                },
+                {
+                  "id": "r2",
+                  "text": {
+                    "ko": "선생님, 안녕하세요! 새해 복 많이 받으세요!",
+                    "romanization": "seonsaengnim annyeonghaseyo saehae bok mani badeuseyo",
+                    "en": "Hello, Teacher! Happy New Year!"
+                  },
+                  "correct": true
+                },
+                {
+                  "id": "r3",
+                  "text": {
+                    "ko": "책이에요.",
+                    "romanization": "chaegieyo",
+                    "en": "It is a book."
+                  },
+                  "correct": false
+                }
+              ]
+            },
+            {
+              "speakerEn": "Mina",
+              "line": {
+                "ko": "새해 복 많이 받으세요!",
+                "romanization": "saehae bok mani badeuseyo",
+                "en": "Happy New Year!"
+              },
+              "replies": [
+                {
+                  "id": "r1",
+                  "text": {
+                    "ko": "저는 호야예요.",
+                    "romanization": "jeoneun hoyayeyo",
+                    "en": "I am Hoya."
+                  },
+                  "correct": false
+                },
+                {
+                  "id": "r2",
+                  "text": {
+                    "ko": "책이에요.",
+                    "romanization": "chaegieyo",
+                    "en": "It is a book."
+                  },
+                  "correct": false
+                },
+                {
+                  "id": "r3",
+                  "text": {
+                    "ko": "고마워요. 미나도 새해 복 많이 받으세요!",
+                    "romanization": "gomawoyo minado saehae bok mani badeuseyo",
+                    "en": "Thank you. Happy New Year to you too, Mina!"
+                  },
+                  "correct": true
+                }
+              ]
+            },
+            {
+              "speakerEn": "Teacher",
+              "line": {
+                "ko": "잘 지냈어요?",
+                "romanization": "jal jinaesseoyo",
+                "en": "Have you been well?"
+              },
+              "replies": [
+                {
+                  "id": "r1",
+                  "text": {
+                    "ko": "네, 잘 지냈어요.",
+                    "romanization": "ne jal jinaesseoyo",
+                    "en": "Yes, I have been well."
+                  },
+                  "correct": true
+                },
+                {
+                  "id": "r2",
+                  "text": {
+                    "ko": "이름이 뭐예요?",
+                    "romanization": "ireumi mwoyeyo",
+                    "en": "What is your name?"
+                  },
+                  "correct": false
+                },
+                {
+                  "id": "r3",
+                  "text": {
+                    "ko": "저는 미나예요.",
+                    "romanization": "jeoneun minayeyo",
+                    "en": "I am Mina."
+                  },
+                  "correct": false
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s4-rites-q3-apply",
+          "kind": "story-sequence",
+          "lines": [
+            {
+              "id": "l1",
+              "speakerEn": "Teacher",
+              "line": {
+                "ko": "호야, 안녕하세요!",
+                "romanization": "hoya annyeonghaseyo",
+                "en": "Hello, Hoya!"
+              }
+            },
+            {
+              "id": "l2",
+              "speakerEn": "Hoya",
+              "line": {
+                "ko": "선생님, 안녕하세요! 새해 복 많이 받으세요!",
+                "romanization": "seonsaengnim annyeonghaseyo saehae bok mani badeuseyo",
+                "en": "Hello, Teacher! Happy New Year!"
+              }
+            },
+            {
+              "id": "l3",
+              "speakerEn": "Teacher",
+              "line": {
+                "ko": "고마워요. 호야도 새해 복 많이 받으세요!",
+                "romanization": "gomawoyo hoyado saehae bok mani badeuseyo",
+                "en": "Thank you. Happy New Year to you too, Hoya!"
+              }
+            },
+            {
+              "id": "l4",
+              "speakerEn": "Hoya",
+              "line": {
+                "ko": "고마워요, 선생님!",
+                "romanization": "gomawoyo seonsaengnim",
+                "en": "Thank you, Teacher!"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s4-rites-q3-check",
+          "kind": "listen-pick",
+          "rounds": [
+            {
+              "id": "c1",
+              "prompt": {
+                "ko": "새해 복 많이 받으세요!",
+                "romanization": "saehae bok mani badeuseyo",
+                "en": "Happy New Year!"
+              },
+              "options": [
+                {
+                  "id": "a",
+                  "text": {
+                    "ko": "책이에요.",
+                    "romanization": "chaegieyo",
+                    "en": "It is a book."
+                  }
+                },
+                {
+                  "id": "b",
+                  "text": {
+                    "ko": "고마워요. 미나도 새해 복 많이 받으세요!",
+                    "romanization": "gomawoyo minado saehae bok mani badeuseyo",
+                    "en": "Thank you. Happy New Year to you too, Mina!"
+                  }
+                },
+                {
+                  "id": "c",
+                  "text": {
+                    "ko": "이름이 뭐예요?",
+                    "romanization": "ireumi mwoyeyo",
+                    "en": "What is your name?"
+                  }
+                }
+              ],
+              "answerId": "b"
+            },
+            {
+              "id": "c2",
+              "prompt": {
+                "ko": "호야, 안녕하세요!",
+                "romanization": "hoya annyeonghaseyo",
+                "en": "Hello, Hoya!"
+              },
+              "options": [
+                {
+                  "id": "a",
+                  "text": {
+                    "ko": "저는 미나예요.",
+                    "romanization": "jeoneun minayeyo",
+                    "en": "I am Mina."
+                  }
+                },
+                {
+                  "id": "b",
+                  "text": {
+                    "ko": "책이에요.",
+                    "romanization": "chaegieyo",
+                    "en": "It is a book."
+                  }
+                },
+                {
+                  "id": "c",
+                  "text": {
+                    "ko": "선생님, 안녕하세요! 새해 복 많이 받으세요!",
+                    "romanization": "seonsaengnim annyeonghaseyo saehae bok mani badeuseyo",
+                    "en": "Hello, Teacher! Happy New Year!"
+                  }
+                }
+              ],
+              "answerId": "c"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "culture": [
+    {
+      "id": "n1",
+      "kind": "culture",
+      "textEn": "{ko:설날} (Seollal) is the Korean Lunar New Year. A common greeting then is {ko:새해 복 많이 받으세요}, a wish that the other person has a year full of blessings.",
+      "sources": [
+        {
+          "title": "설, an entry of the Encyclopedia of Korean Culture",
+          "publisher": "한국민족문화대백과사전 (Encyclopedia of Korean Culture), Academy of Korean Studies",
+          "url": "https://encykorea.aks.ac.kr/Article/E0028997",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "Entry 설. 정의: ‘한 해의 시작인 음력 1월 1일을 일컫는 말로 설날이라는 말과 같은 우리나라의 명절.’ Section 특징과 의의: ‘실상 “새해 복 많이 받으십시오”라는 신년 인사말은 전통적인 덕담이 아니라 새로 생긴 현대판 덕담이다.’"
+        },
+        {
+          "title": "인사, an entry of the Encyclopedia of Korean Culture",
+          "publisher": "한국민족문화대백과사전 (Encyclopedia of Korean Culture), Academy of Korean Studies",
+          "url": "https://encykorea.aks.ac.kr/Article/E0046905",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "Entry 인사, section 내용, (1) 말로 하는 인사, ⑤ 경조사에 임하여 하는 인사말: for the Seollal bow (세배) it gives the greeting ‘새해에 복 많이 받으십시오.’ with ‘오래오래 건강하십시오.’"
+        },
+        {
+          "title": "송년과 신년의 언어 예절, a column by 허철구 on New Year language etiquette",
+          "publisher": "국립국어원 (National Institute of Korean Language), 새국어소식, 언어 예절 column",
+          "url": "https://www.korean.go.kr/nkview/news/91/news6_2.htm",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "Column on New Year greetings: lists ‘새해 복 많이 받으십시오’ and ‘과세 안녕하십니까?’ as suitable greetings to elders, gives elders' replies such as ‘새해 복 많이 받게’, and says the bow itself is the greeting, so the words are not said during the bow."
+        }
+      ],
+      "verification": {
+        "passes": 3,
+        "checkedAt": "2026-10-14",
+        "scope": "lesson",
+        "notes": "Line 1 (passes: 1, author sourcing, 2026-10-14): all three pages fetched. The claim is that Seollal is the Lunar New Year and that 새해 복 많이 받으세요 is a common greeting then. Encyclopedia of Korean Culture, 설: the definition names it the first day of the lunar year, the same as 설날; the 세시풍속 section calls 새해 복 많이 받으십시오 a modern New Year greeting, so the note says 'common' and never 'traditional'. Encyclopedia of Korean Culture, 인사, item ⑤: the Seollal greeting 새해에 복 많이 받으십시오. National Institute of Korean Language column: 새해 복 많이 받으십시오 is a suitable New Year greeting; the bow itself greets, so no line in the cell is said during a bow (no bow is shown). The cell uses the polite 해요체 form 받으세요 (the cell's register); the formal 받으십시오 of the sources is the same wish. The note says 'a common greeting', names no group as a whole and copies no wording (English note, Korean locators). Carried by: q3 intro Hoya line, q3 Discover page 1 caption, q3 blurb. Line 2 (passes: 2, independent fact check, pass 2b, 2026-10-14): a session that did not author the cell fetched all three sources again. Encyclopedia of Korean Culture, 설: the 정의 sentence names 설 as the first day of the lunar year, the same as 설날: confirmed. The sentence calling 새해 복 많이 받으십시오 a modern rather than traditional New Year greeting is there, and the paragraph just before it says that today this greeting is said twice a year, once for the solar and once for the lunar new year, which backs 'common': confirmed. The locator named the section 설의 세시풍속; the quoted sentence is in 특징과 의의, so the locator now names that section. The page also suggests the older 과세 greetings for Seollal itself; the note claims only that 새해 복 많이 받으세요 is common, not that it is the only or traditional one, so it stands. Encyclopedia of Korean Culture, 인사, 내용, (1) 말로 하는 인사, ⑤: for the Seollal 세배 it gives 새해에 복 많이 받으십시오 first among four wishes, 오래오래 건강하십시오 among them: confirmed. National Institute of Korean Language, 송년과 신년의 언어 예절 by 허철구: 과세 안녕하십니까 and 새해 복 많이 받으십시오 as suitable greetings to an elder, 새해 복 많이 받게 among elders' replies, and the bow itself as the greeting with no words during it: confirmed. The two encyclopedia entries differ on whether words go with the bow; the cell shows no bow, so the difference does not touch it. Note text unchanged. The note is English and shares no run of words with any source; the Korean quotations sit only in the locators. All three hosts are in SOURCE_HOST_ALLOWLIST and two are Korean public institutions (Academy of Korean Studies, National Institute of Korean Language). The note names no group as a whole, no real person, shop, brand or price. Line 3 (passes: 3, MAR culture pass 5, 2026-10-14): all three sources re-fetched; 설 정의, the 특징과 의의 modern-greeting sentence (Line 2's section; Line 1's 세시풍속 superseded), 인사 ⑤ and the NIKL column confirmed. Note now says 'Korean Lunar New Year' and 'a year full of blessings', both within the sources; no copied wording."
+      }
+    }
+  ],
+  "review": {
+    "language": "native-reviewed",
+    "culture": "culture-reviewed",
+    "reviewedBy": "MAR",
+    "reviewedAt": "2026-10-14",
+    "notes": [
+      "Language pass 4 (MAR): spelling, spacing, 해요체 and romanization clean; applied one-order Story Sequences (q2 follows Discover, the teacher opens), the q2 past caption covering question and answer, Hoya returning the teacher's greeting in q3, 미나도 in the q3 Check reply as glossed, no late 오랜만이에요 in q3 practice, the intro naming the three scenes, one wording for 복.",
+      "Culture pass 5 (MAR): the Seollal note re-checked against its three sources (verification line 3); 'Korean Lunar New Year' and 'a year full of blessings' applied; cast is Hoya, Mina and an unnamed teacher; no stereotype, no group named as a whole, no real person, brand or price, no age wording."
+    ]
+  },
+  "contentVer": 1
+}

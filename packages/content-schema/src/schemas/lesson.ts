@@ -193,7 +193,9 @@ export const LessonCellObjectSchema = z
     subtitleEn: z.string().trim().min(1).max(60),
     hoyaIntroEn: z.string().trim().min(1).max(90),
     order: z.number().int().min(1),
-    pillarTags: z.array(PillarTagSchema).min(1),
+    // Episode.pillarTags: the blueprint 04 sub-theme the cell belongs to, or [] when none fits
+    // (a wrong tag is worse than none; the shipped stage2-life precedent, S3-2).
+    pillarTags: z.array(PillarTagSchema),
     rewardCardIds: z.array(CardIdSchema).default([]),
     quests: z.array(LessonQuestSchema).min(3).max(6),
     culture: z.array(LessonNoteSchema).max(12),

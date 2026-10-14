@@ -20,8 +20,17 @@ import type { Catalog, CatalogCell, CatalogQuest, CatalogStory, CatalogTopic } f
  * Version 9 (F-CURR-001 S4-1): the Stage 4 Read Along cell ships (three lesson quests).
  * Version 10 (F-CURR-001 S3-1): the Stage 3 First Sentences cell ships (three lesson quests).
  * Version 11 (F-CURR-001 S2-3): Playground Words ships (Stage 2 crafts, three lesson quests).
+ * Version 12 (F-CURR-001 S3-3): the Stage 3 Festival Sentences cell ships (three lesson quests).
+ * Version 13 (F-CURR-001 S3-5): Game Sentences ships (Stage 3 crafts, 3 lesson quests).
+ * Version 14 (F-CURR-001 S3-2): Daily Mini-Sentences ships (Stage 3 life, 3 lesson quests).
+ * Version 15 (F-CURR-001 T-2): Greeting Dialogues adopts Discover and Check and grows to three quests.
+ * Version 16 (F-CURR-001 S2-1): Stage 2 Word Builder ships with six quests that teach the rest of Hangul.
+ * Version 17 (F-CURR-001 S2-2): Holiday Words ships (Stage 2 rites, 3 lesson quests).
+ * Version 18 (F-CURR-001 S4-2): Kitchen Talk ships (Stage 4 life, 3 lesson quests).
+ * Version 19 (F-CURR-001 S4-3): Park Conversations ships (Stage 4 nature, 3 lesson quests).
+ * Version 20 (F-CURR-001 S4-4): Playdate Talk ships (Stage 4 crafts, 3 lesson quests).
  */
-export const CATALOG_VERSION = 11;
+export const CATALOG_VERSION = 20;
 
 const cell = (
   stage: StageKey,
@@ -50,21 +59,21 @@ const cells: CatalogCell[] = [
   cell('stage1', 'rites', 'New Year & Festivals', 'shipped', 14, ['quest:stage1-rites-q1', 'quest:stage1-rites-q2', 'quest:stage1-rites-q3']),
   cell('stage1', 'nature', 'Tigers, Mountains, Moon', 'shipped', 12, ['quest:stage1-nature-q1', 'quest:stage1-nature-q2', 'quest:stage1-nature-q3']),
   cell('stage1', 'crafts', 'Yut, Kites & Paper', 'shipped', 12, ['quest:stage1-crafts-q1', 'quest:stage1-crafts-q2', 'quest:stage1-crafts-q3']),
-  soon('stage2', 'letters', 'Word Builder'),
+  cell('stage2', 'letters', 'Word Builder', 'shipped', 25, ['quest:stage2-letters-q1', 'quest:stage2-letters-q2', 'quest:stage2-letters-q3', 'quest:stage2-letters-q4', 'quest:stage2-letters-q5', 'quest:stage2-letters-q6']),
   cell('stage2', 'life', 'Lunch Box Words', 'shipped', 6, ['quest:stage2-life-q1']),
-  soon('stage2', 'rites', 'Holiday Words'),
+  cell('stage2', 'rites', 'Holiday Words', 'shipped', 13, ['quest:stage2-rites-q1', 'quest:stage2-rites-q2', 'quest:stage2-rites-q3']),
   cell('stage2', 'nature', 'Outdoor Words', 'shipped', 6, ['quest:stage2-nature-q1']),
   cell('stage2', 'crafts', 'Playground Words', 'shipped', 12, ['quest:stage2-crafts-q1', 'quest:stage2-crafts-q2', 'quest:stage2-crafts-q3']),
   cell('stage3', 'letters', 'First Sentences', 'shipped', 14, ['quest:stage3-letters-q1', 'quest:stage3-letters-q2', 'quest:stage3-letters-q3']),
-  soon('stage3', 'life', 'Daily Mini-Sentences'),
-  soon('stage3', 'rites', 'Festival Sentences'),
+  cell('stage3', 'life', 'Daily Mini-Sentences', 'shipped', 14, ['quest:stage3-life-q1', 'quest:stage3-life-q2', 'quest:stage3-life-q3']),
+  cell('stage3', 'rites', 'Festival Sentences', 'shipped', 14, ['quest:stage3-rites-q1', 'quest:stage3-rites-q2', 'quest:stage3-rites-q3']),
   soon('stage3', 'nature', 'Animal Sentences'),
-  soon('stage3', 'crafts', 'Game Sentences'),
+  cell('stage3', 'crafts', 'Game Sentences', 'shipped', 14, ['quest:stage3-crafts-q1', 'quest:stage3-crafts-q2', 'quest:stage3-crafts-q3']),
   cell('stage4', 'letters', 'Read Along', 'shipped', 13, ['quest:stage4-letters-q1', 'quest:stage4-letters-q2', 'quest:stage4-letters-q3']),
-  soon('stage4', 'life', 'Kitchen Talk'),
-  cell('stage4', 'rites', 'Greeting Dialogues', 'shipped', 5, ['quest:stage4-rites-q1']),
-  soon('stage4', 'nature', 'Park Conversations'),
-  soon('stage4', 'crafts', 'Playdate Talk'),
+  cell('stage4', 'life', 'Kitchen Talk', 'shipped', 13, ['quest:stage4-life-q1', 'quest:stage4-life-q2', 'quest:stage4-life-q3']),
+  cell('stage4', 'rites', 'Greeting Dialogues', 'shipped', 13, ['quest:stage4-rites-q1', 'quest:stage4-rites-q2', 'quest:stage4-rites-q3']),
+  cell('stage4', 'nature', 'Park Conversations', 'shipped', 14, ['quest:stage4-nature-q1', 'quest:stage4-nature-q2', 'quest:stage4-nature-q3']),
+  cell('stage4', 'crafts', 'Playdate Talk', 'shipped', 14, ['quest:stage4-crafts-q1', 'quest:stage4-crafts-q2', 'quest:stage4-crafts-q3']),
   cell('stage5', 'letters', 'Stories of Letters', 'shipped', 13, [
     'quest:story-sejong-new-letters-read',
     'quest:story-shapes-of-hangeul-read',
@@ -120,19 +129,49 @@ const lessonQuests: CatalogQuest[] = [
   lesson('stage1-crafts-q1', 'stage1', 'crafts', 'Yut, Kite, Top', 4),
   lesson('stage1-crafts-q2', 'stage1', 'crafts', 'Paper and Pottery', 4),
   lesson('stage1-crafts-q3', 'stage1', 'crafts', 'Read Hangul!', 4),
+  // F-CURR-001 S2-1: Word Builder teaches the rest of Hangul, so `teaches` names its symbols.
+  lesson('stage2-letters-q1', 'stage2', 'letters', 'Vowel Pairs ae and e', 4, ['ㅐ', 'ㅔ', 'ㅒ', 'ㅖ']),
+  lesson('stage2-letters-q2', 'stage2', 'letters', 'Double Letters', 4, ['ㄲ', 'ㄸ', 'ㅃ', 'ㅆ', 'ㅉ']),
+  lesson('stage2-letters-q3', 'stage2', 'letters', 'Joined Vowels wa, wo, wi, ui', 4, ['ㅘ', 'ㅝ', 'ㅟ', 'ㅢ']),
+  lesson('stage2-letters-q4', 'stage2', 'letters', 'Joined Vowels oe, wae, we', 4, ['ㅚ', 'ㅙ', 'ㅞ']),
+  lesson('stage2-letters-q5', 'stage2', 'letters', 'One Sound for Six Letters', 4, ['ㅅ/final', 'ㅈ/final', 'ㅊ/final', 'ㅌ/final', 'ㄷ/final', 'ㅆ/final']),
+  lesson('stage2-letters-q6', 'stage2', 'letters', 'More Letters for k and p', 4, ['ㅋ/final', 'ㄲ/final', 'ㅍ/final']),
   lesson('stage2-life-q1', 'stage2', 'life', 'Lunch Box Words', 5),
+  lesson('stage2-rites-q1', 'stage2', 'rites', 'Seollal Words', 4),
+  lesson('stage2-rites-q2', 'stage2', 'rites', 'Chuseok Words', 4),
+  lesson('stage2-rites-q3', 'stage2', 'rites', 'Holiday Play and Gifts', 4),
   lesson('stage2-nature-q1', 'stage2', 'nature', 'Outdoor Words', 5),
   lesson('stage2-crafts-q1', 'stage2', 'crafts', 'At the Playground', 4),
   lesson('stage2-crafts-q2', 'stage2', 'crafts', 'Traditional Games', 4),
   lesson('stage2-crafts-q3', 'stage2', 'crafts', 'Playing Together', 4),
-  lesson('stage4-rites-q1', 'stage4', 'rites', 'Greeting Dialogues', 4),
+  lesson('stage4-rites-q1', 'stage4', 'rites', 'Nice to Meet You', 4),
+  lesson('stage4-rites-q2', 'stage4', 'rites', 'Long Time No See', 4),
+  lesson('stage4-rites-q3', 'stage4', 'rites', 'Happy New Year', 4),
   // F-CURR-001 upper-stage cells: they teach no symbol, so `teaches` is [].
   lesson('stage3-letters-q1', 'stage3', 'letters', 'It Is a Book', 5),
   lesson('stage3-letters-q2', 'stage3', 'letters', 'There Is a Book', 5),
   lesson('stage3-letters-q3', 'stage3', 'letters', 'This Is Hangul', 5),
+  lesson('stage3-rites-q1', 'stage3', 'rites', 'Grandma and Grandpa', 5),
+  lesson('stage3-rites-q2', 'stage3', 'rites', 'Pretty and Tasty', 5),
+  lesson('stage3-rites-q3', 'stage3', 'rites', 'Festival Days', 5),
   lesson('stage4-letters-q1', 'stage4', 'letters', 'What Is This?', 4),
   lesson('stage4-letters-q2', 'stage4', 'letters', 'Where Is It?', 4),
   lesson('stage4-letters-q3', 'stage4', 'letters', 'Thank You, Teacher', 4),
+  lesson('stage3-crafts-q1', 'stage3', 'crafts', 'I Want to Play', 5),
+  lesson('stage3-crafts-q2', 'stage3', 'crafts', 'Places to Play', 5),
+  lesson('stage3-crafts-q3', 'stage3', 'crafts', 'Kick, Spin, Throw', 5),
+  lesson('stage3-life-q1', 'stage3', 'life', 'I Eat, I Drink', 5),
+  lesson('stage3-life-q2', 'stage3', 'life', 'Tasty and Hot', 5),
+  lesson('stage3-life-q3', 'stage3', 'life', 'Go and Come', 5),
+  lesson('stage4-life-q1', 'stage4', 'life', 'Have You Eaten?', 4),
+  lesson('stage4-life-q2', 'stage4', 'life', 'How Does It Taste?', 5),
+  lesson('stage4-life-q3', 'stage4', 'life', 'Not Spicy', 4),
+  lesson('stage4-nature-q1', 'stage4', 'nature', 'Sky Watching', 5),
+  lesson('stage4-nature-q2', 'stage4', 'nature', 'Rain Later', 5),
+  lesson('stage4-nature-q3', 'stage4', 'nature', 'Where To?', 5),
+  lesson('stage4-crafts-q1', 'stage4', 'crafts', 'What Shall We Play?', 5),
+  lesson('stage4-crafts-q2', 'stage4', 'crafts', 'My Turn, Your Turn', 5),
+  lesson('stage4-crafts-q3', 'stage4', 'crafts', 'Shall We Play Together?', 5),
   // The Stage 5 books (F-STORY-005 PR 5.6): grid quests that play their stories at the read level.
   lesson('story-sejong-new-letters-read', 'stage5', 'letters', "King Sejong's New Letters", 4),
   lesson('story-shapes-of-hangeul-read', 'stage5', 'letters', 'The Secret in the Shapes', 5),

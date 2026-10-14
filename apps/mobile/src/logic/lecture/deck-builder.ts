@@ -18,6 +18,7 @@ import {
   buildCultureQuizRounds,
   buildMatchSoundRounds,
   buildOddOneOutRounds,
+  SOUND_QUIZ_JAMO_IDS,
   type CardMatchPair,
   type CultureQuizRound,
   type MatchSoundRound,
@@ -643,7 +644,8 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
   const quizBlock = (path: string, from: 'previous' | 'all', rounds: number): void => {
     const items = taught.slice(from === 'previous' ? quizFrom : 0);
     quizFrom = taught.length;
-    const letters = [...new Set(items.flatMap((t) => (t.kind === 'letter' ? [t.jamoId] : [])))];
+    // Only letters a sound round may ask (Word Builder's are shown on their letter slides, never quizzed by ear).
+    const letters = [...new Set(items.flatMap((t) => (t.kind === 'letter' && SOUND_QUIZ_JAMO_IDS.has(t.jamoId) ? [t.jamoId] : [])))];
     const pairs: CardMatchPair[] = items.flatMap((t) =>
       t.kind === 'word' && t.gloss !== undefined ? [{ ko: t.ko, en: t.gloss, romanization: t.romanization }] : [],
     );

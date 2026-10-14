@@ -1,5 +1,6 @@
 import type { BrowseTarget } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
+import { jamoAll, jamoWordBuilder } from '../../../content/jamo';
 import { stage1QuestsFrom, teachingQuestFor } from '../../stage1/curriculum';
 import type { ResolvedPass } from '../pass';
 import { resolveEntry, resolveTarget } from '../target';
@@ -50,10 +51,26 @@ describe('resolveTarget', () => {
     }
   });
 
+  it('a Word Builder symbol opens the Word Builder quest that teaches it (F-CURR-001 section 3.13)', () => {
+    const later = bundle.jamo.filter((j) => !jamoAll.some((s) => s.id === j.id));
+    expect(later.length).toBe(jamoWordBuilder.length);
+    for (const jamo of later) {
+      const destination = resolveTarget({ kind: 'jamo', id: jamo.id }, bundle);
+      expect(destination, jamo.id).toMatchObject({ screen: 'item', kind: 'quest', focusJamoId: jamo.id });
+      expect((destination as { id: string }).id, jamo.id).toMatch(/^quest:stage2-letters-q[1-6]$/);
+    }
+    expect(resolveTarget({ kind: 'char', char: 'ㅆ' }, bundle)).toMatchObject({ screen: 'item', id: 'quest:stage2-letters-q2', focusJamoId: 'jamo:ssangsiot' });
+    expect(resolveTarget({ kind: 'jamo', id: 'jamo:ae' }, bundle)).toEqual({ screen: 'item', kind: 'quest', id: 'quest:stage2-letters-q1', focusJamoId: 'jamo:ae' });
+    // Without its shipped lesson a later symbol is not in this version (it is never "practiced across Stage 1").
+    const without = { ...bundle, quests: bundle.quests.filter((q) => q.id !== 'quest:stage2-letters-q1') };
+    expect(resolveTarget({ kind: 'jamo', id: 'jamo:ae' }, without)).toEqual({ screen: 'home', section: null, note: 'not-in-version' });
+  });
+
   it('a letter no lesson teaches lands on the Stage 1 Journey with a note', () => {
-    // Since F-QUEST-002 Q-8 the bundle teaches every letter; without the lesson that teaches one, that letter is untaught.
-    expect(bundle.jamo.every((j) => teachingQuestFor(j.id, stage1))).toBe(true);
-    const letter = bundle.jamo[bundle.jamo.length - 1] as (typeof bundle.jamo)[number];
+    // Since F-QUEST-002 Q-8 the bundle teaches every Stage 1 letter; without the lesson that teaches one, that letter is untaught.
+    const stage1Letters = bundle.jamo.filter((j) => jamoAll.some((s) => s.id === j.id));
+    expect(stage1Letters.every((j) => teachingQuestFor(j.id, stage1))).toBe(true);
+    const letter = stage1Letters[stage1Letters.length - 1] as (typeof bundle.jamo)[number];
     const teacher = teachingQuestFor(letter.id, stage1);
     const without = { ...bundle, quests: bundle.quests.filter((q) => q.id !== teacher?.id) };
     expect(teachingQuestFor(letter.id, stage1QuestsFrom(without.episodes, without.quests))).toBeUndefined();

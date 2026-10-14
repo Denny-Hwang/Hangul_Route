@@ -1,5 +1,5 @@
 import type { Overlays, UiLocale } from '@hangul-route/content-schema';
-import { cardById, episodeById, jamoAll, questById } from '../../content';
+import { cardById, episodeById, jamoKnown, questById } from '../../content';
 import { reviewedStrokeIds, strokesForJamo } from '../../content/jamo-strokes';
 import { localizeCard, localizeEpisode, localizeJamo, localizeQuest, localizeScope } from '../content-locale';
 import { scopeFor } from '../minigame-config';
@@ -37,7 +37,8 @@ export function lectureBundle(locale: UiLocale, overlays?: Overlays): LectureBun
   const reviewed = new Set(reviewedStrokeIds);
   const stories = lectureStories(locale, overlays);
   const topics = lectureVocabTopics(locale, overlays);
-  const localizedJamo = locale === 'en' ? jamoAll : jamoAll.map((j) => localizeJamo(j, locale, overlays));
+  // The Stage 1 symbols, then the Word Builder ones (F-CURR-001 S2-1), so a Word Builder Discover gets its letter slides.
+  const localizedJamo = locale === 'en' ? jamoKnown : jamoKnown.map((j) => localizeJamo(j, locale, overlays));
   return {
     jamoAll: localizedJamo,
     scopeFor: (ref) => {
