@@ -145,12 +145,12 @@ describe('the daily scheduled handler (section 8.7 item 2)', () => {
   it('stops after the first round that leaves nothing to purge', async () => {
     const now = new Date();
     expect(await db.insertNotes(old(10, 200 * DAY, now.getTime()), [])).toBe(10);
-    expect(await runScheduledPurge(db, now)).toEqual({ rounds: 1, notes: 10, rateHits: 0 });
-    expect(await runScheduledPurge(db, now)).toEqual({ rounds: 1, notes: 0, rateHits: 0 });
+    expect(await runScheduledPurge(db, now)).toEqual({ rounds: 1, notes: 10, rateHits: 0, classMoves: 0 });
+    expect(await runScheduledPurge(db, now)).toEqual({ rounds: 1, notes: 0, rateHits: 0, classMoves: 0 });
     expect(SCHEDULED_PURGE_ROUNDS * NOTE_PURGE_LIMIT).toBe(1000);
   });
 
-  it('on D1 one run prepares at most 25 statements (5 rounds of the 4-statement note step and the counter step)', async () => {
+  it('on D1 one run prepares at most 30 statements (5 rounds of the 4-statement note step, the counter step and the class-move step)', async () => {
     const raw = openSqliteD1();
     const own = new D1Db(raw);
     await seed(own);
@@ -165,7 +165,7 @@ describe('the daily scheduled handler (section 8.7 item 2)', () => {
       batch: (statements) => raw.batch(statements),
     };
     await scheduled({ scheduledTime: now }, { DB: binding });
-    expect(prepared).toBe(SCHEDULED_PURGE_ROUNDS * 5);
+    expect(prepared).toBe(SCHEDULED_PURGE_ROUNDS * 6);
     expect((await own.notesForOversight(SUNI, { before: null, limit: 5000, now: new Date(now - 400 * DAY) })).length).toBe(100);
     raw.close();
   });

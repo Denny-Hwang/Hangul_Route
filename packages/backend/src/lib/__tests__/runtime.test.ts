@@ -69,7 +69,7 @@ describe('healthReport (booleans only)', () => {
       environment: 'production',
       devFallbacks: false,
       bindings: { db: false, clerk: false, stripe: false, stripeWebhook: false, rescuePepper: false, stripeLive: false, billingLiveAllowed: false },
-      features: { notesSend: false },
+      features: { notesSend: false, classScopeFull: true },
     });
     expect(healthReport({ DB: {} }).status).toBe('misconfigured');
     expect(healthReport({ CLERK_SECRET_KEY: 'sk_live_secret' }).status).toBe('misconfigured');
@@ -83,10 +83,15 @@ describe('healthReport (booleans only)', () => {
       environment: 'production',
       devFallbacks: false,
       bindings: { db: true, clerk: true, stripe: true, stripeWebhook: true, rescuePepper: true, stripeLive: true, billingLiveAllowed: false }, // 'sk_stripe' has no test prefix: read as live (fail closed)
-      features: { notesSend: false },
+      features: { notesSend: false, classScopeFull: true },
     });
     // the owner's NOTES_SEND switch (F-FEEDBACK-001 section 7.8), as a boolean only
-    expect(healthReport({ DB: {}, CLERK_SECRET_KEY: 'sk', NOTES_SEND: 'enabled' }).features).toEqual({ notesSend: true });
+    expect(healthReport({ DB: {}, CLERK_SECRET_KEY: 'sk', NOTES_SEND: 'enabled' }).features).toEqual({ notesSend: true, classScopeFull: true });
+    // [TV] TV-D15: full-scope teacher visibility is on unless the kill switch is set; any other value fails closed.
+    expect(healthReport({ DB: {}, CLERK_SECRET_KEY: 'sk', CLASS_SCOPE_FULL: 'disabled' }).features.classScopeFull).toBe(false);
+    expect(healthReport({ DB: {}, CLERK_SECRET_KEY: 'sk', CLASS_SCOPE_FULL: 'typo' }).features.classScopeFull).toBe(false);
+    expect(healthReport({ DB: {}, CLERK_SECRET_KEY: 'sk', CLASS_SCOPE_FULL: 'enabled' }).features.classScopeFull).toBe(true);
+    expect(healthReport({ DB: {}, CLERK_SECRET_KEY: 'sk', CLASS_SCOPE_FULL: '' }).features.classScopeFull).toBe(true);
     expect(JSON.stringify(report)).not.toMatch(/sk_live_secret|sk_stripe|whsec_x|pepper_do_not_echo/);
     expect(healthReport({ DB: {}, CLERK_JWT_KEY: '-----BEGIN PUBLIC KEY-----' }).bindings.clerk).toBe(true);
   });

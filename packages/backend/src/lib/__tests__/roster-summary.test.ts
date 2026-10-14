@@ -1,6 +1,6 @@
-import { ActivitySummarySchema, TEACHER_HIDDEN_SUMMARY_KEYS, TEACHER_VISIBLE_SUMMARY_KEYS, type ActivitySummary, type ProgressSummary } from '@hangul-route/content-schema';
+import { ActivitySummarySchema, TEACHER_FULL_SCOPE_EXTRA_KEYS, TEACHER_VISIBLE_SUMMARY_KEYS, type ActivitySummary, type ProgressSummary } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
-import { activityOf, rosterSummary, teacherVisibleSummary } from '../roster-summary';
+import { activityOf, readsFullScope, rosterSummary, teacherVisibleSummary } from '../roster-summary';
 
 const placement = {
   takenAt: '2026-10-10T10:05:00.000Z',
@@ -40,6 +40,8 @@ const full: ProgressSummary = {
 };
 
 const own = new Set(['plan:own-1', 'plan:own-2', 'plan:own-unstarted']);
+/** [TV] What a family (full scope) reads beyond the teacher projection of `full`: the Hangul Check. */
+const familyExtras = { stage1Anchor: full.stage1Anchor };
 
 describe('teacherVisibleSummary (F-SPACE-002 T-1a, section 4.11)', () => {
   it('keeps exactly the allow-listed keys, with their values, and drops stage1Anchor and schemaVersion', () => {
@@ -112,7 +114,7 @@ describe('rosterSummary (F-PLAN-002 section 3.10: the self-route reaches the fam
   const withRoute = { ...full, selfRoute };
 
   it('adds selfRoute to the projection for a family space', () => {
-    expect(rosterSummary(withRoute, own, 'family')).toEqual({ ...teacherVisibleSummary(withRoute, own), selfRoute });
+    expect(rosterSummary(withRoute, own, 'family')).toEqual({ ...teacherVisibleSummary(withRoute, own), ...familyExtras, selfRoute });
   });
 
   it('removes it for a class and a school, which see exactly the teacher projection', () => {
@@ -133,8 +135,8 @@ describe('rosterSummary (F-PLAN-002 section 3.10: the self-route reaches the fam
   });
 
   it('adds nothing when the summary has no route or a malformed one, and answers null without a summary', () => {
-    expect(rosterSummary(full, own, 'family')).toEqual(teacherVisibleSummary(full, own));
-    expect(rosterSummary({ ...full, selfRoute: 'oops' }, own, 'family')).toEqual(teacherVisibleSummary(full, own));
+    expect(rosterSummary(full, own, 'family')).toEqual({ ...teacherVisibleSummary(full, own), ...familyExtras });
+    expect(rosterSummary({ ...full, selfRoute: 'oops' }, own, 'family')).toEqual({ ...teacherVisibleSummary(full, own), ...familyExtras });
     expect(rosterSummary(null, own, 'family')).toBeNull();
   });
 });
@@ -144,7 +146,7 @@ describe('rosterSummary: summary.routeGoal reaches the family space only (Learni
   const withGoal = { ...full, routeGoal };
 
   it('adds routeGoal to the projection for a family space', () => {
-    expect(rosterSummary(withGoal, own, 'family')).toEqual({ ...teacherVisibleSummary(withGoal, own), routeGoal });
+    expect(rosterSummary(withGoal, own, 'family')).toEqual({ ...teacherVisibleSummary(withGoal, own), ...familyExtras, routeGoal });
   });
 
   it('removes it for a class and a school, which see exactly the teacher projection', () => {
@@ -173,7 +175,7 @@ describe('rosterSummary: summary.routeGoal reaches the family space only (Learni
   it('adds nothing when the goal is missing or not an object', () => {
     for (const value of [undefined, null, 'stage2', ['stage2'], 7]) {
       const out = rosterSummary({ ...full, routeGoal: value }, own, 'family');
-      expect(out).toEqual(teacherVisibleSummary(full, own));
+      expect(out).toEqual({ ...teacherVisibleSummary(full, own), ...familyExtras });
       expect(out && 'routeGoal' in out).toBe(false);
     }
   });
@@ -185,15 +187,59 @@ describe('rosterSummary: summary.routeGoal reaches the family space only (Learni
   });
 });
 
-describe('summary.vocab never reaches a roster yet (F-VOC-005 section 3.8; the console line is P-4)', () => {
+describe('[TV] summary.vocab and the full scope (F-VOC-005 P-4b, AMENDMENTS-TEACHER-VISIBILITY-TRANSFER section 2)', () => {
   const own = new Set(['plan:own-1']);
   const vocab = { collected: 12, strong: 4, topicsStarted: 2, topicsPracticed7d: 1, firstTryRate: 0.75, needsPractice: ['vocab:sagwa-apple'] };
+  const { firstTryRate: _rate, ...rosterVocab } = vocab;
+  const selfRoute = { done: 7, total: 9, notReady: 0, weeks: 12, endsOn: '2027-01-09' };
+  const routeGoal = { stage: 'stage2', from: 'class' } as const;
+  const everything = { ...full, vocab, selfRoute, routeGoal };
 
-  it('drops vocab for a class, a school and a family space', () => {
-    for (const kind of ['class', 'school', 'family'] as const) {
-      const out = rosterSummary({ ...full, vocab }, own, kind);
+  it('gives a family vocab without firstTryRate on the roster and with it on the learner report (detail)', () => {
+    expect(rosterSummary({ ...full, vocab }, own, 'family')?.vocab).toEqual(rosterVocab);
+    expect(rosterSummary({ ...full, vocab }, own, 'family', { detail: true })?.vocab).toEqual(vocab);
+  });
+
+  it('a base-scope class or school (no acknowledgement) reads exactly the teacher projection: no vocab, Hangul Check, self-route or goal', () => {
+    for (const kind of ['class', 'school'] as const) {
+      for (const scope of [undefined, 'base'] as const) {
+        const out = rosterSummary(everything, own, kind, { scope, detail: true });
+        expect(out).toEqual(teacherVisibleSummary(full, own));
+        for (const key of TEACHER_FULL_SCOPE_EXTRA_KEYS) expect(out && key in out, `${kind} ${key}`).toBe(false);
+      }
+    }
+  });
+
+  it('a full-scope class or school reads what a family reads, with its own plans only', () => {
+    for (const kind of ['class', 'school'] as const) {
+      expect(rosterSummary(everything, own, kind, { scope: 'full' })).toEqual(rosterSummary(everything, own, 'family'));
+      expect(rosterSummary(everything, own, kind, { scope: 'full', detail: true })?.vocab).toEqual(vocab);
+      expect(rosterSummary(everything, own, kind, { scope: 'full' })).toMatchObject({ vocab: rosterVocab, stage1Anchor: full.stage1Anchor, selfRoute, routeGoal });
+      expect(JSON.stringify(rosterSummary(everything, own, kind, { scope: 'full' }))).not.toContain('plan:other-class');
+    }
+  });
+
+  it('a family is full scope whatever scope a caller passes', () => {
+    expect(rosterSummary(everything, own, 'family', { scope: 'base' })).toEqual(rosterSummary(everything, own, 'family'));
+    expect(readsFullScope({ kind: 'family' })).toBe(true);
+    expect(readsFullScope({ kind: 'class' })).toBe(false);
+    expect(readsFullScope({ kind: 'school', scope: 'full' })).toBe(true);
+  });
+
+  it('copies only the known vocab and Hangul Check keys, never what a newer writer left under them', () => {
+    const stored = { ...full, vocab: { ...vocab, perWord: 'secret' }, stage1Anchor: { ...full.stage1Anchor, answers: 'secret' } };
+    const out = rosterSummary(stored, own, 'class', { scope: 'full', detail: true });
+    expect(JSON.stringify(out)).not.toContain('secret');
+    expect(out?.vocab).toEqual(vocab);
+    expect(out?.stage1Anchor).toEqual(full.stage1Anchor);
+  });
+
+  it('leaves vocab and the Hangul Check out when they are missing or not objects', () => {
+    const { stage1Anchor: _anchor, ...noAnchor } = full;
+    for (const value of [undefined, null, 'vocab', ['x']]) {
+      const out = rosterSummary({ ...noAnchor, vocab: value }, own, 'family');
       expect(out && 'vocab' in out).toBe(false);
-      expect(out).toEqual(rosterSummary(full, own, kind));
+      expect(out && 'stage1Anchor' in out).toBe(false);
     }
   });
 });
@@ -224,27 +270,24 @@ describe('activityOf and summary.activity on the roster (F-REPORT-001 section 3.
     revisit: 'letters-q2',
   };
   const joinedAt = '2026-10-10T01:30:00.000Z';
-  const wordsHidden = (TEACHER_HIDDEN_SUMMARY_KEYS as readonly string[]).includes('vocab');
-  const zeroW = <T extends { w: number }>(row: T): T => ({ ...row, w: wordsHidden ? 0 : row.w });
+  /** A base-scope class or school reads every word count as 0 ([TV]: words travel with vocab, at full scope only). */
+  const zeroW = <T extends { w: number }>(row: T): T => ({ ...row, w: 0 });
 
-  it('gives a family the whole activity, every level projected to its known keys', () => {
+  it('gives a family the whole activity, word counts included, every level projected to its known keys', () => {
     const out = activityOf(activity, { kind: 'family', joinedAt });
-    expect(out).toEqual({
-      ...activity,
-      days: activity.days.map(zeroW),
-      months: activity.months.map(zeroW),
-      total: zeroW(activity.total),
-    });
+    expect(out).toEqual(activity);
     expect(ActivitySummarySchema.safeParse(out).success).toBe(true);
   });
 
-  it('zeroes every word count while vocab is on the hidden list (the coupling with F-VOC-005 P-4b)', () => {
-    // F-VOC-005 P-4b moves vocab to the visible list: this guard fails first, and P-4b rewrites this test
-    expect(wordsHidden).toBe(true);
-    for (const kind of ['family', 'class', 'school'] as const) {
-      const out = activityOf(activity, { kind, joinedAt });
-      for (const row of [...out.days, ...out.months, out.total]) expect(row.w).toBe(0);
+  it('[TV] couples word counts with the scope: 0 at base scope, as sent at full scope (F-VOC-005 P-4b)', () => {
+    for (const kind of ['class', 'school'] as const) {
+      const base = activityOf(activity, { kind, joinedAt });
+      for (const row of [...base.days, ...base.months, base.total]) expect(row.w).toBe(0);
+      expect(activityOf(activity, { kind, joinedAt, scope: 'base' })).toEqual(base);
+      // full scope: the whole history, as a family reads it
+      expect(activityOf(activity, { kind, joinedAt, scope: 'full' })).toEqual(activityOf(activity, { kind: 'family', joinedAt }));
     }
+    expect(activityOf(activity, { kind: 'family', joinedAt }).total.w).toBe(15);
   });
 
   it('for a class or a school drops days and milestones before the local join day, and months up to and including the join month', () => {
@@ -333,7 +376,7 @@ describe('activityOf and summary.activity on the roster (F-REPORT-001 section 3.
     };
     const out = activityOf(stored, { kind: 'family', joinedAt });
     expect(JSON.stringify(out)).not.toContain('secret');
-    expect(out.days).toEqual([zeroW(activity.days[3] as ActivitySummary['days'][number])]);
+    expect(out.days).toEqual([activity.days[3]]);
     expect(out.next).toEqual({ q: 'letters-q3', plan: false });
     expect(Object.keys(out).sort()).toEqual(['asOf', 'days', 'milestones', 'months', 'next', 'revisit', 'total', 'tz', 'v']);
   });

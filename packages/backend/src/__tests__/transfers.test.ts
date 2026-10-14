@@ -365,7 +365,7 @@ describe('create', () => {
       source: { state: 'pending' },
       destination: { state: 'pending' },
     });
-    expect(row?.learner.shown?.lineIds).toEqual(['moving', 'new_teacher', 'old_teacher', 'keeps', 'cooling_off', 'visible_list', 'nothing_else', 'visible_today', 'typed_names', 'cannot_undo', 'introduce']);
+    expect(row?.learner.shown?.lineIds).toEqual(['moving', 'new_teacher', 'old_teacher', 'keeps', 'cooling_off', 'visible_list', 'nothing_else', 'visible_today', 'typed_names', 'teacher_moves', 'cannot_undo', 'introduce']);
     expect(row?.learner.terms).toMatchObject({ destConsentMode: 'parent', destAnonymize: false, destOwnerId: 'teacher-b', premiumChange: 'none', destNameHash: expect.stringMatching(/^[0-9a-f]{64}$/) });
     expect(await db.transferEvents(view.id)).toEqual([expect.objectContaining({ event: 'created', actorKind: 'account', actorRef: 'mom', slot: 'learner' })]);
     // no name is copied into the row

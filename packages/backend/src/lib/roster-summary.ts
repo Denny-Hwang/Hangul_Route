@@ -1,10 +1,11 @@
 import {
-  TEACHER_HIDDEN_SUMMARY_KEYS,
   TEACHER_VISIBLE_SUMMARY_KEYS,
   type ActivitySummary,
+  type ClassScope,
   type ProgressSummary,
   type SpaceKind,
   type TeacherVisibleSummaryKey,
+  type VocabSummary,
 } from '@hangul-route/content-schema';
 
 /**
@@ -44,12 +45,19 @@ function journeyOf(value: Plain): Plain {
 
 /**
  * Who reads a projected `activity` (F-REPORT-001 section 3.8): the kind of the
- * viewing space and when the learner joined it (`memberships.joined_at`).
+ * viewing space, when the learner joined it (`memberships.joined_at`) and, for
+ * a class or school, the learner's scope ([TV] AMENDMENTS-TEACHER-VISIBILITY-TRANSFER
+ * section 2: `full` once the family has read the class-scope update). A family
+ * always reads the full scope; a missing scope is `base`.
  */
 export interface ActivityViewer {
   readonly kind: SpaceKind;
   readonly joinedAt?: string | null;
+  readonly scope?: ClassScope;
 }
+
+/** Whether the viewer reads the full scope: a family always, a class or school once the family acknowledged. */
+export const readsFullScope = (viewer: ActivityViewer): boolean => viewer.kind === 'family' || viewer.scope === 'full';
 
 const ACTIVITY_KEYS = ['v', 'tz', 'asOf'] as const satisfies readonly (keyof ActivitySummary)[];
 const ACTIVITY_DAY_KEYS = ['d', 'min', 'q', 'c', 'w', 'j'] as const satisfies readonly (keyof ActivitySummary['days'][number])[];
@@ -59,13 +67,11 @@ const ACTIVITY_MILESTONE_KEYS = ['stage', 'on'] as const satisfies readonly (key
 const ACTIVITY_NEXT_QUEST_KEYS = ['q', 'plan'] as const;
 
 /**
- * Word counts reach no grown-up while `vocab` is hidden: F-VOC-005 P-4b moves
- * `vocab` to the allow-list with its own consent item, and from then on `w`
- * travels as sent (a test pins the coupling). P-4 shipped the console lines
- * dormant; P-4b's `vocab` branch copies only `VocabSummary`'s known keys and
- * drops `firstTryRate` for every roster viewer (a student's detail view only).
+ * Word counts travel exactly when `vocab` does ([TV], F-VOC-005 P-4b done as the
+ * owner's decision 2026-10-14): as sent at full scope, 0 at base scope (a test
+ * pins the coupling). The `vocab` branch below copies only `VocabSummary`'s known
+ * keys and drops `firstTryRate` on the roster (a student's detail view only).
  */
-const WORDS_HIDDEN = (TEACHER_HIDDEN_SUMMARY_KEYS as readonly string[]).includes('vocab');
 
 /** The learner-local day (`YYYY-MM-DD`) of an instant at `tz` minutes east of UTC, or null when it does not parse. */
 function localDayOf(iso: string | null | undefined, tz: number): string | null {
@@ -74,15 +80,15 @@ function localDayOf(iso: string | null | undefined, tz: number): string | null {
 }
 
 const rowsOf = (value: unknown, keys: readonly string[]): Plain[] => (Array.isArray(value) ? value.filter(isPlain).map((row) => pick(row, keys)) : []);
-const withoutWords = (row: Plain): Plain => (WORDS_HIDDEN ? { ...row, w: 0 } : row);
 
 /**
  * The day-by-day activity a viewer may read (F-REPORT-001 section 3.8), picked
  * to its known keys at every level like `journeyOf`.
  *
- * - Every word count `w` is 0 while `vocab` is hidden, for every viewer.
- * - A family reads the rest whole.
- * - A class or a school reads no history from before the learner joined it:
+ * - A full-scope viewer (a family, or a class or school after the family's
+ *   acknowledgement, [TV]) reads it whole, word counts included.
+ * - A base-scope class or school reads every word count `w` as 0 and no
+ *   history from before the learner joined it:
  *   days and milestones before the learner-local day of `joinedAt` (at
  *   `activity.tz`) and months up to and including the join month are dropped;
  *   `total` keeps its lifetime counts (they match the roster) but `since`, the
@@ -96,12 +102,13 @@ const withoutWords = (row: Plain): Plain => (WORDS_HIDDEN ? { ...row, w: 0 } : r
  */
 export function activityOf(value: Plain, viewer: ActivityViewer): ActivitySummary {
   const out: Plain = pick(value, ACTIVITY_KEYS);
+  const family = readsFullScope(viewer);
+  const withoutWords = (row: Plain): Plain => (family ? row : { ...row, w: 0 });
   let days = rowsOf(value.days, ACTIVITY_DAY_KEYS).map(withoutWords);
   let months = rowsOf(value.months, ACTIVITY_MONTH_KEYS).map(withoutWords);
   let milestones = rowsOf(value.milestones, ACTIVITY_MILESTONE_KEYS);
   const total = isPlain(value.total) ? withoutWords(pick(value.total, ACTIVITY_TOTAL_KEYS)) : null;
   const next = isPlain(value.next) ? (value.next.end === true ? { end: true } : pick(value.next, ACTIVITY_NEXT_QUEST_KEYS)) : null;
-  const family = viewer.kind === 'family';
 
   if (!family) {
     const joinDay = localDayOf(viewer.joinedAt, typeof value.tz === 'number' ? value.tz : 0);
@@ -148,27 +155,50 @@ export function teacherVisibleSummary(summary: unknown, planIds: ReadonlySet<str
   return out as TeacherVisibleSummary;
 }
 
+const VOCAB_KEYS = ['collected', 'strong', 'topicsStarted', 'topicsPracticed7d', 'firstTryRate', 'needsPractice'] as const satisfies readonly (keyof VocabSummary)[];
+const STAGE1_ANCHOR_KEYS = ['met', 'checkedAt', 'tricky'] as const satisfies readonly (keyof NonNullable<ProgressSummary['stage1Anchor']>)[];
 const SELF_ROUTE_KEYS = ['done', 'total', 'notReady', 'weeks', 'endsOn'] as const satisfies readonly (keyof NonNullable<ProgressSummary['selfRoute']>)[];
 const ROUTE_GOAL_KEYS = ['stage', 'from'] as const satisfies readonly (keyof NonNullable<ProgressSummary['routeGoal']>)[];
 
-/** What a family space additionally reads of its learner's summary. */
-export type FamilyVisibleSummary = TeacherVisibleSummary & Pick<ProgressSummary, 'selfRoute' | 'routeGoal'>;
+/** What a full-scope viewer additionally reads of a learner's summary (a family always; [TV] a class or school after the acknowledgement). */
+export type FamilyVisibleSummary = TeacherVisibleSummary & Pick<ProgressSummary, 'selfRoute' | 'routeGoal' | 'vocab' | 'stage1Anchor'>;
+
+export interface RosterSummaryOptions {
+  joinedAt?: string | null;
+  /** [TV] The learner's scope for a class or school viewer; ignored for a family (always full). Missing: base. */
+  scope?: ClassScope;
+  /** [TV] The learner report (a student's detail view): `vocab.firstTryRate` is kept. The roster never sets it. */
+  detail?: boolean;
+}
 
 /**
- * The roster's summary for a space of `kind` (F-PLAN-002 section 3.10): the
- * teacher projection above, plus the self-route counts and the Learning Route
- * goal (Learning Route section 9, LR-W1) for a family space only. A class or
- * school never receives `selfRoute` or `routeGoal`; one summary is shared by
- * every space the learner is in, so the fields are removed at read time.
- * `joinedAt` is the learner's membership of the viewing space: a class or
- * school sees no `activity` day from before it (F-REPORT-001 section 3.8), and
- * the roster and the report routes pass it alike.
+ * The roster's summary for a space of `kind`: one projection for the roster and
+ * the report routes, decided per learner by scope ([TV] AMENDMENTS-TEACHER-VISIBILITY-TRANSFER
+ * section 2).
+ *
+ * - Base scope (a class or school before the family's acknowledgement): the
+ *   teacher projection above and nothing else; `selfRoute` and `routeGoal`
+ *   stay with the family (F-PLAN-002 section 3.10, Learning Route LR-W1), and
+ *   no `activity` day before `joinedAt` (F-REPORT-001 section 3.8).
+ * - Full scope (a family always; a class or school after the acknowledgement):
+ *   the same plus `selfRoute`, `routeGoal`, `vocab` and `stage1Anchor`, each
+ *   projected to its known keys, and the whole `activity` history with word
+ *   counts. `planProgress` keeps the viewing space's own plans for everyone.
+ *   `vocab.firstTryRate` reaches the learner report (`detail`) only, never the
+ *   roster list (F-VOC-005 section 3.8).
  */
-export function rosterSummary(summary: unknown, planIds: ReadonlySet<string>, kind: SpaceKind, opts: { joinedAt?: string | null } = {}): FamilyVisibleSummary | null {
-  const out: FamilyVisibleSummary | null = teacherVisibleSummary(summary, planIds, { kind, joinedAt: opts.joinedAt });
-  if (!out || kind !== 'family' || !isPlain(summary)) return out;
+export function rosterSummary(summary: unknown, planIds: ReadonlySet<string>, kind: SpaceKind, opts: RosterSummaryOptions = {}): FamilyVisibleSummary | null {
+  const viewer: ActivityViewer = { kind, joinedAt: opts.joinedAt, scope: opts.scope };
+  const out: FamilyVisibleSummary | null = teacherVisibleSummary(summary, planIds, viewer);
+  if (!out || !readsFullScope(viewer) || !isPlain(summary)) return out;
   // Projected to the known keys, like every other field here: keys a newer writer left under them never leave.
   if (isPlain(summary.selfRoute)) out.selfRoute = pick(summary.selfRoute, SELF_ROUTE_KEYS) as ProgressSummary['selfRoute'];
   if (isPlain(summary.routeGoal)) out.routeGoal = pick(summary.routeGoal, ROUTE_GOAL_KEYS) as ProgressSummary['routeGoal'];
+  if (isPlain(summary.stage1Anchor)) out.stage1Anchor = pick(summary.stage1Anchor, STAGE1_ANCHOR_KEYS) as ProgressSummary['stage1Anchor'];
+  if (isPlain(summary.vocab)) {
+    const vocab = pick(summary.vocab, VOCAB_KEYS);
+    if (!opts.detail) delete vocab.firstTryRate;
+    out.vocab = vocab as VocabSummary;
+  }
   return out;
 }
