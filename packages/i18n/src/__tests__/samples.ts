@@ -39,6 +39,7 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'learner.journey.countMark': [[1, false], [5, true]],
   'learner.journey.cellStories.title': [['Words', 'Letters & Books']],
   'learner.journey.cellStories.lessonRow': [['Lunch Box Words']],
+  'learner.journey.cellStories.bookRow': [['Festival Tales']],
   'learner.journey.cellStories.rowLabel': [[1], [5]],
   'learner.journey.cellStories.homePill': [[2, 'Letters & Books']],
   'learner.journey.cellStories.homePillLabel': [[2, 'Words', 'Letters & Books']],

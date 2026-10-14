@@ -17,6 +17,8 @@ export interface CellStoriesView {
   theme: ThemeKey;
   /** The cell's lesson or book, listed first so it is never hidden; null for a stories-only or empty cell. */
   lessonEpisodeId: string | null;
+  /** Which the first row names: "the lesson" or (a Stage 5 book cell, PR 5.6) "the book" for this cell. */
+  lessonKind: 'lesson' | 'book' | null;
   /** The stories whose home is the cell, in shelf order (the index's review gate applied). */
   entries: StoryIndexEntry[];
 }
@@ -32,6 +34,7 @@ export function cellStoriesView(i: {
     stage: i.stage,
     theme: i.theme,
     lessonEpisodeId: cell.episodeId ?? null,
+    lessonKind: cell.kind === 'lesson' || cell.kind === 'book' ? cell.kind : null,
     entries: entriesForCell(i.index, i.stage, i.theme),
   };
 }

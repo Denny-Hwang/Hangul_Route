@@ -213,6 +213,8 @@ export function EpisodeDetailView({
         onOpenSources={onOpenSources}
         onOpenCultureNotes={onOpenCultureNotes}
         onOpenCellStories={(stage, theme) => onOpenCellStories(stage, theme, 'story-pill')}
+        cellStoryCount={cellStoryCount}
+        onOpenCellStoriesRow={() => onOpenCellStories(episode.stage, episode.theme, 'lesson-row')}
         onBack={onBack}
       />
     );

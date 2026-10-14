@@ -196,6 +196,7 @@ export const learner = {
       title: (stageTitle: string, themeTitle: string) => `${stageTitle} · ${themeTitle}`,
       subtitle: 'Historias del patrimonio de esta casilla',
       lessonRow: (title: string) => `${title}: la lección de esta casilla`,
+      bookRow: (title: string) => `${title}: el libro de esta casilla`,
       empty: 'Aún no hay nada aquí',
       row: 'Historias del patrimonio de esta casilla',
       rowLabel: (count: number) =>
