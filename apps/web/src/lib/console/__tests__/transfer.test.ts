@@ -345,12 +345,12 @@ describe('ROUTES.spaceTransfers (T14: the space id only)', () => {
 describe('the flag and the session lock (section 4.8 flag handling)', () => {
   afterEach(() => resetTransferLockForTests());
 
-  it('NEXT_PUBLIC_CLASS_TRANSFER=enabled turns the entry points on; anything else stays off', () => {
-    expect(classTransferEnabled({})).toBe(false);
-    expect(classTransferEnabled({ NEXT_PUBLIC_CLASS_TRANSFER: 'enabled' })).toBe(true);
-    for (const off of ['true', '1', 'ENABLED', ' enabled', '']) expect(classTransferEnabled({ NEXT_PUBLIC_CLASS_TRANSFER: off }), off).toBe(false);
-    expect(transfersShown({})).toBe(false);
-    expect(transfersShown({ NEXT_PUBLIC_CLASS_TRANSFER: 'enabled' })).toBe(true);
+  it('[TV] TV-D13: the entry points are on by default; false, 0, off or disabled switch them off on a build', () => {
+    expect(classTransferEnabled({})).toBe(true);
+    for (const on of ['enabled', 'true', '1', '', ' ENABLED ']) expect(classTransferEnabled({ NEXT_PUBLIC_CLASS_TRANSFER: on }), on).toBe(true);
+    for (const off of ['false', '0', 'off', 'disabled', ' Disabled ', 'OFF']) expect(classTransferEnabled({ NEXT_PUBLIC_CLASS_TRANSFER: off }), off).toBe(false);
+    expect(transfersShown({})).toBe(true);
+    expect(transfersShown({ NEXT_PUBLIC_CLASS_TRANSFER: 'disabled' })).toBe(false);
   });
 
   it('the first 422 transfers_locked hides the entry points for the session and tells subscribers once', () => {

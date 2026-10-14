@@ -5,7 +5,6 @@ import {
   OVERLAY_ENTITY_ID,
   OVERLAY_FIELDS,
   OVERLAY_LOCALES,
-  OVERLAYS,
   isOverlayFieldAllowed,
   localize,
   localizeGloss,
@@ -412,11 +411,6 @@ describe('localize (F-I18N-001 §3.6 runtime)', () => {
     expect(es.question.options.map((o) => o.en)).toEqual(['Kimchi', 'Luna']);
   });
 
-  it('defaults to the generated OVERLAYS', () => {
-    expect(localize(card, card.id, 'es')).toEqual(localize(card, card.id, 'es', OVERLAYS));
-    expect(Object.keys(OVERLAYS).sort()).toEqual(['es', 'ko']);
-  });
-
   it('types the localized fields of an entity', () => {
     const fields: LocalizedFields<HeritageCard> = { title: 'Perrito', blurb: 'x', fact: 'y' };
     expect(Object.keys(fields)).toEqual(['title', 'blurb', 'fact']);
@@ -436,7 +430,6 @@ describe('localizeGloss (inline { ko, en, romanization } pairs)', () => {
     expect(localizeGloss(pair, 'es', undefined, overlays)).toBe(pair);
     expect(localizeGloss(pair, 'ko', ref, overlays)).toBe(pair);
     expect(localizeGloss(pair, 'es', { ...ref, path: 'cardPairs.bap' }, overlays)).toBe(pair);
-    expect(localizeGloss(pair, 'es', ref)).toEqual(localizeGloss(pair, 'es', ref, OVERLAYS));
   });
 });
 
@@ -496,5 +489,100 @@ describe('overlay targets and translatable fields (shared by the validator mirro
     expect(translatableFields('jamo:g', 'not an entity')).toEqual([]);
     const story = { tiers: [{ checks: [{ id: 'c1', promptEn: 'P', options: [{ id: 'a', en: 'A' }, { id: 'b' }] }], checkpoints: [] }] };
     expect(translatableFields('story:s', story).map((f) => f.field)).toEqual(['checks.c1.prompt', 'checks.c1.options.a']);
+  });
+});
+
+describe('two-tier stories: tier-qualified scene fields (tiers.<level>.scenes.<id>.*)', () => {
+  // The listen and read tiers reuse scene ids with different English (and different {kw:} tokens).
+  const story = {
+    id: 'story:tiers',
+    tiers: [
+      {
+        level: 'listen',
+        scenes: [
+          { id: 's1', narrationEn: 'Listen one {kw:dal}.', captionEn: 'Listen cap' },
+          { id: 's2', narrationEn: 'Listen two.' },
+        ],
+        checks: [{ id: 'c1', promptEn: 'Listen check?' }],
+      },
+      {
+        level: 'read',
+        scenes: [{ id: 's1', narrationEn: 'Read one {kw:dal} {kw:byeol}.', captionEn: 'Read cap' }],
+        checks: [{ id: 'r1', promptEn: 'Read check?' }],
+      },
+    ],
+  };
+  const narrations = (s: typeof story): string[][] => s.tiers.map((t) => t.scenes.map((sc) => sc.narrationEn));
+  const es = (entry: Record<string, string>): typeof story =>
+    localize(story, story.id, 'es', { es: { [story.id]: entry }, ko: {} });
+
+  it('allows the tier-qualified scene fields only', () => {
+    for (const leaf of ['narration', 'caption', 'alt']) expect(isOverlayFieldAllowed('story:x', `tiers.read.scenes.s1.${leaf}`)).toBe(true);
+    expect(isOverlayFieldAllowed('story:x', 'tiers.read.checks.r1.prompt')).toBe(false);
+    expect(isOverlayFieldAllowed('story:x', 'tiers.read.scenes.s1.audioRef')).toBe(false);
+    expect(isOverlayFieldAllowed('story:x', 'tiers.Read.scenes.s1.narration')).toBe(false);
+    expect(isOverlayFieldAllowed('card:x', 'tiers.read.scenes.s1.narration')).toBe(false);
+  });
+
+  it('lands the untiered scene path on the listen tier only', () => {
+    expect(overlayTargets(story, 'scenes.s1.narration')).toEqual([['tiers', 0, 'scenes', 0, 'narrationEn']]);
+    expect(narrations(es({ 'scenes.s1.narration': 'Escucha uno {kw:dal}.' }))).toEqual([
+      ['Escucha uno {kw:dal}.', 'Listen two.'],
+      ['Read one {kw:dal} {kw:byeol}.'],
+    ]);
+  });
+
+  it('lands a tier-qualified path on that tier, by its level', () => {
+    expect(overlayTargets(story, 'tiers.read.scenes.s1.narration')).toEqual([['tiers', 1, 'scenes', 0, 'narrationEn']]);
+    expect(overlayTargets(story, 'tiers.listen.scenes.s2.narration')).toEqual([['tiers', 0, 'scenes', 1, 'narrationEn']]);
+    expect(overlayTargets(story, 'tiers.read.scenes.s2.narration')).toEqual([]);
+    expect(overlayTargets(story, 'tiers.write.scenes.s1.narration')).toEqual([]);
+    expect(overlayTargets(story, 'tiers.1.scenes.s1.narration')).toEqual([]);
+    const out = es({ 'tiers.read.scenes.s1.narration': 'Lee uno {kw:dal} {kw:byeol}.', 'tiers.read.scenes.s1.caption': 'Leer' });
+    expect(narrations(out)).toEqual([['Listen one {kw:dal}.', 'Listen two.'], ['Lee uno {kw:dal} {kw:byeol}.']]);
+    expect(out.tiers[1]?.scenes[0]?.captionEn).toBe('Leer');
+    expect(out.tiers[0]).toBe(story.tiers[0]);
+  });
+
+  it('lets the tier-qualified form win over the untiered one, in any entry order', () => {
+    const tiersFirst = { 'tiers.listen.scenes.s1.narration': 'Gana {kw:dal}.', 'scenes.s1.narration': 'Pierde {kw:dal}.' };
+    const tiersLast = { 'scenes.s1.narration': 'Pierde {kw:dal}.', 'tiers.listen.scenes.s1.narration': 'Gana {kw:dal}.' };
+    expect(es(tiersFirst).tiers[0]?.scenes[0]?.narrationEn).toBe('Gana {kw:dal}.');
+    expect(es(tiersLast).tiers[0]?.scenes[0]?.narrationEn).toBe('Gana {kw:dal}.');
+  });
+
+  it('still reaches the checks of every tier untiered (their ids differ per tier)', () => {
+    const out = es({ 'checks.c1.prompt': '¿Escucha?', 'checks.r1.prompt': '¿Lectura?' });
+    expect(out.tiers.map((t) => t.checks[0]?.promptEn)).toEqual(['¿Escucha?', '¿Lectura?']);
+  });
+
+  it('treats the only tier, or the first tier when none is listen, as the primary tier', () => {
+    const readOnly = { tiers: [{ level: 'read', scenes: [{ id: 's1', narrationEn: 'Only.' }] }] };
+    expect(overlayTargets(readOnly, 'scenes.s1.narration')).toEqual([['tiers', 0, 'scenes', 0, 'narrationEn']]);
+    expect(overlayTargets(readOnly, 'tiers.read.scenes.s1.narration')).toEqual([['tiers', 0, 'scenes', 0, 'narrationEn']]);
+    const noListen = {
+      tiers: [
+        { level: 'read', scenes: [{ id: 's1', narrationEn: 'A.' }] },
+        { level: 'deep', scenes: [{ id: 's1', narrationEn: 'B.' }] },
+      ],
+    };
+    expect(overlayTargets(noListen, 'scenes.s1.narration')).toEqual([['tiers', 0, 'scenes', 0, 'narrationEn']]);
+    const unlevelled = { tiers: [{ scenes: [{ id: 's1', narrationEn: 'A.' }] }] };
+    expect(overlayTargets(unlevelled, 'scenes.s1.narration')).toEqual([['tiers', 0, 'scenes', 0, 'narrationEn']]);
+    expect(overlayTargets(unlevelled, 'tiers.0.scenes.s1.narration')).toEqual([['tiers', 0, 'scenes', 0, 'narrationEn']]);
+  });
+
+  it('lists each scene source once: the listen tier untiered (tier form as an alternate), other tiers tier-qualified', () => {
+    const scenes = translatableFields(story.id, story).filter(({ field }) => field.includes('scenes.'));
+    expect(scenes.map(({ field, alternates }) => [field, alternates])).toEqual([
+      ['scenes.s1.narration', ['tiers.listen.scenes.s1.narration']],
+      ['scenes.s2.narration', ['tiers.listen.scenes.s2.narration']],
+      ['scenes.s1.caption', ['tiers.listen.scenes.s1.caption']],
+      ['tiers.read.scenes.s1.narration', undefined],
+      ['tiers.read.scenes.s1.caption', undefined],
+    ]);
+    expect(scenes.find(({ field }) => field === 'tiers.read.scenes.s1.narration')?.source).toBe('Read one {kw:dal} {kw:byeol}.');
+    const checks = translatableFields(story.id, story).filter(({ field }) => field.startsWith('checks.'));
+    expect(checks.map(({ field }) => field)).toEqual(['checks.c1.prompt', 'checks.r1.prompt']);
   });
 });

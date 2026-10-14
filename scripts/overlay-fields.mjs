@@ -78,6 +78,11 @@ export const OVERLAY_FIELDS = Object.freeze({
     "scenes.<sceneId>.narration",
     "scenes.<sceneId>.caption",
     "scenes.<sceneId>.alt",
+    // Tier-qualified scenes: `<level>` is the tier's level (listen, read); wins over the untiered
+    // form, which reaches the primary tier only.
+    "tiers.<level>.scenes.<sceneId>.narration",
+    "tiers.<level>.scenes.<sceneId>.caption",
+    "tiers.<level>.scenes.<sceneId>.alt",
     "keywords.<keywordId>.gloss",
     "checks.<checkId>.prompt",
     "checks.<checkId>.explain",
@@ -142,6 +147,9 @@ export function isOverlayFieldAllowed(entityId, field) {
 
 const isRec = (v) => typeof v === "object" && v !== null && !Array.isArray(v);
 const COLLECTION_ALIASES = { checks: ["checks", "checkpoints"] };
+/** Story tiers, keyed by their `level`; collections whose ids repeat per tier (untiered = primary tier only). */
+const TIERS = "tiers";
+const TIER_SCOPED = ["scenes"];
 /** Top-level hints an overlay may add although the English base has none (§3.5.6). */
 const ADDITIVE_FIELDS = ["soundHint", "nameHint"];
 
@@ -171,6 +179,21 @@ export function overlayElementKey(element, index) {
   return String(index);
 }
 
+/** The index of the primary tier: the `listen` tier, else the first. */
+function primaryTier(tiers) {
+  const listen = tiers.findIndex((tier) => isRec(tier) && tier.level === "listen");
+  return listen < 0 ? 0 : listen;
+}
+
+/** The key of an element of the array named `collection`: a story tier by its `level`, else `overlayElementKey`. */
+function elementKey(collection, element, index) {
+  if (collection === TIERS && isRec(element)) {
+    const level = segmentOf(element.level);
+    if (level !== undefined) return level;
+  }
+  return overlayElementKey(element, index);
+}
+
 function leafTargets(node, name, at) {
   if (typeof node[`${name}En`] === "string") return [[...at, `${name}En`]];
   const own = node[name];
@@ -194,7 +217,10 @@ function collections(node, name, at) {
     if (!isRec(value)) return;
     for (const [k, v] of Object.entries(value)) {
       if (names.includes(k) && Array.isArray(v)) out.push([v, [...path, k]]);
-      else walk(v, [...path, k]);
+      else if (k === TIERS && Array.isArray(v) && TIER_SCOPED.includes(name) && v.length > 0) {
+        const primary = primaryTier(v);
+        walk(v[primary], [...path, k, primary]);
+      } else walk(v, [...path, k]);
     }
   };
   walk(node, at);
@@ -222,7 +248,7 @@ function resolve(node, segs, at) {
   }
   const [selector, ...after] = rest;
   return arraysAt(node, head, at).flatMap(([items, path]) =>
-    items.flatMap((item, i) => (overlayElementKey(item, i) === selector ? resolve(item, after, [...path, i]) : [])),
+    items.flatMap((item, i) => (elementKey(head, item, i) === selector ? resolve(item, after, [...path, i]) : [])),
   );
 }
 
@@ -246,7 +272,7 @@ export function missingSelector(entity, field) {
     if (child === undefined && rest.length === 1 && rest[0] === "gloss") return null;
     const [selector, ...after] = rest;
     const hits = arraysAt(node, head, []).flatMap(([items]) =>
-      items.filter((item, i) => overlayElementKey(item, i) === selector),
+      items.filter((item, i) => elementKey(head, item, i) === selector),
     );
     if (hits.length === 0) return { collection: head, key: selector };
     const misses = hits.map((hit) => walk(hit, after));
@@ -268,7 +294,7 @@ function expand(node, segs, at, field) {
   if (rest.length === 0) return leafTargets(node, head, at).map((p) => [[...field, head].join("."), p]);
   if (rest[0].startsWith("<")) {
     return arraysAt(node, head, at).flatMap(([items, path]) =>
-      items.flatMap((item, i) => expand(item, rest.slice(1), [...path, i], [...field, head, overlayElementKey(item, i)])),
+      items.flatMap((item, i) => expand(item, rest.slice(1), [...path, i], [...field, head, elementKey(head, item, i)])),
     );
   }
   const child = node[head];
@@ -279,10 +305,27 @@ function expand(node, segs, at, field) {
   return [];
 }
 
-/** Every translatable field the entity carries an English source for: `{ field, path, source }`. */
+/**
+ * Every translatable field the entity carries an English source for: `{ field, path, source,
+ * alternates? }`, each source once; a later pattern landing on the same source (the
+ * tier-qualified form of a primary-tier scene) is one of its `alternates`.
+ */
 export function translatableFields(entityId, entity) {
   const patterns = OVERLAY_FIELDS[overlayPrefix(entityId)] ?? [];
-  return patterns.flatMap((pattern) =>
-    expand(entity, pattern.split("."), [], []).map(([field, path]) => ({ field, path, source: getIn(entity, path) })),
-  );
+  const out = [];
+  const bySource = new Map();
+  for (const pattern of patterns) {
+    for (const [field, path] of expand(entity, pattern.split("."), [], [])) {
+      const at = path.join("\u0000");
+      const first = bySource.get(at);
+      if (first !== undefined) {
+        first.alternates = [...(first.alternates ?? []), field];
+        continue;
+      }
+      const row = { field, path, source: getIn(entity, path) };
+      bySource.set(at, row);
+      out.push(row);
+    }
+  }
+  return out;
 }

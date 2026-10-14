@@ -313,6 +313,15 @@ describe('parseStory: cross-references', () => {
     expectIssue(twoChecks, 'tiers.0.checks.1.id', 'unique');
   });
 
+  it('rejects a check or checkpoint id that two tiers share (its overlay key has no tier)', () => {
+    const story = ready();
+    story.tiers[1]!.checks[0]!.id = story.tiers[0]!.checks[0]!.id;
+    expectIssue(story, 'tiers.1.checks.0.id', 'unique across tiers');
+    const checkpoint = ready();
+    checkpoint.tiers[1]!.checks[0]!.id = checkpoint.tiers[0]!.checkpoints[0]!.id;
+    expectIssue(checkpoint, 'tiers.1.checks.0.id', 'unique across tiers');
+  });
+
   it('rejects a check with two correct options', () => {
     const story = ready();
     story.tiers[0]!.checks[0]!.options[1]!.isCorrect = true;

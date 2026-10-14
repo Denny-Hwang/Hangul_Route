@@ -1,4 +1,5 @@
 import { localize, type Overlays, type RuntimeVocabItem, type UiLocale, type VocabTopic } from '@hangul-route/content-schema';
+import { OVERLAYS } from '@hangul-route/content-schema/overlays';
 import { VOCAB_ITEMS, VOCAB_TOPICS } from '../../../content/__generated__/vocab';
 import { createVocabCatalog, localizedGloss } from '../../vocab/catalog';
 import type { LectureVocabTopic } from '../deck-builder';
@@ -54,7 +55,7 @@ export function lectureVocabTopicsFrom(
       const topic = byId.get(id);
       if (topic === undefined) return undefined;
       if (!EXPANDABLE.has(topic.status)) return 'not-ready';
-      const text = localize({ titleEn: topic.titleEn, hoyaIntroEn: topic.hoyaIntroEn }, topic.id, locale, overlays);
+      const text = localize({ titleEn: topic.titleEn, hoyaIntroEn: topic.hoyaIntroEn }, topic.id, locale, overlays ?? OVERLAYS);
       return {
         title: text.titleEn,
         ...(text.hoyaIntroEn !== undefined ? { hoyaLine: text.hoyaIntroEn } : {}),

@@ -71,16 +71,17 @@ keep_vars = true
 #                                    F-4). Keep it out of [vars]: a [vars] value returns on every
 #                                    deploy, so unsetting it would no longer stop sending without one.
 #                                    GET /health shows features.notesSend.
-# CLASS_TRANSFER                     F-SPACE-002 T15: leave UNSET. Only the exact text "enabled"
-#                                    opens class moves: the console routes under
-#                                    /api/spaces/:id/transfer-requests and .../transfer-prefs, the
-#                                    learner device routes under /api/sync/learners/:id/transfer-*
-#                                    and the inbox fields (transfersEnabled, transfers). Otherwise
-#                                    every route answers 422 transfers_locked and the inbox says
-#                                    transfersEnabled: false. Only the owner sets it, after every
-#                                    flip gate of the spec (G1-G7, counsel review T-8 included),
-#                                    Worker first, then NEXT_PUBLIC_CLASS_TRANSFER on the console.
-#                                    Unsetting it is the rollback: a planned move stops at once.
+# CLASS_TRANSFER                     [TV] Owner decision 2026-10-14 (AMENDMENTS-TEACHER-VISIBILITY-TRANSFER
+#                                    TV-D13): ON BY DEFAULT. Unset or "enabled" opens class moves (the
+#                                    console routes under /api/spaces/:id/transfer-requests,
+#                                    .../class-moves and .../transfer-prefs, the learner device routes
+#                                    under /api/sync/learners/:id/transfer-*, and the inbox fields).
+#                                    Kill switch: set it to "disabled" (any value other than "enabled"
+#                                    locks): every move route answers 422 transfers_locked, a pending
+#                                    accept or a scheduled move stops at once, the inbox says
+#                                    transfersEnabled: false. Keep it out of [vars] (a [vars] value
+#                                    returns on every deploy). GET /health shows features.classTransfer.
+#                                    Runbook: docs/launch/owner-runbook.md section H.
 # CLASS_TRANSFER_DEVICE_CONSENT      F-SPACE-002 decision A4: leave UNSET, also after
 #                                    CLASS_TRANSFER is on. Only "enabled" lets a learner's own
 #                                    device start a move or say yes (POST .../transfer-requests and

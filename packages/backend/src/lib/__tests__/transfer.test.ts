@@ -40,7 +40,8 @@ import {
  */
 
 const ON = { CLASS_TRANSFER: 'enabled' };
-const OFF = {};
+/** [TV] TV-D13: the kill switch; unset is on since the owner's decision of 2026-10-14. */
+const OFF = { CLASS_TRANSFER: 'disabled' };
 /** The world's memberships are from T0; a guardian counts from T0 + 24 h. */
 const CREATED = at(2 * DAY);
 const DUE = new Date(CREATED.getTime() + TRANSFER_COOLING_OFF_MS);
@@ -115,11 +116,15 @@ beforeEach(async () => {
 });
 
 describe('release flags (T15)', () => {
-  it('only the exact value "enabled" opens either lock', () => {
+  it('[TV] TV-D13: class moves are on unless the kill switch holds another value; device consent still needs "enabled"', () => {
     expect(classTransferEnabled(ON)).toBe(true);
-    expect(classTransferEnabled({ CLASS_TRANSFER: 'true' })).toBe(false);
+    expect(classTransferEnabled(undefined)).toBe(true);
+    expect(classTransferEnabled({})).toBe(true);
+    expect(classTransferEnabled({ CLASS_TRANSFER: '' })).toBe(true);
+    expect(classTransferEnabled({ CLASS_TRANSFER: ' enabled ' })).toBe(true);
     expect(classTransferEnabled(OFF)).toBe(false);
-    expect(classTransferEnabled(undefined)).toBe(false);
+    expect(classTransferEnabled({ CLASS_TRANSFER: 'true' })).toBe(false);
+    expect(transferDeviceConsentEnabled({})).toBe(false);
     expect(transferDeviceConsentEnabled({ CLASS_TRANSFER_DEVICE_CONSENT: 'enabled' })).toBe(true);
     expect(transferDeviceConsentEnabled(ON)).toBe(false);
     expect(transferDeviceConsentEnabled(undefined)).toBe(false);

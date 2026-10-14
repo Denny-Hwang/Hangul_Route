@@ -479,7 +479,7 @@
       ],
       "checks": [
         {
-          "id": "c1",
+          "id": "r1",
           "kind": "detail",
           "promptEn": "Why was the alphabet made?",
           "options": [
@@ -500,7 +500,7 @@
           ]
         },
         {
-          "id": "c2",
+          "id": "r2",
           "kind": "fill-word",
           "promptEn": "Today is {target}.",
           "target": {
@@ -536,7 +536,7 @@
           ]
         },
         {
-          "id": "c3",
+          "id": "r3",
           "kind": "pick-picture",
           "promptEn": "Which one is the book of the alphabet?",
           "options": [

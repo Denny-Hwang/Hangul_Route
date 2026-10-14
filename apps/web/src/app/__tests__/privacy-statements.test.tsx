@@ -149,7 +149,7 @@ describe('the pages say what the app does, in the backup sentence', () => {
   it('Privacy Policy: stays a draft for counsel, with the new effective date', () => {
     const privacy = render(enPrivacyPage);
     expect(privacy).toContain('pending review by qualified legal counsel');
-    expect(privacy).toContain('Effective October 12, 2026');
+    expect(privacy).toContain('Effective October 14, 2026');
   });
 
   it('old home: the trust strip says "Child safety first" (OD-4) and makes no claim about which personal data we hold', () => {

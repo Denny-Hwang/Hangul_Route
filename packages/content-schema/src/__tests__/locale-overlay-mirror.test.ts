@@ -63,6 +63,9 @@ describe('scripts/overlay-fields.mjs mirrors the TypeScript allow-list', () => {
       ['quest:q', 'steps..title'],
       ['story:s', 'checks.c1.options.a'],
       ['story:s', 'scenes.s1.narration.x'],
+      ['story:s', 'tiers.read.scenes.s1.narration'],
+      ['story:s', 'tiers.listen.scenes.s1.alt'],
+      ['story:s', 'tiers.read.checks.r1.prompt'],
       ['minigame:m', 'listenPick.rounds.lp-sym-jamo-eo.prompt'],
       ['minigame:m', 'rounds.r1.prompt'],
       ['minigame:m', 'realiaRead.rounds.q4.options.bread.label'],
@@ -123,6 +126,30 @@ describe('scripts/overlay-fields.mjs mirrors the TypeScript allow-list', () => {
       { id: 'a--b' },
     ];
     samples.forEach((s, i) => expect(mirror.overlayElementKey(s, i)).toBe(overlayElementKey(s, i)));
+  });
+
+  it('resolves and enumerates two-tier stories the same way (tiers by level, untiered scenes on the listen tier)', () => {
+    const story = {
+      tiers: [
+        { level: 'listen', scenes: [{ id: 's1', narrationEn: 'L1' }, { id: 's2', narrationEn: 'L2' }], checks: [{ id: 'c1', promptEn: 'C' }] },
+        { level: 'read', scenes: [{ id: 's1', narrationEn: 'R1', captionEn: 'RC' }], checks: [{ id: 'r1', promptEn: 'R' }] },
+      ],
+    };
+    const fields = [
+      'scenes.s1.narration',
+      'scenes.s2.narration',
+      'tiers.read.scenes.s1.narration',
+      'tiers.listen.scenes.s1.narration',
+      'tiers.write.scenes.s1.narration',
+      'checks.r1.prompt',
+    ];
+    for (const field of fields) expect(mirror.overlayTargets(story, field), field).toEqual(overlayTargets(story, field));
+    expect(mirror.translatableFields('story:t', story)).toEqual(translatableFields('story:t', story));
+    expect(mirror.missingSelector(story, 'tiers.read.scenes.s1.narration')).toBeNull();
+    expect(mirror.missingSelector(story, 'tiers.read.scenes.s2.narration')).toEqual({ collection: 'scenes', key: 's2' });
+    expect(mirror.missingSelector(story, 'tiers.write.scenes.s1.narration')).toEqual({ collection: 'tiers', key: 'write' });
+    expect(mirror.missingSelector(story, 'scenes.s2.narration')).toBeNull();
+    expect(mirror.missingSelector({ tiers: [story.tiers[1]] }, 'scenes.s9.narration')).toEqual({ collection: 'scenes', key: 's9' });
   });
 
   it('finds a selector that matches nothing (the validator rule behind overlay-unknown-id for sub-ids)', () => {

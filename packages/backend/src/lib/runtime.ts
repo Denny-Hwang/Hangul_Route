@@ -2,6 +2,7 @@ import { HTTPException } from 'hono/http-exception';
 import { failResponse } from '../envelope';
 import { classScopeFullEnabled } from './class-scope';
 import { notesSendEnabled } from './notes-switch';
+import { classTransferEnabled } from './transfer';
 import { billingLiveAllowed, stripeMode } from './stripe';
 
 /**
@@ -82,7 +83,8 @@ export interface HealthReport {
   devFallbacks: boolean;
   bindings: { db: boolean; clerk: boolean; stripe: boolean; stripeWebhook: boolean; rescuePepper: boolean; stripeLive: boolean; billingLiveAllowed: boolean };
   /** Switches the owner sets in the dashboard, so a monitor can see they took effect (F-FEEDBACK-001 section 7.8). */
-  features: { notesSend: boolean; classScopeFull: boolean };
+  /** [TV] `classScopeFull`: full-scope teacher visibility (TV-D15); `classTransfer`: class moves are open (on unless the kill switch `CLASS_TRANSFER=disabled` is set, TV-D13). */
+  features: { notesSend: boolean; classScopeFull: boolean; classTransfer: boolean };
 }
 
 /**
@@ -107,5 +109,5 @@ export function healthReport(env: RuntimeEnv | undefined): HealthReport {
   const devFallbacks = devFallbacksAllowed(env);
   const environment = environmentName(env);
   const ready = (bindings.db && bindings.clerk) || (devFallbacks && environment !== 'production');
-  return { status: ready ? 'ok' : 'misconfigured', environment, devFallbacks, bindings, features: { notesSend: notesSendEnabled(env), classScopeFull: classScopeFullEnabled(env) } };
+  return { status: ready ? 'ok' : 'misconfigured', environment, devFallbacks, bindings, features: { notesSend: notesSendEnabled(env), classScopeFull: classScopeFullEnabled(env), classTransfer: classTransferEnabled(env as { CLASS_TRANSFER?: string } | undefined) } };
 }

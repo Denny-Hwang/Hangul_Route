@@ -71,8 +71,11 @@ function SettingsInner(): JSX.Element {
     setRoster(r.data);
     setMembers(mem.data);
     if (r.data.space.kind === 'family' && movesShown) {
-      const moves = await api.transferRequests(spaceId);
-      setMoveOptions(moves.ok ? (moves.data.options ?? []) : []);
+      // The move options are extra: a failed read leaves them empty and never breaks the settings page.
+      const moves = await Promise.resolve()
+        .then(() => api.transferRequests(spaceId))
+        .catch(() => null);
+      setMoveOptions(moves?.ok ? (moves.data.options ?? []) : []);
     }
   }, [api, spaceId, movesShown]);
 

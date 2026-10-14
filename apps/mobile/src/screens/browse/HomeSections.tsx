@@ -1,4 +1,5 @@
 import { localize, type HeritageCard, type StageKey, type ThemeKey } from '@hangul-route/content-schema';
+import { OVERLAYS } from '@hangul-route/content-schema/overlays';
 import {
   Body,
   Caption,
@@ -441,7 +442,7 @@ function WordsRow({ row, onPress }: { row: Extract<BrowseLibraryGroup, { section
   const locale = useLocale();
   const { bundle, pass, gatingEnabled } = useBrowseSession();
   const closed = accessOf({ kind: 'vocab-topic', id: row.topic.id }, { bundle, scope: pass?.scope ?? 'sampler', gatingEnabled }) === 'closed';
-  const title = localize(row.topic, row.topic.id, locale).titleEn;
+  const title = localize(row.topic, row.topic.id, locale, OVERLAYS).titleEn;
   return (
     <Pressable
       onPress={onPress}

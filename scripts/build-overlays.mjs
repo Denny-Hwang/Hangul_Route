@@ -6,6 +6,8 @@
 //
 //   packages/content-schema/src/i18n-overlays.generated.ts
 //       OVERLAYS   Overlays   { es: { <entity id>: { <field>: text } }, ko: { ... } }
+//   served by the `@hangul-route/content-schema/overlays` subpath, never the package barrel
+//   (F-I18N-001 §10 open item 2; size budget in packages/content-schema/src/__tests__/overlays-bundle.test.ts).
 //
 // This is a shaper. It emits only what the app may apply (fields allowed by
 // OVERLAY_FIELDS for the id prefix, non-blank strings, well-formed ids), sorted, so a

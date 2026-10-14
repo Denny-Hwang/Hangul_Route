@@ -13,6 +13,7 @@ import {
   type ThemeKey,
   type UiLocale,
 } from '@hangul-route/content-schema';
+import { OVERLAYS } from '@hangul-route/content-schema/overlays';
 import { localizeEpisode, localizeQuest, localizeScope, localizeStory } from '../content-locale';
 import type { MinigameScope } from '../minigame-config';
 import { SKILLS, questSkills } from '../my-route/skills';
@@ -345,7 +346,7 @@ function storyFacts(entry: StoryIndexEntry, bundle: BrowseBundle, locale: UiLoca
 function topicFacts(id: string, bundle: BrowseBundle, locale: UiLocale): TopicFacts | null {
   const topic = bundle.vocabTopics.find((t) => t.id === id);
   if (!topic) return null;
-  const local = localize(topic, topic.id, locale);
+  const local = localize(topic, topic.id, locale, OVERLAYS);
   const items = bundle.topicItems(vocabTopicKey(id));
   return {
     kind: 'vocab-topic',

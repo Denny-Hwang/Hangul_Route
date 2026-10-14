@@ -5,7 +5,8 @@ import { z } from 'zod';
  * the JSON `title` / `blurb` / `en` fields) stays the source of truth; Spanish and
  * Korean live beside it in `content/i18n/<locale>/<domain>.json`, keyed by entity id,
  * partial, with English fallback. `scripts/build-overlays.mjs` merges the files into
- * `../i18n-overlays.generated.ts` (`OVERLAYS`); `../localize.ts` applies them.
+ * `../i18n-overlays.generated.ts` (`OVERLAYS`, imported through the
+ * `@hangul-route/content-schema/overlays` subpath, never the barrel); `../localize.ts` applies them.
  *
  * Taught Korean and its romanization come only from the base content, so an overlay
  * can never set `ko`, `romanization`, `target`, `char`, `audioRef`, ids or order:
@@ -24,7 +25,7 @@ export const OVERLAY_ENTITY_ID = /^[a-z0-9-]+:[a-z0-9-:.]+$/;
  * The allow-list per id prefix: translatable field names with the `En` suffix
  * stripped, or dotted paths inside the entity where `<name>` stands for the id of an
  * array element (its `id`, else `key`, else its romanization as a slug, else its index;
- * see `overlayElementKey`). A path that ends on an element (`checks.<id>.options.<id>`)
+ * see `overlayElementKey`; a story tier by its `level`). A path that ends on an element (`checks.<id>.options.<id>`)
  * translates that element's `en`.
  *
  * `scripts/overlay-fields.mjs` holds the same table for the plain-Node validator;
@@ -92,6 +93,12 @@ export const OVERLAY_FIELDS = {
     'scenes.<sceneId>.narration',
     'scenes.<sceneId>.caption',
     'scenes.<sceneId>.alt',
+    // Tier-qualified scenes (a two-tier story's tiers reuse the scene ids with different English):
+    // `<level>` is the tier's level (`listen`, `read`); wins over the untiered form, which reaches
+    // the primary tier only (see `localize.ts`).
+    'tiers.<level>.scenes.<sceneId>.narration',
+    'tiers.<level>.scenes.<sceneId>.caption',
+    'tiers.<level>.scenes.<sceneId>.alt',
     'keywords.<keywordId>.gloss',
     'checks.<checkId>.prompt',
     'checks.<checkId>.explain',

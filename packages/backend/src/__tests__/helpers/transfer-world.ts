@@ -15,10 +15,14 @@ export const json = { 'content-type': 'application/json' };
 export const bearer = (user: string): Record<string, string> => ({ ...json, authorization: `Bearer ${user}` });
 export const ON = { CLASS_TRANSFER: 'enabled' };
 
-/** `LOCKED` sends no Worker vars at all (the production default). */
+/**
+ * `LOCKED` sends the kill switch `CLASS_TRANSFER=disabled` ([TV] TV-D13: moves are on by default since the owner's
+ * decision of 2026-10-14; any value other than `enabled` locks them).
+ */
 export const LOCKED = 'locked' as const;
+export const KILLED = { CLASS_TRANSFER: 'disabled' };
 export async function call(method: string, path: string, headers: Record<string, string>, body?: unknown, env: Record<string, string> | typeof LOCKED = ON) {
-  const res = await app.request(path, { method, headers, body: body === undefined ? undefined : JSON.stringify(body) }, env === LOCKED ? undefined : env);
+  const res = await app.request(path, { method, headers, body: body === undefined ? undefined : JSON.stringify(body) }, env === LOCKED ? KILLED : env);
   return { status: res.status, body: (await res.json()) as Envelope };
 }
 
