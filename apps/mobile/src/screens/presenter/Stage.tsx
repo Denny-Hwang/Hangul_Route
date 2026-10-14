@@ -8,9 +8,14 @@ import { units } from '../../logic/lecture/stage-constants';
 import { STAGE_PADDING } from './stage-metrics';
 import type { StageScale } from '../../logic/lecture/stage-scale';
 import { usePresenterView, useStageText } from './presenter-context';
+import { ActivitySlide } from './slides/ActivitySlide';
+import { CardSlide } from './slides/CardSlide';
 import { EndSlide } from './slides/EndSlide';
 import { LetterSlide } from './slides/LetterSlide';
+import { SequenceSlide } from './slides/SequenceSlide';
+import { SyllableSlide } from './slides/SyllableSlide';
 import { TitleSlide } from './slides/TitleSlide';
+import { VocabSlide } from './slides/VocabSlide';
 
 /**
  * The stage (design/screens/presenter/stage-and-bar.md): the slide on a logical 1280-unit stage,
@@ -28,6 +33,8 @@ export interface StageProps {
   joinCta: string;
   onCommand: (command: 'next' | 'prev') => void;
   onPlaySound: () => void;
+  /** An activity slide's [ Start timer ]; absent until the timer overlay ships (PR 9), so the button is disabled. */
+  onStartTimer?: (ms: number) => void;
 }
 
 export function Stage(props: StageProps): React.ReactElement {
@@ -39,7 +46,7 @@ export function Stage(props: StageProps): React.ReactElement {
   const start = useRef<{ x: number; y: number; locationX: number } | null>(null);
 
   const kind = messages.learner.presenter.grid.kind[slide.kind];
-  const detail = slideDetail(slide);
+  const detail = slideDetail(slide, { activity: (preset) => messages.learner.presenter.activity[preset] });
   const live = messages.a11y.presenter.slide(slideIdx + 1, slides.length, detail === '' ? kind : `${kind}, ${detail}`);
 
   const onGrant = (event: GestureResponderEvent): void => {
@@ -95,6 +102,16 @@ export function Stage(props: StageProps): React.ReactElement {
           <TitleSlide slide={slide} {...(slideIdx === 0 ? { deckTitle: props.deckTitle } : {})} />
         ) : slide.kind === 'letter' ? (
           <LetterSlide slide={slide} shown={shown} strokeToken={props.strokeToken} onPlaySound={props.onPlaySound} />
+        ) : slide.kind === 'syllable' ? (
+          <SyllableSlide slide={slide} reveal={reveal} onPlaySound={props.onPlaySound} />
+        ) : slide.kind === 'vocab' ? (
+          <VocabSlide slide={slide} reveal={reveal} />
+        ) : slide.kind === 'sequence' ? (
+          <SequenceSlide slide={slide} reveal={reveal} />
+        ) : slide.kind === 'card' ? (
+          <CardSlide slide={slide} reveal={reveal} />
+        ) : slide.kind === 'activity' ? (
+          <ActivitySlide slide={slide} {...(props.onStartTimer ? { onStartTimer: props.onStartTimer } : {})} />
         ) : slide.kind === 'end' ? (
           <EndSlide slide={slide} joinCta={props.joinCta} />
         ) : null}

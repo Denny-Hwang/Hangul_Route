@@ -31,6 +31,7 @@ import {
 } from './src/logic/lecture/shell';
 import { FONT_WAIT_MS, stageBox } from './src/logic/lecture/stage-constants';
 import { BAR_BAND, STAGE_BOUNDS } from './src/screens/presenter/stage-metrics';
+import { slideSound } from './src/logic/lecture/slide-view';
 import { stageScale } from './src/logic/lecture/stage-scale';
 import { getCapability, playPrompt, refreshCapability, subscribeCapability, unlockAudio } from './src/platform/audio';
 import { setDocumentLang } from './src/platform/locale';
@@ -237,8 +238,9 @@ export default function PresenterApp(): React.ReactElement {
 
   const playSound = useCallback(
     (slide: Slide | undefined) => {
-      if (!slide || slide.kind !== 'letter' || !deck?.options.sound) return;
-      const { text, audioRef } = slide.spoken;
+      const spoken = slideSound(slide);
+      if (!spoken || !deck?.options.sound) return;
+      const { text, audioRef } = spoken;
       void playPrompt({ text, ...(audioRef !== undefined ? { audioRef } : {}), kind: 'sound', source: 'presenter' });
     },
     [deck],
