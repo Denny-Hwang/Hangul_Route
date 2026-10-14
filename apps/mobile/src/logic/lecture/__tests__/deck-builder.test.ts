@@ -611,7 +611,8 @@ describe('expandDeck: stories (rule 5, D14)', () => {
 
   it('checks become quiz slides with the story own prompt, options and explanation', () => {
     const quiz = only(expand([{ kind: 'story', storyId: 'story:sun-moon' }]).slides, 'quiz');
-    expect(quiz[0]!.prompt).toEqual({ ask: 'check', text: 'What does {target} mean?', target: { ko: '해', romanization: 'hae', gloss: 'sun' } });
+    // pick-meaning: the target's gloss is the answer, so it waits for the reveal (as in the learner check, F-STORY-003).
+    expect(quiz[0]!.prompt).toEqual({ ask: 'check', text: 'What does {target} mean?', target: { ko: '해', romanization: 'hae', gloss: 'sun' }, glossAtAnswer: true });
     expect(quiz[0]!.explain).toBe('Hae is the sun.');
     expect(quiz[0]!.options).toHaveLength(3);
     expect(quiz[0]!.options).toContainEqual({ ko: '달', romanization: 'dal', gloss: 'moon', correct: false });

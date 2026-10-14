@@ -21,6 +21,7 @@ import {
   type CultureQuizRound,
   type MatchSoundRound,
 } from '../round-builder';
+import { GLOSS_HIDDEN_KINDS } from '../story/check-view';
 import { derangeSeeded, shuffleSeeded } from '../story/seeded-order';
 import {
   buildsFor,
@@ -550,7 +551,7 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
       const target = check.target ? { ko: check.target.ko, romanization: check.target.romanization, gloss: check.target.en } : undefined;
       push(ref, {
         kind: 'quiz',
-        prompt: { ask: 'check', text: check.promptEn, ...(target ? { target } : {}) },
+        prompt: { ask: 'check', text: check.promptEn, ...(target ? { target } : {}), ...(target && GLOSS_HIDDEN_KINDS.includes(check.kind) ? { glossAtAnswer: true as const } : {}) },
         options: keepOrder ? options : shuffleSeeded(options, seed()),
         textPrompt: false,
         ...(check.explainEn !== undefined ? { explain: check.explainEn } : {}),

@@ -68,8 +68,8 @@ export function presenterLocale(input: { deck: LectureDeck | null; session: UiLo
 
 // --- the slides this build draws ------------------------------------------------------------------
 
-/** Slide kinds the presenter draws: the shell's (PR 6), the teaching slides (PR 7) and the quizzes (PR 9); PR 11 adds its own. */
-export const SHELL_SLIDE_KINDS: ReadonlySet<SlideKind> = new Set<SlideKind>(['title', 'letter', 'syllable', 'vocab', 'sequence', 'card', 'quiz', 'activity', 'end']);
+/** Slide kinds the presenter draws: the shell's (PR 6), the teaching slides (PR 7), the quizzes (PR 9) and the story slides (PR 11). */
+export const SHELL_SLIDE_KINDS: ReadonlySet<SlideKind> = new Set<SlideKind>(['title', 'letter', 'syllable', 'vocab', 'sequence', 'card', 'quiz', 'activity', 'story', 'end']);
 
 /** One line of the start screen's "not shown as slides" list: the block that holds it and why. */
 export interface SkipPart {
@@ -99,9 +99,10 @@ export function blockIndexOfSlide(deck: Pick<LectureDeck, 'blocks'>, slideKey: s
 
 function drawable(slide: Slide, kinds: ReadonlySet<SlideKind>): boolean {
   if (!kinds.has(slide.kind)) return false;
-  // A story title shows its cover scene, and a story check sits among the story's scenes (story slides, PR 11).
-  if (slide.kind === 'title' && slide.cover !== undefined) return false;
-  return !(slide.kind === 'quiz' && slide.prompt.ask === 'check');
+  if (slide.kind !== 'quiz' || slide.prompt.ask !== 'check') return true;
+  // A story check is drawn by PR 11's StoryCheckSlide when its options are words; a check whose
+  // options are pictures stays one "not shown as slides" part.
+  return slide.options.every((o) => o.art === undefined);
 }
 
 /**
@@ -240,6 +241,9 @@ export function slideDetail(slide: Slide, names?: { activity: (preset: ActivityP
       return slide.title;
     case 'activity':
       return names?.activity(slide.preset) ?? '';
+    case 'story':
+      // The scene caption: the art's accessible name (README D8).
+      return slide.caption ?? '';
     default:
       return '';
   }

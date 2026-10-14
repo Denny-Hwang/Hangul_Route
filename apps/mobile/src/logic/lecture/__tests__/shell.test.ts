@@ -98,8 +98,8 @@ describe('resolveBoot', () => {
 });
 
 describe('runDeck: the slides this build draws', () => {
-  it('draws title, letter, syllable, word, order, card, activity, quiz and End slides (PR 6, PR 7 and PR 9)', () => {
-    expect([...SHELL_SLIDE_KINDS].sort()).toEqual(['activity', 'card', 'end', 'letter', 'quiz', 'sequence', 'syllable', 'title', 'vocab']);
+  it('draws title, letter, syllable, word, order, card, activity, quiz, story, story check and End slides (PR 6, PR 7, PR 9 and PR 11)', () => {
+    expect([...SHELL_SLIDE_KINDS].sort()).toEqual(['activity', 'card', 'end', 'letter', 'quiz', 'sequence', 'story', 'syllable', 'title', 'vocab']);
     const deck = deckOf([
       { kind: 'episode', id: 'episode:stage1-letters' },
       { kind: 'quest', id: 'quest:stage1-life-q1' },
@@ -161,27 +161,6 @@ describe('runDeck: the slides this build draws', () => {
     expect(run.minutes).toBe(expanded.minutes);
   });
 
-  it('a story check waits for the story slides (PR 11): one skipped part per block, its minute out of the estimate', () => {
-    const end: Slide = { kind: 'end', letters: [], words: [], key: 'end', builds: ['summary'] };
-    const check = (n: number): Slide => ({
-      kind: 'quiz',
-      prompt: { ask: 'check', text: 'Who made the letters?' },
-      options: [],
-      textPrompt: false,
-      key: `story:x/check-${n}`,
-      builds: ['question', 'answer'],
-    });
-    const odd: Slide = { kind: 'quiz', prompt: { ask: 'odd-one-out' }, options: [], textPrompt: false, key: 'quiz/q1', builds: ['question', 'answer'] };
-    const deck = deckOf([
-      { kind: 'story', storyId: 'story:x', checks: true },
-      { kind: 'quiz', from: 'all', rounds: 3 },
-    ]);
-    const run = runDeck(deck, { slides: [check(1), check(2), odd, end], skipped: [], taught: [], minutes: 5 });
-    expect(run.slides.map((s) => s.key)).toEqual(['quiz/q1', 'end']);
-    expect(run.parts).toEqual([{ blockIndex: 0, reason: 'unsupported-step' }]);
-    expect(run.minutes).toBe(3);
-  });
-
   it('an undrawn activity slide takes its minutes out of the estimate', () => {
     const end: Slide = { kind: 'end', letters: [], words: [], key: 'end', builds: ['summary'] };
     const activity: Slide = { kind: 'activity', preset: 'air-write', minutes: 3, key: 'activity:air-write', builds: ['prompt'] };
@@ -194,7 +173,14 @@ describe('runDeck: the slides this build draws', () => {
 
   it('a deck with nothing to draw but the End slide is empty (the invalid-deck screen)', () => {
     const end: Slide = { kind: 'end', letters: [], words: [], key: 'end', builds: ['summary'] };
-    const check: Slide = { kind: 'quiz', prompt: { ask: 'check', text: 'Who?' }, options: [], textPrompt: false, key: 'story:x/check-1', builds: ['question', 'answer'] };
+    const check: Slide = {
+      kind: 'quiz',
+      prompt: { ask: 'check', text: 'Who?' },
+      options: [{ gloss: 'A sun', art: 'art/sun', correct: true }],
+      textPrompt: false,
+      key: 'story:x/check-1',
+      builds: ['question', 'answer'],
+    };
     const expanded: ExpandedDeck = { slides: [check, end], skipped: [], taught: [], minutes: 4 };
     const run = runDeck(deckOf([{ kind: 'story', storyId: 'story:x', checks: true }]), expanded);
     expect(run.slides).toEqual([]);
@@ -202,16 +188,58 @@ describe('runDeck: the slides this build draws', () => {
     expect(runDeck(deckOf([{ kind: 'quiz', from: 'all', rounds: 3 }]), { slides: [], skipped: [], taught: [], minutes: 0 }).slides).toEqual([]);
   });
 
-  it('a story title (cover scene) waits for the story slides', () => {
-    const title: Slide = { kind: 'title', source: 'story', title: 'T', cover: { storyId: 'story:x', sceneId: 's' }, key: 'story:x/title', builds: ['title'] };
+  it('draws a story: its cover title, scenes, the order slide (PR 7) and checks', () => {
+    const storyId = 'story:sejong-new-letters';
+    const deck = deckOf([{ kind: 'story', storyId, checks: true }]);
+    const expanded = expandDeck(deck, lectureBundle('en'), { canPlayKorean: true });
+    expect(expanded.skipped).toEqual([]);
+    const run = runDeck(deck, expanded);
+    const kinds = run.slides.map((s) => s.kind);
+    expect(kinds[0]).toBe('title');
+    expect(run.slides[0]).toMatchObject({ source: 'story', cover: { storyId } });
+    expect(kinds).toContain('story');
+    expect(kinds).toContain('quiz');
+    expect(kinds).toContain('sequence');
+    expect(kinds.at(-1)).toBe('end');
+    expect(run.slides.length).toBe(expanded.slides.length);
+    expect(run.parts).toEqual([]);
+  });
+
+  it('draws story checks with word options beside the other quizzes (PR 9)', () => {
+    expect(SHELL_SLIDE_KINDS.has('story')).toBe(true);
+    expect(SHELL_SLIDE_KINDS.has('quiz')).toBe(true);
+    const check: Slide = {
+      kind: 'quiz',
+      prompt: { ask: 'check', text: 'Who?' },
+      options: [{ gloss: 'A', correct: true }, { gloss: 'B', correct: false }],
+      textPrompt: false,
+      key: 'story:x/check-c1',
+      builds: ['question', 'answer'],
+    };
+    const odd: Slide = { ...check, prompt: { ask: 'odd-one-out' }, key: 'quiz/q1' };
     const letter = expandDeck(deckOf([{ kind: 'jamo-set', jamoIds: ['jamo:giyeok'] }]), lectureBundle('en'), { canPlayKorean: true }).slides;
-    const run = runDeck(deckOf([{ kind: 'story', storyId: 'story:x', checks: true }, { kind: 'jamo-set', jamoIds: ['jamo:giyeok'] }]), {
-      slides: [title, ...letter],
+    const run = runDeck(deckOf([{ kind: 'story', storyId: 'story:x', checks: true }, { kind: 'quiz', from: 'all', rounds: 1 }, { kind: 'jamo-set', jamoIds: ['jamo:giyeok'] }]), {
+      slides: [check, odd, ...letter],
       skipped: [],
       taught: [],
-      minutes: 0,
+      minutes: 3,
     });
-    expect(run.slides.map((s) => s.kind)).toEqual(['letter', 'end']);
+    expect(run.slides.map((s) => s.key)).toEqual(['story:x/check-c1', 'quiz/q1', ...letter.map((s) => s.key)]);
+    expect(run.parts).toEqual([]);
+    expect(run.minutes).toBe(3);
+  });
+
+  it('a story check with picture options stays one not-shown part (no projected option draws art yet)', () => {
+    const pictures: Slide = {
+      kind: 'quiz',
+      prompt: { ask: 'check', text: 'Which one?' },
+      options: [{ gloss: 'A sun', art: 'art/sun', correct: true }, { gloss: 'A moon', correct: false }],
+      textPrompt: false,
+      key: 'story:x/check-c2',
+      builds: ['question', 'answer'],
+    };
+    const run = runDeck(deckOf([{ kind: 'story', storyId: 'story:x', checks: true }]), { slides: [pictures], skipped: [], taught: [], minutes: 1 });
+    expect(run.slides).toEqual([]);
     expect(run.parts).toEqual([{ blockIndex: 0, reason: 'unsupported-step' }]);
   });
 
@@ -312,6 +340,14 @@ describe('slideDetail', () => {
     expect(slideDetail(of('activity'), names)).toBe('name of air-write');
     expect(slideDetail(of('activity'))).toBe('');
     expect(slideDetail(of('sequence'), names)).toBe('');
+  });
+
+  it('says a story scene by its caption (README D8), and nothing for a check', () => {
+    const slides = expandDeck(deckOf([{ kind: 'story', storyId: 'story:sejong-new-letters', checks: true }]), lectureBundle('en'), { canPlayKorean: true }).slides;
+    const scene = slides.find((s): s is Extract<Slide, { kind: 'story' }> => s.kind === 'story' && s.caption !== undefined)!;
+    expect(slideDetail(scene)).toBe(scene.caption);
+    expect(slideDetail({ ...scene, caption: undefined })).toBe('');
+    expect(slideDetail(slides.find((s) => s.kind === 'quiz')!)).toBe('');
   });
 });
 
