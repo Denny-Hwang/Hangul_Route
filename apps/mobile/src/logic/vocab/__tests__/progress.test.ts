@@ -13,8 +13,10 @@ import {
   type VocabEvent,
 } from '../progress';
 
-const D10 = new Date('2026-10-10T15:00:00.000Z');
-const D11 = new Date('2026-10-11T15:00:00.000Z');
+// Day stamps are device-local calendar days (P5), so the clocks are local wall-clock times:
+// 3 pm on 10 and 11 October 2026 wherever the suite runs (UTC, Los Angeles, Seoul).
+const D10 = new Date(2026, 9, 10, 15);
+const D11 = new Date(2026, 9, 11, 15);
 const APPLE = 'vocab:sagwa-apple';
 const EYE = 'vocab:nun-eye';
 
@@ -206,7 +208,8 @@ describe('applyVocabEvents — robustness and shape', () => {
     const v0 = slice([state()]);
     expect(applyVocabEvents(v0, [], D11)).toBe(v0);
     expect(applyVocabEvents(v0, [{ type: 'introduced', id: EYE }], new Date(Number.NaN))).toBe(v0);
-    expect(applyVocabEvents(v0, [{ type: 'introduced', id: EYE }], new Date('+010000-01-01T00:00:00Z'))).toBe(v0);
+    // New Year's Day of year 10000 on the device calendar: past every four-digit day stamp in any time zone.
+    expect(applyVocabEvents(v0, [{ type: 'introduced', id: EYE }], new Date(10000, 0, 1))).toBe(v0);
   });
 
   it('sorts items by id and topics by key in code-point order, whatever the event order', () => {
