@@ -1,6 +1,7 @@
 import React from 'react';
 import { AppState } from 'react-native';
-import { vi } from 'vitest';
+import { afterEach, vi } from 'vitest';
+import { cleanup } from './render';
 
 /**
  * Setup for the screen render tests (vitest.render.config.ts, F-BILL-002 B-13). `react-native`
@@ -116,3 +117,8 @@ globalThis.fetch = (async () => {
 if (!AppState.isAvailable) {
   AppState.addEventListener = (() => ({ remove: () => undefined })) as unknown as typeof AppState.addEventListener;
 }
+
+// A test that fails before its own unmount leaves its screen mounted; unmount it before the next test.
+afterEach(async () => {
+  await cleanup();
+});

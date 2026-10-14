@@ -26,34 +26,65 @@ export function resetPlatform(): void {
   vi.unstubAllEnvs();
 }
 
+/** Every renderer still mounted, so `cleanup` can unmount the ones a failed test left behind. */
+const mounted = new Set<ReactTestRenderer>();
+
 /** Mounts an element and lets its mount effects (and the promises they start) settle. */
 export async function render(element: React.ReactElement): Promise<ReactTestRenderer> {
   let renderer!: ReactTestRenderer;
   await act(async () => {
     renderer = TestRenderer.create(element);
   });
+  mounted.add(renderer);
   return renderer;
 }
 
 export async function unmount(renderer: ReactTestRenderer): Promise<void> {
+  if (!mounted.delete(renderer)) return;
   await act(async () => {
     renderer.unmount();
   });
 }
 
-/** Every string the tree shows or reads out: text children, then the accessible names and hints. */
+/**
+ * Unmounts every renderer still mounted. render-setup.ts runs it after each test, so a test that
+ * fails before its own `unmount` leaves no screen whose effects and store subscriptions run on.
+ */
+export async function cleanup(): Promise<void> {
+  for (const renderer of [...mounted]) await unmount(renderer);
+}
+
+/** Host attributes that carry words: the accessible name and description, a tooltip, a placeholder. */
+const HOST_TEXT_PROPS = ['aria-label', 'aria-description', 'title', 'placeholder'] as const;
+
+/**
+ * React Native props that carry words a screen reader says. react-native-web drops
+ * `accessibilityHint` (it reaches no host element), yet VoiceOver and TalkBack read it on iOS and
+ * Android, so these are read from the components that receive them.
+ */
+const NATIVE_TEXT_PROPS = ['accessibilityLabel', 'accessibilityHint'] as const;
+
+/**
+ * Every string the tree shows or reads out: text children, the accessible names and hints on host
+ * elements, and the React Native accessibility label, hint and value text on the components above
+ * them (each string once per node that carries it).
+ */
 export function screenTexts(root: ReactTestInstance): string[] {
   const out: string[] = [];
+  const push = (value: unknown): void => {
+    if (typeof value === 'string' && value.trim() !== '') out.push(value);
+  };
   const walk = (node: ReactTestInstance | string): void => {
     if (typeof node === 'string') {
-      if (node.trim() !== '') out.push(node);
+      push(node);
       return;
     }
     if (typeof node.type === 'string') {
-      for (const attr of ['aria-label', 'aria-description', 'title', 'placeholder'] as const) {
-        const value: unknown = node.props[attr];
-        if (typeof value === 'string' && value.trim() !== '') out.push(value);
-      }
+      for (const attr of HOST_TEXT_PROPS) push(node.props[attr]);
+    } else {
+      for (const prop of NATIVE_TEXT_PROPS) push(node.props[prop]);
+      const value: unknown = node.props.accessibilityValue;
+      if (typeof value === 'object' && value !== null) push((value as { text?: unknown }).text);
     }
     for (const child of node.children) walk(child);
   };
@@ -84,7 +115,9 @@ export function buttonsNamed(root: ReactTestInstance, label: string): ReactTestI
 export async function press(node: ReactTestInstance): Promise<void> {
   const onClick = node.props.onClick as ((event: unknown) => void) | undefined;
   if (onClick === undefined) throw new Error('not pressable');
-  const event = { altKey: false, currentTarget: {}, nativeEvent: {}, preventDefault: () => undefined, stopPropagation: () => undefined };
+  // The press responder reads the element's role and tag (a disabled control ignores the click).
+  const currentTarget = { getAttribute: (name: string): unknown => node.props[name] ?? null, tagName: String(node.type) };
+  const event = { altKey: false, currentTarget, nativeEvent: {}, preventDefault: () => undefined, stopPropagation: () => undefined };
   await act(async () => {
     onClick(event);
   });

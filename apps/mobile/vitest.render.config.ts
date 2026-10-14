@@ -15,7 +15,7 @@ export default defineConfig({
   test: {
     name: 'render',
     environment: 'node',
-    include: ['src/screens/**/*.test.tsx'],
+    include: ['src/screens/**/*.test.tsx', 'src/test-support/**/*.test.tsx'],
     setupFiles: ['src/test-support/render-setup.ts'],
     server: { deps: { inline: [/react-native-web/] } },
   },

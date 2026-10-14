@@ -1,12 +1,15 @@
 import type { Profile, TierSource } from '@hangul-route/content-schema';
+import { LOCALES, getMessages, type UiLocale } from '@hangul-route/i18n';
 import React from 'react';
 import type { ReactTestInstance } from 'react-test-renderer';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { planCardView } from '../../../logic/paywall';
 import { useAccountStore } from '../../../store/account-store';
 import { useLocaleStore } from '../../../store/locale-store';
 import { useProfileStore } from '../../../store/profile-store';
 import { useTierStore } from '../../../store/tier-store';
 import { useUiStore } from '../../../store/ui-store';
+import { PURCHASE } from '../../../test-support/copy-words';
 import { buttonsNamed, press, render, resetPlatform, screenTexts, setPlatform, unmount, type RenderPlatform } from '../../../test-support/render';
 import { ProfileScreen } from '../ProfileScreen';
 
@@ -63,11 +66,13 @@ function learner(audience: Audience): Profile {
 }
 
 /** The device: one learner, a grown-up PIN (so the gated rows ask for it), no open grown-up session. */
-function seed(audience: Audience, tier: TierCase): void {
+function seed(audience: Audience, tier: TierCase, locale: UiLocale = 'en'): void {
+  // es and ko are hidden at launch (LOCALE_STATUS) and fall back to English; the QA switch shows them.
+  vi.stubEnv('EXPO_PUBLIC_SHOW_ALL_LOCALES', '1');
   useProfileStore.setState({ profiles: [learner(audience)], activeId: LEARNER_ID });
   useAccountStore.setState({ parentPinHash: 'pin-hash', subscription: null });
   useUiStore.setState({ parentGateOpenedAt: null });
-  useLocaleStore.setState({ device: 'en', session: null, byProfile: {} });
+  useLocaleStore.setState({ device: locale, session: null, byProfile: {} });
   useTierStore.setState({
     byLearner: { [LEARNER_ID]: { tier: tier.tier, source: tier.source, validUntil: null, fetchedAt: '2026-10-14T00:00:00.000Z' } },
     spaceMembers: {},
@@ -115,22 +120,31 @@ describe('ProfileScreen plan card (F-BILL-002 section 11, B-13)', () => {
   });
 
   for (const tier of TIERS) {
-    it(`${tier.key}: the card says "${tier.title}", "${tier.note}" and "${tier.pill}", never "Premium" or "unlock"`, async () => {
+    it(`${tier.key}: the card says "${tier.title}", "${tier.note}" and "${tier.pill}", never "Premium" or "unlock", for both audiences and in every locale`, async () => {
       for (const platform of PLATFORMS) {
-        setPlatform(platform);
-        seed('family', tier);
-        const renderer = await render(<ProfileScreen />);
-        const texts = screenTexts(renderer.root);
-        expect(texts, platform).toContain(tier.title);
-        expect(texts, platform).toContain(tier.note);
-        expect(texts, platform).toContain(tier.pill);
-        expect(texts, platform).not.toContain(tier.tier === 'free' ? 'Full route' : 'Free plan');
-        for (const text of texts) {
-          expect(text, `${platform}: ${text}`).not.toMatch(/premium/i);
-          expect(text, `${platform}: ${text}`).not.toMatch(/\bunlock/i);
-          expect(text, `${platform}: ${text}`).not.toMatch(/\bbuy\b/i);
+        for (const audience of AUDIENCES) {
+          for (const locale of LOCALES) {
+            const key = `${platform} / ${audience} / ${locale}`;
+            const card = planCardView(tier.tier, tier.source, getMessages(locale).learner.profile.plan);
+            if (locale === 'en') expect([card.title, card.note, card.pill], key).toEqual([tier.title, tier.note, tier.pill]);
+            const other = planCardView(tier.tier === 'free' ? 'premium' : 'free', null, getMessages(locale).learner.profile.plan);
+            setPlatform(platform);
+            seed(audience, tier, locale);
+            const renderer = await render(<ProfileScreen />);
+            const texts = screenTexts(renderer.root);
+            expect(texts, key).toContain(card.title);
+            expect(texts, key).toContain(card.note);
+            expect(texts, key).toContain(card.pill);
+            expect(texts, key).not.toContain(other.title);
+            for (const text of texts) {
+              expect(text, `${key}: ${text}`).not.toMatch(/premium/i);
+              expect(text, `${key}: ${text}`).not.toMatch(/\bunlock/i);
+              expect(text, `${key}: ${text}`).not.toMatch(/\bbuy\b/i);
+            }
+            for (const line of [card.title, card.note, card.pill]) expect(line, key).not.toMatch(PURCHASE[locale]);
+            await unmount(renderer);
+          }
         }
-        await unmount(renderer);
       }
     });
   }

@@ -9,13 +9,16 @@ import { defineConfig } from 'vitest/config';
  * Excluded from coverage (per docs/tests/coverage-targets.md §"측정 제외"):
  *   - src/logic/minigame-config.ts — pure data registry (config object only,
  *     no executable branches; mapped by minigame ref → content scope).
- *   - src/platform/motion.ts — React hook over AccessibilityInfo events;
- *     needs a renderer harness, covered by Detox nightly instead.
+ *   - src/platform/motion.ts — React hook over AccessibilityInfo events, not
+ *     yet tested; it could move to the render project below, which renders hooks.
  *   - every __generated__ folder under src — generated files (the clip map, F-AUDIO-004 §3.10).
  *
  * Screen render tests (the .test.tsx files under src/screens) run in the second project of
  * vitest.workspace.ts, vitest.render.config.ts: react-native resolves to
  * react-native-web there and screens render into react-test-renderer (F-BILL-002 B-13).
+ * The `coverage` block below applies to the whole workspace run, so the lane numbers include
+ * src/logic and src/platform lines that screen renders reach, not only unit-test hits
+ * (docs/tests/coverage-targets.md).
  */
 export default defineConfig({
   test: {
