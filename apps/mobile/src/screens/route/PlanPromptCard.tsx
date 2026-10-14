@@ -15,7 +15,7 @@ import { track } from '../../platform/telemetry';
 import { usePlanStore } from '../../store/plan-store';
 import { useProgressStore } from '../../store/progress-store';
 import { useRouteStore } from '../../store/route-store';
-import { LinkButton } from '../placement/parts';
+import { LinkButton } from '../../components/LinkButton';
 import { CheckInCard, useCheckInOffer, useShownOffer } from './CheckInCard';
 import { usePlanChangesOpen } from './use-plan-gate';
 import { useToday } from './use-today';

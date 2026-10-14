@@ -421,6 +421,14 @@ export function ClassMoves({ spaceId, spaceName, api, online, refreshMs, readOnl
   const stay = useRef<Set<string> | null>(null);
   const onlineNow = useRef(online);
   onlineNow.current = online;
+  // The pending announce rewrite, cleared on unmount so nothing writes after the page has gone.
+  const announceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(
+    () => () => {
+      if (announceTimer.current !== null) clearTimeout(announceTimer.current);
+    },
+    [],
+  );
 
   const load = useCallback(async (manual = true): Promise<void> => {
     const result = await api.transferRequests(spaceId);
@@ -435,7 +443,11 @@ export function ClassMoves({ spaceId, spaceName, api, online, refreshMs, readOnl
       // Clear, then write on the next tick: the same words twice in a row are still a new announcement.
       setAnnounce('');
       setAnnounced((n) => n + 1);
-      setTimeout(() => setAnnounce(t.a11y.updated), ANNOUNCE_GAP_MS);
+      if (announceTimer.current !== null) clearTimeout(announceTimer.current);
+      announceTimer.current = setTimeout(() => {
+        announceTimer.current = null;
+        setAnnounce(t.a11y.updated);
+      }, ANNOUNCE_GAP_MS);
     }
     lastJson.current = json;
     keep.current = focusInCard() ? order.current : null;

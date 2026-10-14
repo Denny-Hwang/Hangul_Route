@@ -7,6 +7,7 @@ import {
   fullscreenToggle,
   gridItems,
   helpLanguageChips,
+  narrationStops,
   optionContent,
   optionRomShown,
   pickerModes,
@@ -263,5 +264,31 @@ describe('timerOpenEvent (T and the bar Timer)', () => {
     const run = reduceTimer(initialTimer(), { type: 'start', ms: 60_000, now: 0 });
     expect(timerOpenEvent(state(), run)).toEqual({ overlay: 'timer' });
     expect(timerOpenEvent(state({ timerOpen: true }), initialTimer())).toEqual({ overlay: 'timer' });
+  });
+});
+
+describe('narrationStops (Read-to-me never runs on under a tool)', () => {
+  it('stops on a slide change and when a covering overlay opens', () => {
+    expect(narrationStops(state(), state({ slideIdx: 1 }))).toBe(true);
+    expect(narrationStops(state(), state({ overlay: 'help' }))).toBe(true);
+    expect(narrationStops(state(), state({ overlay: 'blank' }))).toBe(true);
+  });
+
+  it('stops when the full-screen timer opens, which covers the slide with no overlay', () => {
+    const before = state();
+    const after = reduce(before, timerOpenEvent(before, initialTimer()), { slides: [{ key: 'a', builds: ['x'] }] }).state;
+    expect(after.overlay).toBeNull();
+    expect(narrationStops(before, after)).toBe(true);
+    expect(narrationStops(state({ timerOpen: true }), state({ timerOpen: true, timerMode: 'full' }))).toBe(true);
+  });
+
+  it('keeps playing for the corner timer, a reveal, a closing overlay or a full timer that stays', () => {
+    expect(narrationStops(state(), state({ timerOpen: true }))).toBe(false);
+    expect(narrationStops(state(), state({ reveal: 1 }))).toBe(false);
+    expect(narrationStops(state({ overlay: 'help' }), state())).toBe(false);
+    expect(narrationStops(state({ overlay: 'help' }), state({ overlay: 'grid' }))).toBe(false);
+    const full = state({ timerOpen: true, timerMode: 'full' });
+    expect(narrationStops(full, full)).toBe(false);
+    expect(narrationStops(full, state({ timerMode: 'full' }))).toBe(false);
   });
 });

@@ -152,10 +152,18 @@ test.describe('grown-up notes (flag on)', () => {
     await expect(page.getByRole('heading', { name: 'Report this note' })).toBeVisible();
     await expect(page.getByTestId('note-report-quote')).toContainText('Your reading is getting stronger.');
     await expect(page.getByRole('radio', { name: 'Not meant for Mina' })).toBeVisible();
-    await expect(page.getByTestId('note-report-submit')).toBeDisabled();
+    // No reason yet: Report and hide waits soft disabled (aria-disabled), still in the tab order, described by the line.
+    const submit = page.getByTestId('note-report-submit');
+    await expect(submit).toBeDisabled();
+    await expect(submit).toHaveAttribute('aria-disabled', 'true');
+    await expect(submit).not.toHaveAttribute('disabled', /.*/);
+    await submit.focus();
+    await expect(submit).toBeFocused();
+    await expect(submit).toHaveAccessibleDescription('The note goes away for Mina on every device. Our team looks at every report.');
     await expect(page.getByTestId('note-report-line')).toHaveText('The note goes away for Mina on every device. Our team looks at every report.');
     await expect(page.getByRole('textbox')).toHaveCount(0);
     await page.getByRole('radio', { name: 'Unsafe' }).click();
+    await expect(submit).not.toHaveAttribute('aria-disabled', 'true');
     await shot(page, 'notes-report-sheet');
     await page.getByTestId('note-report-submit').click();
 

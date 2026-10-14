@@ -1,4 +1,6 @@
 import { getMessages } from '@hangul-route/i18n';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
   attestFor,
@@ -12,6 +14,7 @@ import {
   prefsOutcome,
   reportOutcome,
   reportSentEvent,
+  reportSubmitState,
   showModeSetting,
 } from '../grown-up';
 import type { NotesViewContext } from '../view';
@@ -144,5 +147,29 @@ describe('telemetry, attestation and where Done goes', () => {
     expect(endsGateOnLeave('note_page', false)).toBe(true);
     expect(endsGateOnLeave('note_page', true)).toBe(false);
     expect(endsGateOnLeave('grown_up_zone', false)).toBe(false);
+  });
+});
+
+describe('Report and hide waits focusable (reportSubmitState, #534 follow-up)', () => {
+  const screen = readFileSync(join(__dirname, '../../../screens/parent/NoteReportScreen.tsx'), 'utf8');
+
+  it('no reason yet: soft disabled (stays focusable, announced disabled), never hard disabled', () => {
+    expect(reportSubmitState(null, false)).toEqual({ softDisabled: true, disabled: false });
+  });
+
+  it('a reason picked: ready; sending: hard disabled whatever the reason', () => {
+    expect(reportSubmitState('unkind', false)).toEqual({ softDisabled: false, disabled: false });
+    expect(reportSubmitState('unsafe', true)).toEqual({ softDisabled: false, disabled: true });
+    expect(reportSubmitState(null, true).disabled).toBe(true);
+  });
+
+  it('the screen spreads the state on the button, which the line under it describes', () => {
+    const at = screen.indexOf('testID="note-report-submit"');
+    const button = screen.slice(screen.lastIndexOf('<Button', at), at);
+    expect(button).toContain('{...reportSubmitState(reason, busy)}');
+    expect(button).not.toContain('disabled={');
+    // The line is the button's description (web aria-describedby through the hint), and it stays on screen.
+    expect(button).toContain('accessibilityHint={r.line(name)}');
+    expect(screen).toContain('testID="note-report-line"');
   });
 });

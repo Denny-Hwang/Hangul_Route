@@ -6,6 +6,7 @@ import {
   PRESENTER_PATH,
   announceReady,
   enterFullscreen,
+  enterFullscreenLandscape,
   exitFullscreen,
   forgetOpenDeck,
   holdOpenDeck,
@@ -107,6 +108,7 @@ describe('route', () => {
     await native.keepScreenAwake();
     await native.releaseScreenAwake();
     await native.lockLandscape();
+    expect(await native.enterFullscreenLandscape()).toBe(false);
     native.unlockOrientation();
   });
 });
@@ -373,6 +375,17 @@ describe('subscribeKeys', () => {
     expect(doc.count('keydown')).toBe(0);
   });
 
+  it('a handler that returns false leaves the key its browser meaning (the home Help scrolls)', () => {
+    const doc = fakeTarget();
+    const handler = vi.fn((command: unknown) => command === 'escape');
+    subscribeKeys(handler, env({ keyTarget: doc }));
+    const pageDown = press(doc, { key: 'PageDown', code: 'PageDown' });
+    const escape = press(doc, { key: 'Escape', code: 'Escape' });
+    expect(handler.mock.calls).toEqual([['next'], ['escape']]);
+    expect(pageDown.preventDefault).not.toHaveBeenCalled();
+    expect(escape.preventDefault).toHaveBeenCalled();
+  });
+
   it('leaves Enter and Space to a focused button, but arrows still move', () => {
     const doc = fakeTarget();
     const handler = vi.fn();
@@ -602,6 +615,43 @@ describe('orientation', () => {
     expect(() => unlockOrientation(env({ screen: { orientation: { unlock: () => { throw new Error('y'); } } } }))).not.toThrow();
     await expect(lockLandscape(env())).resolves.toBeUndefined();
     expect(() => unlockOrientation(env())).not.toThrow();
+  });
+});
+
+describe('enterFullscreenLandscape', () => {
+  it('asks for fullscreen in the gesture and locks landscape only after that request settles', async () => {
+    const order: string[] = [];
+    let settle: () => void = () => undefined;
+    const request = vi.fn(() => {
+      order.push('fullscreen');
+      return new Promise<void>((resolve) => {
+        settle = () => {
+          order.push('fullscreen settled');
+          resolve();
+        };
+      });
+    });
+    const lock = vi.fn(async () => {
+      order.push('lock');
+    });
+    const e = env({ document: { documentElement: { requestFullscreen: request }, fullscreenEnabled: true }, screen: { orientation: { lock } } });
+    const done = enterFullscreenLandscape(e);
+    // The fullscreen request is made at once, inside the tap; the lock waits for it.
+    expect(order).toEqual(['fullscreen']);
+    await Promise.resolve();
+    expect(lock).not.toHaveBeenCalled();
+    settle();
+    expect(await done).toBe(true);
+    expect(order).toEqual(['fullscreen', 'fullscreen settled', 'lock']);
+    expect(lock).toHaveBeenCalledWith('landscape');
+  });
+
+  it('still tries the lock after a refused fullscreen, and tolerates a refused lock', async () => {
+    const lock = vi.fn(async () => Promise.reject(new Error('not in fullscreen')));
+    const refusing = { documentElement: { requestFullscreen: vi.fn(async () => Promise.reject(new Error('denied'))) }, fullscreenEnabled: true };
+    expect(await enterFullscreenLandscape(env({ document: refusing, screen: { orientation: { lock } } }))).toBe(false);
+    expect(lock).toHaveBeenCalledWith('landscape');
+    expect(await enterFullscreenLandscape(env())).toBe(false);
   });
 });
 

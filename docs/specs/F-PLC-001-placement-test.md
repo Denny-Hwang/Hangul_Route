@@ -624,9 +624,9 @@ Flag `flags.placementEnabled` (`apps/mobile/src/config/flags.ts`, `readBool('EXP
 | P-6 | `feat(mobile)`: screens (language with the instruction-voice line; options as a grown-up screen with the `levelOrder` 0 card and the three mode tiles; hand-off; warm-up; item with the Short layout; pause with exit and rest; sound-needed; result), navigation, audio capability hooks and `platform/audio` `hasVoiceFor` (AM-38) | L | P-5, F-I18N-001 PR 4, F-AUDIO-004 A-4, OD-1 (sound-guide choice screen; AM-10, AM-14), wireframes W-1 to W-7 |
 | P-7 | `feat(mobile)`: entry points (onboarding fork, Home card, Profile row; "Take the check again" pre-selects with `defaultMode`; AM-38), Journey placed-out look and start pin | M | P-6, F-ROUTE-001 R-2a (`pin`, `check-circle` glyphs; AM-10) |
 | P-8 | `feat(mobile)`: parent report (Short not-tested line and hint, Deep status words and "checked twice", Spelling with tiles by bank lookup, retake offer location by profile type; AM-38), override, dashboard row | M | P-6, wireframe W-8 |
-| P-7b | `feat(mobile)`: result weekly-plan strip and not-tested copy, `RouteProposal` entry from the result, report "Suggested weekly plan" card (AM-10) | M | P-6, P-8, F-PLAN-002 P2-3b (`proposeRoute`) and P2-7a (`RouteProposal`); no owner gate from OD-12 / OD-13 (decided 2026-10-12, accepted as proposed) |
+| P-7b | `feat(mobile)`: result weekly-plan strip and not-tested copy, `RouteProposal` entry from the result, report "Suggested weekly plan" card (AM-10). **Done (#573)**, behind `flags.routeEnabled` | M | P-6, P-8, F-PLAN-002 P2-3b (`proposeRoute`) and P2-7a (`RouteProposal`); no owner gate from OD-12 / OD-13 (decided 2026-10-12, accepted as proposed) |
 | P-9 | `feat(web)`: roster line, advisory plan prefill, `lib/console/placement.ts` | S | P-2 |
-| P-10 | `test(e2e)` + flag flip for beta | S | P-7, P-7b, P-8, **the P-3b Worker deploy** (AM-38), and **a store build carrying P-3b's schema shipped at least one release earlier on iOS and Android** (older builds reject backups with a long Deep result, section 3.8) |
+| P-10 | `test(e2e)` + flag flip for beta | S | P-7, P-7b, P-8, OD-14 (the owner confirms the one-tap default), **the P-3b Worker deploy** (AM-38), and **a store build carrying P-3b's schema shipped at least one release earlier on iOS and Android** (older builds reject backups with a long Deep result, section 3.8) |
 
 ## 7. Dependencies
 
@@ -854,3 +854,7 @@ Reading the table: a guesser is placed at band 1 or lower in more than 98 % of r
 - **Listen-first:** no Standard or Deep run of a *Pictures first* learner drew `see-pick-sound` or `build-syllable`.
 - **Old readers:** 100 % of Short and Standard results parse with the pre-change schema; Deep results parse when they end early (guessers, beginners), and 16 % (intermediate) and 1 % (advanced) otherwise.
 - **`avoidFirst`.** With the shared default `true`, the worst tapping pattern reached 4.35 % above band 0 and 1.30 % above band 1 in Standard and 0.65 % above band 0 in Short; hence `false` for placement (AM-25).
+
+## Review log
+
+- 2026-10-13, docs follow-ups after the 2026-10-13 merges. Row P-7b is marked done (#573: the result weekly-plan strip, the `RouteProposal` entry and the report's Suggested weekly plan card, all behind `flags.routeEnabled`). OD-14's proposed default (one tap, no PIN, for a self profile) is what P-7b built; the owner confirms it before P-10's flag flip, and P-10's Needs list OD-14.

@@ -11,6 +11,8 @@ export interface CardProps {
   tone?: 'paper' | 'sunken' | 'brand' | 'success' | 'nudge';
   onPress?: () => void;
   accessibilityLabel?: string;
+  /** What a tap does, read after the label on native (react-native-web drops it). */
+  accessibilityHint?: string;
   testID?: string;
   style?: ViewStyle;
 }

@@ -10,7 +10,7 @@ import { localizeEpisode, localizeQuest } from '../../logic/content-locale';
 import { openableTopicKey, type PlanWeek } from '../../logic/route/plan-view';
 import type { WeekRow } from '../../logic/route/proposal-flow';
 import { localizedTopicTitle } from '../../logic/vocab/question-view';
-import { LinkButton } from '../placement/parts';
+import { LinkButton } from '../../components/LinkButton';
 
 /**
  * Pieces the weekly plan screens share (F-PLAN-002 section 3.9): the proposal (K1), the set-up

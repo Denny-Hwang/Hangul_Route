@@ -7,7 +7,7 @@ import { checkInFits, checkInOffer, retainedOfferStep, type CheckInOffer, type R
 import { completedQuestIdsOf } from '../../logic/route/self-route';
 import { announceForScreenReader } from '../../platform/screen-reader';
 import { useRouteStore, type CheckInAnswer } from '../../store/route-store';
-import { LinkButton } from '../placement/parts';
+import { LinkButton } from '../../components/LinkButton';
 
 /**
  * The Hoya check-in (F-PLAN-002 section 3.7, FP-B14, OD-13): once, at the start of week 5 of an

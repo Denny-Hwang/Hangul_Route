@@ -103,7 +103,8 @@ export type RootStackParamList = {
    * The weekly plan proposal (F-PLAN-002 section 3.9, wireframe journey/my-route-overview.md K1):
    * Hoya's recommended plan for `profileId`, with pace, length, start day and days to change, then
    * Start this plan or Not now. `source` is the door that opened it (`route.proposed.source`). The
-   * update after a retake (`mode: 'update'`, K3) arrives with F-PLC-001 P-7b.
+   * update after a retake (K3) does not open this screen and takes no mode param: the result's **Update my plan**
+   * and the report's **Update the plan** apply it through `applyPlanUpdate` (store/plan-offer-store.ts).
    */
   RouteProposal: {
     source: ProposalSource;

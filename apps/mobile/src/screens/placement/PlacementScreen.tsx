@@ -15,7 +15,7 @@ import { CommonActions } from '@react-navigation/native';
 import { createNativeStackNavigator, type NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AppState } from 'react-native';
-import { flags } from '../../config/flags';
+import { flags, routeEnabledFor } from '../../config/flags';
 import { episodesAll, questsAll } from '../../content';
 import { PLACEMENT_BANK, PLACEMENT_WARMUP } from '../../content/placement.generated';
 import { useLocale } from '../../i18n/use-messages';
@@ -336,7 +336,9 @@ export function PlacementScreen({ route, navigation }: Props): React.ReactElemen
       // proposal starts from it. A result that was not stored offers no plan (the offer would start
       // from older results than the screen shows). A dismissal from before this result never hides
       // the strip (OD-16: "until the next result").
-      const offer = stored ? planOfferNow(profile.id, flags.routeEnabled, new Date()) : null;
+      // The plan follows the UI locale's review (P2-8b): `routeEnabledFor`, never the raw flag.
+      const planOn = routeEnabledFor(uiLocale);
+      const offer = stored ? planOfferNow(profile.id, planOn, new Date()) : null;
       const view = resultView({
         result,
         before,
@@ -344,9 +346,9 @@ export function PlacementScreen({ route, navigation }: Props): React.ReactElemen
         catalog,
         completedQuestIds: completed,
         profileType: effectiveLearnerType(profile),
-        // The weekly-plan strip (P-7b) behind `flags.routeEnabled`. "See Learning Route" opens the Route tab, which
+        // The weekly-plan strip (P-7b) behind `routeEnabledFor(uiLocale)`. "See Learning Route" opens the Route tab, which
         // exists only while `flags.myRouteEnabled` is on (AMENDMENTS-ROUTE-LEARNING-ROUTE section 5.2, LR-4).
-        routeEnabled: flags.routeEnabled,
+        routeEnabled: planOn,
         myRouteEnabled: flags.myRouteEnabled,
         proposalAvailable: offer?.kind === 'new',
         // A dismissal is already folded into the offer (OD-16): the strip follows `proposalAvailable`.
@@ -375,7 +377,7 @@ export function PlacementScreen({ route, navigation }: Props): React.ReactElemen
       }
       dispatch({ type: 'runFinished' });
     },
-    [profile, profiles, parentPinHash, leave, dispatch],
+    [profile, profiles, parentPinHash, leave, dispatch, uiLocale],
   );
 
   useEffect(() => {

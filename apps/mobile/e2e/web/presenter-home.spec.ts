@@ -175,6 +175,67 @@ test.describe('presenter home, wide (two columns)', () => {
   });
 });
 
+test.describe('presenter home, Keys and help', () => {
+  test.use({ viewport: { width: 1280, height: 800 }, isMobile: false, hasTouch: false });
+
+  test('Keys and help opens the Help overlay from the home; Close and Esc return to the button', async ({ page }) => {
+    const errors: string[] = [];
+    page.on('pageerror', (e) => errors.push(String(e)));
+    await page.goto('/present');
+    const help = page.getByTestId('presenter-home-help');
+    await expect(help).toBeVisible();
+    await expect(help).toHaveAccessibleName('Keys and help');
+    await help.click();
+    const overlay = page.getByRole('dialog', { name: 'Keys and controls' });
+    await expect(overlay).toBeVisible();
+    await expect(page.getByTestId('presenter-help-close')).toBeFocused();
+    await expect(overlay).toContainText('A presentation clicker works with no setup.');
+    // No lesson is open, so there is no deck romanization to flip here.
+    await expect(page.getByTestId('presenter-help-romanization')).toHaveCount(0);
+    await expect(page.getByTestId('presenter-help-keep-visible')).toBeVisible();
+    await shot(page, 'presenter-home-help-1280x800');
+    await page.getByTestId('presenter-help-close').click();
+    await expect(page.getByTestId('presenter-help')).toHaveCount(0);
+    await expect(help).toBeFocused();
+    await help.press('Enter');
+    await expect(page.getByTestId('presenter-help')).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(page.getByTestId('presenter-help')).toHaveCount(0);
+    await expect(help).toBeFocused();
+    // The home still works after: its h1 is there and nothing was saved.
+    await expect(page.getByRole('heading', { level: 1, name: 'Lecture' })).toBeVisible();
+    expect(errors).toEqual([]);
+  });
+});
+
+test.describe('presenter home, Keys and help on a narrow phone', () => {
+  test.use({ viewport: { width: 320, height: 568 }, isMobile: true, hasTouch: true });
+
+  test('the Help overlay fits 320 px, scrolls with PageDown and closes with a tap', async ({ page }) => {
+    await page.goto('/present');
+    const help = page.getByTestId('presenter-home-help');
+    await help.tap();
+    const close = page.getByTestId('presenter-help-close');
+    await expect(close).toBeVisible();
+    await expect(close).toBeInViewport({ ratio: 1 });
+    expect(await page.evaluate(() => document.scrollingElement!.scrollWidth <= window.innerWidth)).toBe(true);
+    // The home leaves the scroll keys to the browser: PageDown scrolls the taller overlay.
+    const scrolled = () =>
+      page.evaluate(() => {
+        const root = document.querySelector('[data-testid="presenter-help"]');
+        const all = root ? [root, ...Array.from(root.querySelectorAll('*'))] : [];
+        return Math.max(0, ...all.map((el) => el.scrollTop));
+      });
+    expect(await scrolled()).toBe(0);
+    await page.keyboard.press('PageDown');
+    await expect.poll(scrolled).toBeGreaterThan(0);
+    await expect(page.getByTestId('presenter-help')).toBeVisible();
+    await close.tap();
+    await expect(page.getByTestId('presenter-help')).toHaveCount(0);
+    await expect(help).toBeVisible();
+  });
+});
+
 test.describe('presenter home, phone (one column, Recent first)', () => {
   test.use({ viewport: { width: 375, height: 800 }, isMobile: false, hasTouch: true });
 

@@ -147,7 +147,15 @@ describe('the teacher home (F-APP-001 A-5a)', () => {
     vi.stubGlobal('window', { location: { origin: 'https://app.hangulroute.com' } });
     let r = await render([klass]);
     expect(byTestId(r, 'home-lessons')[0]?.type).toBe('a');
-    expect(byTestId(r, 'home-lessons')[0]?.props.href).toBe('/browse');
+    expect(byTestId(r, 'home-lessons')[0]?.props.href).toBe('/browse#s=nav');
+    const preventDefault = vi.fn();
+    await act(async () => {
+      byTestId(r, 'home-lessons')[0]?.props.onClick({ button: 0, metaKey: false, ctrlKey: false, shiftKey: false, altKey: false, preventDefault });
+    });
+    await act(async () => undefined);
+    // The opener holds a plain click for the pass (#518/#525 follow-up 1); this test window has no session storage.
+    expect(preventDefault).toHaveBeenCalledTimes(1);
+    expect(textOf(byTestId(r, 'home-lessons-notice')[0] as ReactTestInstance)).toBe(getMessages('en').console.browse.storageBlocked);
     act(() => mounted?.unmount());
     vi.stubGlobal('window', { location: { origin: 'https://hangulroute.com' } });
     r = await render([klass]);

@@ -1,3 +1,4 @@
+import { getMessages } from '@hangul-route/i18n';
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
 import { answerCheckRounds, onboardChild, openGrownUpZone, passDiscover, unlockWithPin } from './helpers';
@@ -20,6 +21,19 @@ const CONSOLE_KEY = 'hr:console:session';
 const LEARNER_QUEUE = 'hr:telemetry:queue';
 const BROWSE_QUEUE = 'hr:browse:telemetry-queue';
 const SEEDED_QUEUE = JSON.stringify([{ id: 'e2e-learner-1', name: 'quest.completed', profileId: 'e2e-profile', at: '2026-10-12T08:00:00.000Z' }]);
+
+/**
+ * The release build has the content switch off (production until the owner's switch-on step), and every case
+ * of this file but the closed-item ones checks that build. The switch-on lane (F-ENT-003 E3-13,
+ * `switch-on-e2e.yml`) builds dist with the switch on and runs this file with E2E_CONTENT_GATING=1: there only
+ * the closed-item describe at the end runs, and on the release build only it is skipped.
+ */
+const GATED = process.env.E2E_CONTENT_GATING === '1';
+const SWITCH_ON_SUITE = 'switch on: a sampler pass sees closed items (F-ENT-003 keys)';
+
+test.beforeEach(async ({}, testInfo) => {
+  test.skip(GATED && !testInfo.titlePath.includes(SWITCH_ON_SUITE), 'a release-build case (switch off); the switch-on lane runs only the closed-item cases');
+});
 
 type Stored = Record<string, string>;
 
@@ -1199,4 +1213,133 @@ test('BR-13: on a phone in landscape (568 x 320) only the preview stays pinned a
   await expect(page.getByTestId('browse-preview')).toBeInViewport();
   await expect(present).toHaveAccessibleName('Present this');
   expect(await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth)).toBe(false);
+});
+
+/* ---------------------------------------------------------------------------------------------
+ * Switch on (F-BROWSE-001 sections 4.2, 4.5, 4.7 and 9; F-ENT-003 section 3.11; mocks browse/home.md
+ * "sampler, switch on", browse/item.md, browse/topic.md): a sampler account pass sees the free-plan state
+ * of a learner. Only on a dist built with EXPO_PUBLIC_CONTENT_GATING_ENABLED=true (E2E_CONTENT_GATING=1,
+ * the E3-13 switch-on lane). Closed items keep their pages: the grown-up caption "Opens with the Family
+ * Plan or a Group License" in place of the preview, [ Open billing ] under it (`browse.plans_tapped`),
+ * a closed topic without its Hear buttons, and the learner's "Not open yet" mark on closed Words rows.
+ * ------------------------------------------------------------------------------------------- */
+test.describe(SWITCH_ON_SUITE, () => {
+  test.skip(!GATED, 'needs a web build with EXPO_PUBLIC_CONTENT_GATING_ENABLED=true (E2E_CONTENT_GATING=1)');
+  // The billing page is on the app host; a service worker would answer its navigation before the test route.
+  test.use({ serviceWorkers: 'block' });
+
+  const browse = getMessages('en').caregiver.browse;
+  const notOpen = getMessages('en').learner.access.notOpen;
+  /** A word topic a free learner has (FREE_VOCAB_TOPIC_IDS) and one it does not. */
+  const OPEN_TOPIC = { id: 'vocab-topic:food', key: 'food' };
+  const CLOSED_TOPIC = { id: 'vocab-topic:family', key: 'family' };
+  /** A Stage 2 taste lesson: past the free Stage 1, so closed for a sampler. */
+  const CLOSED_QUEST = 'quest:stage2-life-q1';
+
+  async function openSampler(page: Page, fragment = ''): Promise<void> {
+    await page.goto('/');
+    await writeAccountPass(page, { scope: 'sampler' });
+    await page.goto(`/browse${fragment}`);
+    await expect(home(page).or(page.getByTestId('browse-item')).or(page.getByTestId('browse-episode-screen')).first()).toBeVisible();
+  }
+
+  test('home: the sampler line, the dotted ring on closed Journey cells, and Not open yet on closed Words rows only', async ({ page }) => {
+    await openSampler(page);
+    await expect(page.getByTestId('browse-scope-line')).toHaveText(browse.home.scope.sampler);
+    const group = page.getByRole('radiogroup', { name: browse.home.section.label });
+    await group.getByRole('radio', { name: browse.home.section.journey }).click();
+    // A closed cell is the learner's: the dotted ring and its legend word, never a lock glyph.
+    await expect(page.locator('[data-testid^="journey-ring-notOpen"]').first()).toBeVisible();
+    await expect(page.getByTestId('journey-legend')).toContainText(notOpen);
+    await shot(page, 'switch-on-browse-home-journey-pixel5');
+
+    await group.getByRole('radio', { name: browse.home.section.library }).click();
+    const closedRow = page.getByTestId(`browse-words-${CLOSED_TOPIC.key}`);
+    const openRow = page.getByTestId(`browse-words-${OPEN_TOPIC.key}`);
+    await closedRow.scrollIntoViewIfNeeded();
+    await expect(page.getByTestId(`browse-words-${CLOSED_TOPIC.key}-not-open`)).toHaveText(notOpen);
+    await expect(closedRow).toHaveAccessibleName(/^Family, \d+ words\. Not open yet\. Opens the topic\.$/);
+    await expect(page.getByTestId(`browse-words-${OPEN_TOPIC.key}-not-open`)).toHaveCount(0);
+    await expect(openRow).toHaveAccessibleName(/^Food, \d+ words\. Opens the topic\.$/);
+    // Never a price, a product word or "route" as an access word (F-ENT-003 section 3.11).
+    expect(await page.locator('body').innerText()).not.toMatch(/\$|Premium|upgrade|full route/i);
+    await shot(page, 'switch-on-browse-home-words-pixel5');
+  });
+
+  test('a closed lesson page: the grown-up caption in place of the preview, and Open billing goes to billing', async ({ page }) => {
+    await page.route('**/account/billing', (route) => route.fulfill({ status: 200, contentType: 'text/html', body: '<!doctype html><title>billing</title>' }));
+
+    await openSampler(page, `#t=${CLOSED_QUEST}&s=plan`);
+    await expect(page.getByTestId('browse-item')).toBeVisible();
+    const closed = page.getByTestId('browse-item-closed');
+    await expect(closed).toContainText(browse.item.closed);
+    await expect(page.getByTestId('browse-preview')).toHaveCount(0);
+    await expect(page.getByTestId('browse-present')).toHaveCount(0);
+    // The facts stay: what it teaches and where it sits.
+    await expect(page.getByTestId('browse-where')).toHaveText(/^Stage 2 · /);
+    await shot(page, 'switch-on-browse-item-closed-pixel5');
+
+    await page.getByRole('button', { name: browse.item.openBilling.cta }).click();
+    await expect(page).toHaveURL(/\/account\/billing$/);
+  });
+
+  /*
+   * The event is sent only by a build with an API address (EXPO_PUBLIC_API_BASE_URL, E2E_TELEMETRY=1); without one
+   * the client sends nothing, so this case is reported as skipped, not passed (the my-route.spec.ts R-10 pattern):
+   *   E2E_CONTENT_GATING=1 E2E_TELEMETRY=1 pnpm --filter @hangul-route/mobile exec playwright test browse -g "plans_tapped"
+   */
+  test('a closed lesson page: Open billing sends browse.plans_tapped with its kind only', async ({ page }) => {
+    test.skip(process.env.E2E_TELEMETRY !== '1', 'needs a web build with an API address (E2E_TELEMETRY=1)');
+    const tapped: Array<Record<string, unknown>> = [];
+    await page.route('**/api/telemetry', async (route) => {
+      const body = route.request().postDataJSON() as { name?: string; payload?: Record<string, unknown> } | null;
+      if (body?.name === 'browse.plans_tapped' && body.payload) tapped.push(body.payload);
+      await route.fulfill({ status: 200, contentType: 'application/json', body: '{"ok":true}' });
+    });
+    await page.route('**/account/billing', (route) => route.fulfill({ status: 200, contentType: 'text/html', body: '<!doctype html><title>billing</title>' }));
+
+    await openSampler(page, `#t=${CLOSED_QUEST}&s=plan`);
+    await page.getByRole('button', { name: browse.item.openBilling.cta }).click();
+    await expect(page).toHaveURL(/\/account\/billing$/);
+    await expect.poll(() => tapped).toEqual([{ kind: 'quest' }]);
+  });
+
+  test("a closed lesson's Journey cell and outline row carry the learner's mark and the caption, and Open still opens its page", async ({ page }) => {
+    await openSampler(page);
+    await page.getByRole('radio', { name: browse.home.section.journey }).click();
+    // The closed cell's label is the learner Journey's (a11y.access.notOpen), read by reference.
+    await page.getByRole('button', { name: getMessages('en').a11y.access.notOpen('Lunch Box Words') }).click();
+    await expect(page.getByTestId('browse-episode-screen')).toBeVisible();
+    const row = page.getByTestId(`browse-outline-${CLOSED_QUEST}`);
+    await expect(row).toContainText(browse.item.closed);
+    await shot(page, 'switch-on-browse-episode-closed-pixel5');
+    await page.getByTestId(`browse-outline-open-${CLOSED_QUEST}`).click();
+    await expect(page.getByTestId('browse-item-closed')).toBeVisible();
+  });
+
+  test('a closed topic keeps every word, picture, romanization and gloss and drops only the Hear buttons; an open one keeps them', async ({ page }) => {
+    await openSampler(page, `#t=${CLOSED_TOPIC.id}&s=plan`);
+    await expect(page.getByTestId('browse-item-closed')).toContainText(browse.item.closed);
+    const words = page.locator('[data-testid^="browse-topic-word-"]');
+    await expect(words.first()).toBeVisible();
+    expect(await words.count()).toBeGreaterThan(0);
+    await expect(page.locator('[data-testid^="browse-topic-hear-"]')).toHaveCount(0);
+    await expect(page.getByRole('button', { name: browse.item.openBilling.cta })).toBeVisible();
+    await shot(page, 'switch-on-browse-topic-closed-pixel5');
+
+    await page.goto('/');
+    await writeAccountPass(page, { scope: 'sampler' });
+    await page.goto(`/browse#t=${OPEN_TOPIC.id}&s=plan`);
+    await expect(page.getByTestId('browse-item')).toBeVisible();
+    await expect(page.getByTestId('browse-item-closed')).toHaveCount(0);
+    await expect(page.locator('[data-testid^="browse-topic-hear-"]').first()).toBeVisible();
+  });
+
+  test('a fallback pass sees the closed caption with no Open billing', async ({ page }) => {
+    await page.goto('/');
+    await writeAccountPass(page, { scope: 'sampler', fallback: true });
+    await page.goto(`/browse#t=${CLOSED_QUEST}&s=plan`);
+    await expect(page.getByTestId('browse-item-closed')).toContainText(browse.item.closed);
+    await expect(page.getByRole('button', { name: browse.item.openBilling.cta })).toHaveCount(0);
+  });
 });

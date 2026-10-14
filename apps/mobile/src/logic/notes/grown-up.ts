@@ -146,3 +146,12 @@ export const endsGateOnLeave = (via: ReportVia, selfManaged: boolean): boolean =
 
 /** Done on the report sheet: My notes when it came from the note page, else back to Notes for <learner>. */
 export const noteReportDoneTarget = (via: ReportVia): 'Notes' | 'back' => (via === 'note_page' ? 'Notes' : 'back');
+
+/**
+ * Report and hide's state (F-FEEDBACK-001, design/screens/notes/note-report.md): with no reason picked it
+ * waits `softDisabled` (focusable, announced disabled, described by the line under it); while the report is sending
+ * it is plainly `disabled`, so a second press cannot send it twice.
+ */
+export function reportSubmitState(reason: NoteReportReason | null, busy: boolean): { softDisabled: boolean; disabled: boolean } {
+  return { softDisabled: reason === null, disabled: busy };
+}

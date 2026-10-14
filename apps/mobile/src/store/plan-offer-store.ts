@@ -39,7 +39,7 @@ export type OfferSurface = 'learner' | 'report';
 
 /**
  * The offer for a profile from what the stores hold now (the marks as last read by `loadUi`):
- * `enabled` is `flags.routeEnabled`.
+ * `enabled` is the entry's weekly plan switch, `routeEnabledFor(locale)` (P2-8b).
  */
 export function planOfferNow(profileId: string, enabled: boolean, now: Date, surface: OfferSurface = 'learner'): PlanOffer | null {
   if (!enabled) return null;

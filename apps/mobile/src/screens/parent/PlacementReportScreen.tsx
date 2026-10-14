@@ -45,7 +45,8 @@ import { track } from '../../platform/telemetry';
 import { useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
 import { useAccessTier } from '../../store/tier-store';
-import { LinkButton, RadioTile } from '../placement/parts';
+import { LinkButton } from '../../components/LinkButton';
+import { RadioTile } from '../placement/parts';
 import { SuggestedPlanCard } from './SuggestedPlanCard';
 
 /**
@@ -61,7 +62,7 @@ import { SuggestedPlanCard } from './SuggestedPlanCard';
  * Retakes: "Take the check again" (the length is pre-selected by
  * `defaultMode`), the Short hint, and on a child profile the retake with the
  * sound guide hidden. Never a comparison with other learners. With
- * `flags.routeEnabled` the report opens with the "Suggested weekly plan" card
+ * `routeEnabledFor(locale)` the report opens with the "Suggested weekly plan" card
  * (P-7b, AM-5).
  */
 

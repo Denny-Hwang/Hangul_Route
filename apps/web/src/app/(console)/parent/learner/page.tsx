@@ -40,29 +40,37 @@ function ParentChooser(): JSX.Element {
     setLoad(null);
     setSpaces(null);
     void (async () => {
-      const listed = await api.listSpaces();
-      if (!live) return;
-      if (!listed.ok) {
-        setSpaces('failed');
-        setLoad(listed.error === 'unauthorized' ? { kind: 'signedOut' } : { kind: 'failed' });
-        return;
-      }
-      setSpaces(listed.data);
-      const families = parentChooserFamilies(listed.data as readonly SpaceListItem[]);
-      // One roster per family; a roster that fails leaves that family's learners out, never the others, and is said.
-      const results = await Promise.all(families.map((item) => api.roster(item.space.id).then((r) => [item.space.id, r] as const)));
-      if (!live) return;
-      if (results.some(([, r]) => !r.ok && r.error === 'unauthorized')) {
-        setLoad({ kind: 'signedOut' });
-        return;
-      }
-      const failed = results.filter(([, r]) => !r.ok).length;
-      if (families.length > 0 && failed === families.length) {
+      try {
+        const listed = await api.listSpaces();
+        if (!live) return;
+        if (!listed.ok) {
+          setSpaces('failed');
+          setLoad(listed.error === 'unauthorized' ? { kind: 'signedOut' } : { kind: 'failed' });
+          return;
+        }
+        setSpaces(listed.data);
+        const families = parentChooserFamilies(listed.data as readonly SpaceListItem[]);
+        // One roster per family; a roster that fails leaves that family's learners out, never the others, and is said.
+        const results = await Promise.all(families.map((item) => api.roster(item.space.id).then((r) => [item.space.id, r] as const)));
+        if (!live) return;
+        if (results.some(([, r]) => !r.ok && r.error === 'unauthorized')) {
+          setLoad({ kind: 'signedOut' });
+          return;
+        }
+        const failed = results.filter(([, r]) => !r.ok).length;
+        if (families.length > 0 && failed === families.length) {
+          setLoad({ kind: 'failed' });
+          return;
+        }
+        const rosters = new Map<string, readonly RosterLearner[]>(results.map(([id, r]) => [id, r.ok ? r.data.learners : []]));
+        setLoad({ kind: 'rows', rows: parentChooserRows(families, rosters), partial: failed > 0 });
+      } catch {
+        // A read that throws in the client (not an API answer) falls back to the error and Try again, never the
+        // skeleton forever.
+        if (!live) return;
+        setSpaces((current) => current ?? 'failed');
         setLoad({ kind: 'failed' });
-        return;
       }
-      const rosters = new Map<string, readonly RosterLearner[]>(results.map(([id, r]) => [id, r.ok ? r.data.learners : []]));
-      setLoad({ kind: 'rows', rows: parentChooserRows(families, rosters), partial: failed > 0 });
     })();
     return () => {
       live = false;

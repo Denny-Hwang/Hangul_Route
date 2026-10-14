@@ -227,6 +227,14 @@ export const learner = {
         plural('en', count, { one: 'Hoya found 1 card you already earned!', other: `Hoya found ${count} cards you already earned!` }),
       cta: 'See my cards',
     },
+    /**
+     * A pinned card whose story or quest is no longer open (F-STORY-004 PR 4.8f; gating on only): the card's
+     * label (`a11y.missionCard`) then the Not open yet word of the access glossary (F-ENT-003 section 3.11).
+     * The tile shows the same word with the dotted ring; its hint is the ask (`learner.access.ask`).
+     */
+    lockedCard: {
+      a11y: (cardLabel: string) => `${cardLabel} Not open yet.`,
+    },
   },
 
   journey: {

@@ -55,6 +55,15 @@ const sizePaddingX: Record<ButtonSize, number> = {
   hero: spacing.xxl,
 };
 
+type AriaHost = { setAttribute?: (k: string, v: string) => void; removeAttribute?: (k: string) => void };
+
+/** Writes or clears `aria-disabled` on a react-native-web host node; a host without those methods is left alone. */
+function syncAriaDisabled(v: View | null, on: boolean): void {
+  const el = v as unknown as AriaHost | null;
+  if (on) el?.setAttribute?.('aria-disabled', 'true');
+  else el?.removeAttribute?.('aria-disabled');
+}
+
 export function Button({
   label,
   onPress,
@@ -77,24 +86,29 @@ export function Button({
   const describedBy: Record<string, string> = webHint ? { 'aria-describedby': hintId } : {};
   // Soft: drawn and announced as disabled, a press does nothing, and it stays in the tab order. Native keeps a
   // disabled view in the screen reader's reach, so it is plainly `disabled` there. On the web a disabled
-  // <button> leaves the tab order, so the button stays enabled and only `aria-disabled` is written to its node.
+  // <button> leaves the tab order, so the button stays enabled and only `aria-disabled` is written to its node. That
+  // relies on react-native-web handing the ref the DOM element (`setAttribute`); a host without it is left alone.
   const soft = softDisabled && !disabled;
   const looksDisabled = disabled || soft;
   const webSoft = soft && Platform.OS === 'web';
   const node = useRef<View | null>(null);
+  // Read by the ref callback, so a host node that is swapped in (a remount, react-native-web replacing the element)
+  // while the soft state stays the same gets the attribute too, not only the node the effect last saw.
+  const webSoftNow = useRef(webSoft);
+  webSoftNow.current = webSoft;
   const setNode = useCallback(
     (v: View | null) => {
       node.current = v;
+      if (webSoftNow.current) syncAriaDisabled(v, true);
       if (typeof pressableRef === 'function') pressableRef(v);
       else if (pressableRef) (pressableRef as MutableRefObject<View | null>).current = v;
     },
     [pressableRef],
   );
   useEffect(() => {
-    if (Platform.OS !== 'web' || disabled) return;
-    const el = node.current as unknown as { setAttribute?: (k: string, v: string) => void; removeAttribute?: (k: string) => void } | null;
-    if (webSoft) el?.setAttribute?.('aria-disabled', 'true');
-    else el?.removeAttribute?.('aria-disabled');
+    // A hard disabled button clears it too, so going straight from soft to disabled leaves no stale attribute.
+    if (Platform.OS !== 'web') return;
+    syncAriaDisabled(node.current, webSoft);
   }, [webSoft, disabled]);
   return (
     <Pressable

@@ -36,7 +36,7 @@ import { isParentSessionValid } from '../../logic/profiles/session';
 import { reportEntry } from '../../logic/reports/entry';
 import { useAudience } from '../../store/audience';
 import { useUiStore } from '../../store/ui-store';
-import { LinkButton } from '../placement/parts';
+import { LinkButton } from '../../components/LinkButton';
 import { LearningRouteRow } from './LearningRouteRow';
 import { VocabDashboardRow } from './VocabDashboardRow';
 import { wordsOffered } from '../vocab/topic-data';

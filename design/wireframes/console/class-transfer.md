@@ -197,17 +197,18 @@ The route is decided from the inbox **before** any tap, so no PIN is spent on a 
 +--------------------------------------+     +--------------------------------------+
 |  Sunday Class A            Class     |     |  Sunday Class A            Class     |
 |                        [ Leave ]     |     |                        [ Leave ]     |
-|  Use your grown-up's rescue code     |     |  Ask the grown-up with the account   |
-|  first.                              |     |  to answer this in the console.      |
-+--------------------------------------+     +--------------------------------------+
+|  Use your rescue code first.         |     |  Ask the grown-up with the account   |
++--------------------------------------+     |  to answer this in the console.      |
+                                             +--------------------------------------+
 
 (c) this device can answer                   (d) a PIN would open the route; none yet
 +--------------------------------------+     +--------------------------------------+
 |  Sunday Class A            Class     |     |  Sunday Class A            Class     |
 |                 [ Move ]   [ Leave ] |     |                        [ Leave ]     |
 |  Asked: a move to Saturday Class B.  |     |  A grown-up needs to set up a PIN    |
-|                       [ Review ]     |     |  first. Open Profile, then Grown-ups.|
-+--------------------------------------+     |  [ Set up PIN ]                      |
+|                       [ Review ]     |     |  first. Open Profile, then Grown-up  |
++--------------------------------------+     |  zone.                               |
+                                             |  [ Set up PIN ]                      |
                                              +--------------------------------------+
 ```
 

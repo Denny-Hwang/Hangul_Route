@@ -80,36 +80,12 @@ export function FootstepTrail({ answered }: { answered: number }): React.ReactEl
   );
 }
 
-/** A text link with a hit area of at least `touchTarget.min` (section 3.12). */
-export function LinkButton({
-  label,
-  onPress,
-  icon,
-  testID,
-  accessibilityHint,
-}: {
-  label: string;
-  onPress: () => void;
-  icon?: IconName;
-  testID?: string;
-  accessibilityHint?: string;
-}): React.ReactElement {
-  return (
-    <Pressable
-      testID={testID}
-      onPress={onPress}
-      accessibilityRole="button"
-      accessibilityLabel={label}
-      accessibilityHint={accessibilityHint}
-      style={{ minHeight: touchTarget.min, minWidth: touchTarget.min, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.sm, paddingHorizontal: spacing.md }}
-    >
-      {icon ? <Icon name={icon} size={spacing.xl} color={colors.brand.primaryDark} /> : null}
-      <Body weight="semibold" tone="brand">
-        {label}
-      </Body>
-    </Pressable>
-  );
-}
+/**
+ * LinkButton moved to `components/LinkButton.tsx` (shared by placement, the Learning Route and the plan screens).
+ * Re-exported here only for `screens/home/HomeScreen.tsx`, which was out of scope for #609 (another task owns it).
+ * Follow-up (#609 review): switch HomeScreen to `../../components/LinkButton`, then delete this re-export.
+ */
+export { LinkButton } from '../../components/LinkButton';
 
 /**
  * The quiet exit at the top of a learner screen (an icon with a spoken label,

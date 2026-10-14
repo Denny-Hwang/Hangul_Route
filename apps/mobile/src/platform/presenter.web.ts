@@ -336,8 +336,12 @@ interface KeyEventLike {
   preventDefault(): void;
 }
 
-/** Calls `handler` with the key-map command of each `keydown`; unmapped keys keep their browser meaning. */
-export function subscribeKeys(handler: (command: KeyCommand) => void, env: PresenterEnv = browserEnv()): () => void {
+/**
+ * Calls `handler` with the key-map command of each `keydown`; unmapped keys keep their browser
+ * meaning. A handler that returns `false` did not use the key, so it keeps its browser meaning too
+ * (the home's Help overlay leaves the scroll keys alone).
+ */
+export function subscribeKeys(handler: (command: KeyCommand) => boolean | void, env: PresenterEnv = browserEnv()): () => void {
   const target = env.keyTarget;
   if (!target) return () => undefined;
   const onKey = (event: KeyEventLike): void => {
@@ -356,8 +360,7 @@ export function subscribeKeys(handler: (command: KeyCommand) => void, env: Prese
       onActivatable: activatable(focused),
     });
     if (command === null) return;
-    event.preventDefault();
-    handler(command);
+    if (handler(command) !== false) event.preventDefault();
   };
   target.addEventListener('keydown', onKey as Listener);
   return () => target.removeEventListener('keydown', onKey as Listener);
@@ -555,6 +558,18 @@ export async function lockLandscape(env: PresenterEnv = browserEnv()): Promise<v
   } catch {
     // Most desktop browsers and iPadOS Safari refuse outside fullscreen: the stage letterboxes instead.
   }
+}
+
+/**
+ * Fullscreen, then landscape (the Start tap and the fullscreen key or button): the fullscreen
+ * request is made at once, inside the gesture, and the orientation lock only after it settles,
+ * since Android Chrome refuses the lock outside fullscreen. The lock is still tried after a
+ * refusal (some browsers lock without it); either refusal is tolerated. True when fullscreen began.
+ */
+export async function enterFullscreenLandscape(env: PresenterEnv = browserEnv()): Promise<boolean> {
+  const entered = await enterFullscreen(env);
+  await lockLandscape(env);
+  return entered;
 }
 
 export function unlockOrientation(env: PresenterEnv = browserEnv()): void {
