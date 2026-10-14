@@ -230,10 +230,13 @@ export const hoyaPoseOf = (pose: unknown): HoyaPose => (HOYA_POSES.includes(pose
 
 /**
  * Hoya at the shipped component's fidelity: the parts of one pose in draw
- * order on the 128 x 128 box, with the gold cub's fur. An unknown pose reads
- * as idle.
+ * order on the 128 x 128 box, with the gold cub's fur. An unknown pose
+ * (persisted junk, a typo) draws the idle figure without the cheek blush, as
+ * the hand-drawn component did before PR 2.11: blush is kept for the poses
+ * that ask for it.
  */
 export function hoyaFigure(poseIn: HoyaPose): HoyaPart[] {
+  const known = HOYA_POSES.includes(poseIn);
   const pose = hoyaPoseOf(poseIn);
   const eye = eyeFor(pose);
   const parts: HoyaPart[] = [
@@ -257,7 +260,7 @@ export function hoyaFigure(poseIn: HoyaPose): HoyaPart[] {
     const glint = (cx: number): HoyaPart => ({ t: 'circle', cx: cx + 1.2, cy: eye.cy - 1.3, r: 0.9 });
     parts.push({ t: 'group', fill: 'surface.paper', det: true, kids: [glint(eye.cx), glint(eye.cx + 28)] });
   }
-  if (showsCheeks(pose)) {
+  if (known && showsCheeks(pose)) {
     parts.push({
       t: 'group',
       det: true,
@@ -318,8 +321,8 @@ function withoutUndefined<T extends object>(value: T): Partial<T> {
 
 /**
  * The shapes of one pose, in draw order, on the 128 x 128 box with the default
- * gold fur: `hoyaFigure` in the scene primitive set. An unknown pose reads as
- * idle, like the component.
+ * gold fur: `hoyaFigure` in the scene primitive set. An unknown pose draws
+ * idle without the cheek blush, like the component.
  */
 export function hoyaNodes(pose: HoyaPose): Shape[] {
   return hoyaSceneShapes(hoyaFigure(pose));

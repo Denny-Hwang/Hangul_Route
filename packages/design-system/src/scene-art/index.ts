@@ -24,7 +24,7 @@ export {
 } from './resolve';
 export { LIMITS, cappedPalette, checkItem, checkScene, serializedBytes, type Finding } from './rules';
 export { CARD_SIZE, drawProp, drawScene, type DrawCard, type DrawItem, type DrawNode, type DrawPaint, type DrawnScene } from './draw';
-export { HOYA_BOX, HOYA_POSES, hoyaItem, hoyaNodes, type HoyaPose } from './hoya';
+export { HOYA_BOX, HOYA_POSES, hoyaFigure, hoyaItem, hoyaNodes, type HoyaPaint, type HoyaPart, type HoyaPose } from './hoya';
 export { SCENE_ART_REGISTRY, hasItem } from './registry';
 export { REALIA_REGISTRY, REALIA_REGISTRY_RAW_MAX } from './realia-registry';
 export {

@@ -32,8 +32,14 @@ describe('hoya data port: poses', () => {
     expect(a).toEqual(b);
   });
 
-  it('reads an unknown pose as idle, like the component', () => {
-    expect(hoyaNodes('wobbling' as never)).toEqual(hoyaNodes('idle'));
+  it('draws an unknown pose as idle without the cheek blush, like the component', () => {
+    const blush = (s: Shape) => s.t === 'circle' && s.fill === 'hoya.cheek' && s.o === 0.6;
+    const junk = leaves(hoyaNodes('junk' as never));
+    expect(junk.filter(blush)).toHaveLength(0);
+    expect(junk).toEqual(leaves(hoyaNodes('idle')).filter((s) => !blush(s)));
+    // The idle mouth is still drawn, and the pink ear insides are not the blush.
+    expect(junk).toContainEqual({ t: 'path', d: 'M50 92 Q60 100 70 92', stroke: 'hoya.stripes', sw: 'thick' });
+    expect(junk.filter((s) => s.t === 'circle' && s.fill === 'hoya.cheek' && s.o === 0.85)).toHaveLength(2);
   });
 });
 
@@ -221,6 +227,16 @@ describe('hoya figure: the scene form', () => {
   it('reads anything but the five poses as idle', () => {
     expect(HOYA_POSES.map(hoyaPoseOf)).toEqual([...HOYA_POSES]);
     for (const junk of ['wobbling', '', undefined, 3]) expect(hoyaPoseOf(junk)).toBe('idle');
-    expect(hoyaFigure('wobbling' as never)).toEqual(hoyaFigure('idle'));
+  });
+
+  it('draws an unknown pose as the idle figure without the cheek-blush group', () => {
+    const idle = hoyaFigure('idle');
+    const isBlush = (p: HoyaPart) => p.t === 'group' && p.kids.every((k) => k.t === 'circle' && k.fill === 'hoya.cheek' && k.opacity === 0.6);
+    expect(idle.filter(isBlush)).toHaveLength(1);
+    for (const junk of ['junk', 'wobbling', '']) {
+      const parts = hoyaFigure(junk as never);
+      expect(parts.filter(isBlush)).toHaveLength(0);
+      expect(parts).toEqual(idle.filter((p) => !isBlush(p)));
+    }
   });
 });

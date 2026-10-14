@@ -81,8 +81,19 @@ describe('Hoya renders the frozen drawing', () => {
     expect(root!.children[0]!.props).toMatchObject({ width: 40, height: 40, accessibilityLabel: 'Your cub' });
   });
 
-  it('reads an unknown pose as idle', () => {
+  it('draws an unknown pose as idle without the cheek blush, as the hand-drawn component did', () => {
     const strip = (d: Drawn[]): Drawn[] => d.map((r) => ({ ...r, children: r.children.map((s) => ({ ...s, props: { ...s.props, accessibilityLabel: '' } })) }));
-    expect(strip(drawn(Hoya({ pose: 'wobbling' as never })))).toEqual(strip(drawn(Hoya({ pose: 'idle' }))));
+    const isBlush = (el: Drawn) =>
+      el.type === 'G' && el.children.length === 2 && el.children.every((c) => c.type === 'Circle' && c.props.cy === 84 && c.props.opacity === 0.6);
+    const shapesOf = (d: Drawn[]): Drawn[] => d[0]!.children[0]!.children;
+    const idle = strip(drawn(Hoya({ pose: 'idle' })));
+    const junk = strip(drawn(Hoya({ pose: 'junk' as never })));
+    expect(shapesOf(idle).filter(isBlush)).toHaveLength(1);
+    expect(shapesOf(junk).filter(isBlush)).toHaveLength(0);
+    // Everything else is the idle drawing: no raised arms, the idle mouth, the pink ear insides.
+    expect(shapesOf(junk)).toEqual(shapesOf(idle).filter((el) => !isBlush(el)));
+    expect(shapesOf(junk).filter((el) => el.type === 'Path' && el.props.strokeWidth === 10)).toHaveLength(0);
+    expect(shapesOf(junk)).toContainEqual(expect.objectContaining({ type: 'Path', props: expect.objectContaining({ d: 'M50 92 Q60 100 70 92' }) }));
+    expect(shapesOf(junk).filter((el) => el.type === 'Circle' && el.props.opacity === 0.85)).toHaveLength(2);
   });
 });
