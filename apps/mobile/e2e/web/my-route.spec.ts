@@ -292,8 +292,8 @@ test.describe('the Route tab and its route card (LR-10)', () => {
   });
 
   test('320 x 568: "Not open yet" and "Coming later" share the dotted ring and are told apart by their words and the legend (assumption h)', async ({ page }) => {
-    // A free learner on the gating fixture bundle: Stage 2's playable quests are not open (F-ENT-003), its other
-    // cells are coming later. CI's gating run plays it:
+    // A free learner on the gating fixture bundle: Stage 3's playable quests are not open (F-ENT-003), its Animal
+    // Sentences cell is coming later (Stage 2 has no coming-later cell since Holiday Words, F-CURR-001 S2-2). CI's gating run plays it:
     //   pnpm --filter @hangul-route/mobile build:web:fixtures:gated
     //   STORY_FIXTURES_GATED=1 pnpm --filter @hangul-route/mobile exec playwright test my-route.spec -g "assumption h"
     test.skip(!GATED_BUILD, 'needs the gating fixture bundle (STORY_FIXTURES_GATED=1, dist-e2e-gated/)');
@@ -303,7 +303,7 @@ test.describe('the Route tab and its route card (LR-10)', () => {
 
     expect(m.state.notOpen).not.toBe(m.state.later);
     expect(m.legend.notOpen).not.toBe(m.legend.later);
-    const row = page.getByTestId('my-route-stage-2');
+    const row = page.getByTestId('my-route-stage-3');
     await row.getByRole('button').first().click();
     // The cells: each pip group carries its word, so the two kinds read differently while their rings match.
     await expect(row.getByText(m.state.notOpen, { exact: true }).first()).toBeVisible();
