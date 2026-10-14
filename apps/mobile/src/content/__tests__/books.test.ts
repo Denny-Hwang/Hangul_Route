@@ -7,7 +7,7 @@ import {
   QuestSchema,
   type Story,
 } from '@hangul-route/content-schema';
-import { bookEpisodes, bookQuests } from '../books';
+import { BOOK_DEFINITIONS, bookEpisodes, bookQuests, buildBook } from '../books';
 import { episodesAll, episodeById } from '../episodes';
 import { questsAll } from '../quests';
 import { storiesAll, storyById, storyQuests } from '../stories';
@@ -65,6 +65,42 @@ describe('Stage 5 books (books.ts)', () => {
     }
     expect(bookQuests.map((q) => q.id)).toEqual(bookEpisodes.flatMap((e) => e.questIds));
     for (const quest of bookQuests) expect(QuestSchema.safeParse(quest).success).toBe(true);
+  });
+});
+
+describe('buildBook: content trouble never breaks the app (F-STORY-001 §3.7 holds)', () => {
+  const rites = BOOK_DEFINITIONS[0]!;
+  const lookup = (id: string): Story | undefined => storyById(id);
+
+  it('builds the shipped book from the bundle', () => {
+    expect(buildBook(rites, lookup)?.episode).toEqual(bookEpisodes[0]);
+  });
+
+  it('leaves out a story that is held (not bundled), unreviewed or has no read tier', () => {
+    const held = buildBook(rites, (id) => (id === 'story:dano-ssireum' ? undefined : lookup(id)));
+    expect(held?.episode.storyIds).toEqual(['story:seollal-new-year', 'story:chuseok-ganggangsullae']);
+    expect(held?.episode.questIds).toEqual(['quest:story-seollal-new-year-read', 'quest:story-chuseok-ganggangsullae-read']);
+    expect(held?.episode.estimatedMinutes).toBe(held?.quests.reduce((n, q) => n + q.estimatedMinutes, 0));
+    const unreviewed = (id: string): Story | undefined => {
+      const s = lookup(id);
+      return s && id === 'story:seollal-new-year' ? { ...s, review: { ...s.review, culture: 'draft' } } : s;
+    };
+    expect(buildBook(rites, unreviewed)?.episode.storyIds).not.toContain('story:seollal-new-year');
+    const listenOnly = (id: string): Story | undefined => {
+      const s = lookup(id);
+      return s && id === 'story:chuseok-ganggangsullae' ? { ...s, tiers: s.tiers.filter((t) => t.level !== 'read') } : s;
+    };
+    expect(buildBook(rites, listenOnly)?.episode.storyIds).not.toContain('story:chuseok-ganggangsullae');
+    const draft = (id: string): Story | undefined => {
+      const s = lookup(id);
+      return s && id === 'story:dano-ssireum' ? { ...s, state: 'draft' } : s;
+    };
+    expect(buildBook(rites, draft)?.episode.storyIds).not.toContain('story:dano-ssireum');
+  });
+
+  it('builds nothing below two stories, so the cell stays a placeholder', () => {
+    expect(buildBook(rites, (id) => (id === 'story:seollal-new-year' ? lookup(id) : undefined))).toBeNull();
+    expect(buildBook(rites, () => undefined)).toBeNull();
   });
 });
 
