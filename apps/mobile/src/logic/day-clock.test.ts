@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { msUntilNextUtcDay, utcDayKey, watchDay } from './day-clock';
+import { MAX_WAIT_MS, msUntilNextUtcDay, utcDayKey, watchDay } from './day-clock';
 
 /**
  * The day boundary for screens that stay mounted across midnight (F-ROUTE-001 R-7e). Plan day
@@ -103,6 +103,28 @@ describe.each(ZONES)('day clock under TZ=%s', (zone) => {
     (fire as unknown as () => void)();
     expect(days).toEqual(['2026-10-13']);
     expect(delays).toEqual([60_000, 10]);
+    stop();
+  });
+
+  it('wakes at least hourly and emits only at the boundary (a long timer is unreliable on Android)', () => {
+    vi.setSystemTime(new Date('2026-10-13T12:00:00.000Z'));
+    const days: string[] = [];
+    const delays: number[] = [];
+    const stop = watchDay({
+      onDay: (d) => days.push(d),
+      subscribeVisibility: () => () => undefined,
+      setTimer: (fn, ms) => {
+        delays.push(ms);
+        return setTimeout(fn, ms);
+      },
+      clearTimer: (handle) => clearTimeout(handle as ReturnType<typeof setTimeout>),
+    });
+    vi.advanceTimersByTime(12 * 3_600_000 - 1);
+    expect(days).toEqual(['2026-10-13']);
+    vi.advanceTimersByTime(1);
+    expect(days).toEqual(['2026-10-13', '2026-10-14']);
+    expect(delays.length).toBeGreaterThanOrEqual(12);
+    expect(Math.max(...delays)).toBe(MAX_WAIT_MS);
     stop();
   });
 

@@ -107,30 +107,45 @@ describe.each(ZONES)('Home mission across the UTC day boundary under TZ=%s', (zo
 });
 
 /**
- * Source guard for the wiring (the mobile vitest lane does not render screens): Home and the
- * Learning Route page take today from `useToday`, never from a render-time `new Date()`.
+ * The dependency list of the `useMemo(` call that starts at `marker` (a reflow or a reordering
+ * keeps it): the names in its last top-level array.
+ */
+function memoDeps(source: string, marker: string): string[] {
+  const start = source.indexOf(marker);
+  if (start < 0) throw new Error(`marker not found: ${marker}`);
+  const open = source.indexOf('useMemo(', start) + 'useMemo'.length;
+  let depth = 0;
+  let close = open;
+  for (; close < source.length; close += 1) {
+    const ch = source[close];
+    if (ch === '(') depth += 1;
+    else if (ch === ')' && (depth -= 1) === 0) break;
+  }
+  const deps = /\[([^[\]]*)\]\s*,?\s*$/.exec(source.slice(open + 1, close));
+  if (!deps) throw new Error(`no dependency list after: ${marker}`);
+  return (deps[1] ?? '').split(',').map((d) => d.trim()).filter(Boolean);
+}
+
+/**
+ * Source guard for the wiring (the mobile vitest lane does not render screens; the hook itself is
+ * tested in `use-today-hook.test.ts`): Home and the Learning Route page take today from
+ * `useToday`, never from a render-time `new Date()`, and their memos rebuild when it changes.
  */
 describe('Home and the Learning Route page read today from useToday (F-ROUTE-001 R-7e)', () => {
   const read = (...parts: string[]): string => readFileSync(join(__dirname, '..', '..', 'screens', ...parts), 'utf8');
   const home = read('home', 'HomeScreen.tsx');
   const page = read('my-route', 'MyRouteScreen.tsx');
-  const hook = read('route', 'use-today.ts');
-
-  it('useToday sets the boundary timer through watchDay, with the app foreground signal', () => {
-    expect(hook).toMatch(/watchDay\(\{\s*onDay:\s*setToday,\s*subscribeVisibility:\s*subscribeAppVisibility\s*\}\)/);
-    expect(hook).toMatch(/useFocusEffect/);
-  });
 
   it('Home keys the homework count and the route input by useToday', () => {
-    expect(home).toMatch(/const today = useToday\(\);/);
-    expect(home).toMatch(/dueTodayCount\(snap\?\.homework,\s*today\)/);
-    expect(home).not.toMatch(/dayKey\(new Date\(\)/);
-    expect(home).toMatch(/\[profile, snap, today, plans, tier, questOpen\]/);
+    expect(home).toMatch(/const\s+today\s*=\s*useToday\(\s*\)/);
+    expect(home).toMatch(/dueTodayCount\(\s*snap\?\.homework\s*,\s*today\s*\)/);
+    expect(home).not.toMatch(/dayKey\(\s*new Date\(\)/);
+    expect(memoDeps(home, 'const routeInput = useMemo(')).toContain('today');
   });
 
   it('the Learning Route page keys the route input by useToday', () => {
-    expect(page).toMatch(/const today = useToday\(\);/);
-    expect(page).not.toMatch(/dayKey\(now\.toISOString\(\)\)/);
-    expect(page).toMatch(/\[snap, profileId, today, tier,/);
+    expect(page).toMatch(/const\s+today\s*=\s*useToday\(\s*\)/);
+    expect(page).not.toMatch(/dayKey\(\s*now\.toISOString\(\)\s*\)/);
+    expect(memoDeps(page, 'const built = useMemo(')).toContain('today');
   });
 });

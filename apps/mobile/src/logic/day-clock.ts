@@ -7,6 +7,15 @@
 
 const DAY_MS = 86_400_000;
 
+/**
+ * The longest single wait `watchDay` sets. A timer of many hours is unreliable on Android (Doze
+ * and app standby can hold it back), and it is set from the device's zone and clock at that
+ * moment, so a zone or clock change while the screen stays in front would leave it aimed at the
+ * old midnight. Waking at least hourly re-reads the day and aims again; a wake before the
+ * boundary emits nothing.
+ */
+export const MAX_WAIT_MS = 3_600_000;
+
 /** The UTC day key (`YYYY-MM-DD`) of `now`, the same key as `dayKey(now.toISOString())`. */
 export function utcDayKey(now: Date): string {
   return now.toISOString().slice(0, 10);
@@ -38,7 +47,8 @@ export interface WatchDayOptions {
  * Watches the day: emits it at once, again at the next boundary (a timer, set again after each
  * boundary), and whenever the app comes back to the front (a suspended app's timer may not have
  * run). Starting it again, as a screen does on focus, reads the day afresh. A timer that fires
- * before the boundary emits nothing and waits for the time left. Returns the stop function.
+ * before the boundary emits nothing and waits for the time left, never more than `MAX_WAIT_MS` at
+ * a time. Returns the stop function.
  */
 export function watchDay(options: WatchDayOptions): () => void {
   const keyOf = options.keyOf ?? utcDayKey;
@@ -58,7 +68,7 @@ export function watchDay(options: WatchDayOptions): () => void {
       options.onDay(day);
     }
     if (timer !== null) clearTimer(timer);
-    timer = setTimer(read, Math.max(1, msUntilNext(now)));
+    timer = setTimer(read, Math.min(MAX_WAIT_MS, Math.max(1, msUntilNext(now))));
   };
 
   read();
