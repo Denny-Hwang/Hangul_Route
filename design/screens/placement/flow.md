@@ -51,7 +51,7 @@ Screenshots: `HR_SHOTS=1 STORY_FIXTURES=1 pnpm --filter @hangul-route/mobile exe
 
 ## Entry points and the Journey look as built (F-PLC-001 P-7)
 
-Wireframes `design/wireframes/placement/invite.md` (fork), `home-entry.md` (Home card, Profile row) and `placement.md` section I (Journey). Code: `screens/onboarding/PlacementInviteScreen.tsx`, `screens/home/HomeScreen.tsx`, `screens/profile/ProfileScreen.tsx`, `screens/journey/JourneyScreen.tsx`; logic in `logic/placement/entry.ts`, `home-card.ts` and `cell-look.ts` (100 % covered). Everything here is hidden while `flags.placementEnabled` is off or the bank fails to parse; the Journey marks read the stored results only, so a learner without one sees no change.
+Wireframes `design/wireframes/placement/invite.md` (fork), `home-entry.md` (Home card, Profile row) and `placement.md` section I (Journey). Code: `screens/onboarding/PlacementInviteScreen.tsx`, `screens/home/HomeScreen.tsx`, `screens/profile/ProfileScreen.tsx`, `screens/journey/JourneyScreen.tsx`; logic in `logic/placement/entry.ts`, `home-card.ts` and `cell-look.ts` (100 % covered). Everything here is hidden while `flags.placementEnabled` is off (it is on by default since P-10; `EXPO_PUBLIC_PLACEMENT_ENABLED=false` is the kill switch) or the bank fails to parse; the Journey marks read the stored results only, so a learner without one sees no change.
 
 ```
 CreateProfile --(flag on)--> PlacementInvite (A) --"I am new to Korean"--> FirstQuestPreview (declinedAt, placement.skipped)
@@ -84,7 +84,7 @@ Report (any profile)         first card: Suggested weekly plan for <name> | Base
 Report (override)            after Choose a different start: <name>'s plan can follow the start you chose. | [[ Update the plan ]] [ Not now ]
 ```
 
-- **Use this plan** makes the plan with one tap and no PIN on a self profile (OD-14), then opens the start quest; the pace chip changes the length, days and minutes shown, and the plan is exactly what is shown.
+- **Use this plan** makes the plan with one tap and no PIN on a self profile on any device (OD-14, confirmed by the owner 2026-10-14), then opens the start quest; the pace chip changes the length, days and minutes shown, and the plan is exactly what is shown.
 - With the strip or the update card the one primary sits inside the card and nothing is pinned at the bottom; **Just start** and **Change** are ghost buttons. **Keep my plan** folds the card into "Your plan stays right where it is." and a pinned **Start**.
 - **Change** opens the proposal screen on top; once a plan exists there, or after its **Not now**, the strip gives way to **Start** on return. The door already counted `route.proposed`, so the proposal screen does not count it again (`proposedSent`).
 - The update is read from the plan, not from the previous result: a first check after a plan made from Home, or a retake that matches the last one while the plan is still behind, offers **Update my plan**. A level that rises alone moves nothing in the plan and offers nothing.

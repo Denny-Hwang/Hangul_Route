@@ -85,6 +85,9 @@ async function selfLearnerWithAQuest(page: Page, name: string): Promise<string> 
   const profileId = (await readStored<string>(page, 'profiles:active')) as string;
   await seedStored(page, `progress:${profileId}`, snapshotWithOneQuest(profileId));
   await closeInstallGuide(page);
+  // The level-check card holds Home's one quiet slot while it is eligible (F-PLC-001 section 3.10, on since P-10);
+  // its Not now hands the slot to the weekly-plan prompt.
+  await page.getByTestId('home-level-check-not-now').click();
   return profileId;
 }
 

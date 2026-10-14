@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { typeDigits } from './helpers';
+import { answerForkNew, typeDigits } from './helpers';
 
 /**
  * F-LEARN-001 §3.2, §3.3, §3.14: the "Me" path. Nothing but the question is
@@ -76,6 +76,10 @@ for (const vp of VIEWPORTS) {
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
       await next.click();
 
+      // The level check's fork (F-PLC-001 P-10): no age or grown-up words there either.
+      await expect(page.getByTestId('placement-invite')).toBeVisible();
+      expect(await screenText(page)).not.toMatch(/\bAges?\b|grown-up/i);
+      await answerForkNew(page);
       await expect(page.getByText('Your first card is waiting.')).toBeVisible();
       const preview = await screenText(page);
       expect(preview).not.toMatch(/\bAges?\b|grown-up/i);
