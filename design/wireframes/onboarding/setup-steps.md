@@ -53,8 +53,8 @@ Secondary goal: a learner under 13 who picked "Me" can hand over to a grown-up o
 │ │     up for them.           │ │
 │ └────────────────────────────┘ │
 │                                │
-│ "This doesn't change your      │  <- plain caption; second sentence
-│  lessons. Your level check     │     only when the level check is on
+│ "This doesn't change the       │  <- plain caption; second sentence
+│  lessons. The level check      │     only when the level check is on
 │  comes next and sets them."    │
 │                                │
 │ [[ CONTINUE ]]  disabled       │
@@ -63,6 +63,7 @@ Secondary goal: a learner under 13 who picked "Me" can hand over to a grown-up o
 ```
 
 - Nothing is preselected (L4). No number, age range or "older/younger" anywhere on the step.
+- After "I'm under 13" (D) the step is latched: "Me" is drawn disabled (sunken surface, muted label, announced unavailable), "Someone I look after" is checked, and the caption "A grown-up finishes setting this up." sits under the cards.
 - Continue -> B.
 
 ## B. Step 2, Profile (320 dp)
@@ -131,7 +132,7 @@ Secondary goal: a learner under 13 who picked "Me" can hand over to a grown-up o
 
 ```
 ┌────────────────────────────────┐
-│ [<- back]                      │  -> B ("Their name" now)
+│ [<- back]                      │  -> B (still "Your profile")
 │ "Step 3 of 3"                  │
 │ "Privacy"                      │
 │ "A grown-up finishes this      │  <- note; focus lands here
@@ -142,7 +143,7 @@ Secondary goal: a learner under 13 who picked "Me" can hand over to a grown-up o
 │ │ short line: a parent,      │ │
 │ │ guardian or teacher sets   │ │
 │ │ it up; no ads              │ │
-│ │ Email (optional) [ field ] │ │  <- what was typed is kept
+│ │ Email (optional) [ field ] │ │  <- cleared: the learner typed it
 │ │ Create a grown-up PIN      │ │
 │ │   o o o o                  │ │
 │ │ [1][2][3] [4][5][6]        │ │  <- PinPad, 64 dp keys
@@ -162,7 +163,7 @@ Secondary goal: a learner under 13 who picked "Me" can hand over to a grown-up o
 └────────────────────────────────┘
 ```
 
-- No "I'm under 13" button here. Undo: back to A and pick "Me".
+- No "I'm under 13" button here. The statement is latched for the form: Back walks B and A with every value kept, but "Me" stays disabled on A and Continue brings D back. Leaving the screen starts a fresh form.
 - Nothing is stored and no event fires on the switch; Continue runs the guardian path (§3.3).
 
 ## E. Step 3, Privacy, "Someone I look after" (320 dp)
@@ -216,7 +217,8 @@ Same as D without the note: the grown-up card (email, mandatory PIN when the dev
 │ I'm under 13                   │  -> who row back to "Someone I
 │ "Agreeing doesn't change the   │     look after", block hidden,
 │  lessons."                     │     caption "This profile stays
-│ [[ SAVE ]]                     │     with a grown-up."
+│ [[ SAVE ]]                     │     with a grown-up."; "Me" then
+│                                │     disabled until the screen is left
 └────────────────────────────────┘
 ```
 
@@ -231,6 +233,7 @@ Same as D without the note: the grown-up card (email, mandatory PIN when the dev
 | Offline | The whole flow is local; nothing else changes. |
 | Add a profile later, consent already on the device | No Privacy step: B is "Step 2 of 2", carries the Ready card, and its Continue creates the profile. |
 | Add a child on a self-only device | C is replaced by E with the mandatory PIN. |
+| Add a child, guardian consent on the device but no PIN | E shows only the PIN pad: no checkbox, so no "Agreeing doesn't change the lessons." line. |
 | Empty | Not applicable: there is no list on these steps. |
 | Loading | None: no network on any step. |
 
@@ -238,7 +241,7 @@ Same as D without the note: the grown-up card (email, mandatory PIN when the dev
 
 - Radio card (A): selects the answer; Continue enables. Changing it later keeps name, level, cub and email, clears the box and the PIN.
 - Continue (A, B): next step, scroll to top, focus on the new heading. Continue on the last step: `submitProfile`.
-- Back control / system back (B to E): previous step, nothing cleared. On A: leave the screen (Profile when adding later; Welcome on first run via system back only).
+- Back control / Android back (B to E): previous step, nothing cleared. On A: leave the screen (Profile when adding later; Welcome on first run via system back only). The iOS swipe-back is off on B to E (native-stack cannot cancel it) and on as today on A.
 - "I'm under 13" (C): the switch to D, focus on the note.
 - Checkbox, link, PIN pad, optional PIN row: as §3.3 / §3.4.
 
