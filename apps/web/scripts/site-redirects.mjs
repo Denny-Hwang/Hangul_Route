@@ -28,9 +28,14 @@ export const REDIRECT_STATUS = 302;
 /** Hosts where a plain-http origin is allowed: this machine only (the rule of next.config.js and site-links.ts). */
 const LOCAL_HOSTS = new Set(['localhost', '127.0.0.1', '[::1]']);
 
+/** The only domain an https origin may name (itself or a subdomain): a mistyped host such as
+ * https://app.hangulroute.co fails the build instead of forwarding relink codes and space ids to it. */
+const SITE_DOMAIN = 'hangulroute.com';
+
 /**
  * The origin the site forwards to: `CONSOLE_ORIGIN` trimmed, as an origin; `''` (no forwarding) when it is
- * unset or blank. Any other value that is not an https URL (plain http only on this machine) throws, as
+ * unset or blank. Any other value that is not an https URL on hangulroute.com or a subdomain (plain http only
+ * on this machine) throws, as
  * next.config.js does, so a typo fails the build and the previous deployment stays live.
  * @param {string | undefined} raw
  * @returns {string}
@@ -44,10 +49,11 @@ export function redirectOrigin(raw) {
   } catch {
     url = null;
   }
-  const allowed = url !== null && (url.protocol === 'https:' || (url.protocol === 'http:' && LOCAL_HOSTS.has(url.hostname)));
+  const ownHost = url !== null && (url.hostname === SITE_DOMAIN || url.hostname.endsWith(`.${SITE_DOMAIN}`));
+  const allowed = url !== null && ((url.protocol === 'https:' && ownHost) || (url.protocol === 'http:' && LOCAL_HOSTS.has(url.hostname)));
   if (!allowed) {
     throw new Error(
-      `CONSOLE_ORIGIN must be an https origin such as https://app.hangulroute.com (plain http only for localhost), got ${JSON.stringify(raw)}. Unset it to keep grown-up pages on this site.`,
+      `CONSOLE_ORIGIN must be an https origin on hangulroute.com such as https://app.hangulroute.com (plain http only for localhost), got ${JSON.stringify(raw)}. Unset it to keep grown-up pages on this site.`,
     );
   }
   return url.origin;

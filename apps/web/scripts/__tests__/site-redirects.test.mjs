@@ -37,8 +37,14 @@ describe('redirectOrigin (the CONSOLE_ORIGIN rule of next.config.js and site-lin
     }
   });
 
+  it('refuses an https host outside hangulroute.com, so a typo never forwards relink codes to another domain', () => {
+    for (const bad of ['https://app.hangulroute.co', 'https://app-hangulroute.com', 'https://hangulroute.com.example.com', 'https://evilhangulroute.com']) {
+      expect(() => redirectOrigin(bad), bad).toThrow(/CONSOLE_ORIGIN/);
+    }
+  });
+
   it('agrees with grownUpOrigin, so the links and the forwarding always point at the same host', () => {
-    for (const value of [undefined, '', '  ', 'https://app.hangulroute.com', ' https://app.hangulroute.com/ ', 'http://127.0.0.1:3000']) {
+    for (const value of [undefined, '', '  ', 'https://app.hangulroute.com', ' https://app.hangulroute.com/ ', 'http://127.0.0.1:3000', 'https://hangulroute.com']) {
       expect(redirectOrigin(value), String(value)).toBe(grownUpOrigin({ CONSOLE_ORIGIN: value }));
     }
   });
@@ -120,7 +126,7 @@ describe('the CLI', { timeout: 30_000 }, () => {
     const result = run('https://app.hangulroute.com');
     expect(result.status, result.stderr).toBe(0);
     expect(readFileSync(join(out, '_redirects'), 'utf8')).toBe(redirectRules(APP_ORIGIN, GROWN_UP_PREFIXES));
-    expect(result.stdout).toMatch(/site-redirects: 10 rules/);
+    expect(result.stdout).toContain(`site-redirects: ${GROWN_UP_PREFIXES.length * 2} rules to ${APP_ORIGIN}`);
   });
 
   it('writes nothing when CONSOLE_ORIGIN is unset', () => {
@@ -147,5 +153,22 @@ describe('package.json', () => {
 
   it('keeps no _redirects in public/, so only the script decides', () => {
     expect(existsSync(join(WEB, 'public', '_redirects'))).toBe(false);
+  });
+});
+
+// Checked by hand on `wrangler dev --local` (query kept, a redirect wins over the console files still in out/, site pages
+// stay 200) with these [assets] settings. CI only reads the generated text,
+// so this pins the settings the Workers static-assets redirect handling was checked against: a change here
+// means re-running that local check (owner-runbook.md section E2, step 5) before S-3b.
+describe('wrangler.toml (the site Worker the redirects run on)', () => {
+  const toml = readFileSync(join(WEB, 'wrangler.toml'), 'utf8');
+  const assets = toml.slice(toml.indexOf('[assets]')).split(/\n\[/)[0];
+
+  it('serves out/ as an assets-only Worker with the settings the redirects were checked against', () => {
+    expect(assets).toMatch(/^directory = "\.\/out"$/m);
+    expect(assets).toMatch(/^not_found_handling = "404-page"$/m);
+    expect(assets).toMatch(/^html_handling = "auto-trailing-slash"$/m);
+    expect(toml).not.toMatch(/^main\s*=/m);
+    expect(assets).not.toMatch(/run_worker_first/);
   });
 });
