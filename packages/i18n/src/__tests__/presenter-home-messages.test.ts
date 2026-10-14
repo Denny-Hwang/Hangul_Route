@@ -28,7 +28,7 @@ function rendered(locale: UiLocale, root: 'learner.presenter' | 'a11y.presenter'
 
 const en = getMessages('en');
 // The keys this PR adds (PR 6 owns the rest of the presenter tree, such as the `1 / 12` counter shared by every locale).
-const learnerPaths = leafPaths(en.learner.presenter).filter((p) => p.startsWith('home.') || p.startsWith('language.'));
+const learnerPaths = leafPaths(en.learner.presenter).filter((p) => p.startsWith('home.') || p.startsWith('language.') || p === 'start.back.cta');
 const a11yPaths = leafPaths(en.a11y.presenter).filter((p) => p === 'removeRecent');
 
 describe('learner.presenter home strings (F-TCH-004 PR 8)', () => {
@@ -42,7 +42,8 @@ describe('learner.presenter home strings (F-TCH-004 PR 8)', () => {
     expect(p.home.quick.letters(1)).toBe('1 letter');
     expect(p.home.quick.letters(14)).toBe('14 letters');
     expect(p.home.quick.minutes(15)).toBe('about 15 min');
-    expect(p.home.quick.full(30)).toBe('A lesson holds 30 items at most.');
+    expect(p.home.quick.full).toBe('This lesson is full. Remove one to add another.');
+    expect(p.start.back.cta).toBe('Back to lessons');
     expect(p.language.title).toBe('Presenter language');
     expect(en.a11y.presenter.removeRecent('Week 3 letters')).toBe('Remove: Week 3 letters');
   });
@@ -54,9 +55,11 @@ describe('learner.presenter home strings (F-TCH-004 PR 8)', () => {
     expect(es.home.quick.chosen(1)).toBe('Elegiste 1');
     expect(es.home.quick.letters(1)).toBe('1 letra');
     expect(es.home.recent.startOver.cta).toBe('Desde el inicio');
+    expect(es.start.back.cta).toBe('Volver a las lecciones');
     expect(ko.home.title).toBe('강의');
     expect(ko.home.quick.chosen(3)).toBe('3개 골랐어요');
     expect(ko.home.quick.letters(14)).toBe('글자 14개');
+    expect(ko.start.back.cta).toBe('수업 목록으로');
     expect(getMessages('ko').a11y.presenter.removeRecent('Food')).toBe('지우기: Food');
   });
 

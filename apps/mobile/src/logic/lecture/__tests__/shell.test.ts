@@ -79,9 +79,17 @@ describe('resolveBoot', () => {
   it('a reload before Start, or a fresh link to a deck in Recent, starts from the beginning', () => {
     const deck = deckOf([{ kind: 'episode', id: 'episode:stage1-letters' }]);
     const saved = rememberDeck(emptyRecent(), deck, '2026-10-13T09:00:00Z');
-    expect(resolveBoot({ raw: encodeDeck(deck), reloaded: true }, saved)).toEqual({ kind: 'deck', deck, source: 'console' });
+    // A held deck that is in Recent stays a Recent start (lecture.start source), with no slide to resume.
+    expect(resolveBoot({ raw: encodeDeck(deck), reloaded: true }, saved)).toEqual({ kind: 'deck', deck, source: 'recent' });
+    expect(resolveBoot({ raw: encodeDeck(deck), reloaded: true }, emptyRecent())).toEqual({ kind: 'deck', deck, source: 'console' });
     const started = setLastSlide(saved, deck.id, 'episode:stage1-letters/x');
     expect(resolveBoot(link(encodeDeck(deck)), started)).toEqual({ kind: 'deck', deck, source: 'console' });
+  });
+
+  it('a Start over deck reloaded before Start opens at its first slide, still as a Recent start', () => {
+    const deck = deckOf([{ kind: 'episode', id: 'episode:stage1-letters' }]);
+    const list = setLastSlide(rememberDeck(emptyRecent(), deck, '2026-10-13T09:00:00Z'), deck.id, 'episode:stage1-letters/x');
+    expect(resolveBoot({ raw: encodeDeck(deck), reloaded: true, fresh: true }, list)).toEqual({ kind: 'deck', deck, source: 'recent' });
   });
 
   it('shows the home without a deck', () => {
@@ -446,5 +454,7 @@ describe('homeStart and presenterLocale (the presenter home, F-TCH-004 PR 8)', (
     expect(presenterLocale({ deck: null, session: 'ko', device: 'en', available })).toBe('ko');
     // A chip for a locale this build does not offer is ignored.
     expect(presenterLocale({ deck: null, session: 'ko', device: 'en', available: ['en'] })).toBe('en');
+    // So is a deck's language this build does not offer (the English-only release build).
+    expect(presenterLocale({ deck: es, session: null, device: 'en', available: ['en'] })).toBe('en');
   });
 });

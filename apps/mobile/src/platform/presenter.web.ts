@@ -122,12 +122,25 @@ function deckParam(hash: string): string | null {
 
 /** The history-state key holding the open deck's encoded fragment (ids, a seed and options; never a name). */
 const DECK_STATE = 'hrLectureFragment';
+/** Set by Start over from the home: a reload before Start opens the deck fresh, not at its saved slide. */
+const FRESH_STATE = 'hrLectureFresh';
 
 export interface DeckAddress {
   /** The encoded deck, for `decodeDeck`. */
   raw: string;
   /** True when it came back from this tab's history entry (a reload), not from a link. */
   reloaded: boolean;
+  /** A held deck the teacher chose to start over: it does not resume at its saved slide. */
+  fresh?: true;
+}
+
+function freshState(env: PresenterEnv): boolean {
+  const state = env.history?.state;
+  return state !== null && typeof state === 'object' && (state as Record<string, unknown>)[FRESH_STATE] === true;
+}
+
+function heldState(raw: string, fresh: boolean): Record<string, unknown> {
+  return fresh ? { [DECK_STATE]: raw, [FRESH_STATE]: true } : { [DECK_STATE]: raw };
 }
 
 function stateFragment(env: PresenterEnv): string | null {
@@ -172,8 +185,10 @@ export function takeDeckFragment(env: PresenterEnv = browserEnv()): DeckAddress 
     return { raw: linked, reloaded: false };
   }
   const kept = stateFragment(env);
-  if (location.hash || location.pathname !== PRESENTER_PATH) replaceAddress(env, kept === null ? null : { [DECK_STATE]: kept });
-  return kept === null ? null : { raw: kept, reloaded: true };
+  const fresh = kept !== null && freshState(env);
+  if (location.hash || location.pathname !== PRESENTER_PATH) replaceAddress(env, kept === null ? null : heldState(kept, fresh));
+  if (kept === null) return null;
+  return fresh ? { raw: kept, reloaded: true, fresh: true } : { raw: kept, reloaded: true };
 }
 
 /** Forgets the open deck of this tab (Exit, an invalid link): a reload then shows the presenter home. */
@@ -184,10 +199,11 @@ export function forgetOpenDeck(env: PresenterEnv = browserEnv()): void {
 /**
  * Holds a deck started from the presenter home (Resume, Start over, Build lesson) in this tab's
  * history entry, the same state a `#d=` link leaves, so a reload reopens that lesson; the address
- * stays `/present` and the state holds only the encoded deck (no name, TD3).
+ * stays `/present` and the state holds only the encoded deck (no name, TD3). `fresh` (Start over)
+ * marks it to open at its first slide on a reload before Start; Start holds it again without the mark.
  */
-export function holdOpenDeck(raw: string, env: PresenterEnv = browserEnv()): void {
-  replaceAddress(env, { [DECK_STATE]: raw });
+export function holdOpenDeck(raw: string, options: { fresh?: boolean } = {}, env: PresenterEnv = browserEnv()): void {
+  replaceAddress(env, heldState(raw, options.fresh === true));
 }
 
 /**

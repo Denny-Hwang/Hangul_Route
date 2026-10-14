@@ -144,6 +144,14 @@ export function canChoose(chosen: readonly string[], key: string, items: readonl
   return chosenBlockCount(chosen, items) + item.blocks.length <= QUICK_MAX_BLOCKS;
 }
 
+/**
+ * The lesson is full when some unchosen item no longer fits: a 2-block letter set can be out of
+ * reach before 30 blocks, so the status line explains every disabled row (design home.md).
+ */
+export function quickFull(chosen: readonly string[], items: readonly QuickItem[]): boolean {
+  return items.some((i) => !chosen.includes(i.key) && !canChoose(chosen, i.key, items));
+}
+
 export function toggleChoice(chosen: readonly string[], key: string, items: readonly QuickItem[]): readonly string[] {
   if (chosen.includes(key)) return chosen.filter((k) => k !== key);
   return canChoose(chosen, key, items) ? [...chosen, key] : chosen;

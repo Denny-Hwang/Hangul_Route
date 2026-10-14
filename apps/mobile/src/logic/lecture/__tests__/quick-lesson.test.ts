@@ -6,6 +6,7 @@ import {
   canChoose,
   chosenBlockCount,
   quickDeckTitle,
+  quickFull,
   quickGroups,
   toggleChoice,
   type QuickItem,
@@ -116,6 +117,24 @@ describe('choosing (multi-select up to 30 blocks)', () => {
     expect(canChoose(twentyNine, 'letters:big', all)).toBe(false);
     expect(canChoose(twentyNine, 'quest:q29', all)).toBe(true);
   });
+
+  it('is full as soon as any unchosen item no longer fits, not only at exactly 30 blocks', () => {
+    const many: QuickItem[] = Array.from({ length: 30 }, (_, i) => ({
+      key: `quest:q${i}`,
+      group: 'lessons',
+      title: `Q${i}`,
+      detail: { kind: 'minutes', n: 1 },
+      blocks: [{ kind: 'quest', id: `quest:q${i}` }],
+    }));
+    const pair: QuickItem = { ...many[0]!, key: 'letters:big', blocks: [many[0]!.blocks[0]!, many[1]!.blocks[0]!] };
+    const all = [...many, pair];
+    expect(quickFull([], all)).toBe(false);
+    const twentyEight = many.slice(0, 28).map((i) => i.key);
+    expect(quickFull(twentyEight, all)).toBe(false);
+    // 29 blocks: the 2-block set no longer fits, though one more lesson does.
+    expect(quickFull([...twentyEight, 'quest:q28'], all)).toBe(true);
+    expect(quickFull(many.map((i) => i.key), all)).toBe(true);
+  });
 });
 
 describe('the deck title', () => {
@@ -166,6 +185,11 @@ describe('buildQuickDeck', () => {
   it('carries no name: the picker is numbers and the deck has no label field', () => {
     const deck = buildQuickDeck(['letters:vowels'], items, { now, rng: () => 0.1, fallbackTitle: 'Quick lesson' })!;
     expect(Object.keys(deck).sort()).toEqual(['blocks', 'createdAt', 'id', 'options', 'picker', 'seed', 'source', 'title', 'v']);
+  });
+
+  it('keeps no language with the deck when no chip was chosen', () => {
+    const deck = buildQuickDeck(['letters:vowels'], items, { now, rng: () => 0.1, fallbackTitle: 'Quick lesson' })!;
+    expect(deck.options.uiLocale).toBeUndefined();
   });
 
   it('passes the session language to the deck when given', () => {

@@ -26,19 +26,20 @@ export type BootResult =
 
 /**
  * What `/present` opens. `address` is the deck the tab holds: from a link (`#d=`), or kept in the
- * tab's history entry across a reload (`reloaded`). A reloaded deck that was already started
- * (Recent has its open slide) resumes there as a Recent start; otherwise the deck starts fresh.
- * No deck: the presenter home.
+ * tab's history entry across a reload (`reloaded`). A reloaded deck that is in Recent is a Recent
+ * start and resumes at its open slide, unless the teacher chose Start over (`fresh`); otherwise
+ * the deck starts fresh. No deck: the presenter home.
  */
-export function resolveBoot(address: { raw: string; reloaded: boolean } | null, recent: RecentList): BootResult {
+export function resolveBoot(address: { raw: string; reloaded: boolean; fresh?: true } | null, recent: RecentList): BootResult {
   if (address === null) return { kind: 'home' };
   const decoded = decodeDeck(address.raw);
   if (!decoded.ok) return { kind: 'invalid', reason: decoded.reason };
   const deck = decoded.deck;
   const linked: StartSource = deck.source === 'quick' ? 'quick' : 'console';
-  const open = address.reloaded ? recent.items.find((item) => item.deck.id === deck.id && item.lastSlideKey !== undefined) : undefined;
-  if (!open?.lastSlideKey) return { kind: 'deck', deck, source: linked };
-  return { kind: 'deck', deck, source: 'recent', resumeKey: open.lastSlideKey };
+  const known = address.reloaded ? recent.items.find((item) => item.deck.id === deck.id) : undefined;
+  if (!known) return { kind: 'deck', deck, source: linked };
+  if (address.fresh || known.lastSlideKey === undefined) return { kind: 'deck', deck, source: 'recent' };
+  return { kind: 'deck', deck, source: 'recent', resumeKey: known.lastSlideKey };
 }
 
 // --- the presenter home (PR 8) ---------------------------------------------------------------------
@@ -55,12 +56,15 @@ export function homeStart(choice: HomeChoice): { kind: 'ready'; deck: LectureDec
 }
 
 /**
- * The presenter's language (section 3.12): a language chip chosen in this session (memory only,
- * the device locale is never written), else the deck's `options.uiLocale`, else the device locale.
+ * The presenter's language (sections 3.12 and 3.13): a language chip chosen in this session
+ * (memory only, the device locale is never written), else the deck's `options.uiLocale`, else
+ * the device locale. A locale this build does not offer is passed over at every step.
  */
 export function presenterLocale(input: { deck: LectureDeck | null; session: UiLocale | null; device: UiLocale; available: readonly UiLocale[] }): UiLocale {
   if (input.session !== null && input.available.includes(input.session)) return input.session;
-  return input.deck?.options.uiLocale ?? input.device;
+  const fromDeck = input.deck?.options.uiLocale;
+  if (fromDeck !== undefined && input.available.includes(fromDeck)) return fromDeck;
+  return input.device;
 }
 
 // --- the slides this build draws ------------------------------------------------------------------

@@ -4,7 +4,7 @@ import type { Messages, UiLocale } from '@hangul-route/i18n';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, ScrollView, Text, View, useWindowDimensions, type PressableStateCallbackType, type TextStyle, type ViewStyle } from 'react-native';
 import { radioAfter, recentDayLabel, type RecentState } from '../../logic/lecture/home-view';
-import { QUICK_MAX_BLOCKS, buildQuickDeck, canChoose, chosenBlockCount, quickGroups, toggleChoice, type QuickGroupId, type QuickItem, type QuickSource } from '../../logic/lecture/quick-lesson';
+import { buildQuickDeck, canChoose, quickFull, quickGroups, toggleChoice, type QuickGroupId, type QuickItem, type QuickSource } from '../../logic/lecture/quick-lesson';
 import type { RecentItem } from '../../logic/lecture/recent';
 import type { LanguageOption } from '../../logic/locale/language-picker';
 
@@ -30,6 +30,8 @@ export interface PresenterHomeProps {
   locale: UiLocale;
   /** The chips; fewer than two draws none (`showLanguagePickers`). */
   languages: readonly LanguageOption[];
+  /** The chip chosen in this session, or null; only this, never the device locale, goes into a built deck. */
+  sessionLocale: UiLocale | null;
   onLanguage: (locale: UiLocale) => void;
   /** Opens the Help overlay (PR 9); without it the Keys and help button is not drawn, so it never leads nowhere. */
   onHelp?: () => void;
@@ -98,6 +100,7 @@ function HomeButton({
       role="button"
       accessibilityLabel={label}
       accessibilityState={{ disabled: disabled === true }}
+      aria-disabled={disabled === true}
       disabled={disabled}
       onPress={onPress}
       testID={testID}
@@ -255,6 +258,25 @@ function LanguageRadios({
 
 function RecentPanel({ messages, locale, recent, onResume, onStartOver, onRemove, now }: PresenterHomeProps): React.ReactElement {
   const m = messages.learner.presenter.home.recent;
+  // After a remove, focus moves to the next row's remove button (or the one before), else the h2,
+  // so keyboard and screen-reader focus never falls to the page body.
+  const removeRefs = useRef(new Map<string, View | null>());
+  const headingRef = useRef<Text>(null);
+  const [focusAfterRemove, setFocusAfterRemove] = useState<{ target: string | null } | null>(null);
+  const items = recent.status === 'ready' ? recent.list.items : null;
+  useEffect(() => {
+    if (focusAfterRemove === null) return;
+    const target = focusAfterRemove.target === null ? undefined : removeRefs.current.get(focusAfterRemove.target);
+    if (target) target.focus?.();
+    else (headingRef.current as unknown as { focus?: () => void } | null)?.focus?.();
+    setFocusAfterRemove(null);
+  }, [items, focusAfterRemove]);
+  const remove = (deckId: string): void => {
+    const ids = (items ?? []).map((i) => i.deck.id);
+    const at = ids.indexOf(deckId);
+    setFocusAfterRemove({ target: ids[at + 1] ?? ids[at - 1] ?? null });
+    onRemove(deckId);
+  };
   const day = { today: messages.common.notes.date.today, yesterday: messages.common.notes.date.yesterday };
   const today = (now ?? (() => new Date()))();
   const line = (copy: string, testID: string): React.ReactElement => (
@@ -302,7 +324,10 @@ function RecentPanel({ messages, locale, recent, onResume, onStartOver, onRemove
               <Pressable
                 role="button"
                 aria-label={messages.a11y.presenter.removeRecent(item.deck.title)}
-                onPress={() => onRemove(item.deck.id)}
+                ref={(el) => {
+                  removeRefs.current.set(item.deck.id, el);
+                }}
+                onPress={() => remove(item.deck.id)}
                 testID={`presenter-recent-remove-${item.deck.id}`}
                 style={({ focused }: Focusable) => ({
                   width: touchTarget.min,
@@ -329,15 +354,15 @@ function RecentPanel({ messages, locale, recent, onResume, onStartOver, onRemove
     );
   return (
     <View role="region" aria-label={m.title} style={{ gap: spacing.md }} testID="presenter-home-recent">
-      <H level={2} style={text(typography.size.prompt, 'bold', colors.text.primary)}>
+      <Text ref={headingRef} role="heading" aria-level={2} {...{ tabIndex: -1 }} style={text(typography.size.prompt, 'bold', colors.text.primary)}>
         {m.title}
-      </H>
+      </Text>
       {body}
     </View>
   );
 }
 
-function QuickPanel({ messages, locale, quick, onBuild, now, rng }: PresenterHomeProps): React.ReactElement {
+function QuickPanel({ messages, sessionLocale, quick, onBuild, now, rng }: PresenterHomeProps): React.ReactElement {
   const m = messages.learner.presenter.home.quick;
   const groups = useMemo(() => quickGroups(quick, { consonants: m.consonants, vowels: m.vowels }), [quick, m.consonants, m.vowels]);
   const items = useMemo(() => groups.flatMap((g) => g.items), [groups]);
@@ -346,13 +371,14 @@ function QuickPanel({ messages, locale, quick, onBuild, now, rng }: PresenterHom
   useEffect(() => {
     setChosen((c) => c.filter((key) => items.some((i) => i.key === key)));
   }, [items]);
-  const full = chosenBlockCount(chosen, items) >= QUICK_MAX_BLOCKS;
+  const full = quickFull(chosen, items);
   const build = (): void => {
     const deck = buildQuickDeck(chosen, items, {
       now: (now ?? (() => new Date()))(),
       rng: rng ?? Math.random,
       fallbackTitle: m.title,
-      uiLocale: locale,
+      // Only a chip the teacher chose is kept with the deck; with none it opens in the device language.
+      ...(sessionLocale !== null ? { uiLocale: sessionLocale } : {}),
     });
     if (deck) onBuild(deck);
   };
@@ -367,7 +393,7 @@ function QuickPanel({ messages, locale, quick, onBuild, now, rng }: PresenterHom
           <H level={3} style={{ ...text(typography.size.body, 'bold', colors.text.secondary), paddingTop: spacing.sm }}>
             {m.group[GROUP_KEY[group.id]]}
           </H>
-          <View role="list" style={{ gap: spacing.xs }}>
+          <View style={{ gap: spacing.xs }}>
             {group.items.map((item) => (
               <QuickRow
                 key={item.key}
@@ -394,7 +420,7 @@ function QuickPanel({ messages, locale, quick, onBuild, now, rng }: PresenterHom
         }}
       >
         <Text role="status" aria-live="polite" testID="presenter-home-chosen" style={{ ...text(typography.size.body, 'regular', colors.text.primary), flexShrink: 1 }}>
-          {chosen.length === 0 ? m.nothing : full ? `${m.chosen(chosen.length)} ${m.full(QUICK_MAX_BLOCKS)}` : m.chosen(chosen.length)}
+          {chosen.length === 0 ? m.nothing : full ? `${m.chosen(chosen.length)} ${m.full}` : m.chosen(chosen.length)}
         </Text>
         <HomeButton label={m.build.cta} onPress={build} primary disabled={chosen.length === 0} testID="presenter-home-build" />
       </View>
@@ -422,9 +448,11 @@ function QuickRow({
       aria-checked={on}
       aria-disabled={disabled}
       accessibilityState={{ checked: on, disabled }}
-      aria-label={`${item.title}, ${detail}`}
-      disabled={disabled}
-      onPress={onToggle}
+      // Named by its title and detail texts (no label is put together in code); a row that does not
+      // fit stays in the tab order, marked disabled, so the reason in the status line can be found.
+      onPress={() => {
+        if (!disabled) onToggle();
+      }}
       testID={`presenter-quick-${item.key}`}
       style={({ focused }: Focusable) => ({
         flexDirection: 'row',

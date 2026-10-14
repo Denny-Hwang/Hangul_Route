@@ -1819,7 +1819,7 @@ export const learner = {
         letters: (n: number) => plural('en', n, { one: '1 letter', other: `${n} letters` }),
         chosen: (n: number) => plural('en', n, { one: '1 chosen', other: `${n} chosen` }),
         nothing: 'Choose at least one item to build a lesson.',
-        full: (max: number) => `A lesson holds ${max} items at most.`,
+        full: 'This lesson is full. Remove one to add another.',
         build: { cta: 'Build lesson' },
       },
     },
@@ -1896,6 +1896,8 @@ export const learner = {
       },
     },
     start: {
+      /** Back to the presenter home before Start: nothing is saved or sent. */
+      back: { cta: 'Back to lessons' },
       slides: (n: number) => plural('en', n, { one: '1 slide', other: `${n} slides` }),
       minutes: (n: number) => plural('en', n, { one: 'about 1 minute', other: `about ${n} minutes` }),
       checks: 'Before you start',

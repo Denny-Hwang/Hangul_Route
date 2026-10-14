@@ -13,6 +13,9 @@ import { shot } from './shots';
 
 const RECENT_KEY = 'hr:lecture:recent';
 
+// The day labels ("Today", "Oct 9") are read in the runner's zone; pin it so the older row is Oct 9 everywhere.
+test.use({ timezoneId: 'UTC' });
+
 const deck = (id: string, title: string) => ({
   v: 1,
   id,
@@ -76,6 +79,8 @@ test.describe('presenter home, wide (two columns)', () => {
 
     await page.getByRole('button', { name: 'Remove: Food' }).click();
     await expect(recent.getByText('Food')).toHaveCount(0);
+    // Focus moves to the row that is left, not to the page body.
+    await expect(page.getByRole('button', { name: 'Remove: Week 3 letters' })).toBeFocused();
     await expect
       .poll(async () => ((await readStored<{ items: { deck: { id: string } }[] }>(page, 'lecture:recent'))?.items ?? []).map((i) => i.deck.id))
       .toEqual(['lecture:week3abcde']);
@@ -126,6 +131,51 @@ test.describe('presenter home, wide (two columns)', () => {
     await expect(page.getByTestId('presenter-start').getByText('Week 3 letters')).toBeVisible();
   });
 
+  test('Back to lessons leaves the start screen with nothing saved, and a reload shows the home', async ({ page }) => {
+    await seedRecent(page, RECENT);
+    await page.getByTestId('presenter-recent-resume-lecture:food12345a').click();
+    await expect(page.getByTestId('presenter-start')).toBeVisible();
+    await page.getByTestId('presenter-start-back').click();
+    await expect(page.getByTestId('presenter-home-title')).toBeFocused();
+    const stored = async () => (await readStored<{ items: { deck: { id: string }; savedAt: string }[] }>(page, 'lecture:recent'))?.items ?? [];
+    expect((await stored()).map((i) => i.deck.id)).toEqual(['lecture:week3abcde', 'lecture:food12345a']);
+    await page.reload();
+    await expect(page.getByTestId('presenter-home')).toBeVisible();
+  });
+
+  test('a resumed lesson moves to the top of Recent with today', async ({ page }) => {
+    await seedRecent(page, RECENT);
+    await page.getByTestId('presenter-recent-resume-lecture:food12345a').click();
+    const start = page.getByTestId('presenter-start-button');
+    await expect(start).toBeEnabled({ timeout: 10_000 });
+    await start.click();
+    await expect(page.getByTestId('presenter-stage')).toBeVisible();
+    await page.keyboard.press('Escape');
+    await page.getByTestId('presenter-exit-confirm').click();
+    await expect(page.getByTestId('presenter-home-title')).toBeFocused();
+    const rows = page.getByTestId('presenter-home-recent').getByRole('listitem');
+    await expect(rows.first()).toContainText('Food');
+    await expect(rows.first()).toContainText('Today');
+  });
+
+  test('a row that no longer fits stays in the tab order, marked disabled', async ({ page }) => {
+    await page.goto('/present');
+    const quick = page.getByTestId('presenter-home-quick');
+    const boxes = quick.getByRole('checkbox');
+    const total = await boxes.count();
+    // Tick single lessons until something no longer fits (or every row is ticked).
+    for (let i = 0; i < total; i += 1) {
+      const box = boxes.nth(i);
+      if ((await box.getAttribute('aria-disabled')) === 'true') continue;
+      await box.click();
+      if ((await page.getByTestId('presenter-home-chosen').textContent())?.includes('This lesson is full.')) break;
+    }
+    const disabled = quick.locator('[role="checkbox"][aria-disabled="true"]');
+    if ((await disabled.count()) === 0) test.skip(true, 'the bundle holds fewer than 30 blocks: nothing reaches the cap');
+    await expect(disabled.first()).toHaveAttribute('tabindex', '0');
+    await expect(page.getByTestId('presenter-home-chosen')).toContainText('This lesson is full. Remove one to add another.');
+  });
+
   test('language chips: one tab stop, arrows move and select, the device locale is not written', async ({ page }) => {
     await page.goto('/present');
     const group = page.getByRole('radiogroup', { name: 'Presenter language' });
@@ -156,10 +206,16 @@ test.describe('presenter home, phone (one column, Recent first)', () => {
   });
 
   test('works at 320 px with 200 % text', async ({ page }) => {
-    await page.setViewportSize({ width: 320, height: 800 });
+    // react-native-web sets text sizes in px, so a root font-size changes nothing; 320 px at 200 %
+    // zoom is a 160 CSS px layout viewport (WCAG 1.4.10 reflow), which is what is drawn here.
+    await page.setViewportSize({ width: 160, height: 800 });
     await seedRecent(page, RECENT);
-    await page.addStyleTag({ content: 'html { font-size: 200% !important; }' });
+    await expect(page.getByTestId('presenter-home-title')).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+    for (const id of ['presenter-home-build', 'presenter-recent-resume-lecture:week3abcde']) {
+      const box = await page.getByTestId(id).boundingBox();
+      expect(box && box.x >= 0 && box.x + box.width <= 160, id).toBe(true);
+    }
     await shot(page, 'presenter-home-320-text200');
   });
 });

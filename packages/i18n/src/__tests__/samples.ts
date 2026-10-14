@@ -783,6 +783,5 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'learner.presenter.home.quick.minutes': [[1], [15]],
   'learner.presenter.home.quick.letters': [[1], [14]],
   'learner.presenter.home.quick.chosen': [[1], [3]],
-  'learner.presenter.home.quick.full': [[30]],
   'a11y.presenter.removeRecent': [['Week 3 letters']],
 };

@@ -321,8 +321,15 @@ export default function PresenterApp(): React.ReactElement {
     tally.current = startTally(Date.now(), slides[state.slideIdx]?.key);
     const savedAt = new Date().toISOString();
     const firstKey = slides[state.slideIdx]!.key;
-    const { deck: started, source } = phase;
-    updateRecent((list) => setLastSlide(source === 'recent' ? list : rememberDeck(list, started, savedAt), started.id, firstKey));
+    const { deck: started } = phase;
+    // Every start, a resumed one too, moves the lesson to the top of Recent with today's day (section 3.12).
+    updateRecent((list) => setLastSlide(rememberDeck(list, started, savedAt), started.id, firstKey));
+    // From now on a reload resumes at the open slide, also after Start over (which held the deck as fresh).
+    try {
+      holdOpenDeck(encodeDeck(started));
+    } catch {
+      // A deck too long for a link still runs; a reload then shows the home.
+    }
     void track({
       name: 'lecture.start',
       payload: { ...startPayload({ deck: phase.deck, run, source: phase.source, pickerMode, capability, offlineReady: isOfflineReady() }) },
@@ -400,7 +407,7 @@ export default function PresenterApp(): React.ReactElement {
     const next = homeStart(choice);
     // The tab holds the deck, as a link does, so a reload reopens this lesson (section 3.2).
     try {
-      holdOpenDeck(encodeDeck(next.deck));
+      holdOpenDeck(encodeDeck(next.deck), { fresh: choice.kind === 'start-over' });
     } catch {
       // A deck too long for a link still runs; a reload then shows the home.
     }
@@ -408,6 +415,14 @@ export default function PresenterApp(): React.ReactElement {
     setPickerCount(null);
     setHomeFocus(false);
     setPhase(next);
+  }, []);
+  // Back to lessons on the start screen: nothing started, so nothing is saved or sent (design start-screen.md).
+  const backToHome = useCallback(() => {
+    clearPickerLabels();
+    forgetOpenDeck();
+    setPickerCount(null);
+    setHomeFocus(true);
+    setPhase({ kind: 'home' });
   }, []);
 
   // ---- render ----
@@ -452,6 +467,7 @@ export default function PresenterApp(): React.ReactElement {
         messages={messages}
         locale={locale}
         languages={languages}
+        sessionLocale={sessionLocale}
         onLanguage={setSessionLocale}
         recent={recentView(recentLoaded)}
         onResume={(item) => openFromHome({ kind: 'resume', item })}
@@ -492,6 +508,7 @@ export default function PresenterApp(): React.ReactElement {
           onPickerCount={setPickerCount}
           fontReady={fontReady}
           onStart={onStart}
+          onBack={backToHome}
         />
       );
   } else {

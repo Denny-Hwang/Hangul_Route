@@ -181,9 +181,24 @@ describe('takeDeckFragment', () => {
 
   it('holdOpenDeck keeps a deck started from the home in this tab, so a reload reopens it', () => {
     const { e, history } = addressEnv({ pathname: '/present', hash: '' }, null);
-    holdOpenDeck('1.abc', e);
+    holdOpenDeck('1.abc', {}, e);
     expect(history.state).toEqual({ hrLectureFragment: '1.abc' });
     expect(takeDeckFragment(e)).toEqual({ raw: '1.abc', reloaded: true });
+  });
+
+  it('holdOpenDeck marks a Start over deck fresh, and a reload keeps the mark until Start holds it again', () => {
+    const { e, history } = addressEnv({ pathname: '/present', hash: '' }, null);
+    holdOpenDeck('1.abc', { fresh: true }, e);
+    expect(history.state).toEqual({ hrLectureFragment: '1.abc', hrLectureFresh: true });
+    expect(takeDeckFragment(e)).toEqual({ raw: '1.abc', reloaded: true, fresh: true });
+    holdOpenDeck('1.abc', {}, e);
+    expect(takeDeckFragment(e)).toEqual({ raw: '1.abc', reloaded: true });
+  });
+
+  it('a fresh held deck keeps its mark when the address is cleaned', () => {
+    const { e, history } = addressEnv({ pathname: '/present/x', hash: '' }, { hrLectureFragment: '1.abc', hrLectureFresh: true });
+    expect(takeDeckFragment(e)).toEqual({ raw: '1.abc', reloaded: true, fresh: true });
+    expect(history.state).toEqual({ hrLectureFragment: '1.abc', hrLectureFresh: true });
   });
 
   it('forgetOpenDeck clears the held deck', () => {

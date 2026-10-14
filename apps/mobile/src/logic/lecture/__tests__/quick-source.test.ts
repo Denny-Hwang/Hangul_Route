@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { episodeById, jamoConsonants, jamoVowels, questById } from '../../../content';
+import { localizeEpisode, localizeQuest } from '../../content-locale';
 import { expandDeck } from '../deck-builder';
 import { lectureBundle } from '../content';
 import { buildQuickDeck, quickGroups } from '../quick-lesson';
@@ -39,8 +40,12 @@ describe('quickSource: the bundle behind Quick lesson (F-TCH-004 §3.12)', () =>
   });
 
   it('localises titles to the presenter language', () => {
-    const es = quickSource('es');
-    expect(es.episodes.map((e) => e.id)).toEqual(source.episodes.map((e) => e.id));
+    for (const locale of ['es', 'ko'] as const) {
+      const local = quickSource(locale);
+      expect(local.episodes.map((e) => e.id)).toEqual(source.episodes.map((e) => e.id));
+      for (const e of local.episodes) expect(e.title).toBe(localizeEpisode(episodeById(e.id)!, locale).titleEn);
+      for (const q of local.quests) expect(q.title).toBe(localizeQuest(questById(q.id)!, locale).titleEn);
+    }
   });
 
   it('every item expands to at least one slide and the full selection is a valid deck', () => {

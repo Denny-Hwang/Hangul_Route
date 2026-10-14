@@ -1388,7 +1388,7 @@ export const learner = {
         letters: (n: number) => `글자 ${n}개`,
         chosen: (n: number) => `${n}개 골랐어요`,
         nothing: '수업을 만들려면 하나 이상 골라요.',
-        full: (max: number) => `수업에는 ${max}개까지 담을 수 있어요.`,
+        full: '수업이 가득 찼어요. 하나를 빼면 다른 것을 넣을 수 있어요.',
         build: { cta: '수업 만들기' },
       },
     },
@@ -1453,6 +1453,8 @@ export const learner = {
       },
     },
     start: {
+      /** Back to the presenter home before Start: nothing is saved or sent. */
+      back: { cta: '수업 목록으로' },
       slides: (n: number) => `슬라이드 ${n}장`,
       minutes: (n: number) => `약 ${n}분`,
       checks: '시작하기 전에',

@@ -1387,7 +1387,7 @@ export const learner = {
         letters: (n: number) => plural('es', n, { one: '1 letra', other: `${n} letras` }),
         chosen: (n: number) => `Elegiste ${n}`,
         nothing: 'Elige al menos un elemento para armar la lección.',
-        full: (max: number) => `Una lección tiene ${max} elementos como máximo.`,
+        full: 'Esta lección está llena. Quita uno para añadir otro.',
         build: { cta: 'Armar la lección' },
       },
     },
@@ -1452,6 +1452,8 @@ export const learner = {
       },
     },
     start: {
+      /** Back to the presenter home before Start: nothing is saved or sent. */
+      back: { cta: 'Volver a las lecciones' },
       slides: (n: number) => plural('es', n, { one: '1 diapositiva', other: `${n} diapositivas` }),
       minutes: (n: number) => plural('es', n, { one: 'alrededor de 1 minuto', other: `alrededor de ${n} minutos` }),
       checks: 'Antes de empezar',
