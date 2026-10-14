@@ -143,6 +143,12 @@ describe('Home and the Learning Route page read today from useToday (F-ROUTE-001
     expect(memoDeps(home, 'const routeInput = useMemo(')).toContain('today');
   });
 
+  it('Home keys the vocabulary card by the local day (F-VOC-005 P-3b)', () => {
+    expect(home).toMatch(/const\s+localToday\s*=\s*useToday\(\s*'local'\s*\)/);
+    expect(home).toMatch(/vocabRoundsDone\(\s*profile\.id\s*,\s*localToday\s*\)/);
+    expect(memoDeps(home, 'const mission = useMemo(')).toContain('localToday');
+  });
+
   it('the Learning Route page keys the route input by useToday', () => {
     expect(page).toMatch(/const\s+today\s*=\s*useToday\(\s*\)/);
     expect(page).not.toMatch(/dayKey\(\s*now\.toISOString\(\)\s*\)/);

@@ -4,7 +4,7 @@ import { utcDayKey } from '../../day-clock';
 import { homeVocabNudge, topicRefIndex } from '../../vocab/home-card';
 import { localDay } from '../../vocab/progress';
 import { progress, state, topic, word } from '../../vocab/__tests__/fixtures';
-import { buildTodaysMission, vocabCardShownKey, type BuildMissionInput, type MissionCard, type MissionPlan } from '../mission-builder';
+import { buildTodaysMission, vocabCardShownEvent, vocabCardShownKey, type BuildMissionInput, type MissionCard, type MissionPlan } from '../mission-builder';
 
 /**
  * One day basis for the Home vocabulary card (F-VOC-005 P-3b). The plan stays pinned to its UTC
@@ -194,6 +194,30 @@ describe('repinVocabDay and vocabCarry, unit rules (F-VOC-005 P-3b)', () => {
     const third = slot(pinned, 3) as MissionCard;
     const collected: MissionPlan = { ...pinned, cards: pinned.cards.map((c) => (c === third ? { ...c, collected: true } : c)) };
     expect(slot(build({ pinned: collected, vocab: NUDGE, vocabDay: '2026-10-14' }), 3)?.kind).toBe(third.kind);
+  });
+
+  it('a vocabulary card with nothing left to follow it is dropped, never kept with the old count', () => {
+    const empty = { quests: [], episodes: [] };
+    const pinned = build({ ...empty, vocab: NUDGE, vocabDay: '2026-10-13' });
+    expect(slot(pinned, 3)).toMatchObject({ kind: 'vocab', vocabDue: 4 });
+    const after = build({ ...empty, pinned, vocab: null, vocabDay: '2026-10-14' });
+    expect(slot(after, 3)).toBeUndefined();
+    expect(vocabCardShownEvent(after)).toBeNull();
+    // The same local day keeps it as pinned.
+    expect(slot(build({ ...empty, pinned, vocab: null, vocabDay: '2026-10-13' }), 3)).toMatchObject({ kind: 'vocab', vocabDue: 4 });
+  });
+
+  it('a story the learner has started stays in slot 3 when words become due; one not started gives way', () => {
+    const pinned = build({ vocabDay: '2026-10-13' });
+    const story = (storyReason: 'continue' | 'next'): MissionPlan => ({
+      ...pinned,
+      cards: [
+        ...pinned.cards.filter((c) => c.slot !== 3),
+        { slot: 3, kind: 'story', titleEn: 'A tale', subtitle: 'story', questId: 'quest:tale', storyId: 'story:tale', storyReason, storyMode: 'play', collected: false },
+      ],
+    });
+    expect(slot(build({ pinned: story('continue'), vocab: NUDGE, vocabDay: '2026-10-14' }), 3)).toMatchObject({ kind: 'story', storyId: 'story:tale', storyReason: 'continue' });
+    expect(slot(build({ pinned: story('next'), vocab: NUDGE, vocabDay: '2026-10-14' }), 3)).toMatchObject({ kind: 'vocab', vocabDue: 4 });
   });
 
   it('the Daily Test stays in slot 3 on any day', () => {

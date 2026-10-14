@@ -213,6 +213,19 @@ describe('local day basis', () => {
     stop();
   });
 
+  it('a zone change while the screen stays in front is caught within an hour, not at the old midnight', () => {
+    inZone('UTC');
+    vi.setSystemTime(new Date('2026-10-13T20:00:00.000Z'));
+    const days: string[] = [];
+    const stop = watchDay({ onDay: (d) => days.push(d), subscribeVisibility: () => () => undefined, ...DAY_BASES.local });
+    expect(days).toEqual(['2026-10-13']);
+    // The device moves to UTC+14: it is now local 2026-10-14 10:00, but the timer was aimed at UTC midnight.
+    inZone('Pacific/Kiritimati');
+    vi.advanceTimersByTime(MAX_WAIT_MS);
+    expect(days).toEqual(['2026-10-13', '2026-10-14']);
+    stop();
+  });
+
   it('the local key is the vocabulary schedule key (localDay), the utc key is dayKey', () => {
     inZone('Pacific/Pago_Pago');
     const now = new Date('2026-10-14T05:00:00.000Z');
