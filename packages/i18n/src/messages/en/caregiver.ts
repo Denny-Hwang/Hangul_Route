@@ -865,6 +865,8 @@ export const caregiver = {
     /** The word topic page (BR-9): each word row's Hear button, named by the romanization. */
     topic: {
       hearA11y: (romanization: string) => `Hear ${romanization}`,
+      /** BR-9b: the topic page's primary; it opens the learner flashcards in preview (host mode 'preview'), saving nothing. */
+      previewFlashcards: { cta: 'Preview the flashcards' },
     },
     /** The preview strip on lesson screens and the preview end screen (`PreviewFrame`). */
     preview: {
