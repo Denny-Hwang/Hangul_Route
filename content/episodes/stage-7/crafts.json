@@ -1,0 +1,913 @@
+{
+  "id": "episode:stage7-crafts",
+  "stage": "stage7",
+  "theme": "crafts",
+  "status": "draft",
+  "titleEn": "Make & Share",
+  "subtitleEn": "Write the steps of making a paper craft.",
+  "hoyaIntroEn": "Fold, cut and draw with me, then write down how we made it!",
+  "order": 5,
+  "pillarTags": [
+    "E1"
+  ],
+  "rewardCardIds": [],
+  "quests": [
+    {
+      "id": "quest:stage7-crafts-q1",
+      "titleEn": "Fold, Cut, Draw",
+      "blurbEn": "Write three things you do when you make something.",
+      "teaserEn": "Next: put your steps in order.",
+      "estimatedMinutes": 5,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "Fold, Cut, Draw",
+          "hoyaLineEn": "Let us make something with paper and write what we do!",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "Making Words",
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "pattern",
+                    "frame": {
+                      "ko": "___을/를 접어요.",
+                      "romanization": "___eul/reul jeobeoyo",
+                      "en": "I fold ___."
+                    },
+                    "noteEn": "Use {ko:을} after a final consonant and {ko:를} after a vowel, as in your sentences before.",
+                    "examples": [
+                      {
+                        "ko": "비행기를 접어요.",
+                        "romanization": "bihaenggireul jeobeoyo",
+                        "en": "I fold a plane."
+                      },
+                      {
+                        "ko": "배를 접어요.",
+                        "romanization": "baereul jeobeoyo",
+                        "en": "I fold a boat."
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "Folding paper into a plane or a boat is called {ko:종이접기}."
+              },
+              {
+                "items": [
+                  {
+                    "type": "sentence",
+                    "sentence": {
+                      "ko": "가위로 잘라요.",
+                      "romanization": "gawiro jallayo",
+                      "en": "I cut with scissors."
+                    },
+                    "picture": "word:school-scissors"
+                  },
+                  {
+                    "type": "sentence",
+                    "sentence": {
+                      "ko": "꽃을 그려요.",
+                      "romanization": "kkocheul geuryeoyo",
+                      "en": "I draw a flower."
+                    },
+                    "picture": "word:nature-flower"
+                  }
+                ],
+                "captionEn": "Two more making words: cut and draw."
+              }
+            ]
+          },
+          "durationSeconds": 60
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Type the Word",
+          "minigameKind": "type-hangul",
+          "minigameRef": "minigame:s7-crafts-q1-practice",
+          "durationSeconds": 90
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Build the Sentence",
+          "minigameKind": "order-it",
+          "minigameRef": "minigame:s7-crafts-q1-apply",
+          "durationSeconds": 85
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Two Quick Ones",
+          "minigameKind": "order-it",
+          "minigameRef": "minigame:s7-crafts-q1-check",
+          "durationSeconds": 40
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "You Made It!",
+          "hoyaLineEn": "You wrote three making words in Korean!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s7-crafts-q1-practice",
+          "kind": "type-hangul",
+          "rounds": [
+            {
+              "id": "t1",
+              "promptEn": "Type the word for fold.",
+              "pictureRef": "word:travel-airplane",
+              "target": {
+                "ko": "접어요",
+                "romanization": "jeobeoyo",
+                "en": "I fold"
+              }
+            },
+            {
+              "id": "t2",
+              "promptEn": "Type the word for cut.",
+              "pictureRef": "word:school-scissors",
+              "target": {
+                "ko": "잘라요",
+                "romanization": "jallayo",
+                "en": "I cut"
+              }
+            },
+            {
+              "id": "t3",
+              "promptEn": "Type the word for draw.",
+              "pictureRef": "word:nature-flower",
+              "target": {
+                "ko": "그려요",
+                "romanization": "geuryeoyo",
+                "en": "I draw"
+              }
+            },
+            {
+              "id": "t4",
+              "promptEn": "Type the word for plane.",
+              "pictureRef": "word:travel-airplane",
+              "target": {
+                "ko": "비행기",
+                "romanization": "bihaenggi",
+                "en": "airplane"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s7-crafts-q1-apply",
+          "kind": "order-it",
+          "rounds": [
+            {
+              "id": "r1",
+              "sentence": {
+                "ko": "비행기를 접어요.",
+                "romanization": "bihaenggireul jeobeoyo",
+                "en": "I fold a plane."
+              },
+              "pictureRef": "word:travel-airplane",
+              "distractors": [],
+              "particle": {
+                "tile": 0,
+                "choices": [
+                  {
+                    "ko": "을",
+                    "romanization": "eul",
+                    "en": "object marker (after a final consonant)"
+                  },
+                  {
+                    "ko": "를",
+                    "romanization": "reul",
+                    "en": "object marker (after a vowel)"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "r2",
+              "sentence": {
+                "ko": "꽃을 그려요.",
+                "romanization": "kkocheul geuryeoyo",
+                "en": "I draw a flower."
+              },
+              "pictureRef": "word:nature-flower",
+              "distractors": [
+                {
+                  "ko": "잘라요",
+                  "romanization": "jallayo",
+                  "en": "I cut"
+                }
+              ]
+            },
+            {
+              "id": "r3",
+              "sentence": {
+                "ko": "가위로 잘라요.",
+                "romanization": "gawiro jallayo",
+                "en": "I cut with scissors."
+              },
+              "pictureRef": "word:school-scissors",
+              "distractors": [
+                {
+                  "ko": "그려요",
+                  "romanization": "geuryeoyo",
+                  "en": "I draw"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s7-crafts-q1-check",
+          "kind": "order-it",
+          "rounds": [
+            {
+              "id": "c1",
+              "sentence": {
+                "ko": "배를 접어요.",
+                "romanization": "baereul jeobeoyo",
+                "en": "I fold a boat."
+              },
+              "pictureRef": "word:travel-boat",
+              "distractors": [],
+              "particle": {
+                "tile": 0,
+                "choices": [
+                  {
+                    "ko": "을",
+                    "romanization": "eul",
+                    "en": "object marker (after a final consonant)"
+                  },
+                  {
+                    "ko": "를",
+                    "romanization": "reul",
+                    "en": "object marker (after a vowel)"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "c2",
+              "sentence": {
+                "ko": "별을 그려요.",
+                "romanization": "byeoreul geuryeoyo",
+                "en": "I draw a star."
+              },
+              "pictureRef": "word:nature-star",
+              "distractors": [
+                {
+                  "ko": "접어요",
+                  "romanization": "jeobeoyo",
+                  "en": "I fold"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "quest:stage7-crafts-q2",
+      "titleEn": "First, Next, Last",
+      "blurbEn": "Put the steps of a paper craft in order.",
+      "teaserEn": "Next: join two steps into one sentence.",
+      "estimatedMinutes": 5,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "First, Next, Last",
+          "hoyaLineEn": "Every craft has steps. Let us write them in order!",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "Steps in Order",
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "pattern",
+                    "frame": {
+                      "ko": "먼저 ___.",
+                      "romanization": "meonjeo ___",
+                      "en": "First, ___."
+                    },
+                    "noteEn": "Start with {ko:먼저}, go on with {ko:그다음에} and end with {ko:마지막으로}.",
+                    "examples": [
+                      {
+                        "ko": "먼저 접어요.",
+                        "romanization": "meonjeo jeobeoyo",
+                        "en": "First, I fold."
+                      },
+                      {
+                        "ko": "그다음에 잘라요.",
+                        "romanization": "geudaeume jallayo",
+                        "en": "Next, I cut."
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "Three words tell the order of your steps."
+              },
+              {
+                "items": [
+                  {
+                    "type": "sentence",
+                    "sentence": {
+                      "ko": "마지막으로 그려요.",
+                      "romanization": "majimageuro geuryeoyo",
+                      "en": "Last, I draw."
+                    },
+                    "picture": "word:nature-flower"
+                  },
+                  {
+                    "type": "sentence",
+                    "sentence": {
+                      "ko": "먼저 비행기를 접어요.",
+                      "romanization": "meonjeo bihaenggireul jeobeoyo",
+                      "en": "First, I fold a plane."
+                    },
+                    "picture": "word:travel-airplane"
+                  }
+                ],
+                "captionEn": "The order word comes at the start of the sentence."
+              }
+            ]
+          },
+          "durationSeconds": 60
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Type the Word",
+          "minigameKind": "type-hangul",
+          "minigameRef": "minigame:s7-crafts-q2-practice",
+          "durationSeconds": 90
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Build the Steps",
+          "minigameKind": "order-it",
+          "minigameRef": "minigame:s7-crafts-q2-apply",
+          "durationSeconds": 90
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Two Quick Ones",
+          "minigameKind": "order-it",
+          "minigameRef": "minigame:s7-crafts-q2-check",
+          "durationSeconds": 40
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Step by Step!",
+          "hoyaLineEn": "You wrote the steps in order!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s7-crafts-q2-practice",
+          "kind": "type-hangul",
+          "rounds": [
+            {
+              "id": "t1",
+              "promptEn": "Type the word for first.",
+              "target": {
+                "ko": "먼저",
+                "romanization": "meonjeo",
+                "en": "first"
+              }
+            },
+            {
+              "id": "t2",
+              "promptEn": "Type the word for next.",
+              "target": {
+                "ko": "그다음에",
+                "romanization": "geudaeume",
+                "en": "next, after that"
+              }
+            },
+            {
+              "id": "t3",
+              "promptEn": "Type the word for last.",
+              "target": {
+                "ko": "마지막으로",
+                "romanization": "majimageuro",
+                "en": "last, finally"
+              }
+            },
+            {
+              "id": "t4",
+              "promptEn": "Type the word for cut.",
+              "pictureRef": "word:school-scissors",
+              "target": {
+                "ko": "잘라요",
+                "romanization": "jallayo",
+                "en": "I cut"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s7-crafts-q2-apply",
+          "kind": "order-it",
+          "rounds": [
+            {
+              "id": "r1",
+              "sentence": {
+                "ko": "먼저 배를 접어요.",
+                "romanization": "meonjeo baereul jeobeoyo",
+                "en": "First, I fold a boat."
+              },
+              "pictureRef": "word:travel-boat",
+              "distractors": [],
+              "particle": {
+                "tile": 1,
+                "choices": [
+                  {
+                    "ko": "을",
+                    "romanization": "eul",
+                    "en": "object marker (after a final consonant)"
+                  },
+                  {
+                    "ko": "를",
+                    "romanization": "reul",
+                    "en": "object marker (after a vowel)"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "r2",
+              "sentence": {
+                "ko": "그다음에 가위로 잘라요.",
+                "romanization": "geudaeume gawiro jallayo",
+                "en": "Next, I cut with scissors."
+              },
+              "pictureRef": "word:school-scissors",
+              "distractors": [
+                {
+                  "ko": "마지막으로",
+                  "romanization": "majimageuro",
+                  "en": "last, finally"
+                }
+              ]
+            },
+            {
+              "id": "r3",
+              "sentence": {
+                "ko": "마지막으로 꽃을 그려요.",
+                "romanization": "majimageuro kkocheul geuryeoyo",
+                "en": "Last, I draw a flower."
+              },
+              "pictureRef": "word:nature-flower",
+              "distractors": [
+                {
+                  "ko": "먼저",
+                  "romanization": "meonjeo",
+                  "en": "first"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s7-crafts-q2-check",
+          "kind": "order-it",
+          "rounds": [
+            {
+              "id": "c1",
+              "sentence": {
+                "ko": "그다음에 별을 그려요.",
+                "romanization": "geudaeume byeoreul geuryeoyo",
+                "en": "Next, I draw a star."
+              },
+              "pictureRef": "word:nature-star",
+              "distractors": [],
+              "particle": {
+                "tile": 1,
+                "choices": [
+                  {
+                    "ko": "을",
+                    "romanization": "eul",
+                    "en": "object marker (after a final consonant)"
+                  },
+                  {
+                    "ko": "를",
+                    "romanization": "reul",
+                    "en": "object marker (after a vowel)"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "c2",
+              "sentence": {
+                "ko": "마지막으로 가위로 잘라요.",
+                "romanization": "majimageuro gawiro jallayo",
+                "en": "Last, I cut with scissors."
+              },
+              "pictureRef": "word:school-scissors",
+              "distractors": [
+                {
+                  "ko": "먼저",
+                  "romanization": "meonjeo",
+                  "en": "first"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "quest:stage7-crafts-q3",
+      "titleEn": "My Making Page",
+      "blurbEn": "Join two steps with one ending and write your own page.",
+      "estimatedMinutes": 5,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "My Making Page",
+          "hoyaLineEn": "Now you write the steps of your own paper craft!",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "And Then",
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "pattern",
+                    "frame": {
+                      "ko": "접고 ___.",
+                      "romanization": "jeopgo ___",
+                      "en": "I fold and then ___."
+                    },
+                    "noteEn": "Put {ko:고} on the first action to join it to the next one: {ko:접고 잘라요}.",
+                    "examples": [
+                      {
+                        "ko": "접고 잘라요.",
+                        "romanization": "jeopgo jallayo",
+                        "en": "I fold and then cut."
+                      },
+                      {
+                        "ko": "접고 그려요.",
+                        "romanization": "jeopgo geuryeoyo",
+                        "en": "I fold and then draw."
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "One sentence, two steps in order."
+              },
+              {
+                "items": [
+                  {
+                    "type": "sentence",
+                    "sentence": {
+                      "ko": "종이를 접고 잘라요.",
+                      "romanization": "jongireul jeopgo jallayo",
+                      "en": "I fold the paper and then cut it."
+                    }
+                  },
+                  {
+                    "type": "sentence",
+                    "sentence": {
+                      "ko": "먼저 접고 그려요.",
+                      "romanization": "meonjeo jeopgo geuryeoyo",
+                      "en": "First, I fold and then draw."
+                    },
+                    "picture": "word:nature-flower"
+                  }
+                ],
+                "captionEn": "Paper can be {ko:한지}, Korean paper made by hand from tree bark."
+              }
+            ]
+          },
+          "durationSeconds": 65
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Type the Steps",
+          "minigameKind": "type-hangul",
+          "minigameRef": "minigame:s7-crafts-q3-practice",
+          "durationSeconds": 85
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Write Your Steps",
+          "minigameKind": "write-frame",
+          "minigameRef": "minigame:s7-crafts-q3-apply",
+          "durationSeconds": 95
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Two Quick Ones",
+          "minigameKind": "order-it",
+          "minigameRef": "minigame:s7-crafts-q3-check",
+          "durationSeconds": 40
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Your Page Is Ready!",
+          "hoyaLineEn": "You wrote your own steps. Show your page to someone next to you!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s7-crafts-q3-practice",
+          "kind": "type-hangul",
+          "rounds": [
+            {
+              "id": "t1",
+              "promptEn": "Type the word for paper.",
+              "target": {
+                "ko": "종이",
+                "romanization": "jongi",
+                "en": "paper"
+              }
+            },
+            {
+              "id": "t2",
+              "promptEn": "Type fold with the joining ending.",
+              "target": {
+                "ko": "접고",
+                "romanization": "jeopgo",
+                "en": "fold and then"
+              }
+            },
+            {
+              "id": "t3",
+              "promptEn": "Type: I fold and then cut.",
+              "pictureRef": "word:school-scissors",
+              "target": {
+                "ko": "접고 잘라요",
+                "romanization": "jeopgo jallayo",
+                "en": "I fold and then cut"
+              }
+            },
+            {
+              "id": "t4",
+              "promptEn": "Type: I fold and then draw.",
+              "pictureRef": "word:nature-flower",
+              "target": {
+                "ko": "접고 그려요",
+                "romanization": "jeopgo geuryeoyo",
+                "en": "I fold and then draw"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s7-crafts-q3-apply",
+          "kind": "write-frame",
+          "rounds": [
+            {
+              "id": "w1",
+              "frame": {
+                "ko": "먼저 종이를 ___.",
+                "romanization": "meonjeo jongireul ___",
+                "en": "First, I ___ the paper."
+              },
+              "slots": [
+                {
+                  "id": "act",
+                  "bank": [
+                    {
+                      "ko": "접어요",
+                      "romanization": "jeobeoyo",
+                      "en": "I fold"
+                    },
+                    {
+                      "ko": "잘라요",
+                      "romanization": "jallayo",
+                      "en": "I cut"
+                    }
+                  ]
+                }
+              ],
+              "entry": "type",
+              "freeEntry": false
+            },
+            {
+              "id": "w2",
+              "frame": {
+                "ko": "그다음에 접고 ___.",
+                "romanization": "geudaeume jeopgo ___",
+                "en": "Next, I fold and then ___."
+              },
+              "slots": [
+                {
+                  "id": "act",
+                  "bank": [
+                    {
+                      "ko": "잘라요",
+                      "romanization": "jallayo",
+                      "en": "I cut"
+                    },
+                    {
+                      "ko": "그려요",
+                      "romanization": "geuryeoyo",
+                      "en": "I draw"
+                    }
+                  ]
+                }
+              ],
+              "entry": "type",
+              "freeEntry": false
+            },
+            {
+              "id": "w3",
+              "frame": {
+                "ko": "마지막으로 ___을/를 그려요.",
+                "romanization": "majimageuro ___eul/reul geuryeoyo",
+                "en": "Last, I draw a ___."
+              },
+              "slots": [
+                {
+                  "id": "thing",
+                  "bank": [
+                    {
+                      "ko": "꽃",
+                      "romanization": "kkot",
+                      "en": "flower"
+                    },
+                    {
+                      "ko": "별",
+                      "romanization": "byeol",
+                      "en": "star"
+                    }
+                  ]
+                }
+              ],
+              "entry": "type",
+              "freeEntry": false
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s7-crafts-q3-check",
+          "kind": "order-it",
+          "rounds": [
+            {
+              "id": "c1",
+              "sentence": {
+                "ko": "종이를 접고 잘라요.",
+                "romanization": "jongireul jeopgo jallayo",
+                "en": "I fold the paper and then cut it."
+              },
+              "distractors": [],
+              "particle": {
+                "tile": 0,
+                "choices": [
+                  {
+                    "ko": "을",
+                    "romanization": "eul",
+                    "en": "object marker (after a final consonant)"
+                  },
+                  {
+                    "ko": "를",
+                    "romanization": "reul",
+                    "en": "object marker (after a vowel)"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "c2",
+              "sentence": {
+                "ko": "먼저 접고 그려요.",
+                "romanization": "meonjeo jeopgo geuryeoyo",
+                "en": "First, I fold and then draw."
+              },
+              "pictureRef": "word:nature-flower",
+              "distractors": [
+                {
+                  "ko": "마지막으로",
+                  "romanization": "majimageuro",
+                  "en": "last, finally"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "culture": [
+    {
+      "id": "n1",
+      "kind": "culture",
+      "textEn": "{ko:종이접기} is folding paper by hand into shapes such as a crane, a boat or a plane, with plain paper or colored paper.",
+      "sources": [
+        {
+          "title": "종이접기 (jongijeopgi), an entry of the Encyclopedia of Korean Culture",
+          "publisher": "한국민족문화대백과사전 (Encyclopedia of Korean Culture), Academy of Korean Studies",
+          "url": "https://encykorea.aks.ac.kr/Article/E0052997",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "Entry 종이접기, 정의: “종이를 손으로 접어서 여러 가지 모양을 만드는” …; 내용: “배·비행기·모자·바구니·바지·저고리 따위를 만들어” …; “풍선(공)·학·문어·물고기·꽃 따위에 대한 기본 접기가 있어” …; “재료로는 흰 종이뿐만 아니라 색종이나 은박지도 쓴다.”"
+        },
+        {
+          "title": "종이접기",
+          "publisher": "국립국어원 표준국어대사전 (Standard Korean Language Dictionary)",
+          "url": "https://stdict.korean.go.kr/search/searchView.do?word_no=516424&searchKeywordTo=3",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "표제어 ‘종이-접기’(word_no 516424) 「명사」: “종이를 접어서 학, 배, 비행기 따위의 모양을 만드는 일.”"
+        }
+      ],
+      "verification": {
+        "passes": 1,
+        "checkedAt": "2026-10-14",
+        "scope": "lesson",
+        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): both pages fetched. The AKS entry 종이접기 defines it as folding paper by hand into many shapes, lists boats and planes among them, names a basic fold for the crane, and says white paper, colored paper and foil are used; the dictionary entry 종이-접기 defines it as folding paper into the shape of a crane, a boat, a plane and the like. The note restates this in its own words; the AKS definition also calls it a children's game, which the note leaves out (audience any age, no age wording). Nothing is copied. Carried by: q1 Discover page 1 caption, and the plane and boat sentences of q1 and q2."
+      }
+    },
+    {
+      "id": "n2",
+      "kind": "culture",
+      "textEn": "{ko:한지} is Korean paper made by hand in the traditional way, mainly from the bark of the paper mulberry tree.",
+      "sources": [
+        {
+          "title": "한지 (Hanji), an entry of the Encyclopedia of Korean Culture",
+          "publisher": "한국민족문화대백과사전 (Encyclopedia of Korean Culture), Academy of Korean Studies",
+          "url": "https://encykorea.aks.ac.kr/Article/E0061987",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "Entry 한지, 정의: “손으로 떠서 만든 우리나라 전래의 종이.”; 내용: “오늘날 닥나무 껍질로 만든 전래의 종이를 모두 한지로 통칭되고 있으나” …"
+        },
+        {
+          "title": "한지 (韓紙)",
+          "publisher": "국립국어원 표준국어대사전 (Standard Korean Language Dictionary)",
+          "url": "https://stdict.korean.go.kr/search/searchView.do?word_no=365052&searchKeywordTo=3",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "표제어 ‘한지 7(韓紙)’(word_no 365052) 「명사」: “우리나라 고유의 제조법으로 만든 종이. 닥나무 껍질 따위의 섬유를 원료로 한다.”"
+        }
+      ],
+      "verification": {
+        "passes": 1,
+        "checkedAt": "2026-10-14",
+        "scope": "lesson",
+        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): both pages fetched. The AKS entry 한지 defines it as traditional Korean paper made by hand and says the traditional paper made from the bark of the paper mulberry (닥나무) is called hanji today; the dictionary entry 한지 7 defines it as paper made by Korea's own method from fibres such as paper-mulberry bark. The note says 'mainly' because the dictionary says 'such as'. Own wording, nothing copied, no heritage designation number. Carried by: q3 Discover page 2 caption."
+      }
+    },
+    {
+      "id": "n3",
+      "kind": "language",
+      "textEn": "The ending {ko:고} joins one action to the next in a single sentence; after an action word it can show one step and then the next, as in {ko:접고 잘라요}.",
+      "sources": [
+        {
+          "title": "-고 (어미)",
+          "publisher": "국립국어원 표준국어대사전 (Standard Korean Language Dictionary)",
+          "url": "https://stdict.korean.go.kr/search/searchView.do?word_no=394721&searchKeywordTo=3",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "표제어 ‘-고 25’(word_no 394721) 「어미」 「1」 “두 가지 이상의 사실을 대등하게 벌여 놓는 연결 어미.”; 「2」 ((동사 어간이나 어미 ‘-으시-’ 뒤에 붙어)) “앞뒤 절의 두 사실 간에 계기적인 관계가 있음을 나타내는 연결 어미.”"
+        },
+        {
+          "title": "어말어미 (eomareomi), an entry of the Encyclopedia of Korean Culture",
+          "publisher": "한국민족문화대백과사전 (Encyclopedia of Korean Culture), Academy of Korean Studies",
+          "url": "https://encykorea.aks.ac.kr/Article/E0066610",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "Entry 어말어미, 내용: “연결어미는 한 문장을 다른 문장에 이어 주는 기능을 하는 것으로” …; “두 문장을 대등하게 연결하는 대등적 연결어미(‘-고’, ‘-며’, ‘-지마’, ‘-거나’ 등)”."
+        }
+      ],
+      "verification": {
+        "passes": 1,
+        "checkedAt": "2026-10-14",
+        "scope": "lesson",
+        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): both pages fetched (the dictionary body via contentViewOne.do). Sense 1 of -고 25 joins two or more facts side by side; sense 2, after a verb stem, marks a sequential (계기적) relation between the two clauses. The AKS entry 어말어미 says a connective ending joins one sentence to another and lists -고 among them. The note keeps to these two points in its own words ('can show', since sense 1 also exists); nothing copied. Carried by: q3 Discover pattern noteEn, q3 practice, apply and Check."
+      }
+    }
+  ],
+  "review": {
+    "language": "draft",
+    "culture": "draft",
+    "notes": []
+  },
+  "contentVer": 1
+}
