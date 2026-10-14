@@ -1048,7 +1048,7 @@
           "publisher": "표준국어대사전 (Standard Korean Language Dictionary), National Institute of Korean Language",
           "url": "https://stdict.korean.go.kr/search/searchResult.do?pageSize=10&searchKeyword=%EC%9B%90",
           "accessed": "2026-10-14",
-          "quoteOrLocator": "Headword 원1 「의존 명사」: “우리나라의 화폐 단위. 1원은 1전의 100배이다. 1962년 6월 10일부터 시행되었다. 기호는 ￦.” Examples in the full entry: “용돈으로 만 원을 받다.”, “천 원으로 과자를 사 먹었다.”"
+          "quoteOrLocator": "Headword 원1 「의존 명사」 (search 원, result list): “우리나라의 화폐 단위. 1원은 1전의 100배이다. 1962년 6월 10일부터 시행되었다. 기호는 ￦.”"
         },
         {
           "title": "화폐 단위, the Encyclopedia of Korean Culture entry on units of money",
@@ -1059,16 +1059,16 @@
         }
       ],
       "verification": {
-        "passes": 1,
+        "passes": 2,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): both pages fetched. The Standard Korean Language Dictionary (NIKL) defines 원 as the money unit of the country, in force since 1962, with the sign ₩, and gives 천 원 as an example; the AKS Encyclopedia of Korean Culture entry on units of money says the reform of 1962 adopted the unit 원. The two give different days in June 1962, so the note names the year only. The note is original English and copies no source wording; no group-wide claim, stereotype, living person, shop, brand or real price (the menu amounts are round practice amounts in a drawn scene, OD-11). Carried by: q2 Discover page 2 caption ('Won is Korean money') and the q2 key word 원."
+        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): both pages fetched. The Standard Korean Language Dictionary (NIKL) defines 원 as the money unit of the country, in force since 1962, with the sign ₩, and gives 천 원 as an example; the AKS Encyclopedia of Korean Culture entry on units of money says the reform of 1962 adopted the unit 원. The two give different days in June 1962, so the note names the year only. The note is original English and copies no source wording; no group-wide claim, stereotype, living person, shop, brand or real price (the menu amounts are round practice amounts in a drawn scene, OD-11). Carried by: q2 Discover page 2 caption ('Won is Korean money') and the q2 key word 원.\nLine 2 (pass 2b, independent fact check, 2026-10-14): both pages opened again. Standard Korean Language Dictionary entry 원1 (result list text) says the money unit of the country, in force from 10 June 1962, sign ￦: matches 'won since 1962' and '₩'. Encyclopedia of Korean Culture entry 화폐 단위 says the reform of 12 June 1962 adopted the Hangul unit 원: matches; the year-only wording settles the 10 / 12 June difference. The example sentences the author cited from the full dictionary entry could not be reached (the full view loads only in a browser session), so they were removed from the locator; the note does not rely on them. No run of words copied; no group-wide claim, stereotype, living person, shop, brand or real price. Outcome: pass, locator corrected."
       }
     },
     {
       "id": "n2",
       "kind": "language",
-      "textEn": "Prices are read with the Sino-Korean numbers ({ko:일}, {ko:이}, {ko:삼}), and {ko:천} is a thousand, so {ko:천 원} is 1,000 won.",
+      "textEn": "Korean has two sets of numbers: native ones such as {ko:하나} and {ko:둘}, and Sino-Korean ones such as {ko:일}, {ko:이} and {ko:삼}. The menu's prices use the Sino-Korean set: {ko:천} is a thousand, so {ko:천 원} is 1,000 won.",
       "sources": [
         {
           "title": "숫자의 발음, an article on pronouncing numbers in the series on the standard pronunciation rules",
@@ -1089,14 +1089,14 @@
           "publisher": "표준국어대사전 (Standard Korean Language Dictionary), National Institute of Korean Language",
           "url": "https://stdict.korean.go.kr/search/searchResult.do?pageSize=10&searchKeyword=%EC%9B%90",
           "accessed": "2026-10-14",
-          "quoteOrLocator": "Headword 원1 「의존 명사」: “우리나라의 화폐 단위. 1원은 1전의 100배이다. 1962년 6월 10일부터 시행되었다. 기호는 ￦.” Examples in the full entry: “용돈으로 만 원을 받다.”, “천 원으로 과자를 사 먹었다.”"
+          "quoteOrLocator": "Headword 원1 「의존 명사」 (search 원, result list): “우리나라의 화폐 단위. 1원은 1전의 100배이다. 1962년 6월 10일부터 시행되었다. 기호는 ￦.”"
         }
       ],
       "verification": {
-        "passes": 1,
+        "passes": 2,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): all three pages fetched. The NIKL Saegugeo Sosik article splits Korean numbers into a native series (hana, dul, set) and a Sino-Korean series (il, i, sam); the Standard Korean Language Dictionary lists 천 (千) and 오 (五) as numerals of Chinese-character origin, 천 defined as ten hundreds, and its entry 원 gives the example 천 원, a Sino-Korean number before 원. The note and the captions say only what these pages show; nothing is copied. Carried by: q2 Discover page 1 caption ('Prices use the Sino-Korean numbers il, i, sam, sa, o'), q2 page 2 caption ('cheon is a thousand: ocheon won is 5,000') and q3 Discover page 1 caption."
+        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): all three pages fetched. The NIKL Saegugeo Sosik article splits Korean numbers into a native series (hana, dul, set) and a Sino-Korean series (il, i, sam); the Standard Korean Language Dictionary lists 천 (千) and 오 (五) as numerals of Chinese-character origin, 천 defined as ten hundreds, and its entry 원 gives the example 천 원, a Sino-Korean number before 원. The note and the captions say only what these pages show; nothing is copied. Carried by: q2 Discover page 1 caption ('Prices use the Sino-Korean numbers il, i, sam, sa, o'), q2 page 2 caption ('cheon is a thousand: ocheon won is 5,000') and q3 Discover page 1 caption.\nLine 2 (pass 2b, independent fact check, 2026-10-14): all three pages opened again. Saegugeo Sosik (NIKL, Aug 2004) opening sentence splits numerals into a native series (hana, dul, set) and a Sino-Korean series (il, i, sam): supports the two sets. Dictionary 천3 (千) 「수사」 'ten hundreds' and 오4 (五) 「수사」 'four plus one': support 천 as a Sino-Korean thousand. Entry 원1: the money unit, so 천 원 is 1,000 won. FAILED as first written: the general rule 'prices are read with the Sino-Korean numbers' is in none of the cited pages (the Saegugeo article never mentions money, the 천 원 dictionary example could not be reached, and an NIKL Online Q&A of 2025-06-30 says the choice of number set follows usage, with no fixed rule). Fixed: the note now says only that the menu's prices use the Sino-Korean set, which is true of the drawn menu, plus the sourced facts. Flag for pass 5: the q2 and q3 Discover captions ('Prices use the Sino-Korean numbers ...', 'More Sino-Korean numbers for prices ...') still state the general rule; rephrase to the menu ('These prices use ...') or source the rule. No run of words copied. Outcome: fixed (reworded), locator corrected."
       }
     }
   ],
