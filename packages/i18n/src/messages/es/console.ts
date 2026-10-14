@@ -1026,7 +1026,7 @@ export const consoleMsgs = {
       addLearner: 'Añadir un estudiante',
     },
     empty: {
-      title: 'Aún no se unió ningún estudiante.',
+      title: 'Aún no hay estudiantes en la familia.',
       line: (profile: string, section: string, join: string) =>
         `En el dispositivo del estudiante, ve a ${profile}, luego a ${section}, luego a "${join}", y escribe este código familiar.`,
       openApp: 'Abrir la app en este dispositivo',
@@ -1372,8 +1372,8 @@ export const consoleMsgs = {
         days === 0 ? 'lo pidió la familia · hoy' : plural('es', days, { one: `lo pidió la familia · hace ${days} día`, other: `lo pidió la familia · hace ${days} días` }),
       askedByClass: (className: string, days: number) =>
         days === 0
-          ? `Lo pidió la clase ${className} · hoy`
-          : plural('es', days, { one: `Lo pidió la clase ${className} · hace ${days} día`, other: `Lo pidió la clase ${className} · hace ${days} días` }),
+          ? `Lo pidió ${className} · hoy`
+          : plural('es', days, { one: `Lo pidió ${className} · hace ${days} día`, other: `Lo pidió ${className} · hace ${days} días` }),
       daysLeft: (days: number) => plural('es', days, { one: `Queda ${days} día`, other: `Quedan ${days} días` }),
     },
     lines: {
@@ -1404,8 +1404,8 @@ export const consoleMsgs = {
       manageOwn: (name: string) => `${name} gestiona sus propias clases. Pídele que empiece el cambio en su dispositivo.`,
     },
     history: {
-      movedOut: (noun: string) => `Un ${noun} se cambió a otra clase`,
-      joined: (noun: string) => `Un ${noun} se unió a esta clase`,
+      movedOut: (noun: string) => `1 ${noun} se cambió a otra clase`,
+      joined: (noun: string) => `1 ${noun} se unió a esta clase`,
       ended: 'Esta solicitud terminó.',
       endedFromTablet: (name: string) => `Se terminó desde la tableta de ${name}.`,
     },
