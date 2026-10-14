@@ -6,6 +6,7 @@ import {
   Icon,
   Pill,
   Spacer,
+  TagMark,
   borderWidth,
   colors,
   layout,
@@ -426,17 +427,23 @@ function StoryTiles({ entries, open }: { entries: readonly StoryIndexEntry[]; op
   );
 }
 
-/** One Words row: the topic title, its word count and its first three words; one button to the topic page. */
+/**
+ * One Words row: the topic title, its word count and its first three words; one button to the topic page.
+ * A closed topic (switch on, sampler pass, section 4.2) keeps its row and its words, drawn as the learner
+ * draws a closed tile: `surface.sunken`, the dotted ring and "Not open yet" (`learner.access.notOpen`).
+ */
 function WordsRow({ row, onPress }: { row: Extract<BrowseLibraryGroup, { section: 'words' }>['rows'][number]; onPress: () => void }): React.ReactElement {
   const messages = useMessages();
   const m = messages.caregiver.browse.home;
   const locale = useLocale();
+  const { bundle, pass, gatingEnabled } = useBrowseSession();
+  const closed = accessOf({ kind: 'vocab-topic', id: row.topic.id }, { bundle, scope: pass?.scope ?? 'sampler', gatingEnabled }) === 'closed';
   const title = localize(row.topic, row.topic.id, locale).titleEn;
   return (
     <Pressable
       onPress={onPress}
       accessibilityRole="button"
-      accessibilityLabel={m.wordsRowA11y(title, row.count)}
+      accessibilityLabel={closed ? m.wordsRowClosedA11y(title, row.count) : m.wordsRowA11y(title, row.count)}
       testID={`browse-words-${row.topic.key}`}
       style={({ focused }: FocusState) => ({
         minHeight: touchTarget.min,
@@ -445,7 +452,7 @@ function WordsRow({ row, onPress }: { row: Extract<BrowseLibraryGroup, { section
         gap: spacing.sm,
         padding: spacing.md,
         borderRadius: radii.lg,
-        backgroundColor: colors.surface.paper,
+        backgroundColor: closed ? colors.surface.sunken : colors.surface.paper,
         ...focusRing(focused, colors.border.subtle),
       })}
     >
@@ -456,6 +463,14 @@ function WordsRow({ row, onPress }: { row: Extract<BrowseLibraryGroup, { section
             {m.wordCount(row.count)}
           </Body>
         </View>
+        {closed ? (
+          <View testID={`browse-words-${row.topic.key}-not-open`} style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
+            <TagMark kind="notOpen" />
+            <Body size="sm" weight="semibold" tone="secondary">
+              {messages.learner.access.notOpen}
+            </Body>
+          </View>
+        ) : null}
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
           {row.samples.map((w) => (
             <WordChip key={w.id} ko={w.ko} romanization={w.romanization} gloss={w.glosses[locale] ?? w.glosses.en} />

@@ -481,6 +481,7 @@ describe("switch-on e2e lane (F-ENT-003 E3-13)", () => {
     const dir = join(ROOT, "apps", "mobile", "e2e", "web");
     const reads = readdirSync(dir).filter((n) => n.endsWith(".spec.ts") && readFileSync(join(dir, n), "utf8").includes("E2E_CONTENT_GATING"));
     for (const f of [
+      "browse.spec.ts",
       "dashboard-free-line.spec.ts",
       "episode-access.spec.ts",
       "free-days.spec.ts",

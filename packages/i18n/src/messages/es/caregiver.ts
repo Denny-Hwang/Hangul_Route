@@ -657,6 +657,8 @@ export const caregiver = {
       wordCount: (n: number) => plural('es', n, { one: `· ${n} palabra`, other: `· ${n} palabras` }),
       wordsRowA11y: (topic: string, n: number) =>
         plural('es', n, { one: `${topic}, ${n} palabra. Abre el tema.`, other: `${topic}, ${n} palabras. Abre el tema.` }),
+      wordsRowClosedA11y: (topic: string, n: number) =>
+        plural('es', n, { one: `${topic}, ${n} palabra. Aún sin abrir. Abre el tema.`, other: `${topic}, ${n} palabras. Aún sin abrir. Abre el tema.` }),
       storyTileA11y: (title: string, minutes: number) =>
         `${title}. ${plural('es', minutes, { one: `Cerca de ${minutes} minuto`, other: `Cerca de ${minutes} minutos` })}.`,
     },

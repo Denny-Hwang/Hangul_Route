@@ -122,7 +122,7 @@ Numbers that are not tokens, each named once in the second `:root` block of `moc
 ## Content observations for other PRs (not changed here)
 
 - The Week 3 deck's `taught` letters hold ㄱ twice (`g/k` from Meet a, eo, g, n and `k` as a final from Hanbok and the Bow). PR 6 decides whether the End slide merges one character into one item; the fit rule hides it in this sample.
-- The fact of `card:book` reads "Korean kids first learn to read books printed left-to-right ...". It is shipped content projected on a shared surface; CLAUDE.md section 1's copy rule asks a content PR to reword it ("In Korea, people first learn ..."). Not edited here; tracked in #589 (https://github.com/Denny-Hwang/Hangul_Route/issues/589).
+- The fact of `card:book` read "Korean kids first learn to read books printed left-to-right ...". It is shipped content projected on a shared surface; CLAUDE.md section 1's copy rule asked a content PR to reword it. Resolved by the #589 content fix: it now reads "Most Korean books today are printed left-to-right, top-to-bottom — the same as English.", and `slide-card.html` shows the new fact.
 - The first draft drew the class code "HOYA42", which `JOIN_CODE_RE` rejects (the alphabet has no O). The mock and the PR 6 fixtures use "HYRA42".
 
 ## Review log (multi-lens review of this pass)

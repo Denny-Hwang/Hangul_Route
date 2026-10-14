@@ -1,7 +1,8 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { Locator, Page } from '@playwright/test';
-import type { ProgressSnapshot, Story } from '@hangul-route/content-schema';
+import { withoutWebAddresses, type ProgressSnapshot, type Story } from '@hangul-route/content-schema';
+import { getMessages } from '@hangul-route/i18n';
 import { awardWorld } from '../../src/content/award-world';
 import { episodesAll } from '../../src/content/episodes';
 import { heritageCardsAll } from '../../src/content/heritage-cards';
@@ -295,7 +296,13 @@ test.describe('card awards (F-STORY-006 6.9, release bundle)', () => {
     await expect(page.getByRole('button', { name: 'Tap to flip card to back' })).toBeVisible();
     await expect(page.getByText(story.card.titleEn, { exact: true }).filter({ visible: true }).first()).toBeVisible();
     await expect(page.getByText(fact.claimEn, { exact: true }).filter({ visible: true }).first()).toBeVisible();
-    await expect(shown(page, 'card-detail-citation')).toHaveText(/^Source: /);
+    // The whole line, built from the fact's first source in CardDetail's format (web addresses dropped),
+    // so a placeholder or another source after "Source: " fails.
+    const [first] = fact.sources;
+    if (!first) throw new Error(`${fact.id} has no source`);
+    const citationLine = getMessages('en').learner.cardDetail.citation.source(withoutWebAddresses(first.publisher), withoutWebAddresses(first.title));
+    expect(citationLine).not.toBe('Source: , ');
+    await expect(shown(page, 'card-detail-citation')).toHaveText(citationLine, { useInnerText: true });
     const more = fact.sources.length - 1;
     if (more > 0) await expect(shown(page, 'card-detail-citation-more')).toHaveText(more === 1 ? 'and 1 more source' : `and ${more} more sources`);
     await expect(shown(page, 'card-detail-citation').getByRole('link')).toHaveCount(0);

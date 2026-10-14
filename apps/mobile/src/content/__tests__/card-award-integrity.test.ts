@@ -543,8 +543,12 @@ describe('reviewed story and set cards (F-STORY-006 6.8)', () => {
   };
 
   it("every bundled story card's face is its story's cover scene, and every set card's face is its full plate", () => {
-    const story = heritageCardsAll.filter((c) => c.storyId !== undefined);
-    expect(story).toHaveLength(24);
+    // A held story's card has no story to crop a cover from, and a set card with a held
+    // member is not drawn as a full plate: both are left out, and the counts follow the bundle.
+    const carded = storiesAll.filter((s) => s.state === 'ready' && s.shelf !== undefined && s.card !== undefined);
+    const story = heritageCardsAll.filter((c) => c.storyId !== undefined && !heldStoryCardIds.includes(c.id));
+    expect(story.length).toBeGreaterThan(0);
+    expect(story).toHaveLength(carded.length);
     for (const card of story) {
       expect(supportedCardIds, card.id).not.toContain(card.id);
       const src = cardArtSource(card, deps);
@@ -552,8 +556,9 @@ describe('reviewed story and set cards (F-STORY-006 6.8)', () => {
       // A cover with nothing to draw would pass on kind alone: it names a backdrop and its alt text.
       if (src.kind === 'cover') expect([src.art.setting, src.art.altEn.length > 0], card.id).toEqual([expect.stringMatching(/^scene:/), true]);
     }
-    const sets = heritageCardsAll.filter((c) => c.unlockedBy.startsWith('set:'));
-    expect(sets).toHaveLength(4);
+    const sets = heritageCardsAll.filter((c) => c.unlockedBy.startsWith('set:') && !heldSetCardIds.includes(c.id));
+    expect(sets.length).toBeGreaterThan(0);
+    expect(sets).toHaveLength(storySets.length - heldSetCardIds.length);
     for (const card of sets) {
       const src = cardArtSource(card, deps);
       expect(src.kind, card.id).toBe('plate');

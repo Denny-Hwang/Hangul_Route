@@ -162,6 +162,17 @@ describe('the learner Journey grid in All lessons (section 4.5)', () => {
       expect(accessOf({ kind: 'quest', id: q.id }, { bundle, scope: 'sampler', gatingEnabled: true })).toBe(itemAccess({ kind: 'quest', id: q.id }, 'sampler', true, { bundle }));
     }
   });
+
+  it('a Words row is closed only with the switch on for a pass that does not hold its topic (the HomeSections WordsRow mark)', () => {
+    const food = { kind: 'vocab-topic' as const, id: 'vocab-topic:food' };
+    const family = { kind: 'vocab-topic' as const, id: 'vocab-topic:family' };
+    expect(bundle.vocabTopics.map((t) => t.id)).toEqual(expect.arrayContaining([food.id, family.id]));
+    expect(accessOf(family, { bundle, scope: 'sampler', gatingEnabled: true })).toBe('closed');
+    expect(accessOf(food, { bundle, scope: 'sampler', gatingEnabled: true })).not.toBe('closed');
+    expect(accessOf(family, { bundle, scope: 'full', gatingEnabled: true })).not.toBe('closed');
+    // Switch off (production today): no row is closed, whatever the pass.
+    for (const t of [food, family]) expect(accessOf(t, { bundle, scope: 'sampler', gatingEnabled: false }), t.id).not.toBe('closed');
+  });
 });
 
 describe('the item page lines (section 4.6, design decisions 12 and 13)', () => {
