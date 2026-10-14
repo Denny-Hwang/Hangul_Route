@@ -1,8 +1,10 @@
 import { colors, hoyaVariantColors, type HoyaVariant } from '@hangul-route/design-system/tokens';
 
 /**
- * The shipped Hoya, as inline web SVG mirroring
- * packages/design-system/src/components/Hoya/Hoya.tsx. Shared by /design-preview
+ * The shipped Hoya, as inline web SVG mirroring the one drawing,
+ * `hoyaFigure(pose)` in packages/design-system/src/scene-art/hoya.ts, which
+ * Hoya.tsx renders since F-STORY-002 PR 2.11. Rendering this copy from
+ * `hoyaFigure` is a recorded follow-up (F-STORY-002 §4). Shared by /design-preview
  * (the Hoya section) and /design-preview/scenes/library, where it stands beside
  * the scene-art data port (`hoyaNodes`) for the parity check (F-STORY-002 §3.9.4).
  */

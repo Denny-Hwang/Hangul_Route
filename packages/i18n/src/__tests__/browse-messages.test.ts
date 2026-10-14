@@ -122,6 +122,9 @@ const BR8_KEYS = [
 /** BR-9: the word topic page's Hear button. */
 const BR9_KEYS = ['topic.hearA11y'];
 
+/** BR-9b: the word topic page's flashcard preview button. */
+const BR9B_KEYS = ['topic.previewFlashcards.cta'];
+
 /** BR-13: [ Present this ] on the item page and its accessible description (presenter README, Strings). */
 const BR13_KEYS = ['item.present.cta', 'item.presentNote', 'item.presentBlocked'];
 
@@ -172,6 +175,7 @@ describe('caregiver.browse (BR-6)', () => {
         ...BR7_KEYS,
         ...BR8_KEYS,
         ...BR9_KEYS,
+        ...BR9B_KEYS,
         ...BR13_KEYS,
       ].sort(),
     );
@@ -357,5 +361,11 @@ describe('caregiver.dashboard.browse (BR-12a)', () => {
 describe('caregiver.browse (BR-9)', () => {
   it('names the Hear button of a word row by its romanization, as the mock and the learner topic do', () => {
     expect(browse.topic.hearA11y('sagwa')).toBe('Hear sagwa');
+  });
+});
+
+describe('caregiver.browse (BR-9b)', () => {
+  it('labels the topic page primary with the wireframe words', () => {
+    expect(browse.topic.previewFlashcards.cta).toBe('Preview the flashcards');
   });
 });

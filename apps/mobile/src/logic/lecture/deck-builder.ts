@@ -1,4 +1,5 @@
 import {
+  discoverItemTexts,
   parseNarration,
   syllableSplit,
   type CheckKind,
@@ -396,9 +397,11 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
         letterById(path, item.jamoId);
         continue;
       }
-      const word = { ko: item.word.ko, romanization: item.word.romanization, gloss: item.word.en };
-      push(`${path}/${word.ko}`, { kind: 'vocab', word });
-      teachWord(word);
+      for (const text of discoverItemTexts(item)) {
+        const word = { ko: text.ko, romanization: text.romanization, gloss: text.en };
+        push(`${path}/${word.ko}`, { kind: 'vocab', word });
+        teachWord(word);
+      }
     }
   };
 

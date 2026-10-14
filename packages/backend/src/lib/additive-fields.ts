@@ -37,15 +37,45 @@ export interface AdditiveField {
  * `placements` is append-only and defaults to `[]` after the zod parse, so an
  * empty list next to a stored non-empty one can only come from an old client.
  */
+type Plain = Record<string, unknown>;
+
+const isPlain = (value: unknown): value is Plain => typeof value === 'object' && value !== null && !Array.isArray(value);
+
+/**
+ * The fields nested in each placement result that an older build drops (its
+ * `PlacementResultSchema` does not know them) and that never change once a
+ * result is stored: F-CURR-001 §3.13 `catalogVersion`. A result sent without one
+ * keeps the stored copy's value for the same id, so a re-upload after a conflict
+ * merge never turns a result back into a version 8 one. Mirrors `mergePlacement`
+ * in apps/mobile/src/logic/sync/merge.ts.
+ */
+const PLACEMENT_NESTED_KEYS = ['catalogVersion'] as const;
+
+function keepPlacementFields(incoming: unknown, stored: unknown): unknown {
+  if (!Array.isArray(incoming) || !Array.isArray(stored)) return incoming;
+  const byId = new Map<unknown, Plain>();
+  for (const r of stored) if (isPlain(r)) byId.set(r.id, r);
+  let changed = false;
+  const out = incoming.map((r) => {
+    const prior = isPlain(r) ? byId.get(r.id) : undefined;
+    if (!isPlain(r) || prior === undefined) return r;
+    let kept: Plain = r;
+    for (const key of PLACEMENT_NESTED_KEYS) {
+      if (kept[key] === undefined && prior[key] !== undefined) kept = { ...kept, [key]: prior[key] };
+    }
+    if (kept !== r) changed = true;
+    return kept;
+  });
+  // The sent list itself when nothing was filled in, so an unchanged upload stays the same object.
+  return changed ? out : incoming;
+}
+
 const PLACEMENTS: AdditiveField = {
   payloadKey: 'placements',
   summaryKey: 'placement',
   isUnset: (value) => value === undefined || (Array.isArray(value) && value.length === 0),
+  merge: keepPlacementFields,
 };
-
-type Plain = Record<string, unknown>;
-
-const isPlain = (value: unknown): value is Plain => typeof value === 'object' && value !== null && !Array.isArray(value);
 
 /**
  * The earlier of two latch times as instants (`Date.parse`), so an offset form
@@ -183,7 +213,10 @@ export function preserveAdditiveFields<P extends object, S extends object>(
   for (const field of fields) {
     if (field.isUnset(storedPayload[field.payloadKey])) continue;
     if (!field.isUnset(inPayload[field.payloadKey])) {
-      if (field.merge) payload = { ...payload, [field.payloadKey]: field.merge(inPayload[field.payloadKey], storedPayload[field.payloadKey]) };
+      if (field.merge) {
+        const merged = field.merge(inPayload[field.payloadKey], storedPayload[field.payloadKey]);
+        if (merged !== inPayload[field.payloadKey]) payload = { ...payload, [field.payloadKey]: merged };
+      }
       if (field.keepStoredSummaryWhenSent) keepStoredSummary(field.summaryKey);
       continue;
     }

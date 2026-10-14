@@ -30,6 +30,7 @@
 | `minigame/build-letter.md` | R | F-QUEST-002 §3.7 (Q-7a) |
 | `minigame/listen-pick.md` | R | F-QUEST-002 §3.10 (Q-3b) |
 | `minigame/pic-word-match.md` | R | F-QUEST-002 §3.11 (Q-4) |
+| `minigame/type-hangul.md` · `minigame/trace-word.md` · `minigame/write-frame.md` | R | F-CURR-001 §3.7 (D-3; mocks `design/screens/minigame-writing/`; built in G-3, G-4, G-5) |
 | `story/check.md` · `story/word-recap.md` · `results/celebrate-story.md` | R | F-STORY-003 §3.4 · §3.6 · §3.7 (PR 3.0; brief `screens/22-story-check`, `components/choice-card`) |
 | `story/sequence.md` | S | F-STORY-003 §3.5 (Story Order v2 built in PR 3.5a; art in 3.5b; brief `screens/12-minigame-story-sequence` revised) |
 | `results/celebrate.md` | S | F-MOTION-003 |
@@ -54,6 +55,7 @@
 | `journey/my-route-overview.md` | R | F-ROUTE-001 (screens A to I; J amends `placement/result.md` (was `placement.md` G) for F-PLC-001 AM-1 / AM-14, K is F-PLAN-002's weekly plan proposal, FP-B6) |
 | `home/notes-card.md` · `notes/list.md` · `notes/detail.md` | R | F-FEEDBACK-001 §6.5-6.7 (FB-0; built in FB-8) |
 | `minigame/sentence-builder.md` · `quest/discover-sentences.md` | R | F-CURR-001 §3.4-3.7, §3.10 (D-1: Sentence Builder `order-it` and the sentence, pattern, exchange with Read along, and realia Discover pages; mock `design/screens/minigame-sentence-builder/v1/`; built in G-1, S3-1, S4-1, G-2) |
+| `minigame/realia-read.md` | R | F-CURR-001 §3.6, §3.14 (row D-2; mock `design/screens/minigame-realia-read/`; built in G-2) |
 
 ### B/C. Caregiver · Teacher · School console (web, 일부 mobile) — 어른
 | 파일 | 상태 | 스펙 |

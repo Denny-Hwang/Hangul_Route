@@ -475,6 +475,19 @@ describe('placements (F-PLC-001 section 3.8)', () => {
     expect(pick(late, early)).toBe('late');
   });
 
+  it('the winner keeps catalogVersion from the other copy when an older build dropped it (F-CURR-001 §3.13)', () => {
+    const at = '2026-10-01T00:00:00Z';
+    const v9 = p('placement:a', at, { contentVer: 'server', catalogVersion: 9 });
+    const stripped = p('placement:a', at, { contentVer: 'local' });
+    const override = { by: 'parent' as const, at: '2026-10-03T00:00:00Z', startQuestId: 'quest:q2' };
+    const merged = (l: typeof v9, s: typeof v9) => mergeSnapshots(base({ placements: [l] }), base({ placements: [s] }), { now: NOW }).placements?.[0];
+    expect(merged(stripped, v9)).toMatchObject({ contentVer: 'local', catalogVersion: 9 });
+    expect(merged(v9, p('placement:a', at, { override }))).toMatchObject({ override, catalogVersion: 9 });
+    // A copy that carries its own value keeps it; neither side having one adds nothing.
+    expect(merged(p('placement:a', at, { catalogVersion: 10 }), v9)?.catalogVersion).toBe(10);
+    expect('catalogVersion' in (merged(stripped, p('placement:a', at)) ?? {})).toBe(false);
+  });
+
   it('keeps only the newest PLACEMENT_KEEP results', () => {
     const many = Array.from({ length: PLACEMENT_KEEP + 2 }, (_, i) =>
       p(`placement:r${String(i).padStart(2, '0')}`, `2026-10-${String(i + 1).padStart(2, '0')}T00:00:00Z`),

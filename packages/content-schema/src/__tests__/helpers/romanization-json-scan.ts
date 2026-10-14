@@ -19,6 +19,7 @@ import { KNOWN_STORY_FINDINGS, type KnownFinding } from './romanization-baseline
 import {
   ROMANIZATION_EXCEPTIONS,
   checkConsistency,
+  checkFrameRomanization,
   checkJamoRomanization,
   checkProse,
   checkRomanization,
@@ -119,8 +120,13 @@ export function scanContentFiles(
               },
             });
           } else {
-            entries.push({ ko, romanization: rom, where: `${file}:${line ?? 0}` });
-            for (const issue of checkRomanization(ko, rom, { exceptions })) found.push({ file, line, issue });
+            // A sentence frame with slots (F-CURR-001 §3.4, §3.7) is checked between its slots.
+            if (ko.includes('___')) {
+              for (const issue of checkFrameRomanization(ko, rom, { exceptions })) found.push({ file, line, issue });
+            } else {
+              entries.push({ ko, romanization: rom, where: `${file}:${line ?? 0}` });
+              for (const issue of checkRomanization(ko, rom, { exceptions })) found.push({ file, line, issue });
+            }
           }
         }
       }

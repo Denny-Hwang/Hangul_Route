@@ -13,7 +13,7 @@ const REPO = resolve(HERE, "..", "..");
 const SCRIPT = join(REPO, "scripts", "build-overlays.mjs");
 const OUT_REL = join("packages", "content-schema", "src", "i18n-overlays.generated.ts");
 
-const { GENERATED_HEADER, buildOverlays, renderOverlays } = await import(SCRIPT);
+const { GENERATED_HEADER, buildOverlays, isLessonOverlay, renderOverlays } = await import(SCRIPT);
 
 const roots = [];
 function makeRoot() {
@@ -118,6 +118,20 @@ describe("build-overlays.mjs: CLI", () => {
     assert.match(out, /"title": "A"/);
     assert.match(out, /"title": "가 카드"/);
     assert.doesNotMatch(out, /nope/);
+  });
+
+  test("leaves lesson glosses (lessons-stage<n>-<theme>.json) to build-lessons.mjs (F-CURR-001 §3.10)", () => {
+    const root = makeRoot();
+    put(root, "content/i18n/es/cards.json", overlay("es", "cards", { "card:a": { title: "A" } }));
+    put(root, "content/i18n/es/lessons-stage2-rites.json", overlay("es", "lessons-stage2-rites", { "episode:stage2-rites": { title: "Palabras de fiesta" } }));
+    const r = run(root);
+    assert.equal(r.status, 0, r.stdout + r.stderr);
+    const out = readFileSync(join(root, OUT_REL), "utf8");
+    assert.match(out, /"title": "A"/);
+    assert.doesNotMatch(out, /Palabras de fiesta/);
+    assert.equal(isLessonOverlay("lessons-stage7-crafts.json"), true);
+    assert.equal(isLessonOverlay("lessons.json"), false);
+    assert.equal(isLessonOverlay("stage1-quests.json"), false);
   });
 
   test("with no content/i18n it writes empty overlays", () => {

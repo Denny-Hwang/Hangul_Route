@@ -339,14 +339,15 @@ describe('flags', () => {
 
   it('reportsEnabledFor shows reports only with the flag on and a reviewed locale, as the console does (section 3.1)', async () => {
     const mod = await reload();
-    expect(mod.REPORT_REVIEWED_LOCALES).toEqual(['en']);
+    expect(mod.REPORT_REVIEWED_LOCALES).toEqual(['en', 'es', 'ko']);
     expect(mod.reportsEnabledFor('en', { reportsEnabled: true })).toBe(true);
-    expect(mod.reportsEnabledFor('ko', { reportsEnabled: true })).toBe(false);
-    expect(mod.reportsEnabledFor('es', { reportsEnabled: true })).toBe(false);
+    expect(mod.reportsEnabledFor('ko', { reportsEnabled: true })).toBe(true);
+    expect(mod.reportsEnabledFor('es', { reportsEnabled: true })).toBe(true);
+    expect(mod.reportsEnabledFor('ko', { reportsEnabled: false })).toBe(false);
     expect(mod.reportsEnabledFor('en', { reportsEnabled: false })).toBe(false);
     delete process.env.EXPO_PUBLIC_REPORTS_ENABLED;
     expect((await reload()).reportsEnabledFor('en')).toBe(true);
-    expect((await reload()).reportsEnabledFor('ko')).toBe(false);
+    expect((await reload()).reportsEnabledFor('ko')).toBe(true);
     process.env.EXPO_PUBLIC_REPORTS_ENABLED = 'false';
     expect((await reload()).reportsEnabledFor('en')).toBe(false);
     delete process.env.EXPO_PUBLIC_REPORTS_ENABLED;
@@ -373,12 +374,13 @@ describe('flags', () => {
     expect(mod.flags.routeEnabled).toBe(true);
   });
 
-  it('routeEnabledFor shows the weekly plan only with the flag on and a reviewed locale (P2-8b: en only)', async () => {
+  it('routeEnabledFor shows the weekly plan only with the flag on and a reviewed locale (P2-8b; es and ko signed by the MAR re-review)', async () => {
     const mod = await reload();
-    expect(mod.ROUTE_REVIEWED_LOCALES).toEqual(['en']);
+    expect(mod.ROUTE_REVIEWED_LOCALES).toEqual(['en', 'es', 'ko']);
     expect(mod.routeEnabledFor('en', { routeEnabled: true }, false)).toBe(true);
-    expect(mod.routeEnabledFor('es', { routeEnabled: true }, false)).toBe(false);
-    expect(mod.routeEnabledFor('ko', { routeEnabled: true }, false)).toBe(false);
+    expect(mod.routeEnabledFor('es', { routeEnabled: true }, false)).toBe(true);
+    expect(mod.routeEnabledFor('ko', { routeEnabled: true }, false)).toBe(true);
+    expect(mod.routeEnabledFor('es', { routeEnabled: false }, false)).toBe(false);
     expect(mod.routeEnabledFor('en', { routeEnabled: false }, false)).toBe(false);
     // The QA build that shows every locale (EXPO_PUBLIC_SHOW_ALL_LOCALES=1) plays es and ko for the 320 px pass.
     expect(mod.routeEnabledFor('es', { routeEnabled: true }, true)).toBe(true);
@@ -388,7 +390,7 @@ describe('flags', () => {
     delete process.env.EXPO_PUBLIC_SHOW_ALL_LOCALES;
     const fresh = await reload();
     expect(fresh.routeEnabledFor('en')).toBe(true);
-    expect(fresh.routeEnabledFor('ko')).toBe(false);
+    expect(fresh.routeEnabledFor('ko')).toBe(true);
   });
 
   it('every shipped UI locale is a reviewed weekly plan locale, so a plan is never left without its Change and Stop entries', async () => {

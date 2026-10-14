@@ -2,9 +2,16 @@ import type {
   KoText,
   ListenPickRound,
   MinigameKind,
+  OrderItRound,
   PicWordRound,
+  Realia,
+  RealiaReadRound,
   StoryLevel,
+  TraceWordRound,
+  TypeHangulRound,
+  WriteFrameRound,
 } from '@hangul-route/content-schema';
+import { lessons } from '../content/lessons';
 import { lp, pw } from './scope-builders';
 import { storyScopeFor } from './story/story-ref';
 
@@ -45,6 +52,14 @@ export interface MinigameScope {
   listenPick?: { rounds: ListenPickRound[] };
   /** Pic-Word Match boards, built with `pw` (F-QUEST-002 §3.11). */
   picWord?: { boards: PicWordRound[] };
+  // F-CURR-001 §3.10: the upper-stage games, filled by scripts/build-lessons.mjs from the lesson cells.
+  /** Sentence Builder rounds (`order-it`). */
+  orderIt?: { rounds: OrderItRound[] };
+  /** Realia Read: the drawn text and its questions. */
+  realiaRead?: { realia: Realia; rounds: RealiaReadRound[] };
+  typeHangul?: { rounds: TypeHangulRound[] };
+  traceWord?: { rounds: TraceWordRound[] };
+  writeFrame?: { rounds: WriteFrameRound[] };
 }
 
 const J = (id: string): string => `jamo:${id}`;
@@ -731,8 +746,9 @@ export const minigameScopes: Record<string, MinigameScope> = {
   },
 };
 
+/** A hand-written scope, a lesson cell's scope (F-CURR-001, loads its stage module once) or a story scope. */
 export function scopeFor(ref: string): MinigameScope | undefined {
-  return minigameScopes[ref] ?? storyScopeFor(ref);
+  return minigameScopes[ref] ?? lessons.scopeFor(ref) ?? storyScopeFor(ref);
 }
 
 // Suppress unused-import warning for type used in JSDoc

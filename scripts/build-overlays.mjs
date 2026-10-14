@@ -80,13 +80,17 @@ export function renderOverlays(model) {
 
 const relOf = (root, file) => relative(root, file).split(sep).join("/");
 
+/** `lessons-stage<n>-<theme>.json`: a lesson cell's glosses, read by build-lessons.mjs (F-CURR-001 §3.10). */
+export const isLessonOverlay = (name) => /^lessons-stage\d-[a-z]+\.json$/.test(name);
+
 function readFiles(root) {
   const dir = join(root, "content", "i18n");
   const files = [];
   for (const locale of OVERLAY_LOCALES) {
     const localeDir = join(dir, locale);
     if (!existsSync(localeDir) || !statSync(localeDir).isDirectory()) continue;
-    for (const name of readdirSync(localeDir).filter((n) => n.endsWith(".json")).sort()) {
+    // Lesson glosses (F-CURR-001 §3.10) are compiled into the lesson modules by build-lessons.mjs, not here.
+    for (const name of readdirSync(localeDir).filter((n) => n.endsWith(".json") && !isLessonOverlay(n)).sort()) {
       const full = join(localeDir, name);
       const rel = relOf(root, full);
       let json;

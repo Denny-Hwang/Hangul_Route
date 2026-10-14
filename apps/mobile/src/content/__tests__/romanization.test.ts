@@ -7,7 +7,9 @@ import {
   checkConsistency,
   checkJamoRomanization,
   checkProse,
+  checkFrameRomanization,
   checkRomanization,
+  discoverItemTexts,
   formatRomanizationFinding,
   lineOfText,
   type RomanizationEntry,
@@ -22,6 +24,8 @@ import { episodesAll } from '../episodes';
 import { heritageCardsAll } from '../heritage-cards';
 import { jamoAll } from '../jamo';
 import { questsAll } from '../quests';
+import { LESSON_EPISODES, LESSON_QUESTS } from '../__generated__/lessons-index';
+import { LESSON_STAGE_MODULES } from './helpers/lesson-stages';
 
 // F-CNT-002 PR 3, source class B1 (mobile TS data): the romanization that ships in the app is
 // Revised Romanization, unhyphenated, and every taught Korean string carries one (R1 to R7).
@@ -192,6 +196,35 @@ describe('minigame scopes romanization (B1)', () => {
   });
 });
 
+describe('lesson modules romanization (B1, F-CURR-001 §3.10)', () => {
+  /** Every Korean string with its romanization in a generated value: `ko` / `romanization`, `npcKo` / `npcRomanization`, `labelKo` / `romanization`. */
+  function pairsIn(value: unknown, out: Array<[string, string | undefined]> = []): Array<[string, string | undefined]> {
+    if (Array.isArray(value)) value.forEach((v) => pairsIn(v, out));
+    else if (typeof value === 'object' && value !== null) {
+      const o = value as Record<string, unknown>;
+      const rom = (k: string) => (typeof o[k] === 'string' ? (o[k] as string) : undefined);
+      if (typeof o.ko === 'string') out.push([o.ko, rom('romanization')]);
+      if (typeof o.npcKo === 'string') out.push([o.npcKo, rom('npcRomanization')]);
+      if (typeof o.labelKo === 'string') out.push([o.labelKo, rom('romanization')]);
+      Object.values(o).forEach((v) => pairsIn(v, out));
+    }
+    return out;
+  }
+  const check = ([ko, given]: [string, string | undefined]): RomanizationIssue[] =>
+    !HANGUL.test(ko) ? [] : ko.includes('___') ? checkFrameRomanization(ko, given ?? '', ctx) : checkRomanization(ko, given ?? '', ctx);
+
+  it('every taught Korean string of the lesson quests and scopes has its Revised Romanization (R1 to R4)', () => {
+    const values = [LESSON_EPISODES, LESSON_QUESTS, ...Object.values(LESSON_STAGE_MODULES).map((m) => m.LESSON_SCOPES)];
+    expect(values.flatMap((v) => pairsIn(v)).flatMap(check).map((i) => i.message)).toEqual([]);
+  });
+
+  it('the walker finds every pair shape the lesson scopes use (a bad one would fail)', () => {
+    const bad = { a: { ko: '책', romanization: 'chaeg' }, b: [{ npcKo: '네', npcRomanization: 'ne' }], c: { labelKo: '저는 ___을/를 좋아해요', romanization: 'jeoneun joahaeyo' } };
+    expect(pairsIn(bad)).toHaveLength(3);
+    expect(pairsIn(bad).flatMap(check).map((i) => i.rule)).toEqual(['romanization-mismatch', 'romanization-mismatch']);
+  });
+});
+
 describe('quests, episodes and avatars romanization (B1)', () => {
   /** Hangul allowed in an English field: an isolated syllable in a title (F-CNT-002 §3.4 ignore table). */
   const ENGLISH_HANGUL_ALLOWED: ReadonlyArray<{ questId: string; stepId: string; field: 'titleEn'; text: string }> = [];
@@ -217,8 +250,7 @@ describe('quests, episodes and avatars romanization (B1)', () => {
         }
         // Discover examples and words (F-QUEST-002 §3.2): taught Korean with romanization and gloss.
         for (const page of s.discover?.pages ?? []) {
-          for (const item of page.items) {
-            const text = item.type === 'jamo' ? item.example : item.word;
+          for (const text of page.items.flatMap(discoverItemTexts)) {
             note(F.quests, text.ko, text.romanization);
             found.push(...pair(F.quests, text.ko, text.romanization).map((m) => `${q.id}/${s.id}: ${m}`));
           }

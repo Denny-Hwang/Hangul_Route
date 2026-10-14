@@ -1,4 +1,4 @@
-import { effectiveRoute, type Episode, type PlacementResult, type Quest, type RouteCatalog, type RouteQuest, type RouteSeed } from '@hangul-route/content-schema';
+import { effectiveRoute, type CatalogHistory, type Episode, type PlacementResult, type Quest, type RouteCatalog, type RouteQuest, type RouteSeed } from '@hangul-route/content-schema';
 import { gridEpisodes } from '../../content/episodes';
 import { playableEpisodes } from '../next-quest';
 
@@ -45,12 +45,15 @@ export function placedOutSkipSet(
   placements: readonly PlacementResult[] | undefined,
   quests: readonly Quest[],
   episodes: readonly Episode[],
+  catalogHistory?: CatalogHistory,
 ): ReadonlySet<string> | undefined {
   if (placements === undefined || placements.length === 0) return undefined;
-  // Never null here: `effectiveRoute` is null only for an empty list.
+  // Never null here: `effectiveRoute` is null only for an empty list. A result stored at an
+  // older catalogue also skips the quests shipped since that its level places out (F-CURR-001 §3.13).
   const seed = effectiveRoute(placements, appRouteCatalog(quests, episodes), {
     isEntitled: () => true,
     completedQuestIds: new Set(),
+    ...(catalogHistory === undefined ? {} : { catalogHistory }),
   }) as RouteSeed;
   return new Set(seed.placedOutQuestIds);
 }

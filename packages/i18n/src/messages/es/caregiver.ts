@@ -94,9 +94,10 @@ export const caregiver = {
     recent: 'Reciente',
     words: {
       label: 'Palabras',
-      counts: (collected: number, strong: number) => `${collected} reunidas, ${strong} bien aprendidas`,
+      counts: (collected: number, strong: number) =>
+        `${plural('es', collected, { one: `${collected} conseguida`, other: `${collected} conseguidas` })}, ${plural('es', strong, { one: `${strong} firme`, other: `${strong} firmes` })}`,
       firstTry: (percent: number) => `Acierto a la primera: ${percent} %`,
-      together: 'Para ver juntos',
+      together: 'Para ver en familia',
     },
     privacy: {
       title: 'Privacidad',
@@ -143,6 +144,8 @@ export const caregiver = {
     needsConnection: 'Para abrir la facturación hace falta conexión.',
     gateDone: 'PIN aceptado. Toca Abrir facturación otra vez.',
     backToJourney: { cta: 'Volver al recorrido' },
+    backToLibrary: { cta: 'Volver a la colección' },
+    backHome: { cta: 'Ir al inicio' },
     freePlan: {
       line: (lessons: number, letters: number, minutes: number) =>
         `La Etapa 1 es gratis: ${plural('es', lessons, { one: `${lessons} lección`, other: `${lessons} lecciones` })}, ${plural('es', letters, {
@@ -439,7 +442,7 @@ export const caregiver = {
       change: 'Cambiar',
       notNow: 'Ahora no',
       made: (name: string) => `${name} ya tiene un plan semanal. Aparece en Inicio.`,
-      laterStart: (name: string) => `La prueba más reciente de ${name} encontró un punto de partida más adelante.`,
+      laterStart: (name: string) => `La última prueba de nivel de ${name} encontró un inicio más adelante.`,
       laterLine: 'El plan semanal puede avanzar y mantener la misma fecha final.',
       updatePlan: 'Actualizar el plan',
       updated: 'El plan semanal avanzó.',
@@ -460,7 +463,23 @@ export const caregiver = {
     viewing: (name: string) => `Viendo la Ruta de aprendizaje de ${name}`,
     tiles: (n: number) => `Deletrear con fichas: ${plural('es', n, { one: '1 misión', other: `${n} misiones` })}`,
     start: (name: string) => `La Ruta de aprendizaje de ${name} empieza aquí.`,
-    goal: { first: 'Primera meta: leer cada letra del hangul.' },
+    goal: {
+      first: 'Primera meta: leer cada letra del hangul.',
+      inGoal: (name: string, n: number, title: string) => `Etapa ${n} · ${title}: ${name} está en la etapa meta`,
+      exploreInGoal: (name: string, n: number, title: string) => `Explora la Etapa ${n} · ${title}: ${name} está en la etapa meta`,
+      reached: (name: string, n: number, title: string) => `${name} llegó a la meta: Etapa ${n} · ${title}.`,
+      from: {
+        class: 'Del plan semanal de la clase',
+        school: 'Del plan semanal de la escuela',
+        family: 'Del plan semanal de la familia',
+        self: (name: string) => `Del plan semanal de ${name}`,
+        default: 'Sugerencia de Hoya',
+      },
+    },
+    planEnds: (date: string) => `Fin del plan: ${date}`,
+    goalTag: (name: string) => `Meta de ${name}`,
+    endOfRoad: (name: string) => `${name} llegó al final del camino abierto. Viene más.`,
+    error: (name: string) => `Hoya no pudo abrir la Ruta de aprendizaje de ${name}.`,
     rest: (name: string) => `${name} hizo todo lo que está abierto ahora. Viene más.`,
     beyond: (name: string) => `¡${name} sabe mucho! Vienen más aventuras.`,
     hereTag: (name: string) => `${name} está aquí`,
@@ -589,7 +608,7 @@ export const caregiver = {
       title: 'Cambiar a otra clase',
       step1: 'Pide el código a quien enseña en la nueva clase.',
       codeLabel: 'Código de clase',
-      sent: 'Solicitud enviada. Nada cambia hasta que todos digan que sí.',
+      sent: 'Solicitud enviada. Nada cambia hasta que todas las partes digan que sí.',
     },
     errors: {
       codeNotFound: 'Ese código no funcionó.',
@@ -720,7 +739,7 @@ export const caregiver = {
       steps: 'Pasos',
       levels: 'Niveles',
       levelGroup: 'Nivel',
-      level: { listen: 'Escuchar', readAlong: 'Leer juntos', read: 'Leer' },
+      level: { listen: 'Escuchar', readAlong: 'Leer escuchando', read: 'Leer' },
       scenes: 'Escenas',
       keywords: 'Palabras clave',
       sources: 'Fuentes',
@@ -728,6 +747,7 @@ export const caregiver = {
     },
     topic: {
       hearA11y: (romanization: string) => `Escuchar ${romanization}`,
+      previewFlashcards: { cta: 'Vista previa de las tarjetas' },
     },
     preview: {
       strip: 'Vista previa. No se guarda nada.',

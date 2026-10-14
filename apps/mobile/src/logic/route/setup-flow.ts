@@ -1,10 +1,14 @@
 import {
+  CATALOG,
   CURRICULUM_MAX_ITEMS,
   LENGTH_PRESETS,
   PACES,
   ThemeKeySchema,
+  placedOutGrowth,
   placementLevelRank,
+  routeCatalogOf,
   sessionsPerWeekOf,
+  type CatalogHistory,
   type CurriculumParams,
   type CurriculumParamsInput,
   type DateKey,
@@ -13,6 +17,7 @@ import {
   type Motivation,
   type PaceId,
   type PlacementLevel,
+  type RouteCatalog,
   type RouteProposal,
   type SelfRoute,
   type StageKey,
@@ -172,6 +177,9 @@ export interface SetupBasisInput {
   completedQuestIds: readonly string[];
   unlockedStages: readonly StageKey[];
   today: DateKey;
+  /** Today's catalogue (default the shipped one) and its version history: the catalogue-growth rule's inputs (tests pass their own). */
+  catalog?: RouteCatalog;
+  catalogHistory?: CatalogHistory;
 }
 
 /**
@@ -187,11 +195,18 @@ export function setupBasisOf(i: SetupBasisInput): { ctx: SetupContext; state: Se
   const params = stored ?? i.proposal?.params ?? null;
   if (params === null) return null;
   const startFrom = later ?? params;
+  // The plan's own set was fixed at the plan's catalogue version: widen it with the quests shipped
+  // since that its level places out (F-CURR-001 §3.13), or Change the plan would schedule them.
+  // A proposal's set comes from today's catalogue (`effectiveRoute`) and is used as it is.
+  const growth =
+    startFrom === stored && stored.placedOutQuestIds !== undefined && i.active !== null
+      ? placedOutGrowth(stored.level, i.active.meta.catalogVersion, i.catalog ?? routeCatalogOf(CATALOG), new Set(i.completedQuestIds), i.catalogHistory)
+      : [];
   const ctx: SetupContext = {
     completedQuestIds: [...i.completedQuestIds],
     unlockedStages: [...i.unlockedStages],
     level: startFrom.level,
-    ...(startFrom.placedOutQuestIds === undefined ? {} : { placedOutQuestIds: [...startFrom.placedOutQuestIds] }),
+    ...(startFrom.placedOutQuestIds === undefined ? {} : { placedOutQuestIds: [...new Set([...startFrom.placedOutQuestIds, ...growth])] }),
     ...(params.goals.motivation === undefined ? {} : { motivation: params.goals.motivation }),
   };
   if (stored !== null) {

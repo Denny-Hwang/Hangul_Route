@@ -15,6 +15,14 @@ export function pinnedMission(profileId: string, date: string): MissionPlan | nu
   return pin && pin.date === date ? pin : null;
 }
 
+/**
+ * The profile's pin of any day, or null: Home passes it as `vocabCarry`, so a fresh plan on a new
+ * UTC day keeps the vocabulary card's state until local midnight (F-VOC-005 P-3b).
+ */
+export function latestPin(profileId: string): MissionPlan | null {
+  return pins.get(profileId) ?? null;
+}
+
 /** Pin a plan for its profile and day, replacing any earlier pin of that profile. */
 export function pinMission(plan: MissionPlan): void {
   pins.set(plan.profileId, plan);
@@ -23,7 +31,8 @@ export function pinMission(plan: MissionPlan): void {
 /**
  * The topics whose Speed Round reached its results today (F-VOC-005 section 3.7, PR P-3): the Home
  * "Words are ready" card is collected once a round of its topic completes. Same lifetime as the pin
- * (this app session, one day per profile), so it is kept here; `vocab-run-store` marks it.
+ * (this app session, one day per profile), so it is kept here; `vocab-run-store` marks it. The day
+ * is the device's local day (`localDay`, P5), the vocabulary card's day basis (P-3b).
  */
 const roundsDone = new Map<string, { date: string; topics: Set<string> }>();
 const NONE: ReadonlySet<string> = new Set();

@@ -349,16 +349,25 @@ describe('the pieces', () => {
       if (SKILL_OF_KIND[kind].length > 0) expect(GAME_NAME_KEY[kind], kind).toBeDefined();
     }
     const games = EN.learner.myRoute.games;
+    // Only kinds the app can play are named: match-shape and the F-CURR-001 games (realia-read,
+    // type-hangul, trace-word, write-frame) have no screen yet.
     expect(gamesFor('read', games)).toEqual([
       'Hear a sound, find its letter',
       'Hear it, then tap the answer',
-      'Match the shapes',
       'Find the one that is different',
       'Match a picture to its word',
       'Read a story',
     ]);
     expect(gamesFor('listen', games)).toEqual(['Hear a sound, find its letter', 'Hear it, then tap the answer', 'Listen and pick']);
     expect(gamesFor('write', games)).toEqual(['Trace a letter']);
+  });
+
+  it('gamesFor names a game once its kind is playable', () => {
+    const games = EN.learner.myRoute.games;
+    const all = new Set(MinigameKindSchema.options);
+    expect(gamesFor('read', games, all)).toContain('Read a menu, sign or ticket');
+    expect(gamesFor('read', games, all)).toContain('Match the shapes');
+    expect(gamesFor('write', games, all)).toEqual(['Trace a letter', 'Type in Hangul', 'Trace a word', 'Finish a sentence of your own']);
   });
 });
 
@@ -453,11 +462,14 @@ describe('myRouteView: the route card, the weekly plan line and the plan cells (
     expect(view(own, { week: 3 }).planOpen).toBeNull();
   });
 
-  it('view contract: the value routeEnabledFor gives an es or ko UI with the flag on shows no Open plan link (P2-8b; the screen wiring is pinned in entry-source.test.ts)', () => {
+  it('view contract: routeEnabledFor gives a signed es or ko UI the Open plan link with the flag on, and none with it off (P2-8b; the screen wiring is pinned in entry-source.test.ts)', () => {
     const own = { ...model(APPENDIX_C), goal: { stage: 'stage1' as const, from: 'self' as const, sourceId: 'route:1', endsOn: '2026-11-01', reached: false, taste: false } };
+    const translated = { es: 'Abrir el plan', ko: '계획 열기' } as const;
     for (const locale of ['es', 'ko'] as const) {
       const planOverview = routeEnabledFor(locale, { routeEnabled: true }, false);
-      expect(view(own, { week: 3, planOverview, messages: getMessages(locale) }).planOpen).toBeNull();
+      expect(view(own, { week: 3, planOverview, messages: getMessages(locale) }).planOpen).toBe(translated[locale]);
+      const off = routeEnabledFor(locale, { routeEnabled: false }, false);
+      expect(view(own, { week: 3, planOverview: off, messages: getMessages(locale) }).planOpen).toBeNull();
     }
     expect(view(own, { week: 3, planOverview: routeEnabledFor('en', { routeEnabled: true }, false) }).planOpen).toBe('Open plan');
   });

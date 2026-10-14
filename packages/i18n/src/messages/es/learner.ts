@@ -183,7 +183,9 @@ export const learner = {
   journey: {
     title: 'Recorrido del patrimonio',
     intro: 'Todas las lecciones, por etapa y tema.',
-    availability: { open: { pill: 'Abierta' }, taste: { pill: 'Una muestra' }, soon: { pill: 'Más adelante' } },
+    availability: { open: { pill: 'Abierta' }, taste: { pill: 'Una muestra' }, soon: { pill: 'Más adelante' }, complete: { pill: 'Completa' } },
+    stagePrize: { cta: 'Ver tu premio' },
+    hangulCheck: { cta: 'Repaso de hangul' },
     tasteNote: 'Ya hay una muestra de esta etapa. Vienen más episodios.',
     storiesNote: 'Las historias del patrimonio están en las casillas con el icono de libros.',
     countMark: (value: number, more: boolean) => (more ? `${value}+` : `${value}`),
@@ -296,6 +298,7 @@ export const learner = {
     },
     backHome: { cta: 'Ir al inicio' },
     episodePage: { cta: 'Ver episodio' },
+    stagePrize: { cta: 'Ver tu premio de la Etapa 1' },
     nextUp: {
       title: 'Ahora sigue',
       next: { cta: 'Siguiente misión' },
@@ -980,6 +983,10 @@ export const learner = {
       picWordMatch: 'Une una imagen con su palabra',
       storyRead: 'Lee una historia',
       traceStroke: 'Traza una letra',
+      realiaRead: 'Lee un menú, un letrero o un boleto',
+      typeHangul: 'Teclea en hangul',
+      traceWord: 'Traza una palabra',
+      writeFrame: 'Completa tu propia oración',
     },
     legend: {
       title: 'Qué significan las formas',
@@ -1181,7 +1188,67 @@ export const learner = {
   },
   access: {
     notOpen: 'Aún sin abrir',
+    preview: { line: 'Esta lección aún no está abierta. Igual puedes ver lo que enseña.' },
     ask: { family: 'Pregunta a un adulto', class: 'Pregunta a tu docente o a un adulto', self: 'Mira cómo se abre' },
+    back: { cta: 'Ver lecciones abiertas' },
+    freeEnd: { title: '¡Terminaste tus primeras lecciones!' },
+    openForYou: 'Jugaste todas las misiones que tienes abiertas.',
+    practiceWords: { cta: 'Practicar palabras' },
+    readStory: { cta: 'Leer una historia' },
+    replay: { cta: 'Jugar otra vez una favorita' },
+    home: { cta: 'Ir al inicio' },
+    practice: { subtitle: 'Sigue practicando', topicTitle: (title: string) => `Palabras: ${title}` },
+  },
+  /** The Stage 1 ceremony (F-QUEST-002 §3.8): no number, no fraction, no percent, no price, no plan word. */
+  stageComplete: {
+    title: '¡Hangul completo!',
+    headline: '¡Ya puedes leer hangul!',
+    canDo: 'Conoces cada letra y cada sonido final. Hoya está muy orgulloso de ti.',
+    wallTitle: 'Todas las letras que aprendiste',
+    cardsTitle: 'Tarjetas legendarias para ti',
+    seeCards: { cta: 'Ver mis tarjetas' },
+    backHome: { cta: 'Ir al inicio' },
+    notFound: 'Este premio aún no está aquí. Sigue jugando tus misiones.',
+    hangulCheck: { cta: 'Hacer el repaso de hangul', note: 'Unos cuatro minutos. Puedes saltarlo.' },
+  },
+  /**
+   * The Hangul Check (F-QUEST-002 §3.9): "Repaso de hangul", as the console names it. Never a number of right answers;
+   * no adjective that agrees with the learner ("¿Seguimos?", never "¿Listo?").
+   */
+  stageReview: {
+    title: 'Repaso de hangul',
+    notReady: 'El repaso de hangul aún no está abierto. Sigue jugando tus misiones.',
+    intro: {
+      body: 'Unos cuatro minutos. Imágenes y sonidos. Sin reloj.',
+      hideRomanization: 'Práctica de lectura: ocultar la romanización hasta que toque',
+      start: { cta: '¡Vamos!' },
+      later: { cta: 'Quizá después' },
+    },
+    pause: {
+      first: '¡Qué bien escuchaste! ¿Seguimos?',
+      second: 'Lo estás haciendo muy bien. ¿Sigues?',
+      third: 'A Hoya le encanta esta parte. ¿Más letras?',
+      fourth: 'Ya casi. ¡Una parte más!',
+      keepGoing: { cta: 'Seguir' },
+    },
+    leave: {
+      close: 'Parar el repaso',
+      title: '¿Parar el repaso?',
+      body: 'Puedes hacerlo otra vez cuando quieras.',
+      stop: { cta: 'Parar' },
+      stay: { cta: 'Seguir' },
+    },
+    result: {
+      headline: { three: '¡Maravilloso!', two: '¡Buen trabajo!', one: '¡Lo lograste!' },
+      cheer: 'Miraste cada letra del hangul. Hoya está orgulloso de ti.',
+      certificate: { title: 'Certificado', stage: 'Etapa 1: Hangul' },
+      wallTitle: 'Tus tarjetas de hangul',
+      tipTitle: 'Consejo de Hoya',
+      tryAgain: 'Repasa:',
+      everyLetter: '¡Todas las letras!',
+      backHome: { cta: 'Ir al inicio' },
+      seeCards: { cta: 'Ver mis tarjetas' },
+    },
   },
   /**
    * The learner's own weekly plan (F-PLAN-002 P2-7a, P2-7b). "Plan semanal", never "ruta"; the pace names match
