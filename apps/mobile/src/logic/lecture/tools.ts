@@ -58,7 +58,8 @@ export type StatusChip = 'sound-off' | 'no-voice' | 'offline' | 'update';
 export function statusChips(input: { voice: 'ready' | 'none' | 'unknown'; muted: boolean; online: boolean; updateWaiting: boolean }): StatusChip[] {
   const out: StatusChip[] = [];
   if (input.muted) out.push('sound-off');
-  if (input.voice === 'none') out.push('no-voice');
+  // Muted, the one sound chip reads "Sound is off" (section 3.7); the no-voice chip follows once sound is on.
+  if (input.voice === 'none' && !input.muted) out.push('no-voice');
   if (!input.online) out.push('offline');
   if (input.updateWaiting) out.push('update');
   return out;

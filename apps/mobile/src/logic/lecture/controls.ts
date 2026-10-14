@@ -200,7 +200,9 @@ export function reduce(state: PresenterState, event: PresenterEvent, deck: Contr
   }
 
   if ('timerMode' in event) {
-    return { state: { ...state, timerOpen: true, timerMode: event.timerMode } };
+    // Opening a closed timer (an empty one opens full screen) brings it forward over a covering overlay, like T.
+    const overlay = state.timerOpen ? state.overlay : null;
+    return { state: { ...state, overlay, timerOpen: true, timerMode: event.timerMode } };
   }
 
   if ('startTimer' in event) {

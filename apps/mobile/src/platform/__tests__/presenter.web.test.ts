@@ -26,6 +26,8 @@ import {
   subscribeKeys,
   takeDeckFragment,
   trapFocus,
+  focusablesIn,
+  rememberFocus,
   unlockChime,
   unlockOrientation,
   waitForPresenterFont,
@@ -678,5 +680,34 @@ describe('the timer chime (section 3.5: two soft notes, never speech, never an a
     const b = env({ createAudioContext: () => broken });
     unlockChime(b);
     expect(playChime(false, b)).toBe(false);
+  });
+});
+
+describe('focusablesIn and rememberFocus (every covering overlay keeps Tab inside and gives focus back)', () => {
+  it('lists the tabbable controls inside an overlay, in document order, leaving out disabled and tabindex -1 ones', () => {
+    const a = { focus: vi.fn(), getAttribute: () => null };
+    const off = { focus: vi.fn(), getAttribute: (n: string) => (n === 'aria-disabled' ? 'true' : null) };
+    const skip = { focus: vi.fn(), getAttribute: (n: string) => (n === 'tabindex' ? '-1' : null) };
+    const b = { focus: vi.fn(), getAttribute: () => null, disabled: false };
+    const gone = { focus: vi.fn(), getAttribute: () => null, disabled: true };
+    const root = { querySelectorAll: vi.fn(() => [a, off, skip, b, gone]) };
+    expect(focusablesIn(root)).toEqual([a, b]);
+    expect(root.querySelectorAll).toHaveBeenCalledWith(expect.stringContaining('button'));
+  });
+
+  it('is empty for anything that is not an element', () => {
+    expect(focusablesIn(null)).toEqual([]);
+    expect(focusablesIn({})).toEqual([]);
+  });
+
+  it('gives focus back to the control that had it, only while that control is still on the page', () => {
+    const opener = { focus: vi.fn(), isConnected: true };
+    rememberFocus(env({ activeElement: () => opener }))();
+    expect(opener.focus).toHaveBeenCalledTimes(1);
+    const removed = { focus: vi.fn(), isConnected: false };
+    rememberFocus(env({ activeElement: () => removed }))();
+    expect(removed.focus).not.toHaveBeenCalled();
+    expect(() => rememberFocus(env({ activeElement: () => null }))()).not.toThrow();
+    expect(() => rememberFocus(env())()).not.toThrow();
   });
 });

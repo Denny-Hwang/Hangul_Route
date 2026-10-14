@@ -94,8 +94,12 @@ describe('statusChips (section 3.7, 3.8)', () => {
   it('shows nothing when all is well', () => {
     expect(statusChips(base)).toEqual([]);
   });
-  it('no voice, sound off, offline and a waiting update, in that order', () => {
-    expect(statusChips({ voice: 'none', muted: true, online: false, updateWaiting: true })).toEqual(['sound-off', 'no-voice', 'offline', 'update']);
+  it('sound off, offline and a waiting update, in that order; muted replaces the no-voice chip (section 3.7)', () => {
+    expect(statusChips({ voice: 'none', muted: true, online: false, updateWaiting: true })).toEqual(['sound-off', 'offline', 'update']);
+  });
+  it('no voice shows its chip once sound is on', () => {
+    expect(statusChips({ ...base, voice: 'none' })).toEqual(['no-voice']);
+    expect(statusChips({ ...base, voice: 'none', muted: true })).toEqual(['sound-off']);
   });
   it('an unknown voice (still checking) shows no chip', () => {
     expect(statusChips({ ...base, voice: 'unknown' })).toEqual([]);

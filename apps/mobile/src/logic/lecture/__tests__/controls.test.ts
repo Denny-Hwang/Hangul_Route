@@ -224,6 +224,14 @@ describe('opening and closing overlays', () => {
     expect(run(at(1, 0, { overlay: 'help', timerOpen: true }), { overlay: 'timer' })).toMatchObject({ overlay: null, timerOpen: true });
     expect(run(at(1, 0, { overlay: 'help' }), { overlay: 'timer' })).toMatchObject({ overlay: null, timerOpen: true });
   });
+
+  it.each(['picker', 'blank', 'pause', 'grid', 'help'] as const)('opening an empty timer full screen over %s brings it forward', (overlay) => {
+    expect(run(at(1, 0, { overlay }), { timerMode: 'full' })).toMatchObject({ overlay: null, timerOpen: true, timerMode: 'full' });
+  });
+
+  it('switching an open timer between corner and full keeps the covering overlay as it is', () => {
+    expect(run(at(1, 0, { timerOpen: true, timerMode: 'full' }), { timerMode: 'corner' })).toMatchObject({ overlay: null, timerMode: 'corner' });
+  });
 });
 
 describe('a running corner timer survives other overlays (activity slide: Start timer, then P)', () => {

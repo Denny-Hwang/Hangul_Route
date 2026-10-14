@@ -64,6 +64,14 @@ export function trapFocus(_items: () => readonly unknown[]): () => void {
   return () => undefined;
 }
 
+export function focusablesIn(_root: unknown): readonly unknown[] {
+  return [];
+}
+
+export function rememberFocus(): () => void {
+  return () => undefined;
+}
+
 export function subscribeActivity(_handler: () => void): () => void {
   return () => undefined;
 }

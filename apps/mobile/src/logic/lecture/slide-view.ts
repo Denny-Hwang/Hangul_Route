@@ -93,8 +93,12 @@ export function activityTimerMs(slide: Of<'activity'>): number {
   return slide.minutes * 60_000;
 }
 
-/** What the speaker plays on a slide: a letter's carrier syllable, a syllable itself; nothing elsewhere. */
+/**
+ * What the speaker plays on a slide: a letter's carrier syllable, a syllable itself, a Match Sound
+ * quiz's prompt; nothing elsewhere.
+ */
 export function slideSound(slide: Slide | undefined): SpokenForm | undefined {
   if (slide?.kind === 'letter' || slide?.kind === 'syllable') return slide.spoken;
+  if (slide?.kind === 'quiz' && slide.prompt.ask === 'sound') return slide.prompt.spoken;
   return undefined;
 }

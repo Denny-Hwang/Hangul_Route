@@ -385,6 +385,39 @@ export function trapFocus(items: () => readonly unknown[], env: PresenterEnv = b
   return () => target.removeEventListener('keydown', onKey as Listener);
 }
 
+const FOCUSABLE = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"]), [role="button"], [role="radio"]';
+
+interface FocusableLike {
+  focus?: () => void;
+  disabled?: boolean;
+  getAttribute?: (name: string) => string | null;
+}
+
+/**
+ * The tabbable controls inside an overlay's own element, in document order (disabled and
+ * tabindex -1 ones left out): what `trapFocus` cycles when the overlay names no list itself.
+ */
+export function focusablesIn(root: unknown): readonly unknown[] {
+  const query = (root as { querySelectorAll?: (selector: string) => ArrayLike<unknown> } | null)?.querySelectorAll;
+  if (typeof query !== 'function') return [];
+  return Array.from(query.call(root, FOCUSABLE)).filter((node) => {
+    const el = node as FocusableLike;
+    if (typeof el.focus !== 'function' || el.disabled === true) return false;
+    return el.getAttribute?.('aria-disabled') !== 'true' && el.getAttribute?.('tabindex') !== '-1';
+  });
+}
+
+/**
+ * Notes the focused control when an overlay opens; the returned function gives focus back to it
+ * when the overlay closes, if it is still on the page.
+ */
+export function rememberFocus(env: PresenterEnv = browserEnv()): () => void {
+  const opener = env.activeElement?.() as { focus?: () => void; isConnected?: boolean } | null | undefined;
+  return () => {
+    if (opener && opener.isConnected !== false && typeof opener.focus === 'function') opener.focus();
+  };
+}
+
 /**
  * Pointer, touch and key activity anywhere on the page: the control bar comes back on any of them
  * and hides `presenter.autoHideMs` after the last (section 3.5).
