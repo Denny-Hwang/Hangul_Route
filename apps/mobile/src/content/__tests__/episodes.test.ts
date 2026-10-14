@@ -250,6 +250,13 @@ describe('grid golden (F-STORY-005 §3.1 rule 2)', () => {
       { id: 'episode:stage2-nature', order: 4, questIds: ['quest:stage2-nature-q1'], status: 'shipped' },
       // F-CURR-001 S2-3: Playground Words (generated, after the hand-written lessons, in stage order).
       { id: 'episode:stage2-crafts', order: 5, questIds: ['quest:stage2-crafts-q1', 'quest:stage2-crafts-q2', 'quest:stage2-crafts-q3'], status: 'shipped' },
+      // F-CURR-001 S2-1: Word Builder (generated; crafts.json < letters.json).
+      {
+        id: 'episode:stage2-letters',
+        order: 1,
+        questIds: ['quest:stage2-letters-q1', 'quest:stage2-letters-q2', 'quest:stage2-letters-q3', 'quest:stage2-letters-q4', 'quest:stage2-letters-q5', 'quest:stage2-letters-q6'],
+        status: 'shipped',
+      },
       // F-CURR-001 S3-5: Game Sentences (generated; within a stage by file name, so crafts.json before letters.json).
       { id: 'episode:stage3-crafts', order: 5, questIds: ['quest:stage3-crafts-q1', 'quest:stage3-crafts-q2', 'quest:stage3-crafts-q3'], status: 'shipped' },
       // F-CURR-001 S3-1: First Sentences (generated, after the hand-written lessons, in stage order).
@@ -347,6 +354,8 @@ describe('pillar tags of the shipped lessons (F-STORY-005 §3.2)', () => {
       'episode:stage3-life': [],
       // F-CURR-001 T-2 (generated from content/episodes/stage-4/rites.json): q3 is a Seollal custom.
       'episode:stage4-rites': ['B5'],
+      // F-CURR-001 S2-1 (generated from content/episodes/stage-2/letters.json).
+      'episode:stage2-letters': ['A1'],
       'episode:stage5-letters': ['A1'],
       'episode:stage5-life': ['B1', 'B5', 'E4'],
       'episode:stage5-rites': ['B5'],
@@ -369,7 +378,7 @@ const GRID_GOLDEN: Record<string, string> = {
   'stage1:rites': 'episode:stage1-rites | New Year & Festivals | shipped',
   'stage1:nature': 'episode:stage1-nature | Tigers, Mountains, Moon | shipped',
   'stage1:crafts': 'episode:stage1-crafts | Yut, Kites & Paper | shipped',
-  'stage2:letters': 'episode:stage2-letters | Word Builder | preview',
+  'stage2:letters': 'episode:stage2-letters | Word Builder | shipped',
   'stage2:life': 'episode:stage2-life | Lunch Box Words | shipped',
   'stage2:rites': 'episode:stage2-rites | Holiday Words | preview',
   'stage2:nature': 'episode:stage2-nature | Outdoor Words | shipped',

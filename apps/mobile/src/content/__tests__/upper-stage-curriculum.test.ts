@@ -515,7 +515,23 @@ describe('content checks each cell row fills in (F-CURR-001 section 5)', () => {
       for (const quest of cell.quests) {
         // Only Word Builder adds symbols; the other Stage 2 cells never read one (a plan orders themes freely).
         if (cell.theme === 'letters') for (const j of discoverSymbols(quest)) taught.add(keyOf(j));
-        expect(undecodable(quest, taught)).toEqual([]);
+        // The other Stage 2 cells show a Word Builder word only as exposure (rule 6's theme words): a Pic-Word or
+        // Card Match tile carries its romanization and a Listen & Pick prompt is heard (Playground Words S2-3,
+        // Holiday Words S2-2), so their scored reads are the written Listen & Pick options and Build a Letter.
+        const scored =
+          cell.theme === 'letters'
+            ? quest
+            : ({
+                ...quest,
+                scopes: quest.scopes.flatMap((sc): LessonScope[] =>
+                  sc.kind === 'listen-pick'
+                    ? [{ ...sc, rounds: sc.rounds.map((r) => ({ ...r, prompt: { ...r.prompt, ko: '' } })) } as LessonScope]
+                    : sc.kind === 'pic-word-match' || sc.kind === 'card-match'
+                      ? []
+                      : [sc],
+                ),
+              } as LessonQuest);
+        expect(undecodable(scored, taught)).toEqual([]);
       }
     }
   });

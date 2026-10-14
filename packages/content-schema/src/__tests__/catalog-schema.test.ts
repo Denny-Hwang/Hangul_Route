@@ -49,7 +49,7 @@ describe('the shipped catalogue data', () => {
     for (const cell of CATALOG.cells) expect(cell.episodeId).toBe(`episode:${cell.stage}-${cell.theme}`);
   });
 
-  it('has Stage 1 shipped, three taste cells, Playground Words (F-CURR-001 S2-3), First Sentences (S3-1), Festival Sentences (S3-3), Read Along (S4-1), Game Sentences (S3-5), Daily Mini-Sentences (S3-2) and the five Stage 5 books (F-STORY-005 PR 5.6) shipped elsewhere, and the other 16 as previews', () => {
+  it('has Stage 1 shipped, three taste cells, Playground Words (F-CURR-001 S2-3), First Sentences (S3-1), Festival Sentences (S3-3), Read Along (S4-1), Game Sentences (S3-5), Daily Mini-Sentences (S3-2), Word Builder (S2-1) and the five Stage 5 books (F-STORY-005 PR 5.6) shipped elsewhere, and the other 15 as previews', () => {
     const shipped = CATALOG.cells.filter((c) => c.status === 'shipped').map((c) => c.episodeId);
     expect(shipped).toEqual([
       'episode:stage1-letters',
@@ -57,6 +57,7 @@ describe('the shipped catalogue data', () => {
       'episode:stage1-rites',
       'episode:stage1-nature',
       'episode:stage1-crafts',
+      'episode:stage2-letters',
       'episode:stage2-life',
       'episode:stage2-nature',
       'episode:stage2-crafts',
@@ -73,7 +74,7 @@ describe('the shipped catalogue data', () => {
       'episode:stage5-crafts',
     ]);
     const previews = CATALOG.cells.filter((c) => c.status === 'preview');
-    expect(previews).toHaveLength(16);
+    expect(previews).toHaveLength(15);
     for (const cell of previews) expect(cell.questIds).toEqual([]);
   });
 
@@ -103,7 +104,8 @@ describe('the shipped catalogue data', () => {
     // + Game Sentences (S3-5): +3 lesson quests.
     // + Daily Mini-Sentences (S3-2): +3 lesson quests.
     // + Greeting Dialogues q2-q3 (T-2).
-    expect(CATALOG.quests.filter((q) => q.kind === 'lesson')).toHaveLength(52);
+    // + Word Builder (S2-1): +6 lesson quests.
+    expect(CATALOG.quests.filter((q) => q.kind === 'lesson')).toHaveLength(58);
   });
 
   it('has 24 stories adding up to 112 minutes, each with a listen quest on its shelf episode', () => {
@@ -418,6 +420,12 @@ describe('routeCatalogOf', () => {
       'quest:stage1-crafts-q1',
       'quest:stage1-crafts-q2',
       'quest:stage1-crafts-q3',
+      'quest:stage2-letters-q1',
+      'quest:stage2-letters-q2',
+      'quest:stage2-letters-q3',
+      'quest:stage2-letters-q4',
+      'quest:stage2-letters-q5',
+      'quest:stage2-letters-q6',
       'quest:stage2-life-q1',
       'quest:stage2-nature-q1',
       'quest:stage2-crafts-q1',

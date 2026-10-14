@@ -24,8 +24,9 @@ import type { Catalog, CatalogCell, CatalogQuest, CatalogStory, CatalogTopic } f
  * Version 13 (F-CURR-001 S3-5): Game Sentences ships (Stage 3 crafts, 3 lesson quests).
  * Version 14 (F-CURR-001 S3-2): Daily Mini-Sentences ships (Stage 3 life, 3 lesson quests).
  * Version 15 (F-CURR-001 T-2): Greeting Dialogues adopts Discover and Check and grows to three quests.
+ * Version 16 (F-CURR-001 S2-1): Stage 2 Word Builder ships with six quests that teach the rest of Hangul.
  */
-export const CATALOG_VERSION = 15;
+export const CATALOG_VERSION = 16;
 
 const cell = (
   stage: StageKey,
@@ -54,7 +55,7 @@ const cells: CatalogCell[] = [
   cell('stage1', 'rites', 'New Year & Festivals', 'shipped', 14, ['quest:stage1-rites-q1', 'quest:stage1-rites-q2', 'quest:stage1-rites-q3']),
   cell('stage1', 'nature', 'Tigers, Mountains, Moon', 'shipped', 12, ['quest:stage1-nature-q1', 'quest:stage1-nature-q2', 'quest:stage1-nature-q3']),
   cell('stage1', 'crafts', 'Yut, Kites & Paper', 'shipped', 12, ['quest:stage1-crafts-q1', 'quest:stage1-crafts-q2', 'quest:stage1-crafts-q3']),
-  soon('stage2', 'letters', 'Word Builder'),
+  cell('stage2', 'letters', 'Word Builder', 'shipped', 25, ['quest:stage2-letters-q1', 'quest:stage2-letters-q2', 'quest:stage2-letters-q3', 'quest:stage2-letters-q4', 'quest:stage2-letters-q5', 'quest:stage2-letters-q6']),
   cell('stage2', 'life', 'Lunch Box Words', 'shipped', 6, ['quest:stage2-life-q1']),
   soon('stage2', 'rites', 'Holiday Words'),
   cell('stage2', 'nature', 'Outdoor Words', 'shipped', 6, ['quest:stage2-nature-q1']),
@@ -124,6 +125,13 @@ const lessonQuests: CatalogQuest[] = [
   lesson('stage1-crafts-q1', 'stage1', 'crafts', 'Yut, Kite, Top', 4),
   lesson('stage1-crafts-q2', 'stage1', 'crafts', 'Paper and Pottery', 4),
   lesson('stage1-crafts-q3', 'stage1', 'crafts', 'Read Hangul!', 4),
+  // F-CURR-001 S2-1: Word Builder teaches the rest of Hangul, so `teaches` names its symbols.
+  lesson('stage2-letters-q1', 'stage2', 'letters', 'Vowel Pairs ae and e', 4, ['ㅐ', 'ㅔ', 'ㅒ', 'ㅖ']),
+  lesson('stage2-letters-q2', 'stage2', 'letters', 'Double Letters', 4, ['ㄲ', 'ㄸ', 'ㅃ', 'ㅆ', 'ㅉ']),
+  lesson('stage2-letters-q3', 'stage2', 'letters', 'Joined Vowels wa, wo, wi, ui', 4, ['ㅘ', 'ㅝ', 'ㅟ', 'ㅢ']),
+  lesson('stage2-letters-q4', 'stage2', 'letters', 'Joined Vowels oe, wae, we', 4, ['ㅚ', 'ㅙ', 'ㅞ']),
+  lesson('stage2-letters-q5', 'stage2', 'letters', 'One Sound for Six Letters', 4, ['ㅅ/final', 'ㅈ/final', 'ㅊ/final', 'ㅌ/final', 'ㄷ/final', 'ㅆ/final']),
+  lesson('stage2-letters-q6', 'stage2', 'letters', 'More Letters for k and p', 4, ['ㅋ/final', 'ㄲ/final', 'ㅍ/final']),
   lesson('stage2-life-q1', 'stage2', 'life', 'Lunch Box Words', 5),
   lesson('stage2-nature-q1', 'stage2', 'nature', 'Outdoor Words', 5),
   lesson('stage2-crafts-q1', 'stage2', 'crafts', 'At the Playground', 4),
