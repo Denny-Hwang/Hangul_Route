@@ -217,9 +217,10 @@ test.describe('Words picker and topic page (fixture bundle)', () => {
     // The meter is hidden from screen readers; the count is text, never "3 of 12".
     await expect(page.getByRole('progressbar')).toHaveCount(0);
     // Only the activities whose screen is in the build (VOCAB_SCREENS): Learn since C-5, the suggestion with
-    // 3 words; the collected tiles open their flashcard, the silhouettes are not buttons.
+    // 3 words, and Match since C-6, drawn from 3 collected words; the collected tiles open their flashcard,
+    // the silhouettes are not buttons.
     await expect(page.getByTestId('vocab-activity-learn')).toBeVisible();
-    await expect(page.getByTestId('vocab-activity-match')).toHaveCount(0);
+    await expect(page.getByTestId('vocab-activity-match')).toBeVisible();
     await expect(page.getByRole('button', { name: /^Korean: / })).toHaveCount(3);
 
     // 2 wall columns on a 393 dp phone: every word and its romanization stay whole.
