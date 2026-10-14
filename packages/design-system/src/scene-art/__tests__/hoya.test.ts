@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { HOYA_BOX, HOYA_POSES, hoyaItem, hoyaNodes } from '../hoya';
+import { HOYA_BOX, HOYA_POSES, hoyaFigure, hoyaItem, hoyaNodes, hoyaPoseOf, hoyaSceneShapes, type HoyaPart } from '../hoya';
 import { boundsOf, nodeCount, paletteOf } from '../resolve';
 import { checkItem } from '../rules';
 import type { LeafShape, Shape } from '../types';
@@ -166,5 +166,61 @@ describe('hoya data port: as an item', () => {
       expect(b.maxX).toBeLessThanOrEqual(128);
       expect(b.maxY).toBeLessThanOrEqual(128);
     }
+  });
+});
+
+describe('hoya data port: frozen', () => {
+  it('keeps every pose shape for shape as it was before Hoya.tsx moved onto the data (PR 2.11)', async () => {
+    const all = Object.fromEntries(HOYA_POSES.map((pose) => [pose, hoyaNodes(pose)]));
+    await expect(`${JSON.stringify(all, null, 1)}\n`).toMatchFileSnapshot('./__snapshots__/hoya-nodes.json');
+  });
+});
+
+describe('hoya figure: the scene form', () => {
+  it('is hoyaNodes, part for part, in every pose', () => {
+    for (const pose of HOYA_POSES) expect(hoyaSceneShapes(hoyaFigure(pose))).toEqual(hoyaNodes(pose));
+  });
+
+  it('snaps stroke widths to the nearest token, a tie to the wider one', () => {
+    const sw = (strokeWidth: number | undefined) => (hoyaSceneShapes([{ t: 'line', x1: 0, y1: 0, x2: 4, y2: 0, stroke: 'text.primary', strokeWidth }])[0] as LeafShape).sw;
+    expect([0.5, 1, 1.2, 1.5, 2, 2.6, 3, 10].map(sw)).toEqual(['thin', 'thin', 'thin', 'base', 'base', 'thick', 'thick', 'thick']);
+    expect(sw(undefined)).toBe('base');
+  });
+
+  it('snaps opacities to the allowed steps and numbers to half units', () => {
+    expect(hoyaSceneShapes([{ t: 'circle', cx: 51.2, cy: 70.7, r: 0.9, fill: 'surface.paper', opacity: 0.18 }])).toEqual([{ t: 'circle', cx: 51, cy: 70.5, r: 1, fill: 'surface.paper', o: 0.2 }]);
+    expect(hoyaSceneShapes([{ t: 'rect', x: 1.2, y: 2, w: 3, h: 4.3, fill: 'hoya.belly' }])).toEqual([{ t: 'rect', x: 1, y: 2, w: 3, h: 4.5, fill: 'hoya.belly' }]);
+  });
+
+  it('hands a group paint and detail down to its parts, the part own paint winning', () => {
+    const group: HoyaPart = {
+      t: 'group',
+      fill: 'surface.paper',
+      det: true,
+      kids: [
+        { t: 'circle', cx: 1, cy: 1, r: 1 },
+        { t: 'circle', cx: 4, cy: 1, r: 1, fill: 'hoya.cheek' },
+      ],
+    };
+    expect(hoyaSceneShapes([group])).toEqual([
+      { t: 'circle', cx: 1, cy: 1, r: 1, fill: 'surface.paper', det: true },
+      { t: 'circle', cx: 4, cy: 1, r: 1, fill: 'hoya.cheek', det: true },
+    ]);
+  });
+
+  it('draws a part scene stand-in instead of the part, and nothing for an empty one', () => {
+    expect(hoyaSceneShapes([{ t: 'circle', cx: 1, cy: 1, r: 1, fill: 'hoya.fur', scene: [] }])).toEqual([]);
+    const standIn = [{ t: 'circle', cx: 2, cy: 2, r: 1, fill: 'hoya.fur' }] as Shape[];
+    expect(hoyaSceneShapes([{ t: 'circle', cx: 1, cy: 1, r: 1, fill: 'hoya.fur', scene: standIn }])).toEqual(standIn);
+  });
+
+  it('drops an explicit no-fill: a scene shape without a fill draws none', () => {
+    expect(hoyaSceneShapes([{ t: 'path', d: 'M0 0 H4', fill: 'none', stroke: 'hoya.stripes', strokeWidth: 3 }])).toEqual([{ t: 'path', d: 'M0 0 H4', stroke: 'hoya.stripes', sw: 'thick' }]);
+  });
+
+  it('reads anything but the five poses as idle', () => {
+    expect(HOYA_POSES.map(hoyaPoseOf)).toEqual([...HOYA_POSES]);
+    for (const junk of ['wobbling', '', undefined, 3]) expect(hoyaPoseOf(junk)).toBe('idle');
+    expect(hoyaFigure('wobbling' as never)).toEqual(hoyaFigure('idle'));
   });
 });
