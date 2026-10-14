@@ -80,7 +80,7 @@ describe('HoyaSvg', () => {
     expect(HoyaSvg({ pose: 'cheering', label: 'Hoya cheers' }).props).toMatchObject({ 'aria-hidden': undefined, role: 'img', 'aria-label': 'Hoya cheers' });
   });
 
-  it('draws each pose differently, and an unknown pose as idle', () => {
+  it('draws each pose differently, and an unknown pose as the idle scene item (blush included, F-STORY-002 §3.9.4)', () => {
     const shapes = (pose: Parameters<typeof HoyaSvg>[0]['pose']): string => JSON.stringify(children(el(HoyaSvg({ pose }))).map((k) => flat(k).props));
     expect(new Set(HOYA_POSES.map(shapes)).size).toBe(HOYA_POSES.length);
     expect(shapes('dancing' as never)).toBe(shapes('idle'));
