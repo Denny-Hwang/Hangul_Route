@@ -1,6 +1,6 @@
 import { LectureDeckSchema, discoverItemTexts, type LectureBlock, type Overlays } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
-import { episodeById, episodesAll, jamoAll, questById, questsAll } from '../../../content';
+import { episodeById, episodesAll, jamoKnown, questById, questsAll } from '../../../content';
 import { storiesAll } from '../../../content/stories';
 import { buildStoryIndex } from '../../story/story-index';
 import { scopeFor } from '../../minigame-config';
@@ -30,7 +30,7 @@ describe('the presenter content bundle (F-TCH-004 §3.3, §3.13)', () => {
 
   it('looks up the bundled content', () => {
     const b = lectureBundle('en');
-    expect(b.jamoAll).toBe(jamoAll);
+    expect(b.jamoAll).toBe(jamoKnown);
     // Read from the bundled content rather than copied, so a content edit to the quest does not break this test.
     const q1 = questsAll.find((q) => q.id === 'quest:stage1-letters-q1');
     const letters = episodesAll.find((e) => e.id === 'episode:stage1-letters');
@@ -149,6 +149,17 @@ describe('the presenter content bundle (F-TCH-004 §3.3, §3.13)', () => {
     }
   });
 
+  it('a Word Builder quest shows its new letters and never quizzes them by ear (F-CURR-001 section 3.3)', () => {
+    const b = lectureBundle('en');
+    const { slides, skipped } = expandDeck(deck([{ kind: 'quest', id: 'quest:stage2-letters-q1' }, { kind: 'quiz', from: 'previous', rounds: 4 }]), b, { canPlayKorean: true });
+    const letters = slides.flatMap((s) => (s.kind === 'letter' ? [s.char] : []));
+    for (const ch of ['ㅐ', 'ㅔ', 'ㅒ', 'ㅖ']) expect(letters, ch).toContain(ch);
+    expect(slides.filter((s) => s.kind === 'quiz' && s.prompt.ask === 'sound')).toEqual([]);
+    // The quiz block still runs, on the quest's words (a meaning quiz), not as a skip.
+    expect(slides.filter((s) => s.kind === 'quiz').length).toBeGreaterThan(0);
+    expect(skipped.filter((s) => s.reason === 'scope-too-small')).toEqual([]);
+  });
+
   it('every Stage 5 book quest teaches its story through story slides (F-STORY-005 PR 5.6, F-TCH-004 PR 11)', () => {
     expect(bookQuests.length).toBeGreaterThan(0);
     for (const q of bookQuests) {
@@ -234,7 +245,7 @@ describe('the presenter content bundle (F-TCH-004 §3.3, §3.13)', () => {
     const { slides } = expandDeck(deck([{ kind: 'quest', id: 'quest:stage1-letters-q1' }]), b, { canPlayKorean: true });
     expect(slides[0]).toMatchObject({ kind: 'title', title: 'Conoce g, n, d, l' });
     expect(b.episodeById('episode:stage1-letters')?.titleEn).toBe(episodeById('episode:stage1-letters')!.titleEn);
-    expect(b.jamoAll).not.toBe(jamoAll);
+    expect(b.jamoAll).not.toBe(jamoKnown);
     const giyeok = b.jamoAll.find((j) => j.id === 'jamo:giyeok')!;
     expect(giyeok).toMatchObject({ char: 'ㄱ', exampleWordKo: '가족', exampleWordRomanization: 'gajok', exampleWordEn: 'familia' });
   });

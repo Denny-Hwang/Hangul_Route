@@ -7,6 +7,9 @@ import {
   checkKindsFor,
   scopeRoundCount,
   translatableFields,
+  discoverItemTexts,
+  type Jamo,
+  type KoText,
   type LessonCell,
   type LessonQuest,
   type LessonScope,
@@ -23,9 +26,10 @@ import { episodesAll } from '../episodes';
 import { LESSON_EPISODES, LESSON_QUESTS } from '../__generated__/lessons-index';
 import { questsAll } from '../quests';
 import { scopeFor } from '../../logic/minigame-config';
-import { jamoAll } from '../jamo';
+import { findJamo, jamoAll } from '../jamo';
 import { stage1Quests } from '../quests';
 import { VOCAB_ITEMS } from '../__generated__/vocab';
+import { canDrawPicture } from '../../logic/__tests__/drawn-pictures';
 import { distractorProblems, fixedReplyPlace, promptKey, soundKey } from './helpers/distractors';
 import { ALL_LESSON_SCOPES, LESSON_STAGE_MODULES } from './helpers/lesson-stages';
 import {
@@ -362,9 +366,218 @@ describe('U-10 three-language completeness of every ready cell', () => {
   }
 });
 
+// ---- content checks (F-CURR-001 section 5): U-2, U-3, U-4 and U-6 (S2-1 onward) --------------------
+
+/** The symbols a quest's Discover step introduces (its `jamo` items), resolved. */
+function discoverSymbols(quest: LessonQuest): Jamo[] {
+  return quest.steps.flatMap((s) => s.discover?.pages ?? []).flatMap((p) => p.items).flatMap((item) => {
+    const jamo = item.type === 'jamo' ? findJamo(item.jamoId) : undefined;
+    return jamo ? [jamo] : [];
+  });
+}
+
+/** The Korean words a quest's Discover step shows. */
+const discoverWords = (quest: LessonQuest): KoText[] =>
+  quest.steps.flatMap((s) => s.discover?.pages ?? []).flatMap((p) => p.items).flatMap(discoverItemTexts);
+
+/** The Korean a scope asks the learner to read in a scored round (U-4), and every Korean word it shows (U-6). */
+function scopeWords(scope: LessonScope): { read: KoText[]; shown: KoText[] } {
+  switch (scope.kind) {
+    case 'pic-word-match': {
+      const words = scope.boards.flatMap((b) => b.pairs.map((p) => p.word));
+      return { read: words, shown: words };
+    }
+    case 'card-match':
+      return { read: [...scope.pairs], shown: [...scope.pairs] };
+    case 'build-letter':
+      return { read: [...scope.words], shown: [...scope.words] };
+    case 'listen-pick': {
+      const options = scope.rounds.flatMap((r) => r.options.flatMap((o) => (o.text ? [o.text] : [])));
+      // A prompt is heard, but with no Korean voice it shows as text (F-AUDIO-004), so it is read too.
+      const prompts = scope.rounds.map((r) => r.prompt);
+      return { read: [...options, ...prompts], shown: [...options, ...prompts] };
+    }
+    default:
+      return { read: [], shown: [] };
+  }
+}
+
+/** Symbol keys as the catalogue spells them: the letter, or `<letter>/final`. */
+const keyOf = (jamo: Pick<Jamo, 'char' | 'kind'>): string => (jamo.kind === 'batchim' ? `${jamo.char}/final` : jamo.char);
+const STAGE1_KEYS: ReadonlySet<string> = new Set(jamoAll.map(keyOf));
+
+const INITIALS = [...'ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ'];
+const MEDIALS = [...'ㅏㅐㅑㅒㅓㅔㅕㅖㅗㅘㅙㅚㅛㅜㅝㅞㅟㅠㅡㅢㅣ'];
+const FINALS = ['', ...'ㄱㄲㄳㄴㄵㄶㄷㄹㄺㄻㄼㄽㄾㄿㅀㅁㅂㅄㅅㅆㅇㅈㅊㅋㅌㅍㅎ'];
+/** The seven sounds a final letter is said as (standard pronunciation rules, article 8). */
+const REPRESENTATIVE_FINALS = [...'ㄱㄴㄷㄹㅁㅂㅇ'];
+
+/** The symbol keys a Korean string uses: an initial or vowel as its letter, a final as `<letter>/final`. */
+function symbolKeysOf(ko: string): string[] {
+  const keys: string[] = [];
+  for (const ch of ko) {
+    const code = (ch.codePointAt(0) ?? 0) - 0xac00;
+    if (code < 0 || code > 11171) continue;
+    const final = FINALS[code % 28] ?? '';
+    keys.push(INITIALS[Math.floor(code / 588)] ?? '', MEDIALS[Math.floor((code % 588) / 28)] ?? '');
+    if (final !== '') keys.push(`${final}/final`);
+  }
+  return keys;
+}
+
+/** U-4: the read words of a quest that use a symbol not taught by then, as readable lines. */
+function undecodable(quest: LessonQuest, taught: ReadonlySet<string>): string[] {
+  return quest.scopes.flatMap((scope) =>
+    scopeWords(scope).read.flatMap((w) => {
+      const missing = symbolKeysOf(w.ko).filter((k) => !taught.has(k));
+      return missing.length > 0 ? [`U-4 ${quest.id}: ${scope.ref} reads ${w.ko}, which uses ${[...new Set(missing)].join(' ')} not taught yet`] : [];
+    }),
+  );
+}
+
+/** Words taught before any upper-stage cell: the Stage 1 Discover words and the vocabulary topics (rule 5). */
+const STAGE2_KNOWN_WORDS: ReadonlySet<string> = new Set([
+  ...VOCAB_ITEMS.map((v) => v.ko),
+  ...stage1Quests.flatMap((q) => q.steps.flatMap((s) => s.discover?.pages ?? []).flatMap((p) => p.items).flatMap(discoverItemTexts)).map((t) => t.ko),
+]);
+
+/** U-6: each quest of a cell whose words outside Discover are less than half reused, as readable lines. */
+function stage2ReuseProblems(cell: LessonCell, known: ReadonlySet<string> = STAGE2_KNOWN_WORDS): string[] {
+  const earlier = new Set(known);
+  return cell.quests.flatMap((quest) => {
+    const shown = [...new Set(quest.scopes.flatMap((s) => scopeWords(s).shown.map((w) => w.ko)))];
+    const reused = shown.filter((ko) => earlier.has(ko)).length;
+    for (const w of [...discoverWords(quest), ...quest.scopes.flatMap((s) => scopeWords(s).shown)]) earlier.add(w.ko);
+    return reused * 2 < shown.length ? [`U-6 ${quest.id}: ${reused} of ${shown.length} words outside Discover are reused`] : [];
+  });
+}
+
 describe('content checks each cell row fills in (F-CURR-001 section 5)', () => {
-  it.todo('U-2 Word Builder: the 16 symbols each in exactly one Discover; with Stage 1 the full inventory; finals in two quests (S2-1)');
-  it.todo('U-3, U-4, U-6 for Stage 2 cells (Word Builder counts symbols, and the other Stage 2 cells read Stage 1 symbols only) (S2-1 onward)');
+  const wordBuilder = CELLS.find((c) => c.cell.id === 'episode:stage2-letters')?.cell;
+  const stage2 = CELLS.filter((c) => c.cell.stage === 'stage2').map((c) => c.cell);
+
+  it('the helpers read symbols, decodability and reuse', () => {
+    expect(symbolKeysOf('꽃이')).toEqual(['ㄲ', 'ㅗ', 'ㅊ/final', 'ㅇ', 'ㅣ']);
+    const quest = { id: 'quest:x', scopes: [{ ref: 'r', kind: 'card-match', pairs: [{ ko: '개', romanization: 'gae', en: 'dog' }] }], steps: [] } as unknown as LessonQuest;
+    expect(undecodable(quest, STAGE1_KEYS)).toEqual(['U-4 quest:x: r reads 개, which uses ㅐ not taught yet']);
+    expect(undecodable(quest, new Set([...STAGE1_KEYS, 'ㅐ']))).toEqual([]);
+    expect(stage2ReuseProblems({ quests: [quest] } as unknown as LessonCell, new Set())).toEqual(['U-6 quest:x: 0 of 1 words outside Discover are reused']);
+    expect(stage2ReuseProblems({ quests: [quest] } as unknown as LessonCell, new Set(['개']))).toEqual([]);
+  });
+
+  it('U-2 Word Builder: the 16 symbols each in exactly one Discover; with Stage 1 the full inventory; finals in two quests (S2-1)', () => {
+    expect(wordBuilder, 'S2-1 lands content/episodes/stage-2/letters.json').toBeDefined();
+    if (wordBuilder === undefined) return;
+    const taught = wordBuilder.quests.map(discoverSymbols);
+    const letters = taught.flat().filter((j) => j.kind !== 'batchim').map(keyOf);
+    const sixteen = [...'ㄲㄸㅃㅆㅉ', ...'ㅐㅔㅒㅖㅘㅝㅟㅢㅚㅙㅞ'];
+    expect([...letters].sort()).toEqual([...sixteen].sort());
+    const all = new Set([...STAGE1_KEYS, ...taught.flat().map(keyOf)]);
+    for (const c of INITIALS) expect(all.has(c), c).toBe(true);
+    for (const v of MEDIALS) expect(all.has(v), v).toBe(true);
+    for (const f of REPRESENTATIVE_FINALS) expect(all.has(`${f}/final`), `${f}/final`).toBe(true);
+    // Finals in exactly two quests: one new sound (t) for its letters, then letters joined to sounds Stage 1 taught (k, p).
+    const finalQuests = taught.map((js) => js.filter((j) => j.kind === 'batchim')).filter((js) => js.length > 0);
+    expect(finalQuests).toHaveLength(2);
+    expect(new Set(finalQuests[0]?.map((j) => j.romanization))).toEqual(new Set(['t']));
+    const stage1Sounds = new Set(jamoAll.filter((j) => j.kind === 'batchim').map((j) => j.romanization));
+    expect(stage1Sounds.has('t')).toBe(false);
+    for (const j of finalQuests[1] ?? []) expect(stage1Sounds.has(j.romanization), j.id).toBe(true);
+    // Each symbol once in the whole cell, never again in a later Discover.
+    const ids = taught.flat().map((j) => j.id);
+    expect(new Set(ids).size).toBe(ids.length);
+  });
+
+  it('U-3 new-item caps of Stage 2: Word Builder at most 5 symbols of one family or one new final sound; other cells at most 4 new words', () => {
+    for (const cell of stage2) {
+      for (const quest of cell.quests) {
+        if (cell.theme === 'letters') {
+          const symbols = discoverSymbols(quest);
+          const finals = symbols.filter((j) => j.kind === 'batchim');
+          if (finals.length > 0) {
+            expect(finals.length, quest.id).toBe(symbols.length);
+            const newSounds = new Set(finals.map((j) => j.romanization).filter((r) => !jamoAll.some((s) => s.kind === 'batchim' && s.romanization === r)));
+            expect(newSounds.size, quest.id).toBeLessThanOrEqual(1);
+          } else {
+            expect(symbols.length, quest.id).toBeLessThanOrEqual(5);
+          }
+        } else {
+          const words = new Set(discoverWords(quest).map((w) => w.ko).filter((ko) => !STAGE2_KNOWN_WORDS.has(ko)));
+          expect(words.size, quest.id).toBeLessThanOrEqual(4);
+        }
+      }
+    }
+  });
+
+  it('U-4 decodable scored reading in Stage 2: Stage 1 symbols, plus in Word Builder the symbols it taught by then', () => {
+    for (const cell of stage2) {
+      const taught = new Set(STAGE1_KEYS);
+      for (const quest of cell.quests) {
+        // Only Word Builder adds symbols; the other Stage 2 cells never read one (a plan orders themes freely).
+        if (cell.theme === 'letters') for (const j of discoverSymbols(quest)) taught.add(keyOf(j));
+        expect(undecodable(quest, taught)).toEqual([]);
+      }
+    }
+  });
+
+  it('U-6 at least half the Korean words outside Discover are reused (Stage 2)', () => {
+    for (const cell of stage2) expect(stage2ReuseProblems(cell)).toEqual([]);
+  });
+
+  it('no Word Builder round asks to tell ㅐ from ㅔ, or ㅚ ㅙ ㅞ apart, by ear (section 3.3)', () => {
+    expect(wordBuilder, 'S2-1 lands content/episodes/stage-2/letters.json').toBeDefined();
+    if (wordBuilder === undefined) return;
+    const norm = (ko: string): string =>
+      [...ko].map((ch) => {
+        const code = (ch.codePointAt(0) ?? 0) - 0xac00;
+        if (code < 0 || code > 11171) return ch;
+        const medial = MEDIALS[Math.floor((code % 588) / 28)] ?? '';
+        const same = 'ㅐㅔ'.includes(medial) ? 'E' : 'ㅚㅙㅞ'.includes(medial) ? 'W' : medial;
+        return `${INITIALS[Math.floor(code / 588)]}${same}${FINALS[code % 28]}`;
+      }).join('');
+    // A picture option is named by its word's romanization id: find the Korean it pictures in the cell.
+    const koById = new Map<string, string>();
+    for (const quest of wordBuilder.quests) {
+      for (const w of discoverWords(quest)) koById.set(w.romanization, w.ko);
+      for (const scope of quest.scopes) {
+        if (scope.kind === 'pic-word-match') for (const b of scope.boards) for (const p of b.pairs) koById.set(p.id, p.word.ko);
+        for (const w of scopeWords(scope).shown) koById.set(w.romanization, w.ko);
+      }
+    }
+    for (const quest of wordBuilder.quests) {
+      for (const scope of quest.scopes) {
+        if (scope.kind !== 'listen-pick') continue;
+        for (const round of scope.rounds) {
+          const heard = norm(round.prompt.ko);
+          for (const option of round.options) {
+            if (option.id === round.answerId) continue;
+            const ko = option.text?.ko ?? koById.get(option.id);
+            expect(ko, `${scope.ref} ${round.id} ${option.id}: the word it pictures`).toBeDefined();
+            expect(norm(ko ?? ''), `${scope.ref} ${round.id}`).not.toBe(heard);
+          }
+        }
+      }
+    }
+  });
+
+  it('every picture a Stage 2 round shows is drawn art, never the text-tile fallback (section 3.3, U-9)', () => {
+    const undrawn = stage2.flatMap((cell) =>
+      cell.quests.flatMap((quest) =>
+        quest.scopes.flatMap((scope) => {
+          const refs =
+            scope.kind === 'pic-word-match'
+              ? scope.boards.flatMap((b) => b.pairs.map((p) => p.pictureRef))
+              : scope.kind === 'listen-pick'
+                ? scope.rounds.flatMap((r) => r.options.flatMap((o) => (o.pictureRef === undefined ? [] : [o.pictureRef])))
+                : [];
+          const pages = quest.steps.flatMap((s) => s.discover?.pages ?? []).flatMap((p) => p.items).flatMap((i) => ('picture' in i && i.picture ? [i.picture] : []));
+          return [...refs, ...(scope.kind === 'pic-word-match' ? pages : [])].flatMap((ref) => (ref === undefined || !canDrawPicture(ref) ? [`${scope.ref}: ${String(ref)}`] : []));
+        }),
+      ),
+    );
+    expect(undrawn).toEqual([]);
+  });
+
 });
 
 /** Stage 1's taught words: every Hangul run in its quests and their games (the reading words, F-QUEST-002 R5). */

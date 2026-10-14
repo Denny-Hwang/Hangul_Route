@@ -1,0 +1,184 @@
+{
+  "locale": "ko",
+  "domain": "lessons-stage2-letters",
+  "entries": {
+    "episode:stage2-letters": {
+      "title": "낱말 만들기",
+      "subtitle": "남은 한글 글자와 그 글자로 읽는 낱말.",
+      "hoyaIntro": "글자 30개를 알고 있어요. 남은 글자를 만나고 낱말을 더 읽어 봐요!"
+    },
+    "quest:stage2-letters-q1": {
+      "title": "모음 짝 ㅐ와 ㅔ",
+      "blurb": "새 모음 네 개: ㅐ, ㅔ, ㅒ, ㅖ.",
+      "steps.s1.title": "새 모음 네 개",
+      "steps.s2.title": "ㅐ, ㅔ, ㅒ, ㅖ 만나기",
+      "steps.s3.title": "그림과 낱말",
+      "steps.s4.title": "뜻 짝짓기",
+      "steps.s5.title": "듣고 읽기",
+      "steps.s6.title": "모음 네 개를 읽었어요!",
+      "steps.s1.hoyaLine": "벌써 글자 30개를 읽을 수 있어요. 모음 네 개를 더 만나 봐요!",
+      "steps.s2.hoyaLine": "요즘은 ㅐ와 ㅔ를 똑같이 소리 내는 사람이 많아요. 어느 쪽인지는 글자를 보면 알 수 있어요.",
+      "steps.s6.hoyaLine": "새 모음 네 개와 새 낱말을 많이 읽었어요. 잘했어요!",
+      "steps.s2.discover.pages.2.caption": "이제 읽을 수 있는 낱말",
+      "steps.s2.discover.pages.0.items.0.example.gloss": "사람과 함께 살며 멍멍 짖는 동물",
+      "steps.s2.discover.pages.0.items.1.example.gloss": "단단한 껍데기를 쓰고 옆으로 걷는 바다 동물",
+      "steps.s2.discover.pages.1.items.0.example.gloss": "누군가에게 들려주는 말이나 일",
+      "steps.s2.discover.pages.1.items.1.example.gloss": "시간을 알려 주는 물건",
+      "steps.s2.discover.pages.2.items.0.word.gloss": "가락에 맞춰 부르는 것",
+      "steps.s2.discover.pages.2.items.1.word.gloss": "날개가 있어 하늘을 나는 동물"
+    },
+    "quest:stage2-letters-q2": {
+      "title": "쌍자음",
+      "blurb": "쌍자음 다섯 개: ㄲ, ㄸ, ㅃ, ㅆ, ㅉ.",
+      "steps.s1.title": "같은 글자 두 개",
+      "steps.s2.title": "ㄲ, ㄸ, ㅃ, ㅆ, ㅉ 만나기",
+      "steps.s3.title": "그림과 낱말",
+      "steps.s4.title": "뜻 짝짓기",
+      "steps.s5.title": "듣고 읽기",
+      "steps.s6.title": "단단한 소리!",
+      "steps.s1.hoyaLine": "같은 글자 두 개가 모여 새 소리를 내요. 다섯 개를 만나 봐요!",
+      "steps.s2.hoyaLine": "쌍자음은 목을 긴장시켜 단단하게 내고, 바람은 거의 내보내지 않아요.",
+      "steps.s6.hoyaLine": "쌍자음 다섯 개를 읽었어요. 정말 잘했어요!",
+      "steps.s2.discover.pages.0.items.0.example.gloss": "검은색과 흰색 깃털을 가진 새",
+      "steps.s2.discover.pages.0.items.1.example.gloss": "겉에 작은 씨가 박힌 빨간 열매",
+      "steps.s2.discover.pages.1.items.0.example.gloss": "밀가루 반죽을 구워 만든 음식",
+      "steps.s2.discover.pages.1.items.1.example.gloss": "밥을 짓기 전의 벼 알맹이",
+      "steps.s2.discover.pages.2.items.0.example.gloss": "국물을 자작하게 끓인 음식"
+    },
+    "quest:stage2-letters-q3": {
+      "title": "이어진 모음 ㅘ, ㅝ, ㅟ, ㅢ",
+      "blurb": "아는 모음 두 개로 만든 모음 네 개.",
+      "steps.s1.title": "모음이 이어져요",
+      "steps.s2.title": "ㅘ, ㅝ, ㅟ, ㅢ 만나기",
+      "steps.s3.title": "그림과 낱말",
+      "steps.s4.title": "뜻 짝짓기",
+      "steps.s5.title": "듣고 읽기",
+      "steps.s6.title": "모음을 이었어요!",
+      "steps.s1.hoyaLine": "아는 모음 두 개가 하나로 이어질 수 있어요. 어떻게 되는지 봐요!",
+      "steps.s2.hoyaLine": "이어진 모음은 아는 모음 두 개를 빠르게 이어서 한 소리로 낼 때가 많아요.",
+      "steps.s6.hoyaLine": "이어진 모음 네 개를 읽었어요. 아주 잘하고 있어요!",
+      "steps.s2.discover.pages.2.caption": "이제 읽을 수 있는 낱말",
+      "steps.s2.discover.pages.0.items.0.example.gloss": "빨갛거나 푸른 껍질의 둥글고 아삭한 열매",
+      "steps.s2.discover.pages.0.items.1.example.gloss": "나무를 잘 타고 꼬리가 긴 동물",
+      "steps.s2.discover.pages.1.items.0.example.gloss": "소리를 듣는 몸의 부분",
+      "steps.s2.discover.pages.1.items.1.example.gloss": "앉을 때 쓰는 가구",
+      "steps.s2.discover.pages.2.items.0.word.gloss": "밀가루 등으로 만들어 굽거나 튀긴 군것질거리",
+      "steps.s2.discover.pages.2.items.1.word.gloss": "종이나 천을 자르는 도구"
+    },
+    "quest:stage2-letters-q4": {
+      "title": "이어진 모음 ㅚ, ㅙ, ㅞ",
+      "blurb": "소리가 비슷한 이어진 모음 세 개.",
+      "steps.s1.title": "닮은 모음 셋",
+      "steps.s2.title": "ㅚ, ㅙ, ㅞ 만나기",
+      "steps.s3.title": "그림과 낱말",
+      "steps.s4.title": "뜻 짝짓기",
+      "steps.s5.title": "듣고 읽기",
+      "steps.s6.title": "모음을 다 만났어요!",
+      "steps.s1.hoyaLine": "오늘은 이어진 모음 세 개를 더 배워요. 모양을 보면 구별할 수 있어요.",
+      "steps.s2.hoyaLine": "요즘 이 셋은 소리가 거의 같을 때가 많아요. 모양으로 익혀요.",
+      "steps.s6.hoyaLine": "한글 모음 글자를 모두 만났어요. 잘했어요!",
+      "steps.s2.discover.pages.0.items.0.example.gloss": "사람들이 모여 함께 일하는 곳",
+      "steps.s2.discover.pages.0.items.1.example.gloss": "코가 납작하고 꿀꿀 소리를 내는 동물",
+      "steps.s2.discover.pages.1.items.0.example.gloss": "털실로 짠 따뜻한 윗옷",
+      "steps.s2.discover.pages.1.items.1.word.gloss": "흰빛과 검은빛을 섞은 빛깔"
+    },
+    "quest:stage2-letters-q5": {
+      "title": "여섯 글자, 한 소리",
+      "blurb": "모두 [ㄷ]으로 소리 나는 받침 여섯 개.",
+      "steps.s1.title": "같은 소리, 여섯 글자",
+      "steps.s2.title": "끝소리 [ㄷ]",
+      "steps.s3.title": "그림과 낱말",
+      "steps.s4.title": "뜻 짝짓기",
+      "steps.s5.title": "듣고 읽기",
+      "steps.s6.title": "한 소리, 여섯 글자!",
+      "steps.s1.hoyaLine": "받침 여섯 개가 모두 같은 소리로 나요!",
+      "steps.s2.hoyaLine": "낱말 끝이나 자음 앞에서 이 여섯 받침은 모두 [ㄷ]으로 소리 나요.",
+      "steps.s6.hoyaLine": "새 받침 여섯 개, 소리는 [ㄷ] 하나예요. 정말 잘했어요!",
+      "steps.s2.discover.pages.0.items.0.example.gloss": "몸에 걸쳐 입는 것",
+      "steps.s2.discover.pages.0.items.1.example.gloss": "해가 떠 있는 동안",
+      "steps.s2.discover.pages.1.items.0.example.gloss": "식물에 피어나는 빛깔이 고운 부분",
+      "steps.s2.discover.pages.1.items.1.example.gloss": "어떤 일이나 물건의 마지막 부분",
+      "steps.s2.discover.pages.2.items.0.example.gloss": "오래 지나지 않아",
+      "steps.s2.discover.pages.2.items.1.example.gloss": "어떤 곳에 머무르다, 또는 무엇을 가지다"
+    },
+    "quest:stage2-letters-q6": {
+      "title": "[ㄱ]과 [ㅂ]으로 소리 나는 새 받침",
+      "blurb": "아는 소리를 내는 새 받침 세 개.",
+      "steps.s1.title": "아는 소리, 새 글자",
+      "steps.s2.title": "새 글자, 아는 소리",
+      "steps.s3.title": "그림과 낱말",
+      "steps.s4.title": "뜻 짝짓기",
+      "steps.s5.title": "듣고 읽기",
+      "steps.s6.title": "낱말 만들기 끝!",
+      "steps.s1.hoyaLine": "받침 소리 [ㄱ]과 [ㅂ]은 이미 알아요. 같은 소리를 내는 받침 세 개를 더 만나요!",
+      "steps.s2.hoyaLine": "낱말 끝이나 자음 앞에서 ㅋ과 ㄲ은 ㄱ처럼, ㅍ은 ㅂ처럼 소리 나요.",
+      "steps.s6.hoyaLine": "낱말 만들기의 마지막 새 글자를 만났어요. 멋져요!",
+      "steps.s2.discover.pages.0.items.0.example.gloss": "음식을 만드는 곳",
+      "steps.s2.discover.pages.0.items.1.example.gloss": "건물이나 울타리를 벗어난 곳",
+      "steps.s2.discover.pages.1.items.0.example.gloss": "얼굴이 향하는 쪽",
+      "steps.s2.discover.pages.1.items.1.word.gloss": "나무가 빽빽하게 우거진 곳",
+      "steps.s2.discover.pages.2.caption": "이제 읽을 수 있는 낱말",
+      "steps.s2.discover.pages.2.items.0.word.gloss": "풀이나 나무의 줄기에 달린 납작하고 푸른 부분"
+    },
+    "minigame:s2-letters-q1-apply": {
+      "cardPairs.gae.gloss": "사람과 함께 살며 멍멍 짖는 동물",
+      "cardPairs.ge.gloss": "단단한 껍데기를 쓰고 옆으로 걷는 바다 동물",
+      "cardPairs.yaegi.gloss": "누군가에게 들려주는 말이나 일",
+      "cardPairs.sigye.gloss": "시간을 알려 주는 물건"
+    },
+    "minigame:s2-letters-q1-check": {
+      "listenPick.rounds.see-hae.prompt": "낮에 하늘에서 밝게 빛나는 것",
+      "listenPick.rounds.read-norae.prompt": "가락에 맞춰 부르는 것"
+    },
+    "minigame:s2-letters-q2-apply": {
+      "cardPairs.kkachi.gloss": "검은색과 흰색 깃털을 가진 새",
+      "cardPairs.ttalgi.gloss": "겉에 작은 씨가 박힌 빨간 열매",
+      "cardPairs.ppang.gloss": "밀가루 반죽을 구워 만든 음식",
+      "cardPairs.ssal.gloss": "밥을 짓기 전의 벼 알맹이"
+    },
+    "minigame:s2-letters-q2-check": {
+      "listenPick.rounds.see-ttalgi.prompt": "겉에 작은 씨가 박힌 빨간 열매",
+      "listenPick.rounds.read-ppang.prompt": "밀가루 반죽을 구워 만든 음식"
+    },
+    "minigame:s2-letters-q3-apply": {
+      "cardPairs.sagwa.gloss": "빨갛거나 푸른 껍질의 둥글고 아삭한 열매",
+      "cardPairs.gwaja.gloss": "밀가루 등으로 만들어 굽거나 튀긴 군것질거리",
+      "cardPairs.gwi.gloss": "소리를 듣는 몸의 부분",
+      "cardPairs.uija.gloss": "앉을 때 쓰는 가구"
+    },
+    "minigame:s2-letters-q3-check": {
+      "listenPick.rounds.see-gwi.prompt": "소리를 듣는 몸의 부분",
+      "listenPick.rounds.read-uija.prompt": "앉을 때 쓰는 가구"
+    },
+    "minigame:s2-letters-q4-apply": {
+      "cardPairs.hoesa.gloss": "사람들이 모여 함께 일하는 곳",
+      "cardPairs.dwaeji.gloss": "코가 납작하고 꿀꿀 소리를 내는 동물",
+      "cardPairs.seuweteo.gloss": "털실로 짠 따뜻한 윗옷",
+      "cardPairs.hoesaek.gloss": "흰빛과 검은빛을 섞은 빛깔"
+    },
+    "minigame:s2-letters-q4-check": {
+      "listenPick.rounds.see-hoesaek.prompt": "흰빛과 검은빛을 섞은 빛깔",
+      "listenPick.rounds.read-dwaeji.prompt": "코가 납작하고 꿀꿀 소리를 내는 동물"
+    },
+    "minigame:s2-letters-q5-apply": {
+      "cardPairs.ot.gloss": "몸에 걸쳐 입는 것",
+      "cardPairs.kkot.gloss": "식물에 피어나는 빛깔이 고운 부분",
+      "cardPairs.nat.gloss": "해가 떠 있는 동안",
+      "cardPairs.kkeut.gloss": "어떤 일이나 물건의 마지막 부분"
+    },
+    "minigame:s2-letters-q5-check": {
+      "listenPick.rounds.see-kkot.prompt": "식물에 피어나는 빛깔이 고운 부분",
+      "listenPick.rounds.read-ot.prompt": "몸에 걸쳐 입는 것"
+    },
+    "minigame:s2-letters-q6-apply": {
+      "cardPairs.bueok.gloss": "음식을 만드는 곳",
+      "cardPairs.bak.gloss": "건물이나 울타리를 벗어난 곳",
+      "cardPairs.ap.gloss": "얼굴이 향하는 쪽",
+      "cardPairs.sup.gloss": "나무가 빽빽하게 우거진 곳"
+    },
+    "minigame:s2-letters-q6-check": {
+      "listenPick.rounds.see-ip.prompt": "풀이나 나무의 줄기에 달린 납작하고 푸른 부분",
+      "listenPick.rounds.read-ap.prompt": "얼굴이 향하는 쪽"
+    }
+  }
+}

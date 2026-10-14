@@ -147,6 +147,16 @@ async function matchBoards(page: Page, boards: number, ids: readonly string[]): 
   }
 }
 
+/** Word Builder q1's Pic-Word boards (content/episodes/stage-2/letters.json), as pair ids in board order. */
+const WORD_BUILDER_Q1_BOARDS = [
+  ['sae', 'hae', 'namu'],
+  ['norae', 'bae', 'byeol'],
+  ['mujigae', 'jiugae', 'chaek'],
+  ['baegu', 'taeksi', 'bada'],
+  ['hayansaek', 'noransaek', 'paransaek'],
+  ['sebae', 'dongsaeng', 'galsaek'],
+] as const;
+
 /** Each cell row appends its cell here (S2-1 onward). */
 const CELLS: readonly UpperCell[] = [
   // F-CURR-001 S2-3: Playground Words q1, At the Playground, played through its real games.
@@ -372,6 +382,44 @@ const CELLS: readonly UpperCell[] = [
       await page.getByText('Learning Route', { exact: true }).last().click();
       await page.getByRole('button', { name: /^Stage 4, Dialogue\./ }).click();
       await expect(page.getByRole('button', { name: /^Holidays & Traditions: Greeting Dialogues\./ })).toBeVisible();
+    },
+  },
+  // F-CURR-001 S2-1: Word Builder. q1 teaches ㅐ ㅔ ㅒ ㅖ; its six Pic-Word boards are played, its Card Match is
+  // skipped (the shipped game), and the Check is answered by id: the sun picture, then the written 노래.
+  {
+    episodeId: 'episode:stage2-letters',
+    cellButton: journeyCellName(2, 'Letters & Books'),
+    title: 'Word Builder',
+    playFirstQuest: async (page) => {
+      await page.setViewportSize({ width: 320, height: 720 });
+      await startFirstQuest(page);
+      // Discover shows the new vowel ㅐ with its example 개 and the words you can read now.
+      await expect(page.getByText('ㅐ', { exact: true }).first()).toBeVisible();
+      await expect(page.getByText('개', { exact: true }).first()).toBeVisible();
+      await shot(page, 's2-1-q1-discover-320');
+      await passDiscover(page);
+      // Practice: all six Pic-Word boards, each picture drawn art (an svg), never the gloss fallback tile.
+      await page.getByRole('button', { name: 'Play minigame' }).click();
+      for (const [n, board] of WORD_BUILDER_Q1_BOARDS.entries()) {
+        for (const id of board) await expect(page.getByTestId(`pic-word-picture-${id}`).locator('svg').first()).toBeVisible();
+        if (n === 0) await shot(page, 's2-1-q1-pic-word-320');
+        for (const id of board) {
+          await page.getByTestId(`pic-word-picture-${id}`).click();
+          await page.getByTestId(`pic-word-word-${id}`).click();
+        }
+      }
+      // Apply (the shipped Card Match) is skipped; the Check is answered by id.
+      await page.getByRole('button', { name: 'Skip for now' }).click();
+      await playCheckByIds(page, [{ answer: 'hae' }, { answer: 'norae' }]);
+      await page.getByRole('button', { name: 'See results' }).click();
+      await expect(page.getByText('Next up')).toBeVisible();
+      await shot(page, 's2-1-q1-results-320');
+    },
+    expectRouteDay: async (page) => {
+      await page.goto('/');
+      await page.getByText('Learning Route', { exact: true }).last().click();
+      await page.getByRole('button', { name: /^Stage 2, Words\./ }).click();
+      await expect(page.getByRole('button', { name: /^Letters & Books: Word Builder\./ })).toBeVisible();
     },
   },
 ];

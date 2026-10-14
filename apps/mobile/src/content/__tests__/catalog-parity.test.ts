@@ -20,7 +20,7 @@ import { bookEpisodes } from '../books';
 import { questTeaches } from '../../logic/stage1/curriculum';
 import { discoverQuest } from '../../logic/stage1/__tests__/fixtures';
 import { episodesAll } from '../episodes';
-import { jamoAll } from '../jamo';
+import { jamoAll, jamoWordBuilder } from '../jamo';
 import { questsAll } from '../quests';
 import { storiesAll, storyQuests } from '../stories';
 import { VOCAB_TOPICS } from '../__generated__/vocab';
@@ -38,7 +38,7 @@ const row = (value: unknown): string => `\ncorrect data.ts row: ${JSON.stringify
 
 /** Symbol keys as the catalogue spells them: the letter, or `<letter>/final` for a batchim. */
 const symbolKeyOf = (jamo: Jamo): string => (jamo.kind === 'batchim' ? `${jamo.char}/final` : jamo.char);
-const symbolKeys = new Map(jamoAll.map((jamo) => [jamo.id, symbolKeyOf(jamo)]));
+const symbolKeys = new Map([...jamoAll, ...jamoWordBuilder].map((jamo) => [jamo.id, symbolKeyOf(jamo)]));
 const teachesOf = (quest: Quest): string[] =>
   questTeaches(quest).map((id) => symbolKeys.get(id) ?? `unknown:${id}`);
 

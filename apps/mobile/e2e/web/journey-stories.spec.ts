@@ -11,7 +11,8 @@ import { controlsPastEdge, expectNoHorizontalOverflow } from './viewport';
  *   STORY_FIXTURES=1 pnpm --filter @hangul-route/mobile test:e2e:web journey-stories
  *
  * Its two reviewed shelf stories: `story:hangul-day` calls Stage 1 Letters home (a lesson cell, count 1)
- * and `story:cell-stories-fixture` calls Stage 2 Letters home (a preview cell, so a stories-only cell).
+ * and `story:cell-stories-fixture` calls Stage 7 Letters home (a preview cell, so a stories-only cell; it moved
+ * from Stage 2 Letters when F-CURR-001 S2-1 shipped Word Builder there).
  */
 
 const FIXTURE_BUILD = process.env.STORY_FIXTURES === '1';
@@ -25,10 +26,10 @@ type E2eWindow = Window & {
 
 // A new learner's next quest is in this cell, so its label ends with the Next word (F-ENT-003 E3-5).
 const LESSON_CELL = 'Stage 1 Hangul, Letters & Books: lesson, 1 heritage story. Next.';
-const STORIES_CELL = 'Stage 2 Words, Letters & Books: 1 heritage story';
+const STORIES_CELL = 'Stage 7 Self-expression, Letters & Books: 1 heritage story';
 const PLACEHOLDER = 'Stage 3 Sentences, Nature & Animals, coming soon';
 const LESSON_ROW = 'Heritage stories for this cell, 1 heritage story';
-const PILL = 'Stage 2 · Letters & Books. Heritage stories for this cell in Stage 2 Words';
+const PILL = 'Stage 7 · Letters & Books. Heritage stories for this cell in Stage 7 Self-expression';
 
 async function openJourney(page: Page): Promise<void> {
   await page.goto('/');
@@ -68,8 +69,8 @@ test.describe('heritage stories on the Journey (fixture bundle)', () => {
     await expect(page.getByRole('button', { name: LESSON_CELL, exact: true })).toBeEnabled();
     await expect(page.getByTestId('journey-count-stage1-letters')).toHaveText('1');
     await expect(page.getByRole('button', { name: STORIES_CELL, exact: true })).toBeEnabled();
-    await expect(page.getByTestId('journey-count-stage2-letters')).toHaveText('1');
-    await expect(page.getByTestId('journey-stories-note-stage2')).toHaveText('Heritage stories are open in the cells with the books icon.');
+    await expect(page.getByTestId('journey-count-stage7-letters')).toHaveText('1');
+    await expect(page.getByTestId('journey-stories-note-stage7')).toHaveText('Heritage stories are open in the cells with the books icon.');
     await expect(page.getByTestId('journey-stories-note-stage1')).toHaveCount(0);
     await expect(page.getByRole('button', { name: PLACEHOLDER, exact: true })).toBeDisabled();
     await expect(page.getByRole('button', { name: 'Stage 1 Hangul, Food & Daily Life: lesson', exact: true })).toBeEnabled();
@@ -79,19 +80,19 @@ test.describe('heritage stories on the Journey (fixture bundle)', () => {
   test('a stories-only cell opens its cell page with no PIN; a tile opens the story page, whose pill comes back', async ({ page }) => {
     await openJourney(page);
     await page.getByRole('button', { name: STORIES_CELL, exact: true }).click();
-    await expect(page.getByTestId('cell-stories-title')).toHaveText('Words · Letters & Books');
+    await expect(page.getByTestId('cell-stories-title')).toHaveText('Self-expression · Letters & Books');
     await expect(page.getByText('Heritage stories for this cell', { exact: true })).toBeVisible();
     await expect(page.getByTestId('cell-stories-lesson')).toHaveCount(0);
     await expect(page.getByTestId('cell-stories-empty')).toHaveCount(0);
     await expect(page.getByTestId('cell-stories-grid').locator('[data-testid^="story-tile-"]')).toHaveCount(1);
-    await expectCellStoriesEvents(page, [{ stageKey: 'stage2', themeKey: 'letters', stories: 1, source: 'cell' }]);
+    await expectCellStoriesEvents(page, [{ stageKey: 'stage7', themeKey: 'letters', stories: 1, source: 'cell' }]);
 
     await page.getByTestId('story-tile-story:cell-stories-fixture').click();
     await expect(page.getByTestId('story-episode-title')).toHaveText('The Hangul Book');
     const pill = page.getByRole('button', { name: PILL, exact: true });
-    await expect(pill).toContainText('Stage 2 · Letters & Books');
+    await expect(pill).toContainText('Stage 7 · Letters & Books');
     await pill.click();
-    await expect(page.getByTestId('cell-stories-title')).toHaveText('Words · Letters & Books');
+    await expect(page.getByTestId('cell-stories-title')).toHaveText('Self-expression · Letters & Books');
     await expect.poll(async () => (await cellStoriesEvents(page)).map((p) => p?.source)).toEqual(['cell', 'story-pill']);
   });
 
@@ -143,14 +144,14 @@ test.describe('heritage stories on the Journey (fixture bundle)', () => {
 
   test('the same door again while its cell page is on top is not a second open', async ({ page }) => {
     await openJourney(page);
-    const params = { stage: 'stage2', theme: 'letters', source: 'cell' };
+    const params = { stage: 'stage7', theme: 'letters', source: 'cell' };
     await page.evaluate((p) => (window as E2eWindow).__hrStoryE2E?.openCellStories(p), params);
-    await expect(page.getByTestId('cell-stories-title')).toHaveText('Words · Letters & Books');
-    const once = [{ stageKey: 'stage2', themeKey: 'letters', stories: 1, source: 'cell' }];
+    await expect(page.getByTestId('cell-stories-title')).toHaveText('Self-expression · Letters & Books');
+    const once = [{ stageKey: 'stage7', themeKey: 'letters', stories: 1, source: 'cell' }];
     await expectCellStoriesEvents(page, once);
     // A double tap: the second navigate finds this page by its id and swaps in equal params.
     await page.evaluate((p) => (window as E2eWindow).__hrStoryE2E?.openCellStories(p), params);
-    await expect(page.getByTestId('cell-stories-title')).toHaveText('Words · Letters & Books');
+    await expect(page.getByTestId('cell-stories-title')).toHaveText('Self-expression · Letters & Books');
     await goBack(page);
     await expect(page.getByRole('heading', { name: 'Heritage Journey' })).toBeVisible();
     expect(await cellStoriesEvents(page)).toEqual(once);
@@ -166,9 +167,9 @@ test.describe('heritage stories on the Journey (fixture bundle)', () => {
     await page.getByTestId('story-tile-story:cell-stories-fixture').filter({ visible: true }).click();
     await expect(page.getByTestId('story-episode-title')).toHaveText('The Hangul Book');
     await page.getByRole('button', { name: PILL, exact: true }).click();
-    await expect(page.getByTestId('cell-stories-title')).toHaveText('Words · Letters & Books');
+    await expect(page.getByTestId('cell-stories-title')).toHaveText('Self-expression · Letters & Books');
     await expect(page.getByTestId('story-tile-story:cell-stories-fixture').filter({ visible: true })).toBeVisible();
-    await expectCellStoriesEvents(page, [{ stageKey: 'stage2', themeKey: 'letters', stories: 1, source: 'story-pill' }]);
+    await expectCellStoriesEvents(page, [{ stageKey: 'stage7', themeKey: 'letters', stories: 1, source: 'story-pill' }]);
     // Back returns to the story page the pill was on.
     await goBack(page);
     await expect(page.getByTestId('cell-stories-title')).toHaveCount(0);
@@ -270,8 +271,8 @@ test.describe('heritage stories on the Journey, two panes (fixture bundle, 1180x
     await expect(cell).toBeEnabled();
     await expect(cell).not.toHaveAttribute('aria-selected', 'true');
     await cell.click();
-    await expect(page.getByTestId('cell-stories-title')).toHaveText('Words · Letters & Books');
-    await expectCellStoriesEvents(page, [{ stageKey: 'stage2', themeKey: 'letters', stories: 1, source: 'cell' }]);
+    await expect(page.getByTestId('cell-stories-title')).toHaveText('Self-expression · Letters & Books');
+    await expectCellStoriesEvents(page, [{ stageKey: 'stage7', themeKey: 'letters', stories: 1, source: 'cell' }]);
     await goBack(page);
     await expect(page.getByTestId('cell-stories')).toHaveCount(0);
     await expect(page.getByRole('button', { name: STORIES_CELL, exact: true })).not.toHaveAttribute('aria-selected', 'true');

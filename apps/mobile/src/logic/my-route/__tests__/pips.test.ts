@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { StageKey } from '@hangul-route/content-schema';
 import { episodesAll } from '../../../content/episodes';
+import { lessonEpisodes } from '../../../content/lessons';
 import { questsAll } from '../../../content/quests';
 import { gridEpisodesOf, routeOrder } from '../order';
 import { cellRowsOf, pipStateOf, splitStagePips, type PipContext } from '../pips';
@@ -48,16 +49,17 @@ describe('cellRowsOf', () => {
     expect(s2[0]?.pips[0]?.key).toBe('episode:stage2-letters');
   });
 
-  it('runs on the real unparsed bundle: Stage 1, 5 + 6 quest pips (Stage 2: two tastes + Playground Words 3; Stage 4: Greeting Dialogues 3 + Read Along 3)', () => {
+  it('runs on the real unparsed bundle: the Stage 1 quests, the two Stage 2 taste quests and the shipped lesson cells (F-CURR-001; Greeting Dialogues is generated since T-2)', () => {
     const live = { episodes: episodesAll, quests: questsAll };
     const ctx = ctxOf({}, live);
     const count = (stage: StageKey) =>
       cells(stage, ctx, episodesAll).flatMap((c) => c.pips).filter((p) => p.kind === 'quest').length;
     expect(count('stage1')).toBeGreaterThanOrEqual(8);
+    const lessonQuestsOf = (stage: StageKey) => lessonEpisodes.filter((e) => e.stage === stage).flatMap((e) => e.questIds).length;
     expect([count('stage1'), count('stage2'), count('stage4')]).toEqual([
       ctx.order.filter((e) => e.stage === 'stage1').length,
-      5,
-      6,
+      2 + lessonQuestsOf('stage2'),
+      lessonQuestsOf('stage4'),
     ]);
   });
 

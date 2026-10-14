@@ -85,9 +85,9 @@ describe('rosterFreeLessonsLine: the plan-waiting line on a roster card', () => 
   });
 
   it('counts the plan\'s closed lessons, never unreleased items, and shows nothing when only those were skipped', () => {
-    const withSoon = plan('plan:1', { items: [...ITEMS, { kind: 'episode', id: 'episode:stage2-letters' }, { kind: 'episode', id: 'episode:stage3-nature' }] });
+    const withSoon = plan('plan:1', { items: [...ITEMS, { kind: 'episode', id: 'episode:stage7-crafts' }, { kind: 'episode', id: 'episode:stage3-nature' }] });
     expect(rosterFreeLessonsLine(input({ plans: [withSoon], learner: learner({ 'plan:1': { done: 2, total: 2, notReady: 5 } }) }), 'en')?.text).toBe(words.planWaiting('Mina', 3, words.product.class));
-    const onlySoon = plan('plan:1', { items: [quest('quest:stage1-letters-q1'), { kind: 'episode', id: 'episode:stage2-letters' }] });
+    const onlySoon = plan('plan:1', { items: [quest('quest:stage1-letters-q1'), { kind: 'episode', id: 'episode:stage7-crafts' }] });
     expect(rosterFreeLessonsLine(input({ plans: [onlySoon], learner: learner({ 'plan:1': { done: 1, total: 1, notReady: 1 } }) }), 'en')).toBeNull();
   });
 
@@ -126,7 +126,7 @@ describe('rosterFreeLessonsLine: the plan-waiting line on a roster card', () => 
 
   it('never shows when the device skipped fewer items than the closed lessons it derived (they were open for this learner)', () => {
     // Premium through another space: the three closed lessons were open and done; one unreleased episode was skipped.
-    const withSoon = plan('plan:1', { items: [...ITEMS, { kind: 'episode', id: 'episode:stage2-letters' }] });
+    const withSoon = plan('plan:1', { items: [...ITEMS, { kind: 'episode', id: 'episode:stage7-crafts' }] });
     expect(rosterFreeLessonsLine(input({ plans: [withSoon], learner: learner({ 'plan:1': { done: 5, total: 5, notReady: 1 } }) }), 'en')).toBeNull();
     expect(rosterFreeLessonsLine(input({ plans: [withSoon], learner: learner({ 'plan:1': { done: 2, total: 2, notReady: 4 } }) }), 'en')?.text).toBe(words.planWaiting('Mina', 3, words.product.class));
   });

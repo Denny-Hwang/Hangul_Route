@@ -192,6 +192,78 @@ export const jamoBatchim: Jamo[] = [
 
 export const jamoAll: Jamo[] = [...jamoConsonants, ...jamoVowels, ...jamoBatchim];
 
+/**
+ * The symbols Stage 2 Word Builder teaches (F-CURR-001 §3.3, row S2-1): the five tense
+ * consonants, the eleven compound vowels and nine more final letters (the six said t, and
+ * ㅋ ㄲ ㅍ said k / p). They are kept out of `jamoAll`, which stays the 30 Stage 1 anchor
+ * symbols (the letter wall, the Hangul check and Stage 1 completion count those), and
+ * `findJamo` resolves them so the Word Builder Discover pages, the Results teaser and the
+ * catalogue `teaches` show them. No sound hint and no recording yet: the Discover Hoya line
+ * states each quest's rule, and Hear it speaks `spokenKo` with the visible text fallback
+ * (F-AUDIO-004). Final ㅎ is not here: it is not one of the article 9 letters said t
+ * (standard pronunciation rules), so Word Builder does not teach it.
+ */
+const wb = (
+  id: string,
+  char: string,
+  kind: Jamo['kind'],
+  romanization: string,
+  nameEn: string,
+  order: number,
+  spokenKo: string,
+  spokenRomanization: string,
+  nameKo?: string,
+): Jamo => ({
+  id: `jamo:${id}`,
+  char,
+  romanization,
+  nameEn,
+  kind,
+  spokenKo,
+  spokenRomanization,
+  spokenKind: 'sound',
+  ...(nameKo === undefined ? {} : { nameKo }),
+  order,
+});
+
+export const jamoWordBuilder: Jamo[] = [
+  // q1: ㅐ ㅔ ㅒ ㅖ
+  wb('ae', 'ㅐ', 'vowel', 'ae', 'ae', 31, '애', 'ae', '애'),
+  wb('e', 'ㅔ', 'vowel', 'e', 'e', 32, '에', 'e', '에'),
+  wb('yae', 'ㅒ', 'vowel', 'yae', 'yae', 33, '얘', 'yae', '얘'),
+  wb('ye', 'ㅖ', 'vowel', 'ye', 'ye', 34, '예', 'ye', '예'),
+  // q2: the tense consonants
+  wb('ssanggiyeok', 'ㄲ', 'consonant', 'kk', 'ssanggiyeok', 35, '까', 'kka', '쌍기역'),
+  wb('ssangdigeut', 'ㄸ', 'consonant', 'tt', 'ssangdigeut', 36, '따', 'tta', '쌍디귿'),
+  wb('ssangbieup', 'ㅃ', 'consonant', 'pp', 'ssangbieup', 37, '빠', 'ppa', '쌍비읍'),
+  wb('ssangsiot', 'ㅆ', 'consonant', 'ss', 'ssangsiot', 38, '싸', 'ssa', '쌍시옷'),
+  wb('ssangjieut', 'ㅉ', 'consonant', 'jj', 'ssangjieut', 39, '짜', 'jja', '쌍지읒'),
+  // q3: ㅘ ㅝ ㅟ ㅢ
+  wb('wa', 'ㅘ', 'vowel', 'wa', 'wa', 40, '와', 'wa', '와'),
+  wb('wo', 'ㅝ', 'vowel', 'wo', 'wo', 41, '워', 'wo', '워'),
+  wb('wi', 'ㅟ', 'vowel', 'wi', 'wi', 42, '위', 'wi', '위'),
+  wb('ui', 'ㅢ', 'vowel', 'ui', 'ui', 43, '의', 'ui', '의'),
+  // q4: ㅚ ㅙ ㅞ
+  wb('oe', 'ㅚ', 'vowel', 'oe', 'oe', 44, '외', 'oe', '외'),
+  wb('wae', 'ㅙ', 'vowel', 'wae', 'wae', 45, '왜', 'wae', '왜'),
+  wb('we', 'ㅞ', 'vowel', 'we', 'we', 46, '웨', 'we', '웨'),
+  // q5: the six final letters said t
+  wb('siot-batchim', 'ㅅ', 'batchim', 't', 'siot-final', 47, '앗', 'at'),
+  wb('jieut-batchim', 'ㅈ', 'batchim', 't', 'jieut-final', 48, '앚', 'at'),
+  wb('chieut-batchim', 'ㅊ', 'batchim', 't', 'chieut-final', 49, '앛', 'at'),
+  wb('tieut-batchim', 'ㅌ', 'batchim', 't', 'tieut-final', 50, '앝', 'at'),
+  wb('digeut-batchim', 'ㄷ', 'batchim', 't', 'digeut-final', 51, '앋', 'at'),
+  wb('ssangsiot-batchim', 'ㅆ', 'batchim', 't', 'ssangsiot-final', 52, '았', 'at'),
+  // q6: three final letters said k or p
+  wb('kieuk-batchim', 'ㅋ', 'batchim', 'k', 'kieuk-final', 53, '앜', 'ak'),
+  wb('ssanggiyeok-batchim', 'ㄲ', 'batchim', 'k', 'ssanggiyeok-final', 54, '앆', 'ak'),
+  wb('pieup-batchim', 'ㅍ', 'batchim', 'p', 'pieup-final', 55, '앞', 'ap'),
+];
+
+/** Every symbol the app teaches: the Stage 1 30, then the Word Builder ones. */
+export const jamoKnown: Jamo[] = [...jamoAll, ...jamoWordBuilder];
+
+/** A symbol by id: the 30 Stage 1 symbols and the Word Builder symbols. */
 export function findJamo(id: string): Jamo | undefined {
-  return jamoAll.find((j) => j.id === id);
+  return jamoKnown.find((j) => j.id === id);
 }
