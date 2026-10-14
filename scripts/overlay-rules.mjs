@@ -76,6 +76,16 @@ const bare = (s) => s.replace(/[^ㄱ-㆏가-힣a-z0-9]/gi, "");
 const tokenList = (text) => Array.from(text.matchAll(TOKEN), (m) => m[1]).sort();
 
 /**
+ * A Discover pattern note of a lesson quest (F-CURR-001 §3.4, §3.10): its Korean sits in
+ * `{ko:...}` tokens that render as taught Korean with their romanization, so a translation
+ * keeps exactly the tokens of the English note, and the Hangul inside them is not UI text.
+ */
+const KO_TOKEN = /\{ko:([^}]*)\}/g;
+const LESSON_NOTE_FIELD = /^steps\.[^.]+\.discover\.pages\.[^.]+\.items\.[^.]+\.note$/;
+const isLessonNote = (id, field) => /^quest:stage[2-467]-/.test(id) && LESSON_NOTE_FIELD.test(field);
+const koTokenList = (text) => Array.from(text.matchAll(KO_TOKEN), (m) => m[1]).sort();
+
+/**
  * id -> { entity, file } for every object with an entity id in the base content (first
  * one wins). Test fixtures, research data and `_*.json` registries (the vocabulary sense
  * registry lists ids it does not define) are not translatable entities.
@@ -147,7 +157,8 @@ function checkField(locale, id, field, value, base, add, ctx) {
   if (typeof value !== "string" || value.trim() === "") return add("overlay-bad-shape: a translated field is a non-blank string");
   const allowed = isOverlayFieldAllowed(id, field);
   if (!allowed) add(`overlay-forbidden-field: ${field} cannot be translated on ${id}`);
-  if (HANGUL.test(value) && (locale === "es" || !allowed)) add("korean-in-ui-field");
+  const shown = isLessonNote(id, field) ? value.replace(KO_TOKEN, " ") : value;
+  if (HANGUL.test(shown) && (locale === "es" || !allowed)) add("korean-in-ui-field");
   const banned = bannedWordIn(value, locale);
   if (banned !== null) add(`banned-on-learner-surface: "${banned}"`);
   if (!allowed || base === undefined) return;
@@ -162,6 +173,13 @@ function checkField(locale, id, field, value, base, add, ctx) {
       if (value.trim() === holder.ko.trim()) add(`overlay-circular-gloss: the Korean gloss repeats the taught ${holder.ko}`);
       else if (bare(value) === bare(holder.ko)) {
         ctx.warnings.push({ file: ctx.current, path: `entries.${id}.${field}`, rule: `overlay-circular-gloss: the Korean gloss only wraps ${holder.ko}; describe it instead` });
+      }
+    }
+    if (isLessonNote(id, field)) {
+      const want = koTokenList(String(getIn(base, path)));
+      const got = koTokenList(value);
+      if (want.join(",") !== got.join(",")) {
+        add(`overlay-token-mismatch: the note needs exactly the tokens ${want.join(", ") || "(none)"}; found ${got.join(", ") || "(none)"}`);
       }
     }
     if (overlayPrefix(id) === "story" && /^scenes\.[^.]+\.narration$/.test(field)) {

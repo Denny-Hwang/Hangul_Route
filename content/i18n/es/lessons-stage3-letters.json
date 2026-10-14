@@ -1,0 +1,147 @@
+{
+  "locale": "es",
+  "domain": "lessons-stage3-letters",
+  "entries": {
+    "episode:stage3-letters": {
+      "title": "Primeras oraciones",
+      "subtitle": "Nombra cosas, di qué hay y quién eres.",
+      "hoyaIntro": "Ya sabes leer palabras. ¡Ahora vamos a unirlas en oraciones!"
+    },
+    "quest:stage3-letters-q1": {
+      "title": "Es un libro",
+      "blurb": "Nombra una cosa con una oración completa.",
+      "teaser": "Siguiente: di qué hay.",
+      "steps.s1.title": "Es un libro",
+      "steps.s2.title": "Es ...",
+      "steps.s3.title": "Arma la oración",
+      "steps.s4.title": "Escucha y elige",
+      "steps.s5.title": "Dos preguntas rápidas",
+      "steps.s6.title": "¡Lo nombraste!",
+      "steps.s1.hoyaLine": "¡Vamos a nombrar cosas con una oración completa!",
+      "steps.s6.hoyaLine": "¡Armaste oraciones completas en coreano!",
+      "steps.s2.discover.pages.0.caption": "Di la cosa y luego añade la terminación.",
+      "steps.s2.discover.pages.1.caption": "Pon «sí» delante para responder.",
+      "steps.s2.discover.pages.0.items.0.note": "Usa {ko:이에요} después de una consonante final y {ko:예요} después de una vocal.",
+      "steps.s2.discover.pages.1.items.0.sentence.gloss": "Es una mochila.",
+      "steps.s2.discover.pages.1.items.1.sentence.gloss": "Sí, es un libro.",
+      "steps.s2.discover.pages.0.items.0.frame.gloss": "Es ___.",
+      "steps.s2.discover.pages.0.items.0.examples.chaegieyo.gloss": "Es un libro.",
+      "steps.s2.discover.pages.0.items.0.examples.hakgyoyeyo.gloss": "Es una escuela."
+    },
+    "quest:stage3-letters-q2": {
+      "title": "Hay un libro",
+      "blurb": "Di qué hay y qué no hay.",
+      "teaser": "Siguiente: señala una cosa y nómbrala.",
+      "steps.s1.title": "Hay un libro",
+      "steps.s2.title": "Hay ...",
+      "steps.s3.title": "Arma la oración",
+      "steps.s4.title": "Escucha y elige",
+      "steps.s5.title": "Dos preguntas rápidas",
+      "steps.s6.title": "¡Mochila revisada!",
+      "steps.s1.hoyaLine": "¿Qué hay hoy en la mochila? ¡Vamos a ver!",
+      "steps.s6.hoyaLine": "¡Leíste qué hay y qué no hay!",
+      "steps.s2.discover.pages.0.caption": "Las mismas palabras también dicen lo que tienes.",
+      "steps.s2.discover.pages.1.caption": "Cambia la última palabra para decir que no hay.",
+      "steps.s2.discover.pages.0.items.0.note": "Usa {ko:이} después de una consonante final y {ko:가} después de una vocal.",
+      "steps.s2.discover.pages.1.items.0.sentence.gloss": "Hay una mochila.",
+      "steps.s2.discover.pages.1.items.1.sentence.gloss": "No hay lápiz.",
+      "steps.s2.discover.pages.0.items.0.frame.gloss": "Hay ___.",
+      "steps.s2.discover.pages.0.items.0.examples.chaegi-isseoyo.gloss": "Hay un libro.",
+      "steps.s2.discover.pages.0.items.0.examples.chinguga-isseoyo.gloss": "Tengo un amigo."
+    },
+    "quest:stage3-letters-q3": {
+      "title": "Esto es hangul",
+      "blurb": "Señala una cosa y nómbrala; luego di quién eres.",
+      "steps.s1.title": "Esto es hangul",
+      "steps.s2.title": "Esto es ...",
+      "steps.s3.title": "Arma la oración",
+      "steps.s4.title": "Escucha y elige",
+      "steps.s5.title": "Dos preguntas rápidas",
+      "steps.s6.title": "¡Primeras oraciones!",
+      "steps.s1.hoyaLine": "Señala algo cerca de ti. ¿Qué es?",
+      "steps.s6.hoyaLine": "¡Leíste y armaste tus primeras oraciones en coreano!",
+      "steps.s2.discover.pages.0.caption": "Señala algo cerca de ti y luego nómbralo.",
+      "steps.s2.discover.pages.1.caption": "Una forma cortés de decir quién eres.",
+      "steps.s2.discover.pages.0.items.0.note": "{ko:이건} es la forma corta de {ko:이것은}: esto, lo que está cerca de ti.",
+      "steps.s2.discover.pages.1.items.0.sentence.gloss": "Soy Hoya.",
+      "steps.s2.discover.pages.0.items.0.frame.gloss": "Esto es ___.",
+      "steps.s2.discover.pages.0.items.0.examples.igeon-chaegieyo.gloss": "Esto es un libro.",
+      "steps.s2.discover.pages.0.items.0.examples.igeon-hangeurieyo.gloss": "Esto es hangul."
+    },
+    "minigame:s3-letters-q1-practice": {
+      "orderIt.rounds.r1.sentence.gloss": "Sí, es un libro.",
+      "orderIt.rounds.r2.sentence.gloss": "Sí, es una mochila.",
+      "orderIt.rounds.r3.sentence.gloss": "Sí, es una escuela.",
+      "orderIt.rounds.r4.sentence.gloss": "Hoya, es una mochila.",
+      "orderIt.rounds.r5.sentence.gloss": "Mamá, es un libro.",
+      "orderIt.rounds.r1.distractors.gabangieyo.gloss": "es una mochila",
+      "orderIt.rounds.r4.distractors.hakgyoyeyo.gloss": "es una escuela",
+      "orderIt.rounds.r2.particle.choices.ieyo.gloss": "es (después de una consonante final)",
+      "orderIt.rounds.r2.particle.choices.yeyo.gloss": "es (después de una vocal)",
+      "orderIt.rounds.r3.particle.choices.ieyo.gloss": "es (después de una consonante final)",
+      "orderIt.rounds.r3.particle.choices.yeyo.gloss": "es (después de una vocal)",
+      "orderIt.rounds.r5.particle.choices.ieyo.gloss": "es (después de una consonante final)",
+      "orderIt.rounds.r5.particle.choices.yeyo.gloss": "es (después de una vocal)"
+    },
+    "minigame:s3-letters-q1-apply": {
+      "listenPick.rounds.a1.prompt": "Es una mochila.",
+      "listenPick.rounds.a2.prompt": "Es una escuela.",
+      "listenPick.rounds.a3.prompt": "Es un libro.",
+      "listenPick.rounds.a4.prompt": "Sí, es una escuela."
+    },
+    "minigame:s3-letters-q1-check": {
+      "listenPick.rounds.c1.prompt": "Es una mochila.",
+      "listenPick.rounds.c2.prompt": "Es una escuela."
+    },
+    "minigame:s3-letters-q2-practice": {
+      "orderIt.rounds.r1.sentence.gloss": "Hay un libro.",
+      "orderIt.rounds.r2.sentence.gloss": "Tengo un amigo.",
+      "orderIt.rounds.r3.sentence.gloss": "Hay un lápiz.",
+      "orderIt.rounds.r4.sentence.gloss": "Hay una mochila.",
+      "orderIt.rounds.r5.sentence.gloss": "Sí, hay un libro.",
+      "orderIt.rounds.r1.distractors.gabangi.gloss": "mochila (como sujeto)",
+      "orderIt.rounds.r5.distractors.yeonpiri.gloss": "lápiz (como sujeto)",
+      "orderIt.rounds.r2.particle.choices.i.gloss": "marca de sujeto (después de una consonante final)",
+      "orderIt.rounds.r2.particle.choices.ga.gloss": "marca de sujeto (después de una vocal)",
+      "orderIt.rounds.r3.particle.choices.i.gloss": "marca de sujeto (después de una consonante final)",
+      "orderIt.rounds.r3.particle.choices.ga.gloss": "marca de sujeto (después de una vocal)",
+      "orderIt.rounds.r4.particle.choices.i.gloss": "marca de sujeto (después de una consonante final)",
+      "orderIt.rounds.r4.particle.choices.ga.gloss": "marca de sujeto (después de una vocal)"
+    },
+    "minigame:s3-letters-q2-apply": {
+      "listenPick.rounds.a1.prompt": "Tengo un amigo.",
+      "listenPick.rounds.a2.prompt": "Hay un lápiz.",
+      "listenPick.rounds.a3.prompt": "Hay un libro.",
+      "listenPick.rounds.a4.prompt": "No hay lápiz."
+    },
+    "minigame:s3-letters-q2-check": {
+      "listenPick.rounds.c1.prompt": "Hay una mochila.",
+      "listenPick.rounds.c2.prompt": "No hay libro."
+    },
+    "minigame:s3-letters-q3-practice": {
+      "orderIt.rounds.r1.sentence.gloss": "Esto es un libro.",
+      "orderIt.rounds.r2.sentence.gloss": "Esto es hangul.",
+      "orderIt.rounds.r3.sentence.gloss": "Soy Hoya.",
+      "orderIt.rounds.r4.sentence.gloss": "Esto es una mochila.",
+      "orderIt.rounds.r5.sentence.gloss": "Sí, esto es un lápiz.",
+      "orderIt.rounds.r1.distractors.isseoyo.gloss": "hay",
+      "orderIt.rounds.r5.distractors.chinguga.gloss": "amigo (como sujeto)",
+      "orderIt.rounds.r2.particle.choices.ieyo.gloss": "es (después de una consonante final)",
+      "orderIt.rounds.r2.particle.choices.yeyo.gloss": "es (después de una vocal)",
+      "orderIt.rounds.r3.particle.choices.ieyo.gloss": "es (después de una consonante final)",
+      "orderIt.rounds.r3.particle.choices.yeyo.gloss": "es (después de una vocal)",
+      "orderIt.rounds.r4.particle.choices.ieyo.gloss": "es (después de una consonante final)",
+      "orderIt.rounds.r4.particle.choices.yeyo.gloss": "es (después de una vocal)"
+    },
+    "minigame:s3-letters-q3-apply": {
+      "listenPick.rounds.a1.prompt": "Esto es hangul.",
+      "listenPick.rounds.a2.prompt": "Esto es un lápiz.",
+      "listenPick.rounds.a3.prompt": "Esto es un libro.",
+      "listenPick.rounds.a4.prompt": "Esto es una mochila."
+    },
+    "minigame:s3-letters-q3-check": {
+      "listenPick.rounds.c1.prompt": "Esto es un lápiz.",
+      "listenPick.rounds.c2.prompt": "Soy Hoya."
+    }
+  }
+}
