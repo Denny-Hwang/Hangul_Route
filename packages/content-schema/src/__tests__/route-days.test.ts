@@ -529,6 +529,39 @@ const LIVE_ROUTE_DAYS: Partial<Record<number, readonly (readonly [string, number
     ['episode:stage6-nature', 15],
     ['episode:stage6-crafts', 15],
   ],
+  // F-CURR-001 S3-4: Animal Sentences ships (30 route days).
+  26: [
+    ['episode:stage1-letters', 15],
+    ['episode:stage1-life', 12],
+    ['episode:stage1-rites', 14],
+    ['episode:stage1-nature', 12],
+    ['episode:stage1-crafts', 12],
+    ['episode:stage2-letters', 24],
+    ['episode:stage2-life', 5],
+    ['episode:stage2-rites', 12],
+    ['episode:stage2-nature', 5],
+    ['episode:stage2-crafts', 12],
+    ['episode:stage3-letters', 15],
+    ['episode:stage3-life', 15],
+    ['episode:stage3-rites', 15],
+    ['episode:stage3-nature', 15],
+    ['episode:stage3-crafts', 15],
+    ['episode:stage4-letters', 12],
+    ['episode:stage4-life', 13],
+    ['episode:stage4-rites', 12],
+    ['episode:stage4-nature', 15],
+    ['episode:stage4-crafts', 15],
+    ['episode:stage5-letters', 13],
+    ['episode:stage5-life', 15],
+    ['episode:stage5-rites', 14],
+    ['episode:stage5-nature', 9],
+    ['episode:stage5-crafts', 15],
+    ['episode:stage6-letters', 15],
+    ['episode:stage6-life', 15],
+    ['episode:stage6-rites', 15],
+    ['episode:stage6-nature', 15],
+    ['episode:stage6-crafts', 15],
+  ],
 };
 const LIVE_FREE_FACTS: Partial<Record<number, FreeLessonsFacts>> = {
   3: {
@@ -839,6 +872,20 @@ const LIVE_FREE_FACTS: Partial<Record<number, FreeLessonsFacts>> = {
   },
   // F-CURR-001 S6-5: Buy at Market is not Stage 1, so the free figures do not move.
   25: {
+    lessons: 15,
+    letters: 24,
+    minutes: 65,
+    days: 5,
+    episodeIds: [
+      'episode:stage1-letters',
+      'episode:stage1-life',
+      'episode:stage1-rites',
+      'episode:stage1-nature',
+      'episode:stage1-crafts',
+    ],
+  },
+  // F-CURR-001 S3-4: Animal Sentences is not Stage 1, so the free figures do not move.
+  26: {
     lessons: 15,
     letters: 24,
     minutes: 65,

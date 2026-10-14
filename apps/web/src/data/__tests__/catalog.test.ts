@@ -57,7 +57,7 @@ describe('console catalogue adapter over the shared catalogue', () => {
     expect(itemCategory('quest', 'quest:stage1-letters-q1')).toBe('lesson');
     expect(itemCategory('episode', 'episode:stage1-letters')).toBe('lesson');
     expect(itemCategory('quest', 'quest:story-sejong-new-letters-listen')).toBe('story');
-    expect(itemCategory('episode', 'episode:stage3-nature')).toBe('coming-soon');
+    expect(itemCategory('episode', 'episode:stage7-nature')).toBe('coming-soon');
     // F-CURR-001 S3-2: Daily Mini-Sentences shipped, so its cell is a lesson.
     expect(itemCategory('episode', 'episode:stage3-life')).toBe('lesson');
     expect(itemCategory('quest', 'quest:nope')).toBe('unknown');

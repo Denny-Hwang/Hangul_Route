@@ -709,6 +709,38 @@ const CELLS: readonly UpperCell[] = [
       await expect(page.getByRole('button', { name: /^Play & Crafts: Buy at Market\./ })).toBeVisible();
     },
   },
+  // F-CURR-001 S3-4: Animal Sentences, q1 "Where Is the Bird?" played through its real games.
+  {
+    episodeId: 'episode:stage3-nature',
+    cellButton: journeyCellName(3, 'Nature & Animals'),
+    title: 'Animal Sentences',
+    playFirstQuest: async (page) => {
+      await page.getByRole('button', { name: 'Start', exact: true }).first().click();
+      await page.getByRole('button', { name: 'Continue' }).click();
+      // Discover: the pattern page (frame, two examples, the note), then the sentence page.
+      await expect(page.getByText('나무에 새가 있어요.').first()).toBeVisible();
+      await page.setViewportSize({ width: 320, height: 720 });
+      await shot(page, 'animal-sentences-q1-discover-320');
+      await passDiscover(page);
+      await page.getByRole('button', { name: 'Play minigame' }).click();
+      await buildSentence(page, ['나무에, namue', '새가, saega', '있어요, isseoyo']);
+      await shot(page, 'animal-sentences-q1-built-320');
+      await buildSentence(page, ['물에, mure', '물고기가, mulgogiga', '있어요, isseoyo']);
+      await buildSentence(page, ['집에, jibe', '고양이가, goyangiga', '있어요, isseoyo']);
+      await buildSentence(page, ['산에, sane', '토끼가, tokkiga', '있어요, isseoyo']);
+      await buildSentence(page, ['산에, sane', '곰이, gomi', '있어요, isseoyo']);
+      await page.getByRole('button', { name: 'Play minigame' }).click();
+      await pickByIds(page, ['bird', 'fox', 'a', 'a']);
+      await playCheckByIds(page, [{ answer: 'bear' }, { answer: 'a' }]);
+      await expect(page.getByText('Finish', { exact: true }).first()).toBeVisible();
+    },
+    expectRouteDay: async (page) => {
+      await page.goto('/');
+      await page.getByText('Learning Route', { exact: true }).last().click();
+      await page.getByRole('button', { name: /^Stage 3, / }).click();
+      await expect(page.getByRole('button', { name: /^Nature & Animals: Animal Sentences\./ })).toBeVisible();
+    },
+  },
 ];
 
 async function openJourney(page: Page): Promise<void> {

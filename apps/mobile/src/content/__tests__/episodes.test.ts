@@ -262,6 +262,8 @@ describe('grid golden (F-STORY-005 §3.1 rule 2)', () => {
       { id: 'episode:stage3-life', order: 2, questIds: ['quest:stage3-life-q1', 'quest:stage3-life-q2', 'quest:stage3-life-q3'], status: 'shipped' },
       // S3-3 Festival Sentences.
       { id: 'episode:stage3-rites', order: 3, questIds: ['quest:stage3-rites-q1', 'quest:stage3-rites-q2', 'quest:stage3-rites-q3'], status: 'shipped' },
+      // S3-4 Animal Sentences.
+      { id: 'episode:stage3-nature', order: 4, questIds: ['quest:stage3-nature-q1', 'quest:stage3-nature-q2', 'quest:stage3-nature-q3'], status: 'shipped' },
       // S3-5 Game Sentences.
       { id: 'episode:stage3-crafts', order: 5, questIds: ['quest:stage3-crafts-q1', 'quest:stage3-crafts-q2', 'quest:stage3-crafts-q3'], status: 'shipped' },
       // S4-1 Read Along.
@@ -379,6 +381,8 @@ describe('pillar tags of the shipped lessons (F-STORY-005 §3.2)', () => {
       'episode:stage6-nature': ['D2'],
       // F-CURR-001 S6-5 (generated from content/episodes/stage-6/crafts.json).
       'episode:stage6-crafts': ['B1', 'E1'],
+      // F-CURR-001 S3-4 (generated from content/episodes/stage-3/nature.json).
+      'episode:stage3-nature': ['D2'],
       'episode:stage5-letters': ['A1'],
       'episode:stage5-life': ['B1', 'B5', 'E4'],
       'episode:stage5-rites': ['B5'],
@@ -409,7 +413,7 @@ const GRID_GOLDEN: Record<string, string> = {
   'stage3:letters': 'episode:stage3-letters | First Sentences | shipped',
   'stage3:life': 'episode:stage3-life | Daily Mini-Sentences | shipped',
   'stage3:rites': 'episode:stage3-rites | Festival Sentences | shipped',
-  'stage3:nature': 'episode:stage3-nature | Animal Sentences | preview',
+  'stage3:nature': 'episode:stage3-nature | Animal Sentences | shipped',
   'stage3:crafts': 'episode:stage3-crafts | Game Sentences | shipped',
   'stage4:letters': 'episode:stage4-letters | Read Along | shipped',
   'stage4:life': 'episode:stage4-life | Kitchen Talk | shipped',

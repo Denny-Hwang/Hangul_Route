@@ -63,10 +63,10 @@ describe('stageAvailability', () => {
     expect(stageAvailability('stage5', [lesson, volume2, ep('other', 'stage5', 'preview', ['q1'], 'life')])).toBe('taste');
     expect(stageAvailability('stage5', [volume2, { ...volume2, id: 'volume-3', volume: 3 }])).toBe('soon');
   });
-  it('matches the real bundle: stage1 open, stage2 open, stage3 taste, stage4 open, stage6 open, stage7 soon (Stage 2, Stage 4 and Stage 6 open since Holiday Words S2-2, Playdate Talk S4-4 and Buy at Market S6-5 shipped their last placeholders, Stage 3 a taste, F-CURR-001)', () => {
+  it('matches the real bundle: stage1 open, stage2 open, stage3 open, stage4 open, stage6 open, stage7 soon (Stages 2, 3, 4 and 6 open since Holiday Words S2-2, Animal Sentences S3-4, Playdate Talk S4-4 and Buy at Market S6-5 shipped their last placeholders, F-CURR-001)', () => {
     expect(stageAvailability('stage1', episodesAll)).toBe('open');
     expect(stageAvailability('stage2', episodesAll)).toBe('open');
-    expect(stageAvailability('stage3', episodesAll)).toBe('taste');
+    expect(stageAvailability('stage3', episodesAll)).toBe('open');
     expect(stageAvailability('stage4', episodesAll)).toBe('open');
     expect(stageAvailability('stage6', episodesAll)).toBe('open');
     expect(stageAvailability('stage7', episodesAll)).toBe('soon');
@@ -125,12 +125,15 @@ describe('completeStages: which stage rows read Complete', () => {
   });
 
   it('never completes a taste stage from its shipped quests alone', () => {
-    // Stage 3 is a taste stage (Animal Sentences is still coming); Stage 2 opened with F-CURR-001 S2-2.
-    const stage3 = gridEpisodes(episodesAll)
-      .filter((e) => e.stage === 'stage3')
-      .flatMap((e) => e.questIds.map((questId) => ({ questId, episodeId: e.id, startedAt: AT, completedAt: AT, stars: 1 as const, attempts: 1, accuracy: 0.5 })));
+    // Every Stage 3 cell has shipped (F-CURR-001 S3-4), so the taste is made here: one Stage 3 cell
+    // goes back to a "Coming later" placeholder, and the other cells' quests stay completed.
+    const [held, ...rest] = gridEpisodes(episodesAll).filter((e) => e.stage === 'stage3');
+    if (held === undefined) throw new Error('no Stage 3 cell');
+    const tasteBundle = episodesAll.map((e) => (e.id === held.id ? { ...e, status: 'preview' as const, questIds: [] } : e));
+    expect(stageAvailability('stage3', tasteBundle)).toBe('taste');
+    const stage3 = rest.flatMap((e) => e.questIds.map((questId) => ({ questId, episodeId: e.id, startedAt: AT, completedAt: AT, stars: 1 as const, attempts: 1, accuracy: 0.5 })));
     expect(stage3.length).toBeGreaterThan(0);
-    expect(completeStages({ quests: stage3 }, episodesAll).has('stage3')).toBe(false);
+    expect(completeStages({ quests: stage3 }, tasteBundle).has('stage3')).toBe(false);
   });
 });
 

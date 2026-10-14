@@ -34,8 +34,9 @@ import type { Catalog, CatalogCell, CatalogQuest, CatalogStory, CatalogTopic } f
  * Version 23 (F-CURR-001 S6-3): Travel for Chuseok ships (Stage 6 rites, 3 lesson quests).
  * Version 24 (F-CURR-001 S6-4): Hike & Ask ships (Stage 6 nature, 3 lesson quests).
  * Version 25 (F-CURR-001 S6-5): Buy at Market ships (Stage 6 crafts, 3 lesson quests); Stage 6 opens.
+ * Version 26 (F-CURR-001 S3-4): Animal Sentences ships (Stage 3 nature, 3 lesson quests); Stage 3 opens.
  */
-export const CATALOG_VERSION = 25;
+export const CATALOG_VERSION = 26;
 
 const cell = (
   stage: StageKey,
@@ -72,7 +73,7 @@ const cells: CatalogCell[] = [
   cell('stage3', 'letters', 'First Sentences', 'shipped', 14, ['quest:stage3-letters-q1', 'quest:stage3-letters-q2', 'quest:stage3-letters-q3']),
   cell('stage3', 'life', 'Daily Mini-Sentences', 'shipped', 14, ['quest:stage3-life-q1', 'quest:stage3-life-q2', 'quest:stage3-life-q3']),
   cell('stage3', 'rites', 'Festival Sentences', 'shipped', 14, ['quest:stage3-rites-q1', 'quest:stage3-rites-q2', 'quest:stage3-rites-q3']),
-  soon('stage3', 'nature', 'Animal Sentences'),
+  cell('stage3', 'nature', 'Animal Sentences', 'shipped', 14, ['quest:stage3-nature-q1', 'quest:stage3-nature-q2', 'quest:stage3-nature-q3']),
   cell('stage3', 'crafts', 'Game Sentences', 'shipped', 14, ['quest:stage3-crafts-q1', 'quest:stage3-crafts-q2', 'quest:stage3-crafts-q3']),
   cell('stage4', 'letters', 'Read Along', 'shipped', 13, ['quest:stage4-letters-q1', 'quest:stage4-letters-q2', 'quest:stage4-letters-q3']),
   cell('stage4', 'life', 'Kitchen Talk', 'shipped', 13, ['quest:stage4-life-q1', 'quest:stage4-life-q2', 'quest:stage4-life-q3']),
@@ -192,6 +193,9 @@ const lessonQuests: CatalogQuest[] = [
   lesson('stage6-crafts-q1', 'stage6', 'crafts', 'At the Stall', 5),
   lesson('stage6-crafts-q2', 'stage6', 'crafts', 'How Many, How Much?', 5),
   lesson('stage6-crafts-q3', 'stage6', 'crafts', 'A Little Extra', 5),
+  lesson('stage3-nature-q1', 'stage3', 'nature', 'Where Is the Bird?', 5),
+  lesson('stage3-nature-q2', 'stage3', 'nature', 'Big and Small', 5),
+  lesson('stage3-nature-q3', 'stage3', 'nature', 'Fly, Hop, Swim', 5),
   // The Stage 5 books (F-STORY-005 PR 5.6): grid quests that play their stories at the read level.
   lesson('story-sejong-new-letters-read', 'stage5', 'letters', "King Sejong's New Letters", 4),
   lesson('story-shapes-of-hangeul-read', 'stage5', 'letters', 'The Secret in the Shapes', 5),

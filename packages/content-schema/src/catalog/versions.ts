@@ -117,6 +117,8 @@ export const CATALOG_QUEST_ADDITIONS: Readonly<Record<number, readonly string[]>
   24: Object.freeze(['quest:stage6-nature-q1', 'quest:stage6-nature-q2', 'quest:stage6-nature-q3']),
   // F-CURR-001 S6-5: Buy at Market.
   25: Object.freeze(['quest:stage6-crafts-q1', 'quest:stage6-crafts-q2', 'quest:stage6-crafts-q3']),
+  // F-CURR-001 S3-4: Animal Sentences.
+  26: Object.freeze(['quest:stage3-nature-q1', 'quest:stage3-nature-q2', 'quest:stage3-nature-q3']),
 });
 
 /** The quest ids the catalogue held at `version` (versions before 8 read as 8). */

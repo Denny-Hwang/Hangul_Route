@@ -88,8 +88,8 @@ describe('stageAvailabilityOf (the catalogue twin of the app stageAvailability)'
     expect(StageKeySchema.options.map((stage) => stageAvailabilityOf(CATALOG_2026_10, stage))).toEqual(['open', 'taste', 'soon', 'taste', 'soon', 'soon', 'soon']);
   });
 
-  it('agrees on the shipped catalogue today (Stage 5 is open since all five of its books shipped, F-STORY-005 PR 5.6; Stage 2, Stage 4 and Stage 6 open since Holiday Words S2-2, Playdate Talk S4-4 and Buy at Market S6-5 shipped their last placeholders, Stage 3 a taste, F-CURR-001)', () => {
-    expect(StageKeySchema.options.map((stage) => stageAvailabilityOf(CATALOG, stage))).toEqual(['open', 'open', 'taste', 'open', 'open', 'open', 'soon']);
+  it('agrees on the shipped catalogue today (Stage 5 is open since all five of its books shipped, F-STORY-005 PR 5.6; Stages 2, 3, 4 and 6 open since Holiday Words S2-2, Animal Sentences S3-4, Playdate Talk S4-4 and Buy at Market S6-5 shipped their last placeholders, F-CURR-001)', () => {
+    expect(StageKeySchema.options.map((stage) => stageAvailabilityOf(CATALOG, stage))).toEqual(['open', 'open', 'open', 'open', 'open', 'open', 'soon']);
   });
 
   it('counts a ready cell like a shipped one, and a preview or draft cell as not ready', () => {
