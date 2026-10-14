@@ -9,6 +9,7 @@ import { emptyRecent, rememberDeck, setLastSlide } from '../recent';
 import {
   SHELL_SLIDE_KINDS,
   blockIndexOfSlide,
+  countRows,
   completePayload,
   endLetters,
   fitShown,
@@ -159,6 +160,12 @@ describe('the End slide', () => {
       { ko: 'a', romanization: 'g/k' },
       { ko: 'b', romanization: 'n' },
     ]);
+  });
+
+  it('counts wrapped rows by overlap, so baseline offsets inside a row do not add rows', () => {
+    expect(countRows([])).toBe(0);
+    expect(countRows([{ y: 0, height: 40 }, { y: 6, height: 30 }, { y: 2, height: 36 }])).toBe(1);
+    expect(countRows([{ y: 0, height: 40 }, { y: 52, height: 40 }, { y: 58, height: 30 }, { y: 104, height: 40 }])).toBe(3);
   });
 
   it('drops one item per step while the rows overflow, and stops at zero or when it fits', () => {

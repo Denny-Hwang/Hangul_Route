@@ -34,6 +34,10 @@ export function presenterConsoleOrigins(_extraCsv?: string): readonly string[] {
   return [...LECTURE_CONSOLE_ORIGINS];
 }
 
+export function hasOpener(): boolean {
+  return false;
+}
+
 export function announceReady(_deck: Pick<LectureDeck, 'id' | 'picker'>): number {
   return 0;
 }

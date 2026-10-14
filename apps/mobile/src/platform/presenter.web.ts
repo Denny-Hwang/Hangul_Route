@@ -176,6 +176,11 @@ export function presenterConsoleOrigins(extraCsv: string | undefined): readonly 
 
 type DeckPick = Pick<LectureDeck, 'id' | 'picker'>;
 
+/** A console tab opened this one (`window.opener`); a copied, typed or bookmarked link has none. */
+export function hasOpener(env: PresenterEnv = browserEnv()): boolean {
+  return env.opener !== null && env.opener !== undefined;
+}
+
 /** Posts `ready` to the opener, once per allowed origin; returns how many posts went out. */
 export function announceReady(deck: DeckPick, env: PresenterEnv = browserEnv()): number {
   const opener = env.opener as { postMessage?: (message: unknown, targetOrigin: string) => void } | null | undefined;

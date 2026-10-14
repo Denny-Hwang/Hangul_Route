@@ -8,6 +8,7 @@ import {
   enterFullscreen,
   exitFullscreen,
   fullscreenSupported,
+  hasOpener,
   isFullscreen,
   isPresenterRoute,
   keepScreenAwake,
@@ -80,6 +81,7 @@ describe('route', () => {
     expect(native.takeDeckFragment()).toBeNull();
     expect(native.announceReady(deck({ mode: 'names', count: 2 }))).toBe(0);
     expect(native.fullscreenSupported()).toBe(false);
+    expect(native.hasOpener()).toBe(false);
     expect(native.wakeLockSupported()).toBe(false);
     expect(native.openDeckId()).toBeNull();
     native.markOpenDeck('lecture:abc123');
@@ -208,6 +210,12 @@ describe('console origins', () => {
 });
 
 describe('announceReady', () => {
+  it('knows whether a console tab opened this one', () => {
+    expect(hasOpener(env({ opener: {} }))).toBe(true);
+    expect(hasOpener(env({ opener: null }))).toBe(false);
+    expect(hasOpener(env())).toBe(false);
+  });
+
   it('posts one ready message per allowed origin to window.opener only', () => {
     const post = vi.fn();
     const n = announceReady(deck({ mode: 'names', count: 2 }), env({ opener: { postMessage: post }, consoleOrigins: ['https://a.example', 'https://b.example'] }));

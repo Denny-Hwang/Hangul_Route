@@ -1,4 +1,4 @@
-import { borderWidth, layout, radii, spacing, touchTarget } from '@hangul-route/design-system/tokens';
+import { borderWidth, layout, radii, spacing, touchTarget, typography } from '@hangul-route/design-system/tokens';
 import type { WindowSize } from './stage-scale';
 
 /**
@@ -43,6 +43,20 @@ export const NEXT_MIN_WIDTH = 1.5 * touchTarget.hero;
 export const START_BUTTON_HEIGHT = 1.25 * touchTarget.hero;
 /** A teacher page's readable column (the start screen and the state pages), px. */
 export const TEACHER_COLUMN = layout.maxWidth.reading;
+
+/** A state page's readable line (`--line-max`, 32 rem). */
+export const READABLE_LINE = 32 * typography.size.bodySm;
+/** Hoya on a state page, px (1.5 x the hero target). */
+export const STATE_HOYA = 1.5 * touchTarget.hero;
+
+/** The Exit confirm's width (`--dialog-w`, 40 rem). */
+export const EXIT_DIALOG_WIDTH = 40 * typography.size.bodySm;
+
+/** The start screen's picker row label basis (`--picker-label`, 14 rem). */
+export const PICKER_LABEL_BASIS = 14 * typography.size.bodySm;
+/** The numbers picker's count stepper: the deck schema's `picker.count` bounds. */
+export const PICKER_COUNT_MIN = 1;
+export const PICKER_COUNT_MAX = 60;
 
 /** The start screen waits this long at most for the presenter font (spec section 3.6). */
 export const FONT_WAIT_MS = 1500;

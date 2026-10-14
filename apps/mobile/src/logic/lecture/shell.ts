@@ -119,6 +119,26 @@ export function endLetters(letters: readonly KoLine[]): KoLine[] {
 }
 
 /**
+ * Rows of a wrapping line of boxes (`y`, `height` from layout): a box that starts below the
+ * bottom of the row so far opens a new row. Baseline alignment moves boxes of one row a few
+ * pixels apart, so overlap, not equal tops, decides.
+ */
+export function countRows(boxes: readonly { y: number; height: number }[]): number {
+  const sorted = [...boxes].sort((a, b) => a.y - b.y);
+  let rows = 0;
+  let bottom = -Infinity;
+  for (const box of sorted) {
+    if (box.y >= bottom) {
+      rows += 1;
+      bottom = box.y + box.height;
+    } else {
+      bottom = Math.max(bottom, box.y + box.height);
+    }
+  }
+  return rows;
+}
+
+/**
  * One step of the End slide's fit (README D7): the list starts with every item shown and drops
  * one at a time while the drawn rows exceed `maxRows` (the "+ n more" pill takes the rest).
  */
