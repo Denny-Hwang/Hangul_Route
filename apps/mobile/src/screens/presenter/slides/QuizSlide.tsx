@@ -1,6 +1,6 @@
 import type { RomanizationMode } from '@hangul-route/content-schema';
 import { Hoya, Icon, colors, koreanTextLabel, presenter, spacing, typography } from '@hangul-route/design-system';
-import React from 'react';
+import React, { useState } from 'react';
 import { Text, View } from 'react-native';
 import type { BuildName, QuizOption } from '../../../logic/lecture/build-steps';
 import type { Slide } from '../../../logic/lecture/deck-builder';
@@ -46,6 +46,10 @@ export function QuizSlide({
   const revealed = shown.has('answer');
   const romOn = optionRomShown(romanization, revealed);
   const rows = [slide.options.slice(0, 2), slide.options.slice(2, 4)].filter((row) => row.length > 0);
+  // A two-line question (a longer language, or the Say it box beside it) leaves the options less
+  // height: the letters then shrink to fit their cards instead of spilling out (never below body).
+  const [gridHeight, setGridHeight] = useState(0);
+  const rowHeight = gridHeight > 0 ? (gridHeight - units(unit, STAGE_GAP_INNER) * (rows.length - 1)) / rows.length : Infinity;
   return (
     <View testID="presenter-quiz" style={{ flex: 1, gap: units(unit, STAGE_GAP_INNER) }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: units(unit, STAGE_GAP_INNER), minHeight: units(unit, QUIZ_ANSWER_HOYA) }}>
@@ -54,11 +58,16 @@ export function QuizSlide({
         </View>
         <AnswerLine shown={revealed} />
       </View>
-      <View role="list" testID="presenter-quiz-options" style={{ flex: 1, minHeight: 0, gap: units(unit, STAGE_GAP_INNER) }}>
+      <View
+        role="list"
+        testID="presenter-quiz-options"
+        onLayout={(e) => setGridHeight(e.nativeEvent.layout.height)}
+        style={{ flex: 1, minHeight: 0, gap: units(unit, STAGE_GAP_INNER) }}
+      >
         {rows.map((row, r) => (
           <View key={r} style={{ flex: 1, flexDirection: 'row', gap: units(unit, STAGE_GAP) }}>
             {row.map((option, c) => (
-              <OptionCard key={c} option={option} index={r * 2 + c} revealed={revealed} romOn={romOn} />
+              <OptionCard key={c} option={option} index={r * 2 + c} revealed={revealed} romOn={romOn} rowHeight={rowHeight} />
             ))}
             {row.length === 1 ? <View style={{ flex: 1 }} /> : null}
           </View>
@@ -74,7 +83,7 @@ function Question({ slide, sayIt, onPlaySound }: { slide: QuizBody; sayIt: boole
   const m = messages.learner.presenter.quiz;
   const promptSize = size(presenter.size.prompt);
   const heading = (text: string): React.ReactElement => (
-    <Text role="heading" testID="presenter-quiz-question" style={{ fontSize: promptSize, fontWeight: typography.weight.bold, color: colors.text.primary, lineHeight: Math.round(promptSize * typography.leading.normal) }}>
+    <Text role="heading" testID="presenter-quiz-question" style={{ fontSize: promptSize, fontWeight: typography.weight.bold, color: colors.text.primary, lineHeight: Math.round(promptSize * typography.leading.tight) }}>
       {text}
     </Text>
   );
@@ -82,12 +91,10 @@ function Question({ slide, sayIt, onPlaySound }: { slide: QuizBody; sayIt: boole
   if (prompt.ask === 'sound') {
     const say = sayIt || slide.textPrompt;
     return (
-      <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: units(unit, spacing.xl) }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: say ? 'wrap' : 'nowrap', gap: units(unit, spacing.xl) }}>
         {say ? null : <SpeakerButton testID="presenter-quiz-speaker" enabled onPress={onPlaySound} />}
-        <View style={{ flexShrink: 1, gap: units(unit, spacing.sm) }}>
-          {heading(m.sound)}
-          {say ? <SayIt spoken={prompt.spoken} /> : null}
-        </View>
+        <View style={{ flexShrink: 1 }}>{heading(m.sound)}</View>
+        {say ? <SayIt spoken={prompt.spoken} /> : null}
       </View>
     );
   }
@@ -124,7 +131,7 @@ function Question({ slide, sayIt, onPlaySound }: { slide: QuizBody; sayIt: boole
 }
 
 /** One option card: marker, content (a letter at `presenter.size.display` with its romanization, or a gloss) and, at the reveal, the check mark. */
-function OptionCard({ option, index, revealed, romOn }: { option: QuizOption; index: number; revealed: boolean; romOn: boolean }): React.ReactElement {
+function OptionCard({ option, index, revealed, romOn, rowHeight }: { option: QuizOption; index: number; revealed: boolean; romOn: boolean; rowHeight: number }): React.ReactElement {
   const { unit, messages } = usePresenterView();
   const size = useStageText();
   const correct = revealed && option.correct;
@@ -134,6 +141,8 @@ function OptionCard({ option, index, revealed, romOn }: { option: QuizOption; in
   const marker = markerFor(index, presenter.marker.shapes);
   const promptSize = size(presenter.size.prompt);
   const hasKo = option.ko !== undefined;
+  const padV = units(unit, spacing.md);
+  const glyph = Math.max(size(presenter.size.body), Math.min(size(presenter.size.display), Math.floor(rowHeight - 2 * (padV + line))));
   return (
     <View
       role="listitem"
@@ -145,7 +154,7 @@ function OptionCard({ option, index, revealed, romOn }: { option: QuizOption; in
         alignItems: 'center',
         gap: units(unit, STAGE_GAP_INNER),
         // The thicker border keeps the outer size: the padding gives back what the border takes.
-        paddingVertical: units(unit, spacing.md) + line - border,
+        paddingVertical: padV + line - border,
         paddingHorizontal: units(unit, spacing.xl) + line - border,
         borderWidth: border,
         borderColor: correct ? colors.feedback.success : colors.border.strong,
@@ -156,11 +165,15 @@ function OptionCard({ option, index, revealed, romOn }: { option: QuizOption; in
     >
       <ShapeMarker shape={marker.shape} n={marker.n} />
       <View style={{ flex: 1, minWidth: 0, flexDirection: 'row', alignItems: 'baseline', flexWrap: 'wrap', gap: units(unit, spacing.lg) }}>
-        {hasKo ? <TaughtKo size={size(presenter.size.display)}>{option.ko!}</TaughtKo> : null}
+        {hasKo ? (
+          <TaughtKo size={glyph} style={{ lineHeight: glyph }}>
+            {option.ko!}
+          </TaughtKo>
+        ) : null}
         {hasKo && option.romanization !== undefined ? (
           <Text
             style={{
-              fontSize: promptSize,
+              fontSize: size(presenter.size.body),
               fontWeight: typography.weight.semibold,
               // A dimmed or revealed option sets every line in text.primary (presenter.v1.md).
               color: revealed ? colors.text.primary : colors.text.secondary,
@@ -183,7 +196,11 @@ function OptionCard({ option, index, revealed, romOn }: { option: QuizOption; in
   );
 }
 
-/** "Hoya's answer" with a cheering Hoya; it joins the question row at the reveal, keeping its space before. */
+/**
+ * "Hoya's answer" under a small cheering Hoya; it joins the question row at the reveal, keeping its
+ * space before. Stacked, it fits beside the question on one row at 1280 x 720, so the options keep
+ * the height their 140-unit letters need.
+ */
 function AnswerLine({ shown }: { shown: boolean }): React.ReactElement {
   const { unit, messages } = usePresenterView();
   const size = useStageText();
@@ -192,10 +209,10 @@ function AnswerLine({ shown }: { shown: boolean }): React.ReactElement {
       testID="presenter-quiz-answer"
       accessibilityElementsHidden={!shown}
       aria-hidden={!shown}
-      style={{ flexDirection: 'row', alignItems: 'center', gap: units(unit, spacing.md), flexShrink: 0, opacity: shown ? 1 : 0 }}
+      style={{ alignItems: 'center', flexShrink: 0, opacity: shown ? 1 : 0 }}
     >
       <Hoya pose="cheering" size={units(unit, QUIZ_ANSWER_HOYA)} accessibilityLabel={messages.a11y.hoya('cheering')} />
-      <Text style={{ fontSize: size(presenter.size.body), fontWeight: typography.weight.bold, color: colors.text.primary }}>{messages.learner.presenter.quiz.answer}</Text>
+      <Text style={{ fontSize: size(presenter.size.caption), fontWeight: typography.weight.bold, color: colors.text.primary }}>{messages.learner.presenter.quiz.answer}</Text>
     </View>
   );
 }

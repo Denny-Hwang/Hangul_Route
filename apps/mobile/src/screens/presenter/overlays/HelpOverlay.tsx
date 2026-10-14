@@ -47,7 +47,8 @@ export function HelpOverlay({
       }}
     >
       {c.kind === 'arrow' ? (
-        <View style={{ transform: [{ rotate: c.dir === 'up' ? '90deg' : c.dir === 'down' ? '-90deg' : '0deg' }] }}>
+        // arrow-right turned a quarter clockwise points down; arrow-left turned the same way points up.
+        <View style={{ transform: [{ rotate: c.dir === 'up' || c.dir === 'down' ? '90deg' : '0deg' }] }}>
           <Icon name={c.dir === 'right' || c.dir === 'down' ? 'arrow-right' : 'arrow-left'} size={typography.size.body} color={colors.text.primary} />
         </View>
       ) : (

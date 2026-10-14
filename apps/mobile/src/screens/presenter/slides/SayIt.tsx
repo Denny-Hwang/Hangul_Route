@@ -25,14 +25,14 @@ export function SayIt({ spoken, ipa }: { spoken: SpokenForm; ipa?: string }): Re
         alignItems: 'baseline',
         flexWrap: 'wrap',
         gap: units(unit, spacing.md),
-        paddingVertical: units(unit, spacing.sm),
+        paddingVertical: units(unit, spacing.xs),
         paddingHorizontal: units(unit, spacing.xl),
         borderRadius: units(unit, STAGE_RADIUS),
         backgroundColor: colors.surface.sunken,
         alignSelf: 'flex-start',
       }}
     >
-      <Text style={{ fontSize: size(presenter.size.body), fontWeight: typography.weight.bold, color: colors.text.primary }}>{messages.learner.presenter.slide.sayIt}</Text>
+      <Text style={{ fontSize: size(presenter.size.caption), fontWeight: typography.weight.semibold, color: colors.text.primary }}>{messages.learner.presenter.slide.sayIt}</Text>
       <View accessibilityLabel={koreanTextLabel(spoken.text, spoken.romanization)} style={{ flexDirection: 'row', alignItems: 'baseline', gap: units(unit, spacing.md) }}>
         <TaughtKo size={promptSize}>{spoken.text}</TaughtKo>
         <Text style={{ fontSize: promptSize, fontWeight: typography.weight.bold, color: colors.text.primary }}>{spoken.romanization}</Text>

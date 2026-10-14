@@ -112,6 +112,7 @@ export function ControlBar(props: ControlBarProps): React.ReactElement {
   const focus = props.onFocusWithin;
   return (
     <View
+      testID="presenter-bar-band"
       onLayout={onLayout}
       style={{
         minHeight: BAR_BAND,
@@ -125,7 +126,7 @@ export function ControlBar(props: ControlBarProps): React.ReactElement {
           an unseen Exit or Back; keys and focus still reach them (focus shows the bar). */}
       <Animated.View pointerEvents={props.hidden ? 'none' : 'auto'} style={{ opacity, flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'flex-end', gap: spacing.sm }}>
       {props.chips.length > 0 ? (
-        <View testID="presenter-status" role="status" style={{ flexGrow: 1, flexBasis: STATUS_MIN, flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
+        <View testID="presenter-status" role="status" style={{ flexGrow: 1, flexShrink: 0, flexBasis: STATUS_MIN, minWidth: STATUS_MIN, maxWidth: '100%', flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
           {props.chips.map((chip) => (
             <Chip key={chip} chip={chip} onTurnSoundOn={props.onTurnSoundOn} onFocusWithin={focus} />
           ))}
@@ -173,6 +174,8 @@ function Chip({ chip, onTurnSoundOn, onFocusWithin }: { chip: StatusChip; onTurn
     <View
       testID={`presenter-chip-${chip}`}
       style={{
+        flexShrink: 1,
+        maxWidth: '100%',
         minHeight: touchTarget.min,
         flexDirection: 'row',
         alignItems: 'center',

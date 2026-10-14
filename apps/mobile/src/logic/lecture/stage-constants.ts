@@ -48,8 +48,12 @@ export type MarkerShape = keyof typeof MARKER_GEOMETRY;
 export const RING_STAGE = 420;
 /** The corner timer ring is a control: 10 x `spacing.lg` px (`--ring-corner`, 160). */
 export const RING_CORNER_FACTOR = 10;
-/** The small cheering Hoya beside "Hoya's answer" at a quiz reveal, in units (`touchTarget.hero`, slide-quiz.md). */
-export const QUIZ_ANSWER_HOYA = 96;
+/**
+ * The small cheering Hoya over "Hoya's answer" at a quiz reveal, in units. The mock's 96 beside the
+ * line pushed the question to a second row at 1280 x 720 and the 140-unit option letters out of
+ * their cards; stacked at 64 the question row stays one speaker high (slide-quiz.md).
+ */
+export const QUIZ_ANSWER_HOYA = 64;
 /** The picker's label box: at least 480 x 140 units, so a 20-character label fits on one line. */
 export const PICKER_BOX_WIDTH = 480;
 export const PICKER_BOX_HEIGHT = 140;
