@@ -5,6 +5,7 @@ import type { KoLine, SlideKind } from './build-steps';
 import { blockKeyOf, type ExpandedDeck, type Slide, type SkipReason } from './deck-builder';
 import type { PresenterState } from './controls';
 import type { RecentList } from './recent';
+import { SWIPE_MIN, SWIPE_RATIO, TAP_BACK_FRACTION } from './stage-constants';
 
 /**
  * The presenter shell's pure decisions (F-TCH-004 sections 3.2, 3.3, 3.5, 3.14): what the boot
@@ -123,6 +124,21 @@ export function endLetters(letters: readonly KoLine[]): KoLine[] {
  */
 export function fitShown(shown: number, rowsUsed: number, maxRows: number): number {
   return rowsUsed > maxRows && shown > 0 ? shown - 1 : shown;
+}
+
+// --- touch and mouse on the stage ------------------------------------------------------------------
+
+/**
+ * A pointer that went down and up on the stage (section 3.5): a horizontal swipe of at least
+ * `SWIPE_MIN` with |dx| >= `SWIPE_RATIO` |dy| goes forward (to the left) or back; otherwise it is a
+ * tap: the left third goes back, the rest forward. Anything else (a vertical drag) does nothing.
+ */
+export function gestureCommand(g: { x: number; width: number; dx: number; dy: number }): 'next' | 'prev' | null {
+  const ax = Math.abs(g.dx);
+  const ay = Math.abs(g.dy);
+  if (ax >= SWIPE_MIN && ax >= SWIPE_RATIO * ay) return g.dx < 0 ? 'next' : 'prev';
+  if (ax >= SWIPE_MIN || ay >= SWIPE_MIN || !(g.width > 0)) return null;
+  return g.x < g.width * TAP_BACK_FRACTION ? 'prev' : 'next';
 }
 
 // --- accessibility -------------------------------------------------------------------------------

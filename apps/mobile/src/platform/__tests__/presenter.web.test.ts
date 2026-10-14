@@ -18,6 +18,7 @@ import {
   presenterConsoleOrigins,
   releaseScreenAwake,
   setPresenterDocTitle,
+  subscribeActivity,
   subscribeFullscreen,
   subscribeKeys,
   takeDeckFragment,
@@ -88,6 +89,7 @@ describe('route', () => {
     native.setPresenterDocTitle('x');
     native.listenForRoster(deck(null))();
     native.subscribeKeys(() => undefined)();
+    native.subscribeActivity(() => undefined)();
     native.subscribeFullscreen(() => undefined)();
     await native.enterFullscreen();
     await native.exitFullscreen();
@@ -343,6 +345,20 @@ describe('subscribeKeys', () => {
 
   it('no document: a no-op', () => {
     expect(() => subscribeKeys(vi.fn(), env())()).not.toThrow();
+  });
+});
+
+describe('subscribeActivity', () => {
+  it('reports pointer, touch, key and wheel activity until unsubscribed', () => {
+    const win = fakeTarget();
+    const handler = vi.fn();
+    const stop = subscribeActivity(handler, env({ window: win }));
+    for (const type of ['pointermove', 'pointerdown', 'touchstart', 'keydown', 'wheel']) win.fire(type, {});
+    expect(handler).toHaveBeenCalledTimes(5);
+    stop();
+    win.fire('pointermove', {});
+    expect(handler).toHaveBeenCalledTimes(5);
+    expect(() => subscribeActivity(handler, env())()).not.toThrow();
   });
 });
 

@@ -12,6 +12,7 @@ import {
   completePayload,
   endLetters,
   fitShown,
+  gestureCommand,
   resolveBoot,
   runDeck,
   slideDetail,
@@ -235,5 +236,24 @@ describe('stage box (README D1)', () => {
     expect(stageButtonSize(0.6)).toBe(touchTarget.hero);
     expect(stageButtonSize(1.5)).toBe(144);
     expect(units(1.5, 360)).toBe(540);
+  });
+});
+
+describe('gestureCommand (section 3.5)', () => {
+  it('a tap on the left third goes back, elsewhere forward', () => {
+    expect(gestureCommand({ x: 100, width: 1200, dx: 0, dy: 0 })).toBe('prev');
+    expect(gestureCommand({ x: 400, width: 1200, dx: 2, dy: 3 })).toBe('next');
+    expect(gestureCommand({ x: 1100, width: 1200, dx: 0, dy: 0 })).toBe('next');
+  });
+
+  it('a horizontal swipe of 60 px or more: left forward, right back', () => {
+    expect(gestureCommand({ x: 600, width: 1200, dx: -60, dy: 10 })).toBe('next');
+    expect(gestureCommand({ x: 100, width: 1200, dx: 80, dy: -20 })).toBe('prev');
+  });
+
+  it('a vertical or diagonal drag, or a stage with no width, does nothing', () => {
+    expect(gestureCommand({ x: 600, width: 1200, dx: 60, dy: 50 })).toBeNull();
+    expect(gestureCommand({ x: 600, width: 1200, dx: 0, dy: 90 })).toBeNull();
+    expect(gestureCommand({ x: 600, width: 0, dx: 0, dy: 0 })).toBeNull();
   });
 });

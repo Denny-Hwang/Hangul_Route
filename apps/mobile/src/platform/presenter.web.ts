@@ -268,6 +268,21 @@ export function subscribeKeys(handler: (command: KeyCommand) => void, env: Prese
   return () => target.removeEventListener('keydown', onKey as Listener);
 }
 
+/**
+ * Pointer, touch and key activity anywhere on the page: the control bar comes back on any of them
+ * and hides `presenter.autoHideMs` after the last (section 3.5).
+ */
+export function subscribeActivity(handler: () => void, env: PresenterEnv = browserEnv()): () => void {
+  const target = env.window;
+  if (!target) return () => undefined;
+  const onActivity = (): void => handler();
+  const types = ['pointermove', 'pointerdown', 'touchstart', 'keydown', 'wheel'];
+  for (const type of types) target.addEventListener(type, onActivity);
+  return () => {
+    for (const type of types) target.removeEventListener(type, onActivity);
+  };
+}
+
 // --- fullscreen -------------------------------------------------------------------------------
 
 export function fullscreenSupported(env: PresenterEnv = browserEnv()): boolean {
