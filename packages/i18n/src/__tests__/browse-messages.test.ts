@@ -45,6 +45,7 @@ const BR7_KEYS = [
   'home.cardSlotA11y',
   'home.wordCount',
   'home.wordsRowA11y',
+  'home.wordsRowClosedA11y',
   'home.storyTileA11y',
   'keep.label',
   'keep.failed',
@@ -200,6 +201,9 @@ describe('caregiver.browse (BR-7)', () => {
     expect(browse.keep.label).toBe('Keep lessons on this device for 7 days, also offline');
     expect(browse.home.wordCount(12)).toBe('· 12 words');
     expect(browse.home.wordsRowA11y('Food', 12)).toBe('Food, 12 words. Opens the topic.');
+    // A closed Words row (switch on, sampler pass) says so, with the learner's own words (section 4.2).
+    expect(browse.home.wordsRowClosedA11y('Food', 12)).toBe('Food, 12 words. Not open yet. Opens the topic.');
+    expect(browse.home.wordsRowClosedA11y('Food', 1)).toBe('Food, 1 word. Not open yet. Opens the topic.');
     expect(browse.home.storyTileA11y('The Moon Rabbit', 4)).toBe('The Moon Rabbit. About 4 minutes.');
     expect(browse.home.storyTileA11y('The Moon Rabbit', 1)).toBe('The Moon Rabbit. About 1 minute.');
     expect(browse.keep.failed).toBe('Lessons could not be kept on this device.');

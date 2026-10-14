@@ -19,7 +19,7 @@ import { shot } from './shots';
  *   E2E_BROWSE_ACCOUNT=1 pnpm --filter @hangul-route/mobile exec playwright test browse-account
  *
  * (`NEXT_PUBLIC_APP_URL` is the origin the test serves; the Lessons item renders only there.) The item page case
- * needs BR-7 (the item page, #495) in the learner build and runs only with E2E_BROWSE_ITEM=1 until then.
+ * opens the BR-7 item page (#495) of the learner build.
  */
 test.use({ serviceWorkers: 'block' });
 
@@ -154,8 +154,6 @@ test.describe('the account hand-off (BR-10)', () => {
   });
 
   test('a report-style link opens the item page of its lesson', async ({ page, context }) => {
-    // TODO(F-BROWSE-001 BR-7, #495): the item page ships with BR-7; drop this guard once #495 merges.
-    test.skip(process.env.E2E_BROWSE_ITEM !== '1', 'needs the BR-7 item page (#495) in the learner build; set E2E_BROWSE_ITEM=1 once it is there');
     const mocks = await mockApi(context, 'full');
     await signedInFamilyHome(page);
     await page.getByTestId('nav-lessons').click();

@@ -751,6 +751,7 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'caregiver.browse.home.cardSlotA11y': [['Common', 'Book', 'x', 'chaek']],
   'caregiver.browse.home.wordCount': [[1], [12]],
   'caregiver.browse.home.wordsRowA11y': [['Food', 1], ['Food', 12]],
+  'caregiver.browse.home.wordsRowClosedA11y': [['Food', 1], ['Food', 12]],
   'caregiver.browse.episode.stagePill': [[1, 'Hangul']],
   'caregiver.browse.episode.openA11y': [['Meet a, eo, g, n']],
   'caregiver.browse.episode.storyMeta': [[1, 1], [2, 8]],

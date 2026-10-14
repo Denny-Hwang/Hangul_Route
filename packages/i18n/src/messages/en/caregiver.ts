@@ -776,6 +776,9 @@ export const caregiver = {
       /** One Words row: "· 12 words" beside the topic title. */
       wordCount: (n: number) => plural('en', n, { one: `· ${n} word`, other: `· ${n} words` }),
       wordsRowA11y: (topic: string, n: number) => plural('en', n, { one: `${topic}, ${n} word. Opens the topic.`, other: `${topic}, ${n} words. Opens the topic.` }),
+      /** A closed Words row (switch on, sampler pass, section 4.2): the row label with the learner's "Not open yet" word. */
+      wordsRowClosedA11y: (topic: string, n: number) =>
+        plural('en', n, { one: `${topic}, ${n} word. Not open yet. Opens the topic.`, other: `${topic}, ${n} words. Not open yet. Opens the topic.` }),
       /** A Story Time or Culture tile's one label: the title and its length, with no learner state (section 4.5). */
       storyTileA11y: (title: string, minutes: number) =>
         `${title}. ${plural('en', minutes, { one: `About ${minutes} minute`, other: `About ${minutes} minutes` })}.`,
