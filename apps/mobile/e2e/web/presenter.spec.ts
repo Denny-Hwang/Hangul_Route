@@ -1,5 +1,6 @@
 import type { Page } from '@playwright/test';
 import { encodeDeck, type LectureDeckInput } from '@hangul-route/content-schema';
+import { colors } from '@hangul-route/design-system/tokens';
 import { expect, test } from './fixtures';
 import { shot } from './shots';
 
@@ -351,6 +352,49 @@ async function expectDrawn(page: Page, testId: string, drawn: boolean): Promise<
   await expect(page.getByTestId(testId).locator('xpath=..')).toHaveCSS('opacity', drawn ? '1' : '0');
 }
 
+/**
+ * Starts recording whether the leaving syllable parts (the join's slide-together and fade layer)
+ * are ever drawn; `leftSeen` reads the record. A MutationObserver sees a frame that lasts a
+ * fraction of `motion.duration.base`, which a polling assertion could miss.
+ */
+async function watchLeaving(page: Page): Promise<void> {
+  await page.evaluate(() => {
+    const w = window as unknown as { __leaving?: boolean; __leavingObs?: MutationObserver };
+    w.__leaving = false;
+    w.__leavingObs?.disconnect();
+    const check = () => {
+      if (document.querySelector('[data-testid="presenter-syllable-parts-leaving"]')) w.__leaving = true;
+    };
+    w.__leavingObs = new MutationObserver(check);
+    w.__leavingObs.observe(document.body, { subtree: true, childList: true, attributes: true });
+  });
+}
+
+function leftSeen(page: Page): Promise<boolean> {
+  return page.evaluate(() => (window as unknown as { __leaving?: boolean }).__leaving === true);
+}
+
+/** `#rrggbb` as the computed `rgb(r, g, b)` string. */
+function rgb(hex: string): string {
+  const n = Number.parseInt(hex.slice(1), 16);
+  return `rgb(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255})`;
+}
+
+/** Every element of the open slide stays inside the stage box. */
+async function expectInsideStage(page: Page): Promise<void> {
+  const stage = (await page.getByTestId('presenter-stage').boundingBox())!;
+  const outside = await page.getByTestId('presenter-stage').evaluate((root, box) => {
+    const out: string[] = [];
+    for (const el of Array.from(root.querySelectorAll('*'))) {
+      const r = el.getBoundingClientRect();
+      if (r.width === 0 || r.height === 0) continue;
+      if (r.left < box.x - 1 || r.top < box.y - 1 || r.right > box.x + box.width + 1 || r.bottom > box.y + box.height + 1) out.push(`${el.tagName} ${el.getAttribute('data-testid') ?? ''} ${(el.textContent ?? '').slice(0, 30)}`);
+    }
+    return out;
+  }, stage);
+  expect(outside).toEqual([]);
+}
+
 test.describe('PR 7 teaching slides at 1280 x 720', () => {
   test.use({ viewport: { width: 1280, height: 720 }, isMobile: false, hasTouch: false });
 
@@ -369,9 +413,13 @@ test.describe('PR 7 teaching slides at 1280 x 720', () => {
     await expect(page.getByTestId('presenter-syllable-parts')).toBeVisible();
     await expect(page.getByTestId('presenter-syllable')).toHaveCount(0);
     await shot(page, 'presenter-syllable-build0-1280x720');
+    await watchLeaving(page);
     await page.keyboard.press('PageDown');
     await expect(page.getByTestId('presenter-syllable')).toBeVisible();
     await expect(page.getByTestId('presenter-syllable-parts')).toHaveCount(0);
+    // With motion the parts slide together and fade over the block, then leave.
+    await expect.poll(() => leftSeen(page)).toBe(true);
+    await expect(page.getByTestId('presenter-syllable-parts-leaving')).toHaveCount(0);
     await expectDrawn(page, 'presenter-syllable-rom', false);
     await page.keyboard.press('PageDown');
     await expectDrawn(page, 'presenter-syllable-rom', true);
@@ -435,6 +483,8 @@ test.describe('PR 7 teaching slides at 1280 x 720', () => {
     await expect(page.getByText('3 minutes')).toBeVisible();
     await expect(page.getByTestId('presenter-start-timer')).toHaveAccessibleName('Start timer');
     await expect(page.getByTestId('presenter-start-timer')).toBeDisabled();
+    // Disabled, it is outlined on paper, never the filled primary action.
+    await expect(page.getByTestId('presenter-start-timer')).toHaveCSS('background-color', rgb(colors.surface.paper));
     await expect(page.getByTestId('presenter-next')).toHaveAccessibleName('Next');
     await shot(page, 'presenter-activity-1280x720');
 
@@ -443,10 +493,18 @@ test.describe('PR 7 teaching slides at 1280 x 720', () => {
     expect(errors).toEqual([]);
   });
 
-  test('with Shift+R the word and the order slide give romanization its own build', async ({ page }) => {
+  test('with Shift+R the card, the word and the order slide give romanization its own build', async ({ page }) => {
     await page.goto(link(TEACHING_DECK));
     await startLesson(page);
     await page.keyboard.press('Shift+KeyR');
+    await forwardTo(page, 'Card');
+    await expectDrawn(page, 'presenter-card-chip-rom', false);
+    await expectDrawn(page, 'presenter-card-fact', false);
+    await page.keyboard.press('PageDown');
+    await expectDrawn(page, 'presenter-card-chip-rom', true);
+    await expectDrawn(page, 'presenter-card-fact', false);
+    await page.keyboard.press('PageDown');
+    await expectDrawn(page, 'presenter-card-fact', true);
     await forwardTo(page, 'Word');
     await expectDrawn(page, 'presenter-word-rom', false);
     await page.keyboard.press('PageDown');
@@ -488,9 +546,12 @@ test.describe('presenter at 1920 x 1080 with reduced motion', () => {
     await page.goto(link(TEACHING_DECK));
     await startLesson(page);
     await forwardTo(page, 'Syllable');
+    await watchLeaving(page);
     await page.keyboard.press('PageDown');
-    // Reduced motion: the parts are gone with no slide-together frame.
+    // Reduced motion: an instant swap; the parts never draw over the block.
+    await expect(page.getByTestId('presenter-syllable')).toBeVisible();
     await expect(page.getByTestId('presenter-syllable-parts')).toHaveCount(0);
+    expect(await leftSeen(page)).toBe(false);
     await revealAll(page);
     await shot(page, 'presenter-syllable-1920x1080');
     await forwardTo(page, 'Card');
@@ -528,6 +589,23 @@ test.describe('presenter on a 4:3 projector, 1024 x 768', () => {
     await page.keyboard.press('ArrowRight');
     await revealAll(page);
     await shot(page, 'presenter-letter-1024x768');
+  });
+
+  test('every PR 7 teaching slide, fully revealed, stays inside the stage', async ({ page }) => {
+    await page.goto(link(TEACHING_DECK));
+    await startLesson(page);
+    for (const kind of ['Syllable', 'Card', 'Word', 'Order']) {
+      await forwardTo(page, kind);
+      await revealAll(page);
+      // Let the syllable join finish before measuring.
+      await expect(page.getByTestId('presenter-syllable-parts-leaving')).toHaveCount(0);
+      await expectInsideStage(page);
+    }
+    // The order question is the order slide's last build; the next slide follows.
+    await page.keyboard.press('PageDown');
+    await forwardTo(page, 'Activity');
+    await expectInsideStage(page);
+    await shot(page, 'presenter-activity-1024x768');
   });
 });
 
