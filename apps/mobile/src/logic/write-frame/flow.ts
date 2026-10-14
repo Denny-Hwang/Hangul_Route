@@ -64,6 +64,8 @@ export interface WriteFrameState {
   atLongest: boolean;
   /** The sentences finished in this step, in order: My page. */
   written: readonly WrittenFrame[];
+  /** The keys a name round opens on, wherever it sits in the step: the grown-up preview's cast name, else none. */
+  nameKeys: readonly string[];
   /** The step is over (completed or skipped). */
   done: boolean;
 }
@@ -107,14 +109,14 @@ export function blockCount(text: string): number {
 
 const isFree = (s: WriteFrameState): boolean => s.frames[s.roundIdx]?.freeEntry === true;
 
-function freshFrame(s: WriteFrameState, roundIdx: number, nameKeys: readonly string[]): WriteFrameState {
+function freshFrame(s: WriteFrameState, roundIdx: number): WriteFrameState {
   const frame = s.frames[roundIdx];
   return {
     ...s,
     roundIdx,
     slotIdx: 0,
     picks: (frame?.banks ?? []).map(() => null),
-    keys: frame?.freeEntry ? nameKeys : [],
+    keys: frame?.freeEntry ? s.nameKeys : [],
     phase: frame?.freeEntry ? 'typing' : 'pick',
     score: null,
     answered: false,
@@ -147,9 +149,10 @@ export function startFlow(frames: readonly FrameInput[], nameKeys: readonly stri
     lastEdit: null,
     atLongest: false,
     written: [],
+    nameKeys,
     done: frames.length === 0,
   };
-  return freshFrame(base, 0, nameKeys);
+  return freshFrame(base, 0);
 }
 
 /** The Korean picked for each slot of the current frame (null where not picked yet). */
@@ -261,7 +264,7 @@ export function stepFlow(s: WriteFrameState, e: WriteFrameEvent): WriteFrameStep
       if (s.phase === 'pass') return slotDone(s, [], true);
       if (s.phase !== 'sentence') return unchanged(s);
       if (s.roundIdx >= s.total - 1) return unchanged({ ...s, phase: 'myPage', keys: [] });
-      return unchanged(freshFrame(s, s.roundIdx + 1, []));
+      return unchanged(freshFrame(s, s.roundIdx + 1));
     case 'continue':
       if (s.phase !== 'myPage') return unchanged(s);
       return { state: { ...s, done: true }, effects: [{ type: 'complete' }] };

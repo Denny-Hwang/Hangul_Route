@@ -22,7 +22,7 @@ import type { RootStackParamList } from './types';
 export interface WriteFrameE2eParams {
   /** Which fixture rounds to play, in order. */
   rounds: readonly WriteFrameFixture[];
-  /** `preview` opens the name round on the cast name, as the grown-up preview does. */
+  /** `preview` plays as the All lessons preview does: the quest host, with the name round opening on the cast name. */
   mode?: Extract<HostMode, 'quest' | 'preview'>;
 }
 
@@ -73,7 +73,7 @@ export function WriteFrameE2eScreen({ route, navigation }: Props): React.ReactEl
   }, [route.params]);
 
   const host: MinigameHost = {
-    mode: route.params.mode ?? 'quest',
+    mode: 'quest',
     answer: (key, correct, meta) => {
       log.answers.push({ key: String(key), correct, ...(meta?.itemId === undefined ? {} : { itemId: meta.itemId }) });
     },
@@ -85,5 +85,5 @@ export function WriteFrameE2eScreen({ route, navigation }: Props): React.ReactEl
     },
   };
 
-  return <WriteFrameGame key={route.key} scope={scope} host={host} onBack={() => navigation.goBack()} />;
+  return <WriteFrameGame key={route.key} scope={scope} host={host} onBack={() => navigation.goBack()} inPreview={route.params.mode === 'preview'} />;
 }

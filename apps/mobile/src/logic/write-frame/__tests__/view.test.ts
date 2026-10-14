@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { fillGloss, fittedEnding, frameParts, frameReading, sentenceKo, sentenceRomanization } from '../view';
+import { fillGloss, fittedEnding, frameParts, frameReading, nameGloss, sentenceKo, sentenceRomanization } from '../view';
 
 const words = { blank: 'blank', either: (a: string, b: string) => `${a} or ${b}` };
 
@@ -50,6 +50,12 @@ describe('the finished sentence', () => {
     expect(sentenceRomanization('아침에 ___을/를 먹어요.', ['빵'])).toBe('achime ppangeul meogeoyo');
     expect(fillGloss('At ___ I ate ___.', ['Seollal', 'rice cakes'])).toBe('At Seollal I ate rice cakes.');
     expect(fillGloss('I like ___.', [])).toBe('I like ___.');
+  });
+
+  it('a name in the gloss is its romanization as a proper noun', () => {
+    expect(nameGloss('호야')).toBe('Hoya');
+    expect(nameGloss(' 김 호야 ')).toBe('Gim Hoya');
+    expect(fillGloss('My name is ___.', [nameGloss('호야')])).toBe('My name is Hoya.');
   });
 });
 

@@ -226,18 +226,23 @@ describe('Write Frame: the name round (Write Your Name q3)', () => {
     await tap(r, 'write-frame-tile-호');
     await tap(r, 'write-frame-tile-야');
     expect(texts(r)).toContain('예요');
+    // A final on the last block: the ending follows it on the frame line (the cast name is kept for the finish).
     await tap(r, 'write-frame-tile-ㄴ');
     expect(texts(r)).toContain('이에요');
+    await tap(r, 'write-frame-tile-delete');
+    expect(texts(r)).toContain('예요');
+    expect(byTestId(root(r), 'write-frame-card')[0]?.props['aria-label']).toContain('My name is Hoya.');
     await tap(r, 'write-frame-tab-keyboard');
-    await typeWord(r, 'ㄴ');
+    await typeWord(r, 'ㅗ');
     expect(texts(r)).toContain('Finish the last block.');
     expect(texts(r)).toContain('이에요/예요');
+    expect(byTestId(root(r), 'write-frame-card')[0]?.props['aria-label']).toContain('My name is blank.');
     await tap(r, 'hangul-key-delete');
     await tap(r, 'write-frame-done');
-    expect(texts(r, 'write-frame-sentence')).toEqual(expect.arrayContaining(['제 이름은 호얀이에요.', 'My name is hoyan.']));
+    expect(texts(r, 'write-frame-sentence')).toEqual(expect.arrayContaining(['제 이름은 호야예요.', 'My name is Hoya.']));
     expect(h.answers).toEqual([]);
     await advance(SENTENCE_PAUSE_MS);
-    expect(texts(r, 'write-frame-my-page')).toContain('제 이름은 호얀이에요.');
+    expect(texts(r, 'write-frame-my-page')).toEqual(expect.arrayContaining(['제 이름은 호야예요.', 'My name is Hoya.']));
   });
 
   it('says when the name is at its longest', async () => {

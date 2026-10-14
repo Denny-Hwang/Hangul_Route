@@ -13,6 +13,7 @@ import {
   composeTyped,
   endsWithFinal,
   fillFrame,
+  isOneKeyFinal,
   keysFor,
   slotEndingIssues,
 } from '../index';
@@ -74,6 +75,11 @@ describe('composeTyped (two-set keyboard, F-CURR-001 §3.7)', () => {
     expect(composeTyped([...keys('ㄱㅏㄱㅏ'), BACKSPACE])).toBe('각');
     expect(composeTyped([...keys('ㄱㅏ'), BACKSPACE, BACKSPACE, BACKSPACE])).toBe('');
     expect(composeTyped([...keys('ㄱㅏ'), BACKSPACE, 'ㅗ'])).toBe('고');
+  });
+
+  it('isOneKeyFinal: a single closing letter, never a double final, a vowel or nothing', () => {
+    expect(['ㄴ', 'ㅇ', 'ㄲ', 'ㅆ'].every(isOneKeyFinal)).toBe(true);
+    expect(['ㄳ', 'ㄺ', 'ㅄ', 'ㄸ', 'ㅏ', ''].some(isOneKeyFinal)).toBe(false);
   });
 
   it('keysFor splits joined vowels and double finals into their keys', () => {

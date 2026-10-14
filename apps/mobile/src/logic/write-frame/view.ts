@@ -54,6 +54,14 @@ export function fillGloss(gloss: string, fills: readonly string[]): string {
   return gloss.replace(/_{3}/g, (blank) => fills[i++] ?? blank);
 }
 
+/** A name in an English gloss: its romanization from the converter, each part capitalised as a proper noun ("My name is Hoya."). */
+export function nameGloss(name: string): string {
+  return romanize(name.trim())
+    .text.split(' ')
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ');
+}
+
 export interface FrameReadingWords {
   /** Said for an empty slot ("blank"). */
   blank: string;

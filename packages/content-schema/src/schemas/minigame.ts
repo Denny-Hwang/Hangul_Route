@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { ALLOMORPH_PAIRS, allomorph, slotEndingIssues } from '../hangul/allomorph';
-import { FINAL_JAMO } from '../romanization/hangul';
+import { isOneKeyFinal } from '../hangul/compose-typed';
 import { KoTextSchema, PictureRefSchema } from './ko-text';
 
 /**
@@ -397,8 +397,21 @@ export const SoundTableSchema = z.object({
     .min(1)
     .max(6),
   finals: z
-    .array(SoundTileSchema.refine((t) => FINAL_JAMO.includes(t.ko), { message: 'a final tile is a letter that can close a block', path: ['ko'] }))
+    .array(
+      // One keyboard letter that can close a block: the tile sends that one key, so a double final (ㄳ, ㄺ) is two tiles' worth.
+      SoundTileSchema.refine((t) => isOneKeyFinal(t.ko), {
+        message: 'a final tile is one keyboard letter that can close a block',
+        path: ['ko'],
+      }),
+    )
     .max(8),
+}).superRefine((table, ctx) => {
+  // Every tile once: a tile is named (and found) by its Korean.
+  const seen = new Set<string>();
+  [...table.groups.flat(), ...table.finals].forEach((t) => {
+    if (seen.has(t.ko)) ctx.addIssue({ code: z.ZodIssueCode.custom, message: `the sound table lists ${t.ko} twice` });
+    seen.add(t.ko);
+  });
 });
 export type SoundTable = z.infer<typeof SoundTableSchema>;
 

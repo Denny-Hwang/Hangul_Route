@@ -43,7 +43,7 @@ import {
   type WriteFrameEvent,
   type WriteFrameState,
 } from '../../logic/write-frame/flow';
-import { fillGloss, fittedEnding, frameParts, frameReading, sentenceKo, sentenceRomanization, type FramePart } from '../../logic/write-frame/view';
+import { fillGloss, fittedEnding, frameParts, frameReading, nameGloss, sentenceKo, sentenceRomanization, type FramePart } from '../../logic/write-frame/view';
 import { nudge, success } from '../../platform/haptics';
 import { announceForScreenReader, focusForScreenReader } from '../../platform/screen-reader';
 import type { MinigameHost } from './host';
@@ -72,6 +72,11 @@ interface Props {
   host: MinigameHost;
   /** Leave an empty scope (never a dead end). */
   onBack?: () => void;
+  /**
+   * The grown-up preview (All lessons, F-BROWSE-001) plays in the quest's own host mode; it sets this
+   * so the name round opens on the cast name and a grown-up never needs to type a real name there.
+   */
+  inPreview?: boolean;
 }
 
 /** The grown-up preview's name (F-BROWSE-001): the cast name, never a learner's entry. */
@@ -86,7 +91,7 @@ function focusNode(node: Focusable | null): void {
   else focusForScreenReader(node);
 }
 
-export function WriteFrameGame({ scope, host, onBack }: Props): React.ReactElement {
+export function WriteFrameGame({ scope, host, onBack, inPreview = false }: Props): React.ReactElement {
   const m = useMessages();
   const copy = m.learner.minigame;
   const w = copy.writeFrame;
@@ -97,7 +102,7 @@ export function WriteFrameGame({ scope, host, onBack }: Props): React.ReactEleme
     () => rounds.map((r) => ({ banks: r.slots.map((s) => s.bank.map((word) => word.ko)), entry: r.entry, freeEntry: r.freeEntry })),
     [rounds],
   );
-  const [state, setState] = useState<WriteFrameState>(() => startFlow(frames, host.mode === 'preview' ? keysFor(PREVIEW_NAME) : []));
+  const [state, setState] = useState<WriteFrameState>(() => startFlow(frames, inPreview || host.mode === 'preview' ? keysFor(PREVIEW_NAME) : []));
   const stateRef = useRef(state);
   const hostRef = useRef(host);
   hostRef.current = host;
@@ -253,7 +258,7 @@ export function WriteFrameGame({ scope, host, onBack }: Props): React.ReactEleme
                 romanization={sentenceRomanization(written.frame.ko, entry.words)}
                 gloss={fillGloss(
                   written.frame.en,
-                  entry.words.map((word, slot) => (written.freeEntry ? romanize(word).text : (written.slots[slot]?.bank.find((b) => b.ko === word)?.en ?? word))),
+                  entry.words.map((word, slot) => (written.freeEntry ? nameGloss(word) : (written.slots[slot]?.bank.find((b) => b.ko === word)?.en ?? word))),
                 )}
               />
             );
@@ -274,7 +279,7 @@ export function WriteFrameGame({ scope, host, onBack }: Props): React.ReactEleme
     const entry = state.written[state.written.length - 1] as { words: readonly string[] };
     const gloss = fillGloss(
       round.frame.en,
-      entry.words.map((word, slot) => (free ? romanize(word).text : glossOf(slot, word))),
+      entry.words.map((word, slot) => (free ? nameGloss(word) : glossOf(slot, word))),
     );
     return (
       <Screen tone="canvas" testID="write-frame-sentence">
@@ -311,12 +316,16 @@ export function WriteFrameGame({ scope, host, onBack }: Props): React.ReactEleme
 
   const cardLabel = frameReading(
     parts,
-    free ? round.frame.en : fillGloss(round.frame.en, words.map((word, slot) => (word === null ? '___' : glossOf(slot, word)))),
+    free
+      ? nameReady(field.text)
+        ? fillGloss(round.frame.en, [nameGloss(field.text)])
+        : round.frame.en
+      : fillGloss(round.frame.en, words.map((word, slot) => (word === null ? '___' : glossOf(slot, word)))),
     { blank: a.blank, either: a.either },
   );
   const frameCard = (
     <FrameCard label={cardLabel} testID="write-frame-card">
-      <FrameLine parts={parts} current={free ? null : state.slotIdx} writing={state.phase !== 'pick'} />
+      <FrameLine parts={parts} current={free || round.slots.length < 2 ? null : state.slotIdx} writing={state.phase !== 'pick'} />
       {romanizationVisible ? (
         <Caption tone="secondary">{free && nameReady(field.text) ? sentenceRomanization(round.frame.ko, [field.text.trim()]) : round.frame.romanization}</Caption>
       ) : null}
@@ -327,7 +336,7 @@ export function WriteFrameGame({ scope, host, onBack }: Props): React.ReactEleme
   // and the keyboard keep their place (wireframe: 64 + 30 + 72 + 393 at 320 x 568).
   const frameLineOnly = (
     <View accessible accessibilityLabel={cardLabel} testID="write-frame-card">
-      <FrameLine parts={parts} current={free ? null : state.slotIdx} writing />
+      <FrameLine parts={parts} current={free || round.slots.length < 2 ? null : state.slotIdx} writing />
     </View>
   );
   const revealButton = romanizationVisible ? null : (
@@ -594,7 +603,7 @@ function FrameCard({ children, label, testID }: { children: React.ReactNode; lab
 
 interface FrameLineProps {
   parts: readonly FramePart[];
-  /** The slot being picked or written (thick border, light fill); null in the name round. */
+  /** The slot being picked or written in a two-slot frame (light fill); null in a one-slot frame and the name round. */
   current: number | null;
   /** After the pick: the current slot's word is a ghost to write over. */
   writing: boolean;

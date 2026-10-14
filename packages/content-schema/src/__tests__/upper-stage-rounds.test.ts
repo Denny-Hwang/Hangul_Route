@@ -310,6 +310,12 @@ describe('WriteFrameRoundSchema', () => {
     expect(ok(WriteFrameRoundSchema, { ...base, soundTable: { ...soundTable, groups: [[{ ko: 'ㅁ', romanization: 'm' }]] } })).toBe(false);
     expect(ok(WriteFrameRoundSchema, { ...base, soundTable: { ...soundTable, finals: [{ ko: 'ㄸ', romanization: 'tt' }] } })).toBe(false);
     expect(ok(WriteFrameRoundSchema, { ...base, soundTable: { ...soundTable, finals: [{ ko: '안', romanization: 'an' }] } })).toBe(false);
+    // A double final is two keys; the tile sends one.
+    expect(ok(WriteFrameRoundSchema, { ...base, soundTable: { ...soundTable, finals: [{ ko: 'ㄳ', romanization: 'k' }] } })).toBe(false);
+    expect(ok(WriteFrameRoundSchema, { ...base, soundTable: { ...soundTable, finals: [{ ko: 'ㄺ', romanization: 'k' }] } })).toBe(false);
+    // Every tile once, across the groups and the finals.
+    const twice = { ...soundTable, groups: [...soundTable.groups, [soundTable.groups[0]![0]!]] };
+    expect(ok(WriteFrameRoundSchema, { ...base, soundTable: twice })).toBe(false);
     expect(ok(WriteFrameRoundSchema, { ...base, soundTable: { groups: [], finals: [] } })).toBe(false);
     // Only the free-entry round has one.
     expect(ok(WriteFrameRoundSchema, { id: 'r', frame, slots: [{ id: 'what', bank }], entry: 'type', soundTable })).toBe(false);

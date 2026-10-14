@@ -169,17 +169,22 @@ test.describe('Write Frame: my own sentence and My page (F-CURR-001 G-5)', () =>
     // The Keyboard tab keeps the field; a lone letter turns Done off and shows the helper line.
     await page.getByTestId('write-frame-tab-keyboard').click();
     await expect(page.getByTestId('write-frame-field')).toContainText('호야');
+    // A final on the last block: the ending follows it on the frame line only (no shot, no finish with that name).
     await key(page, 'ㄴ').click();
-    await expect(page.getByTestId('write-frame-field')).toContainText('호얀');
     await expect(page.getByTestId('write-frame-ending')).toHaveText('이에요');
-    await key(page, 'ㄴ').click();
+    await key(page, 'delete').click();
+    await expect(page.getByTestId('write-frame-ending')).toHaveText('예요');
+    // A lone letter after the cast name: the helper line and both endings.
+    await key(page, 'ㅗ').click();
     await expect(page.getByText('Finish the last block.')).toBeVisible();
+    await expect(page.getByTestId('write-frame-ending')).toHaveText('이에요/예요');
     await expect(page.getByTestId('write-frame-done')).toBeDisabled();
     await shot(page, 'write-frame-320-name-keyboard');
     await key(page, 'delete').click();
-    await key(page, 'delete').click();
+    await expect(page.getByTestId('write-frame-field')).toContainText('호야');
     await page.getByTestId('write-frame-done').click();
     await expect(page.getByText('제 이름은 호야예요.')).toBeVisible();
+    await expect(page.getByText('My name is Hoya.')).toBeVisible();
     await expect(page.getByTestId('write-frame-my-page')).toBeVisible({ timeout: 5_000 });
     await shot(page, 'write-frame-320-name-my-page');
     await page.getByTestId('write-frame-continue').click();
@@ -204,8 +209,11 @@ test.describe('Write Frame: my own sentence and My page (F-CURR-001 G-5)', () =>
 
   test('the grown-up preview opens the name round on the cast name', async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 667 });
-    await open(page, ['name'], 'preview');
-    await expect(page.getByTestId('write-frame-field')).toContainText('호야');
+    await open(page, ['food', 'name'], 'preview');
+    await page.getByTestId('write-frame-word-1').click();
+    await typeText(page, '김밥');
+    await page.getByTestId('write-frame-done').click();
+    await expect(page.getByTestId('write-frame-field')).toContainText('호야', { timeout: 5_000 });
     await expect(page.getByTestId('write-frame-done')).toBeEnabled();
   });
 

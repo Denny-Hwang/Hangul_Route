@@ -141,6 +141,12 @@ describe('a two-slot frame (wireframe Scoring)', () => {
     expect(answers(both('추섞', '떡국').effects)).toEqual([{ type: 'answer', roundIdx: 0, correct: false }]);
     expect(answers(both('추석', '떡굮').effects)).toEqual([{ type: 'answer', roundIdx: 0, correct: false }]);
   });
+
+  it('Change word holds until the first Done of the frame, as the wireframe says: slot 2 keeps its pick once slot 1 is written', () => {
+    const { state: picked } = run(startFlow([two]), [{ type: 'pick', index: 1 }, ...type('추석'), { type: 'done' }, { type: 'advance' }, { type: 'pick', index: 0 }]);
+    expect(picked).toMatchObject({ slotIdx: 1, phase: 'typing', firstDone: true });
+    expect(stepFlow(picked, { type: 'change-word' }).state).toBe(picked);
+  });
 });
 
 describe('a pick-only frame', () => {
@@ -215,5 +221,12 @@ describe('the name round (Write Your Name q3: free entry, unscored)', () => {
     const s0 = startFlow([name], keysFor('호야'));
     expect(stepFlow(s0, { type: 'change-word' }).state).toBe(s0);
     expect(run(s0, [{ type: 'done' }]).state.written).toEqual([{ roundIdx: 0, words: ['호야'] }]);
+  });
+
+  it('the preview opens a later name round on the cast name too; a learner one opens empty', () => {
+    const toName = [{ type: 'pick', index: 0 }, ...type('떡볶이'), { type: 'done' }, { type: 'advance' }] as WriteFrameEvent[];
+    const preview = run(startFlow([food, name], keysFor('호야')), toName).state;
+    expect(preview).toMatchObject({ roundIdx: 1, phase: 'typing', keys: keysFor('호야') });
+    expect(run(startFlow([food, name]), toName).state).toMatchObject({ roundIdx: 1, phase: 'typing', keys: [] });
   });
 });
