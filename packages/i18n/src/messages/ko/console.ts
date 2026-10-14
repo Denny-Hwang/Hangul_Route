@@ -1460,7 +1460,7 @@ export const consoleMsgs = {
     },
     section: {
       title: '선생님의 반 옮기기',
-      incoming: '이 반에 들어오고 싶어요',
+      incoming: '이 반으로 온 요청',
       outgoing: '이 반에서 보낸 요청',
       done: '끝난 일',
       empty: '기다리는 일이 없어요.',

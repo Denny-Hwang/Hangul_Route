@@ -55,7 +55,7 @@ describe('class-update store', () => {
     expect(await useClassUpdateStore.getState().hydrateSeen(L)).toEqual([]);
     await useClassUpdateStore.getState().markSeen(L, 'move:1');
     expect(mem.get('class-moves-seen:profile:a')).toEqual(['move:1']);
-    expect(track).toHaveBeenCalledWith({ name: 'space.move.notice_seen', payload: {} });
+    expect(track).toHaveBeenCalledWith({ name: 'space.move.notice_seen', payload: { seenOn: 'device' } });
     resetClassUpdateForTests();
     expect(await useClassUpdateStore.getState().hydrateSeen(L)).toEqual(['move:1']);
     // the second read in a session answers from memory

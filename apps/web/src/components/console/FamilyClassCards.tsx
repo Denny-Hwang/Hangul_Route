@@ -49,10 +49,15 @@ export function FamilyClassCards({ familyId, api, movesShown }: { familyId: stri
   const [busy, setBusy] = useState<string | null>(null);
   const [failed, setFailed] = useState<string | null>(null);
 
+  // A failure of either read (network, an older API) leaves the cards hidden; the page itself never breaks.
   const load = useCallback(async (): Promise<void> => {
-    const [s, n] = await Promise.all([api.classScope(familyId), movesShown ? api.moveNotices(familyId) : null]);
-    if (s.ok) setScope(s.data);
-    if (n?.ok) setNotices(n.data);
+    try {
+      const [s, n] = await Promise.all([api.classScope(familyId), movesShown ? api.moveNotices(familyId) : null]);
+      if (s.ok) setScope(s.data);
+      if (n?.ok) setNotices(n.data);
+    } catch {
+      // stay hidden
+    }
   }, [api, familyId, movesShown]);
 
   useEffect(() => {
@@ -88,7 +93,11 @@ export function FamilyClassCards({ familyId, api, movesShown }: { familyId: stri
       {notices.map((n) => (
         <section key={n.id} style={card} data-testid="move-notice" aria-label={t.notice(n.learnerName, n.to.name)}>
           <p style={{ ...line, fontWeight: typography.weight.semibold }}>{t.notice(n.learnerName, n.to.name)}</p>
-          {failed === n.id ? <p style={{ ...line, color: colors.text.secondary }}>{t.failed}</p> : null}
+          {failed === n.id ? (
+            <p role="alert" style={{ ...line, color: colors.text.secondary }}>
+              {t.failed}
+            </p>
+          ) : null}
           <div>
             <MoveButton primary waiting={busy === n.id} onClick={() => void seen(n.id)} testId="move-notice-ok">
               {messages.common.buttons.ok}

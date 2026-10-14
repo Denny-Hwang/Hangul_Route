@@ -61,7 +61,7 @@ export const useClassUpdateStore = create<State & Actions>((set, get) => ({
   markSeen: async (learnerId, moveId) => {
     const next = withSeen(get().seenByLearner[learnerId] ?? [], moveId);
     set((s) => ({ seenByLearner: { ...s.seenByLearner, [learnerId]: next } }));
-    void track({ name: 'space.move.notice_seen', payload: {} });
+    void track({ name: 'space.move.notice_seen', payload: { seenOn: 'device' } });
     try {
       await writeJson(classMovesSeenKey(learnerId), next);
     } catch {

@@ -1547,7 +1547,7 @@ export const consoleMsgs = {
     },
     section: {
       title: 'Cambios por docentes',
-      incoming: 'Piden unirse a esta clase',
+      incoming: 'Pedidos para pasar a esta clase',
       outgoing: 'Enviados desde esta clase',
       done: 'Hechos',
       empty: 'Nada pendiente.',
