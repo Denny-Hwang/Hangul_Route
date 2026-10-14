@@ -224,9 +224,18 @@ export function buildDiscover(
         items.push(wordItem(uniqueKey(`word:${item.word.ko}`), item));
         continue;
       }
+      if (item.type === 'exchange') {
+        // Until the exchange view lands (row D-1), each line is a word card that names its
+        // speaker on screen (the note) and to a screen reader (the label), F-CURR-001 §3.14.
+        for (const { speakerEn, line } of item.lines) {
+          const card = wordItem(uniqueKey(`word:${line.ko}`), { type: 'word', word: line, noteEn: speakerEn });
+          items.push({ ...card, accessibilityLabel: `${speakerEn}: ${card.accessibilityLabel}` });
+        }
+        continue;
+      }
       if (item.type !== 'jamo') {
-        // F-CURR-001 upper-stage items (sentence, pattern, exchange, realia): until their own
-        // Discover views land (row D-1), each taught text shows as a word card with Hear it.
+        // F-CURR-001 upper-stage items (sentence, pattern, realia): until their own Discover
+        // views land (row D-1), each taught text shows as a word card with Hear it.
         const picture = item.type === 'sentence' ? item.picture : undefined;
         for (const word of discoverItemTexts(item)) {
           items.push(wordItem(uniqueKey(`word:${word.ko}`), picture ? { type: 'word', word, picture } : { type: 'word', word }));

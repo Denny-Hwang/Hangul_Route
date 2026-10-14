@@ -5,6 +5,7 @@ import {
   LessonCellSchema,
   LessonScopeSchema,
   checkKindsFor,
+  discoverItemTexts,
   scopeRoundCount,
   translatableFields,
   type LessonCell,
@@ -284,10 +285,143 @@ describe('U-10 three-language completeness of every ready cell', () => {
   }
 });
 
+/** A reply round of a dialogue game: the heard line, its natural reply and the other options. */
+interface ReplyRound {
+  where: string;
+  prompt: string;
+  answer: string;
+  others: string[];
+}
+
+/** Every Tap to Respond turn and Listen & Pick round of a quest, as reply rounds. */
+export function replyRounds(quest: LessonQuest): ReplyRound[] {
+  return quest.scopes.flatMap((scope): ReplyRound[] => {
+    if (scope.kind === 'tap-respond') {
+      return scope.turns.map((t, i) => ({
+        where: `${scope.ref} turn ${i + 1}`,
+        prompt: t.line.ko,
+        answer: t.replies.find((r) => r.correct)?.text.ko ?? '',
+        others: t.replies.filter((r) => !r.correct).map((r) => r.text.ko),
+      }));
+    }
+    if (scope.kind === 'listen-pick') {
+      return scope.rounds.flatMap((r) => {
+        const answer = r.options.find((o) => o.id === r.answerId)?.text?.ko;
+        if (answer === undefined) return [];
+        return [{ where: `${scope.ref} ${r.id}`, prompt: r.prompt.ko, answer, others: r.options.filter((o) => o.id !== r.answerId).flatMap((o) => (o.text ? [o.text.ko] : [])) }];
+      });
+    }
+    return [];
+  });
+}
+
+/**
+ * How a line sounds for most speakers today: ㅔ and ㅐ (and ㅖ and ㅒ) merged (section 3.3,
+ * Word Builder q1; section 3.5, 내 / 네). Two different lines with the same key sound alike.
+ */
+export function soundKey(text: string): string {
+  return [...text]
+    .map((ch) => {
+      const code = ch.codePointAt(0)! - 0xac00;
+      if (code < 0 || code > 11171) return ch;
+      const medial = Math.floor((code % 588) / 28);
+      const merged = medial === 5 ? 1 : medial === 7 ? 3 : medial;
+      return String.fromCodePoint(0xac00 + Math.floor(code / 588) * 588 + merged * 28 + (code % 28));
+    })
+    .join('');
+}
+
+/**
+ * U-8: a line that is the natural reply to a prompt anywhere in the cell is never a distractor
+ * for that same prompt, and no round offers two options that sound alike (내 / 네).
+ */
+export function distractorProblems(quests: readonly LessonQuest[]): string[] {
+  const rounds = quests.flatMap(replyRounds);
+  const natural = new Map<string, Set<string>>();
+  for (const r of rounds) natural.set(r.prompt, new Set([...(natural.get(r.prompt) ?? []), r.answer]));
+  const out: string[] = [];
+  for (const r of rounds) {
+    for (const o of r.others) if (natural.get(r.prompt)?.has(o)) out.push(`U-8 ${r.where}: ${o} is also a natural reply to ${r.prompt}`);
+    const options = [r.answer, ...r.others];
+    for (let i = 0; i < options.length; i += 1) {
+      for (let j = i + 1; j < options.length; j += 1) {
+        if (options[i] !== options[j] && soundKey(options[i]!) === soundKey(options[j]!)) out.push(`U-8 ${r.where}: ${options[i]} and ${options[j]} sound alike`);
+      }
+    }
+  }
+  return out;
+}
+
+/** Section 3.1 rule 4: new words or set phrases per quest (Stage 4: one grammar point and at most 4). */
+export const NEW_ITEM_CAP: Readonly<Partial<Record<StageKey, number>>> = { stage4: 4 };
+
+/** The phrases of a Discover text: split after each sentence mark, so 고마워! 이제 너야! is two set phrases. */
+const phrasesOf = (ko: string): string[] =>
+  ko
+    .split(/(?<=[.!?])\s+/)
+    .map((p) => p.trim())
+    .filter((p) => p !== '');
+
+/**
+ * U-3 (Stage 4): the phrases each quest's Discover shows that no earlier quest of the cell showed.
+ * A word item counts too. The other stages' counting rules (symbol families, number sets) land
+ * with their first cell.
+ */
+export function newItemProblems(stage: StageKey, quests: readonly LessonQuest[]): string[] {
+  const cap = NEW_ITEM_CAP[stage];
+  if (cap === undefined) return [];
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const quest of quests) {
+    const texts = quest.steps.flatMap((s) => s.discover?.pages.flatMap((p) => p.items.flatMap((item) => discoverItemTexts(item).map((t) => t.ko))) ?? []);
+    const fresh = [...new Set(texts.flatMap(phrasesOf))].filter((p) => !seen.has(p));
+    if (fresh.length > cap) out.push(`U-3 ${quest.id}: ${fresh.length} new items (${fresh.join(', ')}), over ${cap}`);
+    for (const p of fresh) seen.add(p);
+  }
+  return out;
+}
+
 describe('content checks each cell row fills in (F-CURR-001 section 5)', () => {
   it.todo('U-2 Word Builder: the 16 symbols each in exactly one Discover; with Stage 1 the full inventory; finals in two quests (S2-1)');
-  it.todo('U-3 new-item caps per stage (section 3.1 rule 4) (S2-1 onward)');
   it.todo('U-4 decodable scored reading (section 3.1 rule 6) (S2-1 onward)');
   it.todo('U-6 at least half the Korean words outside Discover are reused (S2-1 onward)');
-  it.todo('U-8 no distractor reply is also a natural reply; no heard round offers 내 / 네 (S4-1 onward)');
+
+  it('U-8 catches a distractor that is a natural reply elsewhere, and a 내 / 네 pair', () => {
+    const kt = (ko: string) => ({ ko, romanization: 'x', en: 'x' });
+    const turn = (line: string, answer: string, ...others: string[]) => ({
+      speakerEn: 'Mina',
+      line: kt(line),
+      replies: [{ id: 'a', text: kt(answer), correct: true }, ...others.map((o, i) => ({ id: `d${i}`, text: kt(o), correct: false }))],
+    });
+    const quest = {
+      id: 'quest:stage4-crafts-q1',
+      scopes: [
+        { ref: 'minigame:s4-crafts-q1-practice', kind: 'tap-respond', turns: [turn('같이 놀자!', '좋아!', '책이에요.'), turn('같이 놀자!', '뭐 하고 놀까?', '좋아!')] },
+        { ref: 'minigame:s4-crafts-q1-check', kind: 'listen-pick', rounds: [{ id: 'r1', prompt: kt('이제 너야!'), options: [{ id: 'a', text: kt('내 차례야!') }, { id: 'b', text: kt('네 차례야!') }], answerId: 'a' }] },
+      ],
+    } as unknown as LessonQuest;
+    expect(distractorProblems([quest])).toEqual([
+      'U-8 minigame:s4-crafts-q1-practice turn 2: 좋아! is also a natural reply to 같이 놀자!',
+      'U-8 minigame:s4-crafts-q1-check r1: 내 차례야! and 네 차례야! sound alike',
+    ]);
+  });
+
+  it('U-3 counts the new phrases of each Discover against the Stage 4 cap', () => {
+    const kt = (ko: string) => ({ ko, romanization: 'x', en: 'x' });
+    const ex = (a: string, b: string) => ({ type: 'exchange', lines: [{ speaker: 'a', speakerEn: 'A', line: kt(a) }, { speaker: 'b', speakerEn: 'B', line: kt(b) }] });
+    const quest = (k: number, ...items: object[]) => ({ id: `quest:stage4-crafts-q${k}`, steps: [{ id: 's2', kind: 'discover', discover: { pages: [{ items }] } }] }) as unknown as LessonQuest;
+    const q1 = quest(1, ex('같이 놀자!', '좋아!'), ex('뭐 하고 놀까?', '윷놀이 하자!'));
+    const q2 = quest(2, ex('내 차례야!', '좋아!'), ex('잘했어!', '고마워! 이제 너야!'), { type: 'word', word: kt('차례') });
+    expect(newItemProblems('stage4', [q1, q2])).toEqual(['U-3 quest:stage4-crafts-q2: 5 new items (내 차례야!, 잘했어!, 고마워!, 이제 너야!, 차례), over 4']);
+    expect(newItemProblems('stage2', [q2])).toEqual([]);
+  });
+
+  for (const { cell } of READY) {
+    it(`${cell.id}: U-8 no distractor is also a natural reply; no round offers options that sound alike`, () => {
+      expect(distractorProblems(cell.quests)).toEqual([]);
+    });
+    it(`${cell.id}: U-3 new items per quest within the stage cap`, () => {
+      expect(newItemProblems(cell.stage, cell.quests)).toEqual([]);
+    });
+  }
 });

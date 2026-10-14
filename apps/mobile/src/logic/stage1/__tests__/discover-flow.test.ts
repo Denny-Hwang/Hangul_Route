@@ -470,6 +470,12 @@ describe('upper-stage Discover items (F-CURR-001 §3.10) before their own views 
       ['word', '이게 뭐예요?', null],
       ['word', '책이에요.', null],
     ]);
+    // An exchange line names its speaker on the card and in its accessible name (F-CURR-001 §3.14).
+    expect(one?.items.slice(1).map((i) => [i.note, i.accessibilityLabel])).toEqual([
+      ['Hoya', 'Hoya: 이게 뭐예요?, ige mwoyeyo, what is this?'],
+      ['Teacher', 'Teacher: 책이에요., chaegieyo, it is a book'],
+    ]);
+    expect(one?.items[0]?.note).toBeUndefined();
     expect(two?.items.map((i) => i.glyph)).toEqual(['책이에요', '학교예요', '김밥']);
     expect(two?.items.map((i) => i.key)).toEqual(['word:책이에요', 'word:학교예요', 'word:김밥']);
   });
