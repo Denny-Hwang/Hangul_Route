@@ -144,6 +144,10 @@
 .ending { text-decoration: underline; text-decoration-thickness: var(--border-width-base); text-underline-offset: var(--spacing-xs); }
 .slash { color: var(--colors-text-muted); font-weight: var(--weight-regular); }
 .pframe-rom { color: var(--colors-text-secondary); }
+/* A slot and its ending(s) are one unit: the frame may break only at a space, never between a slot and its ending (§3.14). */
+.punit { display: inline-flex; align-items: center; flex-wrap: nowrap; white-space: nowrap; gap: var(--spacing-xs); }
+/* Visually hidden live region (Read along announces each lit line here). */
+.sr-only { position: absolute; width: var(--border-width-thin); height: var(--border-width-thin); margin: calc(-1 * var(--border-width-thin)); padding: var(--spacing-none); overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: var(--spacing-none); }
 .note-line { line-height: var(--leading-relaxed); }
 .examples { display: flex; flex-direction: column; gap: var(--spacing-md); }
 .example { display: flex; align-items: flex-start; gap: var(--spacing-md); padding: var(--spacing-md); border-radius: var(--radii-md); background: var(--colors-surface-canvas); border: var(--border-width-thin) solid var(--colors-border-subtle); }
@@ -157,8 +161,8 @@
 /* Exchange: reading cards with the speaker named above; B's portrait at the end. */
 .exchange { display: flex; flex-direction: column; gap: var(--spacing-md); }
 .xline { display: flex; flex-direction: column; gap: var(--spacing-sm); padding: var(--spacing-md) var(--spacing-lg); border-radius: var(--radii-lg); background: var(--colors-surface-canvas); border: var(--border-width-thin) solid var(--colors-border-subtle); border-left-width: var(--border-width-thick); border-left-color: var(--colors-border-subtle); }
-.xline .who { display: flex; align-items: center; gap: var(--spacing-sm); font-weight: var(--weight-semibold); color: var(--colors-text-secondary); flex-wrap: nowrap; }
-.xline .who > span:not(.portrait):not(.now) { min-width: 0; overflow-wrap: anywhere; }
+.xline .who { display: flex; align-items: center; gap: var(--spacing-sm); font-weight: var(--weight-semibold); color: var(--colors-text-secondary); flex-wrap: wrap; }
+.xline .who > span:not(.portrait):not(.now) { min-width: 0; overflow-wrap: break-word; }
 .xline .who .rom { font-weight: var(--weight-regular); }
 .xline.b .who { flex-direction: row-reverse; }
 .xline .who .portrait { width: var(--portrait); height: var(--portrait); flex: none; border-radius: var(--radii-circle); background: var(--colors-surface-sunken); display: inline-flex; align-items: center; justify-content: center; overflow: hidden; }

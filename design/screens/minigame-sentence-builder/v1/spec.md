@@ -43,7 +43,7 @@ Values that are not tokens. Each one derives from a token or from code; G-1 and 
 | Where | Value | Derived from |
 |---|---|---|
 | Hoya beside a bubble or the Discover Hoya line | 64 | `touchTarget.min` (DiscoverStep draws Hoya at `touchTarget.min`) |
-| Speaker portrait | 40 | `spacing.xxl + spacing.sm`; it sits inside the 64 px speaker row and is never a target |
+| Speaker portrait (neutral `profile` glyph in a disc) | 40 | `spacing.xxl + spacing.sm`; it sits inside the 64 px speaker row and is never a target |
 | Meaning-card picture | 96 | `touchTarget.hero`, the size of DiscoverStep's `PictureArt` |
 | Narrowest slot and tile | 80 wide, 80 tall | `touchTarget.child`: a one-syllable word plus padding; every tile stays at least `touchTarget.min` in both directions |
 | Attached (particle) slot overlap | -2 | `-borderWidth.base`: the particle slot shares its border with the word before it |
@@ -73,7 +73,7 @@ Motion (for G-1 and the Discover rows; the mock is static): a tile slides in `mo
 |---|---|---|
 | Sideways scroll | none at 320, 768, 1024 and 1280, and at 320 with 200 % text (§3.14) | none on any of the 16 shots (`scrollWidth` equals the viewport) |
 | Tile and button targets | at least `touchTarget.min` (64) | tiles 80 x 80 minimum; Hear it, Read along, Stop, Skip and each line's speaker 64 tall; Continue 80 |
-| Korean wraps | at spaces only (§3.14) | `word-break: keep-all` on every `lang="ko"` node; one tile is one unbreakable word |
+| Korean wraps | at spaces only (§3.14) | `word-break: keep-all` on every `lang="ko"` node; one tile is one unbreakable word; a pattern slot and its ending(s) are one `nowrap` unit (`.punit`) |
 | Colour never the only cue | §3.14, CLAUDE.md anti-shame | placed: success fill + check glyph; tried: amber + `dash` glyph; ring: focus outline; lit line: thick start border + tint + play glyph + "Reading now"; pattern slot: dashed (frame) vs solid (example), ending underlined |
 | No red on a miss | anti-shame | the miss uses `nudge` / `nudgeLight` and Hoya `thinking` only; `feedback.danger` appears nowhere |
 | Text contrast on the lit line | 4.5:1 | `text.primary` on `brand.secondaryLight` |
@@ -86,11 +86,12 @@ Motion (for G-1 and the Discover rows; the mock is static): a tile slides in `mo
 - **The sentence's romanization appears only when the round is done**, so building stays reading Korean, not matching Latin letters.
 - **No "Read it here" text fallback in Sentence Builder**: it would show the answer; the meaning card carries the round without sound.
 - **Stacked at every width** for the game; side by side for the pattern, realia and sentence Discover pages on tablet; the exchange stays one column.
+- **Data shapes are C-1's (#629) as they are**: tiles split from `sentence`, up to 2 `distractors`, particle rounds from `particle.{tile, choices}` (particle-only, other tiles pre-placed), speaker names from `speakerEn`, pattern example slots derived from the frame, realia alt text from the `Realia` record.
 - **Read along = line highlight**, started by the learner, one button per exchange item, no highlight without sound (wireframe S3b).
 
 ## Strings (drafts for G-1 and the Discover rows)
 
-New keys only; existing keys are reused as named. Spanish follows the F-I18N-001 section 3.10 style guide (neutral international Spanish, informal tu, no gender-agreeing adjectives); Korean is 해요체, no particle after a variable, the glossary's 낱말 for a word being learned. Taught Korean is never typed into a string: `{word}` and `{speaker}` are content passed in and drawn by `KoreanText`. The rows that ship each screen add these to `messages/{en,es,ko}/learner.ts` in the same PR (es and ko coverage ratchets).
+New keys only; existing keys are reused as named. Spanish follows the F-I18N-001 section 3.10 style guide (neutral international Spanish, informal tu, no gender-agreeing adjectives); Korean is 해요체, no particle after a variable, the glossary's 낱말 for a word being learned. Taught Korean is never typed into a string: `{word}` is content passed in and drawn by `KoreanText`; `{speaker}` is the line's `speakerEn` (a name in the UI language, never Hangul). The rows that ship each screen add these to `messages/{en,es,ko}/learner.ts` in the same PR (es and ko coverage ratchets).
 
 `learner.minigame.sentenceBuilder` (G-1):
 
@@ -117,20 +118,20 @@ Reused unchanged: `learner.minigame.progress.pill`, `learner.minigame.skip`, `le
 
 | Key | en | es | ko |
 |---|---|---|---|
-| `pattern.label` | Sentence pattern | Modelo de oración | 문장 틀 |
+| `pattern.label.pill` | Sentence pattern | Modelo de oración | 문장 틀 |
 | `pattern.examples` | Examples | Ejemplos | 예문 |
 | `pattern.slot` (a11y) | a word goes here | aquí va una palabra | 여기에 낱말이 들어가요 |
-| `exchange.readAlong` | Read along | Leer juntos | 함께 읽기 |
-| `exchange.stop` | Stop | Parar | 멈추기 |
-| `exchange.readingNow` | Reading now | Leyendo ahora | 지금 읽는 중 |
+| `exchange.readAlong.cta` | Read along | Leer juntos | 함께 읽기 |
+| `exchange.stop.cta` | Stop | Parar | 멈추기 |
+| `exchange.readingNow.pill` | Reading now | Leyendo ahora | 지금 읽는 중 |
 | `exchange.lineLabel(line, total, speaker)` (a11y) | Line {line} of {total}, {speaker} | Línea {line} de {total}, {speaker} | {total}줄 중 {line}번째 줄, {speaker} |
 | `realia.keyWords` | Words on it | Palabras que aparecen | 여기 나온 낱말 |
 
 Reused unchanged: `hearIt`, `showHowToSay`, `continue`, `pageLabel`, `heard`, `empty`.
 
-Content strings (not dictionary keys; each cell's overlay carries their es and ko): the meaning gloss of each round, the pattern frame's meaning and `noteEn`, speaker names and roles, page captions, realia alt text, Hoya lines.
+Content strings (not dictionary keys; each cell's overlay carries their es and ko): the meaning gloss of each round, the pattern frame's meaning and `noteEn`, speaker names (`speakerEn`), page captions, realia alt text, Hoya lines.
 
 ## Not in this pass
 
 - The realia drawings (D-2), the keyboard and the trace and frame games (D-3).
-- Word-by-word highlight for Read along, a register badge on casual lines and cast portraits beyond Hoya: open questions in `discover-sentences.md`.
+- Word-by-word highlight for Read along, a register badge on casual lines and cast portraits (v1 shows a neutral portrait for every speaker): open questions in `discover-sentences.md`.

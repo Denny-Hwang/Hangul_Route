@@ -49,7 +49,7 @@ One primary action at a time: the next tile is the target (no button while build
 |  +--------+ +--------+ +------+  |  <- the tray: tiles in a deranged order
 |  |~~먹어요~~| |~~밥을~~ | |~~물을~~|  |     (never already in the right order)
 |  |meogeoyo| | babeul | |mureul|  |  <- romanization under the Korean (romanizationMode)
-|  +--------+ +--------+ +------+  |     at most 1 extra tile (a taught word)
+|  +--------+ +--------+ +------+  |     at most 2 extra tiles (`distractors`, taught words)
 |                                  |
 |  ( Hoya bubble slot )            |  <- empty until a miss
 |  [ Skip ]                        |  <- not in the Check
@@ -58,6 +58,7 @@ One primary action at a time: the next tile is the target (no button while build
 
 - **Slots** are dashed boxes in reading order. Every empty slot of a round has the same width (that of the round's longest tile), so no width gives a tile away; a filled slot takes the width of its tile, so the finished line looks like the sentence. The next slot to fill carries the focus outline; the others are dashed only. The place number is given to a screen reader only.
 - **Tiles** are at least `touchTarget.min` tall and wide, tap only (no drag: a tap path is needed for screen-reader and switch users anyway, the `story/sequence.md` rule). They wrap onto as many rows as they need; the tray never scrolls sideways.
+- **A tile is one word (어절)** of `sentence.ko` split at its spaces; its romanization is the matching word of `sentence.romanization` split at its spaces (one romanized word per Korean word; the content test checks the two counts match). Nothing is computed.
 - **Romanization** on a tile follows the learner's `romanizationMode`, as Listen & Pick options do: shown under the Korean in `always` (the default), left off in `tap` (the tile's accessible name still carries it). Tiles show no gloss: the meaning card is the sentence's meaning.
 - **The meaning card** never shows the Korean target. In the Korean UI its line is the lesson overlay's Korean gloss, which the translation review writes as a description that does not echo the target (`overlay-circular-gloss`, F-CURR-001 §3.8 pass 6; see Open questions 1).
 
@@ -71,7 +72,7 @@ One primary action at a time: the next tile is the target (no button while build
 |  - - - - - - - - - - - - - - -   |
 |  +--------+           +------+   |  <- 물을 was tapped for slot 2: it slid to the slot,
 |  |~~먹어요~~|           |~~물을~~|   |     paused, slid back; it is marked "tried" (amber
-|  +--------+           +------+   |     outline + small dot glyph) and stays tappable
+|  +--------+           +------+   |     outline + small `dash` glyph) and stays tappable
 |                                  |
 |  (Hoya, thinking)                |
 |  "(Not that one yet. Try         |  <- the miss line
@@ -82,9 +83,9 @@ One primary action at a time: the next tile is the target (no button while build
 - A placed tile is never taken back by the game: right tiles stay placed. The learner cannot remove a placed tile either (each placement was checked when it was made, so there is nothing to undo).
 - **Hint lines** (pure rule, `logic/sentence-builder/view.ts`):
   - the tapped tile is the sentence's last word (the verb or describing word, Korean is predicate-final) and the slot is not the last one: "(In Korean, the doing or describing word comes last.)";
-  - a particle slot (round C): "(Look at how the word before it ends.)" plus the pattern note of this quest's Discover page (content, `noteEn` with its `{ko:}` tokens), so the rule is shown again where it is needed;
+  - a particle slot (round C): "(Look at how the word before it ends.)" plus the `noteEn` (with its `{ko:}` tokens) of the first `pattern` item in this quest's own Discover step, so the rule is shown again where it is needed; a quest with no `pattern` item shows the line alone;
   - any other miss: "(Not that one yet. Try another word.)".
-- **Second miss on the same slot**: the right tile gets the "look here" ring (as Listen & Pick and Story Order) and Hoya says "(This one comes next.)". The ring also shows in the Check: the round is already scored, and the ring keeps a learner from getting stuck.
+- **Second miss on the same slot**: the right tile gets the "look here" ring (as Listen & Pick and Story Order) and Hoya says "(This one comes next.)". The ring also shows in the Check: the round is already scored, and the ring keeps a learner from getting stuck. In the Check, `answerRound` is recorded once, on the round's first miss or at completion with no miss; taps after the ring never call `answerRound` again and never change skill or review updates (G-1 reducer test: Check round, miss, miss, ring, right gives exactly one `answerRound(false)`).
 
 ### C. Particle round (Stage 3: 이 / 가, 을 / 를)
 
@@ -99,26 +100,28 @@ One primary action at a time: the next tile is the target (no button while build
 |  |  [ (speaker) Hear it ]     |  |
 |  +----------------------------+  |
 |                                  |
-|   +------+[+2 ]  +--------+      |  <- 책 is given (fixed, drawn as a placed tile
-|   |~~책~~ |       |~~있어요~~|      |     with no check glyph), the attached slot [+2]
-|   +------+       +--------+      |     sits against it with no space: it joins the
-|                                  |     word before it
+|   +------+[+2 ]  +--------+      |  <- the stem 책 (the `particle.tile` word minus its
+|   | 책   |       |~~있어요~~|      |     right ending) is drawn as a given tile, Korean
+|   +------+       +--------+      |     only (a bare stem's romanization is not in the
+|                                  |     data and is never computed); the attached slot
+|                                  |     [+2] sits against it with no space; every other
+|                                  |     word is pre-placed
 |  - - - - - - - - - - - - - - -   |
 |      +------+    +------+        |
-|      |~~이~~ |    |~~가~~ |        |  <- the two forms, in a random order
+|      |~~이~~ |    |~~가~~ |        |  <- `particle.choices`, in a random order
 |      |  i   |    |  ga  |        |
 |      +------+    +------+        |
 +----------------------------------+
 
 Right pick:
 |   +-----------+  +--------+      |  <- the word and its particle become one tile
-|   | ~~책이~~   |  |~~있어요~~|      |     with the romanization of the joined word
-|   |  chaegi   |  |isseoyo |      |     (책 chaek + 이 i is said chaegi: the final
+|   | ~~책이~~   |  |~~있어요~~|      |     with that tile's own romanization from the
+|   |  chaegi   |  |isseoyo |      |     sentence (책 + 이 is said chaegi: the final
 |   +-----------+  +--------+      |     moves on), from content, never computed
 ```
 
-- A round may mix A and C: a particle slot is one more slot of the line, filled in reading order, and its tray holds both forms (one of them is the round's one extra tile).
-- After a right particle the joined word shows the romanization of the whole word (`chaegi`), not `chaek` + `i`, because the final consonant moves on when a vowel follows (Word Builder q5's rule). The round data carries it (Data needs).
+- **A round with `particle` is particle-only**: every tile except `particle.tile` is pre-placed (derived, no flag), the tray holds the two `particle.choices` and nothing else, and such a round carries no `distractors` (the content test U-7 checks it). Order practice and particle practice are separate rounds.
+- After a right particle the joined word shows its own romanization from the sentence (`chaegi`), not a stem + ending, because the final consonant moves on when a vowel follows (Word Builder q5's rule).
 
 ### D. Round complete
 
@@ -127,6 +130,8 @@ Right pick:
 |   +-----------+  +--------+      |  <- the line in the right look (success fill and
 |   | ~~밥을~~   |  |~~먹어요~~|  (v) |     a check glyph); the tray is gone
 |   +-----------+  +--------+      |
+|   (You built the sentence!)      |  <- one calm line, then the sentence again
+|   ~~밥을 먹어요.~~                 |
 |   (babeul meogeoyo)              |  <- the sentence's romanization (always shown here)
 |   "(I eat rice.)"                |  <- and its meaning
 +----------------------------------+
@@ -151,7 +156,7 @@ Right pick:
 +----------------------------------+
 ```
 
-- Same game, same rules; only the frame changes (dots, title, no Skip). Two rounds, each scored on its first try.
+- Same game, same rules; only the frame changes (dots, title, no Skip). Two rounds, each scored on its first try. The look-here ring after a second miss still helps the learner finish, but the round's result was recorded at its first miss: nothing after it changes the Check result, skills or review.
 
 ### F. Tablet (regular and wide, 600 dp and up)
 
@@ -205,14 +210,15 @@ Exit to: `quest/player` (step complete, via `goBack`) · empty scope -> `quest/p
 
 ## Data needs
 
-- reads: `scopeFor(ref)` -> `orderIt.rounds[]` (C-1 `OrderItRoundSchema`), proposed shape:
-  - `meaning`: the sentence gloss (`en` in the cell, `es` / `ko` from the lesson overlay) and optional `picture` (`PictureRefSchema`);
-  - `sentence`: `KoText` of the whole sentence (audio, romanization for D);
-  - `words[]` in the right order: each `{ ko, romanization, fixed?: boolean, attachesToPrevious?: boolean }`, an attached word being a particle slot; a word that is joined with its particle also carries `joined: { ko, romanization }` (책이, chaegi) for the right look of C;
-  - `extra?`: at most one extra tile `{ ko, romanization }` (a taught word or the other particle form);
-  - `noteRef?`: the Discover pattern whose note the particle hint shows again.
+- reads: `scopeFor(ref)` -> `orderIt.rounds[]`, the C-1 `OrderItRoundSchema` (PR #629) as it is:
+  - `sentence`: `KoText` of the whole sentence. Its `en` (with `es` / `ko` from the lesson overlay) is the meaning card's gloss; it is the audio of Hear it; its `romanization` is shown in D;
+  - tiles: `sentence.ko.split(' ')` in the right order (2-6), each with the word at the same index of `sentence.romanization.split(' ')`;
+  - `pictureRef?`: the meaning card's decorative picture;
+  - `distractors` (0-2 `KoText`): the extra tiles, never a word of the sentence;
+  - `particle?: { tile, choices: [KoText, KoText] }`: makes the round a particle round (C): the stem is `tiles[tile]` minus the choice it ends with, the other tiles are pre-placed, exactly one choice ends the tile (C-1 checks it).
+  The particle hint's note is not round data: it is the `noteEn` of the first `pattern` item of the quest's own Discover step.
   `romanizationMode` (F-I18N-001); `layoutClass` (F-LAYOUT-001).
-- writes: `quest-run-store.answerRound(roundIdx, correct)` once per round (first try), retries counted; `markStepComplete` at the end or on Skip.
+- writes: `quest-run-store.answerRound(roundIdx, correct)` exactly once per round (the first miss, or completion with no miss), retries counted; taps after the second-miss ring never write; `markStepComplete` at the end or on Skip.
 - telemetry: `minigame.finished { kind: 'order-it', questId, stepIndex }` (existing event; no new name, §3.11). No Korean text in any payload.
 - skills: `order-it` -> read, write (§3.11, OD-5; G-1 changes the map and pins `TILE_KINDS`).
 
@@ -227,5 +233,5 @@ Exit to: `quest/player` (step complete, via `goBack`) · empty scope -> `quest/p
 ## Open questions
 
 1. **Meaning line in the Korean UI.** A learner using the Korean UI reads the target language already; the meaning card's Korean gloss can make ordering easy. Default: keep it (the round still asks the learner to read the tiles and the overlay gloss never echoes the target); the language review of each Stage 3 cell checks the ko glosses of order rounds for give-aways. Alternative: show the picture and Hear it only in the Korean UI.
-2. **Extra tiles in Stage 7.** §3.7 asks for 2-3 sentence pieces; default at most one extra tile at every stage, so a 3-word round has 4 tiles. Alternative: none in the Check.
+2. **Extra tiles in Stage 7.** §3.7 asks for 2-3 sentence pieces; the cap is C-1's: at most two extra tiles (`distractors`) at every stage, so a 3-word round has at most 5 tiles. Authoring default: one extra tile in practice, none in the Check. Alternative: one in the Check too.
 3. **Tile sound.** A tile could play its own word on a long press. Default: no (long press is not discoverable and a tap places the tile); Hear it plays the whole sentence.

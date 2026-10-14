@@ -63,8 +63,8 @@ Item weights: a `pattern`, an `exchange` and a `realia` item each fill a page on
 +------------------------------+
 |  (Sentence pattern)  [pill]  |  <- small label so the frame is not read as a sentence
 |                              |
-|  ~~ [___]이에요 / [___]예요 ~~   |  <- the frame: the slot is a dashed box the size of a
-|     (___ ieyo / ___ yeyo)    |     short word; the frame's romanization; its meaning
+|  ~~ [___]이에요/예요 ~~        |  <- the frame: one slot, a dashed box the size of a
+|     (___ ieyo/yeyo)          |     short word; the frame's romanization; its meaning
 |     "(It is ___.)"           |     with the slot shown the same way
 |   [ (speaker) Hear it ]      |  <- plays the two examples one after the other
 |  - - - - - - - - - - - - -   |
@@ -86,7 +86,9 @@ Item weights: a `pattern`, an `exchange` and a `realia` item each fill a page on
 +------------------------------+
 ```
 
-- **One slot marker** per frame (§3.10). Stage 7 frames with a particle slot write it explicitly (`___을/를`, `___이에요/예요`, `___에`); the frame shows both forms joined by a slash and the examples show which one a word takes.
+- **One slot marker** per frame (§3.10, C-1 checks `slotCount === 1`). Frames with a two-form ending write it explicitly (`___을/를`, `___이에요/예요`, `___에`); the frame shows both forms joined by a slash and the examples show which one a word takes. Two-slot frames: Open questions 5.
+- **The slot and its ending are one unbreakable unit**: the frame may wrap only at a space, never between the slot box and its ending or inside `이에요/예요` (web: one `inline-flex` / `white-space: nowrap` unit; RN: the slot box and its ending in one row `View` that does not wrap, the frame wrapping between such units). The same holds for the slot word and its ending in each example.
+- **The example's slot is derived, not authored** (C-1 examples are plain `KoText`): split the frame at `___` into the text before it and the ending after it (up to the next space; a `/` separates the ending's forms). The slot word sits in the example's word (어절) at the index of the slot's word in the frame; it is that word, with its sentence mark removed, minus whichever ending form it ends with (an empty ending: the whole word). `고양이가` with `___이/가` gives `고양이`, `책이에요.` with `___이에요/예요` gives `책`. An example where no form matches draws no slot box (a plain sentence); the content test (U-1) keeps that out of shipped data. Pure rule in `discover-flow` (S3-1), unit-tested.
 - The slot box is empty and dashed in the frame, solid and filled in the examples: shape and line style tell them apart, never colour alone. Its accessible name is "(a word goes here)".
 - The example sentence's romanization is of the whole word (`chaegieyo`), as it is said; the slot box sits on the Korean only.
 - Hear it on the frame plays example 1 then example 2 (a frame with a blank has no sound of its own); each example's own speaker plays that example.
@@ -100,13 +102,13 @@ Item weights: a `pattern`, an `exchange` and a `realia` item each fill a page on
 |  [ (play) Read along ]       |  <- reads every line of this item in order and lights
 |                              |     each line while it plays; secondary, not the page CTA
 |  +--------------------------+|
-|  | (o) {Hoya}               ||  <- speaker row: a small portrait (Hoya's face, or a
-|  |  ~~ 이게 뭐예요? ~~   [spk] ||     neutral portrait for a cast member) + the name
-|  |     (ige mwoyeyo)        ||     as content (Korean name with romanization, or the
-|  |     "(What is this?)"    ||     role in the UI language: "(teacher)")
+|  | (o) {speakerEn}          ||  <- speaker row: a neutral person glyph in a disc +
+|  |  ~~ 이게 뭐예요? ~~   [spk] ||     the line's `speakerEn`, a name or role in the UI
+|  |     (ige mwoyeyo)        ||     language ("Hoya", "Teacher"; overlay gives es/ko),
+|  |     "(What is this?)"    ||     never Hangul (the `*En` rule of spec §5)
 |  +--------------------------+|
 |  +--------------------------+|
-|  |               {teacher}(o)||  <- speaker B on the other side (start / end), so two
+|  |             {speakerEn}(o)||  <- speaker B on the other side (start / end), so two
 |  | ~~ 책이에요. ~~       [spk] ||     voices read as two people; the text stays
 |  |    (chaegieyo)           ||     start-aligned inside the line for easy reading
 |  |    "(It is a book.)"     ||
@@ -114,7 +116,7 @@ Item weights: a `pattern`, an `exchange` and a `realia` item each fill a page on
 +------------------------------+
 ```
 
-- Lines are not chat bubbles: they are reading cards with the speaker named above, because the learner follows the text, not a phone conversation. Speaker A's portrait sits at the start, speaker B's at the end; at 320 px both lines keep the full width.
+- Lines are not chat bubbles: they are reading cards with the speaker named above, because the learner follows the text, not a phone conversation. Speaker `a`'s portrait sits at the start, speaker `b`'s at the end; at 320 px both lines keep the full width.
 - Each line has its own speaker button (plays that line only). A line's question mark and full stop are part of the taught Korean.
 
 ### S3b. Read along playing (the audio-synced line highlight)
@@ -124,13 +126,13 @@ Item weights: a `pattern`, an `exchange` and a `realia` item each fill a page on
 |  [ Stop ]                     |  <- the same button, now Stop (label only: the Icon set has no stop glyph and `pause` would promise a resume); focus stays on it
 |                              |
 |  +==========================+|  <- line 1 now playing: thick start border, tinted
-|  |>> (Reading now) {Hoya}   ||     fill, the ">>" glyph and the words "(Reading now)"
+|  |>> (Reading now) {speakerEn}||     fill, the ">>" glyph and the words "(Reading now)"
 |  |  ~~ 이게 뭐예요? ~~         ||     (shape + glyph + word: never colour alone)
 |  |     (ige mwoyeyo)        ||
 |  |     "(What is this?)"    ||
 |  +==========================+|
 |  +--------------------------+|  <- line 2 waits, at full contrast (never dimmed: the
-|  |               {teacher}(o)||     learner may read ahead)
+|  |             {speakerEn}(o)||     learner may read ahead)
 |  | ~~ 책이에요. ~~             ||
 |  +--------------------------+|
 +------------------------------+
@@ -140,18 +142,18 @@ after the last line: the button reads "(Read along)" again and focus returns to 
 ```
 
 - **Sync rule** (pure, `discover-flow`): a line lights **when its `playPrompt` starts** and returns to rest **when it resolves** (the `afterReply` promise Tap to Respond uses), so the highlight follows the real audio, recording or TTS, without word timings. No per-word highlight in v1 (no timing data; see Open questions).
-- If a page has two exchange items, Read along on the first item reads that item only; there is one Read along button per item.
+- One Read along button per exchange item; a page holds at most one exchange item (item weights above), so it reads the whole page. A longer dialogue (Stage 4 Read Along q3 has 4 turns) is two exchange items on two pages: Read along reads one page, and the learner turns the page with Continue (Open questions 4).
 - Read along never turns the page and never starts by itself (the story reader's Read to me rule): the learner taps it. Continue stays enabled; tapping Continue, Stop, leave or a line's own speaker stops Read along at once (a line's speaker then plays just that line, lit).
 - The page scrolls the lit line into view when it is off screen (instantly under reduced motion).
 - **Sound off / no Korean voice** (`playPrompt` returns `muted` or `unavailable`): Read along shows the status line of `audio-fallback.md` once (the `PromptPanel` "status" variant) and lights nothing; every line is already on the page in Korean, romanization and gloss, so the page works without sound (§3.14). No timed highlight without sound: a highlight that moves on its own would be a clock.
-- Screen reader: Read along is a button whose label changes to Stop; each lit line is announced as "(Line 1 of 2, {speaker})" in a polite live region before it plays, so a VoiceOver / TalkBack user hears which line the voice reads.
+- Screen reader: Read along is a button whose label changes to Stop (no `aria-pressed` / `accessibilityState.selected`: the label swap says it all). A separate, visually hidden polite live region (not the line card) receives "(Line 1 of 2, {speakerEn})" for each lit line. **Announce, then play**: with a screen reader on, the line's `playPrompt` starts only after the announcement has finished (iOS: `AccessibilityInfo` `announcementFinished`; Android and web: a `motion.duration.slow` gap), so the label never talks over the Korean audio. With no screen reader, the line plays at once. S4-1 covers the effect order (announce, then play) with a `discover-flow` unit test.
 
 ### S3c. Casual and polite (Playdate Talk)
 
 ```
 |  {page caption}: "(Friends of the same age often talk like this.)"   <- the page's `captionEn`
 |  +--------------------------+|
-|  | (o) {Mina}               ||
+|  | (o) {speakerEn: Mina}    ||
 |  |  ~~ 같이 할까? ~~           ||  <- casual line, recognised only (OD-8)
 |  +--------------------------+|
 ```
@@ -179,7 +181,7 @@ after the last line: the button reads "(Read along)" again and focus returns to 
 
 - Up to **6** key words (§3.10); a number set taught together (일 이 삼 사 오) is one key-word row with the run shown as one line.
 - Tapping a key word's speaker plays the word. The drawing is not tappable in Discover (finding things in it is the game's job, `minigame/realia-read.md`).
-- The drawing's alt text names what it is ("(A snack-bar menu board)"); its words are read from the real-text list, not from the picture.
+- The drawing's alt text names what it is ("(A snack-bar menu board)"): it is the `altEn` of the `Realia` the item's `realiaRef` resolves to (C-1 `RealiaSchema`, shared with Realia Read); the item's optional `captionEn` is a visible one-line caption, not alt text. Its words are read from the real-text list (`entries`), not from the picture.
 
 ---
 
@@ -190,10 +192,10 @@ pattern page:                                      exchange page:
 +-----------------------------------------------+  +-----------------------------------------------+
 | (Page 1 of 2) (*) ( )                         |  |         [ (play) Read along ]                 |
 | +-------------------+ +---------------------+ |  |  +-----------------------------------------+  |
-| | (Sentence pattern)| | (Examples)          | |  |  | (o) {Hoya}  ~~ 이게 뭐예요? ~~      [spk] |  |
+| | (Sentence pattern)| | (Examples)          | |  |  | (o) {speakerEn} ~~ 이게 뭐예요? ~~  [spk] |  |
 | | ~~ [___]이에요 ~~  | | ~~ [책]이에요. ~~    | |  |  +-----------------------------------------+  |
 | | {note}            | | ~~ [학교]예요. ~~    | |  |  +-----------------------------------------+  |
-| +-------------------+ +---------------------+ |  |  |          ~~ 책이에요. ~~ {teacher} (o)  |  |
+| +-------------------+ +---------------------+ |  |  |        ~~ 책이에요. ~~ {speakerEn} (o)  |  |
 |                       [[ CONTINUE ]]          |  |  +-----------------------------------------+  |
 +-----------------------------------------------+  |              [[ CONTINUE ]]                   |
                                                    +-----------------------------------------------+
@@ -213,7 +215,7 @@ sentence page: two sentence items side by side, as two word cards today.
 | Stop | tap | stops the audio, clears the highlight, the button is Read along again |
 | Show how to say it (tap mode) | tap | shows the romanization of that sentence, example or line (as on the word page) |
 | `{ko:}` chip in a note | tap | plays the chip's Korean (it is taught content); it already shows its romanization |
-| CONTINUE | tap | next page; on the last page `quest.discover_completed { questId, pages, heard }` (existing; a Read along counts as hearing each line it played) |
+| CONTINUE | tap | next page; on the last page `quest.discover_completed { questId, pages, heard }` (existing). Read along adds each line it played to the same `tapped` set a line's own speaker adds to (keyed by the line, de-duplicated), so a line counts once whether it was tapped or read along; S4-1 updates the `heard` definition comment in `discover-flow.ts` in the same PR. No new field |
 | [x leave] | tap | the quest's leave sheet; stops any audio |
 
 ## Navigation graph
@@ -224,7 +226,7 @@ Exit to: `quest/player` step 3 (`practice`) · leave sheet -> `episode/detail` �
 ## States
 
 - **success**: as drawn (1-3 pages, 1-2 items each).
-- **empty**: an item that does not resolve (unknown picture or realia ref, an exchange with fewer than two lines): the item is left out; a page with no item shows the `discover.md` empty line and CONTINUE; never a dead end (U-1 / the content test keeps it out of shipped data).
+- **empty**: an item that does not resolve (unknown picture or realia ref): the item is left out; a page with no item shows the `discover.md` empty line and CONTINUE; never a dead end (U-1 / the content test keeps it out of shipped data).
 - **error**: a picture or realia drawing that fails to load shows the words alone (realia: its real-text list stays, so the page still teaches) · audio fails: the status line, nothing blocks.
 - **no sound**: as S3b; every text is on the page.
 - **tap mode** (`romanizationMode === 'tap'`): romanization of sentences, examples and lines hides behind "(Show how to say it)"; the pattern frame's own romanization and every gloss stay.
@@ -237,9 +239,10 @@ Exit to: `quest/player` step 3 (`practice`) · leave sheet -> `episode/detail` �
 
 - reads: `questById(id).steps[]` -> `discover.pages[].items[]` with the four new types (C-1, `DiscoverItemSchema`):
   - `sentence`: `{ type, sentence: KoText, picture? }`;
-  - `pattern`: `{ type, frame: { ko, romanization, en } with one slot marker, noteEn (with {ko:} tokens), examples: [KoText, KoText] }`, each example with the slot word's span (`slot: { start, end }` on the Korean) so the example can draw its slot box;
-  - `exchange`: `{ type, lines: [{ speaker, line: KoText }, { speaker, line: KoText }] }`, `speaker` a cast reference that resolves to a portrait and a name (Korean with romanization, or a role gloss);
-  - `realia`: `{ type, realiaRef, altEn, keyWords: KoText[] (1-6) }`.
+  - `pattern`: `{ type, frame: KoText with exactly one slot marker, noteEn (with {ko:} tokens), examples: [KoText, KoText] }`; each example's slot box is derived from the frame (S2), not authored;
+  - `exchange`: `{ type, lines: [{ speaker: 'a', speakerEn, line: KoText }, { speaker: 'b', speakerEn, line: KoText }] }`, exactly two lines; `speaker` picks the side, `speakerEn` is the shown name (UI language, at most 24 characters, no Hangul; overlay for es / ko);
+  - `realia`: `{ type, realiaRef, keyWords: KoText[] (1-6), captionEn? }`; the drawing's alt text is the referenced `Realia`'s `altEn`.
+  These are the C-1 `DiscoverItemSchema` shapes (PR #629) as they are.
   `romanizationMode`; the lesson overlay (`es`, `ko`) for every gloss, note, caption and alt text; `layoutClass`.
 - writes: nothing (unscored).
 - telemetry: `quest.discover_completed { questId, pages, heard }` (existing; no new event, §3.11).
@@ -250,11 +253,13 @@ Exit to: `quest/player` step 3 (`practice`) · leave sheet -> `episode/detail` �
 2. **Highlight = start border + tinted fill + ">>" glyph + "(Reading now)".** Four cues; colour is never the only one, and the text is never dimmed.
 3. **Read along is per item, tap to start, never automatic,** and it never turns a page: the learner keeps the pace (the story reader's Read to me rule).
 4. **No highlight without sound.** A highlight moving on a timer would be a clock on a reading page.
-5. **One heavy item per page** (pattern, exchange or realia), so a phone page never needs two long scrolls.
+5. **One heavy item per page** (pattern, exchange or realia), so a phone page never needs two long scrolls. This also means one Read along per page.
+6. **The Discover shapes are C-1's as they are**: shown speaker names are `speakerEn` (never Hangul), example slots are derived from the frame, realia alt text comes from the `Realia` record.
 
 ## Open questions
 
 1. **Word-by-word highlight** for Read along (karaoke style) would need per-word timings for every line and voice. Default: not in v1; revisit when recorded lesson audio exists.
 2. **Register badge on lines** ("(Friends' talk)" on casual lines in Playdate Talk). Default: no badge; the page caption explains it once (OD-8). If the language review asks for it, it is a `register` field on the line plus one string.
-3. **Speaker portraits.** The cast beyond Hoya has no portraits yet. Default: Hoya's face for Hoya, a neutral person glyph in a disc for everyone else (no new art); S4-1 decides the cast names with the culture review.
-4. **Read along across two items on one page.** Default: one button per item. Alternative: one page-level button that reads every exchange on the page.
+3. **Speaker portraits.** C-1's exchange line carries no cast id, so v1 shows a neutral person glyph in a disc for every speaker (no new art, Hoya included). Hoya's face (and later cast portraits) needs an optional cast id on the line, an additive schema change for a later row; S4-1 decides the cast names with the culture review.
+4. **Reading a 4-turn exchange that spans two pages** (Stage 4 Read Along q3). Default: Read along reads one page; the learner turns the page with Continue and taps Read along again (Read along never turns a page). Alternative: an exchange item of up to 4 lines, which needs C-1's two-line tuple widened and the weight rule kept.
+5. **Two-slot frames on the Stage 7 frame page.** §3.7's My Holiday Memory q2 frame is `___에 ___을/를 먹었어요`, and Write Frame allows one or two slots, but a Discover `pattern` frame has exactly one slot marker (C-1). Default: allow 1-2 slot markers in a Discover frame; each example then derives one slot per marker by the same word rule (S2), and each slot-plus-ending is its own unbreakable unit. This needs C-1's pattern refinement relaxed from `=== 1` to 1-2 (a schema change pointed at C-1 or the Stage 7 schema row) before the Stage 7 q2 cell is authored. Alternative: teach it as two one-slot patterns on two pages (`___에 가요`, `___을/를 먹었어요`).
