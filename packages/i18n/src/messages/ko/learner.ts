@@ -463,6 +463,18 @@ export const learner = {
       instruction: '한국어 낱말을 누르고, 그다음 그 뜻을 눌러요.',
       nowMeaning: '이제 오른쪽에서 그 뜻을 눌러요.',
     },
+    typeHangul: {
+      heading: {
+        see: '이 낱말을 입력해 봐요',
+        picture: '그림에 맞는 낱말을 입력해 봐요',
+      },
+      pass: '잘 입력했어요!',
+      near: '거의 다 됐어요! 표시된 글자를 살펴봐요.',
+      far: '이렇게 써요. 다시 해 봐요.',
+      typedLabel: '입력한 글자',
+      targetLabel: '낱말',
+      fixIt: { cta: '고치기' },
+    },
   },
 
   audio: {

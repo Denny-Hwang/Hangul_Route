@@ -28,7 +28,10 @@ export type IconName =
   | 'note'
   | 'heart'
   | 'route'
-  | 'flag';
+  | 'flag'
+  | 'shift'
+  | 'shift-on'
+  | 'backspace';
 
 export interface IconProps {
   name: IconName;

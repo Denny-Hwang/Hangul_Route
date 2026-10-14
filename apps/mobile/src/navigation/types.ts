@@ -11,6 +11,7 @@ import type { LibrarySectionId } from '../logic/story/library-sections';
 import type { SourcesRouteParams } from '../logic/story/source-link';
 import type { RoundSummary } from '../logic/vocab/stars';
 import type { VocabQuestionE2eParams } from './vocab-question-e2e';
+import type { TypeHangulE2eParams } from './type-hangul-e2e';
 
 /**
  * Where a grown-up action continues once the gate (or a new PIN) is through. `ExternalLink`
@@ -268,6 +269,8 @@ export type RootStackParamList = {
   NotesGrownUp: { profileId: string };
   /** Fixture builds only (`navigation/vocab-question-e2e.tsx`): the shared vocabulary question view on catalogue words. */
   VocabQuestionE2e: VocabQuestionE2eParams;
+  /** Fixture builds only (`navigation/type-hangul-e2e.tsx`): Type Hangul on fixture rounds (F-CURR-001 G-3). */
+  TypeHangulE2e: TypeHangulE2eParams;
 };
 
 /** The level check's screens (F-PLC-001 section 3.1); the flow state machine decides which one shows. */

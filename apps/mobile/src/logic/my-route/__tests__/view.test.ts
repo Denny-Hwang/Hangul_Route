@@ -193,7 +193,7 @@ describe('myRouteView: wireframe A (Appendix C, today mid-progress)', () => {
     ]);
     expect(v.skills[0]?.a11yLabel).toBe('Read. In 4 quests you finished.');
     expect(v.skills.map((s) => s.icon)).toEqual(['book', 'ear', 'pencil']);
-    expect(v.skills[2]?.sheet).toEqual({ title: 'Games that count for Write', note: 'A finished quest counts here when it has one of these games.', games: ['Trace a letter'] });
+    expect(v.skills[2]?.sheet).toEqual({ title: 'Games that count for Write', note: 'A finished quest counts here when it has one of these games.', games: ['Trace a letter', 'Type in Hangul'] });
     expect(new Set(v.skills.flatMap((s) => s.marks.map((p) => p.key))).size).toBe(9);
     expect(v.skillsNote).toBeNull();
     expect(v.tiles).toBeNull();
@@ -349,8 +349,8 @@ describe('the pieces', () => {
       if (SKILL_OF_KIND[kind].length > 0) expect(GAME_NAME_KEY[kind], kind).toBeDefined();
     }
     const games = EN.learner.myRoute.games;
-    // Only kinds the app can play are named: match-shape and the F-CURR-001 games (realia-read,
-    // type-hangul, trace-word, write-frame) have no screen yet.
+    // Only kinds the app can play are named: match-shape and the F-CURR-001 games still without a
+    // screen (realia-read, trace-word, write-frame) are not; type-hangul is playable since G-3.
     expect(gamesFor('read', games)).toEqual([
       'Hear a sound, find its letter',
       'Hear it, then tap the answer',
@@ -359,7 +359,7 @@ describe('the pieces', () => {
       'Read a story',
     ]);
     expect(gamesFor('listen', games)).toEqual(['Hear a sound, find its letter', 'Hear it, then tap the answer', 'Listen and pick']);
-    expect(gamesFor('write', games)).toEqual(['Trace a letter']);
+    expect(gamesFor('write', games)).toEqual(['Trace a letter', 'Type in Hangul']);
   });
 
   it('gamesFor names a game once its kind is playable', () => {

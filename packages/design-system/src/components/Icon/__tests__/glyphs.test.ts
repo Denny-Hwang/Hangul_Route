@@ -34,6 +34,9 @@ const EXPECTED_NAMES: IconName[] = [
   'heart',
   'route',
   'flag',
+  'shift',
+  'shift-on',
+  'backspace',
 ];
 
 describe('icon glyphs', () => {

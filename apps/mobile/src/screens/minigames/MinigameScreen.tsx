@@ -25,6 +25,7 @@ import { StoryReadGame } from './StoryReadGame';
 import { StorySequenceGame } from './StorySequenceGame';
 import { TapRespondGame } from './TapRespondGame';
 import { TraceStrokeGame } from './TraceStrokeGame';
+import { TypeHangulGame } from './TypeHangulGame';
 import { VoiceEchoGame } from './VoiceEchoGame';
 
 /**
@@ -132,6 +133,8 @@ export function MinigameScreen({ route, navigation, onOpenCultureNote, ...exitPr
       return <StoryReadGame scope={scope} onFinish={close} onBack={exits.back} onOpenCultureNote={openCultureNote} />;
     case 'story-check':
       return <StoryCheckGame scope={scope} onFinish={close} onBack={exits.back} />;
+    case 'type-hangul':
+      return <TypeHangulGame scope={scope} host={host} onBack={exits.back} />;
     default:
       return fallback(copy.comingSoon);
   }

@@ -106,6 +106,16 @@ export const a11y = {
     },
     koreanWord: (word: string) => `한국어 낱말 ${word}`,
     meaning: (gloss: string) => `뜻: ${gloss}`,
+    keyboard: {
+      key: (jamo: string, sound: string) => `${jamo}, ${sound}`,
+      shift: '시프트, 다른 글자',
+      delete: '마지막 글자 하나 지우기',
+      space: '띄어쓰기',
+      field: (text: string, romanization: string) => `입력한 글자: ${text}, ${romanization}`,
+      typedBlocks: (blocks: readonly string[]) => `입력한 글자: ${blocks.join(', ')}.`,
+      wordBlocks: (blocks: readonly string[]) => `낱말: ${blocks.join(', ')}.`,
+      different: (n: number) => `${n}번째 글자가 달라요.`,
+    },
   },
   koreanItem: (item: { ko: string; romanization: string; gloss?: string }) =>
     item.gloss === undefined ? `한글: ${item.ko}, ${item.romanization}` : `한글: ${item.ko}, ${item.romanization}, ${item.gloss}`,

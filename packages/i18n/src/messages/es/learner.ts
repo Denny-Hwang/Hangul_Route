@@ -476,6 +476,18 @@ export const learner = {
       instruction: 'Toca una palabra coreana y luego su significado.',
       nowMeaning: 'Ahora toca su significado a la derecha.',
     },
+    typeHangul: {
+      heading: {
+        see: 'Escribe esta palabra',
+        picture: 'Escribe la palabra de la imagen',
+      },
+      pass: '¡Lo escribiste!',
+      near: '¡Casi! Mira el bloque marcado.',
+      far: 'Así se escribe. Inténtalo otra vez.',
+      typedLabel: 'Escribiste',
+      targetLabel: 'La palabra',
+      fixIt: { cta: 'Corregir' },
+    },
   },
 
   audio: {

@@ -790,4 +790,10 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'learner.presenter.timer.minutes': [[1], [5]],
   'learner.presenter.timer.seconds': [[30]],
   'a11y.presenter.timerLeft': [['2:45']],
+  // F-CURR-001 G-3: the Hangul keyboard and the Type Hangul field (romanized stand-ins for the typed Korean).
+  'a11y.minigame.keyboard.key': [['g', 'g or k'], ['ng', 'silent or ng']],
+  'a11y.minigame.keyboard.field': [['hoya', 'hoya']],
+  'a11y.minigame.keyboard.typedBlocks': [[['ho', 'yeo']], [['bap']]],
+  'a11y.minigame.keyboard.wordBlocks': [[['ho', 'ya']]],
+  'a11y.minigame.keyboard.different': [[1], [2]],
 };
