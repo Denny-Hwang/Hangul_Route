@@ -9,7 +9,7 @@
     },
     "quest:stage7-nature-q1": {
       "title": "Animales que me gustan",
-      "blurb": "Traza y escribe nombres de animales, y escribe cuáles te gustan.",
+      "blurb": "Traza y teclea nombres de animales, y escribe cuáles te gustan.",
       "teaser": "Siguiente: escribe cómo son los animales.",
       "steps.s1.title": "Animales que me gustan",
       "steps.s2.title": "Me gusta ...",
@@ -19,12 +19,12 @@
       "steps.s6.title": "¡Lo escribiste!",
       "steps.s1.hoyaLine": "¡Vamos a escribir los nombres de los animales que te gustan!",
       "steps.s6.hoyaLine": "¡Escribiste nombres de animales en coreano!",
-      "steps.s2.discover.pages.0.caption": "Nombra lo que te gusta y luego añade la terminación.",
-      "steps.s2.discover.pages.1.caption": "Pon el animal que más te guste.",
+      "steps.s2.discover.pages.0.caption": "Nombra lo que te gusta y luego añade la marca de sujeto.",
+      "steps.s2.discover.pages.1.caption": "Cambia el animal por cualquiera que te guste.",
       "steps.s2.discover.pages.0.items.0.note": "Pon primero el animal y luego {ko:이} después de una consonante final o {ko:가} después de una vocal.",
       "steps.s2.discover.pages.1.items.0.sentence.gloss": "Me gustan los animales.",
       "steps.s2.discover.pages.1.items.1.sentence.gloss": "Me gustan los conejos.",
-      "steps.s2.discover.pages.0.items.0.frame.gloss": "Me gusta ___.",
+      "steps.s2.discover.pages.0.items.0.frame.gloss": "Me gustan los ___.",
       "steps.s2.discover.pages.0.items.0.examples.gomi-joayo.gloss": "Me gustan los osos.",
       "steps.s2.discover.pages.0.items.0.examples.goyangiga-joayo.gloss": "Me gustan los gatos."
     },
@@ -48,8 +48,8 @@
       "orderIt.rounds.c1.sentence.gloss": "Me gustan los gatos.",
       "orderIt.rounds.c2.sentence.gloss": "Me gustan los tigres.",
       "orderIt.rounds.c2.distractors.gomi.gloss": "oso (como sujeto)",
-      "orderIt.rounds.c1.particle.choices.i.gloss": "marcador de sujeto (después de consonante final)",
-      "orderIt.rounds.c1.particle.choices.ga.gloss": "marcador de sujeto (después de vocal)"
+      "orderIt.rounds.c1.particle.choices.i.gloss": "marca de sujeto (después de una consonante final)",
+      "orderIt.rounds.c1.particle.choices.ga.gloss": "marca de sujeto (después de una vocal)"
     },
     "quest:stage7-nature-q2": {
       "title": "Tigre grande, gato lindo",
@@ -61,11 +61,11 @@
       "steps.s4.title": "Escríbelo",
       "steps.s5.title": "Dos preguntas rápidas",
       "steps.s6.title": "¡Los describiste!",
-      "steps.s1.hoyaLine": "En un cuento coreano antiguo, un tigre pide pasteles de arroz. ¡Vamos a escribir sobre tigres!",
+      "steps.s1.hoyaLine": "En un cuento coreano antiguo, un tigre pide tteok (pasteles de arroz). ¡Vamos a escribir sobre tigres!",
       "steps.s6.hoyaLine": "Escribiste cómo son los animales. ¡Muy bien escrito!",
-      "steps.s2.discover.pages.0.caption": "Primero di de qué hablas.",
-      "steps.s2.discover.pages.1.caption": "Luego di cómo es.",
-      "steps.s2.discover.pages.0.items.0.note": "{ko:은} después de una consonante final, {ko:는} después de una vocal: marca de qué estás hablando.",
+      "steps.s2.discover.pages.0.caption": "Primero escribe de qué se trata.",
+      "steps.s2.discover.pages.1.caption": "Luego escribe cómo es.",
+      "steps.s2.discover.pages.0.items.0.note": "{ko:은} después de una consonante final, {ko:는} después de una vocal: marca de qué trata la oración.",
       "steps.s2.discover.pages.1.items.0.sentence.gloss": "Los gatos son lindos.",
       "steps.s2.discover.pages.1.items.1.sentence.gloss": "Los conejos son pequeños.",
       "steps.s2.discover.pages.0.items.0.frame.gloss": "Los ___ son grandes.",
@@ -78,12 +78,12 @@
       "orderIt.rounds.r3.sentence.gloss": "Los conejos son pequeños.",
       "orderIt.rounds.r4.sentence.gloss": "Los gatos son lindos.",
       "orderIt.rounds.r3.distractors.keoyo.gloss": "es grande",
-      "orderIt.rounds.r1.particle.choices.eun.gloss": "marcador de tema (después de consonante final)",
-      "orderIt.rounds.r1.particle.choices.neun.gloss": "marcador de tema (después de vocal)",
-      "orderIt.rounds.r2.particle.choices.eun.gloss": "marcador de tema (después de consonante final)",
-      "orderIt.rounds.r2.particle.choices.neun.gloss": "marcador de tema (después de vocal)",
-      "orderIt.rounds.r4.particle.choices.eun.gloss": "marcador de tema (después de consonante final)",
-      "orderIt.rounds.r4.particle.choices.neun.gloss": "marcador de tema (después de vocal)"
+      "orderIt.rounds.r1.particle.choices.eun.gloss": "marca de tema (después de una consonante final)",
+      "orderIt.rounds.r1.particle.choices.neun.gloss": "marca de tema (después de una vocal)",
+      "orderIt.rounds.r2.particle.choices.eun.gloss": "marca de tema (después de una consonante final)",
+      "orderIt.rounds.r2.particle.choices.neun.gloss": "marca de tema (después de una vocal)",
+      "orderIt.rounds.r4.particle.choices.eun.gloss": "marca de tema (después de una consonante final)",
+      "orderIt.rounds.r4.particle.choices.neun.gloss": "marca de tema (después de una vocal)"
     },
     "minigame:s7-nature-q2-apply": {
       "typeHangul.rounds.y1.prompt": "Escribe: Los tigres son grandes.",
@@ -97,8 +97,8 @@
       "orderIt.rounds.c1.sentence.gloss": "Los pájaros son pequeños.",
       "orderIt.rounds.c2.sentence.gloss": "Los osos son lindos.",
       "orderIt.rounds.c2.distractors.jagayo.gloss": "es pequeño",
-      "orderIt.rounds.c1.particle.choices.eun.gloss": "marcador de tema (después de consonante final)",
-      "orderIt.rounds.c1.particle.choices.neun.gloss": "marcador de tema (después de vocal)"
+      "orderIt.rounds.c1.particle.choices.eun.gloss": "marca de tema (después de una consonante final)",
+      "orderIt.rounds.c1.particle.choices.neun.gloss": "marca de tema (después de una vocal)"
     },
     "quest:stage7-nature-q3": {
       "title": "Mi animal favorito",
@@ -110,10 +110,10 @@
       "steps.s5.title": "Dos preguntas rápidas",
       "steps.s6.title": "¡Tus propias oraciones!",
       "steps.s1.hoyaLine": "¿Qué animal te gusta más? ¡Cualquier respuesta está bien!",
-      "steps.s6.hoyaLine": "¡Escribiste sobre tu animal favorito, con tu propio coreano!",
+      "steps.s6.hoyaLine": "¡Escribiste sobre tu animal favorito en coreano, con tus propias palabras!",
       "steps.s2.discover.pages.0.caption": "Nombra tu favorito y luego añade la terminación.",
       "steps.s2.discover.pages.1.caption": "La primera palabra es un «yo» cortés. Añade una oración más sobre él.",
-      "steps.s2.discover.pages.0.items.0.note": "{ko:제가 좋아하는 동물} es el animal que me gusta. Luego {ko:이에요} después de consonante final, {ko:예요} después de vocal.",
+      "steps.s2.discover.pages.0.items.0.note": "{ko:제가 좋아하는 동물} es el animal que me gusta. Luego {ko:이에요} después de una consonante final, {ko:예요} después de una vocal.",
       "steps.s2.discover.pages.1.items.0.sentence.gloss": "Mi animal favorito es el tigre.",
       "steps.s2.discover.pages.1.items.1.sentence.gloss": "Es muy lindo.",
       "steps.s2.discover.pages.0.items.0.frame.gloss": "Mi animal favorito es ___.",
@@ -127,10 +127,10 @@
       "orderIt.rounds.r4.sentence.gloss": "Mi animal favorito es el gato.",
       "orderIt.rounds.r3.distractors.keoyo.gloss": "es grande",
       "orderIt.rounds.r4.distractors.tokkiyeyo.gloss": "es un conejo",
-      "orderIt.rounds.r1.particle.choices.ieyo.gloss": "es (después de consonante final)",
-      "orderIt.rounds.r1.particle.choices.yeyo.gloss": "es (después de vocal)",
-      "orderIt.rounds.r2.particle.choices.ieyo.gloss": "es (después de consonante final)",
-      "orderIt.rounds.r2.particle.choices.yeyo.gloss": "es (después de vocal)"
+      "orderIt.rounds.r1.particle.choices.ieyo.gloss": "es (después de una consonante final)",
+      "orderIt.rounds.r1.particle.choices.yeyo.gloss": "es (después de una vocal)",
+      "orderIt.rounds.r2.particle.choices.ieyo.gloss": "es (después de una consonante final)",
+      "orderIt.rounds.r2.particle.choices.yeyo.gloss": "es (después de una vocal)"
     },
     "minigame:s7-nature-q3-apply": {
       "writeFrame.rounds.w1.frame.gloss": "Me gusta el ___.",
@@ -159,8 +159,8 @@
       "orderIt.rounds.c1.sentence.gloss": "Mi animal favorito es el pájaro.",
       "orderIt.rounds.c2.sentence.gloss": "Los conejos son muy lindos.",
       "orderIt.rounds.c2.distractors.keoyo.gloss": "es grande",
-      "orderIt.rounds.c1.particle.choices.ieyo.gloss": "es (después de consonante final)",
-      "orderIt.rounds.c1.particle.choices.yeyo.gloss": "es (después de vocal)"
+      "orderIt.rounds.c1.particle.choices.ieyo.gloss": "es (después de una consonante final)",
+      "orderIt.rounds.c1.particle.choices.yeyo.gloss": "es (después de una vocal)"
     }
   }
 }
