@@ -1,4 +1,4 @@
-import { Button, Hoya, Icon, borderWidth, colors, layout, radii, shadows, spacing, touchTarget, typography } from '@hangul-route/design-system';
+import { Hoya, Icon, borderWidth, colors, layout, radii, shadows, spacing, touchTarget, typography } from '@hangul-route/design-system';
 import type { LectureDeck } from '@hangul-route/content-schema';
 import type { Messages, UiLocale } from '@hangul-route/i18n';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
@@ -31,7 +31,8 @@ export interface PresenterHomeProps {
   /** The chips; fewer than two draws none (`showLanguagePickers`). */
   languages: readonly LanguageOption[];
   onLanguage: (locale: UiLocale) => void;
-  onHelp: () => void;
+  /** Opens the Help overlay (PR 9); without it the Keys and help button is not drawn, so it never leads nowhere. */
+  onHelp?: () => void;
   recent: RecentState;
   onResume: (item: RecentItem) => void;
   onStartOver: (item: RecentItem) => void;
@@ -67,6 +68,62 @@ function H({ level, children, style }: { level: 1 | 2 | 3; children: string; sty
     <Text role="heading" aria-level={level} style={style}>
       {children}
     </Text>
+  );
+}
+
+/**
+ * The page's pill buttons as the mock draws them (`mock/presenter.css` `.btn`): paper with a
+ * `border.strong` outline, or `brand.primaryDark` when primary; disabled is `surface.sunken`
+ * (shape and fill, not colour of the text alone). `compact` is the 64 px row and header size.
+ */
+function HomeButton({
+  label,
+  onPress,
+  primary,
+  compact,
+  disabled,
+  testID,
+}: {
+  label: string;
+  onPress: () => void;
+  primary?: boolean;
+  compact?: boolean;
+  disabled?: boolean;
+  testID?: string;
+}): React.ReactElement {
+  const fill = disabled ? colors.surface.sunken : primary ? colors.brand.primaryDark : colors.surface.paper;
+  const edge = disabled ? colors.surface.sunken : primary ? colors.brand.primaryDark : colors.border.strong;
+  return (
+    <Pressable
+      role="button"
+      accessibilityLabel={label}
+      accessibilityState={{ disabled: disabled === true }}
+      disabled={disabled}
+      onPress={onPress}
+      testID={testID}
+      style={({ focused }: Focusable) => ({
+        minHeight: compact ? touchTarget.min : touchTarget.hero,
+        minWidth: compact ? touchTarget.min : touchTarget.hero,
+        paddingVertical: compact ? spacing.xs : spacing.sm,
+        paddingHorizontal: compact ? spacing.lg : spacing.xl,
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderRadius: radii.pill,
+        borderWidth: borderWidth.base,
+        borderColor: edge,
+        backgroundColor: fill,
+        ...ring(focused),
+      })}
+    >
+      <Text
+        style={{
+          ...text(compact ? typography.size.body : typography.size.bodyLg, 'bold', primary && !disabled ? colors.text.onPrimary : colors.text.primary),
+          textAlign: 'center',
+        }}
+      >
+        {label}
+      </Text>
+    </Pressable>
   );
 }
 
@@ -118,7 +175,7 @@ export function PresenterHomeScreen(props: PresenterHomeProps): React.ReactEleme
             {props.languages.length >= 2 ? (
               <LanguageRadios options={props.languages} selected={locale} onSelect={props.onLanguage} label={m.language.title} />
             ) : null}
-            <Button label={m.home.help.cta} onPress={props.onHelp} tone="secondary" size="md" testID="presenter-home-help" />
+            {props.onHelp ? <HomeButton label={m.home.help.cta} onPress={props.onHelp} compact testID="presenter-home-help" /> : null}
           </View>
         </View>
         {wide ? (
@@ -263,8 +320,8 @@ function RecentPanel({ messages, locale, recent, onResume, onStartOver, onRemove
               </Pressable>
             </View>
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
-              <Button label={m.resume.cta} onPress={() => onResume(item)} tone="primary" size="md" testID={`presenter-recent-resume-${item.deck.id}`} />
-              <Button label={m.startOver.cta} onPress={() => onStartOver(item)} tone="secondary" size="md" testID={`presenter-recent-startover-${item.deck.id}`} />
+              <HomeButton label={m.resume.cta} onPress={() => onResume(item)} primary compact testID={`presenter-recent-resume-${item.deck.id}`} />
+              <HomeButton label={m.startOver.cta} onPress={() => onStartOver(item)} compact testID={`presenter-recent-startover-${item.deck.id}`} />
             </View>
           </View>
         ))}
@@ -339,7 +396,7 @@ function QuickPanel({ messages, locale, quick, onBuild, now, rng }: PresenterHom
         <Text role="status" aria-live="polite" testID="presenter-home-chosen" style={{ ...text(typography.size.body, 'regular', colors.text.primary), flexShrink: 1 }}>
           {chosen.length === 0 ? m.nothing : full ? `${m.chosen(chosen.length)} ${m.full(QUICK_MAX_BLOCKS)}` : m.chosen(chosen.length)}
         </Text>
-        <Button label={m.build.cta} onPress={build} tone="primary" size="hero" disabled={chosen.length === 0} testID="presenter-home-build" />
+        <HomeButton label={m.build.cta} onPress={build} primary disabled={chosen.length === 0} testID="presenter-home-build" />
       </View>
       <Text style={text(typography.size.body, 'regular', colors.text.secondary)}>{messages.learner.presenter.language.note}</Text>
     </View>
