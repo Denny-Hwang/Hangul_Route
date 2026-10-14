@@ -228,11 +228,11 @@ A-3 이 아니라 **A-4b 머지 후**에 한다: A-4b 의 공통 어른 레이�
 `hangul-route-app` 빌드 변수 `EXPO_PUBLIC_GROWN_UP_HOME` = `true`, `EXPO_PUBLIC_SITE_URL` = `https://hangulroute.com` → **Retry deployment**. (`EXPO_PUBLIC_CONSOLE_URL` 은 F-BILL-002 가 더 읽지 않게 된 뒤 삭제.) 같은 창에서 사이트 빌드 변수 `CONSOLE_ORIGIN` (§E2 S-3b: 사이트 링크와 옛 주소 리다이렉트) 과 API 의 `CONSOLE_URL` (§E2 S-3c: Stripe 복귀 주소) 도 바꾼다 (2026-10-13 개정: 예전의 `out-site/` 와 `BILLING_URL` 은 없다).
 **확인**: 학습자 프로필이 없는 브라우저의 Welcome 에 "Here to support a learner?" 행이 보이고 **Parent or caregiver** 가 `/signin?persona=parent` 로 간다. 학습자 프로필이 있는 기기에서는 Profile → 어른 영역 → **Grown-up home** → PIN → 어른 영역이 열린다.
 
-**되돌리기**: S-3 는 `EXPO_PUBLIC_GROWN_UP_HOME` 을 `false` 로 (또는 삭제) → Retry deployment. 사이트는 `hangul-route-web` 의 `CONSOLE_ORIGIN` 삭제 → Retry deployment, Stripe 복귀는 `CONSOLE_URL` 을 `https://hangulroute.com` 으로 (§E2). 앱 호스트의 어른 페이지는 남아 있어도 무해하고, 데이터는 어느 방향으로도 바뀌지 않는다. 마지막 단계 A-10 (기본값 켜기) 은 M3 후 14일 이상 지나 머지된다.
+**되돌리기**: S-3 는 `EXPO_PUBLIC_GROWN_UP_HOME` 을 `false` 로 (또는 삭제) → Retry deployment. 사이트는 `hangul-route-web` 의 `CONSOLE_ORIGIN` 을 `false` 로 → Retry deployment (F-SITE-002 S-10 부터 변수를 **지우면** 코드 기본값인 앱 호스트로 간다), Stripe 복귀는 `CONSOLE_URL` 을 `https://hangulroute.com` 으로 (§E2). 앱 호스트의 어른 페이지는 남아 있어도 무해하고, 데이터는 어느 방향으로도 바뀌지 않는다. 마지막 단계 A-10 (기본값 켜기) 은 원래 M3 후 14일 뒤였지만, 오너 결정 (2026-10-14) 으로 기다리지 않고 M3 와 같은 날 진행한다.
 
 ## E2. 앱 호스트 이전 체크리스트 — 순서대로 한 번에 (F-APP-001 S-1 → S-2 → S-0 → S-3a → S-3b → S-3c, 2026-10-13)
 
-> §E 의 단계를 **정확한 값·확인·되돌리기**와 함께 실행 순서로 펼친 것이다. 위에서부터 한 줄씩 하고, 각 줄의 **확인**이 통과해야 다음 줄로 간다. 대시보드 작업만 있고 저장소 작업은 없다 (저장소 쪽은 PR "F-APP-001 S-0..S-3 prep" 이 끝냈다: 사이트 빌드가 `CONSOLE_ORIGIN` 이 있을 때만 `_redirects` 를 쓴다). **Stripe 는 Test mode 그대로, Live 는 켜지 않는다.** Secret 값은 어디에도 붙여 넣어 보내지 않는다.
+> §E 의 단계를 **정확한 값·확인·되돌리기**와 함께 실행 순서로 펼친 것이다. 위에서부터 한 줄씩 하고, 각 줄의 **확인**이 통과해야 다음 줄로 간다. 대시보드 작업만 있고 저장소 작업은 없다 (저장소 쪽은 PR "F-APP-001 S-0..S-3 prep" 이 끝냈다: 사이트 빌드가 `CONSOLE_ORIGIN` 이 있을 때만 `_redirects` 를 쓴다; F-SITE-002 S-10 (2026-10-14) 부터는 `CONSOLE_ORIGIN=false` 가 아니면 늘 앱 호스트로 쓴다). **Stripe 는 Test mode 그대로, Live 는 켜지 않는다.** Secret 값은 어디에도 붙여 넣어 보내지 않는다.
 
 **날짜 게이트 (머지 시각에서 계산, UTC)**
 
@@ -241,7 +241,7 @@ A-3 이 아니라 **A-4b 머지 후**에 한다: A-4b 의 공통 어른 레이�
 | S-1, S-2 의 Clerk 확인 | A-4b `#458` (2026-10-12 23:11), A-5c `#481` (2026-10-13 04:42) 이 앱 호스트에 배포됨 (2026-10-14 curl 로 확인) | **지금 가능** |
 | S-2 의 M2 실기기 로그인 | A-6 `#404` 2026-10-12 16:19 + 7일 (옛 학습자 탭) | **2026-10-19 16:19 UTC** (한국 2026-10-20 01:19) |
 | S-0 과 M3 (S-3a, S-3b, S-3c) | A-2 `#386` 2026-10-12 09:14 + 7일 (옛 서비스 워커), 그리고 M2 뒤 | **M2 가 끝난 뒤, 2026-10-19 16:19 UTC 이후** |
-| A-10 과 F-SITE-002 S-10 (코드 기본값) | M3 + 14일 | M3 날짜 + 14일 (나중 PR, 이 체크리스트 밖) |
+| A-10 과 F-SITE-002 S-10 (코드 기본값) | M3 + 14일. **오너 결정 (2026-10-14): 14일 대기를 건너뛴다** (앞의 7일 대기와 같이). M3 는 2026-10-14 에 끝났고 운영에서 확인됐다 | **2026-10-14 진행** (PR, 이 체크리스트 밖) |
 
 **2026-10-14 05:19 UTC 운영 확인 (읽기 전용 curl)**: 앱 호스트의 `/signin` · `/start` · `/teach` · `/teach/home` · `/parent` · `/account/billing` · `/teach/billing` 이 콘솔 페이지를 `noindex` · `no-store` · `frame-ancestors 'none'` 로 서빙한다. `https://app.hangulroute.com/sw.js` 에 denylist 와 `grown-ups-offline.html` 이 있다. 앱 호스트 콘솔 번들에는 Clerk 키가 **아직 없다** (S-1 미완). Clerk Production (`clerk.hangulroute.com`) 은 `https://app.hangulroute.com` 에 CORS 를 허용하고, 가입 시 이메일 확인 · 이메일 코드 · Google 이 켜져 있다. API 는 앱 호스트에 CORS 를 허용한다 (`ALLOWED_ORIGINS` 에 이미 있음). hangulroute.com 은 아직 콘솔을 직접 서빙한다 (리다이렉트 없음).
 
@@ -291,8 +291,8 @@ A-3 이 아니라 **A-4b 머지 후**에 한다: A-4b 의 공통 어른 레이�
    - 3b 전에 hangulroute.com/teach 에 로그인해 있던 브라우저로 `https://hangulroute.com/teach/home` 을 연다 → 앱 호스트에서 로그인된 채로 열리거나, 한 번 로그인하라고 나온다. 둘 다 정상이다. 옛 주소 (hangulroute.com) 에 브라우저가 기억하던 것 (마지막 페르소나, 콘솔 언어 선택, 보내지 않은 쪽지 초안) 은 앱 호스트로 넘어가지 않는다. 서버의 데이터 (학급, 가족, 결제) 는 그대로다.
    - `https://hangulroute.com/privacy`, `/terms`, `/about`, `/design-preview` 는 **사이트에 그대로** 열린다 (리다이렉트 없음).
    - (선택, 터미널이 있으면) `curl -sI https://hangulroute.com/teach/home` 이 `302` 와 `location: https://app.hangulroute.com/teach/home` 을 보여 준다.
-**되돌리기**: `hangul-route-web` 에서 `CONSOLE_ORIGIN` 을 지운다 → Retry deployment. 빌드가 `_redirects` 를 쓰지 않으므로 사이트가 다시 콘솔을 직접 서빙하고 링크도 사이트로 돌아온다. 302 (임시) 라 브라우저에 남지 않는다.
-**되돌리기 확인**: 그 빌드 로그에 `site-redirects: CONSOLE_ORIGIN is unset, no _redirects` 줄이 있고, `curl -sI https://hangulroute.com/teach/home` 이 `200` 을 보여 준다 (`location:` 줄 없음).
+**되돌리기**: `hangul-route-web` 에서 `CONSOLE_ORIGIN` 의 값을 `false` 로 바꾼다 → Retry deployment. 빌드가 `_redirects` 를 쓰지 않으므로 사이트가 다시 콘솔을 직접 서빙하고 링크도 사이트로 돌아온다. 302 (임시) 라 브라우저에 남지 않는다. (F-SITE-002 S-10, 2026-10-14 부터 변수를 **지우면** 코드 기본값인 앱 호스트로 가므로 지우는 것은 되돌리기가 아니다.)
+**되돌리기 확인**: 그 빌드 로그에 `site-redirects: CONSOLE_ORIGIN is off, no _redirects` 줄이 있고, `curl -sI https://hangulroute.com/teach/home` 이 `200` 을 보여 준다 (`location:` 줄 없음).
 
 ### 6. S-3c — Stripe 결제 복귀 주소를 앱 호스트로 (3분, 3b 뒤, Stripe 는 Test mode 그대로)
 1. **`hangul-route-api`** → Settings → Variables and Secrets (런타임) → `CONSOLE_URL` (Type Text) 의 값을 `https://hangulroute.com` 에서 **`https://app.hangulroute.com`** 으로 바꾼다 → **Deploy**. 다른 변수 · Secret 은 건드리지 않는다. `BILLING_URL` 은 만들지 않는다 (F-BILL-002 가 뺐다).
@@ -300,7 +300,7 @@ A-3 이 아니라 **A-4b 머지 후**에 한다: A-4b 의 공통 어른 레이�
 **되돌리기**: `CONSOLE_URL` = `https://hangulroute.com` → Deploy.
 
 ### 7. 끝난 뒤 보내 줄 것
-M2 여섯 조합 결과, 3a 의 확인 2 (설치한 앱 창), 3b 의 다섯 줄, 3c 의 복귀 주소, 그리고 **M3 날짜** (3a 를 한 날). 그 날짜 + 14일이 지나면 A-10 (`grownUpHomeEnabled` 기본 켜기, `grown-up-shell.spec.ts`) 과 F-SITE-002 S-10 (`SITE_DEFAULT_CONSOLE_ORIGIN = APP_ORIGIN`) PR 을 연다. 그 PR 들이 머지되기 전에는 변수를 지우지 않는다; 머지된 뒤에도 변수는 남겨 두어도 같은 값이라 무해하다.
+M2 여섯 조합 결과, 3a 의 확인 2 (설치한 앱 창), 3b 의 다섯 줄, 3c 의 복귀 주소, 그리고 **M3 날짜** (3a 를 한 날). 원래는 그 날짜 + 14일 뒤에 A-10 (`grownUpHomeEnabled` 기본 켜기, `grown-up-shell.spec.ts`) 과 F-SITE-002 S-10 (`SITE_DEFAULT_CONSOLE_ORIGIN = APP_ORIGIN`) PR 을 열었지만, **오너 결정 (2026-10-14)** 으로 14일 대기를 건너뛰고 M3 를 끝낸 2026-10-14 에 연다. 그 PR 들이 머지되기 전에는 변수를 지우지 않는다; 머지된 뒤에도 변수는 남겨 두어도 같은 값이라 무해하다. 머지된 뒤 끄는 방법은 변수를 지우는 것이 아니라 값을 `false` 로 바꾸는 것이다 (`EXPO_PUBLIC_GROWN_UP_HOME=false`, `CONSOLE_ORIGIN=false`).
 
 ## F. 어른의 쪽지 (Notes from grown-ups, F-FEEDBACK-001)
 

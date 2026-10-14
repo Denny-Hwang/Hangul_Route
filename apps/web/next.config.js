@@ -4,20 +4,23 @@ const path = require('node:path');
 const LOCAL_HOSTS = new Set(['localhost', '127.0.0.1', '[::1]']);
 /** The only domain an https CONSOLE_ORIGIN may name (itself or a subdomain), so a mistyped host fails the build. */
 const SITE_DOMAIN = 'hangulroute.com';
+/** The kill switch values (trimmed, lower case): grown-up links stay on the site (CONSOLE_ORIGIN_OFF in site-links.ts). */
+const CONSOLE_ORIGIN_OFF = ['false', '0'];
 
 /**
- * CONSOLE_ORIGIN as the build inlines it: unset = '', a blank value as it is (both mean the site's own
- * origin). Any other value must be an https URL on hangulroute.com or a subdomain (plain http only on LOCAL_HOSTS), the rule of grownUpOrigin in
- * src/lib/site-links.ts, which this CommonJS file cannot import; site-links.test.ts checks they agree. A value
- * that grownUpOrigin would ignore (the likeliest typo leaves out "https://") fails the build, and a failed
- * build keeps the previous deployment live, instead of shipping Sign in links that silently stay on the site.
+ * CONSOLE_ORIGIN as the build inlines it: unset = '', a blank value as it is (both mean the default, the app
+ * host since F-SITE-002 S-10), and the kill switch `false` or `0` as it is (the site's own origin). Any other
+ * value must be an https URL on hangulroute.com or a subdomain (plain http only on LOCAL_HOSTS), the rule of
+ * parseConsoleOrigin in src/lib/site-links.ts, which this CommonJS file cannot import; site-links.test.ts checks
+ * they agree. A value that parseConsoleOrigin would ignore (the likeliest typo leaves out "https://") fails the
+ * build, and a failed build keeps the previous deployment live, instead of shipping links nobody asked for.
  * @param {string | undefined} raw
  * @returns {string}
  */
 function consoleOrigin(raw) {
   const value = raw ?? '';
   const trimmed = value.trim();
-  if (!trimmed) return value;
+  if (!trimmed || CONSOLE_ORIGIN_OFF.includes(trimmed.toLowerCase())) return value;
   let url = null;
   try {
     url = new URL(trimmed);
@@ -28,7 +31,7 @@ function consoleOrigin(raw) {
   const allowed = url !== null && ((url.protocol === 'https:' && ownHost) || (url.protocol === 'http:' && LOCAL_HOSTS.has(url.hostname)));
   if (!allowed) {
     throw new Error(
-      `CONSOLE_ORIGIN must be an https origin on hangulroute.com such as https://app.hangulroute.com (plain http only for localhost), got ${JSON.stringify(value)}. Unset it to keep grown-up links on this site.`,
+      `CONSOLE_ORIGIN must be an https origin on hangulroute.com such as https://app.hangulroute.com (plain http only for localhost), got ${JSON.stringify(value)}. Set it to false to keep grown-up links on this site.`,
     );
   }
   return value;
@@ -42,7 +45,7 @@ const nextConfig = {
   output: 'export',
   images: { unoptimized: true },
   // The site build variable of F-SITE-002 §3.8: where the site's grown-up links point (lib/site-links.ts).
-  // Inlined in server and client code alike; unset = the site's own origin.
+  // Inlined in server and client code alike; unset = the app host (S-10), false or 0 = the site's own origin.
   env: { CONSOLE_ORIGIN: consoleOrigin(process.env.CONSOLE_ORIGIN) },
   transpilePackages: [
     '@hangul-route/content-schema',

@@ -74,7 +74,7 @@ Footer (phones: two columns, Guide and App left, Company right; wide: three colu
 - Skip link → focus moves to `main#content`.
 - Brand → locale home (`sitePath(locale, '/')`).
 - Learners / Parents / Teachers → `sitePath(locale, '/learners' | '/parents' | '/teachers')` (Next `Link` inside the site route group).
-- Sign in → `siteLinks.signIn()` (plain `<a>`): `/signin` on the same origin until the owner sets `CONSOLE_ORIGIN`, then `https://app.hangulroute.com/signin` (F-APP-001 §3.7; neutral intro, no persona hint). Never `/teach`.
+- Sign in → `siteLinks.signIn()` (plain `<a>`): `https://app.hangulroute.com/signin` by default (F-SITE-002 S-10); `/signin` on the same origin only with the kill switch `CONSOLE_ORIGIN=false` (F-APP-001 §3.7; neutral intro, no persona hint). Never `/teach`.
 - Start / Start learning (wide header, footer) → `siteLinks.learnerStart(locale)` (plain `<a>`).
 - Legal variant: the footer has no App group.
 - Contact → `mailto:` (`data/contact.ts`).

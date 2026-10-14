@@ -25,7 +25,7 @@ Phone:
 +--------------------------------------+
 | H1 For teachers                      |
 | one-line lead                        |
-| [[ SIGN IN AS A TEACHER ]]           |  -> /signin?persona=teacher (same origin until CONSOLE_ORIGIN, then app host)
+| [[ SIGN IN AS A TEACHER ]]           |  -> /signin?persona=teacher (app host by default, S-10; same origin only with CONSOLE_ORIGIN=false)
 | [ Try it as a learner ]              |  -> app (learner start), secondary
 +--------------------------------------+
 | H2 Set up in minutes                 |

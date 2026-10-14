@@ -3,13 +3,13 @@ import { APP_ORIGIN, APP_ROUTES, personaHint } from '@hangul-route/content-schem
 import { LOCALES } from '@hangul-route/i18n';
 import { afterEach, beforeEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
 import { appUrl } from '../console/config';
-import { SITE_DEFAULT_CONSOLE_ORIGIN, grownUpOrigin, learnerStart, signIn, type GrownUpPersona } from '../site-links';
+import { CONSOLE_ORIGIN_OFF, SITE_DEFAULT_CONSOLE_ORIGIN, grownUpOrigin, learnerStart, parseConsoleOrigin, signIn, type GrownUpPersona } from '../site-links';
 import { appEntryUrl } from '../site-path';
 
 /**
  * The only place the site builds an app URL (F-SITE-002 §3.8, PR S-2). Paths come from F-APP-001's
- * `APP_ROUTES`, the grown-up origin from the site build variable `CONSOLE_ORIGIN` (same origin while it is
- * unset), and the learner action from `appEntryUrl(appUrl(), locale)` exactly as the landing builds it today.
+ * `APP_ROUTES`, the grown-up origin from the site build variable `CONSOLE_ORIGIN` (the app host while it is
+ * unset since S-10, the site's own origin for the kill switch `false` or `0`), and the learner action from `appEntryUrl(appUrl(), locale)` exactly as the landing builds it today.
  */
 const PERSONAS: readonly GrownUpPersona[] = ['parent', 'teacher'];
 
@@ -23,17 +23,24 @@ beforeEach(() => {
 });
 afterEach(() => vi.unstubAllEnvs());
 
-describe('SITE_DEFAULT_CONSOLE_ORIGIN (until S-10)', () => {
-  it('is the same origin, so a build without CONSOLE_ORIGIN keeps grown-ups on the site host', () => {
-    expect(SITE_DEFAULT_CONSOLE_ORIGIN).toBe('');
+describe('SITE_DEFAULT_CONSOLE_ORIGIN (S-10)', () => {
+  it('is the app host, so a build without CONSOLE_ORIGIN sends grown-ups where production moved them at M3', () => {
+    expect(SITE_DEFAULT_CONSOLE_ORIGIN).toBe(APP_ORIGIN);
+  });
+
+  it('keeps the kill switch: false or 0 (any case, trimmed) means the site\'s own origin', () => {
+    expect(CONSOLE_ORIGIN_OFF).toEqual(['false', '0']);
+    for (const off of ['false', '0', 'FALSE', ' False ', ' 0 ']) {
+      expect(grownUpOrigin({ CONSOLE_ORIGIN: off }), off).toBe('');
+    }
   });
 });
 
 describe('grownUpOrigin', () => {
-  it('is the same origin when CONSOLE_ORIGIN is unset, empty or blank', () => {
-    expect(grownUpOrigin({})).toBe('');
-    expect(grownUpOrigin({ CONSOLE_ORIGIN: '' })).toBe('');
-    expect(grownUpOrigin({ CONSOLE_ORIGIN: '   ' })).toBe('');
+  it('is the app host when CONSOLE_ORIGIN is unset, empty or blank', () => {
+    expect(grownUpOrigin({})).toBe(APP_ORIGIN);
+    expect(grownUpOrigin({ CONSOLE_ORIGIN: '' })).toBe(APP_ORIGIN);
+    expect(grownUpOrigin({ CONSOLE_ORIGIN: '   ' })).toBe(APP_ORIGIN);
   });
 
   it('trims CONSOLE_ORIGIN and drops a trailing slash', () => {
@@ -69,6 +76,8 @@ describe('grownUpOrigin', () => {
   });
 
   it('reads the build variable by default', () => {
+    expect(grownUpOrigin()).toBe(APP_ORIGIN);
+    vi.stubEnv('CONSOLE_ORIGIN', 'false');
     expect(grownUpOrigin()).toBe('');
     vi.stubEnv('CONSOLE_ORIGIN', 'https://app.hangulroute.com/');
     expect(grownUpOrigin()).toBe(APP_ORIGIN);
@@ -76,13 +85,15 @@ describe('grownUpOrigin', () => {
 });
 
 describe('signIn (F-APP-001 §3.7 /signin with ?persona=)', () => {
-  it('is /signin on the same origin before M3', () => {
+  it('is /signin on the same origin with the kill switch CONSOLE_ORIGIN=false', () => {
+    vi.stubEnv('CONSOLE_ORIGIN', 'false');
     expect(signIn()).toBe('/signin');
     expect(signIn('parent')).toBe('/signin?persona=parent');
     expect(signIn('teacher')).toBe('/signin?persona=teacher');
   });
 
-  it('is /signin on the app host once CONSOLE_ORIGIN is set (F-APP-001 §6.4)', () => {
+  it('is /signin on the app host by default (S-10) and with CONSOLE_ORIGIN set (F-APP-001 §6.4)', () => {
+    expect(signIn('parent')).toBe('https://app.hangulroute.com/signin?persona=parent');
     vi.stubEnv('CONSOLE_ORIGIN', 'https://app.hangulroute.com');
     expect(signIn()).toBe('https://app.hangulroute.com/signin');
     expect(signIn('parent')).toBe('https://app.hangulroute.com/signin?persona=parent');
@@ -90,6 +101,7 @@ describe('signIn (F-APP-001 §3.7 /signin with ?persona=)', () => {
   });
 
   it('spells no path itself: the path is APP_ROUTES.signIn', () => {
+    vi.stubEnv('CONSOLE_ORIGIN', 'false');
     expect(signIn()).toBe(APP_ROUTES.signIn);
     vi.stubEnv('CONSOLE_ORIGIN', APP_ORIGIN);
     expect(signIn()).toBe(`${APP_ORIGIN}${APP_ROUTES.signIn}`);
@@ -140,7 +152,8 @@ describe('never /teach, never /parent, never /account, never billing', () => {
   }
 
   it.each([
-    ['the same origin', ''],
+    ['the same origin', 'false'],
+    ['the default (the app host)', ''],
     ['the app host', APP_ORIGIN],
   ])('on %s', (_label, origin) => {
     vi.stubEnv('CONSOLE_ORIGIN', origin);
@@ -175,7 +188,7 @@ describe('next.config.js passes CONSOLE_ORIGIN to server and client code', () =>
     expect(freshConfig().env).toEqual({ CONSOLE_ORIGIN: 'https://app.hangulroute.com' });
   });
 
-  it('inlines an empty string when the variable is not set (same origin)', () => {
+  it('inlines an empty string when the variable is not set (the default, the app host)', () => {
     vi.stubEnv('CONSOLE_ORIGIN', undefined);
     expect(freshConfig().env).toEqual({ CONSOLE_ORIGIN: '' });
   });
@@ -183,6 +196,11 @@ describe('next.config.js passes CONSOLE_ORIGIN to server and client code', () =>
   it('inlines a blank value as it is (grownUpOrigin reads it as unset)', () => {
     vi.stubEnv('CONSOLE_ORIGIN', '  ');
     expect(freshConfig().env).toEqual({ CONSOLE_ORIGIN: '  ' });
+  });
+
+  it.each(['false', '0', ' FALSE '])('inlines the kill switch %j as it is (grownUpOrigin reads it as the site)', (value) => {
+    vi.stubEnv('CONSOLE_ORIGIN', value);
+    expect(freshConfig().env).toEqual({ CONSOLE_ORIGIN: value });
   });
 
   it.each(['app.hangulroute.com', 'http://app.hangulroute.com', 'not a url', 'javascript:alert(1)', 'https://app.hangulroute.co', 'https://app-hangulroute.com'])(
@@ -194,7 +212,7 @@ describe('next.config.js passes CONSOLE_ORIGIN to server and client code', () =>
   );
 
   // next.config.js is CommonJS and cannot import this module, so it repeats the rule. Both must agree: a
-  // non-blank value fails the build exactly when grownUpOrigin would ignore it.
+  // non-blank value fails the build exactly when parseConsoleOrigin would ignore it.
   it.each([
     'https://app.hangulroute.com',
     ' https://app.hangulroute.com/ ',
@@ -210,9 +228,12 @@ describe('next.config.js passes CONSOLE_ORIGIN to server and client code', () =>
     'https://hangulroute.com.example.com',
     'javascript:alert(1)',
     'not a url',
-  ])('agrees with grownUpOrigin on %j', (value) => {
+    'false',
+    ' 0 ',
+    'off',
+  ])('agrees with parseConsoleOrigin on %j', (value) => {
     vi.stubEnv('CONSOLE_ORIGIN', value);
-    const ignored = grownUpOrigin({ CONSOLE_ORIGIN: value }) === SITE_DEFAULT_CONSOLE_ORIGIN;
+    const ignored = parseConsoleOrigin(value) === undefined;
     if (ignored) expect(() => freshConfig()).toThrow(/CONSOLE_ORIGIN/);
     else expect(freshConfig().env).toEqual({ CONSOLE_ORIGIN: value });
   });

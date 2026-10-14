@@ -25,7 +25,7 @@ Phone:
 +--------------------------------------+
 | H1 For parents and caregivers        |
 | one-line lead (parents, grandparents, every caregiver)
-| [[ SIGN IN AS A PARENT ]]            |  -> /signin?persona=parent (same origin until CONSOLE_ORIGIN, then app host)
+| [[ SIGN IN AS A PARENT ]]            |  -> /signin?persona=parent (app host by default, S-10; same origin only with CONSOLE_ORIGIN=false)
 | [ Start learning ]                   |  -> app (learner start), secondary
 +--------------------------------------+
 | H2 What they learn                   |

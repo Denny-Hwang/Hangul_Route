@@ -27,9 +27,12 @@ import { SITE_BREAKPOINTS } from '../../lib/site-style';
 beforeEach(() => {
   vi.stubEnv('NEXT_PUBLIC_SHOW_ALL_LOCALES', '');
   vi.stubEnv('EXPO_PUBLIC_SHOW_ALL_LOCALES', '');
-  vi.stubEnv('CONSOLE_ORIGIN', '');
+  vi.stubEnv('CONSOLE_ORIGIN', 'false');
 });
 afterEach(() => vi.unstubAllEnvs());
+// Grown-up links on the site's own origin (the kill switch CONSOLE_ORIGIN=false; a build without the variable
+// links to the app host since F-SITE-002 S-10). Also set here for the pages rendered while tests are collected.
+vi.stubEnv('CONSOLE_ORIGIN', 'false');
 
 const t = getMessages('en').landing;
 const here = dirname(fileURLToPath(import.meta.url));
