@@ -1018,4 +1018,16 @@ export const caregiver = {
       move: (space: string) => `Move from ${space}`,
     },
   },
+  /**
+   * [TV] The class update screen in the grown-up zone (AMENDMENTS-TEACHER-VISIBILITY-TRANSFER TV-D4, TV-D5): its lines are
+   * the keyed text of content-schema `CLASS_SCOPE_TEXT`; only the frame and the states are here.
+   */
+  classScope: {
+    title: 'Class update',
+    ok: { cta: 'OK' },
+    saving: { cta: 'Saving…' },
+    offline: 'This needs internet.',
+    failed: "That didn't save. Try again.",
+    stale: 'Update the app to read the newest version.',
+  },
 } as const;

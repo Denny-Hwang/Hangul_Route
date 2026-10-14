@@ -14,6 +14,7 @@ import { useNotesStore } from './notes-store';
 import { usePlanStore } from './plan-store';
 import { useProfileStore } from './profile-store';
 import { useRouteStore } from './route-store';
+import { useClassUpdateStore } from './class-update-store';
 import { useTierStore } from './tier-store';
 import { onSynced, syncApi, useSyncStore } from './sync-store';
 
@@ -187,6 +188,8 @@ export const useMembershipStore = create<State & Actions>((set, get) => {
     const rows = put(learnerId, result.inbox.memberships);
     // The server decides premium from memberships (F-ENT-001 §3.4); cache it with its grace window.
     useTierStore.getState().applyInbox(learnerId, result.inbox);
+    // [TV] The class update and the move notices ride the same inbox (AMENDMENTS-TEACHER-VISIBILITY-TRANSFER section 4.3).
+    useClassUpdateStore.getState().applyInbox(learnerId, result.inbox);
     // Plans ride the same inbox (F-PLAN-001 §3.3): derive homework, then push the change back.
     const before = usePlanStore.getState().byLearner[learnerId];
     const applied = await usePlanStore.getState().applyPlans(learnerId, result.inbox.plans);

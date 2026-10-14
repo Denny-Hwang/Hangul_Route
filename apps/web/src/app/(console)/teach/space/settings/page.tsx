@@ -6,7 +6,8 @@ import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { SettingsSections } from '@/components/console/SettingsParts';
 import { FamilyStartFlow } from '@/components/console/FamilyTransferParts';
 import { NoteSendersPanel } from '@/components/console/FamilyNotesParts';
-import { StartMoveSheet, TransferSheet, useOnline, useTransfersShown } from '@/components/console/TransferParts';
+import { TeacherMoveSheet } from '@/components/console/TeacherMoveSheet';
+import { TransferSheet, useOnline, useTransfersShown } from '@/components/console/TransferParts';
 import { Button, LoadErrorPanel, Muted, Notice } from '@/components/console/ui';
 import { AdultFrame } from '@/components/console/AdultFrame';
 import { useConsole } from '@/components/console/use-console';
@@ -43,6 +44,8 @@ function SettingsInner(): JSX.Element {
   // Class moves (F-SPACE-002 T-6c): the learner whose start sheet is open, and the page line it left behind.
   const [moving, setMoving] = useState<MemberView | null>(null);
   const [moveNote, setMoveNote] = useState<'sent' | 'locked' | 'signIn' | 'forbidden' | 'familyTooNew' | 'conflicted' | null>(null);
+  // [TV] A teacher move's outcome line (TV-D7: moved now; TV-D8: sent to the other class).
+  const [teacherMoveLine, setTeacherMoveLine] = useState<string | null>(null);
   const movesShown = useTransfersShown();
   const online = useOnline();
   // On a family (T-6d): the learners in a live class, from the class-moves list's `options`.
@@ -68,8 +71,11 @@ function SettingsInner(): JSX.Element {
     setRoster(r.data);
     setMembers(mem.data);
     if (r.data.space.kind === 'family' && movesShown) {
-      const moves = await api.transferRequests(spaceId);
-      setMoveOptions(moves.ok ? (moves.data.options ?? []) : []);
+      // The move options are extra: a failed read leaves them empty and never breaks the settings page.
+      const moves = await Promise.resolve()
+        .then(() => api.transferRequests(spaceId))
+        .catch(() => null);
+      setMoveOptions(moves?.ok ? (moves.data.options ?? []) : []);
     }
   }, [api, spaceId, movesShown]);
 
@@ -109,6 +115,7 @@ function SettingsInner(): JSX.Element {
       {note ? <Notice tone="nudge">{s.notes[note]}</Notice> : null}
       {archived && space ? <Notice tone="nudge">{s.archived[space.kind]}</Notice> : null}
       {moveNote === 'sent' ? <Notice tone="success">{c.transfer.start.sent}</Notice> : null}
+      {teacherMoveLine ? <Notice tone="success">{teacherMoveLine}</Notice> : null}
       {moveNote === 'locked' ? <Notice tone="nudge">{c.transfer.states.locked}</Notice> : null}
       {moveNote === 'forbidden' ? <Notice tone="nudge">{c.transfer.states.forbidden}</Notice> : null}
       {moveNote === 'signIn' ? <Notice tone="nudge">{c.start.signInAgain}</Notice> : null}
@@ -161,6 +168,7 @@ function SettingsInner(): JSX.Element {
                     familyMovable: new Set(moveOptions.filter((o) => o.classes.length > 0 && !o.selfManaged).map((o) => o.learnerId)),
                     onMove: (member) => {
                       setMoveNote(null);
+                      setTeacherMoveLine(null);
                       setMoving(member);
                     },
                   }
@@ -180,15 +188,18 @@ function SettingsInner(): JSX.Element {
           />
           {archived ? <Button onClick={() => router.push(personaHome(personaOfKind(space.kind)))}>{s.backToConsole.cta}</Button> : null}
           {moving && movesShown && space.kind === 'class' && !archived ? (
-            <StartMoveSheet
+            <TeacherMoveSheet
               spaceId={spaceId}
               learner={{ id: moving.memberId, name: moving.name }}
               api={api}
               online={online}
               onClose={() => setMoving(null)}
-              onSent={() => {
+              onDone={(move) => {
+                const name = moving.name;
                 setMoving(null);
-                setMoveNote('sent');
+                setTeacherMoveLine(move.status === 'moved' ? c.teacherMove.moved(name, move.to.name) : c.teacherMove.sent(move.to.name));
+                // The learner left this class: the list below reads the new roster.
+                if (move.status === 'moved') void load();
               }}
               onPageState={(state) => {
                 setMoving(null);

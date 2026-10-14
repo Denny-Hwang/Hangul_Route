@@ -14,6 +14,7 @@ import { ParentsPage } from '../../components/landing/ParentsPage';
 import { PrivacyPage } from '../../components/landing/PrivacyPage';
 import { TeachersPage } from '../../components/landing/TeachersPage';
 import { TermsPage } from '../../components/landing/TermsPage';
+import { LicensesPage } from '../../components/landing/LicensesPage';
 import { ALL_CLAIMS_ON } from '../../data/__tests__/site-claims-fixtures';
 import { siteMetadata } from '../../data/landing-copy';
 import { SITE_CLAIMS, type SiteClaims } from '../../data/site-claims';
@@ -25,6 +26,7 @@ import * as EnHome from '../(en)/page';
 import * as EnParents from '../(en)/parents/page';
 import * as EnPrivacy from '../(en)/privacy/page';
 import * as EnTeachers from '../(en)/teachers/page';
+import * as EnLicenses from '../(en)/licenses/page';
 import * as EnTerms from '../(en)/terms/page';
 import * as LocAbout from '../(loc)/[locale]/about/page';
 import LocLayout from '../(loc)/[locale]/layout';
@@ -33,6 +35,7 @@ import * as LocHome from '../(loc)/[locale]/page';
 import * as LocParents from '../(loc)/[locale]/parents/page';
 import * as LocPrivacy from '../(loc)/[locale]/privacy/page';
 import * as LocTeachers from '../(loc)/[locale]/teachers/page';
+import * as LocLicenses from '../(loc)/[locale]/licenses/page';
 import * as LocTerms from '../(loc)/[locale]/terms/page';
 import { SITE_PRICE_PATTERNS } from './site-price-patterns';
 
@@ -170,6 +173,7 @@ const EN_ROUTES: Readonly<Record<SitePage, EnRoute>> = {
   '/learners': EnLearners,
   '/parents': EnParents,
   '/teachers': EnTeachers,
+  '/licenses': EnLicenses,
 };
 const LOC_ROUTES: Readonly<Record<SitePage, LocRoute>> = {
   '/': LocHome,
@@ -179,6 +183,7 @@ const LOC_ROUTES: Readonly<Record<SitePage, LocRoute>> = {
   '/learners': LocLearners,
   '/parents': LocParents,
   '/teachers': LocTeachers,
+  '/licenses': LocLicenses,
 };
 
 /** The page components with a claims prop: rendered with today's claims and with every claim on. */
@@ -193,6 +198,7 @@ const PLAIN_PAGES: ReadonlyArray<readonly [SitePage, ComponentType<{ locale?: Ui
   ['/about', AboutPage],
   ['/privacy', PrivacyPage],
   ['/terms', TermsPage],
+  ['/licenses', LicensesPage],
 ];
 
 interface Rendered {

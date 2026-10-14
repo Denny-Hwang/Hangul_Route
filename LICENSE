@@ -1,0 +1,53 @@
+Hangul Route - Proprietary License
+
+Copyright (c) 2026 Sungjoo Hwang. All rights reserved.
+
+This repository and everything in it are the proprietary property of Sungjoo
+Hwang, except for the third-party components described below. This includes:
+
+  - the software: source code, object code, build scripts, configuration and
+    documentation;
+  - the content: lessons, curriculum, stories, vocabulary, quizzes, art,
+    illustrations, audio, translations and other learning material; and
+  - the trademarks: the names "Hangul Route" and "Hoya", the Hoya character,
+    and the related logos and designs.
+
+No license or other right is granted to copy, modify, distribute, publish,
+sublicense, sell, or otherwise use any of the above, in whole or in part,
+except:
+
+  1. under a separate written agreement signed by Sungjoo Hwang; or
+  2. for end users of the Hangul Route service, to use the service as
+     permitted by the published Terms of Service.
+
+Viewing or having access to this repository does not grant any license or
+right to use it. Any use outside these exceptions is unlicensed and may
+infringe copyright and trademark rights, and any permission that might
+otherwise be implied ends at once. All rights not expressly granted are
+reserved.
+
+Third-party components
+
+The software includes third-party open-source components and assets (for
+example npm packages and the Noto Sans KR font). Each of them remains under
+its own license, and nothing in this license limits the rights those licenses
+give. They are listed, with their licenses and notices, in
+THIRD_PARTY_NOTICES.md.
+
+No warranty
+
+To the maximum extent permitted by law, and except as stated in a separate
+written agreement or in the Terms of Service, the software and content are
+provided "as is", without warranty of any kind, express or implied.
+
+Limitation of liability
+
+To the maximum extent permitted by law, and except as stated in a separate
+written agreement or in the Terms of Service, Sungjoo Hwang is not liable for
+any indirect, incidental, special or consequential damages, or for any loss of
+data, profits or revenue, arising from the software or content or from any use
+of them.
+
+Contact
+
+For licensing questions, write to hello@hangulroute.com.

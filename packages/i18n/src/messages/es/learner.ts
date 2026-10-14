@@ -143,6 +143,7 @@ export const learner = {
       details: { cta: 'Detalles del plan' },
     },
     install: { label: 'Instalar aquí', a11yLabel: 'Instalar Hangul Route en este dispositivo' },
+    licenses: { label: 'Avisos de código abierto', fallback: 'Abre hangulroute.com/licenses en un navegador.', gateDone: 'Revisión de adultos lista. Toca Avisos de código abierto otra vez para abrir la página.' },
     language: {
       title: 'Idioma',
       thisProfile: 'Este perfil',
@@ -1785,5 +1786,13 @@ export const learner = {
       title: 'Idioma de la presentación',
       note: 'Solo para esta sesión. El coreano siempre muestra la romanización y el significado.',
     },
+  },
+  /** [TV] Líneas de Inicio sobre las clases (TV-D5, TV-D10). */
+  classUpdate: {
+    moved: (name: string, cls: string) => `${name} pasó a una clase nueva: ${cls}.`,
+    ok: { cta: 'OK' },
+    scopeChild: 'Un adulto tiene novedades sobre tu clase.',
+    scopeSelf: 'Hay novedades sobre tu clase.',
+    open: { cta: 'Abrir' },
   },
 } satisfies DeepPartial<Messages['learner']>;

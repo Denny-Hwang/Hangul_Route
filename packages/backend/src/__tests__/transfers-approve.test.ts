@@ -91,10 +91,10 @@ async function familyDigest(tid: string): Promise<string> {
 }
 
 describe('the release lock (T15)', () => {
-  it('approve and retry answer 422 transfers_locked while CLASS_TRANSFER is unset, before auth or body checks', async () => {
+  it('approve and retry answer 422 transfers_locked while CLASS_TRANSFER is switched off ([TV] the kill switch), before auth or body checks', async () => {
     const tid = 'transfer:00000000-0000-4000-8000-000000000000';
     for (const path of [`${base(A)}/${tid}/approve`, `${base(A)}/${tid}/retry`]) {
-      for (const env of [LOCKED, { CLASS_TRANSFER: 'true' }, { CLASS_TRANSFER_DEVICE_CONSENT: 'enabled' }] as Array<Record<string, string> | typeof LOCKED>) {
+      for (const env of [LOCKED, { CLASS_TRANSFER: 'true' }, { CLASS_TRANSFER: 'off', CLASS_TRANSFER_DEVICE_CONSENT: 'enabled' }] as Array<Record<string, string> | typeof LOCKED>) {
         const r = await call('POST', path, json, { junk: 1 }, env);
         expect([r.status, r.body.error?.code], path).toEqual([422, 'transfers_locked']);
       }

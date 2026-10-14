@@ -114,6 +114,7 @@ export function siteCssVars(): CSSProperties {
     '--hr-site-sunken': colors.surface.sunken,
     '--hr-site-size-caption': rem(typography.size.caption),
     '--hr-site-size-body-sm': rem(typography.size.bodySm),
+    '--hr-site-text-muted': colors.text.muted,
   };
   return vars as CSSProperties;
 }

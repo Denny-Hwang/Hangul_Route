@@ -85,6 +85,10 @@ vi.mock('@/components/console/use-console', async () => {
       }),
       relinkRequests: async () => ({ ok: true, data: [] }),
       listPlans: async () => ({ ok: true, data: [] }),
+      // [TV] teacher moves and the family's class-scope cards: nothing waiting
+      classMoves: async () => ({ ok: true, data: { outgoing: [], incoming: [] } }),
+      classScope: async () => ({ ok: true, data: { current: 'class-scope-2026-10', learners: [] } }),
+      moveNotices: async () => ({ ok: true, data: [] }),
     } as Record<string, unknown>,
     { get: (target, key: string) => target[key] ?? (async () => ({ ok: true, data: [] })) },
   );
@@ -155,6 +159,7 @@ const item = (id: string, kind: string, role: string, name: string) => ({
 
 describe('the requests page, class variant (spec section 5: locked, 401, 403, and the class body)', () => {
   it('without the flag: "Class moves aren\'t available yet." and no call to the Worker', async () => {
+    vi.stubEnv('NEXT_PUBLIC_CLASS_TRANSFER', 'disabled');
     const root = await render(<TransfersPage />);
     expect(textOf(root)).toContain(t.states.locked);
     expect(state.calls).toEqual([]);
@@ -242,6 +247,7 @@ describe('the requests page, class variant (spec section 5: locked, 401, 403, an
 
 describe('the roster chip (beside Re-link requests)', () => {
   it('without the flag: no button and no list read', async () => {
+    vi.stubEnv('NEXT_PUBLIC_CLASS_TRANSFER', 'disabled');
     const root = await render(<SpacePage />);
     expect(byTestId(root, 'class-moves')).toEqual([]);
     expect(state.calls.some((c) => c.startsWith('transfers:'))).toBe(false);
@@ -293,6 +299,7 @@ describe('the home badges', () => {
   });
 
   it('teacher home: nothing waiting or the flag off draws no badge', async () => {
+    vi.stubEnv('NEXT_PUBLIC_CLASS_TRANSFER', 'disabled');
     state.spaces = [item('space:a', 'class', 'owner', 'Sunday Class A')];
     state.requests['space:a'] = [waitingView()];
     let root = await render(<HomePage />);

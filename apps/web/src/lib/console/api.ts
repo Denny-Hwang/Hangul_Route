@@ -1,11 +1,29 @@
 import { ClassReportSchema, ProgressSummarySchema, ReportPeriodSchema, ReportSummarySchema, isDateKey, ReceiptViewSchema, SpaceKindSchema, parseBillingSummary, type BillingSummary, type ReceiptView } from '@hangul-route/content-schema';
 import { noteTransferResult } from './transfer-lock';
+import {
+  readClassScope,
+  readDestinations,
+  readIncoming,
+  readMoveLists,
+  readNotices,
+  readOutgoing,
+  readPreview,
+  readReportScope,
+  type ClassMoveDestination,
+  type ClassMoveLists,
+  type ClassMovePreview,
+  type ClassScopeState,
+  type IncomingMove,
+  type MoveNotice,
+  type OutgoingMove,
+} from './class-moves';
 import type {
   ClassReport,
   CurriculumMeta,
   Entitlement,
   InboxVisibleSpace,
   LearnerSlotState,
+  NotesMode,
   SpaceSettings,
   TransferApproveBody,
   TransferBlockReason,
@@ -85,6 +103,8 @@ export interface RosterLearner {
   lastActiveAt: string;
   summary: RosterSummary | null;
   lastSyncedAt: string | null;
+  /** [TV] Which projection the row carries (AMENDMENTS-TEACHER-VISIBILITY-TRANSFER section 2); absent from an older Worker. */
+  scope?: 'base' | 'full';
 }
 
 export interface Roster {
@@ -402,7 +422,50 @@ export function createConsoleApi(opts: ConsoleApiOptions) {
         const data = parseClassReport(r.data);
         return data === null ? { ok: false, error: 'unknown', status: 200, code: 'bad_response' } : { ok: true, data };
       }),
+    // [TV] Teacher moves and the class-scope update (AMENDMENTS-TEACHER-VISIBILITY-TRANSFER section 4.3). The learner id
+    // travels in the body or the query only, a move by its opaque `move:` id. Move answers go through
+    // `noteTransferResult` (the first `transfers_locked` hides the entry points); the acknowledgement is never locked.
+    classMoveDestinations: (spaceId: string, learnerId: string): Promise<ApiResult<ClassMoveDestination[]>> =>
+      transferCall<unknown>(`${classMoves(spaceId)}/destinations?learnerId=${encodeURIComponent(learnerId)}`, { method: 'GET' }, [200]).then((r) => (r.ok ? { ok: true as const, data: readDestinations(r.data) } : r)),
+    previewClassMove: (spaceId: string, body: { learnerId: string; code: string }): Promise<ApiResult<ClassMovePreview>> =>
+      transferCall<unknown>(`${classMoves(spaceId)}/preview`, { method: 'POST', body: JSON.stringify(body) }, [200]).then((r): ApiResult<ClassMovePreview> => {
+        if (!r.ok) return r;
+        const preview = readPreview(r.data);
+        return preview ? { ok: true, data: preview } : { ok: false, error: 'unknown', status: 200, code: 'bad_response' };
+      }),
+    createClassMove: (spaceId: string, body: { learnerId: string; destinationSpaceId: string; code?: string }): Promise<ApiResult<OutgoingMove>> =>
+      transferCall<{ move?: unknown }>(classMoves(spaceId), { method: 'POST', body: JSON.stringify(body) }, [200, 201]).then((r) => moveOf(r, readOutgoing)),
+    classMoves: (spaceId: string): Promise<ApiResult<ClassMoveLists>> =>
+      transferCall<unknown>(classMoves(spaceId), { method: 'GET' }, [200]).then((r) => (r.ok ? { ok: true as const, data: readMoveLists(r.data) } : r)),
+    acceptClassMove: (spaceId: string, moveId: string): Promise<ApiResult<IncomingMove>> =>
+      transferCall<{ move?: unknown }>(`${classMoves(spaceId)}/${encodeURIComponent(moveId)}/accept`, { method: 'POST', body: '{}' }, [200]).then((r) => moveOf(r, readIncoming)),
+    declineClassMove: (spaceId: string, moveId: string): Promise<ApiResult<IncomingMove>> =>
+      transferCall<{ move?: unknown }>(`${classMoves(spaceId)}/${encodeURIComponent(moveId)}/decline`, { method: 'POST', body: '{}' }, [200]).then((r) => moveOf(r, readIncoming)),
+    cancelClassMove: (spaceId: string, moveId: string): Promise<ApiResult<OutgoingMove>> =>
+      transferCall<{ move?: unknown }>(`${classMoves(spaceId)}/${encodeURIComponent(moveId)}/cancel`, { method: 'POST', body: '{}' }, [200]).then((r) => moveOf(r, readOutgoing)),
+    moveNotices: (familyId: string): Promise<ApiResult<MoveNotice[]>> =>
+      transferCall<unknown>(classMoves(familyId), { method: 'GET' }, [200]).then((r) => (r.ok ? { ok: true as const, data: readNotices(r.data) } : r)),
+    markMoveSeen: (familyId: string, moveId: string): Promise<ApiResult<{ seen: boolean }>> =>
+      transferCall<{ seen: boolean }>(`${classMoves(familyId)}/${encodeURIComponent(moveId)}/seen`, { method: 'POST', body: '{}' }, [200]),
+    classScope: (familyId: string): Promise<ApiResult<ClassScopeState>> =>
+      call<unknown>(`${base}/${encodeURIComponent(familyId)}/class-scope`, { method: 'GET' }, [200]).then((r): ApiResult<ClassScopeState> => {
+        if (!r.ok) return r;
+        const state = readClassScope(r.data);
+        return state ? { ok: true, data: state } : { ok: false, error: 'unknown', status: 200, code: 'bad_response' };
+      }),
+    acknowledgeClassScope: (familyId: string, learnerId: string, version: string): Promise<ApiResult<{ version: string; ackedAt: string }>> =>
+      call<{ version: string; ackedAt: string }>(`${base}/${encodeURIComponent(familyId)}/learners/${encodeURIComponent(learnerId)}/class-scope`, { method: 'POST', body: JSON.stringify({ version }) }, [200], { details: true }),
   };
+
+  function classMoves(spaceId: string): string {
+    return `${base}/${encodeURIComponent(spaceId)}/class-moves`;
+  }
+
+  function moveOf<T>(r: ApiResult<{ move?: unknown }>, read: (v: Record<string, unknown>) => T | null): ApiResult<T> {
+    if (!r.ok) return r;
+    const move = isPlainRecord(r.data.move) ? read(r.data.move) : null;
+    return move ? { ok: true, data: move } : { ok: false, error: 'unknown', status: 200, code: 'bad_response' };
+  }
 
   function transfers(spaceId: string): string {
     return `${base}/${encodeURIComponent(spaceId)}/transfer-requests`;
@@ -614,6 +677,10 @@ export interface LearnerReportBody {
   summary: ReportSummary | null;
   lastSyncedAt: string | null;
   serverTime: string;
+  /** [TV] Which projection this viewer read; null from an older Worker. */
+  scope?: 'base' | 'full' | null;
+  /** [TV] The learner's server-held settings (full scope only); null when not sent. */
+  settings?: { classNotes: NotesMode | null } | null;
 }
 
 const isStringOrNull = (value: unknown): value is string | null => value === null || typeof value === 'string';
@@ -631,6 +698,7 @@ function reportEnvelopeOf(raw: Record<string, unknown>): Omit<LearnerReportBody,
     learner: { id: learner.id, displayName: learner.displayName, avatar: typeof learner.avatar === 'string' ? learner.avatar : null },
     lastSyncedAt,
     serverTime,
+    ...readReportScope(raw),
   };
 }
 

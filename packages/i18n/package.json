@@ -2,6 +2,7 @@
   "name": "@hangul-route/i18n",
   "version": "0.0.0",
   "private": true,
+  "license": "UNLICENSED",
   "description": "Typed UI dictionary (en/es/ko), plural + Intl helpers, banned-word lists and locale detection for Hangul Route (F-I18N-001)",
   "type": "module",
   "main": "./src/index.ts",

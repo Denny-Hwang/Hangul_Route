@@ -7,7 +7,9 @@ import { useCallback, useEffect, useRef, useState, type CSSProperties } from 're
 import { AvatarChip } from '@/components/AvatarChip';
 import { BrowseLink } from '@/components/console/BrowseLink';
 import { AdultFrame, type FrameSpaces } from '@/components/console/AdultFrame';
+import { FamilyClassCards } from '@/components/console/FamilyClassCards';
 import { FreeLessonsLine } from '@/components/console/FreeLessonsParts';
+import { useTransfersShown } from '@/components/console/TransferParts';
 import { Button, Muted, buttonBase, panelStyle } from '@/components/console/ui';
 import { useMovesWaiting } from '@/components/console/MovesEntry';
 import { useConsole } from '@/components/console/use-console';
@@ -130,6 +132,8 @@ export default function ParentHomePage(): JSX.Element {
   const [entitlements, setEntitlements] = useState<EntitlementView[] | null>(null);
   const homeView = items ? parentHomeView(items) : null;
   const moves = useMovesWaiting(api, homeView?.state === 'families' ? homeView.families.map((family) => family.space.id) : []);
+  // [TV] The class-scope update and the one-time move notices (AMENDMENTS-TEACHER-VISIBILITY-TRANSFER TV-D5, TV-D10).
+  const movesShown = useTransfersShown();
 
   const loadRoster = useCallback(
     async (spaceId: string, role: SpaceListItem['role']): Promise<void> => {
@@ -345,6 +349,7 @@ export default function ParentHomePage(): JSX.Element {
             {family.space.name}
             {archived ? <span style={{ color: colors.text.muted, fontSize: typography.size.bodySm, fontWeight: typography.weight.semibold }}> {c.home.archived}</span> : null}
           </h2>
+          {api && !archived ? <FamilyClassCards familyId={id} api={api} movesShown={movesShown} /> : null}
           {entry.state === 'loading' ? (
             <div className="hr-ph-cards">
               <div style={skeleton} />

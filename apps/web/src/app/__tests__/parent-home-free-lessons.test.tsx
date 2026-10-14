@@ -128,6 +128,11 @@ vi.mock('@/components/console/use-console', async () => {
       if (state.entitlements === 'covered') return ok([FAMILY_PLAN]);
       return ok([]);
     },
+    // [TV] the family class cards read these; nobody needs the update here.
+    classScope: async () => ok({ current: 'class-scope-2026-10', learners: [] }),
+    acknowledgeClassScope: async () => ok({ version: 'class-scope-2026-10', ackedAt: '2026-10-12T12:00:00Z' }),
+    moveNotices: async () => ok([]),
+    markMoveSeen: async () => ok({ seen: true }),
   };
   const session = { accountId: 'acc_1', displayName: 'Ms Kim' };
   const signOut = (): undefined => undefined;

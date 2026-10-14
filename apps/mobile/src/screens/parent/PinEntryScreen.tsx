@@ -203,6 +203,11 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
       const { profileId, transferId } = route.params;
       if (profileId === undefined || transferId === undefined) navigation.goBack();
       else navigation.replace('ApproveTransfer', { profileId, transferId });
+    } else if (route.params.next === 'ClassScope') {
+      // [TV] The class update of one learner (AMENDMENTS-TEACHER-VISIBILITY-TRANSFER TV-D4).
+      const { profileId } = route.params;
+      if (profileId === undefined) navigation.goBack();
+      else navigation.replace('ClassScope', { profileId });
     } else if (route.params.next === 'BrowseLessons') {
       // All lessons (F-BROWSE-001 section 4.3, BR-12a): the gate hand-off writes a fresh gate pass and leaves in this
       // tab. A browser that refuses the pass opens the dashboard, which says why under Open all lessons.

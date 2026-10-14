@@ -2,7 +2,7 @@
 // site build forwards every old grown-up URL on hangulroute.com to the app host. `build` = `next build &&
 // prune-hidden-locales && site-redirects` writes `out/_redirects` from `GROWN_UP_PREFIXES` (R-1, the one list) to
 // the site build variable `CONSOLE_ORIGIN`, or to the app host when it is unset (A-10, the default of S-10), and
-// makes sure no `_redirects` file is left in `out/` for the kill switch `CONSOLE_ORIGIN=false` (or `0`). The same
+// makes sure no `_redirects` file is left in `out/` for the kill switch `CONSOLE_ORIGIN=false` (or `0`, `off`, `no`). The same
 // variable and default move the site's grown-up links (`lib/site-links.ts`), so links and forwarding move in one
 // deploy and roll back together.
 import { spawnSync } from 'node:child_process';
@@ -28,8 +28,8 @@ describe('redirectOrigin (the CONSOLE_ORIGIN rule of next.config.js and site-lin
     expect(redirectOrigin('   ')).toBe(APP_ORIGIN);
   });
 
-  it('is empty (no forwarding) for the kill switch false or 0, in any case and with spaces', () => {
-    for (const off of ['false', '0', 'FALSE', ' False ', ' 0 ']) {
+  it('is empty (no forwarding) for the kill switch false, 0, off or no, in any case and with spaces', () => {
+    for (const off of ['false', '0', 'FALSE', ' False ', ' 0 ', 'off', 'OFF', ' Off ', 'no', 'NO', ' No ']) {
       expect(redirectOrigin(off), off).toBe('');
     }
   });
@@ -53,7 +53,7 @@ describe('redirectOrigin (the CONSOLE_ORIGIN rule of next.config.js and site-lin
   });
 
   it('agrees with grownUpOrigin, so the links and the forwarding always point at the same host', () => {
-    for (const value of [undefined, '', '  ', 'false', ' 0 ', 'FALSE', 'https://app.hangulroute.com', ' https://app.hangulroute.com/ ', 'http://127.0.0.1:3000', 'https://hangulroute.com']) {
+    for (const value of [undefined, '', '  ', 'false', ' 0 ', 'FALSE', 'off', ' OFF ', 'no', ' No ', 'https://app.hangulroute.com', ' https://app.hangulroute.com/ ', 'http://127.0.0.1:3000', 'https://hangulroute.com']) {
       expect(redirectOrigin(value), String(value)).toBe(grownUpOrigin({ CONSOLE_ORIGIN: value }));
     }
   });

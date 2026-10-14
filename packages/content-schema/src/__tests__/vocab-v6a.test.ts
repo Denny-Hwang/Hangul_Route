@@ -212,8 +212,17 @@ describe.each(TOPICS)('content/vocab/$key.json (F-VOC-001 V-6a)', (spec) => {
     expect(es.entries[`vocab-topic:${spec.key}`]!.blurb).toBe(REVIEWED_BLURBS[spec.key].es);
   });
 
-  it('has no Korean overlay, like the merged topics', () => {
-    expect(() => readJson(`i18n/ko/vocab-${spec.key}.json`)).toThrow();
+  it('has a Korean overlay with a gloss for every item and the topic copy (F-I18N-001 15b/16b)', () => {
+    const ko = readJson(`i18n/ko/vocab-${spec.key}.json`) as { locale: string; domain: string; entries: Record<string, Record<string, string>> };
+    expect(ko.locale).toBe('ko');
+    expect(ko.domain).toBe(`vocab-${spec.key}`);
+    expect(Object.keys(ko.entries).sort()).toEqual([...file.items.map((i) => i.id), `vocab-topic:${spec.key}`].sort());
+    expect(Object.keys(ko.entries[`vocab-topic:${spec.key}`]!).sort()).toEqual(['blurb', 'hoyaIntro', 'title']);
+    for (const item of file.items) {
+      const entry = ko.entries[item.id]!;
+      expect(Object.keys(entry).sort(), item.id).toEqual(item.senseNote ? ['gloss', 'senseNote'] : ['gloss']);
+      expect(entry.gloss, item.id).not.toBe(item.ko);
+    }
   });
 });
 
