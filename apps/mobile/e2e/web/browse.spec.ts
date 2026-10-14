@@ -1266,7 +1266,7 @@ test.describe(SWITCH_ON_SUITE, () => {
     await shot(page, 'switch-on-browse-home-words-pixel5');
   });
 
-  test('a closed lesson: its outline row and its page carry the grown-up caption; the page has no preview, and Open billing sends browse.plans_tapped', async ({ page }) => {
+  test('a closed lesson page: the grown-up caption in place of the preview, and Open billing goes to billing and sends browse.plans_tapped', async ({ page }) => {
     const tapped: Array<Record<string, unknown>> = [];
     await page.route('**/api/telemetry', async (route) => {
       const body = route.request().postDataJSON() as { name?: string; payload?: Record<string, unknown> } | null;
