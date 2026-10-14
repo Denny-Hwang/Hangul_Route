@@ -941,7 +941,7 @@
           "publisher": "국립국어원 표준국어대사전 (Standard Korean Language Dictionary)",
           "url": "https://stdict.korean.go.kr/search/searchView.do?word_no=302141&searchKeywordTo=3",
           "accessed": "2026-10-14",
-          "quoteOrLocator": "표제어 ‘좋다’(word_no 302141) 「형용사」 1 「1」: “어떤 일이나 대상이 마음에 들 만큼 흡족하다.” 용례 ‘저는 그 아가씨가 좋습니다.’"
+          "quoteOrLocator": "표제어 ‘좋다’(word_no 302141) 「형용사」 2 【…이】 「1」: “어떤 일이나 대상이 마음에 들 만큼 흡족하다.” 용례 ‘저는 그 아가씨가 좋습니다.’"
         },
         {
           "title": "이 (조사)",
@@ -959,10 +959,10 @@
         }
       ],
       "verification": {
-        "passes": 1,
+        "passes": 2,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): the three stdict entries opened (contentViewOne.do, HTTP 200). 좋다 1「1」 is liking something, with the thing liked as the subject in its example (그 아가씨가 좋습니다); 이 25 and 가 11 are the subject marker, 이 after a final consonant and 가 after none. The note restates this in its own words with this cell's words (곰, 고양이); nothing copied. Carried by: q1 Discover pattern noteEn, the 이/가 rounds of q1 and the q3 frame w1."
+        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): the three stdict entries opened (contentViewOne.do, HTTP 200). 좋다 1「1」 is liking something, with the thing liked as the subject in its example (그 아가씨가 좋습니다); 이 25 and 가 11 are the subject marker, 이 after a final consonant and 가 after none. The note restates this in its own words with this cell's words (곰, 고양이); nothing copied. Carried by: q1 Discover pattern noteEn, the 이/가 rounds of q1 and the q3 frame w1.\nLine 2 (pass 2b, independent fact check, 2026-10-14): the three stdict entries re-fetched (contentViewOne.do). 이 25 sense 1 「1」 (after a noun with a final consonant) and 가 11 sense 1 「1」 (after a noun without one) carry the subject sense quoted in the locators. The 좋다 locator pointed to sense 1 「1」, which is a different sense (good, above the usual level); the quoted definition and the example 그 아가씨가 좋습니다 sit under sense 2 「1」, whose pattern 【…이】 shows the thing liked taking 이 / 가. The locator is corrected to sense 2 「1」; the note itself matches the sources. The English is the author's own; no wording is copied. Outcome: pass, locator fixed."
       }
     },
     {
@@ -986,10 +986,10 @@
         }
       ],
       "verification": {
-        "passes": 1,
+        "passes": 2,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): stdict 은 4 and 는 1 opened (contentViewOne.do, HTTP 200). Sense 「2」 of each marks the topic of the sentence (화제), 은 after a final consonant and 는 after none; sense 「1」 (contrast) is not taught here. The note restates the topic use in its own words; nothing copied. Carried by: q2 Discover pattern noteEn, the 은/는 rounds of q2 and q3, and the q3 frame w3."
+        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): stdict 은 4 and 는 1 opened (contentViewOne.do, HTTP 200). Sense 「2」 of each marks the topic of the sentence (화제), 은 after a final consonant and 는 after none; sense 「1」 (contrast) is not taught here. The note restates the topic use in its own words; nothing copied. Carried by: q2 Discover pattern noteEn, the 은/는 rounds of q2 and q3, and the q3 frame w3.\nLine 2 (pass 2b, independent fact check, 2026-10-14): stdict 은 4 and 는 1 re-fetched (contentViewOne.do). Sense 「2」 of each, for a noun with a final consonant (은) and without one (는), marks the topic of the sentence, quoted word for word in the locators with 오늘은 금요일이다 / 나는 학생이다. The note teaches only that topic use and matches. The English is the author's own; no wording is copied. Outcome: pass, no change."
       }
     },
     {
@@ -1013,10 +1013,10 @@
         }
       ],
       "verification": {
-        "passes": 1,
+        "passes": 2,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): the NIKL commentary to standard language rule article 26 (item 17) and the 한 걸음 더 box of stdict 이다 3 both opened (HTTP 200); both say 이에요 attaches to a noun and shortens to 예요 after a noun with no final consonant. Restated in own words with this cell's nouns; nothing copied. Carried by: q3 Discover pattern noteEn, the 이에요/예요 rounds of q3 and the q3 frame w2. The same sources back stage3-letters n1."
+        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): the NIKL commentary to standard language rule article 26 (item 17) and the 한 걸음 더 box of stdict 이다 3 both opened (HTTP 200); both say 이에요 attaches to a noun and shortens to 예요 after a noun with no final consonant. Restated in own words with this cell's nouns; nothing copied. Carried by: q3 Discover pattern noteEn, the 이에요/예요 rounds of q3 and the q3 frame w2. The same sources back stage3-letters n1.\nLine 2 (pass 2b, independent fact check, 2026-10-14): both pages re-fetched. Item 17 of the commentary to article 26 of the standard language rules and the 한 걸음 더 box of stdict 이다 3 carry the quoted sentences word for word (연필이에요 / 지우개예요 in the dictionary box). The note matches: 이에요 after a final consonant, 예요 after a vowel. Both sources add that a personal name with a final consonant takes 이 first (영숙이예요); the note uses common nouns only (곰, 토끼), so it stays true. The English is the author's own; no wording is copied. Outcome: pass, no change."
       }
     },
     {
@@ -1040,10 +1040,10 @@
         }
       ],
       "verification": {
-        "passes": 1,
+        "passes": 2,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): stdict 제 1 and 저 3 opened (contentViewOne.do, HTTP 200). 제 1 「1」 is the form of 저 when the subject marker 가 follows; 저 3 「1」 is the humble first-person pronoun used with a senior or someone not close, and says it becomes 제 before 가. 'Polite word for I' is the cell's short gloss of that humble pronoun (stage3-letters n4 carries the fuller 저 / 나 note). Own words; nothing copied. Carried by: q3 Discover page 2 captionEn ('The first word is a polite I')."
+        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): stdict 제 1 and 저 3 opened (contentViewOne.do, HTTP 200). 제 1 「1」 is the form of 저 when the subject marker 가 follows; 저 3 「1」 is the humble first-person pronoun used with a senior or someone not close, and says it becomes 제 before 가. 'Polite word for I' is the cell's short gloss of that humble pronoun (stage3-letters n4 carries the fuller 저 / 나 note). Own words; nothing copied. Carried by: q3 Discover page 2 captionEn ('The first word is a polite I').\nLine 2 (pass 2b, independent fact check, 2026-10-14): stdict 제 1 and 저 3 re-fetched (contentViewOne.do). 제 1 「1」 is the form of 저 when the subject particle 가 follows, and 저 3 「1」 is the first-person pronoun a speaker uses to lower themself before a senior or someone not close, becoming 제 before 가; both locators quote the entries word for word. 'Polite word for I' is a fair short gloss of that humble pronoun. The English is the author's own; no wording is copied. Outcome: pass, no change."
       }
     },
     {
@@ -1052,10 +1052,10 @@
       "textEn": "In the folk tale of the brother and sister who became the sun and the moon, a tiger stops their mother on her way home and asks for her rice cakes.",
       "factRef": "story:sun-and-moon#f2",
       "verification": {
-        "passes": 1,
+        "passes": 2,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): restates fact f2 of the reviewed story sun-and-moon (ready, MAR-signed 2026-10-13), whose sources are the Encyclopedia of Korean Culture article E0062663 and the National Folk Museum folk-literature entry 6006. The AKS article re-opened (HTTP 200): its 내용 says a mother on her way home from day work meets a tiger at the hill passes, and it asks for rice cakes first. No new fact, no new source (section 3.9 Reuse). Carried by: q2 intro hoyaLineEn ('In an old Korean tale, a tiger asks for rice cakes'). No 'all Koreans' claim, no living person."
+        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): restates fact f2 of the reviewed story sun-and-moon (ready, MAR-signed 2026-10-13), whose sources are the Encyclopedia of Korean Culture article E0062663 and the National Folk Museum folk-literature entry 6006. The AKS article re-opened (HTTP 200): its 내용 says a mother on her way home from day work meets a tiger at the hill passes, and it asks for rice cakes first. No new fact, no new source (section 3.9 Reuse). Carried by: q2 intro hoyaLineEn ('In an old Korean tale, a tiger asks for rice cakes'). No 'all Koreans' claim, no living person.\nLine 2 (pass 2b, independent fact check, 2026-10-14): factRef story:sun-and-moon#f2 resolves (story review: culture-reviewed, MAR, 2026-10-13). Both f2 sources re-fetched: the Encyclopedia of Korean Culture article E0062663, 내용, has the mother meet the tiger on her way home from day work, with rice cakes the first thing it demands at the hill passes; the National Folk Museum entry 6006 (via its content API), 줄거리, has her returning from day work at a neighbour's house when the tiger catches her. The note keeps only the rice cakes and says nothing past f2. The English is the author's own; no wording is copied; no 'all Koreans' claim, no living person. Outcome: pass, no change."
       }
     }
   ],
