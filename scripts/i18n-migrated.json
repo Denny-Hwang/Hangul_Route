@@ -109,7 +109,9 @@
     "apps/mobile/src/screens/transfer/**",
     "apps/web/src/app/(console)/parent/learner/page.tsx",
     "apps/mobile/src/screens/parent/SuggestedPlanCard.tsx",
-    "apps/web/src/components/console/FamilyNotesParts.tsx"
+    "apps/web/src/components/console/FamilyNotesParts.tsx",
+    "apps/mobile/PresenterApp.tsx",
+    "apps/mobile/src/screens/presenter/**"
   ],
   "pluralTernaryBaseline": {
     "packages/content-schema/src/romanization/compare.ts": 1

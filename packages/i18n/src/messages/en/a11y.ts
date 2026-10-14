@@ -340,4 +340,8 @@ export const a11y = {
     row: (title: string, details: readonly string[], tags: readonly string[]) =>
       `${[title, ...details, ...tags].map((part) => part.trim().replace(/[.!?]+$/, '')).join('. ')}.`,
   },
+  /** The lecture presenter (F-TCH-004 PR 6): the stage's polite live region; `what` is the kind label and the slide's words. */
+  presenter: {
+    slide: (i: number, n: number, what: string) => `Slide ${i} of ${n}, ${what}`,
+  },
 } as const;

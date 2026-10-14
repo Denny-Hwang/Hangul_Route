@@ -1791,4 +1791,119 @@ export const learner = {
     /** Home's calm line after an automatic re-pace (section 3.7). */
     homeMoved: { line: 'Hoya moved your plan along.', open: { cta: 'See my plan' } },
   },
+  /**
+   * The lecture presenter at /present (F-TCH-004 PR 6; design/screens/presenter/README.md "Strings"): a teacher's
+   * screen for a projector or a TV. Nothing here names a learner; the deck title is the teacher's own text and never
+   * a message. Taught Korean on the slides is content, never here (rule 5).
+   */
+  presenter: {
+    /** The fixed tab title; the deck title never goes in `document.title` (section 3.2). */
+    docTitle: 'Hangul Route lecture',
+    home: { title: 'Lecture' },
+    bar: {
+      label: 'Lesson controls',
+      counter: (i: number, n: number) => `${i} / ${n}`,
+      /** Next while the slide has builds left (README D3). */
+      reveal: { cta: 'Reveal' },
+      sound: { cta: 'Sound' },
+      timer: { cta: 'Timer' },
+      picker: { cta: 'Helper' },
+      blank: { cta: 'Blank' },
+      grid: { cta: 'Slides' },
+      fullscreen: { cta: 'Full screen' },
+      exit: { cta: 'Exit' },
+    },
+    exit: {
+      title: 'Leave the lesson?',
+      line: "Nothing about anyone's progress changes.",
+      keepGoing: { cta: 'Keep going' },
+    },
+    /** Kind labels: the live region and the slide grid. */
+    grid: {
+      kind: {
+        title: 'Title',
+        letter: 'Letter',
+        syllable: 'Syllable',
+        vocab: 'Word',
+        sequence: 'Order',
+        story: 'Story',
+        quiz: 'Question',
+        card: 'Card',
+        activity: 'Activity',
+        end: 'End',
+      },
+    },
+    quiz: {
+      /** The speaker button on the stage. */
+      playPrompt: 'Play the sound',
+    },
+    slide: {
+      /** Read before the teacher's deck title on the first slide. */
+      deckTitle: 'Lesson',
+      letterName: (name: string) => `Letter name: ${name}`,
+      /** Until a native speaker reviews the letter's strokes (section 3.6). */
+      strokeCaption: 'Simplified stroke guide',
+      end: {
+        title: 'Today we met',
+        letters: 'Letters',
+        words: 'Words',
+        more: (n: number) => `+ ${n} more`,
+        practice: 'Practice at home in Hangul Route',
+        codeTitle: 'Join our class',
+        /** `cta` is the shipped Join label (`caregiver.spaces.join.cta`). */
+        howToJoin: (cta: string) => `Tap “${cta}” in Hangul Route and type this code.`,
+        exitHint: 'To finish, choose Exit.',
+      },
+    },
+    start: {
+      slides: (n: number) => plural('en', n, { one: '1 slide', other: `${n} slides` }),
+      minutes: (n: number) => plural('en', n, { one: 'about 1 minute', other: `about ${n} minutes` }),
+      checks: 'Before you start',
+      offlineReady: 'Ready for offline',
+      offlineNotReady: 'Open this page once with Wi-Fi to use it offline.',
+      installHint: 'You can also add it to the home screen from the browser menu.',
+      voiceLocal: (name: string) => `Korean voice: ${name}, on this device`,
+      voiceNetwork: (name: string) => `Korean voice: ${name}, uses the internet`,
+      voiceNone: 'No Korean voice on this device. You say the sounds; the slides show them.',
+      fullscreen: 'Full screen opens when you start',
+      fullscreenNone: 'This browser has no full screen. The lesson still works.',
+      awake: 'The screen stays on during the lesson',
+      awakeNone: 'Keep the screen awake in system settings.',
+      skipped: (n: number) =>
+        plural('en', n, { one: '1 part of this lesson is not shown as a slide.', other: `${n} parts of this lesson are not shown as slides.` }),
+      seeWhich: { cta: 'See which' },
+      hideWhich: { cta: 'Hide the list' },
+      /** One reason line per skipped part (README D10). */
+      reason: {
+        'unknown-id': 'Not in this version of the app',
+        'not-ready': 'Not ready to show yet',
+        'no-romanization': 'Left out until it has romanization',
+        'scope-too-small': 'Too few letters or words for this quiz',
+        'unsupported-step': 'A step the slides do not show',
+      },
+      picker: {
+        title: 'Helper picker',
+        names: (n: number) => plural('en', n, { one: '1 name received', other: `${n} names received` }),
+        initials: (n: number) => plural('en', n, { one: '1 initial received', other: `${n} initials received` }),
+        numbers: (n: number) => `Numbers 1 to ${n}`,
+        noOpener: 'Names come from the console page that opened this lesson. Using numbers.',
+        notKept: 'Names are not kept on this device. Using numbers.',
+        fewer: 'Fewer',
+        more: 'More',
+      },
+      /** The font wait, at most 1.5 s (section 3.6). */
+      loading: 'Getting the big letters ready',
+      cta: 'Start',
+    },
+    state: {
+      invalid: {
+        title: 'This link does not work',
+        line: 'Open a Quick lesson, or get a new link from the console page.',
+        cta: 'Open Quick lesson',
+      },
+      loading: 'Loading lesson',
+      tooSmall: 'Make the window bigger or turn the screen.',
+      portrait: 'Turn the screen for a bigger view',
+    },
+  },
 } as const;

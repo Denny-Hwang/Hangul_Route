@@ -227,4 +227,7 @@ export const a11y = {
     inPlan: 'En tu plan',
     notOpen: (title: string) => `${title}: aún sin abrir. Abre la página de la lección.`,
   },
+  presenter: {
+    slide: (i: number, n: number, what: string) => `Diapositiva ${i} de ${n}, ${what}`,
+  },
 } satisfies DeepPartial<Messages['a11y']>;
