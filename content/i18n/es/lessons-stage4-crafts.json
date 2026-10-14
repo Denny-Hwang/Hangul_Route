@@ -1,0 +1,158 @@
+{
+  "locale": "es",
+  "domain": "lessons-stage4-crafts",
+  "entries": {
+    "quest:stage4-crafts-q1": {
+      "blurb": "Lee cómo dos amigos se invitan a jugar.",
+      "steps.s1.hoyaLine": "Mina quiere jugar. ¡Leamos lo que dice!",
+      "steps.s1.title": "Hora de jugar",
+      "steps.s2.discover.pages.0.caption": "Los amigos cercanos suelen hablar de forma informal, sin la terminación cortés yo.",
+      "steps.s2.discover.pages.0.items.0.lines.0.line.gloss": "¡juguemos juntos!",
+      "steps.s2.discover.pages.0.items.0.lines.0.speaker": "Mina",
+      "steps.s2.discover.pages.0.items.0.lines.1.line.gloss": "¡vale!, ¡me parece bien!",
+      "steps.s2.discover.pages.0.items.0.lines.1.speaker": "Hoya",
+      "steps.s2.discover.pages.1.caption": "Hoya pregunta a qué jugar y Mina elige el yut.",
+      "steps.s2.discover.pages.1.items.0.lines.0.line.gloss": "¿a qué jugamos?",
+      "steps.s2.discover.pages.1.items.0.lines.0.speaker": "Hoya",
+      "steps.s2.discover.pages.1.items.0.lines.1.line.gloss": "¡juguemos al yut!",
+      "steps.s2.discover.pages.1.items.0.lines.1.speaker": "Mina",
+      "steps.s2.discover.pages.1.items.1.note": "una palabra para preguntar",
+      "steps.s2.discover.pages.1.items.1.word.gloss": "qué",
+      "steps.s2.hoyaLine": "Toca Escuchar para oír cada línea.",
+      "steps.s2.title": "Charla de amigos",
+      "steps.s3.title": "Elige la respuesta de Hoya",
+      "steps.s4.title": "Ordena la charla",
+      "steps.s5.title": "Escucha y responde",
+      "steps.s6.hoyaLine": "¡Seguiste una charla real entre amigos!",
+      "steps.s6.title": "¡A jugar!",
+      "teaser": "Después: túrnense en una partida de yut.",
+      "title": "¿A qué jugamos?"
+    },
+    "minigame:s4-crafts-q1-practice": {
+      "dialogue.0.npc": "¡juguemos juntos!",
+      "dialogue.0.options.chaegieyo.gloss": "es un libro.",
+      "dialogue.0.options.hakgyoe-gayo.gloss": "voy a la escuela.",
+      "dialogue.0.options.joa.gloss": "¡vale!, ¡me parece bien!",
+      "dialogue.1.npc": "¿a qué jugamos?",
+      "dialogue.1.options.mureul-masyeoyo.gloss": "bebo agua.",
+      "dialogue.1.options.tokkiga-jagayo.gloss": "el conejo es pequeño.",
+      "dialogue.1.options.yunnori-haja.gloss": "¡juguemos al yut!",
+      "dialogue.2.npc": "¡juguemos al yut!",
+      "dialogue.2.options.hakgyoe-gayo.gloss": "voy a la escuela.",
+      "dialogue.2.options.joa.gloss": "¡vale!, ¡me parece bien!",
+      "dialogue.2.options.mureul-masyeoyo.gloss": "bebo agua."
+    },
+    "minigame:s4-crafts-q1-apply": {
+      "storySteps.l1.label": "¡juguemos juntos!",
+      "storySteps.l2.label": "¡vale! ¿a qué jugamos?",
+      "storySteps.l3.label": "¡juguemos al yut!",
+      "storySteps.l4.label": "¡vale!, ¡me parece bien!"
+    },
+    "minigame:s4-crafts-q1-check": {
+      "listenPick.rounds.r1.prompt": "¡juguemos juntos!",
+      "listenPick.rounds.r2.prompt": "¿a qué jugamos?"
+    },
+    "quest:stage4-crafts-q2": {
+      "blurb": "Túrnate con Mina en una partida de yut.",
+      "steps.s1.hoyaLine": "Estamos jugando al yut. ¡Turnémonos!",
+      "steps.s1.title": "¿A quién le toca?",
+      "steps.s2.discover.pages.0.caption": "Entre amigos, una frase puede terminar en ya: nae charyeya, me toca.",
+      "steps.s2.discover.pages.0.items.0.lines.0.line.gloss": "¡me toca!",
+      "steps.s2.discover.pages.0.items.0.lines.0.speaker": "Hoya",
+      "steps.s2.discover.pages.0.items.0.lines.1.line.gloss": "¡vale!, ¡me parece bien!",
+      "steps.s2.discover.pages.0.items.0.lines.1.speaker": "Mina",
+      "steps.s2.discover.pages.0.items.1.note": "a quién le toca en un juego",
+      "steps.s2.discover.pages.0.items.1.word.gloss": "turno (en un juego)",
+      "steps.s2.discover.pages.1.caption": "Mina lo felicita y Hoya pasa el turno.",
+      "steps.s2.discover.pages.1.items.0.lines.0.line.gloss": "¡bien hecho!",
+      "steps.s2.discover.pages.1.items.0.lines.0.speaker": "Mina",
+      "steps.s2.discover.pages.1.items.0.lines.1.line.gloss": "¡gracias! ¡ahora tú, te toca!",
+      "steps.s2.discover.pages.1.items.0.lines.1.speaker": "Hoya",
+      "steps.s2.hoyaLine": "Toca Escuchar para oír cada línea.",
+      "steps.s2.title": "Por turnos",
+      "steps.s3.title": "Elige la respuesta de Hoya",
+      "steps.s4.title": "Ordena la charla",
+      "steps.s5.title": "Escucha y responde",
+      "steps.s6.hoyaLine": "¡Te turnaste como un jugador de verdad!",
+      "steps.s6.title": "¡Buena partida!",
+      "teaser": "Después: la forma cortés y la forma amistosa.",
+      "title": "Me toca, te toca"
+    },
+    "minigame:s4-crafts-q2-practice": {
+      "dialogue.0.npc": "¡me toca!",
+      "dialogue.0.options.hakgyoe-gayo.gloss": "voy a la escuela.",
+      "dialogue.0.options.joa.gloss": "¡vale!, ¡me parece bien!",
+      "dialogue.0.options.mureul-masyeoyo.gloss": "bebo agua.",
+      "dialogue.1.npc": "¡bien hecho!",
+      "dialogue.1.options.chaegieyo.gloss": "es un libro.",
+      "dialogue.1.options.gomawo.gloss": "¡gracias!",
+      "dialogue.1.options.mureul-masyeoyo.gloss": "bebo agua.",
+      "dialogue.2.npc": "¡ahora tú, te toca!",
+      "dialogue.2.options.hakgyoe-gayo.gloss": "voy a la escuela.",
+      "dialogue.2.options.joa-nae-charyeya.gloss": "¡vale! ¡me toca!",
+      "dialogue.2.options.tokkiga-jagayo.gloss": "el conejo es pequeño."
+    },
+    "minigame:s4-crafts-q2-apply": {
+      "storySteps.l1.label": "¡juguemos al yut!",
+      "storySteps.l2.label": "¡vale! ¡me toca!",
+      "storySteps.l3.label": "¡bien hecho!",
+      "storySteps.l4.label": "¡gracias! ¡ahora tú, te toca!"
+    },
+    "minigame:s4-crafts-q2-check": {
+      "listenPick.rounds.r1.prompt": "¡bien hecho!",
+      "listenPick.rounds.r2.prompt": "¡ahora tú, te toca!"
+    },
+    "quest:stage4-crafts-q3": {
+      "blurb": "Pregunta de forma cortés y de forma amistosa.",
+      "steps.s1.hoyaLine": "Dami también quiere jugar. ¡Preguntémosle!",
+      "steps.s1.title": "Dos formas de preguntar",
+      "steps.s2.discover.pages.0.caption": "Con su amiga cercana Mina, Hoya habla de forma informal.",
+      "steps.s2.discover.pages.0.items.0.lines.0.line.gloss": "¿lo hacemos juntos? (informal)",
+      "steps.s2.discover.pages.0.items.0.lines.0.speaker": "Mina",
+      "steps.s2.discover.pages.0.items.0.lines.1.line.gloss": "¡vale!, ¡me parece bien!",
+      "steps.s2.discover.pages.0.items.0.lines.1.speaker": "Hoya",
+      "steps.s2.discover.pages.1.caption": "Hoya acaba de conocer a Dami, así que los dos añaden el cortés yo.",
+      "steps.s2.discover.pages.1.items.0.lines.0.line.gloss": "¿lo hacemos juntos? (cortés)",
+      "steps.s2.discover.pages.1.items.0.lines.0.speaker": "Dami",
+      "steps.s2.discover.pages.1.items.0.lines.1.line.gloss": "¡vale!, ¡me parece bien! (cortés)",
+      "steps.s2.discover.pages.1.items.0.lines.1.speaker": "Hoya",
+      "steps.s2.hoyaLine": "Toca Escuchar para oír cada línea.",
+      "steps.s2.title": "Cortés e informal",
+      "steps.s3.title": "Elige la respuesta de Hoya",
+      "steps.s4.title": "Ordena la charla",
+      "steps.s5.title": "Escucha y responde",
+      "steps.s6.hoyaLine": "Ya lees la charla cortés y la informal. ¡Hoya está muy orgulloso!",
+      "steps.s6.title": "¡Fin del juego!",
+      "title": "¿Jugamos juntos?"
+    },
+    "minigame:s4-crafts-q3-practice": {
+      "dialogue.0.npc": "¿lo hacemos juntos? (informal)",
+      "dialogue.0.options.chaegieyo.gloss": "es un libro.",
+      "dialogue.0.options.hakgyoe-gayo.gloss": "voy a la escuela.",
+      "dialogue.0.options.joa.gloss": "¡vale!, ¡me parece bien!",
+      "dialogue.1.npc": "¿a qué jugamos?",
+      "dialogue.1.options.mureul-masyeoyo.gloss": "bebo agua.",
+      "dialogue.1.options.tokkiga-jagayo.gloss": "el conejo es pequeño.",
+      "dialogue.1.options.yunnori-haja.gloss": "¡juguemos al yut!",
+      "dialogue.2.npc": "¿lo hacemos juntos? (cortés)",
+      "dialogue.2.options.chaegieyo.gloss": "es un libro.",
+      "dialogue.2.options.joayo.gloss": "¡vale!, ¡me parece bien! (cortés)",
+      "dialogue.2.options.tokkiga-jagayo.gloss": "el conejo es pequeño."
+    },
+    "minigame:s4-crafts-q3-apply": {
+      "storySteps.l1.label": "¿lo hacemos juntos? (informal)",
+      "storySteps.l2.label": "¡vale! ¿a qué jugamos?",
+      "storySteps.l3.label": "¡juguemos al yut!",
+      "storySteps.l4.label": "¡vale! ¡me toca!"
+    },
+    "minigame:s4-crafts-q3-check": {
+      "listenPick.rounds.r1.prompt": "¿lo hacemos juntos? (cortés)",
+      "listenPick.rounds.r2.prompt": "¿lo hacemos juntos? (informal)"
+    },
+    "episode:stage4-crafts": {
+      "hoyaIntro": "Mina y yo estamos jugando. ¡Ven a leer lo que decimos!",
+      "subtitle": "Unos amigos eligen un juego y se turnan.",
+      "title": "Charla de juego"
+    }
+  }
+}
