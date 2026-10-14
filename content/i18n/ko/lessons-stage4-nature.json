@@ -1,0 +1,154 @@
+{
+  "locale": "ko",
+  "domain": "lessons-stage4-nature",
+  "entries": {
+    "episode:stage4-nature": {
+      "title": "공원 대화",
+      "subtitle": "친구와 날씨와 계획을 이야기해요.",
+      "hoyaIntro": "공원에 가요! 하늘, 비, 우리 계획을 이야기해 봐요."
+    },
+    "quest:stage4-nature-q1": {
+      "title": "하늘 구경",
+      "blurb": "공원에서 친구와 날씨를 이야기해요.",
+      "teaser": "다음: 내일 계획",
+      "steps.s1.title": "공원에서",
+      "steps.s2.title": "짧은 대화 두 개",
+      "steps.s3.title": "대답 고르기",
+      "steps.s4.title": "대화 순서 맞추기",
+      "steps.s5.title": "빠르게 두 문제",
+      "steps.s6.title": "하늘 이야기 완성!",
+      "steps.s1.hoyaLine": "하늘을 봐요! 날씨 이야기를 해 봐요.",
+      "steps.s2.hoyaLine": "줄을 하나씩 눌러 들어 봐요.",
+      "steps.s6.hoyaLine": "한국어로 날씨 이야기를 했어요!",
+      "steps.s2.discover.pages.0.caption": "햇살 가득한 공원의 하루.",
+      "steps.s2.discover.pages.1.caption": "구름이 몰려오고 빗방울이 떨어지기 시작해요.",
+      "steps.s2.discover.pages.0.items.0.lines.0.speaker": "친구",
+      "steps.s2.discover.pages.0.items.0.lines.1.speaker": "호야",
+      "steps.s2.discover.pages.1.items.0.lines.0.speaker": "친구",
+      "steps.s2.discover.pages.1.items.0.lines.1.speaker": "호야",
+      "steps.s2.discover.pages.0.items.0.lines.0.line.gloss": "맑고 화창한 날이라고 하는 말",
+      "steps.s2.discover.pages.0.items.0.lines.1.line.gloss": "좋다고 맞장구치는 대답",
+      "steps.s2.discover.pages.1.items.0.lines.0.line.gloss": "지금 빗방울이 떨어진다고 알리는 말",
+      "steps.s2.discover.pages.1.items.0.lines.1.line.gloss": "살고 있는 곳으로 돌아간다는 말"
+    },
+    "quest:stage4-nature-q2": {
+      "title": "이따가 올 비",
+      "blurb": "오늘과 내일 일어날 일을 말해요.",
+      "teaser": "다음: 가는 곳 묻기",
+      "steps.s1.title": "다가오는 구름",
+      "steps.s2.title": "앞으로의 일 말하기",
+      "steps.s3.title": "대답 고르기",
+      "steps.s4.title": "대화 순서 맞추기",
+      "steps.s5.title": "빠르게 두 문제",
+      "steps.s6.title": "계획 완성!",
+      "steps.s1.hoyaLine": "구름이 잔뜩 끼었어요. 이제 어떻게 될까요?",
+      "steps.s2.hoyaLine": "geoyeyo를 잘 들어 봐요. 앞으로 일어날 일을 말할 때 붙어요.",
+      "steps.s6.hoyaLine": "한국어로 내일 이야기를 했어요!",
+      "steps.s2.discover.pages.0.caption": "공원 위의 회색 구름.",
+      "steps.s2.discover.pages.1.caption": "다음 날 계획 세우기.",
+      "steps.s2.discover.pages.0.items.0.lines.0.speaker": "친구",
+      "steps.s2.discover.pages.0.items.0.lines.1.speaker": "호야",
+      "steps.s2.discover.pages.1.items.0.lines.0.speaker": "친구",
+      "steps.s2.discover.pages.1.items.0.lines.1.speaker": "호야",
+      "steps.s2.discover.pages.0.items.0.lines.0.line.gloss": "이따가 비가 내리겠다고 짐작하는 말",
+      "steps.s2.discover.pages.0.items.0.lines.1.line.gloss": "그렇다면 다음 날 가겠다는 대답",
+      "steps.s2.discover.pages.1.items.0.lines.0.line.gloss": "다음 날은 화창하겠다고 짐작하는 말",
+      "steps.s2.discover.pages.1.items.0.lines.1.line.gloss": "함께 가자고 기쁘게 대답하는 말"
+    },
+    "quest:stage4-nature-q3": {
+      "title": "어디로?",
+      "blurb": "친구에게 가는 곳을 묻고 대답해요.",
+      "steps.s1.title": "길에서",
+      "steps.s2.title": "가는 곳 묻기",
+      "steps.s3.title": "대답 고르기",
+      "steps.s4.title": "대화 순서 맞추기",
+      "steps.s5.title": "빠르게 두 문제",
+      "steps.s6.title": "공원 친구!",
+      "steps.s1.hoyaLine": "친구가 지나가요. 가는 곳을 물어봐요.",
+      "steps.s2.hoyaLine": "줄을 하나씩 눌러 들어 봐요.",
+      "steps.s6.hoyaLine": "한국어로 묻고 대답했어요. 멋진 대화예요!",
+      "steps.s2.discover.pages.0.caption": "길에서 만난 두 친구.",
+      "steps.s2.discover.pages.1.caption": "함께 공원으로.",
+      "steps.s2.discover.pages.0.items.0.lines.0.speaker": "친구",
+      "steps.s2.discover.pages.0.items.0.lines.1.speaker": "호야",
+      "steps.s2.discover.pages.1.items.0.lines.0.speaker": "친구",
+      "steps.s2.discover.pages.1.items.0.lines.1.speaker": "호야",
+      "steps.s2.discover.pages.0.items.0.lines.0.line.gloss": "호야에게 가는 곳을 묻는 말",
+      "steps.s2.discover.pages.0.items.0.lines.1.line.gloss": "산책하고 노는 공원으로 간다는 대답",
+      "steps.s2.discover.pages.1.items.0.lines.0.line.gloss": "함께 가자고 권하는 말",
+      "steps.s2.discover.pages.1.items.0.lines.1.line.gloss": "좋다고 맞장구치는 대답"
+    },
+    "minigame:s4-nature-q1-play": {
+      "dialogue.0.npc": "만났을 때 하는 공손한 인사",
+      "dialogue.1.npc": "맑고 화창한 날이라고 하는 말",
+      "dialogue.2.npc": "지금 빗방울이 떨어진다고 알리는 말",
+      "dialogue.0.options.annyeonghaseyo.gloss": "만났을 때 하는 공손한 인사",
+      "dialogue.0.options.chaegieyo.gloss": "이것이 책이라고 알려 주는 말",
+      "dialogue.0.options.babeul-meogeoyo.gloss": "밥을 먹는다고 말하는 문장",
+      "dialogue.1.options.ne-joayo.gloss": "좋다고 맞장구치는 대답",
+      "dialogue.1.options.babeul-meogeoyo.gloss": "밥을 먹는다고 말하는 문장",
+      "dialogue.1.options.chaegieyo.gloss": "이것이 책이라고 알려 주는 말",
+      "dialogue.2.options.jibe-gayo.gloss": "살고 있는 곳으로 돌아간다는 말",
+      "dialogue.2.options.uyureul-masyeoyo.gloss": "우유를 마신다고 말하는 문장",
+      "dialogue.2.options.jeoneun-hoyayeyo.gloss": "내 이름을 알려 주는 말"
+    },
+    "minigame:s4-nature-q1-apply": {
+      "storySteps.l1.label": "만났을 때 하는 공손한 인사",
+      "storySteps.l2.label": "맑고 화창한 날이라고 하는 말",
+      "storySteps.l3.label": "좋다고 맞장구치는 대답",
+      "storySteps.l4.label": "지금 빗방울이 떨어진다고 알리는 말"
+    },
+    "minigame:s4-nature-q1-check": {
+      "listenPick.rounds.c1.prompt": "맑고 화창한 날이라고 하는 말",
+      "listenPick.rounds.c2.prompt": "지금 빗방울이 떨어진다고 알리는 말"
+    },
+    "minigame:s4-nature-q2-play": {
+      "dialogue.0.npc": "이따가 비가 내리겠다고 짐작하는 말",
+      "dialogue.1.npc": "다음 날 공원에 가겠는지 묻는 말",
+      "dialogue.2.npc": "다음 날은 화창하겠다고 짐작하는 말",
+      "dialogue.0.options.geureom-naeil-gal-geoyeyo.gloss": "그렇다면 다음 날 가겠다는 대답",
+      "dialogue.0.options.annyeonghaseyo.gloss": "만났을 때 하는 공손한 인사",
+      "dialogue.0.options.jeoneun-hoyayeyo.gloss": "내 이름을 알려 주는 말",
+      "dialogue.1.options.ne-gal-geoyeyo.gloss": "가겠다고 그렇다고 대답하는 말",
+      "dialogue.1.options.chaegieyo.gloss": "이것이 책이라고 알려 주는 말",
+      "dialogue.1.options.jeoneun-hoyayeyo.gloss": "내 이름을 알려 주는 말",
+      "dialogue.2.options.ne-gachi-gayo.gloss": "함께 가자고 기쁘게 대답하는 말",
+      "dialogue.2.options.annyeonghaseyo.gloss": "만났을 때 하는 공손한 인사",
+      "dialogue.2.options.babeul-meogeoyo.gloss": "밥을 먹는다고 말하는 문장"
+    },
+    "minigame:s4-nature-q2-apply": {
+      "storySteps.l1.label": "이따가 비가 내리겠다고 짐작하는 말",
+      "storySteps.l2.label": "그렇다면 다음 날 가겠다는 대답",
+      "storySteps.l3.label": "다음 날은 화창하겠다고 짐작하는 말",
+      "storySteps.l4.label": "함께 가자고 기쁘게 대답하는 말"
+    },
+    "minigame:s4-nature-q2-check": {
+      "listenPick.rounds.c1.prompt": "이따가 비가 내리겠다고 짐작하는 말",
+      "listenPick.rounds.c2.prompt": "다음 날은 화창하겠다고 짐작하는 말"
+    },
+    "minigame:s4-nature-q3-play": {
+      "dialogue.0.npc": "호야에게 가는 곳을 묻는 말",
+      "dialogue.1.npc": "함께 가자고 권하는 말",
+      "dialogue.2.npc": "곧 비가 내리겠다고 짐작하는 말",
+      "dialogue.0.options.gongwone-gayo.gloss": "산책하고 노는 공원으로 간다는 대답",
+      "dialogue.0.options.ne-joayo.gloss": "좋다고 맞장구치는 대답",
+      "dialogue.0.options.chaegieyo.gloss": "이것이 책이라고 알려 주는 말",
+      "dialogue.1.options.ne-joayo.gloss": "좋다고 맞장구치는 대답",
+      "dialogue.1.options.jeoneun-hoyayeyo.gloss": "내 이름을 알려 주는 말",
+      "dialogue.1.options.uyureul-masyeoyo.gloss": "우유를 마신다고 말하는 문장",
+      "dialogue.2.options.geureom-jibe-gayo.gloss": "그렇다면 집으로 돌아가자는 말",
+      "dialogue.2.options.annyeonghaseyo.gloss": "만났을 때 하는 공손한 인사",
+      "dialogue.2.options.masisseoyo.gloss": "음식 맛이 좋다는 말"
+    },
+    "minigame:s4-nature-q3-apply": {
+      "storySteps.l1.label": "호야에게 가는 곳을 묻는 말",
+      "storySteps.l2.label": "산책하고 노는 공원으로 간다는 대답",
+      "storySteps.l3.label": "함께 가자고 권하는 말",
+      "storySteps.l4.label": "좋다고 맞장구치는 대답"
+    },
+    "minigame:s4-nature-q3-check": {
+      "listenPick.rounds.c1.prompt": "가는 곳을 묻는 말",
+      "listenPick.rounds.c2.prompt": "함께 가자고 권하는 말"
+    }
+  }
+}
