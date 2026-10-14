@@ -481,6 +481,33 @@ const CELLS: readonly UpperCell[] = [
       await expect(page.getByRole('button', { name: /^Food & Daily Life: Kitchen Talk\./ })).toBeVisible();
     },
   },
+  // F-CURR-001 S4-3: Park Conversations, q1 "Sky Watching": Discover, three Tap to Respond turns, the four-line
+  // Story Sequence and the Check, at 320 px.
+  {
+    episodeId: 'episode:stage4-nature',
+    cellButton: journeyCellName(4, 'Nature & Animals'),
+    title: 'Park Conversations',
+    playFirstQuest: async (page) => {
+      await page.setViewportSize({ width: 320, height: 720 });
+      await startFirstQuest(page);
+      await passDiscover(page);
+      await page.getByRole('button', { name: 'Play minigame' }).click();
+      await reply(page, '안녕하세요!');
+      await reply(page, '네, 좋아요!');
+      await reply(page, '집에 가요!');
+      await page.getByRole('button', { name: 'Play minigame' }).click();
+      await orderLines(page, ['l1', 'l2', 'l3', 'l4']);
+      await playCheckByIds(page, [{ answer: 'a' }, { answer: 'a' }]);
+      await expect(page.getByText('Finish', { exact: true }).first()).toBeVisible();
+      await shot(page, 's4-3-q1-reward-320');
+    },
+    expectRouteDay: async (page) => {
+      await page.goto('/');
+      await page.getByText('Learning Route', { exact: true }).last().click();
+      await page.getByRole('button', { name: /^Stage 4, Dialogue\./ }).click();
+      await expect(page.getByRole('button', { name: /^Nature & Animals: Park Conversations\./ })).toBeVisible();
+    },
+  },
 ];
 
 async function openJourney(page: Page): Promise<void> {

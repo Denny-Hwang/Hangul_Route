@@ -248,41 +248,30 @@ describe('grid golden (F-STORY-005 §3.1 rule 2)', () => {
       { id: 'episode:stage1-crafts', order: 5, questIds: ['quest:stage1-crafts-q1', 'quest:stage1-crafts-q2', 'quest:stage1-crafts-q3'], status: 'shipped' },
       { id: 'episode:stage2-life', order: 2, questIds: ['quest:stage2-life-q1'], status: 'shipped' },
       { id: 'episode:stage2-nature', order: 4, questIds: ['quest:stage2-nature-q1'], status: 'shipped' },
-      // F-CURR-001 S2-3: Playground Words (generated, after the hand-written lessons, in stage order).
-      { id: 'episode:stage2-crafts', order: 5, questIds: ['quest:stage2-crafts-q1', 'quest:stage2-crafts-q2', 'quest:stage2-crafts-q3'], status: 'shipped' },
-      // F-CURR-001 S2-1: Word Builder (generated; crafts.json < letters.json).
-      {
-        id: 'episode:stage2-letters',
-        order: 1,
-        questIds: ['quest:stage2-letters-q1', 'quest:stage2-letters-q2', 'quest:stage2-letters-q3', 'quest:stage2-letters-q4', 'quest:stage2-letters-q5', 'quest:stage2-letters-q6'],
-        status: 'shipped',
-      },
-      // F-CURR-001 S2-2: Holiday Words (generated; letters.json < rites.json).
+      // F-CURR-001 generated lesson cells, after the hand-written lessons: by stage, then in grid theme order
+      // (letters, life, rites, nature, crafts), the order build-lessons writes them in.
+      // S2-1 Word Builder.
+      { id: 'episode:stage2-letters', order: 1, questIds: ['quest:stage2-letters-q1', 'quest:stage2-letters-q2', 'quest:stage2-letters-q3', 'quest:stage2-letters-q4', 'quest:stage2-letters-q5', 'quest:stage2-letters-q6'], status: 'shipped' },
+      // S2-2 Holiday Words.
       { id: 'episode:stage2-rites', order: 3, questIds: ['quest:stage2-rites-q1', 'quest:stage2-rites-q2', 'quest:stage2-rites-q3'], status: 'shipped' },
-      // F-CURR-001 S3-5: Game Sentences (generated; within a stage by file name, so crafts.json before letters.json).
-      { id: 'episode:stage3-crafts', order: 5, questIds: ['quest:stage3-crafts-q1', 'quest:stage3-crafts-q2', 'quest:stage3-crafts-q3'], status: 'shipped' },
-      // F-CURR-001 S3-1: First Sentences (generated, after the hand-written lessons, in stage order).
-      {
-        id: 'episode:stage3-letters',
-        order: 1,
-        questIds: ['quest:stage3-letters-q1', 'quest:stage3-letters-q2', 'quest:stage3-letters-q3'],
-        status: 'shipped',
-      },
-      // F-CURR-001 S3-2: Daily Mini-Sentences (generated; letters.json < life.json < rites.json).
+      // S2-3 Playground Words.
+      { id: 'episode:stage2-crafts', order: 5, questIds: ['quest:stage2-crafts-q1', 'quest:stage2-crafts-q2', 'quest:stage2-crafts-q3'], status: 'shipped' },
+      // S3-1 First Sentences.
+      { id: 'episode:stage3-letters', order: 1, questIds: ['quest:stage3-letters-q1', 'quest:stage3-letters-q2', 'quest:stage3-letters-q3'], status: 'shipped' },
+      // S3-2 Daily Mini-Sentences.
       { id: 'episode:stage3-life', order: 2, questIds: ['quest:stage3-life-q1', 'quest:stage3-life-q2', 'quest:stage3-life-q3'], status: 'shipped' },
-      // F-CURR-001 S3-3: Festival Sentences (generated from content/episodes/stage-3/rites.json).
+      // S3-3 Festival Sentences.
       { id: 'episode:stage3-rites', order: 3, questIds: ['quest:stage3-rites-q1', 'quest:stage3-rites-q2', 'quest:stage3-rites-q3'], status: 'shipped' },
-      // F-CURR-001 S4-1: the first upper-stage lesson cell (generated, after the hand-written lessons).
-      {
-        id: 'episode:stage4-letters',
-        order: 1,
-        questIds: ['quest:stage4-letters-q1', 'quest:stage4-letters-q2', 'quest:stage4-letters-q3'],
-        status: 'shipped',
-      },
-      // F-CURR-001 S4-2: Kitchen Talk (generated; letters.json < life.json < rites.json).
+      // S3-5 Game Sentences.
+      { id: 'episode:stage3-crafts', order: 5, questIds: ['quest:stage3-crafts-q1', 'quest:stage3-crafts-q2', 'quest:stage3-crafts-q3'], status: 'shipped' },
+      // S4-1 Read Along.
+      { id: 'episode:stage4-letters', order: 1, questIds: ['quest:stage4-letters-q1', 'quest:stage4-letters-q2', 'quest:stage4-letters-q3'], status: 'shipped' },
+      // S4-2 Kitchen Talk.
       { id: 'episode:stage4-life', order: 2, questIds: ['quest:stage4-life-q1', 'quest:stage4-life-q2', 'quest:stage4-life-q3'], status: 'shipped' },
-      // F-CURR-001 T-2: the Greeting Dialogues taste moved into its generated cell (same id, three quests).
+      // T-2: the Greeting Dialogues taste moved into its generated cell (same id, three quests).
       { id: 'episode:stage4-rites', order: 3, questIds: ['quest:stage4-rites-q1', 'quest:stage4-rites-q2', 'quest:stage4-rites-q3'], status: 'shipped' },
+      // S4-3 Park Conversations.
+      { id: 'episode:stage4-nature', order: 4, questIds: ['quest:stage4-nature-q1', 'quest:stage4-nature-q2', 'quest:stage4-nature-q3'], status: 'shipped' },
       // F-STORY-005 PR 5.6: the five Stage 5 books (books.ts), each cell's placeholder id kept.
       {
         id: 'episode:stage5-letters',
@@ -364,6 +353,8 @@ describe('pillar tags of the shipped lessons (F-STORY-005 §3.2)', () => {
       'episode:stage2-rites': ['B5'],
       // F-CURR-001 S4-2 (generated from content/episodes/stage-4/life.json).
       'episode:stage4-life': ['B5'],
+      // F-CURR-001 S4-3 (generated from content/episodes/stage-4/nature.json).
+      'episode:stage4-nature': ['D2'],
       'episode:stage5-letters': ['A1'],
       'episode:stage5-life': ['B1', 'B5', 'E4'],
       'episode:stage5-rites': ['B5'],
@@ -399,7 +390,7 @@ const GRID_GOLDEN: Record<string, string> = {
   'stage4:letters': 'episode:stage4-letters | Read Along | shipped',
   'stage4:life': 'episode:stage4-life | Kitchen Talk | shipped',
   'stage4:rites': 'episode:stage4-rites | Greeting Dialogues | shipped',
-  'stage4:nature': 'episode:stage4-nature | Park Conversations | preview',
+  'stage4:nature': 'episode:stage4-nature | Park Conversations | shipped',
   'stage4:crafts': 'episode:stage4-crafts | Playdate Talk | preview',
   'stage5:letters': 'episode:stage5-letters | Stories of Letters | shipped',
   'stage5:life': 'episode:stage5-life | Family Stories | shipped',

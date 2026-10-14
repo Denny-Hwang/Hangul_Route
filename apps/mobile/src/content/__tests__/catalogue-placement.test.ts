@@ -120,7 +120,7 @@ const MATRIX: Record<StageKey, Record<ThemeKey, string>> = {
   stage1: { letters: 'L+5', life: 'L+1', rites: 'L+2', nature: 'L+1', crafts: 'L+1' },
   stage2: { letters: 'L+2', life: 'L+1', rites: 'L+1', nature: 'L+1', crafts: 'L+3' },
   stage3: { letters: 'L+2', life: 'L+1', rites: 'L+0', nature: '-', crafts: 'L+0' },
-  stage4: { letters: 'L+1', life: 'L+0', rites: 'L+0', nature: '-', crafts: '-' },
+  stage4: { letters: 'L+1', life: 'L+0', rites: 'L+0', nature: 'L+0', crafts: '-' },
   stage5: { letters: '-', life: '-', rites: 'S1', nature: '-', crafts: '-' },
   stage6: { letters: 'S1', life: '-', rites: '-', nature: '-', crafts: '-' },
   stage7: { letters: '-', life: '-', rites: '-', nature: '-', crafts: '-' },

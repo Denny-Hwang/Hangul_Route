@@ -2,7 +2,7 @@
   "id": "episode:stage4-nature",
   "stage": "stage4",
   "theme": "nature",
-  "status": "draft",
+  "status": "ready",
   "titleEn": "Park Conversations",
   "subtitleEn": "Talk about the weather and plans with a friend.",
   "hoyaIntroEn": "Let us go to the park! We can talk about the sky, the rain and our plans.",
@@ -139,15 +139,6 @@
               },
               "replies": [
                 {
-                  "id": "r1",
-                  "text": {
-                    "ko": "안녕하세요!",
-                    "romanization": "annyeonghaseyo",
-                    "en": "Hello!"
-                  },
-                  "correct": true
-                },
-                {
                   "id": "r2",
                   "text": {
                     "ko": "책이에요.",
@@ -155,6 +146,15 @@
                     "en": "It is a book."
                   },
                   "correct": false
+                },
+                {
+                  "id": "r1",
+                  "text": {
+                    "ko": "안녕하세요!",
+                    "romanization": "annyeonghaseyo",
+                    "en": "Hello!"
+                  },
+                  "correct": true
                 },
                 {
                   "id": "r3",
@@ -176,15 +176,6 @@
               },
               "replies": [
                 {
-                  "id": "r1",
-                  "text": {
-                    "ko": "네, 좋아요!",
-                    "romanization": "ne joayo",
-                    "en": "Yes, it is!"
-                  },
-                  "correct": true
-                },
-                {
                   "id": "r2",
                   "text": {
                     "ko": "밥을 먹어요.",
@@ -201,6 +192,15 @@
                     "en": "I am Hoya."
                   },
                   "correct": false
+                },
+                {
+                  "id": "r1",
+                  "text": {
+                    "ko": "네, 좋아요!",
+                    "romanization": "ne joayo",
+                    "en": "Yes, it is!"
+                  },
+                  "correct": true
                 }
               ]
             },
@@ -474,15 +474,6 @@
               },
               "replies": [
                 {
-                  "id": "r1",
-                  "text": {
-                    "ko": "그럼 내일 갈 거예요.",
-                    "romanization": "geureom naeil gal geoyeyo",
-                    "en": "Then I will go tomorrow."
-                  },
-                  "correct": true
-                },
-                {
                   "id": "r2",
                   "text": {
                     "ko": "안녕하세요!",
@@ -499,6 +490,15 @@
                     "en": "I am Hoya."
                   },
                   "correct": false
+                },
+                {
+                  "id": "r1",
+                  "text": {
+                    "ko": "그럼 내일 갈 거예요.",
+                    "romanization": "geureom naeil gal geoyeyo",
+                    "en": "Then I will go tomorrow."
+                  },
+                  "correct": true
                 }
               ]
             },
@@ -548,15 +548,6 @@
               },
               "replies": [
                 {
-                  "id": "r1",
-                  "text": {
-                    "ko": "네, 같이 가요!",
-                    "romanization": "ne gachi gayo",
-                    "en": "Yes, let us go together!"
-                  },
-                  "correct": true
-                },
-                {
                   "id": "r2",
                   "text": {
                     "ko": "밥을 먹어요.",
@@ -564,6 +555,15 @@
                     "en": "I eat rice."
                   },
                   "correct": false
+                },
+                {
+                  "id": "r1",
+                  "text": {
+                    "ko": "네, 같이 가요!",
+                    "romanization": "ne gachi gayo",
+                    "en": "Yes, let us go together!"
+                  },
+                  "correct": true
                 },
                 {
                   "id": "r3",
@@ -845,15 +845,6 @@
               },
               "replies": [
                 {
-                  "id": "r1",
-                  "text": {
-                    "ko": "네, 좋아요!",
-                    "romanization": "ne joayo",
-                    "en": "Yes, sounds good!"
-                  },
-                  "correct": true
-                },
-                {
                   "id": "r2",
                   "text": {
                     "ko": "저는 호야예요.",
@@ -861,6 +852,15 @@
                     "en": "I am Hoya."
                   },
                   "correct": false
+                },
+                {
+                  "id": "r1",
+                  "text": {
+                    "ko": "네, 좋아요!",
+                    "romanization": "ne joayo",
+                    "en": "Yes, sounds good!"
+                  },
+                  "correct": true
                 },
                 {
                   "id": "r3",
@@ -882,15 +882,6 @@
               },
               "replies": [
                 {
-                  "id": "r1",
-                  "text": {
-                    "ko": "그럼 집에 가요.",
-                    "romanization": "geureom jibe gayo",
-                    "en": "Then I am going home."
-                  },
-                  "correct": true
-                },
-                {
                   "id": "r2",
                   "text": {
                     "ko": "안녕하세요!",
@@ -907,6 +898,15 @@
                     "en": "I eat rice."
                   },
                   "correct": false
+                },
+                {
+                  "id": "r1",
+                  "text": {
+                    "ko": "그럼 집에 가요.",
+                    "romanization": "geureom jibe gayo",
+                    "en": "Then I am going home."
+                  },
+                  "correct": true
                 }
               ]
             }
@@ -1019,9 +1019,14 @@
   ],
   "culture": [],
   "review": {
-    "language": "draft",
-    "culture": "draft",
-    "notes": []
+    "language": "native-reviewed",
+    "culture": "culture-reviewed",
+    "reviewedBy": "MAR",
+    "reviewedAt": "2026-10-14",
+    "notes": [
+      "Language and translation passes 4 and 6 (MAR, #637): no distractor borrows a sibling cell's Discover item; q2 asks only its own words; ko glosses are definitions with no echo (가겠다고 대답하는 말, 공원으로 간다는 대답); the q1 Story Sequence keeps speaker turns; es names no gendered friend; romanization follows checkRomanization.",
+      "Culture pass 5 (MAR, #637): no culture claim and no sourced language note (culture: []), so no verification record; no real person, shop, brand or price; no age wording; the friend is never gendered in es."
+    ]
   },
   "contentVer": 1
 }

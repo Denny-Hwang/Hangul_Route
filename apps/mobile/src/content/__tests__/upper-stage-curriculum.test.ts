@@ -655,6 +655,8 @@ describe('U-3 new-item caps and U-6 reuse (F-CURR-001 section 3.1 rules 4 and 5)
     const q1 = quest(1, ['만나서 반가워요.', '저도 반가워요.', '저는 미나예요.'], ['만나서 반가워요.']);
     expect(reuseProblems('stage4', [q1], new Set(['저']))).toEqual([]);
     expect(withoutSetPhrases('고마워요. 새해 복 많이 받으세요!')).toBe('고마워요.  !');
+    // A -(으)ㄹ 거예요 future form is the quest's grammar point, not a word (S4-3).
+    expect(reuseProblems('stage4', [quest(1, ['비가 올 거예요.', '내일 갈 거예요.'], ['비가 올 거예요.'])], new Set(['비']))).toEqual([]);
   });
 
   it('counts a particle choice as no word, and a heard prompt as shown', () => {

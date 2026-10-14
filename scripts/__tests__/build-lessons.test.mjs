@@ -124,6 +124,17 @@ describe("build-lessons.mjs: cells", () => {
     assert.match(read(root, "lessons-stage3.ts"), /= \{\};/);
   });
 
+  test("cells are written in grid theme order (letters, life, rites, nature, crafts), not file-name order", () => {
+    const root = makeRoot();
+    put(root, "content/episodes/stage-2/crafts.json", cell("stage2", "crafts", "ready", { order: 5 }));
+    put(root, "content/episodes/stage-2/nature.json", cell("stage2", "nature", "ready", { order: 4 }));
+    put(root, "content/episodes/stage-2/rites.json", cell("stage2", "rites"));
+    const r = run(root);
+    assert.equal(r.status, 0, r.stdout + r.stderr);
+    const ids = [...read(root, "lessons-index.ts").matchAll(/"id":"(episode:[^"]+)"/g)].map((m) => m[1]);
+    assert.deepEqual(ids, ["episode:stage2-rites", "episode:stage2-nature", "episode:stage2-crafts"]);
+  });
+
   test("a ready cell without both review sign-offs fails the build; a draft does not need them (§3.8)", () => {
     const unsigned = [
       { language: "draft", culture: "culture-reviewed", reviewedBy: "MAR", reviewedAt: "2026-10-01" },

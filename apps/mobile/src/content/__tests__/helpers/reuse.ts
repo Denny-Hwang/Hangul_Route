@@ -47,8 +47,17 @@ export const joinSetPhrases = (text: string): string =>
 /** A text without its set phrases: a set phrase is read as a whole, not decoded (rule 6, T-2). */
 export const withoutSetPhrases = (text: string): string => SET_PHRASES.reduce((t, phrase) => t.split(phrase).join(' '), text);
 
+/**
+ * Rule 4 counts one new grammar point a quest besides its words: a predicate in the Stage 4 future
+ * -(으)ㄹ 거예요 (올 거예요, 갈 거예요, 좋을 거예요) is that grammar point at work on a known verb, not a
+ * new word (F-CURR-001 S4-3), so it is left out of the word count.
+ */
+const withoutFutureForms = (text: string): string => text.replace(/[가-힣]+\s+거예요/g, ' ');
+
 export const wordsOf = (texts: readonly string[], known: ReadonlySet<string>): string[] =>
-  texts.flatMap((t) => eojeolOf(joinSetPhrases(t)).map((w) => stemOf(w, known))).filter((w) => !CAST_NAMES.has(w));
+  texts
+    .flatMap((t) => eojeolOf(withoutFutureForms(joinSetPhrases(t))).map((w) => stemOf(w, known)))
+    .filter((w) => !CAST_NAMES.has(w));
 
 /** The Korean texts a quest's Discover step shows (a pattern's examples, not its frame: the frame is a slot, not a word). */
 export function discoverTexts(quest: LessonQuest): string[] {
