@@ -12,7 +12,7 @@
 // `hangul-route-web` at M3, 2026-10-14); since F-APP-001 A-10 / F-SITE-002 S-10 a build without it forwards to
 // `DEFAULT_REDIRECT_ORIGIN` (the app host), the same default as `SITE_DEFAULT_CONSOLE_ORIGIN` in
 // `src/lib/site-links.ts`, so links and forwarding always move together. The kill switch `CONSOLE_ORIGIN=false`
-// (or `0`), then Retry deployment, leaves no `_redirects` file in `out/` and keeps the site's links on the site,
+// (or `0`, `off`, `no`, any case), then Retry deployment, leaves no `_redirects` file in `out/` and keeps the site's links on the site,
 // so the site serves its own console pages again.
 //
 // 302, not 301 (A-10 kept it): a browser never caches a temporary redirect for good, so the kill switch reaches
@@ -31,7 +31,7 @@ export const REDIRECT_STATUS = 302;
 export const DEFAULT_REDIRECT_ORIGIN = 'https://app.hangulroute.com';
 
 /** The kill switch values (trimmed, lower case): no forwarding (`CONSOLE_ORIGIN_OFF` in site-links.ts). */
-const CONSOLE_ORIGIN_OFF = ['false', '0'];
+const CONSOLE_ORIGIN_OFF = ['false', '0', 'off', 'no'];
 
 /** Hosts where a plain-http origin is allowed: this machine only (the rule of next.config.js and site-links.ts). */
 const LOCAL_HOSTS = new Set(['localhost', '127.0.0.1', '[::1]']);
@@ -42,7 +42,7 @@ const SITE_DOMAIN = 'hangulroute.com';
 
 /**
  * The origin the site forwards to: `CONSOLE_ORIGIN` trimmed, as an origin; `DEFAULT_REDIRECT_ORIGIN` when it is
- * unset or blank; `''` (no forwarding) for the kill switch `false` or `0`. Any other value that is not an https
+ * unset or blank; `''` (no forwarding) for the kill switch `false`, `0`, `off` or `no`. Any other value that is not an https
  * URL on hangulroute.com or a subdomain (plain http only on this machine) throws, as next.config.js does, so a
  * typo fails the build and the previous deployment stays live.
  * @param {string | undefined} raw

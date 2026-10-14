@@ -85,6 +85,7 @@ describe('siteCssVars', () => {
     expect(vars['--hr-site-sunken']).toBe(colors.surface.sunken);
     expect(vars['--hr-site-size-caption']).toBe(rem(typography.size.caption));
     expect(vars['--hr-site-size-body-sm']).toBe(rem(typography.size.bodySm));
+    expect(vars['--hr-site-text-muted']).toBe(colors.text.muted);
     const tokenValues = new Set<string>([
       ...Object.values(colors).flatMap((group) => Object.values(group as Record<string, string>)),
       ...Object.values(spacing).map((v) => `${v}px`),

@@ -179,6 +179,8 @@ export const learner = {
       details: { cta: 'Plan details' },
     },
     install: { label: 'Install on this device', a11yLabel: 'Install Hangul Route on this device' },
+    /** The link at the foot of Profiles & settings to the site's /licenses page (owner decision 2026-10-14). */
+    licenses: { label: 'Open-source notices', fallback: 'Open hangulroute.com/licenses in a browser.', gateDone: 'Grown-up check done. Tap Open-source notices again to open the page.' },
     /** Shown when more than one language is offered (hidden while only English ships). */
     language: {
       title: 'Language',

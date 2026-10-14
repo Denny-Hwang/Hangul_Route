@@ -363,6 +363,8 @@ export const landing = {
     copyright: (year: number) => `© ${year} Hangul Route`,
     /** The footer's locale switcher (PR 11c): links named by their endonyms, shown once a second locale ships. */
     language: 'Language',
+    /** The Company group's link to `/licenses` (proprietary license, owner decision 2026-10-14). */
+    licenses: 'Open-source notices',
   },
   /**
    * The launch-news form (`WaitlistForm`, docs/launch/waitlist.md; `WAITLIST_COPY` in apps/web/src/data/landing-copy.ts).
@@ -617,6 +619,9 @@ export const landing = {
           heading: 'Our content and your data',
           paragraphs: {
             p1: 'Hangul Route, including Hoya, the curriculum, illustrations, audio, and heritage cards, is owned by us or our licensors and protected by intellectual-property law. Learning data belongs to the learner and their family; you may export or delete it as described in our Privacy Policy.',
+            /** Consistency with the proprietary LICENSE (2026-10-14): open-source parts keep their own licenses (/licenses). */
+            openSource:
+              'The app includes open-source software and fonts that keep their own licenses, listed on our Open-source notices page (hangulroute.com/licenses). Nothing in these terms limits the rights those licenses give you.',
           },
         },
         disclaimer: {
@@ -663,6 +668,24 @@ export const landing = {
         },
       },
     },
+  },
+  /**
+   * `/licenses` (owner decision 2026-10-14; wireframe design/wireframes/site/licenses.md): the open-source notices
+   * of the shipped apps. The words around the list are translated; the list itself (package names, copyright lines,
+   * license texts, from `apps/web/src/data/third-party-notices.json`) is English legal text, shown under
+   * `legal.englishAuthoritative` on `/es` and `/ko`.
+   */
+  licenses: {
+    title: 'Open-source notices',
+    lead: 'Hangul Route uses open-source software and a font made by other people. Each one keeps its own license. This page lists them, with their copyright lines and the full license texts.',
+    notOpen: 'Hangul Route itself is not open source.',
+    copyright: 'Copyright (c) 2026 Sungjoo Hwang. All rights reserved.',
+    softwareTitle: 'Software',
+    fontsTitle: 'Fonts',
+    noticesTitle: 'NOTICE files',
+    fullText: 'Full license text',
+    usedIn: 'Used in',
+    where: { app: 'App', web: 'Website', server: 'Server', ios: 'iOS app' },
   },
   /** Links on the exported 404 page (F-SITE-002 §3.7); English document, as today. */
   notFound: {

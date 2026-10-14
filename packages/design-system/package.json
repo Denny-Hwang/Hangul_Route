@@ -2,6 +2,7 @@
   "name": "@hangul-route/design-system",
   "version": "0.0.0",
   "private": true,
+  "license": "UNLICENSED",
   "description": "Shared design tokens, components, and icons (including Hoya) for Hangul Route",
   "type": "module",
   "main": "./src/index.ts",

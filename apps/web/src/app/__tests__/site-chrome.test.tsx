@@ -162,7 +162,7 @@ describe('SiteFooter', () => {
     expect(headings).toEqual([t.footer.guide, t.footer.app, t.footer.company]);
   });
 
-  it('Guide: the persona pages; App: Start learning and Sign in; Company: About, Privacy, Terms and Contact', () => {
+  it('Guide: the persona pages; App: Start learning and Sign in; Company: About, Privacy, Terms and Contact; then Open-source notices beside the copyright line', () => {
     expect(items.map((c) => c.text)).toEqual([
       ...personaLabels,
       t.nav.start,
@@ -171,6 +171,7 @@ describe('SiteFooter', () => {
       t.footer.privacy,
       t.footer.terms,
       `${t.footer.contact}${CONTACT_EMAIL}`,
+      t.footer.licenses,
     ]);
     expect(items.map(hrefOf)).toEqual([
       ...personaPaths('en'),
@@ -180,7 +181,19 @@ describe('SiteFooter', () => {
       '/privacy',
       '/terms',
       `mailto:${CONTACT_EMAIL}`,
+      '/licenses',
     ]);
+  });
+
+  it('the open-source link keeps its 64 px hit area without overlapping the copyright line or the locale links', () => {
+    // The link's negative block margins reach out by the overflow; the row takes it up as row gap (when the link wraps
+    // under the line) and as bottom padding less the locale row's own top margin.
+    const link = html.match(/<a [^>]*href="\/licenses"[^>]*>/)?.[0] ?? '';
+    const overflow = link.match(/margin-block:calc\(-1 \* (\(\([^;"]+\)\/ 2\)|[^;"]+)\)/)?.[1];
+    expect(overflow, link).toBeTruthy();
+    const row = html.slice(0, html.indexOf(link)).match(/<div style="([^"]*)"><p[^>]*>[^<]*<\/p>$/)?.[1] ?? '';
+    expect(row).toContain(`row-gap:calc(${overflow})`);
+    expect(row).toContain(`padding-block-end:calc(${overflow} - 8px)`);
   });
 
   it('no console, demo or billing link and no old anchors', () => {
