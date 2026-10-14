@@ -43,6 +43,28 @@ export const MARKER_GEOMETRY = {
 } as const;
 export type MarkerShape = keyof typeof MARKER_GEOMETRY;
 
+/** The class tools of PR 9 (README Constants), in stage units unless named as rem or a factor. */
+/** The full-screen timer ring (`--ring`), in units; its numbers are `presenter.size.display`. */
+export const RING_STAGE = 420;
+/** The corner timer ring is a control: 10 x `spacing.lg` px (`--ring-corner`, 160). */
+export const RING_CORNER_FACTOR = 10;
+/** The small cheering Hoya beside "Hoya's answer" at a quiz reveal, in units (`touchTarget.hero`, slide-quiz.md). */
+export const QUIZ_ANSWER_HOYA = 96;
+/** The picker's label box: at least 480 x 140 units, so a 20-character label fits on one line. */
+export const PICKER_BOX_WIDTH = 480;
+export const PICKER_BOX_HEIGHT = 140;
+/** Grid thumbnails: at least 13 x 8 rem (`--thumb-w`, `--thumb-h`). */
+export const THUMB_W_REM = 13;
+export const THUMB_H_REM = 8;
+/** The help overlay: 56 rem wide (`--help-w`); key columns 10 rem (`--key-col`); a key cap at least 2.25 rem (`--kbd-min`). */
+export const HELP_W_REM = 56;
+export const KEY_COL_REM = 10;
+export const KBD_MIN_REM = 2.25;
+/** The status chips' flex basis beside the bar controls (`--status-min`); below it they wrap above the buttons (D1). */
+export const STATUS_MIN_REM = 12;
+/** The timer ticks this often while it runs (m:ss changes once a second; the ring moves smoothly enough). */
+export const TIMER_TICK_MS = 250;
+
 /** End slide fit rule (README D7): at most this many rows of letters and of words, then one "+ n more" pill. */
 export const END_MAX_ROWS = 2;
 

@@ -1,6 +1,6 @@
 import type { PickerMode, RomanizationMode } from '@hangul-route/content-schema';
 import type { SlideKind } from './build-steps';
-import type { PresenterState } from './controls';
+import type { PresenterEvent, PresenterState } from './controls';
 import type { Slide } from './deck-builder';
 import { TIMER_PRESETS_MS, formatRemaining, ringFraction, type TimerState } from './timer';
 
@@ -141,6 +141,14 @@ export function timerView(state: TimerState): TimerView {
     done: state.status === 'done',
     preset,
   };
+}
+
+/**
+ * What T (or the bar's Timer) asks the reducer for: a timer that has no time yet opens full
+ * screen, where the presets are; otherwise T toggles the timer in its own mode (section 3.5).
+ */
+export function timerOpenEvent(state: Pick<PresenterState, 'timerOpen'>, timer: Pick<TimerState, 'totalMs'>): PresenterEvent {
+  return !state.timerOpen && timer.totalMs === 0 ? { timerMode: 'full' } : { overlay: 'timer' };
 }
 
 /** A preset's label: "30 s" or "3 min" (the catalogue strings take the number). */

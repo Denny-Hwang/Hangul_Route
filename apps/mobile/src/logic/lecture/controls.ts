@@ -19,8 +19,9 @@
  *   covers the slide and is still there when that overlay closes. In the
  *   corner it lets slides move; full screen swallows navigation.
  * - `escape` / `close` close the covering overlay first, then a full-screen
- *   timer; `close` also closes a corner timer (its own close button), while
- *   `escape` with only a corner timer open asks to exit, like with nothing open.
+ *   timer; `close` also closes a corner timer, while `escape` with only a
+ *   corner timer open asks to exit, like with nothing open. `close-timer` (the
+ *   timer card's own Close) closes the timer and nothing else.
  * - A forward step (`next`, `first`, `last`, `goto`) that moves returns a
  *   `revealed` effect naming the build now showing; the screen plays it when
  *   it is a sound or stroke build. `prev` never returns one, so going back to
@@ -67,6 +68,8 @@ export type PresenterEvent =
   | 'escape'
   | 'replay-sound'
   | 'replay-stroke'
+  /** The timer card's own Close: closes the class timer and leaves any covering overlay open (PR 9). */
+  | 'close-timer'
   | { goto: number }
   | { overlay: Overlay }
   | { timerMode: TimerMode }
@@ -174,6 +177,10 @@ export function reduce(state: PresenterState, event: PresenterEvent, deck: Contr
     if (state.overlay !== null) return { state: { ...state, overlay: null } };
     if (fullTimer(state) || (state.timerOpen && event === 'close')) return { state: { ...state, timerOpen: false } };
     return { state: event === 'escape' ? { ...state, overlay: 'exit' } : state };
+  }
+
+  if (event === 'close-timer') {
+    return { state: state.timerOpen ? { ...state, timerOpen: false } : state };
   }
 
   if (event === 'replay-sound' || event === 'replay-stroke') {

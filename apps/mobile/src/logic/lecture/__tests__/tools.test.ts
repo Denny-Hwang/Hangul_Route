@@ -11,6 +11,7 @@ import {
   radioMove,
   sayItShown,
   statusChips,
+  timerOpenEvent,
   timerView,
   toolsOpened,
 } from '../tools';
@@ -193,5 +194,16 @@ describe('pickerModes (README D11)', () => {
     expect(pickerModes('initials', true)).toEqual(['initials', 'numbers']);
     expect(pickerModes('names', false)).toEqual(['numbers']);
     expect(pickerModes('numbers', false)).toEqual(['numbers']);
+  });
+});
+
+describe('timerOpenEvent (T and the bar Timer)', () => {
+  it('a timer with no time yet opens full screen, where the presets are', () => {
+    expect(timerOpenEvent(state(), initialTimer())).toEqual({ timerMode: 'full' });
+  });
+  it('a timer with a time toggles in its own mode', () => {
+    const run = reduceTimer(initialTimer(), { type: 'start', ms: 60_000, now: 0 });
+    expect(timerOpenEvent(state(), run)).toEqual({ overlay: 'timer' });
+    expect(timerOpenEvent(state({ timerOpen: true }), initialTimer())).toEqual({ overlay: 'timer' });
   });
 });

@@ -11,13 +11,13 @@ import { usePresenterView } from '../presenter-context';
  * sound". Disabled while its build is not reached.
  */
 export function SpeakerButton({ enabled, onPress, testID }: { enabled: boolean; onPress: () => void; testID?: string }): React.ReactElement {
-  const { unit, messages } = usePresenterView();
+  const { unit, messages, soundBlocked } = usePresenterView();
   const size = stageButtonSize(unit, touchTarget.hero);
   return (
     <Pressable
       testID={testID}
       role="button"
-      accessibilityLabel={messages.learner.presenter.quiz.playPrompt}
+      accessibilityLabel={soundBlocked ? messages.learner.audio.tapToHear : messages.learner.presenter.quiz.playPrompt}
       disabled={!enabled}
       onPress={onPress}
       style={(state) => ({

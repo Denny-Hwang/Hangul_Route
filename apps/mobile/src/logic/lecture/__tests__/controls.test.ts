@@ -247,6 +247,19 @@ describe('a running corner timer survives other overlays (activity slide: Start 
   });
 });
 
+describe('close-timer: the timer card\'s own Close (PR 9)', () => {
+  it('closes the timer and leaves a covering overlay where it is', () => {
+    const covered = at(1, 0, { overlay: 'picker', timerOpen: true });
+    expect(run(covered, 'close-timer')).toMatchObject({ overlay: 'picker', timerOpen: false });
+    expect(run(at(1, 0, { timerOpen: true, timerMode: 'full' }), 'close-timer')).toMatchObject({ overlay: null, timerOpen: false, slideIdx: 1 });
+  });
+
+  it('does nothing when the timer is not open', () => {
+    const s = at(2, 1);
+    expect(reduce(s, 'close-timer', DECK).state).toBe(s);
+  });
+});
+
 describe('effects stay outside the reducer', () => {
   it('replay sound and replay stroke return an effect and leave the state alone', () => {
     const s = at(1, 2);
