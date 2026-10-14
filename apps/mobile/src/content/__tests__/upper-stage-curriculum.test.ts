@@ -9,6 +9,7 @@ import {
   translatableFields,
   type LessonCell,
   type LessonQuest,
+  type LessonScope,
   type Overlays,
   type QuestStepKind,
   type StageKey,
@@ -20,8 +21,22 @@ import { PLAYABLE_KINDS } from '../../logic/minigame-renderers';
 import { episodesAll } from '../episodes';
 import { LESSON_EPISODES, LESSON_QUESTS } from '../__generated__/lessons-index';
 import { questsAll } from '../quests';
+import { scopeFor } from '../../logic/minigame-config';
+import { jamoAll } from '../jamo';
+import { stage1Quests } from '../quests';
+import { VOCAB_ITEMS } from '../__generated__/vocab';
 import { distractorProblems, fixedReplyPlace, promptKey, soundKey } from './helpers/distractors';
 import { ALL_LESSON_SCOPES, LESSON_STAGE_MODULES } from './helpers/lesson-stages';
+import {
+  WORD_BUILDER_SYMBOLS,
+  reuseProblems,
+  scopeTexts,
+  stemOf,
+  unionSymbols,
+  untaughtSymbols,
+  vocabLevelFor,
+  type TaughtSymbols,
+} from './helpers/reuse';
 
 /**
  * F-CURR-001 section 5, U-1 .. U-10: the invariants every upper-stage lesson cell
@@ -273,6 +288,19 @@ describe('U-10 three-language completeness of every ready cell', () => {
     );
   });
 
+  it('asks for the gloss of every Pic-Word Match pair (the word tile and the picture name show it), board by index', () => {
+    const kt = (ko: string, romanization: string, en: string) => ({ ko, romanization, en });
+    const scope = {
+      kind: 'pic-word-match',
+      rounds: 1,
+      picWord: { boards: [{ pairs: [{ id: 'p1', pictureRef: 'card:rice', word: kt('밥을 먹어요.', 'babeul meogeoyo', 'I eat rice.') }] }] },
+    };
+    const id = 'minigame:s3-life-q1-apply';
+    expect(missingGlosses([[id, scope]], { es: {}, ko: { [id]: { 'picWord.boards.0.pairs.p1.word.gloss': 'x' } } })).toEqual([
+      `U-10 es ${id}.picWord.boards.0.pairs.p1.word.gloss`,
+    ]);
+  });
+
   for (const { cell } of READY) {
     it(`${cell.id}: every English field has its es and ko value`, () => {
       const stage = LESSON_STAGE_MODULES[Number(cell.stage.slice(5)) as 2 | 3 | 4 | 6 | 7];
@@ -287,9 +315,105 @@ describe('U-10 three-language completeness of every ready cell', () => {
 
 describe('content checks each cell row fills in (F-CURR-001 section 5)', () => {
   it.todo('U-2 Word Builder: the 16 symbols each in exactly one Discover; with Stage 1 the full inventory; finals in two quests (S2-1)');
-  it.todo('U-3 new-item caps per stage (section 3.1 rule 4) (S2-1 onward)');
-  it.todo('U-4 decodable scored reading (section 3.1 rule 6) (S2-1 onward)');
-  it.todo('U-6 at least half the Korean words outside Discover are reused (S2-1 onward)');
+  it.todo('U-3, U-4, U-6 for Stage 2 cells (Word Builder counts symbols, and the other Stage 2 cells read Stage 1 symbols only) (S2-1 onward)');
+});
+
+/** Stage 1's taught words: every Hangul run in its quests and their games (the reading words, F-QUEST-002 R5). */
+const STAGE1_WORDS: ReadonlySet<string> = new Set(
+  stage1Quests.flatMap((q) => {
+    const scopes = q.steps.flatMap((s) => (s.minigameRef ? [scopeFor(s.minigameRef)] : []));
+    return JSON.stringify([q, scopes]).match(/[가-힣]+/g) ?? [];
+  }),
+);
+
+/** What a cell of `stage` may count as taught before its own Discover (rule 5): Stage 1 and the vocabulary of its level. */
+const wordsBefore = (stage: StageKey): ReadonlySet<string> =>
+  new Set([...STAGE1_WORDS, ...VOCAB_ITEMS.filter((v) => v.level <= vocabLevelFor(stage)).map((v) => v.ko)]);
+
+/** Stage 1's 30 symbols (14 consonants, 10 vowels, 6 final letters), from the shipped jamo. */
+const STAGE1_SYMBOLS: TaughtSymbols = {
+  initials: new Set(jamoAll.filter((j) => j.kind === 'consonant').map((j) => j.char)),
+  vowels: new Set(jamoAll.filter((j) => j.kind === 'vowel').map((j) => j.char)),
+  finals: new Set(jamoAll.filter((j) => j.kind === 'batchim').map((j) => j.char)),
+};
+
+describe('U-3 new-item caps and U-6 reuse (F-CURR-001 section 3.1 rules 4 and 5)', () => {
+  const kt = (ko: string) => ({ ko, romanization: 'x', en: 'x' });
+  const quest = (k: number, discover: string[], read: string[]) =>
+    ({
+      id: `quest:stage3-life-q${k}`,
+      steps: [
+        { id: 's2', kind: 'discover', titleEn: 'x', discover: { pages: [{ items: discover.map((ko) => ({ type: 'sentence', sentence: kt(ko) })) }] } },
+      ],
+      scopes: [{ ref: `minigame:s3-life-q${k}-practice`, kind: 'order-it', rounds: read.map((ko, i) => ({ id: `r${i}`, sentence: kt(ko), distractors: [] })) }],
+    }) as unknown as LessonQuest;
+
+  it('reads a word without its particle unless the whole word is known', () => {
+    expect(stemOf('친구가', new Set())).toBe('친구');
+    expect(stemOf('학교에', new Set())).toBe('학교');
+    expect(stemOf('송편하고', new Set())).toBe('송편');
+    expect(stemOf('책이에요', new Set())).toBe('책');
+    expect(stemOf('학교예요', new Set())).toBe('학교');
+    expect(stemOf('고양이', new Set(['고양이']))).toBe('고양이');
+    expect(stemOf('먹어요', new Set())).toBe('먹어요');
+  });
+
+  it('counts new Discover words against Stage 1, the level vocabulary and earlier quests of the cell', () => {
+    const before = new Set(['밥', '물']);
+    const q1 = quest(1, ['밥을 먹어요.', '물을 마셔요.'], ['밥을 먹어요.']);
+    const q2 = quest(2, ['떡이 맛있어요.', '빵이 좋아요.', '라면이 뜨거워요.'], ['떡이 맛있어요.']);
+    expect(reuseProblems('stage3', [q1, q2], before)).toEqual(['U-3 quest:stage3-life-q2: 6 new words (떡, 맛있어요, 빵, 좋아요, 라면, 뜨거워요), cap 4']);
+  });
+
+  it('asks that at least half the words outside Discover were taught', () => {
+    const q1 = quest(1, ['밥을 먹어요.'], ['밥을 먹어요.', '사과를 깎아요.', '배를 깎아요.']);
+    expect(reuseProblems('stage3', [q1], new Set(['밥']))).toEqual(['U-6 quest:stage3-life-q1: 2 of 5 words reused (사과, 깎아요, 배 not taught)']);
+  });
+
+  it('counts a particle choice as no word, and a heard prompt as shown', () => {
+    const lp = { kind: 'listen-pick', rounds: [{ id: 'c1', prompt: kt('바다에 가요.'), options: [{ id: 'o1', text: kt('산에 가요.') }], answerId: 'o1' }] };
+    expect(scopeTexts(lp as unknown as LessonScope)).toEqual({ read: ['산에 가요.'], heard: ['바다에 가요.'], particles: [] });
+  });
+
+  for (const { cell } of READY.filter((c) => c.cell.stage !== 'stage2')) {
+    it(`${cell.id}: one new pattern and at most the new words of its stage a quest; at least half the other words reused`, () => {
+      expect(reuseProblems(cell.stage, cell.quests, wordsBefore(cell.stage))).toEqual([]);
+    });
+  }
+});
+
+describe('U-4 decodable scored reading (F-CURR-001 section 3.1 rule 6)', () => {
+  it('names every symbol of a scored read the route has not taught', () => {
+    expect(STAGE1_SYMBOLS.initials.size + STAGE1_SYMBOLS.vowels.size + STAGE1_SYMBOLS.finals.size).toBe(30);
+    expect(untaughtSymbols('밥을 먹어요.', STAGE1_SYMBOLS)).toEqual([]);
+    expect(untaughtSymbols('뜨거워요', STAGE1_SYMBOLS)).toEqual(['initial ㄸ in 뜨', 'vowel ㅝ in 워']);
+    expect(untaughtSymbols('맛있어요', STAGE1_SYMBOLS)).toEqual(['final ㅅ in 맛', 'final ㅆ in 있']);
+    const all = unionSymbols(STAGE1_SYMBOLS, WORD_BUILDER_SYMBOLS);
+    expect(untaughtSymbols('뜨거워요 맛있어요', all)).toEqual([]);
+    // Double finals stay theme words (section 3.3 q6), never a scored read.
+    expect(untaughtSymbols('닭', all)).toEqual(['final ㄺ in 닭']);
+    expect(untaughtSymbols('ㄱ', all)).toEqual(['loose jamo ㄱ']);
+  });
+
+  it('with Word Builder the route has taught every modern initial and vowel (section 3.3, U-2)', () => {
+    const all = unionSymbols(STAGE1_SYMBOLS, WORD_BUILDER_SYMBOLS);
+    expect(all.initials.size).toBe(19);
+    expect(all.vowels.size).toBe(21);
+    expect(all.finals.size).toBe(16);
+  });
+
+  // From Stage 3 on every route has passed Word Builder (Stage 2), so a scored read may use its symbols;
+  // Stage 2's own cells are S2-1's rows (todo above).
+  for (const { cell } of READY.filter((c) => c.cell.stage !== 'stage2')) {
+    it(`${cell.id}: every scored read uses only Stage 1 and Word Builder symbols`, () => {
+      const taught = unionSymbols(STAGE1_SYMBOLS, WORD_BUILDER_SYMBOLS);
+      const read = cell.quests.flatMap((q) => q.scopes.flatMap((s) => {
+        const { read: texts, particles } = scopeTexts(s);
+        return [...texts, ...particles];
+      }));
+      expect(read.flatMap((t) => untaughtSymbols(t, taught))).toEqual([]);
+    });
+  }
 });
 
 describe('U-8 distractors (F-CURR-001 §3.5)', () => {
