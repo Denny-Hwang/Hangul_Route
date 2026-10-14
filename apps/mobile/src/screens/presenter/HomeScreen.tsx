@@ -107,6 +107,9 @@ function HomeButton({
       style={({ focused }: Focusable) => ({
         minHeight: compact ? touchTarget.min : touchTarget.hero,
         minWidth: compact ? touchTarget.min : touchTarget.hero,
+        // At 320 px with 200 % text (a 160 px layout) the label wraps inside the page, never past it.
+        maxWidth: '100%',
+        flexShrink: 1,
         paddingVertical: compact ? spacing.xs : spacing.sm,
         paddingHorizontal: compact ? spacing.lg : spacing.xl,
         alignItems: 'center',
@@ -168,9 +171,9 @@ export function PresenterHomeScreen(props: PresenterHomeProps): React.ReactEleme
         }}
       >
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: spacing.md }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: spacing.md, maxWidth: '100%' }}>
             <Hoya pose="waving" size={touchTarget.min} />
-            <Text ref={titleRef} role="heading" aria-level={1} {...{ tabIndex: -1 }} testID="presenter-home-title" style={text(typography.size.title, 'bold', colors.text.primary)}>
+            <Text ref={titleRef} role="heading" aria-level={1} {...{ tabIndex: -1 }} testID="presenter-home-title" style={{ ...text(typography.size.title, 'bold', colors.text.primary), flexShrink: 1 }}>
               {m.home.title}
             </Text>
           </View>

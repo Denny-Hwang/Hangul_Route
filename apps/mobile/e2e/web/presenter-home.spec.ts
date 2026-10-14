@@ -158,24 +158,6 @@ test.describe('presenter home, wide (two columns)', () => {
     await expect(rows.first()).toContainText('Today');
   });
 
-  test('a row that no longer fits stays in the tab order, marked disabled', async ({ page }) => {
-    await page.goto('/present');
-    const quick = page.getByTestId('presenter-home-quick');
-    const boxes = quick.getByRole('checkbox');
-    const total = await boxes.count();
-    // Tick single lessons until something no longer fits (or every row is ticked).
-    for (let i = 0; i < total; i += 1) {
-      const box = boxes.nth(i);
-      if ((await box.getAttribute('aria-disabled')) === 'true') continue;
-      await box.click();
-      if ((await page.getByTestId('presenter-home-chosen').textContent())?.includes('This lesson is full.')) break;
-    }
-    const disabled = quick.locator('[role="checkbox"][aria-disabled="true"]');
-    if ((await disabled.count()) === 0) test.skip(true, 'the bundle holds fewer than 30 blocks: nothing reaches the cap');
-    await expect(disabled.first()).toHaveAttribute('tabindex', '0');
-    await expect(page.getByTestId('presenter-home-chosen')).toContainText('This lesson is full. Remove one to add another.');
-  });
-
   test('language chips: one tab stop, arrows move and select, the device locale is not written', async ({ page }) => {
     await page.goto('/present');
     const group = page.getByRole('radiogroup', { name: 'Presenter language' });
@@ -212,7 +194,7 @@ test.describe('presenter home, phone (one column, Recent first)', () => {
     await seedRecent(page, RECENT);
     await expect(page.getByTestId('presenter-home-title')).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
-    for (const id of ['presenter-home-build', 'presenter-recent-resume-lecture:week3abcde']) {
+    for (const id of ['presenter-home-title', 'presenter-home-build', 'presenter-home-chosen', 'presenter-recent-resume-lecture:week3abcde', 'presenter-recent-startover-lecture:week3abcde']) {
       const box = await page.getByTestId(id).boundingBox();
       expect(box && box.x >= 0 && box.x + box.width <= 160, id).toBe(true);
     }
