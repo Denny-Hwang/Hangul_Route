@@ -114,6 +114,14 @@ export const a11y = {
       tried: (word: string) => `${word}, 이미 골라 봤어요`,
       next: (word: string) => `${word}, 다음 차례예요`,
     },
+    realia: {
+      summary: (kind: string, lines: number) => `${kind}, ${lines}줄`,
+      kind: { menu: '메뉴판', ticket: '기차표', sign: '산길 표지판', priceCards: '가격표', plain: '읽을거리' },
+      lineHint: '누르면 들려요',
+      found: '여기 있어요',
+      lookHere: '여기를 봐요',
+      dir: { left: '왼쪽으로', right: '오른쪽으로' },
+    },
   },
   koreanItem: (item: { ko: string; romanization: string; gloss?: string }) =>
     item.gloss === undefined ? `한글: ${item.ko}, ${item.romanization}` : `한글: ${item.ko}, ${item.romanization}, ${item.gloss}`,

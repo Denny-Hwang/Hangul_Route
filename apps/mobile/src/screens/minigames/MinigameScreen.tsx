@@ -5,6 +5,7 @@ import { flags } from '../../config/flags';
 import { questById } from '../../content';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { localizeQuest, localizeScope } from '../../logic/content-locale';
+import { minigameFinishedEvent } from '../../logic/minigame-finished';
 import { scopeFor } from '../../logic/minigame-config';
 import { resolveOptionalExit, resolveScreenExits, type ScreenExitProps } from '../../logic/navigation/screen-exits';
 import { patternNoteOf } from '../../logic/sentence-builder/view';
@@ -21,6 +22,7 @@ import { ListenPickGame } from './ListenPickGame';
 import { MatchSoundGame } from './MatchSoundGame';
 import { OddOneOutGame } from './OddOneOutGame';
 import { PicWordMatchGame } from './PicWordMatchGame';
+import { RealiaReadGame } from './RealiaReadGame';
 import { SentenceBuilderGame } from './SentenceBuilderGame';
 import { StoryCheckGame } from './StoryCheckGame';
 import { StoryReadGame } from './StoryReadGame';
@@ -73,11 +75,7 @@ export function MinigameScreen({ route, navigation, onOpenCultureNote, ...exitPr
 
   const close = (): void => {
     if (scope) {
-      void track({
-        name: 'minigame.finished',
-        profileId: activeProfileId,
-        payload: { kind: scope.kind, questId, stepIndex },
-      });
+      void track(minigameFinishedEvent(scope.kind, questId, stepIndex, activeProfileId));
     }
     exits.back();
   };
@@ -138,6 +136,8 @@ export function MinigameScreen({ route, navigation, onOpenCultureNote, ...exitPr
       return <StoryCheckGame scope={scope} onFinish={close} onBack={exits.back} />;
     case 'order-it':
       return <SentenceBuilderGame scope={scope} host={host} patternNote={patternNote} onBack={exits.back} />;
+    case 'realia-read':
+      return <RealiaReadGame scope={scope} host={host} onBack={exits.back} />;
     default:
       return fallback(copy.comingSoon);
   }

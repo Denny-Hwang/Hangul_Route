@@ -8,7 +8,9 @@ import {
   RealiaOptionSchema,
   RealiaReadRoundSchema,
   RealiaSchema,
+  REALIA_KINDS,
   RoundSchema,
+  realiaReadIssues,
   SLOT_MARKER,
   TraceWordRoundSchema,
   TypeHangulRoundSchema,
@@ -178,7 +180,9 @@ describe('Realia Read', () => {
   it('an option is exactly one of text, a figure without Hangul, or a picture', () => {
     expect(ok(RealiaOptionSchema, { id: 'a', text: kt('김밥', 'gimbap', 'gimbap') })).toBe(true);
     expect(ok(RealiaOptionSchema, { id: 'a', figure: '5,000' })).toBe(true);
-    expect(ok(RealiaOptionSchema, { id: 'a', pictureRef: 'word:gimbap' })).toBe(true);
+    expect(ok(RealiaOptionSchema, { id: 'a', pictureRef: 'word:gimbap', labelEn: 'gimbap' })).toBe(true);
+    expect(ok(RealiaOptionSchema, { id: 'a', pictureRef: 'word:gimbap' })).toBe(false);
+    expect(ok(RealiaOptionSchema, { id: 'a', figure: '1', labelEn: 'one' })).toBe(false);
     expect(ok(RealiaOptionSchema, { id: 'a', figure: '천 원' })).toBe(false);
     expect(ok(RealiaOptionSchema, { id: 'a' })).toBe(false);
     expect(ok(RealiaOptionSchema, { id: 'a', figure: '1', pictureRef: 'word:gimbap' })).toBe(false);
@@ -189,6 +193,39 @@ describe('Realia Read', () => {
     expect(ok(RealiaReadRoundSchema, round)).toBe(true);
     expect(ok(RealiaReadRoundSchema, { ...round, answerId: 'c' })).toBe(false);
     expect(ok(RealiaReadRoundSchema, { ...round, options: [round.options[0], round.options[0]] })).toBe(false);
+  });
+
+  // Row G-2 (additive): the sheet's layout, a board's direction, a card's goods, the key word and the answer's entry.
+  it('takes an optional kind, entry direction and goods, and rejects unknown values', () => {
+    expect(REALIA_KINDS).toEqual(['menu', 'ticket', 'sign', 'price-card']);
+    expect(ok(RealiaSchema, { ...realia, kind: 'menu' })).toBe(true);
+    expect(ok(RealiaSchema, { ...realia, kind: 'poster' })).toBe(false);
+    const board = { id: 'e2', text: kt('정상', 'jeongsang', 'summit'), dir: 'right' };
+    expect(ok(RealiaSchema, { ...realia, kind: 'sign', entries: [board] })).toBe(true);
+    expect(ok(RealiaSchema, { ...realia, entries: [{ ...board, dir: 'up' }] })).toBe(false);
+    const card = { id: 'e3', text: kt('사과', 'sagwa', 'apple'), goods: 'apples' };
+    expect(ok(RealiaSchema, { ...realia, kind: 'price-card', entries: [card] })).toBe(true);
+    expect(ok(RealiaSchema, { ...realia, entries: [{ ...card, goods: 'logo' }] })).toBe(false);
+  });
+
+  it('a round takes an optional key word and answer entry', () => {
+    const round = { id: 'r', questionEn: 'How much is this?', key: kt('김밥', 'gimbap', 'gimbap'), options: [{ id: 'a', figure: '1,000' }, { id: 'b', figure: '5,000' }], answerId: 'a', answerEntryId: 'e1' };
+    expect(ok(RealiaReadRoundSchema, round)).toBe(true);
+    expect(ok(RealiaReadRoundSchema, { ...round, answerEntryId: '' })).toBe(false);
+  });
+
+  it('realiaReadIssues: unique entry ids and an answer entry of the realia', () => {
+    const parsed = RealiaSchema.parse(realia);
+    const round = RealiaReadRoundSchema.parse({ id: 'r', questionEn: 'How much?', options: [{ id: 'a', figure: '1,000' }, { id: 'b', figure: '5,000' }], answerId: 'a', answerEntryId: 'e1' });
+    expect(realiaReadIssues(parsed, [round])).toEqual([]);
+    expect(realiaReadIssues(parsed, [{ ...round, answerEntryId: undefined }])).toEqual([
+      { path: ['rounds', 0, 'answerEntryId'], message: 'every round names its answer entry (answerEntryId)' },
+    ]);
+    expect(realiaReadIssues(parsed, [round, { ...round, answerEntryId: 'e9' }])).toEqual([
+      { path: ['rounds', 1, 'answerEntryId'], message: 'answerEntryId "e9" is not an entry of the realia' },
+    ]);
+    const twice = { ...parsed, entries: [parsed.entries[0]!, parsed.entries[0]!] };
+    expect(realiaReadIssues(twice, []).map((i) => i.message)).toEqual(['realia entry ids must be unique']);
   });
 });
 

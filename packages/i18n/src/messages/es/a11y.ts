@@ -113,6 +113,14 @@ export const a11y = {
       tried: (word: string) => `${word}, ya probada`,
       next: (word: string) => `${word}, va ahora`,
     },
+    realia: {
+      summary: (kind: string, lines: number) => `${kind}, ${plural('es', lines, { one: '1 línea', other: `${lines} líneas` })}`,
+      kind: { menu: 'Menú', ticket: 'Boleto de tren', sign: 'Letrero de ruta', priceCards: 'Precios', plain: 'Hoja para leer' },
+      lineHint: 'Toca para escucharla',
+      found: 'Está aquí',
+      lookHere: 'Mira aquí',
+      dir: { left: 'a la izquierda', right: 'a la derecha' },
+    },
   },
   koreanItem: (item: { ko: string; romanization: string; gloss?: string }) =>
     item.gloss === undefined ? `Coreano: ${item.ko}, ${item.romanization}` : `Coreano: ${item.ko}, ${item.romanization}, ${item.gloss}`,

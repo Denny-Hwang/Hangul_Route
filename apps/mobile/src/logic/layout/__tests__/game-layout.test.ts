@@ -1,7 +1,7 @@
 import { layoutClassFor } from '@hangul-route/design-system/layout';
 import { spacing, touchTarget } from '@hangul-route/design-system/tokens';
 import { describe, expect, it } from 'vitest';
-import { answersColumnWidth, gameArrangement, pictureTextArrangement, tileGridWidth, twoUpFits } from '../game-layout';
+import { answersColumnWidth, gameArrangement, pictureTextArrangement, stickyPromptColumn, tileGridWidth, twoUpFits } from '../game-layout';
 
 const at = (width: number, height: number) => layoutClassFor({ width, height });
 
@@ -113,5 +113,15 @@ describe('twoUpFits', () => {
   it('is false for an unknown column', () => {
     expect(twoUpFits(0, 12, 100)).toBe(false);
     expect(twoUpFits(Number.NaN, 12, 100)).toBe(false);
+  });
+});
+
+describe('stickyPromptColumn (Realia Read, D-2 D7)', () => {
+  it('sticks the prompt column side by side on the web, only when the game asks', () => {
+    expect(stickyPromptColumn('side', true, 'web')).toBe(true);
+    expect(stickyPromptColumn('stacked', true, 'web')).toBe(false);
+    expect(stickyPromptColumn('side', false, 'web')).toBe(false);
+    expect(stickyPromptColumn('side', true, 'ios')).toBe(false);
+    expect(stickyPromptColumn('side', true, 'android')).toBe(false);
   });
 });

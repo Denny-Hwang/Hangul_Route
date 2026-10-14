@@ -10,6 +10,7 @@ import type { CellStoriesSource } from '../logic/story/cell-stories';
 import type { LibrarySectionId } from '../logic/story/library-sections';
 import type { SourcesRouteParams } from '../logic/story/source-link';
 import type { RoundSummary } from '../logic/vocab/stars';
+import type { RealiaReadE2eParams } from './realia-read-e2e';
 import type { VocabQuestionE2eParams } from './vocab-question-e2e';
 import type { SentenceE2eParams } from './sentence-builder-e2e';
 
@@ -271,6 +272,8 @@ export type RootStackParamList = {
   VocabQuestionE2e: VocabQuestionE2eParams;
   /** Fixture builds only (`navigation/sentence-builder-e2e.tsx`): Sentence Builder on the D-1 sample sentences (F-CURR-001 G-1). */
   SentenceBuilderE2e: SentenceE2eParams;
+  /** Realia Read on a D-2 fixture realia (fixture builds only, F-CURR-001 G-2). */
+  RealiaReadE2e: RealiaReadE2eParams;
 };
 
 /** The level check's screens (F-PLC-001 section 3.1); the flow state machine decides which one shows. */

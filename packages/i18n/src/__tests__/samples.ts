@@ -798,4 +798,6 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'a11y.minigame.sentenceBuilder.tried': [['mul, mureul']],
   'a11y.minigame.sentenceBuilder.slotNext': [[1, 3], [6, 6]],
   'a11y.minigame.sentenceBuilder.next': [['jeo, jeoneun']],
+  // F-CURR-001 G-2: Realia Read.
+  'a11y.minigame.realia.summary': [['Menu', 1], ['Menu', 4]],
 };

@@ -349,8 +349,9 @@ describe('the pieces', () => {
       if (SKILL_OF_KIND[kind].length > 0) expect(GAME_NAME_KEY[kind], kind).toBeDefined();
     }
     const games = EN.learner.myRoute.games;
-    // Only kinds the app can play are named: match-shape and the F-CURR-001 games still to land (realia-read,
-    // type-hangul, trace-word, write-frame) have no screen yet; Sentence Builder (order-it, G-1) has one.
+    // Only kinds the app can play are named: match-shape and the F-CURR-001 games still to come
+    // (type-hangul, trace-word, write-frame) have no screen yet; Sentence Builder (order-it, G-1) and
+    // Realia Read (G-2) have one.
     expect(gamesFor('read', games)).toEqual([
       'Hear a sound, find its letter',
       'Hear it, then tap the answer',
@@ -358,6 +359,7 @@ describe('the pieces', () => {
       'Match a picture to its word',
       'Read a story',
       'Build a sentence',
+      'Read a menu, sign or ticket',
     ]);
     expect(gamesFor('listen', games)).toEqual(['Hear a sound, find its letter', 'Hear it, then tap the answer', 'Listen and pick']);
     expect(gamesFor('write', games)).toEqual(['Trace a letter', 'Build a sentence']);

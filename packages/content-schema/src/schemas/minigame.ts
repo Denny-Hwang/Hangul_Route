@@ -257,15 +257,38 @@ export const OrderItRoundSchema = z
   });
 export type OrderItRound = z.infer<typeof OrderItRoundSchema>;
 
+/**
+ * The four realia layouts of the Realia Read sheet (row G-2, design/wireframes/minigame/realia-read.md):
+ * a menu board, a train ticket, a trail sign and market price cards. A realia without a kind is
+ * drawn as the plain sheet (the same lines on paper, never blank).
+ */
+export const REALIA_KINDS = ['menu', 'ticket', 'sign', 'price-card'] as const;
+export const RealiaKindSchema = z.enum(REALIA_KINDS);
+export type RealiaKind = z.infer<typeof RealiaKindSchema>;
+
+/** Generic drawn goods above a price card (scene-art props `prop:realia-goods-*`, row G-2). */
+export const REALIA_GOODS = ['apples', 'fan', 'hanji'] as const;
+
+/** A line of a realia: its text, an optional value (a price, a time), and on a sign the way its board points. */
+export const RealiaEntrySchema = z.object({
+  id: z.string().min(1),
+  text: KoTextSchema,
+  value: KoTextSchema.optional(),
+  /** A trail-sign board points this way (its arrow, its side and its accessible name). */
+  dir: z.enum(['left', 'right']).optional(),
+  /** On a price card, the goods drawn above it (decoration; the card text names them). */
+  goods: z.enum(REALIA_GOODS).optional(),
+});
+export type RealiaEntry = z.infer<typeof RealiaEntrySchema>;
+
 /** A drawn real-world text; every entry is also real text for the accessibility tree (F-CURR-001 §3.14). */
 export const RealiaSchema = z.object({
   ref: z.string().regex(/^realia:[a-z0-9-]+$/),
+  /** The layout and dressing (row G-2); absent: the plain sheet. */
+  kind: RealiaKindSchema.optional(),
   title: KoTextSchema.optional(),
   /** E.g. a menu line and its price; read in order by a screen reader. */
-  entries: z
-    .array(z.object({ id: z.string().min(1), text: KoTextSchema, value: KoTextSchema.optional() }))
-    .min(1)
-    .max(12),
+  entries: z.array(RealiaEntrySchema).min(1).max(12),
   altEn: z.string().trim().min(1).max(140),
 });
 export type Realia = z.infer<typeof RealiaSchema>;
@@ -277,16 +300,29 @@ export const RealiaOptionSchema = z
     text: KoTextSchema.optional(),
     figure: z.string().trim().min(1).max(16).regex(/^[^ㄱ-ㆎ가-힣]+$/, 'a figure carries no Hangul; use text').optional(),
     pictureRef: PictureRefSchema.optional(),
+    /** A picture's name in the UI language: its accessible name and its text fallback (row G-2). */
+    labelEn: z.string().trim().min(1).max(40).optional(),
   })
-  .refine((o) => [o.text, o.figure, o.pictureRef].filter((v) => v !== undefined).length === 1, 'an option is exactly one of text, figure or picture');
+  .refine((o) => [o.text, o.figure, o.pictureRef].filter((v) => v !== undefined).length === 1, 'an option is exactly one of text, figure or picture')
+  .refine((o) => (o.pictureRef === undefined ? o.labelEn === undefined : o.labelEn !== undefined), {
+    message: 'a picture option has a labelEn (its name and text fallback); other options have none',
+    path: ['labelEn'],
+  });
 
 /** Realia Read: a question about the drawn text, answered by picking (F-CURR-001 §3.6). */
 export const RealiaReadRoundSchema = z
   .object({
     id: z.string().min(1),
     questionEn: z.string().trim().min(1).max(90),
+    /** The word the question is about, shown under it (`KoreanText`), e.g. 라면 for "How much is this?". */
+    key: KoTextSchema.optional(),
     options: z.array(RealiaOptionSchema).min(2).max(4),
     answerId: z.string(),
+    /**
+     * The realia entry that holds the answer: ringed ("look here") after a second miss and marked
+     * found with its gloss after the right answer (row G-2). Must be an entry of the scope's realia.
+     */
+    answerEntryId: z.string().min(1).optional(),
   })
   .superRefine((round, ctx) => {
     const ids = round.options.map((o) => o.id);
@@ -298,6 +334,25 @@ export const RealiaReadRoundSchema = z
     }
   });
 export type RealiaReadRound = z.infer<typeof RealiaReadRoundSchema>;
+
+/**
+ * Cross-checks of a Realia Read scope that one round cannot see: entry ids are unique, and every
+ * round names its `answerEntryId`, an entry of the realia (without it the look-here ring and the
+ * found line with its gloss never show; D-2 Notes for C-1). Messages carry their path.
+ */
+export function realiaReadIssues(realia: Realia, rounds: readonly RealiaReadRound[]): Array<{ path: (string | number)[]; message: string }> {
+  const out: Array<{ path: (string | number)[]; message: string }> = [];
+  const ids = realia.entries.map((e) => e.id);
+  if (new Set(ids).size !== ids.length) out.push({ path: ['realia', 'entries'], message: 'realia entry ids must be unique' });
+  rounds.forEach((round, i) => {
+    if (round.answerEntryId === undefined) {
+      out.push({ path: ['rounds', i, 'answerEntryId'], message: 'every round names its answer entry (answerEntryId)' });
+    } else if (!ids.includes(round.answerEntryId)) {
+      out.push({ path: ['rounds', i, 'answerEntryId'], message: `answerEntryId "${round.answerEntryId}" is not an entry of the realia` });
+    }
+  });
+  return out;
+}
 
 /** Type Hangul: type a short word or phrase on the in-app keyboard; checked by syllable after Done (F-CURR-001 §3.7). */
 export const TypeHangulRoundSchema = z.object({

@@ -597,6 +597,12 @@ export const learner = {
       missHoya: 'Listen again',
       empty: 'Nothing to play here',
     },
+    /** Realia Read (F-CURR-001 G-2): the line hint under the drawn sheet, the miss bubble, the empty state. */
+    realia: {
+      lineHint: 'Tap a line to hear it.',
+      missHoya: 'Look again',
+      empty: 'Nothing to play here',
+    },
     /**
      * Voice Echo (behind `flags.voiceEchoEnabled`, off at launch): listen, say it back, confirm.
      * The shipped caption ended in a tiger emoji; the dictionary carries no emoji (CLAUDE.md), so it is dropped.

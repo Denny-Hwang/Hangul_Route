@@ -118,6 +118,7 @@ export function presenterStrings({ jamo, scopes, quests, cards, extra, topicFile
       add(entry.value?.ko);
     }
     for (const round of list(scope.realiaRead?.rounds)) for (const option of list(round.options)) add(option.text?.ko);
+    for (const round of list(scope.realiaRead?.rounds)) add(round.key?.ko);
     for (const round of list(scope.typeHangul?.rounds)) add(round.target?.ko);
     for (const round of list(scope.traceWord?.rounds)) add(round.word?.ko);
     for (const round of list(scope.writeFrame?.rounds)) {
