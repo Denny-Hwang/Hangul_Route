@@ -45,10 +45,20 @@ async function expectCellOnRoute(page: Page, stage: number, title: string): Prom
   await expect(cell).toBeVisible();
 }
 
+/** Word Builder q1's Pic-Word boards (content/episodes/stage-2/letters.json), as pair ids in board order. */
+const WORD_BUILDER_Q1_BOARDS = [
+  ['sae', 'hae', 'namu'],
+  ['norae', 'bae', 'byeol'],
+  ['mujigae', 'jiugae', 'chaek'],
+  ['baegu', 'taeksi', 'bada'],
+  ['hayansaek', 'noransaek', 'paransaek'],
+  ['sebae', 'dongsaeng', 'galsaek'],
+] as const;
+
 /** Each cell row appends its cell here (S2-1 onward). */
 const CELLS: readonly UpperCell[] = [
-  // F-CURR-001 S2-1: Word Builder. q1 teaches ㅐ ㅔ ㅒ ㅖ; its games are skipped (they are the shipped Pic-Word and
-  // Card Match), and the Check is answered by id: the sun picture, then the written 노래.
+  // F-CURR-001 S2-1: Word Builder. q1 teaches ㅐ ㅔ ㅒ ㅖ; its six Pic-Word boards are played, its Card Match is
+  // skipped (the shipped game), and the Check is answered by id: the sun picture, then the written 노래.
   {
     episodeId: 'episode:stage2-letters',
     cellButton: 'Stage 2 Words, Letters & Books: lesson',
@@ -59,8 +69,19 @@ const CELLS: readonly UpperCell[] = [
       // Discover shows the new vowel ㅐ with its example 개 and the words you can read now.
       await expect(page.getByText('ㅐ', { exact: true }).first()).toBeVisible();
       await expect(page.getByText('개', { exact: true }).first()).toBeVisible();
+      await page.screenshot({ path: test.info().outputPath('stage2-letters-q1-discover.png'), fullPage: true });
       await passDiscover(page);
-      await page.getByRole('button', { name: 'Skip for now' }).click();
+      // Practice: all six Pic-Word boards, each picture drawn art (an svg), never the gloss fallback tile.
+      await page.getByRole('button', { name: 'Play minigame' }).click();
+      for (const [n, board] of WORD_BUILDER_Q1_BOARDS.entries()) {
+        for (const id of board) await expect(page.getByTestId(`pic-word-picture-${id}`).locator('svg').first()).toBeVisible();
+        if (n === 0) await page.screenshot({ path: test.info().outputPath('stage2-letters-q1-pic-word.png'), fullPage: true });
+        for (const id of board) {
+          await page.getByTestId(`pic-word-picture-${id}`).click();
+          await page.getByTestId(`pic-word-word-${id}`).click();
+        }
+      }
+      // Apply (the shipped Card Match) is skipped; the Check is answered by id.
       await page.getByRole('button', { name: 'Skip for now' }).click();
       await playCheckByIds(page, [{ answer: 'hae' }, { answer: 'norae' }]);
       await page.getByRole('button', { name: 'See results' }).click();
@@ -68,6 +89,7 @@ const CELLS: readonly UpperCell[] = [
       await page.screenshot({ path: test.info().outputPath('stage2-letters-q1-results.png'), fullPage: true });
     },
     expectRouteDay: async (page) => {
+      await page.context().setOffline(false);
       await page.goto('/');
       await expectCellOnRoute(page, 2, 'Word Builder');
     },
@@ -96,7 +118,11 @@ test.describe('upper-stage lesson cells (F-CURR-001)', () => {
     test(`${cell.episodeId}: opens from the grid, a quest plays to its reward, the Learning Route day appears`, async ({ page }) => {
       const errors: string[] = [];
       page.on('pageerror', (e) => errors.push(String(e)));
+      // Section 3.14 layout: the narrowest phone (320 px); the screenshots are the PR's 320 px evidence.
+      await page.setViewportSize({ width: 320, height: 720 });
       await openJourney(page);
+      // Section 3.14: all lesson content is in the bundle, so the cell opens and plays with no network.
+      await page.context().setOffline(true);
       await page.getByRole('button', { name: cell.cellButton }).click();
       await expect(page.getByText(cell.title).first()).toBeVisible();
       await cell.playFirstQuest(page);
