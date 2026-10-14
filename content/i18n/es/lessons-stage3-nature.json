@@ -1,0 +1,148 @@
+{
+  "locale": "es",
+  "domain": "lessons-stage3-nature",
+  "entries": {
+    "episode:stage3-nature": {
+      "title": "Oraciones de animales",
+      "subtitle": "Di dónde están los animales, cómo son y qué hacen.",
+      "hoyaIntro": "¡Me encantan los animales! Leamos y armemos oraciones sobre ellos."
+    },
+    "quest:stage3-nature-q1": {
+      "title": "¿Dónde está el pájaro?",
+      "blurb": "Di dónde está un animal: en un árbol, en el agua, en casa.",
+      "teaser": "Después: animales grandes y pequeños.",
+      "steps.s1.title": "En el bosque",
+      "steps.s2.title": "¿Dónde está?",
+      "steps.s3.title": "Arma la oración",
+      "steps.s4.title": "Escucha y elige",
+      "steps.s5.title": "Dos rapiditas",
+      "steps.s6.title": "¡Animales encontrados!",
+      "steps.s1.hoyaLine": "¡Mira a tu alrededor! Hay animales en los árboles, en el agua y en casa.",
+      "steps.s2.hoyaLine": "Toca Escuchar para oír cada oración.",
+      "steps.s6.hoyaLine": "Dijiste dónde están los animales. ¡Qué buena lectura!",
+      "steps.s2.discover.pages.0.caption": "Decir dónde está algo",
+      "steps.s2.discover.pages.1.caption": "Un gato en casa, un conejo en la montaña",
+      "steps.s2.discover.pages.0.items.0.note": "{ko:에} después de un lugar dice dónde: en o sobre. Usa {ko:이} tras consonante final y {ko:가} tras vocal.",
+      "steps.s2.discover.pages.1.items.0.sentence.gloss": "Hay un gato en casa.",
+      "steps.s2.discover.pages.1.items.1.sentence.gloss": "Hay un conejo en la montaña.",
+      "steps.s2.discover.pages.0.items.0.frame.gloss": "Está en ___.",
+      "steps.s2.discover.pages.0.items.0.examples.namue-saega-isseoyo.gloss": "Hay un pájaro en el árbol.",
+      "steps.s2.discover.pages.0.items.0.examples.mure-mulgogiga-isseoyo.gloss": "Hay un pez en el agua."
+    },
+    "quest:stage3-nature-q2": {
+      "title": "Grande y pequeño",
+      "blurb": "Di cómo es un animal: grande, pequeño o tierno.",
+      "teaser": "Después: animales en movimiento.",
+      "steps.s1.title": "En el zoológico",
+      "steps.s2.title": "¿Cómo es?",
+      "steps.s3.title": "Arma la oración",
+      "steps.s4.title": "Escucha y elige",
+      "steps.s5.title": "Dos rapiditas",
+      "steps.s6.title": "¡Bien descrito!",
+      "steps.s1.hoyaLine": "Algunos animales son grandes y otros pequeños. ¡Digamos cómo son!",
+      "steps.s2.hoyaLine": "Escucha y luego mira la última palabra.",
+      "steps.s6.hoyaLine": "Dijiste cómo son los animales. ¡Maravilloso!",
+      "steps.s2.discover.pages.0.caption": "Decir cómo es algo",
+      "steps.s2.discover.pages.1.caption": "Un conejo pequeño y un gato tierno",
+      "steps.s2.discover.pages.0.items.0.note": "La palabra que describe va al final: {ko:커요} grande, {ko:작아요} pequeño. {ko:이} tras consonante, {ko:가} tras vocal.",
+      "steps.s2.discover.pages.1.items.0.sentence.gloss": "El conejo es pequeño.",
+      "steps.s2.discover.pages.1.items.1.sentence.gloss": "El gato es tierno.",
+      "steps.s2.discover.pages.0.items.0.frame.gloss": "El/la ___ es grande.",
+      "steps.s2.discover.pages.0.items.0.examples.horangiga-keoyo.gloss": "El tigre es grande.",
+      "steps.s2.discover.pages.0.items.0.examples.gomi-keoyo.gloss": "El oso es grande."
+    },
+    "quest:stage3-nature-q3": {
+      "title": "Volar, saltar, nadar",
+      "blurb": "Di qué hace un animal: vuela, salta o nada.",
+      "steps.s1.title": "En movimiento",
+      "steps.s2.title": "¿Qué hace?",
+      "steps.s3.title": "Arma la oración",
+      "steps.s4.title": "Escucha y elige",
+      "steps.s5.title": "Dos rapiditas",
+      "steps.s6.title": "¡Animales en movimiento!",
+      "steps.s1.hoyaLine": "¡Los animales se mueven! Digamos qué hacen.",
+      "steps.s2.hoyaLine": "Escucha y luego mira la palabra de acción al final.",
+      "steps.s6.hoyaLine": "Leíste qué hacen los animales. ¡Qué buen lector eres!",
+      "steps.s2.discover.pages.0.caption": "Decir qué hace algo",
+      "steps.s2.discover.pages.1.caption": "Un pájaro en el cielo, un pez en el agua",
+      "steps.s2.discover.pages.0.items.0.note": "La palabra de acción va al final: {ko:뛰어요} corre o salta. {ko:이} tras consonante, {ko:가} tras vocal.",
+      "steps.s2.discover.pages.1.items.0.sentence.gloss": "El pájaro vuela.",
+      "steps.s2.discover.pages.1.items.1.sentence.gloss": "El pez nada.",
+      "steps.s2.discover.pages.0.items.0.frame.gloss": "El/la ___ corre.",
+      "steps.s2.discover.pages.0.items.0.examples.tokkiga-ttwieoyo.gloss": "El conejo salta.",
+      "steps.s2.discover.pages.0.items.0.examples.horangiga-ttwieoyo.gloss": "El tigre corre."
+    },
+    "minigame:s3-nature-q1-play": {
+      "orderIt.rounds.r1.sentence.gloss": "Hay un pájaro en el árbol.",
+      "orderIt.rounds.r2.sentence.gloss": "Hay un pez en el agua.",
+      "orderIt.rounds.r3.sentence.gloss": "Hay un gato en casa.",
+      "orderIt.rounds.r4.sentence.gloss": "Hay un conejo en la montaña.",
+      "orderIt.rounds.r5.sentence.gloss": "Hay un oso en la montaña.",
+      "orderIt.rounds.r1.distractors.goyangiga.gloss": "el gato",
+      "orderIt.rounds.r2.distractors.sane.gloss": "en la montaña",
+      "orderIt.rounds.r3.distractors.mure.gloss": "en el agua",
+      "orderIt.rounds.r4.particle.choices.i.gloss": "marca de sujeto",
+      "orderIt.rounds.r4.particle.choices.ga.gloss": "marca de sujeto",
+      "orderIt.rounds.r5.particle.choices.i.gloss": "marca de sujeto",
+      "orderIt.rounds.r5.particle.choices.ga.gloss": "marca de sujeto"
+    },
+    "minigame:s3-nature-q1-apply": {
+      "listenPick.rounds.a1.prompt": "Hay un pájaro en el árbol.",
+      "listenPick.rounds.a2.prompt": "Hay un gato en casa.",
+      "listenPick.rounds.a3.prompt": "Hay un pez en el agua.",
+      "listenPick.rounds.a4.prompt": "Hay un zorro en la montaña."
+    },
+    "minigame:s3-nature-q1-check": {
+      "listenPick.rounds.c1.prompt": "Hay un oso en la montaña.",
+      "listenPick.rounds.c2.prompt": "Hay un gato en el árbol."
+    },
+    "minigame:s3-nature-q2-play": {
+      "orderIt.rounds.r1.sentence.gloss": "El tigre es grande.",
+      "orderIt.rounds.r2.sentence.gloss": "El conejo es pequeño.",
+      "orderIt.rounds.r3.sentence.gloss": "El gato es tierno.",
+      "orderIt.rounds.r4.sentence.gloss": "El oso es grande.",
+      "orderIt.rounds.r5.sentence.gloss": "El pájaro es pequeño.",
+      "orderIt.rounds.r1.distractors.jagayo.gloss": "es pequeño",
+      "orderIt.rounds.r2.distractors.keoyo.gloss": "es grande",
+      "orderIt.rounds.r3.distractors.mulgogiga.gloss": "el pez",
+      "orderIt.rounds.r4.particle.choices.i.gloss": "marca de sujeto",
+      "orderIt.rounds.r4.particle.choices.ga.gloss": "marca de sujeto",
+      "orderIt.rounds.r5.particle.choices.i.gloss": "marca de sujeto",
+      "orderIt.rounds.r5.particle.choices.ga.gloss": "marca de sujeto"
+    },
+    "minigame:s3-nature-q2-apply": {
+      "listenPick.rounds.a1.prompt": "El tigre es grande.",
+      "listenPick.rounds.a2.prompt": "El conejo es pequeño.",
+      "listenPick.rounds.a3.prompt": "El gato es tierno.",
+      "listenPick.rounds.a4.prompt": "El pez es pequeño."
+    },
+    "minigame:s3-nature-q2-check": {
+      "listenPick.rounds.c1.prompt": "El tigre es grande.",
+      "listenPick.rounds.c2.prompt": "El conejo es pequeño."
+    },
+    "minigame:s3-nature-q3-play": {
+      "orderIt.rounds.r1.sentence.gloss": "El pájaro vuela.",
+      "orderIt.rounds.r2.sentence.gloss": "El conejo salta.",
+      "orderIt.rounds.r3.sentence.gloss": "El pez nada.",
+      "orderIt.rounds.r4.sentence.gloss": "El tigre corre.",
+      "orderIt.rounds.r5.sentence.gloss": "El oso nada.",
+      "orderIt.rounds.r1.distractors.ttwieoyo.gloss": "corre, salta",
+      "orderIt.rounds.r2.distractors.narayo.gloss": "vuela",
+      "orderIt.rounds.r3.distractors.keoyo.gloss": "es grande",
+      "orderIt.rounds.r4.particle.choices.i.gloss": "marca de sujeto",
+      "orderIt.rounds.r4.particle.choices.ga.gloss": "marca de sujeto",
+      "orderIt.rounds.r5.particle.choices.i.gloss": "marca de sujeto",
+      "orderIt.rounds.r5.particle.choices.ga.gloss": "marca de sujeto"
+    },
+    "minigame:s3-nature-q3-apply": {
+      "listenPick.rounds.a1.prompt": "El pájaro vuela.",
+      "listenPick.rounds.a2.prompt": "El pez nada.",
+      "listenPick.rounds.a3.prompt": "El conejo salta.",
+      "listenPick.rounds.a4.prompt": "El tigre corre."
+    },
+    "minigame:s3-nature-q3-check": {
+      "listenPick.rounds.c1.prompt": "El pájaro vuela.",
+      "listenPick.rounds.c2.prompt": "El pez nada."
+    }
+  }
+}

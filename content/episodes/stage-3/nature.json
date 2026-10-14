@@ -1,0 +1,1273 @@
+{
+  "id": "episode:stage3-nature",
+  "stage": "stage3",
+  "theme": "nature",
+  "status": "draft",
+  "titleEn": "Animal Sentences",
+  "subtitleEn": "Say where animals are, how they look and what they do.",
+  "hoyaIntroEn": "I love animals! Let us read and build sentences about them.",
+  "order": 4,
+  "pillarTags": ["D2"],
+  "rewardCardIds": [],
+  "quests": [
+    {
+      "id": "quest:stage3-nature-q1",
+      "titleEn": "Where Is the Bird?",
+      "blurbEn": "Say where an animal is: in a tree, in the water, at home.",
+      "teaserEn": "Next: big and small animals.",
+      "estimatedMinutes": 5,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "In the Forest",
+          "hoyaLineEn": "Look around! Animals are in the trees, in the water and at home.",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "Where Is It?",
+          "hoyaLineEn": "Tap Hear it to listen to each sentence.",
+          "discover": {
+            "pages": [
+              {
+                "captionEn": "Saying where something is",
+                "items": [
+                  {
+                    "type": "pattern",
+                    "frame": {
+                      "ko": "___에 있어요.",
+                      "romanization": "___e isseoyo",
+                      "en": "It is in / on the ___."
+                    },
+                    "noteEn": "{ko:에} after a place says where: in, on or at. Use {ko:이} after a final consonant, {ko:가} after a vowel.",
+                    "examples": [
+                      {
+                        "ko": "나무에 새가 있어요.",
+                        "romanization": "namue saega isseoyo",
+                        "en": "There is a bird in the tree."
+                      },
+                      {
+                        "ko": "물에 물고기가 있어요.",
+                        "romanization": "mure mulgogiga isseoyo",
+                        "en": "There is a fish in the water."
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "captionEn": "A cat at home, a rabbit on the mountain",
+                "items": [
+                  {
+                    "type": "sentence",
+                    "sentence": {
+                      "ko": "집에 고양이가 있어요.",
+                      "romanization": "jibe goyangiga isseoyo",
+                      "en": "There is a cat at home."
+                    },
+                    "picture": "word:animal-cat"
+                  },
+                  {
+                    "type": "sentence",
+                    "sentence": {
+                      "ko": "산에 토끼가 있어요.",
+                      "romanization": "sane tokkiga isseoyo",
+                      "en": "There is a rabbit on the mountain."
+                    },
+                    "picture": "word:animal-rabbit"
+                  }
+                ]
+              }
+            ]
+          },
+          "durationSeconds": 65
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Build the Sentence",
+          "minigameKind": "order-it",
+          "minigameRef": "minigame:s3-nature-q1-play",
+          "durationSeconds": 90
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Hear and Pick",
+          "minigameKind": "listen-pick",
+          "minigameRef": "minigame:s3-nature-q1-apply",
+          "durationSeconds": 70
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Two Quick Ones",
+          "minigameKind": "listen-pick",
+          "minigameRef": "minigame:s3-nature-q1-check",
+          "durationSeconds": 40
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Animals Found!",
+          "hoyaLineEn": "You said where the animals are. Great reading!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s3-nature-q1-play",
+          "kind": "order-it",
+          "rounds": [
+            {
+              "id": "r1",
+              "sentence": {
+                "ko": "나무에 새가 있어요.",
+                "romanization": "namue saega isseoyo",
+                "en": "There is a bird in the tree."
+              },
+              "pictureRef": "word:animal-bird",
+              "distractors": [
+                {
+                  "ko": "고양이가",
+                  "romanization": "goyangiga",
+                  "en": "the cat"
+                }
+              ]
+            },
+            {
+              "id": "r2",
+              "sentence": {
+                "ko": "물에 물고기가 있어요.",
+                "romanization": "mure mulgogiga isseoyo",
+                "en": "There is a fish in the water."
+              },
+              "pictureRef": "word:animal-fish",
+              "distractors": [
+                {
+                  "ko": "산에",
+                  "romanization": "sane",
+                  "en": "on the mountain"
+                }
+              ]
+            },
+            {
+              "id": "r3",
+              "sentence": {
+                "ko": "집에 고양이가 있어요.",
+                "romanization": "jibe goyangiga isseoyo",
+                "en": "There is a cat at home."
+              },
+              "pictureRef": "word:animal-cat",
+              "distractors": [
+                {
+                  "ko": "물에",
+                  "romanization": "mure",
+                  "en": "in the water"
+                }
+              ]
+            },
+            {
+              "id": "r4",
+              "sentence": {
+                "ko": "산에 토끼가 있어요.",
+                "romanization": "sane tokkiga isseoyo",
+                "en": "There is a rabbit on the mountain."
+              },
+              "pictureRef": "word:animal-rabbit",
+              "particle": {
+                "tile": 1,
+                "choices": [
+                  {
+                    "ko": "이",
+                    "romanization": "i",
+                    "en": "subject marker"
+                  },
+                  {
+                    "ko": "가",
+                    "romanization": "ga",
+                    "en": "subject marker"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "r5",
+              "sentence": {
+                "ko": "산에 곰이 있어요.",
+                "romanization": "sane gomi isseoyo",
+                "en": "There is a bear on the mountain."
+              },
+              "pictureRef": "word:animal-bear",
+              "particle": {
+                "tile": 1,
+                "choices": [
+                  {
+                    "ko": "이",
+                    "romanization": "i",
+                    "en": "subject marker"
+                  },
+                  {
+                    "ko": "가",
+                    "romanization": "ga",
+                    "en": "subject marker"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s3-nature-q1-apply",
+          "kind": "listen-pick",
+          "rounds": [
+            {
+              "id": "a1",
+              "prompt": {
+                "ko": "나무에 새가 있어요.",
+                "romanization": "namue saega isseoyo",
+                "en": "There is a bird in the tree."
+              },
+              "options": [
+                {
+                  "id": "bird",
+                  "pictureRef": "word:animal-bird",
+                  "labelEn": "Bird"
+                },
+                {
+                  "id": "fish",
+                  "pictureRef": "word:animal-fish",
+                  "labelEn": "Fish"
+                },
+                {
+                  "id": "cat",
+                  "pictureRef": "word:animal-cat",
+                  "labelEn": "Cat"
+                }
+              ],
+              "answerId": "bird"
+            },
+            {
+              "id": "a2",
+              "prompt": {
+                "ko": "집에 고양이가 있어요.",
+                "romanization": "jibe goyangiga isseoyo",
+                "en": "There is a cat at home."
+              },
+              "options": [
+                {
+                  "id": "cat",
+                  "pictureRef": "word:animal-cat",
+                  "labelEn": "Cat"
+                },
+                {
+                  "id": "rabbit",
+                  "pictureRef": "word:animal-rabbit",
+                  "labelEn": "Rabbit"
+                },
+                {
+                  "id": "bear",
+                  "pictureRef": "word:animal-bear",
+                  "labelEn": "Bear"
+                }
+              ],
+              "answerId": "cat"
+            },
+            {
+              "id": "a3",
+              "prompt": {
+                "ko": "물에 물고기가 있어요.",
+                "romanization": "mure mulgogiga isseoyo",
+                "en": "There is a fish in the water."
+              },
+              "options": [
+                {
+                  "id": "fish",
+                  "pictureRef": "word:animal-fish",
+                  "labelEn": "Fish"
+                },
+                {
+                  "id": "bird",
+                  "pictureRef": "word:animal-bird",
+                  "labelEn": "Bird"
+                },
+                {
+                  "id": "rabbit",
+                  "pictureRef": "word:animal-rabbit",
+                  "labelEn": "Rabbit"
+                }
+              ],
+              "answerId": "fish"
+            },
+            {
+              "id": "a4",
+              "prompt": {
+                "ko": "산에 여우가 있어요.",
+                "romanization": "sane yeouga isseoyo",
+                "en": "There is a fox on the mountain."
+              },
+              "options": [
+                {
+                  "id": "fox",
+                  "pictureRef": "word:animal-fox",
+                  "labelEn": "Fox"
+                },
+                {
+                  "id": "cat",
+                  "pictureRef": "word:animal-cat",
+                  "labelEn": "Cat"
+                },
+                {
+                  "id": "fish",
+                  "pictureRef": "word:animal-fish",
+                  "labelEn": "Fish"
+                }
+              ],
+              "answerId": "fox"
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s3-nature-q1-check",
+          "kind": "listen-pick",
+          "rounds": [
+            {
+              "id": "c1",
+              "prompt": {
+                "ko": "산에 곰이 있어요.",
+                "romanization": "sane gomi isseoyo",
+                "en": "There is a bear on the mountain."
+              },
+              "options": [
+                {
+                  "id": "bear",
+                  "pictureRef": "word:animal-bear",
+                  "labelEn": "Bear"
+                },
+                {
+                  "id": "bird",
+                  "pictureRef": "word:animal-bird",
+                  "labelEn": "Bird"
+                },
+                {
+                  "id": "cat",
+                  "pictureRef": "word:animal-cat",
+                  "labelEn": "Cat"
+                }
+              ],
+              "answerId": "bear"
+            },
+            {
+              "id": "c2",
+              "prompt": {
+                "ko": "나무에 고양이가 있어요.",
+                "romanization": "namue goyangiga isseoyo",
+                "en": "There is a cat in the tree."
+              },
+              "options": [
+                {
+                  "id": "a",
+                  "text": {
+                    "ko": "나무에 고양이가 있어요.",
+                    "romanization": "namue goyangiga isseoyo",
+                    "en": "There is a cat in the tree."
+                  }
+                },
+                {
+                  "id": "b",
+                  "text": {
+                    "ko": "나무에 새가 있어요.",
+                    "romanization": "namue saega isseoyo",
+                    "en": "There is a bird in the tree."
+                  }
+                },
+                {
+                  "id": "c",
+                  "text": {
+                    "ko": "집에 고양이가 있어요.",
+                    "romanization": "jibe goyangiga isseoyo",
+                    "en": "There is a cat at home."
+                  }
+                }
+              ],
+              "answerId": "a"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "quest:stage3-nature-q2",
+      "titleEn": "Big and Small",
+      "blurbEn": "Say how an animal looks: big, small or cute.",
+      "teaserEn": "Next: animals on the move.",
+      "estimatedMinutes": 5,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "At the Zoo",
+          "hoyaLineEn": "Some animals are big, and some are small. Let us say how they look!",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "How Does It Look?",
+          "hoyaLineEn": "Listen, then look at the last word.",
+          "discover": {
+            "pages": [
+              {
+                "captionEn": "Saying how something looks",
+                "items": [
+                  {
+                    "type": "pattern",
+                    "frame": {
+                      "ko": "___이/가 커요.",
+                      "romanization": "___i/ga keoyo",
+                      "en": "The ___ is big."
+                    },
+                    "noteEn": "The describing word comes last: {ko:커요} big, {ko:작아요} small. {ko:이} after a consonant, {ko:가} after a vowel.",
+                    "examples": [
+                      {
+                        "ko": "호랑이가 커요.",
+                        "romanization": "horangiga keoyo",
+                        "en": "The tiger is big."
+                      },
+                      {
+                        "ko": "곰이 커요.",
+                        "romanization": "gomi keoyo",
+                        "en": "The bear is big."
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "captionEn": "A small rabbit and a cute cat",
+                "items": [
+                  {
+                    "type": "sentence",
+                    "sentence": {
+                      "ko": "토끼가 작아요.",
+                      "romanization": "tokkiga jagayo",
+                      "en": "The rabbit is small."
+                    },
+                    "picture": "word:animal-rabbit"
+                  },
+                  {
+                    "type": "sentence",
+                    "sentence": {
+                      "ko": "고양이가 귀여워요.",
+                      "romanization": "goyangiga gwiyeowoyo",
+                      "en": "The cat is cute."
+                    },
+                    "picture": "word:animal-cat"
+                  }
+                ]
+              }
+            ]
+          },
+          "durationSeconds": 65
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Build the Sentence",
+          "minigameKind": "order-it",
+          "minigameRef": "minigame:s3-nature-q2-play",
+          "durationSeconds": 90
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Hear and Pick",
+          "minigameKind": "listen-pick",
+          "minigameRef": "minigame:s3-nature-q2-apply",
+          "durationSeconds": 70
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Two Quick Ones",
+          "minigameKind": "listen-pick",
+          "minigameRef": "minigame:s3-nature-q2-check",
+          "durationSeconds": 40
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Well Described!",
+          "hoyaLineEn": "You told how the animals look. Wonderful!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s3-nature-q2-play",
+          "kind": "order-it",
+          "rounds": [
+            {
+              "id": "r1",
+              "sentence": {
+                "ko": "호랑이가 커요.",
+                "romanization": "horangiga keoyo",
+                "en": "The tiger is big."
+              },
+              "pictureRef": "card:tiger",
+              "distractors": [
+                {
+                  "ko": "작아요",
+                  "romanization": "jagayo",
+                  "en": "is small"
+                }
+              ]
+            },
+            {
+              "id": "r2",
+              "sentence": {
+                "ko": "토끼가 작아요.",
+                "romanization": "tokkiga jagayo",
+                "en": "The rabbit is small."
+              },
+              "pictureRef": "word:animal-rabbit",
+              "distractors": [
+                {
+                  "ko": "커요",
+                  "romanization": "keoyo",
+                  "en": "is big"
+                }
+              ]
+            },
+            {
+              "id": "r3",
+              "sentence": {
+                "ko": "고양이가 귀여워요.",
+                "romanization": "goyangiga gwiyeowoyo",
+                "en": "The cat is cute."
+              },
+              "pictureRef": "word:animal-cat",
+              "distractors": [
+                {
+                  "ko": "물고기가",
+                  "romanization": "mulgogiga",
+                  "en": "the fish"
+                }
+              ]
+            },
+            {
+              "id": "r4",
+              "sentence": {
+                "ko": "곰이 커요.",
+                "romanization": "gomi keoyo",
+                "en": "The bear is big."
+              },
+              "pictureRef": "word:animal-bear",
+              "particle": {
+                "tile": 0,
+                "choices": [
+                  {
+                    "ko": "이",
+                    "romanization": "i",
+                    "en": "subject marker"
+                  },
+                  {
+                    "ko": "가",
+                    "romanization": "ga",
+                    "en": "subject marker"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "r5",
+              "sentence": {
+                "ko": "새가 작아요.",
+                "romanization": "saega jagayo",
+                "en": "The bird is small."
+              },
+              "pictureRef": "word:animal-bird",
+              "particle": {
+                "tile": 0,
+                "choices": [
+                  {
+                    "ko": "이",
+                    "romanization": "i",
+                    "en": "subject marker"
+                  },
+                  {
+                    "ko": "가",
+                    "romanization": "ga",
+                    "en": "subject marker"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s3-nature-q2-apply",
+          "kind": "listen-pick",
+          "rounds": [
+            {
+              "id": "a1",
+              "prompt": {
+                "ko": "호랑이가 커요.",
+                "romanization": "horangiga keoyo",
+                "en": "The tiger is big."
+              },
+              "options": [
+                {
+                  "id": "tiger",
+                  "pictureRef": "card:tiger",
+                  "labelEn": "Tiger"
+                },
+                {
+                  "id": "rabbit",
+                  "pictureRef": "word:animal-rabbit",
+                  "labelEn": "Rabbit"
+                },
+                {
+                  "id": "bird",
+                  "pictureRef": "word:animal-bird",
+                  "labelEn": "Bird"
+                }
+              ],
+              "answerId": "tiger"
+            },
+            {
+              "id": "a2",
+              "prompt": {
+                "ko": "토끼가 작아요.",
+                "romanization": "tokkiga jagayo",
+                "en": "The rabbit is small."
+              },
+              "options": [
+                {
+                  "id": "rabbit",
+                  "pictureRef": "word:animal-rabbit",
+                  "labelEn": "Rabbit"
+                },
+                {
+                  "id": "tiger",
+                  "pictureRef": "card:tiger",
+                  "labelEn": "Tiger"
+                },
+                {
+                  "id": "fish",
+                  "pictureRef": "word:animal-fish",
+                  "labelEn": "Fish"
+                }
+              ],
+              "answerId": "rabbit"
+            },
+            {
+              "id": "a3",
+              "prompt": {
+                "ko": "고양이가 귀여워요.",
+                "romanization": "goyangiga gwiyeowoyo",
+                "en": "The cat is cute."
+              },
+              "options": [
+                {
+                  "id": "cat",
+                  "pictureRef": "word:animal-cat",
+                  "labelEn": "Cat"
+                },
+                {
+                  "id": "bear",
+                  "pictureRef": "word:animal-bear",
+                  "labelEn": "Bear"
+                },
+                {
+                  "id": "fish",
+                  "pictureRef": "word:animal-fish",
+                  "labelEn": "Fish"
+                }
+              ],
+              "answerId": "cat"
+            },
+            {
+              "id": "a4",
+              "prompt": {
+                "ko": "물고기가 작아요.",
+                "romanization": "mulgogiga jagayo",
+                "en": "The fish is small."
+              },
+              "options": [
+                {
+                  "id": "fish",
+                  "pictureRef": "word:animal-fish",
+                  "labelEn": "Fish"
+                },
+                {
+                  "id": "tiger",
+                  "pictureRef": "card:tiger",
+                  "labelEn": "Tiger"
+                },
+                {
+                  "id": "bear",
+                  "pictureRef": "word:animal-bear",
+                  "labelEn": "Bear"
+                }
+              ],
+              "answerId": "fish"
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s3-nature-q2-check",
+          "kind": "listen-pick",
+          "rounds": [
+            {
+              "id": "c1",
+              "prompt": {
+                "ko": "호랑이가 커요.",
+                "romanization": "horangiga keoyo",
+                "en": "The tiger is big."
+              },
+              "options": [
+                {
+                  "id": "tiger",
+                  "pictureRef": "card:tiger",
+                  "labelEn": "Tiger"
+                },
+                {
+                  "id": "rabbit",
+                  "pictureRef": "word:animal-rabbit",
+                  "labelEn": "Rabbit"
+                },
+                {
+                  "id": "cat",
+                  "pictureRef": "word:animal-cat",
+                  "labelEn": "Cat"
+                }
+              ],
+              "answerId": "tiger"
+            },
+            {
+              "id": "c2",
+              "prompt": {
+                "ko": "토끼가 작아요.",
+                "romanization": "tokkiga jagayo",
+                "en": "The rabbit is small."
+              },
+              "options": [
+                {
+                  "id": "a",
+                  "text": {
+                    "ko": "토끼가 작아요.",
+                    "romanization": "tokkiga jagayo",
+                    "en": "The rabbit is small."
+                  }
+                },
+                {
+                  "id": "b",
+                  "text": {
+                    "ko": "토끼가 커요.",
+                    "romanization": "tokkiga keoyo",
+                    "en": "The rabbit is big."
+                  }
+                },
+                {
+                  "id": "c",
+                  "text": {
+                    "ko": "고양이가 작아요.",
+                    "romanization": "goyangiga jagayo",
+                    "en": "The cat is small."
+                  }
+                }
+              ],
+              "answerId": "a"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "quest:stage3-nature-q3",
+      "titleEn": "Fly, Hop, Swim",
+      "blurbEn": "Say what an animal does: it flies, hops or swims.",
+      "estimatedMinutes": 5,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "On the Move",
+          "hoyaLineEn": "Animals are on the move! Let us say what they do.",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "What Does It Do?",
+          "hoyaLineEn": "Listen, then look at the action word at the end.",
+          "discover": {
+            "pages": [
+              {
+                "captionEn": "Saying what something does",
+                "items": [
+                  {
+                    "type": "pattern",
+                    "frame": {
+                      "ko": "___이/가 뛰어요.",
+                      "romanization": "___i/ga ttwieoyo",
+                      "en": "The ___ runs."
+                    },
+                    "noteEn": "The action word comes last: {ko:뛰어요} runs or hops. {ko:이} after a consonant, {ko:가} after a vowel.",
+                    "examples": [
+                      {
+                        "ko": "토끼가 뛰어요.",
+                        "romanization": "tokkiga ttwieoyo",
+                        "en": "The rabbit hops."
+                      },
+                      {
+                        "ko": "호랑이가 뛰어요.",
+                        "romanization": "horangiga ttwieoyo",
+                        "en": "The tiger runs."
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "captionEn": "A bird in the sky, a fish in the water",
+                "items": [
+                  {
+                    "type": "sentence",
+                    "sentence": {
+                      "ko": "새가 날아요.",
+                      "romanization": "saega narayo",
+                      "en": "The bird flies."
+                    },
+                    "picture": "word:animal-bird"
+                  },
+                  {
+                    "type": "sentence",
+                    "sentence": {
+                      "ko": "물고기가 헤엄쳐요.",
+                      "romanization": "mulgogiga heeomchyeoyo",
+                      "en": "The fish swims."
+                    },
+                    "picture": "word:animal-fish"
+                  }
+                ]
+              }
+            ]
+          },
+          "durationSeconds": 65
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Build the Sentence",
+          "minigameKind": "order-it",
+          "minigameRef": "minigame:s3-nature-q3-play",
+          "durationSeconds": 90
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Hear and Pick",
+          "minigameKind": "listen-pick",
+          "minigameRef": "minigame:s3-nature-q3-apply",
+          "durationSeconds": 70
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Two Quick Ones",
+          "minigameKind": "listen-pick",
+          "minigameRef": "minigame:s3-nature-q3-check",
+          "durationSeconds": 40
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Animals on the Move!",
+          "hoyaLineEn": "You read what the animals do. What a reader you are!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s3-nature-q3-play",
+          "kind": "order-it",
+          "rounds": [
+            {
+              "id": "r1",
+              "sentence": {
+                "ko": "새가 날아요.",
+                "romanization": "saega narayo",
+                "en": "The bird flies."
+              },
+              "pictureRef": "word:animal-bird",
+              "distractors": [
+                {
+                  "ko": "뛰어요",
+                  "romanization": "ttwieoyo",
+                  "en": "runs, hops"
+                }
+              ]
+            },
+            {
+              "id": "r2",
+              "sentence": {
+                "ko": "토끼가 뛰어요.",
+                "romanization": "tokkiga ttwieoyo",
+                "en": "The rabbit hops."
+              },
+              "pictureRef": "word:animal-rabbit",
+              "distractors": [
+                {
+                  "ko": "날아요",
+                  "romanization": "narayo",
+                  "en": "flies"
+                }
+              ]
+            },
+            {
+              "id": "r3",
+              "sentence": {
+                "ko": "물고기가 헤엄쳐요.",
+                "romanization": "mulgogiga heeomchyeoyo",
+                "en": "The fish swims."
+              },
+              "pictureRef": "word:animal-fish",
+              "distractors": [
+                {
+                  "ko": "커요",
+                  "romanization": "keoyo",
+                  "en": "is big"
+                }
+              ]
+            },
+            {
+              "id": "r4",
+              "sentence": {
+                "ko": "호랑이가 뛰어요.",
+                "romanization": "horangiga ttwieoyo",
+                "en": "The tiger runs."
+              },
+              "pictureRef": "card:tiger",
+              "particle": {
+                "tile": 0,
+                "choices": [
+                  {
+                    "ko": "이",
+                    "romanization": "i",
+                    "en": "subject marker"
+                  },
+                  {
+                    "ko": "가",
+                    "romanization": "ga",
+                    "en": "subject marker"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "r5",
+              "sentence": {
+                "ko": "곰이 헤엄쳐요.",
+                "romanization": "gomi heeomchyeoyo",
+                "en": "The bear swims."
+              },
+              "pictureRef": "word:animal-bear",
+              "particle": {
+                "tile": 0,
+                "choices": [
+                  {
+                    "ko": "이",
+                    "romanization": "i",
+                    "en": "subject marker"
+                  },
+                  {
+                    "ko": "가",
+                    "romanization": "ga",
+                    "en": "subject marker"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s3-nature-q3-apply",
+          "kind": "listen-pick",
+          "rounds": [
+            {
+              "id": "a1",
+              "prompt": {
+                "ko": "새가 날아요.",
+                "romanization": "saega narayo",
+                "en": "The bird flies."
+              },
+              "options": [
+                {
+                  "id": "bird",
+                  "pictureRef": "word:animal-bird",
+                  "labelEn": "Bird"
+                },
+                {
+                  "id": "rabbit",
+                  "pictureRef": "word:animal-rabbit",
+                  "labelEn": "Rabbit"
+                },
+                {
+                  "id": "fish",
+                  "pictureRef": "word:animal-fish",
+                  "labelEn": "Fish"
+                }
+              ],
+              "answerId": "bird"
+            },
+            {
+              "id": "a2",
+              "prompt": {
+                "ko": "물고기가 헤엄쳐요.",
+                "romanization": "mulgogiga heeomchyeoyo",
+                "en": "The fish swims."
+              },
+              "options": [
+                {
+                  "id": "fish",
+                  "pictureRef": "word:animal-fish",
+                  "labelEn": "Fish"
+                },
+                {
+                  "id": "cat",
+                  "pictureRef": "word:animal-cat",
+                  "labelEn": "Cat"
+                },
+                {
+                  "id": "tiger",
+                  "pictureRef": "card:tiger",
+                  "labelEn": "Tiger"
+                }
+              ],
+              "answerId": "fish"
+            },
+            {
+              "id": "a3",
+              "prompt": {
+                "ko": "토끼가 뛰어요.",
+                "romanization": "tokkiga ttwieoyo",
+                "en": "The rabbit hops."
+              },
+              "options": [
+                {
+                  "id": "rabbit",
+                  "pictureRef": "word:animal-rabbit",
+                  "labelEn": "Rabbit"
+                },
+                {
+                  "id": "bird",
+                  "pictureRef": "word:animal-bird",
+                  "labelEn": "Bird"
+                },
+                {
+                  "id": "bear",
+                  "pictureRef": "word:animal-bear",
+                  "labelEn": "Bear"
+                }
+              ],
+              "answerId": "rabbit"
+            },
+            {
+              "id": "a4",
+              "prompt": {
+                "ko": "호랑이가 뛰어요.",
+                "romanization": "horangiga ttwieoyo",
+                "en": "The tiger runs."
+              },
+              "options": [
+                {
+                  "id": "tiger",
+                  "pictureRef": "card:tiger",
+                  "labelEn": "Tiger"
+                },
+                {
+                  "id": "fish",
+                  "pictureRef": "word:animal-fish",
+                  "labelEn": "Fish"
+                },
+                {
+                  "id": "cat",
+                  "pictureRef": "word:animal-cat",
+                  "labelEn": "Cat"
+                }
+              ],
+              "answerId": "tiger"
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s3-nature-q3-check",
+          "kind": "listen-pick",
+          "rounds": [
+            {
+              "id": "c1",
+              "prompt": {
+                "ko": "새가 날아요.",
+                "romanization": "saega narayo",
+                "en": "The bird flies."
+              },
+              "options": [
+                {
+                  "id": "bird",
+                  "pictureRef": "word:animal-bird",
+                  "labelEn": "Bird"
+                },
+                {
+                  "id": "fish",
+                  "pictureRef": "word:animal-fish",
+                  "labelEn": "Fish"
+                },
+                {
+                  "id": "rabbit",
+                  "pictureRef": "word:animal-rabbit",
+                  "labelEn": "Rabbit"
+                }
+              ],
+              "answerId": "bird"
+            },
+            {
+              "id": "c2",
+              "prompt": {
+                "ko": "물고기가 헤엄쳐요.",
+                "romanization": "mulgogiga heeomchyeoyo",
+                "en": "The fish swims."
+              },
+              "options": [
+                {
+                  "id": "a",
+                  "text": {
+                    "ko": "물고기가 헤엄쳐요.",
+                    "romanization": "mulgogiga heeomchyeoyo",
+                    "en": "The fish swims."
+                  }
+                },
+                {
+                  "id": "b",
+                  "text": {
+                    "ko": "물고기가 작아요.",
+                    "romanization": "mulgogiga jagayo",
+                    "en": "The fish is small."
+                  }
+                },
+                {
+                  "id": "c",
+                  "text": {
+                    "ko": "새가 날아요.",
+                    "romanization": "saega narayo",
+                    "en": "The bird flies."
+                  }
+                }
+              ],
+              "answerId": "a"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "culture": [
+    {
+      "id": "n1",
+      "kind": "language",
+      "textEn": "After a place word, {ko:에} tells where something is: in, on or at. {ko:있어요} says that an animal or a thing is there.",
+      "sources": [
+        {
+          "title": "에 (표준국어대사전 검색 결과)",
+          "publisher": "국립국어원 (National Institute of Korean Language) — 표준국어대사전",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?pageSize=10&searchKeyword=%EC%97%90",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "표제어 ‘에4’ 「조사」 「1」: ‘앞말이 처소의 부사어임을 나타내는 격 조사.’"
+        },
+        {
+          "title": "있다 (표준국어대사전 검색 결과)",
+          "publisher": "국립국어원 (National Institute of Korean Language) — 표준국어대사전",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?pageSize=10&searchKeyword=%EC%9E%88%EB%8B%A4",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "표제어 ‘있다1’ [Ⅰ]「동사」 「1」: ‘사람이나 동물이 어느 곳에서 떠나거나 벗어나지 아니하고 머물다.’"
+        },
+        {
+          "title": "조사(助詞)",
+          "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+          "url": "https://encykorea.aks.ac.kr/Article/E0051845",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "특징 (3): ‘조사는 선행체언의 음운론적 조건에 따라 이형태(異形態)가 존재하기도 한다(‘이·가’, ‘을·를·ㄹ’ 등).’ / 내용 (1) 격조사: ‘주격(이·가)·속격(의)·처격(에)…’"
+        }
+      ],
+      "verification": {
+        "passes": 1,
+        "checkedAt": "2026-10-14",
+        "scope": "lesson",
+        "notes": "pass 2 (author sourcing, 2026-10-14): '에 after a place word tells where' = stdict 에4 「조사」 「1」 (앞말이 처소의 부사어임을 나타내는 격 조사) and encykorea 조사 (처격(에)); 'in, on or at' is the English gloss of that locative use. '있어요 says an animal or a thing is there' = stdict 있다1 「동사」 「1」 (사람이나 동물이 어느 곳에서 … 머물다). Pages opened 2026-10-14, HTTP 200. English is a paraphrase, nothing copied. Used in: q1 Discover pattern noteEn, q1 Sentence Builder particle hint."
+      }
+    },
+    {
+      "id": "n2",
+      "kind": "language",
+      "textEn": "The subject marker has two forms: {ko:이} after a word that ends in a consonant, {ko:가} after a word that ends in a vowel.",
+      "sources": [
+        {
+          "title": "조사의 사전적 처리 (유동석, 『새국어생활』 1998년 봄호)",
+          "publisher": "국립국어원 (National Institute of Korean Language) — 새국어생활",
+          "url": "https://korean.go.kr/nkview/nklife/1998_1/8-4.html",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "3절에 인용된 사전 뜻풀이: ‘가【조】 ①((주로, 모음으로 끝나는 체언에 붙어)) 그 말이 주격(主格)이 되게 하는 격조사.’ / ‘이【조】 ①((자음으로 끝나는 체언에 붙어)) 그 말이 주격이 되게 하는 격조사.’"
+        },
+        {
+          "title": "조사(助詞)",
+          "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+          "url": "https://encykorea.aks.ac.kr/Article/E0051845",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "특징 (3): ‘조사는 선행체언의 음운론적 조건에 따라 이형태(異形態)가 존재하기도 한다(‘이·가’, ‘을·를·ㄹ’ 등).’ / 내용 (1) 격조사: ‘주격(이·가)·속격(의)·처격(에)…’"
+        }
+      ],
+      "verification": {
+        "passes": 1,
+        "checkedAt": "2026-10-14",
+        "scope": "lesson",
+        "notes": "pass 2 (author sourcing, 2026-10-14): the two forms and their condition = NIKL 새국어생활 1998 봄호, 유동석 「조사의 사전적 처리」 3절 (가: 모음으로 끝나는 체언에 붙어 … 주격 / 이: 자음으로 끝나는 체언에 붙어 … 주격) and encykorea 조사 특징 (3) (이형태 by 선행체언의 음운론적 조건, ‘이·가’). Pages opened 2026-10-14, HTTP 200. Paraphrased, nothing copied. Used in: the pattern noteEn of q1, q2 and q3, the particle rounds r4 and r5 of each quest."
+      }
+    },
+    {
+      "id": "n3",
+      "kind": "language",
+      "textEn": "In a Korean sentence the word that says what the subject does or is like comes after the subject, at the end.",
+      "sources": [
+        {
+          "title": "문장",
+          "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+          "url": "https://encykorea.aks.ac.kr/Article/E0019645",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "내용: ‘국어의 기본어순은 ‘주어·(보어)·(목적어)·서술어’인데’ … ‘서술어가 문장 끝위치에 고정되어 있다는 것’"
+        },
+        {
+          "title": "서술어",
+          "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+          "url": "https://encykorea.aks.ac.kr/Article/E0027885",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "정의: ‘문장에서 주어의 동작·상태·성질 등을 설명하는 문장성분.’ 내용: ‘정상적인 문장에서 서술어는 주어의 뒤에 놓이며 … 서술어에는 용언(用言)이 주로 쓰인다.’"
+        }
+      ],
+      "verification": {
+        "passes": 1,
+        "checkedAt": "2026-10-14",
+        "scope": "lesson",
+        "notes": "pass 2 (author sourcing, 2026-10-14): 'comes at the end' = encykorea 문장 (기본어순 주어·(보어)·(목적어)·서술어; 서술어가 문장 끝위치에 고정); 'says what the subject does or is like' and 'after the subject' = encykorea 서술어 정의 (주어의 동작·상태·성질 등을 설명) and 내용 (서술어는 주어의 뒤에 놓이며). Pages opened 2026-10-14, HTTP 200. Paraphrased, nothing copied. Used in: q2 and q3 Discover pattern noteEn ('The describing word comes last', 'The action word comes last')."
+      }
+    }
+  ],
+  "review": {
+    "language": "draft",
+    "culture": "draft",
+    "notes": []
+  },
+  "contentVer": 1
+}

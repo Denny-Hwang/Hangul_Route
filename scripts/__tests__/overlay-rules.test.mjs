@@ -208,6 +208,13 @@ describe("overlay-rules: korean-in-ui-field", () => {
     assert.deepEqual(rules(base(es({ "card:gangaji": { romanization: "강" } }))), ["korean-in-ui-field", "overlay-forbidden-field"]);
   });
 
+  test("a lesson Discover note may carry {ko:} tokens in Spanish, and no Hangul outside them (F-CURR-001 §3.4)", () => {
+    const note = "steps.s2.discover.pages.0.items.0.note";
+    assert.deepEqual(rules(base(es({ "quest:stage3-nature-q1": { [note]: "Usa {ko:이} tras consonante y {ko:가} tras vocal." } }))), []);
+    assert.deepEqual(rules(base(es({ "quest:stage3-nature-q1": { [note]: "Usa 이 tras consonante." } }))), ["korean-in-ui-field"]);
+    assert.deepEqual(rules(base(es({ "quest:stage3-nature-q1": { title: "{ko:새} y más" } }))), ["korean-in-ui-field"]);
+  });
+
   test("Korean overlays carry Hangul in translatable fields only", () => {
     assert.deepEqual(rules(base(ko({ "vocab:sagwa": { gloss: "빨갛고 동그란 과일" }, "vocab:bap": { senseNote: "끼니를 뜻하기도 해요." } }))), []);
     assert.deepEqual(rules(base(ko({ "card:gangaji": { ko: "개" } }))), ["korean-in-ui-field", "overlay-forbidden-field"]);
