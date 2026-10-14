@@ -16,6 +16,7 @@ import {
 import { describe, expect, it } from 'vitest';
 import { runtimeScope } from '../../../../../scripts/build-lessons.mjs';
 import { CONTENT_OVERLAYS } from '../../logic/content-locale';
+import type { MinigameScope } from '../../logic/minigame-config';
 import { PLAYABLE_KINDS } from '../../logic/minigame-renderers';
 import { episodesAll } from '../episodes';
 import { LESSON_EPISODES, LESSON_QUESTS } from '../__generated__/lessons-index';
@@ -230,6 +231,29 @@ describe('a ready cell plays only games the app has (F-CURR-001 section 6: a gam
   for (const { cell } of READY) {
     it(`${cell.id}: every game it plays has a screen`, () => {
       expect(cell.quests.flatMap((q) => unplayableSteps(q))).toEqual([]);
+    });
+  }
+});
+
+/**
+ * Write Frame rounds whose write part is traced: the Trace a Word canvas joins Write Frame after rows
+ * G-4 and G-5 (until then `WriteFrameGame` writes them on the keyboard), so a ready cell must have none.
+ */
+export function tracedFrameRounds(scopes: Readonly<Record<string, MinigameScope | undefined>>, refs: readonly string[]): string[] {
+  return refs.flatMap((ref) => (scopes[ref]?.writeFrame?.rounds ?? []).filter((r) => r.entry === 'trace').map((r) => `${ref}: round ${r.id} is traced`));
+}
+
+describe('a ready cell has no traced Write Frame round yet (F-CURR-001 G-5)', () => {
+  it('reports a traced round', () => {
+    const frame = { ko: '오늘 ___에 가요.', romanization: 'oneul ___e gayo', en: 'Today I go to ___.' };
+    const round = (entry: 'type' | 'trace') => ({ id: `r-${entry}`, frame, slots: [{ id: 's', bank: [] }], entry, freeEntry: false });
+    const scopes = { 'minigame:x': { kind: 'write-frame' as const, rounds: 2, writeFrame: { rounds: [round('type'), round('trace')] } } };
+    expect(tracedFrameRounds(scopes, ['minigame:x', 'minigame:none'])).toEqual(['minigame:x: round r-trace is traced']);
+  });
+
+  for (const { cell } of READY) {
+    it(`${cell.id}: no Write Frame round is traced`, () => {
+      expect(tracedFrameRounds(ALL_LESSON_SCOPES, cell.quests.flatMap((q) => q.scopes.map((s) => s.ref)))).toEqual([]);
     });
   }
 });

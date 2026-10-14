@@ -805,4 +805,8 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'a11y.minigame.keyboard.typedBlocks': [[['ho', 'yeo']], [['bap']]],
   'a11y.minigame.keyboard.wordBlocks': [[['ho', 'ya']]],
   'a11y.minigame.keyboard.different': [[1], [2]],
+  // F-CURR-001 G-5: Write Frame's frame card and the name round's tiles (romanized stand-ins for the taught Korean).
+  'a11y.minigame.writeFrame.either': [['eul', 'reul'], ['ieyo', 'yeyo']],
+  'a11y.minigame.writeFrame.particleFits': [['reul', 'tteokbokki'], ['eul', 'gimbap']],
+  'a11y.minigame.writeFrame.tile': [['ma', 'ma'], ['n', 'n']],
 };

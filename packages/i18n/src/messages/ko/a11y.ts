@@ -132,6 +132,12 @@ export const a11y = {
       wordBlocks: (blocks: readonly string[]) => `낱말: ${blocks.join(', ')}.`,
       different: (n: number) => `${n}번째 글자가 달라요.`,
     },
+    writeFrame: {
+      blank: '빈칸',
+      either: (a: string, b: string) => `${a} 또는 ${b}`,
+      particleFits: (particle: string, word: string) => `${word} 다음: ${particle}`,
+      tile: (block: string, sound: string) => `${block}, ${sound}`,
+    },
   },
   koreanItem: (item: { ko: string; romanization: string; gloss?: string }) =>
     item.gloss === undefined ? `한글: ${item.ko}, ${item.romanization}` : `한글: ${item.ko}, ${item.romanization}, ${item.gloss}`,

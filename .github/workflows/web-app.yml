@@ -331,6 +331,8 @@ jobs:
             realia-read
             # F-CURR-001 G-3: Type Hangul and the in-app keyboard, through the __hrTypeHangulE2E hook.
             type-hangul
+            # F-CURR-001 G-5: Write Frame, My page and the name round, through the __hrWriteFrameE2E hook.
+            write-frame
             # F-REPORT-001 RP-3b: time-only practice sessions in the story reader and the level check.
             practice-session
             # F-VOC-003 C-4: the Words picker and topic page (Words stays behind its flag until C-7).

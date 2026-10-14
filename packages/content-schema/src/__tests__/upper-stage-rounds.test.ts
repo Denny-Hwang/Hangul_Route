@@ -292,4 +292,26 @@ describe('WriteFrameRoundSchema', () => {
     expect(ok(WriteFrameRoundSchema, { id: 'r', frame: two, slots: [{ id: 'a' }, { id: 'b' }], entry: 'type', freeEntry: true })).toBe(false);
     expect(WriteFrameRoundSchema.parse({ id: 'r', frame, slots: [{ id: 'what', bank }], entry: 'type' }).freeEntry).toBe(false);
   });
+
+  it('a free-entry round may carry a sound table of whole blocks and finals (row G-5)', () => {
+    const name = kt('제 이름은 ___이에요/예요', 'je ireumeun ___ieyo/yeyo', 'my name is ___');
+    const base = { id: 'r', frame: name, slots: [{ id: 'name' }], entry: 'type', freeEntry: true };
+    const soundTable = {
+      groups: [
+        [{ ko: '아', romanization: 'a' }, { ko: '오', romanization: 'o' }],
+        [{ ko: '마', romanization: 'ma' }],
+      ],
+      finals: [{ ko: 'ㄴ', romanization: 'n' }, { ko: 'ㅇ', romanization: 'ng' }],
+    };
+    expect(ok(WriteFrameRoundSchema, { ...base, soundTable })).toBe(true);
+    expect(ok(WriteFrameRoundSchema, { ...base, soundTable: { ...soundTable, finals: [] } })).toBe(true);
+    // A block tile is one whole syllable; a final tile is a letter that can close a block.
+    expect(ok(WriteFrameRoundSchema, { ...base, soundTable: { ...soundTable, groups: [[{ ko: '마나', romanization: 'mana' }]] } })).toBe(false);
+    expect(ok(WriteFrameRoundSchema, { ...base, soundTable: { ...soundTable, groups: [[{ ko: 'ㅁ', romanization: 'm' }]] } })).toBe(false);
+    expect(ok(WriteFrameRoundSchema, { ...base, soundTable: { ...soundTable, finals: [{ ko: 'ㄸ', romanization: 'tt' }] } })).toBe(false);
+    expect(ok(WriteFrameRoundSchema, { ...base, soundTable: { ...soundTable, finals: [{ ko: '안', romanization: 'an' }] } })).toBe(false);
+    expect(ok(WriteFrameRoundSchema, { ...base, soundTable: { groups: [], finals: [] } })).toBe(false);
+    // Only the free-entry round has one.
+    expect(ok(WriteFrameRoundSchema, { id: 'r', frame, slots: [{ id: 'what', bank }], entry: 'type', soundTable })).toBe(false);
+  });
 });

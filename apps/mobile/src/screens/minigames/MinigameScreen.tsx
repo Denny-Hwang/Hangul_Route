@@ -31,6 +31,7 @@ import { TapRespondGame } from './TapRespondGame';
 import { TraceStrokeGame } from './TraceStrokeGame';
 import { TypeHangulGame } from './TypeHangulGame';
 import { VoiceEchoGame } from './VoiceEchoGame';
+import { WriteFrameGame } from './WriteFrameGame';
 
 /**
  * The learner stack passes `route` and `navigation`; another host (All lessons, F-BROWSE-001 §4.7)
@@ -141,6 +142,8 @@ export function MinigameScreen({ route, navigation, onOpenCultureNote, ...exitPr
       return <RealiaReadGame scope={scope} host={host} onBack={exits.back} />;
     case 'type-hangul':
       return <TypeHangulGame scope={scope} host={host} onBack={exits.back} />;
+    case 'write-frame':
+      return <WriteFrameGame scope={scope} host={host} onBack={exits.back} />;
     default:
       return fallback(copy.comingSoon);
   }

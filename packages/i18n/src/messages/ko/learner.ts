@@ -493,6 +493,25 @@ export const learner = {
       fixIt: { cta: '고치기' },
       showRomanization: { cta: '읽는 법 보기' },
     },
+    writeFrame: {
+      heading: '나만의 문장을 만들어 봐요',
+      pick: '낱말을 하나 골라요. 어떤 낱말이든 좋아요.',
+      changeWord: { cta: '낱말 바꾸기' },
+      sentenceDone: '문장을 썼어요!',
+      myPage: {
+        title: '나의 페이지',
+        notKept: '이 페이지는 지금만 볼 수 있어요. 저장되지 않아요.',
+      },
+      name: {
+        heading: '내 이름을 한글로 써 봐요',
+        noWrong: '이름을 쓰는 데 틀린 방법은 없어요.',
+        tabs: { blocks: '글자 블록', keyboard: '키보드' },
+        sounds: '소리',
+        atTheEnd: '받침',
+        longest: '여기에 들어가는 가장 긴 이름이에요.',
+        finishBlock: '마지막 글자를 완성해요.',
+      },
+    },
   },
 
   audio: {

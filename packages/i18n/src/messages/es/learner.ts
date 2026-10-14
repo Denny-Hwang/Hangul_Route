@@ -506,6 +506,25 @@ export const learner = {
       fixIt: { cta: 'Corregir' },
       showRomanization: { cta: 'Ver cómo se dice' },
     },
+    writeFrame: {
+      heading: 'Haz tu propia oración',
+      pick: 'Elige una palabra. Cualquiera sirve.',
+      changeWord: { cta: 'Cambiar palabra' },
+      sentenceDone: '¡Escribiste una oración!',
+      myPage: {
+        title: 'Mi página',
+        notKept: 'Esta página es solo para ahora. No se guarda.',
+      },
+      name: {
+        heading: 'Escribe tu nombre en hangul',
+        noWrong: 'No hay una forma incorrecta de escribir tu nombre.',
+        tabs: { blocks: 'Bloques', keyboard: 'Teclado' },
+        sounds: 'Sonidos',
+        atTheEnd: 'Al final',
+        longest: 'Es el nombre más largo que cabe aquí.',
+        finishBlock: 'Termina el último bloque.',
+      },
+    },
   },
 
   audio: {

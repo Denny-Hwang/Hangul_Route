@@ -672,6 +672,29 @@ export const learner = {
       /** The romanization of the word to type, when the learner's setting hides it until a tap (F-BROWSE-001 BR-5c). */
       showRomanization: { cta: 'Show how to say it' },
     },
+    /**
+     * Write Frame (F-CURR-001 G-5, design/wireframes/minigame/write-frame.md): pick a word for the blank, write it,
+     * read the sentence; "My page" closes the step and is not kept (OD-6). The name round is Write Your Name q3.
+     */
+    writeFrame: {
+      heading: 'Make your own sentence',
+      pick: 'Pick a word. Any word works.',
+      changeWord: { cta: 'Change word' },
+      sentenceDone: 'You wrote a sentence!',
+      myPage: {
+        title: 'My page',
+        notKept: 'This page is just for now. It is not saved.',
+      },
+      name: {
+        heading: 'Write your name in Hangul',
+        noWrong: 'There is no wrong way to write your name.',
+        tabs: { blocks: 'Blocks', keyboard: 'Keyboard' },
+        sounds: 'Sounds',
+        atTheEnd: 'At the end',
+        longest: 'That is the longest name that fits here.',
+        finishBlock: 'Finish the last block.',
+      },
+    },
   },
 
   /**

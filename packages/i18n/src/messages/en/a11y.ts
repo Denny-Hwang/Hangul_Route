@@ -192,6 +192,17 @@ export const a11y = {
       wordBlocks: (blocks: readonly string[]) => `The word: ${blocks.join(', ')}.`,
       different: (n: number) => `Block ${n} is different.`,
     },
+    /**
+     * Write Frame (F-CURR-001 G-5): the frame card reads an empty slot as "blank" and a particle pair as both
+     * forms; after a pick, the fitted form is announced. `particle`, `word` and `block` are taught Korean.
+     */
+    writeFrame: {
+      blank: 'blank',
+      either: (a: string, b: string) => `${a} or ${b}`,
+      particleFits: (particle: string, word: string) => `${particle} after ${word}`,
+      /** A name-round tile: its block (or final letter) and its sound. */
+      tile: (block: string, sound: string) => `${block}, ${sound}`,
+    },
   },
   /** A taught Korean item: Korean text, its romanization and (optionally) a gloss in the UI language. */
   koreanItem: (item: { ko: string; romanization: string; gloss?: string }) =>
