@@ -1,17 +1,20 @@
 import { APP_ROUTES, type StageKey, type StoryLevel } from '@hangul-route/content-schema';
 import { Body, Button, Card, Heading, Pill, Screen, Spacer, borderWidth, colors, radii, spacing, touchTarget, typography, useLayoutClass } from '@hangul-route/design-system';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { cardById } from '../../content';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { episodeOfQuest } from '../../logic/browse/bundle';
 import { itemFacts, type ItemFacts, type QuestFacts, type StoryFacts } from '../../logic/browse/facts';
 import { accessOf, billingShown, itemViewedEvent, plansTappedEvent, stepsLine, whereLine } from '../../logic/browse/home-view';
+import { presentDeck, presentHref, presentThisShown } from '../../logic/browse/present';
 import { storyPreviewParams } from '../../logic/browse/preview';
 import { topicHearShown } from '../../logic/browse/topic-view';
 import { BROWSE_REGISTERED_ROUTES, type BrowseStackParamList } from '../../navigation/browse';
+import { lectureBundle } from '../../logic/lecture/content';
 import { leaveTo } from '../../platform/browse-env';
+import { openPresenter, presenterRootExists } from '../../platform/present-handoff';
 import { CardRow, HeaderBack, HeaderRow, KoChip, SkillChips, WordChip, focusRing, sendBrowseEvent, useItemViewed, type FocusState } from './browse-ui';
 import { useBrowseSession } from './browse-session';
 import { LessonDisplaySheet } from './LessonDisplaySheet';
@@ -27,7 +30,9 @@ import { TopicWordList } from './TopicWordList';
  * Journey ], the card it awards, and the primary action, pinned to the bottom
  * edge on phones. Closed (switch on, sampler pass only): the same facts, and
  * in place of the primary the grown-up line with [ Open billing ] for an
- * account pass that is not kept and not a fallback.
+ * account pass that is not kept and not a fallback. Under the primary, with
+ * a full pass, [ Present this ] opens the item as a one-block deck in the
+ * presenter (BR-13, OD-9; `design/screens/presenter/present-this.md`).
  */
 type Props = NativeStackScreenProps<BrowseStackParamList, 'BrowseItem'>;
 
@@ -48,6 +53,23 @@ export function BrowseItemScreen({ route, navigation }: Props): React.ReactEleme
   // The same mounted page can get new params (Next story to a closed story): the pick belongs to one story.
   useEffect(() => setLevel(null), [kind, id]);
   const compact = useLayoutClass().width === 'compact';
+  const presentTitleText = facts ? (facts.kind === 'story' ? facts.title.gloss : facts.title) : '';
+  // Drawn only when the presenter can show at least one slide of this item (BR-13): a check deck, never opened.
+  const hasFacts = facts !== null;
+  const scope = pass?.scope ?? null;
+  const presentShown = useMemo(
+    () =>
+      hasFacts &&
+      scope !== null &&
+      access !== 'closed' &&
+      presentThisShown({
+        scope,
+        presenterRoot: presenterRootExists(),
+        deck: presentDeck({ kind, id, title: presentTitleText }, { now: new Date(0), rng: () => 0, uiLocale: locale }),
+        bundle: lectureBundle(locale),
+      }),
+    [hasFacts, scope, access, kind, id, presentTitleText, locale],
+  );
   useItemViewed(facts && pass ? itemViewedEvent(kind, id, access) : null);
 
   // An id this build does not hold never shows an empty page: home says so (section 4.4).
@@ -80,6 +102,23 @@ export function BrowseItemScreen({ route, navigation }: Props): React.ReactEleme
     }
   };
 
+  const presentItem = (): void => {
+    // A fresh deck per press: its own id, clock and quiz seed, no names (numbers picker).
+    const deck = presentDeck({ kind, id, title: presentTitleText }, { now: new Date(), rng: Math.random, uiLocale: locale });
+    if (deck) openPresenter(presentHref(deck));
+  };
+  const presentButton = presentShown ? (
+    <Button
+      label={m.item.present.cta}
+      accessibilityHint={m.item.presentNote}
+      tone="ghost"
+      size="lg"
+      fullWidth
+      onPress={presentItem}
+      testID="browse-present"
+    />
+  ) : null;
+
   const action = closed ? (
     <View testID="browse-item-closed" style={{ backgroundColor: colors.surface.sunken, borderRadius: radii.lg, padding: spacing.lg, gap: spacing.sm, alignItems: 'flex-start' }}>
       <Body weight="semibold">{m.item.closed}</Body>
@@ -96,15 +135,19 @@ export function BrowseItemScreen({ route, navigation }: Props): React.ReactEleme
         />
       ) : null}
     </View>
-  ) : canPreview ? (
+  ) : canPreview || presentButton ? (
     <View style={{ width: '100%', maxWidth: compact ? undefined : PRIMARY_MAX }}>
-      <Button label={facts.kind === 'story' ? m.item.previewStory.cta : m.item.preview.cta} tone="primary" size="lg" fullWidth onPress={previewItem} testID="browse-preview" />
+      {canPreview ? (
+        <Button label={facts.kind === 'story' ? m.item.previewStory.cta : m.item.preview.cta} tone="primary" size="lg" fullWidth onPress={previewItem} testID="browse-preview" />
+      ) : null}
       {facts.kind === 'story' && BROWSE_REGISTERED_ROUTES.has('PreviewQuest') ? (
         <>
           <Spacer size="sm" />
           <Button label={m.item.previewQuestions.cta} tone="ghost" size="md" fullWidth onPress={() => playQuest(facts.questId)} testID="browse-preview-questions" />
         </>
       ) : null}
+      {presentButton && canPreview ? <Spacer size="sm" /> : null}
+      {presentButton}
     </View>
   ) : null;
 

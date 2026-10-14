@@ -1033,3 +1033,86 @@ test('a word topic lists every word with its Hear button, keeps 64 targets at 32
   expect(changedOutsideBrowse(deviceBefore, deviceAfter).filter((k) => !k.startsWith('session:hr:grownup') && !k.startsWith('session:hr:console'))).toEqual([]);
   expect((await readAllStored(page))[LEARNER_QUEUE]).toBe(SEEDED_QUEUE);
 });
+
+/* -------------------------------------------------------------------------------------------
+ * BR-13: [ Present this ] on the item page (section 4.6 secondary action, OD-9; design
+ * design/screens/presenter/present-this.md). A full pass, the presenter root, and a block the
+ * presenter can draw: a lesson today, a story or a word topic only once their slides land.
+ * ------------------------------------------------------------------------------------------- */
+
+/** Records every `window.open` address before it opens, so the deck can be read before the presenter strips it. */
+function recordOpens(page: Page): Promise<void> {
+  return page.evaluate(() => {
+    const w = window as unknown as { __opened: string[]; open: typeof window.open };
+    w.__opened = [];
+    const original = window.open.bind(window);
+    w.open = (url?: string | URL, target?: string, features?: string) => {
+      w.__opened.push(String(url));
+      return original(url, target, features);
+    };
+  });
+}
+
+test('BR-13: a lesson with a full pass shows Present this under the preview and opens a one-block deck at /present in a new tab', async ({ page, context }) => {
+  await openLessonPage(page, 'quest:stage1-letters-q1');
+  await bootSettled(page);
+  const present = page.getByTestId('browse-present');
+  await expect(present).toHaveAccessibleName('Present this');
+  await expect(present).toHaveAccessibleDescription("Opens the lesson as slides for a classroom screen or a TV. No one's progress changes.");
+  // Under Preview this lesson, in the same action bar.
+  const previewBox = await page.getByTestId('browse-preview').boundingBox();
+  const presentBox = await present.boundingBox();
+  expect(previewBox && presentBox && presentBox.y > previewBox.y).toBe(true);
+  expect(presentBox?.height ?? 0).toBeGreaterThanOrEqual(64);
+  await shot(page, 'br13-present-this-393');
+
+  await recordOpens(page);
+  const [tab] = await Promise.all([context.waitForEvent('page'), present.click()]);
+  const opened = await page.evaluate(() => (window as unknown as { __opened: string[] }).__opened);
+  expect(opened).toHaveLength(1);
+  const href = opened[0] ?? '';
+  expect(href.startsWith('/present#d=1.')).toBe(true);
+  const deck = await page.evaluate((value) => {
+    const b64 = value.replace(/-/g, '+').replace(/_/g, '/');
+    const bin = atob(b64 + '='.repeat((4 - (b64.length % 4)) % 4));
+    return JSON.parse(new TextDecoder().decode(Uint8Array.from(bin, (c) => c.charCodeAt(0)))) as Record<string, unknown>;
+  }, href.slice('/present#d=1.'.length));
+  expect(deck).toMatchObject({
+    v: 1,
+    title: 'Meet a, eo, g, n',
+    blocks: [{ kind: 'quest', id: 'quest:stage1-letters-q1' }],
+    picker: { mode: 'numbers', count: 12 },
+    source: 'catalogue',
+    options: { uiLocale: 'en' },
+  });
+  await tab.waitForLoadState('domcontentloaded');
+  expect(new URL(tab.url()).pathname).toBe('/present');
+  // No handle back to All lessons, so no roster can be handed over.
+  expect(await tab.evaluate(() => window.opener)).toBeNull();
+  // The item page stays where it was.
+  await expect(page.getByTestId('browse-item')).toBeVisible();
+  await tab.close();
+});
+
+test('BR-13: Present this is not shown with a sampler pass, nor for a story whose slides have not landed', async ({ page }) => {
+  await page.goto('/');
+  await writeAccountPass(page, { scope: 'sampler' });
+  await page.goto('/browse#t=quest:stage1-letters-q1&s=report');
+  await expect(page.getByTestId('browse-preview')).toBeVisible();
+  await expect(page.getByTestId('browse-present')).toHaveCount(0);
+
+  await openLessonPage(page, STORY_ID);
+  await expect(page.getByTestId('browse-preview')).toHaveText('Preview this story');
+  await expect(page.getByTestId('browse-present')).toHaveCount(0);
+});
+
+test('BR-13: at 1280 wide Present this sits under the preview inside the action width', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await openLessonPage(page, 'quest:stage1-letters-q1');
+  const previewBox = await page.getByTestId('browse-preview').boundingBox();
+  const presentBox = await page.getByTestId('browse-present').boundingBox();
+  expect(presentBox?.width).toBe(previewBox?.width);
+  expect(presentBox && previewBox && presentBox.y > previewBox.y).toBe(true);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth)).toBe(false);
+  await shot(page, 'br13-present-this-1280');
+});
