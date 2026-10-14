@@ -97,6 +97,13 @@ export function scopeTexts(scope: LessonScope): { read: string[]; heard: string[
   }
 }
 
+/** The phrases of a Discover text: split after each sentence mark, so 고마워! 이제 너야! is two set phrases (S4-4). */
+export const phrasesOf = (ko: string): string[] =>
+  ko
+    .split(/(?<=[.!?])\s+/)
+    .map((p) => p.trim())
+    .filter((p) => p !== '');
+
 /** Section 3.1 rule 4: new words a quest may Discover, per stage (Stage 2 Word Builder counts symbols instead). */
 export const NEW_WORD_CAP: Readonly<Partial<Record<StageKey, number>>> = { stage2: 4, stage3: 4, stage4: 4, stage6: 6, stage7: 3 };
 
@@ -112,6 +119,7 @@ export function reuseProblems(stage: StageKey, quests: readonly LessonQuest[], b
   const out: string[] = [];
   const taught = new Set(before);
   const cap = NEW_WORD_CAP[stage];
+  const seenPhrases = new Set<string>();
   for (const quest of quests) {
     if (discoverPatterns(quest) > 1) out.push(`U-3 ${quest.id}: Discover teaches ${discoverPatterns(quest)} patterns`);
     const shown = [...new Set(wordsOf(discoverTexts(quest), taught))];
@@ -119,7 +127,12 @@ export function reuseProblems(stage: StageKey, quests: readonly LessonQuest[], b
     // A word of a new set phrase (반가워요 in 만나서 반가워요, then 저도 반가워요) is that one item.
     const phraseWords = new Set(freshAll.filter((w) => w.includes('_')).flatMap((w) => w.split('_')));
     const fresh = freshAll.filter((w) => !phraseWords.has(w));
-    if (cap !== undefined && fresh.length > cap) out.push(`U-3 ${quest.id}: ${fresh.length} new words (${fresh.join(', ')}), cap ${cap}`);
+    // Stage 4 counts "new words or set phrases" (rule 4): a dialogue line between sentence marks is a set
+    // phrase (같이 놀자!, 내 차례야!), so a quest within the cap by either count passes (S4-4 counted phrases).
+    const phrases = stage === 'stage4' ? [...new Set(discoverTexts(quest).flatMap(phrasesOf))].filter((p) => !seenPhrases.has(p)) : [];
+    for (const p of phrases) seenPhrases.add(p);
+    const withinByPhrase = stage === 'stage4' && cap !== undefined && phrases.length <= cap;
+    if (cap !== undefined && fresh.length > cap && !withinByPhrase) out.push(`U-3 ${quest.id}: ${fresh.length} new words (${fresh.join(', ')}), cap ${cap}`);
     for (const w of shown) taught.add(w);
     const outside = [...new Set(quest.scopes.flatMap((s) => {
       const { read, heard } = scopeTexts(s);

@@ -655,6 +655,11 @@ describe('U-3 new-item caps and U-6 reuse (F-CURR-001 section 3.1 rules 4 and 5)
     const q1 = quest(1, ['만나서 반가워요.', '저도 반가워요.', '저는 미나예요.'], ['만나서 반가워요.']);
     expect(reuseProblems('stage4', [q1], new Set(['저']))).toEqual([]);
     expect(withoutSetPhrases('고마워요. 새해 복 많이 받으세요!')).toBe('고마워요.  !');
+    // Stage 4 also counts set phrases: four new dialogue lines pass even when they hold more new words (S4-4).
+    const q2 = quest(2, ['내 차례야!', '잘했어!', '고마워! 이제 너야!'], ['내 차례야!']);
+    expect(reuseProblems('stage4', [q2], new Set())).toEqual([]);
+    const q5 = quest(1, ['가자!', '오자!', '보자!', '먹자!', '자자!'], ['가자!']);
+    expect(reuseProblems('stage4', [q5], new Set())).toEqual(['U-3 quest:stage3-life-q1: 5 new words (가자, 오자, 보자, 먹자, 자자), cap 4']);
     // A -(으)ㄹ 거예요 future form is the quest's grammar point, not a word (S4-3).
     expect(reuseProblems('stage4', [quest(1, ['비가 올 거예요.', '내일 갈 거예요.'], ['비가 올 거예요.'])], new Set(['비']))).toEqual([]);
   });

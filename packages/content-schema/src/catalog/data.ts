@@ -28,8 +28,9 @@ import type { Catalog, CatalogCell, CatalogQuest, CatalogStory, CatalogTopic } f
  * Version 17 (F-CURR-001 S2-2): Holiday Words ships (Stage 2 rites, 3 lesson quests).
  * Version 18 (F-CURR-001 S4-2): Kitchen Talk ships (Stage 4 life, 3 lesson quests).
  * Version 19 (F-CURR-001 S4-3): Park Conversations ships (Stage 4 nature, 3 lesson quests).
+ * Version 20 (F-CURR-001 S4-4): Playdate Talk ships (Stage 4 crafts, 3 lesson quests).
  */
-export const CATALOG_VERSION = 19;
+export const CATALOG_VERSION = 20;
 
 const cell = (
   stage: StageKey,
@@ -72,7 +73,7 @@ const cells: CatalogCell[] = [
   cell('stage4', 'life', 'Kitchen Talk', 'shipped', 13, ['quest:stage4-life-q1', 'quest:stage4-life-q2', 'quest:stage4-life-q3']),
   cell('stage4', 'rites', 'Greeting Dialogues', 'shipped', 13, ['quest:stage4-rites-q1', 'quest:stage4-rites-q2', 'quest:stage4-rites-q3']),
   cell('stage4', 'nature', 'Park Conversations', 'shipped', 14, ['quest:stage4-nature-q1', 'quest:stage4-nature-q2', 'quest:stage4-nature-q3']),
-  soon('stage4', 'crafts', 'Playdate Talk'),
+  cell('stage4', 'crafts', 'Playdate Talk', 'shipped', 14, ['quest:stage4-crafts-q1', 'quest:stage4-crafts-q2', 'quest:stage4-crafts-q3']),
   cell('stage5', 'letters', 'Stories of Letters', 'shipped', 13, [
     'quest:story-sejong-new-letters-read',
     'quest:story-shapes-of-hangeul-read',
@@ -168,6 +169,9 @@ const lessonQuests: CatalogQuest[] = [
   lesson('stage4-nature-q1', 'stage4', 'nature', 'Sky Watching', 5),
   lesson('stage4-nature-q2', 'stage4', 'nature', 'Rain Later', 5),
   lesson('stage4-nature-q3', 'stage4', 'nature', 'Where To?', 5),
+  lesson('stage4-crafts-q1', 'stage4', 'crafts', 'What Shall We Play?', 5),
+  lesson('stage4-crafts-q2', 'stage4', 'crafts', 'My Turn, Your Turn', 5),
+  lesson('stage4-crafts-q3', 'stage4', 'crafts', 'Shall We Play Together?', 5),
   // The Stage 5 books (F-STORY-005 PR 5.6): grid quests that play their stories at the read level.
   lesson('story-sejong-new-letters-read', 'stage5', 'letters', "King Sejong's New Letters", 4),
   lesson('story-shapes-of-hangeul-read', 'stage5', 'letters', 'The Secret in the Shapes', 5),

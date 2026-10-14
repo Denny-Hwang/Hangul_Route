@@ -139,15 +139,6 @@
               },
               "replies": [
                 {
-                  "id": "a",
-                  "text": {
-                    "ko": "좋아!",
-                    "romanization": "joa",
-                    "en": "okay, sounds good!"
-                  },
-                  "correct": true
-                },
-                {
                   "id": "b",
                   "text": {
                     "ko": "책이에요.",
@@ -164,6 +155,15 @@
                     "en": "I go to school."
                   },
                   "correct": false
+                },
+                {
+                  "id": "a",
+                  "text": {
+                    "ko": "좋아!",
+                    "romanization": "joa",
+                    "en": "okay, sounds good!"
+                  },
+                  "correct": true
                 }
               ]
             },
@@ -213,15 +213,6 @@
               },
               "replies": [
                 {
-                  "id": "a",
-                  "text": {
-                    "ko": "좋아!",
-                    "romanization": "joa",
-                    "en": "okay, sounds good!"
-                  },
-                  "correct": true
-                },
-                {
                   "id": "b",
                   "text": {
                     "ko": "뭐 하고 놀까?",
@@ -229,6 +220,15 @@
                     "en": "what shall we play?"
                   },
                   "correct": false
+                },
+                {
+                  "id": "a",
+                  "text": {
+                    "ko": "좋아!",
+                    "romanization": "joa",
+                    "en": "okay, sounds good!"
+                  },
+                  "correct": true
                 },
                 {
                   "id": "c",
@@ -518,15 +518,6 @@
               },
               "replies": [
                 {
-                  "id": "a",
-                  "text": {
-                    "ko": "고마워!",
-                    "romanization": "gomawo",
-                    "en": "thanks!"
-                  },
-                  "correct": true
-                },
-                {
                   "id": "b",
                   "text": {
                     "ko": "내 차례야!",
@@ -534,6 +525,15 @@
                     "en": "it's my turn!"
                   },
                   "correct": false
+                },
+                {
+                  "id": "a",
+                  "text": {
+                    "ko": "고마워!",
+                    "romanization": "gomawo",
+                    "en": "thanks!"
+                  },
+                  "correct": true
                 },
                 {
                   "id": "c",
@@ -555,15 +555,6 @@
               },
               "replies": [
                 {
-                  "id": "a",
-                  "text": {
-                    "ko": "좋아!",
-                    "romanization": "joa",
-                    "en": "okay, sounds good!"
-                  },
-                  "correct": true
-                },
-                {
                   "id": "b",
                   "text": {
                     "ko": "고마워!",
@@ -580,6 +571,15 @@
                     "en": "I drink water."
                   },
                   "correct": false
+                },
+                {
+                  "id": "a",
+                  "text": {
+                    "ko": "좋아!",
+                    "romanization": "joa",
+                    "en": "okay, sounds good!"
+                  },
+                  "correct": true
                 }
               ]
             }
@@ -831,15 +831,6 @@
               },
               "replies": [
                 {
-                  "id": "a",
-                  "text": {
-                    "ko": "좋아!",
-                    "romanization": "joa",
-                    "en": "okay, sounds good!"
-                  },
-                  "correct": true
-                },
-                {
                   "id": "b",
                   "text": {
                     "ko": "잘했어!",
@@ -847,6 +838,15 @@
                     "en": "well done!"
                   },
                   "correct": false
+                },
+                {
+                  "id": "a",
+                  "text": {
+                    "ko": "좋아!",
+                    "romanization": "joa",
+                    "en": "okay, sounds good!"
+                  },
+                  "correct": true
                 },
                 {
                   "id": "c",
@@ -868,15 +868,6 @@
               },
               "replies": [
                 {
-                  "id": "a",
-                  "text": {
-                    "ko": "윷놀이 하자!",
-                    "romanization": "yunnori haja",
-                    "en": "let's play yut!"
-                  },
-                  "correct": true
-                },
-                {
                   "id": "b",
                   "text": {
                     "ko": "좋아!",
@@ -893,6 +884,15 @@
                     "en": "the rabbit is small."
                   },
                   "correct": false
+                },
+                {
+                  "id": "a",
+                  "text": {
+                    "ko": "윷놀이 하자!",
+                    "romanization": "yunnori haja",
+                    "en": "let's play yut!"
+                  },
+                  "correct": true
                 }
               ]
             },

@@ -63,10 +63,10 @@ describe('stageAvailability', () => {
     expect(stageAvailability('stage5', [lesson, volume2, ep('other', 'stage5', 'preview', ['q1'], 'life')])).toBe('taste');
     expect(stageAvailability('stage5', [volume2, { ...volume2, id: 'volume-3', volume: 3 }])).toBe('soon');
   });
-  it('matches the real bundle: stage1 open, stage2 open (Holiday Words shipped its last placeholder, F-CURR-001 S2-2), stage3/4 taste, others soon', () => {
+  it('matches the real bundle: stage1 open, stage2 and stage4 open (Holiday Words S2-2 and Playdate Talk S4-4 shipped their last placeholders, F-CURR-001), stage3 taste, others soon', () => {
     expect(stageAvailability('stage1', episodesAll)).toBe('open');
     expect(stageAvailability('stage2', episodesAll)).toBe('open');
-    expect(stageAvailability('stage4', episodesAll)).toBe('taste');
+    expect(stageAvailability('stage4', episodesAll)).toBe('open');
     expect(stageAvailability('stage3', episodesAll)).toBe('taste');
     expect(stageAvailability('stage6', episodesAll)).toBe('soon');
   });
