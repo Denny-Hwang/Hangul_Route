@@ -22,6 +22,7 @@
  * eyes, no black.
  */
 import type { HoyaPose } from '../components/Hoya/types';
+import { resolveColor } from './tokens-map';
 import { OPACITY_STEPS, type ColorToken, type ItemDef, type OpacityStep, type Shape, type StrokeToken } from './types';
 
 export type { HoyaPose };
@@ -324,6 +325,36 @@ function withoutUndefined<T extends object>(value: T): Partial<T> {
  * gold fur: `hoyaFigure` in the scene primitive set. An unknown pose draws
  * idle without the cheek blush, like the component.
  */
+/** The fur pair a variant paints Hoya with (`hoyaVariantColors(variant)`). */
+export interface HoyaFur {
+  fur: string;
+  furDark: string;
+}
+
+/** A token's colour, with the gold cub's fur pair swapped for the variant. */
+function hoyaColorOf(token: ColorToken | 'none', fur: HoyaFur): string {
+  if (token === 'none') return 'none';
+  if (token === 'hoya.fur') return fur.fur;
+  if (token === 'hoya.furDark') return fur.furDark;
+  return resolveColor(token);
+}
+
+/**
+ * The svg paint props a part sets, and only those, as resolved colours. The one
+ * paint mapper both renderers of `hoyaFigure` use (Hoya.tsx in the app and the
+ * web console's HoyaReference), so a new `HoyaPaint` field is mapped once.
+ */
+export function hoyaPaintProps(part: HoyaPaint, fur: HoyaFur): Record<string, string | number> {
+  const props: Record<string, string | number> = {};
+  if (part.fill !== undefined) props.fill = hoyaColorOf(part.fill, fur);
+  if (part.stroke !== undefined) props.stroke = hoyaColorOf(part.stroke, fur);
+  if (part.strokeWidth !== undefined) props.strokeWidth = part.strokeWidth;
+  if (part.strokeLinecap !== undefined) props.strokeLinecap = part.strokeLinecap;
+  if (part.strokeLinejoin !== undefined) props.strokeLinejoin = part.strokeLinejoin;
+  if (part.opacity !== undefined) props.opacity = part.opacity;
+  return props;
+}
+
 export function hoyaNodes(pose: HoyaPose): Shape[] {
   return hoyaSceneShapes(hoyaFigure(pose));
 }

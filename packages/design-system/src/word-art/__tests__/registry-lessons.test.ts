@@ -28,6 +28,8 @@ describe('lesson pictures (Playground Words)', () => {
   });
 
   it('are the only reserved keys', () => {
+    // A new reserved key (a v1.1 key, say) lands here first: list it, and check the
+    // reserved-card note on /design-preview/word-art (word-art-sheet.test.tsx) still fits.
     expect(WORD_ART_KEYS.filter((k) => WORD_ART[k]!.meta.reserved === true).sort()).toEqual([...LESSON_KEYS].sort());
   });
 

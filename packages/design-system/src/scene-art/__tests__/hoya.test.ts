@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { HOYA_BOX, HOYA_POSES, hoyaFigure, hoyaItem, hoyaNodes, hoyaPoseOf, hoyaSceneShapes, type HoyaPart } from '../hoya';
+import { HOYA_BOX, HOYA_POSES, hoyaFigure, hoyaItem, hoyaNodes, hoyaPaintProps, hoyaPoseOf, hoyaSceneShapes, type HoyaPart } from '../hoya';
 import { boundsOf, nodeCount, paletteOf } from '../resolve';
 import { checkItem } from '../rules';
+import { resolveColor } from '../tokens-map';
 import type { LeafShape, Shape } from '../types';
 
 function leaves(shapes: readonly Shape[]): LeafShape[] {
@@ -238,5 +239,36 @@ describe('hoya figure: the scene form', () => {
       expect(parts.filter(isBlush)).toHaveLength(0);
       expect(parts).toEqual(idle.filter((p) => !isBlush(p)));
     }
+  });
+});
+
+describe('hoyaPaintProps: the one paint mapper of hoyaFigure', () => {
+  const fur = { fur: 'FUR', furDark: 'FURDARK' };
+
+  it('sets only the paint fields a part sets, with resolved colours', () => {
+    expect(hoyaPaintProps({}, fur)).toEqual({});
+    expect(hoyaPaintProps({ fill: 'hoya.fur', stroke: 'hoya.furDark', strokeWidth: 3, strokeLinecap: 'round', strokeLinejoin: 'round', opacity: 0.6 }, fur)).toEqual({
+      fill: 'FUR',
+      stroke: 'FURDARK',
+      strokeWidth: 3,
+      strokeLinecap: 'round',
+      strokeLinejoin: 'round',
+      opacity: 0.6,
+    });
+    expect(hoyaPaintProps({ fill: 'none', stroke: 'hoya.stripes' }, fur)).toEqual({ fill: 'none', stroke: resolveColor('hoya.stripes') });
+  });
+
+  it.each(HOYA_POSES)('%s: every token part maps to a resolved colour', (pose) => {
+    const walk = (parts: readonly HoyaPart[]): void => {
+      for (const part of parts) {
+        const props = hoyaPaintProps(part, fur);
+        for (const key of ['fill', 'stroke'] as const) {
+          const token = part[key];
+          if (token !== undefined && token !== 'none') expect(props[key]).not.toBe(token);
+        }
+        if (part.t === 'group') walk(part.kids);
+      }
+    };
+    walk(hoyaFigure(pose));
   });
 });

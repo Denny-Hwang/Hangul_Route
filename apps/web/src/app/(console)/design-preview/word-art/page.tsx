@@ -114,7 +114,7 @@ function WordLines({ words }: { words: readonly SheetWord[] }): JSX.Element {
 
 function Words({ card }: { card: WordArtCard }): JSX.Element {
   if (card.words.length > 0) return <WordLines words={card.words} />;
-  const note = card.family === 'prop' ? 'prop: drawn inside a colour swatch, not a vocabulary picture' : card.reserved ? 'lesson picture: reserved, used by no vocabulary topic' : 'no vocabulary item yet';
+  const note = card.family === 'prop' ? 'prop: drawn inside a colour swatch, not a vocabulary picture' : card.reserved ? 'reserved: used by no vocabulary topic' : 'no vocabulary item yet';
   return <p style={{ ...muted, margin: 0 }}>{note}</p>;
 }
 

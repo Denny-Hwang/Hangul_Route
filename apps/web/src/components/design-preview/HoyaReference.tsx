@@ -1,42 +1,22 @@
-import { hoyaFigure, resolveColor, type ColorToken, type HoyaPart, type HoyaPose } from '@hangul-route/design-system/scene-art';
+import { hoyaFigure, hoyaPaintProps, type HoyaFur, type HoyaPart, type HoyaPose } from '@hangul-route/design-system/scene-art';
 import { hoyaVariantColors, type HoyaVariant } from '@hangul-route/design-system/tokens';
 
 /**
  * The shipped Hoya as inline web SVG: `hoyaFigure(pose)` from
  * packages/design-system/src/scene-art/hoya.ts, the one drawing that Hoya.tsx
  * renders too (F-STORY-002 §3.9.4), mapped part for part to DOM SVG elements.
- * Colours come from the tokens only, with the gold cub's fur pair swapped for
- * the variant, as Hoya.tsx does. Shared by /design-preview (the Hoya section)
- * and /design-preview/scenes/library, where it stands beside the scene-art
- * form (`hoyaNodes`) for the parity check.
+ * Paint comes from `hoyaPaintProps`, the mapper Hoya.tsx uses too: tokens
+ * only, with the gold cub's fur pair swapped for the variant. Shared by
+ * /design-preview (the Hoya section) and /design-preview/scenes/library, where
+ * it stands beside the scene-art form (`hoyaNodes`) for the parity check.
  */
 
 export type { HoyaPose };
 
-type Fur = { fur: string; furDark: string };
-
-/** A token's colour, with the gold cub's fur pair swapped for the variant. */
-function colorOf(token: ColorToken | 'none', fur: Fur): string {
-  if (token === 'none') return 'none';
-  if (token === 'hoya.fur') return fur.fur;
-  if (token === 'hoya.furDark') return fur.furDark;
-  return resolveColor(token);
-}
-
-/** The svg paint attributes a part sets, and only those. */
-function paintProps(part: HoyaPart, fur: Fur): Record<string, string | number> {
-  const props: Record<string, string | number> = {};
-  if (part.fill !== undefined) props.fill = colorOf(part.fill, fur);
-  if (part.stroke !== undefined) props.stroke = colorOf(part.stroke, fur);
-  if (part.strokeWidth !== undefined) props.strokeWidth = part.strokeWidth;
-  if (part.strokeLinecap !== undefined) props.strokeLinecap = part.strokeLinecap;
-  if (part.strokeLinejoin !== undefined) props.strokeLinejoin = part.strokeLinejoin;
-  if (part.opacity !== undefined) props.opacity = part.opacity;
-  return props;
-}
+type Fur = HoyaFur;
 
 function renderPart(part: HoyaPart, key: number, fur: Fur): JSX.Element {
-  const paint = paintProps(part, fur);
+  const paint = hoyaPaintProps(part, fur);
   switch (part.t) {
     case 'group':
       return (
@@ -54,6 +34,11 @@ function renderPart(part: HoyaPart, key: number, fur: Fur): JSX.Element {
       return <line key={key} x1={part.x1} y1={part.y1} x2={part.x2} y2={part.y2} {...paint} />;
     case 'path':
       return <path key={key} d={part.d} {...paint} />;
+    default: {
+      // A new HoyaPart geometry kind fails typecheck here until it is mapped.
+      const unmapped: never = part;
+      return unmapped;
+    }
   }
 }
 

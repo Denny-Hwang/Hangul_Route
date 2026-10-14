@@ -84,7 +84,7 @@ describe('/design-preview/word-art', () => {
   it('labels the reserved lesson pictures (the playground swing, slide and sand) as used by no vocabulary topic', () => {
     const reserved = keys.filter((k) => WORD_ART[k]!.meta.reserved === true);
     expect(reserved.sort()).toEqual(['nature-sand', 'sport-slide', 'sport-swing']);
-    expect(count(html, 'lesson picture: reserved, used by no vocabulary topic')).toBe(reserved.length);
+    expect(count(html, 'reserved: used by no vocabulary topic')).toBe(reserved.length);
   });
 
   it('marks every glyph with its review state and counts them in the totals line (behaviour 8)', () => {
