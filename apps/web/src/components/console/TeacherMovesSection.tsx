@@ -44,7 +44,7 @@ const card: CSSProperties = {
   gap: spacing.sm,
 };
 const row: CSSProperties = { display: 'flex', flexWrap: 'wrap', gap: spacing.sm, alignItems: 'center' };
-const h3: CSSProperties = { margin: `${spacing.lg}px 0 ${spacing.sm}px`, fontSize: typography.size.bodyLg, fontWeight: typography.weight.bold };
+const h3: CSSProperties = { margin: `${spacing.lg}px 0 ${spacing.sm}px`, fontSize: typography.size.body, fontWeight: typography.weight.bold };
 const muted: CSSProperties = { margin: 0, color: colors.text.secondary, fontSize: typography.size.body };
 const nudge: CSSProperties = { margin: 0, color: colors.text.primary, fontWeight: typography.weight.semibold, borderInlineStart: `${borderWidth.thick}px solid ${colors.feedback.nudge}`, paddingInlineStart: spacing.sm };
 
@@ -140,7 +140,7 @@ export function TeacherMovesSection({ spaceId, api, online, readOnly, refreshMs,
 
   return (
     <section aria-labelledby={titleId} data-testid="teacher-moves" style={{ marginBottom: spacing.xl }}>
-      <h2 id={titleId} style={{ margin: `0 0 ${spacing.sm}px`, fontSize: typography.size.title, fontWeight: typography.weight.bold }}>
+      <h2 id={titleId} style={{ margin: `${spacing.md}px 0 ${spacing.sm}px`, fontSize: typography.size.bodyLg, fontWeight: typography.weight.bold }}>
         {t.title}
       </h2>
 
