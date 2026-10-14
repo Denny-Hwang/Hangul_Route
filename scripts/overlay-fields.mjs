@@ -49,6 +49,9 @@ export const OVERLAY_FIELDS = Object.freeze({
     "dialogue.<turn>.options.<option>.gloss",
     "listenPick.rounds.<roundId>.prompt",
     // F-CURR-001 §3.10: the lesson scopes of the upper-stage games (build-lessons.mjs runtime shape).
+    // F-CURR-001 §3.10: a lesson's Pic-Word Match pair, whose gloss the word tile and the picture's
+    // text fallback show; a board has no id, so `<board>` is its index.
+    "picWord.boards.<board>.pairs.<pair>.word.gloss",
     "orderIt.rounds.<roundId>.sentence.gloss",
     "orderIt.rounds.<roundId>.distractors.<tile>.gloss",
     "orderIt.rounds.<roundId>.particle.choices.<choice>.gloss",

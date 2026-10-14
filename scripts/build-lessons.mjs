@@ -144,7 +144,8 @@ export function runtimeScope(scope, where) {
         storySteps: scope.lines.map((l) => ({ id: l.id, labelEn: l.line.en, labelKo: l.line.ko, romanization: l.line.romanization })),
       };
     case "order-it":
-      return { kind, rounds: scope.rounds.length, orderIt: { rounds: scope.rounds } };
+      // OrderItRoundSchema's default: a particle round may leave out its distractor tiles; the game reads [].
+      return { kind, rounds: scope.rounds.length, orderIt: { rounds: scope.rounds.map((r) => ({ ...r, distractors: r.distractors ?? [] })) } };
     case "realia-read":
       return { kind, rounds: scope.rounds.length, realiaRead: { realia: scope.realia, rounds: scope.rounds } };
     case "type-hangul":

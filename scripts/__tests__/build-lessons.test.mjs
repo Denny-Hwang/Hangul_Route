@@ -219,7 +219,15 @@ describe("build-lessons.mjs: runtime scopes (the app's MinigameScope)", () => {
       [{ kind: "listen-pick", rounds: [lp("a")] }, { kind: "listen-pick", rounds: 1, listenPick: { rounds: [lp("a")] } }],
       [{ kind: "pic-word-match", boards: [{ pairs: [] }] }, { kind: "pic-word-match", rounds: 1, picWord: { boards: [{ pairs: [] }] } }],
       [{ kind: "card-match", pairs: [kt("연", "yeon", "kite", { audioRef: "x" })] }, { kind: "card-match", rounds: 1, cardPairs: [kt("연", "yeon", "kite")] }],
-      [{ kind: "order-it", rounds: [1, 2] }, { kind: "order-it", rounds: 2, orderIt: { rounds: [1, 2] } }],
+      // A particle round may leave out its distractors (the schema default): the game reads [].
+      [
+        { kind: "order-it", rounds: [{ id: "r1", distractors: [kt("물을", "mureul", "water")] }, { id: "r2", particle: { tile: 0 } }] },
+        {
+          kind: "order-it",
+          rounds: 2,
+          orderIt: { rounds: [{ id: "r1", distractors: [kt("물을", "mureul", "water")] }, { id: "r2", particle: { tile: 0 }, distractors: [] }] },
+        },
+      ],
       [{ kind: "realia-read", realia, rounds: [1] }, { kind: "realia-read", rounds: 1, realiaRead: { realia, rounds: [1] } }],
       [{ kind: "type-hangul", rounds: [1] }, { kind: "type-hangul", rounds: 1, typeHangul: { rounds: [1] } }],
       [{ kind: "trace-word", rounds: [1, 2, 3] }, { kind: "trace-word", rounds: 3, traceWord: { rounds: [1, 2, 3] } }],

@@ -115,6 +115,38 @@ async function playCardMatch(page: Page, pairs: readonly (readonly [romanization
   }
 }
 
+/** Sentence Builder: tap a tray tile by its accessible name ("Korean, romanization"), past the game's touch window. */
+async function placeTile(page: Page, name: string): Promise<void> {
+  const tile = page.getByTestId('sentence-builder-tray').getByRole('button', { name, exact: true });
+  await expect(tile).toBeVisible();
+  await page.waitForTimeout(120);
+  await tile.click();
+}
+
+/** Sentence Builder: build each round in order (its tiles, or its one particle choice), waiting for the round's count. */
+async function buildSentences(page: Page, rounds: readonly (readonly string[])[]): Promise<void> {
+  for (const [i, tiles] of rounds.entries()) {
+    await expect(page.getByText(`${i + 1} / ${rounds.length}`, { exact: true })).toBeVisible({ timeout: 5_000 });
+    for (const name of tiles) await placeTile(page, name);
+    await expect(page.getByTestId('sentence-builder-done')).toBeVisible();
+  }
+}
+
+/** Pic-Word Match on whole sentences: each board's pairs by id (picture, then its sentence); a board ends by itself. */
+async function matchBoards(page: Page, boards: number, ids: readonly string[]): Promise<void> {
+  for (let b = 0; b < boards; b += 1) {
+    if (b > 0) await expect(page.getByTestId(`pic-word-word-${ids[0]}`)).not.toHaveAttribute('aria-label', /^Matched/, { timeout: 5_000 });
+    for (const id of ids) {
+      const word = page.getByTestId(`pic-word-word-${id}`);
+      await expect(async () => {
+        await page.getByTestId(`pic-word-picture-${id}`).click();
+        await word.click();
+        await expect(word).toHaveAttribute('aria-label', /^Matched/, { timeout: 400 });
+      }).toPass();
+    }
+  }
+}
+
 /** Each cell row appends its cell here (S2-1 onward). */
 const CELLS: readonly UpperCell[] = [
   // F-CURR-001 S2-3: Playground Words q1, At the Playground, played through its real games.
@@ -285,6 +317,37 @@ const CELLS: readonly UpperCell[] = [
       await page.getByText('Learning Route', { exact: true }).last().click();
       await page.getByRole('button', { name: /^Stage 3, Sentences\./ }).click();
       await expect(page.getByRole('button', { name: /^Play & Crafts: Game Sentences\./ })).toBeVisible();
+    },
+  },
+  // F-CURR-001 S3-2: Daily Mini-Sentences, q1 "I Eat, I Drink" played through its real games.
+  {
+    episodeId: 'episode:stage3-life',
+    cellButton: journeyCellName(3, 'Food & Daily Life'),
+    title: 'Daily Mini-Sentences',
+    playFirstQuest: async (page) => {
+      await startFirstQuest(page);
+      // Discover: the pattern page (its examples) and the drink page; captions are plain UI text.
+      await expect(page.getByText('These sentences use the polite style people use most in everyday talk.')).toBeVisible();
+      await expect(page.getByText('{ko:', { exact: false })).toHaveCount(0);
+      await passDiscover(page);
+      await page.getByRole('button', { name: 'Play minigame' }).click();
+      await buildSentences(page, [
+        ['밥을, babeul', '먹어요, meogeoyo'],
+        ['물을, mureul', '마셔요, masyeoyo'],
+        ['사과를, sagwareul', '먹어요, meogeoyo'],
+        ['를, reul'],
+        ['을, eul'],
+      ]);
+      await page.getByRole('button', { name: 'Play minigame' }).click();
+      await matchBoards(page, 4, ['p1', 'p2', 'p3']);
+      await playCheckByIds(page, [{ answer: 'o1' }, { answer: 'o1' }]);
+      await expect(page.getByText('Finish', { exact: true }).first()).toBeVisible();
+    },
+    expectRouteDay: async (page) => {
+      await page.goto('/');
+      await page.getByText('Learning Route', { exact: true }).last().click();
+      await page.getByRole('button', { name: /^Stage 3, Sentences\./ }).click();
+      await expect(page.getByRole('button', { name: /^Food & Daily Life: Daily Mini-Sentences\./ })).toBeVisible();
     },
   },
 ];
