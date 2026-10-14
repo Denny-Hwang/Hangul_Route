@@ -205,3 +205,13 @@ describe('putTransferPrefs (guard 13)', () => {
     expect(await api.putTransferPrefs('profile:a', { selfManaged: true }, creds)).toEqual({ status: 'error', http: 422, code: 'transfers_locked' });
   });
 });
+
+describe('[TV] putClassScopeAck (AMENDMENTS-TEACHER-VISIBILITY-TRANSFER TV-D4)', () => {
+  it('puts the version the inbox named; a class tablet and an older text answer with their codes', async () => {
+    const { api, fetchImpl } = apiWith(json(200, { data: { version: 'class-scope-2026-10', ackedAt: 't' } }), fail(403, 'scope_limited'), fail(422, 'class_scope_stale'));
+    expect(await api.putClassScopeAck('profile:a', 'class-scope-2026-10', creds)).toEqual({ status: 'ok' });
+    expect(sent(fetchImpl)).toEqual({ url: `${BASE}/api/sync/learners/profile%3Aa/class-scope`, method: 'PUT', auth: 'Device device-x:s3cret', body: { version: 'class-scope-2026-10' } });
+    expect(await api.putClassScopeAck('profile:a', 'class-scope-2026-10', creds)).toEqual({ status: 'error', http: 403, code: 'scope_limited' });
+    expect(await api.putClassScopeAck('profile:a', 'class-scope-2026-10', creds)).toEqual({ status: 'error', http: 422, code: 'class_scope_stale' });
+  });
+});

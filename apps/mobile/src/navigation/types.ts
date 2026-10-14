@@ -58,6 +58,8 @@ export type GrownUpDestination =
   | 'RouteOverview'
   /** F-BROWSE-001 section 4.3 (BR-12a, web only): All lessons; a correct PIN writes a fresh gate pass (`PinEntry.browseTarget`). */
   | 'BrowseLessons'
+  /** [TV] AMENDMENTS-TEACHER-VISIBILITY-TRANSFER TV-D4: the class update of one learner (`PinEntry.profileId`). */
+  | 'ClassScope'
   // add new members above this line
 ;
 
@@ -283,6 +285,11 @@ export type RootStackParamList = {
   TraceWordE2e: TraceWordE2eParams;
   /** Fixture builds only (`navigation/write-frame-e2e.tsx`): Write Frame on fixture rounds (F-CURR-001 G-5). */
   WriteFrameE2e: WriteFrameE2eParams;
+  /**
+   * [TV] The class update of one learner (AMENDMENTS-TEACHER-VISIBILITY-TRANSFER TV-D4, TV-D5): what a teacher sees and
+   * that a teacher may move the learner; OK records it. Behind the grown-up gate whenever the device needs one.
+   */
+  ClassScope: { profileId: string };
 };
 
 /** The level check's screens (F-PLC-001 section 3.1); the flow state machine decides which one shows. */

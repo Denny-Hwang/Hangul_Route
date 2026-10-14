@@ -398,6 +398,16 @@ export function createSyncApi(opts: SyncApiOptions) {
       return parsed.success ? { status: 'ok', selfManaged: parsed.data.prefs.selfManaged } : unreadable(r.status);
     },
 
+    /**
+     * [TV] PUT /learners/:id/class-scope: this full-scope device records that the learner's grown-up read the class
+     * update (AMENDMENTS-TEACHER-VISIBILITY-TRANSFER TV-D4). A class tablet answers 403 `scope_limited`; an older text
+     * 422 `class_scope_stale`.
+     */
+    async putClassScopeAck(learnerId: string, version: string, creds: DeviceCredentials): Promise<{ status: 'ok' } | TransferCallError> {
+      const r = await call(fetchImpl, `${base}/learners/${encodeURIComponent(learnerId)}/class-scope`, { method: 'PUT', headers: authHeader(creds), body: JSON.stringify({ version }) });
+      return r.status === 200 ? { status: 'ok' } : transferError(r);
+    },
+
     /** PUT /learners/:id/notes/:noteId/state: read once, last reaction wins (idempotent). */
     async putNoteState(learnerId: string, noteId: string, body: NoteStatePut, creds: DeviceCredentials): Promise<NoteStateResult> {
       const r = await call(fetchImpl, `${base}/learners/${encodeURIComponent(learnerId)}/notes/${encodeURIComponent(noteId)}/state`, {

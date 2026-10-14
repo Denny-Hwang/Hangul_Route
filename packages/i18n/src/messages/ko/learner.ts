@@ -1721,4 +1721,12 @@ export const learner = {
       note: '이번 수업에만 바뀌어요. 한국어에는 늘 로마자와 뜻이 함께 나와요.',
     },
   },
+  /** [TV] 반에 관한 홈 안내 (TV-D5, TV-D10). */
+  classUpdate: {
+    moved: (name: string, cls: string) => `${name}, 새 반으로 옮겼어요: ${cls}`,
+    ok: { cta: '확인' },
+    scopeChild: '어른에게 반에 관한 안내가 있어요.',
+    scopeSelf: '반에 관한 안내가 있어요.',
+    open: { cta: '열기' },
+  },
 } satisfies DeepPartial<Messages['learner']>;

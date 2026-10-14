@@ -18,6 +18,7 @@ import {
   loadingTabs,
   reportTabId,
 } from '@/components/console/ReportParts';
+import { ReportScopeBlock } from '@/components/console/ReportScopeBlock';
 import { useGrownUpLocation } from '@/components/console/grown-up-location';
 import { useConsole } from '@/components/console/use-console';
 import type { ApiResult, LearnerReportBody, SpaceListItem } from '@/lib/console/api';
@@ -260,7 +261,15 @@ function LearnerReportInner(): JSX.Element {
   });
   const lines = [...(view.archived && roleKnown ? [view.archived] : []), ...view.notices];
   const selected = view.tabs?.find((tab) => tab.selected)?.period ?? period;
-  const body = busy ? <ReportSkeleton /> : <ReportBody view={view} browse={browseOn ? { stage: reportBrowseStage(screen.data.summary) } : null} />;
+  const body = busy ? (
+    <ReportSkeleton />
+  ) : (
+    <>
+      <ReportBody view={view} browse={browseOn ? { stage: reportBrowseStage(screen.data.summary) } : null} />
+      {/* [TV] Words and Settings at full scope, the reason they are missing at base scope (TV-D2, TV-D12). */}
+      <ReportScopeBlock data={screen.data} />
+    </>
+  );
   return frame(
     <>
       <ReportHeader back={view.back} printDisabled={busy || error !== null} onPrint={() => window.print()} sendNote={noteLink} />
