@@ -27,11 +27,11 @@ Open any file in a browser. Line taps in S8 reveal romanization through a few li
 
 **D3. No gloss on the realia while a question is open.** A gloss beside 라면 would answer "Which one is instant noodles?". The found line shows its gloss after a right answer (S4). The Discover realia page (row D-1) shows the key words with their glosses before this step.
 
-**D4. Second miss rings the line, not the option.** The look-here ring (dashed `border.focus`, thick, plus a pointer glyph) goes on the line of the realia that holds the answer, so the learner still reads to answer (S3). Pic-Word Match rings the partner tile; here the reading is the point.
+**D4. Second miss rings the line, not the option.** The look-here ring (dashed `border.focus`, thick, plus a pointer glyph) goes on the line of the realia that holds the answer, so the learner still reads to answer (S3). Pic-Word Match rings the partner tile; here the reading is the point. With 4 options two options are still open after two misses, so the ring sends the learner back to the line to choose; with 3 options the one option left is already the answer by elimination (with 2 options a second miss cannot happen), and the ring is a confirmation that shows where the answer is written. Both are fine (anti-shame: a third tap always ends the question); S6 authors who want the ring to make the learner read give a question 4 options.
 
 **D5. Found = three cues.** Success fill and ring, a check glyph, and the gloss line; the line's accessible name gains "Found here". The option card's states are `ChoiceCard`'s own.
 
-**D6. Directions never by colour or side alone.** A trail board points with its side (the board sits left or right of the post), an arrow glyph in its own cell, and its accessible name ("to the right"). Options for a direction pair the arrow with its Korean word (`왼쪽`, `오른쪽`).
+**D6. Directions never by colour or side alone.** A trail board points with its side (the board sits left or right of the post), an arrow glyph in its own cell, and its accessible name ("to the right"). Options for a direction pair the arrow with its Korean word (`왼쪽`, `오른쪽`). Volume 1 has only left and right boards (`dir: 'left' | 'right'`); no fixture needs a straight-ahead board, so none is drawn. If a later cell needs one, it is added as `dir: 'ahead'` (an additive enum value, never named `up`) with a centred board, an up-arrow cell and the accessible name, and its own mock state.
 
 **D7. Side by side from window class 700.** On a tablet or a phone in landscape the realia stays in view (sticky) beside the question and options, so the learner never scrolls between the text and the answers. The mock switches with a container query so the board frames behave like windows of their own width; the app uses its window class (F-LAYOUT-001).
 
@@ -86,24 +86,28 @@ progressbar "Progress" value 0 of 4            (the count "1 / 4" is its visible
 group "Menu, 4 lines"                          (a11y.minigame.realia.summary(kind, n); the dressing is hidden)
   text "메뉴, menyu"                            (title, lang ko)
   list
-    listitem > button "김밥, g i m b a p, 2,000원, icheon won"       hint "Tap to hear it"
-    listitem > button "떡볶이, t t e o k b o k k i, 3,000원, samcheon won"
-    listitem > button "라면, r a m y e o n, 3,000원, samcheon won"   (+ ". Look here" on the second miss;
-                                                                     + ". instant noodles, 3,000 won. Found here" after the hit)
-    listitem > button "비빔밥, b i b i m b a p, 5,000원, ocheon won"
+    listitem > button "김밥, gimbap, 2,000원, icheon won"       hint "Tap to hear it"
+    listitem > button "떡볶이, tteokbokki, 3,000원, samcheon won"
+    listitem > button "라면, ramyeon, 3,000원, samcheon won"   (+ ". Look here" on the second miss;
+                                                               + ". instant noodles, 3,000 won. Found here" after the hit)
+    listitem > button "비빔밥, bibimbap, 5,000원, ocheon won"
 text "Tap a line to hear it."
 heading "How much is this?"                    (content, from the cell file / lesson overlay)
-text "Korean: 라면, r a m y e o n"              (KoreanText, a11y.koreanItem)
+text "Korean: 라면, ramyeon"                    (KoreanText, a11y.koreanItem)
 button "Korean: 이천 원, icheon won"            (ChoiceCard; with the shipped a11y.minigame.option names when answered)
 button "Korean: 삼천 원, samcheon won"
 button "Korean: 오천 원, ocheon won"
-status (polite) "Look again"                   (only after a miss)
+status (polite) "Look again"                   (after a miss; after the second miss also
+                                                "Look here: 라면, ramyeon, 3,000원": a11y.minigame.option.hint
+                                                with the ringed line's Korean, romanization and value)
 ```
 
 - **Ticket**: group "Train ticket, 2 lines" > list > button "출발, chulbal: 서울, seoul, 3:00, se si" and "도착, ...: 대전, ..., 4:30, ne si samsip bun".
 - **Trail sign**: group "Trail sign, 3 lines" > text "산길, sangil" > list > button "정상, jeongsang, 1시간, han sigan, to the right", "입구, ipgu, to the left", "출구, chulgu, to the left". The arrow cell is hidden (its meaning is in the name).
 - **Price cards**: group "Price cards, 3 lines" > list > button "사과, sagwa, 3개, se gae, 2,000원, icheon won", "부채, ...", "한지, ...". The goods drawings are hidden; the card text names them.
-- Romanization in a name is spaced per letter (`a11yRomanization`), as `KoreanText` does, so a screen reader spells it instead of guessing an English word. In `tap` mode the name keeps the romanization (the setting hides a visual line, not information).
+- Romanization in a name always goes through `a11yRomanization` (`packages/content-schema`, as `KoreanText` labels do), which reads a slash as "or" and leaves the words as written; the mocks show its output. In `tap` mode the name keeps the romanization (the setting hides a visual line, not information).
+- Answered options use the full shipped state names, `a11y.minigame.option.correct` / `.wrong` ("Right answer: Korean: 오른쪽, oreunjjok, right", "Not this one: ..."), as the mocks do; never a short suffix such as ". Right", which beside a direction word would read "right. Right".
+- The look-here ring is announced, not only drawn: on the second miss the status region adds `a11y.minigame.option.hint` with the ringed line's label, so a screen-reader user whose focus is on the options hears which line to read (S3).
 - Picture options have their UI-language label as the accessible name. Number options are read by the formatter of the UI locale.
 - Every line button and option is at least `touchTarget.min` tall; lines are full-width rows, so two lines never share a touch target.
 
@@ -116,7 +120,7 @@ The mocks draw these; G-2 adds them to `packages/i18n` with the es and ko values
 | `learner.minigame.realia.lineHint` | Tap a line to hear it. | Toca una línea para escucharla. | 줄을 누르면 소리를 들을 수 있어요. |
 | `learner.minigame.realia.missHoya` | Look again | Mira otra vez | 다시 살펴봐요 |
 | `learner.minigame.realia.empty` | Nothing to play here | Aquí no hay nada para jugar | 여기에는 할 게임이 없어요 |
-| `a11y.minigame.realia.summary(kind, n)` | `${kind}, ${count(n, 'line', 'lines')}` | `${kind}, ${n} línea` / `líneas` (plural) | `${kind}, ${n}줄` |
+| `a11y.minigame.realia.summary(kind, n)` | `` `${kind}, ${plural('en', n, { one: '1 line', other: `${n} lines` })}` `` | `` `${kind}, ${plural('es', n, { one: '1 línea', other: `${n} líneas` })}` `` | `` `${kind}, ${n}줄` `` |
 | `a11y.minigame.realia.kind.menu` | Menu | Menú | 메뉴판 |
 | `a11y.minigame.realia.kind.ticket` | Train ticket | Boleto de tren | 기차표 |
 | `a11y.minigame.realia.kind.sign` | Trail sign | Letrero del sendero | 산길 표지판 |
@@ -126,13 +130,12 @@ The mocks draw these; G-2 adds them to `packages/i18n` with the es and ko values
 | `a11y.minigame.realia.lookHere` | Look here | Mira aquí | 여기를 봐요 |
 | `a11y.minigame.realia.dir.left` | to the left | hacia la izquierda | 왼쪽으로 |
 | `a11y.minigame.realia.dir.right` | to the right | hacia la derecha | 오른쪽으로 |
-| `a11y.minigame.realia.dir.up` | straight ahead | hacia adelante | 앞으로 |
 
-Reused, not new: `learner.minigame.backToQuest` (the empty state), `a11y.koreanItem` (the key word and Korean options), the answer-card state names of Listen & Pick (`a11y.minigame.option.correct` / `.wrong`: "Right answer: ...", "Not this one: ..."; the mock abbreviates them as ". Right" / ". Try another"), the shell's progress label. The ko `a11y.minigame.realia.kind.*` values are UI words in the Korean UI; the realia's own lines stay content (in every locale they are the same Korean).
+Reused, not new: `learner.minigame.backToQuest` (the empty state), `a11y.koreanItem` (the key word and Korean options), the answer-card state names of Listen & Pick (`a11y.minigame.option.correct` / `.wrong` / `.hint`: "Right answer: ...", "Not this one: ...", "Look here: ..."), the shell's progress label. `plural` is `packages/i18n/src/plural.ts`. The ko `a11y.minigame.realia.kind.*` values are UI words in the Korean UI; the realia's own lines stay content (in every locale they are the same Korean).
 
 ## Notes for C-1, G-2 and the S6 rows
 
-- **C-1** (schema): the screen reads the shape in the wireframe's Data needs: realia `kind`, `dressingRef`, an optional title, 1-8 lines `{ id, ko, value?, dir?, group? }`; 4-5 questions with 2-4 options and both `answerId` and `answerLineId`. The content test checks that `answerLineId` is a line of the realia and that one question's options use one number system.
+- **C-1** (schema): the screen reads the shape in the wireframe's Data needs: realia `kind`, `dressingRef`, an optional title, 1-8 lines `{ id, ko, value?, dir?, group? }`; 4-5 questions with 2-4 options and both `answerId` and `answerLineId`. The content test checks that `answerLineId` is a line of the realia and that one round never mixes Sino-Korean and native numbers: the key word and the options of a question are checked together (spec section 3.6, "the games never mix the two in one round"). A count question's key is the thing counted (`사과`), never a won amount.
 - **G-2**: `RealiaSheet` renders one realia by `kind` (four layouts: menu rows with a leader, ticket label/place/time rows with a stub, sign plate and pointed boards, price-card grid); an unknown `dressingRef` falls back to the plain sheet (S11). The found and look-here states are props of the sheet, driven by the round. The Discover realia page (D-1) reuses the same `RealiaSheet` with glosses shown.
 - **G-2 Playwright**: one spec at 320 and at 1024 x 768: the realia lines are buttons with the names above, a miss shows the amber card and "Look again", the second miss rings the answer line, a hit shows the found line with its gloss, and no telemetry payload contains realia text.
 - **S6 rows**: the mock words are fixtures (spec section 3.6). The menu title `메뉴`, the ticket stations `서울` / `대전` and the counter forms (`3개`, `1시간`) count against each cell's new-word budget (rule 4) unless taught earlier; the wireframe lists the open choice for the ticket.

@@ -113,10 +113,10 @@ find a value:   (How much is this?) ~~ 라면 ~~          -> options: ~~ 이천 
 find a thing:   (Which one costs this?) ~~ 오천 원 ~~   -> options: {picture: bibimbap} {picture: gimbap} {picture: noodles}
 read a number:  (What time does it leave?) ~~ 출발 ~~   -> options: (3:00) (4:00) (4:30)    <- numbers in the UI's own digits and format
 find the way:   (Which way is the summit?) ~~ 정상 ~~   -> options: {arrow left} ~~ 왼쪽 ~~ | {arrow right} ~~ 오른쪽 ~~
-count:          (How many apples?) ~~ 2,000원 ~~         -> options: ~~ 한 개 ~~ ~~ 세 개 ~~ ~~ 다섯 개 ~~
+count:          (How many apples?) ~~ 사과 ~~            -> options: ~~ 한 개 ~~ ~~ 세 개 ~~ ~~ 다섯 개 ~~
 ```
 
-One round never mixes the two number systems in its options (F-CURR-001 §3.6: Sino-Korean for won and minutes, native before a counter).
+One round (the key word plus its options) never mixes Sino-Korean and native numbers (F-CURR-001 §3.6: Sino-Korean for won and minutes, native before a counter; "the games never mix the two in one round"). A count question's key is the thing counted, never a won amount; the realia line it points at may show both (`3개`, `2,000원`), because the realia is the real thing, not the round.
 
 States of one round:
 
@@ -124,7 +124,8 @@ States of one round:
 asking:   the realia without glosses; the question; 2-4 options in idle
 miss:     the tapped option -> amber + "try another" mark, locked; Hoya thinking "(Look again)"; the realia is unchanged
 2nd miss: the line of the realia that holds the answer gets a "look here" ring (thick focus ring + a pointer glyph at its start);
-          the right option is NOT ringed: the learner still reads the line to answer
+          the right option is NOT ringed: the learner still reads the line to answer (with 3 options it confirms the last one);
+          the status region announces "Look here: {line}" so a screen-reader user on the options hears it
 hit:      the option -> green + check; the answer line on the realia -> "found" (ring + check glyph + its gloss under it);
           the option's Korean is spoken once; next question after 0.7 s; the found mark clears when the next question opens
 line tap: any line, any time -> the line is spoken (playPrompt); in `tap` mode its romanization appears and stays for the step
@@ -137,6 +138,7 @@ empty:    "(Nothing to play here)" + [ Back to quest ]
 
 - **Option card** (`ChoiceCard`): the first answer in a question is the scored one; a miss never ends the question; the right tap ends it. Only the first touch in a 50 ms window counts (as Listen & Pick).
 - **Realia line** (a button in the text layer): plays the line (`playPrompt` of its Korean); reveals its romanization in `tap` mode. It is never an answer: tapping a line does not score and does not select. A line tap during the 0.7 s after a hit is ignored.
+- **A line tap is not a hint** (decided): it does not change the first-try tally, which counts only the first option tapped in a question. Hearing a line is supported reading (the learner still has to find the line and match its sound to an option), and it never names the answer in the UI language. G-2 and the S6 content tests use this rule.
 - **Question advance**: automatic, 0.7 s after the right tap; after the last question the step is complete.
 - **No Skip**: the step is short (4-5 questions) and every question can be answered by reading; the quest player's leave control is the way out (as Listen & Pick).
 - **Leave**: the quest player's own leave control (this screen adds none).
@@ -155,18 +157,17 @@ Related: the Discover `realia` page (`quest/discover-sentences.md`, row D-1) sho
 - **offline**: all content and art are bundled; no Korean voice -> line taps show text only, nothing blocks.
 - **reduced motion**: no motion is used; states change instantly.
 - **large text / small phone**: the realia's text layer reflows inside the dressing (lines wrap, the price moves under the dish when the row is too narrow, the dressing stretches to the text); the body scrolls; options fall back to one column below 340 dp and for long text; nothing is cut or shrunk below its token size.
-- **accessibility**: the realia is a named group with a summary ("Menu, 4 lines"), then its lines in reading order as real text (a menu is a list of dishes with prices; a ticket is a list of label and value pairs; a sign is a list of boards, each with its direction; price cards are a list of cards); each line is a button whose name is its Korean, spaced romanization and, for a direction, the direction; the found and look-here marks are in the line's name, not only drawn. Then the question, the key word (`KoreanText`), the options. Full tree in the mock README.
+- **accessibility**: the realia is a named group with a summary ("Menu, 4 lines"), then its lines in reading order as real text (a menu is a list of dishes with prices; a ticket is a list of label and value pairs; a sign is a list of boards, each with its direction; price cards are a list of cards); each line is a button whose name is its Korean, its romanization (through `a11yRomanization`) and, for a direction, the direction; the found and look-here marks are in the line's name, not only drawn. Then the question, the key word (`KoreanText`), the options. Full tree in the mock README.
 - **anti-shame**: amber + Hoya thinking on a miss; a bar that only fills; no red, no timer, no score number; the "n / N" count is the only number.
 - **Korean UI**: menus and the question are Korean; the realia's lines are the same Korean (they are content, not UI), still with romanization; the gloss of a found line is the Korean gloss from the lesson overlay, never an echo of the line (F-CURR-001 §3.15 behaviour 9).
 
 ## Data needs
 
-- reads: `scopeFor(ref).realiaRead` (row C-1 owns the schema; what this screen needs): `realia` `{ id, kind: 'menu' | 'ticket' | 'sign' | 'price-card', dressingRef, title?: KoText, lines: { id, ko: KoText, value?: KoText, dir?: 'left' | 'right' | 'up', group?: string }[] (1-8), altEn }` and `questions` (4-5) `{ id, prompt: en (es / ko in the lesson overlay), key?: KoText, options: { id, ko?: KoText, number?: { kind: 'time' | 'count' | 'won', value }, pictureRef? }[] (2-4), answerId, answerLineId }` · `romanizationMode` (F-I18N-001; `tap` hides a line's romanization until it is tapped)
+- reads: `scopeFor(ref).realiaRead` (row C-1 owns the schema; what this screen needs): `realia` `{ id, kind: 'menu' | 'ticket' | 'sign' | 'price-card', dressingRef, title?: KoText, lines: { id, ko: KoText, value?: KoText, dir?: 'left' | 'right', group?: string }[] (1-8), altEn }` and `questions` (4-5) `{ id, prompt: en (es / ko in the lesson overlay), key?: KoText, options: { id, ko?: KoText, number?: { kind: 'time' | 'count' | 'won', value }, pictureRef? }[] (2-4; 4 when the look-here ring should still make the learner read), answerId, answerLineId }` · a straight-ahead board is not in volume 1; if a cell needs one, C-1 adds `dir: 'ahead'` additively (never `up`) with its own mock state · `romanizationMode` (F-I18N-001; `tap` hides a line's romanization until it is tapped)
 - writes: `host.answer('q<k>', correct)` -> `quest-run-store` (first-try tally); `host.complete()` -> `markStepComplete()`
 - telemetry: `minigame.finished` `{ kind: 'realia-read', questId, stepIndex }` (existing event; no new event name, F-CURR-001 §3.11); no realia text, answer text or tapped line in any payload
 
 ## Open questions
 
-- Should a line tap count as a "hint" in the first-try tally? Recommend no: hearing the Korean read aloud supports reading and never names the answer in the UI language; the tally stays first-answer-only.
 - Station names on the Chuseok ticket (`서울`, `대전` in the mock) are fixture words; S6-3 decides whether the ticket names real cities (allowed: a city is not a company) or the cell's own words (`기차역`, `고향`) and counts them against the 6 new words of rule 4.
 - A two-realia step (the station board beside the ticket in Travel for Chuseok)? Recommend one realia per step in volume 1; the second realia goes in the Discover page.
