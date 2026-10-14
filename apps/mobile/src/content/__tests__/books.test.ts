@@ -125,6 +125,21 @@ describe('buildBook: content trouble never breaks the app (F-STORY-001 §3.7 hol
     expect(buildBook(rites, draft)?.episode.storyIds).not.toContain('story:dano-ssireum');
   });
 
+  it('leaves out a reviewed read story without the Hoya lines a quest needs, without throwing', () => {
+    const noOutro = (id: string): Story | undefined => {
+      const s = lookup(id);
+      return s && id === 'story:dano-ssireum' ? { ...s, hoyaOutroEn: undefined } : s;
+    };
+    expect(() => buildBook(rites, noOutro)).not.toThrow();
+    expect(buildBook(rites, noOutro)?.episode.storyIds).toEqual(['story:seollal-new-year', 'story:chuseok-ganggangsullae']);
+    const noIntro = (id: string): Story | undefined => {
+      const s = lookup(id);
+      return s && id !== 'story:seollal-new-year' ? { ...s, hoyaIntroEn: '' } : s;
+    };
+    expect(() => buildBook(rites, noIntro)).not.toThrow();
+    expect(buildBook(rites, noIntro)).toBeNull();
+  });
+
   it('Hoya names no story count, so a book that lost a story never promises more than it lists', () => {
     for (const definition of BOOK_DEFINITIONS) {
       expect(definition.hoyaIntroEn, definition.id).not.toMatch(/\b(two|three|four|five|six|\d+)\b/i);

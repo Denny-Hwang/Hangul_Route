@@ -1,27 +1,36 @@
 import type { RomanizationMode } from '@hangul-route/content-schema';
+import type { UiLocale } from '@hangul-route/i18n';
 import { Icon, borderWidth, colors, layout, radii, spacing, touchTarget, typography } from '@hangul-route/design-system';
 import React, { useRef } from 'react';
 import { Pressable, ScrollView, Text, View, useWindowDimensions, type ViewStyle } from 'react-native';
 import { HELP_KEYS, type KeyCap } from '../../../logic/lecture/help-keys';
 import { HELP_WIDTH, KBD_MIN, KEY_COL } from '../stage-metrics';
 import { usePresenterView } from '../presenter-context';
-import { ChipRadios, Cover, ToolButton } from './OverlayParts';
+import { ChipRadios, Cover, ToolButton, type ChipOption } from './OverlayParts';
 
 /**
  * Keys and controls (H or ?; design/screens/presenter/overlays.md "Help", README D13): every key
  * of section 3.5 as key caps beside what it does, two columns from `layout.breakpoint.wide`; the
- * clicker line; the Romanization switch (flips the deck's option live, section 3.7); Keep controls
- * visible (section 3.5); Close. Real pixels; it scrolls inside the stage box when taller.
+ * clicker line; the Romanization switch (flips the deck's option live, section 3.7); the Presenter
+ * language chips (section 3.12: session only, the device locale is never written; drawn only when
+ * the build offers two or more locales); Keep controls visible (section 3.5); Close. Real pixels; it scrolls inside the stage box when taller.
  */
 export function HelpOverlay({
   romanization,
   onRomanization,
+  languages,
+  locale,
+  onLanguage,
   keepVisible,
   onKeepVisible,
   onClose,
 }: {
   romanization: RomanizationMode;
   onRomanization: (mode: RomanizationMode) => void;
+  /** The language chips (`helpLanguageChips`); null draws none. */
+  languages: readonly ChipOption<UiLocale>[] | null;
+  locale: UiLocale;
+  onLanguage: (locale: UiLocale) => void;
   keepVisible: boolean;
   onKeepVisible: (on: boolean) => void;
   onClose: () => void;
@@ -88,6 +97,12 @@ export function HelpOverlay({
               onSelect={onRomanization}
             />
           </View>
+          {languages !== null ? (
+            <View style={{ gap: spacing.sm }}>
+              <Text style={{ fontSize: typography.size.body, fontWeight: typography.weight.bold, color: colors.text.primary }}>{messages.learner.presenter.language.title}</Text>
+              <ChipRadios testID="presenter-help-language" label={messages.learner.presenter.language.title} options={languages} selected={locale} onSelect={onLanguage} />
+            </View>
+          ) : null}
           <KeepVisibleSwitch on={keepVisible} label={m.keepVisible} onChange={onKeepVisible} />
         </View>
       </ScrollView>

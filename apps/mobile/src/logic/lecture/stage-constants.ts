@@ -20,8 +20,6 @@ export const STROKE_DOT_RING = 4;
 export const HOYA_STAGE = 240;
 /** A story scene on its slide and a story title's cover: the 400 x 300 scene canvas at one unit per point (slide-story.md). */
 export const SCENE_STAGE = 400;
-/** A quiz option's shape marker is this many body lines high (80 units, slide-quiz.md). */
-export const MARKER_LINES = 2;
 /** The class code panel width, in units (README D7). */
 export const CODE_PANEL = 400;
 

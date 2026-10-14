@@ -89,16 +89,21 @@ function isReviewed(story: Story): boolean {
   return story.state === 'ready' && story.review.language === 'native-reviewed' && story.review.culture === 'culture-reviewed';
 }
 
+/** A story a book can play: reviewed, with a `read` tier and the Hoya lines its quest needs (`storyQuestSkeleton` throws without them). */
+function isBookReady(story: Story): boolean {
+  return isReviewed(story) && story.tiers.some((t) => t.level === 'read') && Boolean(story.hoyaIntroEn) && Boolean(story.hoyaOutroEn);
+}
+
 /**
  * Pure: a book's episode and Read quests from the bundle. A story that is not bundled (held for a
- * correction, F-STORY-001 §3.7), is not reviewed or has no `read` tier is left out, and a book left with
+ * correction, F-STORY-001 §3.7), is not reviewed, has no `read` tier or lacks a Hoya line is left out, and a book left with
  * fewer than `BOOK_MIN_QUESTS` stories is not built, so its cell stays a placeholder: content trouble
  * never breaks the app at load.
  */
 export function buildBook(definition: BookDefinition, lookup: (id: string) => Story | undefined): { episode: Episode; quests: Quest[] } | null {
   const stories = definition.storyIds
     .map((id) => lookup(id))
-    .filter((s): s is Story => s !== undefined && isReviewed(s) && s.tiers.some((t) => t.level === 'read'));
+    .filter((s): s is Story => s !== undefined && isBookReady(s));
   if (stories.length < BOOK_MIN_QUESTS) return null;
   const quests = stories.map((story) => storyQuestSkeleton(story, 'read'));
   return {

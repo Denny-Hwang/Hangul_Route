@@ -2,10 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { BuildName, NarrationPiece } from '../build-steps';
 import {
   PRESENTER_AUDIO_SOURCE,
-  QUIZ_MARKERS,
   checkPromptParts,
-  quizMarker,
-  quizOptionRomShown,
   readToMePlan,
   romShown,
   storyNarrationSteps,
@@ -58,30 +55,6 @@ describe('romShown (D2)', () => {
     const builds: BuildName[] = ['art', 'narration', 'korean', 'rom'];
     expect(romShown(builds, shown('art', 'narration', 'korean'), 'korean')).toBe(false);
     expect(romShown(builds, shown('art', 'narration', 'korean', 'rom'), 'narration')).toBe(true);
-  });
-});
-
-describe('quizOptionRomShown (D2)', () => {
-  it('shows option romanization at once with always, at the answer with tap', () => {
-    expect(quizOptionRomShown('always', new Set<BuildName>(['question']))).toBe(true);
-    expect(quizOptionRomShown('tap', new Set<BuildName>(['question']))).toBe(false);
-    expect(quizOptionRomShown('tap', new Set<BuildName>(['question', 'answer']))).toBe(true);
-  });
-});
-
-describe('quizMarker (section 3.4)', () => {
-  it('gives options circle 1, triangle 2, square 3, star 4 by position', () => {
-    expect(QUIZ_MARKERS).toEqual(['circle', 'triangle', 'square', 'star']);
-    expect([0, 1, 2, 3].map(quizMarker)).toEqual([
-      { shape: 'circle', n: 1 },
-      { shape: 'triangle', n: 2 },
-      { shape: 'square', n: 3 },
-      { shape: 'star', n: 4 },
-    ]);
-  });
-
-  it('wraps past four (the schema allows at most four options)', () => {
-    expect(quizMarker(4)).toEqual({ shape: 'circle', n: 5 });
   });
 });
 
