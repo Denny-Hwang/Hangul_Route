@@ -527,6 +527,32 @@ describe('content/i18n/ko/placement*.json: the Korean overlays', () => {
       }
     }
   });
+  it('never spells out a taught word of two or more syllables inside a gloss (떡국 in a 떡국 definition)', () => {
+    // The picture each vocabulary item teaches, by option id: an option gloss for that
+    // picture must not contain the word, on any item. Single syllables (밥, 먹, 연) are left
+    // out, because they are also everyday morphemes (먹어요).
+    const wordOf = new Map<string, Set<string>>();
+    const byId = new Map([...all, warmup].map((t) => [t.id, t]));
+    for (const t of [...byStrand('vocabulary'), warmup]) {
+      const ko = t.question.promptKo;
+      if (ko === undefined || [...ko].length < 2) continue;
+      const set = wordOf.get(correctOf(t).id) ?? new Set<string>();
+      set.add(ko);
+      wordOf.set(correctOf(t).id, set);
+    }
+    expect(wordOf.get('family-table')).toEqual(new Set(['밥상']));
+    for (const { file, overlay } of overlays) {
+      for (const [id, entry] of Object.entries(overlay.entries)) {
+        const t = byId.get(id) as PlacementTemplate;
+        const promptKo = t.question.promptKo;
+        for (const [field, value] of Object.entries(entry)) {
+          const optionId = /^options\.([a-z0-9-]+)\.gloss$/.exec(field)?.[1];
+          const words = optionId === undefined ? [promptKo] : [...(wordOf.get(optionId) ?? [])];
+          for (const w of words) if (w !== undefined && [...w].length >= 2) expect(value, `${file} ${id} ${field}`).not.toContain(w);
+        }
+      }
+    }
+  });
 });
 
 describe('the validator and the schema agree on the gate table', () => {
