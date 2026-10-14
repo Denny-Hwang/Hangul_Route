@@ -6,7 +6,7 @@ Code: `screens/presenter/StartScreen.tsx` (PR 6)
 
 ## Anatomy (top to bottom, `layout.maxWidth.reading`, centred)
 
-1. "Lecture" (`learner.presenter.home.title`, `text.secondary`), then the deck title as h1 (`size.hero`, teacher text, wraps anywhere).
+1. **Back to lessons** (`start.back.cta`, a ghost pill, PR 8): back to the presenter home before Start; the tab forgets the held deck and nothing is saved to Recent or sent. Then "Lecture" (`learner.presenter.home.title`, `text.secondary`), then the deck title as h1 (`size.hero`, teacher text, wraps anywhere).
 2. Facts: "71 slides · about 56 minutes" (`start.slides`, `start.minutes`; plural keys; the separator is a middle dot between two whole strings).
 3. **Before you start** (h2) and the checks list. Each row: a `check-circle` glyph in `feedback.success` when ready, a `dash` glyph in `text.secondary` when not, and one sentence. None blocks Start.
    - Offline: "Ready for offline" or "Open this page once with Wi-Fi to use it offline." with the plain-text install hint under it, "You can also add it to the home screen from the browser menu." (`start.installHint`, section 3.8; `InstallGuideSheet` is not mounted) (`isOfflineReady()`).

@@ -251,7 +251,7 @@ Every UI string a mock draws. Values with `{x}` are functions; plural keys follo
 | `learner.presenter.home.quick.build.cta` | Build lesson | Armar la lección | 수업 만들기 |  |
 | `learner.presenter.home.quick.chosen` | {n} chosen | Elegiste {n} | {n}개 골랐어요 | plural one: "1 chosen" / "Elegiste 1" / "1개 골랐어요" |
 | `learner.presenter.home.quick.consonants` | Consonants | Consonantes | 자음 |  |
-| `learner.presenter.home.quick.full` (specified, not drawn) | A lesson holds {max} items at most. | Una lección tiene {max} elementos como máximo. | 수업에는 {max}개까지 담을 수 있어요. |  |
+| `learner.presenter.home.quick.full` | This lesson is full. Remove one to add another. | Esta lección está llena. Quita uno para añadir otro. | 수업이 가득 찼어요. 하나를 빼면 다른 것을 넣을 수 있어요. | after the chosen count once any item no longer fits (PR 8; a letter set is 2 of the 30 blocks, so no number is promised) |
 | `learner.presenter.home.quick.group.episodes` | Episodes | Episodios | 에피소드 |  |
 | `learner.presenter.home.quick.group.lessons` | Single lessons | Lecciones sueltas | 레슨 하나씩 |  |
 | `learner.presenter.home.quick.group.letterSets` | Letter sets | Grupos de letras | 글자 묶음 |  |
@@ -302,6 +302,7 @@ Every UI string a mock draws. Values with `{x}` are functions; plural keys follo
 | `learner.presenter.slide.order` | What comes first? | ¿Qué va primero? | 무엇이 먼저일까요? |  |
 | `learner.presenter.slide.sayIt` | Say it: | Dilo así: | 이렇게 읽어요: | teacher-says text (no Korean voice or sound off) |
 | `learner.presenter.slide.strokeCaption` | Simplified stroke guide | Guía de trazos simplificada | 간단한 획순 안내 | spec §3.6, until a jamo is reviewed |
+| `learner.presenter.start.back.cta` | Back to lessons | Volver a las lecciones | 수업 목록으로 | start screen, above the title; returns to the home with nothing saved or sent (PR 8) |
 | `learner.presenter.start.awake` | The screen stays on during the lesson | La pantalla queda encendida durante la lección | 수업 중에는 화면이 꺼지지 않아요 |  |
 | `learner.presenter.start.awakeNone` | Keep the screen awake in system settings. | Mantén la pantalla encendida en los ajustes del sistema. | 시스템 설정에서 화면이 꺼지지 않게 해 주세요. |  |
 | `learner.presenter.start.checks` | Before you start | Antes de empezar | 시작하기 전에 |  |

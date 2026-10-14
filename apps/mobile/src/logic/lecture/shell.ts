@@ -1,10 +1,10 @@
-import { decodeDeck, type ActivityPreset, type LectureDeck, type LectureDecodeFailure } from '@hangul-route/content-schema';
+import { decodeDeck, type ActivityPreset, type LectureDeck, type LectureDecodeFailure, type UiLocale } from '@hangul-route/content-schema';
 import type { AudioCapability } from '../audio/capability';
 import { canPlayKorean } from '../audio/capability';
 import type { KoLine, SlideKind } from './build-steps';
 import { blockKeyOf, type ExpandedDeck, type Slide, type SkipReason } from './deck-builder';
 import type { PresenterState } from './controls';
-import type { RecentList } from './recent';
+import type { RecentItem, RecentList } from './recent';
 import { SWIPE_MIN, SWIPE_RATIO, TAP_BACK_FRACTION } from './stage-constants';
 
 /**
@@ -25,19 +25,45 @@ export type BootResult =
 
 /**
  * What `/present` opens. `address` is the deck the tab holds: from a link (`#d=`), or kept in the
- * tab's history entry across a reload (`reloaded`). A reloaded deck that was already started
- * (Recent has its open slide) resumes there as a Recent start; otherwise the deck starts fresh.
- * No deck: the presenter home.
+ * tab's history entry across a reload (`reloaded`). A reloaded deck that is in Recent is a Recent
+ * start and resumes at its open slide, unless the teacher chose Start over (`fresh`); otherwise
+ * the deck starts fresh. No deck: the presenter home.
  */
-export function resolveBoot(address: { raw: string; reloaded: boolean } | null, recent: RecentList): BootResult {
+export function resolveBoot(address: { raw: string; reloaded: boolean; fresh?: true } | null, recent: RecentList): BootResult {
   if (address === null) return { kind: 'home' };
   const decoded = decodeDeck(address.raw);
   if (!decoded.ok) return { kind: 'invalid', reason: decoded.reason };
   const deck = decoded.deck;
   const linked: StartSource = deck.source === 'quick' ? 'quick' : 'console';
-  const open = address.reloaded ? recent.items.find((item) => item.deck.id === deck.id && item.lastSlideKey !== undefined) : undefined;
-  if (!open?.lastSlideKey) return { kind: 'deck', deck, source: linked };
-  return { kind: 'deck', deck, source: 'recent', resumeKey: open.lastSlideKey };
+  const known = address.reloaded ? recent.items.find((item) => item.deck.id === deck.id) : undefined;
+  if (!known) return { kind: 'deck', deck, source: linked };
+  if (address.fresh || known.lastSlideKey === undefined) return { kind: 'deck', deck, source: 'recent' };
+  return { kind: 'deck', deck, source: 'recent', resumeKey: known.lastSlideKey };
+}
+
+// --- the presenter home (PR 8) ---------------------------------------------------------------------
+
+/** A start from the presenter home: a Recent row's Resume or Start over, or Build lesson (section 3.12). */
+export type HomeChoice = { kind: 'resume'; item: RecentItem } | { kind: 'start-over'; item: RecentItem } | { kind: 'quick'; deck: LectureDeck };
+
+/** The start screen a home choice opens; Resume carries the row's saved slide, Start over drops it. */
+export function homeStart(choice: HomeChoice): { kind: 'ready'; deck: LectureDeck; source: StartSource; resumeKey?: string } {
+  if (choice.kind === 'quick') return { kind: 'ready', deck: choice.deck, source: 'quick' };
+  const { deck, lastSlideKey } = choice.item;
+  if (choice.kind === 'resume' && lastSlideKey !== undefined) return { kind: 'ready', deck, source: 'recent', resumeKey: lastSlideKey };
+  return { kind: 'ready', deck, source: 'recent' };
+}
+
+/**
+ * The presenter's language (sections 3.12 and 3.13): a language chip chosen in this session
+ * (memory only, the device locale is never written), else the deck's `options.uiLocale`, else
+ * the device locale. A locale this build does not offer is passed over at every step.
+ */
+export function presenterLocale(input: { deck: LectureDeck | null; session: UiLocale | null; device: UiLocale; available: readonly UiLocale[] }): UiLocale {
+  if (input.session !== null && input.available.includes(input.session)) return input.session;
+  const fromDeck = input.deck?.options.uiLocale;
+  if (fromDeck !== undefined && input.available.includes(fromDeck)) return fromDeck;
+  return input.device;
 }
 
 // --- the slides this build draws ------------------------------------------------------------------

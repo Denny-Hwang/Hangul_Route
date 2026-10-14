@@ -1367,7 +1367,30 @@ export const learner = {
   /** El presentador de clase en /present (F-TCH-004 PR 6); nunca nombra a nadie. */
   presenter: {
     docTitle: 'Clase de Hangul Route',
-    home: { title: 'Proyección' },
+    home: {
+      title: 'Proyección',
+      help: { cta: 'Teclas y ayuda' },
+      recent: {
+        title: 'Lecciones recientes',
+        empty: 'Aquí aparecen las lecciones que abras. Los nombres nunca se guardan.',
+        storageOff: 'Aquí no hay lecciones recientes. Las lecciones funcionan igual.',
+        resume: { cta: 'Seguir' },
+        startOver: { cta: 'Desde el inicio' },
+      },
+      quick: {
+        title: 'Lección rápida',
+        line: 'Elige qué enseñar. Sin iniciar sesión y sin nombres.',
+        group: { episodes: 'Episodios', lessons: 'Lecciones sueltas', letterSets: 'Grupos de letras', topics: 'Temas de palabras', stories: 'Historias' },
+        consonants: 'Consonantes',
+        vowels: 'Vocales',
+        minutes: (n: number) => `aprox. ${n} min`,
+        letters: (n: number) => plural('es', n, { one: '1 letra', other: `${n} letras` }),
+        chosen: (n: number) => `Elegiste ${n}`,
+        nothing: 'Elige al menos un elemento para armar la lección.',
+        full: 'Esta lección está llena. Quita uno para añadir otro.',
+        build: { cta: 'Armar la lección' },
+      },
+    },
     bar: {
       label: 'Controles de la lección',
       counter: (i: number, n: number) => `${i} / ${n}`,
@@ -1429,6 +1452,8 @@ export const learner = {
       },
     },
     start: {
+      /** Back to the presenter home before Start: nothing is saved or sent. */
+      back: { cta: 'Volver a las lecciones' },
       slides: (n: number) => plural('es', n, { one: '1 diapositiva', other: `${n} diapositivas` }),
       minutes: (n: number) => plural('es', n, { one: 'alrededor de 1 minuto', other: `alrededor de ${n} minutos` }),
       checks: 'Antes de empezar',
@@ -1478,6 +1503,10 @@ export const learner = {
       loading: 'Cargando la lección',
       tooSmall: 'Agranda la ventana o gira la pantalla.',
       portrait: 'Gira la pantalla para verlo más grande',
+    },
+    language: {
+      title: 'Idioma de la presentación',
+      note: 'Solo para esta sesión. El coreano siempre muestra la romanización y el significado.',
     },
   },
 } satisfies DeepPartial<Messages['learner']>;

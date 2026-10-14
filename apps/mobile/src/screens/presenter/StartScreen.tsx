@@ -12,7 +12,7 @@ import { GhostButton, PrimaryButton } from './StatePage';
  * real pixels on paper, not stage-scaled. The deck title (teacher text), the facts, the device
  * checks (none blocks Start), the skipped parts with [ See which ], the helper picker row (a count
  * only, never a label), and one big Start, disabled while the presenter font loads (at most
- * 1.5 s) and focused when it is ready.
+ * 1.5 s) and focused when it is ready. Back to lessons, above the title, returns to the home.
  */
 
 export type { VoiceCheck } from '../../logic/lecture/shell';
@@ -38,6 +38,8 @@ export interface StartScreenProps {
   onPickerCount: (count: number) => void;
   fontReady: boolean;
   onStart: () => void;
+  /** Back to lessons: the presenter home, before anything starts (nothing is saved or sent). */
+  onBack?: () => void;
 }
 
 function Check({ ok, children, testID }: { ok: boolean; children: React.ReactNode; testID?: string }): React.ReactElement {
@@ -127,6 +129,11 @@ export function StartScreen(props: StartScreenProps): React.ReactElement {
     <ScrollView testID="presenter-start" style={{ flex: 1, backgroundColor: colors.surface.paper }} contentContainerStyle={{ paddingVertical: spacing.xxl, paddingHorizontal: layout.gutter.compact }}>
       <View style={{ width: '100%', maxWidth: TEACHER_COLUMN, alignSelf: 'center', gap: spacing.xl }}>
         <View style={{ gap: spacing.md }}>
+          {props.onBack ? (
+            <View style={{ alignItems: 'flex-start' }}>
+              <GhostButton testID="presenter-start-back" label={m.back.cta} onPress={props.onBack} />
+            </View>
+          ) : null}
           <Text style={{ fontSize: typography.size.body, color: colors.text.secondary }}>{messages.learner.presenter.home.title}</Text>
           {/* The deck title is the teacher's own text (TD8): shown here, never in document.title. */}
           <Text role="heading" aria-level={1} style={{ fontSize: typography.size.hero, fontWeight: typography.weight.bold, color: colors.text.primary, lineHeight: Math.round(typography.size.hero * typography.leading.tight) }}>

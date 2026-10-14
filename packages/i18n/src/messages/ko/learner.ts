@@ -1368,7 +1368,30 @@ export const learner = {
   /** /present의 수업 발표 화면 (F-TCH-004 PR 6). 학습자 이름은 어디에도 나오지 않아요. */
   presenter: {
     docTitle: 'Hangul Route 수업',
-    home: { title: '강의' },
+    home: {
+      title: '강의',
+      help: { cta: '키와 도움말' },
+      recent: {
+        title: '최근 수업',
+        empty: '연 수업이 여기에 나와요. 이름은 저장하지 않아요.',
+        storageOff: '이 기기에서는 최근 수업을 쓸 수 없어요. 수업은 그대로 할 수 있어요.',
+        resume: { cta: '이어 하기' },
+        startOver: { cta: '처음부터' },
+      },
+      quick: {
+        title: '빠른 수업',
+        line: '가르칠 것을 골라요. 로그인도 이름도 필요 없어요.',
+        group: { episodes: '에피소드', lessons: '레슨 하나씩', letterSets: '글자 묶음', topics: '낱말 주제', stories: '이야기' },
+        consonants: '자음',
+        vowels: '모음',
+        minutes: (n: number) => `약 ${n}분`,
+        letters: (n: number) => `글자 ${n}개`,
+        chosen: (n: number) => `${n}개 골랐어요`,
+        nothing: '수업을 만들려면 하나 이상 골라요.',
+        full: '수업이 가득 찼어요. 하나를 빼면 다른 것을 넣을 수 있어요.',
+        build: { cta: '수업 만들기' },
+      },
+    },
     bar: {
       label: '수업 조작',
       counter: (i: number, n: number) => `${i} / ${n}`,
@@ -1430,6 +1453,8 @@ export const learner = {
       },
     },
     start: {
+      /** Back to the presenter home before Start: nothing is saved or sent. */
+      back: { cta: '수업 목록으로' },
       slides: (n: number) => `슬라이드 ${n}장`,
       minutes: (n: number) => `약 ${n}분`,
       checks: '시작하기 전에',
@@ -1475,6 +1500,10 @@ export const learner = {
       loading: '수업을 불러오고 있어요',
       tooSmall: '창을 키우거나 화면을 돌려 주세요.',
       portrait: '화면을 돌리면 더 크게 보여요',
+    },
+    language: {
+      title: '발표 언어',
+      note: '이번 수업에만 바뀌어요. 한국어에는 늘 로마자와 뜻이 함께 나와요.',
     },
   },
 } satisfies DeepPartial<Messages['learner']>;

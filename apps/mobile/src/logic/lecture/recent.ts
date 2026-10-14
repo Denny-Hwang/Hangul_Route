@@ -98,6 +98,8 @@ export function forgetDeck(list: RecentList, deckId: string): RecentList {
 export interface LoadedRecent {
   list: RecentList;
   writable: boolean;
+  /** The read failed (storage blocked or broken): the home shows its storage-off line (design home.md). */
+  off?: true;
 }
 
 /** `store.readJson` must throw on a failed read (the strict storage read), not answer null. */
@@ -107,7 +109,7 @@ export async function readRecent(store: RecentStore): Promise<LoadedRecent> {
     if (raw === null || raw === undefined) return { list: emptyRecent(), writable: true };
     return { list: parseRecent(raw), writable: RecentListShape.safeParse(raw).success };
   } catch {
-    return { list: emptyRecent(), writable: false };
+    return { list: emptyRecent(), writable: false, off: true };
   }
 }
 
@@ -119,7 +121,7 @@ export async function loadRecent(store: RecentStore): Promise<RecentList> {
 export async function commitRecent(store: RecentStore, loaded: LoadedRecent, change: (list: RecentList) => RecentList): Promise<LoadedRecent> {
   const next = change(loaded.list);
   if (next !== loaded.list && loaded.writable) await saveRecent(store, next);
-  return { list: next, writable: loaded.writable };
+  return { ...loaded, list: next };
 }
 
 /** False when the write failed (a full or blocked store); the lesson goes on either way. */

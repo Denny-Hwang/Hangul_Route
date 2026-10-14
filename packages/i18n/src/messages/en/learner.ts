@@ -1799,7 +1799,30 @@ export const learner = {
   presenter: {
     /** The fixed tab title; the deck title never goes in `document.title` (section 3.2). */
     docTitle: 'Hangul Route lecture',
-    home: { title: 'Lecture' },
+    home: {
+      title: 'Lecture',
+      help: { cta: 'Keys and help' },
+      recent: {
+        title: 'Recent lessons',
+        empty: 'Lessons you open appear here. Names are never saved.',
+        storageOff: 'Recent lessons are off on this device. Lessons still work.',
+        resume: { cta: 'Resume' },
+        startOver: { cta: 'Start over' },
+      },
+      quick: {
+        title: 'Quick lesson',
+        line: 'Choose what to teach. No sign-in, no names.',
+        group: { episodes: 'Episodes', lessons: 'Single lessons', letterSets: 'Letter sets', topics: 'Word topics', stories: 'Stories' },
+        consonants: 'Consonants',
+        vowels: 'Vowels',
+        minutes: (n: number) => `about ${n} min`,
+        letters: (n: number) => plural('en', n, { one: '1 letter', other: `${n} letters` }),
+        chosen: (n: number) => plural('en', n, { one: '1 chosen', other: `${n} chosen` }),
+        nothing: 'Choose at least one item to build a lesson.',
+        full: 'This lesson is full. Remove one to add another.',
+        build: { cta: 'Build lesson' },
+      },
+    },
     bar: {
       label: 'Lesson controls',
       counter: (i: number, n: number) => `${i} / ${n}`,
@@ -1873,6 +1896,8 @@ export const learner = {
       },
     },
     start: {
+      /** Back to the presenter home before Start: nothing is saved or sent. */
+      back: { cta: 'Back to lessons' },
       slides: (n: number) => plural('en', n, { one: '1 slide', other: `${n} slides` }),
       minutes: (n: number) => plural('en', n, { one: 'about 1 minute', other: `about ${n} minutes` }),
       checks: 'Before you start',
@@ -1921,6 +1946,11 @@ export const learner = {
       loading: 'Loading lesson',
       tooSmall: 'Make the window bigger or turn the screen.',
       portrait: 'Turn the screen for a bigger view',
+    },
+    /** The session language chips (section 3.12): this session only, the device locale is not written. */
+    language: {
+      title: 'Presenter language',
+      note: 'Only for this session. Korean always shows romanization and a meaning.',
     },
   },
 } as const;

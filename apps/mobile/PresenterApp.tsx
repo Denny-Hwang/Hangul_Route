@@ -1,6 +1,6 @@
 import { colors, presenter, supportedCardIds } from '@hangul-route/design-system';
-import { LOCALE_META, dictionaryLocale, getMessages, type UiLocale } from '@hangul-route/i18n';
-import type { LectureDeck } from '@hangul-route/content-schema';
+import { LOCALE_META, availableLocales, dictionaryLocale, getMessages, type UiLocale } from '@hangul-route/i18n';
+import { encodeDeck, type LectureDeck } from '@hangul-route/content-schema';
 import { StatusBar } from 'expo-status-bar';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
@@ -13,10 +13,15 @@ import { initialPresenterState, reduce, type PresenterEvent, type PresenterState
 import { expandDeck, withBuilds, type Slide } from './src/logic/lecture/deck-builder';
 import type { KeyCommand } from './src/logic/lecture/keymap';
 import { clearPickerLabels, heldLabels } from './src/logic/lecture/picker-labels';
-import { commitRecent, emptyRecent, readRecent, rememberDeck, setLastSlide, type LoadedRecent, type RecentList, type RecentStore } from './src/logic/lecture/recent';
+import { recentView } from './src/logic/lecture/home-view';
+import { quickSource } from './src/logic/lecture/quick-source';
+import { commitRecent, emptyRecent, forgetDeck, readRecent, rememberDeck, setLastSlide, type LoadedRecent, type RecentList, type RecentStore } from './src/logic/lecture/recent';
+import { languageOptions } from './src/logic/locale/language-picker';
 import {
   completePayload,
+  homeStart,
   nextStrokePlay,
+  presenterLocale,
   resolveBoot,
   runDeck,
   SHELL_SLIDE_KINDS,
@@ -29,6 +34,7 @@ import {
   type RunTally,
   type StartSource,
   type StrokePlay,
+  type HomeChoice,
 } from './src/logic/lecture/shell';
 import { FONT_WAIT_MS, stageBox } from './src/logic/lecture/stage-constants';
 import { BAR_BAND, STAGE_BOUNDS } from './src/screens/presenter/stage-metrics';
@@ -48,6 +54,7 @@ import {
   listenForRoster,
   lockLandscape,
   forgetOpenDeck,
+  holdOpenDeck,
   releaseScreenAwake,
   reloadOnDeckLink,
   setPresenterDocTitle,
@@ -65,6 +72,7 @@ import { readJsonExact, writeJson } from './src/platform/storage';
 import { flushQueue, track } from './src/platform/telemetry';
 import { ControlBar } from './src/screens/presenter/ControlBar';
 import { ExitConfirm } from './src/screens/presenter/ExitConfirm';
+import { PresenterHomeScreen } from './src/screens/presenter/HomeScreen';
 import { PresenterViewProvider, type PresenterView } from './src/screens/presenter/presenter-context';
 import { Stage, StageHint } from './src/screens/presenter/Stage';
 import { StartScreen, type PickerRow } from './src/screens/presenter/StartScreen';
@@ -118,12 +126,22 @@ export default function PresenterApp(): React.ReactElement {
   );
   // Recent lessons, read once at boot; every change chains on the read, so a fast Start never saves over it.
   const recent = useRef<Promise<LoadedRecent>>(Promise.resolve({ list: emptyRecent(), writable: false }));
+  // What the home draws: null until the boot read lands, then every committed change.
+  const [recentLoaded, setRecentLoaded] = useState<LoadedRecent | null>(null);
   const updateRecent = useCallback((change: (list: RecentList) => RecentList) => {
-    recent.current = recent.current.then((loaded) => commitRecent(recentStore, loaded, change));
+    recent.current = recent.current
+      .then((loaded) => commitRecent(recentStore, loaded, change))
+      .then((next) => {
+        setRecentLoaded(next);
+        return next;
+      });
   }, []);
   const deviceLocale = useLocaleStore((s) => activeLocale(s, null));
+  // A language chip on the home holds for this session only (memory; section 3.12).
+  const [sessionLocale, setSessionLocale] = useState<UiLocale | null>(null);
+  const available = useMemo(() => availableLocales(), []);
   const deck = phase.kind === 'ready' || phase.kind === 'running' ? phase.deck : null;
-  const locale: UiLocale = deck?.options.uiLocale ?? deviceLocale;
+  const locale: UiLocale = presenterLocale({ deck, session: sessionLocale, device: deviceLocale, available });
   const messages = useMemo(() => getMessages(dictionaryLocale(locale)), [locale]);
   const reducedMotion = useReducedMotion();
   const window = useWindowDimensions();
@@ -132,6 +150,8 @@ export default function PresenterApp(): React.ReactElement {
   const [voiceChecked, setVoiceChecked] = useState(false);
   const muted = useAudioStore((s) => s.muted);
   const [updateWaiting, setUpdateWaiting] = useState(false);
+  // After Exit or an invalid link the home takes focus on its h1 (design home.md).
+  const [homeFocus, setHomeFocus] = useState(false);
 
   // Boot: the audio settings and the device locale only (no profile), the voice check, the queue.
   useEffect(() => {
@@ -147,6 +167,9 @@ export default function PresenterApp(): React.ReactElement {
       });
     void flushQueue();
     recent.current = readRecent(recentStore);
+    void recent.current.then((loaded) => {
+      if (live) setRecentLoaded(loaded);
+    });
     if (address?.reloaded) {
       void recent.current.then(({ list }) => {
         if (live) setPhase(phaseOf(resolveBoot(address, list)));
@@ -295,8 +318,15 @@ export default function PresenterApp(): React.ReactElement {
     tally.current = startTally(Date.now(), slides[state.slideIdx]?.key);
     const savedAt = new Date().toISOString();
     const firstKey = slides[state.slideIdx]!.key;
-    const { deck: started, source } = phase;
-    updateRecent((list) => setLastSlide(source === 'recent' ? list : rememberDeck(list, started, savedAt), started.id, firstKey));
+    const { deck: started } = phase;
+    // Every start, a resumed one too, moves the lesson to the top of Recent with today's day (section 3.12).
+    updateRecent((list) => setLastSlide(rememberDeck(list, started, savedAt), started.id, firstKey));
+    // From now on a reload resumes at the open slide, also after Start over (which held the deck as fresh).
+    try {
+      holdOpenDeck(encodeDeck(started));
+    } catch {
+      // A deck too long for a link still runs; a reload then shows the home.
+    }
     void track({
       name: 'lecture.start',
       payload: { ...startPayload({ deck: phase.deck, run, source: phase.source, pickerMode, capability, offlineReady: isOfflineReady() }) },
@@ -318,6 +348,7 @@ export default function PresenterApp(): React.ReactElement {
     setPstate(null);
     setRomanization(null);
     setEndHint(false);
+    setHomeFocus(true);
     setPhase({ kind: 'home' });
     void track({ name: 'lecture.complete', payload }).finally(() => {
       // A waiting update applies only now, never mid-lesson (section 3.8).
@@ -366,6 +397,31 @@ export default function PresenterApp(): React.ReactElement {
     };
   }, [phase.kind]);
 
+  // ---- the presenter home (section 3.12) ----
+  const quick = useMemo(() => quickSource(locale), [locale]);
+  const languages = useMemo(() => languageOptions(available), [available]);
+  const openFromHome = useCallback((choice: HomeChoice) => {
+    const next = homeStart(choice);
+    // The tab holds the deck, as a link does, so a reload reopens this lesson (section 3.2).
+    try {
+      holdOpenDeck(encodeDeck(next.deck), { fresh: choice.kind === 'start-over' });
+    } catch {
+      // A deck too long for a link still runs; a reload then shows the home.
+    }
+    rejected.current = false;
+    setPickerCount(null);
+    setHomeFocus(false);
+    setPhase(next);
+  }, []);
+  // Back to lessons on the start screen: nothing started, so nothing is saved or sent (design start-screen.md).
+  const backToHome = useCallback(() => {
+    clearPickerLabels();
+    forgetOpenDeck();
+    setPickerCount(null);
+    setHomeFocus(true);
+    setPhase({ kind: 'home' });
+  }, []);
+
   // ---- render ----
   const box = stageBox(window, band);
   const scale = stageScale(box, STAGE_BOUNDS);
@@ -389,10 +445,36 @@ export default function PresenterApp(): React.ReactElement {
     body = <StatePage testID="presenter-loading" pose="idle" status={messages.learner.presenter.state.loading} />;
   } else if (phase.kind === 'invalid') {
     const m = messages.learner.presenter.state.invalid;
-    body = <StatePage testID="presenter-invalid" pose="thinking" title={m.title} line={m.line} cta={m.cta} onCta={() => setPhase({ kind: 'home' })} />;
+    body = (
+      <StatePage
+        testID="presenter-invalid"
+        pose="thinking"
+        title={m.title}
+        line={m.line}
+        cta={m.cta}
+        onCta={() => {
+          setHomeFocus(true);
+          setPhase({ kind: 'home' });
+        }}
+      />
+    );
   } else if (phase.kind === 'home') {
-    // The presenter home (Recent lessons and Quick lesson) is F-TCH-004 PR 8; until then it names where lessons come from.
-    body = <StatePage testID="presenter-home" pose="waving" title={messages.learner.presenter.home.title} line={messages.learner.presenter.state.invalid.line} />;
+    body = (
+      <PresenterHomeScreen
+        messages={messages}
+        locale={locale}
+        languages={languages}
+        sessionLocale={sessionLocale}
+        onLanguage={setSessionLocale}
+        recent={recentView(recentLoaded)}
+        onResume={(item) => openFromHome({ kind: 'resume', item })}
+        onStartOver={(item) => openFromHome({ kind: 'start-over', item })}
+        onRemove={(deckId) => updateRecent((list) => forgetDeck(list, deckId))}
+        quick={quick}
+        onBuild={(built) => openFromHome({ kind: 'quick', deck: built })}
+        focusTitle={homeFocus}
+      />
+    );
   } else if (phase.kind === 'ready') {
     const count = pickerCount ?? phase.deck.picker?.count ?? 0;
     const pickerRow: PickerRow =
@@ -423,6 +505,7 @@ export default function PresenterApp(): React.ReactElement {
           onPickerCount={setPickerCount}
           fontReady={fontReady}
           onStart={onStart}
+          onBack={backToHome}
         />
       );
   } else {

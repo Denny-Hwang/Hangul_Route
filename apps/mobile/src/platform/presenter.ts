@@ -17,6 +17,7 @@ export function isPresenterRoute(_location: { pathname: string }): boolean {
 export interface DeckAddress {
   raw: string;
   reloaded: boolean;
+  fresh?: true;
 }
 
 export function takeDeckFragment(): DeckAddress | null {
@@ -28,6 +29,10 @@ export function setPresenterDocTitle(_title: string): void {
 }
 
 export function forgetOpenDeck(): void {
+  // No history on native.
+}
+
+export function holdOpenDeck(_raw: string, _options: { fresh?: boolean } = {}): void {
   // No history on native.
 }
 
