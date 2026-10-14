@@ -3,8 +3,8 @@ import type { InboxPlan, Profile, ProgressSnapshot } from '@hangul-route/content
 import { useFocusEffect } from '@react-navigation/native';
 import React, { useCallback, useEffect, useState } from 'react';
 import { View } from 'react-native';
-import { flags } from '../../config/flags';
-import { useMessages } from '../../i18n/use-messages';
+import { routeEnabledFor } from '../../config/flags';
+import { useLocale, useMessages } from '../../i18n/use-messages';
 import { questsDoneOf } from '../../logic/placement/entry';
 import { hasPlanNow } from '../../logic/plan-free-lines';
 import { effectiveLearnerType } from '../../logic/profiles/learner-type';
@@ -33,18 +33,20 @@ export function usePlanPrompt(
   plans: readonly InboxPlan[] | undefined,
 ): boolean {
   const profileId = profile?.id ?? null;
+  // P2-8b: the flag and a UI locale whose weekly plan words are reviewed (en only for now).
+  const enabled = routeEnabledFor(useLocale());
   const ui = useRouteStore((s) => (profileId === null ? undefined : s.ui[profileId]));
   useFocusEffect(
     useCallback(() => {
-      if (!flags.routeEnabled || profileId === null) return undefined;
+      if (!enabled || profileId === null) return undefined;
       void useRouteStore.getState().loadUi(profileId);
       void usePlanStore.getState().hydrate(profileId);
       return undefined;
-    }, [profileId]),
+    }, [enabled, profileId]),
   );
-  if (!flags.routeEnabled || profile === null || ui === undefined || plans === undefined || snapshot === undefined) return false;
+  if (!enabled || profile === null || ui === undefined || plans === undefined || snapshot === undefined) return false;
   return planPromptEligible({
-    enabled: flags.routeEnabled,
+    enabled,
     learnerType: effectiveLearnerType(profile),
     hasPlan: hasPlanNow(plans, snapshot),
     questsDone: questsDoneOf(snapshot.quests),
@@ -103,7 +105,7 @@ export function usePlanSlot(
   const profileId = profile?.id ?? null;
   const ui = useRouteStore((s) => (profileId === null ? undefined : s.ui[profileId]));
   const today = useToday();
-  const active = flags.routeEnabled ? activeSelfRoute(snapshot) : null;
+  const active = routeEnabledFor(useLocale()) ? activeSelfRoute(snapshot) : null;
   // A child's check-in waits for the grown-up gate (section 3.9): yes changes the plan a grown-up set.
   const changesOpen = usePlanChangesOpen(profile);
   const offer = useCheckInOffer({ route: active, quests: snapshot?.quests, today, ready: ui !== undefined && snapshot !== undefined, answeredFor: ui?.checkInFor, changesOpen });
