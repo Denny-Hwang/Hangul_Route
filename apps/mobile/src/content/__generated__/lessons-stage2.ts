@@ -3,9 +3,1866 @@ import type { Overlays } from '@hangul-route/content-schema';
 import type { MinigameScope } from '../../logic/minigame-config';
 
 /** The game content of the Stage 2 lesson quests, by minigame ref (reached lazily, never from lessons-index.ts). */
-export const LESSON_SCOPES: Readonly<Record<string, MinigameScope>> = {};
+export const LESSON_SCOPES: Readonly<Record<string, MinigameScope>> = {
+  "minigame:s2-letters-q1-apply": {
+    "kind": "card-match",
+    "rounds": 4,
+    "cardPairs": [
+      {
+        "ko": "개",
+        "romanization": "gae",
+        "en": "dog"
+      },
+      {
+        "ko": "게",
+        "romanization": "ge",
+        "en": "crab"
+      },
+      {
+        "ko": "얘기",
+        "romanization": "yaegi",
+        "en": "talk, story"
+      },
+      {
+        "ko": "시계",
+        "romanization": "sigye",
+        "en": "clock, watch"
+      }
+    ]
+  },
+  "minigame:s2-letters-q1-check": {
+    "kind": "listen-pick",
+    "rounds": 2,
+    "listenPick": {
+      "rounds": [
+        {
+          "id": "see-hae",
+          "prompt": {
+            "ko": "해",
+            "romanization": "hae",
+            "en": "sun"
+          },
+          "options": [
+            {
+              "id": "hae",
+              "pictureRef": "word:nature-sun",
+              "labelEn": "sun"
+            },
+            {
+              "id": "sae",
+              "pictureRef": "word:animal-bird",
+              "labelEn": "bird"
+            },
+            {
+              "id": "byeol",
+              "pictureRef": "word:nature-star",
+              "labelEn": "star"
+            }
+          ],
+          "answerId": "hae"
+        },
+        {
+          "id": "read-norae",
+          "prompt": {
+            "ko": "노래",
+            "romanization": "norae",
+            "en": "song"
+          },
+          "options": [
+            {
+              "id": "norae",
+              "text": {
+                "ko": "노래",
+                "romanization": "norae",
+                "en": "song"
+              }
+            },
+            {
+              "id": "nara",
+              "text": {
+                "ko": "나라",
+                "romanization": "nara",
+                "en": "country"
+              }
+            },
+            {
+              "id": "nuna",
+              "text": {
+                "ko": "누나",
+                "romanization": "nuna",
+                "en": "older sister (said by a man or boy)"
+              }
+            }
+          ],
+          "answerId": "norae"
+        }
+      ]
+    }
+  },
+  "minigame:s2-letters-q1-practice": {
+    "kind": "pic-word-match",
+    "rounds": 6,
+    "picWord": {
+      "boards": [
+        {
+          "pairs": [
+            {
+              "id": "sae",
+              "pictureRef": "word:animal-bird",
+              "word": {
+                "ko": "새",
+                "romanization": "sae",
+                "en": "bird"
+              }
+            },
+            {
+              "id": "hae",
+              "pictureRef": "word:nature-sun",
+              "word": {
+                "ko": "해",
+                "romanization": "hae",
+                "en": "sun"
+              }
+            },
+            {
+              "id": "namu",
+              "pictureRef": "word:nature-tree",
+              "word": {
+                "ko": "나무",
+                "romanization": "namu",
+                "en": "tree"
+              }
+            }
+          ]
+        },
+        {
+          "pairs": [
+            {
+              "id": "norae",
+              "pictureRef": "word:culture-song",
+              "word": {
+                "ko": "노래",
+                "romanization": "norae",
+                "en": "song"
+              }
+            },
+            {
+              "id": "bae",
+              "pictureRef": "word:travel-boat",
+              "word": {
+                "ko": "배",
+                "romanization": "bae",
+                "en": "boat"
+              }
+            },
+            {
+              "id": "byeol",
+              "pictureRef": "word:nature-star",
+              "word": {
+                "ko": "별",
+                "romanization": "byeol",
+                "en": "star"
+              }
+            }
+          ]
+        },
+        {
+          "pairs": [
+            {
+              "id": "mujigae",
+              "pictureRef": "word:science-rainbow",
+              "word": {
+                "ko": "무지개",
+                "romanization": "mujigae",
+                "en": "rainbow"
+              }
+            },
+            {
+              "id": "jiugae",
+              "pictureRef": "word:school-eraser",
+              "word": {
+                "ko": "지우개",
+                "romanization": "jiugae",
+                "en": "eraser"
+              }
+            },
+            {
+              "id": "chaek",
+              "pictureRef": "card:book",
+              "word": {
+                "ko": "책",
+                "romanization": "chaek",
+                "en": "book"
+              }
+            }
+          ]
+        },
+        {
+          "pairs": [
+            {
+              "id": "baegu",
+              "pictureRef": "word:sport-volleyball",
+              "word": {
+                "ko": "배구",
+                "romanization": "baegu",
+                "en": "volleyball"
+              }
+            },
+            {
+              "id": "taeksi",
+              "pictureRef": "word:travel-taxi",
+              "word": {
+                "ko": "택시",
+                "romanization": "taeksi",
+                "en": "taxi"
+              }
+            },
+            {
+              "id": "bada",
+              "pictureRef": "card:sea",
+              "word": {
+                "ko": "바다",
+                "romanization": "bada",
+                "en": "sea"
+              }
+            }
+          ]
+        },
+        {
+          "pairs": [
+            {
+              "id": "hayansaek",
+              "pictureRef": "word:color-white",
+              "word": {
+                "ko": "하얀색",
+                "romanization": "hayansaek",
+                "en": "white"
+              }
+            },
+            {
+              "id": "noransaek",
+              "pictureRef": "word:color-yellow",
+              "word": {
+                "ko": "노란색",
+                "romanization": "noransaek",
+                "en": "yellow"
+              }
+            },
+            {
+              "id": "paransaek",
+              "pictureRef": "word:color-blue",
+              "word": {
+                "ko": "파란색",
+                "romanization": "paransaek",
+                "en": "blue"
+              }
+            }
+          ]
+        },
+        {
+          "pairs": [
+            {
+              "id": "sebae",
+              "pictureRef": "card:sebae",
+              "word": {
+                "ko": "세배",
+                "romanization": "sebae",
+                "en": "the New Year's bow"
+              }
+            },
+            {
+              "id": "dongsaeng",
+              "pictureRef": "word:family-dongsaeng",
+              "word": {
+                "ko": "동생",
+                "romanization": "dongsaeng",
+                "en": "younger brother or sister"
+              }
+            },
+            {
+              "id": "galsaek",
+              "pictureRef": "word:color-brown",
+              "word": {
+                "ko": "갈색",
+                "romanization": "galsaek",
+                "en": "brown"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "minigame:s2-letters-q2-apply": {
+    "kind": "card-match",
+    "rounds": 4,
+    "cardPairs": [
+      {
+        "ko": "까치",
+        "romanization": "kkachi",
+        "en": "magpie"
+      },
+      {
+        "ko": "딸기",
+        "romanization": "ttalgi",
+        "en": "strawberry"
+      },
+      {
+        "ko": "빵",
+        "romanization": "ppang",
+        "en": "bread"
+      },
+      {
+        "ko": "쌀",
+        "romanization": "ssal",
+        "en": "uncooked rice"
+      }
+    ]
+  },
+  "minigame:s2-letters-q2-check": {
+    "kind": "listen-pick",
+    "rounds": 2,
+    "listenPick": {
+      "rounds": [
+        {
+          "id": "see-ttalgi",
+          "prompt": {
+            "ko": "딸기",
+            "romanization": "ttalgi",
+            "en": "strawberry"
+          },
+          "options": [
+            {
+              "id": "ttalgi",
+              "pictureRef": "word:food-strawberry",
+              "labelEn": "strawberry"
+            },
+            {
+              "id": "ppang",
+              "pictureRef": "word:food-bread",
+              "labelEn": "bread"
+            },
+            {
+              "id": "tteok",
+              "pictureRef": "word:food-tteok",
+              "labelEn": "rice cake"
+            }
+          ],
+          "answerId": "ttalgi"
+        },
+        {
+          "id": "read-ppang",
+          "prompt": {
+            "ko": "빵",
+            "romanization": "ppang",
+            "en": "bread"
+          },
+          "options": [
+            {
+              "id": "ppang",
+              "text": {
+                "ko": "빵",
+                "romanization": "ppang",
+                "en": "bread"
+              }
+            },
+            {
+              "id": "bang",
+              "text": {
+                "ko": "방",
+                "romanization": "bang",
+                "en": "room"
+              }
+            },
+            {
+              "id": "san",
+              "text": {
+                "ko": "산",
+                "romanization": "san",
+                "en": "mountain"
+              }
+            }
+          ],
+          "answerId": "ppang"
+        }
+      ]
+    }
+  },
+  "minigame:s2-letters-q2-practice": {
+    "kind": "pic-word-match",
+    "rounds": 6,
+    "picWord": {
+      "boards": [
+        {
+          "pairs": [
+            {
+              "id": "kkachi",
+              "pictureRef": "card:magpie",
+              "word": {
+                "ko": "까치",
+                "romanization": "kkachi",
+                "en": "magpie"
+              }
+            },
+            {
+              "id": "ttalgi",
+              "pictureRef": "word:food-strawberry",
+              "word": {
+                "ko": "딸기",
+                "romanization": "ttalgi",
+                "en": "strawberry"
+              }
+            },
+            {
+              "id": "ppang",
+              "pictureRef": "word:food-bread",
+              "word": {
+                "ko": "빵",
+                "romanization": "ppang",
+                "en": "bread"
+              }
+            }
+          ]
+        },
+        {
+          "pairs": [
+            {
+              "id": "tteok",
+              "pictureRef": "word:food-tteok",
+              "word": {
+                "ko": "떡",
+                "romanization": "tteok",
+                "en": "rice cake"
+              }
+            },
+            {
+              "id": "tokki",
+              "pictureRef": "word:animal-rabbit",
+              "word": {
+                "ko": "토끼",
+                "romanization": "tokki",
+                "en": "rabbit"
+              }
+            },
+            {
+              "id": "ori",
+              "pictureRef": "word:animal-duck",
+              "word": {
+                "ko": "오리",
+                "romanization": "ori",
+                "en": "duck"
+              }
+            }
+          ]
+        },
+        {
+          "pairs": [
+            {
+              "id": "kokkiri",
+              "pictureRef": "word:animal-elephant",
+              "word": {
+                "ko": "코끼리",
+                "romanization": "kokkiri",
+                "en": "elephant"
+              }
+            },
+            {
+              "id": "appa",
+              "pictureRef": "word:family-dad",
+              "word": {
+                "ko": "아빠",
+                "romanization": "appa",
+                "en": "dad"
+              }
+            },
+            {
+              "id": "nabi",
+              "pictureRef": "word:animal-butterfly",
+              "word": {
+                "ko": "나비",
+                "romanization": "nabi",
+                "en": "butterfly"
+              }
+            }
+          ]
+        },
+        {
+          "pairs": [
+            {
+              "id": "ppalgansaek",
+              "pictureRef": "word:color-red",
+              "word": {
+                "ko": "빨간색",
+                "romanization": "ppalgansaek",
+                "en": "red"
+              }
+            },
+            {
+              "id": "noransaek",
+              "pictureRef": "word:color-yellow",
+              "word": {
+                "ko": "노란색",
+                "romanization": "noransaek",
+                "en": "yellow"
+              }
+            },
+            {
+              "id": "hayansaek",
+              "pictureRef": "word:color-white",
+              "word": {
+                "ko": "하얀색",
+                "romanization": "hayansaek",
+                "en": "white"
+              }
+            }
+          ]
+        },
+        {
+          "pairs": [
+            {
+              "id": "tteokguk",
+              "pictureRef": "card:tteokguk",
+              "word": {
+                "ko": "떡국",
+                "romanization": "tteokguk",
+                "en": "rice-cake soup"
+              }
+            },
+            {
+              "id": "sae",
+              "pictureRef": "word:animal-bird",
+              "word": {
+                "ko": "새",
+                "romanization": "sae",
+                "en": "bird"
+              }
+            },
+            {
+              "id": "hae",
+              "pictureRef": "word:nature-sun",
+              "word": {
+                "ko": "해",
+                "romanization": "hae",
+                "en": "sun"
+              }
+            }
+          ]
+        },
+        {
+          "pairs": [
+            {
+              "id": "ttalgi",
+              "pictureRef": "word:food-strawberry",
+              "word": {
+                "ko": "딸기",
+                "romanization": "ttalgi",
+                "en": "strawberry"
+              }
+            },
+            {
+              "id": "tokki",
+              "pictureRef": "word:animal-rabbit",
+              "word": {
+                "ko": "토끼",
+                "romanization": "tokki",
+                "en": "rabbit"
+              }
+            },
+            {
+              "id": "norae",
+              "pictureRef": "word:culture-song",
+              "word": {
+                "ko": "노래",
+                "romanization": "norae",
+                "en": "song"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "minigame:s2-letters-q3-apply": {
+    "kind": "card-match",
+    "rounds": 4,
+    "cardPairs": [
+      {
+        "ko": "사과",
+        "romanization": "sagwa",
+        "en": "apple"
+      },
+      {
+        "ko": "과자",
+        "romanization": "gwaja",
+        "en": "snack, cookie"
+      },
+      {
+        "ko": "귀",
+        "romanization": "gwi",
+        "en": "ear"
+      },
+      {
+        "ko": "의자",
+        "romanization": "uija",
+        "en": "chair"
+      }
+    ]
+  },
+  "minigame:s2-letters-q3-check": {
+    "kind": "listen-pick",
+    "rounds": 2,
+    "listenPick": {
+      "rounds": [
+        {
+          "id": "see-gwi",
+          "prompt": {
+            "ko": "귀",
+            "romanization": "gwi",
+            "en": "ear"
+          },
+          "options": [
+            {
+              "id": "gwi",
+              "pictureRef": "word:body-ear",
+              "labelEn": "ear"
+            },
+            {
+              "id": "ko",
+              "pictureRef": "word:body-nose",
+              "labelEn": "nose"
+            },
+            {
+              "id": "ip",
+              "pictureRef": "word:body-mouth",
+              "labelEn": "mouth"
+            }
+          ],
+          "answerId": "gwi"
+        },
+        {
+          "id": "read-uija",
+          "prompt": {
+            "ko": "의자",
+            "romanization": "uija",
+            "en": "chair"
+          },
+          "options": [
+            {
+              "id": "uija",
+              "text": {
+                "ko": "의자",
+                "romanization": "uija",
+                "en": "chair"
+              }
+            },
+            {
+              "id": "ai",
+              "text": {
+                "ko": "아이",
+                "romanization": "ai",
+                "en": "child"
+              }
+            },
+            {
+              "id": "dari",
+              "text": {
+                "ko": "다리",
+                "romanization": "dari",
+                "en": "leg"
+              }
+            }
+          ],
+          "answerId": "uija"
+        }
+      ]
+    }
+  },
+  "minigame:s2-letters-q3-practice": {
+    "kind": "pic-word-match",
+    "rounds": 6,
+    "picWord": {
+      "boards": [
+        {
+          "pairs": [
+            {
+              "id": "sagwa",
+              "pictureRef": "word:food-apple",
+              "word": {
+                "ko": "사과",
+                "romanization": "sagwa",
+                "en": "apple"
+              }
+            },
+            {
+              "id": "wonsungi",
+              "pictureRef": "word:animal-monkey",
+              "word": {
+                "ko": "원숭이",
+                "romanization": "wonsungi",
+                "en": "monkey"
+              }
+            },
+            {
+              "id": "banana",
+              "pictureRef": "word:food-banana",
+              "word": {
+                "ko": "바나나",
+                "romanization": "banana",
+                "en": "banana"
+              }
+            }
+          ]
+        },
+        {
+          "pairs": [
+            {
+              "id": "gwi",
+              "pictureRef": "word:body-ear",
+              "word": {
+                "ko": "귀",
+                "romanization": "gwi",
+                "en": "ear"
+              }
+            },
+            {
+              "id": "ko",
+              "pictureRef": "word:body-nose",
+              "word": {
+                "ko": "코",
+                "romanization": "ko",
+                "en": "nose"
+              }
+            },
+            {
+              "id": "son",
+              "pictureRef": "word:body-hand",
+              "word": {
+                "ko": "손",
+                "romanization": "son",
+                "en": "hand"
+              }
+            }
+          ]
+        },
+        {
+          "pairs": [
+            {
+              "id": "uija",
+              "pictureRef": "word:school-chair",
+              "word": {
+                "ko": "의자",
+                "romanization": "uija",
+                "en": "chair"
+              }
+            },
+            {
+              "id": "gawi",
+              "pictureRef": "word:school-scissors",
+              "word": {
+                "ko": "가위",
+                "romanization": "gawi",
+                "en": "scissors"
+              }
+            },
+            {
+              "id": "gabang",
+              "pictureRef": "word:school-bag",
+              "word": {
+                "ko": "가방",
+                "romanization": "gabang",
+                "en": "bag"
+              }
+            }
+          ]
+        },
+        {
+          "pairs": [
+            {
+              "id": "juhwangsaek",
+              "pictureRef": "word:color-orange",
+              "word": {
+                "ko": "주황색",
+                "romanization": "juhwangsaek",
+                "en": "orange (the color)"
+              }
+            },
+            {
+              "id": "ppalgansaek",
+              "pictureRef": "word:color-red",
+              "word": {
+                "ko": "빨간색",
+                "romanization": "ppalgansaek",
+                "en": "red"
+              }
+            },
+            {
+              "id": "paransaek",
+              "pictureRef": "word:color-blue",
+              "word": {
+                "ko": "파란색",
+                "romanization": "paransaek",
+                "en": "blue"
+              }
+            }
+          ]
+        },
+        {
+          "pairs": [
+            {
+              "id": "taegwondo",
+              "pictureRef": "word:sport-taekwondo",
+              "word": {
+                "ko": "태권도",
+                "romanization": "taegwondo",
+                "en": "taekwondo"
+              }
+            },
+            {
+              "id": "baegu",
+              "pictureRef": "word:sport-volleyball",
+              "word": {
+                "ko": "배구",
+                "romanization": "baegu",
+                "en": "volleyball"
+              }
+            },
+            {
+              "id": "suyeong",
+              "pictureRef": "word:sport-swimming",
+              "word": {
+                "ko": "수영",
+                "romanization": "suyeong",
+                "en": "swimming"
+              }
+            }
+          ]
+        },
+        {
+          "pairs": [
+            {
+              "id": "sagwa",
+              "pictureRef": "word:food-apple",
+              "word": {
+                "ko": "사과",
+                "romanization": "sagwa",
+                "en": "apple"
+              }
+            },
+            {
+              "id": "ttalgi",
+              "pictureRef": "word:food-strawberry",
+              "word": {
+                "ko": "딸기",
+                "romanization": "ttalgi",
+                "en": "strawberry"
+              }
+            },
+            {
+              "id": "uyu",
+              "pictureRef": "word:food-milk",
+              "word": {
+                "ko": "우유",
+                "romanization": "uyu",
+                "en": "milk"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "minigame:s2-letters-q4-apply": {
+    "kind": "card-match",
+    "rounds": 4,
+    "cardPairs": [
+      {
+        "ko": "회사",
+        "romanization": "hoesa",
+        "en": "company, office"
+      },
+      {
+        "ko": "돼지",
+        "romanization": "dwaeji",
+        "en": "pig"
+      },
+      {
+        "ko": "스웨터",
+        "romanization": "seuweteo",
+        "en": "sweater"
+      },
+      {
+        "ko": "회색",
+        "romanization": "hoesaek",
+        "en": "gray"
+      }
+    ]
+  },
+  "minigame:s2-letters-q4-check": {
+    "kind": "listen-pick",
+    "rounds": 2,
+    "listenPick": {
+      "rounds": [
+        {
+          "id": "see-hoesaek",
+          "prompt": {
+            "ko": "회색",
+            "romanization": "hoesaek",
+            "en": "gray"
+          },
+          "options": [
+            {
+              "id": "hoesaek",
+              "pictureRef": "word:color-gray",
+              "labelEn": "gray"
+            },
+            {
+              "id": "hayansaek",
+              "pictureRef": "word:color-white",
+              "labelEn": "white"
+            },
+            {
+              "id": "galsaek",
+              "pictureRef": "word:color-brown",
+              "labelEn": "brown"
+            }
+          ],
+          "answerId": "hoesaek"
+        },
+        {
+          "id": "read-dwaeji",
+          "prompt": {
+            "ko": "돼지",
+            "romanization": "dwaeji",
+            "en": "pig"
+          },
+          "options": [
+            {
+              "id": "dwaeji",
+              "text": {
+                "ko": "돼지",
+                "romanization": "dwaeji",
+                "en": "pig"
+              }
+            },
+            {
+              "id": "dari",
+              "text": {
+                "ko": "다리",
+                "romanization": "dari",
+                "en": "leg"
+              }
+            },
+            {
+              "id": "baji",
+              "text": {
+                "ko": "바지",
+                "romanization": "baji",
+                "en": "pants, trousers"
+              }
+            }
+          ],
+          "answerId": "dwaeji"
+        }
+      ]
+    }
+  },
+  "minigame:s2-letters-q4-practice": {
+    "kind": "pic-word-match",
+    "rounds": 6,
+    "picWord": {
+      "boards": [
+        {
+          "pairs": [
+            {
+              "id": "hoesaek",
+              "pictureRef": "word:color-gray",
+              "word": {
+                "ko": "회색",
+                "romanization": "hoesaek",
+                "en": "gray"
+              }
+            },
+            {
+              "id": "hayansaek",
+              "pictureRef": "word:color-white",
+              "word": {
+                "ko": "하얀색",
+                "romanization": "hayansaek",
+                "en": "white"
+              }
+            },
+            {
+              "id": "ppalgansaek",
+              "pictureRef": "word:color-red",
+              "word": {
+                "ko": "빨간색",
+                "romanization": "ppalgansaek",
+                "en": "red"
+              }
+            }
+          ]
+        },
+        {
+          "pairs": [
+            {
+              "id": "gawi",
+              "pictureRef": "word:school-scissors",
+              "word": {
+                "ko": "가위",
+                "romanization": "gawi",
+                "en": "scissors"
+              }
+            },
+            {
+              "id": "banana",
+              "pictureRef": "word:food-banana",
+              "word": {
+                "ko": "바나나",
+                "romanization": "banana",
+                "en": "banana"
+              }
+            },
+            {
+              "id": "son",
+              "pictureRef": "word:body-hand",
+              "word": {
+                "ko": "손",
+                "romanization": "son",
+                "en": "hand"
+              }
+            }
+          ]
+        },
+        {
+          "pairs": [
+            {
+              "id": "sagwa",
+              "pictureRef": "word:food-apple",
+              "word": {
+                "ko": "사과",
+                "romanization": "sagwa",
+                "en": "apple"
+              }
+            },
+            {
+              "id": "uija",
+              "pictureRef": "word:school-chair",
+              "word": {
+                "ko": "의자",
+                "romanization": "uija",
+                "en": "chair"
+              }
+            },
+            {
+              "id": "gwi",
+              "pictureRef": "word:body-ear",
+              "word": {
+                "ko": "귀",
+                "romanization": "gwi",
+                "en": "ear"
+              }
+            }
+          ]
+        },
+        {
+          "pairs": [
+            {
+              "id": "kkachi",
+              "pictureRef": "card:magpie",
+              "word": {
+                "ko": "까치",
+                "romanization": "kkachi",
+                "en": "magpie"
+              }
+            },
+            {
+              "id": "tokki",
+              "pictureRef": "word:animal-rabbit",
+              "word": {
+                "ko": "토끼",
+                "romanization": "tokki",
+                "en": "rabbit"
+              }
+            },
+            {
+              "id": "wonsungi",
+              "pictureRef": "word:animal-monkey",
+              "word": {
+                "ko": "원숭이",
+                "romanization": "wonsungi",
+                "en": "monkey"
+              }
+            }
+          ]
+        },
+        {
+          "pairs": [
+            {
+              "id": "mujigae",
+              "pictureRef": "word:science-rainbow",
+              "word": {
+                "ko": "무지개",
+                "romanization": "mujigae",
+                "en": "rainbow"
+              }
+            },
+            {
+              "id": "hae",
+              "pictureRef": "word:nature-sun",
+              "word": {
+                "ko": "해",
+                "romanization": "hae",
+                "en": "sun"
+              }
+            },
+            {
+              "id": "gureum",
+              "pictureRef": "word:nature-cloud",
+              "word": {
+                "ko": "구름",
+                "romanization": "gureum",
+                "en": "cloud"
+              }
+            }
+          ]
+        },
+        {
+          "pairs": [
+            {
+              "id": "hoesaek",
+              "pictureRef": "word:color-gray",
+              "word": {
+                "ko": "회색",
+                "romanization": "hoesaek",
+                "en": "gray"
+              }
+            },
+            {
+              "id": "paransaek",
+              "pictureRef": "word:color-blue",
+              "word": {
+                "ko": "파란색",
+                "romanization": "paransaek",
+                "en": "blue"
+              }
+            },
+            {
+              "id": "juhwangsaek",
+              "pictureRef": "word:color-orange",
+              "word": {
+                "ko": "주황색",
+                "romanization": "juhwangsaek",
+                "en": "orange (the color)"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "minigame:s2-letters-q5-apply": {
+    "kind": "card-match",
+    "rounds": 4,
+    "cardPairs": [
+      {
+        "ko": "옷",
+        "romanization": "ot",
+        "en": "clothes"
+      },
+      {
+        "ko": "꽃",
+        "romanization": "kkot",
+        "en": "flower"
+      },
+      {
+        "ko": "낮",
+        "romanization": "nat",
+        "en": "daytime"
+      },
+      {
+        "ko": "끝",
+        "romanization": "kkeut",
+        "en": "end"
+      }
+    ]
+  },
+  "minigame:s2-letters-q5-check": {
+    "kind": "listen-pick",
+    "rounds": 2,
+    "listenPick": {
+      "rounds": [
+        {
+          "id": "see-kkot",
+          "prompt": {
+            "ko": "꽃",
+            "romanization": "kkot",
+            "en": "flower"
+          },
+          "options": [
+            {
+              "id": "kkot",
+              "pictureRef": "word:nature-flower",
+              "labelEn": "flower"
+            },
+            {
+              "id": "namu",
+              "pictureRef": "word:nature-tree",
+              "labelEn": "tree"
+            },
+            {
+              "id": "byeol",
+              "pictureRef": "word:nature-star",
+              "labelEn": "star"
+            }
+          ],
+          "answerId": "kkot"
+        },
+        {
+          "id": "read-ot",
+          "prompt": {
+            "ko": "옷",
+            "romanization": "ot",
+            "en": "clothes"
+          },
+          "options": [
+            {
+              "id": "ot",
+              "text": {
+                "ko": "옷",
+                "romanization": "ot",
+                "en": "clothes"
+              }
+            },
+            {
+              "id": "o",
+              "text": {
+                "ko": "오",
+                "romanization": "o",
+                "en": "five"
+              }
+            },
+            {
+              "id": "mun",
+              "text": {
+                "ko": "문",
+                "romanization": "mun",
+                "en": "door"
+              }
+            }
+          ],
+          "answerId": "ot"
+        }
+      ]
+    }
+  },
+  "minigame:s2-letters-q5-practice": {
+    "kind": "pic-word-match",
+    "rounds": 6,
+    "picWord": {
+      "boards": [
+        {
+          "pairs": [
+            {
+              "id": "kkot",
+              "pictureRef": "word:nature-flower",
+              "word": {
+                "ko": "꽃",
+                "romanization": "kkot",
+                "en": "flower"
+              }
+            },
+            {
+              "id": "namu",
+              "pictureRef": "word:nature-tree",
+              "word": {
+                "ko": "나무",
+                "romanization": "namu",
+                "en": "tree"
+              }
+            },
+            {
+              "id": "haneul",
+              "pictureRef": "word:nature-sky",
+              "word": {
+                "ko": "하늘",
+                "romanization": "haneul",
+                "en": "sky"
+              }
+            }
+          ]
+        },
+        {
+          "pairs": [
+            {
+              "id": "ssiat",
+              "pictureRef": "word:science-seed",
+              "word": {
+                "ko": "씨앗",
+                "romanization": "ssiat",
+                "en": "seed"
+              }
+            },
+            {
+              "id": "bit",
+              "pictureRef": "word:science-light",
+              "word": {
+                "ko": "빛",
+                "romanization": "bit",
+                "en": "light"
+              }
+            },
+            {
+              "id": "byeol",
+              "pictureRef": "word:nature-star",
+              "word": {
+                "ko": "별",
+                "romanization": "byeol",
+                "en": "star"
+              }
+            }
+          ]
+        },
+        {
+          "pairs": [
+            {
+              "id": "jeotgarak",
+              "pictureRef": "card:chopsticks",
+              "word": {
+                "ko": "젓가락",
+                "romanization": "jeotgarak",
+                "en": "chopsticks"
+              }
+            },
+            {
+              "id": "gimbap",
+              "pictureRef": "card:kimbap",
+              "word": {
+                "ko": "김밥",
+                "romanization": "gimbap",
+                "en": "gimbap (seaweed rice roll)"
+              }
+            },
+            {
+              "id": "ramyeon",
+              "pictureRef": "word:food-ramyeon",
+              "word": {
+                "ko": "라면",
+                "romanization": "ramyeon",
+                "en": "instant noodles"
+              }
+            }
+          ]
+        },
+        {
+          "pairs": [
+            {
+              "id": "but",
+              "pictureRef": "card:brush",
+              "word": {
+                "ko": "붓",
+                "romanization": "but",
+                "en": "brush"
+              }
+            },
+            {
+              "id": "chaek",
+              "pictureRef": "card:book",
+              "word": {
+                "ko": "책",
+                "romanization": "chaek",
+                "en": "book"
+              }
+            },
+            {
+              "id": "yeonpil",
+              "pictureRef": "word:school-pencil",
+              "word": {
+                "ko": "연필",
+                "romanization": "yeonpil",
+                "en": "pencil"
+              }
+            }
+          ]
+        },
+        {
+          "pairs": [
+            {
+              "id": "kkot",
+              "pictureRef": "word:nature-flower",
+              "word": {
+                "ko": "꽃",
+                "romanization": "kkot",
+                "en": "flower"
+              }
+            },
+            {
+              "id": "ttalgi",
+              "pictureRef": "word:food-strawberry",
+              "word": {
+                "ko": "딸기",
+                "romanization": "ttalgi",
+                "en": "strawberry"
+              }
+            },
+            {
+              "id": "sagwa",
+              "pictureRef": "word:food-apple",
+              "word": {
+                "ko": "사과",
+                "romanization": "sagwa",
+                "en": "apple"
+              }
+            }
+          ]
+        },
+        {
+          "pairs": [
+            {
+              "id": "bit",
+              "pictureRef": "word:science-light",
+              "word": {
+                "ko": "빛",
+                "romanization": "bit",
+                "en": "light"
+              }
+            },
+            {
+              "id": "hae",
+              "pictureRef": "word:nature-sun",
+              "word": {
+                "ko": "해",
+                "romanization": "hae",
+                "en": "sun"
+              }
+            },
+            {
+              "id": "dal",
+              "pictureRef": "card:moon",
+              "word": {
+                "ko": "달",
+                "romanization": "dal",
+                "en": "moon"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "minigame:s2-letters-q6-apply": {
+    "kind": "card-match",
+    "rounds": 4,
+    "cardPairs": [
+      {
+        "ko": "부엌",
+        "romanization": "bueok",
+        "en": "kitchen"
+      },
+      {
+        "ko": "밖",
+        "romanization": "bak",
+        "en": "outside"
+      },
+      {
+        "ko": "앞",
+        "romanization": "ap",
+        "en": "front"
+      },
+      {
+        "ko": "숲",
+        "romanization": "sup",
+        "en": "forest"
+      }
+    ]
+  },
+  "minigame:s2-letters-q6-check": {
+    "kind": "listen-pick",
+    "rounds": 2,
+    "listenPick": {
+      "rounds": [
+        {
+          "id": "see-ip",
+          "prompt": {
+            "ko": "잎",
+            "romanization": "ip",
+            "en": "leaf"
+          },
+          "options": [
+            {
+              "id": "ip",
+              "pictureRef": "word:prop-leaf",
+              "labelEn": "leaf"
+            },
+            {
+              "id": "kkot",
+              "pictureRef": "word:nature-flower",
+              "labelEn": "flower"
+            },
+            {
+              "id": "namu",
+              "pictureRef": "word:nature-tree",
+              "labelEn": "tree"
+            }
+          ],
+          "answerId": "ip"
+        },
+        {
+          "id": "read-ap",
+          "prompt": {
+            "ko": "앞",
+            "romanization": "ap",
+            "en": "front"
+          },
+          "options": [
+            {
+              "id": "ap",
+              "text": {
+                "ko": "앞",
+                "romanization": "ap",
+                "en": "front"
+              }
+            },
+            {
+              "id": "an",
+              "text": {
+                "ko": "안",
+                "romanization": "an",
+                "en": "inside"
+              }
+            },
+            {
+              "id": "al",
+              "text": {
+                "ko": "알",
+                "romanization": "al",
+                "en": "egg"
+              }
+            }
+          ],
+          "answerId": "ap"
+        }
+      ]
+    }
+  },
+  "minigame:s2-letters-q6-practice": {
+    "kind": "pic-word-match",
+    "rounds": 6,
+    "picWord": {
+      "boards": [
+        {
+          "pairs": [
+            {
+              "id": "tteokbokki",
+              "pictureRef": "word:culture-tteokbokki",
+              "word": {
+                "ko": "떡볶이",
+                "romanization": "tteokbokki",
+                "en": "tteokbokki (stir-fried rice cakes, often spicy)"
+              }
+            },
+            {
+              "id": "gimbap",
+              "pictureRef": "card:kimbap",
+              "word": {
+                "ko": "김밥",
+                "romanization": "gimbap",
+                "en": "gimbap (seaweed rice roll)"
+              }
+            },
+            {
+              "id": "tteok",
+              "pictureRef": "word:food-tteok",
+              "word": {
+                "ko": "떡",
+                "romanization": "tteok",
+                "en": "rice cake"
+              }
+            }
+          ]
+        },
+        {
+          "pairs": [
+            {
+              "id": "kkot",
+              "pictureRef": "word:nature-flower",
+              "word": {
+                "ko": "꽃",
+                "romanization": "kkot",
+                "en": "flower"
+              }
+            },
+            {
+              "id": "ip",
+              "pictureRef": "word:prop-leaf",
+              "word": {
+                "ko": "잎",
+                "romanization": "ip",
+                "en": "leaf"
+              }
+            },
+            {
+              "id": "namu",
+              "pictureRef": "word:nature-tree",
+              "word": {
+                "ko": "나무",
+                "romanization": "namu",
+                "en": "tree"
+              }
+            }
+          ]
+        },
+        {
+          "pairs": [
+            {
+              "id": "ip",
+              "pictureRef": "word:prop-leaf",
+              "word": {
+                "ko": "잎",
+                "romanization": "ip",
+                "en": "leaf"
+              }
+            },
+            {
+              "id": "gureum",
+              "pictureRef": "word:nature-cloud",
+              "word": {
+                "ko": "구름",
+                "romanization": "gureum",
+                "en": "cloud"
+              }
+            },
+            {
+              "id": "haneul",
+              "pictureRef": "word:nature-sky",
+              "word": {
+                "ko": "하늘",
+                "romanization": "haneul",
+                "en": "sky"
+              }
+            }
+          ]
+        },
+        {
+          "pairs": [
+            {
+              "id": "gwi",
+              "pictureRef": "word:body-ear",
+              "word": {
+                "ko": "귀",
+                "romanization": "gwi",
+                "en": "ear"
+              }
+            },
+            {
+              "id": "ip",
+              "pictureRef": "word:body-mouth",
+              "word": {
+                "ko": "입",
+                "romanization": "ip",
+                "en": "mouth"
+              }
+            },
+            {
+              "id": "bal",
+              "pictureRef": "word:body-foot",
+              "word": {
+                "ko": "발",
+                "romanization": "bal",
+                "en": "foot"
+              }
+            }
+          ]
+        },
+        {
+          "pairs": [
+            {
+              "id": "wonsungi",
+              "pictureRef": "word:animal-monkey",
+              "word": {
+                "ko": "원숭이",
+                "romanization": "wonsungi",
+                "en": "monkey"
+              }
+            },
+            {
+              "id": "kokkiri",
+              "pictureRef": "word:animal-elephant",
+              "word": {
+                "ko": "코끼리",
+                "romanization": "kokkiri",
+                "en": "elephant"
+              }
+            },
+            {
+              "id": "gom",
+              "pictureRef": "word:animal-bear",
+              "word": {
+                "ko": "곰",
+                "romanization": "gom",
+                "en": "bear"
+              }
+            }
+          ]
+        },
+        {
+          "pairs": [
+            {
+              "id": "uija",
+              "pictureRef": "word:school-chair",
+              "word": {
+                "ko": "의자",
+                "romanization": "uija",
+                "en": "chair"
+              }
+            },
+            {
+              "id": "gabang",
+              "pictureRef": "word:school-bag",
+              "word": {
+                "ko": "가방",
+                "romanization": "gabang",
+                "en": "bag"
+              }
+            },
+            {
+              "id": "ip",
+              "pictureRef": "word:prop-leaf",
+              "word": {
+                "ko": "잎",
+                "romanization": "ip",
+                "en": "leaf"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  }
+};
 
 export const LESSON_SCOPE_OVERLAYS: Overlays = {
-  "es": {},
-  "ko": {}
+  "es": {
+    "minigame:s2-letters-q1-apply": {
+      "cardPairs.gae.gloss": "perro",
+      "cardPairs.ge.gloss": "cangrejo",
+      "cardPairs.sigye.gloss": "reloj",
+      "cardPairs.yaegi.gloss": "charla, historia"
+    },
+    "minigame:s2-letters-q1-check": {
+      "listenPick.rounds.read-norae.prompt": "canción",
+      "listenPick.rounds.see-hae.prompt": "sol"
+    },
+    "minigame:s2-letters-q2-apply": {
+      "cardPairs.kkachi.gloss": "urraca",
+      "cardPairs.ppang.gloss": "pan",
+      "cardPairs.ssal.gloss": "arroz crudo",
+      "cardPairs.ttalgi.gloss": "fresa"
+    },
+    "minigame:s2-letters-q2-check": {
+      "listenPick.rounds.read-ppang.prompt": "pan",
+      "listenPick.rounds.see-ttalgi.prompt": "fresa"
+    },
+    "minigame:s2-letters-q3-apply": {
+      "cardPairs.gwaja.gloss": "galleta, snack",
+      "cardPairs.gwi.gloss": "oreja",
+      "cardPairs.sagwa.gloss": "manzana",
+      "cardPairs.uija.gloss": "silla"
+    },
+    "minigame:s2-letters-q3-check": {
+      "listenPick.rounds.read-uija.prompt": "silla",
+      "listenPick.rounds.see-gwi.prompt": "oreja"
+    },
+    "minigame:s2-letters-q4-apply": {
+      "cardPairs.dwaeji.gloss": "cerdo",
+      "cardPairs.hoesa.gloss": "empresa, oficina",
+      "cardPairs.hoesaek.gloss": "gris",
+      "cardPairs.seuweteo.gloss": "suéter"
+    },
+    "minigame:s2-letters-q4-check": {
+      "listenPick.rounds.read-dwaeji.prompt": "cerdo",
+      "listenPick.rounds.see-hoesaek.prompt": "gris"
+    },
+    "minigame:s2-letters-q5-apply": {
+      "cardPairs.kkeut.gloss": "fin, final",
+      "cardPairs.kkot.gloss": "flor",
+      "cardPairs.nat.gloss": "de día (no de noche)",
+      "cardPairs.ot.gloss": "ropa"
+    },
+    "minigame:s2-letters-q5-check": {
+      "listenPick.rounds.read-ot.prompt": "ropa",
+      "listenPick.rounds.see-kkot.prompt": "flor"
+    },
+    "minigame:s2-letters-q6-apply": {
+      "cardPairs.ap.gloss": "frente, delante",
+      "cardPairs.bak.gloss": "afuera",
+      "cardPairs.bueok.gloss": "cocina",
+      "cardPairs.sup.gloss": "bosque"
+    },
+    "minigame:s2-letters-q6-check": {
+      "listenPick.rounds.read-ap.prompt": "frente, delante",
+      "listenPick.rounds.see-ip.prompt": "hoja"
+    }
+  },
+  "ko": {
+    "minigame:s2-letters-q1-apply": {
+      "cardPairs.gae.gloss": "사람과 함께 살며 멍멍 짖는 동물",
+      "cardPairs.ge.gloss": "단단한 껍데기를 쓰고 옆으로 걷는 바다 동물",
+      "cardPairs.sigye.gloss": "시간을 알려 주는 물건",
+      "cardPairs.yaegi.gloss": "누군가에게 들려주는 말이나 일"
+    },
+    "minigame:s2-letters-q1-check": {
+      "listenPick.rounds.read-norae.prompt": "가락에 맞춰 부르는 것",
+      "listenPick.rounds.see-hae.prompt": "낮에 하늘에서 밝게 빛나는 것"
+    },
+    "minigame:s2-letters-q2-apply": {
+      "cardPairs.kkachi.gloss": "검은색과 흰색 깃털을 가진 새",
+      "cardPairs.ppang.gloss": "밀가루 반죽을 구워 만든 음식",
+      "cardPairs.ssal.gloss": "밥을 짓기 전의 벼 알맹이",
+      "cardPairs.ttalgi.gloss": "겉에 작은 씨가 박힌 빨간 열매"
+    },
+    "minigame:s2-letters-q2-check": {
+      "listenPick.rounds.read-ppang.prompt": "밀가루 반죽을 구워 만든 음식",
+      "listenPick.rounds.see-ttalgi.prompt": "겉에 작은 씨가 박힌 빨간 열매"
+    },
+    "minigame:s2-letters-q3-apply": {
+      "cardPairs.gwaja.gloss": "밀가루 등으로 만들어 굽거나 튀긴 군것질거리",
+      "cardPairs.gwi.gloss": "소리를 듣는 몸의 부분",
+      "cardPairs.sagwa.gloss": "빨갛거나 푸른 껍질의 둥글고 아삭한 열매",
+      "cardPairs.uija.gloss": "앉을 때 쓰는 가구"
+    },
+    "minigame:s2-letters-q3-check": {
+      "listenPick.rounds.read-uija.prompt": "앉을 때 쓰는 가구",
+      "listenPick.rounds.see-gwi.prompt": "소리를 듣는 몸의 부분"
+    },
+    "minigame:s2-letters-q4-apply": {
+      "cardPairs.dwaeji.gloss": "코가 납작하고 꿀꿀 소리를 내는 동물",
+      "cardPairs.hoesa.gloss": "사람들이 모여 함께 일하는 곳",
+      "cardPairs.hoesaek.gloss": "흰빛과 검은빛을 섞은 빛깔",
+      "cardPairs.seuweteo.gloss": "털실로 짠 따뜻한 윗옷"
+    },
+    "minigame:s2-letters-q4-check": {
+      "listenPick.rounds.read-dwaeji.prompt": "코가 납작하고 꿀꿀 소리를 내는 동물",
+      "listenPick.rounds.see-hoesaek.prompt": "흰빛과 검은빛을 섞은 빛깔"
+    },
+    "minigame:s2-letters-q5-apply": {
+      "cardPairs.kkeut.gloss": "어떤 일이나 물건의 마지막 부분",
+      "cardPairs.kkot.gloss": "식물에 피어나는 빛깔이 고운 부분",
+      "cardPairs.nat.gloss": "해가 떠 있는 동안",
+      "cardPairs.ot.gloss": "몸에 걸쳐 입는 것"
+    },
+    "minigame:s2-letters-q5-check": {
+      "listenPick.rounds.read-ot.prompt": "몸에 걸쳐 입는 것",
+      "listenPick.rounds.see-kkot.prompt": "식물에 피어나는 빛깔이 고운 부분"
+    },
+    "minigame:s2-letters-q6-apply": {
+      "cardPairs.ap.gloss": "얼굴이 향하는 쪽",
+      "cardPairs.bak.gloss": "건물이나 울타리를 벗어난 곳",
+      "cardPairs.bueok.gloss": "음식을 만드는 곳",
+      "cardPairs.sup.gloss": "나무가 빽빽하게 우거진 곳"
+    },
+    "minigame:s2-letters-q6-check": {
+      "listenPick.rounds.read-ap.prompt": "얼굴이 향하는 쪽",
+      "listenPick.rounds.see-ip.prompt": "풀이나 나무의 줄기에 달린 납작하고 푸른 부분"
+    }
+  }
 };

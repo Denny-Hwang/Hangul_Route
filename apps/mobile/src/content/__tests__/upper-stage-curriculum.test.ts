@@ -28,6 +28,7 @@ import { VOCAB_ITEMS } from '../__generated__/vocab';
 import { LESSON_EPISODES, LESSON_QUESTS } from '../__generated__/lessons-index';
 import { questsAll } from '../quests';
 import { ALL_LESSON_SCOPES, LESSON_STAGE_MODULES } from './helpers/lesson-stages';
+import { canDrawPicture } from '../../logic/__tests__/drawn-pictures';
 
 /**
  * F-CURR-001 section 5, U-1 .. U-10: the invariants every upper-stage lesson cell
@@ -391,6 +392,7 @@ describe('content checks each cell row fills in (F-CURR-001 section 5)', () => {
   });
 
   it('U-2 Word Builder: the 16 symbols each in exactly one Discover; with Stage 1 the full inventory; finals in two quests (S2-1)', () => {
+    expect(wordBuilder, 'S2-1 lands content/episodes/stage-2/letters.json').toBeDefined();
     if (wordBuilder === undefined) return;
     const taught = wordBuilder.quests.map(discoverSymbols);
     const letters = taught.flat().filter((j) => j.kind !== 'batchim').map(keyOf);
@@ -449,6 +451,7 @@ describe('content checks each cell row fills in (F-CURR-001 section 5)', () => {
   });
 
   it('no Word Builder round asks to tell ㅐ from ㅔ, or ㅚ ㅙ ㅞ apart, by ear (section 3.3)', () => {
+    expect(wordBuilder, 'S2-1 lands content/episodes/stage-2/letters.json').toBeDefined();
     if (wordBuilder === undefined) return;
     const norm = (ko: string): string =>
       [...ko].map((ch) => {
@@ -458,17 +461,47 @@ describe('content checks each cell row fills in (F-CURR-001 section 5)', () => {
         const same = 'ㅐㅔ'.includes(medial) ? 'E' : 'ㅚㅙㅞ'.includes(medial) ? 'W' : medial;
         return `${INITIALS[Math.floor(code / 588)]}${same}${FINALS[code % 28]}`;
       }).join('');
+    // A picture option is named by its word's romanization id: find the Korean it pictures in the cell.
+    const koById = new Map<string, string>();
+    for (const quest of wordBuilder.quests) {
+      for (const w of discoverWords(quest)) koById.set(w.romanization, w.ko);
+      for (const scope of quest.scopes) {
+        if (scope.kind === 'pic-word-match') for (const b of scope.boards) for (const p of b.pairs) koById.set(p.id, p.word.ko);
+        for (const w of scopeWords(scope).shown) koById.set(w.romanization, w.ko);
+      }
+    }
     for (const quest of wordBuilder.quests) {
       for (const scope of quest.scopes) {
         if (scope.kind !== 'listen-pick') continue;
         for (const round of scope.rounds) {
           const heard = norm(round.prompt.ko);
           for (const option of round.options) {
-            if (option.text && option.id !== round.answerId) expect(norm(option.text.ko), `${scope.ref} ${round.id}`).not.toBe(heard);
+            if (option.id === round.answerId) continue;
+            const ko = option.text?.ko ?? koById.get(option.id);
+            expect(ko, `${scope.ref} ${round.id} ${option.id}: the word it pictures`).toBeDefined();
+            expect(norm(ko ?? ''), `${scope.ref} ${round.id}`).not.toBe(heard);
           }
         }
       }
     }
+  });
+
+  it('every picture a Stage 2 round shows is drawn art, never the text-tile fallback (section 3.3, U-9)', () => {
+    const undrawn = stage2.flatMap((cell) =>
+      cell.quests.flatMap((quest) =>
+        quest.scopes.flatMap((scope) => {
+          const refs =
+            scope.kind === 'pic-word-match'
+              ? scope.boards.flatMap((b) => b.pairs.map((p) => p.pictureRef))
+              : scope.kind === 'listen-pick'
+                ? scope.rounds.flatMap((r) => r.options.flatMap((o) => (o.pictureRef === undefined ? [] : [o.pictureRef])))
+                : [];
+          const pages = quest.steps.flatMap((s) => s.discover?.pages ?? []).flatMap((p) => p.items).flatMap((i) => ('picture' in i && i.picture ? [i.picture] : []));
+          return [...refs, ...(scope.kind === 'pic-word-match' ? pages : [])].flatMap((ref) => (ref === undefined || !canDrawPicture(ref) ? [`${scope.ref}: ${String(ref)}`] : []));
+        }),
+      ),
+    );
+    expect(undrawn).toEqual([]);
   });
 
   it.todo('U-3 new-item caps of Stages 3-7 (section 3.1 rule 4) (S3-1 onward)');

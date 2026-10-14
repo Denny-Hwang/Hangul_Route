@@ -2,11 +2,1051 @@
 import type { Episode, Overlays, Quest } from '@hangul-route/content-schema';
 
 /** The shipped upper-stage lesson cells (F-CURR-001): headers only; the scopes live in lessons-stage<n>.ts. */
-export const LESSON_EPISODES: Episode[] = [];
+export const LESSON_EPISODES: Episode[] = [
+  {
+    "id": "episode:stage2-letters",
+    "stage": "stage2",
+    "theme": "letters",
+    "order": 1,
+    "titleEn": "Word Builder",
+    "subtitleEn": "The rest of Hangul, and the words it opens.",
+    "hoyaIntroEn": "You know 30 letters. Let us meet the rest and read more words!",
+    "questIds": [
+      "quest:stage2-letters-q1",
+      "quest:stage2-letters-q2",
+      "quest:stage2-letters-q3",
+      "quest:stage2-letters-q4",
+      "quest:stage2-letters-q5",
+      "quest:stage2-letters-q6"
+    ],
+    "rewardCardIds": [],
+    "estimatedMinutes": 25,
+    "pillarTags": [
+      "A1"
+    ],
+    "status": "shipped"
+  }
+];
 
-export const LESSON_QUESTS: Quest[] = [];
+export const LESSON_QUESTS: Quest[] = [
+  {
+    "id": "quest:stage2-letters-q1",
+    "titleEn": "Vowel Pairs ae and e",
+    "blurbEn": "Four new vowels: ae, e, yae and ye.",
+    "estimatedMinutes": 4,
+    "steps": [
+      {
+        "id": "s1",
+        "kind": "intro",
+        "titleEn": "Four New Vowels",
+        "hoyaLineEn": "You can read 30 letters. Let us meet four more vowels!",
+        "durationSeconds": 8
+      },
+      {
+        "id": "s2",
+        "kind": "discover",
+        "titleEn": "Meet ae, e, yae, ye",
+        "hoyaLineEn": "Many people say ae and e the same way today. The spelling tells them apart.",
+        "discover": {
+          "pages": [
+            {
+              "items": [
+                {
+                  "type": "jamo",
+                  "jamoId": "jamo:ae",
+                  "example": {
+                    "ko": "개",
+                    "romanization": "gae",
+                    "en": "dog"
+                  }
+                },
+                {
+                  "type": "jamo",
+                  "jamoId": "jamo:e",
+                  "example": {
+                    "ko": "게",
+                    "romanization": "ge",
+                    "en": "crab"
+                  }
+                }
+              ]
+            },
+            {
+              "items": [
+                {
+                  "type": "jamo",
+                  "jamoId": "jamo:yae",
+                  "example": {
+                    "ko": "얘기",
+                    "romanization": "yaegi",
+                    "en": "talk, story",
+                    "syllables": [
+                      "yae",
+                      "gi"
+                    ]
+                  }
+                },
+                {
+                  "type": "jamo",
+                  "jamoId": "jamo:ye",
+                  "example": {
+                    "ko": "시계",
+                    "romanization": "sigye",
+                    "en": "clock, watch",
+                    "syllables": [
+                      "si",
+                      "gye"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "captionEn": "Words you can read now",
+              "items": [
+                {
+                  "type": "word",
+                  "word": {
+                    "ko": "노래",
+                    "romanization": "norae",
+                    "en": "song",
+                    "syllables": [
+                      "no",
+                      "rae"
+                    ]
+                  },
+                  "picture": "word:culture-song"
+                },
+                {
+                  "type": "word",
+                  "word": {
+                    "ko": "새",
+                    "romanization": "sae",
+                    "en": "bird"
+                  },
+                  "picture": "word:animal-bird"
+                }
+              ]
+            }
+          ]
+        },
+        "durationSeconds": 55
+      },
+      {
+        "id": "s3",
+        "kind": "practice",
+        "titleEn": "Picture and Word",
+        "minigameKind": "pic-word-match",
+        "minigameRef": "minigame:s2-letters-q1-practice",
+        "durationSeconds": 85
+      },
+      {
+        "id": "s4",
+        "kind": "apply",
+        "titleEn": "Match the Meaning",
+        "minigameKind": "card-match",
+        "minigameRef": "minigame:s2-letters-q1-apply",
+        "durationSeconds": 65
+      },
+      {
+        "id": "s5",
+        "kind": "check",
+        "titleEn": "Listen and Read",
+        "minigameKind": "listen-pick",
+        "minigameRef": "minigame:s2-letters-q1-check",
+        "durationSeconds": 35
+      },
+      {
+        "id": "s6",
+        "kind": "reward",
+        "titleEn": "Four Vowels Read!",
+        "hoyaLineEn": "Four new vowels, and so many new words. Well done!",
+        "durationSeconds": 8
+      }
+    ]
+  },
+  {
+    "id": "quest:stage2-letters-q2",
+    "titleEn": "Double Letters",
+    "blurbEn": "Five doubled letters: kk, tt, pp, ss and jj.",
+    "estimatedMinutes": 4,
+    "steps": [
+      {
+        "id": "s1",
+        "kind": "intro",
+        "titleEn": "Two of a Kind",
+        "hoyaLineEn": "Two of the same letter make one new sound. Let us meet five!",
+        "durationSeconds": 8
+      },
+      {
+        "id": "s2",
+        "kind": "discover",
+        "titleEn": "Meet kk, tt, pp, ss, jj",
+        "hoyaLineEn": "A doubled letter is said with a tight throat, with almost no puff of air.",
+        "discover": {
+          "pages": [
+            {
+              "items": [
+                {
+                  "type": "jamo",
+                  "jamoId": "jamo:ssanggiyeok",
+                  "example": {
+                    "ko": "까치",
+                    "romanization": "kkachi",
+                    "en": "magpie",
+                    "syllables": [
+                      "kka",
+                      "chi"
+                    ]
+                  },
+                  "picture": "card:magpie"
+                },
+                {
+                  "type": "jamo",
+                  "jamoId": "jamo:ssangdigeut",
+                  "example": {
+                    "ko": "딸기",
+                    "romanization": "ttalgi",
+                    "en": "strawberry",
+                    "syllables": [
+                      "ttal",
+                      "gi"
+                    ]
+                  },
+                  "picture": "word:food-strawberry"
+                }
+              ]
+            },
+            {
+              "items": [
+                {
+                  "type": "jamo",
+                  "jamoId": "jamo:ssangbieup",
+                  "example": {
+                    "ko": "빵",
+                    "romanization": "ppang",
+                    "en": "bread"
+                  },
+                  "picture": "word:food-bread"
+                },
+                {
+                  "type": "jamo",
+                  "jamoId": "jamo:ssangsiot",
+                  "example": {
+                    "ko": "쌀",
+                    "romanization": "ssal",
+                    "en": "uncooked rice"
+                  }
+                }
+              ]
+            },
+            {
+              "items": [
+                {
+                  "type": "jamo",
+                  "jamoId": "jamo:ssangjieut",
+                  "example": {
+                    "ko": "찌개",
+                    "romanization": "jjigae",
+                    "en": "stew",
+                    "syllables": [
+                      "jji",
+                      "gae"
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "durationSeconds": 55
+      },
+      {
+        "id": "s3",
+        "kind": "practice",
+        "titleEn": "Picture and Word",
+        "minigameKind": "pic-word-match",
+        "minigameRef": "minigame:s2-letters-q2-practice",
+        "durationSeconds": 85
+      },
+      {
+        "id": "s4",
+        "kind": "apply",
+        "titleEn": "Match the Meaning",
+        "minigameKind": "card-match",
+        "minigameRef": "minigame:s2-letters-q2-apply",
+        "durationSeconds": 65
+      },
+      {
+        "id": "s5",
+        "kind": "check",
+        "titleEn": "Listen and Read",
+        "minigameKind": "listen-pick",
+        "minigameRef": "minigame:s2-letters-q2-check",
+        "durationSeconds": 35
+      },
+      {
+        "id": "s6",
+        "kind": "reward",
+        "titleEn": "Tight Sounds!",
+        "hoyaLineEn": "You read five doubled letters. Great work!",
+        "durationSeconds": 8
+      }
+    ]
+  },
+  {
+    "id": "quest:stage2-letters-q3",
+    "titleEn": "Joined Vowels wa, wo, wi, ui",
+    "blurbEn": "Four vowels made from two you know.",
+    "estimatedMinutes": 4,
+    "steps": [
+      {
+        "id": "s1",
+        "kind": "intro",
+        "titleEn": "Vowels Join Up",
+        "hoyaLineEn": "Two vowels you know can join into one. Let us see how!",
+        "durationSeconds": 8
+      },
+      {
+        "id": "s2",
+        "kind": "discover",
+        "titleEn": "Meet wa, wo, wi, ui",
+        "hoyaLineEn": "Each joined vowel is two vowels you know, often said quickly as one sound.",
+        "discover": {
+          "pages": [
+            {
+              "items": [
+                {
+                  "type": "jamo",
+                  "jamoId": "jamo:wa",
+                  "example": {
+                    "ko": "사과",
+                    "romanization": "sagwa",
+                    "en": "apple",
+                    "syllables": [
+                      "sa",
+                      "gwa"
+                    ]
+                  },
+                  "picture": "word:food-apple"
+                },
+                {
+                  "type": "jamo",
+                  "jamoId": "jamo:wo",
+                  "example": {
+                    "ko": "원숭이",
+                    "romanization": "wonsungi",
+                    "en": "monkey",
+                    "syllables": [
+                      "won",
+                      "sung",
+                      "i"
+                    ]
+                  },
+                  "picture": "word:animal-monkey"
+                }
+              ]
+            },
+            {
+              "items": [
+                {
+                  "type": "jamo",
+                  "jamoId": "jamo:wi",
+                  "example": {
+                    "ko": "귀",
+                    "romanization": "gwi",
+                    "en": "ear"
+                  },
+                  "picture": "word:body-ear"
+                },
+                {
+                  "type": "jamo",
+                  "jamoId": "jamo:ui",
+                  "example": {
+                    "ko": "의자",
+                    "romanization": "uija",
+                    "en": "chair",
+                    "syllables": [
+                      "ui",
+                      "ja"
+                    ]
+                  },
+                  "picture": "word:school-chair"
+                }
+              ]
+            },
+            {
+              "captionEn": "Words you can read now",
+              "items": [
+                {
+                  "type": "word",
+                  "word": {
+                    "ko": "과자",
+                    "romanization": "gwaja",
+                    "en": "snack, cookie",
+                    "syllables": [
+                      "gwa",
+                      "ja"
+                    ]
+                  }
+                },
+                {
+                  "type": "word",
+                  "word": {
+                    "ko": "가위",
+                    "romanization": "gawi",
+                    "en": "scissors",
+                    "syllables": [
+                      "ga",
+                      "wi"
+                    ]
+                  },
+                  "picture": "word:school-scissors"
+                }
+              ]
+            }
+          ]
+        },
+        "durationSeconds": 55
+      },
+      {
+        "id": "s3",
+        "kind": "practice",
+        "titleEn": "Picture and Word",
+        "minigameKind": "pic-word-match",
+        "minigameRef": "minigame:s2-letters-q3-practice",
+        "durationSeconds": 85
+      },
+      {
+        "id": "s4",
+        "kind": "apply",
+        "titleEn": "Match the Meaning",
+        "minigameKind": "card-match",
+        "minigameRef": "minigame:s2-letters-q3-apply",
+        "durationSeconds": 65
+      },
+      {
+        "id": "s5",
+        "kind": "check",
+        "titleEn": "Listen and Read",
+        "minigameKind": "listen-pick",
+        "minigameRef": "minigame:s2-letters-q3-check",
+        "durationSeconds": 35
+      },
+      {
+        "id": "s6",
+        "kind": "reward",
+        "titleEn": "Vowels Joined!",
+        "hoyaLineEn": "Four joined vowels read. You are on a roll!",
+        "durationSeconds": 8
+      }
+    ]
+  },
+  {
+    "id": "quest:stage2-letters-q4",
+    "titleEn": "Joined Vowels oe, wae, we",
+    "blurbEn": "Three joined vowels that sound alike.",
+    "estimatedMinutes": 4,
+    "steps": [
+      {
+        "id": "s1",
+        "kind": "intro",
+        "titleEn": "Three Look-Alikes",
+        "hoyaLineEn": "Three more joined vowels today. Their shapes tell them apart.",
+        "durationSeconds": 8
+      },
+      {
+        "id": "s2",
+        "kind": "discover",
+        "titleEn": "Meet oe, wae, we",
+        "hoyaLineEn": "Today these three often sound almost the same. Learn them by their shapes.",
+        "discover": {
+          "pages": [
+            {
+              "items": [
+                {
+                  "type": "jamo",
+                  "jamoId": "jamo:oe",
+                  "example": {
+                    "ko": "회사",
+                    "romanization": "hoesa",
+                    "en": "company, office",
+                    "syllables": [
+                      "hoe",
+                      "sa"
+                    ]
+                  }
+                },
+                {
+                  "type": "jamo",
+                  "jamoId": "jamo:wae",
+                  "example": {
+                    "ko": "돼지",
+                    "romanization": "dwaeji",
+                    "en": "pig",
+                    "syllables": [
+                      "dwae",
+                      "ji"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "items": [
+                {
+                  "type": "jamo",
+                  "jamoId": "jamo:we",
+                  "example": {
+                    "ko": "스웨터",
+                    "romanization": "seuweteo",
+                    "en": "sweater",
+                    "syllables": [
+                      "seu",
+                      "we",
+                      "teo"
+                    ]
+                  }
+                },
+                {
+                  "type": "word",
+                  "word": {
+                    "ko": "회색",
+                    "romanization": "hoesaek",
+                    "en": "gray",
+                    "syllables": [
+                      "hoe",
+                      "saek"
+                    ]
+                  },
+                  "picture": "word:color-gray"
+                }
+              ]
+            }
+          ]
+        },
+        "durationSeconds": 45
+      },
+      {
+        "id": "s3",
+        "kind": "practice",
+        "titleEn": "Picture and Word",
+        "minigameKind": "pic-word-match",
+        "minigameRef": "minigame:s2-letters-q4-practice",
+        "durationSeconds": 85
+      },
+      {
+        "id": "s4",
+        "kind": "apply",
+        "titleEn": "Match the Meaning",
+        "minigameKind": "card-match",
+        "minigameRef": "minigame:s2-letters-q4-apply",
+        "durationSeconds": 65
+      },
+      {
+        "id": "s5",
+        "kind": "check",
+        "titleEn": "Listen and Read",
+        "minigameKind": "listen-pick",
+        "minigameRef": "minigame:s2-letters-q4-check",
+        "durationSeconds": 35
+      },
+      {
+        "id": "s6",
+        "kind": "reward",
+        "titleEn": "Every Vowel Met!",
+        "hoyaLineEn": "You have met every vowel letter of Hangul. Well done!",
+        "durationSeconds": 8
+      }
+    ]
+  },
+  {
+    "id": "quest:stage2-letters-q5",
+    "titleEn": "One Sound for Six Letters",
+    "blurbEn": "Six bottom letters that all end in t.",
+    "estimatedMinutes": 4,
+    "steps": [
+      {
+        "id": "s1",
+        "kind": "intro",
+        "titleEn": "Same Sound, Six Letters",
+        "hoyaLineEn": "Six letters at the bottom of a block end with the same sound!",
+        "durationSeconds": 8
+      },
+      {
+        "id": "s2",
+        "kind": "discover",
+        "titleEn": "The t Sound at the End",
+        "hoyaLineEn": "At the end of a word or before another consonant, these six letters all say t.",
+        "discover": {
+          "pages": [
+            {
+              "items": [
+                {
+                  "type": "jamo",
+                  "jamoId": "jamo:siot-batchim",
+                  "example": {
+                    "ko": "옷",
+                    "romanization": "ot",
+                    "en": "clothes"
+                  }
+                },
+                {
+                  "type": "jamo",
+                  "jamoId": "jamo:jieut-batchim",
+                  "example": {
+                    "ko": "낮",
+                    "romanization": "nat",
+                    "en": "daytime"
+                  }
+                }
+              ]
+            },
+            {
+              "items": [
+                {
+                  "type": "jamo",
+                  "jamoId": "jamo:chieut-batchim",
+                  "example": {
+                    "ko": "꽃",
+                    "romanization": "kkot",
+                    "en": "flower"
+                  },
+                  "picture": "word:nature-flower"
+                },
+                {
+                  "type": "jamo",
+                  "jamoId": "jamo:tieut-batchim",
+                  "example": {
+                    "ko": "끝",
+                    "romanization": "kkeut",
+                    "en": "end"
+                  }
+                }
+              ]
+            },
+            {
+              "items": [
+                {
+                  "type": "jamo",
+                  "jamoId": "jamo:digeut-batchim",
+                  "example": {
+                    "ko": "곧",
+                    "romanization": "got",
+                    "en": "soon"
+                  }
+                },
+                {
+                  "type": "jamo",
+                  "jamoId": "jamo:ssangsiot-batchim",
+                  "example": {
+                    "ko": "있다",
+                    "romanization": "itda",
+                    "en": "to be there, to have",
+                    "syllables": [
+                      "it",
+                      "da"
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "durationSeconds": 60
+      },
+      {
+        "id": "s3",
+        "kind": "practice",
+        "titleEn": "Picture and Word",
+        "minigameKind": "pic-word-match",
+        "minigameRef": "minigame:s2-letters-q5-practice",
+        "durationSeconds": 85
+      },
+      {
+        "id": "s4",
+        "kind": "apply",
+        "titleEn": "Match the Meaning",
+        "minigameKind": "card-match",
+        "minigameRef": "minigame:s2-letters-q5-apply",
+        "durationSeconds": 65
+      },
+      {
+        "id": "s5",
+        "kind": "check",
+        "titleEn": "Listen and Read",
+        "minigameKind": "listen-pick",
+        "minigameRef": "minigame:s2-letters-q5-check",
+        "durationSeconds": 35
+      },
+      {
+        "id": "s6",
+        "kind": "reward",
+        "titleEn": "One Sound, Six Letters!",
+        "hoyaLineEn": "Six new bottom letters, one t sound. Great work!",
+        "durationSeconds": 8
+      }
+    ]
+  },
+  {
+    "id": "quest:stage2-letters-q6",
+    "titleEn": "More Letters for k and p",
+    "blurbEn": "Three new bottom letters with sounds you know.",
+    "estimatedMinutes": 4,
+    "steps": [
+      {
+        "id": "s1",
+        "kind": "intro",
+        "titleEn": "Old Sounds, New Letters",
+        "hoyaLineEn": "You know a bottom g and b, said k and p. Three more letters make those sounds!",
+        "durationSeconds": 8
+      },
+      {
+        "id": "s2",
+        "kind": "discover",
+        "titleEn": "New Letters, Known Sounds",
+        "hoyaLineEn": "At the end of a word or before another consonant, the puff-of-air k and the double k sound like a bottom g, a short k. The puff-of-air p sounds like a bottom b, a short p.",
+        "discover": {
+          "pages": [
+            {
+              "items": [
+                {
+                  "type": "jamo",
+                  "jamoId": "jamo:kieuk-batchim",
+                  "example": {
+                    "ko": "부엌",
+                    "romanization": "bueok",
+                    "en": "kitchen",
+                    "syllables": [
+                      "bu",
+                      "eok"
+                    ]
+                  }
+                },
+                {
+                  "type": "jamo",
+                  "jamoId": "jamo:ssanggiyeok-batchim",
+                  "example": {
+                    "ko": "밖",
+                    "romanization": "bak",
+                    "en": "outside"
+                  }
+                }
+              ]
+            },
+            {
+              "items": [
+                {
+                  "type": "jamo",
+                  "jamoId": "jamo:pieup-batchim",
+                  "example": {
+                    "ko": "앞",
+                    "romanization": "ap",
+                    "en": "front"
+                  }
+                },
+                {
+                  "type": "word",
+                  "word": {
+                    "ko": "숲",
+                    "romanization": "sup",
+                    "en": "forest"
+                  }
+                }
+              ]
+            },
+            {
+              "captionEn": "Words you can read now",
+              "items": [
+                {
+                  "type": "word",
+                  "word": {
+                    "ko": "잎",
+                    "romanization": "ip",
+                    "en": "leaf"
+                  },
+                  "picture": "word:prop-leaf"
+                }
+              ]
+            }
+          ]
+        },
+        "durationSeconds": 50
+      },
+      {
+        "id": "s3",
+        "kind": "practice",
+        "titleEn": "Picture and Word",
+        "minigameKind": "pic-word-match",
+        "minigameRef": "minigame:s2-letters-q6-practice",
+        "durationSeconds": 85
+      },
+      {
+        "id": "s4",
+        "kind": "apply",
+        "titleEn": "Match the Meaning",
+        "minigameKind": "card-match",
+        "minigameRef": "minigame:s2-letters-q6-apply",
+        "durationSeconds": 65
+      },
+      {
+        "id": "s5",
+        "kind": "check",
+        "titleEn": "Listen and Read",
+        "minigameKind": "listen-pick",
+        "minigameRef": "minigame:s2-letters-q6-check",
+        "durationSeconds": 35
+      },
+      {
+        "id": "s6",
+        "kind": "reward",
+        "titleEn": "Word Builder Done!",
+        "hoyaLineEn": "You met the last new letters of Word Builder. Wonderful!",
+        "durationSeconds": 8
+      }
+    ]
+  }
+];
 
 export const LESSON_INDEX_OVERLAYS: Overlays = {
-  "es": {},
-  "ko": {}
+  "es": {
+    "episode:stage2-letters": {
+      "hoyaIntro": "Ya conoces 30 letras. ¡Conozcamos el resto y leamos más palabras!",
+      "subtitle": "El resto del hangul y las palabras que abre.",
+      "title": "Constructor de palabras"
+    },
+    "quest:stage2-letters-q1": {
+      "blurb": "Cuatro vocales nuevas: ae, e, yae y ye.",
+      "steps.s1.hoyaLine": "Ya lees 30 letras. ¡Conozcamos cuatro vocales más!",
+      "steps.s1.title": "Cuatro vocales nuevas",
+      "steps.s2.discover.pages.0.items.0.example.gloss": "perro",
+      "steps.s2.discover.pages.0.items.1.example.gloss": "cangrejo",
+      "steps.s2.discover.pages.1.items.0.example.gloss": "charla, historia",
+      "steps.s2.discover.pages.1.items.1.example.gloss": "reloj",
+      "steps.s2.discover.pages.2.caption": "Palabras que ya puedes leer",
+      "steps.s2.discover.pages.2.items.0.word.gloss": "canción",
+      "steps.s2.discover.pages.2.items.1.word.gloss": "pájaro",
+      "steps.s2.hoyaLine": "Hoy mucha gente dice ae y e igual. La escritura muestra cuál es cuál.",
+      "steps.s2.title": "Conoce ae, e, yae, ye",
+      "steps.s3.title": "Imagen y palabra",
+      "steps.s4.title": "Une el significado",
+      "steps.s5.title": "Escucha y lee",
+      "steps.s6.hoyaLine": "Cuatro vocales nuevas y muchas palabras nuevas. ¡Muy bien!",
+      "steps.s6.title": "¡Cuatro vocales leídas!",
+      "title": "Pares de vocales ae y e"
+    },
+    "quest:stage2-letters-q2": {
+      "blurb": "Cinco letras dobles: kk, tt, pp, ss y jj.",
+      "steps.s1.hoyaLine": "Dos letras iguales forman un sonido nuevo. ¡Conozcamos cinco!",
+      "steps.s1.title": "Dos iguales",
+      "steps.s2.discover.pages.0.items.0.example.gloss": "urraca",
+      "steps.s2.discover.pages.0.items.1.example.gloss": "fresa",
+      "steps.s2.discover.pages.1.items.0.example.gloss": "pan",
+      "steps.s2.discover.pages.1.items.1.example.gloss": "arroz crudo",
+      "steps.s2.discover.pages.2.items.0.example.gloss": "guiso",
+      "steps.s2.hoyaLine": "Una letra doble se dice tensa, con la garganta apretada y casi sin soplo de aire.",
+      "steps.s2.title": "Conoce kk, tt, pp, ss, jj",
+      "steps.s3.title": "Imagen y palabra",
+      "steps.s4.title": "Une el significado",
+      "steps.s5.title": "Escucha y lee",
+      "steps.s6.hoyaLine": "Leíste cinco letras dobles. ¡Buen trabajo!",
+      "steps.s6.title": "¡Sonidos tensos!",
+      "title": "Letras dobles"
+    },
+    "quest:stage2-letters-q3": {
+      "blurb": "Cuatro vocales hechas con dos que ya conoces.",
+      "steps.s1.hoyaLine": "Dos vocales que ya conoces pueden unirse en una. ¡Veamos cómo!",
+      "steps.s1.title": "Vocales que se unen",
+      "steps.s2.discover.pages.0.items.0.example.gloss": "manzana",
+      "steps.s2.discover.pages.0.items.1.example.gloss": "mono",
+      "steps.s2.discover.pages.1.items.0.example.gloss": "oreja",
+      "steps.s2.discover.pages.1.items.1.example.gloss": "silla",
+      "steps.s2.discover.pages.2.caption": "Palabras que ya puedes leer",
+      "steps.s2.discover.pages.2.items.0.word.gloss": "galleta, snack",
+      "steps.s2.discover.pages.2.items.1.word.gloss": "tijeras",
+      "steps.s2.hoyaLine": "Cada vocal unida junta dos vocales que ya conoces, que a menudo se dicen rápido como un solo sonido.",
+      "steps.s2.title": "Conoce wa, wo, wi, ui",
+      "steps.s3.title": "Imagen y palabra",
+      "steps.s4.title": "Une el significado",
+      "steps.s5.title": "Escucha y lee",
+      "steps.s6.hoyaLine": "Leíste cuatro vocales unidas. ¡Vas muy bien!",
+      "steps.s6.title": "¡Vocales unidas!",
+      "title": "Vocales unidas wa, wo, wi, ui"
+    },
+    "quest:stage2-letters-q4": {
+      "blurb": "Tres vocales unidas que suenan parecido.",
+      "steps.s1.hoyaLine": "Hoy, tres vocales unidas más. Su forma las distingue.",
+      "steps.s1.title": "Tres parecidas",
+      "steps.s2.discover.pages.0.items.0.example.gloss": "empresa, oficina",
+      "steps.s2.discover.pages.0.items.1.example.gloss": "cerdo",
+      "steps.s2.discover.pages.1.items.0.example.gloss": "suéter",
+      "steps.s2.discover.pages.1.items.1.word.gloss": "gris",
+      "steps.s2.hoyaLine": "Hoy estas tres suelen sonar casi igual. Apréndelas por su forma.",
+      "steps.s2.title": "Conoce oe, wae, we",
+      "steps.s3.title": "Imagen y palabra",
+      "steps.s4.title": "Une el significado",
+      "steps.s5.title": "Escucha y lee",
+      "steps.s6.hoyaLine": "Ya conoces todas las vocales del hangul. ¡Muy bien!",
+      "steps.s6.title": "¡Todas las vocales!",
+      "title": "Vocales unidas oe, wae, we"
+    },
+    "quest:stage2-letters-q5": {
+      "blurb": "Seis letras de abajo que terminan en t.",
+      "steps.s1.hoyaLine": "¡Seis letras que van abajo del bloque terminan con el mismo sonido!",
+      "steps.s1.title": "Mismo sonido, seis letras",
+      "steps.s2.discover.pages.0.items.0.example.gloss": "ropa",
+      "steps.s2.discover.pages.0.items.1.example.gloss": "de día (no de noche)",
+      "steps.s2.discover.pages.1.items.0.example.gloss": "flor",
+      "steps.s2.discover.pages.1.items.1.example.gloss": "fin, final",
+      "steps.s2.discover.pages.2.items.0.example.gloss": "pronto",
+      "steps.s2.discover.pages.2.items.1.example.gloss": "estar (en un lugar), tener",
+      "steps.s2.hoyaLine": "Al final de una palabra o antes de otra consonante, estas seis letras suenan t.",
+      "steps.s2.title": "El sonido t al final",
+      "steps.s3.title": "Imagen y palabra",
+      "steps.s4.title": "Une el significado",
+      "steps.s5.title": "Escucha y lee",
+      "steps.s6.hoyaLine": "Seis letras de abajo nuevas, un solo sonido t. ¡Buen trabajo!",
+      "steps.s6.title": "¡Un sonido, seis letras!",
+      "title": "Un sonido para seis letras"
+    },
+    "quest:stage2-letters-q6": {
+      "blurb": "Tres letras de abajo nuevas con sonidos que ya conoces.",
+      "steps.s1.hoyaLine": "Ya conoces la g y la b de abajo, que suenan k y p. ¡Tres letras más hacen esos sonidos!",
+      "steps.s1.title": "Sonidos conocidos, letras nuevas",
+      "steps.s2.discover.pages.0.items.0.example.gloss": "cocina",
+      "steps.s2.discover.pages.0.items.1.example.gloss": "afuera",
+      "steps.s2.discover.pages.1.items.0.example.gloss": "frente, delante",
+      "steps.s2.discover.pages.1.items.1.word.gloss": "bosque",
+      "steps.s2.discover.pages.2.caption": "Palabras que ya puedes leer",
+      "steps.s2.discover.pages.2.items.0.word.gloss": "hoja",
+      "steps.s2.hoyaLine": "Al final de una palabra o antes de otra consonante, la k con soplo y la k doble suenan como una g de abajo, una k corta. La p con soplo suena como una b de abajo, una p corta.",
+      "steps.s2.title": "Letras nuevas, sonidos conocidos",
+      "steps.s3.title": "Imagen y palabra",
+      "steps.s4.title": "Une el significado",
+      "steps.s5.title": "Escucha y lee",
+      "steps.s6.hoyaLine": "Conociste las últimas letras nuevas de Constructor de palabras. ¡Genial!",
+      "steps.s6.title": "¡Constructor de palabras completo!",
+      "title": "Más letras para k y p"
+    }
+  },
+  "ko": {
+    "episode:stage2-letters": {
+      "hoyaIntro": "글자 30개를 알고 있어요. 남은 글자를 만나고 낱말을 더 읽어 봐요!",
+      "subtitle": "남은 한글 글자와 그 글자로 읽는 낱말.",
+      "title": "낱말 만들기"
+    },
+    "quest:stage2-letters-q1": {
+      "blurb": "새 모음 네 개: ㅐ, ㅔ, ㅒ, ㅖ.",
+      "steps.s1.hoyaLine": "벌써 글자 30개를 읽을 수 있어요. 모음 네 개를 더 만나 봐요!",
+      "steps.s1.title": "새 모음 네 개",
+      "steps.s2.discover.pages.0.items.0.example.gloss": "사람과 함께 살며 멍멍 짖는 동물",
+      "steps.s2.discover.pages.0.items.1.example.gloss": "단단한 껍데기를 쓰고 옆으로 걷는 바다 동물",
+      "steps.s2.discover.pages.1.items.0.example.gloss": "누군가에게 들려주는 말이나 일",
+      "steps.s2.discover.pages.1.items.1.example.gloss": "시간을 알려 주는 물건",
+      "steps.s2.discover.pages.2.caption": "이제 읽을 수 있는 낱말",
+      "steps.s2.discover.pages.2.items.0.word.gloss": "가락에 맞춰 부르는 것",
+      "steps.s2.discover.pages.2.items.1.word.gloss": "날개가 있어 하늘을 나는 동물",
+      "steps.s2.hoyaLine": "요즘은 ㅐ와 ㅔ를 똑같이 소리 내는 사람이 많아요. 어느 쪽인지는 글자를 보면 알 수 있어요.",
+      "steps.s2.title": "ㅐ, ㅔ, ㅒ, ㅖ 만나기",
+      "steps.s3.title": "그림과 낱말",
+      "steps.s4.title": "뜻 짝짓기",
+      "steps.s5.title": "듣고 읽기",
+      "steps.s6.hoyaLine": "새 모음 네 개와 새 낱말을 많이 읽었어요. 잘했어요!",
+      "steps.s6.title": "모음 네 개를 읽었어요!",
+      "title": "모음 짝 ㅐ와 ㅔ"
+    },
+    "quest:stage2-letters-q2": {
+      "blurb": "쌍자음 다섯 개: ㄲ, ㄸ, ㅃ, ㅆ, ㅉ.",
+      "steps.s1.hoyaLine": "같은 글자 두 개가 모여 새 소리를 내요. 다섯 개를 만나 봐요!",
+      "steps.s1.title": "같은 글자 두 개",
+      "steps.s2.discover.pages.0.items.0.example.gloss": "검은색과 흰색 깃털을 가진 새",
+      "steps.s2.discover.pages.0.items.1.example.gloss": "겉에 작은 씨가 박힌 빨간 열매",
+      "steps.s2.discover.pages.1.items.0.example.gloss": "밀가루 반죽을 구워 만든 음식",
+      "steps.s2.discover.pages.1.items.1.example.gloss": "밥을 짓기 전의 벼 알맹이",
+      "steps.s2.discover.pages.2.items.0.example.gloss": "국물을 자작하게 끓인 음식",
+      "steps.s2.hoyaLine": "쌍자음은 목을 긴장시켜 단단하게 내고, 바람은 거의 내보내지 않아요.",
+      "steps.s2.title": "ㄲ, ㄸ, ㅃ, ㅆ, ㅉ 만나기",
+      "steps.s3.title": "그림과 낱말",
+      "steps.s4.title": "뜻 짝짓기",
+      "steps.s5.title": "듣고 읽기",
+      "steps.s6.hoyaLine": "쌍자음 다섯 개를 읽었어요. 정말 잘했어요!",
+      "steps.s6.title": "단단한 소리!",
+      "title": "쌍자음"
+    },
+    "quest:stage2-letters-q3": {
+      "blurb": "아는 모음 두 개로 만든 모음 네 개.",
+      "steps.s1.hoyaLine": "아는 모음 두 개가 하나로 이어질 수 있어요. 어떻게 되는지 봐요!",
+      "steps.s1.title": "모음이 이어져요",
+      "steps.s2.discover.pages.0.items.0.example.gloss": "빨갛거나 푸른 껍질의 둥글고 아삭한 열매",
+      "steps.s2.discover.pages.0.items.1.example.gloss": "나무를 잘 타고 꼬리가 긴 동물",
+      "steps.s2.discover.pages.1.items.0.example.gloss": "소리를 듣는 몸의 부분",
+      "steps.s2.discover.pages.1.items.1.example.gloss": "앉을 때 쓰는 가구",
+      "steps.s2.discover.pages.2.caption": "이제 읽을 수 있는 낱말",
+      "steps.s2.discover.pages.2.items.0.word.gloss": "밀가루 등으로 만들어 굽거나 튀긴 군것질거리",
+      "steps.s2.discover.pages.2.items.1.word.gloss": "종이나 천을 자르는 도구",
+      "steps.s2.hoyaLine": "이어진 모음은 아는 모음 두 개를 빠르게 이어서 한 소리로 낼 때가 많아요.",
+      "steps.s2.title": "ㅘ, ㅝ, ㅟ, ㅢ 만나기",
+      "steps.s3.title": "그림과 낱말",
+      "steps.s4.title": "뜻 짝짓기",
+      "steps.s5.title": "듣고 읽기",
+      "steps.s6.hoyaLine": "이어진 모음 네 개를 읽었어요. 아주 잘하고 있어요!",
+      "steps.s6.title": "모음을 이었어요!",
+      "title": "이어진 모음 ㅘ, ㅝ, ㅟ, ㅢ"
+    },
+    "quest:stage2-letters-q4": {
+      "blurb": "소리가 비슷한 이어진 모음 세 개.",
+      "steps.s1.hoyaLine": "오늘은 이어진 모음 세 개를 더 배워요. 모양을 보면 구별할 수 있어요.",
+      "steps.s1.title": "닮은 모음 셋",
+      "steps.s2.discover.pages.0.items.0.example.gloss": "사람들이 모여 함께 일하는 곳",
+      "steps.s2.discover.pages.0.items.1.example.gloss": "코가 납작하고 꿀꿀 소리를 내는 동물",
+      "steps.s2.discover.pages.1.items.0.example.gloss": "털실로 짠 따뜻한 윗옷",
+      "steps.s2.discover.pages.1.items.1.word.gloss": "흰빛과 검은빛을 섞은 빛깔",
+      "steps.s2.hoyaLine": "요즘 이 셋은 소리가 거의 같을 때가 많아요. 모양으로 익혀요.",
+      "steps.s2.title": "ㅚ, ㅙ, ㅞ 만나기",
+      "steps.s3.title": "그림과 낱말",
+      "steps.s4.title": "뜻 짝짓기",
+      "steps.s5.title": "듣고 읽기",
+      "steps.s6.hoyaLine": "한글 모음 글자를 모두 만났어요. 잘했어요!",
+      "steps.s6.title": "모음을 다 만났어요!",
+      "title": "이어진 모음 ㅚ, ㅙ, ㅞ"
+    },
+    "quest:stage2-letters-q5": {
+      "blurb": "모두 [ㄷ]으로 소리 나는 받침 여섯 개.",
+      "steps.s1.hoyaLine": "받침 여섯 개가 모두 같은 소리로 나요!",
+      "steps.s1.title": "같은 소리, 여섯 글자",
+      "steps.s2.discover.pages.0.items.0.example.gloss": "몸에 걸쳐 입는 것",
+      "steps.s2.discover.pages.0.items.1.example.gloss": "해가 떠 있는 동안",
+      "steps.s2.discover.pages.1.items.0.example.gloss": "식물에 피어나는 빛깔이 고운 부분",
+      "steps.s2.discover.pages.1.items.1.example.gloss": "어떤 일이나 물건의 마지막 부분",
+      "steps.s2.discover.pages.2.items.0.example.gloss": "오래 지나지 않아",
+      "steps.s2.discover.pages.2.items.1.example.gloss": "어떤 곳에 머무르다, 또는 무엇을 가지다",
+      "steps.s2.hoyaLine": "낱말 끝이나 자음 앞에서 이 여섯 받침은 모두 [ㄷ]으로 소리 나요.",
+      "steps.s2.title": "끝소리 [ㄷ]",
+      "steps.s3.title": "그림과 낱말",
+      "steps.s4.title": "뜻 짝짓기",
+      "steps.s5.title": "듣고 읽기",
+      "steps.s6.hoyaLine": "새 받침 여섯 개, 소리는 [ㄷ] 하나예요. 정말 잘했어요!",
+      "steps.s6.title": "한 소리, 여섯 글자!",
+      "title": "여섯 글자, 한 소리"
+    },
+    "quest:stage2-letters-q6": {
+      "blurb": "아는 소리를 내는 새 받침 세 개.",
+      "steps.s1.hoyaLine": "받침 소리 [ㄱ]과 [ㅂ]은 이미 알아요. 같은 소리를 내는 받침 세 개를 더 만나요!",
+      "steps.s1.title": "아는 소리, 새 글자",
+      "steps.s2.discover.pages.0.items.0.example.gloss": "음식을 만드는 곳",
+      "steps.s2.discover.pages.0.items.1.example.gloss": "건물이나 울타리를 벗어난 곳",
+      "steps.s2.discover.pages.1.items.0.example.gloss": "얼굴이 향하는 쪽",
+      "steps.s2.discover.pages.1.items.1.word.gloss": "나무가 빽빽하게 우거진 곳",
+      "steps.s2.discover.pages.2.caption": "이제 읽을 수 있는 낱말",
+      "steps.s2.discover.pages.2.items.0.word.gloss": "풀이나 나무의 줄기에 달린 납작하고 푸른 부분",
+      "steps.s2.hoyaLine": "낱말 끝이나 자음 앞에서 ㅋ과 ㄲ은 ㄱ처럼, ㅍ은 ㅂ처럼 소리 나요.",
+      "steps.s2.title": "새 글자, 아는 소리",
+      "steps.s3.title": "그림과 낱말",
+      "steps.s4.title": "뜻 짝짓기",
+      "steps.s5.title": "듣고 읽기",
+      "steps.s6.hoyaLine": "낱말 만들기의 마지막 새 글자를 만났어요. 멋져요!",
+      "steps.s6.title": "낱말 만들기 끝!",
+      "title": "[ㄱ]과 [ㅂ]으로 소리 나는 새 받침"
+    }
+  }
 };

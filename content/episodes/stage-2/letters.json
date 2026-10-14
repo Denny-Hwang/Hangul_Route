@@ -2,7 +2,7 @@
   "id": "episode:stage2-letters",
   "stage": "stage2",
   "theme": "letters",
-  "status": "draft",
+  "status": "ready",
   "titleEn": "Word Builder",
   "subtitleEn": "The rest of Hangul, and the words it opens.",
   "hoyaIntroEn": "You know 30 letters. Let us meet the rest and read more words!",
@@ -236,7 +236,7 @@
                 },
                 {
                   "id": "chaek",
-                  "pictureRef": "word:book",
+                  "pictureRef": "card:book",
                   "word": {
                     "ko": "책",
                     "romanization": "chaek",
@@ -267,7 +267,7 @@
                 },
                 {
                   "id": "bada",
-                  "pictureRef": "word:sea",
+                  "pictureRef": "card:sea",
                   "word": {
                     "ko": "바다",
                     "romanization": "bada",
@@ -297,12 +297,12 @@
                   }
                 },
                 {
-                  "id": "geomeunsaek",
-                  "pictureRef": "word:color-black",
+                  "id": "paransaek",
+                  "pictureRef": "word:color-blue",
                   "word": {
-                    "ko": "검은색",
-                    "romanization": "geomeunsaek",
-                    "en": "black"
+                    "ko": "파란색",
+                    "romanization": "paransaek",
+                    "en": "blue"
                   }
                 }
               ]
@@ -452,7 +452,7 @@
           "id": "s2",
           "kind": "discover",
           "titleEn": "Meet kk, tt, pp, ss, jj",
-          "hoyaLineEn": "A doubled letter is said tight and strong, with almost no puff of air.",
+          "hoyaLineEn": "A doubled letter is said with a tight throat, with almost no puff of air.",
           "discover": {
             "pages": [
               {
@@ -868,7 +868,7 @@
           "id": "s2",
           "kind": "discover",
           "titleEn": "Meet wa, wo, wi, ui",
-          "hoyaLineEn": "Each joined vowel is two vowels you know, said quickly as one sound.",
+          "hoyaLineEn": "Each joined vowel is two vowels you know, often said quickly as one sound.",
           "discover": {
             "pages": [
               {
@@ -1314,7 +1314,7 @@
                     "example": {
                       "ko": "회사",
                       "romanization": "hoesa",
-                      "en": "company, work",
+                      "en": "company, office",
                       "syllables": [
                         "hoe",
                         "sa"
@@ -1429,12 +1429,12 @@
                   }
                 },
                 {
-                  "id": "geomeunsaek",
-                  "pictureRef": "word:color-black",
+                  "id": "ppalgansaek",
+                  "pictureRef": "word:color-red",
                   "word": {
-                    "ko": "검은색",
-                    "romanization": "geomeunsaek",
-                    "en": "black"
+                    "ko": "빨간색",
+                    "romanization": "ppalgansaek",
+                    "en": "red"
                   }
                 }
               ]
@@ -1442,30 +1442,30 @@
             {
               "pairs": [
                 {
-                  "id": "hoesaek",
-                  "pictureRef": "word:color-gray",
+                  "id": "gawi",
+                  "pictureRef": "word:school-scissors",
                   "word": {
-                    "ko": "회색",
-                    "romanization": "hoesaek",
-                    "en": "gray"
+                    "ko": "가위",
+                    "romanization": "gawi",
+                    "en": "scissors"
                   }
                 },
                 {
-                  "id": "galsaek",
-                  "pictureRef": "word:color-brown",
+                  "id": "banana",
+                  "pictureRef": "word:food-banana",
                   "word": {
-                    "ko": "갈색",
-                    "romanization": "galsaek",
-                    "en": "brown"
+                    "ko": "바나나",
+                    "romanization": "banana",
+                    "en": "banana"
                   }
                 },
                 {
-                  "id": "noransaek",
-                  "pictureRef": "word:color-yellow",
+                  "id": "son",
+                  "pictureRef": "word:body-hand",
                   "word": {
-                    "ko": "노란색",
-                    "romanization": "noransaek",
-                    "en": "yellow"
+                    "ko": "손",
+                    "romanization": "son",
+                    "en": "hand"
                   }
                 }
               ]
@@ -1603,7 +1603,7 @@
             {
               "ko": "회사",
               "romanization": "hoesa",
-              "en": "company, work"
+              "en": "company, office"
             },
             {
               "ko": "돼지",
@@ -1645,9 +1645,9 @@
                   "labelEn": "white"
                 },
                 {
-                  "id": "geomeunsaek",
-                  "pictureRef": "word:color-black",
-                  "labelEn": "black"
+                  "id": "galsaek",
+                  "pictureRef": "word:color-brown",
+                  "labelEn": "brown"
                 }
               ],
               "answerId": "hoesaek"
@@ -1708,7 +1708,7 @@
           "id": "s2",
           "kind": "discover",
           "titleEn": "The t Sound at the End",
-          "hoyaLineEn": "At the end of a word, these six letters say t. When an ending that starts with a vowel comes next, the letter moves on and keeps its own sound.",
+          "hoyaLineEn": "At the end of a word or before another consonant, these six letters all say t.",
           "discover": {
             "pages": [
               {
@@ -1898,7 +1898,7 @@
                 },
                 {
                   "id": "gimbap",
-                  "pictureRef": "word:kimbap",
+                  "pictureRef": "card:kimbap",
                   "word": {
                     "ko": "김밥",
                     "romanization": "gimbap",
@@ -1929,7 +1929,7 @@
                 },
                 {
                   "id": "chaek",
-                  "pictureRef": "word:book",
+                  "pictureRef": "card:book",
                   "word": {
                     "ko": "책",
                     "romanization": "chaek",
@@ -2000,7 +2000,7 @@
                 },
                 {
                   "id": "dal",
-                  "pictureRef": "word:moon",
+                  "pictureRef": "card:moon",
                   "word": {
                     "ko": "달",
                     "romanization": "dal",
@@ -2116,14 +2116,14 @@
           "id": "s1",
           "kind": "intro",
           "titleEn": "Old Sounds, New Letters",
-          "hoyaLineEn": "You know k and p at the end of a block. Three more letters make them!",
+          "hoyaLineEn": "You know a bottom g and b, said k and p. Three more letters make those sounds!",
           "durationSeconds": 8
         },
         {
           "id": "s2",
           "kind": "discover",
           "titleEn": "New Letters, Known Sounds",
-          "hoyaLineEn": "At the end of a word, k and kk say k, as g does. And p says p, as b does.",
+          "hoyaLineEn": "At the end of a word or before another consonant, the puff-of-air k and the double k sound like a bottom g, a short k. The puff-of-air p sounds like a bottom b, a short p.",
           "discover": {
             "pages": [
               {
@@ -2170,6 +2170,20 @@
                       "romanization": "sup",
                       "en": "forest"
                     }
+                  }
+                ]
+              },
+              {
+                "captionEn": "Words you can read now",
+                "items": [
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "잎",
+                      "romanization": "ip",
+                      "en": "leaf"
+                    },
+                    "picture": "word:prop-leaf"
                   }
                 ]
               }
@@ -2222,12 +2236,12 @@
                   "word": {
                     "ko": "떡볶이",
                     "romanization": "tteokbokki",
-                    "en": "tteokbokki (spicy rice cakes)"
+                    "en": "tteokbokki (stir-fried rice cakes, often spicy)"
                   }
                 },
                 {
                   "id": "gimbap",
-                  "pictureRef": "word:kimbap",
+                  "pictureRef": "card:kimbap",
                   "word": {
                     "ko": "김밥",
                     "romanization": "gimbap",
@@ -2257,12 +2271,12 @@
                   }
                 },
                 {
-                  "id": "ssiat",
-                  "pictureRef": "word:science-seed",
+                  "id": "ip",
+                  "pictureRef": "word:prop-leaf",
                   "word": {
-                    "ko": "씨앗",
-                    "romanization": "ssiat",
-                    "en": "seed"
+                    "ko": "잎",
+                    "romanization": "ip",
+                    "en": "leaf"
                   }
                 },
                 {
@@ -2279,12 +2293,12 @@
             {
               "pairs": [
                 {
-                  "id": "mujigae",
-                  "pictureRef": "word:science-rainbow",
+                  "id": "ip",
+                  "pictureRef": "word:prop-leaf",
                   "word": {
-                    "ko": "무지개",
-                    "romanization": "mujigae",
-                    "en": "rainbow"
+                    "ko": "잎",
+                    "romanization": "ip",
+                    "en": "leaf"
                   }
                 },
                 {
@@ -2390,12 +2404,12 @@
                   }
                 },
                 {
-                  "id": "jiugae",
-                  "pictureRef": "word:school-eraser",
+                  "id": "ip",
+                  "pictureRef": "word:prop-leaf",
                   "word": {
-                    "ko": "지우개",
-                    "romanization": "jiugae",
-                    "en": "eraser"
+                    "ko": "잎",
+                    "romanization": "ip",
+                    "en": "leaf"
                   }
                 }
               ]
@@ -2433,30 +2447,30 @@
           "kind": "listen-pick",
           "rounds": [
             {
-              "id": "see-tteokbokki",
+              "id": "see-ip",
               "prompt": {
-                "ko": "떡볶이",
-                "romanization": "tteokbokki",
-                "en": "tteokbokki (spicy rice cakes)"
+                "ko": "잎",
+                "romanization": "ip",
+                "en": "leaf"
               },
               "options": [
                 {
-                  "id": "tteokbokki",
-                  "pictureRef": "word:culture-tteokbokki",
-                  "labelEn": "tteokbokki (spicy rice cakes)"
+                  "id": "ip",
+                  "pictureRef": "word:prop-leaf",
+                  "labelEn": "leaf"
                 },
                 {
-                  "id": "gimbap",
-                  "pictureRef": "word:kimbap",
-                  "labelEn": "gimbap (seaweed rice roll)"
+                  "id": "kkot",
+                  "pictureRef": "word:nature-flower",
+                  "labelEn": "flower"
                 },
                 {
-                  "id": "ramyeon",
-                  "pictureRef": "word:food-ramyeon",
-                  "labelEn": "instant noodles"
+                  "id": "namu",
+                  "pictureRef": "word:nature-tree",
+                  "labelEn": "tree"
                 }
               ],
-              "answerId": "tteokbokki"
+              "answerId": "ip"
             },
             {
               "id": "read-ap",
@@ -2520,10 +2534,10 @@
         }
       ],
       "verification": {
-        "passes": 2,
+        "passes": 3,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "Pass 1 (author sourcing, 2026-10-14): both sources opened; the NIKL standard pronunciation commentary to article 4 says ㅐ and ㅔ are not kept apart by most generations today, and the Encyclopedia of Korean Culture says speakers in their forties and younger do not distinguish /e/ and /ɛ/. Backs the q1 Discover Hoya line. The games never ask the learner to tell ㅐ from ㅔ by ear.\nPass 2b (independent fact check, 2026-10-14): both sources re-opened. NIKL article 4 commentary says most generations no longer tell ㅐ and ㅔ apart (the article 1 commentary adds: most people outside some older speakers in some regions); the Encyclopedia of Korean Culture note to table 1 says Central-dialect speakers in their forties and younger have one merged /E/. Both quoted locators match the pages word for word. Claim holds; no wording shared with the sources."
+        "notes": "Pass 1 (author sourcing, 2026-10-14): both sources opened; the NIKL standard pronunciation commentary to article 4 says ㅐ and ㅔ are not kept apart by most generations today, and the Encyclopedia of Korean Culture says speakers in their forties and younger do not distinguish /e/ and /ɛ/. Backs the q1 Discover Hoya line. The games never ask the learner to tell ㅐ from ㅔ by ear.\nPass 2b (independent fact check, 2026-10-14): both sources re-opened. NIKL article 4 commentary says most generations no longer tell ㅐ and ㅔ apart (the article 1 commentary adds: most people outside some older speakers in some regions); the Encyclopedia of Korean Culture note to table 1 says Central-dialect speakers in their forties and younger have one merged /E/. Both quoted locators match the pages word for word. Claim holds; no wording shared with the sources.\nPass 5 (MAR culture review, independent final check, 2026-10-14): NIKL article 4 commentary (ㅐ and ㅔ not kept apart by most generations) and the Encyclopedia of Korean Culture note to table 1 (merged /E/ under forty) re-read; both locators match. Claim and q1 line hold. No wording shared with the sources."
       }
     },
     {
@@ -2547,10 +2561,10 @@
         }
       ],
       "verification": {
-        "passes": 2,
+        "passes": 3,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "Pass 1 (author sourcing, 2026-10-14): the dictionary defines the tense consonants ㄲ ㄸ ㅃ ㅆ ㅉ as said with raised laryngeal tension and almost no aspiration; the encyclopedia sets the tense series beside the plain and the aspirated series. Backs the q2 Discover Hoya line (tight and strong, almost no puff of air).\nPass 2b (independent fact check, 2026-10-14): the Standard Korean Language Dictionary entry 된소리 (one result) defines it as said with raised laryngeal-muscle tension and almost no aspiration, examples ㄲ ㄸ ㅃ ㅆ ㅉ; the encyclopedia's stops section names the plain, tense and aspirated series (tense: initials of 뼈, 딸, 끝) and its fricatives section names tense [s'] in 싸움, 씨름. 'Throat tightens' is a plain-words restatement of laryngeal tension. Claim holds; no copied wording."
+        "notes": "Pass 1 (author sourcing, 2026-10-14): the dictionary defines the tense consonants ㄲ ㄸ ㅃ ㅆ ㅉ as said with raised laryngeal tension and almost no aspiration; the encyclopedia sets the tense series beside the plain and the aspirated series. Backs the q2 Discover Hoya line (tight and strong, almost no puff of air).\nPass 2b (independent fact check, 2026-10-14): the Standard Korean Language Dictionary entry 된소리 (one result) defines it as said with raised laryngeal-muscle tension and almost no aspiration, examples ㄲ ㄸ ㅃ ㅆ ㅉ; the encyclopedia's stops section names the plain, tense and aspirated series (tense: initials of 뼈, 딸, 끝) and its fricatives section names tense [s'] in 싸움, 씨름. 'Throat tightens' is a plain-words restatement of laryngeal tension. Claim holds; no copied wording.\nPass 5 (MAR culture review, independent final check, 2026-10-14): The 된소리 dictionary entry (laryngeal tension, almost no aspiration; ㄲ ㄸ ㅃ ㅆ ㅉ) and the encyclopedia stop and fricative series re-read; locators match. The q2 line no longer says strong, matching the note. No wording shared with the sources."
       }
     },
     {
@@ -2574,10 +2588,10 @@
         }
       ],
       "verification": {
-        "passes": 2,
+        "passes": 3,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "Pass 1 (author sourcing, 2026-10-14): article 5 of the standard pronunciation rules lists ㅘ ㅝ ㅢ among the diphthongs and article 4 lets ㅟ be said as one; the encyclopedia transcribes ㅘ as [wa], ㅝ as [wʌ] and ㅟ as usually [wi]. Backs the q3 Discover Hoya line (two vowels you know, said quickly as one sound); the letter shapes (ㅗ+ㅏ, ㅜ+ㅓ, ㅜ+ㅣ, ㅡ+ㅣ) are visible in the letters themselves.\nPass 2b (independent fact check, 2026-10-14): article 5 lists ㅘ ㅝ ㅢ as diphthongs and its commentary builds ㅘ ㅝ from [w] plus ㅏ ㅓ and ㅢ from ㅡ plus [j]; article 4 makes ㅟ a monophthong in principle with a diphthong allowed, and article 5 provisos 3-4 say ㅢ after a consonant is said [ㅣ] and is allowed as [ㅣ] or [ㅔ] elsewhere. 'Each is said as one gliding sound' overstated ㅟ and ㅢ, so the note now says 'each can be said as one gliding sound'; locator extended to provisos 3-4. Encyclopedia quotes ([wa], [wʌ], ㅟ usually [wi]) match. Holds as revised."
+        "notes": "Pass 1 (author sourcing, 2026-10-14): article 5 of the standard pronunciation rules lists ㅘ ㅝ ㅢ among the diphthongs and article 4 lets ㅟ be said as one; the encyclopedia transcribes ㅘ as [wa], ㅝ as [wʌ] and ㅟ as usually [wi]. Backs the q3 Discover Hoya line (two vowels you know, said quickly as one sound); the letter shapes (ㅗ+ㅏ, ㅜ+ㅓ, ㅜ+ㅣ, ㅡ+ㅣ) are visible in the letters themselves.\nPass 2b (independent fact check, 2026-10-14): article 5 lists ㅘ ㅝ ㅢ as diphthongs and its commentary builds ㅘ ㅝ from [w] plus ㅏ ㅓ and ㅢ from ㅡ plus [j]; article 4 makes ㅟ a monophthong in principle with a diphthong allowed, and article 5 provisos 3-4 say ㅢ after a consonant is said [ㅣ] and is allowed as [ㅣ] or [ㅔ] elsewhere. 'Each is said as one gliding sound' overstated ㅟ and ㅢ, so the note now says 'each can be said as one gliding sound'; locator extended to provisos 3-4. Encyclopedia quotes ([wa], [wʌ], ㅟ usually [wi]) match. Holds as revised.\nPass 5 (MAR culture review, independent final check, 2026-10-14): Article 5, article 4 [붙임] and article 5 provisos 3-4 re-read with the encyclopedia ([wa], [wʌ], ㅟ usually [wi]). The pass 2b wording (can be said as one gliding sound) holds; the q3 line now says often, in en, es and ko. No wording shared with the sources."
       }
     },
     {
@@ -2601,10 +2615,10 @@
         }
       ],
       "verification": {
-        "passes": 2,
+        "passes": 3,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "Pass 1 (author sourcing, 2026-10-14): ㅚ may be a diphthong (article 4, attachment), ㅙ is [wɛ] and ㅞ is [we] (encyclopedia), and ㅐ / ㅔ are not kept apart by most speakers (article 4 commentary; encyclopedia), so the three end up close. The note says 'often' and 'nearly', not 'always'. Backs the q4 Discover Hoya line; the games never ask for this contrast by ear.\nPass 2b (independent fact check, 2026-10-14): NIKL article 4 attachment allows ㅚ as a diphthong and its commentary says diphthong ㅚ is the same as ㅞ (회 [회]/[훼]); article 4 commentary says ㅐ and ㅔ have merged for most generations; the encyclopedia gives ㅙ [wɛ], ㅞ [we]. So ㅚ ㅙ ㅞ come out close; 'often' and 'nearly' are kept. The encyclopedia's Jeju line is dialect-only, so the merger rests on NIKL; locator extended to the ㅚ = ㅞ commentary. Claim holds; no copied wording."
+        "notes": "Pass 1 (author sourcing, 2026-10-14): ㅚ may be a diphthong (article 4, attachment), ㅙ is [wɛ] and ㅞ is [we] (encyclopedia), and ㅐ / ㅔ are not kept apart by most speakers (article 4 commentary; encyclopedia), so the three end up close. The note says 'often' and 'nearly', not 'always'. Backs the q4 Discover Hoya line; the games never ask for this contrast by ear.\nPass 2b (independent fact check, 2026-10-14): NIKL article 4 attachment allows ㅚ as a diphthong and its commentary says diphthong ㅚ is the same as ㅞ (회 [회]/[훼]); article 4 commentary says ㅐ and ㅔ have merged for most generations; the encyclopedia gives ㅙ [wɛ], ㅞ [we]. So ㅚ ㅙ ㅞ come out close; 'often' and 'nearly' are kept. The encyclopedia's Jeju line is dialect-only, so the merger rests on NIKL; locator extended to the ㅚ = ㅞ commentary. Claim holds; no copied wording.\nPass 5 (MAR culture review, independent final check, 2026-10-14): Article 4 [붙임], the article 4 commentary (diphthong ㅚ equals ㅞ, 회 [회]/[훼]) and the encyclopedia ㅙ [wɛ], ㅞ [we] re-read; often and nearly hold. No round asks the contrast by ear. No wording shared with the sources."
       }
     },
     {
@@ -2628,16 +2642,16 @@
         }
       ],
       "verification": {
-        "passes": 2,
+        "passes": 3,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "Pass 1 (author sourcing, 2026-10-14): articles 8 and 9 give the seven final sounds and the representative sounds of ㄲ ㅋ (ㄱ), ㅅ ㅆ ㅈ ㅊ ㅌ (ㄷ) and ㅍ (ㅂ); the encyclopedia says these stops and fricatives are realised only as [p], [t], [k] at the end of a syllable. Backs the q5 and q6 Discover Hoya lines. Final ㅎ is not in article 9 (article 12 gives it other rules), so q5 teaches six t letters, not ㅎ.\nPass 2b (independent fact check, 2026-10-14): article 8 gives the seven final sounds ㄱ ㄴ ㄷ ㄹ ㅁ ㅂ ㅇ; article 9 maps final ㄲ ㅋ to [ㄱ], ㅅ ㅆ ㅈ ㅊ ㅌ to [ㄷ], ㅍ to [ㅂ] at word end or before a consonant (examples 옷[옫], 꽃[꼳], 앞[압]); article 12 treats final ㅎ separately. The encyclopedia says the stops surface only as [p] [t] [k] syllable-finally and the affricates and /s/, /s'/ as [t]; locator widened to name those parts. Claim holds; no copied wording."
+        "notes": "Pass 1 (author sourcing, 2026-10-14): articles 8 and 9 give the seven final sounds and the representative sounds of ㄲ ㅋ (ㄱ), ㅅ ㅆ ㅈ ㅊ ㅌ (ㄷ) and ㅍ (ㅂ); the encyclopedia says these stops and fricatives are realised only as [p], [t], [k] at the end of a syllable. Backs the q5 and q6 Discover Hoya lines. Final ㅎ is not in article 9 (article 12 gives it other rules), so q5 teaches six t letters, not ㅎ.\nPass 2b (independent fact check, 2026-10-14): article 8 gives the seven final sounds ㄱ ㄴ ㄷ ㄹ ㅁ ㅂ ㅇ; article 9 maps final ㄲ ㅋ to [ㄱ], ㅅ ㅆ ㅈ ㅊ ㅌ to [ㄷ], ㅍ to [ㅂ] at word end or before a consonant (examples 옷[옫], 꽃[꼳], 앞[압]); article 12 treats final ㅎ separately. The encyclopedia says the stops surface only as [p] [t] [k] syllable-finally and the affricates and /s/, /s'/ as [t]; locator widened to name those parts. Claim holds; no copied wording.\nPass 5 (MAR culture review, independent final check, 2026-10-14): Articles 8 and 9 and the encyclopedia ([p] [t] [k] at syllable end; ㅈ ㅉ ㅊ and ㅅ ㅆ end in [t]) re-read; locators match. The q5 and q6 lines now carry both article 9 conditions, end of a word or before a consonant. No wording shared with the sources."
       }
     },
     {
       "id": "n6",
       "kind": "language",
-      "textEn": "When an ending or particle that starts with a vowel follows, a bottom letter moves over to the next block and keeps its own sound: {ko:옷이} is said osi, not with a t.",
+      "textEn": "When an ending or particle that starts with a vowel follows, these bottom letters move over to the next block and keep their own sound: {ko:옷이} is said osi, not with a t.",
       "sources": [
         {
           "title": "표준어 규정 제2부 표준 발음법",
@@ -2655,17 +2669,22 @@
         }
       ],
       "verification": {
-        "passes": 2,
+        "passes": 3,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "Pass 1 (author sourcing, 2026-10-14): article 13 moves a single or double final to the next syllable with its own value before a vowel-initial particle, ending or suffix, and the NIKL explainer gives 옷이 [오시]. Backs the second sentence of the q5 Discover Hoya line.\nPass 2b (independent fact check, 2026-10-14): article 13 (in chapter 4, Pronouncing final consonants, not chapter 5 as the locator said: corrected) moves a single or double final, with its own value, to the next syllable before a vowel-initial particle, ending or suffix, example 옷이[오시]; the NIKL 새국어소식 article (2001, June) gives 옷이[오시], 꽃이[꼬치] and contrasts 겉옷[거돋]. Claim holds; no copied wording."
+        "notes": "Pass 1 (author sourcing, 2026-10-14): article 13 moves a single or double final to the next syllable with its own value before a vowel-initial particle, ending or suffix, and the NIKL explainer gives 옷이 [오시]. Backs the second sentence of the q5 Discover Hoya line.\nPass 2b (independent fact check, 2026-10-14): article 13 (in chapter 4, Pronouncing final consonants, not chapter 5 as the locator said: corrected) moves a single or double final, with its own value, to the next syllable before a vowel-initial particle, ending or suffix, example 옷이[오시]; the NIKL 새국어소식 article (2001, June) gives 옷이[오시], 꽃이[꼬치] and contrasts 겉옷[거돋]. Claim holds; no copied wording.\nPass 5 (MAR culture review, independent final check, 2026-10-14): Article 13 and the 새국어소식 example 옷이[오시] re-read; both limit the carry-over to vowel-initial particles, endings and suffixes (겉옷 [거돋] is not one). Note narrowed to these bottom letters (final ㅇ never moves, ㅎ drops). The q5 line no longer states the rule; the note alone carries it. No wording shared with the sources."
       }
     }
   ],
   "review": {
-    "language": "draft",
-    "culture": "draft",
-    "notes": []
+    "language": "native-reviewed",
+    "culture": "culture-reviewed",
+    "reviewedBy": "MAR",
+    "reviewedAt": "2026-10-14",
+    "notes": [
+      "Language (pass 4, MAR 2026-10-14): spelling, 해요체 register and romanization clean; ko overlay names letters by jamo; q2, q3, q5 and q6 rule lines tightened; q4 and q6 practice reworked within the art that exists; glosses fixed (회사, 낮, 과자, 있다). 있다 is said [읻따], a tensing the cell does not teach; it stays only as the ㅆ-final example, with its audio.",
+      "Culture (pass 5, MAR 2026-10-14): all six language notes re-checked against both sources (verification line 3); n6 narrowed to the letters taught; the q5 carry-over sentence removed; 떡볶이 glossed often spicy. No culture claim beyond the notes, no person, brand, shop or price, no age wording."
+    ]
   },
   "contentVer": 1
 }
