@@ -96,7 +96,7 @@ async function render(Page: () => JSX.Element): Promise<ReactTestInstance> {
 
 describe('the notes hubs (FB-11b)', () => {
   it('flag off: asks nothing and goes back to the persona home', async () => {
-    vi.stubEnv('NEXT_PUBLIC_NOTES_ENABLED', '');
+    vi.stubEnv('NEXT_PUBLIC_NOTES_ENABLED', 'false');
     await render(ParentNotesHub);
     expect(calls).toBe(0);
     expect(replaced).toEqual(['/parent']);

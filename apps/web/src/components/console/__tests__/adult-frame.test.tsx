@@ -113,6 +113,8 @@ beforeEach(() => {
   vi.unstubAllEnvs();
   // Reports are on by default since F-REPORT-001 RP-11; these cases start from every sibling flag off and switch on what they need.
   vi.stubEnv('NEXT_PUBLIC_REPORTS_ENABLED', 'false');
+  // Notes are on by default since FB-14; this suite's baseline is every sibling flag off.
+  vi.stubEnv('NEXT_PUBLIC_NOTES_ENABLED', 'false');
 });
 afterEach(() => {
   act(() => mounted?.unmount());

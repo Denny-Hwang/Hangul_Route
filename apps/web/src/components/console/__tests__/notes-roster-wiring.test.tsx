@@ -152,7 +152,8 @@ const sendNote = (root: ReactTestInstance): ReactTestInstance[] => root.findAll(
 const notesAction = (root: ReactTestInstance): ReactTestInstance[] => root.findAll((n) => n.type === 'a' && n.props['data-testid'] === 'roster-notes');
 
 describe('the roster notes entries (FB-11a)', () => {
-  it('notes off (the default): no Notes action and no Send a note', async () => {
+  it('notes switched off (NEXT_PUBLIC_NOTES_ENABLED=false): no Notes action and no Send a note', async () => {
+    vi.stubEnv('NEXT_PUBLIC_NOTES_ENABLED', 'false');
     const root = await roster();
     expect(notesAction(root)).toHaveLength(0);
     expect(sendNote(root)).toHaveLength(0);
