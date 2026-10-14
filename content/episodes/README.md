@@ -50,8 +50,8 @@ before that row lands.
    `apps/mobile/src/content/__generated__/lessons-index.ts` (episodes, quests, their glosses;
    imported at start) and `lessons-stage<n>.ts` (the game scopes and their glosses; loaded the
    first time a quest of that stage opens). `--check` fails on drift, `--report` on the budget
-   (11 KB raw per quest on average, 150 KB raw / 32 KB gzip per stage module, 600 KB raw /
-   128 KB gzip in total).
+   (9 KB raw per quest on average, 150 KB raw / 32 KB gzip per stage module, 950,000 B raw /
+   140,000 B gzip in total; F-CURR-001 section 3.12).
 3. `apps/mobile/src/content/__tests__/upper-stage-curriculum.test.ts` checks U-1 .. U-10 and
    that a ready cell plays only games the app has a screen for (`PLAYABLE_KINDS`, so a game row
    lands before the cells that use its game), and `e2e/web/journey-upper-cell.spec.ts` needs an
