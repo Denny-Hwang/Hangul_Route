@@ -279,6 +279,8 @@ describe('grid golden (F-STORY-005 §3.1 rule 2)', () => {
         questIds: ['quest:stage4-letters-q1', 'quest:stage4-letters-q2', 'quest:stage4-letters-q3'],
         status: 'shipped',
       },
+      // F-CURR-001 S4-2: Kitchen Talk (generated; letters.json < life.json < rites.json).
+      { id: 'episode:stage4-life', order: 2, questIds: ['quest:stage4-life-q1', 'quest:stage4-life-q2', 'quest:stage4-life-q3'], status: 'shipped' },
       // F-CURR-001 T-2: the Greeting Dialogues taste moved into its generated cell (same id, three quests).
       { id: 'episode:stage4-rites', order: 3, questIds: ['quest:stage4-rites-q1', 'quest:stage4-rites-q2', 'quest:stage4-rites-q3'], status: 'shipped' },
       // F-STORY-005 PR 5.6: the five Stage 5 books (books.ts), each cell's placeholder id kept.
@@ -360,6 +362,8 @@ describe('pillar tags of the shipped lessons (F-STORY-005 §3.2)', () => {
       'episode:stage2-letters': ['A1'],
       // F-CURR-001 S2-2 (generated from content/episodes/stage-2/rites.json).
       'episode:stage2-rites': ['B5'],
+      // F-CURR-001 S4-2 (generated from content/episodes/stage-4/life.json).
+      'episode:stage4-life': ['B5'],
       'episode:stage5-letters': ['A1'],
       'episode:stage5-life': ['B1', 'B5', 'E4'],
       'episode:stage5-rites': ['B5'],
@@ -393,7 +397,7 @@ const GRID_GOLDEN: Record<string, string> = {
   'stage3:nature': 'episode:stage3-nature | Animal Sentences | preview',
   'stage3:crafts': 'episode:stage3-crafts | Game Sentences | shipped',
   'stage4:letters': 'episode:stage4-letters | Read Along | shipped',
-  'stage4:life': 'episode:stage4-life | Kitchen Talk | preview',
+  'stage4:life': 'episode:stage4-life | Kitchen Talk | shipped',
   'stage4:rites': 'episode:stage4-rites | Greeting Dialogues | shipped',
   'stage4:nature': 'episode:stage4-nature | Park Conversations | preview',
   'stage4:crafts': 'episode:stage4-crafts | Playdate Talk | preview',

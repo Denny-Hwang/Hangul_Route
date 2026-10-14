@@ -178,17 +178,15 @@ describe('the lesson cell files (F-CURR-001 section 3.10)', () => {
     }
   });
 
-  it('T-2: once Greeting Dialogues is a generated cell, Stage 4 plays in grid theme order (Read Along, then Greeting Dialogues)', () => {
+  it('T-2: once Greeting Dialogues is a generated cell, Stage 4 plays in grid theme order (Read Along, Kitchen Talk, Greeting Dialogues, ...)', () => {
     if (!READY.some((c) => c.cell.id === 'episode:stage4-rites')) return;
     const stage4 = questsAll.map((q) => q.id).filter((id) => id.startsWith('quest:stage4-'));
-    expect(stage4).toEqual([
-      'quest:stage4-letters-q1',
-      'quest:stage4-letters-q2',
-      'quest:stage4-letters-q3',
-      'quest:stage4-rites-q1',
-      'quest:stage4-rites-q2',
-      'quest:stage4-rites-q3',
-    ]);
+    const THEME_ORDER = ['letters', 'life', 'rites', 'nature', 'crafts'];
+    const expected = READY.filter((c) => c.cell.stage === 'stage4')
+      .sort((a, b) => THEME_ORDER.indexOf(a.cell.theme) - THEME_ORDER.indexOf(b.cell.theme))
+      .flatMap((c) => c.cell.quests.map((q) => q.id));
+    expect(expected.slice(0, 3)).toEqual(['quest:stage4-letters-q1', 'quest:stage4-letters-q2', 'quest:stage4-letters-q3']);
+    expect(stage4).toEqual(expected);
   });
 });
 
