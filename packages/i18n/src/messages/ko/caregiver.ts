@@ -756,4 +756,13 @@ export const caregiver = {
       move: (space: string) => `${space}에서 옮기기`,
     },
   },
+  /** [TV] 어른 공간의 반 안내 화면 (TV-D4, TV-D5). */
+  classScope: {
+    title: '반 안내',
+    ok: { cta: '확인' },
+    saving: { cta: '저장하는 중…' },
+    offline: '인터넷이 필요해요.',
+    failed: '저장하지 못했어요. 다시 해 보세요.',
+    stale: '앱을 업데이트하면 새 안내를 읽을 수 있어요.',
+  },
 } satisfies DeepPartial<Messages['caregiver']>;

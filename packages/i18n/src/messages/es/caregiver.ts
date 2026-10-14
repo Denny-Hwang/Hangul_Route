@@ -790,4 +790,13 @@ export const caregiver = {
       offline: 'Las páginas para adultos necesitan internet.',
     },
   },
+  /** [TV] La pantalla de novedades de clase en la zona de adultos (TV-D4, TV-D5). */
+  classScope: {
+    title: 'Novedades de clase',
+    ok: { cta: 'OK' },
+    saving: { cta: 'Guardando…' },
+    offline: 'Esto necesita internet.',
+    failed: 'No se guardó. Inténtalo de nuevo.',
+    stale: 'Actualiza la app para leer la versión más nueva.',
+  },
 } satisfies DeepPartial<Messages['caregiver']>;
