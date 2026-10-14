@@ -134,7 +134,7 @@ const OTHER_BOOKS = [
   },
   {
     cell: 'Stage 5 Stories, Nature & Animals: story book',
-    title: 'Tiger Folktales',
+    title: 'Nature Tales',
     stories: ['story:sun-and-moon', 'story:angbuilgu-sundial'],
   },
   {

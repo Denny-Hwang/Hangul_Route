@@ -9,6 +9,10 @@ import type { StageKey, ThemeKey } from '../../schemas/heritage-card';
  * shipped today"), pinned by `curriculum-propose.test.ts`, so the goldens stay
  * true while the real catalogue (`catalog/data.ts`) grows. Never edit it to
  * follow the content; add a new dated fixture instead. Types only, never the data.
+ * One display rename only (F-STORY-005 row 5.6c, owner decision 2026-10-14): the
+ * Stage 5 nature cell reads Nature Tales (was Tiger Folktales); no id or count changed.
+ * Such an owner-decided display-only rename is the only edit this contract allows:
+ * any id, count, status or minutes change still needs a new dated fixture.
  */
 const CATALOG_VERSION = 1;
 
@@ -57,7 +61,7 @@ const cells: CatalogCell[] = [
   soon('stage5', 'letters', 'Short Stories'),
   soon('stage5', 'life', 'Family Stories'),
   soon('stage5', 'rites', 'Festival Tales'),
-  soon('stage5', 'nature', 'Tiger Folktales'),
+  soon('stage5', 'nature', 'Nature Tales'),
   soon('stage5', 'crafts', 'Craft Stories'),
   soon('stage6', 'letters', 'Read the Menu'),
   soon('stage6', 'life', 'Order Food'),

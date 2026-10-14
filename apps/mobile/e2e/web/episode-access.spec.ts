@@ -137,7 +137,7 @@ test.describe('free plan switch on (web)', () => {
   for (const book of [
     { theme: 'Letters & Books', title: 'Stories of Letters' },
     { theme: 'Food & Daily Life', title: 'Family Stories' },
-    { theme: 'Nature & Animals', title: 'Tiger Folktales' },
+    { theme: 'Nature & Animals', title: 'Nature Tales' },
     { theme: 'Play & Crafts', title: 'Craft Stories' },
   ] as const) {
     test(`the Stage 5 ${book.title} book on the free plan is a preview too (F-STORY-005 PR 5.6)`, async ({ page }) => {

@@ -62,6 +62,21 @@ describe('generateCurriculum: determinism and output', () => {
     expect(gen().generatorVersion).toBe(GENERATOR_VERSION);
   });
 
+  it('never depends on cell titles, so a display-only rename needs no catalogue version bump (F-STORY-005 row 5.6c)', () => {
+    const retitle = (catalog: Catalog): Catalog => ({
+      ...catalog,
+      cells: catalog.cells.map((cell) => ({ ...cell, title: `Renamed ${cell.episodeId}` })),
+    });
+    for (const catalog of [CATALOG_2026_10, CATALOG]) {
+      for (const patch of [{}, { weeks: 12, goals: { focus: 'balanced' as const } }]) {
+        const draft = gen(patch, catalog);
+        expect(gen(patch, retitle(catalog))).toEqual(draft);
+        const text = JSON.stringify(draft);
+        for (const cell of catalog.cells) expect(text).not.toContain(JSON.stringify(cell.title));
+      }
+    }
+  });
+
   it('produces drafts the schema accepts, with the parsed params', () => {
     const draft = gen({ goals: { focus: 'balanced', motivation: 'heritage' }, weeks: 12 });
     expect(CurriculumDraftSchema.parse(draft)).toEqual(draft);
