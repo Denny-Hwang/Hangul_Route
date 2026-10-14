@@ -343,7 +343,7 @@ const GRID_GOLDEN: Record<string, string> = {
   'stage3:rites': 'episode:stage3-rites | Festival Sentences | preview',
   'stage3:nature': 'episode:stage3-nature | Animal Sentences | preview',
   'stage3:crafts': 'episode:stage3-crafts | Game Sentences | preview',
-  'stage4:letters': 'episode:stage4-letters | Reading Aloud | preview',
+  'stage4:letters': 'episode:stage4-letters | Read Along | preview',
   'stage4:life': 'episode:stage4-life | Kitchen Talk | preview',
   'stage4:rites': 'episode:stage4-rites | Greeting Dialogues | shipped',
   'stage4:nature': 'episode:stage4-nature | Park Conversations | preview',

@@ -57,7 +57,7 @@ const cells: CatalogCell[] = [
   soon('stage3', 'rites', 'Festival Sentences'),
   soon('stage3', 'nature', 'Animal Sentences'),
   soon('stage3', 'crafts', 'Game Sentences'),
-  soon('stage4', 'letters', 'Reading Aloud'),
+  soon('stage4', 'letters', 'Read Along'),
   soon('stage4', 'life', 'Kitchen Talk'),
   cell('stage4', 'rites', 'Greeting Dialogues', 'shipped', 5, ['quest:stage4-rites-q1']),
   soon('stage4', 'nature', 'Park Conversations'),

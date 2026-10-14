@@ -75,8 +75,36 @@ export interface DiscoverItemView {
   picture?: string;
 }
 
+/** One line of an `exchange` item (F-CURR-001 §3.5, D-1 S3a): a named speaker and the Korean they say. */
+export interface DiscoverExchangeLineView {
+  /** Stable per line: `<item key>|line<n>`; also the id of the line's own Hear it. */
+  key: string;
+  /** Speaker `a` sits at the start, `b` at the end. */
+  side: 'a' | 'b';
+  /** The speaker's name in the UI language (never Hangul). */
+  speaker: string;
+  ko: string;
+  romanization: string;
+  spokenRomanization: string;
+  gloss: string;
+  accessibilityLabel: string;
+  hear: HearAction;
+}
+
+/** An `exchange` item: two lines between two named speakers, read along with the line highlight (D-1 S3b). */
+export interface DiscoverExchangeView {
+  key: string;
+  kind: 'exchange';
+  lines: DiscoverExchangeLineView[];
+}
+
 export interface DiscoverPageView {
   title?: string;
+  /**
+   * The page's exchange, drawn first. A page holds at most one heavy item (D-1 "item weights"), so
+   * one exchange per page; a second exchange on a page falls back to word cards.
+   */
+  exchange?: DiscoverExchangeView;
   items: DiscoverItemView[];
 }
 
@@ -196,6 +224,27 @@ function wordItem(key: string, item: Extract<DiscoverItem, { type: 'word' }>): D
   };
 }
 
+function exchangeItem(key: string, item: Extract<DiscoverItem, { type: 'exchange' }>): DiscoverExchangeView {
+  return {
+    key,
+    kind: 'exchange',
+    lines: item.lines.map((l, i) => {
+      const lineKey = `${key}|line${i}`;
+      return {
+        key: lineKey,
+        side: l.speaker,
+        speaker: l.speakerEn,
+        ko: l.line.ko,
+        romanization: teachingRomanization(l.line),
+        spokenRomanization: l.line.romanization,
+        gloss: l.line.en,
+        accessibilityLabel: `${l.speakerEn}: ${l.line.ko}, ${l.line.romanization}, ${l.line.en}`,
+        hear: hear(lineKey, l.line.spokenKo ?? l.line.ko, l.line.audioRef),
+      };
+    }),
+  };
+}
+
 /**
  * Turn the authored pages into view models, skipping what cannot be resolved. `locale`
  * picks the jamo sound hint and example gloss of the UI language (F-I18N-001 §3.6; the
@@ -219,14 +268,19 @@ export function buildDiscover(
   const built: DiscoverPageView[] = [];
   for (const page of pages) {
     const items: DiscoverItemView[] = [];
+    let exchange: DiscoverExchangeView | undefined;
     for (const item of page.items) {
       if (item.type === 'word') {
         items.push(wordItem(uniqueKey(`word:${item.word.ko}`), item));
         continue;
       }
+      if (item.type === 'exchange' && exchange === undefined) {
+        exchange = exchangeItem(uniqueKey(`exchange:${item.lines.map((l) => l.line.ko).join('/')}`), item);
+        continue;
+      }
       if (item.type !== 'jamo') {
-        // F-CURR-001 upper-stage items (sentence, pattern, exchange, realia): until their own
-        // Discover views land (row D-1), each taught text shows as a word card with Hear it.
+          // F-CURR-001 upper-stage items (sentence, pattern, realia): until their own Discover
+        // views land (S3-1, G-2 / S6-1), each taught text shows as a word card with Hear it.
         const picture = item.type === 'sentence' ? item.picture : undefined;
         for (const word of discoverItemTexts(item)) {
           items.push(wordItem(uniqueKey(`word:${word.ko}`), picture ? { type: 'word', word, picture } : { type: 'word', word }));
@@ -236,18 +290,36 @@ export function buildDiscover(
       const found = findJamo(item.jamoId);
       if (found) items.push(symbolItem(uniqueKey(item.jamoId), item, localizeJamo(found, locale, overlays), copy, a11y, found));
     }
-    if (items.length === 0) continue;
-    const allWords = items.every((i) => i.kind === 'word');
+    if (items.length === 0 && exchange === undefined) continue;
+    const allWords = exchange === undefined && items.every((i) => i.kind === 'word');
     const title = page.captionEn ?? (allWords ? copy.wordsTitle : undefined);
-    built.push(title === undefined ? { items } : { title, items });
+    built.push({ ...(title === undefined ? {} : { title }), ...(exchange === undefined ? {} : { exchange }), items });
   }
   return { pages: built };
+}
+
+/**
+ * Read along on an `exchange` item (D-1 S3b): `line` is the lit line, or `null` in the short
+ * pause between two lines. `run` tells a stale audio result (from a stopped run) apart.
+ * `single` is a line's own speaker: it plays and lights just that line.
+ */
+export interface ReadAlongState {
+  item: string;
+  line: number | null;
+  /** The line that played last (the pause waits after it). */
+  last: number;
+  run: number;
+  single: boolean;
 }
 
 export interface DiscoverState {
   page: number;
   pageCount: number;
-  /** Distinct Hear it buttons tapped; its length is the `heard` of `quest.discover_completed`. */
+  /**
+   * Distinct Hear it buttons tapped, and exchange lines played by Read along (keyed by the line, so a
+   * line counts once whether it was tapped or read along); its length is the `heard` of
+   * `quest.discover_completed`.
+   */
   tapped: readonly string[];
   /** Buttons whose audio played: the item shows its heard mark. */
   played: readonly string[];
@@ -255,16 +327,32 @@ export interface DiscoverState {
   text: readonly string[];
   /** Items whose example romanization was revealed by a tap (`romanizationMode === 'tap'`). */
   revealed: readonly string[];
+  /** The Read along in progress, if any. */
+  readAlong: ReadAlongState | null;
+  /** Read along could not play (sound off, no Korean voice): the status line shows once, nothing lights. */
+  readAlongStatus: { item: string; result: Exclude<PlayResult, 'played'> } | null;
+  /** Counts Read along runs, so a result of a stopped run never moves the highlight. */
+  runs: number;
 }
 
 export type DiscoverEvent =
   | { type: 'hear'; id: string }
   | { type: 'audio'; id: string; result: PlayResult }
   | { type: 'reveal'; key: string }
+  /** The Read along button of an exchange item: starts it, or stops it when it is running. */
+  | { type: 'readAlong'; item: string }
+  /** The pause between two lines is over (the screen waits `motion.duration.slow`). */
+  | { type: 'readAlongNext'; run: number }
   | { type: 'next' };
 
 export type DiscoverEffect =
   | { type: 'play'; id: string }
+  /** Say the lit line's label to a screen reader; the `play` that follows starts after it (announce, then play). */
+  | { type: 'announce'; id: string }
+  /** Wait the short pause between two lines, then dispatch `readAlongNext` with this run. */
+  | { type: 'pause'; run: number }
+  /** Stop the audio that is playing (Stop, Continue, or a line's own speaker during Read along). */
+  | { type: 'stopAudio' }
   | { type: 'done'; pages: number; heard: number };
 
 export interface DiscoverStepOut {
@@ -273,28 +361,103 @@ export interface DiscoverStepOut {
 }
 
 export function startDiscover(model: DiscoverModel): DiscoverState {
-  return { page: 0, pageCount: model.pages.length, tapped: [], played: [], text: [], revealed: [] };
+  return {
+    page: 0,
+    pageCount: model.pages.length,
+    tapped: [],
+    played: [],
+    text: [],
+    revealed: [],
+    readAlong: null,
+    readAlongStatus: null,
+    runs: 0,
+  };
 }
 
 const add = (list: readonly string[], id: string): readonly string[] => (list.includes(id) ? list : [...list, id]);
 
-export function stepDiscover(state: DiscoverState, event: DiscoverEvent): DiscoverStepOut {
+const lineId = (item: string, index: number): string => `${item}|line${index}`;
+/** `<item key>|line<n>` -> the item key and n; anything else -> undefined. */
+function parseLineId(id: string): { item: string; index: number } | undefined {
+  const m = /^(.*)\|line(\d+)$/.exec(id);
+  return m ? { item: m[1]!, index: Number(m[2]) } : undefined;
+}
+
+/** Light line `index` of `item`: announce it, then play it (D-1 S3b "announce, then play"). */
+function lightLine(state: DiscoverState, item: string, index: number, run: number, single: boolean): DiscoverStepOut {
+  const id = lineId(item, index);
+  return {
+    state: { ...state, tapped: add(state.tapped, id), readAlong: { item, line: index, last: index, run, single } },
+    effects: [
+      { type: 'announce', id },
+      { type: 'play', id },
+    ],
+  };
+}
+
+/**
+ * The Discover reducer. `lineCount` says how many lines an exchange item has (Read along stops after
+ * the last); the screen passes the model's, and a test may leave it out for two-line items.
+ */
+export function stepDiscover(
+  state: DiscoverState,
+  event: DiscoverEvent,
+  lineCount: (item: string) => number = () => 2,
+): DiscoverStepOut {
   switch (event.type) {
-    case 'hear':
-      return { state: { ...state, tapped: add(state.tapped, event.id) }, effects: [{ type: 'play', id: event.id }] };
-    case 'audio':
+    case 'hear': {
+      const line = parseLineId(event.id);
+      if (line) {
+        // A line's own speaker stops any Read along and plays just that line, lit.
+        const stopping: DiscoverEffect[] = state.readAlong ? [{ type: 'stopAudio' }] : [];
+        const out = lightLine({ ...state, runs: state.runs + 1, readAlongStatus: null }, line.item, line.index, state.runs + 1, true);
+        return { state: out.state, effects: [...stopping, { type: 'play', id: event.id }] };
+      }
+      const stopping: DiscoverEffect[] = state.readAlong ? [{ type: 'stopAudio' }] : [];
       return {
-        state:
-          event.result === 'played'
-            ? { ...state, played: add(state.played, event.id), text: state.text.filter((t) => t !== event.id) }
-            : { ...state, text: add(state.text, event.id) },
-        effects: [],
+        state: { ...state, tapped: add(state.tapped, event.id), readAlong: null },
+        effects: [...stopping, { type: 'play', id: event.id }],
       };
+    }
+    case 'audio': {
+      const base: DiscoverState =
+        event.result === 'played'
+          ? { ...state, played: add(state.played, event.id), text: state.text.filter((t) => t !== event.id) }
+          : { ...state, text: add(state.text, event.id) };
+      const ra = state.readAlong;
+      const line = parseLineId(event.id);
+      if (!ra || !line || line.item !== ra.item || line.index !== ra.line) return { state: base, effects: [] };
+      if (event.result !== 'played') {
+        // No timed highlight without sound: the status line shows once and nothing stays lit.
+        return {
+          state: { ...base, readAlong: null, readAlongStatus: ra.single ? null : { item: ra.item, result: event.result } },
+          effects: [],
+        };
+      }
+      if (ra.single || line.index >= lineCount(ra.item) - 1) return { state: { ...base, readAlong: null }, effects: [] };
+      return { state: { ...base, readAlong: { ...ra, line: null, last: line.index } }, effects: [{ type: 'pause', run: ra.run }] };
+    }
+    case 'readAlongNext': {
+      const ra = state.readAlong;
+      if (!ra || ra.run !== event.run || ra.line !== null) return { state, effects: [] };
+      return lightLine(state, ra.item, ra.last + 1, ra.run, false);
+    }
+    case 'readAlong': {
+      if (state.readAlong?.item === event.item && !state.readAlong.single) {
+        return { state: { ...state, readAlong: null }, effects: [{ type: 'stopAudio' }] };
+      }
+      const stopping: DiscoverEffect[] = state.readAlong ? [{ type: 'stopAudio' }] : [];
+      const out = lightLine({ ...state, runs: state.runs + 1, readAlongStatus: null }, event.item, 0, state.runs + 1, false);
+      return { state: out.state, effects: [...stopping, ...out.effects] };
+    }
     case 'reveal':
       return { state: { ...state, revealed: add(state.revealed, event.key) }, effects: [] };
-    case 'next':
-      if (state.page < state.pageCount - 1) return { state: { ...state, page: state.page + 1 }, effects: [] };
-      return { state, effects: [{ type: 'done', pages: state.pageCount, heard: state.tapped.length }] };
+    case 'next': {
+      const stopping: DiscoverEffect[] = state.readAlong ? [{ type: 'stopAudio' }] : [];
+      const quiet = { ...state, readAlong: null, readAlongStatus: null };
+      if (state.page < state.pageCount - 1) return { state: { ...quiet, page: state.page + 1 }, effects: stopping };
+      return { state: quiet, effects: [...stopping, { type: 'done', pages: state.pageCount, heard: state.tapped.length }] };
+    }
   }
 }
 
@@ -314,10 +477,34 @@ export interface DiscoverItemRender {
   pulse: boolean;
 }
 
+export interface DiscoverExchangeLineRender {
+  line: DiscoverExchangeLineView;
+  /** This line is playing (Read along or its own speaker): border, tint, the ">>" glyph and "Reading now". */
+  lit: boolean;
+  /** `false` hides the line's romanization behind "Show how to say it" (`romanizationMode === 'tap'`). */
+  romanizationShown: boolean;
+  showReveal: boolean;
+}
+
+export interface DiscoverExchangeRender {
+  item: DiscoverExchangeView;
+  lines: DiscoverExchangeLineRender[];
+  /** Read along is running on this item: its button reads Stop. */
+  reading: boolean;
+  /** Any line of the item played. */
+  heard: boolean;
+  /** "Line 1 of 2, Hoya" for the polite live region while a line is lit (not the line card itself). */
+  liveLine?: string;
+  /** Read along could not play: the status line (sound off, or no Korean voice) shows once, nothing lights. */
+  status?: Exclude<PlayResult, 'played'>;
+}
+
 export interface DiscoverPageRender {
   empty: boolean;
   emptyLine?: string;
   title?: string;
+  /** The page's exchange, drawn before the items. */
+  exchange?: DiscoverExchangeRender;
   items: DiscoverItemRender[];
   /** Page dots: they only fill. */
   dots: { value: number; max: number };
@@ -351,15 +538,42 @@ export function pageRender(
       nameShown: item.letterName !== undefined && state.tapped.includes(item.letterName.action.id),
       exampleRomanizationShown: shown,
       showReveal: !shown && item.example !== undefined,
-      pulse: index === 0,
+      pulse: index === 0 && page.exchange === undefined,
     };
   });
   return {
     empty: false,
     ...(page.title === undefined ? {} : { title: page.title }),
+    ...(page.exchange === undefined ? {} : { exchange: exchangeRender(page.exchange, state, mode, copy) }),
     items,
     dots: { value: state.page + 1, max: state.pageCount },
     isLast: state.page >= state.pageCount - 1,
     continueEnabled: true,
+  };
+}
+
+function exchangeRender(
+  item: DiscoverExchangeView,
+  state: DiscoverState,
+  mode: RomanizationMode,
+  copy: DiscoverCopy,
+): DiscoverExchangeRender {
+  const ra = state.readAlong?.item === item.key ? state.readAlong : null;
+  const litIndex = ra?.line ?? null;
+  const lines = item.lines.map((line, i): DiscoverExchangeLineRender => {
+    const shown = romanizationShown(mode, state.revealed.includes(line.key));
+    return { line, lit: litIndex === i, romanizationShown: shown, showReveal: !shown };
+  });
+  const lit = litIndex === null ? undefined : item.lines[litIndex];
+  const status = state.readAlongStatus?.item === item.key ? state.readAlongStatus.result : undefined;
+  return {
+    item,
+    lines,
+    reading: ra !== null && !ra.single,
+    heard: item.lines.some((l) => state.played.includes(l.hear.id)),
+    ...(lit === undefined || litIndex === null
+      ? {}
+      : { liveLine: copy.exchange.lineLabel(litIndex + 1, item.lines.length, lit.speaker) }),
+    ...(status === undefined ? {} : { status }),
   };
 }

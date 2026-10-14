@@ -1,0 +1,1072 @@
+{
+  "id": "episode:stage4-letters",
+  "stage": "stage4",
+  "theme": "letters",
+  "status": "draft",
+  "titleEn": "Read Along",
+  "subtitleEn": "Follow a talk with a teacher, line by line.",
+  "hoyaIntroEn": "Listen to each line and follow along. Let us ask about new words!",
+  "order": 1,
+  "pillarTags": [
+    "A1"
+  ],
+  "rewardCardIds": [],
+  "quests": [
+    {
+      "id": "quest:stage4-letters-q1",
+      "titleEn": "What Is This?",
+      "blurbEn": "Ask the teacher what something is, and who.",
+      "teaserEn": "Next: ask where things are.",
+      "estimatedMinutes": 4,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "What Is This?",
+          "hoyaLineEn": "A new word! Let us ask the teacher what it is.",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "What and Who",
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "exchange",
+                    "lines": [
+                      {
+                        "speaker": "a",
+                        "speakerEn": "Hoya",
+                        "line": {
+                          "ko": "이게 뭐예요?",
+                          "romanization": "ige mwoyeyo",
+                          "en": "What is this?"
+                        }
+                      },
+                      {
+                        "speaker": "b",
+                        "speakerEn": "Teacher",
+                        "line": {
+                          "ko": "지우개예요.",
+                          "romanization": "jiugaeyeyo",
+                          "en": "It is an eraser."
+                        }
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "Point at a thing and ask what it is. The answer names it."
+              },
+              {
+                "items": [
+                  {
+                    "type": "exchange",
+                    "lines": [
+                      {
+                        "speaker": "a",
+                        "speakerEn": "Teacher",
+                        "line": {
+                          "ko": "누구예요?",
+                          "romanization": "nuguyeyo",
+                          "en": "Who is it?"
+                        }
+                      },
+                      {
+                        "speaker": "b",
+                        "speakerEn": "Hoya",
+                        "line": {
+                          "ko": "할머니예요.",
+                          "romanization": "halmeoniyeyo",
+                          "en": "It is Grandma."
+                        }
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "For a person, ask who it is instead."
+              }
+            ]
+          },
+          "durationSeconds": 60
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Pick the Reply",
+          "minigameKind": "tap-respond",
+          "minigameRef": "minigame:s4-letters-q1-practice",
+          "durationSeconds": 80
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Put the Talk in Order",
+          "minigameKind": "story-sequence",
+          "minigameRef": "minigame:s4-letters-q1-apply",
+          "durationSeconds": 70
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Two Quick Ones",
+          "minigameKind": "listen-pick",
+          "minigameRef": "minigame:s4-letters-q1-check",
+          "durationSeconds": 40
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Good Question!",
+          "hoyaLineEn": "You asked what and who. Great reading along!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s4-letters-q1-practice",
+          "kind": "tap-respond",
+          "turns": [
+            {
+              "speakerEn": "Teacher",
+              "line": {
+                "ko": "이게 뭐예요?",
+                "romanization": "ige mwoyeyo",
+                "en": "What is this?"
+              },
+              "replies": [
+                {
+                  "id": "r1",
+                  "text": {
+                    "ko": "책이에요.",
+                    "romanization": "chaegieyo",
+                    "en": "It is a book."
+                  },
+                  "correct": true
+                },
+                {
+                  "id": "r2",
+                  "text": {
+                    "ko": "안녕하세요.",
+                    "romanization": "annyeonghaseyo",
+                    "en": "Hello."
+                  },
+                  "correct": false
+                },
+                {
+                  "id": "r3",
+                  "text": {
+                    "ko": "잘 가요.",
+                    "romanization": "jal gayo",
+                    "en": "Goodbye."
+                  },
+                  "correct": false
+                }
+              ]
+            },
+            {
+              "speakerEn": "Teacher",
+              "line": {
+                "ko": "누구예요?",
+                "romanization": "nuguyeyo",
+                "en": "Who is it?"
+              },
+              "replies": [
+                {
+                  "id": "r1",
+                  "text": {
+                    "ko": "친구예요.",
+                    "romanization": "chinguyeyo",
+                    "en": "It is a friend."
+                  },
+                  "correct": true
+                },
+                {
+                  "id": "r2",
+                  "text": {
+                    "ko": "연필이에요.",
+                    "romanization": "yeonpirieyo",
+                    "en": "It is a pencil."
+                  },
+                  "correct": false
+                },
+                {
+                  "id": "r3",
+                  "text": {
+                    "ko": "잘 가요.",
+                    "romanization": "jal gayo",
+                    "en": "Goodbye."
+                  },
+                  "correct": false
+                }
+              ]
+            },
+            {
+              "speakerEn": "Hoya",
+              "line": {
+                "ko": "이게 뭐예요?",
+                "romanization": "ige mwoyeyo",
+                "en": "What is this?"
+              },
+              "replies": [
+                {
+                  "id": "r1",
+                  "text": {
+                    "ko": "가방이에요.",
+                    "romanization": "gabangieyo",
+                    "en": "It is a bag."
+                  },
+                  "correct": true
+                },
+                {
+                  "id": "r2",
+                  "text": {
+                    "ko": "안녕하세요.",
+                    "romanization": "annyeonghaseyo",
+                    "en": "Hello."
+                  },
+                  "correct": false
+                },
+                {
+                  "id": "r3",
+                  "text": {
+                    "ko": "누구예요?",
+                    "romanization": "nuguyeyo",
+                    "en": "Who is it?"
+                  },
+                  "correct": false
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s4-letters-q1-apply",
+          "kind": "story-sequence",
+          "lines": [
+            {
+              "id": "l1",
+              "speakerEn": "Hoya",
+              "line": {
+                "ko": "선생님, 안녕하세요!",
+                "romanization": "seonsaengnim annyeonghaseyo",
+                "en": "Hello, Teacher!"
+              }
+            },
+            {
+              "id": "l2",
+              "speakerEn": "Teacher",
+              "line": {
+                "ko": "호야, 안녕하세요!",
+                "romanization": "hoya annyeonghaseyo",
+                "en": "Hello, Hoya!"
+              }
+            },
+            {
+              "id": "l3",
+              "speakerEn": "Hoya",
+              "line": {
+                "ko": "이게 뭐예요?",
+                "romanization": "ige mwoyeyo",
+                "en": "What is this?"
+              }
+            },
+            {
+              "id": "l4",
+              "speakerEn": "Teacher",
+              "line": {
+                "ko": "연필이에요.",
+                "romanization": "yeonpirieyo",
+                "en": "It is a pencil."
+              }
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s4-letters-q1-check",
+          "kind": "listen-pick",
+          "rounds": [
+            {
+              "id": "c1",
+              "prompt": {
+                "ko": "이게 뭐예요?",
+                "romanization": "ige mwoyeyo",
+                "en": "What is this?"
+              },
+              "options": [
+                {
+                  "id": "a",
+                  "text": {
+                    "ko": "지우개예요.",
+                    "romanization": "jiugaeyeyo",
+                    "en": "It is an eraser."
+                  }
+                },
+                {
+                  "id": "b",
+                  "text": {
+                    "ko": "누구예요?",
+                    "romanization": "nuguyeyo",
+                    "en": "Who is it?"
+                  }
+                },
+                {
+                  "id": "c",
+                  "text": {
+                    "ko": "안녕하세요.",
+                    "romanization": "annyeonghaseyo",
+                    "en": "Hello."
+                  }
+                }
+              ],
+              "answerId": "a"
+            },
+            {
+              "id": "c2",
+              "prompt": {
+                "ko": "누구예요?",
+                "romanization": "nuguyeyo",
+                "en": "Who is it?"
+              },
+              "options": [
+                {
+                  "id": "a",
+                  "text": {
+                    "ko": "할머니예요.",
+                    "romanization": "halmeoniyeyo",
+                    "en": "It is Grandma."
+                  }
+                },
+                {
+                  "id": "b",
+                  "text": {
+                    "ko": "연필이에요.",
+                    "romanization": "yeonpirieyo",
+                    "en": "It is a pencil."
+                  }
+                },
+                {
+                  "id": "c",
+                  "text": {
+                    "ko": "잘 가요.",
+                    "romanization": "jal gayo",
+                    "en": "Goodbye."
+                  }
+                }
+              ],
+              "answerId": "a"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "quest:stage4-letters-q2",
+      "titleEn": "Where Is It?",
+      "blurbEn": "Ask where things are at school.",
+      "teaserEn": "Next: a whole talk, from hello to thank you.",
+      "estimatedMinutes": 4,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "Where Is It?",
+          "hoyaLineEn": "Where is everything at school? Let us ask!",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "Where?",
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "exchange",
+                    "lines": [
+                      {
+                        "speaker": "a",
+                        "speakerEn": "Hoya",
+                        "line": {
+                          "ko": "화장실이 어디예요?",
+                          "romanization": "hwajangsiri eodiyeyo",
+                          "en": "Where is the restroom?"
+                        }
+                      },
+                      {
+                        "speaker": "b",
+                        "speakerEn": "Teacher",
+                        "line": {
+                          "ko": "저기예요.",
+                          "romanization": "jeogiyeyo",
+                          "en": "It is over there."
+                        }
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "Name the place or the thing, then ask where it is."
+              },
+              {
+                "items": [
+                  {
+                    "type": "exchange",
+                    "lines": [
+                      {
+                        "speaker": "a",
+                        "speakerEn": "Teacher",
+                        "line": {
+                          "ko": "가방이 어디예요?",
+                          "romanization": "gabangi eodiyeyo",
+                          "en": "Where is the bag?"
+                        }
+                      },
+                      {
+                        "speaker": "b",
+                        "speakerEn": "Hoya",
+                        "line": {
+                          "ko": "여기예요.",
+                          "romanization": "yeogiyeyo",
+                          "en": "It is here."
+                        }
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "The answer can be short: here, or over there."
+              }
+            ]
+          },
+          "durationSeconds": 65
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Pick the Reply",
+          "minigameKind": "tap-respond",
+          "minigameRef": "minigame:s4-letters-q2-practice",
+          "durationSeconds": 80
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Put the Talk in Order",
+          "minigameKind": "story-sequence",
+          "minigameRef": "minigame:s4-letters-q2-apply",
+          "durationSeconds": 70
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Two Quick Ones",
+          "minigameKind": "listen-pick",
+          "minigameRef": "minigame:s4-letters-q2-check",
+          "durationSeconds": 40
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Found It!",
+          "hoyaLineEn": "You asked where things are. Now you know the way!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s4-letters-q2-practice",
+          "kind": "tap-respond",
+          "turns": [
+            {
+              "speakerEn": "Hoya",
+              "line": {
+                "ko": "화장실이 어디예요?",
+                "romanization": "hwajangsiri eodiyeyo",
+                "en": "Where is the restroom?"
+              },
+              "replies": [
+                {
+                  "id": "r1",
+                  "text": {
+                    "ko": "저기예요.",
+                    "romanization": "jeogiyeyo",
+                    "en": "It is over there."
+                  },
+                  "correct": true
+                },
+                {
+                  "id": "r2",
+                  "text": {
+                    "ko": "연필이에요.",
+                    "romanization": "yeonpirieyo",
+                    "en": "It is a pencil."
+                  },
+                  "correct": false
+                },
+                {
+                  "id": "r3",
+                  "text": {
+                    "ko": "할머니예요.",
+                    "romanization": "halmeoniyeyo",
+                    "en": "It is Grandma."
+                  },
+                  "correct": false
+                }
+              ]
+            },
+            {
+              "speakerEn": "Teacher",
+              "line": {
+                "ko": "책이 어디예요?",
+                "romanization": "chaegi eodiyeyo",
+                "en": "Where is the book?"
+              },
+              "replies": [
+                {
+                  "id": "r1",
+                  "text": {
+                    "ko": "여기예요.",
+                    "romanization": "yeogiyeyo",
+                    "en": "It is here."
+                  },
+                  "correct": true
+                },
+                {
+                  "id": "r2",
+                  "text": {
+                    "ko": "지우개예요.",
+                    "romanization": "jiugaeyeyo",
+                    "en": "It is an eraser."
+                  },
+                  "correct": false
+                },
+                {
+                  "id": "r3",
+                  "text": {
+                    "ko": "잘 가요.",
+                    "romanization": "jal gayo",
+                    "en": "Goodbye."
+                  },
+                  "correct": false
+                }
+              ]
+            },
+            {
+              "speakerEn": "Hoya",
+              "line": {
+                "ko": "지우개가 어디예요?",
+                "romanization": "jiugaega eodiyeyo",
+                "en": "Where is the eraser?"
+              },
+              "replies": [
+                {
+                  "id": "r1",
+                  "text": {
+                    "ko": "저기예요.",
+                    "romanization": "jeogiyeyo",
+                    "en": "It is over there."
+                  },
+                  "correct": true
+                },
+                {
+                  "id": "r2",
+                  "text": {
+                    "ko": "누구예요?",
+                    "romanization": "nuguyeyo",
+                    "en": "Who is it?"
+                  },
+                  "correct": false
+                },
+                {
+                  "id": "r3",
+                  "text": {
+                    "ko": "안녕하세요.",
+                    "romanization": "annyeonghaseyo",
+                    "en": "Hello."
+                  },
+                  "correct": false
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s4-letters-q2-apply",
+          "kind": "story-sequence",
+          "lines": [
+            {
+              "id": "l1",
+              "speakerEn": "Hoya",
+              "line": {
+                "ko": "선생님, 안녕하세요!",
+                "romanization": "seonsaengnim annyeonghaseyo",
+                "en": "Hello, Teacher!"
+              }
+            },
+            {
+              "id": "l2",
+              "speakerEn": "Teacher",
+              "line": {
+                "ko": "호야, 안녕하세요!",
+                "romanization": "hoya annyeonghaseyo",
+                "en": "Hello, Hoya!"
+              }
+            },
+            {
+              "id": "l3",
+              "speakerEn": "Hoya",
+              "line": {
+                "ko": "화장실이 어디예요?",
+                "romanization": "hwajangsiri eodiyeyo",
+                "en": "Where is the restroom?"
+              }
+            },
+            {
+              "id": "l4",
+              "speakerEn": "Teacher",
+              "line": {
+                "ko": "저기예요.",
+                "romanization": "jeogiyeyo",
+                "en": "It is over there."
+              }
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s4-letters-q2-check",
+          "kind": "listen-pick",
+          "rounds": [
+            {
+              "id": "c1",
+              "prompt": {
+                "ko": "화장실이 어디예요?",
+                "romanization": "hwajangsiri eodiyeyo",
+                "en": "Where is the restroom?"
+              },
+              "options": [
+                {
+                  "id": "a",
+                  "text": {
+                    "ko": "저기예요.",
+                    "romanization": "jeogiyeyo",
+                    "en": "It is over there."
+                  }
+                },
+                {
+                  "id": "b",
+                  "text": {
+                    "ko": "지우개예요.",
+                    "romanization": "jiugaeyeyo",
+                    "en": "It is an eraser."
+                  }
+                },
+                {
+                  "id": "c",
+                  "text": {
+                    "ko": "잘 가요.",
+                    "romanization": "jal gayo",
+                    "en": "Goodbye."
+                  }
+                }
+              ],
+              "answerId": "a"
+            },
+            {
+              "id": "c2",
+              "prompt": {
+                "ko": "책이 어디예요?",
+                "romanization": "chaegi eodiyeyo",
+                "en": "Where is the book?"
+              },
+              "options": [
+                {
+                  "id": "a",
+                  "text": {
+                    "ko": "여기예요.",
+                    "romanization": "yeogiyeyo",
+                    "en": "It is here."
+                  }
+                },
+                {
+                  "id": "b",
+                  "text": {
+                    "ko": "할머니예요.",
+                    "romanization": "halmeoniyeyo",
+                    "en": "It is Grandma."
+                  }
+                },
+                {
+                  "id": "c",
+                  "text": {
+                    "ko": "안녕하세요.",
+                    "romanization": "annyeonghaseyo",
+                    "en": "Hello."
+                  }
+                }
+              ],
+              "answerId": "a"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "quest:stage4-letters-q3",
+      "titleEn": "Thank You, Teacher",
+      "blurbEn": "Follow a whole talk: hello, a question, an answer, thanks.",
+      "estimatedMinutes": 4,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "Thank You, Teacher",
+          "hoyaLineEn": "Let us follow a whole talk with the teacher, line by line.",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "A Whole Talk",
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "exchange",
+                    "lines": [
+                      {
+                        "speaker": "a",
+                        "speakerEn": "Teacher",
+                        "line": {
+                          "ko": "안녕하세요!",
+                          "romanization": "annyeonghaseyo",
+                          "en": "Hello!"
+                        }
+                      },
+                      {
+                        "speaker": "b",
+                        "speakerEn": "Hoya",
+                        "line": {
+                          "ko": "선생님, 이게 뭐예요?",
+                          "romanization": "seonsaengnim ige mwoyeyo",
+                          "en": "Teacher, what is this?"
+                        }
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "A talk can start with hello, then a question."
+              },
+              {
+                "items": [
+                  {
+                    "type": "exchange",
+                    "lines": [
+                      {
+                        "speaker": "a",
+                        "speakerEn": "Teacher",
+                        "line": {
+                          "ko": "한글이에요.",
+                          "romanization": "hangeurieyo",
+                          "en": "It is Hangul."
+                        }
+                      },
+                      {
+                        "speaker": "b",
+                        "speakerEn": "Hoya",
+                        "line": {
+                          "ko": "감사합니다!",
+                          "romanization": "gamsahamnida",
+                          "en": "Thank you!"
+                        }
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "After the answer, say thank you."
+              }
+            ]
+          },
+          "durationSeconds": 60
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Pick the Reply",
+          "minigameKind": "tap-respond",
+          "minigameRef": "minigame:s4-letters-q3-practice",
+          "durationSeconds": 80
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Put the Talk in Order",
+          "minigameKind": "story-sequence",
+          "minigameRef": "minigame:s4-letters-q3-apply",
+          "durationSeconds": 70
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Two Quick Ones",
+          "minigameKind": "listen-pick",
+          "minigameRef": "minigame:s4-letters-q3-check",
+          "durationSeconds": 40
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Great Talk!",
+          "hoyaLineEn": "You followed a whole talk, from hello to thank you!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s4-letters-q3-practice",
+          "kind": "tap-respond",
+          "turns": [
+            {
+              "speakerEn": "Teacher",
+              "line": {
+                "ko": "안녕하세요!",
+                "romanization": "annyeonghaseyo",
+                "en": "Hello!"
+              },
+              "replies": [
+                {
+                  "id": "r1",
+                  "text": {
+                    "ko": "선생님, 안녕하세요!",
+                    "romanization": "seonsaengnim annyeonghaseyo",
+                    "en": "Hello, Teacher!"
+                  },
+                  "correct": true
+                },
+                {
+                  "id": "r2",
+                  "text": {
+                    "ko": "잘 가요.",
+                    "romanization": "jal gayo",
+                    "en": "Goodbye."
+                  },
+                  "correct": false
+                },
+                {
+                  "id": "r3",
+                  "text": {
+                    "ko": "저기예요.",
+                    "romanization": "jeogiyeyo",
+                    "en": "It is over there."
+                  },
+                  "correct": false
+                }
+              ]
+            },
+            {
+              "speakerEn": "Teacher",
+              "line": {
+                "ko": "이게 뭐예요?",
+                "romanization": "ige mwoyeyo",
+                "en": "What is this?"
+              },
+              "replies": [
+                {
+                  "id": "r1",
+                  "text": {
+                    "ko": "한글이에요.",
+                    "romanization": "hangeurieyo",
+                    "en": "It is Hangul."
+                  },
+                  "correct": true
+                },
+                {
+                  "id": "r2",
+                  "text": {
+                    "ko": "감사합니다!",
+                    "romanization": "gamsahamnida",
+                    "en": "Thank you!"
+                  },
+                  "correct": false
+                },
+                {
+                  "id": "r3",
+                  "text": {
+                    "ko": "저기예요.",
+                    "romanization": "jeogiyeyo",
+                    "en": "It is over there."
+                  },
+                  "correct": false
+                }
+              ]
+            },
+            {
+              "speakerEn": "Teacher",
+              "line": {
+                "ko": "연필 여기 있어요.",
+                "romanization": "yeonpil yeogi isseoyo",
+                "en": "Here is a pencil."
+              },
+              "replies": [
+                {
+                  "id": "r1",
+                  "text": {
+                    "ko": "감사합니다!",
+                    "romanization": "gamsahamnida",
+                    "en": "Thank you!"
+                  },
+                  "correct": true
+                },
+                {
+                  "id": "r2",
+                  "text": {
+                    "ko": "누구예요?",
+                    "romanization": "nuguyeyo",
+                    "en": "Who is it?"
+                  },
+                  "correct": false
+                },
+                {
+                  "id": "r3",
+                  "text": {
+                    "ko": "안녕하세요.",
+                    "romanization": "annyeonghaseyo",
+                    "en": "Hello."
+                  },
+                  "correct": false
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s4-letters-q3-apply",
+          "kind": "story-sequence",
+          "lines": [
+            {
+              "id": "l1",
+              "speakerEn": "Teacher",
+              "line": {
+                "ko": "안녕하세요!",
+                "romanization": "annyeonghaseyo",
+                "en": "Hello!"
+              }
+            },
+            {
+              "id": "l2",
+              "speakerEn": "Hoya",
+              "line": {
+                "ko": "선생님, 이게 뭐예요?",
+                "romanization": "seonsaengnim ige mwoyeyo",
+                "en": "Teacher, what is this?"
+              }
+            },
+            {
+              "id": "l3",
+              "speakerEn": "Teacher",
+              "line": {
+                "ko": "공책이에요.",
+                "romanization": "gongchaegieyo",
+                "en": "It is a notebook."
+              }
+            },
+            {
+              "id": "l4",
+              "speakerEn": "Hoya",
+              "line": {
+                "ko": "감사합니다!",
+                "romanization": "gamsahamnida",
+                "en": "Thank you!"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s4-letters-q3-check",
+          "kind": "listen-pick",
+          "rounds": [
+            {
+              "id": "c1",
+              "prompt": {
+                "ko": "연필 여기 있어요.",
+                "romanization": "yeonpil yeogi isseoyo",
+                "en": "Here is a pencil."
+              },
+              "options": [
+                {
+                  "id": "a",
+                  "text": {
+                    "ko": "감사합니다!",
+                    "romanization": "gamsahamnida",
+                    "en": "Thank you!"
+                  }
+                },
+                {
+                  "id": "b",
+                  "text": {
+                    "ko": "누구예요?",
+                    "romanization": "nuguyeyo",
+                    "en": "Who is it?"
+                  }
+                },
+                {
+                  "id": "c",
+                  "text": {
+                    "ko": "저기예요.",
+                    "romanization": "jeogiyeyo",
+                    "en": "It is over there."
+                  }
+                }
+              ],
+              "answerId": "a"
+            },
+            {
+              "id": "c2",
+              "prompt": {
+                "ko": "안녕하세요!",
+                "romanization": "annyeonghaseyo",
+                "en": "Hello!"
+              },
+              "options": [
+                {
+                  "id": "a",
+                  "text": {
+                    "ko": "선생님, 안녕하세요!",
+                    "romanization": "seonsaengnim annyeonghaseyo",
+                    "en": "Hello, Teacher!"
+                  }
+                },
+                {
+                  "id": "b",
+                  "text": {
+                    "ko": "감사합니다!",
+                    "romanization": "gamsahamnida",
+                    "en": "Thank you!"
+                  }
+                },
+                {
+                  "id": "c",
+                  "text": {
+                    "ko": "지우개예요.",
+                    "romanization": "jiugaeyeyo",
+                    "en": "It is an eraser."
+                  }
+                }
+              ],
+              "answerId": "a"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "culture": [],
+  "review": {
+    "language": "draft",
+    "culture": "draft",
+    "notes": []
+  },
+  "contentVer": 1
+}

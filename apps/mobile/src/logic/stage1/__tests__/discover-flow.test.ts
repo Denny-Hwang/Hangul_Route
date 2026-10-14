@@ -439,8 +439,8 @@ describe('copy comes from the message subtree it is given (F-I18N-001 §3.4 rule
   });
 });
 
-describe('upper-stage Discover items (F-CURR-001 §3.10) before their own views (row D-1)', () => {
-  it('shows each taught text of a sentence, pattern, exchange or realia item as a word card', () => {
+describe('upper-stage Discover items (F-CURR-001 §3.10) before their own views', () => {
+  it('shows each taught text of a sentence, pattern or realia item as a word card; an exchange gets its own view', () => {
     const page: DiscoverPage = {
       items: [
         { type: 'sentence', sentence: ko('책이 있어요.', 'chaegi isseoyo', 'there is a book'), picture: 'word:book' },
@@ -465,12 +465,221 @@ describe('upper-stage Discover items (F-CURR-001 §3.10) before their own views 
       ],
     };
     const [one, two] = buildDiscover([page, pattern]).pages;
-    expect(one?.items.map((i) => [i.kind, i.glyph, i.picture ?? null])).toEqual([
-      ['word', '책이 있어요.', 'word:book'],
-      ['word', '이게 뭐예요?', null],
-      ['word', '책이에요.', null],
+    expect(one?.items.map((i) => [i.kind, i.glyph, i.picture ?? null])).toEqual([['word', '책이 있어요.', 'word:book']]);
+    expect(one?.exchange?.lines.map((l) => [l.side, l.speaker, l.ko])).toEqual([
+      ['a', 'Hoya', '이게 뭐예요?'],
+      ['b', 'Teacher', '책이에요.'],
     ]);
+    expect(one?.title).toBeUndefined();
     expect(two?.items.map((i) => i.glyph)).toEqual(['책이에요', '학교예요', '김밥']);
     expect(two?.items.map((i) => i.key)).toEqual(['word:책이에요', 'word:학교예요', 'word:김밥']);
+  });
+});
+
+// ---- the exchange page and Read along (F-CURR-001 §3.5, §3.14; D-1 S3) -----------------------------
+
+const exchangePage = (a: string, b: string, caption?: string): DiscoverPage => ({
+  items: [
+    {
+      type: 'exchange',
+      lines: [
+        { speaker: 'a', speakerEn: 'Hoya', line: ko(a, 'ige mwoyeyo', 'What is this?') },
+        { speaker: 'b', speakerEn: 'Teacher', line: ko(b, 'jiugaeyeyo', 'It is an eraser.', { audioRef: 'audio/x.mp3' }) },
+      ],
+    },
+  ],
+  ...(caption ? { captionEn: caption } : {}),
+});
+
+describe('buildDiscover: the exchange item', () => {
+  const model = buildDiscover([exchangePage('이게 뭐예요?', '지우개예요.', 'Point and ask.')]);
+  const ex = model.pages[0]!.exchange!;
+
+  it('builds one line view per line, with its speaker, side, gloss and its own Hear it', () => {
+    expect(model.pages[0]!.title).toBe('Point and ask.');
+    expect(model.pages[0]!.items).toEqual([]);
+    expect(ex.key).toBe('exchange:이게 뭐예요?/지우개예요.');
+    expect(ex.lines.map((l) => l.key)).toEqual([`${ex.key}|line0`, `${ex.key}|line1`]);
+    expect(ex.lines[0]).toMatchObject({
+      side: 'a',
+      speaker: 'Hoya',
+      ko: '이게 뭐예요?',
+      romanization: 'ige mwoyeyo',
+      gloss: 'What is this?',
+      accessibilityLabel: 'Hoya: 이게 뭐예요?, ige mwoyeyo, What is this?',
+      hear: { id: `${ex.key}|line0`, spec: { text: '이게 뭐예요?' } },
+    });
+    expect(ex.lines[1]!.hear.spec).toEqual({ text: '지우개예요.', audioRef: 'audio/x.mp3' });
+  });
+
+  it('keeps one exchange per page; a second one falls back to word cards', () => {
+    const two: DiscoverPage = { items: [...exchangePage('가', '나').items, ...exchangePage('다', '라').items] };
+    const page = buildDiscover([two]).pages[0]!;
+    expect(page.exchange?.lines.map((l) => l.ko)).toEqual(['가', '나']);
+    expect(page.items.map((i) => i.glyph)).toEqual(['다', '라']);
+  });
+});
+
+describe('Read along (D-1 S3b): the audio-synced line highlight', () => {
+  const model = buildDiscover([exchangePage('이게 뭐예요?', '지우개예요.'), exchangePage('누구예요?', '할머니예요.')]);
+  const key = model.pages[0]!.exchange!.key;
+  const line = (i: number): string => `${key}|line${i}`;
+  const lit = (state: DiscoverState): Array<boolean> => pageRender(model, state, 'always').exchange!.lines.map((l) => l.lit);
+
+  it('never starts by itself: nothing is lit and the button reads Read along', () => {
+    const state = startDiscover(model);
+    const r = pageRender(model, state, 'always').exchange!;
+    expect(r.reading).toBe(false);
+    expect(lit(state)).toEqual([false, false]);
+    expect(r.liveLine).toBeUndefined();
+  });
+
+  it('announces, then plays the first line, and lights it while it plays', () => {
+    const out = stepDiscover(startDiscover(model), { type: 'readAlong', item: key });
+    expect(out.effects).toEqual([
+      { type: 'announce', id: line(0) },
+      { type: 'play', id: line(0) },
+    ]);
+    const r = pageRender(model, out.state, 'always').exchange!;
+    expect(r.reading).toBe(true);
+    expect(lit(out.state)).toEqual([true, false]);
+    expect(r.liveLine).toBe('Line 1 of 2, Hoya');
+  });
+
+  it('after a line plays: back to rest, a short pause, then the next line lights and plays; it stops after the last', () => {
+    let out = stepDiscover(startDiscover(model), { type: 'readAlong', item: key });
+    out = stepDiscover(out.state, { type: 'audio', id: line(0), result: 'played' });
+    expect(out.effects).toEqual([{ type: 'pause', run: 1 }]);
+    expect(lit(out.state)).toEqual([false, false]);
+    expect(pageRender(model, out.state, 'always').exchange!.reading).toBe(true);
+    out = stepDiscover(out.state, { type: 'readAlongNext', run: 1 });
+    expect(out.effects).toEqual([
+      { type: 'announce', id: line(1) },
+      { type: 'play', id: line(1) },
+    ]);
+    expect(lit(out.state)).toEqual([false, true]);
+    expect(pageRender(model, out.state, 'always').exchange!.liveLine).toBe('Line 2 of 2, Teacher');
+    out = stepDiscover(out.state, { type: 'audio', id: line(1), result: 'played' });
+    expect(out.effects).toEqual([]);
+    expect(out.state.readAlong).toBeNull();
+    const r = pageRender(model, out.state, 'always').exchange!;
+    expect(r.reading).toBe(false);
+    expect(r.heard).toBe(true);
+  });
+
+  it('reads as many lines as the item has (lineCount)', () => {
+    let out = stepDiscover(startDiscover(model), { type: 'readAlong', item: key }, () => 3);
+    out = stepDiscover(out.state, { type: 'audio', id: line(0), result: 'played' }, () => 3);
+    out = stepDiscover(out.state, { type: 'readAlongNext', run: 1 }, () => 3);
+    out = stepDiscover(out.state, { type: 'audio', id: line(1), result: 'played' }, () => 3);
+    expect(out.effects).toEqual([{ type: 'pause', run: 1 }]);
+  });
+
+  it('counts each line once in heard, whether read along or tapped', () => {
+    let out = stepDiscover(startDiscover(model), { type: 'readAlong', item: key });
+    out = stepDiscover(out.state, { type: 'audio', id: line(0), result: 'played' });
+    out = stepDiscover(out.state, { type: 'readAlongNext', run: 1 });
+    out = stepDiscover(out.state, { type: 'audio', id: line(1), result: 'played' });
+    out = stepDiscover(out.state, { type: 'hear', id: line(0) });
+    expect(out.state.tapped).toEqual([line(0), line(1)]);
+    out = stepDiscover(out.state, { type: 'next' });
+    out = stepDiscover(out.state, { type: 'next' });
+    expect(out.effects).toEqual([{ type: 'done', pages: 2, heard: 2 }]);
+  });
+
+  it('Stop stops the audio at once, clears the highlight and ignores the stopped run', () => {
+    let out = stepDiscover(startDiscover(model), { type: 'readAlong', item: key });
+    out = stepDiscover(out.state, { type: 'readAlong', item: key });
+    expect(out.effects).toEqual([{ type: 'stopAudio' }]);
+    expect(out.state.readAlong).toBeNull();
+    expect(lit(out.state)).toEqual([false, false]);
+    out = stepDiscover(out.state, { type: 'audio', id: line(0), result: 'played' });
+    expect(out.effects).toEqual([]);
+    expect(stepDiscover(out.state, { type: 'readAlongNext', run: 1 }).effects).toEqual([]);
+  });
+
+  it('a pause of an older run never lights a line of a newer one', () => {
+    let out = stepDiscover(startDiscover(model), { type: 'readAlong', item: key });
+    out = stepDiscover(out.state, { type: 'audio', id: line(0), result: 'played' });
+    out = stepDiscover(out.state, { type: 'readAlong', item: key });
+    out = stepDiscover(out.state, { type: 'readAlong', item: key });
+    expect(out.state.runs).toBe(2);
+    expect(stepDiscover(out.state, { type: 'readAlongNext', run: 1 }).effects).toEqual([]);
+  });
+
+  it("a line's own speaker stops Read along and plays just that line, lit", () => {
+    let out = stepDiscover(startDiscover(model), { type: 'readAlong', item: key });
+    out = stepDiscover(out.state, { type: 'hear', id: line(1) });
+    expect(out.effects).toEqual([{ type: 'stopAudio' }, { type: 'play', id: line(1) }]);
+    expect(lit(out.state)).toEqual([false, true]);
+    expect(pageRender(model, out.state, 'always').exchange!.reading).toBe(false);
+    out = stepDiscover(out.state, { type: 'audio', id: line(1), result: 'played' });
+    expect(out.effects).toEqual([]);
+    expect(lit(out.state)).toEqual([false, false]);
+  });
+
+  it('a plain Hear it stops Read along too', () => {
+    const words = buildDiscover([{ items: [...exchangePage('가', '나').items, { type: 'word', word: ko('책', 'chaek', 'book') }] }]);
+    const k = words.pages[0]!.exchange!.key;
+    let out = stepDiscover(startDiscover(words), { type: 'readAlong', item: k });
+    out = stepDiscover(out.state, { type: 'hear', id: 'word:책|sound' });
+    expect(out.effects).toEqual([{ type: 'stopAudio' }, { type: 'play', id: 'word:책|sound' }]);
+    expect(out.state.readAlong).toBeNull();
+  });
+
+  it('no highlight without sound: muted or no voice shows the status once and lights nothing', () => {
+    for (const result of ['muted', 'unavailable'] as const) {
+      let out = stepDiscover(startDiscover(model), { type: 'readAlong', item: key });
+      out = stepDiscover(out.state, { type: 'audio', id: line(0), result });
+      expect(out.effects).toEqual([]);
+      expect(lit(out.state)).toEqual([false, false]);
+      const r = pageRender(model, out.state, 'always').exchange!;
+      expect(r.status).toBe(result);
+      expect(r.reading).toBe(false);
+      // Starting again clears the status line.
+      out = stepDiscover(out.state, { type: 'readAlong', item: key });
+      expect(pageRender(model, out.state, 'always').exchange!.status).toBeUndefined();
+    }
+  });
+
+  it("a muted line's own speaker shows no Read along status", () => {
+    let out = stepDiscover(startDiscover(model), { type: 'hear', id: line(0) });
+    out = stepDiscover(out.state, { type: 'audio', id: line(0), result: 'muted' });
+    expect(pageRender(model, out.state, 'always').exchange!.status).toBeUndefined();
+  });
+
+  it('Continue stops Read along and moves on; the next page starts at rest', () => {
+    let out = stepDiscover(startDiscover(model), { type: 'readAlong', item: key });
+    out = stepDiscover(out.state, { type: 'next' });
+    expect(out.effects).toEqual([{ type: 'stopAudio' }]);
+    expect(out.state.page).toBe(1);
+    expect(out.state.readAlong).toBeNull();
+    expect(pageRender(model, out.state, 'always').exchange!.lines.map((l) => l.lit)).toEqual([false, false]);
+  });
+
+  it('Continue on the last page while reading stops the audio, then finishes', () => {
+    const one = buildDiscover([exchangePage('가', '나')]);
+    const k = one.pages[0]!.exchange!.key;
+    let out = stepDiscover(startDiscover(one), { type: 'readAlong', item: k });
+    out = stepDiscover(out.state, { type: 'next' });
+    expect(out.effects).toEqual([{ type: 'stopAudio' }, { type: 'done', pages: 1, heard: 1 }]);
+  });
+
+  it('tap mode hides a line romanization behind "Show how to say it", per line', () => {
+    let state = startDiscover(model);
+    const before = pageRender(model, state, 'tap').exchange!.lines;
+    expect(before.map((l) => [l.romanizationShown, l.showReveal])).toEqual([
+      [false, true],
+      [false, true],
+    ]);
+    state = stepDiscover(state, { type: 'reveal', key: line(1) }).state;
+    expect(pageRender(model, state, 'tap').exchange!.lines.map((l) => l.romanizationShown)).toEqual([false, true]);
+    expect(pageRender(model, state, 'always').exchange!.lines.every((l) => l.romanizationShown && !l.showReveal)).toBe(true);
+  });
+
+  it('the Hear it of the page item after an exchange does not pulse (Read along is never pushed)', () => {
+    const words = buildDiscover([{ items: [...exchangePage('가', '나').items, { type: 'word', word: ko('책', 'chaek', 'book') }] }]);
+    expect(pageRender(model, startDiscover(model), 'always').items).toEqual([]);
+    expect(pageRender(words, startDiscover(words), 'always').items[0]!.pulse).toBe(false);
   });
 });
