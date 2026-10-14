@@ -1243,10 +1243,10 @@
         }
       ],
       "verification": {
-        "passes": 1,
+        "passes": 2,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): both pages fetched. The encyclopedia entry calls 해요체 a polite speech level and the one used most widely in everyday conversation today; the dictionary defines 해요체 as the non-formal polite ending style, with examples ending in -요. The note says 'polite' and 'used most in everyday talk', restates both in original English and copies no source wording. Carried by: q1 Discover page 1 caption."
+        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): both pages fetched. The encyclopedia entry calls 해요체 a polite speech level and the one used most widely in everyday conversation today; the dictionary defines 해요체 as the non-formal polite ending style, with examples ending in -요. The note says 'polite' and 'used most in everyday talk', restates both in original English and copies no source wording. Carried by: q1 Discover page 1 caption.\nLine 2 (pass 2b, independent fact check, 2026-10-14): both pages re-fetched and each quoteOrLocator found verbatim (encyclopedia entry 공손법, paragraph on 해요체; dictionary headword 해요-체). The encyclopedia calls 해요체 a representative polite style and the level used most widely in everyday conversation today; the dictionary defines it as the non-formal polite ending style with -요 examples. The note matches both; its English wording is original and copies no source text. Outcome: confirmed, no change."
       }
     },
     {
@@ -1270,10 +1270,10 @@
         }
       ],
       "verification": {
-        "passes": 1,
+        "passes": 2,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): both pages fetched. The dictionary names 을/를 as the object case particle (the thing the action is done to); the encyclopedia entry states that 을 follows a consonant-final noun and 를 a vowel-final noun. The note restates both in original English with no copied wording. Carried by: q1 Discover pattern noteEn and the particle hint of the q1 Sentence Builder rounds r4 and r5."
+        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): both pages fetched. The dictionary names 을/를 as the object case particle (the thing the action is done to); the encyclopedia entry states that 을 follows a consonant-final noun and 를 a vowel-final noun. The note restates both in original English with no copied wording. Carried by: q1 Discover pattern noteEn and the particle hint of the q1 Sentence Builder rounds r4 and r5.\nLine 2 (pass 2b, independent fact check, 2026-10-14): both pages re-fetched and each quoteOrLocator found verbatim (encyclopedia entry 상보적 분포, last paragraph; dictionary 목적격 조사 and 를 「조사」 「1」). The dictionary supports 'marks the thing an action is done to' (direct object of the action); the encyclopedia states 을 after a consonant-final noun and 를 after a vowel-final noun. English wording is original, nothing copied. Outcome: confirmed, no change."
       }
     },
     {
@@ -1294,13 +1294,20 @@
           "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%EC%A3%BC%EA%B2%A9%20%EC%A1%B0%EC%82%AC",
           "accessed": "2026-10-14",
           "quoteOrLocator": "Headword 주격 조사 『언어』: “문장 안에서, 체언이나 체언 구실을 하는 말 뒤에 붙어 주어의 자격을 가지게 하는 격 조사. ‘이/가’, ‘께서’, ‘에서’ 따위가 있다.”"
+        },
+        {
+          "title": "은, 는, 이, 가 조사 분류, an Online Ganada answer",
+          "publisher": "국립국어원 (National Institute of Korean Language), 온라인가나다 (Online Ganada)",
+          "url": "https://www.korean.go.kr/front/onlineQna/onlineQnaView.do?mn_id=216&qna_seq=320750&pageIndex=1",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "Answer of 2025-09-15, the dictionary senses it quotes: “이 「039」 「조사」 ((받침 있는 체언 뒤에 붙어))어떤 상태를 보이는 대상이나 일정한 상태나 상황을 겪는 경험주 또는 일정한 동작의 주체임을 나타내는 격 조사.” and “가 「017」 「조사」 ((받침 없는 체언 뒤에 붙어))어떤 상태를 보이는 대상이나 일정한 상태나 상황을 겪는 경험주 또는 일정한 동작의 주체임을 나타내는 격 조사.”"
         }
       ],
       "verification": {
-        "passes": 1,
+        "passes": 2,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): both pages fetched. The dictionary names 이/가 as the subject case particle; the encyclopedia entry says 이 and 가 alternate for the same reason as 을/를, that is 이 after a consonant-final noun and 가 after a vowel-final noun. The note restates this in original English with no copied wording. Carried by: q2 Discover pattern noteEn and the particle hint of q2 rounds r4, r5 and q3 rounds r4, r5."
+        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): both pages fetched. The dictionary names 이/가 as the subject case particle; the encyclopedia entry says 이 and 가 alternate for the same reason as 을/를, that is 이 after a consonant-final noun and 가 after a vowel-final noun. The note restates this in original English with no copied wording. Carried by: q2 Discover pattern noteEn and the particle hint of q2 rounds r4, r5 and q3 rounds r4, r5.\nLine 2 (pass 2b, independent fact check, 2026-10-14): both cited pages re-fetched and each quoteOrLocator found verbatim. The dictionary supports 'marks the subject'; the encyclopedia only says 이 and 가 are one morpheme for the same reason as 을/를, so it implies but does not state which form follows which. Fix: added a third source, the NIKL Online Ganada answer 320750 (www.korean.go.kr), which quotes the dictionary senses 이 「039」 (after a noun with a final consonant) and 가 「017」 (after a noun with no final consonant); its quote was found verbatim. With it the note's direction rule is stated by a source. Note text unchanged; English wording original, nothing copied. Outcome: confirmed after adding a source."
       }
     },
     {
@@ -1324,10 +1331,10 @@
         }
       ],
       "verification": {
-        "passes": 1,
+        "passes": 2,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): both pages fetched. The encyclopedia entry says a Korean adjective serves as a predicate alone, unlike an English adjective that needs be; the dictionary defines the adjective as a word of state that inflects like a verb. The note restates this in original English with no copied wording. Carried by: q2 Discover page 2 caption."
+        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): both pages fetched. The encyclopedia entry says a Korean adjective serves as a predicate alone, unlike an English adjective that needs be; the dictionary defines the adjective as a word of state that inflects like a verb. The note restates this in original English with no copied wording. Carried by: q2 Discover page 2 caption.\nLine 2 (pass 2b, independent fact check, 2026-10-14): both pages re-fetched and each quoteOrLocator found verbatim (encyclopedia entry 형용사, section 내용, first paragraph; dictionary 형용-사, and 맛-있다 「형용사」). The encyclopedia says a Korean adjective can be a predicate alone, unlike an English adjective that needs be, which is what the note says; the dictionary confirms the adjective is an inflecting state word. English wording is original, nothing copied. Outcome: confirmed, no change."
       }
     },
     {
@@ -1355,13 +1362,20 @@
           "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%EA%B0%80%EB%8B%A4",
           "accessed": "2026-10-14",
           "quoteOrLocator": "Headword 가다 1 [Ⅰ] 「동사」 「1」: “한곳에서 다른 곳으로 장소를 이동하다.”"
+        },
+        {
+          "title": "부사격 조사 '에'와 '로'의 차이, an Online Ganada answer",
+          "publisher": "국립국어원 (National Institute of Korean Language), 온라인가나다 (Online Ganada)",
+          "url": "https://www.korean.go.kr/front/onlineQna/onlineQnaView.do?mn_id=216&qna_seq=317656&pageIndex=1",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "Answer of 2025-07-07: “'학교에 가다'에서 쓰인 '에'는 '앞말이 진행 방향의 부사어임을 나타내는 격 조사'로, '학교로 가다'에서 쓰인 '로'는 '움직임의 방향을 나타내는 격 조사'로 쓰였다는 점을 참고하시기 바랍니다.”"
         }
       ],
       "verification": {
-        "passes": 1,
+        "passes": 2,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): the three dictionary pages fetched. 에 (조사, sense 1) marks the word before it as a place adverbial; 오다 is moving toward the speaker or reference person; 가다 is moving from one place to another. The note says 'marks the place' and 'coming is toward the speaker', restated in original English with no copied wording. All three sources are from one public institution (NIKL); pass 2b may add an independent second publisher. Carried by: q3 Discover pattern noteEn and the q3 Discover page 2 caption."
+        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): the three dictionary pages fetched. 에 (조사, sense 1) marks the word before it as a place adverbial; 오다 is moving toward the speaker or reference person; 가다 is moving from one place to another. The note says 'marks the place' and 'coming is toward the speaker', restated in original English with no copied wording. All three sources are from one public institution (NIKL); pass 2b may add an independent second publisher. Carried by: q3 Discover pattern noteEn and the q3 Discover page 2 caption.\nLine 2 (pass 2b, independent fact check, 2026-10-14): the three dictionary pages re-fetched and each quoteOrLocator found verbatim. 오다 (toward the speaker or reference person) and 가다 (moving to another place) support the note. Finding: the cited 에 sense 「1」 marks a location, while the note's use with 가요 and 와요 is the destination use. Fix: added the NIKL Online Ganada answer 317656 (www.korean.go.kr), which says 에 in 학교에 가다 is the case particle marking the adverbial of the direction of movement; its quote was found verbatim. Note text unchanged; English wording original, nothing copied. Outcome: confirmed after adding a source."
       }
     }
   ],
