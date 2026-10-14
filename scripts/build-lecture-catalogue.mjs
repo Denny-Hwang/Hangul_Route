@@ -28,8 +28,10 @@
 // Stories are held back by STORIES_IN_LECTURE (false) until F-TCH-004 PR 11
 // lands the presenter's story adapter: the mobile `lectureBundle()` has no
 // `story()` yet, so a chosen story would be skipped as not ready and a
-// stories-only deck would have no slides. PR 11 flips the switch to true and
-// regenerates this module. Story files are still read and shaped, so a broken
+// stories-only deck would have no slides. PR 11 adds the adapter; the switch
+// flips to true (and this module is regenerated) in the follow-up PR that
+// merges once that presenter is in production, so no cached presenter meets a
+// story the console offers. Story files are still read and shaped, so a broken
 // story file fails here either way.
 //
 // Usage:
@@ -49,7 +51,7 @@ export const GENERATED_HEADER =
 
 export const OUTPUT_REL = ["apps", "web", "src", "data", "lecture-catalogue.generated.ts"];
 
-/** Off until F-TCH-004 PR 11 adds the presenter's story adapter (it flips this to true). */
+/** Off until the presenter's story adapter (F-TCH-004 PR 11) is in production; its follow-up PR flips this to true. */
 export const STORIES_IN_LECTURE = false;
 
 const LISTED_TOPIC_STATUS = new Set(["ready", "shipped"]);

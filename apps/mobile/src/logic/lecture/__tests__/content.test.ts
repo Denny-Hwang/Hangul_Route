@@ -1,6 +1,8 @@
 import { LectureDeckSchema, type LectureBlock, type Overlays } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
 import { episodeById, episodesAll, jamoAll, questById, questsAll } from '../../../content';
+import { storiesAll } from '../../../content/stories';
+import { buildStoryIndex } from '../../story/story-index';
 import { scopeFor } from '../../minigame-config';
 import { expandDeck } from '../deck-builder';
 import { PAUSE_WORD, lectureBundle } from '../content';
@@ -11,6 +13,10 @@ import { vocabArt } from '../slide-view';
 
 const deck = (blocks: LectureBlock[]) =>
   LectureDeckSchema.parse({ v: 1, id: 'lecture:ship01', title: 'All of it', createdAt: '2026-10-11T09:00:00Z', seed: 1, blocks });
+
+const listedStoryIds = [
+  ...new Set(buildStoryIndex({ stories: storiesAll, episodes: episodesAll, quests: questsAll, showUnreviewed: false }).map((e) => e.storyId)),
+];
 
 const shippedEpisodes = episodesAll.filter((e) => e.status !== 'preview' && e.questIds.length > 0);
 
@@ -44,10 +50,6 @@ describe('the presenter content bundle (F-TCH-004 §3.3, §3.13)', () => {
     expect(b.strokeReviewed('jamo:giyeok')).toBe(false);
   });
 
-  it('stories wait for their adapter (PR 11)', () => {
-    expect(lectureBundle('en').story).toBeUndefined();
-  });
-
   it('vocabulary topics come through their adapter (PR 12), in the presenter language', () => {
     const en = lectureBundle('en').vocabTopic?.('vocab-topic:food');
     const es = lectureBundle('es').vocabTopic?.('vocab-topic:food');
@@ -55,6 +57,33 @@ describe('the presenter content bundle (F-TCH-004 §3.3, §3.13)', () => {
     expect(es).toMatchObject({ title: 'Comida' });
     expect(lectureBundle('en').vocabTopic?.('vocab-topic:nope')).toBeUndefined();
   });
+
+  it('stories come through the story adapter, behind the review gate (PR 11)', () => {
+    const b = lectureBundle('en');
+    expect(b.story).toEqual(expect.any(Function));
+    for (const id of listedStoryIds) expect(b.story!(id)).toBe(storiesAll.find((s) => s.id === id));
+    expect(b.story!('story:nope')).toBeUndefined();
+  });
+
+  it.each(['en', 'es', 'ko'] as const)(
+    'every story the Library lists expands to title, scenes, order and checks with nothing skipped (%s)',
+    (locale) => {
+      expect(listedStoryIds.length).toBeGreaterThan(0);
+      for (const storyId of listedStoryIds) {
+        const story = storiesAll.find((s) => s.id === storyId)!;
+        const tier = story.tiers[0]!;
+        const { slides, skipped } = expandDeck(deck([{ kind: 'story', storyId, checks: true }]), lectureBundle(locale), { canPlayKorean: true });
+        expect(skipped, storyId).toEqual([]);
+        expect(slides.map((s) => s.kind), storyId).toEqual([
+          'title',
+          ...tier.scenes.map(() => 'story'),
+          'sequence',
+          ...tier.checks.map(() => 'quiz'),
+          'end',
+        ]);
+      }
+    },
+  );
 
   it.each(['en', 'es', 'ko'] as const)(
     'every shipped episode and quest expands with no Korean missing its romanization (rule 11, %s)',

@@ -1037,8 +1037,8 @@ test('a word topic lists every word with its Hear button, keeps 64 targets at 32
 /* -------------------------------------------------------------------------------------------
  * BR-13: [ Present this ] on the item page (section 4.6 secondary action, OD-9; design
  * design/screens/presenter/present-this.md). A full pass, the presenter root (index.ts mounts
- * PresenterApp for /present since #591), and a block the presenter can draw: a lesson today, a
- * story or a word topic only once their slides land (F-TCH-004 PR 11, PR 12).
+ * PresenterApp for /present since #591), and a block the presenter can draw: a lesson, a listed
+ * story (F-TCH-004 PR 11) or a ready word topic (F-TCH-004 PR 12).
  * ------------------------------------------------------------------------------------------- */
 
 /** Records every `window.open` address before it opens, so the deck can be read before the presenter strips it. */
@@ -1131,19 +1131,18 @@ test('BR-13: a lesson with a full pass shows Present this under the preview and 
   await second.close();
 });
 
-test('BR-13: Present this is not shown with a sampler pass, nor for a story whose slides have not landed', async ({ page }) => {
+test('BR-13: Present this is not shown with a sampler pass; a story page shows it now the story slides have landed', async ({ page }) => {
   await page.goto('/');
   await writeAccountPass(page, { scope: 'sampler' });
   await page.goto('/browse#t=quest:stage1-letters-q1&s=report');
   await expect(page.getByTestId('browse-preview')).toBeVisible();
   await expect(page.getByTestId('browse-present')).toHaveCount(0);
 
-  // A story block expands to no slide until F-TCH-004 PR 11 gives the lecture bundle its story
-  // adapter; that PR shows the button here by itself and must turn this assertion around.
-  test.info().annotations.push({ type: 'flips-with', description: 'F-TCH-004 PR 11 (story slides): Present this then shows on a story page' });
+  // F-TCH-004 PR 11 gave the lecture bundle its story adapter, so a listed story's one-block deck
+  // has slides and the button shows on its page.
   await openLessonPage(page, STORY_ID);
   await expect(page.getByTestId('browse-preview')).toHaveText('Preview this story');
-  await expect(page.getByTestId('browse-present')).toHaveCount(0);
+  await expect(page.getByTestId('browse-present')).toBeVisible();
 });
 
 test('BR-13: when the browser gives no new tab, one line under Present this says to allow pop-ups, and the page stays', async ({ page }) => {
