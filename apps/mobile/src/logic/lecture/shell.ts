@@ -68,8 +68,8 @@ export function presenterLocale(input: { deck: LectureDeck | null; session: UiLo
 
 // --- the slides this build draws ------------------------------------------------------------------
 
-/** Slide kinds the presenter draws: the shell's (PR 6) and the teaching slides (PR 7); PRs 9 and 11 add theirs. */
-export const SHELL_SLIDE_KINDS: ReadonlySet<SlideKind> = new Set<SlideKind>(['title', 'letter', 'syllable', 'vocab', 'sequence', 'card', 'activity', 'end']);
+/** Slide kinds the presenter draws: the shell's (PR 6), the teaching slides (PR 7) and the story slides (PR 11); PR 9 adds the quizzes. */
+export const SHELL_SLIDE_KINDS: ReadonlySet<SlideKind> = new Set<SlideKind>(['title', 'letter', 'syllable', 'vocab', 'sequence', 'card', 'activity', 'story', 'quiz', 'end']);
 
 /** One line of the start screen's "not shown as slides" list: the block that holds it and why. */
 export interface SkipPart {
@@ -99,8 +99,8 @@ export function blockIndexOfSlide(deck: Pick<LectureDeck, 'blocks'>, slideKey: s
 
 function drawable(slide: Slide, kinds: ReadonlySet<SlideKind>): boolean {
   if (!kinds.has(slide.kind)) return false;
-  // A story title shows its cover scene (story slides, PR 11).
-  return !(slide.kind === 'title' && slide.cover !== undefined);
+  // Of the quiz slides, PR 11 draws the story checks; the other quizzes come with PR 9.
+  return !(slide.kind === 'quiz' && slide.prompt.ask !== 'check');
 }
 
 /**
@@ -226,6 +226,9 @@ export function slideDetail(slide: Slide, names?: { activity: (preset: ActivityP
       return slide.title;
     case 'activity':
       return names?.activity(slide.preset) ?? '';
+    case 'story':
+      // The scene caption: the art's accessible name (README D8).
+      return slide.caption ?? '';
     default:
       return '';
   }

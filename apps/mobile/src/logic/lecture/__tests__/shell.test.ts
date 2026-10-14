@@ -142,7 +142,7 @@ describe('runDeck: the slides this build draws', () => {
     const run = runDeck(deck, expanded);
     expect(run.slides.at(-1)?.kind).toBe('end');
     expect(run.slides.filter((s) => s.kind === 'letter').length).toBeGreaterThan(4);
-    const dropped = expanded.slides.filter((s) => !SHELL_SLIDE_KINDS.has(s.kind));
+    const dropped = expanded.slides.filter((s) => !run.slides.includes(s));
     expect(dropped.length).toBeGreaterThan(0);
     expect(dropped.every((s) => s.kind === 'quiz')).toBe(true);
     // The skipped parts: the builder's own, plus the undrawn runs; the quiz block is one part.
@@ -175,17 +175,45 @@ describe('runDeck: the slides this build draws', () => {
     expect(runDeck(deckOf([{ kind: 'quiz', from: 'all', rounds: 3 }]), { slides: [], skipped: [], taught: [], minutes: 0 }).slides).toEqual([]);
   });
 
-  it('a story title (cover scene) waits for the story slides', () => {
-    const title: Slide = { kind: 'title', source: 'story', title: 'T', cover: { storyId: 'story:x', sceneId: 's' }, key: 'story:x/title', builds: ['title'] };
+  it('draws a story: its cover title, scenes, the order slide (PR 7) and checks', () => {
+    const storyId = 'story:sejong-new-letters';
+    const deck = deckOf([{ kind: 'story', storyId, checks: true }]);
+    const expanded = expandDeck(deck, lectureBundle('en'), { canPlayKorean: true });
+    expect(expanded.skipped).toEqual([]);
+    const run = runDeck(deck, expanded);
+    const kinds = run.slides.map((s) => s.kind);
+    expect(kinds[0]).toBe('title');
+    expect(run.slides[0]).toMatchObject({ source: 'story', cover: { storyId } });
+    expect(kinds).toContain('story');
+    expect(kinds).toContain('quiz');
+    expect(kinds).toContain('sequence');
+    expect(kinds.at(-1)).toBe('end');
+    expect(run.slides.length).toBe(expanded.slides.length);
+    expect(run.parts).toEqual([]);
+  });
+
+  it('draws only story checks among quiz slides; the other quizzes wait for PR 9', () => {
+    expect(SHELL_SLIDE_KINDS.has('story')).toBe(true);
+    expect(SHELL_SLIDE_KINDS.has('quiz')).toBe(true);
+    const check: Slide = {
+      kind: 'quiz',
+      prompt: { ask: 'check', text: 'Who?' },
+      options: [{ gloss: 'A', correct: true }, { gloss: 'B', correct: false }],
+      textPrompt: false,
+      key: 'story:x/check-c1',
+      builds: ['question', 'answer'],
+    };
+    const odd: Slide = { ...check, prompt: { ask: 'odd-one-out' }, key: 'quiz/q1' };
     const letter = expandDeck(deckOf([{ kind: 'jamo-set', jamoIds: ['jamo:giyeok'] }]), lectureBundle('en'), { canPlayKorean: true }).slides;
-    const run = runDeck(deckOf([{ kind: 'story', storyId: 'story:x', checks: true }, { kind: 'jamo-set', jamoIds: ['jamo:giyeok'] }]), {
-      slides: [title, ...letter],
+    const run = runDeck(deckOf([{ kind: 'story', storyId: 'story:x', checks: true }, { kind: 'quiz', from: 'all', rounds: 1 }, { kind: 'jamo-set', jamoIds: ['jamo:giyeok'] }]), {
+      slides: [check, odd, ...letter],
       skipped: [],
       taught: [],
-      minutes: 0,
+      minutes: 3,
     });
-    expect(run.slides.map((s) => s.kind)).toEqual(['letter', 'end']);
-    expect(run.parts).toEqual([{ blockIndex: 0, reason: 'unsupported-step' }]);
+    expect(run.slides.map((s) => s.key)).toEqual(['story:x/check-c1', ...letter.map((s) => s.key)]);
+    expect(run.parts).toEqual([{ blockIndex: 1, reason: 'unsupported-step' }]);
+    expect(run.minutes).toBe(2);
   });
 
   it('keeps the builder skips with their block', () => {
@@ -285,6 +313,14 @@ describe('slideDetail', () => {
     expect(slideDetail(of('activity'), names)).toBe('name of air-write');
     expect(slideDetail(of('activity'))).toBe('');
     expect(slideDetail(of('sequence'), names)).toBe('');
+  });
+
+  it('says a story scene by its caption (README D8), and nothing for a check', () => {
+    const slides = expandDeck(deckOf([{ kind: 'story', storyId: 'story:sejong-new-letters', checks: true }]), lectureBundle('en'), { canPlayKorean: true }).slides;
+    const scene = slides.find((s): s is Extract<Slide, { kind: 'story' }> => s.kind === 'story' && s.caption !== undefined)!;
+    expect(slideDetail(scene)).toBe(scene.caption);
+    expect(slideDetail({ ...scene, caption: undefined })).toBe('');
+    expect(slideDetail(slides.find((s) => s.kind === 'quiz')!)).toBe('');
   });
 });
 

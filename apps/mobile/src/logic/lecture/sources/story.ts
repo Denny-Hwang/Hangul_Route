@@ -1,8 +1,10 @@
-import type { Episode, Overlays, Quest, SceneArt, Story, ThemeKey, UiLocale } from '@hangul-route/content-schema';
+import type { Episode, Overlays, Quest, SceneArt, SpeechLang, Story, ThemeKey, UiLocale } from '@hangul-route/content-schema';
 import { episodesAll } from '../../../content/episodes';
 import { questsAll } from '../../../content/quests';
 import { storiesAll } from '../../../content/stories';
 import { localizeStory } from '../../content-locale';
+import { uiSpeechLang } from '../../story/reader-locale';
+import { narrationSpeechLang } from '../../story/scene-audio';
 import { buildStoryIndex } from '../../story/story-index';
 import type { LectureStory } from '../deck-builder';
 
@@ -27,6 +29,8 @@ export interface LectureSceneView {
   theme: ThemeKey;
   /** The art's accessible name: the scene caption, else the art's own `altEn` (README D8; never drawn). */
   label: string;
+  /** Read-to-me's voice: the presenter language when the overlay's narration is shown, else English. */
+  narrationLang: SpeechLang;
 }
 
 export interface LectureStorySource {
@@ -61,9 +65,11 @@ export function lectureStoriesFrom(input: LectureStoryInput, locale: UiLocale, o
       const story = listedStory(storyId);
       const scene = story?.tiers.flatMap((tier) => tier.scenes).find((s) => s.id === sceneId);
       if (!story || !scene) return undefined;
+      const source = bundled.get(storyId)!.tiers.flatMap((tier) => tier.scenes).find((s) => s.id === sceneId);
       // Placeholder art marked pending is no art, as in the reader (`buildSceneView`).
       const art = scene.artPending === true ? null : (scene.art ?? null);
-      return { art, theme: story.theme, label: scene.captionEn ?? scene.art?.altEn ?? '' };
+      const narrationLang = narrationSpeechLang(uiSpeechLang(locale), source?.narrationEn !== scene.narrationEn);
+      return { art, theme: story.theme, label: scene.captionEn ?? scene.art?.altEn ?? '', narrationLang };
     },
   };
 }

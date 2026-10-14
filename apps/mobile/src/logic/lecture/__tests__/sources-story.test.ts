@@ -86,6 +86,16 @@ describe('lectureStories (F-TCH-004 PR 11)', () => {
     expect(view.label).toBe(art ? altEn : '');
   });
 
+  it('speaks the narration in the voice of the text shown: the overlay language, else English', () => {
+    const sceneId = sample.tiers[0]!.scenes[0]!.id;
+    const other = sample.tiers[0]!.scenes[1]!.id;
+    const overlays: Overlays = { es: { [sample.id]: { [`scenes.${sceneId}.narration`]: 'Narracion' } }, ko: {} };
+    const es = lectureStories('es', overlays);
+    expect(es.scene(sample.id, sceneId)!.narrationLang).toBe('es-US');
+    expect(es.scene(sample.id, other)!.narrationLang).toBe('en-US');
+    expect(lectureStories('en').scene(sample.id, sceneId)!.narrationLang).toBe('en-US');
+  });
+
   it('finds a scene in any tier of the story', () => {
     const source = lectureStories('en');
     for (const id of listed) {
