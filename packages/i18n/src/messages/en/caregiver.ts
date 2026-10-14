@@ -831,6 +831,10 @@ export const caregiver = {
       preview: { cta: 'Preview this lesson' },
       previewStory: { cta: 'Preview this story' },
       previewQuestions: { cta: 'Preview the questions' },
+      /** BR-13: the ghost button under the preview button; it opens the item as a one-block deck in the presenter. */
+      present: { cta: 'Present this' },
+      /** [ Present this ]'s accessible description. Recent keeps the deck on the device, so it never says nothing is saved. */
+      presentNote: "Opens the lesson as slides for a classroom screen or a TV. No one's progress changes.",
       /** The grown-up line in place of the preview button (switch on, sampler pass); F-ENT-003 section 3.11 [BY]. */
       closed: 'Opens with the Family Plan or a Group License',
       /** Under the closed line, an account pass that is not kept and not a fallback (F-BILL-002's label). */
