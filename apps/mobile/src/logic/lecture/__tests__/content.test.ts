@@ -4,6 +4,10 @@ import { episodeById, episodesAll, jamoAll, questById, questsAll } from '../../.
 import { scopeFor } from '../../minigame-config';
 import { expandDeck } from '../deck-builder';
 import { PAUSE_WORD, lectureBundle } from '../content';
+import { VOCAB_ITEMS, VOCAB_TOPICS } from '../../../content/__generated__/vocab';
+import { supportedCardIds } from '@hangul-route/design-system/heritage-card-ids';
+import { WORD_ART_KEYS } from '@hangul-route/design-system/word-art';
+import { vocabArt } from '../slide-view';
 
 const deck = (blocks: LectureBlock[]) =>
   LectureDeckSchema.parse({ v: 1, id: 'lecture:ship01', title: 'All of it', createdAt: '2026-10-11T09:00:00Z', seed: 1, blocks });
@@ -40,10 +44,16 @@ describe('the presenter content bundle (F-TCH-004 §3.3, §3.13)', () => {
     expect(b.strokeReviewed('jamo:giyeok')).toBe(false);
   });
 
-  it('stories and vocabulary topics wait for their adapters (PR 11, PR 12)', () => {
-    const b = lectureBundle('en');
-    expect(b.story).toBeUndefined();
-    expect(b.vocabTopic).toBeUndefined();
+  it('stories wait for their adapter (PR 11)', () => {
+    expect(lectureBundle('en').story).toBeUndefined();
+  });
+
+  it('vocabulary topics come through their adapter (PR 12), in the presenter language', () => {
+    const en = lectureBundle('en').vocabTopic?.('vocab-topic:food');
+    const es = lectureBundle('es').vocabTopic?.('vocab-topic:food');
+    expect(en).toMatchObject({ title: 'Food' });
+    expect(es).toMatchObject({ title: 'Comida' });
+    expect(lectureBundle('en').vocabTopic?.('vocab-topic:nope')).toBeUndefined();
   });
 
   it.each(['en', 'es', 'ko'] as const)(
@@ -62,6 +72,30 @@ describe('the presenter content bundle (F-TCH-004 §3.3, §3.13)', () => {
       }
     },
   );
+
+  it.each(['en', 'es', 'ko'] as const)('every ready vocabulary topic expands with no skip, a slide per word and a quiz (PR 12, %s)', (locale) => {
+    const ready = VOCAB_TOPICS.filter((t) => t.status === 'ready' || t.status === 'shipped');
+    expect(ready.length).toBeGreaterThan(0);
+    for (const t of ready) {
+      const { slides, skipped } = expandDeck(deck([{ kind: 'vocab', topicId: t.id }]), lectureBundle(locale), { canPlayKorean: true });
+      expect(skipped, t.id).toEqual([]);
+      const words = slides.filter((s) => s.kind === 'vocab');
+      expect(words.length, t.id).toBe(VOCAB_ITEMS.filter((i) => (i.topics as readonly string[]).includes(t.key)).length);
+      expect(slides[0], t.id).toMatchObject({ kind: 'title', source: 'topic' });
+      if (words.length >= 4) expect(slides.some((s) => s.kind === 'quiz'), t.id).toBe(true);
+    }
+  });
+
+  it('every ready topic word has a picture the presenter draws: a drawn card or a known WordArt glyph (README D9)', () => {
+    const { slides } = expandDeck(
+      deck(VOCAB_TOPICS.filter((t) => t.status === 'ready').map((t): LectureBlock => ({ kind: 'vocab', topicId: t.id }))),
+      lectureBundle('en'),
+      { canPlayKorean: true },
+    );
+    const missing = slides.filter((s) => s.kind === 'vocab' && vocabArt(s, supportedCardIds, WORD_ART_KEYS) === undefined).map((s) => s.key);
+    // A colour word's picture is a swatch, which the slide does not draw: text only, as section 3.4 allows.
+    expect(missing.every((key) => key.startsWith('vocab-topic:colors/')), missing.join(', ')).toBe(true);
+  });
 
   it('every quest teaches: at least one slide besides its title and End', () => {
     for (const q of questsAll) {

@@ -1876,6 +1876,8 @@ export const learner = {
       strokeCaption: 'Simplified stroke guide',
       /** The kind label above a heritage card's title (PR 7). */
       card: 'Heritage card',
+      /** The kind label above a word topic's title (PR 12). */
+      topic: 'Word topics',
       /** The sequence slide's last build: the steps in a shuffled order (PR 7). */
       order: 'What comes first?',
       activity: {

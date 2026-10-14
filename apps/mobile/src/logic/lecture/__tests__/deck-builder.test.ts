@@ -244,7 +244,7 @@ const topic: LectureVocabTopic = {
   words: [
     { id: 'vocab:gimchi', ko: '김치', romanization: 'gimchi', gloss: 'kimchi', cardId: 'card:kimchi' },
     { id: 'vocab:bap', ko: '밥', romanization: 'bap', gloss: 'rice' },
-    { id: 'vocab:mul', ko: '물', romanization: 'mul', gloss: 'water' },
+    { id: 'vocab:mul', ko: '물', romanization: 'mul', gloss: 'water', wordArt: 'food-water' },
     { id: 'vocab:san', ko: '산', romanization: 'san', gloss: 'mountain' },
   ],
 };
@@ -266,7 +266,10 @@ const bundle = (over: Partial<LectureBundle> = {}): LectureBundle => ({
     if (id === 'story:no-tiers') return { ...sunMoon, id, tiers: [] };
     return [sunMoon, brokenStory, noCaption].find((s) => s.id === id);
   },
-  vocabTopic: (id) => (id === 'vocab-topic:food' ? topic : undefined),
+  vocabTopic: (id) => {
+    if (id === 'vocab-topic:draft') return 'not-ready';
+    return id === 'vocab-topic:food' ? topic : undefined;
+  },
   ...over,
 });
 
@@ -728,6 +731,10 @@ describe('expandDeck: letters, revisit, cards, vocab, activities (rules 3, 4, 6,
       builds: ['ko', 'gloss', 'art'],
     });
     expect(only(all, 'quiz')[0]!.prompt.ask).toBe('meaning');
+    // A topic word's WordArt key rides on its slide and adds the art build after the gloss (README D9).
+    expect(only(all, 'vocab')[2]).toMatchObject({ wordId: 'vocab:mul', wordArt: 'food-water', builds: ['ko', 'gloss', 'art'] });
+    expect(only(all, 'vocab')[1]).not.toHaveProperty('wordArt');
+    expect(only(all, 'vocab')[1]!.builds).toEqual(['ko', 'gloss']);
 
     const some = expand([{ kind: 'vocab', topicId: 'vocab-topic:food', wordIds: ['vocab:bap', 'vocab:gone'] }]);
     expect(only(some.slides, 'vocab').map((v) => v.word.ko)).toEqual(['밥']);
@@ -745,6 +752,9 @@ describe('expandDeck: letters, revisit, cards, vocab, activities (rules 3, 4, 6,
     expect(expand([{ kind: 'vocab', topicId: 'vocab-topic:none' }]).skipped).toEqual([
       { blockIndex: 0, ref: 'vocab-topic:none', reason: 'unknown-id' },
     ]);
+    const draft = expand([{ kind: 'vocab', topicId: 'vocab-topic:draft' }]);
+    expect(draft.skipped).toEqual([{ blockIndex: 0, ref: 'vocab-topic:draft', reason: 'not-ready' }]);
+    expect(draft.slides).toEqual([]);
     const small = bundle({ vocabTopic: () => ({ title: 'Two', words: topic.words.slice(0, 2) }) });
     expect(kinds(expand([{ kind: 'vocab', topicId: 'vocab-topic:food' }], {}, small).slides)).toEqual(['title', 'vocab', 'vocab', 'end']);
   });
