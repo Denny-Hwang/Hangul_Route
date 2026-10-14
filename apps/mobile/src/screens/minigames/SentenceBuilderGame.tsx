@@ -48,7 +48,7 @@ import {
   type NotePart,
   type TileView,
 } from '../../logic/sentence-builder/view';
-import { playPrompt, stop } from '../../platform/audio';
+import { hasClip, playPrompt, stop } from '../../platform/audio';
 import { nudge, success, tapLight } from '../../platform/haptics';
 import { useReducedMotion } from '../../platform/motion';
 import type { MinigameHost } from './host';
@@ -125,7 +125,8 @@ export function SentenceBuilderGame({ scope, host, patternNote, onBack }: Props)
   const completed = useRef(false);
   const dispatchRef = useRef<(event: SbEvent) => void>(() => undefined);
 
-  const slot = usePromptSlot({ source: 'sentence-builder', textOnScreen: true });
+  // The current round's sentence may have a bundled recording: then a missing Korean voice is not a missing sound (as Match Sound).
+  const slot = usePromptSlot({ source: 'sentence-builder', hasClip: hasClip(rounds[state.roundIdx]?.sentence.audioRef), textOnScreen: true });
   const { play, reset } = slot;
   const [helpOpen, setHelpOpen] = useState(false);
 
