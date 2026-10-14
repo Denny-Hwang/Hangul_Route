@@ -47,6 +47,11 @@ describe('the episode page (E3-6)', () => {
     expect(src).not.toMatch(/contentGatingEnabled/);
   });
 
+  it('a story page with a closed quest (a Stage 5 book on the free plan) falls back to the quest list in preview', () => {
+    // F-STORY-005 PR 5.6: book quests are grid lessons, so the story page must not offer Start for a closed one.
+    expect(src).toMatch(/if \(storyEntries && !preview\)/);
+  });
+
   it('has no emoji-capable or arrow character and no colour literal', () => {
     expect(src).not.toMatch(SYMBOL);
     expect(src).not.toMatch(/#[0-9a-fA-F]{3,8}\b|rgba?\(|hsla?\(/);
