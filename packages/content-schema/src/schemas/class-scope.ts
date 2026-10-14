@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { CLASS_SCOPE_TEXT_KO } from './class-scope-ko';
 import { JoinCodeFieldSchema } from './space';
 import type { ProgressSummary } from './sync';
-import type { TeacherVisibleItemId, TransferConsentLocale } from './transfer-consent';
+import { TEACHER_VISIBLE_ITEM_IDS, TRANSFER_CONSENT_TEXT, type TeacherVisibleItemId, type TransferConsentLocale } from './transfer-consent';
 
 /**
  * [TV] Teacher visibility and teacher moves — AMENDMENTS-TEACHER-VISIBILITY-TRANSFER
@@ -74,6 +74,12 @@ export type ClassScopeLineId = (typeof CLASS_SCOPE_LINE_IDS)[number];
 
 export interface ClassScopeText {
   readonly lines: Readonly<Record<ClassScopeLineId, string>>;
+  /**
+   * Items of the `list` line whose class-move wording names one destination class (`{destination}`); the update
+   * speaks of every class the learner is in, so these read "that class" instead. Every other item is the
+   * class-move text's own (`classScopeItems`).
+   */
+  readonly items: Readonly<{ plan_progress: string }>;
 }
 
 /**
@@ -91,6 +97,7 @@ export const CLASS_SCOPE_TEXT: Readonly<Record<TransferConsentLocale, ClassScope
       leave: '{learner} can leave a class in Profile at any time.',
       until: 'Until you press OK, teachers see what they saw before.',
     },
+    items: { plan_progress: 'Progress on homework from that class' },
   },
   ko: CLASS_SCOPE_TEXT_KO,
   es: {
@@ -103,8 +110,16 @@ export const CLASS_SCOPE_TEXT: Readonly<Record<TransferConsentLocale, ClassScope
       leave: '{learner} puede salir de una clase en Perfil cuando quiera.',
       until: 'Hasta que pulses OK, los docentes ven lo mismo que antes.',
     },
+    items: { plan_progress: 'El progreso en las tareas de esa clase' },
   },
 };
+
+/** The `list` items of the update, in the class-move text's order, with `{learner}` left to the renderer. */
+export function classScopeItems(locale: TransferConsentLocale): Array<{ id: TeacherVisibleItemId; text: string }> {
+  const items = TRANSFER_CONSENT_TEXT[locale].items;
+  const own = CLASS_SCOPE_TEXT[locale].items;
+  return TEACHER_VISIBLE_ITEM_IDS.map((id) => ({ id, text: id === 'plan_progress' ? own.plan_progress : items[id] }));
+}
 
 // ---------------------------------------------------------------------------
 // Teacher moves (class_moves)

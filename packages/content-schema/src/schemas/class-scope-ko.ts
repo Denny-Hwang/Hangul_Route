@@ -17,4 +17,5 @@ export const CLASS_SCOPE_TEXT_KO: ClassScopeText = {
     leave: '{learner} 학습자는 언제든지 프로필에서 반을 나갈 수 있습니다.',
     until: '확인을 누르기 전까지 선생님은 지금까지 보던 것만 봅니다.',
   },
+  items: { plan_progress: '그 반에서 받은 숙제의 진도' },
 };
