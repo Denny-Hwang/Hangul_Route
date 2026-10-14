@@ -83,7 +83,21 @@ export const consoleMsgs = {
   shell: {
     home: 'Consola',
     signOut: { cta: 'Salir' },
-    nav: { notes: 'Notas', lessons: 'Lecciones', classReports: 'Informes de clase' },
+    backToLearning: 'Volver a aprender',
+    openLearnerApp: 'Abrir la app de estudiantes',
+    aboutSite: 'Sobre Hangul Route',
+    privacy: 'Privacidad',
+    terms: 'Términos',
+    persona: { parent: 'Familia', teacher: 'Docente' },
+    nav: {
+      home: 'Inicio',
+      reports: 'Informes',
+      notes: 'Notas',
+      classes: 'Clases',
+      lessons: 'Lecciones',
+      billing: 'Facturación',
+      classReports: 'Informes de clase',
+    },
     noApi: 'La consola necesita una dirección de API (NEXT_PUBLIC_API_BASE_URL) en esta versión.',
   },
   kind: {
@@ -156,6 +170,12 @@ export const consoleMsgs = {
     lastList: 'Se muestra la última lista que cargamos.',
     archived: '(archivado)',
     open: { cta: 'Abrir →' },
+    newClass: { cta: '+ Nueva clase' },
+    classReport: 'Informe de clase',
+    notes: 'Notas',
+    lessons: 'Lecciones',
+    noClass: { title: 'Aún no tienes una clase.', setUp: 'Crear una clase', goFamily: 'Ir a Familia' },
+    cross: { addFamily: '¿También aprenden en casa? Crea un espacio familiar', toFamily: 'Tu familia está en Familia' },
   },
   space: {
     loading: 'Cargando…',
@@ -682,8 +702,8 @@ export const consoleMsgs = {
     proposal: {
       lessonsAndStories: (stage: number, week: number) =>
         stage === 1
-          ? `La etapa 1 termina hacia la semana ${week}; después, historias de herencia.`
-          : `Las lecciones listas hoy terminan hacia la semana ${week}; después, historias de herencia.`,
+          ? `La Etapa 1 termina hacia la semana ${week}; después, historias del patrimonio.`
+          : `Las lecciones listas hoy terminan hacia la semana ${week}; después, historias del patrimonio.`,
       lessonsCutShort: (weeks: number) => `Las primeras lecciones caben en ${weeks} semanas. Con más semanas cabe el resto.`,
       lessonsThenFree: (weeks: number) =>
         plural('es', weeks, {
@@ -694,13 +714,13 @@ export const consoleMsgs = {
       storiesAndWords: (stories: number) =>
         stories > 0
           ? plural('es', stories, {
-              one: 'No quedan lecciones desde este punto: 1 historia de herencia y temas de palabras.',
-              other: `No quedan lecciones desde este punto: ${stories} historias de herencia y temas de palabras.`,
+              one: 'Ya no quedan lecciones desde aquí. Siguen 1 historia del patrimonio y temas de palabras.',
+              other: `Ya no quedan lecciones desde aquí. Siguen ${stories} historias del patrimonio y temas de palabras.`,
             })
-          : 'No quedan lecciones desde este punto: temas de palabras y práctica libre.',
+          : 'Ya no quedan lecciones desde aquí. Siguen temas de palabras y práctica libre.',
     },
     update: {
-      line: (name: string) => `La prueba más reciente de ${name} encontró un punto de partida más adelante.`,
+      line: (name: string) => `La última prueba de nivel de ${name} encontró un inicio más adelante.`,
       cta: 'Actualizar el plan',
       label: (name: string) => `Actualizar el plan de ${name}`,
       ask: (removed: number, added: number, next: string | null) => {
@@ -993,6 +1013,30 @@ export const consoleMsgs = {
     settingsLink: 'Ajustes de la escuela',
     footer: (link: string) => `${link} · las listas que se abren desde aquí muestran iniciales por defecto.`,
   },
+  /** The family home `/parent` (F-APP-001 A-5b): counts only, labelled "últimos 7 días", never ranked. */
+  parentHome: {
+    title: 'Inicio familiar',
+    minutes7d: (n: number) => `Minutos, últimos 7 días: ${n}`,
+    child: { open: 'Abrir', seeReport: 'Ver informe', sendNote: 'Enviar una nota', route: 'Ruta de aprendizaje' },
+    actions: {
+      lessons: 'Lecciones',
+      planWeek: 'Planear la semana',
+      planTerm: 'Planear el periodo',
+      settings: 'Ajustes de la familia',
+      addLearner: 'Añadir un estudiante',
+    },
+    empty: {
+      title: 'Aún no se unió ningún estudiante.',
+      line: (profile: string, section: string, join: string) =>
+        `En el dispositivo del estudiante, ve a ${profile}, luego a ${section}, luego a "${join}", y escribe este código familiar.`,
+      openApp: 'Abrir la app en este dispositivo',
+    },
+    noFamily: { title: 'Aún no tienes un espacio familiar.', setUp: 'Crear mi familia', goTeacher: 'Ir a Clases' },
+    cross: { addClass: '¿También das clases? Crea una clase', toTeacher: 'Tus clases están en Docente' },
+    actionsFor: (family: string) => `Acciones de ${family}`,
+    askOwner: 'Pide un código familiar a quien creó el espacio familiar.',
+    copyFailed: 'No se pudo copiar. El código está en la pantalla.',
+  },
   journey: {
     title: 'Ruta de aprendizaje',
     onStage: (n: number) => `En la Etapa ${n}`,
@@ -1267,7 +1311,7 @@ export const consoleMsgs = {
         lastChangedBy: (account: string) => `Último cambio: ${account}`,
         lastChangedOnDevice: 'Último cambio en un dispositivo',
         saved: 'Guardado',
-        stopped: { title: 'Personas bloqueadas', allowAgain: { cta: 'Permitir otra vez' }, former: 'Un remitente anterior' },
+        stopped: { title: 'Personas bloqueadas', allowAgain: { cta: 'Permitir otra vez' }, former: 'Remitente anterior' },
       },
       disclosure: (learner: string) => `Los docentes ven la respuesta que ${learner} elige en sus notas. No ven cuándo se leyó una nota.`,
       oneTimeCard: {
@@ -1292,16 +1336,145 @@ export const consoleMsgs = {
     },
   },
   /**
-   * Class moves (F-SPACE-002 T-6d): the consent sheet's frame only, so the sheet reads in one language when its
-   * own switch picks Spanish (the lines are content-schema's TRANSFER_CONSENT_TEXT.es). The rest of
-   * `console.transfer` falls back to English until the next Spanish draft.
+   * Class moves (F-SPACE-002 T-6c, T-6d): the teacher and family pages, the start sheet and the consent sheet's frame,
+   * so the sheet reads in one language when its own switch picks Spanish (the lines are content-schema's
+   * TRANSFER_CONSENT_TEXT.es). "Cambio de clase" for a move; a teacher is named by the class, never "el docente" or
+   * "la docente"; "todas las partes" for "everyone", so no word agrees with a person's gender.
    */
   transfer: {
-    lines: { notNowEnds: 'Si eliges "Ahora no", esta solicitud termina. Puedes empezar un cambio tú cuando quieras.' },
+    title: 'Cambios de clase',
+    memberNoun: { family: 'estudiante', class: 'estudiante', school: 'miembro' },
+    entry: { cta: 'Cambios de clase' },
+    waiting: (n: number) => plural('es', n, { one: `${n} cambio de clase pendiente`, other: `${n} cambios de clase pendientes` }),
+    schoolRow: (className: string, n: number) =>
+      `${className}: ${plural('es', n, { one: `${n} cambio de clase pendiente`, other: `${n} cambios de clase pendientes` })}`,
+    back: (space: string) => `Volver a ${space}`,
+    groups: {
+      leaving: 'Salen de esta clase',
+      joining: 'Llegan a esta clase',
+      asked: 'Te preguntan por tus estudiantes',
+      start: 'Empezar un cambio',
+      prefs: 'Solicitudes de cambio de docentes',
+      history: 'Antes',
+    },
+    empty: 'Nada pendiente.',
+    steps: {
+      family: 'Familia',
+      thisClass: 'Esta clase',
+      newClass: 'Clase nueva',
+      saidYes: 'dijo que sí',
+      youSaidYes: 'dijiste que sí',
+      waiting: 'pendiente',
+    },
+    meta: {
+      asked: (days: number) => (days === 0 ? 'se pidió hoy' : plural('es', days, { one: `se pidió hace ${days} día`, other: `se pidió hace ${days} días` })),
+      askedByFamily: (days: number) =>
+        days === 0 ? 'lo pidió la familia · hoy' : plural('es', days, { one: `lo pidió la familia · hace ${days} día`, other: `lo pidió la familia · hace ${days} días` }),
+      askedByClass: (className: string, days: number) =>
+        days === 0
+          ? `Lo pidió la clase ${className} · hoy`
+          : plural('es', days, { one: `Lo pidió la clase ${className} · hace ${days} día`, other: `Lo pidió la clase ${className} · hace ${days} días` }),
+      daysLeft: (days: number) => plural('es', days, { one: `Queda ${days} día`, other: `Quedan ${days} días` }),
+    },
+    lines: {
+      familyAsked: (name: string) => `La familia de ${name} pidió el cambio a otra clase.`,
+      familyAskedTo: (name: string, destination: string) => `La familia de ${name} pidió el cambio a ${destination}.`,
+      waitingAll: 'Nada cambia hasta que las tres partes digan que sí.',
+      waitingFamily: 'Esperando a la familia.',
+      newClass: (destination: string) => `Clase nueva: ${destination}`,
+      agreedBySchoolAdmin: 'La administración escolar dijo que sí.',
+      waitingRoom: 'Esperando lugar en la clase nueva.',
+      scheduled: (date: string) => `Todas las partes dijeron que sí. El cambio será el ${date}.`,
+      familySaidYes: 'La familia dijo que sí.',
+      comingFrom: (source: string) => `Viene de ${source}.`,
+      youSaidYes: 'Dijiste que sí. Nada cambia hasta que todas las partes digan que sí.',
+      fullClass: 'Todas las partes dijeron que sí. Por ahora esta clase está llena.',
+      fullSchool: 'Todas las partes dijeron que sí. Por ahora la escuela está llena.',
+      moveWaiting: 'Todas las partes dijeron que sí. El cambio está en espera.',
+      learnerCap: (name: string) => `${name} ya está en el máximo de clases. Cuando deje una, el cambio puede seguir.`,
+      newCode: 'Quizá el código de tu clase se compartió durante el cambio. Puedes crear uno nuevo.',
+      waitingBoth: (date: string) => `Esperando a las otras clases. Si las dos dicen que sí, el cambio será después del ${date}. Puedes cancelar cuando quieras.`,
+      waitingOne: (date: string) => `Esperando a la otra clase. Si dice que sí, el cambio será después del ${date}. Puedes cancelar cuando quieras.`,
+      planned: (date: string) => `Hay un cambio planeado para el ${date}.`,
+      checkAgain: 'Revisa esto otra vez, por favor.',
+      moved: (name: string, className: string) => `Cambio hecho. ${name} ya está en ${className}. Sus tarjetas y estrellas siguen con ${name}.`,
+      movedTablet: (source: string) => `Una tableta que se unió con ${source} tiene que volver a unirse.`,
+      movedOwn: (name: string, className: string) => `${name} se cambió a ${className} por su cuenta.`,
+      notNowEnds: 'Si eliges "Ahora no", esta solicitud termina. Puedes empezar un cambio tú cuando quieras.',
+      manageOwn: (name: string) => `${name} gestiona sus propias clases. Pídele que empiece el cambio en su dispositivo.`,
+    },
+    history: {
+      movedOut: (noun: string) => `Un ${noun} se cambió a otra clase`,
+      joined: (noun: string) => `Un ${noun} se unió a esta clase`,
+      ended: 'Esta solicitud terminó.',
+      endedFromTablet: (name: string) => `Se terminó desde la tableta de ${name}.`,
+    },
+    actions: {
+      agree: { cta: 'Aceptar' },
+      agreeBoth: { cta: 'Aceptar por las dos clases' },
+      notNow: { cta: 'Ahora no' },
+      noRoom: { cta: 'Sin lugar' },
+      accept: { cta: 'Aceptar' },
+      cancelRequest: { cta: 'Cancelar la solicitud' },
+      cancel: { cta: 'Cancelar' },
+      tryAgain: { cta: 'Reintentar' },
+      refresh: { cta: 'Actualizar' },
+      newCode: { cta: 'Código de clase nuevo' },
+      review: { cta: 'Revisar y aceptar' },
+      view: { cta: 'Ver' },
+      backToRoster: { cta: 'Volver a la lista' },
+    },
+    states: {
+      failed: 'No se pudo enviar',
+      changed: 'Algo cambió. Míralo de nuevo.',
+      forbidden: 'Ya no puedes responder los cambios de esta clase.',
+      locked: 'Los cambios de clase aún no están disponibles.',
+      offline: 'Esto necesita internet.',
+      familyTooNew: 'Los cambios se abren un día después de crear la familia.',
+      conflicted: 'Quien enseña en esta clase no puede responder por la familia.',
+    },
+    start: {
+      move: { class: { cta: 'Cambiar a otra clase' }, family: { cta: 'Cambiar a una clase' } },
+      title: (name: string) => `Cambiar a ${name} a otra clase`,
+      step1: 'Pide el código de la otra clase a su docente.',
+      find: { cta: 'Buscar la clase' },
+      looking: { cta: 'Buscando…' },
+      found: (destination: string) => `¿Cambiar a "${destination}"?`,
+      familyFirst:
+        'Primero se pregunta a la familia. La otra clase no ve nada hasta que la familia dice que sí. Después, hasta el cambio, solo ve iniciales, una imagen y un nivel.',
+      nothingUntil: 'Nada cambia hasta que todas las partes digan que sí. Luego, hay que esperar 2 días.',
+      keeps: (name: string) => `${name} conserva sus tarjetas y estrellas. Puedes cancelar cuando quieras antes del cambio.`,
+      send: { cta: 'Enviar solicitud' },
+      sending: { cta: 'Enviando…' },
+      sent: 'Solicitud enviada. Nada cambia hasta que todas las partes digan que sí.',
+      learner: 'Estudiante',
+      nowIn: 'Ahora en',
+      newCode: 'Código de clase nueva',
+      noLearner: 'Por ahora, ningún estudiante de aquí está en una clase.',
+      prefs: 'No aceptar solicitudes de cambio de docentes',
+    },
+    errors: {
+      codeNotFound: 'Ese código no funcionó.',
+      codeExpired: 'Ese código ya es muy antiguo. Pide uno nuevo.',
+      full: 'Por ahora esa clase está llena.',
+      alreadyMember: (name: string) => `${name} ya está en esa clase.`,
+      tooManyAttempts: 'Demasiados intentos. Reintenta más tarde.',
+      cannotSend: 'Ahora no se puede enviar esta solicitud.',
+      familyNeeded: 'Para responder esto hace falta una cuenta familiar. Pide a la familia que empiece el cambio desde su app.',
+      sameSpace: (name: string) => `Ese código es de la clase donde está ${name} ahora.`,
+      alreadyOpen: (name: string) => `${name} ya tiene un cambio pendiente.`,
+      alreadyOpenClass: (name: string) => `Una clase ya preguntó por el cambio de ${name}. Su tarjeta está arriba.`,
+      alreadyOpenFamily: (name: string) => `Ya hay un cambio pendiente para ${name}. Su tarjeta está arriba.`,
+      destinationBusy: 'Esa clase tiene muchos cambios pendientes. Reintenta en unos días.',
+      tooManyRequests: 'Hoy se empezaron demasiados cambios. Reintenta mañana.',
+      notTransferable: 'Ese código no sirve para un cambio de clase.',
+      cooldown: 'Puedes volver a pedirlo en una semana, más o menos.',
+      localeUnavailable: 'Aún no está disponible en tu idioma.',
+    },
     consent: {
       title: (name: string, destination: string) => `¿Cambiar a ${name} a ${destination}?`,
       language: 'Idioma',
-      who: '¿Quién es la nueva clase?',
+      who: '¿Cómo es la nueva clase?',
       teacher: (owner: string) => `Docente: ${owner}`,
       learners: (n: number) => plural('es', n, { one: `${n} estudiante`, other: `${n} estudiantes` }),
       age: { days: 'Tiene menos de una semana', weeks: 'Tiene unas semanas', months: 'Tiene unos meses', years: 'Tiene más de un año' },
@@ -1316,7 +1489,16 @@ export const consoleMsgs = {
       tryAgain: { cta: 'Reintentar' },
       failed: 'No se pudo enviar',
     },
-    a11y: { close: 'Cerrar' },
+    a11y: {
+      steps: 'Quién dijo que sí',
+      reasons: 'Elige una respuesta',
+      notNowReasons: 'Ahora no: elige un motivo',
+      updated: 'Cambios de clase actualizados.',
+      to: 'a',
+      close: 'Cerrar',
+      moveRow: (name: string) => `Cambiar a ${name} a otra clase`,
+      moveRowFamily: (name: string) => `Cambiar a ${name} a una clase`,
+    },
   },
   /** All lessons from the console (F-BROWSE-001 BR-10, BR-11). */
   browse: {
