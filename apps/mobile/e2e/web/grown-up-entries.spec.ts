@@ -113,8 +113,15 @@ function personaButtonsFit(page: Page): Promise<boolean> {
 
 /** Side by side (one line) when both fit, else stacked: Teacher under Parent or caregiver, both the row's width. */
 async function expectPersonaRow(page: Page, sideBySide: boolean): Promise<void> {
-  const p = await page.getByTestId('welcome-grown-ups-parent').boundingBox();
-  const t = await page.getByTestId('welcome-grown-ups-teacher').boundingBox();
+  // Both boxes from one layout: after a viewport change Welcome settles (the column moves up by a few
+  // pixels), so two separate boundingBox() reads can land on either side of that shift and report a
+  // side-by-side row as misaligned.
+  const [p, t] = await page.evaluate(() =>
+    ['welcome-grown-ups-parent', 'welcome-grown-ups-teacher'].map((id) => {
+      const box = document.querySelector<HTMLElement>(`[data-testid="${id}"]`)?.getBoundingClientRect();
+      return box ? { x: box.x, y: box.y, width: box.width, height: box.height } : null;
+    }),
+  );
   expect(p).not.toBeNull();
   expect(t).not.toBeNull();
   if (!p || !t) return;
