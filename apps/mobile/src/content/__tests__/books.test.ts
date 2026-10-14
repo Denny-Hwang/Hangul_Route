@@ -15,11 +15,28 @@ import { STORY_QUEST_COPY, STORY_STEP_SECONDS, storyQuestSkeleton } from '../sto
 
 /** F-STORY-005 §3.2 "Books", §3.3 book plan, PR 5.6. */
 describe('Stage 5 books (books.ts)', () => {
-  it('ships the rites book first, with the placeholder id and the planned three stories', () => {
-    expect(bookEpisodes.map((e) => e.id)).toEqual(['episode:stage5-rites']);
-    const [rites] = bookEpisodes;
-    expect(rites?.titleEn).toBe('Festival Tales');
-    expect(rites?.storyIds).toEqual(['story:seollal-new-year', 'story:dano-ssireum', 'story:chuseok-ganggangsullae']);
+  it('ships all five Stage 5 books in grid order, each with its placeholder id, its planned title and stories (§3.3 book plan)', () => {
+    expect(bookEpisodes.map((e) => [e.id, e.order, e.titleEn, e.storyIds])).toEqual([
+      ['episode:stage5-letters', 1, 'Stories of Letters', ['story:sejong-new-letters', 'story:shapes-of-hangeul', 'story:hangeul-day']],
+      ['episode:stage5-life', 2, 'Family Stories', ['story:gimjang-arirang', 'story:kim-hongdo-genre-paintings', 'story:donguibogam']],
+      ['episode:stage5-rites', 3, 'Festival Tales', ['story:seollal-new-year', 'story:dano-ssireum', 'story:chuseok-ganggangsullae']],
+      ['episode:stage5-nature', 4, 'Tiger Folktales', ['story:sun-and-moon', 'story:angbuilgu-sundial']],
+      ['episode:stage5-crafts', 5, 'Craft Stories', ['story:cheugugi-rain-gauge', 'story:jagyeongnu-water-clock', 'story:pansori-tales']],
+    ]);
+  });
+
+  it('every book carries its pillar tags and a minute total equal to its quests', () => {
+    expect(Object.fromEntries(bookEpisodes.map((e) => [e.id, e.pillarTags]))).toEqual({
+      'episode:stage5-letters': ['A1'],
+      'episode:stage5-life': ['B1', 'B5', 'E4'],
+      'episode:stage5-rites': ['B5'],
+      'episode:stage5-nature': ['D5', 'E5'],
+      'episode:stage5-crafts': ['E3', 'C3'],
+    });
+    for (const book of bookEpisodes) {
+      const minutes = book.questIds.reduce((n, id) => n + (bookQuests.find((q) => q.id === id)?.estimatedMinutes ?? 0), 0);
+      expect(book.estimatedMinutes, book.id).toBe(minutes);
+    }
   });
 
   it.each(bookEpisodes.map((e) => [e.id, e] as const))('%s is a valid grid story book of its Stage 5 cell', (_id, book) => {
@@ -69,11 +86,19 @@ describe('Stage 5 books (books.ts)', () => {
 });
 
 describe('buildBook: content trouble never breaks the app (F-STORY-001 §3.7 holds)', () => {
-  const rites = BOOK_DEFINITIONS[0]!;
+  const rites = BOOK_DEFINITIONS.find((d) => d.id === 'episode:stage5-rites')!;
   const lookup = (id: string): Story | undefined => storyById(id);
 
-  it('builds the shipped book from the bundle', () => {
-    expect(buildBook(rites, lookup)?.episode).toEqual(bookEpisodes[0]);
+  it('builds every shipped book from the bundle', () => {
+    for (const definition of BOOK_DEFINITIONS) {
+      expect(buildBook(definition, lookup)?.episode, definition.id).toEqual(bookEpisodes.find((e) => e.id === definition.id));
+    }
+  });
+
+  it('the two-story nature book stays a placeholder when one of its stories is held', () => {
+    const nature = BOOK_DEFINITIONS.find((d) => d.id === 'episode:stage5-nature')!;
+    expect(buildBook(nature, lookup)?.episode.questIds).toEqual(['quest:story-sun-and-moon-read', 'quest:story-angbuilgu-sundial-read']);
+    expect(buildBook(nature, (id) => (id === 'story:angbuilgu-sundial' ? undefined : lookup(id)))).toBeNull();
   });
 
   it('leaves out a story that is held (not bundled), unreviewed or has no read tier', () => {

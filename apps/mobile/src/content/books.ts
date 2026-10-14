@@ -13,7 +13,8 @@ import { storyQuestSkeleton } from './story-skeleton';
  * the build can only see the story-level review tokens; the per-tier review
  * (the read tier's verification notes) is enforced in CI by books.test.ts. A cell
  * stays a placeholder until its book has at least two reviewed quests (§3.1
- * rule 5). Stage 5 opens cell by cell (PR 5.6): the rites book first.
+ * rule 5). Stage 5 opened cell by cell (PR 5.6): the rites book first, then the
+ * letters, life, nature and crafts books.
  */
 
 /** A book as authored: everything but the quests, which come from its stories. */
@@ -32,6 +33,26 @@ export interface BookDefinition {
 /** The books, in grid order. */
 export const BOOK_DEFINITIONS: readonly BookDefinition[] = [
   {
+    id: 'episode:stage5-letters',
+    stage: 'stage5',
+    theme: 'letters',
+    order: 1,
+    titleEn: 'Stories of Letters',
+    hoyaIntroEn: "Let's read stories about Hangul in Korean, one short sentence at a time.",
+    storyIds: ['story:sejong-new-letters', 'story:shapes-of-hangeul', 'story:hangeul-day'],
+    pillarTags: ['A1'],
+  },
+  {
+    id: 'episode:stage5-life',
+    stage: 'stage5',
+    theme: 'life',
+    order: 2,
+    titleEn: 'Family Stories',
+    hoyaIntroEn: "Let's read stories of everyday life in Korean, one short sentence at a time.",
+    storyIds: ['story:gimjang-arirang', 'story:kim-hongdo-genre-paintings', 'story:donguibogam'],
+    pillarTags: ['B1', 'B5', 'E4'],
+  },
+  {
     id: 'episode:stage5-rites',
     stage: 'stage5',
     theme: 'rites',
@@ -40,6 +61,26 @@ export const BOOK_DEFINITIONS: readonly BookDefinition[] = [
     hoyaIntroEn: "Let's read festival stories in Korean, one short sentence at a time.",
     storyIds: ['story:seollal-new-year', 'story:dano-ssireum', 'story:chuseok-ganggangsullae'],
     pillarTags: ['B5'],
+  },
+  {
+    id: 'episode:stage5-nature',
+    stage: 'stage5',
+    theme: 'nature',
+    order: 4,
+    titleEn: 'Tiger Folktales',
+    hoyaIntroEn: "Let's read stories of the sun and the sky in Korean, one short sentence at a time.",
+    storyIds: ['story:sun-and-moon', 'story:angbuilgu-sundial'],
+    pillarTags: ['D5', 'E5'],
+  },
+  {
+    id: 'episode:stage5-crafts',
+    stage: 'stage5',
+    theme: 'crafts',
+    order: 5,
+    titleEn: 'Craft Stories',
+    hoyaIntroEn: "Let's read stories of clever makers and old tales in Korean, one short sentence at a time.",
+    storyIds: ['story:cheugugi-rain-gauge', 'story:jagyeongnu-water-clock', 'story:pansori-tales'],
+    pillarTags: ['E3', 'C3'],
   },
 ];
 
