@@ -541,8 +541,10 @@ function repinClosed(cards: readonly MissionCard[], input: BuildMissionInput): r
  * local day (P5) while the rest of the plan stays pinned to its UTC day (F-HW-001 section 3.2).
  * When the local day of a pinned plan changes, a vocabulary card in slot (3) is derived again
  * (a fresh card for the new day's due words, or the next card of slot (3)'s chain when fewer than
- * three are due), and a slot (3) card the learner has not collected gives way to the vocabulary
- * card when words are now due. A collected card and the Daily Test stay. Cards (1) and (2) never move.
+ * three are due; with nothing left in the chain the old card is dropped, as a fresh plan leaves
+ * slot (3) empty), and a slot (3) card the learner has not collected gives way to the vocabulary
+ * card when words are now due, except a story the learner has started ("Keep reading"), which
+ * stays until it is finished. A collected card and the Daily Test stay. Cards (1) and (2) never move.
  */
 function repinVocabDay(pinned: MissionPlan, input: BuildMissionInput): readonly MissionCard[] {
   const cards = pinned.cards;
@@ -555,7 +557,9 @@ function repinVocabDay(pinned: MissionPlan, input: BuildMissionInput): readonly 
     const used: Used = { quests: new Set(), episodes: new Set(), stories: new Set() };
     for (const other of cards) if (other !== card) use(used, other.slot === 2 ? { ...other, episodeId: undefined } : other, input);
     replacement = firstOf(SLOT_3_CHAIN, 3, { ...input, vocabCarry: null }, used);
-  } else if (input.vocab && !isCollected(card, input, card.collected)) {
+    // Yesterday's card, with yesterday's count, never stays: nothing else to offer leaves slot (3) empty.
+    if (replacement === null) return cards.filter((_, i) => i !== index);
+  } else if (input.vocab && !isCollected(card, input, card.collected) && !(card.kind === 'story' && refreshedReason(card, input) === 'continue')) {
     replacement = vocabCard(input.vocab);
   }
   if (replacement === null) return cards;
