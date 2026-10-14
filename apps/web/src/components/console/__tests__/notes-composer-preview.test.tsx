@@ -136,8 +136,17 @@ describe('composer quest row: the prop left out, the flags decide after mount', 
     act(() => r.unmount());
   });
 
-  it('absent when All lessons is off (the default build)', async () => {
-    vi.stubEnv('NEXT_PUBLIC_BROWSE', '');
+  it('shown on a build that sets no All lessons value (on by default since F-BROWSE-001 BR-14)', async () => {
+    vi.stubEnv('NEXT_PUBLIC_BROWSE', undefined);
+    vi.stubEnv('NEXT_PUBLIC_NOTES_ENABLED', 'true');
+    at('https://app.hangulroute.com');
+    const r = await mount({ prefillQuest: QUEST });
+    expect(browseLinks(r).map((n) => n.props.href)).toEqual([`/browse#t=${QUEST}&s=notes`]);
+    act(() => r.unmount());
+  });
+
+  it('absent when All lessons is switched off (NEXT_PUBLIC_BROWSE=false)', async () => {
+    vi.stubEnv('NEXT_PUBLIC_BROWSE', 'false');
     vi.stubEnv('NEXT_PUBLIC_NOTES_ENABLED', 'true');
     at('https://app.hangulroute.com');
     const r = await mount({ prefillQuest: QUEST });

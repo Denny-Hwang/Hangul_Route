@@ -437,7 +437,15 @@ describe('Browse links on the report (RP-13, behind browseEnabled() on the app o
     expect(hrefs.join(' ')).not.toMatch(/profile|mina|space|sunflower/i);
   });
 
-  it('off: browseEnabled() unset draws no link; letters stay text', async () => {
+  it('on by default: a build that sets no value links the letters (F-BROWSE-001 BR-14)', async () => {
+    vi.stubEnv('NEXT_PUBLIC_BROWSE', undefined);
+    vi.stubGlobal('window', appWindow('https://app.hangulroute.com'));
+    const root = await page();
+    expect(browseHrefs(root)).toContain('/browse#t=char:%E3%85%82&s=report');
+  });
+
+  it('off: NEXT_PUBLIC_BROWSE=false draws no link; letters stay text', async () => {
+    vi.stubEnv('NEXT_PUBLIC_BROWSE', 'false');
     vi.stubGlobal('window', appWindow('https://app.hangulroute.com'));
     const root = await page();
     expect(browseHrefs(root)).toEqual([]);

@@ -12,7 +12,7 @@
  * | `learningRoute`                    | F-ROUTE-001 R-10 flag flip (Learning Route amendment LR-10 keeps it)     |
  * | `parentReports`, `teacherReports`  | F-REPORT-001 RP-11 (flipped on)                                          |
  * | `feedbackNotes`                    | F-FEEDBACK-001 FB-14 (flipped on)                                        |
- * | `browseAsLearner`                  | F-BROWSE-001 BR-14 flag flip (paid line: needs `paidPlans: 'inApp'`)     |
+ * | `browseAsLearner`                  | F-BROWSE-001 BR-14 (flipped on; paid line: needs `paidPlans: 'inApp'`)   |
  * | `lectureMode`                      | the PR after the owner sets `NEXT_PUBLIC_LECTURE_MODE=enabled` on the    |
  * |                                    | production console build (F-TCH-004 names no flip PR yet)                |
  * | `paidPlans: 'inApp'`               | a PR after the owner turns on Stripe Live (sandbox never counts)         |
@@ -63,7 +63,8 @@ export const SITE_CLAIMS: Readonly<SiteClaims> = Object.freeze({
   teacherReports: true,
   // F-FEEDBACK-001 FB-14: both notes flags are on by default in the console and the learner app.
   feedbackNotes: true,
-  browseAsLearner: false,
+  // F-BROWSE-001 BR-14: the console Lessons entry is on by default (a paid line: the site shows it with paidPlans 'inApp').
+  browseAsLearner: true,
   lectureMode: false,
 });
 
