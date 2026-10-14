@@ -1,6 +1,6 @@
 import type { RomanizationMode, SpeechLang } from '@hangul-route/content-schema';
 import type { PlaySpec } from '../audio/controller';
-import type { BuildName, NarrationPiece } from './build-steps';
+import type { BuildName, KoLine, NarrationPiece } from './build-steps';
 
 /**
  * The story slides' pure decisions (F-TCH-004 PR 11; design/screens/presenter/slide-story.md,
@@ -48,4 +48,21 @@ export type QuizMarkerShape = (typeof QUIZ_MARKERS)[number];
 /** The marker of the option at `index`: circle 1, triangle 2, square 3, star 4 (section 3.4). */
 export function quizMarker(index: number): { shape: QuizMarkerShape; n: number } {
   return { shape: QUIZ_MARKERS[index % QUIZ_MARKERS.length]!, n: index + 1 };
+}
+
+const TARGET_TOKEN = '{target}';
+
+export type CheckPromptPart = { text: string } | { target: KoLine };
+
+/**
+ * A story check's prompt in parts (F-STORY-003): the text around the `{target}` token, with the
+ * target word in its place. A prompt without the token keeps its target out of the line (the
+ * slide draws it after the question).
+ */
+export function checkPromptParts(text: string, target: KoLine | undefined): CheckPromptPart[] {
+  const at = text.indexOf(TARGET_TOKEN);
+  if (at < 0 || !target) return [{ text }];
+  const before = text.slice(0, at);
+  const after = text.slice(at + TARGET_TOKEN.length);
+  return [...(before ? [{ text: before }] : []), { target }, ...(after ? [{ text: after }] : [])];
 }

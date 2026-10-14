@@ -3,6 +3,7 @@ import type { BuildName, NarrationPiece } from '../build-steps';
 import {
   PRESENTER_AUDIO_SOURCE,
   QUIZ_MARKERS,
+  checkPromptParts,
   quizMarker,
   quizOptionRomShown,
   romShown,
@@ -79,5 +80,19 @@ describe('quizMarker (section 3.4)', () => {
 
   it('wraps past four (the schema allows at most four options)', () => {
     expect(quizMarker(4)).toEqual({ shape: 'circle', n: 5 });
+  });
+});
+
+describe('checkPromptParts (story checks, D14)', () => {
+  const target = { ko: 'target-ko', romanization: 'sacho', gloss: 'draft notes' };
+
+  it('puts the target where the prompt holds {target}', () => {
+    expect(checkPromptParts('Who could read {target}?', target)).toEqual([{ text: 'Who could read ' }, { target }, { text: '?' }]);
+    expect(checkPromptParts('{target}', target)).toEqual([{ target }]);
+  });
+
+  it('a prompt without the token, or without a target, is its own text', () => {
+    expect(checkPromptParts('Who created Hangul?', undefined)).toEqual([{ text: 'Who created Hangul?' }]);
+    expect(checkPromptParts('Who created Hangul?', target)).toEqual([{ text: 'Who created Hangul?' }]);
   });
 });

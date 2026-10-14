@@ -766,6 +766,7 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'caregiver.dashboard.words.counts': [[1, 0], [24, 7]],
   'caregiver.dashboard.words.firstTry': [[0], [85]],
   'a11y.presenter.slide': [[5, 71, 'Letter, x, g/k']],
+  'a11y.presenter.option': [[3, 'square']],
   'learner.presenter.bar.counter': [[5, 71]],
   'learner.presenter.slide.letterName': [['giyeok']],
   'learner.presenter.slide.end.more': [[1], [7]],

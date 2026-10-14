@@ -9,6 +9,9 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { canPlayKorean, type AudioCapability } from './src/logic/audio/capability';
 import { lectureBundle } from './src/logic/lecture/content';
+import { lectureStories } from './src/logic/lecture/sources/story';
+import { storyNarrationSteps } from './src/logic/lecture/story-slides';
+import { createAudioRunner } from './src/logic/story/audio-runner';
 import { initialPresenterState, reduce, type PresenterEvent, type PresenterState } from './src/logic/lecture/controls';
 import { expandDeck, withBuilds, type Slide } from './src/logic/lecture/deck-builder';
 import type { KeyCommand } from './src/logic/lecture/keymap';
@@ -40,7 +43,7 @@ import { FONT_WAIT_MS, stageBox } from './src/logic/lecture/stage-constants';
 import { BAR_BAND, STAGE_BOUNDS } from './src/screens/presenter/stage-metrics';
 import { slideSound } from './src/logic/lecture/slide-view';
 import { stageScale } from './src/logic/lecture/stage-scale';
-import { getCapability, playPrompt, refreshCapability, subscribeCapability, unlockAudio } from './src/platform/audio';
+import { getCapability, playPrompt, refreshCapability, stop as stopAudio, subscribeCapability, unlockAudio } from './src/platform/audio';
 import { setDocumentLang } from './src/platform/locale';
 import { useReducedMotion } from './src/platform/motion';
 import {
@@ -195,6 +198,9 @@ export default function PresenterApp(): React.ReactElement {
   }, [messages, locale]);
 
   const bundle = useMemo(() => lectureBundle(locale), [locale]);
+  // Story scenes for the story slides: art, theme, accessible name and Read-to-me's voice (PR 11).
+  const stories = useMemo(() => lectureStories(locale), [locale]);
+  const narrator = useMemo(() => createAudioRunner({ playPrompt, stop: stopAudio }), []);
   const canPlay = canPlayKorean(capability);
   const expanded = useMemo(() => (deck ? expandDeck(deck, bundle, { canPlayKorean: canPlay }) : null), [deck, bundle, canPlay]);
   const run = useMemo(() => (deck && expanded ? runDeck(deck, expanded, SHELL_SLIDE_KINDS, supportedCardIds) : null), [deck, expanded]);
@@ -262,12 +268,20 @@ export default function PresenterApp(): React.ReactElement {
 
   const playSound = useCallback(
     (slide: Slide | undefined) => {
+      if (!slide || !deck?.options.sound) return;
+      if (slide.kind === 'story') {
+        // Read-to-me (S or Sound): the narration in its own voice, keyword chips in Korean. Without a
+        // Korean voice the English still plays; the text is on the slide either way (D6).
+        const lang = stories.scene(slide.storyId, slide.sceneId)?.narrationLang ?? 'en-US';
+        void narrator.play(storyNarrationSteps(slide.narration, lang), { skipUnavailableKorean: true });
+        return;
+      }
       const spoken = slideSound(slide);
-      if (!spoken || !deck?.options.sound) return;
+      if (!spoken) return;
       const { text, audioRef } = spoken;
       void playPrompt({ text, ...(audioRef !== undefined ? { audioRef } : {}), kind: 'sound', source: 'presenter' });
     },
-    [deck],
+    [deck, stories, narrator],
   );
 
   const dispatch = useCallback(
@@ -278,6 +292,8 @@ export default function PresenterApp(): React.ReactElement {
       stateRef.current = state;
       setPstate(state);
       if (tally.current) tally.current = tallyStep(tally.current, before, state, slides);
+      // A story's Read-to-me never runs on into the next slide.
+      if (state.slideIdx !== before.slideIdx) narrator.stop();
       if (state.slideIdx !== before.slideIdx && deck) {
         const key = slides[state.slideIdx]!.key;
         updateRecent((list) => setLastSlide(list, deck.id, key));
@@ -293,7 +309,7 @@ export default function PresenterApp(): React.ReactElement {
       setStrokePlay((current) => nextStrokePlay(current, { slideKey, play: playStroke }));
       if (revealedBuild === 'sound' || effect?.type === 'play-sound') playSound(slides[state.slideIdx]);
     },
-    [slides, deck, playSound, updateRecent],
+    [slides, deck, playSound, updateRecent, narrator],
   );
 
   const toggleFullscreen = useCallback(() => {
@@ -559,6 +575,8 @@ export default function PresenterApp(): React.ReactElement {
                 joinCta={messages.caregiver.spaces.join.cta}
                 onCommand={dispatch}
                 onPlaySound={() => dispatch('replay-sound')}
+                romanization={romanization ?? phase.deck.options.romanization}
+                storyScene={stories.scene}
               />
             </PresenterViewProvider>
           )}

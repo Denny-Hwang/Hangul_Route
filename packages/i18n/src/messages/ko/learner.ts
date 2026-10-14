@@ -1423,7 +1423,7 @@ export const learner = {
         end: '마무리',
       },
     },
-    quiz: { playPrompt: '소리 듣기' },
+    quiz: { playPrompt: '소리 듣기', answer: '호야의 답' },
     activity: {
       'air-write': '허공에 써 보기',
       'say-together': '함께 소리 내어 읽기',

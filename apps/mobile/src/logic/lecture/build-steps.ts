@@ -31,8 +31,11 @@ export type QuizPrompt =
   | { ask: 'meaning'; ko: string; romanization: string }
   /** Odd One Out: which letter is not like the others (the question is a catalogue string). */
   | { ask: 'odd-one-out' }
-  /** A story check: its own prompt (`{target}` stands for the target word). */
-  | { ask: 'check'; text: string; target?: KoLine };
+  /**
+   * A story check: its own prompt (`{target}` stands for the target word). `glossAtAnswer`: a
+   * pick-meaning or fill-word check, whose target gloss would give the answer away before the reveal.
+   */
+  | { ask: 'check'; text: string; target?: KoLine; glossAtAnswer?: true };
 
 /** A quiz option; the screen adds the shape + number marker by position (§3.4). */
 export interface QuizOption {

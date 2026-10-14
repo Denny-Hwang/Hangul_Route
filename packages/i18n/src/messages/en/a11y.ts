@@ -343,7 +343,9 @@ export const a11y = {
   /** The lecture presenter (F-TCH-004 PR 6): the stage's polite live region; `what` is the kind label and the slide's words. */
   presenter: {
     slide: (i: number, n: number, what: string) => `Slide ${i} of ${n}, ${what}`,
-    /** A shape and number marker (the order slide, PR 7; the quiz options, PR 9). */
+    /** The check mark on the revealed option of a quiz (section 3.10). */
+    answerMark: "Hoya's answer",
+    /** A shape and number marker (the order slide, PR 7; the quiz options, PR 9 and the story checks, PR 11). */
     option: (n: number, shape: string) => `Option ${n}, ${shape}`,
     shape: { circle: 'circle', triangle: 'triangle', square: 'square', star: 'star' },
     removeRecent: (t: string) => `Remove: ${t}`,

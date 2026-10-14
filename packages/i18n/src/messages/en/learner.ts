@@ -1859,6 +1859,8 @@ export const learner = {
     quiz: {
       /** The speaker button on the stage. */
       playPrompt: 'Play the sound',
+      /** Joins the question row at the teacher's reveal (section 3.10, README D6). */
+      answer: "Hoya's answer",
     },
     /** Activity preset names on the activity slide (PR 7): the same values as `console.lecture.activity`. */
     activity: {

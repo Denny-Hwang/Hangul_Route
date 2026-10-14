@@ -1422,7 +1422,7 @@ export const learner = {
         end: 'Final',
       },
     },
-    quiz: { playPrompt: 'Escuchar el sonido' },
+    quiz: { playPrompt: 'Escuchar el sonido', answer: 'La respuesta de Hoya' },
     activity: {
       'air-write': 'Escribir en el aire',
       'say-together': 'Decirlo en grupo',

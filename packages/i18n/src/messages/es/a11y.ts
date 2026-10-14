@@ -229,6 +229,7 @@ export const a11y = {
   },
   presenter: {
     slide: (i: number, n: number, what: string) => `Diapositiva ${i} de ${n}, ${what}`,
+    answerMark: 'La respuesta de Hoya',
     option: (n: number, shape: string) => `Opción ${n}, ${shape}`,
     shape: { circle: 'círculo', triangle: 'triángulo', square: 'cuadrado', star: 'estrella' },
     removeRecent: (t: string) => `Quitar: ${t}`,

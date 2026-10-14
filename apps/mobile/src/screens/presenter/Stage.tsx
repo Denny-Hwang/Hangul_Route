@@ -1,9 +1,11 @@
 import { colors, presenter, radii, spacing, typography } from '@hangul-route/design-system';
 import React, { useRef } from 'react';
 import { Text, View, type GestureResponderEvent, type ViewStyle } from 'react-native';
+import type { RomanizationMode } from '@hangul-route/content-schema';
 import type { BuildName } from '../../logic/lecture/build-steps';
 import type { Slide } from '../../logic/lecture/deck-builder';
 import { gestureCommand, slideDetail } from '../../logic/lecture/shell';
+import type { LectureSceneView } from '../../logic/lecture/sources/story';
 import { units } from '../../logic/lecture/stage-constants';
 import { STAGE_PADDING } from './stage-metrics';
 import type { StageScale } from '../../logic/lecture/stage-scale';
@@ -14,6 +16,8 @@ import { EndSlide } from './slides/EndSlide';
 import { LetterSlide } from './slides/LetterSlide';
 import { SequenceSlide } from './slides/SequenceSlide';
 import { SyllableSlide } from './slides/SyllableSlide';
+import { StoryCheckSlide, isStoryCheck } from './slides/StoryCheckSlide';
+import { StorySlide } from './slides/StorySlide';
 import { TitleSlide } from './slides/TitleSlide';
 import { VocabSlide } from './slides/VocabSlide';
 
@@ -35,6 +39,10 @@ export interface StageProps {
   onPlaySound: () => void;
   /** An activity slide's [ Start timer ]; absent until the timer overlay ships (PR 9), so the button is disabled. */
   onStartTimer?: (ms: number) => void;
+  /** The deck's romanization mode now (the live flip included), for quiz options (D2). */
+  romanization: RomanizationMode;
+  /** A listed story's scene: its art, theme and accessible name (`sources/story.ts`). */
+  storyScene: (storyId: string, sceneId: string) => LectureSceneView | undefined;
 }
 
 export function Stage(props: StageProps): React.ReactElement {
@@ -99,7 +107,11 @@ export function Stage(props: StageProps): React.ReactElement {
       </Text>
       <View style={{ flex: 1 }} key={slide.key}>
         {slide.kind === 'title' ? (
-          <TitleSlide slide={slide} {...(slideIdx === 0 ? { deckTitle: props.deckTitle } : {})} />
+          <TitleSlide
+            slide={slide}
+            {...(slideIdx === 0 ? { deckTitle: props.deckTitle } : {})}
+            {...(slide.cover !== undefined ? { cover: props.storyScene(slide.cover.storyId, slide.cover.sceneId) } : {})}
+          />
         ) : slide.kind === 'letter' ? (
           <LetterSlide slide={slide} shown={shown} strokeToken={props.strokeToken} onPlaySound={props.onPlaySound} />
         ) : slide.kind === 'syllable' ? (
@@ -112,6 +124,10 @@ export function Stage(props: StageProps): React.ReactElement {
           <CardSlide slide={slide} reveal={reveal} />
         ) : slide.kind === 'activity' ? (
           <ActivitySlide slide={slide} {...(props.onStartTimer ? { onStartTimer: props.onStartTimer } : {})} />
+        ) : slide.kind === 'story' ? (
+          <StorySlide slide={slide} shown={shown} scene={props.storyScene(slide.storyId, slide.sceneId)} />
+        ) : isStoryCheck(slide) ? (
+          <StoryCheckSlide slide={slide} shown={shown} romanization={props.romanization} />
         ) : slide.kind === 'end' ? (
           <EndSlide slide={slide} joinCta={props.joinCta} />
         ) : null}

@@ -4,7 +4,9 @@ import { Text, View } from 'react-native';
 import type { Slide } from '../../../logic/lecture/deck-builder';
 import { HOYA_STAGE, units } from '../../../logic/lecture/stage-constants';
 import { STAGE_BORDER, STAGE_BORDER_MIN, STAGE_GAP, STAGE_GAP_INNER, STAGE_RADIUS } from '../stage-metrics';
+import type { LectureSceneView } from '../../../logic/lecture/sources/story';
 import { usePresenterView, useStageText } from '../presenter-context';
+import { StoryArt } from './StoryArt';
 
 type TitleBody = Extract<Slide, { kind: 'title' }>;
 
@@ -12,14 +14,19 @@ type TitleBody = Extract<Slide, { kind: 'title' }>;
  * Title slide (design/screens/presenter/slide-title.md): Hoya waving (idle on a topic title) and,
  * beside it, the deck title as a caption on the first slide only (teacher text, README D17), the
  * title, the subtitle and Hoya's line in a bubble. One build; every word is the content's own.
+ * A story title shows its cover scene instead of Hoya, and the "Story" kind label (PR 11).
  */
-export function TitleSlide({ slide, deckTitle }: { slide: TitleBody; deckTitle?: string }): React.ReactElement {
+export function TitleSlide({ slide, deckTitle, cover }: { slide: TitleBody; deckTitle?: string; cover?: LectureSceneView | undefined }): React.ReactElement {
   const { unit, messages } = usePresenterView();
   const size = useStageText();
   const pose = slide.source === 'topic' ? 'idle' : 'waving';
   return (
     <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: units(unit, STAGE_GAP) }}>
-      <Hoya pose={pose} size={units(unit, HOYA_STAGE)} accessibilityLabel={messages.a11y.hoya(pose)} />
+      {slide.cover !== undefined ? (
+        <StoryArt scene={cover} testID="presenter-story-cover" />
+      ) : (
+        <Hoya pose={pose} size={units(unit, HOYA_STAGE)} accessibilityLabel={messages.a11y.hoya(pose)} />
+      )}
       <View style={{ flex: 1, gap: units(unit, STAGE_GAP_INNER) }}>
         {deckTitle !== undefined ? (
           <Text
@@ -27,6 +34,11 @@ export function TitleSlide({ slide, deckTitle }: { slide: TitleBody; deckTitle?:
             style={{ fontSize: size(presenter.size.caption), color: colors.text.secondary, lineHeight: Math.round(size(presenter.size.caption) * typography.leading.tight) }}
           >
             {deckTitle}
+          </Text>
+        ) : null}
+        {slide.source === 'story' ? (
+          <Text style={{ fontSize: size(presenter.size.caption), fontWeight: typography.weight.semibold, color: colors.text.secondary }}>
+            {messages.learner.presenter.grid.kind.story}
           </Text>
         ) : null}
         <Text

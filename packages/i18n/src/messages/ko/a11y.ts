@@ -232,6 +232,7 @@ export const a11y = {
   },
   presenter: {
     slide: (i: number, n: number, what: string) => `슬라이드 ${i}/${n}, ${what}`,
+    answerMark: '호야의 답',
     option: (n: number, shape: string) => `${n}번, ${shape}`,
     shape: { circle: '동그라미', triangle: '세모', square: '네모', star: '별' },
     removeRecent: (t: string) => `지우기: ${t}`,
