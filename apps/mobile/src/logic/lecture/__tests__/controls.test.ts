@@ -224,6 +224,14 @@ describe('opening and closing overlays', () => {
     expect(run(at(1, 0, { overlay: 'help', timerOpen: true }), { overlay: 'timer' })).toMatchObject({ overlay: null, timerOpen: true });
     expect(run(at(1, 0, { overlay: 'help' }), { overlay: 'timer' })).toMatchObject({ overlay: null, timerOpen: true });
   });
+
+  it.each(['picker', 'blank', 'pause', 'grid', 'help'] as const)('opening an empty timer full screen over %s brings it forward', (overlay) => {
+    expect(run(at(1, 0, { overlay }), { timerMode: 'full' })).toMatchObject({ overlay: null, timerOpen: true, timerMode: 'full' });
+  });
+
+  it('switching an open timer between corner and full keeps the covering overlay as it is', () => {
+    expect(run(at(1, 0, { timerOpen: true, timerMode: 'full' }), { timerMode: 'corner' })).toMatchObject({ overlay: null, timerMode: 'corner' });
+  });
 });
 
 describe('a running corner timer survives other overlays (activity slide: Start timer, then P)', () => {
@@ -244,6 +252,19 @@ describe('a running corner timer survives other overlays (activity slide: Start 
     const afterTwo = run(afterOne, 'escape');
     expect(afterTwo).toMatchObject({ overlay: null, timerOpen: false });
     expect(run(afterTwo, 'escape').overlay).toBe('exit');
+  });
+});
+
+describe('close-timer: the timer card\'s own Close (PR 9)', () => {
+  it('closes the timer and leaves a covering overlay where it is', () => {
+    const covered = at(1, 0, { overlay: 'picker', timerOpen: true });
+    expect(run(covered, 'close-timer')).toMatchObject({ overlay: 'picker', timerOpen: false });
+    expect(run(at(1, 0, { timerOpen: true, timerMode: 'full' }), 'close-timer')).toMatchObject({ overlay: null, timerOpen: false, slideIdx: 1 });
+  });
+
+  it('does nothing when the timer is not open', () => {
+    const s = at(2, 1);
+    expect(reduce(s, 'close-timer', DECK).state).toBe(s);
   });
 });
 

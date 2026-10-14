@@ -10,6 +10,7 @@ import { STROKE_DOT_RADIUS, STROKE_DOT_RING, STROKE_LINE, STROKE_PANEL, STROKE_V
 import { STAGE_BORDER, STAGE_BORDER_MIN, STAGE_GAP, STAGE_GAP_INNER, STAGE_RADIUS } from '../stage-metrics';
 import { buildStrokeDiagram } from '../../../logic/stroke-diagram';
 import { TaughtKo, usePresenterView, useStageText } from '../presenter-context';
+import { SayIt } from './SayIt';
 import { SpeakerButton } from './SpeakerButton';
 
 type LetterBody = Extract<Slide, { kind: 'letter' }>;
@@ -25,6 +26,7 @@ export function LetterSlide({
   slide,
   shown,
   strokeToken,
+  sayIt = false,
   onPlaySound,
 }: {
   slide: LetterBody;
@@ -32,6 +34,8 @@ export function LetterSlide({
   shown: ReadonlySet<BuildName>;
   /** Changes when the stroke guide should play (its build arrives, or R). */
   strokeToken: number;
+  /** The room cannot hear the Korean: the sound row becomes the "Say it:" box (section 3.7, PR 9). */
+  sayIt?: boolean;
   onPlaySound: () => void;
 }): React.ReactElement {
   const { unit, messages } = usePresenterView();
@@ -64,6 +68,11 @@ export function LetterSlide({
         </View>
       ) : null}
       <View style={{ flex: 1, gap: units(unit, STAGE_GAP_INNER) }}>
+        {sayIt ? (
+          <View style={reveal(shown.has('sound'))}>
+            <SayIt spoken={slide.spoken} {...(slide.ipa !== undefined ? { ipa: slide.ipa } : {})} />
+          </View>
+        ) : (
         <View style={[{ flexDirection: 'row', alignItems: 'center', gap: units(unit, spacing.xl) }, reveal(shown.has('sound'))]}>
           <SpeakerButton enabled={shown.has('sound')} onPress={onPlaySound} />
           <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: units(unit, spacing.md), flexShrink: 1, flexWrap: 'wrap' }}>
@@ -71,6 +80,7 @@ export function LetterSlide({
             <Text style={{ fontSize: promptSize, fontWeight: typography.weight.bold, color: colors.text.secondary }}>{slide.spoken.romanization}</Text>
           </View>
         </View>
+        )}
         <View style={[{ gap: units(unit, spacing.md) }, reveal(shown.has('name'))]}>
           <Text style={{ fontSize: bodySize, fontWeight: typography.weight.bold, color: colors.text.primary }}>{m.slide.letterName(slide.nameEn)}</Text>
           {slide.soundHint !== undefined ? (

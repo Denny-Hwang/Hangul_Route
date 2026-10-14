@@ -13,10 +13,9 @@ type ActivityBody = Extract<Slide, { kind: 'activity' }>;
  * Activity slide (design/screens/presenter/slide-activity.md): Hoya cheering, "Activity", the
  * preset's name, its minutes and a big [ Start timer ] that opens the class timer with those
  * minutes. The timer never starts by itself, only fills and shows the time left, and scores no
- * one (TD5). One build. Until the timer overlay ships (PR 9) the button is drawn and disabled, as
- * the bar's Timer is, so a press never opens an invisible timer; while disabled it is drawn as an
- * outlined button (`text.primary` on paper, `border.strong` ring) instead of the filled
- * `brand.primaryDark` action, so it never looks pressable.
+ * one (TD5). One build. The presenter passes `onStartTimer` (PR 9); without it the button is
+ * disabled and drawn outlined (`text.primary` on paper, `border.strong` ring) instead of the
+ * filled `brand.primaryDark` action, so it never looks pressable.
  */
 export function ActivitySlide({ slide, onStartTimer }: { slide: ActivityBody; onStartTimer?: (ms: number) => void }): React.ReactElement {
   const { unit, messages } = usePresenterView();

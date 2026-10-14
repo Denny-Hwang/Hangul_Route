@@ -6,6 +6,7 @@ import { syllableView } from '../../../logic/lecture/slide-view';
 import { units } from '../../../logic/lecture/stage-constants';
 import { STAGE_GAP, STAGE_GAP_INNER } from '../stage-metrics';
 import { TaughtKo, usePresenterView, useStageText } from '../presenter-context';
+import { SayIt } from './SayIt';
 import { SpeakerButton } from './SpeakerButton';
 import { revealProps } from './reveal';
 
@@ -21,7 +22,18 @@ type SyllableBody = Extract<Slide, { kind: 'syllable' }>;
  * cannot bring three glyphs to one centre. Under reduced motion the join is an instant swap with no
  * animation (spec sections 3.4 and 3.13). Going back to the parts is instant.
  */
-export function SyllableSlide({ slide, reveal, onPlaySound }: { slide: SyllableBody; reveal: number; onPlaySound: () => void }): React.ReactElement {
+export function SyllableSlide({
+  slide,
+  reveal,
+  sayIt = false,
+  onPlaySound,
+}: {
+  slide: SyllableBody;
+  reveal: number;
+  /** The room cannot hear the Korean: the speaker becomes the "Say it:" box (section 3.7, PR 9). */
+  sayIt?: boolean;
+  onPlaySound: () => void;
+}): React.ReactElement {
   const { unit, reducedMotion } = usePresenterView();
   const size = useStageText();
   const view = syllableView(slide, reveal);
@@ -85,7 +97,7 @@ export function SyllableSlide({ slide, reveal, onPlaySound }: { slide: SyllableB
               </Text>
             </View>
             <View {...revealProps(view.sound)}>
-              <SpeakerButton testID="presenter-syllable-speaker" enabled={view.sound} onPress={onPlaySound} />
+              {sayIt ? <SayIt spoken={slide.spoken} /> : <SpeakerButton testID="presenter-syllable-speaker" enabled={view.sound} onPress={onPlaySound} />}
             </View>
           </View>
         </Animated.View>

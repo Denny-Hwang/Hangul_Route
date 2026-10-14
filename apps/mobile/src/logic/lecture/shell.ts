@@ -68,8 +68,8 @@ export function presenterLocale(input: { deck: LectureDeck | null; session: UiLo
 
 // --- the slides this build draws ------------------------------------------------------------------
 
-/** Slide kinds the presenter draws: the shell's (PR 6), the teaching slides (PR 7) and the story slides (PR 11); PR 9 adds the quizzes. */
-export const SHELL_SLIDE_KINDS: ReadonlySet<SlideKind> = new Set<SlideKind>(['title', 'letter', 'syllable', 'vocab', 'sequence', 'card', 'activity', 'story', 'quiz', 'end']);
+/** Slide kinds the presenter draws: the shell's (PR 6), the teaching slides (PR 7), the quizzes (PR 9) and the story slides (PR 11). */
+export const SHELL_SLIDE_KINDS: ReadonlySet<SlideKind> = new Set<SlideKind>(['title', 'letter', 'syllable', 'vocab', 'sequence', 'card', 'quiz', 'activity', 'story', 'end']);
 
 /** One line of the start screen's "not shown as slides" list: the block that holds it and why. */
 export interface SkipPart {
@@ -99,10 +99,10 @@ export function blockIndexOfSlide(deck: Pick<LectureDeck, 'blocks'>, slideKey: s
 
 function drawable(slide: Slide, kinds: ReadonlySet<SlideKind>): boolean {
   if (!kinds.has(slide.kind)) return false;
-  if (slide.kind !== 'quiz') return true;
-  // Of the quiz slides, PR 11 draws the story checks with word options; the other quizzes, and a
-  // check whose options are pictures, come with PR 9.
-  return slide.prompt.ask === 'check' && slide.options.every((o) => o.art === undefined);
+  if (slide.kind !== 'quiz' || slide.prompt.ask !== 'check') return true;
+  // A story check is drawn by PR 11's StoryCheckSlide when its options are words; a check whose
+  // options are pictures stays one "not shown as slides" part.
+  return slide.options.every((o) => o.art === undefined);
 }
 
 /**

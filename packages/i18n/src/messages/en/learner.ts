@@ -1835,6 +1835,10 @@ export const learner = {
       grid: { cta: 'Slides' },
       fullscreen: { cta: 'Full screen' },
       exit: { cta: 'Exit' },
+      /** Status chips (PR 9, spec sections 3.7 and 3.8); nothing about a learner ever shows here. */
+      noVoice: 'No Korean voice here. You say it!',
+      offline: 'Offline. Everything still works.',
+      update: 'Update ready. It applies when you exit.',
     },
     exit: {
       title: 'Leave the lesson?',
@@ -1855,12 +1859,22 @@ export const learner = {
         activity: 'Activity',
         end: 'End',
       },
+      /** The slide grid overlay (PR 9, README D13). */
+      title: 'All slides',
+      hint: 'Choose a slide to go there. Hide a slide for this lesson only.',
+      now: 'Now',
+      hidden: 'Hidden',
+      hide: { cta: 'Hide' },
+      show: { cta: 'Show' },
     },
     quiz: {
       /** The speaker button on the stage. */
       playPrompt: 'Play the sound',
       /** Joins the question row at the teacher's reveal (section 3.10, README D6). */
       answer: "Hoya's answer",
+      /** The projected Match Sound question, with a voice and without (README D6). */
+      sound: 'Which letter makes this sound?',
+      oddOneOut: 'Which one is different?',
     },
     /** Activity preset names on the activity slide (PR 7): the same values as `console.lecture.activity`. */
     activity: {
@@ -1876,6 +1890,8 @@ export const learner = {
       letterName: (name: string) => `Letter name: ${name}`,
       /** Until a native speaker reviews the letter's strokes (section 3.6). */
       strokeCaption: 'Simplified stroke guide',
+      /** The teacher-says text when the room cannot hear the Korean (section 3.7, PR 9). */
+      sayIt: 'Say it:',
       /** The kind label above a heritage card's title (PR 7). */
       card: 'Heritage card',
       /** The kind label above a word topic's title (PR 12). */
@@ -1940,6 +1956,65 @@ export const learner = {
       /** The font wait, at most 1.5 s (section 3.6). */
       loading: 'Getting the big letters ready',
       cta: 'Start',
+    },
+    /** The Blank overlay (B or .) and its Pause button (README D18). */
+    blank: {
+      line: 'Eyes on me',
+      pause: { cta: 'Pause' },
+    },
+    /** The Pause overlay: the word is `PAUSE_WORD` in `logic/lecture/content.ts`; this is its gloss. */
+    pause: { gloss: 'wait a moment' },
+    /** The helper picker (TD5, README D11): a turn-taking tool, never a count, list or score. */
+    picker: {
+      title: "Who's helping next?",
+      ready: 'Choose Draw.',
+      empty: 'Everyone has had a turn',
+      draw: { cta: 'Draw' },
+      undo: { cta: 'Undo' },
+      /** The reducer's skip: the label goes back into the bag, no reason given. */
+      another: { cta: 'Another' },
+      startAgain: { cta: 'Start again' },
+      mode: { names: 'names', initials: 'initials', numbers: 'numbers' },
+    },
+    /** The class timer (TD5, README D12): the ring only fills; at zero no alarm. */
+    timer: {
+      title: 'Class timer',
+      done: 'All done!',
+      minutes: (n: number) => `${n} min`,
+      seconds: (n: number) => `${n} s`,
+      add: { cta: '+30 s' },
+      pause: { cta: 'Pause' },
+      resume: { cta: 'Go on' },
+      reset: { cta: 'Reset' },
+      big: { cta: 'Big' },
+      small: { cta: 'Small' },
+      hideNumbers: { cta: 'Hide numbers' },
+      showNumbers: { cta: 'Show numbers' },
+    },
+    /** Keys and controls (H or ?, README D13). */
+    help: {
+      title: 'Keys and controls',
+      clicker: 'A presentation clicker works with no setup.',
+      keepVisible: 'Keep controls visible',
+      romanization: 'Romanization',
+      romanizationAlways: 'always',
+      romanizationTap: 'hide until tapped',
+      key: { space: 'Space', backspace: 'Backspace' },
+      row: {
+        next: 'Next',
+        back: 'Back',
+        first: 'First and last slide',
+        blank: 'Blank the screen',
+        sound: 'Play the sound again',
+        strokes: 'Replay the stroke guide',
+        romanization: 'Romanization on or off',
+        timer: 'Class timer',
+        picker: 'Helper picker',
+        grid: 'All slides',
+        fullscreen: 'Full screen',
+        help: 'This help',
+        close: 'Close or exit',
+      },
     },
     state: {
       invalid: {
