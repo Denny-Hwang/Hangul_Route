@@ -4,6 +4,7 @@ import { borderWidth, colors, layout, radii, spacing, touchTarget, typography } 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState, type CSSProperties } from 'react';
+import { BrowseLink } from '@/components/console/BrowseLink';
 import { AdultFrame, type FrameSpaces } from '@/components/console/AdultFrame';
 import { Button, Muted, Notice, buttonBase, panelStyle } from '@/components/console/ui';
 import { useMovesWaiting, useSchoolMoveLinks } from '@/components/console/MovesEntry';
@@ -13,7 +14,6 @@ import { browseEntryShown, reportsEnabled, notesEnabled } from '@/lib/console/co
 import { personaHome } from '@/lib/console/personas';
 import { ROUTES, statusLine } from '@/lib/console/routing';
 import { writeLastPersona } from '@/lib/console/shell-store';
-import { BROWSE_PATH } from '@/lib/console/shell-nav';
 import { START_CLASS, START_FAMILY, classRowLinks, teacherHomeView } from '@/lib/console/teacher-home';
 
 /**
@@ -216,9 +216,9 @@ export default function HomePage(): JSX.Element {
           {view.classRows.length > 0 ? <div style={rowsStyle}>{view.classRows.map(row)}</div> : null}
           {group('home-school', c.kind.group.school, view.schoolRows)}
           {lessons ? (
-            <a href={BROWSE_PATH} style={{ ...smallButton, alignSelf: 'flex-start' }} data-testid="home-lessons">
-              {c.home.lessons}
-            </a>
+            <span style={{ alignSelf: 'flex-start' }}>
+              <BrowseLink source="nav" label={c.home.lessons} testId="home-lessons" style={smallButton} />
+            </span>
           ) : null}
           {crossLink}
         </div>
