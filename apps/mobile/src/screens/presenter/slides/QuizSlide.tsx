@@ -172,6 +172,8 @@ function OptionCard({ option, index, revealed, romOn, rowHeight }: { option: Qui
         ) : null}
         {hasKo && option.romanization !== undefined ? (
           <Text
+            accessibilityElementsHidden={!romOn}
+            aria-hidden={!romOn}
             style={{
               fontSize: size(presenter.size.body),
               fontWeight: typography.weight.semibold,

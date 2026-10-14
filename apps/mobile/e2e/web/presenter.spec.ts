@@ -115,7 +115,8 @@ async function revealAll(page: Page): Promise<number> {
 
 /**
  * A device with a Korean voice (the fixtures' silent engine has none): the presenter then draws
- * the speaker, not the teacher-says text. The voice speaks nothing.
+ * the speaker, not the teacher-says text. The voice speaks nothing; what it was asked to say is
+ * kept in `window.__spoken`.
  */
 async function koreanVoice(page: Page): Promise<void> {
   await page.addInitScript(() => {
@@ -134,6 +135,8 @@ async function koreanVoice(page: Page): Promise<void> {
       onerror: (() => void) | null = null;
       constructor(public text: string) {}
     }
+    const spoken: string[] = [];
+    Object.defineProperty(window, '__spoken', { configurable: true, value: spoken });
     Object.defineProperty(window, 'SpeechSynthesisUtterance', { configurable: true, value: Utterance });
     Object.defineProperty(window, 'speechSynthesis', {
       configurable: true,
@@ -141,6 +144,7 @@ async function koreanVoice(page: Page): Promise<void> {
         speaking: false,
         pending: false,
         speak: (u: Utterance) => {
+          spoken.push(u.text);
           setTimeout(() => {
             u.onstart?.();
             u.onend?.();
@@ -799,6 +803,15 @@ test.describe('PR 9 quiz and class tools at 1280 x 720, with a Korean voice', ()
     await expect(page.getByRole('heading', { name: 'Which letter makes this sound?' })).toBeVisible();
     await expect(page.getByTestId('presenter-quiz-speaker')).toBeEnabled();
     await expect(page.getByTestId('presenter-say-it')).toHaveCount(0);
+    // The speaker and S both say the prompt's carrier syllable.
+    const said = (): Promise<string[]> => page.evaluate(() => [...(window as unknown as { __spoken: string[] }).__spoken]);
+    const already = (await said()).length;
+    await page.getByTestId('presenter-quiz-speaker').click();
+    await expect.poll(async () => (await said()).length).toBe(already + 1);
+    expect((await said()).at(-1)).toMatch(/^[\uac00-\ud7af]+$/);
+    await page.keyboard.press('s');
+    await expect.poll(async () => (await said()).length).toBe(already + 2);
+    expect((await said()).at(-1)).toBe((await said()).at(-2));
     const options = page.getByTestId('presenter-quiz-options').getByRole('listitem');
     await expect(options).toHaveCount(4);
     for (const [n, shape] of [[1, 'circle'], [2, 'triangle'], [3, 'square'], [4, 'star']] as const) {
@@ -840,13 +853,15 @@ test.describe('PR 9 quiz and class tools at 1280 x 720, with a Korean voice', ()
     await page.getByRole('button', { name: '1 min', exact: true }).click();
     await expect(page.getByTestId('presenter-timer-text').first()).toHaveText(/^(1:00|0:5\d)$/);
     await expect(page.getByRole('timer', { name: /^Time left: \d:\d\d$/ })).toBeVisible();
-    // Full screen swallows navigation.
-    const live = await liveText(page);
-    await page.keyboard.press('End');
-    expect(await liveText(page)).toBe(live);
     await shot(page, 'presenter-timer-full-1280x720');
+    // Full screen swallows navigation: End, then a later change that has drawn, and the slide has not moved.
+    const live = await liveText(page);
+    const counter = await page.getByTestId('presenter-counter').textContent();
+    await page.keyboard.press('End');
     await page.getByTestId('presenter-timer-numbers').click();
     await expect(page.getByTestId('presenter-timer-text')).toHaveCount(0);
+    expect(await liveText(page)).toBe(live);
+    await expect(page.getByTestId('presenter-counter')).toHaveText(counter ?? '');
     await page.getByTestId('presenter-timer-numbers').click();
     await page.getByTestId('presenter-timer-small').click();
     await expect(page.getByTestId('presenter-timer-corner')).toBeVisible();
@@ -967,6 +982,19 @@ test.describe('PR 9 quiz and class tools at 1280 x 720, with a Korean voice', ()
     await page.keyboard.press('PageDown');
     // Slide 3 is hidden for this lesson: the next slide is 4.
     await expect(page.getByTestId('presenter-counter')).toHaveText(`4 / ${count}`);
+    // Opened from the bar, Tab stays inside the grid, and closing it gives focus back to Slides.
+    await page.getByTestId('presenter-grid-button').click();
+    await expect(grid).toBeVisible();
+    const inGrid = (): Promise<boolean> => page.evaluate(() => document.activeElement?.closest('[data-testid="presenter-grid"]') != null);
+    await page.keyboard.press('Shift+Tab');
+    expect(await inGrid()).toBe(true);
+    for (let i = 0; i < 3; i++) {
+      await page.keyboard.press('Tab');
+      expect(await inGrid()).toBe(true);
+    }
+    await page.keyboard.press('Escape');
+    await expect(grid).toHaveCount(0);
+    await expect(page.getByTestId('presenter-grid-button')).toBeFocused();
   });
 
   test('Keys and controls lists every key, flips romanization live and keeps the controls visible', async ({ page }) => {

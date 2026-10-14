@@ -3,7 +3,7 @@ import React, { forwardRef, useEffect, useRef } from 'react';
 import { Pressable, Text, View, type ViewStyle } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
 import { radioMove } from '../../../logic/lecture/tools';
-import { trapFocus } from '../../../platform/presenter';
+import { focusablesIn, rememberFocus, trapFocus } from '../../../platform/presenter';
 
 /**
  * Shared parts of the class-tool overlays (design/screens/presenter/overlays.md): the covering
@@ -60,7 +60,8 @@ export const ToolButton = forwardRef<
 /**
  * A covering overlay: a modal dialog over the stage box (the bar stays), on `surface.paper` like
  * the stage (`sunken` for the grid). It takes focus on mount (its `initialFocus`, else the
- * container itself, so Space and Enter still reach the presenter keys) and keeps Tab inside.
+ * container itself, so Space and Enter still reach the presenter keys), keeps Tab inside (its
+ * `focusables`, else every tabbable control in it) and gives focus back to the opener on close.
  */
 export function Cover({
   label,
@@ -76,14 +77,19 @@ export function Cover({
   sunken?: boolean;
   children: React.ReactNode;
   initialFocus?: React.RefObject<View | null>;
-  /** The controls Tab cycles through, in order. */
+  /** The controls Tab cycles through, in order (default: the tabbable controls inside the overlay). */
   focusables?: () => readonly unknown[];
   style?: ViewStyle;
 }): React.ReactElement {
   const self = useRef<View>(null);
   useEffect(() => {
+    const restore = rememberFocus();
     (initialFocus?.current ?? self.current)?.focus?.();
-    return focusables ? trapFocus(focusables) : undefined;
+    const release = trapFocus(focusables ?? (() => focusablesIn(self.current)));
+    return () => {
+      release();
+      restore();
+    };
     // Focus is taken once, when the overlay opens.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
