@@ -113,6 +113,8 @@ export const CATALOG_QUEST_ADDITIONS: Readonly<Record<number, readonly string[]>
   22: Object.freeze(['quest:stage6-life-q1', 'quest:stage6-life-q2', 'quest:stage6-life-q3']),
   // F-CURR-001 S6-3: Travel for Chuseok.
   23: Object.freeze(['quest:stage6-rites-q1', 'quest:stage6-rites-q2', 'quest:stage6-rites-q3']),
+  // F-CURR-001 S6-4: Hike and Ask.
+  24: Object.freeze(['quest:stage6-nature-q1', 'quest:stage6-nature-q2', 'quest:stage6-nature-q3']),
 });
 
 /** The quest ids the catalogue held at `version` (versions before 8 read as 8). */

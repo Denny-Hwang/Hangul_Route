@@ -32,8 +32,9 @@ import type { Catalog, CatalogCell, CatalogQuest, CatalogStory, CatalogTopic } f
  * Version 21 (F-CURR-001 S6-1): the Stage 6 Read the Menu cell ships (three lesson quests).
  * Version 22 (F-CURR-001 S6-2): Order Food ships (Stage 6 life, 3 lesson quests).
  * Version 23 (F-CURR-001 S6-3): Travel for Chuseok ships (Stage 6 rites, 3 lesson quests).
+ * Version 24 (F-CURR-001 S6-4): Hike & Ask ships (Stage 6 nature, 3 lesson quests).
  */
-export const CATALOG_VERSION = 23;
+export const CATALOG_VERSION = 24;
 
 const cell = (
   stage: StageKey,
@@ -101,7 +102,7 @@ const cells: CatalogCell[] = [
   cell('stage6', 'letters', 'Read the Menu', 'shipped', 15, ['quest:stage6-letters-q1', 'quest:stage6-letters-q2', 'quest:stage6-letters-q3']),
   cell('stage6', 'life', 'Order Food', 'shipped', 15, ['quest:stage6-life-q1', 'quest:stage6-life-q2', 'quest:stage6-life-q3']),
   cell('stage6', 'rites', 'Travel for Chuseok', 'shipped', 15, ['quest:stage6-rites-q1', 'quest:stage6-rites-q2', 'quest:stage6-rites-q3']),
-  soon('stage6', 'nature', 'Hike & Ask'),
+  cell('stage6', 'nature', 'Hike & Ask', 'shipped', 15, ['quest:stage6-nature-q1', 'quest:stage6-nature-q2', 'quest:stage6-nature-q3']),
   soon('stage6', 'crafts', 'Buy at Market'),
   soon('stage7', 'letters', 'Write Your Name'),
   soon('stage7', 'life', 'My Day in Korean'),
@@ -184,6 +185,9 @@ const lessonQuests: CatalogQuest[] = [
   lesson('stage6-rites-q1', 'stage6', 'rites', 'The Train Ticket', 5),
   lesson('stage6-rites-q2', 'stage6', 'rites', 'Train Times', 5),
   lesson('stage6-rites-q3', 'stage6', 'rites', "Hoya's Trip", 5),
+  lesson('stage6-nature-q1', 'stage6', 'nature', 'Trail Signs', 5),
+  lesson('stage6-nature-q2', 'stage6', 'nature', 'Which Way?', 5),
+  lesson('stage6-nature-q3', 'stage6', 'nature', 'How Long?', 5),
   // The Stage 5 books (F-STORY-005 PR 5.6): grid quests that play their stories at the read level.
   lesson('story-sejong-new-letters-read', 'stage5', 'letters', "King Sejong's New Letters", 4),
   lesson('story-shapes-of-hangeul-read', 'stage5', 'letters', 'The Secret in the Shapes', 5),

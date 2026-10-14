@@ -57,7 +57,7 @@ export const BUDGET = Object.freeze({
   perQuestRawAvg: 9_000, // average per quest in a cell (S4-1 raise, measured Stage 4 cells 24.1-25.8 KB for three): 54 KB for six, 27 KB for three
   stageRaw: 150_000,
   stageGzip: 32_000,
-  totalRaw: 600_000,
+  totalRaw: 950_000, // F-CURR-001 integration of S6-1..S7-5, S3-4, T-1: all 24 cells measure about 0.9 MB raw on the compact literal (section 9)
   totalGzip: 128_000,
 });
 

@@ -659,6 +659,31 @@ const CELLS: readonly UpperCell[] = [
       await expect(page.getByRole('button', { name: /^Holidays & Traditions: Travel for Chuseok\./ })).toBeVisible();
     },
   },
+  // F-CURR-001 S6-4: Hike & Ask, q1 "Trail Signs" at 320 px: Discover, Realia Read on the trail sign
+  // (four boards), Type Hangul (산길, 정상, 입구, 출구) and the Check by id (정상, then 출구).
+  {
+    episodeId: 'episode:stage6-nature',
+    cellButton: journeyCellName(6, 'Nature & Animals'),
+    title: 'Hike & Ask',
+    playFirstQuest: async (page) => {
+      await page.setViewportSize({ width: 320, height: 720 });
+      await startFirstQuest(page);
+      await passDiscover(page);
+      await page.getByRole('button', { name: 'Play minigame' }).click();
+      await shot(page, 's6-4-q1-realia-320');
+      await pickRealia(page, ['jeongsang', 'chulgu', 'ipgu', 'hwajangsil']);
+      await page.getByRole('button', { name: 'Play minigame' }).click();
+      for (const word of ['산길', '정상', '입구', '출구']) await typeAnswer(page, word);
+      await playCheckByIds(page, [{ answer: 'a' }, { answer: 'a' }]);
+      await expect(page.getByText('Finish', { exact: true }).first()).toBeVisible();
+    },
+    expectRouteDay: async (page) => {
+      await page.goto('/');
+      await page.getByText('Learning Route', { exact: true }).last().click();
+      await page.getByRole('button', { name: /^Stage 6, Real-use\./ }).click();
+      await expect(page.getByRole('button', { name: /^Nature & Animals: Hike & Ask\./ })).toBeVisible();
+    },
+  },
 ];
 
 async function openJourney(page: Page): Promise<void> {

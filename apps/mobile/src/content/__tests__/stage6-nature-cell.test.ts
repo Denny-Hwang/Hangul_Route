@@ -65,9 +65,9 @@ const NATURAL_REPLIES: Readonly<Record<string, readonly string[]>> = {
 };
 
 describe('Hike & Ask (F-CURR-001 S6-4)', () => {
-  it('is the nature cell of Stage 6, three quests, no new cards, MAR signed off, still a draft until the bundle budget is settled (section 3.12)', () => {
+  it('is the nature cell of Stage 6, three quests, no new cards, MAR signed off, ready (shipped at CATALOG_VERSION 24 on the compact literal, section 3.12)', () => {
     expect(cell.id).toBe('episode:stage6-nature');
-    expect(cell.status).toBe('draft');
+    expect(cell.status).toBe('ready');
     expect(cell.review).toMatchObject({ language: 'native-reviewed', culture: 'culture-reviewed', reviewedBy: 'MAR' });
     expect(cell.culture.every((n) => n.verification.passes >= 3)).toBe(true);
     expect(cell.titleEn).toBe('Hike & Ask');
