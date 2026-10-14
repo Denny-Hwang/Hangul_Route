@@ -21,7 +21,7 @@ vi.mock('next/navigation', () => ({
 }));
 vi.mock('@/components/console/AdultFrame', () => ({ AdultFrame: ({ children }: { children: ReactNode }) => <main>{children}</main> }));
 
-const state = vi.hoisted(() => ({ kind: 'class' as string, archivedAt: null as string | null, preview: null as unknown, create: null as unknown, previewCalls: [] as unknown[] }));
+const state = vi.hoisted(() => ({ kind: 'class' as string, archivedAt: null as string | null, preview: null as unknown, create: null as unknown, destinations: null as unknown, previewCalls: [] as unknown[], createCalls: [] as unknown[] }));
 vi.mock('@/components/console/use-console', async () => {
   const { getMessages: messages } = await import('@hangul-route/i18n');
   const api = {
@@ -41,11 +41,16 @@ vi.mock('@/components/console/use-console', async () => {
         { memberKind: 'learner', memberId: 'profile:mina', role: 'student', joinedAt: '2026-09-20T00:00:00.000Z', name: 'Mina', isOwner: false },
       ],
     }),
-    previewTransfer: async (...args: unknown[]) => {
+    // [TV] the teacher move sheet (TV-D7, TV-D8) replaces the source-started request sheet on a class
+    classMoveDestinations: async () => state.destinations ?? { ok: true, data: [] },
+    previewClassMove: async (...args: unknown[]) => {
       state.previewCalls.push(args);
       return state.preview;
     },
-    createTransfer: async () => state.create,
+    createClassMove: async (...args: unknown[]) => {
+      state.createCalls.push(args);
+      return state.create;
+    },
     transferRequests: async () => ({ ok: true, data: { requests: [], options: [] } }),
     billingSummary: async () => ({ ok: false, error: 'network', status: -1 }),
   };
@@ -56,6 +61,7 @@ vi.mock('@/components/console/use-console', async () => {
 import SettingsPage from '@/app/(console)/teach/space/settings/page';
 
 const t = getMessages('en').console.transfer;
+const tm = getMessages('en').console.teacherMove;
 
 beforeAll(() => {
   (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -70,6 +76,8 @@ afterEach(() => {
   state.kind = 'class';
   state.archivedAt = null;
   state.previewCalls = [];
+  state.createCalls = [];
+  state.destinations = null;
 });
 
 async function renderPage(): Promise<ReactTestInstance> {
@@ -119,34 +127,37 @@ describe('settings Move action (T-6c)', () => {
     }
   });
 
-  it('Move opens the start sheet for that learner; a sent request closes it with the status line', async () => {
+  it('[TV] Move opens the teacher move sheet; a move into another teacher\'s class is sent and the page says so', async () => {
     vi.stubEnv('NEXT_PUBLIC_CLASS_TRANSFER', 'enabled');
-    state.preview = { ok: true, data: { destination: { id: 'space:b', kind: 'class', name: 'Saturday Class B' } } };
-    state.create = { ok: true, data: { id: 'transfer:1', role: 'source', status: 'requested' } };
+    state.preview = { ok: true, data: { destination: { id: 'space:b', name: 'Saturday Class B' }, direct: false } };
+    state.create = { ok: true, data: { id: 'move:1', kind: 'accept', status: 'waiting', to: { spaceId: 'space:b', name: 'Saturday Class B' }, learner: { name: 'Mina', avatar: 'tiger' }, createdAt: 't', at: null } };
     const root = await renderPage();
-    act(() => moveButtons(root)[0]?.props.onClick());
-    const sheet = root.find((n) => n.props['data-testid'] === 'move-start-sheet' && typeof n.type === 'string');
-    expect(textOf(sheet)).toContain('Move Mina to another class');
+    await act(async () => moveButtons(root)[0]?.props.onClick());
+    const sheet = root.find((n) => n.props['data-testid'] === 'teacher-move-sheet' && typeof n.type === 'string');
+    expect(textOf(sheet)).toContain(tm.sheetTitle('Mina'));
     act(() => codeInput(root).props.onChange({ target: { value: 'K7PM4Q' } }));
-    await act(async () => root.find((n) => n.type === 'button' && n.props['data-testid'] === 'move-find').props.onClick());
+    await act(async () => root.find((n) => n.type === 'button' && n.props['data-testid'] === 'teacher-move-find').props.onClick());
     expect(state.previewCalls).toEqual([['space:a', { learnerId: 'profile:mina', code: 'K7PM4Q' }]]);
-    await act(async () => root.find((n) => n.type === 'button' && n.props['data-testid'] === 'move-send').props.onClick());
-    expect(root.findAll((n) => n.props['data-testid'] === 'move-start-sheet')).toHaveLength(0);
-    expect(textOf(root)).toContain(t.start.sent);
+    await act(async () => root.find((n) => n.type === 'button' && n.props['data-testid'] === 'teacher-move-continue').props.onClick());
+    await act(async () => root.find((n) => n.type === 'button' && n.props['data-testid'] === 'teacher-move-go').props.onClick());
+    expect(state.createCalls).toEqual([['space:a', { learnerId: 'profile:mina', destinationSpaceId: 'space:b', code: 'K7PM4Q' }]]);
+    await act(async () => root.find((n) => n.type === 'button' && n.props['data-testid'] === 'teacher-move-finish').props.onClick());
+    expect(root.findAll((n) => n.props['data-testid'] === 'teacher-move-sheet')).toHaveLength(0);
+    expect(textOf(root)).toContain(tm.sent('Saturday Class B'));
   });
 
   it('a transfers_locked answer closes the sheet, hides every Move and says moves are not available yet', async () => {
     vi.stubEnv('NEXT_PUBLIC_CLASS_TRANSFER', 'enabled');
     state.preview = { ok: false, error: 'invalid', status: 422, code: 'transfers_locked' };
     const root = await renderPage();
-    act(() => moveButtons(root)[0]?.props.onClick());
+    await act(async () => moveButtons(root)[0]?.props.onClick());
     act(() => codeInput(root).props.onChange({ target: { value: 'K7PM4Q' } }));
     await act(async () => {
       // The real client notes the lock before the sheet sees the answer.
       noteTransferResult(state.preview as never);
-      root.find((n) => n.type === 'button' && n.props['data-testid'] === 'move-find').props.onClick();
+      root.find((n) => n.type === 'button' && n.props['data-testid'] === 'teacher-move-find').props.onClick();
     });
-    expect(root.findAll((n) => n.props['data-testid'] === 'move-start-sheet')).toHaveLength(0);
+    expect(root.findAll((n) => n.props['data-testid'] === 'teacher-move-sheet')).toHaveLength(0);
     expect(moveButtons(root)).toHaveLength(0);
     expect(textOf(root)).toContain(t.states.locked);
   });

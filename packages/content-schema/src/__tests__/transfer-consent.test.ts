@@ -4,11 +4,13 @@ import {
   ACCEPTED_CONSENT_TEXT_VERSIONS,
   InboxNoteSchema,
   ProgressSummarySchema,
+  TEACHER_FULL_SCOPE_ITEMS,
   TEACHER_HIDDEN_SUMMARY_KEYS,
   TEACHER_ROSTER_ADDRESS_FIELDS,
   TEACHER_VISIBLE_ITEM_IDS,
   TEACHER_VISIBLE_NOTE_FIELDS,
   TEACHER_VISIBLE_ROSTER_FIELDS,
+  TEACHER_VISIBLE_SETTING_FIELDS,
   TEACHER_VISIBLE_SUMMARY_ITEMS,
   TEACHER_VISIBLE_SUMMARY_KEYS,
   TRANSFER_CONSENT_LINES,
@@ -20,6 +22,7 @@ import {
   isTransferConsentLocale,
   transferConsentLineIds,
   type TeacherVisibleItemId,
+  type TransferConsentLineId,
   type TransferConsentContext,
   type TransferConsentLocale,
 } from '../index';
@@ -45,6 +48,18 @@ const PINNED_HASHES: Record<string, Partial<Record<TransferConsentLocale, string
     ko: 'ad2597e8f70f4bfb0b9dc757fbf67243c24c51b4739471026bd5320e829f948f',
     es: 'e539aef4e705240989fdec66ce241e53110b3668834197464809f63539cf7069',
   },
+  // [TV] AMENDMENTS-TEACHER-VISIBILITY-TRANSFER TV-D6: the full-scope items and the teacher_moves line, over the 10c text.
+  'transfer-2026-10d': {
+    en: 'f5a5c2df08940dd5ef3b2700854f65eb848bda602aedac1be403a6c8fe248089',
+    ko: '5caf7703e8eb5d4a27ab750985d20b97b330532dbf59c4999fff04ede8459fd4',
+    es: 'af2bab56c9e6e86511c7bdf717acfecc48d60d3fb2573e0a64b885c447bb7ef2',
+  },
+};
+
+/** What `transfer-2026-10d` added to the 10c text, and nothing else (TV-D6). */
+const TV_ADDED: { drop: readonly TeacherVisibleItemId[]; dropLines: readonly TransferConsentLineId[] } = {
+  drop: ['words', 'letter_check', 'own_route', 'learner_settings'],
+  dropLines: ['teacher_moves'],
 };
 
 /**
@@ -54,12 +69,13 @@ const PINNED_HASHES: Record<string, Partial<Record<TransferConsentLocale, string
  */
 function canonical(
   locale: TransferConsentLocale,
-  earlier: { drop?: readonly TeacherVisibleItemId[]; items?: Partial<Record<TeacherVisibleItemId, string>> } = {},
+  earlier: { drop?: readonly TeacherVisibleItemId[]; dropLines?: readonly TransferConsentLineId[]; items?: Partial<Record<TeacherVisibleItemId, string>> } = {},
 ): string {
   const text = TRANSFER_CONSENT_TEXT[locale];
   const dropped = new Set(earlier.drop ?? []);
+  const droppedLines = new Set(earlier.dropLines ?? []);
   return JSON.stringify({
-    lines: TRANSFER_CONSENT_LINES.map((line) => [line.id, line.when, line.kind, text.lines[line.id]]),
+    lines: TRANSFER_CONSENT_LINES.filter((line) => !droppedLines.has(line.id)).map((line) => [line.id, line.when, line.kind, text.lines[line.id]]),
     items: TEACHER_VISIBLE_ITEM_IDS.filter((id) => !dropped.has(id)).map((id) => [id, earlier.items?.[id] ?? text.items[id]]),
   });
 }
@@ -105,6 +121,7 @@ describe('consent lines (F-SPACE-002 §4.11)', () => {
       'school_delete',
       'device_relink',
       'homework_drops',
+      'teacher_moves',
       'cannot_undo',
       'introduce',
     ]);
@@ -292,7 +309,7 @@ describe('what the new teacher sees is generated from data (TEACHER_VISIBLE_SUMM
     expect(ACCEPTED_CONSENT_TEXT_VERSIONS).toContain('transfer-2026-10b');
     expect(ACCEPTED_CONSENT_TEXT_VERSIONS).toContain('transfer-2026-10');
     // transfer-2026-10 is transfer-2026-10b with the earlier activity sentence and without note_replies, and nothing else.
-    expect(sha256(canonical('en', { drop: ['note_replies'], items: { activity: ACTIVITY_BEFORE_RP_W2 } }))).toBe(PINNED_HASHES['transfer-2026-10']?.en);
+    expect(sha256(canonical('en', { drop: [...TV_ADDED.drop, 'note_replies'], dropLines: TV_ADDED.dropLines, items: { activity: ACTIVITY_BEFORE_RP_W2 } }))).toBe(PINNED_HASHES['transfer-2026-10']?.en);
   });
 
   it('classifies every ProgressSummarySchema key exactly once (a new key fails here until classified)', () => {
@@ -344,6 +361,8 @@ describe('what the new teacher sees is generated from data (TEACHER_VISIBLE_SUMM
       ...Object.values(TEACHER_VISIBLE_SUMMARY_ITEMS),
       ...Object.values(TEACHER_VISIBLE_ROSTER_FIELDS),
       ...Object.values(TEACHER_VISIBLE_NOTE_FIELDS),
+      ...Object.values(TEACHER_FULL_SCOPE_ITEMS),
+      ...Object.values(TEACHER_VISIBLE_SETTING_FIELDS),
     ]);
     expect([...used].sort()).toEqual([...TEACHER_VISIBLE_ITEM_IDS].sort());
     expect(TEACHER_VISIBLE_ITEM_IDS).toEqual([
@@ -355,6 +374,10 @@ describe('what the new teacher sees is generated from data (TEACHER_VISIBLE_SUMM
       'plan_progress',
       'sync_time',
       'note_replies',
+      'words',
+      'letter_check',
+      'own_route',
+      'learner_settings',
     ]);
   });
 });
@@ -372,13 +395,22 @@ describe('what a class sender sees of a note (F-FEEDBACK-001 section 7.7, OD-8)'
   });
 
   it('bumped the consent text version over the RP-W2 text and still accepts a sheet signed before the change', () => {
-    expect(TRANSFER_CONSENT_TEXT_VERSION).toBe('transfer-2026-10c');
-    expect(ACCEPTED_CONSENT_TEXT_VERSIONS).toContain(TRANSFER_CONSENT_TEXT_VERSION);
+    expect(ACCEPTED_CONSENT_TEXT_VERSIONS).toContain('transfer-2026-10c');
     expect(ACCEPTED_CONSENT_TEXT_VERSIONS).toContain('transfer-2026-10b');
     expect(ACCEPTED_CONSENT_TEXT_VERSIONS).toContain('transfer-2026-10');
     // transfer-2026-10c is exactly transfer-2026-10b plus the note_replies item: the RP-W2 sentence is kept.
-    expect(sha256(canonical('en', { drop: ['note_replies'] }))).toBe(PINNED_HASHES['transfer-2026-10b']?.en);
-    expect(sha256(canonical('en'))).toBe(PINNED_HASHES['transfer-2026-10c']?.en);
+    expect(sha256(canonical('en', { drop: [...TV_ADDED.drop, 'note_replies'], dropLines: TV_ADDED.dropLines }))).toBe(PINNED_HASHES['transfer-2026-10b']?.en);
+    expect(sha256(canonical('en', TV_ADDED))).toBe(PINNED_HASHES['transfer-2026-10c']?.en);
+  });
+
+  it('[TV] transfer-2026-10d is the 10c text plus the full-scope items and the teacher_moves line, in every locale', () => {
+    expect(TRANSFER_CONSENT_TEXT_VERSION).toBe('transfer-2026-10d');
+    expect(ACCEPTED_CONSENT_TEXT_VERSIONS).toEqual(['transfer-2026-10d', 'transfer-2026-10c', 'transfer-2026-10b', 'transfer-2026-10']);
+    for (const locale of TRANSFER_CONSENT_LOCALES) {
+      expect(sha256(canonical(locale, TV_ADDED)), locale).toBe(PINNED_HASHES['transfer-2026-10c']?.[locale]);
+    }
+    expect(TRANSFER_CONSENT_TEXT.en.lines.teacher_moves).toBe('A teacher may move {learner} to another class later. We tell you when it happens.');
+    expect(TRANSFER_CONSENT_LINES.find((l) => l.id === 'teacher_moves')).toEqual({ id: 'teacher_moves', when: 'always', kind: 'statement' });
   });
 
   it('pins a hash for the current text that no earlier version shares', () => {

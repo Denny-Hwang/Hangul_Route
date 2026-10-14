@@ -33,6 +33,7 @@ const EN_PAGES: Record<SitePage, () => Promise<{ generateMetadata: () => Meta }>
   '/learners': () => import('../(en)/learners/page'),
   '/parents': () => import('../(en)/parents/page'),
   '/teachers': () => import('../(en)/teachers/page'),
+  '/licenses': () => import('../(en)/licenses/page'),
 };
 const LOC_PAGES: Record<SitePage, () => Promise<{ generateMetadata: (p: { params: { locale: string } }) => Meta }>> = {
   '/': () => import('../(loc)/[locale]/page'),
@@ -42,6 +43,7 @@ const LOC_PAGES: Record<SitePage, () => Promise<{ generateMetadata: (p: { params
   '/learners': () => import('../(loc)/[locale]/learners/page'),
   '/parents': () => import('../(loc)/[locale]/parents/page'),
   '/teachers': () => import('../(loc)/[locale]/teachers/page'),
+  '/licenses': () => import('../(loc)/[locale]/licenses/page'),
 };
 
 describe('every site page exports its own metadata', () => {

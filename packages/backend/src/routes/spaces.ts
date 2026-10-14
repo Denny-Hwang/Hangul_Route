@@ -19,6 +19,7 @@ import { authorizeDevice, parseDeviceHeader } from '../lib/device-auth';
 import { classCap, schoolIsFull } from '../lib/entitlement';
 import { generateJoinCode, isJoinCodeLive, joinCodeExpiry } from '../lib/join-code';
 import { clientKey, createRateLimiter } from '../lib/rate-limit';
+import { learnerScopes, type ClassScopeEnv } from '../lib/class-scope';
 import { rosterSummary } from '../lib/roster-summary';
 import { classSeatCheck, studentsIn, type SeatBlock } from '../lib/seats';
 import { id, type Account } from '../store';
@@ -27,7 +28,7 @@ import { id, type Account } from '../store';
  * /api/spaces — F-SPACE-001 §3.3. One shape for family / class / school;
  * every route resolves the actor once and asks `can()`.
  */
-export const spacesRoutes = new Hono<{ Bindings: { SCHOOL_CONSENT_MODE?: string } }>();
+export const spacesRoutes = new Hono<{ Bindings: { SCHOOL_CONSENT_MODE?: string } & ClassScopeEnv }>();
 
 /** School consent mode stays locked until the owner's legal review (app-map decision #26). */
 export function schoolConsentModeEnabled(env: { SCHOOL_CONSENT_MODE?: string } | undefined): boolean {
@@ -368,7 +369,10 @@ spacesRoutes.get('/:id/roster', async (c) => {
   // planProgress is filtered to this space's own plans (archived ones included): F-SPACE-002 T-1a.
   const planIds = new Set((await db.plansOf(space.id)).map((p) => p.id));
   const learners = [];
-  for (const m of await db.membersOf(space.id)) {
+  const members = await db.membersOf(space.id);
+  // [TV] each learner's scope, read once for the whole roster (AMENDMENTS-TEACHER-VISIBILITY-TRANSFER section 2)
+  const scopes = await learnerScopes(db, space.kind, members.filter((m) => m.memberKind === 'learner').map((m) => m.memberId), c.env);
+  for (const m of members) {
     if (m.memberKind !== 'learner') continue;
     const learner = await db.getLearner(m.memberId);
     if (!learner) continue;
@@ -382,8 +386,10 @@ spacesRoutes.get('/:id/roster', async (c) => {
       joinedAt: m.joinedAt,
       lastActiveAt: learner.lastActiveAt,
       // selfRoute reaches a family space only (F-PLAN-002 section 3.10); a class sees no activity day before joinedAt (F-REPORT-001 section 3.8).
-      summary: rosterSummary(snapshot?.summary, planIds, space.kind, { joinedAt: m.joinedAt }),
+      // [TV] full scope (a family; a class after the family's acknowledgement) adds vocab, the Hangul Check, the self-route and the goal; never firstTryRate on a roster.
+      summary: rosterSummary(snapshot?.summary, planIds, space.kind, { joinedAt: m.joinedAt, scope: scopes.get(learner.id) }),
       lastSyncedAt: snapshot?.updatedAt ?? null,
+      scope: scopes.get(learner.id) ?? 'base',
     });
   }
   learners.sort((a, b) => b.lastActiveAt.localeCompare(a.lastActiveAt));

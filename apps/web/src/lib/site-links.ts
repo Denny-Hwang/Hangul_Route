@@ -10,7 +10,7 @@ import { appEntryUrl } from './site-path';
  *
  * - Since S-10 (F-SITE-002 §3.10, with F-APP-001 A-10) a build without `CONSOLE_ORIGIN` sends grown-up links to
  *   the app host (`SITE_DEFAULT_CONSOLE_ORIGIN`), the place production moved them at M3. `CONSOLE_ORIGIN` still
- *   overrides it, and the kill switch `CONSOLE_ORIGIN=false` (or `0`) keeps them on the site's own origin
+ *   overrides it, and the kill switch `CONSOLE_ORIGIN=false` (or `0`, `off`, `no`, any case) keeps them on the site's own origin
  *   (`/signin?persona=parent`), where F-APP-001's `/signin` is part of the same export.
  * - Never `/teach`, `/parent`, `/account` or billing: a parent never passes through the teacher router, and
  *   the site has no billing link (F-BILL-002 §4.1). `site-links.test.ts` pins this for both origins.
@@ -32,9 +32,10 @@ export const SITE_DEFAULT_CONSOLE_ORIGIN: typeof APP_ORIGIN = APP_ORIGIN;
 /**
  * Values of `CONSOLE_ORIGIN` that switch the move off (compared trimmed, in lower case): grown-up links stay on
  * the site's own origin and `site-redirects.mjs` writes no `_redirects`. `next.config.js` and
- * `scripts/site-redirects.mjs` repeat this list; their tests check that all three agree.
+ * `scripts/site-redirects.mjs` repeat this list; their tests check that all three agree. The same off words as the
+ * app's `parseKillSwitch` (`apps/mobile/src/config/flags.ts`, `EXPO_PUBLIC_GROWN_UP_HOME`), so both switches read alike.
  */
-export const CONSOLE_ORIGIN_OFF: readonly string[] = ['false', '0'];
+export const CONSOLE_ORIGIN_OFF: readonly string[] = ['false', '0', 'off', 'no'];
 
 /** Hosts where a plain-http origin is allowed: this machine only (local builds and tests). */
 const LOCAL_HOSTS: ReadonlySet<string> = new Set(['localhost', '127.0.0.1', '[::1]']);

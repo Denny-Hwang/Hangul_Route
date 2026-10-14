@@ -16,6 +16,7 @@ import { spaceReportRoutes } from './routes/space-reports';
 import { syncRoutes } from './routes/sync';
 import { telemetryRoutes } from './routes/telemetry';
 import { transferSyncRoutes } from './routes/transfer-device';
+import { classMoveRoutes, classScopeSyncRoutes } from './routes/class-moves';
 import { transferSpaceRoutes } from './routes/transfers';
 import { waitlistRoutes } from './routes/waitlist';
 
@@ -67,6 +68,10 @@ app.route('/api/spaces', transferSpaceRoutes);
 // Class moves from the learner's own device (F-SPACE-002 T-5c): preview / create / approve / decline / cancel / prefs; create and approve
 // stay locked until CLASS_TRANSFER_DEVICE_CONSENT=enabled (counsel, flip gate G6).
 app.route('/api/sync', transferSyncRoutes);
+// [TV] Teacher moves and the class-scope update (AMENDMENTS-TEACHER-VISIBILITY-TRANSFER section 4.3): moves behind CLASS_TRANSFER,
+// the family's acknowledgement (console and device) always on.
+app.route('/api/spaces', classMoveRoutes);
+app.route('/api/sync', classScopeSyncRoutes);
 // Entitlements (F-ENT-001): one table for receipts, Stripe and contracts; learners inherit through memberships.
 app.route('/api/entitlements', entitlementRoutes);
 // Billing home (F-BILL-002 B-4): plan status per persona, payer-only receipts, fresh receipt links.

@@ -2,6 +2,7 @@
   "name": "@hangul-route/test-utils",
   "version": "0.0.0",
   "private": true,
+  "license": "UNLICENSED",
   "description": "Shared test helpers, fixtures, and matchers for Hangul Route packages",
   "type": "module",
   "main": "./src/index.ts",

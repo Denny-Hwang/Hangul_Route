@@ -24,6 +24,7 @@ export const TRANSFER_CONSENT_TEXT_KO: TransferConsentText = {
     device_relink: '지금 반({source})을 통해 연결한 태블릿은 새 반({destination})에 다시 연결해야 할 수 있습니다.',
     homework_drops: '지금 반({source})에서 받은 숙제 중 끝내지 않은 숙제는 사라집니다. 끝낸 숙제는 그대로 남습니다.',
     cannot_undo: '이동은 되돌릴 수 없습니다. {learner} 학습자는 언제든지 프로필에서 반을 나갈 수 있습니다.',
+    teacher_moves: '선생님이 나중에 {learner} 학습자를 다른 반으로 옮길 수 있습니다. 옮기면 알려 드립니다.',
     introduce: '{learner} 학습자가 어느 반에서 오는지 새 반({destination})에 알려 줍니다.',
   },
   items: {
@@ -35,5 +36,9 @@ export const TRANSFER_CONSENT_TEXT_KO: TransferConsentText = {
     plan_progress: '새 반({destination})에서 받은 숙제의 진도',
     sync_time: '{learner} 학습자가 반에 들어온 때와 진도를 마지막으로 저장한 때',
     note_replies: '선생님의 쪽지에 {learner} 학습자가 고른 답',
+    words: '모은 단어, 잘 아는 단어, 처음에 맞힌 답, 다시 볼 단어',
+    letter_check: '한글 확인 결과와 어려웠던 글자',
+    own_route: '{learner} 학습자가 고른 레슨과 학습 루트 목표',
+    learner_settings: '{learner} 학습자가 반에서 쪽지를 받는지 여부',
   },
 };

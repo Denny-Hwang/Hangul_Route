@@ -1,4 +1,6 @@
 import { z } from 'zod';
+import { ClassScopeSchema } from './class-scope';
+import { NOTES_MODES } from './feedback';
 import { ClassReportSchema, ReportPeriodSchema } from './report';
 import { SpaceSchema } from './space';
 import { ProgressSummarySchema } from './sync';
@@ -25,7 +27,9 @@ export type ReportSpace = z.infer<typeof ReportSpaceSchema>;
  * report never shows more than the roster's consent allows. Every key is
  * optional because a legacy summary may lack any of them; `selfRoute` reaches
  * family spaces only and `activity` only after RP-W2 moves it to the allow-list.
- * `schemaVersion`, `stage1Anchor` and `vocab` are not read and are stripped.
+ * `schemaVersion` is not read and is stripped. [TV] `vocab` (with `firstTryRate`, the student's detail view of
+ * F-VOC-005 section 3.8) and `stage1Anchor` arrive for a family and for a full-scope class
+ * (AMENDMENTS-TEACHER-VISIBILITY-TRANSFER section 2); a base-scope class still never receives them.
  */
 export const ReportSummarySchema = ProgressSummarySchema.pick({
   lastActiveAt: true,
@@ -40,6 +44,8 @@ export const ReportSummarySchema = ProgressSummarySchema.pick({
   journey: true,
   selfRoute: true,
   activity: true,
+  vocab: true,
+  stage1Anchor: true,
 }).partial();
 export type ReportSummary = z.infer<typeof ReportSummarySchema>;
 
@@ -59,6 +65,13 @@ export const LearnerReportResponseSchema = z.object({
   summary: ReportSummarySchema.nullable(),
   lastSyncedAt: z.string().nullable(),
   serverTime: z.string(),
+  /**
+   * [TV] Which projection the viewer read (section 2 of the amendment): a family is always `full`; a class or
+   * school is `full` once the family has read the class-scope update. Optional so a body from an older Worker parses.
+   */
+  scope: ClassScopeSchema.optional(),
+  /** [TV] TV-D12: the learner's server-held settings, at full scope only (null otherwise). `classNotes` null: unreadable. */
+  settings: z.object({ classNotes: z.enum(NOTES_MODES).nullable() }).nullable().optional(),
 });
 export type LearnerReportResponse = z.infer<typeof LearnerReportResponseSchema>;
 

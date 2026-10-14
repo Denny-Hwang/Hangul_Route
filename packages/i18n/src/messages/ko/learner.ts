@@ -139,6 +139,7 @@ export const learner = {
       details: { cta: '플랜 자세히 보기' },
     },
     install: { label: '이 기기에 설치하기', a11yLabel: '이 기기에 Hangul Route 설치하기' },
+    licenses: { label: '오픈소스 라이선스', fallback: '브라우저에서 hangulroute.com/licenses를 열어 주세요.', gateDone: '어른 확인을 마쳤어요. 페이지를 열려면 오픈소스 라이선스를 한 번 더 눌러 주세요.' },
     language: {
       title: '언어',
       thisProfile: '이 프로필',
@@ -1720,5 +1721,13 @@ export const learner = {
       title: '발표 언어',
       note: '이번 수업에만 바뀌어요. 한국어에는 늘 로마자와 뜻이 함께 나와요.',
     },
+  },
+  /** [TV] 반에 관한 홈 안내 (TV-D5, TV-D10). */
+  classUpdate: {
+    moved: (name: string, cls: string) => `${name}, 새 반으로 옮겼어요: ${cls}`,
+    ok: { cta: '확인' },
+    scopeChild: '어른에게 반에 관한 안내가 있어요.',
+    scopeSelf: '반에 관한 안내가 있어요.',
+    open: { cta: '열기' },
   },
 } satisfies DeepPartial<Messages['learner']>;
