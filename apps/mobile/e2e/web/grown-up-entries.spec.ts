@@ -80,6 +80,52 @@ function noSidewaysScroll(page: Page): Promise<boolean> {
   return page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth);
 }
 
+/**
+ * D10: whether Parent or caregiver and Teacher fit side by side in their row at their natural widths (label text,
+ * padding and border), plus the row's gap. That is what the wrapping row decides on.
+ */
+function personaButtonsFit(page: Page): Promise<boolean> {
+  return page.evaluate(() => {
+    const natural = (button: HTMLElement): number => {
+      let left = Infinity;
+      let right = -Infinity;
+      const walker = document.createTreeWalker(button, NodeFilter.SHOW_TEXT);
+      for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+        const range = document.createRange();
+        range.selectNodeContents(node);
+        const box = range.getBoundingClientRect();
+        if (box.width === 0) continue;
+        left = Math.min(left, box.left);
+        right = Math.max(right, box.right);
+      }
+      const style = getComputedStyle(button);
+      const edges = [style.paddingLeft, style.paddingRight, style.borderLeftWidth, style.borderRightWidth];
+      return right - left + edges.reduce((sum, v) => sum + (parseFloat(v) || 0), 0);
+    };
+    const parent = document.querySelector<HTMLElement>('[data-testid="welcome-grown-ups-parent"]');
+    const teacher = document.querySelector<HTMLElement>('[data-testid="welcome-grown-ups-teacher"]');
+    const row = parent?.parentElement?.parentElement;
+    if (!parent || !teacher || !row) throw new Error('the persona row is not on the page');
+    const gap = parseFloat(getComputedStyle(row).columnGap) || 0;
+    return natural(parent) + natural(teacher) + gap <= row.clientWidth + 0.5;
+  });
+}
+
+/** Side by side (one line) when both fit, else stacked: Teacher under Parent or caregiver, both the row's width. */
+async function expectPersonaRow(page: Page, sideBySide: boolean): Promise<void> {
+  const p = await page.getByTestId('welcome-grown-ups-parent').boundingBox();
+  const t = await page.getByTestId('welcome-grown-ups-teacher').boundingBox();
+  expect(p).not.toBeNull();
+  expect(t).not.toBeNull();
+  if (!p || !t) return;
+  if (sideBySide) {
+    expect(Math.abs(p.y - t.y)).toBeLessThan(2);
+  } else {
+    expect(t.y).toBeGreaterThanOrEqual(p.y + p.height);
+    expect(Math.abs(p.width - t.width)).toBeLessThan(2);
+  }
+}
+
 test.describe('flag off (the default build)', () => {
   test.skip(ON, 'runs on the default build');
 
@@ -124,11 +170,16 @@ test.describe('flag on (EXPO_PUBLIC_GROWN_UP_HOME=true)', () => {
     await shot(page, 'a7-welcome-320');
 
     await page.setViewportSize({ width: 375, height: 812 });
-    // Side by side when both fit (D10).
-    const [p, t] = [await parent.boundingBox(), await teacher.boundingBox()];
-    expect(Math.abs((p?.y ?? 0) - (t?.y ?? 1))).toBeLessThan(2);
+    // Side by side when both fit, stacked otherwise (D10). At 375 px that depends on the system font's widths
+    // (macOS fits both, CI's Linux runner does not), so the test measures the labels and checks the right one.
+    await expectPersonaRow(page, await personaButtonsFit(page));
     expect(await noSidewaysScroll(page)).toBe(true);
     await shot(page, 'a7-welcome-375');
+
+    // On a wide screen both fit with any font, so the row is side by side.
+    await page.setViewportSize({ width: 768, height: 1024 });
+    expect(await personaButtonsFit(page)).toBe(true);
+    await expectPersonaRow(page, true);
   });
 
   test('Teacher and Parent or caregiver open sign-in with the persona, in the same tab', async ({ page }) => {

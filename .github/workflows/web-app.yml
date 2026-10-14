@@ -16,7 +16,11 @@ name: Web App (PWA)
 # (dist-e2e-route/, F-PLAN-002 P2-8). The required check
 # 'Build PWA · offline e2e' is the last job: it always runs and passes only
 # when every job above passed (or when nothing the PWA depends on changed, and
-# the build job skipped its steps on purpose).
+# the build job skipped its steps on purpose). A small `changes` job decides
+# that first, so the billing and grown-up home job (F-BILL-002 B-14) starts
+# at once, beside the build job and the shards, on its own app-host build (an
+# API base at a mock host, the grown-up home flag on); the required check
+# stands for it too.
 # A failed shard can be re-run alone; it downloads the same bundles.
 # scripts/__tests__/ci-workflows.test.mjs keeps this layout honest.
 
@@ -43,12 +47,13 @@ permissions:
   contents: read
 
 jobs:
-  build:
-    name: PWA · build (release + fixture bundles)
+  # Did anything the PWA depends on change? Its own small job, so the build
+  # job and the billing lane (which does its own build) both start as soon as
+  # it answers, instead of the billing lane waiting for the whole build job.
+  changes:
+    name: PWA · did anything the PWA depends on change?
     runs-on: ubuntu-latest
-    timeout-minutes: 20
-    env:
-      WRANGLER_SEND_METRICS: "false"
+    timeout-minutes: 5
     outputs:
       run: ${{ steps.changes.outputs.run }}
 
@@ -76,8 +81,22 @@ jobs:
             echo "::notice::No PWA-relevant files changed — build and offline e2e skipped, check reports success."
           fi
 
+  build:
+    name: PWA · build (release + fixture bundles)
+    needs: [changes]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      WRANGLER_SEND_METRICS: "false"
+    outputs:
+      run: ${{ needs.changes.outputs.run }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
       - name: Setup pnpm, Node and dependencies
-        if: steps.changes.outputs.run == 'true'
+        if: needs.changes.outputs.run == 'true'
         uses: ./.github/actions/setup-workspace
 
       # Metro's transform cache is content-addressed (file contents + transform
@@ -85,7 +104,7 @@ jobs:
       # Pull requests restore main's cache; main builds cold and saves a fresh
       # one, so the cache never grows run over run.
       - name: Restore the Metro cache (pull requests)
-        if: steps.changes.outputs.run == 'true' && github.event_name == 'pull_request'
+        if: needs.changes.outputs.run == 'true' && github.event_name == 'pull_request'
         uses: actions/cache/restore@v4
         with:
           path: /tmp/metro-cache
@@ -97,7 +116,7 @@ jobs:
       # merge-console.mjs builds (Next validates every entry itself). Like
       # Metro: pull requests restore main's cache, main builds cold.
       - name: Restore the Next.js build cache (apps/web, console role; pull requests)
-        if: steps.changes.outputs.run == 'true' && github.event_name == 'pull_request'
+        if: needs.changes.outputs.run == 'true' && github.event_name == 'pull_request'
         uses: actions/cache/restore@v4
         with:
           path: apps/web/.next/cache
@@ -106,11 +125,11 @@ jobs:
             next-console-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-
 
       - name: Build PWA (expo export + service worker)
-        if: steps.changes.outputs.run == 'true'
+        if: needs.changes.outputs.run == 'true'
         run: pnpm --filter @hangul-route/mobile build:web
 
       - name: Validate wrangler config (dry run, no upload)
-        if: steps.changes.outputs.run == 'true'
+        if: needs.changes.outputs.run == 'true'
         run: pnpm --filter @hangul-route/mobile exec wrangler deploy --dry-run
 
       # F-STORY-002 PR 2.6a: a second build that holds the test fixtures and the
@@ -118,7 +137,7 @@ jobs:
       # dist-e2e/ (never dist/, never deployed; the script restores the real
       # story bundle and clip map).
       - name: Build the fixture bundle (dist-e2e, e2e only)
-        if: steps.changes.outputs.run == 'true'
+        if: needs.changes.outputs.run == 'true'
         run: pnpm --filter @hangul-route/mobile build:web:fixtures
 
       # F-STORY-004 PR 4.8b: the same fixtures with content gating on
@@ -127,7 +146,7 @@ jobs:
       # own (a fresh TMPDIR), so the gating-on transforms never reach the cache
       # the other two builds read or the one main saves.
       - name: Build the gating fixture bundle (dist-e2e-gated, e2e only)
-        if: steps.changes.outputs.run == 'true'
+        if: needs.changes.outputs.run == 'true'
         run: pnpm --filter @hangul-route/mobile build:web:fixtures:gated
 
       # F-PLAN-002 P2-8: the release content with the learner's weekly plan on
@@ -137,12 +156,12 @@ jobs:
       # exported on a Metro cache of its own, so no flag-on transform reaches
       # the cache the release build reads or the one main saves.
       - name: Build the weekly plan bundle (dist-e2e-route, e2e only)
-        if: steps.changes.outputs.run == 'true'
+        if: needs.changes.outputs.run == 'true'
         run: pnpm --filter @hangul-route/mobile build:web:route
 
       # dist/ holds dot folders (audio clips), so hidden files are included.
       - name: Upload the release build
-        if: steps.changes.outputs.run == 'true'
+        if: needs.changes.outputs.run == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: pwa-dist
@@ -153,7 +172,7 @@ jobs:
           retention-days: 3
 
       - name: Upload the fixture build
-        if: steps.changes.outputs.run == 'true'
+        if: needs.changes.outputs.run == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: pwa-dist-e2e
@@ -164,7 +183,7 @@ jobs:
           retention-days: 3
 
       - name: Upload the gating fixture build
-        if: steps.changes.outputs.run == 'true'
+        if: needs.changes.outputs.run == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: pwa-dist-e2e-gated
@@ -175,7 +194,7 @@ jobs:
           retention-days: 3
 
       - name: Upload the weekly plan build
-        if: steps.changes.outputs.run == 'true'
+        if: needs.changes.outputs.run == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: pwa-dist-e2e-route
@@ -186,14 +205,14 @@ jobs:
           retention-days: 3
 
       - name: Save the Metro cache (main only)
-        if: steps.changes.outputs.run == 'true' && github.event_name == 'push' && success()
+        if: needs.changes.outputs.run == 'true' && github.event_name == 'push' && success()
         uses: actions/cache/save@v4
         with:
           path: /tmp/metro-cache
           key: metro-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-${{ github.sha }}
 
       - name: Save the Next.js build cache (main only)
-        if: steps.changes.outputs.run == 'true' && github.event_name == 'push' && success()
+        if: needs.changes.outputs.run == 'true' && github.event_name == 'push' && success()
         uses: actions/cache/save@v4
         with:
           path: apps/web/.next/cache
@@ -396,9 +415,92 @@ jobs:
           path: ~/.cache/ms-playwright
           key: playwright-chromium-${{ runner.os }}-${{ steps.pw.outputs.version }}
 
+  # F-BILL-002 B-14: the billing and grown-up home lane. F-APP-001's merged
+  # app-host dist (build:web copies the console role of apps/web into dist
+  # under the grown-up prefixes) built with an API base at a mock host (the
+  # specs answer every call to it with page.route; Stripe is never reached)
+  # and the grown-up home flag on. Then the web billing specs run against that
+  # dist (BILLING_E2E=1, E2E_OUT=../mobile/dist) and the flag-on PWA specs
+  # (E2E_GROWN_UP_HOME=1) on the same dist. Its own runner and its own build:
+  # the release dist of the build job must keep the production values.
+  billing-e2e:
+    name: PWA · billing and grown-up home e2e (app-host build, API base at a mock host)
+    needs: [changes]
+    if: needs.changes.outputs.run == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      WRANGLER_SEND_METRICS: "false"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm, Node and dependencies
+        uses: ./.github/actions/setup-workspace
+
+      - name: Playwright version
+        id: pw
+        run: echo "version=$(node -p "require('./apps/mobile/node_modules/@playwright/test/package.json').version")" >> "$GITHUB_OUTPUT"
+
+      - name: Restore the Playwright browsers
+        uses: actions/cache/restore@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-chromium-${{ runner.os }}-${{ steps.pw.outputs.version }}
+
+      - name: Install Playwright Chromium (system deps; the browser only on a cache miss)
+        run: pnpm --filter @hangul-route/mobile exec playwright install --with-deps chromium
+
+      # Metro inlines EXPO_PUBLIC_* values and caches its transforms in
+      # os.tmpdir()/metro-cache, so the export runs on a fresh, empty TMPDIR and
+      # restores no Metro or Next cache (a flag-off transform must never be
+      # served here, and none of these transforms reaches the cache main saves).
+      # merge-console.mjs gives the console the same API base
+      # (NEXT_PUBLIC_API_BASE_URL) and keeps its dev sign-in form off.
+      - name: Build the app-host bundle (dist, API base at a mock host, grown-up home on, Metro cache of its own)
+        env:
+          EXPO_PUBLIC_API_BASE_URL: "https://api.billing-e2e.test"
+          EXPO_PUBLIC_GROWN_UP_HOME: "true"
+        shell: bash
+        run: |
+          export TMPDIR="$RUNNER_TEMP/billing-e2e-tmp"
+          rm -rf "$TMPDIR" && mkdir -p "$TMPDIR"
+          pnpm --filter @hangul-route/mobile build:web
+
+      # The grown-up's billing journey and the step-up dialog, on the console
+      # pages of the merged dist (apps/web's serve-out.mjs serves E2E_OUT).
+      - name: Billing e2e (web specs on the merged dist, BILLING_E2E=1)
+        working-directory: apps/web
+        env:
+          BILLING_E2E: "1"
+          E2E_OUT: ../mobile/dist
+        run: pnpm exec playwright test --output test-results/billing e2e/billing.spec.ts e2e/billing-step-up.spec.ts
+
+      # The learner app's flag-on halves: Plan status and its hand-off to the
+      # real billing page, the same-tab hand-off and the grown-up entries.
+      - name: Grown-up home e2e (flag-on PWA specs, E2E_GROWN_UP_HOME=1)
+        if: ${{ !cancelled() }}
+        working-directory: apps/mobile
+        env:
+          E2E_GROWN_UP_HOME: "1"
+        run: pnpm exec playwright test --output test-results/grown-up-home e2e/web/plan-status.spec.ts e2e/web/plan-screen-same-tab.spec.ts e2e/web/grown-up-entries.spec.ts
+
+      - name: Upload the billing e2e results (on failure)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: billing-e2e-results
+          path: |
+            apps/web/test-results
+            apps/mobile/test-results
+          overwrite: true
+          if-no-files-found: ignore
+          retention-days: 7
+
   pwa:
     name: Build PWA · offline e2e
-    needs: [build, e2e]
+    needs: [changes, build, e2e, billing-e2e]
     if: always()
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -406,12 +508,19 @@ jobs:
     steps:
       - name: Every PWA job passed (or nothing the PWA depends on changed)
         env:
+          CHANGES: ${{ needs.changes.result }}
           BUILD: ${{ needs.build.result }}
-          RUN: ${{ needs.build.outputs.run }}
+          RUN: ${{ needs.changes.outputs.run }}
           E2E: ${{ needs.e2e.result }}
+          BILLING: ${{ needs.billing-e2e.result }}
         run: |
           echo "build: $BUILD (PWA-relevant change: $RUN)"
           echo "e2e shards (release build + fixture bundle): $E2E"
+          echo "billing and grown-up home e2e (app-host build): $BILLING"
+          if [ "$CHANGES" != success ]; then
+            echo "::error::The change detection job did not pass."
+            exit 1
+          fi
           if [ "$BUILD" != success ]; then
             echo "::error::The PWA build job did not pass."
             exit 1
@@ -422,5 +531,9 @@ jobs:
           fi
           if [ "$E2E" != success ]; then
             echo "::error::An e2e job did not pass."
+            exit 1
+          fi
+          if [ "$BILLING" != success ]; then
+            echo "::error::The billing and grown-up home e2e job did not pass."
             exit 1
           fi

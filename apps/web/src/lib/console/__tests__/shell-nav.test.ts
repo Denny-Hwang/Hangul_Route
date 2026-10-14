@@ -54,8 +54,10 @@ describe('navFlags', () => {
     expect(navFlags('en', { NEXT_PUBLIC_BROWSE: '0' }, 'https://app.hangulroute.com').browse).toBe(false);
   });
 
-  it('keeps Reports off in a console locale whose report words are not reviewed', () => {
-    expect(navFlags('ko', { NEXT_PUBLIC_REPORTS_ENABLED: 'true' }).reports).toBe(false);
+  it('shows Reports in ko and es too, whose report words are signed, and keeps the switch-off', () => {
+    expect(navFlags('ko', { NEXT_PUBLIC_REPORTS_ENABLED: 'true' }).reports).toBe(true);
+    expect(navFlags('es', { NEXT_PUBLIC_REPORTS_ENABLED: 'true' }).reports).toBe(true);
+    expect(navFlags('ko', { NEXT_PUBLIC_REPORTS_ENABLED: 'false' }).reports).toBe(false);
   });
 });
 

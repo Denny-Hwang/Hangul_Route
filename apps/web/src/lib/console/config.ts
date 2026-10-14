@@ -124,10 +124,11 @@ export function learningRouteEnabled(env: ConsoleEnv = buildEnv()): boolean {
 }
 
 /**
- * Console locales whose `report.*` words have passed native review (F-REPORT-001 section 3.1). Korean and Spanish
- * join when their review lands (F-I18N-001 PR 16); until then a ko or es console shows no report entry.
+ * Console locales whose `report.*` words have a signed review (F-REPORT-001 section 3.1; F-I18N-001 section 3.10, the
+ * multi-agent review). Spanish and Korean joined with the 2026-10-13 MAR re-review of `report`. Whether es and ko are
+ * public at all is still `LOCALE_STATUS` (rows 15b / 16b); this list only matters once a locale is selectable.
  */
-export const REPORT_REVIEWED_LOCALES: readonly UiLocale[] = ['en'];
+export const REPORT_REVIEWED_LOCALES: readonly UiLocale[] = ['en', 'es', 'ko'];
 
 /** The reports switch when the build sets no value (F-REPORT-001 RP-11 turned it on, with the learner app's). */
 const REPORTS_LAUNCH_DEFAULT = true;

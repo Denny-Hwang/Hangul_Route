@@ -9,6 +9,7 @@ import { BrowseHomeScreen } from '../screens/browse/BrowseHomeScreen';
 import { BrowseItemScreen } from '../screens/browse/BrowseItemScreen';
 import { BrowseMinigameScreen, BrowseStoryReaderScreen, BrowseStorySourcesScreen } from '../screens/browse/BrowseLessonScreens';
 import { PreviewEndScreen } from '../screens/browse/PreviewEndScreen';
+import { PreviewFlashcardsScreen } from '../screens/browse/PreviewFlashcardsScreen';
 import { PreviewQuestScreen } from '../screens/browse/PreviewQuestScreen';
 import type { RootStackParamList } from './types';
 import type { StoryLevel } from '@hangul-route/content-schema';
@@ -19,7 +20,8 @@ import type { PreviewReturn } from '../logic/browse/preview';
  * tabs, no learner route. Every route of the spec is typed here; a route is
  * registered once its screen exists (BR-6: home and Access; BR-7 the episode
  * outline, the item page and the card; BR-8 the preview screens and the
- * learner screens through the navigation adapter, BR-5c). `entryStack` never
+ * learner screens through the navigation adapter, BR-5c; BR-9b a word
+ * topic's flashcards). `entryStack` never
  * names a route that is not registered (`BROWSE_REGISTERED_ROUTES`).
  */
 export type BrowseStackParamList = {
@@ -28,6 +30,8 @@ export type BrowseStackParamList = {
   BrowseItem: { kind: 'quest' | 'story' | 'vocab-topic'; id: string; focusJamoId?: string };
   /** `returnTo`: the item page the preview started from, when not the quest's own (a story's questions). */
   PreviewQuest: { questId: string; episodeId: string; returnTo?: PreviewReturn };
+  /** A word topic's F-VOC-003 flashcards in host mode `'preview'` (BR-9b): `topicId` is the item, `topicKey` its picker key. */
+  PreviewFlashcards: { topicId: string; topicKey: string };
   /** The learner `MinigameScreen`, through the navigation adapter (BR-5c). */
   Minigame: RootStackParamList['Minigame'];
   /** The learner story reader's replay route, which writes nothing. */
@@ -54,6 +58,8 @@ export const BROWSE_REGISTERED_ROUTES: ReadonlySet<BrowseRouteName> = new Set<Br
   'StoryReader',
   'StorySources',
   'PreviewEnd',
+  // BR-9b: a word topic's flashcards.
+  'PreviewFlashcards',
 ]);
 
 const Stack = createNativeStackNavigator<BrowseStackParamList>();
@@ -66,6 +72,7 @@ export function BrowseNavigator(): React.ReactElement {
       <Stack.Screen name="BrowseItem" component={BrowseItemScreen} />
       <Stack.Screen name="CardDetail" component={BrowseCardScreen} options={{ presentation: 'modal' }} />
       <Stack.Screen name="PreviewQuest" component={PreviewQuestScreen} />
+      <Stack.Screen name="PreviewFlashcards" component={PreviewFlashcardsScreen} />
       <Stack.Screen name="Minigame" component={BrowseMinigameScreen} />
       <Stack.Screen name="StoryReader" component={BrowseStoryReaderScreen} />
       <Stack.Screen name="StorySources" component={BrowseStorySourcesScreen} />

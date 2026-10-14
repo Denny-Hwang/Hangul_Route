@@ -21,9 +21,9 @@
       "reviewedAt": "2026-10-13"
     },
     "console": {
-      "enSha": "a86beec3b233af26e8bfb4dc5fa848d0dccd4705f5e650cf7cf5d9829aa73025",
+      "enSha": "366b1aaf7806376509877221a3e272b52d911d36490470c2492d37c70e94444b",
       "reviewedBy": "MAR",
-      "reviewedAt": "2026-10-12"
+      "reviewedAt": "2026-10-13"
     },
     "landing": {
       "enSha": "3dcc633d42b0b78bfd20110d4494f672943750f987744e3af49b05a23c569485",
@@ -31,9 +31,9 @@
       "reviewedAt": "2026-10-13"
     },
     "report": {
-      "enSha": "02e826a47ecba9b91356597d9c8bf9185dc261d8266f0668538182435fb75b77",
+      "enSha": "899320fac2745799d197148b7f3d0586ff8ddb9f9edba6563ee1e1b52772aa63",
       "reviewedBy": "MAR",
-      "reviewedAt": "2026-10-12"
+      "reviewedAt": "2026-10-13"
     }
   },
   "ko": {
@@ -58,7 +58,7 @@
       "reviewedAt": "2026-10-13"
     },
     "console": {
-      "enSha": "c28a7df5687932f8c7ac3026817f997d34547b67b1ee3492a3b29ea3d44388e2",
+      "enSha": "366b1aaf7806376509877221a3e272b52d911d36490470c2492d37c70e94444b",
       "reviewedBy": "MAR",
       "reviewedAt": "2026-10-13"
     },
@@ -68,9 +68,9 @@
       "reviewedAt": "2026-10-13"
     },
     "report": {
-      "enSha": "02e826a47ecba9b91356597d9c8bf9185dc261d8266f0668538182435fb75b77",
+      "enSha": "899320fac2745799d197148b7f3d0586ff8ddb9f9edba6563ee1e1b52772aa63",
       "reviewedBy": "MAR",
-      "reviewedAt": "2026-10-12"
+      "reviewedAt": "2026-10-13"
     }
   }
 }
