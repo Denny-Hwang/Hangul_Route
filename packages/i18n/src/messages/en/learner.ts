@@ -1837,12 +1837,29 @@ export const learner = {
       /** The speaker button on the stage. */
       playPrompt: 'Play the sound',
     },
+    /** Activity preset names on the activity slide (PR 7): the same values as `console.lecture.activity`. */
+    activity: {
+      'air-write': 'Write it in the air',
+      'say-together': 'Say it together',
+      'pair-share': 'Pair and share',
+      'copy-on-paper': 'Copy it on paper',
+      'stretch-break': 'Stretch break',
+    },
     slide: {
       /** Read before the teacher's deck title on the first slide. */
       deckTitle: 'Lesson',
       letterName: (name: string) => `Letter name: ${name}`,
       /** Until a native speaker reviews the letter's strokes (section 3.6). */
       strokeCaption: 'Simplified stroke guide',
+      /** The kind label above a heritage card's title (PR 7). */
+      card: 'Heritage card',
+      /** The sequence slide's last build: the steps in a shuffled order (PR 7). */
+      order: 'What comes first?',
+      activity: {
+        minutes: (n: number) => plural('en', n, { one: '1 minute', other: `${n} minutes` }),
+        /** Opens the class timer with the slide's minutes; it never starts by itself (TD5). */
+        startTimer: { cta: 'Start timer' },
+      },
       end: {
         title: 'Today we met',
         letters: 'Letters',

@@ -1401,10 +1401,23 @@ export const learner = {
       },
     },
     quiz: { playPrompt: '소리 듣기' },
+    activity: {
+      'air-write': '허공에 써 보기',
+      'say-together': '함께 소리 내어 읽기',
+      'pair-share': '짝과 나누기',
+      'copy-on-paper': '종이에 따라 쓰기',
+      'stretch-break': '기지개 켜기',
+    },
     slide: {
       deckTitle: '수업',
       letterName: (name: string) => `글자 이름: ${name}`,
       strokeCaption: '간단한 획순 안내',
+      card: '문화 카드',
+      order: '무엇이 먼저일까요?',
+      activity: {
+        minutes: (n: number) => `${n}분`,
+        startTimer: { cta: '타이머 시작' },
+      },
       end: {
         title: '오늘 함께 본 것',
         letters: '글자',

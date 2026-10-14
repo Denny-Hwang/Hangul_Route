@@ -1400,10 +1400,23 @@ export const learner = {
       },
     },
     quiz: { playPrompt: 'Escuchar el sonido' },
+    activity: {
+      'air-write': 'Escribir en el aire',
+      'say-together': 'Decirlo en grupo',
+      'pair-share': 'En parejas',
+      'copy-on-paper': 'Copiar en papel',
+      'stretch-break': 'Pausa para estirarse',
+    },
     slide: {
       deckTitle: 'Lección',
       letterName: (name: string) => `Nombre de la letra: ${name}`,
       strokeCaption: 'Guía de trazos simplificada',
+      card: 'Tarjeta cultural',
+      order: '¿Qué va primero?',
+      activity: {
+        minutes: (n: number) => plural('es', n, { one: '1 minuto', other: `${n} minutos` }),
+        startTimer: { cta: 'Iniciar temporizador' },
+      },
       end: {
         title: 'Hoy conocimos',
         letters: 'Letras',
