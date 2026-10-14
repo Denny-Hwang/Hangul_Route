@@ -132,11 +132,11 @@ Columns: shelf id = `episode:shelf-<slug>`; **home cell** = `<recommendedStage>-
 | 19 | seungjeongwon-ilgi-every-day | The Royal Secretariat's Everyday Diary | stage3-letters | letters | 3 | 5 | – | culture 13 |  | A4 | records-joseon |
 | 20 | nanjung-ilgi | Admiral Yi's Diary | stage3-letters | letters | 3 | 4 | – | culture 14 |  | A4 | science-art-life |
 | 21 | donguibogam | Heo Jun's Treasured Mirror of Medicine | stage3-life | life | 3 | 5 | – | culture 15 |  | E4 | science-art-life |
-| 22 | ilseongnok-daily-reflection | King Jeongjo's Diary of Daily Reflection | stage4-letters | letters | 4 | 4 | – | culture 16 |  | A4 | records-joseon |
+| 22 | ilseongnok-daily-reflection | King Jeongjo's Diary of Daily Reflection | stage4-letters | letters | 4 | 4 | L (Read Along, F-CURR-001 S4-1) | culture 16 |  | A4 | records-joseon |
 | 23 | uigwe-royal-birthday | A Picture Record of a Royal Birthday | stage5-rites | rites | 5 | 5 | – (book later) | culture 17 |  | C2, A3 | records-joseon |
 | 24 | joseon-records-today | Old Records, New Discoveries | stage6-letters | letters | 6 | 4 | – | culture 18 |  | A3 | records-joseon |
 
-Totals: 112 minutes; 12 stories in cells that already hold a lesson (rows 1-10, 13, 15), 12 in cells that would otherwise be placeholders; story-time 6, culture 18; sampler 6 (the F-STORY-004 §3.9 list, re-verified: all six are `recommended_stage` 1 and 4-5 minutes). Orders are data on the story (`shelf.order`); changing them is a content change.
+Totals: 112 minutes; 13 stories in cells that hold a lesson (rows 1-10, 13, 15, and 22 since F-CURR-001 S4-1), 11 in cells that would otherwise be placeholders; story-time 6, culture 18; sampler 6 (the F-STORY-004 §3.9 list, re-verified: all six are `recommended_stage` 1 and 4-5 minutes). Orders are data on the story (`shelf.order`); changing them is a content change.
 
 **Derived matrix** (L = lesson, number = stories whose home cell this is; "S-only" = a stories-only cell):
 
@@ -145,7 +145,7 @@ Totals: 112 minutes; 12 stories in cells that already hold a lesson (rows 1-10, 
 | Stage 1 | L + 5 | L + 1 | L + 2 | L + 1 | L + 1 |
 | Stage 2 | S-only 2 | L + 1 | S-only 1 | L + 1 | S-only 3 |
 | Stage 3 | S-only 2 | S-only 1 | placeholder | placeholder | placeholder |
-| Stage 4 | S-only 1 | placeholder | L + 0 | placeholder | placeholder |
+| Stage 4 | L + 1 | placeholder | L + 0 | placeholder | placeholder |
 | Stage 5 | book later | book later | S-only 1 → book later | book later | book later |
 | Stage 6 | S-only 1 | placeholder | placeholder | placeholder | placeholder |
 | Stage 7 | placeholder | placeholder | placeholder | placeholder | placeholder |

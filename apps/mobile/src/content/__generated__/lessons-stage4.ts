@@ -3,9 +3,723 @@ import type { Overlays } from '@hangul-route/content-schema';
 import type { MinigameScope } from '../../logic/minigame-config';
 
 /** The game content of the Stage 4 lesson quests, by minigame ref (reached lazily, never from lessons-index.ts). */
-export const LESSON_SCOPES: Readonly<Record<string, MinigameScope>> = {};
+export const LESSON_SCOPES: Readonly<Record<string, MinigameScope>> = {
+  "minigame:s4-letters-q1-apply": {
+    "kind": "story-sequence",
+    "rounds": 1,
+    "storySteps": [
+      {
+        "id": "l1",
+        "labelEn": "Hello, Teacher!",
+        "labelKo": "선생님, 안녕하세요!",
+        "romanization": "seonsaengnim annyeonghaseyo"
+      },
+      {
+        "id": "l2",
+        "labelEn": "What is this?",
+        "labelKo": "이게 뭐예요?",
+        "romanization": "ige mwoyeyo"
+      },
+      {
+        "id": "l3",
+        "labelEn": "It is a pencil.",
+        "labelKo": "연필이에요.",
+        "romanization": "yeonpirieyo"
+      },
+      {
+        "id": "l4",
+        "labelEn": "Goodbye.",
+        "labelKo": "잘 가요.",
+        "romanization": "jal gayo"
+      }
+    ]
+  },
+  "minigame:s4-letters-q1-check": {
+    "kind": "listen-pick",
+    "rounds": 2,
+    "listenPick": {
+      "rounds": [
+        {
+          "id": "c1",
+          "prompt": {
+            "ko": "이게 뭐예요?",
+            "romanization": "ige mwoyeyo",
+            "en": "What is this?"
+          },
+          "options": [
+            {
+              "id": "a",
+              "text": {
+                "ko": "지우개예요.",
+                "romanization": "jiugaeyeyo",
+                "en": "It is an eraser."
+              }
+            },
+            {
+              "id": "b",
+              "text": {
+                "ko": "누구예요?",
+                "romanization": "nuguyeyo",
+                "en": "Who is it?"
+              }
+            },
+            {
+              "id": "c",
+              "text": {
+                "ko": "안녕하세요.",
+                "romanization": "annyeonghaseyo",
+                "en": "Hello."
+              }
+            }
+          ],
+          "answerId": "a"
+        },
+        {
+          "id": "c2",
+          "prompt": {
+            "ko": "누구예요?",
+            "romanization": "nuguyeyo",
+            "en": "Who is it?"
+          },
+          "options": [
+            {
+              "id": "a",
+              "text": {
+                "ko": "할머니예요.",
+                "romanization": "halmeoniyeyo",
+                "en": "It is Grandma."
+              }
+            },
+            {
+              "id": "b",
+              "text": {
+                "ko": "연필이에요.",
+                "romanization": "yeonpirieyo",
+                "en": "It is a pencil."
+              }
+            },
+            {
+              "id": "c",
+              "text": {
+                "ko": "잘 가요.",
+                "romanization": "jal gayo",
+                "en": "Goodbye."
+              }
+            }
+          ],
+          "answerId": "a"
+        }
+      ]
+    }
+  },
+  "minigame:s4-letters-q1-practice": {
+    "kind": "tap-respond",
+    "rounds": 3,
+    "dialogue": [
+      {
+        "npcKo": "이게 뭐예요?",
+        "npcRomanization": "ige mwoyeyo",
+        "npcEn": "What is this?",
+        "options": [
+          {
+            "ko": "책이에요.",
+            "romanization": "chaegieyo",
+            "en": "It is a book.",
+            "isCorrect": true
+          },
+          {
+            "ko": "안녕하세요.",
+            "romanization": "annyeonghaseyo",
+            "en": "Hello.",
+            "isCorrect": false
+          },
+          {
+            "ko": "잘 가요.",
+            "romanization": "jal gayo",
+            "en": "Goodbye.",
+            "isCorrect": false
+          }
+        ]
+      },
+      {
+        "npcKo": "누구예요?",
+        "npcRomanization": "nuguyeyo",
+        "npcEn": "Who is it?",
+        "options": [
+          {
+            "ko": "연필이에요.",
+            "romanization": "yeonpirieyo",
+            "en": "It is a pencil.",
+            "isCorrect": false
+          },
+          {
+            "ko": "잘 가요.",
+            "romanization": "jal gayo",
+            "en": "Goodbye.",
+            "isCorrect": false
+          },
+          {
+            "ko": "친구예요.",
+            "romanization": "chinguyeyo",
+            "en": "It is a friend.",
+            "isCorrect": true
+          }
+        ]
+      },
+      {
+        "npcKo": "이게 뭐예요?",
+        "npcRomanization": "ige mwoyeyo",
+        "npcEn": "What is this?",
+        "options": [
+          {
+            "ko": "안녕하세요.",
+            "romanization": "annyeonghaseyo",
+            "en": "Hello.",
+            "isCorrect": false
+          },
+          {
+            "ko": "가방이에요.",
+            "romanization": "gabangieyo",
+            "en": "It is a bag.",
+            "isCorrect": true
+          },
+          {
+            "ko": "누구예요?",
+            "romanization": "nuguyeyo",
+            "en": "Who is it?",
+            "isCorrect": false
+          }
+        ]
+      }
+    ]
+  },
+  "minigame:s4-letters-q2-apply": {
+    "kind": "story-sequence",
+    "rounds": 1,
+    "storySteps": [
+      {
+        "id": "l1",
+        "labelEn": "Hello, Teacher!",
+        "labelKo": "선생님, 안녕하세요!",
+        "romanization": "seonsaengnim annyeonghaseyo"
+      },
+      {
+        "id": "l2",
+        "labelEn": "Where is the bag?",
+        "labelKo": "가방이 어디예요?",
+        "romanization": "gabangi eodiyeyo"
+      },
+      {
+        "id": "l3",
+        "labelEn": "It is over there.",
+        "labelKo": "저기예요.",
+        "romanization": "jeogiyeyo"
+      },
+      {
+        "id": "l4",
+        "labelEn": "Goodbye.",
+        "labelKo": "잘 가요.",
+        "romanization": "jal gayo"
+      }
+    ]
+  },
+  "minigame:s4-letters-q2-check": {
+    "kind": "listen-pick",
+    "rounds": 2,
+    "listenPick": {
+      "rounds": [
+        {
+          "id": "c1",
+          "prompt": {
+            "ko": "화장실이 어디예요?",
+            "romanization": "hwajangsiri eodiyeyo",
+            "en": "Where is the restroom?"
+          },
+          "options": [
+            {
+              "id": "a",
+              "text": {
+                "ko": "저기예요.",
+                "romanization": "jeogiyeyo",
+                "en": "It is over there."
+              }
+            },
+            {
+              "id": "b",
+              "text": {
+                "ko": "지우개예요.",
+                "romanization": "jiugaeyeyo",
+                "en": "It is an eraser."
+              }
+            },
+            {
+              "id": "c",
+              "text": {
+                "ko": "잘 가요.",
+                "romanization": "jal gayo",
+                "en": "Goodbye."
+              }
+            }
+          ],
+          "answerId": "a"
+        },
+        {
+          "id": "c2",
+          "prompt": {
+            "ko": "책이 어디예요?",
+            "romanization": "chaegi eodiyeyo",
+            "en": "Where is the book?"
+          },
+          "options": [
+            {
+              "id": "a",
+              "text": {
+                "ko": "여기예요.",
+                "romanization": "yeogiyeyo",
+                "en": "It is here."
+              }
+            },
+            {
+              "id": "b",
+              "text": {
+                "ko": "할머니예요.",
+                "romanization": "halmeoniyeyo",
+                "en": "It is Grandma."
+              }
+            },
+            {
+              "id": "c",
+              "text": {
+                "ko": "안녕하세요.",
+                "romanization": "annyeonghaseyo",
+                "en": "Hello."
+              }
+            }
+          ],
+          "answerId": "a"
+        }
+      ]
+    }
+  },
+  "minigame:s4-letters-q2-practice": {
+    "kind": "tap-respond",
+    "rounds": 3,
+    "dialogue": [
+      {
+        "npcKo": "화장실이 어디예요?",
+        "npcRomanization": "hwajangsiri eodiyeyo",
+        "npcEn": "Where is the restroom?",
+        "options": [
+          {
+            "ko": "연필이에요.",
+            "romanization": "yeonpirieyo",
+            "en": "It is a pencil.",
+            "isCorrect": false
+          },
+          {
+            "ko": "저기예요.",
+            "romanization": "jeogiyeyo",
+            "en": "It is over there.",
+            "isCorrect": true
+          },
+          {
+            "ko": "할머니예요.",
+            "romanization": "halmeoniyeyo",
+            "en": "It is Grandma.",
+            "isCorrect": false
+          }
+        ]
+      },
+      {
+        "npcKo": "책이 어디예요?",
+        "npcRomanization": "chaegi eodiyeyo",
+        "npcEn": "Where is the book?",
+        "options": [
+          {
+            "ko": "여기예요.",
+            "romanization": "yeogiyeyo",
+            "en": "It is here.",
+            "isCorrect": true
+          },
+          {
+            "ko": "지우개예요.",
+            "romanization": "jiugaeyeyo",
+            "en": "It is an eraser.",
+            "isCorrect": false
+          },
+          {
+            "ko": "잘 가요.",
+            "romanization": "jal gayo",
+            "en": "Goodbye.",
+            "isCorrect": false
+          }
+        ]
+      },
+      {
+        "npcKo": "지우개가 어디예요?",
+        "npcRomanization": "jiugaega eodiyeyo",
+        "npcEn": "Where is the eraser?",
+        "options": [
+          {
+            "ko": "누구예요?",
+            "romanization": "nuguyeyo",
+            "en": "Who is it?",
+            "isCorrect": false
+          },
+          {
+            "ko": "안녕하세요.",
+            "romanization": "annyeonghaseyo",
+            "en": "Hello.",
+            "isCorrect": false
+          },
+          {
+            "ko": "저기예요.",
+            "romanization": "jeogiyeyo",
+            "en": "It is over there.",
+            "isCorrect": true
+          }
+        ]
+      }
+    ]
+  },
+  "minigame:s4-letters-q3-apply": {
+    "kind": "story-sequence",
+    "rounds": 1,
+    "storySteps": [
+      {
+        "id": "l1",
+        "labelEn": "Hello!",
+        "labelKo": "안녕하세요!",
+        "romanization": "annyeonghaseyo"
+      },
+      {
+        "id": "l2",
+        "labelEn": "Hello, Teacher! What is this?",
+        "labelKo": "선생님, 안녕하세요! 이게 뭐예요?",
+        "romanization": "seonsaengnim annyeonghaseyo ige mwoyeyo"
+      },
+      {
+        "id": "l3",
+        "labelEn": "It is a notebook.",
+        "labelKo": "공책이에요.",
+        "romanization": "gongchaegieyo"
+      },
+      {
+        "id": "l4",
+        "labelEn": "Thank you!",
+        "labelKo": "감사합니다!",
+        "romanization": "gamsahamnida"
+      }
+    ]
+  },
+  "minigame:s4-letters-q3-check": {
+    "kind": "listen-pick",
+    "rounds": 2,
+    "listenPick": {
+      "rounds": [
+        {
+          "id": "c1",
+          "prompt": {
+            "ko": "연필 여기 있어요.",
+            "romanization": "yeonpil yeogi isseoyo",
+            "en": "Here is a pencil."
+          },
+          "options": [
+            {
+              "id": "a",
+              "text": {
+                "ko": "감사합니다!",
+                "romanization": "gamsahamnida",
+                "en": "Thank you!"
+              }
+            },
+            {
+              "id": "b",
+              "text": {
+                "ko": "누구예요?",
+                "romanization": "nuguyeyo",
+                "en": "Who is it?"
+              }
+            },
+            {
+              "id": "c",
+              "text": {
+                "ko": "저기예요.",
+                "romanization": "jeogiyeyo",
+                "en": "It is over there."
+              }
+            }
+          ],
+          "answerId": "a"
+        },
+        {
+          "id": "c2",
+          "prompt": {
+            "ko": "안녕하세요!",
+            "romanization": "annyeonghaseyo",
+            "en": "Hello!"
+          },
+          "options": [
+            {
+              "id": "a",
+              "text": {
+                "ko": "선생님, 안녕하세요!",
+                "romanization": "seonsaengnim annyeonghaseyo",
+                "en": "Hello, Teacher!"
+              }
+            },
+            {
+              "id": "b",
+              "text": {
+                "ko": "감사합니다!",
+                "romanization": "gamsahamnida",
+                "en": "Thank you!"
+              }
+            },
+            {
+              "id": "c",
+              "text": {
+                "ko": "지우개예요.",
+                "romanization": "jiugaeyeyo",
+                "en": "It is an eraser."
+              }
+            }
+          ],
+          "answerId": "a"
+        }
+      ]
+    }
+  },
+  "minigame:s4-letters-q3-practice": {
+    "kind": "tap-respond",
+    "rounds": 3,
+    "dialogue": [
+      {
+        "npcKo": "안녕하세요!",
+        "npcRomanization": "annyeonghaseyo",
+        "npcEn": "Hello!",
+        "options": [
+          {
+            "ko": "잘 가요.",
+            "romanization": "jal gayo",
+            "en": "Goodbye.",
+            "isCorrect": false
+          },
+          {
+            "ko": "저기예요.",
+            "romanization": "jeogiyeyo",
+            "en": "It is over there.",
+            "isCorrect": false
+          },
+          {
+            "ko": "선생님, 안녕하세요!",
+            "romanization": "seonsaengnim annyeonghaseyo",
+            "en": "Hello, Teacher!",
+            "isCorrect": true
+          }
+        ]
+      },
+      {
+        "npcKo": "이게 뭐예요?",
+        "npcRomanization": "ige mwoyeyo",
+        "npcEn": "What is this?",
+        "options": [
+          {
+            "ko": "감사합니다!",
+            "romanization": "gamsahamnida",
+            "en": "Thank you!",
+            "isCorrect": false
+          },
+          {
+            "ko": "한글이에요.",
+            "romanization": "hangeurieyo",
+            "en": "It is Hangul.",
+            "isCorrect": true
+          },
+          {
+            "ko": "저기예요.",
+            "romanization": "jeogiyeyo",
+            "en": "It is over there.",
+            "isCorrect": false
+          }
+        ]
+      },
+      {
+        "npcKo": "연필 여기 있어요.",
+        "npcRomanization": "yeonpil yeogi isseoyo",
+        "npcEn": "Here is a pencil.",
+        "options": [
+          {
+            "ko": "감사합니다!",
+            "romanization": "gamsahamnida",
+            "en": "Thank you!",
+            "isCorrect": true
+          },
+          {
+            "ko": "누구예요?",
+            "romanization": "nuguyeyo",
+            "en": "Who is it?",
+            "isCorrect": false
+          },
+          {
+            "ko": "안녕하세요.",
+            "romanization": "annyeonghaseyo",
+            "en": "Hello.",
+            "isCorrect": false
+          }
+        ]
+      }
+    ]
+  }
+};
 
 export const LESSON_SCOPE_OVERLAYS: Overlays = {
-  "es": {},
-  "ko": {}
+  "es": {
+    "minigame:s4-letters-q1-apply": {
+      "storySteps.l1.label": "¡Hola, docente!",
+      "storySteps.l2.label": "¿Qué es esto?",
+      "storySteps.l3.label": "Es un lápiz.",
+      "storySteps.l4.label": "Adiós."
+    },
+    "minigame:s4-letters-q1-check": {
+      "listenPick.rounds.c1.prompt": "¿Qué es esto?",
+      "listenPick.rounds.c2.prompt": "¿Quién es?"
+    },
+    "minigame:s4-letters-q1-practice": {
+      "dialogue.0.npc": "¿Qué es esto?",
+      "dialogue.0.options.annyeonghaseyo.gloss": "Hola.",
+      "dialogue.0.options.chaegieyo.gloss": "Es un libro.",
+      "dialogue.0.options.jal-gayo.gloss": "Adiós.",
+      "dialogue.1.npc": "¿Quién es?",
+      "dialogue.1.options.chinguyeyo.gloss": "Es un amigo o una amiga.",
+      "dialogue.1.options.jal-gayo.gloss": "Adiós.",
+      "dialogue.1.options.yeonpirieyo.gloss": "Es un lápiz.",
+      "dialogue.2.npc": "¿Qué es esto?",
+      "dialogue.2.options.annyeonghaseyo.gloss": "Hola.",
+      "dialogue.2.options.gabangieyo.gloss": "Es una mochila.",
+      "dialogue.2.options.nuguyeyo.gloss": "¿Quién es?"
+    },
+    "minigame:s4-letters-q2-apply": {
+      "storySteps.l1.label": "¡Hola, docente!",
+      "storySteps.l2.label": "¿Dónde está la mochila?",
+      "storySteps.l3.label": "Está allá.",
+      "storySteps.l4.label": "Adiós."
+    },
+    "minigame:s4-letters-q2-check": {
+      "listenPick.rounds.c1.prompt": "¿Dónde está el baño?",
+      "listenPick.rounds.c2.prompt": "¿Dónde está el libro?"
+    },
+    "minigame:s4-letters-q2-practice": {
+      "dialogue.0.npc": "¿Dónde está el baño?",
+      "dialogue.0.options.halmeoniyeyo.gloss": "Es la abuela.",
+      "dialogue.0.options.jeogiyeyo.gloss": "Está allá.",
+      "dialogue.0.options.yeonpirieyo.gloss": "Es un lápiz.",
+      "dialogue.1.npc": "¿Dónde está el libro?",
+      "dialogue.1.options.jal-gayo.gloss": "Adiós.",
+      "dialogue.1.options.jiugaeyeyo.gloss": "Es una goma de borrar.",
+      "dialogue.1.options.yeogiyeyo.gloss": "Está aquí.",
+      "dialogue.2.npc": "¿Dónde está la goma de borrar?",
+      "dialogue.2.options.annyeonghaseyo.gloss": "Hola.",
+      "dialogue.2.options.jeogiyeyo.gloss": "Está allá.",
+      "dialogue.2.options.nuguyeyo.gloss": "¿Quién es?"
+    },
+    "minigame:s4-letters-q3-apply": {
+      "storySteps.l1.label": "¡Hola!",
+      "storySteps.l2.label": "¡Hola, docente! ¿Qué es esto?",
+      "storySteps.l3.label": "Es un cuaderno.",
+      "storySteps.l4.label": "¡Gracias!"
+    },
+    "minigame:s4-letters-q3-check": {
+      "listenPick.rounds.c1.prompt": "Aquí tienes un lápiz.",
+      "listenPick.rounds.c2.prompt": "¡Hola!"
+    },
+    "minigame:s4-letters-q3-practice": {
+      "dialogue.0.npc": "¡Hola!",
+      "dialogue.0.options.jal-gayo.gloss": "Adiós.",
+      "dialogue.0.options.jeogiyeyo.gloss": "Está allá.",
+      "dialogue.0.options.seonsaengnim-annyeonghaseyo.gloss": "¡Hola, docente!",
+      "dialogue.1.npc": "¿Qué es esto?",
+      "dialogue.1.options.gamsahamnida.gloss": "¡Gracias!",
+      "dialogue.1.options.hangeurieyo.gloss": "Es el hangul.",
+      "dialogue.1.options.jeogiyeyo.gloss": "Está allá.",
+      "dialogue.2.npc": "Aquí tienes un lápiz.",
+      "dialogue.2.options.annyeonghaseyo.gloss": "Hola.",
+      "dialogue.2.options.gamsahamnida.gloss": "¡Gracias!",
+      "dialogue.2.options.nuguyeyo.gloss": "¿Quién es?"
+    }
+  },
+  "ko": {
+    "minigame:s4-letters-q1-apply": {
+      "storySteps.l1.label": "가르쳐 주시는 분께 하는 인사",
+      "storySteps.l2.label": "물건 이름을 묻는 말",
+      "storySteps.l3.label": "글씨 쓰는 도구라는 답",
+      "storySteps.l4.label": "헤어질 때 하는 인사"
+    },
+    "minigame:s4-letters-q1-check": {
+      "listenPick.rounds.c1.prompt": "물건 이름을 묻는 말",
+      "listenPick.rounds.c2.prompt": "사람을 묻는 말"
+    },
+    "minigame:s4-letters-q1-practice": {
+      "dialogue.0.npc": "물건 이름을 묻는 말",
+      "dialogue.0.options.annyeonghaseyo.gloss": "만났을 때 하는 공손한 인사",
+      "dialogue.0.options.chaegieyo.gloss": "읽는 물건이라는 답",
+      "dialogue.0.options.jal-gayo.gloss": "헤어질 때 하는 인사",
+      "dialogue.1.npc": "사람을 묻는 말",
+      "dialogue.1.options.chinguyeyo.gloss": "가깝게 지내는 사람이라는 답",
+      "dialogue.1.options.jal-gayo.gloss": "헤어질 때 하는 인사",
+      "dialogue.1.options.yeonpirieyo.gloss": "글씨 쓰는 도구라는 답",
+      "dialogue.2.npc": "물건 이름을 묻는 말",
+      "dialogue.2.options.annyeonghaseyo.gloss": "만났을 때 하는 공손한 인사",
+      "dialogue.2.options.gabangieyo.gloss": "물건을 넣어 메는 것이라는 답",
+      "dialogue.2.options.nuguyeyo.gloss": "사람을 묻는 말"
+    },
+    "minigame:s4-letters-q2-apply": {
+      "storySteps.l1.label": "가르쳐 주시는 분께 하는 인사",
+      "storySteps.l2.label": "물건을 넣어 메는 것이 어디 있는지 묻는 말",
+      "storySteps.l3.label": "먼 곳을 가리키는 답",
+      "storySteps.l4.label": "헤어질 때 하는 인사"
+    },
+    "minigame:s4-letters-q2-check": {
+      "listenPick.rounds.c1.prompt": "볼일 보는 곳이 어디인지 묻는 말",
+      "listenPick.rounds.c2.prompt": "읽는 물건이 어디 있는지 묻는 말"
+    },
+    "minigame:s4-letters-q2-practice": {
+      "dialogue.0.npc": "볼일 보는 곳이 어디인지 묻는 말",
+      "dialogue.0.options.halmeoniyeyo.gloss": "아빠나 엄마의 어머니라는 답",
+      "dialogue.0.options.jeogiyeyo.gloss": "먼 곳을 가리키는 답",
+      "dialogue.0.options.yeonpirieyo.gloss": "글씨 쓰는 도구라는 답",
+      "dialogue.1.npc": "읽는 물건이 어디 있는지 묻는 말",
+      "dialogue.1.options.jal-gayo.gloss": "헤어질 때 하는 인사",
+      "dialogue.1.options.jiugaeyeyo.gloss": "글씨 지우는 물건이라는 답",
+      "dialogue.1.options.yeogiyeyo.gloss": "가까운 곳을 가리키는 답",
+      "dialogue.2.npc": "글씨 지우는 물건이 어디 있는지 묻는 말",
+      "dialogue.2.options.annyeonghaseyo.gloss": "만났을 때 하는 공손한 인사",
+      "dialogue.2.options.jeogiyeyo.gloss": "먼 곳을 가리키는 답",
+      "dialogue.2.options.nuguyeyo.gloss": "사람을 묻는 말"
+    },
+    "minigame:s4-letters-q3-apply": {
+      "storySteps.l1.label": "만났을 때 하는 공손한 인사",
+      "storySteps.l2.label": "인사하고 물건 이름을 묻는 말",
+      "storySteps.l3.label": "글씨를 쓰는 종이 묶음이라는 답",
+      "storySteps.l4.label": "고마움을 전하는 인사"
+    },
+    "minigame:s4-letters-q3-check": {
+      "listenPick.rounds.c1.prompt": "글씨 쓰는 도구를 건네는 말",
+      "listenPick.rounds.c2.prompt": "만났을 때 하는 공손한 인사"
+    },
+    "minigame:s4-letters-q3-practice": {
+      "dialogue.0.npc": "만났을 때 하는 공손한 인사",
+      "dialogue.0.options.jal-gayo.gloss": "헤어질 때 하는 인사",
+      "dialogue.0.options.jeogiyeyo.gloss": "먼 곳을 가리키는 답",
+      "dialogue.0.options.seonsaengnim-annyeonghaseyo.gloss": "가르쳐 주시는 분께 하는 인사",
+      "dialogue.1.npc": "물건 이름을 묻는 말",
+      "dialogue.1.options.gamsahamnida.gloss": "고마움을 전하는 인사",
+      "dialogue.1.options.hangeurieyo.gloss": "한국어를 적는 글자라는 답",
+      "dialogue.1.options.jeogiyeyo.gloss": "먼 곳을 가리키는 답",
+      "dialogue.2.npc": "글씨 쓰는 도구를 건네는 말",
+      "dialogue.2.options.annyeonghaseyo.gloss": "만났을 때 하는 공손한 인사",
+      "dialogue.2.options.gamsahamnida.gloss": "고마움을 전하는 인사",
+      "dialogue.2.options.nuguyeyo.gloss": "사람을 묻는 말"
+    }
+  }
 };
