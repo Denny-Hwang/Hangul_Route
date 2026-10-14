@@ -75,7 +75,7 @@ export interface WordArtMeta {
   maxTones?: number;      // allowlist above 4 fill tones (§3.3); needs `reason`
   bboxWaived?: boolean;   // C2 waiver; needs `reason`
   reason?: string;        // why a waiver is granted (a test requires it with either waiver)
-  reserved?: boolean;     // key exists for v1.1, unused at launch
+  reserved?: boolean;     // used by no vocabulary topic: a key kept for v1.1, or a lesson picture outside the topics (F-CURR-001)
 }
 export type WordArtFamily = 'food'|'animal'|'family'|'school'|'nature'|'travel'|'sport'|'culture'|'science'|'color'|'count'|'body'|'prop';
 ```
@@ -246,7 +246,7 @@ Files: `glyphs/{food,animal,family,school,nature,travel,sport,culture,science,pr
 
 - every item `visual` of the form `word:<key>` has `<key>` in `WORD_ART_KEYS`;
 - every item `visual` of the form `card:<id>` is in `supportedCardIds`;
-- every `WORD_ART_KEYS` entry of family other than `prop` is used by exactly one item, or is flagged `meta.reserved` — **checked per topic file that exists**: while a topic's JSON has not been merged (F-VOC-001 V-2b..V-6b), the glyphs of its families are checked for validity only (tones, grammar, bbox), so the system PRs W-1b/W-1c and the art batches may land before the data they will serve;
+- every `WORD_ART_KEYS` entry of family other than `prop` is used by exactly one item, or is flagged `meta.reserved` (a lesson picture outside the topics is registered this way: `sport-swing`, `sport-slide` and `nature-sand` for Stage 2 Playground Words, F-CURR-001 S2-3; a reserved key is outside the family plan of `registry.test.ts`) — **checked per topic file that exists**: while a topic's JSON has not been merged (F-VOC-001 V-2b..V-6b), the glyphs of its families are checked for validity only (tones, grammar, bbox), so the system PRs W-1b/W-1c and the art batches may land before the data they will serve;
 - every `prop` key is referenced by a colour generator;
 - **while the art lags the data** (amended at W-1b: F-VOC-001 merged `food`, `animals`, `colors` and `numbers` before any batch, leaving 42 `word:` visuals without a glyph): the test keeps an `AWAITING_ART` map from each family to the PR that draws it (W-3 food, color, count; W-4 animal, body; W-5 family, school, nature; W-6 travel, sport, culture, science). For a served family it pins how many visuals are still missing, so a misspelled key in a topic file raises the count and fails at once; a family whose count reaches 0 must leave the map. A batch PR deletes its families from the map, which turns on the full first rule for them; a topic PR that serves a family in the map pins its count. Until the last batch, behaviour 1 holds for every family outside the map;
 - the `COLOR_CONFUSION_PAIRS` constant matches the recomputed list (§3.4).
@@ -307,6 +307,7 @@ New server-rendered page `apps/web/src/app/design-preview/word-art/page.tsx` (F-
 | sport (12) | `sport-soccer` (prototype) · `sport-baseball`: white ball, red stitches · `sport-basketball`: orange ball, black lines · `sport-volleyball`: white ball, blue and yellow panels · `sport-tabletennis`: paddle and white ball · `sport-swimming`: swimmer head, goggles, waves · `sport-taekwondo`: figure in white uniform, belt, high kick · `sport-running`: figure running, shoes · `sport-jumprope`: figure mid-jump, rope arc · `sport-bicycle`: bicycle, side view · `sport-skiing`: skier, skis, poles · `sport-ball`: striped rubber playground ball |
 | culture (7) | `culture-hangul`: abstract blocks of a circle, square and bar (alluding to jamo shapes, **no letters**) · `culture-hanok`: tiled curved roof, wooden pillars, door · `culture-bibimbap`: stone bowl, colourful toppings, egg · `culture-tteokbokki`: bowl, red-orange sauce, white rice-cake pieces · `culture-song`: two music notes and sound arcs · `culture-dance`: figure with raised arms and a fan or ribbon · `culture-drama`: TV screen with a play triangle |
 | science (12) | `science-fire`: flame in three tones · `science-ice`: light-blue ice cube, shine · `science-stone`: gray rounded stone · `science-magnet`: horseshoe, red and blue ends · `science-earth`: blue globe, green continents · `science-space`: dark sky, stars, ringed planet · `science-robot`: boxy robot, antenna, screen face smiling · `science-seed`: seed with a green sprout · `science-rainbow`: six arcs (allowlisted 6 tones), two clouds · `science-shadow`: ball and its long gray shadow · `science-wind`: three swirls and a leaf · `science-light`: bulb, glow, rays |
+| lesson pictures (3, reserved; F-CURR-001 S2-3, #673) | `sport-swing`: blue A-frame swing set, two ropes, red seat · `sport-slide`: blue ladder, yellow chute curving to the ground · `nature-sand`: pale sand mound with grains, blue spade handle, red bucket. Adopting them in Playground Words q1 (Pic-Word Match and the Check picture round, `content/episodes/stage-2/crafts.json`) is a follow-up after the F-CURR-001 integration PRs merge; then the keys drop `reserved` only if a vocabulary topic adopts them, otherwise they stay reserved as lesson pictures |
 | prop (4) | `prop-tangerine` · `prop-leaf` · `prop-grapes` · `prop-crow` (objects for the colour swatches; not vocabulary pictures) |
 
 ### 3.13 Behaviours (Given / When / Then)
@@ -340,7 +341,7 @@ New server-rendered page `apps/web/src/app/design-preview/word-art/page.tsx` (F-
 | `.../glyphs.test.ts` | unit | for **every registry glyph**: tones valid, at most `maxTones` fill tones, path grammar, coordinates in range, shape count limits, `sw` in {2,3} (generated 1.5 and the paper halo of width 7 allowed, amended at W-1c), bbox 60-70 % (waivers listed), distinct data, no `text`/`image` kinds |
 | `.../render.test.ts` | unit, 100 % | `toRenderList` defaults, `mono`, opacity floor; `glyphToSvgString` golden strings for 3 glyphs |
 | `.../generated.test.ts` | unit, 100 % | `swatch` places the sticker in the lower right and keeps 9+ shapes; `count(n)` has n dots for 0..10 and 20, left-to-right; `bodyPart` anchors inside the viewBox; `figure` variants differ; the four sibling glyphs differ |
-| `.../registry.test.ts` | unit | no duplicate keys; key grammar; family matches its source; deep freeze; every family has the planned count (food 9, animal 11, family 12, school 11, nature 9, travel 12, sport 12, culture 7, science 12, color 12, count 12, body 12, prop 4) — at most the plan until its batch lists it in `COMPLETE_FAMILIES`, exactly the plan after, and a family that reaches the plan must be listed; `getWordArt`, `wordArtKeyOf` |
+| `.../registry.test.ts` | unit | no duplicate keys; key grammar; family matches its source; deep freeze; every family has the planned count, reserved keys not counted (food 9, animal 11, family 12, school 11, nature 9, travel 12, sport 12, culture 7, science 12, color 12, count 12, body 12, prop 4) — at most the plan until its batch lists it in `COMPLETE_FAMILIES`, exactly the plan after, and a family that reaches the plan must be listed; `getWordArt`, `wordArtKeyOf` |
 | `.../color-science.test.ts` | unit | the Lab / Machado helpers on known reference colours; `COLOR_CONFUSION_PAIRS` matches the recomputed list; non-text contrast of the outline on canvas is at least 3:1 |
 | `.../import-guard.test.ts` | integration (source scan) | `colors.vocab` / `'vocab.'` tones appear only under `src/word-art/` and `components/WordArt/` |
 | `.../budget.test.ts` | integration | raw and gzip size limits (W7) |
@@ -364,6 +365,7 @@ Coverage targets (CLAUDE.md §6): `packages/design-system` **85 %**; every `src/
 | W-5 | `feat(design-system)`: batch C: Family (12) + School (11) + Nature (the other 7) | M | W-4 |
 | W-6 | `feat(design-system)`: batch D: Travel (12) + Sports (12) + K-Culture (7) + Science (12) | L | W-5 |
 | W-7 | `refactor(mobile)`: `PictureArt.tsx` resolves `card:` and `word:` with the text-tile fallback (shared with F-QUEST-002 Q-3a; whichever lands first owns the file) | S | W-1c |
+| W-8 | `fix(design-system)` (#673): the three reserved lesson pictures `sport-swing`, `sport-slide`, `nature-sand` (§3.12) and their contact-sheet cards | S | W-6 |
 
 (Batches are `feat(design-system)` because they are TypeScript data with tests under `packages/design-system/src/word-art/`; the owner's approval of each batch is the review of that PR. The contact sheet is the design mock for the art, CLAUDE.md §5.)
 

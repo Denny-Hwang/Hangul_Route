@@ -1,7 +1,16 @@
 import { layoutClassFor } from '@hangul-route/design-system/layout';
 import { spacing, touchTarget } from '@hangul-route/design-system/tokens';
 import { describe, expect, it } from 'vitest';
-import { answersColumnWidth, gameArrangement, pictureTextArrangement, stickyPromptColumn, tileGridWidth, twoUpFits } from '../game-layout';
+import {
+  answersColumnWidth,
+  gameArrangement,
+  pictureTextArrangement,
+  screenScrollsWithColumns,
+  stickyPromptColumn,
+  stickyPromptMode,
+  tileGridWidth,
+  twoUpFits,
+} from '../game-layout';
 
 const at = (width: number, height: number) => layoutClassFor({ width, height });
 
@@ -117,11 +126,43 @@ describe('twoUpFits', () => {
 });
 
 describe('stickyPromptColumn (Realia Read, D-2 D7)', () => {
-  it('sticks the prompt column side by side on the web, only when the game asks', () => {
+  it('keeps the prompt column in view side by side, only when the game asks', () => {
     expect(stickyPromptColumn('side', true, 'web')).toBe(true);
     expect(stickyPromptColumn('stacked', true, 'web')).toBe(false);
     expect(stickyPromptColumn('side', false, 'web')).toBe(false);
-    expect(stickyPromptColumn('side', true, 'ios')).toBe(false);
-    expect(stickyPromptColumn('side', true, 'android')).toBe(false);
+  });
+
+  it('native two-column windows keep it in view too (G-2 follow-up 2: D7 parity)', () => {
+    expect(stickyPromptColumn('side', true, 'ios')).toBe(true);
+    expect(stickyPromptColumn('side', true, 'android')).toBe(true);
+    expect(stickyPromptColumn('stacked', true, 'ios')).toBe(false);
+    expect(stickyPromptColumn('side', false, 'android')).toBe(false);
+  });
+});
+
+describe('stickyPromptMode', () => {
+  it('the web uses CSS sticky; native scrolls each column on its own', () => {
+    expect(stickyPromptMode('side', true, 'web')).toBe('css');
+    expect(stickyPromptMode('side', true, 'ios')).toBe('columns');
+    expect(stickyPromptMode('side', true, 'android')).toBe('columns');
+  });
+
+  it('stacked or not asked: the plain columns on every platform', () => {
+    for (const os of ['web', 'ios', 'android']) {
+      expect(stickyPromptMode('stacked', true, os)).toBe('none');
+      expect(stickyPromptMode('side', false, os)).toBe('none');
+    }
+  });
+});
+
+describe('screenScrollsWithColumns', () => {
+  it('the screen stops scrolling only in native columns mode', () => {
+    expect(screenScrollsWithColumns('side', true, 'ios')).toBe(false);
+    expect(screenScrollsWithColumns('side', true, 'android')).toBe(false);
+    expect(screenScrollsWithColumns('side', true, 'web')).toBe(true);
+    for (const os of ['web', 'ios', 'android']) {
+      expect(screenScrollsWithColumns('stacked', true, os)).toBe(true);
+      expect(screenScrollsWithColumns('side', false, os)).toBe(true);
+    }
   });
 });

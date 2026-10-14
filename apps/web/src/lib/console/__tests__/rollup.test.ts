@@ -4,6 +4,18 @@ import type { RosterLearner } from '../api';
 import { CAP_WARNING_RATIO, capState, classRollup, codeExpiry, percent, relativeDay } from '../rollup';
 
 const now = new Date('2026-09-21T12:00:00.000Z');
+// relativeDay counts calendar days in the host time zone (describeRelativeDay reads local
+// year, month and day), so its cases are built from local wall-clock times: the expectations
+// then hold under any TZ (UTC, America/Los_Angeles, Asia/Seoul). Noon on 21 September 2026, local.
+const localNow = new Date(2026, 8, 21, 12);
+/** The ISO instant of a local wall-clock time in 2026 (month 8 = September). */
+const at = (day: number, hour: number, month = 8): string => new Date(2026, month, day, hour).toISOString();
+// codeExpiry measures a duration (milliseconds between two instants), which never depends on
+// the zone. Its inputs are offsets from the same clock, never local wall-clock constructors:
+// those would shift by an hour across a DST change (Australia/Sydney starts DST on 4 October).
+const HOUR_MS = 3_600_000;
+const DAY_MS = 24 * HOUR_MS;
+const inMs = (ms: number): string => new Date(localNow.getTime() + ms).toISOString();
 const learner = (id: string, over: Partial<RosterLearner> = {}, summary: Partial<NonNullable<RosterLearner['summary']>> | null = {}): RosterLearner => ({
   id,
   displayName: id,
@@ -133,18 +145,18 @@ describe('class roll-up (F-CONSOLE-001 §3.5)', () => {
   });
 
   it('formats relative days, code expiry and percentages', () => {
-    expect(relativeDay('2026-09-21T03:00:00.000Z', now)).toBe('today');
-    expect(relativeDay('2026-09-20T23:00:00.000Z', now)).toBe('yesterday');
-    expect(relativeDay('2026-09-17T10:00:00.000Z', now)).toBe('Thu');
-    expect(relativeDay('2026-09-03T10:00:00.000Z', now)).toBe('Sep 3');
-    expect(relativeDay(null, now)).toBe('not yet');
-    expect(relativeDay('garbage', now)).toBe('not yet');
-    expect(codeExpiry('2026-10-09T12:00:00.000Z', now)).toBe('expires in 18 days');
-    expect(codeExpiry('2026-09-22T11:00:00.000Z', now)).toBe('expires today');
-    expect(codeExpiry('2026-09-22T13:00:00.000Z', now)).toBe('expires in 1 day');
-    expect(codeExpiry('2026-09-01T00:00:00.000Z', now)).toBe('expired');
-    expect(codeExpiry('garbage', now)).toBe('expired');
-    expect(codeExpiry(null, now)).toBe('no code yet');
+    expect(relativeDay(at(21, 3), localNow)).toBe('today');
+    expect(relativeDay(at(20, 23), localNow)).toBe('yesterday');
+    expect(relativeDay(at(17, 10), localNow)).toBe('Thu');
+    expect(relativeDay(at(3, 10), localNow)).toBe('Sep 3');
+    expect(relativeDay(null, localNow)).toBe('not yet');
+    expect(relativeDay('garbage', localNow)).toBe('not yet');
+    expect(codeExpiry(inMs(18 * DAY_MS), localNow)).toBe('expires in 18 days');
+    expect(codeExpiry(inMs(23 * HOUR_MS), localNow)).toBe('expires today');
+    expect(codeExpiry(inMs(25 * HOUR_MS), localNow)).toBe('expires in 1 day');
+    expect(codeExpiry(inMs(-20 * DAY_MS), localNow)).toBe('expired');
+    expect(codeExpiry('garbage', localNow)).toBe('expired');
+    expect(codeExpiry(null, localNow)).toBe('no code yet');
     expect(percent(0.714)).toBe('71%');
     expect(percent(null)).toBe('—');
   });
@@ -153,17 +165,17 @@ describe('class roll-up (F-CONSOLE-001 §3.5)', () => {
     for (const locale of ['en', 'es', 'ko'] as const) {
       const time = getMessages(locale).common.time;
       const expiry = getMessages(locale).console.codeExpiry;
-      expect(relativeDay('2026-09-21T03:00:00.000Z', now, locale)).toBe(time.today);
-      expect(relativeDay('2026-09-20T23:00:00.000Z', now, locale)).toBe(time.yesterday);
-      expect(relativeDay('2026-09-17T10:00:00.000Z', now, locale)).toBe(formatDate(locale, '2026-09-17T10:00:00.000Z', 'weekday'));
-      expect(relativeDay('2026-09-03T10:00:00.000Z', now, locale)).toBe(formatDate(locale, '2026-09-03T10:00:00.000Z', 'monthDay'));
-      expect(relativeDay(undefined, now, locale)).toBe(time.notYet);
-      expect(codeExpiry('2026-10-09T12:00:00.000Z', now, locale)).toBe(expiry.inDays(18));
-      expect(codeExpiry('2026-09-22T13:00:00.000Z', now, locale)).toBe(expiry.inDays(1));
-      expect(codeExpiry('2026-09-22T11:00:00.000Z', now, locale)).toBe(expiry.today);
-      expect(codeExpiry('2026-09-01T00:00:00.000Z', now, locale)).toBe(expiry.expired);
-      expect(codeExpiry(undefined, now, locale)).toBe(expiry.none);
+      expect(relativeDay(at(21, 3), localNow, locale)).toBe(time.today);
+      expect(relativeDay(at(20, 23), localNow, locale)).toBe(time.yesterday);
+      expect(relativeDay(at(17, 10), localNow, locale)).toBe(formatDate(locale, at(17, 10), 'weekday'));
+      expect(relativeDay(at(3, 10), localNow, locale)).toBe(formatDate(locale, at(3, 10), 'monthDay'));
+      expect(relativeDay(undefined, localNow, locale)).toBe(time.notYet);
+      expect(codeExpiry(inMs(18 * DAY_MS), localNow, locale)).toBe(expiry.inDays(18));
+      expect(codeExpiry(inMs(25 * HOUR_MS), localNow, locale)).toBe(expiry.inDays(1));
+      expect(codeExpiry(inMs(23 * HOUR_MS), localNow, locale)).toBe(expiry.today);
+      expect(codeExpiry(inMs(-20 * DAY_MS), localNow, locale)).toBe(expiry.expired);
+      expect(codeExpiry(undefined, localNow, locale)).toBe(expiry.none);
     }
-    expect(relativeDay('2026-09-17T10:00:00.000Z', now, 'ko')).not.toBe('Thu');
+    expect(relativeDay(at(17, 10), localNow, 'ko')).not.toBe('Thu');
   });
 });

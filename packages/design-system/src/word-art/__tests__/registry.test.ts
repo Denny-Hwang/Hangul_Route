@@ -160,14 +160,17 @@ describe('planned counts (§3.8, §5)', () => {
     expect(Object.values(WORD_ART_PLAN).reduce((a, b) => a + b, 0)).toBe(135);
   });
 
+  /** The planned (topic) glyphs of a family: a reserved lesson picture is outside the plan. */
+  const plannedCount = (family: WordArtFamily): number => WORD_ART_KEYS.filter((k) => WORD_ART[k]!.meta.family === family && WORD_ART[k]!.meta.reserved !== true).length;
+
   it.each(WORD_ART_FAMILIES)('%s never exceeds its plan, and equals it once its batch has landed', (family) => {
-    const count = WORD_ART_KEYS.filter((k) => WORD_ART[k]!.meta.family === family).length;
+    const count = plannedCount(family);
     if (COMPLETE_FAMILIES.includes(family)) expect(count).toBe(WORD_ART_PLAN[family]);
     else expect(count).toBeLessThanOrEqual(WORD_ART_PLAN[family]);
   });
 
   it.each(WORD_ART_FAMILIES)('%s is listed in COMPLETE_FAMILIES as soon as it reaches its plan', (family) => {
-    const count = WORD_ART_KEYS.filter((k) => WORD_ART[k]!.meta.family === family).length;
+    const count = plannedCount(family);
     if (count === WORD_ART_PLAN[family]) expect(COMPLETE_FAMILIES, `${family} is complete: add it to COMPLETE_FAMILIES`).toContain(family);
   });
 });

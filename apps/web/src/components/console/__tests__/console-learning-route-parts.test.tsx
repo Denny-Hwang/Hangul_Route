@@ -38,6 +38,9 @@ vi.mock('@hangul-route/i18n', async (importOriginal) => {
   return { ...actual, formatDate: (locale: UiLocale, ...rest: Parameters<typeof actual.formatDate> extends [UiLocale, ...infer R] ? R : never) => actual.formatDate(locale === PSEUDO ? 'en' : locale, ...rest) };
 });
 
+// Several describe blocks render at collection time, before any beforeEach runs, so the
+// time zone is pinned here as well; afterEach restores it and beforeEach pins it again.
+vi.stubEnv('TZ', 'UTC');
 beforeEach(() => {
   vi.stubEnv('TZ', 'UTC');
 });

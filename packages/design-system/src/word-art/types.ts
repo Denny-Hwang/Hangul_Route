@@ -57,6 +57,9 @@ export interface WordArtMeta {
   bboxWaived?: boolean;
   /** Why a waiver is granted. */
   reason?: string;
-  /** The key exists for v1.1 and is unused at launch. */
+  /**
+   * Used by no vocabulary topic: a key kept for v1.1, or a lesson picture outside
+   * the topics (F-CURR-001). Outside the family plan and the one-user check.
+   */
   reserved?: boolean;
 }
