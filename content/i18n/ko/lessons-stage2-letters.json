@@ -118,7 +118,7 @@
       "steps.s2.discover.pages.1.items.0.example.gloss": "얼굴이 향하는 쪽",
       "steps.s2.discover.pages.1.items.1.word.gloss": "나무가 빽빽하게 우거진 곳",
       "steps.s2.discover.pages.2.caption": "이제 읽을 수 있는 낱말",
-      "steps.s2.discover.pages.2.items.0.word.gloss": "풀이나 나무의 줄기에 달린 납작하고 푸른 부분"
+      "steps.s2.discover.pages.2.items.0.word.gloss": "풀이나 나무에 달린 푸르고 납작한 것"
     },
     "minigame:s2-letters-q1-apply": {
       "cardPairs.gae.gloss": "사람과 함께 살며 멍멍 짖는 동물",
@@ -177,7 +177,7 @@
       "cardPairs.sup.gloss": "나무가 빽빽하게 우거진 곳"
     },
     "minigame:s2-letters-q6-check": {
-      "listenPick.rounds.see-ip.prompt": "풀이나 나무의 줄기에 달린 납작하고 푸른 부분",
+      "listenPick.rounds.see-ip.prompt": "풀이나 나무에 달린 푸르고 납작한 것",
       "listenPick.rounds.read-ap.prompt": "얼굴이 향하는 쪽"
     },
     "minigame:s2-letters-q1-practice": {
@@ -185,12 +185,12 @@
       "picWord.boards.0.pairs.hae.word.gloss": "낮에 하늘에서 밝게 빛나는 것",
       "picWord.boards.0.pairs.namu.word.gloss": "줄기와 가지, 잎이 있는 키 큰 식물",
       "picWord.boards.1.pairs.norae.word.gloss": "가락에 맞춰 부르는 것",
-      "picWord.boards.1.pairs.bae.word.gloss": "물 위를 떠다니며 사람이나 짐을 나르는 것",
+      "picWord.boards.1.pairs.bae.word.gloss": "물 위로 사람과 짐을 나르는 것",
       "picWord.boards.1.pairs.byeol.word.gloss": "밤하늘에 반짝이는 작은 빛",
-      "picWord.boards.2.pairs.mujigae.word.gloss": "비가 갠 뒤 하늘에 걸리는 여러 빛깔의 띠",
+      "picWord.boards.2.pairs.mujigae.word.gloss": "비 갠 뒤 하늘에 뜨는 여러 빛깔 띠",
       "picWord.boards.2.pairs.jiugae.word.gloss": "연필로 쓴 글씨를 문질러 없애는 물건",
       "picWord.boards.2.pairs.chaek.word.gloss": "글과 그림을 묶어 만든 읽을거리",
-      "picWord.boards.3.pairs.baegu.word.gloss": "그물 너머로 공을 손으로 쳐 넘기는 운동",
+      "picWord.boards.3.pairs.baegu.word.gloss": "그물 위로 공을 쳐 넘기는 운동",
       "picWord.boards.3.pairs.taeksi.word.gloss": "돈을 내고 가고 싶은 곳까지 타는 차",
       "picWord.boards.3.pairs.bada.word.gloss": "넓고 짠 물",
       "picWord.boards.4.pairs.hayansaek.word.gloss": "눈이나 우유와 같은 빛깔",
@@ -221,9 +221,9 @@
       "picWord.boards.5.pairs.norae.word.gloss": "가락에 맞춰 부르는 것"
     },
     "minigame:s2-letters-q3-practice": {
-      "picWord.boards.0.pairs.sagwa.word.gloss": "빨갛거나 푸른 껍질의 둥글고 아삭한 열매",
+      "picWord.boards.0.pairs.sagwa.word.gloss": "아삭하고 둥근 과일",
       "picWord.boards.0.pairs.wonsungi.word.gloss": "나무를 잘 타고 꼬리가 긴 동물",
-      "picWord.boards.0.pairs.banana.word.gloss": "껍질이 노랗고 길쭉한 열매",
+      "picWord.boards.0.pairs.banana.word.gloss": "껍질이 노랗고 길쭉한 과일",
       "picWord.boards.1.pairs.gwi.word.gloss": "소리를 듣는 몸의 부분",
       "picWord.boards.1.pairs.ko.word.gloss": "얼굴 가운데에서 냄새를 맡는 곳",
       "picWord.boards.1.pairs.son.word.gloss": "팔 끝에 있어 물건을 잡는 몸의 부분",
@@ -234,9 +234,9 @@
       "picWord.boards.3.pairs.ppalgansaek.word.gloss": "잘 익은 딸기와 같은 빛깔",
       "picWord.boards.3.pairs.paransaek.word.gloss": "맑은 하늘과 같은 빛깔",
       "picWord.boards.4.pairs.taegwondo.word.gloss": "손과 발을 쓰는 한국의 무술",
-      "picWord.boards.4.pairs.baegu.word.gloss": "그물 너머로 공을 손으로 쳐 넘기는 운동",
-      "picWord.boards.4.pairs.suyeong.word.gloss": "물속에서 팔다리를 움직여 나아가는 운동",
-      "picWord.boards.5.pairs.sagwa.word.gloss": "빨갛거나 푸른 껍질의 둥글고 아삭한 열매",
+      "picWord.boards.4.pairs.baegu.word.gloss": "그물 위로 공을 쳐 넘기는 운동",
+      "picWord.boards.4.pairs.suyeong.word.gloss": "물에서 팔다리를 저어 나아가는 운동",
+      "picWord.boards.5.pairs.sagwa.word.gloss": "아삭하고 둥근 과일",
       "picWord.boards.5.pairs.ttalgi.word.gloss": "겉에 작은 씨가 박힌 빨간 열매",
       "picWord.boards.5.pairs.uyu.word.gloss": "소에게서 얻는 하얀 마실 것"
     },
@@ -245,17 +245,17 @@
       "picWord.boards.0.pairs.hayansaek.word.gloss": "눈이나 우유와 같은 빛깔",
       "picWord.boards.0.pairs.ppalgansaek.word.gloss": "잘 익은 딸기와 같은 빛깔",
       "picWord.boards.1.pairs.gawi.word.gloss": "종이나 천을 자르는 도구",
-      "picWord.boards.1.pairs.banana.word.gloss": "껍질이 노랗고 길쭉한 열매",
+      "picWord.boards.1.pairs.banana.word.gloss": "껍질이 노랗고 길쭉한 과일",
       "picWord.boards.1.pairs.son.word.gloss": "팔 끝에 있어 물건을 잡는 몸의 부분",
-      "picWord.boards.2.pairs.sagwa.word.gloss": "빨갛거나 푸른 껍질의 둥글고 아삭한 열매",
+      "picWord.boards.2.pairs.sagwa.word.gloss": "아삭하고 둥근 과일",
       "picWord.boards.2.pairs.uija.word.gloss": "앉을 때 쓰는 가구",
       "picWord.boards.2.pairs.gwi.word.gloss": "소리를 듣는 몸의 부분",
       "picWord.boards.3.pairs.kkachi.word.gloss": "검은색과 흰색 깃털을 가진 새",
       "picWord.boards.3.pairs.tokki.word.gloss": "귀가 길고 깡충깡충 뛰는 동물",
       "picWord.boards.3.pairs.wonsungi.word.gloss": "나무를 잘 타고 꼬리가 긴 동물",
-      "picWord.boards.4.pairs.mujigae.word.gloss": "비가 갠 뒤 하늘에 걸리는 여러 빛깔의 띠",
+      "picWord.boards.4.pairs.mujigae.word.gloss": "비 갠 뒤 하늘에 뜨는 여러 빛깔 띠",
       "picWord.boards.4.pairs.hae.word.gloss": "낮에 하늘에서 밝게 빛나는 것",
-      "picWord.boards.4.pairs.gureum.word.gloss": "하늘에 떠 있는 작은 물방울의 덩어리",
+      "picWord.boards.4.pairs.gureum.word.gloss": "하늘에 뜬 하얗거나 회색인 덩어리",
       "picWord.boards.5.pairs.hoesaek.word.gloss": "흰빛과 검은빛을 섞은 빛깔",
       "picWord.boards.5.pairs.paransaek.word.gloss": "맑은 하늘과 같은 빛깔",
       "picWord.boards.5.pairs.juhwangsaek.word.gloss": "귤 껍질과 같은 빛깔"
@@ -264,31 +264,31 @@
       "picWord.boards.0.pairs.kkot.word.gloss": "식물에 피어나는 빛깔이 고운 부분",
       "picWord.boards.0.pairs.namu.word.gloss": "줄기와 가지, 잎이 있는 키 큰 식물",
       "picWord.boards.0.pairs.haneul.word.gloss": "머리 위로 보이는 높고 넓은 곳",
-      "picWord.boards.1.pairs.ssiat.word.gloss": "심으면 싹이 트는 식물의 작은 알",
-      "picWord.boards.1.pairs.bit.word.gloss": "해나 불에서 나와 둘레를 밝히는 것",
+      "picWord.boards.1.pairs.ssiat.word.gloss": "심으면 싹이 트는 작은 알갱이",
+      "picWord.boards.1.pairs.bit.word.gloss": "해나 불에서 나와 주위를 밝히는 것",
       "picWord.boards.1.pairs.byeol.word.gloss": "밤하늘에 반짝이는 작은 빛",
-      "picWord.boards.2.pairs.jeotgarak.word.gloss": "음식을 집을 때 쓰는 가느다란 막대 한 쌍",
-      "picWord.boards.2.pairs.gimbap.word.gloss": "밥과 여러 재료를 김으로 말아 썬 음식",
+      "picWord.boards.2.pairs.jeotgarak.word.gloss": "음식을 집는 가느다란 막대 한 쌍",
+      "picWord.boards.2.pairs.gimbap.word.gloss": "김에 밥과 재료를 넣고 만 음식",
       "picWord.boards.2.pairs.ramyeon.word.gloss": "꼬불꼬불한 국수",
-      "picWord.boards.3.pairs.but.word.gloss": "털을 묶어 글씨를 쓰거나 그림을 그리는 도구",
+      "picWord.boards.3.pairs.but.word.gloss": "털에 먹이나 물감을 묻혀 쓰는 도구",
       "picWord.boards.3.pairs.chaek.word.gloss": "글과 그림을 묶어 만든 읽을거리",
-      "picWord.boards.3.pairs.yeonpil.word.gloss": "나무 속에 심이 있어 글씨를 쓰는 도구",
+      "picWord.boards.3.pairs.yeonpil.word.gloss": "나무 속 심으로 글씨를 쓰는 도구",
       "picWord.boards.4.pairs.kkot.word.gloss": "식물에 피어나는 빛깔이 고운 부분",
       "picWord.boards.4.pairs.ttalgi.word.gloss": "겉에 작은 씨가 박힌 빨간 열매",
-      "picWord.boards.4.pairs.sagwa.word.gloss": "빨갛거나 푸른 껍질의 둥글고 아삭한 열매",
-      "picWord.boards.5.pairs.bit.word.gloss": "해나 불에서 나와 둘레를 밝히는 것",
+      "picWord.boards.4.pairs.sagwa.word.gloss": "아삭하고 둥근 과일",
+      "picWord.boards.5.pairs.bit.word.gloss": "해나 불에서 나와 주위를 밝히는 것",
       "picWord.boards.5.pairs.hae.word.gloss": "낮에 하늘에서 밝게 빛나는 것",
       "picWord.boards.5.pairs.dal.word.gloss": "밤하늘에 뜨는 둥근 빛"
     },
     "minigame:s2-letters-q6-practice": {
       "picWord.boards.0.pairs.tteokbokki.word.gloss": "떡을 양념에 볶거나 졸인 음식",
-      "picWord.boards.0.pairs.gimbap.word.gloss": "밥과 여러 재료를 김으로 말아 썬 음식",
+      "picWord.boards.0.pairs.gimbap.word.gloss": "김에 밥과 재료를 넣고 만 음식",
       "picWord.boards.0.pairs.tteok.word.gloss": "곡식 가루를 쪄서 만든 음식",
       "picWord.boards.1.pairs.kkot.word.gloss": "식물에 피어나는 빛깔이 고운 부분",
-      "picWord.boards.1.pairs.ip.word.gloss": "풀이나 나무의 줄기에 달린 납작하고 푸른 부분",
+      "picWord.boards.1.pairs.ip.word.gloss": "풀이나 나무에 달린 푸르고 납작한 것",
       "picWord.boards.1.pairs.namu.word.gloss": "줄기와 가지, 잎이 있는 키 큰 식물",
-      "picWord.boards.2.pairs.ip.word.gloss": "풀이나 나무의 줄기에 달린 납작하고 푸른 부분",
-      "picWord.boards.2.pairs.gureum.word.gloss": "하늘에 떠 있는 작은 물방울의 덩어리",
+      "picWord.boards.2.pairs.ip.word.gloss": "풀이나 나무에 달린 푸르고 납작한 것",
+      "picWord.boards.2.pairs.gureum.word.gloss": "하늘에 뜬 하얗거나 회색인 덩어리",
       "picWord.boards.2.pairs.haneul.word.gloss": "머리 위로 보이는 높고 넓은 곳",
       "picWord.boards.3.pairs.gwi.word.gloss": "소리를 듣는 몸의 부분",
       "picWord.boards.3.pairs.ip.word.gloss": "먹고 말할 때 쓰는 얼굴의 부분",
@@ -298,7 +298,7 @@
       "picWord.boards.4.pairs.gom.word.gloss": "몸집이 크고 털이 많은 동물",
       "picWord.boards.5.pairs.uija.word.gloss": "앉을 때 쓰는 가구",
       "picWord.boards.5.pairs.gabang.word.gloss": "물건을 넣어 들거나 메고 다니는 것",
-      "picWord.boards.5.pairs.ip.word.gloss": "풀이나 나무의 줄기에 달린 납작하고 푸른 부분"
+      "picWord.boards.5.pairs.ip.word.gloss": "풀이나 나무에 달린 푸르고 납작한 것"
     }
   }
 }
