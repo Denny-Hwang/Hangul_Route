@@ -155,15 +155,37 @@ describe('Button softDisabled on the web host node (react-native-web exposes set
     expect(node.attrs.has('aria-disabled')).toBe(false);
   });
 
-  it('a hard disabled button and a native button never touch the node', () => {
+  it('a hard disabled button never writes the attribute, and a native button never touches the node', () => {
     const node = domNode();
     platform.OS = 'web';
     mount({ softDisabled: true, disabled: true }, node);
+    expect(node.setAttribute).not.toHaveBeenCalled();
     platform.OS = 'ios';
+    node.removeAttribute.mockClear();
     mount({ softDisabled: true }, node);
     platform.OS = 'web';
     expect(node.setAttribute).not.toHaveBeenCalled();
     expect(node.removeAttribute).not.toHaveBeenCalled();
+  });
+
+  it('going straight from soft to hard disabled clears the attribute it wrote', () => {
+    platform.OS = 'web';
+    const node = domNode();
+    mount({ softDisabled: true }, node);
+    expect(node.attrs.get('aria-disabled')).toBe('true');
+    mount({ softDisabled: true, disabled: true }, node);
+    expect(node.attrs.has('aria-disabled')).toBe(false);
+  });
+
+  it('a host node swapped in while the button stays soft gets the attribute from the ref callback', () => {
+    platform.OS = 'web';
+    const first = domNode();
+    mount({ softDisabled: true }, first);
+    const next = domNode();
+    effects.length = 0;
+    const el = pressable({ softDisabled: true }) as unknown as { ref: (v: unknown) => void };
+    el.ref(next); // no effect run: the soft state did not change
+    expect(next.attrs.get('aria-disabled')).toBe('true');
   });
 
   it('a host node without setAttribute is left alone, without throwing', () => {

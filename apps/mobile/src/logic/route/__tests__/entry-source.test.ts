@@ -1,5 +1,6 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { join, relative, sep } from 'node:path';
+import ts from 'typescript';
 import { describe, expect, it } from 'vitest';
 import { routeEnabledFor } from '../../../config/flags';
 
@@ -54,12 +55,44 @@ describe('every learner-facing weekly plan entry reads routeEnabledFor(locale) (
       return /\.tsx?$/.test(e.name) && !/\.test\.tsx?$/.test(e.name) ? [full] : [];
     });
   const root = join(__dirname, '../../..');
-  // Code reads only: a doc comment or a line comment that names the flag is not a reader.
-  const codeReads = (text: string): number =>
-    text
-      .split('\n')
-      .filter((line) => !/^\s*(\*|\/\/|\/\*|\{\/\*)/.test(line))
-      .filter((line) => line.includes('flags.routeEnabled')).length;
+  // Code reads only, found on the syntax tree, so comments (however they wrap) never count: `flags.routeEnabled`,
+  // `flags['routeEnabled']` and `const { routeEnabled } = flags`. A read through another alias of `flags`, or an offer
+  // call handed a literal `true`, is not caught here; the SCREEN_ENTRIES checks below pin the known entries.
+  const codeReads = (text: string): number => {
+    const file = ts.createSourceFile('f.tsx', text, ts.ScriptTarget.Latest, false, ts.ScriptKind.TSX);
+    const isFlags = (e: ts.Node): boolean => ts.isIdentifier(e) && e.text === 'flags';
+    let n = 0;
+    const visit = (node: ts.Node): void => {
+      if (ts.isPropertyAccessExpression(node) && isFlags(node.expression) && node.name.text === 'routeEnabled') n += 1;
+      else if (
+        ts.isElementAccessExpression(node) &&
+        isFlags(node.expression) &&
+        ts.isStringLiteralLike(node.argumentExpression) &&
+        node.argumentExpression.text === 'routeEnabled'
+      )
+        n += 1;
+      else if (
+        ts.isVariableDeclaration(node) &&
+        node.initializer !== undefined &&
+        isFlags(node.initializer) &&
+        ts.isObjectBindingPattern(node.name) &&
+        node.name.elements.some((b) => (b.propertyName ?? b.name).getText(file) === 'routeEnabled')
+      )
+        n += 1;
+      ts.forEachChild(node, visit);
+    };
+    visit(file);
+    return n;
+  };
+
+  it('the reader scan sees through comments and the other spellings of a read', () => {
+    expect(codeReads('/* a note\n flags.routeEnabled\n */ // flags.routeEnabled\nconst a = 1;')).toBe(0);
+    expect(codeReads('const a = flags.routeEnabled;')).toBe(1);
+    expect(codeReads("const a = flags['routeEnabled'];")).toBe(1);
+    expect(codeReads('const { routeEnabled } = flags;')).toBe(1);
+    expect(codeReads('const { routeEnabled: on } = flags;')).toBe(1);
+    expect(codeReads('const a = 2\n  * flags.routeEnabledCount;')).toBe(0);
+  });
 
   it('no file outside the allow list reads flags.routeEnabled', () => {
     const readers: Record<string, number> = {};

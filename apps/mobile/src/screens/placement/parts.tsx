@@ -82,7 +82,8 @@ export function FootstepTrail({ answered }: { answered: number }): React.ReactEl
 
 /**
  * LinkButton moved to `components/LinkButton.tsx` (shared by placement, the Learning Route and the plan screens).
- * Re-exported here for the importers not moved yet.
+ * Re-exported here only for `screens/home/HomeScreen.tsx`, which was out of scope for #609 (another task owns it).
+ * Follow-up (#609 review): switch HomeScreen to `../../components/LinkButton`, then delete this re-export.
  */
 export { LinkButton } from '../../components/LinkButton';
 

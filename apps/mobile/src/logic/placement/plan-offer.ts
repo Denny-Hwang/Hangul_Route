@@ -50,7 +50,7 @@ export type PlanOffer =
 export type UpdateSource = 'retake' | 'override';
 
 export interface PlanOfferInput {
-  /** `flags.routeEnabled`. */
+  /** The entry's weekly plan switch, `routeEnabledFor(locale)` (P2-8b). */
   enabled: boolean;
   context: ProposalContext;
   /** The profile's active own plan (`activeSelfRoute`), or null. */

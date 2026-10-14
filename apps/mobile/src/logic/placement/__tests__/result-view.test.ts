@@ -73,7 +73,7 @@ const input = (over: Partial<ResultViewInput> = {}): ResultViewInput => ({
 });
 
 describe('the weekly-plan strip follows the UI locale (P2-8b)', () => {
-  it('an es or ko UI with the flag on gets no strip and no plan link for the grown-up: Start leads', () => {
+  it('view contract: the value routeEnabledFor gives an es or ko UI with the flag on draws no strip and no plan link for the grown-up (the screen wiring is pinned in entry-source.test.ts)', () => {
     for (const locale of ['es', 'ko'] as const) {
       const routeEnabled = routeEnabledFor(locale, { routeEnabled: true }, false);
       const self = resultView(input({ routeEnabled }));
@@ -82,6 +82,8 @@ describe('the weekly-plan strip follows the UI locale (P2-8b)', () => {
     }
     const en = resultView(input({ routeEnabled: routeEnabledFor('en', { routeEnabled: true }, false) }));
     expect(en).toMatchObject({ strip: true, primary: 'usePlan', secondary: 'justStart' });
+    // QA show-all keeps the strip in every locale.
+    expect(routeEnabledFor('es', { routeEnabled: true }, true)).toBe(true);
   });
 });
 
