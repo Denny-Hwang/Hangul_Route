@@ -46,6 +46,8 @@ export function StoryCheckSlide({ slide, shown, romanization }: { slide: StoryCh
         borderWidth: Math.max(STAGE_BORDER_MIN, units(unit, STAGE_BORDER)),
         borderColor: colors.brand.secondary,
         backgroundColor: colors.brand.secondaryLight,
+    // web: an inline chip never breaks between its Korean and its romanization.
+    ...noWrap,
       }}
     >
       {' '}
@@ -89,3 +91,6 @@ export function StoryCheckSlide({ slide, shown, romanization }: { slide: StoryCh
     </View>
   );
 }
+
+/** `white-space: nowrap` (web); not in the native text style types. */
+const noWrap = { whiteSpace: 'nowrap' } as unknown as Record<string, never>;

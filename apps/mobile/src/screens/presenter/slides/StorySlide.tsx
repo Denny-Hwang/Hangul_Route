@@ -32,6 +32,8 @@ export function StorySlide({ slide, shown, scene }: { slide: StoryBody; shown: R
     borderWidth: Math.max(STAGE_BORDER_MIN, units(unit, STAGE_BORDER)),
     borderColor: colors.brand.secondary,
     backgroundColor: colors.brand.secondaryLight,
+    // web: an inline chip never breaks between its Korean and its romanization.
+    ...noWrap,
   };
   return (
     <View testID="presenter-story" style={{ flex: 1, gap: units(unit, STAGE_GAP_INNER) }}>
@@ -85,3 +87,6 @@ export function StorySlide({ slide, shown, scene }: { slide: StoryBody; shown: R
     </View>
   );
 }
+
+/** `white-space: nowrap` (web); not in the native text style types. */
+const noWrap = { whiteSpace: 'nowrap' } as unknown as Record<string, never>;

@@ -651,3 +651,149 @@ async function startLesson320(page: Page): Promise<void> {
   await expect(start).toBeEnabled({ timeout: 10_000 });
   await start.click();
 }
+
+// F-TCH-004 PR 11: story slides. "King Sejong's New Letters" is reviewed (the Library lists it):
+// its cover title, seven scenes and three checks; the order slide waits for PR 8.
+const STORY_DECK: LectureDeckInput = {
+  v: 1,
+  id: 'lecture:e2e011',
+  title: 'Hangul history',
+  createdAt: '2026-10-13T09:00:00Z',
+  seed: 11,
+  blocks: [{ kind: 'story', storyId: 'story:sejong-new-letters', checks: true }],
+};
+
+/** Forward (through any reveals) until the counter reads slide `n`. */
+async function goToSlide(page: Page, n: number): Promise<void> {
+  for (let i = 0; i < 40 && !(await counter(page)).startsWith(`${n} /`); i++) await page.keyboard.press('ArrowRight');
+  await expect.poll(() => counter(page)).toMatch(new RegExp(`^${n} /`));
+}
+
+/** Forward until the stage shows `testId` (at most `max` presses). */
+async function nextUntil(page: Page, testId: string, max = 40): Promise<void> {
+  for (let i = 0; i < max && (await page.getByTestId(testId).count()) === 0; i++) await page.keyboard.press('ArrowRight');
+  await expect(page.getByTestId(testId)).toBeVisible();
+}
+
+test.describe('presenter story slides at 1280 x 720 (PR 11)', () => {
+  test.use({ viewport: { width: 1280, height: 720 }, isMobile: false, hasTouch: false });
+
+  test('a story deck: cover title, scenes with art, narration and Korean, then checks with a positive reveal', async ({ page }) => {
+    const errors: string[] = [];
+    page.on('pageerror', (e) => errors.push(String(e)));
+    page.on('console', (m) => {
+      if (m.type() === 'error') errors.push(m.text());
+    });
+    await page.goto(link(STORY_DECK));
+    await expect(page.getByTestId('presenter-start')).toBeVisible();
+    // Title, 7 scenes, 3 checks and the End slide; the order slide is one part not shown yet.
+    await expect(page.getByTestId('presenter-start-facts')).toHaveText(/^12 slides · about \d+ minutes?$/);
+    await page.getByTestId('presenter-see-which').click();
+    await expect(page.getByTestId('presenter-skipped-list').getByText('A step the slides do not show')).toHaveCount(1);
+    await startLesson(page);
+
+    // The cover title: the cover scene instead of Hoya, the Story label, the title and Hoya's line.
+    await expect(page.getByTestId('presenter-story-cover')).toBeVisible();
+    const stage = page.getByTestId('presenter-stage');
+    await expect(stage.getByText('Story', { exact: true })).toBeVisible();
+    await expect(stage.getByRole('heading', { name: "King Sejong's New Letters" })).toBeVisible();
+    await expect(stage.getByText("Come with me to Joseon! Let's find out why King Sejong made new letters.")).toBeVisible();
+    await shot(page, 'presenter-story-title-1280x720');
+
+    // The fourth scene: art first (named by its caption, README D8), then narration, then the Korean line.
+    await page.keyboard.press('ArrowRight');
+    await expect(page.getByTestId('presenter-story')).toBeVisible();
+    await expect(page.getByTestId('presenter-live')).toHaveText("Slide 2 of 12, Story, Hoya lands in King Sejong's Joseon");
+    await goToSlide(page, 5);
+    await expect(page.getByTestId('presenter-live')).toHaveText('Slide 5 of 12, Story, He names them Hunminjeongeum');
+    await expect(page.getByRole('img', { name: 'He names them Hunminjeongeum' })).toBeVisible();
+    // The caption is the art's name only, never drawn as text.
+    await expect(stage.getByText('He names them Hunminjeongeum', { exact: true })).toHaveCount(0);
+    await expect(page.getByTestId('presenter-story-narration')).toHaveCSS('opacity', '0');
+    await expect(page.getByTestId('presenter-next')).toHaveAccessibleName('Reveal');
+    expect(await revealAll(page)).toBe(2);
+    await expect(page.getByTestId('presenter-story-narration')).toHaveCSS('opacity', '1');
+    await expect(page.getByTestId('presenter-story-narration')).toContainText('He named them Hunminjeongeum');
+    await expect(page.getByTestId('presenter-story-narration')).toContainText('baekseong');
+    await expect(page.getByTestId('presenter-story-korean')).toHaveCSS('opacity', '1');
+    await expect(page.getByTestId('presenter-story-korean')).toContainText('Hunminjeongeum');
+    await expect(page.getByTestId('presenter-story-korean')).toContainText('the proper sounds for teaching the people');
+    // Read-to-me (S) on a scene plays or falls back quietly: the text stays on the slide (D6).
+    await page.keyboard.press('KeyS');
+    await shot(page, 'presenter-story-1280x720');
+
+    // The first check: its own prompt and four options with shape-and-number markers; no answer yet.
+    await nextUntil(page, 'presenter-check');
+    await expect(page.getByTestId('presenter-live')).toHaveText('Slide 9 of 12, Question');
+    await expect(page.getByTestId('presenter-check-prompt')).toHaveText('Who created Hangul?');
+    await expect(page.getByRole('img', { name: 'Option 1, circle' })).toBeVisible();
+    await expect(page.getByRole('img', { name: 'Option 4, star' })).toBeVisible();
+    await expect(page.getByTestId('presenter-quiz-mark')).toHaveCount(0);
+    await expect(page.getByTestId('presenter-quiz-answer')).toHaveCSS('opacity', '0');
+    await expect(page.getByTestId('presenter-check-explain')).toHaveCSS('opacity', '0');
+    await shot(page, 'presenter-story-check-question-1280x720');
+
+    // The teacher's reveal: the right option marked, Hoya's answer, the explanation; the others only soften.
+    await page.keyboard.press('PageDown');
+    await expect(page.getByRole('img', { name: "Hoya's answer" })).toBeVisible();
+    await expect(page.getByTestId('presenter-quiz-answer')).toHaveCSS('opacity', '1');
+    await expect(page.getByTestId('presenter-check-explain')).toHaveCSS('opacity', '1');
+    const options = page.getByTestId('presenter-quiz-options');
+    const marked = options.locator('[data-testid^="presenter-quiz-option-"]').filter({ has: page.getByTestId('presenter-quiz-mark') });
+    await expect(marked).toHaveCount(1);
+    await expect(marked).toContainText('King Sejong');
+    await expect(marked).toHaveCSS('opacity', '1');
+    const others = options.locator('[data-testid^="presenter-quiz-option-"]').filter({ hasNot: page.getByTestId('presenter-quiz-mark') });
+    await expect(others).toHaveCount(3);
+    for (const o of await others.all()) await expect(o).toHaveCSS('opacity', '0.8');
+    // Anti-shame: no failure words anywhere on the stage (D3).
+    await expect(stage).not.toContainText(/wrong|incorrect|fail|miss/i);
+    await expect(page.getByTestId('presenter-next')).toHaveAccessibleName('Next');
+    await shot(page, 'presenter-story-check-answer-1280x720');
+
+    await page.keyboard.press('End');
+    await expect(page.getByText('Today we met')).toBeVisible();
+    expect(errors).toEqual([]);
+  });
+
+  test('with romanization on tap, a scene shows every romanization at one last reveal', async ({ page }) => {
+    await page.goto(link({ ...STORY_DECK, id: 'lecture:e2e012', options: { romanization: 'tap' } }));
+    await startLesson(page);
+    await goToSlide(page, 5);
+    await expect(page.getByTestId('presenter-live')).toHaveText('Slide 5 of 12, Story, He names them Hunminjeongeum');
+    expect(await revealAll(page)).toBe(3);
+    await expect(page.getByTestId('presenter-story-korean').getByText('Hunminjeongeum', { exact: true })).toHaveCSS('opacity', '1');
+    await page.keyboard.press('ArrowLeft');
+    await expect(page.getByTestId('presenter-story-korean').getByText('Hunminjeongeum', { exact: true })).toHaveCSS('opacity', '0');
+    await shot(page, 'presenter-story-tap-1280x720');
+  });
+
+  test('a story the bundle does not have is listed as not shown, never drawn', async ({ page }) => {
+    await page.goto(link({ ...STORY_DECK, id: 'lecture:e2e013', blocks: [{ kind: 'story', storyId: 'story:not-in-bundle' }, { kind: 'jamo-set', jamoIds: ['jamo:giyeok'] }] }));
+    await expect(page.getByTestId('presenter-start')).toBeVisible();
+    await page.getByTestId('presenter-see-which').click();
+    await expect(page.getByTestId('presenter-skipped-list').getByText('Not in this version of the app')).toBeVisible();
+    await startLesson(page);
+    await expect(page.getByTestId('presenter-story-cover')).toHaveCount(0);
+    await expect(page.getByTestId('presenter-glyph')).toBeAttached();
+  });
+});
+
+test.describe('presenter story slides at 1920 x 1080 (PR 11)', () => {
+  test.use({ viewport: { width: 1920, height: 1080 }, isMobile: false, hasTouch: false });
+
+  test('the scene and the check scale with the stage', async ({ page }) => {
+    await page.goto(link(STORY_DECK));
+    await startLesson(page);
+    await shot(page, 'presenter-story-title-1920x1080');
+    await goToSlide(page, 5);
+    await revealAll(page);
+    // 400 scene units at unit 1.5.
+    const art = (await page.getByTestId('presenter-story-art').boundingBox())!;
+    expect(Math.round(art.width)).toBe(600);
+    await shot(page, 'presenter-story-1920x1080');
+    await nextUntil(page, 'presenter-check');
+    await page.keyboard.press('PageDown');
+    await shot(page, 'presenter-story-check-1920x1080');
+  });
+});
