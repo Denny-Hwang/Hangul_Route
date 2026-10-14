@@ -98,7 +98,7 @@ Row C-5 asks for the iOS and Android flip pass from C-2 to be recorded here. Sta
 
 - **iOS: run by the author, passed.** iOS 26.5 Simulator (iPhone 17) through Xcode, a local Release build with `EXPO_PUBLIC_VOCAB_TOPICS_ENABLED=1`, an XCUITest from onboarding through Library > Words > Food > Learn: front, tap, back, Got it, next front.
 - **Android: not run** (no Android device or emulator on the build machine).
-- **Owner-blocked, a precondition of C-7 (the `flags.vocabTopicsEnabled` flip)**. Before the flag is turned on, the owner (or a device run) checks:
+- **Owner-blocked, a precondition of Words in native builds.** C-7 (owner decision 2026-10-13) turned Words on in the web app only: `flags.vocabTopicsEnabled` defaults to `false` in iOS and Android bundles until this pass is recorded here (with the date and the devices), and no native release ships Words before then. When it is, a follow-up drops the native default in `apps/mobile/src/config/flags.ts`. The owner (or a device run) checks:
   1. Android: the card turns front, back and front again, and each face's name is read by TalkBack.
   2. Android and iOS: a quick double tap turns the card once per tap, never skips a face.
   3. Android and iOS with Reduce motion / Remove animations on: the card swaps at once.

@@ -227,6 +227,28 @@ describe('/api/recovery (F-RESTORE-001)', () => {
     expect((await claim('TIGER-MOON-0003', { 'cf-connecting-ip': '198.51.100.7' })).status).toBe(404);
   });
 
+  it('F-VOC-005 deploy checklist item 4: the Rescue Code restore returns the vocab block a later PUT without vocab left in place', async () => {
+    const auth = await registerAndUpload();
+    const item = { id: 'vocab:sagwa-apple', first: '2026-10-10', seen: 2, right: 1, bestBox: 3, last: '2026-10-12', box: 2, due: '2026-10-15', at: '2026-10-12T09:00:00.000Z' };
+    const vocab = { v: 1, items: [item], topics: [{ topic: 'food', bestStars: 2, sessions: 3, last: '2026-10-12', bestCaught: 0 }] };
+    const counts = { collected: 1, strong: 1, topicsStarted: 1, topicsPracticed7d: 1, firstTryRate: 0.5, needsPractice: [] };
+    const snapshot = { profileId: 'profile:suni', updatedAt: 't', episodes: [], quests: [], cards: [], sessions: [], homework: [], reviews: [], streakDays: 0 };
+    const summary = { schemaVersion: 1, lastActiveAt: 't', streakDays: 0, stage1: { questsDone: 0, questsTotal: 11, anchorAccuracy: null }, cardsUnlocked: 0, minutesLast7d: 0, jamoRecognized: [], needsPractice: [], planProgress: {} };
+    const putSnapshot = (body: Record<string, unknown>) =>
+      app.request('/api/sync/learners/profile:suni/snapshot', { method: 'PUT', headers: auth, body: JSON.stringify({ schemaVer: 1, contentVer: '2026.10', ...body }) });
+    expect((await putSnapshot({ baseRev: 1, snapshot: { ...snapshot, vocab }, summary: { ...summary, vocab: counts } })).status).toBe(200);
+    // An older build's PUT (no vocab key) keeps the stored slice (the preserve rule, checklist item 3).
+    expect((await putSnapshot({ baseRev: 2, snapshot: { ...snapshot, streakDays: 1 }, summary: { ...summary, streakDays: 1 } })).status).toBe(200);
+    const { code } = await issue(auth);
+    const res = await claim(code);
+    expect(res.status).toBe(200);
+    const data = res.body.data as { snapshot: { rev: number; snapshot: { vocab?: unknown; streakDays: number }; summary: { vocab?: unknown } } };
+    expect(data.snapshot.rev).toBe(3);
+    expect(data.snapshot.snapshot.streakDays).toBe(1);
+    expect(data.snapshot.snapshot.vocab).toEqual(vocab);
+    expect(data.snapshot.summary.vocab).toEqual(counts);
+  });
+
   it('claim without a snapshot returns snapshot: null', async () => {
     const reg = await app.request('/api/sync/learners', {
       method: 'POST',

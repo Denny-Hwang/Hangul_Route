@@ -6,8 +6,9 @@ import { controlsPastEdge, expectNoHorizontalOverflow } from './viewport';
 
 /**
  * F-VOC-003 C-6: Words Match, F-QUEST-002's Pic-Word Match on a topic's collected words through the vocab
- * host (design/screens/vocab/match.md). Words stays behind `flags.vocabTopicsEnabled` (off until C-7), so the
- * suite runs on the fixture bundle and opens the topic page through `window.__hrVocabE2E.openTopic(key)`.
+ * host (design/screens/vocab/match.md). Words is behind `flags.vocabTopicsEnabled`, ON by default since C-7
+ * (owner decision 2026-10-13); the suite runs on the fixture bundle, which collects words and opens the topic
+ * page through `window.__hrVocabE2E.openTopic(key)` (vocab-topics and vocab-cards cover the release build's way in).
  *
  *   pnpm --filter @hangul-route/mobile build:web:fixtures
  *   STORY_FIXTURES=1 pnpm --filter @hangul-route/mobile exec playwright test vocab-match
