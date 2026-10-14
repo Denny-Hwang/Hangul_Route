@@ -1216,10 +1216,10 @@
         }
       ],
       "verification": {
-        "passes": 1,
+        "passes": 2,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): both pages fetched. The commentary to article 26 of the NIKL standard language rules and the 한 걸음 더 box of the dictionary entry 이다 3 both say 이에요 attaches to a noun and shortens to 예요 when the noun has no final consonant, with 장남이에요 / 손자예요 and 연필이에요 / 지우개예요 as examples. The note restates this in its own words with this cell's words (책, 학교); no wording is copied. Carried by: q1 Discover pattern noteEn, and the 이에요/예요 particle rounds of q1 and q3."
+        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): both pages fetched. The commentary to article 26 of the NIKL standard language rules and the 한 걸음 더 box of the dictionary entry 이다 3 both say 이에요 attaches to a noun and shortens to 예요 when the noun has no final consonant, with 장남이에요 / 손자예요 and 연필이에요 / 지우개예요 as examples. The note restates this in its own words with this cell's words (책, 학교); no wording is copied. Carried by: q1 Discover pattern noteEn, and the 이에요/예요 particle rounds of q1 and q3.\nLine 2 (pass 2b, independent fact check, 2026-10-14): both pages re-fetched (the stdict entry body via contentViewOne.do). Commentary item 17 to article 26 and the 한 걸음 더 box of 이다 3 carry the quoted sentence word for word, with 장남이에요 / 손자예요 and 연필이에요 / 지우개예요. The note matches: 이에요 after a noun with a final consonant, 예요 after one without (both sources also note that a name with a final consonant takes 이 first, as in 영숙이예요; the note uses common nouns only, so it stays true). The English is the author's own; no wording is copied. Outcome: pass, no change."
       }
     },
     {
@@ -1250,10 +1250,10 @@
         }
       ],
       "verification": {
-        "passes": 1,
+        "passes": 2,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): the three pages fetched. The dictionary entries 이 25 and 가 11 give the same subject-marker sense, 이 after a noun with a final consonant and 가 after one without; the Encyclopedia of Korean Culture entry 조사 says particles such as 이 / 가 have forms that follow the sound of the word before them and lists 이·가 as the nominative. The note restates this with this cell's words (책이, 친구가); no wording is copied. Carried by: q2 Discover pattern noteEn and the 이/가 particle rounds of q2."
+        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): the three pages fetched. The dictionary entries 이 25 and 가 11 give the same subject-marker sense, 이 after a noun with a final consonant and 가 after one without; the Encyclopedia of Korean Culture entry 조사 says particles such as 이 / 가 have forms that follow the sound of the word before them and lists 이·가 as the nominative. The note restates this with this cell's words (책이, 친구가); no wording is copied. Carried by: q2 Discover pattern noteEn and the 이/가 particle rounds of q2.\nLine 2 (pass 2b, independent fact check, 2026-10-14): the three pages re-fetched. 이 25 sense 1 is marked for a noun with a final consonant and 가 11 sense 1 for a noun without one, both with the subject sense quoted in the locators; the Encyclopedia of Korean Culture entry 조사, section (3), names 이·가 as forms that depend on the sound of the noun before them, and section (1) lists 이·가 as the nominative. The note matches; the English is the author's own; no wording is copied. Outcome: pass, no change."
       }
     },
     {
@@ -1277,10 +1277,10 @@
         }
       ],
       "verification": {
-        "passes": 1,
+        "passes": 2,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): both pages fetched. Article 33 of the Korean orthography writes a noun-and-particle contraction as it is said, with 그것은 -> 그건 in its table and 이것 / 저것 contracting the same way in its commentary, which is the rule that gives 이것은 -> 이건; the dictionary defines 이것 as pointing to a thing near the speaker. The note says this in its own words; no wording is copied. Carried by: q3 Discover pattern noteEn and the q3 Discover page 1 caption (point at a thing near you)."
+        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): both pages fetched. Article 33 of the Korean orthography writes a noun-and-particle contraction as it is said, with 그것은 -> 그건 in its table and 이것 / 저것 contracting the same way in its commentary, which is the rule that gives 이것은 -> 이건; the dictionary defines 이것 as pointing to a thing near the speaker. The note says this in its own words; no wording is copied. Carried by: q3 Discover pattern noteEn and the q3 Discover page 1 caption (point at a thing near you).\nLine 2 (pass 2b, independent fact check, 2026-10-14): both pages re-fetched. Article 33 states the rule (a noun-and-particle contraction is written as it is said), its table gives 그것은 -> 그건, and its commentary shows 이것 and 저것 contracting the same way as 그것 (이것으로 -> 이걸로); 이것은 -> 이건 is not printed as a row, so the support is the rule plus the exactly parallel 그것은 -> 그건, which the locator already says. The dictionary entry 이것 sense 1 points to a thing near the speaker (or one the speaker has in mind), with 이것은 연필이다. The note matches; no wording is copied. Outcome: pass, no change."
       }
     },
     {
@@ -1300,14 +1300,14 @@
           "publisher": "국립국어원 표준국어대사전 (Standard Korean Language Dictionary)",
           "url": "https://stdict.korean.go.kr/search/searchView.do?word_no=58349&searchKeywordTo=3",
           "accessed": "2026-10-14",
-          "quoteOrLocator": "표제어 ‘나’(word_no 58349) [Ⅰ] 「대명사」: “말하는 이가 대등한 관계에 있는 사람이나 아랫사람을 상대하여 자기를 가리키는 일인칭 대명사.” 용례 ‘나는 학생이다.’"
+          "quoteOrLocator": "표제어 ‘나 3’(word_no 58349) [Ⅰ] 「대명사」: “말하는 이가 대등한 관계에 있는 사람이나 아랫사람을 상대하여 자기를 가리키는 일인칭 대명사.” 용례 ‘나는 학생이다.’"
         }
       ],
       "verification": {
-        "passes": 1,
+        "passes": 2,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): both entries fetched. The dictionary defines 저 as the first-person pronoun a speaker uses to lower themselves toward a senior or someone not close, and 나 as the one used toward an equal or a junior. The note says this in its own words, names no age range for the learner and copies no wording. Carried by: q3 Discover page 2 caption (a polite way to say who you are) and the 저는 호야예요 rounds."
+        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): both entries fetched. The dictionary defines 저 as the first-person pronoun a speaker uses to lower themselves toward a senior or someone not close, and 나 as the one used toward an equal or a junior. The note says this in its own words, names no age range for the learner and copies no wording. Carried by: q3 Discover page 2 caption (a polite way to say who you are) and the 저는 호야예요 rounds.\nLine 2 (pass 2b, independent fact check, 2026-10-14): both entries re-fetched. 저 3 sense 1 is the first-person pronoun a speaker uses to lower themselves toward a senior or someone not very close; the note's 'people you are not close to or want to show respect to' matches. The entry for 나 is headword 나 3 (sense [I], pronoun), used toward an equal or a junior; the note's 'among equals' is a true subset. Locator fixed: the headword read 나 and now reads 나 3. No wording is copied; no age range is named. Outcome: pass, locator corrected."
       }
     }
   ],
