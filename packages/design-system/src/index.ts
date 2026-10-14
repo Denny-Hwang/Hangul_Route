@@ -18,6 +18,7 @@ export * from './components/KoreanText';
 export * from './components/ChoiceCard';
 export * from './components/SyllableBlock';
 export * from './components/StoryScene';
+export * from './components/RealiaSheet';
 export * from './components/SectionTabs';
 export * from './components/SparkMeter';
 // WordArt and its key list are in this barrel because Metro (Expo SDK 52, no metro.config.js) does not read

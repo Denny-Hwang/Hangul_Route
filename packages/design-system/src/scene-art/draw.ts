@@ -120,3 +120,16 @@ export function drawScene(art: SceneArtLike, registry: Registry, options: { vari
   ranked.sort((x, y) => x.rank - y.rank);
   return { viewBox: `0 0 ${SCENE_CANVAS.width} ${SCENE_CANVAS.height}`, items: ranked.map((r) => r.item), issues: resolved.issues };
 }
+
+/**
+ * One registered prop on its own, with its box as the viewBox (the realia dressings of
+ * F-CURR-001 G-2 are drawn this way, as `HoyaSvg` draws Hoya). `null` for an unknown ref, so
+ * the caller draws its plain fallback instead of a blank box.
+ */
+export function drawProp(ref: string, registry: Registry): DrawnScene | null {
+  const item = Object.prototype.hasOwnProperty.call(registry, ref) ? registry[ref] : undefined;
+  if (!item) return null;
+  const { w, h } = item.box;
+  const { items, issues } = drawScene({ setting: '', layers: [{ ref, x: w / 2, y: h }], altEn: '' }, registry);
+  return { viewBox: `0 0 ${w} ${h}`, items, issues };
+}

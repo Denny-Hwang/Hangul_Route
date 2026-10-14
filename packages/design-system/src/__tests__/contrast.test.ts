@@ -95,6 +95,10 @@ describe('token contrast contract (WCAG AA)', () => {
   normalText.push(['text.primary (ChoiceCard disabled) on surface.sunken', colors.text.primary, colors.surface.sunken]);
   normalText.push(['text.secondary (KoreanText gloss in ChoiceCard) on feedback.successLight', colors.text.secondary, colors.feedback.successLight]);
   normalText.push(['text.secondary (KoreanText gloss in ChoiceCard) on feedback.nudgeLight', colors.text.secondary, colors.feedback.nudgeLight]);
+  // RealiaSheet (F-CURR-001 G-2): trail-board romanization on amber paper, a found line's text on successLight.
+  normalText.push(['text.secondary (RealiaSheet trail-board romanization) on feedback.nudgeLight', colors.text.secondary, colors.feedback.nudgeLight]);
+  normalText.push(['text.primary (RealiaSheet found line) on feedback.successLight', colors.text.primary, colors.feedback.successLight]);
+  normalText.push(['text.secondary (RealiaSheet found romanization) on feedback.successLight', colors.text.secondary, colors.feedback.successLight]);
   // Muted captions also sit inside brand cards (Card tone="brand").
   normalText.push(['text.muted on brand.primaryLight', colors.text.muted, colors.brand.primaryLight]);
 
