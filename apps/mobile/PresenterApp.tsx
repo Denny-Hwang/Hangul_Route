@@ -43,7 +43,7 @@ import {
 } from './src/logic/lecture/shell';
 import { FONT_WAIT_MS, TIMER_TICK_MS, stageBox } from './src/logic/lecture/stage-constants';
 import { initialTimer, justFinished, reduceTimer, type TimerEvent, type TimerState } from './src/logic/lecture/timer';
-import { firstUses, fullscreenToggle, gridItems, helpLanguageChips, pickerModes, sayItShown, statusChips, timerOpenEvent, toolsOpened, type LectureTool } from './src/logic/lecture/tools';
+import { firstUses, fullscreenToggle, gridItems, helpLanguageChips, narrationStops, pickerModes, sayItShown, statusChips, timerOpenEvent, toolsOpened, type LectureTool } from './src/logic/lecture/tools';
 import { BAR_BAND, STAGE_BOUNDS } from './src/screens/presenter/stage-metrics';
 import { slideSound } from './src/logic/lecture/slide-view';
 import { stageScale } from './src/logic/lecture/stage-scale';
@@ -368,8 +368,8 @@ export default function PresenterApp(): React.ReactElement {
       reportTools(toolsOpened(before, state));
       if (effect?.type === 'start-timer') stepTimer({ type: 'start', ms: effect.ms, now: Date.now() });
       if (tally.current) tally.current = tallyStep(tally.current, before, state, slides);
-      // A story's Read-to-me never runs on into the next slide, nor under an overlay.
-      if (state.slideIdx !== before.slideIdx || (state.overlay !== null && before.overlay === null)) narrator.stop();
+      // A story's Read-to-me never runs on into the next slide, nor under an overlay or the full timer.
+      if (narrationStops(before, state)) narrator.stop();
       if (state.slideIdx !== before.slideIdx && deck) {
         const key = slides[state.slideIdx]!.key;
         updateRecent((list) => setLastSlide(list, deck.id, key));
