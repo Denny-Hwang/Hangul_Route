@@ -134,6 +134,9 @@ describe('OrderItRoundSchema (Sentence Builder)', () => {
   it('takes up to two distractor tiles that are not tiles of the sentence', () => {
     expect(ok(OrderItRoundSchema, { id: 'r', sentence, distractors: [kt('없어요.', 'eopseoyo', 'there is none')] })).toBe(true);
     expect(ok(OrderItRoundSchema, { id: 'r', sentence, distractors: [kt('있어요.', 'isseoyo', 'there is')] })).toBe(false);
+    // The game draws tiles without the sentence mark, so a distractor equal to the last word once
+    // its mark is off would be a second identical tile (G-1 review).
+    expect(ok(OrderItRoundSchema, { id: 'r', sentence, distractors: [kt('있어요', 'isseoyo', 'there is')] })).toBe(false);
     const three = [kt('가', 'ga', 'x'), kt('나', 'na', 'x'), kt('다', 'da', 'x')];
     expect(ok(OrderItRoundSchema, { id: 'r', sentence, distractors: three })).toBe(false);
   });

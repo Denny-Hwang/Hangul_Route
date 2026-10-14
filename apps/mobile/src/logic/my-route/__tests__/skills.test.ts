@@ -20,8 +20,16 @@ describe('SKILL_OF_KIND (F-ROUTE-001 section 3.7, OD-5 default)', () => {
     // F-CURR-001 §3.11: realia-read reads; type-hangul, trace-word and write-frame write.
     expect(SKILL_OF_KIND['realia-read']).toEqual(['read']);
     for (const kind of ['type-hangul', 'trace-word', 'write-frame'] as const) expect(SKILL_OF_KIND[kind]).toEqual(['write']);
-    for (const kind of ['build-letter', 'syllable-build', 'card-match', 'culture-quiz', 'story-sequence', 'story-check', 'tap-rhythm', 'order-it'] as const)
+    for (const kind of ['build-letter', 'syllable-build', 'card-match', 'culture-quiz', 'story-sequence', 'story-check', 'tap-rhythm'] as const)
       expect(SKILL_OF_KIND[kind]).toEqual([]);
+  });
+
+  it('F-CURR-001 §3.11 (G-1): order-it reads and writes, and the tile kinds stay spelling only', () => {
+    // Sentence Builder orders whole words and picks particles: composing written Korean, not spelling letters.
+    expect(SKILL_OF_KIND['order-it']).toEqual(['read', 'write']);
+    expect(TILE_KINDS.has('order-it')).toBe(false);
+    expect([...TILE_KINDS].sort()).toEqual(['build-letter', 'syllable-build']);
+    expect(questSkills({ steps: [{ id: 's', kind: 'practice', titleEn: 'Build', minigameKind: 'order-it' }] })).toEqual(new Set(['read', 'write']));
   });
 
   it('tracks no speaking: voice-echo maps to none and no skill is called speak', () => {

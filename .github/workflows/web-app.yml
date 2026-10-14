@@ -325,6 +325,8 @@ jobs:
             story-checks
             # F-VOC-004 S-4b: the shared vocabulary question view, through the __hrVocabE2E hook.
             vocab-question
+            # F-CURR-001 G-1: Sentence Builder and its Check, through the __hrSentenceE2E hook.
+            sentence-builder
             # F-CURR-001 G-2: Realia Read on the four D-2 realia, through the __hrRealiaE2E hook.
             realia-read
             # F-REPORT-001 RP-3b: time-only practice sessions in the story reader and the level check.

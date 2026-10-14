@@ -22,6 +22,8 @@ export const PLAYABLE_KINDS: ReadonlySet<MinigameKind> = new Set<MinigameKind>([
   'tap-respond',
   'story-read',
   'story-check',
+  // F-CURR-001 G-1: Sentence Builder, also the Stage 7 Check.
+  'order-it',
   // F-CURR-001 G-2
   'realia-read',
 ]);

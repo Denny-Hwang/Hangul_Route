@@ -12,6 +12,7 @@ import type { SourcesRouteParams } from '../logic/story/source-link';
 import type { RoundSummary } from '../logic/vocab/stars';
 import type { RealiaReadE2eParams } from './realia-read-e2e';
 import type { VocabQuestionE2eParams } from './vocab-question-e2e';
+import type { SentenceE2eParams } from './sentence-builder-e2e';
 
 /**
  * Where a grown-up action continues once the gate (or a new PIN) is through. `ExternalLink`
@@ -269,6 +270,8 @@ export type RootStackParamList = {
   NotesGrownUp: { profileId: string };
   /** Fixture builds only (`navigation/vocab-question-e2e.tsx`): the shared vocabulary question view on catalogue words. */
   VocabQuestionE2e: VocabQuestionE2eParams;
+  /** Fixture builds only (`navigation/sentence-builder-e2e.tsx`): Sentence Builder on the D-1 sample sentences (F-CURR-001 G-1). */
+  SentenceBuilderE2e: SentenceE2eParams;
   /** Realia Read on a D-2 fixture realia (fixture builds only, F-CURR-001 G-2). */
   RealiaReadE2e: RealiaReadE2eParams;
 };

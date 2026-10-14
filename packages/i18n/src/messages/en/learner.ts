@@ -630,6 +630,28 @@ export const learner = {
       instruction: 'Tap a Korean word, then its English meaning.',
       nowMeaning: 'Now tap its meaning on the right.',
     },
+    /**
+     * Sentence Builder (`order-it`, F-CURR-001 §3.4, §3.7): word tiles tapped into order, or the particle
+     * that fits. A miss is never "wrong": Hoya says why the tile does not go here yet. The Check reuses
+     * `listenPick.checkTitle` and the progress pill; Hear it is `audio.hearIt`.
+     */
+    sentenceBuilder: {
+      heading: 'Build the sentence',
+      instruction: 'Tap the words in order.',
+      /** A round whose one open place is a particle (i or ga, eul or reul). */
+      particleInstruction: 'Tap the piece that fits.',
+      /** The label over the sentence's meaning in the UI language. */
+      meaning: 'Meaning',
+      miss: 'Not that one yet. Try another word.',
+      /** The tapped word is the sentence's last one (Korean puts the verb or describing word last). */
+      missLastWord: 'In Korean, the doing or describing word comes last.',
+      /** A particle miss; the quest's own Discover note follows as content. */
+      missParticle: 'Look at how the word before it ends.',
+      /** The second miss on one place: the right tile is ringed. */
+      lookHere: 'This one comes next.',
+      built: 'You built the sentence!',
+      empty: 'Nothing to play here',
+    },
   },
 
   /**
@@ -1266,6 +1288,8 @@ export const learner = {
       typeHangul: 'Type in Hangul',
       traceWord: 'Trace a word',
       writeFrame: 'Finish a sentence of your own',
+      /** Sentence Builder (`order-it`, row G-1): it counts for reading and writing. */
+      sentenceBuilder: 'Build a sentence',
     },
     /** The pip legend in an open stage (section 3.4): drawn shapes plus these words. */
     legend: {

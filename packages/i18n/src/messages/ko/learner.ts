@@ -468,6 +468,18 @@ export const learner = {
       instruction: '한국어 낱말을 누르고, 그다음 그 뜻을 눌러요.',
       nowMeaning: '이제 오른쪽에서 그 뜻을 눌러요.',
     },
+    sentenceBuilder: {
+      heading: '문장을 만들어 봐요',
+      instruction: '낱말을 순서대로 눌러요.',
+      particleInstruction: '알맞은 조각을 눌러요.',
+      meaning: '뜻',
+      miss: '그건 아직 아니에요. 다른 낱말을 골라 봐요.',
+      missLastWord: '한국어에서는 동작이나 모습을 말하는 낱말이 맨 끝에 와요.',
+      missParticle: '앞 낱말이 어떻게 끝나는지 봐요.',
+      lookHere: '다음은 이거예요.',
+      built: '문장을 만들었어요!',
+      empty: '여기에는 할 게임이 없어요',
+    },
   },
 
   audio: {
@@ -970,6 +982,7 @@ export const learner = {
       typeHangul: '한글 자판으로 쓰기',
       traceWord: '낱말 따라 쓰기',
       writeFrame: '나만의 문장 완성하기',
+      sentenceBuilder: '문장 만들기',
     },
     legend: {
       title: '모양의 뜻',

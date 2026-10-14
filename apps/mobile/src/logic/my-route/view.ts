@@ -283,6 +283,7 @@ export const GAME_NAME_KEY: Readonly<Partial<Record<MinigameKind, GameKey>>> = {
   'type-hangul': 'typeHangul',
   'trace-word': 'traceWord',
   'write-frame': 'writeFrame',
+  'order-it': 'sentenceBuilder',
 };
 
 /**
