@@ -23,6 +23,7 @@ export type BrowseRouteName =
   | 'BrowseEpisode'
   | 'BrowseItem'
   | 'PreviewQuest'
+  | 'PreviewFlashcards'
   | 'Minigame'
   | 'StoryReader'
   | 'StorySources'
@@ -117,18 +118,19 @@ function withPage(home: BrowseEntryRoute, page: BrowseEntryRoute, registered: Re
  * navigation after that (or into a new lesson) shows the Access screen
  * (section 4.3, gate hand-off step 2).
  */
-export const BROWSE_LESSON_ROUTES = ['PreviewQuest', 'Minigame', 'StoryReader', 'StorySources', 'PreviewEnd'] as const satisfies readonly BrowseRouteName[];
+export const BROWSE_LESSON_ROUTES = ['PreviewQuest', 'Minigame', 'StoryReader', 'StorySources', 'PreviewEnd', 'PreviewFlashcards'] as const satisfies readonly BrowseRouteName[];
 
 /** The screens that are always a step of a lesson under way. */
-const LESSON_STEPS: ReadonlySet<string> = new Set<string>(['PreviewQuest', 'Minigame', 'StoryReader']);
+const LESSON_STEPS: ReadonlySet<string> = new Set<string>(['PreviewQuest', 'Minigame', 'StoryReader', 'PreviewFlashcards']);
 const LESSON: ReadonlySet<string> = new Set<string>(BROWSE_LESSON_ROUTES);
 
 /**
  * Whether the visit is inside a lesson that already started once it shows
  * `to`, given whether it was before. The quest, game and story screens are
- * lesson steps. The story sources page is one only when a lesson step opened
- * it: opened from the item page ([ See the sources ], section 4.6) it is a
- * catalogue page, not a preview. Every other screen (the end screen included)
+ * lesson steps, and so are a word topic's flashcards (BR-9b: the cards, the
+ * quick check and the chunk summary are one screen). The story sources page
+ * is one only when a lesson step opened it: opened from the item page
+ * ([ See the sources ], section 4.6) it is a catalogue page, not a preview. Every other screen (the end screen included)
  * ends the lesson. Decided by how the visit got there, not by the route name.
  */
 export function lessonAfter(inLesson: boolean, to: BrowseRouteName): boolean {

@@ -141,13 +141,15 @@ describe('navigationCheck', () => {
     expect(navigationCheck({ ...late, inLesson: lessonAfter(true, 'PreviewEnd'), to: 'PreviewQuest' })).toEqual({ write: null, expired: true });
     expect(navigationCheck({ ...late, inLesson: lessonAfter(true, 'PreviewEnd'), to: 'BrowseItem' })).toEqual({ write: null, expired: true });
     expect(navigationCheck({ ...late, inLesson: lessonAfter(false, 'BrowseItem'), to: 'PreviewQuest' })).toEqual({ write: null, expired: true });
-    expect(BROWSE_LESSON_ROUTES).toEqual(['PreviewQuest', 'Minigame', 'StoryReader', 'StorySources', 'PreviewEnd']);
+    expect(navigationCheck({ ...late, inLesson: true, to: 'PreviewFlashcards' })).toEqual({ write: null, expired: false });
+    expect(BROWSE_LESSON_ROUTES).toEqual(['PreviewQuest', 'Minigame', 'StoryReader', 'StorySources', 'PreviewEnd', 'PreviewFlashcards']);
   });
 
   it('the sources page is a lesson step only when a lesson step opened it, not from the item page', () => {
     expect(lessonAfter(false, 'PreviewQuest')).toBe(true);
     expect(lessonAfter(false, 'Minigame')).toBe(true);
     expect(lessonAfter(false, 'StoryReader')).toBe(true);
+    expect(lessonAfter(false, 'PreviewFlashcards')).toBe(true);
     expect(lessonAfter(lessonAfter(false, 'StoryReader'), 'StorySources')).toBe(true);
     expect(lessonAfter(lessonAfter(false, 'BrowseItem'), 'StorySources')).toBe(false);
     expect(lessonAfter(true, 'PreviewEnd')).toBe(false);
