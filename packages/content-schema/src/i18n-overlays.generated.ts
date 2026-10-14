@@ -3023,6 +3023,374 @@ export const OVERLAYS: Overlays = {
       "options.t3.gloss": "모음 유",
       "options.t4.gloss": "모음 요"
     },
+    "pitem:sent-n-hear-badayeyo": {
+      "gloss": "짠물이 넓게 펼쳐진 곳이에요. (듣기)",
+      "options.family-table.gloss": "가족이 둘러앉아 식사하는 낮은 탁자",
+      "options.sea.gloss": "짠물이 넓게 펼쳐진 곳",
+      "options.tiger.gloss": "줄무늬가 있는 크고 힘센 동물",
+      "options.top.gloss": "빙글빙글 돌려서 노는 장난감"
+    },
+    "pitem:sent-n-hear-busieyo": {
+      "gloss": "끝에 털이 달려 글씨를 쓰는 도구예요. (듣기)",
+      "options.brush.gloss": "끝에 털이 달려 글씨를 쓰는 도구",
+      "options.gayageum.gloss": "줄을 뜯어 소리를 내는 한국 전통 악기",
+      "options.hanbok.gloss": "한국의 전통 옷",
+      "options.magpie.gloss": "까맣고 하얀 깃털을 가진 새"
+    },
+    "pitem:sent-n-hear-chaegieyo": {
+      "gloss": "글과 그림이 담긴 종이 묶음이에요. (듣기)",
+      "options.book.gloss": "글과 그림이 담긴 종이 묶음",
+      "options.moon.gloss": "밤하늘에 떠서 빛나는 둥근 것",
+      "options.tteokguk.gloss": "쌀 반죽을 길게 뽑아 얇게 썰어 넣고 끓인 설날 음식",
+      "options.yutnori.gloss": "나무 막대 네 개를 던져 말을 옮기는 전통 게임"
+    },
+    "pitem:sent-n-hear-darieyo": {
+      "gloss": "밤하늘에 떠서 빛나는 둥근 것이에요. (듣기)",
+      "options.kimbap.gloss": "김에 밥과 채소를 넣고 둥글게 말아 썬 음식",
+      "options.kite.gloss": "바람에 날리는 종이 장난감",
+      "options.magpie.gloss": "까맣고 하얀 깃털을 가진 새",
+      "options.moon.gloss": "밤하늘에 떠서 빛나는 둥근 것"
+    },
+    "pitem:sent-n-hear-gimchiyeyo": {
+      "gloss": "배추 같은 채소를 소금에 절이고 양념해 담근 반찬이에요. (듣기)",
+      "options.jegi.gloss": "발로 차올리며 노는 전통 놀잇감",
+      "options.kimchi.gloss": "배추 같은 채소를 소금에 절이고 양념해 담근 반찬",
+      "options.magpie.gloss": "까맣고 하얀 깃털을 가진 새",
+      "options.pottery.gloss": "푸른빛이 도는 옛 도자기"
+    },
+    "pitem:sent-n-hear-hanbogieyo": {
+      "gloss": "한국의 전통 옷이에요. (듣기)",
+      "options.book.gloss": "글과 그림이 담긴 종이 묶음",
+      "options.chopsticks.gloss": "음식을 집는 가늘고 긴 막대 한 쌍",
+      "options.hanbok.gloss": "한국의 전통 옷",
+      "options.sea.gloss": "짠물이 넓게 펼쳐진 곳"
+    },
+    "pitem:sent-n-hear-hanjiyeyo": {
+      "gloss": "닥나무로 만든 한국 전통 종이예요. (듣기)",
+      "options.hanji.gloss": "닥나무로 만든 한국 전통 종이",
+      "options.kite.gloss": "바람에 날리는 종이 장난감",
+      "options.mugunghwa.gloss": "한국의 나라꽃",
+      "options.rice.gloss": "쌀로 지어 먹는 음식"
+    },
+    "pitem:sent-n-hear-horangiyeyo": {
+      "gloss": "줄무늬가 있는 크고 힘센 동물이에요. (듣기)",
+      "options.gayageum.gloss": "줄을 뜯어 소리를 내는 한국 전통 악기",
+      "options.lantern.gloss": "부처님 오신 날에 밝히는 종이 불빛",
+      "options.origami.gloss": "네모난 색지로 학이나 배 같은 모양을 만드는 놀이",
+      "options.tiger.gloss": "줄무늬가 있는 크고 힘센 동물"
+    },
+    "pitem:sent-n-hear-jegiyeyo": {
+      "gloss": "발로 차올리며 노는 전통 놀잇감이에요. (듣기)",
+      "options.hanji.gloss": "닥나무로 만든 한국 전통 종이",
+      "options.jegi.gloss": "발로 차올리며 노는 전통 놀잇감",
+      "options.kimbap.gloss": "김에 밥과 채소를 넣고 둥글게 말아 썬 음식",
+      "options.moon.gloss": "밤하늘에 떠서 빛나는 둥근 것"
+    },
+    "pitem:sent-n-hear-kkachiyeyo": {
+      "gloss": "까맣고 하얀 깃털을 가진 새예요. (듣기)",
+      "options.book.gloss": "글과 그림이 담긴 종이 묶음",
+      "options.chuseok.gloss": "가을에 거둔 곡식에 감사하는 큰 명절",
+      "options.gayageum.gloss": "줄을 뜯어 소리를 내는 한국 전통 악기",
+      "options.magpie.gloss": "까맣고 하얀 깃털을 가진 새"
+    },
+    "pitem:sent-n-hear-paengiyeyo": {
+      "gloss": "빙글빙글 돌려서 노는 장난감이에요. (듣기)",
+      "options.hanji.gloss": "닥나무로 만든 한국 전통 종이",
+      "options.mountain.gloss": "땅이 높이 솟은 곳",
+      "options.songpyeon.gloss": "반달 모양으로 빚어 찐 떡",
+      "options.top.gloss": "빙글빙글 돌려서 노는 장난감"
+    },
+    "pitem:sent-n-hear-sanieyo": {
+      "gloss": "땅이 높이 솟은 곳이에요. (듣기)",
+      "options.chuseok.gloss": "가을에 거둔 곡식에 감사하는 큰 명절",
+      "options.ink.gloss": "벼루에 갈아 검은 물을 만드는 막대",
+      "options.mountain.gloss": "땅이 높이 솟은 곳",
+      "options.pottery.gloss": "푸른빛이 도는 옛 도자기"
+    },
+    "pitem:sent-n-hear-yeonieyo": {
+      "gloss": "바람에 날리는 종이 장난감이에요. (듣기)",
+      "options.chuseok.gloss": "가을에 거둔 곡식에 감사하는 큰 명절",
+      "options.gayageum.gloss": "줄을 뜯어 소리를 내는 한국 전통 악기",
+      "options.kite.gloss": "바람에 날리는 종이 장난감",
+      "options.magpie.gloss": "까맣고 하얀 깃털을 가진 새"
+    },
+    "pitem:sent-n-hear-yuchieyo": {
+      "gloss": "던져서 노는 나무 막대 네 개예요. (듣기)",
+      "options.gayageum.gloss": "줄을 뜯어 소리를 내는 한국 전통 악기",
+      "options.hanbok.gloss": "한국의 전통 옷",
+      "options.tiger.gloss": "줄무늬가 있는 크고 힘센 동물",
+      "options.yutnori.gloss": "나무 막대 네 개를 던져 말을 옮기는 전통 게임"
+    },
+    "pitem:sent-n-read-badayeyo": {
+      "gloss": "짠물이 넓게 펼쳐진 곳이에요. (읽기)",
+      "options.hanbok.gloss": "한국의 전통 옷",
+      "options.ink.gloss": "벼루에 갈아 검은 물을 만드는 막대",
+      "options.pottery.gloss": "푸른빛이 도는 옛 도자기",
+      "options.sea.gloss": "짠물이 넓게 펼쳐진 곳"
+    },
+    "pitem:sent-n-read-busieyo": {
+      "gloss": "끝에 털이 달려 글씨를 쓰는 도구예요. (읽기)",
+      "options.brush.gloss": "끝에 털이 달려 글씨를 쓰는 도구",
+      "options.kimchi.gloss": "배추 같은 채소를 소금에 절이고 양념해 담근 반찬",
+      "options.kite.gloss": "바람에 날리는 종이 장난감",
+      "options.mountain.gloss": "땅이 높이 솟은 곳"
+    },
+    "pitem:sent-n-read-chaegieyo": {
+      "gloss": "글과 그림이 담긴 종이 묶음이에요. (읽기)",
+      "options.book.gloss": "글과 그림이 담긴 종이 묶음",
+      "options.magpie.gloss": "까맣고 하얀 깃털을 가진 새",
+      "options.pottery.gloss": "푸른빛이 도는 옛 도자기",
+      "options.sebae.gloss": "새해에 웃어른께 드리는 큰절"
+    },
+    "pitem:sent-n-read-darieyo": {
+      "gloss": "밤하늘에 떠서 빛나는 둥근 것이에요. (읽기)",
+      "options.chopsticks.gloss": "음식을 집는 가늘고 긴 막대 한 쌍",
+      "options.gayageum.gloss": "줄을 뜯어 소리를 내는 한국 전통 악기",
+      "options.moon.gloss": "밤하늘에 떠서 빛나는 둥근 것",
+      "options.origami.gloss": "네모난 색지로 학이나 배 같은 모양을 만드는 놀이"
+    },
+    "pitem:sent-n-read-gimchiyeyo": {
+      "gloss": "배추 같은 채소를 소금에 절이고 양념해 담근 반찬이에요. (읽기)",
+      "options.book.gloss": "글과 그림이 담긴 종이 묶음",
+      "options.hanbok.gloss": "한국의 전통 옷",
+      "options.kimchi.gloss": "배추 같은 채소를 소금에 절이고 양념해 담근 반찬",
+      "options.mugunghwa.gloss": "한국의 나라꽃"
+    },
+    "pitem:sent-n-read-hanbogieyo": {
+      "gloss": "한국의 전통 옷이에요. (읽기)",
+      "options.gayageum.gloss": "줄을 뜯어 소리를 내는 한국 전통 악기",
+      "options.hanbok.gloss": "한국의 전통 옷",
+      "options.tiger.gloss": "줄무늬가 있는 크고 힘센 동물",
+      "options.top.gloss": "빙글빙글 돌려서 노는 장난감"
+    },
+    "pitem:sent-n-read-hanjiyeyo": {
+      "gloss": "닥나무로 만든 한국 전통 종이예요. (읽기)",
+      "options.gayageum.gloss": "줄을 뜯어 소리를 내는 한국 전통 악기",
+      "options.hanji.gloss": "닥나무로 만든 한국 전통 종이",
+      "options.sebae.gloss": "새해에 웃어른께 드리는 큰절",
+      "options.tiger.gloss": "줄무늬가 있는 크고 힘센 동물"
+    },
+    "pitem:sent-n-read-horangiyeyo": {
+      "gloss": "줄무늬가 있는 크고 힘센 동물이에요. (읽기)",
+      "options.mountain.gloss": "땅이 높이 솟은 곳",
+      "options.songpyeon.gloss": "반달 모양으로 빚어 찐 떡",
+      "options.tiger.gloss": "줄무늬가 있는 크고 힘센 동물",
+      "options.top.gloss": "빙글빙글 돌려서 노는 장난감"
+    },
+    "pitem:sent-n-read-jegiyeyo": {
+      "gloss": "발로 차올리며 노는 전통 놀잇감이에요. (읽기)",
+      "options.gayageum.gloss": "줄을 뜯어 소리를 내는 한국 전통 악기",
+      "options.jegi.gloss": "발로 차올리며 노는 전통 놀잇감",
+      "options.magpie.gloss": "까맣고 하얀 깃털을 가진 새",
+      "options.sebae.gloss": "새해에 웃어른께 드리는 큰절"
+    },
+    "pitem:sent-n-read-kkachiyeyo": {
+      "gloss": "까맣고 하얀 깃털을 가진 새예요. (읽기)",
+      "options.jegi.gloss": "발로 차올리며 노는 전통 놀잇감",
+      "options.kimbap.gloss": "김에 밥과 채소를 넣고 둥글게 말아 썬 음식",
+      "options.magpie.gloss": "까맣고 하얀 깃털을 가진 새",
+      "options.moon.gloss": "밤하늘에 떠서 빛나는 둥근 것"
+    },
+    "pitem:sent-n-read-paengiyeyo": {
+      "gloss": "빙글빙글 돌려서 노는 장난감이에요. (읽기)",
+      "options.gayageum.gloss": "줄을 뜯어 소리를 내는 한국 전통 악기",
+      "options.hanbok.gloss": "한국의 전통 옷",
+      "options.magpie.gloss": "까맣고 하얀 깃털을 가진 새",
+      "options.top.gloss": "빙글빙글 돌려서 노는 장난감"
+    },
+    "pitem:sent-n-read-sanieyo": {
+      "gloss": "땅이 높이 솟은 곳이에요. (읽기)",
+      "options.kimchi.gloss": "배추 같은 채소를 소금에 절이고 양념해 담근 반찬",
+      "options.magpie.gloss": "까맣고 하얀 깃털을 가진 새",
+      "options.mountain.gloss": "땅이 높이 솟은 곳",
+      "options.yutnori.gloss": "나무 막대 네 개를 던져 말을 옮기는 전통 게임"
+    },
+    "pitem:sent-n-read-yeonieyo": {
+      "gloss": "바람에 날리는 종이 장난감이에요. (읽기)",
+      "options.brush.gloss": "끝에 털이 달려 글씨를 쓰는 도구",
+      "options.kite.gloss": "바람에 날리는 종이 장난감",
+      "options.moon.gloss": "밤하늘에 떠서 빛나는 둥근 것",
+      "options.tteokguk.gloss": "쌀 반죽을 길게 뽑아 얇게 썰어 넣고 끓인 설날 음식"
+    },
+    "pitem:sent-n-read-yuchieyo": {
+      "gloss": "던져서 노는 나무 막대 네 개예요. (읽기)",
+      "options.hanji.gloss": "닥나무로 만든 한국 전통 종이",
+      "options.mountain.gloss": "땅이 높이 솟은 곳",
+      "options.pottery.gloss": "푸른빛이 도는 옛 도자기",
+      "options.yutnori.gloss": "나무 막대 네 개를 던져 말을 옮기는 전통 게임"
+    },
+    "pitem:sent-reply-1": {
+      "gloss": "만났을 때 하는 인사에 대답해요.",
+      "options.reply-1.gloss": "만났을 때 건네는 인사",
+      "options.reply-5.gloss": "남아 있는 사람에게 하는 작별 인사",
+      "options.reply-8.gloss": "이미 식사했다는 대답"
+    },
+    "pitem:sent-reply-10": {
+      "gloss": "잘못을 사과하는 말에 대답해요.",
+      "options.reply-10.gloss": "문제없다고 하는 너그러운 대답",
+      "options.reply-3.gloss": "자기도 만나서 기쁘다는 인사",
+      "options.reply-7.gloss": "그 채소 반찬이 맞다는 대답"
+    },
+    "pitem:sent-reply-2": {
+      "gloss": "이름을 묻는 말에 대답해요.",
+      "options.reply-2.gloss": "자기 이름이 호야라고 소개하는 말",
+      "options.reply-3.gloss": "자기도 만나서 기쁘다는 인사",
+      "options.reply-6.gloss": "그동안 별일 없었다는 대답"
+    },
+    "pitem:sent-reply-3": {
+      "gloss": "처음 만나 기쁘다는 인사에 대답해요.",
+      "options.reply-3.gloss": "자기도 만나서 기쁘다는 인사",
+      "options.reply-5.gloss": "남아 있는 사람에게 하는 작별 인사",
+      "options.reply-8.gloss": "이미 식사했다는 대답"
+    },
+    "pitem:sent-reply-4": {
+      "gloss": "고마움을 전하는 정중한 말에 대답해요.",
+      "options.reply-2.gloss": "자기 이름이 호야라고 소개하는 말",
+      "options.reply-4.gloss": "감사 인사에 하는 정중한 대답",
+      "options.reply-8.gloss": "이미 식사했다는 대답"
+    },
+    "pitem:sent-reply-5": {
+      "gloss": "떠나는 사람에게 하는 작별 인사에 대답해요.",
+      "options.reply-4.gloss": "감사 인사에 하는 정중한 대답",
+      "options.reply-5.gloss": "남아 있는 사람에게 하는 작별 인사",
+      "options.reply-6.gloss": "그동안 별일 없었다는 대답"
+    },
+    "pitem:sent-reply-6": {
+      "gloss": "그동안의 안부를 묻는 말에 대답해요.",
+      "options.reply-5.gloss": "남아 있는 사람에게 하는 작별 인사",
+      "options.reply-6.gloss": "그동안 별일 없었다는 대답",
+      "options.reply-7.gloss": "그 채소 반찬이 맞다는 대답"
+    },
+    "pitem:sent-reply-7": {
+      "gloss": "이것이 소금에 절여 양념한 채소 반찬인지 묻는 말에 대답해요.",
+      "options.reply-1.gloss": "만났을 때 건네는 인사",
+      "options.reply-7.gloss": "그 채소 반찬이 맞다는 대답",
+      "options.reply-8.gloss": "이미 식사했다는 대답"
+    },
+    "pitem:sent-reply-8": {
+      "gloss": "식사했는지 묻는 말에 대답해요.",
+      "options.reply-2.gloss": "자기 이름이 호야라고 소개하는 말",
+      "options.reply-3.gloss": "자기도 만나서 기쁘다는 인사",
+      "options.reply-8.gloss": "이미 식사했다는 대답"
+    },
+    "pitem:sent-reply-9": {
+      "gloss": "고마움을 전하는 말에 대답해요.",
+      "options.reply-2.gloss": "자기 이름이 호야라고 소개하는 말",
+      "options.reply-6.gloss": "그동안 별일 없었다는 대답",
+      "options.reply-9.gloss": "별것 아니라고 하는 겸손한 대답"
+    },
+    "pitem:sent-v-hear-babeulmeogeoyo": {
+      "gloss": "쌀로 지은 음식을 먹어요. (듣기)",
+      "options.magpie.gloss": "까맣고 하얀 깃털을 가진 새",
+      "options.pottery.gloss": "푸른빛이 도는 옛 도자기",
+      "options.rice.gloss": "쌀로 지어 먹는 음식",
+      "options.top.gloss": "빙글빙글 돌려서 노는 장난감"
+    },
+    "pitem:sent-v-hear-chaegeulilgeoyo": {
+      "gloss": "글과 그림이 담긴 종이 묶음을 읽어요. (듣기)",
+      "options.book.gloss": "글과 그림이 담긴 종이 묶음",
+      "options.pottery.gloss": "푸른빛이 도는 옛 도자기",
+      "options.seollal.gloss": "음력으로 새해 첫날을 맞는 명절",
+      "options.tiger.gloss": "줄무늬가 있는 크고 힘센 동물"
+    },
+    "pitem:sent-v-hear-gimbabeulmeogeoyo": {
+      "gloss": "김에 밥과 채소를 넣고 둥글게 말아 썬 음식을 먹어요. (듣기)",
+      "options.gayageum.gloss": "줄을 뜯어 소리를 내는 한국 전통 악기",
+      "options.kimbap.gloss": "김에 밥과 채소를 넣고 둥글게 말아 썬 음식",
+      "options.magpie.gloss": "까맣고 하얀 깃털을 가진 새",
+      "options.yutnori.gloss": "나무 막대 네 개를 던져 말을 옮기는 전통 게임"
+    },
+    "pitem:sent-v-hear-gimchireulmeogeoyo": {
+      "gloss": "배추 같은 채소를 소금에 절이고 양념해 담근 반찬을 먹어요. (듣기)",
+      "options.brush.gloss": "끝에 털이 달려 글씨를 쓰는 도구",
+      "options.hanbok.gloss": "한국의 전통 옷",
+      "options.kimchi.gloss": "배추 같은 채소를 소금에 절이고 양념해 담근 반찬",
+      "options.mountain.gloss": "땅이 높이 솟은 곳"
+    },
+    "pitem:sent-v-hear-hanbogeulibeoyo": {
+      "gloss": "한국의 전통 옷을 입어요. (듣기)",
+      "options.book.gloss": "글과 그림이 담긴 종이 묶음",
+      "options.hanbok.gloss": "한국의 전통 옷",
+      "options.sea.gloss": "짠물이 넓게 펼쳐진 곳",
+      "options.top.gloss": "빙글빙글 돌려서 노는 장난감"
+    },
+    "pitem:sent-v-hear-songpyeoneulmeogeoyo": {
+      "gloss": "반달 모양으로 빚어 찐 떡을 먹어요. (듣기)",
+      "options.gayageum.gloss": "줄을 뜯어 소리를 내는 한국 전통 악기",
+      "options.jegi.gloss": "발로 차올리며 노는 전통 놀잇감",
+      "options.songpyeon.gloss": "반달 모양으로 빚어 찐 떡",
+      "options.tiger.gloss": "줄무늬가 있는 크고 힘센 동물"
+    },
+    "pitem:sent-v-hear-tteokgugeulmeogeoyo": {
+      "gloss": "쌀 반죽을 길게 뽑아 얇게 썰어 넣고 끓인 설날 음식을 먹어요. (듣기)",
+      "options.hanbok.gloss": "한국의 전통 옷",
+      "options.hanji.gloss": "닥나무로 만든 한국 전통 종이",
+      "options.mountain.gloss": "땅이 높이 솟은 곳",
+      "options.tteokguk.gloss": "쌀 반죽을 길게 뽑아 얇게 썰어 넣고 끓인 설날 음식"
+    },
+    "pitem:sent-v-hear-yeoneulnallyeoyo": {
+      "gloss": "실에 매단 종이 장난감을 하늘에 날려요. (듣기)",
+      "options.ink.gloss": "벼루에 갈아 검은 물을 만드는 막대",
+      "options.kite.gloss": "바람에 날리는 종이 장난감",
+      "options.pottery.gloss": "푸른빛이 도는 옛 도자기",
+      "options.rice.gloss": "쌀로 지어 먹는 음식"
+    },
+    "pitem:sent-v-read-babeulmeogeoyo": {
+      "gloss": "쌀로 지은 음식을 먹어요. (읽기)",
+      "options.book.gloss": "글과 그림이 담긴 종이 묶음",
+      "options.rice.gloss": "쌀로 지어 먹는 음식",
+      "options.sea.gloss": "짠물이 넓게 펼쳐진 곳",
+      "options.sebae.gloss": "새해에 웃어른께 드리는 큰절"
+    },
+    "pitem:sent-v-read-chaegeulilgeoyo": {
+      "gloss": "글과 그림이 담긴 종이 묶음을 읽어요. (읽기)",
+      "options.book.gloss": "글과 그림이 담긴 종이 묶음",
+      "options.kite.gloss": "바람에 날리는 종이 장난감",
+      "options.mugunghwa.gloss": "한국의 나라꽃",
+      "options.tteokguk.gloss": "쌀 반죽을 길게 뽑아 얇게 썰어 넣고 끓인 설날 음식"
+    },
+    "pitem:sent-v-read-gimbabeulmeogeoyo": {
+      "gloss": "김에 밥과 채소를 넣고 둥글게 말아 썬 음식을 먹어요. (읽기)",
+      "options.brush.gloss": "끝에 털이 달려 글씨를 쓰는 도구",
+      "options.kimbap.gloss": "김에 밥과 채소를 넣고 둥글게 말아 썬 음식",
+      "options.moon.gloss": "밤하늘에 떠서 빛나는 둥근 것",
+      "options.sebae.gloss": "새해에 웃어른께 드리는 큰절"
+    },
+    "pitem:sent-v-read-gimchireulmeogeoyo": {
+      "gloss": "배추 같은 채소를 소금에 절이고 양념해 담근 반찬을 먹어요. (읽기)",
+      "options.jegi.gloss": "발로 차올리며 노는 전통 놀잇감",
+      "options.kimchi.gloss": "배추 같은 채소를 소금에 절이고 양념해 담근 반찬",
+      "options.magpie.gloss": "까맣고 하얀 깃털을 가진 새",
+      "options.pottery.gloss": "푸른빛이 도는 옛 도자기"
+    },
+    "pitem:sent-v-read-hanbogeulibeoyo": {
+      "gloss": "한국의 전통 옷을 입어요. (읽기)",
+      "options.gayageum.gloss": "줄을 뜯어 소리를 내는 한국 전통 악기",
+      "options.hanbok.gloss": "한국의 전통 옷",
+      "options.kimchi.gloss": "배추 같은 채소를 소금에 절이고 양념해 담근 반찬",
+      "options.tiger.gloss": "줄무늬가 있는 크고 힘센 동물"
+    },
+    "pitem:sent-v-read-songpyeoneulmeogeoyo": {
+      "gloss": "반달 모양으로 빚어 찐 떡을 먹어요. (읽기)",
+      "options.hanji.gloss": "닥나무로 만든 한국 전통 종이",
+      "options.moon.gloss": "밤하늘에 떠서 빛나는 둥근 것",
+      "options.sebae.gloss": "새해에 웃어른께 드리는 큰절",
+      "options.songpyeon.gloss": "반달 모양으로 빚어 찐 떡"
+    },
+    "pitem:sent-v-read-tteokgugeulmeogeoyo": {
+      "gloss": "쌀 반죽을 길게 뽑아 얇게 썰어 넣고 끓인 설날 음식을 먹어요. (읽기)",
+      "options.gayageum.gloss": "줄을 뜯어 소리를 내는 한국 전통 악기",
+      "options.kite.gloss": "바람에 날리는 종이 장난감",
+      "options.magpie.gloss": "까맣고 하얀 깃털을 가진 새",
+      "options.tteokguk.gloss": "쌀 반죽을 길게 뽑아 얇게 썰어 넣고 끓인 설날 음식"
+    },
+    "pitem:sent-v-read-yeoneulnallyeoyo": {
+      "gloss": "실에 매단 종이 장난감을 하늘에 날려요. (읽기)",
+      "options.book.gloss": "글과 그림이 담긴 종이 묶음",
+      "options.kite.gloss": "바람에 날리는 종이 장난감",
+      "options.sea.gloss": "짠물이 넓게 펼쳐진 곳",
+      "options.songpyeon.gloss": "반달 모양으로 빚어 찐 떡"
+    },
     "pitem:sound-basic-hear-a": {
       "gloss": "‘a’ 소리를 듣고 모음 아를 골라요",
       "options.a.gloss": "모음 아",
@@ -3660,6 +4028,349 @@ export const OVERLAYS: Overlays = {
     },
     "pitem:syl-cvc-see-san": {
       "gloss": "‘san’ 음절을 보고 소리를 골라요"
+    },
+    "pitem:vocab-hear-bada": {
+      "gloss": "짠물이 넓게 펼쳐진 곳 (듣기)",
+      "options.gayageum.gloss": "줄을 뜯어 소리를 내는 한국 전통 악기",
+      "options.hanbok.gloss": "한국의 전통 옷",
+      "options.hangul-day.gloss": "세종대왕이 만든 글자를 세상에 펴낸 것을 기념하는 날",
+      "options.sea.gloss": "짠물이 넓게 펼쳐진 곳"
+    },
+    "pitem:vocab-hear-bap": {
+      "gloss": "쌀로 지어 먹는 음식 (듣기)",
+      "options.gayageum.gloss": "줄을 뜯어 소리를 내는 한국 전통 악기",
+      "options.rice.gloss": "쌀로 지어 먹는 음식",
+      "options.tiger.gloss": "줄무늬가 있는 크고 힘센 동물",
+      "options.top.gloss": "빙글빙글 돌려서 노는 장난감"
+    },
+    "pitem:vocab-hear-bapsang": {
+      "gloss": "가족이 둘러앉아 식사하는 낮은 탁자 (듣기)",
+      "options.book.gloss": "글과 그림이 담긴 종이 묶음",
+      "options.family-table.gloss": "가족이 둘러앉아 식사하는 낮은 탁자",
+      "options.tiger.gloss": "줄무늬가 있는 크고 힘센 동물",
+      "options.top.gloss": "빙글빙글 돌려서 노는 장난감"
+    },
+    "pitem:vocab-hear-but": {
+      "gloss": "끝에 털이 달려 글씨를 쓰는 도구 (듣기)",
+      "options.brush.gloss": "끝에 털이 달려 글씨를 쓰는 도구",
+      "options.pottery.gloss": "푸른빛이 도는 옛 도자기",
+      "options.seollal.gloss": "음력으로 새해 첫날을 맞는 명절",
+      "options.tiger.gloss": "줄무늬가 있는 크고 힘센 동물"
+    },
+    "pitem:vocab-hear-chaek": {
+      "gloss": "글과 그림이 담긴 종이 묶음 (듣기)",
+      "options.book.gloss": "글과 그림이 담긴 종이 묶음",
+      "options.gayageum.gloss": "줄을 뜯어 소리를 내는 한국 전통 악기",
+      "options.sebae.gloss": "새해에 웃어른께 드리는 큰절",
+      "options.tiger.gloss": "줄무늬가 있는 크고 힘센 동물"
+    },
+    "pitem:vocab-hear-cheongja": {
+      "gloss": "푸른빛이 도는 옛 도자기 (듣기)",
+      "options.hangul-day.gloss": "세종대왕이 만든 글자를 세상에 펴낸 것을 기념하는 날",
+      "options.mugunghwa.gloss": "한국의 나라꽃",
+      "options.pottery.gloss": "푸른빛이 도는 옛 도자기",
+      "options.sebae.gloss": "새해에 웃어른께 드리는 큰절"
+    },
+    "pitem:vocab-hear-chuseok": {
+      "gloss": "가을에 거둔 곡식에 감사하는 큰 명절 (듣기)",
+      "options.book.gloss": "글과 그림이 담긴 종이 묶음",
+      "options.chuseok.gloss": "가을에 거둔 곡식에 감사하는 큰 명절",
+      "options.kimbap.gloss": "김에 밥과 채소를 넣고 둥글게 말아 썬 음식",
+      "options.top.gloss": "빙글빙글 돌려서 노는 장난감"
+    },
+    "pitem:vocab-hear-dal": {
+      "gloss": "밤하늘에 떠서 빛나는 둥근 것 (듣기)",
+      "options.jegi.gloss": "발로 차올리며 노는 전통 놀잇감",
+      "options.kimbap.gloss": "김에 밥과 채소를 넣고 둥글게 말아 썬 음식",
+      "options.moon.gloss": "밤하늘에 떠서 빛나는 둥근 것",
+      "options.tiger.gloss": "줄무늬가 있는 크고 힘센 동물"
+    },
+    "pitem:vocab-hear-gayageum": {
+      "gloss": "줄을 뜯어 소리를 내는 한국 전통 악기 (듣기)",
+      "options.chopsticks.gloss": "음식을 집는 가늘고 긴 막대 한 쌍",
+      "options.gayageum.gloss": "줄을 뜯어 소리를 내는 한국 전통 악기",
+      "options.tiger.gloss": "줄무늬가 있는 크고 힘센 동물",
+      "options.top.gloss": "빙글빙글 돌려서 노는 장난감"
+    },
+    "pitem:vocab-hear-gimbap": {
+      "gloss": "김에 밥과 채소를 넣고 둥글게 말아 썬 음식 (듣기)",
+      "options.brush.gloss": "끝에 털이 달려 글씨를 쓰는 도구",
+      "options.kimbap.gloss": "김에 밥과 채소를 넣고 둥글게 말아 썬 음식",
+      "options.lantern.gloss": "부처님 오신 날에 밝히는 종이 불빛",
+      "options.mountain.gloss": "땅이 높이 솟은 곳"
+    },
+    "pitem:vocab-hear-gimchi": {
+      "gloss": "배추 같은 채소를 소금에 절이고 양념해 담근 반찬 (듣기)",
+      "options.hanji.gloss": "닥나무로 만든 한국 전통 종이",
+      "options.kimchi.gloss": "배추 같은 채소를 소금에 절이고 양념해 담근 반찬",
+      "options.moon.gloss": "밤하늘에 떠서 빛나는 둥근 것",
+      "options.seollal.gloss": "음력으로 새해 첫날을 맞는 명절"
+    },
+    "pitem:vocab-hear-hanbok": {
+      "gloss": "한국의 전통 옷 (듣기)",
+      "options.hanbok.gloss": "한국의 전통 옷",
+      "options.magpie.gloss": "까맣고 하얀 깃털을 가진 새",
+      "options.pottery.gloss": "푸른빛이 도는 옛 도자기",
+      "options.top.gloss": "빙글빙글 돌려서 노는 장난감"
+    },
+    "pitem:vocab-hear-hanji": {
+      "gloss": "닥나무로 만든 한국 전통 종이 (듣기)",
+      "options.family-table.gloss": "가족이 둘러앉아 식사하는 낮은 탁자",
+      "options.hanji.gloss": "닥나무로 만든 한국 전통 종이",
+      "options.sea.gloss": "짠물이 넓게 펼쳐진 곳",
+      "options.yutnori.gloss": "나무 막대 네 개를 던져 말을 옮기는 전통 게임"
+    },
+    "pitem:vocab-hear-horangi": {
+      "gloss": "줄무늬가 있는 크고 힘센 동물 (듣기)",
+      "options.chuseok.gloss": "가을에 거둔 곡식에 감사하는 큰 명절",
+      "options.gayageum.gloss": "줄을 뜯어 소리를 내는 한국 전통 악기",
+      "options.origami.gloss": "네모난 색지로 학이나 배 같은 모양을 만드는 놀이",
+      "options.tiger.gloss": "줄무늬가 있는 크고 힘센 동물"
+    },
+    "pitem:vocab-hear-jegi": {
+      "gloss": "발로 차올리며 노는 전통 놀잇감 (듣기)",
+      "options.book.gloss": "글과 그림이 담긴 종이 묶음",
+      "options.jegi.gloss": "발로 차올리며 노는 전통 놀잇감",
+      "options.mugunghwa.gloss": "한국의 나라꽃",
+      "options.rice.gloss": "쌀로 지어 먹는 음식"
+    },
+    "pitem:vocab-hear-jeotgarak": {
+      "gloss": "음식을 집는 가늘고 긴 막대 한 쌍 (듣기)",
+      "options.book.gloss": "글과 그림이 담긴 종이 묶음",
+      "options.chopsticks.gloss": "음식을 집는 가늘고 긴 막대 한 쌍",
+      "options.lantern.gloss": "부처님 오신 날에 밝히는 종이 불빛",
+      "options.mugunghwa.gloss": "한국의 나라꽃"
+    },
+    "pitem:vocab-hear-jongijeopgi": {
+      "gloss": "네모난 색지로 학이나 배 같은 모양을 만드는 놀이 (듣기)",
+      "options.jegi.gloss": "발로 차올리며 노는 전통 놀잇감",
+      "options.mountain.gloss": "땅이 높이 솟은 곳",
+      "options.origami.gloss": "네모난 색지로 학이나 배 같은 모양을 만드는 놀이",
+      "options.rice.gloss": "쌀로 지어 먹는 음식"
+    },
+    "pitem:vocab-hear-kkachi": {
+      "gloss": "까맣고 하얀 깃털을 가진 새 (듣기)",
+      "options.chopsticks.gloss": "음식을 집는 가늘고 긴 막대 한 쌍",
+      "options.magpie.gloss": "까맣고 하얀 깃털을 가진 새",
+      "options.sea.gloss": "짠물이 넓게 펼쳐진 곳",
+      "options.top.gloss": "빙글빙글 돌려서 노는 장난감"
+    },
+    "pitem:vocab-hear-meok": {
+      "gloss": "벼루에 갈아 검은 물을 만드는 막대 (듣기)",
+      "options.ink.gloss": "벼루에 갈아 검은 물을 만드는 막대",
+      "options.kimchi.gloss": "배추 같은 채소를 소금에 절이고 양념해 담근 반찬",
+      "options.sea.gloss": "짠물이 넓게 펼쳐진 곳",
+      "options.top.gloss": "빙글빙글 돌려서 노는 장난감"
+    },
+    "pitem:vocab-hear-mugunghwa": {
+      "gloss": "한국의 나라꽃 (듣기)",
+      "options.hanbok.gloss": "한국의 전통 옷",
+      "options.ink.gloss": "벼루에 갈아 검은 물을 만드는 막대",
+      "options.mugunghwa.gloss": "한국의 나라꽃",
+      "options.pottery.gloss": "푸른빛이 도는 옛 도자기"
+    },
+    "pitem:vocab-hear-paengi": {
+      "gloss": "빙글빙글 돌려서 노는 장난감 (듣기)",
+      "options.brush.gloss": "끝에 털이 달려 글씨를 쓰는 도구",
+      "options.kimchi.gloss": "배추 같은 채소를 소금에 절이고 양념해 담근 반찬",
+      "options.mountain.gloss": "땅이 높이 솟은 곳",
+      "options.top.gloss": "빙글빙글 돌려서 노는 장난감"
+    },
+    "pitem:vocab-hear-san": {
+      "gloss": "땅이 높이 솟은 곳 (듣기)",
+      "options.mountain.gloss": "땅이 높이 솟은 곳",
+      "options.tiger.gloss": "줄무늬가 있는 크고 힘센 동물",
+      "options.tteokguk.gloss": "쌀 반죽을 길게 뽑아 얇게 썰어 넣고 끓인 설날 음식",
+      "options.yutnori.gloss": "나무 막대 네 개를 던져 말을 옮기는 전통 게임"
+    },
+    "pitem:vocab-hear-sebae": {
+      "gloss": "새해에 웃어른께 드리는 큰절 (듣기)",
+      "options.chopsticks.gloss": "음식을 집는 가늘고 긴 막대 한 쌍",
+      "options.gayageum.gloss": "줄을 뜯어 소리를 내는 한국 전통 악기",
+      "options.mountain.gloss": "땅이 높이 솟은 곳",
+      "options.sebae.gloss": "새해에 웃어른께 드리는 큰절"
+    },
+    "pitem:vocab-hear-seollal": {
+      "gloss": "음력으로 새해 첫날을 맞는 명절 (듣기)",
+      "options.ink.gloss": "벼루에 갈아 검은 물을 만드는 막대",
+      "options.pottery.gloss": "푸른빛이 도는 옛 도자기",
+      "options.sea.gloss": "짠물이 넓게 펼쳐진 곳",
+      "options.seollal.gloss": "음력으로 새해 첫날을 맞는 명절"
+    },
+    "pitem:vocab-hear-songpyeon": {
+      "gloss": "반달 모양으로 빚어 찐 떡 (듣기)",
+      "options.hanji.gloss": "닥나무로 만든 한국 전통 종이",
+      "options.mountain.gloss": "땅이 높이 솟은 곳",
+      "options.sebae.gloss": "새해에 웃어른께 드리는 큰절",
+      "options.songpyeon.gloss": "반달 모양으로 빚어 찐 떡"
+    },
+    "pitem:vocab-hear-tteokguk": {
+      "gloss": "쌀 반죽을 길게 뽑아 얇게 썰어 넣고 끓인 설날 음식 (듣기)",
+      "options.gayageum.gloss": "줄을 뜯어 소리를 내는 한국 전통 악기",
+      "options.magpie.gloss": "까맣고 하얀 깃털을 가진 새",
+      "options.tteokguk.gloss": "쌀 반죽을 길게 뽑아 얇게 썰어 넣고 끓인 설날 음식",
+      "options.yutnori.gloss": "나무 막대 네 개를 던져 말을 옮기는 전통 게임"
+    },
+    "pitem:vocab-hear-yeon": {
+      "gloss": "바람에 날리는 종이 장난감 (듣기)",
+      "options.kite.gloss": "바람에 날리는 종이 장난감",
+      "options.magpie.gloss": "까맣고 하얀 깃털을 가진 새",
+      "options.pottery.gloss": "푸른빛이 도는 옛 도자기",
+      "options.sebae.gloss": "새해에 웃어른께 드리는 큰절"
+    },
+    "pitem:vocab-hear-yeondeung": {
+      "gloss": "부처님 오신 날에 밝히는 종이 불빛 (듣기)",
+      "options.brush.gloss": "끝에 털이 달려 글씨를 쓰는 도구",
+      "options.kimchi.gloss": "배추 같은 채소를 소금에 절이고 양념해 담근 반찬",
+      "options.lantern.gloss": "부처님 오신 날에 밝히는 종이 불빛",
+      "options.tiger.gloss": "줄무늬가 있는 크고 힘센 동물"
+    },
+    "pitem:vocab-hear-yunnori": {
+      "gloss": "나무 막대 네 개를 던져 말을 옮기는 전통 게임 (듣기)",
+      "options.gayageum.gloss": "줄을 뜯어 소리를 내는 한국 전통 악기",
+      "options.hanbok.gloss": "한국의 전통 옷",
+      "options.tiger.gloss": "줄무늬가 있는 크고 힘센 동물",
+      "options.yutnori.gloss": "나무 막대 네 개를 던져 말을 옮기는 전통 게임"
+    },
+    "pitem:vocab-read-bada": {
+      "gloss": "짠물이 넓게 펼쳐진 곳 (읽기)",
+      "options.kite.gloss": "바람에 날리는 종이 장난감",
+      "options.magpie.gloss": "까맣고 하얀 깃털을 가진 새",
+      "options.rice.gloss": "쌀로 지어 먹는 음식",
+      "options.sea.gloss": "짠물이 넓게 펼쳐진 곳"
+    },
+    "pitem:vocab-read-bap": {
+      "gloss": "쌀로 지어 먹는 음식 (읽기)",
+      "options.book.gloss": "글과 그림이 담긴 종이 묶음",
+      "options.rice.gloss": "쌀로 지어 먹는 음식",
+      "options.sea.gloss": "짠물이 넓게 펼쳐진 곳",
+      "options.sebae.gloss": "새해에 웃어른께 드리는 큰절"
+    },
+    "pitem:vocab-read-bapsang": {
+      "gloss": "가족이 둘러앉아 식사하는 낮은 탁자 (읽기)",
+      "options.family-table.gloss": "가족이 둘러앉아 식사하는 낮은 탁자",
+      "options.hanji.gloss": "닥나무로 만든 한국 전통 종이",
+      "options.kite.gloss": "바람에 날리는 종이 장난감",
+      "options.mountain.gloss": "땅이 높이 솟은 곳"
+    },
+    "pitem:vocab-read-cheongja": {
+      "gloss": "푸른빛이 도는 옛 도자기 (읽기)",
+      "options.chopsticks.gloss": "음식을 집는 가늘고 긴 막대 한 쌍",
+      "options.pottery.gloss": "푸른빛이 도는 옛 도자기",
+      "options.tiger.gloss": "줄무늬가 있는 크고 힘센 동물",
+      "options.top.gloss": "빙글빙글 돌려서 노는 장난감"
+    },
+    "pitem:vocab-read-chuseok": {
+      "gloss": "가을에 거둔 곡식에 감사하는 큰 명절 (읽기)",
+      "options.chuseok.gloss": "가을에 거둔 곡식에 감사하는 큰 명절",
+      "options.magpie.gloss": "까맣고 하얀 깃털을 가진 새",
+      "options.pottery.gloss": "푸른빛이 도는 옛 도자기",
+      "options.top.gloss": "빙글빙글 돌려서 노는 장난감"
+    },
+    "pitem:vocab-read-dal": {
+      "gloss": "밤하늘에 떠서 빛나는 둥근 것 (읽기)",
+      "options.ink.gloss": "벼루에 갈아 검은 물을 만드는 막대",
+      "options.moon.gloss": "밤하늘에 떠서 빛나는 둥근 것",
+      "options.pottery.gloss": "푸른빛이 도는 옛 도자기",
+      "options.sebae.gloss": "새해에 웃어른께 드리는 큰절"
+    },
+    "pitem:vocab-read-gayageum": {
+      "gloss": "줄을 뜯어 소리를 내는 한국 전통 악기 (읽기)",
+      "options.book.gloss": "글과 그림이 담긴 종이 묶음",
+      "options.gayageum.gloss": "줄을 뜯어 소리를 내는 한국 전통 악기",
+      "options.sea.gloss": "짠물이 넓게 펼쳐진 곳",
+      "options.seollal.gloss": "음력으로 새해 첫날을 맞는 명절"
+    },
+    "pitem:vocab-read-gimbap": {
+      "gloss": "김에 밥과 채소를 넣고 둥글게 말아 썬 음식 (읽기)",
+      "options.brush.gloss": "끝에 털이 달려 글씨를 쓰는 도구",
+      "options.hanbok.gloss": "한국의 전통 옷",
+      "options.kimbap.gloss": "김에 밥과 채소를 넣고 둥글게 말아 썬 음식",
+      "options.moon.gloss": "밤하늘에 떠서 빛나는 둥근 것"
+    },
+    "pitem:vocab-read-gimchi": {
+      "gloss": "배추 같은 채소를 소금에 절이고 양념해 담근 반찬 (읽기)",
+      "options.gayageum.gloss": "줄을 뜯어 소리를 내는 한국 전통 악기",
+      "options.jegi.gloss": "발로 차올리며 노는 전통 놀잇감",
+      "options.kimchi.gloss": "배추 같은 채소를 소금에 절이고 양념해 담근 반찬",
+      "options.tiger.gloss": "줄무늬가 있는 크고 힘센 동물"
+    },
+    "pitem:vocab-read-hanbok": {
+      "gloss": "한국의 전통 옷 (읽기)",
+      "options.hanbok.gloss": "한국의 전통 옷",
+      "options.jegi.gloss": "발로 차올리며 노는 전통 놀잇감",
+      "options.magpie.gloss": "까맣고 하얀 깃털을 가진 새",
+      "options.pottery.gloss": "푸른빛이 도는 옛 도자기"
+    },
+    "pitem:vocab-read-hanji": {
+      "gloss": "닥나무로 만든 한국 전통 종이 (읽기)",
+      "options.gayageum.gloss": "줄을 뜯어 소리를 내는 한국 전통 악기",
+      "options.hanji.gloss": "닥나무로 만든 한국 전통 종이",
+      "options.magpie.gloss": "까맣고 하얀 깃털을 가진 새",
+      "options.sebae.gloss": "새해에 웃어른께 드리는 큰절"
+    },
+    "pitem:vocab-read-horangi": {
+      "gloss": "줄무늬가 있는 크고 힘센 동물 (읽기)",
+      "options.jegi.gloss": "발로 차올리며 노는 전통 놀잇감",
+      "options.kimbap.gloss": "김에 밥과 채소를 넣고 둥글게 말아 썬 음식",
+      "options.moon.gloss": "밤하늘에 떠서 빛나는 둥근 것",
+      "options.tiger.gloss": "줄무늬가 있는 크고 힘센 동물"
+    },
+    "pitem:vocab-read-jongijeopgi": {
+      "gloss": "네모난 색지로 학이나 배 같은 모양을 만드는 놀이 (읽기)",
+      "options.origami.gloss": "네모난 색지로 학이나 배 같은 모양을 만드는 놀이",
+      "options.rice.gloss": "쌀로 지어 먹는 음식",
+      "options.sea.gloss": "짠물이 넓게 펼쳐진 곳",
+      "options.top.gloss": "빙글빙글 돌려서 노는 장난감"
+    },
+    "pitem:vocab-read-meok": {
+      "gloss": "벼루에 갈아 검은 물을 만드는 막대 (읽기)",
+      "options.ink.gloss": "벼루에 갈아 검은 물을 만드는 막대",
+      "options.kimbap.gloss": "김에 밥과 채소를 넣고 둥글게 말아 썬 음식",
+      "options.kite.gloss": "바람에 날리는 종이 장난감",
+      "options.mountain.gloss": "땅이 높이 솟은 곳"
+    },
+    "pitem:vocab-read-san": {
+      "gloss": "땅이 높이 솟은 곳 (읽기)",
+      "options.gayageum.gloss": "줄을 뜯어 소리를 내는 한국 전통 악기",
+      "options.hanbok.gloss": "한국의 전통 옷",
+      "options.mountain.gloss": "땅이 높이 솟은 곳",
+      "options.origami.gloss": "네모난 색지로 학이나 배 같은 모양을 만드는 놀이"
+    },
+    "pitem:vocab-read-seollal": {
+      "gloss": "음력으로 새해 첫날을 맞는 명절 (읽기)",
+      "options.book.gloss": "글과 그림이 담긴 종이 묶음",
+      "options.kimbap.gloss": "김에 밥과 채소를 넣고 둥글게 말아 썬 음식",
+      "options.mugunghwa.gloss": "한국의 나라꽃",
+      "options.seollal.gloss": "음력으로 새해 첫날을 맞는 명절"
+    },
+    "pitem:vocab-read-songpyeon": {
+      "gloss": "반달 모양으로 빚어 찐 떡 (읽기)",
+      "options.gayageum.gloss": "줄을 뜯어 소리를 내는 한국 전통 악기",
+      "options.kite.gloss": "바람에 날리는 종이 장난감",
+      "options.magpie.gloss": "까맣고 하얀 깃털을 가진 새",
+      "options.songpyeon.gloss": "반달 모양으로 빚어 찐 떡"
+    },
+    "pitem:vocab-read-yeon": {
+      "gloss": "바람에 날리는 종이 장난감 (읽기)",
+      "options.brush.gloss": "끝에 털이 달려 글씨를 쓰는 도구",
+      "options.kimchi.gloss": "배추 같은 채소를 소금에 절이고 양념해 담근 반찬",
+      "options.kite.gloss": "바람에 날리는 종이 장난감",
+      "options.mountain.gloss": "땅이 높이 솟은 곳"
+    },
+    "pitem:vocab-read-yeondeung": {
+      "gloss": "부처님 오신 날에 밝히는 종이 불빛 (읽기)",
+      "options.brush.gloss": "끝에 털이 달려 글씨를 쓰는 도구",
+      "options.lantern.gloss": "부처님 오신 날에 밝히는 종이 불빛",
+      "options.mountain.gloss": "땅이 높이 솟은 곳",
+      "options.rice.gloss": "쌀로 지어 먹는 음식"
+    },
+    "pitem:warmup-rice": {
+      "gloss": "연습: 쌀로 지어 먹는 음식 (듣기)",
+      "options.jegi.gloss": "발로 차올리며 노는 전통 놀잇감",
+      "options.moon.gloss": "밤하늘에 떠서 빛나는 둥근 것",
+      "options.rice.gloss": "쌀로 지어 먹는 음식",
+      "options.tiger.gloss": "줄무늬가 있는 크고 힘센 동물"
     },
     "quest:stage1-crafts-q1": {
       "steps.s2.discover.pages.0.items.0.word.gloss": "바람에 날리는 종이 장난감",
