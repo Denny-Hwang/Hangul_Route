@@ -9,7 +9,7 @@ Code: `screens/presenter/StartScreen.tsx` (PR 6)
 1. "Lecture" (`learner.presenter.home.title`, `text.secondary`), then the deck title as h1 (`size.hero`, teacher text, wraps anywhere).
 2. Facts: "71 slides · about 56 minutes" (`start.slides`, `start.minutes`; plural keys; the separator is a middle dot between two whole strings).
 3. **Before you start** (h2) and the checks list. Each row: a `check-circle` glyph in `feedback.success` when ready, a `dash` glyph in `text.secondary` when not, and one sentence. None blocks Start.
-   - Offline: "Ready for offline" or "Open this page once with Wi-Fi to use it offline." (`isOfflineReady()`).
+   - Offline: "Ready for offline" or "Open this page once with Wi-Fi to use it offline." with the plain-text install hint under it, "You can also add it to the home screen from the browser menu." (`start.installHint`, section 3.8; `InstallGuideSheet` is not mounted) (`isOfflineReady()`).
    - Voice: "Korean voice: Yuna, on this device" (`voiceLocal`), "... uses the internet" (`voiceNetwork`), "Korean voice needs the internet" (existing `learner.audio.voice.needsInternet`, offline with a network voice) or "No Korean voice on this device. You say the sounds; the slides show them." (`voiceNone`). The voice name comes from `describeKoVoice()` and is never sent anywhere.
    - Full screen: "Full screen opens when you start" or "This browser has no full screen. The lesson still works."
    - Wake lock: "The screen stays on during the lesson" or "Keep the screen awake in system settings."
@@ -17,7 +17,8 @@ Code: `screens/presenter/StartScreen.tsx` (PR 6)
 4. **Helper picker** row (absent when `deck.picker` is null): title, then
    - names or initials received from the console tab: "12 names received" / "12 initials received" (a count only; no label is ever listed here);
    - no opener (a copied, typed or bookmarked link): "Numbers 1 to 12" and "Names come from the console page that opened this lesson. Using numbers." with a stepper (`dash` / `plus` icon buttons named Fewer / More, the count in an `output`, 1 to 60);
-   - a lesson resumed from Recent: the same with "Names are not kept on this device. Using numbers." (section 3.5 Exit).
+   - a lesson resumed from Recent: the same with "Names are not kept on this device. Using numbers." (section 3.5 Exit);
+   - a deck that asked for numbers (`deck.picker.mode` is `numbers`, as a Quick lesson or a [ Present this ] deck sends): only "Numbers 1 to 12" and the stepper, with no noOpener or notKept line, because no names were ever expected.
 5. **Start**: the one primary button (`brand.primaryDark`, 1.25 x hero tall, `size.display`), focused on arrival. While `document.fonts.load` runs (at most 1.5 s) it is disabled and "Getting the big letters ready" shows under it with a static `replay` glyph (no spinner motion).
 
 ## States drawn

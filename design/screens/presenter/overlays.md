@@ -17,12 +17,14 @@ Every covering overlay sits over the stage box (the bar stays), on `surface.pape
 - Before the first draw: "Choose Draw." in the box; Undo and Another disabled (`overlay-picker-ready.html`, initials mode).
 - Drawn: the label only, a first name, initials or a number (`overlay-picker.html` "Mina", a fixture; `overlay-picker-numbers.html` "7").
 - Empty bag: "Everyone has had a turn", Hoya cheering, **Start again** (`overlay-picker-empty.html`).
+- **Mode chips from the keyboard** (also the Help overlay's Romanization switch and language chips): a `radiogroup` with one tab stop. Focus enters on the selected chip; the arrow keys move the selection and select (wrapping); `Space` selects the focused chip. While focus is in the group the arrow keys belong to it (the key input's `onActivatable` covers `role="radio"`, PR 6 extends its list), and `P`, `Esc`, `H` and the clicker keys keep their section 3.5 meaning.
 - Never shown: how many are left, who has gone, who was passed over, any count, list, history, score or ranking. Another gives no reason. The shuffle is `motion.duration.crawl`; instant under reduced motion.
 
 ## Blank and pause
 
 - **Blank** (B or `.`): Hoya `waving` and "Eyes on me" at `presenter.size.title`.
 - **Pause**: Hoya `idle` and 잠깐 `jamkkan` "wait a moment" as a `KoreanText` chip (`PAUSE_WORD`, gloss `learner.presenter.pause.gloss`).
+- **How Pause opens.** Section 3.5 gives Pause no key and the bar no button, so it opens from the Blank overlay: a ghost **Pause** button (`learner.presenter.blank.pause.cta`, real pixels, `touchTarget.hero`) under "Eyes on me" dispatches `{ overlay: 'pause' }`, which replaces Blank in the one covering slot (`lecture.tool_used` `pause`). Pause has no button of its own; it closes like Blank. The Blank dialog takes focus on its container (`tabindex="-1"`), not on the button, so `Space` and `Enter` from a keyboard or clicker still clear the overlay instead of pressing Pause. The key map of section 3.5 is unchanged.
 - Both leave the slide untouched; the first next / back only closes them.
 
 ## Grid (G)
@@ -31,8 +33,8 @@ Every covering overlay sits over the stage box (the bar stays), on `surface.pape
 
 ## Help (H or ?)
 
-- "Keys and controls": each key of section 3.5 as key caps and what it does, two columns from 900 px; "A presentation clicker works with no setup."; the Romanization switch (always / hide until tapped; flips the deck's option live); the Presenter language chips (session only); **Keep controls visible**; Close. It scrolls inside the stage box when taller (1280 x 720).
+- "Keys and controls": each key of section 3.5 as key caps (Next: right arrow, down arrow, Space, PageDown, Enter; Back: left arrow, up arrow, PageUp, Backspace; the up and down caps are the arrow glyph rotated, no new icon) and what it does, two columns from 900 px; "A presentation clicker works with no setup."; the Romanization switch (always / hide until tapped; flips the deck's option live); the Presenter language chips (session only); **Keep controls visible**; Close. It scrolls inside the stage box when taller (1280 x 720).
 
 ## Exit (PR 6)
 
-- An alert dialog over `surface.overlay`: "Leave the lesson?", "Nothing about anyone’s progress changes.", **Keep going** (primary, focused) and **Exit**. Exit leaves fullscreen, releases the wake lock, sends `lecture.complete`, applies a waiting update and goes home.
+- An alert dialog over `surface.overlay`: "Leave the lesson?", "Nothing about anyone's progress changes.", **Keep going** (primary, focused) and **Exit**. Exit leaves fullscreen, releases the wake lock, unlocks the screen orientation, sends `lecture.complete`, applies a waiting update and goes home.

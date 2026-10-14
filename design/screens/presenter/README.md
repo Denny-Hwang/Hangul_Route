@@ -68,11 +68,18 @@ Numbers that are not tokens, each named once in the second `:root` block of `moc
 | `.ctl` width | at least `touchTarget.hero`, at most 1.5 x hero; Next / Reveal at least 1.5 x hero | nine labelled buttons fit 1280 px with the chips; Spanish labels wrap to two lines inside 96 (section 3.13) |
 | Start button | 1.25 x `touchTarget.hero` tall, `typography.size.display` label | the one primary action of the start screen |
 | stage button (speaker, Start timer) | `max(touchTarget.hero, unit x touchTarget.hero)`; Start timer `max(hero, unit x 112)` | a stage control never drops below the bar's target size on a small window |
-| End slide fit | 11 letters and 6 words, then one "+ n more" pill each | two rows each at 1280 x 720 with the class code panel (D7); PR 6 measures rows instead of counting |
+| End slide fit | at most two rows of letters and two of words, then one "+ n more" pill each; the sample holds 11 letters and 6 words (4 syllables, 2 glossed words) | measured at 1280 x 720 with the class code panel (D7); glosses are never dropped to fit, fewer items show instead; PR 6 measures rows instead of counting |
 | Picker label box | at least 480 x 140 units | a 20-character label (the schema maximum) at `presenter.size.title` fits on one line |
-| Code panel | 400 units wide | "HOYA42" at `presenter.size.title` in the mono stack plus padding |
+| Code panel | 400 units wide | "HYRA42" (a valid `JOIN_CODE_RE` code) at `presenter.size.title` in the mono stack plus padding |
 | Grid thumb | at least 13 rem wide, 8 rem tall | five thumbs across at 1280; text grows with the browser text size |
-| Dialog widths | Exit 40 rem; Help 56 rem with two key columns from 900 px | |
+| Dialog widths | `--dialog-w` Exit 40 rem; `--help-w` Help 56 rem with two key columns from 900 px | |
+| Help key column | `--key-col` 10 rem (one column), `--key-col-2` 9 rem (two columns); `--kbd-min` 2.25 rem per key cap | the widest cap row fits one line at 18 px |
+| Status basis | `--status-min` 12 rem | the chips' flex basis beside the bar controls; below it they wrap above the buttons (D1) |
+| Picker label basis | `--picker-label` 14 rem | the start screen's picker row label beside its stepper |
+| Readable line | `--line-max` 32 rem | state pages and the full timer's controls |
+| Grid thumb (named) | `--thumb-w` 13 rem, `--thumb-h` 8 rem | the row above |
+| Media queries | 600 px and 900 px | `layout.breakpoint.regular` / `.wide`; a media query cannot read a custom property, so the sheet says so in a comment |
+| `builds-board.html` frames | 640 x 420 / 520 px | mock scaffolding only, never a presenter surface |
 | Teacher page columns | one column below 900 px (`layout.breakpoint.wide`), two from it; gutters `layout.gutter.*` at 600 / 900 | the app's window classes |
 | Font stacks | system stack for UI (`typography.family.sans` 'System'); `"HR Presenter KR", system` for taught Korean (`presenter.font`, web only) | PR 3 review note 2 |
 
@@ -98,7 +105,7 @@ Numbers that are not tokens, each named once in the second `:root` block of `moc
 - **D4. Letter slide in three columns** (glyph and romanization | stroke guide | sound, name, hint, example word); see `slide-letter.md`. The stroke guide's start dots carry their numeral in `text.primary` on paper inside a `brand.secondaryDark` ring, so no new colour pair is needed.
 - **D5. Syllable: the parts become the block.** Build 0 shows `ㄱ + ㅏ` at `presenter.size.display`; build 1 replaces them with the block at `presenter.size.glyph` (the taught item of the slide) and keeps the parts small beside it. `presenter.v1.md`'s "Used for" column is updated to say so (wording only; no value changes, and the parity and contrast tests pass).
 - **D6. Quiz.** A 2 x 2 grid of options, each with its shape-and-number marker. The answer build gives the correct option a `spacing.sm`-unit `feedback.success` border, the `feedback.successLight` ground and the `check-circle` glyph; the others drop to `presenter.dimOpacity` with every line in `text.primary`. "Hoya's answer" and a cheering Hoya join the question row at the reveal, so the options never move. A story check's explanation sits under the options. The projected Match Sound prompt is "Which letter makes this sound?" (`learner.presenter.quiz.sound`), not the learner's "Tap the letter you hear" (section 3.4 cites the learner text): on a projector the room points or holds up fingers and nobody taps.
-- **D7. End slide fit rule.** Letters and words are plain Korean-and-romanization pairs (a chip per item does not fit), at most two rows of each; the rest is one "+ n more" pill (`learner.presenter.slide.end.more`). The class code sits in a panel on the right at `presenter.size.title` in the mono stack, with the Join line built from the shipped Join label. The practice line closes the left column.
+- **D7. End slide fit rule.** Letters are Korean-and-romanization pairs; words are Korean, romanization and, when the word has one, its gloss in the presenter locale (owner decision D2, section 3.13; a syllable such as 가 has none). A chip per item does not fit. At most two rows of each; the rest is one "+ n more" pill (`learner.presenter.slide.end.more`). Glosses are never dropped to fit: fewer items show before the pill. The class code sits in a panel on the right at `presenter.size.title` in the mono stack, with the Join line built from the shipped Join label. The practice line closes the left column.
 - **D8. Story slide.** The scene (400 x 300 units) and the narration share the first row; the scene's Korean line and gloss run full width under them. The scene caption is the art's accessible name and is not drawn: the narration already says it and the slide has no room for a third text block.
 - **D9. Topic word pictures (PR 12).** The word's WordArt is drawn as an `art` build after the gloss. Today `buildsFor` adds `art` only for a `cardId`; PR 12's adapter passes the word's visual key and adds the build (a `build-steps.ts` change inside PR 12, spec section 3.4 "F-VOC WordArt").
 - **D10. Skipped parts.** The start screen says how many parts are not shown as slides ("6 parts of this lesson are not shown as slides.") rather than "not in this version of the app": in the sample deck all six are listening steps the presenter does not draw, which the old line would misstate. [ See which ] lists each part by the lesson that holds it with one reason line per `SkipReason`.
@@ -108,12 +115,15 @@ Numbers that are not tokens, each named once in the second `:root` block of `moc
 - **D14. Presenter home.** Two columns from 900 px (Recent, Quick lesson), one column below with Recent first; [ Build lesson ] in flow at the end of the list with the chosen count beside it; language chips and Keys and help in the header.
 - **D15. Start screen** is a teacher page in rem on paper (not stage-scaled): deck title, facts, the device checks, skipped parts, the picker row and one big Start. The same page is what a projector shows before Start (`start-projected-*`).
 - **D16. BR-13.** [ Present this ] is a ghost button under [ Preview this lesson ] in the item page's action bar; its explanation is the button's accessible description.
+- **D18. Pause opens from Blank.** Section 3.5 gives Pause no key and the bar no button; the Blank overlay carries a ghost **Pause** button (`learner.presenter.blank.pause.cta`) that swaps Blank for Pause in the covering slot. The Blank dialog focuses its container, so `Space` / `Enter` still clear it (`overlays.md`).
+- **D19. Chip groups are radiogroups.** The picker's mode chips and the Help overlay's Romanization and language chips: one tab stop, arrows move and select, the selected chip takes focus on entry; the presenter keys keep their meaning (`overlays.md`).
 - **D17. The deck title** (teacher text) appears on the start screen and as a small caption line above the first slide's title; never in `document.title` (fixed `learner.presenter.docTitle`).
 
 ## Content observations for other PRs (not changed here)
 
 - The Week 3 deck's `taught` letters hold ㄱ twice (`g/k` from Meet a, eo, g, n and `k` as a final from Hanbok and the Bow). PR 6 decides whether the End slide merges one character into one item; the fit rule hides it in this sample.
-- The fact of `card:book` reads "Korean kids first learn to read books printed left-to-right ...". It is shipped content projected on a shared surface; CLAUDE.md section 1's copy rule suggests a content PR rewords it ("In Korea, people first learn ..."). Not edited here.
+- The fact of `card:book` reads "Korean kids first learn to read books printed left-to-right ...". It is shipped content projected on a shared surface; CLAUDE.md section 1's copy rule asks a content PR to reword it ("In Korea, people first learn ..."). Not edited here; tracked in #589 (https://github.com/Denny-Hwang/Hangul_Route/issues/589).
+- The first draft drew the class code "HOYA42", which `JOIN_CODE_RE` rejects (the alphabet has no O). The mock and the PR 6 fixtures use "HYRA42".
 
 ## Review log (multi-lens review of this pass)
 
@@ -134,9 +144,10 @@ This environment has no sub-agent tool, so the four lenses ran as separate passe
 | Privacy | the skipped list | shows lesson titles and reasons, never refs or anything about a person |
 | Copy (owner rules) | age words, "kids" in UI | none in UI strings; one in shipped card content (observation above) |
 | Copy (owner rules) | speaking | "Say it:" and "No Korean voice here. You say it!" are the spec's teacher-says fallback (the teacher reads aloud); nothing records or measures speech; the `say-together` preset is not drawn |
-| Spanish | length budget (1.5x, `cta` 28) | button labels are `.cta` keys; six strings shortened; one allow-list line needed: `learner.presenter.start.slides` ("diapositivas") |
+| Spanish | length budget (1.5x, `cta` 28) | button labels are `.cta` keys; eight strings shortened (two after the PR review: `present.cta` "Proyectar", `startOver.cta` "Desde el inicio"); six keys need an `ES_LENGTH_ALLOW_LIST` line in the PR that adds them, listed under "Length budget" below |
 | Spanish | register | tú everywhere, Latin-American "armar", no gendered adjective about the reader |
 | Korean | particles on variables | none: the Join line uses "‘{cta}’ 버튼을"; counts attach particles to 개 only |
+| Second review (PR #588) | End slide dropped word glosses; length-budget claim; "Nothing is saved." not true (Recent stores the deck); three "same values as" rows drifted; missing preset, Show numbers and install-hint keys; Help missing up and down arrows; no Pause trigger; picker case for a numbers deck; Exit orientation; apostrophes, Spanish plural hedge, gendered "¡Todos atentos!", lowercase "today"; unnamed rem literals; BR-13 shown before stories and topics expand; radiogroup keys; spec text stale for D1, D6, D10 | all applied: D7 and `slide-end*` re-shot with glosses; "Length budget" below; `presentNote` now says no one's progress changes; values copied from the shipped console strings; keys added; D18, D19; `start-screen.md` fourth case; `overlays.md`; `common.date.*`; constants named; `present-this.md` condition; spec sections 3.4, 3.5, 3.6 amended inline |
 | Korean | register and glossary | 해요체 throughout; 낱말, 문화 카드, 레슨 (as the browse pages), 퀘스트 not needed; "오늘 함께 본 것" for "Today we met" |
 
 ## Strings
@@ -151,8 +162,8 @@ Every UI string a mock draws. Values with `{x}` are functions; plural keys follo
 | `common.buttons.back` | drawn |
 | `common.buttons.close` | drawn |
 | `common.buttons.next` | drawn |
-| `common.time.today` | drawn |
-| `common.time.yesterday` | drawn |
+| `common.date.today` | drawn (the capitalised standalone form; `common.time.today` is the in-sentence form) |
+| `common.date.yesterday` | drawn |
 | `console.lecture.titleField.placeholder` | drawn; fixture deck title; the real title is the teacher's text |
 | `learner.audio.action.turn_on.cta` | drawn |
 | `learner.audio.soundIsOff` | drawn |
@@ -164,7 +175,7 @@ Every UI string a mock draws. Values with `{x}` are functions; plural keys follo
 
 | Key | en | es | ko | Note |
 |---|---|---|---|---|
-| `a11y.presenter.answerMark` | Hoya’s answer | La respuesta de Hoya | 호야의 답 | on the check mark of the revealed option |
+| `a11y.presenter.answerMark` | Hoya's answer | La respuesta de Hoya | 호야의 답 | on the check mark of the revealed option |
 | `a11y.presenter.option` | Option {n}, {shape} | Opción {n}, {shape} | {n}번, {shape} |  |
 | `a11y.presenter.removeRecent` | Remove: {t} | Quitar: {t} | 지우기: {t} |  |
 | `a11y.presenter.shape.circle` | circle | círculo | 동그라미 |  |
@@ -173,9 +184,13 @@ Every UI string a mock draws. Values with `{x}` are functions; plural keys follo
 | `a11y.presenter.shape.triangle` | triangle | triángulo | 세모 |  |
 | `a11y.presenter.slide` | Slide {i} of {n}, {what} | Diapositiva {i} de {n}, {what} | 슬라이드 {i}/{n}, {what} | live region; what = the grid kind label plus the slide's title text or the taught item |
 | `a11y.presenter.timerLeft` | Time left: {t} | Tiempo que queda: {t} | 남은 시간: {t} |  |
-| `caregiver.browse.item.present.cta` | Present this | Mostrar en pantalla grande | 큰 화면에 띄우기 | F-BROWSE-001 BR-13; cta budget 28 in every locale |
-| `caregiver.browse.item.presentNote` | Opens the lesson as slides for a classroom screen or a TV. Nothing is saved. | Abre la lección como diapositivas para una pantalla de clase o un televisor. No se guarda nada. | 교실 화면이나 TV에 슬라이드로 띄워요. 아무것도 저장하지 않아요. | F-BROWSE-001 BR-13 |
+| `caregiver.browse.item.present.cta` | Present this | Proyectar | 큰 화면에 띄우기 | F-BROWSE-001 BR-13; cta budget 28 in every locale; es is the verb of console.lecture.title "Proyección" |
+| `caregiver.browse.item.presentNote` | Opens the lesson as slides for a classroom screen or a TV. No one's progress changes. | Abre la lección como diapositivas para una pantalla de clase o un televisor. No cambia el progreso de nadie. | 교실 화면이나 TV에 슬라이드로 띄워요. 누구의 진도도 바뀌지 않아요. | F-BROWSE-001 BR-13; the presenter keeps the deck in this device's Recent lessons, so the line promises only what is true (it matches `learner.presenter.exit.line`) |
 | `learner.presenter.activity.air-write` | Write it in the air | Escribir en el aire | 허공에 써 보기 | same values as console.lecture.activity |
+| `learner.presenter.activity.copy-on-paper` (specified, not drawn) | Copy it on paper | Copiar en papel | 종이에 따라 쓰기 | same values as console.lecture.activity |
+| `learner.presenter.activity.pair-share` (specified, not drawn) | Pair and share | En parejas | 짝과 나누기 | same values as console.lecture.activity |
+| `learner.presenter.activity.say-together` (specified, not drawn) | Say it together | Decirlo en grupo | 함께 소리 내어 읽기 | same values as console.lecture.activity; a teacher-led choral reading, nothing records or measures speech |
+| `learner.presenter.activity.stretch-break` (specified, not drawn) | Stretch break | Pausa para estirarse | 기지개 켜기 | same values as console.lecture.activity |
 | `learner.presenter.bar.blank.cta` | Blank | En blanco | 화면 가리기 |  |
 | `learner.presenter.bar.counter` | {i} / {n} | {i} / {n} | {i} / {n} |  |
 | `learner.presenter.bar.exit.cta` | Exit | Salir | 나가기 |  |
@@ -189,10 +204,11 @@ Every UI string a mock draws. Values with `{x}` are functions; plural keys follo
 | `learner.presenter.bar.sound.cta` | Sound | Sonido | 소리 |  |
 | `learner.presenter.bar.timer.cta` | Timer | Temporizador | 타이머 |  |
 | `learner.presenter.bar.update` | Update ready. It applies when you exit. | Hay una actualización. Se aplica al salir. | 업데이트가 준비됐어요. 나갈 때 적용돼요. | spec §3.8 |
-| `learner.presenter.blank.line` | Eyes on me | ¡Todos atentos! | 여기를 봐요 | spec §3.5 |
+| `learner.presenter.blank.line` | Eyes on me | ¡Miren aquí! | 여기를 봐요 | spec §3.5; es avoids a gender-agreeing adjective (F-I18N-001 §3.10) |
+| `learner.presenter.blank.pause.cta` | Pause | Pausa | 잠깐 멈춤 | D18: opens the Pause overlay from Blank |
 | `learner.presenter.docTitle` (specified, not drawn) | Hangul Route lecture | Clase de Hangul Route | Hangul Route 수업 | document.title, fixed (§3.2) |
 | `learner.presenter.exit.keepGoing.cta` | Keep going | Seguir | 계속하기 |  |
-| `learner.presenter.exit.line` | Nothing about anyone’s progress changes. | No cambia el progreso de nadie. | 누구의 진도도 바뀌지 않아요. |  |
+| `learner.presenter.exit.line` | Nothing about anyone's progress changes. | No cambia el progreso de nadie. | 누구의 진도도 바뀌지 않아요. |  |
 | `learner.presenter.exit.title` | Leave the lesson? | ¿Salir de la lección? | 수업을 나갈까요? |  |
 | `learner.presenter.grid.hidden` | Hidden | Oculta | 숨김 |  |
 | `learner.presenter.grid.hide.cta` | Hide | Ocultar | 숨기기 |  |
@@ -216,7 +232,7 @@ Every UI string a mock draws. Values with `{x}` are functions; plural keys follo
 | `learner.presenter.help.key.space` | Space | Espacio | 스페이스 바 |  |
 | `learner.presenter.help.romanization` | Romanization | Romanización | 로마자 |  |
 | `learner.presenter.help.romanizationAlways` | always | siempre | 항상 | same values as console.lecture.options.romanizationAlways |
-| `learner.presenter.help.romanizationTap` | hide until tapped | ocultar hasta tocar | 누를 때까지 숨기기 | same values as console.lecture.options.romanizationTap |
+| `learner.presenter.help.romanizationTap` | hide until tapped | oculta hasta tocar | 누를 때까지 숨기기 | same values as console.lecture.options.romanizationTap |
 | `learner.presenter.help.row.back` | Back | Atrás | 뒤로 |  |
 | `learner.presenter.help.row.blank` | Blank the screen | Pantalla en blanco | 화면 가리기 |  |
 | `learner.presenter.help.row.close` | Close or exit | Cerrar o salir | 닫기와 나가기 |  |
@@ -243,18 +259,18 @@ Every UI string a mock draws. Values with `{x}` are functions; plural keys follo
 | `learner.presenter.home.quick.group.topics` | Word topics | Temas de palabras | 낱말 주제 |  |
 | `learner.presenter.home.quick.letters` | {n} letters | {n} letras | 글자 {n}개 | plural: one "1 letter" / "1 letra" / "글자 1개" |
 | `learner.presenter.home.quick.line` | Choose what to teach. No sign-in, no names. | Elige qué enseñar. Sin iniciar sesión y sin nombres. | 가르칠 것을 골라요. 로그인도 이름도 필요 없어요. |  |
-| `learner.presenter.home.quick.minutes` | about {n} min | unos {n} min | 약 {n}분 |  |
+| `learner.presenter.home.quick.minutes` | about {n} min | aprox. {n} min | 약 {n}분 | one es form for every n ("unos 1 min" would read wrong) |
 | `learner.presenter.home.quick.nothing` | Choose at least one item to build a lesson. | Elige al menos un elemento para armar la lección. | 수업을 만들려면 하나 이상 골라요. |  |
 | `learner.presenter.home.quick.title` | Quick lesson | Lección rápida | 빠른 수업 |  |
 | `learner.presenter.home.quick.vowels` | Vowels | Vocales | 모음 |  |
 | `learner.presenter.home.recent.empty` | Lessons you open appear here. Names are never saved. | Aquí aparecen las lecciones que abras. Los nombres nunca se guardan. | 연 수업이 여기에 나와요. 이름은 저장하지 않아요. |  |
 | `learner.presenter.home.recent.resume.cta` | Resume | Seguir | 이어 하기 |  |
-| `learner.presenter.home.recent.startOver.cta` | Start over | Empezar de nuevo | 처음부터 |  |
+| `learner.presenter.home.recent.startOver.cta` | Start over | Desde el inicio | 처음부터 | fits 1.5x |
 | `learner.presenter.home.recent.storageOff` (specified, not drawn) | Recent lessons are off on this device. Lessons still work. | Aquí no hay lecciones recientes. Las lecciones funcionan igual. | 이 기기에서는 최근 수업을 쓸 수 없어요. 수업은 그대로 할 수 있어요. |  |
 | `learner.presenter.home.recent.title` | Recent lessons | Lecciones recientes | 최근 수업 |  |
 | `learner.presenter.home.title` | Lecture | Proyección | 강의 | same values as console.lecture.title |
 | `learner.presenter.language.note` | Only for this session. Korean always shows romanization and a meaning. | Solo para esta sesión. El coreano siempre muestra la romanización y el significado. | 이번 수업에만 바뀌어요. 한국어에는 늘 로마자와 뜻이 함께 나와요. |  |
-| `learner.presenter.language.title` | Presenter language | Idioma de la proyección | 발표 화면 언어 | same values as console.lecture.options.language |
+| `learner.presenter.language.title` | Presenter language | Idioma de la presentación | 발표 언어 | same values as console.lecture.options.language |
 | `learner.presenter.pause.gloss` | wait a moment | espera un momento | 잠시 기다려 달라는 말 | glossKey of PAUSE_WORD, logic/lecture/content.ts |
 | `learner.presenter.picker.another.cta` | Another | Otro turno | 다시 뽑기 | the reducer's skip: returns the label and draws again, no reason |
 | `learner.presenter.picker.draw.cta` | Draw | Sacar | 뽑기 |  |
@@ -293,8 +309,9 @@ Every UI string a mock draws. Values with `{x}` are functions; plural keys follo
 | `learner.presenter.start.fullscreen` | Full screen opens when you start | La pantalla completa se abre al empezar | 시작하면 전체 화면이 돼요 |  |
 | `learner.presenter.start.fullscreenNone` | This browser has no full screen. The lesson still works. | Este navegador no tiene pantalla completa. La lección funciona igual. | 이 브라우저는 전체 화면이 안 돼요. 수업은 그대로 할 수 있어요. |  |
 | `learner.presenter.start.hideWhich.cta` | Hide the list | Ocultar la lista | 목록 닫기 |  |
+| `learner.presenter.start.installHint` | You can also add it to the home screen from the browser menu. | También puedes agregarla a la pantalla de inicio desde el menú del navegador. | 브라우저 메뉴에서 홈 화면에 추가할 수도 있어요. | spec §3.8: plain text under offlineNotReady; `InstallGuideSheet` is not mounted |
 | `learner.presenter.start.loading` | Getting the big letters ready | Preparando las letras grandes | 큰 글자를 준비하고 있어요 | the font wait, at most 1.5 s |
-| `learner.presenter.start.minutes` | about {n} minutes | unos {n} minutos | 약 {n}분 | plural one: "about 1 minute" / "cerca de 1 minuto" / "약 1분" |
+| `learner.presenter.start.minutes` | about {n} minutes | alrededor de {n} minutos | 약 {n}분 | plural one: "about 1 minute" / "alrededor de 1 minuto" / "약 1분" (one hedge in both forms) |
 | `learner.presenter.start.offlineNotReady` | Open this page once with Wi-Fi to use it offline. | Abre esta página una vez con wifi para usarla sin internet. | 오프라인에서 쓰려면 와이파이로 이 페이지를 한 번 열어요. |  |
 | `learner.presenter.start.offlineReady` | Ready for offline | Funciona sin internet | 오프라인에서도 쓸 수 있어요 |  |
 | `learner.presenter.start.picker.fewer` | Fewer | Menos | 줄이기 | accessible name of the stepper minus |
@@ -304,7 +321,7 @@ Every UI string a mock draws. Values with `{x}` are functions; plural keys follo
 | `learner.presenter.start.picker.noOpener` | Names come from the console page that opened this lesson. Using numbers. | Los nombres llegan desde la página de la consola que abrió esta lección. Se usan números. | 이름은 이 수업을 연 콘솔 페이지에서 와요. 지금은 번호를 써요. | spec §3.2 step 5 |
 | `learner.presenter.start.picker.notKept` | Names are not kept on this device. Using numbers. | Los nombres no se guardan en este dispositivo. Se usan números. | 이름은 이 기기에 남기지 않아요. 지금은 번호를 써요. | spec §3.5 Exit (a resumed lesson) |
 | `learner.presenter.start.picker.numbers` | Numbers 1 to {n} | Números del 1 al {n} | 번호 1부터 {n}까지 |  |
-| `learner.presenter.start.picker.title` | Helper picker | Elegir ayudante | 도우미 뽑기 | same values as console.lecture.picker.title |
+| `learner.presenter.start.picker.title` | Helper picker | Elegir ayudantes | 도우미 뽑기 | same values as console.lecture.picker.title |
 | `learner.presenter.start.reason.no-romanization` (specified, not drawn) | Left out until it has romanization | Se omite hasta que tenga romanización | 로마자 표기가 생길 때까지 빼 두었어요 |  |
 | `learner.presenter.start.reason.not-ready` (specified, not drawn) | Not ready to show yet | Todavía no se puede mostrar | 아직 보여 줄 수 없어요 |  |
 | `learner.presenter.start.reason.scope-too-small` (specified, not drawn) | Too few letters or words for this quiz | Hay pocas letras o palabras para este quiz | 이 퀴즈를 하기에는 글자나 낱말이 적어요 |  |
@@ -312,7 +329,7 @@ Every UI string a mock draws. Values with `{x}` are functions; plural keys follo
 | `learner.presenter.start.reason.unsupported-step` | A step the slides do not show | Un paso que las diapositivas no muestran | 슬라이드에 나오지 않는 단계예요 |  |
 | `learner.presenter.start.seeWhich.cta` | See which | Ver cuáles | 목록 보기 |  |
 | `learner.presenter.start.skipped` | {n} parts of this lesson are not shown as slides. | {n} partes de esta lección no se muestran como diapositivas. | 이 수업에서 {n}개 부분은 슬라이드로 나오지 않아요. | plural one: "1 part of this lesson is not shown as a slide." / "1 parte de esta lección no se muestra como diapositiva." / same ko |
-| `learner.presenter.start.slides` | {n} slides | {n} diapositivas | 슬라이드 {n}장 | plural one: "1 slide" / "1 diapositiva" / "슬라이드 1장"; needs a length-budget allow-list line ("diapositivas" is the only Spanish word) |
+| `learner.presenter.start.slides` | {n} slides | {n} diapositivas | 슬라이드 {n}장 | plural one: "1 slide" / "1 diapositiva" / "슬라이드 1장"; needs an allow-list line (see "Length budget") |
 | `learner.presenter.start.voiceLocal` | Korean voice: {name}, on this device | Voz coreana: {name}, en este dispositivo | 한국어 음성: {name} (이 기기) |  |
 | `learner.presenter.start.voiceNetwork` (specified, not drawn) | Korean voice: {name}, uses the internet | Voz coreana: {name}, usa internet | 한국어 음성: {name} (인터넷 사용) |  |
 | `learner.presenter.start.voiceNone` | No Korean voice on this device. You say the sounds; the slides show them. | No hay voz coreana en este dispositivo. Tú dices los sonidos; las diapositivas los muestran. | 이 기기에는 한국어 음성이 없어요. 소리는 직접 읽어 주세요. 슬라이드에 소리가 글자로 나와요. |  |
@@ -326,6 +343,7 @@ Every UI string a mock draws. Values with `{x}` are functions; plural keys follo
 | `learner.presenter.timer.big.cta` | Big | Grande | 크게 |  |
 | `learner.presenter.timer.done` | All done! | ¡Listo! | 다 됐어요! |  |
 | `learner.presenter.timer.hideNumbers.cta` | Hide numbers | Ocultar números | 숫자 숨기기 |  |
+| `learner.presenter.timer.showNumbers.cta` (specified, not drawn) | Show numbers | Mostrar números | 숫자 보이기 | replaces Hide numbers while the numbers are hidden |
 | `learner.presenter.timer.minutes` | {n} min | {n} min | {n}분 |  |
 | `learner.presenter.timer.pause.cta` | Pause | Pausa | 멈춤 |  |
 | `learner.presenter.timer.reset.cta` | Reset | Reiniciar | 처음으로 |  |
@@ -334,8 +352,21 @@ Every UI string a mock draws. Values with `{x}` are functions; plural keys follo
 | `learner.presenter.timer.small.cta` | Small | Pequeño | 작게 |  |
 | `learner.presenter.timer.title` | Class timer | Temporizador | 수업 타이머 |  |
 
+### Length budget (`packages/i18n/src/__tests__/length-budget.test.ts`)
+
+Every es value must be at most `max(8, ceil(1.5 x en))` unless `ES_LENGTH_ALLOW_LIST` names it with a reason. Checked for every row above; six keys fail it, and the PR that adds each key adds its allow-list line with this reason:
+
+| Key | es / en | Reason for the allow-list line | PR |
+|---|---|---|---|
+| `learner.presenter.bar.blank.cta` | "En blanco" 9 / "Blank" 5 (limit 8) | one letter over; the Spanish for a blanked screen needs the preposition; a bar label that wraps inside 96 | PR 9 |
+| `learner.presenter.bar.grid.cta` | "Diapositivas" 12 / "Slides" 6 (limit 9) | the one Spanish word for slides; a bar label that wraps inside 96 | PR 9 |
+| `learner.presenter.bar.timer.cta` | "Temporizador" 12 / "Timer" 5 (limit 8) | the standard Spanish word for a timer; a bar label that wraps inside 96 | PR 9 |
+| `learner.presenter.slide.activity.startTimer.cta` | "Iniciar temporizador" 20 / "Start timer" 11 (limit 17) | "temporizador" again; inside the 28-character cta budget, a stage button that wraps | PR 7 |
+| `learner.presenter.start.slides` | "12 diapositivas" 15 / "12 slides" 9 (limit 14) | "diapositivas" is the only Spanish word; a facts line that wraps | PR 6 |
+| `learner.presenter.timer.reset.cta` | "Reiniciar" 9 / "Reset" 5 (limit 8) | the standard Spanish button word, one letter over; inside the 28-character cta budget | PR 9 |
+
 ## Not drawn here
 
 - The console setup page `/teach/space/lecture` (PR 10, merged; wireframe K) and its entry points.
 - The dual-screen notes window and server-saved decks (section 3.15, later phase).
-- The `say-together`, `pair-share`, `copy-on-paper` and `stretch-break` activity slides: the same layout as `slide-activity.md` with their console-identical names.
+- The `say-together`, `pair-share`, `copy-on-paper` and `stretch-break` activity slides: the same layout as `slide-activity.md` with their console-identical names (keys listed above).
