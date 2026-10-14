@@ -118,15 +118,7 @@ for (const vp of VIEWPORTS) {
       // The consent sits in its own Privacy block (F-LEARN-001 §3.15.6), with the under-13 hand-back.
       await expect(page.getByText('Privacy', { exact: true })).toBeVisible();
       await expect(page.getByText("Agreeing doesn't change the lessons.")).toBeAttached();
-      await page.getByRole('button', { name: "I'm under 13" }).click();
-      await expect(page.getByRole('radio', { name: /^Someone I look after/ })).toHaveAttribute('aria-checked', 'true');
-      await expect(page.getByRole('checkbox')).toHaveCount(0);
-      await expect(page.getByText('This profile stays with a grown-up.')).toBeVisible();
-      await expect(page.getByText('Change something to save')).toBeVisible();
-
-      await page.getByRole('radio', { name: /^Me\./ }).click();
-      await expect(page.getByText('This profile stays with a grown-up.')).toHaveCount(0);
-      await expect(box).toBeVisible();
+      await expect(page.getByRole('button', { name: "I'm under 13" })).toBeAttached();
       await expect(page.getByRole('link', { name: 'Privacy Policy' })).toBeAttached();
       const save = page.getByRole('button', { name: 'Save' });
       await expect(save).toBeDisabled();
@@ -142,6 +134,31 @@ for (const vp of VIEWPORTS) {
       await expect.poll(async () => (await storedProfile(page)).learnerType).toBe('self');
       // The device keeps its PIN, so the grown-up actions stay gated.
       expect(await readStored(page, 'account:parentPinHash')).not.toBeNull();
+    });
+
+    test('family device: "I\'m under 13" keeps the profile with a grown-up and "Me" stays closed (§3.15.6)', async ({ page }) => {
+      await onboardChild(page, { name: 'Mina' });
+      await openProfile(page, 'Mina');
+      await page.getByRole('button', { name: 'Edit Mina (PIN required)', exact: true }).click();
+      await unlockWithPin(page);
+      await expect(page.getByRole('heading', { name: 'Edit profile' })).toBeVisible();
+
+      const me = page.getByRole('radio', { name: /^Me\./ });
+      await me.click();
+      await expect(page.getByRole('checkbox', { name: "I'm 13 or older and I agree to the Privacy Policy." })).toBeVisible();
+      await page.getByRole('button', { name: "I'm under 13" }).click();
+      await expect(page.getByRole('radio', { name: /^Someone I look after/ })).toHaveAttribute('aria-checked', 'true');
+      await expect(page.getByRole('checkbox')).toHaveCount(0);
+      await expect(page.getByText('This profile stays with a grown-up.')).toBeVisible();
+      await expect(page.getByText('Change something to save')).toBeVisible();
+
+      // Latched while the screen is open: "Me" cannot bring the "13 or older" box back.
+      await expect(me).toBeDisabled();
+      await me.click({ force: true });
+      await expect(me).toHaveAttribute('aria-checked', 'false');
+      await expect(page.getByRole('checkbox')).toHaveCount(0);
+      await expect(page.getByText('This profile stays with a grown-up.')).toBeVisible();
+      expect(await noSideScroll(page)).toBe(true);
     });
 
     test('self-only device: changing to a child asks for the grown-up consent and a new PIN', async ({ page }) => {

@@ -1,3 +1,4 @@
+import type { LearnerType } from '@hangul-route/content-schema';
 import { formPlan, missingStep, type FormState, type MissingStep } from './create-profile-form';
 
 /**
@@ -11,6 +12,9 @@ import { formPlan, missingStep, type FormState, type MissingStep } from './creat
 export type SetupStep = 'who' | 'profile' | 'privacy';
 
 const ORDER: readonly SetupStep[] = ['who', 'profile', 'privacy'];
+
+/** Navigator actions that are a back (the others, such as the REPLACE after submit, pass through). */
+const BACK_ACTIONS: ReadonlySet<string> = new Set(['GO_BACK', 'POP', 'POP_TO_TOP']);
 
 /** Which captions belong to which step (§3.2 item 6 order inside each). */
 const STEP_OF: Readonly<Record<MissingStep, SetupStep>> = {
@@ -62,11 +66,38 @@ export function previousStep(step: SetupStep): SetupStep | 'leave' {
 
 /**
  * "I'm under 13" on the Privacy step of "Me" (§3.15.3): the learner becomes
- * someone a grown-up looks after. The box and any typed PIN are cleared (the
- * statement and the PIN rule change with it); name, email and what the device
- * holds are kept. A "Me" Privacy step exists only on a device with no consent
- * at all, so the step stays, now with the guardian card and a mandatory PIN.
+ * someone a grown-up looks after. The box, any typed PIN and the email are
+ * cleared (the email was typed by the learner, so it is never kept as the
+ * grown-up's); name, level, cub and what the device holds are kept. A "Me"
+ * Privacy step exists only on a device with no consent at all, so the step
+ * stays, now with the guardian card and a mandatory PIN.
  */
 export function switchToGrownUp(s: FormState): FormState {
-  return { ...s, learnerType: 'child', agreed: false, pin: null };
+  return { ...s, learnerType: 'child', agreed: false, pin: null, email: '' };
+}
+
+/**
+ * Whether an answer can be picked on step 1 (§3.15.3, the age statement is
+ * latched). Once "I'm under 13" was pressed, "Me" stays closed for the life of
+ * the form, so going Back cannot bring the "13 or older" box again; leaving
+ * the screen starts a new form.
+ */
+export function canChooseWho(next: LearnerType, under13: boolean): boolean {
+  return !(under13 && next === 'self');
+}
+
+/** Wording of the profile step after the switch: still first person, the learner holds the device. */
+export function profileVoice(learnerType: LearnerType, under13: boolean): LearnerType {
+  return under13 ? 'self' : learnerType;
+}
+
+/**
+ * What a system back (Android back, the iOS swipe is off past step 1) does on
+ * this step (§3.15.4): `'leave'` lets the route go, `'ignore'` lets an action
+ * that is not a back (a replace after submit, a navigate) through untouched,
+ * and a step is the one to open instead of leaving.
+ */
+export function systemBack(step: SetupStep, actionType: string): SetupStep | 'leave' | 'ignore' {
+  if (!BACK_ACTIONS.has(actionType)) return 'ignore';
+  return previousStep(step);
 }

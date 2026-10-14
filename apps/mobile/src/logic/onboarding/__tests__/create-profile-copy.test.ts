@@ -28,8 +28,8 @@ describe('create-profile copy (F-LEARN-001 §3.2, §3.3, §3.15)', () => {
   });
 
   it('says the answer does not change the lessons, naming the level check only when it is on', () => {
-    expect(lessonsLine(c, true)).toBe("This doesn't change your lessons. Your level check comes next and sets them.");
-    expect(lessonsLine(c, false)).toBe("This doesn't change your lessons.");
+    expect(lessonsLine(c, true)).toBe("This doesn't change the lessons. The level check comes next and sets them.");
+    expect(lessonsLine(c, false)).toBe("This doesn't change the lessons.");
     expect(c.privacy.lessons).toBe("Agreeing doesn't change the lessons.");
   });
 

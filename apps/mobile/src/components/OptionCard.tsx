@@ -13,6 +13,8 @@ interface OptionCardProps {
   /** Language tag of the label when it is not in the UI language (an endonym), so a screen reader says it right. */
   lang?: string;
   testID?: string;
+  /** Closed for this form (dimmed, not pressable, announced as unavailable). */
+  disabled?: boolean;
 }
 
 /**
@@ -31,14 +33,16 @@ export function OptionCard({
   accessibilityLabel,
   lang,
   testID,
+  disabled = false,
 }: OptionCardProps): React.ReactElement {
   const hasDescription = description !== undefined && description !== '';
   return (
     <Pressable
       testID={testID}
       onPress={onPress}
+      disabled={disabled}
       accessibilityRole="radio"
-      accessibilityState={{ checked: selected }}
+      accessibilityState={{ checked: selected, disabled }}
       // RN-web drops `aria-checked` for an unchecked radio; a radio must always say its state.
       aria-checked={selected}
       {...(lang === undefined ? {} : { lang, accessibilityLanguage: lang })}
@@ -50,7 +54,7 @@ export function OptionCard({
         minHeight: touchTarget.child,
         paddingVertical: spacing.md,
         paddingHorizontal: spacing.lg,
-        backgroundColor: selected ? colors.brand.primaryLight : colors.surface.paper,
+        backgroundColor: selected ? colors.brand.primaryLight : disabled ? colors.surface.sunken : colors.surface.paper,
         borderColor: selected ? colors.brand.primary : colors.border.subtle,
         borderWidth: borderWidth.base,
         borderRadius: radii.lg,
@@ -73,7 +77,9 @@ export function OptionCard({
         {selected ? <Icon name="check" size={spacing.lg} color={colors.text.inverse} /> : null}
       </View>
       <View style={{ flex: 1 }}>
-        <Body weight="semibold">{label}</Body>
+        <Body weight="semibold" tone={disabled ? 'muted' : 'primary'}>
+          {label}
+        </Body>
         {hasDescription ? <Caption tone="secondary">{description}</Caption> : null}
       </View>
     </Pressable>

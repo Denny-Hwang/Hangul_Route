@@ -45,6 +45,7 @@ export const learner = {
     who: {
       self: { label: '나', sub: '내가 직접 설정해요.' },
       child: { label: '내가 돌보는 사람 (아이 또는 학생)', sub: '부모, 보호자 또는 선생님으로서 대신 설정해요.' },
+      latched: '설정은 어른이 마무리해요.',
     },
     lessons: {
       withCheck: '이 선택으로 레슨이 바뀌지 않아요. 다음에 하는 수준 확인이 레슨을 정해요.',

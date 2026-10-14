@@ -37,7 +37,7 @@ for (const vp of VIEWPORTS) {
       await expect(child).toHaveAttribute('aria-checked', 'false');
       await expect(page.getByText("I'm setting this up for myself.")).toBeVisible();
       await expect(page.getByText("I'm a parent, guardian or teacher, setting it up for them.")).toBeVisible();
-      await expect(page.getByText(/^This doesn't change your lessons\./)).toBeVisible();
+      await expect(page.getByText(/^This doesn't change the lessons\./)).toBeVisible();
       await expect(page.getByPlaceholder('Type a name')).toHaveCount(0);
       const next = page.getByRole('button', { name: 'Continue' });
       await expect(next).toBeDisabled();
@@ -104,6 +104,8 @@ for (const vp of VIEWPORTS) {
       await page.getByRole('button', { name: "Let's start" }).click();
       await fillWhoAndProfile(page, 'self', { name: 'Sam', avatar: 'Home Tiger' });
       await page.getByRole('checkbox').click();
+      // Typed by the learner before the statement: never kept as the grown-up's address.
+      await page.getByLabel('Email (optional)').fill('sam@example.com');
 
       await page.getByRole('button', { name: "I'm under 13" }).click();
       await expect(page.getByText('A grown-up finishes this step: they agree and create a PIN. The name and Hoya stay the same.')).toBeVisible();
@@ -116,7 +118,28 @@ for (const vp of VIEWPORTS) {
       const next = page.getByRole('button', { name: 'Continue' });
       await expect(next).toBeDisabled();
       await expect(page.getByText('Tick the box to agree')).toBeVisible();
+      await expect(page.getByLabel('Email (optional)')).toHaveValue('');
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+
+      // The statement is latched: Back to the question cannot bring the "13 or older" box again.
+      const back = page.getByRole('button', { name: 'Go back' });
+      await back.click();
+      // Still the learner's own profile (first person), with the name and cub kept.
+      await expect(page.getByRole('heading', { name: 'Your profile' })).toBeVisible();
+      await expect(page.getByPlaceholder('Type a name')).toHaveValue('Sam');
+      await back.click();
+      await expect(page.getByRole('heading', { name: 'Who is learning?' })).toBeVisible();
+      const me = page.getByRole('radio', { name: WHO_SELF });
+      await expect(me).toBeDisabled();
+      await expect(page.getByRole('radio', { name: WHO_CHILD })).toHaveAttribute('aria-checked', 'true');
+      await expect(page.getByText('A grown-up finishes setting this up.')).toBeVisible();
+      await me.click({ force: true });
+      await expect(me).toHaveAttribute('aria-checked', 'false');
+      await next.click();
+      await next.click();
+      await expect(page.getByRole('heading', { name: 'Privacy' })).toBeVisible();
+      await expect(page.getByText('For a grown-up')).toBeVisible();
+      await expect(page.getByText("I'm 13 or older and I agree to the Privacy Policy.")).toHaveCount(0);
 
       await agreeOnPrivacy(page, 'child');
       await expect(next).toBeEnabled();
@@ -129,6 +152,7 @@ for (const vp of VIEWPORTS) {
       expect(profiles).toHaveLength(1);
       expect(profiles![0]).toMatchObject({ displayName: 'Sam', avatar: 'hoya-blue', learnerType: 'child' });
       expect(await readStored(page, 'account:selfConsentAcceptedAt')).toBeNull();
+      expect(await readStored(page, 'account:parentEmail')).toBeNull();
     });
 
     test('Back walks the steps and keeps every answer', async ({ page }) => {

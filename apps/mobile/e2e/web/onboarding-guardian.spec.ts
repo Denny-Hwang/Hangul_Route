@@ -99,6 +99,42 @@ for (const vp of VIEWPORTS) {
       await expect(page.getByText('Your first card is waiting.')).toBeVisible();
     });
 
+    test('family device: adding someone looked after is two steps, with no Privacy step (§3.15.1)', async ({ page }) => {
+      await onboardChild(page, { name: 'Mina' });
+      await page.goto('/');
+      await expect(page.getByText('Hi, Mina!')).toBeVisible();
+      // The install guide shows from the third cached open and covers the Home tabs.
+      const guide = page.getByTestId('install-guide');
+      await page.waitForTimeout(800);
+      if (await guide.isVisible()) await guide.getByRole('button', { name: 'Not now' }).click();
+      await page.getByRole('button', { name: 'Profile and settings' }).click();
+      const add = page.getByRole('button', { name: 'Add a profile (PIN required)' });
+      await add.scrollIntoViewIfNeeded();
+      await add.click();
+      await unlockWithPin(page, E2E_PIN);
+
+      await expect(page.getByRole('heading', { name: 'Who is learning?' })).toBeVisible();
+      await page.getByRole('radio', { name: WHO_CHILD }).click();
+      await expect(page.getByText('Step 1 of 2')).toBeVisible();
+      const next = page.getByRole('button', { name: 'Continue' });
+      await next.click();
+
+      // The device already holds the consent and the PIN: step 2 is the last one.
+      await expect(page.getByText('Step 2 of 2')).toBeVisible();
+      await expect(page.getByText('Ready to go!')).toBeVisible();
+      await expect(page.getByRole('heading', { name: 'Privacy' })).toHaveCount(0);
+      await expect(page.getByRole('checkbox')).toHaveCount(0);
+      await page.getByPlaceholder('Type a name').fill('Jun');
+      await next.click();
+
+      await expect.poll(async () => ((await readStored<Array<{ displayName: string }>>(page, 'profiles')) ?? []).map((p) => p.displayName)).toEqual([
+        'Mina',
+        'Jun',
+      ]);
+      const profiles = await readStored<Array<{ displayName: string; learnerType?: string }>>(page, 'profiles');
+      expect(profiles![1]).toMatchObject({ displayName: 'Jun', learnerType: 'child' });
+    });
+
     test('the PIN made in the form guards the grown-up zone from the first tap, with no setup screen', async ({ page }) => {
       await onboardChild(page, { name: 'Mina', avatar: 'Feast Tiger' });
       await page.goto('/');

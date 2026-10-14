@@ -67,11 +67,13 @@ export const learner = {
     who: {
       self: { label: 'Me', sub: "I'm setting this up for myself." },
       child: { label: 'Someone I look after (a child or a student)', sub: "I'm a parent, guardian or teacher, setting it up for them." },
+      /** Under the cards after "I'm under 13": "Me" stays closed for this form (§3.15.3). */
+      latched: 'A grown-up finishes setting this up.',
     },
     /** Under the two cards. `plain` on a build where the level check is off. */
     lessons: {
-      withCheck: "This doesn't change your lessons. Your level check comes next and sets them.",
-      plain: "This doesn't change your lessons.",
+      withCheck: "This doesn't change the lessons. The level check comes next and sets them.",
+      plain: "This doesn't change the lessons.",
     },
     /** Step 2, worded for the answer: first person for "Me", third for someone looked after. */
     profile: {

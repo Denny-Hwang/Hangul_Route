@@ -24,7 +24,7 @@ import {
 } from '@hangul-route/design-system';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Linking, Pressable, TextInput, View } from 'react-native';
+import { Linking, Platform, Pressable, TextInput, View } from 'react-native';
 import { useMessages } from '../../i18n/use-messages';
 import { OptionCard } from '../../components/OptionCard';
 import { PinSetupField } from '../../components/PinSetupField';
@@ -37,11 +37,14 @@ import { formPlan, nameHint, type FormState } from '../../logic/onboarding/creat
 import { levelSelected, whoSelected } from '../../logic/onboarding/onboarding-events';
 import { PIN_SETUP_START, type PinSetupState } from '../../logic/onboarding/pin-setup';
 import {
+  canChooseWho,
   nextStep,
   previousStep,
+  profileVoice,
   stepMissing,
   stepPosition,
   switchToGrownUp,
+  systemBack,
   type SetupStep,
 } from '../../logic/onboarding/setup-steps';
 import { submitProfile } from '../../logic/onboarding/submit-profile';
@@ -72,9 +75,6 @@ const fieldStyle = (borderColor: string) =>
     fontSize: typography.size.bodyLg,
     color: colors.text.primary,
   }) as const;
-
-/** Back actions the form answers itself while it is past the first step (the system back, F-LEARN-001 §3.15.4). */
-const BACK_ACTIONS = new Set(['GO_BACK', 'POP', 'POP_TO_TOP']);
 
 /**
  * Create a profile — F-LEARN-001 §3.2 to §3.4 and §3.15. Three steps in one
@@ -116,7 +116,10 @@ export function CreateProfileScreen({ navigation, route }: Props): React.ReactEl
   const [pinRowOpen, setPinRowOpen] = useState(false);
   const [pinError, setPinError] = useState<string | null>(null);
   const [linkNote, setLinkNote] = useState<string | null>(null);
-  /** "I'm under 13" was pressed: the grown-up card shows with its note. */
+  /**
+   * "I'm under 13" was pressed: the grown-up card shows with its note, and the
+   * statement is latched for the life of the form ("Me" stays closed, §3.15.3).
+   */
   const [switched, setSwitched] = useState(false);
   const [busy, setBusy] = useState(false);
   // Events that fire once per form: the first answer, and the first level change.
@@ -146,18 +149,25 @@ export function CreateProfileScreen({ navigation, route }: Props): React.ReactEl
   const isLast = nextStep(step, state) === 'submit';
   const emailOk = email.trim() === '' || isValidEmail(email);
   const hint = nameHint(name, c.nameHint);
-  const words = learnerType === null ? null : whoCopy(c, learnerType);
+  const words = learnerType === null ? null : whoCopy(c, profileVoice(learnerType, switched));
 
   useEffect(
     () =>
       navigation.addListener('beforeRemove', (e) => {
-        if (stepRef.current === 'who' || !BACK_ACTIONS.has(e.data.action.type)) return;
+        const back = systemBack(stepRef.current, e.data.action.type);
+        if (back === 'leave' || back === 'ignore') return;
         e.preventDefault();
-        const back = previousStep(stepRef.current);
-        if (back !== 'leave') setStep(back);
+        moved.current = true;
+        setStep(back);
       }),
     [navigation],
   );
+
+  // The native iOS swipe cannot be cancelled by `beforeRemove` (native-stack): it is
+  // on only on the question, where leaving the route is what back does (§3.15.4).
+  useEffect(() => {
+    navigation.setOptions({ gestureEnabled: step === 'who' });
+  }, [navigation, step]);
 
   useEffect(() => {
     // Not on the first paint: the screen reader starts at the top by itself.
@@ -171,7 +181,7 @@ export function CreateProfileScreen({ navigation, route }: Props): React.ReactEl
   };
 
   const chooseWho = (next: LearnerType): void => {
-    if (next === learnerType) return;
+    if (next === learnerType || !canChooseWho(next, switched)) return;
     if (!whoReported.current) {
       whoReported.current = true;
       void track(whoSelected(firstRun));
@@ -182,13 +192,13 @@ export function CreateProfileScreen({ navigation, route }: Props): React.ReactEl
     setPinSetup(PIN_SETUP_START);
     setPinRowOpen(false);
     setPinError(null);
-    setSwitched(false);
   };
 
   const underThirteen = (): void => {
     const next = switchToGrownUp(state);
     setLearnerType(next.learnerType);
     setAgreed(next.agreed);
+    setEmail(next.email);
     setPinSetup(PIN_SETUP_START);
     setPinRowOpen(false);
     setPinError(null);
@@ -292,6 +302,9 @@ export function CreateProfileScreen({ navigation, route }: Props): React.ReactEl
         }}
         accessible
         focusable
+        // One stop for the caption and the heading. Native merges the children, so the stop itself is the
+        // header the heading rotor finds (§3.15.2); the web keeps the inner heading's role, so no second one there.
+        {...(Platform.OS === 'web' ? {} : { accessibilityRole: 'header' as const })}
         accessibilityLabel={`${c.step(position.n, position.total)}. ${title}`}
         testID="create-profile-heading"
       >
@@ -310,6 +323,7 @@ export function CreateProfileScreen({ navigation, route }: Props): React.ReactEl
           label={c.who.self.label}
           description={c.who.self.sub}
           selected={learnerType === 'self'}
+          disabled={!canChooseWho('self', switched)}
           onPress={() => chooseWho('self')}
         />
         <OptionCard
@@ -319,6 +333,12 @@ export function CreateProfileScreen({ navigation, route }: Props): React.ReactEl
           onPress={() => chooseWho('child')}
         />
       </View>
+      {switched ? (
+        <>
+          <Spacer size="xs" />
+          <Caption tone="secondary">{c.who.latched}</Caption>
+        </>
+      ) : null}
       <Spacer size="md" />
       <Caption tone="secondary">{lessonsLine(c, levelCheckOn)}</Caption>
     </>
@@ -562,8 +582,12 @@ export function CreateProfileScreen({ navigation, route }: Props): React.ReactEl
           </Pressable>
         ) : null}
 
-        <Spacer size="md" />
-        <Caption tone="secondary">{c.privacy.lessons}</Caption>
+        {plan.consent !== null ? (
+          <>
+            <Spacer size="md" />
+            <Caption tone="secondary">{c.privacy.lessons}</Caption>
+          </>
+        ) : null}
       </>
     );
 

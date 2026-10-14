@@ -25,6 +25,7 @@ import { useMessages } from '../../i18n/use-messages';
 import { privacyUrl } from '../../logic/links';
 import { nameHint } from '../../logic/onboarding/create-profile-form';
 import { PIN_SETUP_START, type PinSetupState } from '../../logic/onboarding/pin-setup';
+import { canChooseWho } from '../../logic/onboarding/setup-steps';
 import { AVATAR_PRESETS } from '../../logic/profiles/avatar-catalog';
 import {
   editMissing,
@@ -82,7 +83,10 @@ export function EditProfileScreen({ navigation, route }: Props): React.ReactElem
   const [linkNote, setLinkNote] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
-  /** "I'm under 13" put the who row back: say the profile stays with a grown-up. */
+  /**
+   * "I'm under 13" put the who row back: say the profile stays with a grown-up,
+   * and keep "Me" closed while this screen is open (the statement is latched, §3.15.6).
+   */
   const [kept, setKept] = useState(false);
   // `busy` is React state, so two taps before the re-render would both read `false`;
   // this ref closes Save on the first tap (one hash, one consent, one goBack).
@@ -139,13 +143,12 @@ export function EditProfileScreen({ navigation, route }: Props): React.ReactElem
   };
 
   const chooseWho = (next: LearnerType): void => {
-    if (next === draft.learnerType) return;
+    if (next === draft.learnerType || !canChooseWho(next, kept)) return;
     change({ learnerType: next });
     // The consent wording and the PIN rule change with the answer: start those over.
     setAgreed(false);
     setPinSetup(PIN_SETUP_START);
     setPinError(null);
-    setKept(false);
   };
 
   const underThirteen = (): void => {
@@ -296,6 +299,7 @@ export function EditProfileScreen({ navigation, route }: Props): React.ReactElem
             <OptionCard
               label={e.who.self.label}
               description={e.who.self.sub}
+              disabled={!canChooseWho('self', kept)}
               selected={draft.learnerType === 'self'}
               onPress={() => chooseWho('self')}
             />

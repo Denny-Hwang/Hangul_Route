@@ -48,10 +48,11 @@ export const learner = {
         label: 'Alguien a quien cuido (un niño, una niña o un estudiante)',
         sub: 'Soy madre, padre, tutor legal o docente, y lo configuro para esa persona.',
       },
+      latched: 'Un adulto termina de configurarlo.',
     },
     lessons: {
-      withCheck: 'Esto no cambia tus lecciones. Después viene tu prueba de nivel, que las ajusta.',
-      plain: 'Esto no cambia tus lecciones.',
+      withCheck: 'Esto no cambia las lecciones. Después viene la prueba de nivel, que las ajusta.',
+      plain: 'Esto no cambia las lecciones.',
     },
     profile: {
       self: { title: 'Tu perfil', nameLabel: 'Tu nombre', levelHeading: '¿Cómo te gusta aprender?' },
