@@ -255,6 +255,38 @@ const CELLS: readonly UpperCell[] = [
       await expect(page.getByRole('button', { name: /^Holidays & Traditions: Festival Sentences\./ })).toBeVisible();
     },
   },
+  // F-CURR-001 S3-5: Game Sentences, q1 "I Want to Play" played through its real games.
+  {
+    episodeId: 'episode:stage3-crafts',
+    cellButton: journeyCellName(3, 'Play & Crafts'),
+    title: 'Game Sentences',
+    playFirstQuest: async (page) => {
+      await startFirstQuest(page);
+      await passDiscover(page);
+      // Sentence Builder: three particle rounds (를, 을, 를) and two word-order rounds with one extra tile.
+      await page.getByRole('button', { name: 'Play minigame' }).click();
+      await build(page, 1, 5, ['를, reul']);
+      await build(page, 2, 5, ['을, eul']);
+      await build(page, 3, 5, ['축구를, chukgureul', '하고, hago', '싶어요, sipeoyo']);
+      await build(page, 4, 5, ['를, reul']);
+      await build(page, 5, 5, ['야구를, yagureul', '하고, hago', '싶어요, sipeoyo']);
+      // Pic-Word Match on whole sentences: four boards of three.
+      await playPicWordBoards(page, [
+        ['yunnori', 'yeon', 'chukgu'],
+        ['julleomgi', 'yagu', 'yunnori'],
+        ['nonggu', 'yeon', 'julleomgi'],
+        ['chukgu', 'yunnori', 'yeon'],
+      ]);
+      await playCheckByIds(page, [{ answer: 'kite' }, { answer: 'chukgu' }]);
+      await expect(page.getByText('Finish', { exact: true }).first()).toBeVisible();
+    },
+    expectRouteDay: async (page) => {
+      await page.goto('/');
+      await page.getByText('Learning Route', { exact: true }).last().click();
+      await page.getByRole('button', { name: /^Stage 3, Sentences\./ }).click();
+      await expect(page.getByRole('button', { name: /^Play & Crafts: Game Sentences\./ })).toBeVisible();
+    },
+  },
 ];
 
 async function openJourney(page: Page): Promise<void> {
