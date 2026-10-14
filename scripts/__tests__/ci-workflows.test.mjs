@@ -592,8 +592,9 @@ describe("billing and grown-up home e2e (F-BILL-002 B-14)", () => {
     assert.doesNotMatch(run, /STORY_FIXTURES|E2E_ROUTE/, "serves dist/, not a fixture or plan bundle");
     const listed = specArgs(run);
     const dir = join(ROOT, "apps", "mobile", "e2e", "web");
-    // Every spec that mentions E2E_GROWN_UP_HOME, however it gates on it, is either in the lane or one that only
-    // skips itself when the flag is on (it runs in the release-build shards instead).
+    // Every spec that mentions E2E_GROWN_UP_HOME, however it gates on it, is either in the lane or one whose only
+    // gated block is the kill switch's (E2E_GROWN_UP_HOME=0, a build with the flag off; F-APP-001 A-10 turned the
+    // flag on by default, so the release-build shards skip that block and run the rest of the file).
     const SKIP_ONLY_WHEN_ON = ["plan-screen.spec.ts"];
     const mentions = readdirSync(dir).filter(
       (n) => n.endsWith(".spec.ts") && readFileSync(join(dir, n), "utf8").includes("E2E_GROWN_UP_HOME")
@@ -601,7 +602,8 @@ describe("billing and grown-up home e2e (F-BILL-002 B-14)", () => {
     for (const n of SKIP_ONLY_WHEN_ON) {
       const src = readFileSync(join(dir, n), "utf8");
       assert.ok(mentions.includes(n), `${n} still reads E2E_GROWN_UP_HOME`);
-      assert.match(src, /test\.skip\(\s*ON\b/, `${n} skips itself when the flag is on`);
+      assert.match(src, /test\.skip\(\s*!OFF\b/, `${n} runs its gated block only on the kill switch's build`);
+      assert.match(src, /const OFF = process\.env\.E2E_GROWN_UP_HOME === '0';/);
       assert.doesNotMatch(src, /test\.skip\(\s*!ON\b/, `${n} has a flag-on block, so it belongs in the lane`);
     }
     const flagOn = mentions.filter((n) => !SKIP_ONLY_WHEN_ON.includes(n));

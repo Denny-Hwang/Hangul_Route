@@ -122,8 +122,9 @@ test.describe('grown-up notes (flag on)', () => {
     await expect(page.getByRole('radiogroup', { name: 'Notes from classes' }).getByRole('radio', { name: 'All notes' })).toHaveAttribute('aria-checked', 'true');
     await expect(page.getByText('Notes from your family always arrive.')).toBeVisible();
     await expect(page.getByTestId('notes-disclosure')).toHaveText('Teachers see the answer Mina picks on their notes.');
-    // The native-only shell builds have no Send a note; this build's grown-up home flag is off too.
-    await expect(page.getByTestId('notes-send-note')).toHaveCount(0);
+    // On the web with the grown-up home on (the default since F-APP-001 A-10) Send a note opens the grown-up area;
+    // native builds never draw it (OD-6).
+    await expect(page.getByTestId('notes-send-note')).toBeVisible();
     expect(await page.locator('body').innerText()).not.toMatch(NEVER);
     await shot(page, 'notes-grown-up');
 

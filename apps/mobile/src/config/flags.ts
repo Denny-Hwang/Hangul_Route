@@ -131,7 +131,8 @@ export interface Flags {
   /**
    * The learner app's entries to the grown-up area on app.hangulroute.com (F-APP-001 section
    * 3.6): the Welcome persona row, the Profile "Grown-up home" row, the dashboard card and the
-   * Plan screen's same-tab billing hand-off (A-7). OFF until M3 (owner step S-3); web only, and
+   * Plan screen's same-tab billing hand-off (A-7). ON since A-10 (2026-10-14, after M3; owner
+   * decision: no 14-day wait); `EXPO_PUBLIC_GROWN_UP_HOME=false` switches it off. Web only, and
    * native builds never show them (OD-6). The device gate marker, the bounce and the lock's PIN
    * path run with it off.
    */
@@ -176,7 +177,7 @@ const launchDefaults: Flags = {
   // Web-first (F-VOC-003 C-7): native bundles wait for the device flip pass.
   vocabTopicsEnabled: !isNativeBundle(),
   vocabShowDrafts: false,
-  grownUpHomeEnabled: false,
+  grownUpHomeEnabled: true,
   notesEnabled: true,
   reportsEnabled: true,
   routeEnabled: true,

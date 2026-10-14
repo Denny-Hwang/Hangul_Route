@@ -6,12 +6,14 @@ import { shot } from './shots';
 /**
  * F-APP-001 A-7 (sections 3.6, 3.8, 3.12, 3.16; wireframes onboarding/welcome-personas.md and
  * parent/grown-up-home-card.md; mock design/screens/app-shell/learner-entry.md): the learner
- * app's entries to the grown-up area. They live behind `flags.grownUpHomeEnabled` (off), so a
- * default build checks that Welcome, Profile and the dashboard are today's screens, and a build
- * made with the flag on checks the entries:
+ * app's entries to the grown-up area, behind `flags.grownUpHomeEnabled` (on by default since A-10).
+ * The flag-on cases run in the billing and grown-up home lane (F-BILL-002 B-14):
  *
  *   EXPO_PUBLIC_GROWN_UP_HOME=true pnpm --filter @hangul-route/mobile build:web
  *   E2E_GROWN_UP_HOME=1 pnpm --filter @hangul-route/mobile exec playwright test grown-up-entries
+ *
+ * The kill switch (a build made with `EXPO_PUBLIC_GROWN_UP_HOME=false`, run with `E2E_GROWN_UP_HOME=0`) checks that
+ * Welcome, Profile and the dashboard show no entry.
  *
  * The sign-in page the entries open is a stand-in served by the test (no Clerk session here), and
  * the service worker is blocked so the stand-in is what the navigation gets. The Join prefill
@@ -20,6 +22,8 @@ import { shot } from './shots';
 test.use({ serviceWorkers: 'block' });
 
 const ON = process.env.E2E_GROWN_UP_HOME === '1';
+/** The kill switch's run: a build with `EXPO_PUBLIC_GROWN_UP_HOME=false`. */
+const OFF = process.env.E2E_GROWN_UP_HOME === '0';
 const UNLOCK = 'hr:grownup:unlock';
 const JOIN_HANDOFF = 'hr:shell:joinCode';
 const PROFILE_ROW = /^Grown-up home, Your family, classes and billing/;
@@ -133,8 +137,8 @@ async function expectPersonaRow(page: Page, sideBySide: boolean): Promise<void> 
   }
 }
 
-test.describe('flag off (the default build)', () => {
-  test.skip(ON, 'runs on the default build');
+test.describe('flag off (the kill switch EXPO_PUBLIC_GROWN_UP_HOME=false)', () => {
+  test.skip(!OFF, 'needs a build with EXPO_PUBLIC_GROWN_UP_HOME=false and E2E_GROWN_UP_HOME=0');
 
   test('Welcome, Profile and the dashboard show no grown-up entry', async ({ page }) => {
     await page.goto('/');
