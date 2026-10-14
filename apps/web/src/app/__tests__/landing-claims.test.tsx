@@ -10,19 +10,20 @@ import ParentsPage from '../(en)/parents/page';
 import PrivacyPage from '../(en)/privacy/page';
 import TeachersPage from '../(en)/teachers/page';
 import TermsPage from '../(en)/terms/page';
+import LicensesPage from '../(en)/licenses/page';
 import { SITE_PRICE_PATTERNS } from './site-price-patterns';
 
 /**
  * The site promises only what the product does today (owner decisions 2026-10-10; F-SITE-002 §3.9, §3.12). This
- * scans what a visitor (and a search engine) actually sees on all seven site pages and in their metadata.
+ * scans what a visitor (and a search engine) actually sees on every site page and in their metadata.
  *
  * 1. No price, and nothing sold that is not built: no amount, no term, no lifetime or one-time wording. The home's
  *    cost line is "Stage 1 is free." then the paid line the `paidPlans` claim picks.
  * 2. No adult sign-up flow that does not exist: no page tells an adult to "make your own profile"; the parents page
  *    tells a grown-up the same quests are theirs to play.
  *
- * The legal pages are drafts that describe store billing (S-7 corrects the payment facts), so they are scanned for
- * amounts only.
+ * The legal pages are drafts that describe store billing (S-7 corrects the payment facts), and the open-source notices
+ * quote license texts as written, so they are scanned for amounts only.
  */
 const COMMERCIAL_CLAIMS: ReadonlyArray<{ name: string; re: RegExp }> = [
   ...SITE_PRICE_PATTERNS,
@@ -55,12 +56,14 @@ const SITE: ReadonlyArray<readonly [string, string]> = [
 const LEGAL: ReadonlyArray<readonly [string, string]> = [
   ['/privacy', render(PrivacyPage)],
   ['/terms', render(TermsPage)],
+  // The open-source notices quote third-party license texts as written (owner decision 2026-10-14).
+  ['/licenses', render(LicensesPage)],
 ];
 const metaText = JSON.stringify([siteMetadata, ...SITE_PAGES.map((page) => siteMetadataFor('en', page))]);
 const home = SITE[0]?.[1] ?? '';
 
 describe('site text — no prices, nothing sold that is not built', () => {
-  it('scans all seven site pages', () => {
+  it('scans every site page', () => {
     expect([...SITE, ...LEGAL].map(([path]) => path).sort()).toEqual([...SITE_PAGES].sort());
   });
 

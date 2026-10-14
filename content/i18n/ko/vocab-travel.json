@@ -1,0 +1,49 @@
+{
+  "locale": "ko",
+  "domain": "vocab-travel",
+  "entries": {
+    "vocab-topic:travel": {
+      "title": "여행",
+      "blurb": "이동하는 방법과 여행에 필요한 물건이에요.",
+      "hoyaIntro": "오늘은 어디로 갈까요? 여행 낱말을 배워요."
+    },
+    "vocab:bihaenggi": {
+      "gloss": "날개가 있어 하늘을 나는 탈것"
+    },
+    "vocab:gicha": {
+      "gloss": "철길 위를 달리는 긴 탈것"
+    },
+    "vocab:beoseu": {
+      "gloss": "많은 사람이 함께 타는 큰 차"
+    },
+    "vocab:taeksi": {
+      "gloss": "돈을 내고 원하는 곳까지 타고 가는 차"
+    },
+    "vocab:jihacheol": {
+      "gloss": "땅속 철길을 달리는 기차"
+    },
+    "vocab:jadongcha": {
+      "gloss": "바퀴가 넷이고 엔진으로 달리는 탈것",
+      "senseNote": "평소에는 줄여서 차라고 많이 해요."
+    },
+    "vocab:bae-boat": {
+      "gloss": "사람이나 짐을 싣고 물 위를 다니는 탈것"
+    },
+    "vocab:jido": {
+      "gloss": "땅의 모양과 길을 그려 놓은 그림"
+    },
+    "vocab:yeogwon": {
+      "gloss": "다른 나라에 갈 때 신분을 보여 주는 수첩"
+    },
+    "vocab:pyo-ticket": {
+      "gloss": "돈을 내고 받아 탈것이나 공연장에서 쓰는 종이",
+      "senseNote": "버스나 기차를 타거나 공연을 볼 때 필요해요."
+    },
+    "vocab:gonghang": {
+      "gloss": "비행기가 뜨고 내리는 곳"
+    },
+    "vocab:hotel": {
+      "gloss": "여행하는 사람이 돈을 내고 묵는 곳"
+    }
+  }
+}

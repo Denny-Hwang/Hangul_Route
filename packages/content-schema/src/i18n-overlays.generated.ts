@@ -263,10 +263,131 @@ export const OVERLAYS: Overlays = {
       "fact": "La gente hace reverencias a las personas mayores, que a menudo dan sebaetdon (dinero de la suerte).",
       "title": "Año Nuevo lunar"
     },
+    "card:set-hangul-printing": {
+      "blurb": "Seis historias, una colección.",
+      "title": "Impresión"
+    },
+    "card:set-records-joseon": {
+      "blurb": "Seis historias, una colección.",
+      "title": "Registro"
+    },
+    "card:set-science-art-life": {
+      "blurb": "Seis historias, una colección.",
+      "title": "Tesoro"
+    },
+    "card:set-seasons-tales": {
+      "blurb": "Seis historias, una colección.",
+      "title": "Arirang"
+    },
     "card:songpyeon": {
       "blurb": "Pasteles de arroz en forma de media luna con relleno dulce.",
       "fact": "Se cocinan al vapor sobre agujas de pino para darles aroma.",
       "title": "Songpyeon"
+    },
+    "card:story-chuseok-ganggangsullae": {
+      "blurb": "En Chuseok (Hangawi), Hoya acompaña a una familia que vuelve a su pueblo natal, prepara songpyeon cocidos al vapor sobre agujas de pino y mira a las mujeres bailar el Ganggangsullae de la mano bajo la luna llena.",
+      "fact": "El Ganggangsullae fue inscrito en la Lista Representativa del Patrimonio Cultural Inmaterial de la Humanidad de la UNESCO en 2009.",
+      "title": "Baile en círculo"
+    },
+    "card:story-dano-ssireum": {
+      "blurb": "Hoya celebra Dano, la fiesta coreana de principios del verano: cabello lavado con agua de changpo, columpios que vuelan alto, lucha ssireum y el Gangneung Danoje de la lista de la UNESCO, con su drama de máscaras Gwanno sin palabras.",
+      "fact": "En Dano, la gente se lavaba el cabello con agua hervida con changpo (cálamo aromático, una planta fragante), porque creía que así el cabello quedaba grueso y brillante.",
+      "title": "Dano"
+    },
+    "card:story-donguibogam": {
+      "blurb": "Hoya descubre cómo el médico real Heo Jun terminó el Donguibogam en 1610, una enciclopedia médica que daba importancia a cuidar la salud y escribía los nombres de las hierbas en hangul. Hoy está en el Registro de la Memoria del Mundo de la UNESCO.",
+      "fact": "Heo Jun terminó el Donguibogam en 1610 (año 2 de Gwanghaegun).",
+      "title": "Libro de medicina"
+    },
+    "card:story-gimjang-arirang": {
+      "blurb": "Llega el invierno y Hoya ayuda a la familia y al vecindario a preparar y compartir kimchi en el gimjang (UNESCO 2013). Luego escucha Arirang, la canción popular que se comparte en toda Corea (inscripción de Corea del Sur en la UNESCO, 2012).",
+      "fact": "El gimjang es la costumbre de preparar de una vez mucho kimchi entre finales del otoño y principios del invierno, para que las familias tengan kimchi durante todo el invierno.",
+      "title": "Kimchi para el invierno"
+    },
+    "card:story-hangeul-day": {
+      "blurb": "Hoya descubre por qué Corea del Sur celebra el Día del Hangul el 9 de octubre: se basa en una fecha escrita al final del libro Haerye de 1446, que se encontró hacia 1940. El día empezó como «Gagyanal» en 1926.",
+      "fact": "El libro Hunminjeongeum Haerye es Tesoro Nacional de Corea y está en el Registro de la Memoria del Mundo de la UNESCO.",
+      "title": "Tesoro Nacional"
+    },
+    "card:story-ilseongnok-daily-reflection": {
+      "blurb": "De joven heredero real, Jeongjo escribía un diario para repasar cada día. Ese diario se convirtió en el Ilseongnok, un registro oficial de la corte de 1760 a 1910.",
+      "fact": "Como nieto y heredero del rey (seson), Jeongjo escribía un diario de sus propias palabras, acciones y estudios, y ese diario fue el origen del Ilseongnok.",
+      "title": "Reflexiones diarias"
+    },
+    "card:story-janggyeong-panjeon": {
+      "blurb": "Hoya explora Janggyeong Panjeon, las salas del siglo XV en Haeinsa cuyas ventanas ingeniosas y pisos con capas han protegido las planchas de madera del Tripitaka Koreana durante unos 500 años.",
+      "fact": "Para la ventilación, las ventanas tienen tamaños distintos en la pared sur y en la norte (delante y detrás), y las ventanas de arriba y de abajo también tienen tamaños distintos.",
+      "title": "Viento"
+    },
+    "card:story-jikji-metal-type": {
+      "blurb": "Hoya visita el templo Heungdeoksa en Cheongju, donde se imprimió el Jikji con tipos móviles de metal en 1377. Es el libro más antiguo de su tipo que se conserva en el mundo, y el único volumen que queda se guarda en París.",
+      "fact": "El Jikji se imprimió con tipos móviles de metal en el templo Heungdeoksa, a las afueras de Cheongju, en el 7.º mes de 1377 (3.er año del rey U de Goryeo).",
+      "title": "Tipos de metal"
+    },
+    "card:story-joseon-records-today": {
+      "blurb": "¿Cómo ayudan hoy los registros de Joseon? Hoya ve una fortaleza reparada a partir de los dibujos de un uigwe, un festival que recrea una procesión real, a científicos que leen antiguas notas del tiempo y los Anales abiertos a todo el mundo en internet.",
+      "fact": "Después de que partes de Hwaseong se dañaran, se reconstruyó para que se viera como al principio, siguiendo el Hwaseong Seongyeok Uigwe, y todavía hoy se repara a partir de ese registro.",
+      "title": "Fortaleza Hwaseong"
+    },
+    "card:story-kim-hongdo-genre-paintings": {
+      "blurb": "Hoya mira de cerca Ssireum y Seodang, del álbum de pinturas costumbristas de Danwon en el Museo Nacional de Corea, y encuentra a un vendedor de melcocha, unos zapatos que alguien se quitó y a un alumno que lloriquea.",
+      "fact": "En la pintura Ssireum, dos luchadores se agarran y miden su fuerza en el centro, rodeados por el público, que se reparte en dos grupos redondeados, uno arriba y otro abajo.",
+      "title": "Pintura costumbrista"
+    },
+    "card:story-nanjung-ilgi": {
+      "blurb": "Hoya abre el diario que el almirante Yi Sunsin escribió casi todos los días de 1592 a 1598, lleno de clima, sentimientos y vida diaria. Hoy es Tesoro Nacional y Memoria del Mundo de la UNESCO.",
+      "fact": "El diario registra, entre otras cosas, observaciones sobre el clima, la vida en el ejército, las opiniones y sentimientos personales del almirante y la vida de la gente común.",
+      "title": "Diario de guerra"
+    },
+    "card:story-pansori-tales": {
+      "blurb": "Hoya va a una función de pansori (UNESCO 2003/2008) y escucha dos de sus cinco obras que se conservan: el bondadoso Heungbu y la golondrina agradecida, y el conejo astuto que escapa del palacio del Rey Dragón. Este cuento coreano es distinto de «La liebre y la tortuga» de Esopo.",
+      "fact": "En el pansori, una sola voz cantante (sorikkun) cuenta una historia larga cantando, hablando y con gestos, con el acompañamiento de quien toca el tambor (gosu), que marca el ritmo en un tambor de barril (buk).",
+      "title": "Pansori"
+    },
+    "card:story-sejong-new-letters": {
+      "blurb": "Hoya viaja a Joseon para descubrir por qué el rey Sejong creó 28 letras nuevas en 1443 y cómo el libro Hunminjeongeum las explicó en 1446.",
+      "fact": "El rey Sejong fue el cuarto rey de la dinastía Joseon; reinó de 1418 a 1450.",
+      "title": "Rey Sejong"
+    },
+    "card:story-seollal-new-year": {
+      "blurb": "Hoya pasa Seollal, el Año Nuevo lunar, con una familia: ropa nueva (seolbim), una reverencia de Año Nuevo (sebae), un plato caliente de tteokguk y una animada partida de yunnori.",
+      "fact": "Las personas mayores que reciben el sebae responden con palabras de buenos deseos (deokdam); a quienes vienen a hacer la reverencia se les da un poco de dinero, o pasteles de arroz y fruta.",
+      "title": "Palabras de buenos deseos"
+    },
+    "card:story-seungjeongwon-ilgi-every-day": {
+      "blurb": "En la Secretaría Real, unos escribanos anotaban la jornada de trabajo del rey, todos los días, incluso el tiempo que hacía. Hoya descubre por qué este diario gigante es un tesoro.",
+      "fact": "El Seungjeongwon era la secretaría del rey; se ocupaba de pasar las órdenes reales a los funcionarios y de llevar las opiniones de los funcionarios al rey (el «chulnap» de las órdenes reales).",
+      "title": "Secretaría Real"
+    },
+    "card:story-shapes-of-hangeul": {
+      "blurb": "Hoya lee el libro Hunminjeongeum Haerye de 1446 y descubre que las cinco consonantes básicas del hangul copian la forma de la lengua, la boca, los dientes y la garganta, y que las vocales básicas vienen del cielo, la tierra y una persona.",
+      "fact": "Las cinco consonantes básicas se hicieron copiando la forma de los órganos del habla que se usan para pronunciar cada sonido.",
+      "title": "Consonantes"
+    },
+    "card:story-sillok-mountain-archives": {
+      "blurb": "Cuando moría un rey, unos funcionarios convertían las notas de los historiadores en los Anales y guardaban los libros en archivos lejanos, en las montañas. Hoya sigue los Anales desde el borrador hasta el archivo de montaña.",
+      "fact": "Después de la guerra (1603–1606), los Anales se reimprimieron a partir de la copia de Jeonju, de modo que hubo cinco juegos en total, guardados en cinco archivos.",
+      "title": "Archivo de historia"
+    },
+    "card:story-sillok-royal-historians": {
+      "blurb": "Hoya descubre quién escribía las palabras de los reyes de Joseon y por qué ni siquiera el rey podía leer sus notas. Una entrada real de 1404 de los Anales muestra con cuánta fidelidad lo registraban.",
+      "fact": "En Joseon, los historiadores reales (sagwan) escribían cada día lo que pasaba en la corte real.",
+      "title": "Historiador real"
+    },
+    "card:story-sun-and-moon": {
+      "blurb": "Una versión suave y simplificada del cuento popular coreano Haenim Dallim: un hermano y una hermana son más listos que un tigre tramposo, suben al cielo por una cuerda y se convierten en el sol y la luna.",
+      "fact": "En el cuento, los hermanos le piden al cielo una cuerda; baja una cuerda nueva y fuerte (dongajul) y suben, mientras que el tigre toma una cuerda podrida que se rompe.",
+      "title": "Cuerda fuerte"
+    },
+    "card:story-tripitaka-koreana": {
+      "blurb": "En el templo Haeinsa, Hoya descubre el Tripitaka Koreana: más de 80.000 planchas de madera con escrituras budistas, talladas entre 1237 y 1248 y todavía bien guardadas hoy.",
+      "fact": "Las planchas del Tripitaka Koreana se guardan en el templo Haeinsa, en la montaña Gayasan, en Hapcheon (provincia de Gyeongsang del Sur), en las salas Beopbojeon y Sudarajang.",
+      "title": "Tripitaka Koreana"
+    },
+    "card:story-uigwe-royal-birthday": {
+      "blurb": "Los uigwe eran informes detallados, llenos de imágenes, sobre ceremonias y proyectos reales. Hoya abre el Wonhaeng Eulmyo Jeongni Uigwe, el registro de la celebración que el rey Jeongjo hizo en 1795 por los 60 años de su madre.",
+      "fact": "Los uigwe registran, con texto e ilustraciones, grandes ceremonias reales y proyectos del Estado, como bodas reales, banquetes, funerales, recepciones de enviados y la reconstrucción de palacios.",
+      "title": "Registro real en imágenes"
     },
     "card:taegeukgi": {
       "blurb": "Un remolino rojo y azul con cuatro símbolos negros. La bandera de Corea.",
@@ -317,6 +438,90 @@ export const OVERLAYS: Overlays = {
       "blurb": "Lanza los cuatro palitos: ¡yut!",
       "fact": "El yunnori, que también se escribe yutnori, se juega el día de Año Nuevo.",
       "title": "Juego de yut"
+    },
+    "episode:shelf-chuseok-ganggangsullae": {
+      "hoyaIntro": "¡Es Chuseok! Hagamos songpyeon y miremos la luna llena.",
+      "title": "Chuseok: songpyeon y la luna llena"
+    },
+    "episode:shelf-dano-ssireum": {
+      "hoyaIntro": "¡Llegó Dano! Vamos a columpiarnos alto, ver una obra de máscaras y animar en el ssireum.",
+      "title": "El día de Dano: columpios, máscaras y ssireum"
+    },
+    "episode:shelf-donguibogam": {
+      "hoyaIntro": "Vamos a conocer a un médico real que escribió un libro enorme sobre cómo cuidar la salud.",
+      "title": "El espejo precioso de la medicina de Heo Jun"
+    },
+    "episode:shelf-gimjang-arirang": {
+      "hoyaIntro": "¡Ya llega el invierno! Preparemos kimchi con el vecindario y escuchemos una canción que se comparte en toda Corea.",
+      "title": "El día del gimjang: compartir kimchi y cantar Arirang"
+    },
+    "episode:shelf-hangeul-day": {
+      "hoyaIntro": "¡Descubramos por qué el hangul tiene su propio día especial!",
+      "title": "¡Feliz Día del Hangul!"
+    },
+    "episode:shelf-ilseongnok-daily-reflection": {
+      "hoyaIntro": "Vamos a leer sobre un joven heredero real que repasaba cada día en su diario.",
+      "title": "El diario de reflexión diaria del rey Jeongjo"
+    },
+    "episode:shelf-janggyeong-panjeon": {
+      "hoyaIntro": "¿Cómo se mantienen a salvo unas planchas de madera antiguas? ¡Preguntémosle al viento de Haeinsa!",
+      "title": "Guardado por el viento"
+    },
+    "episode:shelf-jikji-metal-type": {
+      "hoyaIntro": "¡Visitemos un templo donde imprimieron un libro con tipos de metal!",
+      "title": "Jikji: impreso con tipos de metal"
+    },
+    "episode:shelf-joseon-records-today": {
+      "hoyaIntro": "¿Qué hacen hoy por nosotros los registros antiguos? ¡Vamos a verlo!",
+      "title": "Registros antiguos, nuevos descubrimientos"
+    },
+    "episode:shelf-kim-hongdo-genre-paintings": {
+      "hoyaIntro": "Vamos a mirar de cerca unos cuadros antiguos de la vida diaria. ¿Qué puedes encontrar?",
+      "title": "Los cuadros de la vida diaria de Kim Hongdo"
+    },
+    "episode:shelf-nanjung-ilgi": {
+      "hoyaIntro": "¿Tú escribes un diario? Vamos a abrir el diario del almirante Yi.",
+      "title": "El diario del almirante Yi"
+    },
+    "episode:shelf-pansori-tales": {
+      "hoyaIntro": "¡Escuchemos pansori! Una persona canta y otra toca el tambor para contar dos cuentos antiguos.",
+      "title": "Cuentos de pansori: la golondrina de Heungbu y el conejo astuto (cuentos tradicionales)"
+    },
+    "episode:shelf-sejong-new-letters": {
+      "hoyaIntro": "¡Ven conmigo a Joseon! Descubramos por qué el rey Sejong hizo letras nuevas.",
+      "title": "Las nuevas letras del rey Sejong"
+    },
+    "episode:shelf-seollal-new-year": {
+      "hoyaIntro": "¡Feliz Año Nuevo! Pasa la mañana de Seollal conmigo y con una familia.",
+      "title": "Una mañana de Seollal con Hoya"
+    },
+    "episode:shelf-seungjeongwon-ilgi-every-day": {
+      "hoyaIntro": "Vamos a visitar la Secretaría Real, donde se anotaba la jornada de trabajo del rey.",
+      "title": "El diario de cada día de la Secretaría Real"
+    },
+    "episode:shelf-shapes-of-hangeul": {
+      "hoyaIntro": "¿Sabías que las letras esconden formas secretas? ¡Abramos un libro antiguo y busquémoslas!",
+      "title": "El secreto de las formas"
+    },
+    "episode:shelf-sillok-mountain-archives": {
+      "hoyaIntro": "¿Adónde fueron los Anales para estar a salvo? ¡Vamos a seguirlos hasta las montañas!",
+      "title": "Los Anales se esconden en las montañas"
+    },
+    "episode:shelf-sillok-royal-historians": {
+      "hoyaIntro": "¿Cómo sabemos lo que decían los reyes hace mucho tiempo? ¡Vamos a conocer a quienes lo escribían todo!",
+      "title": "Hoya conoce a los historiadores reales"
+    },
+    "episode:shelf-sun-and-moon": {
+      "hoyaIntro": "¡Hora del cuento! Este es un cuento popular antiguo sobre un hermano, una hermana y un tigre tramposo.",
+      "title": "El sol y la luna (cuento tradicional)"
+    },
+    "episode:shelf-tripitaka-koreana": {
+      "hoyaIntro": "¡Subamos una montaña hasta un templo lleno de planchas de madera talladas!",
+      "title": "Ochenta mil planchas de madera"
+    },
+    "episode:shelf-uigwe-royal-birthday": {
+      "hoyaIntro": "¡Vamos a abrir un informe real lleno de imágenes, hecho para una gran fiesta de cumpleaños!",
+      "title": "Un registro en imágenes de un cumpleaños real"
     },
     "episode:stage1-crafts": {
       "hoyaIntro": "Juguemos al yunnori. ¡Lanza los palitos!",
@@ -655,124 +860,284 @@ export const OVERLAYS: Overlays = {
       "listenPick.rounds.lp-sym-jamo-yu.prompt": "la letra yu"
     },
     "pitem:recog-odd-a-eo": {
-      "gloss": "Encuentra la diferente: a entre eo"
+      "gloss": "Encuentra la diferente: a entre eo",
+      "options.t1.gloss": "letra eo",
+      "options.t2.gloss": "letra eo",
+      "options.t3.gloss": "letra a",
+      "options.t4.gloss": "letra eo"
     },
     "pitem:recog-odd-a-ya": {
-      "gloss": "Encuentra la diferente: a entre ya"
+      "gloss": "Encuentra la diferente: a entre ya",
+      "options.t1.gloss": "letra ya",
+      "options.t2.gloss": "letra ya",
+      "options.t3.gloss": "letra a",
+      "options.t4.gloss": "letra ya"
     },
     "pitem:recog-odd-bieup-mieum": {
-      "gloss": "Encuentra la diferente: bieup entre mieum"
+      "gloss": "Encuentra la diferente: bieup entre mieum",
+      "options.t1.gloss": "letra mieum",
+      "options.t2.gloss": "letra mieum",
+      "options.t3.gloss": "letra bieup",
+      "options.t4.gloss": "letra mieum"
     },
     "pitem:recog-odd-chieut-jieut": {
-      "gloss": "Encuentra la diferente: chieut entre jieut"
+      "gloss": "Encuentra la diferente: chieut entre jieut",
+      "options.t1.gloss": "letra jieut",
+      "options.t2.gloss": "letra jieut",
+      "options.t3.gloss": "letra chieut",
+      "options.t4.gloss": "letra jieut"
     },
     "pitem:recog-odd-digeut-nieun": {
-      "gloss": "Encuentra la diferente: digeut entre nieun"
+      "gloss": "Encuentra la diferente: digeut entre nieun",
+      "options.t1.gloss": "letra nieun",
+      "options.t2.gloss": "letra nieun",
+      "options.t3.gloss": "letra digeut",
+      "options.t4.gloss": "letra nieun"
     },
     "pitem:recog-odd-digeut-rieul": {
-      "gloss": "Encuentra la diferente: digeut entre rieul"
+      "gloss": "Encuentra la diferente: digeut entre rieul",
+      "options.t1.gloss": "letra rieul",
+      "options.t2.gloss": "letra rieul",
+      "options.t3.gloss": "letra digeut",
+      "options.t4.gloss": "letra rieul"
     },
     "pitem:recog-odd-digeut-tieut": {
-      "gloss": "Encuentra la diferente: digeut entre tieut"
+      "gloss": "Encuentra la diferente: digeut entre tieut",
+      "options.t1.gloss": "letra tieut",
+      "options.t2.gloss": "letra tieut",
+      "options.t3.gloss": "letra digeut",
+      "options.t4.gloss": "letra tieut"
     },
     "pitem:recog-odd-eo-a": {
-      "gloss": "Encuentra la diferente: eo entre a"
+      "gloss": "Encuentra la diferente: eo entre a",
+      "options.t1.gloss": "letra a",
+      "options.t2.gloss": "letra a",
+      "options.t3.gloss": "letra eo",
+      "options.t4.gloss": "letra a"
     },
     "pitem:recog-odd-eo-yeo": {
-      "gloss": "Encuentra la diferente: eo entre yeo"
+      "gloss": "Encuentra la diferente: eo entre yeo",
+      "options.t1.gloss": "letra yeo",
+      "options.t2.gloss": "letra yeo",
+      "options.t3.gloss": "letra eo",
+      "options.t4.gloss": "letra yeo"
     },
     "pitem:recog-odd-eu-i": {
-      "gloss": "Encuentra la diferente: eu entre i"
+      "gloss": "Encuentra la diferente: eu entre i",
+      "options.t1.gloss": "letra i",
+      "options.t2.gloss": "letra i",
+      "options.t3.gloss": "letra eu",
+      "options.t4.gloss": "letra i"
     },
     "pitem:recog-odd-giyeok-kieuk": {
-      "gloss": "Encuentra la diferente: giyeok entre kieuk"
+      "gloss": "Encuentra la diferente: giyeok entre kieuk",
+      "options.t1.gloss": "letra kieuk",
+      "options.t2.gloss": "letra kieuk",
+      "options.t3.gloss": "letra giyeok",
+      "options.t4.gloss": "letra kieuk"
     },
     "pitem:recog-odd-giyeok-nieun": {
-      "gloss": "Encuentra la diferente: giyeok entre nieun"
+      "gloss": "Encuentra la diferente: giyeok entre nieun",
+      "options.t1.gloss": "letra nieun",
+      "options.t2.gloss": "letra nieun",
+      "options.t3.gloss": "letra giyeok",
+      "options.t4.gloss": "letra nieun"
     },
     "pitem:recog-odd-hieut-ieung": {
-      "gloss": "Encuentra la diferente: hieut entre ieung"
+      "gloss": "Encuentra la diferente: hieut entre ieung",
+      "options.t1.gloss": "letra ieung",
+      "options.t2.gloss": "letra ieung",
+      "options.t3.gloss": "letra hieut",
+      "options.t4.gloss": "letra ieung"
     },
     "pitem:recog-odd-i-eu": {
-      "gloss": "Encuentra la diferente: i entre eu"
+      "gloss": "Encuentra la diferente: i entre eu",
+      "options.t1.gloss": "letra eu",
+      "options.t2.gloss": "letra eu",
+      "options.t3.gloss": "letra i",
+      "options.t4.gloss": "letra eu"
     },
     "pitem:recog-odd-ieung-hieut": {
-      "gloss": "Encuentra la diferente: ieung entre hieut"
+      "gloss": "Encuentra la diferente: ieung entre hieut",
+      "options.t1.gloss": "letra hieut",
+      "options.t2.gloss": "letra hieut",
+      "options.t3.gloss": "letra ieung",
+      "options.t4.gloss": "letra hieut"
     },
     "pitem:recog-odd-ieung-mieum": {
-      "gloss": "Encuentra la diferente: ieung entre mieum"
+      "gloss": "Encuentra la diferente: ieung entre mieum",
+      "options.t1.gloss": "letra mieum",
+      "options.t2.gloss": "letra mieum",
+      "options.t3.gloss": "letra ieung",
+      "options.t4.gloss": "letra mieum"
     },
     "pitem:recog-odd-ieung-siot": {
-      "gloss": "Encuentra la diferente: ieung entre siot"
+      "gloss": "Encuentra la diferente: ieung entre siot",
+      "options.t1.gloss": "letra siot",
+      "options.t2.gloss": "letra siot",
+      "options.t3.gloss": "letra ieung",
+      "options.t4.gloss": "letra siot"
     },
     "pitem:recog-odd-jieut-chieut": {
-      "gloss": "Encuentra la diferente: jieut entre chieut"
+      "gloss": "Encuentra la diferente: jieut entre chieut",
+      "options.t1.gloss": "letra chieut",
+      "options.t2.gloss": "letra chieut",
+      "options.t3.gloss": "letra jieut",
+      "options.t4.gloss": "letra chieut"
     },
     "pitem:recog-odd-jieut-siot": {
-      "gloss": "Encuentra la diferente: jieut entre siot"
+      "gloss": "Encuentra la diferente: jieut entre siot",
+      "options.t1.gloss": "letra siot",
+      "options.t2.gloss": "letra siot",
+      "options.t3.gloss": "letra jieut",
+      "options.t4.gloss": "letra siot"
     },
     "pitem:recog-odd-kieuk-giyeok": {
-      "gloss": "Encuentra la diferente: kieuk entre giyeok"
+      "gloss": "Encuentra la diferente: kieuk entre giyeok",
+      "options.t1.gloss": "letra giyeok",
+      "options.t2.gloss": "letra giyeok",
+      "options.t3.gloss": "letra kieuk",
+      "options.t4.gloss": "letra giyeok"
     },
     "pitem:recog-odd-mieum-bieup": {
-      "gloss": "Encuentra la diferente: mieum entre bieup"
+      "gloss": "Encuentra la diferente: mieum entre bieup",
+      "options.t1.gloss": "letra bieup",
+      "options.t2.gloss": "letra bieup",
+      "options.t3.gloss": "letra mieum",
+      "options.t4.gloss": "letra bieup"
     },
     "pitem:recog-odd-mieum-ieung": {
-      "gloss": "Encuentra la diferente: mieum entre ieung"
+      "gloss": "Encuentra la diferente: mieum entre ieung",
+      "options.t1.gloss": "letra ieung",
+      "options.t2.gloss": "letra ieung",
+      "options.t3.gloss": "letra mieum",
+      "options.t4.gloss": "letra ieung"
     },
     "pitem:recog-odd-nieun-digeut": {
-      "gloss": "Encuentra la diferente: nieun entre digeut"
+      "gloss": "Encuentra la diferente: nieun entre digeut",
+      "options.t1.gloss": "letra digeut",
+      "options.t2.gloss": "letra digeut",
+      "options.t3.gloss": "letra nieun",
+      "options.t4.gloss": "letra digeut"
     },
     "pitem:recog-odd-nieun-giyeok": {
-      "gloss": "Encuentra la diferente: nieun entre giyeok"
+      "gloss": "Encuentra la diferente: nieun entre giyeok",
+      "options.t1.gloss": "letra giyeok",
+      "options.t2.gloss": "letra giyeok",
+      "options.t3.gloss": "letra nieun",
+      "options.t4.gloss": "letra giyeok"
     },
     "pitem:recog-odd-o-u": {
-      "gloss": "Encuentra la diferente: o entre u"
+      "gloss": "Encuentra la diferente: o entre u",
+      "options.t1.gloss": "letra u",
+      "options.t2.gloss": "letra u",
+      "options.t3.gloss": "letra o",
+      "options.t4.gloss": "letra u"
     },
     "pitem:recog-odd-o-yo": {
-      "gloss": "Encuentra la diferente: o entre yo"
+      "gloss": "Encuentra la diferente: o entre yo",
+      "options.t1.gloss": "letra yo",
+      "options.t2.gloss": "letra yo",
+      "options.t3.gloss": "letra o",
+      "options.t4.gloss": "letra yo"
     },
     "pitem:recog-odd-rieul-digeut": {
-      "gloss": "Encuentra la diferente: rieul entre digeut"
+      "gloss": "Encuentra la diferente: rieul entre digeut",
+      "options.t1.gloss": "letra digeut",
+      "options.t2.gloss": "letra digeut",
+      "options.t3.gloss": "letra rieul",
+      "options.t4.gloss": "letra digeut"
     },
     "pitem:recog-odd-siot-ieung": {
-      "gloss": "Encuentra la diferente: siot entre ieung"
+      "gloss": "Encuentra la diferente: siot entre ieung",
+      "options.t1.gloss": "letra ieung",
+      "options.t2.gloss": "letra ieung",
+      "options.t3.gloss": "letra siot",
+      "options.t4.gloss": "letra ieung"
     },
     "pitem:recog-odd-siot-jieut": {
-      "gloss": "Encuentra la diferente: siot entre jieut"
+      "gloss": "Encuentra la diferente: siot entre jieut",
+      "options.t1.gloss": "letra jieut",
+      "options.t2.gloss": "letra jieut",
+      "options.t3.gloss": "letra siot",
+      "options.t4.gloss": "letra jieut"
     },
     "pitem:recog-odd-tieut-digeut": {
-      "gloss": "Encuentra la diferente: tieut entre digeut"
+      "gloss": "Encuentra la diferente: tieut entre digeut",
+      "options.t1.gloss": "letra digeut",
+      "options.t2.gloss": "letra digeut",
+      "options.t3.gloss": "letra tieut",
+      "options.t4.gloss": "letra digeut"
     },
     "pitem:recog-odd-u-o": {
-      "gloss": "Encuentra la diferente: u entre o"
+      "gloss": "Encuentra la diferente: u entre o",
+      "options.t1.gloss": "letra o",
+      "options.t2.gloss": "letra o",
+      "options.t3.gloss": "letra u",
+      "options.t4.gloss": "letra o"
     },
     "pitem:recog-odd-u-yu": {
-      "gloss": "Encuentra la diferente: u entre yu"
+      "gloss": "Encuentra la diferente: u entre yu",
+      "options.t1.gloss": "letra yu",
+      "options.t2.gloss": "letra yu",
+      "options.t3.gloss": "letra u",
+      "options.t4.gloss": "letra yu"
     },
     "pitem:recog-odd-ya-a": {
-      "gloss": "Encuentra la diferente: ya entre a"
+      "gloss": "Encuentra la diferente: ya entre a",
+      "options.t1.gloss": "letra a",
+      "options.t2.gloss": "letra a",
+      "options.t3.gloss": "letra ya",
+      "options.t4.gloss": "letra a"
     },
     "pitem:recog-odd-ya-yeo": {
-      "gloss": "Encuentra la diferente: ya entre yeo"
+      "gloss": "Encuentra la diferente: ya entre yeo",
+      "options.t1.gloss": "letra yeo",
+      "options.t2.gloss": "letra yeo",
+      "options.t3.gloss": "letra ya",
+      "options.t4.gloss": "letra yeo"
     },
     "pitem:recog-odd-yeo-eo": {
-      "gloss": "Encuentra la diferente: yeo entre eo"
+      "gloss": "Encuentra la diferente: yeo entre eo",
+      "options.t1.gloss": "letra eo",
+      "options.t2.gloss": "letra eo",
+      "options.t3.gloss": "letra yeo",
+      "options.t4.gloss": "letra eo"
     },
     "pitem:recog-odd-yeo-ya": {
-      "gloss": "Encuentra la diferente: yeo entre ya"
+      "gloss": "Encuentra la diferente: yeo entre ya",
+      "options.t1.gloss": "letra ya",
+      "options.t2.gloss": "letra ya",
+      "options.t3.gloss": "letra yeo",
+      "options.t4.gloss": "letra ya"
     },
     "pitem:recog-odd-yo-o": {
-      "gloss": "Encuentra la diferente: yo entre o"
+      "gloss": "Encuentra la diferente: yo entre o",
+      "options.t1.gloss": "letra o",
+      "options.t2.gloss": "letra o",
+      "options.t3.gloss": "letra yo",
+      "options.t4.gloss": "letra o"
     },
     "pitem:recog-odd-yo-yu": {
-      "gloss": "Encuentra la diferente: yo entre yu"
+      "gloss": "Encuentra la diferente: yo entre yu",
+      "options.t1.gloss": "letra yu",
+      "options.t2.gloss": "letra yu",
+      "options.t3.gloss": "letra yo",
+      "options.t4.gloss": "letra yu"
     },
     "pitem:recog-odd-yu-u": {
-      "gloss": "Encuentra la diferente: yu entre u"
+      "gloss": "Encuentra la diferente: yu entre u",
+      "options.t1.gloss": "letra u",
+      "options.t2.gloss": "letra u",
+      "options.t3.gloss": "letra yu",
+      "options.t4.gloss": "letra u"
     },
     "pitem:recog-odd-yu-yo": {
-      "gloss": "Encuentra la diferente: yu entre yo"
+      "gloss": "Encuentra la diferente: yu entre yo",
+      "options.t1.gloss": "letra yo",
+      "options.t2.gloss": "letra yo",
+      "options.t3.gloss": "letra yu",
+      "options.t4.gloss": "letra yo"
     },
     "pitem:sent-n-hear-badayeyo": {
       "gloss": "Es el mar. (escuchar)",
@@ -1143,37 +1508,81 @@ export const OVERLAYS: Overlays = {
       "options.songpyeon.gloss": "Songpyeon"
     },
     "pitem:sound-basic-hear-a": {
-      "gloss": "Escucha \"a\": elige la letra a"
+      "gloss": "Escucha \"a\": elige la letra a",
+      "options.a.gloss": "letra a",
+      "options.eo.gloss": "letra eo",
+      "options.i.gloss": "letra i",
+      "options.ya.gloss": "letra ya"
     },
     "pitem:sound-basic-hear-digeut": {
-      "gloss": "Escucha \"da\": elige la letra digeut"
+      "gloss": "Escucha \"da\": elige la letra digeut",
+      "options.digeut.gloss": "letra digeut",
+      "options.nieun.gloss": "letra nieun",
+      "options.rieul.gloss": "letra rieul",
+      "options.tieut.gloss": "letra tieut"
     },
     "pitem:sound-basic-hear-eo": {
-      "gloss": "Escucha \"eo\": elige la letra eo"
+      "gloss": "Escucha \"eo\": elige la letra eo",
+      "options.a.gloss": "letra a",
+      "options.eo.gloss": "letra eo",
+      "options.o.gloss": "letra o",
+      "options.yeo.gloss": "letra yeo"
     },
     "pitem:sound-basic-hear-eu": {
-      "gloss": "Escucha \"eu\": elige la letra eu"
+      "gloss": "Escucha \"eu\": elige la letra eu",
+      "options.eo.gloss": "letra eo",
+      "options.eu.gloss": "letra eu",
+      "options.i.gloss": "letra i",
+      "options.u.gloss": "letra u"
     },
     "pitem:sound-basic-hear-giyeok": {
-      "gloss": "Escucha \"ga\": elige la letra giyeok"
+      "gloss": "Escucha \"ga\": elige la letra giyeok",
+      "options.digeut.gloss": "letra digeut",
+      "options.giyeok.gloss": "letra giyeok",
+      "options.kieuk.gloss": "letra kieuk",
+      "options.nieun.gloss": "letra nieun"
     },
     "pitem:sound-basic-hear-i": {
-      "gloss": "Escucha \"i\": elige la letra i"
+      "gloss": "Escucha \"i\": elige la letra i",
+      "options.a.gloss": "letra a",
+      "options.eo.gloss": "letra eo",
+      "options.eu.gloss": "letra eu",
+      "options.i.gloss": "letra i"
     },
     "pitem:sound-basic-hear-mieum": {
-      "gloss": "Escucha \"ma\": elige la letra mieum"
+      "gloss": "Escucha \"ma\": elige la letra mieum",
+      "options.bieup.gloss": "letra bieup",
+      "options.ieung.gloss": "letra ieung",
+      "options.mieum.gloss": "letra mieum",
+      "options.nieun.gloss": "letra nieun"
     },
     "pitem:sound-basic-hear-nieun": {
-      "gloss": "Escucha \"na\": elige la letra nieun"
+      "gloss": "Escucha \"na\": elige la letra nieun",
+      "options.digeut.gloss": "letra digeut",
+      "options.giyeok.gloss": "letra giyeok",
+      "options.nieun.gloss": "letra nieun",
+      "options.rieul.gloss": "letra rieul"
     },
     "pitem:sound-basic-hear-o": {
-      "gloss": "Escucha \"o\": elige la letra o"
+      "gloss": "Escucha \"o\": elige la letra o",
+      "options.eo.gloss": "letra eo",
+      "options.o.gloss": "letra o",
+      "options.u.gloss": "letra u",
+      "options.yo.gloss": "letra yo"
     },
     "pitem:sound-basic-hear-rieul": {
-      "gloss": "Escucha \"ra\": elige la letra rieul"
+      "gloss": "Escucha \"ra\": elige la letra rieul",
+      "options.digeut.gloss": "letra digeut",
+      "options.mieum.gloss": "letra mieum",
+      "options.nieun.gloss": "letra nieun",
+      "options.rieul.gloss": "letra rieul"
     },
     "pitem:sound-basic-hear-u": {
-      "gloss": "Escucha \"u\": elige la letra u"
+      "gloss": "Escucha \"u\": elige la letra u",
+      "options.eu.gloss": "letra eu",
+      "options.o.gloss": "letra o",
+      "options.u.gloss": "letra u",
+      "options.yu.gloss": "letra yu"
     },
     "pitem:sound-basic-see-a": {
       "gloss": "Mira la letra a: elige \"a\""
@@ -1209,40 +1618,88 @@ export const OVERLAYS: Overlays = {
       "gloss": "Mira la letra u: elige \"u\""
     },
     "pitem:sound-rest-hear-bieup": {
-      "gloss": "Escucha \"ba\": elige la letra bieup"
+      "gloss": "Escucha \"ba\": elige la letra bieup",
+      "options.bieup.gloss": "letra bieup",
+      "options.mieum.gloss": "letra mieum",
+      "options.pieup.gloss": "letra pieup",
+      "options.siot.gloss": "letra siot"
     },
     "pitem:sound-rest-hear-chieut": {
-      "gloss": "Escucha \"cha\": elige la letra chieut"
+      "gloss": "Escucha \"cha\": elige la letra chieut",
+      "options.chieut.gloss": "letra chieut",
+      "options.hieut.gloss": "letra hieut",
+      "options.jieut.gloss": "letra jieut",
+      "options.siot.gloss": "letra siot"
     },
     "pitem:sound-rest-hear-hieut": {
-      "gloss": "Escucha \"ha\": elige la letra hieut"
+      "gloss": "Escucha \"ha\": elige la letra hieut",
+      "options.chieut.gloss": "letra chieut",
+      "options.hieut.gloss": "letra hieut",
+      "options.ieung.gloss": "letra ieung",
+      "options.siot.gloss": "letra siot"
     },
     "pitem:sound-rest-hear-jieut": {
-      "gloss": "Escucha \"ja\": elige la letra jieut"
+      "gloss": "Escucha \"ja\": elige la letra jieut",
+      "options.chieut.gloss": "letra chieut",
+      "options.giyeok.gloss": "letra giyeok",
+      "options.jieut.gloss": "letra jieut",
+      "options.siot.gloss": "letra siot"
     },
     "pitem:sound-rest-hear-kieuk": {
-      "gloss": "Escucha \"ka\": elige la letra kieuk"
+      "gloss": "Escucha \"ka\": elige la letra kieuk",
+      "options.giyeok.gloss": "letra giyeok",
+      "options.kieuk.gloss": "letra kieuk",
+      "options.pieup.gloss": "letra pieup",
+      "options.tieut.gloss": "letra tieut"
     },
     "pitem:sound-rest-hear-pieup": {
-      "gloss": "Escucha \"pa\": elige la letra pieup"
+      "gloss": "Escucha \"pa\": elige la letra pieup",
+      "options.bieup.gloss": "letra bieup",
+      "options.kieuk.gloss": "letra kieuk",
+      "options.pieup.gloss": "letra pieup",
+      "options.tieut.gloss": "letra tieut"
     },
     "pitem:sound-rest-hear-siot": {
-      "gloss": "Escucha \"sa\": elige la letra siot"
+      "gloss": "Escucha \"sa\": elige la letra siot",
+      "options.chieut.gloss": "letra chieut",
+      "options.ieung.gloss": "letra ieung",
+      "options.jieut.gloss": "letra jieut",
+      "options.siot.gloss": "letra siot"
     },
     "pitem:sound-rest-hear-tieut": {
-      "gloss": "Escucha \"ta\": elige la letra tieut"
+      "gloss": "Escucha \"ta\": elige la letra tieut",
+      "options.digeut.gloss": "letra digeut",
+      "options.kieuk.gloss": "letra kieuk",
+      "options.pieup.gloss": "letra pieup",
+      "options.tieut.gloss": "letra tieut"
     },
     "pitem:sound-rest-hear-ya": {
-      "gloss": "Escucha \"ya\": elige la letra ya"
+      "gloss": "Escucha \"ya\": elige la letra ya",
+      "options.a.gloss": "letra a",
+      "options.ya.gloss": "letra ya",
+      "options.yeo.gloss": "letra yeo",
+      "options.yo.gloss": "letra yo"
     },
     "pitem:sound-rest-hear-yeo": {
-      "gloss": "Escucha \"yeo\": elige la letra yeo"
+      "gloss": "Escucha \"yeo\": elige la letra yeo",
+      "options.eo.gloss": "letra eo",
+      "options.ya.gloss": "letra ya",
+      "options.yeo.gloss": "letra yeo",
+      "options.yu.gloss": "letra yu"
     },
     "pitem:sound-rest-hear-yo": {
-      "gloss": "Escucha \"yo\": elige la letra yo"
+      "gloss": "Escucha \"yo\": elige la letra yo",
+      "options.o.gloss": "letra o",
+      "options.ya.gloss": "letra ya",
+      "options.yo.gloss": "letra yo",
+      "options.yu.gloss": "letra yu"
     },
     "pitem:sound-rest-hear-yu": {
-      "gloss": "Escucha \"yu\": elige la letra yu"
+      "gloss": "Escucha \"yu\": elige la letra yu",
+      "options.u.gloss": "letra u",
+      "options.yeo.gloss": "letra yeo",
+      "options.yo.gloss": "letra yo",
+      "options.yu.gloss": "letra yu"
     },
     "pitem:sound-rest-see-bieup": {
       "gloss": "Mira la letra bieup: elige \"ba\""
@@ -1281,76 +1738,172 @@ export const OVERLAYS: Overlays = {
       "gloss": "Mira la letra yu: elige \"yu\""
     },
     "pitem:syl-cv-build-da": {
-      "gloss": "Forma la sílaba da"
+      "gloss": "Forma la sílaba da",
+      "options.a.gloss": "sílaba a",
+      "options.da.gloss": "sílaba da",
+      "options.du.gloss": "sílaba du",
+      "options.ra.gloss": "sílaba ra"
     },
     "pitem:syl-cv-build-ga": {
-      "gloss": "Forma la sílaba ga"
+      "gloss": "Forma la sílaba ga",
+      "options.ga.gloss": "sílaba ga",
+      "options.geo.gloss": "sílaba geo",
+      "options.na.gloss": "sílaba na",
+      "options.ra.gloss": "sílaba ra"
     },
     "pitem:syl-cv-build-gu": {
-      "gloss": "Forma la sílaba gu"
+      "gloss": "Forma la sílaba gu",
+      "options.ga.gloss": "sílaba ga",
+      "options.go.gloss": "sílaba go",
+      "options.gu.gloss": "sílaba gu",
+      "options.nu.gloss": "sílaba nu"
     },
     "pitem:syl-cv-build-ma": {
-      "gloss": "Forma la sílaba ma"
+      "gloss": "Forma la sílaba ma",
+      "options.ma.gloss": "sílaba ma",
+      "options.meo.gloss": "sílaba meo",
+      "options.meu.gloss": "sílaba meu",
+      "options.ra.gloss": "sílaba ra"
     },
     "pitem:syl-cv-build-mo": {
-      "gloss": "Forma la sílaba mo"
+      "gloss": "Forma la sílaba mo",
+      "options.mi.gloss": "sílaba mi",
+      "options.mo.gloss": "sílaba mo",
+      "options.no.gloss": "sílaba no",
+      "options.o.gloss": "sílaba o"
     },
     "pitem:syl-cv-build-na": {
-      "gloss": "Forma la sílaba na"
+      "gloss": "Forma la sílaba na",
+      "options.da.gloss": "sílaba da",
+      "options.na.gloss": "sílaba na",
+      "options.neu.gloss": "sílaba neu",
+      "options.no.gloss": "sílaba no"
     },
     "pitem:syl-cv-hear-da": {
-      "gloss": "Escucha la sílaba da"
+      "gloss": "Escucha la sílaba da",
+      "options.da.gloss": "sílaba da",
+      "options.deu.gloss": "sílaba deu",
+      "options.ga.gloss": "sílaba ga",
+      "options.ma.gloss": "sílaba ma"
     },
     "pitem:syl-cv-hear-deo": {
-      "gloss": "Escucha la sílaba deo"
+      "gloss": "Escucha la sílaba deo",
+      "options.deo.gloss": "sílaba deo",
+      "options.di.gloss": "sílaba di",
+      "options.do.gloss": "sílaba do",
+      "options.eo.gloss": "sílaba eo"
     },
     "pitem:syl-cv-hear-do": {
-      "gloss": "Escucha la sílaba do"
+      "gloss": "Escucha la sílaba do",
+      "options.da.gloss": "sílaba da",
+      "options.do.gloss": "sílaba do",
+      "options.go.gloss": "sílaba go",
+      "options.ro.gloss": "sílaba ro"
     },
     "pitem:syl-cv-hear-du": {
-      "gloss": "Escucha la sílaba du"
+      "gloss": "Escucha la sílaba du",
+      "options.deo.gloss": "sílaba deo",
+      "options.deu.gloss": "sílaba deu",
+      "options.du.gloss": "sílaba du",
+      "options.nu.gloss": "sílaba nu"
     },
     "pitem:syl-cv-hear-ga": {
-      "gloss": "Escucha la sílaba ga"
+      "gloss": "Escucha la sílaba ga",
+      "options.ga.gloss": "sílaba ga",
+      "options.geo.gloss": "sílaba geo",
+      "options.na.gloss": "sílaba na",
+      "options.ra.gloss": "sílaba ra"
     },
     "pitem:syl-cv-hear-geo": {
-      "gloss": "Escucha la sílaba geo"
+      "gloss": "Escucha la sílaba geo",
+      "options.deo.gloss": "sílaba deo",
+      "options.geo.gloss": "sílaba geo",
+      "options.geu.gloss": "sílaba geu",
+      "options.go.gloss": "sílaba go"
     },
     "pitem:syl-cv-hear-go": {
-      "gloss": "Escucha la sílaba go"
+      "gloss": "Escucha la sílaba go",
+      "options.go.gloss": "sílaba go",
+      "options.gu.gloss": "sílaba gu",
+      "options.o.gloss": "sílaba o",
+      "options.ro.gloss": "sílaba ro"
     },
     "pitem:syl-cv-hear-gu": {
-      "gloss": "Escucha la sílaba gu"
+      "gloss": "Escucha la sílaba gu",
+      "options.ga.gloss": "sílaba ga",
+      "options.geu.gloss": "sílaba geu",
+      "options.gu.gloss": "sílaba gu",
+      "options.mu.gloss": "sílaba mu"
     },
     "pitem:syl-cv-hear-i": {
-      "gloss": "Escucha la sílaba i"
+      "gloss": "Escucha la sílaba i",
+      "options.di.gloss": "sílaba di",
+      "options.eu.gloss": "sílaba eu",
+      "options.i.gloss": "sílaba i",
+      "options.o.gloss": "sílaba o"
     },
     "pitem:syl-cv-hear-ma": {
-      "gloss": "Escucha la sílaba ma"
+      "gloss": "Escucha la sílaba ma",
+      "options.a.gloss": "sílaba a",
+      "options.da.gloss": "sílaba da",
+      "options.ma.gloss": "sílaba ma",
+      "options.mu.gloss": "sílaba mu"
     },
     "pitem:syl-cv-hear-meo": {
-      "gloss": "Escucha la sílaba meo"
+      "gloss": "Escucha la sílaba meo",
+      "options.ma.gloss": "sílaba ma",
+      "options.meo.gloss": "sílaba meo",
+      "options.meu.gloss": "sílaba meu",
+      "options.reo.gloss": "sílaba reo"
     },
     "pitem:syl-cv-hear-mo": {
-      "gloss": "Escucha la sílaba mo"
+      "gloss": "Escucha la sílaba mo",
+      "options.mi.gloss": "sílaba mi",
+      "options.mo.gloss": "sílaba mo",
+      "options.no.gloss": "sílaba no",
+      "options.o.gloss": "sílaba o"
     },
     "pitem:syl-cv-hear-mu": {
-      "gloss": "Escucha la sílaba mu"
+      "gloss": "Escucha la sílaba mu",
+      "options.gu.gloss": "sílaba gu",
+      "options.ma.gloss": "sílaba ma",
+      "options.mo.gloss": "sílaba mo",
+      "options.mu.gloss": "sílaba mu"
     },
     "pitem:syl-cv-hear-na": {
-      "gloss": "Escucha la sílaba na"
+      "gloss": "Escucha la sílaba na",
+      "options.a.gloss": "sílaba a",
+      "options.da.gloss": "sílaba da",
+      "options.na.gloss": "sílaba na",
+      "options.ni.gloss": "sílaba ni"
     },
     "pitem:syl-cv-hear-neo": {
-      "gloss": "Escucha la sílaba neo"
+      "gloss": "Escucha la sílaba neo",
+      "options.geo.gloss": "sílaba geo",
+      "options.na.gloss": "sílaba na",
+      "options.neo.gloss": "sílaba neo",
+      "options.nu.gloss": "sílaba nu"
     },
     "pitem:syl-cv-hear-no": {
-      "gloss": "Escucha la sílaba no"
+      "gloss": "Escucha la sílaba no",
+      "options.do.gloss": "sílaba do",
+      "options.mo.gloss": "sílaba mo",
+      "options.neo.gloss": "sílaba neo",
+      "options.no.gloss": "sílaba no"
     },
     "pitem:syl-cv-hear-nu": {
-      "gloss": "Escucha la sílaba nu"
+      "gloss": "Escucha la sílaba nu",
+      "options.ni.gloss": "sílaba ni",
+      "options.no.gloss": "sílaba no",
+      "options.nu.gloss": "sílaba nu",
+      "options.ru.gloss": "sílaba ru"
     },
     "pitem:syl-cv-hear-ra": {
-      "gloss": "Escucha la sílaba ra"
+      "gloss": "Escucha la sílaba ra",
+      "options.ma.gloss": "sílaba ma",
+      "options.na.gloss": "sílaba na",
+      "options.ra.gloss": "sílaba ra",
+      "options.ro.gloss": "sílaba ro"
     },
     "pitem:syl-cv-see-a": {
       "gloss": "Mira la sílaba a y elige su sonido"
@@ -1389,76 +1942,172 @@ export const OVERLAYS: Overlays = {
       "gloss": "Mira la sílaba u y elige su sonido"
     },
     "pitem:syl-cvc-build-dal": {
-      "gloss": "Forma la sílaba dal"
+      "gloss": "Forma la sílaba dal",
+      "options.dak.gloss": "sílaba dak",
+      "options.dal.gloss": "sílaba dal",
+      "options.dan.gloss": "sílaba dan",
+      "options.deol.gloss": "sílaba deol"
     },
     "pitem:syl-cvc-build-gang": {
-      "gloss": "Forma la sílaba gang"
+      "gloss": "Forma la sílaba gang",
+      "options.gal.gloss": "sílaba gal",
+      "options.gang.gloss": "sílaba gang",
+      "options.gap.gloss": "sílaba gap",
+      "options.ging.gloss": "sílaba ging"
     },
     "pitem:syl-cvc-build-gom": {
-      "gloss": "Forma la sílaba gom"
+      "gloss": "Forma la sílaba gom",
+      "options.gam.gloss": "sílaba gam",
+      "options.gom.gloss": "sílaba gom",
+      "options.gon.gloss": "sílaba gon",
+      "options.gong.gloss": "sílaba gong"
     },
     "pitem:syl-cvc-build-mul": {
-      "gloss": "Forma la sílaba mul"
+      "gloss": "Forma la sílaba mul",
+      "options.meol.gloss": "sílaba meol",
+      "options.mul.gloss": "sílaba mul",
+      "options.mum.gloss": "sílaba mum",
+      "options.mung.gloss": "sílaba mung"
     },
     "pitem:syl-cvc-build-mun": {
-      "gloss": "Forma la sílaba mun"
+      "gloss": "Forma la sílaba mun",
+      "options.mon.gloss": "sílaba mon",
+      "options.muk.gloss": "sílaba muk",
+      "options.mun.gloss": "sílaba mun",
+      "options.mup.gloss": "sílaba mup"
     },
     "pitem:syl-cvc-build-san": {
-      "gloss": "Forma la sílaba san"
+      "gloss": "Forma la sílaba san",
+      "options.sal.gloss": "sílaba sal",
+      "options.sam.gloss": "sílaba sam",
+      "options.san.gloss": "sílaba san",
+      "options.seun.gloss": "sílaba seun"
     },
     "pitem:syl-cvc-hear-bap": {
-      "gloss": "Escucha la sílaba bap"
+      "gloss": "Escucha la sílaba bap",
+      "options.bak.gloss": "sílaba bak",
+      "options.bal.gloss": "sílaba bal",
+      "options.bap.gloss": "sílaba bap",
+      "options.bop.gloss": "sílaba bop"
     },
     "pitem:syl-cvc-hear-bom": {
-      "gloss": "Escucha la sílaba bom"
+      "gloss": "Escucha la sílaba bom",
+      "options.beum.gloss": "sílaba beum",
+      "options.bok.gloss": "sílaba bok",
+      "options.bom.gloss": "sílaba bom",
+      "options.bon.gloss": "sílaba bon"
     },
     "pitem:syl-cvc-hear-byeol": {
-      "gloss": "Escucha la sílaba byeol"
+      "gloss": "Escucha la sílaba byeol",
+      "options.bul.gloss": "sílaba bul",
+      "options.byeol.gloss": "sílaba byeol",
+      "options.byeong.gloss": "sílaba byeong",
+      "options.byeop.gloss": "sílaba byeop"
     },
     "pitem:syl-cvc-hear-dal": {
-      "gloss": "Escucha la sílaba dal"
+      "gloss": "Escucha la sílaba dal",
+      "options.dak.gloss": "sílaba dak",
+      "options.dal.gloss": "sílaba dal",
+      "options.dan.gloss": "sílaba dan",
+      "options.deol.gloss": "sílaba deol"
     },
     "pitem:syl-cvc-hear-gang": {
-      "gloss": "Escucha la sílaba gang"
+      "gloss": "Escucha la sílaba gang",
+      "options.gal.gloss": "sílaba gal",
+      "options.gang.gloss": "sílaba gang",
+      "options.gap.gloss": "sílaba gap",
+      "options.ging.gloss": "sílaba ging"
     },
     "pitem:syl-cvc-hear-gom": {
-      "gloss": "Escucha la sílaba gom"
+      "gloss": "Escucha la sílaba gom",
+      "options.gam.gloss": "sílaba gam",
+      "options.gom.gloss": "sílaba gom",
+      "options.gon.gloss": "sílaba gon",
+      "options.gong.gloss": "sílaba gong"
     },
     "pitem:syl-cvc-hear-gong": {
-      "gloss": "Escucha la sílaba gong"
+      "gloss": "Escucha la sílaba gong",
+      "options.gang.gloss": "sílaba gang",
+      "options.gok.gloss": "sílaba gok",
+      "options.gon.gloss": "sílaba gon",
+      "options.gong.gloss": "sílaba gong"
     },
     "pitem:syl-cvc-hear-guk": {
-      "gloss": "Escucha la sílaba guk"
+      "gloss": "Escucha la sílaba guk",
+      "options.gik.gloss": "sílaba gik",
+      "options.guk.gloss": "sílaba guk",
+      "options.gul.gloss": "sílaba gul",
+      "options.gup.gloss": "sílaba gup"
     },
     "pitem:syl-cvc-hear-hak": {
-      "gloss": "Escucha la sílaba hak"
+      "gloss": "Escucha la sílaba hak",
+      "options.hak.gloss": "sílaba hak",
+      "options.han.gloss": "sílaba han",
+      "options.hang.gloss": "sílaba hang",
+      "options.heok.gloss": "sílaba heok"
     },
     "pitem:syl-cvc-hear-han": {
-      "gloss": "Escucha la sílaba han"
+      "gloss": "Escucha la sílaba han",
+      "options.hal.gloss": "sílaba hal",
+      "options.ham.gloss": "sílaba ham",
+      "options.han.gloss": "sílaba han",
+      "options.heun.gloss": "sílaba heun"
     },
     "pitem:syl-cvc-hear-ip": {
-      "gloss": "Escucha la sílaba ip"
+      "gloss": "Escucha la sílaba ip",
+      "options.im.gloss": "sílaba im",
+      "options.ing.gloss": "sílaba ing",
+      "options.ip.gloss": "sílaba ip",
+      "options.op.gloss": "sílaba op"
     },
     "pitem:syl-cvc-hear-jip": {
-      "gloss": "Escucha la sílaba jip"
+      "gloss": "Escucha la sílaba jip",
+      "options.jim.gloss": "sílaba jim",
+      "options.jing.gloss": "sílaba jing",
+      "options.jip.gloss": "sílaba jip",
+      "options.jop.gloss": "sílaba jop"
     },
     "pitem:syl-cvc-hear-jul": {
-      "gloss": "Escucha la sílaba jul"
+      "gloss": "Escucha la sílaba jul",
+      "options.jeol.gloss": "sílaba jeol",
+      "options.jul.gloss": "sílaba jul",
+      "options.jum.gloss": "sílaba jum",
+      "options.jung.gloss": "sílaba jung"
     },
     "pitem:syl-cvc-hear-mul": {
-      "gloss": "Escucha la sílaba mul"
+      "gloss": "Escucha la sílaba mul",
+      "options.meol.gloss": "sílaba meol",
+      "options.mul.gloss": "sílaba mul",
+      "options.mum.gloss": "sílaba mum",
+      "options.mung.gloss": "sílaba mung"
     },
     "pitem:syl-cvc-hear-mun": {
-      "gloss": "Escucha la sílaba mun"
+      "gloss": "Escucha la sílaba mun",
+      "options.mon.gloss": "sílaba mon",
+      "options.muk.gloss": "sílaba muk",
+      "options.mun.gloss": "sílaba mun",
+      "options.mup.gloss": "sílaba mup"
     },
     "pitem:syl-cvc-hear-nun": {
-      "gloss": "Escucha la sílaba nun"
+      "gloss": "Escucha la sílaba nun",
+      "options.neon.gloss": "sílaba neon",
+      "options.num.gloss": "sílaba num",
+      "options.nun.gloss": "sílaba nun",
+      "options.nung.gloss": "sílaba nung"
     },
     "pitem:syl-cvc-hear-san": {
-      "gloss": "Escucha la sílaba san"
+      "gloss": "Escucha la sílaba san",
+      "options.sal.gloss": "sílaba sal",
+      "options.sam.gloss": "sílaba sam",
+      "options.san.gloss": "sílaba san",
+      "options.seun.gloss": "sílaba seun"
     },
     "pitem:syl-cvc-hear-yeon": {
-      "gloss": "Escucha la sílaba yeon"
+      "gloss": "Escucha la sílaba yeon",
+      "options.an.gloss": "sílaba an",
+      "options.yeok.gloss": "sílaba yeok",
+      "options.yeon.gloss": "sílaba yeon",
+      "options.yeop.gloss": "sílaba yeop"
     },
     "pitem:syl-cvc-see-bap": {
       "gloss": "Mira la sílaba bap y elige su sonido"
@@ -2105,6 +2754,326 @@ export const OVERLAYS: Overlays = {
       "steps.s6.title": "¡Tarjeta de la reverencia!",
       "title": "El hanbok y la reverencia"
     },
+    "quest:story-chuseok-ganggangsullae-listen": {
+      "steps.s1.hoyaLine": "¡Es Chuseok! Hagamos songpyeon y miremos la luna llena.",
+      "steps.s1.title": "Hora del cuento",
+      "steps.s2.title": "Lee la historia",
+      "steps.s3.title": "Unas preguntas",
+      "steps.s4.title": "Ordena la historia",
+      "steps.s5.hoyaLine": "Songpyeon, la luna llena y un baile en círculo. ¡Feliz Chuseok!",
+      "steps.s5.title": "Bien hecho",
+      "title": "Chuseok: songpyeon y la luna llena"
+    },
+    "quest:story-chuseok-ganggangsullae-read": {
+      "steps.s1.hoyaLine": "¡Es Chuseok! Hagamos songpyeon y miremos la luna llena.",
+      "steps.s1.title": "Hora del cuento",
+      "steps.s2.title": "Lee la historia",
+      "steps.s3.title": "Unas preguntas",
+      "steps.s4.title": "Ordena la historia",
+      "steps.s5.hoyaLine": "Songpyeon, la luna llena y un baile en círculo. ¡Feliz Chuseok!",
+      "steps.s5.title": "Bien hecho",
+      "title": "Chuseok: songpyeon y la luna llena"
+    },
+    "quest:story-dano-ssireum-listen": {
+      "steps.s1.hoyaLine": "¡Llegó Dano! Vamos a columpiarnos alto, ver una obra de máscaras y animar en el ssireum.",
+      "steps.s1.title": "Hora del cuento",
+      "steps.s2.title": "Lee la historia",
+      "steps.s3.title": "Unas preguntas",
+      "steps.s4.title": "Ordena la historia",
+      "steps.s5.hoyaLine": "Columpios, máscaras y ssireum: ¡qué divertido día de Dano!",
+      "steps.s5.title": "Bien hecho",
+      "title": "El día de Dano: columpios, máscaras y ssireum"
+    },
+    "quest:story-dano-ssireum-read": {
+      "steps.s1.hoyaLine": "¡Llegó Dano! Vamos a columpiarnos alto, ver una obra de máscaras y animar en el ssireum.",
+      "steps.s1.title": "Hora del cuento",
+      "steps.s2.title": "Lee la historia",
+      "steps.s3.title": "Unas preguntas",
+      "steps.s4.title": "Ordena la historia",
+      "steps.s5.hoyaLine": "Columpios, máscaras y ssireum: ¡qué divertido día de Dano!",
+      "steps.s5.title": "Bien hecho",
+      "title": "El día de Dano: columpios, máscaras y ssireum"
+    },
+    "quest:story-donguibogam-listen": {
+      "steps.s1.hoyaLine": "Vamos a conocer a un médico real que escribió un libro enorme sobre cómo cuidar la salud.",
+      "steps.s1.title": "Hora del cuento",
+      "steps.s2.title": "Lee la historia",
+      "steps.s3.title": "Unas preguntas",
+      "steps.s4.title": "Ordena la historia",
+      "steps.s5.hoyaLine": "El libro de Heo Jun ayudó a la gente a cuidar su cuerpo. ¡Estírate conmigo y cuida tu salud!",
+      "steps.s5.title": "Bien hecho",
+      "title": "El espejo precioso de la medicina de Heo Jun"
+    },
+    "quest:story-donguibogam-read": {
+      "steps.s1.hoyaLine": "Vamos a conocer a un médico real que escribió un libro enorme sobre cómo cuidar la salud.",
+      "steps.s1.title": "Hora del cuento",
+      "steps.s2.title": "Lee la historia",
+      "steps.s3.title": "Unas preguntas",
+      "steps.s4.title": "Ordena la historia",
+      "steps.s5.hoyaLine": "El libro de Heo Jun ayudó a la gente a cuidar su cuerpo. ¡Estírate conmigo y cuida tu salud!",
+      "steps.s5.title": "Bien hecho",
+      "title": "El espejo precioso de la medicina de Heo Jun"
+    },
+    "quest:story-gimjang-arirang-listen": {
+      "steps.s1.hoyaLine": "¡Ya llega el invierno! Preparemos kimchi con el vecindario y escuchemos una canción que se comparte en toda Corea.",
+      "steps.s1.title": "Hora del cuento",
+      "steps.s2.title": "Lee la historia",
+      "steps.s3.title": "Unas preguntas",
+      "steps.s4.title": "Ordena la historia",
+      "steps.s5.hoyaLine": "Preparar kimchi en grupo y cantar Arirang: ¡compartir lo hace especial!",
+      "steps.s5.title": "Bien hecho",
+      "title": "El día del gimjang: compartir kimchi y cantar Arirang"
+    },
+    "quest:story-gimjang-arirang-read": {
+      "steps.s1.hoyaLine": "¡Ya llega el invierno! Preparemos kimchi con el vecindario y escuchemos una canción que se comparte en toda Corea.",
+      "steps.s1.title": "Hora del cuento",
+      "steps.s2.title": "Lee la historia",
+      "steps.s3.title": "Unas preguntas",
+      "steps.s4.title": "Ordena la historia",
+      "steps.s5.hoyaLine": "Preparar kimchi en grupo y cantar Arirang: ¡compartir lo hace especial!",
+      "steps.s5.title": "Bien hecho",
+      "title": "El día del gimjang: compartir kimchi y cantar Arirang"
+    },
+    "quest:story-hangeul-day-listen": {
+      "steps.s1.hoyaLine": "¡Descubramos por qué el hangul tiene su propio día especial!",
+      "steps.s1.title": "Hora del cuento",
+      "steps.s2.title": "Lee la historia",
+      "steps.s3.title": "Unas preguntas",
+      "steps.s4.title": "Ordena la historia",
+      "steps.s5.hoyaLine": "¡Feliz Día del Hangul! Ahora sabes por qué Corea del Sur lo celebra cada octubre.",
+      "steps.s5.title": "¡Bien hecho!",
+      "title": "¡Feliz Día del Hangul!"
+    },
+    "quest:story-hangeul-day-read": {
+      "steps.s1.hoyaLine": "¡Descubramos por qué el hangul tiene su propio día especial!",
+      "steps.s1.title": "Hora del cuento",
+      "steps.s2.title": "Lee la historia",
+      "steps.s3.title": "Unas preguntas",
+      "steps.s4.title": "Ordena la historia",
+      "steps.s5.hoyaLine": "¡Feliz Día del Hangul! Ahora sabes por qué Corea del Sur lo celebra cada octubre.",
+      "steps.s5.title": "¡Bien hecho!",
+      "title": "¡Feliz Día del Hangul!"
+    },
+    "quest:story-ilseongnok-daily-reflection-listen": {
+      "steps.s1.hoyaLine": "Vamos a leer sobre un joven heredero real que repasaba cada día en su diario.",
+      "steps.s1.title": "Hora del cuento",
+      "steps.s2.title": "Lee la historia",
+      "steps.s3.title": "Unas preguntas",
+      "steps.s4.title": "Ordena la historia",
+      "steps.s5.hoyaLine": "Repasar cada día ayudó a Jeongjo. ¿Qué te salió bien hoy?",
+      "steps.s5.title": "Muy bien",
+      "title": "El diario de reflexión diaria del rey Jeongjo"
+    },
+    "quest:story-janggyeong-panjeon-listen": {
+      "steps.s1.hoyaLine": "¿Cómo se mantienen a salvo unas planchas de madera antiguas? ¡Preguntémosle al viento de Haeinsa!",
+      "steps.s1.title": "Hora del cuento",
+      "steps.s2.title": "Lee la historia",
+      "steps.s3.title": "Unas preguntas",
+      "steps.s4.title": "Ordena la historia",
+      "steps.s5.hoyaLine": "Ventanas, pisos y aire fresco mantienen a salvo las planchas. ¡Gracias por explorar conmigo!",
+      "steps.s5.title": "¡Bien hecho!",
+      "title": "Guardado por el viento"
+    },
+    "quest:story-jikji-metal-type-listen": {
+      "steps.s1.hoyaLine": "¡Visitemos un templo donde imprimieron un libro con tipos de metal!",
+      "steps.s1.title": "Hora del cuento",
+      "steps.s2.title": "Lee la historia",
+      "steps.s3.title": "Unas preguntas",
+      "steps.s4.title": "Ordena la historia",
+      "steps.s5.hoyaLine": "¡Ahora conoces la historia del Jikji y de los tipos de metal que lo imprimieron!",
+      "steps.s5.title": "¡Bien hecho!",
+      "title": "Jikji: impreso con tipos de metal"
+    },
+    "quest:story-joseon-records-today-listen": {
+      "steps.s1.hoyaLine": "¿Qué hacen hoy por nosotros los registros antiguos? ¡Vamos a verlo!",
+      "steps.s1.title": "Hora del cuento",
+      "steps.s2.title": "Lee la historia",
+      "steps.s3.title": "Unas preguntas",
+      "steps.s4.title": "Ordena la historia",
+      "steps.s5.hoyaLine": "Los registros escritos hace mucho tiempo todavía nos ayudan hoy. ¿Qué vas a escribir tú?",
+      "steps.s5.title": "Muy bien",
+      "title": "Registros antiguos, nuevos descubrimientos"
+    },
+    "quest:story-kim-hongdo-genre-paintings-listen": {
+      "steps.s1.hoyaLine": "Vamos a mirar de cerca unos cuadros antiguos de la vida diaria. ¿Qué puedes encontrar?",
+      "steps.s1.title": "Hora del cuento",
+      "steps.s2.title": "Lee la historia",
+      "steps.s3.title": "Unas preguntas",
+      "steps.s4.title": "Ordena la historia",
+      "steps.s5.hoyaLine": "Un vendedor de melcocha, unos zapatos que alguien se quitó, un alumno que lloriquea: ¡qué buena vista tienes!",
+      "steps.s5.title": "Bien hecho",
+      "title": "Los cuadros de la vida diaria de Kim Hongdo"
+    },
+    "quest:story-kim-hongdo-genre-paintings-read": {
+      "steps.s1.hoyaLine": "Vamos a mirar de cerca unos cuadros antiguos de la vida diaria. ¿Qué puedes encontrar?",
+      "steps.s1.title": "Hora del cuento",
+      "steps.s2.title": "Lee la historia",
+      "steps.s3.title": "Unas preguntas",
+      "steps.s4.title": "Ordena la historia",
+      "steps.s5.hoyaLine": "Un vendedor de melcocha, unos zapatos que alguien se quitó, un alumno que lloriquea: ¡qué buena vista tienes!",
+      "steps.s5.title": "Bien hecho",
+      "title": "Los cuadros de la vida diaria de Kim Hongdo"
+    },
+    "quest:story-nanjung-ilgi-listen": {
+      "steps.s1.hoyaLine": "¿Tú escribes un diario? Vamos a abrir el diario del almirante Yi.",
+      "steps.s1.title": "Hora del cuento",
+      "steps.s2.title": "Lee la historia",
+      "steps.s3.title": "Unas preguntas",
+      "steps.s4.title": "Ordena la historia",
+      "steps.s5.hoyaLine": "El clima, los sentimientos y la vida diaria: el almirante Yi lo escribió todo. ¡Tal vez tú también puedas llevar un diario!",
+      "steps.s5.title": "Bien hecho",
+      "title": "El diario del almirante Yi"
+    },
+    "quest:story-pansori-tales-listen": {
+      "steps.s1.hoyaLine": "¡Escuchemos pansori! Una persona canta y otra toca el tambor para contar dos cuentos antiguos.",
+      "steps.s1.title": "Hora del cuento",
+      "steps.s2.title": "Lee la historia",
+      "steps.s3.title": "Unas preguntas",
+      "steps.s4.title": "Ordena la historia",
+      "steps.s5.hoyaLine": "Un hermano bondadoso, una golondrina agradecida y un conejo astuto. ¡Eolssigu, qué gran función!",
+      "steps.s5.title": "Bien hecho",
+      "title": "Cuentos de pansori: la golondrina de Heungbu y el conejo astuto (cuentos tradicionales)"
+    },
+    "quest:story-pansori-tales-read": {
+      "steps.s1.hoyaLine": "¡Escuchemos pansori! Una persona canta y otra toca el tambor para contar dos cuentos antiguos.",
+      "steps.s1.title": "Hora del cuento",
+      "steps.s2.title": "Lee la historia",
+      "steps.s3.title": "Unas preguntas",
+      "steps.s4.title": "Ordena la historia",
+      "steps.s5.hoyaLine": "Un hermano bondadoso, una golondrina agradecida y un conejo astuto. ¡Eolssigu, qué gran función!",
+      "steps.s5.title": "Bien hecho",
+      "title": "Cuentos de pansori: la golondrina de Heungbu y el conejo astuto (cuentos tradicionales)"
+    },
+    "quest:story-sejong-new-letters-listen": {
+      "steps.s1.hoyaLine": "¡Ven conmigo a Joseon! Descubramos por qué el rey Sejong hizo letras nuevas.",
+      "steps.s1.title": "Hora del cuento",
+      "steps.s2.title": "Lee la historia",
+      "steps.s3.title": "Unas preguntas",
+      "steps.s4.title": "Ordena la historia",
+      "steps.s5.hoyaLine": "Ahora sabes dónde empezó el hangul. El rey Sejong hizo letras para todo el mundo, ¡y tú las estás leyendo!",
+      "steps.s5.title": "¡Bien hecho!",
+      "title": "Las nuevas letras del rey Sejong"
+    },
+    "quest:story-sejong-new-letters-read": {
+      "steps.s1.hoyaLine": "¡Ven conmigo a Joseon! Descubramos por qué el rey Sejong hizo letras nuevas.",
+      "steps.s1.title": "Hora del cuento",
+      "steps.s2.title": "Lee la historia",
+      "steps.s3.title": "Unas preguntas",
+      "steps.s4.title": "Ordena la historia",
+      "steps.s5.hoyaLine": "Ahora sabes dónde empezó el hangul. El rey Sejong hizo letras para todo el mundo, ¡y tú las estás leyendo!",
+      "steps.s5.title": "¡Bien hecho!",
+      "title": "Las nuevas letras del rey Sejong"
+    },
+    "quest:story-seollal-new-year-listen": {
+      "steps.s1.hoyaLine": "¡Feliz Año Nuevo! Pasa la mañana de Seollal conmigo y con una familia.",
+      "steps.s1.title": "Hora del cuento",
+      "steps.s2.title": "Lee la historia",
+      "steps.s3.title": "Unas preguntas",
+      "steps.s4.title": "Ordena la historia",
+      "steps.s5.hoyaLine": "Ropa nueva, una reverencia de Año Nuevo, un plato de tteokguk y una partida de yunnori. ¡Qué Seollal tan feliz!",
+      "steps.s5.title": "Bien hecho",
+      "title": "Una mañana de Seollal con Hoya"
+    },
+    "quest:story-seollal-new-year-read": {
+      "steps.s1.hoyaLine": "¡Feliz Año Nuevo! Pasa la mañana de Seollal conmigo y con una familia.",
+      "steps.s1.title": "Hora del cuento",
+      "steps.s2.title": "Lee la historia",
+      "steps.s3.title": "Unas preguntas",
+      "steps.s4.title": "Ordena la historia",
+      "steps.s5.hoyaLine": "Ropa nueva, una reverencia de Año Nuevo, un plato de tteokguk y una partida de yunnori. ¡Qué Seollal tan feliz!",
+      "steps.s5.title": "Bien hecho",
+      "title": "Una mañana de Seollal con Hoya"
+    },
+    "quest:story-seungjeongwon-ilgi-every-day-listen": {
+      "steps.s1.hoyaLine": "Vamos a visitar la Secretaría Real, donde se anotaba la jornada de trabajo del rey.",
+      "steps.s1.title": "Hora del cuento",
+      "steps.s2.title": "Lee la historia",
+      "steps.s3.title": "Unas preguntas",
+      "steps.s4.title": "Ordena la historia",
+      "steps.s5.hoyaLine": "¡Hasta el tiempo que hacía entraba en el diario! Ahora sabes por qué es un tesoro.",
+      "steps.s5.title": "Muy bien",
+      "title": "El diario de cada día de la Secretaría Real"
+    },
+    "quest:story-shapes-of-hangeul-listen": {
+      "steps.s1.hoyaLine": "¿Sabías que las letras esconden formas secretas? ¡Abramos un libro antiguo y busquémoslas!",
+      "steps.s1.title": "Hora del cuento",
+      "steps.s2.title": "Lee la historia",
+      "steps.s3.title": "Unas preguntas",
+      "steps.s4.title": "Ordena la historia",
+      "steps.s5.hoyaLine": "Lengua, boca, dientes, garganta, cielo, tierra y una persona: ¡encontraste los secretos de las formas!",
+      "steps.s5.title": "¡Bien hecho!",
+      "title": "El secreto de las formas"
+    },
+    "quest:story-shapes-of-hangeul-read": {
+      "steps.s1.hoyaLine": "¿Sabías que las letras esconden formas secretas? ¡Abramos un libro antiguo y busquémoslas!",
+      "steps.s1.title": "Hora del cuento",
+      "steps.s2.title": "Lee la historia",
+      "steps.s3.title": "Unas preguntas",
+      "steps.s4.title": "Ordena la historia",
+      "steps.s5.hoyaLine": "Lengua, boca, dientes, garganta, cielo, tierra y una persona: ¡encontraste los secretos de las formas!",
+      "steps.s5.title": "¡Bien hecho!",
+      "title": "El secreto de las formas"
+    },
+    "quest:story-sillok-mountain-archives-listen": {
+      "steps.s1.hoyaLine": "¿Adónde fueron los Anales para estar a salvo? ¡Vamos a seguirlos hasta las montañas!",
+      "steps.s1.title": "Hora del cuento",
+      "steps.s2.title": "Lee la historia",
+      "steps.s3.title": "Unas preguntas",
+      "steps.s4.title": "Ordena la historia",
+      "steps.s5.hoyaLine": "De las notas a los libros y a los archivos de montaña: ¡seguiste los Anales todo el camino!",
+      "steps.s5.title": "Muy bien",
+      "title": "Los Anales se esconden en las montañas"
+    },
+    "quest:story-sillok-royal-historians-listen": {
+      "steps.s1.hoyaLine": "¿Cómo sabemos lo que decían los reyes hace mucho tiempo? ¡Vamos a conocer a quienes lo escribían todo!",
+      "steps.s1.title": "Hora del cuento",
+      "steps.s2.title": "Lee la historia",
+      "steps.s3.title": "Unas preguntas",
+      "steps.s4.title": "Ordena la historia",
+      "steps.s5.hoyaLine": "Los historiadores lo escribían todo, día tras día. ¡Ahora sabes de dónde vienen los Anales!",
+      "steps.s5.title": "Muy bien",
+      "title": "Hoya conoce a los historiadores reales"
+    },
+    "quest:story-sun-and-moon-listen": {
+      "steps.s1.hoyaLine": "¡Hora del cuento! Este es un cuento popular antiguo sobre un hermano, una hermana y un tigre tramposo.",
+      "steps.s1.title": "Hora del cuento",
+      "steps.s2.title": "Lee la historia",
+      "steps.s3.title": "Unas preguntas",
+      "steps.s4.title": "Ordena la historia",
+      "steps.s5.hoyaLine": "El hermano y la hermana están a salvo en el cielo. ¡Y así termina nuestro cuento!",
+      "steps.s5.title": "Bien hecho",
+      "title": "El sol y la luna (cuento tradicional)"
+    },
+    "quest:story-sun-and-moon-read": {
+      "steps.s1.hoyaLine": "¡Hora del cuento! Este es un cuento popular antiguo sobre un hermano, una hermana y un tigre tramposo.",
+      "steps.s1.title": "Hora del cuento",
+      "steps.s2.title": "Lee la historia",
+      "steps.s3.title": "Unas preguntas",
+      "steps.s4.title": "Ordena la historia",
+      "steps.s5.hoyaLine": "El hermano y la hermana están a salvo en el cielo. ¡Y así termina nuestro cuento!",
+      "steps.s5.title": "Bien hecho",
+      "title": "El sol y la luna (cuento tradicional)"
+    },
+    "quest:story-tripitaka-koreana-listen": {
+      "steps.s1.hoyaLine": "¡Subamos una montaña hasta un templo lleno de planchas de madera talladas!",
+      "steps.s1.title": "Hora del cuento",
+      "steps.s2.title": "Lee la historia",
+      "steps.s3.title": "Unas preguntas",
+      "steps.s4.title": "Ordena la historia",
+      "steps.s5.hoyaLine": "Tantas planchas, talladas hace tanto tiempo y todavía a salvo hoy. ¡Gracias por explorar Haeinsa conmigo!",
+      "steps.s5.title": "¡Bien hecho!",
+      "title": "Ochenta mil planchas de madera"
+    },
+    "quest:story-uigwe-royal-birthday-listen": {
+      "steps.s1.hoyaLine": "¡Vamos a abrir un informe real lleno de imágenes, hecho para una gran fiesta de cumpleaños!",
+      "steps.s1.title": "Hora del cuento",
+      "steps.s2.title": "Lee la historia",
+      "steps.s3.title": "Unas preguntas",
+      "steps.s4.title": "Ordena la historia",
+      "steps.s5.hoyaLine": "Las palabras y las imágenes mantuvieron viva la celebración real. ¡Ahora sabes qué es un uigwe!",
+      "steps.s5.title": "Muy bien",
+      "title": "Un registro en imágenes de un cumpleaños real"
+    },
     "stage:stage1": {
       "anchorSkill": "Reconoce 24 jamo y 6 batchim con ≥90 % de acierto",
       "oneLiner": "Conoce cada letra coreana y su sonido.",
@@ -2139,6 +3108,1330 @@ export const OVERLAYS: Overlays = {
       "anchorSkill": "Graba una presentación personal de 1 minuto",
       "oneLiner": "Di lo que piensas, sientes y creas, en coreano.",
       "title": "Expresión personal"
+    },
+    "story:chuseok-ganggangsullae": {
+      "checks.c1.explain": "Los songpyeon se cuecen al vapor sobre una capa de agujas de pino. Se dice que el aroma del pino los hace más sabrosos.",
+      "checks.c1.options.a": "Hojas de plátano o banana",
+      "checks.c1.options.b": "Hojas de loto",
+      "checks.c1.options.c": "Hojas de papel",
+      "checks.c1.options.d": "Agujas de pino",
+      "checks.c1.prompt": "¿Sobre qué se cuecen al vapor los songpyeon?",
+      "checks.c2.explain": "En el Ganggangsullae, las mujeres se toman de la mano y se mueven en círculo mientras cantan.",
+      "checks.c2.options.a": "En dos filas, frente a frente",
+      "checks.c2.options.b": "Una por una, sola en el centro",
+      "checks.c2.options.c": "De la mano, en un círculo",
+      "checks.c2.options.d": "Sentadas en filas, aplaudiendo",
+      "checks.c2.prompt": "En el baile Ganggangsullae, ¿cómo se mueven las mujeres?",
+      "checks.c3.explain": "Hangawi es el nombre coreano nativo de Chuseok.",
+      "checks.c3.options.a": "Hangawi",
+      "checks.c3.options.b": "Songpyeon",
+      "checks.c3.options.c": "Boreumdal",
+      "checks.c3.options.d": "Charye",
+      "checks.c3.prompt": "¿Cuál es el nombre coreano nativo de Chuseok?",
+      "checks.r1.explain": "Boreumdal significa luna llena. En la noche de Chuseok sale una gran luna llena.",
+      "checks.r1.options.a": "Media luna",
+      "checks.r1.options.b": "Luna llena",
+      "checks.r1.options.c": "Amanecer",
+      "checks.r1.options.d": "Pino",
+      "checks.r1.prompt": "¿Qué significa {target}?",
+      "checks.r2.explain": "Gohyang significa pueblo natal. Mucha gente vuelve a su pueblo natal en Chuseok.",
+      "checks.r2.options.a": "Cosecha",
+      "checks.r2.options.b": "Fiesta",
+      "checks.r2.options.c": "Pastel de arroz",
+      "checks.r2.options.d": "Pueblo natal",
+      "checks.r2.prompt": "¿Qué significa {target}?",
+      "checks.r3.explain": "Los songpyeon se cuecen al vapor sobre una capa de agujas de pino.",
+      "checks.r3.options.a": "Agujas de pino",
+      "checks.r3.options.b": "Hojas de loto",
+      "checks.r3.options.c": "Hojas de plátano o banana",
+      "checks.r3.options.d": "Hojas de papel",
+      "checks.r3.prompt": "En la historia, ¿sobre qué se cuecen al vapor los songpyeon?",
+      "facts.f1.claim": "Chuseok es el día 15 del octavo mes lunar. Llega cuando empieza la cosecha, y es el momento de dar gracias por las cosechas del año.",
+      "facts.f10.claim": "El baile toma su nombre de su estribillo, pero no se sabe el significado exacto de la palabra «ganggangsullae».",
+      "facts.f11.claim": "El Ganggangsullae fue inscrito en la Lista Representativa del Patrimonio Cultural Inmaterial de la Humanidad de la UNESCO en 2009.",
+      "facts.f12.claim": "El libro Yeoryang sesigi, de la era Joseon (de Gim Mae-sun), recoge que la gente decía, en caracteres chinos, «Ni más ni menos, que siempre sea como Hangawi»; la forma moderna conocida en coreano es «Deodo malgo deoldo malgo hangawiman gatara».",
+      "facts.f2.claim": "Hangawi es el nombre coreano nativo (puro) de Chuseok.",
+      "facts.f3.claim": "Mucha gente en Corea vuelve a su pueblo natal en Chuseok; los ritos a los antepasados en casa (charye) y las visitas a sus tumbas (seongmyo) son las dos costumbres que definen Chuseok.",
+      "facts.f4.claim": "La víspera de Chuseok (el día 14), las familias se reúnen bajo la luna brillante para hacer songpyeon, pasteles de masa de arroz con rellenos como frijoles, sésamo o castañas; hechos con grano de la nueva cosecha, saben especialmente bien.",
+      "facts.f5.claim": "Los songpyeon suelen tener forma de media luna y se cuecen al vapor sobre una capa de agujas de pino; se dice que el aroma del pino hace más sabroso el pastel de arroz.",
+      "facts.f6.claim": "En la vida agrícola tradicional, la luna llena de Chuseok era un símbolo de abundancia, y a Chuseok incluso se le llamaba «la fiesta de la luna».",
+      "facts.f7.claim": "En el Ganggangsullae, que se baila en noches de luna alrededor de Chuseok, las mujeres se toman de la mano y se mueven en círculo; una voz principal canta un verso y las demás responden «Ganggangsullae», y el canto y el baile empiezan lentos y se aceleran hasta que el grupo casi corre.",
+      "facts.f8.claim": "El Ganggangsullae incluye juegos populares que lo acompañan, como «recoger helechos» (gosari-kkeokgi) y «atar arenques» (cheongeo-yeokgi).",
+      "facts.f9.claim": "Tradicionalmente, el Ganggangsullae se ha hecho sobre todo en la costa suroeste de Corea (la costa de Jeollanam-do). Su origen exacto es incierto; el Servicio de Patrimonio de Corea considera más probable un origen en antiguas fiestas de noches de luna que la popular historia del almirante Yi Sun-sin.",
+      "hoyaIntro": "¡Es Chuseok! Hagamos songpyeon y miremos la luna llena.",
+      "hoyaOutro": "Songpyeon, la luna llena y un baile en círculo. ¡Feliz Chuseok!",
+      "keywords.boreumdal.gloss": "luna llena",
+      "keywords.charye.gloss": "rito a los antepasados en casa",
+      "keywords.chuseok.gloss": "Chuseok (fiesta de la cosecha)",
+      "keywords.dal.gloss": "luna",
+      "keywords.deodo-malgo-deoldo-malgo-hangawiman-gatara.gloss": "Ni más ni menos: que siempre sea como Hangawi. (la forma moderna conocida)",
+      "keywords.ganggangsullae.gloss": "baile en círculo Ganggangsullae",
+      "keywords.gohyang.gloss": "pueblo natal",
+      "keywords.hangawi.gloss": "Hangawi (nombre coreano nativo de Chuseok)",
+      "keywords.nori.gloss": "juego; jugar",
+      "keywords.sollip.gloss": "agujas de pino",
+      "keywords.songpyeon.gloss": "pasteles de arroz de Chuseok",
+      "scenes.s7.caption": "Juegos entre los bailes",
+      "scenes.s7.narration": "Entre baile y baile hay juegos con nombres divertidos, como «recoger helechos» y «atar arenques». Este baile se practica desde hace mucho en la costa suroeste de Corea. ¡Y nadie sabe exactamente qué significa la palabra «ganggangsullae»!",
+      "scenes.s8.caption": "La lista de la UNESCO y un viejo dicho de Hangawi",
+      "scenes.s8.narration": "En 2009, la UNESCO agregó el Ganggangsullae a su lista de patrimonio. El libro Yeoryang sesigi, de la era Joseon, recoge un viejo dicho así: «¡Ni más ni menos, que siempre sea como Hangawi!»",
+      "summary": "En Chuseok (Hangawi), Hoya acompaña a una familia que vuelve a su pueblo natal, prepara songpyeon cocidos al vapor sobre agujas de pino y mira a las mujeres bailar el Ganggangsullae de la mano bajo la luna llena.",
+      "title": "Chuseok: songpyeon y la luna llena"
+    },
+    "story:dano-ssireum": {
+      "checks.c1.explain": "En el ssireum, cada persona agarra el satba de la otra, un cinturón de tela que se lleva en la cintura y el muslo.",
+      "checks.c1.options.a": "Las mangas de la otra persona",
+      "checks.c1.options.b": "El cinturón satba",
+      "checks.c1.options.c": "Un palo de madera",
+      "checks.c1.options.d": "El cuello de la otra persona",
+      "checks.c1.prompt": "En el ssireum, ¿de qué se agarran las dos personas que luchan?",
+      "checks.c2.explain": "El drama de máscaras Gwanno no tiene diálogos. Quienes actúan con máscara divierten al público solo con gestos.",
+      "checks.c2.options.a": "Usan gestos, nunca palabras",
+      "checks.c2.options.b": "Cantan cada línea por turnos",
+      "checks.c2.options.c": "Una sola voz narra todos los papeles",
+      "checks.c2.options.d": "Recitan poemas a la vez",
+      "checks.c2.prompt": "¿Qué tiene de especial el drama de máscaras Gwanno?",
+      "checks.c3.explain": "El Gangneung Danoje entró en la Lista Representativa de la UNESCO en 2008. Es el único festival de Dano de Corea en esa lista.",
+      "checks.c3.options.a": "Beopseongpo Danoje",
+      "checks.c3.options.b": "Gyeongsan Jain Danoje",
+      "checks.c3.options.c": "Gangneung Danoje",
+      "checks.c3.prompt": "¿Qué festival de Dano está en la lista de patrimonio de la UNESCO?",
+      "checks.r1.explain": "El changpo es una planta aromática. Hace mucho tiempo, en Dano, la gente se lavaba el cabello con agua de changpo.",
+      "checks.r1.options.a": "Un columpio",
+      "checks.r1.options.b": "Una máscara",
+      "checks.r1.options.c": "Una planta aromática",
+      "checks.r1.options.d": "Un cinturón de tela",
+      "checks.r1.prompt": "¿Qué significa {target}?",
+      "checks.r2.explain": "El ssireum es la lucha coreana. Las dos personas que luchan se agarran del satba, un cinturón de tela.",
+      "checks.r2.options.a": "Lucha coreana",
+      "checks.r2.options.b": "Un columpio de cuerda",
+      "checks.r2.options.c": "Una máscara",
+      "checks.r2.options.d": "Un gran festival",
+      "checks.r2.prompt": "¿Qué significa {target}?",
+      "checks.r3.explain": "A quien gana el ssireum se le llama jangsa, que significa persona muy fuerte.",
+      "checks.r3.options.a": "Satba",
+      "checks.r3.options.b": "Geune",
+      "checks.r3.options.c": "Changpo",
+      "checks.r3.options.d": "Jangsa",
+      "checks.r3.prompt": "En la historia, ¿cómo se llama a quien gana el ssireum?",
+      "facts.f1.claim": "Dano cae el quinto día del quinto mes lunar y es una fiesta típica del verano, llena de juegos y costumbres. En 1518 se contaba entre las tres grandes fiestas (con Seollal y Chuseok); a finales de la era Joseon, el libro Dongguk sesigi la contaba entre cuatro (Seol, Hansik, Dano, Chuseok).",
+      "facts.f10.claim": "En 2018, el ssireum fue inscrito en la Lista Representativa de la UNESCO como inscripción conjunta de la República de Corea y la RPDC; la Directora General de la UNESCO dijo que era algo sin precedentes que las dos Coreas presentaran juntas su candidatura.",
+      "facts.f2.claim": "En Dano, la gente se lavaba el cabello con agua hervida con changpo (cálamo aromático, una planta fragante), porque creía que así el cabello quedaba grueso y brillante.",
+      "facts.f3.claim": "Columpiarse (geunettwigi) es una costumbre de Dano y un juego popular registrado desde hace mucho tiempo.",
+      "facts.f4.claim": "El ssireum (lucha coreana) es desde hace mucho un juego popular de Dano.",
+      "facts.f5.claim": "En el ssireum, dos personas se agarran del satba (un cinturón de tela que se lleva en la cintura y el muslo) e intentan derribarse; según las reglas modernas de competición, pierde quien primero toca el suelo con cualquier parte del cuerpo de la rodilla para arriba.",
+      "facts.f6.claim": "A quien gana el ssireum se le llama jangsa (persona muy fuerte); tradicionalmente, el premio era un buey, símbolo de abundancia agrícola.",
+      "facts.f7.claim": "El Gangneung Danoje, que se celebra en Gangneung, en la costa este de Corea, empieza con la preparación de un licor para las deidades; se hacen ritos para pedir paz en el pueblo y una buena cosecha, y es el festival de pueblo más grande de la costa este.",
+      "facts.f8.claim": "El drama de máscaras Gwanno, que se representa en el Gangneung Danoje, no tiene diálogos: quienes actúan con máscara (el yangban, la joven somae-gaksi y otros personajes) divierten al público solo con gestos. El Servicio de Patrimonio de Corea lo llama el único drama sin palabras de Corea, y el diccionario del Museo Nacional del Folclore lo llama el único drama de máscaras mudo de Corea.",
+      "facts.f9.claim": "El Gangneung Danoje fue proclamado Obra Maestra del Patrimonio Oral e Inmaterial de la Humanidad por la UNESCO en 2005 y, cuando ese programa se integró en la Lista Representativa, fue inscrito en la Lista Representativa en 2008. De los festivales de Dano de Corea, solo el Gangneung Danoje está en la lista de la UNESCO.",
+      "hoyaIntro": "¡Llegó Dano! Vamos a columpiarnos alto, ver una obra de máscaras y animar en el ssireum.",
+      "hoyaOutro": "Columpios, máscaras y ssireum: ¡qué divertido día de Dano!",
+      "keywords.changpo.gloss": "cálamo aromático (planta)",
+      "keywords.chukje.gloss": "festival",
+      "keywords.dano.gloss": "fiesta de Dano",
+      "keywords.gangneung-danoje.gloss": "Festival de Dano de Gangneung",
+      "keywords.geune.gloss": "columpio",
+      "keywords.geunettwigi.gloss": "columpiarse (en un columpio)",
+      "keywords.illyu-muhyeong-yusan.gloss": "Patrimonio Inmaterial de la Humanidad (lista de la UNESCO)",
+      "keywords.jangsa.gloss": "quien gana el ssireum; persona muy fuerte",
+      "keywords.satba.gloss": "cinturón de tela del ssireum",
+      "keywords.ssireum.gloss": "lucha coreana",
+      "keywords.tal.gloss": "máscara",
+      "scenes.s8.caption": "El Danoje y el ssireum en la lista de la UNESCO",
+      "scenes.s8.narration": "En 2005, la UNESCO nombró obra maestra al Gangneung Danoje. En 2008 entró en la lista de patrimonio de la UNESCO. En 2018, el ssireum también entró en la lista. Corea del Norte y Corea del Sur lo pidieron juntas. La UNESCO dijo que eso nunca había pasado antes.",
+      "summary": "Hoya celebra Dano, la fiesta coreana de principios del verano: cabello lavado con agua de changpo, columpios que vuelan alto, lucha ssireum y el Gangneung Danoje de la lista de la UNESCO, con su drama de máscaras Gwanno sin palabras.",
+      "title": "El día de Dano: columpios, máscaras y ssireum"
+    },
+    "story:donguibogam": {
+      "checks.c1.explain": "El Donguibogam ponía la prevención de las enfermedades y el cuidado de la salud antes que el tratamiento.",
+      "checks.c1.options.a": "Descansar en la cama muchísimo tiempo",
+      "checks.c1.options.b": "Encontrar la medicina más fuerte de todas",
+      "checks.c1.options.c": "Cuidar la salud y prevenir las enfermedades",
+      "checks.c1.prompt": "Según el Donguibogam, ¿qué va antes que curar la enfermedad?",
+      "checks.c2.explain": "El libro escribió los nombres de las hierbas en hangul, como la gente los llamaba, para que las medicinas del lugar se pudieran usar de forma amplia y fácil.",
+      "checks.c2.options.a": "El hangul",
+      "checks.c2.options.b": "El alfabeto latino",
+      "checks.c2.options.c": "El alfabeto griego",
+      "checks.c2.prompt": "¿Qué alfabeto usó el libro para los nombres coreanos de las hierbas?",
+      "checks.c3.explain": "El Donguibogam se imprimió por primera vez en 1613 con tipos móviles de madera, en 25 tomos.",
+      "checks.c3.options.a": "1592",
+      "checks.c3.options.b": "1613",
+      "checks.c3.options.c": "1610",
+      "checks.c3.prompt": "¿Cuándo se imprimió por primera vez el Donguibogam?",
+      "checks.r1.explain": "Uisa significa médico o médica. Heo Jun era médico de la corte real.",
+      "checks.r1.options.a": "Libro",
+      "checks.r1.options.b": "Médico o médica",
+      "checks.r1.options.c": "Rey",
+      "checks.r1.options.d": "Hierba",
+      "checks.r1.prompt": "¿Qué significa {target}?",
+      "checks.r2.explain": "Yakcho significa hierba medicinal. El libro escribió los nombres de las hierbas en hangul.",
+      "checks.r2.options.a": "Salud",
+      "checks.r2.options.b": "Cuerpo",
+      "checks.r2.options.c": "Hierba medicinal",
+      "checks.r2.options.d": "Tesoro",
+      "checks.r2.prompt": "¿Qué significa {target}?",
+      "checks.r3.explain": "El Donguibogam enseñaba que prevenir las enfermedades y cuidar la salud va antes que curarlas.",
+      "checks.r3.options.a": "Cuidar la salud y prevenir las enfermedades",
+      "checks.r3.options.b": "Imprimir más libros",
+      "checks.r3.options.c": "Juntar piedras raras",
+      "checks.r3.options.d": "Escribir poemas",
+      "checks.r3.prompt": "En la historia, ¿qué ponía el Donguibogam antes que curar la enfermedad?",
+      "facts.f1.claim": "Heo Jun fue médico de la corte de Joseon (las fuentes no coinciden en su año de nacimiento, así que no se da ninguno); el rey Seonjo le ordenó compilar un libro de medicina junto con otros médicos, como Yang Ye-su y Yi Myeong-won.",
+      "facts.f2.claim": "La compilación conjunta se interrumpió cuando volvió a estallar la guerra (la invasión de Jeongyu) y los participantes se dispersaron; después, el rey Seonjo le dio a Heo Jun libros de medicina de la colección real y le ordenó compilar el Donguibogam solo.",
+      "facts.f3.claim": "Heo Jun terminó el Donguibogam en 1610 (año 2 de Gwanghaegun).",
+      "facts.f4.claim": "En el título, 'Dongui' (東醫) significa la tradición médica del Este, es decir, la tradición propia de Joseon, y 'bogam' (寶鑑) significa 'espejo precioso', un modelo o ejemplo.",
+      "facts.f5.claim": "El Donguibogam daba importancia a prevenir las enfermedades y conservar la salud antes de tratarlas.",
+      "facts.f6.claim": "El Donguibogam se imprimió por primera vez en 1613 (año 5 de Gwanghaegun) en la Oficina Médica Real (Naeuiwon), con tipos móviles de madera, en 25 tomos.",
+      "facts.f7.claim": "Uno de los principios de compilación del Donguibogam fue escribir los nombres de las hierbas en hangul, con los nombres que usaba la gente de Joseon, para que las medicinas que crecían en el país se pudieran usar de forma amplia y fácil, también en el campo.",
+      "facts.f8.claim": "El Donguibogam se imprimió muchas veces en China y también en Japón, y en 2009 se inscribió en el Registro de la Memoria del Mundo de la UNESCO.",
+      "facts.f9.claim": "Las copias de la primera edición (1613) del Donguibogam que guardan la Biblioteca Nacional de Corea, la Academia de Estudios Coreanos y el Kyujanggak de la Universidad Nacional de Seúl están designadas como Tesoros Nacionales (2015).",
+      "hoyaIntro": "Vamos a conocer a un médico real que escribió un libro enorme sobre cómo cuidar la salud.",
+      "hoyaOutro": "El libro de Heo Jun ayudó a la gente a cuidar su cuerpo. ¡Estírate conmigo y cuida tu salud!",
+      "keywords.bobae-gateun-chaek.gloss": "un libro como un tesoro",
+      "keywords.chaek.gloss": "libro",
+      "keywords.donguibogam.gloss": "Donguibogam (una enciclopedia médica de Joseon)",
+      "keywords.geongang.gloss": "salud",
+      "keywords.heo-jun.gloss": "Heo Jun, médico de la corte de Joseon",
+      "keywords.mom.gloss": "cuerpo",
+      "keywords.segye-girok-yusan.gloss": "Memoria del Mundo (patrimonio documental de la UNESCO)",
+      "keywords.uisa.gloss": "médico o médica",
+      "keywords.yakcho.gloss": "hierba medicinal",
+      "scenes.s1.caption": "Hoya se estira bajo el sol de la mañana",
+      "scenes.s1.narration": "Hoya estira los brazos y las piernas bajo el sol de la mañana. «En coreano, cuerpo se dice {kw:mom}», dice. «Hace mucho tiempo, un médico real de Joseon escribió un libro enorme para ayudar a la gente a cuidar su cuerpo».",
+      "scenes.s2.caption": "Heo Jun, médico de la corte real",
+      "scenes.s2.narration": "Se llamaba Heo Jun, {kw:heo-jun}, y trabajaba como médico en la corte real. El rey Seonjo le pidió a él y a otros médicos que escribieran un libro de medicina nuevo. Hoy, en coreano, a quien es médico o médica se le llama {kw:uisa}.",
+      "scenes.s3.caption": "Heo Jun escribe el libro solo",
+      "scenes.s3.narration": "Cuando estalló una guerra, el trabajo se detuvo y los médicos se dispersaron. Más tarde, el rey le pidió a Heo Jun que escribiera el libro solo, y le dio muchos libros de medicina del palacio para estudiar.",
+      "scenes.s4.caption": "Heo Jun termina el Donguibogam",
+      "scenes.s4.narration": "En 1610, Heo Jun terminó el libro {kw:donguibogam}. 'Dongui' significa la medicina del Este, la tradición médica propia de Corea, y 'bogam' significa un espejo precioso, un modelo del que aprender.",
+      "scenes.s5.caption": "Primero, cuidar la salud",
+      "scenes.s5.narration": "El Donguibogam enseñaba que cuidar la salud y prevenir las enfermedades va antes que curarlas. En coreano, salud se dice {kw:geongang}.",
+      "scenes.s6.caption": "Los nombres de las hierbas, en hangul",
+      "scenes.s7.caption": "El libro se imprimió muchas veces",
+      "scenes.s7.narration": "El Donguibogam se imprimió en 1613 en 25 tomos. Más tarde se imprimió muchas veces en China, y también en Japón. En 2009, la UNESCO lo agregó al Registro de la Memoria del Mundo de la UNESCO, {kw:segye-girok-yusan}.",
+      "scenes.s8.caption": "Las copias de la primera impresión son Tesoros Nacionales",
+      "summary": "Hoya descubre cómo el médico real Heo Jun terminó el Donguibogam en 1610, una enciclopedia médica que daba importancia a cuidar la salud y escribía los nombres de las hierbas en hangul. Hoy está en el Registro de la Memoria del Mundo de la UNESCO.",
+      "title": "El espejo precioso de la medicina de Heo Jun"
+    },
+    "story:gimjang-arirang": {
+      "checks.c1.explain": "En invierno era difícil conseguir verduras frescas, así que las familias preparaban mucho kimchi de una vez para todo el invierno.",
+      "checks.c1.options.a": "En invierno era difícil encontrar verduras frescas",
+      "checks.c1.options.b": "La col solo crece en el norte frío",
+      "checks.c1.options.c": "El kimchi tenía que estar listo antes del año nuevo",
+      "checks.c1.options.d": "Hacían falta tinajas de kimchi para un banquete de fiesta",
+      "checks.c1.prompt": "¿Por qué las familias preparaban mucho kimchi de una vez para el gimjang?",
+      "checks.c2.explain": "Colaborar y compartir son el espíritu del gimjang. Las casas hasta intercambian kimchi entre sí.",
+      "checks.c2.options.a": "Preparar kimchi lo más rápido posible",
+      "checks.c2.options.b": "Colaborar y compartir",
+      "checks.c2.options.c": "Elegir la mejor col sin ayuda",
+      "checks.c2.options.d": "Competir por el kimchi más salado",
+      "checks.c2.prompt": "¿Qué es lo más importante del gimjang?",
+      "checks.c3.explain": "Arirang tiene muchas versiones regionales, como el Arirang de Jeongseon, de Jindo y de Miryang, y cualquiera puede crear letras nuevas.",
+      "checks.c3.options.a": "Tiene una sola versión en todas partes",
+      "checks.c3.options.b": "La escribió un solo compositor famoso",
+      "checks.c3.options.c": "Tiene muchas versiones regionales",
+      "checks.c3.options.d": "Solo se canta en invierno",
+      "checks.c3.prompt": "¿Qué frase sobre Arirang es verdadera?",
+      "checks.r1.explain": "Baechu significa col china. Las familias salan coles chinas para el gimjang.",
+      "checks.r1.options.a": "Chile rojo en polvo",
+      "checks.r1.options.b": "Col china",
+      "checks.r1.options.c": "Vecino o vecina",
+      "checks.r1.options.d": "Invierno",
+      "checks.r1.prompt": "¿Qué significa {target}?",
+      "checks.r2.explain": "Iut significa vecino o vecina. En el vecindario, la gente se ayuda con el gimjang.",
+      "checks.r2.options.a": "Canción",
+      "checks.r2.options.b": "Kimchi",
+      "checks.r2.options.c": "Vecino o vecina",
+      "checks.r2.options.d": "Invierno",
+      "checks.r2.prompt": "¿Qué significa {target}?",
+      "checks.r3.explain": "Arirang tiene muchas versiones, y cualquiera puede inventar letras nuevas.",
+      "checks.r3.options.a": "Inventar letras nuevas",
+      "checks.r3.options.b": "Cantarla solo en invierno",
+      "checks.r3.options.c": "Cantar una sola versión",
+      "checks.r3.options.d": "Tocarla solo con un tambor",
+      "checks.r3.prompt": "En la historia, ¿qué puede hacer cualquiera con Arirang?",
+      "facts.f1.claim": "Como en invierno era difícil conseguir verduras frescas, las familias preparaban de una vez mucho kimchi entre finales del otoño y principios del invierno para todo el invierno; esta costumbre es el gimjang (UNESCO: Kimjang).",
+      "facts.f10.claim": "El Arirang de Corea del Norte es una inscripción aparte de la UNESCO, 'Arirang folk song in the Democratic People's Republic of Korea', de 2014; es distinta de la inscripción de Corea del Sur de 2012.",
+      "facts.f11.claim": "El gimjang es la costumbre de preparar de una vez mucho kimchi entre finales del otoño y principios del invierno, para que las familias tengan kimchi durante todo el invierno.",
+      "facts.f2.claim": "La preparación del gimjang lleva meses (más de medio año, según la Enciclopedia de la Cultura Coreana) y sigue el ciclo del año: en primavera, las familias compran camarones, anchoas y otros mariscos para salar; en verano, compran sal marina; y a finales del verano, secan chiles rojos y los muelen hasta hacerlos polvo.",
+      "facts.f3.claim": "La familia y el vecindario se ayudan con el gimjang: se salan verduras como la col china y luego se mezclan con un aliño que lleva chile en polvo, ajo, jengibre y cebollín.",
+      "facts.f4.claim": "El kimchi cambia según la región: en el norte frío suele ser menos salado y de aliño más suave, mientras que en el sur es más salado, con un aliño más rojo y fuerte; hay incontables variedades locales.",
+      "facts.f5.claim": "El día del gimjang, la familia anfitriona tradicionalmente cocía carne de cerdo y la servía con las hojas interiores amarillas de la col y el aliño a quienes ayudaban (una costumbre que, según la Enciclopedia, aún se conserva como una tradición querida); también se intercambia kimchi entre hogares, y la colaboración y el compartir son el espíritu del gimjang.",
+      "facts.f6.claim": "'Kimjang, making and sharing kimchi in the Republic of Korea' (en coreano, el Servicio de Patrimonio de Corea lo llama Gimchiwa Gimjangmunhwa, «Kimchi y la cultura del gimjang») se inscribió en 2013 en la Lista Representativa del Patrimonio Cultural Inmaterial de la Humanidad de la UNESCO.",
+      "facts.f7.claim": "Arirang es una canción popular coreana muy compartida, creada y transmitida de boca en boca por gente común durante generaciones, con un estribillo cantado como «Arirang, arirang, arariyo»; los estudios ofrecen varias teorías sobre el origen de la palabra del estribillo, pero el estribillo en sí se considera un conjunto de sílabas cantadas que animan el ambiente y completan la melodía.",
+      "facts.f8.claim": "Arirang tiene muchas versiones regionales, como el Arirang de Jeongseon, el de Jindo y el de Miryang, y cualquiera puede crear letras nuevas.",
+      "facts.f9.claim": "'Arirang, lyrical folk song in the Republic of Korea' (la inscripción de Corea del Sur) se inscribió en la Lista Representativa de la UNESCO en 2012.",
+      "hoyaIntro": "¡Ya llega el invierno! Preparemos kimchi con el vecindario y escuchemos una canción que se comparte en toda Corea.",
+      "hoyaOutro": "Preparar kimchi en grupo y cantar Arirang: ¡compartir lo hace especial!",
+      "keywords.arirang-arirang-arariyo.gloss": "el estribillo de Arirang (sílabas cantadas)",
+      "keywords.arirang.gloss": "Arirang (canción popular)",
+      "keywords.baechu.gloss": "col china",
+      "keywords.gimchi.gloss": "kimchi",
+      "keywords.gimchiwa-gimjangmunhwa.gloss": "Kimchi y la cultura del gimjang (nombre que usa el Servicio de Patrimonio de Corea para la inscripción de la UNESCO)",
+      "keywords.gimjang.gloss": "preparar el kimchi del invierno",
+      "keywords.gochutgaru.gloss": "chile rojo en polvo",
+      "keywords.gyeoul.gloss": "invierno",
+      "keywords.iut.gloss": "vecino o vecina",
+      "keywords.nanum.gloss": "compartir",
+      "scenes.s1.caption": "Mucho kimchi antes del invierno",
+      "scenes.s2.caption": "Meses de preparación",
+      "scenes.s2.narration": "¡El gimjang se prepara durante meses! En primavera, las familias consiguen camarones y anchoas para salar. En verano, compran sal marina. A finales del verano, se secan chiles rojos y se muelen para hacer chile en polvo.",
+      "scenes.s3.caption": "Salar y sazonar las coles chinas",
+      "scenes.s4.caption": "El kimchi propio de cada región",
+      "scenes.s5.caption": "Compartir cerdo, kimchi y ayuda",
+      "scenes.s6.caption": "El gimjang en la lista de la UNESCO",
+      "scenes.s6.narration": "En 2013, la UNESCO añadió el gimjang, preparar y compartir kimchi, a su lista de patrimonio. En coreano, el Servicio de Patrimonio llama a esta inscripción {kw:gimchiwa-gimjangmunhwa}.",
+      "scenes.s7.caption": "La abuela tararea Arirang",
+      "scenes.s8.caption": "Las muchas versiones regionales de Arirang",
+      "scenes.s8.narration": "Arirang tiene muchas versiones. Cada región tiene la suya, como el de Jeongseon, Jindo y Miryang, ¡y cualquiera puede inventar versos nuevos! En 2012, la UNESCO añadió el Arirang de Corea del Sur a su lista de patrimonio. El de Corea del Norte está en la lista aparte.",
+      "summary": "Llega el invierno y Hoya ayuda a la familia y al vecindario a preparar y compartir kimchi en el gimjang (UNESCO 2013). Luego escucha Arirang, la canción popular que se comparte en toda Corea (inscripción de Corea del Sur en la UNESCO, 2012).",
+      "title": "El día del gimjang: compartir kimchi y cantar Arirang"
+    },
+    "story:hangeul-day": {
+      "checks.c1.explain": "El Día del Hangul, Hangeullal, es el 9 de octubre en Corea del Sur.",
+      "checks.c1.options.a": "1 de enero",
+      "checks.c1.options.b": "1 de marzo",
+      "checks.c1.options.c": "9 de octubre",
+      "checks.c1.options.d": "25 de diciembre",
+      "checks.c1.prompt": "¿Qué día es el Día del Hangul en Corea del Sur?",
+      "checks.c2.explain": "El Haerye termina con una fecha lunar: los primeros diez días del noveno mes de 1446. En el calendario solar, el último de esos días quedó como el 9 de octubre.",
+      "checks.c2.options.a": "El cumpleaños del rey Sejong",
+      "checks.c2.options.b": "Un registro del clima",
+      "checks.c2.options.c": "La fecha de una fiesta de la cosecha",
+      "checks.c2.options.d": "Una fecha en el libro Haerye",
+      "checks.c2.prompt": "¿Qué se usó para fijar la fecha del Día del Hangul?",
+      "checks.c3.explain": "La primera celebración, en 1926, se llamó Gagyanal. En 1928 pasó a llamarse Hangeullal.",
+      "checks.c3.options.a": "Seollal",
+      "checks.c3.options.b": "Dano",
+      "checks.c3.options.c": "Gagyanal",
+      "checks.c3.options.d": "Chuseok",
+      "checks.c3.prompt": "¿Cómo se llamó el Día del Hangul en su primera celebración, en 1926?",
+      "checks.r1.explain": "Chaek significa libro. Se encontró una copia original del libro Haerye en Andong.",
+      "checks.r1.options.a": "Libro",
+      "checks.r1.options.b": "Letra",
+      "checks.r1.options.c": "Calendario",
+      "checks.r1.options.d": "Casa",
+      "checks.r1.prompt": "¿Qué significa {target}?",
+      "checks.r2.explain": "Gukbo significa Tesoro Nacional. El libro Haerye es uno de ellos.",
+      "checks.r2.options.a": "Casa antigua",
+      "checks.r2.options.b": "Tesoro Nacional",
+      "checks.r2.options.c": "Calendario lunar",
+      "checks.r2.options.d": "Día festivo",
+      "checks.r2.prompt": "¿Qué significa {target}?",
+      "checks.r3.explain": "La primera celebración, en 1926, se llamó Gagyanal. En 1928 pasó a ser Hangeullal.",
+      "checks.r3.options.a": "Seollal",
+      "checks.r3.options.b": "Dano",
+      "checks.r3.options.c": "Chuseok",
+      "checks.r3.options.d": "Gagyanal",
+      "checks.r3.prompt": "En la historia, ¿cómo se llamó primero el Día del Hangul?",
+      "facts.f1.claim": "El Día del Hangul (Hangeullal) es el 9 de octubre en Corea del Sur.",
+      "facts.f10.claim": "Corea del Norte celebra su propio día del hangul el 15 de enero, llamado Joseon-geul-nal, como aniversario de la creación del Hunminjeongeum.",
+      "facts.f11.claim": "El libro Hunminjeongeum Haerye es Tesoro Nacional de Corea y está en el Registro de la Memoria del Mundo de la UNESCO.",
+      "facts.f2.claim": "El Día del Hangul pasó a ser día nacional (gukgyeongil) en 2005 y desde 2013 vuelve a ser día festivo.",
+      "facts.f3.claim": "El final del libro Haerye lleva la fecha de Jeong In-ji: los primeros diez días (sanghan) del 9.º mes de 1446, según el calendario lunar. El Día del Hangul se fijó tomando el último de esos días, el día 10 del 9.º mes lunar, y convirtiéndolo al calendario solar (yangnyeok); según el método usado cuando se fijó el día, esto da el 9 de octubre. (De 1932 a 1945, las celebraciones que suponían el final del 9.º mes lunar cayeron el 29 de octubre y luego el 28 de octubre, antes de que el día pasara al 9 de octubre.)",
+      "facts.f4.claim": "Se encontró una copia original del libro Hunminjeongeum Haerye hacia 1940 en una casa antigua de Andong, en la provincia de Gyeongsang del Norte.",
+      "facts.f5.claim": "La entrada de los Anales de Sejong (Sillok) del 9.º mes de 1446 no indica ningún día concreto, solo «este mes». La copia del Haerye encontrada hacia 1940 da «los primeros diez días del 9.º mes».",
+      "facts.f6.claim": "Según la UNESCO, la copia del Hunminjeongeum Haerye la guarda el Museo de Arte Kansong; el Portal del Patrimonio Nacional de Corea indica que el museo es su administrador.",
+      "facts.f7.claim": "El libro es Tesoro Nacional de Corea (designado en 1962) y fue inscrito en el Registro de la Memoria del Mundo de la UNESCO en 1997. El Registro reúne patrimonio documental de importancia mundial.",
+      "facts.f8.claim": "La primera celebración del Día del Hangul se hizo en 1926 con el nombre de Gagyanal; se dice que el nombre viene de aprender hangul cantando «ga-gya-geo-gyeo». En 1928 pasó a llamarse Hangeullal.",
+      "facts.f9.claim": "La UNESCO entrega el Premio de Alfabetización Rey Sejong de la UNESCO, creado con el apoyo del Gobierno de la República de Corea, que tiene especialmente en cuenta la alfabetización en la lengua materna de las personas.",
+      "hoyaIntro": "¡Descubramos por qué el hangul tiene su propio día especial!",
+      "hoyaOutro": "¡Feliz Día del Hangul! Ahora sabes por qué Corea del Sur lo celebra cada octubre.",
+      "keywords.chaek.gloss": "libro",
+      "keywords.eumnyeok.gloss": "calendario lunar",
+      "keywords.gagyanal.gloss": "Día Gagya (el primer nombre del Día del Hangul)",
+      "keywords.gomawoyo-sejong-daewangnim.gloss": "¡Gracias, rey Sejong!",
+      "keywords.gomawoyo.gloss": "gracias (cortés y cercano)",
+      "keywords.gukbo.gloss": "Tesoro Nacional",
+      "keywords.hangeullal.gloss": "Día del Hangul (9 de octubre)",
+      "keywords.siwol-guil.gloss": "9 de octubre",
+      "keywords.siwol.gloss": "octubre",
+      "scenes.s4.caption": "Se encuentra una copia original en Andong",
+      "scenes.s7.caption": "Hoya da las gracias al rey Sejong",
+      "scenes.s7.narration": "La historia del hangul llega a todo el mundo. La UNESCO incluso entrega un premio de alfabetización con el nombre del rey Sejong. Hoya hace una gran reverencia: «¡Gomawoyo, Sejongdaewangnim! ¡Gracias, rey Sejong!»",
+      "summary": "Hoya descubre por qué Corea del Sur celebra el Día del Hangul el 9 de octubre: se basa en una fecha escrita al final del libro Haerye de 1446, que se encontró hacia 1940. El día empezó como «Gagyanal» en 1926.",
+      "title": "¡Feliz Día del Hangul!"
+    },
+    "story:ilseongnok-daily-reflection": {
+      "checks.c1.explain": "Como nieto y heredero del rey, Jeongjo escribía un diario de sus palabras, acciones y estudios. Ese diario se convirtió en el Ilseongnok.",
+      "checks.c1.options.a": "Jeongjo, el joven heredero real",
+      "checks.c1.options.b": "Un escribano de la Secretaría Real",
+      "checks.c1.options.c": "Un historiador de la corte real",
+      "checks.c1.prompt": "¿Quién escribió primero el diario que se convirtió en el Ilseongnok?",
+      "checks.c2.explain": "La UNESCO traduce el nombre Ilseongnok al inglés como «Records of Daily Reflections», es decir, registros de reflexiones diarias.",
+      "checks.c2.options.a": "Registros de bodas reales",
+      "checks.c2.options.b": "Registros de archivos de montaña",
+      "checks.c2.options.c": "Registros de reflexiones diarias",
+      "checks.c2.prompt": "¿Qué significa el nombre en inglés que la UNESCO da al Ilseongnok?",
+      "checks.c3.explain": "Desde 1783, los funcionarios del Gyujanggak escribían el diario sobre los asuntos de Estado y se lo daban al rey para que lo aprobara.",
+      "checks.c3.options.a": "Comerciantes del pueblo de mercado",
+      "checks.c3.options.b": "Funcionarios de la biblioteca Gyujanggak",
+      "checks.c3.options.c": "Monjes de un templo en la montaña",
+      "checks.c3.prompt": "Desde 1783, ¿quiénes escribían el diario sobre los asuntos de Estado?",
+      "facts.f1.claim": "Como nieto y heredero del rey (seson), Jeongjo escribía un diario de sus propias palabras, acciones y estudios, y ese diario fue el origen del Ilseongnok.",
+      "facts.f2.claim": "A Jeongjo lo conmovieron mucho las palabras de Zengzi en las Analectas sobre examinarse a uno mismo cada día, y escribió el diario como material para reflexionar sobre sí mismo.",
+      "facts.f3.claim": "Este diario era el Diario de Jonhyeongak, y Jeongjo siguió escribiendo un diario él mismo después de convertirse en rey (1776).",
+      "facts.f4.claim": "Al crecer los asuntos de Estado, desde 1783 los funcionarios del Gyujanggak escribían el diario, centrado en los asuntos de gobierno, y lo presentaban para que el rey lo aprobara; así, el diario personal del rey se convirtió en un diario oficial del Estado.",
+      "facts.f5.claim": "La obra se titula Ilseongnok (日省錄); la UNESCO traduce el nombre al inglés como «Records of Daily Reflections» (registros de reflexiones diarias). (Las fuentes no permiten confirmar quién eligió el título final.)",
+      "facts.f6.claim": "Cada entrada del Ilseongnok tiene un titular (gang, 綱) que resume lo principal, seguido de los detalles (mok, 目), lo que lo hacía fácil de leer.",
+      "facts.f7.claim": "El Ilseongnok tiene la forma de un diario escrito desde el punto de vista del rey, pero en el fondo es un registro oficial del gobierno.",
+      "facts.f8.claim": "Se conservan 2329 libros del Ilseongnok, de enero de 1760 a agosto de 1910; los administra el Instituto Kyujanggak de Estudios Coreanos de la Universidad Nacional de Seúl, en Seúl.",
+      "facts.f9.claim": "El Ilseongnok fue designado Tesoro Nacional el 31 de diciembre de 1973 y se inscribió en el Registro de la Memoria del Mundo de la UNESCO en 2011.",
+      "hoyaIntro": "Vamos a leer sobre un joven heredero real que repasaba cada día en su diario.",
+      "hoyaOutro": "Repasar cada día ayudó a Jeongjo. ¿Qué te salió bien hoy?",
+      "keywords.banseong.gloss": "mirarse a uno mismo (reflexión)",
+      "keywords.gyujanggak.gloss": "biblioteca e instituto de investigación real",
+      "keywords.ilgi.gloss": "diario",
+      "keywords.ilgireul-sseoyo.gloss": "Escriben un diario.",
+      "keywords.ilseongnok.gloss": "Registros de reflexiones diarias",
+      "keywords.oneul-harureul-dorabwayo.gloss": "Repasemos el día de hoy.",
+      "keywords.oneul-naneun-mueoseul-haetji.gloss": "¿Qué hice hoy?",
+      "keywords.oneul.gloss": "hoy",
+      "keywords.seson.gloss": "nieto y heredero del rey",
+      "scenes.s1.caption": "El joven Jeongjo escribe un diario",
+      "scenes.s1.narration": "Hoya abre un libro antiguo sobre un joven heredero real llamado Jeongjo. Como era el nieto del rey y algún día sería rey, lo llamaban {kw:seson}. Ya entonces escribía un diario de lo que decía, hacía y estudiaba.",
+      "scenes.s2.caption": "Palabras sobre repasar cada día",
+      "scenes.s2.narration": "¿Por qué? Una razón fueron las palabras de Zengzi en un libro antiguo, las Analectas, sobre reflexionar cada día sobre uno mismo. Esas palabras conmovieron mucho a Jeongjo, que también quiso reflexionar sobre sí mismo.",
+      "scenes.s3.caption": "Hoya pregunta: «¿Qué hice hoy?»",
+      "scenes.s3.narration": "Su diario se llamaba Diario de Jonhyeongak. Cuando Jeongjo se convirtió en rey, siguió escribiéndolo él mismo. Hoya también lo intenta y pregunta: «¿Qué hice hoy?».",
+      "scenes.s4.caption": "La biblioteca real escribe el diario",
+      "scenes.s4.narration": "Al crecer los asuntos de Estado, Jeongjo tenía demasiado que escribir él mismo. Así que en 1783, los funcionarios de la biblioteca real, el Gyujanggak, empezaron a escribir el diario sobre los asuntos de Estado y se lo daban al rey para que lo aprobara. Su diario personal se convirtió en un registro oficial.",
+      "scenes.s5.caption": "Un titular y luego los detalles",
+      "scenes.s5.narration": "La UNESCO traduce su título, {kw:ilseongnok}, al inglés como «Records of Daily Reflections», es decir, registros de reflexiones diarias. Cada entrada empieza con un titular corto, y después vienen los detalles, lo que lo hacía fácil de leer.",
+      "scenes.s6.caption": "Un diario que es un registro oficial",
+      "scenes.s6.narration": "El {kw:ilseongnok} parece un diario escrito desde el punto de vista del rey, pero en realidad era un registro oficial del gobierno. Hoy se guardan 2329 libros, de 1760 a 1910, en el Gyujanggak de la Universidad Nacional de Seúl.",
+      "scenes.s7.caption": "Hoya repasa el día",
+      "scenes.s7.narration": "El {kw:ilseongnok} es un Tesoro Nacional, y en 2011 la UNESCO lo añadió a la Memoria del Mundo. Hoya decide escribir una línea esta noche: qué salió bien hoy y qué hacer mejor.",
+      "summary": "De joven heredero real, Jeongjo escribía un diario para repasar cada día. Ese diario se convirtió en el Ilseongnok, un registro oficial de la corte de 1760 a 1910.",
+      "title": "El diario de reflexión diaria del rey Jeongjo"
+    },
+    "story:janggyeong-panjeon": {
+      "checks.c1.explain": "Las ventanas tienen tamaños distintos en la pared delantera y en la trasera, y las de arriba y las de abajo también son diferentes. Así circula el aire.",
+      "checks.c1.options.a": "Oscurecer las salas por dentro",
+      "checks.c1.options.b": "Impedir que entren visitantes",
+      "checks.c1.options.c": "Ayudar a que el viento circule por las salas",
+      "checks.c1.options.d": "Mostrar pinturas en las paredes",
+      "checks.c1.prompt": "¿Para qué sirven las ventanas de distintos tamaños?",
+      "checks.c2.explain": "Bajo el piso de tierra hay capas de carbón, cal y sal con arena. Ayudan a controlar la humedad del aire.",
+      "checks.c2.options.a": "Capas de paja de arroz, grava y arcilla",
+      "checks.c2.options.b": "Filas de canales de piedra llenos de agua",
+      "checks.c2.options.c": "Un hueco lleno de bloques de hielo",
+      "checks.c2.options.d": "Capas de carbón, cal, sal y arena",
+      "checks.c2.prompt": "¿Qué hay bajo el piso de Janggyeong Panjeon?",
+      "checks.c3.explain": "La UNESCO añadió Janggyeong Panjeon a la Lista del Patrimonio Mundial en 1995.",
+      "checks.c3.options.a": "1446",
+      "checks.c3.options.b": "2007",
+      "checks.c3.options.c": "1995",
+      "checks.c3.options.d": "1377",
+      "checks.c3.prompt": "¿Cuándo entró Janggyeong Panjeon en la Lista del Patrimonio Mundial de la UNESCO?",
+      "facts.f1.claim": "Janggyeong Panjeon son los edificios de Haeinsa construidos para guardar las planchas de madera del Tripitaka Koreana. Están en la parte más alta del recinto del templo, por encima de la sala del Buda principal.",
+      "facts.f2.claim": "Janggyeong Panjeon son los edificios más antiguos que se conservan en Haeinsa.",
+      "facts.f3.claim": "Dos edificios largos, de 15 tramos de ancho cada uno, están uno al lado del otro: Sudarajang al sur y Beopbojeon al norte. Con dos edificios pequeños al este y al oeste, forman un rectángulo alrededor de un patio.",
+      "facts.f4.claim": "Los depósitos son del siglo XV (principios de Joseon). No se sabe la fecha de la primera construcción; hay registro de una reconstrucción en 1488. Se construyeron de forma sencilla, sin adornos, para cumplir su función.",
+      "facts.f5.claim": "Para la ventilación, las ventanas tienen tamaños distintos en la pared sur y en la norte (delante y detrás), y las ventanas de arriba y de abajo también tienen tamaños distintos.",
+      "facts.f6.claim": "Bajo el piso de tierra hay capas de carbón, cal y sal colocadas con arena, que ayudan a regular la humedad: absorben el exceso de humedad y la liberan cuando el aire está seco.",
+      "facts.f7.claim": "Como el diseño aprovecha las condiciones naturales (luz del sol, ventilación y control de la temperatura y la humedad), las planchas se han conservado durante unos 500 años, a salvo de roedores e insectos.",
+      "facts.f8.claim": "Janggyeong Panjeon del templo Haeinsa se inscribió en la Lista del Patrimonio Mundial de la UNESCO en 1995, y la UNESCO lo describe como el depósito más antiguo del Tripitaka.",
+      "facts.f9.claim": "La UNESCO dice que la entrada de visitantes a Janggyeong Panjeon está restringida para poder controlar la temperatura y la humedad dentro de los depósitos. Desde junio de 2021, Haeinsa también ofrece una pequeña visita guiada con reserva dentro de Beopbojeon (de 10 a 20 personas por sesión), así que la entrada está limitada, no es imposible.",
+      "hoyaIntro": "¿Cómo se mantienen a salvo unas planchas de madera antiguas? ¡Preguntémosle al viento de Haeinsa!",
+      "hoyaOutro": "Ventanas, pisos y aire fresco mantienen a salvo las planchas. ¡Gracias por explorar conmigo!",
+      "keywords.baram.gloss": "viento",
+      "keywords.changmun.gloss": "ventana",
+      "keywords.geonmul.gloss": "edificio",
+      "keywords.janggyeongpanjeon.gloss": "Janggyeong Panjeon, las salas donde se guardan las planchas en Haeinsa",
+      "keywords.jikyeoyo.gloss": "protegemos; cuidamos",
+      "keywords.joseon.gloss": "Joseon, la dinastía coreana de esa época",
+      "keywords.segyeyusan.gloss": "Patrimonio Mundial",
+      "keywords.sut.gloss": "carbón vegetal",
+      "keywords.uriga-jikyeoyo.gloss": "Lo protegemos.",
+      "scenes.s1.caption": "Las salas más antiguas en pie de Haeinsa",
+      "scenes.s1.narration": "Hoya visita el templo Haeinsa y sube a la parte más alta del recinto. Aquí está Janggyeong Panjeon, las salas hechas para guardar las planchas de madera. Son los edificios más antiguos que siguen en pie en Haeinsa.",
+      "scenes.s2.caption": "Cuatro edificios alrededor de un patio",
+      "scenes.s2.narration": "Dos salas largas están una al lado de la otra: Sudarajang al sur y Beopbojeon al norte. Dos edificios pequeños están en los extremos, así que juntos forman un rectángulo alrededor de un patio.",
+      "scenes.s3.caption": "Salas sencillas hechas para una tarea",
+      "scenes.s3.narration": "Estas salas se construyeron en el siglo XV, durante la dinastía Joseon. No tienen adornos lujosos. Cada parte se diseñó para una sola tarea: mantener a salvo las planchas de madera.",
+      "scenes.s4.caption": "Ventanas de distintos tamaños",
+      "scenes.s4.narration": "¡Mira las ventanas! Las ventanas de la pared delantera y de la trasera tienen tamaños distintos, y las de arriba y las de abajo también son diferentes. Así el viento circula por las salas.",
+      "scenes.s5.caption": "Carbón, cal y sal bajo el piso",
+      "scenes.s5.narration": "Ahora mira abajo. Bajo el piso de tierra hay capas de carbón, cal y sal con arena. Absorben el exceso de humedad cuando el aire está húmedo y la devuelven cuando está seco.",
+      "scenes.s6.caption": "Viento, sol y tierra cuidan las planchas",
+      "scenes.s6.narration": "El viento, la luz del sol y la tierra trabajan juntos. Gracias a este diseño natural, las planchas se han mantenido a salvo de la humedad, los ratones y los insectos durante unos 500 años.",
+      "scenes.s7.caption": "Un sitio del Patrimonio Mundial de la UNESCO",
+      "scenes.s7.narration": "En 1995, la UNESCO añadió Janggyeong Panjeon a la Lista del Patrimonio Mundial. La UNESCO dice que es el almacén más antiguo del Tripitaka, las escrituras budistas.",
+      "scenes.s8.caption": "Entrada limitada para mantener el aire estable",
+      "scenes.s8.narration": "Para ayudar a mantener estables la temperatura y la humedad dentro, la entrada de visitantes está limitada. Hoya se asoma entre las tablillas de la ventana y susurra: «Uriga jikyeoyo, ¡lo protegemos!»",
+      "summary": "Hoya explora Janggyeong Panjeon, las salas del siglo XV en Haeinsa cuyas ventanas ingeniosas y pisos con capas han protegido las planchas de madera del Tripitaka Koreana durante unos 500 años.",
+      "title": "Guardado por el viento"
+    },
+    "story:jikji-metal-type": {
+      "checks.c1.explain": "El Jikji se imprimió con tipos de metal en el templo Heungdeoksa en 1377.",
+      "checks.c1.options.a": "1443",
+      "checks.c1.options.b": "1995",
+      "checks.c1.options.c": "1377",
+      "checks.c1.options.d": "2001",
+      "checks.c1.prompt": "¿En qué año se imprimió el Jikji?",
+      "checks.c2.explain": "El Jikji es el libro impreso con tipos móviles de metal más antiguo que se conserva en el mundo. Registros coreanos antiguos mencionan tipos de metal aún más antiguos.",
+      "checks.c2.options.a": "El primer libro escrito en hangul",
+      "checks.c2.options.b": "El primer libro impreso con planchas de madera",
+      "checks.c2.options.c": "Un libro escrito por el rey Sejong",
+      "checks.c2.options.d": "El libro de tipos de metal más antiguo que se conserva",
+      "checks.c2.prompt": "¿Qué hace especial al Jikji?",
+      "checks.c3.explain": "Solo se conserva el segundo volumen. Se guarda en la Biblioteca Nacional de Francia, en París.",
+      "checks.c3.options.a": "El templo Haeinsa, en Hapcheon",
+      "checks.c3.options.b": "La Biblioteca Nacional de Francia",
+      "checks.c3.options.c": "El Museo de Arte Kansong",
+      "checks.c3.options.d": "El Museo de la Imprenta Antigua de Cheongju",
+      "checks.c3.prompt": "¿Dónde se guarda hoy el volumen del Jikji que se conserva?",
+      "facts.f1.claim": "El Jikji se imprimió con tipos móviles de metal en el templo Heungdeoksa, a las afueras de Cheongju, en el 7.º mes de 1377 (3.er año del rey U de Goryeo).",
+      "facts.f2.claim": "El monje Baegun compiló el Jikji en 1372, a los 75 años, eligiendo pasajes importantes de las enseñanzas, los diálogos y las cartas del Buda y de monjes eminentes.",
+      "facts.f3.claim": "Los discípulos de Baegun, entre ellos Seokchan, lo imprimieron con donaciones de la monja budista Myodeok. El nombre del segundo discípulo aparece como Daldam en el Portal del Patrimonio Nacional de Corea y como Daljam en la página del Museo de la Imprenta Antigua de Cheongju, así que la historia no lo nombra.",
+      "facts.f4.claim": "En la impresión con tipos móviles, piezas sueltas de tipo se ordenan (se componen) en una plancha para imprimir páginas. Los tipos de metal hicieron la impresión más cómoda y económica, y facilitaron las correcciones.",
+      "facts.f5.claim": "El Jikji es el libro impreso con tipos móviles de metal más antiguo que se conserva en el mundo, aunque registros coreanos antiguos mencionan impresiones anteriores con tipos de metal.",
+      "facts.f6.claim": "El Jikji se hizo en dos volúmenes; solo se conserva el segundo, que se guarda en la Biblioteca Nacional de Francia (Bibliothèque nationale de France), en París.",
+      "facts.f7.claim": "El Jikji (vol. II) se inscribió en el Registro de la Memoria del Mundo de la UNESCO en 2001.",
+      "facts.f8.claim": "La UNESCO tiene un premio con el nombre del Jikji, el Premio UNESCO/Jikji Memoria del Mundo, que se entrega a personas o instituciones que han contribuido de forma notable a conservar el patrimonio documental y a hacerlo accesible.",
+      "facts.f9.claim": "Parece que Heungdeoksa quedó abandonado tras un incendio a finales de Goryeo. Su emplazamiento se confirmó en 1985, cuando una excavación arqueológica encontró una pieza de metal (geumgu) con la inscripción «Heungdeoksa». Hoy el Museo de la Imprenta Antigua de Cheongju está junto al lugar.",
+      "hoyaIntro": "¡Visitemos un templo donde imprimieron un libro con tipos de metal!",
+      "hoyaOutro": "¡Ahora conoces la historia del Jikji y de los tipos de metal que lo imprimieron!",
+      "keywords.bangmulgwan.gloss": "museo",
+      "keywords.geumsokhwalja.gloss": "tipos móviles de metal",
+      "keywords.hagwon.gloss": "el segundo (último) volumen de una obra",
+      "keywords.hwalja.gloss": "tipo de imprenta (una pieza para cada carácter)",
+      "keywords.jeja.gloss": "estudiante; aprendiz",
+      "keywords.jeol.gloss": "templo budista",
+      "keywords.jikji.gloss": "Jikji (nombre corto del libro)",
+      "keywords.seunim.gloss": "monje budista (forma respetuosa)",
+      "scenes.s1.caption": "Imprimir con tipos de metal en un templo",
+      "scenes.s1.narration": "Hoya viaja a Cheongju en la época del reino de Goryeo. En el templo Heungdeoksa, la gente está ocupada con algo increíble: ¡imprimir un libro con tipos de metal!",
+      "scenes.s2.caption": "El monje Baegun reúne las enseñanzas",
+      "scenes.s2.narration": "El libro se llama Jikji. En 1372, un monje anciano y sabio llamado Baegun, que tenía entonces 75 años, reunió en él enseñanzas importantes del Buda y de grandes maestros.",
+      "scenes.s3.caption": "Sus discípulos imprimen el libro",
+      "scenes.s3.narration": "En 1377, los discípulos de Baegun imprimieron el libro aquí, con el apoyo de una monja budista llamada Myodeok.",
+      "scenes.s4.caption": "Una pieza de tipo para cada carácter",
+      "scenes.s4.narration": "¿Cómo funciona? Cada carácter tiene su propia pieza pequeña de metal, un tipo. Quienes imprimen ponen las piezas en fila para formar una página y luego la imprimen. Los tipos de metal hicieron más fácil imprimir y más fácil corregir errores.",
+      "scenes.s5.caption": "Libro de tipos de metal más antiguo conservado",
+      "scenes.s5.narration": "El Jikji es el libro impreso con tipos móviles de metal más antiguo que se conserva en el mundo. Registros antiguos muestran que en Goryeo se usaban tipos de metal incluso antes, pero el Jikji es el libro de ese tipo más antiguo que todavía existe.",
+      "scenes.s6.caption": "Queda un volumen, en París",
+      "scenes.s6.narration": "El libro tenía dos volúmenes. Hoy solo se conserva el segundo, y se guarda en la Biblioteca Nacional de Francia, en París.",
+      "scenes.s7.caption": "La UNESCO honra el Jikji",
+      "scenes.s7.narration": "En 2001, la UNESCO añadió el Jikji al Registro de la Memoria del Mundo. La UNESCO también tiene un premio con su nombre, para quienes ayudan a proteger documentos antiguos y a compartirlos.",
+      "scenes.s8.caption": "Un museo junto al lugar del templo",
+      "scenes.s8.narration": "Parece que Heungdeoksa cerró tras un incendio hace mucho tiempo. Pero en 1985, un equipo de arqueología que excavaba el lugar encontró una pieza de metal con el nombre Heungdeoksa grabado, y así se confirmó dónde estaba. Hoy el Museo de la Imprenta Antigua de Cheongju está a su lado.",
+      "summary": "Hoya visita el templo Heungdeoksa en Cheongju, donde se imprimió el Jikji con tipos móviles de metal en 1377. Es el libro más antiguo de su tipo que se conserva en el mundo, y el único volumen que queda se guarda en París.",
+      "title": "Jikji: impreso con tipos de metal"
+    },
+    "story:joseon-records-today": {
+      "checks.c1.explain": "Los trabajadores siguieron el Hwaseong Seongyeok Uigwe para reconstruir la fortaleza como se veía al principio, y las reparaciones todavía lo usan.",
+      "checks.c1.options.a": "Adivinando a partir de historias de la gente del pueblo",
+      "checks.c1.options.b": "Copiando una fortaleza de otro país",
+      "checks.c1.options.c": "Siguiendo los registros y dibujos de su uigwe",
+      "checks.c1.prompt": "¿Cómo reconstruyeron Hwaseong de Suwon para que se viera como al principio?",
+      "checks.c2.explain": "El Seungjeongwon Ilgi registraba el tiempo todos los días, así que los científicos pueden usarlo para estudiar la naturaleza del pasado.",
+      "checks.c2.options.a": "Registros del tiempo de hace mucho",
+      "checks.c2.options.b": "Huesos de dinosaurio del palacio",
+      "checks.c2.options.c": "Fotografías de las caras de los reyes",
+      "checks.c2.prompt": "¿Qué pueden estudiar los científicos en el Seungjeongwon Ilgi?",
+      "checks.c3.explain": "Los Anales, el Seungjeongwon Ilgi, los uigwe y el Ilseongnok están todos en el Registro de la Memoria del Mundo de la UNESCO.",
+      "checks.c3.options.a": "Lista del Patrimonio Cultural Inmaterial",
+      "checks.c3.options.b": "Registro de la Memoria del Mundo",
+      "checks.c3.options.c": "Lista de sitios naturales del Patrimonio Mundial",
+      "checks.c3.prompt": "¿Qué registro de la UNESCO incluye los cuatro registros de Joseon de esta historia?",
+      "facts.f1.claim": "Hwaseong de Suwon se terminó en 1796, y todo el proceso de construcción quedó registrado en el Hwaseong Seongyeok Uigwe, con planos de arquitectura, imágenes de máquinas de construcción y los tamaños y las cantidades de los materiales.",
+      "facts.f2.claim": "Después de que partes de Hwaseong se dañaran, se reconstruyó para que se viera como al principio, siguiendo el Hwaseong Seongyeok Uigwe, y todavía hoy se repara a partir de ese registro.",
+      "facts.f3.claim": "El Festival Cultural de Hwaseong de Suwon (Suwon Hwaseong Munhwaje) incluye una recreación de la procesión real del rey Jeongjo (neunghaengcha), basada en el Wonhaeng Eulmyo Jeongni Uigwe.",
+      "facts.f4.claim": "El Seungjeongwon Ilgi registró el tiempo a diario durante 288 años (1623–1910), y estos registros pueden usarse en la investigación de ciencias naturales.",
+      "facts.f5.claim": "Los Anales, escritos en chino clásico, se tradujeron al coreano, y el sitio web del Instituto Nacional de Historia Coreana publica la traducción y el texto original.",
+      "facts.f6.claim": "Los Anales de la dinastía Joseon (1997), el Seungjeongwon Ilgi (2001), los uigwe (2007) y el Ilseongnok (2011) están todos inscritos en el Registro de la Memoria del Mundo de la UNESCO.",
+      "hoyaIntro": "¿Qué hacen hoy por nosotros los registros antiguos? ¡Vamos a verlo!",
+      "hoyaOutro": "Los registros escritos hace mucho tiempo todavía nos ayudan hoy. ¿Qué vas a escribir tú?",
+      "keywords.bomul.gloss": "tesoro",
+      "keywords.girogeun-bomurieyo.gloss": "Los registros son tesoros.",
+      "keywords.girok.gloss": "registro",
+      "keywords.haengnyeol.gloss": "procesión",
+      "keywords.hwaseong.gloss": "fortaleza Hwaseong",
+      "keywords.nalssi-girok.gloss": "registros del tiempo",
+      "keywords.nalssi.gloss": "tiempo (clima)",
+      "keywords.nuguna-ilgeul-su-isseoyo.gloss": "Cualquier persona puede leerlo.",
+      "keywords.seong.gloss": "fortaleza, muralla",
+      "keywords.seongeul-gochyeoyo.gloss": "Reparan la fortaleza.",
+      "keywords.suwon-hwaseong-munhwaje.gloss": "Festival Cultural de Hwaseong de Suwon",
+      "keywords.wae-girokalkkayo.gloss": "¿Por qué guardamos registros?",
+      "keywords.yuneseuko.gloss": "UNESCO",
+      "scenes.s1.caption": "Hoya pregunta qué hacen hoy los registros antiguos",
+      "scenes.s1.narration": "Hoya tiene una pregunta más: ¿qué hacen hoy por nosotros estos registros antiguos? Vamos a visitar algunos lugares donde los registros de Joseon todavía son útiles.",
+      "scenes.s2.caption": "La fortaleza Hwaseong, registrada paso a paso",
+      "scenes.s2.narration": "La fortaleza Hwaseong de Suwon se terminó en 1796. Cada paso de la obra quedó registrado en el Hwaseong Seongyeok Uigwe, con dibujos de los edificios y de las máquinas, y los tamaños y las cantidades de los materiales.",
+      "scenes.s3.caption": "Reparar la fortaleza a partir del uigwe",
+      "scenes.s3.narration": "Más tarde, partes de la fortaleza se dañaron. Los trabajadores siguieron el uigwe para devolverle su forma original, y las reparaciones todavía se basan hoy en este registro.",
+      "scenes.s4.caption": "Un festival recrea la procesión real",
+      "scenes.s4.narration": "Hoy, el Festival Cultural de Hwaseong de Suwon, el {kw:suwon-hwaseong-munhwaje}, incluye una recreación de la gran procesión real del rey Jeongjo, basada en el uigwe de su viaje.",
+      "scenes.s5.caption": "Los científicos pueden estudiar antiguas notas del tiempo",
+      "scenes.s5.narration": "Los científicos pueden estudiar las notas diarias del tiempo del Seungjeongwon Ilgi, que abarca casi 300 años, para aprender sobre la naturaleza del pasado.",
+      "scenes.s6.caption": "Todos pueden leer los Anales en internet",
+      "scenes.s6.narration": "Los Anales se escribieron en chino clásico, que hoy es difícil para la mayoría de la gente. Unos traductores los pasaron al coreano moderno, y ahora cualquier persona puede leer la traducción en internet, junto con el texto original.",
+      "scenes.s7.caption": "En la Memoria del Mundo de la UNESCO",
+      "scenes.s7.narration": "Los cuatro registros que conociste, los Anales, el Seungjeongwon Ilgi, los uigwe y el Ilseongnok, están en el Registro de la Memoria del Mundo de la UNESCO.",
+      "scenes.s8.caption": "Los registros son tesoros",
+      "scenes.s8.narration": "Hoya sonríe. Gracias a las personas que escribieron con cuidado hace mucho tiempo, todavía podemos aprender del pasado. «¡Los registros son tesoros!» ¿Qué vas a escribir tú hoy?",
+      "summary": "¿Cómo ayudan hoy los registros de Joseon? Hoya ve una fortaleza reparada a partir de los dibujos de un uigwe, un festival que recrea una procesión real, a científicos que leen antiguas notas del tiempo y los Anales abiertos a todo el mundo en internet.",
+      "title": "Registros antiguos, nuevos descubrimientos"
+    },
+    "story:kim-hongdo-genre-paintings": {
+      "checks.c1.explain": "El público está sentado en dos grupos redondeados alrededor de los luchadores, uno arriba y otro abajo.",
+      "checks.c1.options.a": "En dos grupos en curva alrededor de los luchadores",
+      "checks.c1.options.b": "En una fila larga y recta al lado de los luchadores",
+      "checks.c1.options.c": "En una sola fila detrás del vendedor de melcocha",
+      "checks.c1.prompt": "¿Cómo está sentado el público en la pintura {target}?",
+      "checks.c2.explain": "Un seodang es una escuela de pueblo. En la pintura Seodang, el maestro y los alumnos están reunidos alrededor de un niño.",
+      "checks.c2.options.a": "Un mercado de pueblo lleno de gente",
+      "checks.c2.options.b": "Una escuela de pueblo",
+      "checks.c2.options.c": "Un salón de un palacio real",
+      "checks.c2.prompt": "¿Qué es {target}?",
+      "checks.c3.explain": "En Ssireum, un vendedor de melcocha está a la izquierda, lejos de la atención del público.",
+      "checks.c3.options.a": "Un maestro con gorro de erudito",
+      "checks.c3.options.b": "Un niño que se ha dado la vuelta",
+      "checks.c3.options.c": "Un vendedor de melcocha",
+      "checks.c3.prompt": "¿Quién está en el lado izquierdo de la pintura {target}, fuera de la atención del público?",
+      "checks.r1.explain": "Geurim significa dibujo o pintura.",
+      "checks.r1.options.a": "Pintor o pintora",
+      "checks.r1.options.b": "Lucha",
+      "checks.r1.options.c": "Dibujo",
+      "checks.r1.options.d": "Escuela",
+      "checks.r1.prompt": "¿Qué significa {target}?",
+      "checks.r2.explain": "Seodang significa escuela de pueblo. Kim Hongdo pintó una clase en un seodang.",
+      "checks.r2.options.a": "Escuela de pueblo",
+      "checks.r2.options.b": "Vendedor o vendedora de melcocha",
+      "checks.r2.options.c": "Museo",
+      "checks.r2.options.d": "Mercado",
+      "checks.r2.prompt": "¿Qué significa {target}?",
+      "checks.r3.explain": "Un vendedor de melcocha está a la izquierda, lejos del público.",
+      "checks.r3.options.a": "Un maestro",
+      "checks.r3.options.b": "Un rey",
+      "checks.r3.options.c": "Un tamborilero",
+      "checks.r3.options.d": "Un vendedor de melcocha",
+      "checks.r3.prompt": "En la pintura Ssireum, ¿quién está en el lado izquierdo?",
+      "facts.f1.claim": "La pintura costumbrista (pungsokhwa) muestra la vida diaria de la gente común, no la de la corte real; el álbum de Kim Hong-do muestra la vida diaria y el trabajo de la gente común.",
+      "facts.f2.claim": "Kim Hong-do (nombre artístico Danwon) nació en 1745; fue pintor de la corte (dohwaseo hwawon), destacó en muchos géneros y es famoso sobre todo por la pintura costumbrista.",
+      "facts.f3.claim": "El álbum de 25 pinturas costumbristas atribuido a Kim Hong-do, también llamado álbum de pinturas costumbristas de Danwon (Danwon pungsokdo-cheop), está designado como Tesoro (1970) y se guarda en el Museo Nacional de Corea.",
+      "facts.f4.claim": "En la pintura Ssireum, dos luchadores se agarran y miden su fuerza en el centro, rodeados por el público, que se reparte en dos grupos redondeados, uno arriba y otro abajo.",
+      "facts.f5.claim": "En Ssireum, un vendedor de melcocha (yeotjangsu) está a la izquierda, fuera de la atención del público, y unos zapatos que alguien se quitó ayudan a cerrar el espacio vacío de la derecha.",
+      "facts.f6.claim": "En Seodang, el maestro y los alumnos están alrededor de un niño agachado, de espaldas, que lloriquea y es el centro del cuadro; los demás alumnos parecen divertirse y el maestro parece preocupado.",
+      "facts.f7.claim": "El ssireum está designado como Patrimonio Inmaterial Nacional de Corea (2017), y la lucha tradicional coreana (Ssirum/Ssireum) se inscribió en 2018 en la Lista Representativa del Patrimonio Cultural Inmaterial de la Humanidad de la UNESCO.",
+      "hoyaIntro": "Vamos a mirar de cerca unos cuadros antiguos de la vida diaria. ¿Qué puedes encontrar?",
+      "hoyaOutro": "Un vendedor de melcocha, unos zapatos que alguien se quitó, un alumno que lloriquea: ¡qué buena vista tienes!",
+      "keywords.geurim.gloss": "dibujo; pintura",
+      "keywords.hwaga.gloss": "pintor o pintora",
+      "keywords.kim-hong-do.gloss": "Kim Hongdo, pintor de la corte de Joseon",
+      "keywords.pungsokhwa.gloss": "pintura costumbrista",
+      "keywords.seodang.gloss": "escuela de pueblo",
+      "keywords.ssireum-hanpan-haeyo.gloss": "¡Hagamos una ronda de ssireum!",
+      "keywords.ssireum.gloss": "lucha coreana",
+      "keywords.yeotjangsu.gloss": "vendedor o vendedora de melcocha",
+      "scenes.s1.caption": "Hoya moja el pincel: cuadros de la vida diaria",
+      "scenes.s2.caption": "Kim Hongdo, pintor de Joseon",
+      "scenes.s3.caption": "Un álbum de pinturas costumbristas en un museo",
+      "scenes.s3.narration": "Un álbum de 25 pinturas costumbristas, conocido como el álbum de pinturas costumbristas de Danwon, se guarda en el Museo Nacional de Corea. Está designado como Tesoro. En coreano, una pintura costumbrista se dice {kw:pungsokhwa}.",
+      "scenes.s4.caption": "Dos luchadores miden su fuerza",
+      "scenes.s4.narration": "¡Mira la pintura {kw:ssireum}! En el centro, dos luchadores se agarran y miden su fuerza. A su alrededor, el público está sentado en dos grupos en curva y mira con atención.",
+      "scenes.s5.caption": "Un vendedor de melcocha a la izquierda",
+      "scenes.s5.narration": "¿Puedes encontrar más cosas? Un vendedor de melcocha, {kw:yeotjangsu}, está de pie a la izquierda, lejos de la atención del público. A la derecha, hay unos zapatos que alguien se quitó y dejó allí.",
+      "scenes.s6.caption": "Una clase alrededor de un niño",
+      "scenes.s6.narration": "Ahora mira {kw:seodang}, la pintura de una escuela de pueblo. El maestro y los alumnos están reunidos alrededor de un niño que se ha dado la vuelta y lloriquea. Los demás alumnos parecen divertirse, y el maestro parece preocupado. Hoya espera que el niño se sienta mejor pronto.",
+      "scenes.s7.caption": "El ssireum, un patrimonio que sigue vivo",
+      "summary": "Hoya mira de cerca Ssireum y Seodang, del álbum de pinturas costumbristas de Danwon en el Museo Nacional de Corea, y encuentra a un vendedor de melcocha, unos zapatos que alguien se quitó y a un alumno que lloriquea.",
+      "title": "Los cuadros de la vida diaria de Kim Hongdo"
+    },
+    "story:nanjung-ilgi": {
+      "checks.c1.explain": "Durante la guerra de Imjin, el almirante Yi escribió en su diario casi todos los días, de su puño y letra.",
+      "checks.c1.options.a": "Solo una vez a la semana",
+      "checks.c1.options.b": "Casi todos los días",
+      "checks.c1.options.c": "Solo en días de fiesta especiales",
+      "checks.c1.prompt": "¿Con qué frecuencia escribía el almirante Yi en su diario?",
+      "checks.c2.explain": "Escribió sobre el clima, la vida en el ejército, sus propios sentimientos y la vida de la gente común.",
+      "checks.c2.options.a": "El clima, la vida en el ejército y la gente común",
+      "checks.c2.options.b": "Historias de tierras lejanas y sus reyes",
+      "checks.c2.options.c": "Listas de comidas de los banquetes reales",
+      "checks.c2.prompt": "¿Sobre cuál de estas cosas escribió?",
+      "checks.c3.explain": "Al principio, el diario no tenía título. Más tarde, los editores de sus obras completas lo llamaron Nanjung Ilgi, el Diario de guerra.",
+      "checks.c3.options.a": "El propio almirante Yi, en la primera página",
+      "checks.c3.options.b": "El rey Seonjo, después de leer el diario",
+      "checks.c3.options.c": "Los editores que más tarde reunieron sus obras completas",
+      "checks.c3.prompt": "¿Quién le puso al diario su nombre, {target}?",
+      "facts.f1.claim": "Yi Sun-sin (1545–1598) fue comandante naval de la provincia de Jeolla Izquierda (Jeolla jwado sugun jeoldosa) y, previendo una invasión, construyó barcos y reforzó los preparativos militares con centro en Yeosu.",
+      "facts.f2.claim": "Durante la guerra de Imjin (1592–1598), Yi Sun-sin llevó un diario personal, escrito casi a diario, de su puño y letra.",
+      "facts.f3.claim": "El diario registra, entre otras cosas, observaciones sobre el clima, la vida en el ejército, las opiniones y sentimientos personales del almirante y la vida de la gente común.",
+      "facts.f4.claim": "El diario también registra a familiares, parientes y subordinados, incluidas sus idas y venidas.",
+      "facts.f5.claim": "El Nanjung Ilgi escrito a mano que se conserva consta de siete tomos.",
+      "facts.f6.claim": "Al principio, el diario no tenía título; el nombre 'Nanjung Ilgi' se lo dieron más tarde los editores de las obras completas de Yi Sun-sin (Yi Chungmugong jeonseo).",
+      "facts.f7.claim": "El diario escrito a mano está designado como Tesoro Nacional (junto con las cartas de Yi Sun-sin y los borradores de sus informes de la guerra de Imjin) y se guarda en Hyeonchungsa, en Asan, provincia de Chungcheong del Sur.",
+      "facts.f8.claim": "El Nanjung Ilgi se inscribió en el Registro de la Memoria del Mundo de la UNESCO en 2013.",
+      "hoyaIntro": "¿Tú escribes un diario? Vamos a abrir el diario del almirante Yi.",
+      "hoyaOutro": "El clima, los sentimientos y la vida diaria: el almirante Yi lo escribió todo. ¡Tal vez tú también puedas llevar un diario!",
+      "keywords.gajok.gloss": "familia",
+      "keywords.ilgi.gloss": "diario",
+      "keywords.janggun.gloss": "general; comandante (el título que se usa en Corea para el almirante Yi)",
+      "keywords.maeil.gloss": "todos los días",
+      "keywords.nalssi.gloss": "tiempo; clima",
+      "keywords.nanjung-ilgi.gloss": "Diario de guerra (de Yi Sunsin)",
+      "keywords.oneuldo-ilgireul-sseoyo.gloss": "¡Hoy también escribo en mi diario!",
+      "keywords.yi-sun-sin.gloss": "Yi Sunsin, comandante naval de Joseon",
+      "scenes.s1.caption": "Hoya abre su libretita",
+      "scenes.s1.narration": "Hoya abre una libretita. «¿Tú escribes un diario? En coreano, diario se dice {kw:ilgi}», dice. «Hoy vamos a conocer un diario famoso que escribió un comandante hace mucho tiempo, en Joseon».",
+      "scenes.s2.caption": "Yi Sunsin construye barcos cerca de Yeosu",
+      "scenes.s2.narration": "Yi Sunsin, {kw:yi-sun-sin}, vivió de 1545 a 1598 y fue comandante de la armada de Joseon. Antes de que llegara la guerra, construyó barcos y preparó las defensas alrededor de Yeosu.",
+      "scenes.s3.caption": "El almirante Yi escribe casi todos los días",
+      "scenes.s3.narration": "Durante la guerra de Imjin, de 1592 a 1598, el almirante Yi llevó un diario y escribía en él casi todos los días.",
+      "scenes.s4.caption": "Escribe sobre el clima y los sentimientos",
+      "scenes.s4.narration": "Escribió sobre el clima, sobre la vida en el ejército, sobre sus propios pensamientos y sentimientos, y sobre la vida de la gente común que lo rodeaba.",
+      "scenes.s5.caption": "Escribe sobre su familia",
+      "scenes.s5.narration": "También escribió sobre su familia y sus parientes, y sobre las personas que servían con él.",
+      "scenes.s6.caption": "Unos editores le ponen nombre al diario",
+      "scenes.s6.narration": "Se conservan siete tomos del diario escritos a mano. Al principio no tenía título. Más tarde, unos editores lo llamaron {kw:nanjung-ilgi}, 'el diario escrito en medio de la guerra'.",
+      "scenes.s7.caption": "El diario es un Tesoro Nacional",
+      "scenes.s7.narration": "Hoy el diario es un Tesoro Nacional y se guarda en el santuario Hyeonchungsa, en Asan. En 2013, la UNESCO lo agregó al Registro de la Memoria del Mundo de la UNESCO. Hoya toma su pincel: «{kw:oneuldo-ilgireul-sseoyo}»",
+      "summary": "Hoya abre el diario que el almirante Yi Sunsin escribió casi todos los días de 1592 a 1598, lleno de clima, sentimientos y vida diaria. Hoy es Tesoro Nacional y Memoria del Mundo de la UNESCO.",
+      "title": "El diario del almirante Yi"
+    },
+    "story:pansori-tales": {
+      "checks.c1.explain": "En el pansori, quien toca el tambor, llamado gosu, marca el ritmo en un tambor de barril, el buk, mientras una persona canta la historia.",
+      "checks.c1.options.a": "Una pequeña orquesta",
+      "checks.c1.options.b": "Una persona que baila con un abanico",
+      "checks.c1.options.c": "Un coro",
+      "checks.c1.options.d": "Quien toca el tambor, el gosu",
+      "checks.c1.prompt": "¿Quién marca el ritmo en el pansori?",
+      "checks.c2.explain": "En la historia, la golondrina vuelve la primavera siguiente con una semilla de calabaza para Heungbu.",
+      "checks.c2.options.a": "Una piña de pino",
+      "checks.c2.options.b": "Una semilla de calabaza",
+      "checks.c2.options.c": "Una pluma brillante",
+      "checks.c2.options.d": "Una flor roja",
+      "checks.c2.prompt": "¿Qué le llevó la golondrina a Heungbu la primavera siguiente?",
+      "checks.c3.explain": "En la historia, el conejo dice que dejó su hígado en tierra, así que el rey lo manda de vuelta, y escapa.",
+      "checks.c3.options.a": "Dijo que había dejado su hígado en tierra",
+      "checks.c3.options.b": "Nadó a casa más rápido que la tortuga",
+      "checks.c3.options.c": "Salió corriendo por un túnel secreto",
+      "checks.c3.options.d": "Le prometió al rey un regalo de oro",
+      "checks.c3.prompt": "¿Cómo escapó el conejo del palacio?",
+      "checks.r1.explain": "Jebi significa golondrina, un ave pequeña. Heungbu ayuda a una golondrina herida.",
+      "checks.r1.options.a": "Conejo",
+      "checks.r1.options.b": "Tortuga",
+      "checks.r1.options.c": "Golondrina",
+      "checks.r1.options.d": "Calabaza",
+      "checks.r1.prompt": "¿Qué significa {target}?",
+      "checks.r2.explain": "Tokki significa conejo. El conejo astuto escapa del palacio del mar.",
+      "checks.r2.options.a": "Conejo",
+      "checks.r2.options.b": "Tigre",
+      "checks.r2.options.c": "Tortuga",
+      "checks.r2.options.d": "Golondrina",
+      "checks.r2.prompt": "¿Qué significa {target}?",
+      "checks.r3.explain": "Cuando la familia de Heungbu abrió las calabazas con una sierra, salieron dinero, arroz y tesoros.",
+      "checks.r3.options.a": "Solo semillas",
+      "checks.r3.options.b": "Dinero, arroz y tesoros",
+      "checks.r3.options.c": "Agua",
+      "checks.r3.options.d": "Más golondrinas",
+      "checks.r3.prompt": "En la historia, ¿qué salió de las calabazas de Heungbu?",
+      "facts.f1.claim": "En el pansori, una sola voz cantante (sorikkun) cuenta una historia larga cantando, hablando y con gestos, con el acompañamiento de quien toca el tambor (gosu), que marca el ritmo en un tambor de barril (buk).",
+      "facts.f10.claim": "En la historia, el conejo dice que dejó su hígado en tierra; el rey lo manda de vuelta con la tortuga, y en tierra el conejo escapa al bosque.",
+      "facts.f11.claim": "El cuento coreano del conejo y la tortuga (Sugungga / Tokki-jeon) es una historia distinta de la fábula de Esopo de la liebre y la tortuga (titulada 'The Hare and the Tortoise' en la traducción de Townsend citada aquí, y también conocida como 'The Tortoise and the Hare'): en la fábula de Esopo, una liebre y una tortuga echan una carrera, mientras que en el cuento coreano envían a una tortuga a buscar el hígado de un conejo para el Rey Dragón enfermo.",
+      "facts.f12.claim": "Una forma breve y antigua del cuento del conejo y la tortuga, llamada Gutojiseol (龜兎之說), aparece en el Samguk sagi, en las biografías (yeoljeon); el Sugungga del pansori se basa en ella como estructura principal.",
+      "facts.f2.claim": "Quien toca el tambor grita exclamaciones como «¡Eolssigu!» y «¡Jota!» para animar la función; se llaman chuimsae.",
+      "facts.f3.claim": "El pansori tuvo una vez doce obras (madang); cinco se siguen interpretando hoy: Chunhyangga, Simcheongga, Sugungga, Heungboga y Jeokbyeokga.",
+      "facts.f4.claim": "La UNESCO proclamó el pansori Obra Maestra del Patrimonio Oral e Inmaterial de la Humanidad en 2003 y lo incorporó a la Lista Representativa en 2008.",
+      "facts.f5.claim": "El Heungboga es una de las cinco obras de pansori; la misma historia existe como la novela de finales de Joseon Heungbu-jeon (de autor y fecha desconocidos), en la que aparecen Nolbu, el hermano mayor codicioso, y Heungbu, el hermano menor pobre y bondadoso, y Heungbu le venda la pata rota a una cría de golondrina que se cayó.",
+      "facts.f6.claim": "En la historia, la golondrina vuelve la primavera siguiente con una semilla de calabaza; Heungbu la planta, crecen calabazas grandes y, cuando las abren con una sierra, salen dinero, arroz y tesoros.",
+      "facts.f7.claim": "En la historia, Nolbu lastima a propósito a una golondrina, y de sus calabazas solo salen cosas dañinas que lo arruinan. Los finales cambian según la versión: en la trama básica de la novela Heungbu-jeon (Enciclopedia de la Cultura Coreana) y en versiones cantadas conocidas del Heungboga (los textos de Park Bong-sul y Jeong Gwang-su que describe el diccionario de literatura folclórica del Museo Nacional del Folclore), Nolbu se arrepiente y los hermanos se reconcilian.",
+      "facts.f8.claim": "El Sugungga es una de las cinco obras de pansori; la misma historia existe como la novela de finales de Joseon Tokki-jeon (también llamada Byeoljubu-jeon). En ella, el Rey Dragón se enferma, un sabio (dosa) dice que el hígado de un conejo lo curará, y la jara (tortuga de caparazón blando) llamada Byeoljubu se ofrece para ir a tierra. Byeoljubu (鼈主簿) es un título para la tortuga (鼈 «tortuga de caparazón blando» + 主簿, un antiguo cargo oficial), no un nombre propio.",
+      "facts.f9.claim": "En la historia, la tortuga atrae al conejo con la promesa de un cargo importante en el palacio submarino; el conejo se deja engañar y la sigue hasta el palacio del Rey Dragón, donde el rey le exige el hígado.",
+      "hoyaIntro": "¡Escuchemos pansori! Una persona canta y otra toca el tambor para contar dos cuentos antiguos.",
+      "hoyaOutro": "Un hermano bondadoso, una golondrina agradecida y un conejo astuto. ¡Eolssigu, qué gran función!",
+      "keywords.bak.gloss": "calabaza",
+      "keywords.buk.gloss": "tambor de barril",
+      "keywords.chuimsae.gloss": "un grito de ánimo de quien toca el tambor",
+      "keywords.eolssigu.gloss": "un grito de alegría",
+      "keywords.ganeul-yukjie-dugo-watseumnida.gloss": "Dejé mi hígado en tierra.",
+      "keywords.hyeongje.gloss": "hermanos",
+      "keywords.jara.gloss": "tortuga de caparazón blando",
+      "keywords.jebi.gloss": "golondrina (ave)",
+      "keywords.pansori.gloss": "pansori (relato musical)",
+      "keywords.tokki.gloss": "conejo",
+      "keywords.yonggung.gloss": "el palacio submarino del Rey Dragón",
+      "scenes.s1.caption": "Una persona canta y otra toca el tambor",
+      "scenes.s2.caption": "Ánimos chuimsae y cinco obras vivas",
+      "scenes.s2.narration": "Quien toca el tambor grita ánimos llamados {kw:chuimsae}, como «¡Eolssigu!» y «¡Jota!». Hace mucho tiempo había doce historias de pansori; cinco se siguen cantando hoy. La UNESCO nombró al pansori obra maestra en 2003 y lo añadió a su lista de patrimonio en 2008. ¡Escuchemos dos!",
+      "scenes.s3.caption": "Heungbu ayuda a una golondrina herida",
+      "scenes.s4.caption": "Salen tesoros de las calabazas",
+      "scenes.s5.caption": "Las calabazas de Nolbu solo traen problemas",
+      "scenes.s5.narration": "Nolbu, que era codicioso, también quería tesoros, así que lastimó a una golondrina a propósito. ¡Pero sus calabazas solo trajeron problemas! En versiones conocidas, Nolbu se arrepintió y los hermanos hicieron las paces.",
+      "scenes.s6.caption": "El Rey Dragón enfermo y la tortuga",
+      "scenes.s6.narration": "Luego, el Sugungga, también contado como la novela Tokkijeon. ¡Es una historia distinta de la carrera de Esopo! El Rey Dragón estaba enfermo. Un sabio dijo que el hígado de un conejo podía curarlo. Una jara, tortuga de caparazón blando con el título de Byeoljubu, se ofreció a conseguir uno.",
+      "scenes.s7.caption": "El conejo sigue a la tortuga hasta el palacio",
+      "scenes.s8.caption": "El conejo astuto escapa",
+      "scenes.s8.narration": "El conejo pensó rápido: «¡Dejé mi hígado en tierra!». El rey le creyó y lo mandó a casa con la tortuga. En la orilla, el conejo se fue saltando al bosque. ¡Eolssigu! Una forma antigua de este cuento aparece en un libro llamado Samguk sagi.",
+      "summary": "Hoya va a una función de pansori (UNESCO 2003/2008) y escucha dos de sus cinco obras que se conservan: el bondadoso Heungbu y la golondrina agradecida, y el conejo astuto que escapa del palacio del Rey Dragón. Este cuento coreano es distinto de «La liebre y la tortuga» de Esopo.",
+      "title": "Cuentos de pansori: la golondrina de Heungbu y el conejo astuto (cuentos tradicionales)"
+    },
+    "story:sejong-new-letters": {
+      "checks.c1.explain": "El rey Sejong creó él mismo las letras nuevas. Las llamó Hunminjeongeum.",
+      "checks.c1.options.a": "El monje Baegun",
+      "checks.c1.options.b": "El rey Sejong",
+      "checks.c1.options.c": "Jeong Inji",
+      "checks.c1.options.d": "Alguien que vende en el mercado",
+      "checks.c1.prompt": "¿Quién creó el hangul?",
+      "checks.c2.explain": "El rey Sejong creó las 28 letras nuevas en 1443.",
+      "checks.c2.options.a": "1377",
+      "checks.c2.options.b": "1446",
+      "checks.c2.options.c": "1443",
+      "checks.c2.options.d": "1940",
+      "checks.c2.prompt": "¿En qué año creó el rey Sejong las 28 letras?",
+      "checks.c3.explain": "Al rey Sejong le daba pena la gente que no podía expresarse, así que hizo letras fáciles de aprender y de usar cada día.",
+      "checks.c3.options.a": "Para guardar secretos del palacio",
+      "checks.c3.options.b": "Para que solo la gente estudiosa leyera las órdenes del rey",
+      "checks.c3.options.c": "Para reemplazar el sello del rey",
+      "checks.c3.options.d": "Para que la gente aprendiera letras fácilmente",
+      "checks.c3.prompt": "¿Por qué hizo letras nuevas el rey Sejong?",
+      "checks.r1.explain": "Geulja significa letra. El rey Sejong hizo 28 letras nuevas.",
+      "checks.r1.options.a": "Un rey",
+      "checks.r1.options.b": "Una letra",
+      "checks.r1.options.c": "Un libro",
+      "checks.r1.options.d": "Una persona sabia",
+      "checks.r1.prompt": "¿Qué significa {target}?",
+      "checks.r2.explain": "Baekseong es una palabra antigua para la gente común.",
+      "checks.r2.options.a": "Un rey",
+      "checks.r2.options.b": "Un libro nuevo",
+      "checks.r2.options.c": "La gente común",
+      "checks.r2.options.d": "Una persona que enseña",
+      "checks.r2.prompt": "¿Qué significa {target}?",
+      "checks.r3.explain": "Hoy las letras del rey Sejong se llaman hangul.",
+      "checks.r3.options.a": "Hangul",
+      "checks.r3.options.b": "Hanja",
+      "checks.r3.options.c": "Haerye",
+      "checks.r3.options.d": "Sillok",
+      "checks.r3.prompt": "En la historia, ¿cómo se llaman hoy las letras nuevas?",
+      "facts.f1.claim": "El rey Sejong fue el cuarto rey de la dinastía Joseon; reinó de 1418 a 1450.",
+      "facts.f2.claim": "Antes del hangul, el coreano se escribía con caracteres chinos prestados. Como el coreano es distinto del chino y los caracteres eran difíciles de aprender, mucha gente común no podía escribir lo que quería decir.",
+      "facts.f3.claim": "En 1443 (registrado en el 12.º mes lunar del 25.º año de Sejong), el rey Sejong creó él mismo 28 letras y las llamó Hunminjeongeum.",
+      "facts.f4.claim": "Hunminjeongeum significa «los sonidos correctos para enseñar al pueblo» (baekseong, una palabra antigua para la gente común).",
+      "facts.f5.claim": "En su prefacio, el rey Sejong escribió que sentía pena por la gente que no podía expresarse y que hizo 28 letras nuevas para que la gente pudiera aprenderlas fácilmente y usarlas con comodidad cada día.",
+      "facts.f6.claim": "El prefacio de Jeong In-ji al Hunminjeongeum dice que una persona sabia puede entender las letras antes de que termine una mañana.",
+      "facts.f7.claim": "En el 9.º mes lunar de 1446 se terminó el libro Hunminjeongeum, que explica las letras nuevas. La UNESCO y el Servicio del Patrimonio de Corea lo describen como publicado (promulgado) en 1446, pero no hay registro de una ceremonia formal de promulgación.",
+      "facts.f8.claim": "La gente estudiosa del Jiphyeonjeon (Sala de los Dignos), con Jeong In-ji al frente, escribió el Haerye del libro (explicaciones y ejemplos).",
+      "facts.f9.claim": "Hangul es el nombre actual de la escritura propia de Corea, que el rey Sejong creó con el nombre de Hunminjeongeum.",
+      "hoyaIntro": "¡Ven conmigo a Joseon! Descubramos por qué el rey Sejong hizo letras nuevas.",
+      "hoyaOutro": "Ahora sabes dónde empezó el hangul. El rey Sejong hizo letras para todo el mundo, ¡y tú las estás leyendo!",
+      "keywords.baekseong.gloss": "la gente común (palabra antigua)",
+      "keywords.baeugi-swiwoyo.gloss": "¡Es fácil de aprender!",
+      "keywords.geulja.gloss": "letra; carácter escrito",
+      "keywords.hangeul.gloss": "el alfabeto coreano",
+      "keywords.hanja.gloss": "caracteres chinos (como se usan en Corea)",
+      "keywords.hunminjeongeum.gloss": "«los sonidos correctos para enseñar al pueblo»",
+      "keywords.jiphyeonjeon.gloss": "la Sala de los Dignos (la sala de estudio del rey)",
+      "keywords.sae-geulja.gloss": "letras nuevas",
+      "keywords.sejong-daewang.gloss": "el rey Sejong el Grande",
+      "keywords.swiwoyo.gloss": "(es) fácil",
+      "scenes.s6.caption": "Un libro explica las letras",
+      "scenes.s6.narration": "En 1446 se terminó un libro llamado Hunminjeongeum para explicar las letras nuevas. La gente estudiosa de la Sala de los Dignos del rey, el Jiphyeonjeon, escribió sus explicaciones y ejemplos.",
+      "summary": "Hoya viaja a Joseon para descubrir por qué el rey Sejong creó 28 letras nuevas en 1443 y cómo el libro Hunminjeongeum las explicó en 1446.",
+      "title": "Las nuevas letras del rey Sejong"
+    },
+    "story:seollal-new-year": {
+      "checks.c1.explain": "Sebae es la reverencia de Año Nuevo a los mayores. Es el primer saludo del año.",
+      "checks.c1.options.a": "Seolbim",
+      "checks.c1.options.b": "Deokdam",
+      "checks.c1.options.c": "Sebae",
+      "checks.c1.options.d": "Tteokguk",
+      "checks.c1.prompt": "¿Cómo se llama la reverencia de Año Nuevo a los mayores?",
+      "checks.c2.explain": "Do avanza 1 casilla, gae 2, geol 3, yut 4 y mo 5. Con yut o mo se tira otra vez.",
+      "checks.c2.options.a": "Dos",
+      "checks.c2.options.b": "Tres",
+      "checks.c2.options.c": "Cuatro",
+      "checks.c2.options.d": "Cinco",
+      "checks.c2.prompt": "En el yunnori, ¿cuántas casillas avanza «mo»?",
+      "checks.c3.explain": "El tteokguk, una sopa clara con rodajas finas de pastel de arroz blanco, es la comida clásica de Seollal.",
+      "checks.c3.options.a": "Miyeokguk (sopa de algas)",
+      "checks.c3.options.b": "Tteokguk (sopa de masa de arroz)",
+      "checks.c3.options.c": "Samgyetang (sopa de pollo con ginseng)",
+      "checks.c3.options.d": "Seolleongtang (sopa de hueso de res)",
+      "checks.c3.prompt": "En la historia, ¿qué sopa come la familia en el desayuno de Seollal?",
+      "checks.r1.explain": "Seolbim es la ropa nueva que la gente se pone en Seollal.",
+      "checks.r1.options.a": "Una reverencia de Año Nuevo",
+      "checks.r1.options.b": "Ropa nueva para Seollal",
+      "checks.r1.options.c": "Sopa de masa de arroz",
+      "checks.r1.options.d": "Un juego con palitos de yut",
+      "checks.r1.prompt": "¿Qué significa {target}?",
+      "checks.r2.explain": "Deokdam son las palabras amables de buenos deseos que dice una persona mayor después de la reverencia sebae.",
+      "checks.r2.options.a": "Ropa nueva",
+      "checks.r2.options.b": "Una sopa clara",
+      "checks.r2.options.c": "Un juego de tablero",
+      "checks.r2.options.d": "Palabras de buenos deseos",
+      "checks.r2.prompt": "¿Qué significa {target}?",
+      "checks.r3.explain": "El tteokguk, una sopa clara con rodajas finas de pastel de arroz blanco, es la comida clásica de Seollal.",
+      "checks.r3.options.a": "Tteokguk (sopa de masa de arroz)",
+      "checks.r3.options.b": "Songpyeon (pasteles de arroz rellenos)",
+      "checks.r3.options.c": "Bibimbap (arroz mezclado)",
+      "checks.r3.options.d": "Japchae (fideos de vidrio)",
+      "checks.r3.prompt": "En la historia, ¿qué come la gente en Seollal?",
+      "facts.f1.claim": "Seollal (Seol) es el primer día del primer mes del calendario lunar y una de las grandes fiestas tradicionales de Corea; a finales de la era Joseon, el libro Dongguk sesigi contaba Seol, Hansik, Dano y Chuseok como las cuatro grandes fiestas.",
+      "facts.f10.claim": "El yunnori fue declarado Patrimonio Inmaterial Nacional (elemento de base comunitaria) el 11 de noviembre de 2022.",
+      "facts.f2.claim": "La ropa nueva para Seollal se llama seolbim; sobre todo las niñas pequeñas llevan tradicionalmente saekdong jeogori (una chaqueta con mangas de rayas de arcoíris).",
+      "facts.f3.claim": "Sebae es la reverencia de Año Nuevo a los mayores, el primer saludo del año; después de los ritos a los antepasados (charye), las niñas y los niños hacen la reverencia primero a los abuelos y a los padres.",
+      "facts.f4.claim": "Al hacer la reverencia, la gente dice deseos de Año Nuevo como «Saehae bok mani badeuseyo» (Recibe muchas bendiciones en el año nuevo); este saludo es una forma moderna de deseo de Año Nuevo.",
+      "facts.f5.claim": "Las personas mayores que reciben el sebae responden con palabras de buenos deseos (deokdam); a quienes vienen a hacer la reverencia se les da un poco de dinero, o pasteles de arroz y fruta.",
+      "facts.f6.claim": "El tteokguk, un caldo claro con pastel de arroz blanco en rodajas finas (garaetteok), es la comida típica de Seollal, y un dicho antiguo cuenta que se cumple un año más al comer tteokguk.",
+      "facts.f7.claim": "En el yunnori (juego de yut), dos bandos se turnan para tirar cuatro palitos de madera (yut); según cómo caen los palitos, mueven sus fichas en el tablero, y gana el bando que primero lleva todas sus fichas a la meta. Se juega desde el día de Año Nuevo hasta Jeongwol Daeboreum.",
+      "facts.f8.claim": "Las cinco tiradas mueven una ficha así: do 1 casilla, gae 2, geol 3, yut 4, mo 5; sacar yut o mo da otra tirada.",
+      "facts.f9.claim": "El 18 de diciembre de 2023, Corea declaró cinco fiestas tradicionales (Seol y Daeboreum, Hansik, Dano, Chuseok y Dongji) Patrimonio Inmaterial Nacional. Daeboreum (el día 15 del primer mes lunar) celebra la primera luna llena después del Año Nuevo lunar.",
+      "hoyaIntro": "¡Feliz Año Nuevo! Pasa la mañana de Seollal conmigo y con una familia.",
+      "hoyaOutro": "Ropa nueva, una reverencia de Año Nuevo, un plato de tteokguk y una partida de yunnori. ¡Qué Seollal tan feliz!",
+      "keywords.deokdam.gloss": "palabras de buenos deseos",
+      "keywords.do-gae-geol-yut-mo.gloss": "las cinco tiradas: 1, 2, 3, 4 y 5 casillas",
+      "keywords.gukga-muhyeong-yusan.gloss": "Patrimonio Inmaterial Nacional",
+      "keywords.halmeoni.gloss": "abuela",
+      "keywords.saehae-bok-mani-badeuseyo.gloss": "¡Feliz Año Nuevo! (literalmente: recibe muchas bendiciones en el año nuevo)",
+      "keywords.sebae.gloss": "reverencia de Año Nuevo a los mayores",
+      "keywords.seolbim.gloss": "ropa nueva para Seollal",
+      "keywords.seollal.gloss": "día del Año Nuevo lunar",
+      "keywords.tteokguk.gloss": "sopa de masa de arroz",
+      "keywords.yunnori.gloss": "yut, juego de tablero con palitos",
+      "keywords.yut.gloss": "palitos de yut; la tirada de 4 casillas",
+      "scenes.s7.caption": "Do, gae, geol, yut, mo: de una a cinco casillas",
+      "scenes.s7.narration": "¡Do avanza una casilla, gae dos, geol tres, yut cuatro y mo cinco! Si sacas yut o mo, vuelves a tirar. Gana el primer equipo que lleva todas sus fichas a casa.",
+      "scenes.s8.caption": "Dos inscripciones como Patrimonio Inmaterial Nacional",
+      "scenes.s8.narration": "En 2023, Corea declaró cinco fiestas tradicionales Patrimonio Inmaterial Nacional. Una es Seol y Daeboreum: el Año Nuevo y la primera luna llena. El yunnori entró en la lista en 2022. Hoya saluda con la mano: «¡Saehae bok mani badeuseyo!»",
+      "summary": "Hoya pasa Seollal, el Año Nuevo lunar, con una familia: ropa nueva (seolbim), una reverencia de Año Nuevo (sebae), un plato caliente de tteokguk y una animada partida de yunnori.",
+      "title": "Una mañana de Seollal con Hoya"
+    },
+    "story:seungjeongwon-ilgi-every-day": {
+      "checks.c1.explain": "Unos escribanos llamados juseo escribían el Seungjeongwon Ilgi, el diario de la oficina de la Secretaría Real.",
+      "checks.c1.options.a": "El propio rey",
+      "checks.c1.options.b": "Escribanos llamados juseo",
+      "checks.c1.options.c": "Monjes de un templo en la montaña",
+      "checks.c1.prompt": "¿Quiénes escribían el {target}?",
+      "checks.c2.explain": "La entrada de cada día registraba el tiempo que hacía, y los investigadores pueden usar estas notas para estudiar la naturaleza del pasado.",
+      "checks.c2.options.a": "Un dibujo del palacio",
+      "checks.c2.options.b": "Un poema escrito por el rey",
+      "checks.c2.options.c": "El tiempo que hizo ese día",
+      "checks.c2.prompt": "¿Qué más registraba la entrada de cada día?",
+      "checks.c3.explain": "Hoy se conservan 3243 libros, de marzo de 1623 a agosto de 1910.",
+      "checks.c3.options.a": "3243 libros",
+      "checks.c3.options.b": "324 libros",
+      "checks.c3.options.c": "32 430 libros",
+      "checks.c3.prompt": "¿Cuántos libros del {target} se conservan hoy?",
+      "facts.f1.claim": "El Seungjeongwon era la secretaría del rey; se ocupaba de pasar las órdenes reales a los funcionarios y de llevar las opiniones de los funcionarios al rey (el «chulnap» de las órdenes reales).",
+      "facts.f2.claim": "El Seungjeongwon tenía seis secretarios reales (seungji, tercer rango) y dos escribanos (juseo, séptimo rango); el Seungjeongwon Ilgi lo escribían los juseo (los escribanos también tenían otras tareas, y se podía añadir un escribano extra temporal).",
+      "facts.f3.claim": "Un juseo registraba las discusiones de Estado delante del rey, junto con un historiador, en un borrador taquigráfico; luego se hacía una copia en limpio, y por lo general el diario de un mes formaba un libro (dos si era largo).",
+      "facts.f4.claim": "El Seungjeongwon Ilgi registraba el tiempo todos los días, lo que da datos básicos sobre fenómenos naturales que pueden usarse en la investigación de ciencias naturales.",
+      "facts.f5.claim": "Los diarios originales están escritos en letra cursiva (choseo) y son difíciles de leer; más tarde, el Instituto Nacional de Historia Coreana los volvió a escribir en letra regular (haeseo), añadió puntuación y los publicó (141 volúmenes; el NIKH da 1960-1977, la Enciclopedia 1961).",
+      "facts.f6.claim": "Los incendios de 1744 y 1888 en el Seungjeongwon destruyeron muchos diarios. Después del incendio de 1744, una oficina especial (Ilgicheong) rehízo una parte (548 volúmenes, menos de un tercio de los perdidos) con la gaceta de la corte (Jobo) y otros registros; los 361 volúmenes perdidos en 1888 se rehicieron para 1890.",
+      "facts.f7.claim": "Se conservan 3243 libros del Seungjeongwon Ilgi, de marzo de 1623 a agosto de 1910. (3045 de ellos se titulan Seungjeongwon Ilgi; 198 llevan nombres posteriores de la oficina, como Seungseonwon Ilgi, porque la oficina cambió de nombre después de 1894.)",
+      "facts.f8.claim": "El Seungjeongwon Ilgi original se guarda en el Gyujanggak de la Universidad Nacional de Seúl (Instituto Kyujanggak de Estudios Coreanos), en Seúl.",
+      "facts.f9.claim": "El Seungjeongwon Ilgi es un Tesoro Nacional (designado el 9 de abril de 1999) y se inscribió en el Registro de la Memoria del Mundo de la UNESCO en 2001.",
+      "hoyaIntro": "Vamos a visitar la Secretaría Real, donde se anotaba la jornada de trabajo del rey.",
+      "hoyaOutro": "¡Hasta el tiempo que hacía entraba en el diario! Ahora sabes por qué es un tesoro.",
+      "keywords.choseo.gloss": "escritura cursiva (de hierba)",
+      "keywords.gukbo.gloss": "Tesoro Nacional",
+      "keywords.ilgi.gloss": "diario",
+      "keywords.ilgireul-dasi-sseoyo.gloss": "Vuelven a escribir el diario.",
+      "keywords.juseo.gloss": "escribano de la Secretaría Real",
+      "keywords.maeil.gloss": "todos los días",
+      "keywords.malgayo.gloss": "está despejado (soleado)",
+      "keywords.nalssi.gloss": "tiempo (clima)",
+      "keywords.nalssiga-malgayo.gloss": "El día está despejado.",
+      "keywords.seungjeongwon-ilgi.gloss": "los Diarios de la Secretaría Real",
+      "keywords.seungjeongwon.gloss": "Secretaría Real",
+      "scenes.s1.caption": "La Secretaría Real del rey",
+      "scenes.s1.narration": "Viajemos al pasado con Hoya hasta el {kw:seungjeongwon}, la Secretaría Real. Esta oficina pasaba las órdenes del rey a los funcionarios y llevaba sus opiniones de vuelta al rey.",
+      "scenes.s2.caption": "Los escribanos llevan el diario",
+      "scenes.s2.narration": "Aquí trabajaban seis secretarios reales, junto con dos escribanos llamados {kw:juseo}. Los escribanos escribían el diario de la oficina, el {kw:seungjeongwon-ilgi}.",
+      "scenes.s3.caption": "Notas rápidas delante del rey",
+      "scenes.s3.narration": "Cada día, un escribano trabajaba delante del rey junto con un historiador y tomaba notas rápidas de las conversaciones. Después se hacía una copia en limpio, y el diario de cada mes solía encuadernarse en un libro.",
+      "scenes.s4.caption": "Cada entrada anota el tiempo",
+      "scenes.s4.narration": "El diario de cada día también anotaba el tiempo que hacía. Hoy, los investigadores pueden usar estas notas del tiempo para estudiar la naturaleza del pasado.",
+      "scenes.s5.caption": "Letra cursiva, reescrita con claridad",
+      "scenes.s5.narration": "Los diarios originales están escritos en una letra cursiva fluida llamada {kw:choseo}, que es difícil de leer. En tiempos modernos, el Instituto Nacional de Historia Coreana los volvió a escribir en caracteres regulares y claros, y los publicó.",
+      "scenes.s6.caption": "Incendios, y luego diarios rehechos en parte",
+      "scenes.s6.narration": "Los incendios de 1744 y 1888 en la Secretaría Real destruyeron muchos diarios. Unos funcionarios trabajaron para rehacerlos, en parte con otros registros, como la gaceta de la corte.",
+      "scenes.s7.caption": "Hoy se guarda como Tesoro Nacional",
+      "scenes.s7.narration": "Hoy se conservan 3243 libros, de 1623 a 1910. Los originales se guardan en el Gyujanggak de la Universidad Nacional de Seúl. Los diarios son un Tesoro Nacional y, desde 2001, forman parte de la Memoria del Mundo de la UNESCO.",
+      "summary": "En la Secretaría Real, unos escribanos anotaban la jornada de trabajo del rey, todos los días, incluso el tiempo que hacía. Hoya descubre por qué este diario gigante es un tesoro.",
+      "title": "El diario de cada día de la Secretaría Real"
+    },
+    "story:shapes-of-hangeul": {
+      "checks.c1.explain": "El Haerye dice que la letra mieum copia la forma de la boca.",
+      "checks.c1.options.a": "La garganta",
+      "checks.c1.options.b": "Un diente",
+      "checks.c1.options.c": "La boca",
+      "checks.c1.options.d": "El cielo",
+      "checks.c1.prompt": "¿A qué se parece la forma de {target}?",
+      "checks.c2.explain": "La línea vertical (de pie) copia a una persona de pie. El punto redondo copia el cielo, y la línea plana copia la tierra.",
+      "checks.c2.options.a": "El punto redondo",
+      "checks.c2.options.b": "la vocal i",
+      "checks.c2.options.c": "la vocal eu",
+      "checks.c2.options.d": "la vocal a",
+      "checks.c2.prompt": "¿Qué forma de vocal copia a una persona de pie?",
+      "checks.c3.explain": "Para un sonido más fuerte, añade un trazo: nieun recibe un trazo y se convierte en digeut, y un trazo más forma tieut.",
+      "checks.c3.options.a": "Darle la vuelta",
+      "checks.c3.options.b": "Dibujar un círculo alrededor",
+      "checks.c3.options.c": "Borrar una línea",
+      "checks.c3.options.d": "Añadir un trazo",
+      "checks.c3.prompt": "¿Cómo se obtiene {target} a partir de la letra nieun?",
+      "checks.r1.explain": "Ip significa boca. La letra mieum copia la forma de la boca.",
+      "checks.r1.options.a": "Garganta",
+      "checks.r1.options.b": "Boca",
+      "checks.r1.options.c": "Cielo",
+      "checks.r1.options.d": "Persona",
+      "checks.r1.prompt": "¿Qué significa {target}?",
+      "checks.r2.explain": "Haneul significa cielo. Un punto redondo copia el cielo redondo.",
+      "checks.r2.options.a": "Tierra",
+      "checks.r2.options.b": "Persona",
+      "checks.r2.options.c": "Trazo",
+      "checks.r2.options.d": "Cielo",
+      "checks.r2.prompt": "¿Qué significa {target}?",
+      "checks.r3.explain": "Para un sonido más fuerte se añade un trazo: nieun, luego digeut, luego tieut.",
+      "checks.r3.options.a": "Un trazo",
+      "checks.r3.options.b": "Un punto",
+      "checks.r3.options.c": "Un círculo",
+      "checks.r3.options.d": "Una vocal",
+      "checks.r3.prompt": "En la historia, ¿qué se añade a una letra para un sonido más fuerte?",
+      "facts.f1.claim": "La edición Hunminjeongeum Haerye (1446) contiene el Haerye, explicaciones y ejemplos escritos por gente estudiosa, que revelan los principios usados para hacer las letras.",
+      "facts.f2.claim": "Las cinco consonantes básicas (giyeok, nieun, mieum, siot e ieung) se hicieron copiando la forma de los órganos del habla que se usan para pronunciar cada sonido.",
+      "facts.f3.claim": "Según el Haerye, giyeok copia la raíz de la lengua que cierra la garganta; nieun, la lengua que toca la encía de arriba (texto del Haerye: 象舌附上腭之形); mieum, la forma de la boca; siot, la forma de un diente; e ieung, la forma de la garganta.",
+      "facts.f4.claim": "Para los sonidos que se pronuncian con más fuerza, se añadió un trazo a la letra básica; por ejemplo, nieun → digeut → tieut.",
+      "facts.f5.claim": "Las tres vocales básicas copian el cielo, la tierra y una persona: · es redondo como el cielo, la línea eu es plana como la tierra, y la línea i está derecha como una persona.",
+      "facts.f6.claim": "Las demás vocales se hicieron combinando las vocales básicas; por ejemplo, la vocal a se forma con i y ·.",
+      "facts.f7.claim": "El Hunminjeongeum empezó con 28 letras. Algunas, como yeorinhieut, bansiot y · (arae-a), ya no se usan, y las reglas de ortografía actuales de Corea del Sur (Hangeul Matchumbeop) fijan 24 letras básicas: 14 consonantes y 10 vocales. (Las normas de Corea del Norte cuentan 40 letras, porque también cuentan las consonantes dobles y las vocales compuestas.)",
+      "facts.f8.claim": "Las cinco consonantes básicas se hicieron copiando la forma de los órganos del habla que se usan para pronunciar cada sonido.",
+      "hoyaIntro": "¿Sabías que las letras esconden formas secretas? ¡Abramos un libro antiguo y busquémoslas!",
+      "hoyaOutro": "Lengua, boca, dientes, garganta, cielo, tierra y una persona: ¡encontraste los secretos de las formas!",
+      "keywords.haeryebon.gloss": "la edición Haerye (el libro con explicaciones y ejemplos)",
+      "keywords.haneul-ttang-saram.gloss": "cielo, tierra, persona",
+      "keywords.haneul.gloss": "cielo",
+      "keywords.hoek.gloss": "un trazo (de una letra)",
+      "keywords.ip.gloss": "boca",
+      "keywords.jaeum.gloss": "consonante",
+      "keywords.jaeumgwa-moeum.gloss": "consonantes y vocales",
+      "keywords.jamo-a.gloss": "la vocal a",
+      "keywords.jamo-d.gloss": "la consonante digeut",
+      "keywords.jamo-eu.gloss": "la vocal eu",
+      "keywords.jamo-g.gloss": "giyeok, la letra del sonido g/k",
+      "keywords.jamo-i.gloss": "la vocal i",
+      "keywords.jamo-m.gloss": "la consonante mieum",
+      "keywords.jamo-n.gloss": "la consonante nieun",
+      "keywords.jamo-s.gloss": "la consonante siot",
+      "keywords.jamo-silent-ng.gloss": "la consonante ieung",
+      "keywords.jamo-t.gloss": "la consonante tieut",
+      "keywords.moeum.gloss": "vocal",
+      "keywords.mokgumeong.gloss": "garganta",
+      "keywords.saram.gloss": "persona",
+      "keywords.ttang.gloss": "tierra; suelo",
+      "scenes.s5.caption": "Añade un trazo para un sonido más fuerte",
+      "scenes.s6.caption": "Vocales: cielo, tierra y una persona",
+      "scenes.s7.caption": "Las formas se unen para hacer vocales nuevas",
+      "scenes.s7.narration": "¡Júntalas para hacer más vocales! {kw:jamo-i} y un punto se unen para formar {kw:jamo-a}. Con unas cuantas ideas ingeniosas, un puñado de formas sencillas se convirtió en todo un conjunto de letras.",
+      "scenes.s8.caption": "Corea del Sur: 14 consonantes y 10 vocales",
+      "scenes.s8.narration": "El hangul empezó con 28 letras, y algunas antiguas ya no se usan. Las reglas de ortografía de Corea del Sur cuentan hoy 24 letras básicas: 14 consonantes y 10 vocales. Hoya celebra: «Jaeumgwa moeum, ¡consonantes y vocales!»",
+      "summary": "Hoya lee el libro Hunminjeongeum Haerye de 1446 y descubre que las cinco consonantes básicas del hangul copian la forma de la lengua, la boca, los dientes y la garganta, y que las vocales básicas vienen del cielo, la tierra y una persona.",
+      "title": "El secreto de las formas"
+    },
+    "story:sillok-mountain-archives": {
+      "checks.c1.explain": "A comienzos de Joseon, los borradores usados se lavaban en un arroyo para que los secretos quedaran a salvo y el papel se pudiera volver a usar.",
+      "checks.c1.options.a": "Para que el papel viejo volviera a oler a fresco",
+      "checks.c1.options.b": "Para cambiar la tinta a un color nuevo",
+      "checks.c1.options.c": "Para guardar secretos y reutilizar el papel",
+      "checks.c1.prompt": "A comienzos de Joseon, ¿por qué se lavaban en un arroyo los borradores usados?",
+      "checks.c2.explain": "An Ui y Son Hongrok, eruditos del lugar, usaron su propio dinero para llevar la copia de Jeonju a la montaña Naejangsan y cuidarla.",
+      "checks.c2.options.a": "An Ui y Son Hongrok",
+      "checks.c2.options.b": "Comerciantes de un pueblo de mercado muy activo",
+      "checks.c2.options.c": "Pintores de la corte real",
+      "checks.c2.prompt": "¿Quiénes salvaron la copia de Jeonju de los Anales durante la guerra?",
+      "checks.c3.explain": "Poswae significa sacar los libros en un día despejado, cada pocos años, y airearlos a la luz del sol y al viento.",
+      "checks.c3.options.a": "Quemar libros viejos",
+      "checks.c3.options.b": "Airear los libros al sol y a la brisa",
+      "checks.c3.options.c": "Pintar retratos del rey",
+      "checks.c3.prompt": "¿Qué es {target}?",
+      "facts.f1.claim": "Los Anales de cada rey se compilaban después de su muerte, durante el reinado siguiente, en una oficina temporal llamada Sillokcheong.",
+      "facts.f10.claim": "Cada pocos años se enviaba a historiadores a los archivos para sacar los Anales y airearlos a la luz del sol y al viento (poswae), en un día despejado; el NIKH y la Enciclopedia de la Cultura Coreana dicen que una vez cada tres años, los Archivos Nacionales que cada dos o tres años, y la entrada sobre el poswae fija el calendario en los años jin-sul-chuk-mi (辰戌丑未), el mismo ciclo de los años de examen del servicio civil, que se repite cada tres años.",
+      "facts.f2.claim": "Los compiladores usaban el sacho de los historiadores junto con otros registros del gobierno, como el Sijeonggi y el Seungjeongwon Ilgi.",
+      "facts.f3.claim": "La compilación pasaba por tres borradores (chocho, jungcho, jeongcho); el borrador final era la base para imprimir, y la mayoría de los Anales son libros impresos con tipos móviles.",
+      "facts.f4.claim": "A comienzos de Joseon, los borradores usados se lavaban en un arroyo fuera de la puerta Jahamun, donde estaba la oficina de papel del gobierno (Jojiseo), para evitar filtraciones y reciclar el papel; esto se llamaba secho. En el Joseon posterior, los borradores en su mayoría se quemaban.",
+      "facts.f5.claim": "Los Anales se guardaban en archivos (sago). En la guerra de Imjin, que empezó en 1592, se perdieron las copias del Chunchugwan de Seúl y las de Chungju y Seongju; solo sobrevivió la copia de Jeonju.",
+      "facts.f6.claim": "An Ui y Son Hong-rok, eruditos confucianos del lugar, usaron sus fondos privados para llevar la copia de Jeonju y otros libros a la montaña Naejangsan, los cuidaron por turnos y los entregaron al gobierno en 1593, al año siguiente.",
+      "facts.f7.claim": "Después de la guerra (1603–1606), los Anales se reimprimieron a partir de la copia de Jeonju, de modo que hubo cinco juegos en total, guardados en cinco archivos.",
+      "facts.f8.claim": "Aparte de la copia guardada en el Chunchugwan de Seúl, los juegos se colocaron en archivos en lo profundo de las montañas o en una isla (Manisan en la isla de Ganghwa, Taebaeksan, Myohyangsan, Odaesan) para que estuvieran más a salvo de la guerra.",
+      "facts.f9.claim": "Los Anales se envolvían en papel grueso aceitado y luego en tela roja, y se ponían en un cofre de madera junto con las hierbas cheongung y changpo, que se añadían para evitar el daño de los insectos y la descomposición.",
+      "hoyaIntro": "¿Adónde fueron los Anales para estar a salvo? ¡Vamos a seguirlos hasta las montañas!",
+      "hoyaOutro": "De las notas a los libros y a los archivos de montaña: ¡seguiste los Anales todo el camino!",
+      "keywords.chaegeul-haetbyeote-mallyeoyo.gloss": "Secan los libros al sol.",
+      "keywords.chaek.gloss": "libro",
+      "keywords.haetbyeot.gloss": "luz del sol",
+      "keywords.naejangsan.gloss": "montaña Naejangsan",
+      "keywords.poswae.gloss": "airear los libros al sol",
+      "keywords.sacho.gloss": "borradores de historia",
+      "keywords.sago.gloss": "archivo para libros de historia",
+      "keywords.san.gloss": "montaña",
+      "keywords.sansogui-sago.gloss": "un archivo en las montañas",
+      "keywords.secho.gloss": "lavado de los borradores usados",
+      "keywords.sillokcheong.gloss": "Oficina de Compilación de los Anales",
+      "keywords.yakcho.gloss": "hierba medicinal",
+      "scenes.s1.caption": "Una oficina reúne las notas de los historiadores",
+      "scenes.s1.narration": "Cuando moría un rey, la corte del siguiente rey abría una oficina temporal llamada {kw:sillokcheong}. Sus funcionarios reunían el {kw:sacho} de los historiadores y otros registros de la corte para escribir los Anales de ese rey.",
+      "scenes.s2.caption": "Tres borradores y luego la impresión",
+      "scenes.s2.narration": "Escribían un primer borrador, lo corregían en un segundo borrador y pulían un borrador final. Después, la mayoría de los Anales se imprimía con tipos móviles.",
+      "scenes.s3.caption": "A comienzos de Joseon, los borradores se lavaban en un arroyo",
+      "scenes.s3.narration": "¿Y los borradores usados? A comienzos de Joseon, se remojaban y se lavaban en un arroyo cerca de la oficina de papel del gobierno. Los secretos quedaban a salvo y el papel se podía volver a usar. Esto se llamaba {kw:secho}.",
+      "scenes.s4.caption": "Solo la copia de Jeonju sobrevive a una guerra",
+      "scenes.s4.narration": "Los Anales terminados se guardaban en archivos especiales llamados {kw:sago}. Durante una gran guerra en la década de 1590, se perdieron las copias de Seúl, Chungju y Seongju. Solo sobrevivió la copia de Jeonju.",
+      "scenes.s5.caption": "Unos eruditos llevan los libros a una montaña",
+      "scenes.s5.narration": "Dos eruditos del lugar, An Ui y Son Hongrok, usaron su propio dinero para llevar la copia de Jeonju y otros libros a la montaña Naejangsan. Se turnaron para cuidarlos hasta que los libros se entregaron al gobierno al año siguiente.",
+      "scenes.s6.caption": "La mayoría de las copias va a archivos de montaña",
+      "scenes.s6.narration": "Después de la guerra, se imprimieron nuevas copias a partir de la copia de Jeonju, y así hubo cinco juegos. La mayoría fue a archivos en lo profundo de las montañas o en una isla, como Odaesan y Taebaeksan, adonde era menos probable que llegara la guerra.",
+      "scenes.s7.caption": "Libros guardados con hierbas en un cofre",
+      "scenes.s7.narration": "Los libros se envolvían en papel aceitado y tela roja, y luego se guardaban en un cofre de madera con unas hierbas llamadas cheongung y changpo, que ayudaban a protegerlos de los insectos y de la podredumbre.",
+      "scenes.s8.caption": "Airear los libros al sol",
+      "scenes.s8.narration": "Cada pocos años, un historiador viajaba a cada archivo de montaña. En un día despejado, sacaban los libros y los aireaban al sol y a la brisa. Esto se llamaba {kw:poswae}. ¡A Hoya también le encantan los días de sol!",
+      "summary": "Cuando moría un rey, unos funcionarios convertían las notas de los historiadores en los Anales y guardaban los libros en archivos lejanos, en las montañas. Hoya sigue los Anales desde el borrador hasta el archivo de montaña.",
+      "title": "Los Anales se esconden en las montañas"
+    },
+    "story:sillok-royal-historians": {
+      "checks.c1.explain": "Según la regla, nadie podía leer los borradores, ni siquiera el rey. Esto ayudaba a los historiadores a escribir con justicia.",
+      "checks.c1.options.a": "Solo el propio rey",
+      "checks.c1.options.b": "Nadie, ni siquiera el rey",
+      "checks.c1.options.c": "Cualquier funcionario de la corte",
+      "checks.c1.prompt": "Según la regla, ¿quién podía leer los borradores de los historiadores ({target})?",
+      "checks.c2.explain": "Dijo: «Que no se entere el historiador». El historiador también escribió eso, y hoy está en los Anales.",
+      "checks.c2.options.a": "¡Que no se entere el historiador!",
+      "checks.c2.options.b": "¡Tráiganme un caballo nuevo!",
+      "checks.c2.options.c": "¡Escriban esto rápido!",
+      "checks.c2.prompt": "Después de caerse del caballo, ¿qué dijo el rey Taejong?",
+      "checks.c3.explain": "Los Anales abarcan 472 años, de 1392 a 1863, y 25 reyes, de Taejo a Cheoljong.",
+      "checks.c3.options.a": "100 años",
+      "checks.c3.options.b": "1000 años",
+      "checks.c3.options.c": "472 años",
+      "checks.c3.prompt": "¿Cuántos años abarcan los Anales de la dinastía Joseon?",
+      "facts.f1.claim": "En Joseon, los historiadores reales (sagwan) escribían cada día lo que pasaba en la corte real.",
+      "facts.f10.claim": "Los Anales se inscribieron en el Registro de la Memoria del Mundo de la UNESCO en 1997.",
+      "facts.f2.claim": "Los historiadores asistían dondequiera que el rey se reuniera con sus funcionarios y registraban lo que veían y oían.",
+      "facts.f3.claim": "Joseon tenía ocho historiadores de tiempo completo (dos bonggyo, dos daegyo y cuatro geomyeol del Yemungwan), y muchos otros funcionarios civiles servían a la vez como historiadores.",
+      "facts.f4.claim": "Los borradores de los historiadores se llamaban sacho (史草), «borrador de historia».",
+      "facts.f5.claim": "Según la regla, nadie, ni siquiera el rey, podía leer el sacho; la regla buscaba que los historiadores registraran con justicia y proteger su posición.",
+      "facts.f6.claim": "En 1404 (cuarto año del rey Taejong, segundo mes lunar, día 8), el rey Taejong se cayó del caballo mientras cazaba, pero no se hizo daño.",
+      "facts.f7.claim": "Taejong dijo a quienes lo rodeaban: «Que no se entere el historiador», y esa misma frase quedó registrada y aparece en los Anales.",
+      "facts.f8.claim": "El sacho de los historiadores fue la fuente más importante para compilar los Anales (Sillok).",
+      "facts.f9.claim": "Los Anales de la dinastía Joseon abarcan 472 años (1392-1863) y 25 reyes, del rey Taejo al rey Cheoljong.",
+      "hoyaIntro": "¿Cómo sabemos lo que decían los reyes hace mucho tiempo? ¡Vamos a conocer a quienes lo escribían todo!",
+      "hoyaOutro": "Los historiadores lo escribían todo, día tras día. ¡Ahora sabes de dónde vienen los Anales!",
+      "keywords.girok.gloss": "registro",
+      "keywords.mal.gloss": "caballo (la misma escritura también significa «palabras»)",
+      "keywords.sacho.gloss": "borradores de historia",
+      "keywords.sachoneun-wangdo-bol-su-eopseosseoyo.gloss": "Ni siquiera el rey podía leer el sacho.",
+      "keywords.sagwan.gloss": "historiador real",
+      "keywords.sagwani-alge-haji-malla.gloss": "Que no se entere el historiador.",
+      "keywords.sillok.gloss": "anales; historia oficial de un reinado",
+      "keywords.wang.gloss": "rey",
+      "scenes.s1.caption": "Hoya pregunta cómo sabemos lo que decían los reyes",
+      "scenes.s1.narration": "Hoya, un tigre joven, tiene una gran pregunta: ¿cómo sabemos lo que decían los reyes hace cientos de años? ¡Porque alguien lo escribió! En el reino de Joseon, unos funcionarios especiales registraban cada día el trabajo de la corte real.",
+      "scenes.s2.caption": "Un historiador escribe junto al rey",
+      "scenes.s2.narration": "Estos funcionarios eran los {kw:sagwan}, los historiadores reales. Dondequiera que el rey se reuniera con sus funcionarios, allí había un historiador que escribía lo que veía y oía.",
+      "scenes.s3.caption": "Los historiadores escriben borradores",
+      "scenes.s3.narration": "Joseon tenía ocho historiadores de tiempo completo, y muchos otros funcionarios también servían como historiadores de tiempo parcial. Sus notas se llamaban {kw:sacho}, que significa «borrador de historia».",
+      "scenes.s4.caption": "Ni siquiera el rey puede leerlos",
+      "scenes.s4.narration": "La regla era estricta: nadie debía leer el {kw:sacho}, ni siquiera el rey. Esto ayudaba a los historiadores a escribir con justicia y protegía su puesto.",
+      "scenes.s5.caption": "El rey Taejong se cae del caballo",
+      "scenes.s5.narration": "Un día de 1404, el rey Taejong salió de caza. Su caballo tropezó y él se cayó. ¡Por suerte, no se hizo daño!",
+      "scenes.s6.caption": "«¡Que no se entere el historiador!»",
+      "scenes.s6.narration": "Taejong miró a su alrededor y dijo: «¡Que no se entere el historiador!». Pero esa misma frase está hoy en los Anales. ¡El historiador escribió hasta eso!",
+      "scenes.s7.caption": "Las notas ayudan a hacer los Anales",
+      "scenes.s7.narration": "Las notas de los historiadores fueron la fuente más importante de los {kw:sillok}, los Anales de la dinastía Joseon. Los Anales abarcan 472 años y 25 reyes, de Taejo a Cheoljong, y están en el Registro de la Memoria del Mundo de la UNESCO.",
+      "summary": "Hoya descubre quién escribía las palabras de los reyes de Joseon y por qué ni siquiera el rey podía leer sus notas. Una entrada real de 1404 de los Anales muestra con cuánta fidelidad lo registraban.",
+      "title": "Hoya conoce a los historiadores reales"
+    },
+    "story:sun-and-moon": {
+      "checks.c1.explain": "En el cuento, el tigre se encuentra con la madre de camino a casa y primero le pide sus pasteles de arroz.",
+      "checks.c1.options.a": "Sus zapatos",
+      "checks.c1.options.b": "Su cántaro de agua",
+      "checks.c1.options.c": "Sus pasteles de arroz",
+      "checks.c1.options.d": "Su bastón",
+      "checks.c1.prompt": "En el primer paso de montaña, ¿qué le pidió el tigre a la madre?",
+      "checks.c2.explain": "En el cuento, los dos le piden al cielo, y baja una cuerda nueva y fuerte para que suban.",
+      "checks.c2.options.a": "Una cuerda nueva y fuerte",
+      "checks.c2.options.b": "Una escalera de madera",
+      "checks.c2.options.c": "Un puente de nubes",
+      "checks.c2.options.d": "Una tela larga de seda",
+      "checks.c2.prompt": "¿Qué bajó del cielo para ayudar a los dos?",
+      "checks.c3.explain": "En el cuento, la hermana tiene miedo de la noche, así que cambia de lugar con su hermano y se convierte en el sol.",
+      "checks.c3.options.a": "Quería ver el amanecer",
+      "checks.c3.options.b": "Tenía miedo de la noche oscura",
+      "checks.c3.options.c": "Sentía que el sol quemaba demasiado",
+      "checks.c3.options.d": "Su hermano pidió brillar primero",
+      "checks.c3.prompt": "¿Por qué la hermana y el hermano cambiaron de lugar en el cielo?",
+      "checks.r1.explain": "Horangi significa tigre. En el cuento, el tigre se hace pasar por mamá.",
+      "checks.r1.options.a": "Conejo",
+      "checks.r1.options.b": "Tigre",
+      "checks.r1.options.c": "Sol",
+      "checks.r1.options.d": "Luna",
+      "checks.r1.prompt": "¿Qué significa {target}?",
+      "checks.r2.explain": "Dongajul significa cuerda gruesa y fuerte. Una nueva baja del cielo.",
+      "checks.r2.options.a": "Un árbol alto",
+      "checks.r2.options.b": "Una puerta",
+      "checks.r2.options.c": "Un campo",
+      "checks.r2.options.d": "Una cuerda fuerte",
+      "checks.r2.prompt": "¿Qué significa {target}?",
+      "checks.r3.explain": "En el cuento, el hermano y la hermana se convirtieron en el sol y la luna.",
+      "checks.r3.options.a": "El sol y la luna",
+      "checks.r3.options.b": "Dos estrellas",
+      "checks.r3.options.c": "Dos árboles",
+      "checks.r3.options.d": "Dos pájaros",
+      "checks.r3.prompt": "En el cuento, ¿en qué se convirtieron el hermano y la hermana?",
+      "facts.f1.claim": "«El hermano y la hermana que se convirtieron en el sol y la luna» (también conocido como Haenim Dallim) es un cuento popular tradicional coreano (mindam) que se cuenta en todo el país, con muchas versiones distintas.",
+      "facts.f2.claim": "En el cuento, una madre que ha salido a trabajar se encuentra con un tigre de camino a casa. En la versión básica de la Enciclopedia de la Cultura Coreana, el tigre aparece en un paso de montaña tras otro y va exigiendo cosas, primero los pasteles de arroz y luego más; esta versión conserva solo los pasteles de arroz y deja fuera el resto.",
+      "facts.f3.claim": "En la versión básica de la Enciclopedia, el tigre va a la casa de los niños haciéndose pasar por su madre; los niños dicen que la voz y la mano no son de su madre y no quieren abrir la puerta, pero la abren cuando el tigre dice que tiene que amamantar al bebé que llora; entonces los hermanos se dan cuenta de quién es y huyen a un árbol grande junto al pozo. Otras versiones cambian (en el resumen del Museo Nacional del Folclore, los niños miran por un agujero de la puerta, ven al tigre y escapan por la puerta de atrás hasta un árbol). Esta versión está simplificada.",
+      "facts.f4.claim": "En la versión básica de la Enciclopedia, siguiendo el consejo del hermano, el tigre se unta aceite de sésamo y no logra subir al árbol; después encuentra otra forma de subir (el consejo de la hermana).",
+      "facts.f5.claim": "En el cuento, los hermanos le piden al cielo una cuerda; baja una cuerda nueva y fuerte (dongajul) y suben, mientras que el tigre toma una cuerda podrida que se rompe.",
+      "facts.f6.claim": "En el cuento, el tigre cae de la cuerda podrida a un campo de sorgo, y quienes cuentan la historia lo usan para explicar por qué los tallos del sorgo son rojos; algunas versiones conservan solo la explicación del sorgo rojo, y el cuento también se conoce como «Por qué los tallos del sorgo son rojos».",
+      "facts.f7.claim": "En la versión básica, primero el hermano se convierte en el sol y la hermana en la luna, pero como la hermana tiene miedo de la noche, cambian. La hermana, ahora el sol, siente vergüenza de que la miren: la Enciclopedia dice que pincha los ojos de la gente con agujas para que no puedan mirar el sol directamente, mientras que el resumen del Museo Nacional del Folclore dice que lanza una luz muy fuerte. Esta versión usa solo la forma más suave, «demasiado brillante para mirarla». Las versiones cambian (en algunas, el hermano sigue siendo el sol).",
+      "hoyaIntro": "¡Hora del cuento! Este es un cuento popular antiguo sobre un hermano, una hermana y un tigre tramposo.",
+      "hoyaOutro": "El hermano y la hermana están a salvo en el cielo. ¡Y así termina nuestro cuento!",
+      "keywords.chamgireum.gloss": "aceite de sésamo",
+      "keywords.dal.gloss": "luna",
+      "keywords.dongajul.gloss": "cuerda gruesa y fuerte",
+      "keywords.hae.gloss": "sol",
+      "keywords.haenim-dallim.gloss": "el Sol y la Luna (con el sufijo de respeto -nim; título del cuento)",
+      "keywords.haewa-dal.gloss": "el sol y la luna",
+      "keywords.horangi.gloss": "tigre",
+      "keywords.mun.gloss": "puerta",
+      "keywords.namu.gloss": "árbol",
+      "keywords.onui.gloss": "hermano y hermana",
+      "keywords.sae-dongajureul-naeryeo-juseyo.gloss": "Por favor, envía una cuerda nueva.",
+      "keywords.susu.gloss": "sorgo",
+      "keywords.tteok.gloss": "pastel de arroz",
+      "scenes.s1.caption": "Hoya empieza un cuento popular antiguo",
+      "scenes.s2.caption": "Un tigre le pide pasteles de arroz a la madre",
+      "scenes.s2.narration": "Hace mucho tiempo, una madre salió a trabajar. De vuelta a casa con pasteles de arroz, se encontró con un tigre en un paso de montaña. «¡Dame tus pasteles de arroz!», le dijo. En el cuento antiguo, vuelve a pedir en cada paso de montaña. Aquí lo contamos corto.",
+      "scenes.s3.caption": "El tigre se hace pasar por mamá",
+      "scenes.s3.narration": "El tigre fue a la casa de un hermano y una hermana, {kw:onui}, haciéndose pasar por su madre. «¡Abran la puerta!». Los dos dijeron: «¡Tu voz y tu mano no son las de mamá!». Pero el tigre hizo un truco astuto y, al final, abrieron la puerta.",
+      "scenes.s4.caption": "Los dos suben a un árbol alto",
+      "scenes.s5.caption": "El tigre resbala con el aceite de sésamo",
+      "scenes.s5.narration": "«¿Cómo subieron hasta allá?», preguntó el tigre. El hermano, muy listo, dijo: «¡Úntate aceite de sésamo!». ¡Resbalón, patinazo y pum! El tigre no pudo subir. Pero pronto encontró otra forma de subir.",
+      "scenes.s6.caption": "Baja una cuerda nueva y fuerte",
+      "scenes.s6.narration": "Los dos le pidieron al cielo: «¡Por favor, envía una cuerda nueva!». Bajó una cuerda nueva y fuerte, {kw:dongajul}, y subieron. El tigre también probó con una cuerda, pero era vieja y estaba podrida. ¡Crac!",
+      "scenes.s7.caption": "El tigre cae en el campo de sorgo",
+      "scenes.s8.caption": "Los dos se convierten en el sol y la luna",
+      "scenes.s8.narration": "En el cielo, el hermano se convirtió en el sol, {kw:hae}, y la hermana en la luna, {kw:dal}. Ella tenía miedo de la noche, así que cambiaron. Es tímida, así que brilla tanto que nadie puede mirarla directamente. ¡Están a salvo!",
+      "summary": "Una versión suave y simplificada del cuento popular coreano Haenim Dallim: un hermano y una hermana son más listos que un tigre tramposo, suben al cielo por una cuerda y se convierten en el sol y la luna.",
+      "title": "El sol y la luna (cuento tradicional)"
+    },
+    "story:tripitaka-koreana": {
+      "checks.c1.explain": "Hay más de 80.000 planchas. Palman, en su nombre coreano, significa ochenta mil.",
+      "checks.c1.options.a": "Más de 800",
+      "checks.c1.options.b": "Más de 8.000",
+      "checks.c1.options.c": "Más de 80.000",
+      "checks.c1.options.d": "Más de 800.000",
+      "checks.c1.prompt": "¿Cuántas planchas tiene el Tripitaka Koreana?",
+      "checks.c2.explain": "Las planchas se guardan en el templo Haeinsa, en la montaña Gayasan, en las salas Beopbojeon y Sudarajang.",
+      "checks.c2.options.a": "La Biblioteca Nacional de Francia",
+      "checks.c2.options.b": "El templo Haeinsa",
+      "checks.c2.options.c": "El templo Heungdeoksa",
+      "checks.c2.options.d": "El Museo de Arte Kansong",
+      "checks.c2.prompt": "¿Dónde se guardan las planchas?",
+      "checks.c3.explain": "La gente talló las planchas con la esperanza de que el poder del Buda hiciera retroceder las invasiones mongolas.",
+      "checks.c3.options.a": "Para registrar las leyes del rey para el futuro",
+      "checks.c3.options.b": "Para venderlas en el mercado",
+      "checks.c3.options.c": "Para hacer un libro escolar infantil",
+      "checks.c3.options.d": "Para pedir al Buda que protegiera el país",
+      "checks.c3.prompt": "¿Por qué la gente talló las planchas en el siglo XIII?",
+      "facts.f1.claim": "Las planchas del Tripitaka Koreana se guardan en el templo Haeinsa, en la montaña Gayasan, en Hapcheon (provincia de Gyeongsang del Sur), en las salas Beopbojeon y Sudarajang.",
+      "facts.f2.claim": "Daejanggyeong (Tripitaka) significa la colección completa de escrituras budistas.",
+      "facts.f3.claim": "Las planchas se tallaron en Goryeo entre 1237 y 1248 (años 24.º a 35.º del rey Gojong).",
+      "facts.f4.claim": "El Estado creó una oficina especial (Daejang Dogam) y talló las planchas con la esperanza de que el poder del Buda hiciera retroceder las invasiones mongolas.",
+      "facts.f5.claim": "Hay más de 80.000 planchas. El registro de la Memoria del Mundo de la UNESCO da 81.258; el Servicio del Patrimonio de Corea señala que esa cifra viene de un estudio hecho bajo el dominio japonés e incluye algunas planchas talladas de nuevo en Joseon. Esa es una razón por la que la colección se llama Palman («ochenta mil») Daejanggyeong; el nombre también se relaciona con las 84.000 enseñanzas (beopmun) que se dice que contienen las planchas.",
+      "facts.f6.claim": "Las planchas tienen texto tallado por las dos caras, están hechas sobre todo de madera de cerezo silvestre (unas dos terceras partes de las planchas estudiadas en un análisis de la madera), están lacadas para conservarlas y tienen placas de metal en las cuatro esquinas.",
+      "facts.f7.claim": "Especialistas en budismo de todo el mundo valoran el Tripitaka Koreana por su exactitud, y sus decenas de millones de caracteres están tallados de forma tan pareja que parece que una sola persona los talló todos.",
+      "facts.f8.claim": "Las planchas son Tesoro Nacional (designado en 1962) y se inscribieron en el Registro de la Memoria del Mundo de la UNESCO en 2007, junto con diversas planchas de escrituras budistas.",
+      "hoyaIntro": "¡Subamos una montaña hasta un templo lleno de planchas de madera talladas!",
+      "hoyaOutro": "Tantas planchas, talladas hace tanto tiempo y todavía a salvo hoy. ¡Gracias por explorar Haeinsa conmigo!",
+      "keywords.daejanggyeong.gloss": "colección completa de escrituras budistas (Tripitaka)",
+      "keywords.geulja.gloss": "letra; carácter escrito",
+      "keywords.goryeo.gloss": "Goryeo, el reino coreano de esa época",
+      "keywords.gyeongpan.gloss": "plancha de madera con escrituras",
+      "keywords.haeinsa.gloss": "templo Haeinsa",
+      "keywords.namu.gloss": "árbol; madera",
+      "keywords.palman.gloss": "ochenta mil",
+      "keywords.sojunghaeyo.gloss": "(Es) valioso.",
+      "keywords.yuneseuko.gloss": "UNESCO",
+      "scenes.s1.caption": "Hoya sube al templo Haeinsa",
+      "scenes.s1.narration": "Hoya sube la montaña Gayasan hasta el templo Haeinsa, en Hapcheon. Al asomarse entre las tablillas de una larga sala de madera, se queda sin aliento. ¡Hay estantes de planchas talladas, fila tras fila!",
+      "scenes.s2.caption": "Las planchas del Tripitaka Koreana",
+      "scenes.s2.narration": "Son las planchas del Tripitaka Koreana. En coreano se llaman Daejanggyeong, que significa una colección completa de escrituras budistas.",
+      "scenes.s3.caption": "Talladas en Goryeo, pidiendo protección",
+      "scenes.s3.narration": "Se tallaron en el reino de Goryeo, de 1237 a 1248. Los ejércitos mongoles habían invadido el país, y la gente talló las escrituras con la esperanza de que el poder del Buda protegiera su país.",
+      "scenes.s4.caption": "¡Más de 80.000 planchas!",
+      "scenes.s4.narration": "Hay más de 80.000 planchas, y esa es una razón por la que se las llama Palman Daejanggyeong. ¡Palman significa ochenta mil! Hoya empieza a contar y luego se ríe: «¡Eso me llevaría todo el año!»",
+      "scenes.s5.caption": "Cada plancha está tallada por las dos caras",
+      "scenes.s5.narration": "Cada plancha, un {kw:gyeongpan}, está tallada por las dos caras. La mayoría son de madera de cerezo silvestre, cubiertas de laca para protegerlas y con placas de metal en las esquinas.",
+      "scenes.s6.caption": "Decenas de millones de caracteres ordenados",
+      "scenes.s6.narration": "Quienes las tallaron grabaron decenas de millones de caracteres en la madera, todos ordenados y parejos, como si una sola mano los hubiera tallado todos. Gente estudiosa de todo el mundo elogia su exactitud.",
+      "scenes.s7.caption": "Tesoro Nacional, honrado por la UNESCO",
+      "scenes.s7.narration": "Hoy las planchas son Tesoro Nacional de Corea. En 2007, la UNESCO las añadió al Registro de la Memoria del Mundo.",
+      "scenes.s8.caption": "Todavía a salvo en Haeinsa",
+      "scenes.s8.narration": "Casi 800 años después, las planchas siguen bien guardadas en Haeinsa. Hoya susurra: «Sojunghaeyo, son valiosas».",
+      "summary": "En el templo Haeinsa, Hoya descubre el Tripitaka Koreana: más de 80.000 planchas de madera con escrituras budistas, talladas entre 1237 y 1248 y todavía bien guardadas hoy.",
+      "title": "Ochenta mil planchas de madera"
+    },
+    "story:uigwe-royal-birthday": {
+      "checks.c1.explain": "Un uigwe registraba una gran ceremonia o proyecto real, como una boda o un banquete, con palabras e imágenes.",
+      "checks.c1.options.a": "Una corona que se usaba solo en bodas reales",
+      "checks.c1.options.b": "Un informe de un evento real con palabras e imágenes",
+      "checks.c1.options.c": "Un libro de cocina de meriendas del palacio real",
+      "checks.c1.prompt": "¿Qué es un uigwe?",
+      "checks.c2.explain": "Los uigwe se hacían para que, más adelante, la gente pudiera seguirlos al celebrar un evento parecido. También anotaban las personas, los materiales y los costos.",
+      "checks.c2.options.a": "Para vender copias a los comerciantes del mercado",
+      "checks.c2.options.b": "Para dar a los muros del palacio una nueva decoración",
+      "checks.c2.options.c": "Para que más adelante se pudiera celebrar bien el mismo evento",
+      "checks.c2.prompt": "¿Por qué la corte de Joseon hacía uigwe?",
+      "checks.c3.explain": "Un banchado muestra dónde estaba o caminaba cada persona en una ceremonia o procesión, por lo general dibujado como si se viera desde muy arriba.",
+      "checks.c3.options.a": "Una procesión, por lo general vista desde arriba",
+      "checks.c3.options.b": "Una canción escrita para el rey",
+      "checks.c3.options.c": "Un mapa de las montañas cerca de Seúl",
+      "checks.c3.prompt": "¿Qué muestra un banchado?",
+      "facts.f1.claim": "Los uigwe registran, con texto e ilustraciones, grandes ceremonias reales y proyectos del Estado, como bodas reales, banquetes, funerales, recepciones de enviados y la reconstrucción de palacios.",
+      "facts.f2.claim": "Los uigwe se hacían para que las generaciones posteriores pudieran consultarlos al celebrar eventos parecidos, y resumían los participantes, los materiales y los costos, como un informe final de cuentas.",
+      "facts.f3.claim": "Los uigwe nombran en detalle a quienes participaron, incluidos los artesanos, con el nombre y la tarea de cada persona.",
+      "facts.f4.claim": "En 1795, el rey Jeongjo fue a la nueva ciudad de Hwaseong con su madre, la señora Hyegyeong, para celebrar los 60 años de ella (hoegap).",
+      "facts.f5.claim": "El banquete para la señora Hyegyeong se celebró en Bongsudang, en el palacio temporal de Hwaseong, el día 13 del segundo mes lunar intercalar (yun-2-wol, el mes extra que se añade después del segundo mes) de 1795, según registran los Anales del rey Jeongjo.",
+      "facts.f6.claim": "Ese día, el rey ordenó regalar seda a las personas mayores que habían participado en el banquete.",
+      "facts.f7.claim": "Los banchado son imágenes de ceremonias y procesiones de la corte que muestran dónde se colocaba cada participante, en general dibujadas desde un punto de vista alto, a vista de pájaro; el Wonhaeng Eulmyo Jeongni Uigwe incluye 63 páginas de banchado entre 112 páginas ilustradas.",
+      "facts.f8.claim": "El Wonhaeng Eulmyo Jeongni Uigwe se imprimió con tipos móviles de metal (Jeongnija); esto era poco común, porque la mayoría de los uigwe se escribían a mano, y los uigwe impresos circulaban más. Sus 112 páginas de imágenes, incluidos los banchado, se hicieron como grabados (panhwa).",
+      "facts.f9.claim": "Los uigwe se inscribieron en el Registro de la Memoria del Mundo de la UNESCO en 2007.",
+      "hoyaIntro": "¡Vamos a abrir un informe real lleno de imágenes, hecho para una gran fiesta de cumpleaños!",
+      "hoyaOutro": "Las palabras y las imágenes mantuvieron viva la celebración real. ¡Ahora sabes qué es un uigwe!",
+      "keywords.banchado.gloss": "imagen de una procesión",
+      "keywords.eomeoni.gloss": "madre",
+      "keywords.eomeoniui-hwangap.gloss": "los 60 años de la madre",
+      "keywords.eoreusin.gloss": "personas mayores (palabra respetuosa)",
+      "keywords.geurim.gloss": "imagen, dibujo",
+      "keywords.geurimi-inneun-bogoseo.gloss": "un informe con imágenes",
+      "keywords.hwalja.gloss": "tipos móviles",
+      "keywords.hwangap.gloss": "cumpleaños número 60",
+      "keywords.janchi.gloss": "fiesta, celebración",
+      "keywords.jangin.gloss": "artesano, persona experta en un oficio",
+      "keywords.uigwe.gloss": "registro ilustrado de un evento real",
+      "keywords.wonhaeng-eulmyo-jeongni-uigwe.gloss": "el uigwe del viaje real del rey Jeongjo en 1795",
+      "scenes.s1.caption": "Un informe de un evento real con palabras e imágenes",
+      "scenes.s1.narration": "Cuando la corte de Joseon celebraba un gran evento, como una boda real, un banquete o la reconstrucción de un palacio, unos funcionarios hacían un {kw:uigwe}: un informe detallado con palabras e imágenes.",
+      "scenes.s2.caption": "Una guía para celebrar eventos parecidos",
+      "scenes.s2.narration": "¿Por qué? Para que la próxima vez se pudiera celebrar bien el mismo tipo de evento. Cada uigwe registraba los pasos, las personas, los costos y los materiales, como un informe final.",
+      "scenes.s3.caption": "Hasta los artesanos aparecen en la lista",
+      "scenes.s3.narration": "Los uigwe hasta nombraban a quienes participaban, desde los altos funcionarios hasta los artesanos expertos. También se escribían sus nombres y sus tareas.",
+      "scenes.s4.caption": "Jeongjo viaja con su madre",
+      "scenes.s4.narration": "En 1795, el rey Jeongjo viajó con su madre, la señora Hyegyeong, a la nueva ciudad de Hwaseong, en Suwon, para celebrar en grande los 60 años de ella.",
+      "scenes.s5.caption": "Un gran banquete en el salón Bongsudang",
+      "scenes.s5.narration": "En 1795, el antiguo calendario lunar tuvo un mes extra después del segundo mes. El día 13 de ese mes, el rey ofreció un gran banquete a su madre en el salón Bongsudang de Hwaseong. Los Anales registran ese día.",
+      "scenes.s6.caption": "Seda para las personas mayores",
+      "scenes.s6.narration": "El rey también regaló seda a las personas mayores que participaron en la celebración.",
+      "scenes.s7.caption": "Imágenes largas de la procesión real",
+      "scenes.s7.narration": "El registro de este viaje, el {kw:wonhaeng-eulmyo-jeongni-uigwe}, está lleno de imágenes. Algunas son {kw:banchado}: imágenes largas de una procesión real, por lo general dibujadas como si se vieran desde muy arriba, que muestran dónde caminaba o estaba cada persona.",
+      "scenes.s8.caption": "Impreso con tipos móviles de metal",
+      "scenes.s8.narration": "Algo poco común: este uigwe se imprimió con tipos móviles de metal, así que se pudieron compartir más copias. Sus imágenes también son grabados. En 2007, la UNESCO añadió los uigwe de Joseon a la Memoria del Mundo.",
+      "summary": "Los uigwe eran informes detallados, llenos de imágenes, sobre ceremonias y proyectos reales. Hoya abre el Wonhaeng Eulmyo Jeongni Uigwe, el registro de la celebración que el rey Jeongjo hizo en 1795 por los 60 años de su madre.",
+      "title": "Un registro en imágenes de un cumpleaños real"
     },
     "vocab-topic:animals": {
       "blurb": "Palabras para animales, de las mascotas al zoológico.",
@@ -2929,10 +5222,131 @@ export const OVERLAYS: Overlays = {
       "fact": "어른께 세배하면 어른이 세뱃돈을 주실 때가 많아요.",
       "title": "설날"
     },
+    "card:set-hangul-printing": {
+      "blurb": "이야기 여섯 편이 한 묶음이에요.",
+      "title": "글자를 찍어 내는 일"
+    },
+    "card:set-records-joseon": {
+      "blurb": "이야기 여섯 편을 하나로 모았어요.",
+      "title": "조선의 기록"
+    },
+    "card:set-science-art-life": {
+      "blurb": "이야기 여섯 편이 모인 컬렉션이에요.",
+      "title": "아주 귀한 물건"
+    },
+    "card:set-seasons-tales": {
+      "blurb": "이야기 여섯 편을 한데 모았어요.",
+      "title": "아리랑"
+    },
     "card:songpyeon": {
       "blurb": "달콤한 소를 넣은 반달 모양 떡이에요.",
       "fact": "향이 좋도록 솔잎을 깔고 쪄요.",
       "title": "송편"
+    },
+    "card:story-chuseok-ganggangsullae": {
+      "blurb": "추석(한가위)에 호야는 고향에 가는 가족과 함께해요. 솔잎을 깔고 찌는 송편을 빚고, 보름달 아래에서 여성들이 손을 잡고 강강술래를 추는 모습을 봐요.",
+      "fact": "강강술래는 2009년에 유네스코 인류무형문화유산 대표목록에 올랐어요.",
+      "title": "손잡고 도는 춤"
+    },
+    "card:story-dano-ssireum": {
+      "blurb": "호야가 한국의 초여름 명절인 단오를 즐겨요. 창포물에 머리를 감고, 그네를 하늘 높이 타고, 씨름을 봐요. 그리고 대사 없는 관노가면극이 펼쳐지는, 유네스코 목록에 오른 강릉단오제도 만나요.",
+      "fact": "단오에는 창포(향기가 좋은 풀)를 삶은 물로 머리를 감았어요. 그러면 머리카락이 숱이 많고 윤기가 난다고 믿었어요.",
+      "title": "여름 명절 단오"
+    },
+    "card:story-donguibogam": {
+      "blurb": "호야가 궁궐 의사 허준이 1610년에 동의보감을 완성한 이야기를 알아봐요. 동의보감은 건강을 지키는 일을 소중히 여기고 약초 이름을 한글로 적은 의학 백과사전으로, 지금은 유네스코 세계기록유산이에요.",
+      "fact": "허준은 1610년(광해군 2년)에 동의보감을 완성했어요.",
+      "title": "의학책"
+    },
+    "card:story-gimjang-arirang": {
+      "blurb": "겨울이 다가오면 호야는 친척, 이웃과 함께 김장(유네스코 2013)을 하며 김치를 담그고 나눠요. 그리고 한국 곳곳에서 함께 부르는 민요 아리랑(대한민국의 유네스코 등재 종목, 2012)을 들어요.",
+      "fact": "김장은 늦가을에서 초겨울 사이에 김치를 한꺼번에 많이 담가, 겨우내 가족이 먹을 수 있게 하는 풍습이에요.",
+      "title": "겨울 김치 담그기"
+    },
+    "card:story-hangeul-day": {
+      "blurb": "호야가 대한민국에서 왜 10월 9일을 한글날로 기념하는지 알아봐요. 이 날짜는 1446년 해례본 끝에 적힌 날짜에서 나왔고, 이 책은 1940년쯤 발견됐어요. 한글날은 1926년 '가갸날'로 시작했어요.",
+      "fact": "훈민정음 해례본은 국보이고, 유네스코 세계기록유산에 올라 있어요.",
+      "title": "나라의 보물"
+    },
+    "card:story-ilseongnok-daily-reflection": {
+      "blurb": "정조는 어린 세손 시절부터 하루하루를 돌아보려고 일기를 썼어요. 이 일기가 자라서 1760년부터 1910년까지의 공식 조정 기록인 일성록이 되었어요.",
+      "fact": "정조는 세손 시절에 자기 말과 행동, 공부를 일기로 적었고, 이 일기가 일성록의 시작이었어요.",
+      "title": "날마다 돌아보기"
+    },
+    "card:story-janggyeong-panjeon": {
+      "blurb": "호야가 해인사의 장경판전을 둘러봐요. 15세기에 지은 이 건물은 슬기롭게 설계한 창문과 여러 층으로 된 바닥 덕분에 약 500년 동안 팔만대장경 경판을 지켜 왔어요.",
+      "fact": "바람이 잘 통하도록 남쪽과 북쪽(앞뒤) 벽의 창 크기를 서로 다르게 했고, 위아래 창의 크기도 다르게 했어요.",
+      "title": "움직이는 공기"
+    },
+    "card:story-jikji-metal-type": {
+      "blurb": "호야가 청주 흥덕사에 가요. 1377년에 이곳에서 직지를 금속활자로 찍었어요. 직지는 지금 남아 있는 금속활자 책 가운데 세계에서 가장 오래됐고, 하나 남은 권은 파리에 있어요.",
+      "fact": "직지는 1377년(고려 우왕 3년) 7월, 청주 근교의 흥덕사에서 금속활자로 찍었어요.",
+      "title": "쇠로 만든 활자"
+    },
+    "card:story-joseon-records-today": {
+      "blurb": "조선의 기록은 오늘날 사람들에게 어떻게 도움이 될까요? 호야는 의궤 그림을 보고 고친 성, 왕의 행렬을 다시 보여 주는 축제, 옛 날씨 기록을 읽는 과학자들, 그리고 누구나 인터넷으로 볼 수 있는 실록을 만나요.",
+      "fact": "화성은 일부가 부서진 뒤 『화성성역의궤』를 따라 처음 모습대로 다시 지어졌고, 오늘날에도 이 기록을 바탕으로 고쳐요.",
+      "title": "수원의 큰 요새"
+    },
+    "card:story-kim-hongdo-genre-paintings": {
+      "blurb": "호야가 국립중앙박물관에 있는 단원 풍속도첩의 그림 「씨름」과 「서당」을 자세히 살펴봐요. 엿장수, 누군가 벗어 놓은 신발, 훌쩍이는 학생을 찾아내요.",
+      "fact": "그림 「씨름」에서는 가운데에서 두 씨름꾼이 맞붙어 힘을 겨루고, 구경꾼들이 위와 아래 두 무리로 둥글게 둘러싸고 있어요.",
+      "title": "생활 모습 그림"
+    },
+    "card:story-nanjung-ilgi": {
+      "blurb": "호야가 이순신 장군이 1592년부터 1598년까지 거의 날마다 쓴 일기를 펼쳐 봐요. 날씨와 마음, 하루하루의 생활이 가득 담긴 이 일기는 지금 국보이자 유네스코 세계기록유산이에요.",
+      "fact": "일기에는 날씨, 군대 생활, 장군 자신의 생각과 마음, 백성들의 삶 등이 적혀 있어요.",
+      "title": "전쟁 일기"
+    },
+    "card:story-pansori-tales": {
+      "blurb": "호야가 판소리 공연(유네스코 2003/2008)에 가서, 지금까지 전해지는 다섯 마당 가운데 두 이야기를 들어요. 착한 흥부와 은혜 갚은 제비, 그리고 용왕의 궁궐에서 빠져나온 꾀 많은 토끼 이야기예요. 이 한국의 토끼와 자라 이야기는 이솝 우화 「토끼와 거북이」와 다른 이야기예요.",
+      "fact": "판소리에서는 소리꾼 한 명이 노래하고 말하고 몸짓을 하며 긴 이야기를 들려주고, 고수가 북으로 장단을 맞추며 함께해요.",
+      "title": "판소리"
+    },
+    "card:story-sejong-new-letters": {
+      "blurb": "호야가 조선으로 가서 세종대왕이 1443년에 왜 새 글자 28자를 만들었는지, 그리고 1446년에 훈민정음이라는 책이 그 글자를 어떻게 풀이했는지 알아봐요.",
+      "fact": "세종은 조선의 넷째 임금이에요. 1418년부터 1450년까지 나라를 다스렸어요.",
+      "title": "조선의 넷째 임금"
+    },
+    "card:story-seollal-new-year": {
+      "blurb": "호야가 한 가족과 함께 음력 새해 첫날인 설날을 보내요. 설빔으로 새 옷을 차려입고, 어른께 세배를 드리고, 따뜻한 떡국을 먹고, 신나게 윷놀이를 해요.",
+      "fact": "세배를 받은 어른은 복을 빌어 주는 말(덕담)로 답해요. 절하러 온 아이들에게는 약간의 돈이나 떡과 과일을 줘요.",
+      "title": "복을 빌어 주는 말"
+    },
+    "card:story-seungjeongwon-ilgi-every-day": {
+      "blurb": "승정원에서는 기록을 맡은 관리들이 왕의 하루 일을 날마다, 날씨까지 적었어요. 호야는 이 커다란 일기가 왜 보물인지 알아봐요.",
+      "fact": "승정원은 왕의 비서 기관으로, 왕명을 신하들에게 내려보내고 신하들의 의견을 왕에게 올리는 일(왕명의 '출납')을 맡았어요.",
+      "title": "왕의 비서 기관"
+    },
+    "card:story-shapes-of-hangeul": {
+      "blurb": "호야가 1446년 훈민정음 해례본을 읽고, 한글의 기본 자음 다섯 자는 혀, 입, 이(치아), 목구멍의 모양을 본떴고 기본 모음은 하늘, 땅, 사람에서 왔다는 것을 알아내요.",
+      "fact": "기본 자음 다섯 자는 각 소리를 낼 때 쓰는 발음 기관의 모양을 본떠 만들었어요.",
+      "title": "닿소리 글자"
+    },
+    "card:story-sillok-mountain-archives": {
+      "blurb": "왕이 세상을 떠나면 관리들이 사관의 기록으로 실록을 만들고, 멀리 산속에 있는 사고에서 책을 지켰어요. 호야는 초고에서 산속 사고까지 실록이 간 길을 따라가요.",
+      "fact": "전쟁이 끝난 뒤(1603~1606년) 전주의 실록을 바탕으로 실록을 다시 인쇄해, 모두 다섯 벌을 다섯 곳의 사고에 보관했어요.",
+      "title": "역사책 보관소"
+    },
+    "card:story-sillok-royal-historians": {
+      "blurb": "호야는 조선 왕의 말을 누가 적었는지, 그리고 왜 왕조차 그 기록을 읽을 수 없었는지 알아봐요. 실록에 실린 1404년의 실제 기록을 보면 사관들이 얼마나 충실하게 기록했는지 알 수 있어요.",
+      "fact": "조선에서는 사관이 궁궐에서 일어난 일을 날마다 적었어요.",
+      "title": "왕실의 역사 기록관"
+    },
+    "card:story-sun-and-moon": {
+      "blurb": "한국의 전래 민담 「해님 달님」을 순하고 쉽게 다시 들려줘요. 오누이가 꾀 많은 호랑이를 따돌리고, 줄을 타고 하늘로 올라가 해와 달이 돼요.",
+      "fact": "이야기에서 오누이가 하늘에 줄을 내려 달라고 빌자, 튼튼한 새 동아줄이 내려와 둘은 그 줄을 타고 올라가요. 호랑이가 잡은 썩은 줄은 끊어져요.",
+      "title": "튼튼한 줄"
+    },
+    "card:story-tripitaka-koreana": {
+      "blurb": "호야가 해인사에서 팔만대장경을 만나요. 1237년부터 1248년까지 불교 경전을 새긴 나무판이 8만 장 넘게 있고, 지금도 잘 보관되어 있어요.",
+      "fact": "고려대장경 경판은 경상남도 합천 가야산의 해인사에 있고, 법보전과 수다라장에 보관되어 있어요.",
+      "title": "불교 경전을 모은 것"
+    },
+    "card:story-uigwe-royal-birthday": {
+      "blurb": "의궤는 왕실의 의식과 큰일을 그림과 함께 자세히 적은 보고서였어요. 호야는 정조가 1795년 어머니의 환갑을 맞아 연 잔치를 기록한 『원행을묘정리의궤』를 펼쳐요.",
+      "fact": "의궤는 왕실 혼례, 잔치, 장례, 사신 접대, 궁궐 중건 같은 왕실의 큰 의식과 나라의 큰일을 글과 그림으로 기록해요.",
+      "title": "왕실 그림 기록"
     },
     "card:taegeukgi": {
       "blurb": "빨강과 파랑 소용돌이에 검은 무늬 네 개가 있어요. 한국의 국기예요.",
@@ -2983,6 +5397,90 @@ export const OVERLAYS: Overlays = {
       "blurb": "막대 네 개를 던져요. 윷!",
       "fact": "윷놀이는 로마자로 yunnori라고도, yutnori라고도 써요. 설날에 하는 놀이예요.",
       "title": "윷놀이"
+    },
+    "episode:shelf-chuseok-ganggangsullae": {
+      "hoyaIntro": "추석이에요! 같이 송편을 빚고 보름달을 봐요.",
+      "title": "추석에 빚는 송편과 둥근 보름달"
+    },
+    "episode:shelf-dano-ssireum": {
+      "hoyaIntro": "단오가 왔어요! 그네를 높이 타고, 가면극을 보고, 씨름을 응원해요.",
+      "title": "신나는 단오: 그네와 탈과 씨름"
+    },
+    "episode:shelf-donguibogam": {
+      "hoyaIntro": "건강하게 지내는 법을 담은 아주 큰 책을 쓴 궁궐 의사를 만나 봐요.",
+      "title": "허준이 쓴 보배 같은 의학책"
+    },
+    "episode:shelf-gimjang-arirang": {
+      "hoyaIntro": "겨울이 오고 있어요! 이웃과 함께 김치를 담그고, 한국 곳곳에서 함께 부르는 노래도 들어 봐요.",
+      "title": "김장하는 날: 김치를 나누고 아리랑을 불러요"
+    },
+    "episode:shelf-hangeul-day": {
+      "hoyaIntro": "한글에 왜 특별한 날이 있는지 알아봐요!",
+      "title": "즐거운 한글날!"
+    },
+    "episode:shelf-ilseongnok-daily-reflection": {
+      "hoyaIntro": "날마다 일기로 하루를 돌아본 어린 세손 이야기를 읽어 봐요.",
+      "title": "날마다 자신을 돌아본 정조의 일기"
+    },
+    "episode:shelf-janggyeong-panjeon": {
+      "hoyaIntro": "오래된 목판은 어떻게 지킬까요? 해인사의 바람에게 물어봐요!",
+      "title": "바람이 지켜 주는 곳"
+    },
+    "episode:shelf-jikji-metal-type": {
+      "hoyaIntro": "금속활자로 책을 찍은 절에 가 봐요!",
+      "title": "쇠 활자로 찍은 옛 책"
+    },
+    "episode:shelf-joseon-records-today": {
+      "hoyaIntro": "옛 기록은 오늘날 우리에게 무슨 일을 해 줄까요? 가서 봐요!",
+      "title": "옛 기록에서 찾은 새로운 발견"
+    },
+    "episode:shelf-kim-hongdo-genre-paintings": {
+      "hoyaIntro": "옛날 사람들의 하루를 담은 그림을 자세히 들여다봐요. 무엇을 찾을 수 있나요?",
+      "title": "김홍도가 그린 사람들의 하루"
+    },
+    "episode:shelf-nanjung-ilgi": {
+      "hoyaIntro": "일기를 쓰나요? 이순신 장군의 일기를 펼쳐 봐요.",
+      "title": "이순신 장군이 쓴 전쟁 일기"
+    },
+    "episode:shelf-pansori-tales": {
+      "hoyaIntro": "판소리를 들어 봐요! 소리꾼 한 명과 북 치는 고수 한 명이 옛이야기 두 편을 들려줘요.",
+      "title": "판소리 이야기: 흥부의 제비와 꾀 많은 토끼 (옛이야기)"
+    },
+    "episode:shelf-sejong-new-letters": {
+      "hoyaIntro": "나랑 같이 조선에 가요! 세종대왕이 왜 새 글자를 만들었는지 알아봐요.",
+      "title": "임금이 만든 새 문자"
+    },
+    "episode:shelf-seollal-new-year": {
+      "hoyaIntro": "새해 복 많이 받으세요! 저와 함께 어느 가족의 설날 아침을 보내 봐요.",
+      "title": "설날 아침, 호야와 함께"
+    },
+    "episode:shelf-seungjeongwon-ilgi-every-day": {
+      "hoyaIntro": "왕의 하루 일을 적던 승정원에 가 봐요.",
+      "title": "왕의 비서 기관이 날마다 남긴 기록"
+    },
+    "episode:shelf-shapes-of-hangeul": {
+      "hoyaIntro": "글자 속에 비밀 모양이 숨어 있는 거 알아요? 옛 책을 펴고 찾아봐요!",
+      "title": "글자 모양에 숨은 비밀"
+    },
+    "episode:shelf-sillok-mountain-archives": {
+      "hoyaIntro": "실록은 안전하게 지내려고 어디로 갔을까요? 산으로 따라가 봐요!",
+      "title": "산에 숨은 실록"
+    },
+    "episode:shelf-sillok-royal-historians": {
+      "hoyaIntro": "옛날 왕이 한 말을 우리는 어떻게 알까요? 그 모든 것을 적은 사람들을 만나러 가요!",
+      "title": "호야가 사관을 만나요"
+    },
+    "episode:shelf-sun-and-moon": {
+      "hoyaIntro": "이야기 시간이에요! 오빠와 여동생, 그리고 꾀 많은 호랑이가 나오는 옛 민담이에요.",
+      "title": "해와 달이 된 오누이 (옛이야기)"
+    },
+    "episode:shelf-tripitaka-koreana": {
+      "hoyaIntro": "산에 올라 글자를 새긴 나무판이 가득한 절에 가 봐요!",
+      "title": "나무판 팔만 장"
+    },
+    "episode:shelf-uigwe-royal-birthday": {
+      "hoyaIntro": "큰 생일잔치를 기록한, 그림이 가득한 왕실 보고서를 펼쳐 봐요!",
+      "title": "예순 번째 생일을 담은 왕실 보고서"
     },
     "episode:stage1-crafts": {
       "hoyaIntro": "같이 윷놀이해요! 윷가락을 던져 봐요!",
@@ -3320,6 +5818,1635 @@ export const OVERLAYS: Overlays = {
       "listenPick.rounds.lp-sym-jamo-yo.prompt": "글자 yo",
       "listenPick.rounds.lp-sym-jamo-yu.prompt": "글자 yu"
     },
+    "pitem:recog-odd-a-eo": {
+      "gloss": "다른 하나를 찾아요: 모음 어 사이에 있는 아",
+      "options.t1.gloss": "모음 어",
+      "options.t2.gloss": "모음 어",
+      "options.t3.gloss": "모음 아",
+      "options.t4.gloss": "모음 어"
+    },
+    "pitem:recog-odd-a-ya": {
+      "gloss": "다른 하나를 찾아요: 모음 야 사이에 있는 아",
+      "options.t1.gloss": "모음 야",
+      "options.t2.gloss": "모음 야",
+      "options.t3.gloss": "모음 아",
+      "options.t4.gloss": "모음 야"
+    },
+    "pitem:recog-odd-bieup-mieum": {
+      "gloss": "다른 하나를 찾아요: 자음 미음 사이에 있는 비읍",
+      "options.t1.gloss": "자음 미음",
+      "options.t2.gloss": "자음 미음",
+      "options.t3.gloss": "자음 비읍",
+      "options.t4.gloss": "자음 미음"
+    },
+    "pitem:recog-odd-chieut-jieut": {
+      "gloss": "다른 하나를 찾아요: 자음 지읒 사이에 있는 치읓",
+      "options.t1.gloss": "자음 지읒",
+      "options.t2.gloss": "자음 지읒",
+      "options.t3.gloss": "자음 치읓",
+      "options.t4.gloss": "자음 지읒"
+    },
+    "pitem:recog-odd-digeut-nieun": {
+      "gloss": "다른 하나를 찾아요: 자음 니은 사이에 있는 디귿",
+      "options.t1.gloss": "자음 니은",
+      "options.t2.gloss": "자음 니은",
+      "options.t3.gloss": "자음 디귿",
+      "options.t4.gloss": "자음 니은"
+    },
+    "pitem:recog-odd-digeut-rieul": {
+      "gloss": "다른 하나를 찾아요: 자음 리을 사이에 있는 디귿",
+      "options.t1.gloss": "자음 리을",
+      "options.t2.gloss": "자음 리을",
+      "options.t3.gloss": "자음 디귿",
+      "options.t4.gloss": "자음 리을"
+    },
+    "pitem:recog-odd-digeut-tieut": {
+      "gloss": "다른 하나를 찾아요: 자음 티읕 사이에 있는 디귿",
+      "options.t1.gloss": "자음 티읕",
+      "options.t2.gloss": "자음 티읕",
+      "options.t3.gloss": "자음 디귿",
+      "options.t4.gloss": "자음 티읕"
+    },
+    "pitem:recog-odd-eo-a": {
+      "gloss": "다른 하나를 찾아요: 모음 아 사이에 있는 어",
+      "options.t1.gloss": "모음 아",
+      "options.t2.gloss": "모음 아",
+      "options.t3.gloss": "모음 어",
+      "options.t4.gloss": "모음 아"
+    },
+    "pitem:recog-odd-eo-yeo": {
+      "gloss": "다른 하나를 찾아요: 모음 여 사이에 있는 어",
+      "options.t1.gloss": "모음 여",
+      "options.t2.gloss": "모음 여",
+      "options.t3.gloss": "모음 어",
+      "options.t4.gloss": "모음 여"
+    },
+    "pitem:recog-odd-eu-i": {
+      "gloss": "다른 하나를 찾아요: 모음 이 사이에 있는 으",
+      "options.t1.gloss": "모음 이",
+      "options.t2.gloss": "모음 이",
+      "options.t3.gloss": "모음 으",
+      "options.t4.gloss": "모음 이"
+    },
+    "pitem:recog-odd-giyeok-kieuk": {
+      "gloss": "다른 하나를 찾아요: 자음 키읔 사이에 있는 기역",
+      "options.t1.gloss": "자음 키읔",
+      "options.t2.gloss": "자음 키읔",
+      "options.t3.gloss": "자음 기역",
+      "options.t4.gloss": "자음 키읔"
+    },
+    "pitem:recog-odd-giyeok-nieun": {
+      "gloss": "다른 하나를 찾아요: 자음 니은 사이에 있는 기역",
+      "options.t1.gloss": "자음 니은",
+      "options.t2.gloss": "자음 니은",
+      "options.t3.gloss": "자음 기역",
+      "options.t4.gloss": "자음 니은"
+    },
+    "pitem:recog-odd-hieut-ieung": {
+      "gloss": "다른 하나를 찾아요: 자음 이응 사이에 있는 히읗",
+      "options.t1.gloss": "자음 이응",
+      "options.t2.gloss": "자음 이응",
+      "options.t3.gloss": "자음 히읗",
+      "options.t4.gloss": "자음 이응"
+    },
+    "pitem:recog-odd-i-eu": {
+      "gloss": "다른 하나를 찾아요: 모음 으 사이에 있는 이",
+      "options.t1.gloss": "모음 으",
+      "options.t2.gloss": "모음 으",
+      "options.t3.gloss": "모음 이",
+      "options.t4.gloss": "모음 으"
+    },
+    "pitem:recog-odd-ieung-hieut": {
+      "gloss": "다른 하나를 찾아요: 자음 히읗 사이에 있는 이응",
+      "options.t1.gloss": "자음 히읗",
+      "options.t2.gloss": "자음 히읗",
+      "options.t3.gloss": "자음 이응",
+      "options.t4.gloss": "자음 히읗"
+    },
+    "pitem:recog-odd-ieung-mieum": {
+      "gloss": "다른 하나를 찾아요: 자음 미음 사이에 있는 이응",
+      "options.t1.gloss": "자음 미음",
+      "options.t2.gloss": "자음 미음",
+      "options.t3.gloss": "자음 이응",
+      "options.t4.gloss": "자음 미음"
+    },
+    "pitem:recog-odd-ieung-siot": {
+      "gloss": "다른 하나를 찾아요: 자음 시옷 사이에 있는 이응",
+      "options.t1.gloss": "자음 시옷",
+      "options.t2.gloss": "자음 시옷",
+      "options.t3.gloss": "자음 이응",
+      "options.t4.gloss": "자음 시옷"
+    },
+    "pitem:recog-odd-jieut-chieut": {
+      "gloss": "다른 하나를 찾아요: 자음 치읓 사이에 있는 지읒",
+      "options.t1.gloss": "자음 치읓",
+      "options.t2.gloss": "자음 치읓",
+      "options.t3.gloss": "자음 지읒",
+      "options.t4.gloss": "자음 치읓"
+    },
+    "pitem:recog-odd-jieut-siot": {
+      "gloss": "다른 하나를 찾아요: 자음 시옷 사이에 있는 지읒",
+      "options.t1.gloss": "자음 시옷",
+      "options.t2.gloss": "자음 시옷",
+      "options.t3.gloss": "자음 지읒",
+      "options.t4.gloss": "자음 시옷"
+    },
+    "pitem:recog-odd-kieuk-giyeok": {
+      "gloss": "다른 하나를 찾아요: 자음 기역 사이에 있는 키읔",
+      "options.t1.gloss": "자음 기역",
+      "options.t2.gloss": "자음 기역",
+      "options.t3.gloss": "자음 키읔",
+      "options.t4.gloss": "자음 기역"
+    },
+    "pitem:recog-odd-mieum-bieup": {
+      "gloss": "다른 하나를 찾아요: 자음 비읍 사이에 있는 미음",
+      "options.t1.gloss": "자음 비읍",
+      "options.t2.gloss": "자음 비읍",
+      "options.t3.gloss": "자음 미음",
+      "options.t4.gloss": "자음 비읍"
+    },
+    "pitem:recog-odd-mieum-ieung": {
+      "gloss": "다른 하나를 찾아요: 자음 이응 사이에 있는 미음",
+      "options.t1.gloss": "자음 이응",
+      "options.t2.gloss": "자음 이응",
+      "options.t3.gloss": "자음 미음",
+      "options.t4.gloss": "자음 이응"
+    },
+    "pitem:recog-odd-nieun-digeut": {
+      "gloss": "다른 하나를 찾아요: 자음 디귿 사이에 있는 니은",
+      "options.t1.gloss": "자음 디귿",
+      "options.t2.gloss": "자음 디귿",
+      "options.t3.gloss": "자음 니은",
+      "options.t4.gloss": "자음 디귿"
+    },
+    "pitem:recog-odd-nieun-giyeok": {
+      "gloss": "다른 하나를 찾아요: 자음 기역 사이에 있는 니은",
+      "options.t1.gloss": "자음 기역",
+      "options.t2.gloss": "자음 기역",
+      "options.t3.gloss": "자음 니은",
+      "options.t4.gloss": "자음 기역"
+    },
+    "pitem:recog-odd-o-u": {
+      "gloss": "다른 하나를 찾아요: 모음 우 사이에 있는 오",
+      "options.t1.gloss": "모음 우",
+      "options.t2.gloss": "모음 우",
+      "options.t3.gloss": "모음 오",
+      "options.t4.gloss": "모음 우"
+    },
+    "pitem:recog-odd-o-yo": {
+      "gloss": "다른 하나를 찾아요: 모음 요 사이에 있는 오",
+      "options.t1.gloss": "모음 요",
+      "options.t2.gloss": "모음 요",
+      "options.t3.gloss": "모음 오",
+      "options.t4.gloss": "모음 요"
+    },
+    "pitem:recog-odd-rieul-digeut": {
+      "gloss": "다른 하나를 찾아요: 자음 디귿 사이에 있는 리을",
+      "options.t1.gloss": "자음 디귿",
+      "options.t2.gloss": "자음 디귿",
+      "options.t3.gloss": "자음 리을",
+      "options.t4.gloss": "자음 디귿"
+    },
+    "pitem:recog-odd-siot-ieung": {
+      "gloss": "다른 하나를 찾아요: 자음 이응 사이에 있는 시옷",
+      "options.t1.gloss": "자음 이응",
+      "options.t2.gloss": "자음 이응",
+      "options.t3.gloss": "자음 시옷",
+      "options.t4.gloss": "자음 이응"
+    },
+    "pitem:recog-odd-siot-jieut": {
+      "gloss": "다른 하나를 찾아요: 자음 지읒 사이에 있는 시옷",
+      "options.t1.gloss": "자음 지읒",
+      "options.t2.gloss": "자음 지읒",
+      "options.t3.gloss": "자음 시옷",
+      "options.t4.gloss": "자음 지읒"
+    },
+    "pitem:recog-odd-tieut-digeut": {
+      "gloss": "다른 하나를 찾아요: 자음 디귿 사이에 있는 티읕",
+      "options.t1.gloss": "자음 디귿",
+      "options.t2.gloss": "자음 디귿",
+      "options.t3.gloss": "자음 티읕",
+      "options.t4.gloss": "자음 디귿"
+    },
+    "pitem:recog-odd-u-o": {
+      "gloss": "다른 하나를 찾아요: 모음 오 사이에 있는 우",
+      "options.t1.gloss": "모음 오",
+      "options.t2.gloss": "모음 오",
+      "options.t3.gloss": "모음 우",
+      "options.t4.gloss": "모음 오"
+    },
+    "pitem:recog-odd-u-yu": {
+      "gloss": "다른 하나를 찾아요: 모음 유 사이에 있는 우",
+      "options.t1.gloss": "모음 유",
+      "options.t2.gloss": "모음 유",
+      "options.t3.gloss": "모음 우",
+      "options.t4.gloss": "모음 유"
+    },
+    "pitem:recog-odd-ya-a": {
+      "gloss": "다른 하나를 찾아요: 모음 아 사이에 있는 야",
+      "options.t1.gloss": "모음 아",
+      "options.t2.gloss": "모음 아",
+      "options.t3.gloss": "모음 야",
+      "options.t4.gloss": "모음 아"
+    },
+    "pitem:recog-odd-ya-yeo": {
+      "gloss": "다른 하나를 찾아요: 모음 여 사이에 있는 야",
+      "options.t1.gloss": "모음 여",
+      "options.t2.gloss": "모음 여",
+      "options.t3.gloss": "모음 야",
+      "options.t4.gloss": "모음 여"
+    },
+    "pitem:recog-odd-yeo-eo": {
+      "gloss": "다른 하나를 찾아요: 모음 어 사이에 있는 여",
+      "options.t1.gloss": "모음 어",
+      "options.t2.gloss": "모음 어",
+      "options.t3.gloss": "모음 여",
+      "options.t4.gloss": "모음 어"
+    },
+    "pitem:recog-odd-yeo-ya": {
+      "gloss": "다른 하나를 찾아요: 모음 야 사이에 있는 여",
+      "options.t1.gloss": "모음 야",
+      "options.t2.gloss": "모음 야",
+      "options.t3.gloss": "모음 여",
+      "options.t4.gloss": "모음 야"
+    },
+    "pitem:recog-odd-yo-o": {
+      "gloss": "다른 하나를 찾아요: 모음 오 사이에 있는 요",
+      "options.t1.gloss": "모음 오",
+      "options.t2.gloss": "모음 오",
+      "options.t3.gloss": "모음 요",
+      "options.t4.gloss": "모음 오"
+    },
+    "pitem:recog-odd-yo-yu": {
+      "gloss": "다른 하나를 찾아요: 모음 유 사이에 있는 요",
+      "options.t1.gloss": "모음 유",
+      "options.t2.gloss": "모음 유",
+      "options.t3.gloss": "모음 요",
+      "options.t4.gloss": "모음 유"
+    },
+    "pitem:recog-odd-yu-u": {
+      "gloss": "다른 하나를 찾아요: 모음 우 사이에 있는 유",
+      "options.t1.gloss": "모음 우",
+      "options.t2.gloss": "모음 우",
+      "options.t3.gloss": "모음 유",
+      "options.t4.gloss": "모음 우"
+    },
+    "pitem:recog-odd-yu-yo": {
+      "gloss": "다른 하나를 찾아요: 모음 요 사이에 있는 유",
+      "options.t1.gloss": "모음 요",
+      "options.t2.gloss": "모음 요",
+      "options.t3.gloss": "모음 유",
+      "options.t4.gloss": "모음 요"
+    },
+    "pitem:sent-n-hear-badayeyo": {
+      "gloss": "짠물이 넓게 펼쳐진 곳이에요. (듣기)",
+      "options.family-table.gloss": "가족이 둘러앉아 식사하는 낮은 탁자",
+      "options.sea.gloss": "짠물이 넓게 펼쳐진 곳",
+      "options.tiger.gloss": "줄무늬가 있는 크고 힘센 동물",
+      "options.top.gloss": "빙글빙글 돌려서 노는 장난감"
+    },
+    "pitem:sent-n-hear-busieyo": {
+      "gloss": "끝에 털이 달려 글씨를 쓰는 도구예요. (듣기)",
+      "options.brush.gloss": "끝에 털이 달려 글씨를 쓰는 도구",
+      "options.gayageum.gloss": "줄을 뜯어 소리를 내는 한국 전통 악기",
+      "options.hanbok.gloss": "한국의 전통 옷",
+      "options.magpie.gloss": "까맣고 하얀 깃털을 가진 새"
+    },
+    "pitem:sent-n-hear-chaegieyo": {
+      "gloss": "글과 그림이 담긴 종이 묶음이에요. (듣기)",
+      "options.book.gloss": "글과 그림이 담긴 종이 묶음",
+      "options.moon.gloss": "밤하늘에 떠서 빛나는 둥근 것",
+      "options.tteokguk.gloss": "쌀 반죽을 길게 뽑아 얇게 썰어 넣고 끓인 설날 음식",
+      "options.yutnori.gloss": "나무 막대 네 개를 던져 말을 옮기는 전통 게임"
+    },
+    "pitem:sent-n-hear-darieyo": {
+      "gloss": "밤하늘에 떠서 빛나는 둥근 것이에요. (듣기)",
+      "options.kimbap.gloss": "김에 밥과 채소를 넣고 둥글게 말아 썬 음식",
+      "options.kite.gloss": "바람에 날리는 종이 장난감",
+      "options.magpie.gloss": "까맣고 하얀 깃털을 가진 새",
+      "options.moon.gloss": "밤하늘에 떠서 빛나는 둥근 것"
+    },
+    "pitem:sent-n-hear-gimchiyeyo": {
+      "gloss": "배추 같은 채소를 소금에 절이고 양념해 담근 반찬이에요. (듣기)",
+      "options.jegi.gloss": "발로 차올리며 노는 전통 놀잇감",
+      "options.kimchi.gloss": "배추 같은 채소를 소금에 절이고 양념해 담근 반찬",
+      "options.magpie.gloss": "까맣고 하얀 깃털을 가진 새",
+      "options.pottery.gloss": "푸른빛이 도는 옛 도자기"
+    },
+    "pitem:sent-n-hear-hanbogieyo": {
+      "gloss": "한국의 전통 옷이에요. (듣기)",
+      "options.book.gloss": "글과 그림이 담긴 종이 묶음",
+      "options.chopsticks.gloss": "음식을 집는 가늘고 긴 막대 한 쌍",
+      "options.hanbok.gloss": "한국의 전통 옷",
+      "options.sea.gloss": "짠물이 넓게 펼쳐진 곳"
+    },
+    "pitem:sent-n-hear-hanjiyeyo": {
+      "gloss": "닥나무로 만든 한국 전통 종이예요. (듣기)",
+      "options.hanji.gloss": "닥나무로 만든 한국 전통 종이",
+      "options.kite.gloss": "바람에 날리는 종이 장난감",
+      "options.mugunghwa.gloss": "한국의 나라꽃",
+      "options.rice.gloss": "쌀로 지어 먹는 음식"
+    },
+    "pitem:sent-n-hear-horangiyeyo": {
+      "gloss": "줄무늬가 있는 크고 힘센 동물이에요. (듣기)",
+      "options.gayageum.gloss": "줄을 뜯어 소리를 내는 한국 전통 악기",
+      "options.lantern.gloss": "부처님 오신 날에 밝히는 종이 불빛",
+      "options.origami.gloss": "네모난 색지로 학이나 배 같은 모양을 만드는 놀이",
+      "options.tiger.gloss": "줄무늬가 있는 크고 힘센 동물"
+    },
+    "pitem:sent-n-hear-jegiyeyo": {
+      "gloss": "발로 차올리며 노는 전통 놀잇감이에요. (듣기)",
+      "options.hanji.gloss": "닥나무로 만든 한국 전통 종이",
+      "options.jegi.gloss": "발로 차올리며 노는 전통 놀잇감",
+      "options.kimbap.gloss": "김에 밥과 채소를 넣고 둥글게 말아 썬 음식",
+      "options.moon.gloss": "밤하늘에 떠서 빛나는 둥근 것"
+    },
+    "pitem:sent-n-hear-kkachiyeyo": {
+      "gloss": "까맣고 하얀 깃털을 가진 새예요. (듣기)",
+      "options.book.gloss": "글과 그림이 담긴 종이 묶음",
+      "options.chuseok.gloss": "가을에 거둔 곡식에 감사하는 큰 명절",
+      "options.gayageum.gloss": "줄을 뜯어 소리를 내는 한국 전통 악기",
+      "options.magpie.gloss": "까맣고 하얀 깃털을 가진 새"
+    },
+    "pitem:sent-n-hear-paengiyeyo": {
+      "gloss": "빙글빙글 돌려서 노는 장난감이에요. (듣기)",
+      "options.hanji.gloss": "닥나무로 만든 한국 전통 종이",
+      "options.mountain.gloss": "땅이 높이 솟은 곳",
+      "options.songpyeon.gloss": "반달 모양으로 빚어 찐 떡",
+      "options.top.gloss": "빙글빙글 돌려서 노는 장난감"
+    },
+    "pitem:sent-n-hear-sanieyo": {
+      "gloss": "땅이 높이 솟은 곳이에요. (듣기)",
+      "options.chuseok.gloss": "가을에 거둔 곡식에 감사하는 큰 명절",
+      "options.ink.gloss": "벼루에 갈아 검은 물을 만드는 막대",
+      "options.mountain.gloss": "땅이 높이 솟은 곳",
+      "options.pottery.gloss": "푸른빛이 도는 옛 도자기"
+    },
+    "pitem:sent-n-hear-yeonieyo": {
+      "gloss": "바람에 날리는 종이 장난감이에요. (듣기)",
+      "options.chuseok.gloss": "가을에 거둔 곡식에 감사하는 큰 명절",
+      "options.gayageum.gloss": "줄을 뜯어 소리를 내는 한국 전통 악기",
+      "options.kite.gloss": "바람에 날리는 종이 장난감",
+      "options.magpie.gloss": "까맣고 하얀 깃털을 가진 새"
+    },
+    "pitem:sent-n-hear-yuchieyo": {
+      "gloss": "던져서 노는 나무 막대 네 개예요. (듣기)",
+      "options.gayageum.gloss": "줄을 뜯어 소리를 내는 한국 전통 악기",
+      "options.hanbok.gloss": "한국의 전통 옷",
+      "options.tiger.gloss": "줄무늬가 있는 크고 힘센 동물",
+      "options.yutnori.gloss": "나무 막대 네 개를 던져 말을 옮기는 전통 게임"
+    },
+    "pitem:sent-n-read-badayeyo": {
+      "gloss": "짠물이 넓게 펼쳐진 곳이에요. (읽기)",
+      "options.hanbok.gloss": "한국의 전통 옷",
+      "options.ink.gloss": "벼루에 갈아 검은 물을 만드는 막대",
+      "options.pottery.gloss": "푸른빛이 도는 옛 도자기",
+      "options.sea.gloss": "짠물이 넓게 펼쳐진 곳"
+    },
+    "pitem:sent-n-read-busieyo": {
+      "gloss": "끝에 털이 달려 글씨를 쓰는 도구예요. (읽기)",
+      "options.brush.gloss": "끝에 털이 달려 글씨를 쓰는 도구",
+      "options.kimchi.gloss": "배추 같은 채소를 소금에 절이고 양념해 담근 반찬",
+      "options.kite.gloss": "바람에 날리는 종이 장난감",
+      "options.mountain.gloss": "땅이 높이 솟은 곳"
+    },
+    "pitem:sent-n-read-chaegieyo": {
+      "gloss": "글과 그림이 담긴 종이 묶음이에요. (읽기)",
+      "options.book.gloss": "글과 그림이 담긴 종이 묶음",
+      "options.magpie.gloss": "까맣고 하얀 깃털을 가진 새",
+      "options.pottery.gloss": "푸른빛이 도는 옛 도자기",
+      "options.sebae.gloss": "새해에 웃어른께 드리는 큰절"
+    },
+    "pitem:sent-n-read-darieyo": {
+      "gloss": "밤하늘에 떠서 빛나는 둥근 것이에요. (읽기)",
+      "options.chopsticks.gloss": "음식을 집는 가늘고 긴 막대 한 쌍",
+      "options.gayageum.gloss": "줄을 뜯어 소리를 내는 한국 전통 악기",
+      "options.moon.gloss": "밤하늘에 떠서 빛나는 둥근 것",
+      "options.origami.gloss": "네모난 색지로 학이나 배 같은 모양을 만드는 놀이"
+    },
+    "pitem:sent-n-read-gimchiyeyo": {
+      "gloss": "배추 같은 채소를 소금에 절이고 양념해 담근 반찬이에요. (읽기)",
+      "options.book.gloss": "글과 그림이 담긴 종이 묶음",
+      "options.hanbok.gloss": "한국의 전통 옷",
+      "options.kimchi.gloss": "배추 같은 채소를 소금에 절이고 양념해 담근 반찬",
+      "options.mugunghwa.gloss": "한국의 나라꽃"
+    },
+    "pitem:sent-n-read-hanbogieyo": {
+      "gloss": "한국의 전통 옷이에요. (읽기)",
+      "options.gayageum.gloss": "줄을 뜯어 소리를 내는 한국 전통 악기",
+      "options.hanbok.gloss": "한국의 전통 옷",
+      "options.tiger.gloss": "줄무늬가 있는 크고 힘센 동물",
+      "options.top.gloss": "빙글빙글 돌려서 노는 장난감"
+    },
+    "pitem:sent-n-read-hanjiyeyo": {
+      "gloss": "닥나무로 만든 한국 전통 종이예요. (읽기)",
+      "options.gayageum.gloss": "줄을 뜯어 소리를 내는 한국 전통 악기",
+      "options.hanji.gloss": "닥나무로 만든 한국 전통 종이",
+      "options.sebae.gloss": "새해에 웃어른께 드리는 큰절",
+      "options.tiger.gloss": "줄무늬가 있는 크고 힘센 동물"
+    },
+    "pitem:sent-n-read-horangiyeyo": {
+      "gloss": "줄무늬가 있는 크고 힘센 동물이에요. (읽기)",
+      "options.mountain.gloss": "땅이 높이 솟은 곳",
+      "options.songpyeon.gloss": "반달 모양으로 빚어 찐 떡",
+      "options.tiger.gloss": "줄무늬가 있는 크고 힘센 동물",
+      "options.top.gloss": "빙글빙글 돌려서 노는 장난감"
+    },
+    "pitem:sent-n-read-jegiyeyo": {
+      "gloss": "발로 차올리며 노는 전통 놀잇감이에요. (읽기)",
+      "options.gayageum.gloss": "줄을 뜯어 소리를 내는 한국 전통 악기",
+      "options.jegi.gloss": "발로 차올리며 노는 전통 놀잇감",
+      "options.magpie.gloss": "까맣고 하얀 깃털을 가진 새",
+      "options.sebae.gloss": "새해에 웃어른께 드리는 큰절"
+    },
+    "pitem:sent-n-read-kkachiyeyo": {
+      "gloss": "까맣고 하얀 깃털을 가진 새예요. (읽기)",
+      "options.jegi.gloss": "발로 차올리며 노는 전통 놀잇감",
+      "options.kimbap.gloss": "김에 밥과 채소를 넣고 둥글게 말아 썬 음식",
+      "options.magpie.gloss": "까맣고 하얀 깃털을 가진 새",
+      "options.moon.gloss": "밤하늘에 떠서 빛나는 둥근 것"
+    },
+    "pitem:sent-n-read-paengiyeyo": {
+      "gloss": "빙글빙글 돌려서 노는 장난감이에요. (읽기)",
+      "options.gayageum.gloss": "줄을 뜯어 소리를 내는 한국 전통 악기",
+      "options.hanbok.gloss": "한국의 전통 옷",
+      "options.magpie.gloss": "까맣고 하얀 깃털을 가진 새",
+      "options.top.gloss": "빙글빙글 돌려서 노는 장난감"
+    },
+    "pitem:sent-n-read-sanieyo": {
+      "gloss": "땅이 높이 솟은 곳이에요. (읽기)",
+      "options.kimchi.gloss": "배추 같은 채소를 소금에 절이고 양념해 담근 반찬",
+      "options.magpie.gloss": "까맣고 하얀 깃털을 가진 새",
+      "options.mountain.gloss": "땅이 높이 솟은 곳",
+      "options.yutnori.gloss": "나무 막대 네 개를 던져 말을 옮기는 전통 게임"
+    },
+    "pitem:sent-n-read-yeonieyo": {
+      "gloss": "바람에 날리는 종이 장난감이에요. (읽기)",
+      "options.brush.gloss": "끝에 털이 달려 글씨를 쓰는 도구",
+      "options.kite.gloss": "바람에 날리는 종이 장난감",
+      "options.moon.gloss": "밤하늘에 떠서 빛나는 둥근 것",
+      "options.tteokguk.gloss": "쌀 반죽을 길게 뽑아 얇게 썰어 넣고 끓인 설날 음식"
+    },
+    "pitem:sent-n-read-yuchieyo": {
+      "gloss": "던져서 노는 나무 막대 네 개예요. (읽기)",
+      "options.hanji.gloss": "닥나무로 만든 한국 전통 종이",
+      "options.mountain.gloss": "땅이 높이 솟은 곳",
+      "options.pottery.gloss": "푸른빛이 도는 옛 도자기",
+      "options.yutnori.gloss": "나무 막대 네 개를 던져 말을 옮기는 전통 게임"
+    },
+    "pitem:sent-reply-1": {
+      "gloss": "만났을 때 하는 인사에 대답해요.",
+      "options.reply-1.gloss": "만났을 때 건네는 인사",
+      "options.reply-5.gloss": "남아 있는 사람에게 하는 작별 인사",
+      "options.reply-8.gloss": "이미 식사했다는 대답"
+    },
+    "pitem:sent-reply-10": {
+      "gloss": "잘못을 사과하는 말에 대답해요.",
+      "options.reply-10.gloss": "문제없다고 하는 너그러운 대답",
+      "options.reply-3.gloss": "자기도 만나서 기쁘다는 인사",
+      "options.reply-7.gloss": "그 채소 반찬이 맞다는 대답"
+    },
+    "pitem:sent-reply-2": {
+      "gloss": "이름을 묻는 말에 대답해요.",
+      "options.reply-2.gloss": "자기 이름이 호야라고 소개하는 말",
+      "options.reply-3.gloss": "자기도 만나서 기쁘다는 인사",
+      "options.reply-6.gloss": "그동안 별일 없었다는 대답"
+    },
+    "pitem:sent-reply-3": {
+      "gloss": "처음 만나 기쁘다는 인사에 대답해요.",
+      "options.reply-3.gloss": "자기도 만나서 기쁘다는 인사",
+      "options.reply-5.gloss": "남아 있는 사람에게 하는 작별 인사",
+      "options.reply-8.gloss": "이미 식사했다는 대답"
+    },
+    "pitem:sent-reply-4": {
+      "gloss": "고마움을 전하는 정중한 말에 대답해요.",
+      "options.reply-2.gloss": "자기 이름이 호야라고 소개하는 말",
+      "options.reply-4.gloss": "감사 인사에 하는 정중한 대답",
+      "options.reply-8.gloss": "이미 식사했다는 대답"
+    },
+    "pitem:sent-reply-5": {
+      "gloss": "떠나는 사람에게 하는 작별 인사에 대답해요.",
+      "options.reply-4.gloss": "감사 인사에 하는 정중한 대답",
+      "options.reply-5.gloss": "남아 있는 사람에게 하는 작별 인사",
+      "options.reply-6.gloss": "그동안 별일 없었다는 대답"
+    },
+    "pitem:sent-reply-6": {
+      "gloss": "그동안의 안부를 묻는 말에 대답해요.",
+      "options.reply-5.gloss": "남아 있는 사람에게 하는 작별 인사",
+      "options.reply-6.gloss": "그동안 별일 없었다는 대답",
+      "options.reply-7.gloss": "그 채소 반찬이 맞다는 대답"
+    },
+    "pitem:sent-reply-7": {
+      "gloss": "이것이 소금에 절여 양념한 채소 반찬인지 묻는 말에 대답해요.",
+      "options.reply-1.gloss": "만났을 때 건네는 인사",
+      "options.reply-7.gloss": "그 채소 반찬이 맞다는 대답",
+      "options.reply-8.gloss": "이미 식사했다는 대답"
+    },
+    "pitem:sent-reply-8": {
+      "gloss": "식사했는지 묻는 말에 대답해요.",
+      "options.reply-2.gloss": "자기 이름이 호야라고 소개하는 말",
+      "options.reply-3.gloss": "자기도 만나서 기쁘다는 인사",
+      "options.reply-8.gloss": "이미 식사했다는 대답"
+    },
+    "pitem:sent-reply-9": {
+      "gloss": "고마움을 전하는 말에 대답해요.",
+      "options.reply-2.gloss": "자기 이름이 호야라고 소개하는 말",
+      "options.reply-6.gloss": "그동안 별일 없었다는 대답",
+      "options.reply-9.gloss": "별것 아니라고 하는 겸손한 대답"
+    },
+    "pitem:sent-v-hear-babeulmeogeoyo": {
+      "gloss": "쌀로 지은 음식을 먹어요. (듣기)",
+      "options.magpie.gloss": "까맣고 하얀 깃털을 가진 새",
+      "options.pottery.gloss": "푸른빛이 도는 옛 도자기",
+      "options.rice.gloss": "쌀로 지어 먹는 음식",
+      "options.top.gloss": "빙글빙글 돌려서 노는 장난감"
+    },
+    "pitem:sent-v-hear-chaegeulilgeoyo": {
+      "gloss": "글과 그림이 담긴 종이 묶음을 읽어요. (듣기)",
+      "options.book.gloss": "글과 그림이 담긴 종이 묶음",
+      "options.pottery.gloss": "푸른빛이 도는 옛 도자기",
+      "options.seollal.gloss": "음력으로 새해 첫날을 맞는 명절",
+      "options.tiger.gloss": "줄무늬가 있는 크고 힘센 동물"
+    },
+    "pitem:sent-v-hear-gimbabeulmeogeoyo": {
+      "gloss": "김에 밥과 채소를 넣고 둥글게 말아 썬 음식을 먹어요. (듣기)",
+      "options.gayageum.gloss": "줄을 뜯어 소리를 내는 한국 전통 악기",
+      "options.kimbap.gloss": "김에 밥과 채소를 넣고 둥글게 말아 썬 음식",
+      "options.magpie.gloss": "까맣고 하얀 깃털을 가진 새",
+      "options.yutnori.gloss": "나무 막대 네 개를 던져 말을 옮기는 전통 게임"
+    },
+    "pitem:sent-v-hear-gimchireulmeogeoyo": {
+      "gloss": "배추 같은 채소를 소금에 절이고 양념해 담근 반찬을 먹어요. (듣기)",
+      "options.brush.gloss": "끝에 털이 달려 글씨를 쓰는 도구",
+      "options.hanbok.gloss": "한국의 전통 옷",
+      "options.kimchi.gloss": "배추 같은 채소를 소금에 절이고 양념해 담근 반찬",
+      "options.mountain.gloss": "땅이 높이 솟은 곳"
+    },
+    "pitem:sent-v-hear-hanbogeulibeoyo": {
+      "gloss": "한국의 전통 옷을 입어요. (듣기)",
+      "options.book.gloss": "글과 그림이 담긴 종이 묶음",
+      "options.hanbok.gloss": "한국의 전통 옷",
+      "options.sea.gloss": "짠물이 넓게 펼쳐진 곳",
+      "options.top.gloss": "빙글빙글 돌려서 노는 장난감"
+    },
+    "pitem:sent-v-hear-songpyeoneulmeogeoyo": {
+      "gloss": "반달 모양으로 빚어 찐 떡을 먹어요. (듣기)",
+      "options.gayageum.gloss": "줄을 뜯어 소리를 내는 한국 전통 악기",
+      "options.jegi.gloss": "발로 차올리며 노는 전통 놀잇감",
+      "options.songpyeon.gloss": "반달 모양으로 빚어 찐 떡",
+      "options.tiger.gloss": "줄무늬가 있는 크고 힘센 동물"
+    },
+    "pitem:sent-v-hear-tteokgugeulmeogeoyo": {
+      "gloss": "쌀 반죽을 길게 뽑아 얇게 썰어 넣고 끓인 설날 음식을 먹어요. (듣기)",
+      "options.hanbok.gloss": "한국의 전통 옷",
+      "options.hanji.gloss": "닥나무로 만든 한국 전통 종이",
+      "options.mountain.gloss": "땅이 높이 솟은 곳",
+      "options.tteokguk.gloss": "쌀 반죽을 길게 뽑아 얇게 썰어 넣고 끓인 설날 음식"
+    },
+    "pitem:sent-v-hear-yeoneulnallyeoyo": {
+      "gloss": "실에 매단 종이 장난감을 하늘에 날려요. (듣기)",
+      "options.ink.gloss": "벼루에 갈아 검은 물을 만드는 막대",
+      "options.kite.gloss": "바람에 날리는 종이 장난감",
+      "options.pottery.gloss": "푸른빛이 도는 옛 도자기",
+      "options.rice.gloss": "쌀로 지어 먹는 음식"
+    },
+    "pitem:sent-v-read-babeulmeogeoyo": {
+      "gloss": "쌀로 지은 음식을 먹어요. (읽기)",
+      "options.book.gloss": "글과 그림이 담긴 종이 묶음",
+      "options.rice.gloss": "쌀로 지어 먹는 음식",
+      "options.sea.gloss": "짠물이 넓게 펼쳐진 곳",
+      "options.sebae.gloss": "새해에 웃어른께 드리는 큰절"
+    },
+    "pitem:sent-v-read-chaegeulilgeoyo": {
+      "gloss": "글과 그림이 담긴 종이 묶음을 읽어요. (읽기)",
+      "options.book.gloss": "글과 그림이 담긴 종이 묶음",
+      "options.kite.gloss": "바람에 날리는 종이 장난감",
+      "options.mugunghwa.gloss": "한국의 나라꽃",
+      "options.tteokguk.gloss": "쌀 반죽을 길게 뽑아 얇게 썰어 넣고 끓인 설날 음식"
+    },
+    "pitem:sent-v-read-gimbabeulmeogeoyo": {
+      "gloss": "김에 밥과 채소를 넣고 둥글게 말아 썬 음식을 먹어요. (읽기)",
+      "options.brush.gloss": "끝에 털이 달려 글씨를 쓰는 도구",
+      "options.kimbap.gloss": "김에 밥과 채소를 넣고 둥글게 말아 썬 음식",
+      "options.moon.gloss": "밤하늘에 떠서 빛나는 둥근 것",
+      "options.sebae.gloss": "새해에 웃어른께 드리는 큰절"
+    },
+    "pitem:sent-v-read-gimchireulmeogeoyo": {
+      "gloss": "배추 같은 채소를 소금에 절이고 양념해 담근 반찬을 먹어요. (읽기)",
+      "options.jegi.gloss": "발로 차올리며 노는 전통 놀잇감",
+      "options.kimchi.gloss": "배추 같은 채소를 소금에 절이고 양념해 담근 반찬",
+      "options.magpie.gloss": "까맣고 하얀 깃털을 가진 새",
+      "options.pottery.gloss": "푸른빛이 도는 옛 도자기"
+    },
+    "pitem:sent-v-read-hanbogeulibeoyo": {
+      "gloss": "한국의 전통 옷을 입어요. (읽기)",
+      "options.gayageum.gloss": "줄을 뜯어 소리를 내는 한국 전통 악기",
+      "options.hanbok.gloss": "한국의 전통 옷",
+      "options.kimchi.gloss": "배추 같은 채소를 소금에 절이고 양념해 담근 반찬",
+      "options.tiger.gloss": "줄무늬가 있는 크고 힘센 동물"
+    },
+    "pitem:sent-v-read-songpyeoneulmeogeoyo": {
+      "gloss": "반달 모양으로 빚어 찐 떡을 먹어요. (읽기)",
+      "options.hanji.gloss": "닥나무로 만든 한국 전통 종이",
+      "options.moon.gloss": "밤하늘에 떠서 빛나는 둥근 것",
+      "options.sebae.gloss": "새해에 웃어른께 드리는 큰절",
+      "options.songpyeon.gloss": "반달 모양으로 빚어 찐 떡"
+    },
+    "pitem:sent-v-read-tteokgugeulmeogeoyo": {
+      "gloss": "쌀 반죽을 길게 뽑아 얇게 썰어 넣고 끓인 설날 음식을 먹어요. (읽기)",
+      "options.gayageum.gloss": "줄을 뜯어 소리를 내는 한국 전통 악기",
+      "options.kite.gloss": "바람에 날리는 종이 장난감",
+      "options.magpie.gloss": "까맣고 하얀 깃털을 가진 새",
+      "options.tteokguk.gloss": "쌀 반죽을 길게 뽑아 얇게 썰어 넣고 끓인 설날 음식"
+    },
+    "pitem:sent-v-read-yeoneulnallyeoyo": {
+      "gloss": "실에 매단 종이 장난감을 하늘에 날려요. (읽기)",
+      "options.book.gloss": "글과 그림이 담긴 종이 묶음",
+      "options.kite.gloss": "바람에 날리는 종이 장난감",
+      "options.sea.gloss": "짠물이 넓게 펼쳐진 곳",
+      "options.songpyeon.gloss": "반달 모양으로 빚어 찐 떡"
+    },
+    "pitem:sound-basic-hear-a": {
+      "gloss": "‘a’ 소리를 듣고 모음 아를 골라요",
+      "options.a.gloss": "모음 아",
+      "options.eo.gloss": "모음 어",
+      "options.i.gloss": "모음 이",
+      "options.ya.gloss": "모음 야"
+    },
+    "pitem:sound-basic-hear-digeut": {
+      "gloss": "‘da’ 소리를 듣고 자음 디귿을 골라요",
+      "options.digeut.gloss": "자음 디귿",
+      "options.nieun.gloss": "자음 니은",
+      "options.rieul.gloss": "자음 리을",
+      "options.tieut.gloss": "자음 티읕"
+    },
+    "pitem:sound-basic-hear-eo": {
+      "gloss": "‘eo’ 소리를 듣고 모음 어를 골라요",
+      "options.a.gloss": "모음 아",
+      "options.eo.gloss": "모음 어",
+      "options.o.gloss": "모음 오",
+      "options.yeo.gloss": "모음 여"
+    },
+    "pitem:sound-basic-hear-eu": {
+      "gloss": "‘eu’ 소리를 듣고 모음 으를 골라요",
+      "options.eo.gloss": "모음 어",
+      "options.eu.gloss": "모음 으",
+      "options.i.gloss": "모음 이",
+      "options.u.gloss": "모음 우"
+    },
+    "pitem:sound-basic-hear-giyeok": {
+      "gloss": "‘ga’ 소리를 듣고 자음 기역을 골라요",
+      "options.digeut.gloss": "자음 디귿",
+      "options.giyeok.gloss": "자음 기역",
+      "options.kieuk.gloss": "자음 키읔",
+      "options.nieun.gloss": "자음 니은"
+    },
+    "pitem:sound-basic-hear-i": {
+      "gloss": "‘i’ 소리를 듣고 모음 이를 골라요",
+      "options.a.gloss": "모음 아",
+      "options.eo.gloss": "모음 어",
+      "options.eu.gloss": "모음 으",
+      "options.i.gloss": "모음 이"
+    },
+    "pitem:sound-basic-hear-mieum": {
+      "gloss": "‘ma’ 소리를 듣고 자음 미음을 골라요",
+      "options.bieup.gloss": "자음 비읍",
+      "options.ieung.gloss": "자음 이응",
+      "options.mieum.gloss": "자음 미음",
+      "options.nieun.gloss": "자음 니은"
+    },
+    "pitem:sound-basic-hear-nieun": {
+      "gloss": "‘na’ 소리를 듣고 자음 니은을 골라요",
+      "options.digeut.gloss": "자음 디귿",
+      "options.giyeok.gloss": "자음 기역",
+      "options.nieun.gloss": "자음 니은",
+      "options.rieul.gloss": "자음 리을"
+    },
+    "pitem:sound-basic-hear-o": {
+      "gloss": "‘o’ 소리를 듣고 모음 오를 골라요",
+      "options.eo.gloss": "모음 어",
+      "options.o.gloss": "모음 오",
+      "options.u.gloss": "모음 우",
+      "options.yo.gloss": "모음 요"
+    },
+    "pitem:sound-basic-hear-rieul": {
+      "gloss": "‘ra’ 소리를 듣고 자음 리을을 골라요",
+      "options.digeut.gloss": "자음 디귿",
+      "options.mieum.gloss": "자음 미음",
+      "options.nieun.gloss": "자음 니은",
+      "options.rieul.gloss": "자음 리을"
+    },
+    "pitem:sound-basic-hear-u": {
+      "gloss": "‘u’ 소리를 듣고 모음 우를 골라요",
+      "options.eu.gloss": "모음 으",
+      "options.o.gloss": "모음 오",
+      "options.u.gloss": "모음 우",
+      "options.yu.gloss": "모음 유"
+    },
+    "pitem:sound-basic-see-a": {
+      "gloss": "모음 아를 보고 ‘a’ 소리를 골라요"
+    },
+    "pitem:sound-basic-see-digeut": {
+      "gloss": "자음 디귿을 보고 ‘da’ 소리를 골라요"
+    },
+    "pitem:sound-basic-see-eo": {
+      "gloss": "모음 어를 보고 ‘eo’ 소리를 골라요"
+    },
+    "pitem:sound-basic-see-eu": {
+      "gloss": "모음 으를 보고 ‘eu’ 소리를 골라요"
+    },
+    "pitem:sound-basic-see-giyeok": {
+      "gloss": "자음 기역을 보고 ‘ga’ 소리를 골라요"
+    },
+    "pitem:sound-basic-see-i": {
+      "gloss": "모음 이를 보고 ‘i’ 소리를 골라요"
+    },
+    "pitem:sound-basic-see-mieum": {
+      "gloss": "자음 미음을 보고 ‘ma’ 소리를 골라요"
+    },
+    "pitem:sound-basic-see-nieun": {
+      "gloss": "자음 니은을 보고 ‘na’ 소리를 골라요"
+    },
+    "pitem:sound-basic-see-o": {
+      "gloss": "모음 오를 보고 ‘o’ 소리를 골라요"
+    },
+    "pitem:sound-basic-see-rieul": {
+      "gloss": "자음 리을을 보고 ‘ra’ 소리를 골라요"
+    },
+    "pitem:sound-basic-see-u": {
+      "gloss": "모음 우를 보고 ‘u’ 소리를 골라요"
+    },
+    "pitem:sound-rest-hear-bieup": {
+      "gloss": "‘ba’ 소리를 듣고 자음 비읍을 골라요",
+      "options.bieup.gloss": "자음 비읍",
+      "options.mieum.gloss": "자음 미음",
+      "options.pieup.gloss": "자음 피읖",
+      "options.siot.gloss": "자음 시옷"
+    },
+    "pitem:sound-rest-hear-chieut": {
+      "gloss": "‘cha’ 소리를 듣고 자음 치읓을 골라요",
+      "options.chieut.gloss": "자음 치읓",
+      "options.hieut.gloss": "자음 히읗",
+      "options.jieut.gloss": "자음 지읒",
+      "options.siot.gloss": "자음 시옷"
+    },
+    "pitem:sound-rest-hear-hieut": {
+      "gloss": "‘ha’ 소리를 듣고 자음 히읗을 골라요",
+      "options.chieut.gloss": "자음 치읓",
+      "options.hieut.gloss": "자음 히읗",
+      "options.ieung.gloss": "자음 이응",
+      "options.siot.gloss": "자음 시옷"
+    },
+    "pitem:sound-rest-hear-jieut": {
+      "gloss": "‘ja’ 소리를 듣고 자음 지읒을 골라요",
+      "options.chieut.gloss": "자음 치읓",
+      "options.giyeok.gloss": "자음 기역",
+      "options.jieut.gloss": "자음 지읒",
+      "options.siot.gloss": "자음 시옷"
+    },
+    "pitem:sound-rest-hear-kieuk": {
+      "gloss": "‘ka’ 소리를 듣고 자음 키읔을 골라요",
+      "options.giyeok.gloss": "자음 기역",
+      "options.kieuk.gloss": "자음 키읔",
+      "options.pieup.gloss": "자음 피읖",
+      "options.tieut.gloss": "자음 티읕"
+    },
+    "pitem:sound-rest-hear-pieup": {
+      "gloss": "‘pa’ 소리를 듣고 자음 피읖을 골라요",
+      "options.bieup.gloss": "자음 비읍",
+      "options.kieuk.gloss": "자음 키읔",
+      "options.pieup.gloss": "자음 피읖",
+      "options.tieut.gloss": "자음 티읕"
+    },
+    "pitem:sound-rest-hear-siot": {
+      "gloss": "‘sa’ 소리를 듣고 자음 시옷을 골라요",
+      "options.chieut.gloss": "자음 치읓",
+      "options.ieung.gloss": "자음 이응",
+      "options.jieut.gloss": "자음 지읒",
+      "options.siot.gloss": "자음 시옷"
+    },
+    "pitem:sound-rest-hear-tieut": {
+      "gloss": "‘ta’ 소리를 듣고 자음 티읕을 골라요",
+      "options.digeut.gloss": "자음 디귿",
+      "options.kieuk.gloss": "자음 키읔",
+      "options.pieup.gloss": "자음 피읖",
+      "options.tieut.gloss": "자음 티읕"
+    },
+    "pitem:sound-rest-hear-ya": {
+      "gloss": "‘ya’ 소리를 듣고 모음 야를 골라요",
+      "options.a.gloss": "모음 아",
+      "options.ya.gloss": "모음 야",
+      "options.yeo.gloss": "모음 여",
+      "options.yo.gloss": "모음 요"
+    },
+    "pitem:sound-rest-hear-yeo": {
+      "gloss": "‘yeo’ 소리를 듣고 모음 여를 골라요",
+      "options.eo.gloss": "모음 어",
+      "options.ya.gloss": "모음 야",
+      "options.yeo.gloss": "모음 여",
+      "options.yu.gloss": "모음 유"
+    },
+    "pitem:sound-rest-hear-yo": {
+      "gloss": "‘yo’ 소리를 듣고 모음 요를 골라요",
+      "options.o.gloss": "모음 오",
+      "options.ya.gloss": "모음 야",
+      "options.yo.gloss": "모음 요",
+      "options.yu.gloss": "모음 유"
+    },
+    "pitem:sound-rest-hear-yu": {
+      "gloss": "‘yu’ 소리를 듣고 모음 유를 골라요",
+      "options.u.gloss": "모음 우",
+      "options.yeo.gloss": "모음 여",
+      "options.yo.gloss": "모음 요",
+      "options.yu.gloss": "모음 유"
+    },
+    "pitem:sound-rest-see-bieup": {
+      "gloss": "자음 비읍을 보고 ‘ba’ 소리를 골라요"
+    },
+    "pitem:sound-rest-see-chieut": {
+      "gloss": "자음 치읓을 보고 ‘cha’ 소리를 골라요"
+    },
+    "pitem:sound-rest-see-hieut": {
+      "gloss": "자음 히읗을 보고 ‘ha’ 소리를 골라요"
+    },
+    "pitem:sound-rest-see-jieut": {
+      "gloss": "자음 지읒을 보고 ‘ja’ 소리를 골라요"
+    },
+    "pitem:sound-rest-see-kieuk": {
+      "gloss": "자음 키읔을 보고 ‘ka’ 소리를 골라요"
+    },
+    "pitem:sound-rest-see-pieup": {
+      "gloss": "자음 피읖을 보고 ‘pa’ 소리를 골라요"
+    },
+    "pitem:sound-rest-see-siot": {
+      "gloss": "자음 시옷을 보고 ‘sa’ 소리를 골라요"
+    },
+    "pitem:sound-rest-see-tieut": {
+      "gloss": "자음 티읕을 보고 ‘ta’ 소리를 골라요"
+    },
+    "pitem:sound-rest-see-ya": {
+      "gloss": "모음 야를 보고 ‘ya’ 소리를 골라요"
+    },
+    "pitem:sound-rest-see-yeo": {
+      "gloss": "모음 여를 보고 ‘yeo’ 소리를 골라요"
+    },
+    "pitem:sound-rest-see-yo": {
+      "gloss": "모음 요를 보고 ‘yo’ 소리를 골라요"
+    },
+    "pitem:sound-rest-see-yu": {
+      "gloss": "모음 유를 보고 ‘yu’ 소리를 골라요"
+    },
+    "pitem:syl-cv-build-da": {
+      "gloss": "‘da’ 음절을 만들어요",
+      "options.a.gloss": "소리 없는 이응과 모음 아를 합친 음절",
+      "options.da.gloss": "자음 디귿과 모음 아를 합친 음절",
+      "options.du.gloss": "자음 디귿과 모음 우를 합친 음절",
+      "options.ra.gloss": "자음 리을과 모음 아를 합친 음절"
+    },
+    "pitem:syl-cv-build-ga": {
+      "gloss": "‘ga’ 음절을 만들어요",
+      "options.ga.gloss": "자음 기역과 모음 아를 합친 음절",
+      "options.geo.gloss": "자음 기역과 모음 어를 합친 음절",
+      "options.na.gloss": "자음 니은과 모음 아를 합친 음절",
+      "options.ra.gloss": "자음 리을과 모음 아를 합친 음절"
+    },
+    "pitem:syl-cv-build-gu": {
+      "gloss": "‘gu’ 음절을 만들어요",
+      "options.ga.gloss": "자음 기역과 모음 아를 합친 음절",
+      "options.go.gloss": "자음 기역과 모음 오를 합친 음절",
+      "options.gu.gloss": "자음 기역과 모음 우를 합친 음절",
+      "options.nu.gloss": "자음 니은과 모음 우를 합친 음절"
+    },
+    "pitem:syl-cv-build-ma": {
+      "gloss": "‘ma’ 음절을 만들어요",
+      "options.ma.gloss": "자음 미음과 모음 아를 합친 음절",
+      "options.meo.gloss": "자음 미음과 모음 어를 합친 음절",
+      "options.meu.gloss": "자음 미음과 모음 으를 합친 음절",
+      "options.ra.gloss": "자음 리을과 모음 아를 합친 음절"
+    },
+    "pitem:syl-cv-build-mo": {
+      "gloss": "‘mo’ 음절을 만들어요",
+      "options.mi.gloss": "자음 미음과 모음 이를 합친 음절",
+      "options.mo.gloss": "자음 미음과 모음 오를 합친 음절",
+      "options.no.gloss": "자음 니은과 모음 오를 합친 음절",
+      "options.o.gloss": "소리 없는 이응과 모음 오를 합친 음절"
+    },
+    "pitem:syl-cv-build-na": {
+      "gloss": "‘na’ 음절을 만들어요",
+      "options.da.gloss": "자음 디귿과 모음 아를 합친 음절",
+      "options.na.gloss": "자음 니은과 모음 아를 합친 음절",
+      "options.neu.gloss": "자음 니은과 모음 으를 합친 음절",
+      "options.no.gloss": "자음 니은과 모음 오를 합친 음절"
+    },
+    "pitem:syl-cv-hear-da": {
+      "gloss": "‘da’ 음절을 들어요",
+      "options.da.gloss": "자음 디귿과 모음 아를 합친 음절",
+      "options.deu.gloss": "자음 디귿과 모음 으를 합친 음절",
+      "options.ga.gloss": "자음 기역과 모음 아를 합친 음절",
+      "options.ma.gloss": "자음 미음과 모음 아를 합친 음절"
+    },
+    "pitem:syl-cv-hear-deo": {
+      "gloss": "‘deo’ 음절을 들어요",
+      "options.deo.gloss": "자음 디귿과 모음 어를 합친 음절",
+      "options.di.gloss": "자음 디귿과 모음 이를 합친 음절",
+      "options.do.gloss": "자음 디귿과 모음 오를 합친 음절",
+      "options.eo.gloss": "소리 없는 이응과 모음 어를 합친 음절"
+    },
+    "pitem:syl-cv-hear-do": {
+      "gloss": "‘do’ 음절을 들어요",
+      "options.da.gloss": "자음 디귿과 모음 아를 합친 음절",
+      "options.do.gloss": "자음 디귿과 모음 오를 합친 음절",
+      "options.go.gloss": "자음 기역과 모음 오를 합친 음절",
+      "options.ro.gloss": "자음 리을과 모음 오를 합친 음절"
+    },
+    "pitem:syl-cv-hear-du": {
+      "gloss": "‘du’ 음절을 들어요",
+      "options.deo.gloss": "자음 디귿과 모음 어를 합친 음절",
+      "options.deu.gloss": "자음 디귿과 모음 으를 합친 음절",
+      "options.du.gloss": "자음 디귿과 모음 우를 합친 음절",
+      "options.nu.gloss": "자음 니은과 모음 우를 합친 음절"
+    },
+    "pitem:syl-cv-hear-ga": {
+      "gloss": "‘ga’ 음절을 들어요",
+      "options.ga.gloss": "자음 기역과 모음 아를 합친 음절",
+      "options.geo.gloss": "자음 기역과 모음 어를 합친 음절",
+      "options.na.gloss": "자음 니은과 모음 아를 합친 음절",
+      "options.ra.gloss": "자음 리을과 모음 아를 합친 음절"
+    },
+    "pitem:syl-cv-hear-geo": {
+      "gloss": "‘geo’ 음절을 들어요",
+      "options.deo.gloss": "자음 디귿과 모음 어를 합친 음절",
+      "options.geo.gloss": "자음 기역과 모음 어를 합친 음절",
+      "options.geu.gloss": "자음 기역과 모음 으를 합친 음절",
+      "options.go.gloss": "자음 기역과 모음 오를 합친 음절"
+    },
+    "pitem:syl-cv-hear-go": {
+      "gloss": "‘go’ 음절을 들어요",
+      "options.go.gloss": "자음 기역과 모음 오를 합친 음절",
+      "options.gu.gloss": "자음 기역과 모음 우를 합친 음절",
+      "options.o.gloss": "소리 없는 이응과 모음 오를 합친 음절",
+      "options.ro.gloss": "자음 리을과 모음 오를 합친 음절"
+    },
+    "pitem:syl-cv-hear-gu": {
+      "gloss": "‘gu’ 음절을 들어요",
+      "options.ga.gloss": "자음 기역과 모음 아를 합친 음절",
+      "options.geu.gloss": "자음 기역과 모음 으를 합친 음절",
+      "options.gu.gloss": "자음 기역과 모음 우를 합친 음절",
+      "options.mu.gloss": "자음 미음과 모음 우를 합친 음절"
+    },
+    "pitem:syl-cv-hear-i": {
+      "gloss": "‘i’ 음절을 들어요",
+      "options.di.gloss": "자음 디귿과 모음 이를 합친 음절",
+      "options.eu.gloss": "소리 없는 이응과 모음 으를 합친 음절",
+      "options.i.gloss": "소리 없는 이응과 모음 이를 합친 음절",
+      "options.o.gloss": "소리 없는 이응과 모음 오를 합친 음절"
+    },
+    "pitem:syl-cv-hear-ma": {
+      "gloss": "‘ma’ 음절을 들어요",
+      "options.a.gloss": "소리 없는 이응과 모음 아를 합친 음절",
+      "options.da.gloss": "자음 디귿과 모음 아를 합친 음절",
+      "options.ma.gloss": "자음 미음과 모음 아를 합친 음절",
+      "options.mu.gloss": "자음 미음과 모음 우를 합친 음절"
+    },
+    "pitem:syl-cv-hear-meo": {
+      "gloss": "‘meo’ 음절을 들어요",
+      "options.ma.gloss": "자음 미음과 모음 아를 합친 음절",
+      "options.meo.gloss": "자음 미음과 모음 어를 합친 음절",
+      "options.meu.gloss": "자음 미음과 모음 으를 합친 음절",
+      "options.reo.gloss": "자음 리을과 모음 어를 합친 음절"
+    },
+    "pitem:syl-cv-hear-mo": {
+      "gloss": "‘mo’ 음절을 들어요",
+      "options.mi.gloss": "자음 미음과 모음 이를 합친 음절",
+      "options.mo.gloss": "자음 미음과 모음 오를 합친 음절",
+      "options.no.gloss": "자음 니은과 모음 오를 합친 음절",
+      "options.o.gloss": "소리 없는 이응과 모음 오를 합친 음절"
+    },
+    "pitem:syl-cv-hear-mu": {
+      "gloss": "‘mu’ 음절을 들어요",
+      "options.gu.gloss": "자음 기역과 모음 우를 합친 음절",
+      "options.ma.gloss": "자음 미음과 모음 아를 합친 음절",
+      "options.mo.gloss": "자음 미음과 모음 오를 합친 음절",
+      "options.mu.gloss": "자음 미음과 모음 우를 합친 음절"
+    },
+    "pitem:syl-cv-hear-na": {
+      "gloss": "‘na’ 음절을 들어요",
+      "options.a.gloss": "소리 없는 이응과 모음 아를 합친 음절",
+      "options.da.gloss": "자음 디귿과 모음 아를 합친 음절",
+      "options.na.gloss": "자음 니은과 모음 아를 합친 음절",
+      "options.ni.gloss": "자음 니은과 모음 이를 합친 음절"
+    },
+    "pitem:syl-cv-hear-neo": {
+      "gloss": "‘neo’ 음절을 들어요",
+      "options.geo.gloss": "자음 기역과 모음 어를 합친 음절",
+      "options.na.gloss": "자음 니은과 모음 아를 합친 음절",
+      "options.neo.gloss": "자음 니은과 모음 어를 합친 음절",
+      "options.nu.gloss": "자음 니은과 모음 우를 합친 음절"
+    },
+    "pitem:syl-cv-hear-no": {
+      "gloss": "‘no’ 음절을 들어요",
+      "options.do.gloss": "자음 디귿과 모음 오를 합친 음절",
+      "options.mo.gloss": "자음 미음과 모음 오를 합친 음절",
+      "options.neo.gloss": "자음 니은과 모음 어를 합친 음절",
+      "options.no.gloss": "자음 니은과 모음 오를 합친 음절"
+    },
+    "pitem:syl-cv-hear-nu": {
+      "gloss": "‘nu’ 음절을 들어요",
+      "options.ni.gloss": "자음 니은과 모음 이를 합친 음절",
+      "options.no.gloss": "자음 니은과 모음 오를 합친 음절",
+      "options.nu.gloss": "자음 니은과 모음 우를 합친 음절",
+      "options.ru.gloss": "자음 리을과 모음 우를 합친 음절"
+    },
+    "pitem:syl-cv-hear-ra": {
+      "gloss": "‘ra’ 음절을 들어요",
+      "options.ma.gloss": "자음 미음과 모음 아를 합친 음절",
+      "options.na.gloss": "자음 니은과 모음 아를 합친 음절",
+      "options.ra.gloss": "자음 리을과 모음 아를 합친 음절",
+      "options.ro.gloss": "자음 리을과 모음 오를 합친 음절"
+    },
+    "pitem:syl-cv-see-a": {
+      "gloss": "‘a’ 음절을 보고 소리를 골라요"
+    },
+    "pitem:syl-cv-see-deu": {
+      "gloss": "‘deu’ 음절을 보고 소리를 골라요"
+    },
+    "pitem:syl-cv-see-di": {
+      "gloss": "‘di’ 음절을 보고 소리를 골라요"
+    },
+    "pitem:syl-cv-see-eo": {
+      "gloss": "‘eo’ 음절을 보고 소리를 골라요"
+    },
+    "pitem:syl-cv-see-geu": {
+      "gloss": "‘geu’ 음절을 보고 소리를 골라요"
+    },
+    "pitem:syl-cv-see-gi": {
+      "gloss": "‘gi’ 음절을 보고 소리를 골라요"
+    },
+    "pitem:syl-cv-see-meu": {
+      "gloss": "‘meu’ 음절을 보고 소리를 골라요"
+    },
+    "pitem:syl-cv-see-mi": {
+      "gloss": "‘mi’ 음절을 보고 소리를 골라요"
+    },
+    "pitem:syl-cv-see-neu": {
+      "gloss": "‘neu’ 음절을 보고 소리를 골라요"
+    },
+    "pitem:syl-cv-see-ni": {
+      "gloss": "‘ni’ 음절을 보고 소리를 골라요"
+    },
+    "pitem:syl-cv-see-o": {
+      "gloss": "‘o’ 음절을 보고 소리를 골라요"
+    },
+    "pitem:syl-cv-see-u": {
+      "gloss": "‘u’ 음절을 보고 소리를 골라요"
+    },
+    "pitem:syl-cvc-build-dal": {
+      "gloss": "‘dal’ 음절을 만들어요",
+      "options.dak.gloss": "자음 디귿, 모음 아, 받침 기역을 합친 음절",
+      "options.dal.gloss": "자음 디귿, 모음 아, 받침 리을을 합친 음절",
+      "options.dan.gloss": "자음 디귿, 모음 아, 받침 니은을 합친 음절",
+      "options.deol.gloss": "자음 디귿, 모음 어, 받침 리을을 합친 음절"
+    },
+    "pitem:syl-cvc-build-gang": {
+      "gloss": "‘gang’ 음절을 만들어요",
+      "options.gal.gloss": "자음 기역, 모음 아, 받침 리을을 합친 음절",
+      "options.gang.gloss": "자음 기역, 모음 아, 받침 이응을 합친 음절",
+      "options.gap.gloss": "자음 기역, 모음 아, 받침 비읍을 합친 음절",
+      "options.ging.gloss": "자음 기역, 모음 이, 받침 이응을 합친 음절"
+    },
+    "pitem:syl-cvc-build-gom": {
+      "gloss": "‘gom’ 음절을 만들어요",
+      "options.gam.gloss": "자음 기역, 모음 아, 받침 미음을 합친 음절",
+      "options.gom.gloss": "자음 기역, 모음 오, 받침 미음을 합친 음절",
+      "options.gon.gloss": "자음 기역, 모음 오, 받침 니은을 합친 음절",
+      "options.gong.gloss": "자음 기역, 모음 오, 받침 이응을 합친 음절"
+    },
+    "pitem:syl-cvc-build-mul": {
+      "gloss": "‘mul’ 음절을 만들어요",
+      "options.meol.gloss": "자음 미음, 모음 어, 받침 리을을 합친 음절",
+      "options.mul.gloss": "자음 미음, 모음 우, 받침 리을을 합친 음절",
+      "options.mum.gloss": "자음 미음, 모음 우, 받침 미음을 합친 음절",
+      "options.mung.gloss": "자음 미음, 모음 우, 받침 이응을 합친 음절"
+    },
+    "pitem:syl-cvc-build-mun": {
+      "gloss": "‘mun’ 음절을 만들어요",
+      "options.mon.gloss": "자음 미음, 모음 오, 받침 니은을 합친 음절",
+      "options.muk.gloss": "자음 미음, 모음 우, 받침 기역을 합친 음절",
+      "options.mun.gloss": "자음 미음, 모음 우, 받침 니은을 합친 음절",
+      "options.mup.gloss": "자음 미음, 모음 우, 받침 비읍을 합친 음절"
+    },
+    "pitem:syl-cvc-build-san": {
+      "gloss": "‘san’ 음절을 만들어요",
+      "options.sal.gloss": "자음 시옷, 모음 아, 받침 리을을 합친 음절",
+      "options.sam.gloss": "자음 시옷, 모음 아, 받침 미음을 합친 음절",
+      "options.san.gloss": "자음 시옷, 모음 아, 받침 니은을 합친 음절",
+      "options.seun.gloss": "자음 시옷, 모음 으, 받침 니은을 합친 음절"
+    },
+    "pitem:syl-cvc-hear-bap": {
+      "gloss": "‘bap’ 음절을 들어요",
+      "options.bak.gloss": "자음 비읍, 모음 아, 받침 기역을 합친 음절",
+      "options.bal.gloss": "자음 비읍, 모음 아, 받침 리을을 합친 음절",
+      "options.bap.gloss": "자음 비읍, 모음 아, 받침 비읍을 합친 음절",
+      "options.bop.gloss": "자음 비읍, 모음 오, 받침 비읍을 합친 음절"
+    },
+    "pitem:syl-cvc-hear-bom": {
+      "gloss": "‘bom’ 음절을 들어요",
+      "options.beum.gloss": "자음 비읍, 모음 으, 받침 미음을 합친 음절",
+      "options.bok.gloss": "자음 비읍, 모음 오, 받침 기역을 합친 음절",
+      "options.bom.gloss": "자음 비읍, 모음 오, 받침 미음을 합친 음절",
+      "options.bon.gloss": "자음 비읍, 모음 오, 받침 니은을 합친 음절"
+    },
+    "pitem:syl-cvc-hear-byeol": {
+      "gloss": "‘byeol’ 음절을 들어요",
+      "options.bul.gloss": "자음 비읍, 모음 우, 받침 리을을 합친 음절",
+      "options.byeol.gloss": "자음 비읍, 모음 여, 받침 리을을 합친 음절",
+      "options.byeong.gloss": "자음 비읍, 모음 여, 받침 이응을 합친 음절",
+      "options.byeop.gloss": "자음 비읍, 모음 여, 받침 비읍을 합친 음절"
+    },
+    "pitem:syl-cvc-hear-dal": {
+      "gloss": "‘dal’ 음절을 들어요",
+      "options.dak.gloss": "자음 디귿, 모음 아, 받침 기역을 합친 음절",
+      "options.dal.gloss": "자음 디귿, 모음 아, 받침 리을을 합친 음절",
+      "options.dan.gloss": "자음 디귿, 모음 아, 받침 니은을 합친 음절",
+      "options.deol.gloss": "자음 디귿, 모음 어, 받침 리을을 합친 음절"
+    },
+    "pitem:syl-cvc-hear-gang": {
+      "gloss": "‘gang’ 음절을 들어요",
+      "options.gal.gloss": "자음 기역, 모음 아, 받침 리을을 합친 음절",
+      "options.gang.gloss": "자음 기역, 모음 아, 받침 이응을 합친 음절",
+      "options.gap.gloss": "자음 기역, 모음 아, 받침 비읍을 합친 음절",
+      "options.ging.gloss": "자음 기역, 모음 이, 받침 이응을 합친 음절"
+    },
+    "pitem:syl-cvc-hear-gom": {
+      "gloss": "‘gom’ 음절을 들어요",
+      "options.gam.gloss": "자음 기역, 모음 아, 받침 미음을 합친 음절",
+      "options.gom.gloss": "자음 기역, 모음 오, 받침 미음을 합친 음절",
+      "options.gon.gloss": "자음 기역, 모음 오, 받침 니은을 합친 음절",
+      "options.gong.gloss": "자음 기역, 모음 오, 받침 이응을 합친 음절"
+    },
+    "pitem:syl-cvc-hear-gong": {
+      "gloss": "‘gong’ 음절을 들어요",
+      "options.gang.gloss": "자음 기역, 모음 아, 받침 이응을 합친 음절",
+      "options.gok.gloss": "자음 기역, 모음 오, 받침 기역을 합친 음절",
+      "options.gon.gloss": "자음 기역, 모음 오, 받침 니은을 합친 음절",
+      "options.gong.gloss": "자음 기역, 모음 오, 받침 이응을 합친 음절"
+    },
+    "pitem:syl-cvc-hear-guk": {
+      "gloss": "‘guk’ 음절을 들어요",
+      "options.gik.gloss": "자음 기역, 모음 이, 받침 기역을 합친 음절",
+      "options.guk.gloss": "자음 기역, 모음 우, 받침 기역을 합친 음절",
+      "options.gul.gloss": "자음 기역, 모음 우, 받침 리을을 합친 음절",
+      "options.gup.gloss": "자음 기역, 모음 우, 받침 비읍을 합친 음절"
+    },
+    "pitem:syl-cvc-hear-hak": {
+      "gloss": "‘hak’ 음절을 들어요",
+      "options.hak.gloss": "자음 히읗, 모음 아, 받침 기역을 합친 음절",
+      "options.han.gloss": "자음 히읗, 모음 아, 받침 니은을 합친 음절",
+      "options.hang.gloss": "자음 히읗, 모음 아, 받침 이응을 합친 음절",
+      "options.heok.gloss": "자음 히읗, 모음 어, 받침 기역을 합친 음절"
+    },
+    "pitem:syl-cvc-hear-han": {
+      "gloss": "‘han’ 음절을 들어요",
+      "options.hal.gloss": "자음 히읗, 모음 아, 받침 리을을 합친 음절",
+      "options.ham.gloss": "자음 히읗, 모음 아, 받침 미음을 합친 음절",
+      "options.han.gloss": "자음 히읗, 모음 아, 받침 니은을 합친 음절",
+      "options.heun.gloss": "자음 히읗, 모음 으, 받침 니은을 합친 음절"
+    },
+    "pitem:syl-cvc-hear-ip": {
+      "gloss": "‘ip’ 음절을 들어요",
+      "options.im.gloss": "소리 없는 이응, 모음 이, 받침 미음을 합친 음절",
+      "options.ing.gloss": "소리 없는 이응, 모음 이, 받침 이응을 합친 음절",
+      "options.ip.gloss": "소리 없는 이응, 모음 이, 받침 비읍을 합친 음절",
+      "options.op.gloss": "소리 없는 이응, 모음 오, 받침 비읍을 합친 음절"
+    },
+    "pitem:syl-cvc-hear-jip": {
+      "gloss": "‘jip’ 음절을 들어요",
+      "options.jim.gloss": "자음 지읒, 모음 이, 받침 미음을 합친 음절",
+      "options.jing.gloss": "자음 지읒, 모음 이, 받침 이응을 합친 음절",
+      "options.jip.gloss": "자음 지읒, 모음 이, 받침 비읍을 합친 음절",
+      "options.jop.gloss": "자음 지읒, 모음 오, 받침 비읍을 합친 음절"
+    },
+    "pitem:syl-cvc-hear-jul": {
+      "gloss": "‘jul’ 음절을 들어요",
+      "options.jeol.gloss": "자음 지읒, 모음 어, 받침 리을을 합친 음절",
+      "options.jul.gloss": "자음 지읒, 모음 우, 받침 리을을 합친 음절",
+      "options.jum.gloss": "자음 지읒, 모음 우, 받침 미음을 합친 음절",
+      "options.jung.gloss": "자음 지읒, 모음 우, 받침 이응을 합친 음절"
+    },
+    "pitem:syl-cvc-hear-mul": {
+      "gloss": "‘mul’ 음절을 들어요",
+      "options.meol.gloss": "자음 미음, 모음 어, 받침 리을을 합친 음절",
+      "options.mul.gloss": "자음 미음, 모음 우, 받침 리을을 합친 음절",
+      "options.mum.gloss": "자음 미음, 모음 우, 받침 미음을 합친 음절",
+      "options.mung.gloss": "자음 미음, 모음 우, 받침 이응을 합친 음절"
+    },
+    "pitem:syl-cvc-hear-mun": {
+      "gloss": "‘mun’ 음절을 들어요",
+      "options.mon.gloss": "자음 미음, 모음 오, 받침 니은을 합친 음절",
+      "options.muk.gloss": "자음 미음, 모음 우, 받침 기역을 합친 음절",
+      "options.mun.gloss": "자음 미음, 모음 우, 받침 니은을 합친 음절",
+      "options.mup.gloss": "자음 미음, 모음 우, 받침 비읍을 합친 음절"
+    },
+    "pitem:syl-cvc-hear-nun": {
+      "gloss": "‘nun’ 음절을 들어요",
+      "options.neon.gloss": "자음 니은, 모음 어, 받침 니은을 합친 음절",
+      "options.num.gloss": "자음 니은, 모음 우, 받침 미음을 합친 음절",
+      "options.nun.gloss": "자음 니은, 모음 우, 받침 니은을 합친 음절",
+      "options.nung.gloss": "자음 니은, 모음 우, 받침 이응을 합친 음절"
+    },
+    "pitem:syl-cvc-hear-san": {
+      "gloss": "‘san’ 음절을 들어요",
+      "options.sal.gloss": "자음 시옷, 모음 아, 받침 리을을 합친 음절",
+      "options.sam.gloss": "자음 시옷, 모음 아, 받침 미음을 합친 음절",
+      "options.san.gloss": "자음 시옷, 모음 아, 받침 니은을 합친 음절",
+      "options.seun.gloss": "자음 시옷, 모음 으, 받침 니은을 합친 음절"
+    },
+    "pitem:syl-cvc-hear-yeon": {
+      "gloss": "‘yeon’ 음절을 들어요",
+      "options.an.gloss": "소리 없는 이응, 모음 아, 받침 니은을 합친 음절",
+      "options.yeok.gloss": "소리 없는 이응, 모음 여, 받침 기역을 합친 음절",
+      "options.yeon.gloss": "소리 없는 이응, 모음 여, 받침 니은을 합친 음절",
+      "options.yeop.gloss": "소리 없는 이응, 모음 여, 받침 비읍을 합친 음절"
+    },
+    "pitem:syl-cvc-see-bap": {
+      "gloss": "‘bap’ 음절을 보고 소리를 골라요"
+    },
+    "pitem:syl-cvc-see-bom": {
+      "gloss": "‘bom’ 음절을 보고 소리를 골라요"
+    },
+    "pitem:syl-cvc-see-byeol": {
+      "gloss": "‘byeol’ 음절을 보고 소리를 골라요"
+    },
+    "pitem:syl-cvc-see-dal": {
+      "gloss": "‘dal’ 음절을 보고 소리를 골라요"
+    },
+    "pitem:syl-cvc-see-gang": {
+      "gloss": "‘gang’ 음절을 보고 소리를 골라요"
+    },
+    "pitem:syl-cvc-see-gom": {
+      "gloss": "‘gom’ 음절을 보고 소리를 골라요"
+    },
+    "pitem:syl-cvc-see-gong": {
+      "gloss": "‘gong’ 음절을 보고 소리를 골라요"
+    },
+    "pitem:syl-cvc-see-han": {
+      "gloss": "‘han’ 음절을 보고 소리를 골라요"
+    },
+    "pitem:syl-cvc-see-jip": {
+      "gloss": "‘jip’ 음절을 보고 소리를 골라요"
+    },
+    "pitem:syl-cvc-see-mul": {
+      "gloss": "‘mul’ 음절을 보고 소리를 골라요"
+    },
+    "pitem:syl-cvc-see-mun": {
+      "gloss": "‘mun’ 음절을 보고 소리를 골라요"
+    },
+    "pitem:syl-cvc-see-san": {
+      "gloss": "‘san’ 음절을 보고 소리를 골라요"
+    },
+    "pitem:vocab-hear-bada": {
+      "gloss": "짠물이 넓게 펼쳐진 곳 (듣기)",
+      "options.gayageum.gloss": "줄을 뜯어 소리를 내는 한국 전통 악기",
+      "options.hanbok.gloss": "한국의 전통 옷",
+      "options.hangul-day.gloss": "세종대왕이 만든 글자를 세상에 펴낸 것을 기념하는 날",
+      "options.sea.gloss": "짠물이 넓게 펼쳐진 곳"
+    },
+    "pitem:vocab-hear-bap": {
+      "gloss": "쌀로 지어 먹는 음식 (듣기)",
+      "options.gayageum.gloss": "줄을 뜯어 소리를 내는 한국 전통 악기",
+      "options.rice.gloss": "쌀로 지어 먹는 음식",
+      "options.tiger.gloss": "줄무늬가 있는 크고 힘센 동물",
+      "options.top.gloss": "빙글빙글 돌려서 노는 장난감"
+    },
+    "pitem:vocab-hear-bapsang": {
+      "gloss": "가족이 둘러앉아 식사하는 낮은 탁자 (듣기)",
+      "options.book.gloss": "글과 그림이 담긴 종이 묶음",
+      "options.family-table.gloss": "가족이 둘러앉아 식사하는 낮은 탁자",
+      "options.tiger.gloss": "줄무늬가 있는 크고 힘센 동물",
+      "options.top.gloss": "빙글빙글 돌려서 노는 장난감"
+    },
+    "pitem:vocab-hear-but": {
+      "gloss": "끝에 털이 달려 글씨를 쓰는 도구 (듣기)",
+      "options.brush.gloss": "끝에 털이 달려 글씨를 쓰는 도구",
+      "options.pottery.gloss": "푸른빛이 도는 옛 도자기",
+      "options.seollal.gloss": "음력으로 새해 첫날을 맞는 명절",
+      "options.tiger.gloss": "줄무늬가 있는 크고 힘센 동물"
+    },
+    "pitem:vocab-hear-chaek": {
+      "gloss": "글과 그림이 담긴 종이 묶음 (듣기)",
+      "options.book.gloss": "글과 그림이 담긴 종이 묶음",
+      "options.gayageum.gloss": "줄을 뜯어 소리를 내는 한국 전통 악기",
+      "options.sebae.gloss": "새해에 웃어른께 드리는 큰절",
+      "options.tiger.gloss": "줄무늬가 있는 크고 힘센 동물"
+    },
+    "pitem:vocab-hear-cheongja": {
+      "gloss": "푸른빛이 도는 옛 도자기 (듣기)",
+      "options.hangul-day.gloss": "세종대왕이 만든 글자를 세상에 펴낸 것을 기념하는 날",
+      "options.mugunghwa.gloss": "한국의 나라꽃",
+      "options.pottery.gloss": "푸른빛이 도는 옛 도자기",
+      "options.sebae.gloss": "새해에 웃어른께 드리는 큰절"
+    },
+    "pitem:vocab-hear-chuseok": {
+      "gloss": "가을에 거둔 곡식에 감사하는 큰 명절 (듣기)",
+      "options.book.gloss": "글과 그림이 담긴 종이 묶음",
+      "options.chuseok.gloss": "가을에 거둔 곡식에 감사하는 큰 명절",
+      "options.kimbap.gloss": "김에 밥과 채소를 넣고 둥글게 말아 썬 음식",
+      "options.top.gloss": "빙글빙글 돌려서 노는 장난감"
+    },
+    "pitem:vocab-hear-dal": {
+      "gloss": "밤하늘에 떠서 빛나는 둥근 것 (듣기)",
+      "options.jegi.gloss": "발로 차올리며 노는 전통 놀잇감",
+      "options.kimbap.gloss": "김에 밥과 채소를 넣고 둥글게 말아 썬 음식",
+      "options.moon.gloss": "밤하늘에 떠서 빛나는 둥근 것",
+      "options.tiger.gloss": "줄무늬가 있는 크고 힘센 동물"
+    },
+    "pitem:vocab-hear-gayageum": {
+      "gloss": "줄을 뜯어 소리를 내는 한국 전통 악기 (듣기)",
+      "options.chopsticks.gloss": "음식을 집는 가늘고 긴 막대 한 쌍",
+      "options.gayageum.gloss": "줄을 뜯어 소리를 내는 한국 전통 악기",
+      "options.tiger.gloss": "줄무늬가 있는 크고 힘센 동물",
+      "options.top.gloss": "빙글빙글 돌려서 노는 장난감"
+    },
+    "pitem:vocab-hear-gimbap": {
+      "gloss": "김에 밥과 채소를 넣고 둥글게 말아 썬 음식 (듣기)",
+      "options.brush.gloss": "끝에 털이 달려 글씨를 쓰는 도구",
+      "options.kimbap.gloss": "김에 밥과 채소를 넣고 둥글게 말아 썬 음식",
+      "options.lantern.gloss": "부처님 오신 날에 밝히는 종이 불빛",
+      "options.mountain.gloss": "땅이 높이 솟은 곳"
+    },
+    "pitem:vocab-hear-gimchi": {
+      "gloss": "배추 같은 채소를 소금에 절이고 양념해 담근 반찬 (듣기)",
+      "options.hanji.gloss": "닥나무로 만든 한국 전통 종이",
+      "options.kimchi.gloss": "배추 같은 채소를 소금에 절이고 양념해 담근 반찬",
+      "options.moon.gloss": "밤하늘에 떠서 빛나는 둥근 것",
+      "options.seollal.gloss": "음력으로 새해 첫날을 맞는 명절"
+    },
+    "pitem:vocab-hear-hanbok": {
+      "gloss": "한국의 전통 옷 (듣기)",
+      "options.hanbok.gloss": "한국의 전통 옷",
+      "options.magpie.gloss": "까맣고 하얀 깃털을 가진 새",
+      "options.pottery.gloss": "푸른빛이 도는 옛 도자기",
+      "options.top.gloss": "빙글빙글 돌려서 노는 장난감"
+    },
+    "pitem:vocab-hear-hanji": {
+      "gloss": "닥나무로 만든 한국 전통 종이 (듣기)",
+      "options.family-table.gloss": "가족이 둘러앉아 식사하는 낮은 탁자",
+      "options.hanji.gloss": "닥나무로 만든 한국 전통 종이",
+      "options.sea.gloss": "짠물이 넓게 펼쳐진 곳",
+      "options.yutnori.gloss": "나무 막대 네 개를 던져 말을 옮기는 전통 게임"
+    },
+    "pitem:vocab-hear-horangi": {
+      "gloss": "줄무늬가 있는 크고 힘센 동물 (듣기)",
+      "options.chuseok.gloss": "가을에 거둔 곡식에 감사하는 큰 명절",
+      "options.gayageum.gloss": "줄을 뜯어 소리를 내는 한국 전통 악기",
+      "options.origami.gloss": "네모난 색지로 학이나 배 같은 모양을 만드는 놀이",
+      "options.tiger.gloss": "줄무늬가 있는 크고 힘센 동물"
+    },
+    "pitem:vocab-hear-jegi": {
+      "gloss": "발로 차올리며 노는 전통 놀잇감 (듣기)",
+      "options.book.gloss": "글과 그림이 담긴 종이 묶음",
+      "options.jegi.gloss": "발로 차올리며 노는 전통 놀잇감",
+      "options.mugunghwa.gloss": "한국의 나라꽃",
+      "options.rice.gloss": "쌀로 지어 먹는 음식"
+    },
+    "pitem:vocab-hear-jeotgarak": {
+      "gloss": "음식을 집는 가늘고 긴 막대 한 쌍 (듣기)",
+      "options.book.gloss": "글과 그림이 담긴 종이 묶음",
+      "options.chopsticks.gloss": "음식을 집는 가늘고 긴 막대 한 쌍",
+      "options.lantern.gloss": "부처님 오신 날에 밝히는 종이 불빛",
+      "options.mugunghwa.gloss": "한국의 나라꽃"
+    },
+    "pitem:vocab-hear-jongijeopgi": {
+      "gloss": "네모난 색지로 학이나 배 같은 모양을 만드는 놀이 (듣기)",
+      "options.jegi.gloss": "발로 차올리며 노는 전통 놀잇감",
+      "options.mountain.gloss": "땅이 높이 솟은 곳",
+      "options.origami.gloss": "네모난 색지로 학이나 배 같은 모양을 만드는 놀이",
+      "options.rice.gloss": "쌀로 지어 먹는 음식"
+    },
+    "pitem:vocab-hear-kkachi": {
+      "gloss": "까맣고 하얀 깃털을 가진 새 (듣기)",
+      "options.chopsticks.gloss": "음식을 집는 가늘고 긴 막대 한 쌍",
+      "options.magpie.gloss": "까맣고 하얀 깃털을 가진 새",
+      "options.sea.gloss": "짠물이 넓게 펼쳐진 곳",
+      "options.top.gloss": "빙글빙글 돌려서 노는 장난감"
+    },
+    "pitem:vocab-hear-meok": {
+      "gloss": "벼루에 갈아 검은 물을 만드는 막대 (듣기)",
+      "options.ink.gloss": "벼루에 갈아 검은 물을 만드는 막대",
+      "options.kimchi.gloss": "배추 같은 채소를 소금에 절이고 양념해 담근 반찬",
+      "options.sea.gloss": "짠물이 넓게 펼쳐진 곳",
+      "options.top.gloss": "빙글빙글 돌려서 노는 장난감"
+    },
+    "pitem:vocab-hear-mugunghwa": {
+      "gloss": "한국의 나라꽃 (듣기)",
+      "options.hanbok.gloss": "한국의 전통 옷",
+      "options.ink.gloss": "벼루에 갈아 검은 물을 만드는 막대",
+      "options.mugunghwa.gloss": "한국의 나라꽃",
+      "options.pottery.gloss": "푸른빛이 도는 옛 도자기"
+    },
+    "pitem:vocab-hear-paengi": {
+      "gloss": "빙글빙글 돌려서 노는 장난감 (듣기)",
+      "options.brush.gloss": "끝에 털이 달려 글씨를 쓰는 도구",
+      "options.kimchi.gloss": "배추 같은 채소를 소금에 절이고 양념해 담근 반찬",
+      "options.mountain.gloss": "땅이 높이 솟은 곳",
+      "options.top.gloss": "빙글빙글 돌려서 노는 장난감"
+    },
+    "pitem:vocab-hear-san": {
+      "gloss": "땅이 높이 솟은 곳 (듣기)",
+      "options.mountain.gloss": "땅이 높이 솟은 곳",
+      "options.tiger.gloss": "줄무늬가 있는 크고 힘센 동물",
+      "options.tteokguk.gloss": "쌀 반죽을 길게 뽑아 얇게 썰어 넣고 끓인 설날 음식",
+      "options.yutnori.gloss": "나무 막대 네 개를 던져 말을 옮기는 전통 게임"
+    },
+    "pitem:vocab-hear-sebae": {
+      "gloss": "새해에 웃어른께 드리는 큰절 (듣기)",
+      "options.chopsticks.gloss": "음식을 집는 가늘고 긴 막대 한 쌍",
+      "options.gayageum.gloss": "줄을 뜯어 소리를 내는 한국 전통 악기",
+      "options.mountain.gloss": "땅이 높이 솟은 곳",
+      "options.sebae.gloss": "새해에 웃어른께 드리는 큰절"
+    },
+    "pitem:vocab-hear-seollal": {
+      "gloss": "음력으로 새해 첫날을 맞는 명절 (듣기)",
+      "options.ink.gloss": "벼루에 갈아 검은 물을 만드는 막대",
+      "options.pottery.gloss": "푸른빛이 도는 옛 도자기",
+      "options.sea.gloss": "짠물이 넓게 펼쳐진 곳",
+      "options.seollal.gloss": "음력으로 새해 첫날을 맞는 명절"
+    },
+    "pitem:vocab-hear-songpyeon": {
+      "gloss": "반달 모양으로 빚어 찐 떡 (듣기)",
+      "options.hanji.gloss": "닥나무로 만든 한국 전통 종이",
+      "options.mountain.gloss": "땅이 높이 솟은 곳",
+      "options.sebae.gloss": "새해에 웃어른께 드리는 큰절",
+      "options.songpyeon.gloss": "반달 모양으로 빚어 찐 떡"
+    },
+    "pitem:vocab-hear-tteokguk": {
+      "gloss": "쌀 반죽을 길게 뽑아 얇게 썰어 넣고 끓인 설날 음식 (듣기)",
+      "options.gayageum.gloss": "줄을 뜯어 소리를 내는 한국 전통 악기",
+      "options.magpie.gloss": "까맣고 하얀 깃털을 가진 새",
+      "options.tteokguk.gloss": "쌀 반죽을 길게 뽑아 얇게 썰어 넣고 끓인 설날 음식",
+      "options.yutnori.gloss": "나무 막대 네 개를 던져 말을 옮기는 전통 게임"
+    },
+    "pitem:vocab-hear-yeon": {
+      "gloss": "바람에 날리는 종이 장난감 (듣기)",
+      "options.kite.gloss": "바람에 날리는 종이 장난감",
+      "options.magpie.gloss": "까맣고 하얀 깃털을 가진 새",
+      "options.pottery.gloss": "푸른빛이 도는 옛 도자기",
+      "options.sebae.gloss": "새해에 웃어른께 드리는 큰절"
+    },
+    "pitem:vocab-hear-yeondeung": {
+      "gloss": "부처님 오신 날에 밝히는 종이 불빛 (듣기)",
+      "options.brush.gloss": "끝에 털이 달려 글씨를 쓰는 도구",
+      "options.kimchi.gloss": "배추 같은 채소를 소금에 절이고 양념해 담근 반찬",
+      "options.lantern.gloss": "부처님 오신 날에 밝히는 종이 불빛",
+      "options.tiger.gloss": "줄무늬가 있는 크고 힘센 동물"
+    },
+    "pitem:vocab-hear-yunnori": {
+      "gloss": "나무 막대 네 개를 던져 말을 옮기는 전통 게임 (듣기)",
+      "options.gayageum.gloss": "줄을 뜯어 소리를 내는 한국 전통 악기",
+      "options.hanbok.gloss": "한국의 전통 옷",
+      "options.tiger.gloss": "줄무늬가 있는 크고 힘센 동물",
+      "options.yutnori.gloss": "나무 막대 네 개를 던져 말을 옮기는 전통 게임"
+    },
+    "pitem:vocab-read-bada": {
+      "gloss": "짠물이 넓게 펼쳐진 곳 (읽기)",
+      "options.kite.gloss": "바람에 날리는 종이 장난감",
+      "options.magpie.gloss": "까맣고 하얀 깃털을 가진 새",
+      "options.rice.gloss": "쌀로 지어 먹는 음식",
+      "options.sea.gloss": "짠물이 넓게 펼쳐진 곳"
+    },
+    "pitem:vocab-read-bap": {
+      "gloss": "쌀로 지어 먹는 음식 (읽기)",
+      "options.book.gloss": "글과 그림이 담긴 종이 묶음",
+      "options.rice.gloss": "쌀로 지어 먹는 음식",
+      "options.sea.gloss": "짠물이 넓게 펼쳐진 곳",
+      "options.sebae.gloss": "새해에 웃어른께 드리는 큰절"
+    },
+    "pitem:vocab-read-bapsang": {
+      "gloss": "가족이 둘러앉아 식사하는 낮은 탁자 (읽기)",
+      "options.family-table.gloss": "가족이 둘러앉아 식사하는 낮은 탁자",
+      "options.hanji.gloss": "닥나무로 만든 한국 전통 종이",
+      "options.kite.gloss": "바람에 날리는 종이 장난감",
+      "options.mountain.gloss": "땅이 높이 솟은 곳"
+    },
+    "pitem:vocab-read-cheongja": {
+      "gloss": "푸른빛이 도는 옛 도자기 (읽기)",
+      "options.chopsticks.gloss": "음식을 집는 가늘고 긴 막대 한 쌍",
+      "options.pottery.gloss": "푸른빛이 도는 옛 도자기",
+      "options.tiger.gloss": "줄무늬가 있는 크고 힘센 동물",
+      "options.top.gloss": "빙글빙글 돌려서 노는 장난감"
+    },
+    "pitem:vocab-read-chuseok": {
+      "gloss": "가을에 거둔 곡식에 감사하는 큰 명절 (읽기)",
+      "options.chuseok.gloss": "가을에 거둔 곡식에 감사하는 큰 명절",
+      "options.magpie.gloss": "까맣고 하얀 깃털을 가진 새",
+      "options.pottery.gloss": "푸른빛이 도는 옛 도자기",
+      "options.top.gloss": "빙글빙글 돌려서 노는 장난감"
+    },
+    "pitem:vocab-read-dal": {
+      "gloss": "밤하늘에 떠서 빛나는 둥근 것 (읽기)",
+      "options.ink.gloss": "벼루에 갈아 검은 물을 만드는 막대",
+      "options.moon.gloss": "밤하늘에 떠서 빛나는 둥근 것",
+      "options.pottery.gloss": "푸른빛이 도는 옛 도자기",
+      "options.sebae.gloss": "새해에 웃어른께 드리는 큰절"
+    },
+    "pitem:vocab-read-gayageum": {
+      "gloss": "줄을 뜯어 소리를 내는 한국 전통 악기 (읽기)",
+      "options.book.gloss": "글과 그림이 담긴 종이 묶음",
+      "options.gayageum.gloss": "줄을 뜯어 소리를 내는 한국 전통 악기",
+      "options.sea.gloss": "짠물이 넓게 펼쳐진 곳",
+      "options.seollal.gloss": "음력으로 새해 첫날을 맞는 명절"
+    },
+    "pitem:vocab-read-gimbap": {
+      "gloss": "김에 밥과 채소를 넣고 둥글게 말아 썬 음식 (읽기)",
+      "options.brush.gloss": "끝에 털이 달려 글씨를 쓰는 도구",
+      "options.hanbok.gloss": "한국의 전통 옷",
+      "options.kimbap.gloss": "김에 밥과 채소를 넣고 둥글게 말아 썬 음식",
+      "options.moon.gloss": "밤하늘에 떠서 빛나는 둥근 것"
+    },
+    "pitem:vocab-read-gimchi": {
+      "gloss": "배추 같은 채소를 소금에 절이고 양념해 담근 반찬 (읽기)",
+      "options.gayageum.gloss": "줄을 뜯어 소리를 내는 한국 전통 악기",
+      "options.jegi.gloss": "발로 차올리며 노는 전통 놀잇감",
+      "options.kimchi.gloss": "배추 같은 채소를 소금에 절이고 양념해 담근 반찬",
+      "options.tiger.gloss": "줄무늬가 있는 크고 힘센 동물"
+    },
+    "pitem:vocab-read-hanbok": {
+      "gloss": "한국의 전통 옷 (읽기)",
+      "options.hanbok.gloss": "한국의 전통 옷",
+      "options.jegi.gloss": "발로 차올리며 노는 전통 놀잇감",
+      "options.magpie.gloss": "까맣고 하얀 깃털을 가진 새",
+      "options.pottery.gloss": "푸른빛이 도는 옛 도자기"
+    },
+    "pitem:vocab-read-hanji": {
+      "gloss": "닥나무로 만든 한국 전통 종이 (읽기)",
+      "options.gayageum.gloss": "줄을 뜯어 소리를 내는 한국 전통 악기",
+      "options.hanji.gloss": "닥나무로 만든 한국 전통 종이",
+      "options.magpie.gloss": "까맣고 하얀 깃털을 가진 새",
+      "options.sebae.gloss": "새해에 웃어른께 드리는 큰절"
+    },
+    "pitem:vocab-read-horangi": {
+      "gloss": "줄무늬가 있는 크고 힘센 동물 (읽기)",
+      "options.jegi.gloss": "발로 차올리며 노는 전통 놀잇감",
+      "options.kimbap.gloss": "김에 밥과 채소를 넣고 둥글게 말아 썬 음식",
+      "options.moon.gloss": "밤하늘에 떠서 빛나는 둥근 것",
+      "options.tiger.gloss": "줄무늬가 있는 크고 힘센 동물"
+    },
+    "pitem:vocab-read-jongijeopgi": {
+      "gloss": "네모난 색지로 학이나 배 같은 모양을 만드는 놀이 (읽기)",
+      "options.origami.gloss": "네모난 색지로 학이나 배 같은 모양을 만드는 놀이",
+      "options.rice.gloss": "쌀로 지어 먹는 음식",
+      "options.sea.gloss": "짠물이 넓게 펼쳐진 곳",
+      "options.top.gloss": "빙글빙글 돌려서 노는 장난감"
+    },
+    "pitem:vocab-read-meok": {
+      "gloss": "벼루에 갈아 검은 물을 만드는 막대 (읽기)",
+      "options.ink.gloss": "벼루에 갈아 검은 물을 만드는 막대",
+      "options.kimbap.gloss": "김에 밥과 채소를 넣고 둥글게 말아 썬 음식",
+      "options.kite.gloss": "바람에 날리는 종이 장난감",
+      "options.mountain.gloss": "땅이 높이 솟은 곳"
+    },
+    "pitem:vocab-read-san": {
+      "gloss": "땅이 높이 솟은 곳 (읽기)",
+      "options.gayageum.gloss": "줄을 뜯어 소리를 내는 한국 전통 악기",
+      "options.hanbok.gloss": "한국의 전통 옷",
+      "options.mountain.gloss": "땅이 높이 솟은 곳",
+      "options.origami.gloss": "네모난 색지로 학이나 배 같은 모양을 만드는 놀이"
+    },
+    "pitem:vocab-read-seollal": {
+      "gloss": "음력으로 새해 첫날을 맞는 명절 (읽기)",
+      "options.book.gloss": "글과 그림이 담긴 종이 묶음",
+      "options.kimbap.gloss": "김에 밥과 채소를 넣고 둥글게 말아 썬 음식",
+      "options.mugunghwa.gloss": "한국의 나라꽃",
+      "options.seollal.gloss": "음력으로 새해 첫날을 맞는 명절"
+    },
+    "pitem:vocab-read-songpyeon": {
+      "gloss": "반달 모양으로 빚어 찐 떡 (읽기)",
+      "options.gayageum.gloss": "줄을 뜯어 소리를 내는 한국 전통 악기",
+      "options.kite.gloss": "바람에 날리는 종이 장난감",
+      "options.magpie.gloss": "까맣고 하얀 깃털을 가진 새",
+      "options.songpyeon.gloss": "반달 모양으로 빚어 찐 떡"
+    },
+    "pitem:vocab-read-yeon": {
+      "gloss": "바람에 날리는 종이 장난감 (읽기)",
+      "options.brush.gloss": "끝에 털이 달려 글씨를 쓰는 도구",
+      "options.kimchi.gloss": "배추 같은 채소를 소금에 절이고 양념해 담근 반찬",
+      "options.kite.gloss": "바람에 날리는 종이 장난감",
+      "options.mountain.gloss": "땅이 높이 솟은 곳"
+    },
+    "pitem:vocab-read-yeondeung": {
+      "gloss": "부처님 오신 날에 밝히는 종이 불빛 (읽기)",
+      "options.brush.gloss": "끝에 털이 달려 글씨를 쓰는 도구",
+      "options.lantern.gloss": "부처님 오신 날에 밝히는 종이 불빛",
+      "options.mountain.gloss": "땅이 높이 솟은 곳",
+      "options.rice.gloss": "쌀로 지어 먹는 음식"
+    },
+    "pitem:warmup-rice": {
+      "gloss": "연습: 쌀로 지어 먹는 음식 (듣기)",
+      "options.jegi.gloss": "발로 차올리며 노는 전통 놀잇감",
+      "options.moon.gloss": "밤하늘에 떠서 빛나는 둥근 것",
+      "options.rice.gloss": "쌀로 지어 먹는 음식",
+      "options.tiger.gloss": "줄무늬가 있는 크고 힘센 동물"
+    },
     "quest:stage1-crafts-q1": {
       "blurb": "놀이 낱말을 읽어요. 연, 공, 줄 같은 낱말이에요.",
       "steps.s1.hoyaLine": "설날에는 가족이 윷놀이를 하고 연을 날려요. 놀이 낱말을 읽어 봐요!",
@@ -3586,6 +7713,326 @@ export const OVERLAYS: Overlays = {
       "steps.s6.title": "세배 카드!",
       "title": "한복과 세배"
     },
+    "quest:story-chuseok-ganggangsullae-listen": {
+      "steps.s1.hoyaLine": "추석이에요! 같이 송편을 빚고 보름달을 봐요.",
+      "steps.s1.title": "이야기 시간",
+      "steps.s2.title": "이야기 읽기",
+      "steps.s3.title": "몇 가지 질문",
+      "steps.s4.title": "이야기 순서대로 놓기",
+      "steps.s5.hoyaLine": "송편, 보름달, 그리고 둥글게 도는 춤. 즐거운 추석 보내세요!",
+      "steps.s5.title": "잘했어요",
+      "title": "추석에 빚는 송편과 둥근 보름달"
+    },
+    "quest:story-chuseok-ganggangsullae-read": {
+      "steps.s1.hoyaLine": "추석이에요! 같이 송편을 빚고 보름달을 봐요.",
+      "steps.s1.title": "이야기 시간",
+      "steps.s2.title": "이야기 읽기",
+      "steps.s3.title": "몇 가지 질문",
+      "steps.s4.title": "이야기 순서대로 놓기",
+      "steps.s5.hoyaLine": "송편, 보름달, 그리고 둥글게 도는 춤. 즐거운 추석 보내세요!",
+      "steps.s5.title": "잘했어요",
+      "title": "추석에 빚는 송편과 둥근 보름달"
+    },
+    "quest:story-dano-ssireum-listen": {
+      "steps.s1.hoyaLine": "단오가 왔어요! 그네를 높이 타고, 가면극을 보고, 씨름을 응원해요.",
+      "steps.s1.title": "이야기 시간",
+      "steps.s2.title": "이야기 읽기",
+      "steps.s3.title": "몇 가지 질문",
+      "steps.s4.title": "이야기 순서대로 놓기",
+      "steps.s5.hoyaLine": "그네, 탈, 씨름. 정말 즐거운 단옷날이에요!",
+      "steps.s5.title": "잘했어요",
+      "title": "신나는 단오: 그네와 탈과 씨름"
+    },
+    "quest:story-dano-ssireum-read": {
+      "steps.s1.hoyaLine": "단오가 왔어요! 그네를 높이 타고, 가면극을 보고, 씨름을 응원해요.",
+      "steps.s1.title": "이야기 시간",
+      "steps.s2.title": "이야기 읽기",
+      "steps.s3.title": "몇 가지 질문",
+      "steps.s4.title": "이야기 순서대로 놓기",
+      "steps.s5.hoyaLine": "그네, 탈, 씨름. 정말 즐거운 단옷날이에요!",
+      "steps.s5.title": "잘했어요",
+      "title": "신나는 단오: 그네와 탈과 씨름"
+    },
+    "quest:story-donguibogam-listen": {
+      "steps.s1.hoyaLine": "건강하게 지내는 법을 담은 아주 큰 책을 쓴 궁궐 의사를 만나 봐요.",
+      "steps.s1.title": "이야기 시간",
+      "steps.s2.title": "이야기 읽기",
+      "steps.s3.title": "몇 가지 질문",
+      "steps.s4.title": "이야기 순서 맞추기",
+      "steps.s5.hoyaLine": "허준의 책은 사람들이 몸을 돌보도록 도와줬어요. 나랑 같이 몸을 쭉 펴고, 건강하게 지내요!",
+      "steps.s5.title": "잘했어요",
+      "title": "허준이 쓴 보배 같은 의학책"
+    },
+    "quest:story-donguibogam-read": {
+      "steps.s1.hoyaLine": "건강하게 지내는 법을 담은 아주 큰 책을 쓴 궁궐 의사를 만나 봐요.",
+      "steps.s1.title": "이야기 시간",
+      "steps.s2.title": "이야기 읽기",
+      "steps.s3.title": "몇 가지 질문",
+      "steps.s4.title": "이야기 순서 맞추기",
+      "steps.s5.hoyaLine": "허준의 책은 사람들이 몸을 돌보도록 도와줬어요. 나랑 같이 몸을 쭉 펴고, 건강하게 지내요!",
+      "steps.s5.title": "잘했어요",
+      "title": "허준이 쓴 보배 같은 의학책"
+    },
+    "quest:story-gimjang-arirang-listen": {
+      "steps.s1.hoyaLine": "겨울이 오고 있어요! 이웃과 함께 김치를 담그고, 한국 곳곳에서 함께 부르는 노래도 들어 봐요.",
+      "steps.s1.title": "이야기 시간",
+      "steps.s2.title": "이야기 읽기",
+      "steps.s3.title": "몇 가지 질문",
+      "steps.s4.title": "이야기 순서 맞추기",
+      "steps.s5.hoyaLine": "함께 김치를 담그고 아리랑을 불러요. 나누면 더 특별해져요!",
+      "steps.s5.title": "잘했어요",
+      "title": "김장하는 날: 김치를 나누고 아리랑을 불러요"
+    },
+    "quest:story-gimjang-arirang-read": {
+      "steps.s1.hoyaLine": "겨울이 오고 있어요! 이웃과 함께 김치를 담그고, 한국 곳곳에서 함께 부르는 노래도 들어 봐요.",
+      "steps.s1.title": "이야기 시간",
+      "steps.s2.title": "이야기 읽기",
+      "steps.s3.title": "몇 가지 질문",
+      "steps.s4.title": "이야기 순서 맞추기",
+      "steps.s5.hoyaLine": "함께 김치를 담그고 아리랑을 불러요. 나누면 더 특별해져요!",
+      "steps.s5.title": "잘했어요",
+      "title": "김장하는 날: 김치를 나누고 아리랑을 불러요"
+    },
+    "quest:story-hangeul-day-listen": {
+      "steps.s1.hoyaLine": "한글에 왜 특별한 날이 있는지 알아봐요!",
+      "steps.s1.title": "이야기 시간",
+      "steps.s2.title": "이야기 읽기",
+      "steps.s3.title": "문제 풀기",
+      "steps.s4.title": "이야기 순서대로 놓기",
+      "steps.s5.hoyaLine": "즐거운 한글날! 이제 대한민국이 해마다 10월에 한글날을 기념하는 까닭을 알게 됐어요.",
+      "steps.s5.title": "잘했어요!",
+      "title": "즐거운 한글날!"
+    },
+    "quest:story-hangeul-day-read": {
+      "steps.s1.hoyaLine": "한글에 왜 특별한 날이 있는지 알아봐요!",
+      "steps.s1.title": "이야기 시간",
+      "steps.s2.title": "이야기 읽기",
+      "steps.s3.title": "문제 풀기",
+      "steps.s4.title": "이야기 순서대로 놓기",
+      "steps.s5.hoyaLine": "즐거운 한글날! 이제 대한민국이 해마다 10월에 한글날을 기념하는 까닭을 알게 됐어요.",
+      "steps.s5.title": "잘했어요!",
+      "title": "즐거운 한글날!"
+    },
+    "quest:story-ilseongnok-daily-reflection-listen": {
+      "steps.s1.hoyaLine": "날마다 일기로 하루를 돌아본 어린 세손 이야기를 읽어 봐요.",
+      "steps.s1.title": "이야기 시간",
+      "steps.s2.title": "이야기 읽기",
+      "steps.s3.title": "몇 가지 질문",
+      "steps.s4.title": "이야기 순서대로 놓기",
+      "steps.s5.hoyaLine": "하루를 돌아보는 일이 정조에게 도움이 되었어요. 오늘은 어떤 일이 잘됐나요?",
+      "steps.s5.title": "잘했어요",
+      "title": "날마다 자신을 돌아본 정조의 일기"
+    },
+    "quest:story-janggyeong-panjeon-listen": {
+      "steps.s1.hoyaLine": "오래된 목판은 어떻게 지킬까요? 해인사의 바람에게 물어봐요!",
+      "steps.s1.title": "이야기 시간",
+      "steps.s2.title": "이야기 읽기",
+      "steps.s3.title": "문제 풀기",
+      "steps.s4.title": "이야기 순서대로 놓기",
+      "steps.s5.hoyaLine": "창문과 바닥과 맑은 바람이 경판을 지켜요. 같이 둘러봐 줘서 고마워요!",
+      "steps.s5.title": "잘했어요!",
+      "title": "바람이 지켜 주는 곳"
+    },
+    "quest:story-jikji-metal-type-listen": {
+      "steps.s1.hoyaLine": "금속활자로 책을 찍은 절에 가 봐요!",
+      "steps.s1.title": "이야기 시간",
+      "steps.s2.title": "이야기 읽기",
+      "steps.s3.title": "문제 풀기",
+      "steps.s4.title": "이야기 순서대로 놓기",
+      "steps.s5.hoyaLine": "이제 직지와 직지를 찍은 금속활자 이야기를 알게 됐어요!",
+      "steps.s5.title": "잘했어요!",
+      "title": "쇠 활자로 찍은 옛 책"
+    },
+    "quest:story-joseon-records-today-listen": {
+      "steps.s1.hoyaLine": "옛 기록은 오늘날 우리에게 무슨 일을 해 줄까요? 가서 봐요!",
+      "steps.s1.title": "이야기 시간",
+      "steps.s2.title": "이야기 읽기",
+      "steps.s3.title": "몇 가지 질문",
+      "steps.s4.title": "이야기 순서대로 놓기",
+      "steps.s5.hoyaLine": "오래전에 쓴 기록이 지금도 우리를 도와요. 여러분은 무엇을 적어 볼래요?",
+      "steps.s5.title": "잘했어요",
+      "title": "옛 기록에서 찾은 새로운 발견"
+    },
+    "quest:story-kim-hongdo-genre-paintings-listen": {
+      "steps.s1.hoyaLine": "옛날 사람들의 하루를 담은 그림을 자세히 들여다봐요. 무엇을 찾을 수 있나요?",
+      "steps.s1.title": "이야기 시간",
+      "steps.s2.title": "이야기 읽기",
+      "steps.s3.title": "몇 가지 질문",
+      "steps.s4.title": "이야기 순서 맞추기",
+      "steps.s5.hoyaLine": "엿장수, 벗어 놓은 신발, 훌쩍이는 학생까지! 눈이 정말 밝네요!",
+      "steps.s5.title": "잘했어요",
+      "title": "김홍도가 그린 사람들의 하루"
+    },
+    "quest:story-kim-hongdo-genre-paintings-read": {
+      "steps.s1.hoyaLine": "옛날 사람들의 하루를 담은 그림을 자세히 들여다봐요. 무엇을 찾을 수 있나요?",
+      "steps.s1.title": "이야기 시간",
+      "steps.s2.title": "이야기 읽기",
+      "steps.s3.title": "몇 가지 질문",
+      "steps.s4.title": "이야기 순서 맞추기",
+      "steps.s5.hoyaLine": "엿장수, 벗어 놓은 신발, 훌쩍이는 학생까지! 눈이 정말 밝네요!",
+      "steps.s5.title": "잘했어요",
+      "title": "김홍도가 그린 사람들의 하루"
+    },
+    "quest:story-nanjung-ilgi-listen": {
+      "steps.s1.hoyaLine": "일기를 쓰나요? 이순신 장군의 일기를 펼쳐 봐요.",
+      "steps.s1.title": "이야기 시간",
+      "steps.s2.title": "이야기 읽기",
+      "steps.s3.title": "몇 가지 질문",
+      "steps.s4.title": "이야기 순서 맞추기",
+      "steps.s5.hoyaLine": "날씨도, 마음도, 하루하루의 생활도 이순신 장군은 모두 적었어요. 여러분도 일기를 써 보면 어때요?",
+      "steps.s5.title": "잘했어요",
+      "title": "이순신 장군이 쓴 전쟁 일기"
+    },
+    "quest:story-pansori-tales-listen": {
+      "steps.s1.hoyaLine": "판소리를 들어 봐요! 소리꾼 한 명과 북 치는 고수 한 명이 옛이야기 두 편을 들려줘요.",
+      "steps.s1.title": "이야기 시간",
+      "steps.s2.title": "이야기 읽기",
+      "steps.s3.title": "몇 가지 질문",
+      "steps.s4.title": "이야기 순서 맞추기",
+      "steps.s5.hoyaLine": "착한 아우, 은혜 갚은 제비, 꾀 많은 토끼까지. 얼씨구, 정말 멋진 공연이에요!",
+      "steps.s5.title": "잘했어요",
+      "title": "판소리 이야기: 흥부의 제비와 꾀 많은 토끼 (옛이야기)"
+    },
+    "quest:story-pansori-tales-read": {
+      "steps.s1.hoyaLine": "판소리를 들어 봐요! 소리꾼 한 명과 북 치는 고수 한 명이 옛이야기 두 편을 들려줘요.",
+      "steps.s1.title": "이야기 시간",
+      "steps.s2.title": "이야기 읽기",
+      "steps.s3.title": "몇 가지 질문",
+      "steps.s4.title": "이야기 순서 맞추기",
+      "steps.s5.hoyaLine": "착한 아우, 은혜 갚은 제비, 꾀 많은 토끼까지. 얼씨구, 정말 멋진 공연이에요!",
+      "steps.s5.title": "잘했어요",
+      "title": "판소리 이야기: 흥부의 제비와 꾀 많은 토끼 (옛이야기)"
+    },
+    "quest:story-sejong-new-letters-listen": {
+      "steps.s1.hoyaLine": "나랑 같이 조선에 가요! 세종대왕이 왜 새 글자를 만들었는지 알아봐요.",
+      "steps.s1.title": "이야기 시간",
+      "steps.s2.title": "이야기 읽기",
+      "steps.s3.title": "문제 풀기",
+      "steps.s4.title": "이야기 순서대로 놓기",
+      "steps.s5.hoyaLine": "이제 한글이 어디서 시작됐는지 알았어요. 세종대왕은 모두를 위해 글자를 만들었고, 지금 여러분이 그 글자를 읽고 있어요!",
+      "steps.s5.title": "잘했어요!",
+      "title": "임금이 만든 새 문자"
+    },
+    "quest:story-sejong-new-letters-read": {
+      "steps.s1.hoyaLine": "나랑 같이 조선에 가요! 세종대왕이 왜 새 글자를 만들었는지 알아봐요.",
+      "steps.s1.title": "이야기 시간",
+      "steps.s2.title": "이야기 읽기",
+      "steps.s3.title": "문제 풀기",
+      "steps.s4.title": "이야기 순서대로 놓기",
+      "steps.s5.hoyaLine": "이제 한글이 어디서 시작됐는지 알았어요. 세종대왕은 모두를 위해 글자를 만들었고, 지금 여러분이 그 글자를 읽고 있어요!",
+      "steps.s5.title": "잘했어요!",
+      "title": "임금이 만든 새 문자"
+    },
+    "quest:story-seollal-new-year-listen": {
+      "steps.s1.hoyaLine": "새해 복 많이 받으세요! 저와 함께 어느 가족의 설날 아침을 보내 봐요.",
+      "steps.s1.title": "이야기 시간",
+      "steps.s2.title": "이야기 읽기",
+      "steps.s3.title": "몇 가지 질문",
+      "steps.s4.title": "이야기 순서대로 놓기",
+      "steps.s5.hoyaLine": "새 옷, 새해 절, 떡국 한 그릇, 그리고 윷놀이 한 판. 정말 행복한 설날이에요!",
+      "steps.s5.title": "잘했어요",
+      "title": "설날 아침, 호야와 함께"
+    },
+    "quest:story-seollal-new-year-read": {
+      "steps.s1.hoyaLine": "새해 복 많이 받으세요! 저와 함께 어느 가족의 설날 아침을 보내 봐요.",
+      "steps.s1.title": "이야기 시간",
+      "steps.s2.title": "이야기 읽기",
+      "steps.s3.title": "몇 가지 질문",
+      "steps.s4.title": "이야기 순서대로 놓기",
+      "steps.s5.hoyaLine": "새 옷, 새해 절, 떡국 한 그릇, 그리고 윷놀이 한 판. 정말 행복한 설날이에요!",
+      "steps.s5.title": "잘했어요",
+      "title": "설날 아침, 호야와 함께"
+    },
+    "quest:story-seungjeongwon-ilgi-every-day-listen": {
+      "steps.s1.hoyaLine": "왕의 하루 일을 적던 승정원에 가 봐요.",
+      "steps.s1.title": "이야기 시간",
+      "steps.s2.title": "이야기 읽기",
+      "steps.s3.title": "몇 가지 질문",
+      "steps.s4.title": "이야기 순서대로 놓기",
+      "steps.s5.hoyaLine": "날씨까지 일기에 적었어요! 이제 왜 보물인지 알게 됐어요.",
+      "steps.s5.title": "잘했어요",
+      "title": "왕의 비서 기관이 날마다 남긴 기록"
+    },
+    "quest:story-shapes-of-hangeul-listen": {
+      "steps.s1.hoyaLine": "글자 속에 비밀 모양이 숨어 있는 거 알아요? 옛 책을 펴고 찾아봐요!",
+      "steps.s1.title": "이야기 시간",
+      "steps.s2.title": "이야기 읽기",
+      "steps.s3.title": "문제 풀기",
+      "steps.s4.title": "이야기 순서대로 놓기",
+      "steps.s5.hoyaLine": "혀, 입, 이(치아), 목구멍, 하늘, 땅, 사람! 글자 모양 속 비밀을 찾았어요!",
+      "steps.s5.title": "잘했어요!",
+      "title": "글자 모양에 숨은 비밀"
+    },
+    "quest:story-shapes-of-hangeul-read": {
+      "steps.s1.hoyaLine": "글자 속에 비밀 모양이 숨어 있는 거 알아요? 옛 책을 펴고 찾아봐요!",
+      "steps.s1.title": "이야기 시간",
+      "steps.s2.title": "이야기 읽기",
+      "steps.s3.title": "문제 풀기",
+      "steps.s4.title": "이야기 순서대로 놓기",
+      "steps.s5.hoyaLine": "혀, 입, 이(치아), 목구멍, 하늘, 땅, 사람! 글자 모양 속 비밀을 찾았어요!",
+      "steps.s5.title": "잘했어요!",
+      "title": "글자 모양에 숨은 비밀"
+    },
+    "quest:story-sillok-mountain-archives-listen": {
+      "steps.s1.hoyaLine": "실록은 안전하게 지내려고 어디로 갔을까요? 산으로 따라가 봐요!",
+      "steps.s1.title": "이야기 시간",
+      "steps.s2.title": "이야기 읽기",
+      "steps.s3.title": "몇 가지 질문",
+      "steps.s4.title": "이야기 순서대로 놓기",
+      "steps.s5.hoyaLine": "기록에서 책으로, 그리고 산속 사고까지! 실록이 간 길을 끝까지 따라왔어요!",
+      "steps.s5.title": "잘했어요",
+      "title": "산에 숨은 실록"
+    },
+    "quest:story-sillok-royal-historians-listen": {
+      "steps.s1.hoyaLine": "옛날 왕이 한 말을 우리는 어떻게 알까요? 그 모든 것을 적은 사람들을 만나러 가요!",
+      "steps.s1.title": "이야기 시간",
+      "steps.s2.title": "이야기 읽기",
+      "steps.s3.title": "몇 가지 질문",
+      "steps.s4.title": "이야기 순서대로 놓기",
+      "steps.s5.hoyaLine": "사관들은 날마다 모든 것을 적었어요. 이제 실록이 어디에서 왔는지 알게 됐어요!",
+      "steps.s5.title": "잘했어요",
+      "title": "호야가 사관을 만나요"
+    },
+    "quest:story-sun-and-moon-listen": {
+      "steps.s1.hoyaLine": "이야기 시간이에요! 오빠와 여동생, 그리고 꾀 많은 호랑이가 나오는 옛 민담이에요.",
+      "steps.s1.title": "이야기 시간",
+      "steps.s2.title": "이야기 읽기",
+      "steps.s3.title": "몇 가지 질문",
+      "steps.s4.title": "이야기 순서 맞추기",
+      "steps.s5.hoyaLine": "오누이는 하늘에서 무사해요. 우리 이야기는 여기까지예요!",
+      "steps.s5.title": "잘했어요",
+      "title": "해와 달이 된 오누이 (옛이야기)"
+    },
+    "quest:story-sun-and-moon-read": {
+      "steps.s1.hoyaLine": "이야기 시간이에요! 오빠와 여동생, 그리고 꾀 많은 호랑이가 나오는 옛 민담이에요.",
+      "steps.s1.title": "이야기 시간",
+      "steps.s2.title": "이야기 읽기",
+      "steps.s3.title": "몇 가지 질문",
+      "steps.s4.title": "이야기 순서 맞추기",
+      "steps.s5.hoyaLine": "오누이는 하늘에서 무사해요. 우리 이야기는 여기까지예요!",
+      "steps.s5.title": "잘했어요",
+      "title": "해와 달이 된 오누이 (옛이야기)"
+    },
+    "quest:story-tripitaka-koreana-listen": {
+      "steps.s1.hoyaLine": "산에 올라 글자를 새긴 나무판이 가득한 절에 가 봐요!",
+      "steps.s1.title": "이야기 시간",
+      "steps.s2.title": "이야기 읽기",
+      "steps.s3.title": "문제 풀기",
+      "steps.s4.title": "이야기 순서대로 놓기",
+      "steps.s5.hoyaLine": "그 많은 나무판을 아주 오래전에 새겼는데 지금도 안전해요. 같이 해인사를 둘러봐 줘서 고마워요!",
+      "steps.s5.title": "잘했어요!",
+      "title": "나무판 팔만 장"
+    },
+    "quest:story-uigwe-royal-birthday-listen": {
+      "steps.s1.hoyaLine": "큰 생일잔치를 기록한, 그림이 가득한 왕실 보고서를 펼쳐 봐요!",
+      "steps.s1.title": "이야기 시간",
+      "steps.s2.title": "이야기 읽기",
+      "steps.s3.title": "몇 가지 질문",
+      "steps.s4.title": "이야기 순서대로 놓기",
+      "steps.s5.hoyaLine": "글과 그림 덕분에 왕실 잔치가 지금도 살아 있어요. 이제 의궤가 무엇인지 알게 됐어요!",
+      "steps.s5.title": "잘했어요",
+      "title": "예순 번째 생일을 담은 왕실 보고서"
+    },
     "stage:stage1": {
       "anchorSkill": "자모 24개와 받침 6개를 90% 이상 알아보기",
       "oneLiner": "모든 한글 글자와 그 소리를 만나요.",
@@ -3620,6 +8067,1857 @@ export const OVERLAYS: Overlays = {
       "anchorSkill": "1분 자기소개 녹음하기",
       "oneLiner": "생각하고 느끼고 만든 것을 한국어로 말해요.",
       "title": "자기표현"
+    },
+    "story:chuseok-ganggangsullae": {
+      "checks.c1.explain": "송편은 솔잎을 깔고 쪄요. 소나무 향이 송편을 더 맛있게 한다고 해요.",
+      "checks.c1.options.a": "바나나 잎",
+      "checks.c1.options.b": "연잎",
+      "checks.c1.options.c": "종이",
+      "checks.c1.options.d": "솔잎",
+      "checks.c1.prompt": "송편은 무엇 위에 놓고 쪄요?",
+      "checks.c2.explain": "강강술래에서는 여성들이 손을 잡고 노래하며 둥글게 돌아요.",
+      "checks.c2.options.a": "두 줄로 마주 서서",
+      "checks.c2.options.b": "한 명씩 가운데에서 혼자",
+      "checks.c2.options.c": "손을 잡고 둥글게",
+      "checks.c2.options.d": "줄지어 앉아 손뼉 치며",
+      "checks.c2.prompt": "강강술래에서 여성들은 어떻게 움직여요?",
+      "checks.c3.explain": "한가위는 추석의 순우리말 이름이에요.",
+      "checks.c3.options.a": "한가위",
+      "checks.c3.options.b": "송편",
+      "checks.c3.options.c": "보름달",
+      "checks.c3.options.d": "차례",
+      "checks.c3.prompt": "추석의 순우리말 이름은 뭐예요?",
+      "checks.r1.explain": "보름달은 둥글게 꽉 찬 달이에요. 추석 밤에는 크고 둥근 보름달이 떠요.",
+      "checks.r1.options.a": "반달",
+      "checks.r1.options.b": "둥글게 꽉 찬 달",
+      "checks.r1.options.c": "해돋이",
+      "checks.r1.options.d": "소나무",
+      "checks.r1.prompt": "{target}의 뜻은 뭐예요?",
+      "checks.r2.explain": "고향은 태어나고 자란 곳이에요. 추석에는 많은 사람이 고향에 가요.",
+      "checks.r2.options.a": "수확",
+      "checks.r2.options.b": "명절",
+      "checks.r2.options.c": "떡",
+      "checks.r2.options.d": "태어나고 자란 곳",
+      "checks.r2.prompt": "{target}의 뜻은 뭐예요?",
+      "checks.r3.explain": "송편은 솔잎을 깔고 쪄요.",
+      "checks.r3.options.a": "솔잎",
+      "checks.r3.options.b": "연잎",
+      "checks.r3.options.c": "바나나 잎",
+      "checks.r3.options.d": "종이",
+      "checks.r3.prompt": "이야기에서 송편은 무엇 위에 놓고 쪄요?",
+      "facts.f1.claim": "추석은 음력 8월 15일이에요. 수확이 시작될 무렵에 찾아오며, 사람들은 이날 한 해 농사에 감사해요.",
+      "facts.f10.claim": "이 춤의 이름은 후렴에서 왔지만, '강강술래'라는 말의 정확한 뜻은 알려져 있지 않아요.",
+      "facts.f11.claim": "강강술래는 2009년에 유네스코 인류무형문화유산 대표목록에 올랐어요.",
+      "facts.f12.claim": "조선 시대 김매순이 쓴 『열양세시기』에는 사람들이 '더도 말고 덜도 말고 늘 한가위 같기를 바란다'는 뜻의 말을 했다고 한자로 적혀 있어요. 오늘날 널리 쓰는 우리말 표현은 '더도 말고 덜도 말고 한가위만 같아라'예요.",
+      "facts.f2.claim": "한가위는 추석의 순우리말 이름이에요.",
+      "facts.f3.claim": "추석에는 많은 한국 사람이 고향에 가요. 집에서 조상께 올리는 차례와 조상의 묘를 찾아가는 성묘가 추석을 대표하는 두 가지 풍습이에요.",
+      "facts.f4.claim": "추석 전날(음력 8월 14일) 저녁, 가족들은 밝은 달 아래 모여 송편을 빚어요. 송편은 콩, 깨, 밤 같은 소를 넣은 쌀 반죽 떡이에요. 새로 거둔 곡식으로 만들어 특히 맛있어요.",
+      "facts.f5.claim": "송편은 흔히 반달 모양으로 빚고, 솔잎을 깔아 쪄요. 소나무 향이 떡을 더 맛있게 한다고 해요.",
+      "facts.f6.claim": "전통 농경 생활에서 추석 보름달은 풍요를 상징했고, 추석을 '달의 명절'이라고 부르기도 했어요.",
+      "facts.f7.claim": "추석 무렵 달 밝은 밤에 하는 강강술래에서는 여성들이 손을 잡고 둥글게 돌아요. 앞소리꾼이 한 구절을 부르면 나머지가 '강강술래'로 받고, 노래와 춤은 느리게 시작해 점점 빨라져 나중에는 거의 뛰듯이 돌아요.",
+      "facts.f8.claim": "강강술래에는 '고사리꺾기', '청어엮기' 같은 민속놀이가 곁들여져요.",
+      "facts.f9.claim": "강강술래는 전통적으로 주로 한국의 서남 해안(전라남도 해안)에서 해 왔어요. 정확한 기원은 확실하지 않아요. 국가유산청은 널리 알려진 이순신 장군 이야기보다 달 밝은 밤에 열던 옛 축제에서 비롯되었다는 설이 더 타당하다고 봐요.",
+      "hoyaIntro": "추석이에요! 같이 송편을 빚고 보름달을 봐요.",
+      "hoyaOutro": "송편, 보름달, 그리고 둥글게 도는 춤. 즐거운 추석 보내세요!",
+      "keywords.boreumdal.gloss": "둥글게 꽉 찬 달",
+      "keywords.charye.gloss": "명절에 집에서 조상께 올리는 의식",
+      "keywords.chuseok.gloss": "음력 8월 15일, 수확에 감사하는 명절",
+      "keywords.dal.gloss": "밤하늘에 떠서 빛나는 천체",
+      "keywords.deodo-malgo-deoldo-malgo-hangawiman-gatara.gloss": "늘 한가위처럼 넉넉하고 즐겁기를 바라는 말 (오늘날 널리 쓰는 표현)",
+      "keywords.ganggangsullae.gloss": "손을 잡고 둥글게 돌며 추는 춤",
+      "keywords.gohyang.gloss": "태어나고 자란 곳",
+      "keywords.hangawi.gloss": "추석을 이르는 순우리말",
+      "keywords.nori.gloss": "즐겁게 노는 일",
+      "keywords.sollip.gloss": "바늘처럼 가늘고 뾰족한 소나무 잎",
+      "keywords.songpyeon.gloss": "추석에 빚어 먹는 떡",
+      "scenes.s7.caption": "춤 사이사이에 하는 놀이",
+      "scenes.s7.narration": "춤 사이사이에 '고사리꺾기', '청어엮기'처럼 재미있는 이름의 놀이를 해요. 이 춤은 오래전부터 한국의 서남쪽 바닷가에서 이어져 왔어요. 그리고 '강강술래'라는 말이 정확히 무슨 뜻인지는 아무도 몰라요!",
+      "scenes.s8.caption": "유네스코 목록과 한가위의 옛말",
+      "scenes.s8.narration": "2009년에 유네스코는 강강술래를 유산 목록에 올렸어요. 조선 시대 책 『열양세시기』에는 이런 뜻의 옛말이 실려 있어요. '더도 말고 덜도 말고 늘 한가위만 같아라!'",
+      "summary": "추석(한가위)에 호야는 고향에 가는 가족과 함께해요. 솔잎을 깔고 찌는 송편을 빚고, 보름달 아래에서 여성들이 손을 잡고 강강술래를 추는 모습을 봐요.",
+      "title": "추석에 빚는 송편과 둥근 보름달"
+    },
+    "story:dano-ssireum": {
+      "checks.c1.explain": "씨름 선수들은 서로의 샅바를 잡아요. 샅바는 허리와 허벅지에 두르는 천 띠예요.",
+      "checks.c1.options.a": "서로의 소매",
+      "checks.c1.options.b": "샅바",
+      "checks.c1.options.c": "나무 막대",
+      "checks.c1.options.d": "서로의 옷깃",
+      "checks.c1.prompt": "씨름에서 두 선수는 무엇을 잡아요?",
+      "checks.c2.explain": "관노가면극에는 대사가 없어요. 가면을 쓴 사람들이 몸짓만으로 관객을 즐겁게 해요.",
+      "checks.c2.options.a": "말없이 몸짓만 써요",
+      "checks.c2.options.b": "모든 대사를 돌아가며 노래해요",
+      "checks.c2.options.c": "이야기꾼 한 명이 모든 역을 말해요",
+      "checks.c2.options.d": "다 함께 시를 읊어요",
+      "checks.c2.prompt": "관노가면극은 무엇이 특별해요?",
+      "checks.c3.explain": "강릉단오제는 2008년에 유네스코 대표목록에 올랐어요. 그 목록에 오른 한국의 단오 축제는 강릉단오제뿐이에요.",
+      "checks.c3.options.a": "법성포단오제",
+      "checks.c3.options.b": "경산자인단오제",
+      "checks.c3.options.c": "강릉단오제",
+      "checks.c3.prompt": "유네스코 유산 목록에 오른 단오 축제는 어느 것이에요?",
+      "checks.r1.explain": "창포는 향기가 좋은 풀이에요. 옛날 단오에는 창포물에 머리를 감았어요.",
+      "checks.r1.options.a": "그네",
+      "checks.r1.options.b": "가면",
+      "checks.r1.options.c": "향기가 좋은 풀",
+      "checks.r1.options.d": "천으로 된 띠",
+      "checks.r1.prompt": "{target}의 뜻은 뭐예요?",
+      "checks.r2.explain": "씨름은 한국 전통 레슬링이에요. 두 선수가 서로의 샅바를 잡아요. 샅바는 천으로 된 띠예요.",
+      "checks.r2.options.a": "한국 전통 레슬링",
+      "checks.r2.options.b": "줄로 만든 그네",
+      "checks.r2.options.c": "얼굴에 쓰는 가면",
+      "checks.r2.options.d": "큰 축제",
+      "checks.r2.prompt": "{target}의 뜻은 뭐예요?",
+      "checks.r3.explain": "씨름 우승자는 장사라고 불러요. 장사는 힘이 아주 센 사람이라는 뜻이에요.",
+      "checks.r3.options.a": "샅바",
+      "checks.r3.options.b": "그네",
+      "checks.r3.options.c": "창포",
+      "checks.r3.options.d": "장사",
+      "checks.r3.prompt": "이야기에서 씨름 우승자를 뭐라고 불러요?",
+      "facts.f1.claim": "단오는 음력 5월 5일로, 놀이와 풍속이 많은 대표적인 여름 명절이에요. 1518년에는 설날, 추석과 함께 3대 명절로 꼽혔고, 조선 후기의 책 『동국세시기』는 설, 한식, 단오, 추석의 4대 명절에 넣었어요.",
+      "facts.f10.claim": "2018년에 씨름은 남북한(대한민국과 조선민주주의인민공화국)의 공동 등재로 유네스코 대표목록에 올랐어요. 유네스코 사무총장은 남북한이 신청서를 합친 것을 전례 없는 일이라고 했어요.",
+      "facts.f2.claim": "단오에는 창포(향기가 좋은 풀)를 삶은 물로 머리를 감았어요. 그러면 머리카락이 숱이 많고 윤기가 난다고 믿었어요.",
+      "facts.f3.claim": "그네뛰기는 오래전부터 기록에 남아 있는 단오 풍속이자 민속놀이예요.",
+      "facts.f4.claim": "씨름(한국 전통 레슬링)은 오래전부터 사랑받은 단오 놀이예요.",
+      "facts.f5.claim": "씨름은 두 선수가 서로의 샅바(허리와 허벅지에 두르는 천 띠)를 잡고 상대를 넘어뜨리려는 경기예요. 현대 경기 규칙에서는 무릎 위의 몸이 먼저 땅에 닿는 선수가 져요.",
+      "facts.f6.claim": "씨름 우승자는 장사(힘이 아주 센 사람)라고 불러요. 전통적으로 우승자에게는 농사의 풍요를 뜻하는 황소를 상으로 주었어요.",
+      "facts.f7.claim": "한국 동해안의 강릉에서 열리는 강릉단오제는 신에게 바칠 술을 빚는 것으로 시작해요. 마을의 평안과 풍년을 비는 제사를 지내며, 동해안에서 가장 큰 마을 축제예요.",
+      "facts.f8.claim": "강릉단오제에서 공연하는 관노가면극에는 대사가 없어요. 가면을 쓴 등장인물(양반, 젊은 아가씨 소매각시 등)이 몸짓만으로 관객을 웃겨요. 국가유산청은 이를 한국의 유일한 무언극이라고 하고, 국립민속박물관 사전은 한국의 유일한 무언 가면극이라고 해요.",
+      "facts.f9.claim": "강릉단오제는 2005년 유네스코 ‘인류 구전 및 무형유산 걸작’으로 선정되었고, 이 제도가 대표목록으로 통합되면서 2008년에 대표목록에 올랐어요. 한국의 단오제 가운데 유네스코 목록에 오른 것은 강릉단오제뿐이에요.",
+      "hoyaIntro": "단오가 왔어요! 그네를 높이 타고, 가면극을 보고, 씨름을 응원해요.",
+      "hoyaOutro": "그네, 탈, 씨름. 정말 즐거운 단옷날이에요!",
+      "keywords.changpo.gloss": "향기가 좋은 풀",
+      "keywords.chukje.gloss": "여럿이 모여 즐기는 큰 잔치",
+      "keywords.dano.gloss": "음력 5월 5일의 여름 명절",
+      "keywords.gangneung-danoje.gloss": "강릉에서 열리는 큰 단오 축제",
+      "keywords.geune.gloss": "줄에 매달려 앞뒤로 흔들며 타는 놀이 기구",
+      "keywords.geunettwigi.gloss": "줄에 매달린 발판을 타고 높이 오르는 놀이",
+      "keywords.illyu-muhyeong-yusan.gloss": "유네스코가 목록에 올려 온 세계가 함께 지키는, 사람을 통해 이어지는 전통 문화",
+      "keywords.jangsa.gloss": "씨름 대회의 우승자, 힘이 아주 센 사람",
+      "keywords.satba.gloss": "씨름할 때 허리와 허벅지에 두르는 천 띠",
+      "keywords.ssireum.gloss": "두 사람이 맞붙어 상대를 넘어뜨리는 한국 전통 경기",
+      "keywords.tal.gloss": "얼굴을 가리려고 쓰는 가면",
+      "scenes.s8.caption": "유네스코 목록에 오른 단오제와 씨름",
+      "scenes.s8.narration": "2005년에 유네스코는 강릉단오제를 '인류 구전 및 무형유산 걸작'으로 선정했어요. 2008년에는 유네스코 유산 목록에 올랐어요. 2018년에는 씨름도 목록에 올랐어요. 남한과 북한이 함께 신청했어요. 유네스코는 이런 일이 처음이라고 했어요.",
+      "summary": "호야가 한국의 초여름 명절인 단오를 즐겨요. 창포물에 머리를 감고, 그네를 하늘 높이 타고, 씨름을 봐요. 그리고 대사 없는 관노가면극이 펼쳐지는, 유네스코 목록에 오른 강릉단오제도 만나요.",
+      "title": "신나는 단오: 그네와 탈과 씨름"
+    },
+    "story:donguibogam": {
+      "checks.c1.explain": "동의보감은 병을 치료하는 것보다 병을 미리 막고 건강을 지키는 것을 먼저로 여겼어요.",
+      "checks.c1.options.a": "아주 오랫동안 누워서 쉬기",
+      "checks.c1.options.b": "가장 센 약 찾기",
+      "checks.c1.options.c": "건강을 지키고 병을 미리 막기",
+      "checks.c1.prompt": "동의보감에 따르면, 병을 고치는 것보다 먼저인 것은 무엇일까요?",
+      "checks.c2.explain": "이 책은 사람들이 부르던 대로 약초 이름을 한글로 적었어요. 그래서 우리 땅에서 나는 약을 널리, 쉽게 쓸 수 있었어요.",
+      "checks.c2.options.a": "한글",
+      "checks.c2.options.b": "로마자",
+      "checks.c2.options.c": "그리스 문자",
+      "checks.c2.prompt": "이 책은 약초의 우리말 이름을 어떤 글자로 적었을까요?",
+      "checks.c3.explain": "동의보감은 1613년에 나무 활자로 25권이 처음 인쇄되었어요.",
+      "checks.c3.options.a": "1592년",
+      "checks.c3.options.b": "1613년",
+      "checks.c3.options.c": "1610년",
+      "checks.c3.prompt": "동의보감은 언제 처음 인쇄되었을까요?",
+      "checks.r1.explain": "의사는 병을 고쳐 주는 사람이에요. 허준은 궁궐의 의사였어요.",
+      "checks.r1.options.a": "글을 적어 묶은 것",
+      "checks.r1.options.b": "병을 고쳐 주는 사람",
+      "checks.r1.options.c": "나라를 다스리는 사람",
+      "checks.r1.options.d": "약으로 쓰는 풀",
+      "checks.r1.prompt": "{target}의 뜻은 무엇일까요?",
+      "checks.r2.explain": "약초는 약으로 쓰는 풀이에요. 이 책은 약초 이름을 한글로 적었어요.",
+      "checks.r2.options.a": "몸과 마음이 튼튼한 상태",
+      "checks.r2.options.b": "머리부터 발끝까지 사람의 전체",
+      "checks.r2.options.c": "약으로 쓰는 풀",
+      "checks.r2.options.d": "아주 귀한 물건",
+      "checks.r2.prompt": "{target}의 뜻은 무엇일까요?",
+      "checks.r3.explain": "동의보감은 병을 고치는 것보다 병을 미리 막고 건강을 지키는 것이 먼저라고 가르쳤어요.",
+      "checks.r3.options.a": "건강을 지키고 병을 미리 막기",
+      "checks.r3.options.b": "책을 더 많이 찍기",
+      "checks.r3.options.c": "귀한 돌 모으기",
+      "checks.r3.options.d": "시 쓰기",
+      "checks.r3.prompt": "이야기에서 동의보감은 병을 고치는 것보다 무엇이 먼저라고 했나요?",
+      "facts.f1.claim": "허준은 조선의 궁궐 의사였어요(태어난 해는 자료마다 달라서 적지 않았어요). 선조 임금은 허준에게 양예수, 이명원 같은 다른 의사들과 함께 의학책을 엮으라고 명했어요.",
+      "facts.f2.claim": "함께 하던 편찬은 전쟁이 다시 일어나(정유재란) 참여한 사람들이 흩어지면서 멈췄어요. 그 뒤 선조 임금은 허준에게 궁궐에 있던 의학책들을 내주고, 혼자서 동의보감을 엮으라고 명했어요.",
+      "facts.f3.claim": "허준은 1610년(광해군 2년)에 동의보감을 완성했어요.",
+      "facts.f4.claim": "책 이름에서 '동의(東醫)'는 동쪽, 곧 조선의 의학 전통을 뜻하고, '보감(寶鑑)'은 '보배로운 거울', 곧 본보기를 뜻해요.",
+      "facts.f5.claim": "동의보감은 병을 치료하기 전에 병을 미리 막고 건강을 지키는 것을 중요하게 여겼어요.",
+      "facts.f6.claim": "동의보감은 1613년(광해군 5년)에 내의원에서 나무 활자로 25권이 처음 인쇄되었어요.",
+      "facts.f7.claim": "동의보감을 엮는 원칙 가운데 하나는 조선 사람들이 부르던 약초 이름을 한글로 적는 것이었어요. 시골에서도 우리 땅에서 나는 약을 널리, 쉽게 쓸 수 있게 하려는 것이었어요.",
+      "facts.f8.claim": "동의보감은 중국에서 여러 번, 일본에서도 인쇄되었고, 2009년에 유네스코 세계기록유산에 올랐어요.",
+      "facts.f9.claim": "국립중앙도서관, 한국학중앙연구원, 서울대학교 규장각이 가진 동의보감 첫 인쇄본(1613년)은 국보로 지정되었어요(2015년).",
+      "hoyaIntro": "건강하게 지내는 법을 담은 아주 큰 책을 쓴 궁궐 의사를 만나 봐요.",
+      "hoyaOutro": "허준의 책은 사람들이 몸을 돌보도록 도와줬어요. 나랑 같이 몸을 쭉 펴고, 건강하게 지내요!",
+      "keywords.bobae-gateun-chaek.gloss": "보물처럼 아주 귀한 책",
+      "keywords.chaek.gloss": "글이나 그림이 담긴 종이를 묶은 것",
+      "keywords.donguibogam.gloss": "조선 시대에 허준이 엮은 의학 백과사전",
+      "keywords.geongang.gloss": "몸과 마음이 아픈 데 없이 튼튼한 상태",
+      "keywords.heo-jun.gloss": "조선 시대 궁궐의 의사",
+      "keywords.mom.gloss": "사람이나 동물의 머리부터 발끝까지 전체",
+      "keywords.segye-girok-yusan.gloss": "유네스코가 온 인류의 소중한 기록으로 정한 유산",
+      "keywords.uisa.gloss": "병을 살피고 고쳐 주는 사람",
+      "keywords.yakcho.gloss": "약으로 쓰는 풀",
+      "scenes.s1.caption": "아침 햇살 아래에서 몸을 펴는 호야",
+      "scenes.s1.narration": "호야가 아침 햇살 아래에서 팔다리를 쭉 펴요. \"오늘 배울 낱말은 {kw:mom}이에요.\" 호야가 말해요. \"아주 먼 옛날, 조선의 궁궐 의사가 사람들이 몸을 돌보도록 아주 큰 책을 썼어요.\"",
+      "scenes.s2.caption": "궁궐 의사 허준",
+      "scenes.s2.narration": "그 의사의 이름은 {kw:heo-jun}이었고, 궁궐에서 의사로 일했어요. 선조 임금은 허준과 다른 의사들에게 새 의학책을 쓰라고 했어요. 오늘날 병을 살피고 고쳐 주는 사람을 {kw:uisa}라고 해요.",
+      "scenes.s3.caption": "혼자 책을 쓰는 허준",
+      "scenes.s3.narration": "전쟁이 일어나자 책을 만드는 일이 멈추고 의사들은 뿔뿔이 흩어졌어요. 나중에 임금은 허준에게 혼자서 책을 쓰라고 하고, 공부할 수 있도록 궁궐의 의학책을 많이 내주었어요.",
+      "scenes.s4.caption": "동의보감을 완성한 허준",
+      "scenes.s4.narration": "1610년, 허준은 {kw:donguibogam}을 완성했어요. '동의'는 동쪽의 의학, 곧 우리나라의 의학 전통을 뜻하고, '보감'은 보배로운 거울, 곧 보고 배울 본보기를 뜻해요.",
+      "scenes.s5.caption": "건강을 지키는 게 먼저예요",
+      "scenes.s5.narration": "동의보감은 병을 고치는 것보다 건강을 지키고 병을 미리 막는 것이 먼저라고 가르쳤어요. 몸과 마음이 아픈 데 없이 튼튼한 상태를 {kw:geongang}이라고 해요.",
+      "scenes.s6.caption": "한글로 적은 약초 이름",
+      "scenes.s7.caption": "여러 번 인쇄된 책",
+      "scenes.s7.narration": "동의보감은 1613년에 25권으로 인쇄되었어요. 나중에는 중국에서 여러 번, 일본에서도 인쇄되었어요. 2009년에는 유네스코가 이 책을 {kw:segye-girok-yusan}으로 올렸어요.",
+      "scenes.s8.caption": "국보가 된 첫 인쇄본",
+      "summary": "호야가 궁궐 의사 허준이 1610년에 동의보감을 완성한 이야기를 알아봐요. 동의보감은 건강을 지키는 일을 소중히 여기고 약초 이름을 한글로 적은 의학 백과사전으로, 지금은 유네스코 세계기록유산이에요.",
+      "title": "허준이 쓴 보배 같은 의학책"
+    },
+    "story:gimjang-arirang": {
+      "checks.c1.explain": "겨울에는 신선한 채소를 구하기 어려웠어요. 그래서 가족들은 겨우내 먹을 김치를 한꺼번에 많이 담갔어요.",
+      "checks.c1.options.a": "겨울에는 신선한 채소를 찾기 어려웠어요",
+      "checks.c1.options.b": "배추는 추운 북쪽에서만 자라요",
+      "checks.c1.options.c": "새해 전에 김치가 준비되어야 했어요",
+      "checks.c1.options.d": "명절 잔치에 김칫독이 필요했어요",
+      "checks.c1.prompt": "가족들은 왜 김장 때 김치를 한꺼번에 많이 담갔을까요?",
+      "checks.c2.explain": "서로 돕고 나누는 것이 김장의 정신이에요. 집집마다 김치를 서로 주고받기도 해요.",
+      "checks.c2.options.a": "김치를 최대한 빨리 담그기",
+      "checks.c2.options.b": "함께 일하고 나누기",
+      "checks.c2.options.c": "혼자서 가장 좋은 배추 고르기",
+      "checks.c2.options.d": "가장 짠 김치 만들기 시합",
+      "checks.c2.prompt": "김장에서 가장 중요한 것은 무엇일까요?",
+      "checks.c3.explain": "아리랑은 정선아리랑, 진도아리랑, 밀양아리랑처럼 지역마다 여러 가지가 있고, 누구나 새 노랫말을 지을 수 있어요.",
+      "checks.c3.options.a": "어디서나 한 가지뿐이에요",
+      "checks.c3.options.b": "유명한 작곡가 한 사람이 지었어요",
+      "checks.c3.options.c": "지역마다 여러 가지가 있어요",
+      "checks.c3.options.d": "겨울에만 불러요",
+      "checks.c3.prompt": "아리랑에 대해 맞는 말은 무엇일까요?",
+      "checks.r1.explain": "배추는 김치를 담글 때 많이 쓰는 잎채소예요. 김장 때 가족들이 배추를 소금에 절여요.",
+      "checks.r1.options.a": "빨간 고추를 말려 빻은 가루",
+      "checks.r1.options.b": "김치를 담글 때 많이 쓰는 잎채소",
+      "checks.r1.options.c": "가까이 사는 사람",
+      "checks.r1.options.d": "한 해에서 가장 추운 계절",
+      "checks.r1.prompt": "{target}의 뜻은 무엇일까요?",
+      "checks.r2.explain": "이웃은 가까이 사는 사람이에요. 이웃끼리 서로 김장을 도와요.",
+      "checks.r2.options.a": "가락에 맞춰 부르는 소리",
+      "checks.r2.options.b": "채소를 절여 양념에 버무린 한국 음식",
+      "checks.r2.options.c": "가까이 사는 사람",
+      "checks.r2.options.d": "한 해에서 가장 추운 계절",
+      "checks.r2.prompt": "{target}의 뜻은 무엇일까요?",
+      "checks.r3.explain": "아리랑은 종류가 많고, 누구나 새 노랫말을 지을 수 있어요.",
+      "checks.r3.options.a": "새 노랫말 짓기",
+      "checks.r3.options.b": "겨울에만 부르기",
+      "checks.r3.options.c": "한 가지만 부르기",
+      "checks.r3.options.d": "북으로만 연주하기",
+      "checks.r3.prompt": "이야기에서 아리랑은 누구나 무엇을 할 수 있는 노래인가요?",
+      "facts.f1.claim": "겨울에는 신선한 채소를 구하기 어려워서, 가족들은 늦가을에서 초겨울 사이에 겨우내 먹을 김치를 한꺼번에 많이 담갔어요. 이 풍습이 김장이에요(유네스코 표기: Kimjang).",
+      "facts.f10.claim": "북한의 아리랑은 유네스코에 따로 오른 종목('Arirang folk song in the Democratic People's Republic of Korea')으로, 2014년에 등재되었어요. 2012년에 오른 대한민국의 종목과는 달라요.",
+      "facts.f11.claim": "김장은 늦가을에서 초겨울 사이에 김치를 한꺼번에 많이 담가, 겨우내 가족이 먹을 수 있게 하는 풍습이에요.",
+      "facts.f2.claim": "김장 준비에는 몇 달이 걸리고(한국민족문화대백과사전에 따르면 반년 이상), 한 해 내내 이어져요. 봄에는 새우, 멸치 같은 해산물을 사서 젓갈을 담그고, 여름에는 바닷소금을 사고, 늦여름에는 빨간 고추를 말려 가루로 빻아요.",
+      "facts.f3.claim": "친척과 이웃이 서로 도와 김장을 해요. 배추 같은 채소를 소금에 절인 다음, 고춧가루, 마늘, 생강, 파가 든 양념에 버무려요.",
+      "facts.f4.claim": "김치는 지역마다 달라요. 추운 북쪽에서는 보통 덜 짜고 양념이 순하며, 남쪽에서는 더 짜고 양념이 더 빨갛고 진해요. 지역마다 종류가 셀 수 없이 많아요.",
+      "facts.f5.claim": "김장하는 날에는 전통적으로 집주인이 돼지고기를 삶아 배추의 노란 속잎, 양념과 함께 일손을 도운 사람들에게 내었어요(백과사전에 따르면 지금도 정겨운 전통으로 이어져요). 집집마다 김치를 주고받기도 하며, 협동과 나눔이 김장의 정신이에요.",
+      "facts.f6.claim": "'Kimjang, making and sharing kimchi in the Republic of Korea'(국가유산청이 쓰는 한국어 이름: 김치와 김장문화) 종목은 2013년에 유네스코 인류무형문화유산 대표목록에 올랐어요.",
+      "facts.f7.claim": "아리랑은 널리 함께 부르는 한국 민요로, 평범한 사람들이 여러 세대에 걸쳐 입에서 입으로 만들고 전해 왔어요. '아리랑 아리랑 아라리요' 같은 후렴을 중심으로 불러요. 후렴 낱말이 어디서 왔는지는 학자마다 여러 설이 있지만, 후렴 자체는 흥을 돋우고 가락을 채우는 노랫소리로 봐요.",
+      "facts.f8.claim": "아리랑은 정선아리랑, 진도아리랑, 밀양아리랑처럼 지역마다 여러 가지가 있고, 누구나 새 노랫말을 지을 수 있어요.",
+      "facts.f9.claim": "대한민국의 아리랑('Arirang, lyrical folk song in the Republic of Korea')은 2012년에 유네스코 대표목록에 올랐어요.",
+      "hoyaIntro": "겨울이 오고 있어요! 이웃과 함께 김치를 담그고, 한국 곳곳에서 함께 부르는 노래도 들어 봐요.",
+      "hoyaOutro": "함께 김치를 담그고 아리랑을 불러요. 나누면 더 특별해져요!",
+      "keywords.arirang-arirang-arariyo.gloss": "아리랑 노래에서 되풀이해 부르는 후렴",
+      "keywords.arirang.gloss": "한국 곳곳에서 불러 온 민요",
+      "keywords.baechu.gloss": "김치를 담글 때 많이 쓰는 잎채소",
+      "keywords.gimchi.gloss": "채소를 절여 양념에 버무린 한국 음식",
+      "keywords.gimchiwa-gimjangmunhwa.gloss": "국가유산청이 유네스코에 오른 김장 종목을 부르는 이름",
+      "keywords.gimjang.gloss": "겨우내 먹을 김치를 한꺼번에 담그는 일",
+      "keywords.gochutgaru.gloss": "빨간 고추를 말려 빻은 가루",
+      "keywords.gyeoul.gloss": "한 해에서 가장 추운 계절",
+      "keywords.iut.gloss": "가까이 사는 사람",
+      "keywords.nanum.gloss": "가진 것을 다른 사람과 함께 쓰는 일",
+      "scenes.s1.caption": "겨울이 오기 전에 김치를 많이 담가요",
+      "scenes.s2.caption": "몇 달 동안 준비해요",
+      "scenes.s2.narration": "김장은 몇 달 동안 준비해요! 봄에는 젓갈을 담글 새우와 멸치를 구해요. 여름에는 바닷소금을 사요. 늦여름에는 빨간 고추를 말려서 고춧가루로 빻아요.",
+      "scenes.s3.caption": "배추를 절이고 양념해요",
+      "scenes.s4.caption": "지역마다 다른 김치",
+      "scenes.s5.caption": "돼지고기와 김치를 나누고 서로 도와요",
+      "scenes.s6.caption": "유네스코 목록에 오른 김장",
+      "scenes.s6.narration": "2013년에 유네스코는 김치를 담그고 나누는 김장을 유산 목록에 올렸어요. 국가유산청은 이 종목을 한국어로 {kw:gimchiwa-gimjangmunhwa}라고 불러요.",
+      "scenes.s7.caption": "할머니가 아리랑을 흥얼거려요",
+      "scenes.s8.caption": "지역마다 다른 여러 아리랑",
+      "scenes.s8.narration": "아리랑은 종류가 아주 많아요. 정선아리랑, 진도아리랑, 밀양아리랑처럼 지역마다 저마다의 아리랑이 있고, 누구나 새 노랫말을 지을 수 있어요! 2012년에 유네스코는 대한민국의 아리랑을 유산 목록에 올렸어요. 북한의 아리랑은 따로 올라 있어요.",
+      "summary": "겨울이 다가오면 호야는 친척, 이웃과 함께 김장(유네스코 2013)을 하며 김치를 담그고 나눠요. 그리고 한국 곳곳에서 함께 부르는 민요 아리랑(대한민국의 유네스코 등재 종목, 2012)을 들어요.",
+      "title": "김장하는 날: 김치를 나누고 아리랑을 불러요"
+    },
+    "story:hangeul-day": {
+      "checks.c1.explain": "대한민국에서 한글날은 10월 9일이에요.",
+      "checks.c1.options.a": "1월 1일",
+      "checks.c1.options.b": "3월 1일",
+      "checks.c1.options.c": "10월 9일",
+      "checks.c1.options.d": "12월 25일",
+      "checks.c1.prompt": "대한민국에서 한글날은 몇 월 며칠이에요?",
+      "checks.c2.explain": "해례본 끝에는 음력 날짜가 있어요. 1446년 9월의 첫 열흘이에요. 그 마지막 날을 양력으로 바꾸니 10월 9일이 됐어요.",
+      "checks.c2.options.a": "세종대왕의 생일",
+      "checks.c2.options.b": "날씨 기록",
+      "checks.c2.options.c": "추수 잔치 날짜",
+      "checks.c2.options.d": "해례본에 적힌 날짜",
+      "checks.c2.prompt": "한글날 날짜는 무엇을 바탕으로 정했어요?",
+      "checks.c3.explain": "1926년 첫 기념식의 이름은 가갸날이었어요. 1928년에 이름이 한글날로 바뀌었어요.",
+      "checks.c3.options.a": "설날",
+      "checks.c3.options.b": "단오",
+      "checks.c3.options.c": "가갸날",
+      "checks.c3.options.d": "추석",
+      "checks.c3.prompt": "1926년 첫 기념식 때 한글날은 뭐라고 불렸어요?",
+      "checks.r1.explain": "책은 글이나 그림을 엮어 묶은 것이에요. 해례본 원본이 안동에서 발견됐어요.",
+      "checks.r1.options.a": "글이나 그림을 엮어 묶은 것",
+      "checks.r1.options.b": "말을 적는 기호",
+      "checks.r1.options.c": "날짜를 적은 표",
+      "checks.r1.options.d": "사람이 사는 건물",
+      "checks.r1.prompt": "{target}: 무슨 뜻이에요?",
+      "checks.r2.explain": "국보는 나라의 보물이에요. 해례본도 국보예요.",
+      "checks.r2.options.a": "오래된 집",
+      "checks.r2.options.b": "나라의 보물",
+      "checks.r2.options.c": "달로 날짜를 세는 달력",
+      "checks.r2.options.d": "쉬는 날",
+      "checks.r2.prompt": "{target}: 무슨 뜻이에요?",
+      "checks.r3.explain": "1926년 첫 기념식의 이름은 가갸날이었어요. 1928년에 한글날이 됐어요.",
+      "checks.r3.options.a": "설날",
+      "checks.r3.options.b": "단오",
+      "checks.r3.options.c": "추석",
+      "checks.r3.options.d": "가갸날",
+      "checks.r3.prompt": "이야기에서 한글날의 처음 이름은 뭐였어요?",
+      "facts.f1.claim": "대한민국의 한글날은 10월 9일이에요.",
+      "facts.f10.claim": "북한은 1월 15일을 훈민정음을 만든 기념일로 삼아 '조선글날'이라는 자기들만의 날로 기념해요.",
+      "facts.f11.claim": "훈민정음 해례본은 국보이고, 유네스코 세계기록유산에 올라 있어요.",
+      "facts.f2.claim": "한글날은 2005년에 국경일이 됐고, 2013년부터 다시 공휴일이에요.",
+      "facts.f3.claim": "해례본 끝에는 정인지가 쓴 날짜가 있어요. 음력으로 1446년 9월의 첫 열흘(상한)이에요. 한글날은 그 마지막 날인 음력 9월 10일을 양력으로 바꾸어 정했고, 날짜를 정할 때 쓴 방법으로는 10월 9일이 돼요. (1932년부터 1945년까지는 음력 9월 그믐으로 보고 10월 29일, 그다음에는 10월 28일에 기념했고, 그 뒤 10월 9일로 옮겼어요.)",
+      "facts.f4.claim": "훈민정음 해례본 원본은 1940년쯤 경상북도 안동의 한 옛집에서 발견됐어요.",
+      "facts.f5.claim": "세종실록의 1446년 9월 기록에는 날짜가 없고 '이달'이라고만 적혀 있어요. 1940년쯤 발견된 해례본에는 '9월의 첫 열흘'이라고 적혀 있어요.",
+      "facts.f6.claim": "유네스코에 따르면 훈민정음 해례본은 간송미술관이 보관하고 있어요. 국가유산포털은 간송미술관을 관리 기관으로 적고 있어요.",
+      "facts.f7.claim": "이 책은 국보(1962년 지정)이고, 1997년 유네스코 세계기록유산에 올랐어요. 세계기록유산 목록에는 세계적으로 중요한 기록유산이 올라요.",
+      "facts.f8.claim": "첫 한글날 기념식은 1926년 '가갸날'이라는 이름으로 열렸어요. 이 이름은 '가갸거겨' 하고 소리 내어 읊으며 한글을 배우던 데서 왔다고 해요. 1928년에 이름이 한글날로 바뀌었어요.",
+      "facts.f9.claim": "유네스코는 대한민국 정부의 지원으로 만든 '유네스코 세종대왕 문해상'을 줘요. 이 상은 모어로 글을 읽고 쓰는 교육을 특히 눈여겨봐요.",
+      "hoyaIntro": "한글에 왜 특별한 날이 있는지 알아봐요!",
+      "hoyaOutro": "즐거운 한글날! 이제 대한민국이 해마다 10월에 한글날을 기념하는 까닭을 알게 됐어요.",
+      "keywords.chaek.gloss": "글이나 그림을 엮어 묶은 것",
+      "keywords.eumnyeok.gloss": "달이 차고 기우는 것으로 날짜를 세는 달력",
+      "keywords.gagyanal.gloss": "한글날의 처음 이름",
+      "keywords.gomawoyo-sejong-daewangnim.gloss": "세종대왕께 감사를 전하는 말",
+      "keywords.gomawoyo.gloss": "고마운 마음을 전하는 친근한 높임말",
+      "keywords.gukbo.gloss": "나라의 보물",
+      "keywords.hangeullal.gloss": "한글을 기리는 날(10월 9일)",
+      "keywords.siwol-guil.gloss": "열째 달의 아홉째 날",
+      "keywords.siwol.gloss": "한 해의 열째 달",
+      "scenes.s4.caption": "안동에서 원본이 발견돼요",
+      "scenes.s7.caption": "호야가 세종대왕께 감사해요",
+      "scenes.s7.narration": "한글 이야기는 온 세계에 닿아요. 유네스코는 세종대왕의 이름을 딴 문해상도 줘요. 호야가 깊이 고개 숙여 인사해요. \"고마워요, 세종대왕님!\"",
+      "summary": "호야가 대한민국에서 왜 10월 9일을 한글날로 기념하는지 알아봐요. 이 날짜는 1446년 해례본 끝에 적힌 날짜에서 나왔고, 이 책은 1940년쯤 발견됐어요. 한글날은 1926년 '가갸날'로 시작했어요.",
+      "title": "즐거운 한글날!"
+    },
+    "story:ilseongnok-daily-reflection": {
+      "checks.c1.explain": "정조는 세손 시절에 자기 말과 행동, 공부를 일기로 적었어요. 이 일기가 자라서 일성록이 되었어요.",
+      "checks.c1.options.a": "어린 세손 정조",
+      "checks.c1.options.b": "승정원의 기록 담당 관리",
+      "checks.c1.options.c": "궁궐의 사관",
+      "checks.c1.prompt": "일성록이 된 일기를 처음 쓴 사람은 누구인가요?",
+      "checks.c2.explain": "유네스코는 일성록이라는 이름을 영어로 'Records of Daily Reflections', 곧 '날마다 돌아본 기록'이라고 옮겨요.",
+      "checks.c2.options.a": "왕실 혼례의 기록",
+      "checks.c2.options.b": "산속 사고의 기록",
+      "checks.c2.options.c": "날마다 돌아본 기록",
+      "checks.c2.prompt": "유네스코는 일성록이라는 이름을 어떻게 옮기나요?",
+      "checks.c3.explain": "1783년부터 규장각 관리들이 나랏일에 관한 일기를 쓰고 왕에게 올려 허락을 받았어요.",
+      "checks.c3.options.a": "장터 마을의 상인들",
+      "checks.c3.options.b": "규장각의 관리들",
+      "checks.c3.options.c": "산속 절의 스님들",
+      "checks.c3.prompt": "1783년부터 나랏일에 관한 일기는 누가 썼나요?",
+      "facts.f1.claim": "정조는 세손 시절에 자기 말과 행동, 공부를 일기로 적었고, 이 일기가 일성록의 시작이었어요.",
+      "facts.f2.claim": "정조는 『논어』에서 날마다 자신을 살핀다고 한 증자의 말에 깊이 감동해, 스스로를 돌아보는 자료로 삼으려고 일기를 썼어요.",
+      "facts.f3.claim": "이 일기는 『존현각일기』였고, 정조는 왕이 된 뒤(1776년)에도 직접 일기를 썼어요.",
+      "facts.f4.claim": "나랏일이 늘어나자 1783년부터 규장각 관리들이 나랏일을 중심으로 일기를 쓰고 왕에게 올려 허락을 받았어요. 이렇게 왕의 개인 일기가 나라의 공식 일기가 되었어요.",
+      "facts.f5.claim": "이 책의 제목은 『일성록(日省錄)』이고, 유네스코는 이 이름을 영어로 'Records of Daily Reflections'라고 옮겨요. (최종 제목을 누가 정했는지는 자료로 확인할 수 없어요.)",
+      "facts.f6.claim": "일성록의 기사마다 요점을 줄인 제목(강, 綱)이 있고, 그 아래에 자세한 내용(목, 目)이 이어져 읽기 편했어요.",
+      "facts.f7.claim": "일성록은 왕의 입장에서 쓴 일기 형식이지만, 실제로는 정부의 공식 기록이에요.",
+      "facts.f8.claim": "일성록은 1760년 1월부터 1910년 8월까지의 기록 2,329책이 남아 있고, 서울에 있는 서울대학교 규장각한국학연구원이 관리해요.",
+      "facts.f9.claim": "일성록은 1973년 12월 31일 국보로 지정되었고, 2011년 유네스코 세계기록유산에 등재되었어요.",
+      "hoyaIntro": "날마다 일기로 하루를 돌아본 어린 세손 이야기를 읽어 봐요.",
+      "hoyaOutro": "하루를 돌아보는 일이 정조에게 도움이 되었어요. 오늘은 어떤 일이 잘됐나요?",
+      "keywords.banseong.gloss": "자기가 한 일을 스스로 돌아보는 것",
+      "keywords.gyujanggak.gloss": "조선 왕실의 도서관이자 연구 기관",
+      "keywords.ilgi.gloss": "날마다 겪은 일을 적는 글",
+      "keywords.ilgireul-sseoyo.gloss": "날마다 겪은 일을 글로 적는다는 뜻이에요.",
+      "keywords.ilseongnok.gloss": "날마다 돌아본 일을 적은 조선 조정의 기록",
+      "keywords.oneul-harureul-dorabwayo.gloss": "이날 있었던 일을 다시 떠올려 보자는 말이에요.",
+      "keywords.oneul-naneun-mueoseul-haetji.gloss": "자기가 이날 한 일을 스스로 묻는 말이에요.",
+      "keywords.oneul.gloss": "지금 지나고 있는 이날",
+      "keywords.seson.gloss": "앞으로 임금이 될 임금의 손자",
+      "scenes.s1.caption": "일기를 쓰는 어린 정조",
+      "scenes.s1.narration": "호야가 정조라는 어린 세손에 대한 옛 책을 펼쳐요. 정조는 왕의 손자로서 언젠가 왕이 될 사람이라 {kw:seson}이라고 불렸어요. 그때부터 정조는 자기가 한 말과 행동, 공부한 것을 일기로 적었어요.",
+      "scenes.s2.caption": "날마다 돌아보라는 옛말",
+      "scenes.s2.narration": "왜 그랬을까요? 한 가지 까닭은 옛 책 『논어』에 나오는 증자의 말이었어요. 날마다 자신을 돌아본다는 말이에요. 정조는 이 말에 깊이 감동해서 자기도 스스로를 돌아보고 싶었어요.",
+      "scenes.s3.caption": "호야의 물음: '오늘 나는 무엇을 했지?'",
+      "scenes.s3.narration": "정조의 일기는 『존현각일기』라고 불렸어요. 정조는 왕이 된 뒤에도 직접 일기를 썼어요. 호야도 따라 해 보며 물어요. '오늘 나는 무엇을 했지?'",
+      "scenes.s4.caption": "일기를 쓰는 규장각 관리들",
+      "scenes.s4.narration": "나랏일이 늘어나자 정조가 혼자 쓰기에는 너무 많아졌어요. 그래서 1783년부터 왕실 도서관인 규장각의 관리들이 나랏일에 관한 일기를 쓰고 왕에게 올려 허락을 받았어요. 왕의 개인 일기가 공식 기록이 된 거예요.",
+      "scenes.s5.caption": "짧은 제목, 그다음 자세한 내용",
+      "scenes.s5.narration": "유네스코는 {kw:ilseongnok}이라는 제목을 영어로 'Records of Daily Reflections'라고 옮겨요. '날마다 돌아본 기록'이라는 뜻이에요. 기사마다 짧은 제목이 먼저 나오고 자세한 내용이 뒤따라서 읽기 쉬웠어요.",
+      "scenes.s6.caption": "공식 기록이 된 일기",
+      "scenes.s6.narration": "{kw:ilseongnok}은 왕의 눈으로 쓴 일기처럼 보이지만, 사실은 정부의 공식 기록이었어요. 오늘날 1760년부터 1910년까지의 기록 2,329책이 서울대학교 규장각에 있어요.",
+      "scenes.s7.caption": "하루를 돌아보는 호야",
+      "scenes.s7.narration": "{kw:ilseongnok}은 국보이고, 2011년 유네스코 세계기록유산에 올랐어요. 호야는 오늘 밤 한 줄을 쓰기로 해요. 오늘 잘된 일과 더 잘할 일을요.",
+      "summary": "정조는 어린 세손 시절부터 하루하루를 돌아보려고 일기를 썼어요. 이 일기가 자라서 1760년부터 1910년까지의 공식 조정 기록인 일성록이 되었어요.",
+      "title": "날마다 자신을 돌아본 정조의 일기"
+    },
+    "story:janggyeong-panjeon": {
+      "checks.c1.explain": "앞벽과 뒷벽의 창문 크기가 다르고, 위아래 창문 크기도 달라요. 그래서 공기가 잘 통해요.",
+      "checks.c1.options.a": "건물 안을 더 어둡게 하기",
+      "checks.c1.options.b": "방문객이 못 들어오게 하기",
+      "checks.c1.options.c": "바람이 건물 안을 잘 드나들게 하기",
+      "checks.c1.options.d": "벽에 그림을 보여 주기",
+      "checks.c1.prompt": "크기가 다른 창문은 무슨 일을 해요?",
+      "checks.c2.explain": "흙바닥 밑에 숯, 석회, 소금을 모래와 함께 층층이 깔았어요. 공기 속 습기를 알맞게 맞춰 줘요.",
+      "checks.c2.options.a": "볏짚, 자갈, 진흙 층",
+      "checks.c2.options.b": "물이 찬 돌 도랑 여러 줄",
+      "checks.c2.options.c": "얼음덩이로 채운 빈 공간",
+      "checks.c2.options.d": "숯, 석회, 소금, 모래 층",
+      "checks.c2.prompt": "장경판전 바닥 밑에는 무엇이 있어요?",
+      "checks.c3.explain": "유네스코는 1995년에 장경판전을 세계유산 목록에 올렸어요.",
+      "checks.c3.options.a": "1446년",
+      "checks.c3.options.b": "2007년",
+      "checks.c3.options.c": "1995년",
+      "checks.c3.options.d": "1377년",
+      "checks.c3.prompt": "장경판전은 언제 유네스코 세계유산 목록에 올랐어요?",
+      "facts.f1.claim": "장경판전은 해인사에서 고려대장경 경판을 보관하려고 지은 건물이에요. 절 안에서 가장 높은 곳, 본존불을 모신 법당보다 위에 있어요.",
+      "facts.f2.claim": "장경판전은 해인사에 남아 있는 건물 가운데 가장 오래됐어요.",
+      "facts.f3.claim": "정면 15칸의 긴 건물 두 채가 나란히 서 있어요. 남쪽은 수다라장, 북쪽은 법보전이에요. 동쪽과 서쪽의 작은 건물 두 채와 함께 마당을 둘러싼 긴 네모꼴을 이뤄요.",
+      "facts.f4.claim": "장경판전은 15세기(조선 전기) 건물이에요. 처음 지은 해는 알 수 없지만 1488년에 다시 지었다는 기록이 있어요. 쓰임에 맞게 장식 없이 간결하게 지었어요.",
+      "facts.f5.claim": "바람이 잘 통하도록 남쪽과 북쪽(앞뒤) 벽의 창 크기를 서로 다르게 했고, 위아래 창의 크기도 다르게 했어요.",
+      "facts.f6.claim": "흙바닥 밑에 숯, 석회, 소금을 모래와 함께 층층이 깔아 습도를 조절해요. 남는 습기를 빨아들이고, 공기가 마르면 다시 내보내요.",
+      "facts.f7.claim": "햇빛, 바람길, 온도와 습도 조절 같은 자연 조건을 이용한 설계 덕분에 경판이 약 500년 동안 쥐나 벌레의 피해 없이 보존됐어요.",
+      "facts.f8.claim": "해인사 장경판전은 1995년 유네스코 세계유산 목록에 올랐고, 유네스코는 이곳을 가장 오래된 대장경 보관 건물로 설명해요.",
+      "facts.f9.claim": "유네스코는 장경판전 안의 온도와 습도를 조절하려고 방문객 출입을 제한한다고 밝혀요. 해인사는 2021년 6월부터 미리 예약한 사람(한 회에 10~20명)에게 법보전 안을 안내하는 작은 탐방도 하고 있어요. 그래서 출입은 제한될 뿐, 아예 못 들어가는 것은 아니에요.",
+      "hoyaIntro": "오래된 목판은 어떻게 지킬까요? 해인사의 바람에게 물어봐요!",
+      "hoyaOutro": "창문과 바닥과 맑은 바람이 경판을 지켜요. 같이 둘러봐 줘서 고마워요!",
+      "keywords.baram.gloss": "움직이는 공기",
+      "keywords.changmun.gloss": "빛과 바람이 드나들도록 벽에 낸 문",
+      "keywords.geonmul.gloss": "사람이 지은 집 같은 구조물",
+      "keywords.janggyeongpanjeon.gloss": "해인사에서 대장경 경판을 보관하는 건물",
+      "keywords.jikyeoyo.gloss": "다치거나 없어지지 않게 보살펴요",
+      "keywords.joseon.gloss": "그때 한반도를 다스린 왕조",
+      "keywords.segyeyusan.gloss": "인류 모두가 함께 지킬 유산",
+      "keywords.sut.gloss": "나무를 태워 만든 검은 덩어리",
+      "keywords.uriga-jikyeoyo.gloss": "우리 손으로 잘 보살펴요.",
+      "scenes.s1.caption": "해인사에 남은 가장 오래된 건물",
+      "scenes.s1.narration": "호야가 해인사에 가서 절 안에서 가장 높은 곳으로 올라가요. 여기에 경판을 보관하려고 지은 건물, 장경판전이 있어요. 해인사에 지금 남아 있는 건물 가운데 가장 오래됐어요.",
+      "scenes.s2.caption": "마당을 둘러싼 건물 네 채",
+      "scenes.s2.narration": "긴 건물 두 채가 나란히 서 있어요. 남쪽은 수다라장, 북쪽은 법보전이에요. 양 끝에 작은 건물 두 채가 있어서, 모두 함께 마당을 둘러싼 네모 모양이 돼요.",
+      "scenes.s3.caption": "한 가지 일을 위해 지은 소박한 건물",
+      "scenes.s3.narration": "이 건물들은 15세기 조선 시대에 지었어요. 화려한 장식은 없어요. 모든 부분이 한 가지 일, 경판을 안전하게 지키는 일을 위해 만들어졌어요.",
+      "scenes.s4.caption": "크기가 서로 다른 창문",
+      "scenes.s4.narration": "창문을 봐요! 앞벽과 뒷벽의 창문 크기가 서로 달라요. 위 창문과 아래 창문도 크기가 달라요. 그래서 바람이 건물 안을 잘 드나들어요.",
+      "scenes.s5.caption": "바닥 밑의 숯, 석회, 소금",
+      "scenes.s5.narration": "이번에는 아래를 봐요. 흙바닥 밑에 숯, 석회, 소금을 모래와 함께 층층이 깔았어요. 공기가 축축하면 남는 습기를 빨아들이고, 마르면 다시 내보내요.",
+      "scenes.s6.caption": "바람, 햇빛, 흙이 경판을 지켜요",
+      "scenes.s6.narration": "바람과 햇빛과 흙이 함께 일해요. 자연을 이용한 이 설계 덕분에 경판은 약 500년 동안 습기나 쥐, 벌레 피해 없이 안전하게 지켜졌어요.",
+      "scenes.s7.caption": "유네스코 세계유산",
+      "scenes.s7.narration": "1995년에 유네스코가 장경판전을 세계유산 목록에 올렸어요. 유네스코는 이곳이 불교 경전인 대장경을 보관하는 가장 오래된 건물이라고 해요.",
+      "scenes.s8.caption": "공기를 고르게 지키려고 출입을 제한해요",
+      "scenes.s8.narration": "안의 온도와 습도를 고르게 지키려고 방문객 출입을 제한해요. 호야가 창살 틈으로 살짝 들여다보며 속삭여요. \"우리가 지켜요!\"",
+      "summary": "호야가 해인사의 장경판전을 둘러봐요. 15세기에 지은 이 건물은 슬기롭게 설계한 창문과 여러 층으로 된 바닥 덕분에 약 500년 동안 팔만대장경 경판을 지켜 왔어요.",
+      "title": "바람이 지켜 주는 곳"
+    },
+    "story:jikji-metal-type": {
+      "checks.c1.explain": "직지는 1377년 흥덕사에서 금속활자로 찍었어요.",
+      "checks.c1.options.a": "1443년",
+      "checks.c1.options.b": "1995년",
+      "checks.c1.options.c": "1377년",
+      "checks.c1.options.d": "2001년",
+      "checks.c1.prompt": "직지는 몇 년에 찍었어요?",
+      "checks.c2.explain": "직지는 지금 남아 있는 금속활자 책 가운데 세계에서 가장 오래됐어요. 한국의 옛 기록에는 그보다 앞선 금속활자도 나와요.",
+      "checks.c2.options.a": "한글로 쓴 첫 책",
+      "checks.c2.options.b": "목판으로 찍은 첫 책",
+      "checks.c2.options.c": "세종대왕이 쓴 책",
+      "checks.c2.options.d": "남아 있는 가장 오래된 금속활자 책",
+      "checks.c2.prompt": "직지는 무엇이 특별해요?",
+      "checks.c3.explain": "둘째 권만 남아 있어요. 파리의 프랑스 국립도서관에 있어요.",
+      "checks.c3.options.a": "합천 해인사",
+      "checks.c3.options.b": "프랑스 국립도서관",
+      "checks.c3.options.c": "간송미술관",
+      "checks.c3.options.d": "청주고인쇄박물관",
+      "checks.c3.prompt": "남아 있는 직지는 지금 어디에 있어요?",
+      "facts.f1.claim": "직지는 1377년(고려 우왕 3년) 7월, 청주 근교의 흥덕사에서 금속활자로 찍었어요.",
+      "facts.f2.claim": "백운 스님은 1372년, 75세에 부처와 이름난 스님들의 가르침, 대화, 편지에서 중요한 대목을 골라 직지를 엮었어요.",
+      "facts.f3.claim": "석찬을 비롯한 백운 스님의 제자들이 비구니 묘덕의 시주를 받아 이 책을 찍었어요. 둘째 제자의 이름은 국가유산포털에는 '달담', 청주고인쇄박물관 누리집에는 '달잠'으로 적혀 있어서, 이야기에서는 이름을 밝히지 않아요.",
+      "facts.f4.claim": "활자 인쇄는 낱낱의 활자를 차례로 늘어놓아(조판) 판을 만들고 쪽을 찍는 방식이에요. 금속활자는 인쇄를 더 편리하고 경제적으로 만들었고, 고치기도 쉽게 했어요.",
+      "facts.f5.claim": "직지는 지금 남아 있는 금속활자 책 가운데 세계에서 가장 오래됐어요. 다만 한국의 옛 기록에는 그보다 앞선 금속활자 인쇄가 나와요.",
+      "facts.f6.claim": "직지는 두 권으로 만들었는데 둘째 권만 남아 있고, 파리의 프랑스 국립도서관(Bibliothèque nationale de France)에 있어요.",
+      "facts.f7.claim": "직지(하권)는 2001년 유네스코 세계기록유산에 올랐어요.",
+      "facts.f8.claim": "유네스코에는 직지의 이름을 딴 '유네스코/직지 세계기록유산상'이 있어요. 기록유산을 지키고 누구나 볼 수 있게 하는 데 크게 이바지한 사람이나 기관에 줘요.",
+      "facts.f9.claim": "흥덕사는 고려 말에 불이 난 뒤 버려진 것으로 보여요. 1985년 발굴에서 '흥덕사'라고 새긴 쇠붙이(금구)가 나와 절터가 확인됐어요. 지금 그 옆에 청주고인쇄박물관이 있어요.",
+      "hoyaIntro": "금속활자로 책을 찍은 절에 가 봐요!",
+      "hoyaOutro": "이제 직지와 직지를 찍은 금속활자 이야기를 알게 됐어요!",
+      "keywords.bangmulgwan.gloss": "옛 물건이나 귀한 것을 모아 보여 주는 곳",
+      "keywords.geumsokhwalja.gloss": "쇠붙이로 만든 인쇄용 글자 조각",
+      "keywords.hagwon.gloss": "여러 권으로 된 책의 마지막 권",
+      "keywords.hwalja.gloss": "인쇄할 때 쓰는 글자 조각, 글자마다 하나씩",
+      "keywords.jeja.gloss": "스승에게 가르침을 받는 사람",
+      "keywords.jeol.gloss": "스님들이 살며 부처를 모시는 곳",
+      "keywords.jikji.gloss": "백운 스님이 엮은 책의 짧은 이름",
+      "keywords.seunim.gloss": "절에서 수행하는 사람을 높여 부르는 말",
+      "scenes.s1.caption": "절에서 금속활자로 찍어요",
+      "scenes.s1.narration": "호야가 고려 시대의 청주로 가요. 흥덕사에서 사람들이 놀라운 일로 바빠요. 금속활자로 책을 찍고 있어요!",
+      "scenes.s2.caption": "백운 스님이 가르침을 모아요",
+      "scenes.s2.narration": "이 책의 이름은 직지예요. 1372년, 그때 75세였던 지혜로운 백운 스님이 부처와 큰 스승들의 중요한 가르침을 이 책에 모았어요.",
+      "scenes.s3.caption": "제자들이 책을 찍어요",
+      "scenes.s3.narration": "1377년, 백운 스님의 제자들이 비구니 묘덕의 도움을 받아 이곳에서 책을 찍었어요.",
+      "scenes.s4.caption": "글자마다 활자 한 개",
+      "scenes.s4.narration": "어떻게 할까요? 글자 하나하나가 작은 금속활자 한 개예요. 활자를 줄지어 놓아 한 쪽을 만들고 찍어요. 금속활자 덕분에 인쇄가 쉬워지고, 틀린 곳도 고치기 쉬워졌어요.",
+      "scenes.s5.caption": "남아 있는 가장 오래된 금속활자 책",
+      "scenes.s5.narration": "직지는 지금 남아 있는 금속활자 책 가운데 세계에서 가장 오래됐어요. 옛 기록을 보면 고려에서는 그보다 먼저 금속활자를 썼지만, 지금까지 남아 있는 책으로는 직지가 가장 오래됐어요.",
+      "scenes.s6.caption": "한 권이 남아 파리에 있어요",
+      "scenes.s6.narration": "이 책은 두 권이었어요. 지금은 둘째 권만 남아 있고, 파리의 프랑스 국립도서관에 있어요.",
+      "scenes.s7.caption": "유네스코가 직지를 기려요",
+      "scenes.s7.narration": "2001년에 유네스코가 직지를 세계기록유산에 올렸어요. 유네스코에는 직지의 이름을 딴 상도 있어요. 옛 기록을 지키고 널리 나누는 데 힘쓴 사람에게 주는 상이에요.",
+      "scenes.s8.caption": "절터 옆의 박물관",
+      "scenes.s8.narration": "흥덕사는 오래전 불이 난 뒤 문을 닫은 것으로 보여요. 그런데 1985년, 그 자리를 발굴하던 고고학자들이 '흥덕사'라는 이름이 새겨진 쇠붙이를 찾아내 절터가 확인됐어요. 지금은 그 옆에 청주고인쇄박물관이 있어요.",
+      "summary": "호야가 청주 흥덕사에 가요. 1377년에 이곳에서 직지를 금속활자로 찍었어요. 직지는 지금 남아 있는 금속활자 책 가운데 세계에서 가장 오래됐고, 하나 남은 권은 파리에 있어요.",
+      "title": "쇠 활자로 찍은 옛 책"
+    },
+    "story:joseon-records-today": {
+      "checks.c1.explain": "일꾼들은 『화성성역의궤』를 따라 성을 처음 모습대로 다시 지었고, 지금도 고칠 때 이 기록을 써요.",
+      "checks.c1.options.a": "마을 사람들의 이야기로 짐작해서",
+      "checks.c1.options.b": "다른 나라의 성을 베껴서",
+      "checks.c1.options.c": "의궤에 있는 기록과 그림을 따라서",
+      "checks.c1.prompt": "수원 화성을 처음 모습대로 다시 지을 때 일꾼들은 어떻게 했나요?",
+      "checks.c2.explain": "승정원 일기는 날마다 날씨를 기록해서, 과학자들이 이 기록으로 옛날 자연을 공부할 수 있어요.",
+      "checks.c2.options.a": "아주 오래전의 날씨 기록",
+      "checks.c2.options.b": "궁궐에서 나온 공룡 뼈",
+      "checks.c2.options.c": "왕들의 얼굴 사진",
+      "checks.c2.prompt": "과학자들은 승정원 일기에서 무엇을 공부할 수 있나요?",
+      "checks.c3.explain": "실록, 승정원 일기, 의궤, 일성록은 모두 유네스코 세계기록유산에 올라 있어요.",
+      "checks.c3.options.a": "인류무형문화유산 목록",
+      "checks.c3.options.b": "세계기록유산 목록",
+      "checks.c3.options.c": "세계자연유산 목록",
+      "checks.c3.prompt": "이 이야기에 나온 조선의 네 가지 기록이 모두 올라 있는 유네스코 목록은 무엇인가요?",
+      "facts.f1.claim": "수원 화성은 1796년에 완성되었고, 성을 쌓은 모든 과정이 건축 도면, 공사 기계 그림, 재료의 크기와 양까지 『화성성역의궤』에 기록되었어요.",
+      "facts.f2.claim": "화성은 일부가 부서진 뒤 『화성성역의궤』를 따라 처음 모습대로 다시 지어졌고, 오늘날에도 이 기록을 바탕으로 고쳐요.",
+      "facts.f3.claim": "수원 화성 문화제에서는 『원행을묘정리의궤』를 바탕으로 정조의 왕실 행렬(능행차)을 재현해요.",
+      "facts.f4.claim": "승정원 일기는 288년 동안(1623~1910년) 날마다 날씨를 기록했고, 이 기록은 자연과학 연구에 쓰일 수 있어요.",
+      "facts.f5.claim": "한문으로 쓰인 실록은 한국어로 번역되었고, 국사편찬위원회 누리집에서 번역문과 원문을 공개하고 있어요.",
+      "facts.f6.claim": "조선왕조실록(1997년), 승정원 일기(2001년), 조선왕조 의궤(2007년), 일성록(2011년)은 모두 유네스코 세계기록유산에 등재되어 있어요.",
+      "hoyaIntro": "옛 기록은 오늘날 우리에게 무슨 일을 해 줄까요? 가서 봐요!",
+      "hoyaOutro": "오래전에 쓴 기록이 지금도 우리를 도와요. 여러분은 무엇을 적어 볼래요?",
+      "keywords.bomul.gloss": "아주 귀하고 값진 것",
+      "keywords.girogeun-bomurieyo.gloss": "적어 남긴 것은 아주 귀하다는 말이에요.",
+      "keywords.girok.gloss": "어떤 일을 글로 적어 남긴 것",
+      "keywords.haengnyeol.gloss": "여럿이 줄지어 가는 것",
+      "keywords.hwaseong.gloss": "정조 때 수원에 쌓은 큰 요새",
+      "keywords.nalssi-girok.gloss": "날마다 하늘의 상태를 적어 둔 것",
+      "keywords.nalssi.gloss": "그날그날의 비, 바람, 햇빛 같은 하늘의 상태",
+      "keywords.nuguna-ilgeul-su-isseoyo.gloss": "어떤 사람이든 그 글을 볼 수 있다는 뜻이에요.",
+      "keywords.seong.gloss": "적을 막으려고 높이 쌓은 담",
+      "keywords.seongeul-gochyeoyo.gloss": "부서진 요새의 담을 다시 손본다는 뜻이에요.",
+      "keywords.suwon-hwaseong-munhwaje.gloss": "정조 때 쌓은 요새가 있는 도시에서 열리는 축제",
+      "keywords.wae-girokalkkayo.gloss": "무슨 까닭으로 적어 남기는지 묻는 말이에요.",
+      "keywords.yuneseuko.gloss": "교육, 과학, 문화를 위해 일하는 국제연합 기구",
+      "scenes.s1.caption": "옛 기록이 오늘 하는 일을 묻는 호야",
+      "scenes.s1.narration": "호야에게 궁금한 게 하나 더 있어요. 이 옛 기록들은 오늘날 우리에게 무슨 일을 해 줄까요? 조선의 기록이 아직도 일하고 있는 곳들을 찾아가 봐요.",
+      "scenes.s2.caption": "한 단계씩 기록한 화성",
+      "scenes.s2.narration": "수원 화성은 1796년에 완성되었어요. 성을 쌓는 모든 과정이 『화성성역의궤』에 기록되었는데, 건물과 기계 그림, 재료의 크기와 양까지 담겨 있어요.",
+      "scenes.s3.caption": "의궤를 보고 고치는 성",
+      "scenes.s3.narration": "나중에 성의 일부가 부서졌어요. 일꾼들은 의궤를 따라 성을 원래 모습으로 되살렸고, 오늘날에도 이 기록을 바탕으로 성을 고쳐요.",
+      "scenes.s4.caption": "왕의 행렬을 다시 보여 주는 축제",
+      "scenes.s4.narration": "오늘날 수원의 {kw:suwon-hwaseong-munhwaje}에서는 정조의 행차를 기록한 의궤를 바탕으로 정조의 큰 왕실 행렬을 다시 보여 줘요.",
+      "scenes.s5.caption": "옛 날씨 기록을 공부하는 과학자들",
+      "scenes.s5.narration": "과학자들은 300년 가까운 기록을 담은 승정원 일기의 날마다 쓴 날씨 기록으로 옛날 자연을 공부할 수 있어요.",
+      "scenes.s6.caption": "누구나 인터넷으로 읽는 실록",
+      "scenes.s6.narration": "실록은 한문으로 쓰여 있어서 오늘날 대부분의 사람에게 어려워요. 번역가들이 실록을 오늘날의 한국어로 옮겼고, 이제 누구나 인터넷에서 원문과 함께 번역문을 읽을 수 있어요.",
+      "scenes.s7.caption": "유네스코 세계기록유산",
+      "scenes.s7.narration": "여러분이 만난 네 가지 기록인 실록, 승정원 일기, 의궤, 일성록은 모두 유네스코 세계기록유산에 올라 있어요.",
+      "scenes.s8.caption": "기록은 보물이에요",
+      "scenes.s8.narration": "호야가 웃어요. 오래전에 정성껏 기록한 사람들 덕분에 우리는 지금도 과거에서 배울 수 있어요. '기록은 보물이에요!' 여러분은 오늘 무엇을 적어 볼래요?",
+      "summary": "조선의 기록은 오늘날 사람들에게 어떻게 도움이 될까요? 호야는 의궤 그림을 보고 고친 성, 왕의 행렬을 다시 보여 주는 축제, 옛 날씨 기록을 읽는 과학자들, 그리고 누구나 인터넷으로 볼 수 있는 실록을 만나요.",
+      "title": "옛 기록에서 찾은 새로운 발견"
+    },
+    "story:kim-hongdo-genre-paintings": {
+      "checks.c1.explain": "구경꾼들은 씨름꾼들을 둘러싸고 위쪽과 아래쪽, 두 무리로 둥글게 앉아 있어요.",
+      "checks.c1.options.a": "씨름꾼들을 둘러싸고 둥글게 두 무리로",
+      "checks.c1.options.b": "씨름꾼들 옆에 길고 곧은 한 줄로",
+      "checks.c1.options.c": "엿장수 뒤에 한 줄로",
+      "checks.c1.prompt": "그림 「{target}」에서 구경꾼들은 어떻게 앉아 있나요?",
+      "checks.c2.explain": "서당은 옛날 마을에서 아이들에게 글을 가르치던 곳이에요. 그림 「서당」에서는 훈장님과 학생들이 한 아이를 둘러싸고 있어요.",
+      "checks.c2.options.a": "북적이는 마을 장터",
+      "checks.c2.options.b": "마을 글방",
+      "checks.c2.options.c": "궁궐의 큰 방",
+      "checks.c2.prompt": "{target}의 뜻은 무엇일까요?",
+      "checks.c3.explain": "「씨름」에서는 엿장수가 사람들의 눈길에서 벗어나 왼쪽에 서 있어요.",
+      "checks.c3.options.a": "선비 모자를 쓴 훈장님",
+      "checks.c3.options.b": "돌아앉은 아이",
+      "checks.c3.options.c": "엿장수",
+      "checks.c3.prompt": "그림 「{target}」의 왼쪽, 사람들의 눈길 밖에 서 있는 사람은 누구일까요?",
+      "checks.r1.explain": "그림은 사물이나 모습을 선과 색으로 나타낸 것이에요.",
+      "checks.r1.options.a": "그림을 그리는 사람",
+      "checks.r1.options.b": "두 사람이 힘을 겨루는 운동",
+      "checks.r1.options.c": "선과 색으로 나타낸 것",
+      "checks.r1.options.d": "아이들이 공부하는 곳",
+      "checks.r1.prompt": "{target}의 뜻은 무엇일까요?",
+      "checks.r2.explain": "서당은 옛날 마을의 글방이에요. 김홍도는 서당에서 공부하는 학생들을 그렸어요.",
+      "checks.r2.options.a": "옛날 마을의 글방",
+      "checks.r2.options.b": "엿을 파는 사람",
+      "checks.r2.options.c": "옛 물건을 모아 보여 주는 곳",
+      "checks.r2.options.d": "물건을 사고파는 곳",
+      "checks.r2.prompt": "{target}의 뜻은 무엇일까요?",
+      "checks.r3.explain": "엿장수가 사람들에게서 떨어져 왼쪽에 서 있어요.",
+      "checks.r3.options.a": "선생님",
+      "checks.r3.options.b": "임금",
+      "checks.r3.options.c": "북 치는 사람",
+      "checks.r3.options.d": "엿장수",
+      "checks.r3.prompt": "그림 「씨름」에서 왼쪽에 서 있는 사람은 누구일까요?",
+      "facts.f1.claim": "풍속화는 궁궐이 아닌 보통 사람들의 생활을 그린 그림이에요. 김홍도의 화첩은 백성들의 하루 생활과 일하는 모습을 보여 줘요.",
+      "facts.f2.claim": "김홍도(호는 단원)는 1745년에 태어났어요. 도화서 화원으로 여러 분야의 그림을 잘 그렸고, 특히 풍속화로 유명해요.",
+      "facts.f3.claim": "김홍도가 그린 것으로 전해지는 풍속화 25점을 모은 화첩, 곧 단원 풍속도첩은 보물로 지정되었고(1970년) 국립중앙박물관에 있어요.",
+      "facts.f4.claim": "그림 「씨름」에서는 가운데에서 두 씨름꾼이 맞붙어 힘을 겨루고, 구경꾼들이 위와 아래 두 무리로 둥글게 둘러싸고 있어요.",
+      "facts.f5.claim": "「씨름」에서 엿장수는 구경꾼들의 눈길 밖 왼쪽에 서 있고, 누군가 벗어 놓은 신발이 오른쪽의 빈 곳을 채워 줘요.",
+      "facts.f6.claim": "「서당」에서는 훈장님과 학생들이 웅크린 채 돌아앉아 훌쩍이는 한 아이를 둘러싸고 있고, 이 아이가 그림의 중심이에요. 다른 학생들은 재미있어하고, 훈장님은 난처해 보여요.",
+      "facts.f7.claim": "씨름은 국가무형유산(2017년)으로 지정되었고, 한국의 전통 씨름은 2018년에 유네스코 인류무형문화유산 대표목록에 올랐어요.",
+      "hoyaIntro": "옛날 사람들의 하루를 담은 그림을 자세히 들여다봐요. 무엇을 찾을 수 있나요?",
+      "hoyaOutro": "엿장수, 벗어 놓은 신발, 훌쩍이는 학생까지! 눈이 정말 밝네요!",
+      "keywords.geurim.gloss": "사물이나 모습을 선과 색으로 나타낸 것",
+      "keywords.hwaga.gloss": "그림 그리는 일을 하는 사람",
+      "keywords.kim-hong-do.gloss": "조선 시대 궁궐의 화가(호는 단원)",
+      "keywords.pungsokhwa.gloss": "보통 사람들의 생활 모습을 그린 그림",
+      "keywords.seodang.gloss": "옛날 마을에서 아이들에게 글을 가르치던 곳",
+      "keywords.ssireum-hanpan-haeyo.gloss": "한 번 겨뤄 보자고 신나게 외치는 말",
+      "keywords.ssireum.gloss": "두 사람이 맞붙어 상대를 넘어뜨리는 우리 전통 운동",
+      "keywords.yeotjangsu.gloss": "엿을 파는 사람",
+      "scenes.s1.caption": "호야와 생활 모습을 담은 그림",
+      "scenes.s2.caption": "조선의 화가 김홍도",
+      "scenes.s3.caption": "박물관에 있는 풍속화 화첩",
+      "scenes.s3.narration": "풍속화 25점을 모은 화첩, 단원 풍속도첩이 국립중앙박물관에 있어요. 보물로 지정되어 있어요. 보통 사람들의 생활 모습을 그린 그림을 {kw:pungsokhwa}라고 해요.",
+      "scenes.s4.caption": "힘을 겨루는 두 씨름꾼",
+      "scenes.s4.narration": "{kw:ssireum}이라는 그림을 봐요! 가운데에서 두 씨름꾼이 서로를 붙잡고 힘을 겨뤄요. 둘레에는 구경꾼들이 둥글게 두 무리로 앉아 열심히 지켜봐요.",
+      "scenes.s5.caption": "왼쪽에 선 엿장수",
+      "scenes.s5.narration": "더 찾을 수 있나요? 왼쪽에는 {kw:yeotjangsu}가 사람들의 눈길에서 벗어나 서 있어요. 오른쪽에는 누군가 벗어 놓은 신발이 있어요.",
+      "scenes.s6.caption": "한 아이를 둘러싼 학생들",
+      "scenes.s6.narration": "이번에는 마을 글방을 그린 {kw:seodang}을 봐요. 훈장님과 학생들이 한 아이를 둘러싸고 있는데, 그 아이는 돌아앉아 훌쩍이고 있어요. 다른 학생들은 재미있어하고, 훈장님은 난처해 보여요. 호야는 그 아이가 얼른 기분이 나아지길 바라요.",
+      "scenes.s7.caption": "지금도 사랑받는 씨름",
+      "summary": "호야가 국립중앙박물관에 있는 단원 풍속도첩의 그림 「씨름」과 「서당」을 자세히 살펴봐요. 엿장수, 누군가 벗어 놓은 신발, 훌쩍이는 학생을 찾아내요.",
+      "title": "김홍도가 그린 사람들의 하루"
+    },
+    "story:nanjung-ilgi": {
+      "checks.c1.explain": "임진왜란 동안 이순신 장군은 거의 매일 손수 일기를 썼어요.",
+      "checks.c1.options.a": "일주일에 한 번만",
+      "checks.c1.options.b": "거의 매일",
+      "checks.c1.options.c": "특별한 명절에만",
+      "checks.c1.prompt": "이순신 장군은 일기를 얼마나 자주 썼을까요?",
+      "checks.c2.explain": "날씨, 군대 생활, 자기 마음, 그리고 백성들의 삶에 대해 적었어요.",
+      "checks.c2.options.a": "날씨, 군대 생활, 백성들의 삶",
+      "checks.c2.options.b": "먼 나라와 그 나라 임금 이야기",
+      "checks.c2.options.c": "궁궐 잔치에 나온 음식 목록",
+      "checks.c2.prompt": "이순신 장군이 일기에 적은 것은 무엇일까요?",
+      "checks.c3.explain": "이 일기는 처음에 제목이 없었어요. 나중에 이순신의 글을 모아 엮은 사람들이 '전쟁 중에 쓴 일기'라는 뜻으로 이름을 붙였어요.",
+      "checks.c3.options.a": "이순신 장군이 직접, 첫 쪽에",
+      "checks.c3.options.b": "선조 임금이 일기를 읽고 나서",
+      "checks.c3.options.c": "나중에 이순신의 글을 모아 엮은 사람들",
+      "checks.c3.prompt": "이 일기의 이름({target})은 누가 붙였을까요?",
+      "facts.f1.claim": "이순신(1545–1598)은 전라좌도 수군절도사로 일했고, 적이 쳐들어올 것에 대비해 여수를 중심으로 배를 만들고 군사 준비를 튼튼히 했어요.",
+      "facts.f2.claim": "임진왜란(1592–1598) 동안 이순신은 거의 날마다 손수 개인 일기를 썼어요.",
+      "facts.f3.claim": "일기에는 날씨, 군대 생활, 장군 자신의 생각과 마음, 백성들의 삶 등이 적혀 있어요.",
+      "facts.f4.claim": "일기에는 가족과 친척, 부하들에 관한 이야기와 그들이 오고 간 일도 적혀 있어요.",
+      "facts.f5.claim": "지금까지 남아 있는 손으로 쓴 난중일기는 일곱 권이에요.",
+      "facts.f6.claim": "이 일기는 처음에 제목이 없었어요. '난중일기'라는 이름은 나중에 이순신의 글을 모은 책(이충무공전서)을 엮은 사람들이 붙였어요.",
+      "facts.f7.claim": "손으로 쓴 일기는 이순신의 편지, 임진왜란 보고서 초안과 함께 국보로 지정되어 있고, 충청남도 아산 현충사에 보관되어 있어요.",
+      "facts.f8.claim": "난중일기는 2013년에 유네스코 세계기록유산에 올랐어요.",
+      "hoyaIntro": "일기를 쓰나요? 이순신 장군의 일기를 펼쳐 봐요.",
+      "hoyaOutro": "날씨도, 마음도, 하루하루의 생활도 이순신 장군은 모두 적었어요. 여러분도 일기를 써 보면 어때요?",
+      "keywords.gajok.gloss": "부모와 형제처럼 한집에서 함께 사는 사람들",
+      "keywords.ilgi.gloss": "날마다 겪은 일과 생각을 적는 글",
+      "keywords.janggun.gloss": "군대를 이끄는 사람(이순신을 부를 때 쓰는 호칭)",
+      "keywords.maeil.gloss": "하루도 빠짐없이 날마다",
+      "keywords.nalssi.gloss": "비, 눈, 바람, 맑음처럼 그날그날 하늘의 모습",
+      "keywords.nanjung-ilgi.gloss": "이순신이 임진왜란 동안 쓴 전쟁 일기",
+      "keywords.oneuldo-ilgireul-sseoyo.gloss": "오늘 하루도 빠뜨리지 않고 적겠다는 신나는 말",
+      "keywords.yi-sun-sin.gloss": "조선 수군을 이끈 장군",
+      "scenes.s1.caption": "작은 공책을 펼치는 호야",
+      "scenes.s1.narration": "호야가 작은 공책을 펼쳐요. \"일기를 쓰나요? 날마다 겪은 일을 적는 글을 {kw:ilgi}라고 해요.\" 호야가 말해요. \"오늘은 아주 먼 옛날 조선의 한 장군이 쓴 유명한 일기를 만나 봐요.\"",
+      "scenes.s2.caption": "여수 가까이에서 배를 만드는 이순신",
+      "scenes.s2.narration": "{kw:yi-sun-sin}은 1545년부터 1598년까지 살았고, 조선 수군을 이끈 장군이었어요. 전쟁이 나기 전에 여수 가까이에서 배를 만들고 나라를 지킬 준비를 했어요.",
+      "scenes.s3.caption": "거의 매일 일기를 쓰는 이순신 장군",
+      "scenes.s3.narration": "1592년부터 1598년까지 이어진 임진왜란 동안, 이순신 장군은 거의 매일 일기를 썼어요.",
+      "scenes.s4.caption": "날씨와 마음을 적어요",
+      "scenes.s4.narration": "날씨, 군대 생활, 자기 생각과 마음, 그리고 주변 백성들의 삶에 대해 적었어요.",
+      "scenes.s5.caption": "가족에 대해 적어요",
+      "scenes.s5.narration": "가족과 친척, 그리고 자기와 함께 일한 사람들에 대해서도 적었어요.",
+      "scenes.s6.caption": "일기에 이름이 붙었어요",
+      "scenes.s6.narration": "손으로 쓴 일기 일곱 권이 지금까지 남아 있어요. 처음에는 제목이 없었어요. 나중에 책을 엮은 사람들이 '전쟁 중에 쓴 일기'라는 뜻으로 {kw:nanjung-ilgi}라는 이름을 붙였어요.",
+      "scenes.s7.caption": "국보가 된 일기",
+      "scenes.s7.narration": "오늘날 이 일기는 국보이고, 아산 현충사에 보관되어 있어요. 2013년에는 유네스코가 세계기록유산으로 올렸어요. 호야가 붓을 들어요. \"{kw:oneuldo-ilgireul-sseoyo}\"",
+      "summary": "호야가 이순신 장군이 1592년부터 1598년까지 거의 날마다 쓴 일기를 펼쳐 봐요. 날씨와 마음, 하루하루의 생활이 가득 담긴 이 일기는 지금 국보이자 유네스코 세계기록유산이에요.",
+      "title": "이순신 장군이 쓴 전쟁 일기"
+    },
+    "story:pansori-tales": {
+      "checks.c1.explain": "판소리에서는 소리꾼 한 명이 이야기를 들려주는 동안, 고수가 북으로 장단을 맞춰요.",
+      "checks.c1.options.a": "작은 관현악단",
+      "checks.c1.options.b": "부채를 든 춤꾼",
+      "checks.c1.options.c": "여러 사람이 함께 노래하는 합창단",
+      "checks.c1.options.d": "북을 치는 고수",
+      "checks.c1.prompt": "판소리에서 장단을 맞추는 사람은 누구일까요?",
+      "checks.c2.explain": "이야기에서 제비는 이듬해 봄에 박씨를 물고 흥부에게 돌아와요.",
+      "checks.c2.options.a": "솔방울",
+      "checks.c2.options.b": "박씨",
+      "checks.c2.options.c": "반짝이는 깃털",
+      "checks.c2.options.d": "빨간 꽃",
+      "checks.c2.prompt": "이듬해 봄, 제비는 흥부에게 무엇을 물어다 주었나요?",
+      "checks.c3.explain": "이야기에서 토끼가 간을 육지에 두고 왔다고 하자, 용왕은 토끼를 돌려보내고 토끼는 달아나요.",
+      "checks.c3.options.a": "간을 육지에 두고 왔다고 했어요",
+      "checks.c3.options.b": "자라보다 빨리 헤엄쳐 집에 갔어요",
+      "checks.c3.options.c": "비밀 굴로 달려 나갔어요",
+      "checks.c3.options.d": "용왕에게 금 선물을 약속했어요",
+      "checks.c3.prompt": "토끼는 어떻게 용궁에서 빠져나왔나요?",
+      "checks.r1.explain": "제비는 봄에 오는 작은 철새예요. 흥부는 다친 제비를 도와요.",
+      "checks.r1.options.a": "귀가 길고 깡충깡충 뛰는 동물",
+      "checks.r1.options.b": "등딱지가 있는 동물",
+      "checks.r1.options.c": "봄에 오는 작은 철새",
+      "checks.r1.options.d": "껍데기가 단단한 둥글고 큰 열매",
+      "checks.r1.prompt": "{target}의 뜻은 무엇일까요?",
+      "checks.r2.explain": "토끼는 귀가 길고 깡충깡충 뛰는 동물이에요. 꾀 많은 토끼가 바닷속 궁궐에서 빠져나와요.",
+      "checks.r2.options.a": "귀가 길고 깡충깡충 뛰는 동물",
+      "checks.r2.options.b": "줄무늬가 있는 큰 산짐승",
+      "checks.r2.options.c": "등딱지가 있는 동물",
+      "checks.r2.options.d": "봄에 오는 작은 철새",
+      "checks.r2.prompt": "{target}의 뜻은 무엇일까요?",
+      "checks.r3.explain": "흥부네 가족이 박을 톱으로 타자 돈과 쌀, 보물이 쏟아져 나왔어요.",
+      "checks.r3.options.a": "씨앗만",
+      "checks.r3.options.b": "돈과 쌀, 보물",
+      "checks.r3.options.c": "물",
+      "checks.r3.options.d": "제비 여러 마리",
+      "checks.r3.prompt": "이야기에서 흥부의 박에서는 무엇이 나왔나요?",
+      "facts.f1.claim": "판소리에서는 소리꾼 한 명이 노래하고 말하고 몸짓을 하며 긴 이야기를 들려주고, 고수가 북으로 장단을 맞추며 함께해요.",
+      "facts.f10.claim": "이야기에서 토끼는 간을 육지에 두고 왔다고 말해요. 용왕은 토끼를 자라와 함께 육지로 돌려보내고, 육지에 닿은 토끼는 숲으로 달아나요.",
+      "facts.f11.claim": "한국의 토끼와 자라 이야기(수궁가·토끼전)는 이솝 우화의 토끼와 거북이 이야기와 다른 이야기예요(여기서 인용한 타운센드 번역본의 제목은 'The Hare and the Tortoise'이고, 'The Tortoise and the Hare'라고도 해요). 이솝 우화에서는 토끼와 거북이가 달리기 시합을 하지만, 한국 이야기에서는 병든 용왕에게 토끼의 간을 가져가려고 자라를 보내요.",
+      "facts.f12.claim": "토끼와 자라 이야기의 짧은 옛 형태인 「구토지설(龜兎之說)」이 『삼국사기』 열전에 실려 있고, 판소리 수궁가는 이것을 기본 뼈대로 삼았어요.",
+      "facts.f2.claim": "고수는 '얼씨구!', '좋다!' 같은 감탄의 말을 외쳐 공연의 흥을 돋우는데, 이것을 추임새라고 해요.",
+      "facts.f3.claim": "판소리는 한때 열두 마당이 있었지만, 지금은 춘향가, 심청가, 수궁가, 흥보가, 적벽가의 다섯 마당을 공연해요.",
+      "facts.f4.claim": "판소리는 2003년에 유네스코 '인류 구전 및 무형유산 걸작'으로 선정되었고, 2008년에 인류무형문화유산 대표목록에 통합되었어요.",
+      "facts.f5.claim": "흥보가는 판소리 다섯 마당 가운데 하나이고, 같은 이야기가 지은이와 연대를 알 수 없는 조선 후기 소설 「흥부전」으로도 전해요. 이 이야기에는 욕심 많은 형 놀부와 가난하지만 착한 아우 흥부가 나오고, 흥부는 떨어져서 다리가 부러진 새끼 제비의 다리를 매어 줘요.",
+      "facts.f6.claim": "이야기에서 제비는 이듬해 봄에 박씨를 물고 돌아와요. 흥부가 그 씨를 심자 커다란 박이 열리고, 톱으로 타자 돈과 쌀, 보물이 쏟아져 나와요.",
+      "facts.f7.claim": "이야기에서 놀부는 일부러 제비를 다치게 하고, 그 박에서는 해로운 것들만 나와 놀부는 망해요. 결말은 이야기마다 달라요. 소설 「흥부전」의 기본 줄거리(한국민족문화대백과사전)와 널리 알려진 흥보가 창본(국립민속박물관 한국민속문학사전이 소개하는 박봉술·정광수 창본)에서는 놀부가 잘못을 뉘우치고 형제가 화해해요.",
+      "facts.f8.claim": "수궁가는 판소리 다섯 마당 가운데 하나이고, 같은 이야기가 조선 후기 소설 「토끼전」(「별주부전」이라고도 해요)으로도 전해요. 이야기에서 용왕이 병이 나자 도사가 토끼의 간을 먹으면 낫는다고 하고, 별주부라고 불리는 자라가 육지에 가겠다고 나서요. 별주부(鼈主簿)는 자라에게 붙은 벼슬 이름(鼈 '자라' + 主簿, 옛 벼슬 이름)으로, 사람 이름이 아니에요.",
+      "facts.f9.claim": "이야기에서 자라는 바닷속 궁궐에 가면 높은 벼슬을 준다며 토끼를 꾀어요. 속은 토끼는 자라를 따라 용궁에 가고, 용왕은 토끼에게 간을 내놓으라고 해요.",
+      "hoyaIntro": "판소리를 들어 봐요! 소리꾼 한 명과 북 치는 고수 한 명이 옛이야기 두 편을 들려줘요.",
+      "hoyaOutro": "착한 아우, 은혜 갚은 제비, 꾀 많은 토끼까지. 얼씨구, 정말 멋진 공연이에요!",
+      "keywords.bak.gloss": "껍데기가 단단한 둥글고 큰 열매",
+      "keywords.buk.gloss": "가죽을 씌워 두드려 소리를 내는 둥근 악기",
+      "keywords.chuimsae.gloss": "고수가 흥을 돋우려고 외치는 소리",
+      "keywords.eolssigu.gloss": "신이 날 때 외치는 소리",
+      "keywords.ganeul-yukjie-dugo-watseumnida.gloss": "토끼가 간이 몸에 없다고 꾸며댄 말",
+      "keywords.hyeongje.gloss": "형과 아우",
+      "keywords.jara.gloss": "등딱지가 부드러운 거북 무리의 동물",
+      "keywords.jebi.gloss": "봄에 오는 작은 철새",
+      "keywords.pansori.gloss": "소리꾼이 노래와 말, 몸짓으로 긴 이야기를 들려주는 공연",
+      "keywords.tokki.gloss": "귀가 길고 깡충깡충 뛰는 동물",
+      "keywords.yonggung.gloss": "바닷속에 있다는 용왕의 궁궐",
+      "scenes.s1.caption": "소리꾼 한 명과 고수 한 명",
+      "scenes.s2.caption": "추임새와 지금까지 전하는 다섯 마당",
+      "scenes.s2.narration": "고수는 '얼씨구!', '좋다!' 같은 {kw:chuimsae}를 외쳐요. 옛날에는 판소리 이야기가 열두 가지였는데, 지금도 부르는 것은 다섯 가지예요. 유네스코는 2003년에 판소리를 걸작으로 선정하고, 2008년에 유산 목록에 올렸어요. 두 이야기를 들어 봐요!",
+      "scenes.s3.caption": "흥부가 다친 제비를 도와요",
+      "scenes.s4.caption": "박에서 보물이 쏟아져요",
+      "scenes.s5.caption": "놀부의 박에서는 골칫거리만 나와요",
+      "scenes.s5.narration": "욕심 많은 놀부도 보물이 갖고 싶어서 일부러 제비를 다치게 했어요. 하지만 놀부의 박에서는 골칫거리만 나왔어요! 널리 알려진 이야기에서는 놀부가 잘못을 뉘우치고 형제가 화해해요.",
+      "scenes.s6.caption": "병든 용왕과 자라",
+      "scenes.s6.narration": "다음은 수궁가예요. 소설 「토끼전」으로도 전해져요. 이솝 우화의 달리기 시합과는 다른 이야기예요! 용왕이 병이 났어요. 한 도사가 토끼의 간이 있으면 병을 고칠 수 있다고 했어요. 그러자 별주부라는 벼슬 이름으로 불리는 자라가 토끼 간을 구해 오겠다고 나섰어요.",
+      "scenes.s7.caption": "토끼가 자라를 따라 용궁에 가요",
+      "scenes.s8.caption": "꾀 많은 토끼가 달아나요",
+      "scenes.s8.narration": "토끼는 재빨리 꾀를 냈어요. \"간을 육지에 두고 왔습니다!\" 용왕은 그 말을 믿고 토끼를 자라와 함께 돌려보냈어요. 바닷가에 닿자 토끼는 깡충깡충 숲으로 달아났어요. 얼씨구! 이 이야기의 옛 모습은 『삼국사기』라는 책에도 나와요.",
+      "summary": "호야가 판소리 공연(유네스코 2003/2008)에 가서, 지금까지 전해지는 다섯 마당 가운데 두 이야기를 들어요. 착한 흥부와 은혜 갚은 제비, 그리고 용왕의 궁궐에서 빠져나온 꾀 많은 토끼 이야기예요. 이 한국의 토끼와 자라 이야기는 이솝 우화 「토끼와 거북이」와 다른 이야기예요.",
+      "title": "판소리 이야기: 흥부의 제비와 꾀 많은 토끼 (옛이야기)"
+    },
+    "story:sejong-new-letters": {
+      "checks.c1.explain": "세종대왕이 직접 새 글자를 만들었어요. 그 이름을 훈민정음이라고 했어요.",
+      "checks.c1.options.a": "백운 스님",
+      "checks.c1.options.b": "세종대왕",
+      "checks.c1.options.c": "정인지",
+      "checks.c1.options.d": "시장 상인",
+      "checks.c1.prompt": "한글은 누가 만들었어요?",
+      "checks.c2.explain": "세종대왕은 1443년에 새 글자 28자를 만들었어요.",
+      "checks.c2.options.a": "1377년",
+      "checks.c2.options.b": "1446년",
+      "checks.c2.options.c": "1443년",
+      "checks.c2.options.d": "1940년",
+      "checks.c2.prompt": "세종대왕은 몇 년에 28자를 만들었어요?",
+      "checks.c3.explain": "세종대왕은 자기 뜻을 글로 펴지 못하는 사람들을 딱하게 여겼어요. 그래서 배우기 쉽고 날마다 쓰기 편한 글자를 만들었어요.",
+      "checks.c3.options.a": "궁궐의 비밀을 지키려고",
+      "checks.c3.options.b": "학자들만 왕의 명령을 읽게 하려고",
+      "checks.c3.options.c": "왕의 도장을 대신하려고",
+      "checks.c3.options.d": "사람들이 글자를 쉽게 배우게 하려고",
+      "checks.c3.prompt": "세종대왕은 왜 새 글자를 만들었어요?",
+      "checks.r1.explain": "글자는 말을 적는 기호예요. 세종대왕은 새 글자 28자를 만들었어요.",
+      "checks.r1.options.a": "임금",
+      "checks.r1.options.b": "말을 적는 기호",
+      "checks.r1.options.c": "책",
+      "checks.r1.options.d": "학자",
+      "checks.r1.prompt": "{target}: 무슨 뜻이에요?",
+      "checks.r2.explain": "백성은 평범한 사람들을 이르는 옛말이에요.",
+      "checks.r2.options.a": "임금",
+      "checks.r2.options.b": "새 책",
+      "checks.r2.options.c": "평범한 사람들",
+      "checks.r2.options.d": "가르치는 사람",
+      "checks.r2.prompt": "{target}: 무슨 뜻이에요?",
+      "checks.r3.explain": "오늘날 세종대왕의 글자는 한글이라고 불러요.",
+      "checks.r3.options.a": "한글",
+      "checks.r3.options.b": "한자",
+      "checks.r3.options.c": "해례",
+      "checks.r3.options.d": "실록",
+      "checks.r3.prompt": "이야기에서 새 글자를 오늘날 뭐라고 불러요?",
+      "facts.f1.claim": "세종은 조선의 넷째 임금이에요. 1418년부터 1450년까지 나라를 다스렸어요.",
+      "facts.f2.claim": "한글이 생기기 전에는 한자를 빌려 한국어를 적었어요. 한국어는 중국어와 다르고 한자는 배우기 어려워서, 많은 보통 사람들이 하고 싶은 말을 글로 적지 못했어요.",
+      "facts.f3.claim": "1443년(세종 25년 음력 12월 기록)에 세종이 직접 28자를 만들고, 그 이름을 훈민정음이라고 했어요.",
+      "facts.f4.claim": "훈민정음은 '백성을 가르치는 바른 소리'라는 뜻이에요. 백성은 보통 사람들을 이르는 옛말이에요.",
+      "facts.f5.claim": "세종은 서문에서, 자기 뜻을 펴지 못하는 사람들을 딱하게 여겨 새 글자 28자를 만들었고 사람들이 쉽게 익혀 날마다 편하게 쓰게 하려는 것이라고 썼어요.",
+      "facts.f6.claim": "정인지는 훈민정음 서문에서 지혜로운 사람은 아침이 다 지나기 전에 이 글자를 깨칠 수 있다고 썼어요.",
+      "facts.f7.claim": "1446년 음력 9월에 새 글자를 풀이한 책 훈민정음이 완성됐어요. 유네스코와 국가유산청은 이 책을 1446년에 펴냈다(반포했다)고 설명하지만, 공식 반포 행사를 열었다는 기록은 없어요.",
+      "facts.f8.claim": "정인지가 이끈 집현전 학자들이 이 책의 해례(풀이와 예)를 썼어요.",
+      "facts.f9.claim": "한글은 세종이 훈민정음이라는 이름으로 만든 한국 고유 문자를 오늘날 부르는 이름이에요.",
+      "hoyaIntro": "나랑 같이 조선에 가요! 세종대왕이 왜 새 글자를 만들었는지 알아봐요.",
+      "hoyaOutro": "이제 한글이 어디서 시작됐는지 알았어요. 세종대왕은 모두를 위해 글자를 만들었고, 지금 여러분이 그 글자를 읽고 있어요!",
+      "keywords.baekseong.gloss": "옛날의 평범한 사람들",
+      "keywords.baeugi-swiwoyo.gloss": "금방 익힐 수 있어요!",
+      "keywords.geulja.gloss": "말을 적는 기호 하나하나",
+      "keywords.hangeul.gloss": "한국어를 적는 고유 문자",
+      "keywords.hanja.gloss": "중국에서 들여와 한국에서 쓴 글자",
+      "keywords.hunminjeongeum.gloss": "'백성을 가르치는 바른 소리'라는 뜻",
+      "keywords.jiphyeonjeon.gloss": "임금 곁에서 학문을 연구하던 기관",
+      "keywords.sae-geulja.gloss": "처음 만든 글자",
+      "keywords.sejong-daewang.gloss": "조선의 넷째 임금, 한글을 만든 왕",
+      "keywords.swiwoyo.gloss": "어렵지 않아요",
+      "scenes.s6.caption": "학자들이 책으로 글자를 풀이해요",
+      "scenes.s6.narration": "1446년, 새 글자를 풀이하는 책 훈민정음이 완성됐어요. 궁궐 안 학문 연구 기관인 집현전의 학자들이 그 풀이와 예를 썼어요.",
+      "summary": "호야가 조선으로 가서 세종대왕이 1443년에 왜 새 글자 28자를 만들었는지, 그리고 1446년에 훈민정음이라는 책이 그 글자를 어떻게 풀이했는지 알아봐요.",
+      "title": "임금이 만든 새 문자"
+    },
+    "story:seollal-new-year": {
+      "checks.c1.explain": "세배는 새해에 어른께 드리는 절이에요. 한 해의 첫인사예요.",
+      "checks.c1.options.a": "설빔",
+      "checks.c1.options.b": "덕담",
+      "checks.c1.options.c": "세배",
+      "checks.c1.options.d": "떡국",
+      "checks.c1.prompt": "새해에 어른께 드리는 절을 뭐라고 해요?",
+      "checks.c2.explain": "도는 1칸, 개는 2칸, 걸은 3칸, 윷은 4칸, 모는 5칸을 가요. 윷이나 모가 나오면 한 번 더 던져요.",
+      "checks.c2.options.a": "두 칸",
+      "checks.c2.options.b": "세 칸",
+      "checks.c2.options.c": "네 칸",
+      "checks.c2.options.d": "다섯 칸",
+      "checks.c2.prompt": "윷놀이에서 '모'는 몇 칸을 가요?",
+      "checks.c3.explain": "떡국은 얇게 썬 흰 떡을 넣은 맑은 국이에요. 설날의 대표 음식이에요.",
+      "checks.c3.options.a": "미역국",
+      "checks.c3.options.b": "떡국",
+      "checks.c3.options.c": "삼계탕",
+      "checks.c3.options.d": "설렁탕",
+      "checks.c3.prompt": "이야기에서 가족은 설날 아침에 어떤 국을 먹어요?",
+      "checks.r1.explain": "설빔은 설날에 입는 새 옷이에요.",
+      "checks.r1.options.a": "새해에 드리는 절",
+      "checks.r1.options.b": "설날에 입는 새 옷",
+      "checks.r1.options.c": "떡을 넣은 국",
+      "checks.r1.options.d": "나무 막대를 던지는 놀이",
+      "checks.r1.prompt": "{target}의 뜻은 뭐예요?",
+      "checks.r2.explain": "덕담은 세배를 받은 어른이 해 주는 다정한 축복의 말이에요.",
+      "checks.r2.options.a": "새 옷",
+      "checks.r2.options.b": "맑은 국",
+      "checks.r2.options.c": "판 위에서 하는 놀이",
+      "checks.r2.options.d": "복을 빌어 주는 좋은 말",
+      "checks.r2.prompt": "{target}의 뜻은 뭐예요?",
+      "checks.r3.explain": "떡국은 얇게 썬 흰 떡을 넣은 맑은 국이에요. 설날의 대표 음식이에요.",
+      "checks.r3.options.a": "떡국",
+      "checks.r3.options.b": "송편",
+      "checks.r3.options.c": "비빔밥",
+      "checks.r3.options.d": "잡채",
+      "checks.r3.prompt": "이야기에서 사람들은 설날에 무엇을 먹어요?",
+      "facts.f1.claim": "설날(설)은 음력 1월 1일(정월 초하루)로, 한국의 큰 전통 명절 가운데 하나예요. 조선 후기의 책 『동국세시기』는 설, 한식, 단오, 추석을 4대 명절로 꼽았어요.",
+      "facts.f10.claim": "윷놀이는 2022년 11월 11일에 국가무형유산(공동체 종목)으로 지정되었어요.",
+      "facts.f2.claim": "설날에 새로 입는 옷을 설빔이라고 해요. 특히 여자 어린이들은 전통적으로 색동저고리(무지개 줄무늬 소매가 달린 저고리)를 입어요.",
+      "facts.f3.claim": "세배는 새해에 어른께 드리는 절로, 한 해의 첫인사예요. 조상께 올리는 차례를 지낸 뒤, 아이들은 먼저 조부모님과 부모님께 절해요.",
+      "facts.f4.claim": "절을 할 때는 “새해 복 많이 받으세요” 같은 새해 인사를 해요. 이 인사말은 현대에 들어 쓰이게 된 새해 인사예요.",
+      "facts.f5.claim": "세배를 받은 어른은 복을 빌어 주는 말(덕담)로 답해요. 절하러 온 아이들에게는 약간의 돈이나 떡과 과일을 줘요.",
+      "facts.f6.claim": "떡국은 흰 가래떡을 얇게 썰어 넣은 맑은 국으로, 설날의 대표 음식이에요. 떡국을 먹으면 나이를 한 살 더 먹는다는 말이 오래전부터 전해져요.",
+      "facts.f7.claim": "윷놀이에서는 두 편이 번갈아 나무 윷가락 네 개를 던져요. 윷가락이 떨어진 모양에 따라 판 위의 말을 옮기고, 모든 말을 먼저 목적지에 보낸 편이 이겨요. 설날부터 정월대보름까지 즐겨요.",
+      "facts.f8.claim": "다섯 가지 결과에 따라 말이 이렇게 움직여요. 도는 1칸, 개는 2칸, 걸은 3칸, 윷은 4칸, 모는 5칸이에요. 윷이나 모가 나오면 한 번 더 던져요.",
+      "facts.f9.claim": "2023년 12월 18일, 한국은 설과 대보름, 한식, 단오, 추석, 동지의 다섯 전통 명절을 국가무형유산으로 지정했어요. 대보름(음력 1월 15일)은 음력 새해가 지나고 처음 뜨는 보름달을 기리는 날이에요.",
+      "hoyaIntro": "새해 복 많이 받으세요! 저와 함께 어느 가족의 설날 아침을 보내 봐요.",
+      "hoyaOutro": "새 옷, 새해 절, 떡국 한 그릇, 그리고 윷놀이 한 판. 정말 행복한 설날이에요!",
+      "keywords.deokdam.gloss": "잘되기를 빌어 주는 좋은 말",
+      "keywords.do-gae-geol-yut-mo.gloss": "던져서 나오는 다섯 가지 결과: 한 칸부터 다섯 칸까지",
+      "keywords.gukga-muhyeong-yusan.gloss": "나라가 지정해 보호하는, 사람을 통해 이어지는 전통 문화(놀이·명절·기술 등)",
+      "keywords.halmeoni.gloss": "아버지나 어머니의 어머니",
+      "keywords.saehae-bok-mani-badeuseyo.gloss": "한 해를 시작하며 좋은 일이 많기를 비는 인사말",
+      "keywords.sebae.gloss": "새해에 어른께 드리는 절",
+      "keywords.seolbim.gloss": "설날에 새로 차려입는 옷",
+      "keywords.seollal.gloss": "음력 새해의 첫날",
+      "keywords.tteokguk.gloss": "흰 떡을 얇게 썰어 넣고 끓인 국",
+      "keywords.yunnori.gloss": "나무 막대 네 개를 던지며 노는 놀이",
+      "keywords.yut.gloss": "놀이할 때 던지는 나무 막대 네 개, 또는 네 칸을 가는 결과",
+      "scenes.s7.caption": "도, 개, 걸, 윷, 모: 한 칸부터 다섯 칸까지",
+      "scenes.s7.narration": "도는 한 칸, 개는 두 칸, 걸은 세 칸, 윷은 네 칸, 모는 다섯 칸을 가요! 윷이나 모가 나오면 한 번 더 던져요. 말을 모두 가장 먼저 집에 들여보낸 팀이 이겨요.",
+      "scenes.s8.caption": "국가무형유산으로 지정된 두 가지",
+      "scenes.s8.narration": "2023년에 한국은 전통 명절 다섯 개를 국가무형유산으로 지정했어요. 그중 하나가 '설과 대보름', 곧 새해와 첫 보름달이에요. 윷놀이는 2022년에 지정되었어요. 호야가 손을 흔들어요. '새해 복 많이 받으세요!'",
+      "summary": "호야가 한 가족과 함께 음력 새해 첫날인 설날을 보내요. 설빔으로 새 옷을 차려입고, 어른께 세배를 드리고, 따뜻한 떡국을 먹고, 신나게 윷놀이를 해요.",
+      "title": "설날 아침, 호야와 함께"
+    },
+    "story:seungjeongwon-ilgi-every-day": {
+      "checks.c1.explain": "주서라는 관리들이 승정원의 일기인 승정원 일기를 썼어요.",
+      "checks.c1.options.a": "왕 자신",
+      "checks.c1.options.b": "주서라는 관리들",
+      "checks.c1.options.c": "산속 절의 스님들",
+      "checks.c1.prompt": "{target}, 누가 썼나요?",
+      "checks.c2.explain": "날마다 쓴 일기에는 날씨를 적었어요. 연구자들은 이 기록으로 옛날 자연을 연구할 수 있어요.",
+      "checks.c2.options.a": "궁궐 그림",
+      "checks.c2.options.b": "왕이 쓴 시",
+      "checks.c2.options.c": "그날의 날씨",
+      "checks.c2.prompt": "날마다 쓴 일기에 함께 적은 것은 무엇인가요?",
+      "checks.c3.explain": "오늘날 1623년 3월부터 1910년 8월까지의 기록 3,243책이 남아 있어요.",
+      "checks.c3.options.a": "3,243책",
+      "checks.c3.options.b": "324책",
+      "checks.c3.options.c": "32,430책",
+      "checks.c3.prompt": "{target}, 오늘날 몇 책이 남아 있나요?",
+      "facts.f1.claim": "승정원은 왕의 비서 기관으로, 왕명을 신하들에게 내려보내고 신하들의 의견을 왕에게 올리는 일(왕명의 '출납')을 맡았어요.",
+      "facts.f2.claim": "승정원에는 왕의 비서인 승지(정3품) 6명과 주서(정7품) 2명이 있었고, 승정원 일기는 주서가 썼어요(주서는 다른 일도 했고, 임시로 주서를 더 둘 수 있었어요).",
+      "facts.f3.claim": "주서는 사관과 함께 왕 앞에서 나랏일을 의논하는 말을 빠르게 초고로 적었어요. 그다음 깨끗하게 옮겨 썼고, 보통 한 달 치 일기가 한 책이 되었어요(양이 많으면 두 책).",
+      "facts.f4.claim": "승정원 일기는 날마다 날씨를 기록해 자연 현상에 대한 기초 자료를 주며, 이 자료는 자연과학 연구에 쓰일 수 있어요.",
+      "facts.f5.claim": "원래 일기는 초서로 쓰여 읽기 어려워요. 국사편찬위원회가 나중에 이를 해서로 다시 쓰고 문장 부호를 넣어 펴냈어요(141권. 국사편찬위원회는 1960~1977년, 백과사전은 1961년이라고 해요).",
+      "facts.f6.claim": "1744년과 1888년 승정원에 난 불로 많은 일기가 타 버렸어요. 1744년 화재 뒤에는 일기청이라는 특별 관청이 조정의 소식지(조보)와 다른 기록을 이용해 일부(548책, 잃은 책의 3분의 1이 안 돼요)를 다시 만들었고, 1888년에 잃은 361책은 1890년까지 다시 만들었어요.",
+      "facts.f7.claim": "승정원 일기는 1623년 3월부터 1910년 8월까지의 기록 3,243책이 남아 있어요. (이 가운데 3,045책의 제목이 '승정원일기'이고, 198책은 1894년 뒤에 관청 이름이 바뀌어 '승선원일기' 같은 나중 이름을 달고 있어요.)",
+      "facts.f8.claim": "승정원 일기 원본은 서울에 있는 서울대학교 규장각(규장각한국학연구원)에 있어요.",
+      "facts.f9.claim": "승정원 일기는 국보(1999년 4월 9일 지정)이고, 2001년 유네스코 세계기록유산에 등재되었어요.",
+      "hoyaIntro": "왕의 하루 일을 적던 승정원에 가 봐요.",
+      "hoyaOutro": "날씨까지 일기에 적었어요! 이제 왜 보물인지 알게 됐어요.",
+      "keywords.choseo.gloss": "획을 흘려서 빠르게 쓰는 글씨체",
+      "keywords.gukbo.gloss": "나라가 정한 아주 귀한 문화유산",
+      "keywords.ilgi.gloss": "날마다 겪은 일을 적는 글",
+      "keywords.ilgireul-dasi-sseoyo.gloss": "하루의 기록을 한 번 더 적는다는 뜻이에요.",
+      "keywords.juseo.gloss": "왕의 비서 기관에서 일기를 적던 관리",
+      "keywords.maeil.gloss": "하루하루 빠짐없이",
+      "keywords.malgayo.gloss": "하늘에 구름이 없고 해가 나 있어요",
+      "keywords.nalssi.gloss": "그날그날의 비, 바람, 햇빛 같은 하늘의 상태",
+      "keywords.nalssiga-malgayo.gloss": "하늘에 구름 없이 해가 났다는 뜻이에요.",
+      "keywords.seungjeongwon-ilgi.gloss": "왕의 비서 기관이 나랏일을 날마다 적은 기록",
+      "keywords.seungjeongwon.gloss": "왕의 명령을 전하고 신하의 뜻을 올리던 왕의 비서 기관",
+      "scenes.s1.caption": "왕의 비서 기관, 승정원",
+      "scenes.s1.narration": "호야와 함께 시간을 거슬러 왕의 비서 기관인 {kw:seungjeongwon}으로 가 봐요. 이곳은 왕의 명령을 신하들에게 전하고, 신하들의 의견을 다시 왕에게 올렸어요.",
+      "scenes.s2.caption": "일기를 쓰는 주서들",
+      "scenes.s2.narration": "이곳에서는 왕의 비서 여섯 명과 함께 {kw:juseo}라고 부르는 기록 담당 관리 두 명이 일했어요. 이 관리들은 이곳의 일기인 {kw:seungjeongwon-ilgi}를 썼어요.",
+      "scenes.s3.caption": "왕 앞에서 빠르게 적은 기록",
+      "scenes.s3.narration": "날마다 주서는 사관과 함께 왕 앞에서 일하며, 나랏일을 의논하는 말을 빠르게 적었어요. 나중에 깨끗하게 옮겨 썼고, 보통 한 달 치 일기를 한 책으로 묶었어요.",
+      "scenes.s4.caption": "날마다 적은 날씨",
+      "scenes.s4.narration": "날마다 쓴 일기에는 날씨도 적었어요. 오늘날 연구자들은 이 날씨 기록으로 옛날 자연을 연구할 수 있어요.",
+      "scenes.s5.caption": "흘려 쓴 글씨를 또박또박 다시 쓰기",
+      "scenes.s5.narration": "원래 일기는 {kw:choseo}라는 흘려 쓴 글씨로 되어 있어서 읽기 어려워요. 현대에 들어 국사편찬위원회가 이를 또박또박한 글씨로 다시 써서 펴냈어요.",
+      "scenes.s6.caption": "화재, 그리고 일부 다시 만든 일기",
+      "scenes.s6.narration": "1744년과 1888년에 승정원에 불이 나서 많은 일기가 타 버렸어요. 관리들은 조정의 소식지 같은 다른 기록을 이용해 일기의 일부를 다시 만들었어요.",
+      "scenes.s7.caption": "오늘날 국보로 지키는 일기",
+      "scenes.s7.narration": "오늘날 1623년부터 1910년까지의 일기 3,243책이 남아 있어요. 원본은 서울대학교 규장각에 있어요. 이 일기는 국보이고, 2001년부터 유네스코 세계기록유산에 올라 있어요.",
+      "summary": "승정원에서는 기록을 맡은 관리들이 왕의 하루 일을 날마다, 날씨까지 적었어요. 호야는 이 커다란 일기가 왜 보물인지 알아봐요.",
+      "title": "왕의 비서 기관이 날마다 남긴 기록"
+    },
+    "story:shapes-of-hangeul": {
+      "checks.c1.explain": "해례에 따르면 미음은 입 모양을 본떴어요.",
+      "checks.c1.options.a": "목구멍",
+      "checks.c1.options.b": "치아",
+      "checks.c1.options.c": "입",
+      "checks.c1.options.d": "하늘",
+      "checks.c1.prompt": "{target}의 모양은 무엇을 본떴어요?",
+      "checks.c2.explain": "세로로 선 줄은 서 있는 사람을 본떴어요. 둥근 점은 하늘을, 평평한 줄은 땅을 본떴어요.",
+      "checks.c2.options.a": "둥근 점",
+      "checks.c2.options.b": "모음 글자 이",
+      "checks.c2.options.c": "모음 글자 으",
+      "checks.c2.options.d": "모음 글자 아",
+      "checks.c2.prompt": "서 있는 사람을 본뜬 모음은 어느 것이에요?",
+      "checks.c3.explain": "더 센 소리는 획을 더해 나타내요. 니은에 획을 하나 더하면 디귿이 되고, 하나 더 더하면 티읕이 돼요.",
+      "checks.c3.options.a": "거꾸로 뒤집기",
+      "checks.c3.options.b": "둘레에 동그라미 그리기",
+      "checks.c3.options.c": "줄 하나 지우기",
+      "checks.c3.options.d": "획 하나 더하기",
+      "checks.c3.prompt": "니은을 어떻게 바꾸면 {target} 글자가 돼요?",
+      "checks.r1.explain": "입은 말하고 먹을 때 여닫는 곳이에요. 미음은 입 모양을 본떴어요.",
+      "checks.r1.options.a": "숨과 음식이 지나가는 길",
+      "checks.r1.options.b": "말하고 먹을 때 여닫는 곳",
+      "checks.r1.options.c": "머리 위로 펼쳐진 넓은 곳",
+      "checks.r1.options.d": "말하고 생각하며 사는 존재",
+      "checks.r1.prompt": "{target}: 무슨 뜻이에요?",
+      "checks.r2.explain": "하늘은 머리 위로 펼쳐진 넓은 곳이에요. 둥근 점은 둥근 하늘을 본떴어요.",
+      "checks.r2.options.a": "우리가 딛고 서는 바닥",
+      "checks.r2.options.b": "말하고 생각하며 사는 존재",
+      "checks.r2.options.c": "한 번에 긋는 선",
+      "checks.r2.options.d": "머리 위로 펼쳐진 넓은 곳",
+      "checks.r2.prompt": "{target}: 무슨 뜻이에요?",
+      "checks.r3.explain": "더 센 소리는 획을 더해 나타내요. 니은, 디귿, 티읕 순서예요.",
+      "checks.r3.options.a": "획",
+      "checks.r3.options.b": "점",
+      "checks.r3.options.c": "동그라미",
+      "checks.r3.options.d": "모음",
+      "checks.r3.prompt": "이야기에서 더 센 소리를 나타내려면 글자에 무엇을 더해요?",
+      "facts.f1.claim": "1446년 훈민정음 해례본에는 학자들이 쓴 해례(풀이와 예)가 실려 있고, 거기에 글자를 만든 원리가 밝혀져 있어요.",
+      "facts.f2.claim": "기본 자음 ㄱ, ㄴ, ㅁ, ㅅ, ㅇ 다섯 자는 각 소리를 낼 때 쓰는 발음 기관의 모양을 본떠 만들었어요.",
+      "facts.f3.claim": "해례에 따르면 ㄱ은 혀뿌리가 목구멍을 막는 모양, ㄴ은 혀가 윗잇몸에 닿는 모양(해례 원문: 象舌附上腭之形), ㅁ은 입 모양, ㅅ은 이(치아) 모양, ㅇ은 목구멍 모양을 본떴어요.",
+      "facts.f4.claim": "더 세게 나는 소리는 기본 글자에 획을 더했어요. 예를 들면 ㄴ → ㄷ → ㅌ이에요.",
+      "facts.f5.claim": "기본 모음 세 자는 하늘, 땅, 사람을 본떴어요. ·는 하늘처럼 둥글고, ㅡ는 땅처럼 평평하고, ㅣ는 사람처럼 곧게 서 있어요.",
+      "facts.f6.claim": "나머지 모음은 기본 모음을 합쳐 만들었어요. 예를 들어 ㅏ는 ㅣ와 ·를 합친 글자예요.",
+      "facts.f7.claim": "훈민정음은 28자로 시작했어요. ㆆ, ㅿ, · 같은 글자는 이제 쓰지 않고, 지금의 대한민국 맞춤법(한글 맞춤법)은 기본 글자를 자음 14자와 모음 10자, 모두 24자로 정해요. (북한의 규범은 겹자음과 겹모음까지 세어 40자예요.)",
+      "facts.f8.claim": "기본 자음 다섯 자는 각 소리를 낼 때 쓰는 발음 기관의 모양을 본떠 만들었어요.",
+      "hoyaIntro": "글자 속에 비밀 모양이 숨어 있는 거 알아요? 옛 책을 펴고 찾아봐요!",
+      "hoyaOutro": "혀, 입, 이(치아), 목구멍, 하늘, 땅, 사람! 글자 모양 속 비밀을 찾았어요!",
+      "keywords.haeryebon.gloss": "글자를 풀이하고 예를 든 훈민정음 책",
+      "keywords.haneul-ttang-saram.gloss": "기본 모음이 본뜬 세 가지: 머리 위 넓은 곳, 발밑 바닥, 곧게 선 존재",
+      "keywords.haneul.gloss": "머리 위로 펼쳐진 넓은 곳",
+      "keywords.hoek.gloss": "글자를 쓸 때 한 번에 긋는 선",
+      "keywords.ip.gloss": "말하고 먹을 때 여닫는 곳",
+      "keywords.jaeum.gloss": "닿소리, 모음과 어울려 소리 나는 글자",
+      "keywords.jaeumgwa-moeum.gloss": "닿소리와 홀소리",
+      "keywords.jamo-a.gloss": "세로줄 오른쪽에 짧은 획을 더한 모음, a 소리",
+      "keywords.jamo-d.gloss": "자음 글자 디귿, d나 t 소리",
+      "keywords.jamo-eu.gloss": "가로줄 하나로 된 모음, eu 소리",
+      "keywords.jamo-g.gloss": "자음 글자 기역, g나 k 소리",
+      "keywords.jamo-i.gloss": "세로줄 하나로 된 모음, i 소리",
+      "keywords.jamo-m.gloss": "자음 글자 미음, m 소리",
+      "keywords.jamo-n.gloss": "자음 글자 니은, n 소리",
+      "keywords.jamo-s.gloss": "자음 글자 시옷, s 소리",
+      "keywords.jamo-silent-ng.gloss": "자음 글자 이응, 받침에서 ng 소리",
+      "keywords.jamo-t.gloss": "자음 글자 티읕, 거센 t 소리",
+      "keywords.moeum.gloss": "홀소리, 혼자서도 소리 나는 글자",
+      "keywords.mokgumeong.gloss": "입 안쪽 깊은 곳, 숨과 음식이 지나가는 길",
+      "keywords.saram.gloss": "말하고 생각하며 사는 존재",
+      "keywords.ttang.gloss": "우리가 딛고 서는 바닥",
+      "scenes.s5.caption": "소리가 세지면 획을 하나 더해요",
+      "scenes.s6.caption": "모음: 하늘, 땅, 사람",
+      "scenes.s7.caption": "모양을 합쳐 새 모음을 만들어요",
+      "scenes.s7.narration": "모양을 합치면 모음이 더 생겨요! {kw:jamo-i}와 점 하나가 만나 {kw:jamo-a}가 돼요. 몇 가지 좋은 생각으로 간단한 모양 몇 개가 글자 한 벌이 됐어요.",
+      "scenes.s8.caption": "대한민국 맞춤법: 자음 14자, 모음 10자",
+      "scenes.s8.narration": "한글은 28자로 시작했고, 옛 글자 몇 개는 이제 쓰지 않아요. 오늘날 대한민국 맞춤법은 기본 글자를 24자로 세요. 자음 14자와 모음 10자예요. 호야가 신나서 외쳐요. \"자음과 모음!\"",
+      "summary": "호야가 1446년 훈민정음 해례본을 읽고, 한글의 기본 자음 다섯 자는 혀, 입, 이(치아), 목구멍의 모양을 본떴고 기본 모음은 하늘, 땅, 사람에서 왔다는 것을 알아내요.",
+      "title": "글자 모양에 숨은 비밀"
+    },
+    "story:sillok-mountain-archives": {
+      "checks.c1.explain": "조선 초기에는 비밀을 지키고 종이를 다시 쓰려고 다 쓴 초고를 시냇물에 씻었어요.",
+      "checks.c1.options.a": "낡은 종이에서 다시 상쾌한 냄새가 나게 하려고",
+      "checks.c1.options.b": "먹을 새로운 색으로 바꾸려고",
+      "checks.c1.options.c": "비밀을 지키고 종이를 다시 쓰려고",
+      "checks.c1.prompt": "조선 초기에는 다 쓴 초고를 왜 시냇물에 씻었나요?",
+      "checks.c2.explain": "그 고장의 선비 안의와 손홍록이 자기 돈을 들여 전주의 실록을 내장산으로 옮기고 지켰어요.",
+      "checks.c2.options.a": "안의와 손홍록",
+      "checks.c2.options.b": "북적이는 장터 마을의 상인들",
+      "checks.c2.options.c": "궁궐의 화가들",
+      "checks.c2.prompt": "전쟁 때 전주의 실록을 지킨 사람은 누구인가요?",
+      "checks.c3.explain": "포쇄는 몇 년마다 맑은 날을 골라 책을 꺼내 햇볕과 바람에 말리는 일이에요.",
+      "checks.c3.options.a": "낡은 책을 태우는 일",
+      "checks.c3.options.b": "책을 햇볕과 바람에 말리는 일",
+      "checks.c3.options.c": "왕의 그림을 그리는 일",
+      "checks.c3.prompt": "{target}, 어떤 일일까요?",
+      "facts.f1.claim": "각 왕의 실록은 그 왕이 세상을 떠난 뒤 다음 왕 때 실록청이라는 임시 관청에서 편찬했어요.",
+      "facts.f10.claim": "몇 년마다 사관을 사고에 보내 맑은 날 실록을 꺼내 햇볕과 바람에 말렸어요(포쇄). 국사편찬위원회와 한국민족문화대백과사전은 3년에 한 번, 국가기록원은 2~3년마다라고 설명하고, 같은 사전의 포쇄 항목은 과거 시험을 보는 해처럼 3년마다 돌아오는 진·술·축·미년(辰戌丑未)에 하도록 정했다고 설명해요.",
+      "facts.f2.claim": "편찬관들은 사관의 사초와 함께 시정기, 승정원 일기 같은 다른 정부 기록을 이용했어요.",
+      "facts.f3.claim": "실록은 초초, 중초, 정초의 세 단계 초고를 거쳐 편찬했어요. 정초를 바탕으로 인쇄했고, 실록은 대부분 활자로 인쇄한 책이에요.",
+      "facts.f4.claim": "조선 초기에는 다 쓴 초고를 나라에서 종이를 만들던 관청(조지서)이 있던 자하문 밖 시냇물에 씻어 기밀이 새지 않게 하고 종이를 다시 썼는데, 이를 세초라고 했어요. 조선 후기에는 초고를 대부분 태웠어요.",
+      "facts.f5.claim": "실록은 사고에 보관했어요. 1592년에 시작된 임진왜란 때 서울 춘추관과 충주, 성주의 실록은 사라지고 전주의 실록만 남았어요.",
+      "facts.f6.claim": "그 고장의 유학자 안의와 손홍록은 자기 재산을 들여 전주의 실록과 다른 책들을 내장산으로 옮기고 번갈아 지켰으며, 이듬해인 1593년에 정부에 넘겨주었어요.",
+      "facts.f7.claim": "전쟁이 끝난 뒤(1603~1606년) 전주의 실록을 바탕으로 실록을 다시 인쇄해, 모두 다섯 벌을 다섯 곳의 사고에 보관했어요.",
+      "facts.f8.claim": "서울 춘추관에 둔 한 벌을 빼고, 나머지는 전쟁에서 더 안전하도록 깊은 산속이나 섬의 사고(강화도 마니산, 태백산, 묘향산, 오대산)에 두었어요.",
+      "facts.f9.claim": "실록은 기름 먹인 두꺼운 종이로 싼 다음 다시 붉은 천으로 싸서, 벌레 피해와 썩는 것을 막으려고 넣은 약초 천궁, 창포와 함께 나무 궤에 넣었어요.",
+      "hoyaIntro": "실록은 안전하게 지내려고 어디로 갔을까요? 산으로 따라가 봐요!",
+      "hoyaOutro": "기록에서 책으로, 그리고 산속 사고까지! 실록이 간 길을 끝까지 따라왔어요!",
+      "keywords.chaegeul-haetbyeote-mallyeoyo.gloss": "글을 담아 묶은 종이를 해가 드는 곳에 두어 습기를 없앤다는 뜻이에요.",
+      "keywords.chaek.gloss": "종이를 묶어 글을 담은 것",
+      "keywords.haetbyeot.gloss": "해가 비추는 따뜻한 빛",
+      "keywords.naejangsan.gloss": "이 이야기에서 선비들이 실록을 옮겨 지킨 높은 곳",
+      "keywords.poswae.gloss": "책을 꺼내 햇볕과 바람에 말리는 일",
+      "keywords.sacho.gloss": "역사를 적는 관리가 쓴 기록의 초고",
+      "keywords.sago.gloss": "역사책을 보관하던 곳",
+      "keywords.san.gloss": "땅이 높이 솟은 곳",
+      "keywords.sansogui-sago.gloss": "깊은 골짜기에 둔 역사책 보관소",
+      "keywords.secho.gloss": "다 쓴 초고를 물에 씻어 없애는 일",
+      "keywords.sillokcheong.gloss": "임금 한 분의 공식 역사책을 엮으려고 임시로 세운 기관",
+      "keywords.yakcho.gloss": "병을 고치는 데 쓰는 풀",
+      "scenes.s1.caption": "사관의 기록을 모으는 관청",
+      "scenes.s1.narration": "왕이 세상을 떠나면 다음 왕의 조정은 {kw:sillokcheong}이라는 임시 관청을 세웠어요. 그곳 관리들은 사관의 {kw:sacho}와 다른 궁궐 기록을 모아 그 왕의 실록을 썼어요.",
+      "scenes.s2.caption": "세 번의 초고, 그다음 인쇄",
+      "scenes.s2.narration": "관리들은 첫 초고를 쓰고, 두 번째 초고에서 고치고, 마지막 초고를 다듬었어요. 그다음 실록은 대부분 활자로 인쇄했어요.",
+      "scenes.s3.caption": "조선 초기, 시냇물에 씻은 초고",
+      "scenes.s3.narration": "다 쓴 초고는 어떻게 했을까요? 조선 초기에는 나라에서 종이를 만들던 관청 근처 시냇물에 담가 씻었어요. 비밀은 지켜지고 종이는 다시 쓸 수 있었어요. 이것을 {kw:secho}라고 했어요.",
+      "scenes.s4.caption": "전쟁에서 살아남은 전주의 실록",
+      "scenes.s4.narration": "다 만든 실록은 {kw:sago}라는 특별한 보관소에 두었어요. 1590년대의 큰 전쟁 때 서울, 충주, 성주에 둔 실록은 사라지고, 전주의 실록만 남았어요.",
+      "scenes.s5.caption": "책을 산으로 옮기는 선비들",
+      "scenes.s5.narration": "그 고장의 선비 안의와 손홍록은 자기 돈을 들여 전주의 실록과 다른 책들을 내장산으로 옮겼어요. 두 사람은 번갈아 책을 지키다가, 이듬해 책을 나라에 넘겨주었어요.",
+      "scenes.s6.caption": "산속 사고로 간 실록들",
+      "scenes.s6.narration": "전쟁이 끝난 뒤 전주의 실록을 바탕으로 새로 인쇄해 모두 다섯 벌을 만들었어요. 대부분은 오대산과 태백산처럼 전쟁이 닿기 어려운 깊은 산속이나 섬의 사고로 갔어요.",
+      "scenes.s7.caption": "약초와 함께 상자에 넣은 책",
+      "scenes.s7.narration": "책은 기름 먹인 종이와 붉은 천으로 싼 다음, 천궁과 창포라는 약초와 함께 나무 상자에 넣었어요. 이 약초는 벌레와 썩는 것을 막는 데 도움을 주었어요.",
+      "scenes.s8.caption": "햇볕에 책 말리기",
+      "scenes.s8.narration": "몇 년마다 사관이 산속 사고를 찾아갔어요. 맑은 날 책을 꺼내 햇볕과 바람에 말렸어요. 이것을 {kw:poswae}라고 했어요. 호야도 맑은 날이 정말 좋아요!",
+      "summary": "왕이 세상을 떠나면 관리들이 사관의 기록으로 실록을 만들고, 멀리 산속에 있는 사고에서 책을 지켰어요. 호야는 초고에서 산속 사고까지 실록이 간 길을 따라가요.",
+      "title": "산에 숨은 실록"
+    },
+    "story:sillok-royal-historians": {
+      "checks.c1.explain": "규칙상 초고 기록은 왕을 포함해 누구도 읽을 수 없었어요. 덕분에 사관은 공정하게 쓸 수 있었어요.",
+      "checks.c1.options.a": "왕 자신만",
+      "checks.c1.options.b": "아무도, 왕조차도",
+      "checks.c1.options.c": "궁궐의 관리라면 누구나",
+      "checks.c1.prompt": "규칙상 사관의 초고 기록({target})은 누가 읽을 수 있었나요?",
+      "checks.c2.explain": "'사관이 알게 하지 말라' 하고 말했어요. 사관은 그 말도 적었고, 그 말은 오늘날 실록에 남아 있어요.",
+      "checks.c2.options.a": "사관이 알게 하지 말라!",
+      "checks.c2.options.b": "새 말을 가져오너라!",
+      "checks.c2.options.c": "어서 이것을 적어라!",
+      "checks.c2.prompt": "말에서 떨어진 뒤 태종은 뭐라고 말했나요?",
+      "checks.c3.explain": "실록은 1392년부터 1863년까지 472년, 태조부터 철종까지 25명의 왕을 담고 있어요.",
+      "checks.c3.options.a": "100년",
+      "checks.c3.options.b": "1,000년",
+      "checks.c3.options.c": "472년",
+      "checks.c3.prompt": "조선왕조실록은 몇 년의 역사를 담고 있나요?",
+      "facts.f1.claim": "조선에서는 사관이 궁궐에서 일어난 일을 날마다 적었어요.",
+      "facts.f10.claim": "실록은 1997년 유네스코 세계기록유산에 등재되었어요.",
+      "facts.f2.claim": "사관은 왕이 신하들을 만나는 곳이면 어디든 참석해 보고 들은 것을 기록했어요.",
+      "facts.f3.claim": "조선의 전임 사관은 예문관의 봉교 2명, 대교 2명, 검열 4명으로 모두 8명이었고, 다른 많은 문관도 사관 일을 겸했어요.",
+      "facts.f4.claim": "사관이 쓴 초고 기록을 사초(史草), 곧 '역사의 초고'라고 불렀어요.",
+      "facts.f5.claim": "규칙상 왕을 포함해 누구도 사초를 읽을 수 없었어요. 이 규칙은 사관이 공정하게 기록하고 그 지위를 보호받도록 하려는 것이었어요.",
+      "facts.f6.claim": "1404년(태종 4년, 음력 2월 8일) 태종은 사냥을 하다가 말에서 떨어졌지만 다치지 않았어요.",
+      "facts.f7.claim": "태종은 주위 사람들에게 '사관이 알게 하지 말라'고 했는데, 바로 이 말이 기록되어 실록에 실려 있어요.",
+      "facts.f8.claim": "사관의 사초는 실록을 편찬하는 데 쓰인 가장 중요한 자료였어요.",
+      "facts.f9.claim": "조선왕조실록은 태조부터 철종까지 25명의 왕, 472년(1392~1863년)의 역사를 담고 있어요.",
+      "hoyaIntro": "옛날 왕이 한 말을 우리는 어떻게 알까요? 그 모든 것을 적은 사람들을 만나러 가요!",
+      "hoyaOutro": "사관들은 날마다 모든 것을 적었어요. 이제 실록이 어디에서 왔는지 알게 됐어요!",
+      "keywords.girok.gloss": "어떤 일을 글로 적어 남긴 것",
+      "keywords.mal.gloss": "사람이 타고 다니는 큰 동물(글자가 같은 다른 낱말은 사람이 입으로 하는 이야기를 뜻해요)",
+      "keywords.sacho.gloss": "역사를 적는 관리가 쓴 기록의 초고",
+      "keywords.sachoneun-wangdo-bol-su-eopseosseoyo.gloss": "임금조차 역사 기록의 초고를 읽을 수 없었다는 뜻이에요.",
+      "keywords.sagwan.gloss": "왕실의 일을 적던 역사 담당 관리",
+      "keywords.sagwani-alge-haji-malla.gloss": "역사를 적는 관리에게 이 일을 알리지 말라는 명령이에요.",
+      "keywords.sillok.gloss": "한 임금이 다스린 시기의 공식 역사책",
+      "keywords.wang.gloss": "나라를 다스리는 임금",
+      "scenes.s1.caption": "왕이 한 말을 어떻게 아는지 묻는 호야",
+      "scenes.s1.narration": "어린 호랑이 호야에게 큰 궁금증이 생겼어요. 수백 년 전 왕이 한 말을 우리는 어떻게 알까요? 누군가 그것을 적어 두었기 때문이에요! 조선에서는 특별한 관리들이 날마다 궁궐의 일을 기록했어요.",
+      "scenes.s2.caption": "왕 곁에서 기록하는 사관",
+      "scenes.s2.narration": "이 관리들이 바로 왕실의 역사를 적는 {kw:sagwan}이었어요. 왕이 신하들을 만나는 곳이면 어디든 사관이 함께 있으면서 보고 들은 것을 적었어요.",
+      "scenes.s3.caption": "초고를 쓰는 사관들",
+      "scenes.s3.narration": "조선에는 이 일만 하는 사관이 여덟 명 있었고, 다른 많은 관리도 사관 일을 함께 맡았어요. 사관들의 기록을 {kw:sacho}라고 불렀는데, '역사의 초고'라는 뜻이에요.",
+      "scenes.s4.caption": "왕도 읽을 수 없는 기록",
+      "scenes.s4.narration": "규칙은 엄격했어요. 누구도 {kw:sacho}를 읽으면 안 되었고, 왕도 마찬가지였어요. 덕분에 사관은 공정하게 쓸 수 있었고, 사관의 자리도 지킬 수 있었어요.",
+      "scenes.s5.caption": "말에서 떨어진 태종",
+      "scenes.s5.narration": "1404년 어느 날, 태종이 사냥을 나갔어요. 말이 비틀거려서 태종이 말에서 떨어졌어요. 다행히 다치지 않았어요!",
+      "scenes.s6.caption": "'사관이 알게 하지 말라!'",
+      "scenes.s6.narration": "태종은 주위를 둘러보며 '사관이 알게 하지 말라!' 하고 말했어요. 그런데 바로 그 말이 오늘날 실록에 남아 있어요. 사관은 이 말까지 적었어요!",
+      "scenes.s7.caption": "실록을 만드는 데 쓰인 기록",
+      "scenes.s7.narration": "사관들의 기록은 조선왕조실록, 곧 {kw:sillok}을 만드는 데 가장 중요한 자료가 되었어요. 실록은 태조부터 철종까지 25명의 왕, 472년을 담고 있고, 유네스코 세계기록유산에 올라 있어요.",
+      "summary": "호야는 조선 왕의 말을 누가 적었는지, 그리고 왜 왕조차 그 기록을 읽을 수 없었는지 알아봐요. 실록에 실린 1404년의 실제 기록을 보면 사관들이 얼마나 충실하게 기록했는지 알 수 있어요.",
+      "title": "호야가 사관을 만나요"
+    },
+    "story:sun-and-moon": {
+      "checks.c1.explain": "옛이야기에서 호랑이는 집에 돌아가는 어머니를 만나, 먼저 떡을 달라고 해요.",
+      "checks.c1.options.a": "신발",
+      "checks.c1.options.b": "물동이",
+      "checks.c1.options.c": "떡",
+      "checks.c1.options.d": "지팡이",
+      "checks.c1.prompt": "첫 번째 고개에서 호랑이는 어머니에게 무엇을 달라고 했나요?",
+      "checks.c2.explain": "옛이야기에서 아이들이 하늘에 빌자, 타고 올라갈 튼튼한 새 줄이 내려와요.",
+      "checks.c2.options.a": "튼튼한 새 줄",
+      "checks.c2.options.b": "나무 사다리",
+      "checks.c2.options.c": "구름 다리",
+      "checks.c2.options.d": "긴 비단 천",
+      "checks.c2.prompt": "하늘에서 무엇이 내려와 아이들을 도왔나요?",
+      "checks.c3.explain": "옛이야기에서 누이는 밤이 무서워서 오빠와 자리를 바꾸고 해가 돼요.",
+      "checks.c3.options.a": "해 뜨는 모습을 보고 싶었어요",
+      "checks.c3.options.b": "캄캄한 밤이 무서웠어요",
+      "checks.c3.options.c": "해가 너무 뜨겁다고 느꼈어요",
+      "checks.c3.options.d": "오빠가 먼저 빛나고 싶다고 했어요",
+      "checks.c3.prompt": "누이와 오빠는 왜 하늘에서 서로 자리를 바꾸었나요?",
+      "checks.r1.explain": "호랑이는 줄무늬가 있는 큰 산짐승이에요. 옛이야기에서 호랑이는 엄마인 척해요.",
+      "checks.r1.options.a": "귀가 길고 깡충깡충 뛰는 동물",
+      "checks.r1.options.b": "줄무늬가 있는 큰 산짐승",
+      "checks.r1.options.c": "낮에 하늘에서 밝게 빛나는 것",
+      "checks.r1.options.d": "밤하늘에 떠서 빛나는 것",
+      "checks.r1.prompt": "{target}의 뜻은 무엇일까요?",
+      "checks.r2.explain": "동아줄은 굵고 튼튼한 밧줄이에요. 하늘에서 새 동아줄이 내려와요.",
+      "checks.r2.options.a": "줄기와 가지가 있는 키 큰 식물",
+      "checks.r2.options.b": "드나들 때 여닫는 것",
+      "checks.r2.options.c": "곡식을 기르는 넓은 땅",
+      "checks.r2.options.d": "굵고 튼튼한 밧줄",
+      "checks.r2.prompt": "{target}의 뜻은 무엇일까요?",
+      "checks.r3.explain": "옛이야기에서 오누이는 해와 달이 되었어요.",
+      "checks.r3.options.a": "해와 달",
+      "checks.r3.options.b": "별 두 개",
+      "checks.r3.options.c": "나무 두 그루",
+      "checks.r3.options.d": "새 두 마리",
+      "checks.r3.prompt": "옛이야기에서 오누이는 무엇이 되었나요?",
+      "facts.f1.claim": "「해와 달이 된 오누이」(「해님 달님」이라고도 해요)는 전국에서 널리 전해지는 한국의 전래 민담으로, 이야기 형태가 여러 가지예요.",
+      "facts.f2.claim": "이야기에서 일하러 나갔던 어머니가 집에 돌아오는 길에 호랑이를 만나요. 한국민족문화대백과사전의 기본형에서는 호랑이가 고개마다 나타나 떡을 시작으로 차례로 더 많은 것을 달라고 해요. 이 이야기는 떡만 남기고 나머지는 뺐어요.",
+      "facts.f3.claim": "백과사전의 기본형에서 호랑이는 어머니인 척하며 아이들의 집에 찾아가요. 아이들은 목소리와 손이 어머니와 다르다며 문을 열어 주지 않다가, 호랑이가 우는 아기에게 젖을 먹여야 한다고 하자 문을 열어 줘요. 그러고는 곧 호랑이인 것을 알아채고 우물가의 큰 나무 위로 피해요. 다른 이야기도 있어요(국립민속박물관 줄거리에서는 아이들이 문구멍으로 내다보고 호랑이를 알아본 뒤, 뒷문으로 빠져나가 나무 위로 피해요). 이 이야기는 쉽게 줄인 것이에요.",
+      "facts.f4.claim": "백과사전의 기본형에서 호랑이는 오빠의 말대로 참기름을 바르고 나무에 오르려 하지만 오르지 못해요. 그 뒤 누이가 알려 준 다른 방법으로 올라가요.",
+      "facts.f5.claim": "이야기에서 오누이가 하늘에 줄을 내려 달라고 빌자, 튼튼한 새 동아줄이 내려와 둘은 그 줄을 타고 올라가요. 호랑이가 잡은 썩은 줄은 끊어져요.",
+      "facts.f6.claim": "이야기에서 호랑이는 썩은 줄이 끊어져 수수밭에 떨어지고, 이야기꾼들은 이것으로 수숫대가 빨간 까닭을 설명해요. 빨간 수숫대의 까닭만 들려주는 이야기도 있고, 이 옛이야기는 「수숫대가 빨간 이유」라고도 불려요.",
+      "facts.f7.claim": "기본형에서는 처음에 오빠가 해, 누이가 달이 되지만, 누이가 밤을 무서워해서 둘이 서로 바꿔요. 해가 된 누이는 사람들이 쳐다보는 것을 부끄러워해요. 백과사전은 누이가 바늘로 사람들의 눈을 찔러 해를 똑바로 보지 못하게 한다고 하고, 국립민속박물관 줄거리는 누이가 강한 빛을 낸다고 해요. 이 이야기는 더 순한 쪽('너무 밝아서 볼 수 없어요')만 따랐어요. 이야기마다 달라요(오빠가 그대로 해가 되는 이야기도 있어요).",
+      "hoyaIntro": "이야기 시간이에요! 오빠와 여동생, 그리고 꾀 많은 호랑이가 나오는 옛 민담이에요.",
+      "hoyaOutro": "오누이는 하늘에서 무사해요. 우리 이야기는 여기까지예요!",
+      "keywords.chamgireum.gloss": "참깨를 볶아 짠 고소한 기름",
+      "keywords.dal.gloss": "밤하늘에 떠서 빛나는 것",
+      "keywords.dongajul.gloss": "굵고 튼튼한 밧줄",
+      "keywords.hae.gloss": "낮에 하늘에서 밝게 빛나는 것",
+      "keywords.haenim-dallim.gloss": "해와 달을 높여 부르는 말로, 이 옛이야기의 제목",
+      "keywords.haewa-dal.gloss": "낮과 밤의 하늘에서 빛나는 둘",
+      "keywords.horangi.gloss": "줄무늬가 있는 큰 산짐승",
+      "keywords.mun.gloss": "드나들 때 여닫는 것",
+      "keywords.namu.gloss": "줄기와 가지가 있는 키 큰 식물",
+      "keywords.onui.gloss": "남자 형제와 여자 형제, 남매",
+      "keywords.sae-dongajureul-naeryeo-juseyo.gloss": "하늘에 새 밧줄을 보내 달라고 비는 말",
+      "keywords.susu.gloss": "줄기가 높이 자라는 곡식의 한 가지",
+      "keywords.tteok.gloss": "쌀가루를 쪄서 만든 음식",
+      "scenes.s1.caption": "호야가 옛 민담을 들려주기 시작해요",
+      "scenes.s2.caption": "호랑이가 어머니에게 떡을 달라고 해요",
+      "scenes.s2.narration": "옛날 옛적에 어머니가 일하러 나갔어요. 떡을 가지고 집으로 돌아오다가 고개에서 호랑이를 만났어요. \"떡을 내놔!\" 호랑이가 말했어요. 옛이야기에서는 고개마다 또 달라고 해요. 여기서는 짧게 할게요.",
+      "scenes.s3.caption": "호랑이가 엄마인 척해요",
+      "scenes.s3.narration": "호랑이는 어머니인 척하며 {kw:onui}의 집에 갔어요. \"문 열어라!\" 아이들은 말했어요. \"목소리도 손도 엄마랑 달라요!\" 하지만 호랑이가 꾀를 부려서, 결국 아이들은 문을 열어 주었어요.",
+      "scenes.s4.caption": "아이들이 높은 나무에 올라가요",
+      "scenes.s5.caption": "호랑이가 참기름에 미끄러져요",
+      "scenes.s5.narration": "\"거기 어떻게 올라갔니?\" 호랑이가 물었어요. 꾀 많은 오빠가 말했어요. \"참기름을 바르면 돼!\" 미끌, 주르륵, 쿵! 호랑이는 오르지 못했어요. 하지만 곧 올라갈 다른 방법을 찾아냈어요.",
+      "scenes.s6.caption": "튼튼한 새 줄이 내려와요",
+      "scenes.s6.narration": "아이들은 하늘에 빌었어요. \"새 동아줄을 내려 주세요!\" 튼튼한 새 {kw:dongajul}이 내려왔고, 아이들은 줄을 타고 올라갔어요. 호랑이도 줄을 잡았지만, 그 줄은 낡고 썩어 있었어요. 뚝!",
+      "scenes.s7.caption": "호랑이가 수수밭에 떨어져요",
+      "scenes.s8.caption": "아이들이 해와 달이 돼요",
+      "scenes.s8.narration": "하늘에서 오빠는 {kw:hae}가 되고, 누이는 {kw:dal}이 되었어요. 누이가 밤을 무서워해서 둘은 서로 바꾸었어요. 누이는 부끄러움이 많아서, 아무도 똑바로 볼 수 없을 만큼 밝게 빛나요. 둘은 이제 무사해요!",
+      "summary": "한국의 전래 민담 「해님 달님」을 순하고 쉽게 다시 들려줘요. 오누이가 꾀 많은 호랑이를 따돌리고, 줄을 타고 하늘로 올라가 해와 달이 돼요.",
+      "title": "해와 달이 된 오누이 (옛이야기)"
+    },
+    "story:tripitaka-koreana": {
+      "checks.c1.explain": "경판은 8만 장이 넘어요. 팔만대장경의 팔만은 8만이라는 뜻이에요.",
+      "checks.c1.options.a": "800장 넘게",
+      "checks.c1.options.b": "8,000장 넘게",
+      "checks.c1.options.c": "80,000장 넘게",
+      "checks.c1.options.d": "800,000장 넘게",
+      "checks.c1.prompt": "고려대장경 경판은 몇 장이에요?",
+      "checks.c2.explain": "경판은 가야산 해인사의 법보전과 수다라장에 보관되어 있어요.",
+      "checks.c2.options.a": "프랑스 국립도서관",
+      "checks.c2.options.b": "해인사",
+      "checks.c2.options.c": "흥덕사",
+      "checks.c2.options.d": "간송미술관",
+      "checks.c2.prompt": "경판은 어디에 보관되어 있어요?",
+      "checks.c3.explain": "사람들은 부처의 힘으로 몽골군의 침입을 물리치기를 바라며 경판을 새겼어요.",
+      "checks.c3.options.a": "왕의 법을 후세에 남기려고",
+      "checks.c3.options.b": "시장에서 팔려고",
+      "checks.c3.options.c": "아이들 교과서를 만들려고",
+      "checks.c3.options.d": "부처에게 나라를 지켜 달라고 기도하려고",
+      "checks.c3.prompt": "1200년대에 사람들은 왜 경판을 새겼어요?",
+      "facts.f1.claim": "고려대장경 경판은 경상남도 합천 가야산의 해인사에 있고, 법보전과 수다라장에 보관되어 있어요.",
+      "facts.f2.claim": "대장경은 불교 경전을 빠짐없이 모은 것을 뜻해요.",
+      "facts.f3.claim": "경판은 고려 고종 24년부터 35년까지(1237~1248년) 새겼어요.",
+      "facts.f4.claim": "나라에서 대장도감이라는 특별 관청을 두고, 부처의 힘으로 몽골군의 침입을 물리치기를 바라며 경판을 새겼어요.",
+      "facts.f5.claim": "경판은 8만 장이 넘어요. 유네스코 세계기록유산 기록에는 81,258장으로 나와 있는데, 국가유산청은 이 숫자가 일제강점기 조사에서 나왔고 조선 시대에 다시 새긴 경판도 들어 있다고 설명해요. 이것이 '팔만대장경'이라고 부르는 까닭 가운데 하나이고, 이 이름은 경판에 담겼다는 8만 4천 가지 가르침(법문)과도 이어져 있어요.",
+      "facts.f6.claim": "경판은 양면에 글자를 새겼고, 주로 산벚나무로 만들었어요(나무 종류를 조사한 경판의 약 3분의 2). 오래 보존하려고 옻칠을 했고, 네 모서리에 쇠판을 붙였어요.",
+      "facts.f7.claim": "세계의 불교 학자들은 고려대장경을 정확하다고 높이 평가해요. 수천만 개의 글자가 아주 고르게 새겨져 마치 한 사람이 모두 새긴 것 같아요.",
+      "facts.f8.claim": "경판은 국보(1962년 지정)이고, 2007년 여러 불교 경판과 함께 유네스코 세계기록유산에 올랐어요.",
+      "hoyaIntro": "산에 올라 글자를 새긴 나무판이 가득한 절에 가 봐요!",
+      "hoyaOutro": "그 많은 나무판을 아주 오래전에 새겼는데 지금도 안전해요. 같이 해인사를 둘러봐 줘서 고마워요!",
+      "keywords.daejanggyeong.gloss": "불교 경전을 빠짐없이 모은 것",
+      "keywords.geulja.gloss": "말을 적는 기호 하나하나",
+      "keywords.goryeo.gloss": "그때 한반도를 다스린 나라",
+      "keywords.gyeongpan.gloss": "불교 경전을 새긴 나무판",
+      "keywords.haeinsa.gloss": "가야산에 있는 큰 절",
+      "keywords.namu.gloss": "줄기와 가지, 잎이 있는 키 큰 식물, 또는 그 재목",
+      "keywords.palman.gloss": "8만이라는 수",
+      "keywords.sojunghaeyo.gloss": "아끼고 싶을 만큼 귀해요.",
+      "keywords.yuneseuko.gloss": "교육, 과학, 문화를 맡은 국제연합 기구",
+      "scenes.s1.caption": "호야가 해인사에 올라가요",
+      "scenes.s1.narration": "호야가 가야산에 올라 합천 해인사에 가요. 긴 나무 건물의 창살 틈으로 들여다보다가 깜짝 놀라요. 글자를 새긴 나무판이 놓인 선반이 줄줄이 이어져 있어요!",
+      "scenes.s2.caption": "고려대장경 경판",
+      "scenes.s2.narration": "이것이 고려대장경 경판이에요. 대장경은 불교 경전을 빠짐없이 모은 것을 뜻해요.",
+      "scenes.s3.caption": "나라를 지키길 바라며 고려에서 새겨요",
+      "scenes.s3.narration": "이 경판은 고려 시대인 1237년부터 1248년까지 새겼어요. 몽골군이 쳐들어오자, 사람들은 부처의 힘이 나라를 지켜 주기를 바라며 경전을 새겼어요.",
+      "scenes.s4.caption": "경판이 8만 장 넘게 있어요!",
+      "scenes.s4.narration": "경판은 8만 장이 넘어요. 이것이 팔만대장경이라고 부르는 까닭 가운데 하나예요. 팔만은 8만이라는 뜻이에요! 호야가 세다가 웃어요. \"이걸 다 세려면 일 년 내내 걸리겠어요!\"",
+      "scenes.s5.caption": "경판마다 양면에 새겼어요",
+      "scenes.s5.narration": "{kw:gyeongpan} 하나하나에는 앞뒤 양면에 글자가 새겨져 있어요. 대부분 산벚나무로 만들었고, 보호하려고 옻칠을 하고 모서리에 쇠판을 붙였어요.",
+      "scenes.s6.caption": "가지런한 글자 수천만 개",
+      "scenes.s6.narration": "새긴 사람들은 수천만 개의 글자를 나무에 새겼어요. 마치 한 사람이 다 새긴 것처럼 모두 가지런하고 고르게요. 세계의 학자들이 그 정확함을 칭찬해요.",
+      "scenes.s7.caption": "유네스코도 기리는 국보",
+      "scenes.s7.narration": "오늘날 이 경판은 국보예요. 2007년에 유네스코가 세계기록유산에 올렸어요.",
+      "scenes.s8.caption": "지금도 해인사에서 안전하게",
+      "scenes.s8.narration": "800년 가까이 지난 지금도 경판은 해인사에 잘 보관되어 있어요. 호야가 속삭여요. \"소중해요.\"",
+      "summary": "호야가 해인사에서 팔만대장경을 만나요. 1237년부터 1248년까지 불교 경전을 새긴 나무판이 8만 장 넘게 있고, 지금도 잘 보관되어 있어요.",
+      "title": "나무판 팔만 장"
+    },
+    "story:uigwe-royal-birthday": {
+      "checks.c1.explain": "의궤는 혼례나 잔치 같은 왕실의 큰 의식이나 큰일을 글과 그림으로 기록한 거예요.",
+      "checks.c1.options.a": "왕실 혼례 때만 쓰는 왕관",
+      "checks.c1.options.b": "글과 그림으로 남긴 왕실 행사 보고서",
+      "checks.c1.options.c": "궁궐 간식 요리책",
+      "checks.c1.prompt": "의궤는 무엇인가요?",
+      "checks.c2.explain": "의궤는 나중 사람들이 비슷한 행사를 치를 때 따라 할 수 있도록 만들었어요. 사람, 재료, 비용도 적었어요.",
+      "checks.c2.options.a": "장터 상인들에게 책을 팔려고",
+      "checks.c2.options.b": "궁궐 담장을 새로 꾸미려고",
+      "checks.c2.options.c": "나중 사람들이 같은 행사를 제대로 치르도록",
+      "checks.c2.prompt": "조선 조정은 왜 의궤를 만들었나요?",
+      "checks.c3.explain": "반차도는 의식이나 행렬에서 모두가 어디에 서거나 걸었는지 보여 줘요. 보통 높은 곳에서 내려다본 것처럼 그렸어요.",
+      "checks.c3.options.a": "보통 위에서 내려다본 행렬",
+      "checks.c3.options.b": "왕을 위해 지은 노래",
+      "checks.c3.options.c": "서울 근처 산을 그린 지도",
+      "checks.c3.prompt": "반차도는 무엇을 보여 주나요?",
+      "facts.f1.claim": "의궤는 왕실 혼례, 잔치, 장례, 사신 접대, 궁궐 중건 같은 왕실의 큰 의식과 나라의 큰일을 글과 그림으로 기록해요.",
+      "facts.f2.claim": "의궤는 뒷세대가 비슷한 행사를 치를 때 참고할 수 있도록 만들었고, 참여한 사람, 재료, 비용을 정리해 결산 보고서 같은 역할도 했어요.",
+      "facts.f3.claim": "의궤에는 장인까지 포함해 참여한 사람들이 자세히 실려 있고, 사람마다 이름과 맡은 일이 적혀 있어요.",
+      "facts.f4.claim": "1795년 정조는 어머니 혜경궁과 함께 어머니의 환갑(회갑)을 축하하려고 새 도시 화성에 갔어요.",
+      "facts.f5.claim": "혜경궁을 위한 잔치는 1795년 윤2월(2월 다음에 넣은 한 달) 13일 화성 행궁의 봉수당에서 열렸고, 정조실록에 기록되어 있어요.",
+      "facts.f6.claim": "그날 정조는 잔치에 참여한 어르신들에게 비단을 내리라고 명했어요.",
+      "facts.f7.claim": "반차도는 궁중 의식과 행렬에서 참여한 사람들의 자리를 보여 주는 그림으로, 대개 높은 곳에서 새가 내려다보듯 그렸어요. 『원행을묘정리의궤』에는 그림 112면 가운데 반차도 63면이 실려 있어요.",
+      "facts.f8.claim": "『원행을묘정리의궤』는 금속 활자(정리자)로 인쇄했어요. 의궤는 대부분 손으로 썼기 때문에 이는 드문 일이었고, 인쇄한 의궤는 더 널리 퍼졌어요. 반차도를 포함한 그림 112면은 판화로 만들었어요.",
+      "facts.f9.claim": "의궤는 2007년 유네스코 세계기록유산에 등재되었어요.",
+      "hoyaIntro": "큰 생일잔치를 기록한, 그림이 가득한 왕실 보고서를 펼쳐 봐요!",
+      "hoyaOutro": "글과 그림 덕분에 왕실 잔치가 지금도 살아 있어요. 이제 의궤가 무엇인지 알게 됐어요!",
+      "keywords.banchado.gloss": "행사에서 사람들이 선 자리와 행렬을 그린 그림",
+      "keywords.eomeoni.gloss": "자식을 낳은 여자 부모",
+      "keywords.eomeoniui-hwangap.gloss": "자식을 낳아 기른 분이 맞는 예순 번째 생일",
+      "keywords.eoreusin.gloss": "나이 든 분을 높여 부르는 말",
+      "keywords.geurim.gloss": "선이나 색으로 모양을 나타낸 것",
+      "keywords.geurimi-inneun-bogoseo.gloss": "눈으로 볼 수 있는 장면을 곁들여 어떤 일을 알리는 글",
+      "keywords.hwalja.gloss": "글자를 하나씩 따로 만들어 짜 맞추는 인쇄용 글자",
+      "keywords.hwangap.gloss": "예순 살이 되는 생일",
+      "keywords.janchi.gloss": "기쁜 날 음식을 차리고 함께 즐기는 모임",
+      "keywords.jangin.gloss": "손으로 물건을 만드는 솜씨 좋은 사람",
+      "keywords.uigwe.gloss": "왕실 행사를 글과 그림으로 남긴 기록",
+      "keywords.wonhaeng-eulmyo-jeongni-uigwe.gloss": "정조가 1795년에 다녀온 왕실 행차를 기록한 책",
+      "scenes.s1.caption": "글과 그림으로 남긴 왕실 행사 보고서",
+      "scenes.s1.narration": "조선 조정이 왕실 혼례, 잔치, 궁궐을 다시 짓는 일 같은 큰 행사를 치르면 관리들이 {kw:uigwe}를 만들었어요. 글과 그림으로 자세히 적은 보고서예요.",
+      "scenes.s2.caption": "비슷한 행사를 치르기 위한 안내서",
+      "scenes.s2.narration": "왜 만들었을까요? 다음에 같은 행사를 제대로 치를 수 있게 하려고요. 의궤마다 행사의 순서, 사람, 비용, 재료를 마치 결산 보고서처럼 적었어요.",
+      "scenes.s3.caption": "장인들의 이름까지 실린 기록",
+      "scenes.s3.narration": "의궤에는 높은 관리부터 솜씨 좋은 장인까지 행사에 참여한 사람들도 실렸어요. 그들의 이름과 맡은 일도 적었어요.",
+      "scenes.s4.caption": "어머니와 함께 길을 나선 정조",
+      "scenes.s4.narration": "1795년 정조는 어머니 혜경궁과 함께 수원의 새 도시 화성으로 가서 어머니의 환갑을 크게 축하했어요.",
+      "scenes.s5.caption": "봉수당의 큰 잔치",
+      "scenes.s5.narration": "1795년 옛 음력 달력에는 2월 다음에 한 달이 더 있었어요. 그달 13일, 정조는 화성의 봉수당에서 어머니를 위해 큰 잔치를 열었어요. 실록에도 그날이 기록되어 있어요.",
+      "scenes.s6.caption": "어르신들께 드린 비단",
+      "scenes.s6.narration": "정조는 잔치에 참여한 어르신들에게 비단도 선물했어요.",
+      "scenes.s7.caption": "왕의 행렬을 길게 그린 그림",
+      "scenes.s7.narration": "이 행차의 기록인 {kw:wonhaeng-eulmyo-jeongni-uigwe}에는 그림이 가득해요. 그중에는 {kw:banchado}도 있어요. 왕의 행렬을 길게 그린 그림으로, 보통 높은 곳에서 내려다본 것처럼 그려서 모두가 어디에서 걷거나 서 있었는지 보여 줘요.",
+      "scenes.s8.caption": "금속 활자로 찍은 책",
+      "scenes.s8.narration": "드물게도 이 의궤는 금속 활자로 인쇄해서 더 많은 책을 나눌 수 있었어요. 그림도 판화로 찍었어요. 2007년 유네스코는 조선의 의궤를 세계기록유산에 올렸어요.",
+      "summary": "의궤는 왕실의 의식과 큰일을 그림과 함께 자세히 적은 보고서였어요. 호야는 정조가 1795년 어머니의 환갑을 맞아 연 잔치를 기록한 『원행을묘정리의궤』를 펼쳐요.",
+      "title": "예순 번째 생일을 담은 왕실 보고서"
+    },
+    "vocab-topic:animals": {
+      "blurb": "반려동물부터 동물원 친구들까지, 동물을 나타내는 낱말이에요.",
+      "hoyaIntro": "저는 호랑이예요! 동물 친구들을 만나러 가요.",
+      "title": "동물"
+    },
+    "vocab-topic:body": {
+      "blurb": "손으로 가리킬 수 있는 몸의 부분이에요.",
+      "hoyaIntro": "코를 가리켜 봐요! 몸을 나타내는 낱말을 배워요.",
+      "title": "몸"
+    },
+    "vocab-topic:colors": {
+      "blurb": "우리 주변의 여러 색을 나타내는 낱말이에요.",
+      "hoyaIntro": "주위를 둘러봐요! 색을 몇 가지나 찾을 수 있어요?",
+      "title": "색"
+    },
+    "vocab-topic:family": {
+      "blurb": "가족 안의 사람들을 부르는 낱말이에요.",
+      "hoyaIntro": "가족 중에 누가 있어요? 사람마다 낱말을 하나씩 배워 봐요.",
+      "title": "가족"
+    },
+    "vocab-topic:food": {
+      "blurb": "먹고 마시는 것을 나타내는 낱말이에요.",
+      "hoyaIntro": "배고파요? 맛있는 것들의 이름을 함께 말해 봐요.",
+      "title": "음식"
+    },
+    "vocab-topic:k-culture": {
+      "blurb": "한국의 옷, 집, 음식, 명절, 놀이, 음악을 나타내는 낱말이에요.",
+      "hoyaIntro": "한국의 옷과 음식, 명절과 음악을 함께 둘러봐요.",
+      "title": "한국 문화"
+    },
+    "vocab-topic:nature": {
+      "blurb": "하늘부터 바다까지, 밖에서 볼 수 있는 것들이에요.",
+      "hoyaIntro": "밖으로 나가서 우리 주변의 세상을 둘러봐요.",
+      "title": "자연"
+    },
+    "vocab-topic:numbers": {
+      "blurb": "1부터 10까지 세는 수, 그리고 20과 0이에요.",
+      "hoyaIntro": "하나씩 하나씩 함께 세어 봐요.",
+      "title": "숫자"
+    },
+    "vocab-topic:school": {
+      "blurb": "학교의 사람들, 교실, 가방 속 물건을 나타내는 낱말이에요.",
+      "hoyaIntro": "가방을 챙겨요! 교실에 있는 물건을 찾아봐요.",
+      "title": "학교"
+    },
+    "vocab-topic:science": {
+      "blurb": "불과 얼음부터 지구와 우주까지 알아봐요.",
+      "hoyaIntro": "가까이 들여다보고, 세상이 어떻게 돌아가는지 궁금해해 봐요.",
+      "title": "과학"
+    },
+    "vocab-topic:sports": {
+      "blurb": "하거나 볼 수 있는 운동과 놀이예요.",
+      "hoyaIntro": "준비, 시작! 운동을 나타내는 낱말을 배워요.",
+      "title": "운동"
+    },
+    "vocab-topic:travel": {
+      "blurb": "이동하는 방법과 여행에 필요한 물건이에요.",
+      "hoyaIntro": "오늘은 어디로 갈까요? 여행 낱말을 배워요.",
+      "title": "여행"
+    },
+    "vocab:agi": {
+      "gloss": "태어난 지 얼마 안 된 아주 어린 아이"
+    },
+    "vocab:ahop": {
+      "gloss": "9를 뜻하는 순우리말 수"
+    },
+    "vocab:appa": {
+      "gloss": "아버지를 친근하게 부르는 말",
+      "senseNote": "평소에 흔히 쓰는 말이에요. 격식 있는 말은 아버지예요."
+    },
+    "vocab:bada": {
+      "gloss": "짠물이 넓게 펼쳐진 곳"
+    },
+    "vocab:bae-belly": {
+      "gloss": "가슴 아래에 있는 몸의 앞부분"
+    },
+    "vocab:bae-boat": {
+      "gloss": "사람이나 짐을 싣고 물 위를 다니는 탈것"
+    },
+    "vocab:baegu": {
+      "gloss": "공을 손으로 쳐서 네트 너머로 넘기는 운동"
+    },
+    "vocab:bal": {
+      "gloss": "다리 끝에 있어 땅을 딛는 부분"
+    },
+    "vocab:banana": {
+      "gloss": "길고 노란 껍질을 벗겨 먹는 과일"
+    },
+    "vocab:bap": {
+      "gloss": "쌀에 물을 붓고 끓여 익힌 음식",
+      "senseNote": "끼니라는 뜻도 있어요. 익히지 않은 것은 쌀이라고 해요."
+    },
+    "vocab:baram": {
+      "gloss": "공기가 움직여 생기는 흐름"
+    },
+    "vocab:beoseu": {
+      "gloss": "많은 사람이 함께 타는 큰 차"
+    },
+    "vocab:bi-rain": {
+      "gloss": "구름에서 떨어지는 물방울"
+    },
+    "vocab:bibimbap": {
+      "gloss": "밥에 나물과 고추장을 넣고 섞어 먹는 음식",
+      "senseNote": "밥 위에 채소를 올리고, 먹기 전에 섞어요."
+    },
+    "vocab:bihaenggi": {
+      "gloss": "날개가 있어 하늘을 나는 탈것"
+    },
+    "vocab:bit": {
+      "gloss": "해나 전등에서 나와 주변을 밝게 하는 것",
+      "senseNote": "해나 전등에서 나와요. 빛이 있어야 물건을 볼 수 있어요."
+    },
+    "vocab:borasaek": {
+      "gloss": "포도나 가지의 색"
+    },
+    "vocab:bul": {
+      "gloss": "뜨겁게 타오르며 빛과 열을 내는 것",
+      "senseNote": "전등처럼 켜 놓은 불빛을 뜻하기도 해요."
+    },
+    "vocab:bunhongsaek": {
+      "gloss": "벚꽃처럼 연하고 붉은색"
+    },
+    "vocab:byeol": {
+      "gloss": "밤하늘에 반짝이는 작은 빛"
+    },
+    "vocab:chaek": {
+      "gloss": "글이나 그림을 묶어 만든 읽을거리"
+    },
+    "vocab:chaeksang": {
+      "gloss": "앉아서 공부하거나 글을 쓰는 탁자"
+    },
+    "vocab:chilpan": {
+      "gloss": "교실 앞에 걸려 있어 분필로 글씨를 쓰는 판"
+    },
+    "vocab:chingu": {
+      "gloss": "가깝게 지내며 함께 노는 사람"
+    },
+    "vocab:choroksaek": {
+      "gloss": "풀이나 나뭇잎의 색"
+    },
+    "vocab:chukgu": {
+      "gloss": "공을 발로 차서 골에 넣는 운동"
+    },
+    "vocab:chum": {
+      "gloss": "음악에 맞춰 몸을 움직이는 것"
+    },
+    "vocab:chuseok": {
+      "gloss": "가을에 거둔 곡식에 감사하는 한국의 큰 명절",
+      "senseNote": "가족이 모여 반달 모양의 떡인 송편을 나눠 먹어요."
+    },
+    "vocab:dal-moon": {
+      "gloss": "밤하늘에 떠서 날마다 모양이 바뀌는 것"
+    },
+    "vocab:dalgyal": {
+      "gloss": "닭이 낳은 알",
+      "senseNote": "계란이라고도 하는데, 똑같이 많이 써요."
+    },
+    "vocab:dalligi": {
+      "gloss": "빠르게 뛰어가는 운동"
+    },
+    "vocab:dari-leg": {
+      "gloss": "몸을 받치고 걷는 데 쓰는 부분"
+    },
+    "vocab:daseot": {
+      "gloss": "5를 뜻하는 순우리말 수"
+    },
+    "vocab:deurama": {
+      "gloss": "텔레비전에서 여러 회로 나누어 보여 주는 이야기"
+    },
+    "vocab:dol-stone": {
+      "gloss": "땅에서 볼 수 있는 단단한 덩어리"
+    },
+    "vocab:dongsaeng": {
+      "gloss": "자기보다 나이 어린 형제나 자매",
+      "senseNote": "누구나 쓸 수 있어요. 손아래 남자 형제에게도, 손아래 여자 형제에게도 써요."
+    },
+    "vocab:dul": {
+      "gloss": "2를 뜻하는 순우리말 수",
+      "senseNote": "개처럼 세는 말 앞에서는 '두'가 돼요. 예: 두 개."
+    },
+    "vocab:eolgul": {
+      "gloss": "눈, 코, 입이 있는 머리의 앞쪽"
+    },
+    "vocab:eomma": {
+      "gloss": "어머니를 친근하게 부르는 말",
+      "senseNote": "평소에 흔히 쓰는 말이에요. 격식 있는 말은 어머니예요."
+    },
+    "vocab:eonni": {
+      "gloss": "여자가 자기보다 나이 많은 여자 형제를 부르는 말",
+      "senseNote": "여자가 손위 여자 형제를 이렇게 불러요. 남자는 누나라고 해요."
+    },
+    "vocab:eoreum": {
+      "gloss": "물이 차갑게 얼어서 굳은 것"
+    },
+    "vocab:gabang": {
+      "gloss": "물건을 넣어 들거나 메고 다니는 것"
+    },
+    "vocab:gajok": {
+      "gloss": "부모와 자식처럼 서로 이어진 한 집안 사람들"
+    },
+    "vocab:galsaek": {
+      "gloss": "초콜릿이나 흙의 색"
+    },
+    "vocab:gang": {
+      "gloss": "넓고 길게 흘러가는 큰 물줄기"
+    },
+    "vocab:gangaji": {
+      "gloss": "어린 개",
+      "senseNote": "집에서 기르는 개를 부를 때도 흔히 써요. 개를 뜻하는 기본 낱말은 개예요."
+    },
+    "vocab:gawi": {
+      "gloss": "종이를 자르는, 날이 두 개 달린 도구"
+    },
+    "vocab:gayageum": {
+      "gloss": "한국의 전통 현악기",
+      "senseNote": "줄이 여러 개 달린 긴 악기로, 손가락으로 줄을 뜯어 연주해요."
+    },
+    "vocab:geomeunsaek": {
+      "gloss": "밤하늘이나 숯의 색"
+    },
+    "vocab:geurimja": {
+      "gloss": "빛이 가려져 생기는 어두운 모양"
+    },
+    "vocab:gicha": {
+      "gloss": "철길 위를 달리는 긴 탈것"
+    },
+    "vocab:gimbap": {
+      "gloss": "김 위에 밥과 재료를 올려 돌돌 만 음식"
+    },
+    "vocab:gimchi": {
+      "gloss": "배추나 무를 양념해 익힌 반찬",
+      "senseNote": "채소를 발효시켜 만든 한국 반찬으로, 매운 것이 많아요."
+    },
+    "vocab:gom": {
+      "gloss": "몸집이 크고 털이 많은 숲속 동물"
+    },
+    "vocab:gong-ball": {
+      "gloss": "차거나 던지며 노는 둥근 물건"
+    },
+    "vocab:gongchaek": {
+      "gloss": "글씨를 쓰도록 빈 종이를 묶은 것"
+    },
+    "vocab:gonghang": {
+      "gloss": "비행기가 뜨고 내리는 곳"
+    },
+    "vocab:goyangi": {
+      "gloss": "야옹 하고 우는 작은 동물"
+    },
+    "vocab:gureum": {
+      "gloss": "하늘에 떠 있는 하얀 물방울 덩어리"
+    },
+    "vocab:gwi": {
+      "gloss": "소리를 듣는 데 쓰는, 머리 양옆의 부분"
+    },
+    "vocab:hae-sun": {
+      "gloss": "낮에 밝게 빛나며 빛과 열을 주는 것"
+    },
+    "vocab:hakgyo": {
+      "gloss": "학생들이 모여 선생님께 배우는 곳"
+    },
+    "vocab:halmeoni": {
+      "gloss": "아버지나 어머니의 어머니"
+    },
+    "vocab:hana": {
+      "gloss": "1을 뜻하는 순우리말 수",
+      "senseNote": "개처럼 세는 말 앞에서는 '한'이 돼요. 예: 한 개."
+    },
+    "vocab:hanbok": {
+      "gloss": "한국의 전통 옷",
+      "senseNote": "설날이나 추석 같은 명절에 많이 입어요."
+    },
+    "vocab:haneul": {
+      "gloss": "머리 위로 보이는 넓은 공간, 구름이 떠 있는 곳"
+    },
+    "vocab:haneulsaek": {
+      "gloss": "맑은 날 올려다보면 보이는 연한 푸른색"
+    },
+    "vocab:hangeul": {
+      "gloss": "한국어를 적는 글자",
+      "senseNote": "여기서 배우고 있는 글자예요."
+    },
+    "vocab:hanok": {
+      "gloss": "한국의 전통 집"
+    },
+    "vocab:harabeoji": {
+      "gloss": "아버지나 어머니의 아버지"
+    },
+    "vocab:hayansaek": {
+      "gloss": "눈이나 우유의 색"
+    },
+    "vocab:hoesaek": {
+      "gloss": "재나 비 오는 날 구름의 색"
+    },
+    "vocab:horangi": {
+      "gloss": "몸에 검은 줄무늬가 있는 크고 힘센 동물"
+    },
+    "vocab:hotel": {
+      "gloss": "여행하는 사람이 돈을 내고 묵는 곳"
+    },
+    "vocab:hyeong": {
+      "gloss": "남자가 자기보다 나이 많은 남자 동기를 부르는 말",
+      "senseNote": "남자가 손위 남자 동기를 이렇게 불러요. 여자는 오빠라고 해요."
+    },
+    "vocab:i-tooth": {
+      "gloss": "음식을 씹는 데 쓰는 입속의 단단한 것",
+      "senseNote": "더 격식 있는 말로 치아라고도 해요."
+    },
+    "vocab:ilgop": {
+      "gloss": "7을 뜻하는 순우리말 수"
+    },
+    "vocab:ip": {
+      "gloss": "먹고 말하는 데 쓰는 얼굴의 부분"
+    },
+    "vocab:jadongcha": {
+      "gloss": "바퀴가 넷이고 엔진으로 달리는 탈것",
+      "senseNote": "평소에는 줄여서 차라고 많이 해요."
+    },
+    "vocab:jajeongeo": {
+      "gloss": "페달을 밟아 바퀴 두 개로 달리는 탈것"
+    },
+    "vocab:jaseok": {
+      "gloss": "쇠붙이를 끌어당기는 물체"
+    },
+    "vocab:jido": {
+      "gloss": "땅의 모양과 길을 그려 놓은 그림"
+    },
+    "vocab:jigu": {
+      "gloss": "우리가 사는 둥근 행성"
+    },
+    "vocab:jihacheol": {
+      "gloss": "땅속 철길을 달리는 기차"
+    },
+    "vocab:jiugae": {
+      "gloss": "연필 자국을 문질러 없애는 물건"
+    },
+    "vocab:juhwangsaek": {
+      "gloss": "귤이나 당근의 색"
+    },
+    "vocab:julleomgi": {
+      "gloss": "돌아가는 줄 위로 계속 뛰어오르는 운동"
+    },
+    "vocab:kkot": {
+      "gloss": "식물에서 피어나는 알록달록한 부분"
+    },
+    "vocab:ko": {
+      "gloss": "냄새를 맡고 숨을 쉬는 얼굴의 부분"
+    },
+    "vocab:kokkiri": {
+      "gloss": "코가 아주 길고 몸집이 아주 큰 동물"
+    },
+    "vocab:meori": {
+      "gloss": "목 위에 있는 몸의 부분",
+      "senseNote": "머리카락이라는 뜻도 있어요."
+    },
+    "vocab:mujigae": {
+      "gloss": "비 온 뒤 하늘에 뜨는 일곱 빛깔 띠"
+    },
+    "vocab:mul": {
+      "gloss": "목마를 때 마시는 맑은 액체"
+    },
+    "vocab:mulgogi": {
+      "gloss": "물속에 살며 아가미로 숨 쉬는 동물"
+    },
+    "vocab:na": {
+      "gloss": "말하는 사람이 자기를 가리키는 말",
+      "senseNote": "편하게 쓰는 말이에요. 예의 있게 말할 때는 저라고 해요."
+    },
+    "vocab:nabi": {
+      "gloss": "알록달록한 날개로 꽃 사이를 나는 곤충"
+    },
+    "vocab:namu": {
+      "gloss": "줄기가 단단하고 가지와 잎이 있는 식물"
+    },
+    "vocab:net": {
+      "gloss": "4를 뜻하는 순우리말 수",
+      "senseNote": "개처럼 세는 말 앞에서는 '네'가 돼요. 예: 네 개."
+    },
+    "vocab:nonggu": {
+      "gloss": "공을 높은 골대의 바구니에 던져 넣는 운동"
+    },
+    "vocab:norae": {
+      "gloss": "가락에 맞춰 목소리로 부르는 것"
+    },
+    "vocab:noransaek": {
+      "gloss": "바나나나 병아리의 색"
+    },
+    "vocab:nun-eye": {
+      "gloss": "보는 데 쓰는 얼굴의 부분"
+    },
+    "vocab:nun-snow": {
+      "gloss": "추운 날 하늘에서 내리는 하얀 얼음 알갱이"
+    },
+    "vocab:nuna": {
+      "gloss": "남자가 자기보다 나이 많은 여자 형제를 부르는 말",
+      "senseNote": "남자가 손위 여자 형제를 이렇게 불러요. 여자는 언니라고 해요."
+    },
+    "vocab:oppa": {
+      "gloss": "여자가 자기보다 나이 많은 남자 형제를 부르는 말",
+      "senseNote": "여자가 손위 남자 형제를 이렇게 불러요. 남자는 형이라고 해요."
+    },
+    "vocab:ori": {
+      "gloss": "꽥꽥 울고 물 위에 떠다니는 새"
+    },
+    "vocab:pal-arm": {
+      "gloss": "어깨에서 손까지 이어진 부분"
+    },
+    "vocab:paransaek": {
+      "gloss": "맑은 날 바다의 색"
+    },
+    "vocab:ppalgansaek": {
+      "gloss": "피나 잘 익은 딸기의 색"
+    },
+    "vocab:ppang": {
+      "gloss": "밀가루 반죽을 구워 만든 음식"
+    },
+    "vocab:pyo-ticket": {
+      "gloss": "돈을 내고 받아 탈것이나 공연장에서 쓰는 종이",
+      "senseNote": "버스나 기차를 타거나 공연을 볼 때 필요해요."
+    },
+    "vocab:ramyeon": {
+      "gloss": "끓는 물에 금방 익혀 먹는 꼬불꼬불한 국수"
+    },
+    "vocab:robot": {
+      "gloss": "사람처럼 스스로 일하도록 만든 기계"
+    },
+    "vocab:sae-bird": {
+      "gloss": "날개와 깃털이 있어 하늘을 나는 동물"
+    },
+    "vocab:sagwa-apple": {
+      "gloss": "빨갛고 동그란 과일"
+    },
+    "vocab:san": {
+      "gloss": "땅이 높이 솟은 곳"
+    },
+    "vocab:seollal": {
+      "gloss": "음력으로 새해 첫날인 한국의 큰 명절",
+      "senseNote": "많은 사람이 한복을 입고 어른께 세배해요."
+    },
+    "vocab:seonsaengnim": {
+      "gloss": "학생을 가르치는 사람",
+      "senseNote": "가르치는 분을 부를 때도 이 말을 써요. 끝에 붙은 '님'은 높임을 나타내요."
+    },
+    "vocab:set": {
+      "gloss": "3을 뜻하는 순우리말 수",
+      "senseNote": "개처럼 세는 말 앞에서는 '세'가 돼요. 예: 세 개."
+    },
+    "vocab:seuki": {
+      "gloss": "긴 판을 신고 눈 위를 미끄러져 내려가는 운동"
+    },
+    "vocab:seumul": {
+      "gloss": "20을 뜻하는 순우리말 수",
+      "senseNote": "개처럼 세는 말 앞에서는 '스무'가 돼요. 예: 스무 개."
+    },
+    "vocab:son": {
+      "gloss": "팔 끝에 있어 물건을 잡는 부분"
+    },
+    "vocab:ssiat": {
+      "gloss": "심으면 싹이 트는 식물의 작은 알맹이"
+    },
+    "vocab:suyeong": {
+      "gloss": "물속에서 팔다리를 움직여 나아가는 운동"
+    },
+    "vocab:taegwondo": {
+      "gloss": "맨손과 맨발로 겨루는 한국의 무술",
+      "senseNote": "높은 발차기로 잘 알려진 한국 무술이에요."
+    },
+    "vocab:taeksi": {
+      "gloss": "돈을 내고 원하는 곳까지 타고 가는 차"
+    },
+    "vocab:takgu": {
+      "gloss": "탁자 위에서 작은 공을 라켓으로 주고받는 운동"
+    },
+    "vocab:tokki": {
+      "gloss": "귀가 길고 깡충깡충 뛰는 동물"
+    },
+    "vocab:ttalgi": {
+      "gloss": "겉에 작은 씨가 박힌 빨갛고 작은 과일"
+    },
+    "vocab:tteok": {
+      "gloss": "쌀가루를 찌거나 쳐서 만든 음식",
+      "senseNote": "쌀로 만든 한국 음식으로, 말랑하고 쫄깃해요."
+    },
+    "vocab:tteokbokki": {
+      "gloss": "가래떡을 고추장 양념에 졸인 매콤한 음식"
+    },
+    "vocab:uija": {
+      "gloss": "앉을 때 쓰는 가구"
+    },
+    "vocab:uju": {
+      "gloss": "지구 밖으로 끝없이 펼쳐진 공간",
+      "senseNote": "온 세상 전체라는 뜻도 있어요."
+    },
+    "vocab:uyu": {
+      "gloss": "소에서 얻는 하얀 마실 것"
+    },
+    "vocab:wonsungi": {
+      "gloss": "나무를 잘 타는 꼬리 긴 동물"
+    },
+    "vocab:yagu": {
+      "gloss": "방망이로 공을 치고 베이스를 도는 운동"
+    },
+    "vocab:yeodeol": {
+      "gloss": "8을 뜻하는 순우리말 수"
+    },
+    "vocab:yeogwon": {
+      "gloss": "다른 나라에 갈 때 신분을 보여 주는 수첩"
+    },
+    "vocab:yeol-ten": {
+      "gloss": "10을 뜻하는 순우리말 수"
+    },
+    "vocab:yeong-zero": {
+      "gloss": "0, 아무것도 없음을 뜻하는 수",
+      "senseNote": "순우리말에는 0을 뜻하는 말이 없어서, 한자에서 온 이 말을 써요. 전화번호를 말할 때는 공이라고 해요."
+    },
+    "vocab:yeonpil": {
+      "gloss": "나무 속에 심이 들어 있는, 글씨를 쓰는 도구"
+    },
+    "vocab:yeoseot": {
+      "gloss": "6을 뜻하는 순우리말 수"
+    },
+    "vocab:yeou": {
+      "gloss": "꼬리가 크고 귀가 뾰족한 들짐승"
+    },
+    "vocab:yunnori": {
+      "gloss": "막대를 던져 나온 대로 말판에서 말을 옮기는 놀이",
+      "senseNote": "나무 막대 네 개를 던져요. 설날에 많이 해요."
     }
   }
 };

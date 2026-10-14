@@ -6,6 +6,7 @@ import { InboxPlanSchema, type InboxPlan } from './plan';
 import { LearnerMembershipSchema } from './space';
 import { LearnerLevelIdSchema } from './learner-level';
 import { PlacementSummarySchema } from './placement';
+import { InboxClassMoveSchema, InboxClassScopeSchema } from './class-scope';
 import { InboxTransferSchema, lenientArray } from './transfer';
 import { InboxNoteSchema, NOTE_PREFS_DEFAULT, NOTE_PREFS_UNREADABLE, NotePrefsSchema } from './feedback';
 import { VocabIdSchema } from './vocab';
@@ -214,6 +215,12 @@ export const SyncInboxSchema = z.object({
    */
   notes: lenientArray(InboxNoteSchema).default([]),
   notePrefs: NotePrefsSchema.default(NOTE_PREFS_DEFAULT).catch(() => ({ ...NOTE_PREFS_UNREADABLE })),
+  /*
+   * [TV] AMENDMENTS-TEACHER-VISIBILITY-TRANSFER section 4.3. Additive and lenient: an old Worker omits both
+   * (no update to read, no notice), a malformed `classScope` reads as null and one bad notice is dropped.
+   */
+  classScope: InboxClassScopeSchema.nullable().default(null).catch(null),
+  classMoves: lenientArray(InboxClassMoveSchema).default([]),
 });
 /**
  * Plans are typed as `InboxPlan` (meta optional) so a parsed inbox and the

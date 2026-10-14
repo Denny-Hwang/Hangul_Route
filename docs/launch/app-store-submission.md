@@ -67,6 +67,7 @@ eas submit --platform ios --profile production     # TestFlight 업로드
   - [ ] 강제 크래시 확인이 필요하면 dev 빌드에서 `throw` 후 OopsScreen → Try again
 - [ ] iPad: 세로 고정 + 레이아웃 깨짐 없음 (supportsTablet = true 이므로 iPad 스크린샷 필수)
 - [ ] **Validate App** (Xcode Organizer → Validate, 또는 업로드 후 App Store Connect 처리 메일): **ITMS-90683 (마이크 purpose string 누락) 없음** 확인. 나오면 `app.json` 의 `microphonePermission` 에 짧고 사실대로인 문구를 넣음 (앱은 녹음하지 않음). 아카이브가 Xcode 26 에서 expo-localization 때문에 실패하면 먼저 #263 해결. 결과는 #264 에 기록
+- [ ] **Open-source notices (store-submission gate, proprietary LICENSE 2026-10-14)**: after `expo prebuild` and `pod install`, compare every pod in `apps/mobile/ios/Podfile.lock` with THIRD_PARTY_NOTICES.md. A pod that is neither an npm package already listed (React Native and Expo pods ship inside their npm packages) nor a `NATIVE_COMPONENTS` row in `scripts/third-party-notices.mjs` (rows marked `ios`) is added there with its license and copyright line, then `node scripts/third-party-notices.mjs` is run and the change merged before upload. A copyleft pod stops the submission. Before any Android release, do the same for the Gradle dependencies (the notices do not cover Android yet).
 
 ## 5. 스토어 메타데이터 입력 — 약 1시간
 

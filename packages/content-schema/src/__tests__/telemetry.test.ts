@@ -126,6 +126,12 @@ describe('telemetry event names (one list for the client type and the API whitel
         'journey.cell_stories_opened',
         'billing.summary_viewed',
         'billing.receipts_viewed',
+        'space.move.requested',
+        'space.move.completed',
+        'space.move.declined',
+        'space.move.cancelled',
+        'space.move.notice_seen',
+        'space.scope.acknowledged',
       ].sort(),
     );
     expect(new Set(TELEMETRY_EVENT_NAMES).size).toBe(TELEMETRY_EVENT_NAMES.length);
@@ -261,5 +267,16 @@ describe('telemetry event names (one list for the client type and the API whitel
     expect(isTelemetryEventName('space.left')).toBe(true);
     expect(isTelemetryEventName('space.LEFT')).toBe(false);
     expect(isTelemetryEventName(undefined)).toBe(false);
+  });
+});
+
+describe('[TV] teacher moves and the class-scope update (AMENDMENTS-TEACHER-VISIBILITY-TRANSFER section 4.4)', () => {
+  it('lists the six names once each, after the billing names', () => {
+    const names = ['space.move.requested', 'space.move.completed', 'space.move.declined', 'space.move.cancelled', 'space.move.notice_seen', 'space.scope.acknowledged'] as const;
+    for (const name of names) {
+      expect(TELEMETRY_EVENT_NAMES.filter((n) => n === name)).toHaveLength(1);
+      expect(isTelemetryEventName(name)).toBe(true);
+    }
+    expect(TELEMETRY_EVENT_NAMES.slice(-6)).toEqual([...names]);
   });
 });

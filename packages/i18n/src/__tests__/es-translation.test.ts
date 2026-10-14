@@ -172,6 +172,8 @@ const LITERALLY_SHARED: readonly string[] = [
   'console.lecture.outline.addQuiz.cta',
   'console.settings.grownUps.role.admin',
   'landing.footer.app',
+  'landing.licenses.softwareTitle', // "Software", a word Spanish borrows (open-source notices, 2026-10-14)
+  'landing.licenses.where.app', // "App", as landing.footer.app
   'learner.audio.voiceHelp.sections.android.title',
   'learner.vocab.speed.challenge.scale.normal', // "Normal", the Speed Round clock length (F-VOC-004 S-6)
   // Names, sample values and glyphs: the brand, sample ids and addresses, arrows and the close cross.

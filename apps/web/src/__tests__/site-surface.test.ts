@@ -61,6 +61,7 @@ describe('sitemap.xml (F-SITE-002 S-9)', () => {
       { url: 'https://hangulroute.com/learners' },
       { url: 'https://hangulroute.com/parents' },
       { url: 'https://hangulroute.com/teachers' },
+      { url: 'https://hangulroute.com/licenses' },
     ]);
   });
 

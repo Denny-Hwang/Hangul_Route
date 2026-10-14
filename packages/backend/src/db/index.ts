@@ -6,6 +6,7 @@ import type { Db } from './types';
 export type { Db, NoteCursor, StoredRelink } from './types';
 export * from './transfer-types';
 export * from './feedback-types';
+export * from './class-move-types';
 export { D1Db, MemoryDb };
 
 /** The dev / test backend when no D1 binding is present (only where dev fallbacks are opted in — lib/runtime). */

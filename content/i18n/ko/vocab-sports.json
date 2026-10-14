@@ -1,0 +1,48 @@
+{
+  "locale": "ko",
+  "domain": "vocab-sports",
+  "entries": {
+    "vocab-topic:sports": {
+      "title": "운동",
+      "blurb": "하거나 볼 수 있는 운동과 놀이예요.",
+      "hoyaIntro": "준비, 시작! 운동을 나타내는 낱말을 배워요."
+    },
+    "vocab:chukgu": {
+      "gloss": "공을 발로 차서 골에 넣는 운동"
+    },
+    "vocab:yagu": {
+      "gloss": "방망이로 공을 치고 베이스를 도는 운동"
+    },
+    "vocab:nonggu": {
+      "gloss": "공을 높은 골대의 바구니에 던져 넣는 운동"
+    },
+    "vocab:baegu": {
+      "gloss": "공을 손으로 쳐서 네트 너머로 넘기는 운동"
+    },
+    "vocab:takgu": {
+      "gloss": "탁자 위에서 작은 공을 라켓으로 주고받는 운동"
+    },
+    "vocab:suyeong": {
+      "gloss": "물속에서 팔다리를 움직여 나아가는 운동"
+    },
+    "vocab:taegwondo": {
+      "gloss": "맨손과 맨발로 겨루는 한국의 무술",
+      "senseNote": "높은 발차기로 잘 알려진 한국 무술이에요."
+    },
+    "vocab:dalligi": {
+      "gloss": "빠르게 뛰어가는 운동"
+    },
+    "vocab:julleomgi": {
+      "gloss": "돌아가는 줄 위로 계속 뛰어오르는 운동"
+    },
+    "vocab:jajeongeo": {
+      "gloss": "페달을 밟아 바퀴 두 개로 달리는 탈것"
+    },
+    "vocab:seuki": {
+      "gloss": "긴 판을 신고 눈 위를 미끄러져 내려가는 운동"
+    },
+    "vocab:gong-ball": {
+      "gloss": "차거나 던지며 노는 둥근 물건"
+    }
+  }
+}

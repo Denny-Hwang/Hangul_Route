@@ -29,8 +29,11 @@ import type {
   StoredSenderBlock,
   StoredSenderHold,
 } from './feedback-types';
+import type { ClassMoveDecider, ClassMoveEndStatus, ExecuteClassMoveInput, ExecuteClassMoveResult, StoredClassMove, StoredClassScopeAck } from './class-move-types';
+import type { ClassMoveEndReason } from '@hangul-route/content-schema';
 
 export * from './transfer-types';
+export * from './class-move-types';
 export * from './feedback-types';
 
 /** A keyset position in a newest-first note list: rows strictly older than this (`createdAt`, then `id`). */
@@ -80,7 +83,7 @@ export interface Db {
   getLearner(id: string): Promise<Learner | null>;
   putLearner(learner: Learner): Promise<void>;
   learnerByRecoveryHash(hash: string): Promise<Learner | null>;
-  /** Erase a learner everywhere (devices, snapshot, memberships, relink requests, transfer requests + events, transfer prefs, notes, note reports, note prefs, sender blocks, learner rate counters). */
+  /** Erase a learner everywhere (devices, snapshot, memberships, relink requests, transfer requests + events, transfer prefs, notes, note reports, note prefs, sender blocks, learner rate counters, class-scope acknowledgement, teacher moves). */
   deleteLearner(id: string): Promise<boolean>;
   getDevice(learnerId: string, deviceId: string): Promise<LearnerDevice | null>;
   putDevice(device: LearnerDevice): Promise<void>;
@@ -366,6 +369,32 @@ export interface Db {
    * Answers the rows removed.
    */
   purgeNotes(before: Date, reportedBefore: Date, liftedBefore: Date, limit: number): Promise<number>;
+
+  // [TV] class-scope acknowledgements and teacher moves (AMENDMENTS-TEACHER-VISIBILITY-TRANSFER section 4.2, migration 0009)
+  getClassScopeAck(learnerId: string): Promise<StoredClassScopeAck | null>;
+  /** Set-based (`IN` chunks): the acknowledgement of each learner that has one. */
+  classScopeAcksOf(learnerIds: readonly string[]): Promise<StoredClassScopeAck[]>;
+  /** Upsert by learner: the newest acknowledgement replaces the earlier one. */
+  putClassScopeAck(ack: StoredClassScopeAck): Promise<void>;
+  /** Inserts a fresh `requested` row unless the learner already has one open (the partial unique index is the backstop). */
+  createClassMove(row: StoredClassMove): Promise<'created' | 'already_open'>;
+  getClassMove(id: string): Promise<StoredClassMove | null>;
+  /** Newest first, at most `limit`: moves out of (`source`) or into (`destination`) the space. */
+  classMovesOfSpace(spaceId: string, role: 'source' | 'destination', limit: number): Promise<StoredClassMove[]>;
+  openClassMoveOf(learnerId: string): Promise<StoredClassMove | null>;
+  /** Executed at or after `since`, newest first, for the given learners (the family notices). */
+  executedClassMovesOf(learnerIds: readonly string[], since: Date): Promise<StoredClassMove[]>;
+  /**
+   * Compare-and-set from `requested` to an ended status with its reason; `expired` also needs `expires_at <= now`.
+   * `decider` is recorded for a destination's decline. Answers the changed-row count.
+   */
+  endClassMove(id: string, status: ClassMoveEndStatus, reason: ClassMoveEndReason, decider: ClassMoveDecider | null, now: Date): Promise<number>;
+  /** Sets `family_seen_at` once (an executed row only). Answers the changed-row count. */
+  markClassMoveSeen(id: string, now: Date): Promise<number>;
+  /** The self-guarding swap of section 4.2: one batch whose first statement is the gate. */
+  executeClassMove(input: ExecuteClassMoveInput): Promise<ExecuteClassMoveResult>;
+  /** Bounded purge: ended rows before `endedBefore`, executed rows before `executedBefore`, still-requested rows whose `expiresAt` is before `endedBefore` (an ask nobody settled). */
+  purgeClassMoves(endedBefore: Date, executedBefore: Date, limit: number): Promise<number>;
 
   /** Tests only: wipe everything. */
   reset(): Promise<void>;

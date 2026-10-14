@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { PRIVACY_FALLBACK_NOTE, privacyUrl } from '../links';
+import { PRIVACY_FALLBACK_NOTE, licensesUrl, privacyUrl } from '../links';
 
 describe('privacyUrl (F-LEARN-001 §3.3)', () => {
   it('defaults to the production site', () => {
@@ -32,5 +32,17 @@ describe('privacyUrl (F-LEARN-001 §3.3)', () => {
 
   it('has a calm fallback line for when the browser cannot be opened', () => {
     expect(PRIVACY_FALLBACK_NOTE).toBe('Open hangulroute.com/privacy in a browser.');
+  });
+});
+
+describe('licensesUrl (open-source notices, 2026-10-14)', () => {
+  it('is /licenses on the same site root as the Privacy Policy', () => {
+    expect(licensesUrl({})).toBe('https://hangulroute.com/licenses');
+    expect(licensesUrl({ EXPO_PUBLIC_SITE_URL: 'https://site.example/' })).toBe('https://site.example/licenses');
+    expect(licensesUrl({ EXPO_PUBLIC_SITE_URL: ' ', EXPO_PUBLIC_CONSOLE_URL: 'https://console.example' })).toBe('https://console.example/licenses');
+  });
+
+  it('reads the build environment when no env is passed', () => {
+    expect(licensesUrl()).toMatch(/\/licenses$/);
   });
 });

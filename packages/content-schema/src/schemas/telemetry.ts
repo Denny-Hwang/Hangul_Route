@@ -155,6 +155,14 @@ export const TELEMETRY_EVENT_NAMES = [
   // F-BILL-002 §10, B-4 (recorded by the Worker on GET /api/billing/summary without poll=1 and GET /receipts; counts and the mode only)
   'billing.summary_viewed',
   'billing.receipts_viewed',
+  // [TV] AMENDMENTS-TEACHER-VISIBILITY-TRANSFER section 4.4 (recorded by the Worker; codes only: `via` on
+  // space.move.completed, `seenOn` on space.move.notice_seen, `basis` on space.scope.acknowledged; never a learner, class or account id or a name)
+  'space.move.requested',
+  'space.move.completed',
+  'space.move.declined',
+  'space.move.cancelled',
+  'space.move.notice_seen',
+  'space.scope.acknowledged',
 ] as const;
 
 export const TelemetryEventNameSchema = z.enum(TELEMETRY_EVENT_NAMES);

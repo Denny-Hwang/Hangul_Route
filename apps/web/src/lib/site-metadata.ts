@@ -16,9 +16,10 @@ export const SITE_URL = 'https://hangulroute.com';
 
 /**
  * The site's pages, as English paths; `sitePath` puts the locale in front. The persona pages of F-SITE-002 (§3.4 to
- * §3.6) join as they ship: `/learners` in S-4a, `/parents` and `/teachers` in S-4b.
+ * §3.6) join as they ship: `/learners` in S-4a, `/parents` and `/teachers` in S-4b. `/licenses` is the open-source
+ * notices (owner decision 2026-10-14, the proprietary LICENSE).
  */
-export const SITE_PAGES = ['/', '/about', '/privacy', '/terms', '/learners', '/parents', '/teachers'] as const;
+export const SITE_PAGES = ['/', '/about', '/privacy', '/terms', '/learners', '/parents', '/teachers', '/licenses'] as const;
 export type SitePage = (typeof SITE_PAGES)[number];
 
 /** The persona pages, keyed by path, and the key of their own title and description (`landing.meta.pages`). */

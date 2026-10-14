@@ -1,4 +1,4 @@
-import { TRANSFER_COOLING_OFF_MS, type BillingEvent, type BillingEventKind, type Entitlement, type EntitlementApply, type MemberKind, type Membership, type Plan, type Space, type TransferBlockReason, type TransferEndReason, type TransferSlot } from '@hangul-route/content-schema';
+import { TRANSFER_COOLING_OFF_MS, type BillingEvent, type ClassMoveEndReason, type ClassMoveKind, type ClassMoveStatus, type ClassMoveVia, type ClassScopeBasis, type BillingEventKind, type Entitlement, type EntitlementApply, type MemberKind, type Membership, type Plan, type Space, type TransferBlockReason, type TransferEndReason, type TransferSlot } from '@hangul-route/content-schema';
 import { id, type Account, type Learner, type LearnerDevice, type SnapshotRecord } from '../store';
 import {
   learnerRateKeys,
@@ -43,6 +43,7 @@ import {
   type StoredSenderHold,
 } from './feedback-types';
 import { assertOneSender, prefixUpperBound } from './feedback-rules';
+import { assertNewClassMove, type ClassMoveDecider, type ClassMoveEndStatus, type ExecuteClassMoveInput, type ExecuteClassMoveResult, type StoredClassMove, type StoredClassScopeAck } from './class-move-types';
 
 /** What `run()` resolves to on D1 (`D1Result`): `meta.changes` is the row count the statement wrote. */
 export interface D1RunResultLike {
@@ -419,6 +420,42 @@ const INBOX_SQL = `SELECT p.learner_id AS p_learner_id, p.classes AS p_classes, 
 
 /** D1 binds at most 100 parameters per statement. */
 const IN_CHUNK = 90;
+
+/** [TV] `class_moves` columns in insert order (migration 0009); `token` is written by the gate only. */
+const CLASS_MOVE_COLUMNS = [
+  'id', 'learner_id', 'source_space_id', 'dest_space_id', 'kind', 'status', 'actor_account_id', 'actor_via',
+  'decided_account_id', 'decided_via', 'end_reason', 'created_at', 'updated_at', 'expires_at', 'executed_at', 'ended_at', 'family_seen_at',
+] as const;
+const classMoveValues = (m: StoredClassMove): unknown[] => [
+  m.id, m.learnerId, m.sourceSpaceId, m.destSpaceId, m.kind, m.status, m.actorAccountId, m.actorVia,
+  m.decidedAccountId, m.decidedVia, m.endReason, m.createdAt, m.updatedAt, m.expiresAt, m.executedAt, m.endedAt, m.familySeenAt,
+];
+const toClassMove = (r: Row): StoredClassMove => ({
+  id: str(r.id),
+  learnerId: str(r.learner_id),
+  sourceSpaceId: str(r.source_space_id),
+  destSpaceId: str(r.dest_space_id),
+  kind: str(r.kind) as ClassMoveKind,
+  status: str(r.status) as ClassMoveStatus,
+  actorAccountId: str(r.actor_account_id),
+  actorVia: str(r.actor_via) as ClassMoveVia,
+  decidedAccountId: nstr(r.decided_account_id),
+  decidedVia: nstr(r.decided_via) as ClassMoveVia | null,
+  endReason: nstr(r.end_reason) as ClassMoveEndReason | null,
+  createdAt: str(r.created_at),
+  updatedAt: str(r.updated_at),
+  expiresAt: str(r.expires_at),
+  executedAt: nstr(r.executed_at),
+  endedAt: nstr(r.ended_at),
+  familySeenAt: nstr(r.family_seen_at),
+});
+const toClassScopeAck = (r: Row): StoredClassScopeAck => ({
+  learnerId: str(r.learner_id),
+  textVersion: str(r.text_version),
+  basis: str(r.basis) as ClassScopeBasis,
+  evidence: str(r.evidence),
+  ackedAt: str(r.acked_at),
+});
 /**
  * The report reads' chunk (F-REPORT-001 section 3.8): their statements bind
  * nothing but the ids, so a chunk fills D1's limit of 100 bound parameters.
@@ -442,7 +479,10 @@ const placeholders = (chunk: readonly string[]): string => chunk.map(() => '?').
 const TRANSFER_TABLES = ['transfer_events', 'transfer_requests', 'learner_transfer_prefs', 'rate_hits'] as const;
 /** The tables of migration 0008 (F-FEEDBACK-001 FB-2), children first. */
 const FEEDBACK_TABLES = ['feedback_reports', 'feedback_notes', 'learner_note_prefs', 'feedback_sender_blocks', 'feedback_send_grants', 'feedback_sender_holds'] as const;
+/** [TV] The tables of migration 0009 (AMENDMENTS-TEACHER-VISIBILITY-TRANSFER section 4.1). */
+const CLASS_MOVE_TABLES = ['class_moves', 'class_scope_acks'] as const;
 const RESET_TABLES = [
+  ...CLASS_MOVE_TABLES,
   ...FEEDBACK_TABLES,
   ...TRANSFER_TABLES,
   'billing_events',
@@ -511,10 +551,12 @@ export class D1Db implements Db {
     // one transaction (F-SPACE-002 section 4.7, F-FEEDBACK-001 section 7.4). A table of migration 0005 or 0008
     // is named only once that migration has created it: an erase is the live caregiver route, and "no such
     // table" would roll the whole batch back if this Worker ever ran before the migration.
-    const present = await this.presentTables([...FEEDBACK_TABLES, ...TRANSFER_TABLES]);
+    const present = await this.presentTables([...CLASS_MOVE_TABLES, ...FEEDBACK_TABLES, ...TRANSFER_TABLES]);
     const rateKeys = learnerRateKeys(learnerId);
     const pairPrefix = notePairPrefix(learnerId);
     const guarded: Array<[string, string, unknown[]]> = [
+      ['class_moves', 'DELETE FROM class_moves WHERE learner_id = ?', [learnerId]],
+      ['class_scope_acks', 'DELETE FROM class_scope_acks WHERE learner_id = ?', [learnerId]],
       ['feedback_reports', 'DELETE FROM feedback_reports WHERE learner_id = ?', [learnerId]],
       ['feedback_notes', 'DELETE FROM feedback_notes WHERE learner_id = ?', [learnerId]],
       ['learner_note_prefs', 'DELETE FROM learner_note_prefs WHERE learner_id = ?', [learnerId]],
@@ -1290,6 +1332,114 @@ export class D1Db implements Db {
       this.d1.prepare('DELETE FROM feedback_sender_holds WHERE account_id IN (SELECT account_id FROM feedback_sender_holds WHERE lifted_at IS NOT NULL AND lifted_at < ? ORDER BY lifted_at, account_id LIMIT ?)').bind(liftedBefore.toISOString(), limit),
     ]);
     return results.reduce((sum, r) => sum + readChanges(r), 0);
+  }
+
+  // ---- [TV] class-scope acknowledgements and teacher moves (AMENDMENTS-TEACHER-VISIBILITY-TRANSFER section 4.2) ----
+
+  getClassScopeAck(learnerId: string): Promise<StoredClassScopeAck | null> {
+    return this.one('SELECT * FROM class_scope_acks WHERE learner_id = ?', [learnerId], toClassScopeAck);
+  }
+  async classScopeAcksOf(learnerIds: readonly string[]): Promise<StoredClassScopeAck[]> {
+    // The report chunks (at most 100 ids a statement), so a class report adds one statement per 100 members.
+    const out: StoredClassScopeAck[] = [];
+    for (const chunk of reportChunks(learnerIds)) out.push(...(await this.many(`SELECT * FROM class_scope_acks WHERE learner_id IN (${placeholders(chunk)})`, chunk, toClassScopeAck)));
+    return out;
+  }
+  putClassScopeAck(ack: StoredClassScopeAck): Promise<void> {
+    return this.run(
+      'INSERT INTO class_scope_acks (learner_id, text_version, basis, evidence, acked_at) VALUES (?, ?, ?, ?, ?) ON CONFLICT(learner_id) DO UPDATE SET text_version = excluded.text_version, basis = excluded.basis, evidence = excluded.evidence, acked_at = excluded.acked_at',
+      [ack.learnerId, ack.textVersion, ack.basis, ack.evidence, ack.ackedAt],
+    );
+  }
+  async createClassMove(row: StoredClassMove): Promise<'created' | 'already_open'> {
+    assertNewClassMove(row);
+    const inserted = await this.changes(
+      `INSERT INTO class_moves (${CLASS_MOVE_COLUMNS.join(', ')}) SELECT ${CLASS_MOVE_COLUMNS.map(() => '?').join(', ')} WHERE NOT EXISTS (SELECT 1 FROM class_moves WHERE learner_id = ? AND status = 'requested')`,
+      [...classMoveValues(row), row.learnerId],
+    );
+    return inserted === 1 ? 'created' : 'already_open';
+  }
+  getClassMove(id: string): Promise<StoredClassMove | null> {
+    return this.one('SELECT * FROM class_moves WHERE id = ?', [id], toClassMove);
+  }
+  classMovesOfSpace(spaceId: string, role: 'source' | 'destination', limit: number): Promise<StoredClassMove[]> {
+    const column = role === 'source' ? 'source_space_id' : 'dest_space_id';
+    return this.many(`SELECT * FROM class_moves WHERE ${column} = ? ORDER BY created_at DESC, id DESC LIMIT ?`, [spaceId, limit], toClassMove);
+  }
+  openClassMoveOf(learnerId: string): Promise<StoredClassMove | null> {
+    return this.one("SELECT * FROM class_moves WHERE learner_id = ? AND status = 'requested' LIMIT 1", [learnerId], toClassMove);
+  }
+  async executedClassMovesOf(learnerIds: readonly string[], since: Date): Promise<StoredClassMove[]> {
+    const unique = [...new Set(learnerIds)];
+    const out: StoredClassMove[] = [];
+    for (let i = 0; i < unique.length; i += IN_CHUNK) {
+      const chunk = unique.slice(i, i + IN_CHUNK);
+      out.push(
+        ...(await this.many(
+          `SELECT * FROM class_moves WHERE learner_id IN (${chunk.map(() => '?').join(', ')}) AND status = 'executed' AND executed_at >= ?`,
+          [...chunk, since.toISOString()],
+          toClassMove,
+        )),
+      );
+    }
+    return out.sort((a, b) => ((a.executedAt ?? '') === (b.executedAt ?? '') ? (a.id < b.id ? 1 : -1) : (a.executedAt ?? '') < (b.executedAt ?? '') ? 1 : -1));
+  }
+  endClassMove(id: string, status: ClassMoveEndStatus, reason: ClassMoveEndReason, decider: ClassMoveDecider | null, now: Date): Promise<number> {
+    const at = now.toISOString();
+    return this.changes(
+      `UPDATE class_moves SET status = ?, end_reason = ?, ended_at = ?, updated_at = ?,
+         decided_account_id = COALESCE(?, decided_account_id), decided_via = COALESCE(?, decided_via)
+       WHERE id = ? AND status = 'requested'${status === 'expired' ? ' AND expires_at <= ?' : ''}`,
+      [status, reason, at, at, decider?.accountId ?? null, decider?.via ?? null, id, ...(status === 'expired' ? [at] : [])],
+    );
+  }
+  markClassMoveSeen(id: string, now: Date): Promise<number> {
+    return this.changes("UPDATE class_moves SET family_seen_at = ? WHERE id = ? AND status = 'executed' AND family_seen_at IS NULL", [now.toISOString(), id]);
+  }
+  async executeClassMove(input: ExecuteClassMoveInput): Promise<ExecuteClassMoveResult> {
+    const at = input.now.toISOString();
+    const { id, learnerId, sourceSpaceId: source, destSpaceId: dest } = input;
+    // The same gate-then-guarded-writes batch as executeTransfer (F-SPACE-002 section 4.6): the gate marks the row
+    // with a one-off token and the last statement clears it, so no reader outside the transaction sees it.
+    const token = `executing:${crypto.randomUUID()}`;
+    const guard = "EXISTS (SELECT 1 FROM class_moves WHERE id = ? AND status = 'executed' AND token = ?)";
+    const g = [id, token];
+    const [gate, , , relinksClosed, devicesRevoked] = await this.batchChanges([
+      [
+        `UPDATE class_moves SET status = 'executed', executed_at = ?, token = ?, updated_at = ?, decided_account_id = ?, decided_via = ?
+         WHERE id = ? AND learner_id = ? AND source_space_id = ? AND dest_space_id = ?
+           AND source_space_id <> dest_space_id AND status = 'requested' AND expires_at > ?
+           AND EXISTS (SELECT 1 FROM learners WHERE id = ?)
+           AND EXISTS (SELECT 1 FROM memberships WHERE space_id = ? AND member_kind = 'learner' AND member_id = ?)
+           AND EXISTS (SELECT 1 FROM spaces WHERE id = ? AND kind = 'class')
+           AND EXISTS (SELECT 1 FROM spaces WHERE id = ? AND kind = 'class' AND archived_at IS NULL)
+           AND ( EXISTS (SELECT 1 FROM memberships WHERE space_id = ? AND member_kind = 'learner' AND member_id = ?)
+                 OR ( (SELECT COUNT(*) FROM memberships WHERE space_id = ? AND member_kind = 'learner') < ?
+                      AND (SELECT COUNT(*) FROM memberships m JOIN spaces s ON s.id = m.space_id
+                           WHERE m.member_kind = 'learner' AND m.member_id = ? AND s.kind = 'class' AND s.archived_at IS NULL AND m.space_id <> ?) < ? ) )`,
+        [at, token, at, input.decider.accountId, input.decider.via, id, learnerId, source, dest, at, learnerId, source, learnerId, source, dest, dest, learnerId, dest, finiteCap(input.destCap), learnerId, source, finiteCap(input.learnerCap)],
+      ],
+      [`INSERT INTO memberships (space_id, member_kind, member_id, role, joined_at) SELECT ?, 'learner', ?, 'student', ? WHERE ${guard} ON CONFLICT(space_id, member_kind, member_id) DO NOTHING`, [dest, learnerId, at, ...g]],
+      [`DELETE FROM memberships WHERE space_id = ? AND member_kind = 'learner' AND member_id = ? AND ${guard}`, [source, learnerId, ...g]],
+      [`UPDATE relink_requests SET status = 'denied', decided_at = ? WHERE space_id = ? AND learner_id = ? AND status = 'pending' AND ${guard}`, [at, source, learnerId, ...g]],
+      [
+        `DELETE FROM learner_devices WHERE learner_id = ? AND scope = 'class' AND ${guard}
+           AND device_id IN (SELECT device_id FROM relink_requests WHERE space_id = ? AND learner_id = ? AND status = 'approved')
+           AND device_id NOT IN (SELECT r.device_id FROM relink_requests r JOIN memberships m ON m.space_id = r.space_id AND m.member_kind = 'learner' AND m.member_id = r.learner_id
+                                 WHERE r.learner_id = ? AND r.status = 'approved' AND r.space_id <> ?)`,
+        [learnerId, ...g, source, learnerId, learnerId, source],
+      ],
+      // F-FEEDBACK-001 section 7.5: the source membership ends, so its live, hidden and withdrawn notes go (reported ones, and any note a report row names, stay)
+      [`DELETE FROM feedback_notes WHERE learner_id = ? AND space_id = ? AND status <> 'reported' AND ${NO_REPORT_ROW} AND ${guard}`, [learnerId, source, ...g]],
+      ['UPDATE class_moves SET token = NULL WHERE id = ? AND token = ?', g],
+    ]);
+    return gate === 1 ? { executed: true, devicesRevoked: devicesRevoked ?? 0, relinksClosed: relinksClosed ?? 0 } : { executed: false, devicesRevoked: 0, relinksClosed: 0 };
+  }
+  purgeClassMoves(endedBefore: Date, executedBefore: Date, limit: number): Promise<number> {
+    return this.changes(
+      "DELETE FROM class_moves WHERE id IN (SELECT id FROM class_moves WHERE (ended_at IS NOT NULL AND ended_at < ?) OR (status = 'executed' AND executed_at < ?) OR (status = 'requested' AND expires_at < ?) LIMIT ?)",
+      [endedBefore.toISOString(), executedBefore.toISOString(), endedBefore.toISOString(), limit],
+    );
   }
 
   /** Tests only. Child tables first; a table whose migration has not landed yet is skipped. */
