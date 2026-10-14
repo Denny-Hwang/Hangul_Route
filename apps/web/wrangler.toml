@@ -15,7 +15,7 @@
 #   NEXT_PUBLIC_SCHOOL_CONSENT_MODE   "enabled" only after the legal review (decision #27)
 #   NEXT_PUBLIC_CONTENT_GATING_ENABLED "true" only with Stripe Live, set by the owner with the learner app's
 #                                     EXPO_PUBLIC_CONTENT_GATING_ENABLED (F-ENT-003 OD-2, E3-11); unset = off
-#   CONSOLE_ORIGIN                    where the site's grown-up links point (F-SITE-002 §3.8); unset = this site.
+#   CONSOLE_ORIGIN                    where the site's grown-up links point (F-SITE-002 §3.8); unset = the app host (S-10), false = this site.
 #                                     When set, the build also writes out/_redirects (scripts/site-redirects.mjs):
 #                                     /signin, /start, /teach, /parent, /account and everything under them go to
 #                                     the same path there (302, query kept; F-APP-001 §3.13). Leave unset until

@@ -20,6 +20,8 @@ beforeEach(() => {
 afterEach(() => vi.unstubAllEnvs());
 
 const APP_URL = 'https://app.hangulroute.com';
+/** Start learning: the app root, with or without ?lang= (Sign in also links to the app host since F-SITE-002 S-10). */
+const isStartLearning = (href: string): boolean => href === APP_URL || href.startsWith(`${APP_URL}?`);
 const hrefs = (html: string): string[] => [...html.matchAll(/href="([^"]*)"/g)].map((m) => m[1] ?? '');
 
 type Meta = ReturnType<typeof siteMetadataFor>;
@@ -65,7 +67,7 @@ describe('while es and ko are hidden, the landing is unchanged', () => {
     expect(html).not.toContain('hrefLang');
     expect(html).not.toContain('hreflang');
     expect(html).not.toContain(`aria-label="${getMessages('en').landing.footer.language}"`);
-    expect(hrefs(html).filter((h) => h.startsWith(APP_URL))).toEqual([APP_URL, APP_URL, APP_URL]);
+    expect(hrefs(html).filter(isStartLearning)).toEqual([APP_URL, APP_URL, APP_URL]);
   });
 
   it('the switcher renders nothing with one locale', () => {
@@ -80,7 +82,7 @@ describe('while es and ko are hidden, the landing is unchanged', () => {
 describe('Start learning from /es and /ko hands the locale to the app (?lang=): header, hero and footer', () => {
   it.each(['es', 'ko'] as const)('%s', (locale) => {
     const html = renderToStaticMarkup(<LandingPage locale={locale} />);
-    expect(hrefs(html).filter((h) => h.startsWith(APP_URL))).toEqual(Array(3).fill(`${APP_URL}?lang=${locale}`));
+    expect(hrefs(html).filter(isStartLearning)).toEqual(Array(3).fill(`${APP_URL}?lang=${locale}`));
   });
 });
 

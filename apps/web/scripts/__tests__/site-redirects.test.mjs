@@ -1,9 +1,10 @@
-// F-APP-001 section 3.13 (amended 2026-10-13, M3 prep) and F-SITE-002 section 3.10: the site build forwards
-// every old grown-up URL on hangulroute.com to the app host, and only once the owner has set the site build
-// variable `CONSOLE_ORIGIN` (the M3 site step). `build` = `next build && prune-hidden-locales && site-redirects`
-// writes `out/_redirects` from `GROWN_UP_PREFIXES` (R-1, the one list) when the variable holds an origin, and
-// makes sure no `_redirects` file is left in `out/` when it does not. The same variable moves the site's
-// grown-up links (`lib/site-links.ts`), so links and forwarding move in one deploy and roll back together.
+// F-APP-001 section 3.13 (amended 2026-10-13, M3 prep; A-10 2026-10-14) and F-SITE-002 section 3.10 (S-10): the
+// site build forwards every old grown-up URL on hangulroute.com to the app host. `build` = `next build &&
+// prune-hidden-locales && site-redirects` writes `out/_redirects` from `GROWN_UP_PREFIXES` (R-1, the one list) to
+// the site build variable `CONSOLE_ORIGIN`, or to the app host when it is unset (A-10, the default of S-10), and
+// makes sure no `_redirects` file is left in `out/` for the kill switch `CONSOLE_ORIGIN=false` (or `0`). The same
+// variable and default move the site's grown-up links (`lib/site-links.ts`), so links and forwarding move in one
+// deploy and roll back together.
 import { spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -11,18 +12,26 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { APP_ORIGIN, GROWN_UP_PREFIXES } from '@hangul-route/content-schema';
-import { grownUpOrigin } from '../../src/lib/site-links';
-import { REDIRECT_STATUS, redirectOrigin, redirectRules, writeSiteRedirects } from '../site-redirects.mjs';
+import { SITE_DEFAULT_CONSOLE_ORIGIN, grownUpOrigin } from '../../src/lib/site-links';
+import { DEFAULT_REDIRECT_ORIGIN, REDIRECT_STATUS, redirectOrigin, redirectRules, writeSiteRedirects } from '../site-redirects.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const SCRIPT = join(here, '..', 'site-redirects.mjs');
 const WEB = join(here, '..', '..');
 
 describe('redirectOrigin (the CONSOLE_ORIGIN rule of next.config.js and site-links.ts)', () => {
-  it('is empty (no forwarding) when the variable is unset, empty or blank', () => {
-    expect(redirectOrigin(undefined)).toBe('');
-    expect(redirectOrigin('')).toBe('');
-    expect(redirectOrigin('   ')).toBe('');
+  it('is the app host when the variable is unset, empty or blank (A-10, the default of F-SITE-002 S-10)', () => {
+    expect(DEFAULT_REDIRECT_ORIGIN).toBe(APP_ORIGIN);
+    expect(DEFAULT_REDIRECT_ORIGIN).toBe(SITE_DEFAULT_CONSOLE_ORIGIN);
+    expect(redirectOrigin(undefined)).toBe(APP_ORIGIN);
+    expect(redirectOrigin('')).toBe(APP_ORIGIN);
+    expect(redirectOrigin('   ')).toBe(APP_ORIGIN);
+  });
+
+  it('is empty (no forwarding) for the kill switch false or 0, in any case and with spaces', () => {
+    for (const off of ['false', '0', 'FALSE', ' False ', ' 0 ']) {
+      expect(redirectOrigin(off), off).toBe('');
+    }
   });
 
   it('is the trimmed origin without a trailing slash or path', () => {
@@ -44,7 +53,7 @@ describe('redirectOrigin (the CONSOLE_ORIGIN rule of next.config.js and site-lin
   });
 
   it('agrees with grownUpOrigin, so the links and the forwarding always point at the same host', () => {
-    for (const value of [undefined, '', '  ', 'https://app.hangulroute.com', ' https://app.hangulroute.com/ ', 'http://127.0.0.1:3000', 'https://hangulroute.com']) {
+    for (const value of [undefined, '', '  ', 'false', ' 0 ', 'FALSE', 'https://app.hangulroute.com', ' https://app.hangulroute.com/ ', 'http://127.0.0.1:3000', 'https://hangulroute.com']) {
       expect(redirectOrigin(value), String(value)).toBe(grownUpOrigin({ CONSOLE_ORIGIN: value }));
     }
   });
@@ -62,7 +71,7 @@ describe('redirectRules', () => {
     expect(lines).toHaveLength(GROWN_UP_PREFIXES.length * 2);
   });
 
-  it('is a temporary redirect, so unsetting the variable rolls back without cached permanent redirects', () => {
+  it('is a temporary redirect, so the kill switch rolls back without cached permanent redirects (A-10 kept 302)', () => {
     expect(REDIRECT_STATUS).toBe(302);
   });
 
@@ -95,7 +104,7 @@ describe('writeSiteRedirects', () => {
     expect(readFileSync(join(out, '_redirects'), 'utf8')).toBe(redirectRules(APP_ORIGIN, GROWN_UP_PREFIXES));
   });
 
-  it('writes no file, and removes a stale one, when no origin is set (production today)', () => {
+  it('writes no file, and removes a stale one, when the origin is empty (the kill switch)', () => {
     writeFileSync(join(out, '_redirects'), '/teach https://example.com 302\n');
     expect(writeSiteRedirects(out, '', GROWN_UP_PREFIXES)).toBe(0);
     expect(existsSync(join(out, '_redirects'))).toBe(false);
@@ -129,8 +138,14 @@ describe('the CLI', { timeout: 30_000 }, () => {
     expect(result.stdout).toContain(`site-redirects: ${GROWN_UP_PREFIXES.length * 2} rules to ${APP_ORIGIN}`);
   });
 
-  it('writes nothing when CONSOLE_ORIGIN is unset', () => {
+  it('forwards to the app host when CONSOLE_ORIGIN is unset (A-10)', () => {
     const result = run(undefined);
+    expect(result.status, result.stderr).toBe(0);
+    expect(readFileSync(join(out, '_redirects'), 'utf8')).toBe(redirectRules(APP_ORIGIN, GROWN_UP_PREFIXES));
+  });
+
+  it('writes nothing for the kill switch CONSOLE_ORIGIN=false', () => {
+    const result = run('false');
     expect(result.status, result.stderr).toBe(0);
     expect(existsSync(join(out, '_redirects'))).toBe(false);
     expect(result.stdout).toMatch(/no _redirects/);

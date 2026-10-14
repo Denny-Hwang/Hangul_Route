@@ -25,9 +25,12 @@ import EnTeachers from '../(en)/teachers/page';
 beforeEach(() => {
   vi.stubEnv('NEXT_PUBLIC_SHOW_ALL_LOCALES', '');
   vi.stubEnv('EXPO_PUBLIC_SHOW_ALL_LOCALES', '');
-  vi.stubEnv('CONSOLE_ORIGIN', '');
+  vi.stubEnv('CONSOLE_ORIGIN', 'false');
 });
 afterEach(() => vi.unstubAllEnvs());
+// Grown-up links on the site's own origin (the kill switch CONSOLE_ORIGIN=false; a build without the variable
+// links to the app host since F-SITE-002 S-10). Also set here for the pages rendered while tests are collected.
+vi.stubEnv('CONSOLE_ORIGIN', 'false');
 
 const here = dirname(fileURLToPath(import.meta.url));
 const webSrc = join(here, '..', '..');
@@ -439,7 +442,12 @@ describe('today\'s claims: the reports lines (F-REPORT-001 RP-11) and the notes 
   });
 });
 
-describe('a build with CONSOLE_ORIGIN set sends both grown-up actions to the app host', () => {
+describe('a build with CONSOLE_ORIGIN set or unset (S-10 default) sends both grown-up actions to the app host', () => {
+  it.each(['', 'https://app.hangulroute.com'])('with CONSOLE_ORIGIN=%j', (value) => {
+    vi.stubEnv('CONSOLE_ORIGIN', value);
+    expect(linksOf(mainOf(render(ParentsPage)))[0]?.href).toBe('https://app.hangulroute.com/signin?persona=parent');
+  });
+
   it('Sign in as a parent / teacher go to https://app.hangulroute.com/signin?persona=…', () => {
     vi.stubEnv('CONSOLE_ORIGIN', 'https://app.hangulroute.com');
     expect(linksOf(mainOf(render(ParentsPage)))[0]?.href).toBe('https://app.hangulroute.com/signin?persona=parent');

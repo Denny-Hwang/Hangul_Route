@@ -56,14 +56,18 @@ test.describe('locale routes', () => {
     await page.goto('/');
     await expect.poll(() => announcerConnected(page)).toBe(true);
 
-    // The site's Sign in (F-SITE-002 §3.2) is a plain <a> to F-APP-001's /signin in the console group.
-    await page.locator('header a[href="/signin"]').first().click();
-    await page.waitForURL('**/signin');
+    // The site's Sign in (F-SITE-002 §3.2) is a plain <a> to F-APP-001's /signin, on the app host since S-10
+    // (a build without CONSOLE_ORIGIN), so it never soft-navigates into the console group of this export.
+    await expect(page.locator('header a', { hasText: getMessages('en').landing.nav.signIn }).first()).toHaveAttribute(
+      'href',
+      'https://app.hangulroute.com/signin',
+    );
+
+    // A console page that needs no sign-in (since F-APP-001 A-5b `/parent` is the signed-in family home), still in
+    // this export: the Worker forwards it to the app host with `_redirects`, the e2e server serves the file.
+    await page.goto('/signin');
     await expect(page.locator('html')).toHaveAttribute('lang', 'en');
     await expect.poll(() => announcerConnected(page)).toBe(true);
-
-    // A console page that needs no sign-in (since F-APP-001 A-5b `/parent` is the signed-in family home).
-    await page.goto('/signin');
     await page.locator('a[href="/"]').first().click();
     await page.waitForURL((url) => url.pathname === '/');
     await expect(page.locator('html')).toHaveAttribute('lang', 'en');
