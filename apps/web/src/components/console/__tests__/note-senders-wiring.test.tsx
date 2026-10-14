@@ -109,6 +109,7 @@ const nameOfSwitch = (root: ReactTestInstance, sw: ReactTestInstance): string =>
 
 describe('panel D: Can send notes (FB-12)', () => {
   it('not shown while the notes flag is off, and never on a class', async () => {
+    vi.stubEnv('NEXT_PUBLIC_NOTES_ENABLED', 'false');
     let root = await renderPage();
     expect(panel(root)).toBeUndefined();
     expect(calls).toHaveLength(0);

@@ -6,18 +6,20 @@ import { shot } from './shots';
 /**
  * F-FEEDBACK-001 FB-8 (sections 6.5, 6.6, 6.10 items 3 and 4; mocks design/screens/notes/home-card.md,
  * notes-list.md, note-page.md): the Home card (row 2a), My notes, the note page and the Profile row.
- * They live behind `flags.notesEnabled` (off), so a default build checks that none of them shows,
- * and a build made with the flag on checks the screens on notes seeded into the store (no API in
- * the e2e build, so nothing is fetched or flushed):
+ * They live behind `flags.notesEnabled`, on by default since FB-14, so the default build checks the
+ * screens on notes seeded into the store (no API in the e2e build, so nothing is fetched or flushed),
+ * and a build with the owner's off switch checks that none of them shows:
  *
- *   EXPO_PUBLIC_NOTES_ENABLED=true pnpm --filter @hangul-route/mobile build:web
- *   E2E_NOTES=1 pnpm --filter @hangul-route/mobile exec playwright test notes-screens
+ *   EXPO_PUBLIC_NOTES_ENABLED=false pnpm --filter @hangul-route/mobile build:web
+ *   E2E_NOTES=off pnpm --filter @hangul-route/mobile exec playwright test notes-screens
  *
  * Metro caches the inlined `EXPO_PUBLIC_*` values: when switching the flag between local builds,
- * export once with `expo export --clear`. FB-14 adds the nightly notes.spec.ts over a stubbed API.
+ * export once with `expo export --clear`. FB-14's notes.spec.ts covers the same screens over a stubbed API.
  */
 
-const NOTES = process.env.E2E_NOTES === '1';
+/** On by default since FB-14; `E2E_NOTES=off` runs the switched-off half on a build with `EXPO_PUBLIC_NOTES_ENABLED=false`. */
+const NOTES_OFF = process.env.E2E_NOTES === 'off';
+const NOTES = !NOTES_OFF;
 /** The free-plan switch (F-ENT-003): only a build with it on has closed quests. */
 const GATED = process.env.E2E_CONTENT_GATING === '1';
 const NOW = Date.parse('2026-10-12T12:00:00.000Z');
@@ -102,8 +104,8 @@ async function openProfile(page: Page): Promise<void> {
   await page.getByRole('button', { name: /profile/i }).first().click();
 }
 
-test.describe('notes screens with the flag off (default build)', () => {
-  test.skip(NOTES, 'runs on the default build only');
+test.describe('notes screens with the flag switched off (EXPO_PUBLIC_NOTES_ENABLED=false)', () => {
+  test.skip(!NOTES_OFF, 'needs a build with EXPO_PUBLIC_NOTES_ENABLED=false and E2E_NOTES=off');
 
   test('no Home card and no My notes row, even with a note in the store', async ({ page }) => {
     await learnerWithNotes(page, [classNote()]);
@@ -114,7 +116,7 @@ test.describe('notes screens with the flag off (default build)', () => {
 });
 
 test.describe('notes screens (flag on)', () => {
-  test.skip(!NOTES, 'needs a build with EXPO_PUBLIC_NOTES_ENABLED=true and E2E_NOTES=1');
+  test.skip(!NOTES, 'runs on the default build (notes on since FB-14), not with E2E_NOTES=off');
 
   test('one new note: the Home card after the missions opens the note, which reads, answers and leaves Home', async ({ page }) => {
     const errors: string[] = [];

@@ -149,6 +149,8 @@ describe('the learner report page, switched on', () => {
   });
 
   it('draws the header: the back link to the roster and Print described by its hint, enabled once loaded', async () => {
+    // Send a note (on by default since F-FEEDBACK-001 FB-14) has its own suite, report-send-note-wiring.test.tsx.
+    vi.stubEnv('NEXT_PUBLIC_NOTES_ENABLED', 'false');
     const root = await page();
     expect(byTestId(root, 'report-back')[0]?.props.href).toBe('/teach/space?id=space%3Asunflower');
     expect(textOf(byTestId(root, 'report-back')[0] as ReactTestInstance)).toBe('Back to Sunflower');
@@ -156,7 +158,6 @@ describe('the learner report page, switched on', () => {
     expect(print.props.disabled).toBe(false);
     const hint = root.find((n) => n.type === 'p' && n.props.id === print.props['aria-describedby']);
     expect(textOf(hint)).toBe(en.report.print.hint);
-    // Send a note waits for RP-12 (after F-FEEDBACK-001 FB-11).
     expect(textOf(root)).not.toContain(en.report.action.sendNote);
   });
 

@@ -38,9 +38,9 @@ describe('ADULT_NAV', () => {
 });
 
 describe('navFlags', () => {
-  it('reads the three sibling predicates: Reports (F-REPORT-001 RP-11) and Lessons (F-BROWSE-001 BR-14) on by default, Notes off', () => {
-    expect(navFlags('en', {}, 'https://app.hangulroute.com')).toEqual({ ...ALL_OFF, reports: true, browse: true });
-    expect(navFlags('en', { NEXT_PUBLIC_REPORTS_ENABLED: 'false', NEXT_PUBLIC_BROWSE: 'false' }, 'https://app.hangulroute.com')).toEqual(ALL_OFF);
+  it('reads the three sibling predicates: Reports (F-REPORT-001 RP-11), Lessons (F-BROWSE-001 BR-14) and Notes (F-FEEDBACK-001 FB-14) on by default', () => {
+    expect(navFlags('en', {}, 'https://app.hangulroute.com')).toEqual(ALL_ON);
+    expect(navFlags('en', { NEXT_PUBLIC_REPORTS_ENABLED: 'false', NEXT_PUBLIC_NOTES_ENABLED: 'false', NEXT_PUBLIC_BROWSE: 'false' }, 'https://app.hangulroute.com')).toEqual(ALL_OFF);
     expect(navFlags('en', { NEXT_PUBLIC_REPORTS_ENABLED: 'true', NEXT_PUBLIC_NOTES_ENABLED: '1', NEXT_PUBLIC_BROWSE: 'enabled' }, 'https://app.hangulroute.com')).toEqual(ALL_ON);
   });
 

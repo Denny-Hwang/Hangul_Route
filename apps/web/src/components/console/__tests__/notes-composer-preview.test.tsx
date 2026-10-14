@@ -156,7 +156,7 @@ describe('composer quest row: the prop left out, the flags decide after mount', 
 
   it('absent when the notes flag is off', async () => {
     vi.stubEnv('NEXT_PUBLIC_BROWSE', 'enabled');
-    vi.stubEnv('NEXT_PUBLIC_NOTES_ENABLED', '');
+    vi.stubEnv('NEXT_PUBLIC_NOTES_ENABLED', 'false');
     at('https://app.hangulroute.com');
     const r = await mount({ prefillQuest: QUEST });
     expect(browseLinks(r)).toHaveLength(0);
