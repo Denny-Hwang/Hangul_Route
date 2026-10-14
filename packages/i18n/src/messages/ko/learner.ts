@@ -1030,7 +1030,7 @@ export const learner = {
       back: '뒤로',
       backToTopic: '주제로 돌아가기',
       stop: {
-        title: '여기서 멈출까요?',
+        title: '여기서 그만할까요?',
         body: '답한 낱말은 그대로 저장돼요.',
         keep: '계속하기',
         stop: '그만하기',
@@ -1118,7 +1118,7 @@ export const learner = {
         speed: '스피드 라운드',
         backToTopic: '주제로 돌아가기',
       },
-      leave: { title: '계속할까요, 여기서 멈출까요?', keep: '계속하기', stop: '멈추기' },
+      leave: { title: '계속할까요, 여기서 그만할까요?', keep: '계속하기', stop: '그만하기' },
     },
   },
   notes: {
@@ -1162,9 +1162,16 @@ export const learner = {
   },
   access: {
     notOpen: '아직 안 열렸어요',
+    preview: { line: '이 레슨은 아직 안 열렸어요. 무엇을 배우는지는 볼 수 있어요.' },
     ask: { family: '어른에게 물어봐요', class: '선생님이나 어른에게 물어봐요', self: '여는 방법 보기' },
+    back: { cta: '열린 레슨으로 돌아가기' },
+    freeEnd: { title: '첫 레슨들을 다 끝냈어요!' },
     openForYou: '지금 열린 퀘스트를 모두 했어요.',
     practiceWords: { cta: '낱말 연습하기' },
+    readStory: { cta: '이야기 읽기' },
+    replay: { cta: '좋아하는 퀘스트 다시 하기' },
+    home: { cta: '홈으로' },
+    practice: { subtitle: '계속 연습해요', topicTitle: (title: string) => `낱말: ${title}` },
   },
   stageComplete: {
     title: '한글 완성!',
@@ -1239,7 +1246,7 @@ export const learner = {
         'beyond-content': '다음은 이야기와 연습이에요. 새 레슨이 곧 나와요.',
       },
       paceTitle: '일주일에 며칠 할까요?',
-      pace: { gentle: '여유롭게', steady: '꾸준히', brisk: '활발하게' },
+      pace: { gentle: '여유롭게', steady: '꾸준히', brisk: '빠르게' },
       paceDays: (days: number) => `일주일에 ${days}일`,
       paceLabel: (pace: string, days: number) => `${pace}, 일주일에 ${days}일`,
       lengthTitle: '얼마 동안 할까요?',
