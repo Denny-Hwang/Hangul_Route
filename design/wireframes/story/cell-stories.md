@@ -32,8 +32,8 @@ No single primary button: each tile is one button and none is singled out (the L
 │       cell"                      │
 │                                  │
 │ ┌──────────────────────────────┐ │   <- only if the cell has a lesson or book
-│ │ [ Lunch Box Words ]          │ │      secondary row: "<title> — the lesson for this cell"
-│ └──────────────────────────────┘ │
+│ │ [ Lunch Box Words ]          │ │      secondary row: "<title> — the lesson for this cell";
+│ └──────────────────────────────┘ │      a Stage 5 book cell: "<title> — the book for this cell"
 │                                  │
 │ ┌────────────┐  ┌────────────┐   │   <- StoryTile (F-STORY-004): cover 4:3, title, ~~ ko ~~,
 │ │ [cover]    │  │ [cover]    │   │      "about 5 min", state line: New / Keep reading /
@@ -45,7 +45,7 @@ No single primary button: each tile is one button and none is singled out (the L
 ```
 
 - Stories in `shelf` order; the order never changes with progress.
-- The lesson row comes first so the lesson is never hidden by stories.
+- The lesson row comes first so the lesson is never hidden by stories. For a `book` cell (F-STORY-005 PR 5.6) the same row names the book: "Festival Tales — the book for this cell" (`learner.journey.cellStories.bookRow`).
 - No count of unfinished stories, no "N of M", no recommended-stage label, no timer, no ranking.
 
 ---
