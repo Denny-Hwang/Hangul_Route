@@ -810,3 +810,4 @@ Assumptions this spec relies on (and what happens if they change):
 | R1 / R2: the lane waited for the whole build job | Applied: the change detection moved to a small `changes` job that the build job and the lane both need. |
 | R2: the two apps' Playwright versions could drift | Applied: a pin test asserts they match. |
 | R2: the "no Metro or Next cache" guard depended on one YAML layout | Applied: every `actions/cache` step of the lane is checked for those paths, whatever its key order. |
+| First CI run of the lane: `grown-up-entries.spec.ts` Panel A asked for the persona buttons side by side at 375 px, and on the Linux runner's font they stack | Applied: D10 says "side by side when both fit, stacked otherwise", so at 375 px the test measures the labels and checks whichever layout applies (macOS fits both, Linux stacks them), and at 768 px it requires side by side. |
