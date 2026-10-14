@@ -112,16 +112,24 @@ function drawable(slide: Slide, kinds: ReadonlySet<SlideKind>): boolean {
  * the run is empty (the invalid-deck screen, section 3.3 rule 10). With `drawnCardIds` (the design
  * system's `supportedCardIds`), a word whose card the art cannot draw drops its `cardId` and so its
  * `art` build: the slide is text only and no press reveals nothing (also after the live
- * romanization flip, which recomputes builds from the slide).
+ * romanization flip, which recomputes builds from the slide). With `drawnWordArtKeys` (the design
+ * system's `WORD_ART_KEYS`), a topic word whose WordArt key has no glyph drops its `wordArt` the
+ * same way (README D9).
  */
-export function runDeck(deck: Pick<LectureDeck, 'blocks'>, expanded: ExpandedDeck, kinds: ReadonlySet<SlideKind> = SHELL_SLIDE_KINDS, drawnCardIds?: readonly string[]): RunDeck {
+export function runDeck(
+  deck: Pick<LectureDeck, 'blocks'>,
+  expanded: ExpandedDeck,
+  kinds: ReadonlySet<SlideKind> = SHELL_SLIDE_KINDS,
+  drawnCardIds?: readonly string[],
+  drawnWordArtKeys?: readonly string[],
+): RunDeck {
   const parts: SkipPart[] = expanded.skipped.map((s) => ({ blockIndex: s.blockIndex, reason: s.reason }));
   const slides: Slide[] = [];
   let minutes = expanded.minutes;
   let last: { blockIndex: number | null; kind: SlideKind } | null = null;
   for (const slide of expanded.slides) {
     if (drawable(slide, kinds)) {
-      slides.push(drawnCardIds === undefined ? slide : withoutUndrawnArt(slide, drawnCardIds));
+      slides.push(withoutUndrawnArt(slide, drawnCardIds, drawnWordArtKeys));
       last = null;
       continue;
     }
@@ -137,10 +145,15 @@ export function runDeck(deck: Pick<LectureDeck, 'blocks'>, expanded: ExpandedDec
   return { slides: empty ? [] : slides, parts, minutes: Math.max(0, minutes) };
 }
 
-function withoutUndrawnArt(slide: Slide, drawnCardIds: readonly string[]): Slide {
-  if (slide.kind !== 'vocab' || slide.cardId === undefined || drawnCardIds.includes(slide.cardId)) return slide;
-  const { cardId: _undrawn, ...rest } = slide;
-  return { ...rest, builds: slide.builds.filter((b) => b !== 'art') };
+function withoutUndrawnArt(slide: Slide, drawnCardIds?: readonly string[], drawnWordArtKeys?: readonly string[]): Slide {
+  if (slide.kind !== 'vocab') return slide;
+  const cardUndrawn = drawnCardIds !== undefined && slide.cardId !== undefined && !drawnCardIds.includes(slide.cardId);
+  const wordUndrawn = drawnWordArtKeys !== undefined && slide.wordArt !== undefined && !drawnWordArtKeys.includes(slide.wordArt);
+  if (!cardUndrawn && !wordUndrawn) return slide;
+  const { cardId, wordArt, ...rest } = slide;
+  const kept = { ...rest, ...(cardId !== undefined && !cardUndrawn ? { cardId } : {}), ...(wordArt !== undefined && !wordUndrawn ? { wordArt } : {}) };
+  const art = kept.cardId !== undefined || kept.wordArt !== undefined;
+  return { ...kept, builds: art ? slide.builds : slide.builds.filter((b) => b !== 'art') };
 }
 
 /** The start screen's list: one line per lesson and reason (a lesson with four listening steps reads once; the count still counts parts). */

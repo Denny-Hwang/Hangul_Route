@@ -1435,6 +1435,7 @@ export const learner = {
       letterName: (name: string) => `Nombre de la letra: ${name}`,
       strokeCaption: 'Guía de trazos simplificada',
       card: 'Tarjeta cultural',
+      topic: 'Temas de palabras',
       order: '¿Qué va primero?',
       activity: {
         minutes: (n: number) => plural('es', n, { one: '1 minuto', other: `${n} minutos` }),

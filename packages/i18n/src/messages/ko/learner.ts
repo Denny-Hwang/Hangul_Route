@@ -1436,6 +1436,7 @@ export const learner = {
       letterName: (name: string) => `글자 이름: ${name}`,
       strokeCaption: '간단한 획순 안내',
       card: '문화 카드',
+      topic: '낱말 주제',
       order: '무엇이 먼저일까요?',
       activity: {
         minutes: (n: number) => `${n}분`,

@@ -17,7 +17,7 @@ import { TALE_ID } from './browse-fixture';
 const NOW = new Date('2026-10-13T09:00:00.000Z');
 const rng = (): number => 0.5;
 const QUEST = 'quest:stage1-letters-q1';
-const TOPIC = VOCAB_TOPICS[0]?.id ?? 'vocab-topic:food';
+const TOPIC = VOCAB_TOPICS.find((t) => t.status === 'ready' || t.status === 'shipped')?.id ?? 'vocab-topic:food';
 const bundle = lectureBundle('en');
 
 function deckOf(kind: 'quest' | 'story' | 'vocab-topic', id: string, title = 'Meet a, eo, g, n') {
@@ -113,16 +113,13 @@ describe('presentThisShown, per item kind', () => {
     expect(presentThisShown({ ...full, deck: deckOf('story', TALE_ID) })).toBe(false);
   });
 
-  it('hides for a word topic until the vocabulary slides land (F-TCH-004 PR 12): the block expands to nothing', () => {
-    expect(presentThisShown({ ...full, deck: deckOf('vocab-topic', TOPIC) })).toBe(false);
+  it('shows for a ready word topic now that the vocabulary slides have landed (F-TCH-004 PR 12)', () => {
+    expect(presentThisShown({ ...full, deck: deckOf('vocab-topic', TOPIC) })).toBe(true);
   });
 
-  it('shows for a word topic once the bundle can expand it, so PR 12 needs no change here', () => {
-    const withTopics = {
-      ...bundle,
-      vocabTopic: () => ({ title: 'Food', words: [{ id: 'vocab:bap', ko: 'bap', romanization: 'bap', gloss: 'rice' }] }),
-    };
-    expect(presentThisShown({ ...full, bundle: withTopics, deck: deckOf('vocab-topic', TOPIC) })).toBe(true);
+  it('hides for a word topic the bundle cannot expand (a topic that is not ready)', () => {
+    const notReady = { ...bundle, vocabTopic: () => 'not-ready' as const };
+    expect(presentThisShown({ ...full, bundle: notReady, deck: deckOf('vocab-topic', TOPIC) })).toBe(false);
   });
 
   it('hides for a lesson the bundle does not hold', () => {
@@ -162,9 +159,12 @@ describe('presentItemShown, the item page rule', () => {
     expect(presentItemShown({ ...page, presenterRoot: false, item: quest })).toBe(false);
   });
 
-  it('hides for a story and a word topic today, and for a title the deck grammar cannot carry', () => {
+  it('shows for a ready word topic (F-TCH-004 PR 12)', () => {
+    expect(presentItemShown({ ...page, item: { kind: 'vocab-topic', id: TOPIC, title: 'Food' } })).toBe(true);
+  });
+
+  it('hides for a story this bundle does not hold, and for a title the deck grammar cannot carry', () => {
     expect(presentItemShown({ ...page, item: { kind: 'story', id: TALE_ID, title: 'The tale' } })).toBe(false);
-    expect(presentItemShown({ ...page, item: { kind: 'vocab-topic', id: TOPIC, title: 'Food' } })).toBe(false);
     expect(presentItemShown({ ...page, item: { ...quest, title: '&&' } })).toBe(false);
   });
 });

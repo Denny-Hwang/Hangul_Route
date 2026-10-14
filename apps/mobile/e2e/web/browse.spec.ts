@@ -1037,8 +1037,8 @@ test('a word topic lists every word with its Hear button, keeps 64 targets at 32
 /* -------------------------------------------------------------------------------------------
  * BR-13: [ Present this ] on the item page (section 4.6 secondary action, OD-9; design
  * design/screens/presenter/present-this.md). A full pass, the presenter root (index.ts mounts
- * PresenterApp for /present since #591), and a block the presenter can draw: a lesson today, a
- * story or a word topic only once their slides land (F-TCH-004 PR 11, PR 12).
+ * PresenterApp for /present since #591), and a block the presenter can draw: a lesson, a listed
+ * story (F-TCH-004 PR 11) or a ready word topic (F-TCH-004 PR 12).
  * ------------------------------------------------------------------------------------------- */
 
 /** Records every `window.open` address before it opens, so the deck can be read before the presenter strips it. */

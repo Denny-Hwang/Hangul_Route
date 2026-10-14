@@ -5,6 +5,7 @@ import { describe, expect, it } from 'vitest';
 import { episodesAll, questsAll } from '../../../content';
 import { storiesAll } from '../../../content/stories';
 import { buildStoryIndex } from '../../story/story-index';
+import { VOCAB_TOPICS } from '../../../content/__generated__/vocab';
 import { PAUSE_WORD, lectureBundle } from '../content';
 import { expandDeck } from '../deck-builder';
 
@@ -16,8 +17,8 @@ import { expandDeck } from '../deck-builder';
  * episode and quest, with a Korean voice and without one (the teacher-says text and the
  * Match Sound text prompts of §3.7 / §3.3), walks every string in the slides and fails on a
  * Hangul code point missing from the committed sidecar. Every story the Library lists
- * joins as a story block with its checks (PR 11); vocabulary blocks join with their
- * adapter (PR 12).
+ * joins as a story block with its checks (PR 11); every vocabulary topic joins as a
+ * vocab block (PR 12).
  *
  * Only taught Korean is drawn in the presenter font. Text in the UI language (titles,
  * card facts, glosses; the teacher-typed deck title) uses the system stack, so those
@@ -62,6 +63,7 @@ const blocks: LectureBlock[] = [
   ...[...new Set(buildStoryIndex({ stories: storiesAll, episodes: episodesAll, quests: questsAll, showUnreviewed: false }).map((e) => e.storyId))].map(
     (storyId): LectureBlock => ({ kind: 'story', storyId, checks: true }),
   ),
+  ...VOCAB_TOPICS.map((t): LectureBlock => ({ kind: 'vocab', topicId: t.id })),
 ];
 
 describe('the presenter font covers the projected Hangul (F-TCH-004 §3.6)', () => {
@@ -89,6 +91,10 @@ describe('the presenter font covers the projected Hangul (F-TCH-004 §3.6)', () 
 
   it('the deck covers every listed story', () => {
     expect(blocks.filter((b) => b.kind === 'story').length).toBeGreaterThan(0);
+  });
+
+  it('the deck covers every vocabulary topic', () => {
+    expect(blocks.filter((b) => b.kind === 'vocab').length).toBe(VOCAB_TOPICS.length);
   });
 
   it('holds the Pause word', () => {

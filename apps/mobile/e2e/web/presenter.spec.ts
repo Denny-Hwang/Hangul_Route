@@ -521,6 +521,68 @@ test.describe('PR 7 teaching slides at 1280 x 720', () => {
   });
 });
 
+/** PR 12: a word topic (Food, four words) through the vocab adapter. */
+const TOPIC_DECK: LectureDeckInput = {
+  ...DECK,
+  id: 'lecture:e2e012',
+  title: 'Food words',
+  blocks: [{ kind: 'vocab', topicId: 'vocab-topic:food', wordIds: ['vocab:sagwa-apple', 'vocab:uyu', 'vocab:ppang', 'vocab:gimchi'] }],
+};
+
+test.describe('PR 12 word topic slides at 1280 x 720', () => {
+  test.use({ viewport: { width: 1280, height: 720 }, isMobile: false, hasTouch: false });
+
+  test('the topic title, then each word with its picture at the build after the gloss', async ({ page }) => {
+    const errors: string[] = [];
+    page.on('pageerror', (e) => errors.push(String(e)));
+    page.on('console', (m) => {
+      if (m.type() === 'error') errors.push(m.text());
+    });
+    await page.goto(link(TOPIC_DECK));
+    await startLesson(page);
+
+    // Title (slide-topic.md): the "Word topics" kind label, the topic title and its Hoya line.
+    await expect(page.getByTestId('presenter-live')).toHaveText(/^Slide 1 of \d+, Title, Food/);
+    await expect(page.getByTestId('presenter-title-kind')).toHaveText('Word topics');
+    await expect(page.getByRole('heading', { name: 'Food' })).toBeVisible();
+    await shot(page, 'presenter-topic-title-1280x720');
+
+    // Word (README D9): the word with its romanization, then the gloss, then the WordArt picture.
+    await forwardTo(page, 'Word');
+    await expect(page.getByTestId('presenter-word')).toHaveText('사과');
+    await expect(page.getByTestId('presenter-word-rom')).toHaveText('sagwa');
+    await expectDrawn(page, 'presenter-word-gloss', false);
+    await expectDrawn(page, 'presenter-word-art', false);
+    await page.keyboard.press('PageDown');
+    await expectDrawn(page, 'presenter-word-gloss', true);
+    await expectDrawn(page, 'presenter-word-art', false);
+    await page.keyboard.press('PageDown');
+    await expectDrawn(page, 'presenter-word-art', true);
+    await expect(page.getByRole('img', { name: 'apple' })).toBeVisible();
+    await expect(page.getByTestId('presenter-next')).toHaveAccessibleName('Next');
+    await shot(page, 'presenter-topic-word-1280x720');
+
+    // A topic word whose picture is a heritage card (kimchi): the card art at the same build, no WordArt.
+    const word = page.getByTestId('presenter-word');
+    const atKimchi = async () => (await word.count()) > 0 && (await word.textContent()) === '김치';
+    for (let i = 0; i < 40 && !(await atKimchi()); i++) {
+      await page.keyboard.press('PageDown');
+      await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+    }
+    await expect(page.getByTestId('presenter-live')).toHaveText(/^Slide \d+ of \d+, Word\b/);
+    await expect(word).toHaveText('김치');
+    await expectDrawn(page, 'presenter-word-gloss', false);
+    await page.keyboard.press('PageDown');
+    await expectDrawn(page, 'presenter-word-gloss', true);
+    await page.keyboard.press('PageDown');
+    await expect(page.getByRole('img', { name: 'kimchi' })).toBeVisible();
+    await expect(page.getByTestId('presenter-word-art')).toHaveCount(0);
+
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(1280);
+    expect(errors).toEqual([]);
+  });
+});
+
 test.describe('presenter at 1920 x 1080 with reduced motion', () => {
   test.use({ viewport: { width: 1920, height: 1080 }, isMobile: false, hasTouch: false });
 
