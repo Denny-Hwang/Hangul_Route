@@ -8358,7 +8358,7 @@ export const storiesAll: Story[] = [
           "chaek",
           "gukbo"
         ],
-        "grammarFocusEn": "-e ... isseoyo (there is ... at): kkeute naljjaga isseoyo; -dwaesseoyo (was found); -euro/-ro bakkwosseoyo (changed to)"
+        "grammarFocusEn": "-e ... isseoyo (there is ... at); -dwaesseoyo (was found); -euro/-ro bakkwosseoyo (changed to)"
       }
     ],
     "coverSceneId": "s1",
