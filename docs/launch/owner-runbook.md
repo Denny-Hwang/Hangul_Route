@@ -200,6 +200,7 @@ Rescue Code 는 서버에 해시로만 저장된다. 이 키를 넣으면 **새�
 | `NEXT_PUBLIC_LECTURE_MODE` · `NEXT_PUBLIC_SCHOOL_CONSENT_MODE` | (선택) `hangul-route-web` 과 같은 값 | S-1 | 해당 콘솔 기능이 앱 호스트에서 꺼진 채로 |
 | `NEXT_PUBLIC_REPORTS_ENABLED` (학습자 앱은 `EXPO_PUBLIC_REPORTS_ENABLED`) | 비워 둔다: F-REPORT-001 RP-11 부터 기본 켜짐. 되돌릴 때만 정확히 `false` 또는 `0` (`FALSE`·`off` 같은 다른 값은 켜짐으로 읽힌다) | RP-11 머지 후 | 리포트 메뉴·카드·페이지가 보인다 (en 만) |
 | 형제 스펙의 콘솔 플래그 (`NEXT_PUBLIC_NOTES_ENABLED` · `NEXT_PUBLIC_LEARNING_ROUTE_ENABLED`) | 각 스펙이 켤 때 `true` (All lessons 는 `NEXT_PUBLIC_BROWSE=enabled`, F-BROWSE-001 BR-14) | 각 형제 스펙의 단계 | 해당 메뉴·카드가 숨겨진다 |
+| `EXPO_PUBLIC_MY_ROUTE_ENABLED` | 비워 둔다: F-ROUTE-001 R-10b 부터 기본 켜짐 (Learning Route 의 Route 탭). 되돌릴 때만 정확히 `false` 또는 `0` (다른 값은 켜짐으로 읽힌다). 끄기 전에 아래 "문제가 생기면" 의 Learning Route kill switch 확인을 한 번 한다 | R-10b 머지 후 | Route 탭 · Home 의 route strip · 리포트의 Open Learning Route 가 보인다 (en 만) |
 | `EXPO_PUBLIC_GROWN_UP_HOME` | `true` | S-3 (M3) | 학습자 앱에 어른 진입점 (Welcome 페르소나 행 · Profile "Grown-up home" · 대시보드 카드) 이 보이지 않는다 |
 | `EXPO_PUBLIC_SITE_URL` | `https://hangulroute.com` | S-3 | 기본값도 `https://hangulroute.com` (그다음 `EXPO_PUBLIC_CONSOLE_URL`) |
 | `EXPO_PUBLIC_CONSOLE_URL` | 삭제 | S-3 뒤, F-BILL-002 가 더 읽지 않을 때 | — |
@@ -438,4 +439,5 @@ DELETE FROM feedback_notes WHERE id = '<note_id>' AND NOT EXISTS (SELECT 1 FROM 
 - Node 버전이 22 가 아니라고 로그에 나오면: Build variables 에 `NODE_VERSION=22` 가 있는지 확인.
 - "Ignored build scripts" 경고: 정상이다 (`pnpm-workspace.yaml` 의 `neverBuiltDependencies` 가 의도한 정책). 빌드·배포에 필요한 스크립트는 없다.
 - wrangler "outdated" 경고 (API Worker 는 wrangler 3.114): 배포에 영향 없는 안내 문구다. 업그레이드는 별도 PR 로 한다.
+- Learning Route kill switch (F-ROUTE-001 R-10b): CI 는 꺼진 빌드를 만들지 않으므로, `EXPO_PUBLIC_MY_ROUTE_ENABLED=false` 를 배포하기 전에 한 번 직접 확인한다. 빌드: Metro 캐시를 새로 (`TMPDIR=$(mktemp -d)`, `EXPO_PUBLIC_` 값은 변환 시점에 박히므로 이전 캐시를 쓰면 켜진 빌드가 나온다) `TMPDIR=$(mktemp -d) EXPO_PUBLIC_MY_ROUTE_ENABLED=false pnpm --filter @hangul-route/mobile build:web`, 그다음 `pnpm --filter @hangul-route/mobile serve:web` 으로 열어 새 학습자로 확인한다: (1) 아래 탭이 3개 (Today, Journey, Library) 이고 Route 탭이 없다, (2) Home 에 "Stage 1 progress" 막대가 보인다, (3) Journey 에 단계 줄 (stage line) 이 보인다. 결과에 커밋 SHA 를 함께 적는다. 되돌리기: 변수를 지우고 Retry deployment. 학습 기록은 어느 방향으로도 바뀌지 않는다.
 - API Worker 를 이전 버전으로 되돌릴 때 (롤백): 커리큘럼 플랜(주차가 있는 긴 플랜, F-PLAN-002)이 하나라도 게시된 뒤에는 F-PLAN-002 P2-4 (PR #232) 이전 버전으로 되돌리지 않는다. 이전 Worker 는 `plans.meta_json` 을 모르고 `?cap=curriculum` 확인도 없어서, 31–260개짜리 플랜을 모든 앱에 그대로 보낸다. 꼭 되돌려야 하면 콘솔에서 커리큘럼 플랜을 먼저 보관(Archive)하거나, 되돌리는 대신 수정 PR 을 새로 배포(roll forward)한다. D1 열(`meta_json`)은 그대로 둬도 된다.

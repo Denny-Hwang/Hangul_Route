@@ -7,7 +7,7 @@ import { flags } from '../../config/flags';
 import { useMessages } from '../../i18n/use-messages';
 import { closeAction } from '../../logic/browse/boot';
 import { browseSections, type BrowseSection } from '../../logic/browse/catalogue';
-import { homeLines, initialSection, pointerUrl } from '../../logic/browse/home-view';
+import { homeLines, initialSection, journeyStageLine, pointerUrl } from '../../logic/browse/home-view';
 import type { BrowseStackParamList } from '../../navigation/browse';
 import { canGoBack, goBack, leaveTo, revealTestId } from '../../platform/browse-env';
 import { useBrowseSettings } from './BrowseSettings';
@@ -154,7 +154,7 @@ export function BrowseHomeScreen({ route, navigation }: Props): React.ReactEleme
       <SectionControl sections={sections} value={section} onChange={setSection} />
       <Spacer size="xl" />
       {section === 'route' ? <RouteSection open={open} /> : null}
-      {section === 'journey' ? <JourneySection open={open} withStageLine={!sections.includes('route')} /> : null}
+      {section === 'journey' ? <JourneySection open={open} withStageLine={journeyStageLine(sections)} /> : null}
       {section === 'library' ? <LibrarySection open={open} /> : null}
 
       {lines.keep ? <KeepRow /> : null}

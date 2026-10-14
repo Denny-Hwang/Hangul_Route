@@ -87,7 +87,7 @@ for (const vp of [
       expect(Math.abs(side.y - missions.y)).toBeLessThan(1);
       expect(missions.width / side.width).toBeCloseTo(1.5, 1);
 
-      const progress = (await page.getByText('Stage 1 progress').boundingBox())!;
+      const progress = (await page.getByTestId('home-route-strip').boundingBox())!;
       const tip = (await page.getByText(/^Tip — finish today/).boundingBox())!;
       const homework = (await page.getByRole('button', { name: 'Open homework' }).boundingBox())!;
       for (const box of [progress, tip, homework]) expect(box.x).toBeGreaterThanOrEqual(side.x - 1);
@@ -116,7 +116,7 @@ for (const vp of [
       await openHomeColumns(page);
       await expect(page.getByTestId('home-side-column')).toHaveCount(0);
       const lastMission = (await page.getByTestId('home-missions').getByRole('button').last().boundingBox())!;
-      const progress = (await page.getByText('Stage 1 progress').boundingBox())!;
+      const progress = (await page.getByTestId('home-route-strip').boundingBox())!;
       expect(progress.y).toBeGreaterThan(lastMission.y + lastMission.height);
       expect(Math.round((await greetingHoya(page).boundingBox())!.width)).toBe(72);
       expect(await overflowsSideways(page)).toBe(false);
@@ -139,7 +139,7 @@ test.describe('Home at 1180x820, then 200 % zoom (590x410) live', () => {
     const after = await missionNames.evaluateAll((els) => els.map((el) => el.getAttribute('aria-label')));
     expect(after).toEqual(before);
     const lastMission = (await missionNames.last().boundingBox())!;
-    const progress = (await page.getByText('Stage 1 progress').boundingBox())!;
+    const progress = (await page.getByTestId('home-route-strip').boundingBox())!;
     expect(progress.y).toBeGreaterThan(lastMission.y + lastMission.height);
     expect(Math.round((await greetingHoya(page).boundingBox())!.width)).toBe(72);
     expect(await overflowsSideways(page)).toBe(false);
@@ -413,7 +413,8 @@ for (const vp of TAB_BAR_VIEWPORTS) {
     await page.setViewportSize({ width: vp.width, height: vp.height });
     await openHome(page);
     const items = page.getByRole('tablist').getByRole('link');
-    await expect(items).toHaveCount(3);
+    // Today, Route, Journey, Library (F-ROUTE-001 R-10b: the Route tab is on by default).
+    await expect(items).toHaveCount(4);
     const boxes = await Promise.all((await items.all()).map((i) => i.boundingBox()));
     const left = Math.min(...boxes.map((b) => b!.x));
     const right = Math.max(...boxes.map((b) => b!.x + b!.width));

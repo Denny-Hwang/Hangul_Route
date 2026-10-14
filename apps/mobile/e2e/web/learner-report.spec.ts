@@ -181,6 +181,32 @@ test.describe('the in-app report on a family device', () => {
       await context.setOffline(false);
     }
   });
+
+  test("Open Learning Route (L1, on since R-10b): the grown-up's read-only page of this learner, then back to the report", async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 667 });
+    const id = await familyDashboard(page);
+    await page.getByTestId(`dashboard-see-report-${id}`).click();
+    await expect(page.getByTestId('learner-report-title')).toHaveText(r.title.learner('Mina'));
+
+    const open = page.getByTestId('learner-report-open-route');
+    await expect(open).toHaveAccessibleName(r.glance.openRoute);
+    await open.click();
+
+    // The root-stack page in the grown-up viewer: this learner's name, Go back, no learner purpose line and no
+    // Continue or Start on the card (amendment section 5.1).
+    const screen = page.getByTestId('my-route-screen');
+    await expect(screen).toBeVisible();
+    await expect(screen.getByText(en.caregiver.journey.viewing('Mina'), { exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: en.a11y.goBack, exact: true })).toBeVisible();
+    await expect(page.getByText(en.learner.myRoute.purpose, { exact: true })).toHaveCount(0);
+    await expect(page.getByTestId('my-route-card-cta')).toHaveCount(0);
+    await expect(page.getByTestId('my-route-card').getByRole('button')).toHaveCount(0);
+    await expectNoHorizontalOverflow(page, 'grown-up Learning Route from the report');
+    await shot(page, 'learner-report-open-route-375');
+
+    await page.getByRole('button', { name: en.a11y.goBack, exact: true }).click();
+    await expect(page.getByTestId('learner-report-title')).toHaveText(r.title.learner('Mina'));
+  });
 });
 
 test.describe('the in-app report on a self-only device', () => {

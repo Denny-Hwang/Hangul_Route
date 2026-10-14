@@ -16,6 +16,7 @@ import {
   browseGridEpisodes,
   homeLines,
   initialSection,
+  journeyStageLine,
   itemViewedEvent,
   plansTappedEvent,
   pointerUrl,
@@ -104,6 +105,13 @@ describe('the section control (section 7: one row, arrow keys move)', () => {
     expect(sectionAfter(three, 'route', 'End')).toBe('library');
     expect(sectionAfter(three, 'route', 'Enter')).toBeNull();
     expect(sectionAfter(two, 'route', 'ArrowRight')).toBeNull();
+  });
+
+  it('the Journey has the stage line only in a build without the Route section (EXPO_PUBLIC_MY_ROUTE_ENABLED=false)', () => {
+    // F-ROUTE-001 R-10b: the flag-on default has the Route section, which already lists the stages, so the
+    // stage line is gone; the kill-switch build (flag off) brings it back. The browse e2e plays the flag-on build.
+    expect(journeyStageLine(three)).toBe(false);
+    expect(journeyStageLine(two)).toBe(true);
   });
 
   it('a requested section this build offers, else the default (Route while the learner Route tab is on, else Journey)', () => {
