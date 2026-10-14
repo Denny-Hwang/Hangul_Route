@@ -30,8 +30,9 @@ import type { Catalog, CatalogCell, CatalogQuest, CatalogStory, CatalogTopic } f
  * Version 19 (F-CURR-001 S4-3): Park Conversations ships (Stage 4 nature, 3 lesson quests).
  * Version 20 (F-CURR-001 S4-4): Playdate Talk ships (Stage 4 crafts, 3 lesson quests).
  * Version 21 (F-CURR-001 S6-1): the Stage 6 Read the Menu cell ships (three lesson quests).
+ * Version 22 (F-CURR-001 S6-2): Order Food ships (Stage 6 life, 3 lesson quests).
  */
-export const CATALOG_VERSION = 21;
+export const CATALOG_VERSION = 22;
 
 const cell = (
   stage: StageKey,
@@ -97,7 +98,7 @@ const cells: CatalogCell[] = [
     'quest:story-pansori-tales-read',
   ]),
   cell('stage6', 'letters', 'Read the Menu', 'shipped', 15, ['quest:stage6-letters-q1', 'quest:stage6-letters-q2', 'quest:stage6-letters-q3']),
-  soon('stage6', 'life', 'Order Food'),
+  cell('stage6', 'life', 'Order Food', 'shipped', 15, ['quest:stage6-life-q1', 'quest:stage6-life-q2', 'quest:stage6-life-q3']),
   soon('stage6', 'rites', 'Travel for Chuseok'),
   soon('stage6', 'nature', 'Hike & Ask'),
   soon('stage6', 'crafts', 'Buy at Market'),
@@ -176,6 +177,9 @@ const lessonQuests: CatalogQuest[] = [
   lesson('stage6-letters-q1', 'stage6', 'letters', 'Dishes on the Menu', 5),
   lesson('stage6-letters-q2', 'stage6', 'letters', 'How Much Is It?', 5),
   lesson('stage6-letters-q3', 'stage6', 'letters', 'Spicy or Not?', 5),
+  lesson('stage6-life-q1', 'stage6', 'life', 'Excuse Me!', 5),
+  lesson('stage6-life-q2', 'stage6', 'life', 'How Many?', 5),
+  lesson('stage6-life-q3', 'stage6', 'life', 'How Much Is It?', 5),
   // The Stage 5 books (F-STORY-005 PR 5.6): grid quests that play their stories at the read level.
   lesson('story-sejong-new-letters-read', 'stage5', 'letters', "King Sejong's New Letters", 4),
   lesson('story-shapes-of-hangeul-read', 'stage5', 'letters', 'The Secret in the Shapes', 5),

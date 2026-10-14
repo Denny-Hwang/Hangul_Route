@@ -27,15 +27,18 @@ export function eojeolOf(text: string): string[] {
  */
 export function stemOf(eojeol: string, known: ReadonlySet<string>): string {
   if (known.has(eojeol)) return eojeol;
+  // A known noun with the polite 요 of a short question or answer (하나요? one?, F-CURR-001 S6-2) is that noun.
+  if (eojeol.endsWith('요') && known.has(eojeol.slice(0, -1))) return eojeol.slice(0, -1);
   const p = PARTICLES.find((x) => eojeol.length > x.length && eojeol.endsWith(x));
   return p === undefined ? eojeol : eojeol.slice(0, -p.length);
 }
 
 /**
  * Section 3.1 rule 4 counts "new words or set phrases" in Stage 4: a fixed greeting of several
- * words is one item, learned and read as a whole (F-CURR-001 T-2). Longest first.
+ * words is one item, learned and read as a whole (F-CURR-001 T-2); the two mealtime phrases of
+ * Order Food (S6-2, section 3.9 "잘 먹겠습니다") are set phrases the same way. Longest first.
  */
-export const SET_PHRASES: readonly string[] = ['새해 복 많이 받으세요', '만나서 반가워요'];
+export const SET_PHRASES: readonly string[] = ['새해 복 많이 받으세요', '만나서 반가워요', '맛있게 드세요', '잘 먹겠습니다'];
 
 /** The cast's names (Hoya and his friends, section 3.5 "named characters"): names, not vocabulary. */
 export const CAST_NAMES: ReadonlySet<string> = new Set(['호야', '미나', '다미']);
@@ -121,6 +124,8 @@ export const vocabLevelFor = (stage: StageKey): number => Math.max(1, Math.min(3
  */
 const NUMERALS = new Set([...'일이삼사오육칠팔구십백천만']);
 const UNITS = new Set([...'십백천만']);
+/** A word made only of Sino-Korean numerals and units (오, 천, 이천, 삼천). */
+export const isNumberWord = (w: string): boolean => [...w].length > 0 && [...w].every((ch) => NUMERALS.has(ch));
 export const isComposedNumber = (w: string, taught: ReadonlySet<string>): boolean =>
   [...w].length > 1 && [...w].some((ch) => UNITS.has(ch)) && [...w].every((ch) => NUMERALS.has(ch) && taught.has(ch));
 
@@ -133,7 +138,10 @@ export function reuseProblems(stage: StageKey, quests: readonly LessonQuest[], b
   for (const quest of quests) {
     if (discoverPatterns(quest) > 1) out.push(`U-3 ${quest.id}: Discover teaches ${discoverPatterns(quest)} patterns`);
     const shown = [...new Set(wordsOf(discoverTexts(quest), taught))];
-    const freshAll = shown.filter((w) => !taught.has(w) && !isComposedNumber(w, taught));
+    // Rule 4's number-set item: the numbers a Discover shows (일 이 삼 사 오; 천, 이천, 삼천 on one price page)
+    // count as one item, and a number composed of numerals already taught is no new item (S6-1, S6-2).
+    const numbers = shown.filter((w) => !taught.has(w) && isNumberWord(w) && !isComposedNumber(w, taught));
+    const freshAll = [...shown.filter((w) => !taught.has(w) && !isNumberWord(w)), ...(numbers.length > 0 ? [`numbers(${numbers.join('·')})`] : [])];
     // A word of a new set phrase (반가워요 in 만나서 반가워요, then 저도 반가워요) is that one item.
     const phraseWords = new Set(freshAll.filter((w) => w.includes('_')).flatMap((w) => w.split('_')));
     const fresh = freshAll.filter((w) => !phraseWords.has(w));

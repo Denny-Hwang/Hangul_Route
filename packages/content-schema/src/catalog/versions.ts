@@ -109,6 +109,8 @@ export const CATALOG_QUEST_ADDITIONS: Readonly<Record<number, readonly string[]>
   20: Object.freeze(['quest:stage4-crafts-q1', 'quest:stage4-crafts-q2', 'quest:stage4-crafts-q3']),
   // F-CURR-001 S6-1: Read the Menu.
   21: Object.freeze(['quest:stage6-letters-q1', 'quest:stage6-letters-q2', 'quest:stage6-letters-q3']),
+  // F-CURR-001 S6-2: Order Food.
+  22: Object.freeze(['quest:stage6-life-q1', 'quest:stage6-life-q2', 'quest:stage6-life-q3']),
 });
 
 /** The quest ids the catalogue held at `version` (versions before 8 read as 8). */

@@ -671,6 +671,15 @@ describe('U-3 new-item caps and U-6 reuse (F-CURR-001 section 3.1 rules 4 and 5)
     expect(reuseProblems('stage6', [lookalike], new Set(['원']))).toEqual(['U-6 quest:stage3-life-q1: 1 of 3 words reused (오리, 사과 not taught)']);
   });
 
+  it('counts the numbers of one Discover as one number-set item, a known noun with 요 as that noun, and the mealtime phrases as set phrases (S6-2)', () => {
+    const prices = quest(1, ['천 원', '이천 원', '삼천 원', '얼마예요?', '라면 하나요?', '맛있게 드세요.', '잘 먹겠습니다.'], ['삼천 원이에요.']);
+    expect(reuseProblems('stage6', [prices], new Set(['라면', '하나']))).toEqual([]);
+    expect(stemOf('하나요', new Set(['하나']))).toBe('하나');
+    expect(stemOf('가요', new Set())).toBe('가요');
+    const tooMany = quest(1, ['천 원', '얼마예요?', '배고파요.', '목말라요.', '빨리요.', '천천히요.', '여기서요.'], ['천 원']);
+    expect(reuseProblems('stage6', [tooMany], new Set())).toEqual(['U-3 quest:stage3-life-q1: 8 new words (원, 얼마, 배고파요, 목말라요, 빨리요, 천천히요, 여기서요, numbers(천)), cap 6']);
+  });
+
   it('counts a particle choice as no word, and a heard prompt as shown', () => {
     const lp = { kind: 'listen-pick', rounds: [{ id: 'c1', prompt: kt('바다에 가요.'), options: [{ id: 'o1', text: kt('산에 가요.') }], answerId: 'o1' }] };
     expect(scopeTexts(lp as unknown as LessonScope)).toEqual({ read: ['산에 가요.'], heard: ['바다에 가요.'], particles: [] });
