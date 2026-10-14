@@ -784,4 +784,7 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'learner.presenter.home.quick.letters': [[1], [14]],
   'learner.presenter.home.quick.chosen': [[1], [3]],
   'a11y.presenter.removeRecent': [['Week 3 letters']],
+  'learner.presenter.timer.minutes': [[1], [5]],
+  'learner.presenter.timer.seconds': [[30]],
+  'a11y.presenter.timerLeft': [['2:45']],
 };

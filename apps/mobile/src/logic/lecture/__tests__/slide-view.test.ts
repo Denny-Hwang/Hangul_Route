@@ -185,4 +185,14 @@ describe('slideSound', () => {
     expect(slideSound(first(slides, 'card'))).toBeUndefined();
     expect(slideSound(undefined)).toBeUndefined();
   });
+
+  it('a Match Sound quiz plays its prompt; a meaning or odd-one-out quiz plays nothing', () => {
+    const spoken = { text: 'ga', romanization: 'ga' };
+    const sound: Slide = { kind: 'quiz', key: 'q/sound', builds: ['question', 'answer'], prompt: { ask: 'sound', spoken }, options: [], textPrompt: false };
+    const meaning: Slide = { kind: 'quiz', key: 'q/meaning', builds: ['question', 'answer'], prompt: { ask: 'meaning', ko: 'mul', romanization: 'mul' }, options: [], textPrompt: false };
+    const odd: Slide = { kind: 'quiz', key: 'q/odd', builds: ['question', 'answer'], prompt: { ask: 'odd-one-out' }, options: [], textPrompt: false };
+    expect(slideSound(sound)).toEqual(spoken);
+    expect(slideSound(meaning)).toBeUndefined();
+    expect(slideSound(odd)).toBeUndefined();
+  });
 });

@@ -68,8 +68,8 @@ export function presenterLocale(input: { deck: LectureDeck | null; session: UiLo
 
 // --- the slides this build draws ------------------------------------------------------------------
 
-/** Slide kinds the presenter draws: the shell's (PR 6) and the teaching slides (PR 7); PRs 9 and 11 add theirs. */
-export const SHELL_SLIDE_KINDS: ReadonlySet<SlideKind> = new Set<SlideKind>(['title', 'letter', 'syllable', 'vocab', 'sequence', 'card', 'activity', 'end']);
+/** Slide kinds the presenter draws: the shell's (PR 6), the teaching slides (PR 7) and the quizzes (PR 9); PR 11 adds its own. */
+export const SHELL_SLIDE_KINDS: ReadonlySet<SlideKind> = new Set<SlideKind>(['title', 'letter', 'syllable', 'vocab', 'sequence', 'card', 'quiz', 'activity', 'end']);
 
 /** One line of the start screen's "not shown as slides" list: the block that holds it and why. */
 export interface SkipPart {
@@ -99,8 +99,9 @@ export function blockIndexOfSlide(deck: Pick<LectureDeck, 'blocks'>, slideKey: s
 
 function drawable(slide: Slide, kinds: ReadonlySet<SlideKind>): boolean {
   if (!kinds.has(slide.kind)) return false;
-  // A story title shows its cover scene (story slides, PR 11).
-  return !(slide.kind === 'title' && slide.cover !== undefined);
+  // A story title shows its cover scene, and a story check sits among the story's scenes (story slides, PR 11).
+  if (slide.kind === 'title' && slide.cover !== undefined) return false;
+  return !(slide.kind === 'quiz' && slide.prompt.ask === 'check');
 }
 
 /**

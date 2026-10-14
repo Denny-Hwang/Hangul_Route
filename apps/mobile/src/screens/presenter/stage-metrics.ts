@@ -3,8 +3,15 @@ import {
   CTL_MAX_FACTOR,
   EXIT_DIALOG_REM,
   NEXT_MIN_FACTOR,
+  HELP_W_REM,
+  KBD_MIN_REM,
+  KEY_COL_REM,
   PICKER_LABEL_REM,
   READABLE_LINE_REM,
+  RING_CORNER_FACTOR,
+  STATUS_MIN_REM,
+  THUMB_H_REM,
+  THUMB_W_REM,
   START_BUTTON_FACTOR,
   STATE_HOYA_FACTOR,
   barBand,
@@ -44,3 +51,12 @@ export const TEACHER_COLUMN = layout.maxWidth.reading;
 export const READABLE_LINE = READABLE_LINE_REM * typography.size.bodySm;
 export const EXIT_DIALOG_WIDTH = EXIT_DIALOG_REM * typography.size.bodySm;
 export const PICKER_LABEL_BASIS = PICKER_LABEL_REM * typography.size.bodySm;
+
+/** PR 9's class tools in real pixels (README Constants). */
+export const RING_CORNER = RING_CORNER_FACTOR * spacing.lg;
+export const THUMB_WIDTH = THUMB_W_REM * typography.size.bodySm;
+export const THUMB_HEIGHT = THUMB_H_REM * typography.size.bodySm;
+export const HELP_WIDTH = HELP_W_REM * typography.size.bodySm;
+export const KEY_COL = KEY_COL_REM * typography.size.bodySm;
+export const KBD_MIN = KBD_MIN_REM * typography.size.bodySm;
+export const STATUS_MIN = STATUS_MIN_REM * typography.size.bodySm;

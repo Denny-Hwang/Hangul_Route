@@ -180,4 +180,8 @@ const LITERALLY_SHARED: readonly string[] = [
   'landing.localeBanner.close.cta',
   // F-TCH-004 PR 6: the presenter's slide counter, two numbers and a slash.
   'learner.presenter.bar.counter',
+  // F-TCH-004 PR 9: the class timer's "+30 s", "{n} min" and "{n} s": SI unit symbols, the same in Spanish (README Strings).
+  'learner.presenter.timer.add.cta',
+  'learner.presenter.timer.minutes',
+  'learner.presenter.timer.seconds',
 ];

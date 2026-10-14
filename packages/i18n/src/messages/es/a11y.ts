@@ -232,5 +232,7 @@ export const a11y = {
     option: (n: number, shape: string) => `Opción ${n}, ${shape}`,
     shape: { circle: 'círculo', triangle: 'triángulo', square: 'cuadrado', star: 'estrella' },
     removeRecent: (t: string) => `Quitar: ${t}`,
+    answerMark: 'La respuesta de Hoya',
+    timerLeft: (t: string) => `Tiempo que queda: ${t}`,
   },
 } satisfies DeepPartial<Messages['a11y']>;
