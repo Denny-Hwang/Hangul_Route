@@ -6,16 +6,16 @@ import { shot } from './shots';
 /**
  * F-FEEDBACK-001 FB-9 (section 6.10; mocks design/screens/notes/grown-up-notes.md, note-report.md):
  * the dashboard rows, Notes for <learner>, the report sheet, the class-notes setting and its one-time
- * card. Behind `flags.notesEnabled` (off): run on a build with the flag on,
- *
- *   EXPO_PUBLIC_NOTES_ENABLED=true pnpm --filter @hangul-route/mobile build:web
- *   E2E_NOTES=1 pnpm --filter @hangul-route/mobile exec playwright test notes-grown-up
+ * card. Behind `flags.notesEnabled`, on by default since FB-14, so it runs on the default build
+ * (`E2E_NOTES=off` skips it on a build made with `EXPO_PUBLIC_NOTES_ENABLED=false`).
  *
  * The e2e build has no API, so a report is queued (with a local hide) and the online-only calls
- * (hide, the setting) answer as not saved; FB-14 adds the stubbed-API nightly.
+ * (hide, the setting) answer as not saved; FB-14's notes.spec.ts covers their answers over a stubbed API.
  */
 
-const NOTES = process.env.E2E_NOTES === '1';
+/** On by default since FB-14; `E2E_NOTES=off` runs the switched-off half on a build with `EXPO_PUBLIC_NOTES_ENABLED=false`. */
+const NOTES_OFF = process.env.E2E_NOTES === 'off';
+const NOTES = !NOTES_OFF;
 const NOW = Date.parse('2026-10-12T12:00:00.000Z');
 const iso = (hoursAgo: number): string => new Date(NOW - hoursAgo * 3_600_000).toISOString();
 /** Never on a grown-up notes screen: red-flag or shame words, counts of unread, a time since sending. */
@@ -101,7 +101,7 @@ async function expectZoneLocked(page: Page): Promise<void> {
 }
 
 test.describe('grown-up notes (flag on)', () => {
-  test.skip(!NOTES, 'needs a build with EXPO_PUBLIC_NOTES_ENABLED=true and E2E_NOTES=1');
+  test.skip(!NOTES, 'runs on the default build (notes on since FB-14), not with E2E_NOTES=off');
 
   test('Notes for <learner>: every note, put away marked, status, setting, card and disclosure', async ({ page }) => {
     const errors: string[] = [];
