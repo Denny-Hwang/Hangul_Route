@@ -747,6 +747,7 @@ export const caregiver = {
     },
     topic: {
       hearA11y: (romanization: string) => `Escuchar ${romanization}`,
+      previewFlashcards: { cta: 'Vista previa de las tarjetas' },
     },
     preview: {
       strip: 'Vista previa. No se guarda nada.',

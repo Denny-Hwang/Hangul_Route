@@ -17,9 +17,9 @@ import {
   useMediaSize,
 } from '@hangul-route/design-system';
 import { romanizationShown as showRomanization } from '@hangul-route/i18n';
-import type { NavigationAction } from '@react-navigation/native';
+import type { EventArg, NavigationAction } from '@react-navigation/native';
 import type { NativeStackNavigationProp, NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState, type MutableRefObject } from 'react';
 import { AccessibilityInfo, Modal, Platform, Pressable, Text, View, useWindowDimensions, type LayoutChangeEvent } from 'react-native';
 import { FlipCard } from '../../components/FlipCard';
 import { PromptPanel } from '../../components/PromptPanel';
@@ -32,6 +32,7 @@ import { canPlayKorean } from '../../logic/audio/capability';
 import { isContentLocked } from '../../logic/content-access';
 import { backOrHome } from '../../logic/navigation/screen-exits';
 import { ACTIVITY_ROUTES, VOCAB_SCREENS } from '../../logic/vocab/caps';
+import { cardsDispatch, learnerCardsPorts, type CardsSessionPorts } from '../../logic/vocab/cards-ports';
 import {
   cardLabels,
   cardsCompleteEvent,
@@ -51,14 +52,12 @@ import {
   chunkTally,
   currentId,
   dotsFilled,
-  flashEvents,
-  flashReducer,
   quickCheckEvent,
   summaryPrimary,
   type FlashEvent,
   type FlashState,
 } from '../../logic/vocab/flashcards';
-import { emptyVocab, vocabOf, type VocabEvent } from '../../logic/vocab/progress';
+import { emptyVocab, vocabOf } from '../../logic/vocab/progress';
 import type { VocabQuestion } from '../../logic/vocab/question-builder';
 import { optionCountFor } from '../../logic/vocab/topic-view';
 import type { RootStackParamList } from '../../navigation/types';
@@ -120,22 +119,73 @@ export function VocabCardsScreen({ route, navigation }: Props): React.ReactEleme
   }, [usable, navigation, topicKey]);
 
   if (!usable) return <Screen tone="canvas" testID="vocab-cards-redirect">{null}</Screen>;
-  return <CardsSession key={topic.key} source={topic} params={route.params} navigation={navigation} />;
+  return <LearnerCards key={topic.key} source={topic} params={route.params} navigation={navigation} />;
 }
 
-interface SessionProps {
+/** The learner's ports and exits: today's writes, telemetry and routes (`ACTIVITY_ROUTES`, the topic page). */
+function LearnerCards({ source, params, navigation }: { source: VocabTopic; params: RootStackParamList['VocabCards']; navigation: Navigation }): React.ReactElement {
+  const topicKey = source.key;
+  const profileId = useProfileStore(activeProfileSelector)?.id ?? null;
+  const ports = useMemo(
+    () =>
+      learnerCardsPorts({
+        profileId,
+        record: (id, events) => useProgressStore.getState().recordVocab(id, events),
+        track,
+      }),
+    [profileId],
+  );
+  const exits = useMemo<CardsExits>(
+    () => ({
+      back: () => backOrHome(navigation, () => navigation.navigate('VocabTopic', { topicKey })),
+      next: (next) => navigation.replace(ACTIVITY_ROUTES.learn, next),
+      speed: () => navigation.replace(ACTIVITY_ROUTES.speed, { topicKey }),
+      guard: (handler) => navigation.addListener('beforeRemove', handler),
+      dispatch: (action) => navigation.dispatch(action),
+    }),
+    [navigation, topicKey],
+  );
+  return <CardsSession source={source} params={params} ports={ports} exits={exits} />;
+}
+
+/** A navigation about to leave the screen (`beforeRemove`), which the session may hold back. */
+export type LeaveAttempt = EventArg<'beforeRemove', true, { action: NavigationAction }>;
+
+/**
+ * Where the session goes (the learner routes, or the All lessons stack, F-BROWSE-001 BR-9b).
+ * `back` is the back button, Stop and Back to topic; `next` opens another run of the same topic
+ * (Next words, Review these); `speed` the Speed round, or `null` where there is none.
+ */
+export interface CardsExits {
+  back(): void;
+  next(params: RootStackParamList['VocabCards']): void;
+  speed: (() => void) | null;
+  /** The summary showed: the chunk is done. */
+  done?(): void;
+  /** Subscribe to navigations leaving the screen; returns the unsubscribe. */
+  guard(handler: (e: LeaveAttempt) => void): () => void;
+  /** Replay a navigation the guard held back. */
+  dispatch(action: NavigationAction): void;
+}
+
+export interface CardsSessionProps {
   source: VocabTopic;
   params: RootStackParamList['VocabCards'];
-  navigation: Navigation;
+  ports: CardsSessionPorts;
+  exits: CardsExits;
+  /** Set to let a navigation from outside the session leave without the Keep going question (the preview strip's Leave). */
+  leavingRef?: MutableRefObject<boolean>;
 }
 
-function CardsSession({ source, params, navigation }: SessionProps): React.ReactElement {
+export function CardsSession({ source, params, ports, exits, leavingRef }: CardsSessionProps): React.ReactElement {
   const messages = useMessages();
   const copy = vocabCopyOf(messages).cards;
   const locale = useLocale();
   const topicKey = source.key;
-  const profile = useProfileStore(activeProfileSelector);
-  const profileId = profile?.id ?? null;
+  const activeProfile = useProfileStore(activeProfileSelector);
+  // The ports say whose words these are: a preview is nobody's, whoever is active on the device.
+  const profileId = ports.profileId;
+  const profile = profileId !== null && activeProfile?.id === profileId ? activeProfile : null;
   const snap = useProgressStore((s) => (profileId ? s.byProfile[profileId] : undefined));
   // Not hydrated or unreadable: chunk 0 and nothing collected; writes wait for hydration (`recordVocab`).
   const progress = useMemo<VocabProgress>(() => (snap ? vocabOf(snap) : emptyVocab()), [snap]);
@@ -149,28 +199,19 @@ function CardsSession({ source, params, navigation }: SessionProps): React.React
   );
   const [collectedBefore] = useState<ReadonlySet<string>>(() => new Set(progress.items.map((s) => s.id)));
 
-  const write = useCallback(
-    (events: readonly VocabEvent[]): void => {
-      if (profileId === null || events.length === 0) return;
-      useProgressStore.getState().recordVocab(profileId, events);
-    },
-    [profileId],
-  );
-
   // The card state lives in a ref that only `dispatch` advances, so two quick taps each see the other's state.
   const stateRef = useRef<FlashState>(initCardsFlash(run.words, run.startId));
   const [state, setState] = useState<FlashState>(stateRef.current);
   const dispatch = useCallback(
     (event: FlashEvent): void => {
       const before = stateRef.current;
-      const next = flashReducer(before, event);
-      if (next === before) return;
       // Written as it happens (§3.6): a closed app loses nothing.
-      write(flashEvents(before, event));
+      const next = cardsDispatch(ports, before, event);
+      if (next === before) return;
       stateRef.current = next;
       setState(next);
     },
-    [write],
+    [ports],
   );
 
   // Once per opened chunk.
@@ -178,11 +219,8 @@ function CardsSession({ source, params, navigation }: SessionProps): React.React
   useEffect(() => {
     if (started.current || run.words.length === 0) return;
     started.current = true;
-    void track({
-      ...cardsStartEvent({ topicKey, chunk: run.index, chunks: run.chunks.length, words: run.words.length, level }),
-      profileId: profileId ?? undefined,
-    });
-  }, [run, topicKey, level, profileId]);
+    ports.track(cardsStartEvent({ topicKey, chunk: run.index, chunks: run.chunks.length, words: run.words.length, level }));
+  }, [run, topicKey, level, ports]);
 
   // The quick check, built when the last card is done: the Show-me-again words first (§3.5).
   const [check, setCheck] = useState<{ questions: VocabQuestion[]; index: number; firstTry: number; asked: ReadonlySet<string> } | null>(null);
@@ -206,19 +244,19 @@ function CardsSession({ source, params, navigation }: SessionProps): React.React
   checkRef.current = check;
   const checkHost = useMemo<MinigameHost>(
     () => ({
-      mode: 'vocab',
+      mode: ports.hostMode,
       answer: (key, correct, meta) => {
         const c = checkRef.current;
         const id = meta?.itemId;
         const k = String(key);
         // The first answer per question is the one recorded (§3.5).
         if (c === null || id === undefined || c.asked.has(k)) return;
-        write([quickCheckEvent(id, correct)]);
+        ports.write([quickCheckEvent(id, correct)]);
         setCheck({ ...c, asked: new Set([...c.asked, k]), firstTry: c.firstTry + (correct ? 1 : 0) });
       },
       complete: () => undefined,
     }),
-    [write],
+    [ports],
   );
 
   // The summary: the session and the telemetry, once.
@@ -226,41 +264,43 @@ function CardsSession({ source, params, navigation }: SessionProps): React.React
   useEffect(() => {
     if (state.phase !== 'done' || finished.current) return;
     finished.current = true;
-    write([cardsSessionEvent(topicKey)]);
-    void track({
-      ...cardsCompleteEvent({
+    ports.write([cardsSessionEvent(topicKey)]);
+    ports.track(
+      cardsCompleteEvent({
         topicKey,
         chunk: run.index,
         tally: chunkTally(state, collectedBefore),
         checkFirstTry: check?.firstTry ?? 0,
         checkQuestions: check?.questions.length ?? 0,
       }),
-      profileId: profileId ?? undefined,
-    });
-  }, [state, write, topicKey, run.index, collectedBefore, check, profileId]);
+    );
+    exits.done?.();
+  }, [state, ports, exits, topicKey, run.index, collectedBefore, check]);
 
   // Leaving before the summary asks first (§3.5); what was turned is already written.
   const [asking, setAsking] = useState(false);
-  const leaving = useRef(false);
+  const ownLeaving = useRef(false);
+  const leaving = leavingRef ?? ownLeaving;
   // The navigation the sheet held back (a system back or swipe), replayed on Stop.
   const pending = useRef<NavigationAction | null>(null);
-  const back = useCallback(() => backOrHome(navigation, () => navigation.navigate('VocabTopic', { topicKey })), [navigation, topicKey]);
+  const back = exits.back;
+  const { guard } = exits;
   useEffect(
     () =>
-      navigation.addListener('beforeRemove', (e) => {
+      guard((e) => {
         if (leaving.current || stateRef.current.phase === 'done') return;
         e.preventDefault();
         pending.current = e.data.action;
         setAsking(true);
       }),
-    [navigation],
+    [guard, leaving],
   );
   const leave = (): void => {
     leaving.current = true;
     setAsking(false);
     const action = pending.current;
     pending.current = null;
-    if (action) navigation.dispatch(action);
+    if (action) exits.dispatch(action);
     else back();
   };
   const onBack = (): void => {
@@ -280,7 +320,7 @@ function CardsSession({ source, params, navigation }: SessionProps): React.React
   return (
     <>
       {state.phase === 'cards' ? (
-        <CardsPhase state={state} dispatch={dispatch} run={run} tint={tint} onBack={onBack} />
+        <CardsPhase state={state} dispatch={dispatch} run={run} tint={tint} onBack={onBack} readingPractice={ports.readingPractice ? profile : null} />
       ) : state.phase === 'check' ? (
         <Screen tone="canvas" scrollable testID="vocab-cards-check">
           <BackButton onPress={onBack} />
@@ -312,12 +352,13 @@ function CardsSession({ source, params, navigation }: SessionProps): React.React
           run={run}
           collectedBefore={collectedBefore}
           optionCount={optionCount}
+          profileId={profileId}
           onBack={back}
           onNext={(chunk) =>
             // -1: "Review these" on an `ids` run opens the same words again, not chunk 0.
-            go(() => navigation.replace(ACTIVITY_ROUTES.learn, chunk < 0 ? { topicKey, ids: run.inOrder.map((w) => w.id) } : { topicKey, chunk }))
+            go(() => exits.next(chunk < 0 ? { topicKey, ids: run.inOrder.map((w) => w.id) } : { topicKey, chunk }))
           }
-          onSpeed={() => go(() => navigation.replace(ACTIVITY_ROUTES.speed, { topicKey }))}
+          onSpeed={exits.speed ? () => go(exits.speed as () => void) : null}
           onTopic={() => go(back)}
           locale={locale}
         />
@@ -333,12 +374,15 @@ function CardsPhase({
   run,
   tint,
   onBack,
+  readingPractice: profile,
 }: {
   state: FlashState;
   dispatch: (event: FlashEvent) => void;
   run: CardsRun<RuntimeVocabItem>;
   tint: string;
   onBack: () => void;
+  /** The profile whose reading practice switch is offered, or `null` (no profile, or a preview: no switch). */
+  readingPractice: { id: string } | null;
 }): React.ReactElement {
   const messages = useMessages();
   const copy = vocabCopyOf(messages).cards;
@@ -349,7 +393,6 @@ function CardsPhase({
   const senseNote = useMemo(() => localize(item, item.id, locale).senseNote, [item, locale]);
 
   // Reading practice (T5): the profile's own setting, the same switch as the Profile screen.
-  const profile = useProfileStore(activeProfileSelector);
   const mode = useRomanizationMode();
   const setMode = useLocaleStore((s) => s.setRomanizationMode);
   const [revealed, setRevealed] = useState(false);
@@ -570,6 +613,7 @@ function Summary({
   run,
   collectedBefore,
   optionCount,
+  profileId,
   onBack,
   onNext,
   onSpeed,
@@ -580,16 +624,17 @@ function Summary({
   run: CardsRun<RuntimeVocabItem>;
   collectedBefore: ReadonlySet<string>;
   optionCount: 3 | 4;
+  profileId: string | null;
   onBack: () => void;
   onNext: (chunk: number) => void;
-  onSpeed: () => void;
+  /** The Speed round, or `null` where the session has none (All lessons). */
+  onSpeed: (() => void) | null;
   onTopic: () => void;
   locale: ReturnType<typeof useLocale>;
 }): React.ReactElement {
   const vocabCopy = vocabCopyOf(useMessages());
   const copy = vocabCopy.cards;
-  const profile = useProfileStore(activeProfileSelector);
-  const snap = useProgressStore((s) => (profile ? s.byProfile[profile.id] : undefined));
+  const snap = useProgressStore((s) => (profileId ? s.byProfile[profileId] : undefined));
   // What this run turned counts too, even before hydration has caught the writes up.
   const collected = useMemo(
     () => new Set([...(snap ? vocabOf(snap) : emptyVocab()).items.map((s) => s.id), ...state.flipped]),
@@ -621,7 +666,7 @@ function Summary({
           onPress={() => onNext(primary.chunk)}
           testID="vocab-cards-next"
         />
-        {summarySpeedShown({ speedScreen: VOCAB_SCREENS.speed, collected: topicCollected, optionCount }) ? (
+        {onSpeed && summarySpeedShown({ speedScreen: VOCAB_SCREENS.speed, collected: topicCollected, optionCount }) ? (
           <Button label={copy.summary.speed} tone="secondary" size="lg" fullWidth onPress={onSpeed} testID="vocab-cards-speed" />
         ) : null}
         <Button label={copy.summary.backToTopic} tone="secondary" size="lg" fullWidth onPress={onTopic} testID="vocab-cards-topic" />

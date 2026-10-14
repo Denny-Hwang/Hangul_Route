@@ -21,6 +21,7 @@ import { LessonDisplaySheet } from './LessonDisplaySheet';
 import { BROWSE_ACTION_MAX_WIDTH, BROWSE_LABEL_COLUMN } from '../../logic/browse/layout';
 import { beginPreview } from './preview-session';
 import { TopicWordList } from './TopicWordList';
+import { pickerTopic, wordsOffered } from '../vocab/topic-data';
 
 /**
  * The item page (F-BROWSE-001 sections 4.2, 4.4 and 4.6; wireframe
@@ -91,7 +92,11 @@ export function BrowseItemScreen({ route, navigation }: Props): React.ReactEleme
     navigation.navigate('BrowseHome', { section: 'journey', stage });
 
   const closed = access === 'closed';
-  const canPreview = (facts.kind === 'quest' && BROWSE_REGISTERED_ROUTES.has('PreviewQuest')) || (facts.kind === 'story' && BROWSE_REGISTERED_ROUTES.has('StoryReader'));
+  // A word topic previews as the learner flashcards (BR-9b) when the learner picker would show it: Words is on and the topic is listed.
+  const canPreview =
+    (facts.kind === 'quest' && BROWSE_REGISTERED_ROUTES.has('PreviewQuest')) ||
+    (facts.kind === 'story' && BROWSE_REGISTERED_ROUTES.has('StoryReader')) ||
+    (facts.kind === 'vocab-topic' && BROWSE_REGISTERED_ROUTES.has('PreviewFlashcards') && wordsOffered() && pickerTopic(facts.key) !== undefined);
   const storyLevel = facts.kind === 'story' ? (level ?? facts.defaultLevel) : null;
   const playQuest = (questId: string): void => {
     const episodeId = facts.kind === 'quest' && facts.where?.kind === 'episode' ? facts.where.episodeId : (episodeOfQuest(bundle, questId)?.id ?? '');
@@ -105,7 +110,13 @@ export function BrowseItemScreen({ route, navigation }: Props): React.ReactEleme
       beginPreview('story', facts.id);
       navigation.navigate('StoryReader', storyPreviewParams(facts.id, storyLevel));
     }
+    if (facts.kind === 'vocab-topic') {
+      beginPreview('vocab-topic', facts.id);
+      navigation.navigate('PreviewFlashcards', { topicId: facts.id, topicKey: facts.key });
+    }
   };
+
+  const previewLabel = facts.kind === 'story' ? m.item.previewStory.cta : facts.kind === 'vocab-topic' ? m.topic.previewFlashcards.cta : m.item.preview.cta;
 
   const presentItem = (): void => {
     // A fresh deck per press: its own id, clock and quiz seed, no names (numbers picker).
@@ -154,7 +165,7 @@ export function BrowseItemScreen({ route, navigation }: Props): React.ReactEleme
     // The gap sits only between the buttons a group draws, so a group without the preview starts with its first button.
     <View style={{ width: '100%', maxWidth: compact ? undefined : PRIMARY_MAX, gap: spacing.sm }}>
       {slot.preview ? (
-        <Button label={facts.kind === 'story' ? m.item.previewStory.cta : m.item.preview.cta} tone="primary" size="lg" fullWidth onPress={previewItem} testID="browse-preview" />
+        <Button label={previewLabel} tone="primary" size="lg" fullWidth onPress={previewItem} testID="browse-preview" />
       ) : null}
       {slot.main && facts.kind === 'story' && BROWSE_REGISTERED_ROUTES.has('PreviewQuest') ? (
         <Button label={m.item.previewQuestions.cta} tone="ghost" size="md" fullWidth onPress={() => playQuest(facts.questId)} testID="browse-preview-questions" />
