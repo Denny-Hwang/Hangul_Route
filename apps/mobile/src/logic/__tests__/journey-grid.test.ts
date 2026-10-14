@@ -557,6 +557,13 @@ describe('JourneyGrid sources (F-ENT-003 E3-5)', () => {
     expect(grid).not.toMatch(/'lock'/);
   });
 
+  it('cells and column labels draw the theme glyph, never a letter (owner decision 2026-10-14)', () => {
+    expect(grid).toMatch(/design\/components\/Icon\/theme-glyphs\.md/);
+    expect(grid).not.toMatch(/themeCellInitial/);
+    expect(grid).toMatch(/<Icon name=\{themeGlyph\(theme\.key\)\}/);
+    expect(grid).toMatch(/<Icon name=\{themeGlyph\(t\.key\)\}/);
+  });
+
   it('draws the marks from the design system, the legend above the column labels, the taste note by the row rule', () => {
     expect(grid).toMatch(/design\/wireframes\/journey\/grid-plan-and-access\.md/);
     expect(grid).toMatch(/design\/components\/RouteMarkers\/spec\.md/);

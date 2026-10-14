@@ -15,12 +15,13 @@ import {
   radii,
   spacing,
   typography,
+  useMediaSize,
 } from '@hangul-route/design-system';
 import React from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { useLocale, useMessages } from '../i18n/use-messages';
 import { localizeEpisode } from '../logic/content-locale';
-import { stagePillLabel, stagePillState, themeCellInitial, themeColumnLabel } from '../logic/journey';
+import { stagePillLabel, stagePillState, themeColumnLabel, themeGlyph } from '../logic/journey';
 import { cellLabel, cellTestId, countMarkOf } from '../logic/journey-cells';
 import {
   journeyGridRows,
@@ -42,6 +43,8 @@ import type { StoryIndexEntry } from '../logic/story/story-index';
  * The route marks (F-ENT-003 E3-5; `design/wireframes/journey/grid-plan-and-access.md`,
  * `design/components/RouteMarkers/spec.md`): the legend line above the column labels, the Next triangle,
  * the In your plan solid ring and the Not open yet dotted ring, and no lock glyph on any cell.
+ * The theme glyphs (`design/components/Icon/theme-glyphs.md`): each lesson cell draws its theme's glyph and
+ * each column label shows it over the word; the glyphs are decorative (the words name the theme).
  * It reads no learner store and no navigation: what a learner has done arrives through `marksOf`,
  * `quests` and `access` (none: nothing done, no mark), a tap goes to `onOpen`, and a stories-only
  * cell to `onOpenStories`.
@@ -51,8 +54,13 @@ import type { StoryIndexEntry } from '../logic/story/story-index';
 const MARK_SIZE = spacing.lg;
 /** The story count mark: a 20 dp circle in the top-right corner (F-STORY-005 §3.6). */
 const COUNT_MARK = spacing.lg + spacing.xs;
-/** The glyph a stories-only cell draws in place of its letter (books). A coming-later cell is empty (E3-D D5). */
+/** The glyph a stories-only cell draws in place of its theme glyph (books), and the column header's theme glyph. A coming-later cell is empty (E3-D D5). */
 const CELL_GLYPH = spacing.lg + spacing.xs;
+/**
+ * A lesson cell's theme glyph (design/components/Icon/theme-glyphs.md; owner decision 2026-10-14
+ * replaced the letters L / F / H / N / P): 24 dp, scaled with the ring around it by `useMediaSize`.
+ */
+const THEME_GLYPH = spacing.xl;
 const STAGE_RING = 32;
 /** A cell's border (`border.focus` at `borderWidth.thick` when selected in two panes). */
 const CELL_EDGE = borderWidth.base;
@@ -131,7 +139,16 @@ export function JourneyGrid({
       {/* Same row geometry as the cells below, so each label sits over its column. */}
       <View style={{ flexDirection: 'row', gap: spacing.xs, marginBottom: spacing.sm, width: '100%', maxWidth: gridMax }}>
         {themes.map((t) => (
-          <View key={t.key} style={{ flex: 1, alignItems: 'center' }}>
+          <View key={t.key} testID={`journey-col-${t.key}`} style={{ flex: 1, alignItems: 'center', gap: spacing.xxs }}>
+            {/* The same glyph the column's cells draw, so the mapping is plain; the word under it is what is read. */}
+            <View
+              testID={`journey-col-glyph-${t.key}`}
+              aria-hidden
+              importantForAccessibility="no-hide-descendants"
+              accessibilityElementsHidden
+            >
+              <Icon name={themeGlyph(t.key)} size={CELL_GLYPH} color={colors.text.muted} testID={`theme-glyph-${themeGlyph(t.key)}`} />
+            </View>
             <Caption tone="muted" align="center">
               {themeColumnLabel(t)}
             </Caption>
@@ -258,6 +275,7 @@ function GridCell({ cell, stage, theme, paneMode, onOpen, onOpenStories, episode
   const episodeId = cell.episodeId;
   const disabled = cell.disabled || (storiesOnly && !onOpenStories);
   const count = countMarkOf(model.storyCount);
+  const glyphSize = useMediaSize(THEME_GLYPH);
 
   const press = (): void => {
     if (disabled) return;
@@ -301,10 +319,18 @@ function GridCell({ cell, stage, theme, paneMode, onOpen, onOpenStories, episode
         <Icon name="library" size={CELL_GLYPH} color={colors.text.secondary} />
       ) : isLater ? null : (
         // A coming-later cell stays sunken and empty (E3-D D5, OD-6): no lock glyph on a learner screen.
-        <Text style={{ fontSize: typography.size.title, fontWeight: '700', color: colors.text.primary }}>{themeCellInitial(theme)}</Text>
+        // The theme glyph is decorative: the cell's label names the theme in words.
+        <View
+          testID={`journey-glyph-${cell.stage}-${cell.theme}`}
+          aria-hidden
+          importantForAccessibility="no-hide-descendants"
+          accessibilityElementsHidden
+        >
+          <Icon name={themeGlyph(theme.key)} size={glyphSize} color={colors.text.primary} testID={`theme-glyph-${themeGlyph(theme.key)}`} />
+        </View>
       )}
       {ring !== null ? (
-        // Around the initial: the solid ring (In your plan) or the dotted ring (Not open yet). Never both.
+        // Around the theme glyph: the solid ring (In your plan) or the dotted ring (Not open yet). Never both.
         <View pointerEvents="none" style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, alignItems: 'center', justifyContent: 'center' }}>
           <RouteRing kind={ring} testID={`journey-ring-${ring}-${cell.stage}-${cell.theme}`} />
         </View>

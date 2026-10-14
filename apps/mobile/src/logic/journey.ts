@@ -1,4 +1,5 @@
-import type { Episode, Quest, QuestProgress, StageKey, ThemeDef } from '@hangul-route/content-schema';
+import type { Episode, Quest, QuestProgress, StageKey, ThemeDef, ThemeKey } from '@hangul-route/content-schema';
+import type { IconName } from '@hangul-route/design-system';
 import type { Messages } from '@hangul-route/i18n';
 import { cellKey, gridEpisodes } from '../content/episodes';
 
@@ -84,8 +85,7 @@ export function gridQuestProgress(
 
 /**
  * Journey column header: the theme title's first word ("Food & Daily Life"
- * → "Food"). Cells use its initial so every column reads like its header —
- * keyed initials gave two "L" columns (letters, life; audit UX-11).
+ * → "Food"), shown under the column's theme glyph.
  */
 export function themeColumnLabel(theme: Pick<ThemeDef, 'titleEn'>): string {
   const title = theme.titleEn.trim();
@@ -93,6 +93,19 @@ export function themeColumnLabel(theme: Pick<ThemeDef, 'titleEn'>): string {
   return gap === -1 ? title : title.slice(0, gap);
 }
 
-export function themeCellInitial(theme: Pick<ThemeDef, 'titleEn'>): string {
-  return themeColumnLabel(theme).charAt(0).toUpperCase();
+/**
+ * The glyph a Journey cell draws and its column header shows (design/components/Icon/theme-glyphs.md).
+ * Owner decision 2026-10-14: the single letters L / F / H / N / P could not be decoded, so every
+ * theme has a picture instead. Decorative: the cell label and the column word name the theme.
+ */
+const THEME_GLYPHS: Record<ThemeKey, IconName> = {
+  letters: 'hangul-tile',
+  life: 'rice-bowl',
+  rites: 'lantern',
+  nature: 'leaf',
+  crafts: 'spinning-top',
+};
+
+export function themeGlyph(theme: ThemeKey): IconName {
+  return THEME_GLYPHS[theme];
 }
