@@ -660,6 +660,26 @@ export const learner = {
       built: 'You built the sentence!',
       empty: 'Nothing to play here',
     },
+    /**
+     * Type Hangul (F-CURR-001 G-3, design/wireframes/minigame/type-hangul.md): type on the in-app two-set
+     * keyboard, then Done (`trace.done`). The heading is also the empty field's placeholder.
+     */
+    typeHangul: {
+      heading: {
+        see: 'Type this word',
+        picture: 'Type the word for the picture',
+      },
+      pass: 'You typed it!',
+      /** One block different, missing or extra. */
+      near: 'Almost! Check the marked block.',
+      /** More than one block. */
+      far: 'Here is how it is written. Try again.',
+      typedLabel: 'You typed',
+      targetLabel: 'The word',
+      fixIt: { cta: 'Fix it' },
+      /** The romanization of the word to type, when the learner's setting hides it until a tap (F-BROWSE-001 BR-5c). */
+      showRomanization: { cta: 'Show how to say it' },
+    },
   },
 
   /**

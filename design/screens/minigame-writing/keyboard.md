@@ -24,10 +24,10 @@ The in-app two-set (dubeolsik) Korean keyboard. It draws keys and reports presse
 
 | Input | Arrangement | Cell width | Cell height |
 |---|---|---|---|
-| width >= 10 x `touchTarget.min` | `standard`: rows 10 / 9 (half-cell indent) / Shift 1.5 + 7 + Del 1.5 / Space 5 centred | width / 10 | `touchTarget.min`, or x `mediaScale` on a tablet (77 regular, 90 wide), at most `touchTarget.hero`; a short window: `touchTarget.min` |
+| width >= 10 x `touchTarget.min`, or any `short` window | `standard`: rows 10 / 9 (half-cell indent) / Shift 1.5 + 7 + Del 1.5 / Space 5 centred | width / 10 | `touchTarget.min`, or x `mediaScale` on a tablet (77 regular, 90 wide), at most `touchTarget.hero`; a short window: `touchTarget.min` |
 | narrower | `split`: C1 C2 C3+Shift, gap `spacing.sm`, V1 V2+Del V3+Space(2) | min(width / 5, `touchTarget.hero`), centred | `touchTarget.min` |
 
-`width` is the window width on a `compact` window (edge to edge, inside the safe-area insets) and the reading column (`min(window - 2 x gutter, layout.maxWidth.reading)`) from `regular` up. Tests: 320 -> split 64 x 64; 375 -> split 75; 599 -> split 96 (capped, centred); 600 -> split 96; 687 -> split; 688 -> standard 64; 768 -> standard 72 x 77; 1180 -> standard 72 x 90; 844 x 390 short -> standard 84 x 64.
+`width` is the window width on a `compact` window (edge to edge, inside the safe-area insets) and the reading column (`min(window - 2 x gutter, layout.maxWidth.reading)`) from `regular` up. Tests: 320 -> split 64 x 64; 375 -> split 75; 599 -> split 96 (capped, centred); 600 -> split 96; 687 -> split; 688 -> standard 64; 768 -> standard 72 x 77; 1180 -> standard 72 x 90; 844 x 390 short -> standard 84 x 64; 568 x 320 and 592 x 360 short -> standard 56 and 59 x 64 (G-3 review: split is 392 tall and would be cut off in a window under 480 tall, so a short window keeps the 4 x 64 rows with cells under 64 wide, the same exception as a window under 320; where even that and the answer row do not fit, Type Hangul scrolls them with the prompt).
 
 ## Key table (`keys.ts`)
 

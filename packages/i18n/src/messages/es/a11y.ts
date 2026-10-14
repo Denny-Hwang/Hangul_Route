@@ -121,6 +121,16 @@ export const a11y = {
       lookHere: 'Mira aquí',
       dir: { left: 'a la izquierda', right: 'a la derecha' },
     },
+    keyboard: {
+      key: (jamo: string, sound: string) => `${jamo}, ${sound}`,
+      shift: 'Shift, más letras',
+      delete: 'Borrar la última letra',
+      space: 'Espacio',
+      field: (text: string, romanization: string) => `Escribiste: ${text}, ${romanization}`,
+      typedBlocks: (blocks: readonly string[]) => `Escribiste: ${blocks.join(', ')}.`,
+      wordBlocks: (blocks: readonly string[]) => `La palabra: ${blocks.join(', ')}.`,
+      different: (n: number) => `El bloque ${n} es diferente.`,
+    },
   },
   koreanItem: (item: { ko: string; romanization: string; gloss?: string }) =>
     item.gloss === undefined ? `Coreano: ${item.ko}, ${item.romanization}` : `Coreano: ${item.ko}, ${item.romanization}, ${item.gloss}`,

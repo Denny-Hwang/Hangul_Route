@@ -800,4 +800,10 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'a11y.minigame.sentenceBuilder.next': [['jeo, jeoneun']],
   // F-CURR-001 G-2: Realia Read.
   'a11y.minigame.realia.summary': [['Menu', 1], ['Menu', 4]],
+  // F-CURR-001 G-3: the Hangul keyboard and the Type Hangul field (romanized stand-ins for the typed Korean).
+  'a11y.minigame.keyboard.key': [['g', 'g or k'], ['ng', 'silent or ng']],
+  'a11y.minigame.keyboard.field': [['hoya', 'hoya']],
+  'a11y.minigame.keyboard.typedBlocks': [[['ho', 'yeo']], [['bap']]],
+  'a11y.minigame.keyboard.wordBlocks': [[['ho', 'ya']]],
+  'a11y.minigame.keyboard.different': [[1], [2]],
 };

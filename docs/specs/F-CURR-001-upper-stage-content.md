@@ -366,6 +366,8 @@ Order: the pipeline (C-1, C-2) first; then Stage 2 (its games ship); Stage 3 aft
 | S7-4 | `content(stage7): My Favorite Animal (F-CURR-001)` | `stage-7/nature.json` | C-2, G-1, G-3, G-4, G-5 | M | none |
 | S7-5 | `content(stage7): Make and Share (F-CURR-001)` | `stage-7/crafts.json`, sources | C-2, G-1, G-3, G-4, G-5 | M | none |
 
+G-3 follow-up (#646 review): Type Hangul plays `see` and `picture` rounds only. The C-1 `TypeHangulRoundSchema` has no `mode` or `audioRef`, so a `hear` round (design/wireframes/minigame/type-hangul.md, open question 4) cannot be authored yet. The first S6 or S7 row that needs one adds `mode` and `audioRef` to the schema additively, `learner.minigame.typeHangul.heading.hear` in en / es / ko, and the renderer's `hear` prompt.
+
 Sizes: S under about 300 changed lines, M about 300-1,000, L above (a cell file with overlays is about 600-900 lines of JSON). 35 rows: 1 spec (C-0), 2 pipeline, 3 design, 5 game, 22 cells, 2 taste refreshes (T-1, T-2, OD-3). Each content row's PR description lists: the pass 4, 5 and 6 findings with outcomes, the `--report` bytes for the cell and the stage, the new `CATALOG_VERSION`, test counts, and screenshots of one quest at 320 px.
 
 ## 7. Dependencies

@@ -176,6 +176,22 @@ export const a11y = {
       lookHere: 'Look here',
       dir: { left: 'to the left', right: 'to the right' },
     },
+    /**
+     * The in-app Hangul keyboard and the Type Hangul field (F-CURR-001 G-3). `jamo` and `text` are the taught
+     * Korean as typed; `sound` and `romanization` are sound values read as words ("g or k").
+     */
+    keyboard: {
+      key: (jamo: string, sound: string) => `${jamo}, ${sound}`,
+      shift: 'Shift, more letters',
+      delete: 'Delete the last letter',
+      /** Also the Space key's face. */
+      space: 'Space',
+      field: (text: string, romanization: string) => `You typed: ${text}, ${romanization}`,
+      /** The result panel read block by block. */
+      typedBlocks: (blocks: readonly string[]) => `You typed: ${blocks.join(', ')}.`,
+      wordBlocks: (blocks: readonly string[]) => `The word: ${blocks.join(', ')}.`,
+      different: (n: number) => `Block ${n} is different.`,
+    },
   },
   /** A taught Korean item: Korean text, its romanization and (optionally) a gloss in the UI language. */
   koreanItem: (item: { ko: string; romanization: string; gloss?: string }) =>

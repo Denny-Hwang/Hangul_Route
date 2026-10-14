@@ -269,6 +269,7 @@ const KO_LITERALLY_SHARED: readonly string[] = [
   'a11y.myRoute.cellInPlan',
   'a11y.myRoute.labelled',
   'a11y.myRoute.routeCard',
+  'a11y.minigame.keyboard.key', // "{letter}, {sound}" on a keyboard key (F-CURR-001 G-3)
   'learner.firstQuest.questLine',
   'learner.journey.countMark',
   'learner.journey.cellStories.title',

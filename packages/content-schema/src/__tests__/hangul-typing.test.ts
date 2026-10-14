@@ -2,12 +2,14 @@ import { describe, expect, it } from 'vitest';
 import {
   ALLOMORPH_PAIRS,
   BACKSPACE,
+  JAMO_SOUND_VALUES,
   MEDIAL_JAMO,
   MEDIAL_RR,
   SINGLE_FORMS,
   SLOT_MARKER,
   allomorph,
   allomorphOrBoth,
+  checkJamoRomanization,
   composeTyped,
   endsWithFinal,
   fillFrame,
@@ -179,5 +181,23 @@ describe('allomorph and fillFrame (F-CURR-001 §3.7)', () => {
 
   it('uses the same slot marker as the quest schema', () => {
     expect(SLOT_MARKER).toBe('___');
+  });
+});
+
+describe('JAMO_SOUND_VALUES on the two-set keyboard (F-CURR-001 §3.7, type-hangul.md open question 1)', () => {
+  it('lists the nine letters only a keyboard key shows, with their Revised Romanization values (ㄲ and ㅆ with their final value)', () => {
+    const typedOnly: Record<string, string> = {
+      'ㄲ': 'kk/k', 'ㄸ': 'tt', 'ㅃ': 'pp', 'ㅆ': 'ss/t', 'ㅉ': 'jj', 'ㅐ': 'ae', 'ㅔ': 'e', 'ㅒ': 'yae', 'ㅖ': 'ye',
+    };
+    for (const [char, value] of Object.entries(typedOnly)) {
+      expect(JAMO_SOUND_VALUES[char], char).toEqual([value]);
+      expect(checkJamoRomanization(char, value), char).toEqual([]);
+    }
+  });
+
+  it('keeps the 24 basic letters as they were', () => {
+    expect(JAMO_SOUND_VALUES['ㄱ']).toEqual(['g/k', 'k']);
+    expect(JAMO_SOUND_VALUES['ㅇ']).toEqual(['silent/ng', 'ng']);
+    expect(Object.keys(JAMO_SOUND_VALUES)).toHaveLength(33);
   });
 });

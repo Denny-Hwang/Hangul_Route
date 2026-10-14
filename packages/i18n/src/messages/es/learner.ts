@@ -499,6 +499,19 @@ export const learner = {
       built: '¡Armaste la oración!',
       empty: 'Aquí no hay nada para jugar',
     },
+    typeHangul: {
+      heading: {
+        see: 'Escribe esta palabra',
+        picture: 'Escribe la palabra de la imagen',
+      },
+      pass: '¡Lo escribiste!',
+      near: '¡Casi! Mira el bloque marcado.',
+      far: 'Así se escribe. Inténtalo otra vez.',
+      typedLabel: 'Escribiste',
+      targetLabel: 'La palabra',
+      fixIt: { cta: 'Corregir' },
+      showRomanization: { cta: 'Ver cómo se dice' },
+    },
   },
 
   audio: {

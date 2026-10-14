@@ -428,3 +428,38 @@ describe('Realia Read (F-CURR-001 G-2; design/screens/minigame-realia-read READM
     expect(getMessages('ko').a11y.minigame.realia.dir).toEqual({ left: '왼쪽으로', right: '오른쪽으로' });
   });
 });
+
+describe('Type Hangul and the Hangul keyboard (F-CURR-001 G-3, English wording)', () => {
+  const t = m.learner.minigame.typeHangul;
+  const k = m.a11y.minigame.keyboard;
+
+  it('keeps the wireframe wording', () => {
+    expect(t.heading).toEqual({ see: 'Type this word', picture: 'Type the word for the picture' });
+    expect([t.pass, t.near, t.far]).toEqual([
+      'You typed it!',
+      'Almost! Check the marked block.',
+      'Here is how it is written. Try again.',
+    ]);
+    expect([t.typedLabel, t.targetLabel, t.fixIt.cta, t.showRomanization.cta]).toEqual(['You typed', 'The word', 'Fix it', 'Show how to say it']);
+  });
+
+  it('names every key and reads the result block by block', () => {
+    expect(k.key('g', 'g or k')).toBe('g, g or k');
+    expect([k.shift, k.delete, k.space]).toEqual(['Shift, more letters', 'Delete the last letter', 'Space']);
+    expect(k.field('hoya', 'hoya')).toBe('You typed: hoya, hoya');
+    expect(`${k.typedBlocks(['ho', 'yeo'])} ${k.wordBlocks(['ho', 'ya'])} ${k.different(2)}`).toBe(
+      'You typed: ho, yeo. The word: ho, ya. Block 2 is different.',
+    );
+  });
+
+  it('every locale has every key, with no age word, failure word or emoji', () => {
+    for (const locale of LOCALES) {
+      const msgs = getMessages(locale);
+      for (const path of leafPaths(m.learner.minigame.typeHangul)) {
+        expect(typeof lookup(msgs.learner.minigame.typeHangul, path), `${locale}:${path}`).toBe('string');
+      }
+      expect(JSON.stringify(msgs.learner.minigame.typeHangul)).not.toMatch(NO_AGE_OR_FAILURE);
+      expect(msgs.a11y.minigame.keyboard.different(1)).not.toMatch(NO_AGE_OR_FAILURE);
+    }
+  });
+});

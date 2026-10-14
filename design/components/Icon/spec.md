@@ -1,6 +1,6 @@
 # Icon: My route glyphs `pin`, `check-circle`, `book`, `ear`, `pencil` (component spec v1)
 
-Sections on this sheet: the My route glyphs (R-2a, below) · [`dash`](#dash-the-miss-mark-of-a-locked-answer-f-voc-004-s-4b) (F-VOC-004 S-4b) · [`note` and `heart`](#note-and-heart-notes-from-grown-ups-f-feedback-001-fb-6) (F-FEEDBACK-001 FB-6) · [`route` and `flag`](#route-and-flag-the-learning-route-amendments-route-learning-route-lr-2) (Learning Route LR-2)
+Sections on this sheet: the My route glyphs (R-2a, below) · [`dash`](#dash-the-miss-mark-of-a-locked-answer-f-voc-004-s-4b) (F-VOC-004 S-4b) · [`note` and `heart`](#note-and-heart-notes-from-grown-ups-f-feedback-001-fb-6) (F-FEEDBACK-001 FB-6) · [`route` and `flag`](#route-and-flag-the-learning-route-amendments-route-learning-route-lr-2) (Learning Route LR-2) · [`shift`, `shift-on` and `backspace`](#shift-shift-on-and-backspace-the-hangul-keyboard-f-curr-001-g-3) (F-CURR-001 G-3)
 
 Spec: `docs/specs/F-ROUTE-001-my-route-overview.md` §3.3 (stage badges), §3.6 (start marker), §3.7 (skill rows), §3.14 (no colour-only meaning), PR R-2a in §6.1 · wireframe: `design/wireframes/journey/my-route-overview.md` (legend `pin`; screens A, B and C1 to C5: stage badges, tags and the practice rows) · also needed by F-PLC-001 P-7 (start pin and placed-out look, amendment AM-10)
 Code: `packages/design-system/src/components/Icon/glyphs.ts` (geometry, pure data) · `types.ts` (`IconName`) · tests `Icon/__tests__/glyphs.test.ts`
@@ -99,3 +99,23 @@ flag:   stroke M6 21.5 V3 (2.2) + fill M6 3.5 H18.5 L15.5 8 L18.5 12.5 H6 Z
 - **Sizes.** 24 dp in the tab, 20 dp on the route card and report lines, 16 dp in the stage-row tags (the size `TrailRow` uses for `pin`).
 - **Accessibility.** Decorative, as for the glyphs above: the navigator labels the tab, and elsewhere the glyph sits inside a labelled row or a hidden wrapper.
 - **Tests.** The "Learning Route glyphs" block in `Icon/__tests__/glyphs.test.ts` checks: both names in `IconName` and apart from `journey` and `pin`; `route` has one road at stroke 2.2 that starts at the centre of a filled start dot and ends outside the pin, its round cap within 0.5 of the drop; the pin is two subpaths whose shoelace sums (over the sampled curves and arcs) have opposite signs, with the hole wholly inside the drop and the tip as its one lowest point; `route` stays inside the 24 x 24 box with its stroke caps; `flag` has one vertical pole at stroke 2.2 and one closed pennant hung from the pole whose only point inside its own bounding box is the notch `L15.5 8`. The set-wide tests cover both as well.
+
+## `shift`, `shift-on` and `backspace`: the Hangul keyboard (F-CURR-001 G-3)
+
+Spec: `docs/specs/F-CURR-001-upper-stage-content.md` §3.7 item 2 · screen spec `design/screens/minigame-writing/keyboard.md` (key faces) · mock `design/screens/minigame-writing/mock/keyboard.html` (the same paths)
+
+| Name | Means | Where | Geometry (24 x 24) |
+|---|---|---|---|
+| `shift` | Shift, off | the Shift key of `HangulKeyboard` | an outlined up arrow with a stem, stroke 2.2 |
+| `shift-on` | Shift, on (one-shot) | the same key while the shifted faces show | the same arrow, filled |
+| `backspace` | Delete the last letter | the Del key of `HangulKeyboard` | a key cap pointing left, stroke 2.2, with a small cross inside |
+
+```
+shift:     stroke M12 4 L20.5 12.5 H15.5 V20 H8.5 V12.5 H3.5 Z (2.2)
+shift-on:  fill   M12 4 L20.5 12.5 H15.5 V20 H8.5 V12.5 H3.5 Z
+backspace: stroke M9 5.5 H20.5 V18.5 H9 L3 12 Z (2.2) + stroke M12 9.5 L16.5 14.5 M16.5 9.5 L12 14.5 (2.2)
+```
+
+- **Never alone, never a miss mark.** The glyphs are key faces: each key carries its accessible name (`a11y.minigame.keyboard`), and Shift's state is also its `selected` state and its fill, never the glyph alone. The cross inside `backspace` sits in a key cap, so it never reads as the red X of a miss (the game never shows one).
+- **Tokens only.** `text.primary` on the key; Shift on uses `brand.secondaryDark`.
+- **Tests.** The set-wide tests in `Icon/__tests__/glyphs.test.ts` (names, path data, distinct, inside the box, stroke band).

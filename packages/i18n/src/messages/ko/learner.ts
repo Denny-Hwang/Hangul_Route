@@ -486,6 +486,19 @@ export const learner = {
       built: '문장을 만들었어요!',
       empty: '여기에는 할 게임이 없어요',
     },
+    typeHangul: {
+      heading: {
+        see: '이 낱말을 입력해 봐요',
+        picture: '그림에 맞는 낱말을 입력해 봐요',
+      },
+      pass: '잘 입력했어요!',
+      near: '거의 다 됐어요! 표시된 글자를 살펴봐요.',
+      far: '이렇게 써요. 다시 해 봐요.',
+      typedLabel: '입력한 글자',
+      targetLabel: '낱말',
+      fixIt: { cta: '고치기' },
+      showRomanization: { cta: '읽는 법 보기' },
+    },
   },
 
   audio: {

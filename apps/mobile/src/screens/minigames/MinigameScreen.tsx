@@ -29,6 +29,7 @@ import { StoryReadGame } from './StoryReadGame';
 import { StorySequenceGame } from './StorySequenceGame';
 import { TapRespondGame } from './TapRespondGame';
 import { TraceStrokeGame } from './TraceStrokeGame';
+import { TypeHangulGame } from './TypeHangulGame';
 import { VoiceEchoGame } from './VoiceEchoGame';
 
 /**
@@ -138,6 +139,8 @@ export function MinigameScreen({ route, navigation, onOpenCultureNote, ...exitPr
       return <SentenceBuilderGame scope={scope} host={host} patternNote={patternNote} onBack={exits.back} />;
     case 'realia-read':
       return <RealiaReadGame scope={scope} host={host} onBack={exits.back} />;
+    case 'type-hangul':
+      return <TypeHangulGame scope={scope} host={host} onBack={exits.back} />;
     default:
       return fallback(copy.comingSoon);
   }
