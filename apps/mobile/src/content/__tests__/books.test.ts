@@ -98,6 +98,14 @@ describe('buildBook: content trouble never breaks the app (F-STORY-001 §3.7 hol
     expect(buildBook(rites, draft)?.episode.storyIds).not.toContain('story:dano-ssireum');
   });
 
+  it('Hoya names no story count, so a book that lost a story never promises more than it lists', () => {
+    for (const definition of BOOK_DEFINITIONS) {
+      expect(definition.hoyaIntroEn, definition.id).not.toMatch(/\b(two|three|four|five|six|\d+)\b/i);
+      const held = buildBook(definition, (id) => (id === definition.storyIds[1] ? undefined : lookup(id)));
+      if (held) expect(held.episode.hoyaIntroEn).toBe(definition.hoyaIntroEn);
+    }
+  });
+
   it('builds nothing below two stories, so the cell stays a placeholder', () => {
     expect(buildBook(rites, (id) => (id === 'story:seollal-new-year' ? lookup(id) : undefined))).toBeNull();
     expect(buildBook(rites, () => undefined)).toBeNull();

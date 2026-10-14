@@ -9,7 +9,9 @@ import { storyQuestSkeleton } from './story-skeleton';
  * cell's "Coming soon" preview automatically (`previewEpisodesFor`).
  *
  * A book plays its stories at the `read` level, so a story joins a book only
- * once its `read` tier has passed the language and culture review; a cell
+ * once its `read` tier has passed the language and culture review. At run time
+ * the build can only see the story-level review tokens; the per-tier review
+ * (the read tier's verification notes) is enforced in CI by books.test.ts. A cell
  * stays a placeholder until its book has at least two reviewed quests (§3.1
  * rule 5). Stage 5 opens cell by cell (PR 5.6): the rites book first.
  */
@@ -35,7 +37,7 @@ export const BOOK_DEFINITIONS: readonly BookDefinition[] = [
     theme: 'rites',
     order: 3,
     titleEn: 'Festival Tales',
-    hoyaIntroEn: "Let's read three festival stories in Korean, one short sentence at a time.",
+    hoyaIntroEn: "Let's read festival stories in Korean, one short sentence at a time.",
     storyIds: ['story:seollal-new-year', 'story:dano-ssireum', 'story:chuseok-ganggangsullae'],
     pillarTags: ['B5'],
   },
