@@ -1,0 +1,999 @@
+{
+  "id": "episode:stage7-life",
+  "stage": "stage7",
+  "theme": "life",
+  "status": "ready",
+  "titleEn": "My Day in Korean",
+  "subtitleEn": "Write about your meals and where your day takes you.",
+  "hoyaIntroEn": "Morning, lunchtime, evening. Let's write about your day in Korean!",
+  "order": 2,
+  "pillarTags": [
+    "B2"
+  ],
+  "rewardCardIds": [],
+  "quests": [
+    {
+      "id": "quest:stage7-life-q1",
+      "titleEn": "Morning to Evening",
+      "blurbEn": "Read, trace and type the words for the parts of your day.",
+      "teaserEn": "Next: write what you eat in the morning.",
+      "estimatedMinutes": 5,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "Morning to Evening",
+          "hoyaLineEn": "Morning, lunchtime, evening. Let's write the parts of a day!",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "Times of Day",
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "아침",
+                      "romanization": "achim",
+                      "en": "morning"
+                    },
+                    "noteEn": "The start of the day, from sunrise to late morning."
+                  },
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "점심",
+                      "romanization": "jeomsim",
+                      "en": "lunch, lunchtime"
+                    },
+                    "noteEn": "The middle of the day, around noon."
+                  }
+                ],
+                "captionEn": "Three words for the parts of your day."
+              },
+              {
+                "items": [
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "저녁",
+                      "romanization": "jeonyeok",
+                      "en": "evening"
+                    },
+                    "noteEn": "From sunset until night."
+                  },
+                  {
+                    "type": "pattern",
+                    "frame": {
+                      "ko": "___에 밥을 먹어요.",
+                      "romanization": "___e babeul meogeoyo",
+                      "en": "When: ___. I eat a meal."
+                    },
+                    "noteEn": "Put {ko:에} after a time word to say when: {ko:아침에} means in the morning.",
+                    "examples": [
+                      {
+                        "ko": "아침에 밥을 먹어요.",
+                        "romanization": "achime babeul meogeoyo",
+                        "en": "In the morning, I eat a meal."
+                      },
+                      {
+                        "ko": "저녁에 밥을 먹어요.",
+                        "romanization": "jeonyeoge babeul meogeoyo",
+                        "en": "In the evening, I eat a meal."
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "A small word after a time word says when something happens."
+              }
+            ]
+          },
+          "durationSeconds": 65
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Trace the Words",
+          "minigameKind": "trace-word",
+          "minigameRef": "minigame:s7-life-q1-practice",
+          "durationSeconds": 90
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Type the Words",
+          "minigameKind": "type-hangul",
+          "minigameRef": "minigame:s7-life-q1-apply",
+          "durationSeconds": 85
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Two Quick Ones",
+          "minigameKind": "order-it",
+          "minigameRef": "minigame:s7-life-q1-check",
+          "durationSeconds": 40
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Your Day Begins!",
+          "hoyaLineEn": "You wrote the times of your day in Hangul!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s7-life-q1-practice",
+          "kind": "trace-word",
+          "rounds": [
+            {
+              "id": "w1",
+              "word": {
+                "ko": "아침",
+                "romanization": "achim",
+                "en": "morning"
+              }
+            },
+            {
+              "id": "w2",
+              "word": {
+                "ko": "점심",
+                "romanization": "jeomsim",
+                "en": "lunch, lunchtime"
+              }
+            },
+            {
+              "id": "w3",
+              "word": {
+                "ko": "저녁",
+                "romanization": "jeonyeok",
+                "en": "evening"
+              }
+            },
+            {
+              "id": "w4",
+              "word": {
+                "ko": "밥",
+                "romanization": "bap",
+                "en": "rice, a meal"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s7-life-q1-apply",
+          "kind": "type-hangul",
+          "rounds": [
+            {
+              "id": "t1",
+              "promptEn": "Type the word for morning.",
+              "target": {
+                "ko": "아침",
+                "romanization": "achim",
+                "en": "morning"
+              }
+            },
+            {
+              "id": "t2",
+              "promptEn": "Type the word for evening.",
+              "target": {
+                "ko": "저녁",
+                "romanization": "jeonyeok",
+                "en": "evening"
+              }
+            },
+            {
+              "id": "t3",
+              "promptEn": "Type: at lunchtime.",
+              "target": {
+                "ko": "점심에",
+                "romanization": "jeomsime",
+                "en": "at lunchtime"
+              }
+            },
+            {
+              "id": "t4",
+              "promptEn": "Type: In the morning, I eat a meal.",
+              "pictureRef": "card:rice",
+              "target": {
+                "ko": "아침에 밥을 먹어요",
+                "romanization": "achime babeul meogeoyo",
+                "en": "In the morning, I eat a meal."
+              }
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s7-life-q1-check",
+          "kind": "order-it",
+          "rounds": [
+            {
+              "id": "c1",
+              "sentence": {
+                "ko": "아침에 밥을 먹어요.",
+                "romanization": "achime babeul meogeoyo",
+                "en": "In the morning, I eat a meal."
+              },
+              "pictureRef": "card:rice",
+              "distractors": [
+                {
+                  "ko": "가요",
+                  "romanization": "gayo",
+                  "en": "I go"
+                }
+              ]
+            },
+            {
+              "id": "c2",
+              "sentence": {
+                "ko": "점심에 밥을 먹어요.",
+                "romanization": "jeomsime babeul meogeoyo",
+                "en": "At lunchtime, I eat a meal."
+              },
+              "pictureRef": "card:rice",
+              "distractors": [
+                {
+                  "ko": "가요",
+                  "romanization": "gayo",
+                  "en": "I go"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "quest:stage7-life-q2",
+      "titleEn": "What I Eat",
+      "blurbEn": "Write a sentence of your own about what you eat.",
+      "teaserEn": "Next: write where you go today.",
+      "estimatedMinutes": 5,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "What I Eat",
+          "hoyaLineEn": "What could you eat in the morning? Pick any food you like from the list!",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "Food in the Frame",
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "pattern",
+                    "frame": {
+                      "ko": "아침에 ___을/를 먹어요.",
+                      "romanization": "achime ___eul/reul meogeoyo",
+                      "en": "In the morning, I eat ___."
+                    },
+                    "noteEn": "Put a food in the slot. Use {ko:을} after a final consonant, {ko:를} after a vowel.",
+                    "examples": [
+                      {
+                        "ko": "아침에 빵을 먹어요.",
+                        "romanization": "achime ppangeul meogeoyo",
+                        "en": "In the morning, I eat bread."
+                      },
+                      {
+                        "ko": "아침에 사과를 먹어요.",
+                        "romanization": "achime sagwareul meogeoyo",
+                        "en": "In the morning, I eat an apple."
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "Your own sentence: pick the food, the frame does the rest."
+              },
+              {
+                "items": [
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "달걀",
+                      "romanization": "dalgyal",
+                      "en": "egg"
+                    },
+                    "picture": "word:food-egg",
+                    "noteEn": "A new food word for your sentences."
+                  },
+                  {
+                    "type": "sentence",
+                    "sentence": {
+                      "ko": "저녁에 김밥을 먹어요.",
+                      "romanization": "jeonyeoge gimbabeul meogeoyo",
+                      "en": "In the evening, I eat gimbap."
+                    },
+                    "picture": "card:kimbap"
+                  }
+                ],
+                "captionEn": "Change the time word to talk about any meal of the day."
+              }
+            ]
+          },
+          "durationSeconds": 65
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Build the Sentence",
+          "minigameKind": "order-it",
+          "minigameRef": "minigame:s7-life-q2-practice",
+          "durationSeconds": 90
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Write Your Meal",
+          "minigameKind": "write-frame",
+          "minigameRef": "minigame:s7-life-q2-apply",
+          "durationSeconds": 90
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Two Quick Ones",
+          "minigameKind": "order-it",
+          "minigameRef": "minigame:s7-life-q2-check",
+          "durationSeconds": 40
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Meal Written!",
+          "hoyaLineEn": "You wrote your own sentences about your meals!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s7-life-q2-practice",
+          "kind": "order-it",
+          "rounds": [
+            {
+              "id": "r1",
+              "sentence": {
+                "ko": "아침에 빵을 먹어요.",
+                "romanization": "achime ppangeul meogeoyo",
+                "en": "In the morning, I eat bread."
+              },
+              "pictureRef": "word:food-bread",
+              "distractors": [
+                {
+                  "ko": "저녁에",
+                  "romanization": "jeonyeoge",
+                  "en": "in the evening"
+                }
+              ]
+            },
+            {
+              "id": "r2",
+              "sentence": {
+                "ko": "아침에 사과를 먹어요.",
+                "romanization": "achime sagwareul meogeoyo",
+                "en": "In the morning, I eat an apple."
+              },
+              "pictureRef": "word:food-apple",
+              "distractors": [],
+              "particle": {
+                "tile": 1,
+                "choices": [
+                  {
+                    "ko": "을",
+                    "romanization": "eul",
+                    "en": "object marker (after a final consonant)"
+                  },
+                  {
+                    "ko": "를",
+                    "romanization": "reul",
+                    "en": "object marker (after a vowel)"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "r3",
+              "sentence": {
+                "ko": "점심에 김밥을 먹어요.",
+                "romanization": "jeomsime gimbabeul meogeoyo",
+                "en": "At lunchtime, I eat gimbap."
+              },
+              "pictureRef": "card:kimbap",
+              "distractors": [],
+              "particle": {
+                "tile": 1,
+                "choices": [
+                  {
+                    "ko": "을",
+                    "romanization": "eul",
+                    "en": "object marker (after a final consonant)"
+                  },
+                  {
+                    "ko": "를",
+                    "romanization": "reul",
+                    "en": "object marker (after a vowel)"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "r4",
+              "sentence": {
+                "ko": "저녁에 달걀을 먹어요.",
+                "romanization": "jeonyeoge dalgyareul meogeoyo",
+                "en": "In the evening, I eat an egg."
+              },
+              "pictureRef": "word:food-egg",
+              "distractors": [
+                {
+                  "ko": "아침에",
+                  "romanization": "achime",
+                  "en": "in the morning"
+                }
+              ],
+              "particle": {
+                "tile": 1,
+                "choices": [
+                  {
+                    "ko": "을",
+                    "romanization": "eul",
+                    "en": "object marker (after a final consonant)"
+                  },
+                  {
+                    "ko": "를",
+                    "romanization": "reul",
+                    "en": "object marker (after a vowel)"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s7-life-q2-apply",
+          "kind": "write-frame",
+          "rounds": [
+            {
+              "id": "f1",
+              "frame": {
+                "ko": "아침에 ___을/를 먹어요.",
+                "romanization": "achime ___eul/reul meogeoyo",
+                "en": "In the morning, I eat ___."
+              },
+              "slots": [
+                {
+                  "id": "food",
+                  "bank": [
+                    {
+                      "ko": "밥",
+                      "romanization": "bap",
+                      "en": "rice"
+                    },
+                    {
+                      "ko": "빵",
+                      "romanization": "ppang",
+                      "en": "bread"
+                    },
+                    {
+                      "ko": "사과",
+                      "romanization": "sagwa",
+                      "en": "an apple"
+                    },
+                    {
+                      "ko": "달걀",
+                      "romanization": "dalgyal",
+                      "en": "an egg"
+                    },
+                    {
+                      "ko": "김밥",
+                      "romanization": "gimbap",
+                      "en": "gimbap (a seaweed rice roll)"
+                    }
+                  ]
+                }
+              ],
+              "entry": "type",
+              "freeEntry": false
+            },
+            {
+              "id": "f2",
+              "frame": {
+                "ko": "점심에 ___을/를 먹어요.",
+                "romanization": "jeomsime ___eul/reul meogeoyo",
+                "en": "At lunchtime, I eat ___."
+              },
+              "slots": [
+                {
+                  "id": "food",
+                  "bank": [
+                    {
+                      "ko": "밥",
+                      "romanization": "bap",
+                      "en": "rice"
+                    },
+                    {
+                      "ko": "빵",
+                      "romanization": "ppang",
+                      "en": "bread"
+                    },
+                    {
+                      "ko": "사과",
+                      "romanization": "sagwa",
+                      "en": "an apple"
+                    },
+                    {
+                      "ko": "달걀",
+                      "romanization": "dalgyal",
+                      "en": "an egg"
+                    },
+                    {
+                      "ko": "김밥",
+                      "romanization": "gimbap",
+                      "en": "gimbap (a seaweed rice roll)"
+                    }
+                  ]
+                }
+              ],
+              "entry": "type",
+              "freeEntry": false
+            },
+            {
+              "id": "f3",
+              "frame": {
+                "ko": "저녁에 ___을/를 먹어요.",
+                "romanization": "jeonyeoge ___eul/reul meogeoyo",
+                "en": "In the evening, I eat ___."
+              },
+              "slots": [
+                {
+                  "id": "food",
+                  "bank": [
+                    {
+                      "ko": "밥",
+                      "romanization": "bap",
+                      "en": "rice"
+                    },
+                    {
+                      "ko": "빵",
+                      "romanization": "ppang",
+                      "en": "bread"
+                    },
+                    {
+                      "ko": "사과",
+                      "romanization": "sagwa",
+                      "en": "an apple"
+                    },
+                    {
+                      "ko": "달걀",
+                      "romanization": "dalgyal",
+                      "en": "an egg"
+                    },
+                    {
+                      "ko": "김밥",
+                      "romanization": "gimbap",
+                      "en": "gimbap (a seaweed rice roll)"
+                    }
+                  ]
+                }
+              ],
+              "entry": "pick",
+              "freeEntry": false
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s7-life-q2-check",
+          "kind": "order-it",
+          "rounds": [
+            {
+              "id": "c1",
+              "sentence": {
+                "ko": "아침에 달걀을 먹어요.",
+                "romanization": "achime dalgyareul meogeoyo",
+                "en": "In the morning, I eat an egg."
+              },
+              "pictureRef": "word:food-egg",
+              "distractors": [],
+              "particle": {
+                "tile": 1,
+                "choices": [
+                  {
+                    "ko": "을",
+                    "romanization": "eul",
+                    "en": "object marker (after a final consonant)"
+                  },
+                  {
+                    "ko": "를",
+                    "romanization": "reul",
+                    "en": "object marker (after a vowel)"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "c2",
+              "sentence": {
+                "ko": "저녁에 빵을 먹어요.",
+                "romanization": "jeonyeoge ppangeul meogeoyo",
+                "en": "In the evening, I eat bread."
+              },
+              "pictureRef": "word:food-bread",
+              "distractors": [
+                {
+                  "ko": "가요",
+                  "romanization": "gayo",
+                  "en": "I go"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "quest:stage7-life-q3",
+      "titleEn": "Where I Go Today",
+      "blurbEn": "Write where your day takes you: school, work, the park or home.",
+      "estimatedMinutes": 5,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "Where I Go Today",
+          "hoyaLineEn": "School, work, the park, home. Where does your day take you?",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "Places in the Frame",
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "오늘",
+                      "romanization": "oneul",
+                      "en": "today"
+                    },
+                    "noteEn": "This day, the one you are in now."
+                  },
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "회사",
+                      "romanization": "hoesa",
+                      "en": "work, the office"
+                    },
+                    "noteEn": "A company or workplace; {ko:회사에 가요} means you go to work."
+                  }
+                ],
+                "captionEn": "A word for when, and a place to go: school, work, the park or home."
+              },
+              {
+                "items": [
+                  {
+                    "type": "pattern",
+                    "frame": {
+                      "ko": "오늘 ___에 가요.",
+                      "romanization": "oneul ___e gayo",
+                      "en": "Today I go to ___."
+                    },
+                    "noteEn": "{ko:오늘} is today. A place goes in the slot; {ko:에} after a place means to, as in {ko:아침에} it said when.",
+                    "examples": [
+                      {
+                        "ko": "오늘 학교에 가요.",
+                        "romanization": "oneul hakgyoe gayo",
+                        "en": "Today I go to school."
+                      },
+                      {
+                        "ko": "오늘 회사에 가요.",
+                        "romanization": "oneul hoesae gayo",
+                        "en": "Today I go to work."
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "Say where your day takes you."
+              },
+              {
+                "items": [
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "공원",
+                      "romanization": "gongwon",
+                      "en": "park"
+                    },
+                    "noteEn": "A place with trees and paths to walk."
+                  },
+                  {
+                    "type": "sentence",
+                    "sentence": {
+                      "ko": "오늘 집에 가요.",
+                      "romanization": "oneul jibe gayo",
+                      "en": "Today I go home."
+                    }
+                  }
+                ],
+                "captionEn": "Home is a place you go to, as well."
+              }
+            ]
+          },
+          "durationSeconds": 70
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Type the Places",
+          "minigameKind": "type-hangul",
+          "minigameRef": "minigame:s7-life-q3-practice",
+          "durationSeconds": 90
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Write Your Day",
+          "minigameKind": "write-frame",
+          "minigameRef": "minigame:s7-life-q3-apply",
+          "durationSeconds": 90
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Two Quick Ones",
+          "minigameKind": "order-it",
+          "minigameRef": "minigame:s7-life-q3-check",
+          "durationSeconds": 40
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "My Day, Written!",
+          "hoyaLineEn": "You wrote about your day in Korean. Great writing!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s7-life-q3-practice",
+          "kind": "type-hangul",
+          "rounds": [
+            {
+              "id": "t1",
+              "promptEn": "Type the word for today.",
+              "target": {
+                "ko": "오늘",
+                "romanization": "oneul",
+                "en": "today"
+              }
+            },
+            {
+              "id": "t2",
+              "promptEn": "Type the word for work.",
+              "target": {
+                "ko": "회사",
+                "romanization": "hoesa",
+                "en": "work, the office"
+              }
+            },
+            {
+              "id": "t3",
+              "promptEn": "Type the word for park.",
+              "target": {
+                "ko": "공원",
+                "romanization": "gongwon",
+                "en": "park"
+              }
+            },
+            {
+              "id": "t4",
+              "promptEn": "Type: Today I go home.",
+              "target": {
+                "ko": "오늘 집에 가요",
+                "romanization": "oneul jibe gayo",
+                "en": "Today I go home."
+              }
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s7-life-q3-apply",
+          "kind": "write-frame",
+          "rounds": [
+            {
+              "id": "f1",
+              "frame": {
+                "ko": "오늘 ___에 가요.",
+                "romanization": "oneul ___e gayo",
+                "en": "Today I go ___."
+              },
+              "slots": [
+                {
+                  "id": "place",
+                  "bank": [
+                    {
+                      "ko": "학교",
+                      "romanization": "hakgyo",
+                      "en": "to school"
+                    },
+                    {
+                      "ko": "회사",
+                      "romanization": "hoesa",
+                      "en": "to work"
+                    },
+                    {
+                      "ko": "공원",
+                      "romanization": "gongwon",
+                      "en": "to the park"
+                    },
+                    {
+                      "ko": "집",
+                      "romanization": "jip",
+                      "en": "home"
+                    }
+                  ]
+                }
+              ],
+              "entry": "type",
+              "freeEntry": false
+            },
+            {
+              "id": "f2",
+              "frame": {
+                "ko": "아침에 ___에 가요.",
+                "romanization": "achime ___e gayo",
+                "en": "In the morning, I go ___."
+              },
+              "slots": [
+                {
+                  "id": "place",
+                  "bank": [
+                    {
+                      "ko": "학교",
+                      "romanization": "hakgyo",
+                      "en": "to school"
+                    },
+                    {
+                      "ko": "회사",
+                      "romanization": "hoesa",
+                      "en": "to work"
+                    },
+                    {
+                      "ko": "공원",
+                      "romanization": "gongwon",
+                      "en": "to the park"
+                    },
+                    {
+                      "ko": "집",
+                      "romanization": "jip",
+                      "en": "home"
+                    }
+                  ]
+                }
+              ],
+              "entry": "type",
+              "freeEntry": false
+            },
+            {
+              "id": "f3",
+              "frame": {
+                "ko": "___에 ___에 가요.",
+                "romanization": "___e ___e gayo",
+                "en": "___, I go ___."
+              },
+              "slots": [
+                {
+                  "id": "time",
+                  "bank": [
+                    {
+                      "ko": "아침",
+                      "romanization": "achim",
+                      "en": "In the morning"
+                    },
+                    {
+                      "ko": "점심",
+                      "romanization": "jeomsim",
+                      "en": "At lunchtime"
+                    },
+                    {
+                      "ko": "저녁",
+                      "romanization": "jeonyeok",
+                      "en": "In the evening"
+                    }
+                  ]
+                },
+                {
+                  "id": "place",
+                  "bank": [
+                    {
+                      "ko": "학교",
+                      "romanization": "hakgyo",
+                      "en": "to school"
+                    },
+                    {
+                      "ko": "회사",
+                      "romanization": "hoesa",
+                      "en": "to work"
+                    },
+                    {
+                      "ko": "공원",
+                      "romanization": "gongwon",
+                      "en": "to the park"
+                    },
+                    {
+                      "ko": "집",
+                      "romanization": "jip",
+                      "en": "home"
+                    }
+                  ]
+                }
+              ],
+              "entry": "pick",
+              "freeEntry": false
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s7-life-q3-check",
+          "kind": "order-it",
+          "rounds": [
+            {
+              "id": "c1",
+              "sentence": {
+                "ko": "오늘 공원에 가요.",
+                "romanization": "oneul gongwone gayo",
+                "en": "Today I go to the park."
+              },
+              "distractors": [
+                {
+                  "ko": "밥을",
+                  "romanization": "babeul",
+                  "en": "rice, a meal (object)"
+                }
+              ]
+            },
+            {
+              "id": "c2",
+              "sentence": {
+                "ko": "아침에 회사에 가요.",
+                "romanization": "achime hoesae gayo",
+                "en": "In the morning, I go to work."
+              },
+              "distractors": [
+                {
+                  "ko": "먹어요",
+                  "romanization": "meogeoyo",
+                  "en": "I eat"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "culture": [],
+  "review": {
+    "language": "native-reviewed",
+    "culture": "culture-reviewed",
+    "reviewedBy": "MAR",
+    "reviewedAt": "2026-10-14",
+    "notes": [
+      "Language pass 4 (MAR): 해요체, spacing, 에 and 을/를 and romanization clean; applied: write-frame glosses compose with every bank pick in en, es and ko (ko colon form, no particle after the slot), no untaught or swappable Check distractors, q3 words before the frame, 점심 glossed lunch, ko typing term 자판으로 쓰기, es Teclea and marca de objeto.",
+      "Culture pass 5 (MAR): no culture claim (section 3.7 lists none); the particle notes restate dictionary senses of 에 and 을/를, no source needed; ko 오늘 and 저녁 glosses reworded away from dictionary wording; q2 intro offers food without assuming a breakfast; school, work, park and home give any age a true answer; no real person, brand or price."
+    ]
+  },
+  "contentVer": 1
+}
