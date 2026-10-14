@@ -5,13 +5,13 @@
     "episode:stage2-crafts": {
       "title": "놀이터 낱말",
       "subtitle": "놀이터와 전통 놀이의 낱말을 읽어요.",
-      "hoyaIntro": "그네, 팽이, 줄넘기! 우리가 노는 낱말을 읽어 봐요!"
+      "hoyaIntro": "그네, 팽이, 줄넘기! 놀 때 쓰는 낱말을 읽어 봐요!"
     },
     "quest:stage2-crafts-q1": {
       "title": "놀이터에서",
       "blurb": "놀이터 낱말을 읽어요: 그네, 미끄럼틀, 모래, 공.",
-      "teaser": "다음: 제기, 팽이와 다른 전통 놀이.",
-      "steps.s1.title": "놀이터 시간!",
+      "teaser": "다음: 제기, 팽이 같은 전통 놀잇감.",
+      "steps.s1.title": "놀이터에 가요!",
       "steps.s1.hoyaLine": "그네, 미끄럼틀, 모래! 놀이터 낱말을 읽어 봐요!",
       "steps.s2.title": "놀이터 낱말",
       "steps.s2.hoyaLine": "들어 보기를 누른 다음, 낱말을 하나씩 직접 읽어 봐요.",
@@ -37,17 +37,17 @@
     },
     "quest:stage2-crafts-q2": {
       "title": "전통 놀이",
-      "blurb": "전통 놀이 이름을 읽어요: 제기, 팽이, 윷, 연.",
+      "blurb": "전통 놀잇감 이름을 읽어요: 제기, 팽이, 윷, 연.",
       "teaser": "다음: 친구와 함께하는 놀이.",
       "steps.s1.title": "놀이 시간!",
-      "steps.s1.hoyaLine": "제기와 팽이는 한국의 전통 놀이예요. 이름을 읽어 봐요!",
+      "steps.s1.hoyaLine": "제기와 팽이는 한국의 전통 놀잇감이에요. 이름을 읽어 봐요!",
       "steps.s2.title": "놀이 낱말",
       "steps.s2.hoyaLine": "들어 보기를 누른 다음, 낱말을 하나씩 직접 읽어 봐요.",
       "steps.s2.discover.pages.0.items.0.word.gloss": "발로 차올리며 노는 전통 놀잇감",
       "steps.s2.discover.pages.0.items.0.note": "제기를 발로 차올려 땅에 떨어지지 않게 해요.",
       "steps.s2.discover.pages.0.items.1.word.gloss": "빙글빙글 돌려서 노는 장난감",
-      "steps.s2.discover.pages.0.items.1.note": "작은 채로 쳐서 계속 돌게 해요.",
-      "steps.s2.discover.pages.1.items.0.word.gloss": "던져서 나온 모양대로 말을 옮기는 놀이의 나무 막대",
+      "steps.s2.discover.pages.0.items.1.note": "팽이채로 쳐서 계속 돌게 해요.",
+      "steps.s2.discover.pages.1.items.0.word.gloss": "던져서 나온 모양대로 말을 옮기는 놀이에 쓰는 나무 막대 네 개",
       "steps.s2.discover.pages.1.items.1.word.gloss": "바람에 날리는 종이 장난감",
       "steps.s3.title": "그림과 낱말",
       "steps.s4.title": "카드 짝 맞추기",
@@ -58,7 +58,7 @@
     "minigame:s2-crafts-q2-apply": {
       "cardPairs.jegi.gloss": "발로 차올리며 노는 전통 놀잇감",
       "cardPairs.paengi.gloss": "빙글빙글 돌려서 노는 장난감",
-      "cardPairs.yut.gloss": "던져서 나온 모양대로 말을 옮기는 놀이의 나무 막대",
+      "cardPairs.yut.gloss": "던져서 나온 모양대로 말을 옮기는 놀이에 쓰는 나무 막대 네 개",
       "cardPairs.yeon.gloss": "바람에 날리는 종이 장난감"
     },
     "minigame:s2-crafts-q2-check": {
@@ -67,15 +67,15 @@
     },
     "quest:stage2-crafts-q3": {
       "title": "함께 놀아요",
-      "blurb": "친구와 노는 낱말을 읽어요: 줄넘기, 달리기, 숨바꼭질.",
+      "blurb": "친구와 놀 때 쓰는 낱말을 읽어요: 줄넘기, 달리기, 숨바꼭질.",
       "steps.s1.title": "같이 놀아요!",
-      "steps.s1.hoyaLine": "줄넘기, 달리기, 숨바꼭질! 친구와 노는 낱말을 읽어 봐요!",
-      "steps.s2.title": "함께 노는 낱말",
+      "steps.s1.hoyaLine": "줄넘기, 달리기, 숨바꼭질! 친구와 놀 때 쓰는 낱말을 읽어 봐요!",
+      "steps.s2.title": "함께하는 놀이 낱말",
       "steps.s2.hoyaLine": "들어 보기를 누른 다음, 낱말을 하나씩 직접 읽어 봐요.",
-      "steps.s2.discover.pages.0.items.0.word.gloss": "돌리는 줄을 뛰어넘는 놀이",
-      "steps.s2.discover.pages.0.items.1.word.gloss": "빨리 뛰어서 누가 먼저 닿는지 겨루는 일",
+      "steps.s2.discover.pages.0.items.0.word.gloss": "줄을 돌리며 뛰어넘는 놀이",
+      "steps.s2.discover.pages.0.items.1.word.gloss": "빨리 달리는 일, 또는 누가 먼저 도착하는지 겨루는 경기",
       "steps.s2.discover.pages.1.items.0.word.gloss": "숨은 사람들을 술래가 찾아내는 놀이",
-      "steps.s2.discover.pages.1.items.1.word.gloss": "가깝게 사귀어 함께 지내는 사람",
+      "steps.s2.discover.pages.1.items.1.word.gloss": "가깝게 지내는 사람",
       "steps.s3.title": "그림과 낱말",
       "steps.s4.title": "카드 짝 맞추기",
       "steps.s5.title": "듣고 읽기",
@@ -83,14 +83,14 @@
       "steps.s6.hoyaLine": "놀이터 낱말을 모두 읽었어요. 정말 잘 놀았어요!"
     },
     "minigame:s2-crafts-q3-apply": {
-      "cardPairs.julleomgi.gloss": "돌리는 줄을 뛰어넘는 놀이",
-      "cardPairs.dalligi.gloss": "빨리 뛰어서 누가 먼저 닿는지 겨루는 일",
+      "cardPairs.julleomgi.gloss": "줄을 돌리며 뛰어넘는 놀이",
+      "cardPairs.dalligi.gloss": "빨리 달리는 일, 또는 누가 먼저 도착하는지 겨루는 경기",
       "cardPairs.sumbakkokjil.gloss": "숨은 사람들을 술래가 찾아내는 놀이",
-      "cardPairs.chingu.gloss": "가깝게 사귀어 함께 지내는 사람"
+      "cardPairs.chingu.gloss": "가깝게 지내는 사람"
     },
     "minigame:s2-crafts-q3-check": {
-      "listenPick.rounds.pic-julleomgi.prompt": "돌리는 줄을 뛰어넘는 놀이",
-      "listenPick.rounds.read-chingu.prompt": "가깝게 사귀어 함께 지내는 사람"
+      "listenPick.rounds.pic-julleomgi.prompt": "줄을 돌리며 뛰어넘는 놀이",
+      "listenPick.rounds.read-chingu.prompt": "가깝게 지내는 사람"
     }
   }
 }

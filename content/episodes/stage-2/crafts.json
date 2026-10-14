@@ -2,7 +2,7 @@
   "id": "episode:stage2-crafts",
   "stage": "stage2",
   "theme": "crafts",
-  "status": "draft",
+  "status": "ready",
   "titleEn": "Playground Words",
   "subtitleEn": "Read words for the playground and traditional games.",
   "hoyaIntroEn": "Swings, spinning tops and jump ropes: let's read the words we play with!",
@@ -16,7 +16,7 @@
       "id": "quest:stage2-crafts-q1",
       "titleEn": "At the Playground",
       "blurbEn": "Read playground words: swing, slide, sand and ball.",
-      "teaserEn": "Next: jegi, tops and other traditional games.",
+      "teaserEn": "Next: jegi, tops and other traditional toys.",
       "estimatedMinutes": 4,
       "steps": [
         {
@@ -163,30 +163,30 @@
             {
               "pairs": [
                 {
-                  "id": "chukgu",
-                  "pictureRef": "word:sport-soccer",
-                  "word": {
-                    "ko": "축구",
-                    "romanization": "chukgu",
-                    "en": "soccer (football)"
-                  }
-                },
-                {
-                  "id": "yagu",
-                  "pictureRef": "word:sport-baseball",
-                  "word": {
-                    "ko": "야구",
-                    "romanization": "yagu",
-                    "en": "baseball"
-                  }
-                },
-                {
                   "id": "gong",
                   "pictureRef": "word:sport-ball",
                   "word": {
                     "ko": "공",
                     "romanization": "gong",
                     "en": "ball"
+                  }
+                },
+                {
+                  "id": "yeon",
+                  "pictureRef": "card:kite",
+                  "word": {
+                    "ko": "연",
+                    "romanization": "yeon",
+                    "en": "kite"
+                  }
+                },
+                {
+                  "id": "jajeongeo",
+                  "pictureRef": "word:sport-bicycle",
+                  "word": {
+                    "ko": "자전거",
+                    "romanization": "jajeongeo",
+                    "en": "bicycle"
                   }
                 }
               ]
@@ -420,7 +420,7 @@
     {
       "id": "quest:stage2-crafts-q2",
       "titleEn": "Traditional Games",
-      "blurbEn": "Read the names of traditional games: jegi, top, yut and kite.",
+      "blurbEn": "Read the names of traditional toys: jegi, top, yut and kite.",
       "teaserEn": "Next: games to play with friends.",
       "estimatedMinutes": 4,
       "steps": [
@@ -428,7 +428,7 @@
           "id": "s1",
           "kind": "intro",
           "titleEn": "Game Time!",
-          "hoyaLineEn": "Jegi and spinning tops are traditional Korean games. Let's read their names!",
+          "hoyaLineEn": "Jegi and spinning tops are traditional Korean toys. Let's read their names!",
           "durationSeconds": 7
         },
         {
@@ -862,7 +862,7 @@
                     "word": {
                       "ko": "달리기",
                       "romanization": "dalligi",
-                      "en": "running race",
+                      "en": "running, a race",
                       "syllables": [
                         "dal",
                         "li",
@@ -962,7 +962,7 @@
                   "word": {
                     "ko": "달리기",
                     "romanization": "dalligi",
-                    "en": "running race"
+                    "en": "running, a race"
                   }
                 },
                 {
@@ -1015,7 +1015,7 @@
                   "word": {
                     "ko": "달리기",
                     "romanization": "dalligi",
-                    "en": "running race"
+                    "en": "running, a race"
                   }
                 },
                 {
@@ -1064,7 +1064,7 @@
                   "word": {
                     "ko": "달리기",
                     "romanization": "dalligi",
-                    "en": "running race"
+                    "en": "running, a race"
                   }
                 }
               ]
@@ -1108,7 +1108,7 @@
                   "word": {
                     "ko": "달리기",
                     "romanization": "dalligi",
-                    "en": "running race"
+                    "en": "running, a race"
                   }
                 },
                 {
@@ -1145,7 +1145,7 @@
             {
               "ko": "달리기",
               "romanization": "dalligi",
-              "en": "running race"
+              "en": "running, a race"
             },
             {
               "ko": "숨바꼭질",
@@ -1211,19 +1211,19 @@
                   }
                 },
                 {
-                  "id": "dalligi",
+                  "id": "chukgu",
                   "text": {
-                    "ko": "달리기",
-                    "romanization": "dalligi",
-                    "en": "running race"
+                    "ko": "축구",
+                    "romanization": "chukgu",
+                    "en": "soccer (football)"
                   }
                 },
                 {
-                  "id": "julleomgi",
+                  "id": "nonggu",
                   "text": {
-                    "ko": "줄넘기",
-                    "romanization": "julleomgi",
-                    "en": "jump rope"
+                    "ko": "농구",
+                    "romanization": "nonggu",
+                    "en": "basketball"
                   }
                 }
               ],
@@ -1256,10 +1256,10 @@
         }
       ],
       "verification": {
-        "passes": 2,
+        "passes": 3,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "Pass 1 (author sourcing, 2026-10-14): both pages fetched; each supports 'traditional game' (MCST lists it under 전통놀이; the encyclopedia files it under 놀이), the weighted core wrapped in paper or cloth with a fringe, and kicking to keep it up for the highest count. Seasonal timing (New Year in the encyclopedia, winter on the MCST page) deliberately left out of the note.\nPass 2 (independent fact-check, 2026-10-14): re-opened both pages. Encyclopedia 정의 gives kicking the jegi without letting it drop and competing on the count, and 내용 paragraph 1 gives a coin wrapped in hanji or silk with the ends torn into fringes; MCST 놀이방법 gives repeated kicks so it does not touch the ground, higher count wins, and lists it under 전통놀이. Every clause of the note is supported; 'weighted' follows from the coin or metal core. Note is an English paraphrase with no wording copied from either page. Outcome: pass, no change."
+        "notes": "Pass 1 (author sourcing, 2026-10-14): both pages fetched; each supports 'traditional game' (MCST lists it under 전통놀이; the encyclopedia files it under 놀이), the weighted core wrapped in paper or cloth with a fringe, and kicking to keep it up for the highest count. Seasonal timing (New Year in the encyclopedia, winter on the MCST page) deliberately left out of the note.\nPass 2 (independent fact-check, 2026-10-14): re-opened both pages. Encyclopedia 정의 gives kicking the jegi without letting it drop and competing on the count, and 내용 paragraph 1 gives a coin wrapped in hanji or silk with the ends torn into fringes; MCST 놀이방법 gives repeated kicks so it does not touch the ground, higher count wins, and lists it under 전통놀이. Every clause of the note is supported; 'weighted' follows from the coin or metal core. Note is an English paraphrase with no wording copied from either page. Outcome: pass, no change.\nPass 5 (MAR culture review, 2026-10-14): re-checked against both sources (both HTTP 200). Encyclopedia 정의 and 내용 paragraph 1 and MCST 놀이방법 support every clause: a traditional game, a coin or metal core wrapped in hanji, silk, paper or cloth with a torn fringe, kicked to keep it off the ground, highest count wins. Both sources treat the jegi itself as the toy the game uses, which backs the q2 Hoya line 'Jegi and spinning tops are traditional Korean toys'. No copied wording, no designation number, no person, shop, brand or price. Outcome: pass, no change to the note."
       }
     },
     {
@@ -1283,17 +1283,23 @@
         }
       ],
       "verification": {
-        "passes": 2,
+        "passes": 3,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "Pass 1 (author sourcing, 2026-10-14): both pages fetched; each supports 'traditional (folk) game', a wooden top kept spinning by striking it with a whip, play on ice in winter, and a longest-spin contest. Origin dating (Three Kingdoms, Nihon Shoki) deliberately left out of the note.\nPass 2 (independent fact-check, 2026-10-14): re-opened both pages. Encyclopedia 정의 gives striking a top with a whip on ice in winter, 내용 gives tops carved from hard wood, a whip made of a stick with cord, and 오래돌리기 (which top spins longer); MCST 유래 calls it a winter folk game on ice made of wood and string, and 놀이방법 lists 오래 돌리기. Every clause of the note is supported. Note is an English paraphrase with no wording copied from either page. Outcome: pass, no change."
+        "notes": "Pass 1 (author sourcing, 2026-10-14): both pages fetched; each supports 'traditional (folk) game', a wooden top kept spinning by striking it with a whip, play on ice in winter, and a longest-spin contest. Origin dating (Three Kingdoms, Nihon Shoki) deliberately left out of the note.\nPass 2 (independent fact-check, 2026-10-14): re-opened both pages. Encyclopedia 정의 gives striking a top with a whip on ice in winter, 내용 gives tops carved from hard wood, a whip made of a stick with cord, and 오래돌리기 (which top spins longer); MCST 유래 calls it a winter folk game on ice made of wood and string, and 놀이방법 lists 오래 돌리기. Every clause of the note is supported. Note is an English paraphrase with no wording copied from either page. Outcome: pass, no change.\nPass 5 (MAR culture review, 2026-10-14): re-checked against both sources (both HTTP 200). Encyclopedia 정의 and 내용 and MCST 유래 and 놀이방법 support every clause: a traditional winter game, a top carved from hard wood, kept spinning by striking it with a whip (채), on ice, and the 오래 돌리기 contest. The top is the object the game uses, which backs the q2 Hoya line calling it a traditional toy. No copied wording, no designation number, no person, shop, brand or price. Outcome: pass, no change to the note."
       }
     }
   ],
   "review": {
-    "language": "draft",
-    "culture": "draft",
-    "notes": []
+    "language": "native-reviewed",
+    "culture": "culture-reviewed",
+    "reviewedBy": "MAR",
+    "reviewedAt": "2026-10-14",
+    "notes": [
+      "Pass 4 language MAR (2026-10-14): Korean naturalness, spelling, pedagogy and gloss lenses; applied the ball-board fix, toy wording, 놀 때 쓰는 낱말, ko gloss fixes and the 친구 reading distractors; rejected the claim that 연 and 줄 are untaught (Stage 1 crafts q1 Discover teaches both).",
+      "Pass 5 culture MAR (2026-10-14): heritage accuracy against all four sources, sensitivity and audience lenses; n1 and n2 pass unchanged; the q2 Hoya line and blurb now call 제기, 팽이, 윷 and 연 toys, as the sources do; verification line 3 on both notes.",
+      "Pass 6 translation MAR (2026-10-14): es and ko overlays; applied 친구 gloss parity with minigames.json, es title length and calque fixes, trompo in es prose to match placement.json; no circular ko gloss."
+    ]
   },
   "contentVer": 1
 }

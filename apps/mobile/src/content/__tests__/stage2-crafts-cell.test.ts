@@ -1,8 +1,9 @@
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { LessonCellSchema, type LessonQuest, type LessonScope } from '@hangul-route/content-schema';
 import { supportedCardIds } from '@hangul-route/design-system/heritage-card-ids';
 import { WORD_ART_KEYS } from '@hangul-route/design-system/word-art';
 import { describe, expect, it } from 'vitest';
+import { stage1Quests } from '../quests';
 
 /**
  * F-CURR-001 row S2-3, Playground Words (`content/episodes/stage-2/crafts.json`): the
@@ -36,8 +37,25 @@ export function decodableAtStage1(ko: string): boolean {
   });
 }
 
-/** Words Stage 1 or a level 1-2 vocabulary topic already taught (section 3.1 rule 5). */
-const REUSED = new Set(['공', '연', '친구', '줄넘기', '달리기', '나무', '하늘', '축구', '야구', '농구', '자전거', '곰', '강', '줄']);
+const VOCAB_DIR = new URL('../../../../../content/vocab/', import.meta.url);
+
+/** The words of the level 1-2 vocabulary topics (`content/vocab/*.json`). */
+const VOCAB_L2 = readdirSync(VOCAB_DIR)
+  .filter((f) => f.endsWith('.json') && !f.startsWith('_'))
+  .flatMap((f) => (JSON.parse(readFileSync(new URL(f, VOCAB_DIR), 'utf8')) as { items: { ko: string; level: number }[] }).items)
+  .filter((item) => item.level <= 2)
+  .map((item) => item.ko);
+
+/** The words Stage 1's Discover steps teach. */
+const STAGE1_DISCOVER = stage1Quests.flatMap((q) =>
+  q.steps.flatMap((s) => s.discover?.pages.flatMap((p) => p.items.flatMap((i) => (i.type === 'word' ? [i.word.ko] : []))) ?? []),
+);
+
+/**
+ * Words Stage 1 or a level 1-2 vocabulary topic already taught (section 3.1 rule 5), derived
+ * from the files, so a word counts as reused only when one of them really teaches it.
+ */
+const REUSED = new Set([...STAGE1_DISCOVER, ...VOCAB_L2]);
 
 const discoverWords = (quest: LessonQuest): string[] =>
   quest.steps.flatMap((s) => s.discover?.pages.flatMap((p) => p.items.flatMap((i) => (i.type === 'word' ? [i.word.ko] : []))) ?? []);
@@ -132,11 +150,47 @@ describe('Playground Words (F-CURR-001 S2-3)', () => {
     }
   });
 
+  it('the reused words this cell leans on are really taught earlier (Stage 1 Discover or level 1-2 vocabulary)', () => {
+    for (const ko of ['공', '연', '줄']) expect(STAGE1_DISCOVER, ko).toContain(ko);
+    for (const ko of ['공', '친구', '줄넘기', '달리기', '나무', '하늘', '축구', '야구', '농구', '자전거', '곰', '강']) expect(VOCAB_L2, ko).toContain(ko);
+    for (const ko of ['그네', '미끄럼틀', '모래', '제기', '팽이', '윷', '숨바꼭질']) expect(REUSED.has(ko), ko).toBe(false);
+  });
+
+  it('a word with a Word Builder symbol is exposure only: Discover, Pic-Word Match, Card Match or a picture round (F-QUEST-002 R3)', () => {
+    for (const quest of cell.quests) {
+      for (const scope of quest.scopes) {
+        if (scope.kind !== 'listen-pick') {
+          expect(['pic-word-match', 'card-match'], scope.ref).toContain(scope.kind);
+          continue;
+        }
+        for (const round of scope.rounds) {
+          const picture = round.options.every((o) => o.pictureRef !== undefined);
+          if (picture) continue;
+          for (const ko of [round.prompt.ko, ...round.options.map((o) => o.text?.ko ?? '')]) expect(decodableAtStage1(ko), `${round.id} ${ko}`).toBe(true);
+        }
+      }
+    }
+  });
+
+  it('a generic ball never shares a board with another ball picture (one picture, one right word)', () => {
+    const balls = ['word:sport-soccer', 'word:sport-baseball', 'word:sport-basketball', 'word:sport-volleyball'];
+    for (const quest of cell.quests) {
+      for (const scope of quest.scopes) {
+        if (scope.kind !== 'pic-word-match') continue;
+        for (const board of scope.boards) {
+          const refs = board.pairs.map((p) => p.pictureRef);
+          if (refs.includes('word:sport-ball')) expect(refs.filter((r) => r !== undefined && balls.includes(r)), scope.ref).toEqual([]);
+        }
+      }
+    }
+  });
+
   it('every culture note has two sources, one a Korean public institution, and is scoped to lessons', () => {
     expect(cell.culture.map((n) => n.id)).toEqual(['n1', 'n2']);
     for (const note of cell.culture) {
       expect(note.sources?.length, note.id).toBeGreaterThanOrEqual(2);
       expect(note.verification.scope, note.id).toBe('lesson');
+      expect(note.verification.passes, note.id).toBeGreaterThanOrEqual(3);
     }
   });
 });

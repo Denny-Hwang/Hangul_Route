@@ -99,17 +99,25 @@ describe('a stage3 result stored at version 8, then Word Builder ships', () => {
 });
 
 describe('a plan made at version 8: Change the plan after Word Builder ships', () => {
-  /** The version 9 catalogue the plan generator reads (the same cells as the bundle above). */
-  const CATALOG_9: Catalog = {
+  /** The catalogue at version 8: today's catalogue without the quests later versions added (Read Along, Playground Words). */
+  const V8 = new Set(CATALOG_QUEST_IDS_V8);
+  const CATALOG_8: Catalog = {
     ...CATALOG,
+    version: 8,
+    cells: CATALOG.cells.map((cell) => (cell.questIds.every((id) => V8.has(id)) ? cell : { ...cell, status: 'preview', minutes: 10, questIds: [] })),
+    quests: CATALOG.quests.filter((q) => V8.has(q.id)),
+  };
+  /** A later catalogue numbered 9 here, the one the plan generator reads (the same cells as the bundle above). */
+  const CATALOG_9: Catalog = {
+    ...CATALOG_8,
     version: 9,
-    cells: CATALOG.cells.map((cell) => {
+    cells: CATALOG_8.cells.map((cell) => {
       if (cell.episodeId === 'episode:stage2-letters') return { ...cell, status: 'shipped', minutes: 26, questIds: WB };
       if (cell.episodeId === 'episode:stage3-letters') return { ...cell, status: 'shipped', minutes: 13, questIds: FS };
       return cell;
     }),
     quests: [
-      ...CATALOG.quests,
+      ...CATALOG_8.quests,
       ...WB.map((id) => ({ id, episodeId: 'episode:stage2-letters', stage: 'stage2' as const, theme: 'letters' as const, title: id, minutes: 4, teaches: [], kind: 'lesson' as const })),
       ...FS.map((id) => ({ id, episodeId: 'episode:stage3-letters', stage: 'stage3' as const, theme: 'letters' as const, title: id, minutes: 4, teaches: [], kind: 'lesson' as const })),
     ],
@@ -128,9 +136,8 @@ describe('a plan made at version 8: Change the plan after Word Builder ships', (
         goals: { focus: 'balanced' },
         unlockedStages: StageKeySchema.options as StageKey[],
       },
-      // Made before the bump: the shipped catalogue read as version 8 (Read Along, S4-1, is version 9 on
-      // main; it is no Stage 2 or 3 quest, so the stage3 start below does not move).
-      { ...CATALOG, version: 8 },
+      // Made at version 8: the catalogue without the quests later versions added (Read Along, Playground Words).
+      CATALOG_8,
     ),
     'route:a',
     '2026-10-05T09:00:00.000Z',

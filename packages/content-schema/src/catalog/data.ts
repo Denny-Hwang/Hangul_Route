@@ -18,8 +18,9 @@ import type { Catalog, CatalogCell, CatalogQuest, CatalogStory, CatalogTopic } f
  * From version 9 on (F-CURR-001 §3.13), a bump that adds quests lists them under the new version in
  * `CATALOG_QUEST_ADDITIONS` (`versions.ts`), so a placement result stored earlier skips them by its level.
  * Version 9 (F-CURR-001 S4-1): the Stage 4 Read Along cell ships (three lesson quests).
+ * Version 10 (F-CURR-001 S2-3): Playground Words ships (Stage 2 crafts, three lesson quests).
  */
-export const CATALOG_VERSION = 9;
+export const CATALOG_VERSION = 10;
 
 const cell = (
   stage: StageKey,
@@ -52,7 +53,7 @@ const cells: CatalogCell[] = [
   cell('stage2', 'life', 'Lunch Box Words', 'shipped', 6, ['quest:stage2-life-q1']),
   soon('stage2', 'rites', 'Holiday Words'),
   cell('stage2', 'nature', 'Outdoor Words', 'shipped', 6, ['quest:stage2-nature-q1']),
-  soon('stage2', 'crafts', 'Playground Words'),
+  cell('stage2', 'crafts', 'Playground Words', 'shipped', 12, ['quest:stage2-crafts-q1', 'quest:stage2-crafts-q2', 'quest:stage2-crafts-q3']),
   soon('stage3', 'letters', 'First Sentences'),
   soon('stage3', 'life', 'Daily Mini-Sentences'),
   soon('stage3', 'rites', 'Festival Sentences'),
@@ -120,6 +121,9 @@ const lessonQuests: CatalogQuest[] = [
   lesson('stage1-crafts-q3', 'stage1', 'crafts', 'Read Hangul!', 4),
   lesson('stage2-life-q1', 'stage2', 'life', 'Lunch Box Words', 5),
   lesson('stage2-nature-q1', 'stage2', 'nature', 'Outdoor Words', 5),
+  lesson('stage2-crafts-q1', 'stage2', 'crafts', 'At the Playground', 4),
+  lesson('stage2-crafts-q2', 'stage2', 'crafts', 'Traditional Games', 4),
+  lesson('stage2-crafts-q3', 'stage2', 'crafts', 'Playing Together', 4),
   lesson('stage4-rites-q1', 'stage4', 'rites', 'Greeting Dialogues', 4),
   // F-CURR-001 upper-stage cells: they teach no symbol, so `teaches` is [].
   lesson('stage4-letters-q1', 'stage4', 'letters', 'What Is This?', 4),
