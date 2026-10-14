@@ -141,22 +141,19 @@ describe('the presenter content bundle (F-TCH-004 §3.3, §3.13)', () => {
   });
 
   it('every quest teaches: at least one slide besides its title and End', () => {
-    const bookQuestIds = new Set(bookQuests.map((b) => b.id));
-    const waiting: string[] = [];
     for (const q of questsAll) {
-      const { slides, skipped } = expandDeck(deck([{ kind: 'quest', id: q.id }]), lectureBundle('en'), { canPlayKorean: true });
-      // A Stage 5 book quest (F-STORY-005 PR 5.6) is only its story, and has no reward card yet
-      // (F-CARD-S5-001): it teaches once the story slides land (F-TCH-004 PR 11), until then it is
-      // counted as not ready. Only the book quests are skipped; remove this skip with PR 11.
-      const storyWaits = bookQuestIds.has(q.id) && skipped.some((s) => s.ref.startsWith('story:') && s.reason === 'not-ready');
-      if (storyWaits) {
-        waiting.push(q.id);
-        continue;
-      }
+      const { slides } = expandDeck(deck([{ kind: 'quest', id: q.id }]), lectureBundle('en'), { canPlayKorean: true });
       expect(slides.filter((s) => s.kind !== 'title' && s.kind !== 'end').length, q.id).toBeGreaterThan(0);
     }
-    // The skip covers exactly the book quests: once PR 11 lands this fails, so the skip leaves with it.
-    expect(waiting.sort()).toEqual([...bookQuestIds].sort());
+  });
+
+  it('every Stage 5 book quest teaches its story through story slides (F-STORY-005 PR 5.6, F-TCH-004 PR 11)', () => {
+    expect(bookQuests.length).toBeGreaterThan(0);
+    for (const q of bookQuests) {
+      const { slides, skipped } = expandDeck(deck([{ kind: 'quest', id: q.id }]), lectureBundle('en'), { canPlayKorean: true });
+      expect(skipped.filter((s) => s.ref.startsWith('story:')), q.id).toEqual([]);
+      expect(slides.filter((s) => s.kind === 'story').length, q.id).toBeGreaterThan(0);
+    }
   });
 
   it('every quest with a Discover step shows a letter slide for each jamo and a word slide for each word it discovers, before any quiz', () => {
