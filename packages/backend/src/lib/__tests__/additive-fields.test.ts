@@ -36,6 +36,21 @@ describe('preserveAdditiveFields (the Worker preserve rule, placement entry)', (
     expect(out.summary).toEqual({ placement: { ...placement, takenAt: 'later' } });
   });
 
+  it('keeps a stored result\'s catalogVersion when an older build re-uploads it without one (F-CURR-001 §3.13)', () => {
+    const v9 = { id: 'placement:a', level: 'x', catalogVersion: 9 };
+    const other = { id: 'placement:b', catalogVersion: 10 };
+    const out = preserveAdditiveFields(
+      incoming({ placements: [{ id: 'placement:a', level: 'x' }, { id: 'placement:c' }, 'junk'] }, { placement }),
+      stored({ placements: [v9, other, 7] }, { placement }),
+    );
+    expect(out.payload).toEqual({ placements: [v9, { id: 'placement:c' }, 'junk'] });
+    // A sent value is never overwritten, and a stored list that is not a list changes nothing.
+    const sent = preserveAdditiveFields(incoming({ placements: [{ id: 'placement:a', catalogVersion: 11 }] }, {}), stored({ placements: [v9] }, {}));
+    expect(sent.payload).toEqual({ placements: [{ id: 'placement:a', catalogVersion: 11 }] });
+    const odd = preserveAdditiveFields(incoming({ placements: [result] }, {}), stored({ placements: { id: 'placement:a' } }, {}));
+    expect(odd.payload).toEqual({ placements: [result] });
+  });
+
   it('does not invent the fields when nothing is stored', () => {
     const inc = incoming({ quests: [], placements: [] }, { streakDays: 0 });
     for (const prior of [null, stored(null, null), stored('text', 7), stored({ placements: [] }, {}), stored({}, undefined)]) {
@@ -140,9 +155,9 @@ describe('preserveAdditiveFields (stage latch entry, F-ROUTE-001 section 3.15)',
 describe('the stage latch merge (server-side key union, F-ROUTE-001 section 3.15)', () => {
   const merge = ADDITIVE_FIELDS.find((f) => f.payloadKey === 'stageDoneAt')?.merge;
 
-  it('exists only for the latch; placements still replace', () => {
+  it('placements still replace: their merge only keeps the nested fields an older build drops', () => {
     expect(merge).toBeDefined();
-    expect(ADDITIVE_FIELDS.find((f) => f.payloadKey === 'placements')?.merge).toBeUndefined();
+    expect(ADDITIVE_FIELDS.find((f) => f.payloadKey === 'placements')?.merge).toBeDefined();
     const out = preserveAdditiveFields(incoming({ placements: [{ id: 'placement:b' }] }, {}), stored({ placements: [result] }, {}));
     expect(out.payload).toEqual({ placements: [{ id: 'placement:b' }] });
   });

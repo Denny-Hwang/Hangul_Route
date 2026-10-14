@@ -1,4 +1,4 @@
-import type { DiscoverItem, DiscoverPage, Jamo, KoText, Overlays, RomanizationMode, UiLocale } from '@hangul-route/content-schema';
+import { discoverItemTexts, type DiscoverItem, type DiscoverPage, type Jamo, type KoText, type Overlays, type RomanizationMode, type UiLocale } from '@hangul-route/content-schema';
 import { romanizationShown, type Messages } from '@hangul-route/i18n';
 import { findJamo } from '../../content/jamo';
 import type { PlayResult } from '../../platform/audio';
@@ -222,6 +222,15 @@ export function buildDiscover(
     for (const item of page.items) {
       if (item.type === 'word') {
         items.push(wordItem(uniqueKey(`word:${item.word.ko}`), item));
+        continue;
+      }
+      if (item.type !== 'jamo') {
+        // F-CURR-001 upper-stage items (sentence, pattern, exchange, realia): until their own
+        // Discover views land (row D-1), each taught text shows as a word card with Hear it.
+        const picture = item.type === 'sentence' ? item.picture : undefined;
+        for (const word of discoverItemTexts(item)) {
+          items.push(wordItem(uniqueKey(`word:${word.ko}`), picture ? { type: 'word', word, picture } : { type: 'word', word }));
+        }
         continue;
       }
       const found = findJamo(item.jamoId);

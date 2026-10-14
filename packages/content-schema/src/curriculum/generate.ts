@@ -1,3 +1,4 @@
+import { placedOutGrowth, type CatalogHistory } from '../catalog/versions';
 import { routeCatalogOf } from '../catalog/route-catalog';
 import {
   FESTIVAL_DATES,
@@ -84,11 +85,19 @@ export interface GenerateOptions {
   history?: PlanItem[];
   /** Week metadata of the weeks before the week that contains `freezeBefore`. */
   historyWeeks?: WeekMeta[];
+  /** The catalogue-growth rule's history (F-CURR-001 §3.13); default the shipped one. */
+  catalogHistory?: CatalogHistory;
 }
 
 interface BuildOptions extends GenerateOptions {
   /** `regenerateFrom` `shift`: the plan's own future items replace the catalogue queue. */
   queue?: Queues;
+  /**
+   * The catalogue version a stored exact placed-out set was fixed against (the plan's
+   * `catalogVersion`); the set is widened by `placedOutGrowth` (F-CURR-001 §3.13). Absent for a
+   * set the caller derived from today's catalogue (a fresh draft or a reseed that sends its set).
+   */
+  placedOutAt?: number;
 }
 
 const stageIndex = (stage: StageKey): number => StageKeySchema.options.indexOf(stage);
@@ -189,6 +198,7 @@ const catalogQueuesOf = (
   const completed = new Set(p.completedQuestIds);
   // The exact placed-out set of a placement result wins over the level (section 3.1): after a
   // grown-up override it may be smaller than the level's, and the put-back quests return (FP-B4).
+  // A set stored at an older catalogue was already widened by `build` (F-CURR-001 §3.13).
   const placed = p.placedOutQuestIds ?? questsPlacedOutAtLevel(p.level, routeCatalogOf(catalog));
   const done = new Set([...placed, ...completed, ...exclude]);
   const unlocked = new Set(p.unlockedStages);
@@ -299,8 +309,21 @@ const copyWeek = (meta: WeekMeta): WeekMeta => ({
 /** A real UTC day key; `today` and `freezeBefore` are compared as strings, so a malformed key must throw. */
 const RealDateKeySchema = DateKeySchema.refine(isDateKey, { message: 'Not a real UTC day key (YYYY-MM-DD)' });
 
+/**
+ * The params with a stored exact placed-out set widened by the catalogue-growth rule
+ * (F-CURR-001 §3.13): the quests shipped after `placedOutAt` that the level places out. The
+ * draft returns these params with today's `catalogVersion`, so the saved set always matches the
+ * saved version and the next regeneration does not lose the widening.
+ */
+const withGrowth = (p: CurriculumParams, catalog: Catalog, opts: BuildOptions): CurriculumParams => {
+  if (p.placedOutQuestIds === undefined || opts.placedOutAt === undefined) return p;
+  const added = placedOutGrowth(p.level, opts.placedOutAt, routeCatalogOf(catalog), new Set(p.completedQuestIds), opts.catalogHistory);
+  if (added.length === 0) return p;
+  return { ...p, placedOutQuestIds: [...new Set([...p.placedOutQuestIds, ...added])] };
+};
+
 const build = (input: CurriculumParamsInput, catalog: Catalog, opts: BuildOptions): CurriculumDraft => {
-  const p = CurriculumParamsSchema.parse(input);
+  const p = withGrowth(CurriculumParamsSchema.parse(input), catalog, opts);
   if (opts.freezeBefore !== undefined) RealDateKeySchema.parse(opts.freezeBefore);
   const cadence = cadenceOf(p);
   const lookup = new Lookup(catalog);
@@ -594,6 +617,8 @@ export interface RegenerateOptions {
   completedQuestIds?: string[];
   /** `reseed` only; ignored by the other modes. */
   paramsPatch?: ReseedPatch;
+  /** The catalogue-growth rule's history (F-CURR-001 §3.13); default the shipped one. */
+  catalogHistory?: CatalogHistory;
 }
 
 /**
@@ -633,7 +658,13 @@ export function regenerateFrom(
   const params: CurriculumParamsInput = { ...plan.meta.params, completedQuestIds: completed };
   const isPast = (item: PlanItem): boolean => item.targetDate !== undefined && item.targetDate < today;
   const past = plan.items.filter(isPast);
-  const base = { freezeBefore: today, historyWeeks: plan.meta.weeks };
+  // The plan's stored set was fixed against the plan's catalogue version (F-CURR-001 §3.13).
+  const base = {
+    freezeBefore: today,
+    historyWeeks: plan.meta.weeks,
+    placedOutAt: plan.meta.catalogVersion,
+    ...(opts.catalogHistory === undefined ? {} : { catalogHistory: opts.catalogHistory }),
+  };
   if (opts.mode === 'reseed') {
     const { level, placedOutQuestIds, goals } = opts.paramsPatch ?? {};
     if (level === undefined && placedOutQuestIds === undefined && goals === undefined) {
@@ -652,7 +683,9 @@ export function regenerateFrom(
       ...(placed === undefined ? {} : { placedOutQuestIds: [...placed] }),
       ...(goals === undefined ? {} : { goals }),
     };
-    return build(reseeded, catalog, { ...base, history: past });
+    // A set sent with the patch comes from today's catalogue: it is not widened (an override's put-backs stay).
+    const reseedBase = placedOutQuestIds === undefined ? base : { ...base, placedOutAt: undefined };
+    return build(reseeded, catalog, { ...reseedBase, history: past });
   }
   if (opts.mode === 'requeue') {
     const lookup = new Lookup(catalog);

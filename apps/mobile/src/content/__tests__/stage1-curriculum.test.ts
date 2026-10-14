@@ -1,6 +1,8 @@
 import {
   QuestSchema,
   ROMANIZATION_EXCEPTIONS,
+  checkKindsFor,
+  discoverItemTexts,
   checkRomanization,
   type DiscoverPage,
   type KoText,
@@ -128,7 +130,7 @@ function discoverReading(quest: Quest): KoText[] {
     (s.discover?.pages ?? []).flatMap((page) =>
       page.items.flatMap((item) => {
         if (item.type === 'jamo') return [item.example];
-        return isThemePage(page) ? [] : [item.word];
+        return isThemePage(page) ? [] : discoverItemTexts(item);
       }),
     ),
   );
@@ -137,7 +139,7 @@ function discoverReading(quest: Quest): KoText[] {
 /** Every KoText a quest and its scopes show (Discover items, Listen & Pick prompts and text options, Pic-Word words). */
 function koTextsOf(quest: Quest): KoText[] {
   const fromDiscover = quest.steps.flatMap((s) =>
-    (s.discover?.pages ?? []).flatMap((p) => p.items.map((i) => (i.type === 'jamo' ? i.example : i.word))),
+    (s.discover?.pages ?? []).flatMap((p) => p.items.flatMap(discoverItemTexts)),
   );
   const fromScopes = scopesOf(quest).flatMap(({ scope }) => [
     ...(scope?.listenPick?.rounds ?? []).flatMap((r) => [
@@ -394,7 +396,7 @@ describe('the Nature and Crafts quests (Q-8)', () => {
   const scopeOf = (quest: Quest, kind: QuestStepKind): MinigameScope => scopesOf(quest).find((s) => s.kind === kind)!.scope!;
   const discoverPages = (quest: Quest): DiscoverPage[] => quest.steps.flatMap((s) => s.discover?.pages ?? []);
   const pageView = (page: DiscoverPage) =>
-    page.items.map((i) => (i.type === 'jamo' ? [i.jamoId, i.example.ko, i.picture ?? null] : [i.word.ko, i.word.romanization, i.picture ?? null]));
+    page.items.map((i) => (i.type === 'jamo' ? [i.jamoId, i.example.ko, i.picture ?? null] : i.type === 'word' ? [i.word.ko, i.word.romanization, i.picture ?? null] : [i.type]));
 
   it('keeps the section 3.6 titles, minutes and reward cards (4 minutes each)', () => {
     expect(NATURE_CRAFTS().map((q) => [q.id, q.titleEn, q.estimatedMinutes, q.rewardCardId])).toEqual([
@@ -666,7 +668,9 @@ describe.each(REBUILT.map((q) => [q.id, q] as const))('%s', (_id, quest) => {
       expect(scope, ref).toBeDefined();
       expect(scopeRounds(scope!), `${ref} (${kind})`).toBe(ROUNDS[kind]);
     }
-    expect(scopesOf(quest).find((s) => s.kind === 'check')?.scope?.kind).toBe('listen-pick');
+    // The Check rule of F-QUEST-002 T4 as amended by F-CURR-001 §3.11: Listen & Pick (order-it only in stage7).
+    expect(checkKindsFor('stage1')).toEqual(['listen-pick']);
+    expect(checkKindsFor('stage1')).toContain(scopesOf(quest).find((s) => s.kind === 'check')?.scope?.kind);
   });
 
   it('T4 every practice and apply scope builds its rounds the way its game screen does, over several seeds', () => {
@@ -860,7 +864,7 @@ describe('a word read in Discover and asked in a Check is the same KoText', () =
     for (const quest of REBUILT) {
       for (const step of quest.steps) {
         for (const item of step.discover?.pages.flatMap((p) => p.items) ?? []) {
-          const text = item.type === 'word' ? item.word : item.example;
+          const text = discoverItemTexts(item)[0];
           if (text !== undefined && !discovered.has(text.ko)) discovered.set(text.ko, { quest: quest.id, text });
         }
       }

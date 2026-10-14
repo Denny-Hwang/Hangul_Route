@@ -17,6 +17,9 @@ describe('SKILL_OF_KIND (F-ROUTE-001 section 3.7, OD-5 default)', () => {
     expect(SKILL_OF_KIND['listen-pick']).toEqual(['listen']);
     for (const kind of ['match-shape', 'odd-one-out', 'pic-word-match', 'story-read'] as const) expect(SKILL_OF_KIND[kind]).toEqual(['read']);
     expect(SKILL_OF_KIND['trace-stroke']).toEqual(['write']);
+    // F-CURR-001 §3.11: realia-read reads; type-hangul, trace-word and write-frame write.
+    expect(SKILL_OF_KIND['realia-read']).toEqual(['read']);
+    for (const kind of ['type-hangul', 'trace-word', 'write-frame'] as const) expect(SKILL_OF_KIND[kind]).toEqual(['write']);
     for (const kind of ['build-letter', 'syllable-build', 'card-match', 'culture-quiz', 'story-sequence', 'story-check', 'tap-rhythm', 'order-it'] as const)
       expect(SKILL_OF_KIND[kind]).toEqual([]);
   });

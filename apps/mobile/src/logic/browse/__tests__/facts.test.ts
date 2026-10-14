@@ -1,4 +1,4 @@
-import type { Quest, Story, StoryLevel } from '@hangul-route/content-schema';
+import { discoverItemTexts, type Quest, type Story, type StoryLevel } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
 import { localizeQuest, localizeScope, localizeStory } from '../../content-locale';
 import { lp, type MinigameScope } from '../../minigame-config';
@@ -57,7 +57,7 @@ describe('itemFacts: quest', () => {
     localizeQuest(q, locale)
       .steps.flatMap((step) => step.discover?.pages ?? [])
       .flatMap((page) => page.items)
-      .map((item) => (item.type === 'jamo' ? item.example : item.word));
+      .flatMap(discoverItemTexts);
 
   it('title, minutes, the steps in order and the card it awards', () => {
     const q = quest(Q1);

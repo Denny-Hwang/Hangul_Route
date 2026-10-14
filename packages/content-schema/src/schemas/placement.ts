@@ -87,6 +87,12 @@ export const PlacementResultSchema = z.object({
   beyondContent: z.boolean(),
   startQuestId: z.string().nullable(),
   placedOutQuestIds: z.array(z.string()).max(40),
+  /**
+   * The catalogue version `placedOutQuestIds` was fixed against (F-CURR-001 §3.13). Optional:
+   * a result without it counts as `LEGACY_CATALOG_VERSION` (8); the set is widened with the quests
+   * later versions added that the level places out (`placedOutGrowth`).
+   */
+  catalogVersion: z.number().int().positive().optional(),
   priorityTokens: z.array(z.string()).max(3),
   needsStage: StageKeySchema.nullable(),
   stopReason: StopReasonSchema,

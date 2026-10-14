@@ -134,6 +134,24 @@ export function checkRomanization(ko: string, given: string, ctx?: CheckContext)
   return issues;
 }
 
+/** A frame's slot and the particle written after it: `___`, `___을/를`, `___에` (F-CURR-001 §3.4, §3.7). */
+const KO_SLOT = /___(?:[가-힣]+(?:\/[가-힣]+)?)?/;
+const ROMAN_SLOT = /___(?:[a-z]+(?:\/[a-z]+)?)?/;
+
+/**
+ * A sentence frame with slots (`저는 ___을/를 좋아해요` / `jeoneun ___eul/reul joahaeyo`):
+ * the slots and their particles are not words, so the text between them is checked
+ * piece by piece with `checkRomanization`, after the slot counts agree.
+ */
+export function checkFrameRomanization(ko: string, given: string, ctx?: CheckContext): RomanizationIssue[] {
+  const koParts = ko.split(KO_SLOT);
+  const romParts = normalizeRomanization(given).split(ROMAN_SLOT);
+  if (koParts.length !== romParts.length) {
+    return [issue('romanization-mismatch', `${ko}: ${koParts.length - 1} slot(s), the romanization has ${romParts.length - 1}`, ko, given)];
+  }
+  return koParts.flatMap((part, i) => (/[가-힣]/.test(part) ? checkRomanization(part.trim(), (romParts[i] as string).trim(), ctx) : []));
+}
+
 function isAllowed(ko: string, given: string, ctx: CheckContext | undefined): boolean {
   const exceptions = ctx?.exceptions ?? [];
   return exceptions.some((e) => e.ko === ko.trim() && e.allowed.some((a) => compact(a) === compact(given)));

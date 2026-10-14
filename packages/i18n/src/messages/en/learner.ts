@@ -1255,6 +1255,11 @@ export const learner = {
       picWordMatch: 'Match a picture to its word',
       storyRead: 'Read a story',
       traceStroke: 'Trace a letter',
+      // F-CURR-001 §3.11: the upper-stage games that count for a skill.
+      realiaRead: 'Read a menu, sign or ticket',
+      typeHangul: 'Type in Hangul',
+      traceWord: 'Trace a word',
+      writeFrame: 'Finish a sentence of your own',
     },
     /** The pip legend in an open stage (section 3.4): drawn shapes plus these words. */
     legend: {
