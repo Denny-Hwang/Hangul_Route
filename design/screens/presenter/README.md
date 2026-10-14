@@ -302,6 +302,7 @@ Every UI string a mock draws. Values with `{x}` are functions; plural keys follo
 | `learner.presenter.slide.order` | What comes first? | ¿Qué va primero? | 무엇이 먼저일까요? |  |
 | `learner.presenter.slide.sayIt` | Say it: | Dilo así: | 이렇게 읽어요: | teacher-says text (no Korean voice or sound off) |
 | `learner.presenter.slide.strokeCaption` | Simplified stroke guide | Guía de trazos simplificada | 간단한 획순 안내 | spec §3.6, until a jamo is reviewed |
+| `learner.presenter.slide.topic` | Word topics | Temas de palabras | 낱말 주제 | kind label above a topic title (PR 12); same values as `home.quick.group.topics` |
 | `learner.presenter.start.back.cta` | Back to lessons | Volver a las lecciones | 수업 목록으로 | start screen, above the title; returns to the home with nothing saved or sent (PR 8) |
 | `learner.presenter.start.awake` | The screen stays on during the lesson | La pantalla queda encendida durante la lección | 수업 중에는 화면이 꺼지지 않아요 |  |
 | `learner.presenter.start.awakeNone` | Keep the screen awake in system settings. | Mantén la pantalla encendida en los ajustes del sistema. | 시스템 설정에서 화면이 꺼지지 않게 해 주세요. |  |

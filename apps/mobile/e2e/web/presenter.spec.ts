@@ -562,6 +562,22 @@ test.describe('PR 12 word topic slides at 1280 x 720', () => {
     await expect(page.getByTestId('presenter-next')).toHaveAccessibleName('Next');
     await shot(page, 'presenter-topic-word-1280x720');
 
+    // A topic word whose picture is a heritage card (kimchi): the card art at the same build, no WordArt.
+    const word = page.getByTestId('presenter-word');
+    const atKimchi = async () => (await word.count()) > 0 && (await word.textContent()) === '김치';
+    for (let i = 0; i < 40 && !(await atKimchi()); i++) {
+      await page.keyboard.press('PageDown');
+      await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+    }
+    await expect(page.getByTestId('presenter-live')).toHaveText(/^Slide \d+ of \d+, Word\b/);
+    await expect(word).toHaveText('김치');
+    await expectDrawn(page, 'presenter-word-gloss', false);
+    await page.keyboard.press('PageDown');
+    await expectDrawn(page, 'presenter-word-gloss', true);
+    await page.keyboard.press('PageDown');
+    await expect(page.getByRole('img', { name: 'kimchi' })).toBeVisible();
+    await expect(page.getByTestId('presenter-word-art')).toHaveCount(0);
+
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(1280);
     expect(errors).toEqual([]);
   });

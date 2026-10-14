@@ -88,13 +88,26 @@ describe('the presenter content bundle (F-TCH-004 §3.3, §3.13)', () => {
 
   it('every ready topic word has a picture the presenter draws: a drawn card or a known WordArt glyph (README D9)', () => {
     const { slides } = expandDeck(
-      deck(VOCAB_TOPICS.filter((t) => t.status === 'ready').map((t): LectureBlock => ({ kind: 'vocab', topicId: t.id }))),
+      deck(VOCAB_TOPICS.filter((t) => t.status === 'ready' || t.status === 'shipped').map((t): LectureBlock => ({ kind: 'vocab', topicId: t.id }))),
       lectureBundle('en'),
       { canPlayKorean: true },
     );
+    expect(slides.some((s) => s.kind === 'vocab')).toBe(true);
+    // Colour words too: their `word:color-*` keys are drawn by the generated colour glyphs.
     const missing = slides.filter((s) => s.kind === 'vocab' && vocabArt(s, supportedCardIds, WORD_ART_KEYS) === undefined).map((s) => s.key);
-    // A colour word's picture is a swatch, which the slide does not draw: text only, as section 3.4 allows.
-    expect(missing.every((key) => key.startsWith('vocab-topic:colors/')), missing.join(', ')).toBe(true);
+    expect(missing).toEqual([]);
+  });
+
+  it.each(['en', 'es', 'ko'] as const)('within every ready topic each word has its own Korean and its own gloss, so no quiz round has two right answers (%s)', (locale) => {
+    const ready = VOCAB_TOPICS.filter((t) => t.status === 'ready' || t.status === 'shipped');
+    for (const t of ready) {
+      const words = expandDeck(deck([{ kind: 'vocab', topicId: t.id }]), lectureBundle(locale), { canPlayKorean: true }).slides.flatMap((s) =>
+        s.kind === 'vocab' ? [s.word] : [],
+      );
+      const dupes = (values: string[]) => values.filter((v, i) => values.indexOf(v) !== i);
+      expect(dupes(words.map((w) => w.ko)), t.id).toEqual([]);
+      expect(dupes(words.map((w) => w.gloss.trim().toLowerCase())), t.id).toEqual([]);
+    }
   });
 
   it('every quest teaches: at least one slide besides its title and End', () => {
