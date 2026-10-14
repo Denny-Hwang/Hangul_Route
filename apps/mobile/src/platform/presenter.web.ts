@@ -72,6 +72,29 @@ export interface PresenterEnv {
   consoleOrigins?: readonly string[];
   navigator?: { wakeLock?: { request: (type: 'screen') => Promise<WakeLockSentinelLike> } } | null;
   screen?: { orientation?: { lock?: (o: string) => Promise<void>; unlock?: () => void } } | null;
+  /** Makes the Web Audio context the timer chime plays on; null without Web Audio. */
+  createAudioContext?: (() => ChimeContextLike) | null;
+}
+
+interface AudioParamLike {
+  value: number;
+  setValueAtTime(value: number, at: number): void;
+  linearRampToValueAtTime(value: number, at: number): void;
+  exponentialRampToValueAtTime(value: number, at: number): void;
+}
+
+interface AudioNodeLike {
+  connect(target: unknown): unknown;
+}
+
+/** The slice of `AudioContext` the chime uses. */
+export interface ChimeContextLike {
+  state?: string;
+  currentTime: number;
+  destination: unknown;
+  resume?: () => Promise<void>;
+  createOscillator(): AudioNodeLike & { type: string; frequency: { value: number }; start(at: number): void; stop(at: number): void };
+  createGain(): AudioNodeLike & { gain: AudioParamLike };
 }
 
 type Globals = {
@@ -101,7 +124,16 @@ function browserEnv(): PresenterEnv {
     consoleOrigins: presenterConsoleOrigins(process.env.EXPO_PUBLIC_CONSOLE_ORIGINS),
     navigator: g.navigator ?? null,
     screen: g.screen ?? null,
+    createAudioContext: browserAudioContext,
   };
+}
+
+/** One factory for the page, so the context it makes is found again (`chimeContexts`). */
+function browserAudioContext(): ChimeContextLike {
+  const g = globalThis as { AudioContext?: new () => ChimeContextLike; webkitAudioContext?: new () => ChimeContextLike };
+  const Ctor = g.AudioContext ?? g.webkitAudioContext;
+  if (!Ctor) throw new Error('no Web Audio');
+  return new Ctor();
 }
 
 // --- route and address ----------------------------------------------------------------------
@@ -518,4 +550,70 @@ export function waitForPresenterFont(timeoutMs: number, family: string, env: Pre
       .catch(() => resolve(false))
       .finally(() => clearTimeout(timer));
   });
+}
+
+// --- the timer chime ----------------------------------------------------------------------------
+
+/**
+ * The class timer's chime at zero (section 3.5, TD5): two soft sine notes, rising, under a second
+ * in all; never speech synthesis, never an alarm, and silent while the device is muted. The
+ * context is made inside the Start tap (`unlockChime`), so a browser that needs a gesture for
+ * audio lets it play when the timer ends minutes later.
+ */
+const CHIME_NOTES_HZ = [660, 880] as const;
+/** Seconds between the two notes, and each note's length. */
+const CHIME_GAP_S = 0.22;
+const CHIME_NOTE_S = 0.6;
+/** Peak loudness of a note (0..1): soft. */
+const CHIME_PEAK = 0.12;
+const CHIME_FLOOR = 0.0001;
+const CHIME_ATTACK_S = 0.02;
+
+const chimeContexts = new WeakMap<() => ChimeContextLike, ChimeContextLike>();
+
+function chimeContext(env: PresenterEnv, make: boolean): ChimeContextLike | null {
+  const factory = env.createAudioContext;
+  if (!factory) return null;
+  const existing = chimeContexts.get(factory);
+  if (existing || !make) return existing ?? null;
+  try {
+    const ctx = factory();
+    chimeContexts.set(factory, ctx);
+    return ctx;
+  } catch {
+    return null;
+  }
+}
+
+/** Makes (once) and resumes the chime's context; call inside a gesture. Failures are silent. */
+export function unlockChime(env: PresenterEnv = browserEnv()): void {
+  const ctx = chimeContext(env, true);
+  if (ctx?.state === 'suspended') void ctx.resume?.().catch(() => undefined);
+}
+
+/** Plays the chime; false when muted, without an unlocked context, or when Web Audio refuses. */
+export function playChime(muted: boolean, env: PresenterEnv = browserEnv()): boolean {
+  if (muted) return false;
+  const ctx = chimeContext(env, false);
+  if (!ctx) return false;
+  try {
+    if (ctx.state === 'suspended') void ctx.resume?.().catch(() => undefined);
+    CHIME_NOTES_HZ.forEach((hz, i) => {
+      const at = ctx.currentTime + i * CHIME_GAP_S;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = hz;
+      gain.gain.setValueAtTime(CHIME_FLOOR, at);
+      gain.gain.linearRampToValueAtTime(CHIME_PEAK, at + CHIME_ATTACK_S);
+      gain.gain.exponentialRampToValueAtTime(CHIME_FLOOR, at + CHIME_NOTE_S);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(at);
+      osc.stop(at + CHIME_NOTE_S);
+    });
+    return true;
+  } catch {
+    return false;
+  }
 }

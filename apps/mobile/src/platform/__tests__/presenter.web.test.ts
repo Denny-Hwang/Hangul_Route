@@ -16,6 +16,7 @@ import {
   keepScreenAwake,
   listenForRoster,
   lockLandscape,
+  playChime,
   presenterConsoleOrigins,
   releaseScreenAwake,
   reloadOnDeckLink,
@@ -25,6 +26,7 @@ import {
   subscribeKeys,
   takeDeckFragment,
   trapFocus,
+  unlockChime,
   unlockOrientation,
   waitForPresenterFont,
   wakeLockSupported,
@@ -90,6 +92,8 @@ describe('route', () => {
     native.reloadOnDeckLink()();
     expect(native.isFullscreen()).toBe(false);
     expect(await native.waitForPresenterFont(1, 'HR Presenter KR')).toBe(false);
+    expect(native.playChime(false)).toBe(false);
+    expect(() => native.unlockChime()).not.toThrow();
     expect(native.presenterConsoleOrigins()).toEqual([...LECTURE_CONSOLE_ORIGINS]);
     native.setPresenterDocTitle('x');
     native.listenForRoster(deck(null))();
@@ -614,5 +618,65 @@ describe('waitForPresenterFont', () => {
     const pending = waitForPresenterFont(1500, 'HR Presenter KR', env({ document: { fonts: { load: () => new Promise(() => undefined) } } }));
     vi.advanceTimersByTime(1500);
     expect(await pending).toBe(false);
+  });
+});
+
+describe('the timer chime (section 3.5: two soft notes, never speech, never an alarm)', () => {
+  function fakeContext(state = 'running') {
+    const oscillators: { type: string; frequency: { value: number }; start: ReturnType<typeof vi.fn>; stop: ReturnType<typeof vi.fn>; connect: ReturnType<typeof vi.fn> }[] = [];
+    const resume = vi.fn(async () => undefined);
+    const ctx = {
+      state,
+      currentTime: 10,
+      destination: {},
+      resume,
+      createOscillator: () => {
+        const o = { type: 'square', frequency: { value: 0 }, start: vi.fn(), stop: vi.fn(), connect: vi.fn((n: unknown) => n) };
+        oscillators.push(o);
+        return o;
+      },
+      createGain: () => ({
+        gain: { value: 1, setValueAtTime: vi.fn(), linearRampToValueAtTime: vi.fn(), exponentialRampToValueAtTime: vi.fn() },
+        connect: vi.fn((n: unknown) => n),
+      }),
+    };
+    return { ctx, oscillators, resume };
+  }
+
+  it('plays two sine notes on the context the Start tap unlocked', () => {
+    const { ctx, oscillators, resume } = fakeContext('suspended');
+    const create = vi.fn(() => ctx);
+    const e = env({ createAudioContext: create });
+    unlockChime(e);
+    unlockChime(e);
+    expect(create).toHaveBeenCalledTimes(1);
+    expect(resume).toHaveBeenCalled();
+    expect(playChime(false, e)).toBe(true);
+    expect(oscillators).toHaveLength(2);
+    expect(oscillators.every((o) => o.type === 'sine')).toBe(true);
+    expect(oscillators[0]!.frequency.value).toBeLessThan(oscillators[1]!.frequency.value);
+    expect(oscillators[1]!.start.mock.calls[0]![0]).toBeGreaterThan(oscillators[0]!.start.mock.calls[0]![0]);
+  });
+
+  it('is silent when muted, without Web Audio, or when the context fails', () => {
+    const { ctx, oscillators } = fakeContext();
+    const e = env({ createAudioContext: () => ctx });
+    unlockChime(e);
+    expect(playChime(true, e)).toBe(false);
+    expect(oscillators).toHaveLength(0);
+    expect(playChime(false, env({ createAudioContext: null }))).toBe(false);
+    expect(() =>
+      unlockChime(
+        env({
+          createAudioContext: () => {
+            throw new Error('no audio');
+          },
+        }),
+      ),
+    ).not.toThrow();
+    const broken = { ...fakeContext().ctx, createOscillator: () => { throw new Error('x'); } };
+    const b = env({ createAudioContext: () => broken });
+    unlockChime(b);
+    expect(playChime(false, b)).toBe(false);
   });
 });
