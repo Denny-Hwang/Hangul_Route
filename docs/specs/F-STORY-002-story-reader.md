@@ -409,7 +409,7 @@ No D1 migration, no API route, no `ProgressSnapshot` field. One additive optiona
 - Recorded audio and the Korean-voice capability check themselves (F-AUDIO-004): this spec calls them through a seam.
 - Animated scenes (F-MOTION-012), full narration audio production (F-MOTION-013), branching choices, drag gestures, a "My Story" retell, word-by-word authored breakdowns (the schema field exists; none authored).
 - Converting `HeritageCardArt`'s 30 drawings to data. (Refactoring `Hoya.tsx` to render from the Hoya data is done in PR 2.11.)
-- ~~Rendering the web design-preview's Hoya reference (`apps/web/src/components/design-preview/HoyaReference.tsx`, a hand-mirrored inline-SVG copy) from `hoyaFigure` through the `scene-art` subpath.~~ Done in #PRNUM: it renders `hoyaFigure(pose)` as DOM SVG.
+- ~~Rendering the web design-preview's Hoya reference (`apps/web/src/components/design-preview/HoyaReference.tsx`, a hand-mirrored inline-SVG copy) from `hoyaFigure` through the `scene-art` subpath.~~ Done in #673: it renders `hoyaFigure(pose)` as DOM SVG.
 - Raster art, AI-generated images, emoji, third-party illustration packs, Lottie.
 - A native content-advisory channel, in-reader feedback/report-an-error button (a mailto/support route is a follow-up; the correction process is F-STORY-001 §3.7).
 - Translating the launch stories (overlays are supported; content is later).
@@ -531,4 +531,4 @@ Decisions made in this spec:
 
 ## 9. Change log
 
-- 2026-10-14 (#PRNUM): an unknown Hoya pose draws the idle figure without the cheek blush (as before PR 2.11); `HoyaReference` renders `hoyaFigure` (the §4 follow-up); §3.9.4 Hoya paragraph rewritten as built; the `hoya-nodes.json` snapshot credited to `hoya.test.ts` in §5.
+- 2026-10-14 (#673): an unknown Hoya pose draws the idle figure without the cheek blush (as before PR 2.11); `HoyaReference` renders `hoyaFigure` (the §4 follow-up); §3.9.4 Hoya paragraph rewritten as built; the `hoya-nodes.json` snapshot credited to `hoya.test.ts` in §5.
