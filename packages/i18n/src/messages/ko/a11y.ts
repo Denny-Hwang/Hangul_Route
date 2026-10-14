@@ -106,6 +106,22 @@ export const a11y = {
     },
     koreanWord: (word: string) => `한국어 낱말 ${word}`,
     meaning: (gloss: string) => `뜻: ${gloss}`,
+    sentenceBuilder: {
+      slotEmpty: (n: number, total: number) => `${total}칸 중 ${n}번째 칸, 비어 있어요`,
+      slotNext: (n: number, total: number) => `${total}칸 중 ${n}번째 칸, 비어 있어요, 다음 칸이에요`,
+      slotFilled: (n: number, total: number, word: string) => `${total}칸 중 ${n}번째 칸: ${word}`,
+      slotAttached: (n: number, total: number) => `${total}칸 중 ${n}번째 칸, 앞 낱말에 붙어요, 비어 있어요`,
+      tried: (word: string) => `${word}, 이미 골라 봤어요`,
+      next: (word: string) => `${word}, 다음 차례예요`,
+    },
+    realia: {
+      summary: (kind: string, lines: number) => `${kind}, ${lines}줄`,
+      kind: { menu: '메뉴판', ticket: '기차표', sign: '산길 표지판', priceCards: '가격표', plain: '읽을거리' },
+      lineHint: '누르면 들려요',
+      found: '여기 있어요',
+      lookHere: '여기를 봐요',
+      dir: { left: '왼쪽으로', right: '오른쪽으로' },
+    },
     keyboard: {
       key: (jamo: string, sound: string) => `${jamo}, ${sound}`,
       shift: '시프트, 다른 글자',

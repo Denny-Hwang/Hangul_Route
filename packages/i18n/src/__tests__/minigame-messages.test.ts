@@ -398,6 +398,37 @@ describe('en-XA covers the new keys', () => {
   }
 });
 
+describe('Realia Read (F-CURR-001 G-2; design/screens/minigame-realia-read README strings)', () => {
+  it('keeps the learner lines short, plain and free of failure words in every locale', () => {
+    for (const locale of LOCALES) {
+      const r = getMessages(locale).learner.minigame.realia;
+      expect(r.lineHint.length, locale).toBeGreaterThan(0);
+      expect(r.missHoya.length, locale).toBeGreaterThan(0);
+      expect(JSON.stringify(r), locale).not.toMatch(NO_AGE_OR_FAILURE);
+    }
+    expect(m.learner.minigame.realia).toEqual({ lineHint: 'Tap a line to hear it.', missHoya: 'Look again', empty: 'Nothing to play here' });
+  });
+
+  it('names the sheet as a group with its line count, in each locale', () => {
+    const en = m.a11y.minigame.realia;
+    expect(en.summary(en.kind.menu, 4)).toBe('Menu, 4 lines');
+    expect(en.summary(en.kind.ticket, 1)).toBe('Train ticket, 1 line');
+    const es = getMessages('es').a11y.minigame.realia;
+    expect(es.summary(es.kind.sign, 3)).toBe('Letrero de ruta, 3 líneas');
+    expect(es.summary(es.kind.menu, 1)).toBe('Menú, 1 línea');
+    // The group name keeps the price meaning (not just "labels"), within the 1.5x length budget.
+    expect(es.summary(es.kind.priceCards, 3)).toBe('Precios, 3 líneas');
+    const ko = getMessages('ko').a11y.minigame.realia;
+    expect(ko.summary(ko.kind.priceCards, 3)).toBe('가격표, 3줄');
+  });
+
+  it('names the marks and the directions', () => {
+    expect(m.a11y.minigame.realia).toMatchObject({ lineHint: 'Tap to hear it', found: 'Found here', lookHere: 'Look here' });
+    expect(m.a11y.minigame.realia.dir).toEqual({ left: 'to the left', right: 'to the right' });
+    expect(getMessages('ko').a11y.minigame.realia.dir).toEqual({ left: '왼쪽으로', right: '오른쪽으로' });
+  });
+});
+
 describe('Type Hangul and the Hangul keyboard (F-CURR-001 G-3, English wording)', () => {
   const t = m.learner.minigame.typeHangul;
   const k = m.a11y.minigame.keyboard;

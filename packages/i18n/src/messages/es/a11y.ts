@@ -105,6 +105,22 @@ export const a11y = {
     },
     koreanWord: (word: string) => `Palabra coreana ${word}`,
     meaning: (gloss: string) => `Significado: ${gloss}`,
+    sentenceBuilder: {
+      slotEmpty: (n: number, total: number) => `Lugar ${n} de ${total}, vacío`,
+      slotNext: (n: number, total: number) => `Lugar ${n} de ${total}, vacío, el siguiente`,
+      slotFilled: (n: number, total: number, word: string) => `Lugar ${n} de ${total}: ${word}`,
+      slotAttached: (n: number, total: number) => `Lugar ${n} de ${total}, se une a la palabra de antes, vacío`,
+      tried: (word: string) => `${word}, ya probada`,
+      next: (word: string) => `${word}, va ahora`,
+    },
+    realia: {
+      summary: (kind: string, lines: number) => `${kind}, ${plural('es', lines, { one: '1 línea', other: `${lines} líneas` })}`,
+      kind: { menu: 'Menú', ticket: 'Boleto de tren', sign: 'Letrero de ruta', priceCards: 'Precios', plain: 'Hoja para leer' },
+      lineHint: 'Toca para escucharla',
+      found: 'Está aquí',
+      lookHere: 'Mira aquí',
+      dir: { left: 'a la izquierda', right: 'a la derecha' },
+    },
     keyboard: {
       key: (jamo: string, sound: string) => `${jamo}, ${sound}`,
       shift: 'Shift, más letras',

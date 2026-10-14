@@ -17,6 +17,7 @@ import type { MissionCard } from '../homework/mission-builder';
 import { scopeFor } from '../minigame-config';
 import { storiesAll } from '../../content/stories';
 import { buildSequenceCards } from '../story/sequence-cards';
+import { REALIA_FIXTURES } from '../../navigation/realia-read-e2e-fixture';
 
 /**
  * F-I18N-001 §3.6: the screens show content titles, blurbs and glosses through
@@ -87,6 +88,35 @@ describe('content-locale: one helper per kind of shipped content', () => {
     expect(es.cardPairs?.find((p) => p.romanization === 'gimbap')?.en).toBe('Kimbap (es)');
     expect(es.cardPairs?.find((p) => p.romanization === 'bap')?.en).toBe('Rice');
     expect(localizeScope(scope, 'minigame:s2-life-card-1', 'en', overlays)).toBe(scope);
+  });
+
+  it('localizes a Realia Read scope: question, picture label and the found-line gloss (row G-2)', () => {
+    const scope = REALIA_FIXTURES.menu;
+    const ref = 'minigame:e2e-realia-menu';
+    const ko: Overlays = {
+      es: {},
+      ko: {
+        [ref]: {
+          'realiaRead.rounds.q1.question': '이건 얼마예요?',
+          'realiaRead.rounds.q4.options.bread.label': '빵',
+          'realiaRead.realia.entries.ramyeon.text.gloss': '라면 (ko)',
+          'realiaRead.realia.entries.ramyeon.value.gloss': '3,000원 (ko)',
+        },
+      },
+    };
+    const out = localizeScope(scope, ref, 'ko', ko);
+    const rounds = out.realiaRead!.rounds;
+    expect(rounds.find((r) => r.id === 'q1')!.questionEn).toBe('이건 얼마예요?');
+    const q4 = rounds.find((r) => r.id === 'q4')!;
+    expect(q4.options.find((o) => o.id === 'bread')!.labelEn).toBe('빵');
+    expect(q4.options.find((o) => o.id === 'banana')!.labelEn).toBe('banana');
+    const ramyeon = out.realiaRead!.realia.entries.find((e) => e.id === 'ramyeon')!;
+    expect(ramyeon.text.en).toBe('라면 (ko)');
+    expect(ramyeon.value?.en).toBe('3,000원 (ko)');
+    // The taught Korean and its romanization never change.
+    expect(ramyeon.text.ko).toBe('라면');
+    expect(ramyeon.text.romanization).toBe('ramyeon');
+    expect(localizeScope(scope, ref, 'en', ko)).toBe(scope);
   });
 
   it('localizes a story by its id: the story-sequence cards show the overlay caption (F-STORY-001 §3.12 row)', () => {

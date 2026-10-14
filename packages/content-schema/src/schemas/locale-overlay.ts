@@ -72,6 +72,7 @@ export const OVERLAY_FIELDS = {
     'realiaRead.realia.entries.<entry>.value.gloss',
     'realiaRead.rounds.<roundId>.question',
     'realiaRead.rounds.<roundId>.options.<option>.text.gloss',
+    'realiaRead.rounds.<roundId>.options.<option>.label',
     'typeHangul.rounds.<roundId>.prompt',
     'typeHangul.rounds.<roundId>.target.gloss',
     'traceWord.rounds.<roundId>.word.gloss',

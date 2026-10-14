@@ -589,6 +589,12 @@ export const learner = {
       missHoya: 'Listen again',
       empty: 'Nothing to play here',
     },
+    /** Realia Read (F-CURR-001 G-2): the line hint under the drawn sheet, the miss bubble, the empty state. */
+    realia: {
+      lineHint: 'Tap a line to hear it.',
+      missHoya: 'Look again',
+      empty: 'Nothing to play here',
+    },
     /**
      * Voice Echo (behind `flags.voiceEchoEnabled`, off at launch): listen, say it back, confirm.
      * The shipped caption ended in a tiger emoji; the dictionary carries no emoji (CLAUDE.md), so it is dropped.
@@ -623,6 +629,28 @@ export const learner = {
       heading: 'Match the meaning',
       instruction: 'Tap a Korean word, then its English meaning.',
       nowMeaning: 'Now tap its meaning on the right.',
+    },
+    /**
+     * Sentence Builder (`order-it`, F-CURR-001 §3.4, §3.7): word tiles tapped into order, or the particle
+     * that fits. A miss is never "wrong": Hoya says why the tile does not go here yet. The Check reuses
+     * `listenPick.checkTitle` and the progress pill; Hear it is `audio.hearIt`.
+     */
+    sentenceBuilder: {
+      heading: 'Build the sentence',
+      instruction: 'Tap the words in order.',
+      /** A round whose one open place is a particle (i or ga, eul or reul). */
+      particleInstruction: 'Tap the piece that fits.',
+      /** The label over the sentence's meaning in the UI language. */
+      meaning: 'Meaning',
+      miss: 'Not that one yet. Try another word.',
+      /** The tapped word is the sentence's last one (Korean puts the verb or describing word last). */
+      missLastWord: 'In Korean, the doing or describing word comes last.',
+      /** A particle miss; the quest's own Discover note follows as content. */
+      missParticle: 'Look at how the word before it ends.',
+      /** The second miss on one place: the right tile is ringed. */
+      lookHere: 'This one comes next.',
+      built: 'You built the sentence!',
+      empty: 'Nothing to play here',
     },
     /**
      * Type Hangul (F-CURR-001 G-3, design/wireframes/minigame/type-hangul.md): type on the in-app two-set
@@ -1280,6 +1308,8 @@ export const learner = {
       typeHangul: 'Type in Hangul',
       traceWord: 'Trace a word',
       writeFrame: 'Finish a sentence of your own',
+      /** Sentence Builder (`order-it`, row G-1): it counts for reading and writing. */
+      sentenceBuilder: 'Build a sentence',
     },
     /** The pip legend in an open stage (section 3.4): drawn shapes plus these words. */
     legend: {

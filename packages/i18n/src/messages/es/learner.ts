@@ -449,6 +449,11 @@ export const learner = {
       missHoya: 'Escucha otra vez',
       empty: 'Aquí no hay nada para jugar',
     },
+    realia: {
+      lineHint: 'Toca una línea para escucharla.',
+      missHoya: 'Mira otra vez',
+      empty: 'Aquí no hay nada para jugar',
+    },
     voiceEcho: {
       heading: 'Dilo en voz alta',
       bubble: "Escúchame y luego repítelo en voz alta. Toca 'Lo dije' al terminar.",
@@ -475,6 +480,18 @@ export const learner = {
       heading: 'Une el significado',
       instruction: 'Toca una palabra coreana y luego su significado.',
       nowMeaning: 'Ahora toca su significado a la derecha.',
+    },
+    sentenceBuilder: {
+      heading: 'Arma la oración',
+      instruction: 'Toca las palabras en orden.',
+      particleInstruction: 'Toca la parte que encaja.',
+      meaning: 'Significado',
+      miss: 'Esa todavía no. Prueba otra palabra.',
+      missLastWord: 'En coreano, la palabra que dice qué pasa o cómo es algo va al final.',
+      missParticle: 'Mira cómo termina la palabra de antes.',
+      lookHere: 'Esta va ahora.',
+      built: '¡Armaste la oración!',
+      empty: 'Aquí no hay nada para jugar',
     },
     typeHangul: {
       heading: {
@@ -1000,6 +1017,7 @@ export const learner = {
       typeHangul: 'Teclea en hangul',
       traceWord: 'Traza una palabra',
       writeFrame: 'Completa tu propia oración',
+      sentenceBuilder: 'Arma una oración',
     },
     legend: {
       title: 'Qué significan las formas',

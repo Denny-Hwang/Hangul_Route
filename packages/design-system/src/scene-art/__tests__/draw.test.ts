@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { CARD_SIZE, drawScene, type DrawItem, type DrawNode } from '../draw';
+import { CARD_SIZE, drawProp, drawScene, type DrawItem, type DrawNode } from '../draw';
 import { hoyaItem } from '../hoya';
+import { REALIA_REGISTRY } from '../realia-registry';
 import { resolveColor } from '../tokens-map';
 import type { ItemDef, Shape } from '../types';
 import { makeArt, makeProp, makeRegistry } from './fixtures';
@@ -156,5 +157,20 @@ describe('drawScene: cards', () => {
     const scene = drawScene(makeArt({ layers: [{ ref: 'card:book', x: 200, y: 250 }] }), registry);
     const card = scene.items.find((i) => i.tag === 'card');
     expect(card).toMatchObject({ transform: `matrix(1 0 0 1 ${200 - CARD_SIZE / 2} ${250 - CARD_SIZE})` });
+  });
+});
+
+describe('drawProp (F-CURR-001 G-2: a realia dressing on its own)', () => {
+  it('draws a registered prop in its own box, every shape in tokens', () => {
+    const drawn = drawProp('prop:realia-awning', REALIA_REGISTRY);
+    expect(drawn?.viewBox).toBe('0 0 400 40');
+    expect(drawn?.items).toHaveLength(9);
+    // Placed at its anchor (w / 2, h): the identity matrix, so the box is the viewBox.
+    expect(drawn?.items.every((i) => i.transform === 'matrix(1 0 0 1 0 0)')).toBe(true);
+  });
+
+  it('returns null for an unknown or inherited ref', () => {
+    expect(drawProp('prop:realia-poster', REALIA_REGISTRY)).toBeNull();
+    expect(drawProp('toString', REALIA_REGISTRY)).toBeNull();
   });
 });
