@@ -6,9 +6,12 @@ import { controlsPastEdge, expectNoHorizontalOverflow } from './viewport';
 
 /**
  * F-VOC-003 C-5: the flashcards, the quick check and the chunk summary
- * (design/screens/vocab/cards.md). Words stays behind `flags.vocabTopicsEnabled`
- * (off until C-7), so the suite runs on the fixture bundle, which opens the topic
- * page through `window.__hrVocabE2E.openTopic(key)`; Learn is a real button there.
+ * (design/screens/vocab/cards.md). Words is behind `flags.vocabTopicsEnabled`, ON by
+ * default since C-7 (owner decision 2026-10-13). The suite runs on the fixture bundle,
+ * which opens the topic page through `window.__hrVocabE2E.openTopic(key)`; Learn is a
+ * real button there. The release build checks the learner's own way in (Library, Words,
+ * a topic, Learn); a build made with `EXPO_PUBLIC_VOCAB_TOPICS_ENABLED=false`
+ * (`E2E_VOCAB_TOPICS=0`) checks the off switch.
  *
  *   pnpm --filter @hangul-route/mobile build:web:fixtures
  *   STORY_FIXTURES=1 pnpm --filter @hangul-route/mobile exec playwright test vocab-cards
@@ -456,8 +459,30 @@ test.describe('Words flashcards (fixture bundle)', () => {
   });
 });
 
-test.describe('Words flashcards with the flag off (the release build, dist/)', () => {
-  test.skip(FIXTURE_BUILD || process.env.E2E_VOCAB_TOPICS === '1', 'the fixture bundle and the Words build offer Words');
+test.describe('Words flashcards on the release build (on by default since C-7)', () => {
+  test.skip(FIXTURE_BUILD || process.env.E2E_VOCAB_TOPICS === '0', 'runs on the release build (dist/) made with the default flags');
+
+  test('Library, Words, Food, Learn: the flashcards open on the first word, with no shame copy', async ({ page }) => {
+    const errors: string[] = [];
+    page.on('pageerror', (e) => errors.push(String(e)));
+    await newLearner(page);
+    await page.getByText('Library', { exact: true }).last().click();
+    await expect(page.getByRole('heading', { name: 'Heritage Library' })).toBeVisible();
+    await page.getByRole('tab', { name: 'Words' }).click();
+    await page.getByTestId('vocab-topic-tile-food').click();
+    await expect(page.getByTestId('vocab-topic-title')).toHaveText('Food');
+    await page.getByTestId('vocab-activity-learn').click();
+    await expect(page.getByTestId('vocab-cards')).toBeVisible();
+    await expect(card(page)).toBeVisible();
+    expect(await page.getByTestId('vocab-cards').innerText()).not.toMatch(SHAME);
+    await expectNoHorizontalOverflow(page);
+    await shot(page, 'vocab-c7-release-cards');
+    expect(errors).toEqual([]);
+  });
+});
+
+test.describe('Words flashcards with the flag off (a build made with EXPO_PUBLIC_VOCAB_TOPICS_ENABLED=false)', () => {
+  test.skip(FIXTURE_BUILD || process.env.E2E_VOCAB_TOPICS !== '0', 'needs a build made with EXPO_PUBLIC_VOCAB_TOPICS_ENABLED=false, then E2E_VOCAB_TOPICS=0');
 
   test('no Words entry, so no way into the flashcards', async ({ page }) => {
     await newLearner(page);

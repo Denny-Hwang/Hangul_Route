@@ -7,16 +7,20 @@ import { shot } from './shots';
  * F-VOC-005 P-3 (section 3.7, section 3.8; wireframe design/wireframes/vocab/flashcards.md G): the
  * Home "Words are ready" card in slot 3 and the parent dashboard Words row.
  *
- * Words stays behind `flags.vocabTopicsEnabled` (off until F-VOC-003 C-7). The fixture bundle offers
- * Words with the flag off (`wordsOffered`), so the card and the row run there:
+ * Words is behind `flags.vocabTopicsEnabled`, ON by default since F-VOC-003 C-7 (owner decision
+ * 2026-10-13), so the card and the row run on the release build and on the fixture bundle (which offers
+ * Words either way, `wordsOffered`):
  *
  *   pnpm --filter @hangul-route/mobile build:web:fixtures
  *   STORY_FIXTURES=1 pnpm --filter @hangul-route/mobile exec playwright test home-vocab-card
  *
- * On the release build (flag off) the same learner sees neither: Home and the dashboard are unchanged.
+ * On a build made with `EXPO_PUBLIC_VOCAB_TOPICS_ENABLED=false` (`E2E_VOCAB_TOPICS=0`) the same learner
+ * sees neither: Home and the dashboard are unchanged.
  */
 
 const FIXTURE_BUILD = process.env.STORY_FIXTURES === '1';
+/** A build made with the flag switched off (the fixture bundle offers Words either way). */
+const WORDS_OFF_BUILD = !FIXTURE_BUILD && process.env.E2E_VOCAB_TOPICS === '0';
 /** A gift, not a guilt trip: no day count and no word about a delay or a miss (section 3.7). */
 const GUILT = /\b(days?|overdue|missed|behind|forgot|wrong|fail\w*)\b/i;
 const PAST = '2026-01-02';
@@ -69,8 +73,8 @@ async function learnerWithDueWords(page: Page): Promise<string> {
   return id;
 }
 
-test.describe('Home "Words are ready" card and the dashboard Words row (fixture bundle)', () => {
-  test.skip(!FIXTURE_BUILD, 'needs the fixture bundle: build:web:fixtures, then STORY_FIXTURES=1');
+test.describe('Home "Words are ready" card and the dashboard Words row (release build and fixture bundle)', () => {
+  test.skip(WORDS_OFF_BUILD, 'this build was made with EXPO_PUBLIC_VOCAB_TOPICS_ENABLED=false');
 
   for (const vp of [
     { width: 375, height: 812 },
@@ -148,8 +152,8 @@ test.describe('Home "Words are ready" card and the dashboard Words row (fixture 
   });
 });
 
-test.describe('Words off (release build)', () => {
-  test.skip(FIXTURE_BUILD, 'the release build: Words is off');
+test.describe('Words off (a build made with EXPO_PUBLIC_VOCAB_TOPICS_ENABLED=false)', () => {
+  test.skip(!WORDS_OFF_BUILD, 'needs a build made with EXPO_PUBLIC_VOCAB_TOPICS_ENABLED=false, then E2E_VOCAB_TOPICS=0');
 
   test('a learner with due words sees no vocabulary card, and the dashboard no Words row', async ({ page }) => {
     const id = await learnerWithDueWords(page);

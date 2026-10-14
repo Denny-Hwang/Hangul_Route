@@ -8,23 +8,23 @@ import { controlsPastEdge, expectNoHorizontalOverflow } from './viewport';
  * F-VOC-003 C-4: the Words picker, the topic page with its word wall, and the
  * Library's Words section (design/screens/vocab/topics.md, topic.md).
  *
- * Words stays behind `flags.vocabTopicsEnabled` (off until C-7), so:
- * - every build: with the flag off the Library has no Words tab (behaviour 1);
+ * Words is behind `flags.vocabTopicsEnabled`, ON by default since C-7 (owner decision 2026-10-13), so:
+ * - the release build (dist/) and the fixture bundle: the Library's Words tab, end to end;
  * - the fixture bundle (`STORY_FIXTURES=1`, served from dist-e2e/): the picker
  *   and topic pages through `window.__hrVocabE2E.openTopics()` /
  *   `openTopic(key)`, words collected with `collect(ids)`;
- * - the Library's Words tab, end to end: in the fixture bundle (which offers
- *   Words with the flag off, `wordsOffered` in screens/vocab/topic-data.ts, so
- *   CI's fixture step runs it) or a build made with
- *   `EXPO_PUBLIC_VOCAB_TOPICS_ENABLED=1` (`E2E_VOCAB_TOPICS=1`).
+ * - a build made with `EXPO_PUBLIC_VOCAB_TOPICS_ENABLED=false` (`E2E_VOCAB_TOPICS=0`): the off
+ *   switch still works, the Library has no Words tab (behaviour 1).
  *
  *   pnpm --filter @hangul-route/mobile build:web:fixtures
  *   STORY_FIXTURES=1 pnpm --filter @hangul-route/mobile exec playwright test vocab-topics
  */
 
 const FIXTURE_BUILD = process.env.STORY_FIXTURES === '1';
-/** A build that offers Words: the fixture bundle, or one made with the flag on. */
-const WORDS_BUILD = FIXTURE_BUILD || process.env.E2E_VOCAB_TOPICS === '1';
+/** A build made with the flag switched off (the fixture bundle offers Words either way, `wordsOffered`). */
+const WORDS_OFF_BUILD = !FIXTURE_BUILD && process.env.E2E_VOCAB_TOPICS === '0';
+/** A build that offers Words: every build since C-7, except one made with the flag switched off. */
+const WORDS_BUILD = !WORDS_OFF_BUILD;
 /** Words and marks a learner never reads here (D3): no fraction, no percent, no "wrong". */
 const SHAME = /\b(wrong|fail\w*|missed|lost|lose|premium|locked)\b|%|\d\s*\/\s*\d|\d+ of \d+/i;
 /**
@@ -119,8 +119,8 @@ async function profileId(page: Page): Promise<string> {
   return id;
 }
 
-test.describe('Words with the flag off (the release build, dist/)', () => {
-  test.skip(WORDS_BUILD, 'the fixture bundle and the Words build offer Words');
+test.describe('Words with the flag off (a build made with EXPO_PUBLIC_VOCAB_TOPICS_ENABLED=false)', () => {
+  test.skip(WORDS_BUILD, 'needs a build made with EXPO_PUBLIC_VOCAB_TOPICS_ENABLED=false, then E2E_VOCAB_TOPICS=0');
 
   test('the Library has no Words tab and no Words copy (behaviour 1)', async ({ page }) => {
     await newLearner(page);
@@ -329,8 +329,8 @@ test.describe('Words picker and topic page (fixture bundle)', () => {
   });
 });
 
-test.describe('the Library Words tab (the fixture bundle, or a build with EXPO_PUBLIC_VOCAB_TOPICS_ENABLED=1)', () => {
-  test.skip(!WORDS_BUILD, 'needs the fixture bundle (STORY_FIXTURES=1) or a build made with EXPO_PUBLIC_VOCAB_TOPICS_ENABLED=1, then E2E_VOCAB_TOPICS=1');
+test.describe('the Library Words tab (the release build and the fixture bundle; on by default since C-7)', () => {
+  test.skip(!WORDS_BUILD, 'this build was made with EXPO_PUBLIC_VOCAB_TOPICS_ENABLED=false');
 
   test('Words is a Library tab with a line, the words collected and the topic grid; a tile opens the topic', async ({ page }) => {
     const errors: string[] = [];
