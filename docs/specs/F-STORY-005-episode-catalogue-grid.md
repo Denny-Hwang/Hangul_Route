@@ -144,7 +144,7 @@ Totals: 112 minutes; 13 stories in cells that hold a lesson (rows 1-10, 13, 15, 
 |---|---|---|---|---|---|
 | Stage 1 | L + 5 | L + 1 | L + 2 | L + 1 | L + 1 |
 | Stage 2 | S-only 2 | L + 1 | S-only 1 | L + 1 | S-only 3 |
-| Stage 3 | S-only 2 | S-only 1 | placeholder | placeholder | placeholder |
+| Stage 3 | S-only 2 | S-only 1 | placeholder | L + 0 | placeholder |
 | Stage 4 | L + 1 | placeholder | L + 0 | placeholder | placeholder |
 | Stage 5 | book later | book later | S-only 1 → book later | book later | book later |
 | Stage 6 | S-only 1 | placeholder | placeholder | placeholder | placeholder |

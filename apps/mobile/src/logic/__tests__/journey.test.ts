@@ -63,11 +63,13 @@ describe('stageAvailability', () => {
     expect(stageAvailability('stage5', [lesson, volume2, ep('other', 'stage5', 'preview', ['q1'], 'life')])).toBe('taste');
     expect(stageAvailability('stage5', [volume2, { ...volume2, id: 'volume-3', volume: 3 }])).toBe('soon');
   });
-  it('matches the real bundle: stage1 open, stage2/4 taste, others soon', () => {
+  it('matches the real bundle: stage1 open, stage2/3/4 taste, others soon', () => {
     expect(stageAvailability('stage1', episodesAll)).toBe('open');
     expect(stageAvailability('stage2', episodesAll)).toBe('taste');
     expect(stageAvailability('stage4', episodesAll)).toBe('taste');
-    expect(stageAvailability('stage3', episodesAll)).toBe('soon');
+    // F-CURR-001 §3.12: Stage 3 reads "taste" from its first shipped cell (S3-4 Animal Sentences).
+    expect(stageAvailability('stage3', episodesAll)).toBe('taste');
+    expect(stageAvailability('stage6', episodesAll)).toBe('soon');
   });
   it('labels are short and come from the message subtree it is given (F-I18N-001 PR 6b)', () => {
     const m = getMessages('en').learner.journey.availability;

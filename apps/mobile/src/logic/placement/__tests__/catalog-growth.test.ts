@@ -128,8 +128,8 @@ describe('a plan made at version 8: Change the plan after Word Builder ships', (
         goals: { focus: 'balanced' },
         unlockedStages: StageKeySchema.options as StageKey[],
       },
-      // Made before the bump: the shipped catalogue read as version 8 (Read Along, S4-1, is version 9 on
-      // main; it is no Stage 2 or 3 quest, so the stage3 start below does not move).
+      // Made before the bumps: the shipped catalogue read as version 8 (Read Along, S4-1, is version 9 and
+      // Animal Sentences, S3-4, version 10; neither is a Stage 2 quest, so the Word Builder widening below holds).
       { ...CATALOG, version: 8 },
     ),
     'route:a',

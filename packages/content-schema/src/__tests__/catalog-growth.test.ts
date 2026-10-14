@@ -190,7 +190,8 @@ describe('regression: a plan made at version 8 from a stage3 result (generate.ts
     unlockedStages: StageKeySchema.options as StageKey[],
   };
   const plan8 = (() => {
-    // Made before the bump: the shipped catalogue read as version 8 (S4-1's Read Along made it 9; no Stage 2 or 3 quest).
+    // Made before the bumps: the shipped catalogue read as version 8 (S4-1's Read Along made it 9, S3-4's Animal Sentences 10;
+    // neither is a Stage 2 quest, so the Word Builder widening below is unchanged).
     const draft = generateCurriculum(PARAMS, { ...CATALOG, version: 8 });
     return { meta: toMeta(draft), items: toPlanItems(draft) };
   })();

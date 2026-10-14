@@ -1,7 +1,8 @@
 import type { Page } from '@playwright/test';
 import { LESSON_EPISODES } from '../../src/content/__generated__/lessons-index';
 import { expect, test } from './fixtures';
-import { completeChildForm, journeyCellName, keepSidewaysIfAsked, passDiscover, playCheckByIds } from './helpers';
+import { completeChildForm, journeyCellName, keepSidewaysIfAsked, passDiscover, playCheckByIds, waitForNextListenPickRound } from './helpers';
+import { shot } from './shots';
 
 /**
  * F-CURR-001 section 5 (row C-2 lands the skeleton; each cell row adds its cell):
@@ -32,6 +33,35 @@ async function reply(page: Page, ko: string): Promise<void> {
   const option = page.getByRole('button', { name: new RegExp(`^${ko.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')} · `) });
   await expect(option).toBeVisible();
   await option.click();
+}
+
+/**
+ * Sentence Builder: tap each tray tile ("Korean, romanization") in order; a built sentence
+ * moves on by itself after the no-sound pause, so the next round's first tile is awaited.
+ */
+async function buildSentence(page: Page, tiles: readonly string[]): Promise<void> {
+  for (const name of tiles) {
+    const tile = page.getByTestId('sentence-builder-tray').getByRole('button', { name, exact: true });
+    await expect(tile).toBeVisible({ timeout: 5_000 });
+    // Past the 50 ms touch window of the last tap.
+    await page.waitForTimeout(120);
+    await tile.click();
+  }
+  await expect(page.getByTestId('sentence-builder-done')).toBeVisible();
+}
+
+/** Listen & Pick: tap each round's option by id; a right tap opens the next round. */
+async function pickByIds(page: Page, ids: readonly string[]): Promise<void> {
+  for (const [i, id] of ids.entries()) {
+    const option = page.getByTestId(`listen-pick-option-${id}`);
+    await expect(option).toBeVisible();
+    // A tap inside the game's double-touch window is dropped: tap again until the card answers.
+    await expect(async () => {
+      await option.click();
+      await expect(option).toHaveAttribute('aria-label', /^Right answer/, { timeout: 250 });
+    }).toPass();
+    if (i < ids.length - 1) await waitForNextListenPickRound(page);
+  }
 }
 
 /** Story Sequence: place the lesson lines in order by card id, then leave the replay. */
@@ -67,6 +97,38 @@ const CELLS: readonly UpperCell[] = [
       await page.getByText('Learning Route', { exact: true }).last().click();
       await page.getByRole('button', { name: /^Stage 4, Dialogue\./ }).click();
       await expect(page.getByRole('button', { name: /^Letters & Books: Read Along\./ })).toBeVisible();
+    },
+  },
+  // F-CURR-001 S3-4: Animal Sentences, q1 "Where Is the Bird?" played through its real games.
+  {
+    episodeId: 'episode:stage3-nature',
+    cellButton: journeyCellName(3, 'Nature & Animals'),
+    title: 'Animal Sentences',
+    playFirstQuest: async (page) => {
+      await page.getByRole('button', { name: 'Start', exact: true }).first().click();
+      await page.getByRole('button', { name: 'Continue' }).click();
+      // Discover: the pattern page (frame, two examples, the note), then the sentence page.
+      await expect(page.getByText('나무에 새가 있어요.').first()).toBeVisible();
+      await page.setViewportSize({ width: 320, height: 720 });
+      await shot(page, 'animal-sentences-q1-discover-320');
+      await passDiscover(page);
+      await page.getByRole('button', { name: 'Play minigame' }).click();
+      await buildSentence(page, ['나무에, namue', '새가, saega', '있어요, isseoyo']);
+      await shot(page, 'animal-sentences-q1-built-320');
+      await buildSentence(page, ['물에, mure', '물고기가, mulgogiga', '있어요, isseoyo']);
+      await buildSentence(page, ['집에, jibe', '고양이가, goyangiga', '있어요, isseoyo']);
+      await buildSentence(page, ['산에, sane', '토끼가, tokkiga', '있어요, isseoyo']);
+      await buildSentence(page, ['산에, sane', '곰이, gomi', '있어요, isseoyo']);
+      await page.getByRole('button', { name: 'Play minigame' }).click();
+      await pickByIds(page, ['bird', 'fox', 'a', 'a']);
+      await playCheckByIds(page, [{ answer: 'bear' }, { answer: 'a' }]);
+      await expect(page.getByText('Finish', { exact: true }).first()).toBeVisible();
+    },
+    expectRouteDay: async (page) => {
+      await page.goto('/');
+      await page.getByText('Learning Route', { exact: true }).last().click();
+      await page.getByRole('button', { name: /^Stage 3, / }).click();
+      await expect(page.getByRole('button', { name: /^Nature & Animals: Animal Sentences\./ })).toBeVisible();
     },
   },
 ];
