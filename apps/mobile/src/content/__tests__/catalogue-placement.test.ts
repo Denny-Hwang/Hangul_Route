@@ -87,15 +87,15 @@ const PLACEMENT: readonly PlacementRow[] = [
   row('gimjang-arirang', 'Gimjang Day: Sharing Kimchi, Singing Arirang', 'life', 2, 5, 'L', 'story-time', 5, '', ['B5', 'C4'], 'seasons-tales'),
   row('dano-ssireum', 'Dano Day: Swings, Masks and Ssireum', 'rites', 2, 5, '-', 'story-time', 4, '', ['B5', 'C4'], 'seasons-tales'),
   row('angbuilgu-sundial', 'The Sky-Facing Pot That Told the Time', 'nature', 2, 4, 'L', 'culture', 11, '', ['E3', 'E5'], 'science-art-life'),
-  row('janggyeong-panjeon', 'Guarded by the Wind', 'crafts', 2, 5, '-', 'culture', 10, '', ['A2', 'D3'], 'hangul-printing'),
-  row('jagyeongnu-water-clock', 'Jang Yeongsil and the Clock That Rang by Itself', 'crafts', 2, 5, '-', 'culture', 12, '', ['E3'], 'science-art-life'),
+  row('janggyeong-panjeon', 'Guarded by the Wind', 'crafts', 2, 5, 'L', 'culture', 10, '', ['A2', 'D3'], 'hangul-printing'),
+  row('jagyeongnu-water-clock', 'Jang Yeongsil and the Clock That Rang by Itself', 'crafts', 2, 5, 'L', 'culture', 12, '', ['E3'], 'science-art-life'),
   row(
     'pansori-tales',
     "Pansori Tales: Heungbu's Swallow and the Clever Rabbit (Traditional Tales)",
     'crafts',
     2,
     6,
-    '-',
+    'L',
     'story-time',
     6,
     '',
@@ -115,7 +115,7 @@ const PLACEMENT: readonly PlacementRow[] = [
 /** The derived matrix of §3.3: L = lesson, a number = stories whose home cell this is. */
 const MATRIX: Record<StageKey, Record<ThemeKey, string>> = {
   stage1: { letters: 'L+5', life: 'L+1', rites: 'L+2', nature: 'L+1', crafts: 'L+1' },
-  stage2: { letters: 'S2', life: 'L+1', rites: 'S1', nature: 'L+1', crafts: 'S3' },
+  stage2: { letters: 'S2', life: 'L+1', rites: 'S1', nature: 'L+1', crafts: 'L+3' },
   stage3: { letters: 'L+2', life: 'S1', rites: '-', nature: '-', crafts: '-' },
   stage4: { letters: 'L+1', life: '-', rites: 'L+0', nature: '-', crafts: '-' },
   stage5: { letters: '-', life: '-', rites: 'S1', nature: '-', crafts: '-' },
@@ -208,11 +208,11 @@ describe('placement table (F-STORY-005 §3.3) against the story files', () => {
     }
   });
 
-  it('totals 112 minutes, 15 stories in lesson cells and 9 in cells without a lesson (Read Along, F-CURR-001 S4-1; First Sentences, S3-1)', () => {
+  it('totals 112 minutes, 18 stories in lesson cells and 6 in cells without a lesson (Read Along S4-1, First Sentences S3-1, Playground Words S2-3)', () => {
     expect(storyFiles.reduce((sum, story) => sum + story.minutes, 0)).toBe(112);
     const inLessonCells = storyFiles.filter((story) => lessonCells.has(homeKey(story)));
-    expect(inLessonCells, GRID_HINT).toHaveLength(15);
-    expect(storyFiles.length - inLessonCells.length, GRID_HINT).toBe(9);
+    expect(inLessonCells, GRID_HINT).toHaveLength(18);
+    expect(storyFiles.length - inLessonCells.length, GRID_HINT).toBe(6);
   });
 
   it('gives every row the "cell holds" of the shipped grid', () => {

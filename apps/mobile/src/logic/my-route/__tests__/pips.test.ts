@@ -48,7 +48,7 @@ describe('cellRowsOf', () => {
     expect(s2[0]?.pips[0]?.key).toBe('episode:stage2-letters');
   });
 
-  it('runs on the real unparsed bundle: Stage 1, 2 + 4 quest pips (Stage 4: Greeting Dialogues 1 + Read Along 3)', () => {
+  it('runs on the real unparsed bundle: Stage 1, 5 + 4 quest pips (Stage 2: two tastes + Playground Words 3; Stage 4: Greeting Dialogues 1 + Read Along 3)', () => {
     const live = { episodes: episodesAll, quests: questsAll };
     const ctx = ctxOf({}, live);
     const count = (stage: StageKey) =>
@@ -56,7 +56,7 @@ describe('cellRowsOf', () => {
     expect(count('stage1')).toBeGreaterThanOrEqual(8);
     expect([count('stage1'), count('stage2'), count('stage4')]).toEqual([
       ctx.order.filter((e) => e.stage === 'stage1').length,
-      2,
+      5,
       4,
     ]);
   });

@@ -69,8 +69,78 @@ async function pickByIds(page: Page, ids: readonly string[]): Promise<void> {
   }
 }
 
+/** Start the episode page's first quest (a soft-prerequisite sheet may ask first) and pass its intro. */
+async function startFirstQuest(page: Page): Promise<void> {
+  await page.getByRole('button', { name: 'Start', exact: true }).first().click();
+  const anyway = page.getByRole('button', { name: 'Play anyway' });
+  await anyway.waitFor({ state: 'visible', timeout: 1500 }).catch(() => undefined);
+  if (await anyway.isVisible()) await anyway.click();
+  await expect(page.getByRole('button', { name: 'Leave quest' })).toBeVisible();
+  await page.getByRole('button', { name: 'Continue' }).click();
+}
+
+/** The ids of the Pic-Word board on screen. */
+const boardIds = (page: Page): Promise<string[]> =>
+  page.locator('[data-testid^="pic-word-picture-"]').evaluateAll((els) => els.map((el) => (el.getAttribute('data-testid') ?? '').replace('pic-word-picture-', '')).sort());
+
+/** Play every Pic-Word board in order: wait for the board (boards advance by themselves), then pair each picture with its word. */
+async function playPicWordBoards(page: Page, boards: readonly (readonly string[])[]): Promise<void> {
+  await page.getByRole('button', { name: 'Play minigame' }).click();
+  for (const ids of boards) {
+    await expect.poll(() => boardIds(page)).toEqual([...ids].sort());
+    for (const id of ids) {
+      await page.getByTestId(`pic-word-picture-${id}`).click();
+      await page.getByTestId(`pic-word-word-${id}`).click();
+    }
+  }
+}
+
+/** Play Card Match: each Korean card (labelled by its romanization), then its meaning. The cards carry a label, not a button role. */
+async function playCardMatch(page: Page, pairs: readonly (readonly [romanization: string, meaning: string])[]): Promise<void> {
+  await page.getByRole('button', { name: 'Play minigame' }).click();
+  for (const [romanization, meaning] of pairs) {
+    await page.getByLabel(`Korean word ${romanization}`, { exact: true }).click();
+    await page.getByLabel(`English meaning ${meaning}`, { exact: true }).click();
+  }
+}
+
 /** Each cell row appends its cell here (S2-1 onward). */
 const CELLS: readonly UpperCell[] = [
+  // F-CURR-001 S2-3: Playground Words q1, At the Playground, played through its real games.
+  {
+    episodeId: 'episode:stage2-crafts',
+    cellButton: journeyCellName(2, 'Play & Crafts'),
+    title: 'Playground Words',
+    playFirstQuest: async (page) => {
+      await startFirstQuest(page);
+      await passDiscover(page);
+      await playPicWordBoards(page, [
+        ['gong', 'namu', 'haneul'],
+        ['gong', 'yeon', 'jajeongeo'],
+        ['nonggu', 'chukgu', 'namu'],
+        ['jajeongeo', 'gong', 'haneul'],
+        ['yeon', 'namu', 'nonggu'],
+        ['yagu', 'jajeongeo', 'yeon'],
+      ]);
+      await playCardMatch(page, [
+        ['geune', 'swing'],
+        ['mikkeureomteul', 'slide'],
+        ['morae', 'sand'],
+        ['gong', 'ball'],
+      ]);
+      // One first-try miss shows the amber nudge, then the ball; the reading round reads 공.
+      await playCheckByIds(page, [{ answer: 'sport-ball', missWith: 'kite' }, { answer: 'gong' }]);
+      await page.getByRole('button', { name: 'See results' }).click();
+      await expect(page.getByText('Next up')).toBeVisible();
+    },
+    expectRouteDay: async (page) => {
+      await page.goto('/');
+      await page.getByText('Learning Route', { exact: true }).last().click();
+      await page.getByRole('button', { name: /^Stage 2, Words\./ }).click();
+      // A shipped, started cell is a button that reads "Playing"; a coming-later cell is no button.
+      await expect(page.getByRole('button', { name: /^Play & Crafts: Playground Words\. Playing\.$/ })).toBeVisible();
+    },
+  },
   // F-CURR-001 S3-1: First Sentences, q1 "It Is a Book" played through its real games.
   {
     episodeId: 'episode:stage3-letters',

@@ -34,8 +34,11 @@ const paramsShape = {
   /** Wording and defaults only. */
   audience: z.enum(['class', 'family', 'self']),
   level: PlacementLevelSchema,
-  /** The exact set from a placement result; wins over `level`. */
-  placedOutQuestIds: z.array(z.string()).max(40).optional(),
+  /**
+   * The exact set from a placement result, or a level's coarse set; wins over `level`. At most 120
+   * (was 40): a stage6 or stage7 level places out every grid quest of Stages 1-6 as F-CURR-001 cells ship.
+   */
+  placedOutQuestIds: z.array(z.string()).max(120).optional(),
   /** A single learner (family, self); empty for a class. Never stored in a plan (`toMeta`). */
   completedQuestIds: z.array(z.string()).max(400).default([]),
   startDate: DateKeySchema,
