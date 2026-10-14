@@ -234,6 +234,9 @@ export const a11y = {
     next: '다음',
     inPlan: '내 계획에 있음',
     notOpen: (title: string) => `${title}: 아직 열리지 않았어요. 레슨 페이지가 열려요.`,
+    /** Title, lines and tags joined by ". ", as in English: the parts arrive in Korean, so the joiner has no word of its own. */
+    row: (title: string, details: readonly string[], tags: readonly string[]) =>
+      `${[title, ...details, ...tags].map((part) => part.trim().replace(/[.!?]+$/, '')).join('. ')}.`,
   },
   presenter: {
     slide: (i: number, n: number, what: string) => `슬라이드 ${i}/${n}, ${what}`,

@@ -90,6 +90,10 @@ describe('Spanish dictionary (F-I18N-001 PR 15)', () => {
     }
     const cell = (finished: number) =>
       es.a11y.journeyCell({ stage: 1, stageTitle: 'Hangul', themeTitle: 'Letras y libros', kind: 'stories-only', complete: false, stories: 2, finished, start: false, placedOut: false });
+    expect(es.caregiver.dashboard.words.counts(1, 1)).toBe('1 conseguida, 1 firme');
+    expect(es.caregiver.dashboard.words.counts(2, 2)).toBe('2 conseguidas, 2 firmes');
+    expect(es.caregiver.dashboard.words.together).toBe('Para ver en familia');
+    expect(es.caregiver.browse.facts.level.readAlong).toBe('Leer escuchando');
     expect(cell(1)).toBe('Etapa 1 Hangul, Letras y libros: 2 historias del patrimonio, 1 terminada');
     expect(cell(2)).toBe('Etapa 1 Hangul, Letras y libros: 2 historias del patrimonio, 2 terminadas');
     expect(es.landing.cards.body(1, 1, 1, 1, 1)).toContain('La Etapa 1 trae 1 tarjeta: 1 común, 1 poco común, 1 rara y 1 legendaria.');
@@ -116,6 +120,7 @@ describe('Spanish dictionary (F-I18N-001 PR 15)', () => {
 const LITERALLY_SHARED: readonly string[] = [
   // Format-only templates: arguments joined by punctuation, a colon, a middle dot or a slash.
   'a11y.homeworkRow',
+  'a11y.access.row', // title, lines and tags joined by ". " (MAR re-review 2026-10-13)
   'a11y.planStatus',
   'a11y.myRoute.later',
   'a11y.myRoute.cell',

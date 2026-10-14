@@ -250,10 +250,11 @@ export function reportsEnabledFor(locale: UiLocale, f: Pick<Flags, 'reportsEnabl
 }
 
 /**
- * UI locales whose `learner.weeklyPlan` words carry a signed review (F-PLAN-002 section 6, P2-8b). The flip is
- * English only: Spanish and Korean join when their re-review is signed.
+ * UI locales whose `learner.weeklyPlan` words carry a signed review (F-PLAN-002 section 6, P2-8b). Spanish and Korean
+ * joined with the 2026-10-13 MAR re-review of `learner` (F-I18N-001 section 3.10). Whether es and ko are selectable is
+ * still `LOCALE_STATUS` (rows 15b / 16b).
  */
-export const ROUTE_REVIEWED_LOCALES: readonly UiLocale[] = ['en'];
+export const ROUTE_REVIEWED_LOCALES: readonly UiLocale[] = ['en', 'es', 'ko'];
 
 /**
  * The effective weekly plan switch for the learner entries (F-PLAN-002 P2-8b): the flag is on **and** the UI
