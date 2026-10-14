@@ -271,10 +271,12 @@ describe('scopeReader: the scope is read once per page', () => {
 
 describe('browseLinksShown (section 4.11): behind browseEnabled() and the app origin', () => {
   const on: ConsoleEnv = { NEXT_PUBLIC_BROWSE: 'enabled' };
-  it('shows on the app origin with the switch on only', () => {
+  it('shows on the app origin unless the switch is off (on by default since BR-14)', () => {
     expect(browseLinksShown(ORIGIN, on)).toBe(true);
-    expect(browseLinksShown(ORIGIN, {})).toBe(false);
-    expect(browseLinksShown(ORIGIN, { NEXT_PUBLIC_BROWSE: 'true' })).toBe(false);
+    expect(browseLinksShown(ORIGIN, {})).toBe(true);
+    expect(browseLinksShown(ORIGIN, { NEXT_PUBLIC_BROWSE: 'true' })).toBe(true);
+    expect(browseLinksShown(ORIGIN, { NEXT_PUBLIC_BROWSE: 'false' })).toBe(false);
+    expect(browseLinksShown(ORIGIN, { NEXT_PUBLIC_BROWSE: '0' })).toBe(false);
     expect(browseLinksShown('https://hangulroute.com', on)).toBe(false);
     expect(browseLinksShown('http://localhost:4173', { ...on, NEXT_PUBLIC_APP_URL: 'http://localhost:4173' })).toBe(true);
   });

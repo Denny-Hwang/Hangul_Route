@@ -14,8 +14,9 @@ import type { Catalog, CatalogCell, CatalogQuest, CatalogStory, CatalogTopic } f
  * holds its `shelf` block; flipping a story to `ready` is that review's change.
  * Version 6 (F-STORY-001 PR 1.9): all 24 stories are `ready`.
  * Version 7 (F-STORY-005 PR 5.6): the Stage 5 rites book ships with three read quests.
+ * Version 8 (F-STORY-005 PR 5.6): the letters, life, nature and crafts books ship (eleven more read quests).
  */
-export const CATALOG_VERSION = 7;
+export const CATALOG_VERSION = 8;
 
 const cell = (
   stage: StageKey,
@@ -59,15 +60,27 @@ const cells: CatalogCell[] = [
   cell('stage4', 'rites', 'Greeting Dialogues', 'shipped', 5, ['quest:stage4-rites-q1']),
   soon('stage4', 'nature', 'Park Conversations'),
   soon('stage4', 'crafts', 'Playdate Talk'),
-  soon('stage5', 'letters', 'Short Stories'),
-  soon('stage5', 'life', 'Family Stories'),
+  cell('stage5', 'letters', 'Stories of Letters', 'shipped', 13, [
+    'quest:story-sejong-new-letters-read',
+    'quest:story-shapes-of-hangeul-read',
+    'quest:story-hangeul-day-read',
+  ]),
+  cell('stage5', 'life', 'Family Stories', 'shipped', 15, [
+    'quest:story-gimjang-arirang-read',
+    'quest:story-kim-hongdo-genre-paintings-read',
+    'quest:story-donguibogam-read',
+  ]),
   cell('stage5', 'rites', 'Festival Tales', 'shipped', 14, [
     'quest:story-seollal-new-year-read',
     'quest:story-dano-ssireum-read',
     'quest:story-chuseok-ganggangsullae-read',
   ]),
-  soon('stage5', 'nature', 'Tiger Folktales'),
-  soon('stage5', 'crafts', 'Craft Stories'),
+  cell('stage5', 'nature', 'Tiger Folktales', 'shipped', 9, ['quest:story-sun-and-moon-read', 'quest:story-angbuilgu-sundial-read']),
+  cell('stage5', 'crafts', 'Craft Stories', 'shipped', 15, [
+    'quest:story-cheugugi-rain-gauge-read',
+    'quest:story-jagyeongnu-water-clock-read',
+    'quest:story-pansori-tales-read',
+  ]),
   soon('stage6', 'letters', 'Read the Menu'),
   soon('stage6', 'life', 'Order Food'),
   soon('stage6', 'rites', 'Travel for Chuseok'),
@@ -105,10 +118,21 @@ const lessonQuests: CatalogQuest[] = [
   lesson('stage2-life-q1', 'stage2', 'life', 'Lunch Box Words', 5),
   lesson('stage2-nature-q1', 'stage2', 'nature', 'Outdoor Words', 5),
   lesson('stage4-rites-q1', 'stage4', 'rites', 'Greeting Dialogues', 4),
-  // The Stage 5 rites book (F-STORY-005 PR 5.6): grid quests that play three stories at the read level.
+  // The Stage 5 books (F-STORY-005 PR 5.6): grid quests that play their stories at the read level.
+  lesson('story-sejong-new-letters-read', 'stage5', 'letters', "King Sejong's New Letters", 4),
+  lesson('story-shapes-of-hangeul-read', 'stage5', 'letters', 'The Secret in the Shapes', 5),
+  lesson('story-hangeul-day-read', 'stage5', 'letters', 'Happy Hangul Day!', 4),
+  lesson('story-gimjang-arirang-read', 'stage5', 'life', 'Gimjang Day: Sharing Kimchi, Singing Arirang', 5),
+  lesson('story-kim-hongdo-genre-paintings-read', 'stage5', 'life', "Kim Hongdo's Pictures of Everyday Life", 5),
+  lesson('story-donguibogam-read', 'stage5', 'life', "Heo Jun's Treasured Mirror of Medicine", 5),
   lesson('story-seollal-new-year-read', 'stage5', 'rites', "Hoya's Seollal Morning", 4),
   lesson('story-dano-ssireum-read', 'stage5', 'rites', 'Dano Day: Swings, Masks and Ssireum', 5),
   lesson('story-chuseok-ganggangsullae-read', 'stage5', 'rites', 'Chuseok: Songpyeon and the Full Moon', 5),
+  lesson('story-sun-and-moon-read', 'stage5', 'nature', 'The Sun and the Moon (A Traditional Tale)', 5),
+  lesson('story-angbuilgu-sundial-read', 'stage5', 'nature', 'The Sky-Facing Pot That Told the Time', 4),
+  lesson('story-cheugugi-rain-gauge-read', 'stage5', 'crafts', 'The Bowl That Measured the Rain', 4),
+  lesson('story-jagyeongnu-water-clock-read', 'stage5', 'crafts', 'Jang Yeongsil and the Clock That Rang by Itself', 5),
+  lesson('story-pansori-tales-read', 'stage5', 'crafts', "Pansori Tales: Heungbu's Swallow and the Clever Rabbit (Traditional Tales)", 6),
 ];
 
 type StoryRow = [slug: string, title: string, stage: number, theme: ThemeKey, minutes: number, anchor?: CatalogStory['anchor'], sampler?: true];

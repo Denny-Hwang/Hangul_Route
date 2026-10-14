@@ -9,10 +9,12 @@ import { expectNoHorizontalOverflow } from './viewport';
  * episode/detail-cell-stories-row D and story/cell-stories B). Festival Tales holds the read quests
  * of three festival stories; its cell (Stage 5 Rites) is also the home of one shelf story, so the
  * book page has the "Heritage stories for this cell" row, and the cell page names the book first.
- * The book plays its stories at the read level: a short Korean sentence per scene.
+ * The book plays its stories at the read level: a short Korean sentence per scene. The letters,
+ * life, nature and crafts books (the rest of PR 5.6) open the same way from their own cells.
  */
 
 const FIXTURE_BUILD = process.env.STORY_FIXTURES === '1';
+const GATED_BUILD = process.env.E2E_CONTENT_GATING === '1';
 const BOOK_CELL = 'Stage 5 Stories, Holidays & Traditions: story book, 1 heritage story';
 const ROW = 'Heritage stories for this cell, 1 heritage story';
 const EMOJI = /\p{Extended_Pictographic}/u;
@@ -39,6 +41,7 @@ async function openBook(page: Page): Promise<void> {
 
 test.describe('the Stage 5 rites book (regular build)', () => {
   test.skip(FIXTURE_BUILD, 'the fixture bundle owns its own cells: see journey-stories.spec.ts');
+  test.skip(GATED_BUILD, 'a free-plan build shows the book preview path: see episode-access.spec.ts');
 
   test('the book cell opens the book page: three stories, then the cell stories row', async ({ page }) => {
     const errors: string[] = [];
@@ -112,6 +115,71 @@ test.describe('the Stage 5 rites book (regular build)', () => {
     await nextPage(page);
     await expect(position(page)).toHaveText('2 / 6');
     await expect(reader).toContainText('설날에는 설빔을 입어요.');
+    const shown = await reader.innerText();
+    expect(shown).not.toContain('{kw:');
+    expect(shown).not.toMatch(EMOJI);
+  });
+});
+
+const OTHER_BOOKS = [
+  {
+    cell: 'Stage 5 Stories, Letters & Books: story book',
+    title: 'Stories of Letters',
+    stories: ['story:sejong-new-letters', 'story:shapes-of-hangeul', 'story:hangeul-day'],
+  },
+  {
+    cell: 'Stage 5 Stories, Food & Daily Life: story book',
+    title: 'Family Stories',
+    stories: ['story:gimjang-arirang', 'story:kim-hongdo-genre-paintings', 'story:donguibogam'],
+  },
+  {
+    cell: 'Stage 5 Stories, Nature & Animals: story book',
+    title: 'Tiger Folktales',
+    stories: ['story:sun-and-moon', 'story:angbuilgu-sundial'],
+  },
+  {
+    cell: 'Stage 5 Stories, Play & Crafts: story book',
+    title: 'Craft Stories',
+    stories: ['story:cheugugi-rain-gauge', 'story:jagyeongnu-water-clock', 'story:pansori-tales'],
+  },
+] as const;
+
+test.describe('the other four Stage 5 books (regular build)', () => {
+  test.skip(FIXTURE_BUILD, 'the fixture bundle owns its own cells: see journey-stories.spec.ts');
+  test.skip(GATED_BUILD, 'a free-plan build shows the book preview path: see episode-access.spec.ts');
+
+  for (const book of OTHER_BOOKS) {
+    test(`the ${book.title} cell opens its book page with its stories and no cell stories row`, async ({ page }) => {
+      const errors: string[] = [];
+      page.on('pageerror', (e) => errors.push(String(e)));
+      await openJourney(page);
+      await page.getByRole('button', { name: book.cell, exact: true }).click();
+      await expect(page.getByTestId('story-episode-title')).toHaveText(book.title);
+      const rows = page.getByTestId('story-episode-rows').locator('[data-testid^="story-episode-row-story:"]');
+      await expect(rows).toHaveCount(book.stories.length);
+      for (const id of book.stories) await expect(page.getByTestId(`story-episode-row-${id}`)).toBeVisible();
+      // No shelf story lives in these Stage 5 cells, so there is no cell stories row.
+      await expect(page.getByTestId('story-episode-cell-stories-row')).toHaveCount(0);
+      await expectNoHorizontalOverflow(page);
+      expect(await page.locator('body').innerText()).not.toMatch(EMOJI);
+      expect(errors).toEqual([]);
+    });
+  }
+
+  test('the letters book reads King Sejong at the read level', async ({ page }) => {
+    await openJourney(page);
+    await page.getByRole('button', { name: OTHER_BOOKS[0].cell, exact: true }).click();
+    await page.getByTestId('story-episode-start-story:sejong-new-letters').click();
+    await expect(page.getByRole('heading', { name: 'Story time' })).toBeVisible();
+    await page.getByRole('button', { name: 'Continue' }).click();
+    await page.getByRole('button', { name: 'Play minigame' }).click();
+    await expect(position(page)).toHaveText('1 / 6');
+    const reader = page.getByTestId('story-reader');
+    await expect(reader).toContainText('세종대왕은 조선의 왕이었어요.');
+    await expect(reader).toContainText('King Sejong, a king of Joseon');
+    await nextPage(page);
+    await expect(position(page)).toHaveText('2 / 6');
+    await expect(reader).toContainText('옛날에는 한자로 글을 썼어요.');
     const shown = await reader.innerText();
     expect(shown).not.toContain('{kw:');
     expect(shown).not.toMatch(EMOJI);

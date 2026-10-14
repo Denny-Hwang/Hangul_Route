@@ -182,7 +182,7 @@ const upperStageTitles: Record<string, Record<string, string>> = {
     crafts: 'Playdate Talk',
   },
   stage5: {
-    letters: 'Short Stories',
+    letters: 'Stories of Letters',
     life: 'Family Stories',
     rites: 'Festival Tales',
     nature: 'Tiger Folktales',

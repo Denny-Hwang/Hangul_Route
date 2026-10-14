@@ -47,11 +47,14 @@ export const GENERATED_HEADER =
  * derived shelf episodes and quests add about 50 KB raw (gzip stays in budget).
  * 1.2 MB since F-STORY-005 PR 5.6: the first Stage 5 book adds a `read` tier to
  * three stories (about 41 KB raw; gzip about 235 KB, still under 260 KB).
+ * 1.3 MB and 65 KB per story since the other four Stage 5 books (PR 5.6): eleven
+ * more `read` tiers add about 137 KB raw (gzip about 251 KB, still under 260 KB);
+ * the largest story, pansori-tales, is about 64 KB raw.
  */
 export const BUDGET = Object.freeze({
-  totalRaw: 1_200_000,
+  totalRaw: 1_300_000,
   totalGzip: 260_000,
-  perStoryRaw: 60_000,
+  perStoryRaw: 65_000,
   artRaw: 130_000,
 });
 

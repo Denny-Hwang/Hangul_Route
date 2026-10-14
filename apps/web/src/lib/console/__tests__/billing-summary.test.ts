@@ -1,6 +1,6 @@
 import { APP_ROUTES, BILLING_RECEIPTS_PATH, FAMILY_LIFETIME_LEARNERS, FREE_CLASS_STUDENT_CAP, SCHOOL_LICENSE_STUDENTS, SCHOOL_LICENSE_TEACHERS, type BillingAccountCard, type BillingSpaceCard, type BillingSummary, type Promo, type ReceiptView } from '@hangul-route/content-schema';
 import { formatDate, formatMinorAmount, getMessages, UI_LOCALES } from '@hangul-route/i18n';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { CONTACT_EMAIL } from '../../../data/contact';
 import { SITE_CLAIMS, type SiteClaims } from '../../../data/site-claims';
 import { actionNoteFor, actionNoteText, billingHomeView, modeBanner, contactHref, includesLines, receiptRow, summaryFailureNotice, type BillingActionNote, type BillingHomeView } from '../billing-summary';
@@ -260,16 +260,38 @@ describe('includesLines: feature lines only while SITE_CLAIMS says the feature i
 
   it.each(['ko', 'es'] as const)('%s: no reports line while reports render only in a reviewed locale', (locale) => {
     const lines = getMessages(locale).console.billing.includesLines;
-    expect(includesLines('family_lifetime', 'family', locale, SITE_CLAIMS)).toEqual(includesLines('family_lifetime', 'family', locale, OFF));
+    expect(includesLines('family_lifetime', 'family', locale, SITE_CLAIMS)).toEqual([...includesLines('family_lifetime', 'family', locale, OFF), lines.family.browse]);
     expect(includesLines('family_lifetime', 'family', locale, ALL_ON)).not.toContain(lines.family.reports);
     expect(includesLines('group_license', 'class', locale, SITE_CLAIMS)).not.toContain(lines.license.reports);
     expect(includesLines('group_license', 'class', locale, ALL_ON)).toEqual([...includesLines('group_license', 'class', locale, OFF), lines.license.browse, lines.license.notes]);
   });
 
-  it('reads SITE_CLAIMS by default, where the reports claims are on (F-REPORT-001 RP-11)', () => {
+  it('reads SITE_CLAIMS by default, where the reports claims (F-REPORT-001 RP-11) and All lessons (F-BROWSE-001 BR-14) are on', () => {
     expect(billingHomeView(summary([card()]), { now }).cards[0]?.offer?.includes).toEqual(includesLines('family_lifetime', 'family', 'en', SITE_CLAIMS));
-    expect(includesLines('family_lifetime', 'family', 'en')).toEqual([...includesLines('family_lifetime', 'family', 'en', OFF), b.includesLines.family.reports]);
-    expect(includesLines('group_license', 'class', 'en')).toEqual([...includesLines('group_license', 'class', 'en', OFF), b.includesLines.license.reports]);
+    expect(includesLines('family_lifetime', 'family', 'en')).toEqual([...includesLines('family_lifetime', 'family', 'en', OFF), b.includesLines.family.browse, b.includesLines.family.reports]);
+    expect(includesLines('group_license', 'class', 'en')).toEqual([...includesLines('group_license', 'class', 'en', OFF), b.includesLines.license.browse, b.includesLines.license.reports]);
+  });
+
+  it('drops the All lessons line when the build switches Lessons off, even with the claim on (F-BROWSE-001 BR-14 rollback)', () => {
+    expect(includesLines('family_lifetime', 'family', 'en', ALL_ON, false)).not.toContain(b.includesLines.family.browse);
+    expect(includesLines('group_license', 'class', 'en', ALL_ON, false)).not.toContain(b.includesLines.license.browse);
+    expect(includesLines('family_lifetime', 'family', 'en', ALL_ON, false)).toContain(b.includesLines.family.reports);
+    vi.stubEnv('NEXT_PUBLIC_BROWSE', 'false');
+    try {
+      expect(includesLines('family_lifetime', 'family', 'en')).not.toContain(b.includesLines.family.browse);
+    } finally {
+      vi.unstubAllEnvs();
+    }
+  });
+
+  it.each(UI_LOCALES)('%s: the All lessons line is in both plans today, worded with no price (F-BROWSE-001 BR-14 copy)', (locale) => {
+    const lines = getMessages(locale).console.billing.includesLines;
+    expect(includesLines('family_lifetime', 'family', locale)).toContain(lines.family.browse);
+    expect(includesLines('group_license', 'class', locale)).toContain(lines.license.browse);
+    for (const line of [lines.family.browse, lines.license.browse]) {
+      expect(line.trim().length).toBeGreaterThan(0);
+      expect(line).not.toMatch(/[$\u20ac\u20a9\d]/);
+    }
   });
 });
 

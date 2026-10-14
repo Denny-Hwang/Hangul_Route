@@ -22,6 +22,7 @@ import { DEFAULT_LOCALE, formatDate, formatMinorAmount, formatUsd, getMessages, 
 import { CONTACT_EMAIL } from '../../data/contact';
 import { SITE_CLAIMS, claimLiveIn, type SiteClaims } from '../../data/site-claims';
 import { planPrice, planTitle, promoPriceLine } from './billing';
+import { browseEnabled } from './config';
 
 /**
  * The billing home's view model — F-BILL-002 B-7 (sections 4.2, 4.3, 4.6, 4.9,
@@ -159,16 +160,21 @@ export function contactHref(locale: UiLocale = DEFAULT_LOCALE): string {
   return `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(getMessages(locale).console.billing.contact.mailSubject)}`;
 }
 
-/** What a plan includes. Feature lines appear only while `claims` says the feature is live (section 4.3). */
-export function includesLines(planKey: PurchasablePlanKey, kind: SpaceKind, locale: UiLocale = DEFAULT_LOCALE, claims: Readonly<SiteClaims> = SITE_CLAIMS): string[] {
+/**
+ * What a plan includes. Feature lines appear only while `claims` says the feature is live (section 4.3). The All lessons
+ * line also needs the build's Lessons switch (`browseEnabled()`, F-BROWSE-001 BR-14), so switching `NEXT_PUBLIC_BROWSE`
+ * off removes the line together with every Lessons entry and Preview link.
+ */
+export function includesLines(planKey: PurchasablePlanKey, kind: SpaceKind, locale: UiLocale = DEFAULT_LOCALE, claims: Readonly<SiteClaims> = SITE_CLAIMS, browseOn: boolean = browseEnabled()): string[] {
   const lines = getMessages(locale).console.billing.includesLines;
+  const browse = browseOn && claimLiveIn(claims, 'browseAsLearner', locale);
   if (planKey === 'family_lifetime') {
     const family = lines.family;
     return [
       family.everyLesson,
       family.learners(FAMILY_LIFETIME_LEARNERS),
       family.cloudSave,
-      ...(claimLiveIn(claims, 'browseAsLearner', locale) ? [family.browse] : []),
+      ...(browse ? [family.browse] : []),
       ...(claimLiveIn(claims, 'parentReports', locale) ? [family.reports] : []),
       ...(claimLiveIn(claims, 'feedbackNotes', locale) ? [family.notes] : []),
     ];
@@ -178,7 +184,7 @@ export function includesLines(planKey: PurchasablePlanKey, kind: SpaceKind, loca
     license.everyStudent,
     license.noCap(FREE_CLASS_STUDENT_CAP),
     ...(kind === 'school' ? [license.school(SCHOOL_LICENSE_TEACHERS, SCHOOL_LICENSE_STUDENTS)] : []),
-    ...(claimLiveIn(claims, 'browseAsLearner', locale) ? [license.browse] : []),
+    ...(browse ? [license.browse] : []),
     ...(claimLiveIn(claims, 'teacherReports', locale) ? [license.reports] : []),
     ...(claimLiveIn(claims, 'feedbackNotes', locale) ? [license.notes] : []),
   ];

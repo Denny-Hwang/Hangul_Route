@@ -49,7 +49,7 @@ describe('the shipped catalogue data', () => {
     for (const cell of CATALOG.cells) expect(cell.episodeId).toBe(`episode:${cell.stage}-${cell.theme}`);
   });
 
-  it('has Stage 1 shipped, four taste cells shipped elsewhere (the Stage 5 rites book since F-STORY-005 PR 5.6) and the other 26 as previews', () => {
+  it('has Stage 1 shipped, three taste cells and the five Stage 5 books (F-STORY-005 PR 5.6) shipped elsewhere, and the other 22 as previews', () => {
     const shipped = CATALOG.cells.filter((c) => c.status === 'shipped').map((c) => c.episodeId);
     expect(shipped).toEqual([
       'episode:stage1-letters',
@@ -60,10 +60,14 @@ describe('the shipped catalogue data', () => {
       'episode:stage2-life',
       'episode:stage2-nature',
       'episode:stage4-rites',
+      'episode:stage5-letters',
+      'episode:stage5-life',
       'episode:stage5-rites',
+      'episode:stage5-nature',
+      'episode:stage5-crafts',
     ]);
     const previews = CATALOG.cells.filter((c) => c.status === 'preview');
-    expect(previews).toHaveLength(26);
+    expect(previews).toHaveLength(22);
     for (const cell of previews) expect(cell.questIds).toEqual([]);
   });
 
@@ -87,8 +91,8 @@ describe('the shipped catalogue data', () => {
       'quest:stage1-crafts-q3',
     ]);
     expect(CATALOG.quests.filter((q) => q.kind === 'lesson').map((q) => q.id)).toContain('quest:stage4-rites-q1');
-    // 15 Stage 1 + 3 taste quests + the 3 read quests of the Stage 5 rites book (F-STORY-005 PR 5.6).
-    expect(CATALOG.quests.filter((q) => q.kind === 'lesson')).toHaveLength(21);
+    // 15 Stage 1 + 3 taste quests + the 14 read quests of the five Stage 5 books (F-STORY-005 PR 5.6).
+    expect(CATALOG.quests.filter((q) => q.kind === 'lesson')).toHaveLength(32);
   });
 
   it('has 24 stories adding up to 112 minutes, each with a listen quest on its shelf episode', () => {
@@ -406,9 +410,20 @@ describe('routeCatalogOf', () => {
       'quest:stage2-life-q1',
       'quest:stage2-nature-q1',
       'quest:stage4-rites-q1',
+      'quest:story-sejong-new-letters-read',
+      'quest:story-shapes-of-hangeul-read',
+      'quest:story-hangeul-day-read',
+      'quest:story-gimjang-arirang-read',
+      'quest:story-kim-hongdo-genre-paintings-read',
+      'quest:story-donguibogam-read',
       'quest:story-seollal-new-year-read',
       'quest:story-dano-ssireum-read',
       'quest:story-chuseok-ganggangsullae-read',
+      'quest:story-sun-and-moon-read',
+      'quest:story-angbuilgu-sundial-read',
+      'quest:story-cheugugi-rain-gauge-read',
+      'quest:story-jagyeongnu-water-clock-read',
+      'quest:story-pansori-tales-read',
     ]);
     expect(route.quests.slice(0, lessons.length).every((q) => q.grid)).toBe(true);
     const stories = route.quests.filter((q) => !q.grid);
