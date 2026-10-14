@@ -111,8 +111,10 @@ beforeEach(() => {
   locales.available = ['en'];
   resetFrameMemory();
   vi.unstubAllEnvs();
-  // Reports are on by default since F-REPORT-001 RP-11; these cases start from every sibling flag off and switch on what they need.
+  // Reports (F-REPORT-001 RP-11) and Lessons (F-BROWSE-001 BR-14) are on by default; these cases start from every
+  // sibling flag off and switch on what they need.
   vi.stubEnv('NEXT_PUBLIC_REPORTS_ENABLED', 'false');
+  vi.stubEnv('NEXT_PUBLIC_BROWSE', 'false');
 });
 afterEach(() => {
   act(() => mounted?.unmount());
@@ -521,7 +523,7 @@ describe('Lessons opens All lessons in the same tab with the pass (F-BROWSE-001 
   });
 
   it('no line region without the Lessons item', async () => {
-    vi.stubEnv('NEXT_PUBLIC_BROWSE', '');
+    vi.stubEnv('NEXT_PUBLIC_BROWSE', 'false');
     const r = await render(fakeEnv({ pathname: '/parent' }), [family]);
     expect(byTestId(r, 'frame-lessons-notice')).toHaveLength(0);
   });

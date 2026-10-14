@@ -2,7 +2,7 @@
   "v": 1,
   "id": "story:pansori-tales",
   "state": "ready",
-  "contentVer": 4,
+  "contentVer": 5,
   "title": {
     "ko": "판소리로 듣는 흥부와 놀부, 토끼와 자라",
     "romanization": "Pansoriro deunneun Heungbuwa Nolbu, tokkiwa jara",
@@ -617,6 +617,369 @@
         "jebi",
         "bak"
       ]
+    },
+    {
+      "level": "read",
+      "scenes": [
+        {
+          "id": "s1",
+          "narrationEn": "In {kw:pansori}, one singer tells a long story, and a drummer keeps the rhythm on a {kw:buk}.",
+          "captionEn": "One singer and one drummer",
+          "line": {
+            "ko": "판소리에서는 한 사람이 노래로 이야기해요.",
+            "romanization": "Pansorieseoneun han sarami noraero iyagihaeyo.",
+            "en": "In pansori, one person tells a story in song.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f1"
+          ],
+          "framing": false,
+          "approximations": [],
+          "art": {
+            "setting": "scene:hanji-backdrop",
+            "layers": [
+              {
+                "ref": "prop:fig-elder-seated",
+                "x": 318,
+                "y": 262,
+                "s": 1.0,
+                "z": "back"
+              },
+              {
+                "ref": "prop:fig-pansori",
+                "x": 190,
+                "y": 262,
+                "s": 1.3
+              },
+              {
+                "ref": "prop:drum",
+                "x": 302,
+                "y": 272,
+                "s": 0.9
+              },
+              {
+                "ref": "prop:crowd-seated",
+                "x": 132,
+                "y": 300,
+                "s": 1.05,
+                "z": "front"
+              },
+              {
+                "ref": "hoya:idle",
+                "x": 40,
+                "y": 298,
+                "s": 0.6
+              }
+            ],
+            "altEn": "A pansori singer with a fan stands beside a seated drummer and his barrel drum, and Hoya watches from the audience."
+          }
+        },
+        {
+          "id": "s3",
+          "narrationEn": "In the tale, kind Heungbu binds the broken leg of a baby swallow, {kw:jebi}.",
+          "captionEn": "Heungbu helps a hurt swallow",
+          "line": {
+            "ko": "흥부가 제비의 다리를 매어 줘요.",
+            "romanization": "Heungbuga jebiui darireul maeeo jwoyo.",
+            "en": "Heungbu binds the swallow's leg.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f5"
+          ],
+          "framing": false,
+          "approximations": [],
+          "art": {
+            "setting": "scene:village-lane",
+            "layers": [
+              {
+                "ref": "prop:fig-villager",
+                "x": 200,
+                "y": 280,
+                "s": 1.35,
+                "tint": "surface.paper"
+              },
+              {
+                "ref": "prop:swallow",
+                "x": 250,
+                "y": 198,
+                "s": 1.1
+              }
+            ],
+            "altEn": "Kind Heungbu stands outside his straw-roofed home as the baby swallow he helped flies beside him."
+          }
+        },
+        {
+          "id": "s4",
+          "narrationEn": "The swallow brings a seed. Heungbu grows big gourds, {kw:bak}, and treasures pour out.",
+          "captionEn": "Treasure pours out of the gourds",
+          "line": {
+            "ko": "박에서 돈과 쌀이 나와요.",
+            "romanization": "Bageseo dongwa ssari nawayo.",
+            "en": "Money and rice come out of the gourds.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f6"
+          ],
+          "framing": false,
+          "approximations": [],
+          "art": {
+            "setting": "scene:village-lane",
+            "layers": [
+              {
+                "ref": "prop:gourds",
+                "x": 200,
+                "y": 290,
+                "s": 1.6
+              },
+              {
+                "ref": "prop:fig-villager",
+                "x": 62,
+                "y": 284,
+                "s": 0.95
+              },
+              {
+                "ref": "prop:fig-woman",
+                "x": 338,
+                "y": 284,
+                "s": 0.95,
+                "tint": "brand.secondaryLight"
+              },
+              {
+                "ref": "prop:swallow",
+                "x": 290,
+                "y": 110,
+                "s": 0.9
+              }
+            ],
+            "altEn": "Heungbu's family splits open a huge gourd and rice and gold coins pour out, while the swallow circles overhead."
+          }
+        },
+        {
+          "id": "s7",
+          "narrationEn": "The rabbit, {kw:tokki}, is fooled and follows the turtle, {kw:jara}, to the sea palace.",
+          "captionEn": "The rabbit follows the turtle",
+          "line": {
+            "ko": "토끼가 자라를 따라가요.",
+            "romanization": "Tokkiga jarareul ttaragayo.",
+            "en": "The rabbit follows the turtle.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f9"
+          ],
+          "framing": false,
+          "approximations": [],
+          "art": {
+            "setting": "scene:sea-palace",
+            "layers": [
+              {
+                "ref": "prop:fig-king-seated",
+                "x": 200,
+                "y": 232,
+                "s": 1.2
+              },
+              {
+                "ref": "prop:fig-officials-kneeling",
+                "x": 86,
+                "y": 282,
+                "s": 0.75
+              },
+              {
+                "ref": "prop:turtle",
+                "x": 282,
+                "y": 288,
+                "s": 1.0,
+                "flip": true
+              },
+              {
+                "ref": "prop:rabbit",
+                "x": 346,
+                "y": 286,
+                "s": 1.05,
+                "flip": true
+              }
+            ],
+            "altEn": "The rabbit arrives at the undersea palace beside the turtle, and the Dragon King and his courtiers look on."
+          }
+        },
+        {
+          "id": "s8",
+          "narrationEn": "The clever rabbit says he left his liver on land. Back on the shore, he hops into the forest.",
+          "captionEn": "The clever rabbit escapes",
+          "line": {
+            "ko": "토끼는 간을 육지에 두고 왔다고 해요.",
+            "romanization": "Tokkineun ganeul yukjie dugo watdago haeyo.",
+            "en": "The rabbit says he left his liver on land.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f10"
+          ],
+          "framing": false,
+          "approximations": [],
+          "art": {
+            "setting": "scene:seashore",
+            "layers": [
+              {
+                "ref": "prop:leafy-tree",
+                "x": 58,
+                "y": 250,
+                "s": 1.5,
+                "z": "back"
+              },
+              {
+                "ref": "prop:leafy-tree",
+                "x": 126,
+                "y": 232,
+                "s": 1.1,
+                "z": "back"
+              },
+              {
+                "ref": "prop:rabbit",
+                "x": 180,
+                "y": 264,
+                "s": 1.5,
+                "flip": true
+              },
+              {
+                "ref": "prop:turtle",
+                "x": 296,
+                "y": 210,
+                "s": 0.9
+              },
+              {
+                "ref": "hoya:cheering",
+                "x": 336,
+                "y": 296,
+                "s": 0.68
+              }
+            ],
+            "altEn": "Back on the shore the clever rabbit hops off into the forest, the turtle watches from the waves, and Hoya cheers."
+          }
+        }
+      ],
+      "checks": [
+        {
+          "id": "r1",
+          "kind": "pick-meaning",
+          "promptEn": "What does {target} mean?",
+          "target": {
+            "ko": "제비",
+            "romanization": "jebi",
+            "en": "swallow (bird)"
+          },
+          "options": [
+            {
+              "id": "a",
+              "en": "Rabbit",
+              "isCorrect": false
+            },
+            {
+              "id": "b",
+              "en": "Turtle",
+              "isCorrect": false
+            },
+            {
+              "id": "c",
+              "en": "Swallow",
+              "isCorrect": true
+            },
+            {
+              "id": "d",
+              "en": "Gourd",
+              "isCorrect": false
+            }
+          ],
+          "explainEn": "Jebi means swallow, a small bird. Heungbu helps a hurt swallow.",
+          "factIds": [
+            "f5"
+          ]
+        },
+        {
+          "id": "r2",
+          "kind": "pick-meaning",
+          "promptEn": "What does {target} mean?",
+          "target": {
+            "ko": "토끼",
+            "romanization": "tokki",
+            "en": "rabbit"
+          },
+          "options": [
+            {
+              "id": "a",
+              "en": "Rabbit",
+              "isCorrect": true
+            },
+            {
+              "id": "b",
+              "en": "Tiger",
+              "isCorrect": false
+            },
+            {
+              "id": "c",
+              "en": "Turtle",
+              "isCorrect": false
+            },
+            {
+              "id": "d",
+              "en": "Swallow",
+              "isCorrect": false
+            }
+          ],
+          "explainEn": "Tokki means rabbit. The clever rabbit escapes from the sea palace.",
+          "factIds": [
+            "f9"
+          ]
+        },
+        {
+          "id": "r3",
+          "kind": "detail",
+          "promptEn": "In the story, what came out of Heungbu's gourds?",
+          "options": [
+            {
+              "id": "a",
+              "en": "Only seeds",
+              "isCorrect": false
+            },
+            {
+              "id": "b",
+              "en": "Money, rice and treasures",
+              "isCorrect": true
+            },
+            {
+              "id": "c",
+              "en": "Water",
+              "isCorrect": false
+            },
+            {
+              "id": "d",
+              "en": "More swallows",
+              "isCorrect": false
+            }
+          ],
+          "explainEn": "When Heungbu's family sawed the gourds open, money, rice and treasures poured out.",
+          "factIds": [
+            "f6"
+          ]
+        }
+      ],
+      "checkpoints": [],
+      "sequenceSceneIds": [
+        "s1",
+        "s3",
+        "s7",
+        "s8"
+      ],
+      "newKeywordIds": [
+        "pansori",
+        "jebi",
+        "bak",
+        "tokki"
+      ],
+      "grammarFocusEn": "-a/-eo jwoyo (do for someone); -dago haeyo (says that)"
     }
   ],
   "coverSceneId": "s1",
@@ -1010,7 +1373,7 @@
     "passes": 3,
     "checkedAt": "2026-10-10",
     "scope": "cluster",
-    "notes": "Third independent pass over 6 episodes / 61 facts / 161 source entries (70 unique URLs). Every URL was re-fetched with my own scripts (UNESCO pages via Wayback copies; heritage.go.kr descriptions via the portal ajax html and khs.go.kr open API; folkency via its JSON API) and each quote or locator was machine-matched to the page text; the few non-matching strings were checked by hand (portal metadata fields, hanja or footnote punctuation, label text). Corrections: (1) pansori scene 2 now gives both UNESCO steps (2003 masterpiece proclamation, 2008 Representative List); (2) pansori f11 states the Aesop title as in the cited Townsend text and the common alternate title; (3) added sources: NFM 놀보박타령 for 'greedy' (f5), 표준국어대사전 타다 for 'sawed' (f6), 한국민족문화대백과사전 선도해 for the Samguk sagi tale (f12); (4) Seollal f9/f10 designation-date locators now cite the KHS open API field. No other change. See seasons-tales.signoff.md. MAR 2026-10-13 language review (F-STORY-001 PR 1.9): Korean strings, romanization and glosses read; findings and outcomes in the PR. MAR 2026-10-13 culture review (F-STORY-001 PR 1.9): heritage accuracy, framing, tone and advisories read; review.advisory confirmed; findings and outcomes in the PR."
+    "notes": "Third independent pass over 6 episodes / 61 facts / 161 source entries (70 unique URLs). Every URL was re-fetched with my own scripts (UNESCO pages via Wayback copies; heritage.go.kr descriptions via the portal ajax html and khs.go.kr open API; folkency via its JSON API) and each quote or locator was machine-matched to the page text; the few non-matching strings were checked by hand (portal metadata fields, hanja or footnote punctuation, label text). Corrections: (1) pansori scene 2 now gives both UNESCO steps (2003 masterpiece proclamation, 2008 Representative List); (2) pansori f11 states the Aesop title as in the cited Townsend text and the common alternate title; (3) added sources: NFM 놀보박타령 for 'greedy' (f5), 표준국어대사전 타다 for 'sawed' (f6), 한국민족문화대백과사전 선도해 for the Samguk sagi tale (f12); (4) Seollal f9/f10 designation-date locators now cite the KHS open API field. No other change. See seasons-tales.signoff.md. MAR 2026-10-13 language review (F-STORY-001 PR 1.9): Korean strings, romanization and glosses read; findings and outcomes in the PR. MAR 2026-10-13 culture review (F-STORY-001 PR 1.9): heritage accuracy, framing, tone and advisories read; review.advisory confirmed; findings and outcomes in the PR. MAR 2026-10-13 language review of the read tier (F-STORY-005 PR 5.6): 5 Korean lines, their romanization (machine-checked) and glosses read for spelling, naturalness and Stage 5 level; 1 change (s1 pansorieseoneun, so the topic and subject agree); findings and outcomes in the PR. MAR 2026-10-13 culture review of the read tier (F-STORY-005 PR 5.6): every line and check compared with its cited facts (no new claim), framing, tone and respectful wording read; no change; told as traditional tales (In the tale); review.advisory unchanged; findings and outcomes in the PR."
   },
   "authorNotes": "REVISED 2026-10-10. Traditional stories: narration describes the tales' content (basic plot per the Encyclopedia of Korean Culture and the National Folk Museum's folk-literature dictionary), not history. Names: the pansori work is 흥보가 (Heungbo/Nolbo) and the novel is 흥부전 (Heungbu/Nolbu); narration uses Heungbu/Nolbu. Ending: the repentance/reconciliation is in the basic plot of the novel Heungbu-jeon (E0066012) AND in the Park Bong-sul and Jeong Gwang-su sung texts (한국민속문학사전 '놀보박타령'); the Encyclopedia's Heungboga entry itself says only that Nolbo is ruined; endings differ (e.g. the 경판본 version ends differently; 신재효's text is described as similar to Jeong Gwang-su's), so narration says 'In well-known versions'. Softened on purpose: Heungbu being beaten and his paid stand-in beatings (매품팔이); Nolbu breaking the swallow's leg is shown only as 'hurt a swallow on purpose'; harmful things from Nolbu's gourds not detailed. Rabbit tale: 'liver' kept because the plot needs it, with a reassurance line right after; the turtle's fate (dies on land or returns empty-handed; in some versions the rabbit's droppings cure the king) is left out. 별주부 (鼈主簿) is the turtle's title, not a name; the 도사 is a sage (道士: one who cultivates the Way). The Korean tale is explicitly distinguished from Aesop's race (summary, scene 6, reference_display, f11). 구토지설: 한국민속문학사전 '수궁가' says Sugungga's frame is the 구토지설 told by Seon Do-hae to Kim Chun-chu and recorded in the Samguk sagi's biographies; the Encyclopedia ('토끼전') names the 구토 tale in the Kim Yu-sin biography as a documented example - narration says only 'an early form is recorded in the Samguk sagi'. Both sources note the older Indian Buddhist (Jataka) roots; not used. 추임새 is now taught in scene 2 and added to vocab (형제 dropped from vocab; it remains the scene 5 Korean word). Combined in one episode to keep the cluster at 6. Theme 'crafts' because the app files performing arts under Play & Crafts. FINAL PASS (3rd check, 2026-10-10): scene 2 now says UNESCO named pansori a masterpiece in 2003 and added it to the Representative List in 2008 (UNESCO page: inscribed 2008, originally proclaimed 2003). f11 now gives the Aesop title as in the cited Townsend text ('The Hare and the Tortoise', also known as 'The Tortoise and the Hare'). 'Greedy' for Nolbu rests on the NFM 놀보박타령 entry, which was added to f5. AUTHORING 2026-10-11 (F-STORY-001 PR 1.8d): title romanization, scene captions and check explanations written from the cited facts; every scene is artPending (text-only tile) until the art PRs; no claim or source changed. Fact scope: f1-f3, f5, f8 (the works and novels), f11 and f12 are documented; f6, f7, f9, f10 (plot) are in-the-tale. 'Let's hear two' (s2) carries an approximation entry. Advisory note now names the hurt swallow. REVIEW 2026-10-11 (PR 1.8d): narration spells Heungbujeon, Tokkijeon; s3 'One day' (rescue undated); s5 follows f7; s6-s8 past tense; PR #208 fixes: s6 caption drops 'loyal' (f8); 'the rabbit' in s7-s8.",
   "errata": []

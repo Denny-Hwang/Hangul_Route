@@ -2,7 +2,7 @@
   "v": 1,
   "id": "story:donguibogam",
   "state": "ready",
-  "contentVer": 4,
+  "contentVer": 5,
   "title": {
     "ko": "허준의 동의보감",
     "romanization": "Heojunui Donguibogam",
@@ -524,6 +524,376 @@
         "chaek",
         "donguibogam"
       ]
+    },
+    {
+      "level": "read",
+      "scenes": [
+        {
+          "id": "s2",
+          "narrationEn": "{kw:heo-jun} was a royal doctor, {kw:uisa}, in Joseon. The king asked him to write a medical book.",
+          "captionEn": "Heo Jun, a royal doctor",
+          "line": {
+            "ko": "허준은 궁궐의 의사였어요.",
+            "romanization": "Heojuneun gunggworui uisayeosseoyo.",
+            "en": "Heo Jun was a doctor at the royal court.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f1"
+          ],
+          "framing": false,
+          "approximations": [],
+          "art": {
+            "setting": "scene:palace-hall",
+            "layers": [
+              {
+                "ref": "prop:fig-king-seated",
+                "x": 200,
+                "y": 188,
+                "s": 1
+              },
+              {
+                "ref": "prop:fig-officials-kneeling",
+                "x": 196,
+                "y": 292,
+                "s": 1.35
+              },
+              {
+                "ref": "prop:papers-loose",
+                "x": 344,
+                "y": 290,
+                "s": 0.8
+              }
+            ],
+            "altEn": "Royal doctors in official dress kneel before King Seonjo in his palace hall as he asks for a new medical book."
+          }
+        },
+        {
+          "id": "s3",
+          "narrationEn": "A war stopped the work. Later the king asked Heo Jun to write the book alone.",
+          "captionEn": "Heo Jun writes the book alone",
+          "line": {
+            "ko": "허준이 혼자 책을 썼어요.",
+            "romanization": "Heojuni honja chaegeul sseosseoyo.",
+            "en": "Heo Jun wrote the book alone.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f2"
+          ],
+          "framing": false,
+          "approximations": [],
+          "art": {
+            "setting": "scene:hanok-room",
+            "layers": [
+              {
+                "ref": "prop:books-stack",
+                "x": 76,
+                "y": 286,
+                "s": 0.9
+              },
+              {
+                "ref": "prop:fig-historian",
+                "x": 200,
+                "y": 286,
+                "s": 1.3
+              },
+              {
+                "ref": "prop:oil-lamp",
+                "x": 296,
+                "y": 278,
+                "s": 1
+              },
+              {
+                "ref": "prop:books-stack",
+                "x": 350,
+                "y": 290,
+                "s": 0.75,
+                "flip": true
+              }
+            ],
+            "altEn": "By lamplight Heo Jun sits writing with a brush, surrounded by stacks of old thread-bound books."
+          }
+        },
+        {
+          "id": "s4",
+          "narrationEn": "In 1610, Heo Jun finished {kw:donguibogam}. 'Bogam' means a treasured mirror, a model to learn from.",
+          "captionEn": "Heo Jun finishes Donguibogam",
+          "line": {
+            "ko": "허준이 동의보감을 완성했어요.",
+            "romanization": "Heojuni donguibogameul wanseonghaesseoyo.",
+            "en": "Heo Jun finished Donguibogam.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f3",
+            "f4"
+          ],
+          "framing": false,
+          "approximations": [],
+          "art": {
+            "setting": "scene:hanji-backdrop",
+            "layers": [
+              {
+                "ref": "prop:books-stack",
+                "x": 150,
+                "y": 262,
+                "s": 1.6
+              },
+              {
+                "ref": "prop:bronze-mirror",
+                "x": 286,
+                "y": 262,
+                "s": 1.6
+              }
+            ],
+            "altEn": "The finished volumes of Donguibogam lie stacked beside a round bronze mirror, since 'bogam' means a treasured mirror."
+          }
+        },
+        {
+          "id": "s5",
+          "narrationEn": "Donguibogam taught that keeping your {kw:geongang}, health, comes before curing sickness.",
+          "captionEn": "Staying healthy comes first",
+          "line": {
+            "ko": "병을 미리 막는 것이 중요해요.",
+            "romanization": "Byeongeul miri mangneun geosi jungyohaeyo.",
+            "en": "Preventing illness early is important.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f5"
+          ],
+          "framing": false,
+          "approximations": [],
+          "art": {
+            "setting": "scene:mountains",
+            "layers": [
+              {
+                "ref": "prop:pine-tree",
+                "x": 50,
+                "y": 262,
+                "s": 1.3,
+                "z": "back"
+              },
+              {
+                "ref": "prop:pine-tree",
+                "x": 352,
+                "y": 258,
+                "s": 1.2,
+                "z": "back",
+                "flip": true
+              },
+              {
+                "ref": "prop:fig-child",
+                "x": 124,
+                "y": 284,
+                "s": 1
+              },
+              {
+                "ref": "hoya:waving",
+                "x": 206,
+                "y": 292,
+                "s": 0.85
+              },
+              {
+                "ref": "prop:fig-child",
+                "x": 286,
+                "y": 284,
+                "s": 1,
+                "tint": "brand.secondaryLight"
+              }
+            ],
+            "altEn": "Hoya and two friends walk happily through a pine forest, breathing the fresh air to stay healthy."
+          }
+        },
+        {
+          "id": "s6",
+          "narrationEn": "The book wrote the everyday Korean names of medicinal herbs, {kw:yakcho}, in Hangul.",
+          "captionEn": "Herb names in Hangul",
+          "line": {
+            "ko": "약초 이름을 한글로 적었어요.",
+            "romanization": "Yakcho ireumeul hangeullo jeogeosseoyo.",
+            "en": "They wrote herb names in Hangul.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f7"
+          ],
+          "framing": false,
+          "approximations": [],
+          "art": {
+            "setting": "scene:mountains",
+            "layers": [
+              {
+                "ref": "prop:herbs",
+                "x": 180,
+                "y": 264,
+                "s": 2
+              },
+              {
+                "ref": "prop:basket",
+                "x": 330,
+                "y": 276,
+                "s": 1.1
+              }
+            ],
+            "altEn": "Wild medicinal herbs such as bellflower and mugwort grow on a sunny hillside beside a basket of picked greens."
+          }
+        },
+        {
+          "id": "s8",
+          "narrationEn": "Copies from the first printing, in 1613, are now National Treasures of Korea.",
+          "captionEn": "First-printing copies are treasures",
+          "line": {
+            "ko": "처음 찍은 책은 국보예요.",
+            "romanization": "Cheoeum jjigeun chaegeun gukboyeyo.",
+            "en": "Copies from the first printing are National Treasures.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f9"
+          ],
+          "framing": false,
+          "approximations": [],
+          "art": {
+            "setting": "scene:modern-room",
+            "layers": [
+              {
+                "ref": "prop:museum-case",
+                "x": 150,
+                "y": 288,
+                "s": 1.6
+              },
+              {
+                "ref": "hoya:reading",
+                "x": 296,
+                "y": 292,
+                "s": 0.8
+              }
+            ],
+            "altEn": "Hoya holds a book close beside a museum case that keeps a treasured first-printing copy of Donguibogam."
+          }
+        }
+      ],
+      "checks": [
+        {
+          "id": "r1",
+          "kind": "pick-meaning",
+          "promptEn": "What does {target} mean?",
+          "target": {
+            "ko": "의사",
+            "romanization": "uisa",
+            "en": "doctor"
+          },
+          "options": [
+            {
+              "id": "a",
+              "en": "Book",
+              "isCorrect": false
+            },
+            {
+              "id": "b",
+              "en": "Doctor",
+              "isCorrect": true
+            },
+            {
+              "id": "c",
+              "en": "King",
+              "isCorrect": false
+            },
+            {
+              "id": "d",
+              "en": "Herb",
+              "isCorrect": false
+            }
+          ],
+          "explainEn": "Uisa means doctor. Heo Jun was a royal doctor.",
+          "factIds": [
+            "f1"
+          ]
+        },
+        {
+          "id": "r2",
+          "kind": "pick-meaning",
+          "promptEn": "What does {target} mean?",
+          "target": {
+            "ko": "약초",
+            "romanization": "yakcho",
+            "en": "medicinal herb"
+          },
+          "options": [
+            {
+              "id": "a",
+              "en": "Health",
+              "isCorrect": false
+            },
+            {
+              "id": "b",
+              "en": "Body",
+              "isCorrect": false
+            },
+            {
+              "id": "c",
+              "en": "Medicinal herb",
+              "isCorrect": true
+            },
+            {
+              "id": "d",
+              "en": "Treasure",
+              "isCorrect": false
+            }
+          ],
+          "explainEn": "Yakcho means medicinal herb. The book wrote herb names in Hangul.",
+          "factIds": [
+            "f7"
+          ]
+        },
+        {
+          "id": "r3",
+          "kind": "detail",
+          "promptEn": "In the story, what did Donguibogam put before curing sickness?",
+          "options": [
+            {
+              "id": "a",
+              "en": "Staying healthy and preventing illness",
+              "isCorrect": true
+            },
+            {
+              "id": "b",
+              "en": "Printing more books",
+              "isCorrect": false
+            },
+            {
+              "id": "c",
+              "en": "Collecting rare stones",
+              "isCorrect": false
+            },
+            {
+              "id": "d",
+              "en": "Writing poems",
+              "isCorrect": false
+            }
+          ],
+          "explainEn": "Donguibogam taught that preventing illness and staying healthy come before curing sickness.",
+          "factIds": [
+            "f5"
+          ]
+        }
+      ],
+      "checkpoints": [],
+      "sequenceSceneIds": [
+        "s2",
+        "s4",
+        "s6",
+        "s8"
+      ],
+      "newKeywordIds": [
+        "heo-jun",
+        "uisa",
+        "donguibogam",
+        "yakcho"
+      ],
+      "grammarFocusEn": "Past -eosseoyo (wrote, finished); -euro/-ro (in): hangeullo"
     }
   ],
   "coverSceneId": "s1",
@@ -806,7 +1176,7 @@
     "passes": 3,
     "checkedAt": "2026-10-10",
     "scope": "cluster",
-    "notes": "Third independent pass. All quotes re-checked programmatically against fetched pages (Sillok, encykorea, 우리역사넷, NMK, KMA; KHS descriptions via the khs.go.kr open API SearchKindOpenapiDt.do?ccbaCpno=...). unesco.org/ich.unesco.org pages could not be fetched directly (connection reset); UNESCO wording and years (2009, 2013, 2018) confirmed from search excerpts of the UNESCO pages and KHS lists. Corrections: Heo Jun birth year dropped from narration/fact (sources conflict: 1539 vs 1546, encykorea internally inconsistent); Jang Yeong-sil rank sentence softened to match the Sillok ('decided to give'); 우리역사넷 added as second source for Donguibogam f4/f5; Ssirum UNESCO locator de-quoted. MAR 2026-10-13 language review (F-STORY-001 PR 1.9): Korean strings, romanization and glosses read; findings and outcomes in the PR. MAR 2026-10-13 culture review (F-STORY-001 PR 1.9): heritage accuracy, framing, tone and advisories read; review.advisory confirmed; findings and outcomes in the PR."
+    "notes": "Third independent pass. All quotes re-checked programmatically against fetched pages (Sillok, encykorea, 우리역사넷, NMK, KMA; KHS descriptions via the khs.go.kr open API SearchKindOpenapiDt.do?ccbaCpno=...). unesco.org/ich.unesco.org pages could not be fetched directly (connection reset); UNESCO wording and years (2009, 2013, 2018) confirmed from search excerpts of the UNESCO pages and KHS lists. Corrections: Heo Jun birth year dropped from narration/fact (sources conflict: 1539 vs 1546, encykorea internally inconsistent); Jang Yeong-sil rank sentence softened to match the Sillok ('decided to give'); 우리역사넷 added as second source for Donguibogam f4/f5; Ssirum UNESCO locator de-quoted. MAR 2026-10-13 language review (F-STORY-001 PR 1.9): Korean strings, romanization and glosses read; findings and outcomes in the PR. MAR 2026-10-13 culture review (F-STORY-001 PR 1.9): heritage accuracy, framing, tone and advisories read; review.advisory confirmed; findings and outcomes in the PR. MAR 2026-10-13 language review of the read tier (F-STORY-005 PR 5.6): 6 Korean lines, their romanization (machine-checked) and glosses read for spelling, naturalness and Stage 5 level; 1 gloss change (s5 early, for miri); findings and outcomes in the PR. MAR 2026-10-13 culture review of the read tier (F-STORY-005 PR 5.6): every line and check compared with its cited facts (no new claim), framing, tone and respectful wording read; no change; the war stays one plain clause (advisory unchanged); review.advisory unchanged; findings and outcomes in the PR."
   },
   "authorNotes": "Sources disagree on the start year of compilation (KHS designation text and encykorea: 1596; KHS portal Memory-of-the-World page: 1597) and on its length (14 vs 16 years), so narration omits both. The number of royal books given to Heo Jun ('500여 권') comes from encykorea only, so narration says 'many'. UNESCO's page says 'compiled in 1613' (the printing year); KHS and encykorea give completion in 1610 and printing in 1613. Omitted: Heo Jun's exile to Uiju (1608–1609); the Jeongyu invasion is referred to only as 'a war broke out'. No remedies or medical advice are presented; prevention is described only as the book's stated principle. Herb names in Hangul: encykorea (compiling principles) plus 우리역사넷/신편한국사 ('모든 향약명을 한글로 표시'). Theme set to 'life' (body and health); BP05 lists 동의보감 at Pillar E (6.E4), so 'crafts' is the grid-aligned alternative. Scene 7 keyword changed to 세계기록유산 so 책 is not repeated. REVISION: the folk-tale entry 허준 설화 (E0063156) was replaced by the person entry 허준 (E0063152) as f1's second source. Birth year: DROPPED in pass 3. KHS gives 1539; encykorea E0063152 is internally inconsistent (infobox 1539 labelled 중종 32 which would be 1537, summary 1539/중종 34, photo captions 1546/명종 1), and other references give 1546, so narration and f1 give no birth year. PASS 3: added 우리역사넷 (신편한국사) as a second source for f4 ('Dongui' = Korea's own medicine, 集例) and f5 (prevention over treatment). PR 1.8c: Hoya's s8 line is 보배 같은 책 rather than the research vocab 보물 같은 책, to avoid the heritage grade 보물 and to echo 보감. s3 keeps 'the doctors were scattered' (f2) and drops 'again' because the story never names an earlier war.",
   "errata": []
