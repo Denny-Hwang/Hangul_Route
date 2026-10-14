@@ -16,7 +16,11 @@
 #   NEXT_PUBLIC_CONTENT_GATING_ENABLED "true" only with Stripe Live, set by the owner with the learner app's
 #                                     EXPO_PUBLIC_CONTENT_GATING_ENABLED (F-ENT-003 OD-2, E3-11); unset = off
 #   CONSOLE_ORIGIN                    where the site's grown-up links point (F-SITE-002 §3.8); unset = this site.
-#                                     Leave unset until the M3 site step; an invalid value fails the build
+#                                     When set, the build also writes out/_redirects (scripts/site-redirects.mjs):
+#                                     /signin, /start, /teach, /parent, /account and everything under them go to
+#                                     the same path there (302, query kept; F-APP-001 §3.13). Leave unset until
+#                                     the M3 site step (owner-runbook.md §E2); a value that is not https on
+#                                     hangulroute.com or a subdomain fails the build
 # Never set NEXT_PUBLIC_SHOW_ALL_LOCALES (or the learner app's EXPO_PUBLIC_SHOW_ALL_LOCALES) on the production
 # build: the first publishes /es and /ko before they ship (F-I18N-001 §3.4); the site ignores the second.
 name = "hangul-route-web"

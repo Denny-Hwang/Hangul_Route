@@ -32,10 +32,13 @@ export const SITE_DEFAULT_CONSOLE_ORIGIN: '' | typeof APP_ORIGIN = '';
 /** Hosts where a plain-http origin is allowed: this machine only (local builds and tests). */
 const LOCAL_HOSTS: ReadonlySet<string> = new Set(['localhost', '127.0.0.1', '[::1]']);
 
+/** The only domain an https `CONSOLE_ORIGIN` may name (itself or a subdomain): a mistyped host is ignored. */
+const SITE_DOMAIN = 'hangulroute.com';
+
 /**
  * The origin of the grown-up pages: `CONSOLE_ORIGIN` trimmed, as an origin without a trailing slash;
- * otherwise `SITE_DEFAULT_CONSOLE_ORIGIN`. `''` means the site's own origin. Only an https URL counts (plain
- * http only on `LOCAL_HOSTS`); any other value falls back to the default, so it never breaks Sign in.
+ * otherwise `SITE_DEFAULT_CONSOLE_ORIGIN`. `''` means the site's own origin. Only an https URL on
+ * hangulroute.com or a subdomain counts (plain http only on `LOCAL_HOSTS`); any other value falls back to the default, so it never breaks Sign in.
  * `next.config.js` repeats this rule and fails the build on such a value, so a typo is seen, not shipped.
  */
 export function grownUpOrigin(env: { CONSOLE_ORIGIN?: string } = { CONSOLE_ORIGIN: process.env.CONSOLE_ORIGIN }): string {
@@ -43,7 +46,8 @@ export function grownUpOrigin(env: { CONSOLE_ORIGIN?: string } = { CONSOLE_ORIGI
   if (!raw) return SITE_DEFAULT_CONSOLE_ORIGIN;
   try {
     const url = new URL(raw);
-    const allowed = url.protocol === 'https:' || (url.protocol === 'http:' && LOCAL_HOSTS.has(url.hostname));
+    const ownHost = url.hostname === SITE_DOMAIN || url.hostname.endsWith(`.${SITE_DOMAIN}`);
+    const allowed = (url.protocol === 'https:' && ownHost) || (url.protocol === 'http:' && LOCAL_HOSTS.has(url.hostname));
     return allowed ? url.origin : SITE_DEFAULT_CONSOLE_ORIGIN;
   } catch {
     return SITE_DEFAULT_CONSOLE_ORIGIN;
