@@ -961,6 +961,10 @@ export const learner = {
       picWordMatch: '그림과 낱말 짝짓기',
       storyRead: '이야기 읽기',
       traceStroke: '글자 따라 쓰기',
+      realiaRead: '메뉴, 표지판, 표 읽기',
+      typeHangul: '한글 자판으로 쓰기',
+      traceWord: '낱말 따라 쓰기',
+      writeFrame: '나만의 문장 완성하기',
     },
     legend: {
       title: '모양의 뜻',

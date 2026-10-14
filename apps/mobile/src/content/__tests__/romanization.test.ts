@@ -8,6 +8,7 @@ import {
   checkJamoRomanization,
   checkProse,
   checkRomanization,
+  discoverItemTexts,
   formatRomanizationFinding,
   lineOfText,
   type RomanizationEntry,
@@ -217,8 +218,7 @@ describe('quests, episodes and avatars romanization (B1)', () => {
         }
         // Discover examples and words (F-QUEST-002 §3.2): taught Korean with romanization and gloss.
         for (const page of s.discover?.pages ?? []) {
-          for (const item of page.items) {
-            const text = item.type === 'jamo' ? item.example : item.word;
+          for (const text of page.items.flatMap(discoverItemTexts)) {
             note(F.quests, text.ko, text.romanization);
             found.push(...pair(F.quests, text.ko, text.romanization).map((m) => `${q.id}/${s.id}: ${m}`));
           }
