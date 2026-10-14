@@ -48,6 +48,13 @@ function pickPrompts(pool: readonly Jamo[], rounds: number, focusIds: readonly s
 }
 
 /**
+ * The letters a Match Sound round may ask by ear: Stage 1's 30. Word Builder's letters
+ * (F-CURR-001 section 3.3) are never asked by sound: ㅐ / ㅔ and ㅚ / ㅙ / ㅞ sound alike
+ * for most speakers today, and its final letters are said as sounds Stage 1 already has.
+ */
+export const SOUND_QUIZ_JAMO_IDS: ReadonlySet<string> = new Set(jamoAll.map((j) => j.id));
+
+/**
  * Build a Match Sound minigame: N rounds, each with `tileCount` distinct jamo.
  * Distractors drawn from the same scope. No duplicates within a round (F-001 §3.5).
  * `rounds` above the pool size cycle the prompts; `focusJamoIds` are always asked.

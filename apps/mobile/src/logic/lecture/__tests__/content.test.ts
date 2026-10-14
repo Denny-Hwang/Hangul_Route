@@ -149,6 +149,17 @@ describe('the presenter content bundle (F-TCH-004 §3.3, §3.13)', () => {
     }
   });
 
+  it('a Word Builder quest shows its new letters and never quizzes them by ear (F-CURR-001 section 3.3)', () => {
+    const b = lectureBundle('en');
+    const { slides, skipped } = expandDeck(deck([{ kind: 'quest', id: 'quest:stage2-letters-q1' }, { kind: 'quiz', from: 'previous', rounds: 4 }]), b, { canPlayKorean: true });
+    const letters = slides.flatMap((s) => (s.kind === 'letter' ? [s.char] : []));
+    for (const ch of ['ㅐ', 'ㅔ', 'ㅒ', 'ㅖ']) expect(letters, ch).toContain(ch);
+    expect(slides.filter((s) => s.kind === 'quiz' && s.prompt.ask === 'sound')).toEqual([]);
+    // The quiz block still runs, on the quest's words (a meaning quiz), not as a skip.
+    expect(slides.filter((s) => s.kind === 'quiz').length).toBeGreaterThan(0);
+    expect(skipped.filter((s) => s.reason === 'scope-too-small')).toEqual([]);
+  });
+
   it('every Stage 5 book quest teaches its story through story slides (F-STORY-005 PR 5.6, F-TCH-004 PR 11)', () => {
     expect(bookQuests.length).toBeGreaterThan(0);
     for (const q of bookQuests) {
