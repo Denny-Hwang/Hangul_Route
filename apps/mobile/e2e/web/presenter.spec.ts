@@ -1303,10 +1303,20 @@ test.describe('PR 9 quiz and class tools at 1280 x 720, with a Korean voice', ()
     await expect(page.getByTestId('presenter-help-language-es')).toHaveAttribute('aria-checked', 'true');
     await expect(page.getByTestId('presenter-help-language-es')).toBeFocused();
     await expect(page.getByTestId('presenter-help-close')).toHaveAccessibleName('Cerrar');
-    expect(await readStored(page, 'device:settings')).toBeNull();
+    // The device locale write would be an async IndexedDB put, so a wrong write can land after a first read.
+    for (let read = 0; read < 4; read += 1) {
+      await page.waitForTimeout(250);
+      expect(await readStored(page, 'device:settings'), `device:settings after ${(read + 1) * 250} ms`).toBeNull();
+    }
     await shot(page, 'presenter-help-language-1280x720');
     await page.keyboard.press('Escape');
     await expect(page.getByTestId('presenter-help')).toHaveCount(0);
+    // Session only: a reload opens the presenter in the device language again.
+    await page.reload();
+    await startLesson(page);
+    await page.keyboard.press('h');
+    await expect(page.getByTestId('presenter-help-language-en')).toHaveAttribute('aria-checked', 'true');
+    expect(await readStored(page, 'device:settings')).toBeNull();
   });
 });
 

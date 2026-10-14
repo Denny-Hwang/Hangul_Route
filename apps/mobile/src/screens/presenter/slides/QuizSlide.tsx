@@ -111,7 +111,9 @@ function Question({ slide, sayIt, onPlaySound }: { slide: QuizBody; sayIt: boole
 /**
  * "Hoya's answer" under a small cheering Hoya; it joins the question row at the reveal, keeping its
  * space before. Stacked, it fits beside the question on one row at 1280 x 720, so the options keep
- * the height their 140-unit letters need.
+ * the height their 140-unit letters need. It stays apart from the story check's row-shaped
+ * `AnswerLine` in QuizParts.tsx on purpose: the quiz's question row has no room for a row-shaped line
+ * beside 140-unit letters, and the story check's prompt has no room for a stacked one.
  */
 function AnswerLine({ shown }: { shown: boolean }): React.ReactElement {
   const { unit, messages } = usePresenterView();
