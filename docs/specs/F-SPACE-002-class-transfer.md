@@ -621,6 +621,8 @@ Merge applies to production, so every migration is `CREATE ... IF NOT EXISTS` on
 
 **Flip gates** (the owner sets `CLASS_TRANSFER=enabled` and `NEXT_PUBLIC_CLASS_TRANSFER=enabled`, never a PR; Worker first):
 
+> **[TV] 2026-10-14:** the owner's decision to turn `CLASS_TRANSFER` on (AMENDMENTS-TEACHER-VISIBILITY-TRANSFER section 1, TV-D13) replaces G1-G5 and G7 for **both** paths that flag opens: the teacher move and the family-started three-slot request of this spec (`/transfer-requests`, `/transfer-prefs`, `settle`). G6 stays closed for both.
+
 - **G1** the owner has confirmed section 9;
 - **G2** T-8 merged: counsel has seen the consent lines, reviewed en/ko/es, and confirmed the retention length;
 - **G3** B1 decided and recorded (a PIN gate for a joining learner who is already in a class or a managed child, or an owner-signed acceptance of the gap); until then privacy copy does not call the transfer "the consent path";
