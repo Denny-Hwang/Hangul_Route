@@ -185,6 +185,9 @@ describe('bootRoot (web): what each root does before it mounts', () => {
     expect(bootRoot(h.env)).toBe('presenter');
     expect(h.area.data.has(UNLOCK_SESSION_KEY)).toBe(false);
     expect(h.area.data.has(CONSOLE_SESSION_KEY)).toBe(false);
+    // A tab opened from All lessons starts with a copy of its sessionStorage, the full browse pass
+    // included; the presenter tab drops it, so typing /browse on a classroom screen asks again (BR-13 review).
+    expect(h.area.data.has('hr:browse:pass')).toBe(false);
     // The deck fragment is the presenter's own to read and strip; the chooser leaves the address alone.
     expect(h.log).toEqual([]);
     expect(peekBootIntent()).toBeNull();
