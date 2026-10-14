@@ -241,7 +241,7 @@ export const MatchSound = ({ content }) => {
 ### 자동 검증 (CI)
 
 - `ci.yml` — typecheck + lint + test
-- `coverage-gate.yml` — logic 90% / platform 70% 분리 리포트
+- `ci.yml` 의 "Measure coverage vs rolling targets" job (`scripts/coverage-gate.mjs`) — logic 90% / platform 70% 분리 리포트
 - `content-validation.yml` — fixture 의 zod 통과
 - R2 Content Validator — fixture·라운드 수 검증 (3 라운드 최소 등 휴리스틱)
 

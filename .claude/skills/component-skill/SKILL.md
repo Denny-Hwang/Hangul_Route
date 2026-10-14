@@ -219,7 +219,7 @@ export default class Button extends React.Component {   // ❌ class, default
 ### 자동 검증 (CI)
 
 - `ci.yml` — typecheck + lint + test
-- `coverage-gate.yml` — 컴포넌트 파일은 테스트 동반 + rolling target 유지
+- `ci.yml` 의 "Measure coverage vs rolling targets" job (`scripts/coverage-gate.mjs`) — 컴포넌트 파일은 테스트 동반 + rolling target 유지
 - `design-token-sync.yml` — 스타일이 토큰만 사용하는지 (하드코딩 탐지 lint rule)
 
 ### 수동 체크리스트 (PR 제출 전)
