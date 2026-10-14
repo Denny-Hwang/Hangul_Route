@@ -15,7 +15,7 @@ export const OVERLAYS: Overlays = {
     },
     "card:story-seollal-new-year": {
       "blurb": "Hoya pasa Seollal, el Año Nuevo lunar, con una familia: ropa nueva (seolbim), una reverencia de Año Nuevo (sebae), un plato caliente de tteokguk y una animada partida de yunnori.",
-      "fact": "Las personas mayores que reciben el sebae responden con palabras de buenos deseos (deokdam); a las niñas y los niños que vienen a hacer la reverencia se les da un poco de dinero, o pasteles de arroz y fruta.",
+      "fact": "Las personas mayores que reciben el sebae responden con palabras de buenos deseos (deokdam); a quienes vienen a hacer la reverencia se les da un poco de dinero, o pasteles de arroz y fruta.",
       "title": "Palabras de buenos deseos"
     },
     "episode:shelf-chuseok-ganggangsullae": {
@@ -1789,7 +1789,7 @@ export const OVERLAYS: Overlays = {
       "facts.f2.claim": "La ropa nueva para Seollal se llama seolbim; sobre todo las niñas pequeñas llevan tradicionalmente saekdong jeogori (una chaqueta con mangas de rayas de arcoíris).",
       "facts.f3.claim": "Sebae es la reverencia de Año Nuevo a los mayores, el primer saludo del año; después de los ritos a los antepasados (charye), las niñas y los niños hacen la reverencia primero a los abuelos y a los padres.",
       "facts.f4.claim": "Al hacer la reverencia, la gente dice deseos de Año Nuevo como «Saehae bok mani badeuseyo» (Recibe muchas bendiciones en el año nuevo); este saludo es una forma moderna de deseo de Año Nuevo.",
-      "facts.f5.claim": "Las personas mayores que reciben el sebae responden con palabras de buenos deseos (deokdam); a las niñas y los niños que vienen a hacer la reverencia se les da un poco de dinero, o pasteles de arroz y fruta.",
+      "facts.f5.claim": "Las personas mayores que reciben el sebae responden con palabras de buenos deseos (deokdam); a quienes vienen a hacer la reverencia se les da un poco de dinero, o pasteles de arroz y fruta.",
       "facts.f6.claim": "El tteokguk, un caldo claro con pastel de arroz blanco en rodajas finas (garaetteok), es la comida típica de Seollal, y un dicho antiguo cuenta que se cumple un año más al comer tteokguk.",
       "facts.f7.claim": "En el yunnori (juego de yut), dos bandos se turnan para tirar cuatro palitos de madera (yut); según cómo caen los palitos, mueven sus fichas en el tablero, y gana el bando que primero lleva todas sus fichas a la meta. Se juega desde el día de Año Nuevo hasta Jeongwol Daeboreum.",
       "facts.f8.claim": "Las cinco tiradas mueven una ficha así: do 1 casilla, gae 2, geol 3, yut 4, mo 5; sacar yut o mo da otra tirada.",
