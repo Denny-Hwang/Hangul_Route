@@ -312,6 +312,10 @@ jobs:
             vocab-topics
             # F-VOC-004 S-5: the Speed Round start sheet, questions and results (Words stays behind its flag until C-7).
             vocab-speed
+            # F-VOC-003 C-5: the flashcards, the quick check and the chunk summary (Words stays behind its flag until C-7).
+            vocab-cards
+            # F-VOC-003 C-6: Words Match, Pic-Word Match on a topic's collected words (Words stays behind its flag until C-7).
+            vocab-match
             # F-VOC-005 P-3: the Home Words are ready card and the dashboard Words row (Words stays behind its flag until C-7).
             home-vocab-card
             # F-STORY-005 PR 5.5b: stories on the Journey, the cell page and its three doors (the fixture shelf stories).

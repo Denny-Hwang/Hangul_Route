@@ -434,6 +434,11 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'a11y.vocab.question.topic': [['Food']],
   'a11y.vocab.speed.sparks': [[0], [1], [3]],
   'a11y.vocab.speed.timeLeft': [[1], [42], [120]],
+  'a11y.vocab.cards.word': [['x']],
+  'a11y.vocab.cards.front': [['Korean: x, sagwa'], ['Korean: x']],
+  'a11y.vocab.cards.back': [['Korean: x, sagwa', 'apple'], ['Korean: x', 'sky blue']],
+  'a11y.vocab.cards.turnedBack': [['Korean: x, sagwa', 'apple']],
+  'a11y.vocab.cards.turnedFront': [['Korean: x, sagwa']],
   // F-REPORT-001 RP-6: the report namespace and a11y.report. Names run to the 20-character display name and dates to
   // the longest short form, so the length budgets see the long case; taught letters and words are stand-ins (no Hangul).
   'report.title.learner': [['Mina'], ['Alexandria Kimberley']],

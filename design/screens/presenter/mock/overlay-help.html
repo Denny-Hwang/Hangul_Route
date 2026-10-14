@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Help overlay (F-TCH-004 PR 9) - design mock</title>
+<link rel="stylesheet" href="presenter.css">
+</head>
+<body>
+<!-- Design mock (F-TCH-004 design pass), not shipped code. Every UI string is a dictionary value or a new key listed in ../README.md "Strings"; Korean, romanization, glosses and titles are the shipped bundle read through expandDeck. -->
+<div class="presenter">
+<div class="stage-box">
+<section class="stage" role="main" tabindex="-1" aria-label="Slide 5 of 71, Letter, ㄱ, g/k">
+<p class="visually-hidden" aria-live="polite">Slide 5 of 71, Letter, ㄱ, g/k</p>
+<span class="counter" aria-hidden="true">5 / 71</span>
+<div class="slide slide-letter">
+<div class="col glyph-col" data-b="0"><span class="glyph ko" lang="ko">ㄱ</span><span class="glyph-rom">g/k</span></div>
+<figure class="stroke-panel" data-b="1"><svg viewBox="0 0 200 200" aria-hidden="true" focusable="false"><path d="M40 50 L160 50 L160 150" fill="none" stroke="var(--colors-text-primary)" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/><circle cx="40" cy="50" r="14" fill="var(--colors-surface-paper)" stroke="var(--colors-brand-secondaryDark)" stroke-width="4"/><text x="40" y="56" text-anchor="middle" font-size="18" font-weight="700" fill="var(--colors-text-primary)" font-family="system-ui, sans-serif">1</text></svg><figcaption class="s-caption">Simplified stroke guide</figcaption></figure>
+<div class="col facts">
+<div class="speak-row" data-b="2"><button class="stage-btn" type="button" aria-label="Play the sound"><svg class="icon"  width="48" height="48" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 9 H8 L13 5 V19 L8 15 H4 Z" fill="var(--colors-brand-secondaryDark)"/><path d="M16.5 9 Q18.5 12 16.5 15" fill="none" stroke="var(--colors-brand-secondaryDark)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M19 7 Q22 12 19 17" fill="none" stroke="var(--colors-brand-secondaryDark)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button><span class="kt"><span class="ko" lang="ko">가</span><span class="rom">ga</span></span></div>
+<div class="col" data-b="3"><p class="s-body"><b>Letter name: giyeok</b></p><p class="s-body t-secondary">a soft, light g (between g and k)</p></div>
+<p class="s-prompt" data-b="4"><span class="kt"><span class="kt-chip"><span class="ko" lang="ko">가족</span><span class="rom">gajok</span></span><span class="gloss">family</span></span></p>
+</div>
+</div>
+</section>
+<div class="cover scroll" role="dialog" aria-modal="true" aria-labelledby="hp-t"><div class="dialog help"><h2 id="hp-t">Keys and controls</h2><dl class="keys">
+<dt><kbd aria-label="ArrowRight"><svg class="icon"  width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M9.5 6 L15.5 12 L9.5 18" fill="none" stroke="var(--colors-text-primary)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></kbd><kbd aria-label="ArrowDown"><svg class="icon"  width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><g transform="rotate(90 12 12)"><path d="M9.5 6 L15.5 12 L9.5 18" fill="none" stroke="var(--colors-text-primary)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></g></svg></kbd><kbd>Space</kbd><kbd>PageDown</kbd><kbd>Enter</kbd></dt><dd>Next</dd>
+<dt><kbd aria-label="ArrowLeft"><svg class="icon"  width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14.5 6 L8.5 12 L14.5 18" fill="none" stroke="var(--colors-text-primary)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></kbd><kbd aria-label="ArrowUp"><svg class="icon"  width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><g transform="rotate(-90 12 12)"><path d="M9.5 6 L15.5 12 L9.5 18" fill="none" stroke="var(--colors-text-primary)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></g></svg></kbd><kbd>PageUp</kbd><kbd>Backspace</kbd></dt><dd>Back</dd>
+<dt><kbd>Home</kbd><kbd>End</kbd></dt><dd>First and last slide</dd>
+<dt><kbd>B</kbd><kbd>.</kbd></dt><dd>Blank the screen</dd>
+<dt><kbd>S</kbd></dt><dd>Play the sound again</dd>
+<dt><kbd>R</kbd></dt><dd>Replay the stroke guide</dd>
+<dt><kbd>Shift+R</kbd></dt><dd>Romanization on or off</dd>
+<dt><kbd>T</kbd></dt><dd>Class timer</dd>
+<dt><kbd>P</kbd></dt><dd>Helper picker</dd>
+<dt><kbd>G</kbd></dt><dd>All slides</dd>
+<dt><kbd>F</kbd></dt><dd>Full screen</dd>
+<dt><kbd>H</kbd><kbd>?</kbd></dt><dd>This help</dd>
+<dt><kbd>Esc</kbd></dt><dd>Close or exit</dd></dl>
+<p class="reason">A presentation clicker works with no setup.</p>
+<div class="switch-row"><b>Romanization</b><span class="btn-row" role="radiogroup"><button class="btn sel" type="button" role="radio" aria-checked="true">always</button><button class="btn" type="button" role="radio" aria-checked="false">hide until tapped</button></span></div>
+<div class="switch-row"><b>Presenter language</b><span class="lang-chips" role="radiogroup"><button class="btn sel" type="button" role="radio" aria-checked="true" lang="en">English</button><button class="btn" type="button" role="radio" aria-checked="false" lang="es">Español</button><button class="btn" type="button" role="radio" aria-checked="false" lang="ko">한국어</button></span></div>
+<label class="toggle"><span class="box" aria-hidden="true"></span><span>Keep controls visible</span></label>
+<div class="btn-row" style="justify-content:flex-end"><button class="btn primary" type="button" data-focused="true">Close</button></div></div></div>
+</div>
+<div class="bar" role="toolbar" aria-label="Lesson controls">
+<div class="status"></div>
+<div class="controls"><button class="ctl " type="button"><svg class="icon"  width="28" height="28" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14.5 6 L8.5 12 L14.5 18" fill="none" stroke="var(--colors-text-primary)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Back</span></button><button class="ctl primary" type="button" data-reveal="Reveal" data-next="Next"><svg class="icon"  width="28" height="28" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M9.5 6 L15.5 12 L9.5 18" fill="none" stroke="var(--colors-text-onPrimary)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Next</span></button><button class="ctl " type="button"><svg class="icon"  width="28" height="28" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 9 H8 L13 5 V19 L8 15 H4 Z" fill="var(--colors-text-primary)"/><path d="M16.5 9 Q18.5 12 16.5 15" fill="none" stroke="var(--colors-text-primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M19 7 Q22 12 19 17" fill="none" stroke="var(--colors-text-primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Sound</span></button><button class="ctl " type="button"><span>Timer</span></button><button class="ctl " type="button"><span>Helper</span></button><button class="ctl " type="button"><span>Blank</span></button><button class="ctl " type="button"><span>Slides</span></button><button class="ctl " type="button" aria-pressed="true"><span>Full screen</span></button><button class="ctl " type="button"><svg class="icon"  width="28" height="28" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6.5 6.5 L17.5 17.5" fill="none" stroke="var(--colors-text-primary)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M17.5 6.5 L6.5 17.5" fill="none" stroke="var(--colors-text-primary)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Exit</span></button></div>
+</div>
+</div>
+<script src="presenter.js"></script>
+</body>
+</html>

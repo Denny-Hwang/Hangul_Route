@@ -291,6 +291,7 @@ describe('topicActivities (section 3.4, T7)', () => {
     suggestion: 'learn',
     optionCount: 4,
     picWordMatch: true,
+    matchPlayable: true,
     screens: ALL_SCREENS,
     copy,
   };
@@ -318,6 +319,8 @@ describe('topicActivities (section 3.4, T7)', () => {
     expect(shape({ ...base, collected: 2 }).map((r) => r[0])).toEqual(['learn', 'speed']);
     expect(shape({ ...base, collected: 3 }).map((r) => r[0])).toEqual(['learn', 'speed', 'match']);
     expect(shape({ ...base, collected: 9, picWordMatch: false }).map((r) => r[0])).toEqual(['learn', 'speed']);
+    // Collected words that cannot share one board (excluded pairs, one picture): no Match, never a dead end.
+    expect(shape({ ...base, collected: 3, matchPlayable: false }).map((r) => r[0])).toEqual(['learn', 'speed']);
   });
 
   it('draws only the activities whose screen is in the build', () => {

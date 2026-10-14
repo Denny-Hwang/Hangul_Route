@@ -45,6 +45,8 @@ import { NoteDetailScreen } from '../screens/notes/NoteDetailScreen';
 import { NotesScreen } from '../screens/notes/NotesScreen';
 import { NoteReportScreen } from '../screens/parent/NoteReportScreen';
 import { NotesGrownUpScreen } from '../screens/parent/NotesGrownUpScreen';
+import { VocabCardsScreen } from '../screens/vocab/VocabCardsScreen';
+import { VocabMatchScreen } from '../screens/vocab/VocabMatchScreen';
 import { VocabTopicScreen } from '../screens/vocab/VocabTopicScreen';
 import { VocabTopicsScreen } from '../screens/vocab/VocabTopicsScreen';
 import { cellStoriesRouteId } from '../logic/story/cell-stories';
@@ -131,6 +133,10 @@ export function RootNavigator(): React.ReactElement {
         {/* Words (F-VOC-003): reachable only from the Library Words section, which needs flags.vocabTopicsEnabled. */}
         <Stack.Screen name="VocabTopics" component={VocabTopicsScreen} />
         <Stack.Screen name="VocabTopic" component={VocabTopicScreen} />
+        {/* The flashcards (F-VOC-003 C-5): opened from a topic page, so also behind flags.vocabTopicsEnabled. */}
+        <Stack.Screen name="VocabCards" component={VocabCardsScreen} />
+        {/* Words Match (F-VOC-003 C-6): Pic-Word Match on the collected words, opened from a topic page. */}
+        <Stack.Screen name="VocabMatch" component={VocabMatchScreen} />
         {/* The Speed Round (F-VOC-004 S-5): launched from a topic page, so also behind flags.vocabTopicsEnabled. */}
         <Stack.Screen name="VocabSpeedRound" component={VocabSpeedRoundScreen} />
         <Stack.Screen name="VocabResults" component={VocabResultsScreen} />
