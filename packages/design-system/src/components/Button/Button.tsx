@@ -77,7 +77,8 @@ export function Button({
   const describedBy: Record<string, string> = webHint ? { 'aria-describedby': hintId } : {};
   // Soft: drawn and announced as disabled, a press does nothing, and it stays in the tab order. Native keeps a
   // disabled view in the screen reader's reach, so it is plainly `disabled` there. On the web a disabled
-  // <button> leaves the tab order, so the button stays enabled and only `aria-disabled` is written to its node.
+  // <button> leaves the tab order, so the button stays enabled and only `aria-disabled` is written to its node. That
+  // relies on react-native-web handing the ref the DOM element (`setAttribute`); a host without it is left alone.
   const soft = softDisabled && !disabled;
   const looksDisabled = disabled || soft;
   const webSoft = soft && Platform.OS === 'web';
