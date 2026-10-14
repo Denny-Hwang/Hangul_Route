@@ -1,0 +1,53 @@
+{
+  "locale": "ko",
+  "domain": "vocab-numbers",
+  "entries": {
+    "vocab-topic:numbers": {
+      "title": "숫자",
+      "blurb": "1부터 10까지 세는 수, 그리고 20과 0이에요.",
+      "hoyaIntro": "하나씩 하나씩 함께 세어 봐요."
+    },
+    "vocab:hana": {
+      "gloss": "1을 뜻하는 우리말 수",
+      "senseNote": "개처럼 세는 말 앞에서는 '한'이 돼요. 예: 한 개."
+    },
+    "vocab:dul": {
+      "gloss": "2를 뜻하는 우리말 수",
+      "senseNote": "개처럼 세는 말 앞에서는 '두'가 돼요. 예: 두 개."
+    },
+    "vocab:set": {
+      "gloss": "3을 뜻하는 우리말 수",
+      "senseNote": "개처럼 세는 말 앞에서는 '세'가 돼요. 예: 세 개."
+    },
+    "vocab:net": {
+      "gloss": "4를 뜻하는 우리말 수",
+      "senseNote": "개처럼 세는 말 앞에서는 '네'가 돼요. 예: 네 개."
+    },
+    "vocab:daseot": {
+      "gloss": "5를 뜻하는 우리말 수"
+    },
+    "vocab:yeoseot": {
+      "gloss": "6을 뜻하는 우리말 수"
+    },
+    "vocab:ilgop": {
+      "gloss": "7을 뜻하는 우리말 수"
+    },
+    "vocab:yeodeol": {
+      "gloss": "8을 뜻하는 우리말 수"
+    },
+    "vocab:ahop": {
+      "gloss": "9를 뜻하는 우리말 수"
+    },
+    "vocab:yeol-ten": {
+      "gloss": "10을 뜻하는 우리말 수"
+    },
+    "vocab:seumul": {
+      "gloss": "20을 뜻하는 우리말 수",
+      "senseNote": "개처럼 세는 말 앞에서는 '스무'가 돼요. 예: 스무 개."
+    },
+    "vocab:yeong-zero": {
+      "gloss": "0, 아무것도 없음을 뜻하는 수",
+      "senseNote": "우리말에는 0을 뜻하는 말이 없어서, 한자에서 온 이 말을 써요. 전화번호를 말할 때는 공이라고 해요."
+    }
+  }
+}

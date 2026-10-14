@@ -1,0 +1,48 @@
+{
+  "locale": "ko",
+  "domain": "vocab-school",
+  "entries": {
+    "vocab-topic:school": {
+      "title": "학교",
+      "blurb": "학교의 사람들, 교실, 가방 속 물건을 나타내는 낱말이에요.",
+      "hoyaIntro": "가방을 챙겨요! 교실에 있는 물건을 찾아봐요."
+    },
+    "vocab:hakgyo": {
+      "gloss": "학생들이 모여 선생님께 배우는 곳"
+    },
+    "vocab:seonsaengnim": {
+      "gloss": "학생을 가르치는 사람",
+      "senseNote": "가르치는 분을 부를 때도 이 말을 써요. 끝에 붙은 '님'은 높임을 나타내요."
+    },
+    "vocab:chingu": {
+      "gloss": "가깝게 지내며 함께 노는 사람"
+    },
+    "vocab:chaek": {
+      "gloss": "글이나 그림을 묶어 만든 읽을거리"
+    },
+    "vocab:yeonpil": {
+      "gloss": "나무 속에 심이 들어 있는, 글씨를 쓰는 도구"
+    },
+    "vocab:gabang": {
+      "gloss": "물건을 넣어 들거나 메고 다니는 것"
+    },
+    "vocab:gongchaek": {
+      "gloss": "글씨를 쓰도록 빈 종이를 묶은 것"
+    },
+    "vocab:jiugae": {
+      "gloss": "연필 자국을 문질러 없애는 물건"
+    },
+    "vocab:chaeksang": {
+      "gloss": "앉아서 공부하거나 글을 쓰는 탁자"
+    },
+    "vocab:uija": {
+      "gloss": "앉을 때 쓰는 가구"
+    },
+    "vocab:gawi": {
+      "gloss": "종이를 자르는, 날이 두 개 달린 도구"
+    },
+    "vocab:chilpan": {
+      "gloss": "교실 앞에 걸려 있어 분필로 글씨를 쓰는 판"
+    }
+  }
+}

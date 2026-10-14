@@ -20,7 +20,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:food-apple",
     "glosses": {
       "en": "apple",
-      "es": "manzana"
+      "es": "manzana",
+      "ko": "빨갛고 동그란 과일"
     }
   },
   {
@@ -32,7 +33,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:food-banana",
     "glosses": {
       "en": "banana",
-      "es": "banana"
+      "es": "banana",
+      "ko": "길고 노란 껍질을 벗겨 먹는 과일"
     }
   },
   {
@@ -44,7 +46,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:food-milk",
     "glosses": {
       "en": "milk",
-      "es": "leche"
+      "es": "leche",
+      "ko": "소에서 얻는 하얀 마실 것"
     }
   },
   {
@@ -56,7 +59,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:food-bread",
     "glosses": {
       "en": "bread",
-      "es": "pan"
+      "es": "pan",
+      "ko": "밀가루 반죽을 구워 만든 음식"
     }
   },
   {
@@ -68,7 +72,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "card:rice",
     "glosses": {
       "en": "cooked rice",
-      "es": "arroz cocido"
+      "es": "arroz cocido",
+      "ko": "쌀에 물을 붓고 끓여 익힌 음식"
     }
   },
   {
@@ -80,7 +85,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "card:kimchi",
     "glosses": {
       "en": "kimchi",
-      "es": "kimchi"
+      "es": "kimchi",
+      "ko": "배추나 무를 양념해 익힌 반찬"
     }
   },
   {
@@ -92,7 +98,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "card:kimbap",
     "glosses": {
       "en": "gimbap (seaweed rice roll)",
-      "es": "gimbap (rollo de arroz con alga)"
+      "es": "gimbap (rollo de arroz con alga)",
+      "ko": "김 위에 밥과 재료를 올려 돌돌 만 음식"
     }
   },
   {
@@ -104,7 +111,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:food-ramyeon",
     "glosses": {
       "en": "instant noodles",
-      "es": "fideos instantáneos"
+      "es": "fideos instantáneos",
+      "ko": "끓는 물에 금방 익혀 먹는 꼬불꼬불한 국수"
     }
   },
   {
@@ -116,7 +124,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:food-water",
     "glosses": {
       "en": "water",
-      "es": "agua"
+      "es": "agua",
+      "ko": "목마를 때 마시는 맑은 액체"
     }
   },
   {
@@ -128,7 +137,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:food-egg",
     "glosses": {
       "en": "egg",
-      "es": "huevo"
+      "es": "huevo",
+      "ko": "닭이 낳은 알"
     }
   },
   {
@@ -140,7 +150,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:food-strawberry",
     "glosses": {
       "en": "strawberry",
-      "es": "fresa"
+      "es": "fresa",
+      "ko": "겉에 작은 씨가 박힌 빨갛고 작은 과일"
     }
   },
   {
@@ -152,7 +163,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:food-tteok",
     "glosses": {
       "en": "rice cake",
-      "es": "pastel de arroz"
+      "es": "pastel de arroz",
+      "ko": "쌀가루를 찌거나 쳐서 만든 음식"
     }
   },
   {
@@ -164,7 +176,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "card:tiger",
     "glosses": {
       "en": "tiger",
-      "es": "tigre"
+      "es": "tigre",
+      "ko": "몸에 검은 줄무늬가 있는 크고 힘센 동물"
     }
   },
   {
@@ -176,7 +189,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:animal-cat",
     "glosses": {
       "en": "cat",
-      "es": "gato"
+      "es": "gato",
+      "ko": "야옹 하고 우는 작은 동물"
     }
   },
   {
@@ -188,7 +202,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:animal-puppy",
     "glosses": {
       "en": "puppy",
-      "es": "perrito"
+      "es": "perrito",
+      "ko": "어린 개"
     }
   },
   {
@@ -200,7 +215,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:animal-rabbit",
     "glosses": {
       "en": "rabbit",
-      "es": "conejo"
+      "es": "conejo",
+      "ko": "귀가 길고 깡충깡충 뛰는 동물"
     }
   },
   {
@@ -212,7 +228,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:animal-bear",
     "glosses": {
       "en": "bear",
-      "es": "oso"
+      "es": "oso",
+      "ko": "몸집이 크고 털이 많은 숲속 동물"
     }
   },
   {
@@ -224,7 +241,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:animal-bird",
     "glosses": {
       "en": "bird",
-      "es": "pájaro"
+      "es": "pájaro",
+      "ko": "날개와 깃털이 있어 하늘을 나는 동물"
     }
   },
   {
@@ -236,7 +254,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:animal-fish",
     "glosses": {
       "en": "fish",
-      "es": "pez"
+      "es": "pez",
+      "ko": "물속에 살며 아가미로 숨 쉬는 동물"
     }
   },
   {
@@ -248,7 +267,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:animal-duck",
     "glosses": {
       "en": "duck",
-      "es": "pato"
+      "es": "pato",
+      "ko": "꽥꽥 울고 물 위에 떠다니는 새"
     }
   },
   {
@@ -260,7 +280,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:animal-fox",
     "glosses": {
       "en": "fox",
-      "es": "zorro"
+      "es": "zorro",
+      "ko": "꼬리가 크고 귀가 뾰족한 들짐승"
     }
   },
   {
@@ -272,7 +293,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:animal-monkey",
     "glosses": {
       "en": "monkey",
-      "es": "mono"
+      "es": "mono",
+      "ko": "나무를 잘 타는 꼬리 긴 동물"
     }
   },
   {
@@ -284,7 +306,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:animal-elephant",
     "glosses": {
       "en": "elephant",
-      "es": "elefante"
+      "es": "elefante",
+      "ko": "코가 아주 길고 몸집이 아주 큰 동물"
     }
   },
   {
@@ -296,7 +319,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:animal-butterfly",
     "glosses": {
       "en": "butterfly",
-      "es": "mariposa"
+      "es": "mariposa",
+      "ko": "알록달록한 날개로 꽃 사이를 나는 곤충"
     }
   },
   {
@@ -308,7 +332,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:color-red",
     "glosses": {
       "en": "red",
-      "es": "rojo"
+      "es": "rojo",
+      "ko": "피나 잘 익은 딸기의 색"
     }
   },
   {
@@ -320,7 +345,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:color-orange",
     "glosses": {
       "en": "orange",
-      "es": "naranja"
+      "es": "naranja",
+      "ko": "귤이나 당근의 색"
     }
   },
   {
@@ -332,7 +358,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:color-yellow",
     "glosses": {
       "en": "yellow",
-      "es": "amarillo"
+      "es": "amarillo",
+      "ko": "바나나나 병아리의 색"
     }
   },
   {
@@ -344,7 +371,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:color-green",
     "glosses": {
       "en": "green",
-      "es": "verde"
+      "es": "verde",
+      "ko": "풀이나 나뭇잎의 색"
     }
   },
   {
@@ -356,7 +384,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:color-blue",
     "glosses": {
       "en": "blue",
-      "es": "azul"
+      "es": "azul",
+      "ko": "깊은 바다처럼 진하고 푸른 색"
     }
   },
   {
@@ -368,7 +397,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:color-purple",
     "glosses": {
       "en": "purple",
-      "es": "morado"
+      "es": "morado",
+      "ko": "포도나 가지의 색"
     }
   },
   {
@@ -380,7 +410,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:color-pink",
     "glosses": {
       "en": "pink",
-      "es": "rosa"
+      "es": "rosa",
+      "ko": "벚꽃처럼 연하고 붉은 색"
     }
   },
   {
@@ -392,7 +423,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:color-skyblue",
     "glosses": {
       "en": "sky blue",
-      "es": "celeste"
+      "es": "celeste",
+      "ko": "맑은 날 올려다보면 보이는 연한 푸른 색"
     }
   },
   {
@@ -404,7 +436,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:color-brown",
     "glosses": {
       "en": "brown",
-      "es": "marrón"
+      "es": "marrón",
+      "ko": "초콜릿이나 흙의 색"
     }
   },
   {
@@ -416,7 +449,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:color-gray",
     "glosses": {
       "en": "gray",
-      "es": "gris"
+      "es": "gris",
+      "ko": "재나 비 오는 날 구름의 색"
     }
   },
   {
@@ -428,7 +462,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:color-white",
     "glosses": {
       "en": "white",
-      "es": "blanco"
+      "es": "blanco",
+      "ko": "눈이나 우유의 색"
     }
   },
   {
@@ -440,7 +475,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:color-black",
     "glosses": {
       "en": "black",
-      "es": "negro"
+      "es": "negro",
+      "ko": "밤하늘이나 숯의 색"
     }
   },
   {
@@ -452,7 +488,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:count-1",
     "glosses": {
       "en": "one",
-      "es": "uno"
+      "es": "uno",
+      "ko": "1을 뜻하는 우리말 수"
     }
   },
   {
@@ -464,7 +501,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:count-2",
     "glosses": {
       "en": "two",
-      "es": "dos"
+      "es": "dos",
+      "ko": "2를 뜻하는 우리말 수"
     }
   },
   {
@@ -476,7 +514,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:count-3",
     "glosses": {
       "en": "three",
-      "es": "tres"
+      "es": "tres",
+      "ko": "3을 뜻하는 우리말 수"
     }
   },
   {
@@ -488,7 +527,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:count-4",
     "glosses": {
       "en": "four",
-      "es": "cuatro"
+      "es": "cuatro",
+      "ko": "4를 뜻하는 우리말 수"
     }
   },
   {
@@ -500,7 +540,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:count-5",
     "glosses": {
       "en": "five",
-      "es": "cinco"
+      "es": "cinco",
+      "ko": "5를 뜻하는 우리말 수"
     }
   },
   {
@@ -512,7 +553,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:count-6",
     "glosses": {
       "en": "six",
-      "es": "seis"
+      "es": "seis",
+      "ko": "6을 뜻하는 우리말 수"
     }
   },
   {
@@ -524,7 +566,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:count-7",
     "glosses": {
       "en": "seven",
-      "es": "siete"
+      "es": "siete",
+      "ko": "7을 뜻하는 우리말 수"
     }
   },
   {
@@ -536,7 +579,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:count-8",
     "glosses": {
       "en": "eight",
-      "es": "ocho"
+      "es": "ocho",
+      "ko": "8을 뜻하는 우리말 수"
     }
   },
   {
@@ -548,7 +592,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:count-9",
     "glosses": {
       "en": "nine",
-      "es": "nueve"
+      "es": "nueve",
+      "ko": "9를 뜻하는 우리말 수"
     }
   },
   {
@@ -560,7 +605,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:count-10",
     "glosses": {
       "en": "ten",
-      "es": "diez"
+      "es": "diez",
+      "ko": "10을 뜻하는 우리말 수"
     }
   },
   {
@@ -572,7 +618,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:count-20",
     "glosses": {
       "en": "twenty",
-      "es": "veinte"
+      "es": "veinte",
+      "ko": "20을 뜻하는 우리말 수"
     }
   },
   {
@@ -584,7 +631,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:count-0",
     "glosses": {
       "en": "zero",
-      "es": "cero"
+      "es": "cero",
+      "ko": "0, 아무것도 없음을 뜻하는 수"
     }
   },
   {
@@ -596,7 +644,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:family-mom",
     "glosses": {
       "en": "mom",
-      "es": "mamá"
+      "es": "mamá",
+      "ko": "어머니를 친근하게 부르는 말"
     }
   },
   {
@@ -608,7 +657,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:family-dad",
     "glosses": {
       "en": "dad",
-      "es": "papá"
+      "es": "papá",
+      "ko": "아버지를 친근하게 부르는 말"
     }
   },
   {
@@ -620,7 +670,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:family-grandma",
     "glosses": {
       "en": "grandmother",
-      "es": "abuela"
+      "es": "abuela",
+      "ko": "아버지나 어머니의 어머니"
     }
   },
   {
@@ -632,7 +683,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:family-grandpa",
     "glosses": {
       "en": "grandfather",
-      "es": "abuelo"
+      "es": "abuelo",
+      "ko": "아버지나 어머니의 아버지"
     }
   },
   {
@@ -644,7 +696,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:family-eonni",
     "glosses": {
       "en": "older sister (said by a woman or girl)",
-      "es": "hermana mayor (lo dice una mujer o niña)"
+      "es": "hermana mayor (lo dice una mujer o niña)",
+      "ko": "여자가 자기보다 나이 많은 여자 형제를 부르는 말"
     }
   },
   {
@@ -656,7 +709,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:family-nuna",
     "glosses": {
       "en": "older sister (said by a man or boy)",
-      "es": "hermana mayor (lo dice un hombre o niño)"
+      "es": "hermana mayor (lo dice un hombre o niño)",
+      "ko": "남자가 자기보다 나이 많은 여자 형제를 부르는 말"
     }
   },
   {
@@ -668,7 +722,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:family-oppa",
     "glosses": {
       "en": "older brother (said by a woman or girl)",
-      "es": "hermano mayor (lo dice una mujer o niña)"
+      "es": "hermano mayor (lo dice una mujer o niña)",
+      "ko": "여자가 자기보다 나이 많은 남자 형제를 부르는 말"
     }
   },
   {
@@ -680,7 +735,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:family-hyeong",
     "glosses": {
       "en": "older brother (said by a man or boy)",
-      "es": "hermano mayor (lo dice un hombre o niño)"
+      "es": "hermano mayor (lo dice un hombre o niño)",
+      "ko": "남자가 자기보다 나이 많은 남자 형제를 부르는 말"
     }
   },
   {
@@ -692,7 +748,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:family-dongsaeng",
     "glosses": {
       "en": "younger brother or sister",
-      "es": "hermano o hermana menor"
+      "es": "hermano o hermana menor",
+      "ko": "자기보다 나이 어린 형제나 자매"
     }
   },
   {
@@ -704,7 +761,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:family-baby",
     "glosses": {
       "en": "baby",
-      "es": "bebé"
+      "es": "bebé",
+      "ko": "태어난 지 얼마 안 된 아주 어린 아이"
     }
   },
   {
@@ -716,7 +774,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:family-family",
     "glosses": {
       "en": "family",
-      "es": "familia"
+      "es": "familia",
+      "ko": "부모와 자식처럼 서로 이어진 한 집안 사람들"
     }
   },
   {
@@ -728,7 +787,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:family-me",
     "glosses": {
       "en": "I, me",
-      "es": "yo"
+      "es": "yo",
+      "ko": "말하는 사람이 자기를 가리키는 말"
     }
   },
   {
@@ -740,7 +800,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:school-school",
     "glosses": {
       "en": "school",
-      "es": "escuela"
+      "es": "escuela",
+      "ko": "학생들이 모여 선생님께 배우는 곳"
     }
   },
   {
@@ -752,7 +813,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:school-teacher",
     "glosses": {
       "en": "teacher",
-      "es": "maestro o maestra"
+      "es": "maestro o maestra",
+      "ko": "학생을 가르치는 사람"
     }
   },
   {
@@ -764,7 +826,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:school-friend",
     "glosses": {
       "en": "friend",
-      "es": "amigo o amiga"
+      "es": "amigo o amiga",
+      "ko": "가깝게 지내며 함께 노는 사람"
     }
   },
   {
@@ -776,7 +839,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "card:book",
     "glosses": {
       "en": "book",
-      "es": "libro"
+      "es": "libro",
+      "ko": "글이나 그림을 묶어 만든 읽을거리"
     }
   },
   {
@@ -788,7 +852,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:school-pencil",
     "glosses": {
       "en": "pencil",
-      "es": "lápiz"
+      "es": "lápiz",
+      "ko": "나무 속에 심이 들어 있는, 글씨를 쓰는 도구"
     }
   },
   {
@@ -800,7 +865,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:school-bag",
     "glosses": {
       "en": "bag",
-      "es": "bolsa o mochila"
+      "es": "bolsa o mochila",
+      "ko": "물건을 넣어 들거나 메고 다니는 것"
     }
   },
   {
@@ -812,7 +878,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:school-notebook",
     "glosses": {
       "en": "notebook",
-      "es": "cuaderno"
+      "es": "cuaderno",
+      "ko": "글씨를 쓰도록 빈 종이를 묶은 것"
     }
   },
   {
@@ -824,7 +891,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:school-eraser",
     "glosses": {
       "en": "eraser",
-      "es": "goma de borrar"
+      "es": "goma de borrar",
+      "ko": "연필 자국을 문질러 없애는 물건"
     }
   },
   {
@@ -836,7 +904,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:school-desk",
     "glosses": {
       "en": "desk",
-      "es": "escritorio"
+      "es": "escritorio",
+      "ko": "앉아서 공부하거나 글을 쓰는 탁자"
     }
   },
   {
@@ -848,7 +917,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:school-chair",
     "glosses": {
       "en": "chair",
-      "es": "silla"
+      "es": "silla",
+      "ko": "앉을 때 쓰는 가구"
     }
   },
   {
@@ -860,7 +930,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:school-scissors",
     "glosses": {
       "en": "scissors",
-      "es": "tijeras"
+      "es": "tijeras",
+      "ko": "종이를 자르는, 날이 두 개 달린 도구"
     }
   },
   {
@@ -872,7 +943,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:school-board",
     "glosses": {
       "en": "blackboard",
-      "es": "pizarrón"
+      "es": "pizarrón",
+      "ko": "교실 앞에 걸려 있어 분필로 글씨를 쓰는 판"
     }
   },
   {
@@ -884,7 +956,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:body-eye",
     "glosses": {
       "en": "eye",
-      "es": "ojo"
+      "es": "ojo",
+      "ko": "보는 데 쓰는 얼굴의 부분"
     }
   },
   {
@@ -896,7 +969,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:body-nose",
     "glosses": {
       "en": "nose",
-      "es": "nariz"
+      "es": "nariz",
+      "ko": "냄새를 맡고 숨을 쉬는 얼굴의 부분"
     }
   },
   {
@@ -908,7 +982,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:body-mouth",
     "glosses": {
       "en": "mouth",
-      "es": "boca"
+      "es": "boca",
+      "ko": "먹고 말하는 데 쓰는 얼굴의 부분"
     }
   },
   {
@@ -920,7 +995,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:body-ear",
     "glosses": {
       "en": "ear",
-      "es": "oreja"
+      "es": "oreja",
+      "ko": "소리를 듣는 데 쓰는, 머리 양옆의 부분"
     }
   },
   {
@@ -932,7 +1008,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:body-head",
     "glosses": {
       "en": "head",
-      "es": "cabeza"
+      "es": "cabeza",
+      "ko": "목 위에 있는 몸의 부분"
     }
   },
   {
@@ -944,7 +1021,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:body-face",
     "glosses": {
       "en": "face",
-      "es": "cara"
+      "es": "cara",
+      "ko": "눈, 코, 입이 있는 머리의 앞쪽"
     }
   },
   {
@@ -956,7 +1034,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:body-hand",
     "glosses": {
       "en": "hand",
-      "es": "mano"
+      "es": "mano",
+      "ko": "팔 끝에 있어 물건을 잡는 부분"
     }
   },
   {
@@ -968,7 +1047,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:body-arm",
     "glosses": {
       "en": "arm",
-      "es": "brazo"
+      "es": "brazo",
+      "ko": "어깨에서 손까지 이어진 부분"
     }
   },
   {
@@ -980,7 +1060,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:body-leg",
     "glosses": {
       "en": "leg",
-      "es": "pierna"
+      "es": "pierna",
+      "ko": "몸을 받치고 걷는 데 쓰는 부분"
     }
   },
   {
@@ -992,7 +1073,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:body-foot",
     "glosses": {
       "en": "foot",
-      "es": "pie"
+      "es": "pie",
+      "ko": "다리 끝에 있어 땅을 딛는 부분"
     }
   },
   {
@@ -1004,7 +1086,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:body-belly",
     "glosses": {
       "en": "belly",
-      "es": "barriga"
+      "es": "barriga",
+      "ko": "가슴 아래에 있는 몸의 앞부분"
     }
   },
   {
@@ -1016,7 +1099,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:body-tooth",
     "glosses": {
       "en": "tooth",
-      "es": "diente"
+      "es": "diente",
+      "ko": "음식을 씹는 데 쓰는 입 속의 단단한 것"
     }
   },
   {
@@ -1028,7 +1112,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "card:mountain",
     "glosses": {
       "en": "mountain",
-      "es": "montaña"
+      "es": "montaña",
+      "ko": "땅이 높이 솟은 곳"
     }
   },
   {
@@ -1040,7 +1125,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "card:sea",
     "glosses": {
       "en": "sea",
-      "es": "mar"
+      "es": "mar",
+      "ko": "짠물이 넓게 펼쳐진 곳"
     }
   },
   {
@@ -1052,7 +1138,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:nature-sky",
     "glosses": {
       "en": "sky",
-      "es": "cielo"
+      "es": "cielo",
+      "ko": "머리 위로 보이는 넓은 공간, 구름이 떠 있는 곳"
     }
   },
   {
@@ -1064,7 +1151,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:nature-sun",
     "glosses": {
       "en": "sun",
-      "es": "sol"
+      "es": "sol",
+      "ko": "낮에 밝게 빛나며 빛과 열을 주는 것"
     }
   },
   {
@@ -1076,7 +1164,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "card:moon",
     "glosses": {
       "en": "moon",
-      "es": "luna"
+      "es": "luna",
+      "ko": "밤하늘에 떠서 날마다 모양이 바뀌는 것"
     }
   },
   {
@@ -1088,7 +1177,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:nature-star",
     "glosses": {
       "en": "star",
-      "es": "estrella"
+      "es": "estrella",
+      "ko": "밤하늘에 반짝이는 작은 빛"
     }
   },
   {
@@ -1100,7 +1190,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:nature-tree",
     "glosses": {
       "en": "tree",
-      "es": "árbol"
+      "es": "árbol",
+      "ko": "줄기가 단단하고 가지와 잎이 있는 식물"
     }
   },
   {
@@ -1112,7 +1203,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:nature-flower",
     "glosses": {
       "en": "flower",
-      "es": "flor"
+      "es": "flor",
+      "ko": "식물에서 피어나는 알록달록한 부분"
     }
   },
   {
@@ -1124,7 +1216,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:nature-rain",
     "glosses": {
       "en": "rain",
-      "es": "lluvia"
+      "es": "lluvia",
+      "ko": "구름에서 떨어지는 물방울"
     }
   },
   {
@@ -1136,7 +1229,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:nature-snow",
     "glosses": {
       "en": "snow",
-      "es": "nieve"
+      "es": "nieve",
+      "ko": "추운 날 하늘에서 내리는 하얀 얼음 알갱이"
     }
   },
   {
@@ -1148,7 +1242,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:nature-river",
     "glosses": {
       "en": "river",
-      "es": "río"
+      "es": "río",
+      "ko": "넓고 길게 흘러가는 큰 물줄기"
     }
   },
   {
@@ -1160,7 +1255,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:nature-cloud",
     "glosses": {
       "en": "cloud",
-      "es": "nube"
+      "es": "nube",
+      "ko": "하늘에 떠 있는 하얀 물방울 덩어리"
     }
   },
   {
@@ -1172,7 +1268,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:travel-airplane",
     "glosses": {
       "en": "airplane",
-      "es": "avión"
+      "es": "avión",
+      "ko": "날개가 있어 하늘을 나는 탈것"
     }
   },
   {
@@ -1184,7 +1281,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:travel-train",
     "glosses": {
       "en": "train",
-      "es": "tren"
+      "es": "tren",
+      "ko": "철길 위를 달리는 긴 탈것"
     }
   },
   {
@@ -1196,7 +1294,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:travel-bus",
     "glosses": {
       "en": "bus",
-      "es": "autobús"
+      "es": "autobús",
+      "ko": "많은 사람이 함께 타는 큰 차"
     }
   },
   {
@@ -1208,7 +1307,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:travel-taxi",
     "glosses": {
       "en": "taxi",
-      "es": "taxi"
+      "es": "taxi",
+      "ko": "돈을 내고 원하는 곳까지 타고 가는 차"
     }
   },
   {
@@ -1220,7 +1320,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:travel-subway",
     "glosses": {
       "en": "subway",
-      "es": "metro"
+      "es": "metro",
+      "ko": "땅속 철길을 달리는 기차"
     }
   },
   {
@@ -1232,7 +1333,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:travel-car",
     "glosses": {
       "en": "car",
-      "es": "automóvil"
+      "es": "automóvil",
+      "ko": "바퀴가 넷이고 엔진으로 달리는 탈것"
     }
   },
   {
@@ -1244,7 +1346,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:travel-boat",
     "glosses": {
       "en": "boat",
-      "es": "barco"
+      "es": "barco",
+      "ko": "사람이나 짐을 싣고 물 위를 다니는 탈것"
     }
   },
   {
@@ -1256,7 +1359,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:travel-map",
     "glosses": {
       "en": "map",
-      "es": "mapa"
+      "es": "mapa",
+      "ko": "땅의 모양과 길을 그려 놓은 그림"
     }
   },
   {
@@ -1268,7 +1372,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:travel-passport",
     "glosses": {
       "en": "passport",
-      "es": "pasaporte"
+      "es": "pasaporte",
+      "ko": "다른 나라에 갈 때 신분을 보여 주는 수첩"
     }
   },
   {
@@ -1280,7 +1385,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:travel-ticket",
     "glosses": {
       "en": "ticket",
-      "es": "boleto"
+      "es": "boleto",
+      "ko": "돈을 내고 받아 탈것이나 공연장에서 쓰는 종이"
     }
   },
   {
@@ -1292,7 +1398,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:travel-airport",
     "glosses": {
       "en": "airport",
-      "es": "aeropuerto"
+      "es": "aeropuerto",
+      "ko": "비행기가 뜨고 내리는 곳"
     }
   },
   {
@@ -1304,7 +1411,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:travel-hotel",
     "glosses": {
       "en": "hotel",
-      "es": "hotel"
+      "es": "hotel",
+      "ko": "여행하는 사람이 돈을 내고 묵는 곳"
     }
   },
   {
@@ -1316,7 +1424,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:sport-soccer",
     "glosses": {
       "en": "soccer (football)",
-      "es": "fútbol"
+      "es": "fútbol",
+      "ko": "공을 발로 차서 골에 넣는 운동"
     }
   },
   {
@@ -1328,7 +1437,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:sport-baseball",
     "glosses": {
       "en": "baseball",
-      "es": "béisbol"
+      "es": "béisbol",
+      "ko": "방망이로 공을 치고 베이스를 도는 운동"
     }
   },
   {
@@ -1340,7 +1450,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:sport-basketball",
     "glosses": {
       "en": "basketball",
-      "es": "baloncesto"
+      "es": "baloncesto",
+      "ko": "공을 높은 골대의 바구니에 던져 넣는 운동"
     }
   },
   {
@@ -1352,7 +1463,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:sport-volleyball",
     "glosses": {
       "en": "volleyball",
-      "es": "voleibol"
+      "es": "voleibol",
+      "ko": "공을 손으로 쳐서 네트 너머로 넘기는 운동"
     }
   },
   {
@@ -1364,7 +1476,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:sport-tabletennis",
     "glosses": {
       "en": "table tennis",
-      "es": "tenis de mesa"
+      "es": "tenis de mesa",
+      "ko": "탁자 위에서 작은 공을 라켓으로 주고받는 운동"
     }
   },
   {
@@ -1376,7 +1489,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:sport-swimming",
     "glosses": {
       "en": "swimming",
-      "es": "natación"
+      "es": "natación",
+      "ko": "물속에서 팔다리를 움직여 나아가는 운동"
     }
   },
   {
@@ -1388,7 +1502,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:sport-taekwondo",
     "glosses": {
       "en": "taekwondo",
-      "es": "taekwondo"
+      "es": "taekwondo",
+      "ko": "맨손과 맨발로 겨루는 한국의 무술"
     }
   },
   {
@@ -1400,7 +1515,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:sport-running",
     "glosses": {
       "en": "running",
-      "es": "carrera"
+      "es": "carrera",
+      "ko": "빠르게 뛰어가는 운동"
     }
   },
   {
@@ -1412,7 +1528,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:sport-jumprope",
     "glosses": {
       "en": "jump rope",
-      "es": "salto de cuerda"
+      "es": "salto de cuerda",
+      "ko": "돌아가는 줄 위로 계속 뛰어오르는 운동"
     }
   },
   {
@@ -1424,7 +1541,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:sport-bicycle",
     "glosses": {
       "en": "bicycle",
-      "es": "bicicleta"
+      "es": "bicicleta",
+      "ko": "페달을 밟아 바퀴 두 개로 달리는 탈것"
     }
   },
   {
@@ -1436,7 +1554,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:sport-skiing",
     "glosses": {
       "en": "skiing",
-      "es": "esquí"
+      "es": "esquí",
+      "ko": "긴 판을 신고 눈 위를 미끄러져 내려가는 운동"
     }
   },
   {
@@ -1448,7 +1567,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:sport-ball",
     "glosses": {
       "en": "ball",
-      "es": "pelota"
+      "es": "pelota",
+      "ko": "차거나 던지며 노는 둥근 물건"
     }
   },
   {
@@ -1460,7 +1580,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "card:hanbok",
     "glosses": {
       "en": "hanbok (traditional clothes)",
-      "es": "hanbok (ropa tradicional)"
+      "es": "hanbok (ropa tradicional)",
+      "ko": "한국의 전통 옷"
     }
   },
   {
@@ -1472,7 +1593,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:culture-hangul",
     "glosses": {
       "en": "Hangul (the Korean alphabet)",
-      "es": "hangul (el alfabeto coreano)"
+      "es": "hangul (el alfabeto coreano)",
+      "ko": "한국어를 적는 글자"
     }
   },
   {
@@ -1484,7 +1606,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:culture-hanok",
     "glosses": {
       "en": "hanok (traditional house)",
-      "es": "hanok (casa tradicional)"
+      "es": "hanok (casa tradicional)",
+      "ko": "한국의 전통 집"
     }
   },
   {
@@ -1496,7 +1619,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:culture-bibimbap",
     "glosses": {
       "en": "bibimbap (mixed rice bowl)",
-      "es": "bibimbap (tazón de arroz mezclado)"
+      "es": "bibimbap (tazón de arroz mezclado)",
+      "ko": "밥에 나물과 고추장을 넣고 섞어 먹는 음식"
     }
   },
   {
@@ -1508,7 +1632,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:culture-tteokbokki",
     "glosses": {
       "en": "tteokbokki (spicy rice cakes)",
-      "es": "tteokbokki (pasteles de arroz picantes)"
+      "es": "tteokbokki (pasteles de arroz picantes)",
+      "ko": "가래떡을 고추장 양념에 졸인 매콤한 음식"
     }
   },
   {
@@ -1520,7 +1645,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "card:seollal",
     "glosses": {
       "en": "Lunar New Year",
-      "es": "Año Nuevo lunar"
+      "es": "Año Nuevo lunar",
+      "ko": "음력으로 새해를 시작하는 첫날, 한국의 큰 명절"
     }
   },
   {
@@ -1532,7 +1658,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "card:chuseok",
     "glosses": {
       "en": "Chuseok (harvest festival)",
-      "es": "Chuseok (fiesta de la cosecha)"
+      "es": "Chuseok (fiesta de la cosecha)",
+      "ko": "가을에 거둔 곡식에 감사하는 한국의 큰 명절"
     }
   },
   {
@@ -1544,7 +1671,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "card:yutnori",
     "glosses": {
       "en": "yut game (board game with sticks)",
-      "es": "juego de yut (tablero y palitos)"
+      "es": "juego de yut (tablero y palitos)",
+      "ko": "막대를 던져 나온 대로 말판에서 말을 옮기는 놀이"
     }
   },
   {
@@ -1556,7 +1684,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "card:gayageum",
     "glosses": {
       "en": "gayageum (Korean zither)",
-      "es": "gayageum (cítara coreana)"
+      "es": "gayageum (cítara coreana)",
+      "ko": "한국의 전통 현악기"
     }
   },
   {
@@ -1568,7 +1697,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:culture-song",
     "glosses": {
       "en": "song",
-      "es": "canción"
+      "es": "canción",
+      "ko": "가락에 맞춰 목소리로 부르는 것"
     }
   },
   {
@@ -1580,7 +1710,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:culture-dance",
     "glosses": {
       "en": "dance",
-      "es": "baile"
+      "es": "baile",
+      "ko": "음악에 맞춰 몸을 움직이는 것"
     }
   },
   {
@@ -1592,7 +1723,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:culture-drama",
     "glosses": {
       "en": "TV drama",
-      "es": "serie de televisión"
+      "es": "serie de televisión",
+      "ko": "텔레비전에서 여러 회로 나누어 보여 주는 이야기"
     }
   },
   {
@@ -1604,7 +1736,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:science-fire",
     "glosses": {
       "en": "fire",
-      "es": "fuego"
+      "es": "fuego",
+      "ko": "뜨겁게 타오르며 빛과 열을 내는 것"
     }
   },
   {
@@ -1616,7 +1749,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:science-ice",
     "glosses": {
       "en": "ice",
-      "es": "hielo"
+      "es": "hielo",
+      "ko": "물이 차갑게 얼어서 굳은 것"
     }
   },
   {
@@ -1628,7 +1762,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:science-stone",
     "glosses": {
       "en": "stone",
-      "es": "piedra"
+      "es": "piedra",
+      "ko": "땅에서 볼 수 있는 단단한 덩어리"
     }
   },
   {
@@ -1640,7 +1775,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:science-magnet",
     "glosses": {
       "en": "magnet",
-      "es": "imán"
+      "es": "imán",
+      "ko": "쇠붙이를 끌어당기는 물체"
     }
   },
   {
@@ -1652,7 +1788,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:science-earth",
     "glosses": {
       "en": "Earth",
-      "es": "Tierra"
+      "es": "Tierra",
+      "ko": "우리가 사는 둥근 행성"
     }
   },
   {
@@ -1664,7 +1801,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:science-space",
     "glosses": {
       "en": "outer space",
-      "es": "espacio exterior"
+      "es": "espacio exterior",
+      "ko": "지구 밖으로 끝없이 펼쳐진 공간"
     }
   },
   {
@@ -1676,7 +1814,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:science-robot",
     "glosses": {
       "en": "robot",
-      "es": "robot"
+      "es": "robot",
+      "ko": "사람처럼 스스로 일하도록 만든 기계"
     }
   },
   {
@@ -1688,7 +1827,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:science-seed",
     "glosses": {
       "en": "seed",
-      "es": "semilla"
+      "es": "semilla",
+      "ko": "심으면 싹이 트는 식물의 작은 알맹이"
     }
   },
   {
@@ -1700,7 +1840,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:science-rainbow",
     "glosses": {
       "en": "rainbow",
-      "es": "arcoíris"
+      "es": "arcoíris",
+      "ko": "비 온 뒤 하늘에 뜨는 일곱 빛깔 띠"
     }
   },
   {
@@ -1712,7 +1853,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:science-shadow",
     "glosses": {
       "en": "shadow",
-      "es": "sombra"
+      "es": "sombra",
+      "ko": "빛이 가려져 생기는 어두운 모양"
     }
   },
   {
@@ -1724,7 +1866,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:science-wind",
     "glosses": {
       "en": "wind",
-      "es": "viento"
+      "es": "viento",
+      "ko": "공기가 움직여 생기는 흐름"
     }
   },
   {
@@ -1736,7 +1879,8 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:science-light",
     "glosses": {
       "en": "light",
-      "es": "luz"
+      "es": "luz",
+      "ko": "해나 등에서 나와 주변을 밝게 하는 것"
     }
   }
 ];

@@ -1,0 +1,47 @@
+{
+  "locale": "ko",
+  "domain": "vocab-colors",
+  "entries": {
+    "vocab-topic:colors": {
+      "title": "색",
+      "blurb": "우리 주변의 여러 색을 나타내는 낱말이에요.",
+      "hoyaIntro": "주위를 둘러봐요! 색을 몇 가지나 찾을 수 있어요?"
+    },
+    "vocab:ppalgansaek": {
+      "gloss": "피나 잘 익은 딸기의 색"
+    },
+    "vocab:juhwangsaek": {
+      "gloss": "귤이나 당근의 색"
+    },
+    "vocab:noransaek": {
+      "gloss": "바나나나 병아리의 색"
+    },
+    "vocab:choroksaek": {
+      "gloss": "풀이나 나뭇잎의 색"
+    },
+    "vocab:paransaek": {
+      "gloss": "깊은 바다처럼 진하고 푸른 색"
+    },
+    "vocab:borasaek": {
+      "gloss": "포도나 가지의 색"
+    },
+    "vocab:bunhongsaek": {
+      "gloss": "벚꽃처럼 연하고 붉은 색"
+    },
+    "vocab:haneulsaek": {
+      "gloss": "맑은 날 올려다보면 보이는 연한 푸른 색"
+    },
+    "vocab:galsaek": {
+      "gloss": "초콜릿이나 흙의 색"
+    },
+    "vocab:hoesaek": {
+      "gloss": "재나 비 오는 날 구름의 색"
+    },
+    "vocab:hayansaek": {
+      "gloss": "눈이나 우유의 색"
+    },
+    "vocab:geomeunsaek": {
+      "gloss": "밤하늘이나 숯의 색"
+    }
+  }
+}

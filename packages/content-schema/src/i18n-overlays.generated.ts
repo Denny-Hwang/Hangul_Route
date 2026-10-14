@@ -2394,6 +2394,533 @@ export const OVERLAYS: Overlays = {
       "steps.s2.discover.pages.0.items.1.example.gloss": "소에게서 얻는 하얀 마실 것",
       "steps.s2.discover.pages.1.items.0.example.gloss": "한국의 전통 옷",
       "steps.s2.discover.pages.1.items.1.example.gloss": "한반도에 있는 나라"
+    },
+    "vocab-topic:animals": {
+      "blurb": "반려동물부터 동물원 동물까지, 동물을 나타내는 낱말이에요.",
+      "hoyaIntro": "저는 호랑이예요! 동물 친구들을 만나러 가요.",
+      "title": "동물"
+    },
+    "vocab-topic:body": {
+      "blurb": "손으로 가리킬 수 있는 몸의 부분이에요.",
+      "hoyaIntro": "코를 가리켜 봐요! 몸을 나타내는 낱말을 배워요.",
+      "title": "몸"
+    },
+    "vocab-topic:colors": {
+      "blurb": "우리 주변의 여러 색을 나타내는 낱말이에요.",
+      "hoyaIntro": "주위를 둘러봐요! 색을 몇 가지나 찾을 수 있어요?",
+      "title": "색"
+    },
+    "vocab-topic:family": {
+      "blurb": "가족 안의 사람들을 부르는 낱말이에요.",
+      "hoyaIntro": "가족에는 누가 있어요? 사람마다 낱말을 하나씩 배워 봐요.",
+      "title": "가족"
+    },
+    "vocab-topic:food": {
+      "blurb": "먹고 마시는 것을 나타내는 낱말이에요.",
+      "hoyaIntro": "배고파요? 맛있는 것들의 이름을 함께 말해 봐요.",
+      "title": "음식"
+    },
+    "vocab-topic:k-culture": {
+      "blurb": "한국의 옷, 집, 음식, 명절, 놀이, 음악 등을 만나요.",
+      "hoyaIntro": "한국의 옷과 음식, 명절과 음악을 함께 둘러봐요.",
+      "title": "한국 문화"
+    },
+    "vocab-topic:nature": {
+      "blurb": "하늘부터 바다까지, 밖에서 볼 수 있는 것들이에요.",
+      "hoyaIntro": "밖으로 나가서 우리 주변의 세상을 둘러봐요.",
+      "title": "자연"
+    },
+    "vocab-topic:numbers": {
+      "blurb": "1부터 10까지 세는 수, 그리고 20과 0이에요.",
+      "hoyaIntro": "하나씩 하나씩 함께 세어 봐요.",
+      "title": "숫자"
+    },
+    "vocab-topic:school": {
+      "blurb": "학교의 사람들, 교실, 가방 속 물건을 나타내는 낱말이에요.",
+      "hoyaIntro": "가방을 챙겨요! 교실에 있는 물건을 찾아봐요.",
+      "title": "학교"
+    },
+    "vocab-topic:science": {
+      "blurb": "불과 얼음부터 지구와 우주까지 알아봐요.",
+      "hoyaIntro": "가까이 들여다보고, 세상이 어떻게 돌아가는지 궁금해해 봐요.",
+      "title": "과학"
+    },
+    "vocab-topic:sports": {
+      "blurb": "하거나 볼 수 있는 운동과 놀이예요.",
+      "hoyaIntro": "준비, 시작! 운동을 나타내는 낱말을 배워요.",
+      "title": "스포츠"
+    },
+    "vocab-topic:travel": {
+      "blurb": "이동하는 방법과 여행에 필요한 물건이에요.",
+      "hoyaIntro": "오늘은 어디로 갈까요? 여행 낱말을 배워요.",
+      "title": "여행"
+    },
+    "vocab:agi": {
+      "gloss": "태어난 지 얼마 안 된 아주 어린 아이"
+    },
+    "vocab:ahop": {
+      "gloss": "9를 뜻하는 우리말 수"
+    },
+    "vocab:appa": {
+      "gloss": "아버지를 친근하게 부르는 말",
+      "senseNote": "날마다 쓰는 말이에요. 격식 있는 말은 아버지예요."
+    },
+    "vocab:bada": {
+      "gloss": "짠물이 넓게 펼쳐진 곳"
+    },
+    "vocab:bae-belly": {
+      "gloss": "가슴 아래에 있는 몸의 앞부분"
+    },
+    "vocab:bae-boat": {
+      "gloss": "사람이나 짐을 싣고 물 위를 다니는 탈것"
+    },
+    "vocab:baegu": {
+      "gloss": "공을 손으로 쳐서 네트 너머로 넘기는 운동"
+    },
+    "vocab:bal": {
+      "gloss": "다리 끝에 있어 땅을 딛는 부분"
+    },
+    "vocab:banana": {
+      "gloss": "길고 노란 껍질을 벗겨 먹는 과일"
+    },
+    "vocab:bap": {
+      "gloss": "쌀에 물을 붓고 끓여 익힌 음식",
+      "senseNote": "끼니라는 뜻도 있어요. 익히지 않은 것은 쌀이라고 해요."
+    },
+    "vocab:baram": {
+      "gloss": "공기가 움직여 생기는 흐름"
+    },
+    "vocab:beoseu": {
+      "gloss": "많은 사람이 함께 타는 큰 차"
+    },
+    "vocab:bi-rain": {
+      "gloss": "구름에서 떨어지는 물방울"
+    },
+    "vocab:bibimbap": {
+      "gloss": "밥에 나물과 고추장을 넣고 섞어 먹는 음식",
+      "senseNote": "밥 위에 채소를 올리고, 먹기 전에 섞어요."
+    },
+    "vocab:bihaenggi": {
+      "gloss": "날개가 있어 하늘을 나는 탈것"
+    },
+    "vocab:bit": {
+      "gloss": "해나 등에서 나와 주변을 밝게 하는 것",
+      "senseNote": "해나 등에서 나오는 밝음을 말해요. 무게가 가볍다는 뜻은 아니에요."
+    },
+    "vocab:borasaek": {
+      "gloss": "포도나 가지의 색"
+    },
+    "vocab:bul": {
+      "gloss": "뜨겁게 타오르며 빛과 열을 내는 것",
+      "senseNote": "등처럼 켜 놓은 빛을 뜻하기도 해요."
+    },
+    "vocab:bunhongsaek": {
+      "gloss": "벚꽃처럼 연하고 붉은 색"
+    },
+    "vocab:byeol": {
+      "gloss": "밤하늘에 반짝이는 작은 빛"
+    },
+    "vocab:chaek": {
+      "gloss": "글이나 그림을 묶어 만든 읽을거리"
+    },
+    "vocab:chaeksang": {
+      "gloss": "앉아서 공부하거나 글을 쓰는 탁자"
+    },
+    "vocab:chilpan": {
+      "gloss": "교실 앞에 걸려 있어 분필로 글씨를 쓰는 판"
+    },
+    "vocab:chingu": {
+      "gloss": "가깝게 지내며 함께 노는 사람"
+    },
+    "vocab:choroksaek": {
+      "gloss": "풀이나 나뭇잎의 색"
+    },
+    "vocab:chukgu": {
+      "gloss": "공을 발로 차서 골에 넣는 운동"
+    },
+    "vocab:chum": {
+      "gloss": "음악에 맞춰 몸을 움직이는 것"
+    },
+    "vocab:chuseok": {
+      "gloss": "가을에 거둔 곡식에 감사하는 한국의 큰 명절",
+      "senseNote": "가족이 모여 반달 모양의 떡인 송편을 나눠 먹어요."
+    },
+    "vocab:dal-moon": {
+      "gloss": "밤하늘에 떠서 날마다 모양이 바뀌는 것"
+    },
+    "vocab:dalgyal": {
+      "gloss": "닭이 낳은 알",
+      "senseNote": "계란이라고도 하는데, 똑같이 많이 써요."
+    },
+    "vocab:dalligi": {
+      "gloss": "빠르게 뛰어가는 운동"
+    },
+    "vocab:dari-leg": {
+      "gloss": "몸을 받치고 걷는 데 쓰는 부분"
+    },
+    "vocab:daseot": {
+      "gloss": "5를 뜻하는 우리말 수"
+    },
+    "vocab:deurama": {
+      "gloss": "텔레비전에서 여러 회로 나누어 보여 주는 이야기"
+    },
+    "vocab:dol-stone": {
+      "gloss": "땅에서 볼 수 있는 단단한 덩어리"
+    },
+    "vocab:dongsaeng": {
+      "gloss": "자기보다 나이 어린 형제나 자매",
+      "senseNote": "누구나 쓸 수 있어요. 어린 남자 형제에게도, 어린 여자 형제에게도 써요."
+    },
+    "vocab:dul": {
+      "gloss": "2를 뜻하는 우리말 수",
+      "senseNote": "개처럼 세는 말 앞에서는 '두'가 돼요. 예: 두 개."
+    },
+    "vocab:eolgul": {
+      "gloss": "눈, 코, 입이 있는 머리의 앞쪽"
+    },
+    "vocab:eomma": {
+      "gloss": "어머니를 친근하게 부르는 말",
+      "senseNote": "날마다 쓰는 말이에요. 격식 있는 말은 어머니예요."
+    },
+    "vocab:eonni": {
+      "gloss": "여자가 자기보다 나이 많은 여자 형제를 부르는 말",
+      "senseNote": "여자가 손위 여자 형제를 이렇게 불러요. 남자는 누나라고 해요."
+    },
+    "vocab:eoreum": {
+      "gloss": "물이 차갑게 얼어서 굳은 것"
+    },
+    "vocab:gabang": {
+      "gloss": "물건을 넣어 들거나 메고 다니는 것"
+    },
+    "vocab:gajok": {
+      "gloss": "부모와 자식처럼 서로 이어진 한 집안 사람들"
+    },
+    "vocab:galsaek": {
+      "gloss": "초콜릿이나 흙의 색"
+    },
+    "vocab:gang": {
+      "gloss": "넓고 길게 흘러가는 큰 물줄기"
+    },
+    "vocab:gangaji": {
+      "gloss": "어린 개",
+      "senseNote": "집에서 기르는 개를 부를 때도 흔히 써요. 개를 뜻하는 기본 낱말은 개예요."
+    },
+    "vocab:gawi": {
+      "gloss": "종이를 자르는, 날이 두 개 달린 도구"
+    },
+    "vocab:gayageum": {
+      "gloss": "한국의 전통 현악기",
+      "senseNote": "줄이 여러 개 달린 긴 악기로, 손가락으로 줄을 뜯어 연주해요."
+    },
+    "vocab:geomeunsaek": {
+      "gloss": "밤하늘이나 숯의 색"
+    },
+    "vocab:geurimja": {
+      "gloss": "빛이 가려져 생기는 어두운 모양"
+    },
+    "vocab:gicha": {
+      "gloss": "철길 위를 달리는 긴 탈것"
+    },
+    "vocab:gimbap": {
+      "gloss": "김 위에 밥과 재료를 올려 돌돌 만 음식"
+    },
+    "vocab:gimchi": {
+      "gloss": "배추나 무를 양념해 익힌 반찬",
+      "senseNote": "채소를 발효시켜 만든 한국 반찬으로, 매운 것이 많아요."
+    },
+    "vocab:gom": {
+      "gloss": "몸집이 크고 털이 많은 숲속 동물"
+    },
+    "vocab:gong-ball": {
+      "gloss": "차거나 던지며 노는 둥근 물건"
+    },
+    "vocab:gongchaek": {
+      "gloss": "글씨를 쓰도록 빈 종이를 묶은 것"
+    },
+    "vocab:gonghang": {
+      "gloss": "비행기가 뜨고 내리는 곳"
+    },
+    "vocab:goyangi": {
+      "gloss": "야옹 하고 우는 작은 동물"
+    },
+    "vocab:gureum": {
+      "gloss": "하늘에 떠 있는 하얀 물방울 덩어리"
+    },
+    "vocab:gwi": {
+      "gloss": "소리를 듣는 데 쓰는, 머리 양옆의 부분"
+    },
+    "vocab:hae-sun": {
+      "gloss": "낮에 밝게 빛나며 빛과 열을 주는 것"
+    },
+    "vocab:hakgyo": {
+      "gloss": "학생들이 모여 선생님께 배우는 곳"
+    },
+    "vocab:halmeoni": {
+      "gloss": "아버지나 어머니의 어머니"
+    },
+    "vocab:hana": {
+      "gloss": "1을 뜻하는 우리말 수",
+      "senseNote": "개처럼 세는 말 앞에서는 '한'이 돼요. 예: 한 개."
+    },
+    "vocab:hanbok": {
+      "gloss": "한국의 전통 옷",
+      "senseNote": "설날이나 추석 같은 명절에 많이 입어요."
+    },
+    "vocab:haneul": {
+      "gloss": "머리 위로 보이는 넓은 공간, 구름이 떠 있는 곳"
+    },
+    "vocab:haneulsaek": {
+      "gloss": "맑은 날 올려다보면 보이는 연한 푸른 색"
+    },
+    "vocab:hangeul": {
+      "gloss": "한국어를 적는 글자",
+      "senseNote": "여기서 배우고 있는 글자예요."
+    },
+    "vocab:hanok": {
+      "gloss": "한국의 전통 집"
+    },
+    "vocab:harabeoji": {
+      "gloss": "아버지나 어머니의 아버지"
+    },
+    "vocab:hayansaek": {
+      "gloss": "눈이나 우유의 색"
+    },
+    "vocab:hoesaek": {
+      "gloss": "재나 비 오는 날 구름의 색"
+    },
+    "vocab:horangi": {
+      "gloss": "몸에 검은 줄무늬가 있는 크고 힘센 동물"
+    },
+    "vocab:hotel": {
+      "gloss": "여행하는 사람이 돈을 내고 묵는 곳"
+    },
+    "vocab:hyeong": {
+      "gloss": "남자가 자기보다 나이 많은 남자 형제를 부르는 말",
+      "senseNote": "남자가 손위 남자 형제를 이렇게 불러요. 여자는 오빠라고 해요."
+    },
+    "vocab:i-tooth": {
+      "gloss": "음식을 씹는 데 쓰는 입 속의 단단한 것",
+      "senseNote": "더 격식 있는 말로 치아라고도 해요."
+    },
+    "vocab:ilgop": {
+      "gloss": "7을 뜻하는 우리말 수"
+    },
+    "vocab:ip": {
+      "gloss": "먹고 말하는 데 쓰는 얼굴의 부분"
+    },
+    "vocab:jadongcha": {
+      "gloss": "바퀴가 넷이고 엔진으로 달리는 탈것",
+      "senseNote": "평소에는 줄여서 차라고 많이 해요."
+    },
+    "vocab:jajeongeo": {
+      "gloss": "페달을 밟아 바퀴 두 개로 달리는 탈것"
+    },
+    "vocab:jaseok": {
+      "gloss": "쇠붙이를 끌어당기는 물체"
+    },
+    "vocab:jido": {
+      "gloss": "땅의 모양과 길을 그려 놓은 그림"
+    },
+    "vocab:jigu": {
+      "gloss": "우리가 사는 둥근 행성"
+    },
+    "vocab:jihacheol": {
+      "gloss": "땅속 철길을 달리는 기차"
+    },
+    "vocab:jiugae": {
+      "gloss": "연필 자국을 문질러 없애는 물건"
+    },
+    "vocab:juhwangsaek": {
+      "gloss": "귤이나 당근의 색"
+    },
+    "vocab:julleomgi": {
+      "gloss": "돌아가는 줄 위로 계속 뛰어오르는 운동"
+    },
+    "vocab:kkot": {
+      "gloss": "식물에서 피어나는 알록달록한 부분"
+    },
+    "vocab:ko": {
+      "gloss": "냄새를 맡고 숨을 쉬는 얼굴의 부분"
+    },
+    "vocab:kokkiri": {
+      "gloss": "코가 아주 길고 몸집이 아주 큰 동물"
+    },
+    "vocab:meori": {
+      "gloss": "목 위에 있는 몸의 부분",
+      "senseNote": "머리카락이라는 뜻도 있어요."
+    },
+    "vocab:mujigae": {
+      "gloss": "비 온 뒤 하늘에 뜨는 일곱 빛깔 띠"
+    },
+    "vocab:mul": {
+      "gloss": "목마를 때 마시는 맑은 액체"
+    },
+    "vocab:mulgogi": {
+      "gloss": "물속에 살며 아가미로 숨 쉬는 동물"
+    },
+    "vocab:na": {
+      "gloss": "말하는 사람이 자기를 가리키는 말",
+      "senseNote": "편하게 쓰는 말이에요. 예의 있게 말할 때는 저라고 해요."
+    },
+    "vocab:nabi": {
+      "gloss": "알록달록한 날개로 꽃 사이를 나는 곤충"
+    },
+    "vocab:namu": {
+      "gloss": "줄기가 단단하고 가지와 잎이 있는 식물"
+    },
+    "vocab:net": {
+      "gloss": "4를 뜻하는 우리말 수",
+      "senseNote": "개처럼 세는 말 앞에서는 '네'가 돼요. 예: 네 개."
+    },
+    "vocab:nonggu": {
+      "gloss": "공을 높은 골대의 바구니에 던져 넣는 운동"
+    },
+    "vocab:norae": {
+      "gloss": "가락에 맞춰 목소리로 부르는 것"
+    },
+    "vocab:noransaek": {
+      "gloss": "바나나나 병아리의 색"
+    },
+    "vocab:nun-eye": {
+      "gloss": "보는 데 쓰는 얼굴의 부분"
+    },
+    "vocab:nun-snow": {
+      "gloss": "추운 날 하늘에서 내리는 하얀 얼음 알갱이"
+    },
+    "vocab:nuna": {
+      "gloss": "남자가 자기보다 나이 많은 여자 형제를 부르는 말",
+      "senseNote": "남자가 손위 여자 형제를 이렇게 불러요. 여자는 언니라고 해요."
+    },
+    "vocab:oppa": {
+      "gloss": "여자가 자기보다 나이 많은 남자 형제를 부르는 말",
+      "senseNote": "여자가 손위 남자 형제를 이렇게 불러요. 남자는 형이라고 해요."
+    },
+    "vocab:ori": {
+      "gloss": "꽥꽥 울고 물 위에 떠다니는 새"
+    },
+    "vocab:pal-arm": {
+      "gloss": "어깨에서 손까지 이어진 부분"
+    },
+    "vocab:paransaek": {
+      "gloss": "깊은 바다처럼 진하고 푸른 색"
+    },
+    "vocab:ppalgansaek": {
+      "gloss": "피나 잘 익은 딸기의 색"
+    },
+    "vocab:ppang": {
+      "gloss": "밀가루 반죽을 구워 만든 음식"
+    },
+    "vocab:pyo-ticket": {
+      "gloss": "돈을 내고 받아 탈것이나 공연장에서 쓰는 종이",
+      "senseNote": "버스나 기차를 타거나 공연을 볼 때 필요해요."
+    },
+    "vocab:ramyeon": {
+      "gloss": "끓는 물에 금방 익혀 먹는 꼬불꼬불한 국수"
+    },
+    "vocab:robot": {
+      "gloss": "사람처럼 스스로 일하도록 만든 기계"
+    },
+    "vocab:sae-bird": {
+      "gloss": "날개와 깃털이 있어 하늘을 나는 동물"
+    },
+    "vocab:sagwa-apple": {
+      "gloss": "빨갛고 동그란 과일"
+    },
+    "vocab:san": {
+      "gloss": "땅이 높이 솟은 곳"
+    },
+    "vocab:seollal": {
+      "gloss": "음력으로 새해를 시작하는 첫날, 한국의 큰 명절",
+      "senseNote": "많은 사람이 한복을 입고 어른께 세배해요."
+    },
+    "vocab:seonsaengnim": {
+      "gloss": "학생을 가르치는 사람",
+      "senseNote": "가르치는 분을 부를 때도 이 말을 써요. 끝에 붙은 '님'은 높임을 나타내요."
+    },
+    "vocab:set": {
+      "gloss": "3을 뜻하는 우리말 수",
+      "senseNote": "개처럼 세는 말 앞에서는 '세'가 돼요. 예: 세 개."
+    },
+    "vocab:seuki": {
+      "gloss": "긴 판을 신고 눈 위를 미끄러져 내려가는 운동"
+    },
+    "vocab:seumul": {
+      "gloss": "20을 뜻하는 우리말 수",
+      "senseNote": "개처럼 세는 말 앞에서는 '스무'가 돼요. 예: 스무 개."
+    },
+    "vocab:son": {
+      "gloss": "팔 끝에 있어 물건을 잡는 부분"
+    },
+    "vocab:ssiat": {
+      "gloss": "심으면 싹이 트는 식물의 작은 알맹이"
+    },
+    "vocab:suyeong": {
+      "gloss": "물속에서 팔다리를 움직여 나아가는 운동"
+    },
+    "vocab:taegwondo": {
+      "gloss": "맨손과 맨발로 겨루는 한국의 무술",
+      "senseNote": "높은 발차기로 잘 알려진 한국 무술이에요."
+    },
+    "vocab:taeksi": {
+      "gloss": "돈을 내고 원하는 곳까지 타고 가는 차"
+    },
+    "vocab:takgu": {
+      "gloss": "탁자 위에서 작은 공을 라켓으로 주고받는 운동"
+    },
+    "vocab:tokki": {
+      "gloss": "귀가 길고 깡충깡충 뛰는 동물"
+    },
+    "vocab:ttalgi": {
+      "gloss": "겉에 작은 씨가 박힌 빨갛고 작은 과일"
+    },
+    "vocab:tteok": {
+      "gloss": "쌀가루를 찌거나 쳐서 만든 음식",
+      "senseNote": "쌀로 만든 한국 음식으로, 말랑하고 쫄깃해요."
+    },
+    "vocab:tteokbokki": {
+      "gloss": "가래떡을 고추장 양념에 졸인 매콤한 음식"
+    },
+    "vocab:uija": {
+      "gloss": "앉을 때 쓰는 가구"
+    },
+    "vocab:uju": {
+      "gloss": "지구 밖으로 끝없이 펼쳐진 공간",
+      "senseNote": "온 세상 전체라는 뜻도 있어요."
+    },
+    "vocab:uyu": {
+      "gloss": "소에서 얻는 하얀 마실 것"
+    },
+    "vocab:wonsungi": {
+      "gloss": "나무를 잘 타는 꼬리 긴 동물"
+    },
+    "vocab:yagu": {
+      "gloss": "방망이로 공을 치고 베이스를 도는 운동"
+    },
+    "vocab:yeodeol": {
+      "gloss": "8을 뜻하는 우리말 수"
+    },
+    "vocab:yeogwon": {
+      "gloss": "다른 나라에 갈 때 신분을 보여 주는 수첩"
+    },
+    "vocab:yeol-ten": {
+      "gloss": "10을 뜻하는 우리말 수"
+    },
+    "vocab:yeong-zero": {
+      "gloss": "0, 아무것도 없음을 뜻하는 수",
+      "senseNote": "우리말에는 0을 뜻하는 말이 없어서, 한자에서 온 이 말을 써요. 전화번호를 말할 때는 공이라고 해요."
+    },
+    "vocab:yeonpil": {
+      "gloss": "나무 속에 심이 들어 있는, 글씨를 쓰는 도구"
+    },
+    "vocab:yeoseot": {
+      "gloss": "6을 뜻하는 우리말 수"
+    },
+    "vocab:yeou": {
+      "gloss": "꼬리가 크고 귀가 뾰족한 들짐승"
+    },
+    "vocab:yunnori": {
+      "gloss": "막대를 던져 나온 대로 말판에서 말을 옮기는 놀이",
+      "senseNote": "나무 막대 네 개를 던져요. 설날에 많이 해요."
     }
   }
 };
