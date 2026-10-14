@@ -203,7 +203,7 @@ Rescue Code 는 서버에 해시로만 저장된다. 이 키를 넣으면 **새�
 | `NEXT_PUBLIC_BROWSE` (All lessons) | 비워 둔다: F-BROWSE-001 BR-14 부터 기본 켜짐 (owner 결정 2026-10-13). 이전에 `false`·`0`·`disabled` 를 넣어 두었다면 지우고 Retry deployment. 되돌릴 때만 `false`, `0` 또는 `disabled` (대소문자·앞뒤 공백은 무시, 그 밖의 값은 `enabled` 포함 켜짐으로 읽힌다). 끄면 결제 페이지의 'All lessons' 포함 줄도 함께 사라진다 | BR-14 머지 후 | 어른 메뉴의 Lessons · 홈의 Lessons · 계획/명단/Learning Route/리포트/쪽지의 Preview 링크가 보인다 (app.hangulroute.com 에서만) |
 | `EXPO_PUBLIC_MY_ROUTE_ENABLED` | 비워 둔다: F-ROUTE-001 R-10b 부터 기본 켜짐 (Learning Route 의 Route 탭). 되돌릴 때만 정확히 `false` 또는 `0` (다른 값은 켜짐으로 읽힌다). 끄기 전에 아래 "문제가 생기면" 의 Learning Route kill switch 확인을 한 번 한다 | R-10b 머지 후 | Route 탭 · Home 의 route strip · 리포트의 Open Learning Route 가 보인다 (en 만) |
 | `EXPO_PUBLIC_PLACEMENT_ENABLED` | 비워 둔다: F-PLC-001 P-10 부터 모든 플랫폼에서 기본 켜짐 (수준 확인, level check). F-ROUTE-001 OD-14 는 오너가 2026-10-14 에 확정했다 (F-ENT-003 OD-14 와는 다른 질문): 본인 (Me) 프로필은 결과 화면의 **Use this plan** 한 번으로 PIN 없이 주간 계획을 만든다 (PIN 이 있는 기기에서도). 아이 프로필은 어른의 PIN 뒤 리포트에서만 계획을 만든다. 스토어 빌드 조건은 충족이다 (오너 결정 2026-10-14: 스토어 앱이 없으므로 모든 플랫폼에서 수준 확인을 켜기로 오너가 정했다): 스토어에도 TestFlight 에도 네이티브 빌드가 나간 적이 없고, 첫 빌드가 P-3b 스키마를 이미 담는다. 되돌릴 때만 정확히 `false` 또는 `0` (다른 값은 켜짐으로 읽힌다). 끄기 전에 아래 "문제가 생기면" 의 수준 확인 kill switch 확인을 한 번 한다 | P-10 머지 후 | 온보딩의 "Where should we start?" 갈림길 · Home 의 "Take the level check" 카드 · Profile 의 "Find my starting spot again" 줄 · 어른 리포트 진입점이 보인다 |
-| `EXPO_PUBLIC_GROWN_UP_HOME` | `true` | S-3 (M3) | 학습자 앱에 어른 진입점 (Welcome 페르소나 행 · Profile "Grown-up home" · 대시보드 카드) 이 보이지 않는다 |
+| `EXPO_PUBLIC_GROWN_UP_HOME` | 비워 두거나 `true` (같은 값): F-APP-001 A-10 (2026-10-14) 부터 기본 켜짐. S-3 (M3) 에 넣은 `true` 는 남겨 둬도 무해하다. 되돌릴 때만 `false` (또는 `0`, `off`, `no`; 대소문자와 앞뒤 공백 무관. 다른 값은 켜짐으로 읽힌다; 변수를 **지우면** 이제 켜짐) | S-3 (M3), A-10 머지 후엔 할 일 없음 | 학습자 앱에 어른 진입점 (Welcome 페르소나 행 · Profile "Grown-up home" · 대시보드 카드) 이 보이지 않는다 |
 | `EXPO_PUBLIC_SITE_URL` | `https://hangulroute.com` | S-3 | 기본값도 `https://hangulroute.com` (그다음 `EXPO_PUBLIC_CONSOLE_URL`) |
 | `EXPO_PUBLIC_CONSOLE_URL` | 삭제 | S-3 뒤, F-BILL-002 가 더 읽지 않을 때 | — |
 
@@ -228,7 +228,7 @@ A-3 이 아니라 **A-4b 머지 후**에 한다: A-4b 의 공통 어른 레이�
 `hangul-route-app` 빌드 변수 `EXPO_PUBLIC_GROWN_UP_HOME` = `true`, `EXPO_PUBLIC_SITE_URL` = `https://hangulroute.com` → **Retry deployment**. (`EXPO_PUBLIC_CONSOLE_URL` 은 F-BILL-002 가 더 읽지 않게 된 뒤 삭제.) 같은 창에서 사이트 빌드 변수 `CONSOLE_ORIGIN` (§E2 S-3b: 사이트 링크와 옛 주소 리다이렉트) 과 API 의 `CONSOLE_URL` (§E2 S-3c: Stripe 복귀 주소) 도 바꾼다 (2026-10-13 개정: 예전의 `out-site/` 와 `BILLING_URL` 은 없다).
 **확인**: 학습자 프로필이 없는 브라우저의 Welcome 에 "Here to support a learner?" 행이 보이고 **Parent or caregiver** 가 `/signin?persona=parent` 로 간다. 학습자 프로필이 있는 기기에서는 Profile → 어른 영역 → **Grown-up home** → PIN → 어른 영역이 열린다.
 
-**되돌리기**: S-3 는 `EXPO_PUBLIC_GROWN_UP_HOME` 을 `false` 로 (또는 삭제) → Retry deployment. 사이트는 `hangul-route-web` 의 `CONSOLE_ORIGIN` 을 `false` 로 → Retry deployment (F-SITE-002 S-10 부터 변수를 **지우면** 코드 기본값인 앱 호스트로 간다), Stripe 복귀는 `CONSOLE_URL` 을 `https://hangulroute.com` 으로 (§E2). 앱 호스트의 어른 페이지는 남아 있어도 무해하고, 데이터는 어느 방향으로도 바뀌지 않는다. 마지막 단계 A-10 (기본값 켜기) 은 원래 M3 후 14일 뒤였지만, 오너 결정 (2026-10-14) 으로 기다리지 않고 M3 와 같은 날 진행한다.
+**되돌리기**: S-3 는 `EXPO_PUBLIC_GROWN_UP_HOME` 을 `false` 로 → Retry deployment (A-10, 2026-10-14 부터 변수를 지우면 기본값인 켜짐이다). 사이트는 `hangul-route-web` 의 `CONSOLE_ORIGIN` 을 `false` 로 → Retry deployment (F-SITE-002 S-10 부터 변수를 **지우면** 코드 기본값인 앱 호스트로 간다), Stripe 복귀는 `CONSOLE_URL` 을 `https://hangulroute.com` 으로 (§E2). 앱 호스트의 어른 페이지는 남아 있어도 무해하고, 데이터는 어느 방향으로도 바뀌지 않는다. 마지막 단계 A-10 (기본값 켜기) 은 원래 M3 후 14일 뒤였지만, 오너 결정 (2026-10-14) 으로 기다리지 않고 M3 와 같은 날 진행한다.
 
 ## E2. 앱 호스트 이전 체크리스트 — 순서대로 한 번에 (F-APP-001 S-1 → S-2 → S-0 → S-3a → S-3b → S-3c, 2026-10-13)
 
@@ -277,7 +277,8 @@ A-3 이 아니라 **A-4b 머지 후**에 한다: A-4b 의 공통 어른 레이�
 **확인 1**: 학습자 프로필이 없는 시크릿 창에서 https://app.hangulroute.com 을 연다. Welcome 에 "Here to support a learner?" 행이 보이고 **Parent or caregiver** 가 `/signin?persona=parent` 로 간다. 학습자 프로필이 있는 기기에서 Profile → **Grown-up home** → PIN → 어른 영역이 열리고, **Back to learning** 이 학습자 앱으로 돌아온다. 학습자 앱의 Privacy 링크 (Profile 또는 Welcome) 는 `https://hangulroute.com/privacy` 로 간다.
 **확인 2 (설치한 앱 창, iPhone 또는 iPad 와 Android)**: 설치한 앱을 연다 (업데이트 배너가 뜨면 누른다) → Profile → Grown-up home (또는 Welcome 의 행) → 로그인 (Google 한 번, 이메일 코드 한 번) → 학급 · `/parent` · `/account/billing` 을 연다 → **Back to learning** 으로 학습자 화면에 돌아온다.
 **확인 2 가 실패하면** (예: iOS 설치한 앱 창에서 로그인이 끝나지 않음): 아래 되돌리기를 하고 S-3b · S-3c 로 가지 않는다. 기기 · 방식 · 화면 캡처를 보낸다.
-**되돌리기**: `EXPO_PUBLIC_GROWN_UP_HOME` 을 지우거나 `false` → Retry deployment. 진입점만 사라지고 학습 기록 · PIN · 프로필은 그대로다.
+**되돌리기**: `EXPO_PUBLIC_GROWN_UP_HOME` 을 `false` → Retry deployment (A-10, 2026-10-14 부터 지우는 것은 되돌리기가 아니다: 기본값이 켜짐). 진입점만 사라지고 학습 기록 · PIN · 프로필은 그대로다.
+**A-10 완료 (2026-10-14)**: `grownUpHomeEnabled` 가 코드 기본값으로 켜졌다 (`grown-up-shell.spec.ts` 가 실제 잠금 · PIN 경로 · 어른 홈을 확인). 대시보드에서 할 일은 없다.
 
 ### 5. S-3b — 사이트의 어른 링크와 옛 주소 리다이렉트 (5분, 3a 확인 뒤 같은 날)
 1. **`hangul-route-web`** → Settings → Build → Variables and Secrets → **Add** → Name `CONSOLE_ORIGIN` (접두어 없음, `NEXT_PUBLIC_` 아님), Value `https://app.hangulroute.com` (끝에 `/` 나 경로 없이) → Save. 값이 `hangulroute.com` (또는 그 서브도메인) 의 https 주소가 아니면 (예: `https://app.hangulroute.co` 같은 오타) 빌드가 일부러 실패하고 이전 배포가 그대로 남는다.
