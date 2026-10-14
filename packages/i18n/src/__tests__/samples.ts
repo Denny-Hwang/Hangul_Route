@@ -24,6 +24,7 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'learner.home.progress.label': [[1, 24]],
   'learner.home.homework.due': [[2]],
   'learner.home.catchUp.line': [[1], [22]],
+  'learner.home.lockedCard.a11y': [['Meet Hoya. Say hello.']],
   'learner.library.collected.line': [[1], [12]],
   'learner.cardDetail.earn.quest': [['Meet g, n, d, l', 1], ['Meet g, n, d, l', 2]],
   'learner.cardDetail.citation.source': [['National Hangeul Museum', 'Hangul Day']],
