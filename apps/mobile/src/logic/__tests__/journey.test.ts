@@ -63,9 +63,9 @@ describe('stageAvailability', () => {
     expect(stageAvailability('stage5', [lesson, volume2, ep('other', 'stage5', 'preview', ['q1'], 'life')])).toBe('taste');
     expect(stageAvailability('stage5', [volume2, { ...volume2, id: 'volume-3', volume: 3 }])).toBe('soon');
   });
-  it('matches the real bundle: stage1 open, stage2/3/4 taste (stage3 since First Sentences, F-CURR-001 S3-1), others soon', () => {
+  it('matches the real bundle: stage1 open, stage2 open (Holiday Words shipped its last placeholder, F-CURR-001 S2-2), stage3/4 taste, others soon', () => {
     expect(stageAvailability('stage1', episodesAll)).toBe('open');
-    expect(stageAvailability('stage2', episodesAll)).toBe('taste');
+    expect(stageAvailability('stage2', episodesAll)).toBe('open');
     expect(stageAvailability('stage4', episodesAll)).toBe('taste');
     expect(stageAvailability('stage3', episodesAll)).toBe('taste');
     expect(stageAvailability('stage6', episodesAll)).toBe('soon');
@@ -124,10 +124,12 @@ describe('completeStages: which stage rows read Complete', () => {
   });
 
   it('never completes a taste stage from its shipped quests alone', () => {
-    const stage2 = gridEpisodes(episodesAll)
-      .filter((e) => e.stage === 'stage2')
+    // Stage 3 is a taste stage (Animal Sentences is still coming); Stage 2 opened with F-CURR-001 S2-2.
+    const stage3 = gridEpisodes(episodesAll)
+      .filter((e) => e.stage === 'stage3')
       .flatMap((e) => e.questIds.map((questId) => ({ questId, episodeId: e.id, startedAt: AT, completedAt: AT, stars: 1 as const, attempts: 1, accuracy: 0.5 })));
-    expect(completeStages({ quests: stage2 }, episodesAll).has('stage2')).toBe(false);
+    expect(stage3.length).toBeGreaterThan(0);
+    expect(completeStages({ quests: stage3 }, episodesAll).has('stage3')).toBe(false);
   });
 });
 

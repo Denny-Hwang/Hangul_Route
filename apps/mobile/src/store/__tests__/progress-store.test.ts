@@ -733,8 +733,9 @@ describe('stage latch writer (F-ROUTE-001 R-1b, runs with flags.myRouteEnabled o
   });
 
   it('never latches a taste stage', async () => {
+    // Stage 3 is a taste stage (Animal Sentences is still coming); Stage 2 opened with F-CURR-001 S2-2.
     const taste = episodesAll
-      .filter((e) => e.stage === 'stage2' && e.status === 'shipped')
+      .filter((e) => e.stage === 'stage3' && e.status === 'shipped')
       .flatMap((e) => e.questIds.map((questId) => ({ questId, episodeId: e.id })));
     mem.set('progress:p1', savedWith(taste));
     await useProgressStore.getState().hydrate('p1');

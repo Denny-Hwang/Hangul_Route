@@ -257,6 +257,8 @@ describe('grid golden (F-STORY-005 §3.1 rule 2)', () => {
         questIds: ['quest:stage2-letters-q1', 'quest:stage2-letters-q2', 'quest:stage2-letters-q3', 'quest:stage2-letters-q4', 'quest:stage2-letters-q5', 'quest:stage2-letters-q6'],
         status: 'shipped',
       },
+      // F-CURR-001 S2-2: Holiday Words (generated; letters.json < rites.json).
+      { id: 'episode:stage2-rites', order: 3, questIds: ['quest:stage2-rites-q1', 'quest:stage2-rites-q2', 'quest:stage2-rites-q3'], status: 'shipped' },
       // F-CURR-001 S3-5: Game Sentences (generated; within a stage by file name, so crafts.json before letters.json).
       { id: 'episode:stage3-crafts', order: 5, questIds: ['quest:stage3-crafts-q1', 'quest:stage3-crafts-q2', 'quest:stage3-crafts-q3'], status: 'shipped' },
       // F-CURR-001 S3-1: First Sentences (generated, after the hand-written lessons, in stage order).
@@ -356,6 +358,8 @@ describe('pillar tags of the shipped lessons (F-STORY-005 §3.2)', () => {
       'episode:stage4-rites': ['B5'],
       // F-CURR-001 S2-1 (generated from content/episodes/stage-2/letters.json).
       'episode:stage2-letters': ['A1'],
+      // F-CURR-001 S2-2 (generated from content/episodes/stage-2/rites.json).
+      'episode:stage2-rites': ['B5'],
       'episode:stage5-letters': ['A1'],
       'episode:stage5-life': ['B1', 'B5', 'E4'],
       'episode:stage5-rites': ['B5'],
@@ -380,7 +384,7 @@ const GRID_GOLDEN: Record<string, string> = {
   'stage1:crafts': 'episode:stage1-crafts | Yut, Kites & Paper | shipped',
   'stage2:letters': 'episode:stage2-letters | Word Builder | shipped',
   'stage2:life': 'episode:stage2-life | Lunch Box Words | shipped',
-  'stage2:rites': 'episode:stage2-rites | Holiday Words | preview',
+  'stage2:rites': 'episode:stage2-rites | Holiday Words | shipped',
   'stage2:nature': 'episode:stage2-nature | Outdoor Words | shipped',
   'stage2:crafts': 'episode:stage2-crafts | Playground Words | shipped',
   'stage3:letters': 'episode:stage3-letters | First Sentences | shipped',

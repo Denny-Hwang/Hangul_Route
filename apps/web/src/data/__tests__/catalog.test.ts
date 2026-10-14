@@ -50,7 +50,7 @@ describe('console catalogue adapter over the shared catalogue', () => {
       'episode:stage1-nature',
       'episode:stage1-crafts',
     ]);
-    expect(builderEpisodes('stage2').map((cell) => cell.episodeId)).toEqual(['episode:stage2-letters', 'episode:stage2-life', 'episode:stage2-nature', 'episode:stage2-crafts']);
+    expect(builderEpisodes('stage2').map((cell) => cell.episodeId)).toEqual(['episode:stage2-letters', 'episode:stage2-life', 'episode:stage2-rites', 'episode:stage2-nature', 'episode:stage2-crafts']);
   });
 
   it('sorts an item into lesson, story, coming soon or unknown', () => {

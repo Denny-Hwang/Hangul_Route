@@ -147,7 +147,15 @@ describe('placedOutGrowth', () => {
 
   it('with the shipped history, a result stored at version 8 gains the Stage 2 quests shipped since, and one stored today gains none', () => {
     const shippedSince = CATALOG.quests.filter((q) => !V8.has(q.id) && q.stage === 'stage2').map((q) => q.id);
-    expect(shippedSince).toEqual([...WB, 'quest:stage2-crafts-q1', 'quest:stage2-crafts-q2', 'quest:stage2-crafts-q3']);
+    expect(shippedSince).toEqual([
+      ...WB,
+      'quest:stage2-rites-q1',
+      'quest:stage2-rites-q2',
+      'quest:stage2-rites-q3',
+      'quest:stage2-crafts-q1',
+      'quest:stage2-crafts-q2',
+      'quest:stage2-crafts-q3',
+    ]);
     expect(placedOutGrowth(STAGE3, undefined, routeCatalogOf(CATALOG))).toEqual(shippedSince);
     expect(placedOutGrowth(STAGE3, CATALOG_VERSION, routeCatalogOf(CATALOG))).toEqual([]);
   });

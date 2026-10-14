@@ -99,6 +99,8 @@ export const CATALOG_QUEST_ADDITIONS: Readonly<Record<number, readonly string[]>
   15: Object.freeze(['quest:stage4-rites-q2', 'quest:stage4-rites-q3']),
   // F-CURR-001 S2-1: Word Builder.
   16: Object.freeze(['quest:stage2-letters-q1', 'quest:stage2-letters-q2', 'quest:stage2-letters-q3', 'quest:stage2-letters-q4', 'quest:stage2-letters-q5', 'quest:stage2-letters-q6']),
+  // F-CURR-001 S2-2: Holiday Words.
+  17: Object.freeze(['quest:stage2-rites-q1', 'quest:stage2-rites-q2', 'quest:stage2-rites-q3']),
 });
 
 /** The quest ids the catalogue held at `version` (versions before 8 read as 8). */

@@ -25,8 +25,9 @@ import type { Catalog, CatalogCell, CatalogQuest, CatalogStory, CatalogTopic } f
  * Version 14 (F-CURR-001 S3-2): Daily Mini-Sentences ships (Stage 3 life, 3 lesson quests).
  * Version 15 (F-CURR-001 T-2): Greeting Dialogues adopts Discover and Check and grows to three quests.
  * Version 16 (F-CURR-001 S2-1): Stage 2 Word Builder ships with six quests that teach the rest of Hangul.
+ * Version 17 (F-CURR-001 S2-2): Holiday Words ships (Stage 2 rites, 3 lesson quests).
  */
-export const CATALOG_VERSION = 16;
+export const CATALOG_VERSION = 17;
 
 const cell = (
   stage: StageKey,
@@ -57,7 +58,7 @@ const cells: CatalogCell[] = [
   cell('stage1', 'crafts', 'Yut, Kites & Paper', 'shipped', 12, ['quest:stage1-crafts-q1', 'quest:stage1-crafts-q2', 'quest:stage1-crafts-q3']),
   cell('stage2', 'letters', 'Word Builder', 'shipped', 25, ['quest:stage2-letters-q1', 'quest:stage2-letters-q2', 'quest:stage2-letters-q3', 'quest:stage2-letters-q4', 'quest:stage2-letters-q5', 'quest:stage2-letters-q6']),
   cell('stage2', 'life', 'Lunch Box Words', 'shipped', 6, ['quest:stage2-life-q1']),
-  soon('stage2', 'rites', 'Holiday Words'),
+  cell('stage2', 'rites', 'Holiday Words', 'shipped', 13, ['quest:stage2-rites-q1', 'quest:stage2-rites-q2', 'quest:stage2-rites-q3']),
   cell('stage2', 'nature', 'Outdoor Words', 'shipped', 6, ['quest:stage2-nature-q1']),
   cell('stage2', 'crafts', 'Playground Words', 'shipped', 12, ['quest:stage2-crafts-q1', 'quest:stage2-crafts-q2', 'quest:stage2-crafts-q3']),
   cell('stage3', 'letters', 'First Sentences', 'shipped', 14, ['quest:stage3-letters-q1', 'quest:stage3-letters-q2', 'quest:stage3-letters-q3']),
@@ -133,6 +134,9 @@ const lessonQuests: CatalogQuest[] = [
   lesson('stage2-letters-q5', 'stage2', 'letters', 'One Sound for Six Letters', 4, ['ㅅ/final', 'ㅈ/final', 'ㅊ/final', 'ㅌ/final', 'ㄷ/final', 'ㅆ/final']),
   lesson('stage2-letters-q6', 'stage2', 'letters', 'More Letters for k and p', 4, ['ㅋ/final', 'ㄲ/final', 'ㅍ/final']),
   lesson('stage2-life-q1', 'stage2', 'life', 'Lunch Box Words', 5),
+  lesson('stage2-rites-q1', 'stage2', 'rites', 'Seollal Words', 4),
+  lesson('stage2-rites-q2', 'stage2', 'rites', 'Chuseok Words', 4),
+  lesson('stage2-rites-q3', 'stage2', 'rites', 'Holiday Play and Gifts', 4),
   lesson('stage2-nature-q1', 'stage2', 'nature', 'Outdoor Words', 5),
   lesson('stage2-crafts-q1', 'stage2', 'crafts', 'At the Playground', 4),
   lesson('stage2-crafts-q2', 'stage2', 'crafts', 'Traditional Games', 4),

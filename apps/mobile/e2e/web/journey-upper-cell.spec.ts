@@ -422,6 +422,38 @@ const CELLS: readonly UpperCell[] = [
       await expect(page.getByRole('button', { name: /^Letters & Books: Word Builder\./ })).toBeVisible();
     },
   },
+  // F-CURR-001 S2-2: Holiday Words, q1 "Seollal Words": Discover, all six Pic-Word boards, Build a Letter
+  // (the shipped game, skipped here), and the Check by id: the 세배 picture, then the written 설날.
+  {
+    episodeId: 'episode:stage2-rites',
+    cellButton: journeyCellName(2, 'Holidays & Traditions'),
+    title: 'Holiday Words',
+    playFirstQuest: async (page) => {
+      await page.setViewportSize({ width: 320, height: 720 });
+      await startFirstQuest(page);
+      await passDiscover(page);
+      await shot(page, 's2-2-q1-practice-320');
+      await playPicWordBoards(page, [
+        ['seollal', 'tteokguk', 'san'],
+        ['sebae', 'hanbok', 'bap'],
+        ['tteokguk', 'sebae', 'gimchi'],
+        ['hanbok', 'seollal', 'san'],
+        ['sebae', 'san', 'tteokguk'],
+        ['hanbok', 'tteokguk', 'sebae'],
+      ]);
+      await page.getByRole('button', { name: 'Skip for now' }).click();
+      await playCheckByIds(page, [{ answer: 'sebae' }, { answer: 'seollal' }]);
+      await page.getByRole('button', { name: 'See results' }).click();
+      await expect(page.getByText('Next up')).toBeVisible();
+      await shot(page, 's2-2-q1-results-320');
+    },
+    expectRouteDay: async (page) => {
+      await page.goto('/');
+      await page.getByText('Learning Route', { exact: true }).last().click();
+      await page.getByRole('button', { name: /^Stage 2, Words\./ }).click();
+      await expect(page.getByRole('button', { name: /^Holidays & Traditions: Holiday Words\./ })).toBeVisible();
+    },
+  },
 ];
 
 async function openJourney(page: Page): Promise<void> {
