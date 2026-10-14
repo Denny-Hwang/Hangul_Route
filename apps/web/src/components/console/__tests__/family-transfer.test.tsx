@@ -103,7 +103,7 @@ function renderSheet(over: Partial<ConsentSheetData> = {}, props: Partial<{ notN
 describe('ConsentSheet (consent-sheet.md; spec 4.11)', () => {
   it('draws every always line in canonical order, the introduce option last; the list of what the teacher sees is open', () => {
     renderSheet();
-    expect(lineIds()).toEqual(['moving', 'new_teacher', 'old_teacher', 'keeps', 'cooling_off', 'visible_list', 'nothing_else', 'visible_today', 'typed_names', 'cannot_undo', 'introduce']);
+    expect(lineIds()).toEqual(['moving', 'new_teacher', 'old_teacher', 'keeps', 'cooling_off', 'visible_list', 'nothing_else', 'visible_today', 'typed_names', 'teacher_moves', 'cannot_undo', 'introduce']);
     const sheet = byTestId('consent-sheet');
     expect(text(sheet)).toContain('Mina would move from Sunday Class A to Saturday Class B.');
     expect(text(sheet)).toContain(TRANSFER_CONSENT_TEXT.en.items.level_check);
@@ -115,7 +115,7 @@ describe('ConsentSheet (consent-sheet.md; spec 4.11)', () => {
 
   it('draws every applicable conditional line for a teacher-started move, and the Not now line', () => {
     renderSheet({ initiator: 'source', terms: { ...sheetData().terms, premiumChange: 'may_change', destinationConsentMode: 'school', relinkAffected: true, sourcePlansAffected: true } }, { notNowEnds: true });
-    expect(lineIds()).toEqual(['moving', 'new_teacher', 'old_teacher', 'keeps', 'cooling_off', 'visible_list', 'nothing_else', 'visible_today', 'typed_names', 'from_teacher', 'premium_may_change', 'school_delete', 'device_relink', 'homework_drops', 'cannot_undo', 'introduce']);
+    expect(lineIds()).toEqual(['moving', 'new_teacher', 'old_teacher', 'keeps', 'cooling_off', 'visible_list', 'nothing_else', 'visible_today', 'typed_names', 'from_teacher', 'premium_may_change', 'school_delete', 'device_relink', 'homework_drops', 'teacher_moves', 'cannot_undo', 'introduce']);
     expect(text(byTestId('consent-sheet'))).toContain(t.lines.notNowEnds);
   });
 
