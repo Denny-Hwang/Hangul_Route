@@ -8,6 +8,7 @@ import { AdultFrame } from '@/components/console/AdultFrame';
 import { useConsoleAuth } from '@/components/console/auth-context';
 import { ClassMoves } from '@/components/console/ClassTransferParts';
 import { FamilyMoves, FamilyPageStateLine, type FamilyPageState } from '@/components/console/FamilyTransferParts';
+import { TeacherMovesSection } from '@/components/console/TeacherMovesSection';
 import { MoveButton, useOnline, useTransfersShown } from '@/components/console/TransferParts';
 import { useConsole } from '@/components/console/use-console';
 import type { Roster, SpaceListItem } from '@/lib/console/api';
@@ -92,6 +93,9 @@ function TransfersInner(): JSX.Element {
       {stateText ? null : space && api && space.kind === 'family' ? (
         <FamilyMoves familyId={spaceId} familyName={space.name} api={api} online={online} refreshMs={TRANSFER_REFRESH_MS} onPageState={setState} />
       ) : space && api && space.kind === 'class' && spacesRead ? (
+        <>
+        {/* [TV] Teacher moves (AMENDMENTS-TEACHER-VISIBILITY-TRANSFER TV-D8): asks into and out of this class. */}
+        <TeacherMovesSection spaceId={spaceId} api={api} online={online} readOnly={space.archivedAt !== null} refreshMs={TRANSFER_REFRESH_MS} onPageState={setState} />
         <ClassMoves
           spaceId={spaceId}
           spaceName={space.name}
@@ -103,6 +107,7 @@ function TransfersInner(): JSX.Element {
           confirm={(question) => typeof window !== 'undefined' && window.confirm(question)}
           onPageState={setState}
         />
+        </>
       ) : null}
     </AdultFrame>
   );

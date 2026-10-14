@@ -1825,4 +1825,88 @@ export const consoleMsgs = {
     preview: { cta: 'Preview' },
     previewLessons: { cta: 'Preview lessons' },
   },
+  /**
+   * [TV] Teacher moves (AMENDMENTS-TEACHER-VISIBILITY-TRANSFER TV-D7, TV-D8; wireframe console/teacher-move-and-scope.md
+   * screens 1 and 2): the Move sheet from class settings and the "Teacher moves" section of the class moves page.
+   * Names and class names arrive as arguments; an ended move never names who ended it.
+   */
+  teacherMove: {
+    sheetTitle: (name: string) => `Move ${name}`,
+    whereTo: 'Where to?',
+    yourClasses: 'Your classes',
+    otherTeacher: 'A class of another teacher',
+    noOtherClass: 'You have no other class. Use a class code.',
+    loading: 'Loading your classes…',
+    continue: { cta: 'Continue' },
+    back: { cta: 'Back' },
+    confirmDirect: (name: string, cls: string) => `Move ${name} to ${cls}?`,
+    directLine: 'This happens now. The family gets a short notice.',
+    keeps: (name: string) => `Cards, stars and finished lessons stay with ${name}.`,
+    confirmAccept: (name: string, cls: string) => `Ask ${cls} to take ${name}?`,
+    acceptLine: (cls: string) => `The teacher of ${cls} needs to accept.`,
+    moveNow: { cta: 'Move now' },
+    moving: { cta: 'Moving…' },
+    send: { cta: 'Send' },
+    sending: { cta: 'Sending…' },
+    moved: (name: string, cls: string) => `Moved. ${name} is now in ${cls}.`,
+    sent: (cls: string) => `Sent. ${cls} needs to accept.`,
+    done: { cta: 'Done' },
+    errors: {
+      full: (cls: string) => `${cls} is full right now.`,
+      capLearner: (name: string) => `${name} is in as many classes as one learner can be.`,
+      alreadyMember: (name: string, cls: string) => `${name} is already in ${cls}.`,
+      alreadyOpen: (name: string) => `A move for ${name} is already waiting.`,
+      sameSpace: (name: string) => `${name} is already in this class.`,
+      codeRequired: 'Type the class code first.',
+      codeNotFound: "That code didn't work. Check it with the teacher.",
+      codeExpired: 'That code is too old. Ask for a new one.',
+      tooManyAttempts: 'Too many tries. Please try again later.',
+      notTransferable: 'A learner can move into a class only.',
+      offline: 'This needs internet.',
+      failed: "That didn't work. Try again.",
+    },
+    section: {
+      title: 'Teacher moves',
+      incoming: 'Asked to join this class',
+      outgoing: 'Sent from this class',
+      done: 'Done',
+      empty: 'Nothing waiting.',
+      from: (cls: string) => `From ${cls}`,
+      to: (cls: string) => `To ${cls}`,
+      asked: (day: string) => `Asked ${day}`,
+      waitingOther: 'Waiting for the other class.',
+      movedTo: (name: string, cls: string) => `${name} moved to ${cls}.`,
+      movedOut: (cls: string) => `A student moved to ${cls}.`,
+      joined: (name: string) => `${name} joined this class.`,
+      ended: 'This move ended.',
+      noRoom: 'No room in this class right now.',
+      accept: { cta: 'Accept' },
+      notNow: { cta: 'Not now' },
+      cancel: { cta: 'Cancel' },
+      tryAgain: { cta: 'Try again' },
+      failed: "That didn't work. Try again.",
+    },
+  },
+  /**
+   * [TV] The family's cards on the parent home (TV-D5, TV-D10; wireframe screen 4): the one-time class-scope update
+   * (its lines are the keyed text of content-schema `CLASS_SCOPE_TEXT`, not here) and the one-time move notice.
+   */
+  classScope: {
+    title: (name: string) => `An update about ${name}'s classes`,
+    saving: { cta: 'Saving…' },
+    failed: "That didn't save. Try again.",
+    notice: (name: string, cls: string) => `${name} moved to a new class: ${cls}.`,
+  },
+  /** [TV] The learner report's Words and Settings blocks (TV-D2, TV-D12; wireframe screen 3). */
+  reportScope: {
+    words: 'Words',
+    firstTry: (percent: number) => `First try: ${percent}%`,
+    settings: 'Settings',
+    classNotes: {
+      all: 'Notes from the class: on',
+      presets: 'Notes from the class: set messages only',
+      off: 'Notes from the class: off',
+    },
+    baseScope: 'Words and more show once the family has read the update.',
+  },
 } as const;

@@ -106,10 +106,10 @@ export interface StudentWords {
 /**
  * A student card's word lines, or null when the roster carries no readable `summary.vocab`.
  *
- * The Worker projects a roster summary to the teacher allow-list, and `vocab` stays on
- * `TEACHER_HIDDEN_SUMMARY_KEYS` until a consent item covers it, so today no roster carries it and
- * the card shows no word line. The first-try rate is never read here: it stays off the roster
- * (section 3.8).
+ * [TV] The Worker sends `vocab` to a family always and to a class or school once the family has read
+ * the class-scope update (AMENDMENTS-TEACHER-VISIBILITY-TRANSFER section 2); before that the card shows
+ * no word line. The first-try rate is never read here: it stays off the roster (section 3.8); the
+ * learner report shows it (`ReportScopeBlock`).
  */
 export function studentWords(summary: { vocab?: RosterVocab } | null | undefined, locale: MessageLocale): StudentWords | null {
   const vocab = parseVocabSummary(summary?.vocab);

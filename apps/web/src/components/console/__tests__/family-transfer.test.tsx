@@ -424,16 +424,11 @@ describe('FamilyMoves (family-page.md)', () => {
     expect(allTestId('consent-updated')).toHaveLength(1);
   });
 
-  it('the teacher-requests switch: one row per learner, named; a self-managed learner has the line, no switch', async () => {
+  it('[TV] TV-D11: the teacher-requests switch is no longer drawn (a teacher move does not ask the family)', async () => {
     const api = makeApi([okList([], [mina, grace])]);
     await renderPage(api);
-    const rows = allTestId('teacher-requests-row');
-    expect(rows).toHaveLength(2);
-    const box = rows[0]?.find((n) => n.type === 'input');
-    expect(text(root().find((n) => n.props.id === box?.props['aria-describedby'] && n.type === 'p'))).toBe('Mina');
-    expect(rows[1]?.findAll((n) => n.type === 'input')).toHaveLength(0);
-    await act(async () => box?.props.onChange({ target: { checked: true } }));
-    expect(api.setTransferPrefs).toHaveBeenCalledWith('space:f', 'profile:mina', { blockTeacherRequests: true });
+    expect(allTestId('teacher-requests-row')).toHaveLength(0);
+    expect(api.setTransferPrefs).not.toHaveBeenCalled();
   });
 
   it('page states: a 401, a lost role and the lock go to the page; any other failure says so; loading has no words', async () => {

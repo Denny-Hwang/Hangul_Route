@@ -1787,4 +1787,12 @@ export const learner = {
       note: 'Solo para esta sesión. El coreano siempre muestra la romanización y el significado.',
     },
   },
+  /** [TV] Líneas de Inicio sobre las clases (TV-D5, TV-D10). */
+  classUpdate: {
+    moved: (name: string, cls: string) => `${name} pasó a una clase nueva: ${cls}.`,
+    ok: { cta: 'OK' },
+    scopeChild: 'Un adulto tiene novedades sobre tu clase.',
+    scopeSelf: 'Hay novedades sobre tu clase.',
+    open: { cta: 'Abrir' },
+  },
 } satisfies DeepPartial<Messages['learner']>;

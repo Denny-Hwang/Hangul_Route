@@ -2231,4 +2231,15 @@ export const learner = {
       note: 'Only for this session. Korean always shows romanization and a meaning.',
     },
   },
+  /**
+   * [TV] Home lines about classes (AMENDMENTS-TEACHER-VISIBILITY-TRANSFER TV-D5, TV-D10; wireframe screen 5): the one-time
+   * move notice, and the line that opens the class update (through the grown-up gate for a child profile).
+   */
+  classUpdate: {
+    moved: (name: string, cls: string) => `${name} moved to a new class: ${cls}.`,
+    ok: { cta: 'OK' },
+    scopeChild: 'A grown-up has an update about your class.',
+    scopeSelf: 'There is an update about your class.',
+    open: { cta: 'Open' },
+  },
 } as const;

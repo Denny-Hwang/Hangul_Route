@@ -847,21 +847,11 @@ export function FamilyMoves({ familyId, familyName, api, online, refreshMs, onPa
         />
       </section>
 
-      {options.length > 0 ? (
-        <>
-          <h2 style={h2Style}>{t.groups.prefs}</h2>
-          <ul style={{ ...panel, listStyle: 'none' }}>
-            {options.map((option) => (
-              <TeacherRequestsSwitch
-                key={option.learnerId}
-                option={option}
-                busy={busy}
-                onChange={(on) => void act(() => api.setTransferPrefs(familyId, option.learnerId, { blockTeacherRequests: on }))}
-              />
-            ))}
-          </ul>
-        </>
-      ) : null}
+      {/*
+        [TV] TV-D11 (AMENDMENTS-TEACHER-VISIBILITY-TRANSFER): the "Do not accept move requests from teachers" switch is no
+        longer drawn. A teacher move (TV-D7, TV-D8) does not ask the family, so the switch would promise more than it does;
+        the Worker keeps the stored setting for the family-started request path.
+      */}
 
       {ended.length > 0 ? (
         <>
