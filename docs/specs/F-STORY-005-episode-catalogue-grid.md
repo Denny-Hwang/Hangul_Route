@@ -148,7 +148,7 @@ Totals: 112 minutes; 18 stories in cells that hold a lesson (rows 1-10, 13, 15, 
 | Stage 4 | L + 1 | placeholder | L + 0 | placeholder | placeholder |
 | Stage 5 | book later | book later | S-only 1 → book later | book later | book later |
 | Stage 6 | S-only 1 | placeholder | placeholder | placeholder | placeholder |
-| Stage 7 | placeholder | placeholder | placeholder | placeholder | placeholder |
+| Stage 7 | placeholder | placeholder | placeholder | L + 0 | placeholder |
 
 15 of 35 cells show stories; the other 20 stay "Coming soon". The generator test asserts these counts from the data, so the table cannot drift.
 

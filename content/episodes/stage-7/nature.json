@@ -774,7 +774,8 @@
                   ]
                 }
               ],
-              "entry": "type"
+              "entry": "type",
+              "freeEntry": false
             },
             {
               "id": "w2",
@@ -815,7 +816,8 @@
                   ]
                 }
               ],
-              "entry": "type"
+              "entry": "type",
+              "freeEntry": false
             },
             {
               "id": "w3",
@@ -876,7 +878,8 @@
                   ]
                 }
               ],
-              "entry": "type"
+              "entry": "type",
+              "freeEntry": false
             }
           ]
         },
