@@ -12,6 +12,7 @@ type TitleBody = Extract<Slide, { kind: 'title' }>;
  * Title slide (design/screens/presenter/slide-title.md): Hoya waving (idle on a topic title) and,
  * beside it, the deck title as a caption on the first slide only (teacher text, README D17), the
  * title, the subtitle and Hoya's line in a bubble. One build; every word is the content's own.
+ * A topic title carries the "Word topics" kind label (slide-topic.md, PR 12).
  */
 export function TitleSlide({ slide, deckTitle }: { slide: TitleBody; deckTitle?: string }): React.ReactElement {
   const { unit, messages } = usePresenterView();
@@ -27,6 +28,11 @@ export function TitleSlide({ slide, deckTitle }: { slide: TitleBody; deckTitle?:
             style={{ fontSize: size(presenter.size.caption), color: colors.text.secondary, lineHeight: Math.round(size(presenter.size.caption) * typography.leading.tight) }}
           >
             {deckTitle}
+          </Text>
+        ) : null}
+        {slide.source === 'topic' ? (
+          <Text testID="presenter-title-kind" style={{ fontSize: size(presenter.size.caption), fontWeight: typography.weight.semibold, color: colors.text.secondary }}>
+            {messages.learner.presenter.slide.topic}
           </Text>
         ) : null}
         <Text
