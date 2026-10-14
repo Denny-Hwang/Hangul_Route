@@ -31,6 +31,7 @@ import { Platform, ScrollView, Text, View, type LayoutChangeEvent } from 'react-
 import { useMessages } from '../../i18n/use-messages';
 import { useRomanizationMode } from '../../i18n/use-romanization-mode';
 import type { MinigameScope } from '../../logic/minigame-config';
+import { chunkRows, compareGrid } from '../../logic/type-hangul/compare-grid';
 import { fieldView, startFlow, stepFlow, type TypeHangulEffect, type TypeHangulEvent, type TypeHangulState } from '../../logic/type-hangul/flow';
 import type { BlockCompare } from '../../logic/type-hangul/score';
 import { keySound } from '../../logic/type-hangul/sounds';
@@ -403,7 +404,9 @@ export function ResultPanel({ state, round, width, height, gutter, panelRef, onF
   const line = passed ? t.pass : score?.verdict === 'near' ? t.near : t.far;
   const blocks = score?.blocks ?? [];
   const inner = width - 2 * gutter;
-  const cell = Math.max(spacing.xxl, Math.min(touchTarget.min, Math.floor((inner - (blocks.length - 1) * spacing.xs) / Math.max(blocks.length, 1))));
+  // A long guess on a narrow phone wraps: typed and word rows per chunk, so each pair stays in one column.
+  const { cell, perRow } = compareGrid(blocks.length, inner, spacing.xs, spacing.xxl, touchTarget.min);
+  const chunks = chunkRows(blocks, perRow);
   const readout = [
     k.typedBlocks(blocks.flatMap((b) => (b.typed === null ? [] : [b.typed]))),
     k.wordBlocks(blocks.flatMap((b) => (b.target === null ? [] : [b.target]))),
@@ -439,10 +442,15 @@ export function ResultPanel({ state, round, width, height, gutter, panelRef, onF
         {passed ? null : (
           <>
             <View accessible accessibilityLabel={readout} style={{ gap: spacing.xs }} testID="type-hangul-compare">
-              <Caption tone="secondary">{t.typedLabel}</Caption>
-              <BlockRow blocks={blocks} side="typed" cell={cell} />
-              <Caption tone="secondary">{t.targetLabel}</Caption>
-              <BlockRow blocks={blocks} side="target" cell={cell} />
+              {chunks.map((chunk, c) => (
+                // Every chunk carries both captions, so a lower pair is never two unlabelled rows of boxes.
+                <View key={c} style={{ gap: spacing.xs, paddingTop: c === 0 ? 0 : spacing.md }} testID="type-hangul-compare-chunk">
+                  <Caption tone="secondary">{t.typedLabel}</Caption>
+                  <BlockRow blocks={chunk} side="typed" cell={cell} />
+                  <Caption tone="secondary">{t.targetLabel}</Caption>
+                  <BlockRow blocks={chunk} side="target" cell={cell} />
+                </View>
+              ))}
             </View>
             {/* After Done the word is the answer: it shows with its romanization whatever the setting (as Story Check does once resolved). */}
             <WordLine round={round} romanizationVisible />
@@ -457,7 +465,7 @@ export function ResultPanel({ state, round, width, height, gutter, panelRef, onF
 /** One row of the compare grid: a block per column; a differing block marked by its border and a dot, never colour alone. */
 function BlockRow({ blocks, side, cell }: { blocks: readonly BlockCompare[]; side: 'typed' | 'target'; cell: number }): React.ReactElement {
   return (
-    <View style={{ flexDirection: 'row', gap: spacing.xs }} {...{ 'aria-hidden': true }} importantForAccessibility="no-hide-descendants">
+    <View style={{ flexDirection: 'row', gap: spacing.xs }} testID={`type-hangul-${side}-row`} {...{ 'aria-hidden': true }} importantForAccessibility="no-hide-descendants">
       {blocks.map((block, i) => {
         const text = side === 'typed' ? block.typed : block.target;
         const marked = block.status !== 'same';

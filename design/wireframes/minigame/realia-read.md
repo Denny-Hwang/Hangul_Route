@@ -104,7 +104,7 @@ Tablet and phone landscape (window class 700 and up: side by side, the realia st
 +--------------------------------------------------------------------+
 ```
 
-The two columns share the width equally up to `layout.maxWidth.full`; the realia column is sticky at the top of the scroll area when the question column is taller. Below 700 the layout is the phone column. At 900 and up the gutters widen; nothing else changes.
+The two columns share the width equally up to `layout.maxWidth.full`; the realia column is sticky at the top of the scroll area when the question column is taller. On native (no CSS sticky) the screen does not scroll in this arrangement; each column scrolls on its own, so the realia stays put while the options scroll. A new question starts both columns at the top, and Hoya's line after a miss scrolls into view under the realia. Crossing the side-by-side boundary on native (rotation, Split View) rebuilds the game body: the game's progress is kept, screen-reader focus and scroll position are not (G-2 follow-up 2). Below 700 the layout is the phone column. At 900 and up the gutters widen; nothing else changes.
 
 Question kinds (the answer is a number, a word or a picture, F-CURR-001 §3.6):
 
