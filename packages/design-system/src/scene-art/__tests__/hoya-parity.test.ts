@@ -33,7 +33,7 @@ describe('hoya parity with Hoya.tsx', () => {
     expect(hoyaTsx).toMatch(/import \{ hoyaFigure\b/);
     expect(hoyaTsx).toMatch(/hoyaFigure\(pose\)/);
     expect(hoyaTsx).not.toMatch(/\bcolors\./);
-    expect(hoyaTsx).not.toMatch(/\b(cx|cy|x1|d)=\{?["\d]/);
+    expect(hoyaTsx).not.toMatch(/\b(cx|cy|r|rx|ry|x|y|x1|y1|x2|y2|width|height|d|points)=\{?["'`\d-]/);
   });
 
   it('the figure uses the fixed Hoya palette across the five poses', () => {

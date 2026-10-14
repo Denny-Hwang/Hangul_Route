@@ -12,7 +12,7 @@ import { hoyaFigure, type HoyaPart } from '../../scene-art/hoya';
 import { resolveColor } from '../../scene-art/tokens-map';
 import type { ColorToken } from '../../scene-art/types';
 import { hoyaVariantColors } from '../../tokens';
-import type { HoyaProps } from './types';
+import type { HoyaPose, HoyaProps } from './types';
 
 /**
  * Hoya, the geometric SVG tiger, v1 placeholder (design/brief/character/hoya-character-sheet.md).
@@ -30,6 +30,17 @@ import type { HoyaProps } from './types';
  */
 
 type Fur = { fur: string; furDark: string };
+
+/** `hoyaFigure` is pure, so each pose's part tree is built once and reused across renders. */
+const figureCache = new Map<HoyaPose, readonly HoyaPart[]>();
+function figureOf(pose: HoyaPose): readonly HoyaPart[] {
+  let parts = figureCache.get(pose);
+  if (parts === undefined) {
+    parts = hoyaFigure(pose);
+    figureCache.set(pose, parts);
+  }
+  return parts;
+}
 
 /** A token's colour, with the gold cub's fur pair swapped for the learner's variant. */
 function colorOf(token: ColorToken | 'none', fur: Fur): string {
@@ -81,7 +92,7 @@ export function Hoya({
   accessibilityLabel,
 }: HoyaProps): React.ReactElement {
   const fur = hoyaVariantColors(variant);
-  const parts = hoyaFigure(pose);
+  const parts = figureOf(pose);
 
   // F-MOTION-001 pose-transition pulse — scale 1 → 1.06 → 1 over ~300ms
   // when the `pose` prop changes (skipped on initial mount and when OS
