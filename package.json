@@ -2,6 +2,7 @@
   "name": "hangul-route",
   "version": "0.0.0",
   "private": true,
+  "license": "UNLICENSED",
   "description": "Hangul Route — learn Hangul from zero, at any age (heritage families, K-culture fans, beginners)",
   "packageManager": "pnpm@10.33.0",
   "scripts": {

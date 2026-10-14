@@ -103,7 +103,7 @@ function renderSheet(over: Partial<ConsentSheetData> = {}, props: Partial<{ notN
 describe('ConsentSheet (consent-sheet.md; spec 4.11)', () => {
   it('draws every always line in canonical order, the introduce option last; the list of what the teacher sees is open', () => {
     renderSheet();
-    expect(lineIds()).toEqual(['moving', 'new_teacher', 'old_teacher', 'keeps', 'cooling_off', 'visible_list', 'nothing_else', 'visible_today', 'typed_names', 'cannot_undo', 'introduce']);
+    expect(lineIds()).toEqual(['moving', 'new_teacher', 'old_teacher', 'keeps', 'cooling_off', 'visible_list', 'nothing_else', 'visible_today', 'typed_names', 'teacher_moves', 'cannot_undo', 'introduce']);
     const sheet = byTestId('consent-sheet');
     expect(text(sheet)).toContain('Mina would move from Sunday Class A to Saturday Class B.');
     expect(text(sheet)).toContain(TRANSFER_CONSENT_TEXT.en.items.level_check);
@@ -115,7 +115,7 @@ describe('ConsentSheet (consent-sheet.md; spec 4.11)', () => {
 
   it('draws every applicable conditional line for a teacher-started move, and the Not now line', () => {
     renderSheet({ initiator: 'source', terms: { ...sheetData().terms, premiumChange: 'may_change', destinationConsentMode: 'school', relinkAffected: true, sourcePlansAffected: true } }, { notNowEnds: true });
-    expect(lineIds()).toEqual(['moving', 'new_teacher', 'old_teacher', 'keeps', 'cooling_off', 'visible_list', 'nothing_else', 'visible_today', 'typed_names', 'from_teacher', 'premium_may_change', 'school_delete', 'device_relink', 'homework_drops', 'cannot_undo', 'introduce']);
+    expect(lineIds()).toEqual(['moving', 'new_teacher', 'old_teacher', 'keeps', 'cooling_off', 'visible_list', 'nothing_else', 'visible_today', 'typed_names', 'from_teacher', 'premium_may_change', 'school_delete', 'device_relink', 'homework_drops', 'teacher_moves', 'cannot_undo', 'introduce']);
     expect(text(byTestId('consent-sheet'))).toContain(t.lines.notNowEnds);
   });
 
@@ -424,16 +424,11 @@ describe('FamilyMoves (family-page.md)', () => {
     expect(allTestId('consent-updated')).toHaveLength(1);
   });
 
-  it('the teacher-requests switch: one row per learner, named; a self-managed learner has the line, no switch', async () => {
+  it('[TV] TV-D11: the teacher-requests switch is no longer drawn (a teacher move does not ask the family)', async () => {
     const api = makeApi([okList([], [mina, grace])]);
     await renderPage(api);
-    const rows = allTestId('teacher-requests-row');
-    expect(rows).toHaveLength(2);
-    const box = rows[0]?.find((n) => n.type === 'input');
-    expect(text(root().find((n) => n.props.id === box?.props['aria-describedby'] && n.type === 'p'))).toBe('Mina');
-    expect(rows[1]?.findAll((n) => n.type === 'input')).toHaveLength(0);
-    await act(async () => box?.props.onChange({ target: { checked: true } }));
-    expect(api.setTransferPrefs).toHaveBeenCalledWith('space:f', 'profile:mina', { blockTeacherRequests: true });
+    expect(allTestId('teacher-requests-row')).toHaveLength(0);
+    expect(api.setTransferPrefs).not.toHaveBeenCalled();
   });
 
   it('page states: a 401, a lost role and the lock go to the page; any other failure says so; loading has no words', async () => {

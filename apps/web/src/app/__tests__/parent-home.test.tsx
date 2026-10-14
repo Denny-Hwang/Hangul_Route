@@ -56,6 +56,9 @@ const data = vi.hoisted(() => ({
   regenerated: [] as string[],
   regenerate: null as null | (() => Promise<unknown>),
   listPending: false,
+  /** [TV] The family's class-scope read: the default lists nobody, so no card shows. */
+  scope: null as unknown,
+  scopeThrows: false,
 }));
 vi.mock('@/components/console/use-console', async () => {
   const { getMessages: messages } = await import('@hangul-route/i18n');
@@ -71,6 +74,14 @@ vi.mock('@/components/console/use-console', async () => {
       if (data.regenerate) return data.regenerate();
       return { ok: true, data: { joinCode: 'NEWCD7', expiresAt: '2026-11-01T00:00:00Z' } };
     },
+    // [TV] the family class cards (FamilyClassCards) read these on every live family section.
+    classScope: async () => {
+      if (data.scopeThrows) throw new Error('network');
+      return data.scope ?? { ok: true, data: { current: 'class-scope-2026-10', learners: [] } };
+    },
+    acknowledgeClassScope: async () => ({ ok: true, data: { version: 'class-scope-2026-10', ackedAt: '2026-10-12T12:00:00Z' } }),
+    moveNotices: async () => ({ ok: true, data: [] }),
+    markMoveSeen: async () => ({ ok: true, data: { seen: true } }),
   };
   const session = { accountId: 'acc_1', displayName: 'Ms Kim' };
   const signOut = (): undefined => undefined;
@@ -132,6 +143,8 @@ beforeEach(() => {
   data.regenerated = [];
   data.regenerate = null;
   data.listPending = false;
+  data.scope = null;
+  data.scopeThrows = false;
   vi.unstubAllEnvs();
   // Reports are on by default since F-REPORT-001 RP-11; these cases start from every sibling flag off and switch on what they need.
   vi.stubEnv('NEXT_PUBLIC_REPORTS_ENABLED', 'false');
@@ -279,6 +292,25 @@ describe('the family home (F-APP-001 A-5b)', () => {
     const [samCard, minaCard] = byTestId(r, 'learner-card') as [ReactTestInstance, ReactTestInstance];
     expect(textOf(samCard)).not.toContain('Minutes, last 7 days');
     expect(textOf(minaCard)).toContain('Minutes, last 7 days: 15');
+  });
+
+  it('[TV] a learner whose family has not read the class update gets the class-scope card in the family section', async () => {
+    data.rosters = { sp_f: roster(family, [mina]) };
+    data.scope = { ok: true, data: { current: 'class-scope-2026-10', learners: [{ learnerId: 'profile:mina', name: 'Mina', needed: true }] } };
+    const r = await render([family]);
+    expect(byTestId(r, 'class-scope-card')).toHaveLength(1);
+    expect(cardNames(r)).toEqual(['Mina']);
+  });
+
+  it('[TV] no class-scope card when nobody needs it, and a failed class-scope read leaves the page as it is', async () => {
+    data.rosters = { sp_f: roster(family, [mina]) };
+    const r = await render([family]);
+    expect(byTestId(r, 'family-class-cards')).toHaveLength(0);
+    act(() => mounted?.unmount());
+    data.scopeThrows = true;
+    const failed = await render([family]);
+    expect(byTestId(failed, 'family-class-cards')).toHaveLength(0);
+    expect(cardNames(failed)).toEqual(['Mina']);
   });
 
   it('cards carry the card shadow token', async () => {

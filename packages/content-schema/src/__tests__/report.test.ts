@@ -225,13 +225,28 @@ describe('LearnerReportResponseSchema (section 3.8)', () => {
     const parsed = LearnerReportResponseSchema.parse({ ...body, payload: { quests: [] }, summary: { ...projected, schemaVersion: 1, stage1Anchor: { met: true, checkedAt: 'x', tricky: [] }, vocab: {} } });
     expect(parsed).not.toHaveProperty('payload');
     expect(parsed.summary).not.toHaveProperty('schemaVersion');
-    expect(parsed.summary).not.toHaveProperty('stage1Anchor');
-    expect(parsed.summary).not.toHaveProperty('vocab');
+    // [TV] a malformed vocab slice is dropped, never the page
+    expect(parsed.summary?.vocab).toBeUndefined();
   });
 
   it('reads exactly the roster allow-list (activity on it since RP-W2) plus the family self-route', () => {
     expect(TEACHER_VISIBLE_SUMMARY_KEYS).toContain('activity');
-    expect(Object.keys(ReportSummarySchema.shape).sort()).toEqual([...TEACHER_VISIBLE_SUMMARY_KEYS, 'selfRoute'].sort());
+    // [TV] plus the full-scope words and Hangul Check (AMENDMENTS-TEACHER-VISIBILITY-TRANSFER section 2)
+    expect(Object.keys(ReportSummarySchema.shape).sort()).toEqual([...TEACHER_VISIBLE_SUMMARY_KEYS, 'selfRoute', 'vocab', 'stage1Anchor'].sort());
+  });
+
+  it('[TV] carries vocab with firstTryRate, the Hangul Check, the scope and the learner settings when the Worker sends them', () => {
+    const vocab = { collected: 4, strong: 1, topicsStarted: 1, topicsPracticed7d: 1, firstTryRate: 0.75, needsPractice: ['vocab:bap'] };
+    const stage1Anchor = { met: true, checkedAt: '2026-10-10T00:00:00.000Z', tricky: ['ㄹ'] };
+    const parsed = LearnerReportResponseSchema.parse({ ...body, summary: { ...projected, vocab, stage1Anchor }, scope: 'full', settings: { classNotes: 'presets' } });
+    expect(parsed.summary?.vocab).toEqual(vocab);
+    expect(parsed.summary?.stage1Anchor).toEqual(stage1Anchor);
+    expect(parsed.scope).toBe('full');
+    expect(parsed.settings).toEqual({ classNotes: 'presets' });
+    const old = LearnerReportResponseSchema.parse(body);
+    expect(old.scope).toBeUndefined();
+    expect(old.settings).toBeUndefined();
+    expect(LearnerReportResponseSchema.safeParse({ ...body, scope: 'all' }).success).toBe(false);
   });
 
   it('reads a legacy projection with missing keys, and the family and activity fields when present', () => {

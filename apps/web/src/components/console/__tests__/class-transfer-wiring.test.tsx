@@ -85,6 +85,10 @@ vi.mock('@/components/console/use-console', async () => {
       }),
       relinkRequests: async () => ({ ok: true, data: [] }),
       listPlans: async () => ({ ok: true, data: [] }),
+      // [TV] teacher moves and the family's class-scope cards: nothing waiting
+      classMoves: async () => ({ ok: true, data: { outgoing: [], incoming: [] } }),
+      classScope: async () => ({ ok: true, data: { current: 'class-scope-2026-10', learners: [] } }),
+      moveNotices: async () => ({ ok: true, data: [] }),
     } as Record<string, unknown>,
     { get: (target, key: string) => target[key] ?? (async () => ({ ok: true, data: [] })) },
   );

@@ -179,6 +179,8 @@ export const learner = {
       details: { cta: 'Plan details' },
     },
     install: { label: 'Install on this device', a11yLabel: 'Install Hangul Route on this device' },
+    /** The link at the foot of Profiles & settings to the site's /licenses page (owner decision 2026-10-14). */
+    licenses: { label: 'Open-source notices', fallback: 'Open hangulroute.com/licenses in a browser.', gateDone: 'Grown-up check done. Tap Open-source notices again to open the page.' },
     /** Shown when more than one language is offered (hidden while only English ships). */
     language: {
       title: 'Language',
@@ -2228,5 +2230,16 @@ export const learner = {
       title: 'Presenter language',
       note: 'Only for this session. Korean always shows romanization and a meaning.',
     },
+  },
+  /**
+   * [TV] Home lines about classes (AMENDMENTS-TEACHER-VISIBILITY-TRANSFER TV-D5, TV-D10; wireframe screen 5): the one-time
+   * move notice, and the line that opens the class update (through the grown-up gate for a child profile).
+   */
+  classUpdate: {
+    moved: (name: string, cls: string) => `${name} moved to a new class: ${cls}.`,
+    ok: { cta: 'OK' },
+    scopeChild: 'A grown-up has an update about your class.',
+    scopeSelf: 'There is an update about your class.',
+    open: { cta: 'Open' },
   },
 } as const;
