@@ -1153,16 +1153,16 @@
         }
       ],
       "verification": {
-        "passes": 1,
+        "passes": 2,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "Pass 2 (author, 2026-10-14): each sentence checked against the cited locators; wording is the author's own, no run of words shared with a source."
+        "notes": "Pass 2 (author, 2026-10-14): each sentence checked against the cited locators; wording is the author's own, no run of words shared with a source.\nLine 2 (pass 2b, independent fact check, 2026-10-14): both pages re-fetched. The NIKL page of the loanword rules, chapter 1 article 1, says loanwords are written with the current 24 letters only (Hangul's own letters). The 2002 새국어소식 article by 정희원 (NIKL) states that the rules write [p] and [f] alike with ㅍ and [l] and [r] alike with ㄹ, and that the rules aim at one unified spelling, not at teaching foreign pronunciation. The note matches both; the English is the author's own; no wording is copied. Outcome: pass, no change."
       }
     },
     {
       "id": "n2",
       "kind": "language",
-      "textEn": "The National Institute of Korean Language sets loanword spelling rules, yet one word is often written more than one way. A name can have more than one Hangul spelling.",
+      "textEn": "The National Institute of Korean Language publishes the loanword spelling rules, yet in real use one word has been written more than one way. A name can have more than one Hangul spelling.",
       "sources": [
         {
           "title": "외래어 표기법, 제1장 표기의 원칙",
@@ -1176,14 +1176,14 @@
           "publisher": "National Institute of Korean Language, 새국어생활 1990 no. 4",
           "url": "https://www.korean.go.kr/nkview/nklife/1990_4/23_10.html",
           "accessed": "2026-10-14",
-          "quoteOrLocator": "Section on consonants, items (4)-(6): counts of one foreign word written in several Hangul spellings in actual use."
+          "quoteOrLocator": "Survey of company names in a 1990 yearbook, consonant items (4)-(6): counts of one foreign word written in several Hangul spellings in actual use (fashion in five spellings)."
         }
       ],
       "verification": {
-        "passes": 1,
+        "passes": 2,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "Pass 2 (author, 2026-10-14): each sentence checked against the cited locators; wording is the author's own, no run of words shared with a source."
+        "notes": "Pass 2 (author, 2026-10-14): each sentence checked against the cited locators; wording is the author's own, no run of words shared with a source.\nLine 2 (pass 2b, independent fact check, 2026-10-14): both pages re-fetched. The NIKL rules page shows the rules (chapter 1, articles 1-5) but does not say NIKL issued them (the rules were issued by the ministry in 1986), so 'sets' was an overclaim: changed to 'publishes'. The 1990 새국어생활 article by 김세중 surveys company names from a 1990 yearbook and finds one word in several spellings (fashion in five, family in two, rocket and systems in two) and says varied spellings coexist in real use; its data is from 1990, so 'is often written' (present, frequency) was changed to 'in real use ... has been written'. Company names and the historical personal names it lists support 'a name can have more than one Hangul spelling'. Locator of source 2 sharpened. The English is the author's own; no wording is copied. Outcome: pass after fix (wording narrowed, locator corrected)."
       }
     }
   ],
