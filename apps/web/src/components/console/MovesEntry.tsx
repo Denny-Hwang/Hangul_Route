@@ -18,6 +18,9 @@ import { schoolMoveLinks, type SchoolMoveLink } from '@/lib/console/transfer-req
 type CountApi = Pick<ConsoleApi, 'transferRequests'>;
 type SchoolApi = Pick<ConsoleApi, 'transferRequests' | 'school'>;
 
+/** One read that never throws: a failed or missing call (an older client shape, a network error) answers null. */
+const quietly = <T,>(read: () => Promise<T>): Promise<T | null> => Promise.resolve().then(read).catch(() => null);
+
 /** Waiting moves per space id (`pendingCount` of each space's own views); empty while class moves are off. */
 export function useMovesWaiting(api: CountApi | null, spaceIds: readonly string[]): Record<string, number> {
   const shown = useTransfersShown();
@@ -30,7 +33,7 @@ export function useMovesWaiting(api: CountApi | null, spaceIds: readonly string[
     }
     let live = true;
     const ids = key.split('\n');
-    void Promise.all(ids.map(async (id) => [id, await api.transferRequests(id).catch(() => null)] as const)).then((answers) => {
+    void Promise.all(ids.map(async (id) => [id, await quietly(() => api.transferRequests(id))] as const)).then((answers) => {
       if (!live) return;
       setCounts(Object.fromEntries(answers.map(([id, r]) => [id, r?.ok ? pendingCount(r.data.requests) : 0])));
     });
@@ -55,7 +58,7 @@ export function useSchoolMoveLinks(api: SchoolApi | null, schoolIds: readonly st
     const ids = key.split('\n');
     void Promise.all(
       ids.map(async (id) => {
-        const [counts, school] = await Promise.all([api.transferRequests(id).catch(() => null), api.school(id).catch(() => null)]);
+        const [counts, school] = await Promise.all([quietly(() => api.transferRequests(id)), quietly(() => api.school(id))]);
         const rows = counts?.ok && school?.ok ? schoolMoveLinks(counts.data.counts ?? [], school.data.classes.map((row) => ({ id: row.space.id, name: row.space.name }))) : [];
         return [id, rows] as const;
       }),
