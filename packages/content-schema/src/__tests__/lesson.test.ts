@@ -270,7 +270,8 @@ describe('LessonScopeSchema', () => {
   ];
 
   it('counts the rounds each scope plays', () => {
-    expect(scopes.map(scopeRoundCount)).toEqual([1, 2, 3, 1, 1, 1, 1, 1, 1]);
+    // Build a Letter: one round per syllable block, so 설날 and 떡국 are four rounds.
+    expect(scopes.map(scopeRoundCount)).toEqual([1, 4, 3, 1, 1, 1, 1, 1, 1]);
   });
 
   it('covers every kind a lesson plays, and only kinds of MinigameKindSchema', () => {

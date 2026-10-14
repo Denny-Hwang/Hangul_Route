@@ -23,6 +23,7 @@ import {
   type StageTagKind,
   type Viewer,
 } from './copy';
+import { PLAYABLE_KINDS } from '../minigame-renderers';
 import { letterWallView, type LetterTile, type LetterWallView } from './letter-wall';
 import { hoyaPoseFor } from './seen';
 import { SKILL_OF_KIND } from './skills';
@@ -284,10 +285,19 @@ export const GAME_NAME_KEY: Readonly<Partial<Record<MinigameKind, GameKey>>> = {
   'write-frame': 'writeFrame',
 };
 
-export function gamesFor(skill: Skill, games: Messages['learner']['myRoute']['games']): string[] {
+/**
+ * The games that count for `skill`, named as the sheet shows them. Only kinds the
+ * app can play (`PLAYABLE_KINDS`) are named, so a game whose screen has not landed
+ * yet is never advertised (F-CURR-001 §3.11).
+ */
+export function gamesFor(
+  skill: Skill,
+  games: Messages['learner']['myRoute']['games'],
+  playable: ReadonlySet<MinigameKind> = PLAYABLE_KINDS,
+): string[] {
   return (Object.keys(SKILL_OF_KIND) as MinigameKind[]).flatMap((kind) => {
     const key = GAME_NAME_KEY[kind];
-    return SKILL_OF_KIND[kind].includes(skill) && key !== undefined ? [games[key]] : [];
+    return SKILL_OF_KIND[kind].includes(skill) && key !== undefined && playable.has(kind) ? [games[key]] : [];
   });
 }
 

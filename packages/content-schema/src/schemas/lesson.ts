@@ -93,13 +93,19 @@ export type LessonScope = z.infer<typeof LessonScopeSchema>;
 export type LessonScopeKind = LessonScope['kind'];
 export const LESSON_SCOPE_KINDS: readonly MinigameKind[] = LessonScopeSchema.options.map((o) => o.shape.kind.value);
 
-/** How many rounds (or turns, boards, words) a scope plays: the count the §3.1 table and the Check rule read. */
+/**
+ * How many rounds (or turns, boards, syllables) a scope plays: the count the
+ * §3.1 table and the Check rule read. Build a Letter plays one round per
+ * syllable block, as the shipped game and the Stage 1 scopes do, so a word of
+ * two syllables is two rounds (`scripts/build-lessons.mjs` emits the same count;
+ * a test checks the two agree).
+ */
 export function scopeRoundCount(scope: LessonScope): number {
   switch (scope.kind) {
     case 'pic-word-match':
       return scope.boards.length;
     case 'build-letter':
-      return scope.words.length;
+      return scope.words.reduce((n, w) => n + [...w.ko].length, 0);
     case 'card-match':
       return scope.pairs.length;
     case 'tap-respond':

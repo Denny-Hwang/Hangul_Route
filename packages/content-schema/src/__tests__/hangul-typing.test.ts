@@ -4,11 +4,15 @@ import {
   BACKSPACE,
   MEDIAL_JAMO,
   MEDIAL_RR,
+  SINGLE_FORMS,
+  SLOT_MARKER,
   allomorph,
+  allomorphOrBoth,
   composeTyped,
   endsWithFinal,
   fillFrame,
   keysFor,
+  slotEndingIssues,
 } from '../index';
 
 const keys = (s: string) => [...s];
@@ -148,5 +152,32 @@ describe('allomorph and fillFrame (F-CURR-001 §3.7)', () => {
 
   it('throws when the picks do not match the slots', () => {
     expect(() => fillFrame('저는 ___을/를 좋아해요', [])).toThrow('1 slot(s) but 0 pick(s)');
+  });
+
+  it('allomorphOrBoth never throws on a half-typed word (Write Your Name free entry)', () => {
+    expect(allomorphOrBoth('민준', '이에요/예요')).toBe('이에요');
+    expect(allomorphOrBoth('호야', '이에요/예요')).toBe('예요');
+    expect(allomorphOrBoth('민ㅈ', '이에요/예요')).toBe('이에요/예요');
+    expect(allomorphOrBoth('', '을/를')).toBe('을/를');
+    expect(allomorphOrBoth('ㅎ', '에')).toBe('에');
+    expect(() => allomorphOrBoth('책', '를/을')).toThrow('unknown allomorph pair');
+  });
+
+  it('slotEndingIssues accepts known pairs, single forms and a bare slot', () => {
+    expect(SINGLE_FORMS).toContain('에');
+    for (const frame of ['저는 ___을/를 좋아해요', '___에 ___을/를 먹었어요', '제 이름은 ___이에요/예요.', '___ 좋아요', '___', '___하고 ___?']) {
+      expect(slotEndingIssues(frame), frame).toEqual([]);
+    }
+  });
+
+  it('slotEndingIssues flags a reversed pair, an unknown ending and a missing space', () => {
+    expect(slotEndingIssues('저는 ___를/을 좋아해요')[0]).toContain('"를/을"');
+    expect(slotEndingIssues('저는 ___좋아해요')[0]).toContain('"좋아해요"');
+    expect(slotEndingIssues('___에 ___을/를먹었어요')).toEqual(['slot 2: "을/를먹었어요" after ___ is not a known particle or ending pair']);
+    expect(slotEndingIssues('___을/를x')).toEqual(['slot 1: the ending after ___ runs into the next word']);
+  });
+
+  it('uses the same slot marker as the quest schema', () => {
+    expect(SLOT_MARKER).toBe('___');
   });
 });

@@ -14,6 +14,7 @@ import {
   TypeHangulRoundSchema,
   WriteFrameRoundSchema,
   discoverItemTexts,
+  fillFrame,
   slotCount,
 } from '../index';
 import { kt } from './helpers/lesson-fixtures';
@@ -141,6 +142,20 @@ describe('OrderItRoundSchema (Sentence Builder)', () => {
     expect(ok(OrderItRoundSchema, { id: 'r', sentence, particle: { tile: 1, choices: [i, ga] } })).toBe(false);
     expect(ok(OrderItRoundSchema, { id: 'r', sentence, particle: { tile: 5, choices: [i, ga] } })).toBe(false);
   });
+
+  it('a particle choice is an allomorph pair and the tile carries the form that fits', () => {
+    const eul = kt('을', 'eul', 'object marker');
+    const reul = kt('를', 'reul', 'object marker');
+    const right = kt('사과를 먹어요.', 'sagwareul meogeoyo', 'I eat an apple');
+    const wrong = kt('사과을 먹어요.', 'sagwaeul meogeoyo', 'I eat an apple');
+    expect(ok(OrderItRoundSchema, { id: 'r', sentence: right, particle: { tile: 0, choices: [eul, reul] } })).toBe(true);
+    expect(ok(OrderItRoundSchema, { id: 'r', sentence: kt('밥을 먹어요.', 'babeul meogeoyo', 'I eat rice'), particle: { tile: 0, choices: [reul, eul] } })).toBe(true);
+    expect(ok(OrderItRoundSchema, { id: 'r', sentence: wrong, particle: { tile: 0, choices: [eul, reul] } })).toBe(false);
+    // Not an allomorph pair: 에 and 를 do not change with the word before them.
+    expect(ok(OrderItRoundSchema, { id: 'r', sentence: right, particle: { tile: 0, choices: [kt('에', 'e', 'to'), reul] } })).toBe(false);
+    // The tile is only the particle: no word before it to fit.
+    expect(ok(OrderItRoundSchema, { id: 'r', sentence: kt('를 먹어요.', 'reul meogeoyo', 'x'), particle: { tile: 0, choices: [eul, reul] } })).toBe(false);
+  });
 });
 
 describe('Realia Read', () => {
@@ -208,6 +223,25 @@ describe('WriteFrameRoundSchema', () => {
   it('takes two slots when the frame has two', () => {
     const two = kt('___에 ___을/를 먹었어요', '___e ___eul/reul meogeosseoyo', 'at ___ I ate ___');
     expect(ok(WriteFrameRoundSchema, { id: 'r', frame: two, slots: [{ id: 'when', bank }, { id: 'what', bank }], entry: 'pick' })).toBe(true);
+  });
+
+  it('writes only a known pair, a single form or nothing after a slot', () => {
+    const at = (ko: string) => kt(ko, 'x', 'y');
+    expect(ok(WriteFrameRoundSchema, { id: 'r', frame: at('저는 ___를/을 좋아해요'), slots: [{ id: 'what', bank }], entry: 'type' })).toBe(false);
+    expect(ok(WriteFrameRoundSchema, { id: 'r', frame: at('___좋아해요'), slots: [{ id: 'what', bank }], entry: 'type' })).toBe(false);
+    expect(ok(WriteFrameRoundSchema, { id: 'r', frame: at('제 이름은 ___이에요/예요.'), slots: [{ id: 'name' }], entry: 'type', freeEntry: true })).toBe(true);
+    expect(ok(WriteFrameRoundSchema, { id: 'r', frame: at('제 이름은 ___예요/이에요.'), slots: [{ id: 'name' }], entry: 'type', freeEntry: true })).toBe(false);
+    expect(ok(WriteFrameRoundSchema, { id: 'r', frame: at('___ 좋아요'), slots: [{ id: 'what', bank }], entry: 'pick' })).toBe(true);
+  });
+
+  it('a sound frame takes every bank word as correct Korean', () => {
+    const two = kt('___에 ___을/를 먹었어요', 'x', 'y');
+    const banks = [[kt('설날', 'seollal', 'x'), kt('추석', 'chuseok', 'x')], [kt('떡국', 'tteokguk', 'x'), kt('송편', 'songpyeon', 'x'), kt('사과', 'sagwa', 'x')]];
+    const round = WriteFrameRoundSchema.parse({ id: 'r', frame: two, slots: banks.map((bank, i) => ({ id: `s${i}`, bank })), entry: 'pick' });
+    const filled = round.slots[0]!.bank.flatMap((a) => round.slots[1]!.bank.map((b) => fillFrame(round.frame.ko, [a.ko, b.ko])));
+    expect(filled).toContain('추석에 송편을 먹었어요');
+    expect(filled).toContain('설날에 사과를 먹었어요');
+    expect(filled).toHaveLength(6);
   });
 
   it('a free-entry round (Write Your Name q3) has one slot and no bank', () => {

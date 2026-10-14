@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { ALLOMORPH_PAIRS, allomorph, slotEndingIssues } from '../hangul/allomorph';
 import { KoTextSchema, PictureRefSchema } from './ko-text';
 
 /**
@@ -225,6 +226,29 @@ export const OrderItRoundSchema = z
           path: ['particle'],
           message: 'exactly one particle choice ends the chosen tile',
         });
+        return;
+      }
+      // The choices are an allomorph pair, and the one in the tile is the form that fits the
+      // word before it: `사과을` with 을 or 를 is caught here, not by a learner.
+      const pair = ALLOMORPH_PAIRS.find((p) => p === `${a.ko}/${b.ko}` || p === `${b.ko}/${a.ko}`);
+      if (pair === undefined) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['particle', 'choices'], message: 'the particle choices are not an allomorph pair (e.g. 이 or 가)' });
+        return;
+      }
+      const chosen = fits(a.ko) ? a.ko : b.ko;
+      const stem = (tile as string).replace(/[.?!]$/, '').slice(0, -chosen.length);
+      let right: string | null = null;
+      try {
+        right = allomorph(stem, pair);
+      } catch {
+        right = null;
+      }
+      if (right !== chosen) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['sentence', 'ko'],
+          message: `tile ${particle.tile} takes ${right ?? 'neither form'} after "${stem}", not ${chosen}`,
+        });
       }
     }
   });
@@ -329,6 +353,10 @@ export const WriteFrameRoundSchema = z
       });
     });
     if (round.freeEntry && round.slots.length !== 1) issue(['slots'], 'a free-entry round has exactly one slot');
+    // Each slot is followed by a known pair, a single form or nothing, and every bank word is
+    // Hangul syllables (above), so `fillFrame` fills every pick as correct Korean: the form of a
+    // pair is chosen from the pick's last syllable (a test fills every bank word of a sound frame).
+    slotEndingIssues(round.frame.ko).forEach((message) => issue(['frame', 'ko'], message));
   });
 export type WriteFrameRound = z.infer<typeof WriteFrameRoundSchema>;
 
