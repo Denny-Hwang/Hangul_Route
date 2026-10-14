@@ -4,8 +4,8 @@
  * Hangul Check, a vocabulary round and a preview. If F-VOC-001 adds a host
  * first, reuse its file and these member names.
  *
- * Only Listen & Pick, Pic-Word Match and Trace a Word take a host; the nine older games keep
- * their direct quest-run-store calls (decision L11).
+ * Listen & Pick, Pic-Word Match, Sentence Builder (F-CURR-001 G-1) and Trace a Word take a host;
+ * the nine older games keep their direct quest-run-store calls (decision L11).
  */
 export type HostMode = 'quest' | 'check' | 'review' | 'vocab' | 'preview';
 

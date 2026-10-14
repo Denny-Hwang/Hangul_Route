@@ -12,6 +12,7 @@ import {
   TraceWordRoundSchema,
   TypeHangulRoundSchema,
   WriteFrameRoundSchema,
+  realiaReadIssues,
   type MinigameKind,
 } from './minigame';
 import { CHECK_ROUNDS, checkKindsFor, QuestObjectSchema, questRules, type QuestStepKind } from './quest';
@@ -121,7 +122,16 @@ export function scopeRoundCount(scope: LessonScope): number {
 
 export const LessonQuestSchema = QuestObjectSchema.extend({
   scopes: z.array(LessonScopeSchema).min(1).max(4),
-}).superRefine(questRules);
+})
+  .superRefine(questRules)
+  .superRefine((quest, ctx) => {
+    quest.scopes.forEach((scope, i) => {
+      if (scope.kind !== 'realia-read') return;
+      for (const issue of realiaReadIssues(scope.realia, scope.rounds)) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['scopes', i, ...issue.path], message: issue.message });
+      }
+    });
+  });
 export type LessonQuest = z.infer<typeof LessonQuestSchema>;
 
 // ---- notes, sources, review -------------------------------------------------------------------------

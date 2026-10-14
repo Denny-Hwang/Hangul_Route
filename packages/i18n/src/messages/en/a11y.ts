@@ -164,6 +164,46 @@ export const a11y = {
     /** Card Match: a Korean word (its romanization, else the word) and a meaning (content gloss). */
     koreanWord: (word: string) => `Korean word ${word}`,
     meaning: (gloss: string) => `English meaning ${gloss}`,
+    /**
+     * Sentence Builder (F-CURR-001): the places on the sentence line and a tried tile. `word` is the
+     * word's accessible name ("Korean, romanization", taught content passed in).
+     */
+    sentenceBuilder: {
+      slotEmpty: (n: number, total: number) => `Place ${n} of ${total}, empty`,
+      /** The empty place to fill now (drawn with a focus outline). */
+      slotNext: (n: number, total: number) => `Place ${n} of ${total}, empty, next`,
+      slotFilled: (n: number, total: number, word: string) => `Place ${n} of ${total}: ${word}`,
+      /** The particle's place, joined to the stem before it. */
+      slotAttached: (n: number, total: number) => `Place ${n} of ${total}, joins the word before it, empty`,
+      tried: (word: string) => `${word}, tried`,
+      /** The ringed tile after a second miss on one place (Hoya: "This one comes next."). */
+      next: (word: string) => `${word}, comes next`,
+    },
+    /** Realia Read (F-CURR-001 G-2): the drawn sheet is a named group of line buttons; a line's name ends with its mark. */
+    realia: {
+      summary: (kind: string, lines: number) => `${kind}, ${plural('en', lines, { one: '1 line', other: `${lines} lines` })}`,
+      kind: { menu: 'Menu', ticket: 'Train ticket', sign: 'Trail sign', priceCards: 'Price cards', plain: 'Reading sheet' },
+      lineHint: 'Tap to hear it',
+      found: 'Found here',
+      lookHere: 'Look here',
+      dir: { left: 'to the left', right: 'to the right' },
+    },
+    /**
+     * The in-app Hangul keyboard and the Type Hangul field (F-CURR-001 G-3). `jamo` and `text` are the taught
+     * Korean as typed; `sound` and `romanization` are sound values read as words ("g or k").
+     */
+    keyboard: {
+      key: (jamo: string, sound: string) => `${jamo}, ${sound}`,
+      shift: 'Shift, more letters',
+      delete: 'Delete the last letter',
+      /** Also the Space key's face. */
+      space: 'Space',
+      field: (text: string, romanization: string) => `You typed: ${text}, ${romanization}`,
+      /** The result panel read block by block. */
+      typedBlocks: (blocks: readonly string[]) => `You typed: ${blocks.join(', ')}.`,
+      wordBlocks: (blocks: readonly string[]) => `The word: ${blocks.join(', ')}.`,
+      different: (n: number) => `Block ${n} is different.`,
+    },
   },
   /** A taught Korean item: Korean text, its romanization and (optionally) a gloss in the UI language. */
   koreanItem: (item: { ko: string; romanization: string; gloss?: string }) =>

@@ -59,3 +59,12 @@ export function answersColumnWidth(
 export function twoUpFits(columnWidth: number, gap: number, minCard: number): boolean {
   return Number.isFinite(columnWidth) && columnWidth > 0 && (columnWidth - gap) / 2 >= minCard;
 }
+
+/**
+ * Whether the prompt column sticks to the top of the scroll area while a taller answer column
+ * scrolls (Realia Read, D-2 D7: the realia stays in view beside long options). Side by side and on
+ * the web only (CSS sticky); a native window wide enough for two columns keeps the plain columns.
+ */
+export function stickyPromptColumn(arrangement: GameArrangement, requested: boolean, os: string): boolean {
+  return requested && arrangement === 'side' && os === 'web';
+}

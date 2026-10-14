@@ -795,4 +795,19 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'learner.presenter.timer.minutes': [[1], [5]],
   'learner.presenter.timer.seconds': [[30]],
   'a11y.presenter.timerLeft': [['2:45']],
+  // F-CURR-001 G-1: Sentence Builder's places and tried tiles (`word` is "Korean, romanization").
+  'a11y.minigame.sentenceBuilder.slotEmpty': [[1, 3], [6, 6]],
+  'a11y.minigame.sentenceBuilder.slotFilled': [[1, 2, 'bap, babeul']],
+  'a11y.minigame.sentenceBuilder.slotAttached': [[1, 2]],
+  'a11y.minigame.sentenceBuilder.tried': [['mul, mureul']],
+  'a11y.minigame.sentenceBuilder.slotNext': [[1, 3], [6, 6]],
+  'a11y.minigame.sentenceBuilder.next': [['jeo, jeoneun']],
+  // F-CURR-001 G-2: Realia Read.
+  'a11y.minigame.realia.summary': [['Menu', 1], ['Menu', 4]],
+  // F-CURR-001 G-3: the Hangul keyboard and the Type Hangul field (romanized stand-ins for the typed Korean).
+  'a11y.minigame.keyboard.key': [['g', 'g or k'], ['ng', 'silent or ng']],
+  'a11y.minigame.keyboard.field': [['hoya', 'hoya']],
+  'a11y.minigame.keyboard.typedBlocks': [[['ho', 'yeo']], [['bap']]],
+  'a11y.minigame.keyboard.wordBlocks': [[['ho', 'ya']]],
+  'a11y.minigame.keyboard.different': [[1], [2]],
 };

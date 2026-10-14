@@ -71,6 +71,19 @@ export const JAMO_SOUND_VALUES: Readonly<Record<string, readonly string[]>> = {
   'ㅠ': ['yu'],
   'ㅡ': ['eu'],
   'ㅣ': ['i'],
+  // The nine letters a two-set keyboard key shows that no taught jamo carries yet (F-CURR-001
+  // §3.7, design/wireframes/minigame/type-hangul.md open question 1): the tense consonants and
+  // the four vowels, at their Revised Romanization values. ㄲ and ㅆ also end a block (밖 bak,
+  // 있다 itda), so like ㄱ (g/k) they carry the final value after the slash; ㄸ ㅃ ㅉ never end one.
+  'ㄲ': ['kk/k'],
+  'ㄸ': ['tt'],
+  'ㅃ': ['pp'],
+  'ㅆ': ['ss/t'],
+  'ㅉ': ['jj'],
+  'ㅐ': ['ae'],
+  'ㅔ': ['e'],
+  'ㅒ': ['yae'],
+  'ㅖ': ['ye'],
 };
 
 /** Standard RR names of the fourteen consonant letters (§3.1 item 7). */

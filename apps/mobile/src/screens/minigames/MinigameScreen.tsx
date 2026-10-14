@@ -4,9 +4,11 @@ import React, { useMemo } from 'react';
 import { flags } from '../../config/flags';
 import { questById } from '../../content';
 import { useLocale, useMessages } from '../../i18n/use-messages';
-import { localizeScope } from '../../logic/content-locale';
+import { localizeQuest, localizeScope } from '../../logic/content-locale';
+import { minigameFinishedEvent } from '../../logic/minigame-finished';
 import { scopeFor } from '../../logic/minigame-config';
 import { resolveOptionalExit, resolveScreenExits, type ScreenExitProps } from '../../logic/navigation/screen-exits';
+import { patternNoteOf } from '../../logic/sentence-builder/view';
 import type { RootStackParamList } from '../../navigation/types';
 import { track } from '../../platform/telemetry';
 import { useQuestRunStore } from '../../store/quest-run-store';
@@ -20,12 +22,15 @@ import { ListenPickGame } from './ListenPickGame';
 import { MatchSoundGame } from './MatchSoundGame';
 import { OddOneOutGame } from './OddOneOutGame';
 import { PicWordMatchGame } from './PicWordMatchGame';
+import { RealiaReadGame } from './RealiaReadGame';
+import { SentenceBuilderGame } from './SentenceBuilderGame';
 import { StoryCheckGame } from './StoryCheckGame';
 import { StoryReadGame } from './StoryReadGame';
 import { StorySequenceGame } from './StorySequenceGame';
 import { TapRespondGame } from './TapRespondGame';
 import { TraceStrokeGame } from './TraceStrokeGame';
 import { TraceWordGame } from './TraceWordGame';
+import { TypeHangulGame } from './TypeHangulGame';
 import { VoiceEchoGame } from './VoiceEchoGame';
 
 /**
@@ -55,6 +60,8 @@ export function MinigameScreen({ route, navigation, onOpenCultureNote, ...exitPr
     const source = ref ? scopeFor(ref) : undefined;
     return source && ref ? localizeScope(source, ref, locale) : source;
   }, [ref, locale]);
+  // Sentence Builder shows the quest's own Discover pattern note again under a particle miss (F-CURR-001 §3.4).
+  const patternNote = useMemo(() => (scope?.kind === 'order-it' && quest ? patternNoteOf(localizeQuest(quest, locale)) : undefined), [scope, quest, locale]);
   const activeProfileId = useProfileStore((s) => activeProfileSelector(s)?.id);
   // Practice time on the learner stack only (F-REPORT-001 section 3.3.2); inside a quest it joins the
   // quest's session. Another host (All lessons) passes no navigation and records nothing.
@@ -70,11 +77,7 @@ export function MinigameScreen({ route, navigation, onOpenCultureNote, ...exitPr
 
   const close = (): void => {
     if (scope) {
-      void track({
-        name: 'minigame.finished',
-        profileId: activeProfileId,
-        payload: { kind: scope.kind, questId, stepIndex },
-      });
+      void track(minigameFinishedEvent(scope.kind, questId, stepIndex, activeProfileId));
     }
     exits.back();
   };
@@ -133,6 +136,12 @@ export function MinigameScreen({ route, navigation, onOpenCultureNote, ...exitPr
       return <StoryReadGame scope={scope} onFinish={close} onBack={exits.back} onOpenCultureNote={openCultureNote} />;
     case 'story-check':
       return <StoryCheckGame scope={scope} onFinish={close} onBack={exits.back} />;
+    case 'order-it':
+      return <SentenceBuilderGame scope={scope} host={host} patternNote={patternNote} onBack={exits.back} />;
+    case 'realia-read':
+      return <RealiaReadGame scope={scope} host={host} onBack={exits.back} />;
+    case 'type-hangul':
+      return <TypeHangulGame scope={scope} host={host} onBack={exits.back} />;
     case 'trace-word':
       return <TraceWordGame scope={scope} host={host} onBack={exits.back} />;
     default:

@@ -156,6 +156,12 @@ export const iconGlyphs: Record<IconName, readonly IconGlyphPart[]> = {
   // The goal stage: a pole with a solid swallow-tail pennant. A destination, never a warning: callers
   // draw it in text.primary, never feedback.danger or feedback.nudge.
   flag: [stroke('M6 21.5 V3', 2.2), fill('M6 3.5 H18.5 L15.5 8 L18.5 12.5 H6 Z')],
+  // F-CURR-001 G-3 (design/components/Icon/spec.md): the in-app Hangul keyboard's action keys.
+  // Shift: an outlined arrow with a stem; `shift-on` is the same arrow filled (Shift is on).
+  shift: [stroke('M12 4 L20.5 12.5 H15.5 V20 H8.5 V12.5 H3.5 Z', 2.2)],
+  'shift-on': [fill('M12 4 L20.5 12.5 H15.5 V20 H8.5 V12.5 H3.5 Z')],
+  // Delete the last letter: a key cap pointing left with a small cross inside (a key face, never a miss mark).
+  backspace: [stroke('M9 5.5 H20.5 V18.5 H9 L3 12 Z', 2.2), stroke('M12 9.5 L16.5 14.5 M16.5 9.5 L12 14.5', 2.2)],
 };
 
 export const iconNames = Object.keys(iconGlyphs) as readonly IconName[];

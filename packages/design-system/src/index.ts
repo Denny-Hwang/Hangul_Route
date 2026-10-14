@@ -18,6 +18,7 @@ export * from './components/KoreanText';
 export * from './components/ChoiceCard';
 export * from './components/SyllableBlock';
 export * from './components/StoryScene';
+export * from './components/RealiaSheet';
 export * from './components/SectionTabs';
 export * from './components/SparkMeter';
 // WordArt and its key list are in this barrel because Metro (Expo SDK 52, no metro.config.js) does not read
@@ -35,3 +36,5 @@ export type { KoreanTextSize, KoreanTextView, KoreanTextViewInput } from './kore
 export * from './labels';
 export { SPARK_DEFAULT_MAX_ROWS, SPARK_DEFAULT_SLOTS, SPARK_FILL_MS, sparkLayout } from './spark';
 export type { SparkLayout } from './spark';
+// The in-app two-set Hangul keyboard (F-CURR-001 G-3): the paint and its pure layout.
+export * from './components/HangulKeyboard';

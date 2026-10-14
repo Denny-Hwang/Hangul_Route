@@ -32,7 +32,10 @@ export const SKILL_OF_KIND: Readonly<Record<MinigameKind, readonly Skill[]>> = {
   'voice-echo': [],
   // Enum only, no renderer.
   'tap-rhythm': [],
-  'order-it': [],
+  // F-CURR-001 §3.11 (row G-1, OD-5): Sentence Builder orders whole words and picks particles, which is
+  // composing written Korean, so it reads and writes. Only `order-it` changes: tile spelling (TILE_KINDS)
+  // still counts toward no skill.
+  'order-it': ['read', 'write'],
   // F-CURR-001 §3.11 (row C-1): reading real-world texts, and writing by typing, tracing and sentence frames.
   'realia-read': ['read'],
   'type-hangul': ['write'],
