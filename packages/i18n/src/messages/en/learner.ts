@@ -514,6 +514,14 @@ export const learner = {
       batchimLine: 'Sits at the bottom of the block',
       empty: 'Nothing to look at here. Tap Continue.',
       pageLabel: (page: number, count: number) => `Page ${page} of ${count}`,
+      /** The `exchange` page (F-CURR-001 §3.5, D-1 S3): Read along plays each line and lights it. */
+      exchange: {
+        readAlong: { cta: 'Read along' },
+        stop: { cta: 'Stop' },
+        readingNow: { pill: 'Reading now' },
+        /** Screen-reader line as a line lights; `speaker` is the line's speaker name in the UI language. */
+        lineLabel: (line: number, total: number, speaker: string) => `Line ${line} of ${total}, ${speaker}`,
+      },
     },
   },
 

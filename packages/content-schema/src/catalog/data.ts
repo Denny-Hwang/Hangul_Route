@@ -17,8 +17,9 @@ import type { Catalog, CatalogCell, CatalogQuest, CatalogStory, CatalogTopic } f
  * Version 8 (F-STORY-005 PR 5.6): the letters, life, nature and crafts books ship (eleven more read quests).
  * From version 9 on (F-CURR-001 §3.13), a bump that adds quests lists them under the new version in
  * `CATALOG_QUEST_ADDITIONS` (`versions.ts`), so a placement result stored earlier skips them by its level.
+ * Version 9 (F-CURR-001 S4-1): the Stage 4 Read Along cell ships (three lesson quests).
  */
-export const CATALOG_VERSION = 8;
+export const CATALOG_VERSION = 9;
 
 const cell = (
   stage: StageKey,
@@ -57,7 +58,7 @@ const cells: CatalogCell[] = [
   soon('stage3', 'rites', 'Festival Sentences'),
   soon('stage3', 'nature', 'Animal Sentences'),
   soon('stage3', 'crafts', 'Game Sentences'),
-  soon('stage4', 'letters', 'Reading Aloud'),
+  cell('stage4', 'letters', 'Read Along', 'shipped', 13, ['quest:stage4-letters-q1', 'quest:stage4-letters-q2', 'quest:stage4-letters-q3']),
   soon('stage4', 'life', 'Kitchen Talk'),
   cell('stage4', 'rites', 'Greeting Dialogues', 'shipped', 5, ['quest:stage4-rites-q1']),
   soon('stage4', 'nature', 'Park Conversations'),
@@ -120,6 +121,10 @@ const lessonQuests: CatalogQuest[] = [
   lesson('stage2-life-q1', 'stage2', 'life', 'Lunch Box Words', 5),
   lesson('stage2-nature-q1', 'stage2', 'nature', 'Outdoor Words', 5),
   lesson('stage4-rites-q1', 'stage4', 'rites', 'Greeting Dialogues', 4),
+  // F-CURR-001 upper-stage cells: they teach no symbol, so `teaches` is [].
+  lesson('stage4-letters-q1', 'stage4', 'letters', 'What Is This?', 4),
+  lesson('stage4-letters-q2', 'stage4', 'letters', 'Where Is It?', 4),
+  lesson('stage4-letters-q3', 'stage4', 'letters', 'Thank You, Teacher', 4),
   // The Stage 5 books (F-STORY-005 PR 5.6): grid quests that play their stories at the read level.
   lesson('story-sejong-new-letters-read', 'stage5', 'letters', "King Sejong's New Letters", 4),
   lesson('story-shapes-of-hangeul-read', 'stage5', 'letters', 'The Secret in the Shapes', 5),

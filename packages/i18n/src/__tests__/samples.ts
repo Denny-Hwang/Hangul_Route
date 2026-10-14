@@ -56,6 +56,7 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'learner.quest.progress': [[2, 5]],
   'learner.quest.discover.sayLine': [['ga']],
   'learner.quest.discover.pageLabel': [[1, 3]],
+  'learner.quest.discover.exchange.lineLabel': [[1, 2, 'Hoya']],
   'caregiver.gating.unknown-quest': [['Suni']],
   'caregiver.gating.episode-not-shipped': [['Suni']],
   'caregiver.gating.stage-locked': [['Suni']],

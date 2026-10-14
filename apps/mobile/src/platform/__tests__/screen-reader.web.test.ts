@@ -19,6 +19,11 @@ describe('platform/screen-reader.web', () => {
     expect(() => web.focusForScreenReader(null)).not.toThrow();
   });
 
+  it('starts the audio after a label at once (the live region says it)', async () => {
+    await expect(web.announceAndWait('Line 1 of 2, Hoya', 300)).resolves.toBeUndefined();
+    expect(web.ANNOUNCE_TIMEOUT_MS).toBe(native.ANNOUNCE_TIMEOUT_MS);
+  });
+
   it('has the same surface as the native file', () => {
     expect(Object.keys(web).sort()).toEqual(Object.keys(native).sort());
   });

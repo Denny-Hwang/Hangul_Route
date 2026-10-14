@@ -34,13 +34,15 @@ import {
   stepDiscover,
   type DiscoverEffect,
   type DiscoverEvent,
+  type DiscoverExchangeRender,
   type DiscoverItemRender,
   type DiscoverState,
   type HearAction,
 } from '../../logic/stage1/discover-flow';
 import { clipRefsOf } from '../../logic/audio/clip-refs';
-import { playPrompt, warmClips } from '../../platform/audio';
+import { playPrompt, stop as stopAudio, warmClips } from '../../platform/audio';
 import { useReducedMotion } from '../../platform/motion';
+import { announceAndWait } from '../../platform/screen-reader';
 import { PICTURE_CONTEXT, PictureArt } from '../minigames/PictureArt';
 
 /**
@@ -49,7 +51,8 @@ import { PICTURE_CONTEXT, PictureArt } from '../minigames/PictureArt';
  * Continue is enabled at once. The behaviour lives in
  * `logic/stage1/discover-flow.ts` (view model, reducer, effects); this file
  * renders it and runs the effects.
- * Design: design/wireframes/quest/discover.md (S1, S2), design/components/SyllableBlock/spec.md.
+ * Design: design/wireframes/quest/discover.md (S1, S2), design/components/SyllableBlock/spec.md;
+ * the exchange page and its Read along: design/wireframes/quest/discover-sentences.md (S3).
  */
 
 interface Props {
@@ -75,9 +78,22 @@ export function DiscoverStep({ pages, hoyaLine, onDone }: Props): React.ReactEle
         if (item.letterName) map.set(item.letterName.action.id, item.letterName.action);
         if (item.example) map.set(item.example.hear.id, item.example.hear);
       }
+      for (const line of page.exchange?.lines ?? []) map.set(line.hear.id, line.hear);
     }
     return map;
   }, [model]);
+  // Read along: each exchange line's label for the screen reader, and each item's line count.
+  const exchanges = useMemo(() => {
+    const labels = new Map<string, string>();
+    const counts = new Map<string, number>();
+    for (const page of model.pages) {
+      const ex = page.exchange;
+      if (!ex) continue;
+      counts.set(ex.key, ex.lines.length);
+      ex.lines.forEach((l, i) => labels.set(l.hear.id, copy.exchange.lineLabel(i + 1, ex.lines.length, l.speaker)));
+    }
+    return { labels, lineCount: (item: string): number => counts.get(item) ?? 0 };
+  }, [model, copy]);
 
   // Recordings for every Hear it on these pages are fetched and decoded ahead (§3.10).
   useEffect(() => {
@@ -93,27 +109,63 @@ export function DiscoverStep({ pages, hoyaLine, onDone }: Props): React.ReactEle
   const dispatchRef = useRef<(event: DiscoverEvent) => void>(() => undefined);
   const scrollRef = useRef<ScrollView | null>(null);
 
-  const runEffect = useCallback(
-    (effect: DiscoverEffect): void => {
-      if (effect.type === 'done') {
-        onDoneRef.current({ pages: effect.pages, heard: effect.heard });
-        return;
-      }
-      const action = actions.get(effect.id);
-      if (!action) return;
-      void playPrompt(action.spec).then((result) => dispatchRef.current({ type: 'audio', id: effect.id, result }));
+  const pauseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(
+    () => () => {
+      if (pauseTimer.current !== null) clearTimeout(pauseTimer.current);
     },
-    [actions],
+    [],
+  );
+
+  /** Runs one effect; the returned promise settles when the next effect of the same batch may start. */
+  const runEffect = useCallback(
+    (effect: DiscoverEffect): Promise<void> | void => {
+      switch (effect.type) {
+        case 'done':
+          onDoneRef.current({ pages: effect.pages, heard: effect.heard });
+          return;
+        case 'stopAudio':
+          if (pauseTimer.current !== null) clearTimeout(pauseTimer.current);
+          stopAudio();
+          return;
+        case 'pause':
+          pauseTimer.current = setTimeout(() => dispatchRef.current({ type: 'readAlongNext', run: effect.run }), motion.duration.slow);
+          return;
+        case 'announce':
+          // Announce, then play: the line's audio starts once the screen reader has said the label.
+          return announceAndWait(exchanges.labels.get(effect.id) ?? '', motion.duration.slow);
+        case 'play': {
+          const action = actions.get(effect.id);
+          if (!action) return;
+          void playPrompt(action.spec).then((result) => dispatchRef.current({ type: 'audio', id: effect.id, result, ...(effect.run === undefined ? {} : { run: effect.run }) }));
+          return;
+        }
+      }
+    },
+    [actions, exchanges],
   );
 
   const dispatch = useCallback(
     (event: DiscoverEvent): void => {
-      const out = stepDiscover(stateRef.current, event);
+      const out = stepDiscover(stateRef.current, event, exchanges.lineCount);
       stateRef.current = out.state;
       setState(out.state);
-      out.effects.forEach(runEffect);
+      // In order, at once until an effect has to finish first (an announce holds back the play after
+      // it); if anything happened meanwhile (Stop, Continue, another line), the rest is dropped.
+      const runFrom = (index: number): void => {
+        for (let i = index; i < out.effects.length; i++) {
+          const pending = runEffect(out.effects[i]!);
+          if (pending) {
+            void pending.then(() => {
+              if (stateRef.current === out.state) runFrom(i + 1);
+            });
+            return;
+          }
+        }
+      };
+      runFrom(0);
     },
-    [runEffect],
+    [runEffect, exchanges],
   );
   dispatchRef.current = dispatch;
 
@@ -162,6 +214,9 @@ export function DiscoverStep({ pages, hoyaLine, onDone }: Props): React.ReactEle
             ) : null}
             <Spacer size="md" />
             <View key={state.page} style={{ gap: spacing.lg }}>
+              {render.exchange ? (
+                <ExchangeCard render={render.exchange} dispatch={dispatch} copy={copy} m={m} scrollRef={scrollRef} />
+              ) : null}
               {render.items.map((r) => (
                 <DiscoverItemCard key={r.item.key} render={r} dispatch={dispatch} copy={copy} a11y={m.a11y} />
               ))}
@@ -404,6 +459,165 @@ function ExampleBlocks({ blocks }: { blocks: Array<{ text: string; emphasised: b
           </Text>
         </View>
       ))}
+    </View>
+  );
+}
+
+/**
+ * An `exchange` item (D-1 S3): two lines between named speakers, each with its own speaker button,
+ * and Read along, which plays the lines in order and lights each one while it plays. The highlight is
+ * a thick start border, a tint, the arrow glyph and the words "Reading now": never colour alone, and
+ * the line waiting next is never dimmed.
+ */
+const srOnly = { position: 'absolute', width: 1, height: 1, margin: -1, overflow: 'hidden' } as const;
+
+function ExchangeCard({
+  render,
+  dispatch,
+  copy,
+  m,
+  scrollRef,
+}: {
+  render: DiscoverExchangeRender;
+  dispatch: (event: DiscoverEvent) => void;
+  copy: DiscoverMessages;
+  m: Messages;
+  scrollRef: React.RefObject<ScrollView | null>;
+}): React.ReactElement {
+  const ex = copy.exchange;
+  const status =
+    render.status === 'muted' ? m.learner.audio.soundIsOff : render.status === 'unavailable' ? m.learner.audio.noKoreanVoiceSentence : undefined;
+  return (
+    <View style={{ gap: spacing.md }} testID={`discover-exchange-${render.item.key}`}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: spacing.md }}>
+        <Button
+          label={render.reading ? ex.stop.cta : ex.readAlong.cta}
+          tone="secondary"
+          size="md"
+          {...(render.reading ? {} : { leading: <Icon name="play" size={spacing.xl} /> })}
+          onPress={() => dispatch({ type: 'readAlong', item: render.item.key })}
+          testID="discover-read-along"
+        />
+        {render.heard ? <Pill tone="success" size="sm" label={copy.heard.pill} /> : null}
+      </View>
+      {status ? (
+        <Body tone="secondary" weight="semibold" testID="discover-read-along-status">
+          {status}
+        </Body>
+      ) : null}
+      {/* The lit line, said politely; visually hidden (the line card carries the visible cues). */}
+      <Text aria-live="polite" accessibilityLiveRegion="polite" style={srOnly} testID="discover-read-along-live">
+        {render.liveLine ?? ''}
+      </Text>
+      {render.lines.map((r) => (
+        <ExchangeLine key={r.line.key} render={r} dispatch={dispatch} copy={copy} a11y={m.a11y} scrollRef={scrollRef} />
+      ))}
+    </View>
+  );
+}
+
+function ExchangeLine({
+  render,
+  dispatch,
+  copy,
+  a11y,
+  scrollRef,
+}: {
+  render: DiscoverExchangeRender['lines'][number];
+  dispatch: (event: DiscoverEvent) => void;
+  copy: DiscoverMessages;
+  a11y: Messages['a11y'];
+  scrollRef: React.RefObject<ScrollView | null>;
+}): React.ReactElement {
+  const { line, lit } = render;
+  const reducedMotion = useReducedMotion();
+  const ref = useRef<View | null>(null);
+  // A lit line that is off screen scrolls into view (instantly under reduced motion).
+  useEffect(() => {
+    if (!lit) return;
+    const scroll = scrollRef.current;
+    const inner = scroll?.getInnerViewNode?.();
+    if (!scroll || !inner || !ref.current) return;
+    try {
+      ref.current.measureLayout(
+        inner,
+        (_x, y) => scroll.scrollTo({ y: Math.max(0, y - spacing.lg), animated: !reducedMotion }),
+        () => undefined,
+      );
+    } catch {
+      // Not measurable here: the line is still on the page.
+    }
+  }, [lit, reducedMotion, scrollRef]);
+  const start = line.side === 'a';
+  const portrait = (
+    <View
+      accessibilityElementsHidden
+      importantForAccessibility="no-hide-descendants"
+      style={{
+        width: touchTarget.min,
+        height: touchTarget.min,
+        borderRadius: radii.pill,
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: colors.surface.sunken,
+      }}
+    >
+      <Icon name="profile" size={spacing.xl} />
+    </View>
+  );
+  return (
+    <View ref={ref}>
+      <Card
+        padding="md"
+        tone={lit ? 'brand' : 'paper'}
+        testID={`discover-line-${line.key}`}
+        style={{
+          borderWidth: borderWidth.base,
+          borderStartWidth: lit ? borderWidth.thick : borderWidth.base,
+          borderColor: lit ? colors.brand.primary : colors.border.subtle,
+        }}
+      >
+        <View style={{ gap: spacing.sm }}>
+          <View style={{ flexDirection: start ? 'row' : 'row-reverse', alignItems: 'center', flexWrap: 'wrap', gap: spacing.sm }}>
+            {portrait}
+            {lit ? (
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }} testID="discover-line-reading-now">
+                <Icon name="arrow-right" size={spacing.lg} />
+                <Pill tone="primary" size="sm" label={copy.exchange.readingNow.pill} />
+              </View>
+            ) : null}
+            <Body weight="semibold">{line.speaker}</Body>
+          </View>
+          {/* The speaker button wraps under the line when the two do not fit side by side (320 px), so a
+              Korean word never breaks inside itself (F-CURR-001 §3.14 layout). */}
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: spacing.md }}>
+            <View style={{ flexGrow: 1, flexShrink: 1, minWidth: '60%', alignItems: 'flex-start' }}>
+              <KoreanText
+                ko={line.ko}
+                romanization={line.romanization}
+                gloss={line.gloss}
+                size="md"
+                romanizationShown={render.romanizationShown}
+                accessibilityLabel={
+                  render.romanizationShown ? line.accessibilityLabel : `${line.speaker}: ${line.ko}, ${line.gloss}`
+                }
+              />
+            </View>
+            <Button
+              label={copy.hearIt.cta}
+              accessibilityLabel={a11y.hearItLabel(line.accessibilityLabel)}
+              tone="ghost"
+              size="md"
+              leading={<Icon name="speaker" size={spacing.xl} />}
+              onPress={() => dispatch({ type: 'hear', id: line.hear.id })}
+              testID={`discover-hear-${line.hear.id}`}
+            />
+          </View>
+          {render.showReveal ? (
+            <Button label={copy.showHowToSay.cta} tone="ghost" size="md" onPress={() => dispatch({ type: 'reveal', key: line.key })} />
+          ) : null}
+        </View>
+      </Card>
     </View>
   );
 }
