@@ -270,6 +270,18 @@ describe('questAccess (F-ENT-003 section 3.3)', () => {
     for (const quest of story) expect(gridLessonIds(CATALOG).has(quest.id)).toBe(false);
   });
 
+  it('golden: the Playdate Talk quests are paid grid lessons (F-CURR-001 S4-4, section 3.13)', () => {
+    for (const questId of ['quest:stage4-crafts-q1', 'quest:stage4-crafts-q2', 'quest:stage4-crafts-q3']) {
+      expect(questsAll.some((q) => q.id === questId), questId).toBe(true);
+      const at = (tier: Tier, gatingEnabled: boolean, done: boolean): QuestAccess =>
+        questAccess({ questId, tier, gatingEnabled, completedQuestIds: done ? kept(questId) : none });
+      expect(at('free', true, false), questId).toBe('closed');
+      expect(at('premium', true, false), questId).toBe('open-premium');
+      expect(at('free', false, false), questId).toBe('open-switch-off');
+      expect(at('free', true, true), questId).toBe('open-kept');
+    }
+  });
+
   it('golden: with the switch off every bundled quest is open for every learner, finished or not', () => {
     for (const quest of questsAll) {
       for (const tier of ['free', 'premium'] as const) {

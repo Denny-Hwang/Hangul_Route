@@ -145,7 +145,7 @@ Totals: 112 minutes; 12 stories in cells that already hold a lesson (rows 1-10, 
 | Stage 1 | L + 5 | L + 1 | L + 2 | L + 1 | L + 1 |
 | Stage 2 | S-only 2 | L + 1 | S-only 1 | L + 1 | S-only 3 |
 | Stage 3 | S-only 2 | S-only 1 | placeholder | placeholder | placeholder |
-| Stage 4 | S-only 1 | placeholder | L + 0 | placeholder | placeholder |
+| Stage 4 | S-only 1 | placeholder | L + 0 | placeholder | L + 0 (Playdate Talk, F-CURR-001 S4-4) |
 | Stage 5 | book later | book later | S-only 1 → book later | book later | book later |
 | Stage 6 | S-only 1 | placeholder | placeholder | placeholder | placeholder |
 | Stage 7 | placeholder | placeholder | placeholder | placeholder | placeholder |

@@ -249,6 +249,8 @@ describe('grid golden (F-STORY-005 §3.1 rule 2)', () => {
       { id: 'episode:stage2-life', order: 2, questIds: ['quest:stage2-life-q1'], status: 'shipped' },
       { id: 'episode:stage2-nature', order: 4, questIds: ['quest:stage2-nature-q1'], status: 'shipped' },
       { id: 'episode:stage4-rites', order: 3, questIds: ['quest:stage4-rites-q1'], status: 'shipped' },
+      // F-CURR-001 S4-4: Playdate Talk, the first generated lesson cell (content/episodes/stage-4/crafts.json).
+      { id: 'episode:stage4-crafts', order: 5, questIds: ['quest:stage4-crafts-q1', 'quest:stage4-crafts-q2', 'quest:stage4-crafts-q3'], status: 'shipped' },
       // F-STORY-005 PR 5.6: the five Stage 5 books (books.ts), each cell's placeholder id kept.
       {
         id: 'episode:stage5-letters',
@@ -311,6 +313,7 @@ describe('pillar tags of the shipped lessons (F-STORY-005 §3.2)', () => {
       'episode:stage2-life': [],
       'episode:stage2-nature': ['D2'],
       'episode:stage4-rites': [],
+      'episode:stage4-crafts': ['B5'],
       'episode:stage5-letters': ['A1'],
       'episode:stage5-life': ['B1', 'B5', 'E4'],
       'episode:stage5-rites': ['B5'],
@@ -347,7 +350,7 @@ const GRID_GOLDEN: Record<string, string> = {
   'stage4:life': 'episode:stage4-life | Kitchen Talk | preview',
   'stage4:rites': 'episode:stage4-rites | Greeting Dialogues | shipped',
   'stage4:nature': 'episode:stage4-nature | Park Conversations | preview',
-  'stage4:crafts': 'episode:stage4-crafts | Playdate Talk | preview',
+  'stage4:crafts': 'episode:stage4-crafts | Playdate Talk | shipped',
   'stage5:letters': 'episode:stage5-letters | Stories of Letters | shipped',
   'stage5:life': 'episode:stage5-life | Family Stories | shipped',
   'stage5:rites': 'episode:stage5-rites | Festival Tales | shipped',

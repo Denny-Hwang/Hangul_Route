@@ -48,7 +48,7 @@ describe('cellRowsOf', () => {
     expect(s2[0]?.pips[0]?.key).toBe('episode:stage2-letters');
   });
 
-  it('runs on the real unparsed bundle: 8 + 2 + 1 quest pips', () => {
+  it('runs on the real unparsed bundle: 8 + 2 + 4 quest pips (Stage 4: Greeting Dialogues and the three of Playdate Talk)', () => {
     const live = { episodes: episodesAll, quests: questsAll };
     const ctx = ctxOf({}, live);
     const count = (stage: StageKey) =>
@@ -57,7 +57,7 @@ describe('cellRowsOf', () => {
     expect([count('stage1'), count('stage2'), count('stage4')]).toEqual([
       ctx.order.filter((e) => e.stage === 'stage1').length,
       2,
-      1,
+      4,
     ]);
   });
 

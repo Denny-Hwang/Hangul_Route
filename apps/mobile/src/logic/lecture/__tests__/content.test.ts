@@ -1,4 +1,4 @@
-import { LectureDeckSchema, type LectureBlock, type Overlays } from '@hangul-route/content-schema';
+import { LectureDeckSchema, discoverItemTexts, type LectureBlock, type Overlays } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
 import { episodeById, episodesAll, jamoAll, questById, questsAll } from '../../../content';
 import { storiesAll } from '../../../content/stories';
@@ -164,8 +164,9 @@ describe('the presenter content bundle (F-TCH-004 §3.3, §3.13)', () => {
     for (const q of discovering) {
       const items = q.steps.flatMap((s) => s.discover?.pages.flatMap((p) => p.items) ?? []);
       const jamoIds = items.flatMap((it) => (it.type === 'jamo' ? [it.jamoId] : []));
-      // The reading quests of F-QUEST-002 rule R5 (Q-8) discover words only.
-      const words = items.flatMap((it) => (it.type === 'word' ? [it.word.ko] : []));
+      // The reading quests of F-QUEST-002 rule R5 (Q-8) discover words only; an upper-stage item
+      // (sentence, pattern, exchange, realia: F-CURR-001) shows each taught text as a word slide.
+      const words = items.flatMap((it) => (it.type === 'jamo' ? [] : discoverItemTexts(it).map((t) => t.ko)));
       expect(jamoIds.length + words.length, q.id).toBeGreaterThan(0);
       const { slides } = expandDeck(deck([{ kind: 'quest', id: q.id }]), lectureBundle('en'), { canPlayKorean: true });
       const letterAt = new Map(slides.flatMap((s, i) => (s.kind === 'letter' ? [[s.jamoId, i] as const] : [])));

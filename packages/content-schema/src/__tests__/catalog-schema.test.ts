@@ -49,7 +49,7 @@ describe('the shipped catalogue data', () => {
     for (const cell of CATALOG.cells) expect(cell.episodeId).toBe(`episode:${cell.stage}-${cell.theme}`);
   });
 
-  it('has Stage 1 shipped, three taste cells and the five Stage 5 books (F-STORY-005 PR 5.6) shipped elsewhere, and the other 22 as previews', () => {
+  it('has Stage 1 shipped, three taste cells, the five Stage 5 books (F-STORY-005 PR 5.6) and Playdate Talk (F-CURR-001 S4-4) shipped elsewhere, and the other 21 as previews', () => {
     const shipped = CATALOG.cells.filter((c) => c.status === 'shipped').map((c) => c.episodeId);
     expect(shipped).toEqual([
       'episode:stage1-letters',
@@ -60,6 +60,7 @@ describe('the shipped catalogue data', () => {
       'episode:stage2-life',
       'episode:stage2-nature',
       'episode:stage4-rites',
+      'episode:stage4-crafts',
       'episode:stage5-letters',
       'episode:stage5-life',
       'episode:stage5-rites',
@@ -67,7 +68,7 @@ describe('the shipped catalogue data', () => {
       'episode:stage5-crafts',
     ]);
     const previews = CATALOG.cells.filter((c) => c.status === 'preview');
-    expect(previews).toHaveLength(22);
+    expect(previews).toHaveLength(21);
     for (const cell of previews) expect(cell.questIds).toEqual([]);
   });
 
@@ -91,8 +92,9 @@ describe('the shipped catalogue data', () => {
       'quest:stage1-crafts-q3',
     ]);
     expect(CATALOG.quests.filter((q) => q.kind === 'lesson').map((q) => q.id)).toContain('quest:stage4-rites-q1');
-    // 15 Stage 1 + 3 taste quests + the 14 read quests of the five Stage 5 books (F-STORY-005 PR 5.6).
-    expect(CATALOG.quests.filter((q) => q.kind === 'lesson')).toHaveLength(32);
+    // 15 Stage 1 + 3 taste quests + the 14 read quests of the five Stage 5 books (F-STORY-005 PR 5.6)
+    // + the 3 Playdate Talk quests (F-CURR-001 S4-4).
+    expect(CATALOG.quests.filter((q) => q.kind === 'lesson')).toHaveLength(35);
   });
 
   it('has 24 stories adding up to 112 minutes, each with a listen quest on its shelf episode', () => {
@@ -410,6 +412,9 @@ describe('routeCatalogOf', () => {
       'quest:stage2-life-q1',
       'quest:stage2-nature-q1',
       'quest:stage4-rites-q1',
+      'quest:stage4-crafts-q1',
+      'quest:stage4-crafts-q2',
+      'quest:stage4-crafts-q3',
       'quest:story-sejong-new-letters-read',
       'quest:story-shapes-of-hangeul-read',
       'quest:story-hangeul-day-read',

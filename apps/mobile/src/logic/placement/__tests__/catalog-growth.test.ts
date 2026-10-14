@@ -99,17 +99,27 @@ describe('a stage3 result stored at version 8, then Word Builder ships', () => {
 });
 
 describe('a plan made at version 8: Change the plan after Word Builder ships', () => {
-  /** The version 9 catalogue the plan generator reads (the same cells as the bundle above). */
-  const CATALOG_9: Catalog = {
+  /** The catalogue as it was at version 8: the quests added since leave it, and their cells are previews again. */
+  const V8_IDS = new Set(CATALOG_QUEST_IDS_V8);
+  const CATALOG_8: Catalog = {
     ...CATALOG,
+    version: 8,
+    cells: CATALOG.cells.map((cell) =>
+      cell.questIds.length > 0 && !cell.questIds.some((id) => V8_IDS.has(id)) ? { ...cell, status: 'preview', minutes: 10, questIds: [] } : cell,
+    ),
+    quests: CATALOG.quests.filter((q) => V8_IDS.has(q.id)),
+  };
+  /** The version 9 catalogue the plan generator reads (the same cells as the bundle above; a fixture). */
+  const CATALOG_9: Catalog = {
+    ...CATALOG_8,
     version: 9,
-    cells: CATALOG.cells.map((cell) => {
+    cells: CATALOG_8.cells.map((cell) => {
       if (cell.episodeId === 'episode:stage2-letters') return { ...cell, status: 'shipped', minutes: 26, questIds: WB };
       if (cell.episodeId === 'episode:stage3-letters') return { ...cell, status: 'shipped', minutes: 13, questIds: FS };
       return cell;
     }),
     quests: [
-      ...CATALOG.quests,
+      ...CATALOG_8.quests,
       ...WB.map((id) => ({ id, episodeId: 'episode:stage2-letters', stage: 'stage2' as const, theme: 'letters' as const, title: id, minutes: 4, teaches: [], kind: 'lesson' as const })),
       ...FS.map((id) => ({ id, episodeId: 'episode:stage3-letters', stage: 'stage3' as const, theme: 'letters' as const, title: id, minutes: 4, teaches: [], kind: 'lesson' as const })),
     ],
@@ -128,7 +138,7 @@ describe('a plan made at version 8: Change the plan after Word Builder ships', (
         goals: { focus: 'balanced' },
         unlockedStages: StageKeySchema.options as StageKey[],
       },
-      CATALOG,
+      CATALOG_8,
     ),
     'route:a',
     '2026-10-05T09:00:00.000Z',
