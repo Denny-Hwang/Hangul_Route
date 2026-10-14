@@ -107,8 +107,10 @@ export interface Flags {
 
   /**
    * Words (F-VOC-003): the Library Words card, the topic picker, the topic
-   * page and the flashcards. OFF until the free-set topics are approved and
-   * native-reviewed (C-7 flips it).
+   * page and the flashcards. ON since C-7 (owner decision 2026-10-13: the
+   * free-set topics passed the production review and the F-VOC-005 deploy
+   * checklist is verified from the repo); `EXPO_PUBLIC_VOCAB_TOPICS_ENABLED=false`
+   * (or `0`) in a build switches it back off without a code change.
    */
   vocabTopicsEnabled: boolean;
 
@@ -165,7 +167,7 @@ const launchDefaults: Flags = {
   placementEnabled: false,
   audioClips: true,
   myRouteEnabled: true,
-  vocabTopicsEnabled: false,
+  vocabTopicsEnabled: true,
   vocabShowDrafts: false,
   grownUpHomeEnabled: false,
   notesEnabled: false,

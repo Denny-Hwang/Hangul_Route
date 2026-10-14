@@ -195,20 +195,28 @@ describe('flags', () => {
     const src = readFileSync(join(__dirname, '../flags.ts'), 'utf8');
     expect(src).toContain('process.env.EXPO_PUBLIC_MY_ROUTE_ENABLED');
   });
-  it('vocabTopicsEnabled (F-VOC-003 section 3.1) is OFF by default and flips on with "true" or "1"', async () => {
+  it('vocabTopicsEnabled (F-VOC-003 section 3.1) is ON by default since C-7 and "false" or "0" switches it off', async () => {
     delete process.env.EXPO_PUBLIC_VOCAB_TOPICS_ENABLED;
     let mod = await reload();
-    expect(mod.flags.vocabTopicsEnabled).toBe(false);
-    expect(mod.launchDefaultFlags.vocabTopicsEnabled).toBe(false);
-    process.env.EXPO_PUBLIC_VOCAB_TOPICS_ENABLED = 'true';
-    mod = await reload();
     expect(mod.flags.vocabTopicsEnabled).toBe(true);
-    process.env.EXPO_PUBLIC_VOCAB_TOPICS_ENABLED = '1';
+    expect(mod.launchDefaultFlags.vocabTopicsEnabled).toBe(true);
+    process.env.EXPO_PUBLIC_VOCAB_TOPICS_ENABLED = 'false';
+    mod = await reload();
+    expect(mod.flags.vocabTopicsEnabled).toBe(false);
+    process.env.EXPO_PUBLIC_VOCAB_TOPICS_ENABLED = '0';
+    mod = await reload();
+    expect(mod.flags.vocabTopicsEnabled).toBe(false);
+    process.env.EXPO_PUBLIC_VOCAB_TOPICS_ENABLED = 'true';
     mod = await reload();
     expect(mod.flags.vocabTopicsEnabled).toBe(true);
     process.env.EXPO_PUBLIC_VOCAB_TOPICS_ENABLED = 'maybe';
     mod = await reload();
-    expect(mod.flags.vocabTopicsEnabled).toBe(false);
+    expect(mod.flags.vocabTopicsEnabled).toBe(true);
+  });
+
+  it('vocabTopicsEnabled is read by its literal name, so a web build can carry the off switch', () => {
+    const src = readFileSync(join(__dirname, '../flags.ts'), 'utf8');
+    expect(src).toContain('process.env.EXPO_PUBLIC_VOCAB_TOPICS_ENABLED');
   });
 
   it('vocabShowDrafts (F-VOC-001 section 3.7, dev builds only) is OFF by default and flips on with "true"', async () => {
