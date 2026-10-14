@@ -43,7 +43,7 @@ import {
 } from './src/logic/lecture/shell';
 import { FONT_WAIT_MS, TIMER_TICK_MS, stageBox } from './src/logic/lecture/stage-constants';
 import { initialTimer, justFinished, reduceTimer, type TimerEvent, type TimerState } from './src/logic/lecture/timer';
-import { firstUses, fullscreenToggle, gridItems, helpLanguageChips, pickerModes, sayItShown, statusChips, timerOpenEvent, toolsOpened, type LectureTool } from './src/logic/lecture/tools';
+import { firstUses, fullscreenToggle, gridItems, helpLanguageChips, narrationStops, pickerModes, sayItShown, statusChips, timerOpenEvent, toolsOpened, type LectureTool } from './src/logic/lecture/tools';
 import { BAR_BAND, STAGE_BOUNDS } from './src/screens/presenter/stage-metrics';
 import { slideSound } from './src/logic/lecture/slide-view';
 import { stageScale } from './src/logic/lecture/stage-scale';
@@ -53,14 +53,13 @@ import { isOnline, subscribeOnline } from './src/platform/online';
 import { useReducedMotion } from './src/platform/motion';
 import {
   announceReady,
-  enterFullscreen,
+  enterFullscreenLandscape,
   exitFullscreen,
   fullscreenSupported,
   hasOpener,
   isFullscreen,
   keepScreenAwake,
   listenForRoster,
-  lockLandscape,
   forgetOpenDeck,
   holdOpenDeck,
   playChime,
@@ -172,6 +171,8 @@ export default function PresenterApp(): React.ReactElement {
   const [updateWaiting, setUpdateWaiting] = useState(false);
   // After Exit or an invalid link the home takes focus on its h1 (design home.md).
   const [homeFocus, setHomeFocus] = useState(false);
+  // Keys and help on the presenter home (home.md): the Help overlay with no lesson open.
+  const [homeHelp, setHomeHelp] = useState(false);
   // The bar's Offline chip (section 3.8): the lesson keeps working; only the chip changes.
   const [online, setOnline] = useState(isOnline);
   useEffect(() => subscribeOnline(setOnline), []);
@@ -369,8 +370,8 @@ export default function PresenterApp(): React.ReactElement {
       reportTools(toolsOpened(before, state));
       if (effect?.type === 'start-timer') stepTimer({ type: 'start', ms: effect.ms, now: Date.now() });
       if (tally.current) tally.current = tallyStep(tally.current, before, state, slides);
-      // A story's Read-to-me never runs on into the next slide, nor under an overlay.
-      if (state.slideIdx !== before.slideIdx || (state.overlay !== null && before.overlay === null)) narrator.stop();
+      // A story's Read-to-me never runs on into the next slide, nor under an overlay or the full timer.
+      if (narrationStops(before, state)) narrator.stop();
       if (state.slideIdx !== before.slideIdx && deck) {
         const key = slides[state.slideIdx]!.key;
         updateRecent((list) => setLastSlide(list, deck.id, key));
@@ -392,7 +393,7 @@ export default function PresenterApp(): React.ReactElement {
   const toggleFullscreen = useCallback(() => {
     // Leaving is a use too: Start already entered full screen, so the first press usually leaves it.
     const { action, tools } = fullscreenToggle(isFullscreen());
-    void (action === 'exit' ? exitFullscreen() : enterFullscreen());
+    void (action === 'exit' ? exitFullscreen() : enterFullscreenLandscape());
     reportTools(tools);
   }, [reportTools]);
 
@@ -405,9 +406,9 @@ export default function PresenterApp(): React.ReactElement {
     // Gesture-bound requests first, in the tap itself (section 3.5); each is feature-detected and may be refused.
     unlockAudio();
     unlockChime();
-    void enterFullscreen();
+    // Landscape is asked for once fullscreen settles (Android Chrome locks only in fullscreen).
+    void enterFullscreenLandscape();
     void keepScreenAwake();
-    void lockLandscape();
     const state = initialPresenterState({ slides }, phase.resumeKey);
     stateRef.current = state;
     setPstate(state);
@@ -492,6 +493,17 @@ export default function PresenterApp(): React.ReactElement {
     });
   }, [phase, dispatch, toggleFullscreen]);
 
+  // The home's Help overlay closes with Esc or H, as in a lesson. Every other key keeps its browser
+  // meaning (arrows, PageDown and Space scroll the overlay on a short viewport).
+  useEffect(() => {
+    if (phase.kind !== 'home' || !homeHelp) return undefined;
+    return subscribeKeys((command: KeyCommand) => {
+      if (command !== 'escape' && !(typeof command === 'object' && command.overlay === 'help')) return false;
+      setHomeHelp(false);
+      return true;
+    });
+  }, [phase.kind, homeHelp]);
+
   // The bar hides after `presenter.autoHideMs` without pointer, touch or key, unless a bar button has focus.
   const [barHidden, setBarHidden] = useState(false);
   const barFocused = useRef(false);
@@ -527,6 +539,7 @@ export default function PresenterApp(): React.ReactElement {
     rejected.current = false;
     setPickerCount(null);
     setHomeFocus(false);
+    setHomeHelp(false);
     setPhase(next);
   }, []);
   // Back to lessons on the start screen: nothing started, so nothing is saved or sent (design start-screen.md).
@@ -576,20 +589,35 @@ export default function PresenterApp(): React.ReactElement {
     );
   } else if (phase.kind === 'home') {
     body = (
-      <PresenterHomeScreen
-        messages={messages}
-        locale={locale}
-        languages={languages}
-        sessionLocale={sessionLocale}
-        onLanguage={setSessionLocale}
-        recent={recentView(recentLoaded)}
-        onResume={(item) => openFromHome({ kind: 'resume', item })}
-        onStartOver={(item) => openFromHome({ kind: 'start-over', item })}
-        onRemove={(deckId) => updateRecent((list) => forgetDeck(list, deckId))}
-        quick={quick}
-        onBuild={(built) => openFromHome({ kind: 'quick', deck: built })}
-        focusTitle={homeFocus}
-      />
+      <View style={{ flex: 1 }}>
+        <PresenterHomeScreen
+          messages={messages}
+          locale={locale}
+          languages={languages}
+          sessionLocale={sessionLocale}
+          onLanguage={setSessionLocale}
+          recent={recentView(recentLoaded)}
+          onResume={(item) => openFromHome({ kind: 'resume', item })}
+          onStartOver={(item) => openFromHome({ kind: 'start-over', item })}
+          onRemove={(deckId) => updateRecent((list) => forgetDeck(list, deckId))}
+          quick={quick}
+          onBuild={(built) => openFromHome({ kind: 'quick', deck: built })}
+          onHelp={() => setHomeHelp(true)}
+          focusTitle={homeFocus}
+        />
+        {homeHelp ? (
+          <HelpOverlay
+            romanization={null}
+            onRomanization={() => undefined}
+            languages={helpLanguageChips(languages)}
+            locale={locale}
+            onLanguage={setSessionLocale}
+            keepVisible={keepVisible}
+            onKeepVisible={setKeepVisible}
+            onClose={() => setHomeHelp(false)}
+          />
+        ) : null}
+      </View>
     );
   } else if (phase.kind === 'ready') {
     const count = pickerCount ?? phase.deck.picker?.count ?? 0;

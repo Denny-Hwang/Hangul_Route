@@ -48,11 +48,12 @@ export function StorySlide({ slide, shown, scene }: { slide: StoryBody; shown: R
         >
           {slide.narration.map((piece, i) =>
             'ko' in piece ? (
-              <Text key={i} accessibilityLabel={koreanTextLabel(piece.ko, piece.romanization)} style={chip}>
+              // The romanization is named only once it shows, so a screen reader never says it early (D2).
+              <Text key={i} testID="presenter-story-chip" accessibilityLabel={chipRom ? koreanTextLabel(piece.ko, piece.romanization) : piece.ko} style={chip}>
                 {' '}
                 <TaughtKo size={bodySize}>{piece.ko}</TaughtKo>
                 {/* text.secondary misses 7:1 on brand.secondaryLight (presenter.v1.md), so the romanization is text.primary here. */}
-                <Text style={[{ fontSize: bodySize, fontWeight: typography.weight.semibold, color: colors.text.primary }, reveal(chipRom)]}>
+                <Text aria-hidden={!chipRom} style={[{ fontSize: bodySize, fontWeight: typography.weight.semibold, color: colors.text.primary }, reveal(chipRom)]}>
                   {` ${piece.romanization} `}
                 </Text>
               </Text>
@@ -65,7 +66,8 @@ export function StorySlide({ slide, shown, scene }: { slide: StoryBody; shown: R
       {slide.korean !== undefined ? (
         <View testID="presenter-story-korean" style={[{ gap: units(unit, spacing.xs), alignItems: 'flex-start' }, reveal(shown.has('korean'))]} accessibilityElementsHidden={!shown.has('korean')} aria-hidden={!shown.has('korean')}>
           <View
-            accessibilityLabel={koreanTextLabel(slide.korean.ko, slide.korean.romanization)}
+            testID="presenter-story-korean-line"
+            accessibilityLabel={lineRom ? koreanTextLabel(slide.korean.ko, slide.korean.romanization) : slide.korean.ko}
             style={{
               ...chip,
               flexDirection: 'row',
@@ -77,7 +79,7 @@ export function StorySlide({ slide, shown, scene }: { slide: StoryBody; shown: R
             }}
           >
             <TaughtKo size={promptSize}>{slide.korean.ko}</TaughtKo>
-            <Text style={[{ fontSize: bodySize, fontWeight: typography.weight.semibold, color: colors.text.primary }, reveal(lineRom)]}>{slide.korean.romanization}</Text>
+            <Text aria-hidden={!lineRom} style={[{ fontSize: bodySize, fontWeight: typography.weight.semibold, color: colors.text.primary }, reveal(lineRom)]}>{slide.korean.romanization}</Text>
           </View>
           <Text style={{ fontSize: bodySize, fontWeight: typography.weight.bold, color: colors.text.secondary, lineHeight: Math.round(bodySize * typography.leading.tight) }}>
             {slide.korean.gloss}

@@ -27,8 +27,10 @@ An owned card therefore always has a face: no blank tile, no broken image.
 | `size` | number (dp) | side of the square |
 | `accessibilityLabel` | string, optional | given: the square is an image with this name ("Card art for Kimchi"; `role="img"` on the web). It is never its own focus stop (no `accessible`): every labelled call site sits inside a button that already names the card, and a nested focusable view would be a second TalkBack stop on Android. Absent: hidden from assistive technology (the Results thumbnails, where the banner says the card's name) |
 | `style` | `borderRadius`, `position`, `top`, `left` only | applied first, so size, background and clipping always stay the face's own. No border or padding: it would shrink the content box that the cover crop and the plate are laid out in (both are absolute layers sized from `size`). A frame goes on a wrapper around the face |
+| `testID` | string, optional | on the face's own view |
+| `wordFontFamily` | string, optional | the Korean word face's font family (also inside a cover's fallback and a plate's cells). Absent: the system Korean stack. The presenter card slide passes its taught-Korean font on the web (F-TCH-004 section 3.6) |
 
-Call sites: Library tile (`radii.md`, labelled), card page front (200, `radii.xxl`, labelled; a locked card keeps its lock panel and never draws `CardArt`), Results `CardArtThumb` (a 96 wrapper with `radii.lg` and `borderWidth.thick` in the rarity colour, holding a 90 face, `96 - 2 * borderWidth.thick`, at `radii.lg - borderWidth.thick`; decorative).
+Call sites: Library tile (`radii.md`, labelled), card page front (200, `radii.xxl`, labelled; a locked card keeps its lock panel and never draws `CardArt`), Results `CardArtThumb` (a 96 wrapper with `radii.lg` and `borderWidth.thick` in the rarity colour, holding a 90 face, `96 - 2 * borderWidth.thick`, at `radii.lg - borderWidth.thick`; decorative), presenter card slide (360 units, labelled with the card title, `testID` `presenter-card-art`, word face in the presenter font).
 
 ## Rules
 

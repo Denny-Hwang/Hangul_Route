@@ -193,6 +193,20 @@ export function timerOpenEvent(state: Pick<PresenterState, 'timerOpen'>, timer: 
   return !state.timerOpen && timer.totalMs === 0 ? { timerMode: 'full' } : { overlay: 'timer' };
 }
 
+/**
+ * Whether a story's Read-to-me stops at this step: it never runs on into the next slide, nor under
+ * a covering overlay, nor under the full-screen timer (which covers the slide with no overlay set,
+ * as when T opens a timer with no time yet). The corner timer leaves the slide in view, so it plays on.
+ */
+export function narrationStops(
+  before: Pick<PresenterState, 'slideIdx' | 'overlay' | 'timerOpen' | 'timerMode'>,
+  state: Pick<PresenterState, 'slideIdx' | 'overlay' | 'timerOpen' | 'timerMode'>,
+): boolean {
+  const fullBefore = before.timerOpen && before.timerMode === 'full';
+  const fullNow = state.timerOpen && state.timerMode === 'full';
+  return state.slideIdx !== before.slideIdx || (state.overlay !== null && before.overlay === null) || (fullNow && !fullBefore);
+}
+
 /** A preset's label: "30 s" or "3 min" (the catalogue strings take the number). */
 export function presetLabel(ms: number): { unit: 's' | 'min'; n: number } {
   return ms < 60_000 ? { unit: 's', n: Math.round(ms / 1000) } : { unit: 'min', n: Math.round(ms / 60_000) };
