@@ -10,7 +10,6 @@ import { episodesAll, questsAll } from '../../content';
 import { vocabTopics } from '../../content/vocab';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { localizeQuest } from '../../logic/content-locale';
-import { dayKey } from '../../logic/homework/mission-builder';
 import { myRouteAccess, myRouteEntryOf, selfEntryTab } from '../../logic/my-route/access';
 import { firstGoalReachedFor, focusEffects, goalRecordFor, seenForView, seenReadAfter } from '../../logic/my-route/focus';
 import { practiceTopicOf } from '../../logic/my-route/free-end';
@@ -35,6 +34,7 @@ import { questOpenFor, useAccessTier, useQuestAccess } from '../../store/tier-st
 import { useUiStore } from '../../store/ui-store';
 import { LinkButton } from '../../components/LinkButton';
 import { GainsCard, StoriesNote } from './GainsCard';
+import { useToday } from '../route/use-today';
 import { RouteCard } from './RouteCard';
 import { SkillsCard } from './SkillsCard';
 import { LaterRowItem, StageRowItem } from './TrailRow';
@@ -178,6 +178,9 @@ function MyRouteBody({ profileId, readOnly, variant, navigation }: BodyProps): R
   // The free-end hero's Practice words: the first free word topic this build lists (LR-5b).
   const practiceTopic = useMemo(() => practiceTopicOf(vocabTopics.map((t) => t.key)), []);
 
+  // Today's UTC day, read again at midnight, on focus and on foreground (F-ROUTE-001 R-7e), so the plan line and
+  // the card's one next move to the new day on a page left open across the boundary.
+  const today = useToday();
   const built = useMemo((): { model: MyRouteModel; week: number | null } | { error: true } => {
     try {
       const snapshot = snap ?? emptySnapshot(profileId);
@@ -186,7 +189,7 @@ function MyRouteBody({ profileId, readOnly, variant, navigation }: BodyProps): R
       const next = routeNextInputOf({
         snapshot,
         profileId,
-        today: dayKey(now.toISOString()),
+        today,
         plans,
         quests: questsAll,
         episodes: episodesAll,
@@ -200,7 +203,7 @@ function MyRouteBody({ profileId, readOnly, variant, navigation }: BodyProps): R
       return { error: true };
     }
     // `attempt` is the retry.
-  }, [snap, profileId, tier, plans, readOnly, activeQuestOpen, localized, seen, attempt]);
+  }, [snap, profileId, today, tier, plans, readOnly, activeQuestOpen, localized, seen, attempt]);
   const model = 'model' in built ? built.model : null;
   const week = 'model' in built ? built.week : null;
   // The first visit that shows a reached plan goal (LR-5c, section 4.3): Hoya cheers and the card says so for this
