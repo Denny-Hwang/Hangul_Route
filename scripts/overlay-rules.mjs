@@ -16,11 +16,12 @@
 //                            naming an element the entity does not have
 //   overlay-forbidden-field  a field outside OVERLAY_FIELDS for the id prefix
 //   korean-in-ui-field       es: Hangul in any value; ko: Hangul outside translatable fields
-//                            (a lesson Discover note's {ko:...} tokens are taught Korean,
+//                            (a lesson quest's Discover note {ko:...} tokens are taught Korean,
 //                            F-CURR-001 §3.4, and do not count)
 //   overlay-circular-gloss   a ko gloss equal to the Korean it glosses (warning when it only
 //                            wraps it in spaces or punctuation)
-//   overlay-token-mismatch   a story narration whose {kw:id} tokens are not the base multiset
+//   overlay-token-mismatch   a story narration whose {kw:id} tokens are not the base multiset;
+//                            a lesson Discover note whose {ko:...} tokens are not its noteEn's
 //   banned-on-learner-surface  a learner-banned word of the locale (banned-words.json)
 //   overlay-missing          warning (error for HANGUL_ROUTE_STRICT_LOCALES): a translatable
 //                            English field of a base entity that the locale lacks
@@ -41,9 +42,15 @@ import {
 } from "./overlay-fields.mjs";
 
 const HANGUL = /[ㄱ-㆏가-힣]/;
-/** A lesson Discover note (F-CURR-001 §3.4): its `{ko:}` tokens are taught Korean, drawn with romanization. */
-const KO_TOKEN_FIELD = /\.items\.[a-z0-9-]+\.note$/;
-const withoutKoTokens = (field, value) => (KO_TOKEN_FIELD.test(field) ? value.replace(/\{ko:[^}]*\}/g, " ") : value);
+/**
+ * A Discover pattern note of a lesson quest (F-CURR-001 §3.4, §3.10): its Korean sits in
+ * `{ko:...}` tokens that render as taught Korean with their romanization, so a translation
+ * keeps exactly the tokens of the English note, and the Hangul inside them is not UI text.
+ */
+const KO_TOKEN = /\{ko:([^}]*)\}/g;
+const LESSON_NOTE_FIELD = /^steps\.[^.]+\.discover\.pages\.[^.]+\.items\.[^.]+\.note$/;
+const isLessonNote = (id, field) => /^quest:stage[2-467]-/.test(id) && LESSON_NOTE_FIELD.test(field);
+const koTokenList = (text) => Array.from(text.matchAll(KO_TOKEN), (m) => m[1]).sort();
 const TOKEN = /\{kw:([a-z0-9-]+)\}/g;
 const I18N_DIR = "content/i18n/";
 const SKIPPED_BASE = ["content/i18n/", "content/fixtures/", "content/stories/research/"];
@@ -152,7 +159,8 @@ function checkField(locale, id, field, value, base, add, ctx) {
   if (typeof value !== "string" || value.trim() === "") return add("overlay-bad-shape: a translated field is a non-blank string");
   const allowed = isOverlayFieldAllowed(id, field);
   if (!allowed) add(`overlay-forbidden-field: ${field} cannot be translated on ${id}`);
-  if (HANGUL.test(withoutKoTokens(field, value)) && (locale === "es" || !allowed)) add("korean-in-ui-field");
+  const shown = isLessonNote(id, field) ? value.replace(KO_TOKEN, " ") : value;
+  if (HANGUL.test(shown) && (locale === "es" || !allowed)) add("korean-in-ui-field");
   const banned = bannedWordIn(value, locale);
   if (banned !== null) add(`banned-on-learner-surface: "${banned}"`);
   if (!allowed || base === undefined) return;
@@ -174,6 +182,13 @@ function checkField(locale, id, field, value, base, add, ctx) {
       const got = tokenList(value);
       if (want.join(",") !== got.join(",")) {
         add(`overlay-token-mismatch: the narration needs exactly the tokens ${want.join(", ") || "(none)"}; found ${got.join(", ") || "(none)"}`);
+      }
+    }
+    if (isLessonNote(id, field)) {
+      const want = koTokenList(String(getIn(base, path)));
+      const got = koTokenList(value);
+      if (want.join(",") !== got.join(",")) {
+        add(`overlay-token-mismatch: the note needs exactly the tokens ${want.join(", ") || "(none)"}; found ${got.join(", ") || "(none)"}`);
       }
     }
   }
