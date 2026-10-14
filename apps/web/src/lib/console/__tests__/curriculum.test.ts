@@ -508,8 +508,14 @@ describe('re-pace from today (console mode shift, section 3.7)', () => {
   });
 
   it('counts coming-soon episodes that no longer fit, which the generator leaves out of its warning', () => {
-    // A catalogue with no story offered, so this Stage 2 route holds coming-soon episodes only.
-    const noStories: Catalog = { ...CATALOG, stories: CATALOG.stories.map((story) => ({ ...story, status: 'draft' as const })) };
+    // A catalogue with no story offered and the Stage 7 cells taken back to "Coming later" (every cell has
+    // shipped since F-CURR-001), so this route holds coming-soon episodes only.
+    const noStories: Catalog = {
+      ...CATALOG,
+      stories: CATALOG.stories.map((story) => ({ ...story, status: 'draft' as const })),
+      cells: CATALOG.cells.map((cell) => (cell.stage === 'stage7' ? { ...cell, status: 'preview' as const, minutes: 10, questIds: [] } : cell)),
+      quests: CATALOG.quests.filter((quest) => quest.stage !== 'stage7'),
+    };
     const plan = classPlan({ length: '12-week', start: 'first-words' }, noStories);
     expect(plan.items.every((item) => item.kind === 'episode')).toBe(true);
     const squeezed = { ...plan, meta: { ...plan.meta, params: { ...plan.meta.params, daysOff: [{ from: '2026-11-01', to: '2027-01-09' }] } } };
@@ -564,8 +570,8 @@ describe('re-pace from today (console mode shift, section 3.7)', () => {
     return { id: 'plan:route', meta: toMeta(draft), items: toPlanItems(draft) };
   }
 
-  it('offers Refresh route on every route saved from catalogue version 1 to 26 (F-QUEST-002 Q-6a bumps it to 2, Q-6b to 3, Q-7b to 4, Q-8 to 5, F-STORY-001 PR 1.9 to 6, F-STORY-005 PR 5.6 to 7 for the rites book and to 8 for the other four books, F-CURR-001 S4-1 to 9 for Read Along, S3-1 to 10 for First Sentences, S2-3 to 11 for Playground Words, S3-3 to 12 for Festival Sentences, S3-5 to 13 for Game Sentences, S3-2 to 14 for Daily Mini-Sentences, T-2 to 15 for Greeting Dialogues, S2-1 to 16 for Word Builder, S2-2 to 17 for Holiday Words, S4-2 to 18 for Kitchen Talk, S4-3 to 19 for Park Conversations, S4-4 to 20 for Playdate Talk, S6-1 to 21 for Read the Menu, S6-2 to 22 for Order Food, S6-3 to 23 for Travel for Chuseok, S6-4 to 24 for Hike & Ask, S6-5 to 25 for Buy at Market, S3-4 to 26 for Animal Sentences, T-1 to 27 for Lunch Box Words and Outdoor Words)', () => {
-    expect(CATALOG.version).toBe(27);
+  it('offers Refresh route on every route saved from catalogue version 1 to 27 (F-QUEST-002 Q-6a bumps it to 2, Q-6b to 3, Q-7b to 4, Q-8 to 5, F-STORY-001 PR 1.9 to 6, F-STORY-005 PR 5.6 to 7 for the rites book and to 8 for the other four books, F-CURR-001 S4-1 to 9 for Read Along, S3-1 to 10 for First Sentences, S2-3 to 11 for Playground Words, S3-3 to 12 for Festival Sentences, S3-5 to 13 for Game Sentences, S3-2 to 14 for Daily Mini-Sentences, T-2 to 15 for Greeting Dialogues, S2-1 to 16 for Word Builder, S2-2 to 17 for Holiday Words, S4-2 to 18 for Kitchen Talk, S4-3 to 19 for Park Conversations, S4-4 to 20 for Playdate Talk, S6-1 to 21 for Read the Menu, S6-2 to 22 for Order Food, S6-3 to 23 for Travel for Chuseok, S6-4 to 24 for Hike & Ask, S6-5 to 25 for Buy at Market, S3-4 to 26 for Animal Sentences, T-1 to 27 for Lunch Box Words and Outdoor Words, S7-1 to 28 for Write Your Name)', () => {
+    expect(CATALOG.version).toBe(28);
     expect(v1Plan('brand-new').meta.catalogVersion).toBe(1);
     expect(isStaleCatalog(v1Plan('brand-new').meta)).toBe(true);
     expect(isStaleCatalog(v1Plan('some-letters').meta)).toBe(true);
@@ -619,6 +625,8 @@ describe('re-pace from today (console mode shift, section 3.7)', () => {
     expect(isStaleCatalog({ ...v1Plan('brand-new').meta, catalogVersion: 25 })).toBe(true);
     // A route saved before Lunch Box Words and Outdoor Words grew (version 26) asks once too.
     expect(isStaleCatalog({ ...v1Plan('brand-new').meta, catalogVersion: 26 })).toBe(true);
+    // A route saved before Write Your Name shipped (version 27) asks once too.
+    expect(isStaleCatalog({ ...v1Plan('brand-new').meta, catalogVersion: 27 })).toBe(true);
   });
 
   it('a new route on the shipped catalogue can schedule the new nature and crafts quests after their q1 (F-QUEST-002 Q-8)', () => {

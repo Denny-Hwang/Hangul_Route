@@ -821,6 +821,38 @@ const CELLS: readonly UpperCell[] = [
       await expectCellOnRoute(page, 2, 'Outdoor Words');
     },
   },
+  // F-CURR-001 S7-1: Write Your Name, q1 "Hoya's Name": Trace a Word (left with Skip, a first-class way
+  // on), Type Hangul with the cast name 호야, and the Stage 7 Sentence Builder Check.
+  {
+    episodeId: 'episode:stage7-letters',
+    cellButton: journeyCellName(7, 'Letters & Books'),
+    title: 'Write Your Name',
+    playFirstQuest: async (page) => {
+      await page.setViewportSize({ width: 320, height: 720 });
+      await startFirstQuest(page);
+      await passDiscover(page);
+      await page.getByRole('button', { name: 'Play minigame' }).click();
+      await expect(page.getByTestId('trace-word-canvas')).toBeVisible();
+      await page.getByRole('button', { name: 'Skip', exact: true }).click();
+      await page.getByRole('button', { name: 'Play minigame' }).click();
+      await typeAnswer(page, '호야');
+      await shot(page, 'write-your-name-q1-type-320');
+      await typeAnswer(page, '이름');
+      await typeAnswer(page, '한글');
+      await typeAnswer(page, '이건 이름이에요');
+      await page.getByRole('button', { name: 'Go', exact: true }).click();
+      await placeTiles(page, ['이건, igeon', '이름이에요, ireumieyo']);
+      await expect(page.getByTestId('sentence-builder-gloss')).toHaveText('This is Hangul.', { timeout: 5_000 });
+      await placeTiles(page, ['이건, igeon', '한글이에요, hangeurieyo']);
+      await expect(page.getByText('Finish', { exact: true }).first()).toBeVisible();
+    },
+    expectRouteDay: async (page) => {
+      await page.goto('/');
+      await page.getByText('Learning Route', { exact: true }).last().click();
+      await page.getByRole('button', { name: /^Stage 7, / }).click();
+      await expect(page.getByRole('button', { name: /^Letters & Books: Write Your Name\./ })).toBeVisible();
+    },
+  },
 ];
 
 async function openJourney(page: Page): Promise<void> {

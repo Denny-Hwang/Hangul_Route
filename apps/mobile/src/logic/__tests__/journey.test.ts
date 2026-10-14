@@ -63,13 +63,13 @@ describe('stageAvailability', () => {
     expect(stageAvailability('stage5', [lesson, volume2, ep('other', 'stage5', 'preview', ['q1'], 'life')])).toBe('taste');
     expect(stageAvailability('stage5', [volume2, { ...volume2, id: 'volume-3', volume: 3 }])).toBe('soon');
   });
-  it('matches the real bundle: stage1 open, stage2 open, stage3 open, stage4 open, stage6 open, stage7 soon (Stages 2, 3, 4 and 6 open since Holiday Words S2-2, Animal Sentences S3-4, Playdate Talk S4-4 and Buy at Market S6-5 shipped their last placeholders, F-CURR-001)', () => {
+  it('matches the real bundle: stage1 open, stage2 open, stage3 open, stage4 open, stage6 open, stage7 taste (Stages 2, 3, 4 and 6 open since Holiday Words S2-2, Animal Sentences S3-4, Playdate Talk S4-4 and Buy at Market S6-5 shipped their last placeholders; Stage 7 a taste since Write Your Name S7-1, F-CURR-001)', () => {
     expect(stageAvailability('stage1', episodesAll)).toBe('open');
     expect(stageAvailability('stage2', episodesAll)).toBe('open');
     expect(stageAvailability('stage3', episodesAll)).toBe('open');
     expect(stageAvailability('stage4', episodesAll)).toBe('open');
     expect(stageAvailability('stage6', episodesAll)).toBe('open');
-    expect(stageAvailability('stage7', episodesAll)).toBe('soon');
+    expect(stageAvailability('stage7', episodesAll)).toBe('taste');
   });
   it('labels are short and come from the message subtree it is given (F-I18N-001 PR 6b)', () => {
     const m = getMessages('en').learner.journey.availability;

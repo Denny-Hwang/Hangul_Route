@@ -36,8 +36,9 @@ import type { Catalog, CatalogCell, CatalogQuest, CatalogStory, CatalogTopic } f
  * Version 25 (F-CURR-001 S6-5): Buy at Market ships (Stage 6 crafts, 3 lesson quests); Stage 6 opens.
  * Version 26 (F-CURR-001 S3-4): Animal Sentences ships (Stage 3 nature, 3 lesson quests); Stage 3 opens.
  * Version 27 (F-CURR-001 T-1): Lunch Box Words and Outdoor Words adopt Discover and Check and grow to three quests each.
+ * Version 28 (F-CURR-001 S7-1): Write Your Name ships (Stage 7 letters, 3 lesson quests); Stage 7 is a taste.
  */
-export const CATALOG_VERSION = 27;
+export const CATALOG_VERSION = 28;
 
 const cell = (
   stage: StageKey,
@@ -107,7 +108,7 @@ const cells: CatalogCell[] = [
   cell('stage6', 'rites', 'Travel for Chuseok', 'shipped', 15, ['quest:stage6-rites-q1', 'quest:stage6-rites-q2', 'quest:stage6-rites-q3']),
   cell('stage6', 'nature', 'Hike & Ask', 'shipped', 15, ['quest:stage6-nature-q1', 'quest:stage6-nature-q2', 'quest:stage6-nature-q3']),
   cell('stage6', 'crafts', 'Buy at Market', 'shipped', 15, ['quest:stage6-crafts-q1', 'quest:stage6-crafts-q2', 'quest:stage6-crafts-q3']),
-  soon('stage7', 'letters', 'Write Your Name'),
+  cell('stage7', 'letters', 'Write Your Name', 'shipped', 15, ['quest:stage7-letters-q1', 'quest:stage7-letters-q2', 'quest:stage7-letters-q3']),
   soon('stage7', 'life', 'My Day in Korean'),
   soon('stage7', 'rites', 'My Holiday Memory'),
   soon('stage7', 'nature', 'My Favorite Animal'),
@@ -201,6 +202,9 @@ const lessonQuests: CatalogQuest[] = [
   lesson('stage3-nature-q1', 'stage3', 'nature', 'Where Is the Bird?', 5),
   lesson('stage3-nature-q2', 'stage3', 'nature', 'Big and Small', 5),
   lesson('stage3-nature-q3', 'stage3', 'nature', 'Fly, Hop, Swim', 5),
+  lesson('stage7-letters-q1', 'stage7', 'letters', "Hoya's Name", 5),
+  lesson('stage7-letters-q2', 'stage7', 'letters', 'My Name Is ...', 5),
+  lesson('stage7-letters-q3', 'stage7', 'letters', 'Your Name in Hangul', 5),
   // The Stage 5 books (F-STORY-005 PR 5.6): grid quests that play their stories at the read level.
   lesson('story-sejong-new-letters-read', 'stage5', 'letters', "King Sejong's New Letters", 4),
   lesson('story-shapes-of-hangeul-read', 'stage5', 'letters', 'The Secret in the Shapes', 5),
