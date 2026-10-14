@@ -94,7 +94,7 @@
                 ]
               },
               {
-                "captionEn": "Who do I have?",
+                "captionEn": "Family sentences",
                 "items": [
                   {
                     "type": "sentence",
@@ -167,7 +167,7 @@
                 {
                   "ko": "있어요.",
                   "romanization": "isseoyo",
-                  "en": "is here, there is"
+                  "en": "have, there is"
                 }
               ]
             },
@@ -198,7 +198,7 @@
                 {
                   "ko": "있어요.",
                   "romanization": "isseoyo",
-                  "en": "is here, there is"
+                  "en": "have, there is"
                 }
               ]
             },
@@ -228,7 +228,7 @@
                 {
                   "ko": "있어요.",
                   "romanization": "isseoyo",
-                  "en": "is here, there is"
+                  "en": "have, there is"
                 }
               ]
             }
@@ -416,39 +416,27 @@
               },
               "options": [
                 {
-                  "id": "o1",
-                  "text": {
-                    "ko": "송편하고 사과를 먹어요.",
-                    "romanization": "songpyeonhago sagwareul meogeoyo",
-                    "en": "I eat songpyeon and an apple."
-                  }
+                  "id": "songpyeon",
+                  "pictureRef": "card:songpyeon",
+                  "labelEn": "Songpyeon"
                 },
                 {
-                  "id": "o2",
-                  "text": {
-                    "ko": "송편하고 떡을 먹어요.",
-                    "romanization": "songpyeonhago tteogeul meogeoyo",
-                    "en": "I eat songpyeon and rice cake."
-                  }
+                  "id": "grandma",
+                  "pictureRef": "word:family-grandma",
+                  "labelEn": "Grandma"
                 },
                 {
-                  "id": "o3",
-                  "text": {
-                    "ko": "사과하고 떡을 먹어요.",
-                    "romanization": "sagwahago tteogeul meogeoyo",
-                    "en": "I eat an apple and rice cake."
-                  }
+                  "id": "moon",
+                  "pictureRef": "card:moon",
+                  "labelEn": "Full moon"
                 },
                 {
-                  "id": "o4",
-                  "text": {
-                    "ko": "할머니하고 할아버지가 있어요.",
-                    "romanization": "halmeonihago harabeojiga isseoyo",
-                    "en": "I have a grandma and a grandpa."
-                  }
+                  "id": "kite",
+                  "pictureRef": "card:kite",
+                  "labelEn": "Kite"
                 }
               ],
-              "answerId": "o1"
+              "answerId": "songpyeon"
             }
           ]
         }
@@ -879,39 +867,27 @@
               },
               "options": [
                 {
-                  "id": "o1",
-                  "text": {
-                    "ko": "한복이 예뻐요.",
-                    "romanization": "hanbogi yeppeoyo",
-                    "en": "The hanbok is pretty."
-                  }
+                  "id": "hanbok",
+                  "pictureRef": "card:hanbok",
+                  "labelEn": "Hanbok"
                 },
                 {
-                  "id": "o2",
-                  "text": {
-                    "ko": "보름달이 예뻐요.",
-                    "romanization": "boreumdari yeppeoyo",
-                    "en": "The full moon is pretty."
-                  }
+                  "id": "songpyeon",
+                  "pictureRef": "card:songpyeon",
+                  "labelEn": "Songpyeon"
                 },
                 {
-                  "id": "o3",
-                  "text": {
-                    "ko": "송편이 맛있어요.",
-                    "romanization": "songpyeoni masisseoyo",
-                    "en": "The songpyeon is tasty."
-                  }
+                  "id": "apple",
+                  "pictureRef": "word:food-apple",
+                  "labelEn": "Apple"
                 },
                 {
-                  "id": "o4",
-                  "text": {
-                    "ko": "사과가 맛있어요.",
-                    "romanization": "sagwaga masisseoyo",
-                    "en": "The apple is tasty."
-                  }
+                  "id": "tiger",
+                  "pictureRef": "card:tiger",
+                  "labelEn": "Tiger"
                 }
               ],
-              "answerId": "o1"
+              "answerId": "hanbok"
             }
           ]
         }
@@ -934,7 +910,7 @@
           "id": "s2",
           "kind": "discover",
           "titleEn": "Things People Do",
-          "hoyaLineEn": "Sebae is a bow to elders at the New Year. Chuseok has a big, bright full moon.",
+          "hoyaLineEn": "Sebae is a bow to elders at Seollal, the Lunar New Year. Chuseok has a big, bright full moon.",
           "discover": {
             "pages": [
               {
@@ -947,7 +923,7 @@
                       "romanization": "___eul/reul haeyo",
                       "en": "I do ___."
                     },
-                    "noteEn": "Use {ko:을} after a final consonant and {ko:를} after a vowel. {ko:해요} means \"I do\".",
+                    "noteEn": "Use {ko:을} after a final consonant and {ko:를} after a vowel. {ko:해요} means \"do\"; the doer comes from context.",
                     "examples": [
                       {
                         "ko": "세배를 해요.",
@@ -1357,39 +1333,27 @@
               },
               "options": [
                 {
-                  "id": "o1",
-                  "text": {
-                    "ko": "보름달을 봐요.",
-                    "romanization": "boreumdareul bwayo",
-                    "en": "I look at the full moon."
-                  }
+                  "id": "moon",
+                  "pictureRef": "card:moon",
+                  "labelEn": "Full moon"
                 },
                 {
-                  "id": "o2",
-                  "text": {
-                    "ko": "세배를 해요.",
-                    "romanization": "sebaereul haeyo",
-                    "en": "I do the New Year's bow."
-                  }
+                  "id": "songpyeon",
+                  "pictureRef": "card:songpyeon",
+                  "labelEn": "Songpyeon"
                 },
                 {
-                  "id": "o3",
-                  "text": {
-                    "ko": "보름달이 예뻐요.",
-                    "romanization": "boreumdari yeppeoyo",
-                    "en": "The full moon is pretty."
-                  }
+                  "id": "kimchi",
+                  "pictureRef": "card:kimchi",
+                  "labelEn": "Kimchi"
                 },
                 {
-                  "id": "o4",
-                  "text": {
-                    "ko": "송편을 먹어요.",
-                    "romanization": "songpyeoneul meogeoyo",
-                    "en": "I eat songpyeon."
-                  }
+                  "id": "mountain",
+                  "pictureRef": "card:mountain",
+                  "labelEn": "Mountain"
                 }
               ],
-              "answerId": "o1"
+              "answerId": "moon"
             }
           ]
         }
@@ -1421,7 +1385,7 @@
         "passes": 3,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "pass 1 (author sourcing, 2026-10-14): 'the New Year's bow' and 'at the start of the year' = encykorea 세배 정의 (정월 초하룻날 … 새해의 첫인사) and stdict 세배 (섣달그믐이나 정초에 웃어른께 인사로 하는 절); 'younger family members bow to grandparents, parents and other elders' = encykorea 세배 (조부모·부모에게 먼저 절하고 … 아랫사람이 윗사람에게); 'elders answer with kind wishes' = encykorea 세배 (세배를 받는 이도 … 덕담을 한다). Restated in own words; no ancestral rite named (the encykorea sentence on 차례 is not quoted). Same fact as Holiday Words n2 and n8. Used in: q3 Discover Hoya line, q3 Discover page 1 caption, q3 practice r1 and apply r1 (sebae sentence).\npass 2b (independent fact check, 2026-10-14): re-opened encykorea E0029802 and stdict 세배. 정의 '정월 초하룻날 윗사람에게 절을 하는 새해의 첫인사' supports 'the New Year's bow' and 'at the start of the year'; 내용 '조부모·부모에게 먼저 절하고, 형·누나 등 차례로 아랫사람이 윗사람에게 절을' and the later visits to 일가친척과 이웃어른 support 'younger family members bow to grandparents, parents and other elders'; '세배를 받는 이도 … 한마디씩 덕담을 한다' supports 'elders answer with kind wishes'; stdict '섣달그믐이나 정초에 웃어른께 인사로 하는 절' matches. All quoteOrLocator strings found verbatim on the pages. textEn is a restatement, not a translation of any source sentence; no copy found. Outcome: pass, no change.\npass 5 (MAR culture review, final independent pass, 2026-10-14): re-opened encykorea E0029802 and stdict 세배; every quoteOrLocator string found verbatim. 'New Year's bow', 'at the start of the year', 'younger family members bow to grandparents, parents and other elders' and 'elders answer with kind wishes' are each supported as recorded in passes 1 and 2b. textEn now opens the custom with 'By custom,' (the source describes a custom, not what every family does; no new fact). No run of words shared with a source; no designation number; no ancestral rite named. Outcome: pass, hedge applied."
+        "notes": "pass 1 (author sourcing, 2026-10-14): 'the New Year's bow' and 'at the start of the year' = encykorea 세배 정의 (정월 초하룻날 … 새해의 첫인사) and stdict 세배 (섣달그믐이나 정초에 웃어른께 인사로 하는 절); 'younger family members bow to grandparents, parents and other elders' = encykorea 세배 (조부모·부모에게 먼저 절하고 … 아랫사람이 윗사람에게); 'elders answer with kind wishes' = encykorea 세배 (세배를 받는 이도 … 덕담을 한다). Restated in own words; no ancestral rite named (the encykorea sentence on 차례 is not quoted). Same fact as Holiday Words n2 and n8. Used in: q3 Discover Hoya line, q3 Discover page 1 caption, q3 practice r1 and apply r1 (sebae sentence).\npass 2b (independent fact check, 2026-10-14): re-opened encykorea E0029802 and stdict 세배. 정의 '정월 초하룻날 윗사람에게 절을 하는 새해의 첫인사' supports 'the New Year's bow' and 'at the start of the year'; 내용 '조부모·부모에게 먼저 절하고, 형·누나 등 차례로 아랫사람이 윗사람에게 절을' and the later visits to 일가친척과 이웃어른 support 'younger family members bow to grandparents, parents and other elders'; '세배를 받는 이도 … 한마디씩 덕담을 한다' supports 'elders answer with kind wishes'; stdict '섣달그믐이나 정초에 웃어른께 인사로 하는 절' matches. All quoteOrLocator strings found verbatim on the pages. textEn is a restatement, not a translation of any source sentence; no copy found. Outcome: pass, no change.\npass 5 (MAR culture review, final independent pass, 2026-10-14): re-opened encykorea E0029802 and stdict 세배; every quoteOrLocator string found verbatim. 'New Year's bow', 'at the start of the year', 'younger family members bow to grandparents, parents and other elders' and 'elders answer with kind wishes' are each supported as recorded in passes 1 and 2b. textEn now opens the custom with 'By custom,' (the source describes a custom, not what every family does; no new fact). No run of words shared with a source; no designation number; no ancestral rite named. Outcome: pass, hedge applied.\npass 5 round 2 (MAR culture, 2026-10-14): the q3 Discover Hoya line now places sebae at Seollal, the Lunar New Year (en/es/ko), from encykorea E0029802 정의 '정월 초하룻날'; textEn unchanged; lesson-copies-source re-run clean. Outcome: pass."
       }
     },
     {
@@ -1467,7 +1431,10 @@
     "notes": [
       "pass 4 language (MAR, 2026-10-14): applied: 하고 as a joining particle (ko), no aspect drift in ko glosses, 'hago' marked as Korean in es, 있어요 with grandparents glossed as possession, q3 r4 now 엄마하고 아빠가, no untaught N N possessive, no q1 particle choice, 떡 role labels; rejected: 송편/떡 gloss (spec 3.4), read-to-picture Check (no schema mode).",
       "pass 5 culture (MAR, 2026-10-14): n1 and n2 re-checked against all five sources, passes 3; applied: q3 Discover title 'Things People Do', the ko q2 Hoya line no longer a flat claim, 'By custom' on n1; no stereotype, no 'all Koreans' claim, no real person, shop, brand or price; reads for any age.",
-      "pass 6 translation (MAR, 2026-10-14): es and ko 1:1 with the cell; applied: ko glosses define, not echo (둥근 달, 반달 모양으로 빚은 떡, 윷가락), q2 frame gloss matches its examples, 떡 definitions, 'Dos palabras de familia', Check title as the dictionary heading; rejected: es verb-form uniformity (mirrors en), {ko:} tokens in es notes (pipeline rule pending)."
+      "pass 6 translation (MAR, 2026-10-14): es and ko 1:1 with the cell; applied: ko glosses define, not echo (둥근 달, 반달 모양으로 빚은 떡, 윷가락), q2 frame gloss matches its examples, 떡 definitions, 'Dos palabras de familia', Check title as the dictionary heading; rejected: es verb-form uniformity (mirrors en), {ko:} tokens in es notes (pipeline rule pending).",
+      "pass 4 language round 2 (MAR, 2026-10-14): applied: 있어요 tile 'have, there is', ko glosses 저는 … 있어요 (no 계세요), '윷을 던지며 놀아요', ko 해요 note and frame gloss as sentences, en 해요 note \"do\" (doer from context), caption 'Family sentences', Check r2 heard -> picture in all quests (with data); rejected: ko titles 'A하고 B' (no typed taught Korean in chrome).",
+      "pass 5 culture round 2 (MAR, 2026-10-14): applied: the q3 Hoya line places sebae at Seollal, the Lunar New Year (encykorea 정의 정월 초하룻날), and the q1 family page caption no longer asks about the learner's own family; n1 and n2 text unchanged, passes 3.",
+      "pass 6 translation round 2 (MAR, 2026-10-14): applied: es articles (una abuela y un abuelo), 'marca de …, tras …', '(como objeto)', capitalised haeyo note, ko 있어요 gloss, ko q1 blurb without typed 하고; rejected: {ko:} tokens in es notes (#652 exemption not on main; Hangul in es fails korean-in-ui-field)."
     ]
   },
   "contentVer": 1

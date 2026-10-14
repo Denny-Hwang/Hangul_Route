@@ -125,7 +125,7 @@ const CELLS: readonly UpperCell[] = [
       await page.getByRole('button', { name: 'Play minigame' }).click();
       await pickByIds(page, ['o1', 'songpyeon', 'o1', 'grandma']);
       await expect(page.getByText('Two quick ones', { exact: true })).toBeVisible();
-      await playCheckByIds(page, [{ answer: 'grandpa' }, { answer: 'o1' }]);
+      await playCheckByIds(page, [{ answer: 'grandpa' }, { answer: 'songpyeon' }]);
       await expect(page.getByText('Finish', { exact: true }).first()).toBeVisible();
       await shot(page, 's3-3-q1-reward-320');
     },
