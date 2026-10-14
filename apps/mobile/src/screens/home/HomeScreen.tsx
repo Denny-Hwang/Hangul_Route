@@ -40,7 +40,6 @@ import { cursorContext } from '../../logic/cursor-context';
 import {
   buildTodaysMission,
   missionCardText,
-  dayKey,
   planHomeStoryOpen,
   storyCardShownEvent,
   vocabCardShownEvent,
@@ -87,6 +86,7 @@ import { PictureArt } from '../minigames/PictureArt';
 import { LinkButton } from '../placement/parts';
 import { NotesHomeCard } from '../notes/NotesHomeCard';
 import { PlanSlotCard, usePlanSlot } from '../route/PlanPromptCard';
+import { useToday } from '../route/use-today';
 import { firstFreeTopicKey, pickerTopics, topicWords, wordsOffered } from '../vocab/topic-data';
 import { FreeEndCard } from './FreeEndCard';
 import { freeTopicsInBuild, samplerStoryOf } from './free-end-inputs';
@@ -279,7 +279,10 @@ export function HomeScreen(): React.ReactElement {
   const { completed, total: totalStage1Quests } = gridQuestProgress(episodesAll, questsAll, snap?.quests ?? []);
   const cardsUnlocked = snap?.cards.length ?? 0;
   // Today's count only, the same number as the Homework list's Today group (F-PLAN-002 section 3.6).
-  const homeworkDue = dueTodayCount(snap?.homework, dayKey(new Date().toISOString()));
+  // Today's UTC day, read again at midnight, on focus and on foreground (F-ROUTE-001 R-7e), so a Home left
+  // open across the day boundary moves the count, the mission and the strip week to the new day.
+  const today = useToday();
+  const homeworkDue = dueTodayCount(snap?.homework, today);
 
   const recentStars = (snap?.quests.slice(-1)[0]?.stars ?? 0) as 0 | 1 | 2 | 3;
 
@@ -330,7 +333,7 @@ export function HomeScreen(): React.ReactElement {
         ? routeNextInputOf({
             snapshot: snap,
             profileId: profile.id,
-            today: dayKey(new Date().toISOString()),
+            today,
             plans,
             quests: questsAll,
             episodes: episodesAll,
@@ -339,7 +342,7 @@ export function HomeScreen(): React.ReactElement {
             isQuestOpen: questOpen,
           })
         : null,
-    [profile, snap, plans, tier, questOpen],
+    [profile, snap, today, plans, tier, questOpen],
   );
   const next = useMemo(() => (routeInput ? routeNext(routeInput) : null), [routeInput]);
   const mission = useMemo(() => {
