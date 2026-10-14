@@ -338,7 +338,7 @@ browse/preview-player ─ [ Leave preview ] ─▶ browse/item (end 화면 없�
 [연기] 자원봉사 학생 ─▶ classroom/projection-mode (F-TCH-001 §3.4)
 ```
 
-**All lessons 진입 edge** (F-BROWSE-001 §4.11, wireframe `browse/entry-points.md`). 모두 `buildBrowseUrl(origin, { target?, source })` 로 만든 같은 탭 이동이고 링크에는 콘텐츠 id 만 (BD7). 콘솔 쪽은 `browseEnabled()` (`NEXT_PUBLIC_BROWSE=enabled`) 이고 콘솔이 app origin 에서 돌 때만 보인다. 학습자 화면·페이월·Plan 화면·마케팅 사이트·이메일에서는 절대 열지 않는다.
+**All lessons 진입 edge** (F-BROWSE-001 §4.11, wireframe `browse/entry-points.md`). 모두 `buildBrowseUrl(origin, { target?, source })` 로 만든 같은 탭 이동이고 링크에는 콘텐츠 id 만 (BD7). 콘솔 쪽은 `browseEnabled()` (`NEXT_PUBLIC_BROWSE`, BR-14 부터 기본 켜짐, `false`·`0`·`disabled` 로 끔) 이고 콘솔이 app origin 에서 돌 때만 보인다. 학습자 화면·페이월·Plan 화면·마케팅 사이트·이메일에서는 절대 열지 않는다.
 
 ```
 shell/adult-frame ─ Lessons (ADULT_NAV, 두 페르소나) ──────────────────────────────▶ /browse            (s=nav, BR-10)

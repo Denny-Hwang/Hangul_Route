@@ -199,7 +199,8 @@ Rescue Code 는 서버에 해시로만 저장된다. 이 키를 넣으면 **새�
 | `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | `hangul-route-web` 과 **같은** `pk_live_…` | S-1 (A-4b 머지 후) | 앱 호스트의 어른 페이지가 "sign-in is not set up on this build" 한 줄만 보여 준다 (아무 데서도 링크하지 않으므로 무해) |
 | `NEXT_PUBLIC_LECTURE_MODE` · `NEXT_PUBLIC_SCHOOL_CONSENT_MODE` | (선택) `hangul-route-web` 과 같은 값 | S-1 | 해당 콘솔 기능이 앱 호스트에서 꺼진 채로 |
 | `NEXT_PUBLIC_REPORTS_ENABLED` (학습자 앱은 `EXPO_PUBLIC_REPORTS_ENABLED`) | 비워 둔다: F-REPORT-001 RP-11 부터 기본 켜짐. 되돌릴 때만 정확히 `false` 또는 `0` (`FALSE`·`off` 같은 다른 값은 켜짐으로 읽힌다) | RP-11 머지 후 | 리포트 메뉴·카드·페이지가 보인다 (en 만) |
-| 형제 스펙의 콘솔 플래그 (`NEXT_PUBLIC_NOTES_ENABLED` · `NEXT_PUBLIC_LEARNING_ROUTE_ENABLED`) | 각 스펙이 켤 때 `true` (All lessons 는 `NEXT_PUBLIC_BROWSE=enabled`, F-BROWSE-001 BR-14) | 각 형제 스펙의 단계 | 해당 메뉴·카드가 숨겨진다 |
+| 형제 스펙의 콘솔 플래그 (`NEXT_PUBLIC_NOTES_ENABLED` · `NEXT_PUBLIC_LEARNING_ROUTE_ENABLED`) | 각 스펙이 켤 때 `true` | 각 형제 스펙의 단계 | 해당 메뉴·카드가 숨겨진다 |
+| `NEXT_PUBLIC_BROWSE` (All lessons) | 비워 둔다: F-BROWSE-001 BR-14 부터 기본 켜짐 (owner 결정 2026-10-13). 이전에 `false`·`0`·`disabled` 를 넣어 두었다면 지우고 Retry deployment. 되돌릴 때만 정확히 `false`, `0` 또는 `disabled` (다른 값은 `enabled` 포함 켜짐으로 읽힌다) | BR-14 머지 후 | 어른 메뉴의 Lessons · 홈의 Lessons · 계획/명단/Learning Route/리포트/쪽지의 Preview 링크가 보인다 (app.hangulroute.com 에서만) |
 | `EXPO_PUBLIC_MY_ROUTE_ENABLED` | 비워 둔다: F-ROUTE-001 R-10b 부터 기본 켜짐 (Learning Route 의 Route 탭). 되돌릴 때만 정확히 `false` 또는 `0` (다른 값은 켜짐으로 읽힌다). 끄기 전에 아래 "문제가 생기면" 의 Learning Route kill switch 확인을 한 번 한다 | R-10b 머지 후 | Route 탭 · Home 의 route strip · 리포트의 Open Learning Route 가 보인다 (en 만) |
 | `EXPO_PUBLIC_GROWN_UP_HOME` | `true` | S-3 (M3) | 학습자 앱에 어른 진입점 (Welcome 페르소나 행 · Profile "Grown-up home" · 대시보드 카드) 이 보이지 않는다 |
 | `EXPO_PUBLIC_SITE_URL` | `https://hangulroute.com` | S-3 | 기본값도 `https://hangulroute.com` (그다음 `EXPO_PUBLIC_CONSOLE_URL`) |

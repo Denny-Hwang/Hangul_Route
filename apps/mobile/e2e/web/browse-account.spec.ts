@@ -9,11 +9,11 @@ import { shot } from './shots';
  * opens a tab with no pass, which shows only the Access screen and drops the unlock and the console session at
  * boot (`canGoBack()` false, BR-6); no URL or title holds anything but content ids.
  *
- * The console needs a signed-in account and the Lessons switch, so this runs on a test build: the dev sign-in
+ * The console needs a signed-in account (the Lessons switch is on by default since BR-14), so this runs on a test build: the dev sign-in
  * bridge (never on the release merge, merge-console.mjs) and route mocks for the API. Recipe, from the repo root:
  *
  *   SKIP_CONSOLE=1 pnpm --filter @hangul-route/mobile build:web
- *   NEXT_PUBLIC_CONSOLE_DEV_AUTH=true NEXT_PUBLIC_BROWSE=enabled NEXT_PUBLIC_APP_URL=http://localhost:4173 \
+ *   NEXT_PUBLIC_CONSOLE_DEV_AUTH=true NEXT_PUBLIC_APP_URL=http://localhost:4173 \
  *     NEXT_PUBLIC_API_BASE_URL=https://api.e2e.invalid pnpm --filter @hangul-route/web build:console
  *   cp -R apps/web/out-console/. apps/mobile/dist/
  *   E2E_BROWSE_ACCOUNT=1 pnpm --filter @hangul-route/mobile exec playwright test browse-account

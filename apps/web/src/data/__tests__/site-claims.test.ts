@@ -17,7 +17,7 @@ const BOOLEAN_KEYS = KEYS.filter((key) => typeof SITE_CLAIMS[key as keyof SiteCl
 const PAID_PLANS: readonly SiteClaims['paidPlans'][] = ['coming', 'inApp'];
 
 describe('SITE_CLAIMS (what the site says today)', () => {
-  it('is what is live: Stage 1 free, plans coming, the reports lines on (F-REPORT-001 RP-11), every other feature line off', () => {
+  it('is what is live: Stage 1 free, plans coming, the reports lines on (F-REPORT-001 RP-11), All lessons on (F-BROWSE-001 BR-14), every other feature line off', () => {
     expect(SITE_CLAIMS).toEqual({
       freePlan: 'stage1',
       paidPlans: 'coming',
@@ -25,7 +25,7 @@ describe('SITE_CLAIMS (what the site says today)', () => {
       parentReports: true,
       teacherReports: true,
       feedbackNotes: false,
-      browseAsLearner: false,
+      browseAsLearner: true,
       lectureMode: false,
     });
   });
@@ -56,6 +56,21 @@ describe('SITE_CLAIMS (what the site says today)', () => {
     const learnerOn = /launchDefaults: Flags = \{[^}]*\breportsEnabled: true,/.test(learnerFlags);
     expect(!SITE_CLAIMS.parentReports || (consoleOn && learnerOn)).toBe(true);
     expect(!SITE_CLAIMS.teacherReports || consoleOn).toBe(true);
+  });
+
+  it('turns the All lessons line on only with the console Lessons switch on by default (F-BROWSE-001 BR-14)', () => {
+    const root = join(dirname(fileURLToPath(import.meta.url)), '..', '..', '..', '..');
+    const consoleConfig = readFileSync(join(root, 'web', 'src', 'lib', 'console', 'config.ts'), 'utf8');
+    expect(!SITE_CLAIMS.browseAsLearner || /const BROWSE_LAUNCH_DEFAULT = true;/.test(consoleConfig)).toBe(true);
+  });
+
+  it('keeps the All lessons line a paid line: on, yet off the site while paid plans are coming (F-BROWSE-001 BR-14)', () => {
+    expect(SITE_CLAIMS.browseAsLearner).toBe(true);
+    expect(CLAIM_REQUIRES_PAID.browseAsLearner).toBe(true);
+    for (const locale of UI_LOCALES) {
+      expect(showsClaim(SITE_CLAIMS, 'browseAsLearner', locale)).toBe(SITE_CLAIMS.paidPlans === 'inApp');
+      expect(claimLiveIn(SITE_CLAIMS, 'browseAsLearner', locale)).toBe(true);
+    }
   });
 
   it('has six feature claims', () => {

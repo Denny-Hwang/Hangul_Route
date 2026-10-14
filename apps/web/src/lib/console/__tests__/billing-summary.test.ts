@@ -260,16 +260,26 @@ describe('includesLines: feature lines only while SITE_CLAIMS says the feature i
 
   it.each(['ko', 'es'] as const)('%s: no reports line while reports render only in a reviewed locale', (locale) => {
     const lines = getMessages(locale).console.billing.includesLines;
-    expect(includesLines('family_lifetime', 'family', locale, SITE_CLAIMS)).toEqual(includesLines('family_lifetime', 'family', locale, OFF));
+    expect(includesLines('family_lifetime', 'family', locale, SITE_CLAIMS)).toEqual([...includesLines('family_lifetime', 'family', locale, OFF), lines.family.browse]);
     expect(includesLines('family_lifetime', 'family', locale, ALL_ON)).not.toContain(lines.family.reports);
     expect(includesLines('group_license', 'class', locale, SITE_CLAIMS)).not.toContain(lines.license.reports);
     expect(includesLines('group_license', 'class', locale, ALL_ON)).toEqual([...includesLines('group_license', 'class', locale, OFF), lines.license.browse, lines.license.notes]);
   });
 
-  it('reads SITE_CLAIMS by default, where the reports claims are on (F-REPORT-001 RP-11)', () => {
+  it('reads SITE_CLAIMS by default, where the reports claims (F-REPORT-001 RP-11) and All lessons (F-BROWSE-001 BR-14) are on', () => {
     expect(billingHomeView(summary([card()]), { now }).cards[0]?.offer?.includes).toEqual(includesLines('family_lifetime', 'family', 'en', SITE_CLAIMS));
-    expect(includesLines('family_lifetime', 'family', 'en')).toEqual([...includesLines('family_lifetime', 'family', 'en', OFF), b.includesLines.family.reports]);
-    expect(includesLines('group_license', 'class', 'en')).toEqual([...includesLines('group_license', 'class', 'en', OFF), b.includesLines.license.reports]);
+    expect(includesLines('family_lifetime', 'family', 'en')).toEqual([...includesLines('family_lifetime', 'family', 'en', OFF), b.includesLines.family.browse, b.includesLines.family.reports]);
+    expect(includesLines('group_license', 'class', 'en')).toEqual([...includesLines('group_license', 'class', 'en', OFF), b.includesLines.license.browse, b.includesLines.license.reports]);
+  });
+
+  it.each(UI_LOCALES)('%s: the All lessons line is in both plans today, worded with no price (F-BROWSE-001 BR-14 copy)', (locale) => {
+    const lines = getMessages(locale).console.billing.includesLines;
+    expect(includesLines('family_lifetime', 'family', locale)).toContain(lines.family.browse);
+    expect(includesLines('group_license', 'class', locale)).toContain(lines.license.browse);
+    for (const line of [lines.family.browse, lines.license.browse]) {
+      expect(line.trim().length).toBeGreaterThan(0);
+      expect(line).not.toMatch(/[$\u20ac\u20a9\d]/);
+    }
   });
 });
 
