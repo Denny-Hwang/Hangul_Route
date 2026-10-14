@@ -1,0 +1,125 @@
+{
+  "locale": "ko",
+  "domain": "lessons-stage3-life",
+  "entries": {
+    "episode:stage3-life": {
+      "title": "하루 짧은 문장",
+      "subtitle": "먹고, 마시고, 나가는 일을 짧은 문장으로 말해요.",
+      "hoyaIntro": "먹고, 마시고, 가고, 오고! 하루를 짧은 문장으로 만들어 봐요!"
+    },
+    "quest:stage3-life-q1": {
+      "title": "먹어요, 마셔요",
+      "blurb": "먹고 마시는 것을 문장으로 만들어요.",
+      "teaser": "다음: 음식이 어떤지 말해요.",
+      "steps.s1.title": "먹고 마시기",
+      "steps.s2.title": "내가 먹는 것",
+      "steps.s3.title": "문장 만들기",
+      "steps.s4.title": "문장 짝 맞추기",
+      "steps.s5.title": "짧은 문제 두 개",
+      "steps.s6.title": "냠냠, 문장 완성!",
+      "steps.s1.hoyaLine": "아침 먹을 시간이에요! 무엇을 먹고 마시는지 말해 봐요.",
+      "steps.s6.hoyaLine": "음식에 관한 첫 문장을 만들었어요!",
+      "steps.s2.discover.pages.0.caption": "{ko:요}로 끝나는 문장은 공손한 말투예요. 일상 대화에서 가장 많이 써요.",
+      "steps.s2.discover.pages.1.caption": "물이나 우유 같은 마실 것에는 {ko:마셔요}를, 음식에는 {ko:먹어요}를 써요.",
+      "steps.s2.discover.pages.0.items.0.note": "먹거나 마시는 대상 뒤에, 받침이 있으면 {ko:을}, 받침이 없으면 {ko:를}을 붙여요.",
+      "steps.s2.discover.pages.1.items.0.sentence.gloss": "목마를 때 맑은 물을 들이켠다는 뜻",
+      "steps.s2.discover.pages.1.items.1.sentence.gloss": "하얀 우유를 들이켠다는 뜻",
+      "steps.s2.discover.pages.0.items.0.frame.gloss": "무언가를 먹는다는 틀",
+      "steps.s2.discover.pages.0.items.0.examples.babeul-meogeoyo.gloss": "지은 쌀밥으로 식사한다는 뜻",
+      "steps.s2.discover.pages.0.items.0.examples.sagwareul-meogeoyo.gloss": "빨간 과일 하나를 먹는다는 뜻"
+    },
+    "quest:stage3-life-q2": {
+      "title": "맛있고 뜨거워요",
+      "blurb": "음식이 어떤지 말해요. 맛, 온도, 좋은 점까지요.",
+      "teaser": "다음: 어디에 가는지 말해요.",
+      "steps.s1.title": "어때요?",
+      "steps.s2.title": "맛있고 뜨거워요",
+      "steps.s3.title": "문장 만들기",
+      "steps.s4.title": "문장 짝 맞추기",
+      "steps.s5.title": "짧은 문제 두 개",
+      "steps.s6.title": "정말 맛있어요!",
+      "steps.s1.hoyaLine": "음, 좋은 냄새! 음식이 어떤지 말해 봐요.",
+      "steps.s6.hoyaLine": "음식이 어떤지 말했어요. 아주 잘했어요!",
+      "steps.s2.discover.pages.1.caption": "{ko:뜨거워요} 한 단어로 온도가 높다는 뜻이 다 담겨요. 다른 말을 덧붙이지 않아도 돼요.",
+      "steps.s2.discover.pages.0.items.0.note": "설명하는 대상 뒤에, 받침이 있으면 {ko:이}, 받침이 없으면 {ko:가}를 붙여요.",
+      "steps.s2.discover.pages.1.items.0.sentence.gloss": "국수 요리가 막 끓어 온도가 높다는 뜻",
+      "steps.s2.discover.pages.1.items.1.sentence.gloss": "구운 밀가루 음식이 마음에 든다는 뜻",
+      "steps.s2.discover.pages.0.items.0.frame.gloss": "무언가의 맛이 좋다는 틀",
+      "steps.s2.discover.pages.0.items.0.examples.gimbabi-masisseoyo.gloss": "김으로 만 밥의 맛이 좋다는 뜻",
+      "steps.s2.discover.pages.0.items.0.examples.sagwaga-masisseoyo.gloss": "빨간 과일의 맛이 좋다는 뜻"
+    },
+    "quest:stage3-life-q3": {
+      "title": "가요, 와요",
+      "blurb": "사람들이 어디에 가는지, 누가 집에 오는지 말해요.",
+      "steps.s1.title": "나가 볼까요",
+      "steps.s2.title": "가요, 와요",
+      "steps.s3.title": "문장 만들기",
+      "steps.s4.title": "문장 짝 맞추기",
+      "steps.s5.title": "짧은 문제 두 개",
+      "steps.s6.title": "출발!",
+      "steps.s1.hoyaLine": "신발 신고 출발! 어디에 가는지, 누가 오는지 말해 봐요.",
+      "steps.s6.hoyaLine": "어디에 가고 누가 오는지 말했어요. 멋진 나들이예요!",
+      "steps.s2.discover.pages.1.caption": "{ko:와요}는 말하는 사람 쪽으로 움직이는 것, {ko:가요}는 멀어지는 거예요.",
+      "steps.s2.discover.pages.0.items.0.note": "장소 뒤에 {ko:에}를 붙여 어디로 움직이는지 말해요. 멀어지면 {ko:가요}, 다가오면 {ko:와요}예요.",
+      "steps.s2.discover.pages.1.items.0.sentence.gloss": "사는 곳으로 돌아온다는 뜻",
+      "steps.s2.discover.pages.1.items.1.sentence.gloss": "친한 사람이 이쪽으로 온다는 뜻",
+      "steps.s2.discover.pages.0.items.0.frame.gloss": "어떤 곳으로 간다는 틀",
+      "steps.s2.discover.pages.0.items.0.examples.hakgyoe-gayo.gloss": "공부하는 곳으로 간다는 뜻",
+      "steps.s2.discover.pages.0.items.0.examples.badae-gayo.gloss": "파도치는 바닷가로 간다는 뜻"
+    },
+    "minigame:s3-life-q1-practice": {
+      "orderIt.rounds.r1.sentence.gloss": "지은 쌀밥으로 식사한다는 뜻",
+      "orderIt.rounds.r2.sentence.gloss": "목마를 때 맑은 물을 들이켠다는 뜻",
+      "orderIt.rounds.r3.sentence.gloss": "빨간 과일 하나를 먹는다는 뜻",
+      "orderIt.rounds.r4.sentence.gloss": "하얀 우유를 들이켠다는 뜻",
+      "orderIt.rounds.r5.sentence.gloss": "쌀로 빚은 떡을 먹는다는 뜻",
+      "orderIt.rounds.r1.distractors.mureul.gloss": "마시는 대상이 되는 맑은 물",
+      "orderIt.rounds.r2.distractors.meogeoyo.gloss": "음식을 입에 넣어 삼키다",
+      "orderIt.rounds.r3.distractors.masyeoyo.gloss": "물 같은 것을 목으로 넘기다",
+      "orderIt.rounds.r4.particle.choices.eul.gloss": "받침 뒤에서 동작의 대상을 나타내는 말",
+      "orderIt.rounds.r4.particle.choices.reul.gloss": "모음 뒤에서 동작의 대상을 나타내는 말",
+      "orderIt.rounds.r5.particle.choices.eul.gloss": "받침 뒤에서 동작의 대상을 나타내는 말",
+      "orderIt.rounds.r5.particle.choices.reul.gloss": "모음 뒤에서 동작의 대상을 나타내는 말"
+    },
+    "minigame:s3-life-q1-check": {
+      "listenPick.rounds.c1.prompt": "하얀 우유를 들이켠다는 뜻",
+      "listenPick.rounds.c2.prompt": "구운 밀가루 음식을 먹는다는 뜻"
+    },
+    "minigame:s3-life-q2-practice": {
+      "orderIt.rounds.r1.sentence.gloss": "김으로 만 밥의 맛이 좋다는 뜻",
+      "orderIt.rounds.r2.sentence.gloss": "국수 요리가 막 끓어 온도가 높다는 뜻",
+      "orderIt.rounds.r3.sentence.gloss": "구운 밀가루 음식이 마음에 든다는 뜻",
+      "orderIt.rounds.r4.sentence.gloss": "빨간 과일의 맛이 좋다는 뜻",
+      "orderIt.rounds.r5.sentence.gloss": "지은 쌀밥의 온도가 높다는 뜻",
+      "orderIt.rounds.r1.distractors.tteugeowoyo.gloss": "온도가 높다",
+      "orderIt.rounds.r2.distractors.sagwaga.gloss": "설명하는 대상이 되는 빨간 과일",
+      "orderIt.rounds.r3.distractors.meogeoyo.gloss": "음식을 입에 넣어 삼키다",
+      "orderIt.rounds.r4.particle.choices.i.gloss": "받침 뒤에서 문장의 주인공을 나타내는 말",
+      "orderIt.rounds.r4.particle.choices.ga.gloss": "모음 뒤에서 문장의 주인공을 나타내는 말",
+      "orderIt.rounds.r5.particle.choices.i.gloss": "받침 뒤에서 문장의 주인공을 나타내는 말",
+      "orderIt.rounds.r5.particle.choices.ga.gloss": "모음 뒤에서 문장의 주인공을 나타내는 말"
+    },
+    "minigame:s3-life-q2-check": {
+      "listenPick.rounds.c1.prompt": "국수 요리가 막 끓어 온도가 높다는 뜻",
+      "listenPick.rounds.c2.prompt": "빨간 과일의 맛이 좋다는 뜻"
+    },
+    "minigame:s3-life-q3-practice": {
+      "orderIt.rounds.r1.sentence.gloss": "친한 사람이 공부하는 곳으로 간다는 뜻",
+      "orderIt.rounds.r2.sentence.gloss": "어머니가 사는 곳으로 돌아온다는 뜻",
+      "orderIt.rounds.r3.sentence.gloss": "아버지가 바닷가로 간다는 뜻",
+      "orderIt.rounds.r4.sentence.gloss": "친한 사람이 높은 봉우리 쪽으로 간다는 뜻",
+      "orderIt.rounds.r5.sentence.gloss": "나보다 어린 형제자매가 공부하는 곳으로 간다는 뜻",
+      "orderIt.rounds.r1.distractors.wayo.gloss": "이쪽으로 움직이다",
+      "orderIt.rounds.r2.distractors.gayo.gloss": "저쪽으로 움직이다",
+      "orderIt.rounds.r3.distractors.sane.gloss": "높은 봉우리 쪽으로",
+      "orderIt.rounds.r4.particle.choices.i.gloss": "받침 뒤에서 문장의 주인공을 나타내는 말",
+      "orderIt.rounds.r4.particle.choices.ga.gloss": "모음 뒤에서 문장의 주인공을 나타내는 말",
+      "orderIt.rounds.r5.particle.choices.i.gloss": "받침 뒤에서 문장의 주인공을 나타내는 말",
+      "orderIt.rounds.r5.particle.choices.ga.gloss": "모음 뒤에서 문장의 주인공을 나타내는 말"
+    },
+    "minigame:s3-life-q3-check": {
+      "listenPick.rounds.c1.prompt": "파도치는 바닷가로 간다는 뜻",
+      "listenPick.rounds.c2.prompt": "친한 사람이 이쪽으로 온다는 뜻"
+    }
+  }
+}

@@ -1,0 +1,1374 @@
+{
+  "id": "episode:stage3-life",
+  "stage": "stage3",
+  "theme": "life",
+  "status": "draft",
+  "titleEn": "Daily Mini-Sentences",
+  "subtitleEn": "Short sentences about eating, drinking and going out.",
+  "hoyaIntroEn": "Eat, drink, go and come: let us build little sentences about a day!",
+  "order": 2,
+  "pillarTags": [
+    "B5"
+  ],
+  "rewardCardIds": [],
+  "quests": [
+    {
+      "id": "quest:stage3-life-q1",
+      "titleEn": "I Eat, I Drink",
+      "blurbEn": "Build sentences about what you eat and drink.",
+      "teaserEn": "Next: say how the food is.",
+      "estimatedMinutes": 5,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "Eat and Drink",
+          "hoyaLineEn": "Breakfast time! Let us say what we eat and drink.",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "What I Eat",
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "pattern",
+                    "frame": {
+                      "ko": "___을/를 먹어요.",
+                      "romanization": "___eul/reul meogeoyo",
+                      "en": "I eat ___."
+                    },
+                    "noteEn": "Put {ko:을} after a final consonant or {ko:를} after a vowel on the thing you eat or drink.",
+                    "examples": [
+                      {
+                        "ko": "밥을 먹어요.",
+                        "romanization": "babeul meogeoyo",
+                        "en": "I eat rice."
+                      },
+                      {
+                        "ko": "사과를 먹어요.",
+                        "romanization": "sagwareul meogeoyo",
+                        "en": "I eat an apple."
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "A sentence that ends in {ko:요} is polite: the style used most in everyday talk."
+              },
+              {
+                "items": [
+                  {
+                    "type": "sentence",
+                    "sentence": {
+                      "ko": "물을 마셔요.",
+                      "romanization": "mureul masyeoyo",
+                      "en": "I drink water."
+                    },
+                    "picture": "word:food-water"
+                  },
+                  {
+                    "type": "sentence",
+                    "sentence": {
+                      "ko": "우유를 마셔요.",
+                      "romanization": "uyureul masyeoyo",
+                      "en": "I drink milk."
+                    },
+                    "picture": "word:food-milk"
+                  }
+                ],
+                "captionEn": "For drinks, use {ko:마셔요}, drink. For food, use {ko:먹어요}, eat."
+              }
+            ]
+          },
+          "durationSeconds": 65
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Build the Sentence",
+          "minigameKind": "order-it",
+          "minigameRef": "minigame:s3-life-q1-practice",
+          "durationSeconds": 90
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Match the Sentence",
+          "minigameKind": "pic-word-match",
+          "minigameRef": "minigame:s3-life-q1-apply",
+          "durationSeconds": 75
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Two Quick Ones",
+          "minigameKind": "listen-pick",
+          "minigameRef": "minigame:s3-life-q1-check",
+          "durationSeconds": 40
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Yum, Sentences!",
+          "hoyaLineEn": "You built your first sentences about food!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s3-life-q1-practice",
+          "kind": "order-it",
+          "rounds": [
+            {
+              "id": "r1",
+              "sentence": {
+                "ko": "밥을 먹어요.",
+                "romanization": "babeul meogeoyo",
+                "en": "I eat rice."
+              },
+              "pictureRef": "card:rice",
+              "distractors": [
+                {
+                  "ko": "물을",
+                  "romanization": "mureul",
+                  "en": "water (as the thing eaten or drunk)"
+                }
+              ]
+            },
+            {
+              "id": "r2",
+              "sentence": {
+                "ko": "물을 마셔요.",
+                "romanization": "mureul masyeoyo",
+                "en": "I drink water."
+              },
+              "pictureRef": "word:food-water",
+              "distractors": [
+                {
+                  "ko": "먹어요",
+                  "romanization": "meogeoyo",
+                  "en": "eat"
+                }
+              ]
+            },
+            {
+              "id": "r3",
+              "sentence": {
+                "ko": "사과를 먹어요.",
+                "romanization": "sagwareul meogeoyo",
+                "en": "I eat an apple."
+              },
+              "pictureRef": "word:food-apple",
+              "distractors": [
+                {
+                  "ko": "마셔요",
+                  "romanization": "masyeoyo",
+                  "en": "drink"
+                }
+              ]
+            },
+            {
+              "id": "r4",
+              "sentence": {
+                "ko": "우유를 마셔요.",
+                "romanization": "uyureul masyeoyo",
+                "en": "I drink milk."
+              },
+              "pictureRef": "word:food-milk",
+              "particle": {
+                "tile": 0,
+                "choices": [
+                  {
+                    "ko": "을",
+                    "romanization": "eul",
+                    "en": "object marker, after a final consonant"
+                  },
+                  {
+                    "ko": "를",
+                    "romanization": "reul",
+                    "en": "object marker, after a vowel"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "r5",
+              "sentence": {
+                "ko": "떡을 먹어요.",
+                "romanization": "tteogeul meogeoyo",
+                "en": "I eat rice cake."
+              },
+              "pictureRef": "word:food-tteok",
+              "particle": {
+                "tile": 0,
+                "choices": [
+                  {
+                    "ko": "을",
+                    "romanization": "eul",
+                    "en": "object marker, after a final consonant"
+                  },
+                  {
+                    "ko": "를",
+                    "romanization": "reul",
+                    "en": "object marker, after a vowel"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s3-life-q1-apply",
+          "kind": "pic-word-match",
+          "boards": [
+            {
+              "pairs": [
+                {
+                  "id": "p1",
+                  "pictureRef": "card:rice",
+                  "word": {
+                    "ko": "밥을 먹어요.",
+                    "romanization": "babeul meogeoyo",
+                    "en": "I eat rice."
+                  }
+                },
+                {
+                  "id": "p2",
+                  "pictureRef": "word:food-water",
+                  "word": {
+                    "ko": "물을 마셔요.",
+                    "romanization": "mureul masyeoyo",
+                    "en": "I drink water."
+                  }
+                },
+                {
+                  "id": "p3",
+                  "pictureRef": "word:food-bread",
+                  "word": {
+                    "ko": "빵을 먹어요.",
+                    "romanization": "ppangeul meogeoyo",
+                    "en": "I eat bread."
+                  }
+                }
+              ]
+            },
+            {
+              "pairs": [
+                {
+                  "id": "p1",
+                  "pictureRef": "word:food-milk",
+                  "word": {
+                    "ko": "우유를 마셔요.",
+                    "romanization": "uyureul masyeoyo",
+                    "en": "I drink milk."
+                  }
+                },
+                {
+                  "id": "p2",
+                  "pictureRef": "word:food-apple",
+                  "word": {
+                    "ko": "사과를 먹어요.",
+                    "romanization": "sagwareul meogeoyo",
+                    "en": "I eat an apple."
+                  }
+                },
+                {
+                  "id": "p3",
+                  "pictureRef": "word:food-tteok",
+                  "word": {
+                    "ko": "떡을 먹어요.",
+                    "romanization": "tteogeul meogeoyo",
+                    "en": "I eat rice cake."
+                  }
+                }
+              ]
+            },
+            {
+              "pairs": [
+                {
+                  "id": "p1",
+                  "pictureRef": "card:kimchi",
+                  "word": {
+                    "ko": "김치를 먹어요.",
+                    "romanization": "gimchireul meogeoyo",
+                    "en": "I eat kimchi."
+                  }
+                },
+                {
+                  "id": "p2",
+                  "pictureRef": "word:food-water",
+                  "word": {
+                    "ko": "물을 마셔요.",
+                    "romanization": "mureul masyeoyo",
+                    "en": "I drink water."
+                  }
+                },
+                {
+                  "id": "p3",
+                  "pictureRef": "word:food-apple",
+                  "word": {
+                    "ko": "사과를 먹어요.",
+                    "romanization": "sagwareul meogeoyo",
+                    "en": "I eat an apple."
+                  }
+                }
+              ]
+            },
+            {
+              "pairs": [
+                {
+                  "id": "p1",
+                  "pictureRef": "word:food-bread",
+                  "word": {
+                    "ko": "빵을 먹어요.",
+                    "romanization": "ppangeul meogeoyo",
+                    "en": "I eat bread."
+                  }
+                },
+                {
+                  "id": "p2",
+                  "pictureRef": "word:food-milk",
+                  "word": {
+                    "ko": "우유를 마셔요.",
+                    "romanization": "uyureul masyeoyo",
+                    "en": "I drink milk."
+                  }
+                },
+                {
+                  "id": "p3",
+                  "pictureRef": "card:rice",
+                  "word": {
+                    "ko": "밥을 먹어요.",
+                    "romanization": "babeul meogeoyo",
+                    "en": "I eat rice."
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s3-life-q1-check",
+          "kind": "listen-pick",
+          "rounds": [
+            {
+              "id": "c1",
+              "prompt": {
+                "ko": "우유를 마셔요.",
+                "romanization": "uyureul masyeoyo",
+                "en": "I drink milk."
+              },
+              "options": [
+                {
+                  "id": "o1",
+                  "pictureRef": "word:food-milk"
+                },
+                {
+                  "id": "o2",
+                  "pictureRef": "word:food-water"
+                },
+                {
+                  "id": "o3",
+                  "pictureRef": "word:food-bread"
+                }
+              ],
+              "answerId": "o1"
+            },
+            {
+              "id": "c2",
+              "prompt": {
+                "ko": "빵을 먹어요.",
+                "romanization": "ppangeul meogeoyo",
+                "en": "I eat bread."
+              },
+              "options": [
+                {
+                  "id": "o1",
+                  "text": {
+                    "ko": "빵을 먹어요.",
+                    "romanization": "ppangeul meogeoyo",
+                    "en": "I eat bread."
+                  }
+                },
+                {
+                  "id": "o2",
+                  "text": {
+                    "ko": "물을 마셔요.",
+                    "romanization": "mureul masyeoyo",
+                    "en": "I drink water."
+                  }
+                },
+                {
+                  "id": "o3",
+                  "text": {
+                    "ko": "밥을 먹어요.",
+                    "romanization": "babeul meogeoyo",
+                    "en": "I eat rice."
+                  }
+                }
+              ],
+              "answerId": "o1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "quest:stage3-life-q2",
+      "titleEn": "Tasty and Hot",
+      "blurbEn": "Say how food is: tasty, hot or good.",
+      "teaserEn": "Next: say where you go.",
+      "estimatedMinutes": 5,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "How Is It?",
+          "hoyaLineEn": "Mmm, that smells good! Let us say how the food is.",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "Tasty and Hot",
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "pattern",
+                    "frame": {
+                      "ko": "___이/가 맛있어요.",
+                      "romanization": "___i/ga masisseoyo",
+                      "en": "The ___ is tasty."
+                    },
+                    "noteEn": "Put {ko:이} after a final consonant or {ko:가} after a vowel on the thing you describe.",
+                    "examples": [
+                      {
+                        "ko": "김밥이 맛있어요.",
+                        "romanization": "gimbabi masisseoyo",
+                        "en": "The gimbap is tasty."
+                      },
+                      {
+                        "ko": "사과가 맛있어요.",
+                        "romanization": "sagwaga masisseoyo",
+                        "en": "The apple is tasty."
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "items": [
+                  {
+                    "type": "sentence",
+                    "sentence": {
+                      "ko": "라면이 뜨거워요.",
+                      "romanization": "ramyeoni tteugeowoyo",
+                      "en": "The ramyeon is hot."
+                    },
+                    "picture": "word:food-ramyeon"
+                  },
+                  {
+                    "type": "sentence",
+                    "sentence": {
+                      "ko": "빵이 좋아요.",
+                      "romanization": "ppangi joayo",
+                      "en": "The bread is good."
+                    },
+                    "picture": "word:food-bread"
+                  }
+                ],
+                "captionEn": "{ko:뜨거워요} already means 'it is hot': no extra word for 'is'."
+              }
+            ]
+          },
+          "durationSeconds": 65
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Build the Sentence",
+          "minigameKind": "order-it",
+          "minigameRef": "minigame:s3-life-q2-practice",
+          "durationSeconds": 90
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Match the Sentence",
+          "minigameKind": "pic-word-match",
+          "minigameRef": "minigame:s3-life-q2-apply",
+          "durationSeconds": 75
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Two Quick Ones",
+          "minigameKind": "listen-pick",
+          "minigameRef": "minigame:s3-life-q2-check",
+          "durationSeconds": 40
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "So Tasty!",
+          "hoyaLineEn": "You said how the food is. Delicious work!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s3-life-q2-practice",
+          "kind": "order-it",
+          "rounds": [
+            {
+              "id": "r1",
+              "sentence": {
+                "ko": "김밥이 맛있어요.",
+                "romanization": "gimbabi masisseoyo",
+                "en": "The gimbap is tasty."
+              },
+              "pictureRef": "card:kimbap",
+              "distractors": [
+                {
+                  "ko": "뜨거워요",
+                  "romanization": "tteugeowoyo",
+                  "en": "it is hot"
+                }
+              ]
+            },
+            {
+              "id": "r2",
+              "sentence": {
+                "ko": "라면이 뜨거워요.",
+                "romanization": "ramyeoni tteugeowoyo",
+                "en": "The ramyeon is hot."
+              },
+              "pictureRef": "word:food-ramyeon",
+              "distractors": [
+                {
+                  "ko": "사과가",
+                  "romanization": "sagwaga",
+                  "en": "the apple (as the one described)"
+                }
+              ]
+            },
+            {
+              "id": "r3",
+              "sentence": {
+                "ko": "빵이 좋아요.",
+                "romanization": "ppangi joayo",
+                "en": "The bread is good."
+              },
+              "pictureRef": "word:food-bread",
+              "distractors": [
+                {
+                  "ko": "먹어요",
+                  "romanization": "meogeoyo",
+                  "en": "eat"
+                }
+              ]
+            },
+            {
+              "id": "r4",
+              "sentence": {
+                "ko": "사과가 맛있어요.",
+                "romanization": "sagwaga masisseoyo",
+                "en": "The apple is tasty."
+              },
+              "pictureRef": "word:food-apple",
+              "particle": {
+                "tile": 0,
+                "choices": [
+                  {
+                    "ko": "이",
+                    "romanization": "i",
+                    "en": "subject marker, after a final consonant"
+                  },
+                  {
+                    "ko": "가",
+                    "romanization": "ga",
+                    "en": "subject marker, after a vowel"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "r5",
+              "sentence": {
+                "ko": "밥이 뜨거워요.",
+                "romanization": "babi tteugeowoyo",
+                "en": "The rice is hot."
+              },
+              "pictureRef": "card:rice",
+              "particle": {
+                "tile": 0,
+                "choices": [
+                  {
+                    "ko": "이",
+                    "romanization": "i",
+                    "en": "subject marker, after a final consonant"
+                  },
+                  {
+                    "ko": "가",
+                    "romanization": "ga",
+                    "en": "subject marker, after a vowel"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s3-life-q2-apply",
+          "kind": "pic-word-match",
+          "boards": [
+            {
+              "pairs": [
+                {
+                  "id": "p1",
+                  "pictureRef": "card:kimbap",
+                  "word": {
+                    "ko": "김밥이 맛있어요.",
+                    "romanization": "gimbabi masisseoyo",
+                    "en": "The gimbap is tasty."
+                  }
+                },
+                {
+                  "id": "p2",
+                  "pictureRef": "word:food-ramyeon",
+                  "word": {
+                    "ko": "라면이 뜨거워요.",
+                    "romanization": "ramyeoni tteugeowoyo",
+                    "en": "The ramyeon is hot."
+                  }
+                },
+                {
+                  "id": "p3",
+                  "pictureRef": "word:food-bread",
+                  "word": {
+                    "ko": "빵이 좋아요.",
+                    "romanization": "ppangi joayo",
+                    "en": "The bread is good."
+                  }
+                }
+              ]
+            },
+            {
+              "pairs": [
+                {
+                  "id": "p1",
+                  "pictureRef": "word:food-apple",
+                  "word": {
+                    "ko": "사과가 맛있어요.",
+                    "romanization": "sagwaga masisseoyo",
+                    "en": "The apple is tasty."
+                  }
+                },
+                {
+                  "id": "p2",
+                  "pictureRef": "card:rice",
+                  "word": {
+                    "ko": "밥이 뜨거워요.",
+                    "romanization": "babi tteugeowoyo",
+                    "en": "The rice is hot."
+                  }
+                },
+                {
+                  "id": "p3",
+                  "pictureRef": "word:food-milk",
+                  "word": {
+                    "ko": "우유가 좋아요.",
+                    "romanization": "uyuga joayo",
+                    "en": "The milk is good."
+                  }
+                }
+              ]
+            },
+            {
+              "pairs": [
+                {
+                  "id": "p1",
+                  "pictureRef": "word:food-tteok",
+                  "word": {
+                    "ko": "떡이 맛있어요.",
+                    "romanization": "tteogi masisseoyo",
+                    "en": "The rice cake is tasty."
+                  }
+                },
+                {
+                  "id": "p2",
+                  "pictureRef": "word:food-water",
+                  "word": {
+                    "ko": "물이 뜨거워요.",
+                    "romanization": "muri tteugeowoyo",
+                    "en": "The water is hot."
+                  }
+                },
+                {
+                  "id": "p3",
+                  "pictureRef": "card:kimchi",
+                  "word": {
+                    "ko": "김치가 맛있어요.",
+                    "romanization": "gimchiga masisseoyo",
+                    "en": "The kimchi is tasty."
+                  }
+                }
+              ]
+            },
+            {
+              "pairs": [
+                {
+                  "id": "p1",
+                  "pictureRef": "word:food-ramyeon",
+                  "word": {
+                    "ko": "라면이 맛있어요.",
+                    "romanization": "ramyeoni masisseoyo",
+                    "en": "The ramyeon is tasty."
+                  }
+                },
+                {
+                  "id": "p2",
+                  "pictureRef": "word:food-apple",
+                  "word": {
+                    "ko": "사과가 좋아요.",
+                    "romanization": "sagwaga joayo",
+                    "en": "The apple is good."
+                  }
+                },
+                {
+                  "id": "p3",
+                  "pictureRef": "card:rice",
+                  "word": {
+                    "ko": "밥이 맛있어요.",
+                    "romanization": "babi masisseoyo",
+                    "en": "The rice is tasty."
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s3-life-q2-check",
+          "kind": "listen-pick",
+          "rounds": [
+            {
+              "id": "c1",
+              "prompt": {
+                "ko": "라면이 뜨거워요.",
+                "romanization": "ramyeoni tteugeowoyo",
+                "en": "The ramyeon is hot."
+              },
+              "options": [
+                {
+                  "id": "o1",
+                  "pictureRef": "word:food-ramyeon"
+                },
+                {
+                  "id": "o2",
+                  "pictureRef": "word:food-apple"
+                },
+                {
+                  "id": "o3",
+                  "pictureRef": "card:kimbap"
+                }
+              ],
+              "answerId": "o1"
+            },
+            {
+              "id": "c2",
+              "prompt": {
+                "ko": "사과가 맛있어요.",
+                "romanization": "sagwaga masisseoyo",
+                "en": "The apple is tasty."
+              },
+              "options": [
+                {
+                  "id": "o1",
+                  "text": {
+                    "ko": "사과가 맛있어요.",
+                    "romanization": "sagwaga masisseoyo",
+                    "en": "The apple is tasty."
+                  }
+                },
+                {
+                  "id": "o2",
+                  "text": {
+                    "ko": "사과가 뜨거워요.",
+                    "romanization": "sagwaga tteugeowoyo",
+                    "en": "The apple is hot."
+                  }
+                },
+                {
+                  "id": "o3",
+                  "text": {
+                    "ko": "빵이 좋아요.",
+                    "romanization": "ppangi joayo",
+                    "en": "The bread is good."
+                  }
+                }
+              ],
+              "answerId": "o1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "quest:stage3-life-q3",
+      "titleEn": "Go and Come",
+      "blurbEn": "Say where people go and who comes home.",
+      "estimatedMinutes": 5,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "Going Out",
+          "hoyaLineEn": "Shoes on! Let us say where we go and who comes.",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "Go and Come",
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "pattern",
+                    "frame": {
+                      "ko": "___에 가요.",
+                      "romanization": "___e gayo",
+                      "en": "I go to ___."
+                    },
+                    "noteEn": "Put {ko:에} after a place to say where you go or come: {ko:가요} is go, {ko:와요} is come.",
+                    "examples": [
+                      {
+                        "ko": "학교에 가요.",
+                        "romanization": "hakgyoe gayo",
+                        "en": "I go to school."
+                      },
+                      {
+                        "ko": "바다에 가요.",
+                        "romanization": "badae gayo",
+                        "en": "I go to the sea."
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "items": [
+                  {
+                    "type": "sentence",
+                    "sentence": {
+                      "ko": "집에 와요.",
+                      "romanization": "jibe wayo",
+                      "en": "I come home."
+                    }
+                  },
+                  {
+                    "type": "sentence",
+                    "sentence": {
+                      "ko": "친구가 와요.",
+                      "romanization": "chinguga wayo",
+                      "en": "A friend comes."
+                    },
+                    "picture": "word:school-friend"
+                  }
+                ],
+                "captionEn": "{ko:와요} is moving toward the speaker. {ko:가요} is moving away."
+              }
+            ]
+          },
+          "durationSeconds": 65
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Build the Sentence",
+          "minigameKind": "order-it",
+          "minigameRef": "minigame:s3-life-q3-practice",
+          "durationSeconds": 95
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Match the Sentence",
+          "minigameKind": "pic-word-match",
+          "minigameRef": "minigame:s3-life-q3-apply",
+          "durationSeconds": 75
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Two Quick Ones",
+          "minigameKind": "listen-pick",
+          "minigameRef": "minigame:s3-life-q3-check",
+          "durationSeconds": 40
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Off We Go!",
+          "hoyaLineEn": "You said where people go and come. Great trip!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s3-life-q3-practice",
+          "kind": "order-it",
+          "rounds": [
+            {
+              "id": "r1",
+              "sentence": {
+                "ko": "친구가 학교에 가요.",
+                "romanization": "chinguga hakgyoe gayo",
+                "en": "My friend goes to school."
+              },
+              "pictureRef": "word:school-friend",
+              "distractors": [
+                {
+                  "ko": "와요",
+                  "romanization": "wayo",
+                  "en": "come"
+                }
+              ]
+            },
+            {
+              "id": "r2",
+              "sentence": {
+                "ko": "엄마가 집에 와요.",
+                "romanization": "eommaga jibe wayo",
+                "en": "Mom comes home."
+              },
+              "pictureRef": "word:family-mom",
+              "distractors": [
+                {
+                  "ko": "가요",
+                  "romanization": "gayo",
+                  "en": "go"
+                }
+              ]
+            },
+            {
+              "id": "r3",
+              "sentence": {
+                "ko": "아빠가 바다에 가요.",
+                "romanization": "appaga badae gayo",
+                "en": "Dad goes to the sea."
+              },
+              "pictureRef": "card:sea",
+              "distractors": [
+                {
+                  "ko": "산에",
+                  "romanization": "sane",
+                  "en": "to the mountain"
+                }
+              ]
+            },
+            {
+              "id": "r4",
+              "sentence": {
+                "ko": "친구가 산에 가요.",
+                "romanization": "chinguga sane gayo",
+                "en": "My friend goes to the mountain."
+              },
+              "pictureRef": "card:mountain",
+              "particle": {
+                "tile": 0,
+                "choices": [
+                  {
+                    "ko": "이",
+                    "romanization": "i",
+                    "en": "subject marker, after a final consonant"
+                  },
+                  {
+                    "ko": "가",
+                    "romanization": "ga",
+                    "en": "subject marker, after a vowel"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "r5",
+              "sentence": {
+                "ko": "동생이 학교에 가요.",
+                "romanization": "dongsaengi hakgyoe gayo",
+                "en": "My little sibling goes to school."
+              },
+              "pictureRef": "word:school-school",
+              "particle": {
+                "tile": 0,
+                "choices": [
+                  {
+                    "ko": "이",
+                    "romanization": "i",
+                    "en": "subject marker, after a final consonant"
+                  },
+                  {
+                    "ko": "가",
+                    "romanization": "ga",
+                    "en": "subject marker, after a vowel"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s3-life-q3-apply",
+          "kind": "pic-word-match",
+          "boards": [
+            {
+              "pairs": [
+                {
+                  "id": "p1",
+                  "pictureRef": "word:school-school",
+                  "word": {
+                    "ko": "학교에 가요.",
+                    "romanization": "hakgyoe gayo",
+                    "en": "I go to school."
+                  }
+                },
+                {
+                  "id": "p2",
+                  "pictureRef": "card:sea",
+                  "word": {
+                    "ko": "바다에 가요.",
+                    "romanization": "badae gayo",
+                    "en": "I go to the sea."
+                  }
+                },
+                {
+                  "id": "p3",
+                  "pictureRef": "card:mountain",
+                  "word": {
+                    "ko": "산에 가요.",
+                    "romanization": "sane gayo",
+                    "en": "I go to the mountain."
+                  }
+                }
+              ]
+            },
+            {
+              "pairs": [
+                {
+                  "id": "p1",
+                  "pictureRef": "word:school-friend",
+                  "word": {
+                    "ko": "친구가 와요.",
+                    "romanization": "chinguga wayo",
+                    "en": "A friend comes."
+                  }
+                },
+                {
+                  "id": "p2",
+                  "pictureRef": "word:family-mom",
+                  "word": {
+                    "ko": "엄마가 와요.",
+                    "romanization": "eommaga wayo",
+                    "en": "Mom comes."
+                  }
+                },
+                {
+                  "id": "p3",
+                  "pictureRef": "word:family-dad",
+                  "word": {
+                    "ko": "아빠가 와요.",
+                    "romanization": "appaga wayo",
+                    "en": "Dad comes."
+                  }
+                }
+              ]
+            },
+            {
+              "pairs": [
+                {
+                  "id": "p1",
+                  "pictureRef": "card:sea",
+                  "word": {
+                    "ko": "엄마가 바다에 가요.",
+                    "romanization": "eommaga badae gayo",
+                    "en": "Mom goes to the sea."
+                  }
+                },
+                {
+                  "id": "p2",
+                  "pictureRef": "card:mountain",
+                  "word": {
+                    "ko": "아빠가 산에 가요.",
+                    "romanization": "appaga sane gayo",
+                    "en": "Dad goes to the mountain."
+                  }
+                },
+                {
+                  "id": "p3",
+                  "pictureRef": "word:school-school",
+                  "word": {
+                    "ko": "친구가 학교에 가요.",
+                    "romanization": "chinguga hakgyoe gayo",
+                    "en": "My friend goes to school."
+                  }
+                }
+              ]
+            },
+            {
+              "pairs": [
+                {
+                  "id": "p1",
+                  "pictureRef": "word:school-friend",
+                  "word": {
+                    "ko": "친구가 집에 와요.",
+                    "romanization": "chinguga jibe wayo",
+                    "en": "My friend comes home."
+                  }
+                },
+                {
+                  "id": "p2",
+                  "pictureRef": "word:family-mom",
+                  "word": {
+                    "ko": "엄마가 집에 와요.",
+                    "romanization": "eommaga jibe wayo",
+                    "en": "Mom comes home."
+                  }
+                },
+                {
+                  "id": "p3",
+                  "pictureRef": "word:family-dongsaeng",
+                  "word": {
+                    "ko": "동생이 집에 와요.",
+                    "romanization": "dongsaengi jibe wayo",
+                    "en": "My little sibling comes home."
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s3-life-q3-check",
+          "kind": "listen-pick",
+          "rounds": [
+            {
+              "id": "c1",
+              "prompt": {
+                "ko": "바다에 가요.",
+                "romanization": "badae gayo",
+                "en": "I go to the sea."
+              },
+              "options": [
+                {
+                  "id": "o1",
+                  "pictureRef": "card:sea"
+                },
+                {
+                  "id": "o2",
+                  "pictureRef": "card:mountain"
+                },
+                {
+                  "id": "o3",
+                  "pictureRef": "word:school-school"
+                }
+              ],
+              "answerId": "o1"
+            },
+            {
+              "id": "c2",
+              "prompt": {
+                "ko": "친구가 와요.",
+                "romanization": "chinguga wayo",
+                "en": "A friend comes."
+              },
+              "options": [
+                {
+                  "id": "o1",
+                  "text": {
+                    "ko": "친구가 와요.",
+                    "romanization": "chinguga wayo",
+                    "en": "A friend comes."
+                  }
+                },
+                {
+                  "id": "o2",
+                  "text": {
+                    "ko": "엄마가 와요.",
+                    "romanization": "eommaga wayo",
+                    "en": "Mom comes."
+                  }
+                },
+                {
+                  "id": "o3",
+                  "text": {
+                    "ko": "친구가 가요.",
+                    "romanization": "chinguga gayo",
+                    "en": "A friend goes."
+                  }
+                }
+              ],
+              "answerId": "o1"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "culture": [
+    {
+      "id": "n1",
+      "kind": "language",
+      "textEn": "A sentence that ends in {ko:요} is polite. This style, {ko:해요체} (haeyoche), is the polite style people use most in everyday talk.",
+      "sources": [
+        {
+          "title": "공손법, an entry of the Encyclopedia of Korean Culture",
+          "publisher": "한국민족문화대백과사전 (Encyclopedia of Korean Culture), Academy of Korean Studies",
+          "url": "https://encykorea.aks.ac.kr/Article/E0079632",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "Entry 공손법, section 내용, paragraph on 해요체: “해요체는 ‘합쇼체’ 다음으로 상대를 정중히 대하는 대표적인 존대 말투의 하나다.” and “… 오늘날 일상 대화에서 가장 폭넓게 쓰이는 등급이다.”"
+        },
+        {
+          "title": "해요체, an entry of the Standard Korean Language Dictionary",
+          "publisher": "표준국어대사전 (Standard Korean Language Dictionary), National Institute of Korean Language",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%ED%95%B4%EC%9A%94%EC%B2%B4",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "Headword 해요-체 「명사」 『언어』: “상대 높임법의 하나. 상대편을 보통으로 높이는 뜻을 나타내는 종결형으로, 격식체인 ‘하오체’와 ‘하십시오체’를 쓸 자리에 두루 쓰는 비격식체이다. ‘안녕히 계세요. 다음에 또 들르겠어요.’ 따위이다.”"
+        }
+      ],
+      "verification": {
+        "passes": 1,
+        "checkedAt": "2026-10-14",
+        "scope": "lesson",
+        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): both pages fetched. The encyclopedia entry calls 해요체 a polite speech level and the one used most widely in everyday conversation today; the dictionary defines 해요체 as the non-formal polite ending style, with examples ending in -요. The note says 'polite' and 'used most in everyday talk', restates both in original English and copies no source wording. Carried by: q1 Discover page 1 caption."
+      }
+    },
+    {
+      "id": "n2",
+      "kind": "language",
+      "textEn": "{ko:을} and {ko:를} mark the thing an action is done to, such as what you eat or drink. {ko:을} follows a final consonant; {ko:를} follows a vowel.",
+      "sources": [
+        {
+          "title": "상보적 분포, an entry of the Encyclopedia of Korean Culture",
+          "publisher": "한국민족문화대백과사전 (Encyclopedia of Korean Culture), Academy of Korean Studies",
+          "url": "https://encykorea.aks.ac.kr/Article/E0079637",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "Entry 상보적 분포, section 내용, last paragraph: “목적격 조사 ‘을’과 ‘를’은 의미가 같으면서 자음으로 끝나는 체언 다음에서는 ‘을’이 나타나고 모음으로 끝나는 체언 다음에서는 ‘를’이 나타나며 그 반대의 경우에는 나타날 수 없다.”"
+        },
+        {
+          "title": "목적격 조사, an entry of the Standard Korean Language Dictionary",
+          "publisher": "표준국어대사전 (Standard Korean Language Dictionary), National Institute of Korean Language",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%EB%AA%A9%EC%A0%81%EA%B2%A9%20%EC%A1%B0%EC%82%AC",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "Headword 목적격 조사 『언어』: “문장 안에서, 체언이나 체언 구실을 하는 말 뒤에 붙어 목적어 자격을 가지게 하는 격 조사. ‘을/를’이 있다.” Also 를 「조사」 「1」: “동작이 미친 직접적 대상을 나타내는 격 조사.”"
+        }
+      ],
+      "verification": {
+        "passes": 1,
+        "checkedAt": "2026-10-14",
+        "scope": "lesson",
+        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): both pages fetched. The dictionary names 을/를 as the object case particle (the thing the action is done to); the encyclopedia entry states that 을 follows a consonant-final noun and 를 a vowel-final noun. The note restates both in original English with no copied wording. Carried by: q1 Discover pattern noteEn and the particle hint of the q1 Sentence Builder rounds r4 and r5."
+      }
+    },
+    {
+      "id": "n3",
+      "kind": "language",
+      "textEn": "{ko:이} and {ko:가} mark the subject of a sentence, here the thing you describe. {ko:이} follows a final consonant; {ko:가} follows a vowel.",
+      "sources": [
+        {
+          "title": "상보적 분포, an entry of the Encyclopedia of Korean Culture",
+          "publisher": "한국민족문화대백과사전 (Encyclopedia of Korean Culture), Academy of Korean Studies",
+          "url": "https://encykorea.aks.ac.kr/Article/E0079637",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "Entry 상보적 분포, section 내용, last paragraph, after the 을/를 sentence (consonant-final noun: 을; vowel-final noun: 를): “‘이’와 ‘가’도 같은 이유로 한 형태소임을 알 수 있다.”"
+        },
+        {
+          "title": "주격 조사, an entry of the Standard Korean Language Dictionary",
+          "publisher": "표준국어대사전 (Standard Korean Language Dictionary), National Institute of Korean Language",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%EC%A3%BC%EA%B2%A9%20%EC%A1%B0%EC%82%AC",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "Headword 주격 조사 『언어』: “문장 안에서, 체언이나 체언 구실을 하는 말 뒤에 붙어 주어의 자격을 가지게 하는 격 조사. ‘이/가’, ‘께서’, ‘에서’ 따위가 있다.”"
+        }
+      ],
+      "verification": {
+        "passes": 1,
+        "checkedAt": "2026-10-14",
+        "scope": "lesson",
+        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): both pages fetched. The dictionary names 이/가 as the subject case particle; the encyclopedia entry says 이 and 가 alternate for the same reason as 을/를, that is 이 after a consonant-final noun and 가 after a vowel-final noun. The note restates this in original English with no copied wording. Carried by: q2 Discover pattern noteEn and the particle hint of q2 rounds r4, r5 and q3 rounds r4, r5."
+      }
+    },
+    {
+      "id": "n4",
+      "kind": "language",
+      "textEn": "A describing word such as {ko:뜨거워요} can end a sentence by itself. Unlike English, it needs no extra word for 'is'.",
+      "sources": [
+        {
+          "title": "형용사, an entry of the Encyclopedia of Korean Culture",
+          "publisher": "한국민족문화대백과사전 (Encyclopedia of Korean Culture), Academy of Korean Studies",
+          "url": "https://encykorea.aks.ac.kr/Article/E0063550",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "Entry 형용사, section 내용, first paragraph: “국어의 형용사는 단독으로도 서술어로 쓰일 수 있다는 점에서 be동사의 도움을 받는 영어의 형용사와는 차이가 있다.”"
+        },
+        {
+          "title": "형용사, an entry of the Standard Korean Language Dictionary",
+          "publisher": "표준국어대사전 (Standard Korean Language Dictionary), National Institute of Korean Language",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%ED%98%95%EC%9A%A9%EC%82%AC",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "Headword 형용-사 「명사」 『언어』: “사물의 성질이나 상태를 나타내는 품사. 활용할 수 있어 동사와 함께 용언에 속한다.” See also 맛-있다 「형용사」: “음식의 맛이 좋다.”"
+        }
+      ],
+      "verification": {
+        "passes": 1,
+        "checkedAt": "2026-10-14",
+        "scope": "lesson",
+        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): both pages fetched. The encyclopedia entry says a Korean adjective serves as a predicate alone, unlike an English adjective that needs be; the dictionary defines the adjective as a word of state that inflects like a verb. The note restates this in original English with no copied wording. Carried by: q2 Discover page 2 caption."
+      }
+    },
+    {
+      "id": "n5",
+      "kind": "language",
+      "textEn": "{ko:에} after a place word marks the place: where you go with {ko:가요} or where you come with {ko:와요}. Coming is toward the speaker.",
+      "sources": [
+        {
+          "title": "에, an entry of the Standard Korean Language Dictionary",
+          "publisher": "표준국어대사전 (Standard Korean Language Dictionary), National Institute of Korean Language",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%EC%97%90",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "Headword 에 (homograph 4) 「조사」 「1」: “앞말이 처소의 부사어임을 나타내는 격 조사.”"
+        },
+        {
+          "title": "오다, an entry of the Standard Korean Language Dictionary",
+          "publisher": "표준국어대사전 (Standard Korean Language Dictionary), National Institute of Korean Language",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%EC%98%A4%EB%8B%A4",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "Headword 오다 [Ⅰ] 「동사」 「1」: “어떤 사람이 말하는 사람 혹은 기준이 되는 사람이 있는 쪽으로 움직여 위치를 옮기다.”"
+        },
+        {
+          "title": "가다, an entry of the Standard Korean Language Dictionary",
+          "publisher": "표준국어대사전 (Standard Korean Language Dictionary), National Institute of Korean Language",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%EA%B0%80%EB%8B%A4",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "Headword 가다 1 [Ⅰ] 「동사」 「1」: “한곳에서 다른 곳으로 장소를 이동하다.”"
+        }
+      ],
+      "verification": {
+        "passes": 1,
+        "checkedAt": "2026-10-14",
+        "scope": "lesson",
+        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): the three dictionary pages fetched. 에 (조사, sense 1) marks the word before it as a place adverbial; 오다 is moving toward the speaker or reference person; 가다 is moving from one place to another. The note says 'marks the place' and 'coming is toward the speaker', restated in original English with no copied wording. All three sources are from one public institution (NIKL); pass 2b may add an independent second publisher. Carried by: q3 Discover pattern noteEn and the q3 Discover page 2 caption."
+      }
+    }
+  ],
+  "review": {
+    "language": "draft",
+    "culture": "draft",
+    "notes": []
+  },
+  "contentVer": 1
+}
