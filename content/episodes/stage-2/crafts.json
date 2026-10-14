@@ -1,0 +1,1305 @@
+{
+  "id": "episode:stage2-crafts",
+  "stage": "stage2",
+  "theme": "crafts",
+  "status": "ready",
+  "titleEn": "Playground Words",
+  "subtitleEn": "Read words for the playground and traditional games.",
+  "hoyaIntroEn": "Swings, spinning tops and jump ropes: let's read the words we play with!",
+  "order": 5,
+  "pillarTags": [
+    "B5"
+  ],
+  "rewardCardIds": [],
+  "quests": [
+    {
+      "id": "quest:stage2-crafts-q1",
+      "titleEn": "At the Playground",
+      "blurbEn": "Read playground words: swing, slide, sand and ball.",
+      "teaserEn": "Next: jegi, tops and other traditional toys.",
+      "estimatedMinutes": 4,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "Playground Time!",
+          "hoyaLineEn": "Swings, slides and sand: let's read playground words!",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "Playground Words",
+          "hoyaLineEn": "Tap Hear it, then read each word yourself.",
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "그네",
+                      "romanization": "geune",
+                      "en": "swing",
+                      "syllables": [
+                        "geu",
+                        "ne"
+                      ]
+                    }
+                  },
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "미끄럼틀",
+                      "romanization": "mikkeureomteul",
+                      "en": "slide",
+                      "syllables": [
+                        "mi",
+                        "kkeu",
+                        "reom",
+                        "teul"
+                      ]
+                    }
+                  }
+                ]
+              },
+              {
+                "items": [
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "모래",
+                      "romanization": "morae",
+                      "en": "sand",
+                      "syllables": [
+                        "mo",
+                        "rae"
+                      ]
+                    }
+                  },
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "공",
+                      "romanization": "gong",
+                      "en": "ball"
+                    },
+                    "picture": "word:sport-ball"
+                  }
+                ]
+              }
+            ]
+          },
+          "durationSeconds": 50
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Picture and Word",
+          "minigameKind": "pic-word-match",
+          "minigameRef": "minigame:s2-crafts-q1-practice",
+          "durationSeconds": 80
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Match the Cards",
+          "minigameKind": "card-match",
+          "minigameRef": "minigame:s2-crafts-q1-apply",
+          "durationSeconds": 65
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Listen and Read",
+          "minigameKind": "listen-pick",
+          "minigameRef": "minigame:s2-crafts-q1-check",
+          "durationSeconds": 35
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Well Played!",
+          "hoyaLineEn": "You read the playground words. Great job!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s2-crafts-q1-practice",
+          "kind": "pic-word-match",
+          "boards": [
+            {
+              "pairs": [
+                {
+                  "id": "gong",
+                  "pictureRef": "word:sport-ball",
+                  "word": {
+                    "ko": "공",
+                    "romanization": "gong",
+                    "en": "ball"
+                  }
+                },
+                {
+                  "id": "namu",
+                  "pictureRef": "word:nature-tree",
+                  "word": {
+                    "ko": "나무",
+                    "romanization": "namu",
+                    "en": "tree"
+                  }
+                },
+                {
+                  "id": "haneul",
+                  "pictureRef": "word:nature-sky",
+                  "word": {
+                    "ko": "하늘",
+                    "romanization": "haneul",
+                    "en": "sky"
+                  }
+                }
+              ]
+            },
+            {
+              "pairs": [
+                {
+                  "id": "gong",
+                  "pictureRef": "word:sport-ball",
+                  "word": {
+                    "ko": "공",
+                    "romanization": "gong",
+                    "en": "ball"
+                  }
+                },
+                {
+                  "id": "yeon",
+                  "pictureRef": "card:kite",
+                  "word": {
+                    "ko": "연",
+                    "romanization": "yeon",
+                    "en": "kite"
+                  }
+                },
+                {
+                  "id": "jajeongeo",
+                  "pictureRef": "word:sport-bicycle",
+                  "word": {
+                    "ko": "자전거",
+                    "romanization": "jajeongeo",
+                    "en": "bicycle"
+                  }
+                }
+              ]
+            },
+            {
+              "pairs": [
+                {
+                  "id": "nonggu",
+                  "pictureRef": "word:sport-basketball",
+                  "word": {
+                    "ko": "농구",
+                    "romanization": "nonggu",
+                    "en": "basketball"
+                  }
+                },
+                {
+                  "id": "chukgu",
+                  "pictureRef": "word:sport-soccer",
+                  "word": {
+                    "ko": "축구",
+                    "romanization": "chukgu",
+                    "en": "soccer (football)"
+                  }
+                },
+                {
+                  "id": "namu",
+                  "pictureRef": "word:nature-tree",
+                  "word": {
+                    "ko": "나무",
+                    "romanization": "namu",
+                    "en": "tree"
+                  }
+                }
+              ]
+            },
+            {
+              "pairs": [
+                {
+                  "id": "jajeongeo",
+                  "pictureRef": "word:sport-bicycle",
+                  "word": {
+                    "ko": "자전거",
+                    "romanization": "jajeongeo",
+                    "en": "bicycle"
+                  }
+                },
+                {
+                  "id": "gong",
+                  "pictureRef": "word:sport-ball",
+                  "word": {
+                    "ko": "공",
+                    "romanization": "gong",
+                    "en": "ball"
+                  }
+                },
+                {
+                  "id": "haneul",
+                  "pictureRef": "word:nature-sky",
+                  "word": {
+                    "ko": "하늘",
+                    "romanization": "haneul",
+                    "en": "sky"
+                  }
+                }
+              ]
+            },
+            {
+              "pairs": [
+                {
+                  "id": "yeon",
+                  "pictureRef": "card:kite",
+                  "word": {
+                    "ko": "연",
+                    "romanization": "yeon",
+                    "en": "kite"
+                  }
+                },
+                {
+                  "id": "namu",
+                  "pictureRef": "word:nature-tree",
+                  "word": {
+                    "ko": "나무",
+                    "romanization": "namu",
+                    "en": "tree"
+                  }
+                },
+                {
+                  "id": "nonggu",
+                  "pictureRef": "word:sport-basketball",
+                  "word": {
+                    "ko": "농구",
+                    "romanization": "nonggu",
+                    "en": "basketball"
+                  }
+                }
+              ]
+            },
+            {
+              "pairs": [
+                {
+                  "id": "yagu",
+                  "pictureRef": "word:sport-baseball",
+                  "word": {
+                    "ko": "야구",
+                    "romanization": "yagu",
+                    "en": "baseball"
+                  }
+                },
+                {
+                  "id": "jajeongeo",
+                  "pictureRef": "word:sport-bicycle",
+                  "word": {
+                    "ko": "자전거",
+                    "romanization": "jajeongeo",
+                    "en": "bicycle"
+                  }
+                },
+                {
+                  "id": "yeon",
+                  "pictureRef": "card:kite",
+                  "word": {
+                    "ko": "연",
+                    "romanization": "yeon",
+                    "en": "kite"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s2-crafts-q1-apply",
+          "kind": "card-match",
+          "pairs": [
+            {
+              "ko": "그네",
+              "romanization": "geune",
+              "en": "swing"
+            },
+            {
+              "ko": "미끄럼틀",
+              "romanization": "mikkeureomteul",
+              "en": "slide"
+            },
+            {
+              "ko": "모래",
+              "romanization": "morae",
+              "en": "sand"
+            },
+            {
+              "ko": "공",
+              "romanization": "gong",
+              "en": "ball"
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s2-crafts-q1-check",
+          "kind": "listen-pick",
+          "rounds": [
+            {
+              "id": "pic-gong",
+              "prompt": {
+                "ko": "공",
+                "romanization": "gong",
+                "en": "ball"
+              },
+              "options": [
+                {
+                  "id": "sport-ball",
+                  "pictureRef": "word:sport-ball",
+                  "labelEn": "Ball"
+                },
+                {
+                  "id": "kite",
+                  "pictureRef": "card:kite",
+                  "labelEn": "Kite"
+                },
+                {
+                  "id": "nature-tree",
+                  "pictureRef": "word:nature-tree",
+                  "labelEn": "Tree"
+                },
+                {
+                  "id": "sport-bicycle",
+                  "pictureRef": "word:sport-bicycle",
+                  "labelEn": "Bicycle"
+                }
+              ],
+              "answerId": "sport-ball"
+            },
+            {
+              "id": "read-gong",
+              "prompt": {
+                "ko": "공",
+                "romanization": "gong",
+                "en": "ball"
+              },
+              "options": [
+                {
+                  "id": "gong",
+                  "text": {
+                    "ko": "공",
+                    "romanization": "gong",
+                    "en": "ball"
+                  }
+                },
+                {
+                  "id": "gom",
+                  "text": {
+                    "ko": "곰",
+                    "romanization": "gom",
+                    "en": "bear"
+                  }
+                },
+                {
+                  "id": "gang",
+                  "text": {
+                    "ko": "강",
+                    "romanization": "gang",
+                    "en": "river"
+                  }
+                }
+              ],
+              "answerId": "gong"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "quest:stage2-crafts-q2",
+      "titleEn": "Traditional Games",
+      "blurbEn": "Read the names of traditional toys: jegi, top, yut and kite.",
+      "teaserEn": "Next: games to play with friends.",
+      "estimatedMinutes": 4,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "Game Time!",
+          "hoyaLineEn": "Jegi and spinning tops are traditional Korean toys. Let's read their names!",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "Game Words",
+          "hoyaLineEn": "Tap Hear it, then read each word yourself.",
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "제기",
+                      "romanization": "jegi",
+                      "en": "jegi, a shuttlecock toy you kick",
+                      "syllables": [
+                        "je",
+                        "gi"
+                      ]
+                    },
+                    "picture": "card:jegi",
+                    "noteEn": "Kick the jegi up and keep it in the air."
+                  },
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "팽이",
+                      "romanization": "paengi",
+                      "en": "spinning top",
+                      "syllables": [
+                        "paeng",
+                        "i"
+                      ]
+                    },
+                    "picture": "card:top",
+                    "noteEn": "Strike it with a small whip to keep it spinning."
+                  }
+                ]
+              },
+              {
+                "items": [
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "윷",
+                      "romanization": "yut",
+                      "en": "yut sticks"
+                    },
+                    "picture": "card:yutnori"
+                  },
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "연",
+                      "romanization": "yeon",
+                      "en": "kite"
+                    },
+                    "picture": "card:kite"
+                  }
+                ]
+              }
+            ]
+          },
+          "durationSeconds": 50
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Picture and Word",
+          "minigameKind": "pic-word-match",
+          "minigameRef": "minigame:s2-crafts-q2-practice",
+          "durationSeconds": 80
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Match the Cards",
+          "minigameKind": "card-match",
+          "minigameRef": "minigame:s2-crafts-q2-apply",
+          "durationSeconds": 65
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Listen and Read",
+          "minigameKind": "listen-pick",
+          "minigameRef": "minigame:s2-crafts-q2-check",
+          "durationSeconds": 35
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Nice Moves!",
+          "hoyaLineEn": "You read four game words. Well played!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s2-crafts-q2-practice",
+          "kind": "pic-word-match",
+          "boards": [
+            {
+              "pairs": [
+                {
+                  "id": "jegi",
+                  "pictureRef": "card:jegi",
+                  "word": {
+                    "ko": "제기",
+                    "romanization": "jegi",
+                    "en": "jegi, a shuttlecock toy you kick"
+                  }
+                },
+                {
+                  "id": "paengi",
+                  "pictureRef": "card:top",
+                  "word": {
+                    "ko": "팽이",
+                    "romanization": "paengi",
+                    "en": "spinning top"
+                  }
+                },
+                {
+                  "id": "yeon",
+                  "pictureRef": "card:kite",
+                  "word": {
+                    "ko": "연",
+                    "romanization": "yeon",
+                    "en": "kite"
+                  }
+                }
+              ]
+            },
+            {
+              "pairs": [
+                {
+                  "id": "yut",
+                  "pictureRef": "card:yutnori",
+                  "word": {
+                    "ko": "윷",
+                    "romanization": "yut",
+                    "en": "yut sticks"
+                  }
+                },
+                {
+                  "id": "yeon",
+                  "pictureRef": "card:kite",
+                  "word": {
+                    "ko": "연",
+                    "romanization": "yeon",
+                    "en": "kite"
+                  }
+                },
+                {
+                  "id": "gong",
+                  "pictureRef": "word:sport-ball",
+                  "word": {
+                    "ko": "공",
+                    "romanization": "gong",
+                    "en": "ball"
+                  }
+                }
+              ]
+            },
+            {
+              "pairs": [
+                {
+                  "id": "paengi",
+                  "pictureRef": "card:top",
+                  "word": {
+                    "ko": "팽이",
+                    "romanization": "paengi",
+                    "en": "spinning top"
+                  }
+                },
+                {
+                  "id": "yut",
+                  "pictureRef": "card:yutnori",
+                  "word": {
+                    "ko": "윷",
+                    "romanization": "yut",
+                    "en": "yut sticks"
+                  }
+                },
+                {
+                  "id": "jegi",
+                  "pictureRef": "card:jegi",
+                  "word": {
+                    "ko": "제기",
+                    "romanization": "jegi",
+                    "en": "jegi, a shuttlecock toy you kick"
+                  }
+                }
+              ]
+            },
+            {
+              "pairs": [
+                {
+                  "id": "yeon",
+                  "pictureRef": "card:kite",
+                  "word": {
+                    "ko": "연",
+                    "romanization": "yeon",
+                    "en": "kite"
+                  }
+                },
+                {
+                  "id": "jegi",
+                  "pictureRef": "card:jegi",
+                  "word": {
+                    "ko": "제기",
+                    "romanization": "jegi",
+                    "en": "jegi, a shuttlecock toy you kick"
+                  }
+                },
+                {
+                  "id": "gong",
+                  "pictureRef": "word:sport-ball",
+                  "word": {
+                    "ko": "공",
+                    "romanization": "gong",
+                    "en": "ball"
+                  }
+                }
+              ]
+            },
+            {
+              "pairs": [
+                {
+                  "id": "yut",
+                  "pictureRef": "card:yutnori",
+                  "word": {
+                    "ko": "윷",
+                    "romanization": "yut",
+                    "en": "yut sticks"
+                  }
+                },
+                {
+                  "id": "paengi",
+                  "pictureRef": "card:top",
+                  "word": {
+                    "ko": "팽이",
+                    "romanization": "paengi",
+                    "en": "spinning top"
+                  }
+                },
+                {
+                  "id": "gong",
+                  "pictureRef": "word:sport-ball",
+                  "word": {
+                    "ko": "공",
+                    "romanization": "gong",
+                    "en": "ball"
+                  }
+                }
+              ]
+            },
+            {
+              "pairs": [
+                {
+                  "id": "jegi",
+                  "pictureRef": "card:jegi",
+                  "word": {
+                    "ko": "제기",
+                    "romanization": "jegi",
+                    "en": "jegi, a shuttlecock toy you kick"
+                  }
+                },
+                {
+                  "id": "yut",
+                  "pictureRef": "card:yutnori",
+                  "word": {
+                    "ko": "윷",
+                    "romanization": "yut",
+                    "en": "yut sticks"
+                  }
+                },
+                {
+                  "id": "paengi",
+                  "pictureRef": "card:top",
+                  "word": {
+                    "ko": "팽이",
+                    "romanization": "paengi",
+                    "en": "spinning top"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s2-crafts-q2-apply",
+          "kind": "card-match",
+          "pairs": [
+            {
+              "ko": "제기",
+              "romanization": "jegi",
+              "en": "jegi, a shuttlecock toy you kick"
+            },
+            {
+              "ko": "팽이",
+              "romanization": "paengi",
+              "en": "spinning top"
+            },
+            {
+              "ko": "윷",
+              "romanization": "yut",
+              "en": "yut sticks"
+            },
+            {
+              "ko": "연",
+              "romanization": "yeon",
+              "en": "kite"
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s2-crafts-q2-check",
+          "kind": "listen-pick",
+          "rounds": [
+            {
+              "id": "pic-paengi",
+              "prompt": {
+                "ko": "팽이",
+                "romanization": "paengi",
+                "en": "spinning top"
+              },
+              "options": [
+                {
+                  "id": "top",
+                  "pictureRef": "card:top",
+                  "labelEn": "Spinning top"
+                },
+                {
+                  "id": "jegi",
+                  "pictureRef": "card:jegi",
+                  "labelEn": "Jegi"
+                },
+                {
+                  "id": "kite",
+                  "pictureRef": "card:kite",
+                  "labelEn": "Kite"
+                },
+                {
+                  "id": "yutnori",
+                  "pictureRef": "card:yutnori",
+                  "labelEn": "Yut"
+                }
+              ],
+              "answerId": "top"
+            },
+            {
+              "id": "read-yeon",
+              "prompt": {
+                "ko": "연",
+                "romanization": "yeon",
+                "en": "kite"
+              },
+              "options": [
+                {
+                  "id": "yeon",
+                  "text": {
+                    "ko": "연",
+                    "romanization": "yeon",
+                    "en": "kite"
+                  }
+                },
+                {
+                  "id": "gong",
+                  "text": {
+                    "ko": "공",
+                    "romanization": "gong",
+                    "en": "ball"
+                  }
+                },
+                {
+                  "id": "jul",
+                  "text": {
+                    "ko": "줄",
+                    "romanization": "jul",
+                    "en": "rope"
+                  }
+                }
+              ],
+              "answerId": "yeon"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "quest:stage2-crafts-q3",
+      "titleEn": "Playing Together",
+      "blurbEn": "Read words for playing with friends: jump rope, race and hide-and-seek.",
+      "estimatedMinutes": 4,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "Let's Play Together!",
+          "hoyaLineEn": "Jump rope, a race, hide-and-seek: let's read words for playing with friends!",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "Together Words",
+          "hoyaLineEn": "Tap Hear it, then read each word yourself.",
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "줄넘기",
+                      "romanization": "julleomgi",
+                      "en": "jump rope",
+                      "syllables": [
+                        "jul",
+                        "leom",
+                        "gi"
+                      ]
+                    },
+                    "picture": "word:sport-jumprope"
+                  },
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "달리기",
+                      "romanization": "dalligi",
+                      "en": "running, a race",
+                      "syllables": [
+                        "dal",
+                        "li",
+                        "gi"
+                      ]
+                    },
+                    "picture": "word:sport-running"
+                  }
+                ]
+              },
+              {
+                "items": [
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "숨바꼭질",
+                      "romanization": "sumbakkokjil",
+                      "en": "hide-and-seek",
+                      "syllables": [
+                        "sum",
+                        "ba",
+                        "kkok",
+                        "jil"
+                      ]
+                    }
+                  },
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "친구",
+                      "romanization": "chingu",
+                      "en": "friend",
+                      "syllables": [
+                        "chin",
+                        "gu"
+                      ]
+                    },
+                    "picture": "word:school-friend"
+                  }
+                ]
+              }
+            ]
+          },
+          "durationSeconds": 50
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Picture and Word",
+          "minigameKind": "pic-word-match",
+          "minigameRef": "minigame:s2-crafts-q3-practice",
+          "durationSeconds": 80
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Match the Cards",
+          "minigameKind": "card-match",
+          "minigameRef": "minigame:s2-crafts-q3-apply",
+          "durationSeconds": 65
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Listen and Read",
+          "minigameKind": "listen-pick",
+          "minigameRef": "minigame:s2-crafts-q3-check",
+          "durationSeconds": 35
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Playground Star!",
+          "hoyaLineEn": "You read every playground word. Great playing!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s2-crafts-q3-practice",
+          "kind": "pic-word-match",
+          "boards": [
+            {
+              "pairs": [
+                {
+                  "id": "julleomgi",
+                  "pictureRef": "word:sport-jumprope",
+                  "word": {
+                    "ko": "줄넘기",
+                    "romanization": "julleomgi",
+                    "en": "jump rope"
+                  }
+                },
+                {
+                  "id": "dalligi",
+                  "pictureRef": "word:sport-running",
+                  "word": {
+                    "ko": "달리기",
+                    "romanization": "dalligi",
+                    "en": "running, a race"
+                  }
+                },
+                {
+                  "id": "chingu",
+                  "pictureRef": "word:school-friend",
+                  "word": {
+                    "ko": "친구",
+                    "romanization": "chingu",
+                    "en": "friend"
+                  }
+                }
+              ]
+            },
+            {
+              "pairs": [
+                {
+                  "id": "chingu",
+                  "pictureRef": "word:school-friend",
+                  "word": {
+                    "ko": "친구",
+                    "romanization": "chingu",
+                    "en": "friend"
+                  }
+                },
+                {
+                  "id": "gong",
+                  "pictureRef": "word:sport-ball",
+                  "word": {
+                    "ko": "공",
+                    "romanization": "gong",
+                    "en": "ball"
+                  }
+                },
+                {
+                  "id": "julleomgi",
+                  "pictureRef": "word:sport-jumprope",
+                  "word": {
+                    "ko": "줄넘기",
+                    "romanization": "julleomgi",
+                    "en": "jump rope"
+                  }
+                }
+              ]
+            },
+            {
+              "pairs": [
+                {
+                  "id": "dalligi",
+                  "pictureRef": "word:sport-running",
+                  "word": {
+                    "ko": "달리기",
+                    "romanization": "dalligi",
+                    "en": "running, a race"
+                  }
+                },
+                {
+                  "id": "chukgu",
+                  "pictureRef": "word:sport-soccer",
+                  "word": {
+                    "ko": "축구",
+                    "romanization": "chukgu",
+                    "en": "soccer (football)"
+                  }
+                },
+                {
+                  "id": "julleomgi",
+                  "pictureRef": "word:sport-jumprope",
+                  "word": {
+                    "ko": "줄넘기",
+                    "romanization": "julleomgi",
+                    "en": "jump rope"
+                  }
+                }
+              ]
+            },
+            {
+              "pairs": [
+                {
+                  "id": "chingu",
+                  "pictureRef": "word:school-friend",
+                  "word": {
+                    "ko": "친구",
+                    "romanization": "chingu",
+                    "en": "friend"
+                  }
+                },
+                {
+                  "id": "yeon",
+                  "pictureRef": "card:kite",
+                  "word": {
+                    "ko": "연",
+                    "romanization": "yeon",
+                    "en": "kite"
+                  }
+                },
+                {
+                  "id": "dalligi",
+                  "pictureRef": "word:sport-running",
+                  "word": {
+                    "ko": "달리기",
+                    "romanization": "dalligi",
+                    "en": "running, a race"
+                  }
+                }
+              ]
+            },
+            {
+              "pairs": [
+                {
+                  "id": "julleomgi",
+                  "pictureRef": "word:sport-jumprope",
+                  "word": {
+                    "ko": "줄넘기",
+                    "romanization": "julleomgi",
+                    "en": "jump rope"
+                  }
+                },
+                {
+                  "id": "paengi",
+                  "pictureRef": "card:top",
+                  "word": {
+                    "ko": "팽이",
+                    "romanization": "paengi",
+                    "en": "spinning top"
+                  }
+                },
+                {
+                  "id": "chingu",
+                  "pictureRef": "word:school-friend",
+                  "word": {
+                    "ko": "친구",
+                    "romanization": "chingu",
+                    "en": "friend"
+                  }
+                }
+              ]
+            },
+            {
+              "pairs": [
+                {
+                  "id": "dalligi",
+                  "pictureRef": "word:sport-running",
+                  "word": {
+                    "ko": "달리기",
+                    "romanization": "dalligi",
+                    "en": "running, a race"
+                  }
+                },
+                {
+                  "id": "julleomgi",
+                  "pictureRef": "word:sport-jumprope",
+                  "word": {
+                    "ko": "줄넘기",
+                    "romanization": "julleomgi",
+                    "en": "jump rope"
+                  }
+                },
+                {
+                  "id": "jegi",
+                  "pictureRef": "card:jegi",
+                  "word": {
+                    "ko": "제기",
+                    "romanization": "jegi",
+                    "en": "jegi, a shuttlecock toy you kick"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s2-crafts-q3-apply",
+          "kind": "card-match",
+          "pairs": [
+            {
+              "ko": "줄넘기",
+              "romanization": "julleomgi",
+              "en": "jump rope"
+            },
+            {
+              "ko": "달리기",
+              "romanization": "dalligi",
+              "en": "running, a race"
+            },
+            {
+              "ko": "숨바꼭질",
+              "romanization": "sumbakkokjil",
+              "en": "hide-and-seek"
+            },
+            {
+              "ko": "친구",
+              "romanization": "chingu",
+              "en": "friend"
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s2-crafts-q3-check",
+          "kind": "listen-pick",
+          "rounds": [
+            {
+              "id": "pic-julleomgi",
+              "prompt": {
+                "ko": "줄넘기",
+                "romanization": "julleomgi",
+                "en": "jump rope"
+              },
+              "options": [
+                {
+                  "id": "sport-jumprope",
+                  "pictureRef": "word:sport-jumprope",
+                  "labelEn": "Jump rope"
+                },
+                {
+                  "id": "sport-running",
+                  "pictureRef": "word:sport-running",
+                  "labelEn": "Running"
+                },
+                {
+                  "id": "school-friend",
+                  "pictureRef": "word:school-friend",
+                  "labelEn": "Friend"
+                },
+                {
+                  "id": "sport-ball",
+                  "pictureRef": "word:sport-ball",
+                  "labelEn": "Ball"
+                }
+              ],
+              "answerId": "sport-jumprope"
+            },
+            {
+              "id": "read-chingu",
+              "prompt": {
+                "ko": "친구",
+                "romanization": "chingu",
+                "en": "friend"
+              },
+              "options": [
+                {
+                  "id": "chingu",
+                  "text": {
+                    "ko": "친구",
+                    "romanization": "chingu",
+                    "en": "friend"
+                  }
+                },
+                {
+                  "id": "chukgu",
+                  "text": {
+                    "ko": "축구",
+                    "romanization": "chukgu",
+                    "en": "soccer (football)"
+                  }
+                },
+                {
+                  "id": "nonggu",
+                  "text": {
+                    "ko": "농구",
+                    "romanization": "nonggu",
+                    "en": "basketball"
+                  }
+                }
+              ],
+              "answerId": "chingu"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "culture": [
+    {
+      "id": "n1",
+      "kind": "culture",
+      "textEn": "{ko:제기차기} is a traditional Korean game. Players kick a {ko:제기}, a small weighted toy with a paper or cloth fringe, and try to keep it off the ground for as many kicks as they can.",
+      "sources": [
+        {
+          "title": "제기차기",
+          "publisher": "Academy of Korean Studies, Encyclopedia of Korean Culture",
+          "url": "https://encykorea.aks.ac.kr/Article/E0051251",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "Entry 제기차기, sections 정의 and 내용 paragraph 1: the definition (a game of kicking a jegi without letting it drop and competing on the count) and how a jegi is made (a holed coin wrapped in hanji or silk, the ends torn into fringes)."
+        },
+        {
+          "title": "전통놀이: 제기차기",
+          "publisher": "Ministry of Culture, Sports and Tourism (children's site)",
+          "url": "https://www.mcst.go.kr/usr/child/enter/play/jegichagi.jsp",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "Page 전통놀이 > 제기차기, sections 유래 and 놀이방법: the jegi as a coin or metal piece wrapped in paper or cloth with fringes; kicking it repeatedly so it does not touch the ground, the player with the higher count winning."
+        }
+      ],
+      "verification": {
+        "passes": 3,
+        "checkedAt": "2026-10-14",
+        "scope": "lesson",
+        "notes": "Pass 1 (author sourcing, 2026-10-14): both pages fetched; each supports 'traditional game' (MCST lists it under 전통놀이; the encyclopedia files it under 놀이), the weighted core wrapped in paper or cloth with a fringe, and kicking to keep it up for the highest count. Seasonal timing (New Year in the encyclopedia, winter on the MCST page) deliberately left out of the note.\nPass 2 (independent fact-check, 2026-10-14): re-opened both pages. Encyclopedia 정의 gives kicking the jegi without letting it drop and competing on the count, and 내용 paragraph 1 gives a coin wrapped in hanji or silk with the ends torn into fringes; MCST 놀이방법 gives repeated kicks so it does not touch the ground, higher count wins, and lists it under 전통놀이. Every clause of the note is supported; 'weighted' follows from the coin or metal core. Note is an English paraphrase with no wording copied from either page. Outcome: pass, no change.\nPass 5 (MAR culture review, 2026-10-14): re-checked against both sources (both HTTP 200). Encyclopedia 정의 and 내용 paragraph 1 and MCST 놀이방법 support every clause: a traditional game, a coin or metal core wrapped in hanji, silk, paper or cloth with a torn fringe, kicked to keep it off the ground, highest count wins. Both sources treat the jegi itself as the toy the game uses, which backs the q2 Hoya line 'Jegi and spinning tops are traditional Korean toys'. No copied wording, no designation number, no person, shop, brand or price. Outcome: pass, no change to the note."
+      }
+    },
+    {
+      "id": "n2",
+      "kind": "culture",
+      "textEn": "{ko:팽이치기} is a traditional Korean game with a wooden spinning top. Players keep the top turning by striking it with a small whip, often on ice in winter, and some contests see whose top spins longest.",
+      "sources": [
+        {
+          "title": "팽이치기",
+          "publisher": "Academy of Korean Studies, Encyclopedia of Korean Culture",
+          "url": "https://encykorea.aks.ac.kr/Article/E0059817",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "Entry 팽이치기, sections 정의 and 내용: the definition (a game of spinning a top on ice in winter by striking it with a whip), tops carved from hard wood, and the contest 오래돌리기 (who spins longest)."
+        },
+        {
+          "title": "전통놀이: 팽이",
+          "publisher": "Ministry of Culture, Sports and Tourism (children's site)",
+          "url": "https://www.mcst.go.kr/usr/child/enter/play/paengi.jsp",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "Page 전통놀이 > 팽이, sections 유래 and 놀이방법: a winter folk game of striking a top with a whip on ice; tops made of wood and string; contests including 오래 돌리기 (whose top spins longer)."
+        }
+      ],
+      "verification": {
+        "passes": 3,
+        "checkedAt": "2026-10-14",
+        "scope": "lesson",
+        "notes": "Pass 1 (author sourcing, 2026-10-14): both pages fetched; each supports 'traditional (folk) game', a wooden top kept spinning by striking it with a whip, play on ice in winter, and a longest-spin contest. Origin dating (Three Kingdoms, Nihon Shoki) deliberately left out of the note.\nPass 2 (independent fact-check, 2026-10-14): re-opened both pages. Encyclopedia 정의 gives striking a top with a whip on ice in winter, 내용 gives tops carved from hard wood, a whip made of a stick with cord, and 오래돌리기 (which top spins longer); MCST 유래 calls it a winter folk game on ice made of wood and string, and 놀이방법 lists 오래 돌리기. Every clause of the note is supported. Note is an English paraphrase with no wording copied from either page. Outcome: pass, no change.\nPass 5 (MAR culture review, 2026-10-14): re-checked against both sources (both HTTP 200). Encyclopedia 정의 and 내용 and MCST 유래 and 놀이방법 support every clause: a traditional winter game, a top carved from hard wood, kept spinning by striking it with a whip (채), on ice, and the 오래 돌리기 contest. The top is the object the game uses, which backs the q2 Hoya line calling it a traditional toy. No copied wording, no designation number, no person, shop, brand or price. Outcome: pass, no change to the note."
+      }
+    }
+  ],
+  "review": {
+    "language": "native-reviewed",
+    "culture": "culture-reviewed",
+    "reviewedBy": "MAR",
+    "reviewedAt": "2026-10-14",
+    "notes": [
+      "Pass 4 language MAR (2026-10-14): Korean naturalness, spelling, pedagogy and gloss lenses; applied the ball-board fix, toy wording, 놀 때 쓰는 낱말, ko gloss fixes and the 친구 reading distractors; rejected the claim that 연 and 줄 are untaught (Stage 1 crafts q1 Discover teaches both).",
+      "Pass 5 culture MAR (2026-10-14): heritage accuracy against all four sources, sensitivity and audience lenses; n1 and n2 pass unchanged; the q2 Hoya line and blurb now call 제기, 팽이, 윷 and 연 toys, as the sources do; verification line 3 on both notes.",
+      "Pass 6 translation MAR (2026-10-14): es and ko overlays; applied 친구 gloss parity with minigames.json, es title length and calque fixes, trompo in es prose to match placement.json; no circular ko gloss."
+    ]
+  },
+  "contentVer": 1
+}

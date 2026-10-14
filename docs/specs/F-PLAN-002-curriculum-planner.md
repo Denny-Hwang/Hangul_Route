@@ -55,7 +55,7 @@ export const WeekdaySchema = z.enum(['sun', 'mon', 'tue', 'wed', 'thu', 'fri', '
 export const CurriculumParamsSchema = z.object({
   audience: z.enum(['class', 'family', 'self']),                                  // wording and defaults only
   level: PlacementLevelSchema,                                                    // F-PLC-001 schemas/placement.ts; created here with the same shape if it has not landed
-  placedOutQuestIds: z.array(z.string()).max(40).optional(),                      // exact set from a placement result; wins over `level`
+  placedOutQuestIds: z.array(z.string()).max(120).optional(),                     // exact set from a placement result; wins over `level`
   completedQuestIds: z.array(z.string()).max(400).default([]),                    // single learner (family, self); empty for a class
   startDate: DateKeySchema,
   weeks: z.number().int().min(1).max(52),
