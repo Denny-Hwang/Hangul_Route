@@ -233,11 +233,12 @@ export function gatingActive(f: Pick<Flags, 'contentGatingEnabled'>, platformOs:
 }
 
 /**
- * UI locales whose `report.*` words have passed native review (F-REPORT-001 section 3.1). The same list as the
- * console's `REPORT_REVIEWED_LOCALES` (`apps/web/src/lib/console/config.ts`): Korean and Spanish join both when
- * their review lands, so a ko or es learner app never shows a report the console would hold back.
+ * UI locales whose `report.*` words have a signed review (F-REPORT-001 section 3.1; F-I18N-001 section 3.10). The
+ * same list as the console's `REPORT_REVIEWED_LOCALES` (`apps/web/src/lib/console/config.ts`), so a ko or es learner
+ * app never shows a report the console would hold back. Spanish and Korean joined both with the 2026-10-13 MAR
+ * re-review of `report`; whether es and ko are selectable is still `LOCALE_STATUS` (rows 15b / 16b).
  */
-export const REPORT_REVIEWED_LOCALES: readonly UiLocale[] = ['en'];
+export const REPORT_REVIEWED_LOCALES: readonly UiLocale[] = ['en', 'es', 'ko'];
 
 /**
  * The effective reports switch in the learner app (F-REPORT-001 section 3.1, RP-9): the flag is on **and** the UI

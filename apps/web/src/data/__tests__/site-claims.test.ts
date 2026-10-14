@@ -247,10 +247,10 @@ describe('CLAIM_LOCALES (a claim live in some UI locales only)', () => {
     expect(claimLiveIn(SITE_CLAIMS, 'parentReports', locale)).toBe(live);
   });
 
-  it('hides the reports lines in ko and es today, and shows them in en', () => {
+  it('shows the reports lines in en, ko and es now that the es and ko report words are signed', () => {
     expect(showsClaim(SITE_CLAIMS, 'parentReports', 'en')).toBe(true);
-    expect(showsClaim(SITE_CLAIMS, 'parentReports', 'ko')).toBe(false);
-    expect(showsClaim(SITE_CLAIMS, 'teacherReports', 'es')).toBe(false);
+    expect(showsClaim(SITE_CLAIMS, 'parentReports', 'ko')).toBe(true);
+    expect(showsClaim(SITE_CLAIMS, 'teacherReports', 'es')).toBe(true);
   });
 
   it('leaves every other claim live in every locale', () => {

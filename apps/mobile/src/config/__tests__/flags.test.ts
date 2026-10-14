@@ -339,14 +339,15 @@ describe('flags', () => {
 
   it('reportsEnabledFor shows reports only with the flag on and a reviewed locale, as the console does (section 3.1)', async () => {
     const mod = await reload();
-    expect(mod.REPORT_REVIEWED_LOCALES).toEqual(['en']);
+    expect(mod.REPORT_REVIEWED_LOCALES).toEqual(['en', 'es', 'ko']);
     expect(mod.reportsEnabledFor('en', { reportsEnabled: true })).toBe(true);
-    expect(mod.reportsEnabledFor('ko', { reportsEnabled: true })).toBe(false);
-    expect(mod.reportsEnabledFor('es', { reportsEnabled: true })).toBe(false);
+    expect(mod.reportsEnabledFor('ko', { reportsEnabled: true })).toBe(true);
+    expect(mod.reportsEnabledFor('es', { reportsEnabled: true })).toBe(true);
+    expect(mod.reportsEnabledFor('ko', { reportsEnabled: false })).toBe(false);
     expect(mod.reportsEnabledFor('en', { reportsEnabled: false })).toBe(false);
     delete process.env.EXPO_PUBLIC_REPORTS_ENABLED;
     expect((await reload()).reportsEnabledFor('en')).toBe(true);
-    expect((await reload()).reportsEnabledFor('ko')).toBe(false);
+    expect((await reload()).reportsEnabledFor('ko')).toBe(true);
     process.env.EXPO_PUBLIC_REPORTS_ENABLED = 'false';
     expect((await reload()).reportsEnabledFor('en')).toBe(false);
     delete process.env.EXPO_PUBLIC_REPORTS_ENABLED;
