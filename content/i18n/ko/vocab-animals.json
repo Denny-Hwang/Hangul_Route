@@ -1,0 +1,48 @@
+{
+  "locale": "ko",
+  "domain": "vocab-animals",
+  "entries": {
+    "vocab-topic:animals": {
+      "title": "동물",
+      "blurb": "반려동물부터 동물원 친구들까지, 동물을 나타내는 낱말이에요.",
+      "hoyaIntro": "저는 호랑이예요! 동물 친구들을 만나러 가요."
+    },
+    "vocab:horangi": {
+      "gloss": "몸에 검은 줄무늬가 있는 크고 힘센 동물"
+    },
+    "vocab:goyangi": {
+      "gloss": "야옹 하고 우는 작은 동물"
+    },
+    "vocab:gangaji": {
+      "gloss": "어린 개",
+      "senseNote": "집에서 기르는 개를 부를 때도 흔히 써요. 개를 뜻하는 기본 낱말은 개예요."
+    },
+    "vocab:tokki": {
+      "gloss": "귀가 길고 깡충깡충 뛰는 동물"
+    },
+    "vocab:gom": {
+      "gloss": "몸집이 크고 털이 많은 숲속 동물"
+    },
+    "vocab:sae-bird": {
+      "gloss": "날개와 깃털이 있어 하늘을 나는 동물"
+    },
+    "vocab:mulgogi": {
+      "gloss": "물속에 살며 아가미로 숨 쉬는 동물"
+    },
+    "vocab:ori": {
+      "gloss": "꽥꽥 울고 물 위에 떠다니는 새"
+    },
+    "vocab:yeou": {
+      "gloss": "꼬리가 크고 귀가 뾰족한 들짐승"
+    },
+    "vocab:wonsungi": {
+      "gloss": "나무를 잘 타는 꼬리 긴 동물"
+    },
+    "vocab:kokkiri": {
+      "gloss": "코가 아주 길고 몸집이 아주 큰 동물"
+    },
+    "vocab:nabi": {
+      "gloss": "알록달록한 날개로 꽃 사이를 나는 곤충"
+    }
+  }
+}

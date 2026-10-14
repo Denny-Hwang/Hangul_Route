@@ -1,0 +1,51 @@
+{
+  "locale": "ko",
+  "domain": "vocab-food",
+  "entries": {
+    "vocab-topic:food": {
+      "title": "음식",
+      "blurb": "먹고 마시는 것을 나타내는 낱말이에요.",
+      "hoyaIntro": "배고파요? 맛있는 것들의 이름을 함께 말해 봐요."
+    },
+    "vocab:sagwa-apple": {
+      "gloss": "빨갛고 동그란 과일"
+    },
+    "vocab:banana": {
+      "gloss": "길고 노란 껍질을 벗겨 먹는 과일"
+    },
+    "vocab:uyu": {
+      "gloss": "소에서 얻는 하얀 마실 것"
+    },
+    "vocab:ppang": {
+      "gloss": "밀가루 반죽을 구워 만든 음식"
+    },
+    "vocab:bap": {
+      "gloss": "쌀에 물을 붓고 끓여 익힌 음식",
+      "senseNote": "끼니라는 뜻도 있어요. 익히지 않은 것은 쌀이라고 해요."
+    },
+    "vocab:gimchi": {
+      "gloss": "배추나 무를 양념해 익힌 반찬",
+      "senseNote": "채소를 발효시켜 만든 한국 반찬으로, 매운 것이 많아요."
+    },
+    "vocab:gimbap": {
+      "gloss": "김 위에 밥과 재료를 올려 돌돌 만 음식"
+    },
+    "vocab:ramyeon": {
+      "gloss": "끓는 물에 금방 익혀 먹는 꼬불꼬불한 국수"
+    },
+    "vocab:mul": {
+      "gloss": "목마를 때 마시는 맑은 액체"
+    },
+    "vocab:dalgyal": {
+      "gloss": "닭이 낳은 알",
+      "senseNote": "계란이라고도 하는데, 똑같이 많이 써요."
+    },
+    "vocab:ttalgi": {
+      "gloss": "겉에 작은 씨가 박힌 빨갛고 작은 과일"
+    },
+    "vocab:tteok": {
+      "gloss": "쌀가루를 찌거나 쳐서 만든 음식",
+      "senseNote": "쌀로 만든 한국 음식으로, 말랑하고 쫄깃해요."
+    }
+  }
+}

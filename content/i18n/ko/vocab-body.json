@@ -1,0 +1,49 @@
+{
+  "locale": "ko",
+  "domain": "vocab-body",
+  "entries": {
+    "vocab-topic:body": {
+      "title": "몸",
+      "blurb": "손으로 가리킬 수 있는 몸의 부분이에요.",
+      "hoyaIntro": "코를 가리켜 봐요! 몸을 나타내는 낱말을 배워요."
+    },
+    "vocab:nun-eye": {
+      "gloss": "보는 데 쓰는 얼굴의 부분"
+    },
+    "vocab:ko": {
+      "gloss": "냄새를 맡고 숨을 쉬는 얼굴의 부분"
+    },
+    "vocab:ip": {
+      "gloss": "먹고 말하는 데 쓰는 얼굴의 부분"
+    },
+    "vocab:gwi": {
+      "gloss": "소리를 듣는 데 쓰는, 머리 양옆의 부분"
+    },
+    "vocab:meori": {
+      "gloss": "목 위에 있는 몸의 부분",
+      "senseNote": "머리카락이라는 뜻도 있어요."
+    },
+    "vocab:eolgul": {
+      "gloss": "눈, 코, 입이 있는 머리의 앞쪽"
+    },
+    "vocab:son": {
+      "gloss": "팔 끝에 있어 물건을 잡는 부분"
+    },
+    "vocab:pal-arm": {
+      "gloss": "어깨에서 손까지 이어진 부분"
+    },
+    "vocab:dari-leg": {
+      "gloss": "몸을 받치고 걷는 데 쓰는 부분"
+    },
+    "vocab:bal": {
+      "gloss": "다리 끝에 있어 땅을 딛는 부분"
+    },
+    "vocab:bae-belly": {
+      "gloss": "가슴 아래에 있는 몸의 앞부분"
+    },
+    "vocab:i-tooth": {
+      "gloss": "음식을 씹는 데 쓰는 입속의 단단한 것",
+      "senseNote": "더 격식 있는 말로 치아라고도 해요."
+    }
+  }
+}
