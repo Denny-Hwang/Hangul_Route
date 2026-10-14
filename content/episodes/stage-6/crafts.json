@@ -1299,10 +1299,10 @@
         }
       ],
       "verification": {
-        "passes": 1,
+        "passes": 2,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): all three pages fetched (HTTP 200). The AKS entry 소매업 describes 재래시장 as many retail shops in one place selling food, everyday goods and durables at relatively low prices; the AKS entry 시장 says such markets still hold a large share of retail today; the korea.kr citizen-reporter piece (the reporter's own wording, a supporting source only) describes a market where sellers sell vegetables they grew and prices are far below big marts. The note says 'often', names no group as a whole, no shop, brand or real price, and copies no wording. Carried by: q1 Discover page 2 caption and the q1 intro Hoya line (market day)."
+        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): all three pages fetched (HTTP 200). The AKS entry 소매업 describes 재래시장 as many retail shops in one place selling food, everyday goods and durables at relatively low prices; the AKS entry 시장 says such markets still hold a large share of retail today; the korea.kr citizen-reporter piece (the reporter's own wording, a supporting source only) describes a market where sellers sell vegetables they grew and prices are far below big marts. The note says 'often', names no group as a whole, no shop, brand or real price, and copies no wording. Carried by: q1 Discover page 2 caption and the q1 intro Hoya line (market day). Line 2 (pass 2b, independent fact check, 2026-10-14): a session that did not author the cell fetched all three pages again (HTTP 200) and found every quoteOrLocator string verbatim on its page. The AKS entry 소매업 supports 'many small shops in one place' and 'food and everyday goods at fairly low prices'; 'fruit' is supported by the korea.kr piece (market apples far cheaper than at a big mart) and is a kind of food in the AKS list; 'often' keeps the price claim no stronger than the AKS 'relatively low'. The AKS entry 시장 and the korea.kr piece (dated 2014-09-06, a reporter's own account, supporting only) agree. No real price, shop or person is carried into the note; no wording copied. Outcome: pass, no change."
       }
     },
     {
@@ -1333,10 +1333,10 @@
         }
       ],
       "verification": {
-        "passes": 1,
+        "passes": 2,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): all three pages fetched (HTTP 200). The Standard Korean Language Dictionary defines 오일장 as a market held once every five days; the AKS entry 정기시장 says the five-day type opened six times a month and gave the name 5일장, and counts 522 periodic markets operating in 2006; the AKS entry 시장 names a five-day market still held on the 4th and 9th of each month. 'Some towns still hold one' is the careful reading of both AKS entries (no count is claimed). No group-wide claim; no wording copied. Carried by: q1 Discover page 2 (the 오일장 word note), the price-card title of every realia, and q1 Apply t3."
+        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): all three pages fetched (HTTP 200). The Standard Korean Language Dictionary defines 오일장 as a market held once every five days; the AKS entry 정기시장 says the five-day type opened six times a month and gave the name 5일장, and counts 522 periodic markets operating in 2006; the AKS entry 시장 names a five-day market still held on the 4th and 9th of each month. 'Some towns still hold one' is the careful reading of both AKS entries (no count is claimed). No group-wide claim; no wording copied. Carried by: q1 Discover page 2 (the 오일장 word note), the price-card title of every realia, and q1 Apply t3. Line 2 (pass 2b, independent fact check, 2026-10-14): a session that did not author the cell fetched all three pages again (HTTP 200) and found every quoteOrLocator string verbatim. The Standard Korean Language Dictionary entry 오일장 supports 'opens once every five days'; the AKS entry 정기시장 supports 'about six times a month' (월 6회) and, with 522 periodic markets operating in 2006, 'some towns still hold one'; the AKS entry 시장 shows one such market on the 4th and 9th of each month, supporting 'fixed market days'. No count or place is claimed in the note. The ko word note for 오일장 (q1 Discover page 2) was reworded so it no longer follows the dictionary definition's wording. Outcome: pass, ko overlay reworded."
       }
     },
     {
@@ -1360,10 +1360,10 @@
         }
       ],
       "verification": {
-        "passes": 1,
+        "passes": 2,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): both pages fetched (HTTP 200). The Standard Korean Language Dictionary defines 덤 as a little extra given for free beyond the price paid, or the thing given; the korea.kr citizen-reporter piece (the reporter's own wording, a supporting source only) describes a seller at a traditional market packing a tub full and calls it the market's 덤 custom. The note says 'may now and then', so it promises no extra and claims nothing of every seller; no wording copied. Carried by: q3 Discover pages 1-3 (word note, realia caption, thank-you caption), the q3 realia card and the q3 Tap to Respond turn 4."
+        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): both pages fetched (HTTP 200). The Standard Korean Language Dictionary defines 덤 as a little extra given for free beyond the price paid, or the thing given; the korea.kr citizen-reporter piece (the reporter's own wording, a supporting source only) describes a seller at a traditional market packing a tub full and calls it the market's 덤 custom. The note says 'may now and then', so it promises no extra and claims nothing of every seller; no wording copied. Carried by: q3 Discover pages 1-3 (word note, realia caption, thank-you caption), the q3 realia card and the q3 Tap to Respond turn 4. Line 2 (pass 2b, independent fact check, 2026-10-14): a session that did not author the cell fetched both pages again (HTTP 200) and found both quoteOrLocator strings verbatim (the korea.kr piece dated 2016-01-04, Ganghwa Pungmul market, a reporter's own account, supporting only). The dictionary supports the definition sentence; the korea.kr piece supports that a market seller may give some, and 'may now and then' claims no more than that one account. The ko word note for 덤 (q3 Discover page 1) was reworded so it no longer follows the dictionary definition's wording (얹어 주는, now 넣어 주는). Outcome: pass, ko overlay reworded."
       }
     },
     {
@@ -1387,10 +1387,10 @@
         }
       ],
       "verification": {
-        "passes": 1,
+        "passes": 2,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): both pages fetched (HTTP 200). The AKS entry 수사 says some numerals change form to 한, 두, 세, 네 when used before a noun, and that the native numerals are not used for a hundred or more (so a price in thousands is said with Sino-Korean 이천, 오천); the Standard Korean Language Dictionary lists 세 as the determiner meaning the amount is three. No wording copied. Carried by: q1 Discover page 3 caption, q2 Discover page 1 caption; the count round (q2 r1) asks only native counts and every price round asks only Sino-Korean prices or figures, never both in one round (spec section 3.6)."
+        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): both pages fetched (HTTP 200). The AKS entry 수사 says some numerals change form to 한, 두, 세, 네 when used before a noun, and that the native numerals are not used for a hundred or more (so a price in thousands is said with Sino-Korean 이천, 오천); the Standard Korean Language Dictionary lists 세 as the determiner meaning the amount is three. No wording copied. Carried by: q1 Discover page 3 caption, q2 Discover page 1 caption; the count round (q2 r1) asks only native counts and every price round asks only Sino-Korean prices or figures, never both in one round (spec section 3.6). Line 2 (pass 2b, independent fact check, 2026-10-14): a session that did not author the cell fetched both pages again (HTTP 200) and found both quoteOrLocator strings verbatim. The AKS entry 수사 supports that 한, 두, 세 are changed forms of the numerals used before a noun, and that native numerals are not used for a hundred or more; the same entry describes the Sino-Korean series (e.g. 이백오십), so prices in thousands with 이, 오, 천 follows. The dictionary entry 세 supports 세 as the determiner for three. No wording copied. Outcome: pass, no change."
       }
     }
   ],
