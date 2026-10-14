@@ -71,6 +71,13 @@ export const a11y = {
     traceLetter: (romanization: string) => `Traza la letra ${romanization}`,
     traceFinal: (romanization: string) => `Traza la final ${romanization}`,
     traceCanvas: (romanization: string) => `Dibuja la letra ${romanization} con el dedo`,
+    traceWord: (romanization: string, gloss: string) => `Traza la palabra ${romanization}, ${gloss}`,
+    traceBlock: (romanization: string, block: number, total: number) =>
+      `Dibuja ${romanization}, bloque ${block} de ${total}, con el dedo`,
+    hearBlockDone: (romanization: string) => `Escuchar ${romanization}, listo`,
+    traceBlockLetter: (romanization: string, block: number, total: number, letter: number, letters: number) =>
+      `Dibuja ${romanization}, bloque ${block} de ${total}, letra ${letter} de ${letters}, con el dedo`,
+    traceWordLetterOrder: (letter: number, letters: number, summary: string) => `Letra ${letter} de ${letters}. ${summary}`,
     strokeOrder: {
       guide: 'Guía del orden de trazos',
       summary: (strokes: readonly string[]) =>

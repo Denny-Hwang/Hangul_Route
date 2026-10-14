@@ -374,6 +374,12 @@ export const TraceWordRoundSchema = z.object({
     path: ['ko'],
   }),
   tolerancePx: z.number().int().positive().optional(),
+  /**
+   * `block` (default): the whole block over its placed ghost; `letter`: one letter at a time
+   * in its zone, for a block whose placed ghost reads poorly at block size (F-CURR-001 §9
+   * assumption 3, row G-4).
+   */
+  mode: z.enum(['block', 'letter']).optional(),
 });
 export type TraceWordRound = z.infer<typeof TraceWordRoundSchema>;
 

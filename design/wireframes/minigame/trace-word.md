@@ -106,7 +106,7 @@ Trace Stroke's accessible path, applied to a block:
 
 - The heading is a header whose label reads the word, its romanization and gloss ("Trace the word 호야, hoya, Hoya").
 - The canvas label names the current block and where it is in the word: "Draw 호, ho, block 1 of 2, with your finger" (`a11y.minigame.traceBlock`, draft below).
-- Show me is the way to hear the stroke order: the still diagram's label reads every letter of the block in order ("Stroke order. ㅎ: 3 strokes ... ㅗ: 2 strokes ..."), using the shipped `strokeOrder.summary` per letter.
+- Show me is the way to hear the stroke order: the still diagram's label reads every letter of the block in order ("Stroke order. ㅎ: 3 strokes ... ㅗ: 2 strokes ..."), using the shipped `strokeOrder.summary` per letter. As built (G-4): each letter is named by its place in the block, never in Hangul ("Letter 1 of 2. Stroke order. 3 strokes ...", `a11y.minigame.traceWordLetterOrder`), and Show me plays the block's sound once as the hint starts, not each letter's (a consonant alone has no sound of its own to play).
 - The Hoya strip is a polite live region (pass and retry lines).
 - Skip stays on screen in every layout; a learner who cannot draw finishes the step with it.
 - The chips are buttons named "Hear 호, ho"; the current chip also has the selected state; a passed chip says "done".
@@ -135,5 +135,5 @@ Reused: `trace.showMe.cta`, `trace.clear.cta`, `trace.done.cta`, `trace.pass.*`,
 ## Open questions
 
 1. **Block placement (spec §9 assumption 3).** G-4 prototypes `placeBlockStrokes` on the 50 syllables of S7-1 first and compares each placed ghost with the same syllable set in the system Korean font; if a placement reads poorly, that round uses `mode: 'letter'`. The design draws both modes so the switch needs no new design.
-2. **Coverage at block size.** The 0.65 coverage threshold was tuned for one letter on the whole canvas. A block's letters are smaller, so a learner's line covers relatively more; G-4 measures pass rates on the scripted traces of the test suite and may scale the stroke width of the coverage check with the zone, with the change written in its PR.
+2. **Coverage at block size.** The 0.65 coverage threshold was tuned for one letter on the whole canvas. A block's letters are smaller, so a learner's line covers relatively more; G-4 measures pass rates on the scripted traces of the test suite and may scale the stroke width of the coverage check with the zone, with the change written in its PR. **Resolved (G-4):** the tolerance is scaled to block size (12 units), with a per-stroke floor, a precision check and an outline check for ㅁ against ㅇ, so a near-miss letter (가 for 기, 공 for 곰) fails; the numbers are in F-CURR-001 §9 assumption 3.
 3. **Two canvases on a tablet** need both at 240 or more; a 600-wide portrait window with the reading column gets two of 264. Below that, one at a time, as on a phone.

@@ -293,3 +293,14 @@ describe('WriteFrameRoundSchema', () => {
     expect(WriteFrameRoundSchema.parse({ id: 'r', frame, slots: [{ id: 'what', bank }], entry: 'type' }).freeEntry).toBe(false);
   });
 });
+
+describe('Trace a Word mode (row G-4, §9 assumption 3)', () => {
+  const round = { id: 'r', word: kt('호야', 'hoya', 'Hoya') };
+
+  it('traces whole blocks unless the round asks for one letter at a time', () => {
+    expect(TraceWordRoundSchema.parse(round).mode).toBeUndefined();
+    expect(TraceWordRoundSchema.parse({ ...round, mode: 'block' }).mode).toBe('block');
+    expect(TraceWordRoundSchema.parse({ ...round, mode: 'letter' }).mode).toBe('letter');
+    expect(ok(TraceWordRoundSchema, { ...round, mode: 'stroke' })).toBe(false);
+  });
+});
