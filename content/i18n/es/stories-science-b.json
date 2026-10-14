@@ -8,12 +8,12 @@
     },
     "card:story-donguibogam": {
       "title": "Libro de medicina",
-      "blurb": "Hoya descubre cómo el médico real Heo Jun terminó el Donguibogam en 1610, una enciclopedia médica que daba valor a cuidar la salud y escribía los nombres de las hierbas en hangul. Hoy está en el registro Memoria del Mundo de la UNESCO.",
+      "blurb": "Hoya descubre cómo el médico real Heo Jun terminó el Donguibogam en 1610, una enciclopedia médica que daba importancia a cuidar la salud y escribía los nombres de las hierbas en hangul. Hoy está en el Registro de la Memoria del Mundo de la UNESCO.",
       "fact": "Heo Jun terminó el Donguibogam en 1610 (año 2 de Gwanghaegun)."
     },
     "card:story-kim-hongdo-genre-paintings": {
       "title": "Pintura costumbrista",
-      "blurb": "Hoya mira de cerca Ssireum y Seodang, del álbum de pinturas costumbristas de Danwon en el Museo Nacional de Corea, y encuentra a un vendedor de melcocha, unos zapatos que alguien se quitó y a un alumno que solloza.",
+      "blurb": "Hoya mira de cerca Ssireum y Seodang, del álbum de pinturas costumbristas de Danwon en el Museo Nacional de Corea, y encuentra a un vendedor de melcocha, unos zapatos que alguien se quitó y a un alumno que lloriquea.",
       "fact": "En la pintura Ssireum, dos luchadores se agarran y miden su fuerza en el centro, rodeados por el público, que se reparte en dos grupos redondeados, uno arriba y otro abajo."
     },
     "card:story-nanjung-ilgi": {
@@ -61,7 +61,7 @@
       "steps.s4.title": "Ordena la historia",
       "steps.s5.title": "Bien hecho",
       "steps.s1.hoyaLine": "Vamos a mirar de cerca unos cuadros antiguos de la vida diaria. ¿Qué puedes encontrar?",
-      "steps.s5.hoyaLine": "Un vendedor de melcocha, unos zapatos que alguien se quitó, un alumno que solloza: ¡qué buena vista tienes!"
+      "steps.s5.hoyaLine": "Un vendedor de melcocha, unos zapatos que alguien se quitó, un alumno que lloriquea: ¡qué buena vista tienes!"
     },
     "quest:story-kim-hongdo-genre-paintings-read": {
       "title": "Los cuadros de la vida diaria de Kim Hongdo",
@@ -71,7 +71,7 @@
       "steps.s4.title": "Ordena la historia",
       "steps.s5.title": "Bien hecho",
       "steps.s1.hoyaLine": "Vamos a mirar de cerca unos cuadros antiguos de la vida diaria. ¿Qué puedes encontrar?",
-      "steps.s5.hoyaLine": "Un vendedor de melcocha, unos zapatos que alguien se quitó, un alumno que solloza: ¡qué buena vista tienes!"
+      "steps.s5.hoyaLine": "Un vendedor de melcocha, unos zapatos que alguien se quitó, un alumno que lloriquea: ¡qué buena vista tienes!"
     },
     "quest:story-nanjung-ilgi-listen": {
       "title": "El diario del almirante Yi",
@@ -85,15 +85,15 @@
     },
     "story:donguibogam": {
       "title": "El espejo precioso de la medicina de Heo Jun",
-      "summary": "Hoya descubre cómo el médico real Heo Jun terminó el Donguibogam en 1610, una enciclopedia médica que daba valor a cuidar la salud y escribía los nombres de las hierbas en hangul. Hoy está en el registro Memoria del Mundo de la UNESCO.",
+      "summary": "Hoya descubre cómo el médico real Heo Jun terminó el Donguibogam en 1610, una enciclopedia médica que daba importancia a cuidar la salud y escribía los nombres de las hierbas en hangul. Hoy está en el Registro de la Memoria del Mundo de la UNESCO.",
       "hoyaIntro": "Vamos a conocer a un médico real que escribió un libro enorme sobre cómo cuidar la salud.",
       "hoyaOutro": "El libro de Heo Jun ayudó a la gente a cuidar su cuerpo. ¡Estírate conmigo y cuida tu salud!",
-      "scenes.s1.narration": "Hoya estira los brazos y las piernas bajo el sol de la mañana. «En coreano, el cuerpo es {kw:mom}», dice. «Hace mucho tiempo, un médico real de Joseon escribió un libro enorme para ayudar a la gente a cuidar su cuerpo».",
+      "scenes.s1.narration": "Hoya estira los brazos y las piernas bajo el sol de la mañana. «En coreano, cuerpo se dice {kw:mom}», dice. «Hace mucho tiempo, un médico real de Joseon escribió un libro enorme para ayudar a la gente a cuidar su cuerpo».",
       "scenes.s2.narration": "Se llamaba Heo Jun, {kw:heo-jun}, y trabajaba como médico en la corte real. El rey Seonjo le pidió a él y a otros médicos que escribieran un libro de medicina nuevo. Hoy, en coreano, a quien es médico o médica se le llama {kw:uisa}.",
       "scenes.s3.narration": "Cuando estalló una guerra, el trabajo se detuvo y los médicos se dispersaron. Más tarde, el rey le pidió a Heo Jun que escribiera el libro solo, y le dio muchos libros de medicina del palacio para estudiar.",
       "scenes.s4.narration": "En 1610, Heo Jun terminó el libro {kw:donguibogam}. 'Dongui' significa la medicina del Este, la tradición médica propia de Corea, y 'bogam' significa un espejo precioso, un modelo del que aprender.",
       "scenes.s5.narration": "El Donguibogam enseñaba que cuidar la salud y prevenir las enfermedades va antes que curarlas. En coreano, salud se dice {kw:geongang}.",
-      "scenes.s7.narration": "El Donguibogam se imprimió en 1613 en 25 tomos. Más tarde se imprimió muchas veces en China, y también en Japón. En 2009, la UNESCO lo añadió al registro Memoria del Mundo, {kw:segye-girok-yusan}.",
+      "scenes.s7.narration": "El Donguibogam se imprimió en 1613 en 25 tomos. Más tarde se imprimió muchas veces en China, y también en Japón. En 2009, la UNESCO lo agregó al Registro de la Memoria del Mundo de la UNESCO, {kw:segye-girok-yusan}.",
       "scenes.s1.caption": "Hoya se estira bajo el sol de la mañana",
       "scenes.s2.caption": "Heo Jun, médico de la corte real",
       "scenes.s3.caption": "Heo Jun escribe el libro solo",
@@ -120,7 +120,7 @@
       "checks.c1.explain": "El Donguibogam ponía la prevención de las enfermedades y el cuidado de la salud antes que el tratamiento.",
       "checks.c2.explain": "El libro escribió los nombres de las hierbas en hangul, como la gente los llamaba, para que las medicinas del lugar se pudieran usar de forma amplia y fácil.",
       "checks.c3.explain": "El Donguibogam se imprimió por primera vez en 1613 con tipos móviles de madera, en 25 tomos.",
-      "checks.r1.explain": "Uisa significa médico. Heo Jun era médico de la corte real.",
+      "checks.r1.explain": "Uisa significa médico o médica. Heo Jun era médico de la corte real.",
       "checks.r2.explain": "Yakcho significa hierba medicinal. El libro escribió los nombres de las hierbas en hangul.",
       "checks.r3.explain": "El Donguibogam enseñaba que prevenir las enfermedades y cuidar la salud va antes que curarlas.",
       "checks.c1.options.a": "Descansar en la cama muchísimo tiempo",
@@ -151,19 +151,19 @@
       "facts.f5.claim": "El Donguibogam daba importancia a prevenir las enfermedades y conservar la salud antes de tratarlas.",
       "facts.f6.claim": "El Donguibogam se imprimió por primera vez en 1613 (año 5 de Gwanghaegun) en la Oficina Médica Real (Naeuiwon), con tipos móviles de madera, en 25 tomos.",
       "facts.f7.claim": "Uno de los principios de compilación del Donguibogam fue escribir los nombres de las hierbas en hangul, con los nombres que usaba la gente de Joseon, para que las medicinas que crecían en el país se pudieran usar de forma amplia y fácil, también en el campo.",
-      "facts.f8.claim": "El Donguibogam se imprimió muchas veces en China y también en Japón, y en 2009 se inscribió en el registro Memoria del Mundo de la UNESCO.",
-      "facts.f9.claim": "Las copias de la primera edición (1613) del Donguibogam que guardan la Biblioteca Nacional de Corea, la Academia de Estudios Coreanos y el Kyujanggak de la Universidad Nacional de Seúl están designadas Tesoros Nacionales (2015)."
+      "facts.f8.claim": "El Donguibogam se imprimió muchas veces en China y también en Japón, y en 2009 se inscribió en el Registro de la Memoria del Mundo de la UNESCO.",
+      "facts.f9.claim": "Las copias de la primera edición (1613) del Donguibogam que guardan la Biblioteca Nacional de Corea, la Academia de Estudios Coreanos y el Kyujanggak de la Universidad Nacional de Seúl están designadas como Tesoros Nacionales (2015)."
     },
     "story:kim-hongdo-genre-paintings": {
       "title": "Los cuadros de la vida diaria de Kim Hongdo",
-      "summary": "Hoya mira de cerca Ssireum y Seodang, del álbum de pinturas costumbristas de Danwon en el Museo Nacional de Corea, y encuentra a un vendedor de melcocha, unos zapatos que alguien se quitó y a un alumno que solloza.",
+      "summary": "Hoya mira de cerca Ssireum y Seodang, del álbum de pinturas costumbristas de Danwon en el Museo Nacional de Corea, y encuentra a un vendedor de melcocha, unos zapatos que alguien se quitó y a un alumno que lloriquea.",
       "hoyaIntro": "Vamos a mirar de cerca unos cuadros antiguos de la vida diaria. ¿Qué puedes encontrar?",
-      "hoyaOutro": "Un vendedor de melcocha, unos zapatos que alguien se quitó, un alumno que solloza: ¡qué buena vista tienes!",
-      "scenes.s3.narration": "Un álbum de 25 pinturas costumbristas, conocido como el álbum de pinturas costumbristas de Danwon, se guarda en el Museo Nacional de Corea. Está designado Tesoro. En coreano, una pintura costumbrista se dice {kw:pungsokhwa}.",
+      "hoyaOutro": "Un vendedor de melcocha, unos zapatos que alguien se quitó, un alumno que lloriquea: ¡qué buena vista tienes!",
+      "scenes.s3.narration": "Un álbum de 25 pinturas costumbristas, conocido como el álbum de pinturas costumbristas de Danwon, se guarda en el Museo Nacional de Corea. Está designado como Tesoro. En coreano, una pintura costumbrista se dice {kw:pungsokhwa}.",
       "scenes.s4.narration": "¡Mira la pintura {kw:ssireum}! En el centro, dos luchadores se agarran y miden su fuerza. A su alrededor, el público está sentado en dos grupos en curva y mira con atención.",
       "scenes.s5.narration": "¿Puedes encontrar más cosas? Un vendedor de melcocha, {kw:yeotjangsu}, está de pie a la izquierda, lejos de la atención del público. A la derecha, hay unos zapatos que alguien se quitó y dejó allí.",
-      "scenes.s6.narration": "Ahora mira {kw:seodang}, la pintura de una escuela de pueblo. El maestro y los alumnos están reunidos alrededor de un niño que se ha dado la vuelta y solloza. Los demás alumnos parecen divertirse, y el maestro parece preocupado. Hoya espera que el niño se sienta mejor pronto.",
-      "scenes.s1.caption": "Hoya y los cuadros de la vida diaria",
+      "scenes.s6.narration": "Ahora mira {kw:seodang}, la pintura de una escuela de pueblo. El maestro y los alumnos están reunidos alrededor de un niño que se ha dado la vuelta y lloriquea. Los demás alumnos parecen divertirse, y el maestro parece preocupado. Hoya espera que el niño se sienta mejor pronto.",
+      "scenes.s1.caption": "Hoya moja el pincel: cuadros de la vida diaria",
       "scenes.s2.caption": "Kim Hongdo, pintor de Joseon",
       "scenes.s3.caption": "Un álbum de pinturas costumbristas en un museo",
       "scenes.s4.caption": "Dos luchadores miden su fuerza",
@@ -180,10 +180,10 @@
       "keywords.kim-hong-do.gloss": "Kim Hongdo, pintor de la corte de Joseon",
       "checks.c1.prompt": "¿Cómo está sentado el público en la pintura {target}?",
       "checks.c2.prompt": "¿Qué es {target}?",
-      "checks.c3.prompt": "¿Quién está a la izquierda de la pintura {target}, fuera de la atención del público?",
+      "checks.c3.prompt": "¿Quién está en el lado izquierdo de la pintura {target}, fuera de la atención del público?",
       "checks.r1.prompt": "¿Qué significa {target}?",
       "checks.r2.prompt": "¿Qué significa {target}?",
-      "checks.r3.prompt": "En la pintura Ssireum, ¿quién está a la izquierda?",
+      "checks.r3.prompt": "En la pintura Ssireum, ¿quién está en el lado izquierdo?",
       "checks.c1.explain": "El público está sentado en dos grupos redondeados alrededor de los luchadores, uno arriba y otro abajo.",
       "checks.c2.explain": "Un seodang es una escuela de pueblo. En la pintura Seodang, el maestro y los alumnos están reunidos alrededor de un niño.",
       "checks.c3.explain": "En Ssireum, un vendedor de melcocha está a la izquierda, lejos de la atención del público.",
@@ -204,20 +204,20 @@
       "checks.r1.options.c": "Dibujo",
       "checks.r1.options.d": "Escuela",
       "checks.r2.options.a": "Escuela de pueblo",
-      "checks.r2.options.b": "Vendedor de melcocha",
+      "checks.r2.options.b": "Vendedor o vendedora de melcocha",
       "checks.r2.options.c": "Museo",
       "checks.r2.options.d": "Mercado",
       "checks.r3.options.a": "Un maestro",
       "checks.r3.options.b": "Un rey",
       "checks.r3.options.c": "Un tamborilero",
       "checks.r3.options.d": "Un vendedor de melcocha",
-      "facts.f1.claim": "La pintura costumbrista muestra la vida diaria de la gente común, no la de la corte real; el álbum de Kim Hong-do muestra la vida diaria y el trabajo de la gente común.",
+      "facts.f1.claim": "La pintura costumbrista (pungsokhwa) muestra la vida diaria de la gente común, no la de la corte real; el álbum de Kim Hong-do muestra la vida diaria y el trabajo de la gente común.",
       "facts.f2.claim": "Kim Hong-do (nombre artístico Danwon) nació en 1745; fue pintor de la corte (dohwaseo hwawon), destacó en muchos géneros y es famoso sobre todo por la pintura costumbrista.",
-      "facts.f3.claim": "El álbum de 25 pinturas costumbristas atribuido a Kim Hong-do, también llamado álbum de pinturas costumbristas de Danwon, está designado Tesoro (1970) y se guarda en el Museo Nacional de Corea.",
+      "facts.f3.claim": "El álbum de 25 pinturas costumbristas atribuido a Kim Hong-do, también llamado álbum de pinturas costumbristas de Danwon (Danwon pungsokdo-cheop), está designado como Tesoro (1970) y se guarda en el Museo Nacional de Corea.",
       "facts.f4.claim": "En la pintura Ssireum, dos luchadores se agarran y miden su fuerza en el centro, rodeados por el público, que se reparte en dos grupos redondeados, uno arriba y otro abajo.",
-      "facts.f5.claim": "En Ssireum, un vendedor de melcocha está a la izquierda, fuera de la atención del público, y unos zapatos que alguien se quitó ayudan a cerrar el espacio vacío de la derecha.",
-      "facts.f6.claim": "En Seodang, el maestro y los alumnos están alrededor de un niño agachado, de espaldas, que solloza y es el centro del cuadro; los demás alumnos parecen divertirse y el maestro parece preocupado.",
-      "facts.f7.claim": "El ssireum está designado Patrimonio Inmaterial Nacional de Corea (2017), y la lucha tradicional coreana (Ssirum/Ssireum) se inscribió en 2018 en la Lista Representativa del Patrimonio Cultural Inmaterial de la Humanidad de la UNESCO."
+      "facts.f5.claim": "En Ssireum, un vendedor de melcocha (yeotjangsu) está a la izquierda, fuera de la atención del público, y unos zapatos que alguien se quitó ayudan a cerrar el espacio vacío de la derecha.",
+      "facts.f6.claim": "En Seodang, el maestro y los alumnos están alrededor de un niño agachado, de espaldas, que lloriquea y es el centro del cuadro; los demás alumnos parecen divertirse y el maestro parece preocupado.",
+      "facts.f7.claim": "El ssireum está designado como Patrimonio Inmaterial Nacional de Corea (2017), y la lucha tradicional coreana (Ssirum/Ssireum) se inscribió en 2018 en la Lista Representativa del Patrimonio Cultural Inmaterial de la Humanidad de la UNESCO."
     },
     "story:nanjung-ilgi": {
       "title": "El diario del almirante Yi",
@@ -230,7 +230,7 @@
       "scenes.s4.narration": "Escribió sobre el clima, sobre la vida en el ejército, sobre sus propios pensamientos y sentimientos, y sobre la vida de la gente común que lo rodeaba.",
       "scenes.s5.narration": "También escribió sobre su familia y sus parientes, y sobre las personas que servían con él.",
       "scenes.s6.narration": "Se conservan siete tomos del diario escritos a mano. Al principio no tenía título. Más tarde, unos editores lo llamaron {kw:nanjung-ilgi}, 'el diario escrito en medio de la guerra'.",
-      "scenes.s7.narration": "Hoy el diario es un Tesoro Nacional y se guarda en el santuario Hyeonchungsa, en Asan. En 2013, la UNESCO lo añadió al registro Memoria del Mundo. Hoya toma su pincel: «{kw:oneuldo-ilgireul-sseoyo}»",
+      "scenes.s7.narration": "Hoy el diario es un Tesoro Nacional y se guarda en el santuario Hyeonchungsa, en Asan. En 2013, la UNESCO lo agregó al Registro de la Memoria del Mundo de la UNESCO. Hoya toma su pincel: «{kw:oneuldo-ilgireul-sseoyo}»",
       "scenes.s1.caption": "Hoya abre su libretita",
       "scenes.s2.caption": "Yi Sunsin construye barcos cerca de Yeosu",
       "scenes.s3.caption": "El almirante Yi escribe casi todos los días",
@@ -241,7 +241,7 @@
       "keywords.ilgi.gloss": "diario",
       "keywords.janggun.gloss": "general; comandante (el título que se usa en Corea para el almirante Yi)",
       "keywords.maeil.gloss": "todos los días",
-      "keywords.nalssi.gloss": "el tiempo, el clima",
+      "keywords.nalssi.gloss": "tiempo; clima",
       "keywords.gajok.gloss": "familia",
       "keywords.nanjung-ilgi.gloss": "Diario de guerra (de Yi Sunsin)",
       "keywords.oneuldo-ilgireul-sseoyo.gloss": "¡Hoy también escribo en mi diario!",
@@ -251,7 +251,7 @@
       "checks.c3.prompt": "¿Quién le puso al diario su nombre, {target}?",
       "checks.c1.explain": "Durante la guerra de Imjin, el almirante Yi escribió en su diario casi todos los días, de su puño y letra.",
       "checks.c2.explain": "Escribió sobre el clima, la vida en el ejército, sus propios sentimientos y la vida de la gente común.",
-      "checks.c3.explain": "Al principio, el diario no tenía título. Más tarde, los editores de sus obras completas lo llamaron Nanjungilgi, el Diario de guerra.",
+      "checks.c3.explain": "Al principio, el diario no tenía título. Más tarde, los editores de sus obras completas lo llamaron Nanjung Ilgi, el Diario de guerra.",
       "checks.c1.options.a": "Solo una vez a la semana",
       "checks.c1.options.b": "Casi todos los días",
       "checks.c1.options.c": "Solo en días de fiesta especiales",
@@ -261,14 +261,14 @@
       "checks.c3.options.a": "El propio almirante Yi, en la primera página",
       "checks.c3.options.b": "El rey Seonjo, después de leer el diario",
       "checks.c3.options.c": "Los editores que más tarde reunieron sus obras completas",
-      "facts.f1.claim": "Yi Sun-sin (1545–1598) fue comandante naval de la provincia de Jeolla Izquierda y, previendo una invasión, construyó barcos y reforzó los preparativos militares con centro en Yeosu.",
+      "facts.f1.claim": "Yi Sun-sin (1545–1598) fue comandante naval de la provincia de Jeolla Izquierda (Jeolla jwado sugun jeoldosa) y, previendo una invasión, construyó barcos y reforzó los preparativos militares con centro en Yeosu.",
       "facts.f2.claim": "Durante la guerra de Imjin (1592–1598), Yi Sun-sin llevó un diario personal, escrito casi a diario, de su puño y letra.",
       "facts.f3.claim": "El diario registra, entre otras cosas, observaciones sobre el clima, la vida en el ejército, las opiniones y sentimientos personales del almirante y la vida de la gente común.",
       "facts.f4.claim": "El diario también registra a familiares, parientes y subordinados, incluidas sus idas y venidas.",
       "facts.f5.claim": "El Nanjung Ilgi escrito a mano que se conserva consta de siete tomos.",
-      "facts.f6.claim": "Al principio, el diario no tenía título; el nombre 'Nanjung Ilgi' se lo dieron más tarde los editores de las obras completas de Yi Sun-sin.",
-      "facts.f7.claim": "El diario escrito a mano está designado Tesoro Nacional (junto con las cartas de Yi Sun-sin y los borradores de sus informes de la guerra de Imjin) y se guarda en Hyeonchungsa, en Asan, provincia de Chungcheong del Sur.",
-      "facts.f8.claim": "El Nanjung Ilgi se inscribió en el registro Memoria del Mundo de la UNESCO en 2013."
+      "facts.f6.claim": "Al principio, el diario no tenía título; el nombre 'Nanjung Ilgi' se lo dieron más tarde los editores de las obras completas de Yi Sun-sin (Yi Chungmugong jeonseo).",
+      "facts.f7.claim": "El diario escrito a mano está designado como Tesoro Nacional (junto con las cartas de Yi Sun-sin y los borradores de sus informes de la guerra de Imjin) y se guarda en Hyeonchungsa, en Asan, provincia de Chungcheong del Sur.",
+      "facts.f8.claim": "El Nanjung Ilgi se inscribió en el Registro de la Memoria del Mundo de la UNESCO en 2013."
     }
   }
 }
