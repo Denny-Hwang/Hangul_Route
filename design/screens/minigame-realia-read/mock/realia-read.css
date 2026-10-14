@@ -1,0 +1,171 @@
+/*
+ * F-CURR-001 row D-2: static design mock of Realia Read (the Stage 6 Practice game) and the four realia (menu, ticket,
+ * trail sign, price cards). Not shipped code. Spec: docs/specs/F-CURR-001-upper-stage-content.md (sections 3.6, 3.10,
+ * 3.14, OD-11); wireframe: design/wireframes/minigame/realia-read.md; drawn parts follow
+ * design/brief/illustrations/scene-art-style.md (F-STORY-002 section 3.9).
+ * The base, the learner-app parts and the token block come unchanged from the app-shell mock (#420), whose custom
+ * properties are the tokens of packages/design-system/src/tokens.ts named after the token (--spacing-xl is
+ * spacing.xl). The block below adds the tokens this pass needs that the app-shell block does not copy, checked
+ * against tokens.ts on this commit. Learner screen: text in rem (so the 200 % shots enlarge every line), layout in
+ * the app's px window classes (600 regular, 700 side by side, 900 wide). The few numbers that are not tokens are in
+ * ../README.md, "Constants".
+ */
+@import url("../../app-shell/mock/app-shell.css");
+
+:root {
+  --colors-feedback-nudge: #F2B33D;        /* colors.feedback.nudge: amber, the miss (never the only cue) */
+  --colors-feedback-successDark: #2C5E3F;  /* colors.feedback.successDark: the found check on a realia line */
+  --colors-hoya-nose: #2A1F14;             /* colors.hoya.nose */
+  --colors-theme-letters: #E8743B;         /* colors.theme.letters */
+  --colors-theme-life: #F2B33D;            /* colors.theme.life */
+  --colors-theme-rites: #8265C2;           /* colors.theme.rites */
+  --colors-theme-nature: #7BB552;          /* colors.theme.nature */
+  --colors-theme-crafts: #4A9DD6;          /* colors.theme.crafts */
+  --colors-stage-stage6: #C84B7D;          /* colors.stage.stage6: the practice bar fill of a Stage 6 quest */
+  --size-hero: 3rem;                       /* typography.size.hero (48) */
+  --size-ko-sm: var(--size-title);         /* KoreanText size sm = typography.size.title */
+  --layout-pane-gap: 24px;                 /* layout.pane.gap */
+}
+
+/* Constants: values that are not tokens (README "Constants"). */
+:root {
+  --realia-line-gap: var(--spacing-sm);    /* between two lines of a realia: spacing.sm */
+  --realia-leader: var(--border-width-base); /* the dotted leader of a menu row: borderWidth.base dots */
+  --dress-top: 40px;                       /* drawn height of a top dressing (awning, ticket band, mountains): spacing.xxxl less spacing.sm, so a 320 window keeps the question in the first screen */
+  --dress-bottom: 32px;                    /* drawn height of a bottom dressing (counter, post foot): spacing.xxl */
+  --goods: 56px;                           /* drawn goods above a price card: touchTarget.min less spacing.sm */
+  --pointer: 24px;                         /* the look-here pointer and the found check glyph: spacing.xl, the Icon row size */
+  --option-art: 96px;                      /* ChoiceCard art: touchTarget.hero */
+}
+
+/* ------------------------------------------------------------------------------------------ */
+/* Screen: the minigame shell around the game (practice bar + count, prompt, answers, Hoya)     */
+/* ------------------------------------------------------------------------------------------ */
+.rr-screen { container-type: inline-size; min-height: 100vh; background: var(--colors-surface-canvas); padding: var(--spacing-md) var(--spacing-none) var(--spacing-xxl); }
+.rr-inner { max-width: var(--max-width-reading); margin: var(--spacing-none) auto; padding: var(--spacing-none) var(--gutter-compact); display: flex; flex-direction: column; gap: var(--spacing-lg); }
+.rr-top { display: flex; align-items: center; gap: var(--spacing-md); min-height: var(--touch-min); }
+.rr-bar { flex: 1; height: var(--spacing-md); border-radius: var(--radii-pill); background: var(--colors-surface-sunken); overflow: hidden; }
+.rr-bar > span { display: block; height: 100%; background: var(--colors-stage-stage6); border-radius: var(--radii-pill); }
+.rr-count { font-size: var(--size-bodySm); font-weight: var(--weight-bold); color: var(--colors-text-secondary); padding: var(--spacing-xs) var(--spacing-md); border-radius: var(--radii-pill); background: var(--colors-surface-paper); border: var(--border-width-thin) solid var(--colors-border-subtle); }
+.rr-body { display: flex; flex-direction: column; gap: var(--spacing-lg); }
+.rr-ask { display: flex; flex-direction: column; gap: var(--spacing-md); }
+.rr-question { font-size: var(--size-prompt); font-weight: var(--weight-bold); line-height: var(--leading-normal); }
+.rr-hint { color: var(--colors-text-secondary); font-size: var(--size-bodySm); }
+
+@container (min-width: 600px) {
+  .rr-inner { padding-left: var(--gutter-regular); padding-right: var(--gutter-regular); }
+}
+/* Window class 700 and up: realia and question side by side, the realia sticky while the options scroll.
+   The mock uses a container query so a board frame behaves like a window of its own width; the app uses its window class. */
+@container (min-width: 700px) {
+  .rr-inner { max-width: var(--max-width-full); }
+  .rr-body { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--layout-pane-gap); align-items: start; }
+  .rr-realia-col { position: sticky; top: var(--spacing-md); }
+}
+@container (min-width: 900px) {
+  .rr-inner { padding-left: var(--gutter-wide); padding-right: var(--gutter-wide); }
+}
+
+/* KoreanText (design/components/KoreanText/spec.md), size sm: chip, romanization, gloss. */
+.kt { display: inline-flex; flex-direction: column; align-items: center; gap: var(--spacing-xs); text-align: center; }
+.kt-chip { display: inline-block; padding: var(--spacing-md) var(--spacing-lg); border-radius: var(--radii-lg); background: var(--colors-brand-secondaryLight); border: var(--border-width-base) solid var(--colors-brand-secondary); font-size: var(--size-ko-sm); font-weight: var(--weight-bold); line-height: var(--leading-tight); color: var(--colors-text-primary); word-break: keep-all; }
+.kt-rom { font-size: var(--size-bodySm); font-style: italic; font-weight: var(--weight-semibold); color: var(--colors-text-secondary); }
+.kt-gloss { font-size: var(--size-body); color: var(--colors-text-secondary); }
+.rr-key { align-self: center; }
+
+/* ChoiceCard (design/components/ChoiceCard/spec.md): idle, correct, wrong, hint, disabled. */
+.options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--spacing-sm); }
+.options.one-col { grid-template-columns: minmax(0, 1fr); }
+@container (max-width: 339px) { .options { grid-template-columns: minmax(0, 1fr); } }
+.cc { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--spacing-sm); min-height: var(--touch-child); padding: var(--spacing-md) var(--spacing-lg); border-radius: var(--radii-lg); border: var(--border-width-base) solid var(--colors-border-subtle); background: var(--colors-surface-paper); color: var(--colors-text-primary); font: inherit; text-align: center; cursor: pointer; }
+.cc .kt-chip { background: transparent; border: none; padding: var(--spacing-none); }
+.cc-label { font-size: var(--size-body); font-weight: var(--weight-semibold); line-height: var(--leading-normal); }
+.cc-number { font-size: var(--size-title); font-weight: var(--weight-bold); line-height: var(--leading-tight); font-variant-numeric: tabular-nums; }
+.cc-art { width: var(--option-art); height: var(--option-art); }
+.cc-mark { position: absolute; top: var(--spacing-xs); right: var(--spacing-xs); width: var(--pointer); height: var(--pointer); padding: var(--spacing-xxs); border-radius: var(--radii-pill); }
+.cc[data-state="correct"] { background: var(--colors-feedback-successLight); border-color: var(--colors-feedback-success); }
+.cc[data-state="correct"] .cc-mark { background: var(--colors-feedback-successLight); stroke: var(--colors-feedback-success); }
+.cc[data-state="wrong"] { background: var(--colors-feedback-nudgeLight); border-color: var(--colors-feedback-nudge); }
+.cc[data-state="wrong"] .cc-mark { background: var(--colors-feedback-nudgeLight); stroke: var(--colors-text-primary); }
+.cc[data-state="disabled"] { background: var(--colors-surface-sunken); cursor: default; }
+
+/* Hoya line (the live region; empty until a miss). */
+.hoya-line { display: flex; align-items: center; gap: var(--spacing-md); min-height: var(--touch-min); }
+.hoya-line .hoya { width: var(--touch-min); height: var(--touch-min); flex: none; }
+.bubble { padding: var(--spacing-sm) var(--spacing-md); border-radius: var(--radii-lg); background: var(--colors-surface-paper); border: var(--border-width-thin) solid var(--colors-border-subtle); font-size: var(--size-body); font-weight: var(--weight-semibold); }
+
+/* ------------------------------------------------------------------------------------------ */
+/* Realia: the dressing (scene-art props, inline SVG) + the text layer (live text)              */
+/* ------------------------------------------------------------------------------------------ */
+.realia { margin: var(--spacing-none); display: flex; flex-direction: column; }
+.dress { display: block; width: 100%; }
+.dress-top { height: var(--dress-top); }
+.dress-bottom { height: var(--dress-bottom); }
+.sheet { background: var(--colors-surface-paper); border: var(--border-width-base) solid var(--colors-border-shape); padding: var(--spacing-md); display: flex; flex-direction: column; gap: var(--realia-line-gap); }
+.sheet-title { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: center; column-gap: var(--spacing-sm); font-size: var(--size-bodyLg); font-weight: var(--weight-bold); padding-bottom: var(--spacing-xs); border-bottom: var(--border-width-base) solid var(--colors-border-subtle); }
+.lines { list-style: none; margin: var(--spacing-none); padding: var(--spacing-none); display: flex; flex-direction: column; gap: var(--spacing-xs); }
+[lang="ko"] { word-break: keep-all; }
+
+/* One line of realia text: a button (tap = hear it); Korean, romanization under it, gloss only once found. */
+.rl { position: relative; width: 100%; display: flex; flex-wrap: wrap; align-items: flex-start; column-gap: var(--spacing-sm); row-gap: var(--spacing-xxs); min-height: var(--touch-min); padding: var(--spacing-xs) var(--spacing-sm); border: var(--border-width-thick) solid transparent; border-radius: var(--radii-sm); background: transparent; color: var(--colors-text-primary); font: inherit; text-align: left; cursor: pointer; }
+.rl-part { display: flex; flex-direction: column; }
+.rl-ko { font-size: var(--size-bodyLg); font-weight: var(--weight-bold); line-height: var(--leading-tight); }
+.rl-rom { font-size: var(--size-caption); font-style: italic; font-weight: var(--weight-semibold); color: var(--colors-text-secondary); line-height: var(--leading-normal); }
+.rl-gloss { flex-basis: 100%; font-size: var(--size-bodySm); color: var(--colors-text-secondary); }
+.rl-leader { flex: 1 1 var(--spacing-lg); align-self: center; min-width: var(--spacing-lg); border-bottom: var(--realia-leader) dotted var(--colors-border-strong); margin-top: var(--spacing-sm); }
+.rl-value { text-align: right; margin-left: auto; }
+.rl-mark { display: none; flex: none; width: var(--pointer); height: var(--pointer); align-self: center; }
+/* found: thick success ring + a check glyph + the gloss (three cues, never colour alone) */
+.rl[data-state="found"] { border-color: var(--colors-feedback-success); background: var(--colors-feedback-successLight); }
+.rl[data-state="found"] .rl-mark-found { display: block; stroke: var(--colors-feedback-successDark); }
+/* look here (after the second miss): thick focus ring + a pointer glyph at the start */
+.rl[data-state="look"] { border-color: var(--colors-border-focus); border-style: dashed; }
+.rl[data-state="look"] .rl-mark-look { display: block; fill: var(--colors-border-focus); }
+/* romanization hidden until the line is tapped (romanizationMode tap) */
+.romanization-tap .rl:not([data-revealed]) .rl-rom { visibility: hidden; }
+
+/* MENU: one row per dish, a dotted leader to the price; the price drops under the dish when the row is too narrow. */
+.realia-menu .sheet { border-radius: var(--radii-sm); border-top: none; border-bottom: none; }
+
+/* TICKET: a label column, the place and the time; a stub after a dotted cut. */
+.realia-ticket .ticket { display: flex; background: var(--colors-surface-paper); border: var(--border-width-base) solid var(--colors-border-shape); border-radius: var(--radii-md); overflow: hidden; }
+.realia-ticket .ticket-band { height: var(--dress-top); background: var(--colors-brand-secondaryLight); border-bottom: var(--border-width-base) solid var(--colors-border-shape); }
+.realia-ticket .ticket-main { flex: 1; min-width: var(--spacing-none); display: flex; flex-direction: column; }
+.realia-ticket .sheet { border: none; }
+.realia-ticket .ticket-stub { flex: none; width: var(--touch-min); border-left: var(--border-width-base) dashed var(--colors-border-strong); background: var(--colors-surface-sunken); }
+.realia-ticket .rl-label { min-width: 4.5rem; }
+.realia-ticket .rl-time { margin-left: auto; text-align: right; font-variant-numeric: tabular-nums; }
+
+/* TRAIL SIGN: a post plate (the trail name) and pointed boards; direction = board side + arrow glyph + its name. */
+.realia-sign { align-items: stretch; }
+.realia-sign .sign { position: relative; display: flex; flex-direction: column; gap: var(--spacing-sm); padding: 0 var(--spacing-md); }
+.realia-sign .post { position: absolute; top: var(--spacing-none); bottom: var(--spacing-none); left: 50%; width: var(--spacing-md); margin-left: calc(var(--spacing-md) / -2); background: var(--colors-text-secondary); border-radius: var(--radii-sm); }
+.realia-sign .plate { position: relative; align-self: center; background: var(--colors-surface-paper); border: var(--border-width-base) solid var(--colors-text-secondary); border-radius: var(--radii-sm); }
+.realia-sign .sign-board { position: relative; display: flex; align-items: stretch; width: 88%; background: var(--colors-feedback-nudgeLight); border: var(--border-width-base) solid var(--colors-text-secondary); border-radius: var(--radii-sm); }
+.realia-sign .sign-board.to-left { align-self: flex-start; flex-direction: row-reverse; }
+.realia-sign .sign-board.to-right { align-self: flex-end; }
+.realia-sign .sign-board .rl { flex: 1; }
+.realia-sign .arrow { flex: none; width: var(--touch-min); display: flex; align-items: center; justify-content: center; border-left: var(--border-width-base) solid var(--colors-text-secondary); }
+.realia-sign .sign-board.to-left .arrow { border-left: none; border-right: var(--border-width-base) solid var(--colors-text-secondary); }
+.realia-sign .arrow svg { width: var(--spacing-xxl); height: var(--spacing-xxl); }
+
+/* PRICE CARDS: goods drawn above each card; the card holds name, count (if any) and price. */
+.realia-cards .stall { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 8.5rem), 1fr)); gap: var(--spacing-md); padding: var(--spacing-md); background: var(--colors-surface-sunken); border-radius: var(--radii-md); border: var(--border-width-base) solid var(--colors-border-shape); }
+.realia-cards .lot { display: flex; flex-direction: column; align-items: center; }
+.realia-cards .goods { width: 100%; height: var(--goods); }
+.realia-cards .card { width: 100%; background: var(--colors-surface-paper); border: var(--border-width-base) solid var(--colors-border-shape); border-radius: var(--radii-sm); padding: var(--spacing-xs); }
+.realia-cards .card .rl { flex-direction: column; align-items: center; text-align: center; }
+.realia-cards .card .rl-part { align-items: center; }
+
+/* Plain sheet: the error fallback when a dressing is unknown (the text layer alone, never blank). */
+.realia-plain .sheet { border-radius: var(--radii-md); }
+
+/* ------------------------------------------------------------------------------------------ */
+/* Design boards (annotations, not UI)                                                          */
+/* ------------------------------------------------------------------------------------------ */
+.board-page { padding: var(--spacing-xl) var(--gutter-compact) var(--spacing-xxxl); }
+.board-head { max-width: var(--max-width-full); margin: var(--spacing-none) auto var(--spacing-xl); display: flex; flex-direction: column; gap: var(--spacing-sm); }
+.board-head h1 { font-size: var(--size-title); line-height: var(--leading-tight); }
+.frame-item { display: flex; flex-direction: column; gap: var(--spacing-sm); }
+.phone { background: var(--colors-surface-canvas); border: var(--border-width-base) dashed var(--colors-border-strong); border-radius: var(--radii-lg); padding: var(--spacing-md); display: flex; flex-direction: column; gap: var(--spacing-md); }
+.note-box { border: var(--border-width-base) dashed var(--colors-border-strong); color: var(--colors-text-secondary); font-family: var(--family-mono); font-size: var(--size-caption); padding: var(--spacing-sm) var(--spacing-md); border-radius: var(--radii-sm); }
