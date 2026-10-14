@@ -1073,10 +1073,10 @@
         }
       ],
       "verification": {
-        "passes": 1,
+        "passes": 2,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): both pages fetched; the column calls the question a customary greeting and an expression of care rather than a real question; the museum report describes it as an ordinary greeting at the family table. The note says 'often', names no group as a whole and copies no wording. Carried by: q1 intro Hoya line and q1 Discover page 1 caption."
+        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): both pages fetched; the column calls the question a customary greeting and an expression of care rather than a real question; the museum report describes it as an ordinary greeting at the family table. The note says 'often', names no group as a whole and copies no wording. Carried by: q1 intro Hoya line and q1 Discover page 1 caption.\nLine 2 (pass 2b, independent fact check by a separate session, 2026-10-14): both korea.kr pages re-fetched; every quoteOrLocator passage found on its page (column dated 2018-08-31 calls the question just a customary greeting and, in the mother's phone call, care and affection rather than a real question; report dated 2025-11-13 describes asking it around the shared table as an ordinary greeting in the museum's third section). 'Family and friends often ask' is supported (family in both, closeness between acquaintances in the column); 'shows care' is supported; 'a short answer is enough' follows from both pages calling it a greeting rather than a real question. The note and the carrying lines are original English and copy no source wording; host www.korea.kr is on the allowlist; no group-wide claim, stereotype, living person, shop, brand or price. Outcome: kept unchanged."
       }
     }
   ],
