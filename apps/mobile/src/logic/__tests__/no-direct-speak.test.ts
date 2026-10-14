@@ -112,4 +112,20 @@ describe('no direct speak from screens', () => {
     expect(audioImports(file!.source)).toContain('hasClip');
     expect(file!.source).toMatch(/usePromptSlot\(\{\s*source: 'match-sound',\s*hasClip: hasClip\(/);
   });
+
+  /**
+   * Sentence Builder plays each round's sentence (`playPrompt` with its `audioRef`), so, as Match
+   * Sound does, its prompt slot is told when the current round's sentence has a bundled recording:
+   * a device with no Korean voice is then not told "no sound" while the clip plays.
+   */
+  it('Sentence Builder passes hasClip for the current round to its prompt slot', () => {
+    const file = files.find((f) => f.rel === 'minigames/SentenceBuilderGame.tsx');
+    expect(file).toBeDefined();
+    expect(audioImports(file!.source)).toContain('hasClip');
+    expect(file!.source).toMatch(
+      /usePromptSlot\(\{\s*source: 'sentence-builder',\s*hasClip: hasClip\(rounds\[state\.roundIdx\]\?\.sentence\.audioRef\),\s*textOnScreen: true\s*\}\)/,
+    );
+    expect(audioImports(file!.source)).toContain('warmClips');
+    expect(file!.source).toMatch(/warmClips\(clipRefsOf\(rounds\.map\(\(r\) => r\.sentence\)\)\)/);
+  });
 });
