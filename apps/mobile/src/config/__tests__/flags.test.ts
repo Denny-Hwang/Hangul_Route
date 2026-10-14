@@ -298,23 +298,27 @@ describe('flags', () => {
     expect(src).toContain('process.env.EXPO_PUBLIC_VOCAB_SHOW_DRAFTS');
   });
 
-  it('grownUpHomeEnabled (F-APP-001 rollout) is OFF by default and flips on with "true" or "1"', async () => {
+  it('grownUpHomeEnabled (F-APP-001 A-10) is ON by default; "false", "0", "off" or "no" in any case, trimmed, is the kill switch', async () => {
     delete process.env.EXPO_PUBLIC_GROWN_UP_HOME;
     let mod = await reload();
-    expect(mod.flags.grownUpHomeEnabled).toBe(false);
-    expect(mod.launchDefaultFlags.grownUpHomeEnabled).toBe(false);
-    process.env.EXPO_PUBLIC_GROWN_UP_HOME = 'true';
-    mod = await reload();
     expect(mod.flags.grownUpHomeEnabled).toBe(true);
-    process.env.EXPO_PUBLIC_GROWN_UP_HOME = '1';
-    mod = await reload();
-    expect(mod.flags.grownUpHomeEnabled).toBe(true);
+    expect(mod.launchDefaultFlags.grownUpHomeEnabled).toBe(true);
+    for (const off of ['false', '0', 'FALSE', 'False', ' false ', 'off', 'OFF', 'no', ' 0']) {
+      process.env.EXPO_PUBLIC_GROWN_UP_HOME = off;
+      mod = await reload();
+      expect(mod.flags.grownUpHomeEnabled, off).toBe(false);
+    }
+    for (const on of ['true', '1', 'TRUE', ' on ', 'yes', '']) {
+      process.env.EXPO_PUBLIC_GROWN_UP_HOME = on;
+      mod = await reload();
+      expect(mod.flags.grownUpHomeEnabled, on).toBe(true);
+    }
     process.env.EXPO_PUBLIC_GROWN_UP_HOME = 'maybe';
     mod = await reload();
-    expect(mod.flags.grownUpHomeEnabled).toBe(false);
+    expect(mod.flags.grownUpHomeEnabled).toBe(true);
   });
 
-  it('grownUpHomeEnabled is read by its literal name, so the owner step S-3 can turn it on in a web build', () => {
+  it('grownUpHomeEnabled is read by its literal name, so the owner can turn it off in a web build', () => {
     const src = readFileSync(join(__dirname, '../flags.ts'), 'utf8');
     expect(src).toContain('process.env.EXPO_PUBLIC_GROWN_UP_HOME');
   });

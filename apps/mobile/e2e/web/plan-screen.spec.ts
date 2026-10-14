@@ -19,8 +19,13 @@ const VIEWPORTS = [
 
 const BILLING_URL = 'https://hangulroute.com/teach/billing';
 
-/** A build with F-APP-001's grown-up home flag on hands off in the same tab instead (plan-screen-same-tab.spec.ts). */
-const ON = process.env.E2E_GROWN_UP_HOME === '1';
+/**
+ * Since F-APP-001 A-10 the grown-up home flag is on by default and Open billing hands off in the same tab
+ * (plan-screen-same-tab.spec.ts). This new-tab path is the kill switch's: a build made with
+ * `EXPO_PUBLIC_GROWN_UP_HOME=false`, run with `E2E_GROWN_UP_HOME=0` (CI: the kill-switch run of the billing and
+ * grown-up home lane).
+ */
+const OFF = process.env.E2E_GROWN_UP_HOME === '0';
 
 const screenText = (page: Page): Promise<string> =>
   page.evaluate(() => (document.body.innerText || '').replace(/\s+/g, ' '));
@@ -107,7 +112,7 @@ async function expectStatusOnly(page: Page): Promise<void> {
 for (const vp of VIEWPORTS) {
   test.describe(`${vp.width}x${vp.height}`, () => {
     test.use({ viewport: vp });
-    test.skip(ON, 'the B-9 new-tab hand-off runs on the default build');
+    test.skip(!OFF, 'the B-9 new-tab hand-off needs a build with EXPO_PUBLIC_GROWN_UP_HOME=false and E2E_GROWN_UP_HOME=0');
 
     test('self-only device without a PIN: Plan details, status only, Open billing opens the billing page', async ({ page, context }) => {
       await stubConsole(context);
