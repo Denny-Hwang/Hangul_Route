@@ -20,6 +20,7 @@ import { PLAYABLE_KINDS } from '../../logic/minigame-renderers';
 import { episodesAll } from '../episodes';
 import { LESSON_EPISODES, LESSON_QUESTS } from '../__generated__/lessons-index';
 import { questsAll } from '../quests';
+import { distractorProblems, fixedReplyPlace, promptKey, soundKey } from './helpers/distractors';
 import { ALL_LESSON_SCOPES, LESSON_STAGE_MODULES } from './helpers/lesson-stages';
 
 /**
@@ -289,5 +290,94 @@ describe('content checks each cell row fills in (F-CURR-001 section 5)', () => {
   it.todo('U-3 new-item caps per stage (section 3.1 rule 4) (S2-1 onward)');
   it.todo('U-4 decodable scored reading (section 3.1 rule 6) (S2-1 onward)');
   it.todo('U-6 at least half the Korean words outside Discover are reused (S2-1 onward)');
-  it.todo('U-8 no distractor reply is also a natural reply; no heard round offers 내 / 네 (S4-1 onward)');
+});
+
+describe('U-8 distractors (F-CURR-001 §3.5)', () => {
+  it('reads ㅐ and ㅔ (and ㅒ, ㅖ) as one sound, ignoring marks and spaces', () => {
+    expect(soundKey('내 차례야.')).toBe(soundKey('네 차례야'));
+    expect(soundKey('얘기')).toBe(soundKey('예기'));
+    expect(soundKey('이제 너야')).not.toBe(soundKey('내 차례야'));
+    expect(soundKey('ok')).toBe('ok');
+  });
+
+  it('reports a natural distractor and a same-sounding pair in a heard round', () => {
+    const kt = (ko: string) => ({ ko, romanization: 'x', en: 'x' });
+    const cell = {
+      quests: [
+        {
+          steps: [
+            {
+              discover: {
+                pages: [{ items: [{ type: 'exchange', lines: [{ line: kt('누구예요?') }, { line: kt('할머니예요.') }] }] }],
+              },
+            },
+          ],
+          scopes: [
+            {
+              ref: 'minigame:s4-crafts-q2-practice',
+              kind: 'tap-respond',
+              turns: [
+                {
+                  line: kt('누구예요?'),
+                  replies: [
+                    { id: 'r1', text: kt('친구예요.'), correct: true },
+                    { id: 'r2', text: kt('할머니예요.'), correct: false },
+                  ],
+                },
+              ],
+            },
+            {
+              ref: 'minigame:s4-crafts-q2-check',
+              kind: 'listen-pick',
+              rounds: [{ id: 'c1', prompt: kt('뭐 해?'), answerId: 'a', options: [{ id: 'a', text: kt('내 차례야.') }, { id: 'b', text: kt('네 차례야.') }] }],
+            },
+          ],
+        },
+      ],
+    } as unknown as LessonCell;
+    expect(distractorProblems(cell)).toEqual([
+      'U-8 minigame:s4-crafts-q2-practice turn 1: 할머니예요. is also a natural reply to 누구예요?',
+      'U-8 minigame:s4-crafts-q2-check c1: 내 차례야. and 네 차례야. sound the same',
+    ]);
+  });
+
+  it('files a prompt under its question word, so a generic answer is natural for every prompt that asks it', () => {
+    expect(promptKey('책이 어디예요?')).toBe('어디예요');
+    expect(promptKey('화장실이 어디예요?')).toBe(promptKey('어디예요?'));
+    expect(promptKey('선생님, 이게 뭐예요?')).toBe('뭐예요');
+    expect(promptKey('연필 여기 있어요.')).toBe('연필여기있어요');
+    const kt = (ko: string) => ({ ko, romanization: 'x', en: 'x' });
+    const cell = {
+      quests: [
+        {
+          steps: [{ discover: { pages: [{ items: [{ type: 'exchange', lines: [{ line: kt('화장실이 어디예요?') }, { line: kt('저기예요.') }] }] }] } }],
+          scopes: [
+            {
+              ref: 'minigame:s4-letters-q2-check',
+              kind: 'listen-pick',
+              rounds: [{ id: 'c1', prompt: kt('책이 어디예요?'), answerId: 'a', options: [{ id: 'a', text: kt('여기예요.') }, { id: 'b', text: kt('저기예요.') }] }],
+            },
+          ],
+        },
+      ],
+    } as unknown as LessonCell;
+    expect(distractorProblems(cell)).toEqual(['U-8 minigame:s4-letters-q2-check c1: 저기예요. is also a natural reply to 책이 어디예요?']);
+  });
+
+  it('finds a Tap to Respond cell whose right reply never moves', () => {
+    const turn = (right: number) => ({ replies: [0, 1, 2].map((i) => ({ id: `r${i + 1}`, correct: i === right })) });
+    const cellWith = (...rights: number[]) =>
+      ({ quests: [{ scopes: [{ kind: 'tap-respond', turns: rights.map(turn) }, { kind: 'listen-pick', rounds: [] }] }] }) as unknown as LessonCell;
+    expect(fixedReplyPlace(cellWith(0, 0, 0))).toBe(0);
+    expect(fixedReplyPlace(cellWith(0, 2, 1))).toBeUndefined();
+  });
+
+  for (const { cell } of CELLS.filter((c) => c.cell.stage === 'stage4')) {
+    it(`${cell.id}: no distractor is a natural reply; no heard round offers two options that sound the same`, () => {
+      expect(distractorProblems(cell)).toEqual([]);
+    });
+    it(`${cell.id}: the right Tap to Respond reply is not always in the same place`, () => {
+      expect(fixedReplyPlace(cell)).toBeUndefined();
+    });
+  }
 });

@@ -1,6 +1,7 @@
 import { JamoSchema, QuestSchema } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
 import { bookQuests } from '../books';
+import { lessonQuests } from '../lessons';
 import { jamoAll } from '../jamo';
 import { questsAll, stage1Quests, stage2Quests, stage4Quests } from '../quests';
 import { storyQuests } from '../stories';
@@ -11,11 +12,13 @@ import { storyQuests } from '../stories';
  * (Until now no test parsed app content with the schema, audit story-mode #1.)
  */
 describe('shipped content still parses after the F-QUEST-002 schema changes', () => {
-  it('has Stage 1, Stage 2 and Stage 4 quests to check, plus the generated story quests and the book quests', () => {
+  it('has Stage 1, Stage 2 and Stage 4 quests to check, plus the generated story, book and lesson quests', () => {
     expect(stage1Quests.length).toBeGreaterThan(0);
     expect(stage2Quests.length).toBeGreaterThan(0);
     expect(stage4Quests.length).toBeGreaterThan(0);
-    expect(questsAll).toHaveLength(stage1Quests.length + stage2Quests.length + stage4Quests.length + storyQuests.length + bookQuests.length);
+    expect(questsAll).toHaveLength(
+      stage1Quests.length + stage2Quests.length + stage4Quests.length + storyQuests.length + bookQuests.length + lessonQuests.length,
+    );
   });
 
   it.each(questsAll.map((q) => [q.id, q] as const))('%s passes QuestSchema', (_id, quest) => {
@@ -23,10 +26,11 @@ describe('shipped content still parses after the F-QUEST-002 schema changes', ()
     expect(result.success, result.success ? '' : JSON.stringify(result.error.issues)).toBe(true);
   });
 
-  it('adds discover and check steps only to Stage 1 quests; Stage 2 and Stage 4 keep their five steps and present', () => {
-    const stage1 = new Set(stage1Quests.map((q) => q.id));
+  it('adds discover and check steps only to Stage 1 and the upper-stage lesson quests; the Stage 2 and Stage 4 tastes keep five steps and present', () => {
+    // F-CURR-001 lesson cells (generated) have the six-step shape of F-QUEST-002 R4 too.
+    const sixSteps = new Set([...stage1Quests, ...lessonQuests].map((q) => q.id));
     for (const quest of questsAll) {
-      if (stage1.has(quest.id)) continue;
+      if (sixSteps.has(quest.id)) continue;
       for (const step of quest.steps) expect(['discover', 'check'], `${quest.id}/${step.id}`).not.toContain(step.kind);
     }
     for (const quest of [...stage2Quests, ...stage4Quests]) {

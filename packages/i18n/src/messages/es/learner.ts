@@ -392,6 +392,12 @@ export const learner = {
       batchimLine: 'Va abajo del bloque',
       empty: 'Aquí no hay nada que ver. Toca Continuar.',
       pageLabel: (page: number, count: number) => `Página ${page} de ${count}`,
+      exchange: {
+        readAlong: { cta: 'Leer juntos' },
+        stop: { cta: 'Parar' },
+        readingNow: { pill: 'Leyendo ahora' },
+        lineLabel: (line: number, total: number, speaker: string) => `Línea ${line} de ${total}, ${speaker}`,
+      },
     },
   },
 
