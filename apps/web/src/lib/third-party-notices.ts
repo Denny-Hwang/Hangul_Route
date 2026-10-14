@@ -6,8 +6,8 @@ import data from '../data/third-party-notices.json';
  * `/licenses` renders them grouped by license (wireframe design/wireframes/site/licenses.md).
  */
 
-/** Where a package ships: the learner app, the site and grown-up console, or the Worker. */
-export type NoticeWhere = 'app' | 'web' | 'server';
+/** Where a package ships: the learner app, the site and grown-up console, the Worker, or the iOS app's native libraries. */
+export type NoticeWhere = 'app' | 'web' | 'server' | 'ios';
 
 export interface NoticePackage {
   name: string;

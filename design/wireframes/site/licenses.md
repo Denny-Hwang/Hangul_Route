@@ -63,6 +63,8 @@ In the app (Profiles & settings, the last item under the grown-up zone button):
 |  browser.                            |
 ```
 
+Leaving the app is a grown-up action (F-STORY-002 §3.8, the rule Sources' Open link follows): on a device with a grown-up PIN the tap opens the PIN screen first, and a cancelled PIN opens nothing. A self-only device with no PIN, or an open grown-up session, opens the page directly. Back from the PIN screen, native opens the page by itself; the web shows "Grown-up check done. Tap Open-source notices again to open the page." (a browser may block a tab not opened inside a tap), and that tap opens it.
+
 Footer (every site page, both variants): the link sits on the copyright row, so the footer is no taller (F-SITE-002 §3.11 budgets):
 
 ```

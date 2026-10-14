@@ -321,7 +321,7 @@ export const landing = {
     noticesTitle: 'NOTICE 파일',
     fullText: '라이선스 전문',
     usedIn: '사용하는 곳',
-    where: { app: '앱', web: '웹사이트', server: '서버' },
+    where: { app: '앱', web: '웹사이트', server: '서버', ios: 'iOS 앱' },
   },
   notFound: {
     body: '이 페이지를 찾을 수 없어요.',

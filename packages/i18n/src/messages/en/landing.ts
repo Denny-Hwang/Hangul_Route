@@ -671,7 +671,7 @@ export const landing = {
     noticesTitle: 'NOTICE files',
     fullText: 'Full license text',
     usedIn: 'Used in',
-    where: { app: 'App', web: 'Website', server: 'Server' },
+    where: { app: 'App', web: 'Website', server: 'Server', ios: 'iOS app' },
   },
   /** Links on the exported 404 page (F-SITE-002 §3.7); English document, as today. */
   notFound: {

@@ -4,7 +4,7 @@
 
 Hangul Route is proprietary software: Copyright (c) 2026 Sungjoo Hwang. All rights reserved. See [LICENSE](./LICENSE).
 
-Hangul Route includes the third-party components below. Each remains under its own license, and nothing in the Hangul Route license or Terms of Service limits the rights those licenses give. This list covers the production dependencies of the shipped apps: the learner app (`app`, apps/mobile, web and PWA build), the website and grown-up console (`web`, apps/web) and the server (`server`, apps/api and packages/backend on Cloudflare Workers). Development-only tools are not shipped and are not listed.
+Hangul Route includes the third-party components below. Each remains under its own license, and nothing in the Hangul Route license or Terms of Service limits the rights those licenses give. This list covers the production dependencies of the shipped apps: the learner app (`app`, apps/mobile, web and PWA build, including the Workbox service-worker runtime), the website and grown-up console (`web`, apps/web) and the server (`server`, apps/api and packages/backend on Cloudflare Workers). The iOS app also links the native libraries marked `ios` (React Native's CocoaPods pods and the Hermes engine). The Android app is not released yet; its native libraries will be added here before it is. Development-only tools are not shipped and are not listed.
 
 Platform-specific binary builds (for example `@esbuild/linux-x64`) are published by the same project under the same license as the package that installs them, and are not listed separately.
 
@@ -13,18 +13,19 @@ Platform-specific binary builds (for example `@esbuild/linux-x64`) are published
 | License | Packages |
 |---|---|
 | 0BSD | 2 |
-| Apache-2.0 | 17 |
+| Apache-2.0 | 18 |
 | BSD-2-Clause | 19 |
-| BSD-3-Clause | 24 |
+| BSD-3-Clause | 27 |
+| BSL-1.0 | 1 |
 | BlueOak-1.0.0 | 6 |
 | CC-BY-4.0 | 1 |
 | CC0-1.0 | 1 |
-| ISC | 62 |
-| MIT | 731 |
+| ISC | 63 |
+| MIT | 739 |
 | MPL-2.0 | 1 |
 | Python-2.0 | 1 |
 | Unlicense | 3 |
-| **Total** | **868** |
+| **Total** | **882** |
 
 ## Packages
 
@@ -271,6 +272,9 @@ Platform-specific binary builds (for example `@esbuild/linux-x64`) are published
 | @urql/exchange-retry | 1.3.2 | MIT | Copyright (c) 2018–2020 Formidable,; Copyright (c) urql GraphQL Team and other contributors | app |
 | @xmldom/xmldom | 0.7.13 | MIT | Copyright 2019 - present Christopher J. Brody and other contributors, as listed in: https://github.com/xmldom/xmldom/graphs/contributors; Copyright 2012 - 2017 @jindw <jindw@xidea.org> and other contributors, as listed in: https://github.com/jindw/xmldom/graphs/contributors | app |
 | @xmldom/xmldom | 0.9.10 | MIT | Copyright 2019 - present Christopher J. Brody and other contributors, as listed in: https://github.com/xmldom/xmldom/graphs/contributors; Copyright 2012 - 2017 @jindw <jindw@xidea.org> and other contributors, as listed in: https://github.com/jindw/xmldom/graphs/contributors | app |
+| DoubleConversion | 1.1.6 | BSD-3-Clause (iOS native library, not an npm package; source: https://github.com/google/double-conversion; the podspec says MIT; the upstream LICENSE file is BSD-3-Clause, which is applied) | Copyright 2006-2011, the V8 project authors. All rights reserved. | ios |
+| RCT-Folly | 2024.01.01.00 | Apache-2.0 (iOS native library, not an npm package; source: https://github.com/facebook/folly) | Copyright (c) Meta Platforms, Inc. and affiliates. | ios |
+| SocketRocket | 0.7.1 | BSD-3-Clause (iOS native library, not an npm package; source: https://github.com/facebook/SocketRocket) | Copyright (c) 2016-present, Facebook, Inc. All rights reserved. | ios |
 | abort-controller | 3.0.0 | MIT | Copyright (c) 2017 Toru Nagashima | app |
 | accepts | 1.3.8 | MIT | Copyright (c) 2014 Jonathan Ong <me@jongleberry.com>; Copyright (c) 2015 Douglas Christopher Wilson <doug@somethingdoug.com> | app |
 | acorn | 8.16.0 | MIT | Copyright (C) 2012-2022 by various contributors (see AUTHORS) | app |
@@ -317,6 +321,7 @@ Platform-specific binary builds (for example `@esbuild/linux-x64`) are published
 | better-opn | 3.0.2 | MIT | Copyright 2018 Michael Lin <linzichunzf@hotmail.com> | app |
 | big-integer | 1.6.52 | Unlicense | (no copyright line in the package; author: Peter Olson) | app |
 | boolbase | 1.0.0 | ISC | (no copyright line in the package; author: Felix Boehm) | app |
+| boost | 1.84.0 | BSL-1.0 (iOS native library, not an npm package; source: https://www.boost.org) | Copyright the Boost authors (each source file names its own authors) | ios |
 | bplist-creator | 0.0.7 | MIT | (no copyright line in the package; author: https://github.com/nearinfinity/node-bplist-parser.git) | app |
 | bplist-creator | 0.1.0 | MIT | Copyright (c) 2012 Near Infinity Corporation | app |
 | bplist-parser | 0.3.1 | MIT | (no copyright line in the package; author: Joe Ferner) | app |
@@ -476,6 +481,7 @@ Platform-specific binary builds (for example `@esbuild/linux-x64`) are published
 | find-up | 5.0.0 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (https://sindresorhus.com) | app |
 | flow-enums-runtime | 0.0.6 | MIT | Copyright (c) Facebook, Inc. and its affiliates. | app |
 | flow-parser | 0.313.0 | MIT | (no copyright line in the package; author: Flow Team) | app |
+| fmt | 9.1.0 | MIT (iOS native library, not an npm package; source: https://github.com/fmtlib/fmt) | Copyright (c) 2012 - present, Victor Zverovich and {fmt} contributors | ios |
 | fontfaceobserver | 2.3.0 | BSD-2-Clause | Copyright (c) 2014 - Bram Stein | app |
 | foreground-child | 3.3.1 | ISC | Copyright (c) 2015-2023 Isaac Z. Schlueter and Contributors | app |
 | form-data | 3.0.4 | MIT | Copyright (c) 2012 Felix Geisendörfer (felix@debuggable.com) and contributors | app |
@@ -501,6 +507,7 @@ Platform-specific binary builds (for example `@esbuild/linux-x64`) are published
 | glob-parent | 5.1.2 | ISC | Copyright (c) 2015, 2019 Elan Shanker | app |
 | glob-to-regexp | 0.4.1 | BSD-2-Clause | (no copyright line in the package; author: Nick Fitzgerald) | server, web |
 | globby | 11.1.0 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (sindresorhus.com) | app |
+| glog | 0.3.5 | BSD-3-Clause (iOS native library, not an npm package; source: https://github.com/google/glog) | Copyright (c) 2008, Google Inc. All rights reserved. | ios |
 | gopd | 1.2.0 | MIT | Copyright (c) 2022 Jordan Harband | app |
 | graceful-fs | 4.2.11 | ISC | Copyright (c) 2011-2022 Isaac Z. Schlueter, Ben Noordhuis, and Contributors | app, web |
 | has-flag | 3.0.0 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (sindresorhus.com) | app |
@@ -508,6 +515,7 @@ Platform-specific binary builds (for example `@esbuild/linux-x64`) are published
 | has-symbols | 1.1.0 | MIT | Copyright (c) 2016 Jordan Harband | app |
 | has-tostringtag | 1.0.2 | MIT | Copyright (c) 2021 Inspect JS | app |
 | hasown | 2.0.3 | MIT | Copyright (c) Jordan Harband and contributors | app |
+| hermes-engine | 0.76.5 | MIT (iOS native library, not an npm package; source: https://github.com/facebook/hermes) | Copyright (c) Meta Platforms, Inc. and affiliates. | ios |
 | hermes-estree | 0.23.1 | MIT | Copyright (c) Meta Platforms, Inc. and affiliates. | app |
 | hermes-estree | 0.25.1 | MIT | Copyright (c) Meta Platforms, Inc. and affiliates. | app |
 | hermes-parser | 0.23.1 | MIT | Copyright (c) Meta Platforms, Inc. and affiliates. | app |
@@ -519,6 +527,7 @@ Platform-specific binary builds (for example `@esbuild/linux-x64`) are published
 | http-errors | 2.0.1 | MIT | Copyright (c) 2014 Jonathan Ong me@jongleberry.com; Copyright (c) 2016 Douglas Christopher Wilson doug@somethingdoug.com | app |
 | human-signals | 2.1.0 | Apache-2.0 | Copyright 2019 ehmicky <ehmicky@gmail.com> | app |
 | hyphenate-style-name | 1.1.0 | BSD-3-Clause | Copyright (c) 2015, Espen Hovlandsdal | app |
+| idb | 7.1.1 | ISC | Copyright (c) 2016, Jake Archibald <jaffathecake@gmail.com> | app |
 | idb-keyval | 6.3.0 | Apache-2.0 | Copyright 2016, Jake Archibald | app, web |
 | ieee754 | 1.2.1 | BSD-3-Clause | Copyright 2008 Fair Oaks Labs, Inc. | app |
 | ignore | 5.3.2 | MIT | Copyright (c) 2013 Kael Zhang <i@kael.me>, contributors | app |
@@ -877,6 +886,12 @@ Platform-specific binary builds (for example `@esbuild/linux-x64`) are published
 | which | 1.3.1 | ISC | Copyright (c) Isaac Z. Schlueter and Contributors | app |
 | which | 2.0.2 | ISC | Copyright (c) Isaac Z. Schlueter and Contributors | app |
 | wonka | 6.3.6 | MIT | Copyright (c) 0no.co | app |
+| workbox-cacheable-response | 7.4.1 | MIT | Copyright 2018 Google LLC | app |
+| workbox-core | 7.4.1 | MIT | Copyright 2018 Google LLC | app |
+| workbox-expiration | 7.4.1 | MIT | Copyright 2018 Google LLC | app |
+| workbox-precaching | 7.4.1 | MIT | Copyright 2018 Google LLC | app |
+| workbox-routing | 7.4.1 | MIT | Copyright 2018 Google LLC | app |
+| workbox-strategies | 7.4.1 | MIT | Copyright 2018 Google LLC | app |
 | wrap-ansi | 7.0.0 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (https://sindresorhus.com) | app |
 | wrap-ansi | 8.1.0 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (https://sindresorhus.com) | app |
 | wrappy | 1.0.2 | ISC | Copyright (c) Isaac Z. Schlueter and Contributors | app |
@@ -1208,6 +1223,34 @@ SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
 CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+```
+
+### BSL-1.0: Boost Software License 1.0
+
+```text
+Boost Software License - Version 1.0 - August 17th, 2003
+
+Permission is hereby granted, free of charge, to any person or organization
+obtaining a copy of the software and accompanying documentation covered by
+this license (the "Software") to use, reproduce, display, distribute,
+execute, and transmit the Software, and to prepare derivative works of the
+Software, and to permit third-parties to whom the Software is furnished to
+do so, all subject to the following:
+
+The copyright notices in the Software and this entire statement, including
+the above license grant, this restriction and the following disclaimer,
+must be included in all copies of the Software, in whole or in part, and
+all derivative works of the Software, unless such copies or derivative
+works are solely in the form of machine-executable object code generated by
+a source language processor.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE, TITLE AND NON-INFRINGEMENT. IN NO EVENT
+SHALL THE COPYRIGHT HOLDERS OR ANYONE DISTRIBUTING THE SOFTWARE BE LIABLE
+FOR ANY DAMAGES OR OTHER LIABILITY, WHETHER IN CONTRACT, TORT OR OTHERWISE,
+ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+DEALINGS IN THE SOFTWARE.
 ```
 
 ### BlueOak-1.0.0: Blue Oak Model License 1.0.0

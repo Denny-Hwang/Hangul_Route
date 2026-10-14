@@ -356,7 +356,8 @@ export function ProfileScreen(): React.ReactElement {
         onPress={() => openGrownUps('ParentDashboard')}
       />
       <Spacer size="lg" />
-      <LicensesLink />
+      {/* Leaving the app: through the grown-up gate where the device has one (F-STORY-002 §3.8). */}
+      <LicensesLink onGate={(url) => navigation.navigate('PinEntry', { next: 'ExternalLink', url })} />
       <Spacer size="xl" />
     </Screen>
   );

@@ -139,7 +139,7 @@ export const learner = {
       details: { cta: '플랜 자세히 보기' },
     },
     install: { label: '이 기기에 설치하기', a11yLabel: '이 기기에 Hangul Route 설치하기' },
-    licenses: { label: '오픈소스 라이선스', fallback: '브라우저에서 hangulroute.com/licenses를 열어 주세요.' },
+    licenses: { label: '오픈소스 라이선스', fallback: '브라우저에서 hangulroute.com/licenses를 열어 주세요.', gateDone: '어른 확인을 마쳤어요. 페이지를 열려면 오픈소스 라이선스를 한 번 더 눌러 주세요.' },
     language: {
       title: '언어',
       thisProfile: '이 프로필',

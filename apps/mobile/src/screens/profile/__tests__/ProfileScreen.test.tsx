@@ -23,7 +23,7 @@ import { ProfileScreen } from '../ProfileScreen';
 
 const navigation = vi.hoisted(() => ({ navigate: vi.fn(), goBack: vi.fn() }));
 
-vi.mock('@react-navigation/native', () => ({ useNavigation: () => navigation }));
+vi.mock('@react-navigation/native', () => ({ useNavigation: () => navigation, useFocusEffect: () => undefined }));
 
 const PLATFORMS: readonly RenderPlatform[] = ['web', 'ios', 'android'];
 const AUDIENCES = ['family', 'self'] as const;
@@ -153,7 +153,7 @@ describe('ProfileScreen plan card (F-BILL-002 section 11, B-13)', () => {
 describe('ProfileScreen open-source notices link (owner decision 2026-10-14)', () => {
   afterEach(() => resetPlatform());
 
-  it.each(PLATFORMS)('%s: the foot of the screen links the open-source notices, for both audiences, with no PIN', async (platform) => {
+  it.each(PLATFORMS)('%s: the foot of the screen links the open-source notices, for both audiences', async (platform) => {
     for (const audience of AUDIENCES) {
       setPlatform(platform);
       seed(audience, FREE);
@@ -161,6 +161,18 @@ describe('ProfileScreen open-source notices link (owner decision 2026-10-14)', (
       const links = byTestId(renderer.root, 'profile-licenses-link');
       expect(links, audience).toHaveLength(1);
       expect(links[0]!.props['aria-label']).toBe(getMessages('en').learner.profile.licenses.label);
+      await unmount(renderer);
+    }
+  });
+
+  it.each(PLATFORMS)('%s: leaving the app for the notices goes through the grown-up gate on a device with a PIN (F-STORY-002 section 3.8)', async (platform) => {
+    for (const audience of AUDIENCES) {
+      navigation.navigate.mockReset();
+      setPlatform(platform);
+      seed(audience, FREE);
+      const renderer = await render(<ProfileScreen />);
+      await press(byTestId(renderer.root, 'profile-licenses-link')[0] as ReactTestInstance);
+      expect(navigation.navigate, audience).toHaveBeenCalledWith('PinEntry', { next: 'ExternalLink', url: expect.stringMatching(/\/licenses$/) });
       await unmount(renderer);
     }
   });

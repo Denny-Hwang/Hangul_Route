@@ -26,10 +26,29 @@ const FOOTER_LINK = { ...HIT, justifyContent: 'flex-start' } as const;
  * The open-source notices link beside the copyright line: caption size, a full hit area, and negative block margins of
  * half the difference between the hit area and one caption line, so the row is one caption line tall.
  */
+/** How far the open-source link's hit area reaches above and below its one caption line. */
+const LEGAL_OVERFLOW = `((${touchTarget.min}px - ${rem(typography.size.caption)} * ${typography.leading.normal}) / 2)`;
+
 const LEGAL_LINK = {
   ...FOOTER_LINK,
   fontSize: rem(typography.size.caption),
-  marginBlock: `calc((${rem(typography.size.caption)} * ${typography.leading.normal} - ${touchTarget.min}px) / 2)`,
+  marginBlock: `calc(-1 * ${LEGAL_OVERFLOW})`,
+} as const;
+
+/**
+ * The copyright row. Its hit areas never overlap a neighbour's: when the link wraps under the line (narrow screens),
+ * the row gap is the overflow, so the area above the link stops at the copyright line; below, padding takes up the
+ * overflow less the locale switcher's own top margin (`.hr-site-locales > nav`), so the area stops where the locale
+ * links' areas start.
+ */
+const LEGAL_ROW = {
+  display: 'flex',
+  flexWrap: 'wrap',
+  alignItems: 'center',
+  columnGap: spacing.md,
+  rowGap: `calc(${LEGAL_OVERFLOW})`,
+  marginTop: spacing.lg,
+  paddingBlockEnd: `calc(${LEGAL_OVERFLOW} - ${spacing.sm}px)`,
 } as const;
 
 /** The current page's Guide link: bold in the primary text colour (a weight change, not colour alone). */
@@ -149,10 +168,10 @@ export function SiteFooter({ locale, page, current, variant = 'default' }: SiteF
           The copyright line and, on the same row, the open-source notices (owner decision 2026-10-14; wireframe
           site/licenses.md): a link beside the line rather than another Company item, so the footer keeps its height
           (F-SITE-002 §3.11 budgets). The link keeps its 64 px hit area (LEGAL_LINK) but takes only one caption line of
-          the row; the rest of the area lies in the margin above and the footer padding below. It wraps under the line
-          where the row is too narrow.
+          the row; the rest of the area lies in the margin above and the row's padding below (LEGAL_ROW), so it overlaps no
+          other link. It wraps under the line where the row is too narrow.
         */}
-        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', columnGap: spacing.md, marginTop: spacing.lg }}>
+        <div style={LEGAL_ROW}>
           <p style={{ margin: 0, fontSize: rem(typography.size.caption), color: colors.text.muted }}>{t.footer.copyright(new Date().getFullYear())}</p>
           <Link href={sitePath(locale, '/licenses')} className="hr-site-footer-link" style={LEGAL_LINK}>
             {t.footer.licenses}

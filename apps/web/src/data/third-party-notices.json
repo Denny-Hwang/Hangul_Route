@@ -2173,6 +2173,36 @@
    ]
   },
   {
+   "name": "DoubleConversion",
+   "version": "1.1.6",
+   "license": "BSD-3-Clause",
+   "note": "iOS native library, not an npm package; source: https://github.com/google/double-conversion; the podspec says MIT; the upstream LICENSE file is BSD-3-Clause, which is applied",
+   "copyright": "Copyright 2006-2011, the V8 project authors. All rights reserved.",
+   "usedIn": [
+    "ios"
+   ]
+  },
+  {
+   "name": "RCT-Folly",
+   "version": "2024.01.01.00",
+   "license": "Apache-2.0",
+   "note": "iOS native library, not an npm package; source: https://github.com/facebook/folly",
+   "copyright": "Copyright (c) Meta Platforms, Inc. and affiliates.",
+   "usedIn": [
+    "ios"
+   ]
+  },
+  {
+   "name": "SocketRocket",
+   "version": "0.7.1",
+   "license": "BSD-3-Clause",
+   "note": "iOS native library, not an npm package; source: https://github.com/facebook/SocketRocket",
+   "copyright": "Copyright (c) 2016-present, Facebook, Inc. All rights reserved.",
+   "usedIn": [
+    "ios"
+   ]
+  },
+  {
    "name": "abort-controller",
    "version": "3.0.0",
    "license": "MIT",
@@ -2584,6 +2614,16 @@
    "copyright": "(no copyright line in the package; author: Felix Boehm)",
    "usedIn": [
     "app"
+   ]
+  },
+  {
+   "name": "boost",
+   "version": "1.84.0",
+   "license": "BSL-1.0",
+   "note": "iOS native library, not an npm package; source: https://www.boost.org",
+   "copyright": "Copyright the Boost authors (each source file names its own authors)",
+   "usedIn": [
+    "ios"
    ]
   },
   {
@@ -4021,6 +4061,16 @@
    ]
   },
   {
+   "name": "fmt",
+   "version": "9.1.0",
+   "license": "MIT",
+   "note": "iOS native library, not an npm package; source: https://github.com/fmtlib/fmt",
+   "copyright": "Copyright (c) 2012 - present, Victor Zverovich and {fmt} contributors",
+   "usedIn": [
+    "ios"
+   ]
+  },
+  {
    "name": "fontfaceobserver",
    "version": "2.3.0",
    "license": "BSD-2-Clause",
@@ -4247,6 +4297,16 @@
    ]
   },
   {
+   "name": "glog",
+   "version": "0.3.5",
+   "license": "BSD-3-Clause",
+   "note": "iOS native library, not an npm package; source: https://github.com/google/glog",
+   "copyright": "Copyright (c) 2008, Google Inc. All rights reserved.",
+   "usedIn": [
+    "ios"
+   ]
+  },
+  {
    "name": "gopd",
    "version": "1.2.0",
    "license": "MIT",
@@ -4308,6 +4368,16 @@
    "copyright": "Copyright (c) Jordan Harband and contributors",
    "usedIn": [
     "app"
+   ]
+  },
+  {
+   "name": "hermes-engine",
+   "version": "0.76.5",
+   "license": "MIT",
+   "note": "iOS native library, not an npm package; source: https://github.com/facebook/hermes",
+   "copyright": "Copyright (c) Meta Platforms, Inc. and affiliates.",
+   "usedIn": [
+    "ios"
    ]
   },
   {
@@ -4405,6 +4475,15 @@
    "version": "1.1.0",
    "license": "BSD-3-Clause",
    "copyright": "Copyright (c) 2015, Espen Hovlandsdal",
+   "usedIn": [
+    "app"
+   ]
+  },
+  {
+   "name": "idb",
+   "version": "7.1.1",
+   "license": "ISC",
+   "copyright": "Copyright (c) 2016, Jake Archibald <jaffathecake@gmail.com>",
    "usedIn": [
     "app"
    ]
@@ -7657,6 +7736,60 @@
    ]
   },
   {
+   "name": "workbox-cacheable-response",
+   "version": "7.4.1",
+   "license": "MIT",
+   "copyright": "Copyright 2018 Google LLC",
+   "usedIn": [
+    "app"
+   ]
+  },
+  {
+   "name": "workbox-core",
+   "version": "7.4.1",
+   "license": "MIT",
+   "copyright": "Copyright 2018 Google LLC",
+   "usedIn": [
+    "app"
+   ]
+  },
+  {
+   "name": "workbox-expiration",
+   "version": "7.4.1",
+   "license": "MIT",
+   "copyright": "Copyright 2018 Google LLC",
+   "usedIn": [
+    "app"
+   ]
+  },
+  {
+   "name": "workbox-precaching",
+   "version": "7.4.1",
+   "license": "MIT",
+   "copyright": "Copyright 2018 Google LLC",
+   "usedIn": [
+    "app"
+   ]
+  },
+  {
+   "name": "workbox-routing",
+   "version": "7.4.1",
+   "license": "MIT",
+   "copyright": "Copyright 2018 Google LLC",
+   "usedIn": [
+    "app"
+   ]
+  },
+  {
+   "name": "workbox-strategies",
+   "version": "7.4.1",
+   "license": "MIT",
+   "copyright": "Copyright 2018 Google LLC",
+   "usedIn": [
+    "app"
+   ]
+  },
+  {
    "name": "wrap-ansi",
    "version": "7.0.0",
    "license": "MIT",
@@ -7884,6 +8017,11 @@
    "id": "BSD-3-Clause",
    "name": "BSD 3-Clause License",
    "text": "BSD 3-Clause License\n\nCopyright (c) <year> <copyright holders>\n\nRedistribution and use in source and binary forms, with or without\nmodification, are permitted provided that the following conditions are met:\n\n1. Redistributions of source code must retain the above copyright notice, this\n   list of conditions and the following disclaimer.\n\n2. Redistributions in binary form must reproduce the above copyright notice,\n   this list of conditions and the following disclaimer in the documentation\n   and/or other materials provided with the distribution.\n\n3. Neither the name of the copyright holder nor the names of its\n   contributors may be used to endorse or promote products derived from\n   this software without specific prior written permission.\n\nTHIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS \"AS IS\"\nAND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE\nIMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE\nDISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE\nFOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL\nDAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR\nSERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER\nCAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,\nOR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE\nOF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE."
+  },
+  {
+   "id": "BSL-1.0",
+   "name": "Boost Software License 1.0",
+   "text": "Boost Software License - Version 1.0 - August 17th, 2003\n\nPermission is hereby granted, free of charge, to any person or organization\nobtaining a copy of the software and accompanying documentation covered by\nthis license (the \"Software\") to use, reproduce, display, distribute,\nexecute, and transmit the Software, and to prepare derivative works of the\nSoftware, and to permit third-parties to whom the Software is furnished to\ndo so, all subject to the following:\n\nThe copyright notices in the Software and this entire statement, including\nthe above license grant, this restriction and the following disclaimer,\nmust be included in all copies of the Software, in whole or in part, and\nall derivative works of the Software, unless such copies or derivative\nworks are solely in the form of machine-executable object code generated by\na source language processor.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE, TITLE AND NON-INFRINGEMENT. IN NO EVENT\nSHALL THE COPYRIGHT HOLDERS OR ANYONE DISTRIBUTING THE SOFTWARE BE LIABLE\nFOR ANY DAMAGES OR OTHER LIABILITY, WHETHER IN CONTRACT, TORT OR OTHERWISE,\nARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER\nDEALINGS IN THE SOFTWARE."
   },
   {
    "id": "BlueOak-1.0.0",

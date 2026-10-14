@@ -14,6 +14,10 @@
 // the real path of the package that asks for it (pnpm's layout puts every dependency beside its dependent). Workspace
 // packages (`@hangul-route/*`) are walked but not listed: they are this project's own code, under LICENSE.
 //
+// Two lists add what the dependency fields do not name: EXTRA_SHIPPED (the Workbox runtime the PWA build copies into
+// dist, from a devDependency) and NATIVE_COMPONENTS (the iOS app's CocoaPods libraries and the Hermes engine, which
+// are not npm packages; versions read from the installed react-native).
+//
 // Platform-specific builds (a package.json with `os` or `cpu`, such as `@esbuild/linux-x64` or
 // `lightningcss-darwin-arm64`) are checked against the license policy but not listed: which ones are installed
 // depends on the machine, and each is published by its parent project under the parent's license. So the output is
@@ -50,6 +54,83 @@ export const ROOTS = [
   { dir: "packages/backend", label: "server" },
 ];
 
+/**
+ * Code the apps ship that their `dependencies` do not name. The PWA's service worker: apps/mobile/scripts/
+ * pwa-postbuild.mjs runs `generateSW` from workbox-build (a devDependency) without `inlineWorkboxRuntime`, so Workbox
+ * copies its runtime (`workbox-<hash>.js`, built from these packages) into dist beside sw.js and precaches it. The
+ * modules are the ones that runtime is built from for our config (precache, navigation fallback, runtime caching with
+ * expiration and cacheable-response). Each is resolved from workbox-build's real path and walked like a dependency.
+ */
+export const EXTRA_SHIPPED = [
+  {
+    from: "apps/mobile",
+    through: "workbox-build",
+    label: "app",
+    packages: ["workbox-core", "workbox-precaching", "workbox-routing", "workbox-strategies", "workbox-expiration", "workbox-cacheable-response"],
+  },
+];
+
+/**
+ * Native libraries the iOS app links that are not npm packages: React Native's CocoaPods pods
+ * (react-native/third-party-podspecs and scripts/cocoapods/helpers.rb) and the Hermes engine. Expo's and React
+ * Native's own native code ships inside their npm packages, which the walk already lists. The version is read from
+ * the installed react-native, so an upgrade updates it (and `--check` reports the notices stale). License and
+ * copyright lines were read from each project's upstream license file at that version. Before each App Store
+ * submission the pod list in Podfile.lock is compared with this table (docs/launch/app-store-submission.md).
+ */
+export const NATIVE_COMPONENTS = [
+  {
+    name: "boost",
+    license: "BSL-1.0",
+    copyright: "Copyright the Boost authors (each source file names its own authors)",
+    source: "https://www.boost.org",
+    version: { file: "third-party-podspecs/boost.podspec", pattern: /spec\.version\s*=\s*['"]([^'"]+)['"]/ },
+  },
+  {
+    name: "DoubleConversion",
+    license: "BSD-3-Clause",
+    copyright: "Copyright 2006-2011, the V8 project authors. All rights reserved.",
+    source: "https://github.com/google/double-conversion",
+    note: "the podspec says MIT; the upstream LICENSE file is BSD-3-Clause, which is applied",
+    version: { file: "third-party-podspecs/DoubleConversion.podspec", pattern: /spec\.version\s*=\s*['"]([^'"]+)['"]/ },
+  },
+  {
+    name: "fmt",
+    license: "MIT",
+    copyright: "Copyright (c) 2012 - present, Victor Zverovich and {fmt} contributors",
+    source: "https://github.com/fmtlib/fmt",
+    version: { file: "third-party-podspecs/fmt.podspec", pattern: /spec\.version\s*=\s*['"]([^'"]+)['"]/ },
+  },
+  {
+    name: "glog",
+    license: "BSD-3-Clause",
+    copyright: "Copyright (c) 2008, Google Inc. All rights reserved.",
+    source: "https://github.com/google/glog",
+    version: { file: "third-party-podspecs/glog.podspec", pattern: /spec\.version\s*=\s*['"]([^'"]+)['"]/ },
+  },
+  {
+    name: "hermes-engine",
+    license: "MIT",
+    copyright: "Copyright (c) Meta Platforms, Inc. and affiliates.",
+    source: "https://github.com/facebook/hermes",
+    version: { file: "package.json", pattern: /"version"\s*:\s*"([^"]+)"/ },
+  },
+  {
+    name: "RCT-Folly",
+    license: "Apache-2.0",
+    copyright: "Copyright (c) Meta Platforms, Inc. and affiliates.",
+    source: "https://github.com/facebook/folly",
+    version: { file: "scripts/cocoapods/helpers.rb", pattern: /@@folly_config\s*=\s*\{\s*:version\s*=>\s*['"]([^'"]+)['"]/ },
+  },
+  {
+    name: "SocketRocket",
+    license: "BSD-3-Clause",
+    copyright: "Copyright (c) 2016-present, Facebook, Inc. All rights reserved.",
+    source: "https://github.com/facebook/SocketRocket",
+    version: { file: "scripts/cocoapods/helpers.rb", pattern: /@@socket_rocket_config\s*=\s*\{\s*:version\s*=>\s*['"]([^'"]+)['"]/ },
+  },
+];
+
 export const MARKDOWN_OUT = "THIRD_PARTY_NOTICES.md";
 export const JSON_OUT = "apps/web/src/data/third-party-notices.json";
 export const ASSETS_CSV = "content/assets-license.csv";
@@ -69,10 +150,11 @@ export const PERMISSIVE = {
   "CC0-1.0": "Creative Commons Zero 1.0 Universal",
   "CC-BY-4.0": "Creative Commons Attribution 4.0 International",
   "Python-2.0": "Python License 2.0",
+  "BSL-1.0": "Boost Software License 1.0",
 };
 
 /** The order in which a choice is taken from an `OR` expression. */
-const PREFERENCE = ["MIT", "Apache-2.0", "BSD-2-Clause", "BSD-3-Clause", "ISC", "0BSD", "BlueOak-1.0.0", "CC0-1.0", "Unlicense", "CC-BY-4.0", "Python-2.0"];
+const PREFERENCE = ["MIT", "Apache-2.0", "BSD-2-Clause", "BSD-3-Clause", "ISC", "0BSD", "BlueOak-1.0.0", "CC0-1.0", "Unlicense", "CC-BY-4.0", "Python-2.0", "BSL-1.0"];
 
 /** Licenses that require sharing source or licensing derived work alike (strong or file-level copyleft). */
 export const COPYLEFT = /^(AGPL|GPL|LGPL|SSPL|EUPL|OSL|CDDL|EPL|MPL|CPAL|RPL|MS-RL|QPL|Sleepycat|CC-BY-SA|CC-BY-NC|CC-BY-ND|CECILL|ODbL)/i;
@@ -285,15 +367,29 @@ function authorName(pkg) {
  * Walks the production tree from each root. Returns { packages, platform, problems } where `packages` is the
  * sorted, de-duplicated list of listed packages and `platform` the platform builds (policy-checked, not listed).
  */
-export function walk(root = DEFAULT_ROOT, roots = ROOTS) {
+export function walk(root = DEFAULT_ROOT, roots = ROOTS, extras = roots === ROOTS ? EXTRA_SHIPPED : []) {
   const byKey = new Map();
   const platform = new Map();
   const problems = [];
   const seen = new Map(); // real dir -> Set(labels) already walked with
 
-  for (const { dir, label } of roots) {
-    const start = realpathSync(join(root, dir));
-    const stack = [{ dir: start, workspace: true }];
+  const starts = roots.map(({ dir, label }) => ({ label, stack: [{ dir: realpathSync(join(root, dir)), workspace: true }] }));
+  for (const { from, through, label, packages: names } of extras) {
+    const via = resolvePackage(through, realpathSync(join(root, from)));
+    if (!via) {
+      problems.push({ code: "missing-dependency", message: `${from} needs ${through}, which is not installed (run pnpm install)` });
+      continue;
+    }
+    const stack = [];
+    for (const name of names) {
+      const found = resolvePackage(name, via);
+      if (found) stack.push({ dir: found, workspace: false });
+      else problems.push({ code: "missing-dependency", message: `${through} needs ${name}, which is not installed (run pnpm install)` });
+    }
+    starts.push({ label, stack });
+  }
+
+  for (const { label, stack } of starts) {
     while (stack.length > 0) {
       const { dir: pkgDir, workspace } = stack.pop();
       const labels = seen.get(pkgDir) ?? new Set();
@@ -378,15 +474,50 @@ function describe(entry) {
   };
 }
 
+/**
+ * The NATIVE_COMPONENTS rows, each with its version read from the react-native the learner app installs (labelled
+ * `ios`: the iOS app is the native build that ships).
+ */
+export function nativeEntries(root, components = NATIVE_COMPONENTS, problems = []) {
+  if (components.length === 0) return [];
+  const rn = resolvePackage("react-native", realpathSync(join(root, "apps/mobile")));
+  if (!rn) {
+    problems.push({ code: "missing-dependency", message: "apps/mobile needs react-native, which is not installed (run pnpm install)" });
+    return [];
+  }
+  return components.map((c) => {
+    let version = null;
+    try {
+      version = readFileSync(join(rn, c.version.file), "utf8").match(c.version.pattern)?.[1] ?? null;
+    } catch {
+      version = null;
+    }
+    if (!version) problems.push({ code: "native-version", message: `no version for ${c.name} in react-native/${c.version.file}; update NATIVE_COMPONENTS` });
+    const verdict = classify(c.name, version ?? "", c.license, { overrides: {} });
+    const where = `iOS native library, not an npm package; source: ${c.source}`;
+    return {
+      name: c.name,
+      version: version ?? "(unknown)",
+      license: verdict.license,
+      declared: c.license,
+      status: verdict.status,
+      note: c.note ? `${where}; ${c.note}` : where,
+      copyright: c.copyright,
+      usedIn: ["ios"],
+      notice: null,
+    };
+  });
+}
+
 function compareEntries(a, b) {
   if (a.name !== b.name) return a.name < b.name ? -1 : 1;
   return a.version < b.version ? -1 : a.version > b.version ? 1 : 0;
 }
 
 /** Builds the full notices model from the installed tree. */
-export function buildModel(root = DEFAULT_ROOT, roots = ROOTS) {
-  const { packages, platform, problems } = walk(root, roots);
-  const listed = packages.map(describe).sort(compareEntries);
+export function buildModel(root = DEFAULT_ROOT, roots = ROOTS, { extras = roots === ROOTS ? EXTRA_SHIPPED : [], native = roots === ROOTS ? NATIVE_COMPONENTS : [] } = {}) {
+  const { packages, platform, problems } = walk(root, roots, extras);
+  const listed = [...packages.map(describe), ...nativeEntries(root, native, problems)].sort(compareEntries);
   const builds = platform.map(describe).sort(compareEntries);
 
   for (const p of [...listed, ...builds]) {
@@ -437,7 +568,7 @@ export function renderMarkdown(model) {
     "",
     "Hangul Route is proprietary software: Copyright (c) 2026 Sungjoo Hwang. All rights reserved. See [LICENSE](./LICENSE).",
     "",
-    "Hangul Route includes the third-party components below. Each remains under its own license, and nothing in the Hangul Route license or Terms of Service limits the rights those licenses give. This list covers the production dependencies of the shipped apps: the learner app (`app`, apps/mobile, web and PWA build), the website and grown-up console (`web`, apps/web) and the server (`server`, apps/api and packages/backend on Cloudflare Workers). Development-only tools are not shipped and are not listed.",
+    "Hangul Route includes the third-party components below. Each remains under its own license, and nothing in the Hangul Route license or Terms of Service limits the rights those licenses give. This list covers the production dependencies of the shipped apps: the learner app (`app`, apps/mobile, web and PWA build, including the Workbox service-worker runtime), the website and grown-up console (`web`, apps/web) and the server (`server`, apps/api and packages/backend on Cloudflare Workers). The iOS app also links the native libraries marked `ios` (React Native's CocoaPods pods and the Hermes engine). The Android app is not released yet; its native libraries will be added here before it is. Development-only tools are not shipped and are not listed.",
     "",
     "Platform-specific binary builds (for example `@esbuild/linux-x64`) are published by the same project under the same license as the package that installs them, and are not listed separately.",
     "",

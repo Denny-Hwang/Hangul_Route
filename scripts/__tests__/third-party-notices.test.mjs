@@ -22,6 +22,7 @@ import {
   copyrightLines,
   declaredLicense,
   exceptionFor,
+  nativeEntries,
   parseCsv,
   renderJson,
   renderMarkdown,
@@ -217,6 +218,49 @@ describe("third-party-notices: the walk", () => {
     }
   });
 
+  test("walks code shipped from a devDependency (EXTRA_SHIPPED), resolved from that package's real path", () => {
+    const root = fixtureRepo();
+    try {
+      const devtool = join(root, "node_modules", ".pnpm", "devtool@1.0.0", "node_modules");
+      const runtime = join(root, "node_modules", ".pnpm", "runtime@4.0.0", "node_modules", "runtime");
+      mkdirSync(runtime, { recursive: true });
+      writeFileSync(join(runtime, "package.json"), JSON.stringify({ name: "runtime", version: "4.0.0", license: "MIT" }));
+      symlinkSync(runtime, join(devtool, "runtime"));
+      const extras = [{ from: "apps/app", through: "devtool", label: "app", packages: ["runtime"] }];
+      const { packages, problems } = walk(root, [{ dir: "apps/app", label: "app" }], extras);
+      assert.deepEqual(problems, []);
+      assert.ok(packages.some((p) => p.name === "runtime" && p.usedIn.has("app")));
+      assert.ok(!packages.some((p) => p.name === "devtool"), "the build tool itself is not listed");
+      const missing = walk(root, [{ dir: "apps/app", label: "app" }], [{ from: "apps/app", through: "devtool", label: "app", packages: ["gone"] }]);
+      assert.deepEqual(missing.problems.map((p) => p.code), ["missing-dependency"]);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("lists the iOS native libraries (NATIVE_COMPONENTS) with versions read from the installed react-native", () => {
+    const root = fixtureRepo();
+    try {
+      const rn = join(root, "apps", "mobile", "node_modules", "react-native");
+      mkdirSync(join(rn, "scripts", "cocoapods"), { recursive: true });
+      writeFileSync(join(rn, "package.json"), JSON.stringify({ name: "react-native", version: "0.76.5" }));
+      writeFileSync(join(rn, "scripts", "cocoapods", "helpers.rb"), "@@folly_config = {\n  :version => '2024.01.01.00',\n}\n");
+      const components = [
+        { name: "RCT-Folly", license: "Apache-2.0", copyright: "Copyright (c) Meta", source: "https://example.com/folly", version: { file: "scripts/cocoapods/helpers.rb", pattern: /@@folly_config\s*=\s*\{\s*:version\s*=>\s*'([^']+)'/ } },
+        { name: "lost", license: "MIT", copyright: "Copyright (c) X", source: "https://example.com/lost", version: { file: "nope.podspec", pattern: /(x)/ } },
+      ];
+      const problems = [];
+      const rows = nativeEntries(root, components, problems);
+      assert.equal(rows[0].version, "2024.01.01.00");
+      assert.equal(rows[0].license, "Apache-2.0");
+      assert.deepEqual(rows[0].usedIn, ["ios"]);
+      assert.match(rows[0].note, /iOS native library, not an npm package/);
+      assert.deepEqual(problems.map((p) => p.code), ["native-version"]);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
   test("reports a copyleft or unknown production dependency, and a missing one", () => {
     const root = fixtureRepo();
     try {
@@ -235,7 +279,7 @@ describe("third-party-notices: the walk", () => {
 const installed = existsSync(join(REPO, "apps", "mobile", "node_modules")) && existsSync(join(REPO, "apps", "web", "node_modules"));
 
 describe("third-party-notices: the repository", () => {
-  test("--check passes: no copyleft or unknown license, and the notices are current", { skip: !installed && "workspace not installed" }, () => {
+  test("--check passes: no copyleft or unknown license, and the notices are current", { skip: !installed && !process.env.CI && "workspace not installed" }, () => {
     const run = spawnSync(process.execPath, [SCRIPT, "--check"], { cwd: REPO, encoding: "utf8" });
     assert.equal(run.status, 0, `${run.stdout}\n${run.stderr}`);
   });
@@ -245,6 +289,11 @@ describe("third-party-notices: the repository", () => {
     assert.match(md, /Copyright \(c\) 2026 Sungjoo Hwang\. All rights reserved\./);
     for (const name of ["react", "react-native-web", "next", "hono", "zod", "expo"]) assert.match(md, new RegExp(`^\\| ${name} \\|`, "m"), name);
     assert.match(md, /hr-presenter-kr\.woff2/);
+    // The Workbox runtime the PWA build copies into dist (EXTRA_SHIPPED), from a devDependency.
+    for (const name of ["workbox-core", "workbox-precaching", "workbox-routing", "workbox-strategies"]) assert.match(md, new RegExp(`^\\| ${name} \\| [^|]+ \\| MIT \\|[^\\n]*\\| app \\|$`, "m"), name);
+    // The iOS app's native libraries (NATIVE_COMPONENTS), with the Boost license text.
+    for (const name of ["boost", "RCT-Folly", "DoubleConversion", "glog", "fmt", "SocketRocket", "hermes-engine"]) assert.match(md, new RegExp(`^\\| ${name} \\|[^\\n]*\\| ios \\|$`, "m"), name);
+    assert.match(md, /### BSL-1\.0: Boost Software License 1\.0/);
     assert.match(md, /### OFL-1\.1: SIL Open Font License 1\.1/);
     const json = JSON.parse(readFileSync(join(REPO, JSON_OUT), "utf8"));
     assert.ok(json.packages.length > 100);
