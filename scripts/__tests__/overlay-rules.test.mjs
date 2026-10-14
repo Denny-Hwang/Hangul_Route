@@ -244,6 +244,37 @@ describe("overlay-rules: overlay-token-mismatch", () => {
   });
 });
 
+describe("overlay-rules: a lesson pattern note keeps its {ko:} tokens (F-CURR-001 section 3.4)", () => {
+  const cell = {
+    id: "episode:stage3-letters",
+    quests: [
+      {
+        id: "quest:stage3-letters-q2",
+        titleEn: "There Is a Book",
+        steps: [{ id: "s2", kind: "discover", titleEn: "Look", discover: { pages: [{ items: [{ type: "pattern", noteEn: "Use {ko:이} after a final consonant, {ko:가} after a vowel." }] }] } }],
+      },
+    ],
+  };
+  const field = "steps.s2.discover.pages.0.items.0.note";
+  const note = (overlayOf, text, id = "quest:stage3-letters-q2") =>
+    base({ "content/episodes/stage-3/letters.json": cell, ...overlayOf({ [id]: { [field]: text } }) });
+
+  test("Hangul inside the same {ko:} tokens is taught Korean, in es and ko", () => {
+    assert.deepEqual(rules(note(es, "Usa {ko:이} después de una consonante final y {ko:가} después de una vocal.")), []);
+    assert.deepEqual(rules(note(ko, "받침 뒤에는 {ko:이}, 모음 뒤에는 {ko:가}를 써요.")), []);
+  });
+
+  test("Hangul outside a token is still a UI field, and the tokens must match the English note", () => {
+    assert.deepEqual(rules(note(es, "Usa {ko:이} o 가.")), ["korean-in-ui-field", "overlay-token-mismatch"]);
+    assert.deepEqual(rules(note(es, "Usa {ko:이}, {ko:가} o {ko:을}.")), ["overlay-token-mismatch"]);
+    assert.match(checkOverlayTree(note(ko, "받침 뒤에는 이를 써요.")).violations[0].rule, /overlay-token-mismatch: .*가, 이/);
+  });
+
+  test("a token lifts nothing outside a lesson quest's Discover note", () => {
+    assert.deepEqual(rules(base(es({ "card:gangaji": { blurb: "Di {ko:강아지}." } }))), ["korean-in-ui-field"]);
+  });
+});
+
 describe("overlay-rules: banned-on-learner-surface", () => {
   test("the locale's learner list from banned-words.json, token match for es, substring for ko", () => {
     assert.deepEqual(rules(base(es({ "card:gangaji": { blurb: "¡Fallaste!" } }))), ["banned-on-learner-surface"]);
