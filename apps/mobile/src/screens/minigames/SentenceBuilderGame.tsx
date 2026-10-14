@@ -30,6 +30,7 @@ import { VoiceHelpSheet } from '../../components/VoiceHelpSheet';
 import { usePromptSlot } from '../../components/use-prompt-slot';
 import { useMessages } from '../../i18n/use-messages';
 import { useRomanizationMode } from '../../i18n/use-romanization-mode';
+import { clipRefsOf } from '../../logic/audio/clip-refs';
 import { cubicBezierPoints } from '../../logic/flip';
 import type { MinigameScope } from '../../logic/minigame-config';
 import { buildRounds, type SbRound, type SbTile } from '../../logic/sentence-builder/progression';
@@ -48,7 +49,7 @@ import {
   type NotePart,
   type TileView,
 } from '../../logic/sentence-builder/view';
-import { playPrompt, stop } from '../../platform/audio';
+import { hasClip, playPrompt, stop, warmClips } from '../../platform/audio';
 import { nudge, success, tapLight } from '../../platform/haptics';
 import { useReducedMotion } from '../../platform/motion';
 import type { MinigameHost } from './host';
@@ -125,9 +126,15 @@ export function SentenceBuilderGame({ scope, host, patternNote, onBack }: Props)
   const completed = useRef(false);
   const dispatchRef = useRef<(event: SbEvent) => void>(() => undefined);
 
-  const slot = usePromptSlot({ source: 'sentence-builder', textOnScreen: true });
+  // The current round's sentence may have a bundled recording: then a missing Korean voice is not a missing sound (as Match Sound).
+  const slot = usePromptSlot({ source: 'sentence-builder', hasClip: hasClip(rounds[state.roundIdx]?.sentence.audioRef), textOnScreen: true });
   const { play, reset } = slot;
   const [helpOpen, setHelpOpen] = useState(false);
+
+  // Bundled sentence recordings start without a fetch (as Match Sound and Discover warm theirs).
+  useEffect(() => {
+    void warmClips(clipRefsOf(rounds.map((r) => r.sentence)));
+  }, [rounds]);
 
   const later = (ms: number, run: () => void): void => {
     timers.current.push(setTimeout(run, ms));
