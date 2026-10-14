@@ -51,7 +51,7 @@ entries by area (`stage1-cards`, `vocab-food`, `placement`, `stories`, ...).
 | `quest:` | `title`, `blurb`, `teaser`, `steps.<stepId>.title` / `.body` / `.hoyaLine`, and Discover: `steps.<stepId>.discover.pages.<page>.caption`, `steps.<stepId>.discover.pages.<page>.items.<item>.example.gloss` / `.word.gloss` / `.note` |
 | `minigame:` | `cardPairs.<pair>.gloss`, `storySteps.<stepId>.label`, `dialogue.<turn>.npc`, `dialogue.<turn>.options.<option>.gloss`, `listenPick.rounds.<roundId>.prompt` |
 | `stage:` / `theme:` | `title`, `oneLiner`, `anchorSkill` |
-| `story:` | `title`, `summary`, `hoyaIntro`, `hoyaOutro`, `scenes.<sceneId>.narration` / `.caption` / `.alt`, `keywords.<id>.gloss`, `checks.<checkId>.prompt` / `.explain` / `.hint` / `.options.<optionId>`, `cultureNotes.<id>.title` / `.body`, `facts.<id>.claim`, `errata.<id>.summary` |
+| `story:` | `title`, `summary`, `hoyaIntro`, `hoyaOutro`, `scenes.<sceneId>.narration` / `.caption` / `.alt`, `tiers.<level>.scenes.<sceneId>.narration` / `.caption` / `.alt` (see below), `keywords.<id>.gloss`, `checks.<checkId>.prompt` / `.explain` / `.hint` / `.options.<optionId>`, `cultureNotes.<id>.title` / `.body`, `facts.<id>.claim`, `errata.<id>.summary` |
 | `vocab:` | `gloss`, `senseNote` |
 | `vocab-topic:` | `title`, `blurb`, `hoyaIntro` |
 | `pitem:` | `gloss`, `options.<optionId>.gloss` |
@@ -62,6 +62,29 @@ scripts, in `scripts/overlay-fields.mjs` (a test keeps them equal). **Never** tr
 `sound`, `pictureRef`, `visual`. Taught Korean and its romanization come only from the base
 content, in every locale. A jamo `soundHint` / `nameHint` may exist in an overlay even when the
 English base has none yet (a Spanish sound-alike is written fresh for Spanish readers).
+
+**Two-tier stories.** A story with a `listen` and a `read` tier reuses the scene ids (`s1`, `s2`, ...)
+in both tiers with different English and different `{kw:}` tokens, so a scene is translated per tier:
+
+- `scenes.<sceneId>.narration` / `.caption` / `.alt` (untiered) translates the **listen** tier only
+  (a one-tier story's only tier; a story without a listen tier, its first tier). Every existing
+  story overlay uses this form, and it stays valid.
+- `tiers.<level>.scenes.<sceneId>.narration` / `.caption` / `.alt` translates that tier's scene, the
+  tier named by its `level` (`tiers.read.scenes.s1.narration`). The read tier's scenes are reached
+  **only** this way; until they have one, the read tier shows its English.
+- On the listen tier both forms may be present: the tier-qualified one wins. Write one or the other
+  for a scene, not both (the validator warns `overlay-shadowed` when an entry has both).
+- An untiered `scenes.<sceneId>.*` for a scene only the read tier has is `overlay-unknown-id`; the
+  message names the `tiers.read.*` key to write instead.
+- Checks (`checks.<checkId>...`) need no tier: a check or checkpoint id is unique across a story's
+  tiers (`c1`, `r1`), which the story schema enforces.
+
+```json
+"story:sun-and-moon": {
+  "scenes.s1.narration": "...the listen tier's s1, with its {kw:} tokens...",
+  "tiers.read.scenes.s1.narration": "...the read tier's s1, with the read tier's {kw:} tokens..."
+}
+```
 
 **Jamo glosses.** `jamo:*.gloss` translates the JSON jamo's `en` (`content/episodes/stage-1/jamo.json`).
 The TypeScript jamo the app ships (`apps/mobile/src/content/jamo.ts`) has no English gloss: its
@@ -95,21 +118,26 @@ that rule (open item for F-I18N-001 PR 15/16).
 - **Korean**: 해요체. A Korean `gloss` is a **description**, not an echo: for 강아지 write
   "작고 귀여운 개", never "강아지" (that fails as `overlay-circular-gloss`; a gloss that only wraps
   the word in quotes or punctuation is a warning).
-- **Story narration** keeps exactly the same `{kw:<id>}` tokens as the English (any order); each
-  token renders as the Korean word on its chip.
+- **Story narration** keeps exactly the same `{kw:<id>}` tokens as the English of the tier it
+  lands on (any order); each token renders as the Korean word on its chip.
 - No word from `packages/i18n/src/banned-words.json` for the locale (anti-shame, F-HW-001 §3.3).
 - Short and plain, like the English (CEFR Pre-A1); no emoji.
 
 ## After an edit
 
 ```bash
-node scripts/build-overlays.mjs           # regenerate packages/content-schema/src/i18n-overlays.generated.ts
+node scripts/build-overlays.mjs           # regenerate packages/content-schema/src/i18n-overlays.generated.ts (never hand-merge it)
 node scripts/build-overlays.mjs --check   # drift detector (CI)
 node scripts/validate-content.mjs         # the overlay rules below
 pnpm --filter @hangul-route/mobile test -t overlays   # ids of TypeScript-resident content
 ```
 
 Vocabulary overlays also feed `scripts/build-vocab.mjs` (run it too, `content/vocab/README.md`).
+
+The app reads the generated overlays through the `@hangul-route/content-schema/overlays` subpath, not
+the package barrel, so the site and the Worker do not bundle the Spanish and Korean text (F-I18N-001
+§10 open item 2). `src/__tests__/overlays-bundle.test.ts` in that package holds a size budget (1 MiB of
+JSON per locale): past it, split the module per locale and load the viewer's locale on demand.
 
 ## What the validator checks (`scripts/overlay-rules.mjs`)
 
@@ -120,9 +148,9 @@ Vocabulary overlays also feed `scripts/build-vocab.mjs` (run it too, `content/vo
 | `overlay-forbidden-field`: a field outside the table above | error |
 | `korean-in-ui-field`: Hangul in a Spanish overlay, or outside a translatable field of a Korean one | error |
 | `overlay-circular-gloss`: a Korean gloss equal to the Korean it glosses | error (warning when it only wraps it) |
-| `overlay-token-mismatch`: story narration tokens differ from the English | error |
+| `overlay-token-mismatch`: story narration tokens differ from the English of the tier the field lands on | error |
 | `banned-on-learner-surface`: a banned word of the locale | error |
-| `overlay-missing`: a translatable English field the locale lacks | warning; error for locales in `HANGUL_ROUTE_STRICT_LOCALES` (set in `.github/workflows/content-validation.yml` when a locale ships; `scripts/i18n-status.mjs` fails a shipped locale that is not listed) |
+| `overlay-missing`: a translatable English field the locale lacks, counted per story tier (a listen-tier scene is covered by either form, a read-tier scene by its `tiers.read.*` field) | warning; error for locales in `HANGUL_ROUTE_STRICT_LOCALES` (set in `.github/workflows/content-validation.yml` when a locale ships; `scripts/i18n-status.mjs` fails a shipped locale that is not listed) |
 
 Ids of content that is still TypeScript in `apps/mobile/src/content` (`jamo:`, `card:`,
 `episode:`, `quest:`, `minigame:`, `stage:`, `theme:` that are not in the JSON) are checked by

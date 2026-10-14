@@ -1,4 +1,3 @@
-import { OVERLAYS } from './i18n-overlays.generated';
 import { OVERLAY_FIELDS, overlayPrefix, type Overlays } from './schemas/locale-overlay';
 import type { UiLocale } from './schemas/locale';
 
@@ -15,6 +14,11 @@ import type { UiLocale } from './schemas/locale';
  *   (an array that is not a direct child is found by name anywhere below, so story
  *   `scenes.<id>` reaches `tiers[].scenes[]`; `checks` also covers `checkpoints`);
  * - a path that ends on an element lands on its `en`;
+ * - story tiers (F-STORY-001: a `listen` and a `read` tier reuse the scene ids `s1`..)
+ *   are addressed by their `level`: `tiers.<level>.scenes.<id>.narration` lands on that
+ *   tier only and wins over the untiered `scenes.<id>.narration`, which lands on the
+ *   primary tier only (the `listen` tier, else the first one: the form a one-tier story
+ *   and the earlier overlays use); see `TIER_SCOPED`;
  * - the jamo hints `soundHint` / `nameHint` are set even when the base has none.
  * Anything that resolves to nothing is ignored: the English stays (§3.13, never a
  * blank and never the key).
@@ -37,6 +41,16 @@ const ADDITIVE_FIELDS: readonly string[] = ['soundHint', 'nameHint'];
 
 /** Collections reached by another name too. */
 const COLLECTION_ALIASES: Readonly<Record<string, readonly string[]>> = { checks: ['checks', 'checkpoints'] };
+
+/** The array of story tiers; its elements are keyed by their `level` (`listen`, `read`). */
+const TIERS = 'tiers';
+/**
+ * Collections whose element ids repeat from tier to tier with different English (scene
+ * `s1` of the listen tier is not scene `s1` of the read tier): an untiered path reaches
+ * them in the primary tier only, and `tiers.<level>.<collection>...` reaches the others.
+ * Check ids differ per tier (`c1`, `r1`), so `checks.<id>` still reaches every tier.
+ */
+const TIER_SCOPED: readonly string[] = ['scenes'];
 
 const slug = (text: string): string =>
   text
@@ -72,6 +86,24 @@ export function overlayElementKey(element: unknown, index: number): string {
   return String(index);
 }
 
+/** The index of the primary tier: the `listen` tier, else the first. */
+function primaryTier(tiers: readonly unknown[]): number {
+  const listen = tiers.findIndex((tier) => isRec(tier) && tier.level === 'listen');
+  return listen < 0 ? 0 : listen;
+}
+
+/** The key of an element of the array named `collection`: a story tier by its `level`, anything else by `overlayElementKey`. */
+function elementKey(collection: string, element: unknown, index: number): string {
+  if (collection === TIERS && isRec(element)) {
+    const level = segmentOf(element.level);
+    if (level !== undefined) return level;
+  }
+  return overlayElementKey(element, index);
+}
+
+/** Whether a field is tier-qualified (`tiers.<level>....`): it is applied after, and so wins over, the untiered form. */
+const isTierField = (field: string): boolean => field.startsWith(`${TIERS}.`);
+
 function leafTargets(node: Rec, name: string, at: Path): Path[] {
   if (typeof node[`${name}En`] === 'string') return [[...at, `${name}En`]];
   const own = node[name];
@@ -95,7 +127,10 @@ function collections(node: Rec, name: string, at: Path): Array<[unknown[], Path]
     if (!isRec(value)) return;
     for (const [k, v] of Object.entries(value)) {
       if (names.includes(k) && Array.isArray(v)) out.push([v, [...path, k]]);
-      else walk(v, [...path, k]);
+      else if (k === TIERS && Array.isArray(v) && TIER_SCOPED.includes(name) && v.length > 0) {
+        const primary = primaryTier(v);
+        walk(v[primary], [...path, k, primary]);
+      } else walk(v, [...path, k]);
     }
   };
   walk(node, at);
@@ -124,7 +159,7 @@ function resolve(node: unknown, segs: readonly string[], at: Path): Path[] {
   }
   const [selector, ...after] = rest;
   return arraysAt(node, head, at).flatMap(([items, path]) =>
-    items.flatMap((item, i) => (overlayElementKey(item, i) === selector ? resolve(item, after, [...path, i]) : [])),
+    items.flatMap((item, i) => (elementKey(head, item, i) === selector ? resolve(item, after, [...path, i]) : [])),
   );
 }
 
@@ -156,6 +191,12 @@ export interface TranslatableField {
   /** Where its English source sits inside the entity. */
   path: Path;
   source: string;
+  /**
+   * Other overlay fields that land on the same source (only when there are any): the
+   * tier-qualified form of a primary-tier scene field (`tiers.listen.scenes.s1.narration`
+   * beside `scenes.s1.narration`). Either one translates it.
+   */
+  alternates?: string[];
 }
 
 function expand(node: unknown, segs: readonly string[], at: Path, field: readonly string[]): Array<[string, Path]> {
@@ -165,7 +206,7 @@ function expand(node: unknown, segs: readonly string[], at: Path, field: readonl
   if (rest.length === 0) return leafTargets(node, head, at).map((p) => [[...field, head].join('.'), p]);
   if (rest[0]?.startsWith('<')) {
     return arraysAt(node, head, at).flatMap(([items, path]) =>
-      items.flatMap((item, i) => expand(item, rest.slice(1), [...path, i], [...field, head, overlayElementKey(item, i)])),
+      items.flatMap((item, i) => expand(item, rest.slice(1), [...path, i], [...field, head, elementKey(head, item, i)])),
     );
   }
   const child = node[head];
@@ -176,12 +217,30 @@ function expand(node: unknown, segs: readonly string[], at: Path, field: readonl
   return [];
 }
 
-/** Every translatable field the entity carries an English source for (pattern order, then element order). */
+/**
+ * Every translatable field the entity carries an English source for (pattern order, then
+ * element order), each source once: a later pattern that lands on a source an earlier one
+ * already names (the tier-qualified form of a primary-tier scene) is listed as that
+ * field's `alternates`, so a story's scenes count once per tier.
+ */
 export function translatableFields(entityId: string, entity: unknown): TranslatableField[] {
   const patterns: readonly string[] = (OVERLAY_FIELDS as Record<string, readonly string[]>)[overlayPrefix(entityId)] ?? [];
-  return patterns.flatMap((pattern) =>
-    expand(entity, pattern.split('.'), [], []).map(([field, path]) => ({ field, path, source: getIn(entity, path) as string })),
-  );
+  const out: TranslatableField[] = [];
+  const bySource = new Map<string, TranslatableField>();
+  for (const pattern of patterns) {
+    for (const [field, path] of expand(entity, pattern.split('.'), [], [])) {
+      const at = path.join('\u0000');
+      const first = bySource.get(at);
+      if (first !== undefined) {
+        first.alternates = [...(first.alternates ?? []), field];
+        continue;
+      }
+      const row: TranslatableField = { field, path, source: getIn(entity, path) as string };
+      bySource.set(at, row);
+      out.push(row);
+    }
+  }
+  return out;
 }
 
 /** `{ title?, blurb?, ... }` for an entity type with `titleEn`, `blurbEn`, ... fields. */
@@ -191,13 +250,19 @@ export type LocalizedFields<T> = { [K in keyof T as K extends `${infer F}En` ? F
  * The entity with its English text replaced by the overlay of `locale` where present.
  * Returns the same object for `en` and when the entity has no overlay; otherwise a
  * copy (only the changed branches are copied; the input is never mutated).
+ *
+ * `overlays` has no default: the generated `OVERLAYS` (every es / ko string) sits behind
+ * the `@hangul-route/content-schema/overlays` subpath, so a consumer of the package
+ * barrel that never translates content (the site, the Worker) does not bundle it.
  */
-export function localize<T extends object>(entity: T, entityId: string, locale: UiLocale, overlays: Overlays = OVERLAYS): T {
+export function localize<T extends object>(entity: T, entityId: string, locale: UiLocale, overlays: Overlays): T {
   if (locale === 'en') return entity;
   const entry = overlays[locale][entityId];
   if (entry === undefined) return entity;
   let out: unknown = entity;
-  for (const [field, value] of Object.entries(entry)) {
+  const fields = Object.entries(entry);
+  // Untiered fields first, so a tier-qualified one wins on its tier.
+  for (const [field, value] of [...fields.filter(([f]) => !isTierField(f)), ...fields.filter(([f]) => isTierField(f))]) {
     for (const path of overlayTargets(out, field)) out = setIn(out, path, value);
   }
   return out as T;
@@ -212,12 +277,13 @@ export interface GlossRef {
 /**
  * An inline `{ ko, en, romanization }` pair (minigame content) with its gloss in the
  * UI language: the overlay's `<path>.gloss` of the owning entity, else the English.
+ * `overlays` is passed as for `localize`.
  */
 export function localizeGloss<P extends { en: string }>(
   pair: P,
   locale: UiLocale,
-  ref?: GlossRef,
-  overlays: Overlays = OVERLAYS,
+  ref: GlossRef | undefined,
+  overlays: Overlays,
 ): P {
   if (locale === 'en' || ref === undefined) return pair;
   const value = overlays[locale][ref.entityId]?.[`${ref.path}.gloss`];

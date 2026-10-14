@@ -8,6 +8,7 @@
   "main": "./src/index.ts",
   "exports": {
     ".": "./src/index.ts",
+    "./overlays": "./overlays.ts",
     "./testing/catalog-2026-10": "./src/__tests__/fixtures/catalog-2026-10.ts"
   },
   "scripts": {

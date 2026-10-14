@@ -1,6 +1,5 @@
 import { readFileSync } from 'node:fs';
 import {
-  OVERLAYS,
   isOverlayFieldAllowed,
   localize,
   overlayElementKey,
@@ -9,6 +8,7 @@ import {
   translatableFields,
   type Overlays,
 } from '@hangul-route/content-schema';
+import { OVERLAYS } from '@hangul-route/content-schema/overlays';
 import { LOCALE_STATUS, type LocaleStatus } from '@hangul-route/i18n';
 import { describe, expect, it } from 'vitest';
 import { CONTENT_OVERLAYS } from '../../logic/content-locale';
