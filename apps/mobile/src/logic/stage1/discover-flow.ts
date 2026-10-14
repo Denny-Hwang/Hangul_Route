@@ -279,7 +279,7 @@ export function buildDiscover(
         continue;
       }
       if (item.type !== 'jamo') {
-          // F-CURR-001 upper-stage items (sentence, pattern, realia): until their own Discover
+        // F-CURR-001 upper-stage items (sentence, pattern, realia): until their own Discover
         // views land (S3-1, G-2 / S6-1), each taught text shows as a word card with Hear it.
         const picture = item.type === 'sentence' ? item.picture : undefined;
         for (const word of discoverItemTexts(item)) {
@@ -337,7 +337,8 @@ export interface DiscoverState {
 
 export type DiscoverEvent =
   | { type: 'hear'; id: string }
-  | { type: 'audio'; id: string; result: PlayResult }
+  /** A play finished; `run` is the one its `play` effect carried (a line of an exchange item). */
+  | { type: 'audio'; id: string; result: PlayResult; run?: number }
   | { type: 'reveal'; key: string }
   /** The Read along button of an exchange item: starts it, or stops it when it is running. */
   | { type: 'readAlong'; item: string }
@@ -346,7 +347,8 @@ export type DiscoverEvent =
   | { type: 'next' };
 
 export type DiscoverEffect =
-  | { type: 'play'; id: string }
+  /** Play a button's audio; a line of an exchange item carries its run, which the `audio` result echoes. */
+  | { type: 'play'; id: string; run?: number }
   /** Say the lit line's label to a screen reader; the `play` that follows starts after it (announce, then play). */
   | { type: 'announce'; id: string }
   /** Wait the short pause between two lines, then dispatch `readAlongNext` with this run. */
@@ -390,7 +392,7 @@ function lightLine(state: DiscoverState, item: string, index: number, run: numbe
     state: { ...state, tapped: add(state.tapped, id), readAlong: { item, line: index, last: index, run, single } },
     effects: [
       { type: 'announce', id },
-      { type: 'play', id },
+      { type: 'play', id, run },
     ],
   };
 }
@@ -411,7 +413,7 @@ export function stepDiscover(
         // A line's own speaker stops any Read along and plays just that line, lit.
         const stopping: DiscoverEffect[] = state.readAlong ? [{ type: 'stopAudio' }] : [];
         const out = lightLine({ ...state, runs: state.runs + 1, readAlongStatus: null }, line.item, line.index, state.runs + 1, true);
-        return { state: out.state, effects: [...stopping, { type: 'play', id: event.id }] };
+        return { state: out.state, effects: [...stopping, { type: 'play', id: event.id, run: state.runs + 1 }] };
       }
       const stopping: DiscoverEffect[] = state.readAlong ? [{ type: 'stopAudio' }] : [];
       return {
@@ -426,7 +428,9 @@ export function stepDiscover(
           : { ...state, text: add(state.text, event.id) };
       const ra = state.readAlong;
       const line = parseLineId(event.id);
-      if (!ra || !line || line.item !== ra.item || line.index !== ra.line) return { state: base, effects: [] };
+      // Only the run that lit the line moves the highlight: a stopped or superseded run's play still
+      // resolves (often 'played'), and that result only records the heard mark.
+      if (!ra || !line || event.run !== ra.run || line.item !== ra.item || line.index !== ra.line) return { state: base, effects: [] };
       if (event.result !== 'played') {
         // No timed highlight without sound: the status line shows once and nothing stays lit.
         return {

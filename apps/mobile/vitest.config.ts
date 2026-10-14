@@ -34,6 +34,8 @@ export default defineConfig({
       'scripts/__tests__/**/*.test.mjs',
     ],
     passWithNoTests: true,
+    // The lesson stage modules load by a Metro-only `require`; Node gets them statically.
+    setupFiles: ['src/test-support/lesson-modules-setup.ts'],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json-summary'],

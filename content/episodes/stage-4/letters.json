@@ -2,10 +2,10 @@
   "id": "episode:stage4-letters",
   "stage": "stage4",
   "theme": "letters",
-  "status": "draft",
+  "status": "ready",
   "titleEn": "Read Along",
   "subtitleEn": "Follow a talk with a teacher, line by line.",
-  "hoyaIntroEn": "Listen to each line and follow along. Let us ask about new words!",
+  "hoyaIntroEn": "Listen to each line and follow along. Let's ask about new words!",
   "order": 1,
   "pillarTags": [
     "A1"
@@ -23,7 +23,7 @@
           "id": "s1",
           "kind": "intro",
           "titleEn": "What Is This?",
-          "hoyaLineEn": "A new word! Let us ask the teacher what it is.",
+          "hoyaLineEn": "A new word! Let's ask the teacher what it is.",
           "durationSeconds": 7
         },
         {
@@ -120,7 +120,7 @@
           "id": "s6",
           "kind": "reward",
           "titleEn": "Good Question!",
-          "hoyaLineEn": "You asked what and who. Great reading along!",
+          "hoyaLineEn": "You asked what and who. You read along so well!",
           "durationSeconds": 8
         }
       ],
@@ -177,15 +177,6 @@
                 {
                   "id": "r1",
                   "text": {
-                    "ko": "친구예요.",
-                    "romanization": "chinguyeyo",
-                    "en": "It is a friend."
-                  },
-                  "correct": true
-                },
-                {
-                  "id": "r2",
-                  "text": {
                     "ko": "연필이에요.",
                     "romanization": "yeonpirieyo",
                     "en": "It is a pencil."
@@ -193,13 +184,22 @@
                   "correct": false
                 },
                 {
-                  "id": "r3",
+                  "id": "r2",
                   "text": {
                     "ko": "잘 가요.",
                     "romanization": "jal gayo",
                     "en": "Goodbye."
                   },
                   "correct": false
+                },
+                {
+                  "id": "r3",
+                  "text": {
+                    "ko": "친구예요.",
+                    "romanization": "chinguyeyo",
+                    "en": "It is a friend."
+                  },
+                  "correct": true
                 }
               ]
             },
@@ -214,20 +214,20 @@
                 {
                   "id": "r1",
                   "text": {
-                    "ko": "가방이에요.",
-                    "romanization": "gabangieyo",
-                    "en": "It is a bag."
-                  },
-                  "correct": true
-                },
-                {
-                  "id": "r2",
-                  "text": {
                     "ko": "안녕하세요.",
                     "romanization": "annyeonghaseyo",
                     "en": "Hello."
                   },
                   "correct": false
+                },
+                {
+                  "id": "r2",
+                  "text": {
+                    "ko": "가방이에요.",
+                    "romanization": "gabangieyo",
+                    "en": "It is a bag."
+                  },
+                  "correct": true
                 },
                 {
                   "id": "r3",
@@ -257,15 +257,6 @@
             },
             {
               "id": "l2",
-              "speakerEn": "Teacher",
-              "line": {
-                "ko": "호야, 안녕하세요!",
-                "romanization": "hoya annyeonghaseyo",
-                "en": "Hello, Hoya!"
-              }
-            },
-            {
-              "id": "l3",
               "speakerEn": "Hoya",
               "line": {
                 "ko": "이게 뭐예요?",
@@ -274,12 +265,21 @@
               }
             },
             {
-              "id": "l4",
+              "id": "l3",
               "speakerEn": "Teacher",
               "line": {
                 "ko": "연필이에요.",
                 "romanization": "yeonpirieyo",
                 "en": "It is a pencil."
+              }
+            },
+            {
+              "id": "l4",
+              "speakerEn": "Teacher",
+              "line": {
+                "ko": "잘 가요.",
+                "romanization": "jal gayo",
+                "en": "Goodbye."
               }
             }
           ]
@@ -373,7 +373,7 @@
           "id": "s1",
           "kind": "intro",
           "titleEn": "Where Is It?",
-          "hoyaLineEn": "Where is everything at school? Let us ask!",
+          "hoyaLineEn": "Where is everything at school? Let's ask!",
           "durationSeconds": 7
         },
         {
@@ -490,20 +490,20 @@
                 {
                   "id": "r1",
                   "text": {
-                    "ko": "저기예요.",
-                    "romanization": "jeogiyeyo",
-                    "en": "It is over there."
-                  },
-                  "correct": true
-                },
-                {
-                  "id": "r2",
-                  "text": {
                     "ko": "연필이에요.",
                     "romanization": "yeonpirieyo",
                     "en": "It is a pencil."
                   },
                   "correct": false
+                },
+                {
+                  "id": "r2",
+                  "text": {
+                    "ko": "저기예요.",
+                    "romanization": "jeogiyeyo",
+                    "en": "It is over there."
+                  },
+                  "correct": true
                 },
                 {
                   "id": "r3",
@@ -564,15 +564,6 @@
                 {
                   "id": "r1",
                   "text": {
-                    "ko": "저기예요.",
-                    "romanization": "jeogiyeyo",
-                    "en": "It is over there."
-                  },
-                  "correct": true
-                },
-                {
-                  "id": "r2",
-                  "text": {
                     "ko": "누구예요?",
                     "romanization": "nuguyeyo",
                     "en": "Who is it?"
@@ -580,13 +571,22 @@
                   "correct": false
                 },
                 {
-                  "id": "r3",
+                  "id": "r2",
                   "text": {
                     "ko": "안녕하세요.",
                     "romanization": "annyeonghaseyo",
                     "en": "Hello."
                   },
                   "correct": false
+                },
+                {
+                  "id": "r3",
+                  "text": {
+                    "ko": "저기예요.",
+                    "romanization": "jeogiyeyo",
+                    "en": "It is over there."
+                  },
+                  "correct": true
                 }
               ]
             }
@@ -607,29 +607,29 @@
             },
             {
               "id": "l2",
-              "speakerEn": "Teacher",
+              "speakerEn": "Hoya",
               "line": {
-                "ko": "호야, 안녕하세요!",
-                "romanization": "hoya annyeonghaseyo",
-                "en": "Hello, Hoya!"
+                "ko": "가방이 어디예요?",
+                "romanization": "gabangi eodiyeyo",
+                "en": "Where is the bag?"
               }
             },
             {
               "id": "l3",
-              "speakerEn": "Hoya",
+              "speakerEn": "Teacher",
               "line": {
-                "ko": "화장실이 어디예요?",
-                "romanization": "hwajangsiri eodiyeyo",
-                "en": "Where is the restroom?"
+                "ko": "저기예요.",
+                "romanization": "jeogiyeyo",
+                "en": "It is over there."
               }
             },
             {
               "id": "l4",
               "speakerEn": "Teacher",
               "line": {
-                "ko": "저기예요.",
-                "romanization": "jeogiyeyo",
-                "en": "It is over there."
+                "ko": "잘 가요.",
+                "romanization": "jal gayo",
+                "en": "Goodbye."
               }
             }
           ]
@@ -722,7 +722,7 @@
           "id": "s1",
           "kind": "intro",
           "titleEn": "Thank You, Teacher",
-          "hoyaLineEn": "Let us follow a whole talk with the teacher, line by line.",
+          "hoyaLineEn": "Let's follow a whole talk with the teacher, line by line.",
           "durationSeconds": 7
         },
         {
@@ -749,9 +749,9 @@
                         "speaker": "b",
                         "speakerEn": "Hoya",
                         "line": {
-                          "ko": "선생님, 이게 뭐예요?",
-                          "romanization": "seonsaengnim ige mwoyeyo",
-                          "en": "Teacher, what is this?"
+                          "ko": "선생님, 안녕하세요! 이게 뭐예요?",
+                          "romanization": "seonsaengnim annyeonghaseyo ige mwoyeyo",
+                          "en": "Hello, Teacher! What is this?"
                         }
                       }
                     ]
@@ -839,15 +839,6 @@
                 {
                   "id": "r1",
                   "text": {
-                    "ko": "선생님, 안녕하세요!",
-                    "romanization": "seonsaengnim annyeonghaseyo",
-                    "en": "Hello, Teacher!"
-                  },
-                  "correct": true
-                },
-                {
-                  "id": "r2",
-                  "text": {
                     "ko": "잘 가요.",
                     "romanization": "jal gayo",
                     "en": "Goodbye."
@@ -855,13 +846,22 @@
                   "correct": false
                 },
                 {
-                  "id": "r3",
+                  "id": "r2",
                   "text": {
                     "ko": "저기예요.",
                     "romanization": "jeogiyeyo",
                     "en": "It is over there."
                   },
                   "correct": false
+                },
+                {
+                  "id": "r3",
+                  "text": {
+                    "ko": "선생님, 안녕하세요!",
+                    "romanization": "seonsaengnim annyeonghaseyo",
+                    "en": "Hello, Teacher!"
+                  },
+                  "correct": true
                 }
               ]
             },
@@ -876,20 +876,20 @@
                 {
                   "id": "r1",
                   "text": {
-                    "ko": "한글이에요.",
-                    "romanization": "hangeurieyo",
-                    "en": "It is Hangul."
-                  },
-                  "correct": true
-                },
-                {
-                  "id": "r2",
-                  "text": {
                     "ko": "감사합니다!",
                     "romanization": "gamsahamnida",
                     "en": "Thank you!"
                   },
                   "correct": false
+                },
+                {
+                  "id": "r2",
+                  "text": {
+                    "ko": "한글이에요.",
+                    "romanization": "hangeurieyo",
+                    "en": "It is Hangul."
+                  },
+                  "correct": true
                 },
                 {
                   "id": "r3",
@@ -958,9 +958,9 @@
               "id": "l2",
               "speakerEn": "Hoya",
               "line": {
-                "ko": "선생님, 이게 뭐예요?",
-                "romanization": "seonsaengnim ige mwoyeyo",
-                "en": "Teacher, what is this?"
+                "ko": "선생님, 안녕하세요! 이게 뭐예요?",
+                "romanization": "seonsaengnim annyeonghaseyo ige mwoyeyo",
+                "en": "Hello, Teacher! What is this?"
               }
             },
             {
@@ -1064,9 +1064,14 @@
   ],
   "culture": [],
   "review": {
-    "language": "draft",
-    "culture": "draft",
-    "notes": []
+    "language": "native-reviewed",
+    "culture": "culture-reviewed",
+    "reviewedBy": "MAR",
+    "reviewedAt": "2026-10-14",
+    "notes": [
+      "Language pass 4 (MAR): spelling, spacing, register and romanization clean; applied the one-order Story Sequences, Hoya greeting the teacher back in q3, the ko q3 title on the taught thank-you, Let's in Hoya lines, es Siguiente, plainer ko glosses; kept 연필 여기 있어요 (natural colloquial order).",
+      "Culture pass 5 (MAR): no culture claim, so no sources; school etiquette fixed (the pupil returns the greeting); cast is Hoya and an unnamed teacher (선생님 / Teacher / Docente), addressed by title as pupils do; no real person, brand or price; no age wording."
+    ]
   },
   "contentVer": 1
 }

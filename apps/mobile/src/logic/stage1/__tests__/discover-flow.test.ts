@@ -538,7 +538,7 @@ describe('Read along (D-1 S3b): the audio-synced line highlight', () => {
     const out = stepDiscover(startDiscover(model), { type: 'readAlong', item: key });
     expect(out.effects).toEqual([
       { type: 'announce', id: line(0) },
-      { type: 'play', id: line(0) },
+      { type: 'play', id: line(0), run: 1 },
     ]);
     const r = pageRender(model, out.state, 'always').exchange!;
     expect(r.reading).toBe(true);
@@ -548,18 +548,18 @@ describe('Read along (D-1 S3b): the audio-synced line highlight', () => {
 
   it('after a line plays: back to rest, a short pause, then the next line lights and plays; it stops after the last', () => {
     let out = stepDiscover(startDiscover(model), { type: 'readAlong', item: key });
-    out = stepDiscover(out.state, { type: 'audio', id: line(0), result: 'played' });
+    out = stepDiscover(out.state, { type: 'audio', id: line(0), result: 'played', run: 1 });
     expect(out.effects).toEqual([{ type: 'pause', run: 1 }]);
     expect(lit(out.state)).toEqual([false, false]);
     expect(pageRender(model, out.state, 'always').exchange!.reading).toBe(true);
     out = stepDiscover(out.state, { type: 'readAlongNext', run: 1 });
     expect(out.effects).toEqual([
       { type: 'announce', id: line(1) },
-      { type: 'play', id: line(1) },
+      { type: 'play', id: line(1), run: 1 },
     ]);
     expect(lit(out.state)).toEqual([false, true]);
     expect(pageRender(model, out.state, 'always').exchange!.liveLine).toBe('Line 2 of 2, Teacher');
-    out = stepDiscover(out.state, { type: 'audio', id: line(1), result: 'played' });
+    out = stepDiscover(out.state, { type: 'audio', id: line(1), result: 'played', run: 1 });
     expect(out.effects).toEqual([]);
     expect(out.state.readAlong).toBeNull();
     const r = pageRender(model, out.state, 'always').exchange!;
@@ -569,17 +569,17 @@ describe('Read along (D-1 S3b): the audio-synced line highlight', () => {
 
   it('reads as many lines as the item has (lineCount)', () => {
     let out = stepDiscover(startDiscover(model), { type: 'readAlong', item: key }, () => 3);
-    out = stepDiscover(out.state, { type: 'audio', id: line(0), result: 'played' }, () => 3);
+    out = stepDiscover(out.state, { type: 'audio', id: line(0), result: 'played', run: 1 }, () => 3);
     out = stepDiscover(out.state, { type: 'readAlongNext', run: 1 }, () => 3);
-    out = stepDiscover(out.state, { type: 'audio', id: line(1), result: 'played' }, () => 3);
+    out = stepDiscover(out.state, { type: 'audio', id: line(1), result: 'played', run: 1 }, () => 3);
     expect(out.effects).toEqual([{ type: 'pause', run: 1 }]);
   });
 
   it('counts each line once in heard, whether read along or tapped', () => {
     let out = stepDiscover(startDiscover(model), { type: 'readAlong', item: key });
-    out = stepDiscover(out.state, { type: 'audio', id: line(0), result: 'played' });
+    out = stepDiscover(out.state, { type: 'audio', id: line(0), result: 'played', run: 1 });
     out = stepDiscover(out.state, { type: 'readAlongNext', run: 1 });
-    out = stepDiscover(out.state, { type: 'audio', id: line(1), result: 'played' });
+    out = stepDiscover(out.state, { type: 'audio', id: line(1), result: 'played', run: 1 });
     out = stepDiscover(out.state, { type: 'hear', id: line(0) });
     expect(out.state.tapped).toEqual([line(0), line(1)]);
     out = stepDiscover(out.state, { type: 'next' });
@@ -593,27 +593,54 @@ describe('Read along (D-1 S3b): the audio-synced line highlight', () => {
     expect(out.effects).toEqual([{ type: 'stopAudio' }]);
     expect(out.state.readAlong).toBeNull();
     expect(lit(out.state)).toEqual([false, false]);
-    out = stepDiscover(out.state, { type: 'audio', id: line(0), result: 'played' });
+    out = stepDiscover(out.state, { type: 'audio', id: line(0), result: 'played', run: 1 });
     expect(out.effects).toEqual([]);
     expect(stepDiscover(out.state, { type: 'readAlongNext', run: 1 }).effects).toEqual([]);
   });
 
   it('a pause of an older run never lights a line of a newer one', () => {
     let out = stepDiscover(startDiscover(model), { type: 'readAlong', item: key });
-    out = stepDiscover(out.state, { type: 'audio', id: line(0), result: 'played' });
+    out = stepDiscover(out.state, { type: 'audio', id: line(0), result: 'played', run: 1 });
     out = stepDiscover(out.state, { type: 'readAlong', item: key });
     out = stepDiscover(out.state, { type: 'readAlong', item: key });
     expect(out.state.runs).toBe(2);
     expect(stepDiscover(out.state, { type: 'readAlongNext', run: 1 }).effects).toEqual([]);
   });
 
+  it("a stale result of a line's own speaker never moves a Read along that superseded it", () => {
+    let out = stepDiscover(startDiscover(model), { type: 'hear', id: line(0) });
+    out = stepDiscover(out.state, { type: 'readAlong', item: key });
+    expect(out.effects).toEqual([
+      { type: 'stopAudio' },
+      { type: 'announce', id: line(0) },
+      { type: 'play', id: line(0), run: 2 },
+    ]);
+    // The stopped speaker play (run 1) still resolves 'played': it records the heard mark only.
+    out = stepDiscover(out.state, { type: 'audio', id: line(0), result: 'played', run: 1 });
+    expect(out.effects).toEqual([]);
+    expect(lit(out.state)).toEqual([true, false]);
+    expect(out.state.played).toContain(line(0));
+    out = stepDiscover(out.state, { type: 'audio', id: line(0), result: 'played', run: 2 });
+    expect(out.effects).toEqual([{ type: 'pause', run: 2 }]);
+  });
+
+  it("a stale Read along result never clears a line's own speaker that superseded it", () => {
+    let out = stepDiscover(startDiscover(model), { type: 'readAlong', item: key });
+    out = stepDiscover(out.state, { type: 'hear', id: line(0) });
+    out = stepDiscover(out.state, { type: 'audio', id: line(0), result: 'played', run: 1 });
+    expect(out.effects).toEqual([]);
+    expect(lit(out.state)).toEqual([true, false]);
+    out = stepDiscover(out.state, { type: 'audio', id: line(0), result: 'played', run: 2 });
+    expect(lit(out.state)).toEqual([false, false]);
+  });
+
   it("a line's own speaker stops Read along and plays just that line, lit", () => {
     let out = stepDiscover(startDiscover(model), { type: 'readAlong', item: key });
     out = stepDiscover(out.state, { type: 'hear', id: line(1) });
-    expect(out.effects).toEqual([{ type: 'stopAudio' }, { type: 'play', id: line(1) }]);
+    expect(out.effects).toEqual([{ type: 'stopAudio' }, { type: 'play', id: line(1), run: 2 }]);
     expect(lit(out.state)).toEqual([false, true]);
     expect(pageRender(model, out.state, 'always').exchange!.reading).toBe(false);
-    out = stepDiscover(out.state, { type: 'audio', id: line(1), result: 'played' });
+    out = stepDiscover(out.state, { type: 'audio', id: line(1), result: 'played', run: 2 });
     expect(out.effects).toEqual([]);
     expect(lit(out.state)).toEqual([false, false]);
   });
@@ -630,7 +657,7 @@ describe('Read along (D-1 S3b): the audio-synced line highlight', () => {
   it('no highlight without sound: muted or no voice shows the status once and lights nothing', () => {
     for (const result of ['muted', 'unavailable'] as const) {
       let out = stepDiscover(startDiscover(model), { type: 'readAlong', item: key });
-      out = stepDiscover(out.state, { type: 'audio', id: line(0), result });
+      out = stepDiscover(out.state, { type: 'audio', id: line(0), result, run: 1 });
       expect(out.effects).toEqual([]);
       expect(lit(out.state)).toEqual([false, false]);
       const r = pageRender(model, out.state, 'always').exchange!;
@@ -644,7 +671,7 @@ describe('Read along (D-1 S3b): the audio-synced line highlight', () => {
 
   it("a muted line's own speaker shows no Read along status", () => {
     let out = stepDiscover(startDiscover(model), { type: 'hear', id: line(0) });
-    out = stepDiscover(out.state, { type: 'audio', id: line(0), result: 'muted' });
+    out = stepDiscover(out.state, { type: 'audio', id: line(0), result: 'muted', run: 1 });
     expect(pageRender(model, out.state, 'always').exchange!.status).toBeUndefined();
   });
 

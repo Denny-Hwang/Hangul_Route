@@ -54,7 +54,7 @@ export const OUT_DIR = join("apps", "mobile", "src", "content", "__generated__")
  * with the measured numbers in the PR.
  */
 export const BUDGET = Object.freeze({
-  perQuestRawAvg: 7_500, // average per quest in a cell: 45 KB for Word Builder's six, 22.5 KB for three
+  perQuestRawAvg: 9_000, // average per quest in a cell (S4-1 raise, measured Stage 4 cells 24.1-25.8 KB for three): 54 KB for six, 27 KB for three
   stageRaw: 150_000,
   stageGzip: 32_000,
   totalRaw: 600_000,

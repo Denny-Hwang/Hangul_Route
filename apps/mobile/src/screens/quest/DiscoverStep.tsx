@@ -137,7 +137,7 @@ export function DiscoverStep({ pages, hoyaLine, onDone }: Props): React.ReactEle
         case 'play': {
           const action = actions.get(effect.id);
           if (!action) return;
-          void playPrompt(action.spec).then((result) => dispatchRef.current({ type: 'audio', id: effect.id, result }));
+          void playPrompt(action.spec).then((result) => dispatchRef.current({ type: 'audio', id: effect.id, result, ...(effect.run === undefined ? {} : { run: effect.run }) }));
           return;
         }
       }

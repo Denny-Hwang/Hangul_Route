@@ -10,15 +10,15 @@
     "quest:stage4-letters-q1": {
       "title": "¿Qué es esto?",
       "blurb": "Pregunta a tu docente qué es algo, y quién es alguien.",
-      "teaser": "Ahora: pregunta dónde están las cosas.",
+      "teaser": "Siguiente: pregunta dónde están las cosas.",
       "steps.s1.title": "¿Qué es esto?",
       "steps.s2.title": "Qué y quién",
       "steps.s3.title": "Elige la respuesta",
       "steps.s4.title": "Ordena la conversación",
-      "steps.s5.title": "Dos rapiditas",
+      "steps.s5.title": "Dos preguntas rápidas",
       "steps.s6.title": "¡Buena pregunta!",
       "steps.s1.hoyaLine": "¡Una palabra nueva! Vamos a preguntar a tu docente qué es.",
-      "steps.s6.hoyaLine": "Preguntaste qué y quién. ¡Muy bien leído!",
+      "steps.s6.hoyaLine": "Preguntaste qué y quién. ¡Seguiste la lectura muy bien!",
       "steps.s2.discover.pages.0.caption": "Señala una cosa y pregunta qué es. La respuesta dice su nombre.",
       "steps.s2.discover.pages.1.caption": "Para una persona, pregunta quién es.",
       "steps.s2.discover.pages.0.items.0.lines.0.speaker": "Hoya",
@@ -37,7 +37,7 @@
       "dialogue.0.options.chaegieyo.gloss": "Es un libro.",
       "dialogue.0.options.annyeonghaseyo.gloss": "Hola.",
       "dialogue.0.options.jal-gayo.gloss": "Adiós.",
-      "dialogue.1.options.chinguyeyo.gloss": "Es un amigo.",
+      "dialogue.1.options.chinguyeyo.gloss": "Es un amigo o una amiga.",
       "dialogue.1.options.yeonpirieyo.gloss": "Es un lápiz.",
       "dialogue.1.options.jal-gayo.gloss": "Adiós.",
       "dialogue.2.options.gabangieyo.gloss": "Es una mochila.",
@@ -46,9 +46,9 @@
     },
     "minigame:s4-letters-q1-apply": {
       "storySteps.l1.label": "¡Hola, docente!",
-      "storySteps.l2.label": "¡Hola, Hoya!",
-      "storySteps.l3.label": "¿Qué es esto?",
-      "storySteps.l4.label": "Es un lápiz."
+      "storySteps.l2.label": "¿Qué es esto?",
+      "storySteps.l3.label": "Es un lápiz.",
+      "storySteps.l4.label": "Adiós."
     },
     "minigame:s4-letters-q1-check": {
       "listenPick.rounds.c1.prompt": "¿Qué es esto?",
@@ -57,17 +57,17 @@
     "quest:stage4-letters-q2": {
       "title": "¿Dónde está?",
       "blurb": "Pregunta dónde están las cosas en la escuela.",
-      "teaser": "Ahora: una charla completa, del hola al gracias.",
+      "teaser": "Siguiente: una charla completa, del hola al gracias.",
       "steps.s1.title": "¿Dónde está?",
       "steps.s2.title": "¿Dónde?",
       "steps.s3.title": "Elige la respuesta",
       "steps.s4.title": "Ordena la conversación",
-      "steps.s5.title": "Dos rapiditas",
+      "steps.s5.title": "Dos preguntas rápidas",
       "steps.s6.title": "¡Lo encontraste!",
       "steps.s1.hoyaLine": "¿Dónde está todo en la escuela? ¡Vamos a preguntar!",
       "steps.s6.hoyaLine": "Preguntaste dónde están las cosas. ¡Ya sabes el camino!",
       "steps.s2.discover.pages.0.caption": "Di el lugar o la cosa, y luego pregunta dónde está.",
-      "steps.s2.discover.pages.1.caption": "La respuesta puede ser corta: aquí, o allá.",
+      "steps.s2.discover.pages.1.caption": "La respuesta puede ser corta: aquí o allá.",
       "steps.s2.discover.pages.0.items.0.lines.0.speaker": "Hoya",
       "steps.s2.discover.pages.0.items.0.lines.1.speaker": "Docente",
       "steps.s2.discover.pages.1.items.0.lines.0.speaker": "Docente",
@@ -93,9 +93,9 @@
     },
     "minigame:s4-letters-q2-apply": {
       "storySteps.l1.label": "¡Hola, docente!",
-      "storySteps.l2.label": "¡Hola, Hoya!",
-      "storySteps.l3.label": "¿Dónde está el baño?",
-      "storySteps.l4.label": "Está allá."
+      "storySteps.l2.label": "¿Dónde está la mochila?",
+      "storySteps.l3.label": "Está allá.",
+      "storySteps.l4.label": "Adiós."
     },
     "minigame:s4-letters-q2-check": {
       "listenPick.rounds.c1.prompt": "¿Dónde está el baño?",
@@ -108,7 +108,7 @@
       "steps.s2.title": "Una charla completa",
       "steps.s3.title": "Elige la respuesta",
       "steps.s4.title": "Ordena la conversación",
-      "steps.s5.title": "Dos rapiditas",
+      "steps.s5.title": "Dos preguntas rápidas",
       "steps.s6.title": "¡Gran charla!",
       "steps.s1.hoyaLine": "Sigamos una charla completa con tu docente, línea por línea.",
       "steps.s6.hoyaLine": "¡Seguiste una charla completa, del hola al gracias!",
@@ -119,7 +119,7 @@
       "steps.s2.discover.pages.1.items.0.lines.0.speaker": "Docente",
       "steps.s2.discover.pages.1.items.0.lines.1.speaker": "Hoya",
       "steps.s2.discover.pages.0.items.0.lines.0.line.gloss": "¡Hola!",
-      "steps.s2.discover.pages.0.items.0.lines.1.line.gloss": "Docente, ¿qué es esto?",
+      "steps.s2.discover.pages.0.items.0.lines.1.line.gloss": "¡Hola, docente! ¿Qué es esto?",
       "steps.s2.discover.pages.1.items.0.lines.0.line.gloss": "Es el hangul.",
       "steps.s2.discover.pages.1.items.0.lines.1.line.gloss": "¡Gracias!"
     },
@@ -139,7 +139,7 @@
     },
     "minigame:s4-letters-q3-apply": {
       "storySteps.l1.label": "¡Hola!",
-      "storySteps.l2.label": "Docente, ¿qué es esto?",
+      "storySteps.l2.label": "¡Hola, docente! ¿Qué es esto?",
       "storySteps.l3.label": "Es un cuaderno.",
       "storySteps.l4.label": "¡Gracias!"
     },
