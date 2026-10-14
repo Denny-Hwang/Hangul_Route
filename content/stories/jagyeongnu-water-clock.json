@@ -2,7 +2,7 @@
   "v": 1,
   "id": "story:jagyeongnu-water-clock",
   "state": "ready",
-  "contentVer": 3,
+  "contentVer": 4,
   "title": {
     "ko": "장영실과 스스로 울리는 물시계, 자격루",
     "romanization": "Jangyeongsilgwa seuseuro ullineun mulsigye, jagyeongnu",
@@ -496,6 +496,354 @@
         "mulsigye",
         "jagyeongnu"
       ]
+    },
+    {
+      "level": "read",
+      "scenes": [
+        {
+          "id": "s1",
+          "narrationEn": "A water clock, {kw:mulsigye}, measures time, {kw:sigan}, by how much water there is.",
+          "captionEn": "A clock that uses water",
+          "line": {
+            "ko": "물시계는 물로 시간을 재요.",
+            "romanization": "Mulsigyeneun mullo siganeul jaeyo.",
+            "en": "A water clock measures time with water.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f1"
+          ],
+          "framing": false,
+          "approximations": [],
+          "art": {
+            "setting": "scene:hanji-backdrop",
+            "layers": [
+              {
+                "ref": "prop:bronze-jar",
+                "x": 140,
+                "y": 200,
+                "s": 1
+              },
+              {
+                "ref": "prop:water-stream",
+                "x": 197.0,
+                "y": 202.0,
+                "s": 1.0
+              },
+              {
+                "ref": "prop:float-vessel",
+                "x": 215.0,
+                "y": 286,
+                "s": 0.8
+              },
+              {
+                "ref": "hoya:thinking",
+                "x": 318,
+                "y": 292,
+                "s": 0.7,
+                "flip": true
+              }
+            ],
+            "altEn": "Hoya watches water trickle drop by drop from a large bronze jar into a tall vessel, the heart of a water clock."
+          }
+        },
+        {
+          "id": "s2",
+          "narrationEn": "{kw:jang-yeongsil} was so skilled that he took charge of craft work in the palace.",
+          "captionEn": "Jang Yeongsil, a skilled maker",
+          "line": {
+            "ko": "장영실은 솜씨가 좋았어요.",
+            "romanization": "Jangyeongsireun somssiga joasseoyo.",
+            "en": "Jang Yeongsil was very skilled.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f2"
+          ],
+          "framing": false,
+          "approximations": [],
+          "art": {
+            "setting": "scene:hanok-room",
+            "layers": [
+              {
+                "ref": "prop:fig-artisan",
+                "x": 180,
+                "y": 288,
+                "s": 1.25
+              },
+              {
+                "ref": "prop:desk-low",
+                "x": 310,
+                "y": 284,
+                "s": 1
+              },
+              {
+                "ref": "prop:bronze-jar",
+                "x": 310,
+                "y": 231,
+                "s": 0.5
+              }
+            ],
+            "altEn": "Jang Yeongsil, a skilled craftsman in plain clothes and a head cloth, works on the bronze parts of a new clock."
+          }
+        },
+        {
+          "id": "s3",
+          "narrationEn": "King Sejong said the clock could not have been made without Jang Yeongsil.",
+          "captionEn": "King Sejong praises Jang Yeongsil",
+          "line": {
+            "ko": "세종대왕이 장영실을 칭찬했어요.",
+            "romanization": "Sejongdaewangi jangyeongsireul chingchanhaesseoyo.",
+            "en": "King Sejong praised Jang Yeongsil.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f3"
+          ],
+          "framing": false,
+          "approximations": [],
+          "art": {
+            "setting": "scene:palace-hall",
+            "layers": [
+              {
+                "ref": "prop:fig-king",
+                "x": 196,
+                "y": 252,
+                "s": 0.95
+              },
+              {
+                "ref": "prop:fig-artisan",
+                "x": 306,
+                "y": 284,
+                "s": 1,
+                "flip": true
+              }
+            ],
+            "altEn": "In a palace hall King Sejong praises Jang Yeongsil for building the water clock, and the craftsman bows."
+          }
+        },
+        {
+          "id": "s4",
+          "narrationEn": "In the {kw:jagyeongnu}, water flowed into a tall vessel, and a floating rod rose as it filled.",
+          "captionEn": "Rising water lifts a rod",
+          "line": {
+            "ko": "물이 차면 잣대가 올라가요.",
+            "romanization": "Muri chamyeon jatdaega ollagayo.",
+            "en": "When the water fills up, the rod rises.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f4"
+          ],
+          "framing": false,
+          "approximations": [],
+          "art": {
+            "setting": "scene:hanji-backdrop",
+            "layers": [
+              {
+                "ref": "prop:bronze-jar",
+                "x": 150,
+                "y": 214,
+                "s": 1.3
+              },
+              {
+                "ref": "prop:water-stream",
+                "x": 224.0,
+                "y": 216.5,
+                "s": 1.3
+              },
+              {
+                "ref": "prop:float-vessel",
+                "x": 247.5,
+                "y": 296,
+                "s": 1
+              }
+            ],
+            "altEn": "How the clock works: water pours from a bronze jar into a tall vessel, and a marked rod floats up as it fills."
+          }
+        },
+        {
+          "id": "s5",
+          "narrationEn": "Wooden figures struck a bell, {kw:jong}, a drum, {kw:buk}, and a gong, {kw:jing}, to tell the time.",
+          "captionEn": "A bell, a drum and a gong",
+          "line": {
+            "ko": "나무 인형이 종, 북, 징을 쳐요.",
+            "romanization": "Namu inhyeongi jong buk jingeul chyeoyo.",
+            "en": "Wooden figures strike a bell, a drum and a gong.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f5"
+          ],
+          "framing": false,
+          "approximations": [],
+          "art": {
+            "setting": "scene:hanji-backdrop",
+            "layers": [
+              {
+                "ref": "prop:striking-figures",
+                "x": 200,
+                "y": 262,
+                "s": 2
+              }
+            ],
+            "altEn": "Metal balls roll down a chute and three wooden figures strike a bell, a drum and a gong to tell the time."
+          }
+        },
+        {
+          "id": "s6",
+          "narrationEn": "From 1434, the clock kept time at {kw:gyeongbokgung}, and the city could hear the time.",
+          "captionEn": "Telling the time at the palace",
+          "line": {
+            "ko": "경복궁에서 시간을 알렸어요.",
+            "romanization": "Gyeongbokgungeseo siganeul allyeosseoyo.",
+            "en": "It told the time at Gyeongbokgung Palace.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f6"
+          ],
+          "framing": false,
+          "approximations": [],
+          "art": {
+            "setting": "scene:palace-courtyard",
+            "layers": [
+              {
+                "ref": "prop:night-sky",
+                "x": 200,
+                "y": 196,
+                "s": 1
+              },
+              {
+                "ref": "prop:drum",
+                "x": 200,
+                "y": 282,
+                "s": 1.6
+              }
+            ],
+            "altEn": "Evening falls at Gyeongbokgung Palace, and a big drum stands ready to pass the clock's sound on to the city."
+          }
+        }
+      ],
+      "checks": [
+        {
+          "id": "r1",
+          "kind": "pick-meaning",
+          "promptEn": "What does {target} mean?",
+          "target": {
+            "ko": "물",
+            "romanization": "mul",
+            "en": "water"
+          },
+          "options": [
+            {
+              "id": "a",
+              "en": "Water",
+              "isCorrect": true
+            },
+            {
+              "id": "b",
+              "en": "Time",
+              "isCorrect": false
+            },
+            {
+              "id": "c",
+              "en": "Bell",
+              "isCorrect": false
+            },
+            {
+              "id": "d",
+              "en": "Fire",
+              "isCorrect": false
+            }
+          ],
+          "explainEn": "Mul means water. The water clock measured time with water.",
+          "factIds": [
+            "f1"
+          ]
+        },
+        {
+          "id": "r2",
+          "kind": "pick-meaning",
+          "promptEn": "What does {target} mean?",
+          "target": {
+            "ko": "종",
+            "romanization": "jong",
+            "en": "bell"
+          },
+          "options": [
+            {
+              "id": "a",
+              "en": "Drum",
+              "isCorrect": false
+            },
+            {
+              "id": "b",
+              "en": "Bell",
+              "isCorrect": true
+            },
+            {
+              "id": "c",
+              "en": "Gong",
+              "isCorrect": false
+            },
+            {
+              "id": "d",
+              "en": "Clock",
+              "isCorrect": false
+            }
+          ],
+          "explainEn": "Jong means bell. Wooden figures struck a bell, a drum and a gong.",
+          "factIds": [
+            "f5"
+          ]
+        },
+        {
+          "id": "r3",
+          "kind": "detail",
+          "promptEn": "In the story, what rises when the water fills up?",
+          "options": [
+            {
+              "id": "a",
+              "en": "A floating rod",
+              "isCorrect": true
+            },
+            {
+              "id": "b",
+              "en": "A palace gate",
+              "isCorrect": false
+            },
+            {
+              "id": "c",
+              "en": "A metal bowl",
+              "isCorrect": false
+            },
+            {
+              "id": "d",
+              "en": "A drum",
+              "isCorrect": false
+            }
+          ],
+          "explainEn": "As the water filled the tall vessel, a floating rod slowly rose.",
+          "factIds": [
+            "f4"
+          ]
+        }
+      ],
+      "checkpoints": [],
+      "sequenceSceneIds": [
+        "s1",
+        "s3",
+        "s4",
+        "s6"
+      ],
+      "newKeywordIds": [
+        "mulsigye",
+        "sigan",
+        "jang-yeongsil",
+        "jagyeongnu"
+      ],
+      "grammarFocusEn": "-myeon (when): muri chamyeon; -ro (with): mullo"
     }
   ],
   "coverSceneId": "s1",
@@ -725,7 +1073,7 @@
     "passes": 3,
     "checkedAt": "2026-10-10",
     "scope": "cluster",
-    "notes": "Third independent pass. All quotes re-checked programmatically against fetched pages (Sillok, encykorea, 우리역사넷, NMK, KMA; KHS descriptions via the khs.go.kr open API SearchKindOpenapiDt.do?ccbaCpno=...). unesco.org/ich.unesco.org pages could not be fetched directly (connection reset); UNESCO wording and years (2009, 2013, 2018) confirmed from search excerpts of the UNESCO pages and KHS lists. Corrections: Heo Jun birth year dropped from narration/fact (sources conflict: 1539 vs 1546, encykorea internally inconsistent); Jang Yeong-sil rank sentence softened to match the Sillok ('decided to give'); 우리역사넷 added as second source for Donguibogam f4/f5; Ssirum UNESCO locator de-quoted. MAR 2026-10-13 language review (F-STORY-001 PR 1.9): Korean strings, romanization and glosses read; findings and outcomes in the PR. MAR 2026-10-13 culture review (F-STORY-001 PR 1.9): heritage accuracy, framing, tone and advisories read; review.advisory confirmed; findings and outcomes in the PR."
+    "notes": "Third independent pass. All quotes re-checked programmatically against fetched pages (Sillok, encykorea, 우리역사넷, NMK, KMA; KHS descriptions via the khs.go.kr open API SearchKindOpenapiDt.do?ccbaCpno=...). unesco.org/ich.unesco.org pages could not be fetched directly (connection reset); UNESCO wording and years (2009, 2013, 2018) confirmed from search excerpts of the UNESCO pages and KHS lists. Corrections: Heo Jun birth year dropped from narration/fact (sources conflict: 1539 vs 1546, encykorea internally inconsistent); Jang Yeong-sil rank sentence softened to match the Sillok ('decided to give'); 우리역사넷 added as second source for Donguibogam f4/f5; Ssirum UNESCO locator de-quoted. MAR 2026-10-13 language review (F-STORY-001 PR 1.9): Korean strings, romanization and glosses read; findings and outcomes in the PR. MAR 2026-10-13 culture review (F-STORY-001 PR 1.9): heritage accuracy, framing, tone and advisories read; review.advisory confirmed; findings and outcomes in the PR. MAR 2026-10-13 language review of the read tier (F-STORY-005 PR 5.6): 6 Korean lines, their romanization (machine-checked) and glosses read for spelling, naturalness and Stage 5 level; no change; findings and outcomes in the PR. MAR 2026-10-13 culture review of the read tier (F-STORY-005 PR 5.6): every line and check compared with its cited facts (no new claim), framing, tone and respectful wording read; no change; Jang Yeongsil is named for his skill only (advisory unchanged); review.advisory unchanged; findings and outcomes in the PR."
   },
   "authorNotes": "Dating: the Sillok entry in which Sejong praises Jang and grants the rank 호군 is dated 1433-09-16 (lunar), while KHS and encykorea give 1434 as the year the clock was made/completed; narration avoids a making year and gives only the start of use (1434-07-01 lunar), on which the Sillok and encykorea agree. Other makers: encykorea's 자격루 entry lists 장영실·이천·김조 and its 장영실 entry mentions 김빈; the story names only Jang Yeong-sil, whom the Sillok (1433, 1434) and KHS credit. Location: encykorea says the 1536 vessels are at Deoksugung (outdated); KHS lists the National Palace Museum of Korea. Simplified mechanism: the Sillok distinguishes small copper balls and large iron balls and also describes 12 zodiac figures holding time plaques; narration says 'metal balls'. Jang Yeong-sil's later career and other instruments (e.g., 옥루, 혼천의) omitted.  REVISION: 관노 is described as a government-owned servant (Sillok 1434: 동래현 관노), worded neutrally; encykorea adds he was later freed and given a court post, so narration says 'first a servant owned by the government'. Illustration of the 1536 vessels no longer shows dragons: KHS describes plain bronze vessels, and the only decoration mention found is an encykorea image caption ('수수통의 용문양'), which is not in the KHS text, so decoration is left out entirely. PASS 3: scene 3/f3 now say the king 'decided to give' the rank (Sillok 1433-09-16: 'I wish to add the post of hogun'; Hwang Hui and others agreed and 'the king followed'). PR 1.8c: s2 now says 'first a servant owned by the government in Dongnae' and adds the encykorea ending from f2 ('Later he was freed and given a post at court'); the bare romanized 'gwanno' was removed; advisory 'historical-hardship' added. s6 says the gate drums and bells 'repeated the sound' (f6: relayed). s1 now tokens 시간 so the s7 line builds on a known word.",
   "errata": []

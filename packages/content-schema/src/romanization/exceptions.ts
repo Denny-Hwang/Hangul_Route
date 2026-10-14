@@ -35,6 +35,11 @@ export const ROMANIZATION_EXCEPTIONS: readonly RomanizationException[] = [
     allowed: ['songpyeoneun sollipeul kkalgo jjyeoyo.'],
     reason: 'ㄴ-insertion in 솔잎 (said [솔립], RR sollip) carries into 솔잎을 [솔리플]; the converter has no compound rule and gives soripeul',
   },
+  {
+    ko: '호랑이가 엄마인 척해요.',
+    allowed: ['horangiga eommain cheokaeyo.'],
+    reason: 'ㄱ+ㅎ across the noun-verb join of 척하다: the converter keeps the noun convention (묵호 mukho) and gives cheokhaeyo; the verb ending aspirates',
+  },
 ];
 
 /**

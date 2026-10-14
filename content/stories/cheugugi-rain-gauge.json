@@ -2,7 +2,7 @@
   "v": 1,
   "id": "story:cheugugi-rain-gauge",
   "state": "ready",
-  "contentVer": 4,
+  "contentVer": 5,
   "title": {
     "ko": "비를 재는 그릇, 측우기",
     "romanization": "Bireul jaeneun geureut, cheugugi",
@@ -492,6 +492,385 @@
         "geureut",
         "cheugugi"
       ]
+    },
+    {
+      "level": "read",
+      "scenes": [
+        {
+          "id": "s2",
+          "narrationEn": "The crown prince, {kw:seja}, worried about drought. After rain, he dug into the ground to check.",
+          "captionEn": "The crown prince digs to check",
+          "line": {
+            "ko": "세자가 땅을 파 보았어요.",
+            "romanization": "Sejaga ttangeul pa boasseoyo.",
+            "en": "The crown prince dug into the ground to check.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f1"
+          ],
+          "framing": false,
+          "approximations": [],
+          "art": {
+            "setting": "scene:palace-courtyard",
+            "layers": [
+              {
+                "ref": "prop:fig-king",
+                "x": 176,
+                "y": 270,
+                "s": 0.95
+              },
+              {
+                "ref": "prop:dug-soil",
+                "x": 268,
+                "y": 268,
+                "s": 1.2
+              }
+            ],
+            "altEn": "The young crown prince stands in the palace grounds beside a small hole, checking how deep the rain soaked in."
+          }
+        },
+        {
+          "id": "s3",
+          "narrationEn": "Digging could not show the exact amount, so he collected rainwater in a copper vessel, {kw:geureut}.",
+          "captionEn": "A vessel collects the rain",
+          "line": {
+            "ko": "그릇에 빗물을 모았어요.",
+            "romanization": "Geureuse binmureul moasseoyo.",
+            "en": "He collected rainwater in a vessel.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f1"
+          ],
+          "framing": false,
+          "approximations": [],
+          "art": {
+            "setting": "scene:palace-courtyard",
+            "layers": [
+              {
+                "ref": "prop:rain-cloud",
+                "x": 200,
+                "y": 200,
+                "s": 1
+              },
+              {
+                "ref": "prop:rain-gauge",
+                "x": 190,
+                "y": 276,
+                "s": 1.3
+              },
+              {
+                "ref": "prop:fig-king",
+                "x": 320,
+                "y": 236,
+                "s": 0.7
+              }
+            ],
+            "altEn": "Rain falls into a plain metal vessel standing in the palace courtyard while the crown prince watches from near the hall."
+          }
+        },
+        {
+          "id": "s4",
+          "narrationEn": "In 1442, the rain gauge was named {kw:cheugugi}. After each rain, an official measured the water.",
+          "captionEn": "Measuring the rain",
+          "line": {
+            "ko": "측우기로 빗물의 깊이를 쟀어요.",
+            "romanization": "Cheugugiro binmurui gipireul jaesseoyo.",
+            "en": "With the cheugugi, they measured how deep the rainwater was.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f3"
+          ],
+          "framing": false,
+          "approximations": [],
+          "art": {
+            "setting": "scene:palace-courtyard",
+            "layers": [
+              {
+                "ref": "prop:ruler",
+                "x": 196,
+                "y": 192,
+                "s": 1.15
+              },
+              {
+                "ref": "prop:rain-gauge",
+                "x": 190,
+                "y": 266,
+                "s": 1.15
+              },
+              {
+                "ref": "prop:fig-official",
+                "x": 96,
+                "y": 264,
+                "s": 1
+              },
+              {
+                "ref": "prop:book-open-entry",
+                "x": 300,
+                "y": 282,
+                "s": 0.75
+              },
+              {
+                "ref": "prop:writing-set",
+                "x": 300,
+                "y": 238,
+                "s": 0.6
+              }
+            ],
+            "altEn": "A Joseon official measures the rain in a metal rain gauge on a stone stand with a ruler, a record book and brush beside him."
+          }
+        },
+        {
+          "id": "s5",
+          "narrationEn": "Rain gauges and rulers, {kw:ja}, were sent from the capital to every province.",
+          "captionEn": "Gauges for every province",
+          "line": {
+            "ko": "측우기를 각 도에 보냈어요.",
+            "romanization": "Cheugugireul gak doe bonaesseoyo.",
+            "en": "Rain gauges were sent to each province.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f4"
+          ],
+          "framing": false,
+          "approximations": [],
+          "art": {
+            "setting": "scene:countryside",
+            "layers": [
+              {
+                "ref": "prop:leafy-tree",
+                "x": 352,
+                "y": 236,
+                "s": 0.9,
+                "z": "back"
+              },
+              {
+                "ref": "prop:fig-official",
+                "x": 150,
+                "y": 264,
+                "s": 1
+              },
+              {
+                "ref": "prop:ruler",
+                "x": 266,
+                "y": 192,
+                "s": 1.15
+              },
+              {
+                "ref": "prop:rain-gauge",
+                "x": 260,
+                "y": 266,
+                "s": 1.15,
+                "tint": "feedback.nudgeLight"
+              }
+            ],
+            "altEn": "In a country town a local official measures the rain in a pottery rain gauge on a stone stand, with green hills behind."
+          }
+        },
+        {
+          "id": "s6",
+          "narrationEn": "Only one Joseon rain gauge vessel is known to survive. Made in 1837, it is a {kw:gukbo}.",
+          "captionEn": "The one surviving gauge",
+          "line": {
+            "ko": "지금 남아 있는 측우기는 국보예요.",
+            "romanization": "Jigeum nama inneun cheugugineun gukboyeyo.",
+            "en": "The one rain gauge known to survive is a National Treasure.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f5"
+          ],
+          "framing": false,
+          "approximations": [],
+          "art": {
+            "setting": "scene:modern-room",
+            "layers": [
+              {
+                "ref": "prop:display-case",
+                "x": 180,
+                "y": 292,
+                "s": 1.45
+              },
+              {
+                "ref": "prop:rain-gauge",
+                "x": 180,
+                "y": 219.5,
+                "s": 1.1
+              },
+              {
+                "ref": "hoya:thinking",
+                "x": 322,
+                "y": 292,
+                "s": 0.6,
+                "flip": true
+              }
+            ],
+            "altEn": "The bronze rain gauge from Gongju, made in 1837, stands in a museum case, and Hoya looks up at it in wonder."
+          }
+        },
+        {
+          "id": "s7",
+          "narrationEn": "Today it is kept at the National Meteorological Museum of Korea in Seoul.",
+          "captionEn": "The gauge rests in Seoul",
+          "line": {
+            "ko": "이 측우기는 서울의 박물관에 있어요.",
+            "romanization": "I cheugugineun seourui bangmulgwane isseoyo.",
+            "en": "The rain gauge is in a museum in Seoul.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f6"
+          ],
+          "framing": false,
+          "approximations": [],
+          "art": {
+            "setting": "scene:countryside",
+            "layers": [
+              {
+                "ref": "prop:rain-cloud",
+                "x": 200,
+                "y": 200,
+                "s": 1
+              },
+              {
+                "ref": "prop:museum-building",
+                "x": 190,
+                "y": 224,
+                "s": 1.3
+              },
+              {
+                "ref": "hoya:waving",
+                "x": 318,
+                "y": 290,
+                "s": 0.8
+              }
+            ],
+            "altEn": "Hoya waves happily at the rainy sky in front of the museum where the rain gauge is kept today."
+          }
+        }
+      ],
+      "checks": [
+        {
+          "id": "r1",
+          "kind": "pick-meaning",
+          "promptEn": "What does {target} mean?",
+          "target": {
+            "ko": "그릇",
+            "romanization": "geureut",
+            "en": "bowl; vessel"
+          },
+          "options": [
+            {
+              "id": "a",
+              "en": "Ruler",
+              "isCorrect": false
+            },
+            {
+              "id": "b",
+              "en": "Rain",
+              "isCorrect": false
+            },
+            {
+              "id": "c",
+              "en": "Bowl",
+              "isCorrect": true
+            },
+            {
+              "id": "d",
+              "en": "Crown prince",
+              "isCorrect": false
+            }
+          ],
+          "explainEn": "Geureut means bowl or vessel. A vessel collected the rainwater.",
+          "factIds": [
+            "f1"
+          ]
+        },
+        {
+          "id": "r2",
+          "kind": "pick-meaning",
+          "promptEn": "What does {target} mean?",
+          "target": {
+            "ko": "세자",
+            "romanization": "seja",
+            "en": "crown prince"
+          },
+          "options": [
+            {
+              "id": "a",
+              "en": "Crown prince",
+              "isCorrect": true
+            },
+            {
+              "id": "b",
+              "en": "Official",
+              "isCorrect": false
+            },
+            {
+              "id": "c",
+              "en": "Farmer",
+              "isCorrect": false
+            },
+            {
+              "id": "d",
+              "en": "Museum guide",
+              "isCorrect": false
+            }
+          ],
+          "explainEn": "Seja means crown prince, the king's son who will be the next king.",
+          "factIds": [
+            "f1"
+          ]
+        },
+        {
+          "id": "r3",
+          "kind": "detail",
+          "promptEn": "In the story, what did the rain gauge measure?",
+          "options": [
+            {
+              "id": "a",
+              "en": "How strong the wind was",
+              "isCorrect": false
+            },
+            {
+              "id": "b",
+              "en": "How deep the rainwater was",
+              "isCorrect": true
+            },
+            {
+              "id": "c",
+              "en": "How hot the day was",
+              "isCorrect": false
+            },
+            {
+              "id": "d",
+              "en": "How long the day was",
+              "isCorrect": false
+            }
+          ],
+          "explainEn": "After each rain, an official measured how deep the water in the gauge was.",
+          "factIds": [
+            "f3"
+          ]
+        }
+      ],
+      "checkpoints": [],
+      "sequenceSceneIds": [
+        "s2",
+        "s4",
+        "s5",
+        "s7"
+      ],
+      "newKeywordIds": [
+        "seja",
+        "geureut",
+        "cheugugi",
+        "gukbo"
+      ],
+      "grammarFocusEn": "Past -asseoyo/-eosseoyo; -ro (with) and -e (to): gak doe"
     }
   ],
   "coverSceneId": "s1",
@@ -700,7 +1079,7 @@
     "passes": 3,
     "checkedAt": "2026-10-10",
     "scope": "cluster",
-    "notes": "Third independent pass. All quotes re-checked programmatically against fetched pages (Sillok, encykorea, 우리역사넷, NMK, KMA; KHS descriptions via the khs.go.kr open API SearchKindOpenapiDt.do?ccbaCpno=...). unesco.org/ich.unesco.org pages could not be fetched directly (connection reset); UNESCO wording and years (2009, 2013, 2018) confirmed from search excerpts of the UNESCO pages and KHS lists. Corrections: Heo Jun birth year dropped from narration/fact (sources conflict: 1539 vs 1546, encykorea internally inconsistent); Jang Yeong-sil rank sentence softened to match the Sillok ('decided to give'); 우리역사넷 added as second source for Donguibogam f4/f5; Ssirum UNESCO locator de-quoted. MAR 2026-10-13 language review (F-STORY-001 PR 1.9): Korean strings, romanization and glosses read; findings and outcomes in the PR. MAR 2026-10-13 culture review (F-STORY-001 PR 1.9): heritage accuracy, framing, tone and advisories read; review.advisory confirmed; findings and outcomes in the PR. MAR 2026-10-13 culture review: f7 added for the story card, a shortened restatement of f3 with the same sources."
+    "notes": "Third independent pass. All quotes re-checked programmatically against fetched pages (Sillok, encykorea, 우리역사넷, NMK, KMA; KHS descriptions via the khs.go.kr open API SearchKindOpenapiDt.do?ccbaCpno=...). unesco.org/ich.unesco.org pages could not be fetched directly (connection reset); UNESCO wording and years (2009, 2013, 2018) confirmed from search excerpts of the UNESCO pages and KHS lists. Corrections: Heo Jun birth year dropped from narration/fact (sources conflict: 1539 vs 1546, encykorea internally inconsistent); Jang Yeong-sil rank sentence softened to match the Sillok ('decided to give'); 우리역사넷 added as second source for Donguibogam f4/f5; Ssirum UNESCO locator de-quoted. MAR 2026-10-13 language review (F-STORY-001 PR 1.9): Korean strings, romanization and glosses read; findings and outcomes in the PR. MAR 2026-10-13 culture review (F-STORY-001 PR 1.9): heritage accuracy, framing, tone and advisories read; review.advisory confirmed; findings and outcomes in the PR. MAR 2026-10-13 culture review: f7 added for the story card, a shortened restatement of f3 with the same sources. MAR 2026-10-13 language review of the read tier (F-STORY-005 PR 5.6): 6 Korean lines, their romanization (machine-checked) and glosses read for spelling, naturalness and Stage 5 level; 1 change (s7 i cheugugineun seourui bangmulgwane, the one gauge, not every gauge); findings and outcomes in the PR. MAR 2026-10-13 culture review of the read tier (F-STORY-005 PR 5.6): every line and check compared with its cited facts (no new claim), framing, tone and respectful wording read; s6 line and gloss keep the hedge of f5 (the gauge that remains today, known to survive; the line was hana nameun before review); review.advisory unchanged; findings and outcomes in the PR."
   },
   "authorNotes": "Attribution: popular retellings often say Jang Yeong-sil invented the rain gauge, but the Sejong Sillok (1441-04-29, lunar) credits the crown prince's (later King Munjong's) experiments and encykorea's 통영 측우대 entry says the system was made under the crown prince's lead; Jang Yeong-sil is therefore not mentioned. Deliberately omitted: the KHS description's comparative claim that the cheugugi was the world's first scientific rain gauge, about 200 years before the West (priority claims are contested); the 1441-08-18 proposal's dimensions and the 1442 standard size (1 cheok 5 chon by 7 chon); the Gongju gauge's removal to Japan (KHS: c.1915; encykorea: early 1910s) and return in 1971 (colonial-era history is out of scope); the 1770/1771 revival under King Yeongjo (sources differ on the year). Materials: the Sillok uses 銅 (copper/bronze) for the crown prince's 1441 vessel and 鐵 (cast metal/iron) for the 1442 standard, so narration says 'copper' and 'metal' respectively; the Gongju gauge is bronze (encykorea). All Sillok dates are lunar. Theme set to 'crafts' to match BP04/BP05 Pillar E (E3 측우기). REVISION: (a) Scene 6/summary/learning goal now say only one gauge VESSEL survives; stone stands (대석/측우대) also survive (encykorea E0007902; Tongyeong stand is a Treasure, E0068941). (b) Museum English name 'National Meteorological Museum of Korea' taken from the museum's own website footer (science.kma.go.kr/museum/); the KHS portal lists only the Korean name. (c) Romanization of 서운관 is Seoun-gwan (seo-un-gwan); 'Seounwan' (proposed by one fact-check) would transcribe 서운완, so it was not adopted. (d) Second source added for f2 (신편한국사 via 우리역사넷); new sources accessed 2026-10-10. PR 1.8c: check c1 distractors replaced with options the story contradicts (s2: the water soaked in; the crown prince dug), so the item has one answer from the story text.",
   "errata": []

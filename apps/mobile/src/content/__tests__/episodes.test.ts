@@ -137,8 +137,14 @@ describe('grid capacity (F-STORY-005 §3.5)', () => {
     expect(new Set(ids).size).toBe(ids.length);
   });
 
-  it('ships the Stage 5 rites book first (PR 5.6): one book, claiming its placeholder cell', () => {
-    expect(bookEpisodes.map((e) => e.id)).toEqual(['episode:stage5-rites']);
+  it('ships the five Stage 5 books (PR 5.6), each claiming its placeholder cell', () => {
+    expect(bookEpisodes.map((e) => e.id)).toEqual([
+      'episode:stage5-letters',
+      'episode:stage5-life',
+      'episode:stage5-rites',
+      'episode:stage5-nature',
+      'episode:stage5-crafts',
+    ]);
     expect(cellsOverCapacity(episodesAll)).toEqual([]);
   });
 });
@@ -243,11 +249,35 @@ describe('grid golden (F-STORY-005 §3.1 rule 2)', () => {
       { id: 'episode:stage2-life', order: 2, questIds: ['quest:stage2-life-q1'], status: 'shipped' },
       { id: 'episode:stage2-nature', order: 4, questIds: ['quest:stage2-nature-q1'], status: 'shipped' },
       { id: 'episode:stage4-rites', order: 3, questIds: ['quest:stage4-rites-q1'], status: 'shipped' },
-      // F-STORY-005 PR 5.6: the first Stage 5 book (books.ts), its cell's placeholder id kept.
+      // F-STORY-005 PR 5.6: the five Stage 5 books (books.ts), each cell's placeholder id kept.
+      {
+        id: 'episode:stage5-letters',
+        order: 1,
+        questIds: ['quest:story-sejong-new-letters-read', 'quest:story-shapes-of-hangeul-read', 'quest:story-hangeul-day-read'],
+        status: 'shipped',
+      },
+      {
+        id: 'episode:stage5-life',
+        order: 2,
+        questIds: ['quest:story-gimjang-arirang-read', 'quest:story-kim-hongdo-genre-paintings-read', 'quest:story-donguibogam-read'],
+        status: 'shipped',
+      },
       {
         id: 'episode:stage5-rites',
         order: 3,
         questIds: ['quest:story-seollal-new-year-read', 'quest:story-dano-ssireum-read', 'quest:story-chuseok-ganggangsullae-read'],
+        status: 'shipped',
+      },
+      {
+        id: 'episode:stage5-nature',
+        order: 4,
+        questIds: ['quest:story-sun-and-moon-read', 'quest:story-angbuilgu-sundial-read'],
+        status: 'shipped',
+      },
+      {
+        id: 'episode:stage5-crafts',
+        order: 5,
+        questIds: ['quest:story-cheugugi-rain-gauge-read', 'quest:story-jagyeongnu-water-clock-read', 'quest:story-pansori-tales-read'],
         status: 'shipped',
       },
     ]);
@@ -281,7 +311,11 @@ describe('pillar tags of the shipped lessons (F-STORY-005 §3.2)', () => {
       'episode:stage2-life': [],
       'episode:stage2-nature': ['D2'],
       'episode:stage4-rites': [],
+      'episode:stage5-letters': ['A1'],
+      'episode:stage5-life': ['B1', 'B5', 'E4'],
       'episode:stage5-rites': ['B5'],
+      'episode:stage5-nature': ['D5', 'E5'],
+      'episode:stage5-crafts': ['E3', 'C3'],
     });
   });
 
@@ -314,11 +348,11 @@ const GRID_GOLDEN: Record<string, string> = {
   'stage4:rites': 'episode:stage4-rites | Greeting Dialogues | shipped',
   'stage4:nature': 'episode:stage4-nature | Park Conversations | preview',
   'stage4:crafts': 'episode:stage4-crafts | Playdate Talk | preview',
-  'stage5:letters': 'episode:stage5-letters | Short Stories | preview',
-  'stage5:life': 'episode:stage5-life | Family Stories | preview',
+  'stage5:letters': 'episode:stage5-letters | Stories of Letters | shipped',
+  'stage5:life': 'episode:stage5-life | Family Stories | shipped',
   'stage5:rites': 'episode:stage5-rites | Festival Tales | shipped',
-  'stage5:nature': 'episode:stage5-nature | Tiger Folktales | preview',
-  'stage5:crafts': 'episode:stage5-crafts | Craft Stories | preview',
+  'stage5:nature': 'episode:stage5-nature | Tiger Folktales | shipped',
+  'stage5:crafts': 'episode:stage5-crafts | Craft Stories | shipped',
   'stage6:letters': 'episode:stage6-letters | Read the Menu | preview',
   'stage6:life': 'episode:stage6-life | Order Food | preview',
   'stage6:rites': 'episode:stage6-rites | Travel for Chuseok | preview',

@@ -38,7 +38,7 @@ Hangul Route 의 모든 테스트 작성·리뷰 흐름을 규정한다. TDD 를
 - [ ] 대상 패키지가 `apps/mobile` 이라면, 변경 파일이 `src/logic/` 인지 `src/platform/` 인지 분류
 - [ ] `packages/test-utils` 에 필요한 fixture helper 존재 확인 — 없으면 helper 먼저 추가하는 별도 커밋
 - [ ] 커버리지 측정 제외 대상 (`**/*.d.ts`, `**/*.stories.tsx`, `**/index.ts` re-export, `**/__generated__/**`) 은 테스트 작성 대상이 아님
-- [ ] vitest 설정이 two-report (logic / platform) 분리되어 있는지 확인 — 누락 시 `coverage-gate.yml` 실패
+- [ ] vitest 설정이 two-report (logic / platform) 분리되어 있는지 확인 — 누락 시 `ci.yml` 의 "Measure coverage vs rolling targets" job (`scripts/coverage-gate.mjs`) 실패
 
 누락 시 보고 예시:
 
@@ -165,7 +165,7 @@ it('renders correctly', () => {
 ### 자동 검증 (CI)
 
 - `.github/workflows/ci.yml` — `pnpm vitest --run` 전 패키지 통과
-- `.github/workflows/coverage-gate.yml` — rolling target 미달 시 머지 차단
+- `.github/workflows/ci.yml` 의 "Measure coverage vs rolling targets" job (`scripts/coverage-gate.mjs`) — rolling target 미달 시 머지 차단
   - `apps/mobile` 은 logic / platform 두 리포트를 별도 비교
 - PR 본문에 커버리지 델타 (+X.X% / –X.X%) 명시
 

@@ -207,7 +207,7 @@ export const color = {
   - ESLint rule: 리터럴 색상·간격 탐지 (프로젝트 커스텀 rule)
   - TypeScript typecheck
   - `validate-contrast.ts` 스크립트
-- `coverage-gate.yml`:
+- `ci.yml` 의 "Measure coverage vs rolling targets" job (`scripts/coverage-gate.mjs`):
   - `packages/design-system` target 85%
 
 ### 수동 체크리스트
