@@ -30,12 +30,15 @@ import { distractorProblems, fixedReplyPlace, promptKey, soundKey } from './help
 import { ALL_LESSON_SCOPES, LESSON_STAGE_MODULES } from './helpers/lesson-stages';
 import {
   WORD_BUILDER_SYMBOLS,
+  discoverTexts,
   reuseProblems,
   scopeTexts,
   stemOf,
   unionSymbols,
   untaughtSymbols,
   vocabLevelFor,
+  withoutSetPhrases,
+  wordsOf,
   type TaughtSymbols,
 } from './helpers/reuse';
 
@@ -373,8 +376,13 @@ const STAGE1_WORDS: ReadonlySet<string> = new Set(
 );
 
 /** What a cell of `stage` may count as taught before its own Discover (rule 5): Stage 1 and the vocabulary of its level. */
-const wordsBefore = (stage: StageKey): ReadonlySet<string> =>
-  new Set([...STAGE1_WORDS, ...VOCAB_ITEMS.filter((v) => v.level <= vocabLevelFor(stage)).map((v) => v.ko)]);
+const wordsBefore = (stage: StageKey): ReadonlySet<string> => {
+  const base = new Set([...STAGE1_WORDS, ...VOCAB_ITEMS.filter((v) => v.level <= vocabLevelFor(stage)).map((v) => v.ko)]);
+  // Rule 5 and U-6: an earlier stage counts too (every route plays a stage's cells before the next stage's).
+  const earlier = READY.filter((c) => Number(c.cell.stage.slice(5)) < Number(stage.slice(5)));
+  for (const { cell } of earlier) for (const q of cell.quests) for (const w of wordsOf(discoverTexts(q), base)) base.add(w);
+  return base;
+};
 
 /** Stage 1's 30 symbols (14 consonants, 10 vowels, 6 final letters), from the shipped jamo. */
 const STAGE1_SYMBOLS: TaughtSymbols = {
@@ -414,6 +422,12 @@ describe('U-3 new-item caps and U-6 reuse (F-CURR-001 section 3.1 rules 4 and 5)
   it('asks that at least half the words outside Discover were taught', () => {
     const q1 = quest(1, ['밥을 먹어요.'], ['밥을 먹어요.', '사과를 깎아요.', '배를 깎아요.']);
     expect(reuseProblems('stage3', [q1], new Set(['밥']))).toEqual(['U-6 quest:stage3-life-q1: 2 of 5 words reused (사과, 깎아요, 배 not taught)']);
+  });
+
+  it('counts a set phrase as one item, its words with it, and a cast name as no word (rule 4, T-2)', () => {
+    const q1 = quest(1, ['만나서 반가워요.', '저도 반가워요.', '저는 미나예요.'], ['만나서 반가워요.']);
+    expect(reuseProblems('stage4', [q1], new Set(['저']))).toEqual([]);
+    expect(withoutSetPhrases('고마워요. 새해 복 많이 받으세요!')).toBe('고마워요.  !');
   });
 
   it('counts a particle choice as no word, and a heard prompt as shown', () => {
@@ -457,7 +471,7 @@ describe('U-4 decodable scored reading (F-CURR-001 section 3.1 rule 6)', () => {
         const { read: texts, particles } = scopeTexts(s);
         return [...texts, ...particles];
       }));
-      expect(read.flatMap((t) => untaughtSymbols(t, taught))).toEqual([]);
+      expect(read.flatMap((t) => untaughtSymbols(withoutSetPhrases(t), taught))).toEqual([]);
     });
   }
 });

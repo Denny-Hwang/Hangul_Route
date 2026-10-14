@@ -50,8 +50,9 @@ const claimers = [...handWrittenEpisodes, ...lessonEpisodes];
 const EPISODES_9: Episode[] = [...claimers, ...storyEpisodes, ...previewEpisodesFor(claimers)];
 const QUESTS_9: Quest[] = questsInCursorOrder({
   early: [...stage1Quests, ...stage2Quests],
-  // The shipped Stage 4 cells (Read Along, Greeting Dialogues: generated) plus the two fake cells.
-  lessons: [...lessonQuests, ...[...WB, ...FS].map(plainQuest)],
+  // The shipped Stage 4 cells (Read Along, Greeting Dialogues: generated) plus the two fake cells; the
+  // other generated cells stay out, so the fixture is the version 9 bundle it names.
+  lessons: [...lessonQuests.filter((q) => q.id.startsWith('quest:stage4-')), ...[...WB, ...FS].map(plainQuest)],
   middle: [...storyQuests, ...bookQuests],
   episodes: claimers,
 });

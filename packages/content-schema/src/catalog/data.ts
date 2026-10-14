@@ -23,8 +23,9 @@ import type { Catalog, CatalogCell, CatalogQuest, CatalogStory, CatalogTopic } f
  * Version 12 (F-CURR-001 S3-3): the Stage 3 Festival Sentences cell ships (three lesson quests).
  * Version 13 (F-CURR-001 S3-5): Game Sentences ships (Stage 3 crafts, 3 lesson quests).
  * Version 14 (F-CURR-001 S3-2): Daily Mini-Sentences ships (Stage 3 life, 3 lesson quests).
+ * Version 15 (F-CURR-001 T-2): Greeting Dialogues adopts Discover and Check and grows to three quests.
  */
-export const CATALOG_VERSION = 14;
+export const CATALOG_VERSION = 15;
 
 const cell = (
   stage: StageKey,
@@ -65,7 +66,7 @@ const cells: CatalogCell[] = [
   cell('stage3', 'crafts', 'Game Sentences', 'shipped', 14, ['quest:stage3-crafts-q1', 'quest:stage3-crafts-q2', 'quest:stage3-crafts-q3']),
   cell('stage4', 'letters', 'Read Along', 'shipped', 13, ['quest:stage4-letters-q1', 'quest:stage4-letters-q2', 'quest:stage4-letters-q3']),
   soon('stage4', 'life', 'Kitchen Talk'),
-  cell('stage4', 'rites', 'Greeting Dialogues', 'shipped', 5, ['quest:stage4-rites-q1']),
+  cell('stage4', 'rites', 'Greeting Dialogues', 'shipped', 13, ['quest:stage4-rites-q1', 'quest:stage4-rites-q2', 'quest:stage4-rites-q3']),
   soon('stage4', 'nature', 'Park Conversations'),
   soon('stage4', 'crafts', 'Playdate Talk'),
   cell('stage5', 'letters', 'Stories of Letters', 'shipped', 13, [
@@ -128,7 +129,9 @@ const lessonQuests: CatalogQuest[] = [
   lesson('stage2-crafts-q1', 'stage2', 'crafts', 'At the Playground', 4),
   lesson('stage2-crafts-q2', 'stage2', 'crafts', 'Traditional Games', 4),
   lesson('stage2-crafts-q3', 'stage2', 'crafts', 'Playing Together', 4),
-  lesson('stage4-rites-q1', 'stage4', 'rites', 'Greeting Dialogues', 4),
+  lesson('stage4-rites-q1', 'stage4', 'rites', 'Nice to Meet You', 4),
+  lesson('stage4-rites-q2', 'stage4', 'rites', 'Long Time No See', 4),
+  lesson('stage4-rites-q3', 'stage4', 'rites', 'Happy New Year', 4),
   // F-CURR-001 upper-stage cells: they teach no symbol, so `teaches` is [].
   lesson('stage3-letters-q1', 'stage3', 'letters', 'It Is a Book', 5),
   lesson('stage3-letters-q2', 'stage3', 'letters', 'There Is a Book', 5),

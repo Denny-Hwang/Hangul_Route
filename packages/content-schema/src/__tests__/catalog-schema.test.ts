@@ -102,7 +102,8 @@ describe('the shipped catalogue data', () => {
     // + the 3 Festival Sentences quests (S3-3).
     // + Game Sentences (S3-5): +3 lesson quests.
     // + Daily Mini-Sentences (S3-2): +3 lesson quests.
-    expect(CATALOG.quests.filter((q) => q.kind === 'lesson')).toHaveLength(50);
+    // + Greeting Dialogues q2-q3 (T-2).
+    expect(CATALOG.quests.filter((q) => q.kind === 'lesson')).toHaveLength(52);
   });
 
   it('has 24 stories adding up to 112 minutes, each with a listen quest on its shelf episode', () => {
@@ -438,6 +439,8 @@ describe('routeCatalogOf', () => {
       'quest:stage4-letters-q2',
       'quest:stage4-letters-q3',
       'quest:stage4-rites-q1',
+      'quest:stage4-rites-q2',
+      'quest:stage4-rites-q3',
       'quest:story-sejong-new-letters-read',
       'quest:story-shapes-of-hangeul-read',
       'quest:story-hangeul-day-read',

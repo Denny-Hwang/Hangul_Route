@@ -31,8 +31,24 @@ export function stemOf(eojeol: string, known: ReadonlySet<string>): string {
   return p === undefined ? eojeol : eojeol.slice(0, -p.length);
 }
 
+/**
+ * Section 3.1 rule 4 counts "new words or set phrases" in Stage 4: a fixed greeting of several
+ * words is one item, learned and read as a whole (F-CURR-001 T-2). Longest first.
+ */
+export const SET_PHRASES: readonly string[] = ['새해 복 많이 받으세요', '만나서 반가워요'];
+
+/** The cast's names (Hoya and his friends, section 3.5 "named characters"): names, not vocabulary. */
+export const CAST_NAMES: ReadonlySet<string> = new Set(['호야', '미나', '다미']);
+
+/** A text with each set phrase joined into one 어절 (`만나서_반가워요`), so it counts as one item. */
+export const joinSetPhrases = (text: string): string =>
+  SET_PHRASES.reduce((t, phrase) => t.split(phrase).join(phrase.replace(/ /g, '_')), text);
+
+/** A text without its set phrases: a set phrase is read as a whole, not decoded (rule 6, T-2). */
+export const withoutSetPhrases = (text: string): string => SET_PHRASES.reduce((t, phrase) => t.split(phrase).join(' '), text);
+
 export const wordsOf = (texts: readonly string[], known: ReadonlySet<string>): string[] =>
-  texts.flatMap((t) => eojeolOf(t).map((w) => stemOf(w, known)));
+  texts.flatMap((t) => eojeolOf(joinSetPhrases(t)).map((w) => stemOf(w, known))).filter((w) => !CAST_NAMES.has(w));
 
 /** The Korean texts a quest's Discover step shows (a pattern's examples, not its frame: the frame is a slot, not a word). */
 export function discoverTexts(quest: LessonQuest): string[] {
@@ -90,7 +106,10 @@ export function reuseProblems(stage: StageKey, quests: readonly LessonQuest[], b
   for (const quest of quests) {
     if (discoverPatterns(quest) > 1) out.push(`U-3 ${quest.id}: Discover teaches ${discoverPatterns(quest)} patterns`);
     const shown = [...new Set(wordsOf(discoverTexts(quest), taught))];
-    const fresh = shown.filter((w) => !taught.has(w));
+    const freshAll = shown.filter((w) => !taught.has(w));
+    // A word of a new set phrase (반가워요 in 만나서 반가워요, then 저도 반가워요) is that one item.
+    const phraseWords = new Set(freshAll.filter((w) => w.includes('_')).flatMap((w) => w.split('_')));
+    const fresh = freshAll.filter((w) => !phraseWords.has(w));
     if (cap !== undefined && fresh.length > cap) out.push(`U-3 ${quest.id}: ${fresh.length} new words (${fresh.join(', ')}), cap ${cap}`);
     for (const w of shown) taught.add(w);
     const outside = [...new Set(quest.scopes.flatMap((s) => {
