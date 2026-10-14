@@ -1,4 +1,5 @@
 import type { Page } from '@playwright/test';
+import { keysFor } from '@hangul-route/content-schema';
 import { LESSON_EPISODES } from '../../src/content/__generated__/lessons-index';
 import { expect, test } from './fixtures';
 import { completeChildForm, journeyCellName, keepSidewaysIfAsked, passDiscover, playCheckByIds, waitForNextListenPickRound } from './helpers';
@@ -104,6 +105,27 @@ async function playCardMatch(page: Page, pairs: readonly (readonly [romanization
   }
 }
 
+/** Realia Read: tap the option until the game marks it right (a tap inside its double-touch window is dropped). */
+async function pickRealia(page: Page, ids: readonly string[]): Promise<void> {
+  for (const [i, id] of ids.entries()) {
+    await expect(page.getByTestId('realia-read-question')).toBeVisible();
+    const option = page.getByTestId(`realia-read-option-${id}`);
+    await expect(async () => {
+      await option.click();
+      await expect(option).toHaveAttribute('aria-label', /^Right answer/, { timeout: 250 });
+    }).toPass();
+    if (i < ids.length - 1) await expect(option).toHaveCount(0, { timeout: 5_000 }).catch(() => undefined);
+  }
+}
+
+/** Type Hangul: tap the keys that type `text` (no tense or two-key letters in these targets), then Done. */
+async function typeAnswer(page: Page, text: string): Promise<void> {
+  await expect(page.getByTestId('type-hangul-field')).toBeVisible();
+  for (const jamo of keysFor(text)) await page.getByTestId(jamo === ' ' ? 'hangul-key-space' : `hangul-key-${jamo}`).click();
+  await page.getByTestId('type-hangul-done').click();
+  await expect(page.getByText('You typed it!')).toBeVisible();
+}
+
 /** Each cell row appends its cell here (S2-1 onward). */
 const CELLS: readonly UpperCell[] = [
   // F-CURR-001 S2-3: Playground Words q1, At the Playground, played through its real games.
@@ -199,6 +221,31 @@ const CELLS: readonly UpperCell[] = [
       await page.getByText('Learning Route', { exact: true }).last().click();
       await page.getByRole('button', { name: /^Stage 4, Dialogue\./ }).click();
       await expect(page.getByRole('button', { name: /^Letters & Books: Read Along\./ })).toBeVisible();
+    },
+  },
+  // F-CURR-001 S6-2: Order Food, q1 "Excuse Me!": Realia Read on the table menu, Type Hangul, Listen & Pick.
+  {
+    episodeId: 'episode:stage6-life',
+    cellButton: journeyCellName(6, 'Food & Daily Life'),
+    title: 'Order Food',
+    playFirstQuest: async (page) => {
+      await page.getByRole('button', { name: 'Start', exact: true }).first().click();
+      await page.getByRole('button', { name: 'Continue' }).click();
+      await passDiscover(page);
+      await page.getByRole('button', { name: 'Play minigame' }).click();
+      await pickRealia(page, ['a', 'b', 'c', 'a']);
+      await page.getByRole('button', { name: 'Play minigame' }).click();
+      await typeAnswer(page, '여기요');
+      await typeAnswer(page, '김밥 주세요');
+      await typeAnswer(page, '물 주세요');
+      await playCheckByIds(page, [{ answer: 'a' }, { answer: 'b' }]);
+      await expect(page.getByText('Finish', { exact: true }).first()).toBeVisible();
+    },
+    expectRouteDay: async (page) => {
+      await page.goto('/');
+      await page.getByText('Learning Route', { exact: true }).last().click();
+      await page.getByRole('button', { name: /^Stage 6, Real-use\./ }).click();
+      await expect(page.getByRole('button', { name: /^Food & Daily Life: Order Food\./ })).toBeVisible();
     },
   },
 ];

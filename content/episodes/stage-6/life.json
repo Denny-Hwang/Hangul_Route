@@ -2,7 +2,7 @@
   "id": "episode:stage6-life",
   "stage": "stage6",
   "theme": "life",
-  "status": "draft",
+  "status": "ready",
   "titleEn": "Order Food",
   "subtitleEn": "Call the server, order, count and pay at a table.",
   "hoyaIntroEn": "A table, a menu and something tasty. Let's order in Korean!",
@@ -503,7 +503,7 @@
                       "romanization": "han gae",
                       "en": "one (thing)"
                     },
-                    "noteEn": "One thing. Han is hana before a counter."
+                    "noteEn": "One thing. Hana becomes han before a counter."
                   },
                   {
                     "type": "word",
@@ -512,7 +512,7 @@
                       "romanization": "du gae",
                       "en": "two (things)"
                     },
-                    "noteEn": "Two things. Du is dul before a counter."
+                    "noteEn": "Two things. Dul becomes du before a counter."
                   }
                 ],
                 "captionEn": "Before a counter, counting uses han, du, se: short forms of hana, dul, set."
@@ -526,19 +526,33 @@
                       "romanization": "se gae",
                       "en": "three (things)"
                     },
-                    "noteEn": "Three things. Se is set before a counter."
+                    "noteEn": "Three things. Set becomes se before a counter."
                   },
                   {
-                    "type": "sentence",
-                    "sentence": {
-                      "ko": "라면 두 개 주세요.",
-                      "romanization": "ramyeon du gae juseyo",
-                      "en": "Two instant noodles, please."
-                    },
-                    "picture": "word:food-ramyeon"
+                    "type": "exchange",
+                    "lines": [
+                      {
+                        "speaker": "a",
+                        "speakerEn": "Server",
+                        "line": {
+                          "ko": "뭐 드릴까요?",
+                          "romanization": "mwo deurilkkayo",
+                          "en": "What can I get you?"
+                        }
+                      },
+                      {
+                        "speaker": "b",
+                        "speakerEn": "Hoya",
+                        "line": {
+                          "ko": "라면 두 개 주세요.",
+                          "romanization": "ramyeon du gae juseyo",
+                          "en": "Two instant noodles, please."
+                        }
+                      }
+                    ]
                   }
                 ],
-                "captionEn": "Name the food, then how many, then say please."
+                "captionEn": "The server asks what you want. Name the food, how many, then say please."
               }
             ]
           },
@@ -809,8 +823,8 @@
                 {
                   "id": "r2",
                   "text": {
-                    "ko": "안녕히 가세요.",
-                    "romanization": "annyeonghi gaseyo",
+                    "ko": "잘 가요.",
+                    "romanization": "jal gayo",
                     "en": "Goodbye."
                   },
                   "correct": false
@@ -829,9 +843,9 @@
             {
               "speakerEn": "Server",
               "line": {
-                "ko": "우유도 드릴까요?",
-                "romanization": "uyudo deurilkkayo",
-                "en": "Would you like milk too?"
+                "ko": "우유 드릴까요?",
+                "romanization": "uyu deurilkkayo",
+                "en": "Would you like milk?"
               },
               "replies": [
                 {
@@ -855,8 +869,8 @@
                 {
                   "id": "r3",
                   "text": {
-                    "ko": "안녕히 가세요.",
-                    "romanization": "annyeonghi gaseyo",
+                    "ko": "잘 가요.",
+                    "romanization": "jal gayo",
                     "en": "Goodbye."
                   },
                   "correct": false
@@ -866,9 +880,9 @@
             {
               "speakerEn": "Server",
               "line": {
-                "ko": "김밥도 드릴까요?",
-                "romanization": "gimbapdo deurilkkayo",
-                "en": "Would you like gimbap too?"
+                "ko": "김밥 드릴까요?",
+                "romanization": "gimbap deurilkkayo",
+                "en": "Would you like gimbap?"
               },
               "replies": [
                 {
@@ -1028,7 +1042,7 @@
           "id": "s1",
           "kind": "intro",
           "titleEn": "How Much Is It?",
-          "hoyaLineEn": "The food is here! Let's read the prices on the menu too.",
+          "hoyaLineEn": "The food is here! Let's read the prices, then pay for my noodles.",
           "durationSeconds": 7
         },
         {
@@ -1076,26 +1090,49 @@
                     "lines": [
                       {
                         "speaker": "a",
-                        "speakerEn": "Hoya",
+                        "speakerEn": "Server",
                         "line": {
-                          "ko": "얼마예요?",
-                          "romanization": "eolmayeyo",
-                          "en": "How much is it?"
+                          "ko": "라면 하나요?",
+                          "romanization": "ramyeon hanayo",
+                          "en": "One bowl of instant noodles?"
                         }
                       },
                       {
                         "speaker": "b",
+                        "speakerEn": "Hoya",
+                        "line": {
+                          "ko": "네, 얼마예요?",
+                          "romanization": "ne eolmayeyo",
+                          "en": "Yes, how much is it?"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "type": "exchange",
+                    "lines": [
+                      {
+                        "speaker": "a",
                         "speakerEn": "Server",
                         "line": {
                           "ko": "삼천 원이에요.",
                           "romanization": "samcheon wonieyo",
                           "en": "It is 3,000 won."
                         }
+                      },
+                      {
+                        "speaker": "b",
+                        "speakerEn": "Hoya",
+                        "line": {
+                          "ko": "여기 있어요.",
+                          "romanization": "yeogi isseoyo",
+                          "en": "Here you are."
+                        }
                       }
                     ]
                   }
                 ],
-                "captionEn": "Ask how much it is. The answer is a price."
+                "captionEn": "At the counter: check the order, ask how much, then pay."
               },
               {
                 "items": [
@@ -1108,9 +1145,32 @@
                     },
                     "noteEn": "Some people say this just before they start to eat.",
                     "picture": "card:rice"
+                  },
+                  {
+                    "type": "exchange",
+                    "lines": [
+                      {
+                        "speaker": "a",
+                        "speakerEn": "Server",
+                        "line": {
+                          "ko": "맛있게 드세요.",
+                          "romanization": "masitge deuseyo",
+                          "en": "Enjoy your meal."
+                        }
+                      },
+                      {
+                        "speaker": "b",
+                        "speakerEn": "Hoya",
+                        "line": {
+                          "ko": "잘 먹겠습니다.",
+                          "romanization": "jal meokgetseumnida",
+                          "en": "I will eat well. (said before eating)"
+                        }
+                      }
+                    ]
                   }
                 ],
-                "captionEn": "The food is on the table."
+                "captionEn": "The food is here. Some people answer the server like this."
               }
             ]
           },
@@ -1466,7 +1526,7 @@
               "line": {
                 "ko": "라면 하나요?",
                 "romanization": "ramyeon hanayo",
-                "en": "One instant noodles?"
+                "en": "One bowl of instant noodles?"
               },
               "replies": [
                 {
@@ -1490,9 +1550,9 @@
                 {
                   "id": "r3",
                   "text": {
-                    "ko": "네. 얼마예요?",
+                    "ko": "네, 얼마예요?",
                     "romanization": "ne eolmayeyo",
-                    "en": "Yes. How much is it?"
+                    "en": "Yes, how much is it?"
                   },
                   "correct": true
                 }
@@ -1638,10 +1698,10 @@
         }
       ],
       "verification": {
-        "passes": 2,
+        "passes": 3,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): both pages fetched; the NIKL Online Ganada answer quotes the institute's own address guide: 여기요 and 저기요 are already in common use to call staff at restaurants, salons and shops, and are comfortable for both sides because they do not show the customer-staff relationship; the MCST card news (student reporters, NIKL cards) calls them appropriate for service staff and says they do not show a social relationship. The note says 'often', makes no group-wide claim and restates the passages in new English words. Carried by: q1 Discover page 2 word note, q1 apply prompt t1, the gloss of 여기요.\nLine 2 (pass 2b, independent fact check, 2026-10-14): both pages re-fetched by a session that did not author the cell; the NIKL Online Ganada answer of 2025-12-22 says 여기요 and 저기요 are already in common use to call staff at restaurants, salons and shops and do not directly show the customer-staff relationship, and the MCST card news (cards marked NIKL) calls them fitting for service staff and puts treating a person as a person ahead of age or social standing; 'often' and 'does not point to age or rank' match both. No wording copied. Outcome: pass, unchanged."
+        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): both pages fetched; the NIKL Online Ganada answer quotes the institute's own address guide: 여기요 and 저기요 are already in common use to call staff at restaurants, salons and shops, and are comfortable for both sides because they do not show the customer-staff relationship; the MCST card news (student reporters, NIKL cards) calls them appropriate for service staff and says they do not show a social relationship. The note says 'often', makes no group-wide claim and restates the passages in new English words. Carried by: q1 Discover page 2 word note, q1 apply prompt t1, the gloss of 여기요.\nLine 2 (pass 2b, independent fact check, 2026-10-14): both pages re-fetched by a session that did not author the cell; the NIKL Online Ganada answer of 2025-12-22 says 여기요 and 저기요 are already in common use to call staff at restaurants, salons and shops and do not directly show the customer-staff relationship, and the MCST card news (cards marked NIKL) calls them fitting for service staff and puts treating a person as a person ahead of age or social standing; 'often' and 'does not point to age or rank' match both. No wording copied. Outcome: pass, unchanged.\nLine 3 (pass 5, MAR culture review, 2026-10-14): both pages re-fetched; each quoteOrLocator is on its page as quoted; 'often' and 'does not point to age or rank' match the NIKL guide and the MCST card news; no group-wide claim, no wording copied, no designation number, no real person, shop, brand or price. Outcome: pass, unchanged."
       }
     },
     {
@@ -1665,10 +1725,10 @@
         }
       ],
       "verification": {
-        "passes": 2,
+        "passes": 3,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): both pages fetched; the newspaper describes the phrase as what is said at a laid table before lifting the spoon, used often by some people, with views differing on when it fits; the NIKL Online Ganada answer says no rule governs it and there is no ground to call it wrong. The note says 'many people', avoids any claim about origin, about who pays or about everyone, and copies no wording. Carried by: q3 Discover page 3 word note and gloss, q3 apply turn 1, q3 check c1 option.\nLine 2 (pass 2b, independent fact check, 2026-10-14): both pages re-fetched by a session that did not author the cell; the NIKL answer of 2026-01-13 says no rule settles the matter, so right or wrong is hard to say, and finds no clear ground to call the phrase wrong in the situation asked about; the newspaper says some people use it often and reports differing views. Two overstatements fixed: 'never wrong to say it' (the institute only found no clear ground, and the article reports people who disagree) became 'No rule settles whether saying it is right or wrong', and 'Many people' (not quantified by either source) became 'Some people', here and in the q3 word note with its es and ko overlays. No wording copied. Outcome: fixed."
+        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): both pages fetched; the newspaper describes the phrase as what is said at a laid table before lifting the spoon, used often by some people, with views differing on when it fits; the NIKL Online Ganada answer says no rule governs it and there is no ground to call it wrong. The note says 'many people', avoids any claim about origin, about who pays or about everyone, and copies no wording. Carried by: q3 Discover page 3 word note and gloss, q3 apply turn 1, q3 check c1 option.\nLine 2 (pass 2b, independent fact check, 2026-10-14): both pages re-fetched by a session that did not author the cell; the NIKL answer of 2026-01-13 says no rule settles the matter, so right or wrong is hard to say, and finds no clear ground to call the phrase wrong in the situation asked about; the newspaper says some people use it often and reports differing views. Two overstatements fixed: 'never wrong to say it' (the institute only found no clear ground, and the article reports people who disagree) became 'No rule settles whether saying it is right or wrong', and 'Many people' (not quantified by either source) became 'Some people', here and in the q3 word note with its es and ko overlays. No wording copied. Outcome: fixed.\nLine 3 (pass 5, MAR culture review, 2026-10-14): both pages re-fetched; the quotes are on their pages; the note now says 'Some people' (Line 1's 'many people' was fixed in Line 2) and that no rule settles it, as NIKL and the newspaper say; the q3 Discover adds the server exchange (맛있게 드세요 / 잘 먹겠습니다) as one option some people use, so the game models it, the note hedges it. No origin, payer or everyone claim; no wording copied. Outcome: pass."
       }
     },
     {
@@ -1699,16 +1759,16 @@
         }
       ],
       "verification": {
-        "passes": 2,
+        "passes": 3,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): the three pages fetched; the dictionary defines 원 as the country's currency unit, the encyclopedia as the currency unit used since the 1962 currency reform to this day (the two sources give June 10 and June 12 for the date; the note states no date); the dictionary's numeral entries give 천 as a thousand and 이, 삼 as two and three, the Sino-Korean numerals (hanja 千, 二, 三). Prices in the cell are round practice amounts in a drawn menu (OD-11), no shop, brand or product price. Carried by: q3 Discover page 1 caption and key words, q3 practice and check rounds, the menu realia values.\nLine 2 (pass 2b, independent fact check, 2026-10-14): the dictionary entries 원 1, 천 3, 이 7 and 삼 6 and the Encyclopedia of Korean Culture entry 원 re-fetched by a session that did not author the cell; 원 is the country's currency unit (the encyclopedia: in use since the 1962 reform), and 이, 삼, 천 are the numerals two, three and a thousand, so 이천 원 reads 2,000 won. The note states no date, so the June 10 and June 12 difference does not touch it. No wording copied. Outcome: pass, unchanged."
+        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): the three pages fetched; the dictionary defines 원 as the country's currency unit, the encyclopedia as the currency unit used since the 1962 currency reform to this day (the two sources give June 10 and June 12 for the date; the note states no date); the dictionary's numeral entries give 천 as a thousand and 이, 삼 as two and three, the Sino-Korean numerals (hanja 千, 二, 三). Prices in the cell are round practice amounts in a drawn menu (OD-11), no shop, brand or product price. Carried by: q3 Discover page 1 caption and key words, q3 practice and check rounds, the menu realia values.\nLine 2 (pass 2b, independent fact check, 2026-10-14): the dictionary entries 원 1, 천 3, 이 7 and 삼 6 and the Encyclopedia of Korean Culture entry 원 re-fetched by a session that did not author the cell; 원 is the country's currency unit (the encyclopedia: in use since the 1962 reform), and 이, 삼, 천 are the numerals two, three and a thousand, so 이천 원 reads 2,000 won. The note states no date, so the June 10 and June 12 difference does not touch it. No wording copied. Outcome: pass, unchanged.\nLine 3 (pass 5, MAR culture review, 2026-10-14): the dictionary entries 원 1, 천 3, 이 7, 삼 6 and the encyclopedia entry 원 re-fetched; quotes verbatim; the note states no date, so the June 10 / June 12 difference does not touch it; prices are round practice amounts on a drawn menu, no shop, brand or product price; no wording copied. Outcome: pass, unchanged."
       }
     },
     {
       "id": "n4",
       "kind": "language",
-      "textEn": "Before a counter such as {ko:개}, the counting words one, two and three take short forms: {ko:한}, {ko:두} and {ko:세}, as in {ko:두 개} (two things).",
+      "textEn": "Before a counter such as {ko:개}, one, two and three are said {ko:한}, {ko:두} and {ko:세}, as in {ko:두 개} (two things).",
       "sources": [
         {
           "title": "한 (Standard Korean Language Dictionary entry 한 1, determiner)",
@@ -1733,17 +1793,22 @@
         }
       ],
       "verification": {
-        "passes": 2,
+        "passes": 3,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): the dictionary result pages fetched; 한, 두, 세 are determiners meaning a quantity of one, two and three (하나, 둘, 셋), used before a noun or counter, and 개 is the counter for single things. The cell never pairs 네 (four) with 개 because 네 is also 'yes'. Carried by: q2 Discover page 2 caption and word notes, q2 practice options, q2 apply and check lines.\nLine 2 (pass 2b, independent fact check, 2026-10-14): the dictionary entries 한 1, 두 1, 세 1 (determiners: a quantity of one, two, three) and 개 7 (the counter for single things) re-fetched by a session that did not author the cell; they support the short forms before a counter and the example 두 개. No wording copied. Outcome: pass, unchanged."
+        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): the dictionary result pages fetched; 한, 두, 세 are determiners meaning a quantity of one, two and three (하나, 둘, 셋), used before a noun or counter, and 개 is the counter for single things. The cell never pairs 네 (four) with 개 because 네 is also 'yes'. Carried by: q2 Discover page 2 caption and word notes, q2 practice options, q2 apply and check lines.\nLine 2 (pass 2b, independent fact check, 2026-10-14): the dictionary entries 한 1, 두 1, 세 1 (determiners: a quantity of one, two, three) and 개 7 (the counter for single things) re-fetched by a session that did not author the cell; they support the short forms before a counter and the example 두 개. No wording copied. Outcome: pass, unchanged.\nLine 3 (pass 5, MAR culture review, 2026-10-14): the entries 한 1, 두 1, 세 1 and 개 7 re-fetched and verbatim; they define 한, 두, 세 as determiners for a quantity of one, two, three, not a 'short form' rule, so the note was reworded to state only what they say: before a counter such as 개, one, two and three are said 한, 두, 세 (no other source stating the rule was found). No wording copied. Outcome: fixed."
       }
     }
   ],
   "review": {
-    "language": "draft",
-    "culture": "draft",
-    "notes": []
+    "language": "native-reviewed",
+    "culture": "culture-reviewed",
+    "reviewedBy": "MAR",
+    "reviewedAt": "2026-10-14",
+    "notes": [
+      "Language pass 4 (MAR): spelling, spacing, register and romanization clean; applied Discover exchanges for the server lines (뭐 드릴까요?, 라면 하나요?, 삼천 원이에요, 맛있게 드세요), offers without -도, taught 잘 가요 for the 안녕히 가세요 distractor, counter notes in the right direction, 'One bowl of instant noodles?', 네, 얼마예요?; kept the q3 Check reply round.",
+      "Culture pass 5 (MAR): all sources re-fetched (verification line 3); n4 reworded to what the dictionary says; 잘 먹겠습니다 modelled as one option some people use; milk kept on the drawn menu; no real person, shop, brand or price; no all-Koreans claim; no age wording."
+    ]
   },
   "contentVer": 1
 }
