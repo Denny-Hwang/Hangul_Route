@@ -364,7 +364,7 @@
                     ]
                   }
                 ],
-                "captionEn": "Prices use the Sino-Korean numbers il, i, sam, sa, o."
+                "captionEn": "These prices use the Sino-Korean numbers il, i, sam, sa, o."
               },
               {
                 "items": [
@@ -718,7 +718,7 @@
                     ]
                   }
                 ],
-                "captionEn": "More Sino-Korean numbers for prices: yuk, chil, pal, gu, sip."
+                "captionEn": "More Sino-Korean numbers on this menu: yuk, chil, pal, gu, sip."
               },
               {
                 "items": [
@@ -1096,7 +1096,7 @@
         "passes": 2,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): all three pages fetched. The NIKL Saegugeo Sosik article splits Korean numbers into a native series (hana, dul, set) and a Sino-Korean series (il, i, sam); the Standard Korean Language Dictionary lists 천 (千) and 오 (五) as numerals of Chinese-character origin, 천 defined as ten hundreds, and its entry 원 gives the example 천 원, a Sino-Korean number before 원. The note and the captions say only what these pages show; nothing is copied. Carried by: q2 Discover page 1 caption ('Prices use the Sino-Korean numbers il, i, sam, sa, o'), q2 page 2 caption ('cheon is a thousand: ocheon won is 5,000') and q3 Discover page 1 caption.\nLine 2 (pass 2b, independent fact check, 2026-10-14): all three pages opened again. Saegugeo Sosik (NIKL, Aug 2004) opening sentence splits numerals into a native series (hana, dul, set) and a Sino-Korean series (il, i, sam): supports the two sets. Dictionary 천3 (千) 「수사」 'ten hundreds' and 오4 (五) 「수사」 'four plus one': support 천 as a Sino-Korean thousand. Entry 원1: the money unit, so 천 원 is 1,000 won. FAILED as first written: the general rule 'prices are read with the Sino-Korean numbers' is in none of the cited pages (the Saegugeo article never mentions money, the 천 원 dictionary example could not be reached, and an NIKL Online Q&A of 2025-06-30 says the choice of number set follows usage, with no fixed rule). Fixed: the note now says only that the menu's prices use the Sino-Korean set, which is true of the drawn menu, plus the sourced facts. Flag for pass 5: the q2 and q3 Discover captions ('Prices use the Sino-Korean numbers ...', 'More Sino-Korean numbers for prices ...') still state the general rule; rephrase to the menu ('These prices use ...') or source the rule. No run of words copied. Outcome: fixed (reworded), locator corrected."
+        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): all three pages fetched. The NIKL Saegugeo Sosik article splits Korean numbers into a native series (hana, dul, set) and a Sino-Korean series (il, i, sam); the Standard Korean Language Dictionary lists 천 (千) and 오 (五) as numerals of Chinese-character origin, 천 defined as ten hundreds, and its entry 원 gives the example 천 원, a Sino-Korean number before 원. The note and the captions say only what these pages show; nothing is copied. Carried by: q2 Discover page 1 caption ('Prices use the Sino-Korean numbers il, i, sam, sa, o'), q2 page 2 caption ('cheon is a thousand: ocheon won is 5,000') and q3 Discover page 1 caption.\nLine 2 (pass 2b, independent fact check, 2026-10-14): all three pages opened again. Saegugeo Sosik (NIKL, Aug 2004) opening sentence splits numerals into a native series (hana, dul, set) and a Sino-Korean series (il, i, sam): supports the two sets. Dictionary 천3 (千) 「수사」 'ten hundreds' and 오4 (五) 「수사」 'four plus one': support 천 as a Sino-Korean thousand. Entry 원1: the money unit, so 천 원 is 1,000 won. FAILED as first written: the general rule 'prices are read with the Sino-Korean numbers' is in none of the cited pages (the Saegugeo article never mentions money, the 천 원 dictionary example could not be reached, and an NIKL Online Q&A of 2025-06-30 says the choice of number set follows usage, with no fixed rule). Fixed: the note now says only that the menu's prices use the Sino-Korean set, which is true of the drawn menu, plus the sourced facts. The q2 and q3 Discover captions that stated the same general rule were rescoped to the menu in en, es and ko (These prices use ..., More Sino-Korean numbers on this menu ...). No run of words copied. Outcome: fixed (reworded), locator corrected."
       }
     }
   ],
