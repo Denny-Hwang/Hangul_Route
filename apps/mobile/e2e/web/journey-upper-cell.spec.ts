@@ -1,4 +1,5 @@
 import type { Page } from '@playwright/test';
+import { keysFor } from '@hangul-route/content-schema';
 import { LESSON_EPISODES } from '../../src/content/__generated__/lessons-index';
 import { expect, test } from './fixtures';
 import { completeChildForm, journeyCellName, keepSidewaysIfAsked, passDiscover, playCheckByIds, waitForNextListenPickRound } from './helpers';
@@ -104,6 +105,23 @@ async function playCardMatch(page: Page, pairs: readonly (readonly [romanization
   }
 }
 
+/** Two-key vowels: `keysFor` gives the joined jamo, the in-app keyboard types its two keys (KS X 5002). */
+const SPLIT_KEYS: Record<string, string> = { 'ㅘ': 'ㅗㅏ', 'ㅙ': 'ㅗㅐ', 'ㅚ': 'ㅗㅣ', 'ㅝ': 'ㅜㅓ', 'ㅞ': 'ㅜㅔ', 'ㅟ': 'ㅜㅣ', 'ㅢ': 'ㅡㅣ' };
+
+/**
+ * Type Hangul round `n` of `total`: waits for the round, taps the keys that type `text` on the in-app
+ * keyboard, then Done; a typed match moves on by itself.
+ */
+async function typeHangul(page: Page, n: number, total: number, text: string): Promise<void> {
+  await expect(page.getByText(`${n} / ${total}`, { exact: true })).toBeVisible({ timeout: 5_000 });
+  await expect(page.getByTestId('type-hangul-done')).toBeDisabled();
+  for (const jamo of keysFor(text).flatMap((j) => [...(SPLIT_KEYS[j] ?? j)])) {
+    await page.getByTestId(jamo === ' ' ? 'hangul-key-space' : `hangul-key-${jamo}`).click();
+  }
+  await page.getByTestId('type-hangul-done').click();
+  await expect(page.getByText('You typed it!')).toBeVisible();
+}
+
 /** Each cell row appends its cell here (S2-1 onward). */
 const CELLS: readonly UpperCell[] = [
   // F-CURR-001 S2-3: Playground Words q1, At the Playground, played through its real games.
@@ -199,6 +217,52 @@ const CELLS: readonly UpperCell[] = [
       await page.getByText('Learning Route', { exact: true }).last().click();
       await page.getByRole('button', { name: /^Stage 4, Dialogue\./ }).click();
       await expect(page.getByRole('button', { name: /^Letters & Books: Read Along\./ })).toBeVisible();
+    },
+  },
+  // F-CURR-001 S7-2: My Day in Korean, q1 "Morning to Evening": Trace a Word (Skip is the
+  // learner's own way past it), Type Hangul on the in-app keyboard, the Sentence Builder Check.
+  {
+    episodeId: 'episode:stage7-life',
+    cellButton: journeyCellName(7, 'Food & Daily Life'),
+    title: 'My Day in Korean',
+    playFirstQuest: async (page) => {
+      await page.setViewportSize({ width: 320, height: 720 });
+      await page.getByRole('button', { name: 'Start', exact: true }).first().click();
+      await page.getByRole('button', { name: 'Continue' }).click();
+      // Discover: the time words, then the time frame ___에 밥을 먹어요.
+      await expect(page.getByText('Look and learn', { exact: true })).toBeVisible();
+      await shot(page, 'my-day-q1-discover-320');
+      await passDiscover(page);
+      await page.getByRole('button', { name: 'Play minigame' }).click();
+      await expect(page.getByTestId('trace-word-canvas')).toBeVisible();
+      await page.getByRole('button', { name: 'Skip', exact: true }).click();
+      await page.getByRole('button', { name: 'Play minigame' }).click();
+      await typeHangul(page, 1, 4, '아침');
+      await shot(page, 'my-day-q1-typed-320');
+      await typeHangul(page, 2, 4, '저녁');
+      await typeHangul(page, 3, 4, '점심에');
+      await typeHangul(page, 4, 4, '아침에 밥을 먹어요');
+      await page.getByRole('button', { name: 'Go', exact: true }).click();
+      const tray = page.getByTestId('sentence-builder-tray');
+      await expect(tray).toBeVisible({ timeout: 5_000 });
+      await shot(page, 'my-day-q1-check-320');
+      for (const tiles of [
+        ['아침에, achime', '밥을, babeul', '먹어요, meogeoyo'],
+        ['점심에, jeomsime', '밥을, babeul', '먹어요, meogeoyo'],
+      ]) {
+        await expect(tray.getByRole('button', { name: tiles[0], exact: true })).toBeVisible({ timeout: 5_000 });
+        for (const name of tiles) {
+          await page.waitForTimeout(120);
+          await tray.getByRole('button', { name, exact: true }).click();
+        }
+      }
+      await expect(page.getByText('Finish', { exact: true }).first()).toBeVisible();
+    },
+    expectRouteDay: async (page) => {
+      await page.goto('/');
+      await page.getByText('Learning Route', { exact: true }).last().click();
+      await page.getByRole('button', { name: /^Stage 7, / }).click();
+      await expect(page.getByRole('button', { name: /^Food & Daily Life: My Day in Korean\./ })).toBeVisible();
     },
   },
 ];
