@@ -1,9 +1,9 @@
-import { Hoya, Icon, colors, presenter, spacing, typography } from '@hangul-route/design-system';
+import { Hoya, Icon, colors, presenter, spacing, touchTarget, typography } from '@hangul-route/design-system';
 import React from 'react';
 import { Text, View } from 'react-native';
 import Svg, { Circle, Path, Rect, Text as SvgText } from 'react-native-svg';
 import type { QuizOption } from '../../../logic/lecture/build-steps';
-import { ANSWER_HOYA, MARKER_LINES, SVG_UI_FONT, units } from '../../../logic/lecture/stage-constants';
+import { MARKER_LINES, SVG_UI_FONT, units } from '../../../logic/lecture/stage-constants';
 import { quizMarker, type QuizMarkerShape } from '../../../logic/lecture/story-slides';
 import { STAGE_BORDER, STAGE_BORDER_MIN, STAGE_GAP, STAGE_GAP_INNER, STAGE_RADIUS } from '../stage-metrics';
 import { TaughtKo, usePresenterView, useStageText } from '../presenter-context';
@@ -98,6 +98,7 @@ function OptionCard({ option, index, revealed, romShown }: { option: QuizOption;
                 color: revealed ? colors.text.primary : colors.text.secondary,
                 opacity: romShown ? 1 : 0,
               }}
+              aria-hidden={!romShown}
             >
               {option.romanization}
             </Text>
@@ -153,9 +154,10 @@ export function AnswerLine({ shown }: { shown: boolean }): React.ReactElement {
     <View
       testID="presenter-quiz-answer"
       accessibilityElementsHidden={!shown}
+      aria-hidden={!shown}
       style={{ flexDirection: 'row', alignItems: 'center', gap: units(unit, STAGE_GAP_INNER), flexShrink: 0, maxWidth: '40%', opacity: shown ? 1 : 0 }}
     >
-      <Hoya pose="cheering" size={units(unit, ANSWER_HOYA)} accessibilityLabel={messages.a11y.hoya('cheering')} />
+      <Hoya pose="cheering" size={units(unit, touchTarget.hero)} accessibilityLabel={messages.a11y.hoya('cheering')} />
       <Text style={{ flexShrink: 1, fontSize: size(presenter.size.body), fontWeight: typography.weight.semibold, color: colors.text.primary }}>
         {messages.learner.presenter.quiz.answer}
       </Text>

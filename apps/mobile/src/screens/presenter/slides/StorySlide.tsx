@@ -38,7 +38,7 @@ export function StorySlide({ slide, shown, scene }: { slide: StoryBody; shown: R
   return (
     <View testID="presenter-story" style={{ flex: 1, gap: units(unit, STAGE_GAP_INNER) }}>
       <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: units(unit, STAGE_GAP), minHeight: 0 }}>
-        <View style={reveal(shown.has('art'))} accessibilityElementsHidden={!shown.has('art')}>
+        <View style={reveal(shown.has('art'))} accessibilityElementsHidden={!shown.has('art')} aria-hidden={!shown.has('art')}>
           <StoryArt scene={scene} testID="presenter-story-art" />
         </View>
         <Text
@@ -63,7 +63,7 @@ export function StorySlide({ slide, shown, scene }: { slide: StoryBody; shown: R
         </Text>
       </View>
       {slide.korean !== undefined ? (
-        <View testID="presenter-story-korean" style={[{ gap: units(unit, spacing.xs), alignItems: 'flex-start' }, reveal(shown.has('korean'))]} accessibilityElementsHidden={!shown.has('korean')}>
+        <View testID="presenter-story-korean" style={[{ gap: units(unit, spacing.xs), alignItems: 'flex-start' }, reveal(shown.has('korean'))]} accessibilityElementsHidden={!shown.has('korean')} aria-hidden={!shown.has('korean')}>
           <View
             accessibilityLabel={koreanTextLabel(slide.korean.ko, slide.korean.romanization)}
             style={{

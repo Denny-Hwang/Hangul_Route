@@ -53,7 +53,7 @@ export function StoryCheckSlide({ slide, shown, romanization }: { slide: StoryCh
       {' '}
       <TaughtKo size={promptSize}>{word.ko}</TaughtKo>
       {/* text.secondary misses 7:1 on brand.secondaryLight (presenter.v1.md), so the romanization is text.primary here. */}
-      <Text style={{ fontSize: bodySize, fontWeight: typography.weight.semibold, color: colors.text.primary, opacity: targetRom ? 1 : 0 }}>{` ${word.romanization} `}</Text>
+      <Text style={{ fontSize: bodySize, fontWeight: typography.weight.semibold, color: colors.text.primary, opacity: targetRom ? 1 : 0 }} aria-hidden={!targetRom}>{` ${word.romanization} `}</Text>
     </Text>
   );
   return (
@@ -71,7 +71,7 @@ export function StoryCheckSlide({ slide, shown, romanization }: { slide: StoryCh
             <Text style={{ fontSize: promptSize, lineHeight: Math.round(promptSize * typography.leading.normal) }}>{chip(target)}</Text>
           ) : null}
           {target !== undefined ? (
-            <Text testID="presenter-check-gloss" style={{ fontSize: bodySize, fontWeight: typography.weight.bold, color: colors.text.secondary, opacity: targetGloss ? 1 : 0 }}>
+            <Text testID="presenter-check-gloss" aria-hidden={!targetGloss} style={{ fontSize: bodySize, fontWeight: typography.weight.bold, color: colors.text.secondary, opacity: targetGloss ? 1 : 0 }}>
               {target.gloss}
             </Text>
           ) : null}
@@ -83,6 +83,7 @@ export function StoryCheckSlide({ slide, shown, romanization }: { slide: StoryCh
         <Text
           testID="presenter-check-explain"
           accessibilityElementsHidden={!revealed}
+          aria-hidden={!revealed}
           style={{ fontSize: bodySize, color: colors.text.primary, lineHeight: Math.round(bodySize * typography.leading.normal), opacity: revealed ? 1 : 0 }}
         >
           {slide.explain}

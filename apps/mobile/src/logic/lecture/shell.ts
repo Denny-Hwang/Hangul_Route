@@ -99,8 +99,10 @@ export function blockIndexOfSlide(deck: Pick<LectureDeck, 'blocks'>, slideKey: s
 
 function drawable(slide: Slide, kinds: ReadonlySet<SlideKind>): boolean {
   if (!kinds.has(slide.kind)) return false;
-  // Of the quiz slides, PR 11 draws the story checks; the other quizzes come with PR 9.
-  return !(slide.kind === 'quiz' && slide.prompt.ask !== 'check');
+  if (slide.kind !== 'quiz') return true;
+  // Of the quiz slides, PR 11 draws the story checks with word options; the other quizzes, and a
+  // check whose options are pictures, come with PR 9.
+  return slide.prompt.ask === 'check' && slide.options.every((o) => o.art === undefined);
 }
 
 /**

@@ -1,6 +1,9 @@
 import type { RomanizationMode, SpeechLang } from '@hangul-route/content-schema';
 import type { PlaySpec } from '../audio/controller';
+import type { AudioRunnerPlayOptions } from '../story/audio-runner';
+import { stepsForVoice } from '../story/reader-effects';
 import type { BuildName, KoLine, NarrationPiece } from './build-steps';
+import { splitPrompt } from '../story/check-view';
 
 /**
  * The story slides' pure decisions (F-TCH-004 PR 11; design/screens/presenter/slide-story.md,
@@ -28,6 +31,37 @@ export function storyNarrationSteps(narration: readonly NarrationPiece[], narrat
   });
 }
 
+export interface ReadToMeInput {
+  /** The deck's `options.sound`: off means the presenter never speaks. */
+  sound: boolean;
+  /** A Korean voice is known to be there. */
+  canPlayKorean: boolean;
+  /** The first voice check has finished. */
+  voiceChecked: boolean;
+  /** The narration's voice (`LectureSceneView.narrationLang`; English when the scene is not known). */
+  narrationLang: SpeechLang;
+}
+
+export interface ReadToMePlan {
+  steps: PlaySpec[];
+  options: AudioRunnerPlayOptions;
+}
+
+/**
+ * What S or the Sound button plays on a slide (D6), with the story reader's voice rules
+ * (F-STORY-002 section 3.4, `use-reader-audio.ts`): with no Korean voice only the English plays
+ * (an all-Korean narration still asks, so the fallback is learned); while the voice check has not
+ * settled, a Korean step that turns out unavailable is skipped rather than ending the chain.
+ * Null when there is nothing to play: sound off, not a story scene, or nothing sayable.
+ */
+export function readToMePlan(slide: { kind: string; narration?: readonly NarrationPiece[] }, input: ReadToMeInput): ReadToMePlan | null {
+  if (!input.sound || slide.kind !== 'story' || !slide.narration) return null;
+  const steps = storyNarrationSteps(slide.narration, input.narrationLang);
+  if (steps.length === 0) return null;
+  const spoken = stepsForVoice(steps, input.canPlayKorean);
+  return { steps: spoken.length > 0 ? spoken : steps, options: { skipUnavailableKorean: !input.voiceChecked } };
+}
+
 /**
  * Whether the romanization of Korean that appears at build `base` is on screen (D2): with
  * `romanization: 'tap'` the slide has a `rom` build that reveals every romanization on it at once;
@@ -50,19 +84,13 @@ export function quizMarker(index: number): { shape: QuizMarkerShape; n: number }
   return { shape: QUIZ_MARKERS[index % QUIZ_MARKERS.length]!, n: index + 1 };
 }
 
-const TARGET_TOKEN = '{target}';
-
 export type CheckPromptPart = { text: string } | { target: KoLine };
 
 /**
  * A story check's prompt in parts (F-STORY-003): the text around the `{target}` token, with the
  * target word in its place. A prompt without the token keeps its target out of the line (the
- * slide draws it after the question).
+ * slide draws it after the question). The learner check's own splitter, so the two never drift.
  */
 export function checkPromptParts(text: string, target: KoLine | undefined): CheckPromptPart[] {
-  const at = text.indexOf(TARGET_TOKEN);
-  if (at < 0 || !target) return [{ text }];
-  const before = text.slice(0, at);
-  const after = text.slice(at + TARGET_TOKEN.length);
-  return [...(before ? [{ text: before }] : []), { target }, ...(after ? [{ text: after }] : [])];
+  return splitPrompt(text, target);
 }

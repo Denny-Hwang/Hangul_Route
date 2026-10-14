@@ -653,7 +653,7 @@ async function startLesson320(page: Page): Promise<void> {
 }
 
 // F-TCH-004 PR 11: story slides. "King Sejong's New Letters" is reviewed (the Library lists it):
-// its cover title, seven scenes and three checks; the order slide waits for PR 8.
+// its cover title, seven scenes and three checks; the order slide waits for PR 7.
 const STORY_DECK: LectureDeckInput = {
   v: 1,
   id: 'lecture:e2e011',
@@ -718,8 +718,9 @@ test.describe('presenter story slides at 1280 x 720 (PR 11)', () => {
     await expect(page.getByTestId('presenter-story-korean')).toHaveCSS('opacity', '1');
     await expect(page.getByTestId('presenter-story-korean')).toContainText('Hunminjeongeum');
     await expect(page.getByTestId('presenter-story-korean')).toContainText('the proper sounds for teaching the people');
-    // Read-to-me (S) on a scene plays or falls back quietly: the text stays on the slide (D6).
+    // Read-to-me (S) on a scene with no voice falls back quietly: the text stays on the slide (D6).
     await page.keyboard.press('KeyS');
+    await expect(page.getByTestId('presenter-story-narration')).toHaveCSS('opacity', '1');
     await shot(page, 'presenter-story-1280x720');
 
     // The first check: its own prompt and four options with shape-and-number markers; no answer yet.
@@ -776,6 +777,121 @@ test.describe('presenter story slides at 1280 x 720 (PR 11)', () => {
     await startLesson(page);
     await expect(page.getByTestId('presenter-story-cover')).toHaveCount(0);
     await expect(page.getByTestId('presenter-glyph')).toBeAttached();
+  });
+});
+
+/** A speech engine with an English and a Korean voice that records each utterance and each cancel. */
+async function recordingSpeech(page: Page): Promise<void> {
+  await page.addInitScript(() => {
+    const log: { lang: string; text: string }[] = [];
+    const record = window as Window & { __spoken?: typeof log; __cancels?: number };
+    record.__spoken = log;
+    record.__cancels = 0;
+    const voices = [
+      { name: 'Samantha', lang: 'en-US', voiceURI: 'Samantha', localService: true, default: true },
+      { name: 'Yuna', lang: 'ko-KR', voiceURI: 'Yuna', localService: true, default: false },
+    ];
+    class Utterance {
+      lang = '';
+      rate = 1;
+      pitch = 1;
+      volume = 1;
+      voice: { name: string } | null = null;
+      onstart: (() => void) | null = null;
+      onend: (() => void) | null = null;
+      onerror: (() => void) | null = null;
+      constructor(public text: string) {}
+    }
+    Object.defineProperty(window, 'SpeechSynthesisUtterance', { configurable: true, writable: true, value: Utterance });
+    Object.defineProperty(window, 'speechSynthesis', {
+      configurable: true,
+      value: {
+        speaking: false,
+        pending: false,
+        speak: (u: Utterance) => {
+          if (u.volume !== 0) log.push({ lang: u.lang, text: u.text });
+          setTimeout(() => {
+            u.onstart?.();
+            u.onend?.();
+          }, 20);
+        },
+        cancel: () => {
+          record.__cancels = (record.__cancels ?? 0) + 1;
+        },
+        getVoices: () => voices,
+        addEventListener: () => undefined,
+        removeEventListener: () => undefined,
+      },
+    });
+  });
+}
+
+const spoken = (page: Page) => page.evaluate(() => (window as Window & { __spoken?: { lang: string; text: string }[] }).__spoken ?? []);
+const cancels = (page: Page) => page.evaluate(() => (window as Window & { __cancels?: number }).__cancels ?? 0);
+
+test.describe('presenter Read-to-me and the projected check at 1280 x 720 (PR 11)', () => {
+  test.use({ viewport: { width: 1280, height: 720 }, isMobile: false, hasTouch: false });
+
+  test('S reads the scene: the narration in English and its keyword chip in Korean; the next slide stops it', async ({ page }) => {
+    await recordingSpeech(page);
+    await page.goto(link({ ...STORY_DECK, id: 'lecture:e2e014' }));
+    await startLesson(page);
+    await goToSlide(page, 5);
+    await revealAll(page);
+    const before = (await spoken(page)).length;
+    await page.keyboard.press('KeyS');
+    await expect.poll(async () => (await spoken(page)).slice(before)).toContainEqual(expect.objectContaining({ lang: 'en-US', text: expect.stringContaining('He named them Hunminjeongeum') }));
+    await expect.poll(async () => (await spoken(page)).slice(before).some((u) => u.lang === 'ko-KR')).toBe(true);
+    const cancelled = await cancels(page);
+    await page.keyboard.press('ArrowRight');
+    await expect.poll(() => cancels(page)).toBeGreaterThan(cancelled);
+  });
+
+  test('a pick-meaning target keeps its gloss for the answer; hidden parts are hidden from assistive tech too', async ({ page }) => {
+    // The Bowl That Measured the Rain: its second check asks what the target word means.
+    await page.goto(link({ ...STORY_DECK, id: 'lecture:e2e015', blocks: [{ kind: 'story', storyId: 'story:cheugugi-rain-gauge', checks: true }], options: { romanization: 'tap' } }));
+    await startLesson(page);
+    await nextUntil(page, 'presenter-check');
+    await expect(page.getByTestId('presenter-check-explain')).toHaveAttribute('aria-hidden', 'true');
+    await expect(page.getByTestId('presenter-quiz-answer')).toHaveAttribute('aria-hidden', 'true');
+    await page.keyboard.press('PageDown');
+    await expect(page.getByTestId('presenter-check-explain')).not.toHaveAttribute('aria-hidden', 'true');
+    await page.keyboard.press('ArrowRight');
+    await expect(page.getByTestId('presenter-check-prompt')).toContainText('What does a');
+    const gloss = page.getByTestId('presenter-check-gloss');
+    await expect(gloss).toHaveText('rain gauge');
+    await expect(gloss).toHaveCSS('opacity', '0');
+    await expect(gloss).toHaveAttribute('aria-hidden', 'true');
+    await page.keyboard.press('PageDown');
+    await expect(gloss).toHaveCSS('opacity', '1');
+    await expect(gloss).not.toHaveAttribute('aria-hidden', 'true');
+    await expect(page.getByTestId('presenter-check-explain')).toHaveCSS('opacity', '1');
+  });
+});
+
+test.describe('presenter story slides on a 4:3 projector, 1024 x 768 (PR 11)', () => {
+  test.use({ viewport: { width: 1024, height: 768 }, isMobile: false, hasTouch: false });
+
+  test('every scene and every revealed check stays inside the stage', async ({ page }) => {
+    await page.goto(link({ ...STORY_DECK, id: 'lecture:e2e016', blocks: [{ kind: 'story', storyId: 'story:cheugugi-rain-gauge', checks: true }] }));
+    await startLesson(page);
+    const stage = (await page.getByTestId('presenter-stage').boundingBox())!;
+    const inside = async (testId: string) => {
+      const part = page.getByTestId(testId);
+      if ((await part.count()) === 0) return;
+      const box = (await part.boundingBox())!;
+      expect(box.x, testId).toBeGreaterThanOrEqual(stage.x - 1);
+      expect(box.y, testId).toBeGreaterThanOrEqual(stage.y - 1);
+      expect(box.x + box.width, testId).toBeLessThanOrEqual(stage.x + stage.width + 1);
+      expect(box.y + box.height, testId).toBeLessThanOrEqual(stage.y + stage.height + 1);
+    };
+    const total = Number((await counter(page)).split('/')[1]!.trim());
+    for (let n = 1; n < total; n++) {
+      await goToSlide(page, n);
+      await revealAll(page);
+      for (const id of ['presenter-story-art', 'presenter-story-narration', 'presenter-story-korean', 'presenter-check-explain', 'presenter-quiz-options', 'presenter-quiz-answer']) await inside(id);
+    }
+    await shot(page, 'presenter-story-1024x768');
   });
 });
 

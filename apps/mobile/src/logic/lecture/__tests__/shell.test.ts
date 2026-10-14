@@ -216,6 +216,20 @@ describe('runDeck: the slides this build draws', () => {
     expect(run.minutes).toBe(2);
   });
 
+  it('a story check with picture options waits for PR 9 (the projected option draws no art yet)', () => {
+    const pictures: Slide = {
+      kind: 'quiz',
+      prompt: { ask: 'check', text: 'Which one?' },
+      options: [{ gloss: 'A sun', art: 'art/sun', correct: true }, { gloss: 'A moon', correct: false }],
+      textPrompt: false,
+      key: 'story:x/check-c2',
+      builds: ['question', 'answer'],
+    };
+    const run = runDeck(deckOf([{ kind: 'story', storyId: 'story:x', checks: true }]), { slides: [pictures], skipped: [], taught: [], minutes: 1 });
+    expect(run.slides).toEqual([]);
+    expect(run.parts).toEqual([{ blockIndex: 0, reason: 'unsupported-step' }]);
+  });
+
   it('keeps the builder skips with their block', () => {
     const deck = deckOf([{ kind: 'quest', id: 'quest:nope' }, { kind: 'jamo-set', jamoIds: ['jamo:giyeok'] }]);
     const run = runDeck(deck, expandDeck(deck, lectureBundle('en'), { canPlayKorean: true }));

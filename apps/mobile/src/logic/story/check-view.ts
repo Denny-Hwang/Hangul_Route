@@ -34,14 +34,23 @@ export interface CheckView {
 }
 
 const TOKEN = '{target}';
-const GLOSS_HIDDEN_KINDS: readonly CheckKind[] = ['pick-meaning', 'fill-word'];
+/**
+ * Check kinds whose target gloss is the answer, so it stays hidden until the check is answered.
+ * Shared with the lecture presenter's projected checks (F-TCH-004 PR 11), so the two never drift.
+ */
+export const GLOSS_HIDDEN_KINDS: readonly CheckKind[] = ['pick-meaning', 'fill-word'];
 
-function splitPrompt(promptEn: string, target: KoText | undefined): PromptPart[] {
+/**
+ * A check prompt in parts: the text around the `{target}` token with the target in its place. A
+ * prompt without the token (or a check without a target) is one text part. Shared with the
+ * lecture presenter (F-TCH-004 PR 11), generic over the target's shape.
+ */
+export function splitPrompt<T>(promptEn: string, target: T | undefined): Array<{ text: string } | { target: T }> {
   const at = promptEn.indexOf(TOKEN);
   if (at < 0 || !target) return [{ text: promptEn }];
   const before = promptEn.slice(0, at);
   const after = promptEn.slice(at + TOKEN.length);
-  const parts: PromptPart[] = [];
+  const parts: Array<{ text: string } | { target: T }> = [];
   if (before) parts.push({ text: before });
   parts.push({ target });
   if (after) parts.push({ text: after });

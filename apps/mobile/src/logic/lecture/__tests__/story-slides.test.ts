@@ -6,9 +6,11 @@ import {
   checkPromptParts,
   quizMarker,
   quizOptionRomShown,
+  readToMePlan,
   romShown,
   storyNarrationSteps,
 } from '../story-slides';
+import { GLOSS_HIDDEN_KINDS } from '../../story/check-view';
 
 /**
  * The story slides' pure decisions (F-TCH-004 PR 11): what Read-to-me says on a story scene,
@@ -94,5 +96,45 @@ describe('checkPromptParts (story checks, D14)', () => {
   it('a prompt without the token, or without a target, is its own text', () => {
     expect(checkPromptParts('Who created Hangul?', undefined)).toEqual([{ text: 'Who created Hangul?' }]);
     expect(checkPromptParts('Who created Hangul?', target)).toEqual([{ text: 'Who created Hangul?' }]);
+  });
+});
+
+describe('readToMePlan (Read-to-me on a story scene, D6; the story reader\'s voice rules)', () => {
+  const scene = { kind: 'story' as const, narration };
+  const base = { sound: true, canPlayKorean: true, voiceChecked: true, narrationLang: 'en-US' as const };
+
+  it('plays the narration with its keyword chips in Korean once the voice check has settled', () => {
+    expect(readToMePlan(scene, base)).toEqual({ steps: storyNarrationSteps(narration, 'en-US'), options: { skipUnavailableKorean: false } });
+  });
+
+  it('skips an unavailable Korean step only while the voice check is still running', () => {
+    expect(readToMePlan(scene, { ...base, voiceChecked: false })?.options).toEqual({ skipUnavailableKorean: true });
+  });
+
+  it('with no Korean voice, plays the English narration only, as the story reader does', () => {
+    const plan = readToMePlan(scene, { ...base, canPlayKorean: false });
+    expect(plan?.steps.every((s) => s.language === 'en-US')).toBe(true);
+    expect(plan?.steps).toHaveLength(2);
+  });
+
+  it('a narration that is all Korean still asks, so the fallback is learned', () => {
+    const ko: NarrationPiece[] = [{ ko: 'baek-seong-ko', romanization: 'baekseong', gloss: 'the people' }];
+    expect(readToMePlan({ kind: 'story', narration: ko }, { ...base, canPlayKorean: false })?.steps).toHaveLength(1);
+  });
+
+  it('speaks in the narration language it is given', () => {
+    expect(readToMePlan(scene, { ...base, narrationLang: 'es-US' })?.steps[0]?.language).toBe('es-US');
+  });
+
+  it('nothing with sound off, on a slide that is not a story scene, or with nothing to say', () => {
+    expect(readToMePlan(scene, { ...base, sound: false })).toBeNull();
+    expect(readToMePlan({ kind: 'letter' }, base)).toBeNull();
+    expect(readToMePlan({ kind: 'story', narration: [{ text: ', ' }] }, base)).toBeNull();
+  });
+});
+
+describe('the projected check shares the learner check rules', () => {
+  it('hides the gloss of a pick-meaning or fill-word target until the answer', () => {
+    expect(GLOSS_HIDDEN_KINDS).toEqual(['pick-meaning', 'fill-word']);
   });
 });
