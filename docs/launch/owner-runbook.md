@@ -497,6 +497,8 @@ DELETE FROM feedback_notes WHERE id = '<note_id>' AND NOT EXISTS (SELECT 1 FROM 
 **되돌리기**: 세 변수를 `false` 로 (또는 삭제): `hangul-route-app` 의 `EXPO_PUBLIC_CONTENT_GATING_ENABLED` 와 `NEXT_PUBLIC_CONTENT_GATING_ENABLED`, `hangul-route-web` 의 `NEXT_PUBLIC_CONTENT_GATING_ENABLED` → 두 프로젝트 (`hangul-route-app`, `hangul-route-web`) 모두 Retry deployment. 학습자가 끝낸 레슨·카드·별은 어느 방향으로도 바뀌지 않는다.
 
 ## 나중에 (법률 검토 후)
+변호사에게 넘길 검토 자료: `docs/legal/counsel-packet-2026-10.md` (영문 초안 — 반 이동 T-8 · G2/G6 와 낱말 동의 항목 P-4b 의 질문·초안 문구·요약표). 아직 법률 검토를 받지 않은 초안이며, 검토가 끝나기 전에는 `CLASS_TRANSFER` 를 켜지 않고 P-4b 를 머지하지 않는다.
+
 학교 동의 모드 (c) 를 열 때만: `hangul-route-api` 런타임 변수 `SCHOOL_CONSENT_MODE=enabled` + `hangul-route-web` 빌드 변수 `NEXT_PUBLIC_SCHOOL_CONSENT_MODE=enabled` (Retry deployment). 그 전엔 콘솔에서 선택 불가로 잠겨 있다.
 
 ## 보내줄 것 ↔ 시작되는 PR
