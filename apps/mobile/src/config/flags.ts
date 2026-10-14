@@ -107,10 +107,12 @@ export interface Flags {
 
   /**
    * Words (F-VOC-003): the Library Words card, the topic picker, the topic
-   * page and the flashcards. ON since C-7 (owner decision 2026-10-13: the
-   * free-set topics passed the production review and the F-VOC-005 deploy
-   * checklist is verified from the repo); `EXPO_PUBLIC_VOCAB_TOPICS_ENABLED=false`
-   * (or `0`) in a build switches it back off without a code change.
+   * page and the flashcards. ON since C-7 (owner decision 2026-10-13) in the
+   * web app (and in tests and scripts, which have no platform); OFF by default
+   * in iOS and Android bundles until the owner's FlipCard device pass
+   * (design/screens/vocab/cards.md, "Device flip pass") is recorded.
+   * `EXPO_PUBLIC_VOCAB_TOPICS_ENABLED=false` (or `0`) in a build switches it
+   * off anywhere, and `true` (or `1`) switches it on in a native build.
    */
   vocabTopicsEnabled: boolean;
 
@@ -167,7 +169,8 @@ const launchDefaults: Flags = {
   placementEnabled: false,
   audioClips: true,
   myRouteEnabled: true,
-  vocabTopicsEnabled: true,
+  // Web-first (F-VOC-003 C-7): native bundles wait for the device flip pass.
+  vocabTopicsEnabled: !isNativeBundle(),
   vocabShowDrafts: false,
   grownUpHomeEnabled: false,
   notesEnabled: false,
@@ -210,6 +213,12 @@ export const launchDefaultFlags: Readonly<Flags> = launchDefaults;
  */
 export function bundleOs(): string | undefined {
   return process.env.EXPO_OS;
+}
+
+/** True in an iOS or Android bundle; false on the web and where no platform is inlined (tests, scripts). */
+function isNativeBundle(): boolean {
+  const os = bundleOs();
+  return os === 'ios' || os === 'android';
 }
 
 /**

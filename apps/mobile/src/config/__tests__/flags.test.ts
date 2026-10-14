@@ -214,9 +214,25 @@ describe('flags', () => {
     expect(mod.flags.vocabTopicsEnabled).toBe(true);
   });
 
-  it('vocabTopicsEnabled is read by its literal name, so a web build can carry the off switch', () => {
-    const src = readFileSync(join(__dirname, '../flags.ts'), 'utf8');
-    expect(src).toContain('process.env.EXPO_PUBLIC_VOCAB_TOPICS_ENABLED');
+  it('vocabTopicsEnabled is web-first: on for web, off by default in iOS and Android bundles until the device pass', async () => {
+    delete process.env.EXPO_PUBLIC_VOCAB_TOPICS_ENABLED;
+    process.env.EXPO_OS = 'web';
+    let mod = await reload();
+    expect(mod.flags.vocabTopicsEnabled).toBe(true);
+    for (const os of ['ios', 'android']) {
+      process.env.EXPO_OS = os;
+      delete process.env.EXPO_PUBLIC_VOCAB_TOPICS_ENABLED;
+      mod = await reload();
+      expect(mod.flags.vocabTopicsEnabled).toBe(false);
+      expect(mod.launchDefaultFlags.vocabTopicsEnabled).toBe(false);
+      process.env.EXPO_PUBLIC_VOCAB_TOPICS_ENABLED = 'true';
+      mod = await reload();
+      expect(mod.flags.vocabTopicsEnabled).toBe(true);
+    }
+    process.env.EXPO_OS = 'web';
+    process.env.EXPO_PUBLIC_VOCAB_TOPICS_ENABLED = 'false';
+    mod = await reload();
+    expect(mod.flags.vocabTopicsEnabled).toBe(false);
   });
 
   it('vocabShowDrafts (F-VOC-001 section 3.7, dev builds only) is OFF by default and flips on with "true"', async () => {
