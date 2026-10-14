@@ -98,8 +98,9 @@ button "Korean: 이천 원, icheon won"            (ChoiceCard; with the shipped
 button "Korean: 삼천 원, samcheon won"
 button "Korean: 오천 원, ocheon won"
 status (polite) "Look again"                   (after a miss; after the second miss also
-                                                "Look here: 라면, ramyeon, 3,000원": a11y.minigame.option.hint
-                                                with the ringed line's Korean, romanization and value)
+                                                "Look here: 라면, ramyeon, 3,000원, samcheon won":
+                                                a11y.minigame.option.hint with the ringed line's full
+                                                name, lineBaseLabel, as the line's button reads it)
 ```
 
 - **Ticket**: group "Train ticket, 2 lines" > list > button "출발, chulbal: 서울, seoul, 3:00, se si" and "도착, ...: 대전, ..., 4:30, ne si samsip bun".
@@ -107,7 +108,7 @@ status (polite) "Look again"                   (after a miss; after the second m
 - **Price cards**: group "Price cards, 3 lines" > list > button "사과, sagwa, 3개, se gae, 2,000원, icheon won", "부채, ...", "한지, ...". The goods drawings are hidden; the card text names them.
 - Romanization in a name always goes through `a11yRomanization` (`packages/content-schema`, as `KoreanText` labels do), which reads a slash as "or" and leaves the words as written; the mocks show its output. In `tap` mode the name keeps the romanization (the setting hides a visual line, not information).
 - Answered options use the full shipped state names, `a11y.minigame.option.correct` / `.wrong` ("Right answer: Korean: 오른쪽, oreunjjok, right", "Not this one: ..."), as the mocks do; never a short suffix such as ". Right", which beside a direction word would read "right. Right".
-- The look-here ring is announced, not only drawn: on the second miss the status region adds `a11y.minigame.option.hint` with the ringed line's label, so a screen-reader user whose focus is on the options hears which line to read (S3).
+- The look-here ring is announced, not only drawn: on the second miss the status region adds `a11y.minigame.option.hint` with the ringed line's full name (`lineBaseLabel` in `apps/mobile/src/logic/realia-read-flow.ts`: Korean, romanization, value and its romanization, and the direction; the same name as the line's button, without the mark suffix), so a screen-reader user whose focus is on the options hears which line to read (S3).
 - Picture options have their UI-language label as the accessible name. Number options are read by the formatter of the UI locale.
 - Every line button and option is at least `touchTarget.min` tall; lines are full-width rows, so two lines never share a touch target.
 

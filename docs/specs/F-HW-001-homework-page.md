@@ -61,6 +61,7 @@ Companion stories:
 - **Given** the learner skips a card (taps another card first or exits the app),
   **when** the home re-renders next time,
   **then** the unfinished card is **still shown** without any visual penalty (no red badge, no "1 missed" text). Hoya idle illustration replaces the cheering one.
+- **Amended by F-VOC-005 P-3b (2026-10-13), slot ③ only:** the pinned plan keeps its cards for the UTC day, but a slot-③ vocabulary card is derived again at the learner's local midnight, or dropped, leaving slot ③ empty as a fresh plan would, when nothing is left in slot ③'s chain (Home re-renders then through `useToday('local')`, which re-reads the day with `watchDay` in `apps/mobile/src/logic/day-clock.ts`). An uncollected slot-③ card may give way to it when words are now due, except a story the learner has started ("Keep reading"), which stays. A collected card and the Daily test stay, and cards ① and ② never move. See the P-3b row of `docs/specs/F-VOC-005-word-progress-srs-sync.md` (*As built*).
 
 ### 3.3 Anti-shame contract
 
