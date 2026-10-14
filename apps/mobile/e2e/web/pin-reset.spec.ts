@@ -112,7 +112,9 @@ for (const vp of VIEWPORTS) {
       await page.goto('/');
       await page.getByRole('button', { name: "Let's start" }).click();
       await page.getByRole('radio', { name: /^Me\./ }).click();
+      await page.getByRole('button', { name: 'Continue' }).click();
       await page.getByPlaceholder('Type a name').fill('Soo');
+      await page.getByRole('button', { name: 'Continue' }).click();
       const row = page.getByRole('button', { name: 'Protect settings with a PIN (optional)' });
       await row.scrollIntoViewIfNeeded();
       await row.click();

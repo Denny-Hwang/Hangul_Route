@@ -108,11 +108,24 @@ for (const vp of VIEWPORTS) {
       await page.getByRole('button', { name: 'Edit Mina (PIN required)', exact: true }).click();
       await unlockWithPin(page);
       await expect(page.getByRole('heading', { name: 'Edit profile' })).toBeVisible();
-      await expect(page.getByRole('radio', { name: /^My child or a student/ })).toHaveAttribute('aria-checked', 'true');
+      await expect(page.getByRole('radio', { name: /^Someone I look after/ })).toHaveAttribute('aria-checked', 'true');
       await expect(page.getByRole('checkbox')).toHaveCount(0);
 
+      await expect(page.getByText("This doesn't change the lessons.")).toBeVisible();
       await page.getByRole('radio', { name: /^Me\./ }).click();
       const box = page.getByRole('checkbox', { name: "I'm 13 or older and I agree to the Privacy Policy." });
+      await expect(box).toBeVisible();
+      // The consent sits in its own Privacy block (F-LEARN-001 §3.15.6), with the under-13 hand-back.
+      await expect(page.getByText('Privacy', { exact: true })).toBeVisible();
+      await expect(page.getByText("Agreeing doesn't change the lessons.")).toBeAttached();
+      await page.getByRole('button', { name: "I'm under 13" }).click();
+      await expect(page.getByRole('radio', { name: /^Someone I look after/ })).toHaveAttribute('aria-checked', 'true');
+      await expect(page.getByRole('checkbox')).toHaveCount(0);
+      await expect(page.getByText('This profile stays with a grown-up.')).toBeVisible();
+      await expect(page.getByText('Change something to save')).toBeVisible();
+
+      await page.getByRole('radio', { name: /^Me\./ }).click();
+      await expect(page.getByText('This profile stays with a grown-up.')).toHaveCount(0);
       await expect(box).toBeVisible();
       await expect(page.getByRole('link', { name: 'Privacy Policy' })).toBeAttached();
       const save = page.getByRole('button', { name: 'Save' });
@@ -137,7 +150,7 @@ for (const vp of VIEWPORTS) {
       await page.getByRole('button', { name: 'Edit Leo', exact: true }).click();
       await expect(page.getByRole('heading', { name: 'Edit profile' })).toBeVisible();
 
-      await page.getByRole('radio', { name: /^My child or a student/ }).click();
+      await page.getByRole('radio', { name: /^Someone I look after/ }).click();
       await expect(page.getByText('For a grown-up')).toBeVisible();
       await expect(page.getByText('Create a grown-up PIN')).toBeVisible();
       const save = page.getByRole('button', { name: 'Save' });
@@ -187,7 +200,7 @@ test.describe('edge cases (375x667)', () => {
     await page.getByRole('button', { name: 'Edit Mina (PIN required)', exact: true }).click();
     await unlockWithPin(page);
     await expect(page.getByRole('heading', { name: 'Edit profile' })).toBeVisible();
-    await expect(page.getByRole('radio', { name: /^My child or a student/ })).toHaveAttribute('aria-checked', 'true');
+    await expect(page.getByRole('radio', { name: /^Someone I look after/ })).toHaveAttribute('aria-checked', 'true');
 
     await page.getByRole('radio', { name: /^Me\./ }).click();
     await page.getByRole('checkbox', { name: "I'm 13 or older and I agree to the Privacy Policy." }).click();
@@ -258,7 +271,7 @@ test.describe('edge cases (375x667)', () => {
     await onboardSelf(page, { name: 'Leo' });
     await openProfile(page, 'Leo');
     await page.getByRole('button', { name: 'Edit Leo', exact: true }).click();
-    await page.getByRole('radio', { name: /^My child or a student/ }).click();
+    await page.getByRole('radio', { name: /^Someone I look after/ }).click();
     await page.getByRole('checkbox').click();
     await typeDigits(page, '2468');
     await typeDigits(page, '2468');

@@ -1,10 +1,10 @@
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { E2E_PIN, onboardChild, openGrownUpZone, readStored, seedRescueCode, typeDigits, unlockWithPin } from './helpers';
+import { E2E_PIN, WHO_CHILD, onboardChild, openGrownUpZone, readStored, seedRescueCode, typeDigits, unlockWithPin } from './helpers';
 
 /**
- * F-LEARN-001 §3.3, §3.4, §3.14: the "My child or a student" path. The
- * grown-up card collects the consent, an optional email and a PIN typed twice
+ * F-LEARN-001 §3.3, §3.4, §3.14, §3.15: the "Someone I look after" path. On
+ * the Privacy step (step 3) the grown-up card collects the consent, an optional email and a PIN typed twice
  * (a mismatch starts over, calmly); the PIN then guards the grown-up pages from
  * the first tap, and no setup screen is shown. Forgot PIN is PR 6.
  */
@@ -33,14 +33,26 @@ for (const vp of VIEWPORTS) {
       await captureOpenedLinks(page);
       await page.goto('/');
       await page.getByRole('button', { name: "Let's start" }).click();
-      await page.getByRole('radio', { name: /^My child or a student/ }).click();
+      await page.getByRole('radio', { name: WHO_CHILD }).click();
+      const next = page.getByRole('button', { name: 'Continue' });
+      await next.click();
 
+      // Step 2, worded for someone else.
+      await expect(page.getByText('Step 2 of 3')).toBeVisible();
+      await expect(page.getByRole('heading', { name: 'Their profile' })).toBeVisible();
       await expect(page.getByText('Their name', { exact: true })).toBeVisible();
       await expect(page.getByText('How do they like to learn?')).toBeVisible();
       await page.getByPlaceholder('Type a name').fill('수니');
-      const next = page.getByRole('button', { name: 'Continue' });
+      await next.click();
+
+      // Step 3, Privacy: the box comes first in the caption.
+      await expect(page.getByText('Step 3 of 3')).toBeVisible();
+      await expect(page.getByRole('heading', { name: 'Privacy' })).toBeVisible();
       await expect(next).toBeDisabled();
       await expect(page.getByText('Tick the box to agree')).toBeVisible();
+      await expect(page.getByText("Agreeing doesn't change the lessons.")).toBeAttached();
+      // The under-13 hand-over belongs to the "Me" path only.
+      await expect(page.getByRole('button', { name: "I'm under 13" })).toHaveCount(0);
 
       // The grown-up card: heading, the consent sentence, a policy link, and an optional email.
       await expect(page.getByText('For a grown-up')).toBeVisible();

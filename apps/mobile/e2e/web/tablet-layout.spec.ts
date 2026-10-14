@@ -773,7 +773,8 @@ test.describe('no portrait guard when the soft keyboard shortens an upright phon
   test('typing the name: the window shrinks to 390x300 and nothing covers the form', async ({ page }) => {
     await page.goto('/');
     await page.getByRole('button', { name: "Let's start" }).click();
-    await page.getByRole('radio', { name: /^My child or a student/ }).click();
+    await page.getByRole('radio', { name: /^Someone I look after/ }).click();
+    await page.getByRole('button', { name: 'Continue' }).click();
     const name = page.getByPlaceholder('Type a name');
     await name.focus();
     // Playwright reports a landscape orientation for a wider-than-tall viewport: only the focused field keeps the guard away here.

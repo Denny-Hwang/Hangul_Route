@@ -38,8 +38,10 @@ async function onboardSelf(page: Page): Promise<string> {
   await page.goto('/');
   await page.getByRole('button', { name: "Let's start" }).click();
   await page.getByRole('radio', { name: /^Me\./ }).click();
+  await page.getByRole('button', { name: 'Continue' }).click();
   await page.getByPlaceholder('Type a name').fill('Sam');
   await page.getByRole('radio', { name: /^Some reading/ }).click();
+  await page.getByRole('button', { name: 'Continue' }).click();
   await page.getByRole('checkbox').click();
   await page.getByRole('button', { name: 'Continue' }).click();
   await page.getByRole('button', { name: 'Start my journey' }).click();

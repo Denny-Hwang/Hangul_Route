@@ -33,7 +33,7 @@ const VIEWPORTS = [
 ] as const;
 
 /**
- * Onboard through the real form: "My child or a student" creates the grown-up PIN in the form, so the gate later asks for it.
+ * Onboard through the real form: "Someone I look after" creates the grown-up PIN on the Privacy step, so the gate later asks for it.
  * At 844x390 (a touch phone on its side) the portrait guard asks first; "Keep sideways" answers it once (F-LAYOUT-001 PR 3).
  */
 async function onboard(page: Page, name: string): Promise<void> {
@@ -239,6 +239,6 @@ test.describe('iPhone 14 landscape size with a mouse 844x390', () => {
     await page.waitForTimeout(500);
     await expect(page.getByTestId('portrait-guard')).toHaveCount(0);
     await start.click();
-    await expect(page.getByRole('radio', { name: /^My child or a student/ })).toBeVisible();
+    await expect(page.getByRole('radio', { name: /^Someone I look after/ })).toBeVisible();
   });
 });

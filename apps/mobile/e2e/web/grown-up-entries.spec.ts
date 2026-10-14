@@ -230,7 +230,7 @@ test.describe('flag on (EXPO_PUBLIC_GROWN_UP_HOME=true)', () => {
   test('Let\'s start still starts the learner in one tap', async ({ page }) => {
     await page.goto('/');
     await page.getByRole('button', { name: "Let's start" }).click();
-    await expect(page.getByRole('radio', { name: /^My child or a student/ })).toBeVisible();
+    await expect(page.getByRole('radio', { name: /^Someone I look after/ })).toBeVisible();
   });
 
   test('Panel B: Continue as teacher opens the plain router; Someone else shows both buttons', async ({ page }) => {

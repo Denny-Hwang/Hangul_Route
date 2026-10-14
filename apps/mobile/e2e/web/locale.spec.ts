@@ -258,15 +258,18 @@ async function walkMatrix(page: Page, locale: MatrixLocale): Promise<void> {
   await checkScreen(page, locale, 'Welcome', start);
   await start.click();
 
-  // CreateProfile, filled in: "My child or a student", a name, the grown-up PIN twice, consent.
-  await page.getByRole('radio', { name: prefixIn(locale, (m) => () => m.learner.editProfile.who.child.label) }).click();
-  await page.getByPlaceholder(n((m) => m.learner.editProfile.namePlaceholder)).fill('Dani');
+  // CreateProfile in its three steps (F-LEARN-001 §3.15): "Someone I look after", a name, then on
+  // the Privacy step the grown-up PIN twice and consent.
+  const cont = button((m) => m.learner.createProfile.cta);
+  await page.getByRole('radio', { name: prefixIn(locale, (m) => () => m.learner.createProfile.who.child.label) }).click();
+  await cont.click();
+  await page.getByPlaceholder(n((m) => m.learner.createProfile.namePlaceholder)).fill('Dani');
+  await cont.click();
   for (let round = 0; round < 2; round += 1) {
     for (const d of [1, 2, 3, 4]) await button((m) => m.a11y.pinDigit(d)).click();
   }
   await expect(page.getByText(n((m) => m.caregiver.pin.setup.set))).toBeVisible();
   await page.getByRole('checkbox').click();
-  const cont = button((m) => m.learner.quest.continue.cta);
   await checkScreen(page, locale, 'CreateProfile', cont);
   await cont.click();
 
