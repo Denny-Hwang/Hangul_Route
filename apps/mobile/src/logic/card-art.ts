@@ -50,6 +50,16 @@ export function cardWord(card: Pick<HeritageCard, 'subtitleKo' | 'titleEn'>): st
   return card.subtitleKo?.trim() || Array.from(card.titleEn.trim())[0] || WORD_PLACEHOLDER;
 }
 
+/**
+ * The Korean line a card shows under its title, or undefined when there is none or when it
+ * repeats the title. A Korean overlay titles most cards with the Korean word itself (the book card reads chaek over chaek),
+ * and a screen that prints the title and then the Korean would show the word twice.
+ */
+export function cardKoLine(card: Pick<HeritageCard, 'subtitleKo' | 'titleEn'>): string | undefined {
+  const ko = card.subtitleKo?.trim();
+  return ko && ko !== card.titleEn.trim() ? card.subtitleKo : undefined;
+}
+
 const SET_RULE = /^set:/;
 
 export function cardArtSource(card: HeritageCard, deps: CardArtDeps): CardArtSource {

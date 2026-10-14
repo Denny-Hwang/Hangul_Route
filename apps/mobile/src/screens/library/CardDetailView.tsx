@@ -30,6 +30,7 @@ import { earnHint } from '../../logic/awards/earn-hint';
 import { cardCitationView, type CardCitationView } from '../../logic/library/card-citation';
 import { cardDetailDisplay, type CardDetailState } from '../../logic/library/card-detail-state';
 import { localizeCard, localizeEpisode } from '../../logic/content-locale';
+import { cardKoLine } from '../../logic/card-art';
 import { nextFace, type FlipFace } from '../../logic/flip';
 import { playPrompt, stop } from '../../platform/audio';
 import { isShareAvailable, shareSnapshot } from '../../platform/sharing';
@@ -335,7 +336,7 @@ function FrontFaceBody({
       <Heading level="display" align="center">
         {card.titleEn}
       </Heading>
-      {card.subtitleKo ? (
+      {cardKoLine(card) ? (
         <>
           <Spacer size="xs" />
           <Heading level="title" tone="brand">

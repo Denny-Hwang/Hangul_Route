@@ -5,7 +5,7 @@
     "card:book": {
       "title": "Libro",
       "blurb": "Un libro que espera ser leído.",
-      "fact": "Hoy, la mayoría de los libros coreanos se imprimen de izquierda a derecha y de arriba abajo, igual que en inglés."
+      "fact": "Hoy, la mayoría de los libros coreanos se imprimen de izquierda a derecha y de arriba abajo, igual que en español."
     },
     "card:hanji": {
       "title": "Papel hanji",
@@ -30,11 +30,11 @@
     "card:hangul-day": {
       "title": "Día del Hangul",
       "blurb": "9 de octubre: el cumpleaños de las letras coreanas.",
-      "fact": "El rey Sejong creó el hangul en 1443 para que todos pudieran leer."
+      "fact": "El rey Sejong creó el hangul en 1443 para que todo el mundo pudiera leer."
     },
     "card:kimchi": {
       "title": "Kimchi",
-      "blurb": "Repollo rojo y picante: Corea en un plato.",
+      "blurb": "Repollo picante, rojo de chile: Corea en un plato.",
       "fact": "Hay más de 200 tipos de kimchi."
     },
     "card:rice": {
@@ -59,13 +59,13 @@
     },
     "card:family-table": {
       "title": "Mesa familiar",
-      "blurb": "Donde todos se reúnen para comer.",
+      "blurb": "Donde toda la familia se reúne para comer.",
       "fact": "En Corea se comparten muchos platillos pequeños llamados banchan."
     },
     "card:seollal": {
       "title": "Año Nuevo lunar",
       "blurb": "El año nuevo: reverencias, hanbok, tteokguk.",
-      "fact": "La gente hace reverencias a sus mayores, y los mayores a menudo dan sebaetdon (dinero de la suerte)."
+      "fact": "La gente hace reverencias a las personas mayores, que a menudo dan sebaetdon (dinero de la suerte)."
     },
     "card:chuseok": {
       "title": "Fiesta de la cosecha",
@@ -84,7 +84,7 @@
     },
     "card:sebae": {
       "title": "Reverencia de Año Nuevo",
-      "blurb": "Una reverencia respetuosa a los abuelos.",
+      "blurb": "Una reverencia respetuosa a las abuelas y los abuelos.",
       "fact": "Después de la reverencia, recibes sebaetdon: dinero de la suerte."
     },
     "card:lantern": {
@@ -169,7 +169,7 @@
     },
     "card:dosirak": {
       "title": "Lonchera",
-      "blurb": "Una lonchera para compartir con tus amistades.",
+      "blurb": "Un almuerzo empacado para compartir con tus amistades.",
       "fact": "Agitar un dosirak para mezclarlo es una divertida tradición coreana."
     },
     "card:haneul": {
@@ -179,7 +179,7 @@
     },
     "card:kkot": {
       "title": "Flor",
-      "blurb": "Una flor brillante en el campo.",
+      "blurb": "Una flor de colores vivos en el campo.",
       "fact": "Corea celebra los cerezos en flor, beotkkot, cada primavera."
     },
     "card:namu": {
@@ -190,7 +190,7 @@
     "card:byeol": {
       "title": "Estrella",
       "blurb": "Una estrella que titila de noche.",
-      "fact": "En Corea, la gente pide un deseo a la primera estrella que ve."
+      "fact": "Hace mucho tiempo, en Corea se rezaba a las siete estrellas de la Osa Mayor (Chilseong) para tener una vida larga."
     },
     "card:annyeong": {
       "title": "Hola",
@@ -255,7 +255,7 @@
     "card:kpop": {
       "title": "K-pop",
       "blurb": "Grandes canciones, grandes bailes. Con el K-pop, el mundo oye coreano cada día.",
-      "fact": "La primera canción de K-pop se cantó en 1992."
+      "fact": "Se suele decir que el K-pop moderno empezó en 1992."
     },
     "card:taegeukgi": {
       "title": "Taegeukgi",
@@ -269,13 +269,13 @@
     },
     "card:horangi": {
       "title": "Tigre",
-      "blurb": "Los cuentos populares coreanos empiezan con «Hace mucho tiempo, cuando los tigres fumaban tabaco...».",
+      "blurb": "Muchos cuentos populares coreanos empiezan con «Hace mucho tiempo, cuando los tigres fumaban tabaco...».",
       "fact": "Se dice que la forma de Corea en el mapa parece un tigre."
     },
     "card:arirang": {
       "title": "Arirang",
       "blurb": "Una canción sobre extrañar el hogar. En Corea, todo el mundo conoce el primer verso.",
-      "fact": "La UNESCO incluyó el Arirang en su lista de patrimonio mundial en 2012."
+      "fact": "En 2012, la UNESCO incluyó el Arirang en su lista del patrimonio cultural inmaterial."
     },
     "card:yagu": {
       "title": "Yagu",
@@ -284,7 +284,7 @@
     },
     "card:eomuk": {
       "title": "Eomuk",
-      "blurb": "Un bocado caliente de invierno que compras en la calle, servido con caldo caliente.",
+      "blurb": "Un bocado de invierno que compras en la calle, con caldo caliente.",
       "fact": "En los días fríos, el vaso de caldo es lo mejor."
     },
     "card:yeou": {
@@ -295,7 +295,7 @@
     "card:ori": {
       "title": "Ori",
       "blurb": "Patos marrones caminan bamboleándose por los estanques coreanos. Les encantan las sobras de arroz.",
-      "fact": "En las bodas coreanas antiguas se usaban patos de madera como símbolo de amor."
+      "fact": "A las parejas que se casan se les suele regalar un par de patos mandarines de madera, símbolo de un matrimonio feliz."
     },
     "card:yong": {
       "title": "Dragón",
@@ -309,7 +309,7 @@
     },
     "card:geune": {
       "title": "Geune",
-      "blurb": "En pinturas antiguas, las jóvenes coreanas se mecen en columpios gigantes durante la fiesta de Dano.",
+      "blurb": "En pinturas antiguas, las mujeres coreanas se mecen en columpios gigantes durante la fiesta de Dano.",
       "fact": "Cuanto más alto te columpias, mejor es el deseo para el año."
     },
     "card:ibul": {

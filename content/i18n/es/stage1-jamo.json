@@ -50,22 +50,22 @@
     "jamo:chieut": {
       "soundHint": "como la ch de «chocolate», con un soplo de aire",
       "exampleWord.gloss": "libro",
-      "gloss": "CH: suena como el inicio de «chocolate»"
+      "gloss": "CH: como la ch de «chocolate», con un soplo de aire"
     },
     "jamo:kieuk": {
       "soundHint": "como la c de «casa», con un soplo de aire",
       "exampleWord.gloss": "nariz",
-      "gloss": "K: una k fuerte, como en «kilo»"
+      "gloss": "K: como la c de «casa», con un soplo de aire"
     },
     "jamo:tieut": {
       "soundHint": "como la t de «taza», con un soplo de aire",
       "exampleWord.gloss": "conejo",
-      "gloss": "T: suena como el inicio de «taza»"
+      "gloss": "T: como la t de «taza», con un soplo de aire"
     },
     "jamo:pieup": {
       "soundHint": "como la p de «papá», con un soplo de aire",
       "exampleWord.gloss": "uva",
-      "gloss": "P: suena como el inicio de «papá»"
+      "gloss": "P: como la p de «papá», con un soplo de aire"
     },
     "jamo:hieut": {
       "soundHint": "como una j muy suave, casi solo aire",
@@ -100,7 +100,7 @@
     "jamo:yo": {
       "soundHint": "como «yo» en «yogur»",
       "exampleWord.gloss": "cocinar, platillo",
-      "gloss": "YO: suena como el inicio de «yoyó»"
+      "gloss": "YO: suena como el inicio de «yogur»"
     },
     "jamo:u": {
       "soundHint": "como la u de «luna»",

@@ -48,6 +48,7 @@ import { usePlanStore } from '../../store/plan-store';
 import { useAccessTier, useQuestAccess } from '../../store/tier-store';
 import { firstFreeTopicKey } from '../vocab/topic-data';
 import { localizeCard, localizeEpisode, localizeQuest, localizeStage, localizeTheme } from '../../logic/content-locale';
+import { cardKoLine } from '../../logic/card-art';
 import { buildsOnLine, prereqSheet, softPrerequisite, type PrereqSheet as PrereqSheetModel } from '../../logic/quest-flow/soft-prereq';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { usePrereqSheetStore } from '../../store/prereq-sheet-store';
@@ -461,7 +462,7 @@ export function EpisodeDetailView({
                     {earned ? (
                       <>
                         <Body weight="semibold">{c.titleEn}</Body>
-                        {c.subtitleKo ? <Caption tone="brand">{c.subtitleKo}</Caption> : null}
+                        {cardKoLine(c) ? <Caption tone="brand">{c.subtitleKo}</Caption> : null}
                         <Pill tone="neutral" size="sm" label={messages.learner.library.rarity[c.rarity]} />
                       </>
                     ) : (

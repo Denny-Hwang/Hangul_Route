@@ -79,7 +79,7 @@ export const stage2Cards: HeritageCard[] = [
   make('haneul', 'Sky', '하늘', 'haneul', 'The wide blue sky above.', 'Haneul also means "heaven" in old Korean songs.', 'nature', 'stage2', 'common', 'episode:stage2-nature'),
   make('kkot', 'Flower', '꽃', 'kkot', 'A bright flower in the field.', 'Korea celebrates cherry blossoms — beotkkot — every spring.', 'nature', 'stage2', 'common', 'episode:stage2-nature'),
   make('namu', 'Tree', '나무', 'namu', 'A tall green tree.', 'Korea\'s oldest tree, a ginkgo, is over 1,000 years old.', 'nature', 'stage2', 'uncommon', 'episode:stage2-nature'),
-  make('byeol', 'Star', '별', 'byeol', 'A twinkling star at night.', 'Koreans make a wish on the first star they see.', 'nature', 'stage2', 'rare', 'episode:stage2-nature'),
+  make('byeol', 'Star', '별', 'byeol', 'A twinkling star at night.', 'Long ago, Koreans prayed to the Big Dipper (Chilseong) for a long life.', 'nature', 'stage2', 'rare', 'episode:stage2-nature'),
 ];
 
 export const stage4Cards: HeritageCard[] = [

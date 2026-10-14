@@ -8,6 +8,7 @@ import {
   CARD_PLATE_SLOTS,
   cardArtSource,
   cardCoverCrop,
+  cardKoLine,
   cardPlateLayout,
   cardWord,
   cardWordFontSize,
@@ -183,5 +184,19 @@ describe('cardWordFontSize', () => {
   it('never goes below the caption size, and treats an empty word as one glyph', () => {
     expect(cardWordFontSize(40, '아주아주아주긴단어', typography.size.caption)).toBe(typography.size.caption);
     expect(cardWordFontSize(100, '', typography.size.caption)).toBe(40);
+  });
+});
+
+describe('cardKoLine', () => {
+  it('shows the Korean line when it differs from the title', () => {
+    expect(cardKoLine(card())).toBe('시험');
+  });
+  it('hides it when a Korean title already is the word (책 / 책)', () => {
+    expect(cardKoLine(card({ titleEn: '책', subtitleKo: '책' }))).toBeUndefined();
+    expect(cardKoLine(card({ titleEn: ' 책', subtitleKo: '책 ' }))).toBeUndefined();
+  });
+  it('hides a missing or blank Korean line', () => {
+    expect(cardKoLine(card({ subtitleKo: undefined }))).toBeUndefined();
+    expect(cardKoLine(card({ subtitleKo: '  ' }))).toBeUndefined();
   });
 });

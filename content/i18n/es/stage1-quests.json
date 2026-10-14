@@ -85,7 +85,7 @@
       "steps.s4.title": "Arma una letra",
       "steps.s5.title": "Escucha y lee",
       "steps.s6.title": "¡Tarjeta de la familia!",
-      "steps.s1.hoyaLine": "Todos están a la mesa. ¡Leamos las palabras de familia!",
+      "steps.s1.hoyaLine": "Toda la familia está a la mesa. ¡Leamos las palabras de familia!",
       "steps.s2.hoyaLine": "Toca Escuchar para oír cada una.",
       "steps.s6.hoyaLine": "¡La mesa familiar llega a tu colección!",
       "steps.s2.discover.pages.2.caption": "Palabras de familia"
@@ -111,7 +111,7 @@
       "steps.s2.discover.pages.0.items.0.example.gloss": "puerta",
       "steps.s2.discover.pages.0.items.1.example.gloss": "luna",
       "steps.s2.discover.pages.1.items.0.word.gloss": "Año Nuevo lunar",
-      "steps.s2.discover.pages.1.items.1.word.gloss": "sopa de masa de arroz",
+      "steps.s2.discover.pages.1.items.1.word.gloss": "sopa de pastel de arroz",
       "title": "Reverencia y tteokguk",
       "blurb": "Tus primeras letras finales, n y l, y las palabras del Seollal.",
       "steps.s1.title": "¡Feliz Año Nuevo!",
@@ -121,7 +121,7 @@
       "steps.s5.title": "Escucha y lee",
       "steps.s6.title": "¡Tarjeta del Seollal!",
       "steps.s1.hoyaLine": "¡Feliz Año Nuevo! Aprendamos el saludo.",
-      "steps.s2.hoyaLine": "Toca Escuchar para oír. Una letra final va abajo del bloque.",
+      "steps.s2.hoyaLine": "Toca Escuchar para oír. Una letra final va debajo del bloque.",
       "steps.s6.hoyaLine": "¡Una tarjeta del Año Nuevo lunar llega a tu colección!",
       "steps.s2.discover.pages.1.caption": "Palabras del Seollal"
     },
@@ -129,10 +129,10 @@
       "steps.s2.discover.pages.0.items.0.example.gloss": "béisbol",
       "steps.s2.discover.pages.0.items.1.example.gloss": "zorro",
       "steps.s2.discover.pages.1.items.0.example.gloss": "uva",
-      "steps.s2.discover.pages.1.items.1.example.gloss": "masa de arroz en media luna",
+      "steps.s2.discover.pages.1.items.1.example.gloss": "pastel de arroz en media luna",
       "steps.s2.discover.pages.2.items.0.word.gloss": "fiesta de la cosecha",
-      "steps.s2.discover.pages.2.items.1.word.gloss": "masa de arroz en media luna",
-      "title": "Pasteles de arroz del Chuseok",
+      "steps.s2.discover.pages.2.items.1.word.gloss": "pastel de arroz en media luna",
+      "title": "Pasteles del Chuseok",
       "blurb": "Dos vocales nuevas, ya y yeo, la letra p y la final ng.",
       "steps.s1.title": "¡Chuseok!",
       "steps.s2.title": "Cuatro letras nuevas",
@@ -158,7 +158,7 @@
       "steps.s4.title": "Orden del Año Nuevo",
       "steps.s5.title": "Escucha y lee",
       "steps.s6.title": "¡Tarjeta de la reverencia!",
-      "steps.s1.hoyaLine": "En Año Nuevo nos ponemos hanbok y hacemos una reverencia a los abuelos.",
+      "steps.s1.hoyaLine": "En Año Nuevo nos ponemos hanbok y hacemos una reverencia a las abuelas y los abuelos.",
       "steps.s2.hoyaLine": "Toca Escuchar para oír cada una.",
       "steps.s6.hoyaLine": "¡Una tarjeta de la reverencia de Año Nuevo llega a tu colección!"
     },
@@ -178,7 +178,7 @@
       "steps.s5.title": "Escucha y lee",
       "steps.s6.title": "¡Tarjeta de la urraca!",
       "steps.s1.hoyaLine": "Las pinturas coreanas antiguas suelen mostrar un tigre con una urraca. ¡Hoy, dos letras finales nuevas!",
-      "steps.s2.hoyaLine": "Toca Escuchar para oír. Las letras m y p también pueden ir abajo de un bloque.",
+      "steps.s2.hoyaLine": "Toca Escuchar para oír. Las letras m y p también pueden ir debajo de un bloque.",
       "steps.s6.hoyaLine": "¡Una tarjeta de la urraca llega a tu colección!",
       "steps.s2.discover.pages.2.caption": "¡Ya puedes leer estas!"
     },
@@ -254,7 +254,7 @@
     "quest:stage1-crafts-q3": {
       "steps.s2.discover.pages.0.items.0.word.gloss": "el alfabeto coreano",
       "steps.s2.discover.pages.0.items.1.word.gloss": "Hoya, el tigre",
-      "steps.s2.discover.pages.1.items.0.word.gloss": "hola, adiós (entre amigos)",
+      "steps.s2.discover.pages.1.items.0.word.gloss": "hola, adiós (entre amistades)",
       "steps.s2.discover.pages.1.items.1.word.gloss": "amor",
       "title": "¡Lee hangul!",
       "blurb": "Junta todo y lee palabras en hangul por tu cuenta.",
@@ -264,7 +264,7 @@
       "steps.s4.title": "Arma un bloque",
       "steps.s5.title": "Escucha y lee",
       "steps.s6.title": "¡Tarjeta de la cometa!",
-      "steps.s1.hoyaLine": "El rey Sejong creó el hangul para que todos pudieran leer. ¡Ahora tú también puedes leerlo!",
+      "steps.s1.hoyaLine": "El rey Sejong creó el hangul para que todo el mundo pudiera leer. ¡Ahora tú también puedes leerlo!",
       "steps.s2.hoyaLine": "Toca Escuchar y luego lee cada palabra por tu cuenta.",
       "steps.s6.hoyaLine": "¡Una tarjeta de la cometa llega a tu colección!"
     }

@@ -9,7 +9,7 @@
     },
     "episode:stage1-life": {
       "title": "한국의 식탁에서",
-      "subtitle": "밥, 김치, 가족을 한국어로 말해요.",
+      "subtitle": "한국어로 말하는 밥, 김치, 가족",
       "hoyaIntro": "점심시간이에요! 제가 뭘 먹는지 보여 줄게요."
     },
     "episode:stage1-rites": {
@@ -25,27 +25,27 @@
     "episode:stage1-crafts": {
       "title": "윷, 연, 종이",
       "subtitle": "해 볼 만한 한국의 놀이와 공예",
-      "hoyaIntro": "윷놀이 해요. 윷가락을 던져요!"
+      "hoyaIntro": "같이 윷놀이해요! 윷가락을 던져 봐요!"
     },
     "episode:stage5-letters": {
       "title": "글자 이야기",
-      "hoyaIntro": "한글에 관한 이야기를 한국어로 읽어 봐요. 짧은 문장 하나씩이요."
+      "hoyaIntro": "한글에 관한 이야기를 짧은 문장 하나씩 한국어로 읽어 봐요."
     },
     "episode:stage5-life": {
       "title": "가족 이야기",
-      "hoyaIntro": "일상 이야기를 한국어로 읽어 봐요. 짧은 문장 하나씩이요."
+      "hoyaIntro": "일상 이야기를 짧은 문장 하나씩 한국어로 읽어 봐요."
     },
     "episode:stage5-rites": {
       "title": "명절 이야기",
-      "hoyaIntro": "명절 이야기를 한국어로 읽어 봐요. 짧은 문장 하나씩이요."
+      "hoyaIntro": "명절 이야기를 짧은 문장 하나씩 한국어로 읽어 봐요."
     },
     "episode:stage5-nature": {
       "title": "자연 이야기",
-      "hoyaIntro": "해와 하늘 이야기를 한국어로 읽어 봐요. 짧은 문장 하나씩이요."
+      "hoyaIntro": "해와 하늘 이야기를 짧은 문장 하나씩 한국어로 읽어 봐요."
     },
     "episode:stage5-crafts": {
       "title": "공예 이야기",
-      "hoyaIntro": "솜씨 좋은 장인과 옛이야기를 한국어로 읽어 봐요. 짧은 문장 하나씩이요."
+      "hoyaIntro": "솜씨 좋은 장인과 옛이야기를 짧은 문장 하나씩 한국어로 읽어 봐요."
     }
   }
 }

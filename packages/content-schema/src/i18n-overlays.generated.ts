@@ -10,7 +10,7 @@ export const OVERLAYS: Overlays = {
     },
     "card:arirang": {
       "blurb": "Una canción sobre extrañar el hogar. En Corea, todo el mundo conoce el primer verso.",
-      "fact": "La UNESCO incluyó el Arirang en su lista de patrimonio mundial en 2012.",
+      "fact": "En 2012, la UNESCO incluyó el Arirang en su lista del patrimonio cultural inmaterial.",
       "title": "Arirang"
     },
     "card:bap": {
@@ -20,7 +20,7 @@ export const OVERLAYS: Overlays = {
     },
     "card:book": {
       "blurb": "Un libro que espera ser leído.",
-      "fact": "Hoy, la mayoría de los libros coreanos se imprimen de izquierda a derecha y de arriba abajo, igual que en inglés.",
+      "fact": "Hoy, la mayoría de los libros coreanos se imprimen de izquierda a derecha y de arriba abajo, igual que en español.",
       "title": "Libro"
     },
     "card:boreumdal": {
@@ -35,7 +35,7 @@ export const OVERLAYS: Overlays = {
     },
     "card:byeol": {
       "blurb": "Una estrella que titila de noche.",
-      "fact": "En Corea, la gente pide un deseo a la primera estrella que ve.",
+      "fact": "Hace mucho tiempo, en Corea se rezaba a las siete estrellas de la Osa Mayor (Chilseong) para tener una vida larga.",
       "title": "Estrella"
     },
     "card:chaek": {
@@ -59,17 +59,17 @@ export const OVERLAYS: Overlays = {
       "title": "Fiesta de la cosecha"
     },
     "card:dosirak": {
-      "blurb": "Una lonchera para compartir con tus amistades.",
+      "blurb": "Un almuerzo empacado para compartir con tus amistades.",
       "fact": "Agitar un dosirak para mezclarlo es una divertida tradición coreana.",
       "title": "Lonchera"
     },
     "card:eomuk": {
-      "blurb": "Un bocado caliente de invierno que compras en la calle, servido con caldo caliente.",
+      "blurb": "Un bocado de invierno que compras en la calle, con caldo caliente.",
       "fact": "En los días fríos, el vaso de caldo es lo mejor.",
       "title": "Eomuk"
     },
     "card:family-table": {
-      "blurb": "Donde todos se reúnen para comer.",
+      "blurb": "Donde toda la familia se reúne para comer.",
       "fact": "En Corea se comparten muchos platillos pequeños llamados banchan.",
       "title": "Mesa familiar"
     },
@@ -89,7 +89,7 @@ export const OVERLAYS: Overlays = {
       "title": "Cítara gayageum"
     },
     "card:geune": {
-      "blurb": "En pinturas antiguas, las jóvenes coreanas se mecen en columpios gigantes durante la fiesta de Dano.",
+      "blurb": "En pinturas antiguas, las mujeres coreanas se mecen en columpios gigantes durante la fiesta de Dano.",
       "fact": "Cuanto más alto te columpias, mejor es el deseo para el año.",
       "title": "Geune"
     },
@@ -105,7 +105,7 @@ export const OVERLAYS: Overlays = {
     },
     "card:hangul-day": {
       "blurb": "9 de octubre: el cumpleaños de las letras coreanas.",
-      "fact": "El rey Sejong creó el hangul en 1443 para que todos pudieran leer.",
+      "fact": "El rey Sejong creó el hangul en 1443 para que todo el mundo pudiera leer.",
       "title": "Día del Hangul"
     },
     "card:hanji": {
@@ -114,7 +114,7 @@ export const OVERLAYS: Overlays = {
       "title": "Papel hanji"
     },
     "card:horangi": {
-      "blurb": "Los cuentos populares coreanos empiezan con «Hace mucho tiempo, cuando los tigres fumaban tabaco...».",
+      "blurb": "Muchos cuentos populares coreanos empiezan con «Hace mucho tiempo, cuando los tigres fumaban tabaco...».",
       "fact": "Se dice que la forma de Corea en el mapa parece un tigre.",
       "title": "Tigre"
     },
@@ -154,7 +154,7 @@ export const OVERLAYS: Overlays = {
       "title": "Kimbap"
     },
     "card:kimchi": {
-      "blurb": "Repollo rojo y picante: Corea en un plato.",
+      "blurb": "Repollo picante, rojo de chile: Corea en un plato.",
       "fact": "Hay más de 200 tipos de kimchi.",
       "title": "Kimchi"
     },
@@ -164,13 +164,13 @@ export const OVERLAYS: Overlays = {
       "title": "Cometa"
     },
     "card:kkot": {
-      "blurb": "Una flor brillante en el campo.",
+      "blurb": "Una flor de colores vivos en el campo.",
       "fact": "Corea celebra los cerezos en flor, beotkkot, cada primavera.",
       "title": "Flor"
     },
     "card:kpop": {
       "blurb": "Grandes canciones, grandes bailes. Con el K-pop, el mundo oye coreano cada día.",
-      "fact": "La primera canción de K-pop se cantó en 1992.",
+      "fact": "Se suele decir que el K-pop moderno empezó en 1992.",
       "title": "K-pop"
     },
     "card:lantern": {
@@ -210,7 +210,7 @@ export const OVERLAYS: Overlays = {
     },
     "card:ori": {
       "blurb": "Patos marrones caminan bamboleándose por los estanques coreanos. Les encantan las sobras de arroz.",
-      "fact": "En las bodas coreanas antiguas se usaban patos de madera como símbolo de amor.",
+      "fact": "A las parejas que se casan se les suele regalar un par de patos mandarines de madera, símbolo de un matrimonio feliz.",
       "title": "Ori"
     },
     "card:origami": {
@@ -254,13 +254,13 @@ export const OVERLAYS: Overlays = {
       "title": "Mar"
     },
     "card:sebae": {
-      "blurb": "Una reverencia respetuosa a los abuelos.",
+      "blurb": "Una reverencia respetuosa a las abuelas y los abuelos.",
       "fact": "Después de la reverencia, recibes sebaetdon: dinero de la suerte.",
       "title": "Reverencia de Año Nuevo"
     },
     "card:seollal": {
       "blurb": "El año nuevo: reverencias, hanbok, tteokguk.",
-      "fact": "La gente hace reverencias a sus mayores, y los mayores a menudo dan sebaetdon (dinero de la suerte).",
+      "fact": "La gente hace reverencias a las personas mayores, que a menudo dan sebaetdon (dinero de la suerte).",
       "title": "Año Nuevo lunar"
     },
     "card:songpyeon": {
@@ -378,7 +378,7 @@ export const OVERLAYS: Overlays = {
     },
     "jamo:chieut": {
       "exampleWord.gloss": "libro",
-      "gloss": "CH: suena como el inicio de «chocolate»",
+      "gloss": "CH: como la ch de «chocolate», con un soplo de aire",
       "soundHint": "como la ch de «chocolate», con un soplo de aire"
     },
     "jamo:digeut": {
@@ -429,7 +429,7 @@ export const OVERLAYS: Overlays = {
     },
     "jamo:kieuk": {
       "exampleWord.gloss": "nariz",
-      "gloss": "K: una k fuerte, como en «kilo»",
+      "gloss": "K: como la c de «casa», con un soplo de aire",
       "soundHint": "como la c de «casa», con un soplo de aire"
     },
     "jamo:mieum": {
@@ -455,7 +455,7 @@ export const OVERLAYS: Overlays = {
     },
     "jamo:pieup": {
       "exampleWord.gloss": "uva",
-      "gloss": "P: suena como el inicio de «papá»",
+      "gloss": "P: como la p de «papá», con un soplo de aire",
       "soundHint": "como la p de «papá», con un soplo de aire"
     },
     "jamo:rieul": {
@@ -473,7 +473,7 @@ export const OVERLAYS: Overlays = {
     },
     "jamo:tieut": {
       "exampleWord.gloss": "conejo",
-      "gloss": "T: suena como el inicio de «taza»",
+      "gloss": "T: como la t de «taza», con un soplo de aire",
       "soundHint": "como la t de «taza», con un soplo de aire"
     },
     "jamo:u": {
@@ -493,7 +493,7 @@ export const OVERLAYS: Overlays = {
     },
     "jamo:yo": {
       "exampleWord.gloss": "cocinar, platillo",
-      "gloss": "YO: suena como el inicio de «yoyó»",
+      "gloss": "YO: suena como el inicio de «yogur»",
       "soundHint": "como «yo» en «yogur»"
     },
     "jamo:yu": {
@@ -531,12 +531,12 @@ export const OVERLAYS: Overlays = {
     },
     "minigame:s1-crafts-q3-check": {
       "listenPick.rounds.0.prompt": "el alfabeto coreano",
-      "listenPick.rounds.1.prompt": "hola, adiós (entre amigos)"
+      "listenPick.rounds.1.prompt": "hola, adiós (entre amistades)"
     },
     "minigame:s1-crafts-q3-play": {
       "listenPick.rounds.0.prompt": "el alfabeto coreano",
       "listenPick.rounds.1.prompt": "Hoya, el tigre",
-      "listenPick.rounds.2.prompt": "hola, adiós (entre amigos)",
+      "listenPick.rounds.2.prompt": "hola, adiós (entre amistades)",
       "listenPick.rounds.3.prompt": "amor",
       "listenPick.rounds.4.prompt": "Corea",
       "listenPick.rounds.5.prompt": "hanbok, ropa tradicional"
@@ -634,11 +634,11 @@ export const OVERLAYS: Overlays = {
     },
     "minigame:s1-rites-q2-check": {
       "listenPick.rounds.0.prompt": "la sílaba song",
-      "listenPick.rounds.1.prompt": "masa de arroz en media luna"
+      "listenPick.rounds.1.prompt": "pastel de arroz en media luna"
     },
     "minigame:s1-rites-q3-apply": {
       "storySteps.a.label": "Ponerse el hanbok",
-      "storySteps.b.label": "Saludar a los mayores con una reverencia",
+      "storySteps.b.label": "Hacer una reverencia a las personas mayores",
       "storySteps.c.label": "Comer tteokguk",
       "storySteps.d.label": "Recibir dinero de la suerte"
     },
@@ -1876,11 +1876,11 @@ export const OVERLAYS: Overlays = {
     },
     "quest:stage1-crafts-q3": {
       "blurb": "Junta todo y lee palabras en hangul por tu cuenta.",
-      "steps.s1.hoyaLine": "El rey Sejong creó el hangul para que todos pudieran leer. ¡Ahora tú también puedes leerlo!",
+      "steps.s1.hoyaLine": "El rey Sejong creó el hangul para que todo el mundo pudiera leer. ¡Ahora tú también puedes leerlo!",
       "steps.s1.title": "¡Ya sabes leer!",
       "steps.s2.discover.pages.0.items.0.word.gloss": "el alfabeto coreano",
       "steps.s2.discover.pages.0.items.1.word.gloss": "Hoya, el tigre",
-      "steps.s2.discover.pages.1.items.0.word.gloss": "hola, adiós (entre amigos)",
+      "steps.s2.discover.pages.1.items.0.word.gloss": "hola, adiós (entre amistades)",
       "steps.s2.discover.pages.1.items.1.word.gloss": "amor",
       "steps.s2.hoyaLine": "Toca Escuchar y luego lee cada palabra por tu cuenta.",
       "steps.s2.title": "Palabras en hangul",
@@ -1961,7 +1961,7 @@ export const OVERLAYS: Overlays = {
     },
     "quest:stage1-life-q2": {
       "blurb": "Dos letras nuevas, b y s, y palabras de familia para leer.",
-      "steps.s1.hoyaLine": "Todos están a la mesa. ¡Leamos las palabras de familia!",
+      "steps.s1.hoyaLine": "Toda la familia está a la mesa. ¡Leamos las palabras de familia!",
       "steps.s1.title": "¡Familia!",
       "steps.s2.discover.pages.0.items.0.example.gloss": "plátano, banana",
       "steps.s2.discover.pages.0.items.1.example.gloss": "león",
@@ -2007,7 +2007,7 @@ export const OVERLAYS: Overlays = {
       "steps.s2.discover.pages.2.caption": "¡Ya puedes leer estas!",
       "steps.s2.discover.pages.2.items.0.word.gloss": "kimchi",
       "steps.s2.discover.pages.2.items.1.word.gloss": "mamá",
-      "steps.s2.hoyaLine": "Toca Escuchar para oír. Las letras m y p también pueden ir abajo de un bloque.",
+      "steps.s2.hoyaLine": "Toca Escuchar para oír. Las letras m y p también pueden ir debajo de un bloque.",
       "steps.s2.title": "Dos finales más",
       "steps.s3.title": "Escucha la final",
       "steps.s4.title": "Imagen y palabra",
@@ -2058,8 +2058,8 @@ export const OVERLAYS: Overlays = {
       "steps.s2.discover.pages.0.items.1.example.gloss": "luna",
       "steps.s2.discover.pages.1.caption": "Palabras del Seollal",
       "steps.s2.discover.pages.1.items.0.word.gloss": "Año Nuevo lunar",
-      "steps.s2.discover.pages.1.items.1.word.gloss": "sopa de masa de arroz",
-      "steps.s2.hoyaLine": "Toca Escuchar para oír. Una letra final va abajo del bloque.",
+      "steps.s2.discover.pages.1.items.1.word.gloss": "sopa de pastel de arroz",
+      "steps.s2.hoyaLine": "Toca Escuchar para oír. Una letra final va debajo del bloque.",
       "steps.s2.title": "Letras abajo",
       "steps.s3.title": "Escucha la final",
       "steps.s4.title": "Arma un bloque",
@@ -2075,10 +2075,10 @@ export const OVERLAYS: Overlays = {
       "steps.s2.discover.pages.0.items.0.example.gloss": "béisbol",
       "steps.s2.discover.pages.0.items.1.example.gloss": "zorro",
       "steps.s2.discover.pages.1.items.0.example.gloss": "uva",
-      "steps.s2.discover.pages.1.items.1.example.gloss": "masa de arroz en media luna",
+      "steps.s2.discover.pages.1.items.1.example.gloss": "pastel de arroz en media luna",
       "steps.s2.discover.pages.2.caption": "Palabras del Chuseok",
       "steps.s2.discover.pages.2.items.0.word.gloss": "fiesta de la cosecha",
-      "steps.s2.discover.pages.2.items.1.word.gloss": "masa de arroz en media luna",
+      "steps.s2.discover.pages.2.items.1.word.gloss": "pastel de arroz en media luna",
       "steps.s2.hoyaLine": "Toca Escuchar para oír cada una.",
       "steps.s2.title": "Cuatro letras nuevas",
       "steps.s3.title": "Une el sonido",
@@ -2086,11 +2086,11 @@ export const OVERLAYS: Overlays = {
       "steps.s5.title": "Escucha y lee",
       "steps.s6.hoyaLine": "¡Una tarjeta de la fiesta de la cosecha llega a tu colección!",
       "steps.s6.title": "¡Tarjeta del Chuseok!",
-      "title": "Pasteles de arroz del Chuseok"
+      "title": "Pasteles del Chuseok"
     },
     "quest:stage1-rites-q3": {
       "blurb": "Dos vocales nuevas, yo y yu, la letra h y la final k.",
-      "steps.s1.hoyaLine": "En Año Nuevo nos ponemos hanbok y hacemos una reverencia a los abuelos.",
+      "steps.s1.hoyaLine": "En Año Nuevo nos ponemos hanbok y hacemos una reverencia a las abuelas y los abuelos.",
       "steps.s1.title": "¡A vestirse!",
       "steps.s2.discover.pages.0.items.0.example.gloss": "respeto a los padres",
       "steps.s2.discover.pages.0.items.1.example.gloss": "leche",
@@ -2122,12 +2122,12 @@ export const OVERLAYS: Overlays = {
     },
     "stage:stage4": {
       "anchorSkill": "Mantén un diálogo de 4 turnos con saludo y pregunta",
-      "oneLiner": "Ten tus primeras miniconversaciones de la vida real.",
+      "oneLiner": "Practica tus primeras conversaciones cortas de la vida real.",
       "title": "Diálogo"
     },
     "stage:stage5": {
       "anchorSkill": "Lee una historia de 5 oraciones y entiende el 80 % o más",
-      "oneLiner": "Lee cuentos cortos y cuentos populares coreanos con Hoya.",
+      "oneLiner": "Lee relatos cortos y cuentos populares coreanos con Hoya.",
       "title": "Historias"
     },
     "stage:stage6": {
@@ -2686,7 +2686,7 @@ export const OVERLAYS: Overlays = {
     },
     "card:book": {
       "blurb": "누군가 읽어 주기를 기다리는 책이에요.",
-      "fact": "오늘날 한국 책은 대부분 영어책처럼 왼쪽에서 오른쪽으로, 위에서 아래로 인쇄해요.",
+      "fact": "오늘날 한국 책은 대부분 영어책처럼 가로로 써서, 왼쪽에서 오른쪽으로, 위에서 아래로 읽어요.",
       "title": "책"
     },
     "card:boreumdal": {
@@ -2697,11 +2697,11 @@ export const OVERLAYS: Overlays = {
     "card:brush": {
       "blurb": "가장 아름다운 글씨를 쓰는 붓이에요.",
       "fact": "한국의 붓글씨는 서예라고 해요.",
-      "title": "붓글씨 붓"
+      "title": "붓"
     },
     "card:byeol": {
       "blurb": "밤에 반짝이는 별이에요.",
-      "fact": "한국 사람들은 처음 본 별에게 소원을 빌어요.",
+      "fact": "옛날 한국 사람들은 북두칠성에 오래 살게 해 달라고 빌었어요.",
       "title": "별"
     },
     "card:chaek": {
@@ -2720,7 +2720,7 @@ export const OVERLAYS: Overlays = {
       "title": "젓가락"
     },
     "card:chuseok": {
-      "blurb": "수확의 보름달과 가족 잔치예요.",
+      "blurb": "한가위 보름달 아래 가족이 모여 잔치를 해요.",
       "fact": "가족이 반달 모양 떡인 송편을 나눠 먹어요.",
       "title": "추석"
     },
@@ -2741,7 +2741,7 @@ export const OVERLAYS: Overlays = {
     },
     "card:gamsa": {
       "blurb": "공손하게 고마움을 전하는 말이에요.",
-      "fact": "‘감사합니다’가 완전하고 공손한 표현이에요.",
+      "fact": "‘감사합니다’는 줄이지 않은 공손한 표현이에요.",
       "title": "감사"
     },
     "card:gangaji": {
@@ -2751,11 +2751,11 @@ export const OVERLAYS: Overlays = {
     },
     "card:gayageum": {
       "blurb": "빗소리처럼 부드러운 12줄 한국 현악기예요.",
-      "fact": "가야금은 1,400년이 넘었어요.",
+      "fact": "가야금의 역사는 1,400년이 넘어요.",
       "title": "가야금"
     },
     "card:geune": {
-      "blurb": "옛 그림 속 한국 소녀들은 단오에 커다란 그네를 타요.",
+      "blurb": "옛 그림 속 한국 여인들은 단오에 커다란 그네를 타요.",
       "fact": "그네를 높이 탈수록 그해 소원이 더 좋아진다고 해요.",
       "title": "그네"
     },
@@ -2776,11 +2776,11 @@ export const OVERLAYS: Overlays = {
     },
     "card:hanji": {
       "blurb": "부드럽고 튼튼한 한국의 전통 종이예요.",
-      "fact": "한지는 닥나무 껍질로 만들고, 1,000년 넘게 갈 수 있어요.",
+      "fact": "한지는 닥나무 껍질로 만들고, 1,000년 넘게 보존될 수 있어요.",
       "title": "한지"
     },
     "card:horangi": {
-      "blurb": "한국 옛이야기는 모두 ‘옛날 옛적 호랑이 담배 피우던 시절에…’로 시작해요.",
+      "blurb": "많은 한국 옛이야기는 ‘옛날 옛적 호랑이 담배 피우던 시절에…’로 시작해요.",
       "fact": "지도에서 한국의 모양이 호랑이를 닮았다고 해요.",
       "title": "호랑이"
     },
@@ -2800,7 +2800,7 @@ export const OVERLAYS: Overlays = {
       "title": "먹"
     },
     "card:insa": {
-      "blurb": "고개 숙이기나 ‘안녕’, 모두 인사예요.",
+      "blurb": "고개를 숙이거나 ‘안녕’ 하고 말하는 것, 모두 인사예요.",
       "fact": "가볍게 고개를 숙이는 것은 한국의 공손한 인사예요.",
       "title": "인사"
     },
@@ -2811,7 +2811,7 @@ export const OVERLAYS: Overlays = {
     },
     "card:jegi": {
       "blurb": "깃털 달린 제기를 최대한 여러 번 차 봐요.",
-      "fact": "제기차기는 겨울 놀이터에서 인기 많은 놀이예요.",
+      "fact": "제기차기는 겨울에 즐겨 하는 놀이예요.",
       "title": "제기"
     },
     "card:kimbap": {
@@ -2820,7 +2820,7 @@ export const OVERLAYS: Overlays = {
       "title": "김밥"
     },
     "card:kimchi": {
-      "blurb": "빨갛고 매운 배추, 접시 위의 한국이에요.",
+      "blurb": "빨갛고 매운 배추, 한국을 대표하는 맛이에요.",
       "fact": "김치는 200가지가 넘어요.",
       "title": "김치"
     },
@@ -2836,7 +2836,7 @@ export const OVERLAYS: Overlays = {
     },
     "card:kpop": {
       "blurb": "신나는 노래, 멋진 춤. 세계는 케이팝으로 날마다 한국어를 들어요.",
-      "fact": "첫 케이팝 노래는 1992년에 불렸어요.",
+      "fact": "오늘날 케이팝은 흔히 1992년에 시작되었다고 해요.",
       "title": "케이팝"
     },
     "card:lantern": {
@@ -2876,7 +2876,7 @@ export const OVERLAYS: Overlays = {
     },
     "card:ori": {
       "blurb": "갈색 오리가 한국 연못가를 뒤뚱뒤뚱 걸어요. 남은 밥알을 아주 좋아해요.",
-      "fact": "옛 한국 결혼식에서는 나무 오리를 사랑의 상징으로 썼어요.",
+      "fact": "결혼하는 부부에게 나무로 깎은 원앙 한 쌍을 선물하곤 해요. 행복한 부부를 뜻해요.",
       "title": "오리"
     },
     "card:origami": {
@@ -2906,12 +2906,12 @@ export const OVERLAYS: Overlays = {
     },
     "card:rice": {
       "blurb": "따뜻한 밥 한 그릇, 모든 식사는 여기서 시작해요.",
-      "fact": "“밥 먹었어?”는 친구끼리 나누는 인사예요.",
+      "fact": "‘밥 먹었어?’는 친구끼리 나누는 인사예요.",
       "title": "밥"
     },
     "card:sagwa": {
       "blurb": "도시락에 넣을 달콤한 빨간 사과예요.",
-      "fact": "한국에서는 대구에서 유명한 사과를 길러요.",
+      "fact": "대구는 맛있는 사과로 유명해요.",
       "title": "사과"
     },
     "card:sea": {
@@ -2966,7 +2966,7 @@ export const OVERLAYS: Overlays = {
     },
     "card:yagu": {
       "blurb": "한국에서 가장 시끄러운 운동이에요. 팬들은 북을 들고 9회 내내 응원해요.",
-      "fact": "한국 야구장에는 경기장에 공식 ‘응원단장’이 있어요.",
+      "fact": "한국 야구장에는 공식 ‘응원단장’이 있어요.",
       "title": "야구"
     },
     "card:yeou": {
@@ -2985,7 +2985,7 @@ export const OVERLAYS: Overlays = {
       "title": "윷놀이"
     },
     "episode:stage1-crafts": {
-      "hoyaIntro": "윷놀이 해요. 윷가락을 던져요!",
+      "hoyaIntro": "같이 윷놀이해요! 윷가락을 던져 봐요!",
       "subtitle": "해 볼 만한 한국의 놀이와 공예",
       "title": "윷, 연, 종이"
     },
@@ -2996,7 +2996,7 @@ export const OVERLAYS: Overlays = {
     },
     "episode:stage1-life": {
       "hoyaIntro": "점심시간이에요! 제가 뭘 먹는지 보여 줄게요.",
-      "subtitle": "밥, 김치, 가족을 한국어로 말해요.",
+      "subtitle": "한국어로 말하는 밥, 김치, 가족",
       "title": "한국의 식탁에서"
     },
     "episode:stage1-nature": {
@@ -3010,23 +3010,23 @@ export const OVERLAYS: Overlays = {
       "title": "새해와 명절"
     },
     "episode:stage5-crafts": {
-      "hoyaIntro": "솜씨 좋은 장인과 옛이야기를 한국어로 읽어 봐요. 짧은 문장 하나씩이요.",
+      "hoyaIntro": "솜씨 좋은 장인과 옛이야기를 짧은 문장 하나씩 한국어로 읽어 봐요.",
       "title": "공예 이야기"
     },
     "episode:stage5-letters": {
-      "hoyaIntro": "한글에 관한 이야기를 한국어로 읽어 봐요. 짧은 문장 하나씩이요.",
+      "hoyaIntro": "한글에 관한 이야기를 짧은 문장 하나씩 한국어로 읽어 봐요.",
       "title": "글자 이야기"
     },
     "episode:stage5-life": {
-      "hoyaIntro": "일상 이야기를 한국어로 읽어 봐요. 짧은 문장 하나씩이요.",
+      "hoyaIntro": "일상 이야기를 짧은 문장 하나씩 한국어로 읽어 봐요.",
       "title": "가족 이야기"
     },
     "episode:stage5-nature": {
-      "hoyaIntro": "해와 하늘 이야기를 한국어로 읽어 봐요. 짧은 문장 하나씩이요.",
+      "hoyaIntro": "해와 하늘 이야기를 짧은 문장 하나씩 한국어로 읽어 봐요.",
       "title": "자연 이야기"
     },
     "episode:stage5-rites": {
-      "hoyaIntro": "명절 이야기를 한국어로 읽어 봐요. 짧은 문장 하나씩이요.",
+      "hoyaIntro": "명절 이야기를 짧은 문장 하나씩 한국어로 읽어 봐요.",
       "title": "명절 이야기"
     },
     "jamo:a": {
@@ -3170,7 +3170,7 @@ export const OVERLAYS: Overlays = {
     "minigame:s1-crafts-q1-apply": {
       "picWord.boards.0.pairs.jegi.word.gloss": "발로 차며 노는 깃털 달린 놀잇감",
       "picWord.boards.0.pairs.paengi.word.gloss": "빙글빙글 도는 나무 놀잇감",
-      "picWord.boards.0.pairs.yeon.word.gloss": "실을 매어 바람에 날리는 놀잇감",
+      "picWord.boards.0.pairs.yeon.word.gloss": "바람에 날리는 종이 장난감",
       "picWord.boards.0.pairs.yut.word.gloss": "놀이할 때 던지는 나무 막대 네 개"
     },
     "minigame:s1-crafts-q1-check": {
@@ -3180,8 +3180,8 @@ export const OVERLAYS: Overlays = {
     "minigame:s1-crafts-q2-apply": {
       "picWord.boards.0.pairs.but.word.gloss": "먹물을 묻혀 글씨를 쓰는 도구",
       "picWord.boards.0.pairs.cheongja.word.gloss": "푸른빛이 도는 한국의 옛 도자기",
-      "picWord.boards.0.pairs.hanji.word.gloss": "한국의 전통 종이",
-      "picWord.boards.0.pairs.jongijeopgi.word.gloss": "종이를 접어 모양을 만드는 놀이"
+      "picWord.boards.0.pairs.hanji.word.gloss": "닥나무로 만든 한국 전통 종이",
+      "picWord.boards.0.pairs.jongijeopgi.word.gloss": "네모난 한 장으로 학이나 배 모양을 만드는 놀이"
     },
     "minigame:s1-crafts-q2-check": {
       "listenPick.rounds.0.prompt": "푸른빛이 도는 옛 도자기",
@@ -3220,10 +3220,10 @@ export const OVERLAYS: Overlays = {
       "listenPick.rounds.lp-sym-jamo-eu.prompt": "글자 eu"
     },
     "minigame:s1-life-q1-apply": {
-      "picWord.boards.0.pairs.bap.word.gloss": "쌀을 물에 익혀 지은 음식",
-      "picWord.boards.0.pairs.gimbap.word.gloss": "밥과 채소를 김에 말아 썬 음식",
+      "picWord.boards.0.pairs.bap.word.gloss": "쌀로 지어 먹는 음식",
+      "picWord.boards.0.pairs.gimbap.word.gloss": "김에 밥과 재료를 넣고 만 음식",
       "picWord.boards.0.pairs.gimchi.word.gloss": "고춧가루로 버무린 매운 배추 반찬",
-      "picWord.boards.0.pairs.jeotgarak.word.gloss": "음식을 집을 때 쓰는 가느다란 막대 두 개"
+      "picWord.boards.0.pairs.jeotgarak.word.gloss": "음식을 집는 가느다란 막대 한 쌍"
     },
     "minigame:s1-life-q1-check": {
       "listenPick.rounds.1.prompt": "우유로 만든 고소한 음식",
@@ -3245,7 +3245,7 @@ export const OVERLAYS: Overlays = {
       "listenPick.rounds.lp-sym-jamo-kieuk.prompt": "글자 kieuk"
     },
     "minigame:s1-nature-q1-apply": {
-      "picWord.boards.0.pairs.dal.word.gloss": "밤하늘에 떠서 빛나는 둥근 것",
+      "picWord.boards.0.pairs.dal.word.gloss": "밤하늘에 뜨는 둥근 빛",
       "picWord.boards.0.pairs.horangi.word.gloss": "줄무늬가 있는 크고 힘센 동물",
       "picWord.boards.0.pairs.kkachi.word.gloss": "검은색과 흰색 깃털의 새",
       "picWord.boards.0.pairs.san.word.gloss": "땅이 높이 솟은 곳"
@@ -3357,7 +3357,7 @@ export const OVERLAYS: Overlays = {
     },
     "quest:stage1-crafts-q3": {
       "blurb": "배운 것을 모두 모아 한글 낱말을 혼자 읽어요.",
-      "steps.s1.hoyaLine": "세종대왕은 모두가 글을 읽을 수 있도록 한글을 만들었어요. 이제 한글을 읽을 수 있어요!",
+      "steps.s1.hoyaLine": "세종대왕은 모두가 글을 읽을 수 있도록 한글을 만들었어요. 이제 여러분도 한글을 읽을 수 있어요!",
       "steps.s1.title": "읽을 수 있어요!",
       "steps.s2.discover.pages.0.items.0.word.gloss": "한국의 글자",
       "steps.s2.discover.pages.0.items.1.word.gloss": "이 앱의 호랑이 친구",
@@ -3619,7 +3619,7 @@ export const OVERLAYS: Overlays = {
     "stage:stage7": {
       "anchorSkill": "1분 자기소개 녹음하기",
       "oneLiner": "생각하고 느끼고 만든 것을 한국어로 말해요.",
-      "title": "나를 표현하기"
+      "title": "자기표현"
     }
   }
 };

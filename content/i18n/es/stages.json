@@ -19,12 +19,12 @@
     },
     "stage:stage4": {
       "title": "Diálogo",
-      "oneLiner": "Ten tus primeras miniconversaciones de la vida real.",
+      "oneLiner": "Practica tus primeras conversaciones cortas de la vida real.",
       "anchorSkill": "Mantén un diálogo de 4 turnos con saludo y pregunta"
     },
     "stage:stage5": {
       "title": "Historias",
-      "oneLiner": "Lee cuentos cortos y cuentos populares coreanos con Hoya.",
+      "oneLiner": "Lee relatos cortos y cuentos populares coreanos con Hoya.",
       "anchorSkill": "Lee una historia de 5 oraciones y entiende el 80 % o más"
     },
     "stage:stage6": {
