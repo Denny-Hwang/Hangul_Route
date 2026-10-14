@@ -1105,10 +1105,10 @@
         }
       ],
       "verification": {
-        "passes": 1,
+        "passes": 2,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "Line 1 (passes: 1, author sourcing, 2026-10-14): the claim is that close friends often use casual speech (banmal) and that the polite lines of this cell end in yo while the casual ones do not. Encyclopedia of Korean Culture, 경어, the 상대경어법 paragraph, places the informal levels in close relationships and names the casual level 해체, also called 반말; the Standard Korean Language Dictionary entry 반말 sense 1 describes it as the speech of a very close relationship. The note says \"often\", not always, and names no age range. Nothing is copied: the note is English, the locators are Korean summaries. Both sources resolved on 2026-10-14."
+        "notes": "Line 1 (passes: 1, author sourcing, 2026-10-14): the claim is that close friends often use casual speech (banmal) and that the polite lines of this cell end in yo while the casual ones do not. Encyclopedia of Korean Culture, 경어, the 상대경어법 paragraph, places the informal levels in close relationships and names the casual level 해체, also called 반말; the Standard Korean Language Dictionary entry 반말 sense 1 describes it as the speech of a very close relationship. The note says \"often\", not always, and names no age range. Nothing is copied: the note is English, the locators are Korean summaries. Both sources resolved on 2026-10-14.\nLine 2 (passes: 2, independent fact-check, 2026-10-14): both sources reopened and resolved. Encyclopedia of Korean Culture, 경어, 상대경어법 paragraph: the informal use is for relationships close enough to drop formality, split into 해요체 and 해체, and 해체 is also called 반말; this supports \"close friends often\" use 반말 (the note says often, not always). Standard Korean Language Dictionary, 반말 sense 1: speech used when the relationship is unclear or very close, neither raising nor lowering, with endings such as -아(어) and -지; consistent with the note. The second sentence describes this cell and was checked against the file: the polite lines (같이 할까요?, 좋아요! and the Stage 3 distractor sentences) end in 요, and no casual line between Hoya and Mina does. Both locators match their sources. No run of words is shared between the English note and either source. No age wording, no all-Koreans claim. Outcome: pass, unchanged."
       }
     },
     {
@@ -1132,10 +1132,10 @@
         }
       ],
       "verification": {
-        "passes": 1,
+        "passes": 2,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "Line 1 (passes: 1, author sourcing, 2026-10-14): the claim is that 같이 할까요? and 같이 할까? ask the same thing and that the yo ending marks the polite form. Encyclopedia of Korean Culture, 경어, pairs the informal polite level 해요체 with the casual level 해체 (반말); the Standard Korean Language Dictionary entry 반말 sense 1 gives casual examples whose endings carry no yo. The suggestion ending -(eu)lkka(yo) itself is a plain gloss, checked in pass 4 against the dictionary. Nothing is copied from either source. Both sources resolved on 2026-10-14."
+        "notes": "Line 1 (passes: 1, author sourcing, 2026-10-14): the claim is that 같이 할까요? and 같이 할까? ask the same thing and that the yo ending marks the polite form. Encyclopedia of Korean Culture, 경어, pairs the informal polite level 해요체 with the casual level 해체 (반말); the Standard Korean Language Dictionary entry 반말 sense 1 gives casual examples whose endings carry no yo. The suggestion ending -(eu)lkka(yo) itself is a plain gloss, checked in pass 4 against the dictionary. Nothing is copied from either source. Both sources resolved on 2026-10-14.\nLine 2 (passes: 2, independent fact-check, 2026-10-14): both sources reopened and resolved. Encyclopedia of Korean Culture, 경어, 상대경어법 paragraph: the informal levels are 두루높임 (해요체) and 두루낮춤 (해체, 반말), and in present-day conversation 해요체 and 해체 are used as a pair; this supports reading 할까요? as the polite member and 할까? as the casual member of one pair. Standard Korean Language Dictionary, 반말 sense 1: casual examples end in -아(어), -지 with no 요; consistent. Extra check (not added as a source): the dictionary entry -ㄹ까 sense 1 labels it an ending used at the 해할 level, so the form without 요 is the casual one. The \"shall we\" meaning stays a plain gloss for pass 4. Both locators match their sources. No run of words is shared between the English note and either source. Outcome: pass, unchanged."
       }
     }
   ],
