@@ -177,12 +177,13 @@ test.describe('heritage stories on the Journey (fixture bundle)', () => {
 
   test('a stale link to a cell with no story: one calm card and Back', async ({ page }) => {
     await openJourney(page);
-    await page.evaluate(() => (window as E2eWindow).__hrStoryE2E?.openCellStories({ stage: 'stage7', theme: 'crafts', source: 'cell' }));
+    // A cell with neither a story nor a lesson (Stage 7 crafts has a lesson since F-CURR-001 S7-5); move it when this one ships.
+    await page.evaluate(() => (window as E2eWindow).__hrStoryE2E?.openCellStories({ stage: 'stage6', theme: 'nature', source: 'cell' }));
     const empty = page.getByTestId('cell-stories-empty');
     await expect(empty).toContainText('Nothing here yet');
     await expect(page.getByTestId('cell-stories-lesson')).toHaveCount(0);
     await expect(page.getByTestId('cell-stories-grid')).toHaveCount(0);
-    await expectCellStoriesEvents(page, [{ stageKey: 'stage7', themeKey: 'crafts', stories: 0, source: 'cell' }]);
+    await expectCellStoriesEvents(page, [{ stageKey: 'stage6', themeKey: 'nature', stories: 0, source: 'cell' }]);
     await page.getByTestId('cell-stories-back').click();
     await expect(page.getByTestId('cell-stories')).toHaveCount(0);
     await expect(page.getByRole('heading', { name: 'Heritage Journey' })).toBeVisible();
