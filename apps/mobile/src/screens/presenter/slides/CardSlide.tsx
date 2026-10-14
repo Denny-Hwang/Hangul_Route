@@ -52,7 +52,7 @@ export function CardSlide({ slide, reveal }: { slide: CardBody; reveal: number }
             <TaughtKo size={promptSize}>{slide.ko}</TaughtKo>
             {/* text.secondary misses 7:1 on brand.secondaryLight (presenter.v1.md), so the romanization is text.primary here. */}
             <View {...revealProps(view.rom)}>
-              <Text style={{ fontSize: bodySize, fontWeight: typography.weight.semibold, color: colors.text.primary }}>{slide.romanization}</Text>
+              <Text testID="presenter-card-chip-rom" style={{ fontSize: bodySize, fontWeight: typography.weight.semibold, color: colors.text.primary }}>{slide.romanization}</Text>
             </View>
           </View>
         ) : null}

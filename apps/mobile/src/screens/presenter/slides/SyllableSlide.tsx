@@ -16,8 +16,10 @@ type SyllableBody = Extract<Slide, { kind: 'syllable' }>;
  * (giyeok + a) at `presenter.size.display`; `join` makes them the
  * block at `presenter.size.glyph`, with the parts kept small beside it (`aria-hidden`); then the
  * romanization (the `syllableSplit` reading, D13) and the speaker, which plays on arrival forward.
- * The join slides the parts together over `motion.duration.base`; under reduced motion it is a
- * crossfade. Going back to the parts is instant.
+ * The join slides a two-part syllable's parts together and fades them over `motion.duration.base`;
+ * a syllable of three or more parts (one with a final consonant) only fades, since one fixed travel
+ * cannot bring three glyphs to one centre. Under reduced motion the join is an instant swap with no
+ * animation (spec sections 3.4 and 3.13). Going back to the parts is instant.
  */
 export function SyllableSlide({ slide, reveal, onPlaySound }: { slide: SyllableBody; reveal: number; onPlaySound: () => void }): React.ReactElement {
   const { unit, reducedMotion } = usePresenterView();
@@ -32,7 +34,7 @@ export function SyllableSlide({ slide, reveal, onPlaySound }: { slide: SyllableB
   useEffect(() => {
     const forward = view.joined && !wasJoined.current;
     wasJoined.current = view.joined;
-    if (!forward) {
+    if (!forward || reducedMotion) {
       progress.setValue(view.joined ? 1 : 0);
       setSliding(false);
       return undefined;
@@ -42,15 +44,16 @@ export function SyllableSlide({ slide, reveal, onPlaySound }: { slide: SyllableB
     const run = Animated.timing(progress, { toValue: 1, duration: motion.duration.base, useNativeDriver: false });
     run.start(() => setSliding(false));
     return () => run.stop();
-  }, [view.joined, progress]);
+  }, [view.joined, progress, reducedMotion]);
 
-  // How far each part travels to meet the other: half a display glyph plus the gap between them.
+  // How far each of two parts travels to meet the other: half a display glyph plus the gap between them.
+  const twoParts = slide.parts.length === 2;
   const travel = units(unit, presenter.size.display / 2 + STAGE_GAP);
   const partsRow = (plus: number, fontSize: number, slideTogether: boolean) => (
     <>
       {slide.parts.map((part, i) => {
-        const sign = slide.parts.length === 1 ? 0 : i === 0 ? 1 : i === slide.parts.length - 1 ? -1 : 0;
-        const shift = slideTogether && !reducedMotion ? [{ translateX: progress.interpolate({ inputRange: [0, 1], outputRange: [0, sign * travel] }) }] : [];
+        const sign = i === 0 ? 1 : -1;
+        const shift = slideTogether && twoParts ? [{ translateX: progress.interpolate({ inputRange: [0, 1], outputRange: [0, sign * travel] }) }] : [];
         return (
           <React.Fragment key={`${i}-${part}`}>
             {i > 0 ? <Icon name="plus" size={units(unit, plus)} color={colors.text.secondary} /> : null}
@@ -87,12 +90,13 @@ export function SyllableSlide({ slide, reveal, onPlaySound }: { slide: SyllableB
           </View>
         </Animated.View>
       ) : null}
-      {/* The parts: alone on build 0; while the join plays they slide together and fade over the block. */}
+      {/* The parts: alone on build 0; while the join plays they slide together and fade over the block
+          (`presenter-syllable-parts-leaving` for as long as they are drawn there). */}
       {!view.joined || sliding ? (
       <Animated.View
         aria-hidden={view.joined}
         pointerEvents="none"
-        testID={view.joined ? undefined : 'presenter-syllable-parts'}
+        testID={view.joined ? 'presenter-syllable-parts-leaving' : 'presenter-syllable-parts'}
         style={[
           { flexDirection: 'row', alignItems: 'center', gap: units(unit, STAGE_GAP) },
           view.joined ? { position: 'absolute', opacity: progress.interpolate({ inputRange: [0, 1], outputRange: [1, 0] }) } : null,

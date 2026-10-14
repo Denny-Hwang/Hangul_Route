@@ -14,7 +14,9 @@ type ActivityBody = Extract<Slide, { kind: 'activity' }>;
  * preset's name, its minutes and a big [ Start timer ] that opens the class timer with those
  * minutes. The timer never starts by itself, only fills and shows the time left, and scores no
  * one (TD5). One build. Until the timer overlay ships (PR 9) the button is drawn and disabled, as
- * the bar's Timer is, so a press never opens an invisible timer.
+ * the bar's Timer is, so a press never opens an invisible timer; while disabled it is drawn as an
+ * outlined button (`text.primary` on paper, `border.strong` ring) instead of the filled
+ * `brand.primaryDark` action, so it never looks pressable.
  */
 export function ActivitySlide({ slide, onStartTimer }: { slide: ActivityBody; onStartTimer?: (ms: number) => void }): React.ReactElement {
   const { unit, messages } = usePresenterView();
@@ -46,7 +48,9 @@ export function ActivitySlide({ slide, onStartTimer }: { slide: ActivityBody; on
               paddingVertical: units(unit, spacing.lg),
               paddingHorizontal: units(unit, spacing.xxxl),
               borderRadius: radii.pill,
-              backgroundColor: colors.brand.primaryDark,
+              borderWidth: borderWidth.thick,
+              borderColor: enabled ? colors.brand.primaryDark : colors.border.strong,
+              backgroundColor: enabled ? colors.brand.primaryDark : colors.surface.paper,
               alignItems: 'center',
               justifyContent: 'center',
               outlineStyle: focused ? 'solid' : undefined,
@@ -56,7 +60,7 @@ export function ActivitySlide({ slide, onStartTimer }: { slide: ActivityBody; on
             };
           }}
         >
-          <Text style={{ fontSize: promptSize, fontWeight: typography.weight.bold, color: colors.text.onPrimary, textAlign: 'center' }}>{m.slide.activity.startTimer.cta}</Text>
+          <Text style={{ fontSize: promptSize, fontWeight: typography.weight.bold, color: enabled ? colors.text.onPrimary : colors.text.primary, textAlign: 'center' }}>{m.slide.activity.startTimer.cta}</Text>
         </Pressable>
       </View>
     </View>
