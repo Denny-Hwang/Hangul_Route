@@ -3,6 +3,7 @@ import { StackActions, useNavigation } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useEffect, useMemo } from 'react';
 import type { MinigameScope } from '../logic/minigame-config';
+import { minigameFinishedEvent } from '../logic/minigame-finished';
 import { FIXTURE_ROUNDS, type WriteFrameFixture } from '../logic/write-frame/e2e-rounds';
 import { addTelemetryListener, track, type TelemetryEvent } from '../platform/telemetry';
 import type { HostMode, MinigameHost } from '../screens/minigames/host';
@@ -79,7 +80,7 @@ export function WriteFrameE2eScreen({ route, navigation }: Props): React.ReactEl
     complete: () => {
       log.completes += 1;
       // What the quest host sends when the game closes (MinigameScreen.close): ids and the kind only.
-      void track({ name: 'minigame.finished', payload: { kind: 'write-frame', questId: 'e2e-write-frame', stepIndex: 0 } });
+      void track(minigameFinishedEvent('write-frame', 'e2e-write-frame', 0));
       navigation.goBack();
     },
   };

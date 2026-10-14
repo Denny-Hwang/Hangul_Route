@@ -15,6 +15,7 @@ const SRC = join(__dirname, '../../..');
 const screen = readFileSync(join(SRC, 'screens/minigames/WriteFrameGame.tsx'), 'utf8');
 const logic = ['flow.ts', 'view.ts'].map((f) => readFileSync(join(__dirname, '..', f), 'utf8'));
 const minigameScreen = readFileSync(join(SRC, 'screens/minigames/MinigameScreen.tsx'), 'utf8');
+const finished = readFileSync(join(SRC, 'logic/minigame-finished.ts'), 'utf8');
 const storeDir = join(SRC, 'store');
 const stores = readdirSync(storeDir)
   .filter((f) => /\.tsx?$/.test(f))
@@ -41,7 +42,8 @@ describe('Write Frame keeps what is written in the round (test P-1)', () => {
   });
 
   it('the quest host sends minigame.finished with the kind and ids only', () => {
-    expect(minigameScreen).toMatch(/payload: \{ kind: scope\.kind, questId, stepIndex \}/);
+    expect(minigameScreen).toMatch(/track\(minigameFinishedEvent\(scope\.kind, questId, stepIndex, activeProfileId\)\)/);
+    expect(finished).toMatch(/payload: \{ kind, questId, stepIndex \}/);
   });
 
   it('reports a frame only as its index and whether it was right; the name round reports nothing', () => {
