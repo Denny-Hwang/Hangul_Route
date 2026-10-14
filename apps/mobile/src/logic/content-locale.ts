@@ -1,5 +1,4 @@
 import {
-  OVERLAYS,
   localize,
   type Episode,
   type HeritageCard,
@@ -11,6 +10,7 @@ import {
   type ThemeDef,
   type UiLocale,
 } from '@hangul-route/content-schema';
+import { OVERLAYS } from '@hangul-route/content-schema/overlays';
 import type { MissionCard } from './homework/mission-builder';
 import type { MinigameScope } from './minigame-config';
 import { lessonIndexOverlays, lessons } from '../content/lessons';
@@ -24,7 +24,7 @@ import { mergeOverlays } from './lessons/lesson-lookup';
  */
 
 export const localizeCard = (card: HeritageCard, locale: UiLocale, overlays?: Overlays): HeritageCard =>
-  localize(card, card.id, locale, overlays);
+  localize(card, card.id, locale, overlays ?? OVERLAYS);
 
 /** The shipped overlays plus the glosses of the generated lesson cells (F-CURR-001 §3.10); `OVERLAYS` itself while none ships. */
 export const CONTENT_OVERLAYS: Overlays = mergeOverlays(OVERLAYS, lessonIndexOverlays);
@@ -36,17 +36,17 @@ export const localizeQuest = (quest: Quest, locale: UiLocale, overlays: Overlays
   localize(quest, quest.id, locale, overlays);
 
 export const localizeStage = (stage: StageDef, locale: UiLocale, overlays?: Overlays): StageDef =>
-  localize(stage, `stage:${stage.key}`, locale, overlays);
+  localize(stage, `stage:${stage.key}`, locale, overlays ?? OVERLAYS);
 
 export const localizeTheme = (theme: ThemeDef, locale: UiLocale, overlays?: Overlays): ThemeDef =>
-  localize(theme, `theme:${theme.key}`, locale, overlays);
+  localize(theme, `theme:${theme.key}`, locale, overlays ?? OVERLAYS);
 
 export const localizeJamo = (jamo: Jamo, locale: UiLocale, overlays?: Overlays): Jamo =>
-  localize(jamo, jamo.id, locale, overlays);
+  localize(jamo, jamo.id, locale, overlays ?? OVERLAYS);
 
 /** A story's title, narration, captions and checks by its `story:<slug>` id (the story-sequence cards read it). */
 export const localizeStory = (story: Story, locale: UiLocale, overlays?: Overlays): Story =>
-  localize(story, story.id, locale, overlays);
+  localize(story, story.id, locale, overlays ?? OVERLAYS);
 
 /** A minigame's pairs, step labels, dialogue lines and prompts, by its minigame ref (a lesson ref adds its stage's glosses). */
 export const localizeScope = (scope: MinigameScope, ref: string, locale: UiLocale, overlays?: Overlays): MinigameScope =>

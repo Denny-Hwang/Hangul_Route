@@ -1,4 +1,5 @@
 import { localize, type Overlays, type RuntimeVocabItem, type UiLocale, type VocabProgress, type VocabTopic } from '@hangul-route/content-schema';
+import { OVERLAYS } from '@hangul-route/content-schema/overlays';
 import { romanizationShown, type RomanizationMode } from '@hangul-route/i18n';
 import { localizedGloss } from './catalog';
 import { speedActivityLine, type VocabCopy } from './copy';
@@ -17,7 +18,7 @@ import { wallTiles } from './wall';
 
 /** The topic's title and Hoya line in the UI language (its `vocab-topic:<key>` overlay), else English. Taught Korean never changes. */
 export function localizedTopic(topic: VocabTopic, locale: UiLocale, overlays?: Overlays): VocabTopic {
-  return localize(topic, topic.id, locale, overlays);
+  return localize(topic, topic.id, locale, overlays ?? OVERLAYS);
 }
 
 /** Topic grid columns by window width (section 3.3): 1 below 360 dp, 2 up to 767, 3 from 768. An unknown width is one column. */

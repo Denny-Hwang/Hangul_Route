@@ -19,6 +19,8 @@
 //   overlay-circular-gloss   a ko gloss equal to the Korean it glosses (warning when it only
 //                            wraps it in spaces or punctuation)
 //   overlay-token-mismatch   a story narration whose {kw:id} tokens are not the base multiset
+//                            of the tier it lands on (scenes.<id>.narration: the primary
+//                            tier; tiers.<level>.scenes.<id>.narration: that tier)
 //   overlay-ko-copula        a ko lesson overlay (lessons-*.json) with '라는' / '라고' / '예요'
 //                            straight after a syllable that ends in a final consonant ('물건라는'
 //                            for '물건이라는'); a final ㄹ is left alone, where '라는' is a verb form
@@ -27,7 +29,9 @@
 //                            a gloss head noun with one ('물건가' for '물건이')
 //   banned-on-learner-surface  a learner-banned word of the locale (banned-words.json)
 //   overlay-missing          warning (error for HANGUL_ROUTE_STRICT_LOCALES): a translatable
-//                            English field of a base entity that the locale lacks
+//                            English field of a base entity that the locale lacks, counted
+//                            per story tier (a read-tier scene needs its tiers.read.* field;
+//                            a primary-tier scene is covered by either form)
 
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -46,6 +50,8 @@ import {
 
 const HANGUL = /[ㄱ-㆏가-힣]/;
 const TOKEN = /\{kw:([a-z0-9-]+)\}/g;
+/** A story narration overlay field, untiered or tier-qualified. */
+const STORY_NARRATION = /^(tiers\.[^.]+\.)?scenes\.[^.]+\.narration$/;
 const I18N_DIR = "content/i18n/";
 const SKIPPED_BASE = ["content/i18n/", "content/fixtures/", "content/stories/research/"];
 
@@ -239,7 +245,7 @@ function checkField(locale, id, field, value, base, add, ctx) {
         add(`overlay-token-mismatch: the note needs exactly the tokens ${want.join(", ") || "(none)"}; found ${got.join(", ") || "(none)"}`);
       }
     }
-    if (overlayPrefix(id) === "story" && /^scenes\.[^.]+\.narration$/.test(field)) {
+    if (overlayPrefix(id) === "story" && STORY_NARRATION.test(field)) {
       const want = tokenList(String(getIn(base, path)));
       const got = tokenList(value);
       if (want.join(",") !== got.join(",")) {
@@ -278,8 +284,8 @@ export function checkOverlayTree(tree, { strictLocales = [] } = {}) {
     for (const [id, { entity, file }] of ctx.base) {
       if (OVERLAY_FIELDS[overlayPrefix(id)] === undefined) continue;
       const entry = ctx.entries[locale].get(id) ?? {};
-      for (const { field } of translatableFields(id, entity)) {
-        if (typeof entry[field] === "string" && entry[field].trim() !== "") continue;
+      for (const { field, alternates = [] } of translatableFields(id, entity)) {
+        if ([field, ...alternates].some((key) => typeof entry[key] === "string" && entry[key].trim() !== "")) continue;
         missing[locale] += 1;
         if (strict) {
           ctx.violations.push({

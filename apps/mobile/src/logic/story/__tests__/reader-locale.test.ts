@@ -84,3 +84,32 @@ describe('readerStory (F-STORY-002 PR 2.8)', () => {
     expect(steps.some((s) => s.language === 'ko-KR')).toBe(true);
   });
 });
+
+describe('readerStory on a two-tier story (tier-qualified scene overlays)', () => {
+  // The read tier reuses the listen tier's scene ids with its own English: the untiered overlay is the listen tier's.
+  const twoTier = {
+    ...story,
+    tiers: [
+      story.tiers[0]!,
+      { ...story.tiers[0]!, level: 'read' as const, scenes: story.tiers[0]!.scenes.map((s) => ({ ...s, narrationEn: `Read: ${s.narrationEn}` })) },
+    ],
+  };
+  const s2 = story.tiers[0]!.scenes[1]!;
+  const withTiers = (entry: Record<string, string>): Overlays => ({ es: { [story.id]: entry }, ko: {} });
+
+  it('shows the untiered translation on the listen tier only; the read tier stays English and en-US', () => {
+    const o = withTiers({ 'scenes.s2.narration': 'Hoya aprende el {kw:hangeul} contigo.' });
+    expect(readerStory(twoTier, 'listen', 'es', o).narrationLangs[1]).toBe('es-US');
+    const read = readerStory(twoTier, 'read', 'es', o);
+    expect(read.story?.tiers[1]?.scenes[1]?.narrationEn).toBe(`Read: ${s2.narrationEn}`);
+    expect(read.narrationLangs.every((lang) => lang === 'en-US')).toBe(true);
+  });
+
+  it('shows a tiers.read.* translation on the read tier, in the UI voice', () => {
+    const o = withTiers({ 'tiers.read.scenes.s2.narration': 'Lee: Hoya aprende el {kw:hangeul}.' });
+    const read = readerStory(twoTier, 'read', 'es', o);
+    expect(read.story?.tiers[1]?.scenes[1]?.narrationEn).toBe('Lee: Hoya aprende el {kw:hangeul}.');
+    expect(read.narrationLangs[1]).toBe('es-US');
+    expect(readerStory(twoTier, 'listen', 'es', o).narrationLangs.every((lang) => lang === 'en-US')).toBe(true);
+  });
+});

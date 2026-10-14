@@ -10,4 +10,4 @@ export function isOverlayFieldAllowed(entityId: string, field: string): boolean;
 export function overlayElementKey(element: unknown, index: number): string;
 export function overlayTargets(entity: unknown, field: string): OverlayPath[];
 export function missingSelector(entity: unknown, field: string): { collection: string; key: string } | null;
-export function translatableFields(entityId: string, entity: unknown): Array<{ field: string; path: OverlayPath; source: string }>;
+export function translatableFields(entityId: string, entity: unknown): Array<{ field: string; path: OverlayPath; source: string; alternates?: string[] }>;

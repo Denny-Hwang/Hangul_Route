@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { OVERLAYS } from '@hangul-route/content-schema';
+import { OVERLAYS } from '@hangul-route/content-schema/overlays';
 import { describe, expect, it } from 'vitest';
 import { heritageCardsAll } from '../heritage-cards';
 

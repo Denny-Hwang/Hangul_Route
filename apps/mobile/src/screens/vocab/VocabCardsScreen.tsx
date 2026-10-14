@@ -1,4 +1,5 @@
 import { levelOrder, localize, type RuntimeVocabItem, type VocabProgress, type VocabTopic } from '@hangul-route/content-schema';
+import { OVERLAYS } from '@hangul-route/content-schema/overlays';
 import {
   Body,
   Button,
@@ -390,7 +391,7 @@ function CardsPhase({
   const id = currentId(state);
   const item = run.words.find((w) => w.id === id) ?? run.words[0]!;
   const gloss = localizedGloss(item, locale);
-  const senseNote = useMemo(() => localize(item, item.id, locale).senseNote, [item, locale]);
+  const senseNote = useMemo(() => localize(item, item.id, locale, OVERLAYS).senseNote, [item, locale]);
 
   // Reading practice (T5): the profile's own setting, the same switch as the Profile screen.
   const mode = useRomanizationMode();

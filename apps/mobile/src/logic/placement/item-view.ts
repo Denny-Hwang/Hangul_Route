@@ -6,6 +6,7 @@ import {
   type PlacementMode,
   type UiLocale,
 } from '@hangul-route/content-schema';
+import { OVERLAYS } from '@hangul-route/content-schema/overlays';
 import type { Messages } from '@hangul-route/i18n';
 
 /**
@@ -163,10 +164,7 @@ export interface OptionViewInput {
  * then it is only "Picture 2". The gloss is never drawn on the item.
  */
 export function optionViews(question: AssessmentQuestion, input: OptionViewInput): OptionView[] {
-  const localized =
-    input.overlays === undefined
-      ? localize(question, question.id, input.testLocale)
-      : localize(question, question.id, input.testLocale, input.overlays);
+  const localized = localize(question, question.id, input.testLocale, input.overlays ?? OVERLAYS);
   const showRomanization = input.revealed && input.mode !== 'short';
   return localized.options.map((option, index): OptionView => {
     if (option.pictureRef !== undefined) {
