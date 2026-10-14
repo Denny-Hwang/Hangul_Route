@@ -262,3 +262,5 @@ Measured on the mock: no page or board scrolls sideways (`scrollWidth` equals th
   - **The `pin` has two meanings on learner screens** (D1): "You started here" on the Journey and the route page's stage rows, "Now" on the Learning Route route card. Not changed by this pass; to settle with the Learning Route owner.
   - **The plain ring** means "In your plan" (chip, Journey cell) and, as the `open` pip, "Ready to play" on the Learning Route (D12). Kept on purpose; a double ring is the alternative if one geometry per meaning is wanted.
   - `Pill` tone `success` writes its label in a component constant (`#2F6A47`), not a token. The mock draws it in `feedback.successDark`.
+
+> 2026-10-14: the cell initial these notes mention is now the theme glyph (`design/components/Icon/theme-glyphs.md`), 24 dp scaled by `useMediaSize` (28.8 regular, 33.6 wide). It fits inside the ring's inner diameter (34 dp compact, 40 regular, 48 wide); the layers and ring sizes are unchanged.

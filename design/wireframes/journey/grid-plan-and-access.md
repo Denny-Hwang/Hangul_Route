@@ -27,7 +27,7 @@ Then: one cell shows where to go next, the cells of the plan's coming items are 
 | (1) Hangul ......................[ Open ]  |  <- stage row: plain, never a button
 |  +------+ +------+ +------+ +------+ +------+
 |  |  v   | |(====)| |      | |      | |      |
-|  |  L   | |  L   | |  R   | |  N   | |  C   |  <- cell initial (unchanged)
+|  |  L   | |  L   | |  R   | |  N   | |  C   |  <- cell art (since 2026-10-14 the theme glyph, Icon/theme-glyphs.md)
 |  +------+ +------+ +------+ +------+ +------+
 |   Next    In your   (all of Stage 1 is free:|
 |           plan       never a dotted ring)  |  <- words in the a11y label and in

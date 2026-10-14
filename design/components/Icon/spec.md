@@ -1,6 +1,6 @@
 # Icon: My route glyphs `pin`, `check-circle`, `book`, `ear`, `pencil` (component spec v1)
 
-Sections on this sheet: the My route glyphs (R-2a, below) · [`dash`](#dash-the-miss-mark-of-a-locked-answer-f-voc-004-s-4b) (F-VOC-004 S-4b) · [`note` and `heart`](#note-and-heart-notes-from-grown-ups-f-feedback-001-fb-6) (F-FEEDBACK-001 FB-6) · [`route` and `flag`](#route-and-flag-the-learning-route-amendments-route-learning-route-lr-2) (Learning Route LR-2) · [`shift`, `shift-on` and `backspace`](#shift-shift-on-and-backspace-the-hangul-keyboard-f-curr-001-g-3) (F-CURR-001 G-3)
+Sections on this sheet: the My route glyphs (R-2a, below) · [`dash`](#dash-the-miss-mark-of-a-locked-answer-f-voc-004-s-4b) (F-VOC-004 S-4b) · [`note` and `heart`](#note-and-heart-notes-from-grown-ups-f-feedback-001-fb-6) (F-FEEDBACK-001 FB-6) · [`route` and `flag`](#route-and-flag-the-learning-route-amendments-route-learning-route-lr-2) (Learning Route LR-2) · [`shift`, `shift-on` and `backspace`](#shift-shift-on-and-backspace-the-hangul-keyboard-f-curr-001-g-3) (F-CURR-001 G-3) · [theme glyphs](theme-glyphs.md) (the Heritage Journey grid: `hangul-tile`, `rice-bowl`, `lantern`, `leaf`, `spinning-top`)
 
 Spec: `docs/specs/F-ROUTE-001-my-route-overview.md` §3.3 (stage badges), §3.6 (start marker), §3.7 (skill rows), §3.14 (no colour-only meaning), PR R-2a in §6.1 · wireframe: `design/wireframes/journey/my-route-overview.md` (legend `pin`; screens A, B and C1 to C5: stage badges, tags and the practice rows) · also needed by F-PLC-001 P-7 (start pin and placed-out look, amendment AM-10)
 Code: `packages/design-system/src/components/Icon/glyphs.ts` (geometry, pure data) · `types.ts` (`IconName`) · tests `Icon/__tests__/glyphs.test.ts`
@@ -119,3 +119,7 @@ backspace: stroke M9 5.5 H20.5 V18.5 H9 L3 12 Z (2.2) + stroke M12 9.5 L16.5 14.
 - **Never alone, never a miss mark.** The glyphs are key faces: each key carries its accessible name (`a11y.minigame.keyboard`), and Shift's state is also its `selected` state and its fill, never the glyph alone. The cross inside `backspace` sits in a key cap, so it never reads as the red X of a miss (the game never shows one).
 - **Tokens only.** `text.primary` on the key; Shift on uses `brand.secondaryDark`.
 - **Tests.** The set-wide tests in `Icon/__tests__/glyphs.test.ts` (names, path data, distinct, inside the box, stroke band).
+
+## Theme glyphs: the Heritage Journey grid
+
+Five glyphs, one per theme, replace the single letters L, F, H, N, P in the Journey cells and sit above each column label: `hangul-tile` (Letters), `rice-bowl` (Food), `lantern` (Holidays), `leaf` (Nature), `spinning-top` (Play). They are decorative; the words stay in the column label and in each cell's label. Geometry, sizes and rules: [`theme-glyphs.md`](theme-glyphs.md); preview `theme-glyphs-v1.png`.

@@ -31,7 +31,12 @@ export type IconName =
   | 'flag'
   | 'shift'
   | 'shift-on'
-  | 'backspace';
+  | 'backspace'
+  | 'hangul-tile'
+  | 'rice-bowl'
+  | 'lantern'
+  | 'leaf'
+  | 'spinning-top';
 
 export interface IconProps {
   name: IconName;
