@@ -1,3 +1,4 @@
+import { CATALOG_VERSION } from '../catalog/data';
 import type { AssessmentQuestion, AssessmentResponse, Outcome } from '../assessment/question';
 import { deadline as deadlineAt, isExpired, isIdle } from '../assessment/clock';
 import { placeCorrect } from '../assessment/options';
@@ -469,6 +470,7 @@ export const finishRun = (state: PlacementRunState, ctx: FinishContext): Placeme
     beyondContent: placementStageNumber(level.stage) >= 3,
     startQuestId: null,
     placedOutQuestIds: placedOutQuestIds(level, covered, ctx.catalog),
+    catalogVersion: CATALOG_VERSION,
     priorityTokens: priorityTokensOf(gates, state.responses, tagsOf),
     needsStage: null,
     stopReason: state.stop,

@@ -3,7 +3,8 @@
 //
 // Collects every unique source URL cited by content/stories/*.json
 // (facts[].sources[].url; the research files under content/stories/research/
-// are not read) and asks each one: HEAD first, then GET when HEAD fails or
+// are not read) and by the lesson cells content/episodes/stage-<n>/*.json
+// (culture[].sources[].url, F-CURR-001 §3.9) and asks each one: HEAD first, then GET when HEAD fails or
 // answers with an error status. 10 s timeout per request, at most 2 requests
 // per host per second (one host at a time, hosts in parallel; redirects are
 // followed by hand, up to 5 hops, and each hop counts as a request to its
@@ -34,6 +35,8 @@ import { fileURLToPath } from "node:url";
 const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
 const ROOT = process.env.HANGUL_ROUTE_ROOT ? resolve(process.env.HANGUL_ROUTE_ROOT) : resolve(SCRIPT_DIR, "..");
 const STORY_DIR = "content/stories";
+/** Lesson cells (F-CURR-001 §3.9): their notes' sources join the monthly check. */
+const LESSON_STAGE_DIRS = [2, 3, 4, 6, 7].map((n) => `content/episodes/stage-${n}`);
 const IGNORE_FILE = join(SCRIPT_DIR, "source-link-ignore.json");
 
 export const USER_AGENT =
@@ -57,8 +60,8 @@ function isObject(value) {
 export function collectSourceUrls(root) {
   const out = new Map();
   const dir = join(root, STORY_DIR);
-  if (!existsSync(dir)) return out;
-  for (const name of readdirSync(dir).filter((f) => f.endsWith(".json")).sort()) {
+  const names = existsSync(dir) ? readdirSync(dir).filter((f) => f.endsWith(".json")).sort() : [];
+  for (const name of names) {
     const file = `${STORY_DIR}/${name}`;
     let story;
     try {
@@ -77,7 +80,34 @@ export function collectSourceUrls(root) {
       }
     }
   }
+  collectLessonSourceUrls(root, out);
   return out;
+}
+
+/** Adds the sources of every lesson cell's notes to `out`, each cited by its note id. */
+function collectLessonSourceUrls(root, out) {
+  for (const rel of LESSON_STAGE_DIRS) {
+    const dir = join(root, rel);
+    if (!existsSync(dir)) continue;
+    for (const name of readdirSync(dir).filter((f) => f.endsWith(".json")).sort()) {
+      let cell;
+      try {
+        cell = JSON.parse(readFileSync(join(dir, name), "utf8"));
+      } catch {
+        continue; // validate-content reports a file that does not parse
+      }
+      if (!isObject(cell) || !Array.isArray(cell.culture)) continue;
+      for (const note of cell.culture) {
+        if (!isObject(note) || !Array.isArray(note.sources)) continue;
+        for (const source of note.sources) {
+          if (!isObject(source) || typeof source.url !== "string" || source.url.length === 0) continue;
+          const list = out.get(source.url) ?? [];
+          list.push({ file: `${rel}/${name}`, factId: typeof note.id === "string" ? note.id : "?" });
+          out.set(source.url, list);
+        }
+      }
+    }
+  }
 }
 
 /** Host suffixes from the ignore file ({ hosts: [{ host, reason }] }); none when it is missing. */

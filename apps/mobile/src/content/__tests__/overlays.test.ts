@@ -11,7 +11,9 @@ import {
 } from '@hangul-route/content-schema';
 import { LOCALE_STATUS, type LocaleStatus } from '@hangul-route/i18n';
 import { describe, expect, it } from 'vitest';
+import { CONTENT_OVERLAYS } from '../../logic/content-locale';
 import { lp, minigameScopes, type MinigameScope } from '../../logic/minigame-config';
+import { ALL_LESSON_SCOPES, LESSON_STAGE_MODULES } from './helpers/lesson-stages';
 import { episodesAll } from '../episodes';
 import { heritageCardsAll } from '../heritage-cards';
 import { jamoAll } from '../jamo';
@@ -38,7 +40,7 @@ const SHIPPED: Shipped = {
   card: new Map(heritageCardsAll.map((c) => [c.id, c])),
   episode: new Map(episodesAll.map((e) => [e.id, e])),
   quest: new Map(questsAll.map((q) => [q.id, q])),
-  minigame: new Map(Object.entries(minigameScopes)),
+  minigame: new Map([...Object.entries(minigameScopes), ...Object.entries(ALL_LESSON_SCOPES)]),
   stage: new Map(stages.map((s) => [`stage:${s.key}`, s])),
   theme: new Map(themes.map((t) => [`theme:${t.key}`, t])),
 };
@@ -112,6 +114,25 @@ describe('content overlays for TypeScript-resident content (F-I18N-001 §3.6)', 
 
   it('the glosses of one minigame stay distinct in every locale', () => {
     expect(duplicateGlosses(OVERLAYS)).toEqual([]);
+  });
+
+  it('the lesson glosses compiled into the lesson modules (F-CURR-001 §3.10) name shipped entities with allowed, resolvable fields', () => {
+    const { es, ko } = CONTENT_OVERLAYS;
+    const fromIndex: Overlays = {
+      es: Object.fromEntries(Object.entries(es).filter(([id]) => OVERLAYS.es[id] === undefined)),
+      ko: Object.fromEntries(Object.entries(ko).filter(([id]) => OVERLAYS.ko[id] === undefined)),
+    };
+    expect(overlayProblems(fromIndex)).toEqual([]);
+    for (const [n, mod] of Object.entries(LESSON_STAGE_MODULES)) {
+      expect(overlayProblems(mod.LESSON_SCOPE_OVERLAYS), `stage ${n}`).toEqual([]);
+      expect(duplicateGlosses(mod.LESSON_SCOPE_OVERLAYS, mod.LESSON_SCOPES), `stage ${n}`).toEqual([]);
+      for (const locale of ['es', 'ko'] as const) {
+        for (const id of Object.keys(mod.LESSON_SCOPE_OVERLAYS[locale])) expect(overlayPrefix(id), id).toBe('minigame');
+      }
+    }
+    for (const locale of ['es', 'ko'] as const) {
+      for (const id of Object.keys(fromIndex[locale])) expect(['episode', 'quest'], id).toContain(overlayPrefix(id));
+    }
   });
 
   it('reports a minigame whose translated glosses collide (two foods both "arroz")', () => {

@@ -528,4 +528,146 @@ describe("validate-content.mjs: locale overlays (F-I18N-001 §3.7)", () => {
       rmSync(root, { recursive: true, force: true });
     }
   });
+
+  // F-CURR-001 section 5: the lesson rules of content/episodes/stage-<n>/*.json.
+  const kt = (ko, romanization, en) => ({ ko, romanization, en });
+  const src = (url, title = "Standard Korean Language Dictionary") => ({
+    title,
+    publisher: "National Institute of Korean Language",
+    url,
+    accessed: "2026-10-01",
+    quoteOrLocator: "entry, sense 1",
+  });
+  const lpRound = (id) => ({ id, prompt: kt("떡국", "tteokguk", "rice-cake soup"), options: [{ id: "a", pictureRef: "word:soup" }, { id: "b", pictureRef: "word:kite" }], answerId: "a" });
+  function lessonQuest(k) {
+    const ref = (step) => `minigame:s2-rites-q${k}-${step}`;
+    return {
+      id: `quest:stage2-rites-q${k}`,
+      titleEn: `Quest ${k}`,
+      estimatedMinutes: 4,
+      steps: [
+        { id: "s1", kind: "intro", titleEn: "Hello", durationSeconds: 7 },
+        { id: "s2", kind: "discover", titleEn: "Look", durationSeconds: 50, discover: { pages: [{ items: [{ type: "word", word: kt("떡국", "tteokguk", "rice-cake soup"), noteEn: "Say {ko:떡국} at the New Year." }] }] } },
+        { id: "s3", kind: "practice", titleEn: "Play", durationSeconds: 80, minigameKind: "listen-pick", minigameRef: ref("practice") },
+        { id: "s4", kind: "apply", titleEn: "Build", durationSeconds: 70, minigameKind: "card-match", minigameRef: ref("apply") },
+        { id: "s5", kind: "check", titleEn: "Two quick ones", durationSeconds: 35, minigameKind: "listen-pick", minigameRef: ref("check") },
+        { id: "s6", kind: "reward", titleEn: "Done", durationSeconds: 8 },
+      ],
+      scopes: [
+        { ref: ref("practice"), kind: "listen-pick", rounds: [1, 2, 3, 4, 5, 6].map((i) => lpRound(`r${i}`)) },
+        { ref: ref("apply"), kind: "card-match", pairs: [kt("연", "yeon", "kite"), kt("윷", "yut", "yut sticks")] },
+        { ref: ref("check"), kind: "listen-pick", rounds: [lpRound("c1"), lpRound("c2")] },
+      ],
+    };
+  }
+  const lessonCell = (over = {}) => ({
+    id: "episode:stage2-rites",
+    stage: "stage2",
+    theme: "rites",
+    status: "draft",
+    titleEn: "Holiday Words",
+    subtitleEn: "Words of Seollal and Chuseok",
+    hoyaIntroEn: "Let us read holiday words!",
+    order: 3,
+    pillarTags: ["B5"],
+    quests: [1, 2, 3].map(lessonQuest),
+    culture: [
+      {
+        id: "n1",
+        kind: "culture",
+        textEn: "Families eat {ko:떡국} on the morning of the New Year.",
+        sources: [src("https://stdict.korean.go.kr/x", "표준국어대사전"), src("https://folkency.nfm.go.kr/topic/1")],
+        verification: { passes: 1, checkedAt: "2026-10-01", scope: "lesson", notes: "pass 1: 출처 확인" },
+      },
+    ],
+    review: { language: "draft", culture: "draft" },
+    contentVer: 1,
+    ...over,
+  });
+
+  test("a well-formed draft lesson cell passes: {ko:} tokens in English fields and Korean source titles are allowed", () => {
+    const root = makeRoot();
+    try {
+      writeContent(root, "episodes/stage-2/rites.json", lessonCell());
+      const r = run(root);
+      assert.equal(r.status, 0, r.stdout + r.stderr);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("lesson rules fail a ready cell without sign-offs, with one source and with Hangul outside a {ko:} token", () => {
+    const root = makeRoot();
+    try {
+      const cell = lessonCell({ status: "ready" });
+      cell.culture[0].sources = [cell.culture[0].sources[1]];
+      cell.hoyaIntroEn = "Let us read 설날 words!";
+      writeContent(root, "episodes/stage-2/rites.json", cell);
+      const r = run(root);
+      assert.equal(r.status, 1);
+      assert.match(r.stdout, /lesson-review-unsigned: a ready cell needs both multi-agent review sign-offs/);
+      assert.match(r.stdout, /lesson-source-shape: a note needs at least 2 sources/);
+      assert.match(r.stdout, /lesson-verification-passes: .* at \.culture\[0\]\.verification\.passes/);
+      assert.match(r.stdout, /korean-in-ui-field at \.hoyaIntroEn/);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("lesson rules: voice-echo and a broken file are reported; the zone covers only lesson cells", () => {
+    const root = makeRoot();
+    try {
+      const cell = lessonCell();
+      cell.quests[0].steps[2].minigameKind = "voice-echo";
+      writeContent(root, "episodes/stage-2/rites.json", cell);
+      writeContent(root, "episodes/stage-3/life.json", { id: "episode:stage3-life" });
+      writeContent(root, "other/x.json", { review: { note: "검토" } });
+      const r = run(root);
+      assert.equal(r.status, 1);
+      assert.match(r.stdout, /file=content\/episodes\/stage-2\/rites\.json::lesson-no-speaking/);
+      assert.match(r.stdout, /file=content\/episodes\/stage-3\/life\.json::lesson-schema/);
+      assert.match(r.stdout, /file=content\/other\/x\.json::korean-in-ui-field/);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("a {ko:} token passes only in an English field of a lesson cell; the zone keys only where the schema puts them", () => {
+    const root = makeRoot();
+    try {
+      const cell = lessonCell();
+      // Not an ...En field of the cell: the token does not hide the Hangul.
+      cell.quests[0].steps[0].bodyNote = "Say {ko:떡국}.";
+      // A `review` key inside a quest is not the cell's review record.
+      cell.quests[0].review = { note: "검토" };
+      writeContent(root, "episodes/stage-2/rites.json", cell);
+      // A story field with a token is still Korean in a UI field.
+      writeContent(root, "stories/x.json", { id: "story:x", summaryEn: "A story of {ko:한글}" });
+      const r = run(root);
+      assert.equal(r.status, 1);
+      assert.match(r.stdout, /korean-in-ui-field at \.quests\.0\.steps\.0\.bodyNote/);
+      assert.match(r.stdout, /korean-in-ui-field at \.quests\.0\.review\.note/);
+      assert.match(r.stdout, /file=content\/stories\/x\.json::korean-in-ui-field at \.summaryEn/);
+      assert.doesNotMatch(r.stdout, /korean-in-ui-field at \.culture/);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("a source accessed today in Korea is not in the future (UTC+14 grace)", () => {
+    const root = makeRoot();
+    try {
+      const cell = lessonCell();
+      const tomorrowUtc = new Date(Date.now() + 9 * 3_600_000).toISOString().slice(0, 10);
+      for (const source of cell.culture[0].sources) source.accessed = tomorrowUtc;
+      writeContent(root, "episodes/stage-2/rites.json", cell);
+      const r = run(root);
+      assert.doesNotMatch(r.stdout, /accessed .* is in the future/, r.stdout);
+      cell.culture[0].sources[0].accessed = new Date(Date.now() + 3 * 86_400_000).toISOString().slice(0, 10);
+      writeContent(root, "episodes/stage-2/rites.json", cell);
+      assert.match(run(root).stdout, /is in the future/);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
 });

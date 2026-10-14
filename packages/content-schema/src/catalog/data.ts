@@ -15,6 +15,8 @@ import type { Catalog, CatalogCell, CatalogQuest, CatalogStory, CatalogTopic } f
  * Version 6 (F-STORY-001 PR 1.9): all 24 stories are `ready`.
  * Version 7 (F-STORY-005 PR 5.6): the Stage 5 rites book ships with three read quests.
  * Version 8 (F-STORY-005 PR 5.6): the letters, life, nature and crafts books ship (eleven more read quests).
+ * From version 9 on (F-CURR-001 §3.13), a bump that adds quests lists them under the new version in
+ * `CATALOG_QUEST_ADDITIONS` (`versions.ts`), so a placement result stored earlier skips them by its level.
  */
 export const CATALOG_VERSION = 8;
 

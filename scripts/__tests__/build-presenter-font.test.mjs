@@ -230,6 +230,59 @@ describe("presenterStrings (what the presenter draws in large Korean)", () => {
     assert.ok(!all.has("대"));
   });
 
+  test("lists the Korean of the upper-stage Discover items (F-CURR-001 §3.10)", () => {
+    const kt = (ko) => ({ ko, romanization: "x", en: "y" });
+    const items = [
+      { type: "sentence", sentence: kt("책이 있어요") },
+      { type: "pattern", frame: kt("___이에요/예요"), examples: [kt("책이에요"), kt("학교예요")] },
+      { type: "exchange", lines: [{ speaker: "a", line: kt("이게 뭐예요?") }, { speaker: "b", line: kt("책이에요") }] },
+      { type: "realia", realiaRef: "realia:menu", keyWords: [kt("김밥")] },
+    ];
+    assert.deepEqual(presenterStrings({ quests: [{ steps: [{ kind: "discover", discover: { pages: [{ items }] } }] }] }), [
+      "책이 있어요",
+      "책이에요",
+      "학교예요",
+      "이게 뭐예요?",
+      "책이에요",
+      "김밥",
+    ]);
+    assert.deepEqual(presenterStrings({ quests: [{ steps: [{ kind: "discover", discover: { pages: [{ items: [{ type: "pattern" }, { type: "exchange" }, { type: "realia" }, { type: "sentence" }] }] } }] }] }), []);
+  });
+
+  test("lists the Korean of the upper-stage lesson scopes (F-CURR-001 §3.12)", () => {
+    const kt = (ko) => ({ ko, romanization: "x", en: "y" });
+    const scopes = {
+      a: { kind: "order-it", orderIt: { rounds: [{ sentence: kt("사과를 먹어요."), distractors: [kt("없어요.")], particle: { tile: 0, choices: [kt("을"), kt("를")] } }] } },
+      b: {
+        kind: "realia-read",
+        realiaRead: {
+          realia: { title: kt("메뉴"), entries: [{ text: kt("김밥"), value: kt("천 원") }, { text: kt("라면") }] },
+          rounds: [{ options: [{ text: kt("떡볶이") }, { figure: "5,000" }] }],
+        },
+      },
+      c: { kind: "type-hangul", typeHangul: { rounds: [{ target: kt("호랑이") }] } },
+      d: { kind: "trace-word", traceWord: { rounds: [{ word: kt("호야") }] } },
+      e: { kind: "write-frame", writeFrame: { rounds: [{ frame: kt("저는 ___을/를 좋아해요"), slots: [{ bank: [kt("사과"), kt("떡")] }, {}] }] } },
+      f: { kind: "realia-read", realiaRead: {} },
+    };
+    assert.deepEqual(presenterStrings({ scopes }), [
+      "사과를 먹어요.",
+      "없어요.",
+      "을",
+      "를",
+      "메뉴",
+      "김밥",
+      "천 원",
+      "라면",
+      "떡볶이",
+      "호랑이",
+      "호야",
+      "저는 ___을/를 좋아해요",
+      "사과",
+      "떡",
+    ]);
+  });
+
   test("tolerates missing optional fields", () => {
     assert.deepEqual(presenterStrings({}), []);
     assert.deepEqual(presenterStrings({ scopes: { x: { kind: "match-sound" } }, quests: [{ steps: [{ kind: "discover" }] }] }), []);

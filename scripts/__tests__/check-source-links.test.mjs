@@ -6,7 +6,7 @@
 
 import { strict as assert } from "node:assert";
 import { spawnSync } from "node:child_process";
-import { mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { describe, test } from "node:test";
@@ -70,6 +70,36 @@ describe("collectSourceUrls", () => {
       { file: "content/stories/alpha.json", factId: "f2" },
       { file: "content/stories/beta.json", factId: "f1" },
     ]);
+  });
+
+  test("adds the sources of the lesson cells' notes (F-CURR-001 §3.9), cited by note id", () => {
+    const root = mkdtempSync(join(tmpdir(), "source-links-"));
+    try {
+      const put = (rel, body) => {
+        mkdirSync(join(root, dirname(rel)), { recursive: true });
+        writeFileSync(join(root, rel), typeof body === "string" ? body : JSON.stringify(body));
+      };
+      const src = (url) => ({ title: "t", publisher: "p", url, accessed: "2026-10-01", quoteOrLocator: "q" });
+      put("content/episodes/stage-2/rites.json", {
+        culture: [
+          { id: "n1", sources: [src("https://folkency.nfm.go.kr/a"), src("https://stdict.korean.go.kr/b")] },
+          { id: "n2", factRef: "story:seollal-new-year#f1" },
+          { sources: [src("https://folkency.nfm.go.kr/a"), { url: "" }, "x"] },
+          "not a note",
+        ],
+      });
+      put("content/episodes/stage-6/life.json", "{ not json");
+      put("content/episodes/stage-7/crafts.json", { culture: "none" });
+      put("content/episodes/stage-1/cards.json", { culture: [{ id: "n9", sources: [src("https://stage1.example/x")] }] });
+      const urls = collectSourceUrls(root);
+      assert.deepEqual([...urls.keys()].sort(), ["https://folkency.nfm.go.kr/a", "https://stdict.korean.go.kr/b"]);
+      assert.deepEqual(urls.get("https://folkency.nfm.go.kr/a"), [
+        { file: "content/episodes/stage-2/rites.json", factId: "n1" },
+        { file: "content/episodes/stage-2/rites.json", factId: "?" },
+      ]);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
   });
 
   test("a missing stories directory gives no URLs", () => {

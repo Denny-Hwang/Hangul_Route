@@ -217,14 +217,24 @@ export function mergeSelfRoute(l: SelfRoute | null | undefined, s: SelfRoute | n
   return compareInstant(s.updatedAt, l.updatedAt) > 0 ? s : l;
 }
 
-/**
- * Same id on both sides: the copy carrying a parent override wins (the later
- * `override.at` when both do), otherwise the local copy.
- */
-export function mergePlacement(l: PlacementResult, s: PlacementResult): PlacementResult {
+/** The copy carrying a parent override wins (the later `override.at` when both do), otherwise the local copy. */
+function placementWinner(l: PlacementResult, s: PlacementResult): PlacementResult {
   if (l.override === undefined) return s.override === undefined ? l : s;
   if (s.override === undefined) return l;
   return compareInstant(s.override.at, l.override.at) > 0 ? s : l;
+}
+
+/**
+ * Same id on both sides: the copy carrying a parent override wins (the later
+ * `override.at` when both do), otherwise the local copy. `catalogVersion`
+ * (F-CURR-001 §3.13) never changes once a result is stored, and a copy that went
+ * through an older build lost it: the winner keeps the other copy's value, so the
+ * result never reads as a version 8 one again.
+ */
+export function mergePlacement(l: PlacementResult, s: PlacementResult): PlacementResult {
+  const won = placementWinner(l, s);
+  const other = won === l ? s : l;
+  return won.catalogVersion === undefined && other.catalogVersion !== undefined ? { ...won, catalogVersion: other.catalogVersion } : won;
 }
 
 /** Union by id, oldest first, newest `PLACEMENT_KEEP` kept. A missing list is `[]`. */

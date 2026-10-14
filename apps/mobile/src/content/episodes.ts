@@ -1,5 +1,6 @@
 import type { Episode } from '@hangul-route/content-schema';
 import { bookEpisodes } from './books';
+import { lessonEpisodes } from './lessons';
 import { stages, themes } from './stages';
 import { storyEpisodes } from './stories';
 
@@ -214,8 +215,12 @@ export const MAX_EPISODES_PER_CELL = 1;
 /** The key of an episode's grid cell (stage × theme); the one definition every cell count uses. */
 export const cellKey = (e: Pick<Episode, 'stage' | 'theme'>): string => `${e.stage}:${e.theme}`;
 
-/** Hand-written grid episodes: the lessons and the Stage 5 books (`books.ts`). */
-export const handWrittenEpisodes: readonly Episode[] = [...stage1Episodes, ...stage2Episodes, ...stage4Episodes, ...bookEpisodes];
+/**
+ * Grid episodes that claim their cell: the hand-written lessons, the generated upper-stage
+ * lesson cells (F-CURR-001 §3.10, `lessons.ts`) and the Stage 5 books (`books.ts`). A
+ * generated cell replaces its "Coming later" preview through `previewEpisodesFor`.
+ */
+export const handWrittenEpisodes: readonly Episode[] = [...stage1Episodes, ...stage2Episodes, ...stage4Episodes, ...lessonEpisodes, ...bookEpisodes];
 
 /**
  * The cells of `list` holding more grid episodes than `max` (F-STORY-005 §3.1

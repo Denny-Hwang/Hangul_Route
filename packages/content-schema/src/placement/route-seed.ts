@@ -2,6 +2,7 @@ import type { AssessmentResponse } from '../assessment/question';
 import type { StageKey, ThemeKey } from '../schemas/heritage-card';
 import { ThemeKeySchema } from '../schemas/heritage-card';
 import type { GateResult, Motivation, PlacementLevel, PlacementResult } from '../schemas/placement';
+import { placedOutGrowth, type CatalogHistory } from '../catalog/versions';
 import { inRouteOrder, placementLevelRank, placementStageNumber, type TagLookup } from './level-map';
 import { modeCeiling, modeOf } from './rungs';
 import { rowsPassed } from './scoring';
@@ -45,6 +46,8 @@ export interface RouteSeed {
 export interface RouteOptions {
   isEntitled: (stage: StageKey) => boolean;
   completedQuestIds: ReadonlySet<string>;
+  /** The catalogue-growth rule's history (F-CURR-001 §3.13); default the shipped one. */
+  catalogHistory?: CatalogHistory;
 }
 
 const MAX_PRIORITY_TOKENS = 3;
@@ -136,7 +139,7 @@ export const seedRoute = (result: PlacementResult, catalog: RouteCatalog, opts: 
     {
       level: result.level,
       oralStage: result.oralStage,
-      placedOut: result.placedOutQuestIds,
+      placedOut: [...result.placedOutQuestIds, ...placedOutGrowth(result.level, result.catalogVersion, catalog, opts.completedQuestIds, opts.catalogHistory)],
       priorityTokens: result.priorityTokens,
       motivation: result.motivation,
     },
@@ -172,7 +175,13 @@ export const effectiveRoute = (
   const newestFirst = [...sorted].reverse();
 
   const placedOut = new Set<string>();
-  for (const result of sorted) for (const id of result.placedOutQuestIds) placedOut.add(id);
+  for (const result of sorted) {
+    for (const id of result.placedOutQuestIds) placedOut.add(id);
+    // The catalogue-growth rule (F-CURR-001 §3.13): quests shipped after this result was stored.
+    for (const id of placedOutGrowth(result.level, result.catalogVersion, catalog, opts.completedQuestIds, opts.catalogHistory)) {
+      placedOut.add(id);
+    }
+  }
 
   const override = newestFirst.find((r) => r.override !== undefined)?.override;
   if (override !== undefined) {

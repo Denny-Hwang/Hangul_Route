@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  CATALOG_VERSION,
   PlacementResultSchema,
   PlacementRunStateSchema,
   apply,
@@ -268,6 +269,8 @@ describe('a run end to end (the section 3.14 behaviours)', () => {
     expect(PlacementResultSchema.parse(r)).toEqual(r);
     expect(r.level).toEqual({ stage: 'stage1', band: 0 });
     expect(r.placedOutQuestIds).toEqual([]);
+    // F-CURR-001 §3.13: the catalogue version the placed-out set was fixed against.
+    expect(r.catalogVersion).toBe(CATALOG_VERSION);
     expect(r.startQuestId).toBe(q(1));
     expect(r.stopReason).toBe('complete');
     expect(r.oralStage).toBe('stage3');

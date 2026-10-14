@@ -146,7 +146,11 @@ export const LessonNoteSchema = z
   .strict()
   .superRefine((note, ctx) => {
     if ((note.sources === undefined) === (note.factRef === undefined)) {
-      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['sources'], message: 'a note has sources or a factRef, not both and not neither' });
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['sources'],
+        message: 'lesson-unsourced-note: a note has sources or a factRef, not both and not neither',
+      });
     }
   });
 export type LessonNote = z.infer<typeof LessonNoteSchema>;
