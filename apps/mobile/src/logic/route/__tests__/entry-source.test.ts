@@ -110,13 +110,14 @@ describe('every learner-facing weekly plan entry reads routeEnabledFor(locale) (
     }
   });
 
-  it('the report card (SuggestedPlanCard) neither reads the offer nor draws in an es or ko UI', () => {
+  it('the report card (SuggestedPlanCard) reads the locale switch: on in a signed es or ko UI, off with the flag off', () => {
     const card = src('screens/parent/SuggestedPlanCard.tsx');
     expect(card).toContain('const enabled = routeEnabledFor(useLocale());');
     expect(card).toContain('if (!enabled) return;');
     expect(card).toContain('if (!enabled) return null;');
-    expect(routeEnabledFor('es', { routeEnabled: true }, false)).toBe(false);
-    expect(routeEnabledFor('ko', { routeEnabled: true }, false)).toBe(false);
+    expect(routeEnabledFor('es', { routeEnabled: true }, false)).toBe(true);
+    expect(routeEnabledFor('ko', { routeEnabled: true }, false)).toBe(true);
+    expect(routeEnabledFor('ko', { routeEnabled: false }, false)).toBe(false);
   });
 
   it('the placement strip and its offer read the same locale switch', () => {

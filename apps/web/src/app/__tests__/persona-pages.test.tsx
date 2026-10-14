@@ -417,19 +417,15 @@ describe('today\'s claims: the reports lines (F-REPORT-001 RP-11) and the notes 
     expect(renderToStaticMarkup(<LearnersPage locale="en" />)).toBe(renderToStaticMarkup(<LearnersPage locale="en" claims={ALL_CLAIMS_OFF} />));
   });
 
-  it.each(['ko', 'es'] as const)('%s: the notes line, but no reports line yet, since reports render only in a reviewed locale (F-SITE-002 G6)', (locale) => {
+  it.each(['ko', 'es'] as const)('%s: the reports lines and the notes line, since its report words are signed (F-SITE-002 G6; MAR re-review)', (locale) => {
     const persona = getMessages(locale).landing.persona;
     const parents = renderToStaticMarkup(<ParentsPage locale={locale} />);
     const teachers = renderToStaticMarkup(<TeachersPage locale={locale} />);
-    const notesOnly = { ...ALL_CLAIMS_OFF, feedbackNotes: true };
-    expect(linesOf(parents, persona.parents.follow.title)).toEqual([persona.parents.follow.body, persona.parents.follow.notes]);
+    expect(linesOf(parents, persona.parents.follow.title)).toEqual([persona.parents.follow.body, persona.parents.follow.reports, persona.parents.follow.notes]);
     const parentsText = textOf(mainOf(parents));
-    expect(parentsText).not.toContain(persona.parents.follow.reports);
-    expect(parentsText).not.toContain(persona.parents.faq.whatSee.reports);
-    expect(parentsText).toContain(persona.parents.faq.whatSee.a);
-    expect(linesOf(teachers, persona.teachers.class.title)).toEqual([persona.teachers.class.body, persona.teachers.class.notes]);
-    expect(parents).toBe(renderToStaticMarkup(<ParentsPage locale={locale} claims={notesOnly} />));
-    expect(teachers).toBe(renderToStaticMarkup(<TeachersPage locale={locale} claims={notesOnly} />));
+    expect(parentsText).toContain(persona.parents.faq.whatSee.reports);
+    expect(parentsText).not.toContain(persona.parents.faq.whatSee.a);
+    expect(linesOf(teachers, persona.teachers.class.title)).toEqual([persona.teachers.class.body, persona.teachers.class.reports, persona.teachers.class.notes]);
   });
 
   it('the reports lines name no speaking and no price, in every locale', () => {

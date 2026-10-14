@@ -152,6 +152,18 @@ describe('console.transfer.consent in Korean and Spanish (F-SPACE-002 T-6d: the 
       expect(t.lines.notNowEnds).toContain(t.consent.notNow.cta);
     });
   }
+  it('es: the history rows put no gendered article before the member noun', () => {
+    const h = getMessages('es').console.transfer.history;
+    for (const noun of ['estudiante', 'miembro']) {
+      for (const text of [h.movedOut(noun), h.joined(noun)]) {
+        expect(text, text).not.toMatch(/^(un|una|el|la)\s/i);
+        expect(text, text).toContain(`1 ${noun}`);
+      }
+    }
+  });
+  it('ko: the screen-reader word between the two classes names the new class', () => {
+    expect(getMessages('ko').console.transfer.a11y.to).toContain('새 반');
+  });
   it('ko: never puts the counter word 반 after a class name ("햇살반 반")', () => {
     expect(getMessages('ko').console.transfer.consent.title('{a}', '{b}')).not.toMatch(/\{b\}\s*반/);
   });

@@ -258,12 +258,11 @@ describe('includesLines: feature lines only while SITE_CLAIMS says the feature i
     expect(includesLines('group_license', 'class', 'en', { ...OFF, parentReports: true })).toEqual(base);
   });
 
-  it.each(['ko', 'es'] as const)('%s: the notes line, no reports line while reports render only in a reviewed locale', (locale) => {
+  it.each(['ko', 'es'] as const)('%s: the reports line and the notes line, since its report words are signed (MAR re-review)', (locale) => {
     const lines = getMessages(locale).console.billing.includesLines;
-    expect(includesLines('family_lifetime', 'family', locale, SITE_CLAIMS)).toEqual([...includesLines('family_lifetime', 'family', locale, OFF), lines.family.browse, lines.family.notes]);
-    expect(includesLines('family_lifetime', 'family', locale, ALL_ON)).not.toContain(lines.family.reports);
-    expect(includesLines('group_license', 'class', locale, SITE_CLAIMS)).not.toContain(lines.license.reports);
-    expect(includesLines('group_license', 'class', locale, ALL_ON)).toEqual([...includesLines('group_license', 'class', locale, OFF), lines.license.browse, lines.license.notes]);
+    expect(includesLines('family_lifetime', 'family', locale, SITE_CLAIMS)).toEqual([...includesLines('family_lifetime', 'family', locale, OFF), lines.family.browse, lines.family.reports, lines.family.notes]);
+    expect(includesLines('group_license', 'class', locale, SITE_CLAIMS)).toEqual([...includesLines('group_license', 'class', locale, OFF), lines.license.browse, lines.license.reports, lines.license.notes]);
+    expect(includesLines('group_license', 'class', locale, ALL_ON)).toEqual([...includesLines('group_license', 'class', locale, OFF), lines.license.browse, lines.license.reports, lines.license.notes]);
   });
 
   it('reads SITE_CLAIMS by default, where the reports claims (F-REPORT-001 RP-11), All lessons (F-BROWSE-001 BR-14) and the notes claim (F-FEEDBACK-001 FB-14) are on', () => {

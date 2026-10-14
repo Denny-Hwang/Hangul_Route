@@ -233,11 +233,12 @@ export function gatingActive(f: Pick<Flags, 'contentGatingEnabled'>, platformOs:
 }
 
 /**
- * UI locales whose `report.*` words have passed native review (F-REPORT-001 section 3.1). The same list as the
- * console's `REPORT_REVIEWED_LOCALES` (`apps/web/src/lib/console/config.ts`): Korean and Spanish join both when
- * their review lands, so a ko or es learner app never shows a report the console would hold back.
+ * UI locales whose `report.*` words have a signed review (F-REPORT-001 section 3.1; F-I18N-001 section 3.10). The
+ * same list as the console's `REPORT_REVIEWED_LOCALES` (`apps/web/src/lib/console/config.ts`), so a ko or es learner
+ * app never shows a report the console would hold back. Spanish and Korean joined both with the 2026-10-13 MAR
+ * re-review of `report`; whether es and ko are selectable is still `LOCALE_STATUS` (rows 15b / 16b).
  */
-export const REPORT_REVIEWED_LOCALES: readonly UiLocale[] = ['en'];
+export const REPORT_REVIEWED_LOCALES: readonly UiLocale[] = ['en', 'es', 'ko'];
 
 /**
  * The effective reports switch in the learner app (F-REPORT-001 section 3.1, RP-9): the flag is on **and** the UI
@@ -249,10 +250,11 @@ export function reportsEnabledFor(locale: UiLocale, f: Pick<Flags, 'reportsEnabl
 }
 
 /**
- * UI locales whose `learner.weeklyPlan` words carry a signed review (F-PLAN-002 section 6, P2-8b). The flip is
- * English only: Spanish and Korean join when their re-review is signed.
+ * UI locales whose `learner.weeklyPlan` words carry a signed review (F-PLAN-002 section 6, P2-8b). Spanish and Korean
+ * joined with the 2026-10-13 MAR re-review of `learner` (F-I18N-001 section 3.10). Whether es and ko are selectable is
+ * still `LOCALE_STATUS` (rows 15b / 16b).
  */
-export const ROUTE_REVIEWED_LOCALES: readonly UiLocale[] = ['en'];
+export const ROUTE_REVIEWED_LOCALES: readonly UiLocale[] = ['en', 'es', 'ko'];
 
 /**
  * The effective weekly plan switch for the learner entries (F-PLAN-002 P2-8b): the flag is on **and** the UI

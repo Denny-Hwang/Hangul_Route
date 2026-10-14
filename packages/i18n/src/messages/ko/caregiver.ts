@@ -138,7 +138,10 @@ export const caregiver = {
     openFailed: (url: string) => `브라우저에서 이 주소를 열어 주세요: ${url}`,
     needsConnection: '결제 화면을 열려면 인터넷 연결이 필요해요.',
     gateDone: 'PIN을 확인했어요. 결제 화면 열기를 한 번 더 눌러 주세요.',
+    // The grown-up Plan screen's back buttons share the '…로 돌아가기' pattern on purpose (learner buttons say '홈으로').
     backToJourney: { cta: '여정으로 돌아가기' },
+    backToLibrary: { cta: '라이브러리로 돌아가기' },
+    backHome: { cta: '홈으로 돌아가기' },
     freePlan: {
       line: (lessons: number, letters: number, minutes: number) =>
         `1단계는 무료예요: 레슨 ${lessons}개, 글자 ${letters}개, 약 ${minutes}분. 끝낸 것은 사라지지 않아요.`,
@@ -367,7 +370,7 @@ export const caregiver = {
     },
     shortNotTested: '글자 모양과 문장은 짧은 확인에 들어 있지 않아요.',
     notTestedShort: '확인 안 함 (짧은 확인)',
-    shortHint: '짧은 확인은 처음 글자만 봐요. 기본 확인을 하면 더 뒤의 시작 위치를 찾을 수 있어요.',
+    shortHint: '짧은 확인은 처음 글자만 봐요. 기본 확인을 하면 더 나아간 시작 위치를 찾을 수 있어요.',
     tryStandard: '기본 확인 해 보기',
     checkedTwice: '두 번 확인함',
     notFinished: '일부만 확인함',
@@ -408,10 +411,10 @@ export const caregiver = {
       change: '바꾸기',
       notNow: '나중에',
       made: (name: string) => `${name}: 이제 주간 계획이 있어요. 홈에 보여요.`,
-      laterStart: (name: string) => `${name}: 가장 최근 확인에서 더 뒤의 시작 위치를 찾았어요.`,
-      laterLine: '주간 계획을 앞당기고 끝나는 날은 그대로 둘 수 있어요.',
-      updatePlan: '계획 바꾸기',
-      updated: '주간 계획을 앞당겼어요.',
+      laterStart: (name: string) => `${name}: 최근 수준 확인에서 더 나아간 시작 위치를 찾았어요.`,
+      laterLine: '주간 계획을 새 시작 위치로 옮기고, 끝나는 날은 그대로 둘 수 있어요.',
+      updatePlan: '계획 업데이트하기',
+      updated: '주간 계획을 새 시작 위치로 옮겼어요.',
       failed: '잘 안 됐어요. 다시 해 보세요.',
       newStart: (name: string) => `${name}: 고른 시작 위치에 맞춰 계획을 바꿀 수 있어요.`,
       newStartLine: '앞으로의 계획이 새 시작 위치를 따라가요. 기간과 끝나는 날은 그대로예요.',
@@ -718,7 +721,7 @@ export const caregiver = {
       title: '다른 반으로 옮기기',
       step1: '새 선생님에게 반 코드를 받아 주세요.',
       codeLabel: '반 코드',
-      sent: '요청을 보냈어요. 모두 좋다고 할 때까지 아무것도 바뀌지 않아요.',
+      sent: '요청을 보냈어요. 모두 동의할 때까지 아무것도 바뀌지 않아요.',
     },
     errors: {
       codeNotFound: '이 코드로는 반을 찾지 못했어요.',
