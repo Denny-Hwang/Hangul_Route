@@ -104,6 +104,8 @@ The rule is **owned by F-I18N-001 §3.9 and is already on `main`**: `validateDis
 
 ### 3.3 Consent, branching on who is learning
 
+> **[TV] Amended 2026-10-14** (`AMENDMENTS-TEACHER-VISIBILITY-TRANSFER.md` TV-D4, TV-D5): besides the device consent below, a learner in a class has a server-held class-scope acknowledgement (`class_scope_acks`, text `class-scope-2026-10`), given once by a guardian in the console or on the learner's full-scope device. In the app it is reached through the grown-up gate for a child profile and directly for a self profile; it changes no field, key or rule of this section.
+
 New module `apps/mobile/src/logic/profiles/learner-type.ts` (pure; 100 %):
 
 ```ts

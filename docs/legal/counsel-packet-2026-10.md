@@ -4,6 +4,8 @@
 >
 > **This file is public** (the repository is public). Do not add counsel's replies, privileged advice or notes of a call with counsel to this file or anywhere else in the repository; keep them outside the repository.
 >
+> **Overtaken in part by the owner's decisions of 2026-10-14** (`docs/specs/AMENDMENTS-TEACHER-VISIBILITY-TRANSFER.md`): the owner chose not to wait for counsel on T-8 and P-4b. Teachers see a learner's full progress, words included, once the family has read a one-time update; a teacher may move a learner between classes they teach, or into another class that accepts, without family consent, and the family is told afterwards; class moves are switched on. The privacy policy and terms describe this as the owner's decision. This packet still describes the earlier design in places; its questions remain open for counsel, and any answer can be applied through a new consent text version.
+>
 > Prepared 2026-10-14 for the owner of Hangul Route, to hand to an outside lawyer. Written for a reader who does not know the codebase. File paths and spec sections are given so each statement can be checked; "spec" means a feature specification under `docs/specs/`.
 
 ## How to read this packet

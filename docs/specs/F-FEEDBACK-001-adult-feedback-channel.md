@@ -547,6 +547,8 @@ A report from a device is allowed from a class-scoped device on purpose: a learn
 
 ### 8.2 Who sees what
 
+> **[TV] Amended 2026-10-14** (`AMENDMENTS-TEACHER-VISIBILITY-TRANSFER.md` TV-D12): the learner's class-notes setting (`learner_note_prefs.classes`) is also shown to the learner's teachers on the learner report once the family has read the class-scope update. Who may send, the reaction rule and the read state below are unchanged.
+
 | Viewer | Sees |
 |---|---|
 | learner (own device) | delivered notes with sender label, preset, text (unless `presets` mode for class notes), suggested quest |

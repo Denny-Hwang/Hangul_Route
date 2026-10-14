@@ -316,6 +316,8 @@ Layers as on the learner report: layer 1 = headline, what went well (class), pra
 
 ### 3.8 Worker routes (additive; `packages/backend/src/routes/space-reports.ts`, mounted `app.route('/api/spaces', spaceReportRoutes)` in `app.ts` next to the other `/api/spaces` routers, `app.ts:56-66`)
 
+> **[TV] Amended 2026-10-14** (`AMENDMENTS-TEACHER-VISIBILITY-TRANSFER.md` section 2): every projection below is now decided per learner by scope. A family reads everything (words included); a class or school reads the same once the family has read the class-scope update (`scope: 'full'`: no join-date clipping, `vocab`, `stage1Anchor`, `selfRoute`, `routeGoal`, words per day), and exactly what this section says until then (`scope: 'base'`). The learner report carries `scope`, `vocab` with `firstTryRate`, and `settings.classNotes`; the roster never carries `firstTryRate`.
+
 **Narrow reads** (RP-5, RP-5b). `Db` (`db/types.ts`, `d1.ts`, `memory.ts`) gains `summaryOf(learnerId)` and `summariesOf(learnerIds)`, which select **only** `learner_id, summary_json, updated_at` (never `payload_json`), and `learnersOf(ids)`, all batched as `IN (...)` lists chunked at 100 bound parameters (D1's limit). The report routes never call `getSnapshot` (`SELECT *`). No migration. The roster route keeps its own reads (out of scope).
 
 **`GET /api/spaces/:id/learners/:learnerId/report?period=<p>`** (RP-5)
