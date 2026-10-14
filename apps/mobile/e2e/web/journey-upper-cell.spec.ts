@@ -684,6 +684,31 @@ const CELLS: readonly UpperCell[] = [
       await expect(page.getByRole('button', { name: /^Nature & Animals: Hike & Ask\./ })).toBeVisible();
     },
   },
+  // F-CURR-001 S6-5: Buy at Market, q1 "At the Stall" at 320 px: Discover, Realia Read on the three price
+  // cards (a drawn stall, round practice amounts, OD-11), Type Hangul (한지, 부채, 오일장) and the Check by id.
+  {
+    episodeId: 'episode:stage6-crafts',
+    cellButton: journeyCellName(6, 'Play & Crafts'),
+    title: 'Buy at Market',
+    playFirstQuest: async (page) => {
+      await page.setViewportSize({ width: 320, height: 720 });
+      await startFirstQuest(page);
+      await passDiscover(page);
+      await page.getByRole('button', { name: 'Play minigame' }).click();
+      await shot(page, 's6-5-q1-realia-320');
+      await pickRealia(page, ['hanji', 'buchae', 'apple', 'cheon']);
+      await page.getByRole('button', { name: 'Play minigame' }).click();
+      for (const word of ['한지', '부채', '오일장']) await typeAnswer(page, word);
+      await playCheckByIds(page, [{ answer: 'b' }, { answer: 'c' }]);
+      await expect(page.getByText('Finish', { exact: true }).first()).toBeVisible();
+    },
+    expectRouteDay: async (page) => {
+      await page.goto('/');
+      await page.getByText('Learning Route', { exact: true }).last().click();
+      await page.getByRole('button', { name: /^Stage 6, Real-use\./ }).click();
+      await expect(page.getByRole('button', { name: /^Play & Crafts: Buy at Market\./ })).toBeVisible();
+    },
+  },
 ];
 
 async function openJourney(page: Page): Promise<void> {

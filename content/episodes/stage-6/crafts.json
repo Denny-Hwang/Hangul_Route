@@ -2,7 +2,7 @@
   "id": "episode:stage6-crafts",
   "stage": "stage6",
   "theme": "crafts",
-  "status": "draft",
+  "status": "ready",
   "titleEn": "Buy at Market",
   "subtitleEn": "Read price cards and shop at a market stall.",
   "hoyaIntroEn": "Let's visit a market stall, read the cards and buy some apples!",
@@ -42,7 +42,7 @@
                       {
                         "ko": "부채",
                         "romanization": "buchae",
-                        "en": "folding fan"
+                        "en": "fan"
                       },
                       {
                         "ko": "한지",
@@ -71,7 +71,7 @@
                     "noteEn": "A market that opens once every five days."
                   }
                 ],
-                "captionEn": "A traditional market has many small shops in one place."
+                "captionEn": "A traditional market has many shops in one place."
               },
               {
                 "items": [
@@ -97,7 +97,7 @@
                     ]
                   }
                 ],
-                "captionEn": "Prices use {ko:이}, {ko:오} and {ko:천}, then {ko:원} for money."
+                "captionEn": "{ko:천} is 1,000, {ko:이} is 2 and {ko:오} is 5: {ko:이천} is 2,000. Add {ko:원} for won."
               }
             ]
           },
@@ -130,8 +130,8 @@
         {
           "id": "s6",
           "kind": "reward",
-          "titleEn": "You Read the Stall!",
-          "hoyaLineEn": "You read a real market stall! A fan, paper and apples.",
+          "titleEn": "You Read the Cards!",
+          "hoyaLineEn": "You read the cards at a market stall! A fan, paper and apples.",
           "durationSeconds": 8
         }
       ],
@@ -148,7 +148,7 @@
                 "text": {
                   "ko": "부채",
                   "romanization": "buchae",
-                  "en": "folding fan"
+                  "en": "fan"
                 },
                 "value": {
                   "ko": "오천 원",
@@ -179,14 +179,14 @@
                   "en": "apple"
                 },
                 "value": {
-                  "ko": "세 개 이천 원",
-                  "romanization": "se gae icheon won",
-                  "en": "3 for 2,000 won"
+                  "ko": "이천 원",
+                  "romanization": "icheon won",
+                  "en": "2,000 won"
                 },
                 "goods": "apples"
               }
             ],
-            "altEn": "Three price cards at a five-day market stall: a folding fan, Korean paper and apples"
+            "altEn": "Three price cards at a five-day market stall: a folding fan, Korean paper and a bundle of apples"
           },
           "rounds": [
             {
@@ -198,7 +198,7 @@
                   "text": {
                     "ko": "부채",
                     "romanization": "buchae",
-                    "en": "folding fan"
+                    "en": "fan"
                   }
                 },
                 {
@@ -223,14 +223,14 @@
             },
             {
               "id": "r2",
-              "questionEn": "Which word on the cards means folding fan?",
+              "questionEn": "Which word on the cards means fan?",
               "options": [
                 {
                   "id": "buchae",
                   "text": {
                     "ko": "부채",
                     "romanization": "buchae",
-                    "en": "folding fan"
+                    "en": "fan"
                   }
                 },
                 {
@@ -336,11 +336,11 @@
             },
             {
               "id": "t2",
-              "promptEn": "Type the word for folding fan.",
+              "promptEn": "Type the word for fan.",
               "target": {
                 "ko": "부채",
                 "romanization": "buchae",
-                "en": "folding fan"
+                "en": "fan"
               }
             },
             {
@@ -363,7 +363,7 @@
               "prompt": {
                 "ko": "부채",
                 "romanization": "buchae",
-                "en": "folding fan"
+                "en": "fan"
               },
               "options": [
                 {
@@ -379,7 +379,7 @@
                   "text": {
                     "ko": "부채",
                     "romanization": "buchae",
-                    "en": "folding fan"
+                    "en": "fan"
                   }
                 },
                 {
@@ -467,7 +467,7 @@
                     ]
                   }
                 ],
-                "captionEn": "Before {ko:개}, count with {ko:한}, {ko:두}, {ko:세}. Prices keep {ko:이}, {ko:오}, {ko:천}."
+                "captionEn": "Before {ko:개}, count with {ko:한}, {ko:두}, {ko:세}. Prices still use {ko:이}, {ko:오}, {ko:천}."
               },
               {
                 "items": [
@@ -553,7 +553,7 @@
                 "text": {
                   "ko": "부채",
                   "romanization": "buchae",
-                  "en": "folding fan"
+                  "en": "fan"
                 },
                 "value": {
                   "ko": "오천 원",
@@ -582,7 +582,7 @@
           "rounds": [
             {
               "id": "r1",
-              "questionEn": "How many apples does the card sell together?",
+              "questionEn": "How many apples does the card sell for one price?",
               "key": {
                 "ko": "사과",
                 "romanization": "sagwa",
@@ -623,7 +623,7 @@
               "key": {
                 "ko": "부채",
                 "romanization": "buchae",
-                "en": "folding fan"
+                "en": "fan"
               },
               "options": [
                 {
@@ -827,9 +827,17 @@
                       "en": "a little extra"
                     },
                     "noteEn": "A little more that a seller adds for free."
+                  },
+                  {
+                    "type": "sentence",
+                    "sentence": {
+                      "ko": "네, 여기 있어요.",
+                      "romanization": "ne yeogi isseoyo",
+                      "en": "Yes, here you are."
+                    }
                   }
                 ],
-                "captionEn": "Now and then a seller at a market stall adds some {ko:덤}."
+                "captionEn": "Pay with {ko:여기 있어요}. Now and then a seller adds some {ko:덤}."
               },
               {
                 "items": [
@@ -949,7 +957,7 @@
                 "text": {
                   "ko": "부채",
                   "romanization": "buchae",
-                  "en": "folding fan"
+                  "en": "fan"
                 },
                 "value": {
                   "ko": "오천 원",
@@ -979,7 +987,7 @@
                   "text": {
                     "ko": "부채",
                     "romanization": "buchae",
-                    "en": "folding fan"
+                    "en": "fan"
                   }
                 },
                 {
@@ -1016,7 +1024,7 @@
                   "text": {
                     "ko": "부채",
                     "romanization": "buchae",
-                    "en": "folding fan"
+                    "en": "fan"
                   }
                 },
                 {
@@ -1062,7 +1070,7 @@
               "key": {
                 "ko": "부채",
                 "romanization": "buchae",
-                "en": "folding fan"
+                "en": "fan"
               },
               "options": [
                 {
@@ -1090,9 +1098,9 @@
             {
               "speakerEn": "Seller",
               "line": {
-                "ko": "사과가 맛있어요.",
-                "romanization": "sagwaga masisseoyo",
-                "en": "The apples are tasty."
+                "ko": "이거 사과예요.",
+                "romanization": "igeo sagwayeyo",
+                "en": "These are apples."
               },
               "replies": [
                 {
@@ -1107,9 +1115,9 @@
                 {
                   "id": "r2",
                   "text": {
-                    "ko": "사과 세 개 주세요.",
-                    "romanization": "sagwa se gae juseyo",
-                    "en": "Three apples, please."
+                    "ko": "이거 얼마예요?",
+                    "romanization": "igeo eolmayeyo",
+                    "en": "How much is this?"
                   },
                   "correct": true
                 },
@@ -1130,6 +1138,43 @@
                 "ko": "이천 원이에요.",
                 "romanization": "icheon wonieyo",
                 "en": "That is 2,000 won."
+              },
+              "replies": [
+                {
+                  "id": "r1",
+                  "text": {
+                    "ko": "사과 세 개 주세요.",
+                    "romanization": "sagwa se gae juseyo",
+                    "en": "Three apples, please."
+                  },
+                  "correct": true
+                },
+                {
+                  "id": "r2",
+                  "text": {
+                    "ko": "한지예요.",
+                    "romanization": "hanjiyeyo",
+                    "en": "It is Korean paper."
+                  },
+                  "correct": false
+                },
+                {
+                  "id": "r3",
+                  "text": {
+                    "ko": "이건 덤이에요.",
+                    "romanization": "igeon deomieyo",
+                    "en": "This one is a little extra."
+                  },
+                  "correct": false
+                }
+              ]
+            },
+            {
+              "speakerEn": "Seller",
+              "line": {
+                "ko": "네, 이천 원이에요.",
+                "romanization": "ne icheon wonieyo",
+                "en": "Okay, that is 2,000 won."
               },
               "replies": [
                 {
@@ -1172,20 +1217,20 @@
                 {
                   "id": "r1",
                   "text": {
-                    "ko": "감사합니다.",
-                    "romanization": "gamsahamnida",
-                    "en": "Thank you."
-                  },
-                  "correct": true
-                },
-                {
-                  "id": "r2",
-                  "text": {
                     "ko": "한지예요.",
                     "romanization": "hanjiyeyo",
                     "en": "It is Korean paper."
                   },
                   "correct": false
+                },
+                {
+                  "id": "r2",
+                  "text": {
+                    "ko": "감사합니다.",
+                    "romanization": "gamsahamnida",
+                    "en": "Thank you."
+                  },
+                  "correct": true
                 },
                 {
                   "id": "r3",
@@ -1274,41 +1319,41 @@
     {
       "id": "n1",
       "kind": "culture",
-      "textEn": "A traditional market gathers many small shops in one place. They sell food, fruit and everyday goods, often at fairly low prices.",
+      "textEn": "A traditional market gathers many shops in one place. They sell food, fruit and everyday goods, often at fairly low prices.",
       "sources": [
         {
-          "title": "소매업 (Retail trade), an entry of the Encyclopedia of Korean Culture",
+          "title": "소매업, an entry of the Encyclopedia of Korean Culture",
           "publisher": "한국민족문화대백과사전 (Encyclopedia of Korean Culture), Academy of Korean Studies",
           "url": "https://encykorea.aks.ac.kr/Article/E0030046",
           "accessed": "2026-10-14",
           "quoteOrLocator": "Entry 소매업, section 내용, on 재래시장: “곡물류, 생선이나 야채 등의 식품과 의류나 잡화 등의 일상생활용품에서 전기·가구 등의 내구재에 이르기까지 다양한 상품구색을 갖추고 비교적 저렴한 가격으로 판매하는 많은 소매점이” … “한 장소에 집단적으로 위치하여 판매활동을 하는 것을 의미한다.”"
         },
         {
-          "title": "시장 (Market), an entry of the Encyclopedia of Korean Culture",
+          "title": "시장, an entry of the Encyclopedia of Korean Culture",
           "publisher": "한국민족문화대백과사전 (Encyclopedia of Korean Culture), Academy of Korean Studies",
           "url": "https://encykorea.aks.ac.kr/Article/E0032448",
           "accessed": "2026-10-14",
-          "quoteOrLocator": "Entry 시장: “재래시장이 전체 유통면에서 차지하는 비중은 오늘날에도 압도적이다.” On the five-day market of Moran in Seongnam: “전통적인 5일장으로 매월 4일과 9일에 개설되고 있다.”"
+          "quoteOrLocator": "Entry 시장, photo caption of the Moran market in Seongnam: “전통적인 5일장으로 매월 4일과 9일에 개설되고 있다.”"
         },
         {
-          "title": "마트만 가던 딸, 엄마 따라 전통시장 장보기 도전 (A daughter who only went to marts tries a traditional market with her mother), a citizen-reporter piece",
+          "title": "마트만 가던 딸, 엄마 따라 전통시장 장보기 도전, a citizen-reporter piece",
           "publisher": "대한민국 정책브리핑 (Korea Policy Briefing), korea.kr, 정책기자단 citizen-reporter piece; the wording is the reporter's",
           "url": "https://www.korea.kr/news/policyNewsView.do?newsId=148783583",
           "accessed": "2026-10-14",
-          "quoteOrLocator": "Report of 2014-09-06: “가격 흥정도 하고 시식도 해가며 인정도 나눌 수 있는 곳” and “직접 농사 지은 채소를 판매하는 상인들의 모습도 발견할 수 있다.”"
+          "quoteOrLocator": "Report of 2014-09-06, a daughter tries a traditional market with her mother: “가격 흥정도 하고 시식도 해가며 인정도 나눌 수 있는 곳” and “직접 농사 지은 채소를 판매하는 상인들의 모습도 발견할 수 있다.”"
         }
       ],
       "verification": {
-        "passes": 2,
+        "passes": 3,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): all three pages fetched (HTTP 200). The AKS entry 소매업 describes 재래시장 as many retail shops in one place selling food, everyday goods and durables at relatively low prices; the AKS entry 시장 says such markets still hold a large share of retail today; the korea.kr citizen-reporter piece (the reporter's own wording, a supporting source only) describes a market where sellers sell vegetables they grew and prices are far below big marts. The note says 'often', names no group as a whole, no shop, brand or real price, and copies no wording. Carried by: q1 Discover page 2 caption and the q1 intro Hoya line (market day). Line 2 (pass 2b, independent fact check, 2026-10-14): a session that did not author the cell fetched all three pages again (HTTP 200) and found every quoteOrLocator string verbatim on its page. The AKS entry 소매업 supports 'many small shops in one place' and 'food and everyday goods at fairly low prices'; 'fruit' is supported by the korea.kr piece (market apples far cheaper than at a big mart) and is a kind of food in the AKS list; 'often' keeps the price claim no stronger than the AKS 'relatively low'. The AKS entry 시장 and the korea.kr piece (dated 2014-09-06, a reporter's own account, supporting only) agree. No real price, shop or person is carried into the note; no wording copied. Outcome: pass, no change."
+        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): all three pages fetched (HTTP 200). The AKS entry 소매업 describes 재래시장 as many retail shops in one place selling food, everyday goods and durables at relatively low prices; the AKS entry 시장 says such markets still hold a large share of retail today; the korea.kr citizen-reporter piece (the reporter's own wording, a supporting source only) describes a market where sellers sell vegetables they grew and prices are far below big marts. The note says 'often', names no group as a whole, no shop, brand or real price, and copies no wording. Carried by: q1 Discover page 2 caption and the q1 intro Hoya line (market day). Line 2 (pass 2b, independent fact check, 2026-10-14): a session that did not author the cell fetched all three pages again (HTTP 200) and found every quoteOrLocator string verbatim on its page. The AKS entry 소매업 supports 'many small shops in one place' and 'food and everyday goods at fairly low prices'; 'fruit' is supported by the korea.kr piece (market apples far cheaper than at a big mart) and is a kind of food in the AKS list; 'often' keeps the price claim no stronger than the AKS 'relatively low'. The AKS entry 시장 and the korea.kr piece (dated 2014-09-06, a reporter's own account, supporting only) agree. No real price, shop or person is carried into the note; no wording copied. Outcome: pass, no change. Line 3 (pass 5, MAR culture review, final independent check, 2026-10-14): all three pages opened again (HTTP 200) and every quoteOrLocator string found word for word. The note now says 'many shops' (the AKS entry 소매업 says 많은 소매점 and nothing about size, so 'small' was dropped from the note and the q1 caption in en, es and ko). The AKS entry 시장 sentence on retail share is old encyclopedia text, not current; it was removed from the locator and is not relied on (the line 1 phrase 'still hold a large share of retail today' is withdrawn). Source titles reshaped to 'headword, an entry of ...' so the romanization prose scan passes. Outcome: pass, note reworded."
       }
     },
     {
       "id": "n2",
       "kind": "culture",
-      "textEn": "A five-day market, {ko:오일장}, opens once every five days, so about six times a month. Some towns still hold one on fixed market days.",
+      "textEn": "A five-day market, {ko:오일장}, opens once every five days, so about six times a month. Some towns hold one on fixed market days.",
       "sources": [
         {
           "title": "오일장, an entry of the Standard Korean Language Dictionary",
@@ -1318,25 +1363,25 @@
           "quoteOrLocator": "Entry 오일장 1 (五日場), 명사: “닷새에 한 번씩 서는 장.”"
         },
         {
-          "title": "정기시장 (Periodic market), an entry of the Encyclopedia of Korean Culture",
+          "title": "정기시장, an entry of the Encyclopedia of Korean Culture",
           "publisher": "한국민족문화대백과사전 (Encyclopedia of Korean Culture), Academy of Korean Studies",
           "url": "https://encykorea.aks.ac.kr/Article/E0066723",
           "accessed": "2026-10-14",
           "quoteOrLocator": "Entry 정기시장, section 연원 및 변천: “장시가 월 6회, 매 5일마다 열리는 5일형이 가장 많았기 때문에 장시를 5일장으로 부르게 되었으며 오늘날에는 옛 것을 살리자는 의미에서 이것을 민속장으로도 부르게 되었다.” Section 현황: 522 periodic markets in operation as of 2006."
         },
         {
-          "title": "시장 (Market), an entry of the Encyclopedia of Korean Culture",
+          "title": "시장, an entry of the Encyclopedia of Korean Culture",
           "publisher": "한국민족문화대백과사전 (Encyclopedia of Korean Culture), Academy of Korean Studies",
           "url": "https://encykorea.aks.ac.kr/Article/E0032448",
           "accessed": "2026-10-14",
-          "quoteOrLocator": "Entry 시장: “재래시장이 전체 유통면에서 차지하는 비중은 오늘날에도 압도적이다.” On the five-day market of Moran in Seongnam: “전통적인 5일장으로 매월 4일과 9일에 개설되고 있다.”"
+          "quoteOrLocator": "Entry 시장, photo caption of the Moran market in Seongnam: “전통적인 5일장으로 매월 4일과 9일에 개설되고 있다.”"
         }
       ],
       "verification": {
-        "passes": 2,
+        "passes": 3,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): all three pages fetched (HTTP 200). The Standard Korean Language Dictionary defines 오일장 as a market held once every five days; the AKS entry 정기시장 says the five-day type opened six times a month and gave the name 5일장, and counts 522 periodic markets operating in 2006; the AKS entry 시장 names a five-day market still held on the 4th and 9th of each month. 'Some towns still hold one' is the careful reading of both AKS entries (no count is claimed). No group-wide claim; no wording copied. Carried by: q1 Discover page 2 (the 오일장 word note), the price-card title of every realia, and q1 Apply t3. Line 2 (pass 2b, independent fact check, 2026-10-14): a session that did not author the cell fetched all three pages again (HTTP 200) and found every quoteOrLocator string verbatim. The Standard Korean Language Dictionary entry 오일장 supports 'opens once every five days'; the AKS entry 정기시장 supports 'about six times a month' (월 6회) and, with 522 periodic markets operating in 2006, 'some towns still hold one'; the AKS entry 시장 shows one such market on the 4th and 9th of each month, supporting 'fixed market days'. No count or place is claimed in the note. The ko word note for 오일장 (q1 Discover page 2) was reworded so it no longer follows the dictionary definition's wording. Outcome: pass, ko overlay reworded."
+        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): all three pages fetched (HTTP 200). The Standard Korean Language Dictionary defines 오일장 as a market held once every five days; the AKS entry 정기시장 says the five-day type opened six times a month and gave the name 5일장, and counts 522 periodic markets operating in 2006; the AKS entry 시장 names a five-day market still held on the 4th and 9th of each month. 'Some towns still hold one' is the careful reading of both AKS entries (no count is claimed). No group-wide claim; no wording copied. Carried by: q1 Discover page 2 (the 오일장 word note), the price-card title of every realia, and q1 Apply t3. Line 2 (pass 2b, independent fact check, 2026-10-14): a session that did not author the cell fetched all three pages again (HTTP 200) and found every quoteOrLocator string verbatim. The Standard Korean Language Dictionary entry 오일장 supports 'opens once every five days'; the AKS entry 정기시장 supports 'about six times a month' (월 6회) and, with 522 periodic markets operating in 2006, 'some towns still hold one'; the AKS entry 시장 shows one such market on the 4th and 9th of each month, supporting 'fixed market days'. No count or place is claimed in the note. The ko word note for 오일장 (q1 Discover page 2) was reworded so it no longer follows the dictionary definition's wording. Outcome: pass, ko overlay reworded. Line 3 (pass 5, MAR culture review, final independent check, 2026-10-14): all three pages opened again (HTTP 200) and every quoteOrLocator string found word for word. The 522-market count is as of 2006 and the Moran line is an undated photo caption, so 'still' was dropped: the note now says 'Some towns hold one on fixed market days', which both AKS entries support without a present-day claim. The Moran locator is labelled as a photo caption; the AKS 시장 retail-share sentence was removed (historical, not relied on). ko gloss and note now read 닷새마다 (not the dictionary's wording). Outcome: pass, note reworded."
       }
     },
     {
@@ -1352,7 +1397,7 @@
           "quoteOrLocator": "Entry 덤, 명사 「1」: “제 값어치 외에 거저로 조금 더 얹어 주는 일. 또는 그런 물건.”"
         },
         {
-          "title": "전통시장 매대마다 원산지 표시 ‘눈에 띄네’ (Origin labels on every stall of a traditional market), a citizen-reporter piece",
+          "title": "전통시장 매대마다 원산지 표시 ‘눈에 띄네’, a citizen-reporter piece",
           "publisher": "대한민국 정책브리핑 (Korea Policy Briefing), korea.kr, 정책기자단 citizen-reporter piece; the wording is the reporter's",
           "url": "https://www.korea.kr/news/reporterView.do?newsId=148807652",
           "accessed": "2026-10-14",
@@ -1360,10 +1405,10 @@
         }
       ],
       "verification": {
-        "passes": 2,
+        "passes": 3,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): both pages fetched (HTTP 200). The Standard Korean Language Dictionary defines 덤 as a little extra given for free beyond the price paid, or the thing given; the korea.kr citizen-reporter piece (the reporter's own wording, a supporting source only) describes a seller at a traditional market packing a tub full and calls it the market's 덤 custom. The note says 'may now and then', so it promises no extra and claims nothing of every seller; no wording copied. Carried by: q3 Discover pages 1-3 (word note, realia caption, thank-you caption), the q3 realia card and the q3 Tap to Respond turn 4. Line 2 (pass 2b, independent fact check, 2026-10-14): a session that did not author the cell fetched both pages again (HTTP 200) and found both quoteOrLocator strings verbatim (the korea.kr piece dated 2016-01-04, Ganghwa Pungmul market, a reporter's own account, supporting only). The dictionary supports the definition sentence; the korea.kr piece supports that a market seller may give some, and 'may now and then' claims no more than that one account. The ko word note for 덤 (q3 Discover page 1) was reworded so it no longer follows the dictionary definition's wording (얹어 주는, now 넣어 주는). Outcome: pass, ko overlay reworded."
+        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): both pages fetched (HTTP 200). The Standard Korean Language Dictionary defines 덤 as a little extra given for free beyond the price paid, or the thing given; the korea.kr citizen-reporter piece (the reporter's own wording, a supporting source only) describes a seller at a traditional market packing a tub full and calls it the market's 덤 custom. The note says 'may now and then', so it promises no extra and claims nothing of every seller; no wording copied. Carried by: q3 Discover pages 1-3 (word note, realia caption, thank-you caption), the q3 realia card and the q3 Tap to Respond turn 4. Line 2 (pass 2b, independent fact check, 2026-10-14): a session that did not author the cell fetched both pages again (HTTP 200) and found both quoteOrLocator strings verbatim (the korea.kr piece dated 2016-01-04, Ganghwa Pungmul market, a reporter's own account, supporting only). The dictionary supports the definition sentence; the korea.kr piece supports that a market seller may give some, and 'may now and then' claims no more than that one account. The ko word note for 덤 (q3 Discover page 1) was reworded so it no longer follows the dictionary definition's wording (얹어 주는, now 넣어 주는). Outcome: pass, ko overlay reworded. Line 3 (pass 5, MAR culture review, final independent check, 2026-10-14): both pages opened again (HTTP 200) and both quoteOrLocator strings found word for word. The definition rests on the Standard Korean Language Dictionary; the market-stall framing rests on one supporting citizen-reporter account (korea.kr, 2016-01-04) and no institutional page tying 덤 to market trading was added in this pass, so the note keeps its soft 'may now and then' wording and claims no custom of every seller. The remaining ko strings that followed the dictionary's 얹어 주는 were reworded (captions, glosses, titles). Outcome: pass, ko overlay reworded."
       }
     },
     {
@@ -1372,7 +1417,7 @@
       "textEn": "Before a counter such as {ko:개}, counting uses {ko:한}, {ko:두}, {ko:세}, short forms of {ko:하나}, {ko:둘}, {ko:셋}. These counting words stop below a hundred, so prices in thousands use {ko:이}, {ko:오}, {ko:천}.",
       "sources": [
         {
-          "title": "수사 (Numerals), an entry of the Encyclopedia of Korean Culture",
+          "title": "수사, an entry of the Encyclopedia of Korean Culture",
           "publisher": "한국민족문화대백과사전 (Encyclopedia of Korean Culture), Academy of Korean Studies",
           "url": "https://encykorea.aks.ac.kr/Article/E0031418",
           "accessed": "2026-10-14",
@@ -1387,17 +1432,22 @@
         }
       ],
       "verification": {
-        "passes": 2,
+        "passes": 3,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): both pages fetched (HTTP 200). The AKS entry 수사 says some numerals change form to 한, 두, 세, 네 when used before a noun, and that the native numerals are not used for a hundred or more (so a price in thousands is said with Sino-Korean 이천, 오천); the Standard Korean Language Dictionary lists 세 as the determiner meaning the amount is three. No wording copied. Carried by: q1 Discover page 3 caption, q2 Discover page 1 caption; the count round (q2 r1) asks only native counts and every price round asks only Sino-Korean prices or figures, never both in one round (spec section 3.6). Line 2 (pass 2b, independent fact check, 2026-10-14): a session that did not author the cell fetched both pages again (HTTP 200) and found both quoteOrLocator strings verbatim. The AKS entry 수사 supports that 한, 두, 세 are changed forms of the numerals used before a noun, and that native numerals are not used for a hundred or more; the same entry describes the Sino-Korean series (e.g. 이백오십), so prices in thousands with 이, 오, 천 follows. The dictionary entry 세 supports 세 as the determiner for three. No wording copied. Outcome: pass, no change."
+        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): both pages fetched (HTTP 200). The AKS entry 수사 says some numerals change form to 한, 두, 세, 네 when used before a noun, and that the native numerals are not used for a hundred or more (so a price in thousands is said with Sino-Korean 이천, 오천); the Standard Korean Language Dictionary lists 세 as the determiner meaning the amount is three. No wording copied. Carried by: q1 Discover page 3 caption, q2 Discover page 1 caption; the count round (q2 r1) asks only native counts and every price round asks only Sino-Korean prices or figures, never both in one round (spec section 3.6). Line 2 (pass 2b, independent fact check, 2026-10-14): a session that did not author the cell fetched both pages again (HTTP 200) and found both quoteOrLocator strings verbatim. The AKS entry 수사 supports that 한, 두, 세 are changed forms of the numerals used before a noun, and that native numerals are not used for a hundred or more; the same entry describes the Sino-Korean series (e.g. 이백오십), so prices in thousands with 이, 오, 천 follows. The dictionary entry 세 supports 세 as the determiner for three. No wording copied. Outcome: pass, no change. Line 3 (pass 5, MAR culture review, final independent check, 2026-10-14): both pages opened again (HTTP 200) and both quoteOrLocator strings found word for word. The note matches the AKS entry 수사 (한, 두, 세 as changed forms before a noun; native numerals not used for a hundred or more) and the dictionary entry 세. The q1 card no longer shows the native count 세 개 before q2 teaches it, and the q1 caption now gives the values of 이, 오 and 천. Outcome: pass, no change to the note."
       }
     }
   ],
   "review": {
-    "language": "draft",
-    "culture": "draft",
-    "notes": []
+    "language": "native-reviewed",
+    "culture": "culture-reviewed",
+    "reviewedBy": "MAR",
+    "reviewedAt": "2026-10-14",
+    "notes": [
+      "Language pass 4 (MAR): spelling, spacing, register and romanization clean; applied 네, 여기 있어요 taught on the q3 Discover, the values of 이, 오 and 천 in the q1 caption, the q1 card priced without the native count, a four-turn q3 transaction from taught lines (no 맛있어요), 부채 glossed as fan, 닷새마다 and plainer ko glosses and questions.",
+      "Culture pass 5 (MAR): every claim re-checked against its sources (verification line 3); 'small' and 'still' dropped, the outdated AKS retail-share quote removed, the 덤 note kept soft on one supporting account, no 'real' stall claim; no real person, shop, brand or product price; no age wording."
+    ]
   },
   "contentVer": 1
 }

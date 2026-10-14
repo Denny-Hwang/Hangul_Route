@@ -63,12 +63,12 @@ describe('stageAvailability', () => {
     expect(stageAvailability('stage5', [lesson, volume2, ep('other', 'stage5', 'preview', ['q1'], 'life')])).toBe('taste');
     expect(stageAvailability('stage5', [volume2, { ...volume2, id: 'volume-3', volume: 3 }])).toBe('soon');
   });
-  it('matches the real bundle: stage1 open, stage2 open, stage3 taste, stage4 open, stage6 taste, stage7 soon (Stage 2 and Stage 4 open since Holiday Words S2-2 and Playdate Talk S4-4 shipped their last placeholders, Stage 3 a taste, Stage 6 a taste since Read the Menu S6-1, F-CURR-001)', () => {
+  it('matches the real bundle: stage1 open, stage2 open, stage3 taste, stage4 open, stage6 open, stage7 soon (Stage 2, Stage 4 and Stage 6 open since Holiday Words S2-2, Playdate Talk S4-4 and Buy at Market S6-5 shipped their last placeholders, Stage 3 a taste, F-CURR-001)', () => {
     expect(stageAvailability('stage1', episodesAll)).toBe('open');
     expect(stageAvailability('stage2', episodesAll)).toBe('open');
     expect(stageAvailability('stage3', episodesAll)).toBe('taste');
     expect(stageAvailability('stage4', episodesAll)).toBe('open');
-    expect(stageAvailability('stage6', episodesAll)).toBe('taste');
+    expect(stageAvailability('stage6', episodesAll)).toBe('open');
     expect(stageAvailability('stage7', episodesAll)).toBe('soon');
   });
   it('labels are short and come from the message subtree it is given (F-I18N-001 PR 6b)', () => {

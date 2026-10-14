@@ -33,8 +33,9 @@ import type { Catalog, CatalogCell, CatalogQuest, CatalogStory, CatalogTopic } f
  * Version 22 (F-CURR-001 S6-2): Order Food ships (Stage 6 life, 3 lesson quests).
  * Version 23 (F-CURR-001 S6-3): Travel for Chuseok ships (Stage 6 rites, 3 lesson quests).
  * Version 24 (F-CURR-001 S6-4): Hike & Ask ships (Stage 6 nature, 3 lesson quests).
+ * Version 25 (F-CURR-001 S6-5): Buy at Market ships (Stage 6 crafts, 3 lesson quests); Stage 6 opens.
  */
-export const CATALOG_VERSION = 24;
+export const CATALOG_VERSION = 25;
 
 const cell = (
   stage: StageKey,
@@ -103,7 +104,7 @@ const cells: CatalogCell[] = [
   cell('stage6', 'life', 'Order Food', 'shipped', 15, ['quest:stage6-life-q1', 'quest:stage6-life-q2', 'quest:stage6-life-q3']),
   cell('stage6', 'rites', 'Travel for Chuseok', 'shipped', 15, ['quest:stage6-rites-q1', 'quest:stage6-rites-q2', 'quest:stage6-rites-q3']),
   cell('stage6', 'nature', 'Hike & Ask', 'shipped', 15, ['quest:stage6-nature-q1', 'quest:stage6-nature-q2', 'quest:stage6-nature-q3']),
-  soon('stage6', 'crafts', 'Buy at Market'),
+  cell('stage6', 'crafts', 'Buy at Market', 'shipped', 15, ['quest:stage6-crafts-q1', 'quest:stage6-crafts-q2', 'quest:stage6-crafts-q3']),
   soon('stage7', 'letters', 'Write Your Name'),
   soon('stage7', 'life', 'My Day in Korean'),
   soon('stage7', 'rites', 'My Holiday Memory'),
@@ -188,6 +189,9 @@ const lessonQuests: CatalogQuest[] = [
   lesson('stage6-nature-q1', 'stage6', 'nature', 'Trail Signs', 5),
   lesson('stage6-nature-q2', 'stage6', 'nature', 'Which Way?', 5),
   lesson('stage6-nature-q3', 'stage6', 'nature', 'How Long?', 5),
+  lesson('stage6-crafts-q1', 'stage6', 'crafts', 'At the Stall', 5),
+  lesson('stage6-crafts-q2', 'stage6', 'crafts', 'How Many, How Much?', 5),
+  lesson('stage6-crafts-q3', 'stage6', 'crafts', 'A Little Extra', 5),
   // The Stage 5 books (F-STORY-005 PR 5.6): grid quests that play their stories at the read level.
   lesson('story-sejong-new-letters-read', 'stage5', 'letters', "King Sejong's New Letters", 4),
   lesson('story-shapes-of-hangeul-read', 'stage5', 'letters', 'The Secret in the Shapes', 5),
