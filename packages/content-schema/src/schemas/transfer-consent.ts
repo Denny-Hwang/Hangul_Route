@@ -31,6 +31,7 @@ export const TRANSFER_CONSENT_LINE_IDS = [
   'device_relink',
   'homework_drops',
   'cannot_undo',
+  'teacher_moves',
   'introduce',
 ] as const;
 export type TransferConsentLineId = (typeof TRANSFER_CONSENT_LINE_IDS)[number];
@@ -69,6 +70,8 @@ export const TRANSFER_CONSENT_LINES: readonly TransferConsentLine[] = [
   { id: 'device_relink', when: 'relink_affected', kind: 'statement' },
   { id: 'homework_drops', when: 'source_plans_affected', kind: 'statement' },
   { id: 'cannot_undo', when: 'always', kind: 'statement' },
+  /** [TV] TV-D6: a teacher may move the learner later, at the teacher's discretion (owner decision 2026-10-14). */
+  { id: 'teacher_moves', when: 'always', kind: 'statement' },
   { id: 'introduce', when: 'always', kind: 'option' },
 ];
 
@@ -107,6 +110,11 @@ export const TEACHER_VISIBLE_ITEM_IDS = [
   'plan_progress',
   'sync_time',
   'note_replies',
+  // [TV] the full scope (AMENDMENTS-TEACHER-VISIBILITY-TRANSFER section 3): TEACHER_FULL_SCOPE_ITEMS and the report's settings
+  'words',
+  'letter_check',
+  'own_route',
+  'learner_settings',
 ] as const;
 export type TeacherVisibleItemId = (typeof TEACHER_VISIBLE_ITEM_IDS)[number];
 
@@ -245,6 +253,7 @@ export const TRANSFER_CONSENT_TEXT: Readonly<Record<TransferConsentLocale, Trans
       device_relink: 'A tablet that joined through {source} may need to join {destination} again.',
       homework_drops: 'Homework from {source} that is not finished will go away. Finished homework stays.',
       cannot_undo: "A move can't be undone. {learner} can still leave a class in Profile at any time.",
+      teacher_moves: 'A teacher may move {learner} to another class later. We tell you when it happens.',
       introduce: 'Tell {destination} where {learner} is coming from.',
     },
     items: {
@@ -256,6 +265,10 @@ export const TRANSFER_CONSENT_TEXT: Readonly<Record<TransferConsentLocale, Trans
       plan_progress: 'Progress on homework from {destination}',
       sync_time: 'When {learner} joined the class and when progress was last saved',
       note_replies: 'The answer {learner} picks on a note from the teacher',
+      words: 'Words collected, words known well, first-try answers and words to look at again',
+      letter_check: 'The Hangul Check result and letters that were tricky',
+      own_route: 'Lessons {learner} picked and the Learning Route goal',
+      learner_settings: 'Whether {learner} gets notes from the class',
     },
   },
   ko: TRANSFER_CONSENT_TEXT_KO,
@@ -276,6 +289,7 @@ export const TRANSFER_CONSENT_TEXT: Readonly<Record<TransferConsentLocale, Trans
       device_relink: 'Una tableta que se unió por {source} quizá tenga que unirse de nuevo a {destination}.',
       homework_drops: 'Las tareas de {source} sin terminar desaparecerán. Las tareas terminadas se quedan.',
       cannot_undo: 'Un cambio no se puede deshacer. {learner} puede salir de una clase en Perfil cuando quiera.',
+      teacher_moves: 'Un docente puede pasar a {learner} a otra clase más adelante. Te avisamos cuando pase.',
       introduce: 'Decirle a {destination} de dónde viene {learner}.',
     },
     items: {
@@ -287,6 +301,10 @@ export const TRANSFER_CONSENT_TEXT: Readonly<Record<TransferConsentLocale, Trans
       plan_progress: 'El progreso en las tareas de {destination}',
       sync_time: 'Cuándo se unió {learner} a la clase y cuándo se guardó el progreso por última vez',
       note_replies: 'La respuesta que elige {learner} en una nota del docente',
+      words: 'Palabras reunidas, palabras que conoce bien, aciertos al primer intento y palabras para repasar',
+      letter_check: 'El resultado del Repaso de hangul y las letras que costaron',
+      own_route: 'Las lecciones que eligió {learner} y la meta de la Ruta de aprendizaje',
+      learner_settings: 'Si {learner} recibe notas de la clase',
     },
   },
 };
