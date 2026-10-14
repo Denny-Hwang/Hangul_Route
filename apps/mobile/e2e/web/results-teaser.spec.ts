@@ -94,14 +94,14 @@ async function home(page: Page): Promise<void> {
 }
 
 /**
- * A quest whose games can all be skipped: the Stage 2 taste quest Lunch Box Words. Since
- * F-QUEST-002 Q-8 every Stage 1 quest ends on a Check, which has no Skip. The soft-prerequisite
- * sheet is Stage 1 only (`previousStage1Quest`), so it never opens here and Start goes straight in.
+ * A quest whose games could all be skipped was the Stage 2 taste Lunch Box Words, then the Stage 4 taste
+ * Greeting Dialogues; since F-CURR-001 T-1 and T-2 both end on a Check, which has no Skip (see the
+ * skipped case below). The soft-prerequisite sheet is Stage 1 only (`previousStage1Quest`).
  */
 async function startSkippableQuest(page: Page): Promise<void> {
   await home(page);
   await page.getByText('Journey', { exact: true }).last().click();
-  await page.getByRole('button', { name: journeyCellName(2, 'Food & Daily Life') }).click();
+  await page.getByRole('button', { name: journeyCellName(4, 'Holidays & Traditions') }).click();
   await page.getByRole('button', { name: 'Start', exact: true }).first().click();
   await page.getByRole('button', { name: 'Continue' }).click();
 }
@@ -144,7 +144,11 @@ test('a played quest teases the real next quest, and the CTA goes there', async 
   expect(errors).toEqual([]);
 });
 
-test('every game skipped: the same quest is offered again, and nothing is locked', async ({ page }) => {
+// Since F-CURR-001 T-1 and T-2 every lesson quest in the bundle ends on a scored Check, which has no Skip, so
+// no shipped quest can end with every game skipped; the "Try this one again" teaser for a run with nothing
+// scored is checked by src/logic/__tests__/results-teaser.test.ts (`again`, `teaserCtaLabel`). The steps below
+// stay for a quest without a Check, if one ships again.
+test.skip('every game skipped: the same quest is offered again, and nothing is locked', async ({ page }) => {
   const errors: string[] = [];
   page.on('pageerror', (e) => errors.push(String(e)));
   await captureSpeech(page);
@@ -154,7 +158,7 @@ test('every game skipped: the same quest is offered again, and nothing is locked
 
   await expect(page.getByText('All done!')).toBeVisible();
   await expect(page.getByText('Next up')).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Lunch Box Words' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Greeting Dialogues' })).toBeVisible();
   await page.getByRole('button', { name: 'Try this one again' }).click();
   await expect(page.getByRole('button', { name: 'Leave quest' })).toBeVisible();
   expect(errors).toEqual([]);

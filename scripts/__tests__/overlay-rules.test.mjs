@@ -208,6 +208,33 @@ describe("overlay-rules: korean-in-ui-field", () => {
     assert.deepEqual(rules(base(es({ "card:gangaji": { romanization: "강" } }))), ["korean-in-ui-field", "overlay-forbidden-field"]);
   });
 
+  test("a lesson Discover note may carry {ko:} tokens in Spanish, and no Hangul outside them (F-CURR-001 §3.4)", () => {
+    const note = "steps.s2.discover.pages.0.items.0.note";
+    assert.deepEqual(rules(base(es({ "quest:stage3-nature-q1": { [note]: "Usa {ko:이} tras consonante y {ko:가} tras vocal." } }))), []);
+    assert.deepEqual(rules(base(es({ "quest:stage3-nature-q1": { [note]: "Usa 이 tras consonante." } }))), ["korean-in-ui-field"]);
+    assert.deepEqual(rules(base(es({ "quest:stage3-nature-q1": { title: "{ko:새} y más" } }))), ["korean-in-ui-field"]);
+    // Only a lesson quest's note: the same field on another id is still UI text.
+    assert.ok(rules(base(es({ "story:demo": { [note]: "Usa {ko:이}." } }))).includes("korean-in-ui-field"));
+  });
+
+  test("a lesson note keeps exactly the {ko:} tokens of its noteEn (overlay-token-mismatch)", () => {
+    const note = "steps.s2.discover.pages.0.items.0.note";
+    const lessonCell = {
+      id: "episode:stage3-nature",
+      quests: [
+        {
+          id: "quest:stage3-nature-q1",
+          titleEn: "Where Is the Bird?",
+          steps: [{ id: "s2", kind: "discover", discover: { pages: [{ items: [{ type: "pattern", noteEn: "Use {ko:이} after a consonant, {ko:가} after a vowel." }] }] } }],
+        },
+      ],
+    };
+    const tree = (value) => base({ "content/episodes/stage-3/nature.json": lessonCell, ...es({ "quest:stage3-nature-q1": { [note]: value } }) });
+    assert.deepEqual(rules(tree("{ko:가} tras vocal, {ko:이} tras consonante.")), []);
+    assert.deepEqual(rules(tree("Usa {ko:이} tras consonante.")), ["overlay-token-mismatch"]);
+    assert.deepEqual(rules(tree("Usa {ko:을} y {ko:가}.")), ["overlay-token-mismatch"]);
+  });
+
   test("Korean overlays carry Hangul in translatable fields only", () => {
     assert.deepEqual(rules(base(ko({ "vocab:sagwa": { gloss: "빨갛고 동그란 과일" }, "vocab:bap": { senseNote: "끼니를 뜻하기도 해요." } }))), []);
     assert.deepEqual(rules(base(ko({ "card:gangaji": { ko: "개" } }))), ["korean-in-ui-field", "overlay-forbidden-field"]);

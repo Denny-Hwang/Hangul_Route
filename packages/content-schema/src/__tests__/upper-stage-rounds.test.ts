@@ -44,7 +44,7 @@ describe('Discover item types: sentence, pattern, exchange, realia', () => {
     expect(ok(DiscoverItemSchema, { type: 'sentence', sentence: kt('책', '', 'book') })).toBe(false);
   });
 
-  it('parses a pattern: one slot marker, a note and exactly two examples', () => {
+  it('parses a pattern: one or two slot markers, a note and exactly two examples', () => {
     const pattern = {
       type: 'pattern',
       frame: kt('___이 있어요', '___i isseoyo', 'there is ___'),
@@ -53,7 +53,9 @@ describe('Discover item types: sentence, pattern, exchange, realia', () => {
     };
     expect(ok(DiscoverItemSchema, pattern)).toBe(true);
     expect(ok(DiscoverItemSchema, { ...pattern, frame: kt('책이 있어요', 'chaegi isseoyo', 'there is a book') })).toBe(false);
-    expect(ok(DiscoverItemSchema, { ...pattern, frame: kt('___하고 ___', '___hago ___', '___ and ___') })).toBe(false);
+    expect(ok(DiscoverItemSchema, { ...pattern, frame: kt('___하고 ___', '___hago ___', '___ and ___') })).toBe(true);
+    expect(ok(DiscoverItemSchema, { ...pattern, frame: kt('___에 ___을/를 먹었어요.', '___e ___eul/reul meogeosseoyo', 'On ___, I ate ___.') })).toBe(true);
+    expect(ok(DiscoverItemSchema, { ...pattern, frame: kt('___에 ___하고 ___', '___e ___hago ___', 'on ___, ___ and ___') })).toBe(false);
     expect(ok(DiscoverItemSchema, { ...pattern, examples: [pattern.examples[0]] })).toBe(false);
     expect(ok(DiscoverItemSchema, { ...pattern, noteEn: '' })).toBe(false);
   });

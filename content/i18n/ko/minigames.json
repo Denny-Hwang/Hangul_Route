@@ -130,34 +130,6 @@
     "minigame:s1-crafts-q3-check": {
       "listenPick.rounds.0.prompt": "한국의 글자",
       "listenPick.rounds.1.prompt": "친구를 만나거나 헤어질 때 하는 인사"
-    },
-    "minigame:s2-life-card-1": {
-      "cardPairs.sagwa.gloss": "빨갛고 둥근 과일",
-      "cardPairs.uyu.gloss": "소에게서 얻는 하얀 마실 것",
-      "cardPairs.ppang.gloss": "밀가루로 구운 음식",
-      "cardPairs.gimbap.gloss": "김에 밥과 재료를 넣고 말아 만든 음식",
-      "cardPairs.bap.gloss": "쌀로 지어 먹는 음식"
-    },
-    "minigame:s2-life-quiz-1": {
-      "cardPairs.sagwa.gloss": "빨갛고 둥근 과일",
-      "cardPairs.uyu.gloss": "소에게서 얻는 하얀 마실 것",
-      "cardPairs.ppang.gloss": "밀가루로 구운 음식",
-      "cardPairs.gimchi.gloss": "배추를 맵게 절인 한국 음식",
-      "cardPairs.mul.gloss": "마시거나 씻을 때 쓰는 맑은 액체"
-    },
-    "minigame:s2-nature-card-1": {
-      "cardPairs.haneul.gloss": "머리 위로 보이는 높고 넓은 곳",
-      "cardPairs.kkot.gloss": "예쁜 색으로 피는 식물의 부분",
-      "cardPairs.namu.gloss": "줄기와 가지, 잎이 있는 키 큰 식물",
-      "cardPairs.san.gloss": "땅이 높이 솟은 곳",
-      "cardPairs.bada.gloss": "넓고 짠 물"
-    },
-    "minigame:s2-nature-quiz-1": {
-      "cardPairs.haneul.gloss": "머리 위로 보이는 높고 넓은 곳",
-      "cardPairs.byeol.gloss": "밤하늘에 반짝이는 작은 빛",
-      "cardPairs.gang.gloss": "길게 흐르는 큰 물줄기",
-      "cardPairs.bom.gloss": "꽃이 피는 따뜻한 계절",
-      "cardPairs.nun.gloss": "겨울에 하늘에서 내리는 하얀 것"
     }
   }
 }

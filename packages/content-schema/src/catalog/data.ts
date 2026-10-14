@@ -29,8 +29,20 @@ import type { Catalog, CatalogCell, CatalogQuest, CatalogStory, CatalogTopic } f
  * Version 18 (F-CURR-001 S4-2): Kitchen Talk ships (Stage 4 life, 3 lesson quests).
  * Version 19 (F-CURR-001 S4-3): Park Conversations ships (Stage 4 nature, 3 lesson quests).
  * Version 20 (F-CURR-001 S4-4): Playdate Talk ships (Stage 4 crafts, 3 lesson quests).
+ * Version 21 (F-CURR-001 S6-1): the Stage 6 Read the Menu cell ships (three lesson quests).
+ * Version 22 (F-CURR-001 S6-2): Order Food ships (Stage 6 life, 3 lesson quests).
+ * Version 23 (F-CURR-001 S6-3): Travel for Chuseok ships (Stage 6 rites, 3 lesson quests).
+ * Version 24 (F-CURR-001 S6-4): Hike & Ask ships (Stage 6 nature, 3 lesson quests).
+ * Version 25 (F-CURR-001 S6-5): Buy at Market ships (Stage 6 crafts, 3 lesson quests); Stage 6 opens.
+ * Version 26 (F-CURR-001 S3-4): Animal Sentences ships (Stage 3 nature, 3 lesson quests); Stage 3 opens.
+ * Version 27 (F-CURR-001 T-1): Lunch Box Words and Outdoor Words adopt Discover and Check and grow to three quests each.
+ * Version 28 (F-CURR-001 S7-1): Write Your Name ships (Stage 7 letters, 3 lesson quests); Stage 7 is a taste.
+ * Version 29 (F-CURR-001 S7-2): My Day in Korean ships (Stage 7 life, 3 lesson quests).
+ * Version 30 (F-CURR-001 S7-3): My Holiday Memory ships (Stage 7 rites, 3 lesson quests).
+ * Version 31 (F-CURR-001 S7-4): My Favorite Animal ships (Stage 7 nature, 3 lesson quests).
+ * Version 32 (F-CURR-001 S7-5): Make & Share ships (Stage 7 crafts, 3 lesson quests); Stage 7 opens and every grid cell has shipped.
  */
-export const CATALOG_VERSION = 20;
+export const CATALOG_VERSION = 32;
 
 const cell = (
   stage: StageKey,
@@ -60,14 +72,14 @@ const cells: CatalogCell[] = [
   cell('stage1', 'nature', 'Tigers, Mountains, Moon', 'shipped', 12, ['quest:stage1-nature-q1', 'quest:stage1-nature-q2', 'quest:stage1-nature-q3']),
   cell('stage1', 'crafts', 'Yut, Kites & Paper', 'shipped', 12, ['quest:stage1-crafts-q1', 'quest:stage1-crafts-q2', 'quest:stage1-crafts-q3']),
   cell('stage2', 'letters', 'Word Builder', 'shipped', 25, ['quest:stage2-letters-q1', 'quest:stage2-letters-q2', 'quest:stage2-letters-q3', 'quest:stage2-letters-q4', 'quest:stage2-letters-q5', 'quest:stage2-letters-q6']),
-  cell('stage2', 'life', 'Lunch Box Words', 'shipped', 6, ['quest:stage2-life-q1']),
+  cell('stage2', 'life', 'Lunch Box Words', 'shipped', 13, ['quest:stage2-life-q1', 'quest:stage2-life-q2', 'quest:stage2-life-q3']),
   cell('stage2', 'rites', 'Holiday Words', 'shipped', 13, ['quest:stage2-rites-q1', 'quest:stage2-rites-q2', 'quest:stage2-rites-q3']),
-  cell('stage2', 'nature', 'Outdoor Words', 'shipped', 6, ['quest:stage2-nature-q1']),
+  cell('stage2', 'nature', 'Outdoor Words', 'shipped', 13, ['quest:stage2-nature-q1', 'quest:stage2-nature-q2', 'quest:stage2-nature-q3']),
   cell('stage2', 'crafts', 'Playground Words', 'shipped', 12, ['quest:stage2-crafts-q1', 'quest:stage2-crafts-q2', 'quest:stage2-crafts-q3']),
   cell('stage3', 'letters', 'First Sentences', 'shipped', 14, ['quest:stage3-letters-q1', 'quest:stage3-letters-q2', 'quest:stage3-letters-q3']),
   cell('stage3', 'life', 'Daily Mini-Sentences', 'shipped', 14, ['quest:stage3-life-q1', 'quest:stage3-life-q2', 'quest:stage3-life-q3']),
   cell('stage3', 'rites', 'Festival Sentences', 'shipped', 14, ['quest:stage3-rites-q1', 'quest:stage3-rites-q2', 'quest:stage3-rites-q3']),
-  soon('stage3', 'nature', 'Animal Sentences'),
+  cell('stage3', 'nature', 'Animal Sentences', 'shipped', 14, ['quest:stage3-nature-q1', 'quest:stage3-nature-q2', 'quest:stage3-nature-q3']),
   cell('stage3', 'crafts', 'Game Sentences', 'shipped', 14, ['quest:stage3-crafts-q1', 'quest:stage3-crafts-q2', 'quest:stage3-crafts-q3']),
   cell('stage4', 'letters', 'Read Along', 'shipped', 13, ['quest:stage4-letters-q1', 'quest:stage4-letters-q2', 'quest:stage4-letters-q3']),
   cell('stage4', 'life', 'Kitchen Talk', 'shipped', 13, ['quest:stage4-life-q1', 'quest:stage4-life-q2', 'quest:stage4-life-q3']),
@@ -95,16 +107,16 @@ const cells: CatalogCell[] = [
     'quest:story-jagyeongnu-water-clock-read',
     'quest:story-pansori-tales-read',
   ]),
-  soon('stage6', 'letters', 'Read the Menu'),
-  soon('stage6', 'life', 'Order Food'),
-  soon('stage6', 'rites', 'Travel for Chuseok'),
-  soon('stage6', 'nature', 'Hike & Ask'),
-  soon('stage6', 'crafts', 'Buy at Market'),
-  soon('stage7', 'letters', 'Write Your Name'),
-  soon('stage7', 'life', 'My Day in Korean'),
-  soon('stage7', 'rites', 'My Holiday Memory'),
-  soon('stage7', 'nature', 'My Favorite Animal'),
-  soon('stage7', 'crafts', 'Make & Share'),
+  cell('stage6', 'letters', 'Read the Menu', 'shipped', 15, ['quest:stage6-letters-q1', 'quest:stage6-letters-q2', 'quest:stage6-letters-q3']),
+  cell('stage6', 'life', 'Order Food', 'shipped', 15, ['quest:stage6-life-q1', 'quest:stage6-life-q2', 'quest:stage6-life-q3']),
+  cell('stage6', 'rites', 'Travel for Chuseok', 'shipped', 15, ['quest:stage6-rites-q1', 'quest:stage6-rites-q2', 'quest:stage6-rites-q3']),
+  cell('stage6', 'nature', 'Hike & Ask', 'shipped', 15, ['quest:stage6-nature-q1', 'quest:stage6-nature-q2', 'quest:stage6-nature-q3']),
+  cell('stage6', 'crafts', 'Buy at Market', 'shipped', 15, ['quest:stage6-crafts-q1', 'quest:stage6-crafts-q2', 'quest:stage6-crafts-q3']),
+  cell('stage7', 'letters', 'Write Your Name', 'shipped', 15, ['quest:stage7-letters-q1', 'quest:stage7-letters-q2', 'quest:stage7-letters-q3']),
+  cell('stage7', 'life', 'My Day in Korean', 'shipped', 15, ['quest:stage7-life-q1', 'quest:stage7-life-q2', 'quest:stage7-life-q3']),
+  cell('stage7', 'rites', 'My Holiday Memory', 'shipped', 15, ['quest:stage7-rites-q1', 'quest:stage7-rites-q2', 'quest:stage7-rites-q3']),
+  cell('stage7', 'nature', 'My Favorite Animal', 'shipped', 15, ['quest:stage7-nature-q1', 'quest:stage7-nature-q2', 'quest:stage7-nature-q3']),
+  cell('stage7', 'crafts', 'Make & Share', 'shipped', 15, ['quest:stage7-crafts-q1', 'quest:stage7-crafts-q2', 'quest:stage7-crafts-q3']),
 ];
 
 /**
@@ -136,11 +148,15 @@ const lessonQuests: CatalogQuest[] = [
   lesson('stage2-letters-q4', 'stage2', 'letters', 'Joined Vowels oe, wae, we', 4, ['ㅚ', 'ㅙ', 'ㅞ']),
   lesson('stage2-letters-q5', 'stage2', 'letters', 'One Sound for Six Letters', 4, ['ㅅ/final', 'ㅈ/final', 'ㅊ/final', 'ㅌ/final', 'ㄷ/final', 'ㅆ/final']),
   lesson('stage2-letters-q6', 'stage2', 'letters', 'More Letters for k and p', 4, ['ㅋ/final', 'ㄲ/final', 'ㅍ/final']),
-  lesson('stage2-life-q1', 'stage2', 'life', 'Lunch Box Words', 5),
+  lesson('stage2-life-q1', 'stage2', 'life', 'Lunch Box Words', 4),
+  lesson('stage2-life-q2', 'stage2', 'life', 'Fruit and Snacks', 4),
+  lesson('stage2-life-q3', 'stage2', 'life', 'At the Table', 4),
   lesson('stage2-rites-q1', 'stage2', 'rites', 'Seollal Words', 4),
   lesson('stage2-rites-q2', 'stage2', 'rites', 'Chuseok Words', 4),
   lesson('stage2-rites-q3', 'stage2', 'rites', 'Holiday Play and Gifts', 4),
-  lesson('stage2-nature-q1', 'stage2', 'nature', 'Outdoor Words', 5),
+  lesson('stage2-nature-q1', 'stage2', 'nature', 'Outdoor Words', 4),
+  lesson('stage2-nature-q2', 'stage2', 'nature', 'Rain and Snow', 4),
+  lesson('stage2-nature-q3', 'stage2', 'nature', 'Rivers and Seas', 4),
   lesson('stage2-crafts-q1', 'stage2', 'crafts', 'At the Playground', 4),
   lesson('stage2-crafts-q2', 'stage2', 'crafts', 'Traditional Games', 4),
   lesson('stage2-crafts-q3', 'stage2', 'crafts', 'Playing Together', 4),
@@ -172,6 +188,39 @@ const lessonQuests: CatalogQuest[] = [
   lesson('stage4-crafts-q1', 'stage4', 'crafts', 'What Shall We Play?', 5),
   lesson('stage4-crafts-q2', 'stage4', 'crafts', 'My Turn, Your Turn', 5),
   lesson('stage4-crafts-q3', 'stage4', 'crafts', 'Shall We Play Together?', 5),
+  lesson('stage6-letters-q1', 'stage6', 'letters', 'Dishes on the Menu', 5),
+  lesson('stage6-letters-q2', 'stage6', 'letters', 'How Much Is It?', 5),
+  lesson('stage6-letters-q3', 'stage6', 'letters', 'Spicy or Not?', 5),
+  lesson('stage6-life-q1', 'stage6', 'life', 'Excuse Me!', 5),
+  lesson('stage6-life-q2', 'stage6', 'life', 'How Many?', 5),
+  lesson('stage6-life-q3', 'stage6', 'life', 'How Much Is It?', 5),
+  lesson('stage6-rites-q1', 'stage6', 'rites', 'The Train Ticket', 5),
+  lesson('stage6-rites-q2', 'stage6', 'rites', 'Train Times', 5),
+  lesson('stage6-rites-q3', 'stage6', 'rites', "Hoya's Trip", 5),
+  lesson('stage6-nature-q1', 'stage6', 'nature', 'Trail Signs', 5),
+  lesson('stage6-nature-q2', 'stage6', 'nature', 'Which Way?', 5),
+  lesson('stage6-nature-q3', 'stage6', 'nature', 'How Long?', 5),
+  lesson('stage6-crafts-q1', 'stage6', 'crafts', 'At the Stall', 5),
+  lesson('stage6-crafts-q2', 'stage6', 'crafts', 'How Many, How Much?', 5),
+  lesson('stage6-crafts-q3', 'stage6', 'crafts', 'A Little Extra', 5),
+  lesson('stage3-nature-q1', 'stage3', 'nature', 'Where Is the Bird?', 5),
+  lesson('stage3-nature-q2', 'stage3', 'nature', 'Big and Small', 5),
+  lesson('stage3-nature-q3', 'stage3', 'nature', 'Fly, Hop, Swim', 5),
+  lesson('stage7-letters-q1', 'stage7', 'letters', "Hoya's Name", 5),
+  lesson('stage7-letters-q2', 'stage7', 'letters', 'My Name Is ...', 5),
+  lesson('stage7-letters-q3', 'stage7', 'letters', 'Your Name in Hangul', 5),
+  lesson('stage7-life-q1', 'stage7', 'life', 'Morning to Evening', 5),
+  lesson('stage7-life-q2', 'stage7', 'life', 'What I Eat', 5),
+  lesson('stage7-life-q3', 'stage7', 'life', 'Where I Go Today', 5),
+  lesson('stage7-rites-q1', 'stage7', 'rites', 'I Ate Tteokguk', 5),
+  lesson('stage7-rites-q2', 'stage7', 'rites', 'On Seollal I Ate ...', 5),
+  lesson('stage7-rites-q3', 'stage7', 'rites', 'My Favorite Day', 5),
+  lesson('stage7-nature-q1', 'stage7', 'nature', 'Animals I Like', 5),
+  lesson('stage7-nature-q2', 'stage7', 'nature', 'Big Tiger, Cute Cat', 5),
+  lesson('stage7-nature-q3', 'stage7', 'nature', 'My Favorite Animal', 5),
+  lesson('stage7-crafts-q1', 'stage7', 'crafts', 'Fold, Cut, Draw', 5),
+  lesson('stage7-crafts-q2', 'stage7', 'crafts', 'First, Next, Last', 5),
+  lesson('stage7-crafts-q3', 'stage7', 'crafts', 'My Making Page', 5),
   // The Stage 5 books (F-STORY-005 PR 5.6): grid quests that play their stories at the read level.
   lesson('story-sejong-new-letters-read', 'stage5', 'letters', "King Sejong's New Letters", 4),
   lesson('story-shapes-of-hangeul-read', 'stage5', 'letters', 'The Secret in the Shapes', 5),

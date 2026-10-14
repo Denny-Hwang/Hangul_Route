@@ -96,37 +96,6 @@ const stage1Episodes: Episode[] = [
   },
 ];
 
-const stage2Episodes: Episode[] = [
-  {
-    id: 'episode:stage2-life',
-    stage: 'stage2',
-    theme: 'life',
-    order: 2,
-    titleEn: 'Lunch Box Words',
-    subtitleEn: 'Read your first Korean food words.',
-    hoyaIntroEn: 'You know the letters now — let us read real words!',
-    questIds: ['quest:stage2-life-q1'],
-    rewardCardIds: ['card:sagwa', 'card:uyu', 'card:ppang', 'card:dosirak'],
-    estimatedMinutes: 6,
-    pillarTags: [],
-    status: 'shipped',
-  },
-  {
-    id: 'episode:stage2-nature',
-    stage: 'stage2',
-    theme: 'nature',
-    order: 4,
-    titleEn: 'Outdoor Words',
-    subtitleEn: 'Name the sky, flowers, and trees.',
-    hoyaIntroEn: 'Come outside with me — let us name the world!',
-    questIds: ['quest:stage2-nature-q1'],
-    rewardCardIds: ['card:haneul', 'card:kkot', 'card:namu', 'card:byeol'],
-    estimatedMinutes: 6,
-    pillarTags: ['D2'],
-    status: 'shipped',
-  },
-];
-
 function makePreviewEpisode(stage: string, theme: string, order: number, titleEn: string): Episode {
   return {
     id: `episode:${stage}-${theme}` as Episode['id'],
@@ -201,20 +170,12 @@ export const cellKey = (e: Pick<Episode, 'stage' | 'theme'>): string => `${e.sta
 /**
  * Grid episodes that claim their cell: the hand-written lessons, the generated upper-stage
  * lesson cells (F-CURR-001 §3.10, `lessons.ts`) and the Stage 5 books (`books.ts`). A
- * generated cell replaces its "Coming later" preview through `previewEpisodesFor`.
+ * generated cell replaces its "Coming later" preview through `previewEpisodesFor`. The three
+ * taste cells moved into lesson cell files that keep their ids and card awards (F-CURR-001
+ * T-1: Lunch Box Words and Outdoor Words; T-2: Greeting Dialogues; OD-3), so no taste literal
+ * is left here.
  */
-export const handWrittenEpisodes: readonly Episode[] = [...stage1Episodes, ...tasteEpisodesStillShipped(), ...lessonEpisodes, ...bookEpisodes];
-
-/**
- * The hand-written taste cells move into lesson cell files that keep their ids (F-CURR-001
- * rows T-1 / T-2, OD-3). A taste stays here until its cell file is ready; then the generated
- * episode, with the same card awards, takes its place. Greeting Dialogues (T-2) now comes
- * only from `content/episodes/stage-4/rites.json`.
- */
-function tasteEpisodesStillShipped(): Episode[] {
-  const generated = new Set<string>(lessonEpisodes.map((e) => e.id));
-  return stage2Episodes.filter((e) => !generated.has(e.id));
-}
+export const handWrittenEpisodes: readonly Episode[] = [...stage1Episodes, ...lessonEpisodes, ...bookEpisodes];
 
 /**
  * The cells of `list` holding more grid episodes than `max` (F-STORY-005 §3.1

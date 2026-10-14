@@ -45,9 +45,9 @@ export function itemCategory(kind: ItemKind, id: string, source: Catalog = CATAL
 }
 
 /** A readable label for a plan item in `locale`: "Meet the Letters (3 quests)", "Word Builder (coming soon)"; unknown ids fall back to the id. */
-export function catalogLabel(kind: ItemKind, id: string, locale: UiLocale = DEFAULT_LOCALE): string {
-  if (kind === 'quest') return itemTitle('quest', id);
-  const cell = indexOf(CATALOG).cells.get(id);
+export function catalogLabel(kind: ItemKind, id: string, locale: UiLocale = DEFAULT_LOCALE, source: Catalog = CATALOG): string {
+  if (kind === 'quest') return itemTitle('quest', id, source);
+  const cell = indexOf(source).cells.get(id);
   if (!cell) return id;
   const words = getMessages(locale).console;
   return cellIsReady(cell) ? words.plan.catalog.episodeLabel(cell.title, cell.questIds.length) : words.curriculum.catalog.comingSoon(cell.title);
@@ -67,8 +67,8 @@ export function plannableQuest(id: string, source: Catalog = CATALOG): boolean {
 }
 
 /** The quests of an episode, in the cell's own order (empty for an episode that is not released yet). */
-export function questsOf(episodeId: string): CatalogQuest[] {
-  const index = indexOf(CATALOG);
+export function questsOf(episodeId: string, source: Catalog = CATALOG): CatalogQuest[] {
+  const index = indexOf(source);
   return (index.cells.get(episodeId)?.questIds ?? []).map((id) => index.quests.get(id)).filter((q): q is CatalogQuest => q !== undefined);
 }
 

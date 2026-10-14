@@ -385,7 +385,8 @@ export const TraceWordRoundSchema = z.object({
 export type TraceWordRound = z.infer<typeof TraceWordRoundSchema>;
 
 /** One tile of the name round's sound table: a whole syllable block, or a final letter (F-CURR-001 §3.7, row G-5). */
-const SoundTileSchema = z.object({ ko: z.string().min(1), romanization: z.string().trim().min(1).max(12) });
+// `en` is the content gloss every Korean item carries (validate-content korean-without-gloss); the tile draws only ko and romanization.
+const SoundTileSchema = z.object({ ko: z.string().min(1), romanization: z.string().trim().min(1).max(12), en: z.string().trim().min(1).optional() });
 
 /**
  * The short sound table of the free-entry name round (Write Your Name q3, design/wireframes/minigame/write-frame.md):
@@ -401,7 +402,8 @@ export const SoundTableSchema = z.object({
         .max(14),
     )
     .min(1)
-    .max(6),
+    // Ten groups: the vowels, one row per vowel (ㅏ ㅐ ㅓ ㅔ ㅗ ㅜ ㅡ ㅣ) and the y and w sounds (S7-1 pass 4).
+    .max(10),
   finals: z
     .array(
       // One keyboard letter that can close a block: the tile sends that one key, so a double final (ㄳ, ㄺ) is two tiles' worth.

@@ -1,0 +1,1527 @@
+{
+  "id": "episode:stage6-nature",
+  "stage": "stage6",
+  "theme": "nature",
+  "status": "ready",
+  "titleEn": "Hike & Ask",
+  "subtitleEn": "Read trail signs, and ask the way and the time.",
+  "hoyaIntroEn": "Most of Korea's national parks are mountain parks. Let's read the trail signs!",
+  "order": 4,
+  "pillarTags": [
+    "D2"
+  ],
+  "rewardCardIds": [],
+  "quests": [
+    {
+      "id": "quest:stage6-nature-q1",
+      "titleEn": "Trail Signs",
+      "blurbEn": "Read the boards on a mountain trail sign.",
+      "teaserEn": "Next: ask which way to go.",
+      "estimatedMinutes": 5,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "Trail Signs",
+          "hoyaLineEn": "A trail sign! Each board names a place. Let's read them.",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "Read the Sign",
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "realia",
+                    "realiaRef": "realia:hike-trail-sign",
+                    "keyWords": [
+                      {
+                        "ko": "산길",
+                        "romanization": "sangil",
+                        "en": "mountain trail"
+                      },
+                      {
+                        "ko": "정상",
+                        "romanization": "jeongsang",
+                        "en": "summit"
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "A trail sign names places to walk to. Here are two of its words."
+              },
+              {
+                "items": [
+                  {
+                    "type": "realia",
+                    "realiaRef": "realia:hike-trail-sign",
+                    "keyWords": [
+                      {
+                        "ko": "입구",
+                        "romanization": "ipgu",
+                        "en": "entrance"
+                      },
+                      {
+                        "ko": "출구",
+                        "romanization": "chulgu",
+                        "en": "exit"
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "Two more words from the sign: the way in and the way out."
+              }
+            ]
+          },
+          "durationSeconds": 60
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Find It on the Sign",
+          "minigameKind": "realia-read",
+          "minigameRef": "minigame:s6-nature-q1-practice",
+          "durationSeconds": 100
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Type the Sign Words",
+          "minigameKind": "type-hangul",
+          "minigameRef": "minigame:s6-nature-q1-apply",
+          "durationSeconds": 80
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Two Quick Ones",
+          "minigameKind": "listen-pick",
+          "minigameRef": "minigame:s6-nature-q1-check",
+          "durationSeconds": 40
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Sign Reader!",
+          "hoyaLineEn": "You read a trail sign. The summit is this way!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s6-nature-q1-practice",
+          "kind": "realia-read",
+          "realia": {
+            "ref": "realia:hike-trail-sign",
+            "kind": "sign",
+            "title": {
+              "ko": "산길",
+              "romanization": "sangil",
+              "en": "mountain trail"
+            },
+            "entries": [
+              {
+                "id": "summit",
+                "text": {
+                  "ko": "정상",
+                  "romanization": "jeongsang",
+                  "en": "summit"
+                },
+                "dir": "right"
+              },
+              {
+                "id": "river",
+                "text": {
+                  "ko": "강",
+                  "romanization": "gang",
+                  "en": "river"
+                },
+                "dir": "right"
+              },
+              {
+                "id": "entrance",
+                "text": {
+                  "ko": "입구",
+                  "romanization": "ipgu",
+                  "en": "entrance"
+                },
+                "dir": "left"
+              },
+              {
+                "id": "exit",
+                "text": {
+                  "ko": "출구",
+                  "romanization": "chulgu",
+                  "en": "exit"
+                },
+                "dir": "left"
+              },
+              {
+                "id": "restroom",
+                "text": {
+                  "ko": "화장실",
+                  "romanization": "hwajangsil",
+                  "en": "restroom"
+                },
+                "dir": "left"
+              }
+            ],
+            "altEn": "A trail sign on a post: boards to the summit and the river point right; the entrance, exit and restroom point left"
+          },
+          "rounds": [
+            {
+              "id": "r1",
+              "questionEn": "Which board leads to the top of the mountain?",
+              "options": [
+                {
+                  "id": "jeongsang",
+                  "text": {
+                    "ko": "정상",
+                    "romanization": "jeongsang",
+                    "en": "summit"
+                  }
+                },
+                {
+                  "id": "gang",
+                  "text": {
+                    "ko": "강",
+                    "romanization": "gang",
+                    "en": "river"
+                  }
+                },
+                {
+                  "id": "ipgu",
+                  "text": {
+                    "ko": "입구",
+                    "romanization": "ipgu",
+                    "en": "entrance"
+                  }
+                }
+              ],
+              "answerId": "jeongsang",
+              "answerEntryId": "summit"
+            },
+            {
+              "id": "r2",
+              "questionEn": "You are leaving the park. Which board do you follow?",
+              "options": [
+                {
+                  "id": "jeongsang",
+                  "text": {
+                    "ko": "정상",
+                    "romanization": "jeongsang",
+                    "en": "summit"
+                  }
+                },
+                {
+                  "id": "chulgu",
+                  "text": {
+                    "ko": "출구",
+                    "romanization": "chulgu",
+                    "en": "exit"
+                  }
+                },
+                {
+                  "id": "hwajangsil",
+                  "text": {
+                    "ko": "화장실",
+                    "romanization": "hwajangsil",
+                    "en": "restroom"
+                  }
+                }
+              ],
+              "answerId": "chulgu",
+              "answerEntryId": "exit"
+            },
+            {
+              "id": "r3",
+              "questionEn": "You want to go back to where you came in. Which board?",
+              "options": [
+                {
+                  "id": "bada",
+                  "text": {
+                    "ko": "바다",
+                    "romanization": "bada",
+                    "en": "sea"
+                  }
+                },
+                {
+                  "id": "jeongsang",
+                  "text": {
+                    "ko": "정상",
+                    "romanization": "jeongsang",
+                    "en": "summit"
+                  }
+                },
+                {
+                  "id": "ipgu",
+                  "text": {
+                    "ko": "입구",
+                    "romanization": "ipgu",
+                    "en": "entrance"
+                  }
+                }
+              ],
+              "answerId": "ipgu",
+              "answerEntryId": "entrance"
+            },
+            {
+              "id": "r4",
+              "questionEn": "You need the restroom. Which board do you follow?",
+              "options": [
+                {
+                  "id": "jip",
+                  "text": {
+                    "ko": "집",
+                    "romanization": "jip",
+                    "en": "home"
+                  }
+                },
+                {
+                  "id": "hwajangsil",
+                  "text": {
+                    "ko": "화장실",
+                    "romanization": "hwajangsil",
+                    "en": "restroom"
+                  }
+                },
+                {
+                  "id": "chulgu",
+                  "text": {
+                    "ko": "출구",
+                    "romanization": "chulgu",
+                    "en": "exit"
+                  }
+                }
+              ],
+              "answerId": "hwajangsil",
+              "answerEntryId": "restroom"
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s6-nature-q1-apply",
+          "kind": "type-hangul",
+          "rounds": [
+            {
+              "id": "t1",
+              "promptEn": "Type the word for a mountain trail.",
+              "target": {
+                "ko": "산길",
+                "romanization": "sangil",
+                "en": "mountain trail"
+              }
+            },
+            {
+              "id": "t2",
+              "promptEn": "Type the word for the top of a mountain.",
+              "target": {
+                "ko": "정상",
+                "romanization": "jeongsang",
+                "en": "summit"
+              }
+            },
+            {
+              "id": "t3",
+              "promptEn": "Type the word for the way in.",
+              "target": {
+                "ko": "입구",
+                "romanization": "ipgu",
+                "en": "entrance"
+              }
+            },
+            {
+              "id": "t4",
+              "promptEn": "Type the word for the way out.",
+              "target": {
+                "ko": "출구",
+                "romanization": "chulgu",
+                "en": "exit"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s6-nature-q1-check",
+          "kind": "listen-pick",
+          "rounds": [
+            {
+              "id": "c1",
+              "prompt": {
+                "ko": "정상",
+                "romanization": "jeongsang",
+                "en": "summit"
+              },
+              "options": [
+                {
+                  "id": "a",
+                  "text": {
+                    "ko": "정상",
+                    "romanization": "jeongsang",
+                    "en": "summit"
+                  }
+                },
+                {
+                  "id": "b",
+                  "text": {
+                    "ko": "입구",
+                    "romanization": "ipgu",
+                    "en": "entrance"
+                  }
+                },
+                {
+                  "id": "c",
+                  "text": {
+                    "ko": "출구",
+                    "romanization": "chulgu",
+                    "en": "exit"
+                  }
+                }
+              ],
+              "answerId": "a"
+            },
+            {
+              "id": "c2",
+              "prompt": {
+                "ko": "출구",
+                "romanization": "chulgu",
+                "en": "exit"
+              },
+              "options": [
+                {
+                  "id": "a",
+                  "text": {
+                    "ko": "출구",
+                    "romanization": "chulgu",
+                    "en": "exit"
+                  }
+                },
+                {
+                  "id": "b",
+                  "text": {
+                    "ko": "산길",
+                    "romanization": "sangil",
+                    "en": "mountain trail"
+                  }
+                },
+                {
+                  "id": "c",
+                  "text": {
+                    "ko": "강",
+                    "romanization": "gang",
+                    "en": "river"
+                  }
+                }
+              ],
+              "answerId": "a"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "quest:stage6-nature-q2",
+      "titleEn": "Which Way?",
+      "blurbEn": "Ask where a place is, and read left and right.",
+      "teaserEn": "Next: ask how long the walk takes.",
+      "estimatedMinutes": 5,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "Which Way?",
+          "hoyaLineEn": "Hiking is a popular day out in Korea. Let's ask a hiker the way!",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "Left and Right",
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "realia",
+                    "realiaRef": "realia:hike-junction-sign",
+                    "keyWords": [
+                      {
+                        "ko": "왼쪽",
+                        "romanization": "oenjjok",
+                        "en": "left"
+                      },
+                      {
+                        "ko": "오른쪽",
+                        "romanization": "oreunjjok",
+                        "en": "right"
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "A board points left or right. Each side has its own word."
+              },
+              {
+                "items": [
+                  {
+                    "type": "exchange",
+                    "lines": [
+                      {
+                        "speaker": "a",
+                        "speakerEn": "Hoya",
+                        "line": {
+                          "ko": "정상이 어디예요?",
+                          "romanization": "jeongsangi eodiyeyo",
+                          "en": "Where is the summit?"
+                        }
+                      },
+                      {
+                        "speaker": "b",
+                        "speakerEn": "Hiker",
+                        "line": {
+                          "ko": "오른쪽으로 가세요.",
+                          "romanization": "oreunjjogeuro gaseyo",
+                          "en": "Go to the right, please."
+                        }
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "Ask where a place is. The reply tells you which way to go."
+              },
+              {
+                "items": [
+                  {
+                    "type": "exchange",
+                    "lines": [
+                      {
+                        "speaker": "a",
+                        "speakerEn": "Hiker",
+                        "line": {
+                          "ko": "화장실이 어디예요?",
+                          "romanization": "hwajangsiri eodiyeyo",
+                          "en": "Where is the restroom?"
+                        }
+                      },
+                      {
+                        "speaker": "b",
+                        "speakerEn": "Hoya",
+                        "line": {
+                          "ko": "왼쪽으로 가세요.",
+                          "romanization": "oenjjogeuro gaseyo",
+                          "en": "Go to the left, please."
+                        }
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "Now Hoya shows someone else the way."
+              }
+            ]
+          },
+          "durationSeconds": 70
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Read the Arrows",
+          "minigameKind": "realia-read",
+          "minigameRef": "minigame:s6-nature-q2-practice",
+          "durationSeconds": 100
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Answer the Hiker",
+          "minigameKind": "tap-respond",
+          "minigameRef": "minigame:s6-nature-q2-apply",
+          "durationSeconds": 85
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Two Quick Ones",
+          "minigameKind": "listen-pick",
+          "minigameRef": "minigame:s6-nature-q2-check",
+          "durationSeconds": 40
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Way Finder!",
+          "hoyaLineEn": "You asked the way, and you showed the way too. Great hiking!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s6-nature-q2-practice",
+          "kind": "realia-read",
+          "realia": {
+            "ref": "realia:hike-junction-sign",
+            "kind": "sign",
+            "title": {
+              "ko": "산길",
+              "romanization": "sangil",
+              "en": "mountain trail"
+            },
+            "entries": [
+              {
+                "id": "summit",
+                "text": {
+                  "ko": "정상",
+                  "romanization": "jeongsang",
+                  "en": "summit"
+                },
+                "dir": "right"
+              },
+              {
+                "id": "restroom",
+                "text": {
+                  "ko": "화장실",
+                  "romanization": "hwajangsil",
+                  "en": "restroom"
+                },
+                "dir": "left"
+              },
+              {
+                "id": "entrance",
+                "text": {
+                  "ko": "입구",
+                  "romanization": "ipgu",
+                  "en": "entrance"
+                },
+                "dir": "left"
+              },
+              {
+                "id": "exit",
+                "text": {
+                  "ko": "출구",
+                  "romanization": "chulgu",
+                  "en": "exit"
+                },
+                "dir": "right"
+              }
+            ],
+            "altEn": "A trail sign at a fork: the summit and the exit point right; the restroom and the entrance point left"
+          },
+          "rounds": [
+            {
+              "id": "r1",
+              "questionEn": "Which way is the summit?",
+              "key": {
+                "ko": "정상",
+                "romanization": "jeongsang",
+                "en": "summit"
+              },
+              "options": [
+                {
+                  "id": "oenjjok",
+                  "text": {
+                    "ko": "왼쪽",
+                    "romanization": "oenjjok",
+                    "en": "left"
+                  }
+                },
+                {
+                  "id": "oreunjjok",
+                  "text": {
+                    "ko": "오른쪽",
+                    "romanization": "oreunjjok",
+                    "en": "right"
+                  }
+                }
+              ],
+              "answerId": "oreunjjok",
+              "answerEntryId": "summit"
+            },
+            {
+              "id": "r2",
+              "questionEn": "Which way is the restroom?",
+              "key": {
+                "ko": "화장실",
+                "romanization": "hwajangsil",
+                "en": "restroom"
+              },
+              "options": [
+                {
+                  "id": "oenjjok",
+                  "text": {
+                    "ko": "왼쪽",
+                    "romanization": "oenjjok",
+                    "en": "left"
+                  }
+                },
+                {
+                  "id": "oreunjjok",
+                  "text": {
+                    "ko": "오른쪽",
+                    "romanization": "oreunjjok",
+                    "en": "right"
+                  }
+                }
+              ],
+              "answerId": "oenjjok",
+              "answerEntryId": "restroom"
+            },
+            {
+              "id": "r3",
+              "questionEn": "Which way is the exit?",
+              "key": {
+                "ko": "출구",
+                "romanization": "chulgu",
+                "en": "exit"
+              },
+              "options": [
+                {
+                  "id": "oenjjok",
+                  "text": {
+                    "ko": "왼쪽",
+                    "romanization": "oenjjok",
+                    "en": "left"
+                  }
+                },
+                {
+                  "id": "oreunjjok",
+                  "text": {
+                    "ko": "오른쪽",
+                    "romanization": "oreunjjok",
+                    "en": "right"
+                  }
+                }
+              ],
+              "answerId": "oreunjjok",
+              "answerEntryId": "exit"
+            },
+            {
+              "id": "r4",
+              "questionEn": "Besides the restroom, which board points left?",
+              "options": [
+                {
+                  "id": "chulgu",
+                  "text": {
+                    "ko": "출구",
+                    "romanization": "chulgu",
+                    "en": "exit"
+                  }
+                },
+                {
+                  "id": "ipgu",
+                  "text": {
+                    "ko": "입구",
+                    "romanization": "ipgu",
+                    "en": "entrance"
+                  }
+                },
+                {
+                  "id": "jeongsang",
+                  "text": {
+                    "ko": "정상",
+                    "romanization": "jeongsang",
+                    "en": "summit"
+                  }
+                }
+              ],
+              "answerId": "ipgu",
+              "answerEntryId": "entrance"
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s6-nature-q2-apply",
+          "kind": "tap-respond",
+          "turns": [
+            {
+              "speakerEn": "Hiker",
+              "line": {
+                "ko": "안녕하세요!",
+                "romanization": "annyeonghaseyo",
+                "en": "Hello!"
+              },
+              "replies": [
+                {
+                  "id": "r1",
+                  "text": {
+                    "ko": "안녕하세요!",
+                    "romanization": "annyeonghaseyo",
+                    "en": "Hello!"
+                  },
+                  "correct": true
+                },
+                {
+                  "id": "r2",
+                  "text": {
+                    "ko": "오른쪽으로 가세요.",
+                    "romanization": "oreunjjogeuro gaseyo",
+                    "en": "Go to the right, please."
+                  },
+                  "correct": false
+                },
+                {
+                  "id": "r3",
+                  "text": {
+                    "ko": "출구예요.",
+                    "romanization": "chulguyeyo",
+                    "en": "It is the exit."
+                  },
+                  "correct": false
+                }
+              ]
+            },
+            {
+              "speakerEn": "Hiker",
+              "line": {
+                "ko": "정상이 어디예요?",
+                "romanization": "jeongsangi eodiyeyo",
+                "en": "Where is the summit?"
+              },
+              "replies": [
+                {
+                  "id": "r1",
+                  "text": {
+                    "ko": "감사합니다.",
+                    "romanization": "gamsahamnida",
+                    "en": "Thank you."
+                  },
+                  "correct": false
+                },
+                {
+                  "id": "r2",
+                  "text": {
+                    "ko": "오른쪽으로 가세요.",
+                    "romanization": "oreunjjogeuro gaseyo",
+                    "en": "Go to the right, please."
+                  },
+                  "correct": true
+                },
+                {
+                  "id": "r3",
+                  "text": {
+                    "ko": "안녕하세요!",
+                    "romanization": "annyeonghaseyo",
+                    "en": "Hello!"
+                  },
+                  "correct": false
+                }
+              ]
+            },
+            {
+              "speakerEn": "Hiker",
+              "line": {
+                "ko": "화장실이 어디예요?",
+                "romanization": "hwajangsiri eodiyeyo",
+                "en": "Where is the restroom?"
+              },
+              "replies": [
+                {
+                  "id": "r1",
+                  "text": {
+                    "ko": "정상이에요.",
+                    "romanization": "jeongsangieyo",
+                    "en": "It is the summit."
+                  },
+                  "correct": false
+                },
+                {
+                  "id": "r2",
+                  "text": {
+                    "ko": "감사합니다.",
+                    "romanization": "gamsahamnida",
+                    "en": "Thank you."
+                  },
+                  "correct": false
+                },
+                {
+                  "id": "r3",
+                  "text": {
+                    "ko": "왼쪽으로 가세요.",
+                    "romanization": "oenjjogeuro gaseyo",
+                    "en": "Go to the left, please."
+                  },
+                  "correct": true
+                }
+              ]
+            },
+            {
+              "speakerEn": "Hiker",
+              "line": {
+                "ko": "입구가 어디예요?",
+                "romanization": "ipguga eodiyeyo",
+                "en": "Where is the entrance?"
+              },
+              "replies": [
+                {
+                  "id": "r1",
+                  "text": {
+                    "ko": "감사합니다.",
+                    "romanization": "gamsahamnida",
+                    "en": "Thank you."
+                  },
+                  "correct": false
+                },
+                {
+                  "id": "r2",
+                  "text": {
+                    "ko": "왼쪽으로 가세요.",
+                    "romanization": "oenjjogeuro gaseyo",
+                    "en": "Go to the left, please."
+                  },
+                  "correct": true
+                },
+                {
+                  "id": "r3",
+                  "text": {
+                    "ko": "정상이에요.",
+                    "romanization": "jeongsangieyo",
+                    "en": "It is the summit."
+                  },
+                  "correct": false
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s6-nature-q2-check",
+          "kind": "listen-pick",
+          "rounds": [
+            {
+              "id": "c1",
+              "prompt": {
+                "ko": "정상이 어디예요?",
+                "romanization": "jeongsangi eodiyeyo",
+                "en": "Where is the summit?"
+              },
+              "options": [
+                {
+                  "id": "a",
+                  "text": {
+                    "ko": "오른쪽으로 가세요.",
+                    "romanization": "oreunjjogeuro gaseyo",
+                    "en": "Go to the right, please."
+                  }
+                },
+                {
+                  "id": "b",
+                  "text": {
+                    "ko": "감사합니다.",
+                    "romanization": "gamsahamnida",
+                    "en": "Thank you."
+                  }
+                },
+                {
+                  "id": "c",
+                  "text": {
+                    "ko": "잘 가요!",
+                    "romanization": "jal gayo",
+                    "en": "Goodbye!"
+                  }
+                }
+              ],
+              "answerId": "a"
+            },
+            {
+              "id": "c2",
+              "prompt": {
+                "ko": "왼쪽",
+                "romanization": "oenjjok",
+                "en": "left"
+              },
+              "options": [
+                {
+                  "id": "a",
+                  "text": {
+                    "ko": "왼쪽",
+                    "romanization": "oenjjok",
+                    "en": "left"
+                  }
+                },
+                {
+                  "id": "b",
+                  "text": {
+                    "ko": "오른쪽",
+                    "romanization": "oreunjjok",
+                    "en": "right"
+                  }
+                },
+                {
+                  "id": "c",
+                  "text": {
+                    "ko": "정상",
+                    "romanization": "jeongsang",
+                    "en": "summit"
+                  }
+                }
+              ],
+              "answerId": "a"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "quest:stage6-nature-q3",
+      "titleEn": "How Long?",
+      "blurbEn": "Ask how long a walk takes, and read the times on a sign.",
+      "estimatedMinutes": 5,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "How Long?",
+          "hoyaLineEn": "Trail guides in Korea's national parks show how long a walk takes. Let's read the times!",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "Hours on the Trail",
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "exchange",
+                    "lines": [
+                      {
+                        "speaker": "a",
+                        "speakerEn": "Hoya",
+                        "line": {
+                          "ko": "얼마나 걸려요?",
+                          "romanization": "eolmana geollyeoyo",
+                          "en": "How long does it take?"
+                        }
+                      },
+                      {
+                        "speaker": "b",
+                        "speakerEn": "Hiker",
+                        "line": {
+                          "ko": "한 시간 걸려요.",
+                          "romanization": "han sigan geollyeoyo",
+                          "en": "It takes one hour."
+                        }
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "Ask how long the walk takes. The reply gives the time."
+              },
+              {
+                "items": [
+                  {
+                    "type": "realia",
+                    "realiaRef": "realia:hike-time-sign",
+                    "keyWords": [
+                      {
+                        "ko": "한 시간",
+                        "romanization": "han sigan",
+                        "en": "one hour"
+                      },
+                      {
+                        "ko": "두 시간",
+                        "romanization": "du sigan",
+                        "en": "two hours"
+                      },
+                      {
+                        "ko": "세 시간",
+                        "romanization": "se sigan",
+                        "en": "three hours"
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "A few hours count with native numbers. Before sigan, hana, dul, set become han, du, se."
+              }
+            ]
+          },
+          "durationSeconds": 70
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Read the Times",
+          "minigameKind": "realia-read",
+          "minigameRef": "minigame:s6-nature-q3-practice",
+          "durationSeconds": 100
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Type the Times",
+          "minigameKind": "type-hangul",
+          "minigameRef": "minigame:s6-nature-q3-apply",
+          "durationSeconds": 80
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Two Quick Ones",
+          "minigameKind": "listen-pick",
+          "minigameRef": "minigame:s6-nature-q3-check",
+          "durationSeconds": 40
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Trail Ready!",
+          "hoyaLineEn": "You read the hours on a trail sign. Enjoy the walk!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s6-nature-q3-practice",
+          "kind": "realia-read",
+          "realia": {
+            "ref": "realia:hike-time-sign",
+            "kind": "sign",
+            "title": {
+              "ko": "산길",
+              "romanization": "sangil",
+              "en": "mountain trail"
+            },
+            "entries": [
+              {
+                "id": "summit",
+                "text": {
+                  "ko": "정상",
+                  "romanization": "jeongsang",
+                  "en": "summit"
+                },
+                "value": {
+                  "ko": "두 시간",
+                  "romanization": "du sigan",
+                  "en": "two hours"
+                },
+                "dir": "right"
+              },
+              {
+                "id": "river",
+                "text": {
+                  "ko": "강",
+                  "romanization": "gang",
+                  "en": "river"
+                },
+                "value": {
+                  "ko": "세 시간",
+                  "romanization": "se sigan",
+                  "en": "three hours"
+                },
+                "dir": "right"
+              },
+              {
+                "id": "exit",
+                "text": {
+                  "ko": "출구",
+                  "romanization": "chulgu",
+                  "en": "exit"
+                },
+                "value": {
+                  "ko": "한 시간",
+                  "romanization": "han sigan",
+                  "en": "one hour"
+                },
+                "dir": "left"
+              },
+              {
+                "id": "restroom",
+                "text": {
+                  "ko": "화장실",
+                  "romanization": "hwajangsil",
+                  "en": "restroom"
+                },
+                "dir": "left"
+              }
+            ],
+            "altEn": "A trail sign with times: summit two hours and river three hours to the right; exit one hour and the restroom to the left"
+          },
+          "rounds": [
+            {
+              "id": "r1",
+              "questionEn": "How long does it take to the summit?",
+              "key": {
+                "ko": "정상",
+                "romanization": "jeongsang",
+                "en": "summit"
+              },
+              "options": [
+                {
+                  "id": "han-sigan",
+                  "text": {
+                    "ko": "한 시간",
+                    "romanization": "han sigan",
+                    "en": "one hour"
+                  }
+                },
+                {
+                  "id": "du-sigan",
+                  "text": {
+                    "ko": "두 시간",
+                    "romanization": "du sigan",
+                    "en": "two hours"
+                  }
+                },
+                {
+                  "id": "se-sigan",
+                  "text": {
+                    "ko": "세 시간",
+                    "romanization": "se sigan",
+                    "en": "three hours"
+                  }
+                }
+              ],
+              "answerId": "du-sigan",
+              "answerEntryId": "summit"
+            },
+            {
+              "id": "r2",
+              "questionEn": "How long does it take to the exit?",
+              "key": {
+                "ko": "출구",
+                "romanization": "chulgu",
+                "en": "exit"
+              },
+              "options": [
+                {
+                  "id": "han-sigan",
+                  "text": {
+                    "ko": "한 시간",
+                    "romanization": "han sigan",
+                    "en": "one hour"
+                  }
+                },
+                {
+                  "id": "du-sigan",
+                  "text": {
+                    "ko": "두 시간",
+                    "romanization": "du sigan",
+                    "en": "two hours"
+                  }
+                },
+                {
+                  "id": "se-sigan",
+                  "text": {
+                    "ko": "세 시간",
+                    "romanization": "se sigan",
+                    "en": "three hours"
+                  }
+                }
+              ],
+              "answerId": "han-sigan",
+              "answerEntryId": "exit"
+            },
+            {
+              "id": "r3",
+              "questionEn": "Which place is three hours away?",
+              "options": [
+                {
+                  "id": "gang",
+                  "text": {
+                    "ko": "강",
+                    "romanization": "gang",
+                    "en": "river"
+                  }
+                },
+                {
+                  "id": "jeongsang",
+                  "text": {
+                    "ko": "정상",
+                    "romanization": "jeongsang",
+                    "en": "summit"
+                  }
+                },
+                {
+                  "id": "chulgu",
+                  "text": {
+                    "ko": "출구",
+                    "romanization": "chulgu",
+                    "en": "exit"
+                  }
+                }
+              ],
+              "answerId": "gang",
+              "answerEntryId": "river"
+            },
+            {
+              "id": "r4",
+              "questionEn": "Which way is the exit?",
+              "key": {
+                "ko": "출구",
+                "romanization": "chulgu",
+                "en": "exit"
+              },
+              "options": [
+                {
+                  "id": "oenjjok",
+                  "text": {
+                    "ko": "왼쪽",
+                    "romanization": "oenjjok",
+                    "en": "left"
+                  }
+                },
+                {
+                  "id": "oreunjjok",
+                  "text": {
+                    "ko": "오른쪽",
+                    "romanization": "oreunjjok",
+                    "en": "right"
+                  }
+                }
+              ],
+              "answerId": "oenjjok",
+              "answerEntryId": "exit"
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s6-nature-q3-apply",
+          "kind": "type-hangul",
+          "rounds": [
+            {
+              "id": "t1",
+              "promptEn": "Type the word for hour.",
+              "target": {
+                "ko": "시간",
+                "romanization": "sigan",
+                "en": "hour"
+              }
+            },
+            {
+              "id": "t2",
+              "promptEn": "Type how you write one hour.",
+              "target": {
+                "ko": "한 시간",
+                "romanization": "han sigan",
+                "en": "one hour"
+              }
+            },
+            {
+              "id": "t3",
+              "promptEn": "Type how you write two hours.",
+              "target": {
+                "ko": "두 시간",
+                "romanization": "du sigan",
+                "en": "two hours"
+              }
+            },
+            {
+              "id": "t4",
+              "promptEn": "Type the word for right, the way to the summit.",
+              "target": {
+                "ko": "오른쪽",
+                "romanization": "oreunjjok",
+                "en": "right"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s6-nature-q3-check",
+          "kind": "listen-pick",
+          "rounds": [
+            {
+              "id": "c1",
+              "prompt": {
+                "ko": "얼마나 걸려요?",
+                "romanization": "eolmana geollyeoyo",
+                "en": "How long does it take?"
+              },
+              "options": [
+                {
+                  "id": "a",
+                  "text": {
+                    "ko": "한 시간 걸려요.",
+                    "romanization": "han sigan geollyeoyo",
+                    "en": "It takes one hour."
+                  }
+                },
+                {
+                  "id": "b",
+                  "text": {
+                    "ko": "오른쪽으로 가세요.",
+                    "romanization": "oreunjjogeuro gaseyo",
+                    "en": "Go to the right, please."
+                  }
+                },
+                {
+                  "id": "c",
+                  "text": {
+                    "ko": "감사합니다.",
+                    "romanization": "gamsahamnida",
+                    "en": "Thank you."
+                  }
+                }
+              ],
+              "answerId": "a"
+            },
+            {
+              "id": "c2",
+              "prompt": {
+                "ko": "두 시간",
+                "romanization": "du sigan",
+                "en": "two hours"
+              },
+              "options": [
+                {
+                  "id": "a",
+                  "text": {
+                    "ko": "두 시간",
+                    "romanization": "du sigan",
+                    "en": "two hours"
+                  }
+                },
+                {
+                  "id": "b",
+                  "text": {
+                    "ko": "한 시간",
+                    "romanization": "han sigan",
+                    "en": "one hour"
+                  }
+                },
+                {
+                  "id": "c",
+                  "text": {
+                    "ko": "세 시간",
+                    "romanization": "se sigan",
+                    "en": "three hours"
+                  }
+                }
+              ],
+              "answerId": "a"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "culture": [
+    {
+      "id": "n1",
+      "kind": "culture",
+      "textEn": "Korea's national parks are protected areas that the state designates and looks after, to keep their nature and scenery and to give the public a place to rest. Most of them are mountain parks.",
+      "sources": [
+        {
+          "title": "우리나라 국립공원",
+          "publisher": "국립공원공단 (Korea National Park Service)",
+          "url": "https://www.knps.or.kr/portal/main/contents.do?menuNo=8000665",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "국립공원은?: ‘국립공원은 우리나라를 대표할 만한 자연생태계와 자연·문화 경관의 보전을 전제로 지속가능한 이용을 도모하고자 … 국가가 직접 관리하는 보호지역입니다.’ 국립공원의 기능: ‘청정한 자연환경과 수려한 경관지를 공공에 개방하고 제공하는 국민의 휴식처’ 우리나라의 국립공원: ‘전국 24개 국립공원은 유형에 따라 산악형 19개, 해상·해안형 4개, 사적형 1개 공원으로 관리·운영되고 있습니다.’"
+        },
+        {
+          "title": "지리산서 태백산까지… 반세기 만에 완성한 국립공원",
+          "publisher": "국가기록원 (National Archives of Korea) — 기록으로 만나는 대한민국",
+          "url": "https://theme.archives.go.kr/next/koreaOfRecord/nationalPark.do",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "‘국립공원은 국토의 대표적인 자연풍경지를 보호·보전해 국민들이 영속적으로 그 혜택을 받을 수 있도록 국가가 공원으로 지정하고 관리하는 곳이다.’ / ‘… 산악형 국립공원 17개, … 해상·해안형 국립공원 4개와 사적형 국립공원 경주가 이에 포함된다.’ (2016년 7월 기준 22개)"
+        }
+      ],
+      "verification": {
+        "passes": 3,
+        "checkedAt": "2026-10-14",
+        "scope": "lesson",
+        "notes": "pass 2 (author sourcing, 2026-10-14): 'protected areas the state designates and looks after' = KNPS 국립공원은? (국가가 직접 관리하는 보호지역) and National Archives (국가가 공원으로 지정하고 관리하는 곳); 'to keep their nature and scenery' = KNPS (자연생태계와 자연·문화 경관의 보전) and Archives (자연풍경지를 보호·보전); 'a place for the public to rest' = KNPS 국립공원의 기능 (국민의 휴식처); 'most are mountain parks' = KNPS (24 parks, 산악형 19개) and Archives (22 parks in 2016, 산악형 17개); no count is put in learner copy because the totals change over time. Both pages fetched 2026-10-14, HTTP 200 (KNPS answers a browser user agent only). Used in: hoyaIntroEn.\npass 2b (independent fact check, 2026-10-14): all four parts re-checked against both pages, re-fetched 2026-10-14 HTTP 200. KNPS 국립공원은? says the state manages them directly as protected areas for keeping nature and scenery; 국립공원의 기능 lists a place of rest open to the public; 우리나라의 국립공원 gives 19 of 24 as mountain parks. The Archives page says the state designates and manages them to protect natural scenery and counts 17 of 22 as mountain parks (2016). Each quoteOrLocator matches the page text. 'Most are mountain parks' holds on both counts. The English note shares no wording with the Korean quotes. Outcome: pass, no change.\npass 3 (MAR pass 5 culture review, 2026-10-14): both pages re-opened, HTTP 200 (KNPS with a browser user agent); each quoteOrLocator found word for word (국가가 직접 관리하는 보호지역, 국민의 휴식처, 산악형 19개; 국가가 공원으로 지정하고 관리, 산악형 17개). Used in hoyaIntroEn ('Most ... are mountain parks'), which both counts support; no count, designation number or copied wording in learner copy. Outcome: pass, no change."
+      }
+    },
+    {
+      "id": "n2",
+      "kind": "culture",
+      "textEn": "Hiking means going up a mountain for exercise, fun or exploring. From the 1960s it became a pastime for ordinary people in Korea, and the national parks now count many millions of visits a year.",
+      "sources": [
+        {
+          "title": "등산",
+          "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+          "url": "https://encykorea.aks.ac.kr/Article/E0017142",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "정의: ‘운동·놀이·탐험 등의 목적으로 산에 오르는 행위.’ 내용 (1960년대 이후): ‘등산이 일반인의 레저화가 되면서 각종 산악단체가 속출하였다.’"
+        },
+        {
+          "title": "국립공원 탐방객 증가 추세 이어져… 2025년 4,331만 명… 전년 대비 6.5% 증가",
+          "publisher": "기후에너지환경부 보도자료 — 대한민국 정책브리핑 (korea.kr)",
+          "url": "https://www.korea.kr/briefing/pressReleaseView.do?newsId=156745647",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "보도자료 제목 (2026.02.24): ‘국립공원 탐방객 증가 추세 이어져… 2025년 4,331만 명… 전년 대비 6.5% 증가’"
+        }
+      ],
+      "verification": {
+        "passes": 3,
+        "checkedAt": "2026-10-14",
+        "scope": "lesson",
+        "notes": "pass 2 (author sourcing, 2026-10-14): 'going up a mountain for exercise, fun or exploring' = encykorea 등산 정의 (운동·놀이·탐험 등의 목적으로 산에 오르는 행위); 'from the 1960s a pastime for ordinary people' = encykorea 등산, 1960-1980 section (등산이 일반인의 레저화가 되면서); 'many millions of visits a year' = Ministry press release title (2025년 4,331만 명). The note says 'ordinary people', never 'all Koreans'; the exact number stays out of learner copy. Both pages fetched 2026-10-14, HTTP 200. Used in: q2 intro Hoya line.\npass 2b (independent fact check, 2026-10-14): both pages re-fetched 2026-10-14 HTTP 200. encykorea 등산 gives the definition as climbing a mountain for exercise, play or exploration, and its 1960-1980 section says hiking became leisure for the general public; the Ministry release (2026-02-24) reports 43.31 million national park visitors in 2025, which supports 'many millions of visits a year' (visitor counts are visit counts). Quotes match the pages. No 'all Koreans' claim; the q2 intro line ('a popular day out') stays within this note. No copied wording. Outcome: pass, no change.\npass 3 (MAR pass 5 culture review, 2026-10-14): both pages re-opened, HTTP 200; encykorea 등산 (definition; 1960-1980 section, 일반인의 레저화) and the 2026-02-24 korea.kr release (4,331만 명) found as quoted. The q2 intro line ('a popular day out') stays within the note and makes no 'all Koreans' claim. Outcome: pass, no change."
+      }
+    },
+    {
+      "id": "n3",
+      "kind": "culture",
+      "textEn": "Trail information for Korea's national parks gives the length of a trail section and the time it takes one way, and the parks set a start time for each trail with the distance and walking time in mind.",
+      "sources": [
+        {
+          "title": "[오맞! 이 정책] 이번 주말 ‘야생화 꽃길’ 걸을래?",
+          "publisher": "대한민국 정책브리핑 (korea.kr), 자료: 환경부·국립공원공단",
+          "url": "https://www.korea.kr/multi/visualNewsView.do?newsId=148906141",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "‘1. 지리산 구룡계곡길 - 위치(구간): 구룡탐방지원센터~구룡폭포 - 거리/소요시간(편도): 3.1km / 1시간 30분’"
+        },
+        {
+          "title": "[오늘추천 공공앱] 국립공원 산행정보",
+          "publisher": "대한민국 정책브리핑 (korea.kr)",
+          "url": "https://www.korea.kr/multi/visualNewsView.do?newsId=148921631",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "‘탐방코스 정보 : 난이도, 안전지수, 거리 ,소요시간, 대중교통 관련 정보 제공’"
+        },
+        {
+          "title": "입산시간지정제",
+          "publisher": "국립공원공단 (Korea National Park Service)",
+          "url": "https://www.knps.or.kr/portal/main/contents.do?menuNo=8000198",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "입산시간지정제는 무엇인가요?: ‘산행목적지, 거리와 산행시간 등을 고려하여 탐방로별로 입산ㆍ통제시간을 지정ㆍ운영하는 제도입니다.’"
+        }
+      ],
+      "verification": {
+        "passes": 3,
+        "checkedAt": "2026-10-14",
+        "scope": "lesson",
+        "notes": "pass 2 (author sourcing, 2026-10-14): 'gives the length of a section and the time it takes one way' = korea.kr wildflower trails list (거리/소요시간(편도): 3.1km / 1시간 30분) and korea.kr park trail app (탐방코스 정보: 거리, 소요시간); 'a start time per trail set with distance and walking time in mind' = KNPS 입산시간지정제 (산행목적지, 거리와 산행시간 등을 고려하여 탐방로별로 입산ㆍ통제시간을 지정). The drawn trail signs of the cell are made for the app and copy no real sign. All three pages fetched 2026-10-14, HTTP 200. Used in: q3 intro Hoya line, q3 Discover page 2 (the time sign).\npass 2b (independent fact check, 2026-10-14): all three pages re-fetched 2026-10-14 HTTP 200. The korea.kr wildflower list gives each trail section with distance and one-way time (3.1km / 1h30 for the first); the korea.kr app page lists distance and time per course; KNPS 입산시간지정제 sets entry and closing times per trail by destination, distance and hiking time. Quotes match the pages. 'Start time' reads the 입산 time correctly. No copied wording; no real sign is reproduced. Outcome: pass, no change.\npass 3 (MAR pass 5 culture review, 2026-10-14): all three pages re-opened, HTTP 200; 거리/소요시간(편도) 3.1km / 1시간 30분, the app's 거리 and 소요시간, and KNPS 거리와 산행시간 등을 고려하여 found as quoted. The drawn signs copy no real sign; the q1 reward line no longer calls the drawn sign real, and the q1 Discover captions no longer state what real signs show. The time sign spells hours in Hangul (두 시간) on purpose, for decoding; real trail guides write numerals (n3 source 1). Outcome: pass, no change to the note."
+      }
+    },
+    {
+      "id": "n4",
+      "kind": "language",
+      "textEn": "For a small number of hours, Korean counts with native numbers, and before the word for hour they take the forms han, du, se (compare hana, dul, set).",
+      "sources": [
+        {
+          "title": "n시간을 말할때 서수인지 기수인지",
+          "publisher": "국립국어원 (National Institute of Korean Language) — 온라인가나다",
+          "url": "https://korean.go.kr/front/onlineQna/onlineQnaView.do?mn_id=&pageIndex=1&qna_seq=333297&searchCondition=&searchKeyword=",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "답변 (2026. 7. 6.): ‘‘한 시간, 두 시간’의 ‘한, 두’는 서수라기보다 의존 명사 ‘시간’ 앞에 쓰인 수 관형사로 보는 것이 적절합니다.’ / ‘일반적으로 작은 수에서는 ‘한 시간, 두 시간’처럼 고유어 수 표현이 자연스럽고 …’"
+        },
+        {
+          "title": "한1 / 두1 / 세1",
+          "publisher": "국립국어원 (National Institute of Korean Language) — 표준국어대사전",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%ED%95%9C",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "한1「관형사」: ‘그 수량이 하나임을 나타내는 말.’ (두1「관형사」: ‘그 수량이 둘임을 나타내는 말.’, searchKeyword=두; 세1「관형사」: ‘그 수량이 셋임을 나타내는 말.’, searchKeyword=세)"
+        }
+      ],
+      "verification": {
+        "passes": 3,
+        "checkedAt": "2026-10-14",
+        "scope": "lesson",
+        "notes": "pass 2 (author sourcing, 2026-10-14): 'small numbers of hours use native numbers' = NIKL 온라인가나다 answer (작은 수에서는 ‘한 시간, 두 시간’처럼 고유어 수 표현이 자연스럽고); 'short forms before the word for hour' = the same answer (‘한, 두’ ... 의존 명사 ‘시간’ 앞에 쓰인 수 관형사) and stdict 한1 / 두1 「관형사」 (그 수량이 하나임 / 둘임을 나타내는 말). The note keeps to small numbers, as the source does (larger numbers may also use Sino-Korean). Both pages fetched 2026-10-14, HTTP 200. Used in: q3 Discover page 2 caption (the §3.6 number-system page).\npass 2b (independent fact check, 2026-10-14): both pages re-fetched 2026-10-14 HTTP 200. The NIKL 온라인가나다 answer (2026-07-06) says 한, 두 before 시간 are numeral determiners and native numbers sound natural for small numbers; quotes match. Finding: the note names se, but the second source covered only 한1 and 두1. Fix: stdict 세1 「관형사」 (그 수량이 셋임을 나타내는 말, fetched with searchKeyword=세) added to that source's title and quoteOrLocator, so han, du and se are each sourced. No copied wording. Outcome: pass after the source fix.\npass 3 (MAR pass 4 language and pass 5 culture review, 2026-10-14): both pages re-opened, HTTP 200 (stdict 한1, 두1, 세1 「관형사」; NIKL 수 관형사, 고유어 수 표현이 자연스럽고). Finding: the sources call han, du, se determiners before 시간, not abbreviations; the note and the q3 Discover caption (en, es, ko) now say hana, dul, set take these forms before the word for hour, with no 'short for' or 줄인 말 claim. Outcome: pass after the wording fix."
+      }
+    }
+  ],
+  "review": {
+    "language": "native-reviewed",
+    "culture": "culture-reviewed",
+    "reviewedBy": "MAR",
+    "reviewedAt": "2026-10-14",
+    "notes": [
+      "Language pass 4 (MAR): spelling, spacing, register and 26 romanizations clean; applied: q1 r2 loses the 입구 distractor, q1 r3 asks by situation, ko q3 typing prompts and 시간 gloss told apart, ko t4 prompt no echo, han/du/se as the forms before 시간 (no 줄인 말), 산길 and 볼일 glosses, main's titles and glosses, es tú; kept Hangul hours on the time sign (decoding).",
+      "Culture pass 5 (MAR): eleven sources re-read, n1-n4 pass (n4 wording fixed); applied: no 'real trail sign' claim, q1 Discover captions make no unsourced claim about real signs, q2 ends on asking for the entrance, not 잘 가요 to an adult stranger; no stereotype, 'all Koreans' claim, real person, shop, brand, price or real sign; suits any age."
+    ]
+  },
+  "contentVer": 1
+}

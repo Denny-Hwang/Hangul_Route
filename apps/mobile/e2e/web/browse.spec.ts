@@ -702,15 +702,21 @@ test('a report letter link opens the lesson that teaches it with the focus line 
 });
 
 test('a lesson whose built syllables are words lists them under Words; a lesson with no letter has no Letters row', async ({ page }) => {
-  await openBrowse(page, 'account', '#t=quest:stage2-life-q1&s=plan');
-  await expect(page.getByRole('heading', { name: 'Lunch Box Words' })).toBeVisible();
-  for (const word of ['산, san', '곰, gom']) await expect(page.getByTestId('browse-facts-words').getByLabel(word)).toBeVisible();
-  // dal is one sense of a homonym (moon or month): the built block stays a syllable, never a guessed gloss.
-  await expect(page.getByTestId('browse-facts-syllables').getByLabel('달, dal')).toBeVisible();
-  await expect(page.getByTestId('browse-facts-words').getByLabel('달, dal')).toHaveCount(0);
+  // Rivers and Seas (F-CURR-001 T-1) builds 호수, 섬 and 강: gang is a word the lesson shows, the blocks of hosu are syllables.
+  await openBrowse(page, 'account', '#t=quest:stage2-nature-q3&s=plan');
+  await expect(page.getByRole('heading', { name: 'Rivers and Seas' })).toBeVisible();
+  await expect(page.getByTestId('browse-facts-words').getByLabel('강, gang')).toBeVisible();
+  await expect(page.getByTestId('browse-facts-syllables').getByLabel('강, gang')).toHaveCount(0);
+  await expect(page.getByTestId('browse-facts-syllables').getByLabel('호, ho')).toBeVisible();
   await expect(page.getByTestId('browse-facts-letters')).toHaveCount(0);
-  // Stage 2 games count for no skill (F-ROUTE-001 OD-5): the Skills row is hidden, never drawn empty.
-  await expect(page.getByTestId('browse-facts-skills')).toHaveCount(0);
+
+  // Outdoor Words builds 나무: na is a word of another topic, but here only a block, so it stays a syllable.
+  await page.evaluate(() => {
+    window.location.hash = '#t=quest:stage2-nature-q1&s=plan';
+  });
+  await expect(page.getByRole('heading', { name: 'Outdoor Words' })).toBeVisible();
+  await expect(page.getByTestId('browse-facts-syllables').getByLabel('나, na')).toBeVisible();
+  await expect(page.getByTestId('browse-facts-words').getByLabel('나, na')).toHaveCount(0);
 
   await page.evaluate(() => {
     window.location.hash = '#t=quest:stage1-nature-q2&s=plan';

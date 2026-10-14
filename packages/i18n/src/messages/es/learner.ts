@@ -599,7 +599,7 @@ export const learner = {
       sentenceDone: '¡Escribiste una oración!',
       myPage: {
         title: 'Mi página',
-        notKept: 'Esta página es solo para ahora. No se guarda.',
+        notKept: 'Esta página es solo por ahora. No se guarda.',
       },
       name: {
         heading: 'Escribe tu nombre en hangul',

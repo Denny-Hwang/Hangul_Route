@@ -733,14 +733,22 @@ describe('stage latch writer (F-ROUTE-001 R-1b, runs with flags.myRouteEnabled o
   });
 
   it('never latches a taste stage', async () => {
-    // Stage 3 is a taste stage (Animal Sentences is still coming); Stage 2 opened with F-CURR-001 S2-2.
-    const taste = episodesAll
-      .filter((e) => e.stage === 'stage3' && e.status === 'shipped')
-      .flatMap((e) => e.questIds.map((questId) => ({ questId, episodeId: e.id })));
-    mem.set('progress:p1', savedWith(taste));
-    await useProgressStore.getState().hydrate('p1');
-    finish('p1', taste[0] as (typeof taste)[number]);
-    expect(stored()).not.toHaveProperty('stageDoneAt');
+    // Every Stage 3 cell has shipped (F-CURR-001 S3-4), so the taste is made for this test only: one
+    // Stage 3 cell of the bundle goes back to a "Coming later" placeholder and is restored after.
+    const cells = episodesAll.filter((e) => e.stage === 'stage3' && (e.placement ?? 'grid') === 'grid' && e.status === 'shipped');
+    const held = cells[0];
+    if (held === undefined) throw new Error('no Stage 3 cell');
+    const at = episodesAll.indexOf(held);
+    episodesAll[at] = { ...held, status: 'preview', questIds: [] };
+    try {
+      const taste = cells.slice(1).flatMap((e) => e.questIds.map((questId) => ({ questId, episodeId: e.id })));
+      mem.set('progress:p1', savedWith(taste));
+      await useProgressStore.getState().hydrate('p1');
+      finish('p1', taste[0] as (typeof taste)[number]);
+      expect(stored()).not.toHaveProperty('stageDoneAt');
+    } finally {
+      episodesAll[at] = held;
+    }
   });
 });
 

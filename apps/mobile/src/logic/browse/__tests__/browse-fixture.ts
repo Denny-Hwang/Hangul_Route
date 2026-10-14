@@ -1,4 +1,4 @@
-import type { Quest, Story } from '@hangul-route/content-schema';
+import type { Episode, Quest, Story } from '@hangul-route/content-schema';
 import { VOCAB_ITEMS, VOCAB_TOPICS } from '../../../content/__generated__/vocab';
 import { episodesAll } from '../../../content/episodes';
 import { heritageCardsAll } from '../../../content/heritage-cards';
@@ -27,14 +27,21 @@ export function fixtureStories(): Story[] {
   ];
 }
 
+/**
+ * Every grid cell has shipped since F-CURR-001 S7-5, so the fixture takes one cell, Make & Share (Stage 7
+ * crafts), back to a "Coming later" placeholder (no quests), so a later cell is still there to check.
+ */
+export const LATER_CELL = 'episode:stage7-crafts';
+const comingLater = (e: Episode): Episode => (e.id === LATER_CELL ? { ...e, status: 'preview', questIds: [] } : e);
+
 /** The fixture input; `stories` replaces the fixture stories (each still gets its shelf episode and listen quest). */
 export function fixtureInput(stories: Story[] = fixtureStories()): BrowseBundleInput {
   const storyQuests: Quest[] = stories.map((s) => ({ ...storyQuest(s.id.replace(/^story:/, '')), titleEn: s.title.en, estimatedMinutes: 5 }));
   return {
     stages,
     themes,
-    episodes: [...episodesAll, ...stories.map((s) => shelfEpisode(s))],
-    quests: [...questsAll, ...storyQuests],
+    episodes: [...episodesAll.map(comingLater), ...stories.map((s) => shelfEpisode(s))],
+    quests: [...questsAll.filter((q) => !q.id.startsWith(`${LATER_CELL.replace('episode:', 'quest:')}-`)), ...storyQuests],
     jamo: jamoKnown,
     cards: heritageCardsAll,
     stories,

@@ -1,4 +1,5 @@
 import type { Locator, Page } from '@playwright/test';
+import { CATALOG } from '@hangul-route/content-schema';
 import { expect, test } from './fixtures';
 import { journeyCellName, keepSidewaysIfAsked, onboardChild, openGrownUpZone, playCheck, readStored, seedStored, waitForSaved } from './helpers';
 import { shot, shotsEnabled } from './shots';
@@ -170,6 +171,8 @@ async function openJourney(page: Page): Promise<void> {
 }
 
 const cell = (page: Page, theme: string, stage: number) => page.getByRole('button', { name: journeyCellName(stage, theme) });
+/** The Journey's theme names (en), by theme key. */
+const THEME_LABEL: Record<string, string> = { letters: 'Letters & Books', life: 'Food & Daily Life', rites: 'Holidays & Traditions', nature: 'Nature & Animals', crafts: 'Play & Crafts' };
 const detailPane = (page: Page) => page.getByRole('region', { name: 'Episode details' });
 const mapPane = (page: Page) => page.getByRole('region', { name: 'Journey map' });
 const tab = (page: Page, name: string) => page.getByRole('tablist').getByRole('link', { name, exact: true });
@@ -225,10 +228,15 @@ test.describe('Journey at 1180x820: two panes', () => {
   });
 
   test('a coming-soon cell shows the coming-soon content in the pane, not a lock or a paywall', async ({ page }) => {
+    // The first grid cell that is still "Coming soon" in the bundle. Every cell has shipped since F-CURR-001
+    // S7-5, so on today's bundle there is none and this case has nothing to show.
+    const later = CATALOG.cells.find((c) => c.status === 'preview');
+    test.skip(later === undefined, 'every grid cell has shipped (F-CURR-001): no coming-soon cell is left to show');
+    const theme = THEME_LABEL[later!.theme];
+    const stage = Number(later!.stage.slice(5));
     await openJourney(page);
-    // Stage 3 Nature has no lesson and no story yet (Stage 3 Holidays ships Festival Sentences, F-CURR-001 S3-3).
-    await cell(page, 'Nature & Animals', 3).click();
-    await expect(cell(page, 'Nature & Animals', 3)).toHaveAttribute('aria-selected', 'true');
+    await cell(page, theme, stage).click();
+    await expect(cell(page, theme, stage)).toHaveAttribute('aria-selected', 'true');
     await expect(detailPane(page).getByText('Coming soon', { exact: true }).first()).toBeVisible();
     await expect(detailPane(page).getByRole('button', { name: 'Start', exact: true })).toHaveCount(0);
     // The stage pill shows the availability word, never a commerce word (F-ROUTE-001 R-J, OD-8).

@@ -246,34 +246,6 @@ export const OVERLAYS: Overlays = {
       "listenPick.rounds.lp-sym-jamo-yo.prompt": "la letra yo",
       "listenPick.rounds.lp-sym-jamo-yu.prompt": "la letra yu"
     },
-    "minigame:s2-life-card-1": {
-      "cardPairs.bap.gloss": "Arroz",
-      "cardPairs.gimbap.gloss": "Kimbap",
-      "cardPairs.ppang.gloss": "Pan",
-      "cardPairs.sagwa.gloss": "Manzana",
-      "cardPairs.uyu.gloss": "Leche"
-    },
-    "minigame:s2-life-quiz-1": {
-      "cardPairs.gimchi.gloss": "Kimchi",
-      "cardPairs.mul.gloss": "Agua",
-      "cardPairs.ppang.gloss": "Pan",
-      "cardPairs.sagwa.gloss": "Manzana",
-      "cardPairs.uyu.gloss": "Leche"
-    },
-    "minigame:s2-nature-card-1": {
-      "cardPairs.bada.gloss": "Mar",
-      "cardPairs.haneul.gloss": "Cielo",
-      "cardPairs.kkot.gloss": "Flor",
-      "cardPairs.namu.gloss": "Árbol",
-      "cardPairs.san.gloss": "Montaña"
-    },
-    "minigame:s2-nature-quiz-1": {
-      "cardPairs.bom.gloss": "Primavera",
-      "cardPairs.byeol.gloss": "Estrella",
-      "cardPairs.gang.gloss": "Río",
-      "cardPairs.haneul.gloss": "Cielo",
-      "cardPairs.nun.gloss": "Nieve"
-    },
     "pitem:recog-odd-a-eo": {
       "gloss": "Encuentra la diferente: a entre eo"
     },
@@ -2326,34 +2298,6 @@ export const OVERLAYS: Overlays = {
       "listenPick.rounds.lp-sym-jamo-hieut.prompt": "글자 hieut",
       "listenPick.rounds.lp-sym-jamo-yo.prompt": "글자 yo",
       "listenPick.rounds.lp-sym-jamo-yu.prompt": "글자 yu"
-    },
-    "minigame:s2-life-card-1": {
-      "cardPairs.bap.gloss": "쌀로 지어 먹는 음식",
-      "cardPairs.gimbap.gloss": "김에 밥과 재료를 넣고 말아 만든 음식",
-      "cardPairs.ppang.gloss": "밀가루로 구운 음식",
-      "cardPairs.sagwa.gloss": "빨갛고 둥근 과일",
-      "cardPairs.uyu.gloss": "소에게서 얻는 하얀 마실 것"
-    },
-    "minigame:s2-life-quiz-1": {
-      "cardPairs.gimchi.gloss": "배추를 맵게 절인 한국 음식",
-      "cardPairs.mul.gloss": "마시거나 씻을 때 쓰는 맑은 액체",
-      "cardPairs.ppang.gloss": "밀가루로 구운 음식",
-      "cardPairs.sagwa.gloss": "빨갛고 둥근 과일",
-      "cardPairs.uyu.gloss": "소에게서 얻는 하얀 마실 것"
-    },
-    "minigame:s2-nature-card-1": {
-      "cardPairs.bada.gloss": "넓고 짠 물",
-      "cardPairs.haneul.gloss": "머리 위로 보이는 높고 넓은 곳",
-      "cardPairs.kkot.gloss": "예쁜 색으로 피는 식물의 부분",
-      "cardPairs.namu.gloss": "줄기와 가지, 잎이 있는 키 큰 식물",
-      "cardPairs.san.gloss": "땅이 높이 솟은 곳"
-    },
-    "minigame:s2-nature-quiz-1": {
-      "cardPairs.bom.gloss": "꽃이 피는 따뜻한 계절",
-      "cardPairs.byeol.gloss": "밤하늘에 반짝이는 작은 빛",
-      "cardPairs.gang.gloss": "길게 흐르는 큰 물줄기",
-      "cardPairs.haneul.gloss": "머리 위로 보이는 높고 넓은 곳",
-      "cardPairs.nun.gloss": "겨울에 하늘에서 내리는 하얀 것"
     },
     "quest:stage1-crafts-q1": {
       "steps.s2.discover.pages.0.items.0.word.gloss": "바람에 날리는 종이 장난감",

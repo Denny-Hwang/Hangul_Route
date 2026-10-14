@@ -3,6 +3,16 @@ import { getMessages } from '@hangul-route/i18n';
 import { describe, expect, it } from 'vitest';
 import { builderEpisodes, catalogLabel, itemCategory, itemTitle, plannableQuest, questsOf } from '../catalog';
 
+/**
+ * Every grid cell has shipped since F-CURR-001, so the coming-soon cases read a copy of the catalogue
+ * with the Stage 7 cells taken back to "Coming later" placeholders.
+ */
+const SOON: Catalog = {
+  ...CATALOG,
+  cells: CATALOG.cells.map((cell) => (cell.stage === 'stage7' ? { ...cell, status: 'preview' as const, minutes: 10, questIds: [] } : cell)),
+  quests: CATALOG.quests.filter((quest) => quest.stage !== 'stage7'),
+};
+
 /** F-PLAN-002 section 3.2: the console reads the shared catalogue through this adapter (it retires `stage1-catalog.ts`). */
 describe('console catalogue adapter over the shared catalogue', () => {
   it('labels quests by title and episodes with their quest count', () => {
@@ -14,7 +24,7 @@ describe('console catalogue adapter over the shared catalogue', () => {
   });
 
   it('labels an episode that is not released yet as coming soon, never as "0 quests"', () => {
-    expect(catalogLabel('episode', 'episode:stage7-crafts')).toBe('Make & Share (coming soon)');
+    expect(catalogLabel('episode', 'episode:stage7-crafts', 'en', SOON)).toBe('Make & Share (coming soon)');
   });
 
   it('falls back to the id for an id this build does not know', () => {
@@ -38,7 +48,7 @@ describe('console catalogue adapter over the shared catalogue', () => {
       ['Picnic Snacks', 4],
     ]);
     expect(questsOf('episode:stage1-letters').map((q) => q.minutes)).toEqual([5, 5, 5]);
-    expect(questsOf('episode:stage7-crafts')).toEqual([]);
+    expect(questsOf('episode:stage7-crafts', SOON)).toEqual([]);
     expect(questsOf('episode:nope')).toEqual([]);
   });
 
@@ -57,7 +67,7 @@ describe('console catalogue adapter over the shared catalogue', () => {
     expect(itemCategory('quest', 'quest:stage1-letters-q1')).toBe('lesson');
     expect(itemCategory('episode', 'episode:stage1-letters')).toBe('lesson');
     expect(itemCategory('quest', 'quest:story-sejong-new-letters-listen')).toBe('story');
-    expect(itemCategory('episode', 'episode:stage3-nature')).toBe('coming-soon');
+    expect(itemCategory('episode', 'episode:stage7-nature', SOON)).toBe('coming-soon');
     // F-CURR-001 S3-2: Daily Mini-Sentences shipped, so its cell is a lesson.
     expect(itemCategory('episode', 'episode:stage3-life')).toBe('lesson');
     expect(itemCategory('quest', 'quest:nope')).toBe('unknown');
