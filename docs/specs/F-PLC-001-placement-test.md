@@ -626,7 +626,7 @@ Flag `flags.placementEnabled` (`apps/mobile/src/config/flags.ts`, `readBool('EXP
 | P-8 | `feat(mobile)`: parent report (Short not-tested line and hint, Deep status words and "checked twice", Spelling with tiles by bank lookup, retake offer location by profile type; AM-38), override, dashboard row | M | P-6, wireframe W-8 |
 | P-7b | `feat(mobile)`: result weekly-plan strip and not-tested copy, `RouteProposal` entry from the result, report "Suggested weekly plan" card (AM-10). **Done (#573)**, behind `flags.routeEnabled` | M | P-6, P-8, F-PLAN-002 P2-3b (`proposeRoute`) and P2-7a (`RouteProposal`); no owner gate from OD-12 / OD-13 (decided 2026-10-12, accepted as proposed) |
 | P-9 | `feat(web)`: roster line, advisory plan prefill, `lib/console/placement.ts` | S | P-2 |
-| P-10 | `test(e2e)` + flag flip for beta | S | P-7, P-7b, P-8, OD-14 (the owner confirms the one-tap default), **the P-3b Worker deploy** (AM-38), and **a store build carrying P-3b's schema shipped at least one release earlier on iOS and Android** (older builds reject backups with a long Deep result, section 3.8) |
+| P-10 | `test(e2e)` + flag flip for beta | S | P-7, P-7b, P-8, **the P-3b Worker deploy** (AM-38), and **a store build carrying P-3b's schema shipped at least one release earlier on iOS and Android** (older builds reject backups with a long Deep result, section 3.8) |
 
 ## 7. Dependencies
 
@@ -682,7 +682,7 @@ Decisions made in this spec (each is reversible):
 13. **Gloss withheld on an open question.** CLAUDE.md section 1 says taught Korean always shows romanization and a gloss. On an open placement item the gloss of a picture option is withheld because it would be the answer (the romanization follows the sound guide choice). Everything is shown after the run. Owner to confirm this narrow exception.
 14. **Mixed-version uploads** are handled by the Worker preserve rule of section 3.8 (shared with F-VOC-005 P-1); until it is deployed the guard is only the order "Worker first, app second".
 15. **Default plan length** — owner decision OD-12 in F-ROUTE-001 section 9, **decided 2026-10-12: accepted as proposed** (thresholds 4 and 16 weeks); the pace chips on the result strip follow OD-13, decided the same day (Gentle 2 / Steady 3 / Brisk 4, default Gentle for "Pictures first" and for classes, Steady otherwise). (AM-11)
-16. **One-tap plan for a self profile on any device** — OD-14.
+16. **One-tap plan for a self profile on any device** — OD-14, **decided 2026-10-14 by the owner: confirmed as proposed** (a self profile applies the recommended plan with one tap, **Use this plan**, no PIN, on any device; a child profile still goes through the grown-up gate).
 17. **The level check and writing** — the report's skills note (AM-5); gap list in `AMENDMENTS-PLC-PLAN-HANDOFF.md` section 4.
 18. **A helping grown-up** is the most realistic source of false-high results for young learners. The hand-off line asks them to let the learner choose; nothing can enforce it. Beta: compare quest-1 accuracy of placed-out Short learners with others. (AM-40)
 19. **Listen-first for `testLocale: 'ko'`** is not assumed. Revisit when beta shows `see-pick-sound` accuracy by test language. (AM-40)
@@ -858,3 +858,4 @@ Reading the table: a guesser is placed at band 1 or lower in more than 98 % of r
 ## Review log
 
 - 2026-10-13, docs follow-ups after the 2026-10-13 merges. Row P-7b is marked done (#573: the result weekly-plan strip, the `RouteProposal` entry and the report's Suggested weekly plan card, all behind `flags.routeEnabled`). OD-14's proposed default (one tap, no PIN, for a self profile) is what P-7b built; the owner confirms it before P-10's flag flip, and P-10's Needs list OD-14.
+- 2026-10-14, owner decision OD-14 (answered in chat): confirmed as proposed; a self profile applies the recommended plan with one tap (**Use this plan**, no PIN) on any device, and a child profile still needs the grown-up gate. Assumption 16 records it, and P-10's Needs no longer list OD-14 (P-10 still needs P-7, P-7b, P-8, the P-3b Worker deploy and the store build carrying P-3b's schema). No code change: P-7b (#573) built this behaviour.

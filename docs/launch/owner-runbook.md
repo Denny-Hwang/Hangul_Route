@@ -481,7 +481,7 @@ DELETE FROM feedback_notes WHERE id = '<note_id>' AND NOT EXISTS (SELECT 1 FROM 
    - 게이팅 픽스처 번들: `pnpm --filter @hangul-route/mobile build:web:fixtures:gated`, 그다음 `STORY_FIXTURES_GATED=1 pnpm --filter @hangul-route/mobile exec playwright test story-shelf-gated.spec free-days`
    - 같은 커밋의 CI `Build PWA · offline e2e` 가 초록 (shard 1 이 게이팅 픽스처 번들에서 `story-shelf-gated.spec` 과 `free-days.spec` 의 직접 이동 케이스를 돌린다, F-STORY-004 PR 4.8b 의 릴리스 게이트).
 4. F-STORY-004 PR 4.8d (고정된 Home 카드의 접근 재확인, #488) 와 PR 4.8e (Home 카드를 누를 때의 접근 확인) 가 머지됨.
-5. F-ENT-003 OD-14 에 답이 있거나 기본값 그대로 둔다.
+5. F-ENT-003 OD-14 (Stage 1 너머의 아직 나오지 않은 레슨 자리를 무료 플랜의 계획에 남기는 방식) 에 답이 있거나 기본값 그대로 둔다. 2026-10-14 에 확정한 OD-14 (self 프로필은 어느 기기에서나 **Use this plan** 한 번 탭, PIN 없음; 아이 프로필은 어른 확인을 거친다) 는 F-ROUTE-001 의 다른 질문이며 이 조건과 관계없다 (F-PLC-001 P-10 의 조건에서 빠졌다).
 6. Stripe Live 를 켜는 릴리스와 같은 창 (§B Step 8 의 Live 절차와 `BILLING_LIVE_ALLOWED`).
 
 **단계 (5분, 위 조건이 모두 예일 때)**

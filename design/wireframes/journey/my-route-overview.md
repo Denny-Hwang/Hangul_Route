@@ -408,7 +408,7 @@ Amends F-PLC-001 `placement/result` (AM-1, AM-14). The mini grid and the three r
 └──────────────────────────────────┘
 ```
 
-- Four actions; **Use this plan** is the only primary. No PIN is asked for the learner's own plan, even on a device with a PIN or a child profile (OD-14).
+- Four actions; **Use this plan** is the only primary. No PIN is asked for a self profile's own plan, even on a device with a PIN or with child profiles on it (OD-14, decided 2026-10-14); a child profile goes through the grown-up gate (J2).
 - Retake that changes nothing: "Your plan stays right where it is." and no strip. Retake that finds more: K3.
 - Nothing to schedule (e.g. placed at Stage 2+ on today's bundle): no strip; the existing "You know a lot!" screen is unchanged.
 
