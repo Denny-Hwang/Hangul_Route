@@ -346,5 +346,6 @@ export const a11y = {
     /** A shape and number marker (the order slide, PR 7; the quiz options, PR 9). */
     option: (n: number, shape: string) => `Option ${n}, ${shape}`,
     shape: { circle: 'circle', triangle: 'triangle', square: 'square', star: 'star' },
+    removeRecent: (t: string) => `Remove: ${t}`,
   },
 } as const;
