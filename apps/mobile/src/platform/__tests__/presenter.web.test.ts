@@ -375,6 +375,17 @@ describe('subscribeKeys', () => {
     expect(doc.count('keydown')).toBe(0);
   });
 
+  it('a handler that returns false leaves the key its browser meaning (the home Help scrolls)', () => {
+    const doc = fakeTarget();
+    const handler = vi.fn((command: unknown) => command === 'escape');
+    subscribeKeys(handler, env({ keyTarget: doc }));
+    const pageDown = press(doc, { key: 'PageDown', code: 'PageDown' });
+    const escape = press(doc, { key: 'Escape', code: 'Escape' });
+    expect(handler.mock.calls).toEqual([['next'], ['escape']]);
+    expect(pageDown.preventDefault).not.toHaveBeenCalled();
+    expect(escape.preventDefault).toHaveBeenCalled();
+  });
+
   it('leaves Enter and Space to a focused button, but arrows still move', () => {
     const doc = fakeTarget();
     const handler = vi.fn();

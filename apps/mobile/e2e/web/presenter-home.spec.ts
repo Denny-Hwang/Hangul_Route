@@ -208,6 +208,34 @@ test.describe('presenter home, Keys and help', () => {
   });
 });
 
+test.describe('presenter home, Keys and help on a narrow phone', () => {
+  test.use({ viewport: { width: 320, height: 568 }, isMobile: true, hasTouch: true });
+
+  test('the Help overlay fits 320 px, scrolls with PageDown and closes with a tap', async ({ page }) => {
+    await page.goto('/present');
+    const help = page.getByTestId('presenter-home-help');
+    await help.tap();
+    const close = page.getByTestId('presenter-help-close');
+    await expect(close).toBeVisible();
+    await expect(close).toBeInViewport({ ratio: 1 });
+    expect(await page.evaluate(() => document.scrollingElement!.scrollWidth <= window.innerWidth)).toBe(true);
+    // The home leaves the scroll keys to the browser: PageDown scrolls the taller overlay.
+    const scrolled = () =>
+      page.evaluate(() => {
+        const root = document.querySelector('[data-testid="presenter-help"]');
+        const all = root ? [root, ...Array.from(root.querySelectorAll('*'))] : [];
+        return Math.max(0, ...all.map((el) => el.scrollTop));
+      });
+    expect(await scrolled()).toBe(0);
+    await page.keyboard.press('PageDown');
+    await expect.poll(scrolled).toBeGreaterThan(0);
+    await expect(page.getByTestId('presenter-help')).toBeVisible();
+    await close.tap();
+    await expect(page.getByTestId('presenter-help')).toHaveCount(0);
+    await expect(help).toBeVisible();
+  });
+});
+
 test.describe('presenter home, phone (one column, Recent first)', () => {
   test.use({ viewport: { width: 375, height: 800 }, isMobile: false, hasTouch: true });
 

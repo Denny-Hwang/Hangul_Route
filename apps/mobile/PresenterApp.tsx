@@ -493,11 +493,14 @@ export default function PresenterApp(): React.ReactElement {
     });
   }, [phase, dispatch, toggleFullscreen]);
 
-  // The home's Help overlay closes with Esc or H, as in a lesson; no other key acts while it is open.
+  // The home's Help overlay closes with Esc or H, as in a lesson. Every other key keeps its browser
+  // meaning (arrows, PageDown and Space scroll the overlay on a short viewport).
   useEffect(() => {
     if (phase.kind !== 'home' || !homeHelp) return undefined;
     return subscribeKeys((command: KeyCommand) => {
-      if (command === 'escape' || (typeof command === 'object' && command.overlay === 'help')) setHomeHelp(false);
+      if (command !== 'escape' && !(typeof command === 'object' && command.overlay === 'help')) return false;
+      setHomeHelp(false);
+      return true;
     });
   }, [phase.kind, homeHelp]);
 

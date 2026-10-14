@@ -1,10 +1,11 @@
-import { HeritageCardArt, colors, koreanTextLabel, presenter, spacing, supportedCardIds, typography } from '@hangul-route/design-system';
+import { colors, koreanTextLabel, presenter, spacing, typography } from '@hangul-route/design-system';
 import React from 'react';
 import { Text, View } from 'react-native';
 import { CardArt } from '../../../components/CardArt';
 import { cardById } from '../../../content/heritage-cards';
 import type { Slide } from '../../../logic/lecture/deck-builder';
 import { cardView } from '../../../logic/lecture/slide-view';
+import { taughtKoreanFont } from '../../../platform/presenter-font';
 import { ART_LG, units } from '../../../logic/lecture/stage-constants';
 import { STAGE_BORDER, STAGE_BORDER_MIN, STAGE_GAP, STAGE_GAP_INNER, STAGE_RADIUS } from '../stage-metrics';
 import { TaughtKo, usePresenterView, useStageText } from '../presenter-context';
@@ -13,8 +14,9 @@ import { revealProps } from './reveal';
 type CardBody = Extract<Slide, { kind: 'card' }>;
 
 /**
- * Heritage card slide (design/screens/presenter/slide-card.md): the card art at 360 units on the
- * left (a card the heritage art cannot draw shows its `CardArt` face); on the right "Heritage card", the title, and the Korean name as a chip (Korean and
+ * Heritage card slide (design/screens/presenter/slide-card.md): the card's `CardArt` face at 360
+ * units on the left (the heritage drawing, or for a card it cannot draw the cover, plate or Korean
+ * word, the word in the presenter font); on the right "Heritage card", the title, and the Korean name as a chip (Korean and
  * romanization in `text.primary` on `brand.secondaryLight`); then the fact, the content's own text.
  * With `romanization: 'tap'` the chip's romanization is its own build. Presenting awards nothing:
  * no "earned", star or count (section 3.9).
@@ -23,18 +25,22 @@ export function CardSlide({ slide, reveal }: { slide: CardBody; reveal: number }
   const { unit, messages } = usePresenterView();
   const size = useStageText();
   const view = cardView(slide, reveal);
-  // A bundled card the heritage art cannot draw shows its card face instead (cover, plate or its
-  // Korean word on the theme tint; F-STORY-006 D7), so the art build always shows a picture.
-  const fallback = supportedCardIds.includes(slide.cardId) ? undefined : cardById(slide.cardId);
+  // CardArt picks the face (F-STORY-006 D7), so the art build always shows a picture. The deck
+  // builder makes a card slide only for a bundled card, so `card` is found in practice.
+  const card = cardById(slide.cardId);
   const promptSize = size(presenter.size.prompt);
   const bodySize = size(presenter.size.body);
   const titleSize = size(presenter.size.title);
   return (
     <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: units(unit, STAGE_GAP) }}>
-      {supportedCardIds.includes(slide.cardId) ? (
-        <HeritageCardArt cardId={slide.cardId} size={units(unit, ART_LG)} accessibilityLabel={slide.title} />
-      ) : fallback !== undefined ? (
-        <CardArt card={fallback} size={units(unit, ART_LG)} accessibilityLabel={slide.title} testID="presenter-card-art" />
+      {card !== undefined ? (
+        <CardArt
+          card={card}
+          size={units(unit, ART_LG)}
+          accessibilityLabel={slide.title}
+          testID="presenter-card-art"
+          wordFontFamily={taughtKoreanFont(presenter.font).fontFamily}
+        />
       ) : null}
       <View style={{ flex: 1, gap: units(unit, STAGE_GAP_INNER), alignItems: 'flex-start' }}>
         <Text style={{ fontSize: size(presenter.size.caption), fontWeight: typography.weight.semibold, color: colors.text.secondary }}>{messages.learner.presenter.slide.card}</Text>

@@ -336,8 +336,12 @@ interface KeyEventLike {
   preventDefault(): void;
 }
 
-/** Calls `handler` with the key-map command of each `keydown`; unmapped keys keep their browser meaning. */
-export function subscribeKeys(handler: (command: KeyCommand) => void, env: PresenterEnv = browserEnv()): () => void {
+/**
+ * Calls `handler` with the key-map command of each `keydown`; unmapped keys keep their browser
+ * meaning. A handler that returns `false` did not use the key, so it keeps its browser meaning too
+ * (the home's Help overlay leaves the scroll keys alone).
+ */
+export function subscribeKeys(handler: (command: KeyCommand) => boolean | void, env: PresenterEnv = browserEnv()): () => void {
   const target = env.keyTarget;
   if (!target) return () => undefined;
   const onKey = (event: KeyEventLike): void => {
@@ -356,8 +360,7 @@ export function subscribeKeys(handler: (command: KeyCommand) => void, env: Prese
       onActivatable: activatable(focused),
     });
     if (command === null) return;
-    event.preventDefault();
-    handler(command);
+    if (handler(command) !== false) event.preventDefault();
   };
   target.addEventListener('keydown', onKey as Listener);
   return () => target.removeEventListener('keydown', onKey as Listener);
