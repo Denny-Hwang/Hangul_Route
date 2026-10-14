@@ -1,4 +1,4 @@
-import { decodeDeck, type LectureDeck, type LectureDecodeFailure } from '@hangul-route/content-schema';
+import { decodeDeck, type ActivityPreset, type LectureDeck, type LectureDecodeFailure } from '@hangul-route/content-schema';
 import type { AudioCapability } from '../audio/capability';
 import { canPlayKorean } from '../audio/capability';
 import type { KoLine, SlideKind } from './build-steps';
@@ -42,8 +42,8 @@ export function resolveBoot(address: { raw: string; reloaded: boolean } | null, 
 
 // --- the slides this build draws ------------------------------------------------------------------
 
-/** Slide kinds the presenter shell draws (PR 6); PRs 7, 9 and 11 add theirs. */
-export const SHELL_SLIDE_KINDS: ReadonlySet<SlideKind> = new Set<SlideKind>(['title', 'letter', 'end']);
+/** Slide kinds the presenter draws: the shell's (PR 6) and the teaching slides (PR 7); PRs 9 and 11 add theirs. */
+export const SHELL_SLIDE_KINDS: ReadonlySet<SlideKind> = new Set<SlideKind>(['title', 'letter', 'syllable', 'vocab', 'sequence', 'card', 'activity', 'end']);
 
 /** One line of the start screen's "not shown as slides" list: the block that holds it and why. */
 export interface SkipPart {
@@ -171,13 +171,24 @@ export function gestureCommand(g: { x: number; width: number; dx: number; dy: nu
 
 // --- accessibility -------------------------------------------------------------------------------
 
-/** The slide's own words for the live region ("g/k" of a letter), after its kind label; '' when none. */
-export function slideDetail(slide: Slide): string {
+/**
+ * The slide's own words for the live region ("g/k" of a letter), after its kind label; '' when none.
+ * An activity is named by its preset, a catalogue string the caller passes (`names.activity`).
+ */
+export function slideDetail(slide: Slide, names?: { activity: (preset: ActivityPreset) => string }): string {
   switch (slide.kind) {
     case 'title':
       return slide.title;
     case 'letter':
       return `${slide.char}, ${slide.romanization}`;
+    case 'syllable':
+      return `${slide.ko}, ${slide.romanization}`;
+    case 'vocab':
+      return `${slide.word.ko}, ${slide.word.romanization}, ${slide.word.gloss}`;
+    case 'card':
+      return slide.title;
+    case 'activity':
+      return names?.activity(slide.preset) ?? '';
     default:
       return '';
   }

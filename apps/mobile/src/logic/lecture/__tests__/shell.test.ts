@@ -87,8 +87,26 @@ describe('resolveBoot', () => {
   });
 });
 
-describe('runDeck: the slides PR 6 draws', () => {
-  it('draws title, letter and End slides; everything else is a skipped part, one per block and kind', () => {
+describe('runDeck: the slides this build draws', () => {
+  it('draws title, letter, syllable, word, order, card, activity and End slides (PR 6 and PR 7)', () => {
+    expect([...SHELL_SLIDE_KINDS].sort()).toEqual(['activity', 'card', 'end', 'letter', 'sequence', 'syllable', 'title', 'vocab']);
+    const deck = deckOf([
+      { kind: 'episode', id: 'episode:stage1-letters' },
+      { kind: 'quest', id: 'quest:stage1-life-q1' },
+      { kind: 'quest', id: 'quest:stage1-rites-q3' },
+      { kind: 'activity', preset: 'air-write', minutes: 3 },
+      { kind: 'cards', cardIds: ['card:book'] },
+      { kind: 'class-code', code: 'HYRA42' },
+    ]);
+    const expanded = expandDeck(deck, lectureBundle('en'), { canPlayKorean: true });
+    const run = runDeck(deck, expanded);
+    expect(new Set(run.slides.map((s) => s.kind))).toEqual(new Set(['title', 'letter', 'syllable', 'vocab', 'sequence', 'card', 'activity', 'end']));
+    // The activity's minutes stay in the estimate with its slide.
+    const quizzes = expanded.slides.filter((s) => s.kind === 'quiz').length;
+    expect(run.minutes).toBe(expanded.minutes - quizzes);
+  });
+
+  it('everything else is a skipped part, one per block and kind', () => {
     const deck = deckOf([
       { kind: 'episode', id: 'episode:stage1-letters' },
       { kind: 'quiz', from: 'all', rounds: 3 },
@@ -97,30 +115,39 @@ describe('runDeck: the slides PR 6 draws', () => {
     ]);
     const expanded = expandDeck(deck, lectureBundle('en'), { canPlayKorean: true });
     const run = runDeck(deck, expanded);
-    expect(new Set(run.slides.map((s) => s.kind))).toEqual(new Set(['title', 'letter', 'end']));
     expect(run.slides.at(-1)?.kind).toBe('end');
     expect(run.slides.filter((s) => s.kind === 'letter').length).toBeGreaterThan(4);
     const dropped = expanded.slides.filter((s) => !SHELL_SLIDE_KINDS.has(s.kind));
     expect(dropped.length).toBeGreaterThan(0);
-    // The skipped parts: the builder's own, plus the undrawn runs; the quiz and activity blocks are one part each.
+    expect(dropped.every((s) => s.kind === 'quiz')).toBe(true);
+    // The skipped parts: the builder's own, plus the undrawn runs; the quiz block is one part.
     const added = run.parts.slice(expanded.skipped.length);
     expect(added.every((p) => p.reason === 'unsupported-step')).toBe(true);
     expect(added.filter((p) => p.blockIndex === 1)).toHaveLength(1);
-    expect(added.filter((p) => p.blockIndex === 2)).toHaveLength(1);
+    expect(added.filter((p) => p.blockIndex === 2)).toHaveLength(0);
     expect(added.length).toBeLessThan(dropped.length);
-    // Quiz minutes and activity minutes leave the estimate with their slides.
-    const quizzes = dropped.filter((s) => s.kind === 'quiz').length;
-    expect(run.minutes).toBe(expanded.minutes - quizzes - 3);
+    // Quiz minutes leave the estimate with their slides; the activity's stay.
+    expect(run.minutes).toBe(expanded.minutes - dropped.length);
+  });
+
+  it('an undrawn activity slide takes its minutes out of the estimate', () => {
+    const end: Slide = { kind: 'end', letters: [], words: [], key: 'end', builds: ['summary'] };
+    const activity: Slide = { kind: 'activity', preset: 'air-write', minutes: 3, key: 'activity:air-write', builds: ['prompt'] };
+    const letter = expandDeck(deckOf([{ kind: 'jamo-set', jamoIds: ['jamo:giyeok'] }]), lectureBundle('en'), { canPlayKorean: true }).slides[0]!;
+    const deck = deckOf([{ kind: 'activity', preset: 'air-write', minutes: 3 }, { kind: 'jamo-set', jamoIds: ['jamo:giyeok'] }]);
+    const run = runDeck(deck, { slides: [activity, letter, end], skipped: [], taught: [], minutes: 5 }, new Set(['letter', 'end']));
+    expect(run.minutes).toBe(2);
+    expect(run.parts).toEqual([{ blockIndex: 0, reason: 'unsupported-step' }]);
   });
 
   it('a deck with nothing to draw but the End slide is empty (the invalid-deck screen)', () => {
     const end: Slide = { kind: 'end', letters: [], words: [], key: 'end', builds: ['summary'] };
-    const card: Slide = { kind: 'card', cardId: 'card:book', title: 'Book', key: 'cards/card:book', builds: ['art'] };
-    const expanded: ExpandedDeck = { slides: [card, end], skipped: [], taught: [], minutes: 4 };
-    const run = runDeck(deckOf([{ kind: 'cards', cardIds: ['card:book'] }]), expanded);
+    const quiz: Slide = { kind: 'quiz', prompt: { ask: 'odd-one-out' }, options: [], textPrompt: false, key: 'quiz/q1', builds: ['question', 'answer'] };
+    const expanded: ExpandedDeck = { slides: [quiz, end], skipped: [], taught: [], minutes: 4 };
+    const run = runDeck(deckOf([{ kind: 'quiz', from: 'all', rounds: 3 }]), expanded);
     expect(run.slides).toEqual([]);
     expect(run.parts).toEqual([{ blockIndex: 0, reason: 'unsupported-step' }]);
-    expect(runDeck(deckOf([{ kind: 'cards', cardIds: ['card:book'] }]), { slides: [], skipped: [], taught: [], minutes: 0 }).slides).toEqual([]);
+    expect(runDeck(deckOf([{ kind: 'quiz', from: 'all', rounds: 3 }]), { slides: [], skipped: [], taught: [], minutes: 0 }).slides).toEqual([]);
   });
 
   it('a story title (cover scene) waits for the story slides', () => {
@@ -211,6 +238,28 @@ describe('slideDetail', () => {
     expect(slideDetail(l[0]!)).toBe(`${(l[0] as Extract<Slide, { kind: 'letter' }>).char}, g/k`);
     expect(slideDetail(l[1]!)).toBe('');
     expect(letter).toBeDefined();
+  });
+
+  it('names the PR 7 slides by their taught item, card title or activity name; the order slide by its kind alone', () => {
+    const slides = expandDeck(
+      deckOf([
+        { kind: 'quest', id: 'quest:stage1-letters-q1' },
+        { kind: 'quest', id: 'quest:stage1-life-q1' },
+        { kind: 'quest', id: 'quest:stage1-rites-q3' },
+        { kind: 'activity', preset: 'air-write', minutes: 3 },
+      ]),
+      lectureBundle('en'),
+      { canPlayKorean: true },
+    ).slides;
+    const of = <K extends Slide['kind']>(kind: K) => slides.find((s) => s.kind === kind) as Extract<Slide, { kind: K }>;
+    const names = { activity: (preset: string) => `name of ${preset}` };
+    expect(slideDetail(of('syllable'), names)).toBe(`${of('syllable').ko}, ${of('syllable').romanization}`);
+    const vocab = of('vocab');
+    expect(slideDetail(vocab, names)).toBe(`${vocab.word.ko}, ${vocab.word.romanization}, ${vocab.word.gloss}`);
+    expect(slideDetail(of('card'), names)).toBe(of('card').title);
+    expect(slideDetail(of('activity'), names)).toBe('name of air-write');
+    expect(slideDetail(of('activity'))).toBe('');
+    expect(slideDetail(of('sequence'), names)).toBe('');
   });
 });
 
