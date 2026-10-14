@@ -72,7 +72,7 @@
                     ]
                   }
                 ],
-                "captionEn": "Two boards every park has: the way in and the way out."
+                "captionEn": "Two boards you may see: the way in and the way out."
               }
             ]
           },
@@ -1418,10 +1418,10 @@
         }
       ],
       "verification": {
-        "passes": 1,
+        "passes": 2,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "pass 2 (author sourcing, 2026-10-14): 'protected areas the state designates and looks after' = KNPS 국립공원은? (국가가 직접 관리하는 보호지역) and National Archives (국가가 공원으로 지정하고 관리하는 곳); 'to keep their nature and scenery' = KNPS (자연생태계와 자연·문화 경관의 보전) and Archives (자연풍경지를 보호·보전); 'a place for the public to rest' = KNPS 국립공원의 기능 (국민의 휴식처); 'most are mountain parks' = KNPS (24 parks, 산악형 19개) and Archives (22 parks in 2016, 산악형 17개); no count is put in learner copy because the totals change over time. Both pages fetched 2026-10-14, HTTP 200 (KNPS answers a browser user agent only). Used in: hoyaIntroEn."
+        "notes": "pass 2 (author sourcing, 2026-10-14): 'protected areas the state designates and looks after' = KNPS 국립공원은? (국가가 직접 관리하는 보호지역) and National Archives (국가가 공원으로 지정하고 관리하는 곳); 'to keep their nature and scenery' = KNPS (자연생태계와 자연·문화 경관의 보전) and Archives (자연풍경지를 보호·보전); 'a place for the public to rest' = KNPS 국립공원의 기능 (국민의 휴식처); 'most are mountain parks' = KNPS (24 parks, 산악형 19개) and Archives (22 parks in 2016, 산악형 17개); no count is put in learner copy because the totals change over time. Both pages fetched 2026-10-14, HTTP 200 (KNPS answers a browser user agent only). Used in: hoyaIntroEn.\npass 2b (independent fact check, 2026-10-14): all four parts re-checked against both pages, re-fetched 2026-10-14 HTTP 200. KNPS 국립공원은? says the state manages them directly as protected areas for keeping nature and scenery; 국립공원의 기능 lists a place of rest open to the public; 우리나라의 국립공원 gives 19 of 24 as mountain parks. The Archives page says the state designates and manages them to protect natural scenery and counts 17 of 22 as mountain parks (2016). Each quoteOrLocator matches the page text. 'Most are mountain parks' holds on both counts. The English note shares no wording with the Korean quotes. Outcome: pass, no change."
       }
     },
     {
@@ -1445,10 +1445,10 @@
         }
       ],
       "verification": {
-        "passes": 1,
+        "passes": 2,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "pass 2 (author sourcing, 2026-10-14): 'going up a mountain for exercise, fun or exploring' = encykorea 등산 정의 (운동·놀이·탐험 등의 목적으로 산에 오르는 행위); 'from the 1960s a pastime for ordinary people' = encykorea 등산, 1960-1980 section (등산이 일반인의 레저화가 되면서); 'many millions of visits a year' = Ministry press release title (2025년 4,331만 명). The note says 'ordinary people', never 'all Koreans'; the exact number stays out of learner copy. Both pages fetched 2026-10-14, HTTP 200. Used in: q2 intro Hoya line."
+        "notes": "pass 2 (author sourcing, 2026-10-14): 'going up a mountain for exercise, fun or exploring' = encykorea 등산 정의 (운동·놀이·탐험 등의 목적으로 산에 오르는 행위); 'from the 1960s a pastime for ordinary people' = encykorea 등산, 1960-1980 section (등산이 일반인의 레저화가 되면서); 'many millions of visits a year' = Ministry press release title (2025년 4,331만 명). The note says 'ordinary people', never 'all Koreans'; the exact number stays out of learner copy. Both pages fetched 2026-10-14, HTTP 200. Used in: q2 intro Hoya line.\npass 2b (independent fact check, 2026-10-14): both pages re-fetched 2026-10-14 HTTP 200. encykorea 등산 gives the definition as climbing a mountain for exercise, play or exploration, and its 1960-1980 section says hiking became leisure for the general public; the Ministry release (2026-02-24) reports 43.31 million national park visitors in 2025, which supports 'many millions of visits a year' (visitor counts are visit counts). Quotes match the pages. No 'all Koreans' claim; the q2 intro line ('a popular day out') stays within this note. No copied wording. Outcome: pass, no change."
       }
     },
     {
@@ -1479,10 +1479,10 @@
         }
       ],
       "verification": {
-        "passes": 1,
+        "passes": 2,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "pass 2 (author sourcing, 2026-10-14): 'gives the length of a section and the time it takes one way' = korea.kr wildflower trails list (거리/소요시간(편도): 3.1km / 1시간 30분) and korea.kr park trail app (탐방코스 정보: 거리, 소요시간); 'a start time per trail set with distance and walking time in mind' = KNPS 입산시간지정제 (산행목적지, 거리와 산행시간 등을 고려하여 탐방로별로 입산ㆍ통제시간을 지정). The drawn trail signs of the cell are made for the app and copy no real sign. All three pages fetched 2026-10-14, HTTP 200. Used in: q3 intro Hoya line, q3 Discover page 2 (the time sign)."
+        "notes": "pass 2 (author sourcing, 2026-10-14): 'gives the length of a section and the time it takes one way' = korea.kr wildflower trails list (거리/소요시간(편도): 3.1km / 1시간 30분) and korea.kr park trail app (탐방코스 정보: 거리, 소요시간); 'a start time per trail set with distance and walking time in mind' = KNPS 입산시간지정제 (산행목적지, 거리와 산행시간 등을 고려하여 탐방로별로 입산ㆍ통제시간을 지정). The drawn trail signs of the cell are made for the app and copy no real sign. All three pages fetched 2026-10-14, HTTP 200. Used in: q3 intro Hoya line, q3 Discover page 2 (the time sign).\npass 2b (independent fact check, 2026-10-14): all three pages re-fetched 2026-10-14 HTTP 200. The korea.kr wildflower list gives each trail section with distance and one-way time (3.1km / 1h30 for the first); the korea.kr app page lists distance and time per course; KNPS 입산시간지정제 sets entry and closing times per trail by destination, distance and hiking time. Quotes match the pages. 'Start time' reads the 입산 time correctly. No copied wording; no real sign is reproduced. Outcome: pass, no change."
       }
     },
     {
@@ -1498,18 +1498,18 @@
           "quoteOrLocator": "답변 (2026. 7. 6.): ‘‘한 시간, 두 시간’의 ‘한, 두’는 서수라기보다 의존 명사 ‘시간’ 앞에 쓰인 수 관형사로 보는 것이 적절합니다.’ / ‘일반적으로 작은 수에서는 ‘한 시간, 두 시간’처럼 고유어 수 표현이 자연스럽고 …’"
         },
         {
-          "title": "한1 / 두1",
+          "title": "한1 / 두1 / 세1",
           "publisher": "국립국어원 (National Institute of Korean Language) — 표준국어대사전",
           "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%ED%95%9C",
           "accessed": "2026-10-14",
-          "quoteOrLocator": "한1「관형사」: ‘그 수량이 하나임을 나타내는 말.’ (두1「관형사」: ‘그 수량이 둘임을 나타내는 말.’, searchKeyword=두)"
+          "quoteOrLocator": "한1「관형사」: ‘그 수량이 하나임을 나타내는 말.’ (두1「관형사」: ‘그 수량이 둘임을 나타내는 말.’, searchKeyword=두; 세1「관형사」: ‘그 수량이 셋임을 나타내는 말.’, searchKeyword=세)"
         }
       ],
       "verification": {
-        "passes": 1,
+        "passes": 2,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "pass 2 (author sourcing, 2026-10-14): 'small numbers of hours use native numbers' = NIKL 온라인가나다 answer (작은 수에서는 ‘한 시간, 두 시간’처럼 고유어 수 표현이 자연스럽고); 'short forms before the word for hour' = the same answer (‘한, 두’ ... 의존 명사 ‘시간’ 앞에 쓰인 수 관형사) and stdict 한1 / 두1 「관형사」 (그 수량이 하나임 / 둘임을 나타내는 말). The note keeps to small numbers, as the source does (larger numbers may also use Sino-Korean). Both pages fetched 2026-10-14, HTTP 200. Used in: q3 Discover page 2 caption (the §3.6 number-system page)."
+        "notes": "pass 2 (author sourcing, 2026-10-14): 'small numbers of hours use native numbers' = NIKL 온라인가나다 answer (작은 수에서는 ‘한 시간, 두 시간’처럼 고유어 수 표현이 자연스럽고); 'short forms before the word for hour' = the same answer (‘한, 두’ ... 의존 명사 ‘시간’ 앞에 쓰인 수 관형사) and stdict 한1 / 두1 「관형사」 (그 수량이 하나임 / 둘임을 나타내는 말). The note keeps to small numbers, as the source does (larger numbers may also use Sino-Korean). Both pages fetched 2026-10-14, HTTP 200. Used in: q3 Discover page 2 caption (the §3.6 number-system page).\npass 2b (independent fact check, 2026-10-14): both pages re-fetched 2026-10-14 HTTP 200. The NIKL 온라인가나다 answer (2026-07-06) says 한, 두 before 시간 are numeral determiners and native numbers sound natural for small numbers; quotes match. Finding: the note names se, but the second source covered only 한1 and 두1. Fix: stdict 세1 「관형사」 (그 수량이 셋임을 나타내는 말, fetched with searchKeyword=세) added to that source's title and quoteOrLocator, so han, du and se are each sourced. No copied wording. Outcome: pass after the source fix."
       }
     }
   ],
