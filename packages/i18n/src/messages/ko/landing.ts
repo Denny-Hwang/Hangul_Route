@@ -268,6 +268,7 @@ export const landing = {
     contact: '문의',
     copyright: (year: number) => `© ${year} Hangul Route`,
     language: '언어',
+    licenses: '오픈소스 라이선스',
   },
   waitlist: {
     label: '내 이메일',
@@ -309,6 +310,18 @@ export const landing = {
     backHome: '← 홈으로',
     englishAuthoritative: '이 문서는 영어로 표시됩니다. 효력이 있는 것은 영어판입니다.',
     draft: '검토용 초안입니다. 이 문서는 공개 출시 전에 자격을 갖춘 법률 전문가의 검토를 기다리는 작업 초안입니다.',
+  },
+  licenses: {
+    title: '오픈소스 라이선스',
+    lead: 'Hangul Route는 다른 사람들이 만든 오픈소스 소프트웨어와 글꼴을 써요. 각각 자기 라이선스를 따라요. 이 페이지에서 저작권 표시와 라이선스 전문을 볼 수 있어요.',
+    notOpen: 'Hangul Route 자체는 오픈소스가 아니에요.',
+    copyright: '© 2026 Sungjoo Hwang. 모든 권리 보유.',
+    softwareTitle: '소프트웨어',
+    fontsTitle: '글꼴',
+    noticesTitle: 'NOTICE 파일',
+    fullText: '라이선스 전문',
+    usedIn: '사용하는 곳',
+    where: { app: '앱', web: '웹사이트', server: '서버' },
   },
   notFound: {
     body: '이 페이지를 찾을 수 없어요.',

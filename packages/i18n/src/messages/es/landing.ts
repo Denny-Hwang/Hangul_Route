@@ -273,6 +273,7 @@ export const landing = {
     contact: 'Contacto',
     copyright: (year: number) => `© ${year} Hangul Route`,
     language: 'Idioma',
+    licenses: 'Avisos de código abierto',
   },
   waitlist: {
     label: 'Tu correo',
@@ -315,6 +316,18 @@ export const landing = {
     backHome: '← Ir al inicio',
     englishAuthoritative: 'Este documento se muestra en inglés. La versión en inglés es la que se aplica.',
     draft: 'Borrador para revisión. Este documento es un borrador de trabajo que espera la revisión de asesoría legal calificada antes del lanzamiento público.',
+  },
+  licenses: {
+    title: 'Avisos de código abierto',
+    lead: 'Hangul Route usa software de código abierto y una fuente tipográfica que hicieron otras personas. Cada uno mantiene su propia licencia. Esta página los muestra con sus avisos de copyright y el texto completo de cada licencia.',
+    notOpen: 'Hangul Route en sí no es de código abierto.',
+    copyright: 'Copyright (c) 2026 Sungjoo Hwang. Todos los derechos reservados.',
+    softwareTitle: 'Software',
+    fontsTitle: 'Fuentes',
+    noticesTitle: 'Archivos NOTICE',
+    fullText: 'Texto de la licencia',
+    usedIn: 'Se usa en',
+    where: { app: 'App', web: 'Sitio web', server: 'Servidor' },
   },
   notFound: {
     body: 'No encontramos esta página.',

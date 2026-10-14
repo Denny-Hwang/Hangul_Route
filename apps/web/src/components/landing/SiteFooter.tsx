@@ -1,4 +1,4 @@
-import { colors, spacing, typography } from '@hangul-route/design-system/tokens';
+import { colors, spacing, touchTarget, typography } from '@hangul-route/design-system/tokens';
 import { getMessages, type UiLocale } from '@hangul-route/i18n';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
@@ -21,6 +21,16 @@ export interface SiteFooterProps {
 
 /** A footer link: 64 px tall, left-aligned; its colours change on hover, so they are the stylesheet's. */
 const FOOTER_LINK = { ...HIT, justifyContent: 'flex-start' } as const;
+
+/**
+ * The open-source notices link beside the copyright line: caption size, a full hit area, and negative block margins of
+ * half the difference between the hit area and one caption line, so the row is one caption line tall.
+ */
+const LEGAL_LINK = {
+  ...FOOTER_LINK,
+  fontSize: rem(typography.size.caption),
+  marginBlock: `calc((${rem(typography.size.caption)} * ${typography.leading.normal} - ${touchTarget.min}px) / 2)`,
+} as const;
 
 /** The current page's Guide link: bold in the primary text colour (a weight change, not colour alone). */
 const FOOTER_CURRENT = { color: colors.text.primary, fontWeight: typography.weight.bold } as const;
@@ -58,7 +68,7 @@ function Group({ id, title, nav = false, children }: { id: string; title: string
  * The site footer (F-SITE-002 §3.2; wireframe design/wireframes/site/header-footer.md; mock
  * design/screens/site/header.md). Three groups in one DOM order, Guide, App, Company: on phones Guide and App stack
  * in the left column and Company sits on the right, on wide screens they are three columns (`hr-site-footer-*` in
- * `globals.css`). Guide links the shipped persona pages only. Then the copyright line and the locale switcher (shown once a second locale ships). The legal
+ * `globals.css`). Guide links the shipped persona pages only. Then the copyright line with the open-source notices link, and the locale switcher (shown once a second locale ships). The legal
  * variant drops the App group (OD-14). No console, demo or billing link, and no old in-page anchors.
  */
 export function SiteFooter({ locale, page, current, variant = 'default' }: SiteFooterProps): JSX.Element {
@@ -135,9 +145,19 @@ export function SiteFooter({ locale, page, current, variant = 'default' }: SiteF
             </Group>
           </div>
         </div>
-        <p style={{ margin: `${spacing.lg}px 0 0`, fontSize: rem(typography.size.caption), color: colors.text.muted }}>
-          {t.footer.copyright(new Date().getFullYear())}
-        </p>
+        {/*
+          The copyright line and, on the same row, the open-source notices (owner decision 2026-10-14; wireframe
+          site/licenses.md): a link beside the line rather than another Company item, so the footer keeps its height
+          (F-SITE-002 §3.11 budgets). The link keeps its 64 px hit area (LEGAL_LINK) but takes only one caption line of
+          the row; the rest of the area lies in the margin above and the footer padding below. It wraps under the line
+          where the row is too narrow.
+        */}
+        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', columnGap: spacing.md, marginTop: spacing.lg }}>
+          <p style={{ margin: 0, fontSize: rem(typography.size.caption), color: colors.text.muted }}>{t.footer.copyright(new Date().getFullYear())}</p>
+          <Link href={sitePath(locale, '/licenses')} className="hr-site-footer-link" style={LEGAL_LINK}>
+            {t.footer.licenses}
+          </Link>
+        </div>
         {/* One row (label, then each locale), so the switcher adds one line once a second locale ships. */}
         <div className="hr-site-locales">
           <LocaleSwitcher locale={locale} page={page} label={t.footer.language} shown={shownSiteLocales()} linkStyle={FOOTER_LINK} />

@@ -22,6 +22,7 @@ import * as enParentsPage from '../(en)/parents/page';
 import * as enTeachersPage from '../(en)/teachers/page';
 import * as enPrivacyPage from '../(en)/privacy/page';
 import * as enTermsPage from '../(en)/terms/page';
+import * as enLicensesPage from '../(en)/licenses/page';
 import * as locAboutPage from '../(loc)/[locale]/about/page';
 import * as locLayout from '../(loc)/[locale]/layout';
 import * as locLandingPage from '../(loc)/[locale]/page';
@@ -30,6 +31,7 @@ import * as locParentsPage from '../(loc)/[locale]/parents/page';
 import * as locTeachersPage from '../(loc)/[locale]/teachers/page';
 import * as locPrivacyPage from '../(loc)/[locale]/privacy/page';
 import * as locTermsPage from '../(loc)/[locale]/terms/page';
+import * as locLicensesPage from '../(loc)/[locale]/licenses/page';
 import * as rootLayout from '../layout';
 import * as notFoundPage from '../not-found';
 
@@ -37,7 +39,7 @@ import * as notFoundPage from '../not-found';
  * F-I18N-001 PR 11b, §3.4: the static export has no middleware, and the root layout cannot see a
  * `[locale]` param unless it lives inside that segment. So the app is three route groups, each rendering
  * its own `<html>` (the top layout holds only the stylesheet and the site metadata):
- *   (en)              `/`, `/about`, `/privacy`, `/terms`, `/learners`, `/parents`, `/teachers` with `<html lang="en">`
+ *   (en)              `/`, `/about`, `/privacy`, `/terms`, `/learners`, `/parents`, `/teachers`, `/licenses` with `<html lang="en">`
  *   (loc)/[locale]    the same pages under `/es` and `/ko` with `<html lang={locale}>`; a locale that
  *                     has not shipped is marked and removed from the export after the build
  *   (console)         `/teach`, `/parent`, `/design-preview`, `<html lang="en">`, client-side locale
@@ -65,7 +67,7 @@ function walk(dir: string, base: string = dir): string[] {
 type LayoutProps = { children: ReactNode; params?: { locale: string } };
 type PageProps = { params: { locale: string } };
 
-const SITE_PAGES = ['page.tsx', join('about', 'page.tsx'), join('privacy', 'page.tsx'), join('terms', 'page.tsx'), join('learners', 'page.tsx'), join('parents', 'page.tsx'), join('teachers', 'page.tsx')];
+const SITE_PAGES = ['page.tsx', join('about', 'page.tsx'), join('privacy', 'page.tsx'), join('terms', 'page.tsx'), join('learners', 'page.tsx'), join('parents', 'page.tsx'), join('teachers', 'page.tsx'), join('licenses', 'page.tsx')];
 
 describe('three route groups, each with its own document', () => {
   it('the top layout carries the stylesheet and the site metadata, and renders no <html>', () => {
@@ -189,6 +191,7 @@ describe('/es and /ko are prerendered but hidden until shipped', () => {
     'learners/page': locLearnersPage,
     'parents/page': locParentsPage,
     'teachers/page': locTeachersPage,
+    'licenses/page': locLicensesPage,
   } as const;
 
   it.each(Object.keys(LOCALE_PAGES) as Array<keyof typeof LOCALE_PAGES>)('(loc)/[locale]/%s is a 404 for a locale that is not a site locale', (page) => {
@@ -208,6 +211,7 @@ describe('locale pages are the English pages with locale links', () => {
     ['learners', enLearnersPage, locLearnersPage],
     ['parents', enParentsPage, locParentsPage],
     ['teachers', enTeachersPage, locTeachersPage],
+    ['licenses', enLicensesPage, locLicensesPage],
   ] as const;
 
   const hrefs = (html: string): string[] => [...html.matchAll(/href="([^"]*)"/g)].map((m) => m[1] ?? '');
@@ -228,6 +232,7 @@ describe('locale pages are the English pages with locale links', () => {
     learners: (m) => ({ own: m.landing.persona.learners.title, english: getMessages('en').landing.persona.learners.title }),
     parents: (m) => ({ own: m.landing.persona.parents.title, english: getMessages('en').landing.persona.parents.title }),
     teachers: (m) => ({ own: m.landing.persona.teachers.title, english: getMessages('en').landing.persona.teachers.title }),
+    licenses: (m) => ({ own: m.landing.licenses.title, english: getMessages('en').landing.licenses.title }),
   };
   for (const [name, enPage, locPage] of pages) {
     it.each(SITE_LOCALES)(`${name}: /%s keeps the English links as locale links, in its own words once translated`, (locale) => {
@@ -239,7 +244,7 @@ describe('locale pages are the English pages with locale links', () => {
       const toLocale = (href: string): string =>
         href === '/'
           ? `/${locale}`
-          : ['/about', '/privacy', '/terms', '/learners', '/parents', '/teachers'].includes(href)
+          : ['/about', '/privacy', '/terms', '/learners', '/parents', '/teachers', '/licenses'].includes(href)
             ? `/${locale}${href}`
             : href === 'https://app.hangulroute.com'
               ? `${href}?lang=${locale}`

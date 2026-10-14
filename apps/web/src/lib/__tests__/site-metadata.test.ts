@@ -42,7 +42,7 @@ describe('siteAlternates (hreflang)', () => {
 
 describe('siteMetadataFor', () => {
   it('lists the site pages: home, About, the legal pages and the persona pages (F-SITE-002 S-4a, S-4b)', () => {
-    expect(SITE_PAGES).toEqual(['/', '/about', '/privacy', '/terms', '/learners', '/parents', '/teachers']);
+    expect(SITE_PAGES).toEqual(['/', '/about', '/privacy', '/terms', '/learners', '/parents', '/teachers', '/licenses']);
   });
 
   it('English while only English ships: the site metadata as before, plus the base for absolute URLs', () => {

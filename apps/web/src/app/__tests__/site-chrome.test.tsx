@@ -162,7 +162,7 @@ describe('SiteFooter', () => {
     expect(headings).toEqual([t.footer.guide, t.footer.app, t.footer.company]);
   });
 
-  it('Guide: the persona pages; App: Start learning and Sign in; Company: About, Privacy, Terms and Contact', () => {
+  it('Guide: the persona pages; App: Start learning and Sign in; Company: About, Privacy, Terms and Contact; then Open-source notices beside the copyright line', () => {
     expect(items.map((c) => c.text)).toEqual([
       ...personaLabels,
       t.nav.start,
@@ -171,6 +171,7 @@ describe('SiteFooter', () => {
       t.footer.privacy,
       t.footer.terms,
       `${t.footer.contact}${CONTACT_EMAIL}`,
+      t.footer.licenses,
     ]);
     expect(items.map(hrefOf)).toEqual([
       ...personaPaths('en'),
@@ -180,6 +181,7 @@ describe('SiteFooter', () => {
       '/privacy',
       '/terms',
       `mailto:${CONTACT_EMAIL}`,
+      '/licenses',
     ]);
   });
 
