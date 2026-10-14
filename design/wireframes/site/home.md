@@ -94,7 +94,7 @@ There is no questions block on `/`: each question now lives on the persona page 
 - [[ START ]] (wide header) and [[ START LEARNING ]] (hero) → learner app, same tab; from `/es` or `/ko` the link carries `?lang=` (unchanged behaviour).
 - "Parent or teacher? Find your page" → scrolls to `#who` (no JavaScript needed); focus moves to the section heading.
 - Persona card (whole card) → `site/learners` / `site/parents` / `site/teachers`.
-- Sign in (header) → `/signin` on the same origin until the owner sets `CONSOLE_ORIGIN`, then app.hangulroute.com/signin (F-APP-001). Never `/teach`.
+- Sign in (header) → app.hangulroute.com/signin by default (F-SITE-002 S-10); `/signin` on the same origin only with the kill switch `CONSOLE_ORIGIN=false` (F-APP-001). Never `/teach`.
 - Launch-news SEND → `POST /api/waitlist` (unchanged); success line replaces the form.
 
 ## Navigation graph
