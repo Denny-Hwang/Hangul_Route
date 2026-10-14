@@ -18,13 +18,17 @@ const words = (ko: string): string[] => ko.replace(/[.?!,]/g, '').split(/\s+/).f
 
 /**
  * Words taught before this cell: Stage 1 and Stage 4 greetings and questions (안녕하세요,
- * 감사합니다, 잘 가요, 어디예요 from Read Along, the restroom word 화장실), the nature, food
- * and travel vocabulary topics (강, 바다, 집) and the polite endings of Stage 3 and 4.
+ * 감사합니다, 잘 가요, 어디예요 from Read Along, the restroom word 화장실) and the nature, food
+ * and travel vocabulary topics (강, 바다, 집).
  */
 const KNOWN = new Set(['안녕하세요', '감사합니다', '잘', '가요', '어디예요', '화장실', '강', '바다', '집']);
 
-/** Particles and copula endings a taught word may carry (Stage 3 patterns). */
-const ENDINGS = ['', '이', '가', '으로', '로', '이에요', '예요'];
+/**
+ * Subject particles and copula endings a taught word may carry (Stage 3 and 4 patterns). The
+ * direction particle 으로 is not here: no earlier row teaches it, so 오른쪽으로 / 왼쪽으로 and
+ * 가세요 count as new q2 Discover items (its exchange pages).
+ */
+const ENDINGS = ['', '이', '가', '이에요', '예요'];
 
 const taughtIn = (set: ReadonlySet<string>, w: string): boolean => ENDINGS.some((e) => w.endsWith(e) && set.has(w.slice(0, w.length - e.length)));
 
@@ -56,13 +60,16 @@ const NATURAL_REPLIES: Readonly<Record<string, readonly string[]>> = {
   '안녕하세요!': ['안녕하세요!'],
   '정상이 어디예요?': ['오른쪽으로 가세요.', '왼쪽으로 가세요.'],
   '화장실이 어디예요?': ['오른쪽으로 가세요.', '왼쪽으로 가세요.'],
-  '감사합니다!': ['잘 가요!'],
+  '입구가 어디예요?': ['오른쪽으로 가세요.', '왼쪽으로 가세요.'],
   '얼마나 걸려요?': ['한 시간 걸려요.'],
 };
 
 describe('Hike & Ask (F-CURR-001 S6-4)', () => {
-  it('is the nature cell of Stage 6, three quests, no new cards, still a draft (section 3.12)', () => {
+  it('is the nature cell of Stage 6, three quests, no new cards, MAR signed off, still a draft until the bundle budget is settled (section 3.12)', () => {
     expect(cell.id).toBe('episode:stage6-nature');
+    expect(cell.status).toBe('draft');
+    expect(cell.review).toMatchObject({ language: 'native-reviewed', culture: 'culture-reviewed', reviewedBy: 'MAR' });
+    expect(cell.culture.every((n) => n.verification.passes >= 3)).toBe(true);
     expect(cell.titleEn).toBe('Hike & Ask');
     expect(cell.quests.map((q) => q.id)).toEqual(['quest:stage6-nature-q1', 'quest:stage6-nature-q2', 'quest:stage6-nature-q3']);
     expect(cell.rewardCardIds).toEqual([]);
@@ -72,7 +79,7 @@ describe('Hike & Ask (F-CURR-001 S6-4)', () => {
   it('teaches the section 3.6 items: signs, asking the way, how long', () => {
     const taught = cell.quests.map((q) => discoverWords(q));
     expect(taught[0]).toEqual(expect.arrayContaining(['산길', '정상', '입구', '출구']));
-    expect(taught[1]).toEqual(expect.arrayContaining(['왼쪽', '오른쪽', '정상이', '어디예요']));
+    expect(taught[1]).toEqual(expect.arrayContaining(['왼쪽', '오른쪽', '정상이', '어디예요', '오른쪽으로', '왼쪽으로', '가세요']));
     expect(taught[2]).toEqual(expect.arrayContaining(['얼마나', '걸려요', '한', '시간']));
   });
 

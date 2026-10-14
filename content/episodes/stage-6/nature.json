@@ -51,7 +51,7 @@
                     ]
                   }
                 ],
-                "captionEn": "The plate on the post names the trail. A board names a place to walk to."
+                "captionEn": "A trail sign names places to walk to. Here are two of its words."
               },
               {
                 "items": [
@@ -72,7 +72,7 @@
                     ]
                   }
                 ],
-                "captionEn": "Two boards you may see: the way in and the way out."
+                "captionEn": "Two more words from the sign: the way in and the way out."
               }
             ]
           },
@@ -106,7 +106,7 @@
           "id": "s6",
           "kind": "reward",
           "titleEn": "Sign Reader!",
-          "hoyaLineEn": "You read a real trail sign. The summit is this way!",
+          "hoyaLineEn": "You read a trail sign. The summit is this way!",
           "durationSeconds": 8
         }
       ],
@@ -209,11 +209,11 @@
               "questionEn": "You are leaving the park. Which board do you follow?",
               "options": [
                 {
-                  "id": "ipgu",
+                  "id": "jeongsang",
                   "text": {
-                    "ko": "입구",
-                    "romanization": "ipgu",
-                    "en": "entrance"
+                    "ko": "정상",
+                    "romanization": "jeongsang",
+                    "en": "summit"
                   }
                 },
                 {
@@ -238,7 +238,7 @@
             },
             {
               "id": "r3",
-              "questionEn": "Which board points back to the entrance?",
+              "questionEn": "You want to go back to where you came in. Which board?",
               "options": [
                 {
                   "id": "bada",
@@ -697,7 +697,7 @@
             },
             {
               "id": "r4",
-              "questionEn": "Which board points left, next to the restroom?",
+              "questionEn": "Besides the restroom, which board points left?",
               "options": [
                 {
                   "id": "chulgu",
@@ -847,19 +847,19 @@
             {
               "speakerEn": "Hiker",
               "line": {
-                "ko": "감사합니다!",
-                "romanization": "gamsahamnida",
-                "en": "Thank you!"
+                "ko": "입구가 어디예요?",
+                "romanization": "ipguga eodiyeyo",
+                "en": "Where is the entrance?"
               },
               "replies": [
                 {
                   "id": "r1",
                   "text": {
-                    "ko": "잘 가요!",
-                    "romanization": "jal gayo",
-                    "en": "Goodbye!"
+                    "ko": "감사합니다.",
+                    "romanization": "gamsahamnida",
+                    "en": "Thank you."
                   },
-                  "correct": true
+                  "correct": false
                 },
                 {
                   "id": "r2",
@@ -868,14 +868,14 @@
                     "romanization": "oenjjogeuro gaseyo",
                     "en": "Go to the left, please."
                   },
-                  "correct": false
+                  "correct": true
                 },
                 {
                   "id": "r3",
                   "text": {
-                    "ko": "화장실이 어디예요?",
-                    "romanization": "hwajangsiri eodiyeyo",
-                    "en": "Where is the restroom?"
+                    "ko": "정상이에요.",
+                    "romanization": "jeongsangieyo",
+                    "en": "It is the summit."
                   },
                   "correct": false
                 }
@@ -1032,7 +1032,7 @@
                     ]
                   }
                 ],
-                "captionEn": "A few hours count with native numbers: han, du, se (short for hana, dul, set)."
+                "captionEn": "A few hours count with native numbers. Before sigan, hana, dul, set become han, du, se."
               }
             ]
           },
@@ -1418,10 +1418,10 @@
         }
       ],
       "verification": {
-        "passes": 2,
+        "passes": 3,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "pass 2 (author sourcing, 2026-10-14): 'protected areas the state designates and looks after' = KNPS 국립공원은? (국가가 직접 관리하는 보호지역) and National Archives (국가가 공원으로 지정하고 관리하는 곳); 'to keep their nature and scenery' = KNPS (자연생태계와 자연·문화 경관의 보전) and Archives (자연풍경지를 보호·보전); 'a place for the public to rest' = KNPS 국립공원의 기능 (국민의 휴식처); 'most are mountain parks' = KNPS (24 parks, 산악형 19개) and Archives (22 parks in 2016, 산악형 17개); no count is put in learner copy because the totals change over time. Both pages fetched 2026-10-14, HTTP 200 (KNPS answers a browser user agent only). Used in: hoyaIntroEn.\npass 2b (independent fact check, 2026-10-14): all four parts re-checked against both pages, re-fetched 2026-10-14 HTTP 200. KNPS 국립공원은? says the state manages them directly as protected areas for keeping nature and scenery; 국립공원의 기능 lists a place of rest open to the public; 우리나라의 국립공원 gives 19 of 24 as mountain parks. The Archives page says the state designates and manages them to protect natural scenery and counts 17 of 22 as mountain parks (2016). Each quoteOrLocator matches the page text. 'Most are mountain parks' holds on both counts. The English note shares no wording with the Korean quotes. Outcome: pass, no change."
+        "notes": "pass 2 (author sourcing, 2026-10-14): 'protected areas the state designates and looks after' = KNPS 국립공원은? (국가가 직접 관리하는 보호지역) and National Archives (국가가 공원으로 지정하고 관리하는 곳); 'to keep their nature and scenery' = KNPS (자연생태계와 자연·문화 경관의 보전) and Archives (자연풍경지를 보호·보전); 'a place for the public to rest' = KNPS 국립공원의 기능 (국민의 휴식처); 'most are mountain parks' = KNPS (24 parks, 산악형 19개) and Archives (22 parks in 2016, 산악형 17개); no count is put in learner copy because the totals change over time. Both pages fetched 2026-10-14, HTTP 200 (KNPS answers a browser user agent only). Used in: hoyaIntroEn.\npass 2b (independent fact check, 2026-10-14): all four parts re-checked against both pages, re-fetched 2026-10-14 HTTP 200. KNPS 국립공원은? says the state manages them directly as protected areas for keeping nature and scenery; 국립공원의 기능 lists a place of rest open to the public; 우리나라의 국립공원 gives 19 of 24 as mountain parks. The Archives page says the state designates and manages them to protect natural scenery and counts 17 of 22 as mountain parks (2016). Each quoteOrLocator matches the page text. 'Most are mountain parks' holds on both counts. The English note shares no wording with the Korean quotes. Outcome: pass, no change.\npass 3 (MAR pass 5 culture review, 2026-10-14): both pages re-opened, HTTP 200 (KNPS with a browser user agent); each quoteOrLocator found word for word (국가가 직접 관리하는 보호지역, 국민의 휴식처, 산악형 19개; 국가가 공원으로 지정하고 관리, 산악형 17개). Used in hoyaIntroEn ('Most ... are mountain parks'), which both counts support; no count, designation number or copied wording in learner copy. Outcome: pass, no change."
       }
     },
     {
@@ -1445,10 +1445,10 @@
         }
       ],
       "verification": {
-        "passes": 2,
+        "passes": 3,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "pass 2 (author sourcing, 2026-10-14): 'going up a mountain for exercise, fun or exploring' = encykorea 등산 정의 (운동·놀이·탐험 등의 목적으로 산에 오르는 행위); 'from the 1960s a pastime for ordinary people' = encykorea 등산, 1960-1980 section (등산이 일반인의 레저화가 되면서); 'many millions of visits a year' = Ministry press release title (2025년 4,331만 명). The note says 'ordinary people', never 'all Koreans'; the exact number stays out of learner copy. Both pages fetched 2026-10-14, HTTP 200. Used in: q2 intro Hoya line.\npass 2b (independent fact check, 2026-10-14): both pages re-fetched 2026-10-14 HTTP 200. encykorea 등산 gives the definition as climbing a mountain for exercise, play or exploration, and its 1960-1980 section says hiking became leisure for the general public; the Ministry release (2026-02-24) reports 43.31 million national park visitors in 2025, which supports 'many millions of visits a year' (visitor counts are visit counts). Quotes match the pages. No 'all Koreans' claim; the q2 intro line ('a popular day out') stays within this note. No copied wording. Outcome: pass, no change."
+        "notes": "pass 2 (author sourcing, 2026-10-14): 'going up a mountain for exercise, fun or exploring' = encykorea 등산 정의 (운동·놀이·탐험 등의 목적으로 산에 오르는 행위); 'from the 1960s a pastime for ordinary people' = encykorea 등산, 1960-1980 section (등산이 일반인의 레저화가 되면서); 'many millions of visits a year' = Ministry press release title (2025년 4,331만 명). The note says 'ordinary people', never 'all Koreans'; the exact number stays out of learner copy. Both pages fetched 2026-10-14, HTTP 200. Used in: q2 intro Hoya line.\npass 2b (independent fact check, 2026-10-14): both pages re-fetched 2026-10-14 HTTP 200. encykorea 등산 gives the definition as climbing a mountain for exercise, play or exploration, and its 1960-1980 section says hiking became leisure for the general public; the Ministry release (2026-02-24) reports 43.31 million national park visitors in 2025, which supports 'many millions of visits a year' (visitor counts are visit counts). Quotes match the pages. No 'all Koreans' claim; the q2 intro line ('a popular day out') stays within this note. No copied wording. Outcome: pass, no change.\npass 3 (MAR pass 5 culture review, 2026-10-14): both pages re-opened, HTTP 200; encykorea 등산 (definition; 1960-1980 section, 일반인의 레저화) and the 2026-02-24 korea.kr release (4,331만 명) found as quoted. The q2 intro line ('a popular day out') stays within the note and makes no 'all Koreans' claim. Outcome: pass, no change."
       }
     },
     {
@@ -1479,16 +1479,16 @@
         }
       ],
       "verification": {
-        "passes": 2,
+        "passes": 3,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "pass 2 (author sourcing, 2026-10-14): 'gives the length of a section and the time it takes one way' = korea.kr wildflower trails list (거리/소요시간(편도): 3.1km / 1시간 30분) and korea.kr park trail app (탐방코스 정보: 거리, 소요시간); 'a start time per trail set with distance and walking time in mind' = KNPS 입산시간지정제 (산행목적지, 거리와 산행시간 등을 고려하여 탐방로별로 입산ㆍ통제시간을 지정). The drawn trail signs of the cell are made for the app and copy no real sign. All three pages fetched 2026-10-14, HTTP 200. Used in: q3 intro Hoya line, q3 Discover page 2 (the time sign).\npass 2b (independent fact check, 2026-10-14): all three pages re-fetched 2026-10-14 HTTP 200. The korea.kr wildflower list gives each trail section with distance and one-way time (3.1km / 1h30 for the first); the korea.kr app page lists distance and time per course; KNPS 입산시간지정제 sets entry and closing times per trail by destination, distance and hiking time. Quotes match the pages. 'Start time' reads the 입산 time correctly. No copied wording; no real sign is reproduced. Outcome: pass, no change."
+        "notes": "pass 2 (author sourcing, 2026-10-14): 'gives the length of a section and the time it takes one way' = korea.kr wildflower trails list (거리/소요시간(편도): 3.1km / 1시간 30분) and korea.kr park trail app (탐방코스 정보: 거리, 소요시간); 'a start time per trail set with distance and walking time in mind' = KNPS 입산시간지정제 (산행목적지, 거리와 산행시간 등을 고려하여 탐방로별로 입산ㆍ통제시간을 지정). The drawn trail signs of the cell are made for the app and copy no real sign. All three pages fetched 2026-10-14, HTTP 200. Used in: q3 intro Hoya line, q3 Discover page 2 (the time sign).\npass 2b (independent fact check, 2026-10-14): all three pages re-fetched 2026-10-14 HTTP 200. The korea.kr wildflower list gives each trail section with distance and one-way time (3.1km / 1h30 for the first); the korea.kr app page lists distance and time per course; KNPS 입산시간지정제 sets entry and closing times per trail by destination, distance and hiking time. Quotes match the pages. 'Start time' reads the 입산 time correctly. No copied wording; no real sign is reproduced. Outcome: pass, no change.\npass 3 (MAR pass 5 culture review, 2026-10-14): all three pages re-opened, HTTP 200; 거리/소요시간(편도) 3.1km / 1시간 30분, the app's 거리 and 소요시간, and KNPS 거리와 산행시간 등을 고려하여 found as quoted. The drawn signs copy no real sign; the q1 reward line no longer calls the drawn sign real, and the q1 Discover captions no longer state what real signs show. The time sign spells hours in Hangul (두 시간) on purpose, for decoding; real trail guides write numerals (n3 source 1). Outcome: pass, no change to the note."
       }
     },
     {
       "id": "n4",
       "kind": "language",
-      "textEn": "For a small number of hours, Korean counts with native numbers in their short forms before the word for hour: han, du, se (from hana, dul, set).",
+      "textEn": "For a small number of hours, Korean counts with native numbers, and before the word for hour they take the forms han, du, se (compare hana, dul, set).",
       "sources": [
         {
           "title": "n시간을 말할때 서수인지 기수인지",
@@ -1506,17 +1506,22 @@
         }
       ],
       "verification": {
-        "passes": 2,
+        "passes": 3,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "pass 2 (author sourcing, 2026-10-14): 'small numbers of hours use native numbers' = NIKL 온라인가나다 answer (작은 수에서는 ‘한 시간, 두 시간’처럼 고유어 수 표현이 자연스럽고); 'short forms before the word for hour' = the same answer (‘한, 두’ ... 의존 명사 ‘시간’ 앞에 쓰인 수 관형사) and stdict 한1 / 두1 「관형사」 (그 수량이 하나임 / 둘임을 나타내는 말). The note keeps to small numbers, as the source does (larger numbers may also use Sino-Korean). Both pages fetched 2026-10-14, HTTP 200. Used in: q3 Discover page 2 caption (the §3.6 number-system page).\npass 2b (independent fact check, 2026-10-14): both pages re-fetched 2026-10-14 HTTP 200. The NIKL 온라인가나다 answer (2026-07-06) says 한, 두 before 시간 are numeral determiners and native numbers sound natural for small numbers; quotes match. Finding: the note names se, but the second source covered only 한1 and 두1. Fix: stdict 세1 「관형사」 (그 수량이 셋임을 나타내는 말, fetched with searchKeyword=세) added to that source's title and quoteOrLocator, so han, du and se are each sourced. No copied wording. Outcome: pass after the source fix."
+        "notes": "pass 2 (author sourcing, 2026-10-14): 'small numbers of hours use native numbers' = NIKL 온라인가나다 answer (작은 수에서는 ‘한 시간, 두 시간’처럼 고유어 수 표현이 자연스럽고); 'short forms before the word for hour' = the same answer (‘한, 두’ ... 의존 명사 ‘시간’ 앞에 쓰인 수 관형사) and stdict 한1 / 두1 「관형사」 (그 수량이 하나임 / 둘임을 나타내는 말). The note keeps to small numbers, as the source does (larger numbers may also use Sino-Korean). Both pages fetched 2026-10-14, HTTP 200. Used in: q3 Discover page 2 caption (the §3.6 number-system page).\npass 2b (independent fact check, 2026-10-14): both pages re-fetched 2026-10-14 HTTP 200. The NIKL 온라인가나다 answer (2026-07-06) says 한, 두 before 시간 are numeral determiners and native numbers sound natural for small numbers; quotes match. Finding: the note names se, but the second source covered only 한1 and 두1. Fix: stdict 세1 「관형사」 (그 수량이 셋임을 나타내는 말, fetched with searchKeyword=세) added to that source's title and quoteOrLocator, so han, du and se are each sourced. No copied wording. Outcome: pass after the source fix.\npass 3 (MAR pass 4 language and pass 5 culture review, 2026-10-14): both pages re-opened, HTTP 200 (stdict 한1, 두1, 세1 「관형사」; NIKL 수 관형사, 고유어 수 표현이 자연스럽고). Finding: the sources call han, du, se determiners before 시간, not abbreviations; the note and the q3 Discover caption (en, es, ko) now say hana, dul, set take these forms before the word for hour, with no 'short for' or 줄인 말 claim. Outcome: pass after the wording fix."
       }
     }
   ],
   "review": {
-    "language": "draft",
-    "culture": "draft",
-    "notes": []
+    "language": "native-reviewed",
+    "culture": "culture-reviewed",
+    "reviewedBy": "MAR",
+    "reviewedAt": "2026-10-14",
+    "notes": [
+      "Language pass 4 (MAR): spelling, spacing, register and 26 romanizations clean; applied: q1 r2 loses the 입구 distractor, q1 r3 asks by situation, ko q3 typing prompts and 시간 gloss told apart, ko t4 prompt no echo, han/du/se as the forms before 시간 (no 줄인 말), 산길 and 볼일 glosses, main's titles and glosses, es tú; kept Hangul hours on the time sign (decoding).",
+      "Culture pass 5 (MAR): eleven sources re-read, n1-n4 pass (n4 wording fixed); applied: no 'real trail sign' claim, q1 Discover captions make no unsourced claim about real signs, q2 ends on asking for the entrance, not 잘 가요 to an adult stranger; no stereotype, 'all Koreans' claim, real person, shop, brand, price or real sign; suits any age."
+    ]
   },
   "contentVer": 1
 }
