@@ -81,16 +81,19 @@ function drawable(slide: Slide, kinds: ReadonlySet<SlideKind>): boolean {
  * The run: the expanded slides this build can draw, in order. A slide it cannot draw yet is not
  * shown and counts as a skipped part (`unsupported-step`), consecutive slides of one block and
  * kind as one part, so the start screen's count stays honest. With nothing left but the End slide
- * the run is empty (the invalid-deck screen, section 3.3 rule 10).
+ * the run is empty (the invalid-deck screen, section 3.3 rule 10). With `drawnCardIds` (the design
+ * system's `supportedCardIds`), a word whose card the art cannot draw drops its `cardId` and so its
+ * `art` build: the slide is text only and no press reveals nothing (also after the live
+ * romanization flip, which recomputes builds from the slide).
  */
-export function runDeck(deck: Pick<LectureDeck, 'blocks'>, expanded: ExpandedDeck, kinds: ReadonlySet<SlideKind> = SHELL_SLIDE_KINDS): RunDeck {
+export function runDeck(deck: Pick<LectureDeck, 'blocks'>, expanded: ExpandedDeck, kinds: ReadonlySet<SlideKind> = SHELL_SLIDE_KINDS, drawnCardIds?: readonly string[]): RunDeck {
   const parts: SkipPart[] = expanded.skipped.map((s) => ({ blockIndex: s.blockIndex, reason: s.reason }));
   const slides: Slide[] = [];
   let minutes = expanded.minutes;
   let last: { blockIndex: number | null; kind: SlideKind } | null = null;
   for (const slide of expanded.slides) {
     if (drawable(slide, kinds)) {
-      slides.push(slide);
+      slides.push(drawnCardIds === undefined ? slide : withoutUndrawnArt(slide, drawnCardIds));
       last = null;
       continue;
     }
@@ -104,6 +107,12 @@ export function runDeck(deck: Pick<LectureDeck, 'blocks'>, expanded: ExpandedDec
   }
   const empty = !slides.some((s) => s.kind !== 'end');
   return { slides: empty ? [] : slides, parts, minutes: Math.max(0, minutes) };
+}
+
+function withoutUndrawnArt(slide: Slide, drawnCardIds: readonly string[]): Slide {
+  if (slide.kind !== 'vocab' || slide.cardId === undefined || drawnCardIds.includes(slide.cardId)) return slide;
+  const { cardId: _undrawn, ...rest } = slide;
+  return { ...rest, builds: slide.builds.filter((b) => b !== 'art') };
 }
 
 /** The start screen's list: one line per lesson and reason (a lesson with four listening steps reads once; the count still counts parts). */
@@ -174,6 +183,8 @@ export function gestureCommand(g: { x: number; width: number; dx: number; dy: nu
 /**
  * The slide's own words for the live region ("g/k" of a letter), after its kind label; '' when none.
  * An activity is named by its preset, a catalogue string the caller passes (`names.activity`).
+ * It names the whole slide on arrival, builds not yet revealed included: the live region speaks to
+ * the presenter at the device, who holds the deck, not to the room, which sees only the stage.
  */
 export function slideDetail(slide: Slide, names?: { activity: (preset: ActivityPreset) => string }): string {
   switch (slide.kind) {

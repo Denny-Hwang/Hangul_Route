@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { UNKNOWN_CAPABILITY, type AudioCapability } from '../../audio/capability';
 import { lectureBundle } from '../content';
 import { initialPresenterState } from '../controls';
-import { expandDeck, type ExpandedDeck, type Slide } from '../deck-builder';
+import { expandDeck, withBuilds, type ExpandedDeck, type Slide } from '../deck-builder';
 import { emptyRecent, rememberDeck, setLastSlide } from '../recent';
 import {
   SHELL_SLIDE_KINDS,
@@ -104,6 +104,21 @@ describe('runDeck: the slides this build draws', () => {
     // The activity's minutes stay in the estimate with its slide.
     const quizzes = expanded.slides.filter((s) => s.kind === 'quiz').length;
     expect(run.minutes).toBe(expanded.minutes - quizzes);
+  });
+
+  it('a word whose card the art cannot draw loses its art build, so no press reveals nothing', () => {
+    const end: Slide = { kind: 'end', letters: [], words: [], key: 'end', builds: ['summary'] };
+    const word = { ko: '책', romanization: 'chaek', gloss: 'book' };
+    const drawn: Slide = { kind: 'vocab', word, cardId: 'card:book', key: 'w/1', builds: ['ko', 'gloss', 'art'] };
+    const undrawn: Slide = { kind: 'vocab', word, cardId: 'card:nope', key: 'w/2', builds: ['ko', 'rom', 'gloss', 'art'] };
+    const deck = deckOf([{ kind: 'jamo-set', jamoIds: ['jamo:giyeok'] }]);
+    const run = runDeck(deck, { slides: [drawn, undrawn, end], skipped: [], taught: [], minutes: 2 }, SHELL_SLIDE_KINDS, ['card:book']);
+    expect(run.slides[0]).toEqual(drawn);
+    expect(run.slides[1]).toEqual({ kind: 'vocab', word, key: 'w/2', builds: ['ko', 'rom', 'gloss'] });
+    // The live romanization flip recomputes builds from the slide, and the art stays gone.
+    expect(withBuilds(run.slides, { romanization: 'always', strokeGuide: true })[1]?.builds).toEqual(['ko', 'gloss']);
+    // Without the drawable list the slides pass through unchanged.
+    expect(runDeck(deck, { slides: [undrawn, end], skipped: [], taught: [], minutes: 2 }).slides[0]).toEqual(undrawn);
   });
 
   it('everything else is a skipped part, one per block and kind', () => {
