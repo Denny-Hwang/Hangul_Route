@@ -1,4 +1,5 @@
 import type { Page } from '@playwright/test';
+import { keysFor } from '@hangul-route/content-schema';
 import { LESSON_EPISODES } from '../../src/content/__generated__/lessons-index';
 import { expect, test } from './fixtures';
 import { completeChildForm, journeyCellName, keepSidewaysIfAsked, passDiscover, playCheckByIds, waitForNextListenPickRound } from './helpers';
@@ -104,6 +105,41 @@ async function playCardMatch(page: Page, pairs: readonly (readonly [romanization
   }
 }
 
+/** The shifted letters and the key that types each with Shift (KS X 5002), as in type-hangul.spec.ts. */
+const SHIFTED: Record<string, string> = { 'ㅃ': 'ㅂ', 'ㅉ': 'ㅈ', 'ㄸ': 'ㄷ', 'ㄲ': 'ㄱ', 'ㅆ': 'ㅅ', 'ㅒ': 'ㅐ', 'ㅖ': 'ㅔ' };
+/** Two-key vowels: `keysFor` gives the joined jamo, the keyboard types its two keys. */
+const SPLIT: Record<string, string> = { 'ㅘ': 'ㅗㅏ', 'ㅝ': 'ㅜㅓ', 'ㅢ': 'ㅡㅣ' };
+
+/** Type Hangul: round `n` of `total`, typed on the in-app keyboard, then Done; a pass moves on by itself. */
+async function typeRound(page: Page, n: number, total: number, text: string): Promise<void> {
+  await expect(page.getByText(`${n} / ${total}`, { exact: true })).toBeVisible({ timeout: 5_000 });
+  const key = (id: string) => page.getByTestId(`hangul-key-${id}`);
+  for (const jamo of keysFor(text).flatMap((j) => [...(SPLIT[j] ?? j)])) {
+    if (SHIFTED[jamo]) {
+      await key('shift').click();
+      await key(SHIFTED[jamo]).click();
+    } else {
+      await key(jamo).click();
+    }
+  }
+  await page.getByTestId('type-hangul-done').click();
+  await expect(page.getByText('You typed it!')).toBeVisible();
+}
+
+/** Sentence Builder in the Stage 7 Check (no round counter, no Skip): build each round by its tiles. */
+async function buildCheck(page: Page, rounds: readonly (readonly string[])[]): Promise<void> {
+  await page.getByRole('button', { name: 'Go', exact: true }).click();
+  for (const tiles of rounds) {
+    const tray = page.getByTestId('sentence-builder-tray');
+    for (const name of tiles) {
+      await page.waitForTimeout(120);
+      await tray.getByRole('button', { name, exact: true }).click();
+    }
+    await expect(page.getByTestId('sentence-builder-done')).toBeVisible();
+    await expect(page.getByTestId('sentence-builder-done')).toHaveCount(0, { timeout: 5_000 });
+  }
+}
+
 /** Each cell row appends its cell here (S2-1 onward). */
 const CELLS: readonly UpperCell[] = [
   // F-CURR-001 S2-3: Playground Words q1, At the Playground, played through its real games.
@@ -199,6 +235,44 @@ const CELLS: readonly UpperCell[] = [
       await page.getByText('Learning Route', { exact: true }).last().click();
       await page.getByRole('button', { name: /^Stage 4, Dialogue\./ }).click();
       await expect(page.getByRole('button', { name: /^Letters & Books: Read Along\./ })).toBeVisible();
+    },
+  },
+  // F-CURR-001 S7-3: My Holiday Memory, q1 "I Ate Tteokguk" played through its real games at 320 px.
+  {
+    episodeId: 'episode:stage7-rites',
+    cellButton: journeyCellName(7, 'Holidays & Traditions'),
+    title: 'My Holiday Memory',
+    playFirstQuest: async (page) => {
+      await page.setViewportSize({ width: 320, height: 720 });
+      await startFirstQuest(page);
+      // Discover: the past-tense frame page and the model page (songpyeon, the full moon).
+      await expect(page.getByText('Look and learn', { exact: true })).toBeVisible();
+      await shot(page, 'my-holiday-memory-q1-discover-320');
+      await passDiscover(page);
+      await page.getByRole('button', { name: 'Play minigame' }).click();
+      await build(page, 1, 4, ['떡국을, tteokgugeul', '먹었어요, meogeosseoyo']);
+      await shot(page, 'my-holiday-memory-q1-built-320');
+      await build(page, 2, 4, ['을, eul']);
+      await build(page, 3, 4, ['보름달을, boreumdareul', '봤어요, bwasseoyo']);
+      await build(page, 4, 4, ['를, reul']);
+      // Type Hangul on the in-app keyboard: the three past forms, then the soup's name.
+      await page.getByRole('button', { name: 'Play minigame' }).click();
+      await typeRound(page, 1, 4, '먹었어요');
+      await shot(page, 'my-holiday-memory-q1-typed-320');
+      await typeRound(page, 2, 4, '봤어요');
+      await typeRound(page, 3, 4, '만들었어요');
+      await typeRound(page, 4, 4, '떡국');
+      await buildCheck(page, [
+        ['송편을, songpyeoneul', '먹었어요, meogeosseoyo'],
+        ['보름달을, boreumdareul', '봤어요, bwasseoyo'],
+      ]);
+      await expect(page.getByText('Finish', { exact: true }).first()).toBeVisible();
+    },
+    expectRouteDay: async (page) => {
+      await page.goto('/');
+      await page.getByText('Learning Route', { exact: true }).last().click();
+      await page.getByRole('button', { name: /^Stage 7, Self-expression\./ }).click();
+      await expect(page.getByRole('button', { name: /^Holidays & Traditions: My Holiday Memory\./ })).toBeVisible();
     },
   },
 ];
