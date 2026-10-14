@@ -27,6 +27,61 @@ interface UpperCell {
   expectRouteDay: (page: Page) => Promise<void>;
 }
 
+/** Shifted letters on the in-app keyboard and the joined vowels it types with two keys (KS X 5002). */
+const SHIFTED: Record<string, string> = { 'ㅃ': 'ㅂ', 'ㅉ': 'ㅈ', 'ㄸ': 'ㄷ', 'ㄲ': 'ㄱ', 'ㅆ': 'ㅅ', 'ㅒ': 'ㅐ', 'ㅖ': 'ㅔ' };
+const SPLIT: Record<string, string> = { 'ㅘ': 'ㅗㅏ', 'ㅙ': 'ㅗㅐ', 'ㅚ': 'ㅗㅣ', 'ㅝ': 'ㅜㅓ', 'ㅞ': 'ㅜㅔ', 'ㅟ': 'ㅜㅣ', 'ㅢ': 'ㅡㅣ' };
+/** The same two-key vowels, by the name the Stage 7 helpers use. */
+const SPLIT_KEYS: Record<string, string> = SPLIT;
+
+
+/**
+ * Type Hangul round `n` of `total`: waits for the round, taps the keys that type `text` on the in-app
+ * keyboard, then Done; a typed match moves on by itself.
+ */
+async function typeHangul(page: Page, n: number, total: number, text: string): Promise<void> {
+  await expect(page.getByText(`${n} / ${total}`, { exact: true })).toBeVisible({ timeout: 5_000 });
+  await expect(page.getByTestId('type-hangul-done')).toBeDisabled();
+  for (const jamo of keysFor(text).flatMap((j) => [...(SPLIT_KEYS[j] ?? j)])) {
+    await page.getByTestId(jamo === ' ' ? 'hangul-key-space' : `hangul-key-${jamo}`).click();
+  }
+  await page.getByTestId('type-hangul-done').click();
+  await expect(page.getByText('You typed it!')).toBeVisible();
+}
+
+/** Sentence Builder Check: place the tiles of the round in order, by accessible name. */
+async function placeTiles(page: Page, tiles: readonly string[]): Promise<void> {
+  const tray = page.getByTestId('sentence-builder-tray');
+  await expect(tray).toBeVisible({ timeout: 5_000 });
+  for (const name of tiles) {
+    await page.waitForTimeout(120);
+    await tray.getByRole('button', { name, exact: true }).click();
+  }
+}
+
+/** Type Hangul: tap the keys for each word, then Done; a typed word moves on by itself. */
+async function typeWords(page: Page, words: readonly string[]): Promise<void> {
+  for (const [i, word] of words.entries()) {
+    await expect(page.getByText(`${i + 1} / ${words.length}`)).toBeVisible({ timeout: 5_000 });
+    for (const jamo of keysFor(word).flatMap((j) => [...(SPLIT[j] ?? j)])) {
+      if (jamo === ' ') await page.getByTestId('hangul-key-space').click();
+      else if (SHIFTED[jamo]) {
+        await page.getByTestId('hangul-key-shift').click();
+        await page.getByTestId(`hangul-key-${SHIFTED[jamo]}`).click();
+      } else await page.getByTestId(`hangul-key-${jamo}`).click();
+    }
+    await page.getByTestId('type-hangul-done').click();
+    await expect(page.getByText('You typed it!')).toBeVisible();
+  }
+}
+
+/** Realia Read: answer each round by option id once its question shows (a right answer moves on by itself). */
+async function readRealia(page: Page, rounds: ReadonlyArray<readonly [question: string, optionId: string]>): Promise<void> {
+  for (const [question, optionId] of rounds) {
+    await expect(page.getByTestId('realia-read-question')).toHaveText(question, { timeout: 5_000 });
+    await page.getByTestId(`realia-read-option-${optionId}`).click();
+  }
+}
+
 /**
  * Trace a Word: trace `word` block by block over its placed ghost (the canvas's 200 viewBox, the
  * same placement the game draws, computed here), one finger stroke per stroke. A fully drawn block
@@ -51,6 +106,26 @@ async function traceWord(page: Page, word: string, romanization: string): Promis
   }
 }
 
+/** Sentence Builder as the Check (S7-4): no round counter; the round's gloss shows, then its tiles by accessible name in order. */
+async function buildCheckRound(page: Page, gloss: string, tiles: readonly string[]): Promise<void> {
+  await expect(page.getByTestId('sentence-builder-gloss')).toHaveText(gloss, { timeout: 5_000 });
+  const tray = page.getByTestId('sentence-builder-tray');
+  for (const name of tiles) {
+    await page.waitForTimeout(120);
+    await tray.getByRole('button', { name, exact: true }).click();
+  }
+}
+
+/** Sentence Builder as the Stage 7 Check (S7-5): tap one round's tiles in order, past the touch window. */
+async function buildCheckTiles(page: Page, tiles: readonly string[]): Promise<void> {
+  const tray = page.getByTestId('sentence-builder-tray');
+  for (const name of tiles) {
+    await page.waitForTimeout(120);
+    await expect(tray.getByRole('button', { name, exact: true })).toBeVisible({ timeout: 5_000 });
+    await tray.getByRole('button', { name, exact: true }).click();
+  }
+}
+
 /** Sentence Builder in the Stage 7 Check (no round counter, no Skip): build each round by its tiles. */
 async function buildCheck(page: Page, rounds: readonly (readonly string[])[]): Promise<void> {
   await page.getByRole('button', { name: 'Go', exact: true }).click();
@@ -65,12 +140,17 @@ async function buildCheck(page: Page, rounds: readonly (readonly string[])[]): P
   }
 }
 
-/** Type Hangul: round `n` of `total`, typed on the in-app keyboard, then Done; a pass moves on by itself. */
+/**
+ * Type Hangul: round `n` of `total`, typed on the in-app keyboard (Space for a space, Shift for a tense
+ * letter, two keys for a joined vowel), then Done; a pass moves on by itself.
+ */
 async function typeRound(page: Page, n: number, total: number, text: string): Promise<void> {
   await expect(page.getByText(`${n} / ${total}`, { exact: true })).toBeVisible({ timeout: 5_000 });
   const key = (id: string) => page.getByTestId(`hangul-key-${id}`);
   for (const jamo of keysFor(text).flatMap((j) => [...(SPLIT[j] ?? j)])) {
-    if (SHIFTED[jamo]) {
+    if (jamo === ' ') {
+      await key('space').click();
+    } else if (SHIFTED[jamo]) {
       await key('shift').click();
       await key(SHIFTED[jamo]).click();
     } else {
@@ -1018,8 +1098,8 @@ const CELLS: readonly UpperCell[] = [
       await typeRound(page, 4, 4, '새가 좋아요');
       await page.getByRole('button', { name: 'Go', exact: true }).click();
       // Check round 1 is a particle round (the noun is given, 가 is picked); round 2 builds the sentence.
-      await buildCheck(page, 'I like cats.', ['가, ga']);
-      await buildCheck(page, 'I like tigers.', ['호랑이가, horangiga', '좋아요, joayo']);
+      await buildCheckRound(page, 'I like cats.', ['가, ga']);
+      await buildCheckRound(page, 'I like tigers.', ['호랑이가, horangiga', '좋아요, joayo']);
       await expect(page.getByText('Finish', { exact: true }).first()).toBeVisible();
     },
     expectRouteDay: async (page) => {
@@ -1056,8 +1136,8 @@ const CELLS: readonly UpperCell[] = [
       await build(page, 3, 3, ['가위로, gawiro', '잘라요, jallayo']);
       // The Stage 7 Check is two Sentence Builder rounds: 을 after a final consonant, then one sentence.
       await page.getByRole('button', { name: 'Go', exact: true }).click();
-      await buildCheck(page, ['을, eul']);
-      await buildCheck(page, ['별을, byeoreul', '그려요, geuryeoyo']);
+      await buildCheckTiles(page, ['을, eul']);
+      await buildCheckTiles(page, ['별을, byeoreul', '그려요, geuryeoyo']);
       await expect(page.getByText('Finish', { exact: true }).first()).toBeVisible();
     },
     expectRouteDay: async (page) => {

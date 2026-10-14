@@ -1,4 +1,5 @@
 import type { Page } from '@playwright/test';
+import { CATALOG } from '@hangul-route/content-schema';
 import { expect, test } from './fixtures';
 import { completeChildForm, keepSidewaysIfAsked } from './helpers';
 import { controlsPastEdge, expectNoHorizontalOverflow } from './viewport';
@@ -11,8 +12,10 @@ import { controlsPastEdge, expectNoHorizontalOverflow } from './viewport';
  *   STORY_FIXTURES=1 pnpm --filter @hangul-route/mobile test:e2e:web journey-stories
  *
  * Its two reviewed shelf stories: `story:hangul-day` calls Stage 1 Letters home (a lesson cell, count 1)
- * and `story:cell-stories-fixture` calls Stage 7 Letters home (a preview cell, so a stories-only cell; it moved
- * from Stage 2 Letters when F-CURR-001 S2-1 shipped Word Builder there).
+ * and `story:cell-stories-fixture` calls Stage 7 Letters home (it moved from Stage 2 Letters when F-CURR-001 S2-1
+ * shipped Word Builder there). Since S7-1 shipped Write Your Name there, and S7-5 the last placeholder, every grid
+ * cell holds a lesson: Stage 7 Letters is a lesson cell with one story, and no cell is stories-only or coming
+ * soon. The stories-only and placeholder cases check the bundle first and run only while such a cell exists.
  */
 
 const FIXTURE_BUILD = process.env.STORY_FIXTURES === '1';
@@ -27,7 +30,14 @@ type E2eWindow = Window & {
 // A new learner's next quest is in this cell, so its label ends with the Next word (F-ENT-003 E3-5).
 const LESSON_CELL = 'Stage 1 Hangul, Letters & Books: lesson, 1 heritage story. Next.';
 const STORIES_CELL = 'Stage 7 Self-expression, Letters & Books: 1 heritage story';
-const PLACEHOLDER = 'Stage 3 Sentences, Nature & Animals, coming soon';
+const PLACEHOLDER = /, coming soon$/;
+/** The fixture story's cell, a lesson cell since F-CURR-001 S7-1. */
+const STORY_LESSON_CELL = 'Stage 7 Self-expression, Letters & Books: lesson, 1 heritage story';
+/** True while Stage 7 Letters has no lesson, so the fixture story makes it a stories-only cell. */
+const STORIES_ONLY = CATALOG.cells.find((c) => c.episodeId === 'episode:stage7-letters')?.status !== 'shipped';
+/** True while some grid cell is still "Coming soon". */
+const ANY_LATER = CATALOG.cells.some((c) => c.status === 'preview');
+const NO_STORIES_ONLY = 'every grid cell holds a lesson since F-CURR-001 S7-1 / S7-5: no stories-only cell is left';
 const LESSON_ROW = 'Heritage stories for this cell, 1 heritage story';
 const PILL = 'Stage 7 · Letters & Books. Heritage stories for this cell in Stage 7 Self-expression';
 
@@ -68,16 +78,23 @@ test.describe('heritage stories on the Journey (fixture bundle)', () => {
     await openJourney(page);
     await expect(page.getByRole('button', { name: LESSON_CELL, exact: true })).toBeEnabled();
     await expect(page.getByTestId('journey-count-stage1-letters')).toHaveText('1');
-    await expect(page.getByRole('button', { name: STORIES_CELL, exact: true })).toBeEnabled();
     await expect(page.getByTestId('journey-count-stage7-letters')).toHaveText('1');
-    await expect(page.getByTestId('journey-stories-note-stage7')).toHaveText('Heritage stories are open in the cells with the books icon.');
+    if (STORIES_ONLY) {
+      await expect(page.getByRole('button', { name: STORIES_CELL, exact: true })).toBeEnabled();
+      await expect(page.getByTestId('journey-stories-note-stage7')).toHaveText('Heritage stories are open in the cells with the books icon.');
+    } else {
+      await expect(page.getByRole('button', { name: STORY_LESSON_CELL, exact: true })).toBeEnabled();
+      await expect(page.getByTestId('journey-stories-note-stage7')).toHaveCount(0);
+    }
     await expect(page.getByTestId('journey-stories-note-stage1')).toHaveCount(0);
-    await expect(page.getByRole('button', { name: PLACEHOLDER, exact: true })).toBeDisabled();
+    if (ANY_LATER) await expect(page.getByRole('button', { name: PLACEHOLDER }).first()).toBeDisabled();
+    else await expect(page.getByRole('button', { name: PLACEHOLDER })).toHaveCount(0);
     await expect(page.getByRole('button', { name: 'Stage 1 Hangul, Food & Daily Life: lesson', exact: true })).toBeEnabled();
     await expect(page.getByTestId('journey-stories-how')).toBeVisible();
   });
 
   test('a stories-only cell opens its cell page with no PIN; a tile opens the story page, whose pill comes back', async ({ page }) => {
+    test.skip(!STORIES_ONLY, NO_STORIES_ONLY);
     await openJourney(page);
     await page.getByRole('button', { name: STORIES_CELL, exact: true }).click();
     await expect(page.getByTestId('cell-stories-title')).toHaveText('Self-expression · Letters & Books');
@@ -177,8 +194,10 @@ test.describe('heritage stories on the Journey (fixture bundle)', () => {
   });
 
   test('a stale link to a cell with no story: one calm card and Back', async ({ page }) => {
+    // A cell with neither a story nor a lesson: none is left since F-CURR-001 S7-5 (Stage 6 Nature has Hike & Ask
+    // since S6-4). The next case, a stage or theme the bundle does not know, keeps the calm card covered.
+    test.skip(!CATALOG.cells.some((c) => c.episodeId === 'episode:stage6-nature' && c.status !== 'shipped'), 'every grid cell holds a lesson since F-CURR-001 S7-5');
     await openJourney(page);
-    // A cell with neither a story nor a lesson (Stage 7 crafts has a lesson since F-CURR-001 S7-5); move it when this one ships.
     await page.evaluate(() => (window as E2eWindow).__hrStoryE2E?.openCellStories({ stage: 'stage6', theme: 'nature', source: 'cell' }));
     const empty = page.getByTestId('cell-stories-empty');
     await expect(empty).toContainText('Nothing here yet');
@@ -213,13 +232,15 @@ test.describe('heritage stories on the Journey (fixture bundle)', () => {
     await openJourney(page);
     await expectNoHorizontalOverflow(page, 'Journey at 320');
     expect(await page.evaluate(controlsPastEdge)).toEqual([]);
-    await page.getByRole('button', { name: STORIES_CELL, exact: true }).click();
-    await expect(page.getByTestId('cell-stories-title')).toBeVisible();
-    await expectNoHorizontalOverflow(page, 'cell page at 320');
-    expect(await page.evaluate(controlsPastEdge)).toEqual([]);
+    if (STORIES_ONLY) {
+      await page.getByRole('button', { name: STORIES_CELL, exact: true }).click();
+      await expect(page.getByTestId('cell-stories-title')).toBeVisible();
+      await expectNoHorizontalOverflow(page, 'cell page at 320');
+      expect(await page.evaluate(controlsPastEdge)).toEqual([]);
+      await goBack(page);
+    }
 
     // The lesson page's stories row, and the cell page with its lesson row and a tile.
-    await goBack(page);
     await page.getByRole('button', { name: LESSON_CELL, exact: true }).click();
     const row = page.getByRole('button', { name: LESSON_ROW, exact: true });
     await row.scrollIntoViewIfNeeded();
@@ -267,6 +288,7 @@ test.describe('heritage stories on the Journey, two panes (fixture bundle, 1180x
   test.use({ viewport: { width: 1180, height: 820 } });
 
   test('a stories-only cell opens its cell page as on one pane, and is never the selected cell', async ({ page }) => {
+    test.skip(!STORIES_ONLY, NO_STORIES_ONLY);
     await openJourney(page);
     const cell = page.getByRole('button', { name: STORIES_CELL, exact: true });
     await expect(cell).toBeEnabled();

@@ -94,10 +94,9 @@ async function home(page: Page): Promise<void> {
 }
 
 /**
- * A quest whose games can all be skipped: the Stage 4 taste quest Greeting Dialogues. Since
- * F-QUEST-002 Q-8 every Stage 1 quest ends on a Check, which has no Skip, and since F-CURR-001 T-1
- * Lunch Box Words ends on one too. The soft-prerequisite sheet is Stage 1 only
- * (`previousStage1Quest`), so it never opens here and Start goes straight in.
+ * A quest whose games could all be skipped was the Stage 2 taste Lunch Box Words, then the Stage 4 taste
+ * Greeting Dialogues; since F-CURR-001 T-1 and T-2 both end on a Check, which has no Skip (see the
+ * skipped case below). The soft-prerequisite sheet is Stage 1 only (`previousStage1Quest`).
  */
 async function startSkippableQuest(page: Page): Promise<void> {
   await home(page);
@@ -145,7 +144,11 @@ test('a played quest teases the real next quest, and the CTA goes there', async 
   expect(errors).toEqual([]);
 });
 
-test('every game skipped: the same quest is offered again, and nothing is locked', async ({ page }) => {
+// Since F-CURR-001 T-1 and T-2 every lesson quest in the bundle ends on a scored Check, which has no Skip, so
+// no shipped quest can end with every game skipped; the "Try this one again" teaser for a run with nothing
+// scored is checked by src/logic/__tests__/results-teaser.test.ts (`again`, `teaserCtaLabel`). The steps below
+// stay for a quest without a Check, if one ships again.
+test.skip('every game skipped: the same quest is offered again, and nothing is locked', async ({ page }) => {
   const errors: string[] = [];
   page.on('pageerror', (e) => errors.push(String(e)));
   await captureSpeech(page);
