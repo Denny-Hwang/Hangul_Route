@@ -5,6 +5,8 @@
  * `screens/route/use-today.ts` wraps it in a hook, and the tests drive it with fake timers.
  */
 
+import { localDay } from './vocab/progress';
+
 const DAY_MS = 86_400_000;
 
 /**
@@ -26,6 +28,31 @@ export function msUntilNextUtcDay(now: Date): number {
   const ms = now.getTime();
   return DAY_MS - (((ms % DAY_MS) + DAY_MS) % DAY_MS);
 }
+
+/**
+ * Milliseconds from `now` to the next local midnight of the device (F-VOC-005 P5, P-3b). Measured
+ * by the calendar, so a day with a daylight-saving change is 23 or 25 hours long.
+ */
+export function msUntilNextLocalDay(now: Date): number {
+  const next = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+  return next.getTime() - now.getTime();
+}
+
+/** A day basis: how an instant is keyed and how long until that key changes. */
+export interface DayBasis {
+  readonly keyOf: (now: Date) => string;
+  readonly msUntilNext: (now: Date) => number;
+}
+
+/**
+ * The two day bases of the app: `utc` for plan days and the mission pin (F-PLAN-002 section 3.6,
+ * F-HW-001 section 3.2), `local` for the vocabulary schedule and the Home vocabulary card
+ * (F-VOC-005 P5, P-3b; the key is `logic/vocab/progress.ts` `localDay`).
+ */
+export const DAY_BASES: { readonly utc: DayBasis; readonly local: DayBasis } = {
+  utc: { keyOf: utcDayKey, msUntilNext: msUntilNextUtcDay },
+  local: { keyOf: localDay, msUntilNext: msUntilNextLocalDay },
+};
 
 type TimerHandle = ReturnType<typeof setTimeout> | number;
 

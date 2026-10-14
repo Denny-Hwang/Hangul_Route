@@ -95,6 +95,11 @@ export interface MissionPlan {
   date: string;
   profileId: string;
   cards: MissionCard[];
+  /**
+   * The device's local day (F-VOC-005 P5) slot (3)'s vocabulary card was last derived for (P-3b):
+   * set when the input gives `vocabDay`. Absent on a plan built without it.
+   */
+  vocabDay?: string;
 }
 
 export interface MissionCapabilities {
@@ -168,6 +173,16 @@ export interface BuildMissionInput {
   vocab?: { topicKey: string; due: number } | null;
   /** The topics whose Speed Round completed today (`vocabRoundsDone`): the vocabulary card is then collected. */
   vocabRoundsDone?: ReadonlySet<string>;
+  /**
+   * The device's local day (`localDay`, F-VOC-005 P5): the day `vocab` and `vocabRoundsDone` were
+   * read for. With it, the vocabulary card follows local midnight rather than the plan's UTC day
+   * (F-VOC-005 P-3b): a pinned plan re-derives slot (3) when it changes (`repinVocabDay`), and a
+   * fresh plan on a new UTC day keeps the vocabulary state of `vocabCarry` while the local day
+   * is the same. Omitted keeps the UTC-day behaviour.
+   */
+  vocabDay?: string;
+  /** The profile's latest pinned plan, of any day (`latestPin`), read with `vocabDay` only. */
+  vocabCarry?: MissionPlan | null;
 }
 
 /** How far back a Quest counts as replayable (§3.1 — days N−1, N−2). */
@@ -333,8 +348,25 @@ const exploreLink: Link = (slot, input, used) => {
   return episode ? exploreCard(slot, episode) : null;
 };
 
+/**
+ * The nudge slot ③ follows (F-VOC-005 P-3b). On a fresh plan for a new UTC day while the local
+ * day has not changed, the earlier pin's vocabulary state carries over: its card (same topic and
+ * count) when it held one, else none, so the card appears and leaves at local midnight only.
+ */
+function slotThreeNudge(input: BuildMissionInput): { topicKey: string; due: number } | null {
+  const carry = input.vocabCarry;
+  if (carry && input.vocabDay !== undefined && carry.profileId === input.profileId && carry.date !== input.today && carry.vocabDay === input.vocabDay) {
+    const card = carry.cards.find((c) => c.slot === 3);
+    return card?.kind === 'vocab' && card.topicKey !== undefined && card.vocabDue !== undefined ? { topicKey: card.topicKey, due: card.vocabDue } : null;
+  }
+  return input.vocab ?? null;
+}
+
 /** The vocabulary card, slot ③ only: when the nudge is set (at least three words due). */
-const vocabLink: Link = (slot, input) => (slot === 3 && input.vocab ? vocabCard(input.vocab) : null);
+const vocabLink: Link = (slot, input) => {
+  const nudge = slot === 3 ? slotThreeNudge(input) : null;
+  return nudge ? vocabCard(nudge) : null;
+};
 
 const SLOT_1_CHAIN: readonly Link[] = [storyLink('continue'), replayLink, storyLink('next'), storyLink('again'), exploreLink];
 const SLOT_3_CHAIN: readonly Link[] = [vocabLink, storyLink('next'), replayLink, storyLink('again'), exploreLink];
@@ -505,6 +537,34 @@ function repinClosed(cards: readonly MissionCard[], input: BuildMissionInput): r
 }
 
 /**
+ * The local-day exception for slot (3) (F-VOC-005 P-3b): the vocabulary card follows the device's
+ * local day (P5) while the rest of the plan stays pinned to its UTC day (F-HW-001 section 3.2).
+ * When the local day of a pinned plan changes, a vocabulary card in slot (3) is derived again
+ * (a fresh card for the new day's due words, or the next card of slot (3)'s chain when fewer than
+ * three are due), and a slot (3) card the learner has not collected gives way to the vocabulary
+ * card when words are now due. A collected card and the Daily Test stay. Cards (1) and (2) never move.
+ */
+function repinVocabDay(pinned: MissionPlan, input: BuildMissionInput): readonly MissionCard[] {
+  const cards = pinned.cards;
+  if (input.vocabDay === undefined || pinned.vocabDay === undefined || pinned.vocabDay === input.vocabDay) return cards;
+  const index = cards.findIndex((c) => c.slot === 3);
+  const card = cards[index];
+  if (card === undefined || card.kind === 'daily-test') return cards;
+  let replacement: MissionCard | null = null;
+  if (card.kind === 'vocab') {
+    const used: Used = { quests: new Set(), episodes: new Set(), stories: new Set() };
+    for (const other of cards) if (other !== card) use(used, other.slot === 2 ? { ...other, episodeId: undefined } : other, input);
+    replacement = firstOf(SLOT_3_CHAIN, 3, { ...input, vocabCarry: null }, used);
+  } else if (input.vocab && !isCollected(card, input, card.collected)) {
+    replacement = vocabCard(input.vocab);
+  }
+  if (replacement === null) return cards;
+  const next = [...cards];
+  next[index] = replacement;
+  return next;
+}
+
+/**
  * An `again` card opens the unscored reader, so it is never collected (§3.7). The vocabulary card is
  * collected once a Speed Round of its topic completed today (F-VOC-005 §3.7).
  */
@@ -537,7 +597,8 @@ export function buildTodaysMission(input: BuildMissionInput): MissionPlan {
   if (input.pinned && input.pinned.date === today && input.pinned.profileId === profileId) {
     return {
       ...input.pinned,
-      cards: repinClosed(repinFreeEnd(repinPlacedOut(input.pinned.cards, input), input), input).map((card) => {
+      ...(input.vocabDay !== undefined ? { vocabDay: input.vocabDay } : {}),
+      cards: repinClosed(repinFreeEnd(repinPlacedOut(repinVocabDay(input.pinned, input), input), input), input).map((card) => {
         const refreshed: MissionCard = { ...card, collected: isCollected(card, input, card.collected) };
         if (card.kind === 'story') refreshed.storyReason = refreshedReason(card, input);
         // A plan removed after the pin (unpublished, or the own plan archived): the quest stays, "Next in your plan" goes.
@@ -584,6 +645,7 @@ export function buildTodaysMission(input: BuildMissionInput): MissionPlan {
     date: today,
     profileId,
     cards: cards.map((card) => ({ ...card, collected: isCollected(card, input, false) })),
+    ...(input.vocabDay !== undefined ? { vocabDay: input.vocabDay } : {}),
   };
 }
 
@@ -655,6 +717,15 @@ export function vocabCardShownEvent(plan: MissionPlan): VocabCardShownEvent | nu
   const card = plan.cards.find((c) => c.kind === 'vocab');
   if (!card?.topicKey || card.vocabDue === undefined) return null;
   return { name: 'home.vocab_card.shown', payload: { topicKey: card.topicKey, due: card.vocabDue } };
+}
+
+/**
+ * The once-only key of `home.vocab_card.shown` (F-VOC-005 section 3.9): profile and the card's
+ * day, the local day when the plan carries one (P-3b), so a card carried over a UTC rollover is
+ * not counted twice, and a card derived again at local midnight is counted once more.
+ */
+export function vocabCardShownKey(plan: MissionPlan): string {
+  return `${plan.profileId}|${plan.vocabDay ?? plan.date}`;
 }
 
 /**
