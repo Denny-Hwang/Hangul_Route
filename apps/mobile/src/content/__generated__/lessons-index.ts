@@ -2,11 +2,519 @@
 import type { Episode, Overlays, Quest } from '@hangul-route/content-schema';
 
 /** The shipped upper-stage lesson cells (F-CURR-001): headers only; the scopes live in lessons-stage<n>.ts. */
-export const LESSON_EPISODES: Episode[] = [];
+export const LESSON_EPISODES: Episode[] = [
+  {
+    "id": "episode:stage4-letters",
+    "stage": "stage4",
+    "theme": "letters",
+    "order": 1,
+    "titleEn": "Read Along",
+    "subtitleEn": "Follow a talk with a teacher, line by line.",
+    "hoyaIntroEn": "Listen to each line and follow along. Let's ask about new words!",
+    "questIds": [
+      "quest:stage4-letters-q1",
+      "quest:stage4-letters-q2",
+      "quest:stage4-letters-q3"
+    ],
+    "rewardCardIds": [],
+    "estimatedMinutes": 13,
+    "pillarTags": [
+      "A1"
+    ],
+    "status": "shipped"
+  }
+];
 
-export const LESSON_QUESTS: Quest[] = [];
+export const LESSON_QUESTS: Quest[] = [
+  {
+    "id": "quest:stage4-letters-q1",
+    "titleEn": "What Is This?",
+    "blurbEn": "Ask the teacher what something is, and who.",
+    "teaserEn": "Next: ask where things are.",
+    "estimatedMinutes": 4,
+    "steps": [
+      {
+        "id": "s1",
+        "kind": "intro",
+        "titleEn": "What Is This?",
+        "hoyaLineEn": "A new word! Let's ask the teacher what it is.",
+        "durationSeconds": 7
+      },
+      {
+        "id": "s2",
+        "kind": "discover",
+        "titleEn": "What and Who",
+        "discover": {
+          "pages": [
+            {
+              "items": [
+                {
+                  "type": "exchange",
+                  "lines": [
+                    {
+                      "speaker": "a",
+                      "speakerEn": "Hoya",
+                      "line": {
+                        "ko": "이게 뭐예요?",
+                        "romanization": "ige mwoyeyo",
+                        "en": "What is this?"
+                      }
+                    },
+                    {
+                      "speaker": "b",
+                      "speakerEn": "Teacher",
+                      "line": {
+                        "ko": "지우개예요.",
+                        "romanization": "jiugaeyeyo",
+                        "en": "It is an eraser."
+                      }
+                    }
+                  ]
+                }
+              ],
+              "captionEn": "Point at a thing and ask what it is. The answer names it."
+            },
+            {
+              "items": [
+                {
+                  "type": "exchange",
+                  "lines": [
+                    {
+                      "speaker": "a",
+                      "speakerEn": "Teacher",
+                      "line": {
+                        "ko": "누구예요?",
+                        "romanization": "nuguyeyo",
+                        "en": "Who is it?"
+                      }
+                    },
+                    {
+                      "speaker": "b",
+                      "speakerEn": "Hoya",
+                      "line": {
+                        "ko": "할머니예요.",
+                        "romanization": "halmeoniyeyo",
+                        "en": "It is Grandma."
+                      }
+                    }
+                  ]
+                }
+              ],
+              "captionEn": "For a person, ask who it is instead."
+            }
+          ]
+        },
+        "durationSeconds": 60
+      },
+      {
+        "id": "s3",
+        "kind": "practice",
+        "titleEn": "Pick the Reply",
+        "minigameKind": "tap-respond",
+        "minigameRef": "minigame:s4-letters-q1-practice",
+        "durationSeconds": 80
+      },
+      {
+        "id": "s4",
+        "kind": "apply",
+        "titleEn": "Put the Talk in Order",
+        "minigameKind": "story-sequence",
+        "minigameRef": "minigame:s4-letters-q1-apply",
+        "durationSeconds": 70
+      },
+      {
+        "id": "s5",
+        "kind": "check",
+        "titleEn": "Two Quick Ones",
+        "minigameKind": "listen-pick",
+        "minigameRef": "minigame:s4-letters-q1-check",
+        "durationSeconds": 40
+      },
+      {
+        "id": "s6",
+        "kind": "reward",
+        "titleEn": "Good Question!",
+        "hoyaLineEn": "You asked what and who. You read along so well!",
+        "durationSeconds": 8
+      }
+    ]
+  },
+  {
+    "id": "quest:stage4-letters-q2",
+    "titleEn": "Where Is It?",
+    "blurbEn": "Ask where things are at school.",
+    "teaserEn": "Next: a whole talk, from hello to thank you.",
+    "estimatedMinutes": 4,
+    "steps": [
+      {
+        "id": "s1",
+        "kind": "intro",
+        "titleEn": "Where Is It?",
+        "hoyaLineEn": "Where is everything at school? Let's ask!",
+        "durationSeconds": 7
+      },
+      {
+        "id": "s2",
+        "kind": "discover",
+        "titleEn": "Where?",
+        "discover": {
+          "pages": [
+            {
+              "items": [
+                {
+                  "type": "exchange",
+                  "lines": [
+                    {
+                      "speaker": "a",
+                      "speakerEn": "Hoya",
+                      "line": {
+                        "ko": "화장실이 어디예요?",
+                        "romanization": "hwajangsiri eodiyeyo",
+                        "en": "Where is the restroom?"
+                      }
+                    },
+                    {
+                      "speaker": "b",
+                      "speakerEn": "Teacher",
+                      "line": {
+                        "ko": "저기예요.",
+                        "romanization": "jeogiyeyo",
+                        "en": "It is over there."
+                      }
+                    }
+                  ]
+                }
+              ],
+              "captionEn": "Name the place or the thing, then ask where it is."
+            },
+            {
+              "items": [
+                {
+                  "type": "exchange",
+                  "lines": [
+                    {
+                      "speaker": "a",
+                      "speakerEn": "Teacher",
+                      "line": {
+                        "ko": "가방이 어디예요?",
+                        "romanization": "gabangi eodiyeyo",
+                        "en": "Where is the bag?"
+                      }
+                    },
+                    {
+                      "speaker": "b",
+                      "speakerEn": "Hoya",
+                      "line": {
+                        "ko": "여기예요.",
+                        "romanization": "yeogiyeyo",
+                        "en": "It is here."
+                      }
+                    }
+                  ]
+                }
+              ],
+              "captionEn": "The answer can be short: here, or over there."
+            }
+          ]
+        },
+        "durationSeconds": 65
+      },
+      {
+        "id": "s3",
+        "kind": "practice",
+        "titleEn": "Pick the Reply",
+        "minigameKind": "tap-respond",
+        "minigameRef": "minigame:s4-letters-q2-practice",
+        "durationSeconds": 80
+      },
+      {
+        "id": "s4",
+        "kind": "apply",
+        "titleEn": "Put the Talk in Order",
+        "minigameKind": "story-sequence",
+        "minigameRef": "minigame:s4-letters-q2-apply",
+        "durationSeconds": 70
+      },
+      {
+        "id": "s5",
+        "kind": "check",
+        "titleEn": "Two Quick Ones",
+        "minigameKind": "listen-pick",
+        "minigameRef": "minigame:s4-letters-q2-check",
+        "durationSeconds": 40
+      },
+      {
+        "id": "s6",
+        "kind": "reward",
+        "titleEn": "Found It!",
+        "hoyaLineEn": "You asked where things are. Now you know the way!",
+        "durationSeconds": 8
+      }
+    ]
+  },
+  {
+    "id": "quest:stage4-letters-q3",
+    "titleEn": "Thank You, Teacher",
+    "blurbEn": "Follow a whole talk: hello, a question, an answer, thanks.",
+    "estimatedMinutes": 4,
+    "steps": [
+      {
+        "id": "s1",
+        "kind": "intro",
+        "titleEn": "Thank You, Teacher",
+        "hoyaLineEn": "Let's follow a whole talk with the teacher, line by line.",
+        "durationSeconds": 7
+      },
+      {
+        "id": "s2",
+        "kind": "discover",
+        "titleEn": "A Whole Talk",
+        "discover": {
+          "pages": [
+            {
+              "items": [
+                {
+                  "type": "exchange",
+                  "lines": [
+                    {
+                      "speaker": "a",
+                      "speakerEn": "Teacher",
+                      "line": {
+                        "ko": "안녕하세요!",
+                        "romanization": "annyeonghaseyo",
+                        "en": "Hello!"
+                      }
+                    },
+                    {
+                      "speaker": "b",
+                      "speakerEn": "Hoya",
+                      "line": {
+                        "ko": "선생님, 안녕하세요! 이게 뭐예요?",
+                        "romanization": "seonsaengnim annyeonghaseyo ige mwoyeyo",
+                        "en": "Hello, Teacher! What is this?"
+                      }
+                    }
+                  ]
+                }
+              ],
+              "captionEn": "A talk can start with hello, then a question."
+            },
+            {
+              "items": [
+                {
+                  "type": "exchange",
+                  "lines": [
+                    {
+                      "speaker": "a",
+                      "speakerEn": "Teacher",
+                      "line": {
+                        "ko": "한글이에요.",
+                        "romanization": "hangeurieyo",
+                        "en": "It is Hangul."
+                      }
+                    },
+                    {
+                      "speaker": "b",
+                      "speakerEn": "Hoya",
+                      "line": {
+                        "ko": "감사합니다!",
+                        "romanization": "gamsahamnida",
+                        "en": "Thank you!"
+                      }
+                    }
+                  ]
+                }
+              ],
+              "captionEn": "After the answer, say thank you."
+            }
+          ]
+        },
+        "durationSeconds": 60
+      },
+      {
+        "id": "s3",
+        "kind": "practice",
+        "titleEn": "Pick the Reply",
+        "minigameKind": "tap-respond",
+        "minigameRef": "minigame:s4-letters-q3-practice",
+        "durationSeconds": 80
+      },
+      {
+        "id": "s4",
+        "kind": "apply",
+        "titleEn": "Put the Talk in Order",
+        "minigameKind": "story-sequence",
+        "minigameRef": "minigame:s4-letters-q3-apply",
+        "durationSeconds": 70
+      },
+      {
+        "id": "s5",
+        "kind": "check",
+        "titleEn": "Two Quick Ones",
+        "minigameKind": "listen-pick",
+        "minigameRef": "minigame:s4-letters-q3-check",
+        "durationSeconds": 40
+      },
+      {
+        "id": "s6",
+        "kind": "reward",
+        "titleEn": "Great Talk!",
+        "hoyaLineEn": "You followed a whole talk, from hello to thank you!",
+        "durationSeconds": 8
+      }
+    ]
+  }
+];
 
 export const LESSON_INDEX_OVERLAYS: Overlays = {
-  "es": {},
-  "ko": {}
+  "es": {
+    "episode:stage4-letters": {
+      "hoyaIntro": "Escucha cada línea y síguela. ¡Vamos a preguntar por palabras nuevas!",
+      "subtitle": "Sigue una charla con tu docente, línea por línea.",
+      "title": "Leer juntos"
+    },
+    "quest:stage4-letters-q1": {
+      "blurb": "Pregunta a tu docente qué es algo, y quién es alguien.",
+      "steps.s1.hoyaLine": "¡Una palabra nueva! Vamos a preguntar a tu docente qué es.",
+      "steps.s1.title": "¿Qué es esto?",
+      "steps.s2.discover.pages.0.caption": "Señala una cosa y pregunta qué es. La respuesta dice su nombre.",
+      "steps.s2.discover.pages.0.items.0.lines.0.line.gloss": "¿Qué es esto?",
+      "steps.s2.discover.pages.0.items.0.lines.0.speaker": "Hoya",
+      "steps.s2.discover.pages.0.items.0.lines.1.line.gloss": "Es una goma de borrar.",
+      "steps.s2.discover.pages.0.items.0.lines.1.speaker": "Docente",
+      "steps.s2.discover.pages.1.caption": "Para una persona, pregunta quién es.",
+      "steps.s2.discover.pages.1.items.0.lines.0.line.gloss": "¿Quién es?",
+      "steps.s2.discover.pages.1.items.0.lines.0.speaker": "Docente",
+      "steps.s2.discover.pages.1.items.0.lines.1.line.gloss": "Es la abuela.",
+      "steps.s2.discover.pages.1.items.0.lines.1.speaker": "Hoya",
+      "steps.s2.title": "Qué y quién",
+      "steps.s3.title": "Elige la respuesta",
+      "steps.s4.title": "Ordena la conversación",
+      "steps.s5.title": "Dos preguntas rápidas",
+      "steps.s6.hoyaLine": "Preguntaste qué y quién. ¡Seguiste la lectura muy bien!",
+      "steps.s6.title": "¡Buena pregunta!",
+      "teaser": "Siguiente: pregunta dónde están las cosas.",
+      "title": "¿Qué es esto?"
+    },
+    "quest:stage4-letters-q2": {
+      "blurb": "Pregunta dónde están las cosas en la escuela.",
+      "steps.s1.hoyaLine": "¿Dónde está todo en la escuela? ¡Vamos a preguntar!",
+      "steps.s1.title": "¿Dónde está?",
+      "steps.s2.discover.pages.0.caption": "Di el lugar o la cosa, y luego pregunta dónde está.",
+      "steps.s2.discover.pages.0.items.0.lines.0.line.gloss": "¿Dónde está el baño?",
+      "steps.s2.discover.pages.0.items.0.lines.0.speaker": "Hoya",
+      "steps.s2.discover.pages.0.items.0.lines.1.line.gloss": "Está allá.",
+      "steps.s2.discover.pages.0.items.0.lines.1.speaker": "Docente",
+      "steps.s2.discover.pages.1.caption": "La respuesta puede ser corta: aquí o allá.",
+      "steps.s2.discover.pages.1.items.0.lines.0.line.gloss": "¿Dónde está la mochila?",
+      "steps.s2.discover.pages.1.items.0.lines.0.speaker": "Docente",
+      "steps.s2.discover.pages.1.items.0.lines.1.line.gloss": "Está aquí.",
+      "steps.s2.discover.pages.1.items.0.lines.1.speaker": "Hoya",
+      "steps.s2.title": "¿Dónde?",
+      "steps.s3.title": "Elige la respuesta",
+      "steps.s4.title": "Ordena la conversación",
+      "steps.s5.title": "Dos preguntas rápidas",
+      "steps.s6.hoyaLine": "Preguntaste dónde están las cosas. ¡Ya sabes el camino!",
+      "steps.s6.title": "¡Lo encontraste!",
+      "teaser": "Siguiente: una charla completa, del hola al gracias.",
+      "title": "¿Dónde está?"
+    },
+    "quest:stage4-letters-q3": {
+      "blurb": "Sigue una charla completa: hola, una pregunta, una respuesta, gracias.",
+      "steps.s1.hoyaLine": "Sigamos una charla completa con tu docente, línea por línea.",
+      "steps.s1.title": "Gracias, docente",
+      "steps.s2.discover.pages.0.caption": "Una charla puede empezar con un hola y luego una pregunta.",
+      "steps.s2.discover.pages.0.items.0.lines.0.line.gloss": "¡Hola!",
+      "steps.s2.discover.pages.0.items.0.lines.0.speaker": "Docente",
+      "steps.s2.discover.pages.0.items.0.lines.1.line.gloss": "¡Hola, docente! ¿Qué es esto?",
+      "steps.s2.discover.pages.0.items.0.lines.1.speaker": "Hoya",
+      "steps.s2.discover.pages.1.caption": "Después de la respuesta, da las gracias.",
+      "steps.s2.discover.pages.1.items.0.lines.0.line.gloss": "Es el hangul.",
+      "steps.s2.discover.pages.1.items.0.lines.0.speaker": "Docente",
+      "steps.s2.discover.pages.1.items.0.lines.1.line.gloss": "¡Gracias!",
+      "steps.s2.discover.pages.1.items.0.lines.1.speaker": "Hoya",
+      "steps.s2.title": "Una charla completa",
+      "steps.s3.title": "Elige la respuesta",
+      "steps.s4.title": "Ordena la conversación",
+      "steps.s5.title": "Dos preguntas rápidas",
+      "steps.s6.hoyaLine": "¡Seguiste una charla completa, del hola al gracias!",
+      "steps.s6.title": "¡Gran charla!",
+      "title": "Gracias, docente"
+    }
+  },
+  "ko": {
+    "episode:stage4-letters": {
+      "hoyaIntro": "한 줄씩 듣고 따라 읽어요. 새 낱말을 물어봐요!",
+      "subtitle": "선생님과 나누는 대화를 한 줄씩 따라 읽어요.",
+      "title": "함께 읽기"
+    },
+    "quest:stage4-letters-q1": {
+      "blurb": "선생님께 무엇인지, 누구인지 물어봐요.",
+      "steps.s1.hoyaLine": "새 낱말이에요! 선생님께 무엇인지 물어봐요.",
+      "steps.s1.title": "이건 무엇일까요?",
+      "steps.s2.discover.pages.0.caption": "물건을 가리키고 무엇인지 물어요. 대답이 이름을 알려 줘요.",
+      "steps.s2.discover.pages.0.items.0.lines.0.line.gloss": "물건 이름을 묻는 말",
+      "steps.s2.discover.pages.0.items.0.lines.0.speaker": "호야",
+      "steps.s2.discover.pages.0.items.0.lines.1.line.gloss": "글씨 지우는 물건이라는 답",
+      "steps.s2.discover.pages.0.items.0.lines.1.speaker": "선생님",
+      "steps.s2.discover.pages.1.caption": "사람이면 누구인지 물어요.",
+      "steps.s2.discover.pages.1.items.0.lines.0.line.gloss": "사람을 묻는 말",
+      "steps.s2.discover.pages.1.items.0.lines.0.speaker": "선생님",
+      "steps.s2.discover.pages.1.items.0.lines.1.line.gloss": "아빠나 엄마의 어머니라는 답",
+      "steps.s2.discover.pages.1.items.0.lines.1.speaker": "호야",
+      "steps.s2.title": "무엇과 누구",
+      "steps.s3.title": "알맞은 대답 고르기",
+      "steps.s4.title": "대화 순서 맞추기",
+      "steps.s5.title": "짧은 문제 두 개",
+      "steps.s6.hoyaLine": "무엇인지, 누구인지 물어봤어요. 정말 잘 따라 읽었어요!",
+      "steps.s6.title": "좋은 질문이에요!",
+      "teaser": "다음: 물건과 장소가 어디 있는지 물어봐요.",
+      "title": "이건 무엇일까요?"
+    },
+    "quest:stage4-letters-q2": {
+      "blurb": "학교에서 물건과 장소가 어디 있는지 물어봐요.",
+      "steps.s1.hoyaLine": "학교에서 무엇이 어디 있을까요? 물어봐요!",
+      "steps.s1.title": "어디 있을까요?",
+      "steps.s2.discover.pages.0.caption": "장소나 물건을 먼저 말하고, 어디 있는지 물어요.",
+      "steps.s2.discover.pages.0.items.0.lines.0.line.gloss": "볼일 보는 곳이 어디인지 묻는 말",
+      "steps.s2.discover.pages.0.items.0.lines.0.speaker": "호야",
+      "steps.s2.discover.pages.0.items.0.lines.1.line.gloss": "먼 곳을 가리키는 답",
+      "steps.s2.discover.pages.0.items.0.lines.1.speaker": "선생님",
+      "steps.s2.discover.pages.1.caption": "대답은 짧아도 돼요. 가까운 곳, 또는 먼 곳을 가리켜요.",
+      "steps.s2.discover.pages.1.items.0.lines.0.line.gloss": "물건을 넣어 메는 것이 어디 있는지 묻는 말",
+      "steps.s2.discover.pages.1.items.0.lines.0.speaker": "선생님",
+      "steps.s2.discover.pages.1.items.0.lines.1.line.gloss": "가까운 곳을 가리키는 답",
+      "steps.s2.discover.pages.1.items.0.lines.1.speaker": "호야",
+      "steps.s2.title": "어디요?",
+      "steps.s3.title": "알맞은 대답 고르기",
+      "steps.s4.title": "대화 순서 맞추기",
+      "steps.s5.title": "짧은 문제 두 개",
+      "steps.s6.hoyaLine": "물건과 장소가 어디 있는지 물어봤어요. 이제 길을 알아요!",
+      "steps.s6.title": "찾았어요!",
+      "teaser": "다음: 인사부터 감사 인사까지, 대화 하나를 끝까지 따라가요.",
+      "title": "어디 있을까요?"
+    },
+    "quest:stage4-letters-q3": {
+      "blurb": "대화 하나를 끝까지 따라가요. 인사, 질문, 대답, 감사 인사.",
+      "steps.s1.hoyaLine": "선생님과 나누는 대화를 한 줄씩 끝까지 따라가요.",
+      "steps.s1.title": "선생님, 감사합니다",
+      "steps.s2.discover.pages.0.caption": "대화는 인사로 시작하고, 이어서 질문을 할 수 있어요.",
+      "steps.s2.discover.pages.0.items.0.lines.0.line.gloss": "만났을 때 하는 공손한 인사",
+      "steps.s2.discover.pages.0.items.0.lines.0.speaker": "선생님",
+      "steps.s2.discover.pages.0.items.0.lines.1.line.gloss": "인사하고 물건 이름을 묻는 말",
+      "steps.s2.discover.pages.0.items.0.lines.1.speaker": "호야",
+      "steps.s2.discover.pages.1.caption": "대답을 들은 뒤에는 고맙다고 말해요.",
+      "steps.s2.discover.pages.1.items.0.lines.0.line.gloss": "한국어를 적는 글자라는 답",
+      "steps.s2.discover.pages.1.items.0.lines.0.speaker": "선생님",
+      "steps.s2.discover.pages.1.items.0.lines.1.line.gloss": "고마움을 전하는 인사",
+      "steps.s2.discover.pages.1.items.0.lines.1.speaker": "호야",
+      "steps.s2.title": "대화 한 편",
+      "steps.s3.title": "알맞은 대답 고르기",
+      "steps.s4.title": "대화 순서 맞추기",
+      "steps.s5.title": "짧은 문제 두 개",
+      "steps.s6.hoyaLine": "인사부터 감사 인사까지 대화를 끝까지 따라갔어요!",
+      "steps.s6.title": "멋진 대화예요!",
+      "title": "선생님, 감사합니다"
+    }
+  }
 };
