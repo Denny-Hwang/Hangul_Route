@@ -24,7 +24,8 @@
 
 - **Korean = the target language** being learned (zero or near-zero baseline).
 - **UI languages**: **English (default)**, **Korean** and **Spanish** selectable. UI strings come from the **selected UI locale** — never hard-coded in another language.
-  - Until the i18n layer ships (F-I18N-001; `packages/i18n` is approved by the owner), English is the only shipped UI locale. Do not add Korean or Spanish UI strings ad hoc.
+  - The i18n layer has shipped (F-I18N-001; `packages/i18n` is approved by the owner): UI strings come from `packages/i18n` (`useMessages()`), and a new or changed English string lands in `messages/en/*.ts` in the same PR as the feature. Spanish and Korean values come from translation PRs (R8 drafts and the multi-agent review, F-I18N-001 §3.10). While a locale is hidden, its coverage ratchet (`packages/i18n/src/__tests__/es-coverage.ts` / `ko-coverage.ts`) fails only when a namespace whose English is still the reviewed text (ledger `enSha` current) falls back to English; once a locale is shipped, any missing key fails. Do not add Korean or Spanish UI strings ad hoc, outside the dictionary.
+  - Which UI locales are public is set by `LOCALE_STATUS` (`packages/i18n/src/locales.ts`): English is shipped; Spanish and Korean were translated and reviewed in F-I18N-001 PR 15 / PR 16 and become public when rows 15b / 16b flip them to `'shipped'`.
   - UI copy stays plain and short (English at CEFR Pre-A1), so a young reader and an adult beginner both read it easily.
 - **Taught Korean content** (자모, 단어, 문장) always shows **romanization** (pronunciation guide) and a **gloss in the UI language** (plus a visual where possible).
 - Korean as taught content is not the same thing as Korean as a UI locale: in the Korean UI the menus are Korean, and taught items still carry romanization and a gloss.
@@ -89,8 +90,9 @@ Hangul_Route/
 │       └── content-skill/
 │
 ├── .github/
-│   ├── workflows/              # ci / coverage-gate / content-validation /
-│   │                           # design-token-sync / routine-validation / preview-deploy
+│   ├── workflows/              # ci (incl. coverage gate) / web-app / content-validation /
+│   │                           # design-token-sync / routine-validation / preview-deploy /
+│   │                           # switch-on-e2e / source-links
 │   ├── pull_request_template.md
 │   ├── ISSUE_TEMPLATE/
 │   └── CODEOWNERS
@@ -116,7 +118,7 @@ Hangul_Route/
 │   ├── i18n/                   # locale overlays (es, ko) keyed by entity id (F-I18N-001)
 │   └── ...                     # real episodes / cards / quests
 │
-├── design/                     # manual Claude Design working space
+├── design/                     # design working space (manual Claude Design + agent design passes, §5)
 │   ├── playbook/               # ★ daily guides (week-01..12)
 │   ├── tokens/
 │   ├── wireframes/
@@ -128,7 +130,7 @@ Hangul_Route/
 │
 ├── scripts/                    # validate-content, check-i18n, build-overlays, i18n-status, coverage gates (run by CI)
 │
-├── routines/                   # R1 / R2 / R3 / R4 / R6 (no R5)
+├── routines/                   # R1 / R2 / R3 / R4 / R6 / R8 (no R5)
 │
 ├── docs/
 │   ├── blueprints/             # 8 original design docs
@@ -160,7 +162,7 @@ Hangul_Route/
 | Backend | Cloudflare Workers + D1 (SQLite) + R2 | 제로 비용 스택 |
 | Auth | Clerk 무료 티어 | 자체 구축도 검토 대상 |
 | 배포 | Cloudflare Pages / Workers | |
-| CI/CD | GitHub Actions | 6 workflows |
+| CI/CD | GitHub Actions | 8 workflows |
 | 테스트 | vitest (unit/int) · Detox / Playwright (e2e) | TDD 강제 |
 
 ---
@@ -171,7 +173,7 @@ Hangul_Route/
 - React: **함수형 컴포넌트 + hooks** 만. 클래스 컴포넌트 금지.
 - **상태 관리**: `zustand`
 - **서버 상태 / API**: `@tanstack/react-query`
-- **테스트**: `vitest`. E2E 는 Detox / Playwright (nightly).
+- **테스트**: `vitest`. E2E 는 Detox / Playwright (PWA offline e2e 는 PR 마다 `web-app.yml`, switch-on e2e 는 nightly `switch-on-e2e.yml`).
 - **스타일**: `packages/design-system` 의 **토큰만** 사용.
   - 색상·간격·타이포·반경·그림자 하드코딩 금지.
   - 색상 리터럴(`#fff`, `rgb(...)`) 직접 사용 금지.
@@ -188,6 +190,7 @@ Hangul_Route/
 - **"와이어프레임 없는 시안 금지."** 시안 전 `design/wireframes/` 를 거친다.
 - **`.claude/skills/` 8개 Skills 자동 트리거.** Claude Code + Routines 가 해당 파일·경로 변경 시 자동 적용.
 - **디자인은 수동.** `design/playbook/` 의 일일 가이드를 본인이 따라간다 (R5 없음).
+  - 2026-10-12 오너 결정: 에이전트가 만든 시안(mock)도 허용한다 — 사양의 design pass / T-0b 행 은 에이전트가 `design/` 에 시안을 만들고 multi-agent review 가 승인한다. 근거: 2026-10-12 오너 결정 (#461, `docs/specs/F-SPACE-002-class-transfer.md` T-0b) 과, 같은 방식으로 머지된 design pass #420 · #472 · #489 · #588 및 multi-agent review 로 마무리하는 오너 상시 규칙. 오너가 손으로 그리지 않아도 된다. 와이어프레임 → 시안 → 컴포넌트 순서는 그대로.
 - **동기화는 CI.** `design/tokens/` ↔ `packages/design-system/` 일치는 `.github/workflows/design-token-sync.yml` 이 검증.
 - **`main` 브랜치 직접 push 금지.** 루틴 PR 은 `claude/*` 브랜치만.
 
@@ -200,17 +203,18 @@ Hangul_Route/
 | 영역 | W4 (알파) | 6 months |
 |---|---|---|
 | `packages/content-schema` | 100% | 100% |
+| `packages/i18n` (message files excluded: data) | 100% | 100% |
 | `packages/backend` | 90% | 90% |
 | `packages/design-system` | 85% | 85% |
 | `apps/mobile` — business logic | 90% | 100% |
 | `apps/mobile` — platform-dependent | 70% | 80% |
 | `apps/web` — verification logic | 90% | 100% |
 
-**Business vs platform 분리**: `apps/mobile/src/logic/` (비즈니스) vs `apps/mobile/src/platform/` (RN Animated, Camera, AsyncStorage 래퍼). coverage-gate.yml 이 두 경로를 분리 리포트.
+**Business vs platform 분리**: `apps/mobile/src/logic/` (비즈니스) vs `apps/mobile/src/platform/` (RN Animated, Camera, AsyncStorage 래퍼). `ci.yml` 의 "Measure coverage vs rolling targets" job (`scripts/coverage-gate.mjs`) 이 두 경로를 분리 리포트.
 
 ---
 
-## 7. Routines (5)
+## 7. Routines (6)
 
 상세는 `routines/` 및 `docs/workflows/routine-operations.md`.
 
@@ -221,20 +225,21 @@ Hangul_Route/
 | R3 | PR Reviewer | PR opened (label: `routine-generated`) |
 | R4 | Coverage Monitor | push to `main` |
 | R6 | Weekly Report | 매주 금 18:00 KST |
+| R8 | Translation Sync | merge to `main` touching `packages/i18n/src/messages/en/**` 또는 Run now — locale x namespace 별 es/ko 초안 PR (`routines/R8-translation-sync.md`) |
 
-> **R5 제거**. 디자인은 수동이며, 토큰 sync 는 `design-token-sync.yml` CI 가 담당.
+> **R5 제거**. 디자인 루틴은 없으며 (§5), 토큰 sync 는 `design-token-sync.yml` CI 가 담당.
 
 ---
 
 ## 8. Do NOT
 
-- ❌ `localStorage` / `AsyncStorage` **직접 사용 금지** — `packages/hooks` 의 안전 훅 경유 (별도 PR 예정).
+- ❌ `localStorage` / `AsyncStorage` **직접 사용 금지** — 안전 래퍼 경유: 앱은 `apps/mobile/src/platform/storage(.web).ts`, 웹은 `apps/web/src/lib/i18n/safe-storage.ts` (경로는 i18n 아래지만 웹의 모든 localStorage / sessionStorage 용 범용 래퍼; `packages/hooks` 는 아직 없음).
 - ❌ `any` 타입 금지. 불가피하면 `unknown` + 내로잉, 또는 정확한 타입.
 - ❌ `console.log` 를 production 코드에 남기지 말 것. 로깅은 `packages/shared-types` (또는 shared logger) 경유.
 - ❌ `main` 브랜치 직접 push. 모든 변경은 PR.
 - ❌ `--no-verify` / `--force` 계열 옵션으로 훅·검증 우회.
 - ❌ 명시적으로 지정되지 않은 파일/패키지에 "겸사겸사" 수정.
-- ❌ 선택된 UI 로케일을 거치지 않은 UI 문자열 (예: 영어 UI 에 섞인 한국어 문구). **UI 문자열 = 선택된 UI 로케일** (기본 English, Korean · Spanish 선택 — i18n 레이어 F-I18N-001 전까지는 English 만), **학습 대상 한국어 = 항상 로마자 + UI 언어 gloss** (§1 Languages).
+- ❌ 선택된 UI 로케일을 거치지 않은 UI 문자열 (예: 영어 UI 에 섞인 한국어 문구). **UI 문자열 = 선택된 UI 로케일** (기본 English, Korean · Spanish 선택; 공개 여부는 `LOCALE_STATUS`), **학습 대상 한국어 = 항상 로마자 + UI 언어 gloss** (§1 Languages).
 
 ---
 
@@ -299,11 +304,11 @@ Hangul_Route/
 - **v2.2 architecture pass** (Week 1)
   - [x] CLAUDE.md 재작성
   - [x] 디렉토리 구조 확장
-  - [x] Routines 5 (R5 제거)
-  - [ ] Turborepo 빌드 그린
-  - [ ] Cloudflare hello world
+  - [x] Routines 5 (R5 제거; 이후 F-I18N-001 PR 13 의 R8 Translation Sync 추가로 6개, §7)
+  - [x] Turborepo 빌드 그린
+  - [x] Cloudflare hello world
   - [ ] Week 1 design playbook 실행
 
 ---
 
-_Last updated: 2026-10-09 (audience: anyone learning Hangul, any age; UI languages EN default + KO/ES; anti-shame rules revised; primary channel: web PWA)_
+_Last updated: 2026-10-13 (stale references refreshed: coverage gate inside `ci.yml`, agent design passes (2026-10-12), i18n layer shipped, public locales set by `LOCALE_STATUS`, R8, workflow list; F-I18N-001 PR 17). Previous: 2026-10-09 (audience: anyone learning Hangul, any age; UI languages EN default + KO/ES; anti-shame rules revised; primary channel: web PWA)_
