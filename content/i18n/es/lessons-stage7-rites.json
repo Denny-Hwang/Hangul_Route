@@ -20,7 +20,7 @@
       "steps.s1.hoyaLine": "El tteokguk es un plato típico de Seollal. ¡Vamos a escribir sobre días que ya pasaron!",
       "steps.s6.hoyaLine": "¡Escribiste qué comiste, hiciste y viste!",
       "steps.s2.discover.pages.0.caption": "Nombra la comida y luego la terminación de pasado.",
-      "steps.s2.discover.pages.1.caption": "Desde hace mucho, Chuseok se llama la fiesta de la luna.",
+      "steps.s2.discover.pages.1.caption": "A Chuseok incluso se le llamó la fiesta de la luna.",
       "steps.s2.discover.pages.0.items.0.note": "{ko:먹었어요} dice que ya pasó. Usa {ko:을} después de una consonante final y {ko:를} después de una vocal.",
       "steps.s2.discover.pages.1.items.0.sentence.gloss": "Hice songpyeon.",
       "steps.s2.discover.pages.1.items.1.sentence.gloss": "Vi la luna llena.",
@@ -41,13 +41,16 @@
       "steps.s1.hoyaLine": "En Chuseok, muchas familias hacen songpyeon juntas. ¿Qué comiste tú en un día especial?",
       "steps.s6.hoyaLine": "¡Escribiste sobre tu propio día especial!",
       "steps.s2.discover.pages.0.caption": "Primero el día, luego la comida.",
-      "steps.s2.discover.pages.1.caption": "Sirve cualquier día especial, también un cumpleaños.",
-      "steps.s2.discover.pages.1.items.1.word.gloss": "pastel",
       "steps.s2.discover.pages.0.items.0.note": "Pon {ko:에} después de un día para decir cuándo: {ko:설날에} es «en Seollal».",
-      "steps.s2.discover.pages.1.items.0.sentence.gloss": "En mi cumpleaños comí pastel.",
       "steps.s2.discover.pages.0.items.0.frame.gloss": "En ___ comí ___.",
       "steps.s2.discover.pages.0.items.0.examples.seollare-tteokgugeul-meogeosseoyo.gloss": "En Seollal comí tteokguk.",
-      "steps.s2.discover.pages.0.items.0.examples.chuseoge-songpyeoneul-meogeosseoyo.gloss": "En Chuseok comí songpyeon."
+      "steps.s2.discover.pages.0.items.0.examples.chuseoge-songpyeoneul-meogeosseoyo.gloss": "En Chuseok comí songpyeon.",
+      "steps.s2.discover.pages.1.caption": "Sirve cualquier día: un cumpleaños, un fin de semana ...",
+      "steps.s2.discover.pages.1.items.0.word.gloss": "cumpleaños",
+      "steps.s2.discover.pages.1.items.1.word.gloss": "fin de semana",
+      "steps.s2.discover.pages.2.caption": "Una palabra nueva de comida: pastel.",
+      "steps.s2.discover.pages.2.items.0.sentence.gloss": "En mi cumpleaños comí pastel.",
+      "steps.s2.discover.pages.2.items.1.word.gloss": "pastel, torta"
     },
     "quest:stage7-rites-q3": {
       "title": "Mi día favorito",
@@ -93,9 +96,7 @@
     },
     "minigame:s7-rites-q1-check": {
       "orderIt.rounds.c1.sentence.gloss": "Comí songpyeon.",
-      "orderIt.rounds.c2.sentence.gloss": "Vi la luna llena.",
-      "orderIt.rounds.c1.distractors.meogeoyo.gloss": "como",
-      "orderIt.rounds.c2.distractors.mandeureosseoyo.gloss": "hice"
+      "orderIt.rounds.c2.sentence.gloss": "Vi la luna llena."
     },
     "minigame:s7-rites-q2-practice": {
       "traceWord.rounds.w1.word.gloss": "el Año Nuevo lunar",
@@ -106,72 +107,72 @@
     "minigame:s7-rites-q2-apply": {
       "writeFrame.rounds.f1.frame.gloss": "En ___ comí ___.",
       "writeFrame.rounds.f2.frame.gloss": "En ___ hice ___.",
-      "writeFrame.rounds.f3.frame.gloss": "En ___ vi ___.",
+      "writeFrame.rounds.f3.frame.gloss": "Lo que vi en ___: ___.",
       "writeFrame.rounds.f1.slots.day.bank.seollal.gloss": "el Año Nuevo lunar",
       "writeFrame.rounds.f1.slots.day.bank.chuseok.gloss": "la fiesta de la cosecha de otoño",
-      "writeFrame.rounds.f1.slots.day.bank.saengil.gloss": "cumpleaños",
+      "writeFrame.rounds.f1.slots.day.bank.saengil.gloss": "mi cumpleaños",
       "writeFrame.rounds.f1.slots.food.bank.tteokguk.gloss": "sopa de pastel de arroz",
       "writeFrame.rounds.f1.slots.food.bank.songpyeon.gloss": "pasteles de arroz en forma de media luna",
       "writeFrame.rounds.f1.slots.food.bank.keikeu.gloss": "pastel",
-      "writeFrame.rounds.f1.slots.food.bank.sagwa.gloss": "manzana",
+      "writeFrame.rounds.f1.slots.food.bank.sagwa.gloss": "una manzana",
       "writeFrame.rounds.f2.slots.day.bank.seollal.gloss": "el Año Nuevo lunar",
       "writeFrame.rounds.f2.slots.day.bank.chuseok.gloss": "la fiesta de la cosecha de otoño",
-      "writeFrame.rounds.f2.slots.day.bank.saengil.gloss": "cumpleaños",
+      "writeFrame.rounds.f2.slots.day.bank.saengil.gloss": "mi cumpleaños",
       "writeFrame.rounds.f2.slots.thing.bank.songpyeon.gloss": "pasteles de arroz en forma de media luna",
       "writeFrame.rounds.f2.slots.thing.bank.tteok.gloss": "pastel de arroz",
       "writeFrame.rounds.f2.slots.thing.bank.keikeu.gloss": "pastel",
       "writeFrame.rounds.f3.slots.day.bank.seollal.gloss": "el Año Nuevo lunar",
       "writeFrame.rounds.f3.slots.day.bank.chuseok.gloss": "la fiesta de la cosecha de otoño",
-      "writeFrame.rounds.f3.slots.day.bank.saengil.gloss": "cumpleaños",
-      "writeFrame.rounds.f3.slots.what.bank.gajok.gloss": "familia",
-      "writeFrame.rounds.f3.slots.what.bank.chingu.gloss": "amigo o amiga",
-      "writeFrame.rounds.f3.slots.what.bank.boreumdal.gloss": "luna llena"
+      "writeFrame.rounds.f3.slots.day.bank.saengil.gloss": "mi cumpleaños",
+      "writeFrame.rounds.f3.slots.what.bank.gajok.gloss": "mi familia",
+      "writeFrame.rounds.f3.slots.what.bank.chingu.gloss": "un amigo o una amiga",
+      "writeFrame.rounds.f3.slots.what.bank.boreumdal.gloss": "la luna llena",
+      "writeFrame.rounds.f1.slots.day.bank.jumal.gloss": "el fin de semana",
+      "writeFrame.rounds.f2.slots.day.bank.jumal.gloss": "el fin de semana",
+      "writeFrame.rounds.f3.slots.day.bank.jumal.gloss": "el fin de semana"
     },
     "minigame:s7-rites-q2-check": {
       "orderIt.rounds.c1.sentence.gloss": "En Chuseok comí songpyeon.",
-      "orderIt.rounds.c2.sentence.gloss": "En mi cumpleaños comí pastel.",
-      "orderIt.rounds.c1.distractors.meogeoyo.gloss": "como",
-      "orderIt.rounds.c2.distractors.bwasseoyo.gloss": "vi"
+      "orderIt.rounds.c2.sentence.gloss": "En mi cumpleaños comí pastel."
     },
     "minigame:s7-rites-q3-practice": {
       "orderIt.rounds.r1.sentence.gloss": "Mi día favorito es Seollal.",
       "orderIt.rounds.r2.sentence.gloss": "Mi día favorito es Chuseok.",
       "orderIt.rounds.r3.sentence.gloss": "Mi día favorito es mi cumpleaños.",
       "orderIt.rounds.r4.sentence.gloss": "Mi día favorito es el fin de semana.",
-      "orderIt.rounds.r3.distractors.jumarieyo.gloss": "es el fin de semana",
       "orderIt.rounds.r2.particle.choices.ieyo.gloss": "es (después de una consonante final)",
       "orderIt.rounds.r2.particle.choices.yeyo.gloss": "es (después de una vocal)",
       "orderIt.rounds.r4.particle.choices.ieyo.gloss": "es (después de una consonante final)",
-      "orderIt.rounds.r4.particle.choices.yeyo.gloss": "es (después de una vocal)"
+      "orderIt.rounds.r4.particle.choices.yeyo.gloss": "es (después de una vocal)",
+      "orderIt.rounds.r3.distractors.meogeosseoyo.gloss": "comí"
     },
     "minigame:s7-rites-q3-apply": {
       "writeFrame.rounds.f1.frame.gloss": "Mi día favorito es ___.",
       "writeFrame.rounds.f2.frame.gloss": "En ___ comí ___.",
-      "writeFrame.rounds.f3.frame.gloss": "En ___ vi ___.",
+      "writeFrame.rounds.f3.frame.gloss": "Lo que vi en ___: ___.",
       "writeFrame.rounds.f1.slots.day.bank.seollal.gloss": "el Año Nuevo lunar",
       "writeFrame.rounds.f1.slots.day.bank.chuseok.gloss": "la fiesta de la cosecha de otoño",
-      "writeFrame.rounds.f1.slots.day.bank.saengil.gloss": "cumpleaños",
-      "writeFrame.rounds.f1.slots.day.bank.jumal.gloss": "fin de semana",
+      "writeFrame.rounds.f1.slots.day.bank.saengil.gloss": "mi cumpleaños",
+      "writeFrame.rounds.f1.slots.day.bank.jumal.gloss": "el fin de semana",
       "writeFrame.rounds.f2.slots.day.bank.seollal.gloss": "el Año Nuevo lunar",
       "writeFrame.rounds.f2.slots.day.bank.chuseok.gloss": "la fiesta de la cosecha de otoño",
-      "writeFrame.rounds.f2.slots.day.bank.saengil.gloss": "cumpleaños",
-      "writeFrame.rounds.f2.slots.day.bank.jumal.gloss": "fin de semana",
+      "writeFrame.rounds.f2.slots.day.bank.saengil.gloss": "mi cumpleaños",
+      "writeFrame.rounds.f2.slots.day.bank.jumal.gloss": "el fin de semana",
       "writeFrame.rounds.f2.slots.food.bank.tteokguk.gloss": "sopa de pastel de arroz",
       "writeFrame.rounds.f2.slots.food.bank.songpyeon.gloss": "pasteles de arroz en forma de media luna",
       "writeFrame.rounds.f2.slots.food.bank.keikeu.gloss": "pastel",
-      "writeFrame.rounds.f2.slots.food.bank.sagwa.gloss": "manzana",
+      "writeFrame.rounds.f2.slots.food.bank.sagwa.gloss": "una manzana",
       "writeFrame.rounds.f3.slots.day.bank.seollal.gloss": "el Año Nuevo lunar",
       "writeFrame.rounds.f3.slots.day.bank.chuseok.gloss": "la fiesta de la cosecha de otoño",
-      "writeFrame.rounds.f3.slots.day.bank.saengil.gloss": "cumpleaños",
-      "writeFrame.rounds.f3.slots.day.bank.jumal.gloss": "fin de semana",
-      "writeFrame.rounds.f3.slots.what.bank.gajok.gloss": "familia",
-      "writeFrame.rounds.f3.slots.what.bank.chingu.gloss": "amigo o amiga",
-      "writeFrame.rounds.f3.slots.what.bank.boreumdal.gloss": "luna llena"
+      "writeFrame.rounds.f3.slots.day.bank.saengil.gloss": "mi cumpleaños",
+      "writeFrame.rounds.f3.slots.day.bank.jumal.gloss": "el fin de semana",
+      "writeFrame.rounds.f3.slots.what.bank.gajok.gloss": "mi familia",
+      "writeFrame.rounds.f3.slots.what.bank.chingu.gloss": "un amigo o una amiga",
+      "writeFrame.rounds.f3.slots.what.bank.boreumdal.gloss": "la luna llena"
     },
     "minigame:s7-rites-q3-check": {
       "orderIt.rounds.c1.sentence.gloss": "Mi día favorito es Chuseok.",
-      "orderIt.rounds.c2.sentence.gloss": "En Seollal comí tteokguk.",
-      "orderIt.rounds.c2.distractors.meogeoyo.gloss": "como"
+      "orderIt.rounds.c2.sentence.gloss": "En Seollal comí tteokguk."
     }
   }
 }

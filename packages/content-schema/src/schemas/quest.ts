@@ -60,7 +60,8 @@ export const DiscoverItemSchema = z.discriminatedUnion('type', [
   }),
   /**
    * A sentence pattern: a frame with one or two slot markers `___` (two for a
-   * Stage 7 two-slot frame, a day slot then a food slot in My Holiday Memory q2, F-CURR-001 S7-3), a
+   * Stage 7 two-slot frame, a day slot then a food slot in My Holiday Memory q2, F-CURR-001 S7-3;
+   * the cell rule in `lesson.ts` keeps two slots to Stage 7), a
    * one-line note in the UI language (Korean only inside `{ko:}` tokens) and two examples.
    */
   z.object({
