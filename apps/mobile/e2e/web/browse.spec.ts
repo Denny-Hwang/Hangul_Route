@@ -2,7 +2,6 @@ import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
 import { answerCheckRounds, onboardChild, openGrownUpZone, passDiscover, unlockWithPin } from './helpers';
 import { shot } from './shots';
-import { PRESENTER_MOUNTED } from '../../src/platform/presenter-mount';
 import { nextPage, position } from './story-reader-helpers';
 
 /**
@@ -1037,13 +1036,10 @@ test('a word topic lists every word with its Hear button, keeps 64 targets at 32
 
 /* -------------------------------------------------------------------------------------------
  * BR-13: [ Present this ] on the item page (section 4.6 secondary action, OD-9; design
- * design/screens/presenter/present-this.md). A full pass, a presenter that index.ts really mounts
- * (PRESENTER_MOUNTED, F-TCH-004 TD1), and a block the presenter can draw: a lesson today, a story
- * or a word topic only once their slides land. Until PR 6 mounts PresenterApp the button stays
- * hidden, and the cases that open the presenter wait for that mount.
+ * design/screens/presenter/present-this.md). A full pass, the presenter root (index.ts mounts
+ * PresenterApp for /present since #591), and a block the presenter can draw: a lesson today, a
+ * story or a word topic only once their slides land (F-TCH-004 PR 11, PR 12).
  * ------------------------------------------------------------------------------------------- */
-
-const PRESENTER_PENDING = 'F-TCH-004 PR 6 has not mounted PresenterApp in index.ts yet (PRESENTER_MOUNTED is false)';
 
 /** Records every `window.open` address before it opens, so the deck can be read before the presenter strips it. */
 function recordOpens(page: Page): Promise<void> {
@@ -1075,16 +1071,7 @@ function learnerStored(all: Stored): Stored {
   return Object.fromEntries(Object.entries(all).filter(([k]) => !k.includes('lecture:') && !k.startsWith('hr:browse:')));
 }
 
-test('BR-13: while index.ts does not mount PresenterApp, a full pass shows no Present this, so /present can never boot the learner app', async ({ page }) => {
-  test.skip(PRESENTER_MOUNTED, 'the presenter is mounted: the cases below cover the button');
-  await openLessonPage(page, 'quest:stage1-letters-q1');
-  await bootSettled(page);
-  await expect(page.getByTestId('browse-preview')).toBeVisible();
-  await expect(page.getByTestId('browse-present')).toHaveCount(0);
-});
-
 test('BR-13: a lesson with a full pass shows Present this under the preview and opens a one-block deck in the presenter, in a new tab that opens no learner', async ({ page, context }) => {
-  test.skip(!PRESENTER_MOUNTED, PRESENTER_PENDING);
   await onboardChild(page, { name: 'Mina' });
   await page.goto('/');
   await expect(page.getByText('Hi, Mina!')).toBeVisible();
@@ -1151,13 +1138,28 @@ test('BR-13: Present this is not shown with a sampler pass, nor for a story whos
   await expect(page.getByTestId('browse-preview')).toBeVisible();
   await expect(page.getByTestId('browse-present')).toHaveCount(0);
 
+  // A story block expands to no slide until F-TCH-004 PR 11 gives the lecture bundle its story
+  // adapter; that PR shows the button here by itself and must turn this assertion around.
+  test.info().annotations.push({ type: 'flips-with', description: 'F-TCH-004 PR 11 (story slides): Present this then shows on a story page' });
   await openLessonPage(page, STORY_ID);
   await expect(page.getByTestId('browse-preview')).toHaveText('Preview this story');
   await expect(page.getByTestId('browse-present')).toHaveCount(0);
 });
 
+test('BR-13: when the browser gives no new tab, one line under Present this says to allow pop-ups, and the page stays', async ({ page }) => {
+  await openLessonPage(page, 'quest:stage1-letters-q1');
+  await bootSettled(page);
+  await page.evaluate(() => {
+    (window as unknown as { open: () => null }).open = () => null;
+  });
+  await expect(page.getByTestId('browse-present-blocked')).toHaveCount(0);
+  await page.getByTestId('browse-present').click();
+  await expect(page.getByTestId('browse-present-blocked')).toHaveText('The new tab did not open. Allow pop-ups for this site, then try again.');
+  await expect(page.getByTestId('browse-item')).toBeVisible();
+  expect(new URL(page.url()).pathname).toBe('/browse');
+});
+
 test('BR-13: at 1280 wide Present this sits under the preview inside the action width', async ({ page }) => {
-  test.skip(!PRESENTER_MOUNTED, PRESENTER_PENDING);
   await page.setViewportSize({ width: 1280, height: 900 });
   await openLessonPage(page, 'quest:stage1-letters-q1');
   const previewBox = await page.getByTestId('browse-preview').boundingBox();
@@ -1169,7 +1171,6 @@ test('BR-13: at 1280 wide Present this sits under the preview inside the action 
 });
 
 test('BR-13: at 320 x 568 both buttons stay pinned, under half the screen, and nothing scrolls sideways', async ({ page }) => {
-  test.skip(!PRESENTER_MOUNTED, PRESENTER_PENDING);
   await page.setViewportSize({ width: 320, height: 568 });
   await openLessonPage(page, 'quest:stage1-letters-q1');
   const present = page.getByTestId('browse-present');
@@ -1184,7 +1185,6 @@ test('BR-13: at 320 x 568 both buttons stay pinned, under half the screen, and n
 });
 
 test('BR-13: on a phone in landscape (568 x 320) only the preview stays pinned and Present this ends the page', async ({ page }) => {
-  test.skip(!PRESENTER_MOUNTED, PRESENTER_PENDING);
   await page.setViewportSize({ width: 568, height: 320 });
   await openLessonPage(page, 'quest:stage1-letters-q1');
   const previewBox = await page.getByTestId('browse-preview').boundingBox();
@@ -1192,8 +1192,12 @@ test('BR-13: on a phone in landscape (568 x 320) only the preview stays pinned a
   expect((previewBox?.y ?? 0) + (previewBox?.height ?? 0)).toBeLessThanOrEqual(320);
   expect(previewBox?.height ?? 0).toBeLessThan(320 / 3);
   const present = page.getByTestId('browse-present');
+  // Not pinned: at the top of the page it is below the facts, out of view, while the preview is pinned in view.
+  await expect(page.getByTestId('browse-preview')).toBeInViewport();
+  await expect(present).not.toBeInViewport();
   await present.scrollIntoViewIfNeeded();
   await expect(present).toBeInViewport();
+  await expect(page.getByTestId('browse-preview')).toBeInViewport();
   await expect(present).toHaveAccessibleName('Present this');
   expect(await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth)).toBe(false);
 });
