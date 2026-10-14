@@ -3,6 +3,7 @@ import { join } from 'node:path';
 import { LectureDeckSchema, type LectureBlock } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
 import { episodesAll, questsAll } from '../../../content';
+import { VOCAB_TOPICS } from '../../../content/__generated__/vocab';
 import { PAUSE_WORD, lectureBundle } from '../content';
 import { expandDeck } from '../deck-builder';
 
@@ -13,8 +14,8 @@ import { expandDeck } from '../deck-builder';
  * ties that list to what `expandDeck` really puts on slides. It expands every shipped
  * episode and quest, with a Korean voice and without one (the teacher-says text and the
  * Match Sound text prompts of §3.7 / §3.3), walks every string in the slides and fails on a
- * Hangul code point missing from the committed sidecar. Story and vocabulary blocks join
- * this test with their adapters (PR 11, PR 12).
+ * Hangul code point missing from the committed sidecar. Every vocabulary topic joins as a
+ * vocab block (PR 12); story blocks join with their adapter (PR 11).
  *
  * Only taught Korean is drawn in the presenter font. Text in the UI language (titles,
  * card facts, glosses; the teacher-typed deck title) uses the system stack, so those
@@ -56,6 +57,7 @@ const deck = (blocks: LectureBlock[]) =>
 const blocks: LectureBlock[] = [
   ...episodesAll.filter((e) => e.status !== 'preview' && e.questIds.length > 0).map((e): LectureBlock => ({ kind: 'episode', id: e.id })),
   ...questsAll.map((q): LectureBlock => ({ kind: 'quest', id: q.id })),
+  ...VOCAB_TOPICS.map((t): LectureBlock => ({ kind: 'vocab', topicId: t.id })),
 ];
 
 describe('the presenter font covers the projected Hangul (F-TCH-004 §3.6)', () => {
@@ -79,6 +81,10 @@ describe('the presenter font covers the projected Hangul (F-TCH-004 §3.6)', () 
       }
     }
     expect([...missing.entries()]).toEqual([]);
+  });
+
+  it('the deck covers every vocabulary topic', () => {
+    expect(blocks.filter((b) => b.kind === 'vocab').length).toBe(VOCAB_TOPICS.length);
   });
 
   it('holds the Pause word', () => {

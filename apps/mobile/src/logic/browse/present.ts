@@ -95,9 +95,9 @@ export function presentHref(deck: LectureDeck): string {
 /**
  * Whether [ Present this ] is drawn: a full pass (OD-9), the presenter root in
  * this build, and at least one slide from the one-block deck on this bundle.
- * Today that is a lesson; a story block expands to nothing until F-TCH-004
- * PR 11 and a word topic until PR 12, so neither lands on the invalid-link
- * state.
+ * Today that is a lesson or a ready word topic (F-TCH-004 PR 12); a story block
+ * expands to nothing until F-TCH-004 PR 11, so it never lands on the
+ * invalid-link state.
  */
 export function presentThisShown(input: { scope: PassScope; presenterRoot: boolean; deck: LectureDeck | null; bundle: LectureBundle }): boolean {
   if (input.scope !== 'full' || !input.presenterRoot || input.deck === null) return false;

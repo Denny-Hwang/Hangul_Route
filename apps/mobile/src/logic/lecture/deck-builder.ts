@@ -90,7 +90,8 @@ export interface LectureStory {
 export interface LectureVocabTopic {
   title: string;
   hoyaLine?: string;
-  words: ReadonlyArray<{ id: string; ko: string; romanization: string; gloss: string; cardId?: string }>;
+  /** `cardId`: the word's heritage card picture; `wordArt`: its WordArt key (README D9). */
+  words: ReadonlyArray<{ id: string; ko: string; romanization: string; gloss: string; cardId?: string; wordArt?: string }>;
 }
 
 export interface LectureBundle {
@@ -103,8 +104,8 @@ export interface LectureBundle {
   strokeReviewed(jamoId: string): boolean;
   /** A story the learner Library would list; `'not-ready'` for a draft or unreviewed one. Absent: none yet. */
   story?(id: string): LectureStory | 'not-ready' | undefined;
-  /** Absent until the vocab adapter lands. */
-  vocabTopic?(id: string): LectureVocabTopic | undefined;
+  /** A topic the presenter may show; `'not-ready'` for a draft or preview one. Absent: none yet. */
+  vocabTopic?(id: string): LectureVocabTopic | 'not-ready' | undefined;
 }
 
 export interface VoiceInfo {
@@ -567,6 +568,10 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
       skip(topicId, 'unknown-id');
       return;
     }
+    if (topic === 'not-ready') {
+      skip(topicId, 'not-ready');
+      return;
+    }
     push(`${path}/title`, { kind: 'title', source: 'topic', title: topic.title, ...(topic.hoyaLine !== undefined ? { line: topic.hoyaLine } : {}) });
     const words = wordIds
       ? wordIds.flatMap((id) => {
@@ -577,7 +582,13 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
       : topic.words;
     for (const w of words) {
       const word = { ko: w.ko, romanization: w.romanization, gloss: w.gloss };
-      push(`${path}/${w.id}`, { kind: 'vocab', word, wordId: w.id, ...(w.cardId !== undefined ? { cardId: w.cardId } : {}) });
+      push(`${path}/${w.id}`, {
+        kind: 'vocab',
+        word,
+        wordId: w.id,
+        ...(w.cardId !== undefined ? { cardId: w.cardId } : {}),
+        ...(w.wordArt !== undefined ? { wordArt: w.wordArt } : {}),
+      });
       teachWord(word);
     }
     // The quiz asks only words that had a slide: under 4 shown (all of a small topic, or a short chosen list), no quiz.

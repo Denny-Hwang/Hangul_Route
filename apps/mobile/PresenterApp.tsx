@@ -1,4 +1,4 @@
-import { colors, presenter, supportedCardIds } from '@hangul-route/design-system';
+import { WORD_ART_KEYS, colors, presenter, supportedCardIds } from '@hangul-route/design-system';
 import { LOCALE_META, availableLocales, dictionaryLocale, getMessages, type UiLocale } from '@hangul-route/i18n';
 import { encodeDeck, type LectureDeck } from '@hangul-route/content-schema';
 import { StatusBar } from 'expo-status-bar';
@@ -197,7 +197,7 @@ export default function PresenterApp(): React.ReactElement {
   const bundle = useMemo(() => lectureBundle(locale), [locale]);
   const canPlay = canPlayKorean(capability);
   const expanded = useMemo(() => (deck ? expandDeck(deck, bundle, { canPlayKorean: canPlay }) : null), [deck, bundle, canPlay]);
-  const run = useMemo(() => (deck && expanded ? runDeck(deck, expanded, SHELL_SLIDE_KINDS, supportedCardIds) : null), [deck, expanded]);
+  const run = useMemo(() => (deck && expanded ? runDeck(deck, expanded, SHELL_SLIDE_KINDS, supportedCardIds, WORD_ART_KEYS) : null), [deck, expanded]);
 
   // A link that does not decode, or a deck with nothing to show: the invalid screen, once per page.
   const rejected = useRef(false);

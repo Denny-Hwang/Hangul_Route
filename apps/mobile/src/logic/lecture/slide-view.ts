@@ -65,12 +65,18 @@ export function cardView(slide: Of<'card'>, reveal: number): CardView {
   return { rom: romShown(slide.builds, shown, 'art'), fact: shown.has('fact') };
 }
 
+/** A word's picture: a heritage card or a WordArt glyph (F-VOC-002). */
+export type VocabArt = { kind: 'card'; cardId: string } | { kind: 'word'; key: string };
+
 /**
  * A word's picture (section 3.4 `vocab`): the heritage card art when the word names a card the art
- * draws; none means the slide is text only. (A topic word's WordArt arrives with PR 12, README D9.)
+ * draws, else a topic word's WordArt when the glyph exists (README D9); none means the slide is
+ * text only.
  */
-export function vocabArtId(slide: Of<'vocab'>, supportedCardIds: readonly string[]): string | undefined {
-  return slide.cardId !== undefined && supportedCardIds.includes(slide.cardId) ? slide.cardId : undefined;
+export function vocabArt(slide: Of<'vocab'>, supportedCardIds: readonly string[], wordArtKeys: readonly string[]): VocabArt | undefined {
+  if (slide.cardId !== undefined && supportedCardIds.includes(slide.cardId)) return { kind: 'card', cardId: slide.cardId };
+  if (slide.wordArt !== undefined && wordArtKeys.includes(slide.wordArt)) return { kind: 'word', key: slide.wordArt };
+  return undefined;
 }
 
 /**
