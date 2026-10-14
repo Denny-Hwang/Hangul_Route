@@ -1,5 +1,6 @@
 import { HTTPException } from 'hono/http-exception';
 import { failResponse } from '../envelope';
+import { classScopeFullEnabled } from './class-scope';
 import { notesSendEnabled } from './notes-switch';
 import { billingLiveAllowed, stripeMode } from './stripe';
 
@@ -27,6 +28,8 @@ export interface RuntimeEnv {
   ALLOWED_ORIGINS?: string;
   /** Dashboard text variable: `enabled` lets adults send notes (F-FEEDBACK-001 section 7.8); unset = off. */
   NOTES_SEND?: string;
+  /** [TV] Dashboard text variable: full-scope teacher visibility; unset = on, `disabled` = every class reads base scope. */
+  CLASS_SCOPE_FULL?: string;
 }
 
 const DEV_ENVIRONMENTS: ReadonlySet<string> = new Set(['development', 'test']);
@@ -79,7 +82,7 @@ export interface HealthReport {
   devFallbacks: boolean;
   bindings: { db: boolean; clerk: boolean; stripe: boolean; stripeWebhook: boolean; rescuePepper: boolean; stripeLive: boolean; billingLiveAllowed: boolean };
   /** Switches the owner sets in the dashboard, so a monitor can see they took effect (F-FEEDBACK-001 section 7.8). */
-  features: { notesSend: boolean };
+  features: { notesSend: boolean; classScopeFull: boolean };
 }
 
 /**
@@ -104,5 +107,5 @@ export function healthReport(env: RuntimeEnv | undefined): HealthReport {
   const devFallbacks = devFallbacksAllowed(env);
   const environment = environmentName(env);
   const ready = (bindings.db && bindings.clerk) || (devFallbacks && environment !== 'production');
-  return { status: ready ? 'ok' : 'misconfigured', environment, devFallbacks, bindings, features: { notesSend: notesSendEnabled(env) } };
+  return { status: ready ? 'ok' : 'misconfigured', environment, devFallbacks, bindings, features: { notesSend: notesSendEnabled(env), classScopeFull: classScopeFullEnabled(env) } };
 }

@@ -1,6 +1,7 @@
 import { CLASS_SCOPE_TEXT_VERSION, type ProgressSummary } from '@hangul-route/content-schema';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { transferRateKey } from '../db';
+import { transferRateKey, type NewNote } from '../db';
+import { runScheduledPurge } from '../lib/note-retention';
 import { hashSecret } from '../lib/device-auth';
 import { classMoveClientLimiter } from '../routes/class-moves';
 import { transferClientLimiter } from '../routes/transfers';
@@ -17,11 +18,14 @@ import {
   MINA,
   NOW,
   OLD,
+  ON,
   SUNI,
   bearer,
   call,
   consent,
   create as createTransfer,
+  approve as approveTransfer,
+  classCreate,
   filler,
   json,
   member,
@@ -164,6 +168,26 @@ describe('a direct move (TV-D7): the teacher manages both classes', () => {
     expect((await db.getClassMove(moveOf(r).id))?.actorVia).toBe('school_admin');
   });
 
+  it('lets a plain teacher (not the owner) of both classes move directly', async () => {
+    await member(A, 'account', 'teacher-b', 'teacher');
+    await member(D, 'account', 'teacher-b', 'teacher');
+    const r = await post(moves(A), 'teacher-b', { learnerId: SUNI, destinationSpaceId: D });
+    expect(r.status).toBe(200);
+    expect(moveOf(r)).toMatchObject({ kind: 'direct', status: 'moved' });
+    expect((await db.getClassMove(moveOf(r).id))?.actorVia).toBe('teacher');
+    expect(await isIn(D)).toBe(true);
+  });
+
+  it('revokes the source class tablet and removes the source class notes, through the route', async () => {
+    await db.putRelink({ id: 'relink:tab', spaceId: A, learnerId: SUNI, deviceId: TABLET, platform: null, status: 'approved', requestedAt: OLD, decidedAt: OLD, expiresAt: OLD, secret: null });
+    const note: NewNote = { id: 'note:src0000001', learnerId: SUNI, spaceId: A, senderAccountId: 'teacher-a', senderRole: 'teacher', senderLabel: null, batchId: 'notebatch:a', batchKind: 'learners', presetId: 'progress_reading', body: null, bodyLocale: null, suggest: null, createdAt: OLD };
+    expect(await db.insertNotes([note], [])).toBe(1);
+    expect((await post(moves(A), 'teacher-a', { learnerId: SUNI, destinationSpaceId: D })).status).toBe(200);
+    expect(await db.getDevice(SUNI, TABLET)).toBeNull();
+    expect(await db.getDevice(SUNI, PHONE)).not.toBeNull();
+    expect(await db.getNote(note.id)).toBeNull();
+  });
+
   it('refuses a full destination, an existing member, the same class and a malformed body', async () => {
     for (let i = 0; i < 20; i += 1) await filler(`profile:fill-${String(i).padStart(2, '0')}`, D);
     expect((await post(moves(A), 'teacher-a', { learnerId: SUNI, destinationSpaceId: D })).body.error?.code).toBe('cap_class');
@@ -277,6 +301,14 @@ describe("a move into another teacher's class (TV-D8): the receiving class accep
     expect((await post(moves(A), 'teacher-a', { learnerId: SUNI, destinationSpaceId: D })).body.error?.code).toBe('already_open');
   });
 
+  it('an ask still waiting for the receiving class blocks a family-started request too', async () => {
+    await send();
+    const r = await createTransfer(FAMILY, 'mom', { learnerId: SUNI, fromSpaceId: A, destinationSpaceId: B, code: CODE_B, consent });
+    expect([r.status, r.body.error?.code, r.body.error?.details]).toEqual([409, 'already_open', { startedBy: 'class' }]);
+    vi.setSystemTime(new Date(NOW.getTime() + 15 * DAY));
+    expect((await createTransfer(FAMILY, 'mom', { learnerId: SUNI, fromSpaceId: A, destinationSpaceId: B, code: CODE_B, consent })).status).toBe(201);
+  });
+
   it('expires after 14 days; an expired ask no longer blocks a new move', async () => {
     const sent = await send();
     vi.setSystemTime(new Date(NOW.getTime() + 15 * DAY));
@@ -314,6 +346,12 @@ describe('the family sees a one-time notice (TV-D10)', () => {
     expect((await post(`${moves(FAMILY)}/${moved.id}/seen`, 'mom')).status).toBe(200);
     expect(notices(await get(moves(FAMILY), 'mom'))).toEqual([]);
     expect(store.events.filter((e) => e.name === 'space.move.notice_seen')).toHaveLength(1);
+  });
+
+  it('records the console OK with seenOn: console only', async () => {
+    const moved = moveOf(await post(moves(A), 'teacher-a', { learnerId: SUNI, destinationSpaceId: D }));
+    await post(`${moves(FAMILY)}/${moved.id}/seen`, 'mom');
+    expect(store.events.filter((e) => e.name === 'space.move.notice_seen').map((e) => [e.payload, e.profileId])).toEqual([[{ seenOn: 'console' }, undefined]]);
   });
 
   it('stops showing a notice after 30 days', async () => {
@@ -375,6 +413,41 @@ describe('the class-scope update (TV-D2 to TV-D5)', () => {
     expect(report.body.data).toMatchObject({ scope: 'full', settings: { classNotes: 'all' }, summary: { vocab } });
   });
 
+  it('the CLASS_SCOPE_FULL kill switch puts every class reader back on the base scope; the acknowledgement still records', async () => {
+    const off = { ...ON, CLASS_SCOPE_FULL: 'disabled' };
+    expect((await post(`/api/spaces/${FAMILY}/learners/${SUNI}/class-scope`, 'mom', { version: CLASS_SCOPE_TEXT_VERSION }, off)).status).toBe(200);
+    const roster = await get(`/api/spaces/${A}/roster`, 'teacher-a', off);
+    const row = (roster.body.data as { learners: Array<Record<string, unknown> & { summary: Record<string, unknown> }> }).learners.find((l) => l.id === SUNI);
+    expect(row?.scope).toBe('base');
+    expect(row?.summary).not.toHaveProperty('vocab');
+    const report = await get(`/api/spaces/${A}/learners/${SUNI}/report`, 'teacher-a', off);
+    expect(report.body.data).toMatchObject({ scope: 'base', settings: null });
+    // the family still reads everything, and the stored acknowledgement counts again once the switch is back on
+    expect((await get(`/api/spaces/${FAMILY}/roster`, 'mom', off)).body.data).toMatchObject({ learners: expect.arrayContaining([expect.objectContaining({ id: SUNI, scope: 'full' })]) });
+    expect((await rosterRow(A, 'teacher-a'))?.scope).toBe('full');
+  });
+
+  it('a failed acknowledgement read answers the base scope instead of an error (for example before migration 0009)', async () => {
+    await ack('mom');
+    const spy = vi.spyOn(db, 'classScopeAcksOf').mockRejectedValue(new Error('no such table: class_scope_acks'));
+    try {
+      const r = await get(`/api/spaces/${A}/roster`, 'teacher-a');
+      expect(r.status).toBe(200);
+      expect((await rosterRow(A, 'teacher-a'))?.scope).toBe('base');
+      expect((await get(`/api/spaces/${A}/learners/${SUNI}/report`, 'teacher-a')).body.data).toMatchObject({ scope: 'base' });
+    } finally {
+      spy.mockRestore();
+    }
+  });
+
+  it('answers 404 for an archived family', async () => {
+    const family = await db.getSpace(FAMILY);
+    if (!family) throw new Error('seed');
+    await db.putSpace({ ...family, archivedAt: OLD });
+    expect((await get(`/api/spaces/${FAMILY}/class-scope`, 'mom')).status).toBe(404);
+    expect((await ack('mom')).status).toBe(404);
+  });
+
   it('the learner report says base and carries no settings before the acknowledgement', async () => {
     const report = await get(`/api/spaces/${A}/learners/${SUNI}/report`, 'teacher-a');
     expect(report.body.data).toMatchObject({ scope: 'base', settings: null });
@@ -413,6 +486,15 @@ describe('the class-scope update (TV-D2 to TV-D5)', () => {
     expect(await db.getClassScopeAck(SUNI)).toMatchObject({ textVersion: CLASS_SCOPE_TEXT_VERSION, basis: 'caregiver', evidence: 'mom' });
   });
 
+  it("a guardian's consent through the family approve route (a teacher-started request) also acknowledges it", async () => {
+    const started = await call('POST', `/api/spaces/${A}/transfer-requests`, bearer('teacher-a'), classCreate());
+    expect(started.status).toBe(201);
+    const tid = (started.body.data as { request: { id: string } }).request.id;
+    expect(await db.getClassScopeAck(SUNI)).toBeNull();
+    expect((await approveTransfer(FAMILY, 'mom', tid, { slots: ['learner'], consent })).status).toBe(200);
+    expect(await db.getClassScopeAck(SUNI)).toMatchObject({ textVersion: CLASS_SCOPE_TEXT_VERSION, basis: 'caregiver', evidence: 'mom' });
+  });
+
   it('a consent at an older transfer text does not', async () => {
     expect((await createTransfer(FAMILY, 'mom', { learnerId: SUNI, fromSpaceId: A, destinationSpaceId: B, code: CODE_B, consent: { ...consent, textVersion: 'transfer-2026-10c' } })).status).toBe(201);
     expect(await db.getClassScopeAck(SUNI)).toBeNull();
@@ -420,16 +502,81 @@ describe('the class-scope update (TV-D2 to TV-D5)', () => {
 });
 
 describe('telemetry for teacher moves and the update keeps codes only (section 4.4)', () => {
-  it('drops every key but via / basis, any unknown value, and the profile id', async () => {
+  it('drops every key but via / seenOn / basis, any unknown value, and the profile id', async () => {
     const send = (name: string, payload: Record<string, unknown>) => call('POST', '/api/telemetry', json, { name, payload, profileId: SUNI, at: NOW.toISOString() });
     expect((await send('space.move.notice_seen', { via: 'direct', learnerId: SUNI, spaceId: A })).status).toBe(201);
+    expect((await send('space.move.notice_seen', { seenOn: 'device', learnerId: SUNI })).status).toBe(201);
+    expect((await send('space.move.notice_seen', { seenOn: 'somewhere' })).status).toBe(201);
     expect((await send('space.move.completed', { via: 'sideways', name: 'Suni' })).status).toBe(201);
     expect((await send('space.scope.acknowledged', { basis: 'device', version: 'x' })).status).toBe(201);
     expect(store.events.map((e) => [e.name, e.payload, e.profileId])).toEqual([
       ['space.move.notice_seen', { via: 'direct' }, undefined],
+      ['space.move.notice_seen', { seenOn: 'device' }, undefined],
+      ['space.move.notice_seen', undefined, undefined],
       ['space.move.completed', undefined, undefined],
       ['space.scope.acknowledged', { basis: 'device' }, undefined],
     ]);
+  });
+});
+
+describe('the 90-day record of moves is enforced by the daily purge (TV-D14 privacy promise)', () => {
+  it('removes an executed move and an ask that expired unsettled once 90 days have passed, with no new move created', async () => {
+    const moved = moveOf(await post(moves(A), 'teacher-a', { learnerId: SUNI, destinationSpaceId: D }));
+    const ask = await post(moves(D), 'teacher-a', { learnerId: SUNI, destinationSpaceId: B, code: CODE_B });
+    expect(ask.status).toBe(201);
+    const later = new Date(NOW.getTime() + 89 * DAY);
+    expect((await runScheduledPurge(db, later)).classMoves).toBe(0);
+    const after = new Date(NOW.getTime() + 105 * DAY);
+    expect((await runScheduledPurge(db, after)).classMoves).toBe(2);
+    expect(await db.getClassMove(moved.id)).toBeNull();
+    expect(await db.getClassMove(moveOf(ask).id)).toBeNull();
+  });
+
+  it('a failing class-move step never stops the note purge', async () => {
+    const spy = vi.spyOn(db, 'purgeClassMoves').mockRejectedValue(new Error('no such table: class_moves'));
+    try {
+      expect(await runScheduledPurge(db, NOW)).toMatchObject({ rounds: 1, classMoves: 0 });
+    } finally {
+      spy.mockRestore();
+    }
+  });
+});
+
+describe('statement budget of the destinations list (section 6)', () => {
+  it('stays flat for a school admin who reaches 60 classes', async () => {
+    const { openSqliteD1 } = await import('./helpers/sqlite');
+    const { D1Db } = await import('../db/d1');
+    const { setFallbackDb, fallbackDb } = await import('../db');
+    const sqlite = openSqliteD1();
+    let prepared = 0;
+    let counting = false;
+    const counted = {
+      prepare(text: string) {
+        if (counting) prepared += 1;
+        return sqlite.prepare(text);
+      },
+      batch: (stmts: Parameters<typeof sqlite.batch>[0]) => sqlite.batch(stmts),
+    };
+    const before = fallbackDb();
+    try {
+      const d1db = new D1Db(counted);
+      setFallbackDb(d1db);
+      await d1db.putAccount({ id: 'admin', email: null, displayName: null, consent: null, createdAt: OLD });
+      await d1db.putSpace(space(SCHOOL, 'school', 'admin'));
+      await d1db.addMembership({ spaceId: SCHOOL, memberKind: 'account', memberId: 'admin', role: 'owner', joinedAt: OLD });
+      for (let i = 0; i < 60; i += 1) await d1db.putSpace(space(`space:sc-${String(i).padStart(2, '0')}`, 'class', 'admin', { parentSpaceId: SCHOOL }));
+      await d1db.putLearner({ id: SUNI, displayName: 'Suni', ageGroup: '8-9', avatar: 'hoya-orange', recoveryHash: null, createdAt: OLD, lastActiveAt: OLD });
+      await d1db.addMembership({ spaceId: 'space:sc-00', memberKind: 'learner', memberId: SUNI, role: 'student', joinedAt: OLD });
+      counting = true;
+      const r = await get(`${moves('space:sc-00')}/destinations?learnerId=${SUNI}`, 'admin');
+      counting = false;
+      expect(r.status).toBe(200);
+      expect((r.body.data as { destinations: unknown[] }).destinations).toHaveLength(59);
+      expect(prepared).toBeLessThan(20);
+    } finally {
+      setFallbackDb(before);
+      sqlite.close();
+    }
   });
 });
 

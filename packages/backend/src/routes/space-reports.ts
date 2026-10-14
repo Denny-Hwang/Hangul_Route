@@ -12,7 +12,7 @@ import {
 import { Hono } from 'hono';
 import { dbFor } from '../db';
 import { fail, ok } from '../envelope';
-import { learnerScope, learnerScopes, learnerSettingsOf } from '../lib/class-scope';
+import { learnerScope, learnerScopes, learnerSettingsOf, type ClassScopeEnv } from '../lib/class-scope';
 import { rosterSummary, type FamilyVisibleSummary } from '../lib/roster-summary';
 import { recordServerEvent } from '../lib/server-events';
 import { findSpace, publicSpace, requireCan, rosterName } from './spaces';
@@ -25,7 +25,7 @@ import { findSpace, publicSpace, requireCan, rosterName } from './spaces';
  * loads `payload_json`. The console has no telemetry client, so each served
  * report records its own `report.viewed` event, codes only (section 3.13).
  */
-export const spaceReportRoutes = new Hono();
+export const spaceReportRoutes = new Hono<{ Bindings: ClassScopeEnv }>();
 
 const PLAN_ENTRY = ProgressSummarySchema.shape.planProgress.valueSchema;
 const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -92,7 +92,7 @@ spaceReportRoutes.get('/:id/learners/:learnerId/report', async (c) => {
   if (!membership || !learner) return fail(c, 'not_member', 'This learner is not in this space', 404);
   const planIds = new Set(plans.map((p) => p.id));
   // [TV] AMENDMENTS-TEACHER-VISIBILITY-TRANSFER section 2: the learner report is a student's detail view (firstTryRate kept); the scope decides the rest.
-  const scope = await learnerScope(db, space.kind, learner.id);
+  const scope = await learnerScope(db, space.kind, learner.id, c.env);
   const body: LearnerReportResponse = {
     space: publicSpace(space),
     // No ageGroup: no report block uses it (section 3.8, data minimisation).
@@ -150,7 +150,7 @@ spaceReportRoutes.get('/:id/class-report', async (c) => {
   const [learnerIds, stored] = await Promise.all([db.learnersOf(memberIds), db.summariesOf(memberIds)]);
   const summaries = new Map(stored.map((row) => [row.learnerId, row]));
   // [TV] each learner counts with its own scope, so a base-scope learner's words never reach a class total
-  const scopes = await learnerScopes(db, space.kind, learnerIds);
+  const scopes = await learnerScopes(db, space.kind, learnerIds, c.env);
   // planProgress keeps this class's own plans only (archived ones included), as on the roster.
   const planIds = new Set(plans.map((p) => p.id));
   const learners = learnerIds.map((learnerId) => {

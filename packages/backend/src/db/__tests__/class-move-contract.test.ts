@@ -162,6 +162,14 @@ function classMoveContract(name: string, make: () => Db): void {
       expect(await db.getClassMove('move:0001')).toBeNull();
     });
 
+    it('purges an ask that expired without anyone settling it, 90 days after its expiry', async () => {
+      await db.createClassMove(move());
+      const expiry = Date.parse(move().expiresAt);
+      expect(await db.purgeClassMoves(new Date(expiry), new Date(expiry), 10)).toBe(0);
+      expect(await db.purgeClassMoves(new Date(expiry + 1), new Date(expiry + 1), 10)).toBe(1);
+      expect(await db.getClassMove('move:0001')).toBeNull();
+    });
+
     it('deleteLearner erases the acknowledgement and the moves', async () => {
       await db.createClassMove(move());
       await db.putClassScopeAck({ learnerId: SUNI, textVersion: 'class-scope-2026-10', basis: 'caregiver', evidence: 'mom', ackedAt: T });

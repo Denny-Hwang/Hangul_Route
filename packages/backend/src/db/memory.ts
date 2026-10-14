@@ -941,7 +941,7 @@ export class MemoryDb implements Db {
     let removed = 0;
     for (const [k, m] of this.classMoves) {
       if (removed >= limit) break;
-      const old = (m.endedAt !== null && m.endedAt < ended) || (m.status === 'executed' && m.executedAt !== null && m.executedAt < executed);
+      const old = (m.endedAt !== null && m.endedAt < ended) || (m.status === 'executed' && m.executedAt !== null && m.executedAt < executed) || (m.status === 'requested' && m.expiresAt < ended);
       if (old) {
         this.classMoves.delete(k);
         removed += 1;

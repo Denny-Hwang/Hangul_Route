@@ -142,6 +142,8 @@ export const ClassMoveViaSchema = z.enum(['owner', 'teacher', 'school_admin']);
 export type ClassMoveVia = z.infer<typeof ClassMoveViaSchema>;
 /** `space.move.completed` payload code. */
 export const ClassMoveCompletedViaSchema = z.enum(['direct', 'accepted']);
+/** `space.move.notice_seen` payload code: where the family pressed OK (the app on a device, or the console). */
+export const ClassMoveSeenOnSchema = z.enum(['device', 'console']);
 
 const LEARNER_ID = z.string().regex(/^profile:[a-z0-9-]+$/);
 const SPACE_ID = z.string().regex(/^space:[a-z0-9-]+$/);

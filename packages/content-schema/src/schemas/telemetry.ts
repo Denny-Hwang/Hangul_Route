@@ -156,7 +156,7 @@ export const TELEMETRY_EVENT_NAMES = [
   'billing.summary_viewed',
   'billing.receipts_viewed',
   // [TV] AMENDMENTS-TEACHER-VISIBILITY-TRANSFER section 4.4 (recorded by the Worker; codes only: `via` on
-  // space.move.completed, `basis` on space.scope.acknowledged; never a learner, class or account id or a name)
+  // space.move.completed, `seenOn` on space.move.notice_seen, `basis` on space.scope.acknowledged; never a learner, class or account id or a name)
   'space.move.requested',
   'space.move.completed',
   'space.move.declined',
