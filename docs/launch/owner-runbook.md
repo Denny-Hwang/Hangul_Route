@@ -19,7 +19,7 @@ Workers & Pages → **Create** → Workers 탭 → **Import a repository** → `
 | Runtime: Secrets (Type: Secret) | 없음 | `CLERK_SECRET_KEY` · `STRIPE_SECRET_KEY` · `STRIPE_WEBHOOK_SECRET` · (권장, 한 번만) `RESCUE_PEPPER` | 없음 |
 | Custom domain | `app.hangulroute.com` | (workers.dev 주소 사용) | `hangulroute.com` · `www.hangulroute.com` |
 
-> **F-APP-001 (2026-10-11)**: `hangul-route-app` 이 학습자 앱과 함께 **어른 페이지 (콘솔)** 도 `app.hangulroute.com` 의 `/signin` · `/start` · `/teach` · `/parent` · `/account` 에서 서빙한다 (빌드 명령은 그대로; A-3 부터 같은 빌드가 콘솔도 만든다). hangulroute.com 은 소개·가이드 전용이 되고 (F-SITE-002 S-10), 결제는 앱 호스트 `/account/billing` 에서만 한다 (F-BILL-002 B-10). 오너 작업은 §E 의 S-1 → S-2 → S-0 → S-3 순서.
+> **F-APP-001 (2026-10-11)**: `hangul-route-app` 이 학습자 앱과 함께 **어른 페이지 (콘솔)** 도 `app.hangulroute.com` 의 `/signin` · `/start` · `/teach` · `/parent` · `/account` 에서 서빙한다 (빌드 명령은 그대로; A-3 부터 같은 빌드가 콘솔도 만든다). hangulroute.com 은 소개·가이드 전용이 되고 (F-SITE-002 S-10), 결제는 앱 호스트 `/account/billing` 에서만 한다 (F-BILL-002 B-10). 오너 작업은 §E 의 S-1 → S-2 → S-0 → S-3 순서 (값 · 확인 · 되돌리기를 펼친 실행 순서표는 §E2).
 
 - **Build variables** 는 프로젝트 → Settings → **Build** → Variables and Secrets. `NEXT_PUBLIC_*` / `EXPO_PUBLIC_*` 는 빌드 때 번들에 박히므로 값을 바꾸면 **Retry deployment** (또는 다음 머지) 로 다시 빌드해야 반영된다.
 - **Runtime Variables / Secrets** 는 프로젝트 → Settings → **Variables and Secrets** (런타임). API Worker 의 `wrangler.toml` 이 `keep_vars = true` 라서 재배포해도 대시보드 변수가 지워지지 않고, Secret 은 원래 지워지지 않는다. 바인딩(D1 등) 만은 toml 이 원본이라 PR 로 바꾼다.
@@ -93,7 +93,7 @@ https://dashboard.stripe.com → **Test mode**
 4. **Worker 변수** — Cloudflare → `hangul-route-api` → Settings → Variables and Secrets → Type **Text** 로
    - **`STRIPE_PRICE_FAMILY_YEARLY`** = 1번의 price id (**새 변수**)
    - `STRIPE_PRICE_GROUP_LICENSE_YEARLY` = 3번의 price id (기존)
-   - `CONSOLE_URL` = `https://hangulroute.com` (기존; F-APP-001 S-4 때 `https://app.hangulroute.com`)
+   - `CONSOLE_URL` = `https://hangulroute.com` (기존; F-APP-001 M3 의 §E2 S-3c 때 `https://app.hangulroute.com`)
    - **`STRIPE_PRICE_FAMILY_LIFETIME` 은 삭제** (코드가 더 이상 읽지 않는다. 남겨 둬도 무해)
    → Deploy.
    - **순서**: `STRIPE_PRICE_FAMILY_YEARLY` 는 BY-1 머지가 API Worker 와 웹 콘솔을 **둘 다** 배포한 뒤에 넣는다 (결제 화면에 "$15.30 / year" 가 보이면 완료). 그 전까지 Family Plan 결제는 `stripe_not_configured` 로 막혀 있어서, 예전 "$15.30 once" 화면에서 연간 구독이 시작되는 일은 없다.
@@ -223,10 +223,78 @@ A-3 이 아니라 **A-4b 머지 후**에 한다: A-4b 의 공통 어른 레이�
 **확인**: 두 가지 모두 예. 아니면 S-3 를 미룬다 (F-SITE-002 S-10, F-BILL-002 B-10 도 같은 이유로 S-0 뒤).
 
 ### S-3. 학습자 앱의 어른 진입점 켜기 (5분, M3: S-0 과 M2 뒤)
-`hangul-route-app` 빌드 변수 `EXPO_PUBLIC_GROWN_UP_HOME` = `true`, `EXPO_PUBLIC_SITE_URL` = `https://hangulroute.com` → **Retry deployment**. (`EXPO_PUBLIC_CONSOLE_URL` 은 F-BILL-002 가 더 읽지 않게 된 뒤 삭제.) 같은 창에서 F-SITE-002 S-10 (사이트가 `out-site/` 와 리다이렉트를 서빙) 과 F-BILL-002 B-10 (`hangul-route-api` 의 `BILLING_URL=https://app.hangulroute.com/account/billing`) 도 각 스펙 순서대로 한다.
+`hangul-route-app` 빌드 변수 `EXPO_PUBLIC_GROWN_UP_HOME` = `true`, `EXPO_PUBLIC_SITE_URL` = `https://hangulroute.com` → **Retry deployment**. (`EXPO_PUBLIC_CONSOLE_URL` 은 F-BILL-002 가 더 읽지 않게 된 뒤 삭제.) 같은 창에서 사이트 빌드 변수 `CONSOLE_ORIGIN` (§E2 S-3b: 사이트 링크와 옛 주소 리다이렉트) 과 API 의 `CONSOLE_URL` (§E2 S-3c: Stripe 복귀 주소) 도 바꾼다 (2026-10-13 개정: 예전의 `out-site/` 와 `BILLING_URL` 은 없다).
 **확인**: 학습자 프로필이 없는 브라우저의 Welcome 에 "Here to support a learner?" 행이 보이고 **Parent or caregiver** 가 `/signin?persona=parent` 로 간다. 학습자 프로필이 있는 기기에서는 Profile → 어른 영역 → **Grown-up home** → PIN → 어른 영역이 열린다.
 
-**되돌리기**: S-3 는 `EXPO_PUBLIC_GROWN_UP_HOME` 을 `false` 로 (또는 삭제) → Retry deployment. S-10 은 F-SITE-002 쪽 되돌리기, B-10 은 `BILLING_URL` 삭제. 앱 호스트의 어른 페이지는 남아 있어도 무해하고, 데이터는 어느 방향으로도 바뀌지 않는다. 마지막 단계 A-10 (기본값 켜기) 은 M3 후 14일 이상 지나 머지된다.
+**되돌리기**: S-3 는 `EXPO_PUBLIC_GROWN_UP_HOME` 을 `false` 로 (또는 삭제) → Retry deployment. 사이트는 `hangul-route-web` 의 `CONSOLE_ORIGIN` 삭제 → Retry deployment, Stripe 복귀는 `CONSOLE_URL` 을 `https://hangulroute.com` 으로 (§E2). 앱 호스트의 어른 페이지는 남아 있어도 무해하고, 데이터는 어느 방향으로도 바뀌지 않는다. 마지막 단계 A-10 (기본값 켜기) 은 M3 후 14일 이상 지나 머지된다.
+
+## E2. 앱 호스트 이전 체크리스트 — 순서대로 한 번에 (F-APP-001 S-1 → S-2 → S-0 → S-3a → S-3b → S-3c, 2026-10-13)
+
+> §E 의 단계를 **정확한 값·확인·되돌리기**와 함께 실행 순서로 펼친 것이다. 위에서부터 한 줄씩 하고, 각 줄의 **확인**이 통과해야 다음 줄로 간다. 대시보드 작업만 있고 저장소 작업은 없다 (저장소 쪽은 PR "F-APP-001 S-0..S-3 prep" 이 끝냈다: 사이트 빌드가 `CONSOLE_ORIGIN` 이 있을 때만 `_redirects` 를 쓴다). **Stripe 는 Test mode 그대로, Live 는 켜지 않는다.** Secret 값은 어디에도 붙여 넣어 보내지 않는다.
+
+**날짜 게이트 (머지 시각에서 계산, UTC)**
+
+| 게이트 | 근거 | 가장 이른 시각 |
+|---|---|---|
+| S-1, S-2 의 Clerk 확인 | A-4b `#458` (2026-10-12 23:11), A-5c `#481` (2026-10-13 04:42) 이 앱 호스트에 배포됨 (2026-10-14 curl 로 확인) | **지금 가능** |
+| S-2 의 M2 실기기 로그인 | A-6 `#404` 2026-10-12 16:19 + 7일 (옛 학습자 탭) | **2026-10-19 16:19 UTC** (한국 2026-10-20 01:19) |
+| S-0 과 M3 (S-3a, S-3b, S-3c) | A-2 `#386` 2026-10-12 09:14 + 7일 (옛 서비스 워커), 그리고 M2 뒤 | **M2 가 끝난 뒤, 2026-10-19 16:19 UTC 이후** |
+| A-10 과 F-SITE-002 S-10 (코드 기본값) | M3 + 14일 | M3 날짜 + 14일 (나중 PR, 이 체크리스트 밖) |
+
+**2026-10-14 05:19 UTC 운영 확인 (읽기 전용 curl)**: 앱 호스트의 `/signin` · `/start` · `/teach` · `/teach/home` · `/parent` · `/account/billing` · `/teach/billing` 이 콘솔 페이지를 `noindex` · `no-store` · `frame-ancestors 'none'` 로 서빙한다. `https://app.hangulroute.com/sw.js` 에 denylist 와 `grown-ups-offline.html` 이 있다. 앱 호스트 콘솔 번들에는 Clerk 키가 **아직 없다** (S-1 미완). Clerk Production (`clerk.hangulroute.com`) 은 `https://app.hangulroute.com` 에 CORS 를 허용하고, 가입 시 이메일 확인 · 이메일 코드 · Google 이 켜져 있다. API 는 앱 호스트에 CORS 를 허용한다 (`ALLOWED_ORIGINS` 에 이미 있음). hangulroute.com 은 아직 콘솔을 직접 서빙한다 (리다이렉트 없음).
+
+### 1. S-1 — 앱 호스트 빌드에 Clerk 키 (5분, 지금 가능)
+1. Cloudflare → Workers & Pages → **`hangul-route-web`** → Settings → Build → Variables and Secrets → `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` 의 값 (`pk_live_…`) 을 복사한다. Secret key (`sk_live_…`) 가 아니다.
+2. **`hangul-route-app`** → Settings → Build → Variables and Secrets → **Add** → Name `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`, Value = 1 의 값 → Save.
+3. (선택) `hangul-route-web` 빌드 변수에 `NEXT_PUBLIC_LECTURE_MODE` · `NEXT_PUBLIC_SCHOOL_CONSENT_MODE` · `NEXT_PUBLIC_NOTES_ENABLED` · `NEXT_PUBLIC_LEARNING_ROUTE_ENABLED` · `NEXT_PUBLIC_BROWSE` 가 있으면 **같은 이름·같은 값**으로 `hangul-route-app` 에도 넣는다. 없는 것은 만들지 않는다. `NEXT_PUBLIC_CONSOLE_DEV_AUTH` 는 **절대 넣지 않는다**. `NEXT_PUBLIC_CONTENT_GATING_ENABLED` 는 §G 순서로만.
+4. `hangul-route-app` → Deployments → 맨 위 배포 → **Retry deployment** → 빌드가 Success 가 될 때까지 기다린다.
+
+**확인**: 시크릿 창에서 https://app.hangulroute.com/signin 에 Clerk 로그인 위젯 (Google 버튼과 이메일 칸) 이 보이고, "sign-in is not set up on this build" 줄이 없다. https://app.hangulroute.com 의 학습자 앱은 그대로다.
+**되돌리기**: `hangul-route-app` 에서 그 변수를 지우고 Retry deployment. 앱 호스트의 어른 페이지는 다시 "not set up" 줄만 보여 준다. 학습 기록은 바뀌지 않는다.
+
+### 2. S-2 — Clerk Production 확인 (10분, 지금 가능) 과 M2 실기기 로그인 (40분, 2026-10-19 16:19 UTC 이후)
+1. Clerk 대시보드 → 앱 선택 → 위쪽 전환에서 **Production** → **Domains**: 기본 도메인이 `hangulroute.com` 인지 본다 (`app.hangulroute.com` 은 같은 루트 도메인의 서브도메인이라 따로 추가하지 않는다; 2026-10-14 확인에서 Clerk 가 앱 호스트 origin 을 이미 받아들인다).
+2. 같은 화면들에서 **허용 redirect origin / redirect URL 목록**이 보이면 (Clerk 화면 구성에 따라 Domains 나 Paths 아래) `https://app.hangulroute.com` 을 추가한다. 그런 목록이 없으면 할 일이 없다. Google Cloud 쪽은 바꾸지 않는다 (OAuth 콜백은 `clerk.hangulroute.com` 이 받는다).
+3. **User & authentication → Email**: "Verify at sign-up" 이 켜져 있고 인증 방식이 **Email verification code** 인지 본다 (2026-10-14 확인: 켜져 있음). 바꾸지 않는다.
+4. (M2, 2026-10-19 16:19 UTC 이후) 아래 여섯 조합을 각각 **Google** 과 **이메일 코드**로 한 번씩 한다. 매번: 로그인 → 페르소나 홈에 도착 → 학급 하나 열기 (`/teach/home` 의 학급) → `/parent` → `/account/billing` → Sign out.
+   - 데스크톱 Chrome: https://app.hangulroute.com/signin?persona=teacher 와 https://app.hangulroute.com/signin?persona=parent
+   - Android Chrome, **설치한 앱** (홈 화면 아이콘): 메시지·메일로 자신에게 `https://app.hangulroute.com/signin?persona=parent` 를 보내 링크를 누르면 설치한 앱 창에서 열린다 (scope `/`). 주소창 대신 앱 창이 열리는지 본다.
+   - iPhone 또는 iPad: Safari 에서 위 주소로 한 번. **설치한 앱 창**에는 주소창이 없고 플래그가 꺼진 동안 진입 버튼도 없으므로, 설치한 앱 창의 확인은 아래 S-3a 의 **확인 2** 에서 한다 (오너 결정 필요 시 PR 본문의 질문 참조).
+**확인**: 모든 조합이 페르소나 홈에 도착하고, 각 화면 아래에 **Back to learning** (또는 **Open the learner app**) 이 보인다. 설치한 앱 창에서는 로그인이 Safari 로 튀어 나가지 않는다 (iOS 는 이메일 코드가 먼저 보인다, OD-15). 안 되는 조합은 기기 · 방식 · 화면 캡처를 보낸다. 그 경우 아래 단계는 멈춘다.
+**되돌리기**: 없음 (확인만 한다). 2 에서 추가한 origin 은 남겨 둬도 무해하다.
+
+### 3. S-0 — 운영 서비스 워커와 날짜 (5분, S-3a 바로 전)
+1. 브라우저에서 `https://app.hangulroute.com/sw.js` 를 열고 Ctrl/Cmd+F 로 `signin`, `teach`, `parent`, `account`, `start`, `grown-ups-offline.html` 을 찾는다. 여섯 개가 모두 보여야 한다.
+2. 오늘이 **2026-10-19 09:14 UTC 이후**인지 본다 (A-2 머지 + 7일).
+**확인**: 둘 다 예. 아니면 3a · 3b · 3c 를 모두 미룬다.
+
+### 4. S-3a — 학습자 앱의 어른 진입점 켜기 (5분, M3)
+1. **`hangul-route-app`** → Settings → Build → Variables and Secrets → **Add** `EXPO_PUBLIC_GROWN_UP_HOME` = `true` (소문자 정확히) → Save.
+2. 같은 화면에서 `EXPO_PUBLIC_SITE_URL` = `https://hangulroute.com` (없으면 Add, 있으면 값만 확인). `EXPO_PUBLIC_CONSOLE_URL` 은 **그대로 둔다**: 지금 삭제하지 않고, 절대 `https://app.hangulroute.com` 으로 바꾸지 않는다 (F-SITE-002 §4 개인정보 링크 규칙).
+3. Deployments → **Retry deployment** → Success 까지.
+**확인 1**: 학습자 프로필이 없는 시크릿 창에서 https://app.hangulroute.com 을 연다. Welcome 에 "Here to support a learner?" 행이 보이고 **Parent or caregiver** 가 `/signin?persona=parent` 로 간다. 학습자 프로필이 있는 기기에서 Profile → **Grown-up home** → PIN → 어른 영역이 열리고, **Back to learning** 이 학습자 앱으로 돌아온다. 학습자 앱의 Privacy 링크 (Profile 또는 Welcome) 는 `https://hangulroute.com/privacy` 로 간다.
+**확인 2 (설치한 앱 창, iPhone 또는 iPad 와 Android)**: 설치한 앱을 연다 (업데이트 배너가 뜨면 누른다) → Profile → Grown-up home (또는 Welcome 의 행) → 로그인 (Google 한 번, 이메일 코드 한 번) → 학급 · `/parent` · `/account/billing` 을 연다 → **Back to learning** 으로 학습자 화면에 돌아온다.
+**되돌리기**: `EXPO_PUBLIC_GROWN_UP_HOME` 을 지우거나 `false` → Retry deployment. 진입점만 사라지고 학습 기록 · PIN · 프로필은 그대로다.
+
+### 5. S-3b — 사이트의 어른 링크와 옛 주소 리다이렉트 (5분, 3a 확인 뒤 같은 날)
+1. **`hangul-route-web`** → Settings → Build → Variables and Secrets → **Add** → Name `CONSOLE_ORIGIN` (접두어 없음, `NEXT_PUBLIC_` 아님), Value `https://app.hangulroute.com` (끝에 `/` 나 경로 없이) → Save. 값이 https 주소가 아니면 빌드가 일부러 실패하고 이전 배포가 그대로 남는다.
+2. Deployments → **Retry deployment** → 빌드 로그에 `site-redirects: 10 rules to https://app.hangulroute.com in out/_redirects` 줄이 있는지 본다 → Success 까지.
+**확인** (시크릿 창):
+   - https://hangulroute.com 의 **Sign in** (헤더) 과 /parents · /teachers 의 어른 버튼이 `https://app.hangulroute.com/signin…` 으로 간다. **Start learning** 은 그대로 앱 호스트 `/` 로 간다.
+   - `https://hangulroute.com/teach/space?id=x#y` → 주소창이 `https://app.hangulroute.com/teach/space?id=x#y` 가 된다 (F-APP-001 행동 12).
+   - `https://hangulroute.com/teach/billing?checkout=cancel` → `https://app.hangulroute.com/account/billing?checkout=cancel` 에 도착한다 (행동 13; 앱 호스트의 `/teach/billing` 페이지가 한 번 더 옮긴다).
+   - `https://hangulroute.com/parent/mina` → `https://app.hangulroute.com/parent` (옛 데모 주소).
+   - `https://hangulroute.com/privacy`, `/terms`, `/about`, `/design-preview` 는 **사이트에 그대로** 열린다 (리다이렉트 없음).
+   - (선택, 터미널이 있으면) `curl -sI https://hangulroute.com/teach/home` 이 `302` 와 `location: https://app.hangulroute.com/teach/home` 을 보여 준다.
+**되돌리기**: `hangul-route-web` 에서 `CONSOLE_ORIGIN` 을 지운다 → Retry deployment. 빌드가 `_redirects` 를 쓰지 않으므로 사이트가 다시 콘솔을 직접 서빙하고 링크도 사이트로 돌아온다. 302 (임시) 라 브라우저에 남지 않는다.
+
+### 6. S-3c — Stripe 결제 복귀 주소를 앱 호스트로 (3분, 3b 뒤, Stripe 는 Test mode 그대로)
+1. **`hangul-route-api`** → Settings → Variables and Secrets (런타임) → `CONSOLE_URL` (Type Text) 의 값을 `https://hangulroute.com` 에서 **`https://app.hangulroute.com`** 으로 바꾼다 → **Deploy**. 다른 변수 · Secret 은 건드리지 않는다. `BILLING_URL` 은 만들지 않는다 (F-BILL-002 가 뺐다).
+**확인**: 테스트용 가족 계정으로 https://app.hangulroute.com/account/billing → 결제 시작 → Stripe Test Checkout 화면에서 **뒤로 (취소)** → `https://app.hangulroute.com/account/billing?checkout=cancel` 로 돌아온다. 결제 포털을 열었다가 돌아와도 앱 호스트로 온다. (S-3b 전에 시작된 결제가 옛 주소로 돌아와도 3b 의 리다이렉트가 앱 호스트로 보낸다.)
+**되돌리기**: `CONSOLE_URL` = `https://hangulroute.com` → Deploy.
+
+### 7. 끝난 뒤 보내 줄 것
+M2 여섯 조합 결과, 3a 의 확인 2 (설치한 앱 창), 3b 의 다섯 줄, 3c 의 복귀 주소, 그리고 **M3 날짜** (3a 를 한 날). 그 날짜 + 14일이 지나면 A-10 (`grownUpHomeEnabled` 기본 켜기, `grown-up-shell.spec.ts`) 과 F-SITE-002 S-10 (`SITE_DEFAULT_CONSOLE_ORIGIN = APP_ORIGIN`) PR 을 연다. 그 PR 들이 머지되기 전에는 변수를 지우지 않는다; 머지된 뒤에도 변수는 남겨 두어도 같은 값이라 무해하다.
 
 ## F. 어른의 쪽지 (Notes from grown-ups, F-FEEDBACK-001)
 
@@ -431,7 +499,7 @@ DELETE FROM feedback_notes WHERE id = '<note_id>' AND NOT EXISTS (SELECT 1 FROM 
 | Step 3 첫 배포 로그 (마이그레이션 ✅ 또는 오류) | 오류면 수정 PR (F-INFRA-003 은 머지됨) |
 | Step 7 확인 결과 (위젯이 뜨고 학급 생성이 되는지) | F-AUTH-005 계정 페이지 (이메일·동의 기록·학습자 데이터 삭제) |
 | Step 11 빨간 항목 캡처 | 성능 수정 |
-| §E S-2 M2 결과 (여섯 조합) · S-0 확인 | F-APP-001 S-3 시점 결정, A-10 (M3 후 14일) |
+| §E S-2 M2 결과 (여섯 조합) · S-0 확인 · §E2 의 M3 날짜 | F-APP-001 S-3 시점 결정, A-10 과 F-SITE-002 S-10 (M3 후 14일) |
 | Step 12 녹음 폴더 (`audio-recording-script.md` 의 file id 이름, 저장소 밖 공유) + 동의서는 본인 보관, attribution 표기만 전달 | `content(audio): jamo clips` (F-AUDIO-004 A-9): 처리된 MP3 30개 + `audio:map`, 오프라인 e2e 활성화, 랜딩의 오프라인 발음 문구 복원 |
 
 ## 문제가 생기면

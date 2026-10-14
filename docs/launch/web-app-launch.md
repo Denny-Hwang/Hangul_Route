@@ -62,7 +62,7 @@
 
 프로젝트 3개의 Project name / Build / Deploy command / Build variables / 런타임 변수·시크릿 표는 `owner-runbook.md` §0.
 
-> **F-APP-001 (2026-10-11)**: 어른 페이지 (콘솔) 의 운영 주소가 `hangulroute.com/teach` 에서 **`app.hangulroute.com`** (`/signin` · `/start` · `/teach` · `/parent` · `/account/billing`) 으로 옮겨 간다. `hangul-route-app` 이 같은 빌드에서 콘솔을 함께 서빙하고 (빌드 명령 불변), 서비스 워커는 어른 경로를 프리캐시하지 않으며 오프라인이면 `/grown-ups-offline.html` 을 보여 준다 (학습자 오프라인 동작은 그대로). hangulroute.com 은 소개·가이드 전용 (F-SITE-002 S-10 이 옛 주소를 리다이렉트). 순서와 확인 기준은 `owner-runbook.md` §E.
+> **F-APP-001 (2026-10-11)**: 어른 페이지 (콘솔) 의 운영 주소가 `hangulroute.com/teach` 에서 **`app.hangulroute.com`** (`/signin` · `/start` · `/teach` · `/parent` · `/account/billing`) 으로 옮겨 간다. `hangul-route-app` 이 같은 빌드에서 콘솔을 함께 서빙하고 (빌드 명령 불변), 서비스 워커는 어른 경로를 프리캐시하지 않으며 오프라인이면 `/grown-ups-offline.html` 을 보여 준다 (학습자 오프라인 동작은 그대로). hangulroute.com 은 소개·가이드 전용 (사이트 빌드 변수 `CONSOLE_ORIGIN` 을 넣으면 빌드가 `_redirects` 로 옛 어른 주소를 앱 호스트로 보낸다, `owner-runbook.md` §E2 S-3b). 순서와 확인 기준은 `owner-runbook.md` §E.
 
 ## 3. 웹에서 다른 점 (사용자 안내용)
 
