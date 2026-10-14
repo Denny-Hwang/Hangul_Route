@@ -1,0 +1,1403 @@
+{
+  "id": "episode:stage6-crafts",
+  "stage": "stage6",
+  "theme": "crafts",
+  "status": "draft",
+  "titleEn": "Buy at Market",
+  "subtitleEn": "Read price cards and shop at a market stall.",
+  "hoyaIntroEn": "Let's visit a market stall, read the cards and buy some apples!",
+  "order": 5,
+  "pillarTags": [
+    "B1",
+    "E1"
+  ],
+  "rewardCardIds": [],
+  "quests": [
+    {
+      "id": "quest:stage6-crafts-q1",
+      "titleEn": "At the Stall",
+      "blurbEn": "Read the goods on the price cards of a market stall.",
+      "teaserEn": "Next: count apples and ask what things cost.",
+      "estimatedMinutes": 5,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "At the Stall",
+          "hoyaLineEn": "It's market day! Let's read the price cards at a stall.",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "Goods at the Stall",
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "realia",
+                    "realiaRef": "realia:market-goods",
+                    "keyWords": [
+                      {
+                        "ko": "부채",
+                        "romanization": "buchae",
+                        "en": "folding fan"
+                      },
+                      {
+                        "ko": "한지",
+                        "romanization": "hanji",
+                        "en": "Korean paper"
+                      },
+                      {
+                        "ko": "사과",
+                        "romanization": "sagwa",
+                        "en": "apple"
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "A stall shows each of its goods on a small price card."
+              },
+              {
+                "items": [
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "오일장",
+                      "romanization": "oiljang",
+                      "en": "five-day market"
+                    },
+                    "noteEn": "A market that opens once every five days."
+                  }
+                ],
+                "captionEn": "A traditional market has many small shops in one place."
+              },
+              {
+                "items": [
+                  {
+                    "type": "realia",
+                    "realiaRef": "realia:market-goods",
+                    "keyWords": [
+                      {
+                        "ko": "천 원",
+                        "romanization": "cheon won",
+                        "en": "1,000 won"
+                      },
+                      {
+                        "ko": "이천 원",
+                        "romanization": "icheon won",
+                        "en": "2,000 won"
+                      },
+                      {
+                        "ko": "오천 원",
+                        "romanization": "ocheon won",
+                        "en": "5,000 won"
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "Prices use {ko:이}, {ko:오} and {ko:천}, then {ko:원} for money."
+              }
+            ]
+          },
+          "durationSeconds": 70
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Read the Cards",
+          "minigameKind": "realia-read",
+          "minigameRef": "minigame:s6-crafts-q1-practice",
+          "durationSeconds": 95
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Type the Words",
+          "minigameKind": "type-hangul",
+          "minigameRef": "minigame:s6-crafts-q1-apply",
+          "durationSeconds": 70
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Two Quick Ones",
+          "minigameKind": "listen-pick",
+          "minigameRef": "minigame:s6-crafts-q1-check",
+          "durationSeconds": 40
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "You Read the Stall!",
+          "hoyaLineEn": "You read a real market stall! A fan, paper and apples.",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s6-crafts-q1-practice",
+          "kind": "realia-read",
+          "realia": {
+            "ref": "realia:market-goods",
+            "kind": "price-card",
+            "entries": [
+              {
+                "id": "fan",
+                "text": {
+                  "ko": "부채",
+                  "romanization": "buchae",
+                  "en": "folding fan"
+                },
+                "value": {
+                  "ko": "오천 원",
+                  "romanization": "ocheon won",
+                  "en": "5,000 won"
+                },
+                "goods": "fan"
+              },
+              {
+                "id": "hanji",
+                "text": {
+                  "ko": "한지",
+                  "romanization": "hanji",
+                  "en": "Korean paper"
+                },
+                "value": {
+                  "ko": "천 원",
+                  "romanization": "cheon won",
+                  "en": "1,000 won"
+                },
+                "goods": "hanji"
+              },
+              {
+                "id": "apple",
+                "text": {
+                  "ko": "사과",
+                  "romanization": "sagwa",
+                  "en": "apple"
+                },
+                "value": {
+                  "ko": "세 개 이천 원",
+                  "romanization": "se gae icheon won",
+                  "en": "3 for 2,000 won"
+                },
+                "goods": "apples"
+              }
+            ],
+            "altEn": "Three price cards at a five-day market stall: a folding fan, Korean paper and apples"
+          },
+          "rounds": [
+            {
+              "id": "r1",
+              "questionEn": "Which word on the cards means Korean paper?",
+              "options": [
+                {
+                  "id": "buchae",
+                  "text": {
+                    "ko": "부채",
+                    "romanization": "buchae",
+                    "en": "folding fan"
+                  }
+                },
+                {
+                  "id": "hanji",
+                  "text": {
+                    "ko": "한지",
+                    "romanization": "hanji",
+                    "en": "Korean paper"
+                  }
+                },
+                {
+                  "id": "sagwa",
+                  "text": {
+                    "ko": "사과",
+                    "romanization": "sagwa",
+                    "en": "apple"
+                  }
+                }
+              ],
+              "answerId": "hanji",
+              "answerEntryId": "hanji"
+            },
+            {
+              "id": "r2",
+              "questionEn": "Which word on the cards means folding fan?",
+              "options": [
+                {
+                  "id": "buchae",
+                  "text": {
+                    "ko": "부채",
+                    "romanization": "buchae",
+                    "en": "folding fan"
+                  }
+                },
+                {
+                  "id": "sagwa",
+                  "text": {
+                    "ko": "사과",
+                    "romanization": "sagwa",
+                    "en": "apple"
+                  }
+                },
+                {
+                  "id": "hanji",
+                  "text": {
+                    "ko": "한지",
+                    "romanization": "hanji",
+                    "en": "Korean paper"
+                  }
+                }
+              ],
+              "answerId": "buchae",
+              "answerEntryId": "fan"
+            },
+            {
+              "id": "r3",
+              "questionEn": "Which picture shows this word?",
+              "key": {
+                "ko": "사과",
+                "romanization": "sagwa",
+                "en": "apple"
+              },
+              "options": [
+                {
+                  "id": "banana",
+                  "pictureRef": "word:food-banana",
+                  "labelEn": "banana"
+                },
+                {
+                  "id": "bread",
+                  "pictureRef": "word:food-bread",
+                  "labelEn": "bread"
+                },
+                {
+                  "id": "apple",
+                  "pictureRef": "word:food-apple",
+                  "labelEn": "apple"
+                }
+              ],
+              "answerId": "apple",
+              "answerEntryId": "apple"
+            },
+            {
+              "id": "r4",
+              "questionEn": "How much is this?",
+              "key": {
+                "ko": "한지",
+                "romanization": "hanji",
+                "en": "Korean paper"
+              },
+              "options": [
+                {
+                  "id": "ocheon",
+                  "text": {
+                    "ko": "오천 원",
+                    "romanization": "ocheon won",
+                    "en": "5,000 won"
+                  }
+                },
+                {
+                  "id": "cheon",
+                  "text": {
+                    "ko": "천 원",
+                    "romanization": "cheon won",
+                    "en": "1,000 won"
+                  }
+                },
+                {
+                  "id": "icheon",
+                  "text": {
+                    "ko": "이천 원",
+                    "romanization": "icheon won",
+                    "en": "2,000 won"
+                  }
+                }
+              ],
+              "answerId": "cheon",
+              "answerEntryId": "hanji"
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s6-crafts-q1-apply",
+          "kind": "type-hangul",
+          "rounds": [
+            {
+              "id": "t1",
+              "promptEn": "Type the word for Korean paper.",
+              "pictureRef": "card:hanji",
+              "target": {
+                "ko": "한지",
+                "romanization": "hanji",
+                "en": "Korean paper"
+              }
+            },
+            {
+              "id": "t2",
+              "promptEn": "Type the word for folding fan.",
+              "target": {
+                "ko": "부채",
+                "romanization": "buchae",
+                "en": "folding fan"
+              }
+            },
+            {
+              "id": "t3",
+              "promptEn": "Type the word for a market that opens every five days.",
+              "target": {
+                "ko": "오일장",
+                "romanization": "oiljang",
+                "en": "five-day market"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s6-crafts-q1-check",
+          "kind": "listen-pick",
+          "rounds": [
+            {
+              "id": "c1",
+              "prompt": {
+                "ko": "부채",
+                "romanization": "buchae",
+                "en": "folding fan"
+              },
+              "options": [
+                {
+                  "id": "a",
+                  "text": {
+                    "ko": "한지",
+                    "romanization": "hanji",
+                    "en": "Korean paper"
+                  }
+                },
+                {
+                  "id": "b",
+                  "text": {
+                    "ko": "부채",
+                    "romanization": "buchae",
+                    "en": "folding fan"
+                  }
+                },
+                {
+                  "id": "c",
+                  "text": {
+                    "ko": "사과",
+                    "romanization": "sagwa",
+                    "en": "apple"
+                  }
+                }
+              ],
+              "answerId": "b"
+            },
+            {
+              "id": "c2",
+              "prompt": {
+                "ko": "한지",
+                "romanization": "hanji",
+                "en": "Korean paper"
+              },
+              "options": [
+                {
+                  "id": "a",
+                  "pictureRef": "word:food-apple",
+                  "labelEn": "apple"
+                },
+                {
+                  "id": "b",
+                  "pictureRef": "word:food-bread",
+                  "labelEn": "bread"
+                },
+                {
+                  "id": "c",
+                  "pictureRef": "card:hanji",
+                  "labelEn": "Korean paper"
+                }
+              ],
+              "answerId": "c"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "quest:stage6-crafts-q2",
+      "titleEn": "How Many, How Much?",
+      "blurbEn": "Count apples and ask what things cost.",
+      "teaserEn": "Next: a little extra from the seller.",
+      "estimatedMinutes": 5,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "How Many, How Much?",
+          "hoyaLineEn": "Apples look good today. Let's count them and ask the price.",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "Count and Ask",
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "realia",
+                    "realiaRef": "realia:market-prices",
+                    "keyWords": [
+                      {
+                        "ko": "한 개",
+                        "romanization": "han gae",
+                        "en": "one (thing)"
+                      },
+                      {
+                        "ko": "두 개",
+                        "romanization": "du gae",
+                        "en": "two (things)"
+                      },
+                      {
+                        "ko": "세 개",
+                        "romanization": "se gae",
+                        "en": "three (things)"
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "Before {ko:개}, count with {ko:한}, {ko:두}, {ko:세}. Prices keep {ko:이}, {ko:오}, {ko:천}."
+              },
+              {
+                "items": [
+                  {
+                    "type": "sentence",
+                    "sentence": {
+                      "ko": "사과 세 개 주세요.",
+                      "romanization": "sagwa se gae juseyo",
+                      "en": "Three apples, please."
+                    }
+                  },
+                  {
+                    "type": "sentence",
+                    "sentence": {
+                      "ko": "이거 얼마예요?",
+                      "romanization": "igeo eolmayeyo",
+                      "en": "How much is this?"
+                    }
+                  }
+                ],
+                "captionEn": "Name what you want and add {ko:주세요}. Point at a thing to ask its price."
+              }
+            ]
+          },
+          "durationSeconds": 65
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Read the Prices",
+          "minigameKind": "realia-read",
+          "minigameRef": "minigame:s6-crafts-q2-practice",
+          "durationSeconds": 100
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Type Your Order",
+          "minigameKind": "type-hangul",
+          "minigameRef": "minigame:s6-crafts-q2-apply",
+          "durationSeconds": 75
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Two Quick Ones",
+          "minigameKind": "listen-pick",
+          "minigameRef": "minigame:s6-crafts-q2-check",
+          "durationSeconds": 40
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Counted and Asked!",
+          "hoyaLineEn": "You counted apples and asked a price. Nice shopping!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s6-crafts-q2-practice",
+          "kind": "realia-read",
+          "realia": {
+            "ref": "realia:market-prices",
+            "kind": "price-card",
+            "entries": [
+              {
+                "id": "apple",
+                "text": {
+                  "ko": "사과",
+                  "romanization": "sagwa",
+                  "en": "apple"
+                },
+                "value": {
+                  "ko": "세 개 이천 원",
+                  "romanization": "se gae icheon won",
+                  "en": "3 for 2,000 won"
+                },
+                "goods": "apples"
+              },
+              {
+                "id": "fan",
+                "text": {
+                  "ko": "부채",
+                  "romanization": "buchae",
+                  "en": "folding fan"
+                },
+                "value": {
+                  "ko": "오천 원",
+                  "romanization": "ocheon won",
+                  "en": "5,000 won"
+                },
+                "goods": "fan"
+              },
+              {
+                "id": "hanji",
+                "text": {
+                  "ko": "한지",
+                  "romanization": "hanji",
+                  "en": "Korean paper"
+                },
+                "value": {
+                  "ko": "천 원",
+                  "romanization": "cheon won",
+                  "en": "1,000 won"
+                },
+                "goods": "hanji"
+              }
+            ],
+            "altEn": "Three price cards at a five-day market stall: apples, a folding fan and Korean paper, with prices"
+          },
+          "rounds": [
+            {
+              "id": "r1",
+              "questionEn": "How many apples does the card sell together?",
+              "key": {
+                "ko": "사과",
+                "romanization": "sagwa",
+                "en": "apple"
+              },
+              "options": [
+                {
+                  "id": "han",
+                  "text": {
+                    "ko": "한 개",
+                    "romanization": "han gae",
+                    "en": "one (thing)"
+                  }
+                },
+                {
+                  "id": "se",
+                  "text": {
+                    "ko": "세 개",
+                    "romanization": "se gae",
+                    "en": "three (things)"
+                  }
+                },
+                {
+                  "id": "du",
+                  "text": {
+                    "ko": "두 개",
+                    "romanization": "du gae",
+                    "en": "two (things)"
+                  }
+                }
+              ],
+              "answerId": "se",
+              "answerEntryId": "apple"
+            },
+            {
+              "id": "r2",
+              "questionEn": "How much is this?",
+              "key": {
+                "ko": "부채",
+                "romanization": "buchae",
+                "en": "folding fan"
+              },
+              "options": [
+                {
+                  "id": "w5000",
+                  "figure": "5,000 won"
+                },
+                {
+                  "id": "w1000",
+                  "figure": "1,000 won"
+                },
+                {
+                  "id": "w2000",
+                  "figure": "2,000 won"
+                }
+              ],
+              "answerId": "w5000",
+              "answerEntryId": "fan"
+            },
+            {
+              "id": "r3",
+              "questionEn": "How much is this?",
+              "key": {
+                "ko": "한지",
+                "romanization": "hanji",
+                "en": "Korean paper"
+              },
+              "options": [
+                {
+                  "id": "w2000",
+                  "figure": "2,000 won"
+                },
+                {
+                  "id": "w5000",
+                  "figure": "5,000 won"
+                },
+                {
+                  "id": "w1000",
+                  "figure": "1,000 won"
+                }
+              ],
+              "answerId": "w1000",
+              "answerEntryId": "hanji"
+            },
+            {
+              "id": "r4",
+              "questionEn": "How much do the apples on the card cost?",
+              "key": {
+                "ko": "사과",
+                "romanization": "sagwa",
+                "en": "apple"
+              },
+              "options": [
+                {
+                  "id": "w2000",
+                  "figure": "2,000 won"
+                },
+                {
+                  "id": "w1000",
+                  "figure": "1,000 won"
+                },
+                {
+                  "id": "w5000",
+                  "figure": "5,000 won"
+                }
+              ],
+              "answerId": "w2000",
+              "answerEntryId": "apple"
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s6-crafts-q2-apply",
+          "kind": "type-hangul",
+          "rounds": [
+            {
+              "id": "t1",
+              "promptEn": "Type: three apples.",
+              "pictureRef": "word:food-apple",
+              "target": {
+                "ko": "사과 세 개",
+                "romanization": "sagwa se gae",
+                "en": "three apples"
+              }
+            },
+            {
+              "id": "t2",
+              "promptEn": "Type the word you add to ask for something.",
+              "target": {
+                "ko": "주세요",
+                "romanization": "juseyo",
+                "en": "please give me"
+              }
+            },
+            {
+              "id": "t3",
+              "promptEn": "Type: how much is it?",
+              "target": {
+                "ko": "얼마예요",
+                "romanization": "eolmayeyo",
+                "en": "how much is it"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s6-crafts-q2-check",
+          "kind": "listen-pick",
+          "rounds": [
+            {
+              "id": "c1",
+              "prompt": {
+                "ko": "사과 세 개 주세요.",
+                "romanization": "sagwa se gae juseyo",
+                "en": "Three apples, please."
+              },
+              "options": [
+                {
+                  "id": "a",
+                  "pictureRef": "word:count-1",
+                  "labelEn": "one"
+                },
+                {
+                  "id": "b",
+                  "pictureRef": "word:count-2",
+                  "labelEn": "two"
+                },
+                {
+                  "id": "c",
+                  "pictureRef": "word:count-3",
+                  "labelEn": "three"
+                }
+              ],
+              "answerId": "c"
+            },
+            {
+              "id": "c2",
+              "prompt": {
+                "ko": "이거 얼마예요?",
+                "romanization": "igeo eolmayeyo",
+                "en": "How much is this?"
+              },
+              "options": [
+                {
+                  "id": "a",
+                  "text": {
+                    "ko": "이거 얼마예요?",
+                    "romanization": "igeo eolmayeyo",
+                    "en": "How much is this?"
+                  }
+                },
+                {
+                  "id": "b",
+                  "text": {
+                    "ko": "부채 주세요.",
+                    "romanization": "buchae juseyo",
+                    "en": "A fan, please."
+                  }
+                },
+                {
+                  "id": "c",
+                  "text": {
+                    "ko": "사과 한 개 주세요.",
+                    "romanization": "sagwa han gae juseyo",
+                    "en": "One apple, please."
+                  }
+                }
+              ],
+              "answerId": "a"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "quest:stage6-crafts-q3",
+      "titleEn": "A Little Extra",
+      "blurbEn": "Buy apples at the stall and thank the seller.",
+      "teaserEn": "You can shop at a market stall now!",
+      "estimatedMinutes": 5,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "A Little Extra",
+          "hoyaLineEn": "Let's buy apples at the stall. Look at that card!",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "Something Extra",
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "덤",
+                      "romanization": "deom",
+                      "en": "a little extra"
+                    },
+                    "noteEn": "A little more that a seller adds for free."
+                  }
+                ],
+                "captionEn": "Now and then a seller at a market stall adds some {ko:덤}."
+              },
+              {
+                "items": [
+                  {
+                    "type": "realia",
+                    "realiaRef": "realia:market-extra",
+                    "keyWords": [
+                      {
+                        "ko": "덤",
+                        "romanization": "deom",
+                        "en": "a little extra"
+                      },
+                      {
+                        "ko": "사과 한 개",
+                        "romanization": "sagwa han gae",
+                        "en": "one apple"
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "This card says the extra is one apple."
+              },
+              {
+                "items": [
+                  {
+                    "type": "sentence",
+                    "sentence": {
+                      "ko": "이건 덤이에요.",
+                      "romanization": "igeon deomieyo",
+                      "en": "This one is a little extra."
+                    }
+                  },
+                  {
+                    "type": "sentence",
+                    "sentence": {
+                      "ko": "감사합니다.",
+                      "romanization": "gamsahamnida",
+                      "en": "Thank you."
+                    }
+                  }
+                ],
+                "captionEn": "When the seller gives you a little extra, say thank you."
+              }
+            ]
+          },
+          "durationSeconds": 65
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Read the Cards",
+          "minigameKind": "realia-read",
+          "minigameRef": "minigame:s6-crafts-q3-practice",
+          "durationSeconds": 95
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Shop at the Stall",
+          "minigameKind": "tap-respond",
+          "minigameRef": "minigame:s6-crafts-q3-apply",
+          "durationSeconds": 80
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Two Quick Ones",
+          "minigameKind": "listen-pick",
+          "minigameRef": "minigame:s6-crafts-q3-check",
+          "durationSeconds": 40
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Happy Shopping!",
+          "hoyaLineEn": "You bought apples and thanked the seller. Well done!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s6-crafts-q3-practice",
+          "kind": "realia-read",
+          "realia": {
+            "ref": "realia:market-extra",
+            "kind": "price-card",
+            "entries": [
+              {
+                "id": "apple",
+                "text": {
+                  "ko": "사과",
+                  "romanization": "sagwa",
+                  "en": "apple"
+                },
+                "value": {
+                  "ko": "세 개 이천 원",
+                  "romanization": "se gae icheon won",
+                  "en": "3 for 2,000 won"
+                },
+                "goods": "apples"
+              },
+              {
+                "id": "extra",
+                "text": {
+                  "ko": "덤",
+                  "romanization": "deom",
+                  "en": "a little extra"
+                },
+                "value": {
+                  "ko": "사과 한 개",
+                  "romanization": "sagwa han gae",
+                  "en": "one apple"
+                }
+              },
+              {
+                "id": "fan",
+                "text": {
+                  "ko": "부채",
+                  "romanization": "buchae",
+                  "en": "folding fan"
+                },
+                "value": {
+                  "ko": "오천 원",
+                  "romanization": "ocheon won",
+                  "en": "5,000 won"
+                },
+                "goods": "fan"
+              }
+            ],
+            "altEn": "Price cards at a five-day market stall: apples, a card for one extra apple, and a folding fan"
+          },
+          "rounds": [
+            {
+              "id": "r1",
+              "questionEn": "Which word on the cards means a little extra?",
+              "options": [
+                {
+                  "id": "hanji",
+                  "text": {
+                    "ko": "한지",
+                    "romanization": "hanji",
+                    "en": "Korean paper"
+                  }
+                },
+                {
+                  "id": "buchae",
+                  "text": {
+                    "ko": "부채",
+                    "romanization": "buchae",
+                    "en": "folding fan"
+                  }
+                },
+                {
+                  "id": "deom",
+                  "text": {
+                    "ko": "덤",
+                    "romanization": "deom",
+                    "en": "a little extra"
+                  }
+                }
+              ],
+              "answerId": "deom",
+              "answerEntryId": "extra"
+            },
+            {
+              "id": "r2",
+              "questionEn": "What is the little extra?",
+              "key": {
+                "ko": "덤",
+                "romanization": "deom",
+                "en": "a little extra"
+              },
+              "options": [
+                {
+                  "id": "sagwa",
+                  "text": {
+                    "ko": "사과 한 개",
+                    "romanization": "sagwa han gae",
+                    "en": "one apple"
+                  }
+                },
+                {
+                  "id": "buchae",
+                  "text": {
+                    "ko": "부채",
+                    "romanization": "buchae",
+                    "en": "folding fan"
+                  }
+                },
+                {
+                  "id": "hanji",
+                  "text": {
+                    "ko": "한지",
+                    "romanization": "hanji",
+                    "en": "Korean paper"
+                  }
+                }
+              ],
+              "answerId": "sagwa",
+              "answerEntryId": "extra"
+            },
+            {
+              "id": "r3",
+              "questionEn": "How much do the apples on the card cost?",
+              "key": {
+                "ko": "사과",
+                "romanization": "sagwa",
+                "en": "apple"
+              },
+              "options": [
+                {
+                  "id": "w5000",
+                  "figure": "5,000 won"
+                },
+                {
+                  "id": "w1000",
+                  "figure": "1,000 won"
+                },
+                {
+                  "id": "w2000",
+                  "figure": "2,000 won"
+                }
+              ],
+              "answerId": "w2000",
+              "answerEntryId": "apple"
+            },
+            {
+              "id": "r4",
+              "questionEn": "How much is this?",
+              "key": {
+                "ko": "부채",
+                "romanization": "buchae",
+                "en": "folding fan"
+              },
+              "options": [
+                {
+                  "id": "w1000",
+                  "figure": "1,000 won"
+                },
+                {
+                  "id": "w5000",
+                  "figure": "5,000 won"
+                },
+                {
+                  "id": "w2000",
+                  "figure": "2,000 won"
+                }
+              ],
+              "answerId": "w5000",
+              "answerEntryId": "fan"
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s6-crafts-q3-apply",
+          "kind": "tap-respond",
+          "turns": [
+            {
+              "speakerEn": "Seller",
+              "line": {
+                "ko": "사과가 맛있어요.",
+                "romanization": "sagwaga masisseoyo",
+                "en": "The apples are tasty."
+              },
+              "replies": [
+                {
+                  "id": "r1",
+                  "text": {
+                    "ko": "부채예요.",
+                    "romanization": "buchaeyeyo",
+                    "en": "It is a fan."
+                  },
+                  "correct": false
+                },
+                {
+                  "id": "r2",
+                  "text": {
+                    "ko": "사과 세 개 주세요.",
+                    "romanization": "sagwa se gae juseyo",
+                    "en": "Three apples, please."
+                  },
+                  "correct": true
+                },
+                {
+                  "id": "r3",
+                  "text": {
+                    "ko": "이건 덤이에요.",
+                    "romanization": "igeon deomieyo",
+                    "en": "This one is a little extra."
+                  },
+                  "correct": false
+                }
+              ]
+            },
+            {
+              "speakerEn": "Seller",
+              "line": {
+                "ko": "이천 원이에요.",
+                "romanization": "icheon wonieyo",
+                "en": "That is 2,000 won."
+              },
+              "replies": [
+                {
+                  "id": "r1",
+                  "text": {
+                    "ko": "부채예요.",
+                    "romanization": "buchaeyeyo",
+                    "en": "It is a fan."
+                  },
+                  "correct": false
+                },
+                {
+                  "id": "r2",
+                  "text": {
+                    "ko": "이건 덤이에요.",
+                    "romanization": "igeon deomieyo",
+                    "en": "This one is a little extra."
+                  },
+                  "correct": false
+                },
+                {
+                  "id": "r3",
+                  "text": {
+                    "ko": "네, 여기 있어요.",
+                    "romanization": "ne yeogi isseoyo",
+                    "en": "Yes, here you are."
+                  },
+                  "correct": true
+                }
+              ]
+            },
+            {
+              "speakerEn": "Seller",
+              "line": {
+                "ko": "이건 덤이에요.",
+                "romanization": "igeon deomieyo",
+                "en": "This one is a little extra."
+              },
+              "replies": [
+                {
+                  "id": "r1",
+                  "text": {
+                    "ko": "감사합니다.",
+                    "romanization": "gamsahamnida",
+                    "en": "Thank you."
+                  },
+                  "correct": true
+                },
+                {
+                  "id": "r2",
+                  "text": {
+                    "ko": "한지예요.",
+                    "romanization": "hanjiyeyo",
+                    "en": "It is Korean paper."
+                  },
+                  "correct": false
+                },
+                {
+                  "id": "r3",
+                  "text": {
+                    "ko": "부채예요.",
+                    "romanization": "buchaeyeyo",
+                    "en": "It is a fan."
+                  },
+                  "correct": false
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s6-crafts-q3-check",
+          "kind": "listen-pick",
+          "rounds": [
+            {
+              "id": "c1",
+              "prompt": {
+                "ko": "이건 덤이에요.",
+                "romanization": "igeon deomieyo",
+                "en": "This one is a little extra."
+              },
+              "options": [
+                {
+                  "id": "a",
+                  "text": {
+                    "ko": "이건 부채예요.",
+                    "romanization": "igeon buchaeyeyo",
+                    "en": "This one is a fan."
+                  }
+                },
+                {
+                  "id": "b",
+                  "text": {
+                    "ko": "이건 덤이에요.",
+                    "romanization": "igeon deomieyo",
+                    "en": "This one is a little extra."
+                  }
+                },
+                {
+                  "id": "c",
+                  "text": {
+                    "ko": "이건 한지예요.",
+                    "romanization": "igeon hanjiyeyo",
+                    "en": "This one is Korean paper."
+                  }
+                }
+              ],
+              "answerId": "b"
+            },
+            {
+              "id": "c2",
+              "prompt": {
+                "ko": "사과 한 개 주세요.",
+                "romanization": "sagwa han gae juseyo",
+                "en": "One apple, please."
+              },
+              "options": [
+                {
+                  "id": "a",
+                  "pictureRef": "word:count-3",
+                  "labelEn": "three"
+                },
+                {
+                  "id": "b",
+                  "pictureRef": "word:count-1",
+                  "labelEn": "one"
+                },
+                {
+                  "id": "c",
+                  "pictureRef": "word:count-2",
+                  "labelEn": "two"
+                }
+              ],
+              "answerId": "b"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "culture": [
+    {
+      "id": "n1",
+      "kind": "culture",
+      "textEn": "A traditional market gathers many small shops in one place. They sell food, fruit and everyday goods, often at fairly low prices.",
+      "sources": [
+        {
+          "title": "소매업 (Retail trade), an entry of the Encyclopedia of Korean Culture",
+          "publisher": "한국민족문화대백과사전 (Encyclopedia of Korean Culture), Academy of Korean Studies",
+          "url": "https://encykorea.aks.ac.kr/Article/E0030046",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "Entry 소매업, section 내용, on 재래시장: “곡물류, 생선이나 야채 등의 식품과 의류나 잡화 등의 일상생활용품에서 전기·가구 등의 내구재에 이르기까지 다양한 상품구색을 갖추고 비교적 저렴한 가격으로 판매하는 많은 소매점이” … “한 장소에 집단적으로 위치하여 판매활동을 하는 것을 의미한다.”"
+        },
+        {
+          "title": "시장 (Market), an entry of the Encyclopedia of Korean Culture",
+          "publisher": "한국민족문화대백과사전 (Encyclopedia of Korean Culture), Academy of Korean Studies",
+          "url": "https://encykorea.aks.ac.kr/Article/E0032448",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "Entry 시장: “재래시장이 전체 유통면에서 차지하는 비중은 오늘날에도 압도적이다.” On the five-day market of Moran in Seongnam: “전통적인 5일장으로 매월 4일과 9일에 개설되고 있다.”"
+        },
+        {
+          "title": "마트만 가던 딸, 엄마 따라 전통시장 장보기 도전 (A daughter who only went to marts tries a traditional market with her mother), a citizen-reporter piece",
+          "publisher": "대한민국 정책브리핑 (Korea Policy Briefing), korea.kr, 정책기자단 citizen-reporter piece; the wording is the reporter's",
+          "url": "https://www.korea.kr/news/policyNewsView.do?newsId=148783583",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "Report of 2014-09-06: “가격 흥정도 하고 시식도 해가며 인정도 나눌 수 있는 곳” and “직접 농사 지은 채소를 판매하는 상인들의 모습도 발견할 수 있다.”"
+        }
+      ],
+      "verification": {
+        "passes": 2,
+        "checkedAt": "2026-10-14",
+        "scope": "lesson",
+        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): all three pages fetched (HTTP 200). The AKS entry 소매업 describes 재래시장 as many retail shops in one place selling food, everyday goods and durables at relatively low prices; the AKS entry 시장 says such markets still hold a large share of retail today; the korea.kr citizen-reporter piece (the reporter's own wording, a supporting source only) describes a market where sellers sell vegetables they grew and prices are far below big marts. The note says 'often', names no group as a whole, no shop, brand or real price, and copies no wording. Carried by: q1 Discover page 2 caption and the q1 intro Hoya line (market day). Line 2 (pass 2b, independent fact check, 2026-10-14): a session that did not author the cell fetched all three pages again (HTTP 200) and found every quoteOrLocator string verbatim on its page. The AKS entry 소매업 supports 'many small shops in one place' and 'food and everyday goods at fairly low prices'; 'fruit' is supported by the korea.kr piece (market apples far cheaper than at a big mart) and is a kind of food in the AKS list; 'often' keeps the price claim no stronger than the AKS 'relatively low'. The AKS entry 시장 and the korea.kr piece (dated 2014-09-06, a reporter's own account, supporting only) agree. No real price, shop or person is carried into the note; no wording copied. Outcome: pass, no change."
+      }
+    },
+    {
+      "id": "n2",
+      "kind": "culture",
+      "textEn": "A five-day market, {ko:오일장}, opens once every five days, so about six times a month. Some towns still hold one on fixed market days.",
+      "sources": [
+        {
+          "title": "오일장, an entry of the Standard Korean Language Dictionary",
+          "publisher": "표준국어대사전 (Standard Korean Language Dictionary), National Institute of Korean Language",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%EC%98%A4%EC%9D%BC%EC%9E%A5",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "Entry 오일장 1 (五日場), 명사: “닷새에 한 번씩 서는 장.”"
+        },
+        {
+          "title": "정기시장 (Periodic market), an entry of the Encyclopedia of Korean Culture",
+          "publisher": "한국민족문화대백과사전 (Encyclopedia of Korean Culture), Academy of Korean Studies",
+          "url": "https://encykorea.aks.ac.kr/Article/E0066723",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "Entry 정기시장, section 연원 및 변천: “장시가 월 6회, 매 5일마다 열리는 5일형이 가장 많았기 때문에 장시를 5일장으로 부르게 되었으며 오늘날에는 옛 것을 살리자는 의미에서 이것을 민속장으로도 부르게 되었다.” Section 현황: 522 periodic markets in operation as of 2006."
+        },
+        {
+          "title": "시장 (Market), an entry of the Encyclopedia of Korean Culture",
+          "publisher": "한국민족문화대백과사전 (Encyclopedia of Korean Culture), Academy of Korean Studies",
+          "url": "https://encykorea.aks.ac.kr/Article/E0032448",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "Entry 시장: “재래시장이 전체 유통면에서 차지하는 비중은 오늘날에도 압도적이다.” On the five-day market of Moran in Seongnam: “전통적인 5일장으로 매월 4일과 9일에 개설되고 있다.”"
+        }
+      ],
+      "verification": {
+        "passes": 2,
+        "checkedAt": "2026-10-14",
+        "scope": "lesson",
+        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): all three pages fetched (HTTP 200). The Standard Korean Language Dictionary defines 오일장 as a market held once every five days; the AKS entry 정기시장 says the five-day type opened six times a month and gave the name 5일장, and counts 522 periodic markets operating in 2006; the AKS entry 시장 names a five-day market still held on the 4th and 9th of each month. 'Some towns still hold one' is the careful reading of both AKS entries (no count is claimed). No group-wide claim; no wording copied. Carried by: q1 Discover page 2 (the 오일장 word note), the price-card title of every realia, and q1 Apply t3. Line 2 (pass 2b, independent fact check, 2026-10-14): a session that did not author the cell fetched all three pages again (HTTP 200) and found every quoteOrLocator string verbatim. The Standard Korean Language Dictionary entry 오일장 supports 'opens once every five days'; the AKS entry 정기시장 supports 'about six times a month' (월 6회) and, with 522 periodic markets operating in 2006, 'some towns still hold one'; the AKS entry 시장 shows one such market on the 4th and 9th of each month, supporting 'fixed market days'. No count or place is claimed in the note. The ko word note for 오일장 (q1 Discover page 2) was reworded so it no longer follows the dictionary definition's wording. Outcome: pass, ko overlay reworded."
+      }
+    },
+    {
+      "id": "n3",
+      "kind": "culture",
+      "textEn": "{ko:덤} is a little more that a seller adds for free on top of what you paid for. At a market stall, a seller may now and then give some.",
+      "sources": [
+        {
+          "title": "덤, an entry of the Standard Korean Language Dictionary",
+          "publisher": "표준국어대사전 (Standard Korean Language Dictionary), National Institute of Korean Language",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%EB%8D%A4",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "Entry 덤, 명사 「1」: “제 값어치 외에 거저로 조금 더 얹어 주는 일. 또는 그런 물건.”"
+        },
+        {
+          "title": "전통시장 매대마다 원산지 표시 ‘눈에 띄네’ (Origin labels on every stall of a traditional market), a citizen-reporter piece",
+          "publisher": "대한민국 정책브리핑 (Korea Policy Briefing), korea.kr, 정책기자단 citizen-reporter piece; the wording is the reporter's",
+          "url": "https://www.korea.kr/news/reporterView.do?newsId=148807652",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "Report of 2016-01-04 from the Ganghwa Pungmul market: “젓갈을 통 가득 담아 꾹꾹 눌러주는 모습에서 전통시장 특유의 ‘덤’ 문화를 느낄 수 있었다.”"
+        }
+      ],
+      "verification": {
+        "passes": 2,
+        "checkedAt": "2026-10-14",
+        "scope": "lesson",
+        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): both pages fetched (HTTP 200). The Standard Korean Language Dictionary defines 덤 as a little extra given for free beyond the price paid, or the thing given; the korea.kr citizen-reporter piece (the reporter's own wording, a supporting source only) describes a seller at a traditional market packing a tub full and calls it the market's 덤 custom. The note says 'may now and then', so it promises no extra and claims nothing of every seller; no wording copied. Carried by: q3 Discover pages 1-3 (word note, realia caption, thank-you caption), the q3 realia card and the q3 Tap to Respond turn 4. Line 2 (pass 2b, independent fact check, 2026-10-14): a session that did not author the cell fetched both pages again (HTTP 200) and found both quoteOrLocator strings verbatim (the korea.kr piece dated 2016-01-04, Ganghwa Pungmul market, a reporter's own account, supporting only). The dictionary supports the definition sentence; the korea.kr piece supports that a market seller may give some, and 'may now and then' claims no more than that one account. The ko word note for 덤 (q3 Discover page 1) was reworded so it no longer follows the dictionary definition's wording (얹어 주는, now 넣어 주는). Outcome: pass, ko overlay reworded."
+      }
+    },
+    {
+      "id": "n4",
+      "kind": "language",
+      "textEn": "Before a counter such as {ko:개}, counting uses {ko:한}, {ko:두}, {ko:세}, short forms of {ko:하나}, {ko:둘}, {ko:셋}. These counting words stop below a hundred, so prices in thousands use {ko:이}, {ko:오}, {ko:천}.",
+      "sources": [
+        {
+          "title": "수사 (Numerals), an entry of the Encyclopedia of Korean Culture",
+          "publisher": "한국민족문화대백과사전 (Encyclopedia of Korean Culture), Academy of Korean Studies",
+          "url": "https://encykorea.aks.ac.kr/Article/E0031418",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "Entry 수사: “수사의 일부는 ‘한·두·세(서, 석)·네(너, 넉)’처럼 형태를 바꾸어 관형사로 전성된 것도 있다.” and “고유어계열은 ‘백’ 이상의 높은 수에는 쓰이지 않음이 한 특징이다.”"
+        },
+        {
+          "title": "세, an entry of the Standard Korean Language Dictionary",
+          "publisher": "표준국어대사전 (Standard Korean Language Dictionary), National Institute of Korean Language",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%EC%84%B8",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "Entry 세 1, 관형사: “그 수량이 셋임을 나타내는 말.”"
+        }
+      ],
+      "verification": {
+        "passes": 2,
+        "checkedAt": "2026-10-14",
+        "scope": "lesson",
+        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): both pages fetched (HTTP 200). The AKS entry 수사 says some numerals change form to 한, 두, 세, 네 when used before a noun, and that the native numerals are not used for a hundred or more (so a price in thousands is said with Sino-Korean 이천, 오천); the Standard Korean Language Dictionary lists 세 as the determiner meaning the amount is three. No wording copied. Carried by: q1 Discover page 3 caption, q2 Discover page 1 caption; the count round (q2 r1) asks only native counts and every price round asks only Sino-Korean prices or figures, never both in one round (spec section 3.6). Line 2 (pass 2b, independent fact check, 2026-10-14): a session that did not author the cell fetched both pages again (HTTP 200) and found both quoteOrLocator strings verbatim. The AKS entry 수사 supports that 한, 두, 세 are changed forms of the numerals used before a noun, and that native numerals are not used for a hundred or more; the same entry describes the Sino-Korean series (e.g. 이백오십), so prices in thousands with 이, 오, 천 follows. The dictionary entry 세 supports 세 as the determiner for three. No wording copied. Outcome: pass, no change."
+      }
+    }
+  ],
+  "review": {
+    "language": "draft",
+    "culture": "draft",
+    "notes": []
+  },
+  "contentVer": 1
+}
