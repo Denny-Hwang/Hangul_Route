@@ -124,7 +124,8 @@ describe('planFreeFacts: what a plan\'s own items say about the free plan', () =
 
   it('counts distinct grid lessons past Stage 1, from quest and episode items', () => {
     const items = [quest('quest:stage1-letters-q1'), quest('quest:stage2-life-q1'), episode('episode:stage2-life'), episode('episode:stage2-nature'), quest('quest:stage4-rites-q1')];
-    expect(planFreeFacts(items, CATALOG, null)).toEqual({ closed: 3, closedInHorizon: 3, openAhead: false });
+    // Lunch Box Words and Outdoor Words hold three quests each since F-CURR-001 T-1; stage2-life-q1 counts once.
+    expect(planFreeFacts(items, CATALOG, null)).toEqual({ closed: 7, closedInHorizon: 7, openAhead: false });
   });
 
   it('never counts a coming-soon episode, a story, an unknown id or a free lesson', () => {

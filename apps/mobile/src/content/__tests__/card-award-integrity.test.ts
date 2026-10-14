@@ -28,6 +28,7 @@ import { obtainableCards } from '../../logic/awards/obtainable';
 import { parseUnlockedBy } from '../../logic/awards/rules';
 import { buildStoryCards } from '../../logic/awards/story-cards';
 import { cardArtSource } from '../../logic/card-art';
+import { LESSON_EPISODES, LESSON_QUESTS } from '../__generated__/lessons-index';
 import { cardCitationView } from '../../logic/library/card-citation';
 import { storyCoverArt } from '../../logic/story/scene-view';
 import type { AwardWorld } from '../../logic/awards/types';
@@ -314,6 +315,11 @@ describe('refreshed taste cells keep their card awards (F-CURR-001 section 3.12 
       [`quest:stage2-${theme}-q2`, undefined],
       [`quest:stage2-${theme}-q3`, undefined],
     ]);
+  });
+
+  it.each(cases)('the generated stage2-$theme cell carries the same awards: $card on q1, no card on q2 and q3', ({ theme, card, cards }) => {
+    expect(LESSON_EPISODES.find((e) => e.id === `episode:stage2-${theme}`)?.rewardCardIds).toEqual(cards);
+    expect([1, 2, 3].map((k) => LESSON_QUESTS.find((q) => q.id === `quest:stage2-${theme}-q${k}`)?.rewardCardId)).toEqual([card, undefined, undefined]);
   });
 });
 

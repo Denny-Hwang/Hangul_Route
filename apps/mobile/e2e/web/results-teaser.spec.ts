@@ -94,14 +94,15 @@ async function home(page: Page): Promise<void> {
 }
 
 /**
- * A quest whose games can all be skipped: the Stage 2 taste quest Lunch Box Words. Since
- * F-QUEST-002 Q-8 every Stage 1 quest ends on a Check, which has no Skip. The soft-prerequisite
- * sheet is Stage 1 only (`previousStage1Quest`), so it never opens here and Start goes straight in.
+ * A quest whose games can all be skipped: the Stage 4 taste quest Greeting Dialogues. Since
+ * F-QUEST-002 Q-8 every Stage 1 quest ends on a Check, which has no Skip, and since F-CURR-001 T-1
+ * Lunch Box Words ends on one too. The soft-prerequisite sheet is Stage 1 only
+ * (`previousStage1Quest`), so it never opens here and Start goes straight in.
  */
 async function startSkippableQuest(page: Page): Promise<void> {
   await home(page);
   await page.getByText('Journey', { exact: true }).last().click();
-  await page.getByRole('button', { name: journeyCellName(2, 'Food & Daily Life') }).click();
+  await page.getByRole('button', { name: journeyCellName(4, 'Holidays & Traditions') }).click();
   await page.getByRole('button', { name: 'Start', exact: true }).first().click();
   await page.getByRole('button', { name: 'Continue' }).click();
 }
@@ -154,7 +155,7 @@ test('every game skipped: the same quest is offered again, and nothing is locked
 
   await expect(page.getByText('All done!')).toBeVisible();
   await expect(page.getByText('Next up')).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Lunch Box Words' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Greeting Dialogues' })).toBeVisible();
   await page.getByRole('button', { name: 'Try this one again' }).click();
   await expect(page.getByRole('button', { name: 'Leave quest' })).toBeVisible();
   expect(errors).toEqual([]);

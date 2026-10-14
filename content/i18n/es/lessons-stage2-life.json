@@ -3,25 +3,25 @@
   "domain": "lessons-stage2-life",
   "entries": {
     "episode:stage2-life": {
-      "title": "Palabras de la fiambrera",
+      "title": "Palabras de la lonchera",
       "subtitle": "Lee palabras coreanas de comida y de las comidas del día.",
       "hoyaIntro": "Ya conoces las letras. ¡Leamos palabras de comida!"
     },
     "quest:stage2-life-q1": {
-      "title": "Palabras de la fiambrera",
-      "blurb": "Lee tus primeras palabras de comida: fiambrera, gimbap, leche y huevo.",
+      "title": "Palabras de la lonchera",
+      "blurb": "Lee tus primeras palabras de comida: lonchera, gimbap, leche y huevo.",
       "teaser": "Siguiente: frutas y meriendas.",
-      "steps.s1.title": "Abre la fiambrera",
-      "steps.s2.title": "Palabras de la fiambrera",
+      "steps.s1.title": "Abre la lonchera",
+      "steps.s2.title": "Palabras de la lonchera",
       "steps.s3.title": "Imagen y palabra",
       "steps.s4.title": "Une las tarjetas",
       "steps.s5.title": "Escucha y lee",
-      "steps.s6.title": "¡Tarjeta de la fiambrera!",
-      "steps.s1.hoyaLine": "¿Qué hay en la fiambrera? ¡Leamos palabras de verdad!",
+      "steps.s6.title": "¡Tarjeta de la lonchera!",
+      "steps.s1.hoyaLine": "¿Qué hay en la lonchera? ¡Leamos palabras de verdad!",
       "steps.s2.hoyaLine": "Toca Escuchar y luego lee tú cada palabra.",
-      "steps.s6.hoyaLine": "Leíste palabras de la fiambrera. ¡Aquí tienes una tarjeta!",
-      "steps.s2.discover.pages.2.caption": "Solo mira y escucha: estas letras las lees en Constructor de palabras.",
-      "steps.s2.discover.pages.0.items.0.word.gloss": "fiambrera",
+      "steps.s6.hoyaLine": "Leíste palabras de la lonchera. ¡Aquí tienes una tarjeta!",
+      "steps.s2.discover.pages.2.caption": "Solo mira y escucha: estas letras se aprenden en Constructor de palabras.",
+      "steps.s2.discover.pages.0.items.0.word.gloss": "lonchera, fiambrera",
       "steps.s2.discover.pages.0.items.1.word.gloss": "gimbap (rollo de arroz con alga)",
       "steps.s2.discover.pages.1.items.0.word.gloss": "leche",
       "steps.s2.discover.pages.1.items.1.word.gloss": "huevo",
@@ -42,7 +42,7 @@
       "steps.s2.hoyaLine": "Toca Escuchar y luego lee tú cada palabra.",
       "steps.s6.hoyaLine": "Leíste palabras de frutas y meriendas. ¡Muy bien!",
       "steps.s2.discover.pages.0.items.0.word.gloss": "merienda",
-      "steps.s2.discover.pages.0.items.1.word.gloss": "plátano",
+      "steps.s2.discover.pages.0.items.1.word.gloss": "plátano, banana",
       "steps.s2.discover.pages.1.items.0.word.gloss": "sandía",
       "steps.s2.discover.pages.1.items.1.word.gloss": "mandarina"
     },
@@ -61,30 +61,30 @@
       "steps.s2.discover.pages.0.items.0.word.gloss": "sopa",
       "steps.s2.discover.pages.0.items.1.word.gloss": "acompañamientos",
       "steps.s2.discover.pages.1.items.0.word.gloss": "tofu",
-      "steps.s2.discover.pages.1.items.1.word.gloss": "verduras aliñadas"
+      "steps.s2.discover.pages.1.items.1.word.gloss": "verduras sazonadas"
     },
     "minigame:s2-life-q1-apply": {
-      "cardPairs.dosirak.gloss": "fiambrera",
+      "cardPairs.dosirak.gloss": "lonchera, fiambrera",
       "cardPairs.gimbap.gloss": "gimbap (rollo de arroz con alga)",
       "cardPairs.uyu.gloss": "leche",
       "cardPairs.dalgyal.gloss": "huevo"
     },
     "minigame:s2-life-q1-check": {
       "listenPick.rounds.pic-gimbap.prompt": "gimbap (rollo de arroz con alga)",
-      "listenPick.rounds.read-dosirak.prompt": "fiambrera"
+      "listenPick.rounds.read-dosirak.prompt": "lonchera, fiambrera"
     },
     "minigame:s2-life-q2-check": {
-      "listenPick.rounds.pic-banana.prompt": "plátano",
+      "listenPick.rounds.pic-banana.prompt": "plátano, banana",
       "listenPick.rounds.read-subak.prompt": "sandía"
     },
     "minigame:s2-life-q3-apply": {
       "cardPairs.guk.gloss": "sopa",
       "cardPairs.banchan.gloss": "acompañamientos",
       "cardPairs.dubu.gloss": "tofu",
-      "cardPairs.namul.gloss": "verduras aliñadas"
+      "cardPairs.namul.gloss": "verduras sazonadas"
     },
     "minigame:s2-life-q3-check": {
-      "listenPick.rounds.pic-bibimbap.prompt": "bibimbap (arroz mezclado en cuenco)",
+      "listenPick.rounds.pic-bibimbap.prompt": "bibimbap (arroz mezclado en tazón)",
       "listenPick.rounds.read-banchan.prompt": "acompañamientos"
     }
   }

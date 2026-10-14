@@ -1737,6 +1737,1812 @@ export const LESSON_SCOPES: Readonly<Record<string, MinigameScope>> = {
         }
       ]
     }
+  },
+  "minigame:s2-life-q1-apply": {
+    "kind": "card-match",
+    "rounds": 4,
+    "cardPairs": [
+      {
+        "ko": "도시락",
+        "romanization": "dosirak",
+        "en": "lunch box"
+      },
+      {
+        "ko": "김밥",
+        "romanization": "gimbap",
+        "en": "gimbap (seaweed rice roll)"
+      },
+      {
+        "ko": "우유",
+        "romanization": "uyu",
+        "en": "milk"
+      },
+      {
+        "ko": "달걀",
+        "romanization": "dalgyal",
+        "en": "egg"
+      }
+    ]
+  },
+  "minigame:s2-life-q1-check": {
+    "kind": "listen-pick",
+    "rounds": 2,
+    "listenPick": {
+      "rounds": [
+        {
+          "id": "pic-gimbap",
+          "prompt": {
+            "ko": "김밥",
+            "romanization": "gimbap",
+            "en": "gimbap (seaweed rice roll)"
+          },
+          "options": [
+            {
+              "id": "gimbap",
+              "pictureRef": "card:kimbap",
+              "labelEn": "gimbap"
+            },
+            {
+              "id": "uyu",
+              "pictureRef": "word:food-milk",
+              "labelEn": "milk"
+            },
+            {
+              "id": "dalgyal",
+              "pictureRef": "word:food-egg",
+              "labelEn": "egg"
+            },
+            {
+              "id": "bap",
+              "pictureRef": "card:rice",
+              "labelEn": "cooked rice"
+            }
+          ],
+          "answerId": "gimbap"
+        },
+        {
+          "id": "read-dosirak",
+          "prompt": {
+            "ko": "도시락",
+            "romanization": "dosirak",
+            "en": "lunch box"
+          },
+          "options": [
+            {
+              "id": "dosirak",
+              "text": {
+                "ko": "도시락",
+                "romanization": "dosirak",
+                "en": "lunch box"
+              }
+            },
+            {
+              "id": "dojagi",
+              "text": {
+                "ko": "도자기",
+                "romanization": "dojagi",
+                "en": "pottery"
+              }
+            },
+            {
+              "id": "sarang",
+              "text": {
+                "ko": "사랑",
+                "romanization": "sarang",
+                "en": "love"
+              }
+            }
+          ],
+          "answerId": "dosirak"
+        }
+      ]
+    }
+  },
+  "minigame:s2-life-q1-practice": {
+    "kind": "pic-word-match",
+    "rounds": 6,
+    "picWord": {
+      "boards": [
+        {
+          "pairs": [
+            {
+              "id": "gimbap",
+              "pictureRef": "card:kimbap",
+              "word": {
+                "ko": "김밥",
+                "romanization": "gimbap",
+                "en": "gimbap (seaweed rice roll)"
+              }
+            },
+            {
+              "id": "uyu",
+              "pictureRef": "word:food-milk",
+              "word": {
+                "ko": "우유",
+                "romanization": "uyu",
+                "en": "milk"
+              }
+            },
+            {
+              "id": "dalgyal",
+              "pictureRef": "word:food-egg",
+              "word": {
+                "ko": "달걀",
+                "romanization": "dalgyal",
+                "en": "egg"
+              }
+            }
+          ]
+        },
+        {
+          "pairs": [
+            {
+              "id": "uyu",
+              "pictureRef": "word:food-milk",
+              "word": {
+                "ko": "우유",
+                "romanization": "uyu",
+                "en": "milk"
+              }
+            },
+            {
+              "id": "bap",
+              "pictureRef": "card:rice",
+              "word": {
+                "ko": "밥",
+                "romanization": "bap",
+                "en": "cooked rice"
+              }
+            },
+            {
+              "id": "mul",
+              "pictureRef": "word:food-water",
+              "word": {
+                "ko": "물",
+                "romanization": "mul",
+                "en": "water"
+              }
+            }
+          ]
+        },
+        {
+          "pairs": [
+            {
+              "id": "dalgyal",
+              "pictureRef": "word:food-egg",
+              "word": {
+                "ko": "달걀",
+                "romanization": "dalgyal",
+                "en": "egg"
+              }
+            },
+            {
+              "id": "gimchi",
+              "pictureRef": "card:kimchi",
+              "word": {
+                "ko": "김치",
+                "romanization": "gimchi",
+                "en": "kimchi"
+              }
+            },
+            {
+              "id": "banana",
+              "pictureRef": "word:food-banana",
+              "word": {
+                "ko": "바나나",
+                "romanization": "banana",
+                "en": "banana"
+              }
+            }
+          ]
+        },
+        {
+          "pairs": [
+            {
+              "id": "gimbap",
+              "pictureRef": "card:kimbap",
+              "word": {
+                "ko": "김밥",
+                "romanization": "gimbap",
+                "en": "gimbap (seaweed rice roll)"
+              }
+            },
+            {
+              "id": "ramyeon",
+              "pictureRef": "word:food-ramyeon",
+              "word": {
+                "ko": "라면",
+                "romanization": "ramyeon",
+                "en": "instant noodles"
+              }
+            },
+            {
+              "id": "uyu",
+              "pictureRef": "word:food-milk",
+              "word": {
+                "ko": "우유",
+                "romanization": "uyu",
+                "en": "milk"
+              }
+            }
+          ]
+        },
+        {
+          "pairs": [
+            {
+              "id": "dalgyal",
+              "pictureRef": "word:food-egg",
+              "word": {
+                "ko": "달걀",
+                "romanization": "dalgyal",
+                "en": "egg"
+              }
+            },
+            {
+              "id": "gimbap",
+              "pictureRef": "card:kimbap",
+              "word": {
+                "ko": "김밥",
+                "romanization": "gimbap",
+                "en": "gimbap (seaweed rice roll)"
+              }
+            },
+            {
+              "id": "mul",
+              "pictureRef": "word:food-water",
+              "word": {
+                "ko": "물",
+                "romanization": "mul",
+                "en": "water"
+              }
+            }
+          ]
+        },
+        {
+          "pairs": [
+            {
+              "id": "gimchi",
+              "pictureRef": "card:kimchi",
+              "word": {
+                "ko": "김치",
+                "romanization": "gimchi",
+                "en": "kimchi"
+              }
+            },
+            {
+              "id": "uyu",
+              "pictureRef": "word:food-milk",
+              "word": {
+                "ko": "우유",
+                "romanization": "uyu",
+                "en": "milk"
+              }
+            },
+            {
+              "id": "gimbap",
+              "pictureRef": "card:kimbap",
+              "word": {
+                "ko": "김밥",
+                "romanization": "gimbap",
+                "en": "gimbap (seaweed rice roll)"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "minigame:s2-life-q2-apply": {
+    "kind": "build-letter",
+    "rounds": 4,
+    "syllables": [
+      {
+        "ko": "수",
+        "romanization": "su",
+        "jamoChars": [
+          "ㅅ",
+          "ㅜ"
+        ]
+      },
+      {
+        "ko": "박",
+        "romanization": "bak",
+        "jamoChars": [
+          "ㅂ",
+          "ㅏ",
+          "ㄱ"
+        ]
+      },
+      {
+        "ko": "간",
+        "romanization": "gan",
+        "jamoChars": [
+          "ㄱ",
+          "ㅏ",
+          "ㄴ"
+        ]
+      },
+      {
+        "ko": "식",
+        "romanization": "sik",
+        "jamoChars": [
+          "ㅅ",
+          "ㅣ",
+          "ㄱ"
+        ]
+      }
+    ]
+  },
+  "minigame:s2-life-q2-check": {
+    "kind": "listen-pick",
+    "rounds": 2,
+    "listenPick": {
+      "rounds": [
+        {
+          "id": "pic-banana",
+          "prompt": {
+            "ko": "바나나",
+            "romanization": "banana",
+            "en": "banana"
+          },
+          "options": [
+            {
+              "id": "banana",
+              "pictureRef": "word:food-banana",
+              "labelEn": "banana"
+            },
+            {
+              "id": "ramyeon",
+              "pictureRef": "word:food-ramyeon",
+              "labelEn": "instant noodles"
+            },
+            {
+              "id": "uyu",
+              "pictureRef": "word:food-milk",
+              "labelEn": "milk"
+            },
+            {
+              "id": "mul",
+              "pictureRef": "word:food-water",
+              "labelEn": "water"
+            }
+          ],
+          "answerId": "banana"
+        },
+        {
+          "id": "read-subak",
+          "prompt": {
+            "ko": "수박",
+            "romanization": "subak",
+            "en": "watermelon"
+          },
+          "options": [
+            {
+              "id": "subak",
+              "text": {
+                "ko": "수박",
+                "romanization": "subak",
+                "en": "watermelon"
+              }
+            },
+            {
+              "id": "suyeong",
+              "text": {
+                "ko": "수영",
+                "romanization": "suyeong",
+                "en": "swimming"
+              }
+            },
+            {
+              "id": "gabang",
+              "text": {
+                "ko": "가방",
+                "romanization": "gabang",
+                "en": "bag"
+              }
+            }
+          ],
+          "answerId": "subak"
+        }
+      ]
+    }
+  },
+  "minigame:s2-life-q2-practice": {
+    "kind": "pic-word-match",
+    "rounds": 6,
+    "picWord": {
+      "boards": [
+        {
+          "pairs": [
+            {
+              "id": "banana",
+              "pictureRef": "word:food-banana",
+              "word": {
+                "ko": "바나나",
+                "romanization": "banana",
+                "en": "banana"
+              }
+            },
+            {
+              "id": "uyu",
+              "pictureRef": "word:food-milk",
+              "word": {
+                "ko": "우유",
+                "romanization": "uyu",
+                "en": "milk"
+              }
+            },
+            {
+              "id": "ramyeon",
+              "pictureRef": "word:food-ramyeon",
+              "word": {
+                "ko": "라면",
+                "romanization": "ramyeon",
+                "en": "instant noodles"
+              }
+            }
+          ]
+        },
+        {
+          "pairs": [
+            {
+              "id": "banana",
+              "pictureRef": "word:food-banana",
+              "word": {
+                "ko": "바나나",
+                "romanization": "banana",
+                "en": "banana"
+              }
+            },
+            {
+              "id": "dalgyal",
+              "pictureRef": "word:food-egg",
+              "word": {
+                "ko": "달걀",
+                "romanization": "dalgyal",
+                "en": "egg"
+              }
+            },
+            {
+              "id": "mul",
+              "pictureRef": "word:food-water",
+              "word": {
+                "ko": "물",
+                "romanization": "mul",
+                "en": "water"
+              }
+            }
+          ]
+        },
+        {
+          "pairs": [
+            {
+              "id": "ramyeon",
+              "pictureRef": "word:food-ramyeon",
+              "word": {
+                "ko": "라면",
+                "romanization": "ramyeon",
+                "en": "instant noodles"
+              }
+            },
+            {
+              "id": "gimbap",
+              "pictureRef": "card:kimbap",
+              "word": {
+                "ko": "김밥",
+                "romanization": "gimbap",
+                "en": "gimbap (seaweed rice roll)"
+              }
+            },
+            {
+              "id": "banana",
+              "pictureRef": "word:food-banana",
+              "word": {
+                "ko": "바나나",
+                "romanization": "banana",
+                "en": "banana"
+              }
+            }
+          ]
+        },
+        {
+          "pairs": [
+            {
+              "id": "uyu",
+              "pictureRef": "word:food-milk",
+              "word": {
+                "ko": "우유",
+                "romanization": "uyu",
+                "en": "milk"
+              }
+            },
+            {
+              "id": "mul",
+              "pictureRef": "word:food-water",
+              "word": {
+                "ko": "물",
+                "romanization": "mul",
+                "en": "water"
+              }
+            },
+            {
+              "id": "bap",
+              "pictureRef": "card:rice",
+              "word": {
+                "ko": "밥",
+                "romanization": "bap",
+                "en": "cooked rice"
+              }
+            }
+          ]
+        },
+        {
+          "pairs": [
+            {
+              "id": "banana",
+              "pictureRef": "word:food-banana",
+              "word": {
+                "ko": "바나나",
+                "romanization": "banana",
+                "en": "banana"
+              }
+            },
+            {
+              "id": "gimchi",
+              "pictureRef": "card:kimchi",
+              "word": {
+                "ko": "김치",
+                "romanization": "gimchi",
+                "en": "kimchi"
+              }
+            },
+            {
+              "id": "dalgyal",
+              "pictureRef": "word:food-egg",
+              "word": {
+                "ko": "달걀",
+                "romanization": "dalgyal",
+                "en": "egg"
+              }
+            }
+          ]
+        },
+        {
+          "pairs": [
+            {
+              "id": "ramyeon",
+              "pictureRef": "word:food-ramyeon",
+              "word": {
+                "ko": "라면",
+                "romanization": "ramyeon",
+                "en": "instant noodles"
+              }
+            },
+            {
+              "id": "uyu",
+              "pictureRef": "word:food-milk",
+              "word": {
+                "ko": "우유",
+                "romanization": "uyu",
+                "en": "milk"
+              }
+            },
+            {
+              "id": "banana",
+              "pictureRef": "word:food-banana",
+              "word": {
+                "ko": "바나나",
+                "romanization": "banana",
+                "en": "banana"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "minigame:s2-life-q3-apply": {
+    "kind": "card-match",
+    "rounds": 4,
+    "cardPairs": [
+      {
+        "ko": "국",
+        "romanization": "guk",
+        "en": "soup"
+      },
+      {
+        "ko": "반찬",
+        "romanization": "banchan",
+        "en": "side dishes"
+      },
+      {
+        "ko": "두부",
+        "romanization": "dubu",
+        "en": "tofu"
+      },
+      {
+        "ko": "나물",
+        "romanization": "namul",
+        "en": "seasoned vegetables"
+      }
+    ]
+  },
+  "minigame:s2-life-q3-check": {
+    "kind": "listen-pick",
+    "rounds": 2,
+    "listenPick": {
+      "rounds": [
+        {
+          "id": "pic-bibimbap",
+          "prompt": {
+            "ko": "비빔밥",
+            "romanization": "bibimbap",
+            "en": "bibimbap (mixed rice bowl)"
+          },
+          "options": [
+            {
+              "id": "bibimbap",
+              "pictureRef": "word:culture-bibimbap",
+              "labelEn": "bibimbap"
+            },
+            {
+              "id": "bap",
+              "pictureRef": "card:rice",
+              "labelEn": "cooked rice"
+            },
+            {
+              "id": "gimchi",
+              "pictureRef": "card:kimchi",
+              "labelEn": "kimchi"
+            },
+            {
+              "id": "gimbap",
+              "pictureRef": "card:kimbap",
+              "labelEn": "gimbap"
+            }
+          ],
+          "answerId": "bibimbap"
+        },
+        {
+          "id": "read-banchan",
+          "prompt": {
+            "ko": "반찬",
+            "romanization": "banchan",
+            "en": "side dishes"
+          },
+          "options": [
+            {
+              "id": "banchan",
+              "text": {
+                "ko": "반찬",
+                "romanization": "banchan",
+                "en": "side dishes"
+              }
+            },
+            {
+              "id": "banji",
+              "text": {
+                "ko": "반지",
+                "romanization": "banji",
+                "en": "ring"
+              }
+            },
+            {
+              "id": "baji",
+              "text": {
+                "ko": "바지",
+                "romanization": "baji",
+                "en": "pants, trousers"
+              }
+            }
+          ],
+          "answerId": "banchan"
+        }
+      ]
+    }
+  },
+  "minigame:s2-life-q3-practice": {
+    "kind": "pic-word-match",
+    "rounds": 6,
+    "picWord": {
+      "boards": [
+        {
+          "pairs": [
+            {
+              "id": "bap",
+              "pictureRef": "card:rice",
+              "word": {
+                "ko": "밥",
+                "romanization": "bap",
+                "en": "cooked rice"
+              }
+            },
+            {
+              "id": "gimchi",
+              "pictureRef": "card:kimchi",
+              "word": {
+                "ko": "김치",
+                "romanization": "gimchi",
+                "en": "kimchi"
+              }
+            },
+            {
+              "id": "mul",
+              "pictureRef": "word:food-water",
+              "word": {
+                "ko": "물",
+                "romanization": "mul",
+                "en": "water"
+              }
+            }
+          ]
+        },
+        {
+          "pairs": [
+            {
+              "id": "bibimbap",
+              "pictureRef": "word:culture-bibimbap",
+              "word": {
+                "ko": "비빔밥",
+                "romanization": "bibimbap",
+                "en": "bibimbap (mixed rice bowl)"
+              }
+            },
+            {
+              "id": "gimbap",
+              "pictureRef": "card:kimbap",
+              "word": {
+                "ko": "김밥",
+                "romanization": "gimbap",
+                "en": "gimbap (seaweed rice roll)"
+              }
+            },
+            {
+              "id": "ramyeon",
+              "pictureRef": "word:food-ramyeon",
+              "word": {
+                "ko": "라면",
+                "romanization": "ramyeon",
+                "en": "instant noodles"
+              }
+            }
+          ]
+        },
+        {
+          "pairs": [
+            {
+              "id": "bap",
+              "pictureRef": "card:rice",
+              "word": {
+                "ko": "밥",
+                "romanization": "bap",
+                "en": "cooked rice"
+              }
+            },
+            {
+              "id": "dalgyal",
+              "pictureRef": "word:food-egg",
+              "word": {
+                "ko": "달걀",
+                "romanization": "dalgyal",
+                "en": "egg"
+              }
+            },
+            {
+              "id": "gimchi",
+              "pictureRef": "card:kimchi",
+              "word": {
+                "ko": "김치",
+                "romanization": "gimchi",
+                "en": "kimchi"
+              }
+            }
+          ]
+        },
+        {
+          "pairs": [
+            {
+              "id": "bibimbap",
+              "pictureRef": "word:culture-bibimbap",
+              "word": {
+                "ko": "비빔밥",
+                "romanization": "bibimbap",
+                "en": "bibimbap (mixed rice bowl)"
+              }
+            },
+            {
+              "id": "mul",
+              "pictureRef": "word:food-water",
+              "word": {
+                "ko": "물",
+                "romanization": "mul",
+                "en": "water"
+              }
+            },
+            {
+              "id": "uyu",
+              "pictureRef": "word:food-milk",
+              "word": {
+                "ko": "우유",
+                "romanization": "uyu",
+                "en": "milk"
+              }
+            }
+          ]
+        },
+        {
+          "pairs": [
+            {
+              "id": "gimchi",
+              "pictureRef": "card:kimchi",
+              "word": {
+                "ko": "김치",
+                "romanization": "gimchi",
+                "en": "kimchi"
+              }
+            },
+            {
+              "id": "ramyeon",
+              "pictureRef": "word:food-ramyeon",
+              "word": {
+                "ko": "라면",
+                "romanization": "ramyeon",
+                "en": "instant noodles"
+              }
+            },
+            {
+              "id": "bap",
+              "pictureRef": "card:rice",
+              "word": {
+                "ko": "밥",
+                "romanization": "bap",
+                "en": "cooked rice"
+              }
+            }
+          ]
+        },
+        {
+          "pairs": [
+            {
+              "id": "gimbap",
+              "pictureRef": "card:kimbap",
+              "word": {
+                "ko": "김밥",
+                "romanization": "gimbap",
+                "en": "gimbap (seaweed rice roll)"
+              }
+            },
+            {
+              "id": "bibimbap",
+              "pictureRef": "word:culture-bibimbap",
+              "word": {
+                "ko": "비빔밥",
+                "romanization": "bibimbap",
+                "en": "bibimbap (mixed rice bowl)"
+              }
+            },
+            {
+              "id": "dalgyal",
+              "pictureRef": "word:food-egg",
+              "word": {
+                "ko": "달걀",
+                "romanization": "dalgyal",
+                "en": "egg"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "minigame:s2-nature-q1-apply": {
+    "kind": "build-letter",
+    "rounds": 4,
+    "syllables": [
+      {
+        "ko": "하",
+        "romanization": "ha",
+        "jamoChars": [
+          "ㅎ",
+          "ㅏ"
+        ]
+      },
+      {
+        "ko": "늘",
+        "romanization": "neul",
+        "jamoChars": [
+          "ㄴ",
+          "ㅡ",
+          "ㄹ"
+        ]
+      },
+      {
+        "ko": "나",
+        "romanization": "na",
+        "jamoChars": [
+          "ㄴ",
+          "ㅏ"
+        ]
+      },
+      {
+        "ko": "무",
+        "romanization": "mu",
+        "jamoChars": [
+          "ㅁ",
+          "ㅜ"
+        ]
+      }
+    ]
+  },
+  "minigame:s2-nature-q1-check": {
+    "kind": "listen-pick",
+    "rounds": 2,
+    "listenPick": {
+      "rounds": [
+        {
+          "id": "pic-byeol",
+          "prompt": {
+            "ko": "별",
+            "romanization": "byeol",
+            "en": "star"
+          },
+          "options": [
+            {
+              "id": "byeol",
+              "pictureRef": "word:nature-star",
+              "labelEn": "star"
+            },
+            {
+              "id": "dal",
+              "pictureRef": "card:moon",
+              "labelEn": "moon"
+            },
+            {
+              "id": "haneul",
+              "pictureRef": "word:nature-sky",
+              "labelEn": "sky"
+            },
+            {
+              "id": "namu",
+              "pictureRef": "word:nature-tree",
+              "labelEn": "tree"
+            }
+          ],
+          "answerId": "byeol"
+        },
+        {
+          "id": "read-namu",
+          "prompt": {
+            "ko": "나무",
+            "romanization": "namu",
+            "en": "tree"
+          },
+          "options": [
+            {
+              "id": "namu",
+              "text": {
+                "ko": "나무",
+                "romanization": "namu",
+                "en": "tree"
+              }
+            },
+            {
+              "id": "nabi",
+              "text": {
+                "ko": "나비",
+                "romanization": "nabi",
+                "en": "butterfly"
+              }
+            },
+            {
+              "id": "bada",
+              "text": {
+                "ko": "바다",
+                "romanization": "bada",
+                "en": "sea"
+              }
+            }
+          ],
+          "answerId": "namu"
+        }
+      ]
+    }
+  },
+  "minigame:s2-nature-q1-practice": {
+    "kind": "pic-word-match",
+    "rounds": 6,
+    "picWord": {
+      "boards": [
+        {
+          "pairs": [
+            {
+              "id": "haneul",
+              "pictureRef": "word:nature-sky",
+              "word": {
+                "ko": "하늘",
+                "romanization": "haneul",
+                "en": "sky"
+              }
+            },
+            {
+              "id": "byeol",
+              "pictureRef": "word:nature-star",
+              "word": {
+                "ko": "별",
+                "romanization": "byeol",
+                "en": "star"
+              }
+            },
+            {
+              "id": "namu",
+              "pictureRef": "word:nature-tree",
+              "word": {
+                "ko": "나무",
+                "romanization": "namu",
+                "en": "tree"
+              }
+            }
+          ]
+        },
+        {
+          "pairs": [
+            {
+              "id": "san",
+              "pictureRef": "card:mountain",
+              "word": {
+                "ko": "산",
+                "romanization": "san",
+                "en": "mountain"
+              }
+            },
+            {
+              "id": "dal",
+              "pictureRef": "card:moon",
+              "word": {
+                "ko": "달",
+                "romanization": "dal",
+                "en": "moon"
+              }
+            },
+            {
+              "id": "haneul",
+              "pictureRef": "word:nature-sky",
+              "word": {
+                "ko": "하늘",
+                "romanization": "haneul",
+                "en": "sky"
+              }
+            }
+          ]
+        },
+        {
+          "pairs": [
+            {
+              "id": "namu",
+              "pictureRef": "word:nature-tree",
+              "word": {
+                "ko": "나무",
+                "romanization": "namu",
+                "en": "tree"
+              }
+            },
+            {
+              "id": "bada",
+              "pictureRef": "card:sea",
+              "word": {
+                "ko": "바다",
+                "romanization": "bada",
+                "en": "sea"
+              }
+            },
+            {
+              "id": "byeol",
+              "pictureRef": "word:nature-star",
+              "word": {
+                "ko": "별",
+                "romanization": "byeol",
+                "en": "star"
+              }
+            }
+          ]
+        },
+        {
+          "pairs": [
+            {
+              "id": "haneul",
+              "pictureRef": "word:nature-sky",
+              "word": {
+                "ko": "하늘",
+                "romanization": "haneul",
+                "en": "sky"
+              }
+            },
+            {
+              "id": "gang",
+              "pictureRef": "word:nature-river",
+              "word": {
+                "ko": "강",
+                "romanization": "gang",
+                "en": "river"
+              }
+            },
+            {
+              "id": "san",
+              "pictureRef": "card:mountain",
+              "word": {
+                "ko": "산",
+                "romanization": "san",
+                "en": "mountain"
+              }
+            }
+          ]
+        },
+        {
+          "pairs": [
+            {
+              "id": "byeol",
+              "pictureRef": "word:nature-star",
+              "word": {
+                "ko": "별",
+                "romanization": "byeol",
+                "en": "star"
+              }
+            },
+            {
+              "id": "namu",
+              "pictureRef": "word:nature-tree",
+              "word": {
+                "ko": "나무",
+                "romanization": "namu",
+                "en": "tree"
+              }
+            },
+            {
+              "id": "dal",
+              "pictureRef": "card:moon",
+              "word": {
+                "ko": "달",
+                "romanization": "dal",
+                "en": "moon"
+              }
+            }
+          ]
+        },
+        {
+          "pairs": [
+            {
+              "id": "bada",
+              "pictureRef": "card:sea",
+              "word": {
+                "ko": "바다",
+                "romanization": "bada",
+                "en": "sea"
+              }
+            },
+            {
+              "id": "haneul",
+              "pictureRef": "word:nature-sky",
+              "word": {
+                "ko": "하늘",
+                "romanization": "haneul",
+                "en": "sky"
+              }
+            },
+            {
+              "id": "namu",
+              "pictureRef": "word:nature-tree",
+              "word": {
+                "ko": "나무",
+                "romanization": "namu",
+                "en": "tree"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "minigame:s2-nature-q2-apply": {
+    "kind": "card-match",
+    "rounds": 4,
+    "cardPairs": [
+      {
+        "ko": "비",
+        "romanization": "bi",
+        "en": "rain"
+      },
+      {
+        "ko": "눈",
+        "romanization": "nun",
+        "en": "snow"
+      },
+      {
+        "ko": "구름",
+        "romanization": "gureum",
+        "en": "cloud"
+      },
+      {
+        "ko": "바람",
+        "romanization": "baram",
+        "en": "wind"
+      }
+    ]
+  },
+  "minigame:s2-nature-q2-check": {
+    "kind": "listen-pick",
+    "rounds": 2,
+    "listenPick": {
+      "rounds": [
+        {
+          "id": "pic-gureum",
+          "prompt": {
+            "ko": "구름",
+            "romanization": "gureum",
+            "en": "cloud"
+          },
+          "options": [
+            {
+              "id": "gureum",
+              "pictureRef": "word:nature-cloud",
+              "labelEn": "cloud"
+            },
+            {
+              "id": "bi",
+              "pictureRef": "word:nature-rain",
+              "labelEn": "rain"
+            },
+            {
+              "id": "nun",
+              "pictureRef": "word:nature-snow",
+              "labelEn": "snow"
+            },
+            {
+              "id": "baram",
+              "pictureRef": "word:science-wind",
+              "labelEn": "wind"
+            }
+          ],
+          "answerId": "gureum"
+        },
+        {
+          "id": "read-baram",
+          "prompt": {
+            "ko": "바람",
+            "romanization": "baram",
+            "en": "wind"
+          },
+          "options": [
+            {
+              "id": "baram",
+              "text": {
+                "ko": "바람",
+                "romanization": "baram",
+                "en": "wind"
+              }
+            },
+            {
+              "id": "bada",
+              "text": {
+                "ko": "바다",
+                "romanization": "bada",
+                "en": "sea"
+              }
+            },
+            {
+              "id": "gabang",
+              "text": {
+                "ko": "가방",
+                "romanization": "gabang",
+                "en": "bag"
+              }
+            }
+          ],
+          "answerId": "baram"
+        }
+      ]
+    }
+  },
+  "minigame:s2-nature-q2-practice": {
+    "kind": "pic-word-match",
+    "rounds": 6,
+    "picWord": {
+      "boards": [
+        {
+          "pairs": [
+            {
+              "id": "bi",
+              "pictureRef": "word:nature-rain",
+              "word": {
+                "ko": "비",
+                "romanization": "bi",
+                "en": "rain"
+              }
+            },
+            {
+              "id": "nun",
+              "pictureRef": "word:nature-snow",
+              "word": {
+                "ko": "눈",
+                "romanization": "nun",
+                "en": "snow"
+              }
+            },
+            {
+              "id": "gureum",
+              "pictureRef": "word:nature-cloud",
+              "word": {
+                "ko": "구름",
+                "romanization": "gureum",
+                "en": "cloud"
+              }
+            }
+          ]
+        },
+        {
+          "pairs": [
+            {
+              "id": "baram",
+              "pictureRef": "word:science-wind",
+              "word": {
+                "ko": "바람",
+                "romanization": "baram",
+                "en": "wind"
+              }
+            },
+            {
+              "id": "haneul",
+              "pictureRef": "word:nature-sky",
+              "word": {
+                "ko": "하늘",
+                "romanization": "haneul",
+                "en": "sky"
+              }
+            },
+            {
+              "id": "bi",
+              "pictureRef": "word:nature-rain",
+              "word": {
+                "ko": "비",
+                "romanization": "bi",
+                "en": "rain"
+              }
+            }
+          ]
+        },
+        {
+          "pairs": [
+            {
+              "id": "gureum",
+              "pictureRef": "word:nature-cloud",
+              "word": {
+                "ko": "구름",
+                "romanization": "gureum",
+                "en": "cloud"
+              }
+            },
+            {
+              "id": "byeol",
+              "pictureRef": "word:nature-star",
+              "word": {
+                "ko": "별",
+                "romanization": "byeol",
+                "en": "star"
+              }
+            },
+            {
+              "id": "nun",
+              "pictureRef": "word:nature-snow",
+              "word": {
+                "ko": "눈",
+                "romanization": "nun",
+                "en": "snow"
+              }
+            }
+          ]
+        },
+        {
+          "pairs": [
+            {
+              "id": "bi",
+              "pictureRef": "word:nature-rain",
+              "word": {
+                "ko": "비",
+                "romanization": "bi",
+                "en": "rain"
+              }
+            },
+            {
+              "id": "namu",
+              "pictureRef": "word:nature-tree",
+              "word": {
+                "ko": "나무",
+                "romanization": "namu",
+                "en": "tree"
+              }
+            },
+            {
+              "id": "baram",
+              "pictureRef": "word:science-wind",
+              "word": {
+                "ko": "바람",
+                "romanization": "baram",
+                "en": "wind"
+              }
+            }
+          ]
+        },
+        {
+          "pairs": [
+            {
+              "id": "nun",
+              "pictureRef": "word:nature-snow",
+              "word": {
+                "ko": "눈",
+                "romanization": "nun",
+                "en": "snow"
+              }
+            },
+            {
+              "id": "dal",
+              "pictureRef": "card:moon",
+              "word": {
+                "ko": "달",
+                "romanization": "dal",
+                "en": "moon"
+              }
+            },
+            {
+              "id": "gureum",
+              "pictureRef": "word:nature-cloud",
+              "word": {
+                "ko": "구름",
+                "romanization": "gureum",
+                "en": "cloud"
+              }
+            }
+          ]
+        },
+        {
+          "pairs": [
+            {
+              "id": "baram",
+              "pictureRef": "word:science-wind",
+              "word": {
+                "ko": "바람",
+                "romanization": "baram",
+                "en": "wind"
+              }
+            },
+            {
+              "id": "bi",
+              "pictureRef": "word:nature-rain",
+              "word": {
+                "ko": "비",
+                "romanization": "bi",
+                "en": "rain"
+              }
+            },
+            {
+              "id": "haneul",
+              "pictureRef": "word:nature-sky",
+              "word": {
+                "ko": "하늘",
+                "romanization": "haneul",
+                "en": "sky"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "minigame:s2-nature-q3-apply": {
+    "kind": "build-letter",
+    "rounds": 4,
+    "syllables": [
+      {
+        "ko": "호",
+        "romanization": "ho",
+        "jamoChars": [
+          "ㅎ",
+          "ㅗ"
+        ]
+      },
+      {
+        "ko": "수",
+        "romanization": "su",
+        "jamoChars": [
+          "ㅅ",
+          "ㅜ"
+        ]
+      },
+      {
+        "ko": "섬",
+        "romanization": "seom",
+        "jamoChars": [
+          "ㅅ",
+          "ㅓ",
+          "ㅁ"
+        ]
+      },
+      {
+        "ko": "강",
+        "romanization": "gang",
+        "jamoChars": [
+          "ㄱ",
+          "ㅏ",
+          "ㅇ"
+        ]
+      }
+    ]
+  },
+  "minigame:s2-nature-q3-check": {
+    "kind": "listen-pick",
+    "rounds": 2,
+    "listenPick": {
+      "rounds": [
+        {
+          "id": "pic-bada",
+          "prompt": {
+            "ko": "바다",
+            "romanization": "bada",
+            "en": "sea"
+          },
+          "options": [
+            {
+              "id": "bada",
+              "pictureRef": "card:sea",
+              "labelEn": "sea"
+            },
+            {
+              "id": "gang",
+              "pictureRef": "word:nature-river",
+              "labelEn": "river"
+            },
+            {
+              "id": "san",
+              "pictureRef": "card:mountain",
+              "labelEn": "mountain"
+            },
+            {
+              "id": "mulgogi",
+              "pictureRef": "word:animal-fish",
+              "labelEn": "fish"
+            }
+          ],
+          "answerId": "bada"
+        },
+        {
+          "id": "read-hosu",
+          "prompt": {
+            "ko": "호수",
+            "romanization": "hosu",
+            "en": "lake"
+          },
+          "options": [
+            {
+              "id": "hosu",
+              "text": {
+                "ko": "호수",
+                "romanization": "hosu",
+                "en": "lake"
+              }
+            },
+            {
+              "id": "suyeong",
+              "text": {
+                "ko": "수영",
+                "romanization": "suyeong",
+                "en": "swimming"
+              }
+            },
+            {
+              "id": "ori",
+              "text": {
+                "ko": "오리",
+                "romanization": "ori",
+                "en": "duck"
+              }
+            }
+          ],
+          "answerId": "hosu"
+        }
+      ]
+    }
+  },
+  "minigame:s2-nature-q3-practice": {
+    "kind": "pic-word-match",
+    "rounds": 6,
+    "picWord": {
+      "boards": [
+        {
+          "pairs": [
+            {
+              "id": "gang",
+              "pictureRef": "word:nature-river",
+              "word": {
+                "ko": "강",
+                "romanization": "gang",
+                "en": "river"
+              }
+            },
+            {
+              "id": "bada",
+              "pictureRef": "card:sea",
+              "word": {
+                "ko": "바다",
+                "romanization": "bada",
+                "en": "sea"
+              }
+            },
+            {
+              "id": "san",
+              "pictureRef": "card:mountain",
+              "word": {
+                "ko": "산",
+                "romanization": "san",
+                "en": "mountain"
+              }
+            }
+          ]
+        },
+        {
+          "pairs": [
+            {
+              "id": "mulgogi",
+              "pictureRef": "word:animal-fish",
+              "word": {
+                "ko": "물고기",
+                "romanization": "mulgogi",
+                "en": "fish"
+              }
+            },
+            {
+              "id": "mul",
+              "pictureRef": "word:food-water",
+              "word": {
+                "ko": "물",
+                "romanization": "mul",
+                "en": "water"
+              }
+            },
+            {
+              "id": "gang",
+              "pictureRef": "word:nature-river",
+              "word": {
+                "ko": "강",
+                "romanization": "gang",
+                "en": "river"
+              }
+            }
+          ]
+        },
+        {
+          "pairs": [
+            {
+              "id": "bada",
+              "pictureRef": "card:sea",
+              "word": {
+                "ko": "바다",
+                "romanization": "bada",
+                "en": "sea"
+              }
+            },
+            {
+              "id": "dol",
+              "pictureRef": "word:science-stone",
+              "word": {
+                "ko": "돌",
+                "romanization": "dol",
+                "en": "stone"
+              }
+            },
+            {
+              "id": "namu",
+              "pictureRef": "word:nature-tree",
+              "word": {
+                "ko": "나무",
+                "romanization": "namu",
+                "en": "tree"
+              }
+            }
+          ]
+        },
+        {
+          "pairs": [
+            {
+              "id": "gang",
+              "pictureRef": "word:nature-river",
+              "word": {
+                "ko": "강",
+                "romanization": "gang",
+                "en": "river"
+              }
+            },
+            {
+              "id": "haneul",
+              "pictureRef": "word:nature-sky",
+              "word": {
+                "ko": "하늘",
+                "romanization": "haneul",
+                "en": "sky"
+              }
+            },
+            {
+              "id": "mulgogi",
+              "pictureRef": "word:animal-fish",
+              "word": {
+                "ko": "물고기",
+                "romanization": "mulgogi",
+                "en": "fish"
+              }
+            }
+          ]
+        },
+        {
+          "pairs": [
+            {
+              "id": "san",
+              "pictureRef": "card:mountain",
+              "word": {
+                "ko": "산",
+                "romanization": "san",
+                "en": "mountain"
+              }
+            },
+            {
+              "id": "bada",
+              "pictureRef": "card:sea",
+              "word": {
+                "ko": "바다",
+                "romanization": "bada",
+                "en": "sea"
+              }
+            },
+            {
+              "id": "mul",
+              "pictureRef": "word:food-water",
+              "word": {
+                "ko": "물",
+                "romanization": "mul",
+                "en": "water"
+              }
+            }
+          ]
+        },
+        {
+          "pairs": [
+            {
+              "id": "dol",
+              "pictureRef": "word:science-stone",
+              "word": {
+                "ko": "돌",
+                "romanization": "dol",
+                "en": "stone"
+              }
+            },
+            {
+              "id": "gang",
+              "pictureRef": "word:nature-river",
+              "word": {
+                "ko": "강",
+                "romanization": "gang",
+                "en": "river"
+              }
+            },
+            {
+              "id": "bada",
+              "pictureRef": "card:sea",
+              "word": {
+                "ko": "바다",
+                "romanization": "bada",
+                "en": "sea"
+              }
+            }
+          ]
+        }
+      ]
+    }
   }
 };
 
@@ -1801,6 +3607,48 @@ export const LESSON_SCOPE_OVERLAYS: Overlays = {
     "minigame:s2-letters-q6-check": {
       "listenPick.rounds.read-ap.prompt": "frente, delante",
       "listenPick.rounds.see-ip.prompt": "hoja"
+    },
+    "minigame:s2-life-q1-apply": {
+      "cardPairs.dalgyal.gloss": "huevo",
+      "cardPairs.dosirak.gloss": "lonchera, fiambrera",
+      "cardPairs.gimbap.gloss": "gimbap (rollo de arroz con alga)",
+      "cardPairs.uyu.gloss": "leche"
+    },
+    "minigame:s2-life-q1-check": {
+      "listenPick.rounds.pic-gimbap.prompt": "gimbap (rollo de arroz con alga)",
+      "listenPick.rounds.read-dosirak.prompt": "lonchera, fiambrera"
+    },
+    "minigame:s2-life-q2-check": {
+      "listenPick.rounds.pic-banana.prompt": "plátano, banana",
+      "listenPick.rounds.read-subak.prompt": "sandía"
+    },
+    "minigame:s2-life-q3-apply": {
+      "cardPairs.banchan.gloss": "acompañamientos",
+      "cardPairs.dubu.gloss": "tofu",
+      "cardPairs.guk.gloss": "sopa",
+      "cardPairs.namul.gloss": "verduras sazonadas"
+    },
+    "minigame:s2-life-q3-check": {
+      "listenPick.rounds.pic-bibimbap.prompt": "bibimbap (arroz mezclado en tazón)",
+      "listenPick.rounds.read-banchan.prompt": "acompañamientos"
+    },
+    "minigame:s2-nature-q1-check": {
+      "listenPick.rounds.pic-byeol.prompt": "estrella",
+      "listenPick.rounds.read-namu.prompt": "árbol"
+    },
+    "minigame:s2-nature-q2-apply": {
+      "cardPairs.baram.gloss": "viento",
+      "cardPairs.bi.gloss": "lluvia",
+      "cardPairs.gureum.gloss": "nube",
+      "cardPairs.nun.gloss": "nieve"
+    },
+    "minigame:s2-nature-q2-check": {
+      "listenPick.rounds.pic-gureum.prompt": "nube",
+      "listenPick.rounds.read-baram.prompt": "viento"
+    },
+    "minigame:s2-nature-q3-check": {
+      "listenPick.rounds.pic-bada.prompt": "mar",
+      "listenPick.rounds.read-hosu.prompt": "lago"
     }
   },
   "ko": {
@@ -1863,6 +3711,48 @@ export const LESSON_SCOPE_OVERLAYS: Overlays = {
     "minigame:s2-letters-q6-check": {
       "listenPick.rounds.read-ap.prompt": "얼굴이 향하는 쪽",
       "listenPick.rounds.see-ip.prompt": "풀이나 나무의 줄기에 달린 납작하고 푸른 부분"
+    },
+    "minigame:s2-life-q1-apply": {
+      "cardPairs.dalgyal.gloss": "닭이 낳는 둥근 알",
+      "cardPairs.dosirak.gloss": "밖에서 먹으려고 그릇에 담아 가는 밥",
+      "cardPairs.gimbap.gloss": "김에 밥과 재료를 넣고 말아 만든 음식",
+      "cardPairs.uyu.gloss": "소에게서 얻는 하얀 마실 것"
+    },
+    "minigame:s2-life-q1-check": {
+      "listenPick.rounds.pic-gimbap.prompt": "김에 밥과 재료를 넣고 말아 만든 음식",
+      "listenPick.rounds.read-dosirak.prompt": "밖에서 먹으려고 그릇에 담아 가는 밥"
+    },
+    "minigame:s2-life-q2-check": {
+      "listenPick.rounds.pic-banana.prompt": "껍질이 노랗고 길쭉한 과일",
+      "listenPick.rounds.read-subak.prompt": "겉은 초록색이고 속은 빨간 커다란 여름 과일"
+    },
+    "minigame:s2-life-q3-apply": {
+      "cardPairs.banchan.gloss": "밥에 곁들여 먹는 여러 가지 음식",
+      "cardPairs.dubu.gloss": "콩으로 만든 하얗고 부드러운 음식",
+      "cardPairs.guk.gloss": "물에 고기나 채소를 넣고 끓여 떠먹는 음식",
+      "cardPairs.namul.gloss": "먹을 수 있는 풀이나 잎을 데치거나 볶아 양념한 음식"
+    },
+    "minigame:s2-life-q3-check": {
+      "listenPick.rounds.pic-bibimbap.prompt": "밥 위에 채소와 고명을 올려 비벼 먹는 음식",
+      "listenPick.rounds.read-banchan.prompt": "밥에 곁들여 먹는 여러 가지 음식"
+    },
+    "minigame:s2-nature-q1-check": {
+      "listenPick.rounds.pic-byeol.prompt": "밤하늘에 반짝이는 작은 빛",
+      "listenPick.rounds.read-namu.prompt": "줄기와 가지, 잎이 있는 키 큰 식물"
+    },
+    "minigame:s2-nature-q2-apply": {
+      "cardPairs.baram.gloss": "움직이는 공기",
+      "cardPairs.bi.gloss": "구름에서 떨어지는 물방울",
+      "cardPairs.gureum.gloss": "하늘에 떠 있는 하얗거나 회색인 덩어리",
+      "cardPairs.nun.gloss": "겨울에 하늘에서 내리는 하얀 것"
+    },
+    "minigame:s2-nature-q2-check": {
+      "listenPick.rounds.pic-gureum.prompt": "하늘에 떠 있는 하얗거나 회색인 덩어리",
+      "listenPick.rounds.read-baram.prompt": "움직이는 공기"
+    },
+    "minigame:s2-nature-q3-check": {
+      "listenPick.rounds.pic-bada.prompt": "넓고 짠 물",
+      "listenPick.rounds.read-hosu.prompt": "땅으로 둘러싸인 넓고 깊은 물"
     }
   }
 };

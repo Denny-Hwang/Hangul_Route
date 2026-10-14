@@ -58,7 +58,8 @@ describe('cellRowsOf', () => {
     const lessonQuestsOf = (stage: StageKey) => lessonEpisodes.filter((e) => e.stage === stage).flatMap((e) => e.questIds).length;
     expect([count('stage1'), count('stage2'), count('stage4')]).toEqual([
       ctx.order.filter((e) => e.stage === 'stage1').length,
-      2 + lessonQuestsOf('stage2'),
+      // The Stage 2 tastes are generated lesson cells since F-CURR-001 T-1.
+      lessonQuestsOf('stage2'),
       1 + lessonQuestsOf('stage4'),
     ]);
   });

@@ -246,8 +246,6 @@ describe('grid golden (F-STORY-005 §3.1 rule 2)', () => {
       // F-QUEST-002 Q-8 appends nature q2-q3 and crafts q2-q3 on purpose (the same re-scope migration).
       { id: 'episode:stage1-nature', order: 4, questIds: ['quest:stage1-nature-q1', 'quest:stage1-nature-q2', 'quest:stage1-nature-q3'], status: 'shipped' },
       { id: 'episode:stage1-crafts', order: 5, questIds: ['quest:stage1-crafts-q1', 'quest:stage1-crafts-q2', 'quest:stage1-crafts-q3'], status: 'shipped' },
-      { id: 'episode:stage2-life', order: 2, questIds: ['quest:stage2-life-q1'], status: 'shipped' },
-      { id: 'episode:stage2-nature', order: 4, questIds: ['quest:stage2-nature-q1'], status: 'shipped' },
       { id: 'episode:stage4-rites', order: 3, questIds: ['quest:stage4-rites-q1'], status: 'shipped' },
       // F-CURR-001 S2-1: Word Builder, the first lesson cell (content/episodes/stage-2/letters.json), keeps its placeholder id.
       {
@@ -256,6 +254,9 @@ describe('grid golden (F-STORY-005 §3.1 rule 2)', () => {
         questIds: [1, 2, 3, 4, 5, 6].map((k) => `quest:stage2-letters-q${k}`),
         status: 'shipped',
       },
+      // F-CURR-001 T-1: the Lunch Box Words and Outdoor Words tastes moved into their generated cells (same ids, three quests).
+      { id: 'episode:stage2-life', order: 2, questIds: ['quest:stage2-life-q1', 'quest:stage2-life-q2', 'quest:stage2-life-q3'], status: 'shipped' },
+      { id: 'episode:stage2-nature', order: 4, questIds: ['quest:stage2-nature-q1', 'quest:stage2-nature-q2', 'quest:stage2-nature-q3'], status: 'shipped' },
       // F-STORY-005 PR 5.6: the five Stage 5 books (books.ts), each cell's placeholder id kept.
       {
         id: 'episode:stage5-letters',

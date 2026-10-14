@@ -96,37 +96,6 @@ const stage1Episodes: Episode[] = [
   },
 ];
 
-const stage2Episodes: Episode[] = [
-  {
-    id: 'episode:stage2-life',
-    stage: 'stage2',
-    theme: 'life',
-    order: 2,
-    titleEn: 'Lunch Box Words',
-    subtitleEn: 'Read your first Korean food words.',
-    hoyaIntroEn: 'You know the letters now — let us read real words!',
-    questIds: ['quest:stage2-life-q1'],
-    rewardCardIds: ['card:sagwa', 'card:uyu', 'card:ppang', 'card:dosirak'],
-    estimatedMinutes: 6,
-    pillarTags: [],
-    status: 'shipped',
-  },
-  {
-    id: 'episode:stage2-nature',
-    stage: 'stage2',
-    theme: 'nature',
-    order: 4,
-    titleEn: 'Outdoor Words',
-    subtitleEn: 'Name the sky, flowers, and trees.',
-    hoyaIntroEn: 'Come outside with me — let us name the world!',
-    questIds: ['quest:stage2-nature-q1'],
-    rewardCardIds: ['card:haneul', 'card:kkot', 'card:namu', 'card:byeol'],
-    estimatedMinutes: 6,
-    pillarTags: ['D2'],
-    status: 'shipped',
-  },
-];
-
 const stage4Episodes: Episode[] = [
   {
     id: 'episode:stage4-rites',
@@ -223,14 +192,14 @@ export const cellKey = (e: Pick<Episode, 'stage' | 'theme'>): string => `${e.sta
 export const handWrittenEpisodes: readonly Episode[] = [...stage1Episodes, ...tasteEpisodesStillShipped(), ...lessonEpisodes, ...bookEpisodes];
 
 /**
- * The three hand-written taste cells (Lunch Box Words, Outdoor Words, Greeting Dialogues) move
- * into lesson cell files that keep their ids (F-CURR-001 rows T-1 / T-2, OD-3). A taste stays
- * here until its cell file is ready; then the generated episode, with the same card awards,
- * takes its place.
+ * The hand-written taste cells move into lesson cell files that keep their ids (F-CURR-001
+ * rows T-1 / T-2, OD-3). A taste stays here until its cell file is ready; then the generated
+ * episode, with the same card awards, takes its place. Lunch Box Words and Outdoor Words (T-1)
+ * now come only from `content/episodes/stage-2/life.json` and `nature.json`.
  */
 function tasteEpisodesStillShipped(): Episode[] {
   const generated = new Set<string>(lessonEpisodes.map((e) => e.id));
-  return [...stage2Episodes, ...stage4Episodes].filter((e) => !generated.has(e.id));
+  return stage4Episodes.filter((e) => !generated.has(e.id));
 }
 
 /**

@@ -10,8 +10,9 @@ import { questsInCursorOrder } from '../logic/lessons/lesson-lookup';
  * intro → discover → practice → apply → check → reward (letters q1-q3 in Q-6a,
  * life q1-q3 in Q-6b, rites q1-q3 in Q-7b, nature and crafts q1-q3 in Q-8).
  * Quests 1-10 teach the 30 symbols; quests 11-15 teach nothing new and read
- * words built from them (R5). The Stage 2 / Stage 4 taste quests keep the
- * five-step pattern intro → present → practice → apply → reward.
+ * words built from them (R5). The Stage 4 taste quest keeps the five-step
+ * pattern intro → present → practice → apply → reward (Lunch Box Words and
+ * Outdoor Words, the Stage 2 tastes, moved to their lesson cell files in F-CURR-001 T-1).
  * Each Stage 1 episode owns 3 quests.
  */
 
@@ -624,38 +625,6 @@ export const stage1Quests: Quest[] = [
   },
 ];
 
-export const stage2Quests: Quest[] = [
-  // Stage 2 / Food & Daily Life — taste episode
-  {
-    id: 'quest:stage2-life-q1',
-    titleEn: 'Lunch Box Words',
-    blurbEn: 'Read and build your first Korean food words.',
-    estimatedMinutes: 5,
-    steps: [
-      { id: 's1', kind: 'intro', titleEn: 'Open the Lunch Box', hoyaLineEn: 'You know the letters now — let us read real words!', durationSeconds: 8 },
-      { id: 's2', kind: 'present', titleEn: 'Food Words', minigameKind: 'card-match', minigameRef: 'minigame:s2-life-card-1', durationSeconds: 75 },
-      { id: 's3', kind: 'practice', titleEn: 'What Does It Mean?', minigameKind: 'culture-quiz', minigameRef: 'minigame:s2-life-quiz-1', durationSeconds: 75 },
-      { id: 's4', kind: 'apply', titleEn: 'Build the Word', minigameKind: 'build-letter', minigameRef: 'minigame:s2-life-build-1', durationSeconds: 90 },
-      { id: 's5', kind: 'reward', titleEn: 'Lunch Box Card!', hoyaLineEn: 'You read your first words. Here is a card!', durationSeconds: 8 },
-    ],
-    rewardCardId: 'card:dosirak',
-  },
-  {
-    id: 'quest:stage2-nature-q1',
-    titleEn: 'Outdoor Words',
-    blurbEn: 'Name the sky, flowers, and trees in Korean.',
-    estimatedMinutes: 5,
-    steps: [
-      { id: 's1', kind: 'intro', titleEn: 'Step Outside', hoyaLineEn: 'Let us name what we see outside!', durationSeconds: 8 },
-      { id: 's2', kind: 'present', titleEn: 'Nature Words', minigameKind: 'card-match', minigameRef: 'minigame:s2-nature-card-1', durationSeconds: 75 },
-      { id: 's3', kind: 'practice', titleEn: 'What Does It Mean?', minigameKind: 'culture-quiz', minigameRef: 'minigame:s2-nature-quiz-1', durationSeconds: 75 },
-      { id: 's4', kind: 'apply', titleEn: 'Build the Word', minigameKind: 'build-letter', minigameRef: 'minigame:s2-nature-build-1', durationSeconds: 90 },
-      { id: 's5', kind: 'reward', titleEn: 'Star Card!', hoyaLineEn: 'You named the outdoors. Here is a star!', durationSeconds: 8 },
-    ],
-    rewardCardId: 'card:byeol',
-  },
-];
-
 export const stage4Quests: Quest[] = [
   // Stage 4 / Holidays & Traditions — taste episode
   {
@@ -680,8 +649,9 @@ export const stage4Quests: Quest[] = [
  * then the lesson quests of Stages 6-7.
  */
 export const questsAll: Quest[] = questsInCursorOrder({
-  // A taste quest whose refreshed lesson cell is ready comes from the cell (F-CURR-001 T-1 / T-2).
-  early: [...stage1Quests, ...[...stage2Quests, ...stage4Quests].filter((q) => !lessonQuests.some((l) => l.id === q.id))],
+  // A taste quest whose refreshed lesson cell is ready comes from the cell (F-CURR-001 T-1 / T-2;
+  // Lunch Box Words and Outdoor Words, T-1, live only in their cell files).
+  early: [...stage1Quests, ...stage4Quests.filter((q) => !lessonQuests.some((l) => l.id === q.id))],
   lessons: lessonQuests,
   middle: [...storyQuests, ...bookQuests],
   episodes: [...handWrittenEpisodes],

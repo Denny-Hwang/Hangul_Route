@@ -55,6 +55,53 @@ const WORD_BUILDER_Q1_BOARDS = [
   ['sebae', 'dongsaeng', 'galsaek'],
 ] as const;
 
+/** Lunch Box Words q1 and Outdoor Words q1 Pic-Word boards (content/episodes/stage-2/life.json, nature.json). */
+const LUNCH_BOX_Q1_BOARDS = [
+  ['gimbap', 'uyu', 'dalgyal'],
+  ['uyu', 'bap', 'mul'],
+  ['dalgyal', 'gimchi', 'banana'],
+  ['gimbap', 'ramyeon', 'uyu'],
+  ['dalgyal', 'gimbap', 'mul'],
+  ['gimchi', 'uyu', 'gimbap'],
+] as const;
+const OUTDOOR_Q1_BOARDS = [
+  ['haneul', 'byeol', 'namu'],
+  ['san', 'dal', 'haneul'],
+  ['namu', 'bada', 'byeol'],
+  ['haneul', 'gang', 'san'],
+  ['byeol', 'namu', 'dal'],
+  ['bada', 'haneul', 'namu'],
+] as const;
+
+/** A refreshed Stage 2 taste (F-CURR-001 T-1): Discover, six Pic-Word boards, the Apply game skipped, the Check by id. */
+async function playTasteQ1(
+  page: Page,
+  shot: string,
+  firstWord: string,
+  boards: readonly (readonly string[])[],
+  check: readonly [string, string],
+): Promise<void> {
+  await startFirstQuest(page);
+  await page.getByRole('button', { name: 'Continue' }).click();
+  await expect(page.getByText(firstWord, { exact: true }).first()).toBeVisible();
+  await page.screenshot({ path: test.info().outputPath(`${shot}-q1-discover.png`), fullPage: true });
+  await passDiscover(page);
+  await page.getByRole('button', { name: 'Play minigame' }).click();
+  for (const [n, board] of boards.entries()) {
+    for (const id of board) await expect(page.getByTestId(`pic-word-picture-${id}`).locator('svg').first()).toBeVisible();
+    if (n === 0) await page.screenshot({ path: test.info().outputPath(`${shot}-q1-pic-word.png`), fullPage: true });
+    for (const id of board) {
+      await page.getByTestId(`pic-word-picture-${id}`).click();
+      await page.getByTestId(`pic-word-word-${id}`).click();
+    }
+  }
+  await page.getByRole('button', { name: 'Skip for now' }).click();
+  await playCheckByIds(page, [{ answer: check[0] }, { answer: check[1] }]);
+  await page.getByRole('button', { name: 'See results' }).click();
+  await expect(page.getByText('Next up')).toBeVisible();
+  await page.screenshot({ path: test.info().outputPath(`${shot}-q1-results.png`), fullPage: true });
+}
+
 /** Each cell row appends its cell here (S2-1 onward). */
 const CELLS: readonly UpperCell[] = [
   // F-CURR-001 S2-1: Word Builder. q1 teaches ㅐ ㅔ ㅒ ㅖ; its six Pic-Word boards are played, its Card Match is
@@ -92,6 +139,31 @@ const CELLS: readonly UpperCell[] = [
       await page.context().setOffline(false);
       await page.goto('/');
       await expectCellOnRoute(page, 2, 'Word Builder');
+    },
+  },
+  // F-CURR-001 T-1: Lunch Box Words. q1 keeps its id and its card; its Card Match is skipped, the Check is the
+  // gimbap picture, then the written 도시락.
+  {
+    episodeId: 'episode:stage2-life',
+    cellButton: 'Stage 2 Words, Food & Daily Life: lesson',
+    title: 'Lunch Box Words',
+    playFirstQuest: (page) => playTasteQ1(page, 'stage2-life', '도시락', LUNCH_BOX_Q1_BOARDS, ['gimbap', 'dosirak']),
+    expectRouteDay: async (page) => {
+      await page.context().setOffline(false);
+      await page.goto('/');
+      await expectCellOnRoute(page, 2, 'Lunch Box Words');
+    },
+  },
+  // F-CURR-001 T-1: Outdoor Words. q1's Build the Word is skipped; the Check is the star picture, then the written 나무.
+  {
+    episodeId: 'episode:stage2-nature',
+    cellButton: 'Stage 2 Words, Nature & Animals: lesson',
+    title: 'Outdoor Words',
+    playFirstQuest: (page) => playTasteQ1(page, 'stage2-nature', '하늘', OUTDOOR_Q1_BOARDS, ['byeol', 'namu']),
+    expectRouteDay: async (page) => {
+      await page.context().setOffline(false);
+      await page.goto('/');
+      await expectCellOnRoute(page, 2, 'Outdoor Words');
     },
   },
 ];

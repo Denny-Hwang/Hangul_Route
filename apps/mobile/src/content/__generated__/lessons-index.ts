@@ -25,6 +25,54 @@ export const LESSON_EPISODES: Episode[] = [
       "A1"
     ],
     "status": "shipped"
+  },
+  {
+    "id": "episode:stage2-life",
+    "stage": "stage2",
+    "theme": "life",
+    "order": 2,
+    "titleEn": "Lunch Box Words",
+    "subtitleEn": "Read Korean words for food and meals.",
+    "hoyaIntroEn": "You know the letters now. Let us read food words!",
+    "questIds": [
+      "quest:stage2-life-q1",
+      "quest:stage2-life-q2",
+      "quest:stage2-life-q3"
+    ],
+    "rewardCardIds": [
+      "card:sagwa",
+      "card:uyu",
+      "card:ppang",
+      "card:dosirak"
+    ],
+    "estimatedMinutes": 13,
+    "pillarTags": [],
+    "status": "shipped"
+  },
+  {
+    "id": "episode:stage2-nature",
+    "stage": "stage2",
+    "theme": "nature",
+    "order": 4,
+    "titleEn": "Outdoor Words",
+    "subtitleEn": "Read words for the sky, the weather and the water.",
+    "hoyaIntroEn": "Come outside with me. Let us read the world around us!",
+    "questIds": [
+      "quest:stage2-nature-q1",
+      "quest:stage2-nature-q2",
+      "quest:stage2-nature-q3"
+    ],
+    "rewardCardIds": [
+      "card:haneul",
+      "card:kkot",
+      "card:namu",
+      "card:byeol"
+    ],
+    "estimatedMinutes": 13,
+    "pillarTags": [
+      "D2"
+    ],
+    "status": "shipped"
   }
 ];
 
@@ -805,6 +853,706 @@ export const LESSON_QUESTS: Quest[] = [
         "durationSeconds": 8
       }
     ]
+  },
+  {
+    "id": "quest:stage2-life-q1",
+    "titleEn": "Lunch Box Words",
+    "blurbEn": "Read your first food words: lunch box, gimbap, milk and egg.",
+    "teaserEn": "Next: fruit and snacks.",
+    "estimatedMinutes": 4,
+    "steps": [
+      {
+        "id": "s1",
+        "kind": "intro",
+        "titleEn": "Open the Lunch Box",
+        "hoyaLineEn": "What is in the lunch box? Let us read real words!",
+        "durationSeconds": 8
+      },
+      {
+        "id": "s2",
+        "kind": "discover",
+        "titleEn": "Lunch Box Words",
+        "hoyaLineEn": "Tap Hear it, then read each word yourself.",
+        "discover": {
+          "pages": [
+            {
+              "items": [
+                {
+                  "type": "word",
+                  "word": {
+                    "ko": "도시락",
+                    "romanization": "dosirak",
+                    "en": "lunch box",
+                    "syllables": [
+                      "do",
+                      "si",
+                      "rak"
+                    ]
+                  }
+                },
+                {
+                  "type": "word",
+                  "word": {
+                    "ko": "김밥",
+                    "romanization": "gimbap",
+                    "en": "gimbap (seaweed rice roll)",
+                    "syllables": [
+                      "gim",
+                      "bap"
+                    ]
+                  },
+                  "picture": "card:kimbap"
+                }
+              ]
+            },
+            {
+              "items": [
+                {
+                  "type": "word",
+                  "word": {
+                    "ko": "우유",
+                    "romanization": "uyu",
+                    "en": "milk",
+                    "syllables": [
+                      "u",
+                      "yu"
+                    ]
+                  },
+                  "picture": "word:food-milk"
+                },
+                {
+                  "type": "word",
+                  "word": {
+                    "ko": "달걀",
+                    "romanization": "dalgyal",
+                    "en": "egg",
+                    "syllables": [
+                      "dal",
+                      "gyal"
+                    ]
+                  },
+                  "picture": "word:food-egg"
+                }
+              ]
+            },
+            {
+              "captionEn": "Just look and listen: you learn these letters in Word Builder.",
+              "items": [
+                {
+                  "type": "word",
+                  "word": {
+                    "ko": "사과",
+                    "romanization": "sagwa",
+                    "en": "apple",
+                    "syllables": [
+                      "sa",
+                      "gwa"
+                    ]
+                  },
+                  "picture": "word:food-apple"
+                },
+                {
+                  "type": "word",
+                  "word": {
+                    "ko": "빵",
+                    "romanization": "ppang",
+                    "en": "bread"
+                  },
+                  "picture": "word:food-bread"
+                }
+              ]
+            }
+          ]
+        },
+        "durationSeconds": 55
+      },
+      {
+        "id": "s3",
+        "kind": "practice",
+        "titleEn": "Picture and Word",
+        "minigameKind": "pic-word-match",
+        "minigameRef": "minigame:s2-life-q1-practice",
+        "durationSeconds": 85
+      },
+      {
+        "id": "s4",
+        "kind": "apply",
+        "titleEn": "Match the Cards",
+        "minigameKind": "card-match",
+        "minigameRef": "minigame:s2-life-q1-apply",
+        "durationSeconds": 65
+      },
+      {
+        "id": "s5",
+        "kind": "check",
+        "titleEn": "Listen and Read",
+        "minigameKind": "listen-pick",
+        "minigameRef": "minigame:s2-life-q1-check",
+        "durationSeconds": 35
+      },
+      {
+        "id": "s6",
+        "kind": "reward",
+        "titleEn": "Lunch Box Card!",
+        "hoyaLineEn": "You read lunch box words. Here is a card!",
+        "durationSeconds": 8
+      }
+    ],
+    "rewardCardId": "card:dosirak"
+  },
+  {
+    "id": "quest:stage2-life-q2",
+    "titleEn": "Fruit and Snacks",
+    "blurbEn": "Read fruit and snack words: snack, banana, watermelon, mandarin.",
+    "teaserEn": "Next: rice, soup and side dishes.",
+    "estimatedMinutes": 4,
+    "steps": [
+      {
+        "id": "s1",
+        "kind": "intro",
+        "titleEn": "Snack Time!",
+        "hoyaLineEn": "Snack time! Let us read some fruit words.",
+        "durationSeconds": 8
+      },
+      {
+        "id": "s2",
+        "kind": "discover",
+        "titleEn": "Fruit and Snack Words",
+        "hoyaLineEn": "Tap Hear it, then read each word yourself.",
+        "discover": {
+          "pages": [
+            {
+              "items": [
+                {
+                  "type": "word",
+                  "word": {
+                    "ko": "간식",
+                    "romanization": "gansik",
+                    "en": "snack",
+                    "syllables": [
+                      "gan",
+                      "sik"
+                    ]
+                  }
+                },
+                {
+                  "type": "word",
+                  "word": {
+                    "ko": "바나나",
+                    "romanization": "banana",
+                    "en": "banana",
+                    "syllables": [
+                      "ba",
+                      "na",
+                      "na"
+                    ]
+                  },
+                  "picture": "word:food-banana"
+                }
+              ]
+            },
+            {
+              "items": [
+                {
+                  "type": "word",
+                  "word": {
+                    "ko": "수박",
+                    "romanization": "subak",
+                    "en": "watermelon",
+                    "syllables": [
+                      "su",
+                      "bak"
+                    ]
+                  }
+                },
+                {
+                  "type": "word",
+                  "word": {
+                    "ko": "귤",
+                    "romanization": "gyul",
+                    "en": "mandarin orange"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "durationSeconds": 50
+      },
+      {
+        "id": "s3",
+        "kind": "practice",
+        "titleEn": "Picture and Word",
+        "minigameKind": "pic-word-match",
+        "minigameRef": "minigame:s2-life-q2-practice",
+        "durationSeconds": 85
+      },
+      {
+        "id": "s4",
+        "kind": "apply",
+        "titleEn": "Build the Word",
+        "minigameKind": "build-letter",
+        "minigameRef": "minigame:s2-life-q2-apply",
+        "durationSeconds": 70
+      },
+      {
+        "id": "s5",
+        "kind": "check",
+        "titleEn": "Listen and Read",
+        "minigameKind": "listen-pick",
+        "minigameRef": "minigame:s2-life-q2-check",
+        "durationSeconds": 35
+      },
+      {
+        "id": "s6",
+        "kind": "reward",
+        "titleEn": "Snack Words!",
+        "hoyaLineEn": "You read fruit and snack words. Well done!",
+        "durationSeconds": 8
+      }
+    ]
+  },
+  {
+    "id": "quest:stage2-life-q3",
+    "titleEn": "At the Table",
+    "blurbEn": "Read table words: soup, side dishes, tofu and vegetables.",
+    "estimatedMinutes": 4,
+    "steps": [
+      {
+        "id": "s1",
+        "kind": "intro",
+        "titleEn": "Time to Eat",
+        "hoyaLineEn": "The table is ready. Let us read what is on it!",
+        "durationSeconds": 8
+      },
+      {
+        "id": "s2",
+        "kind": "discover",
+        "titleEn": "Table Words",
+        "hoyaLineEn": "Rice, soup and side dishes: tap Hear it, then read each word.",
+        "discover": {
+          "pages": [
+            {
+              "items": [
+                {
+                  "type": "word",
+                  "word": {
+                    "ko": "국",
+                    "romanization": "guk",
+                    "en": "soup"
+                  }
+                },
+                {
+                  "type": "word",
+                  "word": {
+                    "ko": "반찬",
+                    "romanization": "banchan",
+                    "en": "side dishes",
+                    "syllables": [
+                      "ban",
+                      "chan"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "items": [
+                {
+                  "type": "word",
+                  "word": {
+                    "ko": "두부",
+                    "romanization": "dubu",
+                    "en": "tofu",
+                    "syllables": [
+                      "du",
+                      "bu"
+                    ]
+                  }
+                },
+                {
+                  "type": "word",
+                  "word": {
+                    "ko": "나물",
+                    "romanization": "namul",
+                    "en": "seasoned vegetables",
+                    "syllables": [
+                      "na",
+                      "mul"
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "durationSeconds": 50
+      },
+      {
+        "id": "s3",
+        "kind": "practice",
+        "titleEn": "Picture and Word",
+        "minigameKind": "pic-word-match",
+        "minigameRef": "minigame:s2-life-q3-practice",
+        "durationSeconds": 85
+      },
+      {
+        "id": "s4",
+        "kind": "apply",
+        "titleEn": "Match the Cards",
+        "minigameKind": "card-match",
+        "minigameRef": "minigame:s2-life-q3-apply",
+        "durationSeconds": 65
+      },
+      {
+        "id": "s5",
+        "kind": "check",
+        "titleEn": "Listen and Read",
+        "minigameKind": "listen-pick",
+        "minigameRef": "minigame:s2-life-q3-check",
+        "durationSeconds": 35
+      },
+      {
+        "id": "s6",
+        "kind": "reward",
+        "titleEn": "Table Words!",
+        "hoyaLineEn": "You read a whole table of words. Great job!",
+        "durationSeconds": 8
+      }
+    ]
+  },
+  {
+    "id": "quest:stage2-nature-q1",
+    "titleEn": "Outdoor Words",
+    "blurbEn": "Read sky, star and tree, and see the word for flower.",
+    "teaserEn": "Next: rain, snow, clouds and wind.",
+    "estimatedMinutes": 4,
+    "steps": [
+      {
+        "id": "s1",
+        "kind": "intro",
+        "titleEn": "Step Outside",
+        "hoyaLineEn": "Let us read what we see outside!",
+        "durationSeconds": 8
+      },
+      {
+        "id": "s2",
+        "kind": "discover",
+        "titleEn": "Outdoor Words",
+        "hoyaLineEn": "Tap Hear it, then read each word yourself.",
+        "discover": {
+          "pages": [
+            {
+              "items": [
+                {
+                  "type": "word",
+                  "word": {
+                    "ko": "하늘",
+                    "romanization": "haneul",
+                    "en": "sky",
+                    "syllables": [
+                      "ha",
+                      "neul"
+                    ]
+                  },
+                  "picture": "word:nature-sky"
+                },
+                {
+                  "type": "word",
+                  "word": {
+                    "ko": "별",
+                    "romanization": "byeol",
+                    "en": "star"
+                  },
+                  "picture": "word:nature-star"
+                }
+              ]
+            },
+            {
+              "items": [
+                {
+                  "type": "word",
+                  "word": {
+                    "ko": "나무",
+                    "romanization": "namu",
+                    "en": "tree",
+                    "syllables": [
+                      "na",
+                      "mu"
+                    ]
+                  },
+                  "picture": "word:nature-tree"
+                }
+              ]
+            },
+            {
+              "captionEn": "Just look and listen: you learn these letters in Word Builder.",
+              "items": [
+                {
+                  "type": "word",
+                  "word": {
+                    "ko": "꽃",
+                    "romanization": "kkot",
+                    "en": "flower"
+                  },
+                  "picture": "word:nature-flower"
+                }
+              ]
+            }
+          ]
+        },
+        "durationSeconds": 55
+      },
+      {
+        "id": "s3",
+        "kind": "practice",
+        "titleEn": "Picture and Word",
+        "minigameKind": "pic-word-match",
+        "minigameRef": "minigame:s2-nature-q1-practice",
+        "durationSeconds": 85
+      },
+      {
+        "id": "s4",
+        "kind": "apply",
+        "titleEn": "Build the Word",
+        "minigameKind": "build-letter",
+        "minigameRef": "minigame:s2-nature-q1-apply",
+        "durationSeconds": 70
+      },
+      {
+        "id": "s5",
+        "kind": "check",
+        "titleEn": "Listen and Read",
+        "minigameKind": "listen-pick",
+        "minigameRef": "minigame:s2-nature-q1-check",
+        "durationSeconds": 35
+      },
+      {
+        "id": "s6",
+        "kind": "reward",
+        "titleEn": "Star Card!",
+        "hoyaLineEn": "You read the outdoors. Here is a star!",
+        "durationSeconds": 8
+      }
+    ],
+    "rewardCardId": "card:byeol"
+  },
+  {
+    "id": "quest:stage2-nature-q2",
+    "titleEn": "Rain and Snow",
+    "blurbEn": "Read weather words: rain, snow, cloud and wind.",
+    "teaserEn": "Next: rivers, lakes and the sea.",
+    "estimatedMinutes": 4,
+    "steps": [
+      {
+        "id": "s1",
+        "kind": "intro",
+        "titleEn": "Look Up!",
+        "hoyaLineEn": "Look up at the sky. What is the weather doing?",
+        "durationSeconds": 8
+      },
+      {
+        "id": "s2",
+        "kind": "discover",
+        "titleEn": "Weather Words",
+        "hoyaLineEn": "Tap Hear it, then read each word yourself.",
+        "discover": {
+          "pages": [
+            {
+              "items": [
+                {
+                  "type": "word",
+                  "word": {
+                    "ko": "비",
+                    "romanization": "bi",
+                    "en": "rain"
+                  },
+                  "picture": "word:nature-rain"
+                },
+                {
+                  "type": "word",
+                  "word": {
+                    "ko": "눈",
+                    "romanization": "nun",
+                    "en": "snow"
+                  },
+                  "picture": "word:nature-snow"
+                }
+              ]
+            },
+            {
+              "items": [
+                {
+                  "type": "word",
+                  "word": {
+                    "ko": "구름",
+                    "romanization": "gureum",
+                    "en": "cloud",
+                    "syllables": [
+                      "gu",
+                      "reum"
+                    ]
+                  },
+                  "picture": "word:nature-cloud"
+                },
+                {
+                  "type": "word",
+                  "word": {
+                    "ko": "바람",
+                    "romanization": "baram",
+                    "en": "wind",
+                    "syllables": [
+                      "ba",
+                      "ram"
+                    ]
+                  },
+                  "picture": "word:science-wind"
+                }
+              ]
+            }
+          ]
+        },
+        "durationSeconds": 50
+      },
+      {
+        "id": "s3",
+        "kind": "practice",
+        "titleEn": "Picture and Word",
+        "minigameKind": "pic-word-match",
+        "minigameRef": "minigame:s2-nature-q2-practice",
+        "durationSeconds": 85
+      },
+      {
+        "id": "s4",
+        "kind": "apply",
+        "titleEn": "Match the Cards",
+        "minigameKind": "card-match",
+        "minigameRef": "minigame:s2-nature-q2-apply",
+        "durationSeconds": 65
+      },
+      {
+        "id": "s5",
+        "kind": "check",
+        "titleEn": "Listen and Read",
+        "minigameKind": "listen-pick",
+        "minigameRef": "minigame:s2-nature-q2-check",
+        "durationSeconds": 35
+      },
+      {
+        "id": "s6",
+        "kind": "reward",
+        "titleEn": "Weather Words!",
+        "hoyaLineEn": "Rain, snow, clouds and wind: you read them all!",
+        "durationSeconds": 8
+      }
+    ]
+  },
+  {
+    "id": "quest:stage2-nature-q3",
+    "titleEn": "Rivers and Seas",
+    "blurbEn": "Read water words: river, lake, island and sea.",
+    "estimatedMinutes": 4,
+    "steps": [
+      {
+        "id": "s1",
+        "kind": "intro",
+        "titleEn": "To the Water",
+        "hoyaLineEn": "Let us go where the water is!",
+        "durationSeconds": 8
+      },
+      {
+        "id": "s2",
+        "kind": "discover",
+        "titleEn": "Water Words",
+        "hoyaLineEn": "Tap Hear it, then read each word yourself.",
+        "discover": {
+          "pages": [
+            {
+              "items": [
+                {
+                  "type": "word",
+                  "word": {
+                    "ko": "강",
+                    "romanization": "gang",
+                    "en": "river"
+                  },
+                  "picture": "word:nature-river"
+                },
+                {
+                  "type": "word",
+                  "word": {
+                    "ko": "호수",
+                    "romanization": "hosu",
+                    "en": "lake",
+                    "syllables": [
+                      "ho",
+                      "su"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "items": [
+                {
+                  "type": "word",
+                  "word": {
+                    "ko": "섬",
+                    "romanization": "seom",
+                    "en": "island"
+                  }
+                },
+                {
+                  "type": "word",
+                  "word": {
+                    "ko": "바다",
+                    "romanization": "bada",
+                    "en": "sea",
+                    "syllables": [
+                      "ba",
+                      "da"
+                    ]
+                  },
+                  "picture": "card:sea"
+                }
+              ]
+            }
+          ]
+        },
+        "durationSeconds": 50
+      },
+      {
+        "id": "s3",
+        "kind": "practice",
+        "titleEn": "Picture and Word",
+        "minigameKind": "pic-word-match",
+        "minigameRef": "minigame:s2-nature-q3-practice",
+        "durationSeconds": 85
+      },
+      {
+        "id": "s4",
+        "kind": "apply",
+        "titleEn": "Build the Word",
+        "minigameKind": "build-letter",
+        "minigameRef": "minigame:s2-nature-q3-apply",
+        "durationSeconds": 70
+      },
+      {
+        "id": "s5",
+        "kind": "check",
+        "titleEn": "Listen and Read",
+        "minigameKind": "listen-pick",
+        "minigameRef": "minigame:s2-nature-q3-check",
+        "durationSeconds": 35
+      },
+      {
+        "id": "s6",
+        "kind": "reward",
+        "titleEn": "Water Words!",
+        "hoyaLineEn": "Rivers, lakes, islands and seas: you read them all. Well done!",
+        "durationSeconds": 8
+      }
+    ]
   }
 ];
 
@@ -814,6 +1562,16 @@ export const LESSON_INDEX_OVERLAYS: Overlays = {
       "hoyaIntro": "Ya conoces 30 letras. ¡Conozcamos el resto y leamos más palabras!",
       "subtitle": "El resto del hangul y las palabras que abre.",
       "title": "Constructor de palabras"
+    },
+    "episode:stage2-life": {
+      "hoyaIntro": "Ya conoces las letras. ¡Leamos palabras de comida!",
+      "subtitle": "Lee palabras coreanas de comida y de las comidas del día.",
+      "title": "Palabras de la lonchera"
+    },
+    "episode:stage2-nature": {
+      "hoyaIntro": "Sal conmigo. ¡Leamos el mundo que nos rodea!",
+      "subtitle": "Lee palabras del cielo, el tiempo y el agua.",
+      "title": "Palabras de afuera"
     },
     "quest:stage2-letters-q1": {
       "blurb": "Cuatro vocales nuevas: ae, e, yae y ye.",
@@ -927,6 +1685,116 @@ export const LESSON_INDEX_OVERLAYS: Overlays = {
       "steps.s6.hoyaLine": "Conociste las últimas letras nuevas de Constructor de palabras. ¡Genial!",
       "steps.s6.title": "¡Constructor de palabras completo!",
       "title": "Más letras para k y p"
+    },
+    "quest:stage2-life-q1": {
+      "blurb": "Lee tus primeras palabras de comida: lonchera, gimbap, leche y huevo.",
+      "steps.s1.hoyaLine": "¿Qué hay en la lonchera? ¡Leamos palabras de verdad!",
+      "steps.s1.title": "Abre la lonchera",
+      "steps.s2.discover.pages.0.items.0.word.gloss": "lonchera, fiambrera",
+      "steps.s2.discover.pages.0.items.1.word.gloss": "gimbap (rollo de arroz con alga)",
+      "steps.s2.discover.pages.1.items.0.word.gloss": "leche",
+      "steps.s2.discover.pages.1.items.1.word.gloss": "huevo",
+      "steps.s2.discover.pages.2.caption": "Solo mira y escucha: estas letras se aprenden en Constructor de palabras.",
+      "steps.s2.discover.pages.2.items.0.word.gloss": "manzana",
+      "steps.s2.discover.pages.2.items.1.word.gloss": "pan",
+      "steps.s2.hoyaLine": "Toca Escuchar y luego lee tú cada palabra.",
+      "steps.s2.title": "Palabras de la lonchera",
+      "steps.s3.title": "Imagen y palabra",
+      "steps.s4.title": "Une las tarjetas",
+      "steps.s5.title": "Escucha y lee",
+      "steps.s6.hoyaLine": "Leíste palabras de la lonchera. ¡Aquí tienes una tarjeta!",
+      "steps.s6.title": "¡Tarjeta de la lonchera!",
+      "teaser": "Siguiente: frutas y meriendas.",
+      "title": "Palabras de la lonchera"
+    },
+    "quest:stage2-life-q2": {
+      "blurb": "Lee palabras de frutas y meriendas: merienda, plátano, sandía, mandarina.",
+      "steps.s1.hoyaLine": "¡Hora de merendar! Leamos palabras de frutas.",
+      "steps.s1.title": "¡Hora de merendar!",
+      "steps.s2.discover.pages.0.items.0.word.gloss": "merienda",
+      "steps.s2.discover.pages.0.items.1.word.gloss": "plátano, banana",
+      "steps.s2.discover.pages.1.items.0.word.gloss": "sandía",
+      "steps.s2.discover.pages.1.items.1.word.gloss": "mandarina",
+      "steps.s2.hoyaLine": "Toca Escuchar y luego lee tú cada palabra.",
+      "steps.s2.title": "Palabras de frutas y meriendas",
+      "steps.s3.title": "Imagen y palabra",
+      "steps.s4.title": "Arma la palabra",
+      "steps.s5.title": "Escucha y lee",
+      "steps.s6.hoyaLine": "Leíste palabras de frutas y meriendas. ¡Muy bien!",
+      "steps.s6.title": "¡Palabras de merienda!",
+      "teaser": "Siguiente: arroz, sopa y acompañamientos.",
+      "title": "Frutas y meriendas"
+    },
+    "quest:stage2-life-q3": {
+      "blurb": "Lee palabras de la mesa: sopa, acompañamientos, tofu y verduras.",
+      "steps.s1.hoyaLine": "La mesa está lista. ¡Leamos qué hay en ella!",
+      "steps.s1.title": "Hora de comer",
+      "steps.s2.discover.pages.0.items.0.word.gloss": "sopa",
+      "steps.s2.discover.pages.0.items.1.word.gloss": "acompañamientos",
+      "steps.s2.discover.pages.1.items.0.word.gloss": "tofu",
+      "steps.s2.discover.pages.1.items.1.word.gloss": "verduras sazonadas",
+      "steps.s2.hoyaLine": "Arroz, sopa y acompañamientos: toca Escuchar y luego lee cada palabra.",
+      "steps.s2.title": "Palabras de la mesa",
+      "steps.s3.title": "Imagen y palabra",
+      "steps.s4.title": "Une las tarjetas",
+      "steps.s5.title": "Escucha y lee",
+      "steps.s6.hoyaLine": "Leíste una mesa llena de palabras. ¡Buen trabajo!",
+      "steps.s6.title": "¡Palabras de la mesa!",
+      "title": "En la mesa"
+    },
+    "quest:stage2-nature-q1": {
+      "blurb": "Lee cielo, estrella y árbol, y mira la palabra flor.",
+      "steps.s1.hoyaLine": "¡Leamos lo que vemos afuera!",
+      "steps.s1.title": "¡Vamos afuera!",
+      "steps.s2.discover.pages.0.items.0.word.gloss": "cielo",
+      "steps.s2.discover.pages.0.items.1.word.gloss": "estrella",
+      "steps.s2.discover.pages.1.items.0.word.gloss": "árbol",
+      "steps.s2.discover.pages.2.caption": "Solo mira y escucha: estas letras se aprenden en Constructor de palabras.",
+      "steps.s2.discover.pages.2.items.0.word.gloss": "flor",
+      "steps.s2.hoyaLine": "Toca Escuchar y luego lee tú cada palabra.",
+      "steps.s2.title": "Palabras de afuera",
+      "steps.s3.title": "Imagen y palabra",
+      "steps.s4.title": "Arma la palabra",
+      "steps.s5.title": "Escucha y lee",
+      "steps.s6.hoyaLine": "Leíste lo que hay afuera. ¡Aquí tienes una estrella!",
+      "steps.s6.title": "¡Tarjeta de estrella!",
+      "teaser": "Siguiente: lluvia, nieve, nubes y viento.",
+      "title": "Palabras de afuera"
+    },
+    "quest:stage2-nature-q2": {
+      "blurb": "Lee palabras del tiempo: lluvia, nieve, nube y viento.",
+      "steps.s1.hoyaLine": "Mira el cielo. ¿Cómo está el tiempo?",
+      "steps.s1.title": "¡Mira arriba!",
+      "steps.s2.discover.pages.0.items.0.word.gloss": "lluvia",
+      "steps.s2.discover.pages.0.items.1.word.gloss": "nieve",
+      "steps.s2.discover.pages.1.items.0.word.gloss": "nube",
+      "steps.s2.discover.pages.1.items.1.word.gloss": "viento",
+      "steps.s2.hoyaLine": "Toca Escuchar y luego lee tú cada palabra.",
+      "steps.s2.title": "Palabras del tiempo",
+      "steps.s3.title": "Imagen y palabra",
+      "steps.s4.title": "Une las tarjetas",
+      "steps.s5.title": "Escucha y lee",
+      "steps.s6.hoyaLine": "Lluvia, nieve, nubes y viento: ¡los leíste todos!",
+      "steps.s6.title": "¡Palabras del tiempo!",
+      "teaser": "Siguiente: ríos, lagos y el mar.",
+      "title": "Lluvia y nieve"
+    },
+    "quest:stage2-nature-q3": {
+      "blurb": "Lee palabras del agua: río, lago, isla y mar.",
+      "steps.s1.hoyaLine": "¡Vamos adonde está el agua!",
+      "steps.s1.title": "Hacia el agua",
+      "steps.s2.discover.pages.0.items.0.word.gloss": "río",
+      "steps.s2.discover.pages.0.items.1.word.gloss": "lago",
+      "steps.s2.discover.pages.1.items.0.word.gloss": "isla",
+      "steps.s2.discover.pages.1.items.1.word.gloss": "mar",
+      "steps.s2.hoyaLine": "Toca Escuchar y luego lee tú cada palabra.",
+      "steps.s2.title": "Palabras del agua",
+      "steps.s3.title": "Imagen y palabra",
+      "steps.s4.title": "Arma la palabra",
+      "steps.s5.title": "Escucha y lee",
+      "steps.s6.hoyaLine": "Ríos, lagos, islas y mares: los leíste todos. ¡Muy bien!",
+      "steps.s6.title": "¡Palabras del agua!",
+      "title": "Ríos y mares"
     }
   },
   "ko": {
@@ -934,6 +1802,16 @@ export const LESSON_INDEX_OVERLAYS: Overlays = {
       "hoyaIntro": "글자 30개를 알고 있어요. 남은 글자를 만나고 낱말을 더 읽어 봐요!",
       "subtitle": "남은 한글 글자와 그 글자로 읽는 낱말.",
       "title": "낱말 만들기"
+    },
+    "episode:stage2-life": {
+      "hoyaIntro": "이제 글자를 알아요. 음식 낱말을 읽어 봐요!",
+      "subtitle": "음식과 식사에 관한 한국어 낱말을 읽어요.",
+      "title": "도시락 낱말"
+    },
+    "episode:stage2-nature": {
+      "hoyaIntro": "함께 밖으로 나가요. 우리 주변 세상을 읽어 봐요!",
+      "subtitle": "하늘과 날씨와 물에 관한 낱말을 읽어요.",
+      "title": "바깥 낱말"
     },
     "quest:stage2-letters-q1": {
       "blurb": "새 모음 네 개: ㅐ, ㅔ, ㅒ, ㅖ.",
@@ -1047,6 +1925,116 @@ export const LESSON_INDEX_OVERLAYS: Overlays = {
       "steps.s6.hoyaLine": "낱말 만들기의 마지막 새 글자를 만났어요. 멋져요!",
       "steps.s6.title": "낱말 만들기 끝!",
       "title": "[ㄱ]과 [ㅂ]으로 소리 나는 새 받침"
+    },
+    "quest:stage2-life-q1": {
+      "blurb": "처음 읽는 음식 낱말: 도시락, 김밥, 우유, 달걀.",
+      "steps.s1.hoyaLine": "도시락에 무엇이 있을까요? 진짜 낱말을 읽어 봐요!",
+      "steps.s1.title": "도시락을 열어요",
+      "steps.s2.discover.pages.0.items.0.word.gloss": "밖에서 먹으려고 그릇에 담아 가는 밥",
+      "steps.s2.discover.pages.0.items.1.word.gloss": "김에 밥과 재료를 넣고 말아 만든 음식",
+      "steps.s2.discover.pages.1.items.0.word.gloss": "소에게서 얻는 하얀 마실 것",
+      "steps.s2.discover.pages.1.items.1.word.gloss": "닭이 낳는 둥근 알",
+      "steps.s2.discover.pages.2.caption": "보고 듣기만 해요. 이 글자는 「낱말 만들기」에서 배워요.",
+      "steps.s2.discover.pages.2.items.0.word.gloss": "빨갛거나 푸른 껍질의 둥글고 아삭한 열매",
+      "steps.s2.discover.pages.2.items.1.word.gloss": "밀가루 반죽을 구워 만든 음식",
+      "steps.s2.hoyaLine": "‘들어 보기’를 누르고, 낱말을 하나씩 직접 읽어 봐요.",
+      "steps.s2.title": "도시락 낱말",
+      "steps.s3.title": "그림과 낱말",
+      "steps.s4.title": "카드 짝짓기",
+      "steps.s5.title": "듣고 읽기",
+      "steps.s6.hoyaLine": "도시락 낱말을 읽었어요. 카드를 받아요!",
+      "steps.s6.title": "도시락 카드!",
+      "teaser": "다음: 과일과 간식.",
+      "title": "도시락 낱말"
+    },
+    "quest:stage2-life-q2": {
+      "blurb": "과일과 간식 낱말: 간식, 바나나, 수박, 귤.",
+      "steps.s1.hoyaLine": "간식 시간이에요! 과일 낱말을 읽어 봐요.",
+      "steps.s1.title": "간식 시간!",
+      "steps.s2.discover.pages.0.items.0.word.gloss": "끼니 사이에 먹는 가벼운 음식",
+      "steps.s2.discover.pages.0.items.1.word.gloss": "껍질이 노랗고 길쭉한 과일",
+      "steps.s2.discover.pages.1.items.0.word.gloss": "겉은 초록색이고 속은 빨간 커다란 여름 과일",
+      "steps.s2.discover.pages.1.items.1.word.gloss": "껍질을 손으로 까서 먹는 작은 주황색 과일",
+      "steps.s2.hoyaLine": "‘들어 보기’를 누르고, 낱말을 하나씩 직접 읽어 봐요.",
+      "steps.s2.title": "과일과 간식 낱말",
+      "steps.s3.title": "그림과 낱말",
+      "steps.s4.title": "낱말 완성하기",
+      "steps.s5.title": "듣고 읽기",
+      "steps.s6.hoyaLine": "과일과 간식 낱말을 읽었어요. 잘했어요!",
+      "steps.s6.title": "간식 낱말!",
+      "teaser": "다음: 밥과 국과 반찬.",
+      "title": "과일과 간식"
+    },
+    "quest:stage2-life-q3": {
+      "blurb": "밥상 낱말: 국, 반찬, 두부, 나물.",
+      "steps.s1.hoyaLine": "밥상이 차려졌어요. 무엇이 있는지 읽어 봐요!",
+      "steps.s1.title": "밥 먹을 시간",
+      "steps.s2.discover.pages.0.items.0.word.gloss": "물에 고기나 채소를 넣고 끓여 떠먹는 음식",
+      "steps.s2.discover.pages.0.items.1.word.gloss": "밥에 곁들여 먹는 여러 가지 음식",
+      "steps.s2.discover.pages.1.items.0.word.gloss": "콩으로 만든 하얗고 부드러운 음식",
+      "steps.s2.discover.pages.1.items.1.word.gloss": "먹을 수 있는 풀이나 잎을 데치거나 볶아 양념한 음식",
+      "steps.s2.hoyaLine": "밥, 국, 반찬이에요. ‘들어 보기’를 누르고 낱말을 하나씩 읽어 봐요.",
+      "steps.s2.title": "밥상 낱말",
+      "steps.s3.title": "그림과 낱말",
+      "steps.s4.title": "카드 짝짓기",
+      "steps.s5.title": "듣고 읽기",
+      "steps.s6.hoyaLine": "밥상 가득 낱말을 읽었어요. 정말 잘했어요!",
+      "steps.s6.title": "밥상 낱말!",
+      "title": "밥상에서"
+    },
+    "quest:stage2-nature-q1": {
+      "blurb": "하늘, 별, 나무를 읽고, 꽃이라는 낱말도 봐요.",
+      "steps.s1.hoyaLine": "밖에서 보이는 것을 읽어 봐요!",
+      "steps.s1.title": "밖으로 나가요",
+      "steps.s2.discover.pages.0.items.0.word.gloss": "머리 위로 보이는 높고 넓은 곳",
+      "steps.s2.discover.pages.0.items.1.word.gloss": "밤하늘에 반짝이는 작은 빛",
+      "steps.s2.discover.pages.1.items.0.word.gloss": "줄기와 가지, 잎이 있는 키 큰 식물",
+      "steps.s2.discover.pages.2.caption": "보고 듣기만 해요. 이 글자는 「낱말 만들기」에서 배워요.",
+      "steps.s2.discover.pages.2.items.0.word.gloss": "식물에 피어나는 빛깔이 고운 부분",
+      "steps.s2.hoyaLine": "‘들어 보기’를 누르고, 낱말을 하나씩 직접 읽어 봐요.",
+      "steps.s2.title": "바깥 낱말",
+      "steps.s3.title": "그림과 낱말",
+      "steps.s4.title": "낱말 완성하기",
+      "steps.s5.title": "듣고 읽기",
+      "steps.s6.hoyaLine": "바깥 낱말을 읽었어요. 별 카드를 받아요!",
+      "steps.s6.title": "별 카드!",
+      "teaser": "다음: 비, 눈, 구름, 바람.",
+      "title": "바깥 낱말"
+    },
+    "quest:stage2-nature-q2": {
+      "blurb": "날씨 낱말: 비, 눈, 구름, 바람.",
+      "steps.s1.hoyaLine": "하늘을 올려다봐요. 날씨가 어때요?",
+      "steps.s1.title": "위를 봐요!",
+      "steps.s2.discover.pages.0.items.0.word.gloss": "구름에서 떨어지는 물방울",
+      "steps.s2.discover.pages.0.items.1.word.gloss": "겨울에 하늘에서 내리는 하얀 것",
+      "steps.s2.discover.pages.1.items.0.word.gloss": "하늘에 떠 있는 하얗거나 회색인 덩어리",
+      "steps.s2.discover.pages.1.items.1.word.gloss": "움직이는 공기",
+      "steps.s2.hoyaLine": "‘들어 보기’를 누르고, 낱말을 하나씩 직접 읽어 봐요.",
+      "steps.s2.title": "날씨 낱말",
+      "steps.s3.title": "그림과 낱말",
+      "steps.s4.title": "카드 짝짓기",
+      "steps.s5.title": "듣고 읽기",
+      "steps.s6.hoyaLine": "비, 눈, 구름, 바람을 모두 읽었어요!",
+      "steps.s6.title": "날씨 낱말!",
+      "teaser": "다음: 강, 호수, 바다.",
+      "title": "비와 눈"
+    },
+    "quest:stage2-nature-q3": {
+      "blurb": "물 낱말: 강, 호수, 섬, 바다.",
+      "steps.s1.hoyaLine": "물이 있는 곳으로 가 봐요!",
+      "steps.s1.title": "물가로 가요",
+      "steps.s2.discover.pages.0.items.0.word.gloss": "길게 흐르는 큰 물줄기",
+      "steps.s2.discover.pages.0.items.1.word.gloss": "땅으로 둘러싸인 넓고 깊은 물",
+      "steps.s2.discover.pages.1.items.0.word.gloss": "사방이 물로 둘러싸인 땅",
+      "steps.s2.discover.pages.1.items.1.word.gloss": "넓고 짠 물",
+      "steps.s2.hoyaLine": "‘들어 보기’를 누르고, 낱말을 하나씩 직접 읽어 봐요.",
+      "steps.s2.title": "물 낱말",
+      "steps.s3.title": "그림과 낱말",
+      "steps.s4.title": "낱말 완성하기",
+      "steps.s5.title": "듣고 읽기",
+      "steps.s6.hoyaLine": "강, 호수, 섬, 바다를 모두 읽었어요. 잘했어요!",
+      "steps.s6.title": "물 낱말!",
+      "title": "강과 바다"
     }
   }
 };

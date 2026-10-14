@@ -2,7 +2,7 @@
   "id": "episode:stage2-nature",
   "stage": "stage2",
   "theme": "nature",
-  "status": "draft",
+  "status": "ready",
   "titleEn": "Outdoor Words",
   "subtitleEn": "Read words for the sky, the weather and the water.",
   "hoyaIntroEn": "Come outside with me. Let us read the world around us!",
@@ -82,7 +82,7 @@
                 ]
               },
               {
-                "caption": "Just look and listen: you read these letters in Word Builder.",
+                "captionEn": "Just look and listen: you learn these letters in Word Builder.",
                 "items": [
                   {
                     "type": "word",
@@ -927,7 +927,7 @@
           "id": "s6",
           "kind": "reward",
           "titleEn": "Water Words!",
-          "hoyaLineEn": "Rivers, lakes and seas: you read them all. Well done!",
+          "hoyaLineEn": "Rivers, lakes, islands and seas: you read them all. Well done!",
           "durationSeconds": 8
         }
       ],
@@ -1226,9 +1226,14 @@
   ],
   "culture": [],
   "review": {
-    "language": "draft",
-    "culture": "draft",
-    "notes": []
+    "language": "native-reviewed",
+    "culture": "culture-reviewed",
+    "reviewedBy": "MAR",
+    "reviewedAt": "2026-10-14",
+    "notes": [
+      "Language (pass 4, MAR 2026-10-14): spelling, 해요체 and RR clean; scored reading decodable; no 눈 'eye' picture. ko: Hoya names the '들어 보기' button; Build the Word is '낱말 완성하기'; caption points to 「낱말 만들기」; 꽃 gloss matches Word Builder; 주변 for 둘레. The q3 reward line names 섬 (en, es, ko). es: '¡Vamos afuera!'. 강 and 바다 in q1 stay: Stage 1 words.",
+      "Culture (pass 5, MAR 2026-10-14): the cell makes no culture claim (no notes). Sky, weather and water words and pictures are neutral; no person, brand, shop or price, no age wording."
+    ]
   },
   "contentVer": 1
 }

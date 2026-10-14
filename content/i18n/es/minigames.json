@@ -131,34 +131,6 @@
       "listenPick.rounds.0.prompt": "el alfabeto coreano",
       "listenPick.rounds.1.prompt": "hola, adiós (entre amigos)"
     },
-    "minigame:s2-life-card-1": {
-      "cardPairs.sagwa.gloss": "Manzana",
-      "cardPairs.uyu.gloss": "Leche",
-      "cardPairs.ppang.gloss": "Pan",
-      "cardPairs.gimbap.gloss": "Kimbap",
-      "cardPairs.bap.gloss": "Arroz"
-    },
-    "minigame:s2-life-quiz-1": {
-      "cardPairs.sagwa.gloss": "Manzana",
-      "cardPairs.uyu.gloss": "Leche",
-      "cardPairs.ppang.gloss": "Pan",
-      "cardPairs.gimchi.gloss": "Kimchi",
-      "cardPairs.mul.gloss": "Agua"
-    },
-    "minigame:s2-nature-card-1": {
-      "cardPairs.haneul.gloss": "Cielo",
-      "cardPairs.kkot.gloss": "Flor",
-      "cardPairs.namu.gloss": "Árbol",
-      "cardPairs.san.gloss": "Montaña",
-      "cardPairs.bada.gloss": "Mar"
-    },
-    "minigame:s2-nature-quiz-1": {
-      "cardPairs.haneul.gloss": "Cielo",
-      "cardPairs.byeol.gloss": "Estrella",
-      "cardPairs.gang.gloss": "Río",
-      "cardPairs.bom.gloss": "Primavera",
-      "cardPairs.nun.gloss": "Nieve"
-    },
     "minigame:s4-rites-respond-1": {
       "dialogue.0.npc": "¡Hola!",
       "dialogue.1.npc": "¿Cómo te llamas?",

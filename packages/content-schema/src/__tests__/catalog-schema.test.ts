@@ -92,8 +92,8 @@ describe('the shipped catalogue data', () => {
       'quest:stage1-crafts-q3',
     ]);
     expect(CATALOG.quests.filter((q) => q.kind === 'lesson').map((q) => q.id)).toContain('quest:stage4-rites-q1');
-    // 15 Stage 1 + 6 Word Builder (F-CURR-001 S2-1) + 3 taste quests + the 14 read quests of the five Stage 5 books (F-STORY-005 PR 5.6).
-    expect(CATALOG.quests.filter((q) => q.kind === 'lesson')).toHaveLength(38);
+    // 15 Stage 1 + 6 Word Builder (F-CURR-001 S2-1) + 3 taste quests + Lunch Box and Outdoor Words q2-q3 (T-1) + the 14 read quests of the five Stage 5 books (F-STORY-005 PR 5.6).
+    expect(CATALOG.quests.filter((q) => q.kind === 'lesson')).toHaveLength(42);
   });
 
   it('has 24 stories adding up to 112 minutes, each with a listen quest on its shelf episode', () => {
@@ -415,7 +415,11 @@ describe('routeCatalogOf', () => {
       'quest:stage2-letters-q5',
       'quest:stage2-letters-q6',
       'quest:stage2-life-q1',
+      'quest:stage2-life-q2',
+      'quest:stage2-life-q3',
       'quest:stage2-nature-q1',
+      'quest:stage2-nature-q2',
+      'quest:stage2-nature-q3',
       'quest:stage4-rites-q1',
       'quest:story-sejong-new-letters-read',
       'quest:story-shapes-of-hangeul-read',

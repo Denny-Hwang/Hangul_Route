@@ -17,7 +17,8 @@ import {
 import { describe, expect, it } from 'vitest';
 import { bookQuests } from '../../../content/books';
 import { previewEpisodesFor, handWrittenEpisodes } from '../../../content/episodes';
-import { questsAll, stage1Quests, stage2Quests, stage4Quests } from '../../../content/quests';
+import { lessonQuests } from '../../../content/lessons';
+import { questsAll, stage1Quests, stage4Quests } from '../../../content/quests';
 import { storyEpisodes, storyQuests } from '../../../content/stories';
 import { questsInCursorOrder } from '../../lessons/lesson-lookup';
 import { nextQuestAfter, offerableQuests } from '../../next-quest';
@@ -54,8 +55,9 @@ const QUESTS_8: Quest[] = questsAll.filter((q) => !LATER.has(q.id));
 const claimers = [...shippedBefore, ...lessonEpisodes];
 const EPISODES_9: Episode[] = [...claimers, ...storyEpisodes, ...previewEpisodesFor(claimers)];
 const QUESTS_9: Quest[] = questsInCursorOrder({
-  early: [...stage1Quests, ...stage2Quests, ...stage4Quests],
-  lessons: [...WB, ...FS].map(plainQuest),
+  early: [...stage1Quests, ...stage4Quests],
+  // The other shipped lesson cells (Lunch Box and Outdoor Words: generated since F-CURR-001 T-1) plus the two fake cells.
+  lessons: [...lessonQuests.filter((q) => !LATER.has(q.id)), ...[...WB, ...FS].map(plainQuest)],
   middle: [...storyQuests, ...bookQuests],
   episodes: claimers,
 });

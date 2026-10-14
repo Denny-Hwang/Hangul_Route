@@ -39,7 +39,7 @@ const overlays: Overlays = {
     'stage:stage1': { title: 'Hangul (es)', oneLiner: 'Cada letra.' },
     'theme:letters': { title: 'Letras' },
     'jamo:giyeok': { soundHint: 'como la g de gato', 'exampleWord.gloss': 'familia' },
-    'minigame:s2-life-card-1': { 'cardPairs.gimbap.gloss': 'Kimbap (es)' },
+    'minigame:s1-life-q3-apply': { 'cardPairs.gimbap.gloss': 'Kimbap (es)' },
   },
   ko: {},
 };
@@ -82,11 +82,11 @@ describe('content-locale: one helper per kind of shipped content', () => {
   });
 
   it('localizes a minigame scope by its minigame ref', () => {
-    const scope = scopeFor('minigame:s2-life-card-1')!;
-    const es = localizeScope(scope, 'minigame:s2-life-card-1', 'es', overlays);
+    const scope = scopeFor('minigame:s1-life-q3-apply')!;
+    const es = localizeScope(scope, 'minigame:s1-life-q3-apply', 'es', overlays);
     expect(es.cardPairs?.find((p) => p.romanization === 'gimbap')?.en).toBe('Kimbap (es)');
-    expect(es.cardPairs?.find((p) => p.romanization === 'bap')?.en).toBe('Rice');
-    expect(localizeScope(scope, 'minigame:s2-life-card-1', 'en', overlays)).toBe(scope);
+    expect(es.cardPairs?.find((p) => p.romanization === 'tomato')?.en).toBe('Tomato');
+    expect(localizeScope(scope, 'minigame:s1-life-q3-apply', 'en', overlays)).toBe(scope);
   });
 
   it('localizes a story by its id: the story-sequence cards show the overlay caption (F-STORY-001 §3.12 row)', () => {

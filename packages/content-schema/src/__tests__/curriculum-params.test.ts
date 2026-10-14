@@ -124,7 +124,8 @@ describe('CurriculumParamsSchema (F-PLAN-002 section 3.1)', () => {
     expect(issues({ goals: { focus: 'words', themes: ['life', 'rites'], motivation: 'kculture' } })).toEqual([]);
     expect(issues({ goals: { focus: 'speaking' } })).not.toEqual([]);
     expect(issues({ goals: { focus: 'balanced', themes: ['life', 'rites', 'nature', 'crafts', 'letters', 'life'] } })).not.toEqual([]);
-    expect(issues({ placedOutQuestIds: Array.from({ length: 41 }, (_, i) => `q${i}`) })).not.toEqual([]);
+    expect(issues({ placedOutQuestIds: Array.from({ length: 120 }, (_, i) => `q${i}`) })).toEqual([]);
+    expect(issues({ placedOutQuestIds: Array.from({ length: 121 }, (_, i) => `q${i}`) })).not.toEqual([]);
     expect(issues({ completedQuestIds: Array.from({ length: 401 }, (_, i) => `q${i}`) })).not.toEqual([]);
     expect(issues({ unlockedStages: [] })).not.toEqual([]);
     expect(issues({ endStage: 'stage3' })).toEqual([]);

@@ -40,11 +40,18 @@ const FS = [1, 2, 3].map((k) => `quest:stage3-letters-q${k}`);
  * The catalogue as it stood at version 8: the live one without Word Builder (F-CURR-001
  * S2-1 shipped it at version 9), so the fixtures below stay the before-and-after pair.
  */
+const V8_IDS = questIdsAtVersion(8);
+/** F-CURR-001 T-1 (version 10): the Lunch Box Words and Outdoor Words quests after their shipped taste q1. */
+const T1 = ['quest:stage2-life-q2', 'quest:stage2-life-q3', 'quest:stage2-nature-q2', 'quest:stage2-nature-q3'];
 const CATALOG_8: Catalog = {
   ...CATALOG,
   version: 8,
-  cells: CATALOG.cells.map((cell) => (cell.episodeId === 'episode:stage2-letters' ? { ...cell, status: 'preview', minutes: 10, questIds: [] } : cell)),
-  quests: CATALOG.quests.filter((quest) => quest.episodeId !== 'episode:stage2-letters'),
+  cells: CATALOG.cells.map((cell) =>
+    cell.episodeId === 'episode:stage2-letters'
+      ? { ...cell, status: 'preview', minutes: 10, questIds: [] }
+      : { ...cell, questIds: cell.questIds.filter((id) => V8_IDS.has(id)) },
+  ),
+  quests: CATALOG.quests.filter((quest) => quest.episodeId !== 'episode:stage2-letters' && (quest.kind !== 'lesson' || V8_IDS.has(quest.id))),
 };
 
 /** Version 9 of a later catalogue: Word Builder (Stage 2) and First Sentences (Stage 3) shipped. */
@@ -145,9 +152,10 @@ describe('placedOutGrowth', () => {
     expect(placedOutGrowth(STAGE3, 8, ROUTE_9, new Set([WB[0] as string]), HISTORY_9)).toEqual(WB.slice(1));
   });
 
-  it('with the shipped history, widens a version 8 set with Word Builder (version 9) and nothing at today\'s version', () => {
+  it('with the shipped history, widens a version 8 set with Word Builder (version 9), Lunch Box and Outdoor Words q2-q3 (version 10) and nothing at today\'s version', () => {
     const live = routeCatalogOf(CATALOG);
-    expect(placedOutGrowth(STAGE3, undefined, live)).toEqual(WB);
+    expect(placedOutGrowth(STAGE3, undefined, live)).toEqual([...WB, ...T1]);
+    expect(placedOutGrowth(STAGE3, 9, live)).toEqual(T1);
     expect(placedOutGrowth(STAGE3, CATALOG_VERSION, live)).toEqual([]);
     expect(placedOutGrowth(STAGE3, undefined, ROUTE_8)).toEqual([]);
   });

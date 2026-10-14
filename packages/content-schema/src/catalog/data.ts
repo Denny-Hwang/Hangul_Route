@@ -18,8 +18,9 @@ import type { Catalog, CatalogCell, CatalogQuest, CatalogStory, CatalogTopic } f
  * From version 9 on (F-CURR-001 §3.13), a bump that adds quests lists them under the new version in
  * `CATALOG_QUEST_ADDITIONS` (`versions.ts`), so a placement result stored earlier skips them by its level.
  * Version 9 (F-CURR-001 S2-1): Stage 2 Word Builder ships with six quests that teach the rest of Hangul.
+ * Version 10 (F-CURR-001 T-1): Lunch Box Words and Outdoor Words adopt Discover and Check and grow to three quests each.
  */
-export const CATALOG_VERSION = 9;
+export const CATALOG_VERSION = 10;
 
 const cell = (
   stage: StageKey,
@@ -56,9 +57,9 @@ const cells: CatalogCell[] = [
     'quest:stage2-letters-q5',
     'quest:stage2-letters-q6',
   ]),
-  cell('stage2', 'life', 'Lunch Box Words', 'shipped', 6, ['quest:stage2-life-q1']),
+  cell('stage2', 'life', 'Lunch Box Words', 'shipped', 13, ['quest:stage2-life-q1', 'quest:stage2-life-q2', 'quest:stage2-life-q3']),
   soon('stage2', 'rites', 'Holiday Words'),
-  cell('stage2', 'nature', 'Outdoor Words', 'shipped', 6, ['quest:stage2-nature-q1']),
+  cell('stage2', 'nature', 'Outdoor Words', 'shipped', 13, ['quest:stage2-nature-q1', 'quest:stage2-nature-q2', 'quest:stage2-nature-q3']),
   soon('stage2', 'crafts', 'Playground Words'),
   soon('stage3', 'letters', 'First Sentences'),
   soon('stage3', 'life', 'Daily Mini-Sentences'),
@@ -132,8 +133,13 @@ const lessonQuests: CatalogQuest[] = [
   lesson('stage2-letters-q4', 'stage2', 'letters', 'Joined Vowels oe, wae, we', 4, ['ㅚ', 'ㅙ', 'ㅞ']),
   lesson('stage2-letters-q5', 'stage2', 'letters', 'One Sound for Six Letters', 4, ['ㅅ/final', 'ㅈ/final', 'ㅊ/final', 'ㅌ/final', 'ㄷ/final', 'ㅆ/final']),
   lesson('stage2-letters-q6', 'stage2', 'letters', 'More Letters for k and p', 4, ['ㅋ/final', 'ㄲ/final', 'ㅍ/final']),
-  lesson('stage2-life-q1', 'stage2', 'life', 'Lunch Box Words', 5),
-  lesson('stage2-nature-q1', 'stage2', 'nature', 'Outdoor Words', 5),
+  lesson('stage2-life-q1', 'stage2', 'life', 'Lunch Box Words', 4),
+  lesson('stage2-nature-q1', 'stage2', 'nature', 'Outdoor Words', 4),
+  // F-CURR-001 T-1: the taste quests keep their ids and move into the cell files with q2 and q3.
+  lesson('stage2-life-q2', 'stage2', 'life', 'Fruit and Snacks', 4),
+  lesson('stage2-life-q3', 'stage2', 'life', 'At the Table', 4),
+  lesson('stage2-nature-q2', 'stage2', 'nature', 'Rain and Snow', 4),
+  lesson('stage2-nature-q3', 'stage2', 'nature', 'Rivers and Seas', 4),
   lesson('stage4-rites-q1', 'stage4', 'rites', 'Greeting Dialogues', 4),
   // The Stage 5 books (F-STORY-005 PR 5.6): grid quests that play their stories at the read level.
   lesson('story-sejong-new-letters-read', 'stage5', 'letters', "King Sejong's New Letters", 4),

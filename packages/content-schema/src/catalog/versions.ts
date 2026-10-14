@@ -92,6 +92,8 @@ export const CATALOG_QUEST_ADDITIONS: Readonly<Record<number, readonly string[]>
     'quest:stage2-letters-q5',
     'quest:stage2-letters-q6',
   ],
+  // F-CURR-001 T-1: Lunch Box Words and Outdoor Words q2 and q3 (each q1 is the shipped taste quest, already in version 8).
+  10: ['quest:stage2-life-q2', 'quest:stage2-life-q3', 'quest:stage2-nature-q2', 'quest:stage2-nature-q3'],
 });
 
 /** The quest ids the catalogue held at `version` (versions before 8 read as 8). */
