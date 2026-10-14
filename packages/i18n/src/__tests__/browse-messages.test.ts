@@ -122,7 +122,7 @@ const BR8_KEYS = [
 const BR9_KEYS = ['topic.hearA11y'];
 
 /** BR-13: [ Present this ] on the item page and its accessible description (presenter README, Strings). */
-const BR13_KEYS = ['item.present.cta', 'item.presentNote'];
+const BR13_KEYS = ['item.present.cta', 'item.presentNote', 'item.presentBlocked'];
 
 describe('caregiver.browse (BR-6)', () => {
   it('names the tab, the page and the preview strip as OD-8 says', () => {
@@ -239,6 +239,14 @@ describe('caregiver.browse (BR-13)', () => {
       // One note for every item kind: lessons now, stories and word topics once their slides land (F-TCH-004 PR 11, 12).
       expect(item.presentNote, locale).not.toMatch(/lesson|story|topic|lecci|historia|tema|레슨|이야기|주제/i);
     }
+  });
+
+  it('says what to do when the browser gave no new tab, without blame (review of #590)', () => {
+    expect(browse.item.presentBlocked).toBe('The new tab did not open. Allow pop-ups for this site, then try again.');
+    expect(getMessages('es').caregiver.browse.item.presentBlocked).toBe(
+      'La pestaña nueva no se abrió. Permite las ventanas emergentes de este sitio y vuelve a intentarlo.',
+    );
+    expect(getMessages('ko').caregiver.browse.item.presentBlocked).toBe('새 탭이 열리지 않았어요. 이 사이트의 팝업을 허용한 뒤 다시 눌러 주세요.');
   });
 });
 
