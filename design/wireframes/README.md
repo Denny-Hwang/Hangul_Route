@@ -53,6 +53,7 @@
 | `billing/plan-status-free-lessons.md` | R | F-ENT-003 §3.9.1 (lines inside F-BILL-002's Plan screen, `billing/plan-status.md`) |
 | `journey/my-route-overview.md` | R | F-ROUTE-001 (screens A to I; J amends `placement/result.md` (was `placement.md` G) for F-PLC-001 AM-1 / AM-14, K is F-PLAN-002's weekly plan proposal, FP-B6) |
 | `home/notes-card.md` · `notes/list.md` · `notes/detail.md` | R | F-FEEDBACK-001 §6.5-6.7 (FB-0; built in FB-8) |
+| `minigame/realia-read.md` | R | F-CURR-001 §3.6, §3.14 (row D-2; mock `design/screens/minigame-realia-read/`; built in G-2) |
 
 ### B/C. Caregiver · Teacher · School console (web, 일부 mobile) — 어른
 | 파일 | 상태 | 스펙 |
