@@ -69,7 +69,9 @@ export class ContentError extends Error {
 }
 
 const isObject = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
-const literal = (value) => JSON.stringify(value, null, 2);
+// Compact JSON: the generated modules are data, not code anyone reads, and pretty-printing
+// alone took a three-quest cell over its 22.5 KB ceiling (F-CURR-001 S4-4: 25.8 KB pretty, 14 KB compact).
+const literal = (value) => JSON.stringify(value);
 const bytes = (text) => Buffer.byteLength(text, "utf8");
 
 function need(obj, field, where, kind = "string") {

@@ -112,14 +112,16 @@ describe("build-lessons.mjs: cells", () => {
     assert.equal(r.status, 0, r.stdout + r.stderr);
     assert.match(r.stdout, /ready cells: 1, drafts left out: 1/);
     const index = read(root, "lessons-index.ts");
-    assert.match(index, /"id": "episode:stage2-rites"/);
-    assert.match(index, /"status": "shipped"/);
+    assert.match(index, /"id":"episode:stage2-rites"/);
+    assert.match(index, /"status":"shipped"/);
     // 3 quests x 250 s = 750 s = 12.5 minutes, rounded.
-    assert.match(index, /"estimatedMinutes": 13/);
-    assert.match(index, /"questIds": \[\n\s+"quest:stage2-rites-q1"/);
+    assert.match(index, /"estimatedMinutes":13/);
+    assert.match(index, /"questIds":\["quest:stage2-rites-q1"/);
     assert.doesNotMatch(index, /"scopes"|stage2-crafts|"sources"|stdict/);
     const stage2 = read(root, "lessons-stage2.ts");
-    assert.match(stage2, /"minigame:s2-rites-q1-practice": \{\n\s+"kind": "card-match"/);
+    assert.match(stage2, /"minigame:s2-rites-q1-practice":\{"kind":"card-match"/);
+    // Compact literals (S4-4): one line per export, no pretty-printing.
+    assert.doesNotMatch(index, /\n  "/);
     assert.doesNotMatch(stage2, /stage2-crafts/);
     assert.match(read(root, "lessons-stage3.ts"), /= \{\};/);
   });
@@ -155,12 +157,12 @@ describe("build-lessons.mjs: cells", () => {
     put(root, "content/i18n/ko/lessons-stage2-rites.json", overlay("ko", "lessons-stage2-rites", { "episode:stage2-rites": { title: "명절 낱말" } }));
     assert.equal(run(root).status, 0);
     const index = read(root, "lessons-index.ts");
-    assert.match(index, /"episode:stage2-rites": \{\n\s+"title": "Palabras de fiesta"\n/);
-    assert.match(index, /"title": "명절 낱말"/);
-    assert.match(index, /"steps.s1.title": "Hola"/);
+    assert.match(index, /"episode:stage2-rites":\{"title":"Palabras de fiesta"\}/);
+    assert.match(index, /"title":"명절 낱말"/);
+    assert.match(index, /"steps.s1.title":"Hola"/);
     assert.doesNotMatch(index, /nope|cometa/);
     const stage2 = read(root, "lessons-stage2.ts");
-    assert.match(stage2, /"cardPairs.yeon.gloss": "cometa"/);
+    assert.match(stage2, /"cardPairs.yeon.gloss":"cometa"/);
     assert.doesNotMatch(stage2, /cardPairs.gong/);
   });
 
