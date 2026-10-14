@@ -347,5 +347,9 @@ export const a11y = {
     option: (n: number, shape: string) => `Option ${n}, ${shape}`,
     shape: { circle: 'circle', triangle: 'triangle', square: 'square', star: 'star' },
     removeRecent: (t: string) => `Remove: ${t}`,
+    /** The check mark on the revealed option of a quiz (section 3.10, PR 9). */
+    answerMark: "Hoya's answer",
+    /** The class timer's ring (PR 9). */
+    timerLeft: (t: string) => `Time left: ${t}`,
   },
 } as const;

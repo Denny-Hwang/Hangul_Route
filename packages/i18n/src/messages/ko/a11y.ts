@@ -235,5 +235,7 @@ export const a11y = {
     option: (n: number, shape: string) => `${n}번, ${shape}`,
     shape: { circle: '동그라미', triangle: '세모', square: '네모', star: '별' },
     removeRecent: (t: string) => `지우기: ${t}`,
+    answerMark: '호야의 답',
+    timerLeft: (t: string) => `남은 시간: ${t}`,
   },
 } satisfies DeepPartial<Messages['a11y']>;
