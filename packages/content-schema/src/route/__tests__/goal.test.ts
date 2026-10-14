@@ -88,8 +88,8 @@ describe('stageAvailabilityOf (the catalogue twin of the app stageAvailability)'
     expect(StageKeySchema.options.map((stage) => stageAvailabilityOf(CATALOG_2026_10, stage))).toEqual(['open', 'taste', 'soon', 'taste', 'soon', 'soon', 'soon']);
   });
 
-  it('agrees on the shipped catalogue today', () => {
-    expect(StageKeySchema.options.map((stage) => stageAvailabilityOf(CATALOG, stage))).toEqual(['open', 'taste', 'soon', 'taste', 'soon', 'soon', 'soon']);
+  it('agrees on the shipped catalogue today (Stage 5 is a taste since its rites book, F-STORY-005 PR 5.6)', () => {
+    expect(StageKeySchema.options.map((stage) => stageAvailabilityOf(CATALOG, stage))).toEqual(['open', 'taste', 'soon', 'taste', 'taste', 'soon', 'soon']);
   });
 
   it('counts a ready cell like a shipped one, and a preview or draft cell as not ready', () => {

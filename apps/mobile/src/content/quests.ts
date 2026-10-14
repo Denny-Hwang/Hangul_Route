@@ -1,4 +1,5 @@
 import type { Quest } from '@hangul-route/content-schema';
+import { bookQuests } from './books';
 import { storyQuests } from './stories';
 
 /**
@@ -670,7 +671,7 @@ export const stage4Quests: Quest[] = [
   },
 ];
 
-export const questsAll: Quest[] = [...stage1Quests, ...stage2Quests, ...stage4Quests, ...storyQuests];
+export const questsAll: Quest[] = [...stage1Quests, ...stage2Quests, ...stage4Quests, ...storyQuests, ...bookQuests];
 
 export function questById(id: string): Quest | undefined {
   return questsAll.find((q) => q.id === id);

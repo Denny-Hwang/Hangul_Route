@@ -112,7 +112,11 @@ describe('the presenter content bundle (F-TCH-004 §3.3, §3.13)', () => {
 
   it('every quest teaches: at least one slide besides its title and End', () => {
     for (const q of questsAll) {
-      const { slides } = expandDeck(deck([{ kind: 'quest', id: q.id }]), lectureBundle('en'), { canPlayKorean: true });
+      const { slides, skipped } = expandDeck(deck([{ kind: 'quest', id: q.id }]), lectureBundle('en'), { canPlayKorean: true });
+      // A Stage 5 book quest (F-STORY-005 PR 5.6) is only its story, and has no reward card yet
+      // (F-CARD-S5-001): it teaches once the story slides land (PR 11), until then it is counted as not ready.
+      const storyWaits = q.rewardCardId === undefined && skipped.some((s) => s.ref.startsWith('story:') && s.reason === 'not-ready');
+      if (storyWaits) continue;
       expect(slides.filter((s) => s.kind !== 'title' && s.kind !== 'end').length, q.id).toBeGreaterThan(0);
     }
   });
