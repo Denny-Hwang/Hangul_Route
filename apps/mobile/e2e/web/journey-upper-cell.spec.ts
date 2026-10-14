@@ -25,6 +25,36 @@ interface UpperCell {
   expectRouteDay: (page: Page) => Promise<void>;
 }
 
+/** Sentence Builder in the Stage 7 Check (no round counter, no Skip): build each round by its tiles. */
+async function buildCheck(page: Page, rounds: readonly (readonly string[])[]): Promise<void> {
+  await page.getByRole('button', { name: 'Go', exact: true }).click();
+  for (const tiles of rounds) {
+    const tray = page.getByTestId('sentence-builder-tray');
+    for (const name of tiles) {
+      await page.waitForTimeout(120);
+      await tray.getByRole('button', { name, exact: true }).click();
+    }
+    await expect(page.getByTestId('sentence-builder-done')).toBeVisible();
+    await expect(page.getByTestId('sentence-builder-done')).toHaveCount(0, { timeout: 5_000 });
+  }
+}
+
+/** Type Hangul: round `n` of `total`, typed on the in-app keyboard, then Done; a pass moves on by itself. */
+async function typeRound(page: Page, n: number, total: number, text: string): Promise<void> {
+  await expect(page.getByText(`${n} / ${total}`, { exact: true })).toBeVisible({ timeout: 5_000 });
+  const key = (id: string) => page.getByTestId(`hangul-key-${id}`);
+  for (const jamo of keysFor(text).flatMap((j) => [...(SPLIT[j] ?? j)])) {
+    if (SHIFTED[jamo]) {
+      await key('shift').click();
+      await key(SHIFTED[jamo]).click();
+    } else {
+      await key(jamo).click();
+    }
+  }
+  await page.getByTestId('type-hangul-done').click();
+  await expect(page.getByText('You typed it!')).toBeVisible();
+}
+
 const LUNCH_BOX_Q1_BOARDS = [
   ['gimbap', 'uyu', 'dalgyal'],
   ['uyu', 'bap', 'mul'],
@@ -897,6 +927,44 @@ const CELLS: readonly UpperCell[] = [
       await page.getByText('Learning Route', { exact: true }).last().click();
       await page.getByRole('button', { name: /^Stage 7, / }).click();
       await expect(page.getByRole('button', { name: /^Food & Daily Life: My Day in Korean\./ })).toBeVisible();
+    },
+  },
+  // F-CURR-001 S7-3: My Holiday Memory, q1 "I Ate Tteokguk" played through its real games at 320 px.
+  {
+    episodeId: 'episode:stage7-rites',
+    cellButton: journeyCellName(7, 'Holidays & Traditions'),
+    title: 'My Holiday Memory',
+    playFirstQuest: async (page) => {
+      await page.setViewportSize({ width: 320, height: 720 });
+      await startFirstQuest(page);
+      // Discover: the past-tense frame page and the model page (songpyeon, the full moon).
+      await expect(page.getByText('Look and learn', { exact: true })).toBeVisible();
+      await shot(page, 'my-holiday-memory-q1-discover-320');
+      await passDiscover(page);
+      await page.getByRole('button', { name: 'Play minigame' }).click();
+      await build(page, 1, 4, ['떡국을, tteokgugeul', '먹었어요, meogeosseoyo']);
+      await shot(page, 'my-holiday-memory-q1-built-320');
+      await build(page, 2, 4, ['을, eul']);
+      await build(page, 3, 4, ['보름달을, boreumdareul', '봤어요, bwasseoyo']);
+      await build(page, 4, 4, ['를, reul']);
+      // Type Hangul on the in-app keyboard: the three past forms, then the soup's name.
+      await page.getByRole('button', { name: 'Play minigame' }).click();
+      await typeRound(page, 1, 4, '먹었어요');
+      await shot(page, 'my-holiday-memory-q1-typed-320');
+      await typeRound(page, 2, 4, '봤어요');
+      await typeRound(page, 3, 4, '만들었어요');
+      await typeRound(page, 4, 4, '떡국');
+      await buildCheck(page, [
+        ['송편을, songpyeoneul', '먹었어요, meogeosseoyo'],
+        ['보름달을, boreumdareul', '봤어요, bwasseoyo'],
+      ]);
+      await expect(page.getByText('Finish', { exact: true }).first()).toBeVisible();
+    },
+    expectRouteDay: async (page) => {
+      await page.goto('/');
+      await page.getByText('Learning Route', { exact: true }).last().click();
+      await page.getByRole('button', { name: /^Stage 7, Self-expression\./ }).click();
+      await expect(page.getByRole('button', { name: /^Holidays & Traditions: My Holiday Memory\./ })).toBeVisible();
     },
   },
 ];
