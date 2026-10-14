@@ -171,6 +171,8 @@ export default function PresenterApp(): React.ReactElement {
   const [updateWaiting, setUpdateWaiting] = useState(false);
   // After Exit or an invalid link the home takes focus on its h1 (design home.md).
   const [homeFocus, setHomeFocus] = useState(false);
+  // Keys and help on the presenter home (home.md): the Help overlay with no lesson open.
+  const [homeHelp, setHomeHelp] = useState(false);
   // The bar's Offline chip (section 3.8): the lesson keeps working; only the chip changes.
   const [online, setOnline] = useState(isOnline);
   useEffect(() => subscribeOnline(setOnline), []);
@@ -491,6 +493,14 @@ export default function PresenterApp(): React.ReactElement {
     });
   }, [phase, dispatch, toggleFullscreen]);
 
+  // The home's Help overlay closes with Esc or H, as in a lesson; no other key acts while it is open.
+  useEffect(() => {
+    if (phase.kind !== 'home' || !homeHelp) return undefined;
+    return subscribeKeys((command: KeyCommand) => {
+      if (command === 'escape' || (typeof command === 'object' && command.overlay === 'help')) setHomeHelp(false);
+    });
+  }, [phase.kind, homeHelp]);
+
   // The bar hides after `presenter.autoHideMs` without pointer, touch or key, unless a bar button has focus.
   const [barHidden, setBarHidden] = useState(false);
   const barFocused = useRef(false);
@@ -526,6 +536,7 @@ export default function PresenterApp(): React.ReactElement {
     rejected.current = false;
     setPickerCount(null);
     setHomeFocus(false);
+    setHomeHelp(false);
     setPhase(next);
   }, []);
   // Back to lessons on the start screen: nothing started, so nothing is saved or sent (design start-screen.md).
@@ -575,20 +586,35 @@ export default function PresenterApp(): React.ReactElement {
     );
   } else if (phase.kind === 'home') {
     body = (
-      <PresenterHomeScreen
-        messages={messages}
-        locale={locale}
-        languages={languages}
-        sessionLocale={sessionLocale}
-        onLanguage={setSessionLocale}
-        recent={recentView(recentLoaded)}
-        onResume={(item) => openFromHome({ kind: 'resume', item })}
-        onStartOver={(item) => openFromHome({ kind: 'start-over', item })}
-        onRemove={(deckId) => updateRecent((list) => forgetDeck(list, deckId))}
-        quick={quick}
-        onBuild={(built) => openFromHome({ kind: 'quick', deck: built })}
-        focusTitle={homeFocus}
-      />
+      <View style={{ flex: 1 }}>
+        <PresenterHomeScreen
+          messages={messages}
+          locale={locale}
+          languages={languages}
+          sessionLocale={sessionLocale}
+          onLanguage={setSessionLocale}
+          recent={recentView(recentLoaded)}
+          onResume={(item) => openFromHome({ kind: 'resume', item })}
+          onStartOver={(item) => openFromHome({ kind: 'start-over', item })}
+          onRemove={(deckId) => updateRecent((list) => forgetDeck(list, deckId))}
+          quick={quick}
+          onBuild={(built) => openFromHome({ kind: 'quick', deck: built })}
+          onHelp={() => setHomeHelp(true)}
+          focusTitle={homeFocus}
+        />
+        {homeHelp ? (
+          <HelpOverlay
+            romanization={null}
+            onRomanization={() => undefined}
+            languages={helpLanguageChips(languages)}
+            locale={locale}
+            onLanguage={setSessionLocale}
+            keepVisible={keepVisible}
+            onKeepVisible={setKeepVisible}
+            onClose={() => setHomeHelp(false)}
+          />
+        ) : null}
+      </View>
     );
   } else if (phase.kind === 'ready') {
     const count = pickerCount ?? phase.deck.picker?.count ?? 0;

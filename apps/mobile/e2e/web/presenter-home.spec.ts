@@ -175,6 +175,39 @@ test.describe('presenter home, wide (two columns)', () => {
   });
 });
 
+test.describe('presenter home, Keys and help', () => {
+  test.use({ viewport: { width: 1280, height: 800 }, isMobile: false, hasTouch: false });
+
+  test('Keys and help opens the Help overlay from the home; Close and Esc return to the button', async ({ page }) => {
+    const errors: string[] = [];
+    page.on('pageerror', (e) => errors.push(String(e)));
+    await page.goto('/present');
+    const help = page.getByTestId('presenter-home-help');
+    await expect(help).toBeVisible();
+    await expect(help).toHaveAccessibleName('Keys and help');
+    await help.click();
+    const overlay = page.getByRole('dialog', { name: 'Keys and controls' });
+    await expect(overlay).toBeVisible();
+    await expect(page.getByTestId('presenter-help-close')).toBeFocused();
+    await expect(overlay).toContainText('A presentation clicker works with no setup.');
+    // No lesson is open, so there is no deck romanization to flip here.
+    await expect(page.getByTestId('presenter-help-romanization')).toHaveCount(0);
+    await expect(page.getByTestId('presenter-help-keep-visible')).toBeVisible();
+    await shot(page, 'presenter-home-help-1280x800');
+    await page.getByTestId('presenter-help-close').click();
+    await expect(page.getByTestId('presenter-help')).toHaveCount(0);
+    await expect(help).toBeFocused();
+    await help.press('Enter');
+    await expect(page.getByTestId('presenter-help')).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(page.getByTestId('presenter-help')).toHaveCount(0);
+    await expect(help).toBeFocused();
+    // The home still works after: its h1 is there and nothing was saved.
+    await expect(page.getByRole('heading', { level: 1, name: 'Lecture' })).toBeVisible();
+    expect(errors).toEqual([]);
+  });
+});
+
 test.describe('presenter home, phone (one column, Recent first)', () => {
   test.use({ viewport: { width: 375, height: 800 }, isMobile: false, hasTouch: true });
 
