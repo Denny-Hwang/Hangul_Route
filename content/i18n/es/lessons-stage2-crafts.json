@@ -1,0 +1,96 @@
+{
+  "locale": "es",
+  "domain": "lessons-stage2-crafts",
+  "entries": {
+    "episode:stage2-crafts": {
+      "title": "Palabras del parque",
+      "subtitle": "Lee palabras del parque y de juegos tradicionales.",
+      "hoyaIntro": "Columpios, peonzas y cuerdas: ¡leamos las palabras con las que jugamos!"
+    },
+    "quest:stage2-crafts-q1": {
+      "title": "En el parque",
+      "blurb": "Lee palabras del parque: columpio, tobogán, arena y pelota.",
+      "teaser": "Después: el jegi, las peonzas y otros juegos tradicionales.",
+      "steps.s1.title": "¡Al parque!",
+      "steps.s1.hoyaLine": "Columpios, toboganes y arena: ¡leamos palabras del parque!",
+      "steps.s2.title": "Palabras del parque",
+      "steps.s2.hoyaLine": "Toca Escuchar y luego lee cada palabra por tu cuenta.",
+      "steps.s2.discover.pages.0.items.0.word.gloss": "columpio",
+      "steps.s2.discover.pages.0.items.1.word.gloss": "tobogán",
+      "steps.s2.discover.pages.1.items.0.word.gloss": "arena",
+      "steps.s2.discover.pages.1.items.1.word.gloss": "pelota",
+      "steps.s3.title": "Imagen y palabra",
+      "steps.s4.title": "Une las tarjetas",
+      "steps.s5.title": "Escucha y lee",
+      "steps.s6.title": "¡Bien jugado!",
+      "steps.s6.hoyaLine": "Leíste las palabras del parque. ¡Muy bien!"
+    },
+    "minigame:s2-crafts-q1-apply": {
+      "cardPairs.geune.gloss": "columpio",
+      "cardPairs.mikkeureomteul.gloss": "tobogán",
+      "cardPairs.morae.gloss": "arena",
+      "cardPairs.gong.gloss": "pelota"
+    },
+    "minigame:s2-crafts-q1-check": {
+      "listenPick.rounds.pic-gong.prompt": "pelota",
+      "listenPick.rounds.read-gong.prompt": "pelota"
+    },
+    "quest:stage2-crafts-q2": {
+      "title": "Juegos tradicionales",
+      "blurb": "Lee los nombres de juegos tradicionales: jegi, peonza, yut y cometa.",
+      "teaser": "Después: juegos para jugar con amigos.",
+      "steps.s1.title": "¡A jugar!",
+      "steps.s1.hoyaLine": "El jegi y la peonza son juegos tradicionales coreanos. ¡Leamos sus nombres!",
+      "steps.s2.title": "Palabras de juegos",
+      "steps.s2.hoyaLine": "Toca Escuchar y luego lee cada palabra por tu cuenta.",
+      "steps.s2.discover.pages.0.items.0.word.gloss": "jegi, un volante que se patea",
+      "steps.s2.discover.pages.0.items.0.note": "Patea el jegi hacia arriba y mantenlo en el aire.",
+      "steps.s2.discover.pages.0.items.1.word.gloss": "peonza, trompo",
+      "steps.s2.discover.pages.0.items.1.note": "Golpéala con un pequeño látigo para que siga girando.",
+      "steps.s2.discover.pages.1.items.0.word.gloss": "palitos de yut",
+      "steps.s2.discover.pages.1.items.1.word.gloss": "cometa",
+      "steps.s3.title": "Imagen y palabra",
+      "steps.s4.title": "Une las tarjetas",
+      "steps.s5.title": "Escucha y lee",
+      "steps.s6.title": "¡Buenos movimientos!",
+      "steps.s6.hoyaLine": "Leíste cuatro palabras de juegos. ¡Bien jugado!"
+    },
+    "minigame:s2-crafts-q2-apply": {
+      "cardPairs.jegi.gloss": "jegi, un volante que se patea",
+      "cardPairs.paengi.gloss": "peonza, trompo",
+      "cardPairs.yut.gloss": "palitos de yut",
+      "cardPairs.yeon.gloss": "cometa"
+    },
+    "minigame:s2-crafts-q2-check": {
+      "listenPick.rounds.pic-paengi.prompt": "peonza, trompo",
+      "listenPick.rounds.read-yeon.prompt": "cometa"
+    },
+    "quest:stage2-crafts-q3": {
+      "title": "Jugar juntos",
+      "blurb": "Lee palabras para jugar con amigos: saltar la cuerda, carrera y escondite.",
+      "steps.s1.title": "¡Juguemos juntos!",
+      "steps.s1.hoyaLine": "Saltar la cuerda, una carrera, el escondite: ¡leamos palabras para jugar con amigos!",
+      "steps.s2.title": "Palabras para jugar juntos",
+      "steps.s2.hoyaLine": "Toca Escuchar y luego lee cada palabra por tu cuenta.",
+      "steps.s2.discover.pages.0.items.0.word.gloss": "saltar la cuerda",
+      "steps.s2.discover.pages.0.items.1.word.gloss": "carrera",
+      "steps.s2.discover.pages.1.items.0.word.gloss": "escondite",
+      "steps.s2.discover.pages.1.items.1.word.gloss": "amigo, amiga",
+      "steps.s3.title": "Imagen y palabra",
+      "steps.s4.title": "Une las tarjetas",
+      "steps.s5.title": "Escucha y lee",
+      "steps.s6.title": "¡Estrella del parque!",
+      "steps.s6.hoyaLine": "Leíste todas las palabras del parque. ¡Muy bien jugado!"
+    },
+    "minigame:s2-crafts-q3-apply": {
+      "cardPairs.julleomgi.gloss": "saltar la cuerda",
+      "cardPairs.dalligi.gloss": "carrera",
+      "cardPairs.sumbakkokjil.gloss": "escondite",
+      "cardPairs.chingu.gloss": "amigo, amiga"
+    },
+    "minigame:s2-crafts-q3-check": {
+      "listenPick.rounds.pic-julleomgi.prompt": "saltar la cuerda",
+      "listenPick.rounds.read-chingu.prompt": "amigo, amiga"
+    }
+  }
+}
