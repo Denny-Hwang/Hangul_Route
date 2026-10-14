@@ -67,7 +67,7 @@ export const BOOK_DEFINITIONS: readonly BookDefinition[] = [
     stage: 'stage5',
     theme: 'nature',
     order: 4,
-    titleEn: 'Tiger Folktales',
+    titleEn: 'Nature Tales',
     hoyaIntroEn: "Let's read stories of the sun and the sky in Korean, one short sentence at a time.",
     storyIds: ['story:sun-and-moon', 'story:angbuilgu-sundial'],
     pillarTags: ['D5', 'E5'],

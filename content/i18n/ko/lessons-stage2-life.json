@@ -88,7 +88,7 @@
       "listenPick.rounds.read-banchan.prompt": "밥에 곁들여 먹는 여러 가지 음식"
     },
     "minigame:s2-life-q1-practice": {
-      "picWord.boards.0.pairs.gimbap.word.gloss": "김에 밥과 재료를 넣고 말아 만든 음식",
+      "picWord.boards.0.pairs.gimbap.word.gloss": "김에 밥과 재료를 넣고 만 음식",
       "picWord.boards.0.pairs.uyu.word.gloss": "소에게서 얻는 하얀 마실 것",
       "picWord.boards.0.pairs.dalgyal.word.gloss": "닭이 낳는 둥근 알",
       "picWord.boards.1.pairs.uyu.word.gloss": "소에게서 얻는 하얀 마실 것",
@@ -97,15 +97,15 @@
       "picWord.boards.2.pairs.dalgyal.word.gloss": "닭이 낳는 둥근 알",
       "picWord.boards.2.pairs.gimchi.word.gloss": "배추를 맵게 절인 한국 음식",
       "picWord.boards.2.pairs.banana.word.gloss": "껍질이 노랗고 길쭉한 과일",
-      "picWord.boards.3.pairs.gimbap.word.gloss": "김에 밥과 재료를 넣고 말아 만든 음식",
+      "picWord.boards.3.pairs.gimbap.word.gloss": "김에 밥과 재료를 넣고 만 음식",
       "picWord.boards.3.pairs.ramyeon.word.gloss": "꼬불꼬불한 국수",
       "picWord.boards.3.pairs.uyu.word.gloss": "소에게서 얻는 하얀 마실 것",
       "picWord.boards.4.pairs.dalgyal.word.gloss": "닭이 낳는 둥근 알",
-      "picWord.boards.4.pairs.gimbap.word.gloss": "김에 밥과 재료를 넣고 말아 만든 음식",
+      "picWord.boards.4.pairs.gimbap.word.gloss": "김에 밥과 재료를 넣고 만 음식",
       "picWord.boards.4.pairs.mul.word.gloss": "목마를 때 마시는 맑고 투명한 것",
       "picWord.boards.5.pairs.gimchi.word.gloss": "배추를 맵게 절인 한국 음식",
       "picWord.boards.5.pairs.uyu.word.gloss": "소에게서 얻는 하얀 마실 것",
-      "picWord.boards.5.pairs.gimbap.word.gloss": "김에 밥과 재료를 넣고 말아 만든 음식"
+      "picWord.boards.5.pairs.gimbap.word.gloss": "김에 밥과 재료를 넣고 만 음식"
     },
     "minigame:s2-life-q2-practice": {
       "picWord.boards.0.pairs.banana.word.gloss": "껍질이 노랗고 길쭉한 과일",
@@ -115,7 +115,7 @@
       "picWord.boards.1.pairs.dalgyal.word.gloss": "닭이 낳는 둥근 알",
       "picWord.boards.1.pairs.mul.word.gloss": "목마를 때 마시는 맑고 투명한 것",
       "picWord.boards.2.pairs.ramyeon.word.gloss": "꼬불꼬불한 국수",
-      "picWord.boards.2.pairs.gimbap.word.gloss": "김에 밥과 재료를 넣고 말아 만든 음식",
+      "picWord.boards.2.pairs.gimbap.word.gloss": "김에 밥과 재료를 넣고 만 음식",
       "picWord.boards.2.pairs.banana.word.gloss": "껍질이 노랗고 길쭉한 과일",
       "picWord.boards.3.pairs.uyu.word.gloss": "소에게서 얻는 하얀 마실 것",
       "picWord.boards.3.pairs.mul.word.gloss": "목마를 때 마시는 맑고 투명한 것",
@@ -132,7 +132,7 @@
       "picWord.boards.0.pairs.gimchi.word.gloss": "배추를 맵게 절인 한국 음식",
       "picWord.boards.0.pairs.mul.word.gloss": "목마를 때 마시는 맑고 투명한 것",
       "picWord.boards.1.pairs.bibimbap.word.gloss": "밥에 나물을 넣고 섞어 먹는 음식",
-      "picWord.boards.1.pairs.gimbap.word.gloss": "김에 밥과 재료를 넣고 말아 만든 음식",
+      "picWord.boards.1.pairs.gimbap.word.gloss": "김에 밥과 재료를 넣고 만 음식",
       "picWord.boards.1.pairs.ramyeon.word.gloss": "꼬불꼬불한 국수",
       "picWord.boards.2.pairs.bap.word.gloss": "쌀로 지어 먹는 음식",
       "picWord.boards.2.pairs.dalgyal.word.gloss": "닭이 낳는 둥근 알",
@@ -143,7 +143,7 @@
       "picWord.boards.4.pairs.gimchi.word.gloss": "배추를 맵게 절인 한국 음식",
       "picWord.boards.4.pairs.ramyeon.word.gloss": "꼬불꼬불한 국수",
       "picWord.boards.4.pairs.bap.word.gloss": "쌀로 지어 먹는 음식",
-      "picWord.boards.5.pairs.gimbap.word.gloss": "김에 밥과 재료를 넣고 말아 만든 음식",
+      "picWord.boards.5.pairs.gimbap.word.gloss": "김에 밥과 재료를 넣고 만 음식",
       "picWord.boards.5.pairs.bibimbap.word.gloss": "밥에 나물을 넣고 섞어 먹는 음식",
       "picWord.boards.5.pairs.dalgyal.word.gloss": "닭이 낳는 둥근 알"
     }

@@ -41,6 +41,8 @@ import type { Catalog, CatalogCell, CatalogQuest, CatalogStory, CatalogTopic } f
  * Version 30 (F-CURR-001 S7-3): My Holiday Memory ships (Stage 7 rites, 3 lesson quests).
  * Version 31 (F-CURR-001 S7-4): My Favorite Animal ships (Stage 7 nature, 3 lesson quests).
  * Version 32 (F-CURR-001 S7-5): Make & Share ships (Stage 7 crafts, 3 lesson quests); Stage 7 opens and every grid cell has shipped.
+ * F-STORY-005 row 5.6c renames the Stage 5 nature cell to Nature Tales (was Tiger Folktales) with no version bump:
+ * a cell title is display text and does not alter what a generated route can contain (same ids, quests and minutes).
  */
 export const CATALOG_VERSION = 32;
 
@@ -101,7 +103,7 @@ const cells: CatalogCell[] = [
     'quest:story-dano-ssireum-read',
     'quest:story-chuseok-ganggangsullae-read',
   ]),
-  cell('stage5', 'nature', 'Tiger Folktales', 'shipped', 9, ['quest:story-sun-and-moon-read', 'quest:story-angbuilgu-sundial-read']),
+  cell('stage5', 'nature', 'Nature Tales', 'shipped', 9, ['quest:story-sun-and-moon-read', 'quest:story-angbuilgu-sundial-read']),
   cell('stage5', 'crafts', 'Craft Stories', 'shipped', 15, [
     'quest:story-cheugugi-rain-gauge-read',
     'quest:story-jagyeongnu-water-clock-read',
