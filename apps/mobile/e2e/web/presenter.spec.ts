@@ -345,10 +345,15 @@ test.describe('presenter on a 4:3 projector, 1024 x 768', () => {
   test('a taller logical stage at unit 0.8, no bars', async ({ page }) => {
     await page.goto(link());
     await startLesson(page);
-    // 1024 x 768 minus the 120 px band: a 1024 x 648 box, unit 0.8, logical stage 1280 x 810.
-    const box = await page.getByTestId('presenter-stage').boundingBox();
-    expect(box?.width).toBe(1024);
-    expect(box?.height).toBe(648);
+    // 1024 x 768 minus the band: with one row of controls a 1024 x 648 box (unit 0.8, logical stage
+    // 1280 x 810); where the labels are wider and the controls wrap, the band grows and the stage
+    // takes the rest (D1), still at unit 0.8 and the full width.
+    const box = (await page.getByTestId('presenter-stage').boundingBox())!;
+    const band = (await page.getByRole('toolbar').locator('..').boundingBox())!;
+    expect(band.height).toBeGreaterThanOrEqual(120);
+    expect(box.width).toBe(1024);
+    expect(box.height).toBe(768 - band.height);
+    expect(box.y + box.height).toBeLessThanOrEqual(band.y);
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(1024);
     await page.keyboard.press('ArrowRight');
     await revealAll(page);
