@@ -86,6 +86,7 @@ afterEach(async () => {
   }
   vi.useRealTimers();
   vi.restoreAllMocks();
+  vi.unstubAllGlobals();
   resetPlatform();
 });
 
@@ -110,8 +111,23 @@ describe('test P-1 on Write Your Name q3 (S7-1)', () => {
   it('builds the cast name 호야 from the cell sound table; nothing is reported, logged or stored, and the name round is unscored', async () => {
     vi.useFakeTimers();
     const logs = (['log', 'info', 'warn', 'error', 'debug'] as const).map((m) => vi.spyOn(console, m).mockImplementation(() => undefined));
-    const store = globalThis.localStorage as Storage | undefined;
-    const setItem = store ? vi.spyOn(store, 'setItem') : undefined;
+    // The suite runs in node, which has no Web Storage: stub both, so the storage check always runs.
+    const storage = (): Storage => {
+      const map = new Map<string, string>();
+      return {
+        get length() {
+          return map.size;
+        },
+        clear: () => map.clear(),
+        getItem: (k) => map.get(k) ?? null,
+        key: (i) => [...map.keys()][i] ?? null,
+        removeItem: (k) => void map.delete(k),
+        setItem: (k, v) => void map.set(k, String(v)),
+      };
+    };
+    vi.stubGlobal('localStorage', storage());
+    vi.stubGlobal('sessionStorage', storage());
+    const setItems = [vi.spyOn(globalThis.localStorage, 'setItem'), vi.spyOn(globalThis.sessionStorage, 'setItem')];
     const { r, h } = await play([nameRound]);
     expect(texts(r)).toEqual(expect.arrayContaining(['Write your name in Hangul', 'There is no wrong way to write your name.']));
     // Every tile of the cell's table is on screen.
@@ -128,7 +144,8 @@ describe('test P-1 on Write Your Name q3 (S7-1)', () => {
     expect(h.calls).toEqual([]);
     expect(h.completes).toBe(1);
     for (const spy of logs) expect(spy).not.toHaveBeenCalled();
-    if (setItem) expect(setItem).not.toHaveBeenCalled();
+    for (const setItem of setItems) expect(setItem).not.toHaveBeenCalled();
+    expect(globalThis.localStorage.length + globalThis.sessionStorage.length).toBe(0);
   });
 
   it('the composed name is gone after the step unmounts: a new mount of the real round starts empty', async () => {

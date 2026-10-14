@@ -1,4 +1,5 @@
 import type { Page } from '@playwright/test';
+import { keysFor } from '@hangul-route/content-schema';
 import { LESSON_EPISODES } from '../../src/content/__generated__/lessons-index';
 import { expect, test } from './fixtures';
 import { completeChildForm, journeyCellName, keepSidewaysIfAsked, passDiscover, playCheckByIds, waitForNextListenPickRound } from './helpers';
@@ -104,6 +105,27 @@ async function playCardMatch(page: Page, pairs: readonly (readonly [romanization
   }
 }
 
+/**
+ * Type Hangul: type `text` on the in-app keyboard (no tense letter or joined vowel in the
+ * words typed here, so one key per jamo), tap Done and wait for the right-answer line.
+ */
+async function typeAnswer(page: Page, text: string): Promise<void> {
+  await expect(page.getByTestId('type-hangul-field')).toBeVisible({ timeout: 5_000 });
+  for (const jamo of keysFor(text)) await page.getByTestId(jamo === ' ' ? 'hangul-key-space' : `hangul-key-${jamo}`).click();
+  await page.getByTestId('type-hangul-done').click();
+  await expect(page.getByText('You typed it!')).toBeVisible();
+}
+
+/** Sentence Builder Check: place the tiles of the round in order, by accessible name. */
+async function placeTiles(page: Page, tiles: readonly string[]): Promise<void> {
+  const tray = page.getByTestId('sentence-builder-tray');
+  await expect(tray).toBeVisible({ timeout: 5_000 });
+  for (const name of tiles) {
+    await page.waitForTimeout(120);
+    await tray.getByRole('button', { name, exact: true }).click();
+  }
+}
+
 /** Each cell row appends its cell here (S2-1 onward). */
 const CELLS: readonly UpperCell[] = [
   // F-CURR-001 S2-3: Playground Words q1, At the Playground, played through its real games.
@@ -199,6 +221,38 @@ const CELLS: readonly UpperCell[] = [
       await page.getByText('Learning Route', { exact: true }).last().click();
       await page.getByRole('button', { name: /^Stage 4, Dialogue\./ }).click();
       await expect(page.getByRole('button', { name: /^Letters & Books: Read Along\./ })).toBeVisible();
+    },
+  },
+  // F-CURR-001 S7-1: Write Your Name, q1 "Hoya's Name": Trace a Word (left with Skip, a first-class way
+  // on), Type Hangul with the cast name 호야, and the Stage 7 Sentence Builder Check.
+  {
+    episodeId: 'episode:stage7-letters',
+    cellButton: journeyCellName(7, 'Letters & Books'),
+    title: 'Write Your Name',
+    playFirstQuest: async (page) => {
+      await page.setViewportSize({ width: 320, height: 720 });
+      await startFirstQuest(page);
+      await passDiscover(page);
+      await page.getByRole('button', { name: 'Play minigame' }).click();
+      await expect(page.getByTestId('trace-word-canvas')).toBeVisible();
+      await page.getByRole('button', { name: 'Skip', exact: true }).click();
+      await page.getByRole('button', { name: 'Play minigame' }).click();
+      await typeAnswer(page, '호야');
+      await shot(page, 'write-your-name-q1-type-320');
+      await typeAnswer(page, '이름');
+      await typeAnswer(page, '한글');
+      await typeAnswer(page, '이건 이름이에요');
+      await page.getByRole('button', { name: 'Go', exact: true }).click();
+      await placeTiles(page, ['이건, igeon', '이름이에요, ireumieyo']);
+      await expect(page.getByTestId('sentence-builder-gloss')).toHaveText('This is Hangul.', { timeout: 5_000 });
+      await placeTiles(page, ['이건, igeon', '한글이에요, hangeurieyo']);
+      await expect(page.getByText('Finish', { exact: true }).first()).toBeVisible();
+    },
+    expectRouteDay: async (page) => {
+      await page.goto('/');
+      await page.getByText('Learning Route', { exact: true }).last().click();
+      await page.getByRole('button', { name: /^Stage 7, / }).click();
+      await expect(page.getByRole('button', { name: /^Letters & Books: Write Your Name\./ })).toBeVisible();
     },
   },
 ];

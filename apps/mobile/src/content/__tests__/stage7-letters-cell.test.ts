@@ -50,10 +50,11 @@ const q3 = cell.quests[2]!;
 const nameScope = q3.scopes.find((s) => s.kind === 'write-frame');
 
 describe('Write Your Name (F-CURR-001 S7-1)', () => {
-  it('is the letters cell of Stage 7, three quests, no cards, a draft until both review sign-offs', () => {
+  it('is the letters cell of Stage 7, three quests, no cards, ready with both MAR review sign-offs', () => {
     expect(cell.id).toBe('episode:stage7-letters');
     expect(cell.titleEn).toBe('Write Your Name');
-    expect(cell.status).toBe('draft');
+    expect(cell.status).toBe('ready');
+    expect(cell.review).toMatchObject({ language: 'native-reviewed', culture: 'culture-reviewed', reviewedBy: 'MAR' });
     expect(cell.quests.map((q) => q.id)).toEqual(['quest:stage7-letters-q1', 'quest:stage7-letters-q2', 'quest:stage7-letters-q3']);
     expect(cell.rewardCardIds).toEqual([]);
     expect(cell.quests.every((q) => q.rewardCardId === undefined)).toBe(true);
@@ -145,6 +146,10 @@ describe('Write Your Name (F-CURR-001 S7-1)', () => {
     const table = nameScope.rounds.at(-1)!.soundTable!;
     const blocks = table.groups.flat().map((t) => t.ko);
     expect(blocks).toEqual(expect.arrayContaining(['호', '야']));
+    // Pass 4: a row for every simple vowel, so names from other languages build on the Blocks tab
+    // (스, 트 and 크 for clusters and final consonants, 터 and 퍼, 샘 and 잭 from 새 and 재, 제 and 베).
+    expect(blocks).toEqual(expect.arrayContaining(['스', '트', '크', '르', '터', '퍼', '새', '재', '제', '베', '치', '초', '추']));
+    expect(new Set(blocks).size).toBe(blocks.length);
     // Loanword spelling rules, chapter 1 article 3: finals are only ㄱ ㄴ ㄹ ㅁ ㅂ ㅅ ㅇ.
     expect(table.finals.map((t) => t.ko).sort()).toEqual(['ㄱ', 'ㄴ', 'ㄹ', 'ㅁ', 'ㅂ', 'ㅅ', 'ㅇ'].sort());
     // Article 4: no tense consonant tiles (ㄲ ㄸ ㅃ ㅆ ㅉ) for the plosives.
@@ -160,7 +165,7 @@ describe('Write Your Name (F-CURR-001 S7-1)', () => {
       expect(note.sources?.length ?? 0, note.id).toBeGreaterThanOrEqual(2);
       expect(note.sources?.some((s) => new URL(s.url).hostname === 'www.korean.go.kr'), note.id).toBe(true);
       expect(note.verification.scope, note.id).toBe('lesson');
-      expect(note.verification.passes, note.id).toBeGreaterThanOrEqual(1);
+      expect(note.verification.passes, note.id).toBe(3);
       expect(note.textEn, note.id).not.toMatch(/all Koreans|every Korean|(one|the) (right|correct|only) (way|spelling)/i);
     }
     expect(cell.culture[1]!.textEn).toMatch(/more than one Hangul spelling/);

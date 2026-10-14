@@ -2,7 +2,7 @@
   "id": "episode:stage7-letters",
   "stage": "stage7",
   "theme": "letters",
-  "status": "draft",
+  "status": "ready",
   "titleEn": "Write Your Name",
   "subtitleEn": "Write names in Hangul: Hoya's first, then your own.",
   "hoyaIntroEn": "Names are fun to write. Let's write mine, then yours!",
@@ -210,9 +210,9 @@
               },
               "distractors": [
                 {
-                  "ko": "책",
-                  "romanization": "chaek",
-                  "en": "book"
+                  "ko": "저는",
+                  "romanization": "jeoneun",
+                  "en": "I (polite)"
                 }
               ]
             },
@@ -357,13 +357,22 @@
                 "romanization": "jeoneun Hoyayeyo",
                 "en": "I am Hoya."
               },
-              "distractors": [
-                {
-                  "ko": "이름은",
-                  "romanization": "ireumeun",
-                  "en": "the name (topic)"
-                }
-              ]
+              "distractors": [],
+              "particle": {
+                "tile": 0,
+                "choices": [
+                  {
+                    "ko": "은",
+                    "romanization": "eun",
+                    "en": "topic marker (after a final consonant)"
+                  },
+                  {
+                    "ko": "는",
+                    "romanization": "neun",
+                    "en": "topic marker (after a vowel)"
+                  }
+                ]
+              }
             },
             {
               "id": "r3",
@@ -371,7 +380,8 @@
                 "ko": "이건 제 책이에요.",
                 "romanization": "igeon je chaegieyo",
                 "en": "This is my book."
-              }
+              },
+              "distractors": []
             },
             {
               "id": "r4",
@@ -380,18 +390,19 @@
                 "romanization": "je ireumeun Hoyayeyo",
                 "en": "My name is Hoya."
               },
+              "distractors": [],
               "particle": {
                 "tile": 1,
                 "choices": [
                   {
                     "ko": "은",
                     "romanization": "eun",
-                    "en": "topic marker after a final consonant"
+                    "en": "topic marker (after a final consonant)"
                   },
                   {
                     "ko": "는",
                     "romanization": "neun",
-                    "en": "topic marker after a vowel"
+                    "en": "topic marker (after a vowel)"
                   }
                 ]
               }
@@ -521,7 +532,7 @@
                     }
                   }
                 ],
-                "captionEn": "Think of the sounds in your name. Each sound gets a block."
+                "captionEn": "Break your name into small sound parts. Each part gets a block."
               }
             ]
           },
@@ -668,7 +679,7 @@
                   ]
                 }
               ],
-              "entry": "trace",
+              "entry": "type",
               "freeEntry": false
             },
             {
@@ -695,14 +706,19 @@
                       "en": "the block a"
                     },
                     {
+                      "ko": "애",
+                      "romanization": "ae",
+                      "en": "the block ae"
+                    },
+                    {
+                      "ko": "어",
+                      "romanization": "eo",
+                      "en": "the block eo"
+                    },
+                    {
                       "ko": "에",
                       "romanization": "e",
                       "en": "the block e"
-                    },
-                    {
-                      "ko": "이",
-                      "romanization": "i",
-                      "en": "the block i"
                     },
                     {
                       "ko": "오",
@@ -715,14 +731,14 @@
                       "en": "the block u"
                     },
                     {
-                      "ko": "어",
-                      "romanization": "eo",
-                      "en": "the block eo"
-                    },
-                    {
                       "ko": "으",
                       "romanization": "eu",
                       "en": "the block eu"
+                    },
+                    {
+                      "ko": "이",
+                      "romanization": "i",
+                      "en": "the block i"
                     }
                   ],
                   [
@@ -794,64 +810,203 @@
                   ],
                   [
                     {
-                      "ko": "기",
-                      "romanization": "gi",
-                      "en": "the block gi"
+                      "ko": "개",
+                      "romanization": "gae",
+                      "en": "the block gae"
                     },
                     {
-                      "ko": "니",
-                      "romanization": "ni",
-                      "en": "the block ni"
+                      "ko": "내",
+                      "romanization": "nae",
+                      "en": "the block nae"
                     },
                     {
-                      "ko": "디",
-                      "romanization": "di",
-                      "en": "the block di"
+                      "ko": "대",
+                      "romanization": "dae",
+                      "en": "the block dae"
                     },
                     {
-                      "ko": "리",
-                      "romanization": "ri",
-                      "en": "the block ri"
+                      "ko": "래",
+                      "romanization": "rae",
+                      "en": "the block rae"
                     },
                     {
-                      "ko": "미",
-                      "romanization": "mi",
-                      "en": "the block mi"
+                      "ko": "매",
+                      "romanization": "mae",
+                      "en": "the block mae"
                     },
                     {
-                      "ko": "비",
-                      "romanization": "bi",
-                      "en": "the block bi"
+                      "ko": "배",
+                      "romanization": "bae",
+                      "en": "the block bae"
                     },
                     {
-                      "ko": "시",
-                      "romanization": "si",
-                      "en": "the block si"
+                      "ko": "새",
+                      "romanization": "sae",
+                      "en": "the block sae"
                     },
                     {
-                      "ko": "지",
-                      "romanization": "ji",
-                      "en": "the block ji"
+                      "ko": "재",
+                      "romanization": "jae",
+                      "en": "the block jae"
                     },
                     {
-                      "ko": "키",
-                      "romanization": "ki",
-                      "en": "the block ki"
+                      "ko": "채",
+                      "romanization": "chae",
+                      "en": "the block chae"
                     },
                     {
-                      "ko": "티",
-                      "romanization": "ti",
-                      "en": "the block ti"
+                      "ko": "캐",
+                      "romanization": "kae",
+                      "en": "the block kae"
                     },
                     {
-                      "ko": "피",
-                      "romanization": "pi",
-                      "en": "the block pi"
+                      "ko": "태",
+                      "romanization": "tae",
+                      "en": "the block tae"
                     },
                     {
-                      "ko": "히",
-                      "romanization": "hi",
-                      "en": "the block hi"
+                      "ko": "패",
+                      "romanization": "pae",
+                      "en": "the block pae"
+                    },
+                    {
+                      "ko": "해",
+                      "romanization": "hae",
+                      "en": "the block hae"
+                    }
+                  ],
+                  [
+                    {
+                      "ko": "거",
+                      "romanization": "geo",
+                      "en": "the block geo"
+                    },
+                    {
+                      "ko": "너",
+                      "romanization": "neo",
+                      "en": "the block neo"
+                    },
+                    {
+                      "ko": "더",
+                      "romanization": "deo",
+                      "en": "the block deo"
+                    },
+                    {
+                      "ko": "러",
+                      "romanization": "reo",
+                      "en": "the block reo"
+                    },
+                    {
+                      "ko": "머",
+                      "romanization": "meo",
+                      "en": "the block meo"
+                    },
+                    {
+                      "ko": "버",
+                      "romanization": "beo",
+                      "en": "the block beo"
+                    },
+                    {
+                      "ko": "서",
+                      "romanization": "seo",
+                      "en": "the block seo"
+                    },
+                    {
+                      "ko": "저",
+                      "romanization": "jeo",
+                      "en": "the block jeo"
+                    },
+                    {
+                      "ko": "처",
+                      "romanization": "cheo",
+                      "en": "the block cheo"
+                    },
+                    {
+                      "ko": "커",
+                      "romanization": "keo",
+                      "en": "the block keo"
+                    },
+                    {
+                      "ko": "터",
+                      "romanization": "teo",
+                      "en": "the block teo"
+                    },
+                    {
+                      "ko": "퍼",
+                      "romanization": "peo",
+                      "en": "the block peo"
+                    },
+                    {
+                      "ko": "허",
+                      "romanization": "heo",
+                      "en": "the block heo"
+                    }
+                  ],
+                  [
+                    {
+                      "ko": "게",
+                      "romanization": "ge",
+                      "en": "the block ge"
+                    },
+                    {
+                      "ko": "네",
+                      "romanization": "ne",
+                      "en": "the block ne"
+                    },
+                    {
+                      "ko": "데",
+                      "romanization": "de",
+                      "en": "the block de"
+                    },
+                    {
+                      "ko": "레",
+                      "romanization": "re",
+                      "en": "the block re"
+                    },
+                    {
+                      "ko": "메",
+                      "romanization": "me",
+                      "en": "the block me"
+                    },
+                    {
+                      "ko": "베",
+                      "romanization": "be",
+                      "en": "the block be"
+                    },
+                    {
+                      "ko": "세",
+                      "romanization": "se",
+                      "en": "the block se"
+                    },
+                    {
+                      "ko": "제",
+                      "romanization": "je",
+                      "en": "the block je"
+                    },
+                    {
+                      "ko": "체",
+                      "romanization": "che",
+                      "en": "the block che"
+                    },
+                    {
+                      "ko": "케",
+                      "romanization": "ke",
+                      "en": "the block ke"
+                    },
+                    {
+                      "ko": "테",
+                      "romanization": "te",
+                      "en": "the block te"
+                    },
+                    {
+                      "ko": "페",
+                      "romanization": "pe",
+                      "en": "the block pe"
+                    },
+                    {
+                      "ko": "헤",
+                      "romanization": "he",
+                      "en": "the block he"
                     }
                   ],
                   [
@@ -894,6 +1049,11 @@
                       "ko": "조",
                       "romanization": "jo",
                       "en": "the block jo"
+                    },
+                    {
+                      "ko": "초",
+                      "romanization": "cho",
+                      "en": "the block cho"
                     },
                     {
                       "ko": "코",
@@ -958,6 +1118,11 @@
                       "en": "the block ju"
                     },
                     {
+                      "ko": "추",
+                      "romanization": "chu",
+                      "en": "the block chu"
+                    },
+                    {
                       "ko": "쿠",
                       "romanization": "ku",
                       "en": "the block ku"
@@ -976,6 +1141,140 @@
                       "ko": "후",
                       "romanization": "hu",
                       "en": "the block hu"
+                    }
+                  ],
+                  [
+                    {
+                      "ko": "그",
+                      "romanization": "geu",
+                      "en": "the block geu"
+                    },
+                    {
+                      "ko": "느",
+                      "romanization": "neu",
+                      "en": "the block neu"
+                    },
+                    {
+                      "ko": "드",
+                      "romanization": "deu",
+                      "en": "the block deu"
+                    },
+                    {
+                      "ko": "르",
+                      "romanization": "reu",
+                      "en": "the block reu"
+                    },
+                    {
+                      "ko": "므",
+                      "romanization": "meu",
+                      "en": "the block meu"
+                    },
+                    {
+                      "ko": "브",
+                      "romanization": "beu",
+                      "en": "the block beu"
+                    },
+                    {
+                      "ko": "스",
+                      "romanization": "seu",
+                      "en": "the block seu"
+                    },
+                    {
+                      "ko": "즈",
+                      "romanization": "jeu",
+                      "en": "the block jeu"
+                    },
+                    {
+                      "ko": "츠",
+                      "romanization": "cheu",
+                      "en": "the block cheu"
+                    },
+                    {
+                      "ko": "크",
+                      "romanization": "keu",
+                      "en": "the block keu"
+                    },
+                    {
+                      "ko": "트",
+                      "romanization": "teu",
+                      "en": "the block teu"
+                    },
+                    {
+                      "ko": "프",
+                      "romanization": "peu",
+                      "en": "the block peu"
+                    },
+                    {
+                      "ko": "흐",
+                      "romanization": "heu",
+                      "en": "the block heu"
+                    }
+                  ],
+                  [
+                    {
+                      "ko": "기",
+                      "romanization": "gi",
+                      "en": "the block gi"
+                    },
+                    {
+                      "ko": "니",
+                      "romanization": "ni",
+                      "en": "the block ni"
+                    },
+                    {
+                      "ko": "디",
+                      "romanization": "di",
+                      "en": "the block di"
+                    },
+                    {
+                      "ko": "리",
+                      "romanization": "ri",
+                      "en": "the block ri"
+                    },
+                    {
+                      "ko": "미",
+                      "romanization": "mi",
+                      "en": "the block mi"
+                    },
+                    {
+                      "ko": "비",
+                      "romanization": "bi",
+                      "en": "the block bi"
+                    },
+                    {
+                      "ko": "시",
+                      "romanization": "si",
+                      "en": "the block si"
+                    },
+                    {
+                      "ko": "지",
+                      "romanization": "ji",
+                      "en": "the block ji"
+                    },
+                    {
+                      "ko": "치",
+                      "romanization": "chi",
+                      "en": "the block chi"
+                    },
+                    {
+                      "ko": "키",
+                      "romanization": "ki",
+                      "en": "the block ki"
+                    },
+                    {
+                      "ko": "티",
+                      "romanization": "ti",
+                      "en": "the block ti"
+                    },
+                    {
+                      "ko": "피",
+                      "romanization": "pi",
+                      "en": "the block pi"
+                    },
+                    {
+                      "ko": "히",
+                      "romanization": "hi",
+                      "en": "the block hi"
                     }
                   ],
                   [
@@ -1013,41 +1312,6 @@
                       "ko": "위",
                       "romanization": "wi",
                       "en": "the block wi"
-                    },
-                    {
-                      "ko": "네",
-                      "romanization": "ne",
-                      "en": "the block ne"
-                    },
-                    {
-                      "ko": "데",
-                      "romanization": "de",
-                      "en": "the block de"
-                    },
-                    {
-                      "ko": "레",
-                      "romanization": "re",
-                      "en": "the block re"
-                    },
-                    {
-                      "ko": "메",
-                      "romanization": "me",
-                      "en": "the block me"
-                    },
-                    {
-                      "ko": "세",
-                      "romanization": "se",
-                      "en": "the block se"
-                    },
-                    {
-                      "ko": "케",
-                      "romanization": "ke",
-                      "en": "the block ke"
-                    },
-                    {
-                      "ko": "테",
-                      "romanization": "te",
-                      "en": "the block te"
                     }
                   ]
                 ],
@@ -1120,9 +1384,9 @@
               },
               "distractors": [
                 {
-                  "ko": "제",
-                  "romanization": "je",
-                  "en": "my (polite)"
+                  "ko": "저는",
+                  "romanization": "jeoneun",
+                  "en": "I (polite)"
                 }
               ]
             }
@@ -1149,14 +1413,14 @@
           "publisher": "National Institute of Korean Language, 새국어소식 March 2002",
           "url": "https://www.korean.go.kr/nkview/nknews/200203/44_4.html",
           "accessed": "2026-10-14",
-          "quoteOrLocator": "Opening paragraphs: [p] and [f] are both spelled with ㅍ and [l] and [r] with ㄹ; the purpose of the rules is one agreed spelling for use in Korean, not teaching foreign pronunciation."
+          "quoteOrLocator": "Opening paragraphs: a critic's objection describes the rules' spelling of [p] and [f] both with ㅍ and [l] and [r] both with ㄹ; the author answers that the purpose of the rules is one agreed spelling for use in Korean, not teaching foreign pronunciation."
         }
       ],
       "verification": {
-        "passes": 2,
+        "passes": 3,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "Pass 2 (author, 2026-10-14): each sentence checked against the cited locators; wording is the author's own, no run of words shared with a source.\nLine 2 (pass 2b, independent fact check, 2026-10-14): both pages re-fetched. The NIKL page of the loanword rules, chapter 1 article 1, says loanwords are written with the current 24 letters only (Hangul's own letters). The 2002 새국어소식 article by 정희원 (NIKL) states that the rules write [p] and [f] alike with ㅍ and [l] and [r] alike with ㄹ, and that the rules aim at one unified spelling, not at teaching foreign pronunciation. The note matches both; the English is the author's own; no wording is copied. Outcome: pass, no change."
+        "notes": "Pass 2 (author, 2026-10-14): each sentence checked against the cited locators; wording is the author's own, no run of words shared with a source.\nLine 2 (pass 2b, independent fact check, 2026-10-14): both pages re-fetched. The NIKL page of the loanword rules, chapter 1 article 1, says loanwords are written with the current 24 letters only (Hangul's own letters). The 2002 새국어소식 article by 정희원 (NIKL) states that the rules write [p] and [f] alike with ㅍ and [l] and [r] alike with ㄹ, and that the rules aim at one unified spelling, not at teaching foreign pronunciation. The note matches both; the English is the author's own; no wording is copied. Outcome: pass, no change.\nLine 3 (pass 5, MAR culture review, 2026-10-14): both pages re-fetched. Chapter 1 article 1 of the loanword rules (24 letters only) and the 2002 새국어소식 article (ㅍ for [p] and [f], ㄹ for [l] and [r], one agreed spelling as the aim) say what the note says; the locator of source 2 now says the mapping is raised as a critic's objection that the author answers. No wording copied. Outcome: pass, locator clarified, note text unchanged."
       }
     },
     {
@@ -1173,24 +1437,29 @@
         },
         {
           "title": "외래어 표기의 변천과 실태",
-          "publisher": "National Institute of Korean Language, 새국어생활 1990 no. 4",
+          "publisher": "National Institute of Korean Language (then 국어연구소), 국어생활 no. 23, winter 1990",
           "url": "https://www.korean.go.kr/nkview/nklife/1990_4/23_10.html",
           "accessed": "2026-10-14",
           "quoteOrLocator": "Survey of company names in a 1990 yearbook, consonant items (4)-(6): counts of one foreign word written in several Hangul spellings in actual use (fashion in five spellings)."
         }
       ],
       "verification": {
-        "passes": 2,
+        "passes": 3,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "Pass 2 (author, 2026-10-14): each sentence checked against the cited locators; wording is the author's own, no run of words shared with a source.\nLine 2 (pass 2b, independent fact check, 2026-10-14): both pages re-fetched. The NIKL rules page shows the rules (chapter 1, articles 1-5) but does not say NIKL issued them (the rules were issued by the ministry in 1986), so 'sets' was an overclaim: changed to 'publishes'. The 1990 새국어생활 article by 김세중 surveys company names from a 1990 yearbook and finds one word in several spellings (fashion in five, family in two, rocket and systems in two) and says varied spellings coexist in real use; its data is from 1990, so 'is often written' (present, frequency) was changed to 'in real use ... has been written'. Company names and the historical personal names it lists support 'a name can have more than one Hangul spelling'. Locator of source 2 sharpened. The English is the author's own; no wording is copied. Outcome: pass after fix (wording narrowed, locator corrected)."
+        "notes": "Pass 2 (author, 2026-10-14): each sentence checked against the cited locators; wording is the author's own, no run of words shared with a source.\nLine 2 (pass 2b, independent fact check, 2026-10-14): both pages re-fetched. The NIKL rules page shows the rules (chapter 1, articles 1-5) but does not say NIKL issued them (the rules were issued by the ministry in 1986), so 'sets' was an overclaim: changed to 'publishes'. The 1990 국어생활 (no. 23, winter 1990) article by 김세중 surveys company names from a 1990 yearbook and finds one word in several spellings (fashion in five, family in two, rocket and systems in two) and says varied spellings coexist in real use; its data is from 1990, so 'is often written' (present, frequency) was changed to 'in real use ... has been written'. Company names and the historical personal names it lists support 'a name can have more than one Hangul spelling'. Locator of source 2 sharpened. The English is the author's own; no wording is copied. Outcome: pass after fix (wording narrowed, locator corrected).\nLine 3 (pass 5, MAR culture review, 2026-10-14): both pages re-fetched. 'Publishes' and 'has been written' hold (the 1990 article lists fashion in five spellings, family and system in two each, and foreign personal names). The page header reads 국어생활 1990 겨울 (제23호), by 김세중 of 국어연구소, so the publisher of source 2 is corrected from '새국어생활 1990 no. 4' (the later title of the journal and the URL path) to 국어생활 no. 23, winter 1990. No wording copied. Outcome: pass, citation corrected, note text unchanged."
       }
     }
   ],
   "review": {
-    "language": "draft",
-    "culture": "draft",
-    "notes": []
+    "language": "native-reviewed",
+    "culture": "culture-reviewed",
+    "reviewedBy": "MAR",
+    "reviewedAt": "2026-10-14",
+    "notes": [
+      "Language pass 4 (MAR): 해요체, spacing, 이에요/예요 and RR clean; applied: Hoya's lines use 제/저, reward lines make the learner the writer, distractors that formed a valid sentence replaced with 저는, a 는 particle round on 저는, the q3 caption no longer says one sound per block, the sound table gains the ㅡ, ㅓ, ㅐ and full ㅔ rows and 치 초 추.",
+      "Culture pass 5 (MAR): both loanword notes re-checked against all three cited NIKL pages, two sources each, nothing copied; n2's 1990 source cited as 국어생활 no. 23; the name round keeps the spec's 'no wrong way' line and the notes promise no single spelling; no real person, brand or price; no age wording; Hoya is the cast name."
+    ]
   },
   "contentVer": 1
 }

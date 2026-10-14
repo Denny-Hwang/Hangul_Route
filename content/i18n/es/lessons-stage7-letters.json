@@ -9,11 +9,11 @@
     },
     "quest:stage7-letters-q1": {
       "title": "El nombre de Hoya",
-      "blurb": "Repasa y escribe el nombre de Hoya y la palabra para nombre.",
+      "blurb": "Traza y escribe el nombre de Hoya y la palabra para nombre.",
       "teaser": "Siguiente: escribe tu nombre en una oración completa.",
       "steps.s1.title": "El nombre de Hoya",
       "steps.s2.title": "¿Qué es?",
-      "steps.s3.title": "Repasa el nombre",
+      "steps.s3.title": "Traza el nombre",
       "steps.s4.title": "Escribe la palabra",
       "steps.s5.title": "Dos preguntas rápidas",
       "steps.s6.title": "¡Ya escribes nombres!",
@@ -55,14 +55,14 @@
       "teaser": "¡Terminaste Escribe tu nombre!",
       "steps.s1.title": "Tu nombre en hangul",
       "steps.s2.title": "Sonidos y letras",
-      "steps.s3.title": "Repasa las palabras",
+      "steps.s3.title": "Traza las palabras",
       "steps.s4.title": "Escribe tu nombre",
       "steps.s5.title": "Dos preguntas rápidas",
       "steps.s6.title": "¡Tu nombre!",
       "steps.s1.hoyaLine": "¡Ahora tu nombre! Puedes escribir tu nombre como tú quieras.",
       "steps.s6.hoyaLine": "Escribiste tu nombre en hangul. ¡Se ve genial!",
       "steps.s2.discover.pages.0.caption": "Tu nombre va donde está el mío.",
-      "steps.s2.discover.pages.1.caption": "Piensa en los sonidos de tu nombre. Cada sonido lleva un bloque.",
+      "steps.s2.discover.pages.1.caption": "Divide tu nombre en partes de sonido. Cada parte lleva un bloque.",
       "steps.s2.discover.pages.1.items.0.word.gloss": "sonido",
       "steps.s2.discover.pages.1.items.1.word.gloss": "letra, carácter escrito",
       "steps.s2.discover.pages.0.items.0.sentence.gloss": "Me llamo Hoya."
@@ -86,8 +86,8 @@
     "minigame:s7-letters-q1-check": {
       "orderIt.rounds.c1.sentence.gloss": "Esto es un nombre.",
       "orderIt.rounds.c2.sentence.gloss": "Esto es hangul.",
-      "orderIt.rounds.c1.distractors.chaek.gloss": "libro",
-      "orderIt.rounds.c2.distractors.ireum.gloss": "nombre"
+      "orderIt.rounds.c2.distractors.ireum.gloss": "nombre",
+      "orderIt.rounds.c1.distractors.jeoneun.gloss": "yo (forma cortés)"
     },
     "minigame:s7-letters-q2-practice": {
       "orderIt.rounds.r1.sentence.gloss": "Me llamo Hoya.",
@@ -95,9 +95,10 @@
       "orderIt.rounds.r3.sentence.gloss": "Este es mi libro.",
       "orderIt.rounds.r4.sentence.gloss": "Me llamo Hoya.",
       "orderIt.rounds.r1.distractors.jeoneun.gloss": "yo (forma cortés)",
-      "orderIt.rounds.r2.distractors.ireumeun.gloss": "el nombre (tema)",
-      "orderIt.rounds.r4.particle.choices.eun.gloss": "marca de tema tras consonante final",
-      "orderIt.rounds.r4.particle.choices.neun.gloss": "marca de tema tras vocal"
+      "orderIt.rounds.r4.particle.choices.eun.gloss": "marca de tema (después de una consonante final)",
+      "orderIt.rounds.r4.particle.choices.neun.gloss": "marca de tema (después de una vocal)",
+      "orderIt.rounds.r2.particle.choices.eun.gloss": "marca de tema (después de una consonante final)",
+      "orderIt.rounds.r2.particle.choices.neun.gloss": "marca de tema (después de una vocal)"
     },
     "minigame:s7-letters-q2-apply": {
       "typeHangul.rounds.y1.prompt": "Escribe: mi nombre.",
@@ -110,7 +111,7 @@
     "minigame:s7-letters-q2-check": {
       "orderIt.rounds.c1.sentence.gloss": "Me llamo Hoya.",
       "orderIt.rounds.c2.sentence.gloss": "Soy Hoya.",
-      "orderIt.rounds.c1.distractors.igeon.gloss": "esto (tema)",
+      "orderIt.rounds.c1.distractors.igeon.gloss": "esto (como tema)",
       "orderIt.rounds.c2.distractors.je.gloss": "mi (forma cortés)"
     },
     "minigame:s7-letters-q3-practice": {
@@ -135,7 +136,7 @@
       "orderIt.rounds.c1.sentence.gloss": "Este es mi nombre.",
       "orderIt.rounds.c2.sentence.gloss": "Esta es una letra del hangul.",
       "orderIt.rounds.c1.distractors.sori.gloss": "sonido",
-      "orderIt.rounds.c2.distractors.je.gloss": "mi (forma cortés)"
+      "orderIt.rounds.c2.distractors.jeoneun.gloss": "yo (forma cortés)"
     }
   }
 }

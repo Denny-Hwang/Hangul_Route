@@ -564,8 +564,8 @@ describe('re-pace from today (console mode shift, section 3.7)', () => {
     return { id: 'plan:route', meta: toMeta(draft), items: toPlanItems(draft) };
   }
 
-  it('offers Refresh route on every route saved from catalogue version 1 to 10 (F-QUEST-002 Q-6a bumps it to 2, Q-6b to 3, Q-7b to 4, Q-8 to 5, F-STORY-001 PR 1.9 to 6, F-STORY-005 PR 5.6 to 7 for the rites book and to 8 for the other four books, F-CURR-001 S4-1 to 9 for Read Along, S3-1 to 10 for First Sentences, S2-3 to 11 for Playground Words)', () => {
-    expect(CATALOG.version).toBe(11);
+  it('offers Refresh route on every route saved from catalogue version 1 to 11 (F-QUEST-002 Q-6a bumps it to 2, Q-6b to 3, Q-7b to 4, Q-8 to 5, F-STORY-001 PR 1.9 to 6, F-STORY-005 PR 5.6 to 7 for the rites book and to 8 for the other four books, F-CURR-001 S4-1 to 9 for Read Along, S3-1 to 10 for First Sentences, S2-3 to 11 for Playground Words, S7-1 to 12 for Write Your Name)', () => {
+    expect(CATALOG.version).toBe(12);
     expect(v1Plan('brand-new').meta.catalogVersion).toBe(1);
     expect(isStaleCatalog(v1Plan('brand-new').meta)).toBe(true);
     expect(isStaleCatalog(v1Plan('some-letters').meta)).toBe(true);
@@ -587,6 +587,8 @@ describe('re-pace from today (console mode shift, section 3.7)', () => {
     expect(isStaleCatalog({ ...v1Plan('brand-new').meta, catalogVersion: 9 })).toBe(true);
     // A route saved before Playground Words shipped (version 10) asks once too.
     expect(isStaleCatalog({ ...v1Plan('brand-new').meta, catalogVersion: 10 })).toBe(true);
+    // A route saved before Write Your Name shipped (version 11) asks once too.
+    expect(isStaleCatalog({ ...v1Plan('brand-new').meta, catalogVersion: 11 })).toBe(true);
   });
 
   it('a new route on the shipped catalogue can schedule the new nature and crafts quests after their q1 (F-QUEST-002 Q-8)', () => {
