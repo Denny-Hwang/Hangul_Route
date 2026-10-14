@@ -1162,6 +1162,7 @@ export const learner = {
   },
   access: {
     notOpen: '아직 안 열렸어요',
+    ask: { family: '어른에게 물어봐요', class: '선생님이나 어른에게 물어봐요', self: '여는 방법 보기' },
     openForYou: '지금 열린 퀘스트를 모두 했어요.',
     practiceWords: { cta: '낱말 연습하기' },
   },

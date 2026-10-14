@@ -1181,6 +1181,7 @@ export const learner = {
   },
   access: {
     notOpen: 'Aún sin abrir',
+    ask: { family: 'Pregunta a un adulto', class: 'Pregunta a tu docente o a un adulto', self: 'Mira cómo se abre' },
   },
   /**
    * The learner's own weekly plan (F-PLAN-002 P2-7a, P2-7b). "Plan semanal", never "ruta"; the pace names match

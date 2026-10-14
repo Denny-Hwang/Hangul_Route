@@ -47,7 +47,7 @@ import {
   type MissionCard,
 } from '../../logic/homework/mission-builder';
 import { dueTodayCount, showsTodayCount } from '../../logic/homework/assignment-groups';
-import { homeCardLock, isHomeCardLocked } from '../../logic/homework/home-card-access';
+import { homeCardLock, homeTileLook, isHomeCardLocked } from '../../logic/homework/home-card-access';
 import { mergeAssignments } from '../../logic/homework/assignment-merger';
 import { gridQuestProgress } from '../../logic/journey';
 import { homeColumns } from '../../logic/layout/home-columns';
@@ -132,7 +132,7 @@ const catchUpAnnounced = new Set<string>();
  * A collected card keeps its slot and switches tone — it never disappears and
  * the cards below it never move up (§3.2). A pinned card that is no longer open (F-STORY-004
  * PR 4.8f, gating on only) shows the sunken tone, the dotted ring and "Not open yet", says so in
- * its label and gives the ask as its hint, as a closed Library tile does (F-ENT-003 section 3.7;
+ * its label and gives the ask as its hint (collected wins the look, `homeTileLook`), as a closed Library tile does (F-ENT-003 section 3.7;
  * never a lock glyph, OD-6). Design: design/wireframes/home/story-time-card.md (state "not open").
  */
 function MissionTile({
@@ -157,14 +157,20 @@ function MissionTile({
   const m = useMessages();
   const locale = useLocale();
   const { title, subtitle } = missionCardText(localizeMissionCard(card, locale), m.learner);
-  const label = m.a11y.missionCard(title, subtitle, card.collected);
+  const look = homeTileLook({
+    collected: card.collected,
+    locked,
+    label: m.a11y.missionCard(title, subtitle, card.collected),
+    lockedLabel: m.learner.home.lockedCard.a11y,
+    askHint,
+  });
   return (
     <Card
       padding="md"
-      tone={locked ? 'sunken' : card.collected ? 'success' : 'paper'}
+      tone={look.tone}
       onPress={onPress}
-      accessibilityLabel={locked ? m.learner.home.lockedCard.a11y(label) : label}
-      accessibilityHint={locked ? askHint : undefined}
+      accessibilityLabel={look.accessibilityLabel}
+      accessibilityHint={look.accessibilityHint}
     >
       <View
         style={{
@@ -189,16 +195,16 @@ function MissionTile({
             {title}
           </Body>
           <Caption tone="muted">{subtitle}</Caption>
-          {locked ? (
+          {look.notOpen ? (
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
               <TagMark kind="notOpen" testID={`home-mission-not-open-${card.slot}`} />
-              <Body size="sm" weight="semibold" tone="secondary">
+              <Body size="sm" weight="semibold" tone="secondary" style={{ flexShrink: 1 }}>
                 {m.learner.access.notOpen}
               </Body>
             </View>
           ) : null}
         </View>
-        {card.collected ? <Icon name="sparkle" size={28} color={colors.brand.primary} /> : null}
+        {look.sparkle ? <Icon name="sparkle" size={28} color={colors.brand.primary} /> : null}
       </View>
     </Card>
   );

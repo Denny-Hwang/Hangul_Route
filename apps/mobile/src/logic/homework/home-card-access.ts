@@ -54,3 +54,44 @@ export function homeCardLock(input: HomeCardAccessInput): HomeCardLock | null {
 export function isHomeCardLocked(input: Omit<HomeCardAccessInput, 'opensDirectly'>): boolean {
   return homeCardLock({ ...input, opensDirectly: false }) !== null;
 }
+
+export interface HomeTileLookInput {
+  /** The card was collected today (F-HW-001 section 3.2). */
+  collected: boolean;
+  /** `isHomeCardLocked` for the card. */
+  locked: boolean;
+  /** The card's own label (`a11y.missionCard`). */
+  label: string;
+  /** `learner.home.lockedCard.a11y`: the label with the Not open yet word. */
+  lockedLabel: (label: string) => string;
+  /** The ask (`askFor(...).label`), the hint of a tap that opens the grown-up gate. */
+  askHint: string;
+}
+
+export interface HomeTileLook {
+  tone: 'paper' | 'success' | 'sunken';
+  /** The dotted ring and the Not open yet word under the card's line. */
+  notOpen: boolean;
+  /** The collected sparkle. */
+  sparkle: boolean;
+  accessibilityLabel: string;
+  accessibilityHint: string | undefined;
+}
+
+/**
+ * What a Home mission tile draws (F-STORY-004 PR 4.8f). Collected wins the look: a card the learner
+ * finished today keeps the collected tone, sparkle and label (F-HW-001 section 3.2) and never reads
+ * "Not open yet", even when its story or quest has closed since; a tap still takes the locked path
+ * (`homeCardLock`), so its hint is the ask. A locked card not collected takes the sunken tone, the
+ * dotted ring and the Not open yet word, in its label too, with the ask as its hint.
+ */
+export function homeTileLook(input: HomeTileLookInput): HomeTileLook {
+  const hint = input.locked ? input.askHint : undefined;
+  if (input.collected) {
+    return { tone: 'success', notOpen: false, sparkle: true, accessibilityLabel: input.label, accessibilityHint: hint };
+  }
+  if (input.locked) {
+    return { tone: 'sunken', notOpen: true, sparkle: false, accessibilityLabel: input.lockedLabel(input.label), accessibilityHint: hint };
+  }
+  return { tone: 'paper', notOpen: false, sparkle: false, accessibilityLabel: input.label, accessibilityHint: undefined };
+}

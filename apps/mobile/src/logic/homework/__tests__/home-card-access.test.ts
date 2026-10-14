@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import type { StoryIndexEntry } from '../../story/story-index';
 import { questId, story } from '../../story/__tests__/shelf-fixture';
-import { homeCardLock, isHomeCardLocked, type HomeCardAccessInput } from '../home-card-access';
+import { homeCardLock, homeTileLook, isHomeCardLocked, type HomeCardAccessInput } from '../home-card-access';
 import type { MissionCard } from '../mission-builder';
 
 /**
@@ -136,7 +136,7 @@ describe('isHomeCardLocked (F-STORY-004 PR 4.8f: the locked look of a pinned car
     }
   });
 
-  it('agrees with homeCardLock for every case, whichever way the gate opens', () => {
+  it('does not depend on how the gate opens (PIN entry or the Plan screen directly)', () => {
     const cases: Partial<HomeCardAccessInput>[] = [
       {},
       { isQuestOpen: () => false },
@@ -171,24 +171,59 @@ describe('Home wires the tap-time check (source guard: the mobile lane does not 
   });
 });
 
-describe('Home draws a pinned card that became locked (source guard, PR 4.8f)', () => {
+describe('homeTileLook (PR 4.8f: what a Home tile draws)', () => {
+  const base = { label: 'A short story. Read it.', lockedLabel: (l: string) => `${l} Not open yet.`, askHint: 'Ask a grown-up' };
+
+  it('an open card that is not collected: paper, no ring, no hint', () => {
+    expect(homeTileLook({ ...base, collected: false, locked: false })).toEqual({
+      tone: 'paper',
+      notOpen: false,
+      sparkle: false,
+      accessibilityLabel: 'A short story. Read it.',
+      accessibilityHint: undefined,
+    });
+  });
+
+  it('a collected open card: the collected look (F-HW-001 section 3.2)', () => {
+    expect(homeTileLook({ ...base, collected: true, locked: false })).toEqual({
+      tone: 'success',
+      notOpen: false,
+      sparkle: true,
+      accessibilityLabel: 'A short story. Read it.',
+      accessibilityHint: undefined,
+    });
+  });
+
+  it('a locked card: sunken, the ring and the word, in the label too, with the ask as the hint', () => {
+    expect(homeTileLook({ ...base, collected: false, locked: true })).toEqual({
+      tone: 'sunken',
+      notOpen: true,
+      sparkle: false,
+      accessibilityLabel: 'A short story. Read it. Not open yet.',
+      accessibilityHint: 'Ask a grown-up',
+    });
+  });
+
+  it('collected wins the look: a card finished today never reads Not open yet; the hint still says where a tap goes', () => {
+    expect(homeTileLook({ ...base, collected: true, locked: true })).toEqual({
+      tone: 'success',
+      notOpen: false,
+      sparkle: true,
+      accessibilityLabel: 'A short story. Read it.',
+      accessibilityHint: 'Ask a grown-up',
+    });
+  });
+});
+
+describe('Home draws a pinned card that became locked (loose source guard, PR 4.8f)', () => {
   const src = readFileSync(join(__dirname, '..', '..', '..', 'screens', 'home', 'HomeScreen.tsx'), 'utf8');
   const tileStart = src.indexOf('function MissionTile(');
   const tile = tileStart < 0 ? '' : src.slice(tileStart, src.indexOf('\nfunction ', tileStart + 1));
 
-  it('derives the locked look with the same inputs as the tap', () => {
-    expect(src).toMatch(/locked=\{isHomeCardLocked\(\{ card, entries: storyIndex, isQuestOpen: questOpen, isStoryLocked \}\)\}/);
-  });
-
-  it('shows the Not open yet word with the dotted ring, never a lock glyph or the word locked', () => {
-    expect(tile).toMatch(/\{locked \? \(\s*<View[^>]*>\s*<TagMark kind="notOpen"/);
-    expect(tile).toMatch(/m\.learner\.access\.notOpen/);
+  it('derives the look from isHomeCardLocked and homeTileLook, with no lock glyph', () => {
+    expect(src).toMatch(/isHomeCardLocked\(\{\s*card,\s*entries: storyIndex,\s*isQuestOpen: questOpen,\s*isStoryLocked\s*\}\)/);
+    expect(tile).toMatch(/homeTileLook\(/);
+    expect(tile).toMatch(/TagMark kind="notOpen"/);
     expect(tile).not.toMatch(/name=["']lock["']/);
-  });
-
-  it('says it in the label and gives the ask as the hint', () => {
-    expect(tile).toMatch(/m\.learner\.home\.lockedCard\.a11y\(/);
-    expect(tile).toMatch(/accessibilityHint=\{locked \? askHint : undefined\}/);
-    expect(src).toMatch(/askHint=\{ask\.label\}/);
   });
 });

@@ -37,6 +37,29 @@ describe('learner.home.lockedCard (F-STORY-004 PR 4.8f)', () => {
   });
 });
 
+describe('learner.access.ask in es and ko (review of #610: the hint of a closed card)', () => {
+  it('es and ko read their own ask, never the English one', () => {
+    const en = getMessages('en').learner.access.ask;
+    for (const locale of ['es', 'ko'] as const) {
+      const ask = getMessages(locale).learner.access.ask;
+      for (const key of ['family', 'class', 'self'] as const) expect(ask[key], `${locale} ${key}`).not.toBe(en[key]);
+    }
+  });
+
+  it('reads the exact wording, with no grown-up word on a self device', () => {
+    expect(getMessages('es').learner.access.ask).toEqual({
+      family: 'Pregunta a un adulto',
+      class: 'Pregunta a tu docente o a un adulto',
+      self: 'Mira cómo se abre',
+    });
+    expect(getMessages('ko').learner.access.ask).toEqual({
+      family: '어른에게 물어봐요',
+      class: '선생님이나 어른에게 물어봐요',
+      self: '여는 방법 보기',
+    });
+  });
+});
+
 describe('a11y.hoya pose words per locale (review of #594)', () => {
   it('every locale names every pose of the design-system union', () => {
     for (const locale of LOCALES) {
