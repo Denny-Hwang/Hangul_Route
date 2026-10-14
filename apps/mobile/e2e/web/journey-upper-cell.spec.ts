@@ -1,7 +1,7 @@
 import type { Page } from '@playwright/test';
 import { LESSON_EPISODES } from '../../src/content/__generated__/lessons-index';
 import { expect, test } from './fixtures';
-import { completeChildForm, keepSidewaysIfAsked } from './helpers';
+import { completeChildForm, journeyCellName, keepSidewaysIfAsked, passDiscover, playCheckByIds } from './helpers';
 
 /**
  * F-CURR-001 section 5 (row C-2 lands the skeleton; each cell row adds its cell):
@@ -13,8 +13,8 @@ import { completeChildForm, keepSidewaysIfAsked } from './helpers';
 
 interface UpperCell {
   episodeId: string;
-  /** The grid cell's accessible name, e.g. "Stage 2 Words, Holidays & Traditions: ...". */
-  cellButton: string;
+  /** The grid cell's accessible name, e.g. "Stage 2 Words, Holidays & Traditions: ..." (or `journeyCellName`). */
+  cellButton: string | RegExp;
   /** The episode page title. */
   title: string;
   /** Plays the first quest from its launcher to the reward step (the cell's games, in order). */
@@ -23,8 +23,53 @@ interface UpperCell {
   expectRouteDay: (page: Page) => Promise<void>;
 }
 
+/**
+ * Tap to Respond: tap the written reply whose button label starts with `ko` (the label is
+ * "<ko>  ·  <romanization>  ·  <gloss>"); a right reply moves to the next turn.
+ */
+async function reply(page: Page, ko: string): Promise<void> {
+  // The accessible name collapses the label's double spaces.
+  const option = page.getByRole('button', { name: new RegExp(`^${ko.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')} · `) });
+  await expect(option).toBeVisible();
+  await option.click();
+}
+
+/** Story Sequence: place the lesson lines in order by card id, then leave the replay. */
+async function orderLines(page: Page, ids: readonly string[]): Promise<void> {
+  for (const id of ids) await page.getByTestId(`story-sequence-card-${id}`).click();
+  await page.getByTestId('story-sequence-skip-replay').or(page.getByTestId('story-sequence-done')).first().click();
+}
+
 /** Each cell row appends its cell here (S2-1 onward). */
-const CELLS: readonly UpperCell[] = [];
+const CELLS: readonly UpperCell[] = [
+  // F-CURR-001 S4-1: Read Along, q1 "What Is This?" played through its real games.
+  {
+    episodeId: 'episode:stage4-letters',
+    cellButton: journeyCellName(4, 'Letters & Books'),
+    title: 'Read Along',
+    playFirstQuest: async (page) => {
+      await page.getByRole('button', { name: 'Start', exact: true }).first().click();
+      await page.getByRole('button', { name: 'Continue' }).click();
+      // Discover: two exchange pages; Read along is offered, never started by itself.
+      await expect(page.getByRole('button', { name: 'Read along' })).toBeVisible();
+      await passDiscover(page);
+      await page.getByRole('button', { name: 'Play minigame' }).click();
+      await reply(page, '책이에요.');
+      await reply(page, '친구예요.');
+      await reply(page, '가방이에요.');
+      await page.getByRole('button', { name: 'Play minigame' }).click();
+      await orderLines(page, ['l1', 'l2', 'l3', 'l4']);
+      await playCheckByIds(page, [{ answer: 'a' }, { answer: 'a' }]);
+      await expect(page.getByText('Finish', { exact: true }).first()).toBeVisible();
+    },
+    expectRouteDay: async (page) => {
+      await page.goto('/');
+      await page.getByText('Learning Route', { exact: true }).last().click();
+      await page.getByRole('button', { name: /^Stage 4, Dialogue\./ }).click();
+      await expect(page.getByRole('button', { name: /^Letters & Books: Read Along\./ })).toBeVisible();
+    },
+  },
+];
 
 async function openJourney(page: Page): Promise<void> {
   await page.goto('/');

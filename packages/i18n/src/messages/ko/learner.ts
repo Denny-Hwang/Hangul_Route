@@ -379,6 +379,12 @@ export const learner = {
       batchimLine: '글자의 맨 아래에 와요',
       empty: '여기에는 볼 것이 없어요. 계속을 눌러요.',
       pageLabel: (page: number, count: number) => `${count}쪽 중 ${page}쪽`,
+      exchange: {
+        readAlong: { cta: '함께 읽기' },
+        stop: { cta: '그만 읽기' },
+        readingNow: { pill: '지금 읽는 중' },
+        lineLabel: (line: number, total: number, speaker: string) => `${total}줄 중 ${line}번째 줄, ${speaker}`,
+      },
     },
   },
 

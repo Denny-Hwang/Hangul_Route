@@ -26,3 +26,11 @@ export function focusForScreenReader(node: object | null): void {
 export function announceForScreenReader(_text: string): void {
   return undefined;
 }
+
+/** The same constant as native; the web never waits on an announcement. */
+export const ANNOUNCE_TIMEOUT_MS = 3000;
+
+/** The web cannot tell a screen reader is on (above), so the audio that follows starts at once. */
+export function announceAndWait(_text: string, _gapMs: number): Promise<void> {
+  return Promise.resolve();
+}
