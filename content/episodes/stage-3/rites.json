@@ -1,0 +1,1528 @@
+{
+  "id": "episode:stage3-rites",
+  "stage": "stage3",
+  "theme": "rites",
+  "status": "draft",
+  "titleEn": "Festival Sentences",
+  "subtitleEn": "Short sentences about Seollal and Chuseok",
+  "hoyaIntroEn": "Festival days are fun! Let's read and build sentences about them.",
+  "order": 3,
+  "pillarTags": [
+    "B5"
+  ],
+  "rewardCardIds": [],
+  "quests": [
+    {
+      "id": "quest:stage3-rites-q1",
+      "titleEn": "Grandma and Grandpa",
+      "blurbEn": "Join two things with hago, \"and\", in festival sentences.",
+      "teaserEn": "Next: pretty and tasty things",
+      "estimatedMinutes": 5,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "Family and Festival Food",
+          "hoyaLineEn": "Let's read sentences that join two things with one small word!",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "A and B",
+          "hoyaLineEn": "Tap Hear it to listen to each word and sentence.",
+          "discover": {
+            "pages": [
+              {
+                "captionEn": "Two family words",
+                "items": [
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "할머니",
+                      "romanization": "halmeoni",
+                      "en": "grandmother",
+                      "syllables": [
+                        "hal",
+                        "meo",
+                        "ni"
+                      ]
+                    },
+                    "picture": "word:family-grandma"
+                  },
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "할아버지",
+                      "romanization": "harabeoji",
+                      "en": "grandfather",
+                      "syllables": [
+                        "ha",
+                        "ra",
+                        "beo",
+                        "ji"
+                      ]
+                    },
+                    "picture": "word:family-grandpa"
+                  }
+                ]
+              },
+              {
+                "captionEn": "Joining two things",
+                "items": [
+                  {
+                    "type": "pattern",
+                    "frame": {
+                      "ko": "___하고 떡을 먹어요.",
+                      "romanization": "___hago tteogeul meogeoyo",
+                      "en": "I eat ___ and rice cake."
+                    },
+                    "noteEn": "{ko:하고} means \"and\". It comes right after the first thing: A{ko:하고} B.",
+                    "examples": [
+                      {
+                        "ko": "송편하고 떡을 먹어요.",
+                        "romanization": "songpyeonhago tteogeul meogeoyo",
+                        "en": "I eat songpyeon and rice cake."
+                      },
+                      {
+                        "ko": "사과하고 떡을 먹어요.",
+                        "romanization": "sagwahago tteogeul meogeoyo",
+                        "en": "I eat an apple and rice cake."
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "captionEn": "Who is here?",
+                "items": [
+                  {
+                    "type": "sentence",
+                    "sentence": {
+                      "ko": "할머니하고 할아버지가 있어요.",
+                      "romanization": "halmeonihago harabeojiga isseoyo",
+                      "en": "Grandma and Grandpa are here."
+                    }
+                  },
+                  {
+                    "type": "sentence",
+                    "sentence": {
+                      "ko": "엄마하고 할머니가 있어요.",
+                      "romanization": "eommahago halmeoniga isseoyo",
+                      "en": "Mom and Grandma are here."
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "durationSeconds": 65
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Build the Sentences",
+          "minigameKind": "order-it",
+          "minigameRef": "minigame:s3-rites-q1-practice",
+          "durationSeconds": 85
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Listen and Pick",
+          "minigameKind": "listen-pick",
+          "minigameRef": "minigame:s3-rites-q1-apply",
+          "durationSeconds": 70
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Two Quick Ones",
+          "minigameKind": "listen-pick",
+          "minigameRef": "minigame:s3-rites-q1-check",
+          "durationSeconds": 40
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "A and B!",
+          "hoyaLineEn": "You joined two things in a sentence. Well done!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s3-rites-q1-practice",
+          "kind": "order-it",
+          "rounds": [
+            {
+              "id": "r1",
+              "sentence": {
+                "ko": "송편하고 떡을 먹어요.",
+                "romanization": "songpyeonhago tteogeul meogeoyo",
+                "en": "I eat songpyeon and rice cake."
+              },
+              "pictureRef": "card:songpyeon",
+              "distractors": [
+                {
+                  "ko": "있어요.",
+                  "romanization": "isseoyo",
+                  "en": "is here, there is"
+                }
+              ]
+            },
+            {
+              "id": "r2",
+              "sentence": {
+                "ko": "할머니하고 할아버지가 있어요.",
+                "romanization": "halmeonihago harabeojiga isseoyo",
+                "en": "Grandma and Grandpa are here."
+              },
+              "distractors": [
+                {
+                  "ko": "먹어요.",
+                  "romanization": "meogeoyo",
+                  "en": "eat"
+                }
+              ],
+              "particle": {
+                "tile": 1,
+                "choices": [
+                  {
+                    "ko": "이",
+                    "romanization": "i",
+                    "en": "subject marker after a final consonant"
+                  },
+                  {
+                    "ko": "가",
+                    "romanization": "ga",
+                    "en": "subject marker after a vowel"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "r3",
+              "sentence": {
+                "ko": "사과하고 떡을 먹어요.",
+                "romanization": "sagwahago tteogeul meogeoyo",
+                "en": "I eat an apple and rice cake."
+              },
+              "pictureRef": "word:food-apple",
+              "distractors": [
+                {
+                  "ko": "있어요.",
+                  "romanization": "isseoyo",
+                  "en": "is here, there is"
+                }
+              ],
+              "particle": {
+                "tile": 1,
+                "choices": [
+                  {
+                    "ko": "을",
+                    "romanization": "eul",
+                    "en": "object marker after a final consonant"
+                  },
+                  {
+                    "ko": "를",
+                    "romanization": "reul",
+                    "en": "object marker after a vowel"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "r4",
+              "sentence": {
+                "ko": "엄마하고 할머니가 있어요.",
+                "romanization": "eommahago halmeoniga isseoyo",
+                "en": "Mom and Grandma are here."
+              },
+              "distractors": [
+                {
+                  "ko": "떡을",
+                  "romanization": "tteogeul",
+                  "en": "rice cake (what is eaten)"
+                }
+              ],
+              "particle": {
+                "tile": 1,
+                "choices": [
+                  {
+                    "ko": "이",
+                    "romanization": "i",
+                    "en": "subject marker after a final consonant"
+                  },
+                  {
+                    "ko": "가",
+                    "romanization": "ga",
+                    "en": "subject marker after a vowel"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "r5",
+              "sentence": {
+                "ko": "송편하고 사과를 먹어요.",
+                "romanization": "songpyeonhago sagwareul meogeoyo",
+                "en": "I eat songpyeon and an apple."
+              },
+              "distractors": [
+                {
+                  "ko": "있어요.",
+                  "romanization": "isseoyo",
+                  "en": "is here, there is"
+                }
+              ],
+              "particle": {
+                "tile": 1,
+                "choices": [
+                  {
+                    "ko": "을",
+                    "romanization": "eul",
+                    "en": "object marker after a final consonant"
+                  },
+                  {
+                    "ko": "를",
+                    "romanization": "reul",
+                    "en": "object marker after a vowel"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s3-rites-q1-apply",
+          "kind": "listen-pick",
+          "rounds": [
+            {
+              "id": "r1",
+              "prompt": {
+                "ko": "할머니하고 할아버지가 있어요.",
+                "romanization": "halmeonihago harabeojiga isseoyo",
+                "en": "Grandma and Grandpa are here."
+              },
+              "options": [
+                {
+                  "id": "o1",
+                  "text": {
+                    "ko": "할머니하고 할아버지가 있어요.",
+                    "romanization": "halmeonihago harabeojiga isseoyo",
+                    "en": "Grandma and Grandpa are here."
+                  }
+                },
+                {
+                  "id": "o2",
+                  "text": {
+                    "ko": "엄마하고 할머니가 있어요.",
+                    "romanization": "eommahago halmeoniga isseoyo",
+                    "en": "Mom and Grandma are here."
+                  }
+                },
+                {
+                  "id": "o3",
+                  "text": {
+                    "ko": "송편하고 사과를 먹어요.",
+                    "romanization": "songpyeonhago sagwareul meogeoyo",
+                    "en": "I eat songpyeon and an apple."
+                  }
+                }
+              ],
+              "answerId": "o1"
+            },
+            {
+              "id": "r2",
+              "prompt": {
+                "ko": "송편하고 떡을 먹어요.",
+                "romanization": "songpyeonhago tteogeul meogeoyo",
+                "en": "I eat songpyeon and rice cake."
+              },
+              "options": [
+                {
+                  "id": "songpyeon",
+                  "pictureRef": "card:songpyeon",
+                  "labelEn": "Songpyeon"
+                },
+                {
+                  "id": "kimchi",
+                  "pictureRef": "card:kimchi",
+                  "labelEn": "Kimchi"
+                },
+                {
+                  "id": "sea",
+                  "pictureRef": "card:sea",
+                  "labelEn": "Sea"
+                },
+                {
+                  "id": "grandpa",
+                  "pictureRef": "word:family-grandpa",
+                  "labelEn": "Grandpa"
+                }
+              ],
+              "answerId": "songpyeon"
+            },
+            {
+              "id": "r3",
+              "prompt": {
+                "ko": "사과하고 떡을 먹어요.",
+                "romanization": "sagwahago tteogeul meogeoyo",
+                "en": "I eat an apple and rice cake."
+              },
+              "options": [
+                {
+                  "id": "o1",
+                  "text": {
+                    "ko": "사과하고 떡을 먹어요.",
+                    "romanization": "sagwahago tteogeul meogeoyo",
+                    "en": "I eat an apple and rice cake."
+                  }
+                },
+                {
+                  "id": "o2",
+                  "text": {
+                    "ko": "송편하고 떡을 먹어요.",
+                    "romanization": "songpyeonhago tteogeul meogeoyo",
+                    "en": "I eat songpyeon and rice cake."
+                  }
+                },
+                {
+                  "id": "o3",
+                  "text": {
+                    "ko": "송편하고 사과를 먹어요.",
+                    "romanization": "songpyeonhago sagwareul meogeoyo",
+                    "en": "I eat songpyeon and an apple."
+                  }
+                }
+              ],
+              "answerId": "o1"
+            },
+            {
+              "id": "r4",
+              "prompt": {
+                "ko": "엄마하고 할머니가 있어요.",
+                "romanization": "eommahago halmeoniga isseoyo",
+                "en": "Mom and Grandma are here."
+              },
+              "options": [
+                {
+                  "id": "grandma",
+                  "pictureRef": "word:family-grandma",
+                  "labelEn": "Grandma"
+                },
+                {
+                  "id": "apple",
+                  "pictureRef": "word:food-apple",
+                  "labelEn": "Apple"
+                },
+                {
+                  "id": "moon",
+                  "pictureRef": "card:moon",
+                  "labelEn": "Full moon"
+                },
+                {
+                  "id": "hanbok",
+                  "pictureRef": "card:hanbok",
+                  "labelEn": "Hanbok"
+                }
+              ],
+              "answerId": "grandma"
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s3-rites-q1-check",
+          "kind": "listen-pick",
+          "rounds": [
+            {
+              "id": "r1",
+              "prompt": {
+                "ko": "할머니하고 할아버지가 있어요.",
+                "romanization": "halmeonihago harabeojiga isseoyo",
+                "en": "Grandma and Grandpa are here."
+              },
+              "options": [
+                {
+                  "id": "grandpa",
+                  "pictureRef": "word:family-grandpa",
+                  "labelEn": "Grandpa"
+                },
+                {
+                  "id": "songpyeon",
+                  "pictureRef": "card:songpyeon",
+                  "labelEn": "Songpyeon"
+                },
+                {
+                  "id": "apple",
+                  "pictureRef": "word:food-apple",
+                  "labelEn": "Apple"
+                },
+                {
+                  "id": "mountain",
+                  "pictureRef": "card:mountain",
+                  "labelEn": "Mountain"
+                }
+              ],
+              "answerId": "grandpa"
+            },
+            {
+              "id": "r2",
+              "prompt": {
+                "ko": "송편하고 사과를 먹어요.",
+                "romanization": "songpyeonhago sagwareul meogeoyo",
+                "en": "I eat songpyeon and an apple."
+              },
+              "options": [
+                {
+                  "id": "o1",
+                  "text": {
+                    "ko": "송편하고 사과를 먹어요.",
+                    "romanization": "songpyeonhago sagwareul meogeoyo",
+                    "en": "I eat songpyeon and an apple."
+                  }
+                },
+                {
+                  "id": "o2",
+                  "text": {
+                    "ko": "송편하고 떡을 먹어요.",
+                    "romanization": "songpyeonhago tteogeul meogeoyo",
+                    "en": "I eat songpyeon and rice cake."
+                  }
+                },
+                {
+                  "id": "o3",
+                  "text": {
+                    "ko": "사과하고 떡을 먹어요.",
+                    "romanization": "sagwahago tteogeul meogeoyo",
+                    "en": "I eat an apple and rice cake."
+                  }
+                },
+                {
+                  "id": "o4",
+                  "text": {
+                    "ko": "할머니하고 할아버지가 있어요.",
+                    "romanization": "halmeonihago harabeojiga isseoyo",
+                    "en": "Grandma and Grandpa are here."
+                  }
+                }
+              ],
+              "answerId": "o1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "quest:stage3-rites-q2",
+      "titleEn": "Pretty and Tasty",
+      "blurbEn": "Read how festival things look and taste.",
+      "teaserEn": "Next: the New Year's bow and the full moon",
+      "estimatedMinutes": 4,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "Pretty and Tasty",
+          "hoyaLineEn": "Festival things can be pretty and tasty. Let's read about them!",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "How Is It?",
+          "hoyaLineEn": "Tap Hear it to listen to each sentence.",
+          "discover": {
+            "pages": [
+              {
+                "captionEn": "It is tasty",
+                "items": [
+                  {
+                    "type": "pattern",
+                    "frame": {
+                      "ko": "___이/가 맛있어요.",
+                      "romanization": "___i/ga masisseoyo",
+                      "en": "___ is tasty."
+                    },
+                    "noteEn": "Use {ko:이} after a final consonant and {ko:가} after a vowel.",
+                    "examples": [
+                      {
+                        "ko": "송편이 맛있어요.",
+                        "romanization": "songpyeoni masisseoyo",
+                        "en": "The songpyeon is tasty."
+                      },
+                      {
+                        "ko": "사과가 맛있어요.",
+                        "romanization": "sagwaga masisseoyo",
+                        "en": "The apple is tasty."
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "captionEn": "It is pretty",
+                "items": [
+                  {
+                    "type": "sentence",
+                    "sentence": {
+                      "ko": "한복이 예뻐요.",
+                      "romanization": "hanbogi yeppeoyo",
+                      "en": "The hanbok is pretty."
+                    },
+                    "picture": "card:hanbok"
+                  },
+                  {
+                    "type": "sentence",
+                    "sentence": {
+                      "ko": "보름달이 예뻐요.",
+                      "romanization": "boreumdari yeppeoyo",
+                      "en": "The full moon is pretty."
+                    },
+                    "picture": "card:moon"
+                  }
+                ]
+              }
+            ]
+          },
+          "durationSeconds": 60
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Build the Sentences",
+          "minigameKind": "order-it",
+          "minigameRef": "minigame:s3-rites-q2-practice",
+          "durationSeconds": 85
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Listen and Pick",
+          "minigameKind": "listen-pick",
+          "minigameRef": "minigame:s3-rites-q2-apply",
+          "durationSeconds": 70
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Two Quick Ones",
+          "minigameKind": "listen-pick",
+          "minigameRef": "minigame:s3-rites-q2-check",
+          "durationSeconds": 40
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Pretty and Tasty!",
+          "hoyaLineEn": "You read how festival things look and taste. Lovely work!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s3-rites-q2-practice",
+          "kind": "order-it",
+          "rounds": [
+            {
+              "id": "r1",
+              "sentence": {
+                "ko": "송편이 맛있어요.",
+                "romanization": "songpyeoni masisseoyo",
+                "en": "The songpyeon is tasty."
+              },
+              "pictureRef": "card:songpyeon",
+              "distractors": [
+                {
+                  "ko": "예뻐요.",
+                  "romanization": "yeppeoyo",
+                  "en": "is pretty"
+                }
+              ],
+              "particle": {
+                "tile": 0,
+                "choices": [
+                  {
+                    "ko": "이",
+                    "romanization": "i",
+                    "en": "subject marker after a final consonant"
+                  },
+                  {
+                    "ko": "가",
+                    "romanization": "ga",
+                    "en": "subject marker after a vowel"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "r2",
+              "sentence": {
+                "ko": "한복이 예뻐요.",
+                "romanization": "hanbogi yeppeoyo",
+                "en": "The hanbok is pretty."
+              },
+              "pictureRef": "card:hanbok",
+              "distractors": [
+                {
+                  "ko": "맛있어요.",
+                  "romanization": "masisseoyo",
+                  "en": "is tasty"
+                }
+              ],
+              "particle": {
+                "tile": 0,
+                "choices": [
+                  {
+                    "ko": "이",
+                    "romanization": "i",
+                    "en": "subject marker after a final consonant"
+                  },
+                  {
+                    "ko": "가",
+                    "romanization": "ga",
+                    "en": "subject marker after a vowel"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "r3",
+              "sentence": {
+                "ko": "사과가 맛있어요.",
+                "romanization": "sagwaga masisseoyo",
+                "en": "The apple is tasty."
+              },
+              "pictureRef": "word:food-apple",
+              "distractors": [
+                {
+                  "ko": "예뻐요.",
+                  "romanization": "yeppeoyo",
+                  "en": "is pretty"
+                }
+              ],
+              "particle": {
+                "tile": 0,
+                "choices": [
+                  {
+                    "ko": "이",
+                    "romanization": "i",
+                    "en": "subject marker after a final consonant"
+                  },
+                  {
+                    "ko": "가",
+                    "romanization": "ga",
+                    "en": "subject marker after a vowel"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "r4",
+              "sentence": {
+                "ko": "할머니 한복이 예뻐요.",
+                "romanization": "halmeoni hanbogi yeppeoyo",
+                "en": "Grandma's hanbok is pretty."
+              },
+              "distractors": [
+                {
+                  "ko": "떡이",
+                  "romanization": "tteogi",
+                  "en": "rice cake (who or what)"
+                }
+              ]
+            },
+            {
+              "id": "r5",
+              "sentence": {
+                "ko": "송편하고 떡이 맛있어요.",
+                "romanization": "songpyeonhago tteogi masisseoyo",
+                "en": "The songpyeon and rice cake are tasty."
+              },
+              "distractors": [
+                {
+                  "ko": "예뻐요.",
+                  "romanization": "yeppeoyo",
+                  "en": "is pretty"
+                }
+              ],
+              "particle": {
+                "tile": 1,
+                "choices": [
+                  {
+                    "ko": "이",
+                    "romanization": "i",
+                    "en": "subject marker after a final consonant"
+                  },
+                  {
+                    "ko": "가",
+                    "romanization": "ga",
+                    "en": "subject marker after a vowel"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s3-rites-q2-apply",
+          "kind": "listen-pick",
+          "rounds": [
+            {
+              "id": "r1",
+              "prompt": {
+                "ko": "한복이 예뻐요.",
+                "romanization": "hanbogi yeppeoyo",
+                "en": "The hanbok is pretty."
+              },
+              "options": [
+                {
+                  "id": "hanbok",
+                  "pictureRef": "card:hanbok",
+                  "labelEn": "Hanbok"
+                },
+                {
+                  "id": "kimchi",
+                  "pictureRef": "card:kimchi",
+                  "labelEn": "Kimchi"
+                },
+                {
+                  "id": "mountain",
+                  "pictureRef": "card:mountain",
+                  "labelEn": "Mountain"
+                },
+                {
+                  "id": "apple",
+                  "pictureRef": "word:food-apple",
+                  "labelEn": "Apple"
+                }
+              ],
+              "answerId": "hanbok"
+            },
+            {
+              "id": "r2",
+              "prompt": {
+                "ko": "사과가 맛있어요.",
+                "romanization": "sagwaga masisseoyo",
+                "en": "The apple is tasty."
+              },
+              "options": [
+                {
+                  "id": "apple",
+                  "pictureRef": "word:food-apple",
+                  "labelEn": "Apple"
+                },
+                {
+                  "id": "hanbok",
+                  "pictureRef": "card:hanbok",
+                  "labelEn": "Hanbok"
+                },
+                {
+                  "id": "sea",
+                  "pictureRef": "card:sea",
+                  "labelEn": "Sea"
+                },
+                {
+                  "id": "kite",
+                  "pictureRef": "card:kite",
+                  "labelEn": "Kite"
+                }
+              ],
+              "answerId": "apple"
+            },
+            {
+              "id": "r3",
+              "prompt": {
+                "ko": "보름달이 예뻐요.",
+                "romanization": "boreumdari yeppeoyo",
+                "en": "The full moon is pretty."
+              },
+              "options": [
+                {
+                  "id": "moon",
+                  "pictureRef": "card:moon",
+                  "labelEn": "Full moon"
+                },
+                {
+                  "id": "songpyeon",
+                  "pictureRef": "card:songpyeon",
+                  "labelEn": "Songpyeon"
+                },
+                {
+                  "id": "hanbok",
+                  "pictureRef": "card:hanbok",
+                  "labelEn": "Hanbok"
+                },
+                {
+                  "id": "tiger",
+                  "pictureRef": "card:tiger",
+                  "labelEn": "Tiger"
+                }
+              ],
+              "answerId": "moon"
+            },
+            {
+              "id": "r4",
+              "prompt": {
+                "ko": "떡이 맛있어요.",
+                "romanization": "tteogi masisseoyo",
+                "en": "The rice cake is tasty."
+              },
+              "options": [
+                {
+                  "id": "tteok",
+                  "pictureRef": "word:food-tteok",
+                  "labelEn": "Rice cake"
+                },
+                {
+                  "id": "moon",
+                  "pictureRef": "card:moon",
+                  "labelEn": "Full moon"
+                },
+                {
+                  "id": "grandma",
+                  "pictureRef": "word:family-grandma",
+                  "labelEn": "Grandma"
+                },
+                {
+                  "id": "sea",
+                  "pictureRef": "card:sea",
+                  "labelEn": "Sea"
+                }
+              ],
+              "answerId": "tteok"
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s3-rites-q2-check",
+          "kind": "listen-pick",
+          "rounds": [
+            {
+              "id": "r1",
+              "prompt": {
+                "ko": "송편이 맛있어요.",
+                "romanization": "songpyeoni masisseoyo",
+                "en": "The songpyeon is tasty."
+              },
+              "options": [
+                {
+                  "id": "songpyeon",
+                  "pictureRef": "card:songpyeon",
+                  "labelEn": "Songpyeon"
+                },
+                {
+                  "id": "hanbok",
+                  "pictureRef": "card:hanbok",
+                  "labelEn": "Hanbok"
+                },
+                {
+                  "id": "moon",
+                  "pictureRef": "card:moon",
+                  "labelEn": "Full moon"
+                },
+                {
+                  "id": "mountain",
+                  "pictureRef": "card:mountain",
+                  "labelEn": "Mountain"
+                }
+              ],
+              "answerId": "songpyeon"
+            },
+            {
+              "id": "r2",
+              "prompt": {
+                "ko": "한복이 예뻐요.",
+                "romanization": "hanbogi yeppeoyo",
+                "en": "The hanbok is pretty."
+              },
+              "options": [
+                {
+                  "id": "o1",
+                  "text": {
+                    "ko": "한복이 예뻐요.",
+                    "romanization": "hanbogi yeppeoyo",
+                    "en": "The hanbok is pretty."
+                  }
+                },
+                {
+                  "id": "o2",
+                  "text": {
+                    "ko": "보름달이 예뻐요.",
+                    "romanization": "boreumdari yeppeoyo",
+                    "en": "The full moon is pretty."
+                  }
+                },
+                {
+                  "id": "o3",
+                  "text": {
+                    "ko": "송편이 맛있어요.",
+                    "romanization": "songpyeoni masisseoyo",
+                    "en": "The songpyeon is tasty."
+                  }
+                },
+                {
+                  "id": "o4",
+                  "text": {
+                    "ko": "사과가 맛있어요.",
+                    "romanization": "sagwaga masisseoyo",
+                    "en": "The apple is tasty."
+                  }
+                }
+              ],
+              "answerId": "o1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "quest:stage3-rites-q3",
+      "titleEn": "Festival Days",
+      "blurbEn": "Read sentences about the New Year's bow and the full moon.",
+      "estimatedMinutes": 5,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "Festival Days",
+          "hoyaLineEn": "Festival days have special things to do. Let's read them!",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "Things We Do",
+          "hoyaLineEn": "Sebae is a bow to elders at the New Year. Chuseok has a big, bright full moon.",
+          "discover": {
+            "pages": [
+              {
+                "captionEn": "The New Year's bow",
+                "items": [
+                  {
+                    "type": "pattern",
+                    "frame": {
+                      "ko": "___을/를 해요.",
+                      "romanization": "___eul/reul haeyo",
+                      "en": "I do ___."
+                    },
+                    "noteEn": "Use {ko:을} after a final consonant and {ko:를} after a vowel. {ko:해요} means \"I do\".",
+                    "examples": [
+                      {
+                        "ko": "세배를 해요.",
+                        "romanization": "sebaereul haeyo",
+                        "en": "I do the New Year's bow."
+                      },
+                      {
+                        "ko": "윷놀이를 해요.",
+                        "romanization": "yunnorireul haeyo",
+                        "en": "I play yut."
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "captionEn": "Under the full moon",
+                "items": [
+                  {
+                    "type": "sentence",
+                    "sentence": {
+                      "ko": "보름달을 봐요.",
+                      "romanization": "boreumdareul bwayo",
+                      "en": "I look at the full moon."
+                    },
+                    "picture": "card:moon"
+                  },
+                  {
+                    "type": "sentence",
+                    "sentence": {
+                      "ko": "송편을 먹어요.",
+                      "romanization": "songpyeoneul meogeoyo",
+                      "en": "I eat songpyeon."
+                    },
+                    "picture": "card:songpyeon"
+                  }
+                ]
+              }
+            ]
+          },
+          "durationSeconds": 65
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Build the Sentences",
+          "minigameKind": "order-it",
+          "minigameRef": "minigame:s3-rites-q3-practice",
+          "durationSeconds": 85
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Listen and Pick",
+          "minigameKind": "listen-pick",
+          "minigameRef": "minigame:s3-rites-q3-apply",
+          "durationSeconds": 70
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Two Quick Ones",
+          "minigameKind": "listen-pick",
+          "minigameRef": "minigame:s3-rites-q3-check",
+          "durationSeconds": 40
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Festival Sentences!",
+          "hoyaLineEn": "You read what people do on festival days. Wonderful!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s3-rites-q3-practice",
+          "kind": "order-it",
+          "rounds": [
+            {
+              "id": "r1",
+              "sentence": {
+                "ko": "세배를 해요.",
+                "romanization": "sebaereul haeyo",
+                "en": "I do the New Year's bow."
+              },
+              "pictureRef": "card:sebae",
+              "distractors": [
+                {
+                  "ko": "봐요.",
+                  "romanization": "bwayo",
+                  "en": "look at, see"
+                }
+              ],
+              "particle": {
+                "tile": 0,
+                "choices": [
+                  {
+                    "ko": "을",
+                    "romanization": "eul",
+                    "en": "object marker after a final consonant"
+                  },
+                  {
+                    "ko": "를",
+                    "romanization": "reul",
+                    "en": "object marker after a vowel"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "r2",
+              "sentence": {
+                "ko": "보름달을 봐요.",
+                "romanization": "boreumdareul bwayo",
+                "en": "I look at the full moon."
+              },
+              "pictureRef": "card:moon",
+              "distractors": [
+                {
+                  "ko": "해요.",
+                  "romanization": "haeyo",
+                  "en": "do"
+                }
+              ],
+              "particle": {
+                "tile": 0,
+                "choices": [
+                  {
+                    "ko": "을",
+                    "romanization": "eul",
+                    "en": "object marker after a final consonant"
+                  },
+                  {
+                    "ko": "를",
+                    "romanization": "reul",
+                    "en": "object marker after a vowel"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "r3",
+              "sentence": {
+                "ko": "윷놀이를 해요.",
+                "romanization": "yunnorireul haeyo",
+                "en": "I play yut."
+              },
+              "pictureRef": "card:yutnori",
+              "distractors": [
+                {
+                  "ko": "먹어요.",
+                  "romanization": "meogeoyo",
+                  "en": "eat"
+                }
+              ]
+            },
+            {
+              "id": "r4",
+              "sentence": {
+                "ko": "할머니하고 할아버지가 보름달을 봐요.",
+                "romanization": "halmeonihago harabeojiga boreumdareul bwayo",
+                "en": "Grandma and Grandpa look at the full moon."
+              },
+              "distractors": [
+                {
+                  "ko": "해요.",
+                  "romanization": "haeyo",
+                  "en": "do"
+                }
+              ],
+              "particle": {
+                "tile": 2,
+                "choices": [
+                  {
+                    "ko": "을",
+                    "romanization": "eul",
+                    "en": "object marker after a final consonant"
+                  },
+                  {
+                    "ko": "를",
+                    "romanization": "reul",
+                    "en": "object marker after a vowel"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "r5",
+              "sentence": {
+                "ko": "송편을 먹어요.",
+                "romanization": "songpyeoneul meogeoyo",
+                "en": "I eat songpyeon."
+              },
+              "distractors": [
+                {
+                  "ko": "봐요.",
+                  "romanization": "bwayo",
+                  "en": "look at, see"
+                }
+              ],
+              "particle": {
+                "tile": 0,
+                "choices": [
+                  {
+                    "ko": "을",
+                    "romanization": "eul",
+                    "en": "object marker after a final consonant"
+                  },
+                  {
+                    "ko": "를",
+                    "romanization": "reul",
+                    "en": "object marker after a vowel"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s3-rites-q3-apply",
+          "kind": "listen-pick",
+          "rounds": [
+            {
+              "id": "r1",
+              "prompt": {
+                "ko": "세배를 해요.",
+                "romanization": "sebaereul haeyo",
+                "en": "I do the New Year's bow."
+              },
+              "options": [
+                {
+                  "id": "sebae",
+                  "pictureRef": "card:sebae",
+                  "labelEn": "New Year's bow"
+                },
+                {
+                  "id": "moon",
+                  "pictureRef": "card:moon",
+                  "labelEn": "Full moon"
+                },
+                {
+                  "id": "kite",
+                  "pictureRef": "card:kite",
+                  "labelEn": "Kite"
+                },
+                {
+                  "id": "apple",
+                  "pictureRef": "word:food-apple",
+                  "labelEn": "Apple"
+                }
+              ],
+              "answerId": "sebae"
+            },
+            {
+              "id": "r2",
+              "prompt": {
+                "ko": "보름달을 봐요.",
+                "romanization": "boreumdareul bwayo",
+                "en": "I look at the full moon."
+              },
+              "options": [
+                {
+                  "id": "moon",
+                  "pictureRef": "card:moon",
+                  "labelEn": "Full moon"
+                },
+                {
+                  "id": "yutnori",
+                  "pictureRef": "card:yutnori",
+                  "labelEn": "Yut game"
+                },
+                {
+                  "id": "sebae",
+                  "pictureRef": "card:sebae",
+                  "labelEn": "New Year's bow"
+                },
+                {
+                  "id": "hanbok",
+                  "pictureRef": "card:hanbok",
+                  "labelEn": "Hanbok"
+                }
+              ],
+              "answerId": "moon"
+            },
+            {
+              "id": "r3",
+              "prompt": {
+                "ko": "윷놀이를 해요.",
+                "romanization": "yunnorireul haeyo",
+                "en": "I play yut."
+              },
+              "options": [
+                {
+                  "id": "o1",
+                  "text": {
+                    "ko": "윷놀이를 해요.",
+                    "romanization": "yunnorireul haeyo",
+                    "en": "I play yut."
+                  }
+                },
+                {
+                  "id": "o2",
+                  "text": {
+                    "ko": "세배를 해요.",
+                    "romanization": "sebaereul haeyo",
+                    "en": "I do the New Year's bow."
+                  }
+                },
+                {
+                  "id": "o3",
+                  "text": {
+                    "ko": "보름달을 봐요.",
+                    "romanization": "boreumdareul bwayo",
+                    "en": "I look at the full moon."
+                  }
+                },
+                {
+                  "id": "o4",
+                  "text": {
+                    "ko": "송편을 먹어요.",
+                    "romanization": "songpyeoneul meogeoyo",
+                    "en": "I eat songpyeon."
+                  }
+                }
+              ],
+              "answerId": "o1"
+            },
+            {
+              "id": "r4",
+              "prompt": {
+                "ko": "할머니하고 할아버지가 보름달을 봐요.",
+                "romanization": "halmeonihago harabeojiga boreumdareul bwayo",
+                "en": "Grandma and Grandpa look at the full moon."
+              },
+              "options": [
+                {
+                  "id": "o1",
+                  "text": {
+                    "ko": "할머니하고 할아버지가 보름달을 봐요.",
+                    "romanization": "halmeonihago harabeojiga boreumdareul bwayo",
+                    "en": "Grandma and Grandpa look at the full moon."
+                  }
+                },
+                {
+                  "id": "o2",
+                  "text": {
+                    "ko": "할머니하고 할아버지가 있어요.",
+                    "romanization": "halmeonihago harabeojiga isseoyo",
+                    "en": "Grandma and Grandpa are here."
+                  }
+                },
+                {
+                  "id": "o3",
+                  "text": {
+                    "ko": "할머니 한복이 예뻐요.",
+                    "romanization": "halmeoni hanbogi yeppeoyo",
+                    "en": "Grandma's hanbok is pretty."
+                  }
+                }
+              ],
+              "answerId": "o1"
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s3-rites-q3-check",
+          "kind": "listen-pick",
+          "rounds": [
+            {
+              "id": "r1",
+              "prompt": {
+                "ko": "윷놀이를 해요.",
+                "romanization": "yunnorireul haeyo",
+                "en": "I play yut."
+              },
+              "options": [
+                {
+                  "id": "yutnori",
+                  "pictureRef": "card:yutnori",
+                  "labelEn": "Yut game"
+                },
+                {
+                  "id": "sebae",
+                  "pictureRef": "card:sebae",
+                  "labelEn": "New Year's bow"
+                },
+                {
+                  "id": "moon",
+                  "pictureRef": "card:moon",
+                  "labelEn": "Full moon"
+                },
+                {
+                  "id": "songpyeon",
+                  "pictureRef": "card:songpyeon",
+                  "labelEn": "Songpyeon"
+                }
+              ],
+              "answerId": "yutnori"
+            },
+            {
+              "id": "r2",
+              "prompt": {
+                "ko": "보름달을 봐요.",
+                "romanization": "boreumdareul bwayo",
+                "en": "I look at the full moon."
+              },
+              "options": [
+                {
+                  "id": "o1",
+                  "text": {
+                    "ko": "보름달을 봐요.",
+                    "romanization": "boreumdareul bwayo",
+                    "en": "I look at the full moon."
+                  }
+                },
+                {
+                  "id": "o2",
+                  "text": {
+                    "ko": "세배를 해요.",
+                    "romanization": "sebaereul haeyo",
+                    "en": "I do the New Year's bow."
+                  }
+                },
+                {
+                  "id": "o3",
+                  "text": {
+                    "ko": "보름달이 예뻐요.",
+                    "romanization": "boreumdari yeppeoyo",
+                    "en": "The full moon is pretty."
+                  }
+                },
+                {
+                  "id": "o4",
+                  "text": {
+                    "ko": "송편을 먹어요.",
+                    "romanization": "songpyeoneul meogeoyo",
+                    "en": "I eat songpyeon."
+                  }
+                }
+              ],
+              "answerId": "o1"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "culture": [
+    {
+      "id": "n1",
+      "kind": "culture",
+      "textEn": "Sebae is the New Year's bow. At the start of the year, younger family members bow to grandparents, parents and other elders, and the elders answer with kind wishes.",
+      "sources": [
+        {
+          "title": "세배",
+          "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+          "url": "https://encykorea.aks.ac.kr/Article/E0029802",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "정의: '정월 초하룻날 윗사람에게 절을 하는 새해의 첫인사.' / '조부모·부모에게 먼저 절하고, … 아랫사람이 윗사람에게 절을 하여 새해 첫인사를 드린다.' / '세배를 받는 이도 … 한마디씩 덕담을 한다.'"
+        },
+        {
+          "title": "세배",
+          "publisher": "국립국어원 (National Institute of Korean Language) — 표준국어대사전",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%EC%84%B8%EB%B0%B0",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "세배(歲拜)「명사」: '섣달그믐이나 정초에 웃어른께 인사로 하는 절.'"
+        }
+      ],
+      "verification": {
+        "passes": 1,
+        "checkedAt": "2026-10-14",
+        "scope": "lesson",
+        "notes": "pass 1 (author sourcing, 2026-10-14): 'the New Year's bow' and 'at the start of the year' = encykorea 세배 정의 (정월 초하룻날 … 새해의 첫인사) and stdict 세배 (섣달그믐이나 정초에 웃어른께 인사로 하는 절); 'younger family members bow to grandparents, parents and other elders' = encykorea 세배 (조부모·부모에게 먼저 절하고 … 아랫사람이 윗사람에게); 'elders answer with kind wishes' = encykorea 세배 (세배를 받는 이도 … 덕담을 한다). Restated in own words; no ancestral rite named (the encykorea sentence on 차례 is not quoted). Same fact as Holiday Words n2 and n8. Used in: q3 Discover Hoya line, q3 Discover page 1 caption, q3 practice r1 and apply r1 (sebae sentence)."
+      }
+    },
+    {
+      "id": "n2",
+      "kind": "culture",
+      "textEn": "Chuseok falls on day 15 of the eighth lunar month, a full-moon day, and is known as a festival of the moon. Families may gather under the bright moon to make songpyeon.",
+      "sources": [
+        {
+          "title": "추석",
+          "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+          "url": "https://encykorea.aks.ac.kr/Article/E0057862",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "정의: '음력 8월 15일로 가배·가위·한가위·중추절 등으로 불리는 우리나라의 명절.' / 내용 요약: '추석은 1년 중 가장 큰 보름달을 맞이하는 달의 명절이다.' / 추석 절식: '열 나흗날 저녁 밝은 달을 보면서 가족들이 모여 송편을 만든다.'"
+        },
+        {
+          "title": "추석",
+          "publisher": "국립국어원 (National Institute of Korean Language) — 표준국어대사전",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%EC%B6%94%EC%84%9D",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "추석(秋夕)「명사」: '우리나라 명절의 하나. 음력 팔월 보름날이다. …' (동의어 팔월대보름, 한가위)"
+        },
+        {
+          "title": "보름달",
+          "publisher": "국립국어원 (National Institute of Korean Language) — 표준국어대사전",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%EB%B3%B4%EB%A6%84%EB%8B%AC",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "보름-달「명사」: '음력 보름날 밤에 뜨는 둥근달.'"
+        }
+      ],
+      "verification": {
+        "passes": 1,
+        "checkedAt": "2026-10-14",
+        "scope": "lesson",
+        "notes": "pass 1 (author sourcing, 2026-10-14): 'day 15 of the eighth lunar month' = encykorea 추석 정의 (음력 8월 15일) and stdict 추석 (음력 팔월 보름날이다); 'a full-moon day' = stdict 보름달 (음력 보름날 밤에 뜨는 둥근달) with the 보름날 date; 'known as a festival of the moon' = encykorea 추석 내용 요약 (1년 중 가장 큰 보름달을 맞이하는 달의 명절); 'families may gather under the bright moon to make songpyeon' = encykorea 추석 절식 (밝은 달을 보면서 가족들이 모여 송편을 만든다), hedged with 'may'. The stdict 추석 quote is trimmed before its 차례 clause (OD-9). Restated in own words. Used in: q3 Discover Hoya line ('Chuseok has a big, bright full moon'), q3 Discover page 2 caption, q2 Discover page 2 and q3 sentences with 보름달."
+      }
+    }
+  ],
+  "review": {
+    "language": "draft",
+    "culture": "draft",
+    "notes": []
+  },
+  "contentVer": 1
+}
