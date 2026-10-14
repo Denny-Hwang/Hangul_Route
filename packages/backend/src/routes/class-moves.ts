@@ -225,12 +225,21 @@ classMoveRoutes.get('/:id/class-moves/destinations', async (c) => {
   const schools = own.filter((s) => s.kind === 'school' && !s.archivedAt).map((s) => s.id);
   const children = schools.length ? await db.childSpacesOfSpaces(schools) : [];
   const learnerIn = new Set((await db.membershipsOf('learner', learnerId)).map((m) => m.spaceId));
+  // Parents come from the spaces already read (a school the account runs), else one read per distinct parent, so the
+  // statement count does not grow with the number of classes (G7 budget; a school admin may reach many classes).
+  const known = new Map<string, Space | null>([...own, ...children].map((s) => [s.id, s]));
+  const parentOf = async (space: Space): Promise<Space | null> => {
+    const id = space.parentSpaceId;
+    if (!id) return null;
+    if (!known.has(id)) known.set(id, await db.getSpace(id));
+    return known.get(id) ?? null;
+  };
   const seen = new Set<string>();
   const destinations: Array<{ id: string; name: string }> = [];
   for (const space of [...own, ...children]) {
     if (seen.has(space.id) || space.id === source.id || space.kind !== 'class' || space.archivedAt || learnerIn.has(space.id)) continue;
     seen.add(space.id);
-    if (teacherVia(actor, await spaceContext(db, space))) destinations.push({ id: space.id, name: space.name });
+    if (teacherVia(actor, { space, parent: await parentOf(space) })) destinations.push({ id: space.id, name: space.name });
   }
   destinations.sort((a, b) => a.name.localeCompare(b.name) || a.id.localeCompare(b.id));
   return ok(c, { destinations });
@@ -486,7 +495,7 @@ classMoveRoutes.post('/:id/class-moves/:mid/seen', async (c) => {
   if (!family || family.kind !== 'family' || !move || move.status !== 'executed') return notFound(c);
   const role = (await db.membership(family.id, 'account', account.id))?.role;
   if ((role !== 'owner' && role !== 'caregiver') || !(await db.membership(family.id, 'learner', move.learnerId))) return notFound(c);
-  if ((await db.markClassMoveSeen(move.id, new Date())) === 1) event('space.move.notice_seen');
+  if ((await db.markClassMoveSeen(move.id, new Date())) === 1) event('space.move.notice_seen', { seenOn: 'console' });
   return ok(c, { seen: true });
 });
 
@@ -504,7 +513,7 @@ classMoveRoutes.get('/:id/class-scope', async (c) => {
   if (!('id' in account)) return account;
   const db = dbFor(c);
   const family = await db.getSpace(c.req.param('id'));
-  if (!family || family.kind !== 'family') return notFound(c);
+  if (!family || family.kind !== 'family' || family.archivedAt) return notFound(c);
   const role = (await db.membership(family.id, 'account', account.id))?.role;
   if (role !== 'owner' && role !== 'caregiver') return notFound(c);
   const learnerIds = (await db.membersOf(family.id)).filter((m) => m.memberKind === 'learner').map((m) => m.memberId);

@@ -393,7 +393,7 @@ export interface Db {
   markClassMoveSeen(id: string, now: Date): Promise<number>;
   /** The self-guarding swap of section 4.2: one batch whose first statement is the gate. */
   executeClassMove(input: ExecuteClassMoveInput): Promise<ExecuteClassMoveResult>;
-  /** Bounded purge: ended rows before `endedBefore`, executed rows before `executedBefore`. */
+  /** Bounded purge: ended rows before `endedBefore`, executed rows before `executedBefore`, still-requested rows whose `expiresAt` is before `endedBefore` (an ask nobody settled). */
   purgeClassMoves(endedBefore: Date, executedBefore: Date, limit: number): Promise<number>;
 
   /** Tests only: wipe everything. */

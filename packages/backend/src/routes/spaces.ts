@@ -19,7 +19,7 @@ import { authorizeDevice, parseDeviceHeader } from '../lib/device-auth';
 import { classCap, schoolIsFull } from '../lib/entitlement';
 import { generateJoinCode, isJoinCodeLive, joinCodeExpiry } from '../lib/join-code';
 import { clientKey, createRateLimiter } from '../lib/rate-limit';
-import { learnerScopes } from '../lib/class-scope';
+import { learnerScopes, type ClassScopeEnv } from '../lib/class-scope';
 import { rosterSummary } from '../lib/roster-summary';
 import { classSeatCheck, studentsIn, type SeatBlock } from '../lib/seats';
 import { id, type Account } from '../store';
@@ -28,7 +28,7 @@ import { id, type Account } from '../store';
  * /api/spaces — F-SPACE-001 §3.3. One shape for family / class / school;
  * every route resolves the actor once and asks `can()`.
  */
-export const spacesRoutes = new Hono<{ Bindings: { SCHOOL_CONSENT_MODE?: string } }>();
+export const spacesRoutes = new Hono<{ Bindings: { SCHOOL_CONSENT_MODE?: string } & ClassScopeEnv }>();
 
 /** School consent mode stays locked until the owner's legal review (app-map decision #26). */
 export function schoolConsentModeEnabled(env: { SCHOOL_CONSENT_MODE?: string } | undefined): boolean {
@@ -371,7 +371,7 @@ spacesRoutes.get('/:id/roster', async (c) => {
   const learners = [];
   const members = await db.membersOf(space.id);
   // [TV] each learner's scope, read once for the whole roster (AMENDMENTS-TEACHER-VISIBILITY-TRANSFER section 2)
-  const scopes = await learnerScopes(db, space.kind, members.filter((m) => m.memberKind === 'learner').map((m) => m.memberId));
+  const scopes = await learnerScopes(db, space.kind, members.filter((m) => m.memberKind === 'learner').map((m) => m.memberId), c.env);
   for (const m of members) {
     if (m.memberKind !== 'learner') continue;
     const learner = await db.getLearner(m.memberId);

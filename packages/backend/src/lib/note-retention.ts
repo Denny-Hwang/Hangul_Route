@@ -1,3 +1,4 @@
+import { CLASS_MOVE_PURGE_AFTER_MS } from '@hangul-route/content-schema';
 import { NOTE_HOLD_RETENTION_DAYS, NOTE_REPORT_RETENTION_DAYS, NOTE_RETENTION_DAYS, type Db } from '../db';
 
 /**
@@ -7,7 +8,9 @@ import { NOTE_HOLD_RETENTION_DAYS, NOTE_REPORT_RETENTION_DAYS, NOTE_RETENTION_DA
  * 1. lazily, once per `POST /:id/notes` and per family oversight read
  *    (`purgeNotesLazily`, one bounded step of four statements);
  * 2. daily, from the Worker's Cron Trigger (`runScheduledPurge`): the note
- *    purge and the existing `purgeRateHits`, at most five rounds of 200 rows.
+ *    purge, the existing `purgeRateHits` and ([TV] AMENDMENTS-TEACHER-VISIBILITY-TRANSFER
+ *    4.1) the class-move records 90 days after they ended, executed or expired,
+ *    at most five rounds of 200 rows.
  *
  * Every list already filters by the same cut-offs, so purge lag is never
  * visible; the purge only keeps the tables small.
@@ -32,6 +35,21 @@ export interface ScheduledPurgeResult {
   rounds: number;
   notes: number;
   rateHits: number;
+  classMoves: number;
+}
+
+/**
+ * One bounded class-move purge step ([TV] 4.1): ended rows 90 days after `ended_at`, executed rows 90 days after
+ * `executed_at`, and asks that expired unopened 90 days after `expires_at`. A failure (for example a Worker that runs
+ * before migration 0009) removes nothing and never stops the note purge; tomorrow's run retries.
+ */
+export async function purgeClassMovesStep(db: Db, now: Date): Promise<number> {
+  const before = new Date(now.getTime() - CLASS_MOVE_PURGE_AFTER_MS);
+  try {
+    return await db.purgeClassMoves(before, before, NOTE_PURGE_LIMIT);
+  } catch {
+    return 0;
+  }
 }
 
 /**
@@ -39,16 +57,18 @@ export interface ScheduledPurgeResult {
  * full step of each (nothing left) or after `SCHEDULED_PURGE_ROUNDS` rounds; tomorrow's run continues.
  */
 export async function runScheduledPurge(db: Db, now: Date): Promise<ScheduledPurgeResult> {
-  const out: ScheduledPurgeResult = { rounds: 0, notes: 0, rateHits: 0 };
+  const out: ScheduledPurgeResult = { rounds: 0, notes: 0, rateHits: 0, classMoves: 0 };
   const hitsBefore = new Date(now.getTime() - RATE_HIT_WINDOW_MS);
   while (out.rounds < SCHEDULED_PURGE_ROUNDS) {
     out.rounds += 1;
     const notes = await purgeNotesLazily(db, now);
     const rateHits = await db.purgeRateHits(hitsBefore, NOTE_PURGE_LIMIT);
+    const classMoves = await purgeClassMovesStep(db, now);
     out.notes += notes;
     out.rateHits += rateHits;
+    out.classMoves += classMoves;
     // The note step's four statements each remove at most a full step, so a total under one step means all four are done.
-    if (notes < NOTE_PURGE_LIMIT && rateHits < NOTE_PURGE_LIMIT) break;
+    if (notes < NOTE_PURGE_LIMIT && rateHits < NOTE_PURGE_LIMIT && classMoves < NOTE_PURGE_LIMIT) break;
   }
   return out;
 }

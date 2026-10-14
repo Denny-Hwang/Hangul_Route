@@ -90,6 +90,13 @@ keep_vars = true
 #                                    (that needs only CLASS_TRANSFER). Set it only after written
 #                                    counsel sign-off that a device attestation is acceptable as
 #                                    learner-side consent (flip gate G6).
+# CLASS_SCOPE_FULL                   AMENDMENTS-TEACHER-VISIBILITY-TRANSFER TV-D15: leave UNSET (on).
+#                                    Unset, empty or "enabled" lets a class teacher or school admin
+#                                    read a learner's full progress (words included) once the family
+#                                    has acknowledged the class-scope update. "disabled" (or any other
+#                                    value) is the kill switch: every class and school reader sees the
+#                                    base scope at once; families are unaffected and acknowledgements
+#                                    still record. GET /health shows features.classScopeFull.
 # ENVIRONMENT                        unset = production (fail closed: no Clerk key or no
 #                                    D1 binding → 503). Only "development" / "test" turn on
 #                                    the dev fallbacks (bearer = account id, in-memory Db

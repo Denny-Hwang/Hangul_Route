@@ -6,6 +6,7 @@ import {
   CLASS_MOVE_TELEMETRY_PREFIX,
   CLASS_SCOPE_TELEMETRY_PREFIX,
   ClassMoveCompletedViaSchema,
+  ClassMoveSeenOnSchema,
   ClassScopeBasisSchema,
   LearnerBasisSchema,
   NOTES_MODES,
@@ -59,9 +60,9 @@ const TRANSFER_PAYLOAD_VALUES = valuesOf({
 /**
  * [TV] Teacher moves and the class-scope update (AMENDMENTS-TEACHER-VISIBILITY-TRANSFER
  * section 4.4): codes only, no profile id. `space.move.*` keeps `via`
- * (`direct` | `accepted`), `space.scope.*` keeps `basis` (`caregiver` | `device`).
+ * (`direct` | `accepted`) and `seenOn` (`device` | `console`), `space.scope.*` keeps `basis` (`caregiver` | `device`).
  */
-const CLASS_MOVE_PAYLOAD_VALUES = valuesOf({ via: ClassMoveCompletedViaSchema.options });
+const CLASS_MOVE_PAYLOAD_VALUES = valuesOf({ via: ClassMoveCompletedViaSchema.options, seenOn: ClassMoveSeenOnSchema.options });
 const CLASS_SCOPE_PAYLOAD_VALUES = valuesOf({ basis: ClassScopeBasisSchema.options });
 
 /**

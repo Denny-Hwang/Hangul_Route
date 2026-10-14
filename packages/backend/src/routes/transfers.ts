@@ -290,6 +290,14 @@ async function startMove(c: Ctx, mode: 'preview' | 'create'): Promise<Response> 
       : fail(c, 'already_open', 'A move is already open for this learner', 409);
   if (open && isOwn(open) && mode === 'create') return ok(c, { request: await startedView(db, side, open, env, now) });
   if (open && !isOwn(open)) return alreadyOpen(open);
+  // [TV] TV-D7: a teacher move still waiting for the receiving class blocks a new request too (one open move per learner, either kind).
+  // An ask past its expiry, or whose learner already left its source class, does not block (the class-moves pages settle it).
+  const teacherMove = await db.openClassMoveOf(learnerId).catch(() => null);
+  if (teacherMove && teacherMove.status === 'requested' && teacherMove.expiresAt > now.toISOString() && (await db.membership(teacherMove.sourceSpaceId, 'learner', learnerId))) {
+    return side.kind === 'family'
+      ? fail(c, 'already_open', 'A move is already open for this learner', 409, { startedBy: 'class' })
+      : fail(c, 'already_open', 'A move is already open for this learner', 409);
+  }
 
   if (await db.membership(dest.id, 'learner', learnerId)) return fail(c, 'already_member', 'The learner is already in that class', 409);
   if (side.kind === 'family') {

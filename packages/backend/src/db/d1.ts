@@ -1437,8 +1437,8 @@ export class D1Db implements Db {
   }
   purgeClassMoves(endedBefore: Date, executedBefore: Date, limit: number): Promise<number> {
     return this.changes(
-      "DELETE FROM class_moves WHERE id IN (SELECT id FROM class_moves WHERE (ended_at IS NOT NULL AND ended_at < ?) OR (status = 'executed' AND executed_at < ?) LIMIT ?)",
-      [endedBefore.toISOString(), executedBefore.toISOString(), limit],
+      "DELETE FROM class_moves WHERE id IN (SELECT id FROM class_moves WHERE (ended_at IS NOT NULL AND ended_at < ?) OR (status = 'executed' AND executed_at < ?) OR (status = 'requested' AND expires_at < ?) LIMIT ?)",
+      [endedBefore.toISOString(), executedBefore.toISOString(), endedBefore.toISOString(), limit],
     );
   }
 
