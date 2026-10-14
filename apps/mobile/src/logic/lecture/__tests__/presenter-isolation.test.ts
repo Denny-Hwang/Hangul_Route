@@ -68,13 +68,16 @@ function presenterFiles(): string[] {
   const platform = readdirSync(join(SRC, 'platform'))
     .filter((name) => name.startsWith('presenter') && /\.tsx?$/.test(name))
     .map((name) => join(SRC, 'platform', name));
-  return [...sourceFiles(join(SRC, 'screens', 'presenter')), ...sourceFiles(join(SRC, 'logic', 'lecture')), ...platform];
+  // The presenter root and the shared component its letter slide draws.
+  const roots = [join(SRC, '..', 'PresenterApp.tsx'), join(SRC, 'components', 'StrokeHint.tsx')];
+  return [...sourceFiles(join(SRC, 'screens', 'presenter')), ...sourceFiles(join(SRC, 'logic', 'lecture')), ...platform, ...roots];
 }
 
 describe('presenter isolation (F-TCH-004 §3.9)', () => {
   it('no presenter file imports a learner store or a minigame screen', () => {
     const files = presenterFiles();
     expect(files.length).toBeGreaterThan(0);
+    for (const root of ['PresenterApp.tsx', 'StrokeHint.tsx']) expect(files.some((f) => f.endsWith(root) && existsSync(f)), root).toBe(true);
     const hits = files.flatMap((file) => scanSource(relative(SRC, file), readFileSync(file, 'utf8')));
     expect(hits, hits.join('\n')).toEqual([]);
   });

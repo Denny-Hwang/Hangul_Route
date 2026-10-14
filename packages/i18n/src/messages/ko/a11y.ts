@@ -230,4 +230,7 @@ export const a11y = {
     inPlan: '내 계획에 있음',
     notOpen: (title: string) => `${title}: 아직 열리지 않았어요. 레슨 페이지가 열려요.`,
   },
+  presenter: {
+    slide: (i: number, n: number, what: string) => `슬라이드 ${i}/${n}, ${what}`,
+  },
 } satisfies DeepPartial<Messages['a11y']>;

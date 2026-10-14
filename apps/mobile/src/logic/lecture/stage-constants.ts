@@ -1,0 +1,72 @@
+import type { WindowSize } from './stage-scale';
+
+/**
+ * The presenter's layout numbers that are not tokens (design/screens/presenter/README.md
+ * "Constants"), each named once beside `stage-scale.ts`. Stage numbers are in stage units
+ * (multiply by `unit`); factors multiply a token. Pure: the token values themselves are applied in
+ * `screens/presenter/stage-metrics.ts` (this module imports no design-system runtime, like
+ * `stage-scale.ts`).
+ */
+
+/** `StrokeHint size = unit x 360` (spec section 3.6). */
+export const STROKE_PANEL = 360;
+/** The stroke skeletons' viewBox (`jamo-strokes.ts`). */
+export const STROKE_VIEWBOX = 200;
+/** Stroke width and start dot on the 200 viewBox (README Constants, "stroke guide"). */
+export const STROKE_LINE = 14;
+export const STROKE_DOT_RADIUS = 14;
+export const STROKE_DOT_RING = 4;
+/** Hoya on title slides, in units. */
+export const HOYA_STAGE = 240;
+/** The class code panel width, in units (README D7). */
+export const CODE_PANEL = 400;
+
+/** End slide fit rule (README D7): at most this many rows of letters and of words, then one "+ n more" pill. */
+export const END_MAX_ROWS = 2;
+
+/** Control-bar buttons are at most 1.5 x `touchTarget.hero` wide; Next / Reveal at least 1.5 x (README Constants). */
+export const CTL_MAX_FACTOR = 1.5;
+export const NEXT_MIN_FACTOR = 1.5;
+/** The start screen's Start button is 1.25 x `touchTarget.hero` tall. */
+export const START_BUTTON_FACTOR = 1.25;
+/** Hoya on a state page is 1.5 x `touchTarget.hero`. */
+export const STATE_HOYA_FACTOR = 1.5;
+/** Rem counts of the teacher pages (README Constants), in multiples of the 16 px root size (`typography.size.bodySm`). */
+export const READABLE_LINE_REM = 32;
+export const EXIT_DIALOG_REM = 40;
+export const PICKER_LABEL_REM = 14;
+
+/** The numbers picker's count stepper: the deck schema's `picker.count` bounds. */
+export const PICKER_COUNT_MIN = 1;
+export const PICKER_COUNT_MAX = 60;
+
+/** The start screen waits this long at most for the presenter font (spec section 3.6). */
+export const FONT_WAIT_MS = 1500;
+/** SVG text does not read React Native's 'System' family; the stroke diagram's numerals use the browser's UI stack. */
+export const SVG_UI_FONT = 'system-ui, sans-serif';
+
+/** Touch: a horizontal swipe of at least 60 px with |dx| >= 1.5 |dy| (spec section 3.5). */
+export const SWIPE_MIN = 60;
+export const SWIPE_RATIO = 1.5;
+/** A tap on the left third of the stage goes back, elsewhere forward. */
+export const TAP_BACK_FRACTION = 1 / 3;
+
+/** The docked control-bar band: one row of hero buttons with `spacing.md` above and below (README D1). */
+export function barBand(hero: number, gap: number): number {
+  return hero + 2 * gap;
+}
+
+/** The stage box: the window minus the docked bar band, which stays when the bar hides (README D1). */
+export function stageBox(window: WindowSize, band: number): WindowSize {
+  return { width: Math.max(0, window.width), height: Math.max(0, window.height - band) };
+}
+
+/** A control drawn on the stage (the speaker) never drops below the bar's target size `hero`. */
+export function stageButtonSize(unit: number, hero: number): number {
+  return Math.max(hero, Math.round(unit * hero));
+}
+
+/** `n` stage units in window pixels (geometry, not text: text goes through `stageText`). */
+export function units(unit: number, n: number): number {
+  return Math.round(unit * n);
+}

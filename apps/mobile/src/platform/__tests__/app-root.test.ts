@@ -18,10 +18,16 @@ import { useUiStore } from '../../store/ui-store';
 
 /**
  * The root chooser of the learner web build (F-APP-001 sections 3.4, 3.9 and 3.11; F-BROWSE-001
- * section 4.1), chosen in `index.ts` before `App` mounts. Order: `/present` (F-TCH-004 PR 6, not
- * yet in), `/browse`, the grown-up bounce, else the app.
+ * section 4.1), chosen in `index.ts` before `App` mounts. Order: `/present` (F-TCH-004 PR 6),
+ * `/browse`, the grown-up bounce, else the app.
  */
 describe('pickRoot (web)', () => {
+  it('chooses the presenter root for /present and every path under it (F-TCH-004 section 3.1)', () => {
+    for (const pathname of ['/present', '/present/', '/present/x', '/present/unknown/deeper', '/present.html']) {
+      expect(pickRoot({ pathname }), pathname).toBe('presenter');
+    }
+  });
+
   it('chooses the browse root for /browse and every path under it', () => {
     for (const pathname of ['/browse', '/browse/', '/browse/x', '/browse/episode/stage1-letters', '/browse.html']) {
       expect(pickRoot({ pathname }), pathname).toBe('browse');
@@ -35,7 +41,7 @@ describe('pickRoot (web)', () => {
   });
 
   it('keeps the learner app everywhere else, the persona entries included (no bounce loop on a host without them)', () => {
-    for (const pathname of ['/', '', '/browsex', '/browser', '/Browse', '/x/browse', '/present', '/teach', '/teach/', '/parent', '/signin', '/teacher', '/index.html']) {
+    for (const pathname of ['/', '', '/browsex', '/browser', '/Browse', '/x/browse', '/presentx', '/presenter', '/Present', '/x/present', '/teach', '/teach/', '/parent', '/signin', '/teacher', '/index.html']) {
       expect(pickRoot({ pathname }), pathname).toBe('app');
     }
   });
@@ -44,6 +50,7 @@ describe('pickRoot (web)', () => {
 describe('pickRoot (native stub)', () => {
   it('always chooses the learner app: native builds have no other root (OD-6, F-BROWSE-001 OD-10)', () => {
     expect(nativeRoot.pickRoot({ pathname: '/browse' })).toBe('app');
+    expect(nativeRoot.pickRoot({ pathname: '/present' })).toBe('app');
     expect(nativeRoot.pickRoot({ pathname: '/teach/zzz' })).toBe('app');
     expect(nativeRoot.pickRoot({ pathname: '/' })).toBe('app');
     expect(nativeRoot.pickRoot()).toBe('app');
@@ -171,6 +178,23 @@ describe('bootRoot (web): what each root does before it mounts', () => {
     expect(bootRoot(h.env)).toBe('app');
     expect(h.area.data.has(UNLOCK_SESSION_KEY)).toBe(false);
     expect(h.log).toEqual([]);
+  });
+
+  it('/present mounts PresenterApp and clears the grown-up unlock and the console session of its tab (F-TCH-004 section 3.1, F-APP-001 section 3.9)', () => {
+    const h = harness('/present');
+    expect(bootRoot(h.env)).toBe('presenter');
+    expect(h.area.data.has(UNLOCK_SESSION_KEY)).toBe(false);
+    expect(h.area.data.has(CONSOLE_SESSION_KEY)).toBe(false);
+    // The deck fragment is the presenter's own to read and strip; the chooser leaves the address alone.
+    expect(h.log).toEqual([]);
+    expect(peekBootIntent()).toBeNull();
+  });
+
+  it('/present reads no boot intent and keeps the fragment for the presenter', () => {
+    const h = harness('/present?gate=grown-up&next=%2Fparent#d=1.abc');
+    expect(bootRoot(h.env)).toBe('presenter');
+    expect(h.log).toEqual([]);
+    expect(peekBootIntent()).toBeNull();
   });
 
   it('/browse mounts BrowseApp and the root chooser clears neither the unlock nor the console session (F-BROWSE-001 BD1, section 4.10; BrowseApp removes both itself only in a tab with nothing to go back to, browse-start.test.ts)', () => {

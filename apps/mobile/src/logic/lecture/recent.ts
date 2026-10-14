@@ -90,12 +90,36 @@ export function forgetDeck(list: RecentList, deckId: string): RecentList {
   return { v: 1, items: list.items.filter((i) => i.deck.id !== deckId) };
 }
 
-export async function loadRecent(store: RecentStore): Promise<RecentList> {
+/**
+ * Recent as read, and whether a change may be saved over it: a read that failed, or stored data
+ * that is not a Recent list, shows as empty but is never written over (only Start writes), so a
+ * passing storage fault cannot replace the teacher's list with one deck.
+ */
+export interface LoadedRecent {
+  list: RecentList;
+  writable: boolean;
+}
+
+/** `store.readJson` must throw on a failed read (the strict storage read), not answer null. */
+export async function readRecent(store: RecentStore): Promise<LoadedRecent> {
   try {
-    return parseRecent(await store.readJson(RECENT_KEY));
+    const raw = await store.readJson(RECENT_KEY);
+    if (raw === null || raw === undefined) return { list: emptyRecent(), writable: true };
+    return { list: parseRecent(raw), writable: RecentListShape.safeParse(raw).success };
   } catch {
-    return emptyRecent();
+    return { list: emptyRecent(), writable: false };
   }
+}
+
+export async function loadRecent(store: RecentStore): Promise<RecentList> {
+  return (await readRecent(store)).list;
+}
+
+/** Applies `change`; saves only a real change to a list that may be written. */
+export async function commitRecent(store: RecentStore, loaded: LoadedRecent, change: (list: RecentList) => RecentList): Promise<LoadedRecent> {
+  const next = change(loaded.list);
+  if (next !== loaded.list && loaded.writable) await saveRecent(store, next);
+  return { list: next, writable: loaded.writable };
 }
 
 /** False when the write failed (a full or blocked store); the lesson goes on either way. */

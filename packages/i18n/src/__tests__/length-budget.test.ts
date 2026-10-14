@@ -47,6 +47,11 @@ const ES_LENGTH_ALLOW_LIST: Readonly<Record<string, string>> = {
   'console.notes.family.report.why': 'Spanish questions open with "¿": "¿Por qué?" is one letter over',
   'caregiver.notes.report.why': 'Spanish questions open with "¿": "¿Por qué?" is one letter over',
   'console.browse.preview.cta': 'the Spanish word "Vista previa" (12) against "Preview" (7), the same word as console.notes.composer.preview.title; inside the 28-character cta budget, a link that wraps',
+  // F-TCH-004 PR 6 (design/screens/presenter/README.md "Length budget"): the presenter's start facts and its control bar.
+  'learner.presenter.start.slides': '"diapositivas" is the only Spanish word for slides; a facts line that wraps',
+  'learner.presenter.bar.blank.cta': 'one letter over; the Spanish for a blanked screen needs the preposition; a bar label that wraps inside 96',
+  'learner.presenter.bar.grid.cta': 'the one Spanish word for slides; a bar label that wraps inside 96',
+  'learner.presenter.bar.timer.cta': 'the standard Spanish word for a timer; a bar label that wraps inside 96',
 };
 
 const BUDGETS: Readonly<Record<string, number>> = { tab: 12, pill: 24, cta: 28 };

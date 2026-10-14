@@ -297,4 +297,6 @@ const KO_LITERALLY_SHARED: readonly string[] = [
   'console.lecture.outline.upGlyph',
   'console.lecture.outline.downGlyph',
   'landing.localeBanner.close.cta',
+  // F-TCH-004 PR 6: the presenter's slide counter, two numbers and a slash.
+  'learner.presenter.bar.counter',
 ];
