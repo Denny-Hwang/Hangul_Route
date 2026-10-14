@@ -13,6 +13,7 @@ import {
   TraceWordRoundSchema,
   TypeHangulRoundSchema,
   WriteFrameRoundSchema,
+  discoverItemTexts,
   slotCount,
 } from '../index';
 import { kt } from './helpers/lesson-fixtures';
@@ -81,6 +82,32 @@ describe('Discover item types: sentence, pattern, exchange, realia', () => {
     const word = { type: 'word', word: kt('연', 'yeon', 'kite') };
     expect(ok(DiscoverPageSchema, { items: [word, word] })).toBe(true);
     expect(ok(DiscoverPageSchema, { items: [word, word, word] })).toBe(false);
+  });
+
+  it('discoverItemTexts gives the taught Korean of every item type (a pattern\'s frame is not a word)', () => {
+    const t = (ko: string) => kt(ko, 'x', 'y');
+    const items = [
+      { type: 'jamo', jamoId: 'jamo:a', example: t('나') },
+      { type: 'word', word: t('연') },
+      { type: 'sentence', sentence: t('책이 있어요.') },
+      { type: 'pattern', frame: t('___이에요/예요'), noteEn: 'n', examples: [t('책이에요'), t('학교예요')] },
+      {
+        type: 'exchange',
+        lines: [
+          { speaker: 'a', speakerEn: 'Hoya', line: t('이게 뭐예요?') },
+          { speaker: 'b', speakerEn: 'Mina', line: t('책이에요.') },
+        ],
+      },
+      { type: 'realia', realiaRef: 'realia:menu', keyWords: [t('김밥'), t('라면')] },
+    ].map((i) => DiscoverItemSchema.parse(i));
+    expect(items.map((i) => discoverItemTexts(i).map((x) => x.ko))).toEqual([
+      ['나'],
+      ['연'],
+      ['책이 있어요.'],
+      ['책이에요', '학교예요'],
+      ['이게 뭐예요?', '책이에요.'],
+      ['김밥', '라면'],
+    ]);
   });
 
   it('counts slot markers', () => {
