@@ -25,6 +25,7 @@ export function Card({
   tone = 'paper',
   onPress,
   accessibilityLabel,
+  accessibilityHint,
   testID,
   style,
 }: CardProps): React.ReactElement {
@@ -42,6 +43,7 @@ export function Card({
         onPress={onPress}
         accessibilityRole="button"
         accessibilityLabel={accessibilityLabel}
+        accessibilityHint={accessibilityHint}
         testID={testID}
         style={({ pressed }) => [
           baseStyle,
@@ -54,7 +56,7 @@ export function Card({
     );
   }
   return (
-    <View accessibilityLabel={accessibilityLabel} testID={testID} style={[baseStyle, style]}>
+    <View accessibilityLabel={accessibilityLabel} accessibilityHint={accessibilityHint} testID={testID} style={[baseStyle, style]}>
       {children}
     </View>
   );

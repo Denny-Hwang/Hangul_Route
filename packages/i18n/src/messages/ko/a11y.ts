@@ -6,10 +6,15 @@ import type { DeepPartial, Messages } from '../../types';
  * never before a particle that changes with the final consonant (§3.10 style guide). Korean has no plural, so counts
  * read "n개" / "n명" and need no `plural()` call.
  */
+/** The spoken word of each Hoya pose, as a short sentence after the comma. */
+const hoyaPose = { idle: '가만히 있어요', cheering: '응원해요', thinking: '생각해요', reading: '책을 읽어요', waving: '손을 흔들어요' };
+
 export const a11y = {
   tile: (label: string) => `한글 글자 ${label}, 눌러서 고르기`,
   stars: (earned: number) => `별 3개 중 ${earned}개 받음`,
-  hoya: (pose: string) => `호랑이 호야, ${pose}`,
+  /** A pose missing from the map adds no word, so no English token reaches the label. */
+  hoya: (pose: string) => (Object.prototype.hasOwnProperty.call(hoyaPose, pose) ? `호랑이 호야, ${hoyaPose[pose as keyof typeof hoyaPose]}` : '호랑이 호야'),
+  hoyaPose,
   dismissHoya: '호야 말풍선 닫기',
   goBack: '뒤로 가기',
   tabs: { home: '오늘', journey: '여정', library: '라이브러리', route: '루트' },

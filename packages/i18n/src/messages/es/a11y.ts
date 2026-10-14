@@ -2,10 +2,15 @@ import { plural } from '../../plural';
 import type { DeepPartial, Messages } from '../../types';
 
 /** Spanish accessibility labels (F-I18N-001 PR 15). Read aloud, so whole sentences; sound values arrive as arguments. */
+/** The spoken word of each Hoya pose; Hoya is "el tigre", so the words agree with a masculine noun. */
+const hoyaPose = { idle: 'quieto', cheering: 'celebrando', thinking: 'pensando', reading: 'leyendo', waving: 'saludando' };
+
 export const a11y = {
   tile: (label: string) => `Letra coreana ${label}, toca para elegir`,
   stars: (earned: number) => `${earned} de 3 estrellas ganadas`,
-  hoya: (pose: string) => `Hoya, el tigre, ${pose}`,
+  /** A pose missing from the map adds no word, so no English token reaches the label. */
+  hoya: (pose: string) => (Object.prototype.hasOwnProperty.call(hoyaPose, pose) ? `Hoya, el tigre, ${hoyaPose[pose as keyof typeof hoyaPose]}` : 'Hoya, el tigre'),
+  hoyaPose,
   dismissHoya: 'Cerrar el mensaje de Hoya',
   goBack: 'Volver',
   tabs: { home: 'Hoy', journey: 'Recorrido', library: 'Colección', route: 'Ruta' },
@@ -13,9 +18,9 @@ export const a11y = {
   cardArt: (title: string) => `Dibujo de la tarjeta ${title}`,
   profileEntry: 'Perfil y ajustes',
   openHomework: 'Abrir la tarea',
-  missionCard: (title: string, subtitle: string, collected: boolean) => `${title}. ${subtitle}.${collected ? ' Conseguida.' : ''}`,
+  missionCard: (title: string, subtitle: string, collected: boolean) => `${title}. ${subtitle}.${collected ? ' Hecho.' : ''}`,
   vocabMissionCard: (title: string, subtitle: string, collected: boolean) =>
-    `${title}. ${subtitle}.${collected ? ' Conseguida.' : ''} Abre una ronda rápida.`,
+    `${title}. ${subtitle}.${collected ? ' Hecho.' : ''} Abre una ronda rápida.`,
   journeyCell: (c: {
     stage: number;
     stageTitle: string;
