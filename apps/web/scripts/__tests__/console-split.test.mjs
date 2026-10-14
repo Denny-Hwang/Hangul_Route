@@ -254,8 +254,8 @@ describe('package.json', () => {
     expect(scripts['build:console']).toBe('next build && node scripts/console-split.mjs out && node scripts/prune-hidden-locales.mjs out');
   });
 
-  it('keeps the site role unchanged', () => {
-    expect(scripts.build).toBe('next build && node scripts/prune-hidden-locales.mjs out');
+  it('keeps the site role apart: no console split, only the CONSOLE_ORIGIN redirect file at the end (section 3.13)', () => {
+    expect(scripts.build).toBe('next build && node scripts/prune-hidden-locales.mjs out && node scripts/site-redirects.mjs out');
   });
 });
 

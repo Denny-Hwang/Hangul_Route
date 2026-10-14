@@ -1,0 +1,151 @@
+// F-APP-001 section 3.13 (amended 2026-10-13, M3 prep) and F-SITE-002 section 3.10: the site build forwards
+// every old grown-up URL on hangulroute.com to the app host, and only once the owner has set the site build
+// variable `CONSOLE_ORIGIN` (the M3 site step). `build` = `next build && prune-hidden-locales && site-redirects`
+// writes `out/_redirects` from `GROWN_UP_PREFIXES` (R-1, the one list) when the variable holds an origin, and
+// makes sure no `_redirects` file is left in `out/` when it does not. The same variable moves the site's
+// grown-up links (`lib/site-links.ts`), so links and forwarding move in one deploy and roll back together.
+import { spawnSync } from 'node:child_process';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { APP_ORIGIN, GROWN_UP_PREFIXES } from '@hangul-route/content-schema';
+import { grownUpOrigin } from '../../src/lib/site-links';
+import { REDIRECT_STATUS, redirectOrigin, redirectRules, writeSiteRedirects } from '../site-redirects.mjs';
+
+const here = dirname(fileURLToPath(import.meta.url));
+const SCRIPT = join(here, '..', 'site-redirects.mjs');
+const WEB = join(here, '..', '..');
+
+describe('redirectOrigin (the CONSOLE_ORIGIN rule of next.config.js and site-links.ts)', () => {
+  it('is empty (no forwarding) when the variable is unset, empty or blank', () => {
+    expect(redirectOrigin(undefined)).toBe('');
+    expect(redirectOrigin('')).toBe('');
+    expect(redirectOrigin('   ')).toBe('');
+  });
+
+  it('is the trimmed origin without a trailing slash or path', () => {
+    expect(redirectOrigin('https://app.hangulroute.com')).toBe(APP_ORIGIN);
+    expect(redirectOrigin(' https://app.hangulroute.com/ ')).toBe(APP_ORIGIN);
+    expect(redirectOrigin('http://localhost:8787')).toBe('http://localhost:8787');
+  });
+
+  it('refuses a value that is not an https origin (plain http only on this machine)', () => {
+    for (const bad of ['app.hangulroute.com', 'http://app.hangulroute.com', 'ftp://app.hangulroute.com', 'not a url']) {
+      expect(() => redirectOrigin(bad), bad).toThrow(/CONSOLE_ORIGIN/);
+    }
+  });
+
+  it('agrees with grownUpOrigin, so the links and the forwarding always point at the same host', () => {
+    for (const value of [undefined, '', '  ', 'https://app.hangulroute.com', ' https://app.hangulroute.com/ ', 'http://127.0.0.1:3000']) {
+      expect(redirectOrigin(value), String(value)).toBe(grownUpOrigin({ CONSOLE_ORIGIN: value }));
+    }
+  });
+});
+
+describe('redirectRules', () => {
+  const rules = redirectRules(APP_ORIGIN, GROWN_UP_PREFIXES);
+  const lines = rules.trim().split('\n').filter((line) => line && !line.startsWith('#'));
+
+  it('forwards every grown-up prefix, bare and with anything under it, to the same path on the app host', () => {
+    for (const prefix of GROWN_UP_PREFIXES) {
+      expect(lines).toContain(`${prefix} ${APP_ORIGIN}${prefix} ${REDIRECT_STATUS}`);
+      expect(lines).toContain(`${prefix}/* ${APP_ORIGIN}${prefix}/:splat ${REDIRECT_STATUS}`);
+    }
+    expect(lines).toHaveLength(GROWN_UP_PREFIXES.length * 2);
+  });
+
+  it('is a temporary redirect, so unsetting the variable rolls back without cached permanent redirects', () => {
+    expect(REDIRECT_STATUS).toBe(302);
+  });
+
+  it('never forwards a site page, the previews or the presenter', () => {
+    for (const line of lines) {
+      const [from] = line.split(' ');
+      expect(from).not.toMatch(/^\/(design-preview|present|browse|teachers|parents|learners|about|privacy|terms|es|ko)(\/|$)/);
+      expect(from === '/' || from === '/*').toBe(false);
+    }
+  });
+
+  it('refuses an empty origin or an empty prefix list', () => {
+    expect(() => redirectRules('', GROWN_UP_PREFIXES)).toThrow();
+    expect(() => redirectRules(APP_ORIGIN, [])).toThrow();
+  });
+});
+
+describe('writeSiteRedirects', () => {
+  let out;
+  beforeEach(() => {
+    out = mkdtempSync(join(tmpdir(), 'site-redirects-'));
+    writeFileSync(join(out, 'index.html'), '<html></html>');
+    mkdirSync(join(out, 'teach'));
+    writeFileSync(join(out, 'teach', 'home.html'), '<html></html>');
+  });
+  afterEach(() => rmSync(out, { recursive: true, force: true }));
+
+  it('writes out/_redirects when an origin is set', () => {
+    expect(writeSiteRedirects(out, APP_ORIGIN, GROWN_UP_PREFIXES)).toBe(GROWN_UP_PREFIXES.length * 2);
+    expect(readFileSync(join(out, '_redirects'), 'utf8')).toBe(redirectRules(APP_ORIGIN, GROWN_UP_PREFIXES));
+  });
+
+  it('writes no file, and removes a stale one, when no origin is set (production today)', () => {
+    writeFileSync(join(out, '_redirects'), '/teach https://example.com 302\n');
+    expect(writeSiteRedirects(out, '', GROWN_UP_PREFIXES)).toBe(0);
+    expect(existsSync(join(out, '_redirects'))).toBe(false);
+  });
+
+  it('refuses a missing export folder', () => {
+    expect(() => writeSiteRedirects(join(out, 'nope'), APP_ORIGIN, GROWN_UP_PREFIXES)).toThrow(/no export folder/);
+  });
+});
+
+// Each case starts Node with the TypeScript loader (about 2 s); a shared CI runner gets room.
+describe('the CLI', { timeout: 30_000 }, () => {
+  let out;
+  beforeEach(() => {
+    out = mkdtempSync(join(tmpdir(), 'site-redirects-cli-'));
+    writeFileSync(join(out, 'index.html'), '<html></html>');
+  });
+  afterEach(() => rmSync(out, { recursive: true, force: true }));
+
+  const run = (consoleOrigin) => {
+    const env = { ...process.env };
+    delete env.CONSOLE_ORIGIN;
+    if (consoleOrigin !== undefined) env.CONSOLE_ORIGIN = consoleOrigin;
+    return spawnSync(process.execPath, [SCRIPT, out], { cwd: WEB, env, encoding: 'utf8' });
+  };
+
+  it('writes the rules from the R-1 prefix list when CONSOLE_ORIGIN is set', () => {
+    const result = run('https://app.hangulroute.com');
+    expect(result.status, result.stderr).toBe(0);
+    expect(readFileSync(join(out, '_redirects'), 'utf8')).toBe(redirectRules(APP_ORIGIN, GROWN_UP_PREFIXES));
+    expect(result.stdout).toMatch(/site-redirects: 10 rules/);
+  });
+
+  it('writes nothing when CONSOLE_ORIGIN is unset', () => {
+    const result = run(undefined);
+    expect(result.status, result.stderr).toBe(0);
+    expect(existsSync(join(out, '_redirects'))).toBe(false);
+    expect(result.stdout).toMatch(/no _redirects/);
+  });
+
+  it('fails the build on an invalid CONSOLE_ORIGIN', () => {
+    const result = run('app.hangulroute.com');
+    expect(result.status).toBe(1);
+    expect(result.stderr).toMatch(/CONSOLE_ORIGIN/);
+    expect(existsSync(join(out, '_redirects'))).toBe(false);
+  });
+});
+
+describe('package.json', () => {
+  it('runs site-redirects at the end of the site build only, never in the console role', () => {
+    const pkg = JSON.parse(readFileSync(join(WEB, 'package.json'), 'utf8'));
+    expect(pkg.scripts.build).toMatch(/&& node scripts\/site-redirects\.mjs out$/);
+    expect(pkg.scripts['build:console']).not.toMatch(/site-redirects/);
+  });
+
+  it('keeps no _redirects in public/, so only the script decides', () => {
+    expect(existsSync(join(WEB, 'public', '_redirects'))).toBe(false);
+  });
+});
