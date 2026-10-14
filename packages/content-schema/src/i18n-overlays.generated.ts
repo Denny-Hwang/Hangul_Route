@@ -2396,7 +2396,7 @@ export const OVERLAYS: Overlays = {
       "steps.s2.discover.pages.1.items.1.example.gloss": "한반도에 있는 나라"
     },
     "vocab-topic:animals": {
-      "blurb": "반려동물부터 동물원 동물까지, 동물을 나타내는 낱말이에요.",
+      "blurb": "반려동물부터 동물원 친구들까지, 동물을 나타내는 낱말이에요.",
       "hoyaIntro": "저는 호랑이예요! 동물 친구들을 만나러 가요.",
       "title": "동물"
     },
@@ -2412,7 +2412,7 @@ export const OVERLAYS: Overlays = {
     },
     "vocab-topic:family": {
       "blurb": "가족 안의 사람들을 부르는 낱말이에요.",
-      "hoyaIntro": "가족에는 누가 있어요? 사람마다 낱말을 하나씩 배워 봐요.",
+      "hoyaIntro": "가족 중에 누가 있어요? 사람마다 낱말을 하나씩 배워 봐요.",
       "title": "가족"
     },
     "vocab-topic:food": {
@@ -2421,7 +2421,7 @@ export const OVERLAYS: Overlays = {
       "title": "음식"
     },
     "vocab-topic:k-culture": {
-      "blurb": "한국의 옷, 집, 음식, 명절, 놀이, 음악 등을 만나요.",
+      "blurb": "한국의 옷, 집, 음식, 명절, 놀이, 음악을 나타내는 낱말이에요.",
       "hoyaIntro": "한국의 옷과 음식, 명절과 음악을 함께 둘러봐요.",
       "title": "한국 문화"
     },
@@ -2448,7 +2448,7 @@ export const OVERLAYS: Overlays = {
     "vocab-topic:sports": {
       "blurb": "하거나 볼 수 있는 운동과 놀이예요.",
       "hoyaIntro": "준비, 시작! 운동을 나타내는 낱말을 배워요.",
-      "title": "스포츠"
+      "title": "운동"
     },
     "vocab-topic:travel": {
       "blurb": "이동하는 방법과 여행에 필요한 물건이에요.",
@@ -2459,11 +2459,11 @@ export const OVERLAYS: Overlays = {
       "gloss": "태어난 지 얼마 안 된 아주 어린 아이"
     },
     "vocab:ahop": {
-      "gloss": "9를 뜻하는 우리말 수"
+      "gloss": "9를 뜻하는 순우리말 수"
     },
     "vocab:appa": {
       "gloss": "아버지를 친근하게 부르는 말",
-      "senseNote": "날마다 쓰는 말이에요. 격식 있는 말은 아버지예요."
+      "senseNote": "평소에 흔히 쓰는 말이에요. 격식 있는 말은 아버지예요."
     },
     "vocab:bada": {
       "gloss": "짠물이 넓게 펼쳐진 곳"
@@ -2504,18 +2504,18 @@ export const OVERLAYS: Overlays = {
       "gloss": "날개가 있어 하늘을 나는 탈것"
     },
     "vocab:bit": {
-      "gloss": "해나 등에서 나와 주변을 밝게 하는 것",
-      "senseNote": "해나 등에서 나오는 밝음을 말해요. 무게가 가볍다는 뜻은 아니에요."
+      "gloss": "해나 전등에서 나와 주변을 밝게 하는 것",
+      "senseNote": "해나 전등에서 나와요. 빛이 있어야 물건을 볼 수 있어요."
     },
     "vocab:borasaek": {
       "gloss": "포도나 가지의 색"
     },
     "vocab:bul": {
       "gloss": "뜨겁게 타오르며 빛과 열을 내는 것",
-      "senseNote": "등처럼 켜 놓은 빛을 뜻하기도 해요."
+      "senseNote": "전등처럼 켜 놓은 불빛을 뜻하기도 해요."
     },
     "vocab:bunhongsaek": {
-      "gloss": "벚꽃처럼 연하고 붉은 색"
+      "gloss": "벚꽃처럼 연하고 붉은색"
     },
     "vocab:byeol": {
       "gloss": "밤하늘에 반짝이는 작은 빛"
@@ -2559,7 +2559,7 @@ export const OVERLAYS: Overlays = {
       "gloss": "몸을 받치고 걷는 데 쓰는 부분"
     },
     "vocab:daseot": {
-      "gloss": "5를 뜻하는 우리말 수"
+      "gloss": "5를 뜻하는 순우리말 수"
     },
     "vocab:deurama": {
       "gloss": "텔레비전에서 여러 회로 나누어 보여 주는 이야기"
@@ -2569,10 +2569,10 @@ export const OVERLAYS: Overlays = {
     },
     "vocab:dongsaeng": {
       "gloss": "자기보다 나이 어린 형제나 자매",
-      "senseNote": "누구나 쓸 수 있어요. 어린 남자 형제에게도, 어린 여자 형제에게도 써요."
+      "senseNote": "누구나 쓸 수 있어요. 손아래 남자 형제에게도, 손아래 여자 형제에게도 써요."
     },
     "vocab:dul": {
-      "gloss": "2를 뜻하는 우리말 수",
+      "gloss": "2를 뜻하는 순우리말 수",
       "senseNote": "개처럼 세는 말 앞에서는 '두'가 돼요. 예: 두 개."
     },
     "vocab:eolgul": {
@@ -2580,7 +2580,7 @@ export const OVERLAYS: Overlays = {
     },
     "vocab:eomma": {
       "gloss": "어머니를 친근하게 부르는 말",
-      "senseNote": "날마다 쓰는 말이에요. 격식 있는 말은 어머니예요."
+      "senseNote": "평소에 흔히 쓰는 말이에요. 격식 있는 말은 어머니예요."
     },
     "vocab:eonni": {
       "gloss": "여자가 자기보다 나이 많은 여자 형제를 부르는 말",
@@ -2659,7 +2659,7 @@ export const OVERLAYS: Overlays = {
       "gloss": "아버지나 어머니의 어머니"
     },
     "vocab:hana": {
-      "gloss": "1을 뜻하는 우리말 수",
+      "gloss": "1을 뜻하는 순우리말 수",
       "senseNote": "개처럼 세는 말 앞에서는 '한'이 돼요. 예: 한 개."
     },
     "vocab:hanbok": {
@@ -2670,7 +2670,7 @@ export const OVERLAYS: Overlays = {
       "gloss": "머리 위로 보이는 넓은 공간, 구름이 떠 있는 곳"
     },
     "vocab:haneulsaek": {
-      "gloss": "맑은 날 올려다보면 보이는 연한 푸른 색"
+      "gloss": "맑은 날 올려다보면 보이는 연한 푸른색"
     },
     "vocab:hangeul": {
       "gloss": "한국어를 적는 글자",
@@ -2695,15 +2695,15 @@ export const OVERLAYS: Overlays = {
       "gloss": "여행하는 사람이 돈을 내고 묵는 곳"
     },
     "vocab:hyeong": {
-      "gloss": "남자가 자기보다 나이 많은 남자 형제를 부르는 말",
-      "senseNote": "남자가 손위 남자 형제를 이렇게 불러요. 여자는 오빠라고 해요."
+      "gloss": "남자가 자기보다 나이 많은 남자 동기를 부르는 말",
+      "senseNote": "남자가 손위 남자 동기를 이렇게 불러요. 여자는 오빠라고 해요."
     },
     "vocab:i-tooth": {
-      "gloss": "음식을 씹는 데 쓰는 입 속의 단단한 것",
+      "gloss": "음식을 씹는 데 쓰는 입속의 단단한 것",
       "senseNote": "더 격식 있는 말로 치아라고도 해요."
     },
     "vocab:ilgop": {
-      "gloss": "7을 뜻하는 우리말 수"
+      "gloss": "7을 뜻하는 순우리말 수"
     },
     "vocab:ip": {
       "gloss": "먹고 말하는 데 쓰는 얼굴의 부분"
@@ -2769,7 +2769,7 @@ export const OVERLAYS: Overlays = {
       "gloss": "줄기가 단단하고 가지와 잎이 있는 식물"
     },
     "vocab:net": {
-      "gloss": "4를 뜻하는 우리말 수",
+      "gloss": "4를 뜻하는 순우리말 수",
       "senseNote": "개처럼 세는 말 앞에서는 '네'가 돼요. 예: 네 개."
     },
     "vocab:nonggu": {
@@ -2802,7 +2802,7 @@ export const OVERLAYS: Overlays = {
       "gloss": "어깨에서 손까지 이어진 부분"
     },
     "vocab:paransaek": {
-      "gloss": "깊은 바다처럼 진하고 푸른 색"
+      "gloss": "맑은 날 바다의 색"
     },
     "vocab:ppalgansaek": {
       "gloss": "피나 잘 익은 딸기의 색"
@@ -2830,7 +2830,7 @@ export const OVERLAYS: Overlays = {
       "gloss": "땅이 높이 솟은 곳"
     },
     "vocab:seollal": {
-      "gloss": "음력으로 새해를 시작하는 첫날, 한국의 큰 명절",
+      "gloss": "음력으로 새해 첫날인 한국의 큰 명절",
       "senseNote": "많은 사람이 한복을 입고 어른께 세배해요."
     },
     "vocab:seonsaengnim": {
@@ -2838,14 +2838,14 @@ export const OVERLAYS: Overlays = {
       "senseNote": "가르치는 분을 부를 때도 이 말을 써요. 끝에 붙은 '님'은 높임을 나타내요."
     },
     "vocab:set": {
-      "gloss": "3을 뜻하는 우리말 수",
+      "gloss": "3을 뜻하는 순우리말 수",
       "senseNote": "개처럼 세는 말 앞에서는 '세'가 돼요. 예: 세 개."
     },
     "vocab:seuki": {
       "gloss": "긴 판을 신고 눈 위를 미끄러져 내려가는 운동"
     },
     "vocab:seumul": {
-      "gloss": "20을 뜻하는 우리말 수",
+      "gloss": "20을 뜻하는 순우리말 수",
       "senseNote": "개처럼 세는 말 앞에서는 '스무'가 돼요. 예: 스무 개."
     },
     "vocab:son": {
@@ -2897,23 +2897,23 @@ export const OVERLAYS: Overlays = {
       "gloss": "방망이로 공을 치고 베이스를 도는 운동"
     },
     "vocab:yeodeol": {
-      "gloss": "8을 뜻하는 우리말 수"
+      "gloss": "8을 뜻하는 순우리말 수"
     },
     "vocab:yeogwon": {
       "gloss": "다른 나라에 갈 때 신분을 보여 주는 수첩"
     },
     "vocab:yeol-ten": {
-      "gloss": "10을 뜻하는 우리말 수"
+      "gloss": "10을 뜻하는 순우리말 수"
     },
     "vocab:yeong-zero": {
       "gloss": "0, 아무것도 없음을 뜻하는 수",
-      "senseNote": "우리말에는 0을 뜻하는 말이 없어서, 한자에서 온 이 말을 써요. 전화번호를 말할 때는 공이라고 해요."
+      "senseNote": "순우리말에는 0을 뜻하는 말이 없어서, 한자에서 온 이 말을 써요. 전화번호를 말할 때는 공이라고 해요."
     },
     "vocab:yeonpil": {
       "gloss": "나무 속에 심이 들어 있는, 글씨를 쓰는 도구"
     },
     "vocab:yeoseot": {
-      "gloss": "6을 뜻하는 우리말 수"
+      "gloss": "6을 뜻하는 순우리말 수"
     },
     "vocab:yeou": {
       "gloss": "꼬리가 크고 귀가 뾰족한 들짐승"

@@ -706,7 +706,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     "glosses": {
       "en": "blue",
       "es": "azul",
-      "ko": "깊은 바다처럼 진하고 푸른 색"
+      "ko": "맑은 날 바다의 색"
     }
   },
   {
@@ -740,7 +740,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     "glosses": {
       "en": "pink",
       "es": "rosa",
-      "ko": "벚꽃처럼 연하고 붉은 색"
+      "ko": "벚꽃처럼 연하고 붉은색"
     }
   },
   {
@@ -757,7 +757,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     "glosses": {
       "en": "sky blue",
       "es": "celeste",
-      "ko": "맑은 날 올려다보면 보이는 연한 푸른 색"
+      "ko": "맑은 날 올려다보면 보이는 연한 푸른색"
     }
   },
   {
@@ -843,7 +843,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     "glosses": {
       "en": "one",
       "es": "uno",
-      "ko": "1을 뜻하는 우리말 수"
+      "ko": "1을 뜻하는 순우리말 수"
     }
   },
   {
@@ -861,7 +861,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     "glosses": {
       "en": "two",
       "es": "dos",
-      "ko": "2를 뜻하는 우리말 수"
+      "ko": "2를 뜻하는 순우리말 수"
     }
   },
   {
@@ -879,7 +879,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     "glosses": {
       "en": "three",
       "es": "tres",
-      "ko": "3을 뜻하는 우리말 수"
+      "ko": "3을 뜻하는 순우리말 수"
     }
   },
   {
@@ -897,7 +897,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     "glosses": {
       "en": "four",
       "es": "cuatro",
-      "ko": "4를 뜻하는 우리말 수"
+      "ko": "4를 뜻하는 순우리말 수"
     }
   },
   {
@@ -914,7 +914,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     "glosses": {
       "en": "five",
       "es": "cinco",
-      "ko": "5를 뜻하는 우리말 수"
+      "ko": "5를 뜻하는 순우리말 수"
     }
   },
   {
@@ -931,7 +931,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     "glosses": {
       "en": "six",
       "es": "seis",
-      "ko": "6을 뜻하는 우리말 수"
+      "ko": "6을 뜻하는 순우리말 수"
     }
   },
   {
@@ -948,7 +948,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     "glosses": {
       "en": "seven",
       "es": "siete",
-      "ko": "7을 뜻하는 우리말 수"
+      "ko": "7을 뜻하는 순우리말 수"
     }
   },
   {
@@ -965,7 +965,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     "glosses": {
       "en": "eight",
       "es": "ocho",
-      "ko": "8을 뜻하는 우리말 수"
+      "ko": "8을 뜻하는 순우리말 수"
     }
   },
   {
@@ -982,7 +982,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     "glosses": {
       "en": "nine",
       "es": "nueve",
-      "ko": "9를 뜻하는 우리말 수"
+      "ko": "9를 뜻하는 순우리말 수"
     }
   },
   {
@@ -1000,7 +1000,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     "glosses": {
       "en": "ten",
       "es": "diez",
-      "ko": "10을 뜻하는 우리말 수"
+      "ko": "10을 뜻하는 순우리말 수"
     }
   },
   {
@@ -1018,7 +1018,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     "glosses": {
       "en": "twenty",
       "es": "veinte",
-      "ko": "20을 뜻하는 우리말 수"
+      "ko": "20을 뜻하는 순우리말 수"
     }
   },
   {
@@ -1183,7 +1183,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     "glosses": {
       "en": "older brother (said by a man or boy)",
       "es": "hermano mayor (lo dice un hombre o niño)",
-      "ko": "남자가 자기보다 나이 많은 남자 형제를 부르는 말"
+      "ko": "남자가 자기보다 나이 많은 남자 동기를 부르는 말"
     }
   },
   {
@@ -1669,7 +1669,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     "glosses": {
       "en": "tooth",
       "es": "diente",
-      "ko": "음식을 씹는 데 쓰는 입 속의 단단한 것"
+      "ko": "음식을 씹는 데 쓰는 입속의 단단한 것"
     }
   },
   {
@@ -2397,7 +2397,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     "glosses": {
       "en": "Lunar New Year",
       "es": "Año Nuevo lunar",
-      "ko": "음력으로 새해를 시작하는 첫날, 한국의 큰 명절"
+      "ko": "음력으로 새해 첫날인 한국의 큰 명절"
     }
   },
   {
@@ -2710,7 +2710,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     "glosses": {
       "en": "light",
       "es": "luz",
-      "ko": "해나 등에서 나와 주변을 밝게 하는 것"
+      "ko": "해나 전등에서 나와 주변을 밝게 하는 것"
     }
   }
 ];
