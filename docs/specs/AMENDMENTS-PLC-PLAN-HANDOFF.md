@@ -172,14 +172,14 @@ ADD after P-8:
 
 | P-7b | `feat(mobile)`: result weekly-plan strip and not-tested copy, `RouteProposal` entry from the result, report "Suggested weekly plan" card. **Done (#573)**, behind `flags.routeEnabled` | M | P-6, P-8, F-PLAN-002 P2-3b (`proposeRoute`) and P2-7a (`RouteProposal`) |
 
-Change P-10's "Needs" to "P-7, P-7b, P-8, OD-14 (the owner confirms the one-tap default)". P-6 and P-7 do not wait. Add to P-6's Needs: "OD-1 (sound-guide choice screen)". Add to P-7's Needs: "F-ROUTE-001 R-2a (`pin`, `check-circle` glyphs)".
+Change P-10's "Needs" to "P-7, P-7b, P-8" (OD-14 was decided on 2026-10-14, confirmed as proposed, and no longer gates P-10; P-10 still needs the store build listed in F-PLC-001's row). P-6 and P-7 do not wait. Add to P-6's Needs: "OD-1 (sound-guide choice screen)". Add to P-7's Needs: "F-ROUTE-001 R-2a (`pin`, `check-circle` glyphs)".
 
 ### AM-11. Section 9 (Unverified assumptions), after line 513
 
 APPEND:
 
 > 15. **Default plan length** — owner decision OD-12 in F-ROUTE-001 section 9, decided 2026-10-12 (accepted as proposed); the pace chips follow OD-13, decided the same day.
-> 16. **One-tap plan for a self profile on any device** — OD-14.
+> 16. **One-tap plan for a self profile on any device** — OD-14, decided 2026-10-14 (confirmed as proposed).
 > 17. **The level check and writing** — the report's skills note (AM-5); gap list in `AMENDMENTS-PLC-PLAN-HANDOFF.md` section 4.
 
 ### AM-12. Wireframe `placement.md` G (Result) and J (report)
@@ -295,7 +295,7 @@ APPEND: "`route.proposed` `{ source, kind: 'new' | 'update', defaultWeeks: 4 | 1
 ### FP-B12. Section 9 (Unverified assumptions), APPEND
 
 > 11. **Default length rule and pace chips** — owner decisions OD-12 and OD-13 (F-ROUTE-001 section 9), decided 2026-10-12 (accepted as proposed); the 1.2 table is hand-estimated and pinned by the P2-3b goldens.
-> 12. **One-tap plan for a self profile on any device** — OD-14.
+> 12. **One-tap plan for a self profile on any device** — OD-14, decided 2026-10-14 (confirmed as proposed).
 
 ### FP-B13. Wireframe `curriculum-planner.md` (promoted to `console/curriculum-wizard.md`, `route/setup.md`)
 
@@ -325,7 +325,7 @@ In learner-facing strings of sections 3.9 to 3.12 and the wireframes, "route" be
 
 ## 5. Owner decisions touched by this file (the questions and defaults are in F-ROUTE-001 section 9)
 
-OD-1 (sound guide; gates P-6), OD-4 (free-tier stages), OD-7 (learner naming), OD-9 (defined level), OD-12 (length rule; decided 2026-10-12, accepted as proposed; no longer gates P2-3b), OD-13 (pace chips and check-in; decided 2026-10-12, accepted as proposed; no longer gates P2-3b / P2-7b), OD-14 (one-tap for self profiles on any device; the proposed default is built behind the flag in P-7b, #573; the owner confirms it before P-10), OD-15 (start day Today), OD-16 (14-day dismissal; gates P2-7a), OD-17 (a child answers the Hoya check-in alone; decided 2026-10-13: no, the check-in stays behind the grown-up gate on a child profile; no longer gates P2-8b, the flag flip).
+OD-1 (sound guide; gates P-6), OD-4 (free-tier stages), OD-7 (learner naming), OD-9 (defined level), OD-12 (length rule; decided 2026-10-12, accepted as proposed; no longer gates P2-3b), OD-13 (pace chips and check-in; decided 2026-10-12, accepted as proposed; no longer gates P2-3b / P2-7b), OD-14 (one-tap for self profiles on any device; **decided 2026-10-14 by the owner: confirmed as proposed** (a self profile applies the recommended plan with one tap, **Use this plan**, no PIN, on any device; a child profile still goes through the grown-up gate); the default built behind the flag in P-7b, #573, is the decided behaviour; no longer gates P-10), OD-15 (start day Today), OD-16 (14-day dismissal; gates P2-7a), OD-17 (a child answers the Hoya check-in alone; decided 2026-10-13: no, the check-in stays behind the grown-up gate on a child profile; no longer gates P2-8b, the flag flip).
 
 ## 6. Errata (apply in the same docs PR)
 
@@ -346,3 +346,4 @@ Not part of these amendments or of any screen. See F-ROUTE-001 section 10 and `d
 ## Review log
 
 - 2026-10-13, docs follow-ups after the 2026-10-13 merges. Row P-7b is marked done (#573). Section 5: OD-14 no longer gates P-7b; its proposed default is built behind `flags.routeEnabled`, and the owner confirms it before P-10 (added to P-10's Needs in section 2).
+- 2026-10-14, owner decision OD-14 (answered in chat): confirmed as proposed. A self profile applies the recommended plan with one tap (**Use this plan**, no PIN) on any device, also a family or PIN device; a child profile still needs the grown-up gate. Section 5 records it; section 2 drops OD-14 from P-10's Needs (P-10 still needs P-7, P-7b, P-8, the P-3b Worker deploy and the store build); AM-11 item 16 and FP-B12 item 12 say decided. No code change: P-7b (#573) already built this behaviour.
