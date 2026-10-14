@@ -25,7 +25,8 @@ import {
   type RunTally,
   type StartSource,
 } from './src/logic/lecture/shell';
-import { BAR_BAND, FONT_WAIT_MS, stageBox } from './src/logic/lecture/stage-constants';
+import { FONT_WAIT_MS, stageBox } from './src/logic/lecture/stage-constants';
+import { BAR_BAND, STAGE_BOUNDS } from './src/screens/presenter/stage-metrics';
 import { stageScale } from './src/logic/lecture/stage-scale';
 import { getCapability, playPrompt, refreshCapability, subscribeCapability, unlockAudio } from './src/platform/audio';
 import { setDocumentLang } from './src/platform/locale';
@@ -40,9 +41,9 @@ import {
   keepScreenAwake,
   listenForRoster,
   lockLandscape,
-  markOpenDeck,
-  openDeckId,
+  forgetOpenDeck,
   releaseScreenAwake,
+  reloadOnDeckLink,
   setPresenterDocTitle,
   subscribeActivity,
   subscribeFullscreen,
@@ -51,6 +52,7 @@ import {
   unlockOrientation,
   waitForPresenterFont,
   wakeLockSupported,
+  type DeckAddress,
 } from './src/platform/presenter';
 import { applyUpdate, isOfflineReady, subscribePwa } from './src/platform/pwa';
 import { readJson, writeJson } from './src/platform/storage';
@@ -82,15 +84,12 @@ import { activeLocale, useLocaleStore } from './src/store/locale-store';
 
 const recentStore: RecentStore = { readJson: (key) => readJson<unknown>(key), writeJson: (key, value) => writeJson(key, value) };
 
-let bootRead: { raw: string | null; openId: string | null } | null = null;
+let bootRead: { address: DeckAddress | null } | null = null;
 
 /** The address is read once per page, before the first paint (the fragment then leaves it). */
-function readAddress(): { raw: string | null; openId: string | null } {
-  if (bootRead === null) {
-    const openId = openDeckId();
-    bootRead = { raw: takeDeckFragment(), openId };
-  }
-  return bootRead;
+function readAddress(): DeckAddress | null {
+  if (bootRead === null) bootRead = { address: takeDeckFragment() };
+  return bootRead.address;
 }
 
 type Phase =
@@ -115,8 +114,19 @@ function voiceCheck(capability: AudioCapability, checked: boolean): VoiceCheck {
 
 export default function PresenterApp(): React.ReactElement {
   const address = useMemo(readAddress, []);
-  const [phase, setPhase] = useState<Phase>(() => (address.raw !== null ? phaseOf(resolveBoot(address.raw, null, emptyRecent())) : { kind: 'boot' }));
-  const recent = useRef<RecentList>(emptyRecent());
+  // A link opens at once; a reloaded deck waits for Recent (it may resume at its slide); no deck is the home.
+  const [phase, setPhase] = useState<Phase>(() =>
+    address === null ? { kind: 'home' } : address.reloaded ? { kind: 'boot' } : phaseOf(resolveBoot(address, emptyRecent())),
+  );
+  // Recent lessons, read once at boot; every change chains on the read, so a fast Start never saves over it.
+  const recent = useRef<Promise<RecentList>>(Promise.resolve(emptyRecent()));
+  const updateRecent = useCallback((change: (list: RecentList) => RecentList) => {
+    recent.current = recent.current.then(async (list) => {
+      const next = change(list);
+      if (next !== list) await saveRecent(recentStore, next);
+      return next;
+    });
+  }, []);
   const deviceLocale = useLocaleStore((s) => activeLocale(s, null));
   const deck = phase.kind === 'ready' || phase.kind === 'running' ? phase.deck : null;
   const locale: UiLocale = deck?.options.uiLocale ?? deviceLocale;
@@ -141,16 +151,13 @@ export default function PresenterApp(): React.ReactElement {
         if (live) setVoiceChecked(true);
       });
     void flushQueue();
-    if (address.raw === null) {
-      void loadRecent(recentStore).then((list) => {
-        recent.current = list;
-        if (live) setPhase(phaseOf(resolveBoot(null, address.openId, list)));
-      });
-    } else {
-      void loadRecent(recentStore).then((list) => {
-        recent.current = list;
+    recent.current = loadRecent(recentStore);
+    if (address?.reloaded) {
+      void recent.current.then((list) => {
+        if (live) setPhase(phaseOf(resolveBoot(address, list)));
       });
     }
+    const offLink = reloadOnDeckLink();
     const offPwa = subscribePwa((event) => {
       if (event === 'back-online') void flushQueue();
       if (event === 'update-ready') setUpdateWaiting(true);
@@ -159,6 +166,7 @@ export default function PresenterApp(): React.ReactElement {
       live = false;
       offCapability();
       offPwa();
+      offLink();
     };
   }, [address]);
 
@@ -176,16 +184,18 @@ export default function PresenterApp(): React.ReactElement {
   // A link that does not decode, or a deck with nothing to show: the invalid screen, once per page.
   const rejected = useRef(false);
   useEffect(() => {
-    if (phase.kind === 'invalid' && !rejected.current && address.raw !== null) {
+    if (phase.kind === 'invalid' && !rejected.current && address !== null) {
       rejected.current = true;
-      const decoded = resolveBoot(address.raw, null, emptyRecent());
+      const decoded = resolveBoot(address, emptyRecent());
       void track({ name: 'lecture.deck_rejected', payload: { reason: decoded.kind === 'invalid' ? decoded.reason : 'invalid' } });
+      forgetOpenDeck();
     }
     if (phase.kind === 'ready' && run !== null && run.slides.length === 0) {
       if (!rejected.current) {
         rejected.current = true;
         void track({ name: 'lecture.deck_rejected', payload: { reason: 'invalid' } });
       }
+      forgetOpenDeck();
       setPhase({ kind: 'invalid' });
     }
   }, [phase, run, address]);
@@ -208,7 +218,7 @@ export default function PresenterApp(): React.ReactElement {
   useEffect(() => {
     if (phase.kind !== 'ready') return undefined;
     let live = true;
-    void waitForPresenterFont(FONT_WAIT_MS).then(() => {
+    void waitForPresenterFont(FONT_WAIT_MS, presenter.font).then(() => {
       if (live) setFontReady(true);
     });
     return () => {
@@ -251,8 +261,7 @@ export default function PresenterApp(): React.ReactElement {
       if (tally.current) tally.current = tallyStep(tally.current, before, state, slides);
       if (state.slideIdx !== before.slideIdx && deck) {
         const key = slides[state.slideIdx]!.key;
-        recent.current = setLastSlide(recent.current, deck.id, key);
-        void saveRecent(recentStore, recent.current);
+        updateRecent((list) => setLastSlide(list, deck.id, key));
       }
       const atEnd = event === 'next' && state === before && before.overlay === null && before.slideIdx === slides.length - 1;
       setEndHint(atEnd);
@@ -268,7 +277,7 @@ export default function PresenterApp(): React.ReactElement {
         setStrokeToken((n) => n + 1);
       }
     },
-    [slides, deck, playSound],
+    [slides, deck, playSound, updateRecent],
   );
 
   const toggleFullscreen = useCallback(() => {
@@ -291,12 +300,10 @@ export default function PresenterApp(): React.ReactElement {
     stateRef.current = state;
     setPstate(state);
     tally.current = startTally(Date.now(), slides[state.slideIdx]?.key);
-    if (phase.source !== 'recent') {
-      recent.current = rememberDeck(recent.current, phase.deck, new Date().toISOString());
-    }
-    recent.current = setLastSlide(recent.current, phase.deck.id, slides[state.slideIdx]!.key);
-    void saveRecent(recentStore, recent.current);
-    markOpenDeck(phase.deck.id);
+    const savedAt = new Date().toISOString();
+    const firstKey = slides[state.slideIdx]!.key;
+    const { deck: started, source } = phase;
+    updateRecent((list) => setLastSlide(source === 'recent' ? list : rememberDeck(list, started, savedAt), started.id, firstKey));
     void track({
       name: 'lecture.start',
       payload: { ...startPayload({ deck: phase.deck, run, source: phase.source, pickerMode, capability, offlineReady: isOfflineReady() }) },
@@ -304,7 +311,7 @@ export default function PresenterApp(): React.ReactElement {
     setPhase({ kind: 'running', deck: phase.deck, source: phase.source });
     const first = slides[state.slideIdx]!;
     if (first.builds[0] === 'stroke') setStrokeToken((n) => n + 1);
-  }, [phase, run, slides, pickerMode, capability]);
+  }, [phase, run, slides, pickerMode, capability, updateRecent]);
 
   const onExit = useCallback(() => {
     void exitFullscreen();
@@ -313,7 +320,7 @@ export default function PresenterApp(): React.ReactElement {
     const payload = tally.current ? completePayload(tally.current, Date.now()) : { slidesShown: 0, minutes: 0, reveals: 0 };
     tally.current = null;
     clearPickerLabels();
-    markOpenDeck(null);
+    forgetOpenDeck();
     stateRef.current = null;
     setPstate(null);
     setRomanization(null);
@@ -365,7 +372,10 @@ export default function PresenterApp(): React.ReactElement {
 
   // ---- render ----
   const box = stageBox(window, band);
-  const scale = stageScale(box, presenter.stage);
+  const scale = stageScale(box, STAGE_BOUNDS);
+  // Too small is judged on the one-row band, so a bar that wraps on a phone cannot decide it; then the
+  // hint page takes the whole window with its own Exit, and the bar is not drawn (states.md).
+  const tooSmall = stageScale(stageBox(window, BAR_BAND), STAGE_BOUNDS).tooSmall || scale.tooSmall;
   const stageView: PresenterView = { ...view, unit: scale.unit };
 
   const partTitle = useCallback(
@@ -427,7 +437,7 @@ export default function PresenterApp(): React.ReactElement {
     body = (
       <View style={{ flex: 1, backgroundColor: colors.surface.paper }}>
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-          {scale.tooSmall || !slide ? (
+          {tooSmall || !slide ? (
             <StatePage
               testID="presenter-too-small"
               pose="thinking"
@@ -450,27 +460,29 @@ export default function PresenterApp(): React.ReactElement {
               />
             </PresenterViewProvider>
           )}
-          {scale.portrait && !scale.tooSmall ? <StageHint text={messages.learner.presenter.state.portrait} /> : null}
+          {scale.portrait && !tooSmall ? <StageHint text={messages.learner.presenter.state.portrait} /> : null}
           {endHint ? <StageHint text={messages.learner.presenter.slide.end.exitHint} bottom /> : null}
         </View>
-        <ControlBar
-          hidden={barHidden}
-          revealNext={revealNext}
-          muted={muted}
-          fullscreenSupported={fullscreenSupported()}
-          fullscreen={fullscreen}
-          onBack={() => dispatch('prev')}
-          onNext={() => dispatch('next')}
-          onSound={() => dispatch('replay-sound')}
-          onFullscreen={toggleFullscreen}
-          onExit={() => dispatch({ overlay: 'exit' })}
-          onFocusWithin={(focused) => {
-            barFocused.current = focused;
-            if (focused) setBarHidden(false);
-          }}
-          onBandHeight={setBand}
-          exitRef={exitRef}
-        />
+        {tooSmall ? null : (
+          <ControlBar
+            hidden={barHidden}
+            revealNext={revealNext}
+            muted={muted}
+            fullscreenSupported={fullscreenSupported()}
+            fullscreen={fullscreen}
+            onBack={() => dispatch('prev')}
+            onNext={() => dispatch('next')}
+            onSound={() => dispatch('replay-sound')}
+            onFullscreen={toggleFullscreen}
+            onExit={() => dispatch({ overlay: 'exit' })}
+            onFocusWithin={(focused) => {
+              barFocused.current = focused;
+              if (focused) setBarHidden(false);
+            }}
+            onBandHeight={setBand}
+            exitRef={exitRef}
+          />
+        )}
         {p.overlay === 'exit' ? <ExitConfirm onKeepGoing={() => dispatch('close')} onExit={onExit} /> : null}
       </View>
     );

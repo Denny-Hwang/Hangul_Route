@@ -1,4 +1,4 @@
-import { Icon, colors, koreanTextLabel, presenter, radii, spacing, typography } from '@hangul-route/design-system';
+import { Icon, colors, koreanTextLabel, presenter, radii, spacing, touchTarget, typography } from '@hangul-route/design-system';
 import React, { useMemo } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import Svg, { Circle, Path, Text as SvgText } from 'react-native-svg';
@@ -6,23 +6,15 @@ import { StrokeHint } from '../../../components/StrokeHint';
 import { strokesForJamo } from '../../../content/jamo-strokes';
 import type { BuildName } from '../../../logic/lecture/build-steps';
 import type { Slide } from '../../../logic/lecture/deck-builder';
-import {
-  STAGE_BORDER,
-  STAGE_GAP,
-  STAGE_GAP_INNER,
-  STAGE_RADIUS,
-  STROKE_DOT_RADIUS,
-  STROKE_DOT_RING,
-  STROKE_LINE,
-  STROKE_PANEL,
-  STROKE_VIEWBOX,
-  stageButtonSize,
-  units,
-} from '../../../logic/lecture/stage-constants';
+import { STROKE_DOT_RADIUS, STROKE_DOT_RING, STROKE_LINE, STROKE_PANEL, STROKE_VIEWBOX, stageButtonSize, units } from '../../../logic/lecture/stage-constants';
+import { STAGE_BORDER, STAGE_GAP, STAGE_GAP_INNER, STAGE_RADIUS } from '../stage-metrics';
 import { buildStrokeDiagram } from '../../../logic/stroke-diagram';
 import { TaughtKo, usePresenterView, useStageText } from '../presenter-context';
 
 type LetterBody = Extract<Slide, { kind: 'letter' }>;
+
+/** SVG text does not read React Native's 'System' family; the numerals use the browser's UI stack. */
+const SVG_UI_FONT = 'system-ui, sans-serif';
 
 /**
  * Letter slide in three columns (design/screens/presenter/slide-letter.md, README D4): the glyph
@@ -80,12 +72,12 @@ export function LetterSlide({
             accessibilityLabel={m.quiz.playPrompt}
             disabled={!shown.has('sound')}
             onPress={onPlaySound}
-            style={({ focused }: { focused?: boolean }) => ({
-              width: stageButtonSize(unit),
-              height: stageButtonSize(unit),
+            style={(state) => ({
+              width: stageButtonSize(unit, touchTarget.hero),
+              height: stageButtonSize(unit, touchTarget.hero),
               borderRadius: radii.circle,
               borderWidth: Math.max(2, units(unit, STAGE_BORDER)),
-              borderColor: focused ? colors.border.focus : colors.brand.secondary,
+              borderColor: (state as { focused?: boolean }).focused ? colors.border.focus : colors.brand.secondary,
               backgroundColor: colors.surface.paper,
               alignItems: 'center',
               justifyContent: 'center',
@@ -170,6 +162,7 @@ function StrokePanel({ jamoId, playToken }: { jamoId: string; playToken: number 
               y={item.badge.y}
               dy={typography.size.body / 3}
               fontSize={typography.size.body}
+              fontFamily={SVG_UI_FONT}
               fontWeight={typography.weight.bold}
               fill={colors.text.primary}
               textAnchor="middle"

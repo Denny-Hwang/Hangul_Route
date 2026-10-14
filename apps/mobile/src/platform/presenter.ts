@@ -14,7 +14,12 @@ export function isPresenterRoute(_location: { pathname: string }): boolean {
   return false;
 }
 
-export function takeDeckFragment(): string | null {
+export interface DeckAddress {
+  raw: string;
+  reloaded: boolean;
+}
+
+export function takeDeckFragment(): DeckAddress | null {
   return null;
 }
 
@@ -22,12 +27,12 @@ export function setPresenterDocTitle(_title: string): void {
   // No document on native.
 }
 
-export function markOpenDeck(_deckId: string | null): void {
+export function forgetOpenDeck(): void {
   // No history on native.
 }
 
-export function openDeckId(): string | null {
-  return null;
+export function reloadOnDeckLink(): () => void {
+  return () => undefined;
 }
 
 export function presenterConsoleOrigins(_extraCsv?: string): readonly string[] {
@@ -94,6 +99,6 @@ export function unlockOrientation(): void {
   // Nothing locked.
 }
 
-export async function waitForPresenterFont(_timeoutMs: number): Promise<boolean> {
+export async function waitForPresenterFont(_timeoutMs: number, _family: string): Promise<boolean> {
   return false;
 }

@@ -2,8 +2,9 @@ import { layout, typography } from '@hangul-route/design-system/tokens';
 import { describe, expect, it } from 'vitest';
 import { stageScale, stageText, type StageBounds } from '../stage-scale';
 
-// The presenter passes `presenter.stage` from the design tokens (F-TCH-004 §3.6).
-const STAGE: StageBounds = { width: 1280, minHeight: 600, maxHeight: 960 };
+// The presenter passes `presenter.stage` and the compact breakpoint from the design tokens (F-TCH-004 §3.6).
+const STAGE: StageBounds = { width: 1280, minHeight: 600, maxHeight: 960, compactWidth: layout.breakpoint.regular };
+const FLOOR = typography.size.body;
 
 describe('stageScale (F-TCH-004 §3.6)', () => {
   it('16:9 fills the window: logical height 720, one unit = width / 1280', () => {
@@ -128,13 +129,13 @@ describe('tooSmall: the stage is narrower than the compact breakpoint (§3.6 "ab
 
 describe('stageText', () => {
   it('scales by the unit and rounds to whole pixels', () => {
-    expect(stageText(1.5, 40)).toBe(60);
-    expect(stageText(0.8, 56)).toBe(45);
+    expect(stageText(1.5, 40, FLOOR)).toBe(60);
+    expect(stageText(0.8, 56, FLOOR)).toBe(45);
   });
 
   it('never goes below the body floor (18): an iPad portrait caption (28 units at 0.6) is 18, not 17', () => {
     expect(typography.size.body).toBe(18);
-    expect(stageText(0.6, 28)).toBe(typography.size.body);
-    expect(stageText(0, 380)).toBe(typography.size.body);
+    expect(stageText(0.6, 28, FLOOR)).toBe(typography.size.body);
+    expect(stageText(0, 380, FLOOR)).toBe(typography.size.body);
   });
 });

@@ -1,5 +1,5 @@
 import { Hoya, borderWidth, colors, layout, radii, spacing, touchTarget, typography, type HoyaPose } from '@hangul-route/design-system';
-import { READABLE_LINE, STATE_HOYA } from '../../logic/lecture/stage-constants';
+import { READABLE_LINE, STATE_HOYA } from './stage-metrics';
 import React, { useEffect, useRef } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { usePresenterView } from './presenter-context';
@@ -118,7 +118,7 @@ export const GhostButton = React.forwardRef<View, { label: string; onPress: () =
         const { focused } = state as PressState;
         return {
           minHeight: touchTarget.min,
-          paddingHorizontal: spacing.xl,
+          paddingHorizontal: spacing.xxl,
           alignItems: 'center',
           justifyContent: 'center',
           borderRadius: radii.pill,

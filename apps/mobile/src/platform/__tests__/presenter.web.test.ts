@@ -7,17 +7,17 @@ import {
   announceReady,
   enterFullscreen,
   exitFullscreen,
+  forgetOpenDeck,
   fullscreenSupported,
   hasOpener,
   isFullscreen,
   isPresenterRoute,
   keepScreenAwake,
   listenForRoster,
-  markOpenDeck,
-  openDeckId,
   lockLandscape,
   presenterConsoleOrigins,
   releaseScreenAwake,
+  reloadOnDeckLink,
   setPresenterDocTitle,
   subscribeActivity,
   subscribeFullscreen,
@@ -83,10 +83,10 @@ describe('route', () => {
     expect(native.fullscreenSupported()).toBe(false);
     expect(native.hasOpener()).toBe(false);
     expect(native.wakeLockSupported()).toBe(false);
-    expect(native.openDeckId()).toBeNull();
-    native.markOpenDeck('lecture:abc123');
+    native.forgetOpenDeck();
+    native.reloadOnDeckLink()();
     expect(native.isFullscreen()).toBe(false);
-    expect(await native.waitForPresenterFont(1)).toBe(false);
+    expect(await native.waitForPresenterFont(1, 'HR Presenter KR')).toBe(false);
     expect(native.presenterConsoleOrigins()).toEqual([...LECTURE_CONSOLE_ORIGINS]);
     native.setPresenterDocTitle('x');
     native.listenForRoster(deck(null))();
@@ -103,52 +103,73 @@ describe('route', () => {
 });
 
 describe('takeDeckFragment', () => {
-  function addressEnv(href: { pathname: string; hash: string }) {
-    const calls: string[] = [];
-    const e = env({
-      location: { pathname: href.pathname, hash: href.hash },
-      history: {
-        replaceState: (_state: unknown, _unused: string, url: string) => {
-          calls.push(url);
-        },
+  function addressEnv(href: { pathname: string; hash: string }, state: unknown = null) {
+    const calls: { state: unknown; url: string }[] = [];
+    const history = {
+      state,
+      replaceState(next: unknown, _unused: string, url: string) {
+        this.state = next;
+        calls.push({ state: next, url });
       },
-    });
-    return { e, calls };
+    };
+    return { e: env({ location: { pathname: href.pathname, hash: href.hash }, history }), calls, history };
   }
 
-  it('reads the d= value and takes the fragment out of the address before the first paint', () => {
+  it('reads the d= value, takes the fragment out of the address and keeps the deck in the history state', () => {
     const { e, calls } = addressEnv({ pathname: '/present', hash: '#d=1.eyJ2IjoxfQ' });
-    expect(takeDeckFragment(e)).toBe('1.eyJ2IjoxfQ');
-    expect(calls).toEqual([PRESENTER_PATH]);
+    expect(takeDeckFragment(e)).toEqual({ raw: '1.eyJ2IjoxfQ', reloaded: false });
+    expect(calls).toEqual([{ state: { hrLectureFragment: '1.eyJ2IjoxfQ' }, url: PRESENTER_PATH }]);
   });
 
-  it('an empty d= is an empty fragment (the codec rejects it as empty); the address is cleaned all the same', () => {
-    const { e, calls } = addressEnv({ pathname: '/present', hash: '#d=' });
-    expect(takeDeckFragment(e)).toBe('');
-    expect(calls).toEqual([PRESENTER_PATH]);
+  it('a reload (no fragment, the state kept) returns the same deck as reloaded and leaves the history alone', () => {
+    const { e, calls } = addressEnv({ pathname: '/present', hash: '' }, { hrLectureFragment: '1.abc' });
+    expect(takeDeckFragment(e)).toEqual({ raw: '1.abc', reloaded: true });
+    expect(calls).toEqual([]);
+  });
+
+  it('a new link in a tab that held another deck replaces it', () => {
+    const { e, history } = addressEnv({ pathname: '/present', hash: '#d=1.new' }, { hrLectureFragment: '1.old' });
+    expect(takeDeckFragment(e)).toEqual({ raw: '1.new', reloaded: false });
+    expect(history.state).toEqual({ hrLectureFragment: '1.new' });
+  });
+
+  it('an empty d= is an empty fragment (the codec rejects it as empty)', () => {
+    const { e } = addressEnv({ pathname: '/present', hash: '#d=' });
+    expect(takeDeckFragment(e)).toEqual({ raw: '', reloaded: false });
+    const bare = addressEnv({ pathname: '/present', hash: '#d' });
+    expect(takeDeckFragment(bare.e)).toEqual({ raw: '', reloaded: false });
   });
 
   it('a fragment without d= is not a deck, and the fragment still leaves the address', () => {
     const { e, calls } = addressEnv({ pathname: '/present', hash: '#x=1' });
     expect(takeDeckFragment(e)).toBeNull();
-    expect(calls).toEqual([PRESENTER_PATH]);
+    expect(calls).toEqual([{ state: null, url: PRESENTER_PATH }]);
   });
 
   it('a d= among other keys is found', () => {
     const { e } = addressEnv({ pathname: '/present', hash: '#a=1&d=1.abc&b=2' });
-    expect(takeDeckFragment(e)).toBe('1.abc');
+    expect(takeDeckFragment(e)).toEqual({ raw: '1.abc', reloaded: false });
   });
 
-  it('an unknown path under /present is cleaned to /present (the presenter home, no 404)', () => {
+  it('an unknown path under /present is cleaned to /present (the presenter home, no 404), keeping a held deck', () => {
     const { e, calls } = addressEnv({ pathname: '/present/old/link', hash: '' });
     expect(takeDeckFragment(e)).toBeNull();
-    expect(calls).toEqual([PRESENTER_PATH]);
+    expect(calls).toEqual([{ state: null, url: PRESENTER_PATH }]);
+    const held = addressEnv({ pathname: '/present/', hash: '' }, { hrLectureFragment: '1.abc' });
+    expect(takeDeckFragment(held.e)).toEqual({ raw: '1.abc', reloaded: true });
+    expect(held.history.state).toEqual({ hrLectureFragment: '1.abc' });
   });
 
-  it('/present with no fragment leaves the history alone', () => {
-    const { e, calls } = addressEnv({ pathname: '/present', hash: '' });
+  it('ignores a state that is not a deck', () => {
+    expect(takeDeckFragment(addressEnv({ pathname: '/present', hash: '' }, { hrLectureFragment: 3 }).e)).toBeNull();
+    expect(takeDeckFragment(addressEnv({ pathname: '/present', hash: '' }, 'x').e)).toBeNull();
+  });
+
+  it('forgetOpenDeck clears the held deck', () => {
+    const { e, history } = addressEnv({ pathname: '/present', hash: '' }, { hrLectureFragment: '1.abc' });
+    forgetOpenDeck(e);
+    expect(history.state).toBeNull();
     expect(takeDeckFragment(e)).toBeNull();
-    expect(calls).toEqual([]);
   });
 
   it('a history that refuses (a sandboxed frame) still returns the deck', () => {
@@ -160,7 +181,8 @@ describe('takeDeckFragment', () => {
         },
       },
     });
-    expect(takeDeckFragment(e)).toBe('1.abc');
+    expect(takeDeckFragment(e)).toEqual({ raw: '1.abc', reloaded: false });
+    expect(() => forgetOpenDeck(e)).not.toThrow();
   });
 
   it('no location (not a browser): nothing', () => {
@@ -168,34 +190,32 @@ describe('takeDeckFragment', () => {
   });
 });
 
-describe('document title and navigation type', () => {
+describe('reloadOnDeckLink', () => {
+  it('reloads when a deck link arrives in the open tab, not for another fragment', () => {
+    const win = fakeTarget();
+    const reload = vi.fn();
+    const location = { pathname: '/present', hash: '#x=1' };
+    const stop = reloadOnDeckLink(env({ window: win, location, reload }));
+    win.fire('hashchange', {});
+    expect(reload).not.toHaveBeenCalled();
+    location.hash = '#d=1.abc';
+    win.fire('hashchange', {});
+    expect(reload).toHaveBeenCalledTimes(1);
+    location.hash = '';
+    win.fire('hashchange', {});
+    expect(reload).toHaveBeenCalledTimes(1);
+    stop();
+    expect(win.count('hashchange')).toBe(0);
+    expect(() => reloadOnDeckLink(env())()).not.toThrow();
+  });
+});
+
+describe('document title', () => {
   it('sets the fixed title only', () => {
     const doc = { title: 'Deck title with a name' };
     setPresenterDocTitle('Hangul Route lecture', env({ document: doc }));
     expect(doc.title).toBe('Hangul Route lecture');
     expect(() => setPresenterDocTitle('x', env())).not.toThrow();
-  });
-
-  it('marks the open lesson in the history state, reads it back after a reload, and clears it', () => {
-    const history = {
-      state: null as unknown,
-      replaceState(state: unknown, _unused: string, url: string) {
-        this.state = state;
-        expect(url).toBe(PRESENTER_PATH);
-      },
-    };
-    const e = env({ history });
-    expect(openDeckId(e)).toBeNull();
-    markOpenDeck('lecture:abc123', e);
-    expect(history.state).toEqual({ hrLectureDeck: 'lecture:abc123' });
-    expect(openDeckId(e)).toBe('lecture:abc123');
-    markOpenDeck(null, e);
-    expect(openDeckId(e)).toBeNull();
-    expect(openDeckId(env({ history: { state: { hrLectureDeck: 3 }, replaceState: () => undefined } }))).toBeNull();
-    expect(openDeckId(env())).toBeNull();
-    expect(() =>
-      markOpenDeck('lecture:abc123', env({ history: { replaceState: () => { throw new Error('SecurityError'); } } })),
-    ).not.toThrow();
   });
 });
 
@@ -486,16 +506,16 @@ describe('orientation', () => {
 describe('waitForPresenterFont', () => {
   it('resolves true when the face loads in time', async () => {
     const load = vi.fn(async () => [{}]);
-    expect(await waitForPresenterFont(1500, env({ document: { fonts: { load } } }))).toBe(true);
+    expect(await waitForPresenterFont(1500, 'HR Presenter KR', env({ document: { fonts: { load } } }))).toBe(true);
     expect(load).toHaveBeenCalledWith('700 1em "HR Presenter KR"');
   });
 
   it('falls back silently: no face, a failure or a timeout resolve false', async () => {
-    expect(await waitForPresenterFont(1500, env({ document: { fonts: { load: async () => [] } } }))).toBe(false);
-    expect(await waitForPresenterFont(1500, env({ document: { fonts: { load: () => Promise.reject(new Error('x')) } } }))).toBe(false);
-    expect(await waitForPresenterFont(1500, env({ document: {} }))).toBe(false);
+    expect(await waitForPresenterFont(1500, 'HR Presenter KR', env({ document: { fonts: { load: async () => [] } } }))).toBe(false);
+    expect(await waitForPresenterFont(1500, 'HR Presenter KR', env({ document: { fonts: { load: () => Promise.reject(new Error('x')) } } }))).toBe(false);
+    expect(await waitForPresenterFont(1500, 'HR Presenter KR', env({ document: {} }))).toBe(false);
     vi.useFakeTimers();
-    const pending = waitForPresenterFont(1500, env({ document: { fonts: { load: () => new Promise(() => undefined) } } }));
+    const pending = waitForPresenterFont(1500, 'HR Presenter KR', env({ document: { fonts: { load: () => new Promise(() => undefined) } } }));
     vi.advanceTimersByTime(1500);
     expect(await pending).toBe(false);
   });

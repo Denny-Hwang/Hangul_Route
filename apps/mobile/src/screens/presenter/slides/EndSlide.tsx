@@ -4,7 +4,8 @@ import { Text, View, type LayoutChangeEvent } from 'react-native';
 import type { KoLine } from '../../../logic/lecture/build-steps';
 import type { Slide } from '../../../logic/lecture/deck-builder';
 import { countRows, endLetters, fitShown } from '../../../logic/lecture/shell';
-import { CODE_PANEL, END_MAX_ROWS, STAGE_BORDER, STAGE_GAP, STAGE_GAP_INNER, STAGE_RADIUS, units } from '../../../logic/lecture/stage-constants';
+import { CODE_PANEL, END_MAX_ROWS, units } from '../../../logic/lecture/stage-constants';
+import { STAGE_BORDER, STAGE_GAP, STAGE_GAP_INNER, STAGE_RADIUS } from '../stage-metrics';
 import { TaughtKo, usePresenterView, useStageText } from '../presenter-context';
 
 type EndBody = Extract<Slide, { kind: 'end' }>;

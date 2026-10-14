@@ -58,6 +58,26 @@ function storedKeys(page: Page): Promise<string[]> {
   );
 }
 
+/** One stored value (`keyval-store`), as stored (a JSON string). */
+function storedValue(page: Page, key: string): Promise<unknown> {
+  return page.evaluate(
+    (k) =>
+      new Promise<unknown>((resolve, reject) => {
+        const open = indexedDB.open('keyval-store');
+        open.onerror = () => reject(open.error);
+        open.onsuccess = () => {
+          const req = open.result.transaction('keyval', 'readonly').objectStore('keyval').get(k);
+          req.onsuccess = () => {
+            open.result.close();
+            resolve(req.result);
+          };
+          req.onerror = () => reject(req.error);
+        };
+      }),
+    key,
+  );
+}
+
 async function startLesson(page: Page): Promise<void> {
   const start = page.getByTestId('presenter-start-button');
   await expect(start).toBeEnabled({ timeout: 10_000 });
@@ -79,7 +99,9 @@ test.describe('presenter at 1280 x 720', () => {
       if (m.type() === 'error') errors.push(m.text());
     });
 
-    await page.goto('/');
+    // The presenter home writes nothing: the key set before the lesson.
+    await page.goto('/present');
+    await expect(page.getByTestId('presenter-home')).toBeVisible();
     const before = await storedKeys(page);
 
     await page.goto(link());
@@ -114,7 +136,10 @@ test.describe('presenter at 1280 x 720', () => {
     await expect.poll(() => counter(page)).toBe(`2 / ${total}`);
     await expect(page.getByTestId('presenter-glyph')).toBeVisible();
     await expect(page.getByTestId('presenter-next')).toHaveAccessibleName('Reveal');
-    for (let i = 0; i < 6; i++) await page.keyboard.press('PageDown');
+    // Every build of the letter, then the bar reads Next.
+    for (let i = 0; i < 8 && (await page.getByTestId('presenter-next').getAttribute('aria-label')) === 'Reveal'; i++) await page.keyboard.press('PageDown');
+    await expect(page.getByTestId('presenter-next')).toHaveAccessibleName('Next');
+    expect(await counter(page)).toBe(`2 / ${total}`);
     await expect(page.getByText('Simplified stroke guide')).toBeVisible();
     await expect(page.getByText(/^Letter name: /)).toBeVisible();
     await shot(page, 'presenter-letter-1280x720');
@@ -156,8 +181,10 @@ test.describe('presenter at 1280 x 720', () => {
     await startLesson(page);
     await page.keyboard.press('ArrowRight');
     await page.keyboard.press('End');
-    const at = await counter(page);
     await expect.poll(() => counter(page)).toMatch(/^(\d+) \/ \1$/);
+    const at = await counter(page);
+    // Recent keeps the open slide (the End slide's key is "end"); then the tab reloads.
+    await expect.poll(async () => JSON.stringify(await storedValue(page, 'hr:lecture:recent'))).toContain('\\"lastSlideKey\\":\\"end\\"');
     await page.reload();
     await expect(page.getByTestId('presenter-start')).toBeVisible();
     expect(new URL(page.url()).hash).toBe('');
@@ -195,7 +222,7 @@ test.describe('presenter at 1920 x 1080 with reduced motion', () => {
     expect(box?.height).toBe(960);
     await shot(page, 'presenter-title-1920x1080');
     await page.keyboard.press('ArrowRight');
-    for (let i = 0; i < 6; i++) await page.keyboard.press('ArrowDown');
+    for (let i = 0; i < 8 && (await page.getByTestId('presenter-next').getAttribute('aria-label')) === 'Reveal'; i++) await page.keyboard.press('ArrowDown');
     await shot(page, 'presenter-letter-1920x1080');
     await page.keyboard.press('End');
     await shot(page, 'presenter-end-1920x1080');

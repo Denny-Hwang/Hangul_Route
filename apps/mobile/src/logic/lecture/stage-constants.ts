@@ -1,24 +1,12 @@
-import { borderWidth, layout, radii, spacing, touchTarget, typography } from '@hangul-route/design-system/tokens';
 import type { WindowSize } from './stage-scale';
 
 /**
  * The presenter's layout numbers that are not tokens (design/screens/presenter/README.md
- * "Constants"), each named once beside `stage-scale.ts` and derived from tokens where the design
- * derives it. Stage numbers are in stage units (multiply by `unit`); control numbers are real
- * pixels. Pure.
+ * "Constants"), each named once beside `stage-scale.ts`. Stage numbers are in stage units
+ * (multiply by `unit`); factors multiply a token. Pure: the token values themselves are applied in
+ * `screens/presenter/stage-metrics.ts` (this module imports no design-system runtime, like
+ * `stage-scale.ts`).
  */
-
-/** The docked control-bar band: one row of hero buttons with `spacing.md` above and below (README D1). */
-export const BAR_BAND = touchTarget.hero + 2 * spacing.md;
-
-/** Every slide keeps this margin inside the stage, in units. */
-export const STAGE_PADDING = spacing.xxxl;
-/** Gap between slide parts, and inside a part, in units. */
-export const STAGE_GAP = spacing.xxxl;
-export const STAGE_GAP_INNER = spacing.xl;
-/** Borders on the stage: a 1 or 2 px border vanishes on a projector. */
-export const STAGE_BORDER = borderWidth.thick;
-export const STAGE_RADIUS = radii.xl;
 
 /** `StrokeHint size = unit x 360` (spec section 3.6). */
 export const STROKE_PANEL = 360;
@@ -28,7 +16,7 @@ export const STROKE_VIEWBOX = 200;
 export const STROKE_LINE = 14;
 export const STROKE_DOT_RADIUS = 14;
 export const STROKE_DOT_RING = 4;
-/** Hoya on title slides and the state pages, in units. */
+/** Hoya on title slides, in units. */
 export const HOYA_STAGE = 240;
 /** The class code panel width, in units (README D7). */
 export const CODE_PANEL = 400;
@@ -36,24 +24,18 @@ export const CODE_PANEL = 400;
 /** End slide fit rule (README D7): at most this many rows of letters and of words, then one "+ n more" pill. */
 export const END_MAX_ROWS = 2;
 
-/** Control-bar buttons: at least `touchTarget.hero` square, at most 1.5 x wide; Next / Reveal at least 1.5 x. */
-export const CTL_MAX_WIDTH = 1.5 * touchTarget.hero;
-export const NEXT_MIN_WIDTH = 1.5 * touchTarget.hero;
-/** The start screen's one primary button. */
-export const START_BUTTON_HEIGHT = 1.25 * touchTarget.hero;
-/** A teacher page's readable column (the start screen and the state pages), px. */
-export const TEACHER_COLUMN = layout.maxWidth.reading;
+/** Control-bar buttons are at most 1.5 x `touchTarget.hero` wide; Next / Reveal at least 1.5 x (README Constants). */
+export const CTL_MAX_FACTOR = 1.5;
+export const NEXT_MIN_FACTOR = 1.5;
+/** The start screen's Start button is 1.25 x `touchTarget.hero` tall. */
+export const START_BUTTON_FACTOR = 1.25;
+/** Hoya on a state page is 1.5 x `touchTarget.hero`. */
+export const STATE_HOYA_FACTOR = 1.5;
+/** Rem counts of the teacher pages (README Constants), in multiples of the 16 px root size (`typography.size.bodySm`). */
+export const READABLE_LINE_REM = 32;
+export const EXIT_DIALOG_REM = 40;
+export const PICKER_LABEL_REM = 14;
 
-/** A state page's readable line (`--line-max`, 32 rem). */
-export const READABLE_LINE = 32 * typography.size.bodySm;
-/** Hoya on a state page, px (1.5 x the hero target). */
-export const STATE_HOYA = 1.5 * touchTarget.hero;
-
-/** The Exit confirm's width (`--dialog-w`, 40 rem). */
-export const EXIT_DIALOG_WIDTH = 40 * typography.size.bodySm;
-
-/** The start screen's picker row label basis (`--picker-label`, 14 rem). */
-export const PICKER_LABEL_BASIS = 14 * typography.size.bodySm;
 /** The numbers picker's count stepper: the deck schema's `picker.count` bounds. */
 export const PICKER_COUNT_MIN = 1;
 export const PICKER_COUNT_MAX = 60;
@@ -67,18 +49,22 @@ export const SWIPE_RATIO = 1.5;
 /** A tap on the left third of the stage goes back, elsewhere forward. */
 export const TAP_BACK_FRACTION = 1 / 3;
 
+/** The docked control-bar band: one row of hero buttons with `spacing.md` above and below (README D1). */
+export function barBand(hero: number, gap: number): number {
+  return hero + 2 * gap;
+}
+
 /** The stage box: the window minus the docked bar band, which stays when the bar hides (README D1). */
-export function stageBox(window: WindowSize, band: number = BAR_BAND): WindowSize {
+export function stageBox(window: WindowSize, band: number): WindowSize {
   return { width: Math.max(0, window.width), height: Math.max(0, window.height - band) };
 }
 
-/** A control drawn on the stage (the speaker) never drops below the bar's target size. */
-export function stageButtonSize(unit: number, units: number = touchTarget.hero): number {
-  return Math.max(touchTarget.hero, Math.round(unit * units));
+/** A control drawn on the stage (the speaker) never drops below the bar's target size `hero`. */
+export function stageButtonSize(unit: number, hero: number): number {
+  return Math.max(hero, Math.round(unit * hero));
 }
 
 /** `n` stage units in window pixels (geometry, not text: text goes through `stageText`). */
 export function units(unit: number, n: number): number {
   return Math.round(unit * n);
 }
-

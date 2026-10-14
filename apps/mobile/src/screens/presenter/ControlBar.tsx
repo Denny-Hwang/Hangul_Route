@@ -1,7 +1,7 @@
 import { Icon, borderWidth, colors, layout, motion, radii, spacing, touchTarget, typography, type IconName } from '@hangul-route/design-system';
 import React, { forwardRef, useEffect, useRef } from 'react';
 import { Animated, Pressable, Text, View, type LayoutChangeEvent } from 'react-native';
-import { BAR_BAND, CTL_MAX_WIDTH, NEXT_MIN_WIDTH } from '../../logic/lecture/stage-constants';
+import { BAR_BAND, CTL_MAX_WIDTH, NEXT_MIN_WIDTH } from './stage-metrics';
 import { usePresenterView } from './presenter-context';
 
 /**

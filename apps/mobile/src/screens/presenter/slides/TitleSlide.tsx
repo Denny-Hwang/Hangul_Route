@@ -2,7 +2,8 @@ import { Hoya, colors, presenter, spacing, typography } from '@hangul-route/desi
 import React from 'react';
 import { Text, View } from 'react-native';
 import type { Slide } from '../../../logic/lecture/deck-builder';
-import { HOYA_STAGE, STAGE_BORDER, STAGE_GAP, STAGE_GAP_INNER, STAGE_RADIUS, units } from '../../../logic/lecture/stage-constants';
+import { HOYA_STAGE, units } from '../../../logic/lecture/stage-constants';
+import { STAGE_BORDER, STAGE_GAP, STAGE_GAP_INNER, STAGE_RADIUS } from '../stage-metrics';
 import { usePresenterView, useStageText } from '../presenter-context';
 
 type TitleBody = Extract<Slide, { kind: 'title' }>;

@@ -1,5 +1,4 @@
 import { isLearnerRoot, type LectureDeck } from '@hangul-route/content-schema';
-import { presenter } from '@hangul-route/design-system/tokens';
 import { commandForKey, type KeyCommand } from '../logic/lecture/keymap';
 import { receiveRoster } from '../logic/lecture/picker-labels';
 import { consoleOrigins, readyMessage, readyTargets, wantsRoster } from '../logic/lecture/roster-message';
@@ -59,6 +58,8 @@ interface WakeLockSentinelLike {
 
 export interface PresenterEnv {
   location?: { pathname: string; hash: string } | null;
+  /** `location.reload()`. */
+  reload?: () => void;
   history?: { state?: unknown; replaceState: (state: unknown, unused: string, url: string) => void } | null;
   document?: DocumentLike | null;
   /** The target `keydown` is read from (the document). */
@@ -90,6 +91,7 @@ function browserEnv(): PresenterEnv {
   const win = typeof g.addEventListener === 'function' ? (g as EventTargetLike) : null;
   return {
     location: g.location ?? null,
+    reload: () => (g.location as { reload?: () => void } | undefined)?.reload?.(),
     history: g.history ?? null,
     document: doc,
     keyTarget: doc && typeof doc.addEventListener === 'function' ? (doc as EventTargetLike) : null,
@@ -118,53 +120,74 @@ function deckParam(hash: string): string | null {
   return null;
 }
 
+/** The history-state key holding the open deck's encoded fragment (ids, a seed and options; never a name). */
+const DECK_STATE = 'hrLectureFragment';
+
+export interface DeckAddress {
+  /** The encoded deck, for `decodeDeck`. */
+  raw: string;
+  /** True when it came back from this tab's history entry (a reload), not from a link. */
+  reloaded: boolean;
+}
+
+function stateFragment(env: PresenterEnv): string | null {
+  const state = env.history?.state;
+  if (state === null || typeof state !== 'object') return null;
+  const raw = (state as Record<string, unknown>)[DECK_STATE];
+  return typeof raw === 'string' ? raw : null;
+}
+
+function replaceAddress(env: PresenterEnv, state: unknown): void {
+  try {
+    env.history?.replaceState(state, '', PRESENTER_PATH);
+  } catch {
+    // A history that refuses (a sandboxed frame) must not lose the deck.
+  }
+}
+
 /**
- * Reads the deck fragment (`#d=<encoded deck>`) and cleans the address to `/present`
- * (`history.replaceState(null, '', '/present')`), so neither the deck nor an unknown sub-path stays
- * in the address bar or the history entry. Returns the raw value for `decodeDeck`, or null.
+ * Reads the deck and cleans the address to `/present` before the first paint (section 3.2), so
+ * neither the deck nor an unknown sub-path stays in the address bar. A `#d=<encoded deck>` link
+ * wins; its value moves into this tab's history-entry state, which a reload keeps and a new tab
+ * or a typed address does not, so a reload reopens the same lesson (`reloaded: true`) and the
+ * console can hand the names over again (section 3.2 step 2). The state holds only the encoded
+ * deck, which carries no name by construction (TD3). Null: no deck (the presenter home).
  */
-export function takeDeckFragment(env: PresenterEnv = browserEnv()): string | null {
+export function takeDeckFragment(env: PresenterEnv = browserEnv()): DeckAddress | null {
   const location = env.location;
   if (!location) return null;
-  const raw = location.hash ? deckParam(location.hash) : null;
-  if (location.hash || location.pathname !== PRESENTER_PATH) {
-    try {
-      env.history?.replaceState(null, '', PRESENTER_PATH);
-    } catch {
-      // A history that refuses (a sandboxed frame) must not lose the deck.
-    }
+  const linked = location.hash ? deckParam(location.hash) : null;
+  if (linked !== null) {
+    replaceAddress(env, { [DECK_STATE]: linked });
+    return { raw: linked, reloaded: false };
   }
-  return raw;
+  const kept = stateFragment(env);
+  if (location.hash || location.pathname !== PRESENTER_PATH) replaceAddress(env, kept === null ? null : { [DECK_STATE]: kept });
+  return kept === null ? null : { raw: kept, reloaded: true };
+}
+
+/** Forgets the open deck of this tab (Exit, an invalid link): a reload then shows the presenter home. */
+export function forgetOpenDeck(env: PresenterEnv = browserEnv()): void {
+  replaceAddress(env, null);
+}
+
+/**
+ * A new deck link typed into this tab while it is open (`hashchange` with `#d=`) reloads the page,
+ * so the boot reads it like any link; the console always opens a new tab, so this is rare.
+ */
+export function reloadOnDeckLink(env: PresenterEnv = browserEnv()): () => void {
+  const target = env.window;
+  if (!target) return () => undefined;
+  const onHash = (): void => {
+    if (env.location?.hash && deckParam(env.location.hash) !== null) env.reload?.();
+  };
+  target.addEventListener('hashchange', onHash);
+  return () => target.removeEventListener('hashchange', onHash);
 }
 
 /** The fixed tab title (`learner.presenter.docTitle`); the deck title never goes here (section 3.2). */
 export function setPresenterDocTitle(title: string, env: PresenterEnv = browserEnv()): void {
   if (env.document) env.document.title = title;
-}
-
-/** The history-state key that marks the open lesson of this tab (a deck id, never a name). */
-const OPEN_DECK_STATE = 'hrLectureDeck';
-
-/**
- * Marks the lesson open in this tab in the history entry's state (`null` clears it on Exit). A
- * reload keeps the state but not the fragment (already stripped), so the presenter can reopen the
- * lesson from Recent at the slide that was open (section 3.5); a new tab or a typed address has
- * none. Nothing else is written, and the deck id is all it holds.
- */
-export function markOpenDeck(deckId: string | null, env: PresenterEnv = browserEnv()): void {
-  try {
-    env.history?.replaceState(deckId === null ? null : { [OPEN_DECK_STATE]: deckId }, '', PRESENTER_PATH);
-  } catch {
-    // A refusing history: a reload shows the home instead.
-  }
-}
-
-/** The deck id `markOpenDeck` left in this tab's history entry, or null. */
-export function openDeckId(env: PresenterEnv = browserEnv()): string | null {
-  const state = env.history?.state;
-  if (state === null || typeof state !== 'object') return null;
-  const id = (state as Record<string, unknown>)[OPEN_DECK_STATE];
-  return typeof id === 'string' ? id : null;
 }
 
 // --- roster hand-off --------------------------------------------------------------------------
@@ -414,17 +437,17 @@ export function unlockOrientation(env: PresenterEnv = browserEnv()): void {
 // --- the presenter font -------------------------------------------------------------------------
 
 /**
- * Waits for the bundled Hangul face (`@font-face` in the PWA shell, PR 3) for at most `timeoutMs`.
+ * Waits for the bundled Hangul face `family` (`presenter.font`; `@font-face` in the PWA shell, PR 3) for at most `timeoutMs`.
  * True when it loaded; false on a timeout, a failure or a browser without the Font Loading API,
  * and the system stack draws the Korean (section 3.6).
  */
-export function waitForPresenterFont(timeoutMs: number, env: PresenterEnv = browserEnv()): Promise<boolean> {
+export function waitForPresenterFont(timeoutMs: number, family: string, env: PresenterEnv = browserEnv()): Promise<boolean> {
   const load = env.document?.fonts?.load;
   if (typeof load !== 'function') return Promise.resolve(false);
   return new Promise<boolean>((resolve) => {
     const timer = setTimeout(() => resolve(false), timeoutMs);
     load
-      .call(env.document?.fonts, `700 1em "${presenter.font}"`)
+      .call(env.document?.fonts, `700 1em "${family}"`)
       .then((faces) => resolve(faces.length > 0))
       .catch(() => resolve(false))
       .finally(() => clearTimeout(timer));

@@ -1,9 +1,10 @@
-import { KOREAN_LANGUAGE, colors, typography } from '@hangul-route/design-system';
+import { KOREAN_LANGUAGE, colors, presenter, typography } from '@hangul-route/design-system';
 import type { Messages, UiLocale } from '@hangul-route/i18n';
 import React, { createContext, useContext } from 'react';
 import { Text, type TextStyle } from 'react-native';
 import { stageText } from '../../logic/lecture/stage-scale';
 import { taughtKoreanFont } from '../../platform/presenter-font';
+import { TEXT_FLOOR } from './stage-metrics';
 
 /**
  * What every presenter component reads (F-TCH-004 PR 6): the dictionary of the presenter locale
@@ -33,7 +34,7 @@ export function usePresenterView(): PresenterView {
 /** Stage text size in pixels for `n` units, never below the body floor (README D2). */
 export function useStageText(): (n: number) => number {
   const { unit } = usePresenterView();
-  return (n) => stageText(unit, n);
+  return (n) => stageText(unit, n, TEXT_FLOOR);
 }
 
 // Speech language for assistive tech and `lang="ko"` on the web node (as KoreanText does); spread
@@ -56,7 +57,7 @@ export function TaughtKo({ children, size, style, testID }: { children: string; 
           fontWeight: typography.weight.bold,
           color: colors.text.primary,
         },
-        taughtKoreanFont(),
+        taughtKoreanFont(presenter.font),
         style,
       ]}
     >

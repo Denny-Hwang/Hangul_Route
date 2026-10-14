@@ -1,7 +1,7 @@
 import { colors, layout, radii, shadows, spacing, typography, z } from '@hangul-route/design-system';
 import React, { useEffect, useRef } from 'react';
 import { Text, View } from 'react-native';
-import { EXIT_DIALOG_WIDTH } from '../../logic/lecture/stage-constants';
+import { EXIT_DIALOG_WIDTH } from './stage-metrics';
 import { usePresenterView } from './presenter-context';
 import { GhostButton, PrimaryButton } from './StatePage';
 

@@ -11,7 +11,7 @@ import { describe, expect, it } from 'vitest';
  */
 const SRC = join(__dirname, '..', '..');
 /** Runtime subpath imports in files that no screen imports yet; switch to the root before one does. */
-const KNOWN_UNBUNDLED = new Set(['logic/lecture/stage-scale.ts']);
+const KNOWN_UNBUNDLED = new Set<string>([]);
 
 function sources(dir: string): string[] {
   return readdirSync(dir).flatMap((name) => {

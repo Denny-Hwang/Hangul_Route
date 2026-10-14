@@ -24,19 +24,20 @@ export type BootResult =
   | { kind: 'home' };
 
 /**
- * What `/present` opens. A deck fragment wins (a link from the console or a copied link); without
- * one, the lesson this tab had open before a reload comes back from Recent at the slide that was
- * open (`openId` is the deck id the tab's history entry holds); otherwise the presenter home.
+ * What `/present` opens. `address` is the deck the tab holds: from a link (`#d=`), or kept in the
+ * tab's history entry across a reload (`reloaded`). A reloaded deck that was already started
+ * (Recent has its open slide) resumes there as a Recent start; otherwise the deck starts fresh.
+ * No deck: the presenter home.
  */
-export function resolveBoot(raw: string | null, openId: string | null, recent: RecentList): BootResult {
-  if (raw !== null) {
-    const decoded = decodeDeck(raw);
-    if (!decoded.ok) return { kind: 'invalid', reason: decoded.reason };
-    return { kind: 'deck', deck: decoded.deck, source: decoded.deck.source === 'quick' ? 'quick' : 'console' };
-  }
-  const open = openId === null ? undefined : recent.items.find((item) => item.deck.id === openId);
-  if (!open) return { kind: 'home' };
-  return { kind: 'deck', deck: open.deck, source: 'recent', ...(open.lastSlideKey !== undefined ? { resumeKey: open.lastSlideKey } : {}) };
+export function resolveBoot(address: { raw: string; reloaded: boolean } | null, recent: RecentList): BootResult {
+  if (address === null) return { kind: 'home' };
+  const decoded = decodeDeck(address.raw);
+  if (!decoded.ok) return { kind: 'invalid', reason: decoded.reason };
+  const deck = decoded.deck;
+  const linked: StartSource = deck.source === 'quick' ? 'quick' : 'console';
+  const open = address.reloaded ? recent.items.find((item) => item.deck.id === deck.id && item.lastSlideKey !== undefined) : undefined;
+  if (!open?.lastSlideKey) return { kind: 'deck', deck, source: linked };
+  return { kind: 'deck', deck, source: 'recent', resumeKey: open.lastSlideKey };
 }
 
 // --- the slides this build draws ------------------------------------------------------------------
@@ -103,6 +104,13 @@ export function runDeck(deck: Pick<LectureDeck, 'blocks'>, expanded: ExpandedDec
   }
   const empty = !slides.some((s) => s.kind !== 'end');
   return { slides: empty ? [] : slides, parts, minutes: Math.max(0, minutes) };
+}
+
+/** The start screen's list: one line per lesson and reason (a lesson with four listening steps reads once; the count still counts parts). */
+export function distinctParts(parts: readonly SkipPart[]): SkipPart[] {
+  const out: SkipPart[] = [];
+  for (const part of parts) if (!out.some((p) => p.blockIndex === part.blockIndex && p.reason === part.reason)) out.push(part);
+  return out;
 }
 
 // --- the End slide -----------------------------------------------------------------------------

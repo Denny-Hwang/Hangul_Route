@@ -1,10 +1,11 @@
 import { colors, presenter, radii, spacing, typography } from '@hangul-route/design-system';
 import React, { useRef } from 'react';
-import { Text, View, type GestureResponderEvent } from 'react-native';
+import { Text, View, type GestureResponderEvent, type ViewStyle } from 'react-native';
 import type { BuildName } from '../../logic/lecture/build-steps';
 import type { Slide } from '../../logic/lecture/deck-builder';
 import { gestureCommand, slideDetail } from '../../logic/lecture/shell';
-import { STAGE_PADDING, units } from '../../logic/lecture/stage-constants';
+import { units } from '../../logic/lecture/stage-constants';
+import { STAGE_PADDING } from './stage-metrics';
 import type { StageScale } from '../../logic/lecture/stage-scale';
 import { usePresenterView, useStageText } from './presenter-context';
 import { EndSlide } from './slides/EndSlide';
@@ -68,7 +69,7 @@ export function Stage(props: StageProps): React.ReactElement {
         height: scale.stageHeight,
         padding: units(unit, STAGE_PADDING),
         backgroundColor: colors.surface.paper,
-        touchAction: 'manipulation',
+        ...manipulation,
         overflow: 'hidden',
       }}
     >
@@ -101,6 +102,9 @@ export function Stage(props: StageProps): React.ReactElement {
     </View>
   );
 }
+
+/** `touch-action: manipulation` (web): no double-tap zoom on the stage. Not in the native style types. */
+const manipulation = { touchAction: 'manipulation' } as unknown as ViewStyle;
 
 /** Read by assistive tech, not drawn (a 1 px clipped box). */
 const visuallyHidden = {

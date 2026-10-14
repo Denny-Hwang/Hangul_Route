@@ -1,8 +1,9 @@
 import { Icon, borderWidth, colors, layout, radii, spacing, touchTarget, typography, type IconName } from '@hangul-route/design-system';
 import React, { useEffect, useRef, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
-import type { SkipPart } from '../../logic/lecture/shell';
-import { PICKER_COUNT_MAX, PICKER_COUNT_MIN, PICKER_LABEL_BASIS, START_BUTTON_HEIGHT, TEACHER_COLUMN } from '../../logic/lecture/stage-constants';
+import { distinctParts, type SkipPart } from '../../logic/lecture/shell';
+import { PICKER_COUNT_MAX, PICKER_COUNT_MIN } from '../../logic/lecture/stage-constants';
+import { PICKER_LABEL_BASIS, START_BUTTON_HEIGHT, TEACHER_COLUMN } from './stage-metrics';
 import { usePresenterView } from './presenter-context';
 import { GhostButton, PrimaryButton } from './StatePage';
 
@@ -67,6 +68,7 @@ function Line({ children, secondary, bold }: { children: React.ReactNode; second
 }
 
 type PressState = { pressed: boolean; focused?: boolean };
+
 
 function StepButton({ icon, label, disabled, onPress }: { icon: IconName; label: string; disabled: boolean; onPress: () => void }): React.ReactElement {
   return (
@@ -165,10 +167,10 @@ export function StartScreen(props: StartScreenProps): React.ReactElement {
               </View>
               {listOpen ? (
                 <View testID="presenter-skipped-list" role="list" style={{ backgroundColor: colors.surface.sunken, borderRadius: radii.lg, padding: spacing.lg, gap: spacing.md }}>
-                  {props.parts.map((part, i) => {
+                  {distinctParts(props.parts).map((part) => {
                     const title = props.partTitle(part.blockIndex);
                     return (
-                      <View key={i} role="listitem">
+                      <View key={`${part.blockIndex ?? 'none'}-${part.reason}`} role="listitem">
                         {title !== null ? <Line bold>{title}</Line> : null}
                         <Line>{m.reason[part.reason]}</Line>
                       </View>

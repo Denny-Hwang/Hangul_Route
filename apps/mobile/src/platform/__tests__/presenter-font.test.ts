@@ -1,7 +1,7 @@
 import { presenter } from '@hangul-route/design-system/tokens';
 import { describe, expect, it } from 'vitest';
 import { taughtKoreanFont as nativeFont } from '../presenter-font';
-import { TAUGHT_KOREAN_STACK, taughtKoreanFont as webFont } from '../presenter-font.web';
+import { taughtKoreanFont as webFont, taughtKoreanStack } from '../presenter-font.web';
 
 /**
  * The presenter font applies to taught Korean on web only (F-TCH-004 section 3.6, PR 3 review
@@ -9,12 +9,12 @@ import { TAUGHT_KOREAN_STACK, taughtKoreanFont as webFont } from '../presenter-f
  */
 describe('taught Korean font', () => {
   it('the native style omits the family', () => {
-    expect(nativeFont()).toEqual({});
-    expect(nativeFont()).not.toHaveProperty('fontFamily');
+    expect(nativeFont(presenter.font)).toEqual({});
+    expect(nativeFont(presenter.font)).not.toHaveProperty('fontFamily');
   });
 
   it('web names the bundled subset first and falls back to the system stack', () => {
-    expect(webFont()).toEqual({ fontFamily: TAUGHT_KOREAN_STACK });
-    expect(TAUGHT_KOREAN_STACK.startsWith(`"${presenter.font}",`)).toBe(true);
+    expect(webFont(presenter.font)).toEqual({ fontFamily: '"HR Presenter KR", system-ui, sans-serif' });
+    expect(taughtKoreanStack(presenter.font).startsWith(`"${presenter.font}",`)).toBe(true);
   });
 });

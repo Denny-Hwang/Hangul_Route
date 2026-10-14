@@ -1,5 +1,3 @@
-import { layout, typography } from '@hangul-route/design-system/tokens';
-
 /**
  * Presenter stage scale (F-TCH-004 §3.6), pure.
  *
@@ -12,8 +10,11 @@ import { layout, typography } from '@hangul-route/design-system/tokens';
  * left and right, a portrait window bars top and bottom). Components size
  * everything as `unit * n`, never with a CSS transform.
  *
- * The bounds are passed in (the presenter passes `presenter.stage` from the
- * design tokens), so this module holds no layout numbers of its own.
+ * The bounds are passed in (the presenter passes `presenter.stage` and the
+ * compact breakpoint from the design tokens), so this module holds no layout
+ * numbers of its own and imports no design-system runtime (Metro cannot
+ * resolve a package subpath, and the package root pulls React Native into the
+ * unit tests).
  *
  * `tooSmall`: the stage box is narrower than the compact breakpoint
  * (`layout.breakpoint.regular`, 600 px; §3.6 "about 640 px"). There the 18 px
@@ -26,6 +27,8 @@ export interface StageBounds {
   readonly width: number;
   readonly minHeight: number;
   readonly maxHeight: number;
+  /** Below this stage width the presenter shows the bigger-window hint (`layout.breakpoint.regular`). */
+  readonly compactWidth: number;
 }
 
 export interface WindowSize {
@@ -84,7 +87,7 @@ export function stageScale(size: WindowSize, bounds: StageBounds): StageScale {
       offsetY: 0,
       letterboxed: false,
       portrait,
-      tooSmall: w < layout.breakpoint.regular,
+      tooSmall: w < bounds.compactWidth,
     };
   }
   const unit = Math.min(w / bounds.width, h / logicalHeight);
@@ -100,11 +103,11 @@ export function stageScale(size: WindowSize, bounds: StageBounds): StageScale {
     offsetY: (h - stageHeight) / 2,
     letterboxed: true,
     portrait,
-    tooSmall: stageWidth < layout.breakpoint.regular,
+    tooSmall: stageWidth < bounds.compactWidth,
   };
 }
 
-/** Text size in window pixels for `n` stage units, never below the charter body floor (18). */
-export function stageText(unit: number, n: number): number {
-  return Math.max(typography.size.body, Math.round(unit * n));
+/** Text size in window pixels for `n` stage units, never below `floor` (the charter body floor, `typography.size.body`). */
+export function stageText(unit: number, n: number, floor: number): number {
+  return Math.max(floor, Math.round(unit * n));
 }

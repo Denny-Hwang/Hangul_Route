@@ -1,5 +1,4 @@
 import { encodeDeck, LectureDeckSchema, type LectureBlock, type LectureDeckInput } from '@hangul-route/content-schema';
-import { touchTarget } from '@hangul-route/design-system/tokens';
 import { describe, expect, it } from 'vitest';
 import { UNKNOWN_CAPABILITY, type AudioCapability } from '../../audio/capability';
 import { lectureBundle } from '../content';
@@ -10,6 +9,7 @@ import {
   SHELL_SLIDE_KINDS,
   blockIndexOfSlide,
   countRows,
+  distinctParts,
   completePayload,
   endLetters,
   fitShown,
@@ -22,9 +22,12 @@ import {
   tallyStep,
   voiceState,
 } from '../shell';
-import { BAR_BAND, stageBox, stageButtonSize, units } from '../stage-constants';
+import { barBand, stageBox, stageButtonSize, units } from '../stage-constants';
 import { stageScale } from '../stage-scale';
-import { presenter } from '@hangul-route/design-system/tokens';
+import { layout, presenter, spacing, touchTarget } from '@hangul-route/design-system/tokens';
+
+const BAR_BAND = barBand(touchTarget.hero, spacing.md);
+const BOUNDS = { ...presenter.stage, compactWidth: layout.breakpoint.regular };
 
 /**
  * The presenter shell's pure decisions (F-TCH-004 PR 6): the boot, the slides PR 6 draws and the
@@ -47,32 +50,37 @@ const ready: AudioCapability = { tts: { state: 'ready', voiceId: 'v', voiceName:
 const none: AudioCapability = { tts: { state: 'none', reason: 'no_korean_voice' }, clips: false, unlocked: false };
 
 describe('resolveBoot', () => {
-  it('opens a valid deck fragment, from the console or a Quick lesson', () => {
+  const link = (raw: string) => ({ raw, reloaded: false });
+
+  it('opens a valid deck link, from the console or a Quick lesson', () => {
     const deck = deckOf([{ kind: 'episode', id: 'episode:stage1-letters' }]);
-    expect(resolveBoot(encodeDeck(deck), null, emptyRecent())).toEqual({ kind: 'deck', deck, source: 'console' });
+    expect(resolveBoot(link(encodeDeck(deck)), emptyRecent())).toEqual({ kind: 'deck', deck, source: 'console' });
     const quick = deckOf([{ kind: 'jamo-set', jamoIds: ['jamo:giyeok'] }], { source: 'quick' });
-    expect(resolveBoot(encodeDeck(quick), null, emptyRecent())).toMatchObject({ kind: 'deck', source: 'quick' });
+    expect(resolveBoot(link(encodeDeck(quick)), emptyRecent())).toMatchObject({ kind: 'deck', source: 'quick' });
   });
 
   it('rejects a broken fragment with the codec reason', () => {
-    expect(resolveBoot('', null, emptyRecent())).toEqual({ kind: 'invalid', reason: 'empty' });
-    expect(resolveBoot('1.!!!', null, emptyRecent())).toEqual({ kind: 'invalid', reason: 'bad_encoding' });
-    expect(resolveBoot('9.abc', null, emptyRecent())).toMatchObject({ kind: 'invalid', reason: 'unsupported_version' });
+    expect(resolveBoot(link(''), emptyRecent())).toEqual({ kind: 'invalid', reason: 'empty' });
+    expect(resolveBoot(link('1.!!!'), emptyRecent())).toEqual({ kind: 'invalid', reason: 'bad_encoding' });
+    expect(resolveBoot(link('9.abc'), emptyRecent())).toMatchObject({ kind: 'invalid', reason: 'unsupported_version' });
   });
 
-  it('after a reload reopens the lesson the tab had open, at its slide, as a Recent start', () => {
+  it('after a reload reopens a started lesson at its slide, as a Recent start', () => {
     const deck = deckOf([{ kind: 'episode', id: 'episode:stage1-letters' }]);
     const list = setLastSlide(rememberDeck(emptyRecent(), deck, '2026-10-13T09:00:00Z'), deck.id, 'episode:stage1-letters/x');
-    expect(resolveBoot(null, deck.id, list)).toEqual({ kind: 'deck', deck, source: 'recent', resumeKey: 'episode:stage1-letters/x' });
-    const noSlide = rememberDeck(emptyRecent(), deck, '2026-10-13T09:00:00Z');
-    expect(resolveBoot(null, deck.id, noSlide)).toEqual({ kind: 'deck', deck, source: 'recent' });
+    expect(resolveBoot({ raw: encodeDeck(deck), reloaded: true }, list)).toEqual({ kind: 'deck', deck, source: 'recent', resumeKey: 'episode:stage1-letters/x' });
   });
 
-  it('shows the home without a fragment or an open lesson', () => {
+  it('a reload before Start, or a fresh link to a deck in Recent, starts from the beginning', () => {
     const deck = deckOf([{ kind: 'episode', id: 'episode:stage1-letters' }]);
-    const list = rememberDeck(emptyRecent(), deck, '2026-10-13T09:00:00Z');
-    expect(resolveBoot(null, null, list)).toEqual({ kind: 'home' });
-    expect(resolveBoot(null, 'lecture:other01', list)).toEqual({ kind: 'home' });
+    const saved = rememberDeck(emptyRecent(), deck, '2026-10-13T09:00:00Z');
+    expect(resolveBoot({ raw: encodeDeck(deck), reloaded: true }, saved)).toEqual({ kind: 'deck', deck, source: 'console' });
+    const started = setLastSlide(saved, deck.id, 'episode:stage1-letters/x');
+    expect(resolveBoot(link(encodeDeck(deck)), started)).toEqual({ kind: 'deck', deck, source: 'console' });
+  });
+
+  it('shows the home without a deck', () => {
+    expect(resolveBoot(null, emptyRecent())).toEqual({ kind: 'home' });
   });
 });
 
@@ -115,7 +123,7 @@ describe('runDeck: the slides PR 6 draws', () => {
   it('a story title (cover scene) waits for the story slides', () => {
     const title: Slide = { kind: 'title', source: 'story', title: 'T', cover: { storyId: 'story:x', sceneId: 's' }, key: 'story:x/title', builds: ['title'] };
     const letter = expandDeck(deckOf([{ kind: 'jamo-set', jamoIds: ['jamo:giyeok'] }]), lectureBundle('en'), { canPlayKorean: true }).slides;
-    const run = runDeck(deckOf([{ kind: 'story', storyId: 'story:x' }, { kind: 'jamo-set', jamoIds: ['jamo:giyeok'] }]), {
+    const run = runDeck(deckOf([{ kind: 'story', storyId: 'story:x', checks: true }, { kind: 'jamo-set', jamoIds: ['jamo:giyeok'] }]), {
       slides: [title, ...letter],
       skipped: [],
       taught: [],
@@ -129,6 +137,23 @@ describe('runDeck: the slides PR 6 draws', () => {
     const deck = deckOf([{ kind: 'quest', id: 'quest:nope' }, { kind: 'jamo-set', jamoIds: ['jamo:giyeok'] }]);
     const run = runDeck(deck, expandDeck(deck, lectureBundle('en'), { canPlayKorean: true }));
     expect(run.parts).toEqual([{ blockIndex: 0, reason: 'unknown-id' }]);
+  });
+});
+
+describe('distinctParts', () => {
+  it('lists each lesson and reason once, in order', () => {
+    expect(
+      distinctParts([
+        { blockIndex: 0, reason: 'unsupported-step' },
+        { blockIndex: 0, reason: 'unsupported-step' },
+        { blockIndex: 0, reason: 'scope-too-small' },
+        { blockIndex: null, reason: 'unsupported-step' },
+      ]),
+    ).toEqual([
+      { blockIndex: 0, reason: 'unsupported-step' },
+      { blockIndex: 0, reason: 'scope-too-small' },
+      { blockIndex: null, reason: 'unsupported-step' },
+    ]);
   });
 });
 
@@ -212,7 +237,7 @@ describe('telemetry payloads', () => {
   });
 
   it('lecture.complete counts distinct slides shown, reveals and whole minutes', () => {
-    const slides = [{ key: 'a' }, { key: 'b' }, { key: 'c' }];
+    const slides = [{ key: 'a', builds: [] }, { key: 'b', builds: [] }, { key: 'c', builds: [] }];
     let t = startTally(1_000, 'a');
     t = tallyStep(t, { slideIdx: 0, reveal: 0 }, { slideIdx: 0, reveal: 1 }, slides);
     t = tallyStep(t, { slideIdx: 0, reveal: 1 }, { slideIdx: 1, reveal: 0 }, slides);
@@ -228,20 +253,20 @@ describe('telemetry payloads', () => {
 describe('stage box (README D1)', () => {
   it('the bar band is touchTarget.hero + 2 x spacing.md = 120, and the stage box is the window minus it', () => {
     expect(BAR_BAND).toBe(120);
-    expect(stageBox({ width: 1280, height: 720 })).toEqual({ width: 1280, height: 600 });
-    expect(stageBox({ width: 100, height: 50 })).toEqual({ width: 100, height: 0 });
+    expect(stageBox({ width: 1280, height: 720 }, BAR_BAND)).toEqual({ width: 1280, height: 600 });
+    expect(stageBox({ width: 100, height: 50 }, BAR_BAND)).toEqual({ width: 100, height: 0 });
   });
 
   it('1280 x 720 gives unit 1; 1920 x 1080 unit 1.5; 2560 x 1080 unit 1.6 (not the window 1.8)', () => {
-    expect(stageScale(stageBox({ width: 1280, height: 720 }), presenter.stage).unit).toBe(1);
-    expect(stageScale(stageBox({ width: 1920, height: 1080 }), presenter.stage).unit).toBe(1.5);
-    expect(stageScale(stageBox({ width: 2560, height: 1080 }), presenter.stage).unit).toBeCloseTo(1.6);
-    expect(stageScale(stageBox({ width: 1024, height: 768 }), presenter.stage).unit).toBeCloseTo(0.8);
+    expect(stageScale(stageBox({ width: 1280, height: 720 }, BAR_BAND), BOUNDS).unit).toBe(1);
+    expect(stageScale(stageBox({ width: 1920, height: 1080 }, BAR_BAND), BOUNDS).unit).toBe(1.5);
+    expect(stageScale(stageBox({ width: 2560, height: 1080 }, BAR_BAND), BOUNDS).unit).toBeCloseTo(1.6);
+    expect(stageScale(stageBox({ width: 1024, height: 768 }, BAR_BAND), BOUNDS).unit).toBeCloseTo(0.8);
   });
 
   it('a stage button never drops below the hero target; units round to whole pixels', () => {
-    expect(stageButtonSize(0.6)).toBe(touchTarget.hero);
-    expect(stageButtonSize(1.5)).toBe(144);
+    expect(stageButtonSize(0.6, touchTarget.hero)).toBe(touchTarget.hero);
+    expect(stageButtonSize(1.5, touchTarget.hero)).toBe(144);
     expect(units(1.5, 360)).toBe(540);
   });
 });
