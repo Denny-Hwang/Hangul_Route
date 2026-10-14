@@ -84,6 +84,8 @@ describe('buildsFor: one teacher click per build (F-TCH-004 §3.4)', () => {
     expect(buildsFor(body, ALWAYS)).toEqual(['art', 'fact']);
     expect(buildsFor(body, TAP)).toEqual(['art', 'rom', 'fact']);
     expect(buildsFor({ kind: 'card', cardId: 'card:x', title: 'X' }, TAP)).toEqual(['art']);
+    // No romanization means no chip on the slide, so no romanization build to press through.
+    expect(buildsFor({ kind: 'card', cardId: 'card:x', title: 'X', ko: '책', fact: 'A fact.' }, TAP)).toEqual(['art', 'fact']);
   });
 
   it('title, activity and end are one build', () => {

@@ -232,5 +232,7 @@ export const a11y = {
   },
   presenter: {
     slide: (i: number, n: number, what: string) => `슬라이드 ${i}/${n}, ${what}`,
+    option: (n: number, shape: string) => `${n}번, ${shape}`,
+    shape: { circle: '동그라미', triangle: '세모', square: '네모', star: '별' },
   },
 } satisfies DeepPartial<Messages['a11y']>;

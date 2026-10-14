@@ -1,4 +1,4 @@
-import { colors, presenter } from '@hangul-route/design-system';
+import { colors, presenter, supportedCardIds } from '@hangul-route/design-system';
 import { LOCALE_META, dictionaryLocale, getMessages, type UiLocale } from '@hangul-route/i18n';
 import type { LectureDeck } from '@hangul-route/content-schema';
 import { StatusBar } from 'expo-status-bar';
@@ -19,6 +19,7 @@ import {
   nextStrokePlay,
   resolveBoot,
   runDeck,
+  SHELL_SLIDE_KINDS,
   startPayload,
   startTally,
   strokeTokenFor,
@@ -31,6 +32,7 @@ import {
 } from './src/logic/lecture/shell';
 import { FONT_WAIT_MS, stageBox } from './src/logic/lecture/stage-constants';
 import { BAR_BAND, STAGE_BOUNDS } from './src/screens/presenter/stage-metrics';
+import { slideSound } from './src/logic/lecture/slide-view';
 import { stageScale } from './src/logic/lecture/stage-scale';
 import { getCapability, playPrompt, refreshCapability, subscribeCapability, unlockAudio } from './src/platform/audio';
 import { setDocumentLang } from './src/platform/locale';
@@ -172,7 +174,7 @@ export default function PresenterApp(): React.ReactElement {
   const bundle = useMemo(() => lectureBundle(locale), [locale]);
   const canPlay = canPlayKorean(capability);
   const expanded = useMemo(() => (deck ? expandDeck(deck, bundle, { canPlayKorean: canPlay }) : null), [deck, bundle, canPlay]);
-  const run = useMemo(() => (deck && expanded ? runDeck(deck, expanded) : null), [deck, expanded]);
+  const run = useMemo(() => (deck && expanded ? runDeck(deck, expanded, SHELL_SLIDE_KINDS, supportedCardIds) : null), [deck, expanded]);
 
   // A link that does not decode, or a deck with nothing to show: the invalid screen, once per page.
   const rejected = useRef(false);
@@ -237,8 +239,9 @@ export default function PresenterApp(): React.ReactElement {
 
   const playSound = useCallback(
     (slide: Slide | undefined) => {
-      if (!slide || slide.kind !== 'letter' || !deck?.options.sound) return;
-      const { text, audioRef } = slide.spoken;
+      const spoken = slideSound(slide);
+      if (!spoken || !deck?.options.sound) return;
+      const { text, audioRef } = spoken;
       void playPrompt({ text, ...(audioRef !== undefined ? { audioRef } : {}), kind: 'sound', source: 'presenter' });
     },
     [deck],

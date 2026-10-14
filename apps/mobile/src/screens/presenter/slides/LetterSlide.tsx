@@ -1,15 +1,16 @@
-import { Icon, colors, koreanTextLabel, presenter, radii, spacing, touchTarget, typography } from '@hangul-route/design-system';
+import { colors, koreanTextLabel, presenter, spacing, typography } from '@hangul-route/design-system';
 import React, { useMemo } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 import Svg, { Circle, Path, Text as SvgText } from 'react-native-svg';
 import { StrokeHint } from '../../../components/StrokeHint';
 import { strokesForJamo } from '../../../content/jamo-strokes';
 import type { BuildName } from '../../../logic/lecture/build-steps';
 import type { Slide } from '../../../logic/lecture/deck-builder';
-import { STROKE_DOT_RADIUS, STROKE_DOT_RING, STROKE_LINE, STROKE_PANEL, STROKE_VIEWBOX, SVG_UI_FONT, stageButtonSize, units } from '../../../logic/lecture/stage-constants';
+import { STROKE_DOT_RADIUS, STROKE_DOT_RING, STROKE_LINE, STROKE_PANEL, STROKE_VIEWBOX, SVG_UI_FONT, units } from '../../../logic/lecture/stage-constants';
 import { STAGE_BORDER, STAGE_BORDER_MIN, STAGE_GAP, STAGE_GAP_INNER, STAGE_RADIUS } from '../stage-metrics';
 import { buildStrokeDiagram } from '../../../logic/stroke-diagram';
 import { TaughtKo, usePresenterView, useStageText } from '../presenter-context';
+import { SpeakerButton } from './SpeakerButton';
 
 type LetterBody = Extract<Slide, { kind: 'letter' }>;
 
@@ -64,24 +65,7 @@ export function LetterSlide({
       ) : null}
       <View style={{ flex: 1, gap: units(unit, STAGE_GAP_INNER) }}>
         <View style={[{ flexDirection: 'row', alignItems: 'center', gap: units(unit, spacing.xl) }, reveal(shown.has('sound'))]}>
-          <Pressable
-            role="button"
-            accessibilityLabel={m.quiz.playPrompt}
-            disabled={!shown.has('sound')}
-            onPress={onPlaySound}
-            style={(state) => ({
-              width: stageButtonSize(unit, touchTarget.hero),
-              height: stageButtonSize(unit, touchTarget.hero),
-              borderRadius: radii.circle,
-              borderWidth: Math.max(STAGE_BORDER_MIN, units(unit, STAGE_BORDER)),
-              borderColor: (state as { focused?: boolean }).focused ? colors.border.focus : colors.brand.secondary,
-              backgroundColor: colors.surface.paper,
-              alignItems: 'center',
-              justifyContent: 'center',
-            })}
-          >
-            <Icon name="speaker" size={Math.max(spacing.xxl, units(unit, spacing.xxxl))} color={colors.brand.secondaryDark} />
-          </Pressable>
+          <SpeakerButton enabled={shown.has('sound')} onPress={onPlaySound} />
           <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: units(unit, spacing.md), flexShrink: 1, flexWrap: 'wrap' }}>
             <TaughtKo size={promptSize}>{slide.spoken.text}</TaughtKo>
             <Text style={{ fontSize: promptSize, fontWeight: typography.weight.bold, color: colors.text.secondary }}>{slide.spoken.romanization}</Text>

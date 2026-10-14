@@ -156,7 +156,8 @@ export function buildsFor(body: SlideBody, opts: BuildOptions): BuildName[] {
     case 'quiz':
       return ['question', 'answer'];
     case 'card':
-      return ['art', ...(body.ko !== undefined ? rom : []), ...(body.fact !== undefined ? (['fact'] as const) : [])];
+      // The chip (and so its romanization build) is drawn only when the card has both its Korean and romanization.
+      return ['art', ...(body.ko !== undefined && body.romanization !== undefined ? rom : []), ...(body.fact !== undefined ? (['fact'] as const) : [])];
     case 'activity':
       return ['prompt'];
     case 'end':

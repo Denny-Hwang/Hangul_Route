@@ -1,5 +1,6 @@
 import type { Page } from '@playwright/test';
 import { encodeDeck, type LectureDeckInput } from '@hangul-route/content-schema';
+import { colors } from '@hangul-route/design-system/tokens';
 import { expect, test } from './fixtures';
 import { shot } from './shots';
 
@@ -318,6 +319,208 @@ test.describe('presenter at 1280 x 720', () => {
   });
 });
 
+/** PR 7: a deck that holds every teaching slide (syllables and a card, words, an order slide, an activity). */
+const TEACHING_DECK: LectureDeckInput = {
+  ...DECK,
+  id: 'lecture:e2e007',
+  title: 'Week 4 words',
+  blocks: [
+    { kind: 'quest', id: 'quest:stage1-letters-q1' },
+    { kind: 'quest', id: 'quest:stage1-life-q1' },
+    { kind: 'quest', id: 'quest:stage1-rites-q3' },
+    { kind: 'activity', preset: 'air-write', minutes: 3 },
+  ],
+};
+
+async function liveText(page: Page): Promise<string> {
+  return (await page.getByTestId('presenter-live').textContent()) ?? '';
+}
+
+/** Steps forward (through every build) until the live region names a slide of `kind`. */
+async function forwardTo(page: Page, kind: string): Promise<void> {
+  const at = new RegExp(`^Slide \\d+ of \\d+, ${kind}\\b`);
+  for (let i = 0; i < 200 && !at.test(await liveText(page)); i++) {
+    await page.keyboard.press('PageDown');
+    // Two frames: the key's state change has rendered before the live region is read again.
+    await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+  }
+  await expect(page.getByTestId('presenter-live')).toHaveText(at);
+}
+
+/** A build that is not reached keeps its space and is not drawn: its wrapper is transparent. */
+async function expectDrawn(page: Page, testId: string, drawn: boolean): Promise<void> {
+  await expect(page.getByTestId(testId).locator('xpath=..')).toHaveCSS('opacity', drawn ? '1' : '0');
+}
+
+/**
+ * Starts recording whether the leaving syllable parts (the join's slide-together and fade layer)
+ * are ever drawn; `leftSeen` reads the record. A MutationObserver sees a frame that lasts a
+ * fraction of `motion.duration.base`, which a polling assertion could miss.
+ */
+async function watchLeaving(page: Page): Promise<void> {
+  await page.evaluate(() => {
+    const w = window as unknown as { __leaving?: boolean; __leavingObs?: MutationObserver };
+    w.__leaving = false;
+    w.__leavingObs?.disconnect();
+    const check = () => {
+      if (document.querySelector('[data-testid="presenter-syllable-parts-leaving"]')) w.__leaving = true;
+    };
+    w.__leavingObs = new MutationObserver(check);
+    w.__leavingObs.observe(document.body, { subtree: true, childList: true, attributes: true });
+  });
+}
+
+function leftSeen(page: Page): Promise<boolean> {
+  return page.evaluate(() => (window as unknown as { __leaving?: boolean }).__leaving === true);
+}
+
+/** `#rrggbb` as the computed `rgb(r, g, b)` string. */
+function rgb(hex: string): string {
+  const n = Number.parseInt(hex.slice(1), 16);
+  return `rgb(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255})`;
+}
+
+/** Every element of the open slide stays inside the stage box. */
+async function expectInsideStage(page: Page): Promise<void> {
+  const stage = (await page.getByTestId('presenter-stage').boundingBox())!;
+  const outside = await page.getByTestId('presenter-stage').evaluate((root, box) => {
+    const out: string[] = [];
+    for (const el of Array.from(root.querySelectorAll('*'))) {
+      const r = el.getBoundingClientRect();
+      if (r.width === 0 || r.height === 0) continue;
+      if (r.left < box.x - 1 || r.top < box.y - 1 || r.right > box.x + box.width + 1 || r.bottom > box.y + box.height + 1) out.push(`${el.tagName} ${el.getAttribute('data-testid') ?? ''} ${(el.textContent ?? '').slice(0, 30)}`);
+    }
+    return out;
+  }, stage);
+  expect(outside).toEqual([]);
+}
+
+test.describe('PR 7 teaching slides at 1280 x 720', () => {
+  test.use({ viewport: { width: 1280, height: 720 }, isMobile: false, hasTouch: false });
+
+  test('syllable, word, order, card and activity slides reveal build by build', async ({ page }) => {
+    const errors: string[] = [];
+    page.on('pageerror', (e) => errors.push(String(e)));
+    page.on('console', (m) => {
+      if (m.type() === 'error') errors.push(m.text());
+    });
+    await page.goto(link(TEACHING_DECK));
+    await startLesson(page);
+
+    // Syllable (README D5): the parts alone, then the block with the parts small beside it, then
+    // the romanization, then the speaker.
+    await forwardTo(page, 'Syllable');
+    await expect(page.getByTestId('presenter-syllable-parts')).toBeVisible();
+    await expect(page.getByTestId('presenter-syllable')).toHaveCount(0);
+    await shot(page, 'presenter-syllable-build0-1280x720');
+    await watchLeaving(page);
+    await page.keyboard.press('PageDown');
+    await expect(page.getByTestId('presenter-syllable')).toBeVisible();
+    await expect(page.getByTestId('presenter-syllable-parts')).toHaveCount(0);
+    // With motion the parts slide together and fade over the block, then leave.
+    await expect.poll(() => leftSeen(page)).toBe(true);
+    await expect(page.getByTestId('presenter-syllable-parts-leaving')).toHaveCount(0);
+    await expectDrawn(page, 'presenter-syllable-rom', false);
+    await page.keyboard.press('PageDown');
+    await expectDrawn(page, 'presenter-syllable-rom', true);
+    await expect(page.getByTestId('presenter-syllable-rom')).toHaveText('ga');
+    await expect(page.getByTestId('presenter-syllable-speaker')).toBeDisabled();
+    await page.keyboard.press('PageDown');
+    await expect(page.getByTestId('presenter-syllable-speaker')).toBeEnabled();
+    await expect(page.getByRole('button', { name: 'Play the sound' })).toBeVisible();
+    await expect(page.getByTestId('presenter-next')).toHaveAccessibleName('Next');
+    await expect(page.getByTestId('presenter-live')).toHaveText(/^Slide \d+ of \d+, Syllable, .+, ga$/);
+    await shot(page, 'presenter-syllable-1280x720');
+
+    // Heritage card: art, title and the Korean chip, then the fact.
+    await forwardTo(page, 'Card');
+    await expect(page.getByText('Heritage card')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Book' })).toBeVisible();
+    await expect(page.getByTestId('presenter-card-chip')).toContainText('chaek');
+    await expectDrawn(page, 'presenter-card-fact', false);
+    await page.keyboard.press('PageDown');
+    await expectDrawn(page, 'presenter-card-fact', true);
+    await shot(page, 'presenter-card-1280x720');
+
+    // Word: the Korean with its romanization, then the gloss.
+    await forwardTo(page, 'Word');
+    await expect(page.getByTestId('presenter-word')).toBeVisible();
+    await expectDrawn(page, 'presenter-word-rom', true);
+    await expectDrawn(page, 'presenter-word-gloss', false);
+    await page.keyboard.press('PageDown');
+    await expectDrawn(page, 'presenter-word-gloss', true);
+    await expect(page.getByTestId('presenter-live')).toHaveText(/^Slide \d+ of \d+, Word, .+, .+, .+$/);
+    await shot(page, 'presenter-vocab-1280x720');
+
+    // Order: the steps in their true order one by one, then "What comes first?" with shape markers.
+    await forwardTo(page, 'Order');
+    // Steps not reached yet keep their space but are hidden from assistive tech, so count them by test id.
+    const steps = page.getByTestId('presenter-sequence-steps').getByTestId('presenter-step');
+    const n = await steps.count();
+    expect(n).toBeGreaterThanOrEqual(3);
+    await expect(steps.nth(0)).toHaveCSS('opacity', '1');
+    await expect(steps.nth(1)).toHaveCSS('opacity', '0');
+    for (let i = 1; i < n; i++) await page.keyboard.press('PageDown');
+    await expect(steps.nth(n - 1)).toHaveCSS('opacity', '1');
+    await shot(page, 'presenter-sequence-steps-1280x720');
+    await page.keyboard.press('PageDown');
+    await expect(page.getByRole('heading', { name: 'What comes first?' })).toBeVisible();
+    await expect(page.getByRole('img', { name: 'Option 1, circle' })).toBeVisible();
+    await expect(page.getByRole('img', { name: 'Option 2, triangle' })).toBeVisible();
+    await expect(page.getByTestId('presenter-sequence-order').getByRole('listitem')).toHaveCount(n);
+    await expect(page.getByTestId('presenter-sequence-order').getByRole('img', { name: /^Option \d+, (circle|triangle|square|star)$/ })).toHaveCount(n);
+    await expect(page.getByTestId('presenter-next')).toHaveAccessibleName('Next');
+    await shot(page, 'presenter-sequence-order-1280x720');
+    // Back shows the true order again.
+    await page.keyboard.press('PageUp');
+    await expect(page.getByTestId('presenter-sequence-steps')).toBeVisible();
+
+    // Activity: one build; Start timer is drawn and waits for the class timer (PR 9).
+    await page.keyboard.press('PageDown');
+    await forwardTo(page, 'Activity');
+    await expect(page.getByTestId('presenter-live')).toHaveText(/Activity, Write it in the air$/);
+    await expect(page.getByRole('heading', { name: 'Write it in the air' })).toBeVisible();
+    await expect(page.getByText('3 minutes')).toBeVisible();
+    await expect(page.getByTestId('presenter-start-timer')).toHaveAccessibleName('Start timer');
+    await expect(page.getByTestId('presenter-start-timer')).toBeDisabled();
+    // Disabled, it is outlined on paper, never the filled primary action.
+    await expect(page.getByTestId('presenter-start-timer')).toHaveCSS('background-color', rgb(colors.surface.paper));
+    await expect(page.getByTestId('presenter-next')).toHaveAccessibleName('Next');
+    await shot(page, 'presenter-activity-1280x720');
+
+    // No slide overflows the stage, and the page never scrolls sideways.
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(1280);
+    expect(errors).toEqual([]);
+  });
+
+  test('with Shift+R the card, the word and the order slide give romanization its own build', async ({ page }) => {
+    await page.goto(link(TEACHING_DECK));
+    await startLesson(page);
+    await page.keyboard.press('Shift+KeyR');
+    await forwardTo(page, 'Card');
+    await expectDrawn(page, 'presenter-card-chip-rom', false);
+    await expectDrawn(page, 'presenter-card-fact', false);
+    await page.keyboard.press('PageDown');
+    await expectDrawn(page, 'presenter-card-chip-rom', true);
+    await expectDrawn(page, 'presenter-card-fact', false);
+    await page.keyboard.press('PageDown');
+    await expectDrawn(page, 'presenter-card-fact', true);
+    await forwardTo(page, 'Word');
+    await expectDrawn(page, 'presenter-word-rom', false);
+    await page.keyboard.press('PageDown');
+    await expectDrawn(page, 'presenter-word-rom', true);
+    await expectDrawn(page, 'presenter-word-gloss', false);
+    await page.keyboard.press('PageDown');
+    await expectDrawn(page, 'presenter-word-gloss', true);
+
+    await forwardTo(page, 'Order');
+    const steps = await page.getByTestId('presenter-sequence-steps').getByTestId('presenter-step').count();
+    // n step builds, one romanization build, then the question.
+    expect(await revealAll(page)).toBe(steps + 1);
+    await expect(page.getByRole('heading', { name: 'What comes first?' })).toBeVisible();
+  });
+});
+
 test.describe('presenter at 1920 x 1080 with reduced motion', () => {
   test.use({ viewport: { width: 1920, height: 1080 }, isMobile: false, hasTouch: false });
 
@@ -336,6 +539,34 @@ test.describe('presenter at 1920 x 1080 with reduced motion', () => {
     await shot(page, 'presenter-letter-1920x1080');
     await page.keyboard.press('End');
     await shot(page, 'presenter-end-1920x1080');
+  });
+
+  test('the syllable joins at once and the teaching slides scale with the stage', async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await page.goto(link(TEACHING_DECK));
+    await startLesson(page);
+    await forwardTo(page, 'Syllable');
+    await watchLeaving(page);
+    await page.keyboard.press('PageDown');
+    // Reduced motion: an instant swap; the parts never draw over the block.
+    await expect(page.getByTestId('presenter-syllable')).toBeVisible();
+    await expect(page.getByTestId('presenter-syllable-parts')).toHaveCount(0);
+    expect(await leftSeen(page)).toBe(false);
+    await revealAll(page);
+    await shot(page, 'presenter-syllable-1920x1080');
+    await forwardTo(page, 'Card');
+    await revealAll(page);
+    await shot(page, 'presenter-card-1920x1080');
+    await forwardTo(page, 'Word');
+    await revealAll(page);
+    await shot(page, 'presenter-vocab-1920x1080');
+    await forwardTo(page, 'Order');
+    await revealAll(page);
+    await shot(page, 'presenter-sequence-order-1920x1080');
+    await page.keyboard.press('PageDown');
+    await forwardTo(page, 'Activity');
+    await shot(page, 'presenter-activity-1920x1080');
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(1920);
   });
 });
 
@@ -358,6 +589,23 @@ test.describe('presenter on a 4:3 projector, 1024 x 768', () => {
     await page.keyboard.press('ArrowRight');
     await revealAll(page);
     await shot(page, 'presenter-letter-1024x768');
+  });
+
+  test('every PR 7 teaching slide, fully revealed, stays inside the stage', async ({ page }) => {
+    await page.goto(link(TEACHING_DECK));
+    await startLesson(page);
+    for (const kind of ['Syllable', 'Card', 'Word', 'Order']) {
+      await forwardTo(page, kind);
+      await revealAll(page);
+      // Let the syllable join finish before measuring.
+      await expect(page.getByTestId('presenter-syllable-parts-leaving')).toHaveCount(0);
+      await expectInsideStage(page);
+    }
+    // The order question is the order slide's last build; the next slide follows.
+    await page.keyboard.press('PageDown');
+    await forwardTo(page, 'Activity');
+    await expectInsideStage(page);
+    await shot(page, 'presenter-activity-1024x768');
   });
 });
 

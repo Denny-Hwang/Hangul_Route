@@ -21,6 +21,28 @@ export const HOYA_STAGE = 240;
 /** The class code panel width, in units (README D7). */
 export const CODE_PANEL = 400;
 
+/** Card and word pictures match the stroke panel, so slides line up (README Constants `--art-lg`), in units. */
+export const ART_LG = 360;
+/** The activity slide's [ Start timer ]: at least `touchTarget.hero`, else `unit x 112` tall (README Constants). */
+export const STAGE_CTA_HEIGHT = 112;
+
+/**
+ * The shape and number marker (README Constants `--marker`): 2 x `presenter.size.body` = 80 units,
+ * drawn on a 100 viewBox with a 6 stroke; the numeral is 40 (30 inside the triangle and the star,
+ * which have less room) on the baseline given per shape. The order slide uses it (PR 7) and the
+ * quiz options will (PR 9).
+ */
+export const MARKER_BODY_FACTOR = 2;
+export const MARKER_VIEWBOX = 100;
+export const MARKER_STROKE = 6;
+export const MARKER_GEOMETRY = {
+  circle: { kind: 'circle', cx: 50, cy: 50, r: 44, numeral: 40, baseline: 64 },
+  triangle: { kind: 'path', d: 'M50 6 L95 90 L5 90 Z', numeral: 30, baseline: 74 },
+  square: { kind: 'rect', x: 8, y: 8, size: 84, rx: 6, numeral: 40, baseline: 64 },
+  star: { kind: 'path', d: 'M50 4 L62 36 L96 37 L69 58 L79 92 L50 72 L21 92 L31 58 L4 37 L38 36 Z', numeral: 30, baseline: 63 },
+} as const;
+export type MarkerShape = keyof typeof MARKER_GEOMETRY;
+
 /** End slide fit rule (README D7): at most this many rows of letters and of words, then one "+ n more" pill. */
 export const END_MAX_ROWS = 2;
 

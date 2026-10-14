@@ -52,6 +52,8 @@ const ES_LENGTH_ALLOW_LIST: Readonly<Record<string, string>> = {
   'learner.presenter.bar.blank.cta': 'one letter over; the Spanish for a blanked screen needs the preposition; a bar label that wraps inside 96',
   'learner.presenter.bar.grid.cta': 'the one Spanish word for slides; a bar label that wraps inside 96',
   'learner.presenter.bar.timer.cta': 'the standard Spanish word for a timer; a bar label that wraps inside 96',
+  // F-TCH-004 PR 7 (design/screens/presenter/README.md "Length budget"): the activity slide's stage button.
+  'learner.presenter.slide.activity.startTimer.cta': '"temporizador" again; inside the 28-character cta budget, a stage button that wraps',
 };
 
 const BUDGETS: Readonly<Record<string, number>> = { tab: 12, pill: 24, cta: 28 };

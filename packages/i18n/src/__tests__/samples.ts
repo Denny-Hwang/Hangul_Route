@@ -771,6 +771,8 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'learner.presenter.slide.end.more': [[1], [7]],
   'learner.presenter.slide.end.howToJoin': [['Join a class']],
   'learner.presenter.start.slides': [[1], [12]],
+  'learner.presenter.slide.activity.minutes': [[1], [3]],
+  'a11y.presenter.option': [[2, 'triangle']],
   'learner.presenter.start.minutes': [[1], [56]],
   'learner.presenter.start.voiceLocal': [['Yuna']],
   'learner.presenter.start.voiceNetwork': [['Yuna']],
