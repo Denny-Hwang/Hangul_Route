@@ -1,7 +1,8 @@
 import type { Page } from '@playwright/test';
 import { LESSON_EPISODES } from '../../src/content/__generated__/lessons-index';
 import { expect, test } from './fixtures';
-import { completeChildForm, journeyCellName, keepSidewaysIfAsked, passDiscover, playCheckByIds } from './helpers';
+import { completeChildForm, journeyCellName, keepSidewaysIfAsked, passDiscover, playCheckByIds, waitForNextListenPickRound } from './helpers';
+import { shot } from './shots';
 
 /**
  * F-CURR-001 section 5 (row C-2 lands the skeleton; each cell row adds its cell):
@@ -40,8 +41,69 @@ async function orderLines(page: Page, ids: readonly string[]): Promise<void> {
   await page.getByTestId('story-sequence-skip-replay').or(page.getByTestId('story-sequence-done')).first().click();
 }
 
+/**
+ * Sentence Builder: build round `n` of `total` by tapping its tiles by accessible name
+ * ("<ko>, <romanization>"), past the 50 ms touch window between taps; the built sentence
+ * moves on by itself (silent engine).
+ */
+async function build(page: Page, n: number, total: number, tiles: readonly string[]): Promise<void> {
+  await expect(page.getByText(`${n} / ${total}`, { exact: true })).toBeVisible({ timeout: 5_000 });
+  const tray = page.getByTestId('sentence-builder-tray');
+  for (const name of tiles) {
+    await page.waitForTimeout(120);
+    await tray.getByRole('button', { name, exact: true }).click();
+  }
+  await expect(page.getByTestId('sentence-builder-done')).toBeVisible();
+}
+
+/** Listen & Pick (not the Check): each round's option by id, round by round. */
+async function pickByIds(page: Page, ids: readonly string[]): Promise<void> {
+  for (const [i, id] of ids.entries()) {
+    const option = page.getByTestId(`listen-pick-option-${id}`);
+    await expect(option).toBeVisible();
+    await expect(async () => {
+      await option.click();
+      await expect(option).toHaveAttribute('aria-label', /^Right answer/, { timeout: 250 });
+    }).toPass();
+    if (i < ids.length - 1) await waitForNextListenPickRound(page);
+  }
+}
+
 /** Each cell row appends its cell here (S2-1 onward). */
 const CELLS: readonly UpperCell[] = [
+  // F-CURR-001 S3-1: First Sentences, q1 "It Is a Book" played through its real games.
+  {
+    episodeId: 'episode:stage3-letters',
+    cellButton: journeyCellName(3, 'Letters & Books'),
+    title: 'First Sentences',
+    playFirstQuest: async (page) => {
+      await page.setViewportSize({ width: 320, height: 720 });
+      await page.getByRole('button', { name: 'Start', exact: true }).first().click();
+      await page.getByRole('button', { name: 'Continue' }).click();
+      // Discover: the pattern page (frame, two examples, the note) and the sentence page.
+      await expect(page.getByText('Look and learn', { exact: true })).toBeVisible();
+      await shot(page, 'first-sentences-q1-discover-320');
+      await passDiscover(page);
+      await page.getByRole('button', { name: 'Play minigame' }).click();
+      await build(page, 1, 5, ['네,, ne', '책이에요, chaegieyo']);
+      await shot(page, 'first-sentences-q1-built-320');
+      // Particle rounds: the noun is given, the ending is picked by its final sound.
+      await build(page, 2, 5, ['이에요, ieyo']);
+      await build(page, 3, 5, ['예요, yeyo']);
+      await build(page, 4, 5, ['네,, ne', '가방이에요, gabangieyo']);
+      await build(page, 5, 5, ['이에요, ieyo']);
+      await page.getByRole('button', { name: 'Play minigame' }).click();
+      await pickByIds(page, ['school-bag', 'school-school', 'book', 'school-school']);
+      await playCheckByIds(page, [{ answer: 'school-bag' }, { answer: 'b' }]);
+      await expect(page.getByText('Finish', { exact: true }).first()).toBeVisible();
+    },
+    expectRouteDay: async (page) => {
+      await page.goto('/');
+      await page.getByText('Learning Route', { exact: true }).last().click();
+      await page.getByRole('button', { name: /^Stage 3, Sentences\./ }).click();
+      await expect(page.getByRole('button', { name: /^Letters & Books: First Sentences\./ })).toBeVisible();
+    },
+  },
   // F-CURR-001 S4-1: Read Along, q1 "What Is This?" played through its real games.
   {
     episodeId: 'episode:stage4-letters',

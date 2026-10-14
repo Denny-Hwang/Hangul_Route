@@ -36,17 +36,29 @@ import {
 const WB = [1, 2, 3, 4, 5, 6].map((k) => `quest:stage2-letters-q${k}`);
 const FS = [1, 2, 3].map((k) => `quest:stage3-letters-q${k}`);
 
+/**
+ * The shipped catalogue without First Sentences (F-CURR-001 S3-1 ships it on main at version 10),
+ * so the "version 8" plan below holds no Stage 3 quest, as the real version 8 did not.
+ */
+const BASE: Catalog = {
+  ...CATALOG,
+  cells: CATALOG.cells.map((cell) =>
+    cell.episodeId === 'episode:stage3-letters' ? { ...cell, status: 'preview', minutes: 10, questIds: [] } : cell,
+  ),
+  quests: CATALOG.quests.filter((q) => !FS.includes(q.id)),
+};
+
 /** Version 9 of a later catalogue: Word Builder (Stage 2) and First Sentences (Stage 3) shipped. */
 const CATALOG_9: Catalog = {
-  ...CATALOG,
+  ...BASE,
   version: 9,
-  cells: CATALOG.cells.map((cell) => {
+  cells: BASE.cells.map((cell) => {
     if (cell.episodeId === 'episode:stage2-letters') return { ...cell, status: 'shipped', minutes: 26, questIds: WB };
     if (cell.episodeId === 'episode:stage3-letters') return { ...cell, status: 'shipped', minutes: 13, questIds: FS };
     return cell;
   }),
   quests: [
-    ...CATALOG.quests,
+    ...BASE.quests,
     ...WB.map((id) => ({ id, episodeId: 'episode:stage2-letters', stage: 'stage2' as const, theme: 'letters' as const, title: id, minutes: 4, teaches: [], kind: 'lesson' as const })),
     ...FS.map((id) => ({ id, episodeId: 'episode:stage3-letters', stage: 'stage3' as const, theme: 'letters' as const, title: id, minutes: 4, teaches: [], kind: 'lesson' as const })),
   ],
@@ -56,7 +68,7 @@ const HISTORY_9: CatalogHistory = {
   idsAt: (v) => new Set([...CATALOG_QUEST_IDS_V8, ...(v >= 9 ? [...WB, ...FS] : [])]),
 };
 const STAGE3: PlacementLevel = { stage: 'stage3', band: 0 };
-const ROUTE_8 = routeCatalogOf(CATALOG);
+const ROUTE_8 = routeCatalogOf(BASE);
 const ROUTE_9 = routeCatalogOf(CATALOG_9);
 
 /** A `stage3` result stored at version 8 (no `catalogVersion`, as every result before the rule). */
@@ -190,8 +202,9 @@ describe('regression: a plan made at version 8 from a stage3 result (generate.ts
     unlockedStages: StageKeySchema.options as StageKey[],
   };
   const plan8 = (() => {
-    // Made before the bump: the shipped catalogue read as version 8 (S4-1's Read Along made it 9; no Stage 2 or 3 quest).
-    const draft = generateCurriculum(PARAMS, { ...CATALOG, version: 8 });
+    // Made before the bump: the shipped catalogue read as version 8 (S4-1's Read Along made it 9, S3-1's First
+    // Sentences 10; BASE leaves First Sentences out, so the plan holds no Stage 2 or 3 quest).
+    const draft = generateCurriculum(PARAMS, { ...BASE, version: 8 });
     return { meta: toMeta(draft), items: toPlanItems(draft) };
   })();
   const firstLesson = (items: readonly { kind: string; id: string }[]) =>
