@@ -24,8 +24,8 @@
 
 - **Korean = the target language** being learned (zero or near-zero baseline).
 - **UI languages**: **English (default)**, **Korean** and **Spanish** selectable. UI strings come from the **selected UI locale** — never hard-coded in another language.
-  - The i18n layer has shipped (F-I18N-001; `packages/i18n` is approved by the owner): UI strings come from `packages/i18n` (`useMessages()`), and every new or changed English string gets its Spanish and Korean values in the same PR (the es / ko coverage ratchets in `packages/i18n/src/__tests__/` fail CI otherwise). Do not add Korean or Spanish UI strings ad hoc, outside the dictionary.
-  - Spanish and Korean are translated and reviewed (F-I18N-001 PR 15 / PR 16) but stay `'hidden'` in `LOCALE_STATUS` (`packages/i18n/src/locales.ts`) until rows 15b / 16b flip them; until then English is the only shipped UI locale.
+  - The i18n layer has shipped (F-I18N-001; `packages/i18n` is approved by the owner): UI strings come from `packages/i18n` (`useMessages()`), and a new or changed English string lands in `messages/en/*.ts` in the same PR as the feature. Spanish and Korean values come from translation PRs (R8 drafts and the multi-agent review, F-I18N-001 §3.10). While a locale is hidden, its coverage ratchet (`packages/i18n/src/__tests__/es-coverage.ts` / `ko-coverage.ts`) fails only when a namespace whose English is still the reviewed text (ledger `enSha` current) falls back to English; once a locale is shipped, any missing key fails. Do not add Korean or Spanish UI strings ad hoc, outside the dictionary.
+  - Which UI locales are public is set by `LOCALE_STATUS` (`packages/i18n/src/locales.ts`): English is shipped; Spanish and Korean were translated and reviewed in F-I18N-001 PR 15 / PR 16 and become public when rows 15b / 16b flip them to `'shipped'`.
   - UI copy stays plain and short (English at CEFR Pre-A1), so a young reader and an adult beginner both read it easily.
 - **Taught Korean content** (자모, 단어, 문장) always shows **romanization** (pronunciation guide) and a **gloss in the UI language** (plus a visual where possible).
 - Korean as taught content is not the same thing as Korean as a UI locale: in the Korean UI the menus are Korean, and taught items still carry romanization and a gloss.
@@ -190,7 +190,7 @@ Hangul_Route/
 - **"와이어프레임 없는 시안 금지."** 시안 전 `design/wireframes/` 를 거친다.
 - **`.claude/skills/` 8개 Skills 자동 트리거.** Claude Code + Routines 가 해당 파일·경로 변경 시 자동 적용.
 - **디자인은 수동.** `design/playbook/` 의 일일 가이드를 본인이 따라간다 (R5 없음).
-  - 2026-10-12 오너 결정: 에이전트가 만든 시안(mock)도 허용한다 — 사양의 design pass / T-0b 행 (예: `docs/specs/F-SPACE-002-class-transfer.md` T-0b, 머지된 design pass #420 · #472 · #489 · #588) 은 에이전트가 `design/` 에 시안을 만들고 multi-agent review 가 승인한다. 오너가 손으로 그리지 않아도 된다. 와이어프레임 → 시안 → 컴포넌트 순서는 그대로.
+  - 2026-10-12 오너 결정: 에이전트가 만든 시안(mock)도 허용한다 — 사양의 design pass / T-0b 행 은 에이전트가 `design/` 에 시안을 만들고 multi-agent review 가 승인한다. 근거: 2026-10-12 오너 결정 (#461, `docs/specs/F-SPACE-002-class-transfer.md` T-0b) 과, 같은 방식으로 머지된 design pass #420 · #472 · #489 · #588 및 multi-agent review 로 마무리하는 오너 상시 규칙. 오너가 손으로 그리지 않아도 된다. 와이어프레임 → 시안 → 컴포넌트 순서는 그대로.
 - **동기화는 CI.** `design/tokens/` ↔ `packages/design-system/` 일치는 `.github/workflows/design-token-sync.yml` 이 검증.
 - **`main` 브랜치 직접 push 금지.** 루틴 PR 은 `claude/*` 브랜치만.
 
@@ -233,7 +233,7 @@ Hangul_Route/
 
 ## 8. Do NOT
 
-- ❌ `localStorage` / `AsyncStorage` **직접 사용 금지** — 안전 래퍼 경유: 앱은 `apps/mobile/src/platform/storage(.web).ts`, 웹은 `apps/web/src/lib/i18n/safe-storage.ts` (`packages/hooks` 는 아직 없음).
+- ❌ `localStorage` / `AsyncStorage` **직접 사용 금지** — 안전 래퍼 경유: 앱은 `apps/mobile/src/platform/storage(.web).ts`, 웹은 `apps/web/src/lib/i18n/safe-storage.ts` (경로는 i18n 아래지만 웹의 모든 localStorage / sessionStorage 용 범용 래퍼; `packages/hooks` 는 아직 없음).
 - ❌ `any` 타입 금지. 불가피하면 `unknown` + 내로잉, 또는 정확한 타입.
 - ❌ `console.log` 를 production 코드에 남기지 말 것. 로깅은 `packages/shared-types` (또는 shared logger) 경유.
 - ❌ `main` 브랜치 직접 push. 모든 변경은 PR.
@@ -304,11 +304,11 @@ Hangul_Route/
 - **v2.2 architecture pass** (Week 1)
   - [x] CLAUDE.md 재작성
   - [x] 디렉토리 구조 확장
-  - [x] Routines 5 (R5 제거)
+  - [x] Routines 5 (R5 제거; 이후 F-I18N-001 PR 13 의 R8 Translation Sync 추가로 6개, §7)
   - [x] Turborepo 빌드 그린
   - [x] Cloudflare hello world
   - [ ] Week 1 design playbook 실행
 
 ---
 
-_Last updated: 2026-10-13 (stale references refreshed: coverage gate inside `ci.yml`, agent design passes (2026-10-12), i18n layer shipped with es / ko hidden until 15b / 16b, R8, workflow list; F-I18N-001 PR 17). Previous: 2026-10-09 (audience: anyone learning Hangul, any age; UI languages EN default + KO/ES; anti-shame rules revised; primary channel: web PWA)_
+_Last updated: 2026-10-13 (stale references refreshed: coverage gate inside `ci.yml`, agent design passes (2026-10-12), i18n layer shipped, public locales set by `LOCALE_STATUS`, R8, workflow list; F-I18N-001 PR 17). Previous: 2026-10-09 (audience: anyone learning Hangul, any age; UI languages EN default + KO/ES; anti-shame rules revised; primary channel: web PWA)_

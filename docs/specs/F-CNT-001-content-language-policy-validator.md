@@ -24,9 +24,9 @@ or a gloss, breaks the contract.
 - Korean as a UI locale is not taught content: in the Korean UI, menus are
   Korean strings from the `ko` locale, and taught items still carry
   romanization and a gloss.
-- **The i18n layer has shipped (F-I18N-001)**, and English is still the
-  only shipped UI locale (`es` and `ko` stay `'hidden'` in `LOCALE_STATUS`,
-  `packages/i18n/src/locales.ts`, until F-I18N-001 rows 15b / 16b);
+- **The i18n layer has shipped (F-I18N-001).** Which UI locales are public
+  is set by `LOCALE_STATUS` (`packages/i18n/src/locales.ts`; `es` and `ko`
+  become public when F-I18N-001 rows 15b / 16b flip them), and
   `content/**/*.json` is the English source. This validator therefore keeps
   enforcing the English source as written below: Korean only in
   Korean-target fields, romanization on every Korean item, and an English
