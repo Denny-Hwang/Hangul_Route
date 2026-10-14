@@ -47,3 +47,25 @@ The romanization suites check every value against the converter:
 
 > Note: counts add to 24. The earliest letters lean Life/Nature (everyday
 > words) and later letters introduce Rites/Crafts.
+
+## Review log
+
+**2026-10-13, age-free card copy (#589).** Card copy has no age wording (CLAUDE.md
+section 1, owner decision D1); `apps/mobile/src/content/__tests__/card-age-words.test.ts`
+now fails on "kid", "kids", "child" or "children" in a hand-written card or in this file,
+and on the matching words in an es or ko card overlay (none ship yet). Reworded with a
+two-lens review (language lens: CEFR Pre-A1 English, plain, no age or audience words;
+culture lens: the heritage claim stays true). These are AI review passes, not a native
+or expert review.
+
+| Card | Field | Now reads | Review notes |
+|---|---|---|---|
+| `card:book` (app) | fact | Most Korean books today are printed left-to-right, top-to-bottom — the same as English. | "today": older books were printed in vertical lines read right to left. |
+| `card:seollal` (app) | fact | People bow to their elders, and the elders often give sebaetdon (lucky money). | Sebae is a bow to elders; "often" because not every bow is answered with money. |
+| `card:gangaji` | blurb | A friendly little dog. One of the first words heard in many Korean homes. | Same wording as the reviewed site blurb (F-SITE-002 S-6). |
+| `card:nabi` | blurb | A tiny flying flower that flutters through many Korean songs. | Site blurb (S-6); "many" replaces the claim "every". |
+| `card:jamjari` | fact | Catching dragonflies with a long-handled net is an old pastime in Korea. | "Paper nets" dropped: the culture lens found no support for it. |
+| `card:chaek` | fact | Hangul was made so that anyone could learn to read and write. | Matches the stated aim of the Hunminjeongeum preface. |
+| `card:paengi` | blurb | Wooden tops spun on the ice in winter. | Site blurb (S-6). |
+| `card:usan` | blurb | Korea's rainy season lasts about a month. Keep an umbrella by the door. | Site blurb (S-6), "one" named; "about a month" (the yellow-umbrella line dropped). |
+| `card:ibul` | blurb | In many Korean homes, people sleep on a warm floor under bright, padded blankets called ibul. | The ibul is the cover; the floor is warmed by ondol. |
