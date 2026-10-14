@@ -56,13 +56,13 @@ interface Props {
 }
 
 /** Typed Korean is read with the Korean voice; react-native-web forwards `lang` (spread: native Text props lack it). */
-const koreanSpeech = { accessibilityLanguage: KOREAN_LANGUAGE, lang: KOREAN_LANGUAGE };
+export const koreanSpeech = { accessibilityLanguage: KOREAN_LANGUAGE, lang: KOREAN_LANGUAGE };
 
 /** Visually hidden, still read (the field's polite live line). */
-const srOnly = { position: 'absolute', width: 1, height: 1, margin: -1, overflow: 'hidden' } as const;
+export const srOnly = { position: 'absolute', width: 1, height: 1, margin: -1, overflow: 'hidden' } as const;
 
 /** Focus target for assistive tech when the result panel opens: `focus()` on the web, the native view elsewhere. */
-interface Focusable {
+export interface Focusable {
   focus?: () => void;
 }
 
@@ -71,7 +71,7 @@ interface Focusable {
  * `focus()` does it; on iOS and Android it does not move VoiceOver or TalkBack focus, so the
  * screen-reader helper does (platform/screen-reader.ts).
  */
-function focusPanel(node: Focusable | null): void {
+export function focusPanel(node: Focusable | null): void {
   if (node === null) return;
   if (Platform.OS === 'web') node.focus?.();
   else focusForScreenReader(node);
@@ -379,9 +379,11 @@ export function TypeHangulGame({ scope, host, onBack }: Props): React.ReactEleme
   );
 }
 
-interface ResultPanelProps {
-  state: TypeHangulState;
-  round: TypeHangulRound;
+export interface ResultPanelProps {
+  /** The check and the phase only (Write Frame passes its own, G-5). */
+  state: Pick<TypeHangulState, 'score' | 'phase'>;
+  /** The word checked against (Write Frame: the picked word). */
+  round: Pick<TypeHangulRound, 'target'>;
   width: number;
   /** The keyboard's height: the panel takes its place, so nothing jumps. */
   height: number;
@@ -392,7 +394,7 @@ interface ResultPanelProps {
 }
 
 /** After Done: Hoya's line, and on a miss the block compare, the word and Fix it (type-hangul.md "After Done"). */
-function ResultPanel({ state, round, width, height, gutter, panelRef, onFix }: ResultPanelProps): React.ReactElement {
+export function ResultPanel({ state, round, width, height, gutter, panelRef, onFix }: ResultPanelProps): React.ReactElement {
   const m = useMessages();
   const t = m.learner.minigame.typeHangul;
   const k = m.a11y.minigame.keyboard;
@@ -504,7 +506,7 @@ function BlockRow({ blocks, side, cell }: { blocks: readonly BlockCompare[]; sid
 }
 
 interface WordLineProps {
-  round: TypeHangulRound;
+  round: Pick<TypeHangulRound, 'target'>;
   /** The learner's setting (`romanizationShown`); the result panel always passes true. */
   romanizationVisible: boolean;
   /** Shows the romanization when the setting hides it until a tap. */

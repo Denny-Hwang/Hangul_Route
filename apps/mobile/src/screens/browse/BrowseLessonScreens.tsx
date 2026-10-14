@@ -47,7 +47,7 @@ export function BrowseMinigameScreen({ route, navigation }: MinigameProps): Reac
   return (
     <PreviewFrame onLeave={ask}>
       <ErrorBoundary fallbackRender={() => <OopsScreen onRetry={leave} actionLabel={m.end.back.cta} />}>
-        <MinigameScreen route={route} onBack={() => navigation.goBack()} onHome={() => navigation.navigate('BrowseHome', {})} onOpenCultureNote={null} />
+        <MinigameScreen route={route} onBack={() => navigation.goBack()} onHome={() => navigation.navigate('BrowseHome', {})} onOpenCultureNote={null} inPreview />
       </ErrorBoundary>
       <LeavePreviewSheet visible={confirming} onKeep={keep} onLeave={leave} />
     </PreviewFrame>

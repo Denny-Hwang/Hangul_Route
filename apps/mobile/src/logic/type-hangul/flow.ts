@@ -94,7 +94,8 @@ export interface FieldView {
   empty: boolean;
 }
 
-export function fieldView(s: TypeHangulState): FieldView {
+/** Reads only the keys and the last edit, so Write Frame's field draws the same way (G-5). */
+export function fieldView(s: Pick<TypeHangulState, 'keys' | 'lastEdit'>): FieldView {
   const text = composeTyped(s.keys);
   const last = s.keys[s.keys.length - 1];
   const open = last === undefined || last === ' ' ? null : text.slice(-1);

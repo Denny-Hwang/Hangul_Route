@@ -28,4 +28,6 @@ export const PLAYABLE_KINDS: ReadonlySet<MinigameKind> = new Set<MinigameKind>([
   'realia-read',
   'type-hangul',
   'trace-word',
+  // F-CURR-001 G-5
+  'write-frame',
 ]);

@@ -15,6 +15,7 @@ import type { VocabQuestionE2eParams } from './vocab-question-e2e';
 import type { SentenceE2eParams } from './sentence-builder-e2e';
 import type { TypeHangulE2eParams } from './type-hangul-e2e';
 import type { TraceWordE2eParams } from './trace-word-e2e';
+import type { WriteFrameE2eParams } from './write-frame-e2e';
 
 /**
  * Where a grown-up action continues once the gate (or a new PIN) is through. `ExternalLink`
@@ -280,6 +281,8 @@ export type RootStackParamList = {
   TypeHangulE2e: TypeHangulE2eParams;
   /** Fixture builds only (`navigation/trace-word-e2e.tsx`): Trace a Word on the spec's Stage 7 words. */
   TraceWordE2e: TraceWordE2eParams;
+  /** Fixture builds only (`navigation/write-frame-e2e.tsx`): Write Frame on fixture rounds (F-CURR-001 G-5). */
+  WriteFrameE2e: WriteFrameE2eParams;
 };
 
 /** The level check's screens (F-PLC-001 section 3.1); the flow state machine decides which one shows. */
