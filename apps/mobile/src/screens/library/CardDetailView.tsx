@@ -30,7 +30,7 @@ import { earnHint } from '../../logic/awards/earn-hint';
 import { cardCitationView, type CardCitationView } from '../../logic/library/card-citation';
 import { cardDetailDisplay, type CardDetailState } from '../../logic/library/card-detail-state';
 import { localizeCard, localizeEpisode } from '../../logic/content-locale';
-import { cardKoLine } from '../../logic/card-art';
+import { cardKoLine, cardTitleIsKo } from '../../logic/card-art';
 import { nextFace, type FlipFace } from '../../logic/flip';
 import { playPrompt, stop } from '../../platform/audio';
 import { isShareAvailable, shareSnapshot } from '../../platform/sharing';
@@ -413,11 +413,15 @@ function BackFaceBody({ card }: { card: HeritageCard }): React.ReactElement {
 
       <Spacer size="lg" />
 
-      {/* Middle 30% — English title + blurb */}
-      <Heading level="title" align="center">
-        {card.titleEn}
-      </Heading>
-      <Spacer size="sm" />
+      {/* Middle 30% — English title + blurb (a Korean title that is the word itself already leads the face) */}
+      {cardTitleIsKo(card) ? null : (
+        <>
+          <Heading level="title" align="center">
+            {card.titleEn}
+          </Heading>
+          <Spacer size="sm" />
+        </>
+      )}
       <Body size="md" align="center">
         {card.blurbEn}
       </Body>

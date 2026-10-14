@@ -9,6 +9,7 @@ import {
   cardArtSource,
   cardCoverCrop,
   cardKoLine,
+  cardTitleIsKo,
   cardPlateLayout,
   cardWord,
   cardWordFontSize,
@@ -198,5 +199,15 @@ describe('cardKoLine', () => {
   it('hides a missing or blank Korean line', () => {
     expect(cardKoLine(card({ subtitleKo: undefined }))).toBeUndefined();
     expect(cardKoLine(card({ subtitleKo: '  ' }))).toBeUndefined();
+  });
+});
+
+describe('cardTitleIsKo', () => {
+  it('is true only when a Korean line exists and the title repeats it', () => {
+    expect(cardTitleIsKo(card({ titleEn: '책', subtitleKo: '책' }))).toBe(true);
+    expect(cardTitleIsKo(card({ titleEn: ' 책', subtitleKo: '책 ' }))).toBe(true);
+    expect(cardTitleIsKo(card())).toBe(false);
+    expect(cardTitleIsKo(card({ subtitleKo: undefined }))).toBe(false);
+    expect(cardTitleIsKo(card({ subtitleKo: '  ' }))).toBe(false);
   });
 });

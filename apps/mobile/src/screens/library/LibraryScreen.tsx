@@ -33,6 +33,7 @@ import { useLocale, useMessages } from '../../i18n/use-messages';
 import { earnHint } from '../../logic/awards/earn-hint';
 import { libraryExplainer } from '../../logic/awards/explainer';
 import { obtainableCards } from '../../logic/awards/obtainable';
+import { cardTitleIsKo } from '../../logic/card-art';
 import { localizeCard, localizeEpisode, localizeTheme } from '../../logic/content-locale';
 import { initialCard, latchedSelection, reconcileSelection, type PaneLatch } from '../../logic/layout/pane-selection';
 import {
@@ -397,7 +398,7 @@ function CardThumb({
               {card.romanization}
             </Caption>
           ) : null}
-          <Caption tone="secondary">{card.titleEn}</Caption>
+          {cardTitleIsKo(card) ? null : <Caption tone="secondary">{card.titleEn}</Caption>}
         </>
       )}
     </Pressable>

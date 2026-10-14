@@ -1,6 +1,7 @@
 import type { HeritageCard } from '@hangul-route/content-schema';
 import {
   Body,
+  Caption,
   Icon,
   KOREAN_LANGUAGE,
   borderWidth,
@@ -16,6 +17,7 @@ import React, { useEffect } from 'react';
 import { Pressable, Text, View, type PressableStateCallbackType, type ViewStyle } from 'react-native';
 import { CardArt } from '../../components/CardArt';
 import { useLocale, useMessages } from '../../i18n/use-messages';
+import { cardKoLine } from '../../logic/card-art';
 import { localizeCard } from '../../logic/content-locale';
 import type { ItemViewedEvent, PlansTappedEvent } from '../../logic/browse/home-view';
 import type { PreviewEndedEvent, PreviewStartedEvent } from '../../logic/browse/preview';
@@ -141,7 +143,8 @@ export function CardRow({
   const thumb = CARD_THUMB[size];
   const card = localizeCard(source, useLocale());
   const messages = useMessages();
-  const ko = card.subtitleKo ?? '';
+  // A Korean title that is the word itself shows once: the title line, then the romanization alone.
+  const ko = cardKoLine(card) ?? '';
   const romanization = card.romanization ?? '';
   return (
     <Pressable
@@ -176,7 +179,13 @@ export function CardRow({
         <Body weight={size === 'end' ? 'bold' : 'semibold'} size={size === 'end' ? 'lg' : 'md'}>
           {card.titleEn}
         </Body>
-        {ko && romanization ? <KoChip ko={ko} romanization={romanization} /> : null}
+        {ko && romanization ? (
+          <KoChip ko={ko} romanization={romanization} />
+        ) : !ko && card.subtitleKo?.trim() && romanization ? (
+          <Caption tone="muted" style={{ fontStyle: 'italic' }}>
+            {romanization}
+          </Caption>
+        ) : null}
       </View>
     </Pressable>
   );

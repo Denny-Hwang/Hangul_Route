@@ -60,6 +60,14 @@ export function cardKoLine(card: Pick<HeritageCard, 'subtitleKo' | 'titleEn'>): 
   return ko && ko !== card.titleEn.trim() ? card.subtitleKo : undefined;
 }
 
+/**
+ * True when the card's (localized) title is its Korean word: a screen that leads with the Korean
+ * line then drops the trailing title, so the word shows once (chaek over its romanization, not chaek, romanization, chaek again).
+ */
+export function cardTitleIsKo(card: Pick<HeritageCard, 'subtitleKo' | 'titleEn'>): boolean {
+  return Boolean(card.subtitleKo?.trim()) && cardKoLine(card) === undefined;
+}
+
 const SET_RULE = /^set:/;
 
 export function cardArtSource(card: HeritageCard, deps: CardArtDeps): CardArtSource {

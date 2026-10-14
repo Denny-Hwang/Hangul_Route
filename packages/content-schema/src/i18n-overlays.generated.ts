@@ -9,7 +9,7 @@ export const OVERLAYS: Overlays = {
       "title": "Hola"
     },
     "card:arirang": {
-      "blurb": "Una canción sobre extrañar el hogar. En Corea, todo el mundo conoce el primer verso.",
+      "blurb": "Una canción sobre extrañar el hogar. En Corea, mucha gente conoce el primer verso.",
       "fact": "En 2012, la UNESCO incluyó el Arirang en su lista del patrimonio cultural inmaterial.",
       "title": "Arirang"
     },
@@ -90,7 +90,7 @@ export const OVERLAYS: Overlays = {
     },
     "card:geune": {
       "blurb": "En pinturas antiguas, las mujeres coreanas se mecen en columpios gigantes durante la fiesta de Dano.",
-      "fact": "Cuanto más alto te columpias, mejor es el deseo para el año.",
+      "fact": "En los concursos de columpio de Dano, se pateaba una campanilla colgada en lo alto para mostrar la altura alcanzada.",
       "title": "Geune"
     },
     "card:hanbok": {
@@ -125,7 +125,7 @@ export const OVERLAYS: Overlays = {
     },
     "card:inhyeong": {
       "blurb": "Desde muñecas de tela hechas a mano hasta figuras de K-pop, a Corea le encantan sus muñecas.",
-      "fact": "Las muñecas antiguas de los palacios coreanos se hacían de paja y papel.",
+      "fact": "Hace mucho tiempo, las muñecas coreanas solían hacerse de paja, papel o tela.",
       "title": "Muñeca"
     },
     "card:ink": {
@@ -200,7 +200,7 @@ export const OVERLAYS: Overlays = {
     },
     "card:nabi": {
       "blurb": "Una florecita voladora que revolotea en muchas canciones coreanas.",
-      "fact": "La canción coreana «Nabi-ya, nabi-ya» tiene más de 100 años.",
+      "fact": "La melodía de la canción «Nabi-ya, nabi-ya» viene de una vieja canción popular alemana.",
       "title": "Mariposa"
     },
     "card:namu": {
@@ -220,7 +220,7 @@ export const OVERLAYS: Overlays = {
     },
     "card:paengi": {
       "blurb": "Trompos de madera que giran sobre el hielo en invierno.",
-      "fact": "Un paengi coreano puede girar más de cinco minutos si se azota bien.",
+      "fact": "Para que un paengi siga girando, se le da con un pequeño látigo de cuerda.",
       "title": "Paengi"
     },
     "card:pottery": {
@@ -300,7 +300,7 @@ export const OVERLAYS: Overlays = {
     },
     "card:yagu": {
       "blurb": "El deporte más ruidoso de Corea. La afición lleva tambores y anima durante nueve entradas seguidas.",
-      "fact": "Los estadios de béisbol coreanos tienen «líderes de cánticos» oficiales en el campo.",
+      "fact": "Los equipos de béisbol coreanos tienen líderes de ánimo oficiales que guían los cánticos de la afición.",
       "title": "Yagu"
     },
     "card:yeou": {
@@ -2675,7 +2675,7 @@ export const OVERLAYS: Overlays = {
       "title": "안녕"
     },
     "card:arirang": {
-      "blurb": "고향을 그리워하는 노래예요. 한국 사람이라면 누구나 첫 줄을 알아요.",
+      "blurb": "고향을 그리워하는 노래예요. 많은 한국 사람이 첫 줄을 알아요.",
       "fact": "2012년에 유네스코는 아리랑을 인류무형문화유산으로 올렸어요.",
       "title": "아리랑"
     },
@@ -2686,7 +2686,7 @@ export const OVERLAYS: Overlays = {
     },
     "card:book": {
       "blurb": "누군가 읽어 주기를 기다리는 책이에요.",
-      "fact": "오늘날 한국 책은 대부분 영어책처럼 가로로 써서, 왼쪽에서 오른쪽으로, 위에서 아래로 읽어요.",
+      "fact": "오늘날 한국 책은 대부분 가로쓰기라서 왼쪽에서 오른쪽으로, 위에서 아래로 읽어요.",
       "title": "책"
     },
     "card:boreumdal": {
@@ -2756,7 +2756,7 @@ export const OVERLAYS: Overlays = {
     },
     "card:geune": {
       "blurb": "옛 그림 속 한국 여인들은 단오에 커다란 그네를 타요.",
-      "fact": "그네를 높이 탈수록 그해 소원이 더 좋아진다고 해요.",
+      "fact": "단오 그네 겨루기에서는 높이 매단 방울을 발로 차서 얼마나 높이 올랐는지 겨뤘어요.",
       "title": "그네"
     },
     "card:hanbok": {
@@ -2791,7 +2791,7 @@ export const OVERLAYS: Overlays = {
     },
     "card:inhyeong": {
       "blurb": "손으로 만든 천 인형부터 케이팝 피규어까지, 한국은 인형을 사랑해요.",
-      "fact": "옛 한국 궁궐의 인형은 짚과 종이로 만들었어요.",
+      "fact": "옛날 한국 인형은 짚이나 종이, 천으로 만들 때가 많았어요.",
       "title": "인형"
     },
     "card:ink": {
@@ -2866,7 +2866,7 @@ export const OVERLAYS: Overlays = {
     },
     "card:nabi": {
       "blurb": "많은 한국 노래 속을 팔랑팔랑 나는 작은 꽃 같아요.",
-      "fact": "한국 노래 ‘나비야 나비야’는 100년이 넘었어요.",
+      "fact": "‘나비야 나비야’의 가락은 옛 독일 민요에서 왔어요.",
       "title": "나비"
     },
     "card:namu": {
@@ -2886,11 +2886,11 @@ export const OVERLAYS: Overlays = {
     },
     "card:paengi": {
       "blurb": "겨울에 얼음 위에서 돌리는 나무 팽이예요.",
-      "fact": "팽이채로 잘 치면 팽이가 5분 넘게 돌 수 있어요.",
+      "fact": "팽이채로 쳐서 팽이가 계속 돌게 해요.",
       "title": "팽이"
     },
     "card:pottery": {
-      "blurb": "1000년 된 옥빛 한국 도자기예요.",
+      "blurb": "1,000년 된 옥빛 한국 도자기예요.",
       "fact": "고려청자는 빛깔로 세계에 이름났어요.",
       "title": "청자"
     },
@@ -2966,7 +2966,7 @@ export const OVERLAYS: Overlays = {
     },
     "card:yagu": {
       "blurb": "한국에서 가장 시끄러운 운동이에요. 팬들은 북을 들고 9회 내내 응원해요.",
-      "fact": "한국 야구장에는 공식 ‘응원단장’이 있어요.",
+      "fact": "한국 야구팀에는 팬들의 응원을 이끄는 공식 ‘응원단장’이 있어요.",
       "title": "야구"
     },
     "card:yeou": {
