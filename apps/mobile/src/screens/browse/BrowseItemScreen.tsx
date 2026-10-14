@@ -2,7 +2,7 @@ import { APP_ROUTES, type StageKey, type StoryLevel } from '@hangul-route/conten
 import { Body, Button, Card, Heading, Pill, Screen, Spacer, borderWidth, colors, radii, spacing, touchTarget, typography, useLayoutClass } from '@hangul-route/design-system';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useEffect, useMemo, useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Pressable, Text, View, useWindowDimensions } from 'react-native';
 import { cardById } from '../../content';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { episodeOfQuest } from '../../logic/browse/bundle';
@@ -18,7 +18,7 @@ import { openPresenter, presenterRootExists } from '../../platform/present-hando
 import { CardRow, HeaderBack, HeaderRow, KoChip, SkillChips, WordChip, focusRing, sendBrowseEvent, useItemViewed, type FocusState } from './browse-ui';
 import { useBrowseSession } from './browse-session';
 import { LessonDisplaySheet } from './LessonDisplaySheet';
-import { BROWSE_ACTION_MAX_WIDTH, BROWSE_LABEL_COLUMN } from '../../logic/browse/layout';
+import { BROWSE_ACTION_MAX_WIDTH, BROWSE_LABEL_COLUMN, BROWSE_PIN_SECONDARY_MIN_HEIGHT } from '../../logic/browse/layout';
 import { beginPreview } from './preview-session';
 import { TopicWordList } from './TopicWordList';
 
@@ -53,6 +53,7 @@ export function BrowseItemScreen({ route, navigation }: Props): React.ReactEleme
   // The same mounted page can get new params (Next story to a closed story): the pick belongs to one story.
   useEffect(() => setLevel(null), [kind, id]);
   const compact = useLayoutClass().width === 'compact';
+  const windowHeight = useWindowDimensions().height;
   const presentTitleText = facts ? (facts.kind === 'story' ? facts.title.gloss : facts.title) : '';
   // Drawn only when the presenter can show at least one slide of this item (BR-13): a check deck, never opened.
   const hasFacts = facts !== null;
@@ -118,7 +119,8 @@ export function BrowseItemScreen({ route, navigation }: Props): React.ReactEleme
     />
   ) : null;
 
-  const action = closed ? (
+  const actionBar = (withPresent: boolean): React.ReactElement | null =>
+    closed ? (
     <View testID="browse-item-closed" style={{ backgroundColor: colors.surface.sunken, borderRadius: radii.lg, padding: spacing.lg, gap: spacing.sm, alignItems: 'flex-start' }}>
       <Body weight="semibold">{m.item.closed}</Body>
       {billingShown(pass) ? (
@@ -134,7 +136,7 @@ export function BrowseItemScreen({ route, navigation }: Props): React.ReactEleme
         />
       ) : null}
     </View>
-  ) : canPreview || presentButton ? (
+  ) : canPreview || (withPresent && presentButton) ? (
     <View style={{ width: '100%', maxWidth: compact ? undefined : PRIMARY_MAX }}>
       {canPreview ? (
         <Button label={facts.kind === 'story' ? m.item.previewStory.cta : m.item.preview.cta} tone="primary" size="lg" fullWidth onPress={previewItem} testID="browse-preview" />
@@ -145,13 +147,19 @@ export function BrowseItemScreen({ route, navigation }: Props): React.ReactEleme
           <Button label={m.item.previewQuestions.cta} tone="ghost" size="md" fullWidth onPress={() => playQuest(facts.questId)} testID="browse-preview-questions" />
         </>
       ) : null}
-      {presentButton && canPreview ? <Spacer size="sm" /> : null}
-      {presentButton}
+      {withPresent && presentButton && canPreview ? <Spacer size="sm" /> : null}
+      {withPresent ? presentButton : null}
     </View>
   ) : null;
 
+  // On a short phone window (landscape) the pinned footer keeps only the preview; Present this
+  // moves to the end of the page, so the facts keep their room (review of #590).
+  const pinPresent = windowHeight >= BROWSE_PIN_SECONDARY_MIN_HEIGHT;
+  const footerAction = compact && !closed ? actionBar(pinPresent) : null;
+  const inlineAction = closed || !compact ? actionBar(true) : pinPresent ? null : presentButton;
+
   return (
-    <Screen tone="canvas" scrollable width="reading" testID="browse-item" footer={compact && action && !closed ? action : undefined}>
+    <Screen tone="canvas" scrollable width="reading" testID="browse-item" footer={footerAction ?? undefined}>
       <HeaderRow back={<HeaderBack label={m.item.back} showLabel={false} onPress={back} testID="browse-back" />} onDisplay={() => setDisplayOpen(true)} />
       <Spacer size="sm" />
       {facts.kind === 'quest' && facts.focus ? (
@@ -201,10 +209,10 @@ export function BrowseItemScreen({ route, navigation }: Props): React.ReactEleme
         </>
       ) : null}
 
-      {action && (closed || !compact) ? (
+      {inlineAction ? (
         <>
           <Spacer size="xl" />
-          {action}
+          {inlineAction}
         </>
       ) : null}
       <Spacer size="xl" />

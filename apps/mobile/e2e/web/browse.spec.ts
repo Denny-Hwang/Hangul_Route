@@ -1166,23 +1166,32 @@ test('BR-13: at 1280 wide Present this sits under the preview inside the action 
   await shot(page, 'br13-present-this-1280');
 });
 
-for (const size of [
-  { width: 320, height: 568 },
-  { width: 568, height: 320 },
-]) {
-  test(`BR-13: at ${size.width} x ${size.height} both buttons fit, the facts still scroll and nothing scrolls sideways`, async ({ page }) => {
-    test.skip(!PRESENTER_MOUNTED, PRESENTER_PENDING);
-    await page.setViewportSize(size);
-    await openLessonPage(page, 'quest:stage1-letters-q1');
-    const present = page.getByTestId('browse-present');
-    await expect(present).toBeVisible();
-    const previewBox = await page.getByTestId('browse-preview').boundingBox();
-    const presentBox = await present.boundingBox();
-    // The pinned footer (both buttons) stays under half the screen, so the facts keep their room.
-    const footerTop = previewBox?.y ?? 0;
-    const footerBottom = (presentBox?.y ?? 0) + (presentBox?.height ?? 0);
-    expect(footerBottom).toBeLessThanOrEqual(size.height);
-    expect(footerBottom - footerTop).toBeLessThan(size.height / 2);
-    expect(await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth)).toBe(false);
-  });
-}
+test('BR-13: at 320 x 568 both buttons stay pinned, under half the screen, and nothing scrolls sideways', async ({ page }) => {
+  test.skip(!PRESENTER_MOUNTED, PRESENTER_PENDING);
+  await page.setViewportSize({ width: 320, height: 568 });
+  await openLessonPage(page, 'quest:stage1-letters-q1');
+  const present = page.getByTestId('browse-present');
+  await expect(present).toBeVisible();
+  const previewBox = await page.getByTestId('browse-preview').boundingBox();
+  const presentBox = await present.boundingBox();
+  const footerBottom = (presentBox?.y ?? 0) + (presentBox?.height ?? 0);
+  expect(presentBox && previewBox && presentBox.y > previewBox.y).toBe(true);
+  expect(footerBottom).toBeLessThanOrEqual(568);
+  expect(footerBottom - (previewBox?.y ?? 0)).toBeLessThan(568 / 2);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth)).toBe(false);
+});
+
+test('BR-13: on a phone in landscape (568 x 320) only the preview stays pinned and Present this ends the page', async ({ page }) => {
+  test.skip(!PRESENTER_MOUNTED, PRESENTER_PENDING);
+  await page.setViewportSize({ width: 568, height: 320 });
+  await openLessonPage(page, 'quest:stage1-letters-q1');
+  const previewBox = await page.getByTestId('browse-preview').boundingBox();
+  // The pinned bar is one button tall, so the facts keep most of the screen.
+  expect((previewBox?.y ?? 0) + (previewBox?.height ?? 0)).toBeLessThanOrEqual(320);
+  expect(previewBox?.height ?? 0).toBeLessThan(320 / 3);
+  const present = page.getByTestId('browse-present');
+  await present.scrollIntoViewIfNeeded();
+  await expect(present).toBeInViewport();
+  await expect(present).toHaveAccessibleName('Present this');
+  expect(await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth)).toBe(false);
+});
