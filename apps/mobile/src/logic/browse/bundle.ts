@@ -1,7 +1,7 @@
 import type { Episode, HeritageCard, Jamo, Quest, RuntimeVocabItem, StageDef, Story, ThemeDef, VocabTopic } from '@hangul-route/content-schema';
 import { episodesAll } from '../../content/episodes';
 import { heritageCardsAll } from '../../content/heritage-cards';
-import { jamoAll } from '../../content/jamo';
+import { jamoKnown } from '../../content/jamo';
 import { questsAll } from '../../content/quests';
 import { stages, themes } from '../../content/stages';
 import { storiesAll } from '../../content/stories';
@@ -123,7 +123,8 @@ export function defaultBrowseBundle(canRender: (visual: string) => boolean): Bro
     themes,
     episodes: episodesAll,
     quests: questsAll,
-    jamo: jamoAll,
+    // Stage 1's 30 symbols and Word Builder's (F-CURR-001 section 3.13: a grown-up preview shows every cell as a learner sees it).
+    jamo: jamoKnown,
     cards: heritageCardsAll,
     stories: storiesAll,
     vocabTopics: VOCAB_TOPICS,

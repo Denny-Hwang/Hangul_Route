@@ -1,4 +1,5 @@
 import type { AdultPersona, BrowseTarget, StageKey } from '@hangul-route/content-schema';
+import { jamoAll } from '../../content/jamo';
 import { stage1QuestsFrom, teachingQuestFor } from '../stage1/curriculum';
 import { episodeOfQuest, type BrowseBundle } from './bundle';
 import { accessSource, type AccessSource, type ResolvedPass } from './pass';
@@ -26,9 +27,15 @@ const NOT_IN_VERSION: BrowseDestination = { screen: 'home', section: null, note:
 
 function resolveJamo(jamoId: string, bundle: BrowseBundle): BrowseDestination {
   if (!bundle.jamo.some((j) => j.id === jamoId)) return NOT_IN_VERSION;
-  const teacher = teachingQuestFor(jamoId, stage1QuestsFrom(bundle.episodes, bundle.quests));
-  if (!teacher) return { screen: 'home', section: 'journey', stage: 'stage1', note: 'letter-across-stage1' };
-  return { screen: 'item', kind: 'quest', id: teacher.id, focusJamoId: jamoId };
+  const stage1 = stage1QuestsFrom(bundle.episodes, bundle.quests);
+  const teacher = teachingQuestFor(jamoId, stage1);
+  if (teacher) return { screen: 'item', kind: 'quest', id: teacher.id, focusJamoId: jamoId };
+  // A symbol past Stage 1 (Word Builder, F-CURR-001 section 3.3) opens the shipped quest whose Discover teaches it.
+  const later = teachingQuestFor(jamoId, bundle.quests.filter((q) => !stage1.includes(q) && episodeOfQuest(bundle, q.id) !== undefined));
+  if (later) return { screen: 'item', kind: 'quest', id: later.id, focusJamoId: jamoId };
+  // Only a Stage 1 letter is "practiced across Stage 1"; a later symbol with no shipped lesson is not in this version.
+  if (!jamoAll.some((j) => j.id === jamoId)) return NOT_IN_VERSION;
+  return { screen: 'home', section: 'journey', stage: 'stage1', note: 'letter-across-stage1' };
 }
 
 export function resolveTarget(target: BrowseTarget | null, bundle: BrowseBundle): BrowseDestination {
