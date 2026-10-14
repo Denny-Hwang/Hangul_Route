@@ -170,7 +170,7 @@ APPEND: "strip visibility matrix (flag x learner type x device has PIN or child 
 
 ADD after P-8:
 
-| P-7b | `feat(mobile)`: result weekly-plan strip and not-tested copy, `RouteProposal` entry from the result, report "Suggested weekly plan" card | M | P-6, P-8, F-PLAN-002 P2-3b (`proposeRoute`) and P2-7a (`RouteProposal`) |
+| P-7b | `feat(mobile)`: result weekly-plan strip and not-tested copy, `RouteProposal` entry from the result, report "Suggested weekly plan" card. **Done (#573)**, behind `flags.routeEnabled` | M | P-6, P-8, F-PLAN-002 P2-3b (`proposeRoute`) and P2-7a (`RouteProposal`) |
 
 Change P-10's "Needs" to "P-7, P-7b, P-8". P-6 and P-7 do not wait. Add to P-6's Needs: "OD-1 (sound-guide choice screen)". Add to P-7's Needs: "F-ROUTE-001 R-2a (`pin`, `check-circle` glyphs)".
 
@@ -325,7 +325,7 @@ In learner-facing strings of sections 3.9 to 3.12 and the wireframes, "route" be
 
 ## 5. Owner decisions touched by this file (the questions and defaults are in F-ROUTE-001 section 9)
 
-OD-1 (sound guide; gates P-6), OD-4 (free-tier stages), OD-7 (learner naming), OD-9 (defined level), OD-12 (length rule; decided 2026-10-12, accepted as proposed; no longer gates P2-3b), OD-13 (pace chips and check-in; decided 2026-10-12, accepted as proposed; no longer gates P2-3b / P2-7b), OD-14 (one-tap for self profiles on any device; gates P-7b), OD-15 (start day Today), OD-16 (14-day dismissal; gates P2-7a), OD-17 (a child answers the Hoya check-in alone; decided 2026-10-13: no, the check-in stays behind the grown-up gate on a child profile; no longer gates P2-8b, the flag flip).
+OD-1 (sound guide; gates P-6), OD-4 (free-tier stages), OD-7 (learner naming), OD-9 (defined level), OD-12 (length rule; decided 2026-10-12, accepted as proposed; no longer gates P2-3b), OD-13 (pace chips and check-in; decided 2026-10-12, accepted as proposed; no longer gates P2-3b / P2-7b), OD-14 (one-tap for self profiles on any device; the proposed default is built behind the flag in P-7b, #573; the owner confirms it before P-10), OD-15 (start day Today), OD-16 (14-day dismissal; gates P2-7a), OD-17 (a child answers the Hoya check-in alone; decided 2026-10-13: no, the check-in stays behind the grown-up gate on a child profile; no longer gates P2-8b, the flag flip).
 
 ## 6. Errata (apply in the same docs PR)
 
@@ -342,3 +342,7 @@ OD-1 (sound guide; gates P-6), OD-4 (free-tier stages), OD-7 (learner naming), O
 ## 8. Later: speaking
 
 Not part of these amendments or of any screen. See F-ROUTE-001 section 10 and `docs/roadmap/speaking-later.md`.
+
+## Review log
+
+- 2026-10-13, docs follow-ups after the 2026-10-13 merges. Row P-7b is marked done (#573). Section 5: OD-14 no longer gates P-7b; its proposed default is built behind `flags.routeEnabled`, and the owner confirms it before P-10.
