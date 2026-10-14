@@ -10,7 +10,7 @@ import { useProfileStore } from '../../../store/profile-store';
 import { useTierStore } from '../../../store/tier-store';
 import { useUiStore } from '../../../store/ui-store';
 import { PURCHASE } from '../../../test-support/__tests__/copy-words';
-import { buttonsNamed, press, render, resetPlatform, screenTexts, setPlatform, unmount, type RenderPlatform } from '../../../test-support/render';
+import { buttonsNamed, byTestId, press, render, resetPlatform, screenTexts, setPlatform, unmount, type RenderPlatform } from '../../../test-support/render';
 import { ProfileScreen } from '../ProfileScreen';
 
 /**
@@ -148,4 +148,20 @@ describe('ProfileScreen plan card (F-BILL-002 section 11, B-13)', () => {
       }
     });
   }
+});
+
+describe('ProfileScreen open-source notices link (owner decision 2026-10-14)', () => {
+  afterEach(() => resetPlatform());
+
+  it.each(PLATFORMS)('%s: the foot of the screen links the open-source notices, for both audiences, with no PIN', async (platform) => {
+    for (const audience of AUDIENCES) {
+      setPlatform(platform);
+      seed(audience, FREE);
+      const renderer = await render(<ProfileScreen />);
+      const links = byTestId(renderer.root, 'profile-licenses-link');
+      expect(links, audience).toHaveLength(1);
+      expect(links[0]!.props['aria-label']).toBe(getMessages('en').learner.profile.licenses.label);
+      await unmount(renderer);
+    }
+  });
 });

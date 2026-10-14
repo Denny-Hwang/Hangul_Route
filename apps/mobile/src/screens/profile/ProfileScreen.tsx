@@ -48,6 +48,7 @@ import { grownUpPinParams } from '../../logic/shell/handoff-rules';
 import { openGrownUpArea } from '../../platform/grown-up-handoff';
 import { MyNotesRow } from '../notes/MyNotesRow';
 import { GrownUpHomeRow } from './GrownUpHomeRow';
+import { LicensesLink } from './LicensesLink';
 import { ChallengeCard } from '../vocab/ChallengeCard';
 import { wordsOffered } from '../vocab/topic-data';
 
@@ -354,6 +355,8 @@ export function ProfileScreen(): React.ReactElement {
         accessibilityLabel={copy.gatedA11y(copy.zoneLabel, pinSet)}
         onPress={() => openGrownUps('ParentDashboard')}
       />
+      <Spacer size="lg" />
+      <LicensesLink />
       <Spacer size="xl" />
     </Screen>
   );
