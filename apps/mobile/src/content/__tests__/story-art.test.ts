@@ -62,7 +62,8 @@ const CLUSTERS: ReadonlyArray<{ name: string; ids: readonly string[]; scenes: nu
   { name: 'records-joseon', ids: RECORDS_JOSEON, scenes: 45 },
   { name: 'hangul-printing', ids: HANGUL_PRINTING, scenes: 46 },
   { name: 'science-art-life', ids: SCIENCE_ART_LIFE, scenes: 43 },
-  { name: 'seasons-tales', ids: SEASONS_TALES, scenes: 48 },
+  // 48 listen scenes + 19 read scenes of the Stage 5 rites book (F-STORY-005 PR 5.6; art reused from the listen scene).
+  { name: 'seasons-tales', ids: SEASONS_TALES, scenes: 67 },
 ];
 
 describe('story scene art', () => {

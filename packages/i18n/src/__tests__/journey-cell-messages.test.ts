@@ -106,6 +106,10 @@ describe('learner.journey.cellStories (F-STORY-005 PR 5.5b)', () => {
     expect(c.empty).toBe('Nothing here yet');
   });
 
+  it('the cell page row of a Stage 5 book cell names the book (F-STORY-005 PR 5.6)', () => {
+    expect(c.bookRow('Festival Tales')).toBe('Festival Tales — the book for this cell');
+  });
+
   it('the lesson page row: a plain count with plural(), never "N of M"', () => {
     expect(c.row).toBe('Heritage stories for this cell');
     expect(c.rowLabel(1)).toBe('Heritage stories for this cell, 1 heritage story');
@@ -124,7 +128,7 @@ describe('learner.journey.cellStories (F-STORY-005 PR 5.5b)', () => {
   });
 
   it('every function message has sample arguments', () => {
-    for (const key of ['title', 'lessonRow', 'rowLabel', 'homePill', 'homePillLabel']) {
+    for (const key of ['title', 'lessonRow', 'bookRow', 'rowLabel', 'homePill', 'homePillLabel']) {
       expect(SAMPLES[`learner.journey.cellStories.${key}`], key).toBeDefined();
     }
   });

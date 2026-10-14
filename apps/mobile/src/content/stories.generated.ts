@@ -1420,7 +1420,7 @@ export const storiesAll: Story[] = [
     "v": 1,
     "id": "story:chuseok-ganggangsullae",
     "state": "ready",
-    "contentVer": 4,
+    "contentVer": 5,
     "title": {
       "ko": "추석 송편과 보름달",
       "romanization": "Chuseok songpyeongwa boreumdal",
@@ -2059,6 +2059,408 @@ export const storiesAll: Story[] = [
           "sollip",
           "boreumdal"
         ]
+      },
+      {
+        "level": "read",
+        "scenes": [
+          {
+            "id": "s1",
+            "narrationEn": "{kw:chuseok}, the harvest holiday, is also called {kw:hangawi}, its native Korean name.",
+            "captionEn": "Chuseok is also called Hangawi",
+            "line": {
+              "ko": "추석을 한가위라고도 해요.",
+              "romanization": "Chuseogeul hangawiragodo haeyo.",
+              "en": "Chuseok is also called Hangawi.",
+              "speaker": "narrator"
+            },
+            "factIds": [
+              "f2",
+              "f1"
+            ],
+            "framing": false,
+            "approximations": [],
+            "art": {
+              "setting": "scene:countryside",
+              "layers": [
+                {
+                  "ref": "prop:rice-field",
+                  "x": 200,
+                  "y": 300,
+                  "s": 1
+                },
+                {
+                  "ref": "prop:persimmon-tree",
+                  "x": 70,
+                  "y": 256,
+                  "s": 1.2,
+                  "z": "back"
+                },
+                {
+                  "ref": "prop:persimmon-tree",
+                  "x": 340,
+                  "y": 240,
+                  "s": 0.9,
+                  "flip": true,
+                  "z": "back"
+                },
+                {
+                  "ref": "prop:fig-villager",
+                  "x": 262,
+                  "y": 226,
+                  "s": 0.45,
+                  "tint": "feedback.nudge"
+                },
+                {
+                  "ref": "hoya:cheering",
+                  "x": 190,
+                  "y": 294,
+                  "s": 0.95
+                }
+              ],
+              "altEn": "Golden rice fields and persimmon trees heavy with orange fruit at harvest time, as a farmer works and Hoya cheers."
+            }
+          },
+          {
+            "id": "s2",
+            "narrationEn": "For Chuseok, many people travel back to their hometowns, {kw:gohyang}.",
+            "captionEn": "Many people go to their hometowns",
+            "line": {
+              "ko": "많은 사람이 고향에 가요.",
+              "romanization": "Maneun sarami gohyange gayo.",
+              "en": "Many people go to their hometowns.",
+              "speaker": "narrator"
+            },
+            "factIds": [
+              "f3"
+            ],
+            "framing": false,
+            "approximations": [],
+            "art": {
+              "setting": "scene:hanok-room",
+              "layers": [
+                {
+                  "ref": "prop:feast-table",
+                  "x": 200,
+                  "y": 268,
+                  "s": 1.45
+                },
+                {
+                  "ref": "prop:fig-woman",
+                  "x": 92,
+                  "y": 290,
+                  "s": 1,
+                  "tint": "brand.secondaryLight"
+                },
+                {
+                  "ref": "prop:fig-child",
+                  "x": 262,
+                  "y": 294,
+                  "s": 0.85
+                },
+                {
+                  "ref": "prop:fig-villager",
+                  "x": 318,
+                  "y": 290,
+                  "s": 1.05
+                },
+                {
+                  "ref": "hoya:idle",
+                  "x": 38,
+                  "y": 296,
+                  "s": 0.55
+                }
+              ],
+              "altEn": "A family in hanbok stands quietly before a table of food set for the ancestors, the Chuseok charye, with Hoya beside them."
+            }
+          },
+          {
+            "id": "s3",
+            "narrationEn": "The family gathers to make {kw:songpyeon}, rice cakes with fillings like beans, sesame or chestnuts.",
+            "captionEn": "The family makes songpyeon together",
+            "line": {
+              "ko": "가족이 함께 송편을 빚어요.",
+              "romanization": "Gajogi hamkke songpyeoneul bijeoyo.",
+              "en": "The family makes songpyeon together.",
+              "speaker": "narrator"
+            },
+            "factIds": [
+              "f4"
+            ],
+            "framing": false,
+            "approximations": [],
+            "art": {
+              "setting": "scene:hanok-room",
+              "layers": [
+                {
+                  "ref": "prop:fig-elder-seated",
+                  "x": 62,
+                  "y": 272,
+                  "s": 1.15
+                },
+                {
+                  "ref": "hoya:idle",
+                  "x": 140,
+                  "y": 296,
+                  "s": 0.58
+                },
+                {
+                  "ref": "prop:songpyeon",
+                  "x": 244,
+                  "y": 296,
+                  "s": 1.75
+                },
+                {
+                  "ref": "prop:fig-woman",
+                  "x": 368,
+                  "y": 286,
+                  "s": 0.95,
+                  "tint": "surface.sunken"
+                }
+              ],
+              "altEn": "The family shapes songpyeon together, a tray of white, green and yellow rice cakes between them, and Hoya helps."
+            }
+          },
+          {
+            "id": "s4",
+            "narrationEn": "Songpyeon are steamed on a layer of pine needles, {kw:sollip}.",
+            "captionEn": "Songpyeon steamed on pine needles",
+            "line": {
+              "ko": "송편은 솔잎을 깔고 쪄요.",
+              "romanization": "Songpyeoneun sollipeul kkalgo jjyeoyo.",
+              "en": "Songpyeon are steamed on a layer of pine needles.",
+              "speaker": "narrator"
+            },
+            "factIds": [
+              "f5"
+            ],
+            "framing": false,
+            "approximations": [],
+            "art": {
+              "setting": "scene:hanji-backdrop",
+              "layers": [
+                {
+                  "ref": "prop:songpyeon",
+                  "x": 190,
+                  "y": 272,
+                  "s": 2.4
+                },
+                {
+                  "ref": "hoya:idle",
+                  "x": 344,
+                  "y": 294,
+                  "s": 0.7
+                }
+              ],
+              "altEn": "Freshly steamed half-moon songpyeon rest on fragrant pine needles, and Hoya is ready to taste one."
+            }
+          },
+          {
+            "id": "s5",
+            "narrationEn": "On Chuseok night, a big round full moon, {kw:boreumdal}, rises.",
+            "captionEn": "A full moon rises on Chuseok night",
+            "line": {
+              "ko": "추석 밤에 보름달이 떠요.",
+              "romanization": "Chuseok bame boreumdari tteoyo.",
+              "en": "On Chuseok night, the full moon rises.",
+              "speaker": "narrator"
+            },
+            "factIds": [
+              "f6",
+              "f1"
+            ],
+            "framing": false,
+            "approximations": [],
+            "art": {
+              "setting": "scene:village-lane",
+              "layers": [
+                {
+                  "ref": "prop:full-moon",
+                  "x": 320,
+                  "y": 98,
+                  "s": 1.8
+                },
+                {
+                  "ref": "prop:flat-rock",
+                  "x": 150,
+                  "y": 292,
+                  "s": 1.4
+                },
+                {
+                  "ref": "hoya:idle",
+                  "x": 220,
+                  "y": 292,
+                  "s": 1
+                }
+              ],
+              "altEn": "A big round full moon rises over the village on Chuseok, and Hoya gazes up at it."
+            }
+          },
+          {
+            "id": "s6",
+            "narrationEn": "Under the moon, women join hands and dance {kw:ganggangsullae} in a circle.",
+            "captionEn": "Hand in hand for Ganggangsullae",
+            "line": {
+              "ko": "손에 손을 잡고 강강술래를 해요.",
+              "romanization": "Sone soneul japgo ganggangsullaereul haeyo.",
+              "en": "Hand in hand, they dance Ganggangsullae.",
+              "speaker": "narrator"
+            },
+            "factIds": [
+              "f7"
+            ],
+            "framing": false,
+            "approximations": [],
+            "art": {
+              "setting": "scene:countryside",
+              "layers": [
+                {
+                  "ref": "prop:night-sky",
+                  "x": 200,
+                  "y": 196,
+                  "s": 1
+                },
+                {
+                  "ref": "prop:full-moon",
+                  "x": 320,
+                  "y": 96,
+                  "s": 1.5
+                },
+                {
+                  "ref": "prop:dance-circle",
+                  "x": 200,
+                  "y": 270,
+                  "s": 1.6
+                },
+                {
+                  "ref": "hoya:cheering",
+                  "x": 364,
+                  "y": 298,
+                  "s": 0.56
+                }
+              ],
+              "altEn": "Under the full moon at night, women hold hands in a wide circle for Ganggangsullae, and Hoya cheers along outside it."
+            }
+          }
+        ],
+        "checks": [
+          {
+            "id": "r1",
+            "kind": "pick-meaning",
+            "promptEn": "What does {target} mean?",
+            "target": {
+              "ko": "보름달",
+              "romanization": "boreumdal",
+              "en": "full moon"
+            },
+            "options": [
+              {
+                "id": "a",
+                "en": "Half moon",
+                "isCorrect": false
+              },
+              {
+                "id": "b",
+                "en": "Full moon",
+                "isCorrect": true
+              },
+              {
+                "id": "c",
+                "en": "Sunrise",
+                "isCorrect": false
+              },
+              {
+                "id": "d",
+                "en": "Pine tree",
+                "isCorrect": false
+              }
+            ],
+            "explainEn": "Boreumdal means full moon. A big full moon rises on Chuseok night.",
+            "factIds": [
+              "f6"
+            ]
+          },
+          {
+            "id": "r2",
+            "kind": "pick-meaning",
+            "promptEn": "What does {target} mean?",
+            "target": {
+              "ko": "고향",
+              "romanization": "gohyang",
+              "en": "hometown"
+            },
+            "options": [
+              {
+                "id": "a",
+                "en": "Harvest",
+                "isCorrect": false
+              },
+              {
+                "id": "b",
+                "en": "Holiday",
+                "isCorrect": false
+              },
+              {
+                "id": "c",
+                "en": "Rice cake",
+                "isCorrect": false
+              },
+              {
+                "id": "d",
+                "en": "Hometown",
+                "isCorrect": true
+              }
+            ],
+            "explainEn": "Gohyang means hometown. Many people go back to their hometowns for Chuseok.",
+            "factIds": [
+              "f3"
+            ]
+          },
+          {
+            "id": "r3",
+            "kind": "detail",
+            "promptEn": "In the story, what are songpyeon steamed on?",
+            "options": [
+              {
+                "id": "a",
+                "en": "Pine needles",
+                "isCorrect": true
+              },
+              {
+                "id": "b",
+                "en": "Lotus leaves",
+                "isCorrect": false
+              },
+              {
+                "id": "c",
+                "en": "Banana leaves",
+                "isCorrect": false
+              },
+              {
+                "id": "d",
+                "en": "Paper sheets",
+                "isCorrect": false
+              }
+            ],
+            "explainEn": "Songpyeon are steamed on a layer of pine needles.",
+            "factIds": [
+              "f5"
+            ]
+          }
+        ],
+        "checkpoints": [],
+        "sequenceSceneIds": [
+          "s1",
+          "s3",
+          "s5",
+          "s6"
+        ],
+        "newKeywordIds": [
+          "hangawi",
+          "gohyang",
+          "songpyeon",
+          "boreumdal"
+        ],
+        "grammarFocusEn": "-rago-do haeyo (is also called); -go to join two actions"
       }
     ],
     "coverSceneId": "s1",
@@ -2396,16 +2798,16 @@ export const storiesAll: Story[] = [
       "passes": 3,
       "checkedAt": "2026-10-10",
       "scope": "cluster",
-      "notes": "Third independent pass over 6 episodes / 61 facts / 161 source entries (70 unique URLs). Every URL was re-fetched with my own scripts (UNESCO pages via Wayback copies; heritage.go.kr descriptions via the portal ajax html and khs.go.kr open API; folkency via its JSON API) and each quote or locator was machine-matched to the page text; the few non-matching strings were checked by hand (portal metadata fields, hanja or footnote punctuation, label text). Corrections: (1) pansori scene 2 now gives both UNESCO steps (2003 masterpiece proclamation, 2008 Representative List); (2) pansori f11 states the Aesop title as in the cited Townsend text and the common alternate title; (3) added sources: NFM 놀보박타령 for 'greedy' (f5), 표준국어대사전 타다 for 'sawed' (f6), 한국민족문화대백과사전 선도해 for the Samguk sagi tale (f12); (4) Seollal f9/f10 designation-date locators now cite the KHS open API field. No other change. See seasons-tales.signoff.md. MAR 2026-10-13 language review (F-STORY-001 PR 1.9): Korean strings, romanization and glosses read; findings and outcomes in the PR. MAR 2026-10-13 culture review (F-STORY-001 PR 1.9): heritage accuracy, framing, tone and advisories read; review.advisory confirmed; findings and outcomes in the PR."
+      "notes": "Third independent pass over 6 episodes / 61 facts / 161 source entries (70 unique URLs). Every URL was re-fetched with my own scripts (UNESCO pages via Wayback copies; heritage.go.kr descriptions via the portal ajax html and khs.go.kr open API; folkency via its JSON API) and each quote or locator was machine-matched to the page text; the few non-matching strings were checked by hand (portal metadata fields, hanja or footnote punctuation, label text). Corrections: (1) pansori scene 2 now gives both UNESCO steps (2003 masterpiece proclamation, 2008 Representative List); (2) pansori f11 states the Aesop title as in the cited Townsend text and the common alternate title; (3) added sources: NFM 놀보박타령 for 'greedy' (f5), 표준국어대사전 타다 for 'sawed' (f6), 한국민족문화대백과사전 선도해 for the Samguk sagi tale (f12); (4) Seollal f9/f10 designation-date locators now cite the KHS open API field. No other change. See seasons-tales.signoff.md. MAR 2026-10-13 language review (F-STORY-001 PR 1.9): Korean strings, romanization and glosses read; findings and outcomes in the PR. MAR 2026-10-13 culture review (F-STORY-001 PR 1.9): heritage accuracy, framing, tone and advisories read; review.advisory confirmed; findings and outcomes in the PR. MAR 2026-10-13 language review of the read tier (F-STORY-005 PR 5.6): 6 Korean lines, their romanization (machine-checked; one converter exception for sollip) and glosses read for spelling, naturalness and Stage 5 level; no change; findings and outcomes in the PR. MAR 2026-10-13 culture review of the read tier (F-STORY-005 PR 5.6): every line and check compared with its cited facts (no new claim), framing, tone and respectful wording read; review.advisory unchanged; findings and outcomes in the PR."
     },
-    "authorNotes": "Left out on purpose: the popular claim that Ganggangsullae began as Admiral Yi Sun-sin's military trick. The 국가유산포털 mentions it only as one theory and says an origin in ancient moonlit-night festivals is more plausible, so it isn't used. Also left out are folk etymologies of 'ganggangsullae' (UNESCO says the meaning is unknown), songpyeon fortune-telling beliefs (spouse looks, pregnancy divination), and specific 차례 table rules. Songpyeon shape symbolism (half-moon) isn't claimed because the sources don't support it. The 국가유산포털 actually links songpyeon to the full moon in general terms. The existing heritage-cards.ts text 'half-moon rice cakes' and 'steamed on pine needles for fragrance' is only partly supported: pine-needle steaming is supported, but the shape and fragrance claims weren't verified. UNESCO describes the original dancers as young unmarried village women; today mostly middle-aged women in cities keep it alive. The narration says 'women'. 'Tile treading' was skipped because explaining it (walking on bent backs) needs care for young children. REVISION 2026-10-10: \"comes from the southwest coast\" -> \"has long been done along the southwestern coast\" (origin is uncertain per KHS and 한국세시풍속사전). Yeoryang sesigi saying: verified in the text quoted by 한국세시풍속사전 (Gim Mae-sun, 8th month entry; the Hanja there is printed 減夜勿, apparently a typo for 減也勿) - narration says the book \"records an old saying like this\" and gives the modern wording. Songpyeon: half-moon shape and pine scent are supported by the National Folk Museum (어린이민속사전; 한국세시풍속사전); the older note saying shape/fragrance were unverified is superseded. \"warm and chewy\" removed (not sourced). AUTHORING 2026-10-11 (F-STORY-001 PR 1.8d): title romanization, scene captions and check explanations written from the cited facts; every scene is artPending (text-only tile) until the art PRs; no claim or source changed. REVIEW 2026-10-11 (PR 1.8d review fixes): title is now 'Chuseok: Songpyeon and the Full Moon' (추석 송편과 보름달), because songpyeon are made on the evening before Chuseok under 'the bright moon' (f4) and the full moon belongs to Chuseok night (f1, f6); the catalogue row and F-STORY-005 table follow. s3 and s5 name their nights; s4 says 'many' songpyeon are half-moons (f5 'often'); s7 and s8 use plainer words; checks 2 and 3 have one clearly correct answer and only taught distractors; the gohyang and dal keywords are used as tokens; learning goals use receptive verbs. PR #208 REVIEW FIXES 2026-10-11: s7 names the games 'fern picking' and 'herring tying' (f8: bracken picking, herring tying; bracken is a fern); check 1 distractor 'Bamboo mats' replaced by 'Paper sheets' because songpyeon steam over a bamboo steamer base.",
+    "authorNotes": "Left out on purpose: the popular claim that Ganggangsullae began as Admiral Yi Sun-sin's military trick. The 국가유산포털 mentions it only as one theory and says an origin in ancient moonlit-night festivals is more plausible, so it isn't used. Also left out are folk etymologies of 'ganggangsullae' (UNESCO says the meaning is unknown), songpyeon fortune-telling beliefs (spouse looks, pregnancy divination), and specific 차례 table rules. Songpyeon shape symbolism (half-moon) isn't claimed because the sources don't support it. The 국가유산포털 actually links songpyeon to the full moon in general terms. The existing heritage-cards.ts text 'half-moon rice cakes' and 'steamed on pine needles for fragrance' is only partly supported: pine-needle steaming is supported, but the shape and fragrance claims weren't verified. UNESCO describes the original dancers as young unmarried village women; today mostly middle-aged women in cities keep it alive. The narration says 'women'. 'Tile treading' was skipped because explaining it (walking on bent backs) needs care for young children. REVISION 2026-10-10: \"comes from the southwest coast\" -> \"has long been done along the southwestern coast\" (origin is uncertain per KHS and 한국세시풍속사전). Yeoryang sesigi saying: verified in the text quoted by 한국세시풍속사전 (Gim Mae-sun, 8th month entry; the Hanja there is printed 減夜勿, apparently a typo for 減也勿) - narration says the book \"records an old saying like this\" and gives the modern wording. Songpyeon: half-moon shape and pine scent are supported by the National Folk Museum (어린이민속사전; 한국세시풍속사전); the older note saying shape/fragrance were unverified is superseded. \"warm and chewy\" removed (not sourced). AUTHORING 2026-10-11 (F-STORY-001 PR 1.8d): title romanization, scene captions and check explanations written from the cited facts; every scene is artPending (text-only tile) until the art PRs; no claim or source changed. REVIEW 2026-10-11 (PR 1.8d review fixes): title is now 'Chuseok: Songpyeon and the Full Moon' (추석 송편과 보름달), because songpyeon are made on the evening before Chuseok under 'the bright moon' (f4) and the full moon belongs to Chuseok night (f1, f6); the catalogue row and F-STORY-005 table follow. s3 and s5 name their nights; s4 says 'many' songpyeon are half-moons (f5 'often'); s7 and s8 use plainer words; checks 2 and 3 have one clearly correct answer and only taught distractors; the gohyang and dal keywords are used as tokens; learning goals use receptive verbs. PR #208 REVIEW FIXES 2026-10-11: s7 names the games 'fern picking' and 'herring tying' (f8: bracken picking, herring tying; bracken is a fern); check 1 distractor 'Bamboo mats' replaced by 'Paper sheets' because songpyeon steam over a bamboo steamer base. READ TIER 2026-10-13 (F-STORY-005 PR 5.6): short Korean sentences retell facts already cited; no new fact, claim or source; art reused from the listen scene with the same id.",
     "errata": []
   },
   {
     "v": 1,
     "id": "story:dano-ssireum",
     "state": "ready",
-    "contentVer": 4,
+    "contentVer": 6,
     "title": {
       "ko": "단옷날의 그네, 탈, 씨름",
       "romanization": "Danonnarui geune, tal, ssireum",
@@ -2994,6 +3396,438 @@ export const storiesAll: Story[] = [
           "ssireum",
           "jangsa"
         ]
+      },
+      {
+        "level": "read",
+        "scenes": [
+          {
+            "id": "s1",
+            "narrationEn": "{kw:dano} falls on the fifth day of the fifth lunar month. It is a summer holiday full of games.",
+            "captionEn": "Dano, the fifth day of the fifth lunar month",
+            "line": {
+              "ko": "단오는 음력 오월 오일이에요.",
+              "romanization": "Danoneun eumnyeok owol oirieyo.",
+              "en": "Dano is the fifth day of the fifth lunar month.",
+              "speaker": "narrator"
+            },
+            "factIds": [
+              "f1"
+            ],
+            "framing": false,
+            "approximations": [],
+            "art": {
+              "setting": "scene:countryside",
+              "layers": [
+                {
+                  "ref": "prop:rice-field",
+                  "x": 200,
+                  "y": 300,
+                  "s": 1,
+                  "tint": "feedback.successLight"
+                },
+                {
+                  "ref": "prop:leafy-tree",
+                  "x": 336,
+                  "y": 238,
+                  "s": 1
+                },
+                {
+                  "ref": "hoya:waving",
+                  "x": 200,
+                  "y": 280,
+                  "s": 1
+                }
+              ],
+              "altEn": "Hoya waves on a green hillside in early summer, above rice paddies freshly planted, as Dano comes."
+            }
+          },
+          {
+            "id": "s2",
+            "narrationEn": "Long ago on Dano, people washed their hair in water boiled with {kw:changpo}, a fragrant plant.",
+            "captionEn": "Washing hair in changpo water",
+            "line": {
+              "ko": "옛날에는 창포물에 머리를 감았어요.",
+              "romanization": "Yennareneun changpomure meorireul gamasseoyo.",
+              "en": "Long ago, people washed their hair in changpo water.",
+              "speaker": "narrator"
+            },
+            "factIds": [
+              "f2"
+            ],
+            "framing": false,
+            "approximations": [],
+            "art": {
+              "setting": "scene:mountain-stream",
+              "layers": [
+                {
+                  "ref": "prop:changpo",
+                  "x": 140,
+                  "y": 282,
+                  "s": 1.1
+                },
+                {
+                  "ref": "prop:fig-woman",
+                  "x": 250,
+                  "y": 286,
+                  "s": 1.15,
+                  "tint": "brand.secondaryLight"
+                },
+                {
+                  "ref": "hoya:idle",
+                  "x": 56,
+                  "y": 294,
+                  "s": 0.6
+                }
+              ],
+              "altEn": "By a stream a woman stands beside tall sweet flag, the plant once boiled for Dano hair washing, and Hoya stands nearby."
+            }
+          },
+          {
+            "id": "s3",
+            "narrationEn": "Swinging, {kw:geunettwigi}, has long been a favorite Dano game.",
+            "captionEn": "Swinging, a Dano game",
+            "line": {
+              "ko": "그네뛰기는 단오 놀이예요.",
+              "romanization": "Geunettwigineun dano noriyeyo.",
+              "en": "Swinging is a Dano game.",
+              "speaker": "narrator"
+            },
+            "factIds": [
+              "f3"
+            ],
+            "framing": false,
+            "approximations": [],
+            "art": {
+              "setting": "scene:countryside",
+              "layers": [
+                {
+                  "ref": "prop:leafy-tree",
+                  "x": 70,
+                  "y": 262,
+                  "s": 2.1,
+                  "z": "back"
+                },
+                {
+                  "ref": "prop:swing",
+                  "x": 196,
+                  "y": 276,
+                  "s": 1.3
+                },
+                {
+                  "ref": "hoya:cheering",
+                  "x": 330,
+                  "y": 294,
+                  "s": 0.8
+                }
+              ],
+              "altEn": "A woman in hanbok swings high on a rope swing hung from a big tree, and Hoya cheers below."
+            }
+          },
+          {
+            "id": "s4",
+            "narrationEn": "In {kw:ssireum}, Korean wrestling, the two wrestlers grip each other's {kw:satba}, a cloth belt.",
+            "captionEn": "Two wrestlers grip the satba",
+            "line": {
+              "ko": "씨름할 때 두 사람이 샅바를 잡아요.",
+              "romanization": "Ssireumhal ttae du sarami satbareul jabayo.",
+              "en": "In ssireum, the two wrestlers grip the satba belts.",
+              "speaker": "narrator"
+            },
+            "factIds": [
+              "f4",
+              "f5"
+            ],
+            "framing": false,
+            "approximations": [],
+            "art": {
+              "setting": "scene:countryside",
+              "layers": [
+                {
+                  "ref": "prop:sand-ring",
+                  "x": 200,
+                  "y": 292,
+                  "s": 1.4
+                },
+                {
+                  "ref": "prop:fig-wrestlers",
+                  "x": 200,
+                  "y": 264,
+                  "s": 1.6
+                },
+                {
+                  "ref": "hoya:idle",
+                  "x": 338,
+                  "y": 294,
+                  "s": 0.7
+                }
+              ],
+              "altEn": "Two wrestlers grip each other's satba belts in a sand ring for ssireum, and Hoya watches closely like a referee."
+            }
+          },
+          {
+            "id": "s5",
+            "narrationEn": "The ssireum champion is called {kw:jangsa}, a very strong person.",
+            "captionEn": "The champion is called jangsa",
+            "line": {
+              "ko": "우승한 사람을 장사라고 불러요.",
+              "romanization": "Useunghan sarameul jangsarago bulleoyo.",
+              "en": "The champion is called jangsa.",
+              "speaker": "narrator"
+            },
+            "factIds": [
+              "f6"
+            ],
+            "framing": false,
+            "approximations": [],
+            "art": {
+              "setting": "scene:countryside",
+              "layers": [
+                {
+                  "ref": "prop:sand-ring",
+                  "x": 200,
+                  "y": 296,
+                  "s": 1.5
+                },
+                {
+                  "ref": "prop:crowd-seated",
+                  "x": 76,
+                  "y": 240,
+                  "s": 0.8,
+                  "z": "back",
+                  "tint": "feedback.nudgeLight"
+                },
+                {
+                  "ref": "prop:ox",
+                  "x": 190,
+                  "y": 286,
+                  "s": 1.5
+                },
+                {
+                  "ref": "prop:fig-villager",
+                  "x": 310,
+                  "y": 286,
+                  "s": 1,
+                  "tint": "feedback.nudgeLight"
+                },
+                {
+                  "ref": "hoya:cheering",
+                  "x": 366,
+                  "y": 298,
+                  "s": 0.55
+                }
+              ],
+              "altEn": "The ssireum champion, the jangsa, stands beside his prize ox, a symbol of plenty, while villagers and Hoya cheer."
+            }
+          },
+          {
+            "id": "s6",
+            "narrationEn": "The city of Gangneung holds a big Dano festival, {kw:gangneung-danoje}.",
+            "captionEn": "Gangneung's big Dano festival",
+            "line": {
+              "ko": "강릉에서 큰 단오제가 열려요.",
+              "romanization": "Gangneungeseo keun danojega yeollyeoyo.",
+              "en": "A big Dano festival is held in Gangneung.",
+              "speaker": "narrator"
+            },
+            "factIds": [
+              "f7"
+            ],
+            "framing": false,
+            "approximations": [],
+            "art": {
+              "setting": "scene:mountains",
+              "layers": [
+                {
+                  "ref": "prop:lanterns",
+                  "x": 200,
+                  "y": 300,
+                  "s": 1
+                },
+                {
+                  "ref": "prop:feast-table",
+                  "x": 200,
+                  "y": 272,
+                  "s": 1.6
+                },
+                {
+                  "ref": "hoya:waving",
+                  "x": 320,
+                  "y": 294,
+                  "s": 0.75
+                }
+              ],
+              "altEn": "Paper lanterns hang over a festival ground by the mountains for Gangneung Danoje, with a table of offerings, and Hoya joins in."
+            }
+          },
+          {
+            "id": "s7",
+            "narrationEn": "In the Gwanno mask drama, performers in masks, {kw:tal}, make people laugh without a single word.",
+            "captionEn": "Masks and laughter, with no words",
+            "line": {
+              "ko": "탈을 쓰고 말없이 관객을 웃겨요.",
+              "romanization": "Tareul sseugo mareopsi gwangaegeul utgyeoyo.",
+              "en": "Wearing masks, they make the audience laugh without words.",
+              "speaker": "narrator"
+            },
+            "factIds": [
+              "f8"
+            ],
+            "framing": false,
+            "approximations": [],
+            "art": {
+              "setting": "scene:countryside",
+              "layers": [
+                {
+                  "ref": "prop:fig-yangban-mask",
+                  "x": 156,
+                  "y": 262,
+                  "s": 1.3
+                },
+                {
+                  "ref": "prop:fig-woman",
+                  "x": 248,
+                  "y": 262,
+                  "s": 1.15
+                },
+                {
+                  "ref": "prop:crowd-seated",
+                  "x": 200,
+                  "y": 300,
+                  "s": 1.3,
+                  "z": "front",
+                  "tint": "surface.paper"
+                },
+                {
+                  "ref": "hoya:cheering",
+                  "x": 352,
+                  "y": 296,
+                  "s": 0.62
+                }
+              ],
+              "altEn": "In the Gwanno mask play a long-bearded nobleman and a young lady act without words, and the crowd and Hoya laugh."
+            }
+          }
+        ],
+        "checks": [
+          {
+            "id": "r1",
+            "kind": "pick-meaning",
+            "promptEn": "What does {target} mean?",
+            "target": {
+              "ko": "창포",
+              "romanization": "changpo",
+              "en": "sweet flag (plant)"
+            },
+            "options": [
+              {
+                "id": "a",
+                "en": "A swing",
+                "isCorrect": false
+              },
+              {
+                "id": "b",
+                "en": "A mask",
+                "isCorrect": false
+              },
+              {
+                "id": "c",
+                "en": "A fragrant plant",
+                "isCorrect": true
+              },
+              {
+                "id": "d",
+                "en": "A cloth belt",
+                "isCorrect": false
+              }
+            ],
+            "explainEn": "Changpo is a fragrant plant. Long ago on Dano, people washed their hair in changpo water.",
+            "factIds": [
+              "f2"
+            ]
+          },
+          {
+            "id": "r2",
+            "kind": "pick-meaning",
+            "promptEn": "What does {target} mean?",
+            "target": {
+              "ko": "씨름",
+              "romanization": "ssireum",
+              "en": "Korean wrestling"
+            },
+            "options": [
+              {
+                "id": "a",
+                "en": "Korean wrestling",
+                "isCorrect": true
+              },
+              {
+                "id": "b",
+                "en": "A rope swing",
+                "isCorrect": false
+              },
+              {
+                "id": "c",
+                "en": "A face mask",
+                "isCorrect": false
+              },
+              {
+                "id": "d",
+                "en": "A big festival",
+                "isCorrect": false
+              }
+            ],
+            "explainEn": "Ssireum is Korean wrestling. The two wrestlers grip each other's satba, a cloth belt.",
+            "factIds": [
+              "f4",
+              "f5"
+            ]
+          },
+          {
+            "id": "r3",
+            "kind": "detail",
+            "promptEn": "In the story, what is the ssireum champion called?",
+            "options": [
+              {
+                "id": "a",
+                "en": "Satba",
+                "isCorrect": false
+              },
+              {
+                "id": "b",
+                "en": "Geune",
+                "isCorrect": false
+              },
+              {
+                "id": "c",
+                "en": "Changpo",
+                "isCorrect": false
+              },
+              {
+                "id": "d",
+                "en": "Jangsa",
+                "isCorrect": true
+              }
+            ],
+            "explainEn": "The ssireum champion is called jangsa, which means a very strong person.",
+            "factIds": [
+              "f6"
+            ]
+          }
+        ],
+        "checkpoints": [],
+        "sequenceSceneIds": [
+          "s1",
+          "s3",
+          "s5",
+          "s7"
+        ],
+        "newKeywordIds": [
+          "dano",
+          "changpo",
+          "ssireum",
+          "jangsa"
+        ],
+        "grammarFocusEn": "Past -asseoyo for old customs; -go to join two actions"
       }
     ],
     "coverSceneId": "s1",
@@ -3313,9 +4147,9 @@ export const storiesAll: Story[] = [
       "passes": 3,
       "checkedAt": "2026-10-10",
       "scope": "cluster",
-      "notes": "Third independent pass over 6 episodes / 61 facts / 161 source entries (70 unique URLs). Every URL was re-fetched with my own scripts (UNESCO pages via Wayback copies; heritage.go.kr descriptions via the portal ajax html and khs.go.kr open API; folkency via its JSON API) and each quote or locator was machine-matched to the page text; the few non-matching strings were checked by hand (portal metadata fields, hanja or footnote punctuation, label text). Corrections: (1) pansori scene 2 now gives both UNESCO steps (2003 masterpiece proclamation, 2008 Representative List); (2) pansori f11 states the Aesop title as in the cited Townsend text and the common alternate title; (3) added sources: NFM 놀보박타령 for 'greedy' (f5), 표준국어대사전 타다 for 'sawed' (f6), 한국민족문화대백과사전 선도해 for the Samguk sagi tale (f12); (4) Seollal f9/f10 designation-date locators now cite the KHS open API field. No other change. See seasons-tales.signoff.md. MAR 2026-10-13 language review (F-STORY-001 PR 1.9): Korean strings, romanization and glosses read; findings and outcomes in the PR. MAR 2026-10-13 culture review (F-STORY-001 PR 1.9): heritage accuracy, framing, tone and advisories read; review.advisory confirmed; findings and outcomes in the PR."
+      "notes": "Third independent pass over 6 episodes / 61 facts / 161 source entries (70 unique URLs). Every URL was re-fetched with my own scripts (UNESCO pages via Wayback copies; heritage.go.kr descriptions via the portal ajax html and khs.go.kr open API; folkency via its JSON API) and each quote or locator was machine-matched to the page text; the few non-matching strings were checked by hand (portal metadata fields, hanja or footnote punctuation, label text). Corrections: (1) pansori scene 2 now gives both UNESCO steps (2003 masterpiece proclamation, 2008 Representative List); (2) pansori f11 states the Aesop title as in the cited Townsend text and the common alternate title; (3) added sources: NFM 놀보박타령 for 'greedy' (f5), 표준국어대사전 타다 for 'sawed' (f6), 한국민족문화대백과사전 선도해 for the Samguk sagi tale (f12); (4) Seollal f9/f10 designation-date locators now cite the KHS open API field. No other change. See seasons-tales.signoff.md. MAR 2026-10-13 language review (F-STORY-001 PR 1.9): Korean strings, romanization and glosses read; findings and outcomes in the PR. MAR 2026-10-13 culture review (F-STORY-001 PR 1.9): heritage accuracy, framing, tone and advisories read; review.advisory confirmed; findings and outcomes in the PR. MAR 2026-10-13 language review of the read tier (F-STORY-005 PR 5.6): 7 Korean lines, their romanization (machine-checked) and glosses read for spelling, naturalness and Stage 5 level; 3 changes (s5 useunghan saram for the champion, s6 keun danoje, s7 gwangaegeul utgyeoyo with an object); findings and outcomes in the PR. MAR 2026-10-13 culture review of the read tier (F-STORY-005 PR 5.6): every line and check compared with its cited facts (no new claim), framing, tone and respectful wording read; review.advisory unchanged; findings and outcomes in the PR. REVIEW FIXES 2026-10-13 (F-STORY-005 5.6 follow-up): read-tier checks r1 and r2 now ask the meaning of changpo and ssireum, two of the tier's newKeywordIds (they asked satba and tal, which the tier does not list as taught); r3 now says champion, matching s5 useunghan saram; English check text only, no Korean line, fact or source changed."
     },
-    "authorNotes": "Left out on purpose: the story that Dano comes from China (Qu Yuan), folk etymology of 수릿날, the 석전 (stone fight) custom, shamanic (굿) details, the festival's deities by name (김유신, 범일국사, 정씨 처녀), and how long the festival lasts. Sources describe its length differently (UNESCO says four weeks; the 국가유산포털 says 5 days of rites at the 단오장). The 'only silent mask drama' claim comes from one official source (국가유산청 국가유산포털), so the narration hedges it as 'known as'. The knee rule describes modern competition ssireum (Encyclopedia of Korean Culture). The narration uses 'east coast' and doesn't name the sea. 단오 was also designated National Intangible Heritage on 2023-12-18. That's covered in the Seollal episode and not repeated here. The 2023 Dano designation (KHS press release) is available if wanted. Standard spelling note: 단옷날 (with 사이시옷) is the dictionary form, and the title now uses it: 단옷날의 그네, 탈, 씨름 (Danonnarui geune, tal, ssireum), matching the English title. REVISION 2026-10-10: \"four great holidays\" now dated to the late-Joseon Dongguk sesigi (1518 list had three); knee rule labelled modern competition rule and phrased \"from the knee up\"; Gwanno illustration now nobleman (yangban) mask + young-lady (somae-gaksi) mask; \"only silent mask drama\" kept hedged and now has two sources (KHS portal; 국립민속박물관 한국세시풍속사전). UNESCO: Danoje proclaimed 2005, inscribed 2008 (stated both). Ox: UNESCO says ox; encykorea says 황소 (bull) - narration follows UNESCO. Check 3 changed to a question that does not rely on \"from Gangneung\". AUTHORING 2026-10-11 (F-STORY-001 PR 1.8d): title romanization, scene captions and check explanations written from the cited facts; every scene is artPending (text-only tile) until the art PRs; no claim or source changed. Korean spacing: learner terms are written 강릉 단오제 and 인류 무형 유산 (spaced by word, 한글 맞춤법 제49항/제50항) so each word lines up with Gangneung Danoje and illyu muhyeong yusan; the facts keep the official spellings. REVIEW 2026-10-11 (PR 1.8d review fixes): the learner keyword stays 인류 무형 유산 (illyu muhyeong yusan, the Korea Heritage Service's current term, spaced by word) with the gloss 'Intangible Heritage of Humanity (UNESCO list)'; f9 and f10 keep the researched 인류무형문화유산. s8 is rewritten in short sentences with the same years; check options are of even length; geune and chukje are used as tokens; learning goals use receptive verbs.",
+    "authorNotes": "Left out on purpose: the story that Dano comes from China (Qu Yuan), folk etymology of 수릿날, the 석전 (stone fight) custom, shamanic (굿) details, the festival's deities by name (김유신, 범일국사, 정씨 처녀), and how long the festival lasts. Sources describe its length differently (UNESCO says four weeks; the 국가유산포털 says 5 days of rites at the 단오장). The 'only silent mask drama' claim comes from one official source (국가유산청 국가유산포털), so the narration hedges it as 'known as'. The knee rule describes modern competition ssireum (Encyclopedia of Korean Culture). The narration uses 'east coast' and doesn't name the sea. 단오 was also designated National Intangible Heritage on 2023-12-18. That's covered in the Seollal episode and not repeated here. The 2023 Dano designation (KHS press release) is available if wanted. Standard spelling note: 단옷날 (with 사이시옷) is the dictionary form, and the title now uses it: 단옷날의 그네, 탈, 씨름 (Danonnarui geune, tal, ssireum), matching the English title. REVISION 2026-10-10: \"four great holidays\" now dated to the late-Joseon Dongguk sesigi (1518 list had three); knee rule labelled modern competition rule and phrased \"from the knee up\"; Gwanno illustration now nobleman (yangban) mask + young-lady (somae-gaksi) mask; \"only silent mask drama\" kept hedged and now has two sources (KHS portal; 국립민속박물관 한국세시풍속사전). UNESCO: Danoje proclaimed 2005, inscribed 2008 (stated both). Ox: UNESCO says ox; encykorea says 황소 (bull) - narration follows UNESCO. Check 3 changed to a question that does not rely on \"from Gangneung\". AUTHORING 2026-10-11 (F-STORY-001 PR 1.8d): title romanization, scene captions and check explanations written from the cited facts; every scene is artPending (text-only tile) until the art PRs; no claim or source changed. Korean spacing: learner terms are written 강릉 단오제 and 인류 무형 유산 (spaced by word, 한글 맞춤법 제49항/제50항) so each word lines up with Gangneung Danoje and illyu muhyeong yusan; the facts keep the official spellings. REVIEW 2026-10-11 (PR 1.8d review fixes): the learner keyword stays 인류 무형 유산 (illyu muhyeong yusan, the Korea Heritage Service's current term, spaced by word) with the gloss 'Intangible Heritage of Humanity (UNESCO list)'; f9 and f10 keep the researched 인류무형문화유산. s8 is rewritten in short sentences with the same years; check options are of even length; geune and chukje are used as tokens; learning goals use receptive verbs. READ TIER 2026-10-13 (F-STORY-005 PR 5.6): short Korean sentences retell facts already cited; no new fact, claim or source; art reused from the listen scene with the same id.",
     "errata": []
   },
   {
@@ -13431,7 +14265,7 @@ export const storiesAll: Story[] = [
     "v": 1,
     "id": "story:seollal-new-year",
     "state": "ready",
-    "contentVer": 4,
+    "contentVer": 6,
     "title": {
       "ko": "호야의 설날 아침",
       "romanization": "Hoyaui Seollal achim",
@@ -14025,6 +14859,416 @@ export const storiesAll: Story[] = [
           "sebae",
           "tteokguk"
         ]
+      },
+      {
+        "level": "read",
+        "scenes": [
+          {
+            "id": "s1",
+            "narrationEn": "{kw:seollal} is the first day of the new year on the lunar calendar. It is one of Korea's biggest traditional holidays.",
+            "captionEn": "Seollal, the first day of the lunar year",
+            "line": {
+              "ko": "설날은 음력 새해 첫날이에요.",
+              "romanization": "Seollareun eumnyeok saehae cheonnarieyo.",
+              "en": "Seollal is the first day of the lunar new year.",
+              "speaker": "narrator"
+            },
+            "factIds": [
+              "f1"
+            ],
+            "framing": false,
+            "approximations": [],
+            "art": {
+              "setting": "scene:village-lane",
+              "layers": [
+                {
+                  "ref": "prop:glow-burst",
+                  "x": 200,
+                  "y": 150,
+                  "s": 0.7
+                },
+                {
+                  "ref": "prop:persimmon-tree",
+                  "x": 62,
+                  "y": 262,
+                  "s": 1.1,
+                  "tint": "feedback.nudge"
+                },
+                {
+                  "ref": "hoya:waving",
+                  "x": 210,
+                  "y": 292,
+                  "s": 0.95
+                }
+              ],
+              "altEn": "On a crisp Seollal morning the sun rises over the village roofs, and Hoya waves hello for the Lunar New Year."
+            }
+          },
+          {
+            "id": "s2",
+            "narrationEn": "On Seollal, people wear new clothes for the new year, called {kw:seolbim}.",
+            "captionEn": "New seolbim clothes for the new year",
+            "line": {
+              "ko": "설날에는 설빔을 입어요.",
+              "romanization": "Seollareneun seolbimeul ibeoyo.",
+              "en": "On Seollal, people wear seolbim (new clothes).",
+              "speaker": "narrator"
+            },
+            "factIds": [
+              "f2"
+            ],
+            "framing": false,
+            "approximations": [],
+            "art": {
+              "setting": "scene:hanok-room",
+              "layers": [
+                {
+                  "ref": "prop:fig-woman",
+                  "x": 90,
+                  "y": 286,
+                  "s": 1,
+                  "tint": "brand.primary"
+                },
+                {
+                  "ref": "prop:fig-girl",
+                  "x": 200,
+                  "y": 288,
+                  "s": 1.6
+                },
+                {
+                  "ref": "prop:fig-child",
+                  "x": 292,
+                  "y": 286,
+                  "s": 1.15
+                },
+                {
+                  "ref": "hoya:cheering",
+                  "x": 360,
+                  "y": 294,
+                  "s": 0.62
+                }
+              ],
+              "altEn": "A family in new Seollal clothes: a girl holds out her rainbow-striped saekdong sleeves, and Hoya cheers."
+            }
+          },
+          {
+            "id": "s3",
+            "narrationEn": "The children bow to Grandma, {kw:halmeoni}. This New Year bow is called {kw:sebae}.",
+            "captionEn": "The children bow to Grandma",
+            "line": {
+              "ko": "아이들이 할머니께 세배를 드려요.",
+              "romanization": "Aideuri halmeonikke sebaereul deuryeoyo.",
+              "en": "The children make a New Year bow (sebae) to Grandma.",
+              "speaker": "narrator"
+            },
+            "factIds": [
+              "f3"
+            ],
+            "framing": false,
+            "approximations": [],
+            "art": {
+              "setting": "scene:hanok-room",
+              "layers": [
+                {
+                  "ref": "prop:fig-elder-seated",
+                  "x": 252,
+                  "y": 262,
+                  "s": 1.35
+                },
+                {
+                  "ref": "prop:fig-elder-seated",
+                  "x": 350,
+                  "y": 262,
+                  "s": 1.25,
+                  "flip": true,
+                  "tint": "brand.secondaryLight"
+                },
+                {
+                  "ref": "prop:fig-bowing",
+                  "x": 110,
+                  "y": 292,
+                  "s": 1.6,
+                  "flip": true,
+                  "tint": "brand.secondaryLight"
+                },
+                {
+                  "ref": "prop:fig-bowing",
+                  "x": 178,
+                  "y": 298,
+                  "s": 1.5,
+                  "flip": true,
+                  "tint": "feedback.nudgeLight"
+                },
+                {
+                  "ref": "hoya:idle",
+                  "x": 40,
+                  "y": 296,
+                  "s": 0.52
+                }
+              ],
+              "altEn": "Two children kneel in a deep New Year bow, sebae, before their grandparents on floor cushions, as Hoya watches."
+            }
+          },
+          {
+            "id": "s4",
+            "narrationEn": "Grandma answers the bow with kind words of blessing for the year, called {kw:deokdam}.",
+            "captionEn": "Grandma gives words of blessing",
+            "line": {
+              "ko": "할머니께서 덕담을 해 주세요.",
+              "romanization": "Halmeonikkeseo deokdameul hae juseyo.",
+              "en": "Grandma gives words of blessing (deokdam).",
+              "speaker": "narrator"
+            },
+            "factIds": [
+              "f5"
+            ],
+            "framing": false,
+            "approximations": [],
+            "art": {
+              "setting": "scene:hanok-room",
+              "layers": [
+                {
+                  "ref": "prop:fig-elder-seated",
+                  "x": 150,
+                  "y": 268,
+                  "s": 1.3
+                },
+                {
+                  "ref": "prop:soban",
+                  "x": 250,
+                  "y": 294,
+                  "s": 1.15
+                },
+                {
+                  "ref": "prop:fig-child",
+                  "x": 322,
+                  "y": 286,
+                  "s": 1.15
+                },
+                {
+                  "ref": "hoya:cheering",
+                  "x": 62,
+                  "y": 296,
+                  "s": 0.55
+                }
+              ],
+              "altEn": "Grandma shares kind New Year wishes with a child beside a low table of rice cakes and fruit, and Hoya cheers."
+            }
+          },
+          {
+            "id": "s5",
+            "narrationEn": "On Seollal, people eat {kw:tteokguk}, a clear soup with thin slices of white rice cake.",
+            "captionEn": "A bowl of tteokguk on Seollal",
+            "line": {
+              "ko": "설날에는 떡국을 먹어요.",
+              "romanization": "Seollareneun tteokgugeul meogeoyo.",
+              "en": "On Seollal, people eat tteokguk (rice cake soup).",
+              "speaker": "narrator"
+            },
+            "factIds": [
+              "f6"
+            ],
+            "framing": false,
+            "approximations": [],
+            "art": {
+              "setting": "scene:hanok-room",
+              "layers": [
+                {
+                  "ref": "prop:soban",
+                  "x": 220,
+                  "y": 288,
+                  "s": 2,
+                  "tint": "surface.sunken"
+                },
+                {
+                  "ref": "hoya:idle",
+                  "x": 78,
+                  "y": 292,
+                  "s": 0.8
+                }
+              ],
+              "altEn": "Two bowls of tteokguk, clear soup with white rice-cake slices, wait on a low table, and Hoya is ready for breakfast."
+            }
+          },
+          {
+            "id": "s6",
+            "narrationEn": "People split into two teams and play {kw:yunnori}, throwing four wooden yut sticks.",
+            "captionEn": "Two teams play yunnori",
+            "line": {
+              "ko": "두 편으로 나누어 윷놀이를 해요.",
+              "romanization": "Du pyeoneuro nanueo yunnorireul haeyo.",
+              "en": "People split into two teams and play yunnori.",
+              "speaker": "narrator"
+            },
+            "factIds": [
+              "f7"
+            ],
+            "framing": false,
+            "approximations": [],
+            "art": {
+              "setting": "scene:hanok-room",
+              "layers": [
+                {
+                  "ref": "prop:yut-board",
+                  "x": 200,
+                  "y": 292,
+                  "s": 1.35
+                },
+                {
+                  "ref": "prop:yut-sticks",
+                  "x": 200,
+                  "y": 206,
+                  "s": 1.15
+                },
+                {
+                  "ref": "prop:fig-woman",
+                  "x": 62,
+                  "y": 282,
+                  "s": 0.95,
+                  "tint": "brand.primary"
+                },
+                {
+                  "ref": "hoya:cheering",
+                  "x": 112,
+                  "y": 296,
+                  "s": 0.6
+                },
+                {
+                  "ref": "prop:fig-girl",
+                  "x": 300,
+                  "y": 284,
+                  "s": 1.1
+                },
+                {
+                  "ref": "prop:fig-child",
+                  "x": 352,
+                  "y": 286,
+                  "s": 1.05
+                }
+              ],
+              "altEn": "Four yut sticks tumble above the yut board as two teams cheer, and Hoya cheers with his team."
+            }
+          }
+        ],
+        "checks": [
+          {
+            "id": "r1",
+            "kind": "pick-meaning",
+            "promptEn": "What does {target} mean?",
+            "target": {
+              "ko": "설빔",
+              "romanization": "seolbim",
+              "en": "new clothes for Seollal"
+            },
+            "options": [
+              {
+                "id": "a",
+                "en": "A New Year bow",
+                "isCorrect": false
+              },
+              {
+                "id": "b",
+                "en": "New clothes for Seollal",
+                "isCorrect": true
+              },
+              {
+                "id": "c",
+                "en": "Rice cake soup",
+                "isCorrect": false
+              },
+              {
+                "id": "d",
+                "en": "A yut stick game",
+                "isCorrect": false
+              }
+            ],
+            "explainEn": "Seolbim are the new clothes people wear for Seollal.",
+            "factIds": [
+              "f2"
+            ]
+          },
+          {
+            "id": "r2",
+            "kind": "pick-meaning",
+            "promptEn": "What does {target} mean?",
+            "target": {
+              "ko": "덕담",
+              "romanization": "deokdam",
+              "en": "words of blessing"
+            },
+            "options": [
+              {
+                "id": "a",
+                "en": "New clothes",
+                "isCorrect": false
+              },
+              {
+                "id": "b",
+                "en": "A clear soup",
+                "isCorrect": false
+              },
+              {
+                "id": "c",
+                "en": "A board game",
+                "isCorrect": false
+              },
+              {
+                "id": "d",
+                "en": "Words of blessing",
+                "isCorrect": true
+              }
+            ],
+            "explainEn": "Deokdam are the kind words of blessing an elder says after a sebae bow.",
+            "factIds": [
+              "f5"
+            ]
+          },
+          {
+            "id": "r3",
+            "kind": "detail",
+            "promptEn": "In the story, what do people eat on Seollal?",
+            "options": [
+              {
+                "id": "a",
+                "en": "Tteokguk (rice cake soup)",
+                "isCorrect": true
+              },
+              {
+                "id": "b",
+                "en": "Songpyeon (filled rice cakes)",
+                "isCorrect": false
+              },
+              {
+                "id": "c",
+                "en": "Bibimbap (mixed rice)",
+                "isCorrect": false
+              },
+              {
+                "id": "d",
+                "en": "Japchae (glass noodles)",
+                "isCorrect": false
+              }
+            ],
+            "explainEn": "Tteokguk, a clear soup with thin slices of white rice cake, is the classic Seollal food.",
+            "factIds": [
+              "f6"
+            ]
+          }
+        ],
+        "checkpoints": [],
+        "sequenceSceneIds": [
+          "s1",
+          "s3",
+          "s5",
+          "s6"
+        ],
+        "newKeywordIds": [
+          "seolbim",
+          "sebae",
+          "deokdam",
+          "tteokguk"
+        ],
+        "grammarFocusEn": "Topic -eun/-neun and -e-neun: \"On Seollal, we ...\" with polite -ayo/-eoyo"
       }
     ],
     "coverSceneId": "s1",
@@ -14323,9 +15567,9 @@ export const storiesAll: Story[] = [
       "passes": 3,
       "checkedAt": "2026-10-10",
       "scope": "cluster",
-      "notes": "Third independent pass over 6 episodes / 61 facts / 161 source entries (70 unique URLs). Every URL was re-fetched with my own scripts (UNESCO pages via Wayback copies; heritage.go.kr descriptions via the portal ajax html and khs.go.kr open API; folkency via its JSON API) and each quote or locator was machine-matched to the page text; the few non-matching strings were checked by hand (portal metadata fields, hanja or footnote punctuation, label text). Corrections: (1) pansori scene 2 now gives both UNESCO steps (2003 masterpiece proclamation, 2008 Representative List); (2) pansori f11 states the Aesop title as in the cited Townsend text and the common alternate title; (3) added sources: NFM 놀보박타령 for 'greedy' (f5), 표준국어대사전 타다 for 'sawed' (f6), 한국민족문화대백과사전 선도해 for the Samguk sagi tale (f12); (4) Seollal f9/f10 designation-date locators now cite the KHS open API field. No other change. See seasons-tales.signoff.md. MAR 2026-10-13 language review (F-STORY-001 PR 1.9): Korean strings, romanization and glosses read; findings and outcomes in the PR. MAR 2026-10-13 culture review (F-STORY-001 PR 1.9): heritage accuracy, framing, tone and advisories read; review.advisory confirmed; findings and outcomes in the PR."
+      "notes": "Third independent pass over 6 episodes / 61 facts / 161 source entries (70 unique URLs). Every URL was re-fetched with my own scripts (UNESCO pages via Wayback copies; heritage.go.kr descriptions via the portal ajax html and khs.go.kr open API; folkency via its JSON API) and each quote or locator was machine-matched to the page text; the few non-matching strings were checked by hand (portal metadata fields, hanja or footnote punctuation, label text). Corrections: (1) pansori scene 2 now gives both UNESCO steps (2003 masterpiece proclamation, 2008 Representative List); (2) pansori f11 states the Aesop title as in the cited Townsend text and the common alternate title; (3) added sources: NFM 놀보박타령 for 'greedy' (f5), 표준국어대사전 타다 for 'sawed' (f6), 한국민족문화대백과사전 선도해 for the Samguk sagi tale (f12); (4) Seollal f9/f10 designation-date locators now cite the KHS open API field. No other change. See seasons-tales.signoff.md. MAR 2026-10-13 language review (F-STORY-001 PR 1.9): Korean strings, romanization and glosses read; findings and outcomes in the PR. MAR 2026-10-13 culture review (F-STORY-001 PR 1.9): heritage accuracy, framing, tone and advisories read; review.advisory confirmed; findings and outcomes in the PR. MAR 2026-10-13 language review of the read tier (F-STORY-005 PR 5.6): 6 Korean lines, their romanization (machine-checked) and glosses read for spelling, naturalness and Stage 5 level; 1 change (s3 sebae-reul deuryeoyo, the humble verb for a bow to an elder); findings and outcomes in the PR. MAR 2026-10-13 culture review of the read tier (F-STORY-005 PR 5.6): every line and check compared with its cited facts (no new claim), framing, tone and respectful wording read; review.advisory unchanged; findings and outcomes in the PR. REVIEW FIXES 2026-10-13 (F-STORY-005 5.6 follow-up), language review of the read tier: s4 now halmeonikkeseo deokdameul hae juseyo (honorific subject particle kkeseo with the honorific verb, matching s3 halmeonikke; hae juseyo marks the blessing as given to the children), gloss 'Grandma gives words of blessing (deokdam)'; romanization machine-checked; no fact or source changed."
     },
-    "authorNotes": "Romanization: 윷놀이 is pronounced [윤노리], so RR (the repo converter) gives 'yunnori', and yunnori is the app-wide romanization (the yut heritage card also stores yunnori). 'Yut nori' (Korea Heritage Service) and 'yutnori' appear only as alternate English spellings. 'Saehae bok mani badeuseyo' is the greeting most people use today, but the Encyclopedia of Korean Culture calls it a modern greeting (older ones include '과세 안녕히 하셨습니까'). The narration keeps that in facts and doesn't call it ancient. The tteokguk age saying is presented only as a saying. Sebae money (세뱃돈) is described the way the Encyclopedia does: 'a little money, or rice cakes and fruit'. Left out on purpose: the sources don't explain which way up the yut sticks count for each throw (엎어지다/젖혀지다), so the narration doesn't say. Also left out are 차례 table details, 복조리, and 안택 rites. Note for existing content: heritage-cards.ts says tteokguk slices 'look like coins for good luck'. None of the sources checked here supports that, so it's not used here; please review it. REVISION 2026-10-10: \"four great holidays\" now stated as the late-Joseon Dongguk sesigi listing (the 1518 list had three: Seol, Dano, Chuseok, per the KHS portal). Check 3 reworded to an in-story question; \"Everyone\" softened to \"People\". AUTHORING 2026-10-11 (F-STORY-001 PR 1.8d): title romanization, scene captions and check explanations written from the cited facts; every scene is artPending (text-only tile) until the art PRs; no claim or source changed. Korean spacing: the learner term is written 국가 무형 유산 (spaced by word, 한글 맞춤법 제50항) so each word lines up with gukga muhyeong yusan; the facts keep the official 국가무형유산. REVIEW 2026-10-11 (PR 1.8d review fixes): s7 also cites f7 (the winning rule); s8 says 'listed' in short sentences; check 1 uses only words this story teaches; s4 now uses the halmeoni keyword as a token; learning goals use receptive verbs (Know, Understand, Read and recognize). PR #208 REVIEW FIXES 2026-10-11: s8 caption 'Two National Intangible Heritage listings' (f9's item is Seol and Daeboreum, not Seol alone; the full name exceeds the 48-character caption cap).",
+    "authorNotes": "Romanization: 윷놀이 is pronounced [윤노리], so RR (the repo converter) gives 'yunnori', and yunnori is the app-wide romanization (the yut heritage card also stores yunnori). 'Yut nori' (Korea Heritage Service) and 'yutnori' appear only as alternate English spellings. 'Saehae bok mani badeuseyo' is the greeting most people use today, but the Encyclopedia of Korean Culture calls it a modern greeting (older ones include '과세 안녕히 하셨습니까'). The narration keeps that in facts and doesn't call it ancient. The tteokguk age saying is presented only as a saying. Sebae money (세뱃돈) is described the way the Encyclopedia does: 'a little money, or rice cakes and fruit'. Left out on purpose: the sources don't explain which way up the yut sticks count for each throw (엎어지다/젖혀지다), so the narration doesn't say. Also left out are 차례 table details, 복조리, and 안택 rites. Note for existing content: heritage-cards.ts says tteokguk slices 'look like coins for good luck'. None of the sources checked here supports that, so it's not used here; please review it. REVISION 2026-10-10: \"four great holidays\" now stated as the late-Joseon Dongguk sesigi listing (the 1518 list had three: Seol, Dano, Chuseok, per the KHS portal). Check 3 reworded to an in-story question; \"Everyone\" softened to \"People\". AUTHORING 2026-10-11 (F-STORY-001 PR 1.8d): title romanization, scene captions and check explanations written from the cited facts; every scene is artPending (text-only tile) until the art PRs; no claim or source changed. Korean spacing: the learner term is written 국가 무형 유산 (spaced by word, 한글 맞춤법 제50항) so each word lines up with gukga muhyeong yusan; the facts keep the official 국가무형유산. REVIEW 2026-10-11 (PR 1.8d review fixes): s7 also cites f7 (the winning rule); s8 says 'listed' in short sentences; check 1 uses only words this story teaches; s4 now uses the halmeoni keyword as a token; learning goals use receptive verbs (Know, Understand, Read and recognize). PR #208 REVIEW FIXES 2026-10-11: s8 caption 'Two National Intangible Heritage listings' (f9's item is Seol and Daeboreum, not Seol alone; the full name exceeds the 48-character caption cap). READ TIER 2026-10-13 (F-STORY-005 PR 5.6): short Korean sentences retell facts already cited; no new fact, claim or source; art reused from the listen scene with the same id.",
     "errata": []
   },
   {

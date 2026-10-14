@@ -137,8 +137,9 @@ describe('grid capacity (F-STORY-005 §3.5)', () => {
     expect(new Set(ids).size).toBe(ids.length);
   });
 
-  it('ships no book yet: books.ts exports an empty list', () => {
-    expect(bookEpisodes).toEqual([]);
+  it('ships the Stage 5 rites book first (PR 5.6): one book, claiming its placeholder cell', () => {
+    expect(bookEpisodes.map((e) => e.id)).toEqual(['episode:stage5-rites']);
+    expect(cellsOverCapacity(episodesAll)).toEqual([]);
   });
 });
 
@@ -226,7 +227,7 @@ describe('episodesFor', () => {
  * un-complete an episode for existing learners), and every cell keeps its id.
  */
 describe('grid golden (F-STORY-005 §3.1 rule 2)', () => {
-  it('keeps the eight shipped episodes frozen', () => {
+  it('keeps the eight shipped lessons frozen, then the shipped Stage 5 books', () => {
     const shipped = gridEpisodes(episodesAll)
       .filter((e) => e.status === 'shipped')
       .map((e) => ({ id: e.id, order: e.order, questIds: e.questIds, status: e.status }));
@@ -242,6 +243,13 @@ describe('grid golden (F-STORY-005 §3.1 rule 2)', () => {
       { id: 'episode:stage2-life', order: 2, questIds: ['quest:stage2-life-q1'], status: 'shipped' },
       { id: 'episode:stage2-nature', order: 4, questIds: ['quest:stage2-nature-q1'], status: 'shipped' },
       { id: 'episode:stage4-rites', order: 3, questIds: ['quest:stage4-rites-q1'], status: 'shipped' },
+      // F-STORY-005 PR 5.6: the first Stage 5 book (books.ts), its cell's placeholder id kept.
+      {
+        id: 'episode:stage5-rites',
+        order: 3,
+        questIds: ['quest:story-seollal-new-year-read', 'quest:story-dano-ssireum-read', 'quest:story-chuseok-ganggangsullae-read'],
+        status: 'shipped',
+      },
     ]);
   });
 
@@ -273,6 +281,7 @@ describe('pillar tags of the shipped lessons (F-STORY-005 §3.2)', () => {
       'episode:stage2-life': [],
       'episode:stage2-nature': ['D2'],
       'episode:stage4-rites': [],
+      'episode:stage5-rites': ['B5'],
     });
   });
 
@@ -307,7 +316,7 @@ const GRID_GOLDEN: Record<string, string> = {
   'stage4:crafts': 'episode:stage4-crafts | Playdate Talk | preview',
   'stage5:letters': 'episode:stage5-letters | Short Stories | preview',
   'stage5:life': 'episode:stage5-life | Family Stories | preview',
-  'stage5:rites': 'episode:stage5-rites | Festival Tales | preview',
+  'stage5:rites': 'episode:stage5-rites | Festival Tales | shipped',
   'stage5:nature': 'episode:stage5-nature | Tiger Folktales | preview',
   'stage5:crafts': 'episode:stage5-crafts | Craft Stories | preview',
   'stage6:letters': 'episode:stage6-letters | Read the Menu | preview',

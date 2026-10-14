@@ -7,6 +7,7 @@ import { scopeFor } from '../../minigame-config';
 import { expandDeck } from '../deck-builder';
 import { PAUSE_WORD, lectureBundle } from '../content';
 import { VOCAB_ITEMS, VOCAB_TOPICS } from '../../../content/__generated__/vocab';
+import { bookQuests } from '../../../content/books';
 import { supportedCardIds } from '@hangul-route/design-system/heritage-card-ids';
 import { WORD_ART_KEYS } from '@hangul-route/design-system/word-art';
 import { vocabArt } from '../slide-view';
@@ -145,6 +146,15 @@ describe('the presenter content bundle (F-TCH-004 §3.3, §3.13)', () => {
     for (const q of questsAll) {
       const { slides } = expandDeck(deck([{ kind: 'quest', id: q.id }]), lectureBundle('en'), { canPlayKorean: true });
       expect(slides.filter((s) => s.kind !== 'title' && s.kind !== 'end').length, q.id).toBeGreaterThan(0);
+    }
+  });
+
+  it('every Stage 5 book quest teaches its story through story slides (F-STORY-005 PR 5.6, F-TCH-004 PR 11)', () => {
+    expect(bookQuests.length).toBeGreaterThan(0);
+    for (const q of bookQuests) {
+      const { slides, skipped } = expandDeck(deck([{ kind: 'quest', id: q.id }]), lectureBundle('en'), { canPlayKorean: true });
+      expect(skipped.filter((s) => s.ref.startsWith('story:')), q.id).toEqual([]);
+      expect(slides.filter((s) => s.kind === 'story').length, q.id).toBeGreaterThan(0);
     }
   });
 
