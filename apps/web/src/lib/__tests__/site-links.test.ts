@@ -9,7 +9,7 @@ import { appEntryUrl } from '../site-path';
 /**
  * The only place the site builds an app URL (F-SITE-002 §3.8, PR S-2). Paths come from F-APP-001's
  * `APP_ROUTES`, the grown-up origin from the site build variable `CONSOLE_ORIGIN` (the app host while it is
- * unset since S-10, the site's own origin for the kill switch `false` or `0`), and the learner action from `appEntryUrl(appUrl(), locale)` exactly as the landing builds it today.
+ * unset since S-10, the site's own origin for the kill switch `false`, `0`, `off` or `no`, any case, trimmed), and the learner action from `appEntryUrl(appUrl(), locale)` exactly as the landing builds it today.
  */
 const PERSONAS: readonly GrownUpPersona[] = ['parent', 'teacher'];
 
