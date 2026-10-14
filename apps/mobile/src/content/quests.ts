@@ -10,8 +10,9 @@ import { questsInCursorOrder } from '../logic/lessons/lesson-lookup';
  * intro → discover → practice → apply → check → reward (letters q1-q3 in Q-6a,
  * life q1-q3 in Q-6b, rites q1-q3 in Q-7b, nature and crafts q1-q3 in Q-8).
  * Quests 1-10 teach the 30 symbols; quests 11-15 teach nothing new and read
- * words built from them (R5). The Stage 2 / Stage 4 taste quests keep the
- * five-step pattern intro → present → practice → apply → reward.
+ * words built from them (R5). The Stage 2 taste quests keep the five-step
+ * pattern intro → present → practice → apply → reward (Greeting Dialogues, the
+ * Stage 4 taste, moved to its lesson cell file in F-CURR-001 T-2).
  * Each Stage 1 episode owns 3 quests.
  */
 
@@ -656,31 +657,15 @@ export const stage2Quests: Quest[] = [
   },
 ];
 
-export const stage4Quests: Quest[] = [
-  // Stage 4 / Holidays & Traditions — taste episode
-  {
-    id: 'quest:stage4-rites-q1',
-    titleEn: 'Greeting Dialogues',
-    blurbEn: 'Say hello and meet a new friend in Korean.',
-    estimatedMinutes: 4,
-    steps: [
-      { id: 's1', kind: 'intro', titleEn: 'Meet Someone New', hoyaLineEn: 'Someone wants to say hi. Let us answer!', durationSeconds: 8 },
-      { id: 's2', kind: 'present', titleEn: 'Hello Words', minigameKind: 'card-match', minigameRef: 'minigame:s4-rites-card-1', durationSeconds: 60 },
-      { id: 's3', kind: 'practice', titleEn: 'Choose Your Reply', minigameKind: 'tap-respond', minigameRef: 'minigame:s4-rites-respond-1', durationSeconds: 90 },
-      { id: 's4', kind: 'apply', titleEn: 'What Does It Mean?', minigameKind: 'culture-quiz', minigameRef: 'minigame:s4-rites-quiz-1', durationSeconds: 60 },
-      { id: 's5', kind: 'reward', titleEn: 'Greeting Card!', hoyaLineEn: 'You had a real conversation!', durationSeconds: 8 },
-    ],
-    rewardCardId: 'card:insa',
-  },
-];
-
 /**
  * Every quest in cursor order: Stages 1-4 (the generated lesson quests of F-CURR-001 by
  * stage, after the hand-written ones of their stage), the stories and the Stage 5 books,
  * then the lesson quests of Stages 6-7.
  */
 export const questsAll: Quest[] = questsInCursorOrder({
-  early: [...stage1Quests, ...stage2Quests, ...stage4Quests],
+  // A taste quest whose refreshed lesson cell is ready comes from the cell (F-CURR-001 T-1 / T-2;
+  // Greeting Dialogues, T-2, lives only in its cell file).
+  early: [...stage1Quests, ...stage2Quests.filter((q) => !lessonQuests.some((l) => l.id === q.id))],
   lessons: lessonQuests,
   middle: [...storyQuests, ...bookQuests],
   episodes: [...handWrittenEpisodes],

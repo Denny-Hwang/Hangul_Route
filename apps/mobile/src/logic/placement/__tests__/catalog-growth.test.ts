@@ -17,7 +17,8 @@ import {
 import { describe, expect, it } from 'vitest';
 import { bookQuests } from '../../../content/books';
 import { episodesAll, previewEpisodesFor, handWrittenEpisodes } from '../../../content/episodes';
-import { questsAll, stage1Quests, stage2Quests, stage4Quests } from '../../../content/quests';
+import { lessonQuests } from '../../../content/lessons';
+import { questsAll, stage1Quests, stage2Quests } from '../../../content/quests';
 import { storyEpisodes, storyQuests } from '../../../content/stories';
 import { questsInCursorOrder } from '../../lessons/lesson-lookup';
 import { nextQuestAfter, offerableQuests } from '../../next-quest';
@@ -48,8 +49,9 @@ const lessonEpisodes: Episode[] = [
 const claimers = [...handWrittenEpisodes, ...lessonEpisodes];
 const EPISODES_9: Episode[] = [...claimers, ...storyEpisodes, ...previewEpisodesFor(claimers)];
 const QUESTS_9: Quest[] = questsInCursorOrder({
-  early: [...stage1Quests, ...stage2Quests, ...stage4Quests],
-  lessons: [...WB, ...FS].map(plainQuest),
+  early: [...stage1Quests, ...stage2Quests],
+  // The shipped Stage 4 cells (Read Along, Greeting Dialogues: generated) plus the two fake cells.
+  lessons: [...lessonQuests, ...[...WB, ...FS].map(plainQuest)],
   middle: [...storyQuests, ...bookQuests],
   episodes: claimers,
 });

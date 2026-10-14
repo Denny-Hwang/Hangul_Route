@@ -362,11 +362,8 @@ test('Build a Letter with sound off: a tap says sound is off, and Turn sound on 
   await expect.poll(() => savedAudioPrefs(page)).toBe(JSON.stringify({ muted: false }));
 });
 
-/**
- * F-AUDIO-004 A-5b: the Stage 4 "Greeting Dialogues" quest (Journey, Holidays & Traditions, stage 4):
- * step 3 is Tap & Respond, step 4 Culture Quiz. `skips` is how many minigame steps to skip first.
- */
-async function openGreetingQuest(page: Page, name: string, skips: number): Promise<void> {
+/** Onboarded learner: the Journey tab, the Install guide closed if it shows. */
+async function openJourneyTab(page: Page, name: string): Promise<void> {
   await page.goto('/');
   await keepSidewaysIfAsked(page);
   await expect(page.getByText(`Hi, ${name}!`)).toBeVisible();
@@ -374,19 +371,34 @@ async function openGreetingQuest(page: Page, name: string, skips: number): Promi
   await page.waitForTimeout(800);
   if (await guide.isVisible()) await guide.getByRole('button', { name: 'Not now' }).click();
   await page.getByText('Journey', { exact: true }).last().click();
+}
+
+/**
+ * F-AUDIO-004 A-5b: the Stage 4 "Greeting Dialogues" quest 1, Nice to Meet You (Journey,
+ * Holidays & Traditions, stage 4; a generated lesson cell since F-CURR-001 T-2): Discover,
+ * then step 3 is Tap & Respond.
+ */
+async function openTapRespond(page: Page, name = 'Dami'): Promise<void> {
+  await openJourneyTab(page, name);
   await page.getByRole('button', { name: journeyCellName(4, 'Holidays & Traditions') }).click();
-  await page.getByRole('button', { name: 'Start', exact: true }).click();
+  await page.getByRole('button', { name: 'Start', exact: true }).first().click();
   const anyway = page.getByRole('button', { name: 'Play anyway' });
   if (await anyway.isVisible()) await anyway.click();
   await page.getByRole('button', { name: 'Continue' }).click();
-  for (let i = 0; i < skips; i++) await page.getByRole('button', { name: 'Skip for now' }).click();
+  await passDiscover(page);
   await page.getByRole('button', { name: 'Play minigame' }).click();
-}
-
-async function openTapRespond(page: Page, name = 'Dami'): Promise<void> {
-  await openGreetingQuest(page, name, 1);
   await expect(page.getByText('Choose your reply', { exact: true })).toBeVisible();
   await expect(page.getByText('1 / 3')).toBeVisible();
+}
+
+/** The Stage 2 taste Lunch Box Words: step 2 is Card Match (skipped), step 3 Culture Quiz. */
+async function openCultureQuiz(page: Page, name = 'Dami'): Promise<void> {
+  await openJourneyTab(page, name);
+  await page.getByRole('button', { name: journeyCellName(2, 'Food & Daily Life') }).click();
+  await page.getByRole('button', { name: 'Start', exact: true }).first().click();
+  await page.getByRole('button', { name: 'Continue' }).click();
+  await page.getByRole('button', { name: 'Skip for now' }).click();
+  await page.getByRole('button', { name: 'Play minigame' }).click();
 }
 
 const tapRespondHear = (page: Page) => page.getByTestId('tap-respond-hear');
@@ -421,16 +433,16 @@ test('Tap & Respond: a right reply is said in full before the next line, and Hea
   await openTapRespond(page);
   await expect.poll(async () => (await utterances(page)).length).toBe(1);
 
-  await reply(page, 'Hello').click();
+  await reply(page, 'Hello!').click();
   // While the reply is said (and for at least 900 ms), Hear it is off.
   await expect(tapRespondHear(page)).toBeDisabled();
   await expect(page.getByText('2 / 3')).toBeVisible();
   const texts = (await utterances(page)).map((u) => u.text);
   // NPC line, the reply, then the next turn's line: never the next line before the reply.
-  expect(texts.slice(0, 2)).toEqual(['안녕하세요!', '안녕하세요']);
+  expect(texts.slice(0, 2)).toEqual(['안녕하세요!', '안녕하세요!']);
   await expect.poll(async () => (await utterances(page)).length).toBe(3);
   const next = (await utterances(page))[2]!;
-  expect(next.text).not.toBe('안녕하세요');
+  expect(next.text).toBe('이름이 뭐예요?');
   await expect(page.getByText(next.text, { exact: true })).toBeVisible();
   await expect(tapRespondHear(page)).toBeEnabled();
 });
@@ -445,7 +457,7 @@ test('Tap & Respond with no Korean voice: nothing is said and the panel says why
   await expect(page.getByTestId('prompt-panel-help')).toBeVisible();
   // The Korean is not printed a second time.
   await expect(page.getByTestId('prompt-panel-text')).toHaveCount(0);
-  await reply(page, 'Hello').click();
+  await reply(page, 'Hello!').click();
   await expect(page.getByText('2 / 3')).toBeVisible();
   expect(await utterances(page)).toEqual([]);
 });
@@ -470,7 +482,7 @@ test('Tap & Respond with sound off: the turn opens quietly, and Hear it says sou
 test('Culture Quiz: Hear it says the prompt word, and nothing plays before the tap', async ({ page }) => {
   await fakeSpeech(page, 'korean');
   await onboardChild(page, { name: 'Dami', startJourney: false });
-  await openGreetingQuest(page, 'Dami', 2);
+  await openCultureQuiz(page);
   const hear = page.getByTestId('culture-quiz-hear');
   await expect(hear).toBeVisible();
   await page.waitForTimeout(1600);

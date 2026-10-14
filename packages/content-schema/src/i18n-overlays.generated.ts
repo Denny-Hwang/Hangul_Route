@@ -274,34 +274,6 @@ export const OVERLAYS: Overlays = {
       "cardPairs.haneul.gloss": "Cielo",
       "cardPairs.nun.gloss": "Nieve"
     },
-    "minigame:s4-rites-card-1": {
-      "cardPairs.annyeong.gloss": "Hola",
-      "cardPairs.chingu.gloss": "Amigo, amiga",
-      "cardPairs.gamsa.gloss": "Gracias",
-      "cardPairs.insa.gloss": "Saludo",
-      "cardPairs.ireum.gloss": "Nombre"
-    },
-    "minigame:s4-rites-quiz-1": {
-      "cardPairs.annyeong.gloss": "Hola",
-      "cardPairs.chingu.gloss": "Amigo, amiga",
-      "cardPairs.gamsa.gloss": "Gracias",
-      "cardPairs.insa.gloss": "Saludo",
-      "cardPairs.ireum.gloss": "Nombre"
-    },
-    "minigame:s4-rites-respond-1": {
-      "dialogue.0.npc": "¡Hola!",
-      "dialogue.0.options.annyeonghaseyo.gloss": "Hola",
-      "dialogue.0.options.gomawoyo.gloss": "Gracias",
-      "dialogue.0.options.jal-gayo.gloss": "Adiós",
-      "dialogue.1.npc": "¿Cómo te llamas?",
-      "dialogue.1.options.jeoneun-hoyayeyo.gloss": "Soy Hoya",
-      "dialogue.1.options.ne-joayo.gloss": "Sí, está bien",
-      "dialogue.1.options.sagwa-juseyo.gloss": "Una manzana, por favor",
-      "dialogue.2.npc": "¡Mucho gusto!",
-      "dialogue.2.options.aniyo.gloss": "No",
-      "dialogue.2.options.jeodo-bangawoyo.gloss": "Igualmente, mucho gusto",
-      "dialogue.2.options.mollayo.gloss": "No sé"
-    },
     "pitem:recog-odd-a-eo": {
       "gloss": "Encuentra la diferente: a entre eo"
     },
@@ -2382,34 +2354,6 @@ export const OVERLAYS: Overlays = {
       "cardPairs.gang.gloss": "길게 흐르는 큰 물줄기",
       "cardPairs.haneul.gloss": "머리 위로 보이는 높고 넓은 곳",
       "cardPairs.nun.gloss": "겨울에 하늘에서 내리는 하얀 것"
-    },
-    "minigame:s4-rites-card-1": {
-      "cardPairs.annyeong.gloss": "친구를 만나거나 헤어질 때 하는 인사",
-      "cardPairs.chingu.gloss": "가깝게 지내는 사람",
-      "cardPairs.gamsa.gloss": "고마운 마음",
-      "cardPairs.insa.gloss": "만날 때 서로 나누는 말이나 행동",
-      "cardPairs.ireum.gloss": "사람이나 물건을 부르는 말"
-    },
-    "minigame:s4-rites-quiz-1": {
-      "cardPairs.annyeong.gloss": "친구를 만나거나 헤어질 때 하는 인사",
-      "cardPairs.chingu.gloss": "가깝게 지내는 사람",
-      "cardPairs.gamsa.gloss": "고마운 마음",
-      "cardPairs.insa.gloss": "만날 때 서로 나누는 말이나 행동",
-      "cardPairs.ireum.gloss": "사람이나 물건을 부르는 말"
-    },
-    "minigame:s4-rites-respond-1": {
-      "dialogue.0.npc": "반갑게 건네는 인사",
-      "dialogue.0.options.annyeonghaseyo.gloss": "만났을 때 하는 공손한 인사",
-      "dialogue.0.options.gomawoyo.gloss": "고마운 마음을 전하는 말",
-      "dialogue.0.options.jal-gayo.gloss": "헤어질 때 하는 인사",
-      "dialogue.1.npc": "이름을 묻는 말",
-      "dialogue.1.options.jeoneun-hoyayeyo.gloss": "내 이름을 알려 주는 말",
-      "dialogue.1.options.ne-joayo.gloss": "좋다고 대답하는 말",
-      "dialogue.1.options.sagwa-juseyo.gloss": "사과를 달라고 부탁하는 말",
-      "dialogue.2.npc": "처음 만나서 기쁘다는 말",
-      "dialogue.2.options.aniyo.gloss": "아니라고 대답하는 말",
-      "dialogue.2.options.jeodo-bangawoyo.gloss": "나도 만나서 기쁘다는 말",
-      "dialogue.2.options.mollayo.gloss": "잘 모른다고 대답하는 말"
     },
     "quest:stage1-crafts-q1": {
       "steps.s2.discover.pages.0.items.0.word.gloss": "바람에 날리는 종이 장난감",

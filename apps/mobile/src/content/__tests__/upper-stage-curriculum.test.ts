@@ -67,6 +67,8 @@ function readCells(): CellFile[] {
 }
 
 const CELLS = readCells();
+/** The hand-written taste cells that rows T-1 / T-2 move into cell files (F-CURR-001 OD-3). */
+const TASTE_CELLS: ReadonlySet<string> = new Set(['episode:stage2-life', 'episode:stage2-nature', 'episode:stage4-rites']);
 const READY = CELLS.filter((c) => c.cell.status === 'ready');
 
 /** Section 3.1 rule 2: the summed seconds of a quest's six steps, per stage. */
@@ -147,7 +149,14 @@ describe('the lesson cell files (F-CURR-001 section 3.10)', () => {
     expect(LESSON_EPISODES.map((e) => e.id).sort()).toEqual(READY.map((c) => c.cell.id).sort());
     expect(LESSON_QUESTS.map((q) => q.id).sort()).toEqual(READY.flatMap((c) => c.cell.quests.map((q) => q.id)).sort());
     for (const { cell } of CELLS.filter((c) => c.cell.status === 'draft')) {
-      expect(episodesAll.find((e) => e.id === cell.id)?.status, cell.id).toBe('preview');
+      const bundled = episodesAll.find((e) => e.id === cell.id);
+      if (TASTE_CELLS.has(cell.id)) {
+        // A refreshed taste cell (T-1 / T-2) keeps playing its shipped hand-written quest until ready.
+        expect(bundled?.status, cell.id).toBe('shipped');
+        expect(bundled?.questIds, cell.id).toEqual([cell.quests[0]?.id]);
+      } else {
+        expect(bundled?.status, cell.id).toBe('preview');
+      }
     }
   });
 
@@ -160,6 +169,19 @@ describe('the lesson cell files (F-CURR-001 section 3.10)', () => {
         for (const scope of quest.scopes) expect(ALL_LESSON_SCOPES[scope.ref]?.kind, scope.ref).toBe(scope.kind);
       }
     }
+  });
+
+  it('T-2: once Greeting Dialogues is a generated cell, Stage 4 plays in grid theme order (Read Along, then Greeting Dialogues)', () => {
+    if (!READY.some((c) => c.cell.id === 'episode:stage4-rites')) return;
+    const stage4 = questsAll.map((q) => q.id).filter((id) => id.startsWith('quest:stage4-'));
+    expect(stage4).toEqual([
+      'quest:stage4-letters-q1',
+      'quest:stage4-letters-q2',
+      'quest:stage4-letters-q3',
+      'quest:stage4-rites-q1',
+      'quest:stage4-rites-q2',
+      'quest:stage4-rites-q3',
+    ]);
   });
 });
 
