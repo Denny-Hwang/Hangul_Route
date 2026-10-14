@@ -73,9 +73,28 @@ type StoredShape = { level: PlacementLevel; placedOutQuestIds?: readonly string[
  * catalogue gains the quests shipped since that its level places out (F-CURR-001 §3.13), so a
  * new cell alone is never "a later place to start" and shows no plan-update prompt.
  */
-function storedSetOf(stored: StoredShape, catalog: RouteCatalog, history?: CatalogHistory): readonly string[] {
+function storedSetOf(stored: StoredShape, catalog: RouteCatalog, completed: ReadonlySet<string>, history?: CatalogHistory): readonly string[] {
   if (stored.placedOutQuestIds === undefined) return questsPlacedOutAtLevel(stored.level, catalog);
-  return [...stored.placedOutQuestIds, ...placedOutGrowth(stored.level, stored.catalogVersion, catalog, undefined, history)];
+  return [...stored.placedOutQuestIds, ...placedOutGrowth(stored.level, stored.catalogVersion, catalog, completed, history)];
+}
+
+/**
+ * Both sides of the start comparison without the quests the learner has completed: a completed
+ * quest is done whether or not it is placed out, and the seed's catalogue growth leaves completed
+ * quests out (F-CURR-001 §3.13), so counting them on one side only would read as a put-back.
+ */
+function comparedSets(
+  seed: SeedShape,
+  stored: StoredShape,
+  catalog: RouteCatalog,
+  completed: ReadonlySet<string>,
+  history?: CatalogHistory,
+): { storedSet: string[]; seedSet: Set<string> } {
+  const open = (id: string): boolean => !completed.has(id);
+  return {
+    storedSet: storedSetOf(stored, catalog, completed, history).filter(open),
+    seedSet: new Set(seed.placedOutQuestIds.filter(open)),
+  };
 }
 
 /**
@@ -83,10 +102,15 @@ function storedSetOf(stored: StoredShape, catalog: RouteCatalog, history?: Catal
  * more, or keeps the same set at a higher level. A grown-up override that puts quests back
  * (an earlier start) is never "a later place to start" (AM-2).
  */
-export function startRaised(seed: SeedShape | null, stored: StoredShape, catalog: RouteCatalog, history?: CatalogHistory): boolean {
+export function startRaised(
+  seed: SeedShape | null,
+  stored: StoredShape,
+  catalog: RouteCatalog,
+  history?: CatalogHistory,
+  completed: ReadonlySet<string> = new Set(),
+): boolean {
   if (seed === null) return false;
-  const storedSet = storedSetOf(stored, catalog, history);
-  const seedSet = new Set(seed.placedOutQuestIds);
+  const { storedSet, seedSet } = comparedSets(seed, stored, catalog, completed, history);
   if (!storedSet.every((id) => seedSet.has(id))) return false;
   return seedSet.size > new Set(storedSet).size || placementLevelRank(seed.level) > placementLevelRank(stored.level);
 }
@@ -97,10 +121,15 @@ export function startRaised(seed: SeedShape | null, stored: StoredShape, catalog
  * that put quests back or chose another start (AM-2: "the put-back quests then return to the plan's
  * future queue").
  */
-export function startPutBack(seed: SeedShape | null, stored: StoredShape, catalog: RouteCatalog, history?: CatalogHistory): boolean {
+export function startPutBack(
+  seed: SeedShape | null,
+  stored: StoredShape,
+  catalog: RouteCatalog,
+  history?: CatalogHistory,
+  completed: ReadonlySet<string> = new Set(),
+): boolean {
   if (seed === null) return false;
-  const storedSet = storedSetOf(stored, catalog, history);
-  const seedSet = new Set(seed.placedOutQuestIds);
+  const { storedSet, seedSet } = comparedSets(seed, stored, catalog, completed, history);
   return storedSet.some((id) => !seedSet.has(id));
 }
 
@@ -138,8 +167,9 @@ export function planOfferOf(i: PlanOfferInput): PlanOffer | null {
     const changeAt = planChangeAt(i.context.placements);
     if (changeAt !== undefined && i.keptFor === changeAt) return null;
     const stored = { ...i.active.meta.params, catalogVersion: i.active.meta.catalogVersion };
-    if (startPutBack(input.seed, stored, catalog)) return { kind: 'update', proposal, source: 'override', input };
-    if (!startRaised(input.seed, stored, catalog)) return null;
+    const completed = new Set(i.context.completedQuestIds);
+    if (startPutBack(input.seed, stored, catalog, undefined, completed)) return { kind: 'update', proposal, source: 'override', input };
+    if (!startRaised(input.seed, stored, catalog, undefined, completed)) return null;
     return { kind: 'update', proposal, source: planUpdateSource(i.context.placements), input };
   }
   if (planPromptHidden(i.dismissedAt, newestResultAt(i.context.placements), i.nowMs)) return null;

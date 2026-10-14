@@ -19,12 +19,12 @@
 // literal strings), so a stage's scopes are evaluated only when one of its quests opens.
 //
 // This is a shaper, like build-stories.mjs: it checks what it emits (ids, statuses,
-// refs, the fields it reads), maps each lesson scope onto the app's MinigameScope and
-// fails on JSON it cannot read. The content gate is the zod schema
-// (`LessonCellSchema`, packages/content-schema/src/__tests__/lesson-content.test.ts),
-// the lesson rules of validate-content.mjs and apps/mobile's upper-stage-curriculum
-// test; the literals are typed by contextual typing, so `tsc --noEmit` is a second gate.
-// Culture-note sources never reach the bundle (§3.10).
+// refs, the fields it reads, and the two review sign-offs of a ready cell, §3.8), maps
+// each lesson scope onto the app's MinigameScope and fails on JSON it cannot read. The
+// content gates are the zod schema (`LessonCellSchema`) run by the `lesson-*` rules of
+// validate-content.mjs, and apps/mobile/src/content/__tests__/upper-stage-curriculum.test.ts
+// (U-1 .. U-10); the literals are typed by contextual typing, so `tsc --noEmit` is a
+// further gate. Culture-note sources never reach the bundle (§3.10).
 //
 // Usage:
 //   node scripts/build-lessons.mjs            write the modules
@@ -158,6 +158,16 @@ export function runtimeScope(scope, where) {
 
 // ---- cells -------------------------------------------------------------------------------
 
+/** Both multi-agent review sign-offs: mirrors `isLessonSignedOff` (packages/content-schema/src/schemas/lesson.ts). */
+export const isSignedOff = (review) =>
+  isObject(review) &&
+  review.language === "native-reviewed" &&
+  review.culture === "culture-reviewed" &&
+  typeof review.reviewedBy === "string" &&
+  review.reviewedBy.trim() !== "" &&
+  typeof review.reviewedAt === "string" &&
+  review.reviewedAt !== "";
+
 const PICK_QUEST = ["id", "titleEn", "blurbEn", "teaserEn", "estimatedMinutes", "steps", "rewardCardId"];
 
 /** One parsed cell file -> its episode, quests and scopes; throws ContentError on what it cannot emit. */
@@ -170,6 +180,12 @@ export function shapeCell(cell, rel) {
   if (cell.id !== id) throw new ContentError(`id must be ${id} (the file's stage and theme)`, rel);
   if (cell.stage !== stage || cell.theme !== theme) throw new ContentError(`stage and theme must be ${stage} and ${theme}`, rel);
   if (cell.status !== "draft" && cell.status !== "ready") throw new ContentError('status must be "draft" or "ready"', rel);
+  if (cell.status === "ready" && !isSignedOff(cell.review)) {
+    throw new ContentError(
+      'lesson-review-unsigned: a ready cell needs review.language "native-reviewed", review.culture "culture-reviewed", reviewedBy and reviewedAt (F-CURR-001 §3.8)',
+      rel,
+    );
+  }
   const quests = need(cell, "quests", rel, "array");
   const scopes = {};
   const shapedQuests = quests.map((quest, qi) => {

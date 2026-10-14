@@ -124,6 +124,26 @@ describe("build-lessons.mjs: cells", () => {
     assert.match(read(root, "lessons-stage3.ts"), /= \{\};/);
   });
 
+  test("a ready cell without both review sign-offs fails the build; a draft does not need them (§3.8)", () => {
+    const unsigned = [
+      { language: "draft", culture: "culture-reviewed", reviewedBy: "MAR", reviewedAt: "2026-10-01" },
+      { language: "native-reviewed", culture: "draft", reviewedBy: "MAR", reviewedAt: "2026-10-01" },
+      { language: "native-reviewed", culture: "culture-reviewed", reviewedAt: "2026-10-01" },
+      { language: "native-reviewed", culture: "culture-reviewed", reviewedBy: "MAR" },
+      { language: "native-reviewed", culture: "culture-reviewed", reviewedBy: " ", reviewedAt: "2026-10-01" },
+      undefined,
+    ];
+    for (const review of unsigned) {
+      assert.throws(() => shapeCell(cell("stage2", "rites", "ready", { review }), "content/episodes/stage-2/rites.json"), /lesson-review-unsigned/);
+    }
+    assert.equal(shapeCell(cell("stage2", "rites", "draft", { review: unsigned[0] }), "content/episodes/stage-2/rites.json").status, "draft");
+    const root = makeRoot();
+    put(root, "content/episodes/stage-2/rites.json", cell("stage2", "rites", "ready", { review: unsigned[1] }));
+    const r = run(root);
+    assert.equal(r.status, 1);
+    assert.match(r.stdout, /::error file=content\/episodes\/stage-2\/rites.json::lesson-review-unsigned/);
+  });
+
   test("glosses: episode and quest entries go to the index, minigame entries to the stage module; disallowed fields are dropped", () => {
     const root = makeRoot();
     put(root, "content/episodes/stage-2/rites.json", cell("stage2", "rites"));

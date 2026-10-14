@@ -194,18 +194,12 @@ const catalogQueuesOf = (
   themeOrder: readonly ThemeKey[],
   endStage: StageKey,
   exclude: ReadonlySet<string>,
-  placedOutAt: number | undefined,
-  history: CatalogHistory | undefined,
 ): CatalogQueues => {
   const completed = new Set(p.completedQuestIds);
   // The exact placed-out set of a placement result wins over the level (section 3.1): after a
   // grown-up override it may be smaller than the level's, and the put-back quests return (FP-B4).
-  // A set stored at an older catalogue gains the quests shipped since that the level places out.
-  const placed = p.placedOutQuestIds === undefined
-    ? questsPlacedOutAtLevel(p.level, routeCatalogOf(catalog))
-    : placedOutAt === undefined
-      ? p.placedOutQuestIds
-      : [...p.placedOutQuestIds, ...placedOutGrowth(p.level, placedOutAt, routeCatalogOf(catalog), completed, history)];
+  // A set stored at an older catalogue was already widened by `build` (F-CURR-001 §3.13).
+  const placed = p.placedOutQuestIds ?? questsPlacedOutAtLevel(p.level, routeCatalogOf(catalog));
   const done = new Set([...placed, ...completed, ...exclude]);
   const unlocked = new Set(p.unlockedStages);
   const cellAt = new Map(catalog.cells.map((cell) => [`${cell.stage}-${cell.theme}`, cell]));
@@ -315,8 +309,21 @@ const copyWeek = (meta: WeekMeta): WeekMeta => ({
 /** A real UTC day key; `today` and `freezeBefore` are compared as strings, so a malformed key must throw. */
 const RealDateKeySchema = DateKeySchema.refine(isDateKey, { message: 'Not a real UTC day key (YYYY-MM-DD)' });
 
+/**
+ * The params with a stored exact placed-out set widened by the catalogue-growth rule
+ * (F-CURR-001 §3.13): the quests shipped after `placedOutAt` that the level places out. The
+ * draft returns these params with today's `catalogVersion`, so the saved set always matches the
+ * saved version and the next regeneration does not lose the widening.
+ */
+const withGrowth = (p: CurriculumParams, catalog: Catalog, opts: BuildOptions): CurriculumParams => {
+  if (p.placedOutQuestIds === undefined || opts.placedOutAt === undefined) return p;
+  const added = placedOutGrowth(p.level, opts.placedOutAt, routeCatalogOf(catalog), new Set(p.completedQuestIds), opts.catalogHistory);
+  if (added.length === 0) return p;
+  return { ...p, placedOutQuestIds: [...new Set([...p.placedOutQuestIds, ...added])] };
+};
+
 const build = (input: CurriculumParamsInput, catalog: Catalog, opts: BuildOptions): CurriculumDraft => {
-  const p = CurriculumParamsSchema.parse(input);
+  const p = withGrowth(CurriculumParamsSchema.parse(input), catalog, opts);
   if (opts.freezeBefore !== undefined) RealDateKeySchema.parse(opts.freezeBefore);
   const cadence = cadenceOf(p);
   const lookup = new Lookup(catalog);
@@ -331,7 +338,7 @@ const build = (input: CurriculumParamsInput, catalog: Catalog, opts: BuildOption
     .filter((item): item is PlanItem & { targetDate: DateKey } => item.targetDate !== undefined && item.targetDate < from)
     .sort(byDate)
     .map((item): CurriculumItem => ({ ...item, week: weekOf(item.targetDate) }));
-  const fromCatalog = catalogQueuesOf(p, catalog, themeOrder, cadence.endStage, new Set(history.map((item) => item.id)), opts.placedOutAt, opts.catalogHistory);
+  const fromCatalog = catalogQueuesOf(p, catalog, themeOrder, cadence.endStage, new Set(history.map((item) => item.id)));
   const queues: Queues = opts.queue ?? fromCatalog;
   const { lessons, stories, comingSoon } = queues;
   const reserved = p.culturalAnchors ? reserveAnchors(stories, calendar, from, end, p.startDate) : new Map<number, Reservation[]>();

@@ -631,4 +631,43 @@ describe("validate-content.mjs: locale overlays (F-I18N-001 §3.7)", () => {
       rmSync(root, { recursive: true, force: true });
     }
   });
+
+  test("a {ko:} token passes only in an English field of a lesson cell; the zone keys only where the schema puts them", () => {
+    const root = makeRoot();
+    try {
+      const cell = lessonCell();
+      // Not an ...En field of the cell: the token does not hide the Hangul.
+      cell.quests[0].steps[0].bodyNote = "Say {ko:떡국}.";
+      // A `review` key inside a quest is not the cell's review record.
+      cell.quests[0].review = { note: "검토" };
+      writeContent(root, "episodes/stage-2/rites.json", cell);
+      // A story field with a token is still Korean in a UI field.
+      writeContent(root, "stories/x.json", { id: "story:x", summaryEn: "A story of {ko:한글}" });
+      const r = run(root);
+      assert.equal(r.status, 1);
+      assert.match(r.stdout, /korean-in-ui-field at \.quests\.0\.steps\.0\.bodyNote/);
+      assert.match(r.stdout, /korean-in-ui-field at \.quests\.0\.review\.note/);
+      assert.match(r.stdout, /file=content\/stories\/x\.json::korean-in-ui-field at \.summaryEn/);
+      assert.doesNotMatch(r.stdout, /korean-in-ui-field at \.culture/);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("a source accessed today in Korea is not in the future (UTC+14 grace)", () => {
+    const root = makeRoot();
+    try {
+      const cell = lessonCell();
+      const tomorrowUtc = new Date(Date.now() + 9 * 3_600_000).toISOString().slice(0, 10);
+      for (const source of cell.culture[0].sources) source.accessed = tomorrowUtc;
+      writeContent(root, "episodes/stage-2/rites.json", cell);
+      const r = run(root);
+      assert.doesNotMatch(r.stdout, /accessed .* is in the future/, r.stdout);
+      cell.culture[0].sources[0].accessed = new Date(Date.now() + 3 * 86_400_000).toISOString().slice(0, 10);
+      writeContent(root, "episodes/stage-2/rites.json", cell);
+      assert.match(run(root).stdout, /is in the future/);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
 });

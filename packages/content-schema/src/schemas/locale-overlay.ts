@@ -64,6 +64,8 @@ export const OVERLAY_FIELDS = {
     'listenPick.rounds.<roundId>.prompt',
     // F-CURR-001 §3.10: the lesson scopes of the upper-stage games (build-lessons.mjs runtime shape).
     'orderIt.rounds.<roundId>.sentence.gloss',
+    'orderIt.rounds.<roundId>.distractors.<tile>.gloss',
+    'orderIt.rounds.<roundId>.particle.choices.<choice>.gloss',
     'realiaRead.realia.alt',
     'realiaRead.realia.title.gloss',
     'realiaRead.realia.entries.<entry>.text.gloss',

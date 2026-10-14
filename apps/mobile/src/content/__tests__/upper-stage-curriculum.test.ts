@@ -3,6 +3,7 @@ import {
   CHECK_ROUNDS,
   LESSON_STEP_ORDER,
   LessonCellSchema,
+  LessonScopeSchema,
   checkKindsFor,
   scopeRoundCount,
   translatableFields,
@@ -13,7 +14,9 @@ import {
   type StageKey,
 } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
+import { runtimeScope } from '../../../../../scripts/build-lessons.mjs';
 import { CONTENT_OVERLAYS } from '../../logic/content-locale';
+import { PLAYABLE_KINDS } from '../../logic/minigame-renderers';
 import { episodesAll } from '../episodes';
 import { LESSON_EPISODES, LESSON_QUESTS } from '../__generated__/lessons-index';
 import { questsAll } from '../quests';
@@ -179,9 +182,54 @@ describe('U-1, U-5, U-7, U-9 per quest of every cell', () => {
     ]);
   });
 
+  it('counts rounds as the generated scope plays them (Build a Letter: one round per syllable)', () => {
+    const kt = (ko: string, romanization: string, en: string, syllables?: string[]) => ({ ko, romanization, en, ...(syllables ? { syllables } : {}) });
+    const scope = LessonScopeSchema.parse({
+      ref: 'minigame:s2-rites-q1-apply',
+      kind: 'build-letter',
+      words: [kt('설날', 'seollal', 'Lunar New Year', ['seol', 'lal']), kt('떡국', 'tteokguk', 'rice-cake soup', ['tteok', 'guk']), kt('연', 'yeon', 'kite')],
+    });
+    expect(scopeRoundCount(scope)).toBe(5);
+    expect(runtimeScope(scope, 'test').rounds).toBe(scopeRoundCount(scope));
+  });
+
+  for (const { cell } of READY) {
+    it(`${cell.id}: every generated scope plays the rounds the cell counts`, () => {
+      for (const scope of cell.quests.flatMap((q) => q.scopes)) expect(ALL_LESSON_SCOPES[scope.ref]?.rounds, scope.ref).toBe(scopeRoundCount(scope));
+    });
+  }
+
   for (const { cell } of CELLS) {
     it(`${cell.id}: six steps, short Discover, 2-round Check, round counts, refs, timing, no speech`, () => {
       expect(cell.quests.flatMap((q) => questProblems(cell.stage, q))).toEqual([]);
+    });
+  }
+});
+
+/** The steps of a quest whose game the app cannot play yet (no MinigameScreen arm): a ready cell must have none. */
+export function unplayableSteps(quest: LessonQuest, playable: ReadonlySet<string> = PLAYABLE_KINDS): string[] {
+  return quest.steps.flatMap((s) =>
+    s.minigameKind !== undefined && !playable.has(s.minigameKind) ? [`${quest.id}: step ${s.id} plays ${s.minigameKind}, which has no game screen yet`] : [],
+  );
+}
+
+describe('a ready cell plays only games the app has (F-CURR-001 section 6: a game row lands before its cells)', () => {
+  it('reports a step whose game has no screen', () => {
+    const quest = {
+      id: 'quest:stage7-life-q1',
+      steps: [
+        { id: 's1', kind: 'intro', titleEn: 'x' },
+        { id: 's5', kind: 'check', titleEn: 'x', minigameKind: 'order-it', minigameRef: 'minigame:s7-life-q1-check' },
+        { id: 's6', kind: 'apply', titleEn: 'x', minigameKind: 'listen-pick', minigameRef: 'minigame:s7-life-q1-apply' },
+      ],
+    } as unknown as LessonQuest;
+    expect(unplayableSteps(quest)).toEqual(['quest:stage7-life-q1: step s5 plays order-it, which has no game screen yet']);
+    expect(unplayableSteps(quest, new Set(['order-it', 'listen-pick']))).toEqual([]);
+  });
+
+  for (const { cell } of READY) {
+    it(`${cell.id}: every game it plays has a screen`, () => {
+      expect(cell.quests.flatMap((q) => unplayableSteps(q))).toEqual([]);
     });
   }
 });
@@ -195,6 +243,33 @@ describe('U-10 three-language completeness of every ready cell', () => {
       'U-10 ko episode:stage3-letters.subtitle',
       'U-10 ko episode:stage3-letters.hoyaIntro',
     ]);
+  });
+
+  it('asks for the gloss of every Sentence Builder tile, distractors and particle choices included', () => {
+    const kt = (ko: string, romanization: string, en: string) => ({ ko, romanization, en });
+    const scope = {
+      kind: 'order-it',
+      rounds: 1,
+      orderIt: {
+        rounds: [
+          {
+            id: 'r1',
+            sentence: kt('사과를 먹어요.', 'sagwareul meogeoyo', 'I eat an apple'),
+            distractors: [kt('없어요.', 'eopseoyo', 'there is none')],
+            particle: { tile: 0, choices: [kt('을', 'eul', 'object marker'), kt('를', 'reul', 'object marker')] },
+          },
+        ],
+      },
+    };
+    const id = 'minigame:s3-life-q1-apply';
+    const full = { [id]: { 'orderIt.rounds.r1.sentence.gloss': 'x' } };
+    expect(missingGlosses([[id, scope]], { es: full, ko: full })).toEqual(
+      (['es', 'ko'] as const).flatMap((l) => [
+        `U-10 ${l} ${id}.orderIt.rounds.r1.distractors.eopseoyo.gloss`,
+        `U-10 ${l} ${id}.orderIt.rounds.r1.particle.choices.eul.gloss`,
+        `U-10 ${l} ${id}.orderIt.rounds.r1.particle.choices.reul.gloss`,
+      ]),
+    );
   });
 
   for (const { cell } of READY) {

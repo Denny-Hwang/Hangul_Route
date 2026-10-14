@@ -111,12 +111,21 @@ function isStoryFile(file) {
   return file.split(sep).join("/").startsWith(STORY_DIR_PREFIX);
 }
 
-// F-CURR-001 §3.9: a lesson cell's sources, verification and review records are reference text.
+// F-CURR-001 §3.9: a lesson cell's sources, verification and review records are reference text,
+// exactly where the schema puts them: `review` on the cell, `sources` / `verification` on a
+// `culture[]` note. The same key anywhere else is checked like any other field.
 const LESSON_FILE = /^content\/episodes\/stage-[2-467]\/[a-z]+\.json$/;
-const LESSON_ZONE_KEYS = new Set(["sources", "verification", "review"]);
 const isLessonFile = (file) => LESSON_FILE.test(file.split(sep).join("/"));
-/** `{ko:이}` in a note is taught Korean rendered with its romanization (F-CURR-001 §3.4), not a UI string. */
+const isLessonZone = (path, k) =>
+  (path.length === 0 && k === "review") ||
+  (path.length === 2 && path[0] === "culture" && (k === "sources" || k === "verification"));
+/**
+ * `{ko:이}` in an English field of a lesson cell (`...En`) is taught Korean rendered with its
+ * romanization (F-CURR-001 §3.4), not a UI string. Only there: the story, vocabulary and other
+ * renderers do not read the token, so it stays a `korean-in-ui-field` everywhere else.
+ */
 const withoutKoTokens = (text) => text.replace(/\{ko:[^}]*\}/g, " ");
+const uiText = (file, k, v) => (isLessonFile(file) && k.endsWith("En") ? withoutKoTokens(v) : v);
 
 function walk(dir) {
   const out = [];
@@ -165,11 +174,11 @@ function visit(value, path, file, violations, parentObj, inReferenceZone = false
       const zone =
         inReferenceZone ||
         (path.length === 0 && REFERENCE_ZONE_KEYS.has(k) && isStoryFile(file)) ||
-        (LESSON_ZONE_KEYS.has(k) && isLessonFile(file));
+        (isLessonFile(file) && isLessonZone(path, k));
       if (
         !zone &&
         typeof v === "string" &&
-        KOREAN_RE.test(withoutKoTokens(v)) &&
+        KOREAN_RE.test(uiText(file, k, v)) &&
         !KOREAN_TARGET_FIELDS.has(k) &&
         k !== "romanization"
       ) {
@@ -237,7 +246,9 @@ if (lessonFiles.length > 0) {
     if (!/^content\/stories\/[^/]+\.json$/.test(rel) || typeof json?.id !== "string") continue;
     storyFacts.set(json.id.replace(/^story:/, ""), new Set((json.facts ?? []).map((f) => f.id)));
   }
-  const ctx = { today: new Date().toISOString().slice(0, 10), storyFacts };
+  // "Not in the future" is read against the latest calendar date on Earth (UTC+14), so a source
+  // accessed today in Korea (UTC+9) never fails a CI run that starts before UTC midnight.
+  const ctx = { today: new Date(Date.now() + 14 * 3_600_000).toISOString().slice(0, 10), storyFacts };
   for (const rel of lessonFiles) {
     for (const f of lintLessonCell(parsedByRel.get(rel), ctx)) {
       violations.push({ file: rel, path: f.path, rule: `${f.rule}: ${f.message}` });

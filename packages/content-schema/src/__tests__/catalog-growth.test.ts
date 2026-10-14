@@ -215,6 +215,25 @@ describe('regression: a plan made at version 8 from a stage3 result (generate.ts
     expect(draft.items.map((i) => i.id)).toContain(WB[0]);
   });
 
+  it('saves the widened set next to today\'s version, so a second regeneration keeps it', () => {
+    const save = (draft: ReturnType<typeof regenerateFrom>) => ({ meta: toMeta(draft), items: toPlanItems(draft) });
+    for (const first of ['requeue', 'shift'] as const) {
+      const once = save(regenerateFrom(plan8, '2026-10-12', CATALOG_9, { mode: first, catalogHistory: HISTORY_9 }));
+      expect(once.meta.catalogVersion).toBe(9);
+      for (const id of WB) expect(once.meta.params.placedOutQuestIds, first).toContain(id);
+      const twice = regenerateFrom(once, '2026-10-19', CATALOG_9, { mode: 'requeue', catalogHistory: HISTORY_9 });
+      for (const id of WB) expect(twice.items.map((i) => i.id), first).not.toContain(id);
+      expect(firstLesson(twice.items.filter((item) => (item.targetDate ?? '') >= '2026-10-19'))).toBe(FS[0]);
+      expect(new Set(twice.params.placedOutQuestIds).size).toBe(twice.params.placedOutQuestIds?.length);
+    }
+  });
+
+  it('does not save a completed quest into the widened set', () => {
+    const draft = regenerateFrom(plan8, '2026-10-12', CATALOG_9, { mode: 'requeue', completedQuestIds: [WB[0] as string], catalogHistory: HISTORY_9 });
+    expect(draft.params.placedOutQuestIds).not.toContain(WB[0]);
+    expect(draft.params.placedOutQuestIds).toContain(WB[1]);
+  });
+
   it('a reseed that sends its own set (from today\'s catalogue) is not widened', () => {
     const set = [...questsPlacedOutAtLevel(STAGE3, ROUTE_8)];
     const draft = regenerateFrom(plan8, '2026-10-12', CATALOG_9, { mode: 'reseed', paramsPatch: { level: STAGE3, placedOutQuestIds: set }, catalogHistory: HISTORY_9 });

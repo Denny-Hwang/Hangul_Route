@@ -55,9 +55,11 @@ export const localizeScope = (scope: MinigameScope, ref: string, locale: UiLocal
 /**
  * Something that carries the English title of a content entity as built (a mission card,
  * the Results "Next up" teaser) with the overlay title of that entity swapped in at
- * render time, so a value pinned earlier still follows a language change.
+ * render time, so a value pinned earlier still follows a language change. The default
+ * overlays include the lesson glosses (`CONTENT_OVERLAYS`), so a lesson quest or episode
+ * title follows the language on the Home card and in notes too (F-CURR-001 §3.10).
  */
-export function localizeTitle<T extends { titleEn: string }>(item: T, entityId: string, locale: UiLocale, overlays?: Overlays): T {
+export function localizeTitle<T extends { titleEn: string }>(item: T, entityId: string, locale: UiLocale, overlays: Overlays = CONTENT_OVERLAYS): T {
   const { titleEn } = localize({ titleEn: item.titleEn }, entityId, locale, overlays);
   return titleEn === item.titleEn ? item : { ...item, titleEn };
 }
@@ -66,7 +68,7 @@ export function localizeTitle<T extends { titleEn: string }>(item: T, entityId: 
  * A mission card's title from its story (a story card, F-STORY-004 §3.7), else its quest
  * (replay, new, assigned), else its episode (explore); the daily test names itself.
  */
-export function localizeMissionCard(card: MissionCard, locale: UiLocale, overlays?: Overlays): MissionCard {
+export function localizeMissionCard(card: MissionCard, locale: UiLocale, overlays: Overlays = CONTENT_OVERLAYS): MissionCard {
   // A practice card of a word topic is titled by its topic (`vocab-topic:<key>` overlay, F-ENT-003 E3-7).
   const entityId = card.storyId ?? card.questId ?? card.episodeId ?? (card.topicKey === undefined ? undefined : `vocab-topic:${card.topicKey}`);
   const { titleEn } = card;

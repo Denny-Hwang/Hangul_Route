@@ -105,6 +105,25 @@ export function presenterStrings({ jamo, scopes, quests, cards, extra, topicFile
     for (const pair of list(scope.cardPairs)) add(pair.ko);
     for (const board of list(scope.picWord?.boards)) for (const pair of list(board.pairs)) add(pair.word?.ko);
     for (const step of list(scope.storySteps)) add(step.labelKo);
+    // F-CURR-001 §3.12: the Korean of the upper-stage lesson scopes (build-lessons.mjs runtime shape).
+    for (const round of list(scope.orderIt?.rounds)) {
+      add(round.sentence?.ko);
+      list(round.distractors).forEach((d) => add(d?.ko));
+      list(round.particle?.choices).forEach((c) => add(c?.ko));
+    }
+    const realia = scope.realiaRead?.realia;
+    add(realia?.title?.ko);
+    for (const entry of list(realia?.entries)) {
+      add(entry.text?.ko);
+      add(entry.value?.ko);
+    }
+    for (const round of list(scope.realiaRead?.rounds)) for (const option of list(round.options)) add(option.text?.ko);
+    for (const round of list(scope.typeHangul?.rounds)) add(round.target?.ko);
+    for (const round of list(scope.traceWord?.rounds)) add(round.word?.ko);
+    for (const round of list(scope.writeFrame?.rounds)) {
+      add(round.frame?.ko);
+      for (const slot of list(round.slots)) list(slot.bank).forEach((w) => add(w?.ko));
+    }
   }
   for (const quest of list(quests)) {
     for (const step of list(quest.steps)) {
