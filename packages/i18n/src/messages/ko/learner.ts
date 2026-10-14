@@ -474,6 +474,7 @@ export const learner = {
       typedLabel: '입력한 글자',
       targetLabel: '낱말',
       fixIt: { cta: '고치기' },
+      showRomanization: { cta: '읽는 법 보기' },
     },
   },
 

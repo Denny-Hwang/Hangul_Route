@@ -87,6 +87,27 @@ async function expectKeysInWindow(page: Page, width: number, height: number, cel
   }
 }
 
+/**
+ * A window too short to pin the answer row and the keyboard (a small phone on its side) scrolls them
+ * with the prompt: every key keeps the 64 height, sits inside the window's width, and scrolls fully
+ * into view when it is needed (never cut off).
+ */
+async function expectKeysReachable(page: Page, width: number, height: number, cell: { w: number; h: number }): Promise<void> {
+  const keys = page.locator('[data-testid^="hangul-key-"]');
+  expect(await keys.count()).toBe(29);
+  for (let i = 0; i < 29; i++) {
+    const k = keys.nth(i);
+    await k.scrollIntoViewIfNeeded();
+    const b = await k.evaluate((el) => el.getBoundingClientRect().toJSON() as DOMRect);
+    expect(b.width).toBeGreaterThanOrEqual(cell.w - 0.5);
+    expect(b.height).toBeGreaterThanOrEqual(cell.h - 0.5);
+    expect(b.left).toBeGreaterThanOrEqual(-0.5);
+    expect(b.right).toBeLessThanOrEqual(width + 0.5);
+    expect(b.top).toBeGreaterThanOrEqual(-0.5);
+    expect(b.bottom).toBeLessThanOrEqual(height + 0.5);
+  }
+}
+
 test.describe('Type Hangul: the in-app two-set keyboard (F-CURR-001 G-3)', () => {
   test.skip(!FIXTURE_BUILD, 'needs the fixture bundle (STORY_FIXTURES=1, build:web:fixtures)');
 
@@ -158,8 +179,11 @@ test.describe('Type Hangul: the in-app two-set keyboard (F-CURR-001 G-3)', () =>
       { key: '0', correct: false, itemId: 'e2e-hoya' },
       { key: '1', correct: true, itemId: 'e2e-bibimbap' },
     ]);
-    // Test P-1: nothing typed reaches telemetry.
-    expect(JSON.stringify(await events(page))).not.toMatch(/[ㄱ-ㆎ가-힣]/);
+    // Test P-1: nothing typed reaches telemetry. The host sends minigame.finished on complete, as the
+    // quest host does, so the check reads real events (never a vacuous empty list).
+    const sent = await events(page);
+    expect(sent.map((e) => e.name)).toContain('minigame.finished');
+    expect(JSON.stringify(sent)).not.toMatch(/[ㄱ-ㆎ가-힣]/);
   });
 
   test('Shift is one-shot and shows the tense letters; Space and Del work; spacing never decides', async ({ page }) => {
@@ -168,7 +192,7 @@ test.describe('Type Hangul: the in-app two-set keyboard (F-CURR-001 G-3)', () =>
     await expect(key(page, 'ㄱ')).toHaveAttribute('aria-label', 'ㄱ, g or k');
     await key(page, 'shift').click();
     await expect(key(page, 'shift')).toHaveAttribute('aria-pressed', 'true');
-    await expect(key(page, 'ㄱ')).toHaveAttribute('aria-label', 'ㄲ, kk');
+    await expect(key(page, 'ㄱ')).toHaveAttribute('aria-label', 'ㄲ, kk or k');
     await expect(key(page, 'ㅁ')).toHaveAttribute('aria-label', 'ㅁ, m');
     await shot(page, 'type-hangul-375-shift');
     await key(page, 'ㄱ').click();
@@ -232,6 +256,45 @@ test.describe('Type Hangul: the in-app two-set keyboard (F-CURR-001 G-3)', () =>
     await typeText(page, '호야');
     await shot(page, 'type-hangul-844x390');
   });
+
+  test('1024 x 600 (a laptop window under 640 tall): one Skip, Done beside the field, keys at the floor, all in view', async ({ page }) => {
+    await page.setViewportSize({ width: 1024, height: 600 });
+    await open(page, ['hoya']);
+    await expect(page.getByTestId('type-hangul-skip')).toHaveCount(1);
+    await expectKeysInWindow(page, 1024, 600, { w: 64, h: 64 });
+    const field = await box(page, 'type-hangul-field');
+    const done = await box(page, 'type-hangul-done');
+    // Done sits in the answer row, inside the window.
+    expect(Math.abs(done.y + done.height / 2 - (field.y + field.height / 2))).toBeLessThanOrEqual(2);
+    expect(done.y + done.height).toBeLessThanOrEqual(600);
+    const skip = await box(page, 'type-hangul-skip');
+    expect(skip.y + skip.height).toBeLessThanOrEqual(600);
+    await expectNoHorizontalOverflow(page);
+    await shot(page, 'type-hangul-1024x600');
+  });
+
+  for (const [width, height, cell] of [
+    [568, 320, 56],
+    [592, 360, 59],
+  ] as const) {
+    test(`${width} x ${height} (a small phone on its side): standard keyboard that scrolls with the prompt, every key reachable, one Skip`, async ({ page }) => {
+      await page.setViewportSize({ width, height });
+      await open(page, ['hoya']);
+      await keepSidewaysIfAsked(page);
+      await expect(page.getByTestId('type-hangul-skip')).toHaveCount(1);
+      // A short window keeps the standard rows (split is 392 tall and would be cut off).
+      const top = async (id: string) => (await box(page, `hangul-key-${id}`)).y;
+      expect(await top('ㅛ')).toBe(await top('ㅂ'));
+      await expectKeysReachable(page, width, height, { w: cell, h: 64 });
+      await typeText(page, '호야');
+      await page.getByTestId('type-hangul-done').scrollIntoViewIfNeeded();
+      const done = await box(page, 'type-hangul-done');
+      expect(done.y + done.height).toBeLessThanOrEqual(height);
+      await page.getByTestId('type-hangul-done').click();
+      await expect(page.getByText('You typed it!')).toBeVisible();
+      await shot(page, `type-hangul-${width}x${height}`);
+    });
+  }
 
   test('every key is a focusable button; Enter types the focused key', async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 667 });

@@ -409,7 +409,7 @@ describe('Type Hangul and the Hangul keyboard (F-CURR-001 G-3, English wording)'
       'Almost! Check the marked block.',
       'Here is how it is written. Try again.',
     ]);
-    expect([t.typedLabel, t.targetLabel, t.fixIt.cta]).toEqual(['You typed', 'The word', 'Fix it']);
+    expect([t.typedLabel, t.targetLabel, t.fixIt.cta, t.showRomanization.cta]).toEqual(['You typed', 'The word', 'Fix it', 'Show how to say it']);
   });
 
   it('names every key and reads the result block by block', () => {

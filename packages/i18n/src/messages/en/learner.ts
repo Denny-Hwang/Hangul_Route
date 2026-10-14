@@ -641,6 +641,8 @@ export const learner = {
       typedLabel: 'You typed',
       targetLabel: 'The word',
       fixIt: { cta: 'Fix it' },
+      /** The romanization of the word to type, when the learner's setting hides it until a tap (F-BROWSE-001 BR-5c). */
+      showRomanization: { cta: 'Show how to say it' },
     },
   },
 

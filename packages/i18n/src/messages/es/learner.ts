@@ -487,6 +487,7 @@ export const learner = {
       typedLabel: 'Escribiste',
       targetLabel: 'La palabra',
       fixIt: { cta: 'Corregir' },
+      showRomanization: { cta: 'Ver cómo se dice' },
     },
   },
 

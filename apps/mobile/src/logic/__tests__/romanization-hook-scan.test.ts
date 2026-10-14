@@ -44,6 +44,8 @@ const CALL_SITES = [
   'screens/minigames/PicWordMatchGame.tsx',
   'screens/minigames/StoryCheckGame.tsx',
   'screens/minigames/StorySequenceGame.tsx',
+  // Type Hangul's "see" prompt (F-CURR-001 G-3 review).
+  'screens/minigames/TypeHangulGame.tsx',
   'screens/story/StoryReaderView.tsx',
   'screens/story/CheckpointCard.tsx',
   'screens/story/StoryWordRecap.tsx',

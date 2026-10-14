@@ -7,7 +7,7 @@ describe('keySound (the face under a keyboard letter)', () => {
     const faces = [...CONSONANT_ROWS.flat(), ...VOWEL_ROWS.flat(), ...Object.values(SHIFTED_KEYS)];
     expect(faces).toHaveLength(33);
     for (const face of faces) expect(keySound(face), face).not.toBe('');
-    expect([keySound('ㄱ'), keySound('ㅇ'), keySound('ㄲ'), keySound('ㅖ')]).toEqual(['g/k', 'silent/ng', 'kk', 'ye']);
+    expect([keySound('ㄱ'), keySound('ㅇ'), keySound('ㄲ'), keySound('ㅖ')]).toEqual(['g/k', 'silent/ng', 'kk/k', 'ye']);
   });
 
   it('shows nothing for a character with no value', () => {

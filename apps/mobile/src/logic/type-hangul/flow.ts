@@ -41,7 +41,9 @@ export type TypeHangulEvent =
   | { type: 'delete' }
   | { type: 'done' }
   | { type: 'fix' }
-  | { type: 'advance' };
+  | { type: 'advance' }
+  /** Skip: leave the game now, without recording the remaining rounds (shell rule for construction games). */
+  | { type: 'skip' };
 
 export type TypeHangulEffect =
   | { type: 'answer'; roundIdx: number; correct: boolean }
@@ -133,6 +135,9 @@ export function stepFlow(s: TypeHangulState, e: TypeHangulEvent): TypeHangulStep
     }
     case 'fix':
       return s.phase === 'miss' ? unchanged({ ...s, phase: 'typing', lastEdit: null }) : unchanged(s);
+    case 'skip':
+      // Once only: a second Skip, or the pass pause's advance after a Skip, completes nothing more.
+      return s.done ? unchanged(s) : { state: { ...s, done: true }, effects: [{ type: 'complete' }] };
     case 'advance':
       if (s.phase !== 'pass' || s.done) return unchanged(s);
       if (s.roundIdx >= s.total - 1) return { state: { ...s, done: true }, effects: [{ type: 'complete' }] };

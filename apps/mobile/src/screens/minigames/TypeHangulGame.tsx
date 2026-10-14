@@ -25,14 +25,17 @@ import {
   useLayoutClass,
   useMediaSize,
 } from '@hangul-route/design-system';
+import { romanizationShown } from '@hangul-route/i18n';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ScrollView, Text, View, type LayoutChangeEvent } from 'react-native';
+import { Platform, ScrollView, Text, View, type LayoutChangeEvent } from 'react-native';
 import { useMessages } from '../../i18n/use-messages';
+import { useRomanizationMode } from '../../i18n/use-romanization-mode';
 import type { MinigameScope } from '../../logic/minigame-config';
 import { fieldView, startFlow, stepFlow, type TypeHangulEffect, type TypeHangulEvent, type TypeHangulState } from '../../logic/type-hangul/flow';
 import type { BlockCompare } from '../../logic/type-hangul/score';
 import { keySound } from '../../logic/type-hangul/sounds';
 import { nudge, success } from '../../platform/haptics';
+import { announceForScreenReader, focusForScreenReader } from '../../platform/screen-reader';
 import type { MinigameHost } from './host';
 import { PictureArt } from './PictureArt';
 
@@ -58,9 +61,20 @@ const koreanSpeech = { accessibilityLanguage: KOREAN_LANGUAGE, lang: KOREAN_LANG
 /** Visually hidden, still read (the field's polite live line). */
 const srOnly = { position: 'absolute', width: 1, height: 1, margin: -1, overflow: 'hidden' } as const;
 
-/** Focus target for assistive tech when the result panel opens (web; a no-op where the node has no `focus`). */
+/** Focus target for assistive tech when the result panel opens: `focus()` on the web, the native view elsewhere. */
 interface Focusable {
   focus?: () => void;
+}
+
+/**
+ * Moves assistive-tech focus to the result panel's first line. On the web the element's own
+ * `focus()` does it; on iOS and Android it does not move VoiceOver or TalkBack focus, so the
+ * screen-reader helper does (platform/screen-reader.ts).
+ */
+function focusPanel(node: Focusable | null): void {
+  if (node === null) return;
+  if (Platform.OS === 'web') node.focus?.();
+  else focusForScreenReader(node);
 }
 
 export function TypeHangulGame({ scope, host, onBack }: Props): React.ReactElement {
@@ -79,9 +93,19 @@ export function TypeHangulGame({ scope, host, onBack }: Props): React.ReactEleme
   const lc = useLayoutClass();
   const [available, setAvailable] = useState(lc.windowWidth);
   const kbWidth = keyboardWidth(lc, available || lc.windowWidth);
-  const kb = keyboardLayout(kbWidth, lc);
   const compactRow = lc.windowHeight > 0 && lc.windowHeight < layout.compactHeight;
   const phone = lc.width === 'compact' || lc.short;
+  // Done sits beside the field on a phone and in any window under 640 tall; elsewhere it is full
+  // width under the keyboard. Skip is drawn once: in the top row (a compact-height window that is
+  // not short, or a phone), beside Done (a short window), else under Done (type-hangul.md).
+  const inlineDone = phone || compactRow;
+  const skipIn: 'top' | 'answer' | 'bottom' = lc.short ? 'answer' : compactRow || phone ? 'top' : 'bottom';
+  // A window under 640 tall keeps keys at the touch floor (no media scale): a 1024 x 600 window
+  // would otherwise draw 4 x 90 and push Done off the screen.
+  const keyboardClass = compactRow && lc.mediaScale !== 1 ? { ...lc, mediaScale: 1 } : lc;
+  const kb = keyboardLayout(kbWidth, keyboardClass);
+  const romanizationMode = useRomanizationMode();
+  const [revealed, setRevealed] = useState(false);
   const pictureSize = useMediaSize(compactRow ? spacing.xxxl : touchTarget.hero);
   const fieldFont = lc.mediaScale > 1 ? typography.size.display : typography.size.title;
 
@@ -100,6 +124,9 @@ export function TypeHangulGame({ scope, host, onBack }: Props): React.ReactEleme
         advanceTimer.current = setTimeout(() => dispatchRef.current({ type: 'advance' }), effect.ms);
         return;
       case 'complete':
+        // Skip during the pass pause: the scheduled advance must not complete the game a second time.
+        if (advanceTimer.current) clearTimeout(advanceTimer.current);
+        advanceTimer.current = null;
         hostRef.current.complete();
     }
   }, [rounds]);
@@ -116,6 +143,9 @@ export function TypeHangulGame({ scope, host, onBack }: Props): React.ReactEleme
   );
   const dispatchRef = useRef(dispatch);
   dispatchRef.current = dispatch;
+  const readTyped = (text: string): string => k.field(text, a11yRomanization(romanize(text).text));
+  const readTypedRef = useRef(readTyped);
+  readTypedRef.current = readTyped;
 
   // Nothing typed outlives the round's screen: the timer goes, and the state with the component.
   useEffect(
@@ -127,8 +157,18 @@ export function TypeHangulGame({ scope, host, onBack }: Props): React.ReactEleme
 
   // The result panel takes focus when it opens, on Hoya's line (then the compare, the word and Fix it).
   useEffect(() => {
-    if (state.phase !== 'typing') panelRef.current?.focus?.();
+    if (state.phase !== 'typing') focusPanel(panelRef.current);
   }, [state.phase, state.retries]);
+
+  // Each round starts with the romanization hidden again when the setting is "tap to show".
+  useEffect(() => setRevealed(false), [state.roundIdx]);
+
+  // The field's polite live line (finished blocks, the whole text after Del). Web and Android read
+  // the live region; iOS has none, so VoiceOver is told here (a no-op on the other platforms).
+  const live = fieldView(state).live;
+  useEffect(() => {
+    if (live !== '' && stateRef.current.phase === 'typing') announceForScreenReader(readTypedRef.current(live));
+  }, [live]);
 
   const round = rounds[state.roundIdx];
   if (!round) {
@@ -148,9 +188,12 @@ export function TypeHangulGame({ scope, host, onBack }: Props): React.ReactEleme
   const field = fieldView(state);
   const mode = round.pictureRef ? 'picture' : 'see';
   const instruction = t.heading[mode];
-  const skip = (): void => hostRef.current.complete();
+  const skip = (): void => dispatch({ type: 'skip' });
   const done = (): void => dispatch({ type: 'done' });
-  const readTyped = (text: string): string => k.field(text, a11yRomanization(romanize(text).text));
+  // In "see" mode the learner's romanization setting applies ("tap to show"); a picture round always
+  // shows it, because with the Korean hidden the romanization and gloss are the cue.
+  const romanizationVisible = mode === 'picture' || romanizationShown(romanizationMode, revealed);
+  const reveal = (): void => setRevealed(true);
 
   // The word to type, with its romanization and gloss (taught Korean always carries both). A compact
   // window (under 640 tall) draws it inline in the top row, as the mock does; a picture round hides the Korean.
@@ -160,7 +203,7 @@ export function TypeHangulGame({ scope, host, onBack }: Props): React.ReactEleme
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
         {mode === 'picture' ? <PictureArt pictureRef={round.pictureRef} gloss={round.target.en} size={pictureSize} /> : null}
         {mode === 'see' ? (
-          <WordLine round={round} testID="type-hangul-prompt" />
+          <WordLine round={round} romanizationVisible={romanizationVisible} onReveal={reveal} testID="type-hangul-prompt" />
         ) : (
           <View style={{ flexShrink: 1 }} testID="type-hangul-prompt">
             <Body weight="bold">{round.target.romanization}</Body>
@@ -170,7 +213,20 @@ export function TypeHangulGame({ scope, host, onBack }: Props): React.ReactEleme
       </View>
     </View>
   ) : mode === 'see' ? (
-    <KoreanText ko={round.target.ko} romanization={round.target.romanization} gloss={round.target.en} size="md" testID="type-hangul-prompt" />
+    <View style={{ alignItems: 'center', gap: spacing.xs }}>
+      <KoreanText
+        ko={round.target.ko}
+        romanization={round.target.romanization}
+        gloss={round.target.en}
+        size="md"
+        romanizationShown={romanizationVisible}
+        accessibilityLabel={romanizationVisible ? undefined : m.a11y.vocab.cards.word(round.target.ko)}
+        testID="type-hangul-prompt"
+      />
+      {romanizationVisible ? null : (
+        <Button label={t.showRomanization.cta} tone="ghost" size="sm" onPress={reveal} testID="type-hangul-reveal" />
+      )}
+    </View>
   ) : (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md, flexShrink: 1 }} testID="type-hangul-prompt">
       <PictureArt pictureRef={round.pictureRef} gloss={round.target.en} size={pictureSize} />
@@ -185,7 +241,7 @@ export function TypeHangulGame({ scope, host, onBack }: Props): React.ReactEleme
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
       <Pill label={copy.progress.pill(state.roundIdx + 1, state.total)} size="sm" />
       <View style={{ flex: 1, minWidth: 0 }}>{prompt}</View>
-      {lc.short ? null : <Button label={copy.skip.cta} tone="ghost" size="sm" onPress={skip} testID="type-hangul-skip" />}
+      {skipIn === 'top' ? <Button label={copy.skip.cta} tone="ghost" size="sm" onPress={skip} testID="type-hangul-skip" /> : null}
     </View>
   ) : (
     <>
@@ -194,7 +250,7 @@ export function TypeHangulGame({ scope, host, onBack }: Props): React.ReactEleme
           <Progress value={state.roundIdx + 1} max={state.total} tone="primary" />
         </View>
         <Pill label={copy.progress.pill(state.roundIdx + 1, state.total)} size="sm" />
-        {phone ? <Button label={copy.skip.cta} tone="ghost" size="sm" onPress={skip} testID="type-hangul-skip" /> : null}
+        {skipIn === 'top' ? <Button label={copy.skip.cta} tone="ghost" size="sm" onPress={skip} testID="type-hangul-skip" /> : null}
       </View>
       <Spacer size="md" />
       <Heading level="prompt">{round.promptEn}</Heading>
@@ -255,7 +311,7 @@ export function TypeHangulGame({ scope, host, onBack }: Props): React.ReactEleme
       label={copy.trace.done.cta}
       tone="primary"
       size="md"
-      fullWidth={!phone}
+      fullWidth={!inlineDone}
       disabled={field.empty || state.phase !== 'typing'}
       onPress={done}
       testID="type-hangul-done"
@@ -267,16 +323,16 @@ export function TypeHangulGame({ scope, host, onBack }: Props): React.ReactEleme
       <View style={{ width: phone ? undefined : kbWidth, alignSelf: phone ? 'stretch' : 'center', paddingHorizontal: phone ? lc.gutter : 0, paddingBottom: lc.short ? spacing.xs : spacing.sm }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
           {answerField}
-          {phone ? doneButton : null}
+          {inlineDone ? doneButton : null}
           {/* A short window (a phone on its side) has no room for Skip in the top row: it sits beside Done. */}
-          {lc.short ? <Button label={copy.skip.cta} tone="ghost" size="sm" onPress={skip} testID="type-hangul-skip" /> : null}
+          {skipIn === 'answer' ? <Button label={copy.skip.cta} tone="ghost" size="sm" onPress={skip} testID="type-hangul-skip" /> : null}
         </View>
       </View>
       {state.phase === 'typing' ? (
         <HangulKeyboard
           testID="hangul-key"
           width={kbWidth}
-          layoutClass={lc}
+          layoutClass={keyboardClass}
           soundOf={keySound}
           speakSound={a11yRomanization}
           labels={{ key: k.key, shift: k.shift, delete: k.delete, space: k.space }}
@@ -295,21 +351,30 @@ export function TypeHangulGame({ scope, host, onBack }: Props): React.ReactEleme
           onFix={() => dispatch({ type: 'fix' })}
         />
       )}
-      {!phone ? (
+      {skipIn === 'bottom' ? (
         <View style={{ width: kbWidth, alignSelf: 'center', paddingTop: spacing.md, gap: spacing.sm }}>
-          {state.phase === 'typing' ? doneButton : null}
+          {state.phase === 'typing' && !inlineDone ? doneButton : null}
           <Button label={copy.skip.cta} tone="ghost" size="md" fullWidth onPress={skip} testID="type-hangul-skip" />
         </View>
       ) : null}
     </View>
   );
 
+  // The answer row and the keyboard are pinned to the bottom when the window holds them and still
+  // leaves the prompt a row of its own (320 x 568: 72 + 392 + 64; 844 x 390: 68 + 256 + 64). A window
+  // too short for that (a small phone on its side, 568 x 320) scrolls them with the prompt instead,
+  // so no key is ever cut off and the touch floor is kept (keyboard.md, short windows).
+  const answerRow = touchTarget.min + (lc.short ? spacing.xs : spacing.sm);
+  const underKeyboard = skipIn === 'bottom' ? spacing.md + (inlineDone ? 0 : touchTarget.min + spacing.sm) + touchTarget.min : 0;
+  const pinned = lc.windowHeight <= 0 || lc.windowHeight >= answerRow + kb.height + underKeyboard + touchTarget.min;
+
   // A phone (and any short window) gets the keyboard edge to edge, so the screen has no width cap there.
   return (
-    <Screen tone="canvas" padded={false} width={phone ? 'bleed' : 'reading'} footer={footer} testID="type-hangul">
+    <Screen tone="canvas" padded={false} width={phone ? 'bleed' : 'reading'} footer={pinned ? footer : undefined} testID="type-hangul">
       <View style={{ paddingHorizontal: lc.gutter, paddingTop: compactRow ? spacing.sm : spacing.md, paddingBottom: spacing.sm }}>
         {header}
       </View>
+      {pinned ? null : footer}
     </Screen>
   );
 }
@@ -377,7 +442,8 @@ function ResultPanel({ state, round, width, height, gutter, panelRef, onFix }: R
               <Caption tone="secondary">{t.targetLabel}</Caption>
               <BlockRow blocks={blocks} side="target" cell={cell} />
             </View>
-            <WordLine round={round} />
+            {/* After Done the word is the answer: it shows with its romanization whatever the setting (as Story Check does once resolved). */}
+            <WordLine round={round} romanizationVisible />
             <Button label={t.fixIt.cta} tone="primary" size="md" fullWidth onPress={onFix} testID="type-hangul-fix" />
           </>
         )}
@@ -437,22 +503,40 @@ function BlockRow({ blocks, side, cell }: { blocks: readonly BlockCompare[]; sid
   );
 }
 
+interface WordLineProps {
+  round: TypeHangulRound;
+  /** The learner's setting (`romanizationShown`); the result panel always passes true. */
+  romanizationVisible: boolean;
+  /** Shows the romanization when the setting hides it until a tap. */
+  onReveal?: () => void;
+  testID?: string;
+}
+
 /** A word on one line, as the mock draws it: the Korean, its romanization and `· gloss`, read as one item. */
-function WordLine({ round, testID }: { round: TypeHangulRound; testID?: string }): React.ReactElement {
+function WordLine({ round, romanizationVisible, onReveal, testID }: WordLineProps): React.ReactElement {
   const m = useMessages();
   const { ko, romanization, en } = round.target;
+  const hidden = !romanizationVisible;
   return (
-    <View
-      accessible
-      accessibilityLabel={m.a11y.koreanItem({ ko, romanization, gloss: en })}
-      style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'baseline', columnGap: spacing.sm, flexShrink: 1 }}
-      testID={testID}
-    >
-      <Text {...koreanSpeech} style={{ fontSize: typography.size.prompt, fontWeight: typography.weight.bold, color: colors.text.primary }}>
-        {ko}
-      </Text>
-      <Text style={{ fontSize: typography.size.bodySm, fontStyle: 'italic', color: colors.text.secondary }}>{romanization}</Text>
-      <Text style={{ fontSize: typography.size.bodySm, color: colors.text.secondary }}>{`· ${en}`}</Text>
+    <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', columnGap: spacing.sm, flexShrink: 1 }}>
+      {/* One item with its romanization; while the setting hides it, the Korean (Korean voice) and the gloss are read in turn. */}
+      <View
+        accessible={!hidden}
+        accessibilityLabel={hidden ? undefined : m.a11y.koreanItem({ ko, romanization, gloss: en })}
+        style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'baseline', columnGap: spacing.sm, flexShrink: 1 }}
+        testID={testID}
+      >
+        {/* `lang="ko"` (koreanSpeech) also gives the web its keep-all wrapping: the PWA shell's `:lang(ko)`
+            rule breaks a sentence at its spaces, never inside a word (F-I18N-001 PR 16). */}
+        <Text {...koreanSpeech} style={{ fontSize: typography.size.prompt, fontWeight: typography.weight.bold, color: colors.text.primary }}>
+          {ko}
+        </Text>
+        {hidden ? null : <Text style={{ fontSize: typography.size.bodySm, fontStyle: 'italic', color: colors.text.secondary }}>{romanization}</Text>}
+        <Text style={{ fontSize: typography.size.bodySm, color: colors.text.secondary }}>{`· ${en}`}</Text>
+      </View>
+      {hidden && onReveal ? (
+        <Button label={m.learner.minigame.typeHangul.showRomanization.cta} tone="ghost" size="sm" onPress={onReveal} testID="type-hangul-reveal" />
+      ) : null}
     </View>
   );
 }

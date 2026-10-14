@@ -4,7 +4,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useEffect, useMemo } from 'react';
 import type { MinigameScope } from '../logic/minigame-config';
 import { FIXTURE_ROUNDS } from '../logic/type-hangul/e2e-rounds';
-import { addTelemetryListener, type TelemetryEvent } from '../platform/telemetry';
+import { addTelemetryListener, track, type TelemetryEvent } from '../platform/telemetry';
 import type { MinigameHost } from '../screens/minigames/host';
 import { TypeHangulGame } from '../screens/minigames/TypeHangulGame';
 import type { RootStackParamList } from './types';
@@ -27,7 +27,10 @@ export interface TypeHangulE2eHandle {
   open(params: TypeHangulE2eParams): void;
   /** Every `host.answer` call and `host.complete` count since the screen opened. */
   log(): Log;
-  /** Every telemetry event `track()` accepted since the hook mounted (the e2e build sends none). */
+  /**
+   * Every telemetry event `track()` accepted since the hook mounted (the e2e build sends none). The host
+   * below sends `minigame.finished` on complete, as `MinigameScreen.close` does, so test P-1 reads real events.
+   */
   events(): TelemetryEvent[];
 }
 
@@ -76,6 +79,8 @@ export function TypeHangulE2eScreen({ route, navigation }: Props): React.ReactEl
     },
     complete: () => {
       log.completes += 1;
+      // What the quest host sends when the game closes (MinigameScreen.close): ids and the kind only.
+      void track({ name: 'minigame.finished', payload: { kind: 'type-hangul', questId: 'e2e-type-hangul', stepIndex: 0 } });
     },
   };
 

@@ -116,6 +116,17 @@ describe('type-hangul flow: Done, the first try and Fix it', () => {
     expect(run(last.state, [{ type: 'advance' }]).effects).toEqual([]);
   });
 
+  it('Skip completes once: a second Skip and the pass pause advance after it complete nothing more', () => {
+    const passed = run(startFlow(['호']), [...type('ㅎㅗ'), { type: 'done' }]);
+    expect(passed.effects).toContainEqual({ type: 'schedule-advance', ms: PASS_PAUSE_MS });
+    const skipped = run(passed.state, [{ type: 'skip' }, { type: 'skip' }, { type: 'advance' }]);
+    expect(skipped.effects).toEqual([{ type: 'complete' }]);
+    expect(skipped.state.done).toBe(true);
+    // Mid-round, before any Done: Skip leaves without recording the round.
+    const early = run(startFlow(['호야', '김밥']), [...type('ㅎ'), { type: 'skip' }]);
+    expect(early.effects).toEqual([{ type: 'complete' }]);
+  });
+
   it('a scope with no rounds is done from the start', () => {
     expect(startFlow([])).toMatchObject({ total: 0, done: true });
     const typed = run(startFlow([]), [...type('ㅎㅏ'), { type: 'done' }]);

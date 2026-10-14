@@ -154,6 +154,21 @@ describe('keyboardLayout (keyboard.md table)', () => {
     expect(k.keys[0]?.x).toBe(2);
   });
 
+  it('a short window under 640 wide gets standard too: split (392) would not fit, standard is 256', () => {
+    for (const [w, h, cw] of [
+      [568, 320, 56],
+      [592, 360, 59],
+      [480, 320, 48],
+    ] as const) {
+      const k = forWindow(w, h);
+      expect([k.arrangement, k.cellWidth, k.cellHeight, k.height], `${w} x ${h}`).toEqual(['standard', cw, 64, 256]);
+      for (const key of k.keys) {
+        expect(key.x + key.width, `${w} x ${h} ${key.id}`).toBeLessThanOrEqual(w);
+        expect(key.y + key.height, `${w} x ${h} ${key.id}`).toBeLessThanOrEqual(256);
+      }
+    }
+  });
+
   it('below 320 the split cells go under 64 and the keyboard keeps working', () => {
     const k = forWindow(284, 500);
     expect(k.arrangement).toBe('split');

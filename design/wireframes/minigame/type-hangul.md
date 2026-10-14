@@ -66,6 +66,8 @@ split: narrower (every phone in portrait, a 600-687 window)
 - **Width.** On a `compact` window the keyboard spans the window edge to edge (inside the safe-area insets), like a system keyboard, so a 320 window gives five cells of exactly 64. From `regular` up it sits in the reading column (`layout.maxWidth.reading`, inside the gutter).
 - **Cell size.** Every cell is a hit area, with no gap between hit areas; the visible key is drawn inside it, inset by `spacing.xxs`. Standard: cell width = keyboard width / 10 (64 to 72 in the reading column); split: keyboard width / 5, at most `touchTarget.hero` (wider windows centre a keyboard of 5 x 96). Cell height: `touchTarget.min` on a phone and on any `short` window; on a tablet `touchTarget.min x mediaScale` (77 regular, 90 wide), never above `touchTarget.hero` (F-LAYOUT-001 LD4: media scales, the floor does not).
 - **Height.** Split: 6 x 64 + `spacing.sm` between the halves = 392. Standard: 4 rows (256 on a phone in landscape, 308 regular, 360 wide).
+- **Short and narrow.** A short window under 640 wide (a small phone on its side: 568 x 320, 592 x 360) has no room for split's 392 under the answer row, so it gets standard at 4 x 64 with cells under 64 wide (56, 59). A window that cannot hold the answer row, the keyboard and one row of prompt (answer row + keyboard + 64) scrolls the answer row and the keyboard with the prompt instead of pinning them, so no key is cut off and the 64 height is kept (G-3).
+- **Under 640 tall, any width.** Done sits beside the field (as on a phone), Skip is in the top row only, and the keys stay at the 64 floor (no media scale): a 1024 x 600 laptop window fits the top row, the answer row and 4 x 64 (G-3).
 - **Below 320.** 320 is the narrowest supported window (F-LAYOUT-001); a narrower one (200 % browser zoom on a 568 phone) gets split cells under 64, and the keyboard keeps working. G-3's layout test pins 320 -> 64.
 
 ### Key faces
@@ -73,7 +75,7 @@ split: narrower (every phone in portrait, a 600-687 window)
 ```
 +--------+     +--------+     +--------+     +----------+
 |   ㄱ   |     |   ㄲ   |     |  Shift |     |   Del    |
-|  g/k   |     |   kk   |     |  (on)  |     |  (glyph) |
+|  g/k   |     |  kk/k  |     |  (on)  |     |  (glyph) |
 +--------+     +--------+     +--------+     +----------+
  letter key    shifted face    toggle on       action key
 ```
@@ -202,9 +204,9 @@ Exit to: `quest/player` (always, via goBack).
 
 ## Accessibility
 
-- Every key is a button (`accessibilityRole="button"`) whose name is the jamo and its sound value read as words: "ㄱ, g or k", "ㅇ, silent or ng" (`a11yRomanization`, the rule of `logic/korean-labels.ts`). Shifted keys read their shifted letter while Shift is on ("ㄲ, kk"). Shift is a toggle with its state ("Shift, more letters, on"); Del reads "Delete the last letter"; Space reads "Space".
+- Every key is a button (`accessibilityRole="button"`) whose name is the jamo and its sound value read as words: "ㄱ, g or k", "ㅇ, silent or ng" (`a11yRomanization`, the rule of `logic/korean-labels.ts`). Shifted keys read their shifted letter while Shift is on ("ㄲ, kk or k"). Shift is a toggle with its state ("Shift, more letters, on"); Del reads "Delete the last letter"; Space reads "Space".
 - The field is a live region (polite): after each finished block and after Del it reads the text so far, then its romanization ("호, ho" ... "호야, hoya"); it does not read every jamo while a block is open, so typing is not drowned in speech.
-- Focus order: prompt, field, Done, keys in reading order (row by row, the consonant half first in split), Skip. Every key is reachable by keyboard focus on the web and by switch access; Enter or Space on a focused key types it.
+- Focus order follows the drawn layout (WCAG 2.4.3), so it differs by window: on a phone and any window under 640 tall, the top row (count, prompt, Skip), the field, Done, then the keys; on a short window, the top row, the field, Done, Skip, then the keys; from `regular` up and 640 tall, the prompt, the field, the keys, Done, Skip (Done is drawn full width under the keyboard). Keys are in reading order (row by row, the consonant half first in split). (G-3 review: the earlier "prompt, field, Done, keys, Skip" did not match the layouts drawn above; the layouts win.) Every key is reachable by keyboard focus on the web and by switch access; Enter or Space on a focused key types it.
 - The result panel takes focus when it opens; its first line is Hoya's line, then the two rows, read block by block ("You typed: 호, 여. The word: 호, 야. Block 2 is different.").
 - Nothing in the round relies on colour alone: marked blocks have a mark and a thicker border; Shift has a pressed look and a state.
 
@@ -239,9 +241,9 @@ No `packages/i18n` key is added by this design row. G-3 adds these under `learne
 
 ## Open questions
 
-1. **Sound values of nine keys.** `JAMO_SOUND_VALUES` holds the 24 basic letters; the keyboard also shows ㄲ ㄸ ㅃ ㅆ ㅉ ㅐ ㅔ ㅒ ㅖ. Proposal for C-1 or G-3: add them additively (`kk`, `tt`, `pp`, `ss`, `jj`, `ae`, `e`, `yae`, `ye`; Revised Romanization), checked by the romanization suite. Owner of the decision: C-1.
+1. **Sound values of nine keys.** `JAMO_SOUND_VALUES` holds the 24 basic letters; the keyboard also shows ㄲ ㄸ ㅃ ㅆ ㅉ ㅐ ㅔ ㅒ ㅖ. Proposal for C-1 or G-3: add them additively (`kk/k`, `tt`, `pp`, `ss/t`, `jj`, `ae`, `e`, `yae`, `ye`; Revised Romanization), checked by the romanization suite. Owner of the decision: C-1.
 2. **Physical keyboard.** OD-10 rules out the system Korean keyboard. A hardware keyboard on the web or a tablet could type through the same two-set positions (Q -> ㅂ, W -> ㅈ ...) without any Korean input method. Not in G-3 by default; proposed as a follow-up for keyboard-only learners, since every on-screen key is already focusable.
 3. **The `silent/ng` face.** At 320 the visible key is 60 wide; "silent/ng" at caption size is the longest face and fits in the mock (checked in `shots/keyboard-board.png`, board K1). If a locale ever needs a longer face, the face shows the letter only and the sound stays in the accessible name.
 4. **Hear a key.** Long-press to hear a letter's sound is not in G-3 (no key sounds). Revisit after the first Stage 7 lessons ship.
 5. **Assumption to test in G-3**: split rows are learnable at the speed Stage 7 needs (two to five blocks per answer). The Playwright spec times a scripted entry only for regressions; real speed comes from the first lessons.
-4. **Romanization in `hear` mode.** This design keeps it visible (see the input modes). G-3 may instead show it only after the first replay, or only in the no-voice fallback state, if playtests show learners skip the audio; the choice and its reason go in the G-3 PR, with the e2e updated to match.
+4. **Romanization in `hear` mode.** (Open: G-3 shipped `see` and `picture` only, because the C-1 `TypeHangulRoundSchema` has no `mode` or `audioRef`. The first S6 or S7 row that authors a `hear` round adds both fields additively, `heading.hear` in en / es / ko and this choice; F-CURR-001 section 6 notes it.) This design keeps it visible (see the input modes). G-3 may instead show it only after the first replay, or only in the no-voice fallback state, if playtests show learners skip the audio; the choice and its reason go in the G-3 PR, with the e2e updated to match.

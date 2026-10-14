@@ -155,7 +155,13 @@ function split(width: number): KeyboardLayout {
  * rows side by side) from ten cells at the touch floor, else `split` (the vowel half under
  * the consonant half, the same rows in the same order). Cell height is the touch floor on a
  * phone and on a short window, scaled by the media scale on a tablet, never above `hero`.
+ *
+ * A short window (under `layout.shortHeight`, a phone on its side) always gets `standard`:
+ * split is 6 rows (392) and cannot fit under the answer row in a window 320-479 tall, so its
+ * bottom rows would be cut off. Standard is 4 x 64 (256) there; under 640 wide (568 x 320,
+ * 592 x 360) its cells are narrower than 64 (56, 59) but every key stays on screen, the same
+ * below-floor exception a window under 320 wide makes (keyboard.md).
  */
 export function keyboardLayout(width: number, lc: KeyboardLayoutClass): KeyboardLayout {
-  return width >= STANDARD_MIN_WIDTH ? standard(width, lc) : split(width);
+  return width >= STANDARD_MIN_WIDTH || lc.short ? standard(width, lc) : split(width);
 }

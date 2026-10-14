@@ -18,7 +18,7 @@ export interface HangulKeyboardProps {
   /** The width it gets (`keyboardWidth`); `keyboardLayout` picks the arrangement from it. */
   width: number;
   layoutClass: Pick<LayoutClass, 'width' | 'short' | 'mediaScale'>;
-  /** The face's sound value ('g/k', 'silent/ng', 'kk'). */
+  /** The face's sound value ('g/k', 'silent/ng', 'kk/k'). */
   soundOf: (jamo: string) => string;
   /** The sound value as screen-reader words ('g or k'); default: the face value. */
   speakSound?: (sound: string) => string;
