@@ -14,8 +14,12 @@ import { fileURLToPath } from "node:url";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
 
-/** Zones west and east of UTC, far enough that a mid-day UTC instant changes calendar day. */
-export const ZONES = ["America/Los_Angeles", "Asia/Seoul"];
+/**
+ * Zones west and east of UTC, far enough that a mid-day UTC instant changes calendar day,
+ * plus a southern-hemisphere zone whose DST starts in early October (inside the fixture
+ * windows), so a duration built from local wall-clock times is caught.
+ */
+export const ZONES = ["America/Los_Angeles", "Asia/Seoul", "Australia/Sydney"];
 
 /** Workspace → test files (relative to the workspace) that must hold in every zone. */
 export const FILES = {
@@ -26,12 +30,17 @@ export const FILES = {
   "apps/mobile": [
     "src/logic/vocab/__tests__/progress.test.ts",
     "src/store/__tests__/vocab-run-store.test.ts",
+    // Suites whose code reads device-local days through localDay.
+    "src/logic/homework/__tests__/mission-builder-vocab-day.test.ts",
+    "src/logic/reports/__tests__/activity.test.ts",
+    "src/logic/vocab/__tests__/word-progress.integration.test.ts",
   ],
 };
 
 function vitest(workspace, files, tz) {
   const cwd = join(ROOT, workspace);
   const bin = join(cwd, "node_modules", ".bin", "vitest");
+  assert.ok(existsSync(bin), `${workspace}: ${bin} is missing; run pnpm install first`);
   return spawnSync(bin, ["run", "--reporter=dot", ...files], {
     cwd,
     env: { ...process.env, TZ: tz, CI: "true" },
@@ -51,7 +60,13 @@ describe("date-dependent unit tests are time-zone independent", () => {
     for (const [workspace, files] of Object.entries(FILES)) {
       test(`${workspace} under TZ=${tz}`, { timeout: 300_000 }, () => {
         const run = vitest(workspace, files, tz);
-        assert.equal(run.status, 0, `vitest failed under TZ=${tz} in ${workspace}:\n${run.stdout}\n${run.stderr}`);
+        const cause = run.error ? `\nspawn error: ${run.error.message}` : "";
+        const signal = run.signal ? `\nsignal: ${run.signal}` : "";
+        assert.equal(
+          run.status,
+          0,
+          `vitest failed under TZ=${tz} in ${workspace} (status ${run.status})${cause}${signal}:\n${run.stdout ?? ""}\n${run.stderr ?? ""}`,
+        );
       });
     }
   }

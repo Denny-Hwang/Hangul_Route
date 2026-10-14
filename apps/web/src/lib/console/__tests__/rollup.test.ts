@@ -10,6 +10,12 @@ const now = new Date('2026-09-21T12:00:00.000Z');
 const localNow = new Date(2026, 8, 21, 12);
 /** The ISO instant of a local wall-clock time in 2026 (month 8 = September). */
 const at = (day: number, hour: number, month = 8): string => new Date(2026, month, day, hour).toISOString();
+// codeExpiry measures a duration (milliseconds between two instants), which never depends on
+// the zone. Its inputs are offsets from the same clock, never local wall-clock constructors:
+// those would shift by an hour across a DST change (Australia/Sydney starts DST on 4 October).
+const HOUR_MS = 3_600_000;
+const DAY_MS = 24 * HOUR_MS;
+const inMs = (ms: number): string => new Date(localNow.getTime() + ms).toISOString();
 const learner = (id: string, over: Partial<RosterLearner> = {}, summary: Partial<NonNullable<RosterLearner['summary']>> | null = {}): RosterLearner => ({
   id,
   displayName: id,
@@ -145,10 +151,10 @@ describe('class roll-up (F-CONSOLE-001 §3.5)', () => {
     expect(relativeDay(at(3, 10), localNow)).toBe('Sep 3');
     expect(relativeDay(null, localNow)).toBe('not yet');
     expect(relativeDay('garbage', localNow)).toBe('not yet');
-    expect(codeExpiry(at(9, 12, 9), localNow)).toBe('expires in 18 days');
-    expect(codeExpiry(at(22, 11), localNow)).toBe('expires today');
-    expect(codeExpiry(at(22, 13), localNow)).toBe('expires in 1 day');
-    expect(codeExpiry(at(1, 0), localNow)).toBe('expired');
+    expect(codeExpiry(inMs(18 * DAY_MS), localNow)).toBe('expires in 18 days');
+    expect(codeExpiry(inMs(23 * HOUR_MS), localNow)).toBe('expires today');
+    expect(codeExpiry(inMs(25 * HOUR_MS), localNow)).toBe('expires in 1 day');
+    expect(codeExpiry(inMs(-20 * DAY_MS), localNow)).toBe('expired');
     expect(codeExpiry('garbage', localNow)).toBe('expired');
     expect(codeExpiry(null, localNow)).toBe('no code yet');
     expect(percent(0.714)).toBe('71%');
@@ -164,10 +170,10 @@ describe('class roll-up (F-CONSOLE-001 §3.5)', () => {
       expect(relativeDay(at(17, 10), localNow, locale)).toBe(formatDate(locale, at(17, 10), 'weekday'));
       expect(relativeDay(at(3, 10), localNow, locale)).toBe(formatDate(locale, at(3, 10), 'monthDay'));
       expect(relativeDay(undefined, localNow, locale)).toBe(time.notYet);
-      expect(codeExpiry(at(9, 12, 9), localNow, locale)).toBe(expiry.inDays(18));
-      expect(codeExpiry(at(22, 13), localNow, locale)).toBe(expiry.inDays(1));
-      expect(codeExpiry(at(22, 11), localNow, locale)).toBe(expiry.today);
-      expect(codeExpiry(at(1, 0), localNow, locale)).toBe(expiry.expired);
+      expect(codeExpiry(inMs(18 * DAY_MS), localNow, locale)).toBe(expiry.inDays(18));
+      expect(codeExpiry(inMs(25 * HOUR_MS), localNow, locale)).toBe(expiry.inDays(1));
+      expect(codeExpiry(inMs(23 * HOUR_MS), localNow, locale)).toBe(expiry.today);
+      expect(codeExpiry(inMs(-20 * DAY_MS), localNow, locale)).toBe(expiry.expired);
       expect(codeExpiry(undefined, localNow, locale)).toBe(expiry.none);
     }
     expect(relativeDay(at(17, 10), localNow, 'ko')).not.toBe('Thu');
