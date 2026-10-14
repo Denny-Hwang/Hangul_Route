@@ -43,6 +43,7 @@ import {
   planHomeStoryOpen,
   storyCardShownEvent,
   vocabCardShownEvent,
+  vocabCardShownKey,
   type MissionCard,
 } from '../../logic/homework/mission-builder';
 import { dueTodayCount, showsTodayCount } from '../../logic/homework/assignment-groups';
@@ -77,7 +78,7 @@ import { gateOpensDirectlyNow } from '../../store/gate-now';
 import { useMembershipStore } from '../../store/membership-store';
 import { usePlacementRunStore } from '../../store/placement-run-store';
 import { usePlanStore } from '../../store/plan-store';
-import { pinMission, pinnedMission, vocabRoundsDone } from '../../store/mission-pin-store';
+import { latestPin, pinMission, pinnedMission, vocabRoundsDone } from '../../store/mission-pin-store';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
 import { useStoryStore } from '../../store/story-store';
@@ -122,7 +123,7 @@ const NO_BOOKMARKS = emptyBookmarks();
  * first pinned — the plan itself is pinned per session too (F-STORY-004 §3.7, §3.11).
  */
 const storyCardShownSent = new Set<string>();
-/** `home.vocab_card.shown` likewise, once per profile, day and app session (F-VOC-005 section 3.9). */
+/** `home.vocab_card.shown` likewise, once per profile, local day and app session (F-VOC-005 section 3.9, P-3b). */
 const vocabCardShownSent = new Set<string>();
 /** Catch-up lines already announced this app session (`<profileId>|<line>`), so a tab switch never repeats one (F-STORY-006 §3.10). */
 const catchUpAnnounced = new Set<string>();
@@ -282,6 +283,8 @@ export function HomeScreen(): React.ReactElement {
   // Today's UTC day, read again at midnight, on focus and on foreground (F-ROUTE-001 R-7e), so a Home left
   // open across the day boundary moves the count, the mission and the strip week to the new day.
   const today = useToday();
+  // The device's local day, the vocabulary card's day (F-VOC-005 P5, P-3b): read again at local midnight too.
+  const localToday = useToday('local');
   const homeworkDue = dueTodayCount(snap?.homework, today);
 
   const recentStars = (snap?.quests.slice(-1)[0]?.stars ?? 0) as 0 | 1 | 2 | 3;
@@ -381,7 +384,10 @@ export function HomeScreen(): React.ReactElement {
       // Slot (3) leads with "Words are ready" from three due words (F-VOC-005 section 3.7); collected once
       // a Speed Round of its topic completed today.
       vocab: vocabTopicOf === null ? null : homeVocabNudge({ enabled: true, snapshot: snap, topicOf: vocabTopicOf, now: new Date() }),
-      vocabRoundsDone: vocabRoundsDone(profile.id, today),
+      vocabRoundsDone: vocabRoundsDone(profile.id, localToday),
+      // The card appears and leaves at local midnight, not at the plan's UTC rollover (F-VOC-005 P-3b).
+      vocabDay: localToday,
+      vocabCarry: latestPin(profile.id),
     });
     // A caregiver or class assignment for today takes card ② (F-HW-001 §3.4, F-PLAN-001 §3.4).
     const merged = mergeAssignments({
@@ -396,7 +402,7 @@ export function HomeScreen(): React.ReactElement {
     pinMission(merged);
     return merged;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [profile, snap, tier, questOpen, routeInput, bookmarks, storyIndex, freeEndSeen, freeTopics, samplerStory, isStoryLocked, vocabTopicOf]);
+  }, [profile, snap, tier, questOpen, routeInput, bookmarks, storyIndex, freeEndSeen, freeTopics, samplerStory, isStoryLocked, vocabTopicOf, localToday]);
 
   // The route strip (F-ROUTE-001 R-4b, OD-3): built from `routeModelInput`, the same input as the
   // Learning Route page, so the strip and the page always name the same stage and pips.
@@ -437,7 +443,7 @@ export function HomeScreen(): React.ReactElement {
   useEffect(() => {
     if (!mission) return;
     const event = vocabCardShownEvent(mission);
-    const key = `${mission.profileId}|${mission.date}`;
+    const key = vocabCardShownKey(mission);
     if (!event || vocabCardShownSent.has(key)) return;
     vocabCardShownSent.add(key);
     void track({ name: event.name, profileId: mission.profileId, payload: event.payload });

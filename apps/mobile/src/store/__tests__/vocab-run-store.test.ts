@@ -191,6 +191,22 @@ describe('vocab-run-store, Speed Round (F-VOC-004 section 3.6)', () => {
     expect([...vocabRoundsDone('p1', '2026-10-11')]).toEqual(['food']);
   });
 
+  it("marks the device's local day, the Home card's day, not the UTC day (F-VOC-005 P-3b)", () => {
+    const before = process.env.TZ;
+    process.env.TZ = 'Pacific/Kiritimati';
+    try {
+      clearMissionPins();
+      useVocabRunStore.getState().begin('p1', 'food', 'speed');
+      // 2026-10-11 12:00 UTC is 2026-10-12 02:00 at UTC+14.
+      useVocabRunStore.getState().finishSpeed(summary, NOW);
+      expect([...vocabRoundsDone('p1', '2026-10-12')]).toEqual(['food']);
+      expect(vocabRoundsDone('p1', '2026-10-11').size).toBe(0);
+    } finally {
+      if (before === undefined) delete process.env.TZ;
+      else process.env.TZ = before;
+    }
+  });
+
   it('a write that throws leaves the topic not done, so Home never shows a round the progress lacks', () => {
     clearMissionPins();
     recordVocab.mockImplementationOnce(() => {
