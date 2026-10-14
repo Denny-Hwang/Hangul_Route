@@ -1,5 +1,7 @@
 import type { PickerMode, RomanizationMode } from '@hangul-route/content-schema';
-import type { SlideKind } from './build-steps';
+import type { UiLocale } from '@hangul-route/i18n';
+import type { LanguageOption } from '../locale/language-picker';
+import type { QuizOption, SlideKind } from './build-steps';
 import type { PresenterEvent, PresenterState } from './controls';
 import type { Slide } from './deck-builder';
 import { TIMER_PRESETS_MS, formatRemaining, ringFraction, type TimerState } from './timer';
@@ -47,9 +49,48 @@ export function sayItShown(input: { textPrompt: boolean; canPlay: boolean; muted
   return input.textPrompt || !input.canPlay || input.muted || !input.sound;
 }
 
-/** Quiz options' romanization (D2): with the question by default; at the answer with `tap`. */
+/**
+ * Quiz options' romanization, for every quiz slide and story check alike (D2; slide-quiz.md):
+ * visible by default, with the question; with the teacher's `tap` setting it waits for the answer
+ * build.
+ */
 export function optionRomShown(romanization: RomanizationMode, revealed: boolean): boolean {
   return romanization === 'always' || revealed;
+}
+
+/** What one option card draws, and at which presenter size (slide-quiz.md "Options"). */
+export interface OptionContent {
+  ko: { text: string; romanization?: string; size: 'display' | 'prompt' } | null;
+  gloss: { text: string; size: 'prompt' | 'body' } | null;
+}
+
+/**
+ * A letter or word at `presenter.size.display` with its romanization, or a gloss at
+ * `presenter.size.prompt`. A story check's word option keeps its gloss under it, so the word drops
+ * to prompt size and the gloss to body size, and both fit the card.
+ */
+export function optionContent(option: QuizOption): OptionContent {
+  const withGloss = option.ko !== undefined && option.gloss !== undefined;
+  const ko =
+    option.ko === undefined
+      ? null
+      : { text: option.ko, ...(option.romanization !== undefined ? { romanization: option.romanization } : {}), size: withGloss ? ('prompt' as const) : ('display' as const) };
+  const gloss = option.gloss === undefined ? null : { text: option.gloss, size: withGloss ? ('body' as const) : ('prompt' as const) };
+  return { ko, gloss };
+}
+
+/**
+ * Full screen (F or the bar's button): enter when not in it, leave when in it. Both directions are
+ * a use of the tool; Start already entered full screen, so a first press usually leaves it.
+ */
+export function fullscreenToggle(isFull: boolean): { action: 'enter' | 'exit'; tools: LectureTool[] } {
+  return { action: isFull ? 'exit' : 'enter', tools: ['fullscreen'] };
+}
+
+/** The Help overlay's Presenter language chips (section 3.12): drawn only when the build offers two or more locales. */
+export function helpLanguageChips(languages: readonly LanguageOption[]): { value: UiLocale; label: string; lang: string }[] | null {
+  if (languages.length < 2) return null;
+  return languages.map((o) => ({ value: o.locale, label: o.endonym, lang: o.htmlLang }));
 }
 
 /** The control bar's status chips (stage-and-bar.md); nothing about a learner ever shows there. */

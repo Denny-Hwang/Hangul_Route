@@ -43,7 +43,7 @@ import {
 } from './src/logic/lecture/shell';
 import { FONT_WAIT_MS, TIMER_TICK_MS, stageBox } from './src/logic/lecture/stage-constants';
 import { initialTimer, justFinished, reduceTimer, type TimerEvent, type TimerState } from './src/logic/lecture/timer';
-import { firstUses, gridItems, pickerModes, sayItShown, statusChips, timerOpenEvent, toolsOpened, type LectureTool } from './src/logic/lecture/tools';
+import { firstUses, fullscreenToggle, gridItems, helpLanguageChips, pickerModes, sayItShown, statusChips, timerOpenEvent, toolsOpened, type LectureTool } from './src/logic/lecture/tools';
 import { BAR_BAND, STAGE_BOUNDS } from './src/screens/presenter/stage-metrics';
 import { slideSound } from './src/logic/lecture/slide-view';
 import { stageScale } from './src/logic/lecture/stage-scale';
@@ -390,12 +390,10 @@ export default function PresenterApp(): React.ReactElement {
   );
 
   const toggleFullscreen = useCallback(() => {
-    if (isFullscreen()) {
-      void exitFullscreen();
-      return;
-    }
-    void enterFullscreen();
-    reportTools(['fullscreen']);
+    // Leaving is a use too: Start already entered full screen, so the first press usually leaves it.
+    const { action, tools } = fullscreenToggle(isFullscreen());
+    void (action === 'exit' ? exitFullscreen() : enterFullscreen());
+    reportTools(tools);
   }, [reportTools]);
 
   useEffect(() => subscribeFullscreen(() => setFullscreen(isFullscreen())), []);
@@ -734,6 +732,9 @@ export default function PresenterApp(): React.ReactElement {
                 <HelpOverlay
                   romanization={romanizationNow}
                   onRomanization={setRomanization}
+                  languages={helpLanguageChips(languages)}
+                  locale={locale}
+                  onLanguage={setSessionLocale}
                   keepVisible={keepVisible}
                   onKeepVisible={(on) => {
                     setKeepVisible(on);
