@@ -3,7 +3,8 @@ import { DURATION_IDS, type DurationId, type PaceId, type StageKey } from '@hang
 import type { Messages } from '@hangul-route/i18n';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { View } from 'react-native';
-import { flags } from '../../config/flags';
+import { routeEnabledFor } from '../../config/flags';
+import { useLocale } from '../../i18n/use-messages';
 import { bandLabel } from '../../logic/placement/copy';
 import { draftOfOffer, grownUpWarningText, grownUpWarnings, type PlanOffer } from '../../logic/placement/plan-offer';
 import { PACE_IDS, proposalSkippedEvent, proposedEvent } from '../../logic/route/proposal-flow';
@@ -17,8 +18,8 @@ import { RadioTile } from '../placement/parts';
 
 /**
  * The report's "Suggested weekly plan" card (F-PLC-001 section 3.9, AM-5, AM-10; wireframe
- * journey/my-route-overview.md K2 and K3), at the top of the report while `flags.routeEnabled`
- * is on. The grown-up is already through the gate: **Use this plan** makes the plan at once.
+ * journey/my-route-overview.md K2 and K3), at the top of the report while `routeEnabledFor(locale)`
+ * is on (the flag, held back in a UI locale whose plan words are not reviewed; P2-8b). The grown-up is already through the gate: **Use this plan** makes the plan at once.
  * The basis in words, the pace chips, the three lengths with the suggested one selected, the
  * warnings in plain words (no price, no plan name, no purchase button), **Change** (the
  * proposal screen) and **Not now** (this card only: the learner's skip never hides it, and it never
@@ -42,10 +43,11 @@ export function SuggestedPlanCard({ profileId, name, messages, stageTitle, onCha
   const tier = useAccessTier(profileId);
   const [offer, setOffer] = useState<PlanOffer | null>(null);
   const [outcome, setOutcome] = useState<Outcome>(null);
+  const enabled = routeEnabledFor(useLocale());
 
   // Read again when the results, the plan or the tier change (a saved start, a plan made elsewhere).
   useEffect(() => {
-    if (!flags.routeEnabled) return;
+    if (!enabled) return;
     let live = true;
     void loadPlanOffer(profileId, true, new Date(), 'report').then((next) => {
       if (live) setOffer(next);
@@ -53,9 +55,9 @@ export function SuggestedPlanCard({ profileId, name, messages, stageTitle, onCha
     return () => {
       live = false;
     };
-  }, [profileId, snapshot, tier]);
+  }, [profileId, snapshot, tier, enabled]);
 
-  if (!flags.routeEnabled) return null;
+  if (!enabled) return null;
   const m = messages.caregiver.placementReport.plan;
   if (outcome === 'hidden' || (offer === null && outcome === null)) return null;
   return (

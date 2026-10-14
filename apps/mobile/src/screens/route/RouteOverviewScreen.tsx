@@ -14,7 +14,7 @@ import { announceForScreenReader } from '../../platform/screen-reader';
 import { useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
 import { useRouteStore } from '../../store/route-store';
-import { LinkButton } from '../placement/parts';
+import { LinkButton } from '../../components/LinkButton';
 import { CheckInCard, useCheckInOffer, useShownOffer } from './CheckInCard';
 import { PlanWeekCard } from './parts';
 import { usePlanChangesOpen } from './use-plan-gate';

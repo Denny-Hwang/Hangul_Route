@@ -46,7 +46,7 @@ const DAY_MS = 86_400_000;
 export const PICK_DAYS_AHEAD = 12;
 
 export interface PlanPromptInput {
-  /** `flags.routeEnabled`. */
+  /** The entry's weekly plan switch, `routeEnabledFor(locale)` (P2-8b). */
   enabled: boolean;
   /** `effectiveLearnerType(profile)`: the prompt is for a self profile only (OD-14; a child gets a plan through the grown-up). */
   learnerType: LearnerType;
