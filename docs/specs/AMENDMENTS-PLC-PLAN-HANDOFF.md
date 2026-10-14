@@ -325,7 +325,7 @@ In learner-facing strings of sections 3.9 to 3.12 and the wireframes, "route" be
 
 ## 5. Owner decisions touched by this file (the questions and defaults are in F-ROUTE-001 section 9)
 
-OD-1 (sound guide; gates P-6), OD-4 (free-tier stages), OD-7 (learner naming), OD-9 (defined level), OD-12 (length rule; decided 2026-10-12, accepted as proposed; no longer gates P2-3b), OD-13 (pace chips and check-in; decided 2026-10-12, accepted as proposed; no longer gates P2-3b / P2-7b), OD-14 (one-tap for self profiles on any device; gates P-7b), OD-15 (start day Today), OD-16 (14-day dismissal; gates P2-7a), OD-17 (a child answers the Hoya check-in alone; gates P2-8b, the flag flip).
+OD-1 (sound guide; gates P-6), OD-4 (free-tier stages), OD-7 (learner naming), OD-9 (defined level), OD-12 (length rule; decided 2026-10-12, accepted as proposed; no longer gates P2-3b), OD-13 (pace chips and check-in; decided 2026-10-12, accepted as proposed; no longer gates P2-3b / P2-7b), OD-14 (one-tap for self profiles on any device; gates P-7b), OD-15 (start day Today), OD-16 (14-day dismissal; gates P2-7a), OD-17 (a child answers the Hoya check-in alone; decided 2026-10-13: no, the check-in stays behind the grown-up gate on a child profile; no longer gates P2-8b, the flag flip).
 
 ## 6. Errata (apply in the same docs PR)
 

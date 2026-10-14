@@ -8,7 +8,7 @@ import { shot } from './shots';
  * F-PLAN-002 P2-7b (section 3.9; wireframe console/curriculum-planner.md G1 to G3; section 3.7
  * and FP-B14): **Change the plan** in four steps, the preview, "Your weekly plan", Move my plan
  * along, Stop this plan, and the Hoya check-in at the start of week 5. The screens live behind
- * `flags.routeEnabled` (off), so this runs on a build made with the flag on:
+ * `flags.routeEnabled` (on by default since P2-8b); this runs on the weekly plan build:
  *
  *   pnpm --filter @hangul-route/mobile build:web:route      (writes dist-e2e-route/)
  *   E2E_ROUTE=1 pnpm --filter @hangul-route/mobile exec playwright test route-plan

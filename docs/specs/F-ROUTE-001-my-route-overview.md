@@ -542,7 +542,7 @@ Spec decisions (reversible, engineering only; product calls are in section 9):
 | OD-14 | One-tap plan for a **self** profile on any device (also a family or PIN device); a child profile only through the grown-up | yes | result strip visibility | F-PLC-001 P-7b | yes |
 | OD-15 | Start day "Today" for self and family | yes | proposal | P2-7a | yes |
 | OD-16 | After "Not now" / "Just start", hide the plan prompt until the next placement result or 14 days | 14 days | Home card, strip | P2-7a | yes |
-| OD-17 | May a child answer the Hoya check-in alone (F-PLAN-002 section 3.7, "A child's plan")? | no: on a child profile the check-in shows only while plan changes are open (`planChangesOpen`, the Profile row rule), so a grown-up opens it | the check-in on child profiles | F-PLAN-002 P2-8b (the `routeEnabled` flip waits for an answer; the default is what ships until then, with the flag off) | yes |
+| OD-17 | May a child answer the Hoya check-in alone (F-PLAN-002 section 3.7, "A child's plan")? | **Decided by the owner (2026-10-13): no.** A child does not answer the check-in alone: on a device that needs the grown-up gate the check-in stays hidden from the child and shows only while plan changes are open (`planChangesOpen`, the Profile row rule), so a grown-up answers it (the behaviour PR #545 shipped) | the check-in on child profiles | F-PLAN-002 P2-8b (no longer gated: the `routeEnabled` flip goes ahead, en only) | yes |
 
 **Assumptions to verify** (with the PR that verifies each):
 
