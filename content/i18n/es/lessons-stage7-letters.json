@@ -1,0 +1,142 @@
+{
+  "locale": "es",
+  "domain": "lessons-stage7-letters",
+  "entries": {
+    "episode:stage7-letters": {
+      "title": "Escribe tu nombre",
+      "subtitle": "Escribe nombres en hangul: primero el de Hoya, luego el tuyo.",
+      "hoyaIntro": "¡Escribir nombres es divertido! Primero el mío y luego el tuyo."
+    },
+    "quest:stage7-letters-q1": {
+      "title": "El nombre de Hoya",
+      "blurb": "Traza y escribe el nombre de Hoya y la palabra para nombre.",
+      "teaser": "Siguiente: escribe tu nombre en una oración completa.",
+      "steps.s1.title": "El nombre de Hoya",
+      "steps.s2.title": "¿Qué es?",
+      "steps.s3.title": "Traza el nombre",
+      "steps.s4.title": "Escribe la palabra",
+      "steps.s5.title": "Dos preguntas rápidas",
+      "steps.s6.title": "¡Ya escribes nombres!",
+      "steps.s1.hoyaLine": "Vamos a escribir un nombre en hangul. ¡Primero el mío!",
+      "steps.s6.hoyaLine": "Escribiste mi nombre en hangul. ¡Gracias!",
+      "steps.s2.discover.pages.0.caption": "Nombra una cosa con este marco.",
+      "steps.s2.discover.pages.1.caption": "Un nombre se escribe bloque a bloque, como cualquier palabra.",
+      "steps.s2.discover.pages.1.items.0.word.gloss": "nombre",
+      "steps.s2.discover.pages.1.items.1.word.gloss": "Hoya",
+      "steps.s2.discover.pages.0.items.0.note": "Usa {ko:이에요} después de una consonante final y {ko:예요} después de una vocal.",
+      "steps.s2.discover.pages.1.items.1.note": "Mi nombre, en dos bloques.",
+      "steps.s2.discover.pages.0.items.0.frame.gloss": "Esto es ___.",
+      "steps.s2.discover.pages.0.items.0.examples.igeon-ireumieyo.gloss": "Esto es un nombre.",
+      "steps.s2.discover.pages.0.items.0.examples.igeon-hangeurieyo.gloss": "Esto es hangul."
+    },
+    "quest:stage7-letters-q2": {
+      "title": "Me llamo ...",
+      "blurb": "Escribe quién eres de dos formas corteses.",
+      "teaser": "Siguiente: escribe tu propio nombre en hangul.",
+      "steps.s1.title": "Me llamo ...",
+      "steps.s2.title": "Mi nombre",
+      "steps.s3.title": "Arma la oración",
+      "steps.s4.title": "Escribe la oración",
+      "steps.s5.title": "Dos preguntas rápidas",
+      "steps.s6.title": "¡Mucho gusto!",
+      "steps.s1.hoyaLine": "¡Vamos a contar quiénes somos, por escrito!",
+      "steps.s6.hoyaLine": "Escribiste quién soy de dos formas. ¡Muy bien escrito!",
+      "steps.s2.discover.pages.0.caption": "Pon un nombre en el espacio para decir cómo te llamas.",
+      "steps.s2.discover.pages.1.caption": "Otra forma cortés de decir quién eres.",
+      "steps.s2.discover.pages.0.items.0.note": "{ko:제} significa mi, de forma cortés. {ko:은} marca de qué hablas.",
+      "steps.s2.discover.pages.1.items.0.sentence.gloss": "Soy Hoya.",
+      "steps.s2.discover.pages.0.items.0.frame.gloss": "Me llamo ___.",
+      "steps.s2.discover.pages.0.items.0.examples.je-ireumeun-hoyayeyo.gloss": "Me llamo Hoya.",
+      "steps.s2.discover.pages.0.items.0.examples.je-gabangieyo.gloss": "Es mi mochila."
+    },
+    "quest:stage7-letters-q3": {
+      "title": "Tu nombre en hangul",
+      "blurb": "Arma los bloques de tu nombre a partir de sus sonidos.",
+      "teaser": "¡Terminaste Escribe tu nombre!",
+      "steps.s1.title": "Tu nombre en hangul",
+      "steps.s2.title": "Sonidos y letras",
+      "steps.s3.title": "Traza las palabras",
+      "steps.s4.title": "Escribe tu nombre",
+      "steps.s5.title": "Dos preguntas rápidas",
+      "steps.s6.title": "¡Tu nombre!",
+      "steps.s1.hoyaLine": "¡Ahora tu nombre! Puedes escribir tu nombre como tú quieras.",
+      "steps.s6.hoyaLine": "Escribiste tu nombre en hangul. ¡Se ve genial!",
+      "steps.s2.discover.pages.0.caption": "Tu nombre va donde está el mío.",
+      "steps.s2.discover.pages.1.caption": "Divide tu nombre en partes de sonido. Cada parte lleva un bloque.",
+      "steps.s2.discover.pages.1.items.0.word.gloss": "sonido",
+      "steps.s2.discover.pages.1.items.1.word.gloss": "letra, carácter escrito",
+      "steps.s2.discover.pages.0.items.0.sentence.gloss": "Me llamo Hoya."
+    },
+    "minigame:s7-letters-q1-practice": {
+      "traceWord.rounds.t1.word.gloss": "Hoya",
+      "traceWord.rounds.t2.word.gloss": "nombre",
+      "traceWord.rounds.t3.word.gloss": "hangul, el alfabeto coreano",
+      "traceWord.rounds.t4.word.gloss": "libro"
+    },
+    "minigame:s7-letters-q1-apply": {
+      "typeHangul.rounds.y1.prompt": "Escribe el nombre de Hoya.",
+      "typeHangul.rounds.y2.prompt": "Escribe la palabra para nombre.",
+      "typeHangul.rounds.y3.prompt": "Escribe la palabra para el alfabeto coreano.",
+      "typeHangul.rounds.y4.prompt": "Escribe: Esto es un nombre.",
+      "typeHangul.rounds.y1.target.gloss": "Hoya",
+      "typeHangul.rounds.y2.target.gloss": "nombre",
+      "typeHangul.rounds.y3.target.gloss": "hangul, el alfabeto coreano",
+      "typeHangul.rounds.y4.target.gloss": "Esto es un nombre."
+    },
+    "minigame:s7-letters-q1-check": {
+      "orderIt.rounds.c1.sentence.gloss": "Esto es un nombre.",
+      "orderIt.rounds.c2.sentence.gloss": "Esto es hangul.",
+      "orderIt.rounds.c2.distractors.ireum.gloss": "nombre",
+      "orderIt.rounds.c1.distractors.jeoneun.gloss": "yo (forma cortés)"
+    },
+    "minigame:s7-letters-q2-practice": {
+      "orderIt.rounds.r1.sentence.gloss": "Me llamo Hoya.",
+      "orderIt.rounds.r2.sentence.gloss": "Soy Hoya.",
+      "orderIt.rounds.r3.sentence.gloss": "Este es mi libro.",
+      "orderIt.rounds.r4.sentence.gloss": "Me llamo Hoya.",
+      "orderIt.rounds.r1.distractors.jeoneun.gloss": "yo (forma cortés)",
+      "orderIt.rounds.r4.particle.choices.eun.gloss": "marca de tema (después de una consonante final)",
+      "orderIt.rounds.r4.particle.choices.neun.gloss": "marca de tema (después de una vocal)",
+      "orderIt.rounds.r2.particle.choices.eun.gloss": "marca de tema (después de una consonante final)",
+      "orderIt.rounds.r2.particle.choices.neun.gloss": "marca de tema (después de una vocal)"
+    },
+    "minigame:s7-letters-q2-apply": {
+      "typeHangul.rounds.y1.prompt": "Escribe: mi nombre.",
+      "typeHangul.rounds.y2.prompt": "Escribe: Soy Hoya.",
+      "typeHangul.rounds.y3.prompt": "Escribe: Me llamo Hoya.",
+      "typeHangul.rounds.y1.target.gloss": "mi nombre",
+      "typeHangul.rounds.y2.target.gloss": "Soy Hoya.",
+      "typeHangul.rounds.y3.target.gloss": "Me llamo Hoya."
+    },
+    "minigame:s7-letters-q2-check": {
+      "orderIt.rounds.c1.sentence.gloss": "Me llamo Hoya.",
+      "orderIt.rounds.c2.sentence.gloss": "Soy Hoya.",
+      "orderIt.rounds.c1.distractors.igeon.gloss": "esto (como tema)",
+      "orderIt.rounds.c2.distractors.je.gloss": "mi (forma cortés)"
+    },
+    "minigame:s7-letters-q3-practice": {
+      "traceWord.rounds.t1.word.gloss": "sonido",
+      "traceWord.rounds.t2.word.gloss": "letra, carácter escrito",
+      "traceWord.rounds.t3.word.gloss": "nombre",
+      "traceWord.rounds.t4.word.gloss": "mi (forma cortés)"
+    },
+    "minigame:s7-letters-q3-apply": {
+      "writeFrame.rounds.w1.frame.gloss": "Esto es ___.",
+      "writeFrame.rounds.w2.frame.gloss": "Es mi ___.",
+      "writeFrame.rounds.w3.frame.gloss": "Me llamo ___.",
+      "writeFrame.rounds.w1.slots.what.bank.hangeul.gloss": "hangul, el alfabeto coreano",
+      "writeFrame.rounds.w1.slots.what.bank.ireum.gloss": "nombre",
+      "writeFrame.rounds.w1.slots.what.bank.sori.gloss": "sonido",
+      "writeFrame.rounds.w1.slots.what.bank.geulja.gloss": "letra, carácter escrito",
+      "writeFrame.rounds.w2.slots.what.bank.chaek.gloss": "libro",
+      "writeFrame.rounds.w2.slots.what.bank.gabang.gloss": "mochila",
+      "writeFrame.rounds.w2.slots.what.bank.yeonpil.gloss": "lápiz"
+    },
+    "minigame:s7-letters-q3-check": {
+      "orderIt.rounds.c1.sentence.gloss": "Este es mi nombre.",
+      "orderIt.rounds.c2.sentence.gloss": "Esta es una letra del hangul.",
+      "orderIt.rounds.c1.distractors.sori.gloss": "sonido",
+      "orderIt.rounds.c2.distractors.jeoneun.gloss": "yo (forma cortés)"
+    }
+  }
+}

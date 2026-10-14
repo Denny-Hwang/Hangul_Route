@@ -1,0 +1,142 @@
+{
+  "locale": "ko",
+  "domain": "lessons-stage7-letters",
+  "entries": {
+    "episode:stage7-letters": {
+      "title": "내 이름 쓰기",
+      "subtitle": "한글로 이름을 써요. 호야 이름 먼저, 그다음 내 이름.",
+      "hoyaIntro": "이름 쓰기는 재미있어요. 제 이름 먼저, 그다음 여러분 이름!"
+    },
+    "quest:stage7-letters-q1": {
+      "title": "호야의 이름",
+      "blurb": "호야의 이름과 '이름'이라는 낱말을 따라 쓰고 입력해 봐요.",
+      "teaser": "다음: 문장으로 이름을 써 봐요.",
+      "steps.s1.title": "호야의 이름",
+      "steps.s2.title": "무엇인지 알리기",
+      "steps.s3.title": "이름 따라 쓰기",
+      "steps.s4.title": "낱말 입력하기",
+      "steps.s5.title": "짧은 문제 두 개",
+      "steps.s6.title": "이름 쓰기 성공!",
+      "steps.s1.hoyaLine": "한글로 이름을 써 봐요. 제 이름부터요!",
+      "steps.s6.hoyaLine": "한글로 제 이름을 써 줬네요. 고마워요!",
+      "steps.s2.discover.pages.0.caption": "이 틀로 물건이 무엇인지 알려요.",
+      "steps.s2.discover.pages.1.caption": "이름도 다른 낱말처럼 한 글자씩 써요.",
+      "steps.s2.discover.pages.1.items.0.word.gloss": "사람이나 물건을 부르는 말",
+      "steps.s2.discover.pages.1.items.1.word.gloss": "이 앱에서 함께 배우는 친구의 이름",
+      "steps.s2.discover.pages.0.items.0.note": "받침이 있으면 {ko:이에요}, 받침이 없으면 {ko:예요}를 써요.",
+      "steps.s2.discover.pages.1.items.1.note": "두 글자로 된 제 이름이에요.",
+      "steps.s2.discover.pages.0.items.0.frame.gloss": "가까이 있는 것이 무엇인지 알려 주는 틀",
+      "steps.s2.discover.pages.0.items.0.examples.igeon-ireumieyo.gloss": "가까이 있는 것이 사람이나 물건을 부르는 말이라는 뜻",
+      "steps.s2.discover.pages.0.items.0.examples.igeon-hangeurieyo.gloss": "가까이 있는 것이 한국어를 적는 글자라는 뜻"
+    },
+    "quest:stage7-letters-q2": {
+      "title": "제 이름은 ...",
+      "blurb": "나를 소개하는 공손한 두 가지 말을 써요.",
+      "teaser": "다음: 한글로 내 이름을 써 봐요.",
+      "steps.s1.title": "제 이름은 ...",
+      "steps.s2.title": "나의 이름",
+      "steps.s3.title": "문장 만들기",
+      "steps.s4.title": "문장 입력하기",
+      "steps.s5.title": "짧은 문제 두 개",
+      "steps.s6.title": "반가워요!",
+      "steps.s1.hoyaLine": "글로 자기를 소개해 봐요!",
+      "steps.s6.hoyaLine": "저를 두 가지로 소개하는 문장을 써 줬네요. 정말 잘 썼어요!",
+      "steps.s2.discover.pages.0.caption": "빈칸에 이름을 넣어 내 이름을 알려요.",
+      "steps.s2.discover.pages.1.caption": "나를 소개하는 또 다른 공손한 말이에요.",
+      "steps.s2.discover.pages.0.items.0.note": "{ko:제}는 자기를 낮추어 '나의'를 공손하게 이르는 말이에요. {ko:은}은 이야기의 주제를 나타내요.",
+      "steps.s2.discover.pages.1.items.0.sentence.gloss": "자기가 누구인지 공손하게 밝힌다는 뜻",
+      "steps.s2.discover.pages.0.items.0.frame.gloss": "자기 이름을 공손하게 알려 주는 틀",
+      "steps.s2.discover.pages.0.items.0.examples.je-ireumeun-hoyayeyo.gloss": "자기 이름을 공손하게 알려 준다는 뜻",
+      "steps.s2.discover.pages.0.items.0.examples.je-gabangieyo.gloss": "물건을 넣어 메는 것이 내 것이라는 뜻"
+    },
+    "quest:stage7-letters-q3": {
+      "title": "한글로 쓰는 내 이름",
+      "blurb": "소리를 따라 내 이름의 글자를 만들어요.",
+      "teaser": "내 이름 쓰기를 마쳤어요!",
+      "steps.s1.title": "한글로 쓰는 내 이름",
+      "steps.s2.title": "소리와 글자",
+      "steps.s3.title": "낱말 따라 쓰기",
+      "steps.s4.title": "내 이름 쓰기",
+      "steps.s5.title": "짧은 문제 두 개",
+      "steps.s6.title": "내 이름!",
+      "steps.s1.hoyaLine": "이제 여러분 이름이에요! 이름은 마음 가는 대로 써도 괜찮아요.",
+      "steps.s6.hoyaLine": "한글로 여러분 이름을 썼네요. 정말 멋져요!",
+      "steps.s2.discover.pages.0.caption": "내 이름 자리에 여러분 이름을 넣어요.",
+      "steps.s2.discover.pages.1.caption": "이름을 소리 마디로 나눠 봐요. 마디마다 글자를 하나씩 써요.",
+      "steps.s2.discover.pages.1.items.0.word.gloss": "귀로 듣는 울림",
+      "steps.s2.discover.pages.1.items.1.word.gloss": "말을 적는 하나하나의 기호",
+      "steps.s2.discover.pages.0.items.0.sentence.gloss": "자기 이름을 공손하게 알려 준다는 뜻"
+    },
+    "minigame:s7-letters-q1-practice": {
+      "traceWord.rounds.t1.word.gloss": "이 앱에서 함께 배우는 친구의 이름",
+      "traceWord.rounds.t2.word.gloss": "사람이나 물건을 부르는 말",
+      "traceWord.rounds.t3.word.gloss": "한국어를 적는 문자",
+      "traceWord.rounds.t4.word.gloss": "글이나 그림을 묶어 펴낸 것"
+    },
+    "minigame:s7-letters-q1-apply": {
+      "typeHangul.rounds.y1.prompt": "함께 배우는 친구의 이름을 입력해 봐요.",
+      "typeHangul.rounds.y2.prompt": "사람이나 물건을 부르는 말을 입력해 봐요.",
+      "typeHangul.rounds.y3.prompt": "한국어를 적는 문자를 뜻하는 말을 입력해 봐요.",
+      "typeHangul.rounds.y4.prompt": "가까이 있는 것이 사람이나 물건을 부르는 말이라는 문장을 입력해 봐요.",
+      "typeHangul.rounds.y1.target.gloss": "이 앱에서 함께 배우는 친구의 이름",
+      "typeHangul.rounds.y2.target.gloss": "사람이나 물건을 부르는 말",
+      "typeHangul.rounds.y3.target.gloss": "한국어를 적는 문자",
+      "typeHangul.rounds.y4.target.gloss": "가까이 있는 것이 사람이나 물건을 부르는 말이라는 뜻"
+    },
+    "minigame:s7-letters-q1-check": {
+      "orderIt.rounds.c1.sentence.gloss": "가까이 있는 것이 사람이나 물건을 부르는 말이라는 뜻",
+      "orderIt.rounds.c2.sentence.gloss": "가까이 있는 것이 한국어를 적는 글자라는 뜻",
+      "orderIt.rounds.c2.distractors.ireum.gloss": "사람이나 물건을 부르는 말",
+      "orderIt.rounds.c1.distractors.jeoneun.gloss": "'나는'을 공손하게 이르는 말"
+    },
+    "minigame:s7-letters-q2-practice": {
+      "orderIt.rounds.r1.sentence.gloss": "자기 이름을 공손하게 알려 준다는 뜻",
+      "orderIt.rounds.r2.sentence.gloss": "자기가 누구인지 공손하게 밝힌다는 뜻",
+      "orderIt.rounds.r3.sentence.gloss": "가까이 있는, 글이나 그림을 묶어 펴낸 것이 내 것이라는 뜻",
+      "orderIt.rounds.r4.sentence.gloss": "자기 이름을 공손하게 알려 준다는 뜻",
+      "orderIt.rounds.r1.distractors.jeoneun.gloss": "'나는'을 공손하게 이르는 말",
+      "orderIt.rounds.r4.particle.choices.eun.gloss": "이야기의 주제를 나타내는 말 (받침 있는 말 뒤)",
+      "orderIt.rounds.r4.particle.choices.neun.gloss": "이야기의 주제를 나타내는 말 (받침 없는 말 뒤)",
+      "orderIt.rounds.r2.particle.choices.eun.gloss": "이야기의 주제를 나타내는 말 (받침 있는 말 뒤)",
+      "orderIt.rounds.r2.particle.choices.neun.gloss": "이야기의 주제를 나타내는 말 (받침 없는 말 뒤)"
+    },
+    "minigame:s7-letters-q2-apply": {
+      "typeHangul.rounds.y1.prompt": "나를 부르는 말을 공손한 꼴로 입력해 봐요.",
+      "typeHangul.rounds.y2.prompt": "친구가 자기가 누구인지 밝히는 말을 입력해 봐요.",
+      "typeHangul.rounds.y3.prompt": "친구가 자기 이름을 알려 주는 말을 입력해 봐요.",
+      "typeHangul.rounds.y1.target.gloss": "나를 부르는 말 (공손하게)",
+      "typeHangul.rounds.y2.target.gloss": "자기가 누구인지 공손하게 밝힌다는 뜻",
+      "typeHangul.rounds.y3.target.gloss": "자기 이름을 공손하게 알려 준다는 뜻"
+    },
+    "minigame:s7-letters-q2-check": {
+      "orderIt.rounds.c1.sentence.gloss": "자기 이름을 공손하게 알려 준다는 뜻",
+      "orderIt.rounds.c2.sentence.gloss": "자기가 누구인지 공손하게 밝힌다는 뜻",
+      "orderIt.rounds.c1.distractors.igeon.gloss": "가까운 물건을 가리키는 말",
+      "orderIt.rounds.c2.distractors.je.gloss": "자기를 낮추어 '나의'를 이르는 말"
+    },
+    "minigame:s7-letters-q3-practice": {
+      "traceWord.rounds.t1.word.gloss": "귀로 듣는 울림",
+      "traceWord.rounds.t2.word.gloss": "말을 적는 하나하나의 기호",
+      "traceWord.rounds.t3.word.gloss": "사람이나 물건을 부르는 말",
+      "traceWord.rounds.t4.word.gloss": "자기를 낮추어 '나의'를 이르는 말"
+    },
+    "minigame:s7-letters-q3-apply": {
+      "writeFrame.rounds.w1.frame.gloss": "가까이 있는 것이 무엇인지 알려 주는 틀",
+      "writeFrame.rounds.w2.frame.gloss": "무엇이 내 것인지 알려 주는 틀",
+      "writeFrame.rounds.w3.frame.gloss": "자기 이름을 공손하게 알려 주는 틀",
+      "writeFrame.rounds.w1.slots.what.bank.hangeul.gloss": "한국어를 적는 문자",
+      "writeFrame.rounds.w1.slots.what.bank.ireum.gloss": "사람이나 물건을 부르는 말",
+      "writeFrame.rounds.w1.slots.what.bank.sori.gloss": "귀로 듣는 울림",
+      "writeFrame.rounds.w1.slots.what.bank.geulja.gloss": "말을 적는 하나하나의 기호",
+      "writeFrame.rounds.w2.slots.what.bank.chaek.gloss": "글이나 그림을 묶어 펴낸 것",
+      "writeFrame.rounds.w2.slots.what.bank.gabang.gloss": "물건을 넣어 메는 것",
+      "writeFrame.rounds.w2.slots.what.bank.yeonpil.gloss": "글씨 쓰는 도구"
+    },
+    "minigame:s7-letters-q3-check": {
+      "orderIt.rounds.c1.sentence.gloss": "가까이 있는 것이 나를 부르는 말이라는 뜻",
+      "orderIt.rounds.c2.sentence.gloss": "가까이 있는 것이 한국어를 적는 기호 하나라는 뜻",
+      "orderIt.rounds.c1.distractors.sori.gloss": "귀로 듣는 울림",
+      "orderIt.rounds.c2.distractors.jeoneun.gloss": "'나는'을 공손하게 이르는 말"
+    }
+  }
+}
