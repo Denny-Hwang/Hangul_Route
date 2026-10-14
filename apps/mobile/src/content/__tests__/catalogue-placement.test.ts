@@ -109,7 +109,8 @@ const PLACEMENT: readonly PlacementRow[] = [
   // F-CURR-001 S4-1: Read Along ships into this story's home cell.
   row('ilseongnok-daily-reflection', "King Jeongjo's Diary of Daily Reflection", 'letters', 4, 4, 'L', 'culture', 16, '', ['A4'], 'records-joseon'),
   row('uigwe-royal-birthday', 'A Picture Record of a Royal Birthday', 'rites', 5, 5, '-', 'culture', 17, '', ['C2', 'A3'], 'records-joseon'),
-  row('joseon-records-today', 'Old Records, New Discoveries', 'letters', 6, 4, '-', 'culture', 18, '', ['A3'], 'records-joseon'),
+  // F-CURR-001 S6-1: Read the Menu ships into this story's home cell.
+  row('joseon-records-today', 'Old Records, New Discoveries', 'letters', 6, 4, 'L', 'culture', 18, '', ['A3'], 'records-joseon'),
 ];
 
 /** The derived matrix of §3.3: L = lesson, a number = stories whose home cell this is. */
@@ -119,7 +120,7 @@ const MATRIX: Record<StageKey, Record<ThemeKey, string>> = {
   stage3: { letters: 'L+2', life: 'S1', rites: '-', nature: '-', crafts: '-' },
   stage4: { letters: 'L+1', life: '-', rites: 'L+0', nature: '-', crafts: '-' },
   stage5: { letters: '-', life: '-', rites: 'S1', nature: '-', crafts: '-' },
-  stage6: { letters: 'S1', life: '-', rites: '-', nature: '-', crafts: '-' },
+  stage6: { letters: 'L+1', life: '-', rites: '-', nature: '-', crafts: '-' },
   stage7: { letters: '-', life: '-', rites: '-', nature: '-', crafts: '-' },
 };
 
@@ -208,11 +209,11 @@ describe('placement table (F-STORY-005 §3.3) against the story files', () => {
     }
   });
 
-  it('totals 112 minutes, 18 stories in lesson cells and 6 in cells without a lesson (Read Along S4-1, First Sentences S3-1, Playground Words S2-3)', () => {
+  it('totals 112 minutes, 19 stories in lesson cells and 5 in cells without a lesson (Read Along S4-1, First Sentences S3-1, Playground Words S2-3, Read the Menu S6-1)', () => {
     expect(storyFiles.reduce((sum, story) => sum + story.minutes, 0)).toBe(112);
     const inLessonCells = storyFiles.filter((story) => lessonCells.has(homeKey(story)));
-    expect(inLessonCells, GRID_HINT).toHaveLength(18);
-    expect(storyFiles.length - inLessonCells.length, GRID_HINT).toBe(6);
+    expect(inLessonCells, GRID_HINT).toHaveLength(19);
+    expect(storyFiles.length - inLessonCells.length, GRID_HINT).toBe(5);
   });
 
   it('gives every row the "cell holds" of the shipped grid', () => {

@@ -2,7 +2,7 @@
   "id": "episode:stage6-letters",
   "stage": "stage6",
   "theme": "letters",
-  "status": "draft",
+  "status": "ready",
   "titleEn": "Read the Menu",
   "subtitleEn": "Read dishes, prices and drinks on a menu board.",
   "hoyaIntroEn": "A menu board! Let's read the dishes, the prices and the drinks.",
@@ -41,7 +41,7 @@
                       {
                         "ko": "김밥",
                         "romanization": "gimbap",
-                        "en": "rice rolls"
+                        "en": "seaweed rice rolls"
                       },
                       {
                         "ko": "떡볶이",
@@ -95,7 +95,7 @@
           "id": "s6",
           "kind": "reward",
           "titleEn": "Menu Reader!",
-          "hoyaLineEn": "You read four dishes on a real menu board!",
+          "hoyaLineEn": "You read four dishes on a menu board!",
           "durationSeconds": 8
         }
       ],
@@ -112,7 +112,7 @@
                 "text": {
                   "ko": "김밥",
                   "romanization": "gimbap",
-                  "en": "rice rolls"
+                  "en": "seaweed rice rolls"
                 }
               },
               {
@@ -155,7 +155,7 @@
                 {
                   "id": "b",
                   "pictureRef": "card:kimbap",
-                  "labelEn": "rice rolls"
+                  "labelEn": "seaweed rice rolls"
                 },
                 {
                   "id": "c",
@@ -231,7 +231,7 @@
                   "text": {
                     "ko": "김밥",
                     "romanization": "gimbap",
-                    "en": "rice rolls"
+                    "en": "seaweed rice rolls"
                   }
                 }
               ],
@@ -250,7 +250,7 @@
               "target": {
                 "ko": "김밥",
                 "romanization": "gimbap",
-                "en": "rice rolls"
+                "en": "seaweed rice rolls"
               }
             },
             {
@@ -300,7 +300,7 @@
                 {
                   "id": "c",
                   "pictureRef": "card:kimbap",
-                  "labelEn": "rice rolls"
+                  "labelEn": "seaweed rice rolls"
                 }
               ],
               "answerId": "b"
@@ -321,7 +321,7 @@
                 {
                   "id": "b",
                   "pictureRef": "card:kimbap",
-                  "labelEn": "rice rolls"
+                  "labelEn": "seaweed rice rolls"
                 }
               ],
               "answerId": "a"
@@ -364,7 +364,7 @@
                     ]
                   }
                 ],
-                "captionEn": "These prices use the Sino-Korean numbers il, i, sam, sa, o."
+                "captionEn": "The Sino-Korean numbers are il, i, sam, sa, o. These prices use i to o."
               },
               {
                 "items": [
@@ -436,7 +436,7 @@
                 "text": {
                   "ko": "김밥",
                   "romanization": "gimbap",
-                  "en": "rice rolls"
+                  "en": "seaweed rice rolls"
                 },
                 "value": {
                   "ko": "이천 원",
@@ -493,7 +493,7 @@
               "key": {
                 "ko": "김밥",
                 "romanization": "gimbap",
-                "en": "rice rolls"
+                "en": "seaweed rice rolls"
               },
               "options": [
                 {
@@ -524,7 +524,7 @@
                 {
                   "id": "a",
                   "pictureRef": "card:kimbap",
-                  "labelEn": "rice rolls"
+                  "labelEn": "seaweed rice rolls"
                 },
                 {
                   "id": "b",
@@ -695,7 +695,7 @@
           "id": "s1",
           "kind": "intro",
           "titleEn": "Spicy or Not?",
-          "hoyaLineEn": "This menu has a spicy choice and drinks. Let's read it all!",
+          "hoyaLineEn": "Another menu board, with a spicy choice and drinks. Let's read it all!",
           "durationSeconds": 7
         },
         {
@@ -718,7 +718,7 @@
                     ]
                   }
                 ],
-                "captionEn": "More Sino-Korean numbers on this menu: yuk, chil, pal, gu, sip."
+                "captionEn": "The Sino-Korean numbers go on: yuk, chil, pal, gu, sip. This menu uses yuk and chil."
               },
               {
                 "items": [
@@ -808,7 +808,7 @@
                 "text": {
                   "ko": "매운맛 떡볶이",
                   "romanization": "maeunmat tteokbokki",
-                  "en": "spicy-flavour rice cakes"
+                  "en": "extra-spicy rice cakes"
                 },
                 "value": {
                   "ko": "칠천 원",
@@ -838,7 +838,7 @@
                 }
               }
             ],
-            "altEn": "A snack-bar menu with a spicy choice and two drinks"
+            "altEn": "Another snack-bar menu, with a spicy choice and two drinks"
           },
           "rounds": [
             {
@@ -847,7 +847,7 @@
               "key": {
                 "ko": "매운맛 떡볶이",
                 "romanization": "maeunmat tteokbokki",
-                "en": "spicy-flavour rice cakes"
+                "en": "extra-spicy rice cakes"
               },
               "options": [
                 {
@@ -946,7 +946,7 @@
           "rounds": [
             {
               "id": "t1",
-              "promptEn": "Type the flavour you want",
+              "promptEn": "Type the spicy flavour",
               "target": {
                 "ko": "매운맛",
                 "romanization": "maeunmat",
@@ -955,7 +955,7 @@
             },
             {
               "id": "t2",
-              "promptEn": "Type the drink you want",
+              "promptEn": "Type the word for water",
               "pictureRef": "word:food-water",
               "target": {
                 "ko": "물",
@@ -965,7 +965,7 @@
             },
             {
               "id": "t3",
-              "promptEn": "Type the drink you want",
+              "promptEn": "Type the word for tea",
               "target": {
                 "ko": "차",
                 "romanization": "cha",
@@ -1041,7 +1041,7 @@
     {
       "id": "n1",
       "kind": "culture",
-      "textEn": "Prices in Korea are in won, written {ko:원}. Won has been the unit of Korean money since 1962, and its sign is ₩.",
+      "textEn": "Prices in South Korea are in won, written {ko:원}. Today's won has been the unit of money since 1962, and its sign is ₩.",
       "sources": [
         {
           "title": "원 (won), entry 원1 of the Standard Korean Language Dictionary",
@@ -1059,10 +1059,10 @@
         }
       ],
       "verification": {
-        "passes": 2,
+        "passes": 3,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): both pages fetched. The Standard Korean Language Dictionary (NIKL) defines 원 as the money unit of the country, in force since 1962, with the sign ₩, and gives 천 원 as an example; the AKS Encyclopedia of Korean Culture entry on units of money says the reform of 1962 adopted the unit 원. The two give different days in June 1962, so the note names the year only. The note is original English and copies no source wording; no group-wide claim, stereotype, living person, shop, brand or real price (the menu amounts are round practice amounts in a drawn scene, OD-11). Carried by: q2 Discover page 2 caption ('Won is Korean money') and the q2 key word 원.\nLine 2 (pass 2b, independent fact check, 2026-10-14): both pages opened again. Standard Korean Language Dictionary entry 원1 (result list text) says the money unit of the country, in force from 10 June 1962, sign ￦: matches 'won since 1962' and '₩'. Encyclopedia of Korean Culture entry 화폐 단위 says the reform of 12 June 1962 adopted the Hangul unit 원: matches; the year-only wording settles the 10 / 12 June difference. The example sentences the author cited from the full dictionary entry could not be reached (the full view loads only in a browser session), so they were removed from the locator; the note does not rely on them. No run of words copied; no group-wide claim, stereotype, living person, shop, brand or real price. Outcome: pass, locator corrected."
+        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): both pages fetched. The Standard Korean Language Dictionary (NIKL) defines 원 as the money unit of the country, in force since 1962, with the sign ₩, and gives 천 원 as an example; the AKS Encyclopedia of Korean Culture entry on units of money says the reform of 1962 adopted the unit 원. The two give different days in June 1962, so the note names the year only. The note is original English and copies no source wording; no group-wide claim, stereotype, living person, shop, brand or real price (the menu amounts are round practice amounts in a drawn scene, OD-11). Carried by: q2 Discover page 2 caption ('Won is Korean money') and the q2 key word 원.\nLine 2 (pass 2b, independent fact check, 2026-10-14): both pages opened again. Standard Korean Language Dictionary entry 원1 (result list text) says the money unit of the country, in force from 10 June 1962, sign ￦: matches 'won since 1962' and '₩'. Encyclopedia of Korean Culture entry 화폐 단위 says the reform of 12 June 1962 adopted the Hangul unit 원: matches; the year-only wording settles the 10 / 12 June difference. The example sentences the author cited from the full dictionary entry could not be reached (the full view loads only in a browser session), so they were removed from the locator; the note does not rely on them. No run of words copied; no group-wide claim, stereotype, living person, shop, brand or real price. Outcome: pass, locator corrected.\nLine 3 (pass 5, MAR culture review, final independent check, 2026-10-14): both sources re-checked claim by claim. NIKL entry 원1 (the money unit of the country, in force from 10 June 1962, sign ￦) and the AKS entry 화폐 단위 (the reform of 12 June 1962 adopted the Hangul unit 원) support the note. The AKS entry also records an earlier 원 (圓) used before the 1953 switch to 환, and both sources speak of 우리나라, so the note was tightened to 'Prices in South Korea' and 'Today's won ... since 1962'. No run of words copied; no group-wide claim, stereotype, living person, shop, brand or real price (OD-11 practice amounts in a drawn scene). Outcome: pass, wording tightened."
       }
     },
     {
@@ -1093,17 +1093,22 @@
         }
       ],
       "verification": {
-        "passes": 2,
+        "passes": 3,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): all three pages fetched. The NIKL Saegugeo Sosik article splits Korean numbers into a native series (hana, dul, set) and a Sino-Korean series (il, i, sam); the Standard Korean Language Dictionary lists 천 (千) and 오 (五) as numerals of Chinese-character origin, 천 defined as ten hundreds, and its entry 원 gives the example 천 원, a Sino-Korean number before 원. The note and the captions say only what these pages show; nothing is copied. Carried by: q2 Discover page 1 caption ('Prices use the Sino-Korean numbers il, i, sam, sa, o'), q2 page 2 caption ('cheon is a thousand: ocheon won is 5,000') and q3 Discover page 1 caption.\nLine 2 (pass 2b, independent fact check, 2026-10-14): all three pages opened again. Saegugeo Sosik (NIKL, Aug 2004) opening sentence splits numerals into a native series (hana, dul, set) and a Sino-Korean series (il, i, sam): supports the two sets. Dictionary 천3 (千) 「수사」 'ten hundreds' and 오4 (五) 「수사」 'four plus one': support 천 as a Sino-Korean thousand. Entry 원1: the money unit, so 천 원 is 1,000 won. FAILED as first written: the general rule 'prices are read with the Sino-Korean numbers' is in none of the cited pages (the Saegugeo article never mentions money, the 천 원 dictionary example could not be reached, and an NIKL Online Q&A of 2025-06-30 says the choice of number set follows usage, with no fixed rule). Fixed: the note now says only that the menu's prices use the Sino-Korean set, which is true of the drawn menu, plus the sourced facts. The q2 and q3 Discover captions that stated the same general rule were rescoped to the menu in en, es and ko (These prices use ..., More Sino-Korean numbers on this menu ...). No run of words copied. Outcome: fixed (reworded), locator corrected."
+        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): all three pages fetched. The NIKL Saegugeo Sosik article splits Korean numbers into a native series (hana, dul, set) and a Sino-Korean series (il, i, sam); the Standard Korean Language Dictionary lists 천 (千) and 오 (五) as numerals of Chinese-character origin, 천 defined as ten hundreds, and its entry 원 gives the example 천 원, a Sino-Korean number before 원. The note and the captions say only what these pages show; nothing is copied. Carried by: q2 Discover page 1 caption ('Prices use the Sino-Korean numbers il, i, sam, sa, o'), q2 page 2 caption ('cheon is a thousand: ocheon won is 5,000') and q3 Discover page 1 caption.\nLine 2 (pass 2b, independent fact check, 2026-10-14): all three pages opened again. Saegugeo Sosik (NIKL, Aug 2004) opening sentence splits numerals into a native series (hana, dul, set) and a Sino-Korean series (il, i, sam): supports the two sets. Dictionary 천3 (千) 「수사」 'ten hundreds' and 오4 (五) 「수사」 'four plus one': support 천 as a Sino-Korean thousand. Entry 원1: the money unit, so 천 원 is 1,000 won. FAILED as first written: the general rule 'prices are read with the Sino-Korean numbers' is in none of the cited pages (the Saegugeo article never mentions money, the 천 원 dictionary example could not be reached, and an NIKL Online Q&A of 2025-06-30 says the choice of number set follows usage, with no fixed rule). Fixed: the note now says only that the menu's prices use the Sino-Korean set, which is true of the drawn menu, plus the sourced facts. The q2 and q3 Discover captions that stated the same general rule were rescoped to the menu in en, es and ko (These prices use ..., More Sino-Korean numbers on this menu ...). No run of words copied. Outcome: fixed (reworded), locator corrected.\nLine 3 (pass 5, MAR culture review, final independent check, 2026-10-14): all three sources re-checked. Saegugeo Sosik (NIKL, Aug 2004) supports the native and Sino-Korean sets; dictionary 천3 (千) and 오4 (五) 「수사」 support 천 as a Sino-Korean thousand; entry 원1 supports 천 원 = 1,000 won. The note's scope ('the menu's prices') holds for the drawn menu. The q2 and q3 Discover captions overreached (the q3 caption put yuk to sip 'on this menu', the q2 caption put il in the prices, but the boards show only i to o and yuk, chil): both now name the number set and then say which members these prices use (en, es, ko). Carried by: q2 Discover page 1 and 2 captions, q3 Discover page 1 caption. No run of words copied. Outcome: pass, captions corrected."
       }
     }
   ],
   "review": {
-    "language": "draft",
-    "culture": "draft",
-    "notes": []
+    "language": "native-reviewed",
+    "culture": "culture-reviewed",
+    "reviewedBy": "MAR",
+    "reviewedAt": "2026-10-14",
+    "notes": [
+      "Language pass 4 (MAR): romanization, spelling (매운맛 one headword) and particles clean; applied number-set captions that name only the numbers on the board, extra-spicy for 매운맛 떡볶이, seaweed rice rolls, a ko tea question without 차, non-echo ko labels, shorter ko glosses; kept 육-십 as one number-set item (rule 4 count).",
+      "Culture pass 5 (MAR): n1 and n2 re-checked against every source (verification line 3); q3 is another drawn menu board; Type Hangul prompts name the target; topic snack-bar dishes: no fact claim (dishes are only glossed), so no note, and n1 covers the won; no real person, shop, brand or price; no age wording."
+    ]
   },
   "contentVer": 1
 }

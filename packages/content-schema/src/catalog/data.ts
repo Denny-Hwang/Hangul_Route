@@ -20,8 +20,9 @@ import type { Catalog, CatalogCell, CatalogQuest, CatalogStory, CatalogTopic } f
  * Version 9 (F-CURR-001 S4-1): the Stage 4 Read Along cell ships (three lesson quests).
  * Version 10 (F-CURR-001 S3-1): the Stage 3 First Sentences cell ships (three lesson quests).
  * Version 11 (F-CURR-001 S2-3): Playground Words ships (Stage 2 crafts, three lesson quests).
+ * Version 12 (F-CURR-001 S6-1): the Stage 6 Read the Menu cell ships (three lesson quests).
  */
-export const CATALOG_VERSION = 11;
+export const CATALOG_VERSION = 12;
 
 const cell = (
   stage: StageKey,
@@ -86,7 +87,7 @@ const cells: CatalogCell[] = [
     'quest:story-jagyeongnu-water-clock-read',
     'quest:story-pansori-tales-read',
   ]),
-  soon('stage6', 'letters', 'Read the Menu'),
+  cell('stage6', 'letters', 'Read the Menu', 'shipped', 15, ['quest:stage6-letters-q1', 'quest:stage6-letters-q2', 'quest:stage6-letters-q3']),
   soon('stage6', 'life', 'Order Food'),
   soon('stage6', 'rites', 'Travel for Chuseok'),
   soon('stage6', 'nature', 'Hike & Ask'),
@@ -133,6 +134,9 @@ const lessonQuests: CatalogQuest[] = [
   lesson('stage4-letters-q1', 'stage4', 'letters', 'What Is This?', 4),
   lesson('stage4-letters-q2', 'stage4', 'letters', 'Where Is It?', 4),
   lesson('stage4-letters-q3', 'stage4', 'letters', 'Thank You, Teacher', 4),
+  lesson('stage6-letters-q1', 'stage6', 'letters', 'Dishes on the Menu', 5),
+  lesson('stage6-letters-q2', 'stage6', 'letters', 'How Much Is It?', 5),
+  lesson('stage6-letters-q3', 'stage6', 'letters', 'Spicy or Not?', 5),
   // The Stage 5 books (F-STORY-005 PR 5.6): grid quests that play their stories at the read level.
   lesson('story-sejong-new-letters-read', 'stage5', 'letters', "King Sejong's New Letters", 4),
   lesson('story-shapes-of-hangeul-read', 'stage5', 'letters', 'The Secret in the Shapes', 5),
