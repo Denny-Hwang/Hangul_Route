@@ -105,7 +105,11 @@ describe('presentThisShown, per item kind', () => {
     expect(presentThisShown({ ...full, deck: deckOf('quest', QUEST) })).toBe(true);
   });
 
-  it('hides for a story until the story slides land (F-TCH-004 PR 11): the block expands to nothing', () => {
+  it('shows for a story the Library lists, now the story slides have landed (F-TCH-004 PR 11)', () => {
+    expect(presentThisShown({ ...full, deck: deckOf('story', 'story:chuseok-ganggangsullae') })).toBe(true);
+  });
+
+  it('hides for a story this bundle does not hold: the block expands to nothing', () => {
     expect(presentThisShown({ ...full, deck: deckOf('story', TALE_ID) })).toBe(false);
   });
 
