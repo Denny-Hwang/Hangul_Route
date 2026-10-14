@@ -1,0 +1,41 @@
+{
+  "locale": "ko",
+  "domain": "stages",
+  "entries": {
+    "stage:stage1": {
+      "title": "한글",
+      "oneLiner": "모든 한글 글자와 그 소리를 만나요.",
+      "anchorSkill": "자모 24개와 받침 6개를 90% 이상 알아보기"
+    },
+    "stage:stage2": {
+      "title": "낱말",
+      "oneLiner": "글자를 모아 처음 배우는 한국어 낱말 60개를 만들어요.",
+      "anchorSkill": "일상 주제의 핵심 낱말 60개 읽고 발음하기"
+    },
+    "stage:stage3": {
+      "title": "문장",
+      "oneLiner": "낱말을 이어 짧고 쓸모 있는 문장을 만들어요.",
+      "anchorSkill": "현재 시제로 주어와 동사가 있는 문장 만들기"
+    },
+    "stage:stage4": {
+      "title": "대화",
+      "oneLiner": "실생활에서 쓰는 첫 짧은 대화를 나눠요.",
+      "anchorSkill": "인사와 질문으로 4번 주고받는 대화하기"
+    },
+    "stage:stage5": {
+      "title": "이야기",
+      "oneLiner": "호야와 함께 짧은 이야기와 한국 옛이야기를 읽어요.",
+      "anchorSkill": "5문장 이야기를 읽고 80% 이상 이해하기"
+    },
+    "stage:stage6": {
+      "title": "실생활",
+      "oneLiner": "메뉴, 표지판, 전화까지, 한국어를 밖에서 써 봐요.",
+      "anchorSkill": "음식 주문하기, 길 묻기, 사촌에게 메시지 보내기"
+    },
+    "stage:stage7": {
+      "title": "나를 표현하기",
+      "oneLiner": "생각하고 느끼고 만든 것을 한국어로 말해요.",
+      "anchorSkill": "1분 자기소개 녹음하기"
+    }
+  }
+}

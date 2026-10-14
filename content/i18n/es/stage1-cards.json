@@ -1,0 +1,321 @@
+{
+  "locale": "es",
+  "domain": "stage1-cards",
+  "entries": {
+    "card:book": {
+      "title": "Libro",
+      "blurb": "Un libro que espera ser leído.",
+      "fact": "Hoy, la mayoría de los libros coreanos se imprimen de izquierda a derecha y de arriba abajo, igual que en inglés."
+    },
+    "card:hanji": {
+      "title": "Papel hanji",
+      "blurb": "Papel tradicional coreano, suave y resistente.",
+      "fact": "El hanji se hace con corteza de morera y puede durar más de 1000 años."
+    },
+    "card:brush": {
+      "title": "Pincel de caligrafía",
+      "blurb": "Un pincel que escribe las letras más bonitas.",
+      "fact": "La caligrafía coreana se llama seoye."
+    },
+    "card:ink": {
+      "title": "Barra de tinta",
+      "blurb": "Tinta negra para escribir letras grandes y firmes.",
+      "fact": "Se frota una barra de meok con agua para hacer tinta, fresca cada día."
+    },
+    "card:origami": {
+      "title": "Plegado de papel",
+      "blurb": "Papel doblado en formas mágicas.",
+      "fact": "Una grulla de papel se llama jongihak."
+    },
+    "card:hangul-day": {
+      "title": "Día del Hangul",
+      "blurb": "9 de octubre: el cumpleaños de las letras coreanas.",
+      "fact": "El rey Sejong creó el hangul en 1443 para que todos pudieran leer."
+    },
+    "card:kimchi": {
+      "title": "Kimchi",
+      "blurb": "Repollo rojo y picante: Corea en un plato.",
+      "fact": "Hay más de 200 tipos de kimchi."
+    },
+    "card:rice": {
+      "title": "Arroz",
+      "blurb": "Un tazón de arroz caliente: aquí empieza cada comida.",
+      "fact": "«¿Ya comiste arroz?» es un saludo entre amistades."
+    },
+    "card:chopsticks": {
+      "title": "Palillos",
+      "blurb": "Palillos de metal delgados: pruébalos con kimbap.",
+      "fact": "Los palillos coreanos suelen ser de metal y planos, no de madera y redondos."
+    },
+    "card:hanbok": {
+      "title": "Hanbok",
+      "blurb": "Un hermoso traje tradicional.",
+      "fact": "El hanbok se usa en Seollal y Chuseok."
+    },
+    "card:kimbap": {
+      "title": "Kimbap",
+      "blurb": "Arroz y verduras enrollados en alga.",
+      "fact": "Kimbap significa «arroz con alga»: perfecto para un pícnic."
+    },
+    "card:family-table": {
+      "title": "Mesa familiar",
+      "blurb": "Donde todos se reúnen para comer.",
+      "fact": "En Corea se comparten muchos platillos pequeños llamados banchan."
+    },
+    "card:seollal": {
+      "title": "Año Nuevo lunar",
+      "blurb": "El año nuevo: reverencias, hanbok, tteokguk.",
+      "fact": "La gente hace reverencias a sus mayores, y los mayores a menudo dan sebaetdon (dinero de la suerte)."
+    },
+    "card:chuseok": {
+      "title": "Fiesta de la cosecha",
+      "blurb": "Una luna de cosecha y un banquete familiar.",
+      "fact": "Las familias comparten songpyeon: pasteles de arroz en forma de media luna."
+    },
+    "card:tteokguk": {
+      "title": "Sopa de pastel de arroz",
+      "blurb": "En Año Nuevo, come tteokguk para cumplir un año más.",
+      "fact": "Las rodajas de pastel de arroz parecen monedas y traen buena suerte."
+    },
+    "card:songpyeon": {
+      "title": "Songpyeon",
+      "blurb": "Pasteles de arroz en forma de media luna con relleno dulce.",
+      "fact": "Se cocinan al vapor sobre agujas de pino para darles aroma."
+    },
+    "card:sebae": {
+      "title": "Reverencia de Año Nuevo",
+      "blurb": "Una reverencia respetuosa a los abuelos.",
+      "fact": "Después de la reverencia, recibes sebaetdon: dinero de la suerte."
+    },
+    "card:lantern": {
+      "title": "Farol de papel",
+      "blurb": "Un farol de papel que brilla en las fiestas.",
+      "fact": "El Yeondeunghoe es un festival de faroles reconocido por la UNESCO."
+    },
+    "card:tiger": {
+      "title": "Tigre",
+      "blurb": "El orgulloso tigre coreano. ¡Hoya es uno!",
+      "fact": "Los tigres aparecen en muchos cuentos populares coreanos."
+    },
+    "card:magpie": {
+      "title": "Urraca",
+      "blurb": "Un pájaro blanco y negro que trae buenas noticias.",
+      "fact": "Oír una urraca por la mañana significa que llegan visitas."
+    },
+    "card:mugunghwa": {
+      "title": "Rosa de Siria",
+      "blurb": "La flor nacional de Corea: florece todo el verano.",
+      "fact": "Mugunghwa significa «flor eterna»."
+    },
+    "card:mountain": {
+      "title": "Montaña",
+      "blurb": "Corea está llena de montañas verdes.",
+      "fact": "Cerca del 70 % del territorio coreano es montañoso."
+    },
+    "card:sea": {
+      "title": "Mar",
+      "blurb": "El mar azul en tres lados de Corea.",
+      "fact": "Corea tiene el mar del Este, el del Oeste y el del Sur."
+    },
+    "card:moon": {
+      "title": "Luna",
+      "blurb": "Una luna que brilla sobre las montañas.",
+      "fact": "Un cuento popular coreano dice que en la luna vive un conejo."
+    },
+    "card:yutnori": {
+      "title": "Juego de yut",
+      "blurb": "Lanza los cuatro palitos: ¡yut!",
+      "fact": "El yunnori, que también se escribe yutnori, se juega el día de Año Nuevo."
+    },
+    "card:jegi": {
+      "title": "Volante para patear",
+      "blurb": "Patea la pesita con plumas tantas veces como puedas.",
+      "fact": "El jegichagi es un juego favorito del invierno en el patio."
+    },
+    "card:kite": {
+      "title": "Cometa",
+      "blurb": "Una cometa en forma de rombo pintada con la cara de un tigre.",
+      "fact": "El bangpaeyeon, la cometa escudo, tiene un agujero en el centro para dirigirla."
+    },
+    "card:top": {
+      "title": "Trompo",
+      "blurb": "Un trompo de madera que gira sobre el hielo.",
+      "fact": "Hacer girar trompos en estanques congelados es una tradición de invierno."
+    },
+    "card:pottery": {
+      "title": "Cerámica celadón",
+      "blurb": "Una vasija coreana verde jade de hace 1000 años.",
+      "fact": "El cheongja de Goryeo es famoso en todo el mundo por su color."
+    },
+    "card:gayageum": {
+      "title": "Cítara gayageum",
+      "blurb": "Una cítara coreana de 12 cuerdas, suave como la lluvia.",
+      "fact": "El gayageum tiene más de 1400 años."
+    },
+    "card:sagwa": {
+      "title": "Manzana",
+      "blurb": "Una manzana roja y dulce para tu lonchera.",
+      "fact": "Corea cultiva manzanas famosas en Daegu."
+    },
+    "card:uyu": {
+      "title": "Leche",
+      "blurb": "Un vaso de leche fría para beber.",
+      "fact": "La leche con sabor a plátano es una de las favoritas en Corea."
+    },
+    "card:ppang": {
+      "title": "Pan",
+      "blurb": "Pan suave recién salido de la panadería.",
+      "fact": "La palabra ppang viene del portugués «pão»."
+    },
+    "card:dosirak": {
+      "title": "Lonchera",
+      "blurb": "Una lonchera para compartir con tus amistades.",
+      "fact": "Agitar un dosirak para mezclarlo es una divertida tradición coreana."
+    },
+    "card:haneul": {
+      "title": "Cielo",
+      "blurb": "El amplio cielo azul.",
+      "fact": "En canciones coreanas antiguas, haneul también significa «paraíso»."
+    },
+    "card:kkot": {
+      "title": "Flor",
+      "blurb": "Una flor brillante en el campo.",
+      "fact": "Corea celebra los cerezos en flor, beotkkot, cada primavera."
+    },
+    "card:namu": {
+      "title": "Árbol",
+      "blurb": "Un árbol alto y verde.",
+      "fact": "El árbol más antiguo de Corea, un ginkgo, tiene más de 1000 años."
+    },
+    "card:byeol": {
+      "title": "Estrella",
+      "blurb": "Una estrella que titila de noche.",
+      "fact": "En Corea, la gente pide un deseo a la primera estrella que ve."
+    },
+    "card:annyeong": {
+      "title": "Hola",
+      "blurb": "Un saludo amistoso.",
+      "fact": "Entre amistades, annyeong significa «hola» y también «adiós»."
+    },
+    "card:gamsa": {
+      "title": "Gracias",
+      "blurb": "Un agradecimiento cortés.",
+      "fact": "Gamsahamnida es la forma completa y cortés."
+    },
+    "card:chingu": {
+      "title": "Amigo, amiga",
+      "blurb": "Una buena amistad a quien saludar.",
+      "fact": "A las amistades cercanas de la misma edad se les llama chingu."
+    },
+    "card:insa": {
+      "title": "Saludo",
+      "blurb": "Una reverencia o un hola: un saludo.",
+      "fact": "Una pequeña reverencia es un saludo cortés en Corea."
+    },
+    "card:gangaji": {
+      "title": "Cachorro",
+      "blurb": "Un perrito simpático. Una de las primeras palabras que se oyen en muchos hogares coreanos.",
+      "fact": "¡Las familias coreanas suelen llamar gangaji a todos los perros pequeños, aunque crezcan!"
+    },
+    "card:nabi": {
+      "title": "Mariposa",
+      "blurb": "Una florecita voladora que revolotea en muchas canciones coreanas.",
+      "fact": "La canción coreana «Nabi-ya, nabi-ya» tiene más de 100 años."
+    },
+    "card:boreumdal": {
+      "title": "Luna llena",
+      "blurb": "La luna más brillante del año sale en Chuseok, la fiesta coreana de la cosecha.",
+      "fact": "Las familias comparten songpyeon, pasteles de arroz con forma de pequeñas medias lunas."
+    },
+    "card:ramyeon": {
+      "title": "Ramyeon",
+      "blurb": "Fideos humeantes en un tazón rojo y picante. La merienda más querida de Corea.",
+      "fact": "En Corea, cada persona come más de 70 paquetes de ramyeon al año."
+    },
+    "card:bap": {
+      "title": "Bap",
+      "blurb": "En Corea, una comida no está completa sin arroz en el centro de la mesa.",
+      "fact": "«¿Comiste bap?» es la forma en que las abuelas y los abuelos coreanos dicen «¿Cómo estás?»."
+    },
+    "card:inhyeong": {
+      "title": "Muñeca",
+      "blurb": "Desde muñecas de tela hechas a mano hasta figuras de K-pop, a Corea le encantan sus muñecas.",
+      "fact": "Las muñecas antiguas de los palacios coreanos se hacían de paja y papel."
+    },
+    "card:jamjari": {
+      "title": "Libélula",
+      "blurb": "Alas rápidas y transparentes que zumban sobre los estanques en verano.",
+      "fact": "Atrapar libélulas con una red de mango largo es un pasatiempo antiguo en Corea."
+    },
+    "card:chaek": {
+      "title": "Libro",
+      "blurb": "A Corea le gustan tanto los libros que tiene festivales del libro cada año.",
+      "fact": "El hangul se creó para que cualquier persona pudiera aprender a leer y escribir."
+    },
+    "card:kpop": {
+      "title": "K-pop",
+      "blurb": "Grandes canciones, grandes bailes. Con el K-pop, el mundo oye coreano cada día.",
+      "fact": "La primera canción de K-pop se cantó en 1992."
+    },
+    "card:taegeukgi": {
+      "title": "Taegeukgi",
+      "blurb": "Un remolino rojo y azul con cuatro símbolos negros. La bandera de Corea.",
+      "fact": "El remolino del centro significa «yin y yang»: equilibrio."
+    },
+    "card:paengi": {
+      "title": "Paengi",
+      "blurb": "Trompos de madera que giran sobre el hielo en invierno.",
+      "fact": "Un paengi coreano puede girar más de cinco minutos si se azota bien."
+    },
+    "card:horangi": {
+      "title": "Tigre",
+      "blurb": "Los cuentos populares coreanos empiezan con «Hace mucho tiempo, cuando los tigres fumaban tabaco...».",
+      "fact": "Se dice que la forma de Corea en el mapa parece un tigre."
+    },
+    "card:arirang": {
+      "title": "Arirang",
+      "blurb": "Una canción sobre extrañar el hogar. En Corea, todo el mundo conoce el primer verso.",
+      "fact": "La UNESCO incluyó el Arirang en su lista de patrimonio mundial en 2012."
+    },
+    "card:yagu": {
+      "title": "Yagu",
+      "blurb": "El deporte más ruidoso de Corea. La afición lleva tambores y anima durante nueve entradas seguidas.",
+      "fact": "Los estadios de béisbol coreanos tienen «líderes de cánticos» oficiales en el campo."
+    },
+    "card:eomuk": {
+      "title": "Eomuk",
+      "blurb": "Un bocado caliente de invierno que compras en la calle, servido con caldo caliente.",
+      "fact": "En los días fríos, el vaso de caldo es lo mejor."
+    },
+    "card:yeou": {
+      "title": "Zorro",
+      "blurb": "Los zorros de los cuentos coreanos antiguos son astutos y un poco mágicos.",
+      "fact": "Un zorro de nueve colas se llama «gumiho» y es famoso en los K-dramas."
+    },
+    "card:ori": {
+      "title": "Ori",
+      "blurb": "Patos marrones caminan bamboleándose por los estanques coreanos. Les encantan las sobras de arroz.",
+      "fact": "En las bodas coreanas antiguas se usaban patos de madera como símbolo de amor."
+    },
+    "card:yong": {
+      "title": "Dragón",
+      "blurb": "Los dragones coreanos viven en los ríos y traen lluvia cuando la tierra está seca.",
+      "fact": "No echan fuego: hacen girar el agua y el viento."
+    },
+    "card:usan": {
+      "title": "Usan",
+      "blurb": "La temporada de lluvias en Corea dura cerca de un mes. Ten un paraguas junto a la puerta.",
+      "fact": "Los paraguas coreanos antiguos se hacían de papel aceitado y bambú."
+    },
+    "card:geune": {
+      "title": "Geune",
+      "blurb": "En pinturas antiguas, las jóvenes coreanas se mecen en columpios gigantes durante la fiesta de Dano.",
+      "fact": "Cuanto más alto te columpias, mejor es el deseo para el año."
+    },
+    "card:ibul": {
+      "title": "Ibul",
+      "blurb": "En muchos hogares coreanos, la gente duerme en un piso cálido bajo mantas acolchadas y de colores llamadas ibul.",
+      "fact": "Las abuelas y los abuelos doblan los ibul en pilas ordenadas cada mañana."
+    }
+  }
+}

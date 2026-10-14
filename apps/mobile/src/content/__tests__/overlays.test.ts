@@ -45,6 +45,20 @@ const SHIPPED: Shipped = {
   theme: new Map(themes.map((t) => [`theme:${t.key}`, t])),
 };
 
+/**
+ * Stage 1 cards that exist only in `content/episodes/stage-1/cards.json` (no TypeScript card shares the id),
+ * and the jamo `gloss` (the JSON jamo's `en`, `content/episodes/stage-1/jamo.json`): JSON-base fields that
+ * `scripts/validate-content.mjs` checks against that JSON (and counts for `HANGUL_ROUTE_STRICT_LOCALES`), so
+ * this test leaves them alone. An overlay key of a card id the TypeScript cards also use is checked here.
+ */
+const JSON_ONLY_CARD_IDS: ReadonlySet<string> = new Set(
+  (JSON.parse(readFileSync(new URL('../../../../../content/episodes/stage-1/cards.json', import.meta.url), 'utf8')) as { id: string }[])
+    .map((card) => card.id)
+    .filter((id) => !SHIPPED.card!.has(id)),
+);
+const jsonBaseField = (id: string, field?: string): boolean =>
+  JSON_ONLY_CARD_IDS.has(id) || (field === 'gloss' && overlayPrefix(id) === 'jamo');
+
 type Rec = Record<string | number, unknown>;
 const getIn = (root: unknown, path: ReadonlyArray<string | number>): unknown =>
   path.reduce<unknown>((node, key) => (node as Rec | undefined)?.[key], root);
@@ -68,11 +82,13 @@ function overlayProblems(overlays: Overlays, shippedByPrefix: Shipped = SHIPPED)
       const shipped = shippedByPrefix[overlayPrefix(id)];
       if (shipped === undefined) continue;
       const entity = shipped.get(id);
+      if (entity === undefined && jsonBaseField(id)) continue;
       if (entity === undefined) {
         problems.push(`${locale} ${id}: not in the shipped content modules`);
         continue;
       }
       for (const [field, value] of Object.entries(fields)) {
+        if (jsonBaseField(id, field)) continue;
         const targets = overlayTargets(entity, field);
         if (!isOverlayFieldAllowed(id, field)) problems.push(`${locale} ${id}.${field}: not on the allow-list`);
         else if (targets.length === 0) problems.push(`${locale} ${id}.${field}: lands on no English source`);
@@ -203,6 +219,16 @@ describe('content overlays for TypeScript-resident content (F-I18N-001 §3.6)', 
     expect(SHIPPED.quest!.size).toBeGreaterThan(0);
   });
 
+  it('leaves the JSON-base fields to the validator: a JSON-only Stage 1 card and the JSON jamo gloss', () => {
+    expect(JSON_ONLY_CARD_IDS.has('card:gangaji')).toBe(true);
+    expect(JSON_ONLY_CARD_IDS.has('card:mugunghwa')).toBe(false);
+    const overlays: Overlays = {
+      es: { 'card:gangaji': { title: 'Cachorro' }, 'jamo:giyeok': { gloss: 'G: suena como el inicio de «gato»' } },
+      ko: { 'card:gangaji': { blurb: '다정한 작은 개예요.' }, 'card:mugunghwa': { nope: 'x' } },
+    };
+    expect(overlayProblems(overlays)).toEqual(['ko card:mugunghwa.nope: not on the allow-list']);
+  });
+
   it('reports an unknown id, a field off the allow-list and a field that lands nowhere', () => {
     const quest = questsAll[0]!;
     const bad: Overlays = {
@@ -292,12 +318,26 @@ const OVERLAY_KO_PINS: Readonly<Record<string, string>> = JSON.parse(
 /** Whether an overlay field names its element by position, or is a jamo example word (the TypeScript jamo's word). */
 const pinned = (id: string, field: string): boolean => field.split('.').some((seg) => /^\d+$/.test(seg)) || (id.startsWith('jamo:') && field === 'exampleWord.gloss');
 
-/** The Korean an overlay target explains: the holder's `ko`, or the `<name>Ko` beside a `<name>En` target. */
+/** Every `ko` string under a node, depth first (the words of a Discover page or item). */
+const nestedKo = (node: unknown): string[] =>
+  Array.isArray(node)
+    ? node.flatMap(nestedKo)
+    : typeof node === 'object' && node !== null
+      ? Object.entries(node).flatMap(([key, value]) => (key === 'ko' && typeof value === 'string' ? [value] : nestedKo(value)))
+      : [];
+
+/**
+ * The Korean an overlay target explains: the holder's `ko`, or the `<name>Ko` beside a `<name>En` target. A
+ * Discover page caption or item note has no Korean of its own: it is pinned to the Korean its page or item shows
+ * ("엄마 / 가족"), so a reorder of pages or items still fails the pin.
+ */
 function koAt(entity: object, path: ReadonlyArray<string | number>): string | undefined {
   const holder = getIn(entity, path.slice(0, -1)) as Rec | undefined;
   const key = String(path[path.length - 1]);
   const ko = key.endsWith('En') ? holder?.[`${key.slice(0, -2)}Ko`] : holder?.ko;
-  return typeof ko === 'string' ? ko : undefined;
+  if (typeof ko === 'string') return ko;
+  const shown = key === 'captionEn' || key === 'noteEn' ? nestedKo(holder) : [];
+  return shown.length > 0 ? shown.join(' / ') : undefined;
 }
 
 function pinProblems(overlays: Overlays, pins: Readonly<Record<string, string>>, shippedByPrefix: Shipped = SHIPPED): string[] {
@@ -350,31 +390,62 @@ describe('positional overlay entries stay on the Korean they translate (review o
  */
 describe('release guard: no es/ko ship while TypeScript-resident content lacks its overlay', () => {
   const GUARDED = ['jamo', 'card', 'episode', 'quest', 'minigame', 'stage'] as const;
-  const missingContent = (locale: 'es' | 'ko'): string[] =>
+  type Sources = readonly Overlays[];
+  // What the screens apply: the shipped overlays plus the lesson-cell glosses (CONTENT_OVERLAYS), and for a
+  // minigame ref the scope overlays of its lesson stage (compiled by build-lessons.mjs, not build-overlays).
+  const APPLIED: Sources = [CONTENT_OVERLAYS, ...Object.values(LESSON_STAGE_MODULES).map((mod) => mod.LESSON_SCOPE_OVERLAYS)];
+  const missingContent = (locale: 'es' | 'ko', sources: Sources = APPLIED): string[] =>
     GUARDED.flatMap((prefix) =>
       [...SHIPPED[prefix]!.entries()].flatMap(([id, entity]) =>
         translatableFields(id, entity)
-          .filter(({ field }) => OVERLAYS[locale]?.[id]?.[field] === undefined)
+          .filter(({ field }) => !sources.some((overlays) => overlays[locale]?.[id]?.[field] !== undefined))
           .map(({ field }) => `${id} ${field}`),
       ),
     );
-  const blockers = (status: Readonly<Record<'es' | 'ko', LocaleStatus>>): string[] =>
-    (['es', 'ko'] as const).filter((locale) => status[locale] === 'shipped' && missingContent(locale).length > 0);
+  const blockers = (status: Readonly<Record<'es' | 'ko', LocaleStatus>>, sources: Sources = APPLIED): string[] =>
+    (['es', 'ko'] as const).filter((locale) => status[locale] === 'shipped' && missingContent(locale, sources).length > 0);
+
+  /** A synthetic overlay that translates every guarded field in both locales, minus `drop` ("<id> <field>" rows). */
+  const complete = (drop: readonly string[] = []): Overlays => {
+    const overlays: Record<'es' | 'ko', Record<string, Record<string, string>>> = { es: {}, ko: {} };
+    for (const prefix of GUARDED) {
+      for (const [id, entity] of SHIPPED[prefix]!.entries()) {
+        for (const { field } of translatableFields(id, entity)) {
+          if (drop.includes(`${id} ${field}`)) continue;
+          for (const locale of ['es', 'ko'] as const) overlays[locale][id] = { ...overlays[locale][id], [field]: 'x' };
+        }
+      }
+    }
+    return overlays;
+  };
 
   it('holds for the current LOCALE_STATUS', () => {
     expect(blockers(LOCALE_STATUS)).toEqual([]);
   });
 
-  it('would stop a locale flipped to shipped while a quest, episode or stage field is still English', () => {
+  it('counts what the screens apply: the stage 2-7 lesson fields of the lesson modules are not missing', () => {
     for (const locale of ['es', 'ko'] as const) {
-      if (missingContent(locale).length === 0) continue;
-      expect(blockers({ es: 'hidden', ko: 'hidden', [locale]: 'shipped' })).toEqual([locale]);
+      const lessonRefs = new Set(Object.keys(ALL_LESSON_SCOPES));
+      expect(missingContent(locale).filter((row) => lessonRefs.has(row.split(' ')[0]!))).toEqual([]);
     }
-    // es today: the jamo hints and glosses are done; quest, episode and stage text is the fourth flip blocker (§10).
-    expect(missingContent('es').some((row) => row.startsWith('quest:'))).toBe(true);
+  });
+
+  it('would stop a locale flipped to shipped while a quest, episode or stage field is still English', () => {
+    const quest = questsAll[0]!;
+    const episode = episodesAll[0]!;
+    const drop = [`${quest.id} title`, `${episode.id} title`, 'stage:stage1 oneLiner'];
+    const sources: Sources = [complete(drop)];
+    expect(missingContent('es', sources)).toEqual(expect.arrayContaining(drop));
+    expect(missingContent('es', sources)).toHaveLength(drop.length);
+    for (const locale of ['es', 'ko'] as const) {
+      expect(blockers({ es: 'hidden', ko: 'hidden', [locale]: 'shipped' }, sources)).toEqual([locale]);
+    }
+    expect(blockers({ es: 'shipped', ko: 'shipped' }, [complete()])).toEqual([]);
+    expect(missingContent('ko', [{ es: {}, ko: {} }])).toContain(`${quest.id} title`);
+  });
+
+  it('the jamo hints and glosses are done in both locales (PR 15 / 16)', () => {
     expect(missingContent('es').filter((row) => row.startsWith('jamo:'))).toEqual([]);
-    // ko today (PR 16): the same split as es, the jamo hints and example-word glosses done, quest text still English.
-    expect(missingContent('ko').some((row) => row.startsWith('quest:'))).toBe(true);
     expect(missingContent('ko').filter((row) => row.startsWith('jamo:'))).toEqual([]);
   });
 });

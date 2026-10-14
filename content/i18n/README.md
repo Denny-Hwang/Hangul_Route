@@ -63,10 +63,15 @@ scripts, in `scripts/overlay-fields.mjs` (a test keeps them equal). **Never** tr
 content, in every locale. A jamo `soundHint` / `nameHint` may exist in an overlay even when the
 English base has none yet (a Spanish sound-alike is written fresh for Spanish readers).
 
-**Jamo glosses.** `jamo:*.gloss` translates the JSON jamo's `en` (`content/episodes/stage-1/jamo.json`).
+**Jamo glosses.** `jamo:*.gloss` translates the JSON jamo's `en` (`content/episodes/stage-1/jamo.json`,
+"G — sounds like the start of 'go'"), a JSON-base field: `scripts/validate-content.mjs` checks it against
+that JSON and counts it for `HANGUL_ROUTE_STRICT_LOCALES`, and the mobile overlay test leaves it alone.
 The TypeScript jamo the app ships (`apps/mobile/src/content/jamo.ts`) has no English gloss: its
-`nameEn` is the romanized letter name (`giyeok`) and is **never** a gloss source, so a `gloss` on a
-TypeScript-only jamo lands nowhere and fails the mobile overlay test. Describe a letter's sound in
+`nameEn` is the romanized letter name (`giyeok`) and is **never** a gloss source, so no screen shows
+`gloss` today. The same goes for the Stage 1 cards that exist only in `content/episodes/stage-1/cards.json`
+(`card:gangaji`, `card:nabi`, ...): the validator checks them, the mobile test skips them. Three ids are in
+both the JSON and the TypeScript cards with different English (`card:mugunghwa`, `card:sagwa`,
+`card:yutnori`); their overlay translates the TypeScript text the app ships. Describe a letter's sound in
 `soundHint` (and its name in `nameHint`); translate its example word with `exampleWord.gloss`, which
 Discover uses when the page shows that jamo's own example word. A Discover page's other example
 and word glosses are translated on the quest (`steps.<stepId>.discover.pages...`).
@@ -82,7 +87,8 @@ named by its position (`listenPick.rounds.1.prompt`), so a reorder would move th
 another word. `apps/mobile/src/content/__tests__/fixtures/overlay-ko-pins.json` records the Korean
 each positional entry (and each jamo `exampleWord.gloss`) was written for, and the mobile overlay
 test fails when the base Korean at that position changes. Add a pin with every new positional entry,
-after checking the translation against that Korean.
+after checking the translation against that Korean. A Discover page `caption` or item `note` has no Korean of
+its own; it is pinned to the Korean its page or item shows (`"엄마 / 가족"`).
 
 **Not yet translatable.** The Journey and Library theme labels shorten the theme title to its first
 word (an English-only rule); a theme overlay must not ship before a short-label field replaces

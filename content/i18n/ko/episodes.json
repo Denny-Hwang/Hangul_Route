@@ -1,0 +1,51 @@
+{
+  "locale": "ko",
+  "domain": "episodes",
+  "entries": {
+    "episode:stage1-letters": {
+      "title": "글자 만나기",
+      "subtitle": "글자 열두 개와 처음 읽는 진짜 낱말",
+      "hoyaIntro": "안녕하세요! 저는 호야예요. 제가 좋아하는 한글 글자를 만나 볼래요?"
+    },
+    "episode:stage1-life": {
+      "title": "한국의 식탁에서",
+      "subtitle": "밥, 김치, 가족을 한국어로 말해요.",
+      "hoyaIntro": "점심시간이에요! 제가 뭘 먹는지 보여 줄게요."
+    },
+    "episode:stage1-rites": {
+      "title": "새해와 명절",
+      "subtitle": "설날과 추석: 세배하고, 먹고, 떡을 나눠요.",
+      "hoyaIntro": "명절이에요! 설날에는 세배하고, 추석에는 떡을 나눠 먹어요."
+    },
+    "episode:stage1-nature": {
+      "title": "호랑이, 산, 달",
+      "subtitle": "한국의 자연은 거칠고 아름다워요.",
+      "hoyaIntro": "저는 호랑이예요! 제가 사는 곳을 보러 갈래요?"
+    },
+    "episode:stage1-crafts": {
+      "title": "윷, 연, 종이",
+      "subtitle": "해 볼 만한 한국의 놀이와 공예",
+      "hoyaIntro": "윷놀이 해요. 윷가락을 던져요!"
+    },
+    "episode:stage5-letters": {
+      "title": "글자 이야기",
+      "hoyaIntro": "한글에 관한 이야기를 한국어로 읽어 봐요. 짧은 문장 하나씩이요."
+    },
+    "episode:stage5-life": {
+      "title": "가족 이야기",
+      "hoyaIntro": "일상 이야기를 한국어로 읽어 봐요. 짧은 문장 하나씩이요."
+    },
+    "episode:stage5-rites": {
+      "title": "명절 이야기",
+      "hoyaIntro": "명절 이야기를 한국어로 읽어 봐요. 짧은 문장 하나씩이요."
+    },
+    "episode:stage5-nature": {
+      "title": "자연 이야기",
+      "hoyaIntro": "해와 하늘 이야기를 한국어로 읽어 봐요. 짧은 문장 하나씩이요."
+    },
+    "episode:stage5-crafts": {
+      "title": "공예 이야기",
+      "hoyaIntro": "솜씨 좋은 장인과 옛이야기를 한국어로 읽어 봐요. 짧은 문장 하나씩이요."
+    }
+  }
+}
