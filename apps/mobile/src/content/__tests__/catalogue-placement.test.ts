@@ -104,7 +104,8 @@ const PLACEMENT: readonly PlacementRow[] = [
   ),
   row('seungjeongwon-ilgi-every-day', "The Royal Secretariat's Everyday Diary", 'letters', 3, 5, '-', 'culture', 13, '', ['A4'], 'records-joseon'),
   row('nanjung-ilgi', "Admiral Yi's Diary", 'letters', 3, 4, '-', 'culture', 14, '', ['A4'], 'science-art-life'),
-  row('donguibogam', "Heo Jun's Treasured Mirror of Medicine", 'life', 3, 5, '-', 'culture', 15, '', ['E4'], 'science-art-life'),
+  // F-CURR-001 S3-2: Daily Mini-Sentences ships into this story's home cell.
+  row('donguibogam', "Heo Jun's Treasured Mirror of Medicine", 'life', 3, 5, 'L', 'culture', 15, '', ['E4'], 'science-art-life'),
   // F-CURR-001 S4-1: Read Along ships into this story's home cell.
   row('ilseongnok-daily-reflection', "King Jeongjo's Diary of Daily Reflection", 'letters', 4, 4, 'L', 'culture', 16, '', ['A4'], 'records-joseon'),
   row('uigwe-royal-birthday', 'A Picture Record of a Royal Birthday', 'rites', 5, 5, '-', 'culture', 17, '', ['C2', 'A3'], 'records-joseon'),
@@ -115,7 +116,7 @@ const PLACEMENT: readonly PlacementRow[] = [
 const MATRIX: Record<StageKey, Record<ThemeKey, string>> = {
   stage1: { letters: 'L+5', life: 'L+1', rites: 'L+2', nature: 'L+1', crafts: 'L+1' },
   stage2: { letters: 'S2', life: 'L+1', rites: 'S1', nature: 'L+1', crafts: 'S3' },
-  stage3: { letters: 'S2', life: 'S1', rites: '-', nature: '-', crafts: '-' },
+  stage3: { letters: 'S2', life: 'L+1', rites: '-', nature: '-', crafts: '-' },
   stage4: { letters: 'L+1', life: '-', rites: 'L+0', nature: '-', crafts: '-' },
   stage5: { letters: '-', life: '-', rites: 'S1', nature: '-', crafts: '-' },
   stage6: { letters: 'S1', life: '-', rites: '-', nature: '-', crafts: '-' },
@@ -207,11 +208,11 @@ describe('placement table (F-STORY-005 §3.3) against the story files', () => {
     }
   });
 
-  it('totals 112 minutes, 13 stories in lesson cells and 11 in cells without a lesson (Read Along, F-CURR-001 S4-1)', () => {
+  it('totals 112 minutes, 14 stories in lesson cells and 10 in cells without a lesson (Read Along, F-CURR-001 S4-1; Daily Mini-Sentences, S3-2)', () => {
     expect(storyFiles.reduce((sum, story) => sum + story.minutes, 0)).toBe(112);
     const inLessonCells = storyFiles.filter((story) => lessonCells.has(homeKey(story)));
-    expect(inLessonCells, GRID_HINT).toHaveLength(13);
-    expect(storyFiles.length - inLessonCells.length, GRID_HINT).toBe(11);
+    expect(inLessonCells, GRID_HINT).toHaveLength(14);
+    expect(storyFiles.length - inLessonCells.length, GRID_HINT).toBe(10);
   });
 
   it('gives every row the "cell holds" of the shipped grid', () => {
