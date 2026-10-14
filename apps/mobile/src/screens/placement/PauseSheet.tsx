@@ -5,7 +5,7 @@ import { Modal, ScrollView, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { PauseSheet as PauseSheetModel } from '../../logic/placement/flow';
 import { usePlacement } from './context';
-import { LinkButton } from './parts';
+import { LinkButton } from '../../components/LinkButton';
 
 /**
  * Pause (F-PLC-001 section 3.1 step 6, wireframe placement F and F2): a

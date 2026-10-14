@@ -19,7 +19,8 @@ import { Pressable, Switch, View, useWindowDimensions } from 'react-native';
 import { canProceed, controlsFor, flowReducer, showSoundGuideQuestion, type FlowControl } from '../../logic/placement/flow';
 import { MOTIVATION_CHOICES, modeTiles, modeTilesSideBySide } from '../../logic/placement/options-view';
 import { usePlacement } from './context';
-import { BackArrow, LinkButton, Note, RadioTile } from './parts';
+import { LinkButton } from '../../components/LinkButton';
+import { BackArrow, Note, RadioTile } from './parts';
 
 /**
  * Options (F-PLC-001 section 3.1 step 3, wireframe placement C1 / C2): a

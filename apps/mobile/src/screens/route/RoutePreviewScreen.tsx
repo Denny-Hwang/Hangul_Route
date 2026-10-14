@@ -10,7 +10,7 @@ import { draftWeeks, learnerNotices, previewStats, previewWeeks, type LearnerNot
 import { routesAfterStart, setupParams } from '../../logic/route/setup-flow';
 import type { RootStackParamList } from '../../navigation/types';
 import { useRouteStore } from '../../store/route-store';
-import { LinkButton } from '../placement/parts';
+import { LinkButton } from '../../components/LinkButton';
 import { PlanWeekCard } from './parts';
 import { usePlanBasis } from './use-plan-basis';
 

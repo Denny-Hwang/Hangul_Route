@@ -31,7 +31,7 @@ import { keepPlan } from '../../store/plan-offer-store';
 import { useProgressStore } from '../../store/progress-store';
 import { useRouteStore } from '../../store/route-store';
 import { usePlacement, type FinishedCheck, type ResultAction } from './context';
-import { LinkButton } from './parts';
+import { LinkButton } from '../../components/LinkButton';
 import { PlanStrip, PlanUpdateCard } from './PlanParts';
 
 /**

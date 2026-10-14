@@ -45,7 +45,8 @@ import { track } from '../../platform/telemetry';
 import { useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
 import { useAccessTier } from '../../store/tier-store';
-import { LinkButton, RadioTile } from '../placement/parts';
+import { LinkButton } from '../../components/LinkButton';
+import { RadioTile } from '../placement/parts';
 import { SuggestedPlanCard } from './SuggestedPlanCard';
 
 /**

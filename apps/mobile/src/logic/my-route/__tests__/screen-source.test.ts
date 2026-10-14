@@ -386,7 +386,8 @@ describe('the route card wiring (Learning Route LR-5a)', () => {
     expect(screen).toMatch(/view\.planOpen !== null && !readOnly/);
     expect(screen).toContain("navigation.navigate('RouteOverview', { profileId })");
     expect(screen).toContain('testID="my-route-plan-open"');
-    // The accessible name is the visible words (section 3.9), with the link role from LinkButton.
+    // The accessible name is the visible words (section 3.9), with the link role from the shared LinkButton.
+    expect(screen).toContain("import { LinkButton } from '../../components/LinkButton';");
     expect(screen).toMatch(/<LinkButton label=\{view\.planOpen\}/);
     // RouteOverview is mounted behind the raw flag, which routeEnabledFor includes, so the link never opens a missing screen.
     expect(read(join(SRC, 'navigation', 'root.tsx'))).toContain('{flags.routeEnabled ? <Stack.Screen name="RouteOverview"');

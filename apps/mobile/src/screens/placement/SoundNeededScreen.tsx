@@ -2,7 +2,7 @@ import { Button, Heading, Icon, Screen, Spacer, colors, spacing, touchTarget } f
 import React, { useEffect } from 'react';
 import { View } from 'react-native';
 import { usePlacement } from './context';
-import { LinkButton } from './parts';
+import { LinkButton } from '../../components/LinkButton';
 
 /**
  * Sound needed (F-PLC-001 section 3.1 step 4, wireframe placement L2): a
