@@ -128,7 +128,7 @@ describe('planFreeFacts: what a plan\'s own items say about the free plan', () =
   });
 
   it('never counts a coming-soon episode, a story, an unknown id or a free lesson', () => {
-    const items = [episode('episode:stage2-letters'), episode('episode:stage3-life'), episode('episode:nowhere'), quest(story), quest('quest:unknown'), episode('episode:stage1-letters')];
+    const items = [episode('episode:stage7-crafts'), episode('episode:stage3-life'), episode('episode:nowhere'), quest(story), quest('quest:unknown'), episode('episode:stage1-letters')];
     expect(planFreeFacts(items, CATALOG, null)).toEqual({ closed: 0, closedInHorizon: 0, openAhead: false });
   });
 

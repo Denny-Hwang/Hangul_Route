@@ -249,6 +249,13 @@ describe('grid golden (F-STORY-005 §3.1 rule 2)', () => {
       { id: 'episode:stage2-life', order: 2, questIds: ['quest:stage2-life-q1'], status: 'shipped' },
       { id: 'episode:stage2-nature', order: 4, questIds: ['quest:stage2-nature-q1'], status: 'shipped' },
       { id: 'episode:stage4-rites', order: 3, questIds: ['quest:stage4-rites-q1'], status: 'shipped' },
+      // F-CURR-001 S2-1: Word Builder, the first lesson cell (content/episodes/stage-2/letters.json), keeps its placeholder id.
+      {
+        id: 'episode:stage2-letters',
+        order: 1,
+        questIds: [1, 2, 3, 4, 5, 6].map((k) => `quest:stage2-letters-q${k}`),
+        status: 'shipped',
+      },
       // F-STORY-005 PR 5.6: the five Stage 5 books (books.ts), each cell's placeholder id kept.
       {
         id: 'episode:stage5-letters',
@@ -311,6 +318,7 @@ describe('pillar tags of the shipped lessons (F-STORY-005 §3.2)', () => {
       'episode:stage2-life': [],
       'episode:stage2-nature': ['D2'],
       'episode:stage4-rites': [],
+      'episode:stage2-letters': ['A1'],
       'episode:stage5-letters': ['A1'],
       'episode:stage5-life': ['B1', 'B5', 'E4'],
       'episode:stage5-rites': ['B5'],
@@ -333,7 +341,7 @@ const GRID_GOLDEN: Record<string, string> = {
   'stage1:rites': 'episode:stage1-rites | New Year & Festivals | shipped',
   'stage1:nature': 'episode:stage1-nature | Tigers, Mountains, Moon | shipped',
   'stage1:crafts': 'episode:stage1-crafts | Yut, Kites & Paper | shipped',
-  'stage2:letters': 'episode:stage2-letters | Word Builder | preview',
+  'stage2:letters': 'episode:stage2-letters | Word Builder | shipped',
   'stage2:life': 'episode:stage2-life | Lunch Box Words | shipped',
   'stage2:rites': 'episode:stage2-rites | Holiday Words | preview',
   'stage2:nature': 'episode:stage2-nature | Outdoor Words | shipped',

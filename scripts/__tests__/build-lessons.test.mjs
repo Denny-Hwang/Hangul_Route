@@ -303,7 +303,7 @@ describe("build-lessons.mjs: --check and --report", () => {
     assert.match(r.stdout, /episode:stage2-rites {2}3 quests {2}\d+ B raw {2}\d+ B gzip/);
     assert.match(r.stdout, /lessons-stage2\.ts {2}\d+ B raw/);
     assert.match(r.stdout, /total {2}\d+ B raw {2}\d+ B gzip/);
-    assert.match(r.stdout, /Budget: 7500 B raw per quest/);
+    assert.match(r.stdout, /Budget: 11000 B raw per quest/);
   });
 
   test("--report fails over budget; a draft is never measured", () => {
@@ -314,13 +314,13 @@ describe("build-lessons.mjs: --check and --report", () => {
     put(root, "content/episodes/stage-2/crafts.json", cell("stage2", "crafts", "draft", { order: 5 }));
     const r = run(root, ["--report"]);
     assert.equal(r.status, 1);
-    assert.match(r.stdout, /::error file=apps\/mobile\/src\/content\/__generated__::episode:stage2-rites is \d+ B raw for 3 quests, over its ceiling of 22500 B/);
+    assert.match(r.stdout, /::error file=apps\/mobile\/src\/content\/__generated__::episode:stage2-rites is \d+ B raw for 3 quests, over its ceiling of 33000 B/);
     assert.doesNotMatch(r.stdout, /stage2-crafts/);
   });
 
   test("checkBudget names every ceiling it crosses", () => {
     const over = checkBudget({
-      perCell: [{ id: "episode:x", quests: 6, raw: 45_001, gzip: 1 }],
+      perCell: [{ id: "episode:x", quests: 6, raw: 66_001, gzip: 1 }],
       perModule: [
         { name: "lessons-index.ts", raw: 999_999, gzip: 999_999 },
         { name: "lessons-stage2.ts", raw: BUDGET.stageRaw + 1, gzip: BUDGET.stageGzip + 1 },
@@ -328,7 +328,7 @@ describe("build-lessons.mjs: --check and --report", () => {
       total: { raw: BUDGET.totalRaw + 1, gzip: BUDGET.totalGzip + 1 },
     });
     assert.equal(over.length, 5);
-    assert.match(over[0], /episode:x is 45001 B raw for 6 quests, over its ceiling of 45000 B/);
+    assert.match(over[0], /episode:x is 66001 B raw for 6 quests, over its ceiling of 66000 B/);
     assert.deepEqual(checkBudget({ perCell: [], perModule: [], total: { raw: 0, gzip: 0 } }), []);
     const report = sizes([{ status: "draft", episode: { id: "d" }, quests: [], scopes: {} }], buildModules([]));
     assert.deepEqual(report.perCell, []);

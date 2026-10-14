@@ -82,7 +82,17 @@ export const CATALOG_QUEST_IDS_V8: readonly string[] = Object.freeze([
  * `CATALOG_VERSION` (a cell row adds its cell's quests under its new version).
  * `catalog-versions.test.ts` fails when the catalogue holds a quest no version lists.
  */
-export const CATALOG_QUEST_ADDITIONS: Readonly<Record<number, readonly string[]>> = Object.freeze({});
+export const CATALOG_QUEST_ADDITIONS: Readonly<Record<number, readonly string[]>> = Object.freeze({
+  // F-CURR-001 S2-1: Stage 2 Word Builder.
+  9: [
+    'quest:stage2-letters-q1',
+    'quest:stage2-letters-q2',
+    'quest:stage2-letters-q3',
+    'quest:stage2-letters-q4',
+    'quest:stage2-letters-q5',
+    'quest:stage2-letters-q6',
+  ],
+});
 
 /** The quest ids the catalogue held at `version` (versions before 8 read as 8). */
 export function questIdsAtVersion(

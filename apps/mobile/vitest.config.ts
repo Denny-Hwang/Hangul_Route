@@ -34,6 +34,8 @@ export default defineConfig({
       'scripts/__tests__/**/*.test.mjs',
     ],
     passWithNoTests: true,
+    // F-CURR-001: the lesson stage modules load through a Metro-only `require`; tests get them imported.
+    setupFiles: ['./src/content/__tests__/helpers/lesson-modules-setup.ts'],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json-summary'],

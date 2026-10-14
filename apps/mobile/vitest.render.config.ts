@@ -16,7 +16,8 @@ export default defineConfig({
     name: 'render',
     environment: 'node',
     include: ['src/screens/**/*.test.tsx', 'src/test-support/**/*.test.tsx'],
-    setupFiles: ['src/test-support/render-setup.ts'],
+    // F-CURR-001: the lesson stage modules load through a Metro-only `require`; tests get them imported.
+    setupFiles: ['src/test-support/render-setup.ts', 'src/content/__tests__/helpers/lesson-modules-setup.ts'],
     server: { deps: { inline: [/react-native-web/] } },
   },
 });

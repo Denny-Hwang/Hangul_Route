@@ -10,7 +10,7 @@ import { nextPage, position } from './story-reader-helpers';
  * tiles), the story variant of the episode page and Culture notes. Needs the
  * fixture bundle, whose main reviewed shelf story is `story:hangul-day`
  * (Story Time, order 1, the sampler; one culture note). Its second one,
- * `story:cell-stories-fixture` ("The Hangul Book", Culture, home cell Stage 2
+ * `story:cell-stories-fixture` ("The Hangul Book", Culture, home cell Stage 7
  * Letters), is there for journey-stories.spec.ts (F-STORY-005 PR 5.5b); here it
  * is only the Home plan's second story and the Culture section's one tile:
  *

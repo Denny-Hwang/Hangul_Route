@@ -36,17 +36,28 @@ import {
 const WB = [1, 2, 3, 4, 5, 6].map((k) => `quest:stage2-letters-q${k}`);
 const FS = [1, 2, 3].map((k) => `quest:stage3-letters-q${k}`);
 
+/**
+ * The catalogue as it stood at version 8: the live one without Word Builder (F-CURR-001
+ * S2-1 shipped it at version 9), so the fixtures below stay the before-and-after pair.
+ */
+const CATALOG_8: Catalog = {
+  ...CATALOG,
+  version: 8,
+  cells: CATALOG.cells.map((cell) => (cell.episodeId === 'episode:stage2-letters' ? { ...cell, status: 'preview', minutes: 10, questIds: [] } : cell)),
+  quests: CATALOG.quests.filter((quest) => quest.episodeId !== 'episode:stage2-letters'),
+};
+
 /** Version 9 of a later catalogue: Word Builder (Stage 2) and First Sentences (Stage 3) shipped. */
 const CATALOG_9: Catalog = {
-  ...CATALOG,
+  ...CATALOG_8,
   version: 9,
-  cells: CATALOG.cells.map((cell) => {
+  cells: CATALOG_8.cells.map((cell) => {
     if (cell.episodeId === 'episode:stage2-letters') return { ...cell, status: 'shipped', minutes: 26, questIds: WB };
     if (cell.episodeId === 'episode:stage3-letters') return { ...cell, status: 'shipped', minutes: 13, questIds: FS };
     return cell;
   }),
   quests: [
-    ...CATALOG.quests,
+    ...CATALOG_8.quests,
     ...WB.map((id) => ({ id, episodeId: 'episode:stage2-letters', stage: 'stage2' as const, theme: 'letters' as const, title: id, minutes: 4, teaches: [], kind: 'lesson' as const })),
     ...FS.map((id) => ({ id, episodeId: 'episode:stage3-letters', stage: 'stage3' as const, theme: 'letters' as const, title: id, minutes: 4, teaches: [], kind: 'lesson' as const })),
   ],
@@ -56,7 +67,7 @@ const HISTORY_9: CatalogHistory = {
   idsAt: (v) => new Set([...CATALOG_QUEST_IDS_V8, ...(v >= 9 ? [...WB, ...FS] : [])]),
 };
 const STAGE3: PlacementLevel = { stage: 'stage3', band: 0 };
-const ROUTE_8 = routeCatalogOf(CATALOG);
+const ROUTE_8 = routeCatalogOf(CATALOG_8);
 const ROUTE_9 = routeCatalogOf(CATALOG_9);
 
 /** A `stage3` result stored at version 8 (no `catalogVersion`, as every result before the rule). */
@@ -134,7 +145,10 @@ describe('placedOutGrowth', () => {
     expect(placedOutGrowth(STAGE3, 8, ROUTE_9, new Set([WB[0] as string]), HISTORY_9)).toEqual(WB.slice(1));
   });
 
-  it('is empty with the shipped history while no version has added quests', () => {
+  it('with the shipped history, widens a version 8 set with Word Builder (version 9) and nothing at today\'s version', () => {
+    const live = routeCatalogOf(CATALOG);
+    expect(placedOutGrowth(STAGE3, undefined, live)).toEqual(WB);
+    expect(placedOutGrowth(STAGE3, CATALOG_VERSION, live)).toEqual([]);
     expect(placedOutGrowth(STAGE3, undefined, ROUTE_8)).toEqual([]);
   });
 });
@@ -190,7 +204,7 @@ describe('regression: a plan made at version 8 from a stage3 result (generate.ts
     unlockedStages: StageKeySchema.options as StageKey[],
   };
   const plan8 = (() => {
-    const draft = generateCurriculum(PARAMS, CATALOG);
+    const draft = generateCurriculum(PARAMS, CATALOG_8);
     return { meta: toMeta(draft), items: toPlanItems(draft) };
   })();
   const firstLesson = (items: readonly { kind: string; id: string }[]) =>

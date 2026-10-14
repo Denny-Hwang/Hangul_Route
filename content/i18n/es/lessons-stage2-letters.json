@@ -1,0 +1,182 @@
+{
+  "locale": "es",
+  "domain": "lessons-stage2-letters",
+  "entries": {
+    "episode:stage2-letters": {
+      "title": "Constructor de palabras",
+      "subtitle": "El resto del hangul y las palabras que abre.",
+      "hoyaIntro": "Ya conoces 30 letras. ¡Conozcamos el resto y leamos más palabras!"
+    },
+    "quest:stage2-letters-q1": {
+      "title": "Pares de vocales ae y e",
+      "blurb": "Cuatro vocales nuevas: ae, e, yae y ye.",
+      "steps.s1.title": "Cuatro vocales nuevas",
+      "steps.s2.title": "Conoce ae, e, yae, ye",
+      "steps.s3.title": "Imagen y palabra",
+      "steps.s4.title": "Une el significado",
+      "steps.s5.title": "Escucha y lee",
+      "steps.s6.title": "¡Cuatro vocales leídas!",
+      "steps.s1.hoyaLine": "Ya lees 30 letras. ¡Conozcamos cuatro vocales más!",
+      "steps.s2.hoyaLine": "Hoy mucha gente dice ae y e igual. La escritura muestra cuál es cuál.",
+      "steps.s6.hoyaLine": "Cuatro vocales nuevas y muchas palabras nuevas. ¡Muy bien!",
+      "steps.s2.discover.pages.2.caption": "Palabras que ya puedes leer",
+      "steps.s2.discover.pages.0.items.0.example.gloss": "perro",
+      "steps.s2.discover.pages.0.items.1.example.gloss": "cangrejo",
+      "steps.s2.discover.pages.1.items.0.example.gloss": "charla, historia",
+      "steps.s2.discover.pages.1.items.1.example.gloss": "reloj",
+      "steps.s2.discover.pages.2.items.0.word.gloss": "canción",
+      "steps.s2.discover.pages.2.items.1.word.gloss": "pájaro"
+    },
+    "quest:stage2-letters-q2": {
+      "title": "Letras dobles",
+      "blurb": "Cinco letras dobles: kk, tt, pp, ss y jj.",
+      "steps.s1.title": "Dos iguales",
+      "steps.s2.title": "Conoce kk, tt, pp, ss, jj",
+      "steps.s3.title": "Imagen y palabra",
+      "steps.s4.title": "Une el significado",
+      "steps.s5.title": "Escucha y lee",
+      "steps.s6.title": "¡Sonidos tensos!",
+      "steps.s1.hoyaLine": "Dos letras iguales forman un sonido nuevo. ¡Conozcamos cinco!",
+      "steps.s2.hoyaLine": "Una letra doble se dice tensa y fuerte, casi sin soplo de aire.",
+      "steps.s6.hoyaLine": "Leíste cinco letras dobles. ¡Buen trabajo!",
+      "steps.s2.discover.pages.0.items.0.example.gloss": "urraca",
+      "steps.s2.discover.pages.0.items.1.example.gloss": "fresa",
+      "steps.s2.discover.pages.1.items.0.example.gloss": "pan",
+      "steps.s2.discover.pages.1.items.1.example.gloss": "arroz crudo",
+      "steps.s2.discover.pages.2.items.0.example.gloss": "guiso"
+    },
+    "quest:stage2-letters-q3": {
+      "title": "Vocales unidas wa, wo, wi, ui",
+      "blurb": "Cuatro vocales hechas con dos que ya conoces.",
+      "steps.s1.title": "Vocales que se unen",
+      "steps.s2.title": "Conoce wa, wo, wi, ui",
+      "steps.s3.title": "Imagen y palabra",
+      "steps.s4.title": "Une el significado",
+      "steps.s5.title": "Escucha y lee",
+      "steps.s6.title": "¡Vocales unidas!",
+      "steps.s1.hoyaLine": "Dos vocales que ya conoces pueden unirse en una. ¡Veamos cómo!",
+      "steps.s2.hoyaLine": "Cada vocal unida son dos vocales que ya conoces, dichas rápido como un solo sonido.",
+      "steps.s6.hoyaLine": "Leíste cuatro vocales unidas. ¡Vas muy bien!",
+      "steps.s2.discover.pages.2.caption": "Palabras que ya puedes leer",
+      "steps.s2.discover.pages.0.items.0.example.gloss": "manzana",
+      "steps.s2.discover.pages.0.items.1.example.gloss": "mono",
+      "steps.s2.discover.pages.1.items.0.example.gloss": "oreja",
+      "steps.s2.discover.pages.1.items.1.example.gloss": "silla",
+      "steps.s2.discover.pages.2.items.0.word.gloss": "golosina, galleta",
+      "steps.s2.discover.pages.2.items.1.word.gloss": "tijeras"
+    },
+    "quest:stage2-letters-q4": {
+      "title": "Vocales unidas oe, wae, we",
+      "blurb": "Tres vocales unidas que suenan parecido.",
+      "steps.s1.title": "Tres parecidas",
+      "steps.s2.title": "Conoce oe, wae, we",
+      "steps.s3.title": "Imagen y palabra",
+      "steps.s4.title": "Une el significado",
+      "steps.s5.title": "Escucha y lee",
+      "steps.s6.title": "¡Todas las vocales!",
+      "steps.s1.hoyaLine": "Hoy, tres vocales unidas más. Su forma las distingue.",
+      "steps.s2.hoyaLine": "Hoy estas tres suelen sonar casi igual. Apréndelas por su forma.",
+      "steps.s6.hoyaLine": "Ya conoces todas las vocales del hangul. ¡Muy bien!",
+      "steps.s2.discover.pages.0.items.0.example.gloss": "empresa, trabajo",
+      "steps.s2.discover.pages.0.items.1.example.gloss": "cerdo",
+      "steps.s2.discover.pages.1.items.0.example.gloss": "suéter",
+      "steps.s2.discover.pages.1.items.1.word.gloss": "gris"
+    },
+    "quest:stage2-letters-q5": {
+      "title": "Un sonido para seis letras",
+      "blurb": "Seis letras de abajo que terminan en t.",
+      "steps.s1.title": "Mismo sonido, seis letras",
+      "steps.s2.title": "El sonido t al final",
+      "steps.s3.title": "Imagen y palabra",
+      "steps.s4.title": "Une el significado",
+      "steps.s5.title": "Escucha y lee",
+      "steps.s6.title": "¡Un sonido, seis letras!",
+      "steps.s1.hoyaLine": "¡Seis letras de abajo del bloque terminan con el mismo sonido!",
+      "steps.s2.hoyaLine": "Al final de una palabra, estas seis letras suenan t. Si sigue una terminación que empieza con vocal, la letra pasa a la sílaba siguiente y conserva su propio sonido.",
+      "steps.s6.hoyaLine": "Seis letras de abajo nuevas, un solo sonido t. ¡Buen trabajo!",
+      "steps.s2.discover.pages.0.items.0.example.gloss": "ropa",
+      "steps.s2.discover.pages.0.items.1.example.gloss": "de día, el día",
+      "steps.s2.discover.pages.1.items.0.example.gloss": "flor",
+      "steps.s2.discover.pages.1.items.1.example.gloss": "fin, final",
+      "steps.s2.discover.pages.2.items.0.example.gloss": "pronto",
+      "steps.s2.discover.pages.2.items.1.example.gloss": "estar, haber; tener"
+    },
+    "quest:stage2-letters-q6": {
+      "title": "Más letras para k y p",
+      "blurb": "Tres letras de abajo nuevas con sonidos que ya conoces.",
+      "steps.s1.title": "Sonidos conocidos, letras nuevas",
+      "steps.s2.title": "Letras nuevas, sonidos conocidos",
+      "steps.s3.title": "Imagen y palabra",
+      "steps.s4.title": "Une el significado",
+      "steps.s5.title": "Escucha y lee",
+      "steps.s6.title": "¡Constructor de palabras completo!",
+      "steps.s1.hoyaLine": "Ya conoces k y p al final del bloque. ¡Tres letras más hacen esos sonidos!",
+      "steps.s2.hoyaLine": "Al final de una palabra, k y kk suenan k, como g. Y p suena p, como b.",
+      "steps.s6.hoyaLine": "Conociste las últimas letras nuevas de Constructor de palabras. ¡Genial!",
+      "steps.s2.discover.pages.0.items.0.example.gloss": "cocina",
+      "steps.s2.discover.pages.0.items.1.example.gloss": "afuera",
+      "steps.s2.discover.pages.1.items.0.example.gloss": "frente, delante",
+      "steps.s2.discover.pages.1.items.1.word.gloss": "bosque"
+    },
+    "minigame:s2-letters-q1-apply": {
+      "cardPairs.gae.gloss": "perro",
+      "cardPairs.ge.gloss": "cangrejo",
+      "cardPairs.yaegi.gloss": "charla, historia",
+      "cardPairs.sigye.gloss": "reloj"
+    },
+    "minigame:s2-letters-q1-check": {
+      "listenPick.rounds.see-hae.prompt": "sol",
+      "listenPick.rounds.read-norae.prompt": "canción"
+    },
+    "minigame:s2-letters-q2-apply": {
+      "cardPairs.kkachi.gloss": "urraca",
+      "cardPairs.ttalgi.gloss": "fresa",
+      "cardPairs.ppang.gloss": "pan",
+      "cardPairs.ssal.gloss": "arroz crudo"
+    },
+    "minigame:s2-letters-q2-check": {
+      "listenPick.rounds.see-ttalgi.prompt": "fresa",
+      "listenPick.rounds.read-ppang.prompt": "pan"
+    },
+    "minigame:s2-letters-q3-apply": {
+      "cardPairs.sagwa.gloss": "manzana",
+      "cardPairs.gwaja.gloss": "golosina, galleta",
+      "cardPairs.gwi.gloss": "oreja",
+      "cardPairs.uija.gloss": "silla"
+    },
+    "minigame:s2-letters-q3-check": {
+      "listenPick.rounds.see-gwi.prompt": "oreja",
+      "listenPick.rounds.read-uija.prompt": "silla"
+    },
+    "minigame:s2-letters-q4-apply": {
+      "cardPairs.hoesa.gloss": "empresa, trabajo",
+      "cardPairs.dwaeji.gloss": "cerdo",
+      "cardPairs.seuweteo.gloss": "suéter",
+      "cardPairs.hoesaek.gloss": "gris"
+    },
+    "minigame:s2-letters-q4-check": {
+      "listenPick.rounds.see-hoesaek.prompt": "gris",
+      "listenPick.rounds.read-dwaeji.prompt": "cerdo"
+    },
+    "minigame:s2-letters-q5-apply": {
+      "cardPairs.ot.gloss": "ropa",
+      "cardPairs.kkot.gloss": "flor",
+      "cardPairs.nat.gloss": "de día, el día",
+      "cardPairs.kkeut.gloss": "fin, final"
+    },
+    "minigame:s2-letters-q5-check": {
+      "listenPick.rounds.see-kkot.prompt": "flor",
+      "listenPick.rounds.read-ot.prompt": "ropa"
+    },
+    "minigame:s2-letters-q6-apply": {
+      "cardPairs.bueok.gloss": "cocina",
+      "cardPairs.bak.gloss": "afuera",
+      "cardPairs.ap.gloss": "frente, delante",
+      "cardPairs.sup.gloss": "bosque"
+    },
+    "minigame:s2-letters-q6-check": {
+      "listenPick.rounds.see-tteokbokki.prompt": "tteokbokki (pasteles de arroz picantes)",
+      "listenPick.rounds.read-ap.prompt": "frente, delante"
+    }
+  }
+}

@@ -16,7 +16,7 @@ import {
 } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
 import { bookQuests } from '../../../content/books';
-import { episodesAll, previewEpisodesFor, handWrittenEpisodes } from '../../../content/episodes';
+import { previewEpisodesFor, handWrittenEpisodes } from '../../../content/episodes';
 import { questsAll, stage1Quests, stage2Quests, stage4Quests } from '../../../content/quests';
 import { storyEpisodes, storyQuests } from '../../../content/stories';
 import { questsInCursorOrder } from '../../lessons/lesson-lookup';
@@ -44,8 +44,14 @@ const lessonEpisodes: Episode[] = [
   episodeOf('episode:stage2-letters', WB, { stage: 'stage2', theme: 'letters', order: 1, status: 'shipped' }),
   episodeOf('episode:stage3-letters', FS, { stage: 'stage3', theme: 'letters', order: 1, status: 'shipped' }),
 ];
+/** The episodes the bundle held before these cells (Word Builder itself shipped at version 9, F-CURR-001 S2-1). */
+const shippedBefore = handWrittenEpisodes.filter((e) => !lessonEpisodes.some((l) => l.id === e.id));
+const LATER = new Set([...WB, ...FS]);
+/** The version 8 bundle: the stored placement result fixed its set against it. */
+const EPISODES_8: Episode[] = [...shippedBefore, ...storyEpisodes, ...previewEpisodesFor(shippedBefore)];
+const QUESTS_8: Quest[] = questsAll.filter((q) => !LATER.has(q.id));
 /** The version 9 bundle, put together the way content/episodes.ts and content/quests.ts do. */
-const claimers = [...handWrittenEpisodes, ...lessonEpisodes];
+const claimers = [...shippedBefore, ...lessonEpisodes];
 const EPISODES_9: Episode[] = [...claimers, ...storyEpisodes, ...previewEpisodesFor(claimers)];
 const QUESTS_9: Quest[] = questsInCursorOrder({
   early: [...stage1Quests, ...stage2Quests, ...stage4Quests],
@@ -60,7 +66,7 @@ const HISTORY_WITHOUT_RULE: CatalogHistory = { version: 8, idsAt: HISTORY_9.idsA
 const stored = placementResult({
   level: STAGE3,
   beyondContent: true,
-  placedOutQuestIds: questsPlacedOutAtLevel(STAGE3, appRouteCatalog(questsAll, episodesAll)),
+  placedOutQuestIds: questsPlacedOutAtLevel(STAGE3, appRouteCatalog(QUESTS_8, EPISODES_8)),
 });
 const next = (skip: ReadonlySet<string> | undefined) =>
   nextQuestAfter({ snapshot: snapshotWith([]), quests: QUESTS_9, episodes: EPISODES_9, ...(skip ? { skipQuestIds: skip } : {}) })?.id;
@@ -99,17 +105,24 @@ describe('a stage3 result stored at version 8, then Word Builder ships', () => {
 });
 
 describe('a plan made at version 8: Change the plan after Word Builder ships', () => {
+  /** The version 8 catalogue: the live one without Word Builder (shipped at version 9 by F-CURR-001 S2-1). */
+  const CATALOG_8: Catalog = {
+    ...CATALOG,
+    version: 8,
+    cells: CATALOG.cells.map((cell) => (cell.episodeId === 'episode:stage2-letters' ? { ...cell, status: 'preview', minutes: 10, questIds: [] } : cell)),
+    quests: CATALOG.quests.filter((quest) => quest.episodeId !== 'episode:stage2-letters'),
+  };
   /** The version 9 catalogue the plan generator reads (the same cells as the bundle above). */
   const CATALOG_9: Catalog = {
-    ...CATALOG,
+    ...CATALOG_8,
     version: 9,
-    cells: CATALOG.cells.map((cell) => {
+    cells: CATALOG_8.cells.map((cell) => {
       if (cell.episodeId === 'episode:stage2-letters') return { ...cell, status: 'shipped', minutes: 26, questIds: WB };
       if (cell.episodeId === 'episode:stage3-letters') return { ...cell, status: 'shipped', minutes: 13, questIds: FS };
       return cell;
     }),
     quests: [
-      ...CATALOG.quests,
+      ...CATALOG_8.quests,
       ...WB.map((id) => ({ id, episodeId: 'episode:stage2-letters', stage: 'stage2' as const, theme: 'letters' as const, title: id, minutes: 4, teaches: [], kind: 'lesson' as const })),
       ...FS.map((id) => ({ id, episodeId: 'episode:stage3-letters', stage: 'stage3' as const, theme: 'letters' as const, title: id, minutes: 4, teaches: [], kind: 'lesson' as const })),
     ],
@@ -128,7 +141,7 @@ describe('a plan made at version 8: Change the plan after Word Builder ships', (
         goals: { focus: 'balanced' },
         unlockedStages: StageKeySchema.options as StageKey[],
       },
-      CATALOG,
+      CATALOG_8,
     ),
     'route:a',
     '2026-10-05T09:00:00.000Z',

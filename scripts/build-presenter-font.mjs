@@ -82,7 +82,7 @@ const list = (value) => (Array.isArray(value) ? value : []);
 
 /**
  * Every Korean string the presenter can draw from this content. Inputs are plain data:
- * `jamo` (jamoAll), `scopes` (minigameScopes), `quests` (questsAll), `cards`
+ * `jamo` (jamoKnown), `scopes` (minigameScopes), `quests` (questsAll), `cards`
  * (heritageCardsAll), `extra` (presenter words such as the Pause word), `topicFiles`
  * and `stories` ({ name, json } per content file).
  */
@@ -356,7 +356,7 @@ export async function loadRepoContent(root) {
     ...[2, 3, 4, 6, 7].map((n) => load(`apps/mobile/src/content/__generated__/lessons-stage${n}.ts`)),
   ]);
   return {
-    jamo: content.jamoAll,
+    jamo: content.jamoKnown, // the Stage 1 symbols and the Word Builder ones (F-CURR-001 S2-1)
     scopes: Object.assign({}, config.minigameScopes, ...lessonStages.map((m) => m.LESSON_SCOPES)),
     quests: content.questsAll,
     cards: content.heritageCardsAll,

@@ -1,7 +1,7 @@
 import type { Page } from '@playwright/test';
 import { LESSON_EPISODES } from '../../src/content/__generated__/lessons-index';
 import { expect, test } from './fixtures';
-import { completeChildForm, keepSidewaysIfAsked } from './helpers';
+import { completeChildForm, keepSidewaysIfAsked, passDiscover, playCheckByIds } from './helpers';
 
 /**
  * F-CURR-001 section 5 (row C-2 lands the skeleton; each cell row adds its cell):
@@ -13,7 +13,10 @@ import { completeChildForm, keepSidewaysIfAsked } from './helpers';
 
 interface UpperCell {
   episodeId: string;
-  /** The grid cell's accessible name, e.g. "Stage 2 Words, Holidays & Traditions: ...". */
+  /**
+   * The start of the grid cell's accessible name, e.g. "Stage 2 Words, Holidays & Traditions: lesson" (the
+   * heritage-story count after it differs between the release and the story fixture bundles).
+   */
   cellButton: string;
   /** The episode page title. */
   title: string;
@@ -23,8 +26,53 @@ interface UpperCell {
   expectRouteDay: (page: Page) => Promise<void>;
 }
 
+/** Start the first quest of the open episode page; Stage 1 is not done, so the soft-prerequisite sheet may ask. */
+async function startFirstQuest(page: Page): Promise<void> {
+  await page.getByRole('button', { name: 'Start', exact: true }).first().click();
+  const anyway = page.getByRole('button', { name: 'Play anyway' });
+  await anyway.waitFor({ state: 'visible', timeout: 1500 }).catch(() => undefined);
+  if (await anyway.isVisible()) await anyway.click();
+  await expect(page.getByRole('button', { name: 'Leave quest' })).toBeVisible();
+}
+
+/** The Learning Route tab: the cell's stage row, opened, lists the cell by its title. */
+async function expectCellOnRoute(page: Page, stage: number, title: string): Promise<void> {
+  await page.getByRole('tablist').getByRole('link', { name: 'Learning Route' }).click();
+  const row = page.getByTestId(`my-route-stage-${stage}`);
+  await expect(row).toBeVisible();
+  const cell = row.getByRole('button', { name: new RegExp(`: ${title.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\.`) }).first();
+  if (!(await cell.isVisible())) await row.getByRole('button', { name: new RegExp(`^Stage ${stage}, `) }).first().click();
+  await expect(cell).toBeVisible();
+}
+
 /** Each cell row appends its cell here (S2-1 onward). */
-const CELLS: readonly UpperCell[] = [];
+const CELLS: readonly UpperCell[] = [
+  // F-CURR-001 S2-1: Word Builder. q1 teaches ㅐ ㅔ ㅒ ㅖ; its games are skipped (they are the shipped Pic-Word and
+  // Card Match), and the Check is answered by id: the sun picture, then the written 노래.
+  {
+    episodeId: 'episode:stage2-letters',
+    cellButton: 'Stage 2 Words, Letters & Books: lesson',
+    title: 'Word Builder',
+    playFirstQuest: async (page) => {
+      await startFirstQuest(page);
+      await page.getByRole('button', { name: 'Continue' }).click();
+      // Discover shows the new vowel ㅐ with its example 개 and the words you can read now.
+      await expect(page.getByText('ㅐ', { exact: true }).first()).toBeVisible();
+      await expect(page.getByText('개', { exact: true }).first()).toBeVisible();
+      await passDiscover(page);
+      await page.getByRole('button', { name: 'Skip for now' }).click();
+      await page.getByRole('button', { name: 'Skip for now' }).click();
+      await playCheckByIds(page, [{ answer: 'hae' }, { answer: 'norae' }]);
+      await page.getByRole('button', { name: 'See results' }).click();
+      await expect(page.getByText('Next up')).toBeVisible();
+      await page.screenshot({ path: test.info().outputPath('stage2-letters-q1-results.png'), fullPage: true });
+    },
+    expectRouteDay: async (page) => {
+      await page.goto('/');
+      await expectCellOnRoute(page, 2, 'Word Builder');
+    },
+  },
+];
 
 async function openJourney(page: Page): Promise<void> {
   await page.goto('/');
@@ -49,7 +97,7 @@ test.describe('upper-stage lesson cells (F-CURR-001)', () => {
       const errors: string[] = [];
       page.on('pageerror', (e) => errors.push(String(e)));
       await openJourney(page);
-      await page.getByRole('button', { name: cell.cellButton, exact: true }).click();
+      await page.getByRole('button', { name: cell.cellButton }).click();
       await expect(page.getByText(cell.title).first()).toBeVisible();
       await cell.playFirstQuest(page);
       await cell.expectRouteDay(page);
