@@ -569,6 +569,11 @@ BR-1, BR-3, BR-4, BR-5a, BR-5b and BR-5c can run in parallel. Merge BR-1's `tele
 - The Korean chip keeps a Korean word whole on a narrow row: its romanization moves under the Korean instead (all catalogue chips).
 - Review of #519: stacked on BR-8 (#531), so the item page keeps BR-8's story rows (level pick, sources, preview wiring) with `TopicWordList` in place of the old topic rows; the Hear glyph is `spacing.xl`; `browse.spec.ts` compares the device only once playback has stopped writing (no change for 500 ms). A closed Words row mark and the switch-on topic page are checked once F-ENT-003's keys are on `main` (section 12).
 
+**BR-13 as built**:
+- [ Present this ] is a ghost `lg` button under the primary in the item page's action bar (D16), its explanation the button's accessible description (`caregiver.browse.item.presentNote`, `aria-describedby` on the web). `logic/browse/present.ts` builds the one-block deck (`presentBlock`: `quest`, `story` with checks, `vocab`; `source: 'catalogue'`, picker numbers 12, `options.uiLocale` the page's language, the title cut to the deck grammar by `presentTitle`, or no button when nothing is left) and decides the button (`presentThisShown`: scope `full`, the presenter root, and at least one slide from `expandDeck` on `lectureBundle(locale)`). A story or a word topic therefore shows the button by itself once F-TCH-004 PR 11 or PR 12 gives the bundle its adapter; no change here.
+- `platform/present-handoff.web.ts`: `presenterRootExists()` asks the root chooser (`pickRoot({ pathname: '/present' }) === 'presenter'`); `openPresenter(href)` opens only a `/present#…` link with `window.open(href, '_blank')` inside the tap and clears the new tab's `opener`, so no roster hand-off reaches it. The native stub has no presenter root and opens nothing. Each press makes a fresh deck (id, clock, seed); no learner store is read or written and no browse event is sent.
+- `browse.spec.ts` (release build): the button, its name and description, its place under the preview at phone width and at 1280, the decoded deck of the opened link and the new tab's null `opener`; no button with a sampler pass or on a story page.
+
 ## 12. Dependencies
 
 - **Upstream (hard)**: F-APP-001 A-3 and A-5a for the console entry (BR-10); F-APP-001 A-6 for the boot intent (BR-12b); F-TCH-004 PR 6 for BR-13; F-VOC-003 screens for flashcard preview (BR-9).
@@ -643,4 +648,5 @@ BR-1, BR-3, BR-4, BR-5a, BR-5b and BR-5c can run in parallel. Merge BR-1's `tele
 - 2026-10-13: BR-8 as built (section 11 note): the preview routes and ports, the leave confirm, the end screen and its Next order, the preview events, the lesson, story and card e2e on the release build.
 - 2026-10-13: review of #531 (section 11 BR-8 note): a story's questions return to the story page, Read again keeps the level read.
 - 2026-10-13: BR-9 as built (section 11 note): the word topic list with Hear through `playPrompt`, no flashcard preview until F-VOC-003 C-5.
+- 2026-10-13: BR-13 as built (section 11 note): [ Present this ] under the preview, shown by `expandDeck`, opened in a new tab with no opener.
 - 2026-10-13: review of #519 (section 11 BR-9 note): stacked on BR-8, the settled no-write check, the Hear glyph token.
