@@ -114,6 +114,16 @@ export const NEW_WORD_CAP: Readonly<Partial<Record<StageKey, number>>> = { stage
  */
 export const vocabLevelFor = (stage: StageKey): number => Math.max(1, Math.min(3, Number(stage.slice(5)) - 1));
 
+/**
+ * A Sino-Korean number composed of taught numerals (Stage 6 prices: 오천 from 오 and 천, F-CURR-001
+ * S6-1): the quest teaches the numerals and the unit, and a composed number is those parts at work,
+ * not a new word. It needs a unit (십, 백, 천, 만), so a word such as 오리 is still a word.
+ */
+const NUMERALS = new Set([...'일이삼사오육칠팔구십백천만']);
+const UNITS = new Set([...'십백천만']);
+export const isComposedNumber = (w: string, taught: ReadonlySet<string>): boolean =>
+  [...w].length > 1 && [...w].some((ch) => UNITS.has(ch)) && [...w].every((ch) => NUMERALS.has(ch) && taught.has(ch));
+
 /** U-3 and U-6 for one cell, quest by quest, against what earlier stages and the cell's own Discover taught. */
 export function reuseProblems(stage: StageKey, quests: readonly LessonQuest[], before: ReadonlySet<string>): string[] {
   const out: string[] = [];
@@ -123,7 +133,7 @@ export function reuseProblems(stage: StageKey, quests: readonly LessonQuest[], b
   for (const quest of quests) {
     if (discoverPatterns(quest) > 1) out.push(`U-3 ${quest.id}: Discover teaches ${discoverPatterns(quest)} patterns`);
     const shown = [...new Set(wordsOf(discoverTexts(quest), taught))];
-    const freshAll = shown.filter((w) => !taught.has(w));
+    const freshAll = shown.filter((w) => !taught.has(w) && !isComposedNumber(w, taught));
     // A word of a new set phrase (반가워요 in 만나서 반가워요, then 저도 반가워요) is that one item.
     const phraseWords = new Set(freshAll.filter((w) => w.includes('_')).flatMap((w) => w.split('_')));
     const fresh = freshAll.filter((w) => !phraseWords.has(w));
@@ -138,9 +148,10 @@ export function reuseProblems(stage: StageKey, quests: readonly LessonQuest[], b
       const { read, heard } = scopeTexts(s);
       return wordsOf([...read, ...heard], taught);
     }))];
-    const reused = outside.filter((w) => taught.has(w));
+    const known = (w: string): boolean => taught.has(w) || isComposedNumber(w, taught);
+    const reused = outside.filter(known);
     if (outside.length > 0 && reused.length * 2 < outside.length) {
-      out.push(`U-6 ${quest.id}: ${reused.length} of ${outside.length} words reused (${outside.filter((w) => !taught.has(w)).join(', ')} not taught)`);
+      out.push(`U-6 ${quest.id}: ${reused.length} of ${outside.length} words reused (${outside.filter((w) => !known(w)).join(', ')} not taught)`);
     }
   }
   return out;

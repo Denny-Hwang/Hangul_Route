@@ -664,6 +664,13 @@ describe('U-3 new-item caps and U-6 reuse (F-CURR-001 section 3.1 rules 4 and 5)
     expect(reuseProblems('stage4', [quest(1, ['비가 올 거예요.', '내일 갈 거예요.'], ['비가 올 거예요.'])], new Set(['비']))).toEqual([]);
   });
 
+  it('counts a number composed of taught numerals and a unit as taught, but not a word that only looks like one (S6-1)', () => {
+    const prices = quest(1, ['일 이 삼 사 오', '천 원'], ['오천 원', '이천 원', '사천 원']);
+    expect(reuseProblems('stage6', [prices], new Set(['원']))).toEqual([]);
+    const lookalike = quest(1, ['일 이 삼 사 오', '천 원'], ['오천', '오리', '사과']);
+    expect(reuseProblems('stage6', [lookalike], new Set(['원']))).toEqual(['U-6 quest:stage3-life-q1: 1 of 3 words reused (오리, 사과 not taught)']);
+  });
+
   it('counts a particle choice as no word, and a heard prompt as shown', () => {
     const lp = { kind: 'listen-pick', rounds: [{ id: 'c1', prompt: kt('바다에 가요.'), options: [{ id: 'o1', text: kt('산에 가요.') }], answerId: 'o1' }] };
     expect(scopeTexts(lp as unknown as LessonScope)).toEqual({ read: ['산에 가요.'], heard: ['바다에 가요.'], particles: [] });

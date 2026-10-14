@@ -107,6 +107,8 @@ export const CATALOG_QUEST_ADDITIONS: Readonly<Record<number, readonly string[]>
   19: Object.freeze(['quest:stage4-nature-q1', 'quest:stage4-nature-q2', 'quest:stage4-nature-q3']),
   // F-CURR-001 S4-4: Playdate Talk.
   20: Object.freeze(['quest:stage4-crafts-q1', 'quest:stage4-crafts-q2', 'quest:stage4-crafts-q3']),
+  // F-CURR-001 S6-1: Read the Menu.
+  21: Object.freeze(['quest:stage6-letters-q1', 'quest:stage6-letters-q2', 'quest:stage6-letters-q3']),
 });
 
 /** The quest ids the catalogue held at `version` (versions before 8 read as 8). */

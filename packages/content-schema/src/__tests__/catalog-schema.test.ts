@@ -49,7 +49,7 @@ describe('the shipped catalogue data', () => {
     for (const cell of CATALOG.cells) expect(cell.episodeId).toBe(`episode:${cell.stage}-${cell.theme}`);
   });
 
-  it('has Stage 1 shipped, three taste cells, Playground Words (F-CURR-001 S2-3), First Sentences (S3-1), Festival Sentences (S3-3), Read Along (S4-1), Game Sentences (S3-5), Daily Mini-Sentences (S3-2), Word Builder (S2-1), Holiday Words (S2-2), Kitchen Talk (S4-2), Park Conversations (S4-3), Playdate Talk (S4-4) and the five Stage 5 books (F-STORY-005 PR 5.6) shipped elsewhere, and the other 11 as previews', () => {
+  it('has Stage 1 shipped, three taste cells, Playground Words (F-CURR-001 S2-3), First Sentences (S3-1), Festival Sentences (S3-3), Read Along (S4-1), Game Sentences (S3-5), Daily Mini-Sentences (S3-2), Word Builder (S2-1), Holiday Words (S2-2), Kitchen Talk (S4-2), Park Conversations (S4-3), Playdate Talk (S4-4), Read the Menu (S6-1) and the five Stage 5 books (F-STORY-005 PR 5.6) shipped elsewhere, and the other 10 as previews', () => {
     const shipped = CATALOG.cells.filter((c) => c.status === 'shipped').map((c) => c.episodeId);
     expect(shipped).toEqual([
       'episode:stage1-letters',
@@ -76,9 +76,10 @@ describe('the shipped catalogue data', () => {
       'episode:stage5-rites',
       'episode:stage5-nature',
       'episode:stage5-crafts',
+      'episode:stage6-letters',
     ]);
     const previews = CATALOG.cells.filter((c) => c.status === 'preview');
-    expect(previews).toHaveLength(11);
+    expect(previews).toHaveLength(10);
     for (const cell of previews) expect(cell.questIds).toEqual([]);
   });
 
@@ -113,7 +114,8 @@ describe('the shipped catalogue data', () => {
     // + Kitchen Talk (S4-2): +3 lesson quests.
     // + Park Conversations (S4-3): +3 lesson quests.
     // + Playdate Talk (S4-4): +3 lesson quests.
-    expect(CATALOG.quests.filter((q) => q.kind === 'lesson')).toHaveLength(70);
+    // + Read the Menu (S6-1): +3 lesson quests.
+    expect(CATALOG.quests.filter((q) => q.kind === 'lesson')).toHaveLength(73);
   });
 
   it('has 24 stories adding up to 112 minutes, each with a listen quest on its shelf episode', () => {
@@ -483,6 +485,9 @@ describe('routeCatalogOf', () => {
       'quest:story-cheugugi-rain-gauge-read',
       'quest:story-jagyeongnu-water-clock-read',
       'quest:story-pansori-tales-read',
+      'quest:stage6-letters-q1',
+      'quest:stage6-letters-q2',
+      'quest:stage6-letters-q3',
     ]);
     expect(route.quests.slice(0, lessons.length).every((q) => q.grid)).toBe(true);
     const stories = route.quests.filter((q) => !q.grid);

@@ -1,4 +1,5 @@
 import type { Page } from '@playwright/test';
+import { keysFor } from '@hangul-route/content-schema';
 import { LESSON_EPISODES } from '../../src/content/__generated__/lessons-index';
 import { expect, test } from './fixtures';
 import { completeChildForm, journeyCellName, keepSidewaysIfAsked, passDiscover, playCheckByIds, waitForNextListenPickRound } from './helpers';
@@ -543,6 +544,44 @@ const CELLS: readonly UpperCell[] = [
       await page.getByText('Learning Route', { exact: true }).last().click();
       await page.getByRole('button', { name: /^Stage 4, Dialogue\./ }).click();
       await expect(page.getByRole('button', { name: /^Play & Crafts: Playdate Talk\./ })).toBeVisible();
+    },
+  },
+  // F-CURR-001 S6-1: Read the Menu, q1 "Dishes on the Menu" played through its real games.
+  {
+    episodeId: 'episode:stage6-letters',
+    cellButton: journeyCellName(6, 'Letters & Books'),
+    title: 'Read the Menu',
+    playFirstQuest: async (page) => {
+      await page.getByRole('button', { name: 'Start', exact: true }).first().click();
+      await page.getByRole('button', { name: 'Continue' }).click();
+      await passDiscover(page);
+      await page.getByRole('button', { name: 'Play minigame' }).click();
+      // Realia Read: each round by its question, then the right option; a right pick moves on by itself.
+      for (const [question, answer] of [
+        ['Which one is on the menu?', 'b'],
+        ['Which dish is noodles?', 'a'],
+        ['Which dish is spicy rice cakes?', 'b'],
+        ['Which dish is mixed rice?', 'a'],
+      ] as const) {
+        await expect(page.getByTestId('realia-read-question')).toHaveText(question);
+        await page.getByTestId(`realia-read-option-${answer}`).click();
+      }
+      await page.getByRole('button', { name: 'Play minigame' }).click();
+      // Type Hangul on the in-app keyboard: 김밥, 라면, 비빔밥 (no shifted or two-key letter).
+      for (const [i, word] of ['김밥', '라면', '비빔밥'].entries()) {
+        await expect(page.getByText(`${i + 1} / 3`)).toBeVisible({ timeout: 5_000 });
+        for (const jamo of keysFor(word)) await page.getByTestId(`hangul-key-${jamo}`).click();
+        await page.getByTestId('type-hangul-done').click();
+        await expect(page.getByText('You typed it!')).toBeVisible();
+      }
+      await playCheckByIds(page, [{ answer: 'b' }, { answer: 'a' }]);
+      await expect(page.getByText('Finish', { exact: true }).first()).toBeVisible();
+    },
+    expectRouteDay: async (page) => {
+      await page.goto('/');
+      await page.getByText('Learning Route', { exact: true }).last().click();
+      await page.getByRole('button', { name: /^Stage 6, Real-use\./ }).click();
+      await expect(page.getByRole('button', { name: /^Letters & Books: Read the Menu\./ })).toBeVisible();
     },
   },
 ];
