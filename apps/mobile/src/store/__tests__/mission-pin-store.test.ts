@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { beforeEach, describe, expect, it } from 'vitest';
 import type { MissionPlan } from '../../logic/homework/mission-builder';
-import { clearMissionPins, markVocabRoundDone, pinMission, pinnedMission, unmarkVocabRoundDone, vocabRoundsDone } from '../mission-pin-store';
+import { clearMissionPins, latestPin, markVocabRoundDone, pinMission, pinnedMission, unmarkVocabRoundDone, vocabRoundsDone } from '../mission-pin-store';
 
 const plan = (profileId: string, date: string, questId = 'quest:a'): MissionPlan => ({
   profileId,
@@ -38,6 +38,14 @@ describe('mission-pin-store (F-STORY-004 PR 4.8c)', () => {
     const later = plan('p1', '2026-10-12', 'quest:b');
     pinMission(later);
     expect(pinnedMission('p1', '2026-10-12')).toBe(later);
+  });
+
+  it('latestPin is the profile pin of any day, for the vocabulary carry (F-VOC-005 P-3b)', () => {
+    expect(latestPin('p1')).toBeNull();
+    const p = plan('p1', '2026-10-12');
+    pinMission(p);
+    expect(latestPin('p1')).toBe(p);
+    expect(latestPin('p2')).toBeNull();
   });
 
   it("keeps one pin per profile: a new day's pin drops that profile's older day, not other profiles", () => {
@@ -105,5 +113,21 @@ describe('Speed Rounds done today, for the Home vocabulary card (F-VOC-005 secti
     markVocabRoundDone('p1', '2026-10-12', 'food');
     clearMissionPins();
     expect(vocabRoundsDone('p1', '2026-10-12').size).toBe(0);
+  });
+});
+
+/** Source guard: Home keys the vocabulary card by the local day (F-VOC-005 P-3b). */
+describe('HomeScreen gives the vocabulary card its local day (F-VOC-005 P-3b)', () => {
+  const home = readFileSync(join(__dirname, '..', '..', 'screens', 'home', 'HomeScreen.tsx'), 'utf8');
+
+  it('reads the local day from useToday and passes it with the carry', () => {
+    expect(home).toMatch(/const localToday = useToday\('local'\);/);
+    expect(home).toMatch(/vocabRoundsDone:\s*vocabRoundsDone\(profile\.id,\s*localToday\)/);
+    expect(home).toMatch(/vocabDay:\s*localToday/);
+    expect(home).toMatch(/vocabCarry:\s*latestPin\(profile\.id\)/);
+  });
+
+  it('sends the shown event once per local day', () => {
+    expect(home).toMatch(/const key = vocabCardShownKey\(mission\);/);
   });
 });
