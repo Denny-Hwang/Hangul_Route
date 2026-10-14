@@ -108,7 +108,9 @@ Exit to: `quest/player` · `profiles/pin-entry` -> `billing/plan-status-free-les
 - **Mixed episode** (one quest open by being finished, the rest closed): rows as drawn; the preview card shows.
 - **Coming soon** (preview cell, not shipped): unchanged coming-soon card from `episode/detail`; no access words (nothing to open).
 - **Empty** (episode not found): unchanged not-found line.
-- **Error** (tier or snapshot unreadable): fail open — state A' with every Start live.
+- **Error** (the plan or route read fails: `routeNext` / `planView` throw): fail open for the tags. No Next tag and no In your plan tag; each row's Start still follows the access rule, as in the states above (`EpisodeDetailView`, `episodeAccessView`).
+- **No progress yet** (a new profile: no snapshot, or no finished quest): not an error, and never fail open. The access rule applies as usual (`useQuestAccess`): Stage 1 open, Stage 2+ rows in state B for a free learner. Opening everything here would open Stage 2+ for every new profile.
+- **Tier not known yet** (no tier cache entry for this learner on this device): read as free (Stage 1 only), except a learner with a space membership on this device, which fails open until the server answers (F-ENT-003 section 3.4, rule 3; `accessTier`).
 
 ## Accessibility
 
