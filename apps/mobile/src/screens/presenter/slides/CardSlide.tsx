@@ -1,6 +1,8 @@
 import { HeritageCardArt, colors, koreanTextLabel, presenter, spacing, supportedCardIds, typography } from '@hangul-route/design-system';
 import React from 'react';
 import { Text, View } from 'react-native';
+import { CardArt } from '../../../components/CardArt';
+import { cardById } from '../../../content/heritage-cards';
 import type { Slide } from '../../../logic/lecture/deck-builder';
 import { cardView } from '../../../logic/lecture/slide-view';
 import { ART_LG, units } from '../../../logic/lecture/stage-constants';
@@ -12,7 +14,7 @@ type CardBody = Extract<Slide, { kind: 'card' }>;
 
 /**
  * Heritage card slide (design/screens/presenter/slide-card.md): the card art at 360 units on the
- * left; on the right "Heritage card", the title, and the Korean name as a chip (Korean and
+ * left (a card the heritage art cannot draw shows its `CardArt` face); on the right "Heritage card", the title, and the Korean name as a chip (Korean and
  * romanization in `text.primary` on `brand.secondaryLight`); then the fact, the content's own text.
  * With `romanization: 'tap'` the chip's romanization is its own build. Presenting awards nothing:
  * no "earned", star or count (section 3.9).
@@ -21,12 +23,19 @@ export function CardSlide({ slide, reveal }: { slide: CardBody; reveal: number }
   const { unit, messages } = usePresenterView();
   const size = useStageText();
   const view = cardView(slide, reveal);
+  // A bundled card the heritage art cannot draw shows its card face instead (cover, plate or its
+  // Korean word on the theme tint; F-STORY-006 D7), so the art build always shows a picture.
+  const fallback = supportedCardIds.includes(slide.cardId) ? undefined : cardById(slide.cardId);
   const promptSize = size(presenter.size.prompt);
   const bodySize = size(presenter.size.body);
   const titleSize = size(presenter.size.title);
   return (
     <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: units(unit, STAGE_GAP) }}>
-      {supportedCardIds.includes(slide.cardId) ? <HeritageCardArt cardId={slide.cardId} size={units(unit, ART_LG)} accessibilityLabel={slide.title} /> : null}
+      {supportedCardIds.includes(slide.cardId) ? (
+        <HeritageCardArt cardId={slide.cardId} size={units(unit, ART_LG)} accessibilityLabel={slide.title} />
+      ) : fallback !== undefined ? (
+        <CardArt card={fallback} size={units(unit, ART_LG)} accessibilityLabel={slide.title} testID="presenter-card-art" />
+      ) : null}
       <View style={{ flex: 1, gap: units(unit, STAGE_GAP_INNER), alignItems: 'flex-start' }}>
         <Text style={{ fontSize: size(presenter.size.caption), fontWeight: typography.weight.semibold, color: colors.text.secondary }}>{messages.learner.presenter.slide.card}</Text>
         <Text role="heading" style={{ fontSize: titleSize, lineHeight: Math.round(titleSize * typography.leading.tight), fontWeight: typography.weight.bold, color: colors.text.primary }}>

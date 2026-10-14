@@ -41,7 +41,9 @@ export function StoryCheckSlide({ slide, shown, romanization }: { slide: StoryCh
   const targetGloss = slide.prompt.glossAtAnswer !== true || revealed;
   const chip = (word: KoLine) => (
     <Text
-      accessibilityLabel={koreanTextLabel(word.ko, word.romanization)}
+      testID="presenter-check-target"
+      // The romanization is named only once it shows, so a screen reader never says it early (D2).
+      accessibilityLabel={targetRom ? koreanTextLabel(word.ko, word.romanization) : word.ko}
       style={{
         borderRadius: units(unit, STAGE_RADIUS),
         borderWidth: Math.max(STAGE_BORDER_MIN, units(unit, STAGE_BORDER)),
