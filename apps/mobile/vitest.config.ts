@@ -13,11 +13,13 @@ import { defineConfig } from 'vitest/config';
  *     needs a renderer harness, covered by Detox nightly instead.
  *   - every __generated__ folder under src — generated files (the clip map, F-AUDIO-004 §3.10).
  *
- * RN component tests go through Detox in a separate nightly job once the
- * device matrix is wired.
+ * Screen render tests (the .test.tsx files under src/screens) run in the second project of
+ * vitest.workspace.ts, vitest.render.config.ts: react-native resolves to
+ * react-native-web there and screens render into react-test-renderer (F-BILL-002 B-13).
  */
 export default defineConfig({
   test: {
+    name: 'unit',
     environment: 'node',
     include: [
       'src/logic/**/*.test.ts',
