@@ -27,8 +27,8 @@ describe('consoleWord', () => {
 
   it('glosses in the UI language when the catalogue has it, else in English', () => {
     expect(consoleWord('vocab:sagwa-apple', 'es').gloss).toBe('manzana');
-    // No Korean vocabulary overlay ships yet: the Korean UI falls back to the English gloss, as the app does.
-    expect(consoleWord('vocab:sagwa-apple', 'ko').gloss).toBe('apple');
+    // The Korean overlay glosses in Korean (a definition, never the headword).
+    expect(consoleWord('vocab:sagwa-apple', 'ko').gloss).toBe('빨갛고 동그란 과일');
     expect(consoleWord('vocab:sagwa-apple', 'en-XA').gloss).toBe('apple');
   });
 
