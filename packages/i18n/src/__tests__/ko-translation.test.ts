@@ -151,6 +151,21 @@ describe('the Korean review lenses, pinned (§3.10 step 3)', () => {
     for (const [path, text] of outputs()) expect(SHAME.test(text), `${path}: ${text}`).toBe(false);
   });
 
+  it('lens 1, terms: 멈추- only pauses; ending a round, a check or a plan is 그만하- (MAR re-review, #502)', () => {
+    for (const [path, text] of outputs()) {
+      if (/멈추|멈출|멈춰|멈췄|멈춤/.test(text)) expect(path, `${path}: ${text}`).toMatch(/pause|paused|stopsLine/i);
+    }
+    expect(ko.learner.placement.invite.duration).toContain('그만할 수 있어요');
+  });
+
+  it('lens 1, terms: the learner weekly plan and the console name each pace the same way (MAR re-review)', () => {
+    expect(ko.learner.weeklyPlan.proposal.pace).toEqual(ko.console.curriculum.rhythm.paces);
+  });
+
+  it('lens 1, naturalness: a later start is "더 나아간", never "더 뒤" or "앞당기-" (MAR re-review, #507 twins)', () => {
+    for (const [path, text] of outputs()) expect(/더 뒤의|더 뒤에서|앞당기/.test(text), `${path}: ${text}`).toBe(false);
+  });
+
   it('lens 3, length: drawn tab labels stay one short word for the 80 px tab (four tabs at 320 px)', () => {
     for (const label of Object.values(ko.a11y.tabs)) {
       expect(label.length, label).toBeLessThanOrEqual(5);
