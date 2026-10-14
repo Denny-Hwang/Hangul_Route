@@ -17,9 +17,10 @@ import {
   useMediaSize,
 } from '@hangul-route/design-system';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { View } from 'react-native';
+import { Platform, View } from 'react-native';
 import { useMessages } from '../../i18n/use-messages';
 import { useRomanizationMode } from '../../i18n/use-romanization-mode';
+import { stickyPromptMode } from '../../logic/layout/game-layout';
 import type { MinigameScope } from '../../logic/minigame-config';
 import {
   lineSpeech,
@@ -164,9 +165,11 @@ export function RealiaReadGame({ scope, host, onBack }: Props): React.ReactEleme
   const status = realiaStatus(play.realia, round, state, host.mode, copy, a11y);
   const arrangement = realiaArrangement(layoutClass.windowWidth, layout.sideBySideMin);
   const columns = arrangement === 'side' ? 1 : realiaOptionColumns(round, layoutClass.windowWidth);
+  // D7 on native: the sheet stays put beside the options, so the screen does not scroll; each column does.
+  const pinnedColumns = stickyPromptMode(arrangement, true, Platform.OS) === 'columns';
 
   return (
-    <Screen tone="canvas">
+    <Screen tone="canvas" scrollable={!pinnedColumns}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
         <View style={{ flex: 1 }}>
           {header.kind === 'dots' ? (

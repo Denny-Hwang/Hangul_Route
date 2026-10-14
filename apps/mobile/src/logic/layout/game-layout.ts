@@ -61,10 +61,23 @@ export function twoUpFits(columnWidth: number, gap: number, minCard: number): bo
 }
 
 /**
- * Whether the prompt column sticks to the top of the scroll area while a taller answer column
- * scrolls (Realia Read, D-2 D7: the realia stays in view beside long options). Side by side and on
- * the web only (CSS sticky); a native window wide enough for two columns keeps the plain columns.
+ * How the prompt column stays in view beside a taller answer column (Realia Read, D-2 D7: the
+ * realia stays readable beside long options). Side by side only, and only when the game asks:
+ *
+ * - `css`:     the web. The page scrolls as one; the prompt column is CSS `position: sticky`.
+ * - `columns`: native (a tablet, a phone on its side). React Native has no sticky, so the screen
+ *              stops scrolling and each column scrolls on its own: the prompt stays where it is
+ *              while the answers scroll (and a prompt taller than the window can still be read).
+ * - `none`:    stacked, or not asked: the plain columns, unchanged.
  */
+export type StickyPromptMode = 'none' | 'css' | 'columns';
+
+export function stickyPromptMode(arrangement: GameArrangement, requested: boolean, os: string): StickyPromptMode {
+  if (!requested || arrangement !== 'side') return 'none';
+  return os === 'web' ? 'css' : 'columns';
+}
+
+/** Whether the prompt column stays in view beside the answers, on any platform (`stickyPromptMode`). */
 export function stickyPromptColumn(arrangement: GameArrangement, requested: boolean, os: string): boolean {
-  return requested && arrangement === 'side' && os === 'web';
+  return stickyPromptMode(arrangement, requested, os) !== 'none';
 }
