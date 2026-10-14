@@ -1,6 +1,5 @@
 import { create } from 'zustand';
-import { dayKey } from '../logic/homework/mission-builder';
-import type { VocabEvent } from '../logic/vocab/progress';
+import { localDay, type VocabEvent } from '../logic/vocab/progress';
 import { speedAnswerEvent, speedSessionEvent } from '../logic/vocab/speed-round';
 import type { QuestionResult } from '../logic/vocab/speed-session';
 import type { RoundSummary } from '../logic/vocab/stars';
@@ -101,8 +100,9 @@ export const useVocabRunStore = create<State & Actions>((set, get) => ({
     try {
       if (event !== null) {
         // Before the write, so the Home plan it re-renders already sees the round (F-VOC-005 section 3.7);
-        // taken back when the write throws, unless an earlier round of the topic today stands.
-        const day = dayKey(now.toISOString());
+        // taken back when the write throws, unless an earlier round of the topic today stands. Keyed by the
+        // device's local day, the Home vocabulary card's day (F-VOC-005 P5, P-3b).
+        const day = localDay(now);
         const earlier = vocabRoundsDone(profileId, day).has(topicKey);
         markVocabRoundDone(profileId, day, topicKey);
         try {

@@ -7,6 +7,7 @@ vi.mock('../progress-store', () => ({
 
 const { speedHost, useVocabRunStore, vocabHost } = await import('../vocab-run-store');
 const { clearMissionPins, vocabRoundsDone } = await import('../mission-pin-store');
+const { localDay } = await import('../../logic/vocab/progress');
 
 const NOW = new Date('2026-10-11T12:00:00.000Z');
 
@@ -188,7 +189,23 @@ describe('vocab-run-store, Speed Round (F-VOC-004 section 3.6)', () => {
     clearMissionPins();
     useVocabRunStore.getState().begin('p1', 'food', 'speed');
     useVocabRunStore.getState().finishSpeed(summary, NOW);
-    expect([...vocabRoundsDone('p1', '2026-10-11')]).toEqual(['food']);
+    expect([...vocabRoundsDone('p1', localDay(NOW))]).toEqual(['food']);
+  });
+
+  it("marks the device's local day, the Home card's day, not the UTC day (F-VOC-005 P-3b)", () => {
+    const before = process.env.TZ;
+    process.env.TZ = 'Pacific/Kiritimati';
+    try {
+      clearMissionPins();
+      useVocabRunStore.getState().begin('p1', 'food', 'speed');
+      // 2026-10-11 12:00 UTC is 2026-10-12 02:00 at UTC+14.
+      useVocabRunStore.getState().finishSpeed(summary, NOW);
+      expect([...vocabRoundsDone('p1', '2026-10-12')]).toEqual(['food']);
+      expect(vocabRoundsDone('p1', '2026-10-11').size).toBe(0);
+    } finally {
+      if (before === undefined) delete process.env.TZ;
+      else process.env.TZ = before;
+    }
   });
 
   it('a write that throws leaves the topic not done, so Home never shows a round the progress lacks', () => {
@@ -198,7 +215,7 @@ describe('vocab-run-store, Speed Round (F-VOC-004 section 3.6)', () => {
     });
     useVocabRunStore.getState().begin('p1', 'food', 'speed');
     expect(() => useVocabRunStore.getState().finishSpeed(summary, NOW)).toThrow('quota');
-    expect(vocabRoundsDone('p1', '2026-10-11').size).toBe(0);
+    expect(vocabRoundsDone('p1', localDay(NOW)).size).toBe(0);
     expect(useVocabRunStore.getState()).toMatchObject({ profileId: null, mode: null });
   });
 
@@ -211,14 +228,14 @@ describe('vocab-run-store, Speed Round (F-VOC-004 section 3.6)', () => {
     });
     useVocabRunStore.getState().begin('p1', 'food', 'speed');
     expect(() => useVocabRunStore.getState().finishSpeed(summary, NOW)).toThrow('quota');
-    expect([...vocabRoundsDone('p1', '2026-10-11')]).toEqual(['food']);
+    expect([...vocabRoundsDone('p1', localDay(NOW))]).toEqual(['food']);
   });
 
   it('a round with no answer marks nothing done', () => {
     clearMissionPins();
     useVocabRunStore.getState().begin('p1', 'food', 'speed');
     useVocabRunStore.getState().finishSpeed({ ...summary, answered: 0, firstTryCorrect: 0, caught: 0, caughtIds: [], seeAgainIds: [], stars: null }, NOW);
-    expect(vocabRoundsDone('p1', '2026-10-11').size).toBe(0);
+    expect(vocabRoundsDone('p1', localDay(NOW)).size).toBe(0);
   });
 
   it('a round with no answer (no stars) writes no session but still ends the run', () => {
