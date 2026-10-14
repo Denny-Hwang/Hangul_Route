@@ -70,7 +70,8 @@ export class ContentError extends Error {
 
 const isObject = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
 // Compact literals (F-CURR-001 S3-4): the generated modules are data, and pretty-printing alone took
-// a three-quest cell over its 22.5 KB ceiling (Animal Sentences: 32,423 B pretty); §3.12 measures what is emitted.
+// a three-quest cell past 27 KB (Animal Sentences: 32,423 B pretty; the ceiling is BUDGET.perQuestRawAvg per quest,
+// 27,000 B for three); §3.12 measures what is emitted.
 const literal = (value) => JSON.stringify(value);
 const bytes = (text) => Buffer.byteLength(text, "utf8");
 

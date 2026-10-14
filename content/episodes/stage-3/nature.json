@@ -89,7 +89,7 @@
           "kind": "practice",
           "titleEn": "Build the Sentence",
           "minigameKind": "order-it",
-          "minigameRef": "minigame:s3-nature-q1-play",
+          "minigameRef": "minigame:s3-nature-q1-practice",
           "durationSeconds": 90
         },
         {
@@ -118,7 +118,7 @@
       ],
       "scopes": [
         {
-          "ref": "minigame:s3-nature-q1-play",
+          "ref": "minigame:s3-nature-q1-practice",
           "kind": "order-it",
           "rounds": [
             {
@@ -479,7 +479,7 @@
           "kind": "practice",
           "titleEn": "Build the Sentence",
           "minigameKind": "order-it",
-          "minigameRef": "minigame:s3-nature-q2-play",
+          "minigameRef": "minigame:s3-nature-q2-practice",
           "durationSeconds": 90
         },
         {
@@ -508,7 +508,7 @@
       ],
       "scopes": [
         {
-          "ref": "minigame:s3-nature-q2-play",
+          "ref": "minigame:s3-nature-q2-practice",
           "kind": "order-it",
           "rounds": [
             {
@@ -886,7 +886,7 @@
           "kind": "practice",
           "titleEn": "Build the Sentence",
           "minigameKind": "order-it",
-          "minigameRef": "minigame:s3-nature-q3-play",
+          "minigameRef": "minigame:s3-nature-q3-practice",
           "durationSeconds": 90
         },
         {
@@ -915,7 +915,7 @@
       ],
       "scopes": [
         {
-          "ref": "minigame:s3-nature-q3-play",
+          "ref": "minigame:s3-nature-q3-practice",
           "kind": "order-it",
           "rounds": [
             {
@@ -1101,9 +1101,9 @@
                 {
                   "id": "c",
                   "text": {
-                    "ko": "토끼가 헤엄쳐요.",
-                    "romanization": "tokkiga heeomchyeoyo",
-                    "en": "The rabbit swims."
+                    "ko": "토끼가 커요.",
+                    "romanization": "tokkiga keoyo",
+                    "en": "The rabbit is big."
                   }
                 }
               ],
@@ -1136,9 +1136,9 @@
                 {
                   "id": "c",
                   "text": {
-                    "ko": "호랑이가 헤엄쳐요.",
-                    "romanization": "horangiga heeomchyeoyo",
-                    "en": "The tiger swims."
+                    "ko": "호랑이가 작아요.",
+                    "romanization": "horangiga jagayo",
+                    "en": "The tiger is small."
                   }
                 }
               ],
@@ -1320,7 +1320,8 @@
     "reviewedAt": "2026-10-14",
     "notes": [
       "pass 4 language (MAR, 2026-10-14): no Korean gloss repeats its noun or stem; Apply a3 and a4 hold the animal and vary the new word; q1 keeps one pattern (its particle rounds became order rounds); q3 distractors no longer build a true sentence; ko button name, register, glosses fixed; the two-slot q1 frame rejected (schema: one slot).",
-      "pass 5 culture (MAR, 2026-10-14): every claim re-checked against its sources; the n1 있다 locator now cites the adjective sense of existing at a place; n3 gained an NIKL source; the es reward line no longer genders the learner; no culture claim, person, brand or price in the cell."
+      "pass 5 culture (MAR, 2026-10-14): every claim re-checked against its sources; the n1 있다 locator now cites the adjective sense of existing at a place; n3 gained an NIKL source; the es reward line no longer genders the learner; no culture claim, person, brand or price in the cell.",
+      "pass 7 four-lens review (MAR, 2026-10-14): the bear gloss no longer carries the taught 크다 (adnominal forms now checked); 집 and 산 glosses say only what the words mean; Apply distractors no longer say a tiger or rabbit cannot swim; ko titles and teasers in 해요체, one 헤엄쳐요 gloss, es teasers use Siguiente; practice refs renamed."
     ]
   },
   "contentVer": 1

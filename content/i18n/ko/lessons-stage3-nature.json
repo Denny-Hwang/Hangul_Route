@@ -10,9 +10,9 @@
     "quest:stage3-nature-q1": {
       "title": "새는 어디에?",
       "blurb": "동물이 있는 곳을 말해요. 나무, 물속, 집 안.",
-      "teaser": "다음: 큰 동물과 작은 동물",
+      "teaser": "다음: 큰 동물과 작은 동물을 말해요.",
       "steps.s1.title": "숲에서",
-      "steps.s2.title": "어디에 있을까?",
+      "steps.s2.title": "어디에 있을까요?",
       "steps.s3.title": "문장 만들기",
       "steps.s4.title": "듣고 고르기",
       "steps.s5.title": "짧은 문제 두 개",
@@ -23,18 +23,18 @@
       "steps.s2.discover.pages.0.caption": "있는 곳 말하기",
       "steps.s2.discover.pages.1.caption": "집 안의 고양이, 산속의 토끼",
       "steps.s2.discover.pages.0.items.0.note": "{ko:에}는 장소를 나타내는 말 뒤에 붙어서 어디에 있는지 알려 줘요.",
-      "steps.s2.discover.pages.1.items.0.sentence.gloss": "야옹 하는 동물이 가족이 사는 곳에 있다는 말",
-      "steps.s2.discover.pages.1.items.1.sentence.gloss": "귀가 긴 동물이 숲이 우거진 높은 곳에 있다는 말",
+      "steps.s2.discover.pages.1.items.0.sentence.gloss": "야옹 하는 동물이 사람이 사는 건물에 있다는 말",
+      "steps.s2.discover.pages.1.items.1.sentence.gloss": "귀가 긴 동물이 주변 땅보다 높이 올라간 곳에 있다는 말",
       "steps.s2.discover.pages.0.items.0.frame.gloss": "어떤 장소 안이나 위에 있다는 말",
-      "steps.s2.discover.pages.0.items.0.examples.namue-saega-isseoyo.gloss": "나뭇가지에 깃털 달린 동물 한 마리가 있다는 말",
+      "steps.s2.discover.pages.0.items.0.examples.namue-saega-isseoyo.gloss": "나뭇가지에 깃털 달린 동물이 있다는 말",
       "steps.s2.discover.pages.0.items.0.examples.mure-mulgogiga-isseoyo.gloss": "지느러미가 있는 동물이 강이나 바닷속에 있다는 말"
     },
     "quest:stage3-nature-q2": {
       "title": "크고 작고",
       "blurb": "동물의 모습을 말해요. 크기와 생김새.",
-      "teaser": "다음: 움직이는 동물",
+      "teaser": "다음: 움직이는 동물을 말해요.",
       "steps.s1.title": "동물원에서",
-      "steps.s2.title": "어떤 모습일까?",
+      "steps.s2.title": "어떤 모습일까요?",
       "steps.s3.title": "문장 만들기",
       "steps.s4.title": "듣고 고르기",
       "steps.s5.title": "짧은 문제 두 개",
@@ -49,13 +49,13 @@
       "steps.s2.discover.pages.1.items.1.sentence.gloss": "야옹 하는 동물이 사랑스럽다는 말",
       "steps.s2.discover.pages.0.items.0.frame.gloss": "어떤 것의 몸집이 우람하다는 말",
       "steps.s2.discover.pages.0.items.0.examples.horangiga-keoyo.gloss": "줄무늬 맹수의 몸집이 우람하다는 말",
-      "steps.s2.discover.pages.0.items.0.examples.gomi-keoyo.gloss": "덩치 큰 들짐승의 몸집이 우람하다는 말"
+      "steps.s2.discover.pages.0.items.0.examples.gomi-keoyo.gloss": "둥근 귀에 털이 덥수룩한 들짐승의 몸집이 우람하다는 말"
     },
     "quest:stage3-nature-q3": {
       "title": "날고 뛰고 헤엄치고",
       "blurb": "동물이 어떻게 움직이는지 말해요. 하늘, 땅, 물에서.",
       "steps.s1.title": "움직이는 동물",
-      "steps.s2.title": "무엇을 할까?",
+      "steps.s2.title": "무엇을 하고 있을까요?",
       "steps.s3.title": "문장 만들기",
       "steps.s4.title": "듣고 고르기",
       "steps.s5.title": "짧은 문제 두 개",
@@ -67,38 +67,38 @@
       "steps.s2.discover.pages.1.caption": "하늘의 새, 물속의 물고기",
       "steps.s2.discover.pages.0.items.0.note": "움직임을 말하는 낱말은 맨 끝에 와요. {ko:뛰어요}는 달리거나 깡충거리는 모습이에요. 받침 뒤에는 {ko:이}, 모음 뒤에는 {ko:가}를 써요.",
       "steps.s2.discover.pages.1.items.0.sentence.gloss": "깃털 달린 동물이 하늘을 가르며 움직인다는 말",
-      "steps.s2.discover.pages.1.items.1.sentence.gloss": "지느러미가 있는 동물이 몸을 흔들며 나아간다는 말",
+      "steps.s2.discover.pages.1.items.1.sentence.gloss": "지느러미가 있는 동물이 물속에서 몸을 움직여 나아간다는 말",
       "steps.s2.discover.pages.0.items.0.frame.gloss": "어떤 동물이 달린다는 말",
       "steps.s2.discover.pages.0.items.0.examples.tokkiga-ttwieoyo.gloss": "귀가 긴 동물이 깡충깡충 움직인다는 말",
       "steps.s2.discover.pages.0.items.0.examples.horangiga-ttwieoyo.gloss": "줄무늬 맹수가 달린다는 말"
     },
-    "minigame:s3-nature-q1-play": {
-      "orderIt.rounds.r1.sentence.gloss": "나뭇가지에 깃털 달린 동물 한 마리가 있다는 말",
+    "minigame:s3-nature-q1-practice": {
+      "orderIt.rounds.r1.sentence.gloss": "나뭇가지에 깃털 달린 동물이 있다는 말",
       "orderIt.rounds.r2.sentence.gloss": "지느러미가 있는 동물이 강이나 바닷속에 있다는 말",
-      "orderIt.rounds.r3.sentence.gloss": "야옹 하는 동물이 가족이 사는 곳에 있다는 말",
-      "orderIt.rounds.r4.sentence.gloss": "귀가 긴 동물이 숲이 우거진 높은 곳에 있다는 말",
-      "orderIt.rounds.r5.sentence.gloss": "덩치 큰 들짐승이 숲이 우거진 높은 곳에 있다는 말",
+      "orderIt.rounds.r3.sentence.gloss": "야옹 하는 동물이 사람이 사는 건물에 있다는 말",
+      "orderIt.rounds.r4.sentence.gloss": "귀가 긴 동물이 주변 땅보다 높이 올라간 곳에 있다는 말",
+      "orderIt.rounds.r5.sentence.gloss": "둥근 귀에 털이 덥수룩한 들짐승이 주변 땅보다 높이 올라간 곳에 있다는 말",
       "orderIt.rounds.r1.distractors.goyangiga.gloss": "야옹 하는 동물을 가리키는 말",
-      "orderIt.rounds.r2.distractors.sane.gloss": "숲이 우거진 높은 곳이라는 장소",
+      "orderIt.rounds.r2.distractors.sane.gloss": "주변 땅보다 높이 올라간 곳이라는 장소",
       "orderIt.rounds.r3.distractors.mure.gloss": "강이나 바닷속이라는 장소",
       "orderIt.rounds.r4.distractors.mure.gloss": "강이나 바닷속이라는 장소",
-      "orderIt.rounds.r5.distractors.jibe.gloss": "가족이 사는 곳이라는 장소"
+      "orderIt.rounds.r5.distractors.jibe.gloss": "사람이 사는 건물이라는 장소"
     },
     "minigame:s3-nature-q1-apply": {
-      "listenPick.rounds.a1.prompt": "나뭇가지에 깃털 달린 동물 한 마리가 있다는 말",
-      "listenPick.rounds.a2.prompt": "꼬리가 풍성한 들짐승이 숲이 우거진 높은 곳에 있다는 말",
-      "listenPick.rounds.a3.prompt": "야옹 하는 동물이 가족이 사는 곳에 있다는 말",
-      "listenPick.rounds.a4.prompt": "귀가 긴 동물이 숲이 우거진 높은 곳에 있다는 말"
+      "listenPick.rounds.a1.prompt": "나뭇가지에 깃털 달린 동물이 있다는 말",
+      "listenPick.rounds.a2.prompt": "꼬리가 풍성한 들짐승이 주변 땅보다 높이 올라간 곳에 있다는 말",
+      "listenPick.rounds.a3.prompt": "야옹 하는 동물이 사람이 사는 건물에 있다는 말",
+      "listenPick.rounds.a4.prompt": "귀가 긴 동물이 주변 땅보다 높이 올라간 곳에 있다는 말"
     },
     "minigame:s3-nature-q1-check": {
-      "listenPick.rounds.c1.prompt": "덩치 큰 들짐승이 숲이 우거진 높은 곳에 있다는 말",
-      "listenPick.rounds.c2.prompt": "야옹 하는 동물이 나뭇가지 위에 올라가 있다는 말"
+      "listenPick.rounds.c1.prompt": "둥근 귀에 털이 덥수룩한 들짐승이 주변 땅보다 높이 올라간 곳에 있다는 말",
+      "listenPick.rounds.c2.prompt": "야옹 하는 동물이 나뭇가지에 있다는 말"
     },
-    "minigame:s3-nature-q2-play": {
+    "minigame:s3-nature-q2-practice": {
       "orderIt.rounds.r1.sentence.gloss": "줄무늬 맹수의 몸집이 우람하다는 말",
       "orderIt.rounds.r2.sentence.gloss": "귀가 긴 동물의 몸집이 조그맣다는 말",
       "orderIt.rounds.r3.sentence.gloss": "야옹 하는 동물이 사랑스럽다는 말",
-      "orderIt.rounds.r4.sentence.gloss": "덩치 큰 들짐승의 몸집이 우람하다는 말",
+      "orderIt.rounds.r4.sentence.gloss": "둥근 귀에 털이 덥수룩한 들짐승의 몸집이 우람하다는 말",
       "orderIt.rounds.r5.sentence.gloss": "깃털 달린 동물의 몸집이 조그맣다는 말",
       "orderIt.rounds.r1.distractors.jagayo.gloss": "몸집이 조그맣다는 뜻",
       "orderIt.rounds.r2.distractors.keoyo.gloss": "몸집이 우람하다는 뜻",
@@ -118,12 +118,12 @@
       "listenPick.rounds.c1.prompt": "줄무늬 맹수의 몸집이 우람하다는 말",
       "listenPick.rounds.c2.prompt": "귀가 긴 동물의 몸집이 조그맣다는 말"
     },
-    "minigame:s3-nature-q3-play": {
+    "minigame:s3-nature-q3-practice": {
       "orderIt.rounds.r1.sentence.gloss": "깃털 달린 동물이 하늘을 가르며 움직인다는 말",
       "orderIt.rounds.r2.sentence.gloss": "귀가 긴 동물이 깡충깡충 움직인다는 말",
-      "orderIt.rounds.r3.sentence.gloss": "지느러미가 있는 동물이 몸을 흔들며 나아간다는 말",
+      "orderIt.rounds.r3.sentence.gloss": "지느러미가 있는 동물이 물속에서 몸을 움직여 나아간다는 말",
       "orderIt.rounds.r4.sentence.gloss": "줄무늬 맹수가 달린다는 말",
-      "orderIt.rounds.r5.sentence.gloss": "덩치 큰 들짐승이 팔다리를 저어 나아간다는 말",
+      "orderIt.rounds.r5.sentence.gloss": "둥근 귀에 털이 덥수룩한 들짐승이 물속에서 몸을 움직여 나아간다는 말",
       "orderIt.rounds.r1.distractors.mulgogiga.gloss": "지느러미가 있는 동물을 가리키는 말",
       "orderIt.rounds.r2.distractors.narayo.gloss": "하늘을 가르며 움직인다는 뜻",
       "orderIt.rounds.r3.distractors.tokkiga.gloss": "귀가 긴 동물을 가리키는 말",
@@ -134,13 +134,13 @@
     },
     "minigame:s3-nature-q3-apply": {
       "listenPick.rounds.a1.prompt": "깃털 달린 동물이 하늘을 가르며 움직인다는 말",
-      "listenPick.rounds.a2.prompt": "지느러미가 있는 동물이 몸을 흔들며 나아간다는 말",
+      "listenPick.rounds.a2.prompt": "지느러미가 있는 동물이 물속에서 몸을 움직여 나아간다는 말",
       "listenPick.rounds.a3.prompt": "귀가 긴 동물이 깡충깡충 움직인다는 말",
       "listenPick.rounds.a4.prompt": "줄무늬 맹수가 달린다는 말"
     },
     "minigame:s3-nature-q3-check": {
       "listenPick.rounds.c1.prompt": "깃털 달린 동물이 하늘을 가르며 움직인다는 말",
-      "listenPick.rounds.c2.prompt": "지느러미가 있는 동물이 몸을 흔들며 나아간다는 말"
+      "listenPick.rounds.c2.prompt": "지느러미가 있는 동물이 물속에서 몸을 움직여 나아간다는 말"
     }
   }
 }

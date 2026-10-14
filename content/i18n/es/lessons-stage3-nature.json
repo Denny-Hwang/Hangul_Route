@@ -10,7 +10,7 @@
     "quest:stage3-nature-q1": {
       "title": "¿Dónde está el pájaro?",
       "blurb": "Di dónde está un animal: en un árbol, en el agua, en casa.",
-      "teaser": "Después: animales grandes y pequeños.",
+      "teaser": "Siguiente: animales grandes y pequeños.",
       "steps.s1.title": "En el bosque",
       "steps.s2.title": "¿Dónde está?",
       "steps.s3.title": "Arma la oración",
@@ -32,7 +32,7 @@
     "quest:stage3-nature-q2": {
       "title": "Grande y pequeño",
       "blurb": "Di cómo es un animal: grande, pequeño o tierno.",
-      "teaser": "Después: animales en movimiento.",
+      "teaser": "Siguiente: animales en movimiento.",
       "steps.s1.title": "En el zoológico",
       "steps.s2.title": "¿Cómo es?",
       "steps.s3.title": "Arma la oración",
@@ -72,7 +72,7 @@
       "steps.s2.discover.pages.0.items.0.examples.tokkiga-ttwieoyo.gloss": "El conejo salta.",
       "steps.s2.discover.pages.0.items.0.examples.horangiga-ttwieoyo.gloss": "El tigre corre."
     },
-    "minigame:s3-nature-q1-play": {
+    "minigame:s3-nature-q1-practice": {
       "orderIt.rounds.r1.sentence.gloss": "Hay un pájaro en el árbol.",
       "orderIt.rounds.r2.sentence.gloss": "Hay un pez en el agua.",
       "orderIt.rounds.r3.sentence.gloss": "Hay un gato en casa.",
@@ -94,7 +94,7 @@
       "listenPick.rounds.c1.prompt": "Hay un oso en la montaña.",
       "listenPick.rounds.c2.prompt": "Hay un gato en el árbol."
     },
-    "minigame:s3-nature-q2-play": {
+    "minigame:s3-nature-q2-practice": {
       "orderIt.rounds.r1.sentence.gloss": "El tigre es grande.",
       "orderIt.rounds.r2.sentence.gloss": "El conejo es pequeño.",
       "orderIt.rounds.r3.sentence.gloss": "El gato es tierno.",
@@ -118,7 +118,7 @@
       "listenPick.rounds.c1.prompt": "El tigre es grande.",
       "listenPick.rounds.c2.prompt": "El conejo es pequeño."
     },
-    "minigame:s3-nature-q3-play": {
+    "minigame:s3-nature-q3-practice": {
       "orderIt.rounds.r1.sentence.gloss": "El pájaro vuela.",
       "orderIt.rounds.r2.sentence.gloss": "El conejo salta.",
       "orderIt.rounds.r3.sentence.gloss": "El pez nada.",
