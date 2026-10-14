@@ -139,7 +139,7 @@ export const a11y = {
       different: (n: number) => `El bloque ${n} es diferente.`,
     },
     writeFrame: {
-      blank: 'espacio',
+      blank: 'hueco',
       either: (a: string, b: string) => `${a} o ${b}`,
       particleFits: (particle: string, word: string) => `${particle} después de ${word}`,
       tile: (block: string, sound: string) => `${block}, ${sound}`,

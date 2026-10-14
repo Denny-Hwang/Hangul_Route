@@ -1,0 +1,1163 @@
+{
+  "id": "episode:stage7-rites",
+  "stage": "stage7",
+  "theme": "rites",
+  "status": "ready",
+  "titleEn": "My Holiday Memory",
+  "subtitleEn": "Write what you ate, made and saw on a special day.",
+  "hoyaIntroEn": "Special days make good memories. Let us write about yours!",
+  "order": 3,
+  "pillarTags": [
+    "B5"
+  ],
+  "rewardCardIds": [],
+  "quests": [
+    {
+      "id": "quest:stage7-rites-q1",
+      "titleEn": "I Ate Tteokguk",
+      "blurbEn": "Write what you ate, made and saw.",
+      "teaserEn": "Next: say which day it was.",
+      "estimatedMinutes": 5,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "I Ate Tteokguk",
+          "hoyaLineEn": "Tteokguk is a classic Seollal dish. Let us write about days that already happened!",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "It Already Happened",
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "pattern",
+                    "frame": {
+                      "ko": "___을/를 먹었어요.",
+                      "romanization": "___eul/reul meogeosseoyo",
+                      "en": "I ate ___."
+                    },
+                    "noteEn": "{ko:먹었어요} says it already happened. Use {ko:을} after a final consonant, {ko:를} after a vowel.",
+                    "examples": [
+                      {
+                        "ko": "떡국을 먹었어요.",
+                        "romanization": "tteokgugeul meogeosseoyo",
+                        "en": "I ate tteokguk."
+                      },
+                      {
+                        "ko": "사과를 먹었어요.",
+                        "romanization": "sagwareul meogeosseoyo",
+                        "en": "I ate an apple."
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "Name the food, then the past ending."
+              },
+              {
+                "items": [
+                  {
+                    "type": "sentence",
+                    "sentence": {
+                      "ko": "송편을 만들었어요.",
+                      "romanization": "songpyeoneul mandeureosseoyo",
+                      "en": "I made songpyeon."
+                    },
+                    "picture": "card:songpyeon"
+                  },
+                  {
+                    "type": "sentence",
+                    "sentence": {
+                      "ko": "보름달을 봤어요.",
+                      "romanization": "boreumdareul bwasseoyo",
+                      "en": "I saw the full moon."
+                    },
+                    "picture": "card:moon"
+                  }
+                ],
+                "captionEn": "Chuseok was even called the holiday of the moon."
+              }
+            ]
+          },
+          "durationSeconds": 60
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Build the Sentence",
+          "minigameKind": "order-it",
+          "minigameRef": "minigame:s7-rites-q1-practice",
+          "durationSeconds": 85
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Type It",
+          "minigameKind": "type-hangul",
+          "minigameRef": "minigame:s7-rites-q1-apply",
+          "durationSeconds": 90
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Two Quick Ones",
+          "minigameKind": "order-it",
+          "minigameRef": "minigame:s7-rites-q1-check",
+          "durationSeconds": 40
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "You Wrote the Past!",
+          "hoyaLineEn": "You wrote what you ate, made and saw!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s7-rites-q1-practice",
+          "kind": "order-it",
+          "rounds": [
+            {
+              "id": "r1",
+              "sentence": {
+                "ko": "떡국을 먹었어요.",
+                "romanization": "tteokgugeul meogeosseoyo",
+                "en": "I ate tteokguk."
+              },
+              "pictureRef": "card:tteokguk",
+              "distractors": [
+                {
+                  "ko": "먹어요",
+                  "romanization": "meogeoyo",
+                  "en": "I eat"
+                }
+              ]
+            },
+            {
+              "id": "r2",
+              "sentence": {
+                "ko": "송편을 만들었어요.",
+                "romanization": "songpyeoneul mandeureosseoyo",
+                "en": "I made songpyeon."
+              },
+              "pictureRef": "card:songpyeon",
+              "distractors": [],
+              "particle": {
+                "tile": 0,
+                "choices": [
+                  {
+                    "ko": "을",
+                    "romanization": "eul",
+                    "en": "object marker (after a final consonant)"
+                  },
+                  {
+                    "ko": "를",
+                    "romanization": "reul",
+                    "en": "object marker (after a vowel)"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "r3",
+              "sentence": {
+                "ko": "보름달을 봤어요.",
+                "romanization": "boreumdareul bwasseoyo",
+                "en": "I saw the full moon."
+              },
+              "pictureRef": "card:moon",
+              "distractors": [
+                {
+                  "ko": "봐요",
+                  "romanization": "bwayo",
+                  "en": "I see"
+                }
+              ]
+            },
+            {
+              "id": "r4",
+              "sentence": {
+                "ko": "사과를 먹었어요.",
+                "romanization": "sagwareul meogeosseoyo",
+                "en": "I ate an apple."
+              },
+              "pictureRef": "word:food-apple",
+              "distractors": [],
+              "particle": {
+                "tile": 0,
+                "choices": [
+                  {
+                    "ko": "을",
+                    "romanization": "eul",
+                    "en": "object marker (after a final consonant)"
+                  },
+                  {
+                    "ko": "를",
+                    "romanization": "reul",
+                    "en": "object marker (after a vowel)"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s7-rites-q1-apply",
+          "kind": "type-hangul",
+          "rounds": [
+            {
+              "id": "t1",
+              "promptEn": "Type the word for \"I ate\".",
+              "target": {
+                "ko": "먹었어요",
+                "romanization": "meogeosseoyo",
+                "en": "I ate"
+              }
+            },
+            {
+              "id": "t2",
+              "promptEn": "Type the word for \"I saw\".",
+              "target": {
+                "ko": "봤어요",
+                "romanization": "bwasseoyo",
+                "en": "I saw"
+              }
+            },
+            {
+              "id": "t3",
+              "promptEn": "Type the word for \"I made\".",
+              "target": {
+                "ko": "만들었어요",
+                "romanization": "mandeureosseoyo",
+                "en": "I made"
+              }
+            },
+            {
+              "id": "t4",
+              "promptEn": "Type the name of this soup.",
+              "pictureRef": "card:tteokguk",
+              "target": {
+                "ko": "떡국",
+                "romanization": "tteokguk",
+                "en": "rice-cake soup"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s7-rites-q1-check",
+          "kind": "order-it",
+          "rounds": [
+            {
+              "id": "c1",
+              "sentence": {
+                "ko": "송편을 먹었어요.",
+                "romanization": "songpyeoneul meogeosseoyo",
+                "en": "I ate songpyeon."
+              },
+              "pictureRef": "card:songpyeon",
+              "distractors": []
+            },
+            {
+              "id": "c2",
+              "sentence": {
+                "ko": "보름달을 봤어요.",
+                "romanization": "boreumdareul bwasseoyo",
+                "en": "I saw the full moon."
+              },
+              "pictureRef": "card:moon",
+              "distractors": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "quest:stage7-rites-q2",
+      "titleEn": "On Seollal I Ate ...",
+      "blurbEn": "Say which day, then what you ate.",
+      "teaserEn": "Next: write your favorite day.",
+      "estimatedMinutes": 5,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "On Seollal I Ate ...",
+          "hoyaLineEn": "For Chuseok, families often make songpyeon together. What did you eat on a special day?",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "On Which Day?",
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "pattern",
+                    "frame": {
+                      "ko": "___에 ___을/를 먹었어요.",
+                      "romanization": "___e ___eul/reul meogeosseoyo",
+                      "en": "On ___, I ate ___."
+                    },
+                    "noteEn": "Put {ko:에} after a day to say when: {ko:설날에} means on Seollal.",
+                    "examples": [
+                      {
+                        "ko": "설날에 떡국을 먹었어요.",
+                        "romanization": "seollare tteokgugeul meogeosseoyo",
+                        "en": "On Seollal, I ate tteokguk."
+                      },
+                      {
+                        "ko": "추석에 송편을 먹었어요.",
+                        "romanization": "chuseoge songpyeoneul meogeosseoyo",
+                        "en": "On Chuseok, I ate songpyeon."
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "First the day, then the food."
+              },
+              {
+                "items": [
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "생일",
+                      "romanization": "saengil",
+                      "en": "birthday"
+                    }
+                  },
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "주말",
+                      "romanization": "jumal",
+                      "en": "weekend"
+                    }
+                  }
+                ],
+                "captionEn": "Any day works: a birthday, a weekend ..."
+              },
+              {
+                "items": [
+                  {
+                    "type": "sentence",
+                    "sentence": {
+                      "ko": "생일에 케이크를 먹었어요.",
+                      "romanization": "saengire keikeureul meogeosseoyo",
+                      "en": "On my birthday, I ate cake."
+                    }
+                  },
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "케이크",
+                      "romanization": "keikeu",
+                      "en": "cake"
+                    }
+                  }
+                ],
+                "captionEn": "A new food word: cake."
+              }
+            ]
+          },
+          "durationSeconds": 70
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Trace the Day",
+          "minigameKind": "trace-word",
+          "minigameRef": "minigame:s7-rites-q2-practice",
+          "durationSeconds": 80
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "My Holiday Sentence",
+          "minigameKind": "write-frame",
+          "minigameRef": "minigame:s7-rites-q2-apply",
+          "durationSeconds": 95
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Two Quick Ones",
+          "minigameKind": "order-it",
+          "minigameRef": "minigame:s7-rites-q2-check",
+          "durationSeconds": 40
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Your Day, Your Words!",
+          "hoyaLineEn": "You wrote about your own special day!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s7-rites-q2-practice",
+          "kind": "trace-word",
+          "rounds": [
+            {
+              "id": "w1",
+              "word": {
+                "ko": "설날",
+                "romanization": "seollal",
+                "en": "Lunar New Year's Day"
+              }
+            },
+            {
+              "id": "w2",
+              "word": {
+                "ko": "추석",
+                "romanization": "chuseok",
+                "en": "the autumn harvest festival"
+              }
+            },
+            {
+              "id": "w3",
+              "word": {
+                "ko": "생일",
+                "romanization": "saengil",
+                "en": "birthday"
+              }
+            },
+            {
+              "id": "w4",
+              "word": {
+                "ko": "송편",
+                "romanization": "songpyeon",
+                "en": "half-moon rice cakes"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s7-rites-q2-apply",
+          "kind": "write-frame",
+          "rounds": [
+            {
+              "id": "f1",
+              "frame": {
+                "ko": "___에 ___을/를 먹었어요.",
+                "romanization": "___e ___eul/reul meogeosseoyo",
+                "en": "On ___, I ate ___."
+              },
+              "slots": [
+                {
+                  "id": "day",
+                  "bank": [
+                    {
+                      "ko": "설날",
+                      "romanization": "seollal",
+                      "en": "Lunar New Year's Day"
+                    },
+                    {
+                      "ko": "추석",
+                      "romanization": "chuseok",
+                      "en": "the autumn harvest festival"
+                    },
+                    {
+                      "ko": "생일",
+                      "romanization": "saengil",
+                      "en": "my birthday"
+                    },
+                    {
+                      "ko": "주말",
+                      "romanization": "jumal",
+                      "en": "the weekend"
+                    }
+                  ]
+                },
+                {
+                  "id": "food",
+                  "bank": [
+                    {
+                      "ko": "떡국",
+                      "romanization": "tteokguk",
+                      "en": "rice-cake soup"
+                    },
+                    {
+                      "ko": "송편",
+                      "romanization": "songpyeon",
+                      "en": "half-moon rice cakes"
+                    },
+                    {
+                      "ko": "케이크",
+                      "romanization": "keikeu",
+                      "en": "cake"
+                    },
+                    {
+                      "ko": "사과",
+                      "romanization": "sagwa",
+                      "en": "an apple"
+                    }
+                  ]
+                }
+              ],
+              "entry": "type",
+              "freeEntry": false
+            },
+            {
+              "id": "f2",
+              "frame": {
+                "ko": "___에 ___을/를 만들었어요.",
+                "romanization": "___e ___eul/reul mandeureosseoyo",
+                "en": "On ___, I made ___."
+              },
+              "slots": [
+                {
+                  "id": "day",
+                  "bank": [
+                    {
+                      "ko": "설날",
+                      "romanization": "seollal",
+                      "en": "Lunar New Year's Day"
+                    },
+                    {
+                      "ko": "추석",
+                      "romanization": "chuseok",
+                      "en": "the autumn harvest festival"
+                    },
+                    {
+                      "ko": "생일",
+                      "romanization": "saengil",
+                      "en": "my birthday"
+                    },
+                    {
+                      "ko": "주말",
+                      "romanization": "jumal",
+                      "en": "the weekend"
+                    }
+                  ]
+                },
+                {
+                  "id": "thing",
+                  "bank": [
+                    {
+                      "ko": "송편",
+                      "romanization": "songpyeon",
+                      "en": "half-moon rice cakes"
+                    },
+                    {
+                      "ko": "떡",
+                      "romanization": "tteok",
+                      "en": "rice cake"
+                    },
+                    {
+                      "ko": "케이크",
+                      "romanization": "keikeu",
+                      "en": "cake"
+                    }
+                  ]
+                }
+              ],
+              "entry": "pick",
+              "freeEntry": false
+            },
+            {
+              "id": "f3",
+              "frame": {
+                "ko": "___에 ___을/를 봤어요.",
+                "romanization": "___e ___eul/reul bwasseoyo",
+                "en": "On ___, I saw ___."
+              },
+              "slots": [
+                {
+                  "id": "day",
+                  "bank": [
+                    {
+                      "ko": "설날",
+                      "romanization": "seollal",
+                      "en": "Lunar New Year's Day"
+                    },
+                    {
+                      "ko": "추석",
+                      "romanization": "chuseok",
+                      "en": "the autumn harvest festival"
+                    },
+                    {
+                      "ko": "생일",
+                      "romanization": "saengil",
+                      "en": "my birthday"
+                    },
+                    {
+                      "ko": "주말",
+                      "romanization": "jumal",
+                      "en": "the weekend"
+                    }
+                  ]
+                },
+                {
+                  "id": "what",
+                  "bank": [
+                    {
+                      "ko": "가족",
+                      "romanization": "gajok",
+                      "en": "my family"
+                    },
+                    {
+                      "ko": "친구",
+                      "romanization": "chingu",
+                      "en": "a friend"
+                    },
+                    {
+                      "ko": "보름달",
+                      "romanization": "boreumdal",
+                      "en": "the full moon"
+                    }
+                  ]
+                }
+              ],
+              "entry": "type",
+              "freeEntry": false
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s7-rites-q2-check",
+          "kind": "order-it",
+          "rounds": [
+            {
+              "id": "c1",
+              "sentence": {
+                "ko": "추석에 송편을 먹었어요.",
+                "romanization": "chuseoge songpyeoneul meogeosseoyo",
+                "en": "On Chuseok, I ate songpyeon."
+              },
+              "pictureRef": "card:songpyeon",
+              "distractors": []
+            },
+            {
+              "id": "c2",
+              "sentence": {
+                "ko": "생일에 케이크를 먹었어요.",
+                "romanization": "saengire keikeureul meogeosseoyo",
+                "en": "On my birthday, I ate cake."
+              },
+              "distractors": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "quest:stage7-rites-q3",
+      "titleEn": "My Favorite Day",
+      "blurbEn": "Write the day you like best.",
+      "estimatedMinutes": 5,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "My Favorite Day",
+          "hoyaLineEn": "Which day do you like best? Every answer is a good one!",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "The Day I Like",
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "pattern",
+                    "frame": {
+                      "ko": "제가 좋아하는 날은 ___이에요/예요.",
+                      "romanization": "jega joahaneun nareun ___ieyo/yeyo",
+                      "en": "My favorite day is ___."
+                    },
+                    "noteEn": "{ko:제가 좋아하는 날은} means the day I like. Use {ko:이에요} after a final consonant, {ko:예요} after a vowel.",
+                    "examples": [
+                      {
+                        "ko": "제가 좋아하는 날은 설날이에요.",
+                        "romanization": "jega joahaneun nareun seollarieyo",
+                        "en": "My favorite day is Seollal."
+                      },
+                      {
+                        "ko": "제가 좋아하는 날은 생일이에요.",
+                        "romanization": "jega joahaneun nareun saengirieyo",
+                        "en": "My favorite day is my birthday."
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "Put your day in the slot."
+              },
+              {
+                "items": [
+                  {
+                    "type": "sentence",
+                    "sentence": {
+                      "ko": "제가 좋아하는 날은 주말이에요.",
+                      "romanization": "jega joahaneun nareun jumarieyo",
+                      "en": "My favorite day is the weekend."
+                    }
+                  },
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "주말",
+                      "romanization": "jumal",
+                      "en": "weekend"
+                    }
+                  }
+                ],
+                "captionEn": "Any day can be your favorite."
+              }
+            ]
+          },
+          "durationSeconds": 65
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Build the Sentence",
+          "minigameKind": "order-it",
+          "minigameRef": "minigame:s7-rites-q3-practice",
+          "durationSeconds": 90
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Your Own Sentence",
+          "minigameKind": "write-frame",
+          "minigameRef": "minigame:s7-rites-q3-apply",
+          "durationSeconds": 95
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Two Quick Ones",
+          "minigameKind": "order-it",
+          "minigameRef": "minigame:s7-rites-q3-check",
+          "durationSeconds": 40
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Your Favorite Day!",
+          "hoyaLineEn": "You wrote a whole page about your days!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s7-rites-q3-practice",
+          "kind": "order-it",
+          "rounds": [
+            {
+              "id": "r1",
+              "sentence": {
+                "ko": "제가 좋아하는 날은 설날이에요.",
+                "romanization": "jega joahaneun nareun seollarieyo",
+                "en": "My favorite day is Seollal."
+              },
+              "pictureRef": "card:seollal",
+              "distractors": []
+            },
+            {
+              "id": "r2",
+              "sentence": {
+                "ko": "제가 좋아하는 날은 추석이에요.",
+                "romanization": "jega joahaneun nareun chuseogieyo",
+                "en": "My favorite day is Chuseok."
+              },
+              "pictureRef": "card:chuseok",
+              "distractors": [],
+              "particle": {
+                "tile": 3,
+                "choices": [
+                  {
+                    "ko": "이에요",
+                    "romanization": "ieyo",
+                    "en": "it is (after a final consonant)"
+                  },
+                  {
+                    "ko": "예요",
+                    "romanization": "yeyo",
+                    "en": "it is (after a vowel)"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "r3",
+              "sentence": {
+                "ko": "제가 좋아하는 날은 생일이에요.",
+                "romanization": "jega joahaneun nareun saengirieyo",
+                "en": "My favorite day is my birthday."
+              },
+              "distractors": [
+                {
+                  "ko": "먹었어요",
+                  "romanization": "meogeosseoyo",
+                  "en": "I ate"
+                }
+              ]
+            },
+            {
+              "id": "r4",
+              "sentence": {
+                "ko": "제가 좋아하는 날은 주말이에요.",
+                "romanization": "jega joahaneun nareun jumarieyo",
+                "en": "My favorite day is the weekend."
+              },
+              "distractors": [],
+              "particle": {
+                "tile": 3,
+                "choices": [
+                  {
+                    "ko": "이에요",
+                    "romanization": "ieyo",
+                    "en": "it is (after a final consonant)"
+                  },
+                  {
+                    "ko": "예요",
+                    "romanization": "yeyo",
+                    "en": "it is (after a vowel)"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s7-rites-q3-apply",
+          "kind": "write-frame",
+          "rounds": [
+            {
+              "id": "f1",
+              "frame": {
+                "ko": "제가 좋아하는 날은 ___이에요/예요.",
+                "romanization": "jega joahaneun nareun ___ieyo/yeyo",
+                "en": "My favorite day is ___."
+              },
+              "slots": [
+                {
+                  "id": "day",
+                  "bank": [
+                    {
+                      "ko": "설날",
+                      "romanization": "seollal",
+                      "en": "Lunar New Year's Day"
+                    },
+                    {
+                      "ko": "추석",
+                      "romanization": "chuseok",
+                      "en": "the autumn harvest festival"
+                    },
+                    {
+                      "ko": "생일",
+                      "romanization": "saengil",
+                      "en": "my birthday"
+                    },
+                    {
+                      "ko": "주말",
+                      "romanization": "jumal",
+                      "en": "the weekend"
+                    }
+                  ]
+                }
+              ],
+              "entry": "type",
+              "freeEntry": false
+            },
+            {
+              "id": "f2",
+              "frame": {
+                "ko": "___에 ___을/를 먹었어요.",
+                "romanization": "___e ___eul/reul meogeosseoyo",
+                "en": "On ___, I ate ___."
+              },
+              "slots": [
+                {
+                  "id": "day",
+                  "bank": [
+                    {
+                      "ko": "설날",
+                      "romanization": "seollal",
+                      "en": "Lunar New Year's Day"
+                    },
+                    {
+                      "ko": "추석",
+                      "romanization": "chuseok",
+                      "en": "the autumn harvest festival"
+                    },
+                    {
+                      "ko": "생일",
+                      "romanization": "saengil",
+                      "en": "my birthday"
+                    },
+                    {
+                      "ko": "주말",
+                      "romanization": "jumal",
+                      "en": "the weekend"
+                    }
+                  ]
+                },
+                {
+                  "id": "food",
+                  "bank": [
+                    {
+                      "ko": "떡국",
+                      "romanization": "tteokguk",
+                      "en": "rice-cake soup"
+                    },
+                    {
+                      "ko": "송편",
+                      "romanization": "songpyeon",
+                      "en": "half-moon rice cakes"
+                    },
+                    {
+                      "ko": "케이크",
+                      "romanization": "keikeu",
+                      "en": "cake"
+                    },
+                    {
+                      "ko": "사과",
+                      "romanization": "sagwa",
+                      "en": "an apple"
+                    }
+                  ]
+                }
+              ],
+              "entry": "pick",
+              "freeEntry": false
+            },
+            {
+              "id": "f3",
+              "frame": {
+                "ko": "___에 ___을/를 봤어요.",
+                "romanization": "___e ___eul/reul bwasseoyo",
+                "en": "On ___, I saw ___."
+              },
+              "slots": [
+                {
+                  "id": "day",
+                  "bank": [
+                    {
+                      "ko": "설날",
+                      "romanization": "seollal",
+                      "en": "Lunar New Year's Day"
+                    },
+                    {
+                      "ko": "추석",
+                      "romanization": "chuseok",
+                      "en": "the autumn harvest festival"
+                    },
+                    {
+                      "ko": "생일",
+                      "romanization": "saengil",
+                      "en": "my birthday"
+                    },
+                    {
+                      "ko": "주말",
+                      "romanization": "jumal",
+                      "en": "the weekend"
+                    }
+                  ]
+                },
+                {
+                  "id": "what",
+                  "bank": [
+                    {
+                      "ko": "가족",
+                      "romanization": "gajok",
+                      "en": "my family"
+                    },
+                    {
+                      "ko": "친구",
+                      "romanization": "chingu",
+                      "en": "a friend"
+                    },
+                    {
+                      "ko": "보름달",
+                      "romanization": "boreumdal",
+                      "en": "the full moon"
+                    }
+                  ]
+                }
+              ],
+              "entry": "type",
+              "freeEntry": false
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s7-rites-q3-check",
+          "kind": "order-it",
+          "rounds": [
+            {
+              "id": "c1",
+              "sentence": {
+                "ko": "제가 좋아하는 날은 추석이에요.",
+                "romanization": "jega joahaneun nareun chuseogieyo",
+                "en": "My favorite day is Chuseok."
+              },
+              "pictureRef": "card:chuseok",
+              "distractors": []
+            },
+            {
+              "id": "c2",
+              "sentence": {
+                "ko": "설날에 떡국을 먹었어요.",
+                "romanization": "seollare tteokgugeul meogeosseoyo",
+                "en": "On Seollal, I ate tteokguk."
+              },
+              "pictureRef": "card:tteokguk",
+              "distractors": []
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "culture": [
+    {
+      "id": "n1",
+      "kind": "language",
+      "textEn": "A past action ends in {ko:았어요} when the stem's last vowel is {ko:ㅏ} or {ko:ㅗ}, and in {ko:었어요} after any other vowel: {ko:먹었어요}, {ko:만들었어요}. {ko:보았어요} can be written short as {ko:봤어요}.",
+      "sources": [
+        {
+          "title": "-었- (어미)",
+          "publisher": "국립국어원 표준국어대사전 (Standard Korean Language Dictionary)",
+          "url": "https://stdict.korean.go.kr/search/searchView.do?word_no=462343&searchKeywordTo=3",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "표제어 ‘-었-’(word_no 462343) 「어미」 「1」: “((끝음절의 모음이 ‘ㅏ, ㅗ’가 아닌 용언의 어간 뒤나 ‘이다’의 어간 뒤에 붙어))” … “이야기하는 시점에서 볼 때 사건이나 행위가 이미 일어났음을 나타내는 어미.” 예: ‘철수는 이미 밥을 먹었다.’"
+        },
+        {
+          "title": "-았- (어미)",
+          "publisher": "국립국어원 표준국어대사전 (Standard Korean Language Dictionary)",
+          "url": "https://stdict.korean.go.kr/search/searchView.do?word_no=457085&searchKeywordTo=3",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "표제어 ‘-았-’(word_no 457085) 「어미」: “((끝음절의 모음이 ‘ㅏ, ㅗ’인 용언의 어간 뒤에 붙어))” 「1」 “이야기하는 시점에서 볼 때 사건이 이미 일어났음을 나타내는 어미.” 예: ‘동생은 어제 하루 종일 텔레비전을 보았다.’"
+        },
+        {
+          "title": "한글 맞춤법 제35항 (모음 ‘ㅗ, ㅜ’ 어간과 ‘-아/-어, -았-/-었-’의 준말)",
+          "publisher": "국립국어원 (National Institute of Korean Language)",
+          "url": "https://korean.go.kr/kornorms/regltn/regltnView.do?regltn_code=0001&regltn_no=188",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "제4장 제5절 제35항: “모음 ‘ㅗ, ㅜ’로 끝난 어간에 ‘-아/-어, -았-/-었-’이 어울려 ‘ㅘ/ㅝ, ㅘㅆ/ㅝㅆ’으로 될 적에는 준 대로 적는다.” 예시 표: 본말 ‘보았다’, 준말 ‘봤다’; 본말 ‘보아’, 준말 ‘봐’."
+        }
+      ],
+      "verification": {
+        "passes": 3,
+        "checkedAt": "2026-10-14",
+        "scope": "lesson",
+        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): the three pages fetched. The dictionary entries -었- (word_no 462343) and -았- (word_no 457085) give the past sense (an event already happened at the time of speaking) and the stem rule: -았- after a stem whose last vowel is ㅏ or ㅗ, -었- after any other (and after 이다). Article 35 of the Korean orthography says ㅗ / ㅜ stems with -아/-어, -았-/-었- are written in the short form, with 보았다 / 봤다 in its table. The note restates this in its own words with this cell's verbs (먹었어요, 만들었어요, 봤어요); no wording is copied. Carried by: q1 Discover pattern noteEn (먹었어요 says it already happened), the q1 games and every past frame of q2 and q3.\nLine 2 (pass 2b, independent fact check, 2026-10-14): the three pages re-fetched (the stdict entry bodies via contentViewOne.do). -었- (462343) sense 1 carries the stem condition (last-syllable vowel not ㅏ / ㅗ, or the stem of 이다) and the already-happened sense with 밥을 먹었다; -았- (457085) carries the ㅏ / ㅗ condition and the same sense with 텔레비전을 보았다; article 35 carries its rule and the 보았다 / 봤다 row. The locators match. One fix: the note said 보았어요 \"is written short as\" 봤어요, which could read as if the long form were wrong; article 35 governs how the contraction is spelled when it happens, and both forms stand, so the note now says \"can be written short as\". Its rule otherwise matches the sources and is in its own words; no wording copied.\nLine 3 (pass 5, MAR culture review, 2026-10-14): the three pages re-checked; -었- (462343) and -았- (457085) carry the ㅏ / ㅗ stem condition and the already-happened sense, and article 35 its 보았다 / 봤다 row. The note now names the vowels in Hangul ({ko:ㅏ} or {ko:ㅗ}) instead of Latin letters, the same rule; \"can be written short\" stands (both forms are standard). No wording copied. Outcome: pass."
+      }
+    },
+    {
+      "id": "n2",
+      "kind": "language",
+      "textEn": "After a word for a day or a time, {ko:에} tells when something happens: {ko:설날에} means on Seollal.",
+      "sources": [
+        {
+          "title": "에 (조사)",
+          "publisher": "국립국어원 표준국어대사전 (Standard Korean Language Dictionary)",
+          "url": "https://stdict.korean.go.kr/search/searchView.do?word_no=460139&searchKeywordTo=3",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "표제어 ‘에 4’(word_no 460139) 「조사」 1 ((체언 뒤에 붙어)) 「2」: “앞말이 시간의 부사어임을 나타내는 격 조사.” 예: ‘나는 아침에 운동을 한다.’, ‘우리, 오후에 만나자.’"
+        },
+        {
+          "title": "조사(助詞)",
+          "publisher": "한국학중앙연구원 한국민족문화대백과사전 (Encyclopedia of Korean Culture)",
+          "url": "https://encykorea.aks.ac.kr/Article/E0051845",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "내용, (1) 격조사: 표면격의 조사로 ‘주격(이·가)·속격(의)·처격(에)…’을 들고, 내면격의 조사를 ‘…처격·시간격·공동격…’ 등으로 나누기도 하며, ‘한 격조사가 여러 격에 두루 사용된다’고 설명한다."
+        }
+      ],
+      "verification": {
+        "passes": 3,
+        "checkedAt": "2026-10-14",
+        "scope": "lesson",
+        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): both pages fetched. The dictionary entry 에 4 (word_no 460139), sense 1「2」, defines 에 after a noun as the case particle that makes the word before it an adverbial of time, with 아침에 and 오후에 as examples. The Encyclopedia of Korean Culture entry 조사 lists 에 among the case particles and a time case (시간격) among the cases particles express, one particle serving several. The note restates the time use in its own words with this cell's 설날에; no wording is copied. Carried by: q2 Discover pattern noteEn and the ___에 slots of q2 and q3.\nLine 2 (pass 2b, independent fact check, 2026-10-14): both pages re-fetched (the stdict entry body via contentViewOne.do). 에 4 sense 1「2」 is the time-adverbial case particle with 아침에 운동을 한다 and 오후에 만나자, as the locator says; the Encyclopedia of Korean Culture entry 조사 lists 처격(에) among the surface cases and 시간격 among the deep cases, and says one case particle serves several cases. The note (에 after a day or time word tells when, 설날에) matches and is in its own words; no wording copied.\nLine 3 (pass 5, MAR culture review, 2026-10-14): both pages re-checked; 에 4 sense 1「2」 is the time-adverbial case particle (아침에, 오후에), and the AKS entry 조사 lists 처격(에) and a time case. The note (에 after a day or time word tells when, 설날에) matches; no wording copied. Outcome: pass, no change."
+      }
+    },
+    {
+      "id": "n3",
+      "kind": "language",
+      "textEn": "The ending {ko:이에요} follows a word that ends in a final consonant, and {ko:예요} a word that ends in a vowel: {ko:생일이에요}.",
+      "sources": [
+        {
+          "title": "표준어 규정 제1부 제26항 해설 (복수 표준어 ‘-이에요/-이어요’)",
+          "publisher": "국립국어원 (National Institute of Korean Language)",
+          "url": "https://korean.go.kr/kornorms/regltn/regltnView.do?regltn_code=0002&regltn_no=191",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "제1부 제26항 해설 ⑰: “‘이에요’와 ‘이어요’는 체언 뒤에 붙는데 받침이 없는 체언에 붙을 때는 ‘예요’, ‘여요’로 줄어든다.” 예시 (4) 받침이 없는 명사 ‘손자예요’."
+        },
+        {
+          "title": "이다 (조사), 한 걸음 더",
+          "publisher": "국립국어원 표준국어대사전 (Standard Korean Language Dictionary)",
+          "url": "https://stdict.korean.go.kr/search/searchView.do?word_no=469673&searchKeywordTo=3",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "표제어 ‘이다 3’(word_no 469673) 「조사」, 한 걸음 더: “‘-이에요’와 ‘-이어요’는 체언 뒤에 붙는데 받침이 없는 체언에 붙을 때는 ‘-예요’, ‘-여요’로 줄어들기도 한다.” 예: ‘지우개예요’, ‘연필이에요’."
+        }
+      ],
+      "verification": {
+        "passes": 3,
+        "checkedAt": "2026-10-14",
+        "scope": "lesson",
+        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): both pages fetched. Commentary item 17 to article 26 of the NIKL standard language rules and the 한 걸음 더 box of the dictionary entry 이다 3 both say 이에요 attaches to a noun and shortens to 예요 when the noun has no final consonant (손자예요, 지우개예요 / 연필이에요). The note restates this in its own words with this cell's 생일이에요; no wording is copied. Every day in this cell's banks (설날, 추석, 생일, 주말) ends in a final consonant, so the helper always fills 이에요; the note still names both forms because the frame shows both. Carried by: q3 Discover pattern noteEn and the 이에요/예요 particle rounds of q3.\nLine 2 (pass 2b, independent fact check, 2026-10-14): both pages re-fetched (the stdict entry body via contentViewOne.do). Commentary item 17 to article 26 says 이에요 attaches to a noun and becomes 예요 after a noun with no final consonant, with 손자예요 in example (4); the 한 걸음 더 box of 이다 3 says the same (줄어들기도 한다) with 지우개예요 / 연필이에요. The note (이에요 after a final consonant, 예요 after a vowel, 생일이에요) matches and is in its own words; no wording copied.\nLine 3 (pass 5, MAR culture review, 2026-10-14): both pages re-checked; commentary item 17 to article 26 and the 한 걸음 더 box of 이다 3 say 이에요 attaches to a noun and becomes 예요 after a noun with no final consonant (손자예요, 지우개예요 / 연필이에요). The note matches; every day in the banks ends in a final consonant, so the helper fills 이에요, and the frame still shows both forms. No wording copied. Outcome: pass, no change."
+      }
+    },
+    {
+      "id": "n4",
+      "kind": "culture",
+      "textEn": "Tteokguk, a soup of sliced rice cake, is the classic Seollal dish.",
+      "factRef": "story:seollal-new-year#f6",
+      "verification": {
+        "passes": 3,
+        "checkedAt": "2026-10-14",
+        "scope": "lesson",
+        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): restates fact f6 of the reviewed story seollal-new-year (tteokguk is the representative Seollal food, sliced garaetteok in a clear broth; sources: the Encyclopedia of Korean Culture entries 떡국 and 설 and the Korea Heritage Service entry 설과 대보름). No new fact. Carried by: the q1 intro Hoya line (\"Tteokguk is a classic Seollal dish.\").\nLine 2 (pass 2b, independent fact check, 2026-10-14): factRef story:seollal-new-year#f6 resolves (story reviewed by MAR 2026-10-13). Its sources re-fetched: the Encyclopedia of Korean Culture entry 떡국 defines it as sliced garaetteok in clear broth and a Seollal seasonal food; the entry 설 calls tteokguk the representative New Year food; the Korea Heritage Service text for 설과 대보름 (loaded from its cul_127ZZ01500000 description page) names eating tteokguk as a core Seol custom. \"The classic Seollal dish\" matches; no new fact; no wording copied.\nLine 3 (pass 5, MAR culture review, 2026-10-14): factRef story:seollal-new-year#f6 resolves; AKS 떡국 (설날 절식) and 설 and the Korea Heritage Service 설과 대보름 page support \"the classic Seollal dish\". The note says \"classic\", no claim about every household. No new fact; no wording copied. Outcome: pass, no change."
+      }
+    },
+    {
+      "id": "n5",
+      "kind": "culture",
+      "textEn": "For Chuseok, families often gather to make songpyeon together.",
+      "factRef": "story:chuseok-ganggangsullae#f4",
+      "verification": {
+        "passes": 3,
+        "checkedAt": "2026-10-14",
+        "scope": "lesson",
+        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): restates fact f4 of the reviewed story chuseok-ganggangsullae (on the evening before Chuseok families gather to make songpyeon; sources: the Encyclopedia of Korean Culture entries 추석 and 송편). The note says \"often\", not every family. No new fact. Carried by: the q2 intro Hoya line.\nLine 2 (pass 2b, independent fact check, 2026-10-14): factRef story:chuseok-ganggangsullae#f4 resolves (story reviewed by MAR 2026-10-13). Its sources re-fetched: the Encyclopedia of Korean Culture entry 추석 says families gather on the evening of the 14th to make songpyeon; the entry 송편 says songpyeon is made from new rice for Chuseok. The note says \"often\", so it makes no claim about every family; no new fact; no wording copied.\nLine 3 (pass 5, MAR culture review, 2026-10-14): factRef story:chuseok-ganggangsullae#f4 resolves; AKS 추석 (families gather on the evening of the 14th to make songpyeon) and 송편 (new rice) support the note, which says \"often\", not every family. No new fact; no wording copied. Outcome: pass, no change."
+      }
+    },
+    {
+      "id": "n6",
+      "kind": "culture",
+      "textEn": "Chuseok has long been linked with the full moon, and it was even called the holiday of the moon.",
+      "factRef": "story:chuseok-ganggangsullae#f6",
+      "verification": {
+        "passes": 3,
+        "checkedAt": "2026-10-14",
+        "scope": "lesson",
+        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): restates fact f6 of the reviewed story chuseok-ganggangsullae (the Chuseok full moon as a symbol of plenty; Chuseok called 'the holiday of the moon'; source: the Korea Heritage Service entry 추석). No new fact. Carried by: the q1 Discover page 2 caption.\nLine 2 (pass 2b, independent fact check, 2026-10-14): factRef story:chuseok-ganggangsullae#f6 resolves (story reviewed by MAR 2026-10-13). The Korea Heritage Service text for 추석 (loaded from its cul_127ZZ01530000 description page) says the full moon symbolised plenty in traditional farming life and that Chuseok was also called 달의 명절, and gives the English line quoted in the story locator; the Encyclopedia of Korean Culture entry 추석 also calls it a moon holiday. The note matches; \"the holiday of the moon\" is a translated name, not copied prose; no new fact.\nLine 3 (pass 5, MAR culture review, 2026-10-14): factRef story:chuseok-ganggangsullae#f6 resolves; the Korea Heritage Service 추석 page (the full moon as a symbol of plenty; 달의 명절) and AKS 추석 support the note. The q1 Discover caption that carries it said \"has long been called\", a duration the sources do not give; it now says \"was even called the holiday of the moon\" in en, es and ko, matching the note. No new fact; no wording copied. Outcome: pass, caption fixed."
+      }
+    }
+  ],
+  "review": {
+    "language": "native-reviewed",
+    "culture": "culture-reviewed",
+    "reviewedBy": "MAR",
+    "reviewedAt": "2026-10-14",
+    "notes": [
+      "Language pass 4 (MAR): 해요체, spacing, past forms, allomorphs and romanization clean; applied: ko glosses describe and echo no tile, no 이미, q3 glosses name the learner as the one who likes the day, type prompts give the dictionary verb, no extra tiles in the Checks, q3 r3 extra tile wrong in form, n1 names ㅏ / ㅗ in Hangul.",
+      "Culture pass 5 (MAR): n1-n6 re-checked against every cited NIKL, AKS and Korea Heritage Service page or reviewed story fact, nothing copied; applied: 주말 in every q2 day bank so every learner has a true answer, the moon caption says 'was even called', a neutral ko 가족 gloss, ko titles on 특별한 날; no real person, brand, price, ancestral rite or age wording."
+    ]
+  },
+  "contentVer": 1
+}
