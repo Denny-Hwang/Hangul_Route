@@ -5,7 +5,8 @@ import { Text, View } from 'react-native';
 import type { BuildName, KoLine } from '../../../logic/lecture/build-steps';
 import type { Slide } from '../../../logic/lecture/deck-builder';
 import { units } from '../../../logic/lecture/stage-constants';
-import { checkPromptParts, quizOptionRomShown } from '../../../logic/lecture/story-slides';
+import { checkPromptParts } from '../../../logic/lecture/story-slides';
+import { optionRomShown } from '../../../logic/lecture/tools';
 import { STAGE_BORDER, STAGE_BORDER_MIN, STAGE_GAP_INNER, STAGE_RADIUS } from '../stage-metrics';
 import { TaughtKo, usePresenterView, useStageText } from '../presenter-context';
 import { AnswerLine, QuizOptions } from './QuizParts';
@@ -36,7 +37,7 @@ export function StoryCheckSlide({ slide, shown, romanization }: { slide: StoryCh
   const { target } = slide.prompt;
   const parts = checkPromptParts(slide.prompt.text, target);
   const inline = parts.some((p) => 'target' in p);
-  const targetRom = quizOptionRomShown(romanization, shown);
+  const targetRom = optionRomShown(romanization, revealed);
   const targetGloss = slide.prompt.glossAtAnswer !== true || revealed;
   const chip = (word: KoLine) => (
     <Text
@@ -78,7 +79,7 @@ export function StoryCheckSlide({ slide, shown, romanization }: { slide: StoryCh
         </View>
         <AnswerLine shown={revealed} />
       </View>
-      <QuizOptions options={slide.options} revealed={revealed} romShown={quizOptionRomShown(romanization, shown)} />
+      <QuizOptions options={slide.options} revealed={revealed} romanization={romanization} />
       {slide.explain !== undefined ? (
         <Text
           testID="presenter-check-explain"

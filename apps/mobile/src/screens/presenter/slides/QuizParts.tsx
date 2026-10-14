@@ -1,17 +1,22 @@
+import type { RomanizationMode } from '@hangul-route/content-schema';
 import { Hoya, Icon, colors, presenter, spacing, touchTarget, typography } from '@hangul-route/design-system';
-import React from 'react';
+import React, { useState } from 'react';
 import { Text, View } from 'react-native';
-import Svg, { Circle, Path, Rect, Text as SvgText } from 'react-native-svg';
 import type { QuizOption } from '../../../logic/lecture/build-steps';
-import { MARKER_LINES, SVG_UI_FONT, units } from '../../../logic/lecture/stage-constants';
-import { quizMarker, type QuizMarkerShape } from '../../../logic/lecture/story-slides';
+import { markerFor } from '../../../logic/lecture/slide-view';
+import { units } from '../../../logic/lecture/stage-constants';
+import { optionContent, optionRomShown } from '../../../logic/lecture/tools';
+import { ShapeMarker } from '../ShapeMarker';
 import { STAGE_BORDER, STAGE_BORDER_MIN, STAGE_GAP, STAGE_GAP_INNER, STAGE_RADIUS } from '../stage-metrics';
 import { TaughtKo, usePresenterView, useStageText } from '../presenter-context';
 
 /**
- * The parts of a projected quiz (design/screens/presenter/slide-quiz.md, README D6): the
- * shape-and-number markers, the 2 x 2 option grid with the teacher's reveal, and the "Hoya's
- * answer" line. PR 11 draws story checks with them; PR 9's quizzes reuse them.
+ * The parts of a projected quiz (design/screens/presenter/slide-quiz.md, README D6), shared by the
+ * quiz slide (PR 9) and the story check slide (PR 11): the 2 x 2 option grid with its
+ * shape-and-number markers and the teacher's reveal, and the story check's "Hoya's answer" line.
+ *
+ * The options' romanization follows one rule for both slides (`optionRomShown`, D2): visible by
+ * default, at the answer build with the teacher's `tap` setting.
  *
  * The reveal (D3, section 3.10): the correct option gets a `spacing.sm`-unit `feedback.success`
  * border, the `feedback.successLight` ground and the check mark; the others drop to
@@ -19,101 +24,101 @@ import { TaughtKo, usePresenterView, useStageText } from '../presenter-context';
  * The options never move between builds.
  */
 
-/** The marker drawing's own box: the shapes are drawn on 100 x 100 and scaled to the marker size. */
-const MARKER_BOX = 100;
-const MARKER_STROKE = 6;
-const MARKER_SHAPES: Record<QuizMarkerShape, { node: React.ReactElement; numeralY: number }> = {
-  circle: { node: <Circle cx={50} cy={50} r={44} />, numeralY: 50 },
-  triangle: { node: <Path d="M50 6 L94 90 L6 90 Z" strokeLinejoin="round" />, numeralY: 66 },
-  square: { node: <Rect x={8} y={8} width={84} height={84} rx={6} />, numeralY: 50 },
-  star: { node: <Path d="M50 4 L61 36 L95 37 L68 58 L78 92 L50 72 L22 92 L32 58 L5 37 L39 36 Z" strokeLinejoin="round" />, numeralY: 58 },
-};
-
-/** An outlined shape with the option's numeral inside (colour is never the only cue). */
-export function QuizMarker({ index }: { index: number }): React.ReactElement {
-  const { unit, messages } = usePresenterView();
-  const { shape, n } = quizMarker(index);
-  const side = units(unit, MARKER_LINES * presenter.size.body);
-  const { node, numeralY } = MARKER_SHAPES[shape];
+/** The 2 x 2 option grid (2 or 3 options fill it in order). */
+export function QuizOptions({ options, revealed, romanization }: { options: readonly QuizOption[]; revealed: boolean; romanization: RomanizationMode }): React.ReactElement {
+  const { unit } = usePresenterView();
+  const romOn = optionRomShown(romanization, revealed);
+  const rows = [options.slice(0, 2), options.slice(2, 4)].filter((row) => row.length > 0);
+  // A two-line question (a longer language, or the Say it box beside it) leaves the options less
+  // height: the letters then shrink to fit their cards instead of spilling out (never below body).
+  const [gridHeight, setGridHeight] = useState(0);
+  const rowHeight = gridHeight > 0 ? (gridHeight - units(unit, STAGE_GAP_INNER) * (rows.length - 1)) / rows.length : Infinity;
   return (
-    <View role="img" accessibilityLabel={messages.a11y.presenter.option(n, messages.a11y.presenter.shape[shape])} style={{ width: side, height: side, flexShrink: 0 }}>
-      <Svg width={side} height={side} viewBox={`0 0 ${MARKER_BOX} ${MARKER_BOX}`} aria-hidden>
-        {React.cloneElement(node, { fill: colors.surface.paper, stroke: colors.text.primary, strokeWidth: MARKER_STROKE })}
-        <SvgText
-          x={MARKER_BOX / 2}
-          y={numeralY}
-          dy={MARKER_BOX / 8}
-          fontSize={MARKER_BOX / 3}
-          fontFamily={SVG_UI_FONT}
-          fontWeight={typography.weight.bold}
-          fill={colors.text.primary}
-          textAnchor="middle"
-        >
-          {String(n)}
-        </SvgText>
-      </Svg>
+    <View
+      role="list"
+      testID="presenter-quiz-options"
+      onLayout={(e) => setGridHeight(e.nativeEvent.layout.height)}
+      style={{ flex: 1, minHeight: 0, gap: units(unit, STAGE_GAP_INNER) }}
+    >
+      {rows.map((row, r) => (
+        <View key={r} style={{ flex: 1, flexDirection: 'row', gap: units(unit, STAGE_GAP) }}>
+          {row.map((option, c) => (
+            <OptionCard key={c} option={option} index={r * 2 + c} revealed={revealed} romOn={romOn} rowHeight={rowHeight} />
+          ))}
+          {row.length === 1 ? <View style={{ flex: 1 }} /> : null}
+        </View>
+      ))}
     </View>
   );
 }
 
-/** One option card: marker, content (Korean with romanization, and its gloss) and, at the reveal, the check mark. */
-function OptionCard({ option, index, revealed, romShown }: { option: QuizOption; index: number; revealed: boolean; romShown: boolean }): React.ReactElement {
+/**
+ * One option card: marker, content (`optionContent`: a letter or word at `presenter.size.display`
+ * with its romanization, a gloss at `presenter.size.prompt`, or a story check's word with its gloss
+ * under it) and, at the reveal, the check mark.
+ */
+function OptionCard({ option, index, revealed, romOn, rowHeight }: { option: QuizOption; index: number; revealed: boolean; romOn: boolean; rowHeight: number }): React.ReactElement {
   const { unit, messages } = usePresenterView();
   const size = useStageText();
   const correct = revealed && option.correct;
   const line = Math.max(STAGE_BORDER_MIN, units(unit, STAGE_BORDER));
   const rule = Math.max(STAGE_BORDER_MIN, units(unit, spacing.sm));
   const border = correct ? rule : line;
-  const glossSize = size(presenter.size.prompt);
+  const marker = markerFor(index, presenter.marker.shapes);
+  const content = optionContent(option);
+  const padV = units(unit, spacing.md);
   const bodySize = size(presenter.size.body);
+  // A lone letter fills its card up to display size; a word with its gloss under it stays at prompt size.
+  const koSize =
+    content.ko?.size === 'display' ? Math.max(bodySize, Math.min(size(presenter.size.display), Math.floor(rowHeight - 2 * (padV + line)))) : size(presenter.size.prompt);
+  const glossSize = content.gloss?.size === 'body' ? bodySize : size(presenter.size.prompt);
   return (
     <View
+      role="listitem"
       testID={`presenter-quiz-option-${index + 1}`}
       style={{
         flex: 1,
+        minWidth: 0,
         flexDirection: 'row',
         alignItems: 'center',
         gap: units(unit, STAGE_GAP_INNER),
         // The thicker border keeps the outer size: the padding gives back what the border takes.
-        paddingVertical: units(unit, spacing.md) + line - border,
+        paddingVertical: padV + line - border,
         paddingHorizontal: units(unit, spacing.xl) + line - border,
         borderWidth: border,
         borderColor: correct ? colors.feedback.success : colors.border.strong,
         borderRadius: units(unit, STAGE_RADIUS),
         backgroundColor: correct ? colors.feedback.successLight : colors.surface.paper,
         opacity: revealed && !option.correct ? presenter.dimOpacity : 1,
-        minWidth: 0,
       }}
     >
-      <QuizMarker index={index} />
+      <ShapeMarker shape={marker.shape} n={marker.n} />
       <View style={{ flex: 1, minWidth: 0, gap: units(unit, spacing.xs) }}>
-        {option.ko !== undefined ? (
-          <View style={{ flexDirection: 'row', alignItems: 'baseline', flexWrap: 'wrap', gap: units(unit, spacing.md) }}>
-            <TaughtKo size={glossSize}>{option.ko}</TaughtKo>
-            <Text
-              style={{
-                fontSize: bodySize,
-                fontWeight: typography.weight.semibold,
-                // A dimmed or revealed option sets every line in text.primary (presenter.v1.md).
-                color: revealed ? colors.text.primary : colors.text.secondary,
-                opacity: romShown ? 1 : 0,
-              }}
-              aria-hidden={!romShown}
-            >
-              {option.romanization}
-            </Text>
+        {content.ko !== null ? (
+          <View style={{ flexDirection: 'row', alignItems: 'baseline', flexWrap: 'wrap', gap: units(unit, content.ko.size === 'display' ? spacing.lg : spacing.md) }}>
+            <TaughtKo size={koSize} style={content.ko.size === 'display' ? { lineHeight: koSize } : undefined}>
+              {content.ko.text}
+            </TaughtKo>
+            {content.ko.romanization !== undefined ? (
+              <Text
+                accessibilityElementsHidden={!romOn}
+                aria-hidden={!romOn}
+                style={{
+                  fontSize: bodySize,
+                  fontWeight: typography.weight.semibold,
+                  // A dimmed or revealed option sets every line in text.primary (presenter.v1.md).
+                  color: revealed ? colors.text.primary : colors.text.secondary,
+                  opacity: romOn ? 1 : 0,
+                }}
+              >
+                {content.ko.romanization}
+              </Text>
+            ) : null}
           </View>
         ) : null}
-        {option.gloss !== undefined ? (
-          <Text
-            style={{
-              fontSize: option.ko !== undefined ? bodySize : glossSize,
-              fontWeight: typography.weight.semibold,
-              color: colors.text.primary,
-              lineHeight: Math.round((option.ko !== undefined ? bodySize : glossSize) * typography.leading.tight),
-            }}
-          >
-            {option.gloss}
+        {content.gloss !== null ? (
+          <Text style={{ fontSize: glossSize, fontWeight: typography.weight.semibold, color: colors.text.primary, lineHeight: Math.round(glossSize * typography.leading.tight) }}>
+            {content.gloss.text}
           </Text>
         ) : null}
       </View>
@@ -126,27 +131,7 @@ function OptionCard({ option, index, revealed, romShown }: { option: QuizOption;
   );
 }
 
-/** The 2 x 2 option grid (2 or 3 options fill it in order). */
-export function QuizOptions({ options, revealed, romShown }: { options: readonly QuizOption[]; revealed: boolean; romShown: boolean }): React.ReactElement {
-  const { unit } = usePresenterView();
-  const rows = [options.slice(0, 2), options.slice(2, 4)].filter((row) => row.length > 0);
-  return (
-    <View testID="presenter-quiz-options" role="list" style={{ flex: 1, minHeight: 0, gap: units(unit, STAGE_GAP_INNER) }}>
-      {rows.map((row, r) => (
-        <View key={r} style={{ flex: 1, flexDirection: 'row', gap: units(unit, STAGE_GAP) }}>
-          {row.map((option, c) => (
-            <View key={c} role="listitem" style={{ flex: 1, minWidth: 0 }}>
-              <OptionCard option={option} index={r * 2 + c} revealed={revealed} romShown={romShown} />
-            </View>
-          ))}
-          {row.length === 1 ? <View style={{ flex: 1 }} /> : null}
-        </View>
-      ))}
-    </View>
-  );
-}
-
-/** "Hoya's answer" with a cheering Hoya; it joins the question row at the reveal. */
+/** "Hoya's answer" with a cheering Hoya; it joins the story check's question row at the reveal. */
 export function AnswerLine({ shown }: { shown: boolean }): React.ReactElement {
   const { unit, messages } = usePresenterView();
   const size = useStageText();

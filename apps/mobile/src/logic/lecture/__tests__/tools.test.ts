@@ -4,7 +4,10 @@ import { initialPresenterState, reduce, type PresenterState } from '../controls'
 import {
   TOOL_NAMES,
   firstUses,
+  fullscreenToggle,
   gridItems,
+  helpLanguageChips,
+  optionContent,
   optionRomShown,
   pickerModes,
   presetLabel,
@@ -86,6 +89,57 @@ describe('optionRomShown (D2)', () => {
     expect(optionRomShown('always', false)).toBe(true);
     expect(optionRomShown('tap', false)).toBe(false);
     expect(optionRomShown('tap', true)).toBe(true);
+    expect(optionRomShown('always', true)).toBe(true);
+  });
+});
+
+describe('optionContent (slide-quiz.md: one option card for quizzes and story checks)', () => {
+  it('a letter or word alone is drawn at display size with its romanization', () => {
+    expect(optionContent({ ko: 'ga', romanization: 'ga', correct: true })).toEqual({ ko: { text: 'ga', romanization: 'ga', size: 'display' }, gloss: null });
+  });
+
+  it('a gloss alone is drawn at prompt size', () => {
+    expect(optionContent({ gloss: 'rice', correct: false })).toEqual({ ko: null, gloss: { text: 'rice', size: 'prompt' } });
+  });
+
+  it("a story check's word keeps its gloss under it: the word at prompt size, the gloss at body size", () => {
+    expect(optionContent({ ko: 'bap', romanization: 'bap', gloss: 'rice', correct: true })).toEqual({
+      ko: { text: 'bap', romanization: 'bap', size: 'prompt' },
+      gloss: { text: 'rice', size: 'body' },
+    });
+  });
+
+  it('a Korean option without romanization draws no romanization line', () => {
+    expect(optionContent({ ko: 'ga', correct: false }).ko).toEqual({ text: 'ga', size: 'display' });
+  });
+});
+
+describe('fullscreenToggle (lecture.tool_used, section 3.14)', () => {
+  it('enters full screen when not in it, and reports the tool', () => {
+    expect(fullscreenToggle(false)).toEqual({ action: 'enter', tools: ['fullscreen'] });
+  });
+
+  it('leaves full screen and still reports the tool (Start already entered it; firstUses dedupes)', () => {
+    expect(fullscreenToggle(true)).toEqual({ action: 'exit', tools: ['fullscreen'] });
+    const first = firstUses(new Set(), fullscreenToggle(true).tools);
+    expect(first.fresh).toEqual(['fullscreen']);
+    expect(firstUses(first.used, fullscreenToggle(false).tools).fresh).toEqual([]);
+  });
+});
+
+describe('helpLanguageChips (section 3.12, overlays.md Help)', () => {
+  const en = { locale: 'en' as const, endonym: 'English', htmlLang: 'en' };
+  const es = { locale: 'es' as const, endonym: 'Espa\u00f1ol', htmlLang: 'es' };
+  it('draws no chips when the build offers one locale', () => {
+    expect(helpLanguageChips([en])).toBeNull();
+    expect(helpLanguageChips([])).toBeNull();
+  });
+
+  it('gives each offered locale a chip named by its endonym, in its own language', () => {
+    expect(helpLanguageChips([en, es])).toEqual([
+      { value: 'en', label: 'English', lang: 'en' },
+      { value: 'es', label: 'Espa\u00f1ol', lang: 'es' },
+    ]);
   });
 });
 
