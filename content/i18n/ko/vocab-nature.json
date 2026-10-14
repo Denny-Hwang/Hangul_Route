@@ -1,0 +1,47 @@
+{
+  "locale": "ko",
+  "domain": "vocab-nature",
+  "entries": {
+    "vocab-topic:nature": {
+      "title": "자연",
+      "blurb": "하늘부터 바다까지, 밖에서 볼 수 있는 것들이에요.",
+      "hoyaIntro": "밖으로 나가서 우리 주변의 세상을 둘러봐요."
+    },
+    "vocab:san": {
+      "gloss": "땅이 높이 솟은 곳"
+    },
+    "vocab:bada": {
+      "gloss": "짠물이 넓게 펼쳐진 곳"
+    },
+    "vocab:haneul": {
+      "gloss": "머리 위로 보이는 넓은 공간, 구름이 떠 있는 곳"
+    },
+    "vocab:hae-sun": {
+      "gloss": "낮에 밝게 빛나며 빛과 열을 주는 것"
+    },
+    "vocab:dal-moon": {
+      "gloss": "밤하늘에 떠서 날마다 모양이 바뀌는 것"
+    },
+    "vocab:byeol": {
+      "gloss": "밤하늘에 반짝이는 작은 빛"
+    },
+    "vocab:namu": {
+      "gloss": "줄기가 단단하고 가지와 잎이 있는 식물"
+    },
+    "vocab:kkot": {
+      "gloss": "식물에서 피어나는 알록달록한 부분"
+    },
+    "vocab:bi-rain": {
+      "gloss": "구름에서 떨어지는 물방울"
+    },
+    "vocab:nun-snow": {
+      "gloss": "추운 날 하늘에서 내리는 하얀 얼음 알갱이"
+    },
+    "vocab:gang": {
+      "gloss": "넓고 길게 흘러가는 큰 물줄기"
+    },
+    "vocab:gureum": {
+      "gloss": "하늘에 떠 있는 하얀 물방울 덩어리"
+    }
+  }
+}
