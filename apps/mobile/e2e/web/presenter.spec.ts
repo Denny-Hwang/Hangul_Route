@@ -555,10 +555,10 @@ test.describe('PR 7 teaching slides at 1280 x 720', () => {
     await page.goto(link({ ...DECK, id: 'lecture:e2e019', title: 'Apple card', blocks: [{ kind: 'cards', cardIds: ['card:sagwa'] }] }));
     await startLesson(page);
     await forwardTo(page, 'Card');
-    await expect(page.getByRole('heading', { name: 'Sagwa' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Apple' })).toBeVisible();
     const art = page.getByTestId('presenter-card-art');
     await expect(art).toBeVisible();
-    await expect(art).toHaveAccessibleName('Sagwa');
+    await expect(art).toHaveAccessibleName('Apple');
     await shot(page, 'presenter-card-fallback-1280x720');
   });
 
