@@ -11,6 +11,8 @@ import { BOOK_DEFINITIONS, bookEpisodes, bookQuests, buildBook } from '../books'
 import { episodesAll, episodeById } from '../episodes';
 import { questsAll } from '../quests';
 import { storiesAll, storyById, storyQuests } from '../stories';
+import { completeStages, stagesToLatch, withStageLatches } from '../../logic/my-route/latch';
+import { snapshotWith } from '../../logic/my-route/__tests__/fixtures/bundle-2026-10';
 import { STORY_QUEST_COPY, STORY_STEP_SECONDS, storyQuestSkeleton } from '../story-skeleton';
 
 /** F-STORY-005 §3.2 "Books", §3.3 book plan, PR 5.6. */
@@ -194,5 +196,28 @@ describe('storyQuestSkeleton (story-skeleton.ts)', () => {
     const base = storyById('story:seollal-new-year') as Story;
     expect(() => storyQuestSkeleton({ ...base, hoyaIntroEn: undefined }, 'read')).toThrow(/hoyaIntroEn/);
     expect(() => storyQuestSkeleton({ ...base, hoyaOutroEn: undefined }, 'read')).toThrow(/hoyaOutroEn/);
+  });
+});
+
+/** F-STORY-005 PR 5.6: with all five books shipped, Stage 5 is `open` and can complete (F-ROUTE-001 OD-6 latch). */
+describe('Stage 5 completion on the shipped bundle', () => {
+  const stage5Quests = bookEpisodes.flatMap((e) => e.questIds);
+  const NOW = new Date('2026-10-13T09:00:00.000Z');
+  const episodeOf = new Map(bookEpisodes.flatMap((e) => e.questIds.map((q) => [q, e.id] as const)));
+  /** The fixture helper guesses episode ids from quest ids; a book quest names its book. */
+  const doneWith = (questIds: readonly string[]) => {
+    const s = snapshotWith(questIds);
+    return { ...s, quests: s.quests.map((q) => ({ ...q, episodeId: episodeOf.get(q.questId) ?? q.episodeId })) };
+  };
+
+  it('latches stage5 once when every Stage 5 read quest is done, and no other stage', () => {
+    expect(stage5Quests).toHaveLength(14);
+    expect(stagesToLatch(doneWith(stage5Quests.slice(0, -1)), episodesAll)).toEqual([]);
+    const done = doneWith(stage5Quests);
+    expect(stagesToLatch(done, episodesAll)).toEqual(['stage5']);
+    const latched = withStageLatches(done, ['stage5'], NOW);
+    expect(latched.stageDoneAt).toEqual({ stage5: NOW.toISOString() });
+    expect(stagesToLatch(latched, episodesAll)).toEqual([]);
+    expect([...completeStages(latched, episodesAll)]).toEqual(['stage5']);
   });
 });

@@ -14,6 +14,7 @@ import { expectNoHorizontalOverflow } from './viewport';
  */
 
 const FIXTURE_BUILD = process.env.STORY_FIXTURES === '1';
+const GATED_BUILD = process.env.E2E_CONTENT_GATING === '1';
 const BOOK_CELL = 'Stage 5 Stories, Holidays & Traditions: story book, 1 heritage story';
 const ROW = 'Heritage stories for this cell, 1 heritage story';
 const EMOJI = /\p{Extended_Pictographic}/u;
@@ -40,6 +41,7 @@ async function openBook(page: Page): Promise<void> {
 
 test.describe('the Stage 5 rites book (regular build)', () => {
   test.skip(FIXTURE_BUILD, 'the fixture bundle owns its own cells: see journey-stories.spec.ts');
+  test.skip(GATED_BUILD, 'a free-plan build shows the book preview path: see episode-access.spec.ts');
 
   test('the book cell opens the book page: three stories, then the cell stories row', async ({ page }) => {
     const errors: string[] = [];
@@ -144,6 +146,7 @@ const OTHER_BOOKS = [
 
 test.describe('the other four Stage 5 books (regular build)', () => {
   test.skip(FIXTURE_BUILD, 'the fixture bundle owns its own cells: see journey-stories.spec.ts');
+  test.skip(GATED_BUILD, 'a free-plan build shows the book preview path: see episode-access.spec.ts');
 
   for (const book of OTHER_BOOKS) {
     test(`the ${book.title} cell opens its book page with its stories and no cell stories row`, async ({ page }) => {

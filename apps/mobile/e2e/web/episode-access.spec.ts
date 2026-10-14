@@ -134,6 +134,27 @@ test.describe('free plan switch on (web)', () => {
     expect(errors).toEqual([]);
   });
 
+  for (const book of [
+    { theme: 'Letters & Books', title: 'Stories of Letters' },
+    { theme: 'Food & Daily Life', title: 'Family Stories' },
+    { theme: 'Nature & Animals', title: 'Tiger Folktales' },
+    { theme: 'Play & Crafts', title: 'Craft Stories' },
+  ] as const) {
+    test(`the Stage 5 ${book.title} book on the free plan is a preview too (F-STORY-005 PR 5.6)`, async ({ page }) => {
+      const errors: string[] = [];
+      page.on('pageerror', (e) => errors.push(String(e)));
+      await onboardChild(page, { name: 'Dami', startJourney: false });
+      await home(page, 'Dami');
+      await page.getByText('Journey', { exact: true }).last().click();
+      await page.getByRole('button', { name: new RegExp(`^Stage 5 Stories, ${book.theme}: story book`) }).click();
+      await expect(page.getByRole('heading', { name: book.title })).toBeVisible();
+      await expect(page.getByTestId('story-episode-title')).toHaveCount(0);
+      await expect(page.getByTestId('episode-quest-not-open').first()).toHaveText(access.notOpen);
+      await expect(page.getByTestId('episode-preview-card').getByText(access.preview.line)).toBeVisible();
+      expect(errors).toEqual([]);
+    });
+  }
+
   test('Stage 1 lessons are never a preview', async ({ page }) => {
     await onboardChild(page, { name: 'Dami', startJourney: false });
     await home(page, 'Dami');
