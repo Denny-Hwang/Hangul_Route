@@ -15,6 +15,7 @@
 | 파일 | 상태 | 스펙 |
 |---|---|---|
 | `onboarding/welcome.md` · `onboarding/first-quest-preview.md` | S | F-PROF-001 |
+| `onboarding/setup-steps.md` | R | F-LEARN-001 §3.15 (Who is learning, Profile, Privacy as three steps; amends the layout of `onboarding/all-ages-onboarding.md` A to C, E) |
 | `profiles/picker.md` · `pin-entry.md` · `switch-button.md` · `create-parent.md` · `create-learner.md` | S | F-PROF-001 |
 | `home/todays-mission.md` · `homework/list.md` | S | F-HW-001 |
 | `home/story-time-card.md` | S | F-STORY-004 §3.7 (PR 4.0; built in PR 4.4a) |

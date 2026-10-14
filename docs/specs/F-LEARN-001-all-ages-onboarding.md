@@ -5,7 +5,7 @@ Status: ready
 **Scope**: `packages/content-schema` (level table, `learnerType`, telemetry names) · `packages/design-system` (Hoya fur variants, tokens) · `apps/mobile` (`CreateProfileScreen`, consent and PIN logic, `PinEntryScreen` + new `PinResetScreen`, profile switcher, grown-up dashboard, copy) · `apps/web` (console roster, parent demo pages, privacy and terms text) · `packages/backend` (types only, no behaviour change) · **no D1 migration**
 **Owner**: solo dev
 **Rollout**: audience update of 2026-10-09 (CLAUDE.md §1). PR order in §7.
-**Wireframe**: `design/wireframes/onboarding/all-ages-onboarding.md` (drafted in one file: `wireframes/all-ages-onboarding.md`; copy it there with the first PR)
+**Wireframe**: `design/wireframes/onboarding/all-ages-onboarding.md` (drafted in one file: `wireframes/all-ages-onboarding.md`; copy it there with the first PR); the stepped setup of §3.15: `design/wireframes/onboarding/setup-steps.md`
 
 Parent / siblings: F-PROF-001 (device profiles, PIN §3.5, avatars §3.2) · F-SYNC-001 (`LearnerRegister` contract) · F-SPACE-001 (roster) · F-RESTORE-001 (Rescue Code, used by Forgot PIN) · F-I18N-001 (locale catalogs; this spec's new strings live in one module so they can move) · F-PLC-001 (placement: first reader of the level) · F-LAYOUT-001 (safe-area and small-phone layout; PIN keypad sizing) · audit findings UF-05/06/07/08/09, DATA-01/02, UX-06/07/08/27/33 · **PR #95** (merged: Profile entry label "Profile", scrollable safe-area `Screen`, responsive PIN pad — referenced, not respecified here, see §3.7 and §3.4)
 
@@ -84,6 +84,8 @@ export function levelOrder(id: string): 0 | 1 | 2 | null;
 - `LEARNER_LEVELS` strings are English, plain (CEFR Pre-A1), and in this one table so F-I18N-001 can add `es`/`ko` overlays keyed by `id`.
 
 ### 3.2 Who is learning (first screen of the form)
+
+> **Amended 2026-10-14 (§3.15).** The form is now three steps (Who is learning, Profile, Privacy); the option sub-lines of item 1 no longer mention an age, and the "13 or older" statement lives only on the Privacy step. The rules below (fields, validation, consent, PIN) are unchanged; §3.15 owns the layout and order.
 
 `CreateProfileScreen` keeps its file and route (`Onboarding/CreateProfile`, params `{ firstRun: boolean }`, `navigation/types.ts:32`). Sections render in this order; sections 2 to 6 appear only after section 1 has an answer (L4).
 
@@ -304,6 +306,97 @@ Counsel reviews the switch from child-directed to mixed-audience (audit UF-09). 
 - **Given** a stored `ageGroup` this build does not know (a future level), **then** no level pill is drawn and nothing throws.
 - **Given** the cub `hoya-blue`, **when** the switcher, Home entry and dashboard render, **then** each draws the blue variant (not the theme colour) and the picker shows the label "Blue Tiger"-style English label under each cub.
 
+### 3.15 Setup in steps: the privacy agreement is its own step (owner decision 2026-10-14, option A)
+
+**Why.** In the one long form of §3.2 the first question was "Me — I'm 13 or older" / "My child or a student — A grown-up sets it up". People read it as an age fork that picks different lessons, and the consent sat at the bottom of a long scroll. The owner chose option A: say who sets the profile up with **no age wording**, move the agreement (and the "13 or older" statement) to a separate Privacy step, and say on both steps that the answer does not change the lessons. **The legal meaning is unchanged**: L3 still holds (`'self'` = the learner states they are 13 or older and agrees; `'child'` = a parent, guardian or teacher agrees and creates the grown-up PIN), and so do `requiredConsent`, `pinRequiredForNewProfile`, the consent timestamps of §3.3, the telemetry of §3.8 (`onboarding.consent_given { basis: 'guardian' | 'self_13plus' }`) and the rule that `learnerType` is never sent. This section replaces the *layout* of §3.2 (one scrolling form, sections 2 to 6 under section 1) and the two option sub-lines of §3.2 item 1; everything else in §3.2 to §3.4 stays as written. Wireframe: `design/wireframes/onboarding/setup-steps.md`.
+
+#### 3.15.1 Steps, not routes
+
+`CreateProfileScreen` keeps its file, route and params (`Onboarding/CreateProfile { firstRun }`). It shows **one step at a time**, held in screen state: `step: 'who' | 'profile' | 'privacy'`. Steps are not separate routes, so the answers live in one place (back navigation and the under-13 switch keep them), deep links and the e2e entry point do not move, and `submitProfile` (§3.3) is called once, from the last step, with the same `FormState`.
+
+The pure rules live in `apps/mobile/src/logic/onboarding/setup-steps.ts` (100 % covered), on top of `formPlan` / `missingStep` (`create-profile-form.ts`):
+
+```ts
+export type SetupStep = 'who' | 'profile' | 'privacy';
+/** The steps this answer needs: ['who'] before an answer; then 'profile', and 'privacy' only when formPlan(s).card !== null. */
+export function setupSteps(s: FormState): SetupStep[];
+/** "Step n of N" for the caption (1-based; N from setupSteps once answered, 3 before). */
+export function stepPosition(step: SetupStep, s: FormState): { n: number; total: number };
+/** What this step still needs before its Continue works; null when it can go on. Only the step's own gaps, in §3.2 item 6 order. */
+export function stepMissing(step: SetupStep, s: FormState): MissingStep | null;
+/** The step Continue opens, or 'submit' on the last step. */
+export function nextStep(step: SetupStep, s: FormState): SetupStep | 'submit';
+/** The step Back opens, or 'leave' on 'who' (the screen then goes back as today). */
+export function previousStep(step: SetupStep): SetupStep | 'leave';
+/** "I'm under 13" on the Privacy step: learnerType 'child'; agreed, PIN and optional-PIN row reset; name, level, cub and email kept. */
+export function switchToGrownUp(s: FormState): FormState;
+```
+
+| Step | Shows | Continue needs (`stepMissing`, caption) |
+|---|---|---|
+| 1 `who` | "Who is learning?" + two radio cards (§3.15.2) + the lessons line | an answer: "Choose who is learning" |
+| 2 `profile` | heading "Your profile" (Me) / "Their profile" (Someone I look after), then name, reading level, cub (as §3.2 items 2 to 4, same wording rules "Your name" / "Their name") | a valid name: "Type a name" |
+| 3 `privacy` | the agreement card for the answer (§3.15.3) | in this order "Tick the box to agree", "Create the PIN", "Check the email, or leave it empty" |
+
+- The **last** step (3, or 2 when no Privacy step is needed) also carries the "Ready to go!" card (§3.2 item 6, `readyLine`) above Continue; Continue there runs `submitProfile`. The Continue label is "Continue" on every step.
+- **When the Privacy step is skipped**: only when `formPlan(s).card === null`, i.e. adding a profile later on a device that already has the consent this answer needs (and a PIN for a child). That is the §3.3 "Adding a profile later" rule unchanged; the caption then reads "Step 2 of 2". On a fresh install the Privacy step is always shown.
+- **Invariant used by the under-13 switch**: a `'self'` Privacy step exists only when the device has no consent at all (`requiredConsent` gives `'self'` only when both timestamps are null), so after the switch `requiredConsent` for `'child'` is `'guardian'` and the step always has a grown-up card to show. `switchToGrownUp` never removes the step.
+
+#### 3.15.2 Step 1, "Who is learning?" (no age wording)
+
+- Heading "Who is learning?" (`accessibilityRole="header"`), above it the caption "Step 1 of 3".
+- Two radio cards (`OptionCard`, radiogroup labelled "Who is learning?", nothing preselected, L4):
+  - **"Me"**, sub-line "I'm setting this up for myself."
+  - **"Someone I look after (a child or a student)"**, sub-line "I'm a parent, guardian or teacher, setting it up for them."
+  The sub-lines say who sets the profile up. Neither card, sub-line nor accessible name mentions an age or a number.
+- Under the cards, one plain line (`Caption`, secondary): **"This doesn't change your lessons. Your level check comes next and sets them."** On a build where the level check is off (`placementEntriesOn(flags.placementEnabled)` false, F-PLC-001 §3.10) the second sentence is not true, so the line is only "This doesn't change your lessons."
+- Changing the answer later (Back to step 1, pick the other card) keeps name, level, cub and email and resets the checkbox, the PIN and the optional-PIN row, exactly as `chooseWho` does today. `onboarding.who_selected` still fires once per form, on the first answer.
+
+#### 3.15.3 Step 3, Privacy
+
+Heading **"Privacy"**, caption "Step 3 of 3", then the card for the answer, then one plain line **"Agreeing doesn't change the lessons."** (both paths).
+
+- **"Me"** (card heading "Before you start", body, "Email (optional)", the checkbox **"I'm 13 or older and I agree to the Privacy Policy."**, the "Read the Privacy Policy" link with its fallback note, and the collapsed "Protect settings with a PIN (optional)" row: all as §3.3). Below the card a secondary text button **"I'm under 13"** (`accessibilityRole="button"`, at least `touchTarget.min` tall, quiet styling, no icon).
+- **The under-13 switch.** Pressing "I'm under 13" applies `switchToGrownUp`: `learnerType` becomes `'child'`; the checkbox, any typed PIN and the optional row are cleared; name, level, cub and email are kept; the step stays on Privacy and now shows the grown-up card of §3.3 (heading "For a grown-up", body, email, **mandatory** "Create a grown-up PIN", the guardian checkbox and link). A note sits above the card: **"A grown-up finishes this step: they agree and create a PIN. The name and Hoya stay the same."** Focus moves to that note. Nothing is stored and no event fires on the switch; on Continue the guardian path of §3.3 runs (`acceptGuardianConsent`, PIN hash, profile with `learnerType: 'child'`, `consent_given { basis: 'guardian' }`). To undo it, Back to step 1 and pick "Me" again (the switch is not a dead end and is never framed as a mistake).
+- **"Someone I look after"**: the grown-up card of §3.3 unchanged (PIN mandatory when `pinRequiredForNewProfile`).
+- Telemetry, order of the stores and the PIN failure line ("Couldn't set the PIN. Try again.") are §3.3 / §3.13 unchanged.
+
+#### 3.15.4 Back navigation
+
+- Steps 2 and 3 show the back control top-left (the arrow of today's later-profile form, accessible name "Go back"): it opens the previous step with every value kept. Step 1 shows it only when `firstRun` is false (back to Profile, as today); on first run step 1 has no back control, as today.
+- The system back (Android back, browser back on the PWA) does the same: while the step is not `who`, the screen listens to the navigator's `beforeRemove`, cancels the removal and opens the previous step; on `who` the route is left as today.
+- Each step change scrolls the form to the top.
+
+#### 3.15.5 Accessibility and focus order
+
+- On each step change focus moves to the new step's heading (or, after the under-13 switch, to the switch note), so a screen reader announces "Step n of N" and the heading first. Reading order on every step: back control, step caption, heading, the step's controls, the step's plain line, (last step) the "Ready to go!" card, Continue, the missing-step caption.
+- Radios keep `accessibilityRole="radio"` + checked state inside a labelled radiogroup; the checkbox keeps `accessibilityRole="checkbox"`; the policy link keeps `accessibilityRole="link"` named "Privacy Policy"; "I'm under 13" is a button. All targets at least `touchTarget.min`, option cards at least `touchTarget.child`.
+- Captions and errors stay calm (`colors.feedback.nudge` only for the email field border, never red). No emoji, tokens only, no new animation (the native stack transition is not used between steps; the step swaps in place).
+- 320 dp: each step fits one column and scrolls; Continue is the last element of the scroll. Tablet (768 and wider): the same single column, centred at the `Screen` content width; nothing goes side by side.
+
+#### 3.15.6 Adding a profile later and editing "who is learning"
+
+- **Add a profile** (`firstRun: false`): the same steps. Step 3 appears only when the answer needs a card (§3.15.1), so on a family device adding a child is two steps, and on a self-only device adding a child brings the Privacy step with the grown-up card and the mandatory PIN (§3.3).
+- **Edit profile** (§3.11) stays one screen with Save, and follows the same split: the who row uses the step-1 labels and sub-lines and the line "This doesn't change the lessons." under it; when the change needs a consent the card sits in its own block headed "Privacy" with the line "Agreeing doesn't change the lessons." Becoming **"Me"** shows the "I'm 13 or older and I agree to the Privacy Policy." checkbox and, under it, "I'm under 13": pressing it sets the who row back to "Someone I look after (a child or a student)" (the stored value, so the who change and the Privacy block go away) and shows the caption "This profile stays with a grown-up." Becoming "Someone I look after" keeps the grown-up card (and PIN creation when none exists) of §3.11.
+
+#### 3.15.7 Copy in the dictionary
+
+`logic/onboarding/create-profile-copy.ts` (`CREATE_PROFILE_COPY`) and `MISSING_STEP_CAPTION` are English constants outside the dictionary. This change moves every string of the form into `packages/i18n` `learner.createProfile` (read with `useMessages()`), adds `apps/mobile/src/screens/onboarding/CreateProfileScreen.tsx` to `scripts/i18n-migrated.json`, and writes the `es` and `ko` values in the same PR (F-I18N-001 §3.10 style guide: tú; 해요체; 어른 / 어른용 PIN; 수준 확인 for the level check; no particle on a variable). The edit screen's changed and new keys (`learner.editProfile`) get their `es` and `ko` values in the same PR too.
+
+#### 3.15.8 Migration
+
+**Nothing stored changes.** No new storage key, no new profile field, no new telemetry name or payload key, no D1 or API change. Profiles, consent timestamps and PINs written by the one-page form read the same. A device mid-way through the old form simply opens the new step 1 after the update (the form was never saved part-way).
+
+#### 3.15.9 Behaviours
+
+- **Given** a fresh install, **when** Create profile opens, **then** step 1 shows "Step 1 of 3", "Who is learning?", the cards "Me" and "Someone I look after (a child or a student)" unselected, the lessons line, and a disabled Continue captioned "Choose who is learning"; no text on the screen matches `/\b13\b|\bages?\b|how old/i`.
+- **Given** "Me" and a name, **when** Continue is pressed on step 2, **then** step 3 "Privacy" shows the "13 or older" checkbox, the policy link, "I'm under 13" and "Agreeing doesn't change the lessons."; ticking the box and pressing Continue stores `selfConsentAcceptedAt`, no PIN, a profile with `learnerType: 'self'` and leads to the level check's fork (or the first-quest preview when it is off).
+- **Given** step 3 on the "Me" path with the name "Sam" and the cub "Home Tiger", **when** "I'm under 13" is pressed, **then** the grown-up card with the PIN pad shows, the box is unticked, Continue is captioned "Tick the box to agree"; after the guardian box and a PIN twice, Continue stores `guardianConsentAcceptedAt`, the PIN hash and a profile "Sam" with `learnerType: 'child'` and cub `hoya-blue`.
+- **Given** step 3, **when** Back is pressed twice, **then** step 1 shows with the earlier answer checked; **when** Continue is pressed twice, **then** step 3 shows with the name and cub still set.
+- **Given** a family device (guardian consent and PIN stored), **when** a child profile is added, **then** the caption on step 2 reads "Step 2 of 2" and its Continue creates the profile with no Privacy step.
+- **Given** Edit profile on a `'child'` profile, **when** "Me" is picked and then "I'm under 13" pressed, **then** the who row is back on "Someone I look after (a child or a student)", the Privacy block is gone and "This profile stays with a grown-up." shows.
+
+
 ## 4. Out of scope
 
 - Content or difficulty that changes with level; placement (F-PLC-001); the "Read to me" default (F-STORY-002 / F-STORY-003 own it).
@@ -362,6 +455,8 @@ Ships behind no flag; the old flow cannot coexist with the new consent text. Ord
 | 6 | `feat(mobile)`: Forgot PIN (`PinResetScreen`, route, `PinEntry` link + `mode`), titles by audience, `pin.*` telemetry, e2e | 2, 4b |
 | 7 | `feat(web)`: console roster `levelLabel` + `AvatarChip`, parent demo pages, design-preview samples, `mock-family` types; privacy and terms edits (§3.12) after counsel; docs and wireframe alignment | 1, 3 |
 | 8 (can slip) | `feat(mobile)`: `EditProfile` screen (§3.11) | 2, 3, 5 |
+| 9 | `docs(spec)`: §3.15 setup in steps (privacy agreement as its own step, no age wording on "Who is learning?"), wireframe `design/wireframes/onboarding/setup-steps.md` (320 dp and tablet) | 4b, 8 |
+| 10 | `feat(mobile)`: §3.15 in `CreateProfileScreen` (steps, under-13 switch, back), `logic/onboarding/setup-steps.ts` + tests, CreateProfile copy moved to `learner.createProfile` with `es` and `ko`, Edit profile split, updated onboarding e2e helpers and specs | 9 |
 
 **Cross-spec order**: PR 4b and F-I18N-001 PR 5 edit the same screens — PR 4b first. F-I18N-001 PR 4 (`KoreanText`) is not needed here. This spec adds no field to `ProfileSettings` (F-I18N-001 owns it).
 
