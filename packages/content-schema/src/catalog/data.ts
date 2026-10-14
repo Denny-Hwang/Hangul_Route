@@ -20,8 +20,9 @@ import type { Catalog, CatalogCell, CatalogQuest, CatalogStory, CatalogTopic } f
  * Version 9 (F-CURR-001 S4-1): the Stage 4 Read Along cell ships (three lesson quests).
  * Version 10 (F-CURR-001 S3-1): the Stage 3 First Sentences cell ships (three lesson quests).
  * Version 11 (F-CURR-001 S2-3): Playground Words ships (Stage 2 crafts, three lesson quests).
+ * Version 12 (F-CURR-001 S3-3): the Stage 3 Festival Sentences cell ships (three lesson quests).
  */
-export const CATALOG_VERSION = 11;
+export const CATALOG_VERSION = 12;
 
 const cell = (
   stage: StageKey,
@@ -57,7 +58,7 @@ const cells: CatalogCell[] = [
   cell('stage2', 'crafts', 'Playground Words', 'shipped', 12, ['quest:stage2-crafts-q1', 'quest:stage2-crafts-q2', 'quest:stage2-crafts-q3']),
   cell('stage3', 'letters', 'First Sentences', 'shipped', 14, ['quest:stage3-letters-q1', 'quest:stage3-letters-q2', 'quest:stage3-letters-q3']),
   soon('stage3', 'life', 'Daily Mini-Sentences'),
-  soon('stage3', 'rites', 'Festival Sentences'),
+  cell('stage3', 'rites', 'Festival Sentences', 'shipped', 14, ['quest:stage3-rites-q1', 'quest:stage3-rites-q2', 'quest:stage3-rites-q3']),
   soon('stage3', 'nature', 'Animal Sentences'),
   soon('stage3', 'crafts', 'Game Sentences'),
   cell('stage4', 'letters', 'Read Along', 'shipped', 13, ['quest:stage4-letters-q1', 'quest:stage4-letters-q2', 'quest:stage4-letters-q3']),
@@ -130,6 +131,9 @@ const lessonQuests: CatalogQuest[] = [
   lesson('stage3-letters-q1', 'stage3', 'letters', 'It Is a Book', 5),
   lesson('stage3-letters-q2', 'stage3', 'letters', 'There Is a Book', 5),
   lesson('stage3-letters-q3', 'stage3', 'letters', 'This Is Hangul', 5),
+  lesson('stage3-rites-q1', 'stage3', 'rites', 'Grandma and Grandpa', 5),
+  lesson('stage3-rites-q2', 'stage3', 'rites', 'Pretty and Tasty', 5),
+  lesson('stage3-rites-q3', 'stage3', 'rites', 'Festival Days', 5),
   lesson('stage4-letters-q1', 'stage4', 'letters', 'What Is This?', 4),
   lesson('stage4-letters-q2', 'stage4', 'letters', 'Where Is It?', 4),
   lesson('stage4-letters-q3', 'stage4', 'letters', 'Thank You, Teacher', 4),
