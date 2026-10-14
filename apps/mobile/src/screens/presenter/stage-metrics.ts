@@ -32,6 +32,8 @@ export const STAGE_GAP_INNER = spacing.xl;
 /** Borders on the stage, in units: a 1 or 2 px border vanishes on a projector. */
 export const STAGE_BORDER = borderWidth.thick;
 export const STAGE_RADIUS = radii.xl;
+/** The thinnest a stage border draws in real pixels, however small the unit. */
+export const STAGE_BORDER_MIN = borderWidth.base;
 
 export const CTL_MAX_WIDTH = CTL_MAX_FACTOR * touchTarget.hero;
 export const NEXT_MIN_WIDTH = NEXT_MIN_FACTOR * touchTarget.hero;

@@ -145,6 +145,23 @@ describe('locale-store: hydrate', () => {
     });
   });
 
+  it("with handoff 'session' (the presenter), ?lang= is held for the session and never stored", async () => {
+    platform.handoff = 'ko';
+    await useLocaleStore.getState().hydrate([], { handoff: 'session' });
+    const s = useLocaleStore.getState();
+    expect(s.device).toBeNull();
+    expect(s.session).toBe('ko');
+    expect(activeLocale(s, null)).toBe('ko');
+    expect(mem.has('device:settings')).toBe(false);
+    expect(track).not.toHaveBeenCalled();
+    // A stored device choice still wins, as for the device hand-off.
+    reset();
+    mem.set('device:settings', { uiLocale: 'en' });
+    platform.handoff = 'ko';
+    await useLocaleStore.getState().hydrate([], { handoff: 'session' });
+    expect(useLocaleStore.getState().session).toBeNull();
+  });
+
   it('?lang= never overrides a stored device choice', async () => {
     mem.set('device:settings', { uiLocale: 'en' });
     platform.handoff = 'ko';

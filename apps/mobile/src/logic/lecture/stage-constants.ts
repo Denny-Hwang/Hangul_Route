@@ -42,6 +42,8 @@ export const PICKER_COUNT_MAX = 60;
 
 /** The start screen waits this long at most for the presenter font (spec section 3.6). */
 export const FONT_WAIT_MS = 1500;
+/** SVG text does not read React Native's 'System' family; the stroke diagram's numerals use the browser's UI stack. */
+export const SVG_UI_FONT = 'system-ui, sans-serif';
 
 /** Touch: a horizontal swipe of at least 60 px with |dx| >= 1.5 |dy| (spec section 3.5). */
 export const SWIPE_MIN = 60;

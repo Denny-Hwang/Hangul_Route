@@ -21,6 +21,9 @@ import {
   startTally,
   tallyStep,
   voiceState,
+  voiceCheck,
+  nextStrokePlay,
+  strokeTokenFor,
 } from '../shell';
 import { barBand, stageBox, stageButtonSize, units } from '../stage-constants';
 import { stageScale } from '../stage-scale';
@@ -287,5 +290,64 @@ describe('gestureCommand (section 3.5)', () => {
     expect(gestureCommand({ x: 600, width: 1200, dx: 60, dy: 50 })).toBeNull();
     expect(gestureCommand({ x: 600, width: 1200, dx: 0, dy: 90 })).toBeNull();
     expect(gestureCommand({ x: 600, width: 0, dx: 0, dy: 0 })).toBeNull();
+  });
+});
+
+describe('voiceCheck (the start screen voice line)', () => {
+  const ready = (local: boolean): AudioCapability => ({
+    tts: { state: 'ready', voiceId: 'v', voiceName: 'Yuna', local, quality: 'enhanced' },
+    clips: false,
+    unlocked: false,
+  });
+
+  it('names the ready voice, on this device or over the internet', () => {
+    expect(voiceCheck(ready(true), false)).toEqual({ kind: 'local', name: 'Yuna' });
+    expect(voiceCheck(ready(false), true)).toEqual({ kind: 'network', name: 'Yuna' });
+  });
+
+  it('reads clips-only as a ready voice with no empty name', () => {
+    const clips: AudioCapability = { tts: { state: 'none', reason: 'no_engine' }, clips: true, unlocked: false };
+    expect(voiceCheck(clips, true)).toEqual({ kind: 'clips' });
+    expect(voiceCheck({ ...UNKNOWN_CAPABILITY, clips: true }, false)).toEqual({ kind: 'clips' });
+  });
+
+  it('says when the voice needs the internet, or there is none', () => {
+    expect(voiceCheck({ tts: { state: 'none', reason: 'offline_network_only' }, clips: false, unlocked: false }, true)).toEqual({ kind: 'needs-internet' });
+    expect(voiceCheck({ tts: { state: 'none', reason: 'no_engine' }, clips: false, unlocked: false }, true)).toEqual({ kind: 'none' });
+  });
+
+  it('is checking until the first check finished, then none', () => {
+    expect(voiceCheck(UNKNOWN_CAPABILITY, false)).toEqual({ kind: 'checking' });
+    expect(voiceCheck(UNKNOWN_CAPABILITY, true)).toEqual({ kind: 'none' });
+  });
+});
+
+describe('stroke guide play (going back to a complete slide is silent)', () => {
+  it('plays on a stroke reveal or replay, with a fresh token each time', () => {
+    const first = nextStrokePlay(null, { slideKey: 'a', play: true });
+    expect(first).toEqual({ slideKey: 'a', token: 1 });
+    expect(nextStrokePlay(first, { slideKey: 'a', play: true })).toEqual({ slideKey: 'a', token: 2 });
+  });
+
+  it('keeps the guide through other reveals on the same slide', () => {
+    const playing = { slideKey: 'a', token: 3 };
+    expect(nextStrokePlay(playing, { slideKey: 'a', play: false })).toBe(playing);
+  });
+
+  it('drops the guide on any slide change without a stroke reveal, so Next then Prev does not replay it', () => {
+    const playing = nextStrokePlay(null, { slideKey: 'a', play: true });
+    const moved = nextStrokePlay(playing, { slideKey: 'b', play: false });
+    expect(moved).toBeNull();
+    const back = nextStrokePlay(moved, { slideKey: 'a', play: false });
+    expect(back).toBeNull();
+    expect(strokeTokenFor(back, 'a')).toBe(0);
+  });
+
+  it('gives the token only to the slide it was played on', () => {
+    const playing = { slideKey: 'a', token: 2 };
+    expect(strokeTokenFor(playing, 'a')).toBe(2);
+    expect(strokeTokenFor(playing, 'b')).toBe(0);
+    expect(strokeTokenFor(playing, undefined)).toBe(0);
+    expect(strokeTokenFor(null, 'a')).toBe(0);
   });
 });

@@ -3,7 +3,7 @@ import React from 'react';
 import { Text, View } from 'react-native';
 import type { Slide } from '../../../logic/lecture/deck-builder';
 import { HOYA_STAGE, units } from '../../../logic/lecture/stage-constants';
-import { STAGE_BORDER, STAGE_GAP, STAGE_GAP_INNER, STAGE_RADIUS } from '../stage-metrics';
+import { STAGE_BORDER, STAGE_BORDER_MIN, STAGE_GAP, STAGE_GAP_INNER, STAGE_RADIUS } from '../stage-metrics';
 import { usePresenterView, useStageText } from '../presenter-context';
 
 type TitleBody = Extract<Slide, { kind: 'title' }>;
@@ -48,7 +48,7 @@ export function TitleSlide({ slide, deckTitle }: { slide: TitleBody; deckTitle?:
         {slide.line !== undefined ? (
           <View
             style={{
-              borderWidth: Math.max(1, units(unit, STAGE_BORDER)),
+              borderWidth: Math.max(STAGE_BORDER_MIN, units(unit, STAGE_BORDER)),
               borderColor: colors.border.strong,
               borderRadius: units(unit, STAGE_RADIUS),
               paddingVertical: units(unit, spacing.xl),

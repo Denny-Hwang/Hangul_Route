@@ -1,11 +1,11 @@
 import { colors, presenter, radii, spacing, typography } from '@hangul-route/design-system';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Text, View, type LayoutChangeEvent } from 'react-native';
 import type { KoLine } from '../../../logic/lecture/build-steps';
 import type { Slide } from '../../../logic/lecture/deck-builder';
 import { countRows, endLetters, fitShown } from '../../../logic/lecture/shell';
 import { CODE_PANEL, END_MAX_ROWS, units } from '../../../logic/lecture/stage-constants';
-import { STAGE_BORDER, STAGE_GAP, STAGE_GAP_INNER, STAGE_RADIUS } from '../stage-metrics';
+import { STAGE_BORDER, STAGE_BORDER_MIN, STAGE_GAP, STAGE_GAP_INNER, STAGE_RADIUS } from '../stage-metrics';
 import { TaughtKo, usePresenterView, useStageText } from '../presenter-context';
 
 type EndBody = Extract<Slide, { kind: 'end' }>;
@@ -20,7 +20,8 @@ export function EndSlide({ slide, joinCta }: { slide: EndBody; joinCta: string }
   const { unit, messages } = usePresenterView();
   const size = useStageText();
   const m = messages.learner.presenter.slide.end;
-  const letters = endLetters(slide.letters);
+  // Memoised: a new array each render would restart the row fit on every bar hide or show (no flashing, section 3.13).
+  const letters = useMemo(() => endLetters(slide.letters), [slide.letters]);
   const title = size(presenter.size.title);
   return (
     <View style={{ flex: 1, flexDirection: 'row', gap: units(unit, STAGE_GAP) }}>
@@ -84,7 +85,7 @@ function EndList({
         {label}
       </Text>
       {items.slice(0, shown).map((item, i) => (
-        <View key={`${item.ko}-${shown}`} onLayout={measured(i)} style={{ flexDirection: 'row', alignItems: 'baseline', gap: units(unit, spacing.sm) }}>
+        <View key={`${i}-${item.ko}-${shown}`} onLayout={measured(i)} style={{ flexDirection: 'row', alignItems: 'baseline', gap: units(unit, spacing.sm) }}>
           <TaughtKo size={body}>{item.ko}</TaughtKo>
           <Text style={{ fontSize: caption, fontWeight: typography.weight.semibold, color: colors.text.secondary }}>{item.romanization}</Text>
           {item.gloss !== undefined ? <Text style={{ fontSize: caption, color: colors.text.primary }}>{item.gloss}</Text> : null}
@@ -96,7 +97,7 @@ function EndList({
           onLayout={measured(items.length)}
           style={{
             paddingHorizontal: units(unit, spacing.md),
-            borderWidth: Math.max(2, units(unit, STAGE_BORDER)),
+            borderWidth: Math.max(STAGE_BORDER_MIN, units(unit, STAGE_BORDER)),
             borderColor: colors.border.strong,
             borderRadius: radii.pill,
           }}
@@ -123,7 +124,7 @@ function CodePanel({ code, joinCta }: { code: string; joinCta: string }): React.
         gap: units(unit, STAGE_GAP_INNER),
         padding: units(unit, spacing.xxl),
         borderRadius: units(unit, STAGE_RADIUS),
-        borderWidth: Math.max(2, units(unit, STAGE_BORDER)),
+        borderWidth: Math.max(STAGE_BORDER_MIN, units(unit, STAGE_BORDER)),
         borderColor: colors.border.strong,
       }}
     >

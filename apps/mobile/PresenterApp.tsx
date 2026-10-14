@@ -13,17 +13,21 @@ import { initialPresenterState, reduce, type PresenterEvent, type PresenterState
 import { expandDeck, withBuilds, type Slide } from './src/logic/lecture/deck-builder';
 import type { KeyCommand } from './src/logic/lecture/keymap';
 import { clearPickerLabels, heldLabels } from './src/logic/lecture/picker-labels';
-import { emptyRecent, loadRecent, rememberDeck, saveRecent, setLastSlide, type RecentList, type RecentStore } from './src/logic/lecture/recent';
+import { commitRecent, emptyRecent, readRecent, rememberDeck, setLastSlide, type LoadedRecent, type RecentList, type RecentStore } from './src/logic/lecture/recent';
 import {
   completePayload,
+  nextStrokePlay,
   resolveBoot,
   runDeck,
   startPayload,
   startTally,
+  strokeTokenFor,
   tallyStep,
+  voiceCheck,
   type BootResult,
   type RunTally,
   type StartSource,
+  type StrokePlay,
 } from './src/logic/lecture/shell';
 import { FONT_WAIT_MS, stageBox } from './src/logic/lecture/stage-constants';
 import { BAR_BAND, STAGE_BOUNDS } from './src/screens/presenter/stage-metrics';
@@ -55,15 +59,14 @@ import {
   type DeckAddress,
 } from './src/platform/presenter';
 import { applyUpdate, isOfflineReady, subscribePwa } from './src/platform/pwa';
-import { readJson, writeJson } from './src/platform/storage';
+import { readJsonExact, writeJson } from './src/platform/storage';
 import { flushQueue, track } from './src/platform/telemetry';
 import { ControlBar } from './src/screens/presenter/ControlBar';
 import { ExitConfirm } from './src/screens/presenter/ExitConfirm';
 import { PresenterViewProvider, type PresenterView } from './src/screens/presenter/presenter-context';
 import { Stage, StageHint } from './src/screens/presenter/Stage';
-import { StartScreen, type PickerRow, type VoiceCheck } from './src/screens/presenter/StartScreen';
+import { StartScreen, type PickerRow } from './src/screens/presenter/StartScreen';
 import { StatePage } from './src/screens/presenter/StatePage';
-import { OopsScreen } from './src/screens/system/OopsScreen';
 import { useAudioStore } from './src/store/audio-store';
 import { activeLocale, useLocaleStore } from './src/store/locale-store';
 
@@ -82,7 +85,8 @@ import { activeLocale, useLocaleStore } from './src/store/locale-store';
  * Picker labels arrive only from the console tab that opened this one and stay in memory.
  */
 
-const recentStore: RecentStore = { readJson: (key) => readJson<unknown>(key), writeJson: (key, value) => writeJson(key, value) };
+// The strict read throws on a failed or damaged read, so Recent is then never written over (`readRecent`).
+const recentStore: RecentStore = { readJson: (key) => readJsonExact<unknown>(key), writeJson: (key, value) => writeJson(key, value) };
 
 let bootRead: { address: DeckAddress | null } | null = null;
 
@@ -104,14 +108,6 @@ function phaseOf(result: BootResult): Phase {
   return { kind: result.kind };
 }
 
-function voiceCheck(capability: AudioCapability, checked: boolean): VoiceCheck {
-  const tts = capability.tts;
-  if (tts.state === 'ready') return { kind: tts.local ? 'local' : 'network', name: tts.voiceName };
-  if (capability.clips) return { kind: 'local', name: '' };
-  if (tts.state === 'none') return tts.reason === 'offline_network_only' ? { kind: 'needs-internet' } : { kind: 'none' };
-  return checked ? { kind: 'none' } : { kind: 'checking' };
-}
-
 export default function PresenterApp(): React.ReactElement {
   const address = useMemo(readAddress, []);
   // A link opens at once; a reloaded deck waits for Recent (it may resume at its slide); no deck is the home.
@@ -119,13 +115,9 @@ export default function PresenterApp(): React.ReactElement {
     address === null ? { kind: 'home' } : address.reloaded ? { kind: 'boot' } : phaseOf(resolveBoot(address, emptyRecent())),
   );
   // Recent lessons, read once at boot; every change chains on the read, so a fast Start never saves over it.
-  const recent = useRef<Promise<RecentList>>(Promise.resolve(emptyRecent()));
+  const recent = useRef<Promise<LoadedRecent>>(Promise.resolve({ list: emptyRecent(), writable: false }));
   const updateRecent = useCallback((change: (list: RecentList) => RecentList) => {
-    recent.current = recent.current.then(async (list) => {
-      const next = change(list);
-      if (next !== list) await saveRecent(recentStore, next);
-      return next;
-    });
+    recent.current = recent.current.then((loaded) => commitRecent(recentStore, loaded, change));
   }, []);
   const deviceLocale = useLocaleStore((s) => activeLocale(s, null));
   const deck = phase.kind === 'ready' || phase.kind === 'running' ? phase.deck : null;
@@ -143,7 +135,8 @@ export default function PresenterApp(): React.ReactElement {
   useEffect(() => {
     let live = true;
     void useAudioStore.getState().hydrate().catch(() => undefined);
-    void useLocaleStore.getState().hydrate([]).catch(() => undefined);
+    // A `?lang=` hand-off is held for this page only: the presenter never writes the device locale (section 3.9).
+    void useLocaleStore.getState().hydrate([], { handoff: 'session' }).catch(() => undefined);
     const offCapability = subscribeCapability(setCapability);
     void refreshCapability()
       .catch(() => undefined)
@@ -151,9 +144,9 @@ export default function PresenterApp(): React.ReactElement {
         if (live) setVoiceChecked(true);
       });
     void flushQueue();
-    recent.current = loadRecent(recentStore);
+    recent.current = readRecent(recentStore);
     if (address?.reloaded) {
-      void recent.current.then((list) => {
+      void recent.current.then(({ list }) => {
         if (live) setPhase(phaseOf(resolveBoot(address, list)));
       });
     }
@@ -231,7 +224,7 @@ export default function PresenterApp(): React.ReactElement {
   const stateRef = useRef<PresenterState | null>(null);
   const tally = useRef<RunTally | null>(null);
   const [romanization, setRomanization] = useState<'always' | 'tap' | null>(null);
-  const [strokeToken, setStrokeToken] = useState(0);
+  const [strokePlay, setStrokePlay] = useState<StrokePlay | null>(null);
   const [endHint, setEndHint] = useState(false);
   const [fullscreen, setFullscreen] = useState(isFullscreen);
   const exitRef = useRef<View>(null);
@@ -266,16 +259,13 @@ export default function PresenterApp(): React.ReactElement {
       const atEnd = event === 'next' && state === before && before.overlay === null && before.slideIdx === slides.length - 1;
       setEndHint(atEnd);
       if (atEnd) exitRef.current?.focus?.();
-      if (!effect) return;
-      if (effect.type === 'revealed') {
-        const build = slides[state.slideIdx]?.builds[effect.build];
-        if (build === 'sound') playSound(slides[state.slideIdx]);
-        if (build === 'stroke') setStrokeToken((n) => n + 1);
-      } else if (effect.type === 'play-sound') {
-        playSound(slides[state.slideIdx]);
-      } else if (effect.type === 'play-stroke') {
-        setStrokeToken((n) => n + 1);
-      }
+      // The stroke guide plays only on a forward stroke reveal or a replay; any other slide change
+      // drops it, so going back to a complete slide is silent (section 3.5 amendment point 2).
+      const revealedBuild = effect?.type === 'revealed' ? slides[state.slideIdx]?.builds[effect.build] : undefined;
+      const playStroke = revealedBuild === 'stroke' || effect?.type === 'play-stroke';
+      const slideKey = slides[state.slideIdx]!.key;
+      setStrokePlay((current) => nextStrokePlay(current, { slideKey, play: playStroke }));
+      if (revealedBuild === 'sound' || effect?.type === 'play-sound') playSound(slides[state.slideIdx]);
     },
     [slides, deck, playSound, updateRecent],
   );
@@ -310,7 +300,7 @@ export default function PresenterApp(): React.ReactElement {
     });
     setPhase({ kind: 'running', deck: phase.deck, source: phase.source });
     const first = slides[state.slideIdx]!;
-    if (first.builds[0] === 'stroke') setStrokeToken((n) => n + 1);
+    setStrokePlay(first.builds[0] === 'stroke' ? nextStrokePlay(null, { slideKey: first.key, play: true }) : null);
   }, [phase, run, slides, pickerMode, capability, updateRecent]);
 
   const onExit = useCallback(() => {
@@ -336,6 +326,9 @@ export default function PresenterApp(): React.ReactElement {
   useEffect(() => {
     if (phase.kind !== 'running') return undefined;
     return subscribeKeys((command: KeyCommand) => {
+      // An open overlay (the Exit confirm) takes no lesson key but its own.
+      const overlayOpen = stateRef.current?.overlay != null;
+      if ((command === 'toggle-romanization' || command === 'fullscreen') && overlayOpen) return;
       if (command === 'toggle-romanization') {
         setRomanization((current) => ((current ?? phase.deck.options.romanization) === 'always' ? 'tap' : 'always'));
         return;
@@ -434,8 +427,31 @@ export default function PresenterApp(): React.ReactElement {
     const slide = slides[p.slideIdx];
     const reveal = slide ? Math.min(p.reveal, slide.builds.length - 1) : 0;
     const revealNext = slide !== undefined && reveal < slide.builds.length - 1;
+    const bar = tooSmall ? null : (
+      <ControlBar
+        hidden={barHidden}
+        revealNext={revealNext}
+        muted={muted}
+        fullscreenSupported={fullscreenSupported()}
+        fullscreen={fullscreen}
+        onBack={() => dispatch('prev')}
+        onNext={() => dispatch('next')}
+        onSound={() => dispatch('replay-sound')}
+        onFullscreen={toggleFullscreen}
+        onExit={() => dispatch({ overlay: 'exit' })}
+        onFocusWithin={(focused) => {
+          barFocused.current = focused;
+          if (focused) setBarHidden(false);
+        }}
+        onBandHeight={setBand}
+        exitRef={exitRef}
+      />
+    );
+    // The bar comes first in the DOM, so focus order is the bar, then the stage (README D3, section
+    // 3.13); `column-reverse` still draws it in its band under the stage.
     body = (
-      <View style={{ flex: 1, backgroundColor: colors.surface.paper }}>
+      <View style={{ flex: 1, flexDirection: 'column-reverse', backgroundColor: colors.surface.paper }}>
+        {bar}
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
           {tooSmall || !slide ? (
             <StatePage
@@ -453,7 +469,7 @@ export default function PresenterApp(): React.ReactElement {
                 slideIdx={p.slideIdx}
                 reveal={reveal}
                 deckTitle={phase.deck.title}
-                strokeToken={strokeToken}
+                strokeToken={strokeTokenFor(strokePlay, slide.key)}
                 joinCta={messages.caregiver.spaces.join.cta}
                 onCommand={dispatch}
                 onPlaySound={() => dispatch('replay-sound')}
@@ -463,26 +479,6 @@ export default function PresenterApp(): React.ReactElement {
           {scale.portrait && !tooSmall ? <StageHint text={messages.learner.presenter.state.portrait} /> : null}
           {endHint ? <StageHint text={messages.learner.presenter.slide.end.exitHint} bottom /> : null}
         </View>
-        {tooSmall ? null : (
-          <ControlBar
-            hidden={barHidden}
-            revealNext={revealNext}
-            muted={muted}
-            fullscreenSupported={fullscreenSupported()}
-            fullscreen={fullscreen}
-            onBack={() => dispatch('prev')}
-            onNext={() => dispatch('next')}
-            onSound={() => dispatch('replay-sound')}
-            onFullscreen={toggleFullscreen}
-            onExit={() => dispatch({ overlay: 'exit' })}
-            onFocusWithin={(focused) => {
-              barFocused.current = focused;
-              if (focused) setBarHidden(false);
-            }}
-            onBandHeight={setBand}
-            exitRef={exitRef}
-          />
-        )}
         {p.overlay === 'exit' ? <ExitConfirm onKeepGoing={() => dispatch('close')} onExit={onExit} /> : null}
       </View>
     );
@@ -491,12 +487,24 @@ export default function PresenterApp(): React.ReactElement {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
-        <ErrorBoundary fallbackRender={({ resetErrorBoundary }) => <OopsScreen onRetry={resetErrorBoundary} />}>
-          <PresenterViewProvider value={view}>
+        <PresenterViewProvider value={view}>
+          {/* The presenter's own fallback, in the presenter locale (not the app's OopsScreen, which reads the profile locale). */}
+          <ErrorBoundary
+            fallbackRender={({ resetErrorBoundary }) => (
+              <StatePage
+                testID="presenter-oops"
+                pose="thinking"
+                title={messages.learner.oops.title}
+                line={messages.learner.oops.body}
+                cta={messages.common.buttons.tryAgain}
+                onCta={resetErrorBoundary}
+              />
+            )}
+          >
             <View style={{ flex: 1, backgroundColor: colors.surface.paper }}>{body}</View>
-          </PresenterViewProvider>
-          <StatusBar style="dark" />
-        </ErrorBoundary>
+          </ErrorBoundary>
+        </PresenterViewProvider>
+        <StatusBar style="dark" />
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );

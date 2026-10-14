@@ -183,6 +183,45 @@ export function slideDetail(slide: Slide): string {
   }
 }
 
+// --- start screen and stage ---------------------------------------------------------------------
+
+/** The start screen's Korean voice line. `clips` is bundled audio with no named voice. */
+export type VoiceCheck =
+  | { kind: 'checking' }
+  | { kind: 'local' | 'network'; name: string }
+  | { kind: 'clips' }
+  | { kind: 'needs-internet' }
+  | { kind: 'none' };
+
+/** `checked`: the first capability check finished, so an unknown voice now reads as none. */
+export function voiceCheck(capability: AudioCapability, checked: boolean): VoiceCheck {
+  const tts = capability.tts;
+  if (tts.state === 'ready') return { kind: tts.local ? 'local' : 'network', name: tts.voiceName };
+  if (capability.clips) return { kind: 'clips' };
+  if (tts.state === 'none') return tts.reason === 'offline_network_only' ? { kind: 'needs-internet' } : { kind: 'none' };
+  return checked ? { kind: 'none' } : { kind: 'checking' };
+}
+
+/**
+ * The stroke guide that plays on the open slide (spec section 3.5 amendment point 2): it plays
+ * only on a forward stroke reveal or a replay, and any other slide change drops it, so going
+ * back to a complete slide is silent. `token` grows on every play, so a replay restarts it.
+ */
+export interface StrokePlay {
+  slideKey: string;
+  token: number;
+}
+
+export function nextStrokePlay(current: StrokePlay | null, change: { slideKey: string; play: boolean }): StrokePlay | null {
+  if (change.play) return { slideKey: change.slideKey, token: (current?.token ?? 0) + 1 };
+  return current !== null && current.slideKey === change.slideKey ? current : null;
+}
+
+/** The play token the slide gets: 0 (no guide mounted) unless the guide was played on it. */
+export function strokeTokenFor(play: StrokePlay | null, slideKey: string | undefined): number {
+  return play !== null && slideKey !== undefined && play.slideKey === slideKey ? play.token : 0;
+}
+
 // --- telemetry -----------------------------------------------------------------------------------
 
 export interface StartPayload {

@@ -23,6 +23,7 @@ import {
   subscribeFullscreen,
   subscribeKeys,
   takeDeckFragment,
+  trapFocus,
   unlockOrientation,
   waitForPresenterFont,
   wakeLockSupported,
@@ -144,6 +145,17 @@ describe('takeDeckFragment', () => {
     const { e, calls } = addressEnv({ pathname: '/present', hash: '#x=1' });
     expect(takeDeckFragment(e)).toBeNull();
     expect(calls).toEqual([{ state: null, url: PRESENTER_PATH }]);
+  });
+
+  it('keeps a ?lang= hand-off for the locale store to take, and drops every other query', () => {
+    const calls: { state: unknown; url: string }[] = [];
+    const history = { state: null as unknown, replaceState: (next: unknown, _u: string, url: string) => calls.push({ state: next, url }) };
+    const e = env({ location: { pathname: '/present', search: '?x=1&lang=es', hash: '#d=1.abc' }, history });
+    expect(takeDeckFragment(e)).toEqual({ raw: '1.abc', reloaded: false });
+    expect(calls).toEqual([{ state: { hrLectureFragment: '1.abc' }, url: `${PRESENTER_PATH}?lang=es` }]);
+    const plain = env({ location: { pathname: '/present/x', search: '?x=1', hash: '' }, history });
+    takeDeckFragment(plain);
+    expect(calls[1]!.url).toBe(PRESENTER_PATH);
   });
 
   it('a d= among other keys is found', () => {
@@ -448,6 +460,46 @@ describe('fullscreen', () => {
   });
 });
 
+describe('trapFocus (the Exit confirm)', () => {
+  const button = () => ({ focus: vi.fn() });
+  const tab = (shiftKey = false, key = 'Tab') => ({ key, shiftKey, preventDefault: vi.fn() });
+
+  it('cycles Tab and Shift+Tab through the dialog buttons and pulls an outside focus back in', () => {
+    const doc = fakeTarget();
+    const exit = button();
+    const keep = button();
+    let focused: unknown = keep;
+    const stop = trapFocus(() => [exit, keep], env({ keyTarget: doc, activeElement: () => focused }));
+    const forward = tab();
+    doc.fire('keydown', forward);
+    expect(forward.preventDefault).toHaveBeenCalled();
+    expect(exit.focus).toHaveBeenCalledTimes(1);
+    focused = exit;
+    doc.fire('keydown', tab(true));
+    expect(keep.focus).toHaveBeenCalledTimes(1);
+    focused = { tagName: 'BUTTON' };
+    doc.fire('keydown', tab());
+    expect(exit.focus).toHaveBeenCalledTimes(2);
+    doc.fire('keydown', tab(true));
+    expect(keep.focus).toHaveBeenCalledTimes(2);
+    const other = tab(false, 'Enter');
+    doc.fire('keydown', other);
+    expect(other.preventDefault).not.toHaveBeenCalled();
+    stop();
+    expect(doc.count('keydown')).toBe(0);
+  });
+
+  it('with nothing to focus, or no document, does nothing', () => {
+    const doc = fakeTarget();
+    trapFocus(() => [null], env({ keyTarget: doc }));
+    const key = tab();
+    doc.fire('keydown', key);
+    expect(key.preventDefault).not.toHaveBeenCalled();
+    expect(() => trapFocus(() => [], env())()).not.toThrow();
+    expect(() => native.trapFocus(() => [])()).not.toThrow();
+  });
+});
+
 describe('wake lock', () => {
   it('requests the screen lock, re-requests it when the page is shown again, and releases it', async () => {
     const sentinel = { release: vi.fn(async () => undefined), released: false };
@@ -473,6 +525,26 @@ describe('wake lock', () => {
     doc.fire('visibilitychange', {});
     expect(request).toHaveBeenCalledTimes(1);
     await releaseScreenAwake(e);
+  });
+
+  it('an Exit before the lock arrives releases the late lock at once (no screen kept awake on the home)', async () => {
+    const sentinel = { release: vi.fn(async () => undefined), released: false };
+    let grant: (value: typeof sentinel) => void = () => undefined;
+    const request = vi.fn(() => new Promise<typeof sentinel>((resolve) => (grant = resolve)));
+    const doc = { ...fakeTarget(), visibilityState: 'visible' };
+    const e = env({ navigator: { wakeLock: { request } }, document: doc as never });
+    const asked = keepScreenAwake(e);
+    await releaseScreenAwake(e);
+    grant(sentinel);
+    await asked;
+    expect(sentinel.release).toHaveBeenCalledTimes(1);
+    // A later lesson takes and releases its own lock as usual.
+    const second = { release: vi.fn(async () => undefined), released: false };
+    request.mockImplementationOnce(async () => second);
+    await keepScreenAwake(e);
+    expect(second.release).not.toHaveBeenCalled();
+    await releaseScreenAwake(e);
+    expect(second.release).toHaveBeenCalledTimes(1);
   });
 
   it('unsupported or refused: silent', async () => {

@@ -46,7 +46,11 @@ interface State {
 }
 
 interface Actions {
-  hydrate: (profileIds: string[]) => Promise<void>;
+  /**
+   * `handoff: 'session'` (the presenter, F-TCH-004 section 3.9) holds a `?lang=` hand-off for this
+   * page only and writes nothing; the default makes it the stored device choice.
+   */
+  hydrate: (profileIds: string[], options?: { handoff?: 'device' | 'session' }) => Promise<void>;
   setDeviceLocale: (locale: UiLocale | null, source?: LocaleChangeSource) => void;
   /** Sets the active UI locale in memory only: no `device:settings` write, no event (F-BROWSE-001 §4.9). */
   setSessionLocale: (locale: UiLocale | null) => void;
@@ -148,7 +152,7 @@ export const useLocaleStore = create<State & Actions>((set, get) => ({
   byProfile: {},
   hydrated: false,
 
-  hydrate: async (profileIds) => {
+  hydrate: async (profileIds, options) => {
     const storedDevice = DeviceSettingsSchema.safeParse(await readJson<unknown>(DEVICE_KEY));
     const byProfile: Record<string, ProfileSettings> = {};
     for (const id of profileIds) {
@@ -160,7 +164,10 @@ export const useLocaleStore = create<State & Actions>((set, get) => ({
     const device = (storedDevice.success ? storedDevice.data.uiLocale : undefined) ?? null;
     set({ device, byProfile, hydrated: true });
     // A stored choice in a currently hidden locale is ignored, so it does not block the hand-off either.
-    if (visible(device) === undefined && handoff !== null) get().setDeviceLocale(handoff, 'handoff');
+    if (visible(device) === undefined && handoff !== null) {
+      if (options?.handoff === 'session') set({ session: handoff });
+      else get().setDeviceLocale(handoff, 'handoff');
+    }
   },
 
   setDeviceLocale: (locale, source = 'settings') => {

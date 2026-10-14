@@ -1,7 +1,7 @@
 import { Icon, borderWidth, colors, layout, radii, spacing, touchTarget, typography, type IconName } from '@hangul-route/design-system';
 import React, { useEffect, useRef, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
-import { distinctParts, type SkipPart } from '../../logic/lecture/shell';
+import { distinctParts, type SkipPart, type VoiceCheck } from '../../logic/lecture/shell';
 import { PICKER_COUNT_MAX, PICKER_COUNT_MIN } from '../../logic/lecture/stage-constants';
 import { PICKER_LABEL_BASIS, START_BUTTON_HEIGHT, TEACHER_COLUMN } from './stage-metrics';
 import { usePresenterView } from './presenter-context';
@@ -15,7 +15,7 @@ import { GhostButton, PrimaryButton } from './StatePage';
  * 1.5 s) and focused when it is ready.
  */
 
-export type VoiceCheck = { kind: 'checking' } | { kind: 'local' | 'network'; name: string } | { kind: 'needs-internet' } | { kind: 'none' };
+export type { VoiceCheck } from '../../logic/lecture/shell';
 
 export type PickerRow =
   | null
@@ -112,6 +112,8 @@ export function StartScreen(props: StartScreenProps): React.ReactElement {
         return { ok: true, text: m.voiceLocal(props.voice.name) };
       case 'network':
         return { ok: true, text: m.voiceNetwork(props.voice.name) };
+      case 'clips':
+        return { ok: true, text: messages.learner.audio.voice.ready };
       case 'needs-internet':
         return { ok: false, text: messages.learner.audio.voice.needsInternet };
       case 'none':

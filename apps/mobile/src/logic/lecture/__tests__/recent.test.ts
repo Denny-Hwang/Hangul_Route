@@ -9,6 +9,8 @@ import {
   parseRecent,
   rememberDeck,
   saveRecent,
+  readRecent,
+  commitRecent,
   setLastSlide,
   type RecentList,
   type RecentStore,
@@ -141,5 +143,56 @@ describe('Recent lessons (F-TCH-004 §3.12)', () => {
     expect(parseRecent({ v: 1, items })).toEqual({ v: 1, items: [{ deck: deck(1), savedAt: at(1) }] });
     const labelled = [{ deck: deck(1), savedAt: at(1), lastSlideKey: '', labels: ['Mina'] }];
     expect(parseRecent({ v: 1, items: labelled })).toEqual(emptyRecent());
+  });
+});
+
+describe('readRecent and commitRecent (a failed read never overwrites Recent)', () => {
+  const memory = (initial: unknown): RecentStore & { writeJson: ReturnType<typeof vi.fn> } => {
+    let value: unknown = initial;
+    return {
+      readJson: vi.fn(async () => value),
+      writeJson: vi.fn(async (_key: string, next: unknown) => {
+        value = next;
+      }),
+    };
+  };
+
+  it('a read that throws gives an empty list that is never written', async () => {
+    const store: RecentStore & { writeJson: ReturnType<typeof vi.fn> } = {
+      readJson: vi.fn(async () => {
+        throw new Error('idb down');
+      }),
+      writeJson: vi.fn(async () => undefined),
+    };
+    const loaded = await readRecent(store);
+    expect(loaded).toEqual({ list: emptyRecent(), writable: false });
+    const after = await commitRecent(store, loaded, (list) => rememberDeck(list, deck(1), at(1)));
+    expect(after.list.items).toHaveLength(1);
+    expect(store.writeJson).not.toHaveBeenCalled();
+  });
+
+  it('stored data that is not a Recent list is never written over', async () => {
+    const store = memory({ v: 9, something: 'else' });
+    const loaded = await readRecent(store);
+    expect(loaded.writable).toBe(false);
+    await commitRecent(store, loaded, (list) => rememberDeck(list, deck(1), at(1)));
+    expect(store.writeJson).not.toHaveBeenCalled();
+  });
+
+  it('nothing stored, or a readable list, is written on a change and not on a no-op', async () => {
+    const empty = memory(null);
+    const loaded = await readRecent(empty);
+    expect(loaded).toEqual({ list: emptyRecent(), writable: true });
+    const saved = await commitRecent(empty, loaded, (list) => rememberDeck(list, deck(1), at(1)));
+    expect(empty.writeJson).toHaveBeenCalledTimes(1);
+    const same = await commitRecent(empty, saved, (list) => list);
+    expect(same.list).toBe(saved.list);
+    expect(empty.writeJson).toHaveBeenCalledTimes(1);
+
+    const kept = memory(rememberDeck(emptyRecent(), deck(2), at(2)));
+    const read = await readRecent(kept);
+    expect(read.writable).toBe(true);
+    expect(read.list.items[0]!.deck.id).toBe('lecture:deck002');
+    expect(await loadRecent(kept)).toEqual(read.list);
   });
 });

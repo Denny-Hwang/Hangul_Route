@@ -110,7 +110,9 @@ export function ControlBar(props: ControlBarProps): React.ReactElement {
         justifyContent: 'center',
       }}
     >
-      <Animated.View role="toolbar" aria-label={m.label} style={{ opacity, flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'flex-end', gap: spacing.sm }}>
+      {/* Hidden, the controls take no pointer, so the tap that brings the bar back never also presses
+          an unseen Exit or Back; keys and focus still reach them (focus shows the bar). */}
+      <Animated.View role="toolbar" aria-label={m.label} pointerEvents={props.hidden ? 'none' : 'auto'} style={{ opacity, flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'flex-end', gap: spacing.sm }}>
         <Ctl testID="presenter-back" label={messages.common.buttons.back} icon="arrow-left" onPress={props.onBack} onFocusWithin={focus} />
         <Ctl
           testID="presenter-next"

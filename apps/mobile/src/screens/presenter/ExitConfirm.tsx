@@ -1,6 +1,7 @@
 import { colors, layout, radii, shadows, spacing, typography, z } from '@hangul-route/design-system';
 import React, { useEffect, useRef } from 'react';
 import { Text, View } from 'react-native';
+import { trapFocus } from '../../platform/presenter';
 import { EXIT_DIALOG_WIDTH } from './stage-metrics';
 import { usePresenterView } from './presenter-context';
 import { GhostButton, PrimaryButton } from './StatePage';
@@ -8,14 +9,17 @@ import { GhostButton, PrimaryButton } from './StatePage';
 /**
  * The Exit confirm (design/screens/presenter/overlays.md "Exit"): an alert dialog over
  * `surface.overlay`, "Leave the lesson?", "Nothing about anyone's progress changes.", Keep going
- * (primary, focused) and Exit. Esc or Keep going closes it.
+ * (primary, focused) and Exit. Esc or Keep going closes it; Tab and Shift+Tab stay inside it.
  */
 export function ExitConfirm({ onKeepGoing, onExit }: { onKeepGoing: () => void; onExit: () => void }): React.ReactElement {
   const { messages } = usePresenterView();
   const m = messages.learner.presenter;
   const keep = useRef<View>(null);
+  const exit = useRef<View>(null);
   useEffect(() => {
     keep.current?.focus?.();
+    // Tab stays in the dialog (aria-modal), so no control behind it can be reached or activated.
+    return trapFocus(() => [exit.current, keep.current]);
   }, []);
   return (
     <View
@@ -52,7 +56,7 @@ export function ExitConfirm({ onKeepGoing, onExit }: { onKeepGoing: () => void; 
         </Text>
         <Text style={{ fontSize: typography.size.body, color: colors.text.secondary, lineHeight: Math.round(typography.size.body * typography.leading.normal) }}>{m.exit.line}</Text>
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md, justifyContent: 'flex-end' }}>
-          <GhostButton testID="presenter-exit-confirm" label={m.bar.exit.cta} onPress={onExit} />
+          <GhostButton ref={exit} testID="presenter-exit-confirm" label={m.bar.exit.cta} onPress={onExit} />
           <PrimaryButton ref={keep} testID="presenter-keep-going" label={m.exit.keepGoing.cta} onPress={onKeepGoing} />
         </View>
       </View>

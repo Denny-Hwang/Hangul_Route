@@ -78,6 +78,40 @@ function storedValue(page: Page, key: string): Promise<unknown> {
   );
 }
 
+/** Writes learner-looking keys (stored as JSON strings, as the app stores them) before a lesson. */
+function seedKeys(page: Page, entries: Record<string, unknown>): Promise<void> {
+  return page.evaluate(
+    (values) =>
+      new Promise<void>((resolve, reject) => {
+        const open = indexedDB.open('keyval-store');
+        open.onupgradeneeded = () => {
+          if (!open.result.objectStoreNames.contains('keyval')) open.result.createObjectStore('keyval');
+        };
+        open.onerror = () => reject(open.error);
+        open.onsuccess = () => {
+          const tx = open.result.transaction('keyval', 'readwrite');
+          for (const [key, value] of Object.entries(values)) tx.objectStore('keyval').put(JSON.stringify(value), key);
+          tx.oncomplete = () => {
+            open.result.close();
+            resolve();
+          };
+          tx.onerror = () => reject(tx.error);
+        };
+      }),
+    entries,
+  );
+}
+
+/** Reveal presses on the open slide until the bar reads Next. */
+async function revealAll(page: Page): Promise<number> {
+  let presses = 0;
+  while (presses < 10 && (await page.getByTestId('presenter-next').getAttribute('aria-label')) === 'Reveal') {
+    await page.keyboard.press('PageDown');
+    presses += 1;
+  }
+  return presses;
+}
+
 async function startLesson(page: Page): Promise<void> {
   const start = page.getByTestId('presenter-start-button');
   await expect(start).toBeEnabled({ timeout: 10_000 });
@@ -192,6 +226,82 @@ test.describe('presenter at 1280 x 720', () => {
     await expect.poll(() => counter(page)).toBe(at);
   });
 
+  test('learner data already on the device is left byte for byte, and ?lang= is never stored', async ({ page }) => {
+    await page.goto('/present?lang=ko');
+    await expect(page.getByTestId('presenter-home')).toBeVisible();
+    // The hand-off left the address and was held for this page only (section 3.9).
+    await expect.poll(() => new URL(page.url()).search).toBe('');
+    expect(await storedKeys(page)).not.toContain('hr:device:settings');
+
+    const learner = {
+      'hr:device:settings': { uiLocale: 'en' },
+      'hr:profiles': { v: 1, profiles: [{ id: 'profile:e2e', name: 'Mina' }] },
+      'hr:progress:profile:e2e': { v: 1, done: ['quest:stage1-letters-q1'] },
+    };
+    await seedKeys(page, learner);
+    const before = await Promise.all(Object.keys(learner).map((k) => storedValue(page, k)));
+
+    await page.goto(link());
+    await startLesson(page);
+    await page.keyboard.press('ArrowRight');
+    await revealAll(page);
+    await page.keyboard.press('End');
+    await page.keyboard.press('Escape');
+    await page.getByTestId('presenter-exit-confirm').click();
+    await expect(page.getByTestId('presenter-home')).toBeVisible();
+    await expect.poll(async () => (await storedKeys(page)).includes('hr:lecture:recent')).toBe(true);
+
+    expect(await Promise.all(Object.keys(learner).map((k) => storedValue(page, k)))).toEqual(before);
+  });
+
+  test('a tap on the right two thirds of the stage goes on, on the left third goes back', async ({ page }) => {
+    await page.goto(link());
+    await startLesson(page);
+    const box = (await page.getByTestId('presenter-stage').boundingBox())!;
+    await page.mouse.click(box.x + box.width * 0.8, box.y + box.height * 0.5);
+    await expect.poll(() => counter(page)).toMatch(/^2 \//);
+    await page.mouse.click(box.x + box.width * 0.1, box.y + box.height * 0.5);
+    await expect.poll(() => counter(page)).toMatch(/^1 \//);
+  });
+
+  test('Shift+R gives romanization its own reveal, and Back on the first build stays put', async ({ page }) => {
+    await page.goto(link());
+    await startLesson(page);
+    await page.keyboard.press('ArrowLeft');
+    expect(await counter(page)).toMatch(/^1 \//);
+    await page.keyboard.press('ArrowRight');
+    const always = await revealAll(page);
+    await page.keyboard.press('Home');
+    await expect.poll(() => counter(page)).toMatch(/^1 \//);
+    await page.keyboard.press('Shift+KeyR');
+    await page.keyboard.press('ArrowRight');
+    await expect.poll(() => counter(page)).toMatch(/^2 \//);
+    expect(await revealAll(page)).toBe(always + 1);
+  });
+
+  test('an update that arrives mid-lesson applies only after the Exit confirm', async ({ page }) => {
+    await page.goto(link());
+    await startLesson(page);
+    await page.evaluate(() => {
+      const w = window as unknown as { __hrApplyUpdate?: () => void; __hrApplied?: number };
+      w.__hrApplied = 0;
+      w.__hrApplyUpdate = () => {
+        w.__hrApplied = (w.__hrApplied ?? 0) + 1;
+      };
+      window.dispatchEvent(new Event('hr:update-ready'));
+    });
+    const applied = () => page.evaluate(() => (window as unknown as { __hrApplied?: number }).__hrApplied ?? 0);
+    await page.keyboard.press('ArrowRight');
+    await page.keyboard.press('Escape');
+    await expect(page.getByTestId('presenter-exit-dialog')).toBeVisible();
+    expect(await applied()).toBe(0);
+    // Tab stays inside the dialog.
+    for (let i = 0; i < 3; i++) await page.keyboard.press('Tab');
+    expect(await page.evaluate(() => Boolean(document.activeElement?.closest('[data-testid="presenter-exit-dialog"]')))).toBe(true);
+    await page.getByTestId('presenter-exit-confirm').click();
+    await expect.poll(applied).toBe(1);
+  });
+
   test('a broken link shows the invalid screen and leads to the presenter home', async ({ page }) => {
     await page.goto('/present#d=1.not-a-deck!!');
     await expect(page.getByText('This link does not work')).toBeVisible();
@@ -229,6 +339,23 @@ test.describe('presenter at 1920 x 1080 with reduced motion', () => {
   });
 });
 
+test.describe('presenter on a 4:3 projector, 1024 x 768', () => {
+  test.use({ viewport: { width: 1024, height: 768 }, isMobile: false, hasTouch: false });
+
+  test('a taller logical stage at unit 0.8, no bars', async ({ page }) => {
+    await page.goto(link());
+    await startLesson(page);
+    // 1024 x 768 minus the 120 px band: a 1024 x 648 box, unit 0.8, logical stage 1280 x 810.
+    const box = await page.getByTestId('presenter-stage').boundingBox();
+    expect(box?.width).toBe(1024);
+    expect(box?.height).toBe(648);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(1024);
+    await page.keyboard.press('ArrowRight');
+    await revealAll(page);
+    await shot(page, 'presenter-letter-1024x768');
+  });
+});
+
 test.describe('presenter in a small window', () => {
   test.use({ viewport: { width: 375, height: 667 }, isMobile: false, hasTouch: false });
 
@@ -244,3 +371,22 @@ test.describe('presenter in a small window', () => {
     await shot(page, 'presenter-too-small-375x667');
   });
 });
+
+test.describe('presenter at the narrowest phone, 320 x 568', () => {
+  test.use({ viewport: { width: 320, height: 568 }, isMobile: false, hasTouch: false });
+
+  test('the start screen and the too-small page never scroll sideways', async ({ page }) => {
+    await page.goto(link());
+    await expect(page.getByTestId('presenter-start')).toBeVisible();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(320);
+    await startLesson320(page);
+    await expect(page.getByText('Make the window bigger or turn the screen.')).toBeVisible();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(320);
+  });
+});
+
+async function startLesson320(page: Page): Promise<void> {
+  const start = page.getByTestId('presenter-start-button');
+  await expect(start).toBeEnabled({ timeout: 10_000 });
+  await start.click();
+}

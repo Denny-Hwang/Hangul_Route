@@ -12,6 +12,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import Svg, { Circle, Path, Text as SvgText } from 'react-native-svg';
+import type { Messages } from '@hangul-route/i18n';
 import type { JamoStrokePoint } from '../content/jamo-strokes';
 import { useMessages } from '../i18n/use-messages';
 import {
@@ -36,6 +37,11 @@ interface Props {
   onComplete?: () => void;
   /** Forces the demo to run when this number changes (e.g. tap counter). */
   playToken: number;
+  /**
+   * The stroke-order labels; default the app's catalogue (`useMessages`). The presenter passes
+   * its own, in the deck's language (F-TCH-004 section 3.12).
+   */
+  strokeOrder?: Messages['a11y']['minigame']['strokeOrder'];
 }
 
 /**
@@ -58,8 +64,10 @@ export function StrokeHint({
   viewBox = 200,
   onComplete,
   playToken,
+  strokeOrder: strokeOrderOverride,
 }: Props): React.ReactElement | null {
-  const strokeOrder = useMessages().a11y.minigame.strokeOrder;
+  const appStrokeOrder = useMessages().a11y.minigame.strokeOrder;
+  const strokeOrder = strokeOrderOverride ?? appStrokeOrder;
   // One progress shared value per stroke (0 → 1 along the path)
   // For simplicity, we use a single sweep value spanning all strokes.
   const sweep = useSharedValue(0);

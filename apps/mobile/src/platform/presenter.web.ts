@@ -57,7 +57,7 @@ interface WakeLockSentinelLike {
 }
 
 export interface PresenterEnv {
-  location?: { pathname: string; hash: string } | null;
+  location?: { pathname: string; hash: string; search?: string } | null;
   /** `location.reload()`. */
   reload?: () => void;
   history?: { state?: unknown; replaceState: (state: unknown, unused: string, url: string) => void } | null;
@@ -137,9 +137,19 @@ function stateFragment(env: PresenterEnv): string | null {
   return typeof raw === 'string' ? raw : null;
 }
 
+/** `/present`, keeping only a `?lang=` hand-off, which the locale store takes (and strips) next. */
+function cleanAddress(env: PresenterEnv): string {
+  try {
+    const lang = new URLSearchParams(env.location?.search ?? '').get('lang');
+    return lang === null ? PRESENTER_PATH : `${PRESENTER_PATH}?${new URLSearchParams({ lang }).toString()}`;
+  } catch {
+    return PRESENTER_PATH;
+  }
+}
+
 function replaceAddress(env: PresenterEnv, state: unknown): void {
   try {
-    env.history?.replaceState(state, '', PRESENTER_PATH);
+    env.history?.replaceState(state, '', cleanAddress(env));
   } catch {
     // A history that refuses (a sandboxed frame) must not lose the deck.
   }
@@ -297,6 +307,28 @@ export function subscribeKeys(handler: (command: KeyCommand) => void, env: Prese
 }
 
 /**
+ * Keeps Tab and Shift+Tab inside a modal dialog (the Exit confirm, section 3.13): focus cycles
+ * through `items` (in order), and a focus that is outside them comes back to the first (or, with
+ * Shift, the last). Other keys keep their meaning.
+ */
+export function trapFocus(items: () => readonly unknown[], env: PresenterEnv = browserEnv()): () => void {
+  const target = env.keyTarget;
+  if (!target) return () => undefined;
+  const onKey = (event: KeyEventLike): void => {
+    if (event.key !== 'Tab' || event.ctrlKey === true || event.metaKey === true || event.altKey === true) return;
+    const list = items().filter((item): item is { focus: () => void } => typeof (item as { focus?: unknown } | null)?.focus === 'function');
+    if (list.length === 0) return;
+    const at = list.indexOf(env.activeElement?.() as { focus: () => void });
+    const back = event.shiftKey === true;
+    const next = at === -1 ? (back ? list.length - 1 : 0) : (at + (back ? list.length - 1 : 1)) % list.length;
+    event.preventDefault();
+    list[next]!.focus();
+  };
+  target.addEventListener('keydown', onKey as Listener);
+  return () => target.removeEventListener('keydown', onKey as Listener);
+}
+
+/**
  * Pointer, touch and key activity anywhere on the page: the control bar comes back on any of them
  * and hides `presenter.autoHideMs` after the last (section 3.5).
  */
@@ -376,6 +408,8 @@ export function subscribeFullscreen(handler: () => void, env: PresenterEnv = bro
 
 let sentinel: WakeLockSentinelLike | null = null;
 let onVisible: (() => void) | null = null;
+/** False once the lesson released the lock, so a request still in flight lets its lock go. */
+let wanted = false;
 
 export function wakeLockSupported(env: PresenterEnv = browserEnv()): boolean {
   return typeof env.navigator?.wakeLock?.request === 'function';
@@ -384,7 +418,12 @@ export function wakeLockSupported(env: PresenterEnv = browserEnv()): boolean {
 async function requestLock(env: PresenterEnv): Promise<void> {
   try {
     const lock = await env.navigator?.wakeLock?.request('screen');
-    if (lock) sentinel = lock;
+    if (!lock) return;
+    if (!wanted) {
+      await lock.release();
+      return;
+    }
+    sentinel = lock;
   } catch {
     // Refused (battery saver, a hidden page): the screen may sleep; the start screen said how to stop it.
   }
@@ -393,6 +432,7 @@ async function requestLock(env: PresenterEnv): Promise<void> {
 /** Keeps the screen on for the lesson; a lock the browser drops when the tab hides is taken again on return. */
 export async function keepScreenAwake(env: PresenterEnv = browserEnv()): Promise<void> {
   if (!wakeLockSupported(env)) return;
+  wanted = true;
   await requestLock(env);
   const doc = env.document;
   if (onVisible === null && doc && typeof doc.addEventListener === 'function') {
@@ -404,6 +444,7 @@ export async function keepScreenAwake(env: PresenterEnv = browserEnv()): Promise
 }
 
 export async function releaseScreenAwake(env: PresenterEnv = browserEnv()): Promise<void> {
+  wanted = false;
   const doc = env.document;
   if (onVisible !== null && doc && typeof doc.removeEventListener === 'function') doc.removeEventListener('visibilitychange', onVisible);
   onVisible = null;

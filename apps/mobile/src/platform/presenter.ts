@@ -55,6 +55,10 @@ export function subscribeKeys(_handler: (command: KeyCommand) => void): () => vo
   return () => undefined;
 }
 
+export function trapFocus(_items: () => readonly unknown[]): () => void {
+  return () => undefined;
+}
+
 export function subscribeActivity(_handler: () => void): () => void {
   return () => undefined;
 }

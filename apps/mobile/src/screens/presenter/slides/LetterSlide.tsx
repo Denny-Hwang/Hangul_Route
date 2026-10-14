@@ -6,15 +6,12 @@ import { StrokeHint } from '../../../components/StrokeHint';
 import { strokesForJamo } from '../../../content/jamo-strokes';
 import type { BuildName } from '../../../logic/lecture/build-steps';
 import type { Slide } from '../../../logic/lecture/deck-builder';
-import { STROKE_DOT_RADIUS, STROKE_DOT_RING, STROKE_LINE, STROKE_PANEL, STROKE_VIEWBOX, stageButtonSize, units } from '../../../logic/lecture/stage-constants';
-import { STAGE_BORDER, STAGE_GAP, STAGE_GAP_INNER, STAGE_RADIUS } from '../stage-metrics';
+import { STROKE_DOT_RADIUS, STROKE_DOT_RING, STROKE_LINE, STROKE_PANEL, STROKE_VIEWBOX, SVG_UI_FONT, stageButtonSize, units } from '../../../logic/lecture/stage-constants';
+import { STAGE_BORDER, STAGE_BORDER_MIN, STAGE_GAP, STAGE_GAP_INNER, STAGE_RADIUS } from '../stage-metrics';
 import { buildStrokeDiagram } from '../../../logic/stroke-diagram';
 import { TaughtKo, usePresenterView, useStageText } from '../presenter-context';
 
 type LetterBody = Extract<Slide, { kind: 'letter' }>;
-
-/** SVG text does not read React Native's 'System' family; the numerals use the browser's UI stack. */
-const SVG_UI_FONT = 'system-ui, sans-serif';
 
 /**
  * Letter slide in three columns (design/screens/presenter/slide-letter.md, README D4): the glyph
@@ -76,7 +73,7 @@ export function LetterSlide({
               width: stageButtonSize(unit, touchTarget.hero),
               height: stageButtonSize(unit, touchTarget.hero),
               borderRadius: radii.circle,
-              borderWidth: Math.max(2, units(unit, STAGE_BORDER)),
+              borderWidth: Math.max(STAGE_BORDER_MIN, units(unit, STAGE_BORDER)),
               borderColor: (state as { focused?: boolean }).focused ? colors.border.focus : colors.brand.secondary,
               backgroundColor: colors.surface.paper,
               alignItems: 'center',
@@ -108,7 +105,7 @@ export function LetterSlide({
                 paddingVertical: units(unit, spacing.xs),
                 paddingHorizontal: units(unit, spacing.lg),
                 borderRadius: units(unit, STAGE_RADIUS),
-                borderWidth: Math.max(2, units(unit, STAGE_BORDER)),
+                borderWidth: Math.max(STAGE_BORDER_MIN, units(unit, STAGE_BORDER)),
                 borderColor: colors.brand.secondary,
                 backgroundColor: colors.brand.secondaryLight,
               }}
@@ -134,7 +131,7 @@ export function LetterSlide({
  * arrives or on R. Under reduced motion `StrokeHint` draws its own still diagram.
  */
 function StrokePanel({ jamoId, playToken }: { jamoId: string; playToken: number }): React.ReactElement {
-  const { unit } = usePresenterView();
+  const { unit, messages } = usePresenterView();
   const target = useMemo(() => strokesForJamo(jamoId) ?? [], [jamoId]);
   const items = useMemo(() => buildStrokeDiagram(target), [target]);
   const panel = units(unit, STROKE_PANEL);
@@ -144,7 +141,7 @@ function StrokePanel({ jamoId, playToken }: { jamoId: string; playToken: number 
         width: panel,
         height: panel,
         borderRadius: units(unit, STAGE_RADIUS),
-        borderWidth: Math.max(2, units(unit, STAGE_BORDER)),
+        borderWidth: Math.max(STAGE_BORDER_MIN, units(unit, STAGE_BORDER)),
         borderColor: colors.border.subtle,
         backgroundColor: colors.surface.paper,
         overflow: 'hidden',
@@ -172,7 +169,7 @@ function StrokePanel({ jamoId, playToken }: { jamoId: string; playToken: number 
           </React.Fragment>
         ))}
       </Svg>
-      {playToken > 0 ? <StrokeHint key={playToken} target={target} size={panel} viewBox={STROKE_VIEWBOX} playToken={playToken} /> : null}
+      {playToken > 0 ? <StrokeHint key={playToken} target={target} size={panel} viewBox={STROKE_VIEWBOX} playToken={playToken} strokeOrder={messages.a11y.minigame.strokeOrder} /> : null}
     </View>
   );
 }
