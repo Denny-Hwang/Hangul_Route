@@ -185,6 +185,27 @@ describe('LessonCellSchema (F-CURR-001 §3.10)', () => {
   });
 });
 
+describe('LessonQuestSchema: Realia Read cross-checks (row G-2)', () => {
+  const realiaQuest = (answerEntryId: string) => {
+    const quest = clone(lessonQuest('stage6', 'letters', 1)) as Json;
+    quest.steps[2].minigameKind = 'realia-read';
+    quest.scopes[0] = {
+      ref: quest.scopes[0].ref,
+      kind: 'realia-read',
+      realia: { ref: 'realia:snack-menu', kind: 'menu', entries: [{ id: 'e1', text: kt('김밥', 'gimbap', 'gimbap') }], altEn: 'A menu board' },
+      rounds: [{ id: 'r1', questionEn: 'Which one?', options: [{ id: 'a', figure: '1' }, { id: 'b', figure: '2' }], answerId: 'a', answerEntryId }],
+    };
+    return quest;
+  };
+
+  it('accepts an answer entry of the realia and names one that is not', () => {
+    expect(LessonQuestSchema.safeParse(realiaQuest('e1')).success).toBe(true);
+    const r = LessonQuestSchema.safeParse(realiaQuest('e9'));
+    expect(r.success).toBe(false);
+    expect(r.error?.issues.map((i) => i.path.join('.'))).toEqual(['scopes.0.rounds.0.answerEntryId']);
+  });
+});
+
 describe('LessonQuestSchema', () => {
   it('is QuestSchema plus inline scopes', () => {
     expect(LessonQuestSchema.safeParse(lessonQuest('stage2', 'rites', 1)).success).toBe(true);
