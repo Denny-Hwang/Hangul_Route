@@ -1,0 +1,1390 @@
+{
+  "id": "episode:stage6-rites",
+  "stage": "stage6",
+  "theme": "rites",
+  "status": "draft",
+  "titleEn": "Travel for Chuseok",
+  "subtitleEn": "Read a train ticket, a station board and a trip plan.",
+  "hoyaIntroEn": "Hoya is taking the train to Grandma's home for Chuseok. Let's read the way!",
+  "order": 3,
+  "pillarTags": [
+    "B5"
+  ],
+  "rewardCardIds": [],
+  "quests": [
+    {
+      "id": "quest:stage6-rites-q1",
+      "titleEn": "The Train Ticket",
+      "blurbEn": "Read a train ticket: where the train leaves and where it arrives.",
+      "teaserEn": "Next: read the times on a station board.",
+      "estimatedMinutes": 5,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "The Train Ticket",
+          "hoyaLineEn": "Hoya has a train ticket for the Chuseok holiday. Let's read it together!",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "Read the Ticket",
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "realia",
+                    "realiaRef": "realia:s6-rites-q1-ticket",
+                    "keyWords": [
+                      {
+                        "ko": "기차표",
+                        "romanization": "gichapyo",
+                        "en": "train ticket"
+                      },
+                      {
+                        "ko": "기차",
+                        "romanization": "gicha",
+                        "en": "train"
+                      }
+                    ],
+                    "captionEn": "A train ticket is gichapyo: gicha (train) and pyo (ticket)."
+                  }
+                ],
+                "captionEn": "Hoya's ticket for the train."
+              },
+              {
+                "items": [
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "출발",
+                      "romanization": "chulbal",
+                      "en": "departure"
+                    },
+                    "noteEn": "Where the train leaves from"
+                  },
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "도착",
+                      "romanization": "dochak",
+                      "en": "arrival"
+                    },
+                    "noteEn": "Where the train gets in"
+                  }
+                ],
+                "captionEn": "Every ticket shows these two words."
+              }
+            ]
+          },
+          "durationSeconds": 60
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Find It on the Ticket",
+          "minigameKind": "realia-read",
+          "minigameRef": "minigame:s6-rites-q1-practice",
+          "durationSeconds": 100
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Type the Words",
+          "minigameKind": "type-hangul",
+          "minigameRef": "minigame:s6-rites-q1-apply",
+          "durationSeconds": 75
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Two Quick Ones",
+          "minigameKind": "listen-pick",
+          "minigameRef": "minigame:s6-rites-q1-check",
+          "durationSeconds": 40
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Ticket Read!",
+          "hoyaLineEn": "You read a real train ticket. Departure and arrival, both found!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s6-rites-q1-practice",
+          "kind": "realia-read",
+          "realia": {
+            "ref": "realia:s6-rites-q1-ticket",
+            "kind": "ticket",
+            "title": {
+              "ko": "기차표",
+              "romanization": "gichapyo",
+              "en": "train ticket"
+            },
+            "entries": [
+              {
+                "id": "dep",
+                "text": {
+                  "ko": "출발",
+                  "romanization": "chulbal",
+                  "en": "departure"
+                },
+                "value": {
+                  "ko": "서울",
+                  "romanization": "Seoul",
+                  "en": "Seoul (a city)"
+                }
+              },
+              {
+                "id": "arr",
+                "text": {
+                  "ko": "도착",
+                  "romanization": "dochak",
+                  "en": "arrival"
+                },
+                "value": {
+                  "ko": "부산",
+                  "romanization": "Busan",
+                  "en": "Busan (a city)"
+                }
+              }
+            ],
+            "altEn": "A train ticket that leaves from Seoul and arrives in Busan"
+          },
+          "rounds": [
+            {
+              "id": "r1",
+              "questionEn": "Where does the train leave from?",
+              "key": {
+                "ko": "출발",
+                "romanization": "chulbal",
+                "en": "departure"
+              },
+              "options": [
+                {
+                  "id": "seoul",
+                  "text": {
+                    "ko": "서울",
+                    "romanization": "Seoul",
+                    "en": "Seoul (a city)"
+                  }
+                },
+                {
+                  "id": "busan",
+                  "text": {
+                    "ko": "부산",
+                    "romanization": "Busan",
+                    "en": "Busan (a city)"
+                  }
+                }
+              ],
+              "answerId": "seoul",
+              "answerEntryId": "dep"
+            },
+            {
+              "id": "r2",
+              "questionEn": "Which word on the ticket means arrival?",
+              "options": [
+                {
+                  "id": "chulbal",
+                  "text": {
+                    "ko": "출발",
+                    "romanization": "chulbal",
+                    "en": "departure"
+                  }
+                },
+                {
+                  "id": "dochak",
+                  "text": {
+                    "ko": "도착",
+                    "romanization": "dochak",
+                    "en": "arrival"
+                  }
+                },
+                {
+                  "id": "gichapyo",
+                  "text": {
+                    "ko": "기차표",
+                    "romanization": "gichapyo",
+                    "en": "train ticket"
+                  }
+                }
+              ],
+              "answerId": "dochak",
+              "answerEntryId": "arr"
+            },
+            {
+              "id": "r3",
+              "questionEn": "Where does the train arrive?",
+              "key": {
+                "ko": "도착",
+                "romanization": "dochak",
+                "en": "arrival"
+              },
+              "options": [
+                {
+                  "id": "busan",
+                  "text": {
+                    "ko": "부산",
+                    "romanization": "Busan",
+                    "en": "Busan (a city)"
+                  }
+                },
+                {
+                  "id": "seoul",
+                  "text": {
+                    "ko": "서울",
+                    "romanization": "Seoul",
+                    "en": "Seoul (a city)"
+                  }
+                }
+              ],
+              "answerId": "busan",
+              "answerEntryId": "arr"
+            },
+            {
+              "id": "r4",
+              "questionEn": "Which word on the ticket means departure?",
+              "options": [
+                {
+                  "id": "dochak",
+                  "text": {
+                    "ko": "도착",
+                    "romanization": "dochak",
+                    "en": "arrival"
+                  }
+                },
+                {
+                  "id": "gichapyo",
+                  "text": {
+                    "ko": "기차표",
+                    "romanization": "gichapyo",
+                    "en": "train ticket"
+                  }
+                },
+                {
+                  "id": "chulbal",
+                  "text": {
+                    "ko": "출발",
+                    "romanization": "chulbal",
+                    "en": "departure"
+                  }
+                }
+              ],
+              "answerId": "chulbal",
+              "answerEntryId": "dep"
+            },
+            {
+              "id": "r5",
+              "questionEn": "What is this ticket for?",
+              "options": [
+                {
+                  "id": "bus",
+                  "pictureRef": "word:travel-bus",
+                  "labelEn": "bus"
+                },
+                {
+                  "id": "train",
+                  "pictureRef": "word:travel-train",
+                  "labelEn": "train"
+                },
+                {
+                  "id": "plane",
+                  "pictureRef": "word:travel-airplane",
+                  "labelEn": "airplane"
+                }
+              ],
+              "answerId": "train",
+              "answerEntryId": "dep"
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s6-rites-q1-apply",
+          "kind": "type-hangul",
+          "rounds": [
+            {
+              "id": "t1",
+              "promptEn": "Type the word for train",
+              "target": {
+                "ko": "기차",
+                "romanization": "gicha",
+                "en": "train"
+              }
+            },
+            {
+              "id": "t2",
+              "promptEn": "Type the word for departure",
+              "target": {
+                "ko": "출발",
+                "romanization": "chulbal",
+                "en": "departure"
+              }
+            },
+            {
+              "id": "t3",
+              "promptEn": "Type the word for arrival",
+              "target": {
+                "ko": "도착",
+                "romanization": "dochak",
+                "en": "arrival"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s6-rites-q1-check",
+          "kind": "listen-pick",
+          "rounds": [
+            {
+              "id": "c1",
+              "prompt": {
+                "ko": "출발",
+                "romanization": "chulbal",
+                "en": "departure"
+              },
+              "options": [
+                {
+                  "id": "a",
+                  "text": {
+                    "ko": "도착",
+                    "romanization": "dochak",
+                    "en": "arrival"
+                  }
+                },
+                {
+                  "id": "b",
+                  "text": {
+                    "ko": "출발",
+                    "romanization": "chulbal",
+                    "en": "departure"
+                  }
+                },
+                {
+                  "id": "c",
+                  "text": {
+                    "ko": "기차표",
+                    "romanization": "gichapyo",
+                    "en": "train ticket"
+                  }
+                }
+              ],
+              "answerId": "b"
+            },
+            {
+              "id": "c2",
+              "prompt": {
+                "ko": "기차",
+                "romanization": "gicha",
+                "en": "train"
+              },
+              "options": [
+                {
+                  "id": "a",
+                  "pictureRef": "word:travel-train",
+                  "labelEn": "train"
+                },
+                {
+                  "id": "b",
+                  "pictureRef": "word:travel-airplane",
+                  "labelEn": "airplane"
+                },
+                {
+                  "id": "c",
+                  "pictureRef": "word:travel-bus",
+                  "labelEn": "bus"
+                }
+              ],
+              "answerId": "a"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "quest:stage6-rites-q2",
+      "titleEn": "Train Times",
+      "blurbEn": "Read the hours and minutes on a station board.",
+      "teaserEn": "Next: read Hoya's trip plan.",
+      "estimatedMinutes": 5,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "Train Times",
+          "hoyaLineEn": "Lots of trains leave today. Let's find the right time on the board!",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "Hours and Minutes",
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "세 시",
+                      "romanization": "se si",
+                      "en": "three o'clock"
+                    },
+                    "noteEn": "Hours: han, du, se, ne, daseot, yeoseot"
+                  },
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "삼십 분",
+                      "romanization": "samsip bun",
+                      "en": "thirty minutes"
+                    },
+                    "noteEn": "Minutes: sip, isip, samsip, sasip"
+                  }
+                ],
+                "captionEn": "Hours count han, du, se. Minutes count il, i, sam."
+              },
+              {
+                "items": [
+                  {
+                    "type": "realia",
+                    "realiaRef": "realia:s6-rites-q2-board",
+                    "keyWords": [
+                      {
+                        "ko": "한 시",
+                        "romanization": "han si",
+                        "en": "one o'clock"
+                      },
+                      {
+                        "ko": "두 시",
+                        "romanization": "du si",
+                        "en": "two o'clock"
+                      },
+                      {
+                        "ko": "네 시",
+                        "romanization": "ne si",
+                        "en": "four o'clock"
+                      },
+                      {
+                        "ko": "십 분",
+                        "romanization": "sip bun",
+                        "en": "ten minutes"
+                      },
+                      {
+                        "ko": "이십 분",
+                        "romanization": "isip bun",
+                        "en": "twenty minutes"
+                      },
+                      {
+                        "ko": "사십 분",
+                        "romanization": "sasip bun",
+                        "en": "forty minutes"
+                      }
+                    ],
+                    "captionEn": "The board lists each train and the time it leaves."
+                  }
+                ],
+                "captionEn": "Read the hour first, then the minutes."
+              }
+            ]
+          },
+          "durationSeconds": 65
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Read the Board",
+          "minigameKind": "realia-read",
+          "minigameRef": "minigame:s6-rites-q2-practice",
+          "durationSeconds": 100
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Type the Time",
+          "minigameKind": "type-hangul",
+          "minigameRef": "minigame:s6-rites-q2-apply",
+          "durationSeconds": 70
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Two Quick Ones",
+          "minigameKind": "listen-pick",
+          "minigameRef": "minigame:s6-rites-q2-check",
+          "durationSeconds": 40
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Right on Time!",
+          "hoyaLineEn": "You read hours and minutes. Now you can catch any train!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s6-rites-q2-practice",
+          "kind": "realia-read",
+          "realia": {
+            "ref": "realia:s6-rites-q2-board",
+            "title": {
+              "ko": "출발",
+              "romanization": "chulbal",
+              "en": "departure"
+            },
+            "entries": [
+              {
+                "id": "daejeon",
+                "text": {
+                  "ko": "대전",
+                  "romanization": "Daejeon",
+                  "en": "Daejeon (a city)"
+                },
+                "value": {
+                  "ko": "한 시",
+                  "romanization": "han si",
+                  "en": "1:00"
+                }
+              },
+              {
+                "id": "busan",
+                "text": {
+                  "ko": "부산",
+                  "romanization": "Busan",
+                  "en": "Busan (a city)"
+                },
+                "value": {
+                  "ko": "세 시 삼십 분",
+                  "romanization": "se si samsip bun",
+                  "en": "3:30"
+                }
+              },
+              {
+                "id": "seoul",
+                "text": {
+                  "ko": "서울",
+                  "romanization": "Seoul",
+                  "en": "Seoul (a city)"
+                },
+                "value": {
+                  "ko": "네 시 이십 분",
+                  "romanization": "ne si isip bun",
+                  "en": "4:20"
+                }
+              }
+            ],
+            "altEn": "A station departure board: trains to Daejeon, Busan and Seoul, each with its time"
+          },
+          "rounds": [
+            {
+              "id": "r1",
+              "questionEn": "At what hour does the train to Daejeon leave?",
+              "key": {
+                "ko": "대전",
+                "romanization": "Daejeon",
+                "en": "Daejeon (a city)"
+              },
+              "options": [
+                {
+                  "id": "han",
+                  "text": {
+                    "ko": "한 시",
+                    "romanization": "han si",
+                    "en": "one o'clock"
+                  }
+                },
+                {
+                  "id": "du",
+                  "text": {
+                    "ko": "두 시",
+                    "romanization": "du si",
+                    "en": "two o'clock"
+                  }
+                },
+                {
+                  "id": "ne",
+                  "text": {
+                    "ko": "네 시",
+                    "romanization": "ne si",
+                    "en": "four o'clock"
+                  }
+                }
+              ],
+              "answerId": "han",
+              "answerEntryId": "daejeon"
+            },
+            {
+              "id": "r2",
+              "questionEn": "At what hour does the train to Busan leave?",
+              "key": {
+                "ko": "부산",
+                "romanization": "Busan",
+                "en": "Busan (a city)"
+              },
+              "options": [
+                {
+                  "id": "daseot",
+                  "text": {
+                    "ko": "다섯 시",
+                    "romanization": "daseot si",
+                    "en": "five o'clock"
+                  }
+                },
+                {
+                  "id": "se",
+                  "text": {
+                    "ko": "세 시",
+                    "romanization": "se si",
+                    "en": "three o'clock"
+                  }
+                },
+                {
+                  "id": "han",
+                  "text": {
+                    "ko": "한 시",
+                    "romanization": "han si",
+                    "en": "one o'clock"
+                  }
+                }
+              ],
+              "answerId": "se",
+              "answerEntryId": "busan"
+            },
+            {
+              "id": "r3",
+              "questionEn": "How many minutes after the hour does the Busan train leave?",
+              "key": {
+                "ko": "부산",
+                "romanization": "Busan",
+                "en": "Busan (a city)"
+              },
+              "options": [
+                {
+                  "id": "isip",
+                  "text": {
+                    "ko": "이십 분",
+                    "romanization": "isip bun",
+                    "en": "twenty minutes"
+                  }
+                },
+                {
+                  "id": "sip",
+                  "text": {
+                    "ko": "십 분",
+                    "romanization": "sip bun",
+                    "en": "ten minutes"
+                  }
+                },
+                {
+                  "id": "samsip",
+                  "text": {
+                    "ko": "삼십 분",
+                    "romanization": "samsip bun",
+                    "en": "thirty minutes"
+                  }
+                }
+              ],
+              "answerId": "samsip",
+              "answerEntryId": "busan"
+            },
+            {
+              "id": "r4",
+              "questionEn": "Which train leaves at one o'clock?",
+              "key": {
+                "ko": "한 시",
+                "romanization": "han si",
+                "en": "one o'clock"
+              },
+              "options": [
+                {
+                  "id": "seoul",
+                  "text": {
+                    "ko": "서울",
+                    "romanization": "Seoul",
+                    "en": "Seoul (a city)"
+                  }
+                },
+                {
+                  "id": "daejeon",
+                  "text": {
+                    "ko": "대전",
+                    "romanization": "Daejeon",
+                    "en": "Daejeon (a city)"
+                  }
+                },
+                {
+                  "id": "busan",
+                  "text": {
+                    "ko": "부산",
+                    "romanization": "Busan",
+                    "en": "Busan (a city)"
+                  }
+                }
+              ],
+              "answerId": "daejeon",
+              "answerEntryId": "daejeon"
+            },
+            {
+              "id": "r5",
+              "questionEn": "What time does the train to Seoul leave?",
+              "key": {
+                "ko": "서울",
+                "romanization": "Seoul",
+                "en": "Seoul (a city)"
+              },
+              "options": [
+                {
+                  "id": "t330",
+                  "figure": "3:30"
+                },
+                {
+                  "id": "t100",
+                  "figure": "1:00"
+                },
+                {
+                  "id": "t420",
+                  "figure": "4:20"
+                }
+              ],
+              "answerId": "t420",
+              "answerEntryId": "seoul"
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s6-rites-q2-apply",
+          "kind": "type-hangul",
+          "rounds": [
+            {
+              "id": "t1",
+              "promptEn": "Type the hour: three o'clock",
+              "target": {
+                "ko": "세 시",
+                "romanization": "se si",
+                "en": "three o'clock"
+              }
+            },
+            {
+              "id": "t2",
+              "promptEn": "Type the minutes: thirty minutes",
+              "target": {
+                "ko": "삼십 분",
+                "romanization": "samsip bun",
+                "en": "thirty minutes"
+              }
+            },
+            {
+              "id": "t3",
+              "promptEn": "Type the hour: one o'clock",
+              "target": {
+                "ko": "한 시",
+                "romanization": "han si",
+                "en": "one o'clock"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s6-rites-q2-check",
+          "kind": "listen-pick",
+          "rounds": [
+            {
+              "id": "c1",
+              "prompt": {
+                "ko": "세 시",
+                "romanization": "se si",
+                "en": "three o'clock"
+              },
+              "options": [
+                {
+                  "id": "a",
+                  "text": {
+                    "ko": "두 시",
+                    "romanization": "du si",
+                    "en": "two o'clock"
+                  }
+                },
+                {
+                  "id": "b",
+                  "text": {
+                    "ko": "네 시",
+                    "romanization": "ne si",
+                    "en": "four o'clock"
+                  }
+                },
+                {
+                  "id": "c",
+                  "text": {
+                    "ko": "세 시",
+                    "romanization": "se si",
+                    "en": "three o'clock"
+                  }
+                }
+              ],
+              "answerId": "c"
+            },
+            {
+              "id": "c2",
+              "prompt": {
+                "ko": "삼십 분",
+                "romanization": "samsip bun",
+                "en": "thirty minutes"
+              },
+              "options": [
+                {
+                  "id": "a",
+                  "text": {
+                    "ko": "삼십 분",
+                    "romanization": "samsip bun",
+                    "en": "thirty minutes"
+                  }
+                },
+                {
+                  "id": "b",
+                  "text": {
+                    "ko": "사십 분",
+                    "romanization": "sasip bun",
+                    "en": "forty minutes"
+                  }
+                },
+                {
+                  "id": "c",
+                  "text": {
+                    "ko": "십 분",
+                    "romanization": "sip bun",
+                    "en": "ten minutes"
+                  }
+                }
+              ],
+              "answerId": "a"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "quest:stage6-rites-q3",
+      "titleEn": "Hoya's Trip",
+      "blurbEn": "Read Hoya's plan: the station, the hometown and Grandma's home.",
+      "teaserEn": "You can read a ticket, a board and a trip plan!",
+      "estimatedMinutes": 5,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "Hoya's Trip",
+          "hoyaLineEn": "Hoya wrote a plan for the trip. Let's read where Hoya goes!",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "Places on the Trip",
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "기차역",
+                      "romanization": "gichayeok",
+                      "en": "train station"
+                    },
+                    "noteEn": "gicha (train) and yeok (station)"
+                  },
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "고향",
+                      "romanization": "gohyang",
+                      "en": "hometown"
+                    },
+                    "noteEn": "The place where someone grew up"
+                  }
+                ],
+                "captionEn": "At Chuseok, many people travel to their hometowns."
+              },
+              {
+                "items": [
+                  {
+                    "type": "realia",
+                    "realiaRef": "realia:s6-rites-q3-plan",
+                    "keyWords": [
+                      {
+                        "ko": "할머니 댁",
+                        "romanization": "halmeoni daek",
+                        "en": "Grandma's home"
+                      }
+                    ],
+                    "captionEn": "Daek is a polite word for someone's home."
+                  }
+                ],
+                "captionEn": "Hoya's plan, from the station to Grandma's home."
+              }
+            ]
+          },
+          "durationSeconds": 60
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Read the Plan",
+          "minigameKind": "realia-read",
+          "minigameRef": "minigame:s6-rites-q3-practice",
+          "durationSeconds": 100
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Type the Places",
+          "minigameKind": "type-hangul",
+          "minigameRef": "minigame:s6-rites-q3-apply",
+          "durationSeconds": 75
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Two Quick Ones",
+          "minigameKind": "listen-pick",
+          "minigameRef": "minigame:s6-rites-q3-check",
+          "durationSeconds": 40
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Trip Planned!",
+          "hoyaLineEn": "You read Hoya's whole trip plan. Thanks for coming along!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s6-rites-q3-practice",
+          "kind": "realia-read",
+          "realia": {
+            "ref": "realia:s6-rites-q3-plan",
+            "title": {
+              "ko": "호야의 추석 여행",
+              "romanization": "hoyaui chuseok yeohaeng",
+              "en": "Hoya's Chuseok trip"
+            },
+            "entries": [
+              {
+                "id": "station",
+                "text": {
+                  "ko": "기차역",
+                  "romanization": "gichayeok",
+                  "en": "train station"
+                },
+                "value": {
+                  "ko": "한 시",
+                  "romanization": "han si",
+                  "en": "one o'clock"
+                }
+              },
+              {
+                "id": "leave",
+                "text": {
+                  "ko": "기차 출발",
+                  "romanization": "gicha chulbal",
+                  "en": "the train leaves"
+                },
+                "value": {
+                  "ko": "두 시",
+                  "romanization": "du si",
+                  "en": "two o'clock"
+                }
+              },
+              {
+                "id": "arrive",
+                "text": {
+                  "ko": "고향 도착",
+                  "romanization": "gohyang dochak",
+                  "en": "arrive in the hometown"
+                },
+                "value": {
+                  "ko": "다섯 시",
+                  "romanization": "daseot si",
+                  "en": "five o'clock"
+                }
+              },
+              {
+                "id": "grandma",
+                "text": {
+                  "ko": "할머니 댁",
+                  "romanization": "halmeoni daek",
+                  "en": "Grandma's home"
+                },
+                "value": {
+                  "ko": "여섯 시",
+                  "romanization": "yeoseot si",
+                  "en": "six o'clock"
+                }
+              }
+            ],
+            "altEn": "Hoya's trip plan: the station at one, the train at two, the hometown at five, Grandma's home at six"
+          },
+          "rounds": [
+            {
+              "id": "r1",
+              "questionEn": "Where is Hoya at one o'clock?",
+              "key": {
+                "ko": "한 시",
+                "romanization": "han si",
+                "en": "one o'clock"
+              },
+              "options": [
+                {
+                  "id": "grandma",
+                  "text": {
+                    "ko": "할머니 댁",
+                    "romanization": "halmeoni daek",
+                    "en": "Grandma's home"
+                  }
+                },
+                {
+                  "id": "station",
+                  "text": {
+                    "ko": "기차역",
+                    "romanization": "gichayeok",
+                    "en": "train station"
+                  }
+                },
+                {
+                  "id": "hometown",
+                  "text": {
+                    "ko": "고향",
+                    "romanization": "gohyang",
+                    "en": "hometown"
+                  }
+                }
+              ],
+              "answerId": "station",
+              "answerEntryId": "station"
+            },
+            {
+              "id": "r2",
+              "questionEn": "When does the train leave?",
+              "key": {
+                "ko": "출발",
+                "romanization": "chulbal",
+                "en": "departure"
+              },
+              "options": [
+                {
+                  "id": "du",
+                  "text": {
+                    "ko": "두 시",
+                    "romanization": "du si",
+                    "en": "two o'clock"
+                  }
+                },
+                {
+                  "id": "han",
+                  "text": {
+                    "ko": "한 시",
+                    "romanization": "han si",
+                    "en": "one o'clock"
+                  }
+                },
+                {
+                  "id": "yeoseot",
+                  "text": {
+                    "ko": "여섯 시",
+                    "romanization": "yeoseot si",
+                    "en": "six o'clock"
+                  }
+                }
+              ],
+              "answerId": "du",
+              "answerEntryId": "leave"
+            },
+            {
+              "id": "r3",
+              "questionEn": "Where does the train take Hoya?",
+              "key": {
+                "ko": "도착",
+                "romanization": "dochak",
+                "en": "arrival"
+              },
+              "options": [
+                {
+                  "id": "station",
+                  "text": {
+                    "ko": "기차역",
+                    "romanization": "gichayeok",
+                    "en": "train station"
+                  }
+                },
+                {
+                  "id": "school",
+                  "text": {
+                    "ko": "학교",
+                    "romanization": "hakgyo",
+                    "en": "school"
+                  }
+                },
+                {
+                  "id": "hometown",
+                  "text": {
+                    "ko": "고향",
+                    "romanization": "gohyang",
+                    "en": "hometown"
+                  }
+                }
+              ],
+              "answerId": "hometown",
+              "answerEntryId": "arrive"
+            },
+            {
+              "id": "r4",
+              "questionEn": "Where does Hoya go last, at six o'clock?",
+              "options": [
+                {
+                  "id": "grandma",
+                  "text": {
+                    "ko": "할머니 댁",
+                    "romanization": "halmeoni daek",
+                    "en": "Grandma's home"
+                  }
+                },
+                {
+                  "id": "school",
+                  "text": {
+                    "ko": "학교",
+                    "romanization": "hakgyo",
+                    "en": "school"
+                  }
+                },
+                {
+                  "id": "station",
+                  "text": {
+                    "ko": "기차역",
+                    "romanization": "gichayeok",
+                    "en": "train station"
+                  }
+                }
+              ],
+              "answerId": "grandma",
+              "answerEntryId": "grandma"
+            },
+            {
+              "id": "r5",
+              "questionEn": "How does Hoya travel?",
+              "options": [
+                {
+                  "id": "plane",
+                  "pictureRef": "word:travel-airplane",
+                  "labelEn": "airplane"
+                },
+                {
+                  "id": "bus",
+                  "pictureRef": "word:travel-bus",
+                  "labelEn": "bus"
+                },
+                {
+                  "id": "train",
+                  "pictureRef": "word:travel-train",
+                  "labelEn": "train"
+                }
+              ],
+              "answerId": "train",
+              "answerEntryId": "leave"
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s6-rites-q3-apply",
+          "kind": "type-hangul",
+          "rounds": [
+            {
+              "id": "t1",
+              "promptEn": "Type the word for hometown",
+              "target": {
+                "ko": "고향",
+                "romanization": "gohyang",
+                "en": "hometown"
+              }
+            },
+            {
+              "id": "t2",
+              "promptEn": "Type the word for train station",
+              "target": {
+                "ko": "기차역",
+                "romanization": "gichayeok",
+                "en": "train station"
+              }
+            },
+            {
+              "id": "t3",
+              "promptEn": "Type the place Hoya goes last",
+              "target": {
+                "ko": "할머니 댁",
+                "romanization": "halmeoni daek",
+                "en": "Grandma's home"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s6-rites-q3-check",
+          "kind": "listen-pick",
+          "rounds": [
+            {
+              "id": "c1",
+              "prompt": {
+                "ko": "고향",
+                "romanization": "gohyang",
+                "en": "hometown"
+              },
+              "options": [
+                {
+                  "id": "a",
+                  "text": {
+                    "ko": "기차역",
+                    "romanization": "gichayeok",
+                    "en": "train station"
+                  }
+                },
+                {
+                  "id": "b",
+                  "text": {
+                    "ko": "고향",
+                    "romanization": "gohyang",
+                    "en": "hometown"
+                  }
+                },
+                {
+                  "id": "c",
+                  "text": {
+                    "ko": "기차표",
+                    "romanization": "gichapyo",
+                    "en": "train ticket"
+                  }
+                }
+              ],
+              "answerId": "b"
+            },
+            {
+              "id": "c2",
+              "prompt": {
+                "ko": "할머니 댁",
+                "romanization": "halmeoni daek",
+                "en": "Grandma's home"
+              },
+              "options": [
+                {
+                  "id": "a",
+                  "text": {
+                    "ko": "할머니 댁",
+                    "romanization": "halmeoni daek",
+                    "en": "Grandma's home"
+                  }
+                },
+                {
+                  "id": "b",
+                  "text": {
+                    "ko": "고향",
+                    "romanization": "gohyang",
+                    "en": "hometown"
+                  }
+                },
+                {
+                  "id": "c",
+                  "text": {
+                    "ko": "기차역",
+                    "romanization": "gichayeok",
+                    "en": "train station"
+                  }
+                }
+              ],
+              "answerId": "a"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "culture": [
+    {
+      "id": "n1",
+      "kind": "culture",
+      "textEn": "Chuseok is a public holiday. Many people travel to their hometowns then, so roads and trains get busy and extra trains and buses run. Some families travel the other way, to the city.",
+      "sources": [
+        {
+          "title": "추석(秋夕)",
+          "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+          "url": "https://encykorea.aks.ac.kr/Article/E0057862",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "Entry 추석, section 개설: “추석은 공휴일로 제정되어 많은 사람들이 고향으로 돌아가기 때문에 교통혼잡을 이루고 도시의 직장들은 쉬게 된다.” Section 추석 절식, last paragraph: “아직도 추석 귀성은 여전하며 …”"
+        },
+        {
+          "title": "추석 4일간 고속도로 통행료 면제…KTX·SRT 역귀성 요금 할인",
+          "publisher": "국토교통부 (Ministry of Land, Infrastructure and Transport), 대한민국 정책브리핑 korea.kr",
+          "url": "https://www.korea.kr/news/policyNewsView.do?newsId=148933781",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "Policy news of 2024-09-10: “국토교통부는 추석 연휴 국민들의 안전하고 편리한 이동을 위해 … “특별교통대책기간”으로 정하고 관련 대책을 시행한다.” and “대중교통 증가에 대비해 버스·철도 운행 횟수와 좌석을 평시 대비 각각 … 늘리고”"
+        },
+        {
+          "title": "추석 고향 체류 짧아지고 역귀성 증가",
+          "publisher": "국토교통부 (Ministry of Land, Infrastructure and Transport), 대한민국 정책브리핑 korea.kr",
+          "url": "https://www.korea.kr/news/policyNewsView.do?newsId=148783701",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "Policy news of 2014-09-04, survey of Chuseok travel: “역귀성하는 비율은 약 2배(8.6%→13.8%) 각각 늘었다.”"
+        }
+      ],
+      "verification": {
+        "passes": 1,
+        "checkedAt": "2026-10-14",
+        "scope": "lesson",
+        "notes": "Line 1 (passes: 1, author sourcing, 2026-10-14): all three pages opened and each quoteOrLocator found on its page. 'Public holiday' and 'many people travel to their hometowns, so roads get busy' = encykorea 추석, 개설 (공휴일로 제정, 많은 사람들이 고향으로 돌아가기 때문에 교통혼잡); 'trains get busy and extra trains and buses run' = MOLIT 2024 special transport measures (버스·철도 운행 횟수와 좌석을 평시 대비 늘리고); 'some families travel the other way, to the city' = MOLIT 2014 survey (역귀성 share rising; 역귀성 is the trip from the hometown to where the children live). The note says 'many' and 'some', never everyone; it names no ancestral rite (OD-9, the encyclopedia's reason for the trip is left out), no number, no living person, shop, brand or price, and copies no source wording (English restatement of Korean sources). Carried by: q1 intro Hoya line (the holiday trip, Hoya's own story), q3 Discover page 1 caption."
+      }
+    },
+    {
+      "id": "n2",
+      "kind": "language",
+      "textEn": "Clock hours count with {ko:한}, {ko:두}, {ko:세}, {ko:네}, the short forms of {ko:하나}, {ko:둘}, {ko:셋}, {ko:넷}. Minutes count with {ko:일}, {ko:이}, {ko:삼}: {ko:두 시 삼십 분} is 2:30.",
+      "sources": [
+        {
+          "title": "한글 맞춤법 제5장 제2절 제43항",
+          "publisher": "국립국어원 (National Institute of Korean Language)",
+          "url": "https://korean.go.kr/kornorms/regltn/regltnView.do?regltn_code=0001&regltn_no=263",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "Article 43 (단위를 나타내는 명사는 띄어 쓴다), the example under 다만: “두 시 삼십 분 오 초”; the counting examples above it include “한 개” and “소 한 마리”."
+        },
+        {
+          "title": "세",
+          "publisher": "국립국어원 (National Institute of Korean Language) — 표준국어대사전",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%EC%84%B8",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "Entry 세1 「관형사」: “그 수량이 셋임을 나타내는 말.”"
+        },
+        {
+          "title": "분",
+          "publisher": "국립국어원 (National Institute of Korean Language) — 표준국어대사전",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%EB%B6%84",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "Entry 분6 (分) [Ⅰ]「의존 명사」「1」: “한 시간의 60분의 1에 해당하는 시간.”"
+        }
+      ],
+      "verification": {
+        "passes": 1,
+        "checkedAt": "2026-10-14",
+        "scope": "lesson",
+        "notes": "Line 1 (passes: 1, author sourcing, 2026-10-14): all three pages opened and each quoteOrLocator found. The orthography's own example of a clock time, 두 시 삼십 분 오 초, writes the hour with the native counting form 두 and the minutes with the Sino-Korean 삼십; its counting examples (한 개, 소 한 마리) show the short native forms before a unit; the dictionary gives 세 as the determiner form meaning three, and 분 as the unit of one sixtieth of an hour. The note states only this one pattern of clock times and copies no source wording. Carried by: q2 Discover page 1 caption and the two word notes (Hours: han, du, se ...; Minutes: sip, isip, samsip ...); q2 practice and Check never mix the two sets in one question's options."
+      }
+    }
+  ],
+  "review": {
+    "language": "draft",
+    "culture": "draft",
+    "notes": []
+  },
+  "contentVer": 1
+}
