@@ -66,7 +66,7 @@ async function draw(page: Page, strokes: Point[][]): Promise<void> {
   for (const stroke of strokes) {
     await page.mouse.move(...at(stroke[0]!));
     await page.mouse.down();
-    for (const p of stroke.slice(1)) await page.mouse.move(...at(p), { steps: 6 });
+    for (const p of stroke.slice(1)) await page.mouse.move(...at(p), { steps: 12 });
     await page.mouse.up();
   }
 }
@@ -157,15 +157,32 @@ test.describe('Trace a Word, phone 320: gate, retry, letter mode, Skip', () => {
   test('letter mode traces each letter in its lit zone, block after block', async ({ page }) => {
     await open(page, [IREUM]);
     await expect(hoya(page)).toHaveText(LETTER_IDLE);
+    await expect(page.getByTestId('trace-word-canvas')).toHaveAttribute('aria-label', 'Draw i, block 1 of 2, letter 1 of 2, with your finger');
+    // The part marks join the strip; the canvas keeps its floor and every control stays on screen.
+    for (const name of ['Done', 'Skip', 'Show me', 'Clear']) {
+      await expect(page.getByRole('button', { name, exact: true }), name).toBeInViewport({ ratio: 1 });
+    }
+    await expectNoHorizontalOverflow(page);
+    expect((await page.getByTestId('trace-word-canvas').boundingBox())!.width, 'canvas floor').toBeGreaterThanOrEqual(160);
     await shot(page, 'trace-word-320-letter');
+    const paths = page.getByTestId('trace-word-canvas').locator('path');
     const blocks = await blocksOf(page, '이름');
     for (const [bi, letters] of blocks.entries()) {
+      const ghosts = await paths.count();
       for (const [li, letter] of letters.entries()) {
         await draw(page, letter);
         await done(page).click();
         const last = bi === blocks.length - 1 && li === letters.length - 1;
         if (last) await expect(hoya(page)).toHaveText(WORD_DONE);
         else await expect(hoya(page)).toHaveText(LETTER_IDLE, { timeout: 5_000 });
+        if (li === 0) {
+          // The letter just written stays on the canvas while the next one is traced.
+          await expect(page.getByTestId('trace-word-canvas')).toHaveAttribute(
+            'aria-label',
+            `Draw ${bi === 0 ? 'i' : 'reum'}, block ${bi + 1} of 2, letter 2 of ${letters.length}, with your finger`,
+          );
+          expect(await paths.count(), 'the first letter\'s ink').toBe(ghosts + letter.length);
+        }
       }
     }
     await expect.poll(async () => (await log(page)).answers).toEqual([{ key: '0', correct: true }]);

@@ -20,11 +20,15 @@ describe('trace-word words against the stroke data', () => {
     for (const word of STAGE7_WORDS) expect(placeWordStrokes(word, strokesForJamo), word).not.toBeNull();
   });
 
-  it('places every word a shipped trace-word round traces', () => {
-    for (const [ref, scope] of Object.entries(ALL_LESSON_SCOPES)) {
-      for (const round of scope.traceWord?.rounds ?? []) {
-        expect(placeWordStrokes(round.word.ko, strokesForJamo), `${ref} ${round.id}`).not.toBeNull();
-      }
+  const shipped = Object.entries(ALL_LESSON_SCOPES).flatMap(([ref, scope]) =>
+    (scope.traceWord?.rounds ?? []).map((round) => ({ ref, round })),
+  );
+
+  // Skipped, not passed empty, until a cell ships trace-word rounds (the S7-1 cell is the first).
+  it.skipIf(shipped.length === 0)('places every word a shipped trace-word round traces', () => {
+    expect.hasAssertions();
+    for (const { ref, round } of shipped) {
+      expect(placeWordStrokes(round.word.ko, strokesForJamo), `${ref} ${round.id}`).not.toBeNull();
     }
   });
 });

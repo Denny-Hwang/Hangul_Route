@@ -79,6 +79,9 @@ export const a11y = {
     traceBlock: (romanization: string, block: number, total: number) =>
       `손가락으로 쓰기: ${romanization}, 글자 덩어리 ${total}개 중 ${block}번째`,
     hearBlockDone: (romanization: string) => `듣기: ${romanization}, 다 썼어요`,
+    traceBlockLetter: (romanization: string, block: number, total: number, letter: number, letters: number) =>
+      `손가락으로 쓰기: ${romanization}, 글자 덩어리 ${total}개 중 ${block}번째, 글자 ${letters}개 중 ${letter}번째`,
+    traceWordLetterOrder: (letter: number, letters: number, summary: string) => `글자 ${letters}개 중 ${letter}번째: ${summary}`,
     strokeOrder: {
       guide: '획순 안내',
       summary: (strokes: readonly string[]) =>

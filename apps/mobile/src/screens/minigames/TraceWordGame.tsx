@@ -28,7 +28,7 @@ import { StrokeHint } from '../../components/StrokeHint';
 import { strokesForJamo, type JamoStrokePoint } from '../../content/jamo-strokes';
 import { useMessages } from '../../i18n/use-messages';
 import type { MinigameScope } from '../../logic/minigame-config';
-import { pointsToPathD } from '../../logic/stroke-diagram';
+import { describeStrokeOrder, pointsToPathD } from '../../logic/stroke-diagram';
 import { TRACE_IDLE_MS, type TraceEvaluator } from '../../logic/trace-evaluator';
 import { traceCanvasMax, traceLayoutMode, traceScreenWidth, traceSidePanelWidth } from '../../logic/trace-layout';
 import { BLOCK_VIEWBOX, type PlacedLetter } from '../../logic/trace-word/block-strokes';
@@ -147,7 +147,10 @@ export function TraceWordGame({ scope, host, onBack }: Props): React.ReactElemen
     stateRef.current = next;
     setState(next);
     const answer = answerOf(prev, next);
-    if (answer) host.answer(answer.round, answer.correct);
+    if (answer) {
+      const answered = rounds[answer.round];
+      host.answer(answer.round, answer.correct, answered ? { itemId: answered.id } : undefined);
+    }
     if (next.phase === 'finished') finish();
     return next;
   };
@@ -204,11 +207,7 @@ export function TraceWordGame({ scope, host, onBack }: Props): React.ReactElemen
       gateRef.current?.reopen();
       return;
     }
-    const result = scoreTraceUnit(
-      unitLetters.map((l) => l.strokes),
-      drawn,
-      round.tolerance,
-    );
+    const result = scoreTraceUnit(unitLetters, drawn, round.tolerance);
     setCoaching({ orderCorrect: result.orderCorrect, directionNudge: result.directionNudge });
     setHintPlaying(false);
     const next = apply({ type: 'evaluated', passed: result.passed });
@@ -289,24 +288,46 @@ export function TraceWordGame({ scope, host, onBack }: Props): React.ReactElemen
   const liveLook: Look = phase === 'retry' ? 'retry' : phase === 'drawing' ? 'live' : 'pass';
   const done = blocksPassed(state);
   const unitStrokes = unitLetters.flatMap((l) => l.strokes);
+  // Show me's still diagram reads the unit letter by letter (wireframe "Accessibility").
+  const firstLetter = round.mode === 'letter' ? state.letter : 0;
+  const orderLabel = unitLetters
+    .map((l, i) => a11y.traceWordLetterOrder(firstLetter + i + 1, block.placed.letters.length, describeStrokeOrder(l.strokes, a11y.strokeOrder)))
+    .join(' ');
 
   const liveCanvas = (
     <GestureDetector gesture={pan}>
       <View
         nativeID="trace-canvas"
         testID="trace-word-canvas"
-        accessibilityLabel={a11y.traceBlock(a11yRomanization(block.romanization), state.block + 1, round.blocks.length)}
+        accessibilityLabel={
+          round.mode === 'letter'
+            ? a11y.traceBlockLetter(
+                a11yRomanization(block.romanization),
+                state.block + 1,
+                round.blocks.length,
+                state.letter + 1,
+                block.placed.letters.length,
+              )
+            : a11y.traceBlock(a11yRomanization(block.romanization), state.block + 1, round.blocks.length)
+        }
         style={canvasStyle(size, liveLook)}
       >
         <BlockArt
           block={block}
           size={size}
           focus={round.mode === 'letter' ? state.letter : null}
-          ink={strokes}
+          ink={round.mode === 'letter' ? [...(traced[state.block] ?? []), ...strokes] : strokes}
           inkWidth={INK_WIDTH}
         />
         {hintPlaying ? (
-          <StrokeHint target={unitStrokes} size={size} viewBox={BLOCK_VIEWBOX} playToken={hintToken} onComplete={() => setHintPlaying(false)} />
+          <StrokeHint
+            target={unitStrokes}
+            size={size}
+            viewBox={BLOCK_VIEWBOX}
+            playToken={hintToken}
+            orderLabel={orderLabel}
+            onComplete={() => setHintPlaying(false)}
+          />
         ) : null}
       </View>
     </GestureDetector>

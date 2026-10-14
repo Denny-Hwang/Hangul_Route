@@ -88,6 +88,8 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'a11y.minigame.traceWord': [['hoya', 'Hoya'], ['ireum', 'name']],
   'a11y.minigame.traceBlock': [['ho', 1, 2], ['reum', 2, 2]],
   'a11y.minigame.hearBlockDone': [['ho']],
+  'a11y.minigame.traceBlockLetter': [['reum', 2, 2, 1, 2]],
+  'a11y.minigame.traceWordLetterOrder': [[1, 2, 'Stroke order. One stroke. 1: right.']],
   'a11y.minigame.strokeOrder.summary': [[['down, then right']], [['right', 'down', 'right']]],
   'a11y.minigame.strokeOrder.curving': [['down and right']],
   'a11y.minigame.strokeOrder.legs': [[['right', 'down']], [['right']]],
