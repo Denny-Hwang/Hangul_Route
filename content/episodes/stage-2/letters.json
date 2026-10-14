@@ -2520,10 +2520,10 @@
         }
       ],
       "verification": {
-        "passes": 1,
+        "passes": 2,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "Pass 1 (author sourcing, 2026-10-14): both sources opened; the NIKL standard pronunciation commentary to article 4 says ㅐ and ㅔ are not kept apart by most generations today, and the Encyclopedia of Korean Culture says speakers in their forties and younger do not distinguish /e/ and /ɛ/. Backs the q1 Discover Hoya line. The games never ask the learner to tell ㅐ from ㅔ by ear."
+        "notes": "Pass 1 (author sourcing, 2026-10-14): both sources opened; the NIKL standard pronunciation commentary to article 4 says ㅐ and ㅔ are not kept apart by most generations today, and the Encyclopedia of Korean Culture says speakers in their forties and younger do not distinguish /e/ and /ɛ/. Backs the q1 Discover Hoya line. The games never ask the learner to tell ㅐ from ㅔ by ear.\nPass 2b (independent fact check, 2026-10-14): both sources re-opened. NIKL article 4 commentary says most generations no longer tell ㅐ and ㅔ apart (the article 1 commentary adds: most people outside some older speakers in some regions); the Encyclopedia of Korean Culture note to table 1 says Central-dialect speakers in their forties and younger have one merged /E/. Both quoted locators match the pages word for word. Claim holds; no wording shared with the sources."
       }
     },
     {
@@ -2547,23 +2547,23 @@
         }
       ],
       "verification": {
-        "passes": 1,
+        "passes": 2,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "Pass 1 (author sourcing, 2026-10-14): the dictionary defines the tense consonants ㄲ ㄸ ㅃ ㅆ ㅉ as said with raised laryngeal tension and almost no aspiration; the encyclopedia sets the tense series beside the plain and the aspirated series. Backs the q2 Discover Hoya line (tight and strong, almost no puff of air)."
+        "notes": "Pass 1 (author sourcing, 2026-10-14): the dictionary defines the tense consonants ㄲ ㄸ ㅃ ㅆ ㅉ as said with raised laryngeal tension and almost no aspiration; the encyclopedia sets the tense series beside the plain and the aspirated series. Backs the q2 Discover Hoya line (tight and strong, almost no puff of air).\nPass 2b (independent fact check, 2026-10-14): the Standard Korean Language Dictionary entry 된소리 (one result) defines it as said with raised laryngeal-muscle tension and almost no aspiration, examples ㄲ ㄸ ㅃ ㅆ ㅉ; the encyclopedia's stops section names the plain, tense and aspirated series (tense: initials of 뼈, 딸, 끝) and its fricatives section names tense [s'] in 싸움, 씨름. 'Throat tightens' is a plain-words restatement of laryngeal tension. Claim holds; no copied wording."
       }
     },
     {
       "id": "n3",
       "kind": "language",
-      "textEn": "{ko:ㅘ}, {ko:ㅝ}, {ko:ㅟ} and {ko:ㅢ} are each written by joining two simple vowel letters, and each is said as one gliding sound.",
+      "textEn": "{ko:ㅘ}, {ko:ㅝ}, {ko:ㅟ} and {ko:ㅢ} are each written by joining two simple vowel letters, and each can be said as one gliding sound.",
       "sources": [
         {
           "title": "표준어 규정 제2부 표준 발음법",
           "publisher": "국립국어원 (National Institute of Korean Language)",
           "url": "https://korean.go.kr/kornorms/regltn/regltnView.do?regltn_code=0002&regltn_no=191",
           "accessed": "2026-10-14",
-          "quoteOrLocator": "제2부 표준 발음법, 제2장 제5항: \"'ㅑ ㅒ ㅕ ㅖ ㅘ ㅙ ㅛ ㅝ ㅞ ㅠ ㅢ'는 이중 모음으로 발음한다.\"; 제4항 [붙임]: \"'ㅚ, ㅟ'는 이중 모음으로 발음할 수 있다.\""
+          "quoteOrLocator": "제2부 표준 발음법, 제2장 제5항: \"'ㅑ ㅒ ㅕ ㅖ ㅘ ㅙ ㅛ ㅝ ㅞ ㅠ ㅢ'는 이중 모음으로 발음한다.\"; 제4항 [붙임]: \"'ㅚ, ㅟ'는 이중 모음으로 발음할 수 있다.\"; 제5항 다만 3, 다만 4 (ㅢ의 허용 발음)"
         },
         {
           "title": "모음(母音)",
@@ -2574,10 +2574,10 @@
         }
       ],
       "verification": {
-        "passes": 1,
+        "passes": 2,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "Pass 1 (author sourcing, 2026-10-14): article 5 of the standard pronunciation rules lists ㅘ ㅝ ㅢ among the diphthongs and article 4 lets ㅟ be said as one; the encyclopedia transcribes ㅘ as [wa], ㅝ as [wʌ] and ㅟ as usually [wi]. Backs the q3 Discover Hoya line (two vowels you know, said quickly as one sound); the letter shapes (ㅗ+ㅏ, ㅜ+ㅓ, ㅜ+ㅣ, ㅡ+ㅣ) are visible in the letters themselves."
+        "notes": "Pass 1 (author sourcing, 2026-10-14): article 5 of the standard pronunciation rules lists ㅘ ㅝ ㅢ among the diphthongs and article 4 lets ㅟ be said as one; the encyclopedia transcribes ㅘ as [wa], ㅝ as [wʌ] and ㅟ as usually [wi]. Backs the q3 Discover Hoya line (two vowels you know, said quickly as one sound); the letter shapes (ㅗ+ㅏ, ㅜ+ㅓ, ㅜ+ㅣ, ㅡ+ㅣ) are visible in the letters themselves.\nPass 2b (independent fact check, 2026-10-14): article 5 lists ㅘ ㅝ ㅢ as diphthongs and its commentary builds ㅘ ㅝ from [w] plus ㅏ ㅓ and ㅢ from ㅡ plus [j]; article 4 makes ㅟ a monophthong in principle with a diphthong allowed, and article 5 provisos 3-4 say ㅢ after a consonant is said [ㅣ] and is allowed as [ㅣ] or [ㅔ] elsewhere. 'Each is said as one gliding sound' overstated ㅟ and ㅢ, so the note now says 'each can be said as one gliding sound'; locator extended to provisos 3-4. Encyclopedia quotes ([wa], [wʌ], ㅟ usually [wi]) match. Holds as revised."
       }
     },
     {
@@ -2590,7 +2590,7 @@
           "publisher": "국립국어원 (National Institute of Korean Language)",
           "url": "https://korean.go.kr/kornorms/regltn/regltnView.do?regltn_code=0002&regltn_no=191",
           "accessed": "2026-10-14",
-          "quoteOrLocator": "제2장 제4항 [붙임]: \"'ㅚ, ㅟ'는 이중 모음으로 발음할 수 있다.\"; 제4항 해설: \"'ㅐ'와 'ㅔ'는 현재 대부분의 세대에서 별개의 모음으로 구별되지 않고 있다.\"; 제5항: 'ㅙ', 'ㅞ'는 이중 모음"
+          "quoteOrLocator": "제2장 제4항 [붙임]: \"'ㅚ, ㅟ'는 이중 모음으로 발음할 수 있다.\"; 제4항 해설: \"'ㅐ'와 'ㅔ'는 현재 대부분의 세대에서 별개의 모음으로 구별되지 않고 있다.\"; 제5항: 'ㅙ', 'ㅞ'는 이중 모음; 제4항 해설 끝 문단 (이중 모음으로 발음한 'ㅚ'는 'ㅞ'와 같음, 예: '회' [회]/[훼])"
         },
         {
           "title": "모음(母音)",
@@ -2601,10 +2601,10 @@
         }
       ],
       "verification": {
-        "passes": 1,
+        "passes": 2,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "Pass 1 (author sourcing, 2026-10-14): ㅚ may be a diphthong (article 4, attachment), ㅙ is [wɛ] and ㅞ is [we] (encyclopedia), and ㅐ / ㅔ are not kept apart by most speakers (article 4 commentary; encyclopedia), so the three end up close. The note says 'often' and 'nearly', not 'always'. Backs the q4 Discover Hoya line; the games never ask for this contrast by ear."
+        "notes": "Pass 1 (author sourcing, 2026-10-14): ㅚ may be a diphthong (article 4, attachment), ㅙ is [wɛ] and ㅞ is [we] (encyclopedia), and ㅐ / ㅔ are not kept apart by most speakers (article 4 commentary; encyclopedia), so the three end up close. The note says 'often' and 'nearly', not 'always'. Backs the q4 Discover Hoya line; the games never ask for this contrast by ear.\nPass 2b (independent fact check, 2026-10-14): NIKL article 4 attachment allows ㅚ as a diphthong and its commentary says diphthong ㅚ is the same as ㅞ (회 [회]/[훼]); article 4 commentary says ㅐ and ㅔ have merged for most generations; the encyclopedia gives ㅙ [wɛ], ㅞ [we]. So ㅚ ㅙ ㅞ come out close; 'often' and 'nearly' are kept. The encyclopedia's Jeju line is dialect-only, so the merger rests on NIKL; locator extended to the ㅚ = ㅞ commentary. Claim holds; no copied wording."
       }
     },
     {
@@ -2624,14 +2624,14 @@
           "publisher": "한국학중앙연구원 한국민족문화대백과사전 (Encyclopedia of Korean Culture)",
           "url": "https://encykorea.aks.ac.kr/Article/E0048042",
           "accessed": "2026-10-14",
-          "quoteOrLocator": "파열음과 마찰음 부분: \"이들은 음절말에서 각기 [p], [t], [k]로만 실현된다.\""
+          "quoteOrLocator": "파열음 부분: \"이들은 음절말에서 각기 [p], [t], [k]로만 실현된다.\"; 파찰음 부분 (/ㅈ, ㅉ, ㅊ/)과 마찰음 부분 (/s/, /s'/): 음절말에서 [t]로 실현"
         }
       ],
       "verification": {
-        "passes": 1,
+        "passes": 2,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "Pass 1 (author sourcing, 2026-10-14): articles 8 and 9 give the seven final sounds and the representative sounds of ㄲ ㅋ (ㄱ), ㅅ ㅆ ㅈ ㅊ ㅌ (ㄷ) and ㅍ (ㅂ); the encyclopedia says these stops and fricatives are realised only as [p], [t], [k] at the end of a syllable. Backs the q5 and q6 Discover Hoya lines. Final ㅎ is not in article 9 (article 12 gives it other rules), so q5 teaches six t letters, not ㅎ."
+        "notes": "Pass 1 (author sourcing, 2026-10-14): articles 8 and 9 give the seven final sounds and the representative sounds of ㄲ ㅋ (ㄱ), ㅅ ㅆ ㅈ ㅊ ㅌ (ㄷ) and ㅍ (ㅂ); the encyclopedia says these stops and fricatives are realised only as [p], [t], [k] at the end of a syllable. Backs the q5 and q6 Discover Hoya lines. Final ㅎ is not in article 9 (article 12 gives it other rules), so q5 teaches six t letters, not ㅎ.\nPass 2b (independent fact check, 2026-10-14): article 8 gives the seven final sounds ㄱ ㄴ ㄷ ㄹ ㅁ ㅂ ㅇ; article 9 maps final ㄲ ㅋ to [ㄱ], ㅅ ㅆ ㅈ ㅊ ㅌ to [ㄷ], ㅍ to [ㅂ] at word end or before a consonant (examples 옷[옫], 꽃[꼳], 앞[압]); article 12 treats final ㅎ separately. The encyclopedia says the stops surface only as [p] [t] [k] syllable-finally and the affricates and /s/, /s'/ as [t]; locator widened to name those parts. Claim holds; no copied wording."
       }
     },
     {
@@ -2644,7 +2644,7 @@
           "publisher": "국립국어원 (National Institute of Korean Language)",
           "url": "https://korean.go.kr/kornorms/regltn/regltnView.do?regltn_code=0002&regltn_no=191",
           "accessed": "2026-10-14",
-          "quoteOrLocator": "제5장 소리의 동화 앞 연음 규정, 제13항: \"홑받침이나 쌍받침이 모음으로 시작된 조사나 어미, 접미사와 결합되는 경우에는, 제 음가대로 뒤 음절 첫소리로 옮겨 발음한다.\""
+          "quoteOrLocator": "제4장 받침의 발음, 제13항: \"홑받침이나 쌍받침이 모음으로 시작된 조사나 어미, 접미사와 결합되는 경우에는, 제 음가대로 뒤 음절 첫소리로 옮겨 발음한다.\""
         },
         {
           "title": "표준 발음법의 이해 (한글 자모의 발음)",
@@ -2655,10 +2655,10 @@
         }
       ],
       "verification": {
-        "passes": 1,
+        "passes": 2,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "Pass 1 (author sourcing, 2026-10-14): article 13 moves a single or double final to the next syllable with its own value before a vowel-initial particle, ending or suffix, and the NIKL explainer gives 옷이 [오시]. Backs the second sentence of the q5 Discover Hoya line."
+        "notes": "Pass 1 (author sourcing, 2026-10-14): article 13 moves a single or double final to the next syllable with its own value before a vowel-initial particle, ending or suffix, and the NIKL explainer gives 옷이 [오시]. Backs the second sentence of the q5 Discover Hoya line.\nPass 2b (independent fact check, 2026-10-14): article 13 (in chapter 4, Pronouncing final consonants, not chapter 5 as the locator said: corrected) moves a single or double final, with its own value, to the next syllable before a vowel-initial particle, ending or suffix, example 옷이[오시]; the NIKL 새국어소식 article (2001, June) gives 옷이[오시], 꽃이[꼬치] and contrasts 겉옷[거돋]. Claim holds; no copied wording."
       }
     }
   ],
