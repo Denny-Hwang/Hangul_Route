@@ -15,7 +15,7 @@ import {
   realiaReadIssues,
   type MinigameKind,
 } from './minigame';
-import { CHECK_ROUNDS, checkKindsFor, QuestObjectSchema, questRules, type QuestStepKind } from './quest';
+import { CHECK_ROUNDS, checkKindsFor, QuestObjectSchema, questRules, slotCount, type QuestStepKind } from './quest';
 import { CardIdSchema, IsoDateSchema, SourceSchema, VerificationSchema } from './story';
 
 /**
@@ -243,6 +243,13 @@ export function lessonCellRules(cell: z.output<typeof LessonCellObjectSchema>, c
 
     const used = new Set<string>();
     quest.steps.forEach((step, si) => {
+      step.discover?.pages.forEach((page, pi) =>
+        page.items.forEach((item, ii) => {
+          if (item.type === 'pattern' && slotCount(item.frame.ko) === 2 && stage !== 'stage7') {
+            issue(at('steps', si, 'discover', 'pages', pi, 'items', ii, 'frame'), 'a two-slot pattern frame is a Stage 7 frame (§3.10)');
+          }
+        }),
+      );
       if (step.minigameKind === 'voice-echo') {
         issue(at('steps', si, 'minigameKind'), 'lesson-no-speaking: no lesson step records or asks for speech');
       }

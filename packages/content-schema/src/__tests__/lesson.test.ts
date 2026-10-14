@@ -92,6 +92,18 @@ describe('LessonCellSchema (F-CURR-001 §3.10)', () => {
     );
   });
 
+  it('keeps a two-slot pattern frame to Stage 7 (§3.10)', () => {
+    const twoSlots = (stage: string, theme: string) => {
+      const cell = lessonCell(stage, theme) as Json;
+      cell.quests[0].steps[1].discover.pages[0].items[0].frame = kt('___에 ___을/를 먹었어요.', '___e ___eul/reul meogeosseoyo', 'On ___, I ate ___.');
+      return messages(cell);
+    };
+    expect(twoSlots('stage7', 'rites')).toEqual([]);
+    expect(twoSlots('stage3', 'letters')).toEqual([
+      'quests.0.steps.1.discover.pages.0.items.0.frame: a two-slot pattern frame is a Stage 7 frame (§3.10)',
+    ]);
+  });
+
   it('resolves every minigameRef to a scope of the same kind, once, and every scope is played', () => {
     const missing = lessonCell() as Json;
     missing.quests[0].scopes.splice(1, 1);

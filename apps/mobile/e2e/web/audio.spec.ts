@@ -391,12 +391,20 @@ async function openTapRespond(page: Page, name = 'Dami'): Promise<void> {
   await expect(page.getByText('1 / 3')).toBeVisible();
 }
 
-/** The Stage 2 taste Lunch Box Words: step 2 is Card Match (skipped), step 3 Culture Quiz. */
+/**
+ * Stage 1 Picnic Snacks (Food & Daily Life q3), the last Culture Quiz in the bundle since the Stage 2
+ * tastes became lesson cells (F-CURR-001 T-1): Discover, Match the Sound (skipped), then step 4 is
+ * the Culture Quiz. Its soft prerequisite sheet ("Play anyway") opens on a fresh learner.
+ */
 async function openCultureQuiz(page: Page, name = 'Dami'): Promise<void> {
   await openJourneyTab(page, name);
-  await page.getByRole('button', { name: journeyCellName(2, 'Food & Daily Life') }).click();
-  await page.getByRole('button', { name: 'Start', exact: true }).first().click();
+  await page.getByRole('button', { name: journeyCellName(1, 'Food & Daily Life') }).click();
+  await page.getByRole('button', { name: 'Start', exact: true }).nth(2).click();
+  const anyway = page.getByRole('button', { name: 'Play anyway' });
+  await anyway.waitFor({ state: 'visible', timeout: 1500 }).catch(() => undefined);
+  if (await anyway.isVisible()) await anyway.click();
   await page.getByRole('button', { name: 'Continue' }).click();
+  await passDiscover(page);
   await page.getByRole('button', { name: 'Skip for now' }).click();
   await page.getByRole('button', { name: 'Play minigame' }).click();
 }

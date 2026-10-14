@@ -512,13 +512,13 @@ export const learner = {
       changeWord: { cta: '낱말 바꾸기' },
       sentenceDone: '문장을 썼어요!',
       myPage: {
-        title: '나의 페이지',
+        title: '내 페이지',
         notKept: '이 페이지는 지금만 볼 수 있어요. 저장되지 않아요.',
       },
       name: {
         heading: '내 이름을 한글로 써 봐요',
         noWrong: '이름을 쓰는 데 틀린 방법은 없어요.',
-        tabs: { blocks: '글자 블록', keyboard: '키보드' },
+        tabs: { blocks: '글자 블록', keyboard: '자판' },
         sounds: '소리',
         atTheEnd: '받침',
         longest: '여기에 들어가는 가장 긴 이름이에요.',

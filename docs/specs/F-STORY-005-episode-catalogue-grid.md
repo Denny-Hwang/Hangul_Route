@@ -134,9 +134,9 @@ Columns: shelf id = `episode:shelf-<slug>`; **home cell** = `<recommendedStage>-
 | 21 | donguibogam | Heo Jun's Treasured Mirror of Medicine | stage3-life | life | 3 | 5 | – | culture 15 |  | E4 | science-art-life |
 | 22 | ilseongnok-daily-reflection | King Jeongjo's Diary of Daily Reflection | stage4-letters | letters | 4 | 4 | L (Read Along, F-CURR-001 S4-1) | culture 16 |  | A4 | records-joseon |
 | 23 | uigwe-royal-birthday | A Picture Record of a Royal Birthday | stage5-rites | rites | 5 | 5 | – (book later) | culture 17 |  | C2, A3 | records-joseon |
-| 24 | joseon-records-today | Old Records, New Discoveries | stage6-letters | letters | 6 | 4 | – | culture 18 |  | A3 | records-joseon |
+| 24 | joseon-records-today | Old Records, New Discoveries | stage6-letters | letters | 6 | 4 | L (Read the Menu, F-CURR-001 S6-1) | culture 18 |  | A3 | records-joseon |
 
-Totals: 112 minutes; 22 stories in cells that hold a lesson (every Stage 1 cell; at Stage 2 the two taste cells, Word Builder's letters cell since F-CURR-001 S2-1, Holiday Words' rites cell since S2-2 and Playground Words' crafts cell since S2-3; at Stage 3 the letters cell since S3-1 and the life cell since S3-2; at Stage 4 the letters cell since S4-1), 2 in cells without a lesson (Stage 5 rites, its book later, and Stage 6 letters); story-time 6, culture 18; sampler 6 (the F-STORY-004 §3.9 list, re-verified: all six are `recommended_stage` 1 and 4-5 minutes). Orders are data on the story (`shelf.order`); changing them is a content change.
+Totals: 112 minutes; 23 stories in cells that hold a lesson (every Stage 1 cell; at Stage 2 the two taste cells, refreshed in F-CURR-001 T-1, Word Builder's letters cell since S2-1, Holiday Words' rites cell since S2-2 and Playground Words' crafts cell since S2-3; at Stage 3 the letters cell since S3-1 and the life cell since S3-2; at Stage 4 the letters cell since S4-1; at Stage 6 the letters cell since S6-1), 1 in a cell without a lesson (Stage 5 rites, its book later); story-time 6, culture 18; sampler 6 (the F-STORY-004 §3.9 list, re-verified: all six are `recommended_stage` 1 and 4-5 minutes). Orders are data on the story (`shelf.order`); changing them is a content change.
 
 **Derived matrix** (L = lesson, number = stories whose home cell this is; "S-only" = a stories-only cell):
 
@@ -144,11 +144,11 @@ Totals: 112 minutes; 22 stories in cells that hold a lesson (every Stage 1 cell;
 |---|---|---|---|---|---|
 | Stage 1 | L + 5 | L + 1 | L + 2 | L + 1 | L + 1 |
 | Stage 2 | L + 2 | L + 1 | L + 1 | L + 1 | L + 3 |
-| Stage 3 | L + 2 | L + 1 | L + 0 | placeholder | L + 0 |
+| Stage 3 | L + 2 | L + 1 | L + 0 | L + 0 | L + 0 |
 | Stage 4 | L + 1 | L + 0 | L + 0 | L + 0 | L + 0 |
 | Stage 5 | book later | book later | S-only 1 → book later | book later | book later |
-| Stage 6 | S-only 1 | placeholder | placeholder | placeholder | placeholder |
-| Stage 7 | placeholder | placeholder | placeholder | placeholder | placeholder |
+| Stage 6 | L + 1 | L + 0 | L + 0 | L + 0 | L + 0 |
+| Stage 7 | L + 0 | L + 0 | L + 0 | L + 0 | L + 0 |
 
 15 of 35 cells show stories; the other 20 stay "Coming soon". The generator test asserts these counts from the data, so the table cannot drift.
 

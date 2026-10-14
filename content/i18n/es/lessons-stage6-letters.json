@@ -1,0 +1,160 @@
+{
+  "locale": "es",
+  "domain": "lessons-stage6-letters",
+  "entries": {
+    "episode:stage6-letters": {
+      "title": "Lee el menú",
+      "subtitle": "Lee platillos, precios y bebidas en un menú.",
+      "hoyaIntro": "¡Un menú! Leamos los platillos, los precios y las bebidas."
+    },
+    "quest:stage6-letters-q1": {
+      "title": "Platillos del menú",
+      "blurb": "Lee los nombres de cuatro platillos en un menú.",
+      "teaser": "Siguiente: lee los precios.",
+      "steps.s1.title": "Platillos del menú",
+      "steps.s1.hoyaLine": "¡Un menú! Leamos qué platillos hay.",
+      "steps.s2.title": "Cuatro platillos",
+      "steps.s2.discover.pages.0.caption": "Un menú enumera los platillos. Lee cada nombre bloque a bloque.",
+      "steps.s2.discover.pages.0.items.0.keyWords.gimbap.gloss": "rollos de arroz con alga",
+      "steps.s2.discover.pages.0.items.0.keyWords.tteokbokki.gloss": "pasteles de arroz picantes",
+      "steps.s2.discover.pages.0.items.0.keyWords.ramyeon.gloss": "fideos instantáneos",
+      "steps.s2.discover.pages.0.items.0.keyWords.bibimbap.gloss": "arroz mezclado",
+      "steps.s3.title": "Lee el menú",
+      "steps.s4.title": "Escribe un platillo",
+      "steps.s5.title": "Dos preguntas rápidas",
+      "steps.s6.title": "¡Lees menús!",
+      "steps.s6.hoyaLine": "¡Leíste cuatro platillos en un menú!"
+    },
+    "minigame:s6-letters-q1-practice": {
+      "realiaRead.realia.alt": "Un menú de cafetería con cuatro platillos",
+      "realiaRead.realia.entries.e1.text.gloss": "rollos de arroz con alga",
+      "realiaRead.realia.entries.e2.text.gloss": "pasteles de arroz picantes",
+      "realiaRead.realia.entries.e3.text.gloss": "fideos instantáneos",
+      "realiaRead.realia.entries.e4.text.gloss": "arroz mezclado",
+      "realiaRead.rounds.r1.question": "¿Cuál está en el menú?",
+      "realiaRead.rounds.r1.options.a.label": "pan",
+      "realiaRead.rounds.r1.options.b.label": "rollos de arroz con alga",
+      "realiaRead.rounds.r1.options.c.label": "plátano, banana",
+      "realiaRead.rounds.r2.question": "¿Qué platillo es de fideos?",
+      "realiaRead.rounds.r2.options.a.text.gloss": "fideos instantáneos",
+      "realiaRead.rounds.r2.options.b.text.gloss": "pasteles de arroz picantes",
+      "realiaRead.rounds.r3.question": "¿Qué platillo es de pasteles de arroz picantes?",
+      "realiaRead.rounds.r3.options.a.text.gloss": "arroz mezclado",
+      "realiaRead.rounds.r3.options.b.text.gloss": "pasteles de arroz picantes",
+      "realiaRead.rounds.r4.question": "¿Qué platillo es de arroz mezclado?",
+      "realiaRead.rounds.r4.options.a.text.gloss": "arroz mezclado",
+      "realiaRead.rounds.r4.options.b.text.gloss": "rollos de arroz con alga"
+    },
+    "minigame:s6-letters-q1-apply": {
+      "typeHangul.rounds.t1.prompt": "Escribe el nombre del platillo",
+      "typeHangul.rounds.t1.target.gloss": "rollos de arroz con alga",
+      "typeHangul.rounds.t2.prompt": "Escribe el platillo que pides",
+      "typeHangul.rounds.t2.target.gloss": "fideos instantáneos",
+      "typeHangul.rounds.t3.prompt": "Escribe el platillo que pides",
+      "typeHangul.rounds.t3.target.gloss": "arroz mezclado"
+    },
+    "minigame:s6-letters-q1-check": {
+      "listenPick.rounds.c1.prompt": "fideos instantáneos",
+      "listenPick.rounds.c2.prompt": "pasteles de arroz picantes"
+    },
+    "quest:stage6-letters-q2": {
+      "title": "¿Cuánto cuesta?",
+      "blurb": "Lee precios en wones con los números del il al o.",
+      "teaser": "Siguiente: platillos picantes y bebidas.",
+      "steps.s1.title": "¿Cuánto cuesta?",
+      "steps.s1.hoyaLine": "Cada platillo tiene un precio. ¡Leamos los números!",
+      "steps.s2.title": "Números y wones",
+      "steps.s2.discover.pages.0.caption": "Los números sinocoreanos son il, i, sam, sa, o. Estos precios usan del i al o.",
+      "steps.s2.discover.pages.0.items.0.keyWords.il-i-sam-sa-o.gloss": "uno, dos, tres, cuatro, cinco",
+      "steps.s2.discover.pages.1.caption": "El won es el dinero coreano y cheon es mil: ocheon won son 5000 wones.",
+      "steps.s2.discover.pages.1.items.0.keyWords.cheon.gloss": "mil",
+      "steps.s2.discover.pages.1.items.0.keyWords.won.gloss": "won, el dinero coreano",
+      "steps.s3.title": "Lee los precios",
+      "steps.s4.title": "Escribe un precio",
+      "steps.s5.title": "Dos preguntas rápidas",
+      "steps.s6.title": "¡Lees precios!",
+      "steps.s6.hoyaLine": "Leíste precios en wones. ¡Muy bien con los números!"
+    },
+    "minigame:s6-letters-q2-practice": {
+      "realiaRead.realia.alt": "Un menú de cafetería con cuatro platillos y sus precios en wones",
+      "realiaRead.realia.entries.e1.text.gloss": "rollos de arroz con alga",
+      "realiaRead.realia.entries.e1.value.gloss": "2000 wones",
+      "realiaRead.realia.entries.e2.text.gloss": "pasteles de arroz picantes",
+      "realiaRead.realia.entries.e2.value.gloss": "3000 wones",
+      "realiaRead.realia.entries.e3.text.gloss": "fideos instantáneos",
+      "realiaRead.realia.entries.e3.value.gloss": "4000 wones",
+      "realiaRead.realia.entries.e4.text.gloss": "arroz mezclado",
+      "realiaRead.realia.entries.e4.value.gloss": "5000 wones",
+      "realiaRead.rounds.r1.question": "¿Cuánto cuesta esto?",
+      "realiaRead.rounds.r2.question": "¿Cuál tiene este precio?",
+      "realiaRead.rounds.r2.options.a.label": "rollos de arroz con alga",
+      "realiaRead.rounds.r2.options.b.label": "pasteles de arroz picantes",
+      "realiaRead.rounds.r2.options.c.label": "fideos instantáneos",
+      "realiaRead.rounds.r3.question": "¿Cuánto cuesta esto?",
+      "realiaRead.rounds.r4.question": "¿Cuál tiene este precio?",
+      "realiaRead.rounds.r4.options.a.label": "fideos instantáneos",
+      "realiaRead.rounds.r4.options.b.label": "arroz mezclado"
+    },
+    "minigame:s6-letters-q2-apply": {
+      "typeHangul.rounds.t1.prompt": "Escribe el precio",
+      "typeHangul.rounds.t1.target.gloss": "1000 wones",
+      "typeHangul.rounds.t2.prompt": "Escribe el precio",
+      "typeHangul.rounds.t2.target.gloss": "5000 wones",
+      "typeHangul.rounds.t3.prompt": "Escribe el precio",
+      "typeHangul.rounds.t3.target.gloss": "3000 wones"
+    },
+    "minigame:s6-letters-q2-check": {
+      "listenPick.rounds.c1.prompt": "5000 wones",
+      "listenPick.rounds.c2.prompt": "2000 wones"
+    },
+    "quest:stage6-letters-q3": {
+      "title": "¿Picante o no?",
+      "blurb": "Encuentra la opción picante y las bebidas, y lee precios más altos.",
+      "steps.s1.title": "¿Picante o no?",
+      "steps.s1.hoyaLine": "Otro menú, con una opción picante y bebidas. ¡Leámoslo todo!",
+      "steps.s2.title": "Más números, picante y bebidas",
+      "steps.s2.discover.pages.0.caption": "Los números sinocoreanos siguen: yuk, chil, pal, gu, sip. Este menú usa yuk y chil.",
+      "steps.s2.discover.pages.0.items.0.keyWords.yuk-chil-pal-gu-sip.gloss": "seis, siete, ocho, nueve, diez",
+      "steps.s2.discover.pages.1.caption": "Un sabor picante, agua y té: palabras para elegir.",
+      "steps.s2.discover.pages.1.items.0.keyWords.maeunmat.gloss": "sabor picante",
+      "steps.s2.discover.pages.1.items.0.keyWords.mul.gloss": "agua",
+      "steps.s2.discover.pages.1.items.0.keyWords.cha.gloss": "té",
+      "steps.s3.title": "Lee el menú",
+      "steps.s4.title": "Escribe tu elección",
+      "steps.s5.title": "Dos preguntas rápidas",
+      "steps.s6.title": "¡Ya lees todo el menú!",
+      "steps.s6.hoyaLine": "Leíste la opción picante, las bebidas y los precios. ¡Bien leído!"
+    },
+    "minigame:s6-letters-q3-practice": {
+      "realiaRead.realia.alt": "Otro menú de cafetería, con una opción picante y dos bebidas",
+      "realiaRead.realia.entries.e1.text.gloss": "pasteles de arroz picantes",
+      "realiaRead.realia.entries.e1.value.gloss": "6000 wones",
+      "realiaRead.realia.entries.e2.text.gloss": "pasteles de arroz extra picantes",
+      "realiaRead.realia.entries.e2.value.gloss": "7000 wones",
+      "realiaRead.realia.entries.e3.text.gloss": "té",
+      "realiaRead.realia.entries.e3.value.gloss": "2000 wones",
+      "realiaRead.realia.entries.e4.text.gloss": "agua",
+      "realiaRead.rounds.r1.question": "¿Cuánto cuesta esto?",
+      "realiaRead.rounds.r2.question": "¿Cuánto cuesta esto?",
+      "realiaRead.rounds.r3.question": "¿Cuál es el té?",
+      "realiaRead.rounds.r3.options.a.text.gloss": "agua",
+      "realiaRead.rounds.r3.options.b.text.gloss": "té",
+      "realiaRead.rounds.r4.question": "¿Qué bebida está en el menú?",
+      "realiaRead.rounds.r4.options.a.label": "leche",
+      "realiaRead.rounds.r4.options.b.label": "fresa",
+      "realiaRead.rounds.r4.options.c.label": "agua"
+    },
+    "minigame:s6-letters-q3-apply": {
+      "typeHangul.rounds.t1.prompt": "Escribe el sabor picante",
+      "typeHangul.rounds.t1.target.gloss": "sabor picante",
+      "typeHangul.rounds.t2.prompt": "Escribe la palabra agua",
+      "typeHangul.rounds.t2.target.gloss": "agua",
+      "typeHangul.rounds.t3.prompt": "Escribe la palabra té",
+      "typeHangul.rounds.t3.target.gloss": "té"
+    },
+    "minigame:s6-letters-q3-check": {
+      "listenPick.rounds.c1.prompt": "sabor picante",
+      "listenPick.rounds.c2.prompt": "7000 wones"
+    }
+  }
+}

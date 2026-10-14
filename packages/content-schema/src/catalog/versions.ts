@@ -107,6 +107,31 @@ export const CATALOG_QUEST_ADDITIONS: Readonly<Record<number, readonly string[]>
   19: Object.freeze(['quest:stage4-nature-q1', 'quest:stage4-nature-q2', 'quest:stage4-nature-q3']),
   // F-CURR-001 S4-4: Playdate Talk.
   20: Object.freeze(['quest:stage4-crafts-q1', 'quest:stage4-crafts-q2', 'quest:stage4-crafts-q3']),
+  // F-CURR-001 S6-1: Read the Menu.
+  21: Object.freeze(['quest:stage6-letters-q1', 'quest:stage6-letters-q2', 'quest:stage6-letters-q3']),
+  // F-CURR-001 S6-2: Order Food.
+  22: Object.freeze(['quest:stage6-life-q1', 'quest:stage6-life-q2', 'quest:stage6-life-q3']),
+  // F-CURR-001 S6-3: Travel for Chuseok.
+  23: Object.freeze(['quest:stage6-rites-q1', 'quest:stage6-rites-q2', 'quest:stage6-rites-q3']),
+  // F-CURR-001 S6-4: Hike and Ask.
+  24: Object.freeze(['quest:stage6-nature-q1', 'quest:stage6-nature-q2', 'quest:stage6-nature-q3']),
+  // F-CURR-001 S6-5: Buy at Market.
+  25: Object.freeze(['quest:stage6-crafts-q1', 'quest:stage6-crafts-q2', 'quest:stage6-crafts-q3']),
+  // F-CURR-001 S3-4: Animal Sentences.
+  26: Object.freeze(['quest:stage3-nature-q1', 'quest:stage3-nature-q2', 'quest:stage3-nature-q3']),
+  // F-CURR-001 T-1: Lunch Box Words and Outdoor Words.
+  // q1 of each is the shipped taste quest, already in version 8; q2 and q3 are new.
+  27: Object.freeze(['quest:stage2-life-q2', 'quest:stage2-life-q3', 'quest:stage2-nature-q2', 'quest:stage2-nature-q3']),
+  // F-CURR-001 S7-1: Write Your Name.
+  28: Object.freeze(['quest:stage7-letters-q1', 'quest:stage7-letters-q2', 'quest:stage7-letters-q3']),
+  // F-CURR-001 S7-2: My Day in Korean.
+  29: Object.freeze(['quest:stage7-life-q1', 'quest:stage7-life-q2', 'quest:stage7-life-q3']),
+  // F-CURR-001 S7-3: My Holiday Memory.
+  30: Object.freeze(['quest:stage7-rites-q1', 'quest:stage7-rites-q2', 'quest:stage7-rites-q3']),
+  // F-CURR-001 S7-4: My Favorite Animal.
+  31: Object.freeze(['quest:stage7-nature-q1', 'quest:stage7-nature-q2', 'quest:stage7-nature-q3']),
+  // F-CURR-001 S7-5: Make & Share.
+  32: Object.freeze(['quest:stage7-crafts-q1', 'quest:stage7-crafts-q2', 'quest:stage7-crafts-q3']),
 });
 
 /** The quest ids the catalogue held at `version` (versions before 8 read as 8). */

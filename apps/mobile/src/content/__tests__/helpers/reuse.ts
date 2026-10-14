@@ -27,15 +27,18 @@ export function eojeolOf(text: string): string[] {
  */
 export function stemOf(eojeol: string, known: ReadonlySet<string>): string {
   if (known.has(eojeol)) return eojeol;
+  // A known noun with the polite 요 of a short question or answer (하나요? one?, F-CURR-001 S6-2) is that noun.
+  if (eojeol.endsWith('요') && known.has(eojeol.slice(0, -1))) return eojeol.slice(0, -1);
   const p = PARTICLES.find((x) => eojeol.length > x.length && eojeol.endsWith(x));
   return p === undefined ? eojeol : eojeol.slice(0, -p.length);
 }
 
 /**
  * Section 3.1 rule 4 counts "new words or set phrases" in Stage 4: a fixed greeting of several
- * words is one item, learned and read as a whole (F-CURR-001 T-2). Longest first.
+ * words is one item, learned and read as a whole (F-CURR-001 T-2); the two mealtime phrases of
+ * Order Food (S6-2, section 3.9 "잘 먹겠습니다") are set phrases the same way. Longest first.
  */
-export const SET_PHRASES: readonly string[] = ['새해 복 많이 받으세요', '만나서 반가워요'];
+export const SET_PHRASES: readonly string[] = ['새해 복 많이 받으세요', '만나서 반가워요', '맛있게 드세요', '잘 먹겠습니다'];
 
 /** The cast's names (Hoya and his friends, section 3.5 "named characters"): names, not vocabulary. */
 export const CAST_NAMES: ReadonlySet<string> = new Set(['호야', '미나', '다미']);
@@ -62,6 +65,17 @@ export const wordsOf = (texts: readonly string[], known: ReadonlySet<string>): s
 /** The Korean texts a quest's Discover step shows (a pattern's examples, not its frame: the frame is a slot, not a word). */
 export function discoverTexts(quest: LessonQuest): string[] {
   return quest.steps.flatMap((s) => s.discover?.pages.flatMap((p) => p.items.flatMap((i) => discoverItemTexts(i).map((t) => t.ko))) ?? []);
+}
+
+/**
+ * The fixed words of a quest's Discover frames (`___을/를 접어요.` -> 접어요): rule 4 counts a new frame as
+ * its own item ("one new frame" in Stage 7, "one new pattern" in Stage 3), so the words that make up the
+ * frame are that item, not new words beside it (F-CURR-001 S7-5).
+ */
+export function frameTexts(quest: LessonQuest): string[] {
+  return quest.steps.flatMap(
+    (s) => s.discover?.pages.flatMap((p) => p.items.flatMap((i) => (i.type === 'pattern' ? [i.frame.ko.replace(/___\S*/g, ' ')] : []))) ?? [],
+  );
 }
 
 /** The pattern items of a quest's Discover step (rule 4: one new pattern a quest in Stage 3). */
@@ -114,6 +128,18 @@ export const NEW_WORD_CAP: Readonly<Partial<Record<StageKey, number>>> = { stage
  */
 export const vocabLevelFor = (stage: StageKey): number => Math.max(1, Math.min(3, Number(stage.slice(5)) - 1));
 
+/**
+ * A Sino-Korean number composed of taught numerals (Stage 6 prices: 오천 from 오 and 천, F-CURR-001
+ * S6-1): the quest teaches the numerals and the unit, and a composed number is those parts at work,
+ * not a new word. It needs a unit (십, 백, 천, 만), so a word such as 오리 is still a word.
+ */
+const NUMERALS = new Set([...'일이삼사오육칠팔구십백천만']);
+const UNITS = new Set([...'십백천만']);
+/** A word made only of Sino-Korean numerals and units (오, 천, 이천, 삼천). */
+export const isNumberWord = (w: string): boolean => [...w].length > 0 && [...w].every((ch) => NUMERALS.has(ch));
+export const isComposedNumber = (w: string, taught: ReadonlySet<string>): boolean =>
+  [...w].length > 1 && [...w].some((ch) => UNITS.has(ch)) && [...w].every((ch) => NUMERALS.has(ch) && taught.has(ch));
+
 /** U-3 and U-6 for one cell, quest by quest, against what earlier stages and the cell's own Discover taught. */
 export function reuseProblems(stage: StageKey, quests: readonly LessonQuest[], before: ReadonlySet<string>): string[] {
   const out: string[] = [];
@@ -123,7 +149,14 @@ export function reuseProblems(stage: StageKey, quests: readonly LessonQuest[], b
   for (const quest of quests) {
     if (discoverPatterns(quest) > 1) out.push(`U-3 ${quest.id}: Discover teaches ${discoverPatterns(quest)} patterns`);
     const shown = [...new Set(wordsOf(discoverTexts(quest), taught))];
-    const freshAll = shown.filter((w) => !taught.has(w));
+    // Rule 4's number-set item: the numbers a Discover shows (일 이 삼 사 오; 천, 이천, 삼천 on one price page)
+    // count as one item, and a number composed of numerals already taught is no new item (S6-1, S6-2).
+    const numbers = shown.filter((w) => !taught.has(w) && isNumberWord(w) && !isComposedNumber(w, taught));
+    const frameWords = new Set(wordsOf(frameTexts(quest), taught));
+    const freshAll = [
+      ...shown.filter((w) => !taught.has(w) && !isNumberWord(w) && !frameWords.has(w)),
+      ...(numbers.length > 0 ? [`numbers(${numbers.join('·')})`] : []),
+    ];
     // A word of a new set phrase (반가워요 in 만나서 반가워요, then 저도 반가워요) is that one item.
     const phraseWords = new Set(freshAll.filter((w) => w.includes('_')).flatMap((w) => w.split('_')));
     const fresh = freshAll.filter((w) => !phraseWords.has(w));
@@ -138,9 +171,10 @@ export function reuseProblems(stage: StageKey, quests: readonly LessonQuest[], b
       const { read, heard } = scopeTexts(s);
       return wordsOf([...read, ...heard], taught);
     }))];
-    const reused = outside.filter((w) => taught.has(w));
+    const known = (w: string): boolean => taught.has(w) || isComposedNumber(w, taught);
+    const reused = outside.filter(known);
     if (outside.length > 0 && reused.length * 2 < outside.length) {
-      out.push(`U-6 ${quest.id}: ${reused.length} of ${outside.length} words reused (${outside.filter((w) => !taught.has(w)).join(', ')} not taught)`);
+      out.push(`U-6 ${quest.id}: ${reused.length} of ${outside.length} words reused (${outside.filter((w) => !known(w)).join(', ')} not taught)`);
     }
   }
   return out;

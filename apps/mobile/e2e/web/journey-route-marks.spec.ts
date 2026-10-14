@@ -89,10 +89,15 @@ test.describe('Journey route marks (F-ENT-003 E3-5)', () => {
       expect(Math.abs(box.y - drawn!.top - TRIANGLE_ABOVE)).toBeLessThanOrEqual(0.5);
     }
 
-    // A coming-later cell is sunken and empty: no glyph (D5), no lock anywhere on the grid.
-    const later = page.getByRole('button', { name: /^Stage 3 Sentences, Nature & Animals, coming soon$/ });
-    await expect(later).toBeDisabled();
-    await expect(later.locator('svg')).toHaveCount(0);
+    // A coming-later cell is sunken and empty: no glyph (D5), no lock anywhere on the grid. Every grid cell has
+    // shipped since F-CURR-001 S7-5, so on today's bundle no cell reads "coming soon" at all.
+    const later = page.getByRole('button', { name: /, coming soon$/ });
+    if (CATALOG.cells.some((c) => c.status === 'preview')) {
+      await expect(later.first()).toBeDisabled();
+      await expect(later.first().locator('svg')).toHaveCount(0);
+    } else {
+      await expect(later).toHaveCount(0);
+    }
     await expect(page.getByText(/locked|premium|not open yet/i)).toHaveCount(0);
     await expectNoHorizontalOverflow(page);
     await page.screenshot({ path: test.info().outputPath('journey-next-320.png') });

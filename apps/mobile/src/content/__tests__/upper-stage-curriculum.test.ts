@@ -167,6 +167,13 @@ describe('the lesson cell files (F-CURR-001 section 3.10)', () => {
     }
   });
 
+  it('only an allow-listed cell ships with no pillar tag (LessonCellSchema accepts [] for the shipped Lunch Box Words)', () => {
+    // Lunch Box Words kept its shipped [] (T-1) and Daily Mini-Sentences ships [] (S3-2): everyday eating
+    // and going out fit no sub-theme. Every other cell names at least one tag.
+    const NO_TAG_ALLOWED: ReadonlySet<string> = new Set(['episode:stage2-life', 'episode:stage3-life']);
+    for (const { cell } of CELLS) if (!NO_TAG_ALLOWED.has(cell.id)) expect(cell.pillarTags.length, cell.id).toBeGreaterThan(0);
+  });
+
   it('a ready cell replaces its placeholder in the bundle, and its quests and scopes are shipped', () => {
     for (const { cell } of READY) {
       const episode = episodesAll.filter((e) => e.id === cell.id);
@@ -662,6 +669,49 @@ describe('U-3 new-item caps and U-6 reuse (F-CURR-001 section 3.1 rules 4 and 5)
     expect(reuseProblems('stage4', [q5], new Set())).toEqual(['U-3 quest:stage3-life-q1: 5 new words (가자, 오자, 보자, 먹자, 자자), cap 4']);
     // A -(으)ㄹ 거예요 future form is the quest's grammar point, not a word (S4-3).
     expect(reuseProblems('stage4', [quest(1, ['비가 올 거예요.', '내일 갈 거예요.'], ['비가 올 거예요.'])], new Set(['비']))).toEqual([]);
+  });
+
+  it('counts a number composed of taught numerals and a unit as taught, but not a word that only looks like one (S6-1)', () => {
+    const prices = quest(1, ['일 이 삼 사 오', '천 원'], ['오천 원', '이천 원', '사천 원']);
+    expect(reuseProblems('stage6', [prices], new Set(['원']))).toEqual([]);
+    const lookalike = quest(1, ['일 이 삼 사 오', '천 원'], ['오천', '오리', '사과']);
+    expect(reuseProblems('stage6', [lookalike], new Set(['원']))).toEqual(['U-6 quest:stage3-life-q1: 1 of 3 words reused (오리, 사과 not taught)']);
+  });
+
+  it('counts the numbers of one Discover as one number-set item, a known noun with 요 as that noun, and the mealtime phrases as set phrases (S6-2)', () => {
+    const prices = quest(1, ['천 원', '이천 원', '삼천 원', '얼마예요?', '라면 하나요?', '맛있게 드세요.', '잘 먹겠습니다.'], ['삼천 원이에요.']);
+    expect(reuseProblems('stage6', [prices], new Set(['라면', '하나']))).toEqual([]);
+    expect(stemOf('하나요', new Set(['하나']))).toBe('하나');
+    expect(stemOf('가요', new Set())).toBe('가요');
+    const tooMany = quest(1, ['천 원', '얼마예요?', '배고파요.', '목말라요.', '빨리요.', '천천히요.', '여기서요.'], ['천 원']);
+    expect(reuseProblems('stage6', [tooMany], new Set())).toEqual(['U-3 quest:stage3-life-q1: 8 new words (원, 얼마, 배고파요, 목말라요, 빨리요, 천천히요, 여기서요, numbers(천)), cap 6']);
+  });
+
+  it('counts the fixed words of a new frame as that frame, not as new words beside it (S7-5)', () => {
+    const framed = {
+      id: 'quest:stage7-crafts-q1',
+      steps: [
+        {
+          id: 's2',
+          kind: 'discover',
+          titleEn: 'x',
+          discover: {
+            pages: [
+              {
+                items: [
+                  { type: 'pattern', frame: kt('___을/를 접어요.'), noteEn: 'x', examples: [kt('비행기를 접어요.'), kt('배를 접어요.')] },
+                  { type: 'sentence', sentence: kt('가위로 잘라요.') },
+                  { type: 'sentence', sentence: kt('꽃을 그려요.') },
+                ],
+              },
+            ],
+          },
+        },
+      ],
+      scopes: [],
+    } as unknown as LessonQuest;
+    expect(reuseProblems('stage7', [framed], new Set(['비행기', '배', '꽃']))).toEqual([]);
+    expect(reuseProblems('stage7', [framed], new Set(['비행기', '배']))).toEqual(['U-3 quest:stage7-crafts-q1: 4 new words (가위로, 잘라요, 꽃, 그려요), cap 3']);
   });
 
   it('counts a particle choice as no word, and a heard prompt as shown', () => {

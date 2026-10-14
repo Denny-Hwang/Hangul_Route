@@ -18,7 +18,7 @@ import { describe, expect, it } from 'vitest';
 import { bookQuests } from '../../../content/books';
 import { episodesAll, previewEpisodesFor, handWrittenEpisodes } from '../../../content/episodes';
 import { lessonQuests } from '../../../content/lessons';
-import { questsAll, stage1Quests, stage2Quests } from '../../../content/quests';
+import { questsAll, stage1Quests } from '../../../content/quests';
 import { storyEpisodes, storyQuests } from '../../../content/stories';
 import { questsInCursorOrder } from '../../lessons/lesson-lookup';
 import { nextQuestAfter, offerableQuests } from '../../next-quest';
@@ -55,10 +55,14 @@ const QUESTS_8: Quest[] = questsAll.filter((q) => !LATER.has(q.id));
 const claimers = [...shippedBefore, ...lessonEpisodes];
 const EPISODES_9: Episode[] = [...claimers, ...storyEpisodes, ...previewEpisodesFor(claimers)];
 const QUESTS_9: Quest[] = questsInCursorOrder({
-  early: [...stage1Quests, ...stage2Quests],
-  // The shipped Stage 4 cells (Read Along, Greeting Dialogues: generated) plus the two fake cells; the
-  // other generated cells stay out, so the fixture is the version 9 bundle it names.
-  lessons: [...lessonQuests.filter((q) => q.id.startsWith('quest:stage4-')), ...[...WB, ...FS].map(plainQuest)],
+  early: stage1Quests,
+  // The shipped Stage 4 cells (Read Along, Greeting Dialogues: generated), the two Stage 2 taste quests
+  // (generated since F-CURR-001 T-1) plus the two fake cells; the other generated cells stay out, so the
+  // fixture is the version 9 bundle it names.
+  lessons: [
+    ...lessonQuests.filter((q) => q.id.startsWith('quest:stage4-') || q.id === 'quest:stage2-life-q1' || q.id === 'quest:stage2-nature-q1'),
+    ...[...WB, ...FS].map(plainQuest),
+  ],
   middle: [...storyQuests, ...bookQuests],
   episodes: claimers,
 });

@@ -164,10 +164,14 @@ describe('previewEpisodesFor', () => {
     }
   });
 
+  // Every grid cell is claimed since F-CURR-001 S7-5, so these two cases start from the bundle without
+  // Make & Share: Stage 7 crafts is a placeholder again.
+  const withoutCrafts = handWritten.filter((e) => e.id !== 'episode:stage7-crafts');
+
   it('drops the preview of a cell once a hand-written episode claims it, with no exclusion list to edit', () => {
     const stage7Crafts = episode('episode:stage7-crafts-new', { stage: 'stage7', theme: 'crafts', order: 5 });
-    const before = previewEpisodesFor(handWritten).map((e) => e.id);
-    const after = previewEpisodesFor([...handWritten, stage7Crafts]).map((e) => e.id);
+    const before = previewEpisodesFor(withoutCrafts).map((e) => e.id);
+    const after = previewEpisodesFor([...withoutCrafts, stage7Crafts]).map((e) => e.id);
     expect(before).toContain('episode:stage7-crafts');
     expect(after).not.toContain('episode:stage7-crafts');
     expect(after).toEqual(before.filter((id) => id !== 'episode:stage7-crafts'));
@@ -175,7 +179,7 @@ describe('previewEpisodesFor', () => {
 
   it('ignores shelf episodes when deciding which cells are claimed', () => {
     const shelfAtStage7 = episode('episode:shelf-x', { stage: 'stage7', theme: 'crafts', placement: 'shelf' });
-    expect(previewEpisodesFor([...handWritten, shelfAtStage7]).map((e) => e.id)).toContain('episode:stage7-crafts');
+    expect(previewEpisodesFor([...withoutCrafts, shelfAtStage7]).map((e) => e.id)).toContain('episode:stage7-crafts');
   });
 });
 
@@ -246,14 +250,16 @@ describe('grid golden (F-STORY-005 §3.1 rule 2)', () => {
       // F-QUEST-002 Q-8 appends nature q2-q3 and crafts q2-q3 on purpose (the same re-scope migration).
       { id: 'episode:stage1-nature', order: 4, questIds: ['quest:stage1-nature-q1', 'quest:stage1-nature-q2', 'quest:stage1-nature-q3'], status: 'shipped' },
       { id: 'episode:stage1-crafts', order: 5, questIds: ['quest:stage1-crafts-q1', 'quest:stage1-crafts-q2', 'quest:stage1-crafts-q3'], status: 'shipped' },
-      { id: 'episode:stage2-life', order: 2, questIds: ['quest:stage2-life-q1'], status: 'shipped' },
-      { id: 'episode:stage2-nature', order: 4, questIds: ['quest:stage2-nature-q1'], status: 'shipped' },
       // F-CURR-001 generated lesson cells, after the hand-written lessons: by stage, then in grid theme order
       // (letters, life, rites, nature, crafts), the order build-lessons writes them in.
       // S2-1 Word Builder.
       { id: 'episode:stage2-letters', order: 1, questIds: ['quest:stage2-letters-q1', 'quest:stage2-letters-q2', 'quest:stage2-letters-q3', 'quest:stage2-letters-q4', 'quest:stage2-letters-q5', 'quest:stage2-letters-q6'], status: 'shipped' },
+      // T-1: the Lunch Box Words taste moved into its generated cell (same id, three quests).
+      { id: 'episode:stage2-life', order: 2, questIds: ['quest:stage2-life-q1', 'quest:stage2-life-q2', 'quest:stage2-life-q3'], status: 'shipped' },
       // S2-2 Holiday Words.
       { id: 'episode:stage2-rites', order: 3, questIds: ['quest:stage2-rites-q1', 'quest:stage2-rites-q2', 'quest:stage2-rites-q3'], status: 'shipped' },
+      // T-1: the Outdoor Words taste moved into its generated cell (same id, three quests).
+      { id: 'episode:stage2-nature', order: 4, questIds: ['quest:stage2-nature-q1', 'quest:stage2-nature-q2', 'quest:stage2-nature-q3'], status: 'shipped' },
       // S2-3 Playground Words.
       { id: 'episode:stage2-crafts', order: 5, questIds: ['quest:stage2-crafts-q1', 'quest:stage2-crafts-q2', 'quest:stage2-crafts-q3'], status: 'shipped' },
       // S3-1 First Sentences.
@@ -262,6 +268,8 @@ describe('grid golden (F-STORY-005 §3.1 rule 2)', () => {
       { id: 'episode:stage3-life', order: 2, questIds: ['quest:stage3-life-q1', 'quest:stage3-life-q2', 'quest:stage3-life-q3'], status: 'shipped' },
       // S3-3 Festival Sentences.
       { id: 'episode:stage3-rites', order: 3, questIds: ['quest:stage3-rites-q1', 'quest:stage3-rites-q2', 'quest:stage3-rites-q3'], status: 'shipped' },
+      // S3-4 Animal Sentences.
+      { id: 'episode:stage3-nature', order: 4, questIds: ['quest:stage3-nature-q1', 'quest:stage3-nature-q2', 'quest:stage3-nature-q3'], status: 'shipped' },
       // S3-5 Game Sentences.
       { id: 'episode:stage3-crafts', order: 5, questIds: ['quest:stage3-crafts-q1', 'quest:stage3-crafts-q2', 'quest:stage3-crafts-q3'], status: 'shipped' },
       // S4-1 Read Along.
@@ -274,6 +282,26 @@ describe('grid golden (F-STORY-005 §3.1 rule 2)', () => {
       { id: 'episode:stage4-nature', order: 4, questIds: ['quest:stage4-nature-q1', 'quest:stage4-nature-q2', 'quest:stage4-nature-q3'], status: 'shipped' },
       // S4-4 Playdate Talk.
       { id: 'episode:stage4-crafts', order: 5, questIds: ['quest:stage4-crafts-q1', 'quest:stage4-crafts-q2', 'quest:stage4-crafts-q3'], status: 'shipped' },
+      // S6-1 Read the Menu.
+      { id: 'episode:stage6-letters', order: 1, questIds: ['quest:stage6-letters-q1', 'quest:stage6-letters-q2', 'quest:stage6-letters-q3'], status: 'shipped' },
+      // S6-2 Order Food.
+      { id: 'episode:stage6-life', order: 2, questIds: ['quest:stage6-life-q1', 'quest:stage6-life-q2', 'quest:stage6-life-q3'], status: 'shipped' },
+      // S6-3 Travel for Chuseok.
+      { id: 'episode:stage6-rites', order: 3, questIds: ['quest:stage6-rites-q1', 'quest:stage6-rites-q2', 'quest:stage6-rites-q3'], status: 'shipped' },
+      // S6-4 Hike & Ask.
+      { id: 'episode:stage6-nature', order: 4, questIds: ['quest:stage6-nature-q1', 'quest:stage6-nature-q2', 'quest:stage6-nature-q3'], status: 'shipped' },
+      // S6-5 Buy at Market.
+      { id: 'episode:stage6-crafts', order: 5, questIds: ['quest:stage6-crafts-q1', 'quest:stage6-crafts-q2', 'quest:stage6-crafts-q3'], status: 'shipped' },
+      // S7-1 Write Your Name.
+      { id: 'episode:stage7-letters', order: 1, questIds: ['quest:stage7-letters-q1', 'quest:stage7-letters-q2', 'quest:stage7-letters-q3'], status: 'shipped' },
+      // S7-2 My Day in Korean.
+      { id: 'episode:stage7-life', order: 2, questIds: ['quest:stage7-life-q1', 'quest:stage7-life-q2', 'quest:stage7-life-q3'], status: 'shipped' },
+      // S7-3 My Holiday Memory.
+      { id: 'episode:stage7-rites', order: 3, questIds: ['quest:stage7-rites-q1', 'quest:stage7-rites-q2', 'quest:stage7-rites-q3'], status: 'shipped' },
+      // S7-4 My Favorite Animal.
+      { id: 'episode:stage7-nature', order: 4, questIds: ['quest:stage7-nature-q1', 'quest:stage7-nature-q2', 'quest:stage7-nature-q3'], status: 'shipped' },
+      // S7-5 Make & Share.
+      { id: 'episode:stage7-crafts', order: 5, questIds: ['quest:stage7-crafts-q1', 'quest:stage7-crafts-q2', 'quest:stage7-crafts-q3'], status: 'shipped' },
       // F-STORY-005 PR 5.6: the five Stage 5 books (books.ts), each cell's placeholder id kept.
       {
         id: 'episode:stage5-letters',
@@ -359,6 +387,28 @@ describe('pillar tags of the shipped lessons (F-STORY-005 §3.2)', () => {
       'episode:stage4-nature': ['D2'],
       // F-CURR-001 S4-4 (generated from content/episodes/stage-4/crafts.json).
       'episode:stage4-crafts': ['B5'],
+      // F-CURR-001 S6-1 (generated from content/episodes/stage-6/letters.json).
+      'episode:stage6-letters': ['A1'],
+      // F-CURR-001 S6-2 (generated from content/episodes/stage-6/life.json).
+      'episode:stage6-life': ['B2'],
+      // F-CURR-001 S6-3 (generated from content/episodes/stage-6/rites.json).
+      'episode:stage6-rites': ['B5'],
+      // F-CURR-001 S6-4 (generated from content/episodes/stage-6/nature.json).
+      'episode:stage6-nature': ['D2'],
+      // F-CURR-001 S6-5 (generated from content/episodes/stage-6/crafts.json).
+      'episode:stage6-crafts': ['B1', 'E1'],
+      // F-CURR-001 S3-4 (generated from content/episodes/stage-3/nature.json).
+      'episode:stage3-nature': ['D2'],
+      // F-CURR-001 S7-1 (generated from content/episodes/stage-7/letters.json).
+      'episode:stage7-letters': ['A1'],
+      // F-CURR-001 S7-2 (generated from content/episodes/stage-7/life.json).
+      'episode:stage7-life': ['B2'],
+      // F-CURR-001 S7-3 (generated from content/episodes/stage-7/rites.json).
+      'episode:stage7-rites': ['B5'],
+      // F-CURR-001 S7-4 (generated from content/episodes/stage-7/nature.json).
+      'episode:stage7-nature': ['D5', 'D2'],
+      // F-CURR-001 S7-5 (generated from content/episodes/stage-7/crafts.json).
+      'episode:stage7-crafts': ['E1'],
       'episode:stage5-letters': ['A1'],
       'episode:stage5-life': ['B1', 'B5', 'E4'],
       'episode:stage5-rites': ['B5'],
@@ -389,7 +439,7 @@ const GRID_GOLDEN: Record<string, string> = {
   'stage3:letters': 'episode:stage3-letters | First Sentences | shipped',
   'stage3:life': 'episode:stage3-life | Daily Mini-Sentences | shipped',
   'stage3:rites': 'episode:stage3-rites | Festival Sentences | shipped',
-  'stage3:nature': 'episode:stage3-nature | Animal Sentences | preview',
+  'stage3:nature': 'episode:stage3-nature | Animal Sentences | shipped',
   'stage3:crafts': 'episode:stage3-crafts | Game Sentences | shipped',
   'stage4:letters': 'episode:stage4-letters | Read Along | shipped',
   'stage4:life': 'episode:stage4-life | Kitchen Talk | shipped',
@@ -401,14 +451,14 @@ const GRID_GOLDEN: Record<string, string> = {
   'stage5:rites': 'episode:stage5-rites | Festival Tales | shipped',
   'stage5:nature': 'episode:stage5-nature | Tiger Folktales | shipped',
   'stage5:crafts': 'episode:stage5-crafts | Craft Stories | shipped',
-  'stage6:letters': 'episode:stage6-letters | Read the Menu | preview',
-  'stage6:life': 'episode:stage6-life | Order Food | preview',
-  'stage6:rites': 'episode:stage6-rites | Travel for Chuseok | preview',
-  'stage6:nature': 'episode:stage6-nature | Hike & Ask | preview',
-  'stage6:crafts': 'episode:stage6-crafts | Buy at Market | preview',
-  'stage7:letters': 'episode:stage7-letters | Write Your Name | preview',
-  'stage7:life': 'episode:stage7-life | My Day in Korean | preview',
-  'stage7:rites': 'episode:stage7-rites | My Holiday Memory | preview',
-  'stage7:nature': 'episode:stage7-nature | My Favorite Animal | preview',
-  'stage7:crafts': 'episode:stage7-crafts | Make & Share | preview',
+  'stage6:letters': 'episode:stage6-letters | Read the Menu | shipped',
+  'stage6:life': 'episode:stage6-life | Order Food | shipped',
+  'stage6:rites': 'episode:stage6-rites | Travel for Chuseok | shipped',
+  'stage6:nature': 'episode:stage6-nature | Hike & Ask | shipped',
+  'stage6:crafts': 'episode:stage6-crafts | Buy at Market | shipped',
+  'stage7:letters': 'episode:stage7-letters | Write Your Name | shipped',
+  'stage7:life': 'episode:stage7-life | My Day in Korean | shipped',
+  'stage7:rites': 'episode:stage7-rites | My Holiday Memory | shipped',
+  'stage7:nature': 'episode:stage7-nature | My Favorite Animal | shipped',
+  'stage7:crafts': 'episode:stage7-crafts | Make & Share | shipped',
 };

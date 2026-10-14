@@ -1,5 +1,8 @@
 import type { Page } from '@playwright/test';
+import { keysFor } from '@hangul-route/content-schema';
 import { LESSON_EPISODES } from '../../src/content/__generated__/lessons-index';
+import { strokesForJamo } from '../../src/content/jamo-strokes';
+import { placeWordStrokes } from '../../src/logic/trace-word/block-strokes';
 import { expect, test } from './fixtures';
 import { completeChildForm, journeyCellName, keepSidewaysIfAsked, passDiscover, playCheckByIds, waitForNextListenPickRound } from './helpers';
 import { shot } from './shots';
@@ -22,6 +25,216 @@ interface UpperCell {
   playFirstQuest: (page: Page) => Promise<void>;
   /** Checks the Learning Route shows the cell's day. */
   expectRouteDay: (page: Page) => Promise<void>;
+}
+
+/** Shifted letters on the in-app keyboard and the joined vowels it types with two keys (KS X 5002). */
+const SHIFTED: Record<string, string> = { 'ㅃ': 'ㅂ', 'ㅉ': 'ㅈ', 'ㄸ': 'ㄷ', 'ㄲ': 'ㄱ', 'ㅆ': 'ㅅ', 'ㅒ': 'ㅐ', 'ㅖ': 'ㅔ' };
+const SPLIT: Record<string, string> = { 'ㅘ': 'ㅗㅏ', 'ㅙ': 'ㅗㅐ', 'ㅚ': 'ㅗㅣ', 'ㅝ': 'ㅜㅓ', 'ㅞ': 'ㅜㅔ', 'ㅟ': 'ㅜㅣ', 'ㅢ': 'ㅡㅣ' };
+/** The same two-key vowels, by the name the Stage 7 helpers use. */
+const SPLIT_KEYS: Record<string, string> = SPLIT;
+
+
+/**
+ * Type Hangul round `n` of `total`: waits for the round, taps the keys that type `text` on the in-app
+ * keyboard, then Done; a typed match moves on by itself.
+ */
+async function typeHangul(page: Page, n: number, total: number, text: string): Promise<void> {
+  await expect(page.getByText(`${n} / ${total}`, { exact: true })).toBeVisible({ timeout: 5_000 });
+  await expect(page.getByTestId('type-hangul-done')).toBeDisabled();
+  for (const jamo of keysFor(text).flatMap((j) => [...(SPLIT_KEYS[j] ?? j)])) {
+    await page.getByTestId(jamo === ' ' ? 'hangul-key-space' : `hangul-key-${jamo}`).click();
+  }
+  await page.getByTestId('type-hangul-done').click();
+  await expect(page.getByText('You typed it!')).toBeVisible();
+}
+
+/** Sentence Builder Check: place the tiles of the round in order, by accessible name. */
+async function placeTiles(page: Page, tiles: readonly string[]): Promise<void> {
+  const tray = page.getByTestId('sentence-builder-tray');
+  await expect(tray).toBeVisible({ timeout: 5_000 });
+  for (const name of tiles) {
+    await page.waitForTimeout(120);
+    await tray.getByRole('button', { name, exact: true }).click();
+  }
+}
+
+/** Type Hangul: tap the keys for each word, then Done; a typed word moves on by itself. */
+async function typeWords(page: Page, words: readonly string[]): Promise<void> {
+  for (const [i, word] of words.entries()) {
+    await expect(page.getByText(`${i + 1} / ${words.length}`)).toBeVisible({ timeout: 5_000 });
+    for (const jamo of keysFor(word).flatMap((j) => [...(SPLIT[j] ?? j)])) {
+      if (jamo === ' ') await page.getByTestId('hangul-key-space').click();
+      else if (SHIFTED[jamo]) {
+        await page.getByTestId('hangul-key-shift').click();
+        await page.getByTestId(`hangul-key-${SHIFTED[jamo]}`).click();
+      } else await page.getByTestId(`hangul-key-${jamo}`).click();
+    }
+    await page.getByTestId('type-hangul-done').click();
+    await expect(page.getByText('You typed it!')).toBeVisible();
+  }
+}
+
+/** Realia Read: answer each round by option id once its question shows (a right answer moves on by itself). */
+async function readRealia(page: Page, rounds: ReadonlyArray<readonly [question: string, optionId: string]>): Promise<void> {
+  for (const [question, optionId] of rounds) {
+    await expect(page.getByTestId('realia-read-question')).toHaveText(question, { timeout: 5_000 });
+    await page.getByTestId(`realia-read-option-${optionId}`).click();
+  }
+}
+
+/**
+ * Trace a Word: trace `word` block by block over its placed ghost (the canvas's 200 viewBox, the
+ * same placement the game draws, computed here), one finger stroke per stroke. A fully drawn block
+ * is scored by the idle timer or by Done, whichever comes first; the game then moves on by itself.
+ */
+async function traceWord(page: Page, word: string, romanization: string): Promise<void> {
+  const blocks = placeWordStrokes(word, strokesForJamo);
+  expect(blocks, word).not.toBeNull();
+  await expect(page.getByRole('heading', { name: new RegExp(`^Trace the word ${romanization},`) })).toBeVisible({ timeout: 5_000 });
+  for (const [i, block] of blocks!.entries()) {
+    const canvas = page.getByTestId('trace-word-canvas');
+    await expect(canvas).toHaveAttribute('aria-label', new RegExp(`block ${i + 1} of ${blocks!.length}`));
+    const box = (await canvas.boundingBox())!;
+    const at = (p: { x: number; y: number }): [number, number] => [box.x + (p.x * box.width) / 200, box.y + (p.y * box.height) / 200];
+    for (const stroke of block.letters.flatMap((l) => l.strokes)) {
+      await page.mouse.move(...at(stroke[0]!));
+      await page.mouse.down();
+      for (const point of stroke.slice(1)) await page.mouse.move(...at(point), { steps: 12 });
+      await page.mouse.up();
+    }
+    await page.getByRole('button', { name: 'Done', exact: true }).click({ timeout: 1_500 }).catch(() => undefined);
+  }
+}
+
+/** Sentence Builder as the Check (S7-4): no round counter; the round's gloss shows, then its tiles by accessible name in order. */
+async function buildCheckRound(page: Page, gloss: string, tiles: readonly string[]): Promise<void> {
+  await expect(page.getByTestId('sentence-builder-gloss')).toHaveText(gloss, { timeout: 5_000 });
+  const tray = page.getByTestId('sentence-builder-tray');
+  for (const name of tiles) {
+    await page.waitForTimeout(120);
+    await tray.getByRole('button', { name, exact: true }).click();
+  }
+}
+
+/** Sentence Builder as the Stage 7 Check (S7-5): tap one round's tiles in order, past the touch window. */
+async function buildCheckTiles(page: Page, tiles: readonly string[]): Promise<void> {
+  const tray = page.getByTestId('sentence-builder-tray');
+  for (const name of tiles) {
+    await page.waitForTimeout(120);
+    await expect(tray.getByRole('button', { name, exact: true })).toBeVisible({ timeout: 5_000 });
+    await tray.getByRole('button', { name, exact: true }).click();
+  }
+}
+
+/** Sentence Builder in the Stage 7 Check (no round counter, no Skip): build each round by its tiles. */
+async function buildCheck(page: Page, rounds: readonly (readonly string[])[]): Promise<void> {
+  await page.getByRole('button', { name: 'Go', exact: true }).click();
+  for (const tiles of rounds) {
+    const tray = page.getByTestId('sentence-builder-tray');
+    for (const name of tiles) {
+      await page.waitForTimeout(120);
+      await tray.getByRole('button', { name, exact: true }).click();
+    }
+    await expect(page.getByTestId('sentence-builder-done')).toBeVisible();
+    await expect(page.getByTestId('sentence-builder-done')).toHaveCount(0, { timeout: 5_000 });
+  }
+}
+
+/**
+ * Type Hangul: round `n` of `total`, typed on the in-app keyboard (Space for a space, Shift for a tense
+ * letter, two keys for a joined vowel), then Done; a pass moves on by itself.
+ */
+async function typeRound(page: Page, n: number, total: number, text: string): Promise<void> {
+  await expect(page.getByText(`${n} / ${total}`, { exact: true })).toBeVisible({ timeout: 5_000 });
+  const key = (id: string) => page.getByTestId(`hangul-key-${id}`);
+  for (const jamo of keysFor(text).flatMap((j) => [...(SPLIT[j] ?? j)])) {
+    if (jamo === ' ') {
+      await key('space').click();
+    } else if (SHIFTED[jamo]) {
+      await key('shift').click();
+      await key(SHIFTED[jamo]).click();
+    } else {
+      await key(jamo).click();
+    }
+  }
+  await page.getByTestId('type-hangul-done').click();
+  await expect(page.getByText('You typed it!')).toBeVisible();
+}
+
+const LUNCH_BOX_Q1_BOARDS = [
+  ['gimbap', 'uyu', 'dalgyal'],
+  ['uyu', 'bap', 'mul'],
+  ['dalgyal', 'gimchi', 'banana'],
+  ['gimbap', 'ramyeon', 'uyu'],
+  ['dalgyal', 'gimbap', 'mul'],
+  ['gimchi', 'uyu', 'gimbap'],
+] as const;
+const OUTDOOR_Q1_BOARDS = [
+  ['haneul', 'byeol', 'namu'],
+  ['san', 'dal', 'haneul'],
+  ['namu', 'bada', 'byeol'],
+  ['haneul', 'gang', 'san'],
+  ['byeol', 'namu', 'dal'],
+  ['bada', 'haneul', 'namu'],
+] as const;
+
+/** A refreshed Stage 2 taste (F-CURR-001 T-1): Discover, six Pic-Word boards, the Apply game skipped, the Check by id. */
+async function playTasteQ1(
+  page: Page,
+  shot: string,
+  firstWord: string,
+  boards: readonly (readonly string[])[],
+  check: readonly [string, string],
+): Promise<void> {
+  await startFirstQuest(page);
+  await expect(page.getByText(firstWord, { exact: true }).first()).toBeVisible();
+  await page.screenshot({ path: test.info().outputPath(`${shot}-q1-discover.png`), fullPage: true });
+  await passDiscover(page);
+  await page.getByRole('button', { name: 'Play minigame' }).click();
+  for (const [n, board] of boards.entries()) {
+    for (const id of board) await expect(page.getByTestId(`pic-word-picture-${id}`).locator('svg').first()).toBeVisible();
+    if (n === 0) await page.screenshot({ path: test.info().outputPath(`${shot}-q1-pic-word.png`), fullPage: true });
+    for (const id of board) {
+      await page.getByTestId(`pic-word-picture-${id}`).click();
+      await page.getByTestId(`pic-word-word-${id}`).click();
+    }
+  }
+  await page.getByRole('button', { name: 'Skip for now' }).click();
+  await playCheckByIds(page, [{ answer: check[0] }, { answer: check[1] }]);
+  await page.getByRole('button', { name: 'See results' }).click();
+  await expect(page.getByText('Next up')).toBeVisible();
+  await page.screenshot({ path: test.info().outputPath(`${shot}-q1-results.png`), fullPage: true });
+}
+
+/** The Learning Route tab: the cell's stage row, opened, lists the cell by its title. */
+async function expectCellOnRoute(page: Page, stage: number, title: string): Promise<void> {
+  await page.getByRole('tablist').getByRole('link', { name: 'Learning Route' }).click();
+  const row = page.getByTestId(`my-route-stage-${stage}`);
+  await expect(row).toBeVisible();
+  const cell = row.getByRole('button', { name: new RegExp(`: ${title.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\.`) }).first();
+  if (!(await cell.isVisible())) await row.getByRole('button', { name: new RegExp(`^Stage ${stage}, `) }).first().click();
+  await expect(cell).toBeVisible();
+}
+
+/** Type Hangul: tap the keys that type `text` (no tense or two-key letters in these targets), then Done. */
+async function typeAnswer(page: Page, text: string): Promise<void> {
+  await expect(page.getByTestId('type-hangul-field')).toBeVisible();
+  for (const jamo of keysFor(text)) await page.getByTestId(jamo === ' ' ? 'hangul-key-space' : `hangul-key-${jamo}`).click();
+  await page.getByTestId('type-hangul-done').click();
+  await expect(page.getByText('You typed it!')).toBeVisible();
+}
+
+/** Realia Read: tap the option until the game marks it right (a tap inside its double-touch window is dropped). */
+async function pickRealia(page: Page, ids: readonly string[]): Promise<void> {
+  for (const [i, id] of ids.entries()) {
+    await expect(page.getByTestId('realia-read-question')).toBeVisible();
+    const option = page.getByTestId(`realia-read-option-${id}`);
+    await expect(async () => {
+      await option.click();
+      await expect(option).toHaveAttribute('aria-label', /^Right answer/, { timeout: 250 });
+    }).toPass();
+    if (i < ids.length - 1) await expect(option).toHaveCount(0, { timeout: 5_000 }).catch(() => undefined);
+  }
 }
 
 /**
@@ -543,6 +756,395 @@ const CELLS: readonly UpperCell[] = [
       await page.getByText('Learning Route', { exact: true }).last().click();
       await page.getByRole('button', { name: /^Stage 4, Dialogue\./ }).click();
       await expect(page.getByRole('button', { name: /^Play & Crafts: Playdate Talk\./ })).toBeVisible();
+    },
+  },
+  // F-CURR-001 S6-1: Read the Menu, q1 "Dishes on the Menu" played through its real games.
+  {
+    episodeId: 'episode:stage6-letters',
+    cellButton: journeyCellName(6, 'Letters & Books'),
+    title: 'Read the Menu',
+    playFirstQuest: async (page) => {
+      await page.getByRole('button', { name: 'Start', exact: true }).first().click();
+      await page.getByRole('button', { name: 'Continue' }).click();
+      await passDiscover(page);
+      await page.getByRole('button', { name: 'Play minigame' }).click();
+      // Realia Read: each round by its question, then the right option; a right pick moves on by itself.
+      for (const [question, answer] of [
+        ['Which one is on the menu?', 'b'],
+        ['Which dish is noodles?', 'a'],
+        ['Which dish is spicy rice cakes?', 'b'],
+        ['Which dish is mixed rice?', 'a'],
+      ] as const) {
+        await expect(page.getByTestId('realia-read-question')).toHaveText(question);
+        await page.getByTestId(`realia-read-option-${answer}`).click();
+      }
+      await page.getByRole('button', { name: 'Play minigame' }).click();
+      // Type Hangul on the in-app keyboard: 김밥, 라면, 비빔밥 (no shifted or two-key letter).
+      for (const [i, word] of ['김밥', '라면', '비빔밥'].entries()) {
+        await expect(page.getByText(`${i + 1} / 3`)).toBeVisible({ timeout: 5_000 });
+        for (const jamo of keysFor(word)) await page.getByTestId(`hangul-key-${jamo}`).click();
+        await page.getByTestId('type-hangul-done').click();
+        await expect(page.getByText('You typed it!')).toBeVisible();
+      }
+      await playCheckByIds(page, [{ answer: 'b' }, { answer: 'a' }]);
+      await expect(page.getByText('Finish', { exact: true }).first()).toBeVisible();
+    },
+    expectRouteDay: async (page) => {
+      await page.goto('/');
+      await page.getByText('Learning Route', { exact: true }).last().click();
+      await page.getByRole('button', { name: /^Stage 6, Real-use\./ }).click();
+      await expect(page.getByRole('button', { name: /^Letters & Books: Read the Menu\./ })).toBeVisible();
+    },
+  },
+  // F-CURR-001 S6-2: Order Food, q1 "Excuse Me!": Realia Read on the table menu, Type Hangul, Listen & Pick.
+  {
+    episodeId: 'episode:stage6-life',
+    cellButton: journeyCellName(6, 'Food & Daily Life'),
+    title: 'Order Food',
+    playFirstQuest: async (page) => {
+      await page.getByRole('button', { name: 'Start', exact: true }).first().click();
+      await page.getByRole('button', { name: 'Continue' }).click();
+      await passDiscover(page);
+      await page.getByRole('button', { name: 'Play minigame' }).click();
+      await pickRealia(page, ['a', 'b', 'c', 'a']);
+      await page.getByRole('button', { name: 'Play minigame' }).click();
+      await typeAnswer(page, '여기요');
+      await typeAnswer(page, '김밥 주세요');
+      await typeAnswer(page, '물 주세요');
+      await playCheckByIds(page, [{ answer: 'a' }, { answer: 'b' }]);
+      await expect(page.getByText('Finish', { exact: true }).first()).toBeVisible();
+    },
+    expectRouteDay: async (page) => {
+      await page.goto('/');
+      await page.getByText('Learning Route', { exact: true }).last().click();
+      await page.getByRole('button', { name: /^Stage 6, Real-use\./ }).click();
+      await expect(page.getByRole('button', { name: /^Food & Daily Life: Order Food\./ })).toBeVisible();
+    },
+  },
+  // F-CURR-001 S6-3: Travel for Chuseok, q1 "The Train Ticket" played through its real games.
+  {
+    episodeId: 'episode:stage6-rites',
+    cellButton: journeyCellName(6, 'Holidays & Traditions'),
+    title: 'Travel for Chuseok',
+    playFirstQuest: async (page) => {
+      await page.getByRole('button', { name: 'Start', exact: true }).first().click();
+      await page.getByRole('button', { name: 'Continue' }).click();
+      await passDiscover(page);
+      await page.getByRole('button', { name: 'Play minigame' }).click();
+      await readRealia(page, [
+        ['Where does the train leave from?', 'seoul'],
+        ['Which word on the ticket means arrival?', 'dochak'],
+        ['Where does the train arrive?', 'busan'],
+        ['Which word on the ticket means departure?', 'chulbal'],
+        ['What is this ticket for?', 'train'],
+      ]);
+      await page.getByRole('button', { name: 'Play minigame' }).click();
+      await typeWords(page, ['기차', '출발', '도착']);
+      await playCheckByIds(page, [{ answer: 'b' }, { answer: 'a' }]);
+      await expect(page.getByText('Finish', { exact: true }).first()).toBeVisible();
+    },
+    expectRouteDay: async (page) => {
+      await page.goto('/');
+      await page.getByText('Learning Route', { exact: true }).last().click();
+      await page.getByRole('button', { name: /^Stage 6, Real-use\./ }).click();
+      await expect(page.getByRole('button', { name: /^Holidays & Traditions: Travel for Chuseok\./ })).toBeVisible();
+    },
+  },
+  // F-CURR-001 S6-4: Hike & Ask, q1 "Trail Signs" at 320 px: Discover, Realia Read on the trail sign
+  // (four boards), Type Hangul (산길, 정상, 입구, 출구) and the Check by id (정상, then 출구).
+  {
+    episodeId: 'episode:stage6-nature',
+    cellButton: journeyCellName(6, 'Nature & Animals'),
+    title: 'Hike & Ask',
+    playFirstQuest: async (page) => {
+      await page.setViewportSize({ width: 320, height: 720 });
+      await startFirstQuest(page);
+      await passDiscover(page);
+      await page.getByRole('button', { name: 'Play minigame' }).click();
+      await shot(page, 's6-4-q1-realia-320');
+      await pickRealia(page, ['jeongsang', 'chulgu', 'ipgu', 'hwajangsil']);
+      await page.getByRole('button', { name: 'Play minigame' }).click();
+      for (const word of ['산길', '정상', '입구', '출구']) await typeAnswer(page, word);
+      await playCheckByIds(page, [{ answer: 'a' }, { answer: 'a' }]);
+      await expect(page.getByText('Finish', { exact: true }).first()).toBeVisible();
+    },
+    expectRouteDay: async (page) => {
+      await page.goto('/');
+      await page.getByText('Learning Route', { exact: true }).last().click();
+      await page.getByRole('button', { name: /^Stage 6, Real-use\./ }).click();
+      await expect(page.getByRole('button', { name: /^Nature & Animals: Hike & Ask\./ })).toBeVisible();
+    },
+  },
+  // F-CURR-001 S6-5: Buy at Market, q1 "At the Stall" at 320 px: Discover, Realia Read on the three price
+  // cards (a drawn stall, round practice amounts, OD-11), Type Hangul (한지, 부채, 오일장) and the Check by id.
+  {
+    episodeId: 'episode:stage6-crafts',
+    cellButton: journeyCellName(6, 'Play & Crafts'),
+    title: 'Buy at Market',
+    playFirstQuest: async (page) => {
+      await page.setViewportSize({ width: 320, height: 720 });
+      await startFirstQuest(page);
+      await passDiscover(page);
+      await page.getByRole('button', { name: 'Play minigame' }).click();
+      await shot(page, 's6-5-q1-realia-320');
+      await pickRealia(page, ['hanji', 'buchae', 'apple', 'cheon']);
+      await page.getByRole('button', { name: 'Play minigame' }).click();
+      for (const word of ['한지', '부채', '오일장']) await typeAnswer(page, word);
+      await playCheckByIds(page, [{ answer: 'b' }, { answer: 'c' }]);
+      await expect(page.getByText('Finish', { exact: true }).first()).toBeVisible();
+    },
+    expectRouteDay: async (page) => {
+      await page.goto('/');
+      await page.getByText('Learning Route', { exact: true }).last().click();
+      await page.getByRole('button', { name: /^Stage 6, Real-use\./ }).click();
+      await expect(page.getByRole('button', { name: /^Play & Crafts: Buy at Market\./ })).toBeVisible();
+    },
+  },
+  // F-CURR-001 S3-4: Animal Sentences, q1 "Where Is the Bird?" played through its real games.
+  {
+    episodeId: 'episode:stage3-nature',
+    cellButton: journeyCellName(3, 'Nature & Animals'),
+    title: 'Animal Sentences',
+    playFirstQuest: async (page) => {
+      await page.getByRole('button', { name: 'Start', exact: true }).first().click();
+      await page.getByRole('button', { name: 'Continue' }).click();
+      // Discover: the pattern page (frame, two examples, the note), then the sentence page.
+      await expect(page.getByText('나무에 새가 있어요.').first()).toBeVisible();
+      await page.setViewportSize({ width: 320, height: 720 });
+      await shot(page, 'animal-sentences-q1-discover-320');
+      await passDiscover(page);
+      await page.getByRole('button', { name: 'Play minigame' }).click();
+      await buildSentence(page, ['나무에, namue', '새가, saega', '있어요, isseoyo']);
+      await shot(page, 'animal-sentences-q1-built-320');
+      await buildSentence(page, ['물에, mure', '물고기가, mulgogiga', '있어요, isseoyo']);
+      await buildSentence(page, ['집에, jibe', '고양이가, goyangiga', '있어요, isseoyo']);
+      await buildSentence(page, ['산에, sane', '토끼가, tokkiga', '있어요, isseoyo']);
+      await buildSentence(page, ['산에, sane', '곰이, gomi', '있어요, isseoyo']);
+      await page.getByRole('button', { name: 'Play minigame' }).click();
+      await pickByIds(page, ['bird', 'fox', 'a', 'a']);
+      await playCheckByIds(page, [{ answer: 'bear' }, { answer: 'a' }]);
+      await expect(page.getByText('Finish', { exact: true }).first()).toBeVisible();
+    },
+    expectRouteDay: async (page) => {
+      await page.goto('/');
+      await page.getByText('Learning Route', { exact: true }).last().click();
+      await page.getByRole('button', { name: /^Stage 3, / }).click();
+      await expect(page.getByRole('button', { name: /^Nature & Animals: Animal Sentences\./ })).toBeVisible();
+    },
+  },
+  // F-CURR-001 T-1: Lunch Box Words. q1 keeps its id and its card; its Card Match is skipped, the Check is the
+  // gimbap picture, then the written 도시락.
+  {
+    episodeId: 'episode:stage2-life',
+    cellButton: journeyCellName(2, 'Food & Daily Life'),
+    title: 'Lunch Box Words',
+    playFirstQuest: (page) => playTasteQ1(page, 'stage2-life', '도시락', LUNCH_BOX_Q1_BOARDS, ['gimbap', 'dosirak']),
+    expectRouteDay: async (page) => {
+      await page.context().setOffline(false);
+      await page.goto('/');
+      await expectCellOnRoute(page, 2, 'Lunch Box Words');
+    },
+  },
+  // F-CURR-001 T-1: Outdoor Words. q1's Build the Word is skipped; the Check is the star picture, then the written 나무.
+  {
+    episodeId: 'episode:stage2-nature',
+    cellButton: journeyCellName(2, 'Nature & Animals'),
+    title: 'Outdoor Words',
+    playFirstQuest: (page) => playTasteQ1(page, 'stage2-nature', '하늘', OUTDOOR_Q1_BOARDS, ['byeol', 'namu']),
+    expectRouteDay: async (page) => {
+      await page.context().setOffline(false);
+      await page.goto('/');
+      await expectCellOnRoute(page, 2, 'Outdoor Words');
+    },
+  },
+  // F-CURR-001 S7-1: Write Your Name, q1 "Hoya's Name": Trace a Word (left with Skip, a first-class way
+  // on), Type Hangul with the cast name 호야, and the Stage 7 Sentence Builder Check.
+  {
+    episodeId: 'episode:stage7-letters',
+    cellButton: journeyCellName(7, 'Letters & Books'),
+    title: 'Write Your Name',
+    playFirstQuest: async (page) => {
+      await page.setViewportSize({ width: 320, height: 720 });
+      await startFirstQuest(page);
+      await passDiscover(page);
+      await page.getByRole('button', { name: 'Play minigame' }).click();
+      await expect(page.getByTestId('trace-word-canvas')).toBeVisible();
+      await page.getByRole('button', { name: 'Skip', exact: true }).click();
+      await page.getByRole('button', { name: 'Play minigame' }).click();
+      await typeAnswer(page, '호야');
+      await shot(page, 'write-your-name-q1-type-320');
+      await typeAnswer(page, '이름');
+      await typeAnswer(page, '한글');
+      await typeAnswer(page, '이건 이름이에요');
+      await page.getByRole('button', { name: 'Go', exact: true }).click();
+      await placeTiles(page, ['이건, igeon', '이름이에요, ireumieyo']);
+      await expect(page.getByTestId('sentence-builder-gloss')).toHaveText('This is Hangul.', { timeout: 5_000 });
+      await placeTiles(page, ['이건, igeon', '한글이에요, hangeurieyo']);
+      await expect(page.getByText('Finish', { exact: true }).first()).toBeVisible();
+    },
+    expectRouteDay: async (page) => {
+      await page.goto('/');
+      await page.getByText('Learning Route', { exact: true }).last().click();
+      await page.getByRole('button', { name: /^Stage 7, / }).click();
+      await expect(page.getByRole('button', { name: /^Letters & Books: Write Your Name\./ })).toBeVisible();
+    },
+  },
+  // F-CURR-001 S7-2: My Day in Korean, q1 "Morning to Evening": Trace a Word (Skip is the
+  // learner's own way past it), Type Hangul on the in-app keyboard, the Sentence Builder Check.
+  {
+    episodeId: 'episode:stage7-life',
+    cellButton: journeyCellName(7, 'Food & Daily Life'),
+    title: 'My Day in Korean',
+    playFirstQuest: async (page) => {
+      await page.setViewportSize({ width: 320, height: 720 });
+      await page.getByRole('button', { name: 'Start', exact: true }).first().click();
+      await page.getByRole('button', { name: 'Continue' }).click();
+      // Discover: the time words, then the time frame ___에 밥을 먹어요.
+      await expect(page.getByText('Look and learn', { exact: true })).toBeVisible();
+      await shot(page, 'my-day-q1-discover-320');
+      await passDiscover(page);
+      await page.getByRole('button', { name: 'Play minigame' }).click();
+      await expect(page.getByTestId('trace-word-canvas')).toBeVisible();
+      await page.getByRole('button', { name: 'Skip', exact: true }).click();
+      await page.getByRole('button', { name: 'Play minigame' }).click();
+      await typeHangul(page, 1, 4, '아침');
+      await shot(page, 'my-day-q1-typed-320');
+      await typeHangul(page, 2, 4, '저녁');
+      await typeHangul(page, 3, 4, '점심에');
+      await typeHangul(page, 4, 4, '아침에 밥을 먹어요');
+      await page.getByRole('button', { name: 'Go', exact: true }).click();
+      const tray = page.getByTestId('sentence-builder-tray');
+      await expect(tray).toBeVisible({ timeout: 5_000 });
+      await shot(page, 'my-day-q1-check-320');
+      for (const tiles of [
+        ['아침에, achime', '밥을, babeul', '먹어요, meogeoyo'],
+        ['점심에, jeomsime', '밥을, babeul', '먹어요, meogeoyo'],
+      ]) {
+        await expect(tray.getByRole('button', { name: tiles[0], exact: true })).toBeVisible({ timeout: 5_000 });
+        for (const name of tiles) {
+          await page.waitForTimeout(120);
+          await tray.getByRole('button', { name, exact: true }).click();
+        }
+      }
+      await expect(page.getByText('Finish', { exact: true }).first()).toBeVisible();
+    },
+    expectRouteDay: async (page) => {
+      await page.goto('/');
+      await page.getByText('Learning Route', { exact: true }).last().click();
+      await page.getByRole('button', { name: /^Stage 7, / }).click();
+      await expect(page.getByRole('button', { name: /^Food & Daily Life: My Day in Korean\./ })).toBeVisible();
+    },
+  },
+  // F-CURR-001 S7-3: My Holiday Memory, q1 "I Ate Tteokguk" played through its real games at 320 px.
+  {
+    episodeId: 'episode:stage7-rites',
+    cellButton: journeyCellName(7, 'Holidays & Traditions'),
+    title: 'My Holiday Memory',
+    playFirstQuest: async (page) => {
+      await page.setViewportSize({ width: 320, height: 720 });
+      await startFirstQuest(page);
+      // Discover: the past-tense frame page and the model page (songpyeon, the full moon).
+      await expect(page.getByText('Look and learn', { exact: true })).toBeVisible();
+      await shot(page, 'my-holiday-memory-q1-discover-320');
+      await passDiscover(page);
+      await page.getByRole('button', { name: 'Play minigame' }).click();
+      await build(page, 1, 4, ['떡국을, tteokgugeul', '먹었어요, meogeosseoyo']);
+      await shot(page, 'my-holiday-memory-q1-built-320');
+      await build(page, 2, 4, ['을, eul']);
+      await build(page, 3, 4, ['보름달을, boreumdareul', '봤어요, bwasseoyo']);
+      await build(page, 4, 4, ['를, reul']);
+      // Type Hangul on the in-app keyboard: the three past forms, then the soup's name.
+      await page.getByRole('button', { name: 'Play minigame' }).click();
+      await typeRound(page, 1, 4, '먹었어요');
+      await shot(page, 'my-holiday-memory-q1-typed-320');
+      await typeRound(page, 2, 4, '봤어요');
+      await typeRound(page, 3, 4, '만들었어요');
+      await typeRound(page, 4, 4, '떡국');
+      await buildCheck(page, [
+        ['송편을, songpyeoneul', '먹었어요, meogeosseoyo'],
+        ['보름달을, boreumdareul', '봤어요, bwasseoyo'],
+      ]);
+      await expect(page.getByText('Finish', { exact: true }).first()).toBeVisible();
+    },
+    expectRouteDay: async (page) => {
+      await page.goto('/');
+      await page.getByText('Learning Route', { exact: true }).last().click();
+      await page.getByRole('button', { name: /^Stage 7, Self-expression\./ }).click();
+      await expect(page.getByRole('button', { name: /^Holidays & Traditions: My Holiday Memory\./ })).toBeVisible();
+    },
+  },
+  // F-CURR-001 S7-4: My Favorite Animal, q1 "Animals I Like": Trace a Word, Type Hangul, the order-it Check.
+  {
+    episodeId: 'episode:stage7-nature',
+    cellButton: journeyCellName(7, 'Nature & Animals'),
+    title: 'My Favorite Animal',
+    playFirstQuest: async (page) => {
+      await page.setViewportSize({ width: 320, height: 720 });
+      await startFirstQuest(page);
+      await expect(page.getByText('Look and learn', { exact: true })).toBeVisible();
+      await shot(page, 'favorite-animal-q1-discover-320');
+      await passDiscover(page);
+      await page.getByRole('button', { name: 'Play minigame' }).click();
+      await traceWord(page, '곰', 'gom');
+      await shot(page, 'favorite-animal-q1-trace-320');
+      await traceWord(page, '새', 'sae');
+      await traceWord(page, '토끼', 'tokki');
+      await traceWord(page, '동물', 'dongmul');
+      await page.getByRole('button', { name: 'Play minigame' }).click();
+      await typeRound(page, 1, 4, '호랑이');
+      await typeRound(page, 2, 4, '고양이');
+      await typeRound(page, 3, 4, '곰이 좋아요');
+      await shot(page, 'favorite-animal-q1-type-320');
+      await typeRound(page, 4, 4, '새가 좋아요');
+      await page.getByRole('button', { name: 'Go', exact: true }).click();
+      // Check round 1 is a particle round (the noun is given, 가 is picked); round 2 builds the sentence.
+      await buildCheckRound(page, 'I like cats.', ['가, ga']);
+      await buildCheckRound(page, 'I like tigers.', ['호랑이가, horangiga', '좋아요, joayo']);
+      await expect(page.getByText('Finish', { exact: true }).first()).toBeVisible();
+    },
+    expectRouteDay: async (page) => {
+      await page.goto('/');
+      await page.getByText('Learning Route', { exact: true }).last().click();
+      await page.getByRole('button', { name: /^Stage 7, / }).click();
+      await expect(page.getByRole('button', { name: /^Nature & Animals: My Favorite Animal\./ })).toBeVisible();
+    },
+  },
+  // F-CURR-001 S7-5: Make & Share, q1 "Fold, Cut, Draw" played through its real games at 320 px.
+  {
+    episodeId: 'episode:stage7-crafts',
+    cellButton: journeyCellName(7, 'Play & Crafts'),
+    title: 'Make & Share',
+    playFirstQuest: async (page) => {
+      await page.setViewportSize({ width: 320, height: 720 });
+      await page.getByRole('button', { name: 'Start', exact: true }).first().click();
+      await page.getByRole('button', { name: 'Continue' }).click();
+      // Discover: the frame page (fold) and the sentence page (cut with scissors, draw).
+      await expect(page.getByText('Look and learn', { exact: true })).toBeVisible();
+      await shot(page, 'make-share-q1-discover-320');
+      await passDiscover(page);
+      await page.getByRole('button', { name: 'Play minigame' }).click();
+      // Type Hangul on the in-app keyboard: fold, cut, draw, plane.
+      await typeRound(page, 1, 4, '접어요');
+      await shot(page, 'make-share-q1-typed-320');
+      await typeRound(page, 2, 4, '잘라요');
+      await typeRound(page, 3, 4, '그려요');
+      await typeRound(page, 4, 4, '비행기');
+      await page.getByRole('button', { name: 'Play minigame' }).click();
+      // Sentence Builder: a particle round (를 after a vowel), then two built sentences.
+      await build(page, 1, 3, ['를, reul']);
+      await build(page, 2, 3, ['꽃을, kkocheul', '그려요, geuryeoyo']);
+      await build(page, 3, 3, ['가위로, gawiro', '잘라요, jallayo']);
+      // The Stage 7 Check is two Sentence Builder rounds: 을 after a final consonant, then one sentence.
+      await page.getByRole('button', { name: 'Go', exact: true }).click();
+      await buildCheckTiles(page, ['을, eul']);
+      await buildCheckTiles(page, ['별을, byeoreul', '그려요, geuryeoyo']);
+      await expect(page.getByText('Finish', { exact: true }).first()).toBeVisible();
+    },
+    expectRouteDay: async (page) => {
+      await page.goto('/');
+      await page.getByText('Learning Route', { exact: true }).last().click();
+      await page.getByRole('button', { name: /^Stage 7, Self-expression\./ }).click();
+      await expect(page.getByRole('button', { name: /^Play & Crafts: Make & Share\./ })).toBeVisible();
     },
   },
 ];

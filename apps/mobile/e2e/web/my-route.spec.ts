@@ -297,13 +297,20 @@ test.describe('the Route tab and its route card (LR-10)', () => {
     //   pnpm --filter @hangul-route/mobile build:web:fixtures:gated
     //   STORY_FIXTURES_GATED=1 pnpm --filter @hangul-route/mobile exec playwright test my-route.spec -g "assumption h"
     test.skip(!GATED_BUILD, 'needs the gating fixture bundle (STORY_FIXTURES_GATED=1, dist-e2e-gated/)');
+    // A stage past Stage 1 with a shipped cell (not open to a free learner) and a "Coming later" cell. Since
+    // F-CURR-001 S7-5 every grid cell has shipped, so no stage has both and there is no "Coming later" to tell apart.
+    const both = [2, 3, 4, 5, 6, 7].find((n) => {
+      const cells = CATALOG.cells.filter((c) => c.stage === `stage${n}`);
+      return cells.some((c) => c.status === 'shipped') && cells.some((c) => c.status === 'preview');
+    });
+    test.skip(both === undefined, 'every grid cell has shipped (F-CURR-001 S7-5): no "Coming later" cell is left beside a "Not open yet" one');
     await page.setViewportSize({ width: 320, height: 568 });
     await learnerOnHome(page);
     await openRouteTab(page);
 
     expect(m.state.notOpen).not.toBe(m.state.later);
     expect(m.legend.notOpen).not.toBe(m.legend.later);
-    const row = page.getByTestId('my-route-stage-3');
+    const row = page.getByTestId(`my-route-stage-${both}`);
     await row.getByRole('button').first().click();
     // The cells: each pip group carries its word, so the two kinds read differently while their rings match.
     await expect(row.getByText(m.state.notOpen, { exact: true }).first()).toBeVisible();
@@ -318,9 +325,9 @@ test.describe('the Route tab and its route card (LR-10)', () => {
     const [a, b] = await Promise.all([notOpen.boundingBox(), later.boundingBox()]);
     if (a === null || b === null) throw new Error('a legend line has no box');
     expect(a.y).toBeLessThan(b.y);
-    // A stage that is coming later says so on its own row, in its own words (Stage 6: Stage 3 has a taste since
-    // First Sentences, F-CURR-001 S3-1).
-    await expect(page.getByTestId('my-route-later-6').getByText(m.state.later, { exact: true })).toBeVisible();
+    // A stage that is coming later (every cell still to come) says so on its own row, in its own words.
+    const laterStage = [2, 3, 4, 5, 6, 7].find((n) => CATALOG.cells.filter((c) => c.stage === `stage${n}`).every((c) => c.status === 'preview'));
+    if (laterStage !== undefined) await expect(page.getByTestId(`my-route-later-${laterStage}`).getByText(m.state.later, { exact: true })).toBeVisible();
     expect(await noSideScroll(page)).toBe(true);
     await shot(page, 'my-route-not-open-and-later-320');
   });

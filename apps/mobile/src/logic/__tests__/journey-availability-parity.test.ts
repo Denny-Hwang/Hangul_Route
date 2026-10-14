@@ -18,8 +18,24 @@ describe('stage availability parity: the shared catalogue and the app bundle (LR
     });
   }
 
-  it('the bundle is not trivially uniform: it has a full stage, a taste and a stage still to come', () => {
+  it('the bundle is not trivially uniform: it has a full stage, and every stage reads a known state', () => {
+    // F-CURR-001 ships the last "Coming later" cells, so the live bundle may hold no taste or soon stage;
+    // the taste and soon cases are checked on a bundle with cells taken back below.
     const all = new Set(StageKeySchema.options.map((stage) => stageAvailability(stage, grid)));
-    expect(all).toEqual(new Set(['open', 'taste', 'soon']));
+    expect(all.has('open')).toBe(true);
+    for (const state of all) expect(['open', 'taste', 'soon']).toContain(state);
+  });
+
+  it('agrees on a taste and a stage still to come too (cells taken back to placeholders)', () => {
+    const back = (keep: (cell: { stage: string; theme: string }) => boolean) => ({
+      app: grid.map((e) => (e.stage === 'stage6' && !keep(e) ? { ...e, status: 'preview' as const, questIds: [] } : e)),
+      catalog: { ...CATALOG, cells: CATALOG.cells.map((c) => (c.stage === 'stage6' && !keep(c) ? { ...c, status: 'preview' as const, questIds: [] } : c)) },
+    });
+    const taste = back((c) => c.theme === 'letters');
+    expect(stageAvailability('stage6', taste.app)).toBe('taste');
+    expect(stageAvailabilityOf(taste.catalog, 'stage6')).toBe('taste');
+    const soon = back(() => false);
+    expect(stageAvailability('stage6', soon.app)).toBe('soon');
+    expect(stageAvailabilityOf(soon.catalog, 'stage6')).toBe('soon');
   });
 });
