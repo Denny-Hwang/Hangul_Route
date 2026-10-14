@@ -52,7 +52,7 @@
                         "line": {
                           "ko": "네, 먹었어요.",
                           "romanization": "ne meogeosseoyo",
-                          "en": "Yes, I have."
+                          "en": "Yes, I ate."
                         }
                       }
                     ]
@@ -80,7 +80,7 @@
                         "line": {
                           "ko": "네, 마셨어요.",
                           "romanization": "ne masyeosseoyo",
-                          "en": "Yes, I did."
+                          "en": "Yes, I drank it."
                         }
                       }
                     ]
@@ -142,7 +142,7 @@
                   "text": {
                     "ko": "네, 먹었어요.",
                     "romanization": "ne meogeosseoyo",
-                    "en": "Yes, I have."
+                    "en": "Yes, I ate."
                   },
                   "correct": true
                 },
@@ -179,7 +179,7 @@
                   "text": {
                     "ko": "네, 마셨어요.",
                     "romanization": "ne masyeosseoyo",
-                    "en": "Yes, I did."
+                    "en": "Yes, I drank it."
                   },
                   "correct": true
                 },
@@ -216,7 +216,7 @@
                   "text": {
                     "ko": "네, 먹었어요.",
                     "romanization": "ne meogeosseoyo",
-                    "en": "Yes, I have."
+                    "en": "Yes, I ate."
                   },
                   "correct": true
                 },
@@ -225,7 +225,7 @@
                   "text": {
                     "ko": "네, 마셨어요.",
                     "romanization": "ne masyeosseoyo",
-                    "en": "Yes, I did."
+                    "en": "Yes, I drank it."
                   },
                   "correct": false
                 },
@@ -270,7 +270,16 @@
               "line": {
                 "ko": "네, 먹었어요.",
                 "romanization": "ne meogeosseoyo",
-                "en": "Yes, I have."
+                "en": "Yes, I ate."
+              }
+            },
+            {
+              "id": "l4",
+              "speakerEn": "Grandma",
+              "line": {
+                "ko": "잘 가요.",
+                "romanization": "jal gayo",
+                "en": "Goodbye."
               }
             }
           ]
@@ -292,7 +301,7 @@
                   "text": {
                     "ko": "네, 먹었어요.",
                     "romanization": "ne meogeosseoyo",
-                    "en": "Yes, I have."
+                    "en": "Yes, I ate."
                   }
                 },
                 {
@@ -300,7 +309,7 @@
                   "text": {
                     "ko": "네, 마셨어요.",
                     "romanization": "ne masyeosseoyo",
-                    "en": "Yes, I did."
+                    "en": "Yes, I drank it."
                   }
                 },
                 {
@@ -327,7 +336,7 @@
                   "text": {
                     "ko": "네, 마셨어요.",
                     "romanization": "ne masyeosseoyo",
-                    "en": "Yes, I did."
+                    "en": "Yes, I drank it."
                   }
                 },
                 {
@@ -491,7 +500,7 @@
                   "text": {
                     "ko": "네, 먹었어요.",
                     "romanization": "ne meogeosseoyo",
-                    "en": "Yes, I have."
+                    "en": "Yes, I ate."
                   },
                   "correct": false
                 },
@@ -528,7 +537,7 @@
                   "text": {
                     "ko": "네, 마셨어요.",
                     "romanization": "ne masyeosseoyo",
-                    "en": "Yes, I did."
+                    "en": "Yes, I drank it."
                   },
                   "correct": false
                 },
@@ -546,17 +555,17 @@
             {
               "speakerEn": "Mom",
               "line": {
-                "ko": "우유가 어때요?",
-                "romanization": "uyuga eottaeyo",
-                "en": "How is the milk?"
+                "ko": "김치가 어때요?",
+                "romanization": "gimchiga eottaeyo",
+                "en": "How is the kimchi?"
               },
               "replies": [
                 {
                   "id": "r1",
                   "text": {
-                    "ko": "뜨거워요.",
-                    "romanization": "tteugeowoyo",
-                    "en": "It is hot."
+                    "ko": "맛있어요.",
+                    "romanization": "masisseoyo",
+                    "en": "It is tasty."
                   },
                   "correct": true
                 },
@@ -572,9 +581,9 @@
                 {
                   "id": "r3",
                   "text": {
-                    "ko": "만나서 반가워요.",
-                    "romanization": "mannaseo bangawoyo",
-                    "en": "Nice to meet you."
+                    "ko": "네, 마셨어요.",
+                    "romanization": "ne masyeosseoyo",
+                    "en": "Yes, I drank it."
                   },
                   "correct": false
                 }
@@ -649,7 +658,7 @@
                   "text": {
                     "ko": "네, 마셨어요.",
                     "romanization": "ne masyeosseoyo",
-                    "en": "Yes, I did."
+                    "en": "Yes, I drank it."
                   }
                 },
                 {
@@ -692,7 +701,7 @@
                   "text": {
                     "ko": "네, 먹었어요.",
                     "romanization": "ne meogeosseoyo",
-                    "en": "Yes, I have."
+                    "en": "Yes, I ate."
                   }
                 }
               ],
@@ -876,7 +885,7 @@
                   "text": {
                     "ko": "네, 마셨어요.",
                     "romanization": "ne masyeosseoyo",
-                    "en": "Yes, I did."
+                    "en": "Yes, I drank it."
                   },
                   "correct": false
                 },
@@ -894,9 +903,9 @@
             {
               "speakerEn": "Dad",
               "line": {
-                "ko": "김치가 매워요?",
-                "romanization": "gimchiga maewoyo",
-                "en": "Is the kimchi spicy?"
+                "ko": "국이 매워요?",
+                "romanization": "gugi maewoyo",
+                "en": "Is the soup spicy?"
               },
               "replies": [
                 {
@@ -913,7 +922,7 @@
                   "text": {
                     "ko": "네, 먹었어요.",
                     "romanization": "ne meogeosseoyo",
-                    "en": "Yes, I have."
+                    "en": "Yes, I ate."
                   },
                   "correct": false
                 },
@@ -1032,7 +1041,7 @@
                   "text": {
                     "ko": "네, 마셨어요.",
                     "romanization": "ne masyeosseoyo",
-                    "en": "Yes, I did."
+                    "en": "Yes, I drank it."
                   }
                 },
                 {
@@ -1055,35 +1064,47 @@
     {
       "id": "n1",
       "kind": "culture",
-      "textEn": "Family and friends often ask {ko:밥 먹었어요?} as a friendly hello. It shows care, and a short answer is enough.",
+      "textEn": "People often ask {ko:밥 먹었어요?} as a friendly hello. It shows care, and a short answer is enough.",
       "sources": [
         {
-          "title": "“언제 밥이나 한번 먹죠” (Let us have a meal sometime), column by Han Gi-bong",
-          "publisher": "대한민국 정책브리핑 (Korea Policy Briefing, Ministry of Culture, Sports and Tourism), korea.kr",
+          "title": "인사 (Greeting)",
+          "publisher": "한국민족문화대백과사전 (Encyclopedia of Korean Culture), Academy of Korean Studies",
+          "url": "https://encykorea.aks.ac.kr/Article/E0046905",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "Entry 인사, section 내용, (1) 말로 하는 인사, ①: “아침식사 뒤에는 ‘진지 자셨나？’, ‘밥 먹었는가？’ … 등으로 인사말을 나눈다.” and “우리의 평상시 인사말은 취식여부(取食與否)와 신변안부에 관한 물음으로 되어 있다. 이러한 인사말은 오늘날에도 변함없이 교환되고 있다.” Definition: “안부를 묻거나 공경·친애·우정의 뜻을 표시하는 예의.”"
+        },
+        {
+          "title": "“언제 밥이나 한번 먹죠” (Let us have a meal sometime), a personal opinion column (정책칼럼) by Han Gi-bong",
+          "publisher": "대한민국 정책브리핑 (Korea Policy Briefing), korea.kr, opinion section; the author's own view",
           "url": "https://www.korea.kr/news/cultureColumnView.do?newsId=148853649",
           "accessed": "2026-10-14",
           "quoteOrLocator": "Column of 2018-08-31: “‘밥 먹었어요?’처럼 그냥 인사치레다.” and “시골에 사는 노모가 전화로 ‘밥은 먹었나?’하면 … 질문이 아니라 관심과 애정의 표현이라는 걸 알기 때문이다.”"
         },
         {
           "title": "국립민속박물관 속 전통문화, 오늘의 K-컬처로 이어지다 (Traditional culture in the National Folk Museum of Korea continues into today's K-culture)",
-          "publisher": "대한민국 정책브리핑 (Korea Policy Briefing), 정책기자단 report",
+          "publisher": "대한민국 정책브리핑 (Korea Policy Briefing), korea.kr, 정책기자단 citizen-reporter piece; the wording is the reporter's",
           "url": "https://www.korea.kr/news/reporterView.do?newsId=148954337",
           "accessed": "2026-10-14",
           "quoteOrLocator": "Report of 2025-11-13, on the museum's section <함께 하는>: “식탁을 함께 둘러앉아 ‘밥 먹었어?’ 라고 묻는 평범한 인사 …”"
         }
       ],
       "verification": {
-        "passes": 2,
+        "passes": 3,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): both pages fetched; the column calls the question a customary greeting and an expression of care rather than a real question; the museum report describes it as an ordinary greeting at the family table. The note says 'often', names no group as a whole and copies no wording. Carried by: q1 intro Hoya line and q1 Discover page 1 caption.\nLine 2 (pass 2b, independent fact check by a separate session, 2026-10-14): both korea.kr pages re-fetched; every quoteOrLocator passage found on its page (column dated 2018-08-31 calls the question just a customary greeting and, in the mother's phone call, care and affection rather than a real question; report dated 2025-11-13 describes asking it around the shared table as an ordinary greeting in the museum's third section). 'Family and friends often ask' is supported (family in both, closeness between acquaintances in the column); 'shows care' is supported; 'a short answer is enough' follows from both pages calling it a greeting rather than a real question. The note and the carrying lines are original English and copy no source wording; host www.korea.kr is on the allowlist; no group-wide claim, stereotype, living person, shop, brand or price. Outcome: kept unchanged."
+        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): both pages fetched; the column calls the question a customary greeting and an expression of care rather than a real question; the 정책기자단 citizen-reporter piece on an NFMK exhibit (the reporter's wording) describes it as an ordinary greeting at a shared table. The note says 'often', names no group as a whole and copies no wording. Carried by: q1 intro Hoya line and q1 Discover page 1 caption.\nLine 2 (pass 2b, independent fact check by a separate session, 2026-10-14): both korea.kr pages re-fetched; every quoteOrLocator passage found on its page (column dated 2018-08-31 calls the question just a customary greeting and, in the mother's phone call, care and affection rather than a real question; report dated 2025-11-13 describes asking it around the shared table as an ordinary greeting as the reporter describes the museum's third section). 'Family and friends often ask' is supported (family in both, closeness between acquaintances in the column); 'shows care' is supported; 'a short answer is enough' follows from both pages calling it a greeting rather than a real question. The note and the carrying lines are original English and copy no source wording; host www.korea.kr is on the allowlist; no group-wide claim, stereotype, living person, shop, brand or price. Outcome: kept unchanged.\nLine 3 (pass 5, MAR culture review, final independent fact check, 2026-10-14): the review found both korea.kr sources were private writing on a public host (an opinion column and a citizen-reporter piece), not an institution's own statement, so the AKS Encyclopedia of Korean Culture entry 인사 was added as the institutional source; all three pages re-fetched and every quoteOrLocator passage found. The entry lists asking whether someone has eaten among everyday greetings still exchanged today and defines a greeting as asking after someone and showing warmth. 'Family and friends' was narrowed to 'People often ask'. Source labels in lines 1-2 corrected. No copied wording, no group-wide claim, stereotype, living person, shop, brand or price. Outcome: changed as stated, passes 3."
       }
     }
   ],
   "review": {
-    "language": "draft",
-    "culture": "draft",
-    "notes": []
+    "language": "native-reviewed",
+    "culture": "culture-reviewed",
+    "reviewedBy": "MAR",
+    "reviewedAt": "2026-10-14",
+    "notes": [
+      "Language (pass 4, MAR): q2 no longer asks a q3 word before q3 teaches it; English glosses name the verb (Yes, I ate / Yes, I drank it); ko captions fixed (상태를 나타내는 말, 말끝); q1 Apply has 4 lines; yes/no wording uses 네/아니요.",
+      "Culture (pass 5, MAR): AKS Encyclopedia of Korean Culture source added for the have-you-eaten greeting, note narrowed to People often ask; source labels corrected; spicy turn moved from kimchi to this soup; elder lines in 해요체 kept as polite models."
+    ]
   },
   "contentVer": 1
 }
