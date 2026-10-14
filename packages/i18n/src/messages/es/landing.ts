@@ -31,7 +31,7 @@ export const landing = {
         description: 'Aprende a leer, escuchar y escribir hangul desde cero en misiones de cinco minutos con Hoya, el tigre, y colecciona tarjetas de cultura coreana. Sin anuncios.',
       },
       parents: {
-        title: 'Para familias: Hangul Route',
+        title: 'Para madres, padres y quien cuide: Hangul Route',
         description: 'Lecciones de hangul cortas y amables, sin anuncios y con un control para adultos. Crea un espacio familiar gratis y mira la semana de cada estudiante.',
       },
       teachers: {
@@ -155,8 +155,8 @@ export const landing = {
       },
     },
     parents: {
-      title: 'Para familias',
-      lead: 'Para madres, padres, abuelos y quien cuide: lecciones cortas y amables que mantienen privados los datos de tu estudiante.',
+      title: 'Para madres, padres y quien cuide',
+      lead: 'También para abuelos y toda persona que cuide: lecciones cortas y amables que mantienen privados los datos de tu estudiante.',
       signIn: 'Entrar como familia',
       learn: {
         title: 'Qué aprenden',
