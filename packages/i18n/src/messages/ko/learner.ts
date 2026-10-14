@@ -436,6 +436,11 @@ export const learner = {
       missHoya: '다시 들어 봐요',
       empty: '여기에는 할 게임이 없어요',
     },
+    realia: {
+      lineHint: '줄을 누르면 소리를 들을 수 있어요.',
+      missHoya: '다시 살펴봐요',
+      empty: '여기에는 할 게임이 없어요',
+    },
     voiceEcho: {
       heading: '소리 내어 따라 해요',
       bubble: "제 소리를 듣고 소리 내어 따라 해 봐요. 다 하면 '했어요'를 눌러요.",

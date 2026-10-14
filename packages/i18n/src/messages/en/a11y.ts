@@ -152,6 +152,15 @@ export const a11y = {
     /** Card Match: a Korean word (its romanization, else the word) and a meaning (content gloss). */
     koreanWord: (word: string) => `Korean word ${word}`,
     meaning: (gloss: string) => `English meaning ${gloss}`,
+    /** Realia Read (F-CURR-001 G-2): the drawn sheet is a named group of line buttons; a line's name ends with its mark. */
+    realia: {
+      summary: (kind: string, lines: number) => `${kind}, ${plural('en', lines, { one: '1 line', other: `${lines} lines` })}`,
+      kind: { menu: 'Menu', ticket: 'Train ticket', sign: 'Trail sign', priceCards: 'Price cards', plain: 'Reading sheet' },
+      lineHint: 'Tap to hear it',
+      found: 'Found here',
+      lookHere: 'Look here',
+      dir: { left: 'to the left', right: 'to the right' },
+    },
   },
   /** A taught Korean item: Korean text, its romanization and (optionally) a gloss in the UI language. */
   koreanItem: (item: { ko: string; romanization: string; gloss?: string }) =>

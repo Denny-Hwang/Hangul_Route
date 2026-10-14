@@ -790,4 +790,6 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'learner.presenter.timer.minutes': [[1], [5]],
   'learner.presenter.timer.seconds': [[30]],
   'a11y.presenter.timerLeft': [['2:45']],
+  // F-CURR-001 G-2: Realia Read.
+  'a11y.minigame.realia.summary': [['Menu', 1], ['Menu', 4]],
 };

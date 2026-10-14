@@ -449,6 +449,11 @@ export const learner = {
       missHoya: 'Escucha otra vez',
       empty: 'Aquí no hay nada para jugar',
     },
+    realia: {
+      lineHint: 'Toca una línea para escucharla.',
+      missHoya: 'Mira otra vez',
+      empty: 'Aquí no hay nada para jugar',
+    },
     voiceEcho: {
       heading: 'Dilo en voz alta',
       bubble: "Escúchame y luego repítelo en voz alta. Toca 'Lo dije' al terminar.",
