@@ -2,7 +2,7 @@
   "v": 1,
   "id": "story:seollal-new-year",
   "state": "ready",
-  "contentVer": 4,
+  "contentVer": 5,
   "title": {
     "ko": "호야의 설날 아침",
     "romanization": "Hoyaui Seollal achim",
@@ -596,6 +596,416 @@
         "sebae",
         "tteokguk"
       ]
+    },
+    {
+      "level": "read",
+      "scenes": [
+        {
+          "id": "s1",
+          "narrationEn": "{kw:seollal} is the first day of the new year on the lunar calendar. It is one of Korea's biggest traditional holidays.",
+          "captionEn": "Seollal, the first day of the lunar year",
+          "line": {
+            "ko": "설날은 음력 새해 첫날이에요.",
+            "romanization": "Seollareun eumnyeok saehae cheonnarieyo.",
+            "en": "Seollal is the first day of the lunar new year.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f1"
+          ],
+          "framing": false,
+          "approximations": [],
+          "art": {
+            "setting": "scene:village-lane",
+            "layers": [
+              {
+                "ref": "prop:glow-burst",
+                "x": 200,
+                "y": 150,
+                "s": 0.7
+              },
+              {
+                "ref": "prop:persimmon-tree",
+                "x": 62,
+                "y": 262,
+                "s": 1.1,
+                "tint": "feedback.nudge"
+              },
+              {
+                "ref": "hoya:waving",
+                "x": 210,
+                "y": 292,
+                "s": 0.95
+              }
+            ],
+            "altEn": "On a crisp Seollal morning the sun rises over the village roofs, and Hoya waves hello for the Lunar New Year."
+          }
+        },
+        {
+          "id": "s2",
+          "narrationEn": "On Seollal, people wear new clothes for the new year, called {kw:seolbim}.",
+          "captionEn": "New seolbim clothes for the new year",
+          "line": {
+            "ko": "설날에는 설빔을 입어요.",
+            "romanization": "Seollareneun seolbimeul ibeoyo.",
+            "en": "On Seollal, people wear seolbim (new clothes).",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f2"
+          ],
+          "framing": false,
+          "approximations": [],
+          "art": {
+            "setting": "scene:hanok-room",
+            "layers": [
+              {
+                "ref": "prop:fig-woman",
+                "x": 90,
+                "y": 286,
+                "s": 1.0,
+                "tint": "brand.primary"
+              },
+              {
+                "ref": "prop:fig-girl",
+                "x": 200,
+                "y": 288,
+                "s": 1.6
+              },
+              {
+                "ref": "prop:fig-child",
+                "x": 292,
+                "y": 286,
+                "s": 1.15
+              },
+              {
+                "ref": "hoya:cheering",
+                "x": 360,
+                "y": 294,
+                "s": 0.62
+              }
+            ],
+            "altEn": "A family in new Seollal clothes: a girl holds out her rainbow-striped saekdong sleeves, and Hoya cheers."
+          }
+        },
+        {
+          "id": "s3",
+          "narrationEn": "The children bow to Grandma, {kw:halmeoni}. This New Year bow is called {kw:sebae}.",
+          "captionEn": "The children bow to Grandma",
+          "line": {
+            "ko": "아이들이 할머니께 세배를 드려요.",
+            "romanization": "Aideuri halmeonikke sebaereul deuryeoyo.",
+            "en": "The children make a New Year bow (sebae) to Grandma.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f3"
+          ],
+          "framing": false,
+          "approximations": [],
+          "art": {
+            "setting": "scene:hanok-room",
+            "layers": [
+              {
+                "ref": "prop:fig-elder-seated",
+                "x": 252,
+                "y": 262,
+                "s": 1.35
+              },
+              {
+                "ref": "prop:fig-elder-seated",
+                "x": 350,
+                "y": 262,
+                "s": 1.25,
+                "flip": true,
+                "tint": "brand.secondaryLight"
+              },
+              {
+                "ref": "prop:fig-bowing",
+                "x": 110,
+                "y": 292,
+                "s": 1.6,
+                "flip": true,
+                "tint": "brand.secondaryLight"
+              },
+              {
+                "ref": "prop:fig-bowing",
+                "x": 178,
+                "y": 298,
+                "s": 1.5,
+                "flip": true,
+                "tint": "feedback.nudgeLight"
+              },
+              {
+                "ref": "hoya:idle",
+                "x": 40,
+                "y": 296,
+                "s": 0.52
+              }
+            ],
+            "altEn": "Two children kneel in a deep New Year bow, sebae, before their grandparents on floor cushions, as Hoya watches."
+          }
+        },
+        {
+          "id": "s4",
+          "narrationEn": "Grandma answers the bow with kind words of blessing for the year, called {kw:deokdam}.",
+          "captionEn": "Grandma gives words of blessing",
+          "line": {
+            "ko": "할머니가 덕담을 하세요.",
+            "romanization": "Halmeoniga deokdameul haseyo.",
+            "en": "Grandma says words of blessing (deokdam).",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f5"
+          ],
+          "framing": false,
+          "approximations": [],
+          "art": {
+            "setting": "scene:hanok-room",
+            "layers": [
+              {
+                "ref": "prop:fig-elder-seated",
+                "x": 150,
+                "y": 268,
+                "s": 1.3
+              },
+              {
+                "ref": "prop:soban",
+                "x": 250,
+                "y": 294,
+                "s": 1.15
+              },
+              {
+                "ref": "prop:fig-child",
+                "x": 322,
+                "y": 286,
+                "s": 1.15
+              },
+              {
+                "ref": "hoya:cheering",
+                "x": 62,
+                "y": 296,
+                "s": 0.55
+              }
+            ],
+            "altEn": "Grandma shares kind New Year wishes with a child beside a low table of rice cakes and fruit, and Hoya cheers."
+          }
+        },
+        {
+          "id": "s5",
+          "narrationEn": "On Seollal, people eat {kw:tteokguk}, a clear soup with thin slices of white rice cake.",
+          "captionEn": "A bowl of tteokguk on Seollal",
+          "line": {
+            "ko": "설날에는 떡국을 먹어요.",
+            "romanization": "Seollareneun tteokgugeul meogeoyo.",
+            "en": "On Seollal, people eat tteokguk (rice cake soup).",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f6"
+          ],
+          "framing": false,
+          "approximations": [],
+          "art": {
+            "setting": "scene:hanok-room",
+            "layers": [
+              {
+                "ref": "prop:soban",
+                "x": 220,
+                "y": 288,
+                "s": 2.0,
+                "tint": "surface.sunken"
+              },
+              {
+                "ref": "hoya:idle",
+                "x": 78,
+                "y": 292,
+                "s": 0.8
+              }
+            ],
+            "altEn": "Two bowls of tteokguk, clear soup with white rice-cake slices, wait on a low table, and Hoya is ready for breakfast."
+          }
+        },
+        {
+          "id": "s6",
+          "narrationEn": "People split into two teams and play {kw:yunnori}, throwing four wooden yut sticks.",
+          "captionEn": "Two teams play yunnori",
+          "line": {
+            "ko": "두 편으로 나누어 윷놀이를 해요.",
+            "romanization": "Du pyeoneuro nanueo yunnorireul haeyo.",
+            "en": "People split into two teams and play yunnori.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f7"
+          ],
+          "framing": false,
+          "approximations": [],
+          "art": {
+            "setting": "scene:hanok-room",
+            "layers": [
+              {
+                "ref": "prop:yut-board",
+                "x": 200,
+                "y": 292,
+                "s": 1.35
+              },
+              {
+                "ref": "prop:yut-sticks",
+                "x": 200,
+                "y": 206,
+                "s": 1.15
+              },
+              {
+                "ref": "prop:fig-woman",
+                "x": 62,
+                "y": 282,
+                "s": 0.95,
+                "tint": "brand.primary"
+              },
+              {
+                "ref": "hoya:cheering",
+                "x": 112,
+                "y": 296,
+                "s": 0.6
+              },
+              {
+                "ref": "prop:fig-girl",
+                "x": 300,
+                "y": 284,
+                "s": 1.1
+              },
+              {
+                "ref": "prop:fig-child",
+                "x": 352,
+                "y": 286,
+                "s": 1.05
+              }
+            ],
+            "altEn": "Four yut sticks tumble above the yut board as two teams cheer, and Hoya cheers with his team."
+          }
+        }
+      ],
+      "checks": [
+        {
+          "id": "r1",
+          "kind": "pick-meaning",
+          "promptEn": "What does {target} mean?",
+          "target": {
+            "ko": "설빔",
+            "romanization": "seolbim",
+            "en": "new clothes for Seollal"
+          },
+          "options": [
+            {
+              "id": "a",
+              "en": "A New Year bow",
+              "isCorrect": false
+            },
+            {
+              "id": "b",
+              "en": "New clothes for Seollal",
+              "isCorrect": true
+            },
+            {
+              "id": "c",
+              "en": "Rice cake soup",
+              "isCorrect": false
+            },
+            {
+              "id": "d",
+              "en": "A yut stick game",
+              "isCorrect": false
+            }
+          ],
+          "explainEn": "Seolbim are the new clothes people wear for Seollal.",
+          "factIds": [
+            "f2"
+          ]
+        },
+        {
+          "id": "r2",
+          "kind": "pick-meaning",
+          "promptEn": "What does {target} mean?",
+          "target": {
+            "ko": "덕담",
+            "romanization": "deokdam",
+            "en": "words of blessing"
+          },
+          "options": [
+            {
+              "id": "a",
+              "en": "New clothes",
+              "isCorrect": false
+            },
+            {
+              "id": "b",
+              "en": "A clear soup",
+              "isCorrect": false
+            },
+            {
+              "id": "c",
+              "en": "A board game",
+              "isCorrect": false
+            },
+            {
+              "id": "d",
+              "en": "Words of blessing",
+              "isCorrect": true
+            }
+          ],
+          "explainEn": "Deokdam are the kind words of blessing an elder says after a sebae bow.",
+          "factIds": [
+            "f5"
+          ]
+        },
+        {
+          "id": "r3",
+          "kind": "detail",
+          "promptEn": "In the story, what do people eat on Seollal?",
+          "options": [
+            {
+              "id": "a",
+              "en": "Tteokguk (rice cake soup)",
+              "isCorrect": true
+            },
+            {
+              "id": "b",
+              "en": "Songpyeon (filled rice cakes)",
+              "isCorrect": false
+            },
+            {
+              "id": "c",
+              "en": "Bibimbap (mixed rice)",
+              "isCorrect": false
+            },
+            {
+              "id": "d",
+              "en": "Japchae (glass noodles)",
+              "isCorrect": false
+            }
+          ],
+          "explainEn": "Tteokguk, a clear soup with thin slices of white rice cake, is the classic Seollal food.",
+          "factIds": [
+            "f6"
+          ]
+        }
+      ],
+      "checkpoints": [],
+      "sequenceSceneIds": [
+        "s1",
+        "s3",
+        "s5",
+        "s6"
+      ],
+      "newKeywordIds": [
+        "seolbim",
+        "sebae",
+        "deokdam",
+        "tteokguk"
+      ],
+      "grammarFocusEn": "Topic -eun/-neun and -e-neun: \"On Seollal, we ...\" with polite -ayo/-eoyo"
     }
   ],
   "coverSceneId": "s1",
@@ -894,8 +1304,8 @@
     "passes": 3,
     "checkedAt": "2026-10-10",
     "scope": "cluster",
-    "notes": "Third independent pass over 6 episodes / 61 facts / 161 source entries (70 unique URLs). Every URL was re-fetched with my own scripts (UNESCO pages via Wayback copies; heritage.go.kr descriptions via the portal ajax html and khs.go.kr open API; folkency via its JSON API) and each quote or locator was machine-matched to the page text; the few non-matching strings were checked by hand (portal metadata fields, hanja or footnote punctuation, label text). Corrections: (1) pansori scene 2 now gives both UNESCO steps (2003 masterpiece proclamation, 2008 Representative List); (2) pansori f11 states the Aesop title as in the cited Townsend text and the common alternate title; (3) added sources: NFM 놀보박타령 for 'greedy' (f5), 표준국어대사전 타다 for 'sawed' (f6), 한국민족문화대백과사전 선도해 for the Samguk sagi tale (f12); (4) Seollal f9/f10 designation-date locators now cite the KHS open API field. No other change. See seasons-tales.signoff.md. MAR 2026-10-13 language review (F-STORY-001 PR 1.9): Korean strings, romanization and glosses read; findings and outcomes in the PR. MAR 2026-10-13 culture review (F-STORY-001 PR 1.9): heritage accuracy, framing, tone and advisories read; review.advisory confirmed; findings and outcomes in the PR."
+    "notes": "Third independent pass over 6 episodes / 61 facts / 161 source entries (70 unique URLs). Every URL was re-fetched with my own scripts (UNESCO pages via Wayback copies; heritage.go.kr descriptions via the portal ajax html and khs.go.kr open API; folkency via its JSON API) and each quote or locator was machine-matched to the page text; the few non-matching strings were checked by hand (portal metadata fields, hanja or footnote punctuation, label text). Corrections: (1) pansori scene 2 now gives both UNESCO steps (2003 masterpiece proclamation, 2008 Representative List); (2) pansori f11 states the Aesop title as in the cited Townsend text and the common alternate title; (3) added sources: NFM 놀보박타령 for 'greedy' (f5), 표준국어대사전 타다 for 'sawed' (f6), 한국민족문화대백과사전 선도해 for the Samguk sagi tale (f12); (4) Seollal f9/f10 designation-date locators now cite the KHS open API field. No other change. See seasons-tales.signoff.md. MAR 2026-10-13 language review (F-STORY-001 PR 1.9): Korean strings, romanization and glosses read; findings and outcomes in the PR. MAR 2026-10-13 culture review (F-STORY-001 PR 1.9): heritage accuracy, framing, tone and advisories read; review.advisory confirmed; findings and outcomes in the PR. MAR 2026-10-13 language review of the read tier (F-STORY-005 PR 5.6): 6 Korean lines, their romanization (machine-checked) and glosses read for spelling, naturalness and Stage 5 level; 1 change (s3 sebae-reul deuryeoyo, the humble verb for a bow to an elder); findings and outcomes in the PR. MAR 2026-10-13 culture review of the read tier (F-STORY-005 PR 5.6): every line and check compared with its cited facts (no new claim), framing, tone and respectful wording read; review.advisory unchanged; findings and outcomes in the PR."
   },
-  "authorNotes": "Romanization: 윷놀이 is pronounced [윤노리], so RR (the repo converter) gives 'yunnori', and yunnori is the app-wide romanization (the yut heritage card also stores yunnori). 'Yut nori' (Korea Heritage Service) and 'yutnori' appear only as alternate English spellings. 'Saehae bok mani badeuseyo' is the greeting most people use today, but the Encyclopedia of Korean Culture calls it a modern greeting (older ones include '과세 안녕히 하셨습니까'). The narration keeps that in facts and doesn't call it ancient. The tteokguk age saying is presented only as a saying. Sebae money (세뱃돈) is described the way the Encyclopedia does: 'a little money, or rice cakes and fruit'. Left out on purpose: the sources don't explain which way up the yut sticks count for each throw (엎어지다/젖혀지다), so the narration doesn't say. Also left out are 차례 table details, 복조리, and 안택 rites. Note for existing content: heritage-cards.ts says tteokguk slices 'look like coins for good luck'. None of the sources checked here supports that, so it's not used here; please review it. REVISION 2026-10-10: \"four great holidays\" now stated as the late-Joseon Dongguk sesigi listing (the 1518 list had three: Seol, Dano, Chuseok, per the KHS portal). Check 3 reworded to an in-story question; \"Everyone\" softened to \"People\". AUTHORING 2026-10-11 (F-STORY-001 PR 1.8d): title romanization, scene captions and check explanations written from the cited facts; every scene is artPending (text-only tile) until the art PRs; no claim or source changed. Korean spacing: the learner term is written 국가 무형 유산 (spaced by word, 한글 맞춤법 제50항) so each word lines up with gukga muhyeong yusan; the facts keep the official 국가무형유산. REVIEW 2026-10-11 (PR 1.8d review fixes): s7 also cites f7 (the winning rule); s8 says 'listed' in short sentences; check 1 uses only words this story teaches; s4 now uses the halmeoni keyword as a token; learning goals use receptive verbs (Know, Understand, Read and recognize). PR #208 REVIEW FIXES 2026-10-11: s8 caption 'Two National Intangible Heritage listings' (f9's item is Seol and Daeboreum, not Seol alone; the full name exceeds the 48-character caption cap).",
+  "authorNotes": "Romanization: 윷놀이 is pronounced [윤노리], so RR (the repo converter) gives 'yunnori', and yunnori is the app-wide romanization (the yut heritage card also stores yunnori). 'Yut nori' (Korea Heritage Service) and 'yutnori' appear only as alternate English spellings. 'Saehae bok mani badeuseyo' is the greeting most people use today, but the Encyclopedia of Korean Culture calls it a modern greeting (older ones include '과세 안녕히 하셨습니까'). The narration keeps that in facts and doesn't call it ancient. The tteokguk age saying is presented only as a saying. Sebae money (세뱃돈) is described the way the Encyclopedia does: 'a little money, or rice cakes and fruit'. Left out on purpose: the sources don't explain which way up the yut sticks count for each throw (엎어지다/젖혀지다), so the narration doesn't say. Also left out are 차례 table details, 복조리, and 안택 rites. Note for existing content: heritage-cards.ts says tteokguk slices 'look like coins for good luck'. None of the sources checked here supports that, so it's not used here; please review it. REVISION 2026-10-10: \"four great holidays\" now stated as the late-Joseon Dongguk sesigi listing (the 1518 list had three: Seol, Dano, Chuseok, per the KHS portal). Check 3 reworded to an in-story question; \"Everyone\" softened to \"People\". AUTHORING 2026-10-11 (F-STORY-001 PR 1.8d): title romanization, scene captions and check explanations written from the cited facts; every scene is artPending (text-only tile) until the art PRs; no claim or source changed. Korean spacing: the learner term is written 국가 무형 유산 (spaced by word, 한글 맞춤법 제50항) so each word lines up with gukga muhyeong yusan; the facts keep the official 국가무형유산. REVIEW 2026-10-11 (PR 1.8d review fixes): s7 also cites f7 (the winning rule); s8 says 'listed' in short sentences; check 1 uses only words this story teaches; s4 now uses the halmeoni keyword as a token; learning goals use receptive verbs (Know, Understand, Read and recognize). PR #208 REVIEW FIXES 2026-10-11: s8 caption 'Two National Intangible Heritage listings' (f9's item is Seol and Daeboreum, not Seol alone; the full name exceeds the 48-character caption cap). READ TIER 2026-10-13 (F-STORY-005 PR 5.6): short Korean sentences retell facts already cited; no new fact, claim or source; art reused from the listen scene with the same id.",
   "errata": []
 }

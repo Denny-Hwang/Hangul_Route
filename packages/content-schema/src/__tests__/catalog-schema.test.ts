@@ -49,7 +49,7 @@ describe('the shipped catalogue data', () => {
     for (const cell of CATALOG.cells) expect(cell.episodeId).toBe(`episode:${cell.stage}-${cell.theme}`);
   });
 
-  it('has Stage 1 shipped, three taste cells shipped elsewhere and the other 27 as previews', () => {
+  it('has Stage 1 shipped, four taste cells shipped elsewhere (the Stage 5 rites book since F-STORY-005 PR 5.6) and the other 26 as previews', () => {
     const shipped = CATALOG.cells.filter((c) => c.status === 'shipped').map((c) => c.episodeId);
     expect(shipped).toEqual([
       'episode:stage1-letters',
@@ -60,9 +60,10 @@ describe('the shipped catalogue data', () => {
       'episode:stage2-life',
       'episode:stage2-nature',
       'episode:stage4-rites',
+      'episode:stage5-rites',
     ]);
     const previews = CATALOG.cells.filter((c) => c.status === 'preview');
-    expect(previews).toHaveLength(27);
+    expect(previews).toHaveLength(26);
     for (const cell of previews) expect(cell.questIds).toEqual([]);
   });
 
@@ -86,7 +87,8 @@ describe('the shipped catalogue data', () => {
       'quest:stage1-crafts-q3',
     ]);
     expect(CATALOG.quests.filter((q) => q.kind === 'lesson').map((q) => q.id)).toContain('quest:stage4-rites-q1');
-    expect(CATALOG.quests.filter((q) => q.kind === 'lesson')).toHaveLength(18);
+    // 15 Stage 1 + 3 taste quests + the 3 read quests of the Stage 5 rites book (F-STORY-005 PR 5.6).
+    expect(CATALOG.quests.filter((q) => q.kind === 'lesson')).toHaveLength(21);
   });
 
   it('has 24 stories adding up to 112 minutes, each with a listen quest on its shelf episode', () => {
@@ -404,6 +406,9 @@ describe('routeCatalogOf', () => {
       'quest:stage2-life-q1',
       'quest:stage2-nature-q1',
       'quest:stage4-rites-q1',
+      'quest:story-seollal-new-year-read',
+      'quest:story-dano-ssireum-read',
+      'quest:story-chuseok-ganggangsullae-read',
     ]);
     expect(route.quests.slice(0, lessons.length).every((q) => q.grid)).toBe(true);
     const stories = route.quests.filter((q) => !q.grid);

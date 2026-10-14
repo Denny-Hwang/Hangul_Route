@@ -52,6 +52,7 @@ import { track } from '../../platform/telemetry';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
 import { useStoryStore } from '../../store/story-store';
+import { CellLinkRow } from '../story/CellLinkRow';
 import { SpeakerButton } from '../story/ReaderParts';
 import { CoverFallback } from '../library/StoryTile';
 
@@ -75,6 +76,8 @@ export interface StoryEpisodeNavigation {
   onBack?: () => void;
   /** A shelf story's home-cell pill opens its cell page (F-STORY-005 §3.6); informational, never a lock. */
   onOpenCellStories: (stage: StageKey, theme: ThemeKey) => void;
+  /** A book page's "Heritage stories for this cell" row opens the book's cell page (F-STORY-005 PR 5.6). */
+  onOpenCellStoriesRow: () => void;
 }
 
 interface Props extends StoryEpisodeNavigation {
@@ -82,6 +85,11 @@ interface Props extends StoryEpisodeNavigation {
   episode: Episode;
   /** `storyEpisodeEntries(episode, index)`: one per quest, in the episode's quest order. */
   entries: readonly StoryIndexEntry[];
+  /**
+   * `lessonRowCount(episode, index)`: the shelf stories whose home is this grid page's cell. A book page
+   * draws the row when it is above 0 (wireframe episode/detail-cell-stories-row D); a shelf page has 0.
+   */
+  cellStoryCount: number;
 }
 
 /**
@@ -91,7 +99,10 @@ interface Props extends StoryEpisodeNavigation {
  * renders it for a story episode that is not a preview. What is shown and
  * which button is the one large one is `storyEpisodeView`; every action runs
  * through `planOpenStory`, so the page reports `story.opened` like every
- * other surface. Start over clears the bookmark first.
+ * other surface. Start over clears the bookmark first. A Stage 5 book page
+ * also has the cell's "Heritage stories for this cell" row after its tale
+ * rows (F-STORY-005 PR 5.6; wireframe
+ * design/wireframes/episode/detail-cell-stories-row.md D).
  */
 export function StoryEpisodeDetail({
   episode,
@@ -102,6 +113,8 @@ export function StoryEpisodeDetail({
   onOpenCultureNotes,
   onBack,
   onOpenCellStories,
+  cellStoryCount,
+  onOpenCellStoriesRow,
 }: Props): React.ReactElement {
   const messages = useMessages();
   const copy = shelfCopy(messages);
@@ -249,6 +262,20 @@ export function StoryEpisodeDetail({
             />
           ))}
         </View>
+
+        {cellStoryCount > 0 ? (
+          <>
+            <Spacer size="lg" />
+            <CellLinkRow
+              label={messages.learner.journey.cellStories.row}
+              accessibilityLabel={messages.learner.journey.cellStories.rowLabel(cellStoryCount)}
+              count={messages.learner.journey.countMark(cellStoryCount, false)}
+              icon="library"
+              onPress={onOpenCellStoriesRow}
+              testID="story-episode-cell-stories-row"
+            />
+          </>
+        ) : null}
 
         {view.words.length > 0 ? (
           <>

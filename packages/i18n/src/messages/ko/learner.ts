@@ -195,6 +195,7 @@ export const learner = {
       title: (stageTitle: string, themeTitle: string) => `${stageTitle} · ${themeTitle}`,
       subtitle: '이 칸의 문화 이야기',
       lessonRow: (title: string) => `${title} — 이 칸의 레슨`,
+      bookRow: (title: string) => `${title} — 이 칸의 책`,
       empty: '아직 여기에는 아무것도 없어요',
       row: '이 칸의 문화 이야기',
       rowLabel: (count: number) => `이 칸의 문화 이야기, 문화 이야기 ${count}개`,

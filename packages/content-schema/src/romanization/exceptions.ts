@@ -30,6 +30,11 @@ export const ROMANIZATION_EXCEPTIONS: readonly RomanizationException[] = [
     allowed: ['wae girokalkkayo'],
     reason: 'ㄱ+ㅎ across the noun-verb join of 기록하다: the converter keeps the noun convention (묵호 mukho) and gives girokhalkkayo; the verb ending aspirates',
   },
+  {
+    ko: '송편은 솔잎을 깔고 쪄요.',
+    allowed: ['songpyeoneun sollipeul kkalgo jjyeoyo.'],
+    reason: 'ㄴ-insertion in 솔잎 (said [솔립], RR sollip) carries into 솔잎을 [솔리플]; the converter has no compound rule and gives soripeul',
+  },
 ];
 
 /**

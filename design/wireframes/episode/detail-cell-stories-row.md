@@ -2,7 +2,7 @@
 
 Spec: `docs/specs/F-STORY-005-episode-catalogue-grid.md` §3.6 (lesson page row), §3.12; base page `episode/detail.md`; locked-card earn hints of the same page in F-STORY-006 (`library/earn-hints.md`)
 Audience: anyone learning Hangul, any age (CLAUDE.md §1). The row is an invitation beside the lesson, never a requirement.
-Code: built (PR 5.5b) inside `apps/mobile/src/screens/episode/EpisodeDetailView.tsx` with `screens/story/CellLinkRow.tsx` and `lessonRowCount` (`logic/story/cell-stories.ts`); a Stage 5 book page gets the same row with the first book (PR 5.6) (the body extracted by F-LAYOUT-001 PR 4, so the row also shows in the Journey detail pane); count from `entriesForCell` (PR 5.3). Brief: `design/brief/screens/06-episode-detail.md` (stories row section).
+Code: built (PR 5.5b) inside `apps/mobile/src/screens/episode/EpisodeDetailView.tsx` with `screens/story/CellLinkRow.tsx` and `lessonRowCount` (`logic/story/cell-stories.ts`); the Stage 5 book page (`screens/episode/StoryEpisodeDetail.tsx`) gets the same row with the first book (PR 5.6, panel D) (the body extracted by F-LAYOUT-001 PR 4, so the row also shows in the Journey detail pane); count from `entriesForCell` (PR 5.3). Brief: `design/brief/screens/06-episode-detail.md` (stories row section).
 Notation: `[[ X ]]` the one primary action, `[ X ]` secondary or ghost, `n >` a plain count with a chevron.
 
 Promoted by F-STORY-005 PR 5.0 from panel C of the one-file draft (`journey/grid-with-stories.md`).
@@ -46,11 +46,43 @@ The page's one primary stays the next quest's Start; the row is secondary.
 
 ---
 
+## D. Stage 5 book page: stories row (F-STORY-005 PR 5.6)
+
+A book page is the story variant of the episode page (`episode/detail-story.md` E): one tale row per story of the book. A book sits in a grid cell that may also be the home cell of shelf stories (Festival Tales, Stage 5 Rites, is the home of "A Picture Record of a Royal Birthday"), so the page gets the same row.
+
+```
+┌──────────────────────────────────┐
+│ [<]                              │
+│ [Stories] [Holidays & Traditions] [14 min]
+│ Festival Tales (display)         │
+│ [Hoya bubble: intro]             │
+│                                  │
+│ row: [cover] Hoya's Seollal ...  │   <- [[ START ]] on the first new or in-progress row
+│ row: [cover] Dano Day ...        │      stays the one primary
+│ row: [cover] Chuseok ...         │
+│                                  │
+│ ┌──────────────────────────────┐ │   <- new row, only when the cell has shelf stories
+│ │ Heritage stories for this    │ │      the same CellLinkRow as panel C
+│ │ cell                     1 > │ │
+│ └──────────────────────────────┘ │
+│                                  │
+│ Cards in this episode            │   <- unchanged (none for a book until F-CARD-S5-001)
+│ [ Sources ]                      │   <- single-story pages only (unchanged)
+└──────────────────────────────────┘
+```
+
+- Placed after the tale rows and before "Culture notes", "Cards in this episode" and Sources, like panel C.
+- The count is the cell's shelf stories (`lessonRowCount`: `entriesForCell`), so the book's own Read quests never count; 0 hides the row.
+- A one-story shelf page keeps its home-cell pill instead (the row is only for grid pages); a preview page has neither.
+- Tapping opens `CellStories { stage, theme, source: 'lesson-row' }`.
+
+---
+
 ## Interaction points
 
 | Where | Tap / key | Result |
 |---|---|---|
-| Stories row | tap, Enter | `CellStories { stage, theme }` (`story/cell-stories.md`) |
+| Stories row (C, D) | tap, Enter | `CellStories { stage, theme }` (`story/cell-stories.md`) |
 | Everything else | tap | unchanged (`episode/detail.md`) |
 
 ## Navigation graph
