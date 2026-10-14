@@ -19,10 +19,11 @@ import { shot } from './shots';
  *
  * LR-10 (amendment section 13) adds two entry cases: (a) the parent dashboard
  * row of the active learner, through the PIN gate, opens the read-only page;
- * (b) a finished level check's "See Learning Route" opens the Route tab. The
- * level check has no learner entry while `flags.placementEnabled` is off, so
- * (b) opens it through the fixture bundle's `window.__hrPlacementE2E` hook and
- * runs in CI's fixture run (its own describe, "the level check entry"):
+ * (b) a finished level check's "See Learning Route" opens the Route tab. Case
+ * (b) opens the check through the fixture bundle's `window.__hrPlacementE2E`
+ * hook (written before F-PLC-001 P-10 turned the learner entries on;
+ * `placement.spec.ts` takes them on the release build) and runs in CI's
+ * fixture run (its own describe, "the level check entry"):
  *
  *   pnpm --filter @hangul-route/mobile build:web:fixtures
  *   STORY_FIXTURES=1 pnpm --filter @hangul-route/mobile exec playwright test route-tab -g "level check entry"

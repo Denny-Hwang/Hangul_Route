@@ -42,7 +42,10 @@ export const WORD_ART_FAMILIES: readonly WordArtFamily[] = Object.freeze([
 
 export const WORD_ART_KEY_RE = new RegExp(`^(${WORD_ART_FAMILIES.join('|')})-[a-z0-9-]+$`);
 
-/** Planned glyphs per family (F-VOC-001 §3.4 counts; F-VOC-002 §3.8): 95 hand + 4 props + 36 generated. */
+/**
+ * Planned glyphs per family (F-VOC-001 §3.4 counts; F-VOC-002 §3.8): 95 hand + 4 props + 36 generated.
+ * A `reserved` key (a lesson picture outside the vocabulary topics) is not counted.
+ */
 export const WORD_ART_PLAN: Readonly<Record<WordArtFamily, number>> = Object.freeze({
   food: 9,
   animal: 11,
@@ -100,6 +103,8 @@ const META: WordArtMetaOverrides = {
   // batch W-6: travel, sport, K-Culture and science, approved by the batch review that stands in for the owner's (2026-10-11)
   ...Object.fromEntries([...['airplane', 'train', 'taxi', 'subway', 'car', 'boat', 'map', 'passport', 'ticket', 'airport', 'hotel'].map((k) => `travel-${k}`), ...['baseball', 'basketball', 'volleyball', 'tabletennis', 'swimming', 'taekwondo', 'running', 'jumprope', 'bicycle', 'skiing', 'ball'].map((k) => `sport-${k}`), ...['hangul', 'hanok', 'bibimbap', 'tteokbokki', 'song', 'dance', 'drama'].map((k) => `culture-${k}`), ...['fire', 'ice', 'stone', 'magnet', 'earth', 'space', 'robot', 'seed', 'shadow', 'wind', 'light'].map((k) => `science-${k}`)].map((k) => [k, { status: 'approved' }])),
   'science-rainbow': { status: 'approved', maxTones: 7, reason: 'A rainbow needs its six arc colours, and the two clouds at its feet are a seventh, white (§3.12 brief: six arcs, two clouds).' },
+  // lesson pictures outside the vocabulary topics (Stage 2 Playground Words, F-CURR-001 S2-3): reserved, so outside the family plan
+  ...Object.fromEntries(['sport-swing', 'sport-slide', 'nature-sand'].map((k) => [k, { status: 'approved', reserved: true }])),
 };
 
 /** One glyph file: the family it holds, and its glyphs by key. */

@@ -416,7 +416,8 @@ jobs:
         working-directory: apps/mobile
         env:
           E2E_ROUTE: "1"
-        run: pnpm exec playwright test e2e/web/route-proposal.spec e2e/web/route-plan.spec e2e/web/route.spec
+        # F-PLC-001 P-10: placement.spec's test-language case needs a build that shows more than one locale.
+        run: pnpm exec playwright test e2e/web/route-proposal.spec e2e/web/route-plan.spec e2e/web/route.spec e2e/web/placement.spec
 
       - name: Save the Playwright browsers (main only)
         if: github.event_name == 'push' && steps.pw-cache.outputs.cache-hit != 'true' && success()

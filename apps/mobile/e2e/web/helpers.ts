@@ -21,6 +21,33 @@ export interface OnboardOptions {
   pin?: string;
   /** Press "Start my journey" on the first-quest preview (default true). */
   startJourney?: boolean;
+  /**
+   * The level check's onboarding fork (F-PLC-001 section 3.1 step 1, on since P-10): `'new'` (the default)
+   * answers "I am new to Korean" and goes on to the first-quest preview; `'stop'` stays on the fork, for a
+   * spec that takes the check from there.
+   */
+  levelCheck?: 'new' | 'stop';
+  /** Visible label of the reading level to pick (`Pictures first`, `Some reading`, ...); the form's default when omitted. */
+  readingLevel?: string;
+}
+
+/**
+ * The onboarding fork, "Where should we start?" (F-PLC-001 P-7; on by default since P-10): "I am new to
+ * Korean" goes on to the first-quest preview exactly as before the fork existed.
+ */
+export async function answerForkNew(page: Page): Promise<void> {
+  await expect(page.getByTestId('placement-invite')).toBeVisible();
+  await page.getByTestId('placement-invite-new').click();
+  await expect(page.getByTestId('placement-invite')).toHaveCount(0);
+  // The fork speaks its question on open. Specs that count utterances (`__utterances`, `__spoken`, the silent
+  // engine's `__silentSpeech`) count from the first-quest preview on, as they did before the fork existed.
+  await page.evaluate(() => {
+    const w = window as unknown as Record<string, unknown>;
+    for (const key of ['__utterances', '__spoken', '__silentSpeech']) {
+      const log = w[key];
+      if (Array.isArray(log)) log.length = 0;
+    }
+  });
 }
 
 /** Tap the four digits of a PIN on the on-screen pad (the pad on the PIN screen and the one in the form share the labels). */
@@ -86,6 +113,7 @@ async function fillForm(page: Page, who: 'child' | 'self', o: OnboardOptions): P
   await page.getByRole('radio', { name: who === 'child' ? /^My child or a student/ : /^Me\./ }).click();
   await page.getByPlaceholder('Type a name').fill(o.name);
   if (o.avatar) await page.getByRole('radio', { name: o.avatar }).click();
+  if (o.readingLevel) await page.getByRole('radio', { name: new RegExp(`^${o.readingLevel}`) }).click();
   if (who === 'child') {
     const pin = o.pin ?? E2E_PIN;
     await typeDigits(page, pin); // create
@@ -94,10 +122,19 @@ async function fillForm(page: Page, who: 'child' | 'self', o: OnboardOptions): P
   }
   await page.getByRole('checkbox').click();
   await page.getByRole('button', { name: 'Continue' }).click();
+  if (o.levelCheck === 'stop') {
+    await expect(page.getByTestId('placement-invite')).toBeVisible();
+    return;
+  }
+  await answerForkNew(page);
   await expect(page.getByText('Your first card is waiting.')).toBeVisible();
 }
 
 async function finish(page: Page, who: 'child' | 'self', o: OnboardOptions): Promise<void> {
+  if (o.levelCheck === 'stop') {
+    await waitForSaved(page, ['profiles', ...(who === 'child' ? ['account:parentPinHash'] : [])]);
+    return;
+  }
   if (o.startJourney ?? true) await page.getByRole('button', { name: 'Start my journey' }).click();
   await waitForSaved(page, ['profiles', ...(who === 'child' ? ['account:parentPinHash'] : [])]);
 }
