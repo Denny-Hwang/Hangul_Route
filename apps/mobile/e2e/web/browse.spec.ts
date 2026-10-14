@@ -1089,10 +1089,12 @@ test('BR-13: a lesson with a full pass shows Present this under the preview and 
   await page.goto('/');
   await expect(page.getByText('Hi, Mina!')).toBeVisible();
   await putStored(page, LEARNER_QUEUE, SEEDED_QUEUE);
-  const learnerBefore = learnerStored(await readAllStored(page));
 
   await openLessonPage(page, 'quest:stage1-letters-q1');
   await bootSettled(page);
+  // Taken after openLessonPage: its own visit to '/' boots the learner App once (the install-guide
+  // visit count), which is this test's setup, not the presenter.
+  const learnerBefore = learnerStored(await readAllStored(page));
   const present = page.getByTestId('browse-present');
   await expect(present).toHaveAccessibleName('Present this');
   await expect(present).toHaveAccessibleDescription("Opens this as slides for a classroom screen or a TV. No one's progress changes.");
