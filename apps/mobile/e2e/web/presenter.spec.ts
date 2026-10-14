@@ -113,6 +113,52 @@ async function revealAll(page: Page): Promise<number> {
   return presses;
 }
 
+/**
+ * A device with a Korean voice (the fixtures' silent engine has none): the presenter then draws
+ * the speaker, not the teacher-says text. The voice speaks nothing; what it was asked to say is
+ * kept in `window.__spoken`.
+ */
+async function koreanVoice(page: Page): Promise<void> {
+  await page.addInitScript(() => {
+    const voices = [
+      { name: 'Yuna', lang: 'ko-KR', voiceURI: 'Yuna', localService: true, default: false },
+      { name: 'Samantha', lang: 'en-US', voiceURI: 'Samantha', localService: true, default: true },
+    ];
+    class Utterance {
+      lang = '';
+      rate = 1;
+      pitch = 1;
+      volume = 1;
+      voice: unknown = null;
+      onstart: (() => void) | null = null;
+      onend: (() => void) | null = null;
+      onerror: (() => void) | null = null;
+      constructor(public text: string) {}
+    }
+    const spoken: string[] = [];
+    Object.defineProperty(window, '__spoken', { configurable: true, value: spoken });
+    Object.defineProperty(window, 'SpeechSynthesisUtterance', { configurable: true, value: Utterance });
+    Object.defineProperty(window, 'speechSynthesis', {
+      configurable: true,
+      value: {
+        speaking: false,
+        pending: false,
+        speak: (u: Utterance) => {
+          spoken.push(u.text);
+          setTimeout(() => {
+            u.onstart?.();
+            u.onend?.();
+          }, 0);
+        },
+        cancel: () => undefined,
+        getVoices: () => voices,
+        addEventListener: () => undefined,
+        removeEventListener: () => undefined,
+      },
+    });
+  });
+}
+
 async function startLesson(page: Page): Promise<void> {
   const start = page.getByTestId('presenter-start-button');
   await expect(start).toBeEnabled({ timeout: 10_000 });
@@ -397,6 +443,7 @@ async function expectInsideStage(page: Page): Promise<void> {
 
 test.describe('PR 7 teaching slides at 1280 x 720', () => {
   test.use({ viewport: { width: 1280, height: 720 }, isMobile: false, hasTouch: false });
+  test.beforeEach(async ({ page }) => koreanVoice(page));
 
   test('syllable, word, order, card and activity slides reveal build by build', async ({ page }) => {
     const errors: string[] = [];
@@ -475,18 +522,23 @@ test.describe('PR 7 teaching slides at 1280 x 720', () => {
     await page.keyboard.press('PageUp');
     await expect(page.getByTestId('presenter-sequence-steps')).toBeVisible();
 
-    // Activity: one build; Start timer is drawn and waits for the class timer (PR 9).
+    // Activity: one build; Start timer opens the class timer with the slide's minutes (PR 9).
     await page.keyboard.press('PageDown');
     await forwardTo(page, 'Activity');
     await expect(page.getByTestId('presenter-live')).toHaveText(/Activity, Write it in the air$/);
     await expect(page.getByRole('heading', { name: 'Write it in the air' })).toBeVisible();
     await expect(page.getByText('3 minutes')).toBeVisible();
     await expect(page.getByTestId('presenter-start-timer')).toHaveAccessibleName('Start timer');
-    await expect(page.getByTestId('presenter-start-timer')).toBeDisabled();
-    // Disabled, it is outlined on paper, never the filled primary action.
-    await expect(page.getByTestId('presenter-start-timer')).toHaveCSS('background-color', rgb(colors.surface.paper));
+    await expect(page.getByTestId('presenter-start-timer')).toBeEnabled();
+    // Enabled with the class timer (PR 9), it is the filled primary action.
+    await expect(page.getByTestId('presenter-start-timer')).toHaveCSS('background-color', rgb(colors.brand.primaryDark));
     await expect(page.getByTestId('presenter-next')).toHaveAccessibleName('Next');
     await shot(page, 'presenter-activity-1280x720');
+    await page.getByTestId('presenter-start-timer').click();
+    await expect(page.getByTestId('presenter-timer-corner')).toBeVisible();
+    await expect(page.getByTestId('presenter-timer-text')).toHaveText(/^(3:00|2:5\d)$/);
+    await page.getByTestId('presenter-timer-close').click();
+    await expect(page.getByTestId('presenter-timer-corner')).toHaveCount(0);
 
     // No slide overflows the stage, and the page never scrolls sideways.
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(1280);
@@ -518,6 +570,68 @@ test.describe('PR 7 teaching slides at 1280 x 720', () => {
     // n step builds, one romanization build, then the question.
     expect(await revealAll(page)).toBe(steps + 1);
     await expect(page.getByRole('heading', { name: 'What comes first?' })).toBeVisible();
+  });
+});
+
+/** PR 12: a word topic (Food, four words) through the vocab adapter. */
+const TOPIC_DECK: LectureDeckInput = {
+  ...DECK,
+  id: 'lecture:e2e012',
+  title: 'Food words',
+  blocks: [{ kind: 'vocab', topicId: 'vocab-topic:food', wordIds: ['vocab:sagwa-apple', 'vocab:uyu', 'vocab:ppang', 'vocab:gimchi'] }],
+};
+
+test.describe('PR 12 word topic slides at 1280 x 720', () => {
+  test.use({ viewport: { width: 1280, height: 720 }, isMobile: false, hasTouch: false });
+
+  test('the topic title, then each word with its picture at the build after the gloss', async ({ page }) => {
+    const errors: string[] = [];
+    page.on('pageerror', (e) => errors.push(String(e)));
+    page.on('console', (m) => {
+      if (m.type() === 'error') errors.push(m.text());
+    });
+    await page.goto(link(TOPIC_DECK));
+    await startLesson(page);
+
+    // Title (slide-topic.md): the "Word topics" kind label, the topic title and its Hoya line.
+    await expect(page.getByTestId('presenter-live')).toHaveText(/^Slide 1 of \d+, Title, Food/);
+    await expect(page.getByTestId('presenter-title-kind')).toHaveText('Word topics');
+    await expect(page.getByRole('heading', { name: 'Food' })).toBeVisible();
+    await shot(page, 'presenter-topic-title-1280x720');
+
+    // Word (README D9): the word with its romanization, then the gloss, then the WordArt picture.
+    await forwardTo(page, 'Word');
+    await expect(page.getByTestId('presenter-word')).toHaveText('사과');
+    await expect(page.getByTestId('presenter-word-rom')).toHaveText('sagwa');
+    await expectDrawn(page, 'presenter-word-gloss', false);
+    await expectDrawn(page, 'presenter-word-art', false);
+    await page.keyboard.press('PageDown');
+    await expectDrawn(page, 'presenter-word-gloss', true);
+    await expectDrawn(page, 'presenter-word-art', false);
+    await page.keyboard.press('PageDown');
+    await expectDrawn(page, 'presenter-word-art', true);
+    await expect(page.getByRole('img', { name: 'apple' })).toBeVisible();
+    await expect(page.getByTestId('presenter-next')).toHaveAccessibleName('Next');
+    await shot(page, 'presenter-topic-word-1280x720');
+
+    // A topic word whose picture is a heritage card (kimchi): the card art at the same build, no WordArt.
+    const word = page.getByTestId('presenter-word');
+    const atKimchi = async () => (await word.count()) > 0 && (await word.textContent()) === '김치';
+    for (let i = 0; i < 40 && !(await atKimchi()); i++) {
+      await page.keyboard.press('PageDown');
+      await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+    }
+    await expect(page.getByTestId('presenter-live')).toHaveText(/^Slide \d+ of \d+, Word\b/);
+    await expect(word).toHaveText('김치');
+    await expectDrawn(page, 'presenter-word-gloss', false);
+    await page.keyboard.press('PageDown');
+    await expectDrawn(page, 'presenter-word-gloss', true);
+    await page.keyboard.press('PageDown');
+    await expect(page.getByRole('img', { name: 'kimchi' })).toBeVisible();
+    await expect(page.getByTestId('presenter-word-art')).toHaveCount(0);
+
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(1280);
+    expect(errors).toEqual([]);
   });
 });
 
@@ -580,18 +694,20 @@ test.describe('presenter on a 4:3 projector, 1024 x 768', () => {
     // 1280 x 810); where the labels are wider and the controls wrap, the band grows and the stage
     // takes the rest (D1), still at unit 0.8 and the full width.
     // The band is measured after the first layout (`onBandHeight`): wait until the stage has settled into the rest.
+    // The fixtures' engine has no Korean voice, so the "You say it!" chip joins the bar (PR 9); the
+    // stage follows the band once the bar has laid out again.
+    await expect(page.getByTestId('presenter-chip-no-voice')).toBeVisible();
     const measure = async () => ({
       box: (await page.getByTestId('presenter-stage').boundingBox())!,
-      band: (await page.getByRole('toolbar').locator('..').boundingBox())!,
+      band: (await page.getByTestId('presenter-bar-band').boundingBox())!,
     });
     await expect.poll(async () => {
       const { box, band } = await measure();
-      return box.height + band.height;
-    }).toBe(768);
+      return box.height === 768 - band.height;
+    }).toBe(true);
     const { box, band } = await measure();
     expect(band.height).toBeGreaterThanOrEqual(120);
     expect(box.width).toBe(1024);
-    expect(box.height).toBe(768 - band.height);
     expect(box.y + box.height).toBeLessThanOrEqual(band.y);
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(1024);
     await page.keyboard.press('ArrowRight');
@@ -910,5 +1026,300 @@ test.describe('presenter story slides at 1920 x 1080 (PR 11)', () => {
     await nextUntil(page, 'presenter-check');
     await page.keyboard.press('PageDown');
     await shot(page, 'presenter-story-check-1920x1080');
+  });
+});
+
+/** PR 9: letters, a Match Sound quiz over them, a one-minute activity and the class code; a picker of three. */
+const TOOLS_DECK: LectureDeckInput = {
+  ...DECK,
+  id: 'lecture:e2e009',
+  title: 'Week 5 review',
+  blocks: [
+    { kind: 'jamo-set', jamoIds: ['jamo:giyeok', 'jamo:nieun', 'jamo:a', 'jamo:eo'] },
+    { kind: 'quiz', from: 'all', rounds: 2 },
+    { kind: 'activity', preset: 'air-write', minutes: 1 },
+    { kind: 'class-code', code: 'HYRA42' },
+  ],
+  picker: { mode: 'numbers', count: 3 },
+};
+
+function collectErrors(page: Page): string[] {
+  const errors: string[] = [];
+  page.on('pageerror', (e) => errors.push(String(e)));
+  page.on('console', (m) => {
+    if (m.type() === 'error') errors.push(m.text());
+  });
+  return errors;
+}
+
+test.describe('PR 9 quiz and class tools at 1280 x 720, with a Korean voice', () => {
+  test.use({ viewport: { width: 1280, height: 720 }, isMobile: false, hasTouch: false });
+  test.beforeEach(async ({ page }) => koreanVoice(page));
+
+  test('a Match Sound quiz: the question with the speaker, markers on every option, then the teacher reveal', async ({ page }) => {
+    const errors = collectErrors(page);
+    await page.goto(link(TOOLS_DECK));
+    await startLesson(page);
+    await forwardTo(page, 'Question');
+    await expect(page.getByRole('heading', { name: 'Which letter makes this sound?' })).toBeVisible();
+    await expect(page.getByTestId('presenter-quiz-speaker')).toBeEnabled();
+    await expect(page.getByTestId('presenter-say-it')).toHaveCount(0);
+    // The speaker and S both say the prompt's carrier syllable.
+    const said = (): Promise<string[]> => page.evaluate(() => [...(window as unknown as { __spoken: string[] }).__spoken]);
+    const already = (await said()).length;
+    await page.getByTestId('presenter-quiz-speaker').click();
+    await expect.poll(async () => (await said()).length).toBe(already + 1);
+    expect((await said()).at(-1)).toMatch(/^[\uac00-\ud7af]+$/);
+    await page.keyboard.press('s');
+    await expect.poll(async () => (await said()).length).toBe(already + 2);
+    expect((await said()).at(-1)).toBe((await said()).at(-2));
+    const options = page.getByTestId('presenter-quiz-options').getByRole('listitem');
+    await expect(options).toHaveCount(4);
+    for (const [n, shape] of [[1, 'circle'], [2, 'triangle'], [3, 'square'], [4, 'star']] as const) {
+      await expect(page.getByRole('img', { name: `Option ${n}, ${shape}` })).toBeVisible();
+    }
+    await expect(page.getByTestId('presenter-quiz-mark')).toHaveCount(0);
+    await expect(page.getByTestId('presenter-quiz-answer')).toHaveCSS('opacity', '0');
+    await expect(page.getByTestId('presenter-next')).toHaveAccessibleName('Reveal');
+    await shot(page, 'presenter-quiz-question-1280x720');
+
+    const before = await page.getByTestId('presenter-quiz-option-1').boundingBox();
+    await page.keyboard.press('PageDown');
+    await expect(page.getByTestId('presenter-quiz-mark')).toHaveCount(1);
+    await expect(page.getByRole('img', { name: "Hoya's answer" })).toBeVisible();
+    await expect(page.getByTestId('presenter-quiz-answer')).toHaveCSS('opacity', '1');
+    // The options never move; one is the answer, the other three are dimmed, never red.
+    expect(await page.getByTestId('presenter-quiz-option-1').boundingBox()).toEqual(before);
+    let dimmed = 0;
+    for (let i = 1; i <= 4; i++) {
+      const option = page.getByTestId(`presenter-quiz-option-${i}`);
+      if ((await option.getByTestId('presenter-quiz-mark').count()) === 0) {
+        await expect(option).toHaveCSS('opacity', '0.8');
+        dimmed += 1;
+      }
+    }
+    expect(dimmed).toBe(3);
+    await expect(page.getByText(/wrong|incorrect|fail/i)).toHaveCount(0);
+    await shot(page, 'presenter-quiz-answer-1280x720');
+    expect(errors).toEqual([]);
+  });
+
+  test('the timer: T opens it full with the presets, Small puts it in the corner while slides move, Close shuts it', async ({ page }) => {
+    const errors = collectErrors(page);
+    await page.goto(link(TOOLS_DECK));
+    await startLesson(page);
+    await page.keyboard.press('t');
+    await expect(page.getByTestId('presenter-timer-full')).toBeVisible();
+    for (const label of ['30 s', '1 min', '3 min', '5 min']) await expect(page.getByRole('button', { name: label, exact: true })).toBeVisible();
+    await page.getByRole('button', { name: '1 min', exact: true }).click();
+    await expect(page.getByTestId('presenter-timer-text').first()).toHaveText(/^(1:00|0:5\d)$/);
+    await expect(page.getByRole('timer', { name: /^Time left: \d:\d\d$/ })).toBeVisible();
+    await shot(page, 'presenter-timer-full-1280x720');
+    // Full screen swallows navigation: End, then a later change that has drawn, and the slide has not moved.
+    const live = await liveText(page);
+    const counter = await page.getByTestId('presenter-counter').textContent();
+    await page.keyboard.press('End');
+    await page.getByTestId('presenter-timer-numbers').click();
+    await expect(page.getByTestId('presenter-timer-text')).toHaveCount(0);
+    expect(await liveText(page)).toBe(live);
+    await expect(page.getByTestId('presenter-counter')).toHaveText(counter ?? '');
+    await page.getByTestId('presenter-timer-numbers').click();
+    await page.getByTestId('presenter-timer-small').click();
+    await expect(page.getByTestId('presenter-timer-corner')).toBeVisible();
+    // In the corner the lesson goes on under it.
+    await page.keyboard.press('End');
+    await expect(page.getByTestId('presenter-live')).not.toHaveText(live);
+    await page.getByTestId('presenter-timer-pause').click();
+    await expect(page.getByTestId('presenter-timer-resume')).toHaveAccessibleName('Go on');
+    const paused = await page.getByTestId('presenter-timer-text').textContent();
+    await page.waitForTimeout(1200);
+    expect(await page.getByTestId('presenter-timer-text').textContent()).toBe(paused);
+    await shot(page, 'presenter-timer-corner-1280x720');
+    await page.getByTestId('presenter-timer-close').click();
+    await expect(page.getByTestId('presenter-timer-corner')).toHaveCount(0);
+    expect(errors).toEqual([]);
+  });
+
+  test('at zero the timer says All done!, with no alarm and no red', async ({ page }) => {
+    await page.clock.install();
+    await page.goto(link(TOOLS_DECK));
+    await startLesson(page);
+    await page.keyboard.press('t');
+    await page.getByRole('button', { name: '30 s', exact: true }).click();
+    await page.clock.runFor(31_000);
+    await expect(page.getByTestId('presenter-timer-done')).toHaveText('All done!');
+    await expect(page.getByTestId('presenter-timer-text')).toHaveText('0:00');
+    await expect(page.getByTestId('presenter-timer-pause')).toHaveCount(0);
+    await shot(page, 'presenter-timer-done-1280x720');
+  });
+
+  test('the helper picker draws each number once, Another and Undo give no reason, then everyone has had a turn', async ({ page }) => {
+    const errors = collectErrors(page);
+    await page.goto(link(TOOLS_DECK));
+    await startLesson(page);
+    await page.keyboard.press('p');
+    const picker = page.getByTestId('presenter-picker');
+    await expect(picker).toBeVisible();
+    await expect(page.getByRole('heading', { name: "Who's helping next?" })).toBeVisible();
+    await expect(page.getByTestId('presenter-picker-label')).toHaveText('Choose Draw.');
+    await expect(page.getByTestId('presenter-picker-undo')).toBeDisabled();
+    await expect(page.getByTestId('presenter-picker-another')).toBeDisabled();
+    await shot(page, 'presenter-picker-ready-1280x720');
+    // Arrows do not move the slide under the picker.
+    const live = await liveText(page);
+    await page.keyboard.press('ArrowRight');
+    expect(await liveText(page)).toBe(live);
+
+    const drawn: string[] = [];
+    await page.getByTestId('presenter-picker-draw').click();
+    const first = (await page.getByTestId('presenter-picker-label').textContent())!;
+    expect(['1', '2', '3']).toContain(first);
+    await page.getByTestId('presenter-picker-undo').click();
+    await expect(page.getByTestId('presenter-picker-label')).toHaveText('Choose Draw.');
+    for (let i = 0; i < 3; i++) {
+      await page.getByTestId('presenter-picker-draw').click();
+      drawn.push((await page.getByTestId('presenter-picker-label').textContent())!);
+    }
+    expect([...drawn].sort()).toEqual(['1', '2', '3']);
+    await shot(page, 'presenter-picker-numbers-1280x720');
+    await page.getByTestId('presenter-picker-draw').click();
+    await expect(page.getByTestId('presenter-picker-label')).toHaveText('Everyone has had a turn');
+    await expect(page.getByTestId('presenter-picker-start-again')).toBeVisible();
+    // Never a count, a list of who has gone, or a skipped mark.
+    await expect(picker.getByText(/skipped|left|\d+ (of|\/) \d+/i)).toHaveCount(0);
+    await shot(page, 'presenter-picker-empty-1280x720');
+    await page.getByTestId('presenter-picker-start-again').click();
+    await expect(page.getByTestId('presenter-picker-label')).toHaveText('Choose Draw.');
+    await page.keyboard.press('Escape');
+    await expect(picker).toHaveCount(0);
+    expect(errors).toEqual([]);
+  });
+
+  test('Blank hides the slide, its Pause button swaps in Pause, and the first key brings the slide back unchanged', async ({ page }) => {
+    await page.goto(link(TOOLS_DECK));
+    await startLesson(page);
+    await page.keyboard.press('ArrowRight');
+    const live = await liveText(page);
+    await page.keyboard.press('b');
+    await expect(page.getByTestId('presenter-blank')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Eyes on me' })).toBeVisible();
+    await shot(page, 'presenter-blank-1280x720');
+    await page.getByTestId('presenter-blank-pause').click();
+    await expect(page.getByTestId('presenter-pause')).toBeVisible();
+    await expect(page.getByTestId('presenter-pause-gloss')).toHaveText('wait a moment');
+    await expect(page.getByText('jamkkan')).toBeVisible();
+    await shot(page, 'presenter-pause-1280x720');
+    await page.keyboard.press('ArrowRight');
+    await expect(page.getByTestId('presenter-pause')).toHaveCount(0);
+    expect(await liveText(page)).toBe(live);
+    // Space on the Blank overlay clears it (the dialog, not its Pause button, has focus).
+    await page.keyboard.press('.');
+    await expect(page.getByTestId('presenter-blank')).toBeVisible();
+    await page.keyboard.press('Space');
+    await expect(page.getByTestId('presenter-blank')).toHaveCount(0);
+    expect(await liveText(page)).toBe(live);
+  });
+
+  test('the grid jumps to a slide, hides one for this lesson, and has no Hide on the End slide', async ({ page }) => {
+    await page.goto(link(TOOLS_DECK));
+    await startLesson(page);
+    await page.keyboard.press('g');
+    const grid = page.getByTestId('presenter-grid');
+    await expect(grid).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'All slides' })).toBeVisible();
+    await expect(page.getByTestId('presenter-grid-item-1')).toContainText('Now');
+    const count = await grid.locator('[data-testid^="presenter-grid-item-"]').count();
+    expect(count).toBeGreaterThan(5);
+    await expect(page.getByTestId(`presenter-grid-toggle-${count}`)).toHaveCount(0);
+    // No Korean on any thumbnail.
+    expect(await grid.innerText()).not.toMatch(/[\u1100-\u11ff\u3130-\u318f\uac00-\ud7af]/);
+    await page.getByTestId('presenter-grid-toggle-3').click();
+    await expect(page.getByTestId('presenter-grid-item-3')).toContainText('Hidden');
+    await shot(page, 'presenter-grid-1280x720');
+    await page.getByTestId('presenter-grid-goto-2').click();
+    await expect(grid).toHaveCount(0);
+    await expect(page.getByTestId('presenter-counter')).toHaveText(`2 / ${count}`);
+    await revealAll(page);
+    await page.keyboard.press('PageDown');
+    // Slide 3 is hidden for this lesson: the next slide is 4.
+    await expect(page.getByTestId('presenter-counter')).toHaveText(`4 / ${count}`);
+    // Opened from the bar, Tab stays inside the grid, and closing it gives focus back to Slides.
+    await page.getByTestId('presenter-grid-button').click();
+    await expect(grid).toBeVisible();
+    const inGrid = (): Promise<boolean> => page.evaluate(() => document.activeElement?.closest('[data-testid="presenter-grid"]') != null);
+    await page.keyboard.press('Shift+Tab');
+    expect(await inGrid()).toBe(true);
+    for (let i = 0; i < 3; i++) {
+      await page.keyboard.press('Tab');
+      expect(await inGrid()).toBe(true);
+    }
+    await page.keyboard.press('Escape');
+    await expect(grid).toHaveCount(0);
+    await expect(page.getByTestId('presenter-grid-button')).toBeFocused();
+  });
+
+  test('Keys and controls lists every key, flips romanization live and keeps the controls visible', async ({ page }) => {
+    await page.goto(link(TOOLS_DECK));
+    await startLesson(page);
+    await page.keyboard.press('ArrowRight');
+    await page.keyboard.press('h');
+    const help = page.getByTestId('presenter-help');
+    await expect(help).toBeVisible();
+    for (const row of ['Next', 'Back', 'First and last slide', 'Blank the screen', 'Class timer', 'Helper picker', 'All slides', 'Close or exit']) {
+      await expect(help.getByText(row, { exact: true })).toBeVisible();
+    }
+    await expect(help.getByText('A presentation clicker works with no setup.')).toBeVisible();
+    await shot(page, 'presenter-help-1280x720');
+    // The romanization chips are one radiogroup: an arrow moves and selects.
+    await page.getByTestId('presenter-help-romanization-always').focus();
+    await page.keyboard.press('ArrowRight');
+    await expect(page.getByTestId('presenter-help-romanization-tap')).toHaveAttribute('aria-checked', 'true');
+    await expect(page.getByTestId('presenter-help-romanization-tap')).toBeFocused();
+    await page.getByTestId('presenter-help-keep-visible').click();
+    await expect(page.getByTestId('presenter-help-keep-visible')).toHaveAttribute('aria-checked', 'true');
+    await page.keyboard.press('Escape');
+    await expect(help).toHaveCount(0);
+    // tap: the letter's romanization is now its own build.
+    await expect(page.getByTestId('presenter-next')).toHaveAccessibleName('Reveal');
+    // With Keep controls visible the bar does not fade.
+    await page.waitForTimeout(3500);
+    await expect(page.getByTestId('presenter-next')).toBeVisible();
+    await expect(page.getByRole('toolbar').locator('..')).toHaveCSS('opacity', '1');
+  });
+});
+
+test.describe('PR 9 with no Korean voice at 1280 x 720', () => {
+  test.use({ viewport: { width: 1280, height: 720 }, isMobile: false, hasTouch: false });
+
+  test('the bar says "You say it!" and letters and the quiz show the Say it text', async ({ page }) => {
+    const errors = collectErrors(page);
+    await page.goto(link(TOOLS_DECK));
+    await startLesson(page);
+    await expect(page.getByTestId('presenter-chip-no-voice')).toHaveText('No Korean voice here. You say it!');
+    await forwardTo(page, 'Letter');
+    await revealAll(page);
+    const say = page.getByTestId('presenter-say-it');
+    await expect(say).toBeVisible();
+    await expect(say).toContainText('Say it:');
+    await expect(say).toContainText('[k]');
+    await expect(page.getByRole('button', { name: 'Play the sound' })).toHaveCount(0);
+    await shot(page, 'presenter-letter-novoice-1280x720');
+    await forwardTo(page, 'Question');
+    await expect(page.getByRole('heading', { name: 'Which letter makes this sound?' })).toBeVisible();
+    await expect(page.getByTestId('presenter-say-it')).toBeVisible();
+    await expect(page.getByTestId('presenter-quiz-speaker')).toHaveCount(0);
+    await shot(page, 'presenter-quiz-text-1280x720');
+    expect(errors).toEqual([]);
+  });
+
+  test('muted: the Sound is off chip turns sound back on', async ({ page }) => {
+    await page.goto('/present');
+    await seedKeys(page, { 'hr:device:audio': { muted: true } });
+    await page.goto(link(TOOLS_DECK));
+    await startLesson(page);
+    await expect(page.getByTestId('presenter-chip-sound-off')).toContainText('Sound is off.');
+    await shot(page, 'presenter-bar-chips-1280x720');
+    await page.getByTestId('presenter-turn-sound-on').click();
+    await expect(page.getByTestId('presenter-chip-sound-off')).toHaveCount(0);
   });
 });

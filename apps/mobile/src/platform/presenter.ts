@@ -64,6 +64,14 @@ export function trapFocus(_items: () => readonly unknown[]): () => void {
   return () => undefined;
 }
 
+export function focusablesIn(_root: unknown): readonly unknown[] {
+  return [];
+}
+
+export function rememberFocus(): () => void {
+  return () => undefined;
+}
+
 export function subscribeActivity(_handler: () => void): () => void {
   return () => undefined;
 }
@@ -109,5 +117,13 @@ export function unlockOrientation(): void {
 }
 
 export async function waitForPresenterFont(_timeoutMs: number, _family: string): Promise<boolean> {
+  return false;
+}
+
+export function unlockChime(): void {
+  // The timer chime is web only in the MVP.
+}
+
+export function playChime(_muted: boolean): boolean {
   return false;
 }

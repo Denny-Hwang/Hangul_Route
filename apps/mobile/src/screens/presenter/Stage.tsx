@@ -12,6 +12,7 @@ import type { StageScale } from '../../logic/lecture/stage-scale';
 import { usePresenterView, useStageText } from './presenter-context';
 import { ActivitySlide } from './slides/ActivitySlide';
 import { CardSlide } from './slides/CardSlide';
+import { QuizSlide } from './slides/QuizSlide';
 import { EndSlide } from './slides/EndSlide';
 import { LetterSlide } from './slides/LetterSlide';
 import { SequenceSlide } from './slides/SequenceSlide';
@@ -37,10 +38,12 @@ export interface StageProps {
   joinCta: string;
   onCommand: (command: 'next' | 'prev') => void;
   onPlaySound: () => void;
-  /** An activity slide's [ Start timer ]; absent until the timer overlay ships (PR 9), so the button is disabled. */
+  /** An activity slide's [ Start timer ]: opens the class timer with the slide's minutes. */
   onStartTimer?: (ms: number) => void;
-  /** The deck's romanization mode now (the live flip included), for quiz options (D2). */
+  /** The deck's romanization mode now (the live Shift+R flip included), for quiz options (D2). */
   romanization: RomanizationMode;
+  /** The room cannot hear the Korean: sound builds show the teacher-says text (section 3.7). */
+  sayIt: boolean;
   /** A listed story's scene: its art, theme and accessible name (`sources/story.ts`). */
   storyScene: (storyId: string, sceneId: string) => LectureSceneView | undefined;
 }
@@ -113,21 +116,23 @@ export function Stage(props: StageProps): React.ReactElement {
             {...(slide.cover !== undefined ? { cover: props.storyScene(slide.cover.storyId, slide.cover.sceneId) } : {})}
           />
         ) : slide.kind === 'letter' ? (
-          <LetterSlide slide={slide} shown={shown} strokeToken={props.strokeToken} onPlaySound={props.onPlaySound} />
+          <LetterSlide slide={slide} shown={shown} strokeToken={props.strokeToken} sayIt={props.sayIt} onPlaySound={props.onPlaySound} />
         ) : slide.kind === 'syllable' ? (
-          <SyllableSlide slide={slide} reveal={reveal} onPlaySound={props.onPlaySound} />
+          <SyllableSlide slide={slide} reveal={reveal} sayIt={props.sayIt} onPlaySound={props.onPlaySound} />
         ) : slide.kind === 'vocab' ? (
           <VocabSlide slide={slide} reveal={reveal} />
         ) : slide.kind === 'sequence' ? (
           <SequenceSlide slide={slide} reveal={reveal} />
         ) : slide.kind === 'card' ? (
           <CardSlide slide={slide} reveal={reveal} />
+        ) : isStoryCheck(slide) ? (
+          <StoryCheckSlide slide={slide} shown={shown} romanization={props.romanization} />
+        ) : slide.kind === 'quiz' ? (
+          <QuizSlide slide={slide} shown={shown} romanization={props.romanization} sayIt={props.sayIt} onPlaySound={props.onPlaySound} />
         ) : slide.kind === 'activity' ? (
           <ActivitySlide slide={slide} {...(props.onStartTimer ? { onStartTimer: props.onStartTimer } : {})} />
         ) : slide.kind === 'story' ? (
           <StorySlide slide={slide} shown={shown} scene={props.storyScene(slide.storyId, slide.sceneId)} />
-        ) : isStoryCheck(slide) ? (
-          <StoryCheckSlide slide={slide} shown={shown} romanization={props.romanization} />
         ) : slide.kind === 'end' ? (
           <EndSlide slide={slide} joinCta={props.joinCta} />
         ) : null}

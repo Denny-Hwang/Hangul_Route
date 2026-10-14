@@ -17,6 +17,8 @@ export interface PresenterView {
   /** Window pixels per stage unit (`stageScale` on the stage box). */
   unit: number;
   reducedMotion: boolean;
+  /** The browser blocked the last sound (a long idle): the speaker reads "Tap to hear" (section 3.7). */
+  soundBlocked?: boolean;
 }
 
 const PresenterViewContext = createContext<PresenterView | null>(null);

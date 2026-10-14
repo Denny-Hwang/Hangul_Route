@@ -82,7 +82,14 @@ export type SlideBody =
       strokeFirst?: true;
     }
   | { kind: 'syllable'; ko: string; romanization: string; split: string; parts: string[]; spoken: SpokenForm }
-  | { kind: 'vocab'; word: KoLine & { gloss: string }; cardId?: string; wordId?: string }
+  | {
+      kind: 'vocab';
+      word: KoLine & { gloss: string };
+      cardId?: string;
+      wordId?: string;
+      /** A topic word's WordArt key (F-VOC-002), drawn at the `art` build after the gloss (README D9). */
+      wordArt?: string;
+    }
   | { kind: 'sequence'; steps: SequenceStep[]; shuffled: string[] }
   | { kind: 'story'; storyId: string; sceneId: string; narration: NarrationPiece[]; korean?: KoLine & { gloss: string }; caption?: string }
   | {
@@ -147,7 +154,7 @@ export function buildsFor(body: SlideBody, opts: BuildOptions): BuildName[] {
     case 'syllable':
       return ['parts', 'join', 'rom', 'sound'];
     case 'vocab':
-      return ['ko', ...rom, 'gloss', ...(body.cardId ? (['art'] as const) : [])];
+      return ['ko', ...rom, 'gloss', ...(body.cardId !== undefined || body.wordArt !== undefined ? (['art'] as const) : [])];
     case 'sequence':
       // `tap`: every step's romanization appears together at one build, before the order question.
       return [...body.steps.map((): BuildName => 'step'), ...(body.steps.some((s) => s.ko !== undefined) ? rom : []), 'order'];

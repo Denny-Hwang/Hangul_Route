@@ -12,7 +12,7 @@ import {
   shownBuilds,
   slideSound,
   syllableView,
-  vocabArtId,
+  vocabArt,
 } from '../slide-view';
 
 /**
@@ -123,17 +123,30 @@ describe('cardView', () => {
   });
 });
 
-describe('vocabArtId', () => {
+describe('vocabArt', () => {
   const supported = ['card:kimchi', 'card:book'];
+  const keys = ['food-apple', 'food-milk'];
   const vocab = first(slidesOf([{ kind: 'quest', id: 'quest:stage1-life-q1' }]), 'vocab');
 
   it('a quest word has no picture: text only', () => {
-    expect(vocabArtId(vocab, supported)).toBeUndefined();
+    expect(vocabArt(vocab, supported, keys)).toBeUndefined();
   });
 
   it('a word with a drawn card shows that card; an undrawn card shows none', () => {
-    expect(vocabArtId({ ...vocab, cardId: 'card:kimchi' }, supported)).toBe('card:kimchi');
-    expect(vocabArtId({ ...vocab, cardId: 'card:nope' }, supported)).toBeUndefined();
+    expect(vocabArt({ ...vocab, cardId: 'card:kimchi' }, supported, keys)).toEqual({ kind: 'card', cardId: 'card:kimchi' });
+    expect(vocabArt({ ...vocab, cardId: 'card:nope' }, supported, keys)).toBeUndefined();
+  });
+
+  it('a topic word shows its WordArt when the glyph exists (README D9); an unknown key shows none', () => {
+    expect(vocabArt({ ...vocab, wordArt: 'food-apple' }, supported, keys)).toEqual({ kind: 'word', key: 'food-apple' });
+    expect(vocabArt({ ...vocab, wordArt: 'food-nope' }, supported, keys)).toBeUndefined();
+  });
+
+  it('the Food topic words of the real bundle draw a picture at their art build', () => {
+    const slides = slidesOf([{ kind: 'vocab', topicId: 'vocab-topic:food' }]);
+    const apple = slides.find((s): s is Extract<Slide, { kind: 'vocab' }> => s.kind === 'vocab' && s.wordId === 'vocab:sagwa-apple')!;
+    expect(apple.builds).toEqual(['ko', 'gloss', 'art']);
+    expect(vocabArt(apple, supported, [...keys])).toEqual({ kind: 'word', key: 'food-apple' });
   });
 });
 
@@ -171,5 +184,15 @@ describe('slideSound', () => {
     expect(slideSound(syllable)).toEqual({ text: syllable.ko, romanization: syllable.romanization });
     expect(slideSound(first(slides, 'card'))).toBeUndefined();
     expect(slideSound(undefined)).toBeUndefined();
+  });
+
+  it('a Match Sound quiz plays its prompt; a meaning or odd-one-out quiz plays nothing', () => {
+    const spoken = { text: 'ga', romanization: 'ga' };
+    const sound: Slide = { kind: 'quiz', key: 'q/sound', builds: ['question', 'answer'], prompt: { ask: 'sound', spoken }, options: [], textPrompt: false };
+    const meaning: Slide = { kind: 'quiz', key: 'q/meaning', builds: ['question', 'answer'], prompt: { ask: 'meaning', ko: 'mul', romanization: 'mul' }, options: [], textPrompt: false };
+    const odd: Slide = { kind: 'quiz', key: 'q/odd', builds: ['question', 'answer'], prompt: { ask: 'odd-one-out' }, options: [], textPrompt: false };
+    expect(slideSound(sound)).toEqual(spoken);
+    expect(slideSound(meaning)).toBeUndefined();
+    expect(slideSound(odd)).toBeUndefined();
   });
 });

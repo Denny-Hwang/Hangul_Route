@@ -5,6 +5,7 @@ import { localizeCard, localizeEpisode, localizeJamo, localizeQuest, localizeSco
 import { scopeFor } from '../minigame-config';
 import type { LectureBundle } from './deck-builder';
 import { lectureStories } from './sources/story';
+import { lectureVocabTopics } from './sources/vocab';
 
 /**
  * The presenter's content (F-TCH-004 §3.3, §3.13).
@@ -17,8 +18,7 @@ import { lectureStories } from './sources/story';
  * with content text in the presenter's language (overlays, F-I18N-001 §3.6);
  * taught Korean and its romanization never change. Stories come through
  * their adapter (`sources/story.ts`, PR 11: the Library's review gate);
- * vocabulary topics join with theirs (PR 12), until then those blocks are
- * counted as not ready.
+ * vocabulary topics come through theirs (`sources/vocab.ts`, PR 12).
  */
 
 /**
@@ -36,6 +36,7 @@ export const PAUSE_WORD = {
 export function lectureBundle(locale: UiLocale, overlays?: Overlays): LectureBundle {
   const reviewed = new Set(reviewedStrokeIds);
   const stories = lectureStories(locale, overlays);
+  const topics = lectureVocabTopics(locale, overlays);
   const localizedJamo = locale === 'en' ? jamoAll : jamoAll.map((j) => localizeJamo(j, locale, overlays));
   return {
     jamoAll: localizedJamo,
@@ -58,5 +59,6 @@ export function lectureBundle(locale: UiLocale, overlays?: Overlays): LectureBun
     hasStrokes: (id) => strokesForJamo(id) !== undefined,
     strokeReviewed: (id) => reviewed.has(id),
     story: stories.story,
+    vocabTopic: topics.vocabTopic,
   };
 }

@@ -1,6 +1,6 @@
-import { colors, presenter, supportedCardIds } from '@hangul-route/design-system';
+import { WORD_ART_KEYS, colors, presenter, supportedCardIds } from '@hangul-route/design-system';
 import { LOCALE_META, availableLocales, dictionaryLocale, getMessages, type UiLocale } from '@hangul-route/i18n';
-import { encodeDeck, type LectureDeck } from '@hangul-route/content-schema';
+import { encodeDeck, type LectureDeck, type PickerMode } from '@hangul-route/content-schema';
 import { StatusBar } from 'expo-status-bar';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
@@ -15,6 +15,7 @@ import { createAudioRunner } from './src/logic/story/audio-runner';
 import { initialPresenterState, reduce, type PresenterEvent, type PresenterState } from './src/logic/lecture/controls';
 import { expandDeck, withBuilds, type Slide } from './src/logic/lecture/deck-builder';
 import type { KeyCommand } from './src/logic/lecture/keymap';
+import { createPicker, reducePicker, type PickerEvent, type PickerState } from './src/logic/lecture/picker';
 import { clearPickerLabels, heldLabels } from './src/logic/lecture/picker-labels';
 import { recentView } from './src/logic/lecture/home-view';
 import { quickSource } from './src/logic/lecture/quick-source';
@@ -38,13 +39,17 @@ import {
   type StartSource,
   type StrokePlay,
   type HomeChoice,
+  voiceState,
 } from './src/logic/lecture/shell';
-import { FONT_WAIT_MS, stageBox } from './src/logic/lecture/stage-constants';
+import { FONT_WAIT_MS, TIMER_TICK_MS, stageBox } from './src/logic/lecture/stage-constants';
+import { initialTimer, justFinished, reduceTimer, type TimerEvent, type TimerState } from './src/logic/lecture/timer';
+import { firstUses, gridItems, pickerModes, sayItShown, statusChips, timerOpenEvent, toolsOpened, type LectureTool } from './src/logic/lecture/tools';
 import { BAR_BAND, STAGE_BOUNDS } from './src/screens/presenter/stage-metrics';
 import { slideSound } from './src/logic/lecture/slide-view';
 import { stageScale } from './src/logic/lecture/stage-scale';
 import { getCapability, playPrompt, refreshCapability, stop as stopAudio, subscribeCapability, unlockAudio } from './src/platform/audio';
 import { setDocumentLang } from './src/platform/locale';
+import { isOnline, subscribeOnline } from './src/platform/online';
 import { useReducedMotion } from './src/platform/motion';
 import {
   announceReady,
@@ -58,6 +63,7 @@ import {
   lockLandscape,
   forgetOpenDeck,
   holdOpenDeck,
+  playChime,
   releaseScreenAwake,
   reloadOnDeckLink,
   setPresenterDocTitle,
@@ -65,6 +71,7 @@ import {
   subscribeFullscreen,
   subscribeKeys,
   takeDeckFragment,
+  unlockChime,
   unlockOrientation,
   waitForPresenterFont,
   wakeLockSupported,
@@ -76,6 +83,11 @@ import { flushQueue, track } from './src/platform/telemetry';
 import { ControlBar } from './src/screens/presenter/ControlBar';
 import { ExitConfirm } from './src/screens/presenter/ExitConfirm';
 import { PresenterHomeScreen } from './src/screens/presenter/HomeScreen';
+import { BlankOverlay, PauseOverlay } from './src/screens/presenter/overlays/BlankOverlay';
+import { GridOverlay } from './src/screens/presenter/overlays/GridOverlay';
+import { HelpOverlay } from './src/screens/presenter/overlays/HelpOverlay';
+import { PickerOverlay } from './src/screens/presenter/overlays/PickerOverlay';
+import { TimerOverlay, type TimerControls } from './src/screens/presenter/overlays/TimerOverlay';
 import { PresenterViewProvider, type PresenterView } from './src/screens/presenter/presenter-context';
 import { Stage, StageHint } from './src/screens/presenter/Stage';
 import { StartScreen, type PickerRow } from './src/screens/presenter/StartScreen';
@@ -96,6 +108,11 @@ import { activeLocale, useLocaleStore } from './src/store/locale-store';
  * presenter font, and its Start tap unlocks audio and asks for fullscreen, the wake lock and
  * landscape. Writes: `lecture:recent` (a deck has no name field) and the telemetry queue.
  * Picker labels arrive only from the console tab that opened this one and stay in memory.
+ *
+ * The class tools (PR 9): the timer (corner or full), the helper picker, Blank and its Pause, the
+ * slide grid and Keys and controls, each reported once per lecture as `lecture.tool_used` (the
+ * tool name only). The picker's bag and the timer live in memory for this lecture and are dropped
+ * on Exit; nothing about who was drawn is kept, shown or sent.
  */
 
 // The strict read throws on a failed or damaged read, so Recent is then never written over (`readRecent`).
@@ -155,6 +172,11 @@ export default function PresenterApp(): React.ReactElement {
   const [updateWaiting, setUpdateWaiting] = useState(false);
   // After Exit or an invalid link the home takes focus on its h1 (design home.md).
   const [homeFocus, setHomeFocus] = useState(false);
+  // The bar's Offline chip (section 3.8): the lesson keeps working; only the chip changes.
+  const [online, setOnline] = useState(isOnline);
+  useEffect(() => subscribeOnline(setOnline), []);
+  // The browser blocked the last sound (a long idle): the speaker reads "Tap to hear" (section 3.7).
+  const [soundBlocked, setSoundBlocked] = useState(false);
 
   // Boot: the audio settings and the device locale only (no profile), the voice check, the queue.
   useEffect(() => {
@@ -203,7 +225,7 @@ export default function PresenterApp(): React.ReactElement {
   const narrator = useMemo(() => createAudioRunner({ playPrompt, stop: stopAudio }), []);
   const canPlay = canPlayKorean(capability);
   const expanded = useMemo(() => (deck ? expandDeck(deck, bundle, { canPlayKorean: canPlay }) : null), [deck, bundle, canPlay]);
-  const run = useMemo(() => (deck && expanded ? runDeck(deck, expanded, SHELL_SLIDE_KINDS, supportedCardIds) : null), [deck, expanded]);
+  const run = useMemo(() => (deck && expanded ? runDeck(deck, expanded, SHELL_SLIDE_KINDS, supportedCardIds, WORD_ART_KEYS) : null), [deck, expanded]);
 
   // A link that does not decode, or a deck with nothing to show: the invalid screen, once per page.
   const rejected = useRef(false);
@@ -235,7 +257,7 @@ export default function PresenterApp(): React.ReactElement {
   const labels = useMemo(() => (deck ? heldLabels(deck) : null), [deck, rosterTick]);
   const [pickerCount, setPickerCount] = useState<number | null>(null);
 
-  const view: PresenterView = useMemo(() => ({ messages, locale, unit: 0, reducedMotion }), [messages, locale, reducedMotion]);
+  const view: PresenterView = useMemo(() => ({ messages, locale, unit: 0, reducedMotion, soundBlocked }), [messages, locale, reducedMotion, soundBlocked]);
 
   // ---- the start screen ----
   const [fontReady, setFontReady] = useState(false);
@@ -260,6 +282,54 @@ export default function PresenterApp(): React.ReactElement {
   const [fullscreen, setFullscreen] = useState(isFullscreen);
   const exitRef = useRef<View>(null);
 
+  // ---- the class tools (PR 9; TD5: teacher tools, nothing about a learner is kept or sent) ----
+  const toolsUsed = useRef<ReadonlySet<LectureTool>>(new Set());
+  const reportTools = useCallback((tools: readonly LectureTool[]) => {
+    const { used, fresh } = firstUses(toolsUsed.current, tools);
+    toolsUsed.current = used;
+    for (const tool of fresh) void track({ name: 'lecture.tool_used', payload: { tool } });
+  }, []);
+  const [timer, setTimer] = useState<TimerState>(initialTimer);
+  const timerRef = useRef<TimerState>(timer);
+  const mutedRef = useRef(muted);
+  mutedRef.current = muted;
+  const stepTimer = useCallback((event: TimerEvent) => {
+    const before = timerRef.current;
+    const after = reduceTimer(before, event);
+    if (after === before) return;
+    timerRef.current = after;
+    setTimer(after);
+    // At zero: the soft chime, unless muted; never speech, never an alarm (section 3.5).
+    if (justFinished(before, after)) playChime(mutedRef.current);
+  }, []);
+  useEffect(() => {
+    if (timer.status !== 'running') return undefined;
+    const id = setInterval(() => stepTimer({ type: 'tick', now: Date.now() }), TIMER_TICK_MS);
+    return () => clearInterval(id);
+  }, [timer.status, stepTimer]);
+  const [showNumbers, setShowNumbers] = useState(true);
+  const [keepVisible, setKeepVisible] = useState(false);
+  const keepVisibleRef = useRef(keepVisible);
+  keepVisibleRef.current = keepVisible;
+  // The helper picker's bag, for this lecture only: made when the picker first opens.
+  const [picker, setPicker] = useState<PickerState | null>(null);
+  const pickerOpen = pstate?.overlay === 'picker';
+  useEffect(() => {
+    if (!pickerOpen || picker !== null || !deck?.picker) return;
+    const count = pickerCount ?? deck.picker.count;
+    setPicker(createPicker({ mode: labels !== null ? deck.picker.mode : 'numbers', count, labels }, Math.random));
+  }, [pickerOpen, picker, deck, labels, pickerCount]);
+  // Names delivered again (the console re-sends them after a reload) make a new bag.
+  useEffect(() => setPicker(null), [labels]);
+  const onPickerEvent = useCallback((event: PickerEvent) => setPicker((current) => (current ? reducePicker(current, event, Math.random) : current)), []);
+  const onPickerMode = useCallback(
+    (mode: PickerMode) => {
+      if (!deck?.picker) return;
+      setPicker(createPicker({ mode, count: pickerCount ?? deck.picker.count, labels }, Math.random));
+    },
+    [deck, labels, pickerCount],
+  );
+
   const slides: Slide[] = useMemo(() => {
     if (!deck || !run) return [];
     const mode = romanization ?? deck.options.romanization;
@@ -280,7 +350,11 @@ export default function PresenterApp(): React.ReactElement {
       const spoken = slideSound(slide);
       if (!spoken) return;
       const { text, audioRef } = spoken;
-      void playPrompt({ text, ...(audioRef !== undefined ? { audioRef } : {}), kind: 'sound', source: 'presenter' });
+      const at = Date.now();
+      void playPrompt({ text, ...(audioRef !== undefined ? { audioRef } : {}), kind: 'sound', source: 'presenter' }).then((result) => {
+        const failure = useAudioStore.getState().lastFailure;
+        setSoundBlocked(result !== 'played' && failure !== null && failure.reason === 'blocked' && failure.at >= at);
+      });
     },
     [deck, stories, narrator, canPlay, voiceChecked],
   );
@@ -292,6 +366,8 @@ export default function PresenterApp(): React.ReactElement {
       const { state, effect } = reduce(before, event, { slides });
       stateRef.current = state;
       setPstate(state);
+      reportTools(toolsOpened(before, state));
+      if (effect?.type === 'start-timer') stepTimer({ type: 'start', ms: effect.ms, now: Date.now() });
       if (tally.current) tally.current = tallyStep(tally.current, before, state, slides);
       // A story's Read-to-me never runs on into the next slide, nor under an overlay.
       if (state.slideIdx !== before.slideIdx || (state.overlay !== null && before.overlay === null)) narrator.stop();
@@ -310,13 +386,17 @@ export default function PresenterApp(): React.ReactElement {
       setStrokePlay((current) => nextStrokePlay(current, { slideKey, play: playStroke }));
       if (revealedBuild === 'sound' || effect?.type === 'play-sound') playSound(slides[state.slideIdx]);
     },
-    [slides, deck, playSound, updateRecent, narrator],
+    [slides, deck, playSound, updateRecent, reportTools, stepTimer, narrator],
   );
 
   const toggleFullscreen = useCallback(() => {
-    if (isFullscreen()) void exitFullscreen();
-    else void enterFullscreen();
-  }, []);
+    if (isFullscreen()) {
+      void exitFullscreen();
+      return;
+    }
+    void enterFullscreen();
+    reportTools(['fullscreen']);
+  }, [reportTools]);
 
   useEffect(() => subscribeFullscreen(() => setFullscreen(isFullscreen())), []);
 
@@ -326,12 +406,14 @@ export default function PresenterApp(): React.ReactElement {
     if (phase.kind !== 'ready' || !run || slides.length === 0) return;
     // Gesture-bound requests first, in the tap itself (section 3.5); each is feature-detected and may be refused.
     unlockAudio();
+    unlockChime();
     void enterFullscreen();
     void keepScreenAwake();
     void lockLandscape();
     const state = initialPresenterState({ slides }, phase.resumeKey);
     stateRef.current = state;
     setPstate(state);
+    toolsUsed.current = new Set();
     tally.current = startTally(Date.now(), slides[state.slideIdx]?.key);
     const savedAt = new Date().toISOString();
     const firstKey = slides[state.slideIdx]!.key;
@@ -364,6 +446,12 @@ export default function PresenterApp(): React.ReactElement {
     forgetOpenDeck();
     stateRef.current = null;
     setPstate(null);
+    // The class tools end with the lesson: the bag, the timer and the tool tally are dropped.
+    setPicker(null);
+    timerRef.current = initialTimer();
+    setTimer(timerRef.current);
+    setShowNumbers(true);
+    toolsUsed.current = new Set();
     setRomanization(null);
     setEndHint(false);
     setHomeFocus(true);
@@ -377,11 +465,11 @@ export default function PresenterApp(): React.ReactElement {
   // Leaving the page stops Read-to-me too.
   useEffect(() => () => narrator.stop(), [narrator]);
 
-  // Keys (section 3.5); the class tools (timer, picker, blank, grid, help) arrive with their overlays in PR 9.
+  // Keys (section 3.5), the class tools included.
   useEffect(() => {
     if (phase.kind !== 'running') return undefined;
     return subscribeKeys((command: KeyCommand) => {
-      // An open overlay (the Exit confirm) takes no lesson key but its own.
+      // An open overlay takes no romanization or fullscreen key; the Exit confirm takes no tool key.
       const overlayOpen = stateRef.current?.overlay != null;
       if ((command === 'toggle-romanization' || command === 'fullscreen') && overlayOpen) return;
       if (command === 'toggle-romanization') {
@@ -392,7 +480,16 @@ export default function PresenterApp(): React.ReactElement {
         toggleFullscreen();
         return;
       }
-      if (typeof command === 'object') return;
+      if (typeof command === 'object') {
+        if (stateRef.current?.overlay === 'exit') return;
+        if (command.overlay === 'picker' && phase.deck.picker === null) return;
+        if (command.overlay === 'timer') {
+          if (stateRef.current) dispatch(timerOpenEvent(stateRef.current, timerRef.current));
+          return;
+        }
+        dispatch(command);
+        return;
+      }
       dispatch(command);
     });
   }, [phase, dispatch, toggleFullscreen]);
@@ -407,7 +504,7 @@ export default function PresenterApp(): React.ReactElement {
       setBarHidden(false);
       if (timer) clearTimeout(timer);
       timer = setTimeout(() => {
-        if (!barFocused.current) setBarHidden(true);
+        if (!barFocused.current && !keepVisibleRef.current) setBarHidden(true);
       }, presenter.autoHideMs);
     };
     arm();
@@ -534,6 +631,20 @@ export default function PresenterApp(): React.ReactElement {
     const slide = slides[p.slideIdx];
     const reveal = slide ? Math.min(p.reveal, slide.builds.length - 1) : 0;
     const revealNext = slide !== undefined && reveal < slide.builds.length - 1;
+    const deckNow = phase.deck;
+    const romanizationNow = romanization ?? deckNow.options.romanization;
+    const chips = statusChips({ voice: voiceState(capability), muted, online, updateWaiting });
+    const sayIt = sayItShown({ textPrompt: false, canPlay, muted, sound: deckNow.options.sound });
+    const timerControls: TimerControls = {
+      onPreset: (ms) => stepTimer({ type: 'start', ms, now: Date.now() }),
+      onAdd: () => stepTimer({ type: 'add', now: Date.now() }),
+      onPause: () => stepTimer({ type: 'pause', now: Date.now() }),
+      onResume: () => stepTimer({ type: 'resume', now: Date.now() }),
+      onReset: () => stepTimer({ type: 'reset' }),
+      onMode: (mode) => dispatch({ timerMode: mode }),
+      onClose: () => dispatch('close-timer'),
+      onToggleNumbers: () => setShowNumbers((on) => !on),
+    };
     const bar = tooSmall ? null : (
       <ControlBar
         hidden={barHidden}
@@ -546,6 +657,12 @@ export default function PresenterApp(): React.ReactElement {
         onSound={() => dispatch('replay-sound')}
         onFullscreen={toggleFullscreen}
         onExit={() => dispatch({ overlay: 'exit' })}
+        onTimer={() => dispatch(timerOpenEvent(p, timerRef.current))}
+        {...(deckNow.picker !== null ? { onPicker: () => dispatch({ overlay: 'picker' }) } : {})}
+        onBlank={() => dispatch({ overlay: 'blank' })}
+        onGrid={() => dispatch({ overlay: 'grid' })}
+        chips={chips}
+        onTurnSoundOn={() => useAudioStore.getState().setMuted(false, 'fallback_panel')}
         onFocusWithin={(focused) => {
           barFocused.current = focused;
           if (focused) setBarHidden(false);
@@ -580,13 +697,54 @@ export default function PresenterApp(): React.ReactElement {
                 joinCta={messages.caregiver.spaces.join.cta}
                 onCommand={dispatch}
                 onPlaySound={() => dispatch('replay-sound')}
-                romanization={romanization ?? phase.deck.options.romanization}
+                onStartTimer={(ms) => dispatch({ startTimer: ms })}
+                romanization={romanizationNow}
+                sayIt={sayIt}
                 storyScene={stories.scene}
               />
             </PresenterViewProvider>
           )}
           {scale.portrait && !tooSmall ? <StageHint text={messages.learner.presenter.state.portrait} /> : null}
           {endHint ? <StageHint text={messages.learner.presenter.slide.end.exitHint} bottom /> : null}
+          {/* Class tools over the stage box (the bar stays): the full timer, a covering tool, then the
+              corner timer, which stays on screen over a covering tool (section 3.5 amendment 1). */}
+          {!tooSmall ? (
+            <PresenterViewProvider value={stageView}>
+              {p.timerOpen && p.timerMode === 'full' ? <TimerOverlay mode="full" timer={timer} showNumbers={showNumbers} controls={timerControls} /> : null}
+              {p.overlay === 'blank' ? <BlankOverlay onPause={() => dispatch({ overlay: 'pause' })} /> : null}
+              {p.overlay === 'pause' ? <PauseOverlay /> : null}
+              {p.overlay === 'picker' && picker !== null ? (
+                <PickerOverlay
+                  picker={picker}
+                  modes={deckNow.picker ? pickerModes(deckNow.picker.mode, labels !== null) : ['numbers']}
+                  onEvent={onPickerEvent}
+                  onMode={onPickerMode}
+                  onClose={() => dispatch('close')}
+                />
+              ) : null}
+              {p.overlay === 'grid' ? (
+                <GridOverlay
+                  items={gridItems(slides, p, { activity: (preset) => messages.learner.presenter.activity[preset] })}
+                  onGoto={(idx) => dispatch({ goto: idx })}
+                  onToggle={(key) => dispatch({ toggleSkip: key })}
+                  onClose={() => dispatch('close')}
+                />
+              ) : null}
+              {p.overlay === 'help' ? (
+                <HelpOverlay
+                  romanization={romanizationNow}
+                  onRomanization={setRomanization}
+                  keepVisible={keepVisible}
+                  onKeepVisible={(on) => {
+                    setKeepVisible(on);
+                    if (on) setBarHidden(false);
+                  }}
+                  onClose={() => dispatch('close')}
+                />
+              ) : null}
+              {p.timerOpen && p.timerMode === 'corner' ? <TimerOverlay mode="corner" timer={timer} showNumbers={showNumbers} controls={timerControls} /> : null}
+            </PresenterViewProvider>
+          ) : null}
         </View>
         {p.overlay === 'exit' ? <ExitConfirm onKeepGoing={() => dispatch('close')} onExit={onExit} /> : null}
       </View>

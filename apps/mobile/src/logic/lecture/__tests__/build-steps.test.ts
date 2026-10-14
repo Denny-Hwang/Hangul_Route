@@ -40,6 +40,12 @@ describe('buildsFor: one teacher click per build (F-TCH-004 §3.4)', () => {
     expect(buildsFor(body, TAP)).toEqual(['parts', 'join', 'rom', 'sound']);
   });
 
+  it('vocab: a topic word with a WordArt key has the art build after the gloss (README D9)', () => {
+    const body: SlideBody = { kind: 'vocab', word: { ko: '사과', romanization: 'sagwa', gloss: 'apple' }, wordId: 'vocab:sagwa-apple', wordArt: 'food-apple' };
+    expect(buildsFor(body, ALWAYS)).toEqual(['ko', 'gloss', 'art']);
+    expect(buildsFor(body, { ...ALWAYS, romanization: 'tap' })).toEqual(['ko', 'rom', 'gloss', 'art']);
+  });
+
   it('vocab: word, gloss, art; tap adds romanization; no art = text only', () => {
     const body: SlideBody = { kind: 'vocab', word: { ko: '김치', romanization: 'gimchi', gloss: 'kimchi' }, cardId: 'card:kimchi' };
     expect(buildsFor(body, ALWAYS)).toEqual(['ko', 'gloss', 'art']);

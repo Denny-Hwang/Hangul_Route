@@ -6,6 +6,10 @@ import { buildStoryIndex } from '../../story/story-index';
 import { scopeFor } from '../../minigame-config';
 import { expandDeck } from '../deck-builder';
 import { PAUSE_WORD, lectureBundle } from '../content';
+import { VOCAB_ITEMS, VOCAB_TOPICS } from '../../../content/__generated__/vocab';
+import { supportedCardIds } from '@hangul-route/design-system/heritage-card-ids';
+import { WORD_ART_KEYS } from '@hangul-route/design-system/word-art';
+import { vocabArt } from '../slide-view';
 // The console's story list (scripts/build-lecture-catalogue.mjs), checked against the presenter's gate below.
 import { LECTURE_STORIES } from '../../../../../web/src/data/lecture-catalogue.generated';
 
@@ -48,8 +52,12 @@ describe('the presenter content bundle (F-TCH-004 §3.3, §3.13)', () => {
     expect(b.strokeReviewed('jamo:giyeok')).toBe(false);
   });
 
-  it('vocabulary topics wait for their adapter (PR 12)', () => {
-    expect(lectureBundle('en').vocabTopic).toBeUndefined();
+  it('vocabulary topics come through their adapter (PR 12), in the presenter language', () => {
+    const en = lectureBundle('en').vocabTopic?.('vocab-topic:food');
+    const es = lectureBundle('es').vocabTopic?.('vocab-topic:food');
+    expect(en).toMatchObject({ title: 'Food' });
+    expect(es).toMatchObject({ title: 'Comida' });
+    expect(lectureBundle('en').vocabTopic?.('vocab-topic:nope')).toBeUndefined();
   });
 
   it('stories come through the story adapter, behind the review gate (PR 11)', () => {
@@ -95,6 +103,43 @@ describe('the presenter content bundle (F-TCH-004 §3.3, §3.13)', () => {
       }
     },
   );
+
+  it.each(['en', 'es', 'ko'] as const)('every ready vocabulary topic expands with no skip, a slide per word and a quiz (PR 12, %s)', (locale) => {
+    const ready = VOCAB_TOPICS.filter((t) => t.status === 'ready' || t.status === 'shipped');
+    expect(ready.length).toBeGreaterThan(0);
+    for (const t of ready) {
+      const { slides, skipped } = expandDeck(deck([{ kind: 'vocab', topicId: t.id }]), lectureBundle(locale), { canPlayKorean: true });
+      expect(skipped, t.id).toEqual([]);
+      const words = slides.filter((s) => s.kind === 'vocab');
+      expect(words.length, t.id).toBe(VOCAB_ITEMS.filter((i) => (i.topics as readonly string[]).includes(t.key)).length);
+      expect(slides[0], t.id).toMatchObject({ kind: 'title', source: 'topic' });
+      if (words.length >= 4) expect(slides.some((s) => s.kind === 'quiz'), t.id).toBe(true);
+    }
+  });
+
+  it('every ready topic word has a picture the presenter draws: a drawn card or a known WordArt glyph (README D9)', () => {
+    const { slides } = expandDeck(
+      deck(VOCAB_TOPICS.filter((t) => t.status === 'ready' || t.status === 'shipped').map((t): LectureBlock => ({ kind: 'vocab', topicId: t.id }))),
+      lectureBundle('en'),
+      { canPlayKorean: true },
+    );
+    expect(slides.some((s) => s.kind === 'vocab')).toBe(true);
+    // Colour words too: their `word:color-*` keys are drawn by the generated colour glyphs.
+    const missing = slides.filter((s) => s.kind === 'vocab' && vocabArt(s, supportedCardIds, WORD_ART_KEYS) === undefined).map((s) => s.key);
+    expect(missing).toEqual([]);
+  });
+
+  it.each(['en', 'es', 'ko'] as const)('within every ready topic each word has its own Korean and its own gloss, so no quiz round has two right answers (%s)', (locale) => {
+    const ready = VOCAB_TOPICS.filter((t) => t.status === 'ready' || t.status === 'shipped');
+    for (const t of ready) {
+      const words = expandDeck(deck([{ kind: 'vocab', topicId: t.id }]), lectureBundle(locale), { canPlayKorean: true }).slides.flatMap((s) =>
+        s.kind === 'vocab' ? [s.word] : [],
+      );
+      const dupes = (values: string[]) => values.filter((v, i) => values.indexOf(v) !== i);
+      expect(dupes(words.map((w) => w.ko)), t.id).toEqual([]);
+      expect(dupes(words.map((w) => w.gloss.trim().toLowerCase())), t.id).toEqual([]);
+    }
+  });
 
   it('every quest teaches: at least one slide besides its title and End', () => {
     for (const q of questsAll) {
