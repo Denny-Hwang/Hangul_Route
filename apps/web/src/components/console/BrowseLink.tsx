@@ -197,7 +197,8 @@ export function BrowseLink({
   onOpen,
   onStay,
 }: {
-  target: BrowseTarget;
+  /** Omitted, the link opens the All lessons home (a home page's Lessons, source `nav`). */
+  target?: BrowseTarget;
   source: BrowseSource;
   label?: string;
   ariaLabel?: string;

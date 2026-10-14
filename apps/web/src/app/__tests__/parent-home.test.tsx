@@ -206,7 +206,24 @@ describe('the family home (F-APP-001 A-5b)', () => {
     vi.stubEnv('NEXT_PUBLIC_BROWSE', 'enabled');
     vi.stubGlobal('window', { location: { origin: 'https://app.hangulroute.com' } });
     r = await render([family]);
-    expect(byTestId(r, 'family-lessons')[0]?.props.href).toBe('/browse');
+    expect(byTestId(r, 'family-lessons')[0]?.props.href).toBe('/browse#s=nav');
+    vi.unstubAllGlobals();
+  });
+
+  it('Lessons opens through the All lessons opener: a plain click is held for the pass, never a bare navigation (#518/#525 follow-up 1)', async () => {
+    data.rosters = { sp_f: roster(family, [sam]) };
+    vi.stubEnv('NEXT_PUBLIC_BROWSE', 'enabled');
+    vi.stubGlobal('window', { location: { origin: 'https://app.hangulroute.com' } });
+    const r = await render([family]);
+    const link = byTestId(r, 'family-lessons')[0];
+    const preventDefault = vi.fn();
+    await act(async () => {
+      link?.props.onClick({ button: 0, metaKey: false, ctrlKey: false, shiftKey: false, altKey: false, preventDefault });
+    });
+    await act(async () => undefined);
+    expect(preventDefault).toHaveBeenCalledTimes(1);
+    // This test window has no session storage, so the opener stays and says why (section 4.3 step 4).
+    expect(textOf(byTestId(r, 'family-lessons-notice')[0] as ReactTestInstance)).toBe(getMessages('en').console.browse.storageBlocked);
     vi.unstubAllGlobals();
   });
 
