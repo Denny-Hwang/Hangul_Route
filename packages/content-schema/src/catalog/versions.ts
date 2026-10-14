@@ -85,6 +85,8 @@ export const CATALOG_QUEST_IDS_V8: readonly string[] = Object.freeze([
 export const CATALOG_QUEST_ADDITIONS: Readonly<Record<number, readonly string[]>> = Object.freeze({
   // F-CURR-001 S4-1: Read Along.
   9: Object.freeze(['quest:stage4-letters-q1', 'quest:stage4-letters-q2', 'quest:stage4-letters-q3']),
+  // F-CURR-001 S3-3: Festival Sentences.
+  10: Object.freeze(['quest:stage3-rites-q1', 'quest:stage3-rites-q2', 'quest:stage3-rites-q3']),
 });
 
 /** The quest ids the catalogue held at `version` (versions before 8 read as 8). */

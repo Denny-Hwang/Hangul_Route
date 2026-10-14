@@ -249,6 +249,8 @@ describe('grid golden (F-STORY-005 §3.1 rule 2)', () => {
       { id: 'episode:stage2-life', order: 2, questIds: ['quest:stage2-life-q1'], status: 'shipped' },
       { id: 'episode:stage2-nature', order: 4, questIds: ['quest:stage2-nature-q1'], status: 'shipped' },
       { id: 'episode:stage4-rites', order: 3, questIds: ['quest:stage4-rites-q1'], status: 'shipped' },
+      // F-CURR-001 S3-3 (generated from content/episodes/stage-3/rites.json).
+      { id: 'episode:stage3-rites', order: 3, questIds: ['quest:stage3-rites-q1', 'quest:stage3-rites-q2', 'quest:stage3-rites-q3'], status: 'shipped' },
       // F-CURR-001 S4-1: the first upper-stage lesson cell (generated, after the hand-written lessons).
       {
         id: 'episode:stage4-letters',
@@ -320,6 +322,7 @@ describe('pillar tags of the shipped lessons (F-STORY-005 §3.2)', () => {
       'episode:stage4-rites': [],
       // F-CURR-001 S4-1 (generated from content/episodes/stage-4/letters.json).
       'episode:stage4-letters': ['A1'],
+      'episode:stage3-rites': ['B5'],
       'episode:stage5-letters': ['A1'],
       'episode:stage5-life': ['B1', 'B5', 'E4'],
       'episode:stage5-rites': ['B5'],
@@ -349,7 +352,7 @@ const GRID_GOLDEN: Record<string, string> = {
   'stage2:crafts': 'episode:stage2-crafts | Playground Words | preview',
   'stage3:letters': 'episode:stage3-letters | First Sentences | preview',
   'stage3:life': 'episode:stage3-life | Daily Mini-Sentences | preview',
-  'stage3:rites': 'episode:stage3-rites | Festival Sentences | preview',
+  'stage3:rites': 'episode:stage3-rites | Festival Sentences | shipped',
   'stage3:nature': 'episode:stage3-nature | Animal Sentences | preview',
   'stage3:crafts': 'episode:stage3-crafts | Game Sentences | preview',
   'stage4:letters': 'episode:stage4-letters | Read Along | shipped',
