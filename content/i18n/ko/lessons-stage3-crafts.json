@@ -1,0 +1,124 @@
+{
+  "locale": "ko",
+  "domain": "lessons-stage3-crafts",
+  "entries": {
+    "episode:stage3-crafts": {
+      "title": "놀이 문장",
+      "subtitle": "놀이와 노는 곳에 대한 문장을 만들어요.",
+      "hoyaIntro": "무엇을 하고 놀지, 어디에 갈지, 무엇을 하는지 말해 봐요!"
+    },
+    "quest:stage3-crafts-q1": {
+      "title": "놀고 싶은 것",
+      "blurb": "바라는 일을 말하는 문장 틀로 하고 싶은 놀이를 말해요.",
+      "teaser": "다음: 노는 곳.",
+      "steps.s1.title": "무엇을 하고 놀까요?",
+      "steps.s2.title": "하고 싶은 일",
+      "steps.s3.title": "문장 만들기",
+      "steps.s4.title": "문장과 그림",
+      "steps.s5.title": "짧은 문제 두 개",
+      "steps.s6.title": "잘 말했어요!",
+      "steps.s1.hoyaLine": "윷놀이, 축구, 연? 하고 싶은 놀이를 말해 봐요!",
+      "steps.s2.hoyaLine": "‘들어 보기’를 누르고, 문장을 하나씩 직접 읽어 봐요.",
+      "steps.s6.hoyaLine": "하고 싶은 놀이를 문장으로 만들었어요. 아주 잘했어요!",
+      "steps.s2.discover.pages.0.items.0.note": "놀이 이름 뒤에 {ko:하고} {ko:싶어요}를 붙여요. 받침이 없으면 {ko:를}, 받침이 있으면 {ko:을}을 써요.",
+      "steps.s2.discover.pages.1.items.0.sentence.gloss": "종이 놀잇감을 하늘에 띄우기를 바라는 말",
+      "steps.s2.discover.pages.1.items.1.sentence.gloss": "돌리는 줄을 뛰어넘는 놀이를 바라는 말",
+      "steps.s2.discover.pages.0.items.0.frame.gloss": "바라는 놀이를 말하는 틀",
+      "steps.s2.discover.pages.0.items.0.examples.yunnorireul-hago-sipeoyo.gloss": "막대 네 개를 던지며 노는 놀이를 바라는 말",
+      "steps.s2.discover.pages.0.items.0.examples.chukgureul-hago-sipeoyo.gloss": "공을 차서 골을 넣는 경기를 바라는 말"
+    },
+    "quest:stage3-crafts-q2": {
+      "title": "노는 곳",
+      "blurb": "놀러 가는 곳을 말해요. 놀이터, 공원 같은 곳이에요.",
+      "teaser": "다음: 차고, 돌리고, 던져요.",
+      "steps.s1.title": "어디에 갈까요?",
+      "steps.s2.title": "가는 곳",
+      "steps.s3.title": "문장 만들기",
+      "steps.s4.title": "문장과 그림",
+      "steps.s5.title": "짧은 문제 두 개",
+      "steps.s6.title": "출발!",
+      "steps.s1.hoyaLine": "놀이터? 공원? 어디에 가는지 말해 봐요!",
+      "steps.s2.hoyaLine": "‘들어 보기’를 누르고, 문장을 하나씩 직접 읽어 봐요.",
+      "steps.s6.hoyaLine": "가는 곳을 말할 수 있어요. 잘했어요!",
+      "steps.s2.discover.pages.0.items.0.note": "장소 뒤에 {ko:에}를 붙이고 {ko:가요}를 쓰면, 그곳으로 간다는 말이 돼요.",
+      "steps.s2.discover.pages.1.items.0.sentence.gloss": "짠물이 끝없이 펼쳐진 곳으로 향한다는 말",
+      "steps.s2.discover.pages.1.items.1.sentence.gloss": "높이 솟은 땅으로 향한다는 말",
+      "steps.s2.discover.pages.0.items.0.frame.gloss": "향하는 곳을 말하는 틀",
+      "steps.s2.discover.pages.0.items.0.examples.noriteoe-gayo.gloss": "미끄럼틀과 그네가 있는 곳으로 향한다는 말",
+      "steps.s2.discover.pages.0.items.0.examples.gongwone-gayo.gloss": "나무와 잔디가 있는 넓은 쉼터로 향한다는 말"
+    },
+    "quest:stage3-crafts-q3": {
+      "title": "차고, 돌리고, 던져요",
+      "blurb": "놀이에서 하는 동작을 말해요: 차요, 돌려요, 던져요.",
+      "steps.s1.title": "놀이 시간!",
+      "steps.s2.title": "동작을 나타내는 말",
+      "steps.s3.title": "문장 만들기",
+      "steps.s4.title": "문장과 그림",
+      "steps.s5.title": "짧은 문제 두 개",
+      "steps.s6.title": "멋진 솜씨!",
+      "steps.s1.hoyaLine": "제기를 차고 팽이를 돌려요! 무엇을 하는지 말해 봐요.",
+      "steps.s2.hoyaLine": "‘들어 보기’를 누르고, 문장을 하나씩 직접 읽어 봐요.",
+      "steps.s6.hoyaLine": "차고, 돌리고, 던지는 문장을 만들었어요. 멋져요!",
+      "steps.s2.discover.pages.0.items.0.note": "동작을 나타내는 말은 맨 끝에 와요: {ko:차요}, {ko:돌려요}, {ko:던져요}. 그 동작을 받는 것은 앞에 오고 {ko:을}이나 {ko:를}을 붙여요.",
+      "steps.s2.discover.pages.1.items.0.sentence.gloss": "뾰족한 놀잇감을 빙글빙글 움직이게 한다는 말",
+      "steps.s2.discover.pages.1.items.1.sentence.gloss": "나무 막대 네 개를 위로 휙 올려 보낸다는 말",
+      "steps.s2.discover.pages.0.items.0.frame.gloss": "무엇을 발로 툭 쳐 보낸다고 말하는 틀",
+      "steps.s2.discover.pages.0.items.0.examples.jegireul-chayo.gloss": "술이 달린 작은 놀잇감을 발로 툭툭 올린다는 말",
+      "steps.s2.discover.pages.0.items.0.examples.gongeul-chayo.gloss": "동그란 놀잇감을 발끝으로 힘껏 보낸다는 말"
+    },
+    "minigame:s3-crafts-q1-practice": {
+      "orderIt.rounds.r1.sentence.gloss": "막대 네 개를 던지며 노는 놀이를 바라는 말",
+      "orderIt.rounds.r1.particle.choices.eul.gloss": "받침 있는 말 뒤에서 동작의 대상을 나타내는 조사",
+      "orderIt.rounds.r1.particle.choices.reul.gloss": "받침 없는 말 뒤에서 동작의 대상을 나타내는 조사",
+      "orderIt.rounds.r2.sentence.gloss": "종이 놀잇감을 하늘에 띄우기를 바라는 말",
+      "orderIt.rounds.r2.particle.choices.eul.gloss": "받침 있는 말 뒤에서 동작의 대상을 나타내는 조사",
+      "orderIt.rounds.r2.particle.choices.reul.gloss": "받침 없는 말 뒤에서 동작의 대상을 나타내는 조사",
+      "orderIt.rounds.r3.sentence.gloss": "공을 차서 골을 넣는 경기를 바라는 말",
+      "orderIt.rounds.r3.distractors.nalligo.gloss": "공중에 띄워 움직이게 함 (‘싶어요’ 앞에 쓰는 꼴)",
+      "orderIt.rounds.r4.sentence.gloss": "돌리는 줄을 뛰어넘는 놀이를 바라는 말",
+      "orderIt.rounds.r4.particle.choices.reul.gloss": "받침 없는 말 뒤에서 동작의 대상을 나타내는 조사",
+      "orderIt.rounds.r4.particle.choices.eul.gloss": "받침 있는 말 뒤에서 동작의 대상을 나타내는 조사",
+      "orderIt.rounds.r5.sentence.gloss": "방망이로 공을 치는 경기를 바라는 말",
+      "orderIt.rounds.r5.distractors.nalligo.gloss": "공중에 띄워 움직이게 함 (‘싶어요’ 앞에 쓰는 꼴)"
+    },
+    "minigame:s3-crafts-q1-check": {
+      "listenPick.rounds.hear-yeon.prompt": "종이 놀잇감을 하늘에 띄우기를 바라는 말",
+      "listenPick.rounds.read-chukgu.prompt": "공을 차서 골을 넣는 경기를 바라는 말"
+    },
+    "minigame:s3-crafts-q2-practice": {
+      "orderIt.rounds.r1.sentence.gloss": "미끄럼틀과 그네가 있는 곳으로 향한다는 말",
+      "orderIt.rounds.r1.distractors.sipeoyo.gloss": "앞의 일을 바라는 마음을 나타냄 (‘-고’ 뒤에 쓰는 꼴)",
+      "orderIt.rounds.r2.sentence.gloss": "나무와 잔디가 있는 넓은 쉼터로 향한다는 말",
+      "orderIt.rounds.r2.distractors.hago.gloss": "어떤 일을 함 (‘싶어요’ 앞에 쓰는 꼴)",
+      "orderIt.rounds.r3.sentence.gloss": "짠물이 끝없이 펼쳐진 곳으로 향한다는 말",
+      "orderIt.rounds.r4.sentence.gloss": "미끄럼틀과 그네가 있는 곳으로 향하기를 바라는 말",
+      "orderIt.rounds.r4.distractors.gayo.gloss": "다른 곳으로 움직임",
+      "orderIt.rounds.r5.sentence.gloss": "높이 솟은 땅으로 향한다는 말",
+      "orderIt.rounds.r5.distractors.nalligo.gloss": "공중에 띄워 움직이게 함 (‘싶어요’ 앞에 쓰는 꼴)",
+      "orderIt.rounds.r3.distractors.nalligo.gloss": "공중에 띄워 움직이게 함 (‘싶어요’ 앞에 쓰는 꼴)"
+    },
+    "minigame:s3-crafts-q2-check": {
+      "listenPick.rounds.hear-san.prompt": "높이 솟은 땅으로 향한다는 말",
+      "listenPick.rounds.read-noriteo.prompt": "미끄럼틀과 그네가 있는 곳으로 향한다는 말"
+    },
+    "minigame:s3-crafts-q3-practice": {
+      "orderIt.rounds.r1.sentence.gloss": "뾰족한 놀잇감을 빙글빙글 움직이게 한다는 말",
+      "orderIt.rounds.r1.particle.choices.reul.gloss": "받침 없는 말 뒤에서 동작의 대상을 나타내는 조사",
+      "orderIt.rounds.r1.particle.choices.eul.gloss": "받침 있는 말 뒤에서 동작의 대상을 나타내는 조사",
+      "orderIt.rounds.r2.sentence.gloss": "술이 달린 작은 놀잇감을 발로 툭툭 올린다는 말",
+      "orderIt.rounds.r2.distractors.dollyeoyo.gloss": "제자리에서 빙글빙글 움직이게 함",
+      "orderIt.rounds.r3.sentence.gloss": "동그란 놀잇감을 발끝으로 힘껏 보낸다는 말",
+      "orderIt.rounds.r3.particle.choices.eul.gloss": "받침 있는 말 뒤에서 동작의 대상을 나타내는 조사",
+      "orderIt.rounds.r3.particle.choices.reul.gloss": "받침 없는 말 뒤에서 동작의 대상을 나타내는 조사",
+      "orderIt.rounds.r4.sentence.gloss": "나무 막대 네 개를 위로 휙 올려 보낸다는 말",
+      "orderIt.rounds.r4.particle.choices.eul.gloss": "받침 있는 말 뒤에서 동작의 대상을 나타내는 조사",
+      "orderIt.rounds.r4.particle.choices.reul.gloss": "받침 없는 말 뒤에서 동작의 대상을 나타내는 조사",
+      "orderIt.rounds.r5.sentence.gloss": "술이 달린 작은 놀잇감을 발로 툭툭 올리기를 바라는 말",
+      "orderIt.rounds.r5.distractors.dollyeoyo.gloss": "제자리에서 빙글빙글 움직이게 함"
+    },
+    "minigame:s3-crafts-q3-check": {
+      "listenPick.rounds.hear-jegi.prompt": "술이 달린 작은 놀잇감을 발로 툭툭 올린다는 말",
+      "listenPick.rounds.read-paengi.prompt": "뾰족한 놀잇감을 빙글빙글 움직이게 한다는 말"
+    }
+  }
+}

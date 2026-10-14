@@ -116,7 +116,7 @@ const PLACEMENT: readonly PlacementRow[] = [
 const MATRIX: Record<StageKey, Record<ThemeKey, string>> = {
   stage1: { letters: 'L+5', life: 'L+1', rites: 'L+2', nature: 'L+1', crafts: 'L+1' },
   stage2: { letters: 'S2', life: 'L+1', rites: 'S1', nature: 'L+1', crafts: 'S3' },
-  stage3: { letters: 'L+2', life: 'S1', rites: '-', nature: '-', crafts: '-' },
+  stage3: { letters: 'L+2', life: 'S1', rites: '-', nature: '-', crafts: 'L+0' },
   stage4: { letters: 'L+1', life: '-', rites: 'L+0', nature: '-', crafts: '-' },
   stage5: { letters: '-', life: '-', rites: 'S1', nature: '-', crafts: '-' },
   stage6: { letters: 'S1', life: '-', rites: '-', nature: '-', crafts: '-' },

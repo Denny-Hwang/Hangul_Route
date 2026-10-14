@@ -69,6 +69,17 @@ async function pickByIds(page: Page, ids: readonly string[]): Promise<void> {
   }
 }
 
+/** Pic-Word Match: each board by its pair ids (a board's first id is not on the board before it). */
+async function matchBoards(page: Page, boards: readonly (readonly string[])[]): Promise<void> {
+  for (const ids of boards) {
+    await expect(page.getByTestId(`pic-word-picture-${ids[0]}`)).toBeVisible();
+    for (const id of ids) {
+      await page.getByTestId(`pic-word-picture-${id}`).click();
+      await page.getByTestId(`pic-word-word-${id}`).click();
+    }
+  }
+}
+
 /** Each cell row appends its cell here (S2-1 onward). */
 const CELLS: readonly UpperCell[] = [
   // F-CURR-001 S3-1: First Sentences, q1 "It Is a Book" played through its real games.
@@ -102,6 +113,40 @@ const CELLS: readonly UpperCell[] = [
       await page.getByText('Learning Route', { exact: true }).last().click();
       await page.getByRole('button', { name: /^Stage 3, Sentences\./ }).click();
       await expect(page.getByRole('button', { name: /^Letters & Books: First Sentences\./ })).toBeVisible();
+    },
+  },
+  // F-CURR-001 S3-5: Game Sentences, q1 "I Want to Play" played through its real games.
+  {
+    episodeId: 'episode:stage3-crafts',
+    cellButton: journeyCellName(3, 'Play & Crafts'),
+    title: 'Game Sentences',
+    playFirstQuest: async (page) => {
+      await page.getByRole('button', { name: 'Start', exact: true }).first().click();
+      await page.getByRole('button', { name: 'Continue' }).click();
+      await passDiscover(page);
+      // Sentence Builder: three particle rounds (를, 을, 를) and two word-order rounds with one extra tile.
+      await page.getByRole('button', { name: 'Play minigame' }).click();
+      await build(page, 1, 5, ['를, reul']);
+      await build(page, 2, 5, ['을, eul']);
+      await build(page, 3, 5, ['축구를, chukgureul', '하고, hago', '싶어요, sipeoyo']);
+      await build(page, 4, 5, ['를, reul']);
+      await build(page, 5, 5, ['야구를, yagureul', '하고, hago', '싶어요, sipeoyo']);
+      // Pic-Word Match on whole sentences: four boards of three.
+      await page.getByRole('button', { name: 'Play minigame' }).click();
+      await matchBoards(page, [
+        ['yunnori', 'yeon', 'chukgu'],
+        ['julleomgi', 'yagu', 'yunnori'],
+        ['nonggu', 'yeon', 'julleomgi'],
+        ['chukgu', 'yunnori', 'yeon'],
+      ]);
+      await playCheckByIds(page, [{ answer: 'kite' }, { answer: 'chukgu' }]);
+      await expect(page.getByText('Finish', { exact: true }).first()).toBeVisible();
+    },
+    expectRouteDay: async (page) => {
+      await page.goto('/');
+      await page.getByText('Learning Route', { exact: true }).last().click();
+      await page.getByRole('button', { name: /^Stage 3, Sentences\./ }).click();
+      await expect(page.getByRole('button', { name: /^Play & Crafts: Game Sentences\./ })).toBeVisible();
     },
   },
   // F-CURR-001 S4-1: Read Along, q1 "What Is This?" played through its real games.

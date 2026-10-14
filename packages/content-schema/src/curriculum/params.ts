@@ -34,8 +34,12 @@ const paramsShape = {
   /** Wording and defaults only. */
   audience: z.enum(['class', 'family', 'self']),
   level: PlacementLevelSchema,
-  /** The exact set from a placement result; wins over `level`. */
-  placedOutQuestIds: z.array(z.string()).max(40).optional(),
+  /**
+   * The exact set from a placement result; wins over `level`. Capped like `completedQuestIds`: a
+   * `stage6`/`stage7` level places out every grid lesson and story below it, past 40 once Game
+   * Sentences ships (F-CURR-001 S3-5).
+   */
+  placedOutQuestIds: z.array(z.string()).max(400).optional(),
   /** A single learner (family, self); empty for a class. Never stored in a plan (`toMeta`). */
   completedQuestIds: z.array(z.string()).max(400).default([]),
   startDate: DateKeySchema,
