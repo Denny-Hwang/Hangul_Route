@@ -1315,7 +1315,7 @@
     {
       "id": "n1",
       "kind": "culture",
-      "textEn": "Chuseok is a public holiday. Many people travel to their hometowns then, so roads and trains get busy and extra trains and buses run. Some families travel the other way, to the city.",
+      "textEn": "Chuseok is a public holiday. Many people travel to their hometowns then, so roads and trains get busy and extra trains and buses run. In some families, the parents travel the other way, to where their children live.",
       "sources": [
         {
           "title": "추석(秋夕)",
@@ -1337,13 +1337,20 @@
           "url": "https://www.korea.kr/news/policyNewsView.do?newsId=148783701",
           "accessed": "2026-10-14",
           "quoteOrLocator": "Policy news of 2014-09-04, survey of Chuseok travel: “역귀성하는 비율은 약 2배(8.6%→13.8%) 각각 늘었다.”"
+        },
+        {
+          "title": "역귀성",
+          "publisher": "국립국어원 (National Institute of Korean Language) — 표준국어대사전",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%EC%97%AD%EA%B7%80%EC%84%B1",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "Entry 역귀성 (逆歸省) 「명사」, the only sense: “명절 때에 자식이 고향의 부모를 찾아가는 것에 대하여 거꾸로 부모가 객지에 있는 자식들을 찾아감.”"
         }
       ],
       "verification": {
-        "passes": 1,
+        "passes": 2,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "Line 1 (passes: 1, author sourcing, 2026-10-14): all three pages opened and each quoteOrLocator found on its page. 'Public holiday' and 'many people travel to their hometowns, so roads get busy' = encykorea 추석, 개설 (공휴일로 제정, 많은 사람들이 고향으로 돌아가기 때문에 교통혼잡); 'trains get busy and extra trains and buses run' = MOLIT 2024 special transport measures (버스·철도 운행 횟수와 좌석을 평시 대비 늘리고); 'some families travel the other way, to the city' = MOLIT 2014 survey (역귀성 share rising; 역귀성 is the trip from the hometown to where the children live). The note says 'many' and 'some', never everyone; it names no ancestral rite (OD-9, the encyclopedia's reason for the trip is left out), no number, no living person, shop, brand or price, and copies no source wording (English restatement of Korean sources). Carried by: q1 intro Hoya line (the holiday trip, Hoya's own story), q3 Discover page 1 caption."
+        "notes": "Line 1 (passes: 1, author sourcing, 2026-10-14): all three pages opened and each quoteOrLocator found on its page. 'Public holiday' and 'many people travel to their hometowns, so roads get busy' = encykorea 추석, 개설 (공휴일로 제정, 많은 사람들이 고향으로 돌아가기 때문에 교통혼잡); 'trains get busy and extra trains and buses run' = MOLIT 2024 special transport measures (버스·철도 운행 횟수와 좌석을 평시 대비 늘리고); 'some families travel the other way, to the city' = MOLIT 2014 survey (역귀성 share rising; 역귀성 is the trip from the hometown to where the children live). The note says 'many' and 'some', never everyone; it names no ancestral rite (OD-9, the encyclopedia's reason for the trip is left out), no number, no living person, shop, brand or price, and copies no source wording (English restatement of Korean sources). Carried by: q1 intro Hoya line (the holiday trip, Hoya's own story), q3 Discover page 1 caption.\nLine 2 (passes: 2, independent fact-check, 2026-10-14): all three cited pages reopened and every quoteOrLocator found word for word. 'Public holiday' and 'many people travel to their hometowns, so roads get busy': Encyclopedia of Korean Culture, 추석, 개설 (공휴일로 제정; 많은 사람들이 고향으로 돌아가기 때문에 교통혼잡) - passes. 'Trains get busy and extra trains and buses run': MOLIT 2024-09-10 (대중교통 증가에 대비해 버스·철도 운행 횟수와 좌석을 평시 대비 각각 늘리고; 특별교통대책기간) - passes; the note gives no figure. 'Some families travel the other way, to the city': FAILED as worded. The MOLIT 2014 survey only gives the rising 역귀성 share (8.6% to 13.8%) and does not define the word or name a destination; the 2024 page only names KTX/SRT 역귀성 fares; neither source says 'to the city'. Fixed: the sentence now reads 'In some families, the parents travel the other way, to where their children live.', and the Standard Korean Language Dictionary entry 역귀성 was added as a source (parents going to the children who live away from the hometown, the reverse of the usual trip); 'some' stays supported by the 2014 share (a minority, rising). The note has no number, no everyone claim, no rite, no living person, shop, brand or price; it is an English restatement with no source wording copied. All four sources are on hosts in SOURCE_HOST_ALLOWLIST; three are Korean public institutions (MOLIT on www.korea.kr twice, the National Institute of Korean Language on stdict.korean.go.kr) and the fourth is the Academy of Korean Studies encyclopedia. No es/ko overlay carries this note, so no overlay change."
       }
     },
     {
@@ -1374,10 +1381,10 @@
         }
       ],
       "verification": {
-        "passes": 1,
+        "passes": 2,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "Line 1 (passes: 1, author sourcing, 2026-10-14): all three pages opened and each quoteOrLocator found. The orthography's own example of a clock time, 두 시 삼십 분 오 초, writes the hour with the native counting form 두 and the minutes with the Sino-Korean 삼십; its counting examples (한 개, 소 한 마리) show the short native forms before a unit; the dictionary gives 세 as the determiner form meaning three, and 분 as the unit of one sixtieth of an hour. The note states only this one pattern of clock times and copies no source wording. Carried by: q2 Discover page 1 caption and the two word notes (Hours: han, du, se ...; Minutes: sip, isip, samsip ...); q2 practice and Check never mix the two sets in one question's options."
+        "notes": "Line 1 (passes: 1, author sourcing, 2026-10-14): all three pages opened and each quoteOrLocator found. The orthography's own example of a clock time, 두 시 삼십 분 오 초, writes the hour with the native counting form 두 and the minutes with the Sino-Korean 삼십; its counting examples (한 개, 소 한 마리) show the short native forms before a unit; the dictionary gives 세 as the determiner form meaning three, and 분 as the unit of one sixtieth of an hour. The note states only this one pattern of clock times and copies no source wording. Carried by: q2 Discover page 1 caption and the two word notes (Hours: han, du, se ...; Minutes: sip, isip, samsip ...); q2 practice and Check never mix the two sets in one question's options.\nLine 2 (passes: 2, independent fact-check, 2026-10-14): all three cited pages reopened and every quoteOrLocator found word for word. Hangul orthography (한글 맞춤법) Article 43, korean.go.kr: the 다만 example is 두 시 삼십 분 오 초 and the examples above it include 한 개 and 소 한 마리; this supports 'clock hours count with the native short forms' (두 시) and 'minutes count with 일, 이, 삼' (삼십 분), and 두 시 삼십 분 = 2:30 - passes. Standard Korean Language Dictionary 세1 「관형사」 (그 수량이 셋임을 나타내는 말) supports 세 as the determiner form of 셋, i.e. the short form before a unit - passes. Dictionary 분6 [Ⅰ]「1」 (한 시간의 60분의 1에 해당하는 시간) supports 분 as the minute unit - passes. The only words shared with a source are the Korean example 두 시 삼십 분, a short standard phrase used as a language example, not source prose; the English is a restatement. The note claims one clock pattern only and nothing about age, people or places. Outcome: passes, no change."
       }
     }
   ],
