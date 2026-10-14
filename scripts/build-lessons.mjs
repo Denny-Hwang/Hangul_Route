@@ -69,7 +69,9 @@ export class ContentError extends Error {
 }
 
 const isObject = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
-const literal = (value) => JSON.stringify(value, null, 2);
+// Compact literals (F-CURR-001 S2-3): pretty-printing doubled a cell's raw bytes with whitespace alone
+// (Playground Words: 31,812 B pretty, 14,759 B compact), and the §3.12 budget measures what is emitted.
+const literal = (value) => JSON.stringify(value);
 const bytes = (text) => Buffer.byteLength(text, "utf8");
 
 function need(obj, field, where, kind = "string") {
