@@ -109,7 +109,14 @@ export function presenterStrings({ jamo, scopes, quests, cards, extra, topicFile
   for (const quest of list(quests)) {
     for (const step of list(quest.steps)) {
       for (const page of list(step.discover?.pages)) {
-        for (const item of list(page.items)) if (item.type === "word") add(item.word?.ko);
+        for (const item of list(page.items)) {
+          if (item.type === "word") add(item.word?.ko);
+          // F-CURR-001 §3.10: the upper-stage Discover items the lecture deck shows (discoverItemTexts).
+          if (item.type === "sentence") add(item.sentence?.ko);
+          if (item.type === "pattern") list(item.examples).forEach((e) => add(e?.ko));
+          if (item.type === "exchange") list(item.lines).forEach((l) => add(l?.line?.ko));
+          if (item.type === "realia") list(item.keyWords).forEach((w) => add(w?.ko));
+        }
       }
     }
   }
@@ -322,14 +329,16 @@ export async function loadRepoContent(root) {
     loaderRegistered = true;
   }
   const load = (rel) => import(pathToFileURL(join(root, ...rel.split("/"))).href);
-  const [content, config, lecture] = await Promise.all([
+  const [content, config, lecture, ...lessonStages] = await Promise.all([
     load("apps/mobile/src/content/index.ts"),
     load("apps/mobile/src/logic/minigame-config.ts"),
     load("apps/mobile/src/logic/lecture/content.ts"),
+    // F-CURR-001 §3.12: the scopes of the generated lesson modules (the lesson quests come with questsAll).
+    ...[2, 3, 4, 6, 7].map((n) => load(`apps/mobile/src/content/__generated__/lessons-stage${n}.ts`)),
   ]);
   return {
     jamo: content.jamoAll,
-    scopes: config.minigameScopes,
+    scopes: Object.assign({}, config.minigameScopes, ...lessonStages.map((m) => m.LESSON_SCOPES)),
     quests: content.questsAll,
     cards: content.heritageCardsAll,
     extra: [lecture.PAUSE_WORD.ko],

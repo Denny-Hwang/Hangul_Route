@@ -230,6 +230,25 @@ describe("presenterStrings (what the presenter draws in large Korean)", () => {
     assert.ok(!all.has("대"));
   });
 
+  test("lists the Korean of the upper-stage Discover items (F-CURR-001 §3.10)", () => {
+    const kt = (ko) => ({ ko, romanization: "x", en: "y" });
+    const items = [
+      { type: "sentence", sentence: kt("책이 있어요") },
+      { type: "pattern", frame: kt("___이에요/예요"), examples: [kt("책이에요"), kt("학교예요")] },
+      { type: "exchange", lines: [{ speaker: "a", line: kt("이게 뭐예요?") }, { speaker: "b", line: kt("책이에요") }] },
+      { type: "realia", realiaRef: "realia:menu", keyWords: [kt("김밥")] },
+    ];
+    assert.deepEqual(presenterStrings({ quests: [{ steps: [{ kind: "discover", discover: { pages: [{ items }] } }] }] }), [
+      "책이 있어요",
+      "책이에요",
+      "학교예요",
+      "이게 뭐예요?",
+      "책이에요",
+      "김밥",
+    ]);
+    assert.deepEqual(presenterStrings({ quests: [{ steps: [{ kind: "discover", discover: { pages: [{ items: [{ type: "pattern" }, { type: "exchange" }, { type: "realia" }, { type: "sentence" }] }] } }] }] }), []);
+  });
+
   test("tolerates missing optional fields", () => {
     assert.deepEqual(presenterStrings({}), []);
     assert.deepEqual(presenterStrings({ scopes: { x: { kind: "match-sound" } }, quests: [{ steps: [{ kind: "discover" }] }] }), []);

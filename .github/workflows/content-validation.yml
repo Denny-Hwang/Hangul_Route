@@ -42,6 +42,9 @@ on:
       # F-TCH-004 PR 3: presenter font glyph list (re-derived from the content above)
       - "scripts/build-presenter-font.mjs"
       - "apps/mobile/public/fonts/**"
+      # F-CURR-001 row C-2: lesson cells -> generated lesson modules (generator, lesson rules)
+      - "scripts/build-lessons.mjs"
+      - "scripts/check-source-links.mjs"
 
 # F-I18N-001 §3.10: overlay locales whose missing translations are errors (comma list, e.g. "es").
 # Add a locale here in the PR that flips its LOCALE_STATUS to 'shipped'; scripts/i18n-status.mjs
@@ -107,6 +110,12 @@ jobs:
 
       - name: Story bundle budget (F-STORY-001)
         run: node scripts/build-stories.mjs --report
+
+      - name: Lesson modules are up to date (F-CURR-001)
+        run: node scripts/build-lessons.mjs --check
+
+      - name: Lesson module budget (F-CURR-001 §3.12)
+        run: node scripts/build-lessons.mjs --report
 
       - name: Lecture catalogue is up to date (F-TCH-004)
         run: node scripts/build-lecture-catalogue.mjs --check

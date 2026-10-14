@@ -127,6 +127,14 @@ describe('romanization content scanner (a bad file would fail)', () => {
     expect(scanFixture({ 'content/j.json': jamo('g/k (giyeog)') }).errors[0]).toContain('not the standard letter name');
   });
 
+  it('checks a sentence frame between its slots (F-CURR-001 §3.4, §3.7)', () => {
+    const frame = (ko: string, romanization: string) => ({ 'content/f.json': [{ ko, romanization, en: 'I like ___' }] });
+    expect(scanFixture(frame('저는 ___을/를 좋아해요', 'jeoneun ___eul/reul joahaeyo')).errors).toEqual([]);
+    expect(scanFixture(frame('___에 ___을/를 먹었어요', '___e ___eul/reul meogeosseoyo')).errors).toEqual([]);
+    expect(scanFixture(frame('저는 ___을/를 좋아해요', 'jeonun ___eul/reul joahaeyo')).errors[0]).toContain('romanization-mismatch');
+    expect(scanFixture(frame('저는 ___을/를 좋아해요', 'jeoneun joahaeyo')).errors[0]).toContain('1 slot(s), the romanization has 0');
+  });
+
   it('skips a bare isolated jamo outside a jamo record (C6)', () => {
     expect(scanFixture({ 'content/a.json': [{ ko: 'ㄱ', romanization: 'g', en: 'g' }] }).errors).toEqual([]);
   });

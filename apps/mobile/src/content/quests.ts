@@ -1,6 +1,9 @@
 import type { Quest } from '@hangul-route/content-schema';
 import { bookQuests } from './books';
+import { handWrittenEpisodes } from './episodes';
+import { lessonQuests } from './lessons';
 import { storyQuests } from './stories';
+import { questsInCursorOrder } from '../logic/lessons/lesson-lookup';
 
 /**
  * The 15 Stage 1 quests follow the six-step pattern of F-QUEST-002 §3.6:
@@ -671,7 +674,17 @@ export const stage4Quests: Quest[] = [
   },
 ];
 
-export const questsAll: Quest[] = [...stage1Quests, ...stage2Quests, ...stage4Quests, ...storyQuests, ...bookQuests];
+/**
+ * Every quest in cursor order: Stages 1-4 (the generated lesson quests of F-CURR-001 by
+ * stage, after the hand-written ones of their stage), the stories and the Stage 5 books,
+ * then the lesson quests of Stages 6-7.
+ */
+export const questsAll: Quest[] = questsInCursorOrder({
+  early: [...stage1Quests, ...stage2Quests, ...stage4Quests],
+  lessons: lessonQuests,
+  middle: [...storyQuests, ...bookQuests],
+  episodes: [...handWrittenEpisodes],
+});
 
 export function questById(id: string): Quest | undefined {
   return questsAll.find((q) => q.id === id);

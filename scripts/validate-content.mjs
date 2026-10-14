@@ -11,6 +11,13 @@
 //     (F-HW-001 §3.3 anti-shame contract).
 //   - content/placement/** follows the placement-bank rules in
 //     scripts/placement-rules.mjs (F-PLC-001 §3.4).
+//   - content/episodes/stage-<n>/*.json (n = 2, 3, 4, 6, 7) are lesson cells (F-CURR-001):
+//     the lesson-* rules of packages/content-schema/src/lesson-lint.ts (loaded through
+//     scripts/ts-loader.mjs, one implementation): schema, no speaking, review sign-offs,
+//     sourced notes, factRefs, source shape, copied sources, designation numbers and
+//     verification passes. Their sources, verification and review records are a
+//     reference zone (source titles may be Korean), and a `{ko:...}` token in an
+//     English field is taught Korean, not a Korean UI string.
 //   - content/i18n/<locale>/*.json are locale overlays, not base content: they
 //     follow the overlay rules in scripts/overlay-rules.mjs (F-I18N-001 §3.7),
 //     where Korean overlays may hold Hangul in translatable fields (a Korean
@@ -22,8 +29,9 @@
 // docs/specs/F-HW-001-homework-page.md §3.3 / §9.5.
 
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
+import nodeModule from "node:module";
 import { dirname, extname, join, relative, resolve, sep } from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { checkPlacementTree } from "./placement-rules.mjs";
 import { bannedWordIn, checkOverlayTree } from "./overlay-rules.mjs";
 
@@ -103,6 +111,13 @@ function isStoryFile(file) {
   return file.split(sep).join("/").startsWith(STORY_DIR_PREFIX);
 }
 
+// F-CURR-001 §3.9: a lesson cell's sources, verification and review records are reference text.
+const LESSON_FILE = /^content\/episodes\/stage-[2-467]\/[a-z]+\.json$/;
+const LESSON_ZONE_KEYS = new Set(["sources", "verification", "review"]);
+const isLessonFile = (file) => LESSON_FILE.test(file.split(sep).join("/"));
+/** `{ko:이}` in a note is taught Korean rendered with its romanization (F-CURR-001 §3.4), not a UI string. */
+const withoutKoTokens = (text) => text.replace(/\{ko:[^}]*\}/g, " ");
+
 function walk(dir) {
   const out = [];
   for (const entry of readdirSync(dir)) {
@@ -149,11 +164,12 @@ function visit(value, path, file, violations, parentObj, inReferenceZone = false
     for (const [k, v] of Object.entries(obj)) {
       const zone =
         inReferenceZone ||
-        (path.length === 0 && REFERENCE_ZONE_KEYS.has(k) && isStoryFile(file));
+        (path.length === 0 && REFERENCE_ZONE_KEYS.has(k) && isStoryFile(file)) ||
+        (LESSON_ZONE_KEYS.has(k) && isLessonFile(file));
       if (
         !zone &&
         typeof v === "string" &&
-        KOREAN_RE.test(v) &&
+        KOREAN_RE.test(withoutKoTokens(v)) &&
         !KOREAN_TARGET_FIELDS.has(k) &&
         k !== "romanization"
       ) {
@@ -208,6 +224,26 @@ for (const file of files) {
 
 // F-PLC-001 §3.4: structure of content/placement/**.
 violations.push(...checkPlacementTree(parsedByRel));
+
+// F-CURR-001 section 5: the lesson rules of every lesson cell file.
+const lessonFiles = [...parsedByRel.keys()].filter((rel) => LESSON_FILE.test(rel));
+if (lessonFiles.length > 0) {
+  nodeModule.register(pathToFileURL(join(dirname(fileURLToPath(import.meta.url)), "ts-loader.mjs")));
+  const { lintLessonCell } = await import(
+    pathToFileURL(join(dirname(fileURLToPath(import.meta.url)), "..", "packages", "content-schema", "src", "lesson-lint.ts")).href
+  );
+  const storyFacts = new Map();
+  for (const [rel, json] of parsedByRel) {
+    if (!/^content\/stories\/[^/]+\.json$/.test(rel) || typeof json?.id !== "string") continue;
+    storyFacts.set(json.id.replace(/^story:/, ""), new Set((json.facts ?? []).map((f) => f.id)));
+  }
+  const ctx = { today: new Date().toISOString().slice(0, 10), storyFacts };
+  for (const rel of lessonFiles) {
+    for (const f of lintLessonCell(parsedByRel.get(rel), ctx)) {
+      violations.push({ file: rel, path: f.path, rule: `${f.rule}: ${f.message}` });
+    }
+  }
+}
 
 // F-I18N-001 §3.7: content/i18n/<locale>/*.json against the base content.
 const strictLocales = (process.env.HANGUL_ROUTE_STRICT_LOCALES ?? "")

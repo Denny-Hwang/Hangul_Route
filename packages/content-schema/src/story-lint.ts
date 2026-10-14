@@ -771,6 +771,25 @@ function lintDesignationNumbers(story: Story, add: Add): void {
   }
 }
 
+/**
+ * The first run of `COPIED_RUN_WORDS` words that `text` shares with any of `excerpts`
+ * (case and punctuation ignored), or undefined. The story rule `narration-copies-source`
+ * applied to other prose: F-CURR-001's `lesson-copies-source`.
+ */
+export function copiedRun(text: string, excerpts: readonly string[]): string | undefined {
+  const windows = new Set(excerpts.flatMap(wordWindows));
+  return wordWindows(text).find((window) => windows.has(window));
+}
+
+/**
+ * The heritage designation number `text` carries ("National Treasure No. 70"), or
+ * undefined: F-CURR-001's `lesson-national-treasure-number`.
+ */
+export function designationNumberIn(text: string): string | undefined {
+  const plain = stripTokens(text);
+  return DESIGNATION_NUMBER.map((re) => re.exec(plain)).find((m) => m !== null)?.[0];
+}
+
 function lintShelfReviewers(story: Story, add: Add): void {
   const { review } = story;
   if (story.shelf && !(review.language === 'native-reviewed' && review.culture === 'culture-reviewed')) {

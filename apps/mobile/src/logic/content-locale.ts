@@ -1,4 +1,5 @@
 import {
+  OVERLAYS,
   localize,
   type Episode,
   type HeritageCard,
@@ -12,6 +13,8 @@ import {
 } from '@hangul-route/content-schema';
 import type { MissionCard } from './homework/mission-builder';
 import type { MinigameScope } from './minigame-config';
+import { lessonIndexOverlays, lessons } from '../content/lessons';
+import { mergeOverlays } from './lessons/lesson-lookup';
 
 /**
  * Content text in the UI language (F-I18N-001 §3.6). The screens pass `useLocale()`;
@@ -23,10 +26,13 @@ import type { MinigameScope } from './minigame-config';
 export const localizeCard = (card: HeritageCard, locale: UiLocale, overlays?: Overlays): HeritageCard =>
   localize(card, card.id, locale, overlays);
 
-export const localizeEpisode = (episode: Episode, locale: UiLocale, overlays?: Overlays): Episode =>
+/** The shipped overlays plus the glosses of the generated lesson cells (F-CURR-001 §3.10); `OVERLAYS` itself while none ships. */
+export const CONTENT_OVERLAYS: Overlays = mergeOverlays(OVERLAYS, lessonIndexOverlays);
+
+export const localizeEpisode = (episode: Episode, locale: UiLocale, overlays: Overlays = CONTENT_OVERLAYS): Episode =>
   localize(episode, episode.id, locale, overlays);
 
-export const localizeQuest = (quest: Quest, locale: UiLocale, overlays?: Overlays): Quest =>
+export const localizeQuest = (quest: Quest, locale: UiLocale, overlays: Overlays = CONTENT_OVERLAYS): Quest =>
   localize(quest, quest.id, locale, overlays);
 
 export const localizeStage = (stage: StageDef, locale: UiLocale, overlays?: Overlays): StageDef =>
@@ -42,9 +48,9 @@ export const localizeJamo = (jamo: Jamo, locale: UiLocale, overlays?: Overlays):
 export const localizeStory = (story: Story, locale: UiLocale, overlays?: Overlays): Story =>
   localize(story, story.id, locale, overlays);
 
-/** A minigame's pairs, step labels, dialogue lines and prompts, by its minigame ref. */
+/** A minigame's pairs, step labels, dialogue lines and prompts, by its minigame ref (a lesson ref adds its stage's glosses). */
 export const localizeScope = (scope: MinigameScope, ref: string, locale: UiLocale, overlays?: Overlays): MinigameScope =>
-  localize(scope, ref, locale, overlays);
+  localize(scope, ref, locale, overlays ?? lessons.scopeOverlaysFor(ref, OVERLAYS));
 
 /**
  * Something that carries the English title of a content entity as built (a mission card,

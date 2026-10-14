@@ -40,6 +40,13 @@ export const REGISTERED_SOURCES: readonly RegisteredSource[] = [
   { path: 'apps/mobile/src/logic/lecture/content.ts', cls: 'B1', suite: MOBILE_SUITE, needle: 'lecture/content' },
   // F-QUEST-002 §3.9: the Hangul Check's five words and its final-syllable distractors.
   { path: 'apps/mobile/src/logic/stage1/hangul-check.ts', cls: 'B1', suite: MOBILE_SUITE, needle: 'stage1/hangul-check' },
+  // F-CURR-001 §3.10: the generated lesson modules (built from content/episodes/stage-<n>/*.json, which class A scans).
+  { path: 'apps/mobile/src/content/__generated__/lessons-index.ts', cls: 'B1', suite: MOBILE_SUITE, needle: '__generated__/lessons-index' },
+  { path: 'apps/mobile/src/content/__generated__/lessons-stage2.ts', cls: 'B1', suite: MOBILE_SUITE, needle: 'helpers/lesson-stages' },
+  { path: 'apps/mobile/src/content/__generated__/lessons-stage3.ts', cls: 'B1', suite: MOBILE_SUITE, needle: 'helpers/lesson-stages' },
+  { path: 'apps/mobile/src/content/__generated__/lessons-stage4.ts', cls: 'B1', suite: MOBILE_SUITE, needle: 'helpers/lesson-stages' },
+  { path: 'apps/mobile/src/content/__generated__/lessons-stage6.ts', cls: 'B1', suite: MOBILE_SUITE, needle: 'helpers/lesson-stages' },
+  { path: 'apps/mobile/src/content/__generated__/lessons-stage7.ts', cls: 'B1', suite: MOBILE_SUITE, needle: 'helpers/lesson-stages' },
   // B2. TS data, web
   { path: 'apps/web/src/data/stage1-cards.ts', cls: 'B2', suite: WEB_DATA_SUITE, needle: '../stage1-cards' },
   // B3. TS data, API (isolated jamo only: R7)
