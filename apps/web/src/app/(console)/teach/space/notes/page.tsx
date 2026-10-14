@@ -47,9 +47,10 @@ function NotesInner(): JSX.Element {
   const [rosterError, setRosterError] = useState<SpaceError | null>(null);
   const [gating, setGating] = useState(false);
   const [coverage, setCoverage] = useState<SpaceCoverage>('unknown');
-  // Whether this viewer's role sends here (section 6.1). Unknown (the spaces read failed) leaves the action in place:
-  // the Worker decides, and the composer words its refusal.
-  const [canSend, setCanSend] = useState(true);
+  // Whether this viewer's role sends here (section 6.1): null until the roster and spaces reads answer, so a role
+  // that never sends (a school admin) never sees New note while they load. A failed spaces read leaves the action in
+  // place: the Worker decides, and the composer words its refusal.
+  const [canSend, setCanSend] = useState<boolean | null>(null);
   // A family caregiver's send grant (OD-17, FB-12): false only when the family's list says so; null (unknown) leaves
   // Send a note; undefined until the list answered, so a `&compose=1` arrival never opens the composer before it.
   const [grant, setGrant] = useState<boolean | null | undefined>(undefined);
@@ -98,10 +99,8 @@ function NotesInner(): JSX.Element {
       setSchool(true);
       return;
     }
-    if (spaces.ok) {
-      const mine = spaces.data.find((item) => item.space.id === result.data.space.id);
-      setCanSend(mine ? notesSender(mine.role, result.data.space.kind) : true);
-    }
+    const mine = spaces.ok ? spaces.data.find((item) => item.space.id === result.data.space.id) : undefined;
+    setCanSend(mine ? notesSender(mine.role, result.data.space.kind) : true);
     setRoster(result.data);
     if (gate) setCoverage(spaceCoverage(entitlements?.ok ? entitlements.data : null, spaces?.ok ? spaces.data : null, result.data.space, new Date()));
   }, [api, enabled, q.spaceId]);
@@ -159,6 +158,8 @@ function NotesInner(): JSX.Element {
   const noLearners = family && roster !== null && familyLearners.length === 0;
   // Send a note stays in place for a caregiver without the grant, unavailable and described by why (screen spec, States).
   const notGranted = family && grant === false;
+  // New note shows only once the roster has loaded and this viewer's role is known to send.
+  const sendable = canSend === true && roster !== null;
 
   const openComposer = (): void => {
     openedHere.current = true;
@@ -238,7 +239,7 @@ function NotesInner(): JSX.Element {
           setNotice(null);
           setTakeBack({ view, name: raw.to === 'learner' ? raw.displayName : null });
         }}
-        onNewNote={canSend && !rosterError && !notGranted ? openComposer : undefined}
+        onNewNote={sendable && !rosterError && !notGranted ? openComposer : undefined}
       />
     </>
   );
@@ -253,7 +254,7 @@ function NotesInner(): JSX.Element {
         </Link>
         <div className="hr-notes-head">
           <h1>{title}</h1>
-          {canSend && !rosterError && !noLearners ? (
+          {sendable && !rosterError && !noLearners ? (
             <button
               type="button"
               className="hr-notes-btn hr-notes-primary"
@@ -324,7 +325,7 @@ function NotesInner(): JSX.Element {
           <div className="hr-notes-panel">{list}</div>
         )}
       </div>
-      {q.compose && roster && notesApi && canSend && (!family || grant !== undefined) && !notGranted ? (
+      {q.compose && roster && notesApi && sendable && (!family || grant !== undefined) && !notGranted ? (
         <NoteComposer
           notesApi={notesApi}
           space={{ id: roster.space.id, kind: roster.space.kind, name: roster.space.name, archived: roster.space.archivedAt !== null }}
