@@ -2,7 +2,7 @@
   "v": 1,
   "id": "story:angbuilgu-sundial",
   "state": "ready",
-  "contentVer": 3,
+  "contentVer": 4,
   "title": {
     "ko": "하늘을 바라보는 해시계, 앙부일구",
     "romanization": "Haneureul baraboneun haesigye, angbuilgu",
@@ -469,6 +469,356 @@
         "geurimja",
         "gil"
       ]
+    },
+    {
+      "level": "read",
+      "scenes": [
+        {
+          "id": "s1",
+          "narrationEn": "The sun, {kw:hae}, makes a shadow, {kw:geurimja}. In Joseon, a shadow told the time.",
+          "captionEn": "A shadow tells the time",
+          "line": {
+            "ko": "해가 만든 그림자로 시간을 알아요.",
+            "romanization": "Haega mandeun geurimjaro siganeul arayo.",
+            "en": "People tell the time by the shadow the sun makes.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f1"
+          ],
+          "framing": false,
+          "approximations": [],
+          "art": {
+            "setting": "scene:palace-courtyard",
+            "layers": [
+              {
+                "ref": "prop:glow-burst",
+                "x": 330,
+                "y": 130,
+                "s": 0.6
+              },
+              {
+                "ref": "prop:ground-shadow",
+                "x": 166,
+                "y": 291,
+                "s": 1,
+                "flip": true
+              },
+              {
+                "ref": "hoya:thinking",
+                "x": 220,
+                "y": 290,
+                "s": 0.9
+              }
+            ],
+            "altEn": "Hoya looks up at the bright sun in a palace courtyard, his shadow stretching across the stone paving."
+          }
+        },
+        {
+          "id": "s2",
+          "narrationEn": "In 1434, a new sundial was set up. Its bowl looks like a pot facing the sky: the {kw:angbuilgu}.",
+          "captionEn": "A pot-shaped sundial",
+          "line": {
+            "ko": "앙부일구는 솥 모양이에요.",
+            "romanization": "Angbuilguneun sot moyangieyo.",
+            "en": "The angbuilgu is shaped like a pot.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f2"
+          ],
+          "framing": false,
+          "approximations": [],
+          "art": {
+            "setting": "scene:palace-courtyard",
+            "layers": [
+              {
+                "ref": "prop:glow-burst",
+                "x": 336,
+                "y": 120,
+                "s": 0.5
+              },
+              {
+                "ref": "prop:sundial",
+                "x": 200,
+                "y": 280,
+                "s": 2
+              }
+            ],
+            "altEn": "A bronze bowl-shaped sundial on four short legs faces the open sky, with a slim pointer set inside the bowl."
+          }
+        },
+        {
+          "id": "s3",
+          "narrationEn": "A pointer inside the bowl casts a shadow. Lines show the time of day and the time of year.",
+          "captionEn": "A pointer's shadow shows the time",
+          "line": {
+            "ko": "그림자가 시간을 알려 줘요.",
+            "romanization": "Geurimjaga siganeul allyeo jwoyo.",
+            "en": "The shadow shows the time.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f3"
+          ],
+          "framing": false,
+          "approximations": [],
+          "art": {
+            "setting": "scene:hanji-backdrop",
+            "layers": [
+              {
+                "ref": "prop:sundial",
+                "x": 200,
+                "y": 286,
+                "s": 3
+              }
+            ],
+            "altEn": "Close up inside the sundial's bowl, the pointer's shadow falls across curved lines that show the time of day and year."
+          }
+        },
+        {
+          "id": "s4",
+          "narrationEn": "The sundials stood beside busy roads, {kw:gil}, so people passing by could see the time.",
+          "captionEn": "Sundials beside busy roads",
+          "line": {
+            "ko": "앙부일구를 길가에 두었어요.",
+            "romanization": "Angbuilgureul gilgae dueosseoyo.",
+            "en": "They set the sundials beside the roads.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f4"
+          ],
+          "framing": false,
+          "approximations": [],
+          "art": {
+            "setting": "scene:village-lane",
+            "layers": [
+              {
+                "ref": "prop:fig-villager",
+                "x": 96,
+                "y": 276,
+                "s": 1
+              },
+              {
+                "ref": "prop:sundial",
+                "x": 200,
+                "y": 272,
+                "s": 1.3
+              },
+              {
+                "ref": "prop:fig-child",
+                "x": 278,
+                "y": 284,
+                "s": 0.9
+              },
+              {
+                "ref": "prop:fig-villager",
+                "x": 336,
+                "y": 278,
+                "s": 0.95,
+                "flip": true,
+                "tint": "surface.paper"
+              }
+            ],
+            "altEn": "On a busy Joseon street, people in white clothes and a child gather around a sundial to see what time it is."
+          }
+        },
+        {
+          "id": "s5",
+          "narrationEn": "The hours were shown with zodiac animal pictures, so people who could not read could tell the time.",
+          "captionEn": "Animal pictures show the hours",
+          "line": {
+            "ko": "글자 대신 동물 그림을 그렸어요.",
+            "romanization": "Geulja daesin dongmul geurimeul geuryeosseoyo.",
+            "en": "They drew animal pictures instead of letters.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f5"
+          ],
+          "framing": false,
+          "approximations": [],
+          "art": {
+            "setting": "scene:countryside",
+            "layers": [
+              {
+                "ref": "prop:zodiac-ring",
+                "x": 196,
+                "y": 250,
+                "s": 1.5
+              },
+              {
+                "ref": "hoya:waving",
+                "x": 342,
+                "y": 296,
+                "s": 0.6
+              }
+            ],
+            "altEn": "The heads of the twelve zodiac animals form a ring on a grassy hill, and Hoya waves happily at the tiger."
+          }
+        },
+        {
+          "id": "s6",
+          "narrationEn": "The sundials we see today were made later in Joseon, and several are Treasures, {kw:bomul}.",
+          "captionEn": "Some sundials are Treasures",
+          "line": {
+            "ko": "몇몇 앙부일구는 보물이에요.",
+            "romanization": "Myeonmyeot angbuilguneun bomurieyo.",
+            "en": "Some angbuilgu are Treasures.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f7"
+          ],
+          "framing": false,
+          "approximations": [],
+          "art": {
+            "setting": "scene:modern-room",
+            "layers": [
+              {
+                "ref": "prop:display-case",
+                "x": 200,
+                "y": 300,
+                "s": 2
+              },
+              {
+                "ref": "prop:sundial",
+                "x": 152,
+                "y": 202,
+                "s": 0.95,
+                "z": "back"
+              },
+              {
+                "ref": "prop:sundial",
+                "x": 234,
+                "y": 214,
+                "s": 1.2
+              }
+            ],
+            "altEn": "Two later Joseon bronze sundials on cross-shaped bases stand side by side in a museum display case."
+          }
+        }
+      ],
+      "checks": [
+        {
+          "id": "r1",
+          "kind": "pick-meaning",
+          "promptEn": "What does {target} mean?",
+          "target": {
+            "ko": "그림자",
+            "romanization": "geurimja",
+            "en": "shadow"
+          },
+          "options": [
+            {
+              "id": "a",
+              "en": "Sun",
+              "isCorrect": false
+            },
+            {
+              "id": "b",
+              "en": "Shadow",
+              "isCorrect": true
+            },
+            {
+              "id": "c",
+              "en": "Road",
+              "isCorrect": false
+            },
+            {
+              "id": "d",
+              "en": "Pot",
+              "isCorrect": false
+            }
+          ],
+          "explainEn": "Geurimja means shadow. The sun's shadow told the time.",
+          "factIds": [
+            "f1"
+          ]
+        },
+        {
+          "id": "r2",
+          "kind": "pick-meaning",
+          "promptEn": "What does {target} mean?",
+          "target": {
+            "ko": "길",
+            "romanization": "gil",
+            "en": "road"
+          },
+          "options": [
+            {
+              "id": "a",
+              "en": "Road",
+              "isCorrect": true
+            },
+            {
+              "id": "b",
+              "en": "Tiger",
+              "isCorrect": false
+            },
+            {
+              "id": "c",
+              "en": "Treasure",
+              "isCorrect": false
+            },
+            {
+              "id": "d",
+              "en": "Shadow",
+              "isCorrect": false
+            }
+          ],
+          "explainEn": "Gil means road. The sundials stood beside busy roads.",
+          "factIds": [
+            "f4"
+          ]
+        },
+        {
+          "id": "r3",
+          "kind": "detail",
+          "promptEn": "In the story, why were animal pictures used for the hours?",
+          "options": [
+            {
+              "id": "a",
+              "en": "To make the bowl heavier",
+              "isCorrect": false
+            },
+            {
+              "id": "b",
+              "en": "To scare birds away",
+              "isCorrect": false
+            },
+            {
+              "id": "c",
+              "en": "So people who could not read could tell the time",
+              "isCorrect": true
+            },
+            {
+              "id": "d",
+              "en": "To show the weather",
+              "isCorrect": false
+            }
+          ],
+          "explainEn": "Animal pictures took the place of letters, so people who could not read could tell the time.",
+          "factIds": [
+            "f5"
+          ]
+        }
+      ],
+      "checkpoints": [],
+      "sequenceSceneIds": [
+        "s1",
+        "s3",
+        "s4",
+        "s6"
+      ],
+      "newKeywordIds": [
+        "hae",
+        "geurimja",
+        "angbuilgu",
+        "gil"
+      ],
+      "grammarFocusEn": "-ro/-euro (by, with): geurimjaro; daesin (instead of)"
     }
   ],
   "coverSceneId": "s1",
@@ -700,7 +1050,7 @@
     "passes": 3,
     "checkedAt": "2026-10-10",
     "scope": "cluster",
-    "notes": "Third independent pass. All quotes re-checked programmatically against fetched pages (Sillok, encykorea, 우리역사넷, NMK, KMA; KHS descriptions via the khs.go.kr open API SearchKindOpenapiDt.do?ccbaCpno=...). unesco.org/ich.unesco.org pages could not be fetched directly (connection reset); UNESCO wording and years (2009, 2013, 2018) confirmed from search excerpts of the UNESCO pages and KHS lists. Corrections: Heo Jun birth year dropped from narration/fact (sources conflict: 1539 vs 1546, encykorea internally inconsistent); Jang Yeong-sil rank sentence softened to match the Sillok ('decided to give'); 우리역사넷 added as second source for Donguibogam f4/f5; Ssirum UNESCO locator de-quoted. MAR 2026-10-13 language review (F-STORY-001 PR 1.9): Korean strings, romanization and glosses read; findings and outcomes in the PR. MAR 2026-10-13 culture review (F-STORY-001 PR 1.9): heritage accuracy, framing, tone and advisories read; review.advisory confirmed; findings and outcomes in the PR."
+    "notes": "Third independent pass. All quotes re-checked programmatically against fetched pages (Sillok, encykorea, 우리역사넷, NMK, KMA; KHS descriptions via the khs.go.kr open API SearchKindOpenapiDt.do?ccbaCpno=...). unesco.org/ich.unesco.org pages could not be fetched directly (connection reset); UNESCO wording and years (2009, 2013, 2018) confirmed from search excerpts of the UNESCO pages and KHS lists. Corrections: Heo Jun birth year dropped from narration/fact (sources conflict: 1539 vs 1546, encykorea internally inconsistent); Jang Yeong-sil rank sentence softened to match the Sillok ('decided to give'); 우리역사넷 added as second source for Donguibogam f4/f5; Ssirum UNESCO locator de-quoted. MAR 2026-10-13 language review (F-STORY-001 PR 1.9): Korean strings, romanization and glosses read; findings and outcomes in the PR. MAR 2026-10-13 culture review (F-STORY-001 PR 1.9): heritage accuracy, framing, tone and advisories read; review.advisory confirmed; findings and outcomes in the PR. MAR 2026-10-13 language review of the read tier (F-STORY-005 PR 5.6): 6 Korean lines, their romanization (machine-checked) and glosses read for spelling, naturalness and Stage 5 level; 2 changes (s1 haega mandeun geurimja, as in the cited fact; s5 past geuryeosseoyo for the Sejong-era sundials); findings and outcomes in the PR. MAR 2026-10-13 culture review of the read tier (F-STORY-005 PR 5.6): every line and check compared with its cited facts (no new claim), framing, tone and respectful wording read; s5 cites f5 only (no tiger named); review.advisory unchanged; findings and outcomes in the PR."
   },
   "authorNotes": "Makers deliberately not named: KHS entries list different makers (1985 Treasure: 장영실·이천·김조; 2022-1 Treasure: 장영실·이천·이순지) and encykorea says the maker is unclear (citing the Sejo Sillok, 이순지 led instrument-making). The Sillok inscription says '神의 몸을 그렸으니 어리석은 백성을 위한 것' (drew the bodies of spirits, for ordinary people); KHS and encykorea interpret these as the twelve zodiac animal spirits; narration follows them. Omitted: KHS's description of it as Korea's first public clock ('first' claim); line counts (KHS 1985: 7 vertical/13 horizontal; KHS 2022-1: 15-minute hour lines), because they vary by instrument; the sundial returned from the United States in 2020 (KHS 2022-1). Surviving Treasures date from the 17th–18th centuries (KHS). Theme set to 'nature' (sun, sky, seasons, zodiac animals); BP04 places Sejong science under Pillar E, so 'crafts' is an alternative. REVISION: 'seasons' replaced by 'time of year' (KHS: 계절선; encykorea: 13 절기선). Scene 5 now says explicitly that the animal-picture dials are those of Sejong's time (encykorea notes later versions used written characters). The reading of 'drew the bodies of spirits (신의 몸)' as the twelve zodiac animals is the interpretation of KHS and encykorea, not stated in the Sillok inscription itself. PR 1.8c: keyword gloss 'bowl-shaped sundial' replaces the research vocab 'hemispherical sundial' as plainer English consistent with f2 (cauldron-like bowl). s3 says 'pointer' (f3: pointer, yeongchim) to match check c1. s5 and c2 say 'twelve zodiac animal spirits' and keep the Sejong-era qualifier (f5).",
   "errata": []

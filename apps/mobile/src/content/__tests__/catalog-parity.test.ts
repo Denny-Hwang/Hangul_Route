@@ -16,6 +16,7 @@ import {
   type Quest,
 } from '@hangul-route/content-schema';
 import { FREE_VOCAB_TOPIC_IDS } from '../../logic/content-access';
+import { bookEpisodes } from '../books';
 import { questTeaches } from '../../logic/stage1/curriculum';
 import { discoverQuest } from '../../logic/stage1/__tests__/fixtures';
 import { episodesAll } from '../episodes';
@@ -74,6 +75,17 @@ describe('cells and the bundle episodes', () => {
     for (const cell of CATALOG.cells) {
       const inBundle = gridEpisodes.some((episode) => episode.id === cell.episodeId);
       if (!inBundle) expect(cellIsReady(cell), `cell ${cell.episodeId} is not in the bundle but is ready`).toBe(false);
+    }
+  });
+
+  it('lists every Stage 5 book as a shipped cell whose read quests are catalogue lesson quests (F-STORY-005 PR 5.6)', () => {
+    expect(bookEpisodes.map((book) => book.theme)).toEqual(['letters', 'life', 'rites', 'nature', 'crafts']);
+    for (const book of bookEpisodes) {
+      const cell = CATALOG.cells.find((c) => c.episodeId === book.id);
+      expect(cell?.status, book.id).toBe('shipped');
+      for (const questId of book.questIds) {
+        expect(CATALOG.quests.find((q) => q.id === questId)?.kind, questId).toBe('lesson');
+      }
     }
   });
 

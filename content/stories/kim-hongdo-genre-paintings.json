@@ -2,7 +2,7 @@
   "v": 1,
   "id": "story:kim-hongdo-genre-paintings",
   "state": "ready",
-  "contentVer": 4,
+  "contentVer": 5,
   "title": {
     "ko": "김홍도의 풍속화, 씨름과 서당",
     "romanization": "Gimhongdoui pungsokhwa, ssireumgwa seodang",
@@ -527,6 +527,406 @@
         "pungsokhwa",
         "ssireum"
       ]
+    },
+    {
+      "level": "read",
+      "scenes": [
+        {
+          "id": "s1",
+          "narrationEn": "A genre painting, {kw:pungsokhwa}, shows the everyday life of ordinary people, not the royal court.",
+          "captionEn": "Pictures of everyday life",
+          "line": {
+            "ko": "풍속화는 사람들의 생활을 그린 그림이에요.",
+            "romanization": "Pungsokhwaneun saramdeurui saenghwareul geurin geurimieyo.",
+            "en": "A genre painting is a picture of people's everyday life.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f1"
+          ],
+          "framing": false,
+          "approximations": [],
+          "art": {
+            "setting": "scene:hanji-backdrop",
+            "layers": [
+              {
+                "ref": "hoya:idle",
+                "x": 150,
+                "y": 286,
+                "s": 1
+              },
+              {
+                "ref": "prop:blank-sheet",
+                "x": 270,
+                "y": 276,
+                "s": 1.4
+              },
+              {
+                "ref": "prop:writing-set",
+                "x": 300,
+                "y": 294,
+                "s": 1
+              }
+            ],
+            "altEn": "Hoya gets ready to paint, with a brush, an inkstone and a sheet of plain paper beside him."
+          }
+        },
+        {
+          "id": "s2",
+          "narrationEn": "{kw:kim-hong-do}, born in 1745, was a court painter, {kw:hwaga}, famous for genre paintings.",
+          "captionEn": "Kim Hongdo, a Joseon painter",
+          "line": {
+            "ko": "김홍도는 조선의 화가였어요.",
+            "romanization": "Gimhongdoneun joseonui hwagayeosseoyo.",
+            "en": "Kim Hongdo was a painter of Joseon.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f2"
+          ],
+          "framing": false,
+          "approximations": [],
+          "art": {
+            "setting": "scene:hanok-room",
+            "layers": [
+              {
+                "ref": "prop:fig-writer-seated",
+                "x": 196,
+                "y": 288,
+                "s": 1.5
+              },
+              {
+                "ref": "prop:writing-set",
+                "x": 330,
+                "y": 290,
+                "s": 0.9
+              }
+            ],
+            "altEn": "Kim Hongdo, a court painter in a light robe, sits on the floor painting on a sheet of paper."
+          }
+        },
+        {
+          "id": "s4",
+          "narrationEn": "In the painting {kw:ssireum}, two wrestlers test their strength in the middle of a crowd.",
+          "captionEn": "Two wrestlers in the middle",
+          "line": {
+            "ko": "두 사람이 씨름을 해요.",
+            "romanization": "Du sarami ssireumeul haeyo.",
+            "en": "Two people are wrestling (ssireum).",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f4"
+          ],
+          "framing": false,
+          "approximations": [],
+          "art": {
+            "setting": "scene:hanji-backdrop",
+            "layers": [
+              {
+                "ref": "prop:crowd-seated",
+                "x": 104,
+                "y": 160,
+                "s": 0.75,
+                "z": "back",
+                "tint": "surface.paper"
+              },
+              {
+                "ref": "prop:crowd-seated",
+                "x": 296,
+                "y": 160,
+                "s": 0.75,
+                "z": "back",
+                "tint": "surface.paper"
+              },
+              {
+                "ref": "prop:fig-wrestlers",
+                "x": 200,
+                "y": 252,
+                "s": 1.45,
+                "tint": "surface.paper"
+              },
+              {
+                "ref": "prop:crowd-seated",
+                "x": 200,
+                "y": 300,
+                "s": 1.05,
+                "z": "front",
+                "tint": "surface.paper"
+              }
+            ],
+            "altEn": "In Kim Hongdo's Ssireum two wrestlers grapple in the middle while two curved rows of onlookers watch closely."
+          }
+        },
+        {
+          "id": "s5",
+          "narrationEn": "A taffy seller, {kw:yeotjangsu}, stands at the left, away from the crowd.",
+          "captionEn": "A taffy seller at the left",
+          "line": {
+            "ko": "왼쪽에 엿장수가 서 있어요.",
+            "romanization": "Oenjjoge yeotjangsuga seo isseoyo.",
+            "en": "A taffy seller stands at the left.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f5"
+          ],
+          "framing": false,
+          "approximations": [],
+          "art": {
+            "setting": "scene:hanji-backdrop",
+            "layers": [
+              {
+                "ref": "prop:crowd-seated",
+                "x": 270,
+                "y": 196,
+                "s": 0.9,
+                "z": "back"
+              },
+              {
+                "ref": "prop:fig-child",
+                "x": 144,
+                "y": 276,
+                "s": 1.3
+              },
+              {
+                "ref": "prop:taffy-tray",
+                "x": 70,
+                "y": 286,
+                "s": 1.2
+              },
+              {
+                "ref": "prop:shoes",
+                "x": 330,
+                "y": 282,
+                "s": 1.6
+              }
+            ],
+            "altEn": "At the edges of the painting a young taffy seller stands by his tray on the left, and a pair of shoes rests on the right."
+          }
+        },
+        {
+          "id": "s6",
+          "narrationEn": "In the painting {kw:seodang}, the class gathers around one boy who has turned away, sniffling.",
+          "captionEn": "A class around one boy",
+          "line": {
+            "ko": "서당에서 한 아이가 울고 있어요.",
+            "romanization": "Seodangeseo han aiga ulgo isseoyo.",
+            "en": "At the village school, one child is crying.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f6"
+          ],
+          "framing": false,
+          "approximations": [],
+          "art": {
+            "setting": "scene:hanok-room",
+            "layers": [
+              {
+                "ref": "prop:fig-child",
+                "x": 76,
+                "y": 276,
+                "s": 0.9
+              },
+              {
+                "ref": "prop:fig-child",
+                "x": 126,
+                "y": 286,
+                "s": 0.85,
+                "tint": "surface.sunken"
+              },
+              {
+                "ref": "prop:fig-child-back",
+                "x": 200,
+                "y": 284,
+                "s": 1.6
+              },
+              {
+                "ref": "prop:fig-writer-seated",
+                "x": 308,
+                "y": 280,
+                "s": 0.9,
+                "tint": "surface.paper"
+              }
+            ],
+            "altEn": "In Kim Hongdo's Seodang, a teacher and his students gather around one boy who sits turned away, sniffling."
+          }
+        },
+        {
+          "id": "s7",
+          "narrationEn": "Ssireum is a National Intangible Heritage of Korea, and UNESCO inscribed it in 2018.",
+          "captionEn": "Ssireum, a living heritage",
+          "line": {
+            "ko": "씨름은 국가무형유산이에요.",
+            "romanization": "Ssireumeun gukgamuhyeongyusanieyo.",
+            "en": "Ssireum is a National Intangible Heritage of Korea.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f7"
+          ],
+          "framing": false,
+          "approximations": [],
+          "art": {
+            "setting": "scene:countryside",
+            "layers": [
+              {
+                "ref": "prop:sand-ring",
+                "x": 200,
+                "y": 292,
+                "s": 1.4
+              },
+              {
+                "ref": "prop:fig-child",
+                "x": 56,
+                "y": 268,
+                "s": 0.8,
+                "tint": "feedback.nudgeLight"
+              },
+              {
+                "ref": "hoya:cheering",
+                "x": 168,
+                "y": 284,
+                "s": 0.8
+              },
+              {
+                "ref": "prop:fig-child",
+                "x": 248,
+                "y": 280,
+                "s": 1.05
+              },
+              {
+                "ref": "prop:fig-child",
+                "x": 350,
+                "y": 268,
+                "s": 0.8,
+                "tint": "brand.secondaryLight"
+              }
+            ],
+            "altEn": "Today Hoya cheers in a sand ring beside a friend, set for a friendly round of ssireum, as other friends look on."
+          }
+        }
+      ],
+      "checks": [
+        {
+          "id": "r1",
+          "kind": "pick-meaning",
+          "promptEn": "What does {target} mean?",
+          "target": {
+            "ko": "그림",
+            "romanization": "geurim",
+            "en": "picture"
+          },
+          "options": [
+            {
+              "id": "a",
+              "en": "Painter",
+              "isCorrect": false
+            },
+            {
+              "id": "b",
+              "en": "Wrestling",
+              "isCorrect": false
+            },
+            {
+              "id": "c",
+              "en": "Picture",
+              "isCorrect": true
+            },
+            {
+              "id": "d",
+              "en": "School",
+              "isCorrect": false
+            }
+          ],
+          "explainEn": "Geurim means picture or painting.",
+          "factIds": [
+            "f1"
+          ]
+        },
+        {
+          "id": "r2",
+          "kind": "pick-meaning",
+          "promptEn": "What does {target} mean?",
+          "target": {
+            "ko": "서당",
+            "romanization": "seodang",
+            "en": "village school"
+          },
+          "options": [
+            {
+              "id": "a",
+              "en": "Village school",
+              "isCorrect": true
+            },
+            {
+              "id": "b",
+              "en": "Taffy seller",
+              "isCorrect": false
+            },
+            {
+              "id": "c",
+              "en": "Museum",
+              "isCorrect": false
+            },
+            {
+              "id": "d",
+              "en": "Market",
+              "isCorrect": false
+            }
+          ],
+          "explainEn": "Seodang means village school. Kim Hongdo painted a class at a seodang.",
+          "factIds": [
+            "f6"
+          ]
+        },
+        {
+          "id": "r3",
+          "kind": "detail",
+          "promptEn": "In the painting Ssireum, who stands at the left?",
+          "options": [
+            {
+              "id": "a",
+              "en": "A teacher",
+              "isCorrect": false
+            },
+            {
+              "id": "b",
+              "en": "A king",
+              "isCorrect": false
+            },
+            {
+              "id": "c",
+              "en": "A drummer",
+              "isCorrect": false
+            },
+            {
+              "id": "d",
+              "en": "A taffy seller",
+              "isCorrect": true
+            }
+          ],
+          "explainEn": "A taffy seller stands at the left, away from the crowd.",
+          "factIds": [
+            "f5"
+          ]
+        }
+      ],
+      "checkpoints": [],
+      "sequenceSceneIds": [
+        "s1",
+        "s4",
+        "s6",
+        "s7"
+      ],
+      "newKeywordIds": [
+        "pungsokhwa",
+        "hwaga",
+        "ssireum",
+        "yeotjangsu"
+      ],
+      "grammarFocusEn": "-n geurim (a picture that ...); -a isseoyo and -go isseoyo (is standing, is crying)"
     }
   ],
   "coverSceneId": "s1",
@@ -728,7 +1128,7 @@
     "passes": 3,
     "checkedAt": "2026-10-10",
     "scope": "cluster",
-    "notes": "Third independent pass. All quotes re-checked programmatically against fetched pages (Sillok, encykorea, 우리역사넷, NMK, KMA; KHS descriptions via the khs.go.kr open API SearchKindOpenapiDt.do?ccbaCpno=...). unesco.org/ich.unesco.org pages could not be fetched directly (connection reset); UNESCO wording and years (2009, 2013, 2018) confirmed from search excerpts of the UNESCO pages and KHS lists. Corrections: Heo Jun birth year dropped from narration/fact (sources conflict: 1539 vs 1546, encykorea internally inconsistent); Jang Yeong-sil rank sentence softened to match the Sillok ('decided to give'); 우리역사넷 added as second source for Donguibogam f4/f5; Ssirum UNESCO locator de-quoted. MAR 2026-10-13 language review (F-STORY-001 PR 1.9): Korean strings, romanization and glosses read; findings and outcomes in the PR. MAR 2026-10-13 culture review (F-STORY-001 PR 1.9): heritage accuracy, framing, tone and advisories read; review.advisory confirmed; findings and outcomes in the PR."
+    "notes": "Third independent pass. All quotes re-checked programmatically against fetched pages (Sillok, encykorea, 우리역사넷, NMK, KMA; KHS descriptions via the khs.go.kr open API SearchKindOpenapiDt.do?ccbaCpno=...). unesco.org/ich.unesco.org pages could not be fetched directly (connection reset); UNESCO wording and years (2009, 2013, 2018) confirmed from search excerpts of the UNESCO pages and KHS lists. Corrections: Heo Jun birth year dropped from narration/fact (sources conflict: 1539 vs 1546, encykorea internally inconsistent); Jang Yeong-sil rank sentence softened to match the Sillok ('decided to give'); 우리역사넷 added as second source for Donguibogam f4/f5; Ssirum UNESCO locator de-quoted. MAR 2026-10-13 language review (F-STORY-001 PR 1.9): Korean strings, romanization and glosses read; findings and outcomes in the PR. MAR 2026-10-13 culture review (F-STORY-001 PR 1.9): heritage accuracy, framing, tone and advisories read; review.advisory confirmed; findings and outcomes in the PR. MAR 2026-10-13 language review of the read tier (F-STORY-005 PR 5.6): 6 Korean lines, their romanization (machine-checked) and glosses read for spelling, naturalness and Stage 5 level; no change; findings and outcomes in the PR. MAR 2026-10-13 culture review of the read tier (F-STORY-005 PR 5.6): every line and check compared with its cited facts (no new claim), framing, tone and respectful wording read; s7 states only f7 (a National Intangible Heritage) instead of 'still loved'; review.advisory unchanged; findings and outcomes in the PR."
   },
   "authorNotes": "Attribution caution: NMK and encykorea both report scholarly debate about the album (differences in skill between leaves, retouching, many similar copies); some scholars regard leaves such as Ssireum and Mudong as genuine and weaker leaves as copies, and one view treats the whole album as a later model book. Only 13 of the 25 leaves bear the seal 김홍도인 (encykorea). Narration therefore calls it the album 'known as' Danwon's album and describes what the paintings show; the fact claim says 'attributed to'. The KHS designation text names the school leaf 〈글방〉; NMK and encykorea use 서당. Omitted: the switch (회초리) mentioned in an encykorea media caption for 서당; the album's purchase history (1918) and the 1957 remounting that separated two 군선도 leaves (NMK); Kim Hong-do's death (c.1806 per encykorea; KHS gives '?'). The 2018 UNESCO inscription was a joint inscription by both Koreas; this is not mentioned in narration. Scene 5 claim about shoes follows NMK ('벗어 놓은 신발'), without saying whose shoes they are. REVISION: (a) 'kicked-off shoes' removed; museum text says only 벗어 놓은 신발 (shoes taken off), at the right, narrowing the open space (NMK relicId=551); seller at the left, 'outside the spectators' attention'. 우리역사넷 says the shoes are the two wrestlers' and the seller looks into the distance; NMK's curator page says the seller looks outward, but narration stays with the museum's catalog wording. (b) Seodang layout softened to 'gathered around' because NMK says 둥글게 배치 around the boy while an encykorea caption says pupils sit side by side on both sides of the teacher. (c) Ssireum crowd: NMK says two groups arranged roundly above and below; narration says 'two curved groups'. (d) Quiz distractor for museum changed to other national museums. PR 1.8c review: check c3 now asks who stands at the left of Ssireum (f5), because three similar museum names tested memory of a name rather than the story. Check c3 says 'outside the crowd's attention', following f5 and the museum text, not 'away from the crowd'.",
   "errata": []
