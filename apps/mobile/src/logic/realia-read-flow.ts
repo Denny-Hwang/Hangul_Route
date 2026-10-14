@@ -382,6 +382,14 @@ export function realiaOptionView(
   return { ...view, accessibilityLabel };
 }
 
+/**
+ * The accessible name of the question's key word: read the same way as that word on the sheet
+ * and in the options (a slash in its romanization is read as "or").
+ */
+export function realiaKeyLabel(key: KoText, koreanItem: Messages['a11y']['koreanItem']): string {
+  return koreanItem({ ko: key.ko, romanization: a11yRomanization(key.romanization) });
+}
+
 /** Narrow phones (below this width, dp) get one column. */
 const NARROW_WIDTH = 340;
 /** Text options up to this many glyphs sit two to a row. */

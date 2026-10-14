@@ -215,7 +215,9 @@ describe('Realia Read', () => {
     const parsed = RealiaSchema.parse(realia);
     const round = RealiaReadRoundSchema.parse({ id: 'r', questionEn: 'How much?', options: [{ id: 'a', figure: '1,000' }, { id: 'b', figure: '5,000' }], answerId: 'a', answerEntryId: 'e1' });
     expect(realiaReadIssues(parsed, [round])).toEqual([]);
-    expect(realiaReadIssues(parsed, [{ ...round, answerEntryId: undefined }])).toEqual([]);
+    expect(realiaReadIssues(parsed, [{ ...round, answerEntryId: undefined }])).toEqual([
+      { path: ['rounds', 0, 'answerEntryId'], message: 'every round names its answer entry (answerEntryId)' },
+    ]);
     expect(realiaReadIssues(parsed, [round, { ...round, answerEntryId: 'e9' }])).toEqual([
       { path: ['rounds', 1, 'answerEntryId'], message: 'answerEntryId "e9" is not an entry of the realia' },
     ]);

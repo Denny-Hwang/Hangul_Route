@@ -1,5 +1,5 @@
 import React from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Platform, Pressable, Text, View } from 'react-native';
 import Svg, { Circle, Ellipse, Line, Path, Polygon, Rect } from 'react-native-svg';
 import { KOREAN_LANGUAGE } from '../../korean-text';
 import { drawProp, type DrawItem } from '../../scene-art/draw';
@@ -13,12 +13,14 @@ import {
   REALIA_DRESSINGS,
   REALIA_GOODS_HEIGHT,
   REALIA_MARK_SIZE,
+  REALIA_SR_ONLY,
   REALIA_STUB,
   REALIA_STUB_WIDTH,
   REALIA_TOP_DRESSING,
   realiaGoodsRef,
   realiaLineLook,
   realiaPaper,
+  realiaSummaryOnNative,
 } from './style';
 import type { RealiaSheetLine, RealiaSheetProps, RealiaSheetText } from './types';
 
@@ -276,6 +278,9 @@ export function RealiaSheet({ kind, title, titleLabel, lines, accessibilityLabel
 
   return (
     <View role="group" accessibilityLabel={accessibilityLabel} aria-label={accessibilityLabel} testID={testID} style={{ width: '100%' }}>
+      {realiaSummaryOnNative(Platform.OS) ? (
+        <View accessible accessibilityRole="text" accessibilityLabel={accessibilityLabel} testID={testID ? `${testID}-summary` : undefined} style={REALIA_SR_ONLY} />
+      ) : null}
       {body}
     </View>
   );

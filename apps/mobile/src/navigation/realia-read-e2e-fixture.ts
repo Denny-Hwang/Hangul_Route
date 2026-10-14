@@ -67,6 +67,18 @@ export const REALIA_FIXTURES = {
           answerId: 'icheon',
           answerEntryId: 'gimbap',
         },
+        {
+          // Picture options (D-2 state S5): each picture is named by its labelEn.
+          id: 'q4',
+          questionEn: 'Which one is on the menu?',
+          options: [
+            { id: 'ramyeon', pictureRef: 'word:food-ramyeon', labelEn: 'instant noodles' },
+            { id: 'bread', pictureRef: 'word:food-bread', labelEn: 'bread' },
+            { id: 'banana', pictureRef: 'word:food-banana', labelEn: 'banana' },
+          ],
+          answerId: 'ramyeon',
+          answerEntryId: 'ramyeon',
+        },
       ],
     },
   },
@@ -78,8 +90,8 @@ export const REALIA_FIXTURES = {
         kind: 'ticket',
         title: k('기차표', 'gichapyo', 'train ticket'),
         entries: [
-          { id: 'dep', text: k('출발', 'chulbal', 'departure'), value: k('서울 3:00', 'seoul se si', 'Seoul, 3:00') },
-          { id: 'arr', text: k('도착', 'dochak', 'arrival'), value: k('대전 4:30', 'daejeon ne si samsip bun', 'Daejeon, 4:30') },
+          { id: 'dep', text: k('출발', 'chulbal', 'departure'), value: k('서울 3:00', 'Seoul se si', 'Seoul, 3:00') },
+          { id: 'arr', text: k('도착', 'dochak', 'arrival'), value: k('대전 4:30', 'Daejeon ne si samsip bun', 'Daejeon, 4:30') },
         ],
         altEn: 'A train ticket with a departure and an arrival',
       },

@@ -186,7 +186,7 @@ describe('LessonCellSchema (F-CURR-001 §3.10)', () => {
 });
 
 describe('LessonQuestSchema: Realia Read cross-checks (row G-2)', () => {
-  const realiaQuest = (answerEntryId: string) => {
+  const realiaQuest = (answerEntryId: string | undefined) => {
     const quest = clone(lessonQuest('stage6', 'letters', 1)) as Json;
     quest.steps[2].minigameKind = 'realia-read';
     quest.scopes[0] = {
@@ -203,6 +203,12 @@ describe('LessonQuestSchema: Realia Read cross-checks (row G-2)', () => {
     const r = LessonQuestSchema.safeParse(realiaQuest('e9'));
     expect(r.success).toBe(false);
     expect(r.error?.issues.map((i) => i.path.join('.'))).toEqual(['scopes.0.rounds.0.answerEntryId']);
+  });
+
+  it('requires every round to name its answer entry (the look-here ring and the found line need it)', () => {
+    const r = LessonQuestSchema.safeParse(realiaQuest(undefined));
+    expect(r.success).toBe(false);
+    expect(r.error?.issues.map((i) => [i.path.join('.'), i.message])).toEqual([['scopes.0.rounds.0.answerEntryId', 'every round names its answer entry (answerEntryId)']]);
   });
 });
 

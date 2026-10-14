@@ -1,5 +1,6 @@
 import {
   ROMANIZATION_EXCEPTIONS,
+  a11yRomanization,
   RealiaReadRoundSchema,
   RealiaSchema,
   checkRomanization,
@@ -22,6 +23,7 @@ import {
   realiaHeaderView,
   realiaOptionColumns,
   realiaOptionView,
+  realiaKeyLabel,
   realiaStatus,
   sheetKind,
   sheetSummary,
@@ -333,6 +335,22 @@ describe('realiaOptionView', () => {
     expect(realiaOptionView(round, pic, startRealiaRead(1), always, A11Y, KOREAN_ITEM)).toMatchObject({ pictureRef: 'word:apple', label: 'apple', accessibilityLabel: 'apple' });
     expect(realiaOptionView(round, { id: 'q', pictureRef: 'word:x' }, startRealiaRead(1), always, A11Y, KOREAN_ITEM).label).toBe('Picture');
     expect(realiaOptionView(round, { id: 'z' }, startRealiaRead(1), always, A11Y, KOREAN_ITEM).label).toBe('');
+  });
+
+  it('the menu fixture has a picture round (D-2 S5): each picture is named by its labelEn', () => {
+    const q4 = menu.rounds.find((r) => r.id === 'q4')!;
+    expect(q4.options.map((o) => realiaOptionView(q4, o, startRealiaRead(4), always, A11Y, KOREAN_ITEM).accessibilityLabel).sort()).toEqual(['banana', 'bread', 'instant noodles']);
+  });
+});
+
+describe('realiaKeyLabel', () => {
+  it('reads the key word as the sheet and the options do: a slash is read as "or"', () => {
+    expect(realiaKeyLabel({ ko: '라면', romanization: 'ramyeon', en: 'instant noodles' }, KOREAN_ITEM)).toBe(
+      realiaOptionView(q1, { id: 'x', text: { ko: '라면', romanization: 'ramyeon', en: 'instant noodles' } }, startRealiaRead(3), always, A11Y, KOREAN_ITEM).accessibilityLabel,
+    );
+    const slash = { ko: '네', romanization: 'ne/nye', en: 'yes' };
+    expect(realiaKeyLabel(slash, KOREAN_ITEM)).toBe(KOREAN_ITEM({ ko: '네', romanization: a11yRomanization('ne/nye') }));
+    expect(realiaKeyLabel(slash, KOREAN_ITEM)).not.toContain('/');
   });
 });
 

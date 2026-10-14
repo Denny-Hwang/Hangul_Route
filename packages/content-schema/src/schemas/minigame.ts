@@ -333,15 +333,18 @@ export const RealiaReadRoundSchema = z
 export type RealiaReadRound = z.infer<typeof RealiaReadRoundSchema>;
 
 /**
- * Cross-checks of a Realia Read scope that one round cannot see: entry ids are unique, and a
- * round's `answerEntryId` names an entry of the realia. Messages carry their path.
+ * Cross-checks of a Realia Read scope that one round cannot see: entry ids are unique, and every
+ * round names its `answerEntryId`, an entry of the realia (without it the look-here ring and the
+ * found line with its gloss never show; D-2 Notes for C-1). Messages carry their path.
  */
 export function realiaReadIssues(realia: Realia, rounds: readonly RealiaReadRound[]): Array<{ path: (string | number)[]; message: string }> {
   const out: Array<{ path: (string | number)[]; message: string }> = [];
   const ids = realia.entries.map((e) => e.id);
   if (new Set(ids).size !== ids.length) out.push({ path: ['realia', 'entries'], message: 'realia entry ids must be unique' });
   rounds.forEach((round, i) => {
-    if (round.answerEntryId !== undefined && !ids.includes(round.answerEntryId)) {
+    if (round.answerEntryId === undefined) {
+      out.push({ path: ['rounds', i, 'answerEntryId'], message: 'every round names its answer entry (answerEntryId)' });
+    } else if (!ids.includes(round.answerEntryId)) {
       out.push({ path: ['rounds', i, 'answerEntryId'], message: `answerEntryId "${round.answerEntryId}" is not an entry of the realia` });
     }
   });

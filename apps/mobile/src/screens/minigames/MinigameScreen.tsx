@@ -5,6 +5,7 @@ import { flags } from '../../config/flags';
 import { questById } from '../../content';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { localizeScope } from '../../logic/content-locale';
+import { minigameFinishedEvent } from '../../logic/minigame-finished';
 import { scopeFor } from '../../logic/minigame-config';
 import { resolveOptionalExit, resolveScreenExits, type ScreenExitProps } from '../../logic/navigation/screen-exits';
 import type { RootStackParamList } from '../../navigation/types';
@@ -70,11 +71,7 @@ export function MinigameScreen({ route, navigation, onOpenCultureNote, ...exitPr
 
   const close = (): void => {
     if (scope) {
-      void track({
-        name: 'minigame.finished',
-        profileId: activeProfileId,
-        payload: { kind: scope.kind, questId, stepIndex },
-      });
+      void track(minigameFinishedEvent(scope.kind, questId, stepIndex, activeProfileId));
     }
     exits.back();
   };

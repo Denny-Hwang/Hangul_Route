@@ -416,6 +416,8 @@ describe('Realia Read (F-CURR-001 G-2; design/screens/minigame-realia-read READM
     const es = getMessages('es').a11y.minigame.realia;
     expect(es.summary(es.kind.sign, 3)).toBe('Letrero de ruta, 3 líneas');
     expect(es.summary(es.kind.menu, 1)).toBe('Menú, 1 línea');
+    // The group name keeps the price meaning (not just "labels"), within the 1.5x length budget.
+    expect(es.summary(es.kind.priceCards, 3)).toBe('Precios, 3 líneas');
     const ko = getMessages('ko').a11y.minigame.realia;
     expect(ko.summary(ko.kind.priceCards, 3)).toBe('가격표, 3줄');
   });

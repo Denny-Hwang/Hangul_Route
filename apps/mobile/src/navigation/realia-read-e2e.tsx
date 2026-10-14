@@ -3,7 +3,8 @@ import { StackActions, useNavigation } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useEffect } from 'react';
 import { RomanizationModeOverride } from '../i18n/use-romanization-mode';
-import { addTelemetryListener, type TelemetryEvent } from '../platform/telemetry';
+import { minigameFinishedEvent } from '../logic/minigame-finished';
+import { addTelemetryListener, track, type TelemetryEvent } from '../platform/telemetry';
 import type { HostMode, MinigameHost } from '../screens/minigames/host';
 import { RealiaReadGame } from '../screens/minigames/RealiaReadGame';
 import { REALIA_FIXTURES, type RealiaFixtureKey } from './realia-read-e2e-fixture';
@@ -29,6 +30,9 @@ export interface RealiaE2eHandle {
   /** Every telemetry event `track()` accepted since the hook mounted. */
   events(): TelemetryEvent[];
 }
+
+/** The quest id the e2e host reports in `minigame.finished` (no lesson cell plays Realia Read yet). */
+const E2E_QUEST_ID = 'quest:stage6-e2e-realia-read';
 
 const log: { answers: Array<{ key: string; correct: boolean }>; completed: number } = { answers: [], completed: 0 };
 
@@ -66,6 +70,8 @@ export function RealiaReadE2eScreen({ route, navigation }: Props): React.ReactEl
     answer: (key, correct) => log.answers.push({ key: String(key), correct }),
     complete: () => {
       log.completed += 1;
+      // The event MinigameScreen sends when a lesson step of this game closes, so the e2e checks its payload.
+      void track(minigameFinishedEvent('realia-read', E2E_QUEST_ID, 0));
     },
   };
   return (

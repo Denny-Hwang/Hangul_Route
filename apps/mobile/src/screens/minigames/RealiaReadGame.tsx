@@ -27,6 +27,7 @@ import {
   playableRealia,
   realiaArrangement,
   realiaHeaderView,
+  realiaKeyLabel,
   realiaOptionColumns,
   realiaOptionView,
   realiaStatus,
@@ -182,6 +183,7 @@ export function RealiaReadGame({ scope, host, onBack }: Props): React.ReactEleme
       <GameColumns
         arrangement={arrangement}
         stackedGap="lg"
+        stickyPrompt
         prompt={
           <View testID="realia-read-sheet-column" style={{ gap: spacing.sm }}>
             <RealiaSheet
@@ -210,7 +212,7 @@ export function RealiaReadGame({ scope, host, onBack }: Props): React.ReactEleme
                   romanization={round.key.romanization}
                   romanizationShown={romanizationMode === 'always'}
                   size="sm"
-                  accessibilityLabel={m.a11y.koreanItem({ ko: round.key.ko, romanization: round.key.romanization })}
+                  accessibilityLabel={realiaKeyLabel(round.key, m.a11y.koreanItem)}
                 />
               </View>
             ) : null}

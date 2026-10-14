@@ -130,25 +130,25 @@ test.describe('Realia Read (F-CURR-001 G-2)', () => {
         // The last question: the step completes once.
         await expect.poll(async () => (await log(page)).completed, { timeout: 3_000 }).toBe(1);
       });
+
+      test('the ticket and the price cards draw as their own sheets, with figure and count options', async ({ page }) => {
+        await open(page, { fixture: 'ticket' });
+        await expect(page.getByRole('group', { name: 'Train ticket, 2 lines' })).toBeVisible();
+        await expect(page.getByRole('button', { name: '출발, chulbal, 서울 3:00, Seoul se si', exact: true })).toBeVisible();
+        await expect(page.getByRole('button', { name: '도착, dochak, 대전 4:30, Daejeon ne si samsip bun', exact: true })).toBeVisible();
+        await expect(option(page, 't430')).toHaveText(/4:30/);
+        await expectNoHorizontalOverflow(page);
+        await shot(page, `realia-read-ticket-${size.name}`);
+
+        await open(page, { fixture: 'priceCards' });
+        const cards = page.getByRole('group', { name: 'Price cards, 3 lines' });
+        await expect(cards.getByRole('button', { name: '사과, sagwa, 3개 2,000원, se gae icheon won', exact: true })).toBeVisible();
+        await expect(cards.getByRole('button', { name: '한지, hanji, 1,000원, cheon won', exact: true })).toBeVisible();
+        await expectNoHorizontalOverflow(page);
+        await shot(page, `realia-read-price-cards-${size.name}`);
+      });
     });
   }
-
-  test('the ticket and the price cards draw as their own sheets, with figure and count options', async ({ page }) => {
-    await page.setViewportSize({ width: 375, height: 812 });
-    await open(page, { fixture: 'ticket' });
-    await expect(page.getByRole('group', { name: 'Train ticket, 2 lines' })).toBeVisible();
-    await expect(page.getByRole('button', { name: '출발, chulbal, 서울 3:00, seoul se si', exact: true })).toBeVisible();
-    await expect(option(page, 't430')).toHaveText(/4:30/);
-    await expectNoHorizontalOverflow(page);
-    await shot(page, 'realia-read-ticket-375');
-
-    await open(page, { fixture: 'priceCards' });
-    const cards = page.getByRole('group', { name: 'Price cards, 3 lines' });
-    await expect(cards.getByRole('button', { name: '사과, sagwa, 3개 2,000원, se gae icheon won', exact: true })).toBeVisible();
-    await expect(cards.getByRole('button', { name: '한지, hanji, 1,000원, cheon won', exact: true })).toBeVisible();
-    await expectNoHorizontalOverflow(page);
-    await shot(page, 'realia-read-price-cards-375');
-  });
 
   test('tap mode hides the romanization until a line is tapped; the line keeps it in its name', async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 812 });
@@ -161,13 +161,34 @@ test.describe('Realia Read (F-CURR-001 G-2)', () => {
     await expect(sheet.getByRole('button', { name: '라면, ramyeon, 3,000원, samcheon won', exact: true })).toBeVisible();
   });
 
-  test('no telemetry payload carries realia text or an answer', async ({ page }) => {
+  test('a picture round names each picture; no telemetry payload carries realia text or an answer', async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 812 });
     await open(page, { fixture: 'menu' });
+    const question = page.getByTestId('realia-read-question');
     await line(page, 'ramyeon').click();
     await option(page, 'icheon').click();
     await page.waitForTimeout(TAP_GAP_MS);
     await option(page, 'samcheon').click();
-    await expect(page.getByTestId('realia-read-question')).toHaveText('Which one costs this?', { timeout: 3_000 });
-    for (const e of await events(page)) expect(JSON.stringify(e)).not.toMatch(HANGUL);
+    await expect(question).toHaveText('Which one costs this?', { timeout: 3_000 });
+    await option(page, 'bibimbap').click();
+    await expect(question).toHaveText('How much is this?', { timeout: 3_000 });
+    await option(page, 'icheon').click();
+
+    // Picture options (D-2 S5): each picture is named in the UI language by its label.
+    await expect(question).toHaveText('Which one is on the menu?', { timeout: 3_000 });
+    for (const name of ['instant noodles', 'bread', 'banana']) await expect(page.getByRole('button', { name, exact: true })).toBeVisible();
+    await shot(page, 'realia-read-menu-pictures-375');
+    await option(page, 'ramyeon').click();
+    await expect(page.getByRole('button', { name: 'Right answer: instant noodles' })).toBeVisible();
+    await expect.poll(async () => (await log(page)).completed, { timeout: 3_000 }).toBe(1);
+
+    // The step's minigame.finished was sent (the same builder MinigameScreen uses), so the check below is not empty.
+    const all = await events(page);
+    expect(all.length).toBeGreaterThan(0);
+    const finished = all.filter((e) => e.name === 'minigame.finished');
+    expect(finished).toHaveLength(1);
+    expect(Object.keys(finished[0]!.payload ?? {}).sort()).toEqual(['kind', 'questId', 'stepIndex']);
+    expect(finished[0]!.payload?.kind).toBe('realia-read');
+    for (const e of all) expect(JSON.stringify(e)).not.toMatch(HANGUL);
   });
 });

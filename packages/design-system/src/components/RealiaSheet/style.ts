@@ -79,3 +79,15 @@ export function realiaPaper(kind: RealiaSheetKind): { backgroundColor: string; b
   if (kind === 'sign') return { backgroundColor: colors.feedback.nudgeLight, borderColor: colors.text.secondary, borderRadius: radii.sm };
   return { backgroundColor: colors.surface.paper, borderColor: kind === 'plain' ? colors.border.shape : colors.text.secondary, borderRadius: radii.md };
 }
+
+/**
+ * Where the sheet's group summary ("Menu, 4 lines") is announced. The web reads the group's
+ * `aria-label`; VoiceOver and TalkBack do not announce a label on a container that is not itself
+ * accessible, so on iOS and Android the summary is also a screen-reader-only element read first.
+ */
+export function realiaSummaryOnNative(os: string): boolean {
+  return os !== 'web';
+}
+
+/** A screen-reader-only box: in the accessibility tree, 1 dp, clipped, at the sheet's top-left (read first). */
+export const REALIA_SR_ONLY = { position: 'absolute', top: 0, left: 0, width: 1, height: 1, overflow: 'hidden' } as const;

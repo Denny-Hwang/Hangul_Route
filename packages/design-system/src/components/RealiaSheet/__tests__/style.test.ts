@@ -10,6 +10,8 @@ import {
   realiaGoodsRef,
   realiaLineLook,
   realiaPaper,
+  realiaSummaryOnNative,
+  REALIA_SR_ONLY,
 } from '../style';
 
 /** design/screens/minigame-realia-read/README.md ("Constants", D4, D5, S11). */
@@ -46,5 +48,14 @@ describe('RealiaSheet looks', () => {
     expect(realiaPaper('sign').backgroundColor).toBe(colors.feedback.nudgeLight);
     expect(realiaPaper('menu').backgroundColor).toBe(colors.surface.paper);
     expect(realiaPaper('plain').borderColor).toBe(colors.border.shape);
+  });
+});
+
+describe('the group summary on native screen readers', () => {
+  it('is its own screen-reader-only element on iOS and Android; the web reads the group aria-label', () => {
+    expect(realiaSummaryOnNative('ios')).toBe(true);
+    expect(realiaSummaryOnNative('android')).toBe(true);
+    expect(realiaSummaryOnNative('web')).toBe(false);
+    expect(REALIA_SR_ONLY).toMatchObject({ position: 'absolute', width: 1, height: 1, overflow: 'hidden' });
   });
 });
