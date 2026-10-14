@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import * as builder from '../../../../scripts/build-placement-bank.mjs';
@@ -490,23 +490,41 @@ describe('content/i18n/es/placement.json: the Spanish overlay skeleton', () => {
   });
 });
 
-describe('content/i18n/ko/placement.json: the Korean overlay skeleton', () => {
-  /**
-   * Korean glosses wait for the locale-aware validator of F-I18N-001 section 3.7 (today the
-   * base rule rejects Hangul in a gloss) and for native review, so the skeleton has no entries
-   * yet; every template falls back to English until then.
-   */
-  it('exists with the overlay shape and holds only known ids and allowed fields', () => {
-    const overlay = JSON.parse(readFileSync(join(REPO_ROOT, 'content/i18n/ko/placement.json'), 'utf8')) as {
+describe('content/i18n/ko/placement*.json: the Korean overlays', () => {
+  const dir = join(REPO_ROOT, 'content/i18n/ko');
+  const files = readdirSync(dir).filter((f) => /^placement.*\.json$/.test(f)).sort();
+  const overlays = files.map((file) => ({
+    file,
+    overlay: JSON.parse(readFileSync(join(dir, file), 'utf8')) as {
       locale: string;
       domain: string;
       entries: Record<string, Record<string, string>>;
-    };
-    expect(overlay).toMatchObject({ locale: 'ko', domain: 'placement' });
+    },
+  }));
+  it('each file has the overlay shape and holds only known ids and allowed fields', () => {
+    expect(files).toContain('placement.json');
     const ids = new Set([...all, warmup].map((t) => t.id));
-    for (const [id, entry] of Object.entries(overlay.entries)) {
-      expect(ids.has(id), id).toBe(true);
-      for (const field of Object.keys(entry)) expect(field, id).toMatch(/^(gloss|options\.[a-z0-9-]+\.gloss)$/);
+    for (const { file, overlay } of overlays) {
+      expect(overlay, file).toMatchObject({ locale: 'ko', domain: file.slice(0, -'.json'.length) });
+      for (const [id, entry] of Object.entries(overlay.entries)) {
+        expect(ids.has(id), `${file} ${id}`).toBe(true);
+        for (const field of Object.keys(entry)) expect(field, `${file} ${id}`).toMatch(/^(gloss|options\.[a-z0-9-]+\.gloss)$/);
+      }
+    }
+  });
+  it('puts an entity in one file only and never repeats the Korean a gloss explains', () => {
+    const seen = new Map<string, string>();
+    const byId = new Map([...all, warmup].map((t) => [t.id, t]));
+    for (const { file, overlay } of overlays) {
+      for (const [id, entry] of Object.entries(overlay.entries)) {
+        expect(seen.get(id), `${id} in ${file}`).toBeUndefined();
+        seen.set(id, file);
+        const t = byId.get(id) as PlacementTemplate;
+        const taught = [t.question.promptKo, t.question.spokenKo, ...t.question.options.map((o) => o.ko)].filter((ko): ko is string => typeof ko === 'string');
+        for (const [field, value] of Object.entries(entry)) {
+          for (const ko of taught) expect(value.trim(), `${id} ${field}`).not.toBe(ko.trim());
+        }
+      }
     }
   });
 });
