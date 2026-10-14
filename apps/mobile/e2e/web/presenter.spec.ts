@@ -188,9 +188,11 @@ test.describe('presenter at 1280 x 720', () => {
 
     await page.goto(link());
     await expect(page.getByTestId('presenter-start')).toBeVisible();
-    // The deck left the address and the history entry; the tab title is fixed (section 3.2).
+    // The deck left the address and the entry's URL and stays only in this tab's history state,
+    // for a reload; the tab title is fixed (section 3.2).
     expect(new URL(page.url()).pathname).toBe('/present');
     expect(new URL(page.url()).hash).toBe('');
+    expect(await page.evaluate(() => Object.keys((history.state ?? {}) as object))).toEqual(['hrLectureFragment']);
     await expect(page).toHaveTitle('Hangul Route lecture');
     // `#root` is not capped (F-LAYOUT-001).
     expect(await page.evaluate(() => document.getElementById('root')?.getBoundingClientRect().width)).toBe(1280);
@@ -250,6 +252,8 @@ test.describe('presenter at 1280 x 720', () => {
     await page.getByTestId('presenter-exit').click();
     await page.getByTestId('presenter-exit-confirm').click();
     await expect(page.getByTestId('presenter-home')).toBeVisible();
+    // Exit forgets the open deck: the history entry holds none after the lesson (section 3.2).
+    expect(await page.evaluate(() => history.state)).toBeNull();
 
     // Only the allowed keys were added (section 3.9).
     await expect.poll(async () => (await storedKeys(page)).includes('hr:lecture:recent')).toBe(true);
