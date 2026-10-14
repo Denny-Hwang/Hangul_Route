@@ -172,7 +172,7 @@ ADD after P-8:
 
 | P-7b | `feat(mobile)`: result weekly-plan strip and not-tested copy, `RouteProposal` entry from the result, report "Suggested weekly plan" card. **Done (#573)**, behind `flags.routeEnabled` | M | P-6, P-8, F-PLAN-002 P2-3b (`proposeRoute`) and P2-7a (`RouteProposal`) |
 
-Change P-10's "Needs" to "P-7, P-7b, P-8" (OD-14 was decided on 2026-10-14, confirmed as proposed, and no longer gates P-10; P-10 still needs the store build listed in F-PLC-001's row). P-6 and P-7 do not wait. Add to P-6's Needs: "OD-1 (sound-guide choice screen)". Add to P-7's Needs: "F-ROUTE-001 R-2a (`pin`, `check-circle` glyphs)".
+Change P-10's "Needs" to "P-7, P-7b, P-8" (OD-14 was decided on 2026-10-14, confirmed as proposed, and no longer gates P-10; P-10 still needs the P-3b Worker deploy (AM-38) and the store build carrying P-3b's schema, as listed in F-PLC-001's row). P-6 and P-7 do not wait. Add to P-6's Needs: "OD-1 (sound-guide choice screen)". Add to P-7's Needs: "F-ROUTE-001 R-2a (`pin`, `check-circle` glyphs)".
 
 ### AM-11. Section 9 (Unverified assumptions), after line 513
 
