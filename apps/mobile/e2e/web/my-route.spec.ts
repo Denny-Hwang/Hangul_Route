@@ -293,7 +293,8 @@ test.describe('the Route tab and its route card (LR-10)', () => {
 
   test('320 x 568: "Not open yet" and "Coming later" share the dotted ring and are told apart by their words and the legend (assumption h)', async ({ page }) => {
     // A free learner on the gating fixture bundle: Stage 2's playable quests are not open (F-ENT-003), its other
-    // cells are coming later. CI's gating run plays it:
+    // cells are coming later. Stage 3 has a playable cell too (Daily Mini-Sentences), so it is a full not-open-yet
+    // row; Stages 6 and 7 are coming later and merge into one compact row. CI's gating run plays it:
     //   pnpm --filter @hangul-route/mobile build:web:fixtures:gated
     //   STORY_FIXTURES_GATED=1 pnpm --filter @hangul-route/mobile exec playwright test my-route.spec -g "assumption h"
     test.skip(!GATED_BUILD, 'needs the gating fixture bundle (STORY_FIXTURES_GATED=1, dist-e2e-gated/)');
@@ -318,8 +319,13 @@ test.describe('the Route tab and its route card (LR-10)', () => {
     const [a, b] = await Promise.all([notOpen.boundingBox(), later.boundingBox()]);
     if (a === null || b === null) throw new Error('a legend line has no box');
     expect(a.y).toBeLessThan(b.y);
-    // A stage that is coming later says so on its own row, in its own words.
-    await expect(page.getByTestId('my-route-later-3').getByText(m.state.later, { exact: true })).toBeVisible();
+    // A stage with playable content keeps its full row, never a compact coming-later one.
+    await expect(page.getByTestId('my-route-stage-3')).toBeVisible();
+    await expect(page.getByTestId('my-route-later-3')).toHaveCount(0);
+    // Stages that are coming later say so on their own row, in their own words.
+    const laterRow = page.getByTestId('my-route-later-6');
+    await expect(laterRow.getByText(m.laterGroup(6, 7), { exact: true })).toBeVisible();
+    await expect(laterRow.getByText(m.state.later, { exact: true })).toBeVisible();
     expect(await noSideScroll(page)).toBe(true);
     await shot(page, 'my-route-not-open-and-later-320');
   });
