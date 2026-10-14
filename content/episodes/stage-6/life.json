@@ -1,0 +1,1749 @@
+{
+  "id": "episode:stage6-life",
+  "stage": "stage6",
+  "theme": "life",
+  "status": "draft",
+  "titleEn": "Order Food",
+  "subtitleEn": "Call the server, order, count and pay at a table.",
+  "hoyaIntroEn": "A table, a menu and something tasty. Let's order in Korean!",
+  "order": 2,
+  "pillarTags": [
+    "B2"
+  ],
+  "rewardCardIds": [],
+  "quests": [
+    {
+      "id": "quest:stage6-life-q1",
+      "titleEn": "Excuse Me!",
+      "blurbEn": "Call a server to your table and ask for food.",
+      "teaserEn": "Next: order two or three of something.",
+      "estimatedMinutes": 5,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "Excuse Me!",
+          "hoyaLineEn": "We have a table and a little menu. Let's order some food!",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "Call and Ask",
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "realia",
+                    "realiaRef": "realia:order-food-menu",
+                    "keyWords": [
+                      {
+                        "ko": "메뉴",
+                        "romanization": "menyu",
+                        "en": "menu"
+                      },
+                      {
+                        "ko": "김밥",
+                        "romanization": "gimbap",
+                        "en": "gimbap (seaweed rice roll)"
+                      },
+                      {
+                        "ko": "라면",
+                        "romanization": "ramyeon",
+                        "en": "instant noodles"
+                      },
+                      {
+                        "ko": "떡볶이",
+                        "romanization": "tteokbokki",
+                        "en": "spicy rice cakes"
+                      }
+                    ],
+                    "captionEn": "A menu on the table. You know these dishes!"
+                  }
+                ],
+                "captionEn": "Read the menu first."
+              },
+              {
+                "items": [
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "여기요",
+                      "romanization": "yeogiyo",
+                      "en": "Excuse me! (to call a server)"
+                    },
+                    "noteEn": "Say this to call a server to your table."
+                  },
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "주세요",
+                      "romanization": "juseyo",
+                      "en": "please give me"
+                    },
+                    "noteEn": "Say it after the thing you want."
+                  }
+                ],
+                "captionEn": "Call the server first, then ask."
+              },
+              {
+                "items": [
+                  {
+                    "type": "sentence",
+                    "sentence": {
+                      "ko": "김밥 주세요.",
+                      "romanization": "gimbap juseyo",
+                      "en": "Gimbap, please."
+                    },
+                    "picture": "card:kimbap"
+                  },
+                  {
+                    "type": "sentence",
+                    "sentence": {
+                      "ko": "물 주세요.",
+                      "romanization": "mul juseyo",
+                      "en": "Water, please."
+                    },
+                    "picture": "word:food-water"
+                  }
+                ],
+                "captionEn": "Name the food, then say please."
+              }
+            ]
+          },
+          "durationSeconds": 65
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Read the Menu",
+          "minigameKind": "realia-read",
+          "minigameRef": "minigame:s6-life-q1-practice",
+          "durationSeconds": 95
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Type Your Order",
+          "minigameKind": "type-hangul",
+          "minigameRef": "minigame:s6-life-q1-apply",
+          "durationSeconds": 75
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Two Quick Ones",
+          "minigameKind": "listen-pick",
+          "minigameRef": "minigame:s6-life-q1-check",
+          "durationSeconds": 40
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Order In!",
+          "hoyaLineEn": "You called the server and asked for food. Well read!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s6-life-q1-practice",
+          "kind": "realia-read",
+          "realia": {
+            "ref": "realia:order-food-menu",
+            "kind": "menu",
+            "title": {
+              "ko": "메뉴",
+              "romanization": "menyu",
+              "en": "menu"
+            },
+            "entries": [
+              {
+                "id": "gimbap",
+                "text": {
+                  "ko": "김밥",
+                  "romanization": "gimbap",
+                  "en": "gimbap (seaweed rice roll)"
+                },
+                "value": {
+                  "ko": "이천 원",
+                  "romanization": "icheon won",
+                  "en": "2,000 won"
+                }
+              },
+              {
+                "id": "ramyeon",
+                "text": {
+                  "ko": "라면",
+                  "romanization": "ramyeon",
+                  "en": "instant noodles"
+                },
+                "value": {
+                  "ko": "삼천 원",
+                  "romanization": "samcheon won",
+                  "en": "3,000 won"
+                }
+              },
+              {
+                "id": "tteokbokki",
+                "text": {
+                  "ko": "떡볶이",
+                  "romanization": "tteokbokki",
+                  "en": "spicy rice cakes"
+                },
+                "value": {
+                  "ko": "삼천 원",
+                  "romanization": "samcheon won",
+                  "en": "3,000 won"
+                }
+              },
+              {
+                "id": "milk",
+                "text": {
+                  "ko": "우유",
+                  "romanization": "uyu",
+                  "en": "milk"
+                },
+                "value": {
+                  "ko": "천 원",
+                  "romanization": "cheon won",
+                  "en": "1,000 won"
+                }
+              }
+            ],
+            "altEn": "A small menu on a table: gimbap, instant noodles, spicy rice cakes and milk, each with its price."
+          },
+          "rounds": [
+            {
+              "id": "r1",
+              "questionEn": "Find this dish on the menu. Which picture shows it?",
+              "key": {
+                "ko": "라면",
+                "romanization": "ramyeon",
+                "en": "instant noodles"
+              },
+              "options": [
+                {
+                  "id": "a",
+                  "pictureRef": "word:food-ramyeon",
+                  "labelEn": "noodles"
+                },
+                {
+                  "id": "b",
+                  "pictureRef": "card:kimbap",
+                  "labelEn": "gimbap"
+                },
+                {
+                  "id": "c",
+                  "pictureRef": "word:culture-tteokbokki",
+                  "labelEn": "spicy rice cakes"
+                }
+              ],
+              "answerId": "a",
+              "answerEntryId": "ramyeon"
+            },
+            {
+              "id": "r2",
+              "questionEn": "Which dish on the menu is spicy rice cakes?",
+              "options": [
+                {
+                  "id": "a",
+                  "text": {
+                    "ko": "김밥",
+                    "romanization": "gimbap",
+                    "en": "gimbap (seaweed rice roll)"
+                  }
+                },
+                {
+                  "id": "b",
+                  "text": {
+                    "ko": "떡볶이",
+                    "romanization": "tteokbokki",
+                    "en": "spicy rice cakes"
+                  }
+                },
+                {
+                  "id": "c",
+                  "text": {
+                    "ko": "라면",
+                    "romanization": "ramyeon",
+                    "en": "instant noodles"
+                  }
+                }
+              ],
+              "answerId": "b",
+              "answerEntryId": "tteokbokki"
+            },
+            {
+              "id": "r3",
+              "questionEn": "Which of these is on the menu?",
+              "options": [
+                {
+                  "id": "a",
+                  "text": {
+                    "ko": "사과",
+                    "romanization": "sagwa",
+                    "en": "apple"
+                  }
+                },
+                {
+                  "id": "b",
+                  "text": {
+                    "ko": "빵",
+                    "romanization": "ppang",
+                    "en": "bread"
+                  }
+                },
+                {
+                  "id": "c",
+                  "text": {
+                    "ko": "김밥",
+                    "romanization": "gimbap",
+                    "en": "gimbap (seaweed rice roll)"
+                  }
+                }
+              ],
+              "answerId": "c",
+              "answerEntryId": "gimbap"
+            },
+            {
+              "id": "r4",
+              "questionEn": "What can you drink from this menu?",
+              "options": [
+                {
+                  "id": "a",
+                  "text": {
+                    "ko": "우유",
+                    "romanization": "uyu",
+                    "en": "milk"
+                  }
+                },
+                {
+                  "id": "b",
+                  "text": {
+                    "ko": "김밥",
+                    "romanization": "gimbap",
+                    "en": "gimbap (seaweed rice roll)"
+                  }
+                },
+                {
+                  "id": "c",
+                  "text": {
+                    "ko": "떡볶이",
+                    "romanization": "tteokbokki",
+                    "en": "spicy rice cakes"
+                  }
+                }
+              ],
+              "answerId": "a",
+              "answerEntryId": "milk"
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s6-life-q1-apply",
+          "kind": "type-hangul",
+          "rounds": [
+            {
+              "id": "t1",
+              "promptEn": "Call the server to your table.",
+              "target": {
+                "ko": "여기요",
+                "romanization": "yeogiyo",
+                "en": "Excuse me! (to call a server)"
+              }
+            },
+            {
+              "id": "t2",
+              "promptEn": "Ask for gimbap.",
+              "pictureRef": "card:kimbap",
+              "target": {
+                "ko": "김밥 주세요",
+                "romanization": "gimbap juseyo",
+                "en": "Gimbap, please."
+              }
+            },
+            {
+              "id": "t3",
+              "promptEn": "Ask for water.",
+              "pictureRef": "word:food-water",
+              "target": {
+                "ko": "물 주세요",
+                "romanization": "mul juseyo",
+                "en": "Water, please."
+              }
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s6-life-q1-check",
+          "kind": "listen-pick",
+          "rounds": [
+            {
+              "id": "c1",
+              "prompt": {
+                "ko": "김밥 주세요.",
+                "romanization": "gimbap juseyo",
+                "en": "Gimbap, please."
+              },
+              "options": [
+                {
+                  "id": "a",
+                  "pictureRef": "card:kimbap"
+                },
+                {
+                  "id": "b",
+                  "pictureRef": "word:food-ramyeon"
+                },
+                {
+                  "id": "c",
+                  "pictureRef": "word:food-milk"
+                }
+              ],
+              "answerId": "a"
+            },
+            {
+              "id": "c2",
+              "prompt": {
+                "ko": "라면 주세요.",
+                "romanization": "ramyeon juseyo",
+                "en": "Instant noodles, please."
+              },
+              "options": [
+                {
+                  "id": "a",
+                  "text": {
+                    "ko": "우유 주세요.",
+                    "romanization": "uyu juseyo",
+                    "en": "Milk, please."
+                  }
+                },
+                {
+                  "id": "b",
+                  "text": {
+                    "ko": "라면 주세요.",
+                    "romanization": "ramyeon juseyo",
+                    "en": "Instant noodles, please."
+                  }
+                },
+                {
+                  "id": "c",
+                  "text": {
+                    "ko": "김밥 주세요.",
+                    "romanization": "gimbap juseyo",
+                    "en": "Gimbap, please."
+                  }
+                }
+              ],
+              "answerId": "b"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "quest:stage6-life-q2",
+      "titleEn": "How Many?",
+      "blurbEn": "Order one, two or three of something.",
+      "teaserEn": "Next: ask how much it is.",
+      "estimatedMinutes": 5,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "How Many?",
+          "hoyaLineEn": "Friends are joining us. Let's order more than one!",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "Count Your Order",
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "realia",
+                    "realiaRef": "realia:order-food-slip",
+                    "keyWords": [
+                      {
+                        "ko": "주문",
+                        "romanization": "jumun",
+                        "en": "order"
+                      },
+                      {
+                        "ko": "라면",
+                        "romanization": "ramyeon",
+                        "en": "instant noodles"
+                      },
+                      {
+                        "ko": "우유",
+                        "romanization": "uyu",
+                        "en": "milk"
+                      },
+                      {
+                        "ko": "달걀",
+                        "romanization": "dalgyal",
+                        "en": "egg"
+                      }
+                    ],
+                    "captionEn": "An order slip: each food and how many."
+                  }
+                ],
+                "captionEn": "Read the order slip."
+              },
+              {
+                "items": [
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "한 개",
+                      "romanization": "han gae",
+                      "en": "one (thing)"
+                    },
+                    "noteEn": "One thing. Han is hana before a counter."
+                  },
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "두 개",
+                      "romanization": "du gae",
+                      "en": "two (things)"
+                    },
+                    "noteEn": "Two things. Du is dul before a counter."
+                  }
+                ],
+                "captionEn": "Before a counter, counting uses han, du, se: short forms of hana, dul, set."
+              },
+              {
+                "items": [
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "세 개",
+                      "romanization": "se gae",
+                      "en": "three (things)"
+                    },
+                    "noteEn": "Three things. Se is set before a counter."
+                  },
+                  {
+                    "type": "sentence",
+                    "sentence": {
+                      "ko": "라면 두 개 주세요.",
+                      "romanization": "ramyeon du gae juseyo",
+                      "en": "Two instant noodles, please."
+                    },
+                    "picture": "word:food-ramyeon"
+                  }
+                ],
+                "captionEn": "Name the food, then how many, then say please."
+              }
+            ]
+          },
+          "durationSeconds": 65
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Read the Order",
+          "minigameKind": "realia-read",
+          "minigameRef": "minigame:s6-life-q2-practice",
+          "durationSeconds": 95
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Order at the Table",
+          "minigameKind": "tap-respond",
+          "minigameRef": "minigame:s6-life-q2-apply",
+          "durationSeconds": 75
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Two Quick Ones",
+          "minigameKind": "listen-pick",
+          "minigameRef": "minigame:s6-life-q2-check",
+          "durationSeconds": 40
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Counted!",
+          "hoyaLineEn": "One, two, three. You ordered for the whole table!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s6-life-q2-practice",
+          "kind": "realia-read",
+          "realia": {
+            "ref": "realia:order-food-slip",
+            "title": {
+              "ko": "주문",
+              "romanization": "jumun",
+              "en": "order"
+            },
+            "entries": [
+              {
+                "id": "gimbap",
+                "text": {
+                  "ko": "김밥",
+                  "romanization": "gimbap",
+                  "en": "gimbap (seaweed rice roll)"
+                },
+                "value": {
+                  "ko": "하나",
+                  "romanization": "hana",
+                  "en": "one"
+                }
+              },
+              {
+                "id": "ramyeon",
+                "text": {
+                  "ko": "라면",
+                  "romanization": "ramyeon",
+                  "en": "instant noodles"
+                },
+                "value": {
+                  "ko": "두 개",
+                  "romanization": "du gae",
+                  "en": "two (things)"
+                }
+              },
+              {
+                "id": "milk",
+                "text": {
+                  "ko": "우유",
+                  "romanization": "uyu",
+                  "en": "milk"
+                },
+                "value": {
+                  "ko": "세 개",
+                  "romanization": "se gae",
+                  "en": "three (things)"
+                }
+              },
+              {
+                "id": "egg",
+                "text": {
+                  "ko": "달걀",
+                  "romanization": "dalgyal",
+                  "en": "egg"
+                },
+                "value": {
+                  "ko": "한 개",
+                  "romanization": "han gae",
+                  "en": "one (thing)"
+                }
+              }
+            ],
+            "altEn": "An order slip on the table: one gimbap, two instant noodles, three milks and one egg."
+          },
+          "rounds": [
+            {
+              "id": "r1",
+              "questionEn": "How many of these are on the order?",
+              "key": {
+                "ko": "라면",
+                "romanization": "ramyeon",
+                "en": "instant noodles"
+              },
+              "options": [
+                {
+                  "id": "a",
+                  "text": {
+                    "ko": "한 개",
+                    "romanization": "han gae",
+                    "en": "one (thing)"
+                  }
+                },
+                {
+                  "id": "b",
+                  "text": {
+                    "ko": "두 개",
+                    "romanization": "du gae",
+                    "en": "two (things)"
+                  }
+                },
+                {
+                  "id": "c",
+                  "text": {
+                    "ko": "세 개",
+                    "romanization": "se gae",
+                    "en": "three (things)"
+                  }
+                }
+              ],
+              "answerId": "b",
+              "answerEntryId": "ramyeon"
+            },
+            {
+              "id": "r2",
+              "questionEn": "How many of these are on the order?",
+              "key": {
+                "ko": "우유",
+                "romanization": "uyu",
+                "en": "milk"
+              },
+              "options": [
+                {
+                  "id": "a",
+                  "text": {
+                    "ko": "한 개",
+                    "romanization": "han gae",
+                    "en": "one (thing)"
+                  }
+                },
+                {
+                  "id": "b",
+                  "text": {
+                    "ko": "두 개",
+                    "romanization": "du gae",
+                    "en": "two (things)"
+                  }
+                },
+                {
+                  "id": "c",
+                  "text": {
+                    "ko": "세 개",
+                    "romanization": "se gae",
+                    "en": "three (things)"
+                  }
+                }
+              ],
+              "answerId": "c",
+              "answerEntryId": "milk"
+            },
+            {
+              "id": "r3",
+              "questionEn": "How many of these are on the order?",
+              "key": {
+                "ko": "달걀",
+                "romanization": "dalgyal",
+                "en": "egg"
+              },
+              "options": [
+                {
+                  "id": "a",
+                  "text": {
+                    "ko": "한 개",
+                    "romanization": "han gae",
+                    "en": "one (thing)"
+                  }
+                },
+                {
+                  "id": "b",
+                  "text": {
+                    "ko": "두 개",
+                    "romanization": "du gae",
+                    "en": "two (things)"
+                  }
+                },
+                {
+                  "id": "c",
+                  "text": {
+                    "ko": "세 개",
+                    "romanization": "se gae",
+                    "en": "three (things)"
+                  }
+                }
+              ],
+              "answerId": "a",
+              "answerEntryId": "egg"
+            },
+            {
+              "id": "r4",
+              "questionEn": "Which food is ordered two of?",
+              "key": {
+                "ko": "두 개",
+                "romanization": "du gae",
+                "en": "two (things)"
+              },
+              "options": [
+                {
+                  "id": "a",
+                  "pictureRef": "word:food-milk",
+                  "labelEn": "milk"
+                },
+                {
+                  "id": "b",
+                  "pictureRef": "word:food-ramyeon",
+                  "labelEn": "noodles"
+                },
+                {
+                  "id": "c",
+                  "pictureRef": "word:food-egg",
+                  "labelEn": "egg"
+                }
+              ],
+              "answerId": "b",
+              "answerEntryId": "ramyeon"
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s6-life-q2-apply",
+          "kind": "tap-respond",
+          "turns": [
+            {
+              "speakerEn": "Server",
+              "line": {
+                "ko": "뭐 드릴까요?",
+                "romanization": "mwo deurilkkayo",
+                "en": "What can I get you?"
+              },
+              "replies": [
+                {
+                  "id": "r1",
+                  "text": {
+                    "ko": "라면 두 개 주세요.",
+                    "romanization": "ramyeon du gae juseyo",
+                    "en": "Two instant noodles, please."
+                  },
+                  "correct": true
+                },
+                {
+                  "id": "r2",
+                  "text": {
+                    "ko": "안녕히 가세요.",
+                    "romanization": "annyeonghi gaseyo",
+                    "en": "Goodbye."
+                  },
+                  "correct": false
+                },
+                {
+                  "id": "r3",
+                  "text": {
+                    "ko": "누구예요?",
+                    "romanization": "nuguyeyo",
+                    "en": "Who is it?"
+                  },
+                  "correct": false
+                }
+              ]
+            },
+            {
+              "speakerEn": "Server",
+              "line": {
+                "ko": "우유도 드릴까요?",
+                "romanization": "uyudo deurilkkayo",
+                "en": "Would you like milk too?"
+              },
+              "replies": [
+                {
+                  "id": "r1",
+                  "text": {
+                    "ko": "이게 뭐예요?",
+                    "romanization": "ige mwoyeyo",
+                    "en": "What is this?"
+                  },
+                  "correct": false
+                },
+                {
+                  "id": "r2",
+                  "text": {
+                    "ko": "네, 우유 세 개 주세요.",
+                    "romanization": "ne uyu se gae juseyo",
+                    "en": "Yes, three milks, please."
+                  },
+                  "correct": true
+                },
+                {
+                  "id": "r3",
+                  "text": {
+                    "ko": "안녕히 가세요.",
+                    "romanization": "annyeonghi gaseyo",
+                    "en": "Goodbye."
+                  },
+                  "correct": false
+                }
+              ]
+            },
+            {
+              "speakerEn": "Server",
+              "line": {
+                "ko": "김밥도 드릴까요?",
+                "romanization": "gimbapdo deurilkkayo",
+                "en": "Would you like gimbap too?"
+              },
+              "replies": [
+                {
+                  "id": "r1",
+                  "text": {
+                    "ko": "누구예요?",
+                    "romanization": "nuguyeyo",
+                    "en": "Who is it?"
+                  },
+                  "correct": false
+                },
+                {
+                  "id": "r2",
+                  "text": {
+                    "ko": "이게 뭐예요?",
+                    "romanization": "ige mwoyeyo",
+                    "en": "What is this?"
+                  },
+                  "correct": false
+                },
+                {
+                  "id": "r3",
+                  "text": {
+                    "ko": "네, 김밥 하나 주세요.",
+                    "romanization": "ne gimbap hana juseyo",
+                    "en": "Yes, one gimbap, please."
+                  },
+                  "correct": true
+                }
+              ]
+            },
+            {
+              "speakerEn": "Server",
+              "line": {
+                "ko": "여기 있어요.",
+                "romanization": "yeogi isseoyo",
+                "en": "Here you are."
+              },
+              "replies": [
+                {
+                  "id": "r1",
+                  "text": {
+                    "ko": "감사합니다.",
+                    "romanization": "gamsahamnida",
+                    "en": "Thank you."
+                  },
+                  "correct": true
+                },
+                {
+                  "id": "r2",
+                  "text": {
+                    "ko": "누구예요?",
+                    "romanization": "nuguyeyo",
+                    "en": "Who is it?"
+                  },
+                  "correct": false
+                },
+                {
+                  "id": "r3",
+                  "text": {
+                    "ko": "이게 뭐예요?",
+                    "romanization": "ige mwoyeyo",
+                    "en": "What is this?"
+                  },
+                  "correct": false
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s6-life-q2-check",
+          "kind": "listen-pick",
+          "rounds": [
+            {
+              "id": "c1",
+              "prompt": {
+                "ko": "라면 두 개 주세요.",
+                "romanization": "ramyeon du gae juseyo",
+                "en": "Two instant noodles, please."
+              },
+              "options": [
+                {
+                  "id": "a",
+                  "text": {
+                    "ko": "라면 두 개 주세요.",
+                    "romanization": "ramyeon du gae juseyo",
+                    "en": "Two instant noodles, please."
+                  }
+                },
+                {
+                  "id": "b",
+                  "text": {
+                    "ko": "라면 세 개 주세요.",
+                    "romanization": "ramyeon se gae juseyo",
+                    "en": "Three instant noodles, please."
+                  }
+                },
+                {
+                  "id": "c",
+                  "text": {
+                    "ko": "우유 두 개 주세요.",
+                    "romanization": "uyu du gae juseyo",
+                    "en": "Two milks, please."
+                  }
+                }
+              ],
+              "answerId": "a"
+            },
+            {
+              "id": "c2",
+              "prompt": {
+                "ko": "우유 세 개 주세요.",
+                "romanization": "uyu se gae juseyo",
+                "en": "Three milks, please."
+              },
+              "options": [
+                {
+                  "id": "a",
+                  "text": {
+                    "ko": "우유 한 개 주세요.",
+                    "romanization": "uyu han gae juseyo",
+                    "en": "One milk, please."
+                  }
+                },
+                {
+                  "id": "b",
+                  "text": {
+                    "ko": "달걀 세 개 주세요.",
+                    "romanization": "dalgyal se gae juseyo",
+                    "en": "Three eggs, please."
+                  }
+                },
+                {
+                  "id": "c",
+                  "text": {
+                    "ko": "우유 세 개 주세요.",
+                    "romanization": "uyu se gae juseyo",
+                    "en": "Three milks, please."
+                  }
+                }
+              ],
+              "answerId": "c"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "quest:stage6-life-q3",
+      "titleEn": "How Much Is It?",
+      "blurbEn": "Read the prices, start the meal and pay.",
+      "teaserEn": "Next: a new place to read in Korean.",
+      "estimatedMinutes": 5,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "How Much Is It?",
+          "hoyaLineEn": "The food is here! Let's read the prices on the menu too.",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "Prices and Paying",
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "realia",
+                    "realiaRef": "realia:order-food-menu",
+                    "keyWords": [
+                      {
+                        "ko": "원",
+                        "romanization": "won",
+                        "en": "won (Korean money)"
+                      },
+                      {
+                        "ko": "천 원",
+                        "romanization": "cheon won",
+                        "en": "1,000 won"
+                      },
+                      {
+                        "ko": "이천 원",
+                        "romanization": "icheon won",
+                        "en": "2,000 won"
+                      },
+                      {
+                        "ko": "삼천 원",
+                        "romanization": "samcheon won",
+                        "en": "3,000 won"
+                      }
+                    ],
+                    "captionEn": "Each dish has a price in won."
+                  }
+                ],
+                "captionEn": "Prices use i, sam with cheon: icheon won is 2,000 won."
+              },
+              {
+                "items": [
+                  {
+                    "type": "exchange",
+                    "lines": [
+                      {
+                        "speaker": "a",
+                        "speakerEn": "Hoya",
+                        "line": {
+                          "ko": "얼마예요?",
+                          "romanization": "eolmayeyo",
+                          "en": "How much is it?"
+                        }
+                      },
+                      {
+                        "speaker": "b",
+                        "speakerEn": "Server",
+                        "line": {
+                          "ko": "삼천 원이에요.",
+                          "romanization": "samcheon wonieyo",
+                          "en": "It is 3,000 won."
+                        }
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "Ask how much it is. The answer is a price."
+              },
+              {
+                "items": [
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "잘 먹겠습니다",
+                      "romanization": "jal meokgetseumnida",
+                      "en": "I will eat well. (said before eating)"
+                    },
+                    "noteEn": "Many people say this just before they start to eat.",
+                    "picture": "card:rice"
+                  }
+                ],
+                "captionEn": "The food is on the table."
+              }
+            ]
+          },
+          "durationSeconds": 70
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Read the Prices",
+          "minigameKind": "realia-read",
+          "minigameRef": "minigame:s6-life-q3-practice",
+          "durationSeconds": 100
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Eat and Pay",
+          "minigameKind": "tap-respond",
+          "minigameRef": "minigame:s6-life-q3-apply",
+          "durationSeconds": 80
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Two Quick Ones",
+          "minigameKind": "listen-pick",
+          "minigameRef": "minigame:s6-life-q3-check",
+          "durationSeconds": 40
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Meal Done!",
+          "hoyaLineEn": "You read the prices and paid. That was a whole order in Korean!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s6-life-q3-practice",
+          "kind": "realia-read",
+          "realia": {
+            "ref": "realia:order-food-menu",
+            "kind": "menu",
+            "title": {
+              "ko": "메뉴",
+              "romanization": "menyu",
+              "en": "menu"
+            },
+            "entries": [
+              {
+                "id": "gimbap",
+                "text": {
+                  "ko": "김밥",
+                  "romanization": "gimbap",
+                  "en": "gimbap (seaweed rice roll)"
+                },
+                "value": {
+                  "ko": "이천 원",
+                  "romanization": "icheon won",
+                  "en": "2,000 won"
+                }
+              },
+              {
+                "id": "ramyeon",
+                "text": {
+                  "ko": "라면",
+                  "romanization": "ramyeon",
+                  "en": "instant noodles"
+                },
+                "value": {
+                  "ko": "삼천 원",
+                  "romanization": "samcheon won",
+                  "en": "3,000 won"
+                }
+              },
+              {
+                "id": "tteokbokki",
+                "text": {
+                  "ko": "떡볶이",
+                  "romanization": "tteokbokki",
+                  "en": "spicy rice cakes"
+                },
+                "value": {
+                  "ko": "삼천 원",
+                  "romanization": "samcheon won",
+                  "en": "3,000 won"
+                }
+              },
+              {
+                "id": "milk",
+                "text": {
+                  "ko": "우유",
+                  "romanization": "uyu",
+                  "en": "milk"
+                },
+                "value": {
+                  "ko": "천 원",
+                  "romanization": "cheon won",
+                  "en": "1,000 won"
+                }
+              }
+            ],
+            "altEn": "A small menu on a table: gimbap, instant noodles, spicy rice cakes and milk, each with its price."
+          },
+          "rounds": [
+            {
+              "id": "r1",
+              "questionEn": "How much is this?",
+              "key": {
+                "ko": "김밥",
+                "romanization": "gimbap",
+                "en": "gimbap (seaweed rice roll)"
+              },
+              "options": [
+                {
+                  "id": "a",
+                  "text": {
+                    "ko": "천 원",
+                    "romanization": "cheon won",
+                    "en": "1,000 won"
+                  }
+                },
+                {
+                  "id": "b",
+                  "text": {
+                    "ko": "이천 원",
+                    "romanization": "icheon won",
+                    "en": "2,000 won"
+                  }
+                },
+                {
+                  "id": "c",
+                  "text": {
+                    "ko": "삼천 원",
+                    "romanization": "samcheon won",
+                    "en": "3,000 won"
+                  }
+                }
+              ],
+              "answerId": "b",
+              "answerEntryId": "gimbap"
+            },
+            {
+              "id": "r2",
+              "questionEn": "How much is this?",
+              "key": {
+                "ko": "라면",
+                "romanization": "ramyeon",
+                "en": "instant noodles"
+              },
+              "options": [
+                {
+                  "id": "a",
+                  "text": {
+                    "ko": "천 원",
+                    "romanization": "cheon won",
+                    "en": "1,000 won"
+                  }
+                },
+                {
+                  "id": "b",
+                  "text": {
+                    "ko": "이천 원",
+                    "romanization": "icheon won",
+                    "en": "2,000 won"
+                  }
+                },
+                {
+                  "id": "c",
+                  "text": {
+                    "ko": "삼천 원",
+                    "romanization": "samcheon won",
+                    "en": "3,000 won"
+                  }
+                }
+              ],
+              "answerId": "c",
+              "answerEntryId": "ramyeon"
+            },
+            {
+              "id": "r3",
+              "questionEn": "Which one costs this?",
+              "key": {
+                "ko": "천 원",
+                "romanization": "cheon won",
+                "en": "1,000 won"
+              },
+              "options": [
+                {
+                  "id": "a",
+                  "pictureRef": "card:kimbap",
+                  "labelEn": "gimbap"
+                },
+                {
+                  "id": "b",
+                  "pictureRef": "word:food-milk",
+                  "labelEn": "milk"
+                },
+                {
+                  "id": "c",
+                  "pictureRef": "word:food-ramyeon",
+                  "labelEn": "noodles"
+                }
+              ],
+              "answerId": "b",
+              "answerEntryId": "milk"
+            },
+            {
+              "id": "r4",
+              "questionEn": "How much is this?",
+              "key": {
+                "ko": "떡볶이",
+                "romanization": "tteokbokki",
+                "en": "spicy rice cakes"
+              },
+              "options": [
+                {
+                  "id": "a",
+                  "text": {
+                    "ko": "삼천 원",
+                    "romanization": "samcheon won",
+                    "en": "3,000 won"
+                  }
+                },
+                {
+                  "id": "b",
+                  "text": {
+                    "ko": "천 원",
+                    "romanization": "cheon won",
+                    "en": "1,000 won"
+                  }
+                },
+                {
+                  "id": "c",
+                  "text": {
+                    "ko": "이천 원",
+                    "romanization": "icheon won",
+                    "en": "2,000 won"
+                  }
+                }
+              ],
+              "answerId": "a",
+              "answerEntryId": "tteokbokki"
+            },
+            {
+              "id": "r5",
+              "questionEn": "How much is the milk? Pick the number.",
+              "key": {
+                "ko": "우유",
+                "romanization": "uyu",
+                "en": "milk"
+              },
+              "options": [
+                {
+                  "id": "a",
+                  "figure": "3,000"
+                },
+                {
+                  "id": "b",
+                  "figure": "2,000"
+                },
+                {
+                  "id": "c",
+                  "figure": "1,000"
+                }
+              ],
+              "answerId": "c",
+              "answerEntryId": "milk"
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s6-life-q3-apply",
+          "kind": "tap-respond",
+          "turns": [
+            {
+              "speakerEn": "Server",
+              "line": {
+                "ko": "맛있게 드세요.",
+                "romanization": "masitge deuseyo",
+                "en": "Enjoy your meal."
+              },
+              "replies": [
+                {
+                  "id": "r1",
+                  "text": {
+                    "ko": "잘 먹겠습니다.",
+                    "romanization": "jal meokgetseumnida",
+                    "en": "I will eat well. (said before eating)"
+                  },
+                  "correct": true
+                },
+                {
+                  "id": "r2",
+                  "text": {
+                    "ko": "얼마예요?",
+                    "romanization": "eolmayeyo",
+                    "en": "How much is it?"
+                  },
+                  "correct": false
+                },
+                {
+                  "id": "r3",
+                  "text": {
+                    "ko": "누구예요?",
+                    "romanization": "nuguyeyo",
+                    "en": "Who is it?"
+                  },
+                  "correct": false
+                }
+              ]
+            },
+            {
+              "speakerEn": "Server",
+              "line": {
+                "ko": "물 드릴까요?",
+                "romanization": "mul deurilkkayo",
+                "en": "Would you like water?"
+              },
+              "replies": [
+                {
+                  "id": "r1",
+                  "text": {
+                    "ko": "삼천 원이에요.",
+                    "romanization": "samcheon wonieyo",
+                    "en": "It is 3,000 won."
+                  },
+                  "correct": false
+                },
+                {
+                  "id": "r2",
+                  "text": {
+                    "ko": "네, 물 주세요.",
+                    "romanization": "ne mul juseyo",
+                    "en": "Yes, water, please."
+                  },
+                  "correct": true
+                },
+                {
+                  "id": "r3",
+                  "text": {
+                    "ko": "누구예요?",
+                    "romanization": "nuguyeyo",
+                    "en": "Who is it?"
+                  },
+                  "correct": false
+                }
+              ]
+            },
+            {
+              "speakerEn": "Server",
+              "line": {
+                "ko": "라면 하나요?",
+                "romanization": "ramyeon hanayo",
+                "en": "One instant noodles?"
+              },
+              "replies": [
+                {
+                  "id": "r1",
+                  "text": {
+                    "ko": "잘 먹겠습니다.",
+                    "romanization": "jal meokgetseumnida",
+                    "en": "I will eat well. (said before eating)"
+                  },
+                  "correct": false
+                },
+                {
+                  "id": "r2",
+                  "text": {
+                    "ko": "이게 뭐예요?",
+                    "romanization": "ige mwoyeyo",
+                    "en": "What is this?"
+                  },
+                  "correct": false
+                },
+                {
+                  "id": "r3",
+                  "text": {
+                    "ko": "네. 얼마예요?",
+                    "romanization": "ne eolmayeyo",
+                    "en": "Yes. How much is it?"
+                  },
+                  "correct": true
+                }
+              ]
+            },
+            {
+              "speakerEn": "Server",
+              "line": {
+                "ko": "삼천 원이에요.",
+                "romanization": "samcheon wonieyo",
+                "en": "It is 3,000 won."
+              },
+              "replies": [
+                {
+                  "id": "r1",
+                  "text": {
+                    "ko": "여기 있어요.",
+                    "romanization": "yeogi isseoyo",
+                    "en": "Here you are."
+                  },
+                  "correct": true
+                },
+                {
+                  "id": "r2",
+                  "text": {
+                    "ko": "누구예요?",
+                    "romanization": "nuguyeyo",
+                    "en": "Who is it?"
+                  },
+                  "correct": false
+                },
+                {
+                  "id": "r3",
+                  "text": {
+                    "ko": "맛있게 드세요.",
+                    "romanization": "masitge deuseyo",
+                    "en": "Enjoy your meal."
+                  },
+                  "correct": false
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s6-life-q3-check",
+          "kind": "listen-pick",
+          "rounds": [
+            {
+              "id": "c1",
+              "prompt": {
+                "ko": "얼마예요?",
+                "romanization": "eolmayeyo",
+                "en": "How much is it?"
+              },
+              "options": [
+                {
+                  "id": "a",
+                  "text": {
+                    "ko": "삼천 원이에요.",
+                    "romanization": "samcheon wonieyo",
+                    "en": "It is 3,000 won."
+                  }
+                },
+                {
+                  "id": "b",
+                  "text": {
+                    "ko": "잘 먹겠습니다.",
+                    "romanization": "jal meokgetseumnida",
+                    "en": "I will eat well. (said before eating)"
+                  }
+                },
+                {
+                  "id": "c",
+                  "text": {
+                    "ko": "라면 주세요.",
+                    "romanization": "ramyeon juseyo",
+                    "en": "Instant noodles, please."
+                  }
+                }
+              ],
+              "answerId": "a"
+            },
+            {
+              "id": "c2",
+              "prompt": {
+                "ko": "이천 원이에요.",
+                "romanization": "icheon wonieyo",
+                "en": "It is 2,000 won."
+              },
+              "options": [
+                {
+                  "id": "a",
+                  "text": {
+                    "ko": "삼천 원",
+                    "romanization": "samcheon won",
+                    "en": "3,000 won"
+                  }
+                },
+                {
+                  "id": "b",
+                  "text": {
+                    "ko": "천 원",
+                    "romanization": "cheon won",
+                    "en": "1,000 won"
+                  }
+                },
+                {
+                  "id": "c",
+                  "text": {
+                    "ko": "이천 원",
+                    "romanization": "icheon won",
+                    "en": "2,000 won"
+                  }
+                }
+              ],
+              "answerId": "c"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "culture": [
+    {
+      "id": "n1",
+      "kind": "language",
+      "textEn": "To call a server in a restaurant, people often say {ko:여기요} (over here). It does not point to age or rank, so it suits any server.",
+      "sources": [
+        {
+          "title": "호칭을 정해주세요. (Please settle on forms of address), an Online Ganada answer",
+          "publisher": "국립국어원 (National Institute of Korean Language), 온라인가나다 (Online Ganada)",
+          "url": "https://www.korean.go.kr/front/onlineQna/onlineQnaView.do?mn_id=&qna_seq=325443&pageIndex=1",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "Answer of 2025-12-22, quoting the institute's guide 「우리, 뭐라고 부를까요?」, section [직원과 손님을 부르거나 이르는 말]: “식당, 미용실, 상점과 같은 서비스 기관의 직원을 부르는 말로 ‘여기요’, ‘저기요’ 등이 이미 보편적으로 사용되고 있습니다. 이 말은 직원과 손님 사이라는 사회적 관계를 직접 드러내지 않는다는 점에서 손님과 직원 모두에게 편안하게 사용되고 있습니다.”"
+        },
+        {
+          "title": "[카드뉴스] 헷갈리고 궁금했던 호칭‧지칭어, 정리해드립니다! (card news by the 대학생기자단 student reporters, 2020-06-01)",
+          "publisher": "문화체육관광부 (Ministry of Culture, Sports and Tourism), student-reporter card news; cards marked ⓒ국립국어원",
+          "url": "https://www.mcst.go.kr/site/s_policy/comm/studentNews/studentNewsView.jsp?pSeq=5255",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "Body text: “식당이나 상점과 같은 서비스 직종의 직원을 부르게 된다면 ‘여기요’, ‘저기요’라는 표현이 적절합니다.” Card image text (alt): “‘여기요’, ‘저기요’는 직원과 손님 사이의 사회적 관계를 드러내지 않는 호칭입니다.”"
+        }
+      ],
+      "verification": {
+        "passes": 1,
+        "checkedAt": "2026-10-14",
+        "scope": "lesson",
+        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): both pages fetched; the NIKL Online Ganada answer quotes the institute's own address guide: 여기요 and 저기요 are already in common use to call staff at restaurants, salons and shops, and are comfortable for both sides because they do not show the customer-staff relationship; the MCST card news (student reporters, NIKL cards) calls them appropriate for service staff and says they do not show a social relationship. The note says 'often', makes no group-wide claim and restates the passages in new English words. Carried by: q1 Discover page 2 word note, q1 apply prompt t1, the gloss of 여기요."
+      }
+    },
+    {
+      "id": "n2",
+      "kind": "culture",
+      "textEn": "Many people say {ko:잘 먹겠습니다} (I will eat well) just before they start a meal. No rule says it must be said, and it is never wrong to say it.",
+      "sources": [
+        {
+          "title": "Online Ganada question and answer on the meal phrase, titled 잘먹겠습니다",
+          "publisher": "국립국어원 (National Institute of Korean Language), 온라인가나다 (Online Ganada)",
+          "url": "https://www.korean.go.kr/front/onlineQna/onlineQnaView.do?mn_id=&qna_seq=326221&pageIndex=1",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "Answer [식사 인사] of 2026-01-13: “이에 대해서 규정으로 정해 놓은 것은 없습니다. 따라서 무엇이 맞고 틀리다고 말씀드리기는 어렵습니다. 제시하신 상황에서 ‘잘 먹겠습니다’처럼 쓰는 것이 틀렸다고 볼 만한 근거는 딱히 없어 보입니다.”"
+        },
+        {
+          "title": "밥상 앞 “잘 먹겠습니다”, 밥값 내달란 말로 들리시나요? [넷만세]",
+          "publisher": "서울신문 (Seoul Shinmun), article by 이정수, 2023-06-22",
+          "url": "https://www.seoul.co.kr/news/2023/06/22/20230622500197",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "Lead paragraph: “밥이 차려진 식탁 앞에서 숟가락을 들기 전 하는 말 ‘잘 먹겠습니다’. 사람에 따라서 자주 쓰기도 하는 이 말이 …” and closing paragraph: “우리말에서 ‘잘 먹겠습니다’라는 표현이 자주 쓰이게 된 시기나 유래에 대해서는 정확히 알려진 바 없다.”"
+        }
+      ],
+      "verification": {
+        "passes": 1,
+        "checkedAt": "2026-10-14",
+        "scope": "lesson",
+        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): both pages fetched; the newspaper describes the phrase as what is said at a laid table before lifting the spoon, used often by some people, with views differing on when it fits; the NIKL Online Ganada answer says no rule governs it and there is no ground to call it wrong. The note says 'many people', avoids any claim about origin, about who pays or about everyone, and copies no wording. Carried by: q3 Discover page 3 word note and gloss, q3 apply turn 1, q3 check c1 option."
+      }
+    },
+    {
+      "id": "n3",
+      "kind": "culture",
+      "textEn": "Korean money is counted in won ({ko:원}). Amounts are read with the numbers {ko:이} (two), {ko:삼} (three) and {ko:천} (thousand), so {ko:이천 원} is 2,000 won.",
+      "sources": [
+        {
+          "title": "원 (Standard Korean Language Dictionary entry 원 1, dependent noun)",
+          "publisher": "표준국어대사전 (Standard Korean Language Dictionary), National Institute of Korean Language",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%EC%9B%90",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "Entry 원 1 「의존 명사」: “우리나라의 화폐 단위. 1원은 1전의 100배이다. 1962년 6월 10일부터 시행되었다. 기호는 ￦.”"
+        },
+        {
+          "title": "원, an entry of the Encyclopedia of Korean Culture",
+          "publisher": "한국민족문화대백과사전 (Encyclopedia of Korean Culture), Academy of Korean Studies",
+          "url": "https://encykorea.aks.ac.kr/Article/E0040571",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "Entry 원, 정의: “우리나라에서 1962년 6월 12일에 단행된 통화개혁 이래로 오늘날까지 사용되고 있는 화폐단위.”"
+        },
+        {
+          "title": "천 (Standard Korean Language Dictionary entry 천 3, numeral)",
+          "publisher": "표준국어대사전 (Standard Korean Language Dictionary), National Institute of Korean Language",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%EC%B2%9C",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "Entry 천 3 (千) [Ⅰ]「수사」: “백의 열 배가 되는 수.” The same dictionary, entry 이 7 (二/貳) 「수사」: “일에 일을 더한 수.”, and entry 삼 6 (三) 「수사」: “이에 일을 더한 수.”"
+        }
+      ],
+      "verification": {
+        "passes": 1,
+        "checkedAt": "2026-10-14",
+        "scope": "lesson",
+        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): the three pages fetched; the dictionary defines 원 as the country's currency unit, the encyclopedia as the currency unit used since the 1962 currency reform to this day (the two sources give June 10 and June 12 for the date; the note states no date); the dictionary's numeral entries give 천 as a thousand and 이, 삼 as two and three, the Sino-Korean numerals (hanja 千, 二, 三). Prices in the cell are round practice amounts in a drawn menu (OD-11), no shop, brand or product price. Carried by: q3 Discover page 1 caption and key words, q3 practice and check rounds, the menu realia values."
+      }
+    },
+    {
+      "id": "n4",
+      "kind": "language",
+      "textEn": "Before a counter such as {ko:개}, the counting words one, two and three take short forms: {ko:한}, {ko:두} and {ko:세}, as in {ko:두 개} (two things).",
+      "sources": [
+        {
+          "title": "한 (Standard Korean Language Dictionary entry 한 1, determiner)",
+          "publisher": "표준국어대사전 (Standard Korean Language Dictionary), National Institute of Korean Language",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%ED%95%9C",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "Entry 한 1 「관형사」 「1」: “그 수량이 하나임을 나타내는 말.”"
+        },
+        {
+          "title": "두 (Standard Korean Language Dictionary entry 두 1, determiner)",
+          "publisher": "표준국어대사전 (Standard Korean Language Dictionary), National Institute of Korean Language",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%EB%91%90",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "Entry 두 1 「관형사」: “그 수량이 둘임을 나타내는 말.”"
+        },
+        {
+          "title": "세 and 개 (Standard Korean Language Dictionary entries 세 1 and 개 7)",
+          "publisher": "표준국어대사전 (Standard Korean Language Dictionary), National Institute of Korean Language",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%EC%84%B8",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "Entry 세 1 「관형사」: “그 수량이 셋임을 나타내는 말.” Entry 개 7 (個/箇/介) 「의존 명사」 「1」 (searchKeyword=개): “낱으로 된 물건을 세는 단위.”"
+        }
+      ],
+      "verification": {
+        "passes": 1,
+        "checkedAt": "2026-10-14",
+        "scope": "lesson",
+        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): the dictionary result pages fetched; 한, 두, 세 are determiners meaning a quantity of one, two and three (하나, 둘, 셋), used before a noun or counter, and 개 is the counter for single things. The cell never pairs 네 (four) with 개 because 네 is also 'yes'. Carried by: q2 Discover page 2 caption and word notes, q2 practice options, q2 apply and check lines."
+      }
+    }
+  ],
+  "review": {
+    "language": "draft",
+    "culture": "draft",
+    "notes": []
+  },
+  "contentVer": 1
+}
