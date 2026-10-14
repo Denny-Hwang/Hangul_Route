@@ -19,6 +19,7 @@ import { flags } from '../config/flags';
 import { RestoreScreen } from '../screens/sync/RestoreScreen';
 import { SaveProgressScreen } from '../screens/sync/SaveProgressScreen';
 import { JoinSpaceScreen } from '../screens/sync/JoinSpaceScreen';
+import { ClassScopeScreen } from '../screens/class-update/ClassScopeScreen';
 import { ApproveTransferScreen } from '../screens/transfer/ApproveTransferScreen';
 import { MoveClassScreen } from '../screens/transfer/MoveClassScreen';
 import { PaywallScreen } from '../screens/paywall/PaywallScreen';
@@ -120,6 +121,7 @@ export function RootNavigator(): React.ReactElement {
         {/* Class moves (F-SPACE-002 T-7c): reachable only from the Classes card and the Home line, which draw nothing while the inbox says transfers are off. */}
         <Stack.Screen name="MoveClass" component={MoveClassScreen} />
         <Stack.Screen name="ApproveTransfer" component={ApproveTransferScreen} />
+        <Stack.Screen name="ClassScope" component={ClassScopeScreen} />
         <Stack.Screen name="Paywall" component={PaywallScreen} />
         <Stack.Screen name="StoryReader" component={StoryReaderScreen} />
         <Stack.Screen name="StorySources" component={StorySourcesScreen} />

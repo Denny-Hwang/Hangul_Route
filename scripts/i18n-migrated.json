@@ -116,7 +116,8 @@
     "apps/web/src/components/console/TeacherMoveSheet.tsx",
     "apps/web/src/components/console/TeacherMovesSection.tsx",
     "apps/web/src/components/console/FamilyClassCards.tsx",
-    "apps/web/src/components/console/ReportScopeBlock.tsx"
+    "apps/web/src/components/console/ReportScopeBlock.tsx",
+    "apps/mobile/src/screens/class-update/**"
   ],
   "pluralTernaryBaseline": {
     "packages/content-schema/src/romanization/compare.ts": 1
