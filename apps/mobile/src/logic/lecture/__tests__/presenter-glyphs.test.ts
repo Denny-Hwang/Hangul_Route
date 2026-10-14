@@ -3,6 +3,8 @@ import { join } from 'node:path';
 import { LectureDeckSchema, type LectureBlock } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
 import { episodesAll, questsAll } from '../../../content';
+import { storiesAll } from '../../../content/stories';
+import { buildStoryIndex } from '../../story/story-index';
 import { PAUSE_WORD, lectureBundle } from '../content';
 import { expandDeck } from '../deck-builder';
 
@@ -13,8 +15,9 @@ import { expandDeck } from '../deck-builder';
  * ties that list to what `expandDeck` really puts on slides. It expands every shipped
  * episode and quest, with a Korean voice and without one (the teacher-says text and the
  * Match Sound text prompts of §3.7 / §3.3), walks every string in the slides and fails on a
- * Hangul code point missing from the committed sidecar. Story and vocabulary blocks join
- * this test with their adapters (PR 11, PR 12).
+ * Hangul code point missing from the committed sidecar. Every story the Library lists
+ * joins as a story block with its checks (PR 11); vocabulary blocks join with their
+ * adapter (PR 12).
  *
  * Only taught Korean is drawn in the presenter font. Text in the UI language (titles,
  * card facts, glosses; the teacher-typed deck title) uses the system stack, so those
@@ -56,6 +59,9 @@ const deck = (blocks: LectureBlock[]) =>
 const blocks: LectureBlock[] = [
   ...episodesAll.filter((e) => e.status !== 'preview' && e.questIds.length > 0).map((e): LectureBlock => ({ kind: 'episode', id: e.id })),
   ...questsAll.map((q): LectureBlock => ({ kind: 'quest', id: q.id })),
+  ...[...new Set(buildStoryIndex({ stories: storiesAll, episodes: episodesAll, quests: questsAll, showUnreviewed: false }).map((e) => e.storyId))].map(
+    (storyId): LectureBlock => ({ kind: 'story', storyId, checks: true }),
+  ),
 ];
 
 describe('the presenter font covers the projected Hangul (F-TCH-004 §3.6)', () => {
@@ -79,6 +85,10 @@ describe('the presenter font covers the projected Hangul (F-TCH-004 §3.6)', () 
       }
     }
     expect([...missing.entries()]).toEqual([]);
+  });
+
+  it('the deck covers every listed story', () => {
+    expect(blocks.filter((b) => b.kind === 'story').length).toBeGreaterThan(0);
   });
 
   it('holds the Pause word', () => {

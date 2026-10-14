@@ -4,6 +4,7 @@ import { reviewedStrokeIds, strokesForJamo } from '../../content/jamo-strokes';
 import { localizeCard, localizeEpisode, localizeJamo, localizeQuest, localizeScope } from '../content-locale';
 import { scopeFor } from '../minigame-config';
 import type { LectureBundle } from './deck-builder';
+import { lectureStories } from './sources/story';
 
 /**
  * The presenter's content (F-TCH-004 §3.3, §3.13).
@@ -14,9 +15,9 @@ import type { LectureBundle } from './deck-builder';
  *
  * `lectureBundle(locale)` is the deck builder's view of the bundled content,
  * with content text in the presenter's language (overlays, F-I18N-001 §3.6);
- * taught Korean and its romanization never change. Stories join when the
- * story slides land (PR 11, through the Library's review gate) and
- * vocabulary topics with their adapter (PR 12); until then those blocks are
+ * taught Korean and its romanization never change. Stories come through
+ * their adapter (`sources/story.ts`, PR 11: the Library's review gate);
+ * vocabulary topics join with theirs (PR 12), until then those blocks are
  * counted as not ready.
  */
 
@@ -34,6 +35,7 @@ export const PAUSE_WORD = {
 
 export function lectureBundle(locale: UiLocale, overlays?: Overlays): LectureBundle {
   const reviewed = new Set(reviewedStrokeIds);
+  const stories = lectureStories(locale, overlays);
   const localizedJamo = locale === 'en' ? jamoAll : jamoAll.map((j) => localizeJamo(j, locale, overlays));
   return {
     jamoAll: localizedJamo,
@@ -55,5 +57,6 @@ export function lectureBundle(locale: UiLocale, overlays?: Overlays): LectureBun
     },
     hasStrokes: (id) => strokesForJamo(id) !== undefined,
     strokeReviewed: (id) => reviewed.has(id),
+    story: stories.story,
   };
 }
