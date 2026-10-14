@@ -557,6 +557,18 @@ export async function lockLandscape(env: PresenterEnv = browserEnv()): Promise<v
   }
 }
 
+/**
+ * Fullscreen, then landscape (the Start tap and the fullscreen key or button): the fullscreen
+ * request is made at once, inside the gesture, and the orientation lock only after it settles,
+ * since Android Chrome refuses the lock outside fullscreen. The lock is still tried after a
+ * refusal (some browsers lock without it); either refusal is tolerated. True when fullscreen began.
+ */
+export async function enterFullscreenLandscape(env: PresenterEnv = browserEnv()): Promise<boolean> {
+  const entered = await enterFullscreen(env);
+  await lockLandscape(env);
+  return entered;
+}
+
 export function unlockOrientation(env: PresenterEnv = browserEnv()): void {
   try {
     env.screen?.orientation?.unlock?.();

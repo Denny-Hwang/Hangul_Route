@@ -53,14 +53,13 @@ import { isOnline, subscribeOnline } from './src/platform/online';
 import { useReducedMotion } from './src/platform/motion';
 import {
   announceReady,
-  enterFullscreen,
+  enterFullscreenLandscape,
   exitFullscreen,
   fullscreenSupported,
   hasOpener,
   isFullscreen,
   keepScreenAwake,
   listenForRoster,
-  lockLandscape,
   forgetOpenDeck,
   holdOpenDeck,
   playChime,
@@ -392,7 +391,7 @@ export default function PresenterApp(): React.ReactElement {
   const toggleFullscreen = useCallback(() => {
     // Leaving is a use too: Start already entered full screen, so the first press usually leaves it.
     const { action, tools } = fullscreenToggle(isFullscreen());
-    void (action === 'exit' ? exitFullscreen() : enterFullscreen());
+    void (action === 'exit' ? exitFullscreen() : enterFullscreenLandscape());
     reportTools(tools);
   }, [reportTools]);
 
@@ -405,9 +404,9 @@ export default function PresenterApp(): React.ReactElement {
     // Gesture-bound requests first, in the tap itself (section 3.5); each is feature-detected and may be refused.
     unlockAudio();
     unlockChime();
-    void enterFullscreen();
+    // Landscape is asked for once fullscreen settles (Android Chrome locks only in fullscreen).
+    void enterFullscreenLandscape();
     void keepScreenAwake();
-    void lockLandscape();
     const state = initialPresenterState({ slides }, phase.resumeKey);
     stateRef.current = state;
     setPstate(state);
