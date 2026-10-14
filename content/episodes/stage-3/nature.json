@@ -2,7 +2,7 @@
   "id": "episode:stage3-nature",
   "stage": "stage3",
   "theme": "nature",
-  "status": "draft",
+  "status": "ready",
   "titleEn": "Animal Sentences",
   "subtitleEn": "Say where animals are, how they look and what they do.",
   "hoyaIntroEn": "I love animals! Let us read and build sentences about them.",
@@ -41,7 +41,7 @@
                       "romanization": "___e isseoyo",
                       "en": "It is in / on the ___."
                     },
-                    "noteEn": "{ko:에} after a place says where: in, on or at. Use {ko:이} after a final consonant, {ko:가} after a vowel.",
+                    "noteEn": "{ko:에} after a place says where: in, on or at.",
                     "examples": [
                       {
                         "ko": "나무에 새가 있어요.",
@@ -177,21 +177,13 @@
                 "en": "There is a rabbit on the mountain."
               },
               "pictureRef": "word:animal-rabbit",
-              "particle": {
-                "tile": 1,
-                "choices": [
-                  {
-                    "ko": "이",
-                    "romanization": "i",
-                    "en": "subject marker"
-                  },
-                  {
-                    "ko": "가",
-                    "romanization": "ga",
-                    "en": "subject marker"
-                  }
-                ]
-              }
+              "distractors": [
+                {
+                  "ko": "물에",
+                  "romanization": "mure",
+                  "en": "in the water"
+                }
+              ]
             },
             {
               "id": "r5",
@@ -201,21 +193,13 @@
                 "en": "There is a bear on the mountain."
               },
               "pictureRef": "word:animal-bear",
-              "particle": {
-                "tile": 1,
-                "choices": [
-                  {
-                    "ko": "이",
-                    "romanization": "i",
-                    "en": "subject marker"
-                  },
-                  {
-                    "ko": "가",
-                    "romanization": "ga",
-                    "en": "subject marker"
-                  }
-                ]
-              }
+              "distractors": [
+                {
+                  "ko": "집에",
+                  "romanization": "jibe",
+                  "en": "at home"
+                }
+              ]
             }
           ]
         },
@@ -252,58 +236,6 @@
             {
               "id": "a2",
               "prompt": {
-                "ko": "집에 고양이가 있어요.",
-                "romanization": "jibe goyangiga isseoyo",
-                "en": "There is a cat at home."
-              },
-              "options": [
-                {
-                  "id": "cat",
-                  "pictureRef": "word:animal-cat",
-                  "labelEn": "Cat"
-                },
-                {
-                  "id": "rabbit",
-                  "pictureRef": "word:animal-rabbit",
-                  "labelEn": "Rabbit"
-                },
-                {
-                  "id": "bear",
-                  "pictureRef": "word:animal-bear",
-                  "labelEn": "Bear"
-                }
-              ],
-              "answerId": "cat"
-            },
-            {
-              "id": "a3",
-              "prompt": {
-                "ko": "물에 물고기가 있어요.",
-                "romanization": "mure mulgogiga isseoyo",
-                "en": "There is a fish in the water."
-              },
-              "options": [
-                {
-                  "id": "fish",
-                  "pictureRef": "word:animal-fish",
-                  "labelEn": "Fish"
-                },
-                {
-                  "id": "bird",
-                  "pictureRef": "word:animal-bird",
-                  "labelEn": "Bird"
-                },
-                {
-                  "id": "rabbit",
-                  "pictureRef": "word:animal-rabbit",
-                  "labelEn": "Rabbit"
-                }
-              ],
-              "answerId": "fish"
-            },
-            {
-              "id": "a4",
-              "prompt": {
                 "ko": "산에 여우가 있어요.",
                 "romanization": "sane yeouga isseoyo",
                 "en": "There is a fox on the mountain."
@@ -326,6 +258,76 @@
                 }
               ],
               "answerId": "fox"
+            },
+            {
+              "id": "a3",
+              "prompt": {
+                "ko": "집에 고양이가 있어요.",
+                "romanization": "jibe goyangiga isseoyo",
+                "en": "There is a cat at home."
+              },
+              "options": [
+                {
+                  "id": "a",
+                  "text": {
+                    "ko": "집에 고양이가 있어요.",
+                    "romanization": "jibe goyangiga isseoyo",
+                    "en": "There is a cat at home."
+                  }
+                },
+                {
+                  "id": "b",
+                  "text": {
+                    "ko": "산에 고양이가 있어요.",
+                    "romanization": "sane goyangiga isseoyo",
+                    "en": "There is a cat on the mountain."
+                  }
+                },
+                {
+                  "id": "c",
+                  "text": {
+                    "ko": "물에 고양이가 있어요.",
+                    "romanization": "mure goyangiga isseoyo",
+                    "en": "There is a cat in the water."
+                  }
+                }
+              ],
+              "answerId": "a"
+            },
+            {
+              "id": "a4",
+              "prompt": {
+                "ko": "산에 토끼가 있어요.",
+                "romanization": "sane tokkiga isseoyo",
+                "en": "There is a rabbit on the mountain."
+              },
+              "options": [
+                {
+                  "id": "a",
+                  "text": {
+                    "ko": "산에 토끼가 있어요.",
+                    "romanization": "sane tokkiga isseoyo",
+                    "en": "There is a rabbit on the mountain."
+                  }
+                },
+                {
+                  "id": "b",
+                  "text": {
+                    "ko": "집에 토끼가 있어요.",
+                    "romanization": "jibe tokkiga isseoyo",
+                    "en": "There is a rabbit at home."
+                  }
+                },
+                {
+                  "id": "c",
+                  "text": {
+                    "ko": "물에 토끼가 있어요.",
+                    "romanization": "mure tokkiga isseoyo",
+                    "en": "There is a rabbit in the water."
+                  }
+                }
+              ],
+              "answerId": "a"
             }
           ]
         },
@@ -565,18 +567,19 @@
                 "en": "The bear is big."
               },
               "pictureRef": "word:animal-bear",
+              "distractors": [],
               "particle": {
                 "tile": 0,
                 "choices": [
                   {
                     "ko": "이",
                     "romanization": "i",
-                    "en": "subject marker"
+                    "en": "subject marker after a final consonant"
                   },
                   {
                     "ko": "가",
                     "romanization": "ga",
-                    "en": "subject marker"
+                    "en": "subject marker after a vowel"
                   }
                 ]
               }
@@ -589,18 +592,19 @@
                 "en": "The bird is small."
               },
               "pictureRef": "word:animal-bird",
+              "distractors": [],
               "particle": {
                 "tile": 0,
                 "choices": [
                   {
                     "ko": "이",
                     "romanization": "i",
-                    "en": "subject marker"
+                    "en": "subject marker after a final consonant"
                   },
                   {
                     "ko": "가",
                     "romanization": "ga",
-                    "en": "subject marker"
+                    "en": "subject marker after a vowel"
                   }
                 ]
               }
@@ -672,22 +676,31 @@
               },
               "options": [
                 {
-                  "id": "cat",
-                  "pictureRef": "word:animal-cat",
-                  "labelEn": "Cat"
+                  "id": "a",
+                  "text": {
+                    "ko": "고양이가 귀여워요.",
+                    "romanization": "goyangiga gwiyeowoyo",
+                    "en": "The cat is cute."
+                  }
                 },
                 {
-                  "id": "bear",
-                  "pictureRef": "word:animal-bear",
-                  "labelEn": "Bear"
+                  "id": "b",
+                  "text": {
+                    "ko": "고양이가 커요.",
+                    "romanization": "goyangiga keoyo",
+                    "en": "The cat is big."
+                  }
                 },
                 {
-                  "id": "fish",
-                  "pictureRef": "word:animal-fish",
-                  "labelEn": "Fish"
+                  "id": "c",
+                  "text": {
+                    "ko": "고양이가 작아요.",
+                    "romanization": "goyangiga jagayo",
+                    "en": "The cat is small."
+                  }
                 }
               ],
-              "answerId": "cat"
+              "answerId": "a"
             },
             {
               "id": "a4",
@@ -698,22 +711,31 @@
               },
               "options": [
                 {
-                  "id": "fish",
-                  "pictureRef": "word:animal-fish",
-                  "labelEn": "Fish"
+                  "id": "a",
+                  "text": {
+                    "ko": "물고기가 작아요.",
+                    "romanization": "mulgogiga jagayo",
+                    "en": "The fish is small."
+                  }
                 },
                 {
-                  "id": "tiger",
-                  "pictureRef": "card:tiger",
-                  "labelEn": "Tiger"
+                  "id": "b",
+                  "text": {
+                    "ko": "물고기가 커요.",
+                    "romanization": "mulgogiga keoyo",
+                    "en": "The fish is big."
+                  }
                 },
                 {
-                  "id": "bear",
-                  "pictureRef": "word:animal-bear",
-                  "labelEn": "Bear"
+                  "id": "c",
+                  "text": {
+                    "ko": "물고기가 귀여워요.",
+                    "romanization": "mulgogiga gwiyeowoyo",
+                    "en": "The fish is cute."
+                  }
                 }
               ],
-              "answerId": "fish"
+              "answerId": "a"
             }
           ]
         },
@@ -906,9 +928,9 @@
               "pictureRef": "word:animal-bird",
               "distractors": [
                 {
-                  "ko": "뛰어요",
-                  "romanization": "ttwieoyo",
-                  "en": "runs, hops"
+                  "ko": "물고기가",
+                  "romanization": "mulgogiga",
+                  "en": "the fish"
                 }
               ]
             },
@@ -938,9 +960,9 @@
               "pictureRef": "word:animal-fish",
               "distractors": [
                 {
-                  "ko": "커요",
-                  "romanization": "keoyo",
-                  "en": "is big"
+                  "ko": "토끼가",
+                  "romanization": "tokkiga",
+                  "en": "the rabbit"
                 }
               ]
             },
@@ -952,18 +974,19 @@
                 "en": "The tiger runs."
               },
               "pictureRef": "card:tiger",
+              "distractors": [],
               "particle": {
                 "tile": 0,
                 "choices": [
                   {
                     "ko": "이",
                     "romanization": "i",
-                    "en": "subject marker"
+                    "en": "subject marker after a final consonant"
                   },
                   {
                     "ko": "가",
                     "romanization": "ga",
-                    "en": "subject marker"
+                    "en": "subject marker after a vowel"
                   }
                 ]
               }
@@ -976,18 +999,19 @@
                 "en": "The bear swims."
               },
               "pictureRef": "word:animal-bear",
+              "distractors": [],
               "particle": {
                 "tile": 0,
                 "choices": [
                   {
                     "ko": "이",
                     "romanization": "i",
-                    "en": "subject marker"
+                    "en": "subject marker after a final consonant"
                   },
                   {
                     "ko": "가",
                     "romanization": "ga",
-                    "en": "subject marker"
+                    "en": "subject marker after a vowel"
                   }
                 ]
               }
@@ -1059,22 +1083,31 @@
               },
               "options": [
                 {
-                  "id": "rabbit",
-                  "pictureRef": "word:animal-rabbit",
-                  "labelEn": "Rabbit"
+                  "id": "a",
+                  "text": {
+                    "ko": "토끼가 뛰어요.",
+                    "romanization": "tokkiga ttwieoyo",
+                    "en": "The rabbit hops."
+                  }
                 },
                 {
-                  "id": "bird",
-                  "pictureRef": "word:animal-bird",
-                  "labelEn": "Bird"
+                  "id": "b",
+                  "text": {
+                    "ko": "토끼가 날아요.",
+                    "romanization": "tokkiga narayo",
+                    "en": "The rabbit flies."
+                  }
                 },
                 {
-                  "id": "bear",
-                  "pictureRef": "word:animal-bear",
-                  "labelEn": "Bear"
+                  "id": "c",
+                  "text": {
+                    "ko": "토끼가 헤엄쳐요.",
+                    "romanization": "tokkiga heeomchyeoyo",
+                    "en": "The rabbit swims."
+                  }
                 }
               ],
-              "answerId": "rabbit"
+              "answerId": "a"
             },
             {
               "id": "a4",
@@ -1085,22 +1118,31 @@
               },
               "options": [
                 {
-                  "id": "tiger",
-                  "pictureRef": "card:tiger",
-                  "labelEn": "Tiger"
+                  "id": "a",
+                  "text": {
+                    "ko": "호랑이가 뛰어요.",
+                    "romanization": "horangiga ttwieoyo",
+                    "en": "The tiger runs."
+                  }
                 },
                 {
-                  "id": "fish",
-                  "pictureRef": "word:animal-fish",
-                  "labelEn": "Fish"
+                  "id": "b",
+                  "text": {
+                    "ko": "호랑이가 날아요.",
+                    "romanization": "horangiga narayo",
+                    "en": "The tiger flies."
+                  }
                 },
                 {
-                  "id": "cat",
-                  "pictureRef": "word:animal-cat",
-                  "labelEn": "Cat"
+                  "id": "c",
+                  "text": {
+                    "ko": "호랑이가 헤엄쳐요.",
+                    "romanization": "horangiga heeomchyeoyo",
+                    "en": "The tiger swims."
+                  }
                 }
               ],
-              "answerId": "tiger"
+              "answerId": "a"
             }
           ]
         },
@@ -1188,11 +1230,11 @@
           "quoteOrLocator": "표제어 ‘에4’ 「조사」 「1」: ‘앞말이 처소의 부사어임을 나타내는 격 조사.’"
         },
         {
-          "title": "있다 (표준국어대사전 검색 결과)",
+          "title": "있다1 (표준국어대사전)",
           "publisher": "국립국어원 (National Institute of Korean Language) — 표준국어대사전",
-          "url": "https://stdict.korean.go.kr/search/searchResult.do?pageSize=10&searchKeyword=%EC%9E%88%EB%8B%A4",
+          "url": "https://stdict.korean.go.kr/search/searchView.do?word_no=275069&searchKeywordTo=3",
           "accessed": "2026-10-14",
-          "quoteOrLocator": "표제어 ‘있다1’ [Ⅰ]「동사」 「1」: ‘사람이나 동물이 어느 곳에서 떠나거나 벗어나지 아니하고 머물다.’"
+          "quoteOrLocator": "표제어 ‘있다1’ [Ⅱ]「형용사」 2 【…에】 「1」: ‘사람이나 사물 또는 어떤 사실이나 현상 따위가 어떤 곳에 자리나 공간을 차지하고 존재하는 상태이다.’ / 「2」: ‘사람이나 동물이 어느 곳에 머무르거나 사는 상태이다.’"
         },
         {
           "title": "조사(助詞)",
@@ -1203,10 +1245,10 @@
         }
       ],
       "verification": {
-        "passes": 2,
+        "passes": 3,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "pass 2 (author sourcing, 2026-10-14): '에 after a place word tells where' = stdict 에4 「조사」 「1」 (앞말이 처소의 부사어임을 나타내는 격 조사) and encykorea 조사 (처격(에)); 'in, on or at' is the English gloss of that locative use. '있어요 says an animal or a thing is there' = stdict 있다1 「동사」 「1」 (사람이나 동물이 어느 곳에서 … 머물다). Pages opened 2026-10-14, HTTP 200. English is a paraphrase, nothing copied. Used in: q1 Discover pattern noteEn, q1 Sentence Builder particle hint.\npass 2b (independent fact-check, 2026-10-14): re-opened stdict 에 and 있다 search results and encykorea 조사 (E0051845); 에4 「조사」 「1」 (처소의 부사어 격 조사), 있다1 「동사」 「1」 (사람이나 동물이 어느 곳에 머물다) and 처격(에) found on the pages as quoted. 'in, on or at' is a fair English gloss of the locative use; 'an animal or a thing is there' is supported (stdict covers people and animals; the thing reading is the ordinary 있다 existence use). English and the ko/es noteEn are paraphrases; no source wording copied. Outcome: confirmed, no change."
+        "notes": "pass 2 (author sourcing, 2026-10-14): '에 after a place word tells where' = stdict 에4 「조사」 「1」 (앞말이 처소의 부사어임을 나타내는 격 조사) and encykorea 조사 (처격(에)); 'in, on or at' is the English gloss of that locative use. '있어요 says an animal or a thing is there' = stdict 있다1 「동사」 「1」 (사람이나 동물이 어느 곳에서 … 머물다). Pages opened 2026-10-14, HTTP 200. English is a paraphrase, nothing copied. Used in: q1 Discover pattern noteEn, q1 Sentence Builder particle hint.\npass 2b (independent fact-check, 2026-10-14): re-opened stdict 에 and 있다 search results and encykorea 조사 (E0051845); 에4 「조사」 「1」 (처소의 부사어 격 조사), 있다1 「동사」 「1」 (사람이나 동물이 어느 곳에 머물다) and 처격(에) found on the pages as quoted. 'in, on or at' is a fair English gloss of the locative use; 'an animal or a thing is there' is supported (stdict covers people and animals; the thing reading is the ordinary 있다 existence use). English and the ko/es noteEn are paraphrases; no source wording copied. Outcome: confirmed, no change.\npass 5 (MAR culture review, final independent fact-check, 2026-10-14): re-opened all three sources (HTTP 200). Finding: the second source cited 있다1 [Ⅰ]「동사」「1」 (a person or animal staying put), the wrong sense for 나무에 새가 있어요. Fixed: the locator now cites 있다1 [Ⅱ]「형용사」 2 【…에】 「1」 (a person or thing takes up a place and exists there) and 「2」 (a person or animal stays or lives somewhere), read on the full entry (word_no=275069, the content view the page loads); that sense covers both 'an animal' and 'a thing', so the note text stands. 에4 「조사」「1」 and encykorea 조사 (처격(에)) re-confirmed. The q1 Discover note now carries only the 에 sentence (the 이/가 choice moved to q2 and q3). Paraphrased in en, es and ko; no source wording copied. Outcome: locator corrected, note confirmed."
       }
     },
     {
@@ -1230,10 +1272,10 @@
         }
       ],
       "verification": {
-        "passes": 2,
+        "passes": 3,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "pass 2 (author sourcing, 2026-10-14): the two forms and their condition = NIKL 새국어생활 1998 봄호, 유동석 「조사의 사전적 처리」 3절 (가: 모음으로 끝나는 체언에 붙어 … 주격 / 이: 자음으로 끝나는 체언에 붙어 … 주격) and encykorea 조사 특징 (3) (이형태 by 선행체언의 음운론적 조건, ‘이·가’). Pages opened 2026-10-14, HTTP 200. Paraphrased, nothing copied. Used in: the pattern noteEn of q1, q2 and q3, the particle rounds r4 and r5 of each quest.\npass 2b (independent fact-check, 2026-10-14): re-opened the 새국어생활 article (유동석, 「조사의 사전적 처리」); both quoted dictionary entries (가: 주로 모음으로 끝나는 체언 / 이: 자음으로 끝나는 체언, 주격) found in section 3; encykorea 조사 특징 (3) 이형태 ‘이·가’ found. Consonant/vowel condition matches the note. Paraphrased; ko gloss (받침 뒤 이, 모음 뒤 가) does not reuse source wording. Outcome: confirmed, no change."
+        "notes": "pass 2 (author sourcing, 2026-10-14): the two forms and their condition = NIKL 새국어생활 1998 봄호, 유동석 「조사의 사전적 처리」 3절 (가: 모음으로 끝나는 체언에 붙어 … 주격 / 이: 자음으로 끝나는 체언에 붙어 … 주격) and encykorea 조사 특징 (3) (이형태 by 선행체언의 음운론적 조건, ‘이·가’). Pages opened 2026-10-14, HTTP 200. Paraphrased, nothing copied. Used in: the pattern noteEn of q1, q2 and q3, the particle rounds r4 and r5 of each quest.\npass 2b (independent fact-check, 2026-10-14): re-opened the 새국어생활 article (유동석, 「조사의 사전적 처리」); both quoted dictionary entries (가: 주로 모음으로 끝나는 체언 / 이: 자음으로 끝나는 체언, 주격) found in section 3; encykorea 조사 특징 (3) 이형태 ‘이·가’ found. Consonant/vowel condition matches the note. Paraphrased; ko gloss (받침 뒤 이, 모음 뒤 가) does not reuse source wording. Outcome: confirmed, no change.\npass 5 (MAR culture review, final independent fact-check, 2026-10-14): re-opened the 새국어생활 article (유동석) and encykorea 조사; the consonant / vowel condition of 이 and 가 found as quoted. The note is now used in the q2 and q3 pattern notes and their particle rounds r4 and r5 (q1 no longer drills the choice); the choice glosses now say which form goes where, matching the source. Paraphrased; nothing copied. Outcome: confirmed, no change to the note."
       }
     },
     {
@@ -1254,20 +1296,32 @@
           "url": "https://encykorea.aks.ac.kr/Article/E0027885",
           "accessed": "2026-10-14",
           "quoteOrLocator": "정의: ‘문장에서 주어의 동작·상태·성질 등을 설명하는 문장성분.’ 내용: ‘정상적인 문장에서 서술어는 주어의 뒤에 놓이며 … 서술어에는 용언(用言)이 주로 쓰인다.’"
+        },
+        {
+          "title": "서술어 (표준국어대사전 검색 결과)",
+          "publisher": "국립국어원 (National Institute of Korean Language) — 표준국어대사전",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?pageSize=10&searchKeyword=%EC%84%9C%EC%88%A0%EC%96%B4",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "표제어 ‘서술-어(敍述語)’ 「명사」 『언어』: ‘한 문장에서 주어의 움직임, 상태, 성질 따위를 서술하는 말.’"
         }
       ],
       "verification": {
-        "passes": 2,
+        "passes": 3,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "pass 2 (author sourcing, 2026-10-14): 'comes at the end' = encykorea 문장 (기본어순 주어·(보어)·(목적어)·서술어; 서술어가 문장 끝위치에 고정); 'says what the subject does or is like' and 'after the subject' = encykorea 서술어 정의 (주어의 동작·상태·성질 등을 설명) and 내용 (서술어는 주어의 뒤에 놓이며). Pages opened 2026-10-14, HTTP 200. Paraphrased, nothing copied. Used in: q2 and q3 Discover pattern noteEn ('The describing word comes last', 'The action word comes last').\npass 2b (independent fact-check, 2026-10-14): re-opened encykorea 문장 (E0019645) and 서술어 (E0027885); 기본어순 ‘주어·(보어)·(목적어)·서술어’, 서술어가 문장 끝위치에 고정, 서술어 정의 (주어의 동작·상태·성질 등을 설명) and 서술어는 주어의 뒤에 놓이며 found as quoted. The note matches; it makes no free-word-order claim beyond the predicate. Paraphrased, nothing copied. Outcome: confirmed, no change."
+        "notes": "pass 2 (author sourcing, 2026-10-14): 'comes at the end' = encykorea 문장 (기본어순 주어·(보어)·(목적어)·서술어; 서술어가 문장 끝위치에 고정); 'says what the subject does or is like' and 'after the subject' = encykorea 서술어 정의 (주어의 동작·상태·성질 등을 설명) and 내용 (서술어는 주어의 뒤에 놓이며). Pages opened 2026-10-14, HTTP 200. Paraphrased, nothing copied. Used in: q2 and q3 Discover pattern noteEn ('The describing word comes last', 'The action word comes last').\npass 2b (independent fact-check, 2026-10-14): re-opened encykorea 문장 (E0019645) and 서술어 (E0027885); 기본어순 ‘주어·(보어)·(목적어)·서술어’, 서술어가 문장 끝위치에 고정, 서술어 정의 (주어의 동작·상태·성질 등을 설명) and 서술어는 주어의 뒤에 놓이며 found as quoted. The note matches; it makes no free-word-order claim beyond the predicate. Paraphrased, nothing copied. Outcome: confirmed, no change.\npass 5 (MAR culture review, final independent fact-check, 2026-10-14): re-opened encykorea 문장 and 서술어; the basic order and the predicate after the subject at the end found as quoted. Finding (minor): both sources came from one reference work; added the NIKL Standard Korean Language Dictionary entry 서술어 (주어의 움직임, 상태, 성질 따위를 서술하는 말, opened 2026-10-14, HTTP 200), which supports 'says what the subject does or is like'. Paraphrased; nothing copied. Outcome: confirmed, a third source added."
       }
     }
   ],
   "review": {
-    "language": "draft",
-    "culture": "draft",
-    "notes": []
+    "language": "native-reviewed",
+    "culture": "culture-reviewed",
+    "reviewedBy": "MAR",
+    "reviewedAt": "2026-10-14",
+    "notes": [
+      "pass 4 language (MAR, 2026-10-14): no Korean gloss repeats its noun or stem; Apply a3 and a4 hold the animal and vary the new word; q1 keeps one pattern (its particle rounds became order rounds); q3 distractors no longer build a true sentence; ko button name, register, glosses fixed; the two-slot q1 frame rejected (schema: one slot).",
+      "pass 5 culture (MAR, 2026-10-14): every claim re-checked against its sources; the n1 있다 locator now cites the adjective sense of existing at a place; n3 gained an NIKL source; the es reward line no longer genders the learner; no culture claim, person, brand or price in the cell."
+    ]
   },
   "contentVer": 1
 }

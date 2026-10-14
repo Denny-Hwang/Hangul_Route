@@ -15,9 +15,9 @@ import { resolvePicture } from "../../logic/picture-ref";
 
 /**
  * F-CURR-001 row S3-4, Animal Sentences (`content/episodes/stage-3/nature.json`): the
- * content checks of sections 3.1 and 3.4 for this cell (romanization of the draft cell,
- * U-3 new items, U-4 sentence shape, U-6 reuse, pictures), until the shared checks of
- * upper-stage-curriculum.test.ts land.
+ * content checks of sections 3.1 and 3.4 for this cell (romanization, U-3 new items,
+ * sentence shape, U-6 reuse, pictures, the sign-off invariant of section 3.8), until the
+ * shared checks of upper-stage-curriculum.test.ts land.
  */
 
 const ROOT = new URL("../../../../../", import.meta.url);
@@ -48,6 +48,8 @@ function lemma(word: string): string {
   return word.replace(PARTICLE, "");
 }
 const lemmas = (ko: string): string[] => words(ko).map(lemma);
+
+const ANIMALS = new Set(["새", "물고기", "고양이", "토끼", "곰", "호랑이", "여우"]);
 
 /** Taught before Stage 3 (Stage 1 words, the Stage 2 nature taste, the Stage 2 vocabulary topics). */
 const KNOWN = new Set(["나무", "물", "집", "산", "곰", "여우", "하늘", "꽃"]);
@@ -93,7 +95,7 @@ function pairs(
 }
 
 describe("Animal Sentences (F-CURR-001 S3-4)", () => {
-  it("is the nature cell of Stage 3: three quests, no new cards, a draft until both MAR sign-offs", () => {
+  it("is the nature cell of Stage 3: three quests, no new cards, ready exactly when both MAR sign-offs and three passes are in", () => {
     expect(cell.id).toBe("episode:stage3-nature");
     expect(cell.titleEn).toBe("Animal Sentences");
     expect(cell.quests.map((q) => q.id)).toEqual([
@@ -103,7 +105,13 @@ describe("Animal Sentences (F-CURR-001 S3-4)", () => {
     ]);
     expect(cell.rewardCardIds).toEqual([]);
     expect(cell.quests.every((q) => q.rewardCardId === undefined)).toBe(true);
-    expect(cell.status).toBe("draft");
+    const signedOff =
+      cell.review.language === "native-reviewed" &&
+      cell.review.culture === "culture-reviewed" &&
+      cell.review.reviewedBy === "MAR" &&
+      cell.review.reviewedAt !== undefined &&
+      cell.culture.every((n) => n.verification.passes >= 3);
+    expect(cell.status === "ready").toBe(signedOff);
   });
 
   it("teaches the section 3.4 sentences: N-e isseoyo, size and look, animal actions", () => {
@@ -130,7 +138,7 @@ describe("Animal Sentences (F-CURR-001 S3-4)", () => {
     expect(issues).toEqual([]);
   });
 
-  it("Stage 3 shape: Sentence Builder x 5 (3 order rounds, 2 particle rounds), Listen & Pick x 4, a 2-round Check (heard -> picture, then a reading round)", () => {
+  it("Stage 3 shape: Sentence Builder x 5 (q1: 5 order rounds; q2, q3: 3 order + 2 particle rounds), Listen & Pick x 4 (2 picture rounds, 2 rounds that hold the animal and vary the new word), a 2-round Check", () => {
     for (const quest of cell.quests) {
       expect(
         quest.scopes.map((s) => s.kind),
@@ -143,10 +151,11 @@ describe("Animal Sentences (F-CURR-001 S3-4)", () => {
         check?.kind !== "listen-pick"
       )
         throw new Error(quest.id);
+      // q1 teaches one pattern (에 + 있어요); the 이 / 가 choice is drilled in q2 and q3.
       expect(
         play.rounds.filter((r) => r.particle === undefined).length,
         quest.id,
-      ).toBe(3);
+      ).toBe(quest.id.endsWith("q1") ? 5 : 3);
       for (const r of play.rounds) {
         if (r.particle)
           expect(
@@ -155,13 +164,26 @@ describe("Animal Sentences (F-CURR-001 S3-4)", () => {
           ).toEqual([]);
         else expect(r.distractors.length, `${quest.id} ${r.id}`).toBe(1);
       }
-      expect(
-        apply.rounds.every((r) =>
-          r.options.every(
+      const [a1, a2, a3, a4] = apply.rounds;
+      for (const r of [a1, a2])
+        expect(
+          r?.options.every(
             (o) => o.pictureRef !== undefined && o.labelEn !== undefined,
           ),
-        ),
-      ).toBe(true);
+          `${quest.id} ${r?.id}`,
+        ).toBe(true);
+      // The noun alone never answers a3 and a4: every option has the prompt's animal.
+      for (const r of [a3, a4]) {
+        if (!r) throw new Error(quest.id);
+        const animal = lemmas(r.prompt.ko).find((w) =>
+          ANIMALS.has(w),
+        );
+        expect(animal, `${quest.id} ${r.id}`).toBeDefined();
+        for (const o of r.options) {
+          expect(o.text, `${quest.id} ${r.id}`).toBeDefined();
+          expect(lemmas(o.text!.ko), `${quest.id} ${r.id}`).toContain(animal);
+        }
+      }
       expect(
         check.rounds[0]?.options.every((o) => o.pictureRef !== undefined),
       ).toBe(true);
@@ -251,13 +273,22 @@ describe("Animal Sentences (F-CURR-001 S3-4)", () => {
     }
   });
 
-  it("notes: each language note has two or more sources, one a Korean public institution, and its pass-2 record", () => {
+  it("notes: each language note has two or more sources, one a Korean public institution, and its pass 2, 2b and 5 records", () => {
     expect(cell.culture.map((n) => n.id)).toEqual(["n1", "n2", "n3"]);
     for (const note of cell.culture) {
       expect(note.kind).toBe("language");
       expect(note.sources?.length ?? 0, note.id).toBeGreaterThanOrEqual(2);
       expect(note.verification.scope).toBe("lesson");
       expect(note.verification.notes, note.id).toMatch(/^pass 2 /);
+      expect(note.verification.notes, note.id).toMatch(/\npass 2b /);
+      expect(note.verification.notes, note.id).toMatch(/\npass 5 /);
+      expect(note.verification.passes, note.id).toBeGreaterThanOrEqual(3);
+      expect(
+        note.sources?.some((s) =>
+          /국립국어원|한국학중앙연구원/.test(s.publisher),
+        ),
+        note.id,
+      ).toBe(true);
     }
   });
 
@@ -278,5 +309,66 @@ describe("Animal Sentences (F-CURR-001 S3-4)", () => {
     )) {
       expect(taught.has(value.replace(/[.?!]$/, "")), value).toBe(false);
     }
+  });
+
+  it("no Korean gloss repeats a noun or the stem of the predicate it explains (spec 3.15-9, pass 6)", () => {
+    const STEMS: Record<string, string> = {
+      커요: "크",
+      큰: "크",
+      작아요: "작",
+      귀여워요: "귀엽",
+      날아요: "날",
+      뛰어요: "뛰",
+      헤엄쳐요: "헤엄",
+    };
+    // 있어요 is the existential verb itself; a gloss of "there is" may say 있다.
+    const echoes = (ko: string): string[] =>
+      lemmas(ko)
+        .filter((w) => w !== "있어요")
+        .map((w) => STEMS[w] ?? w);
+    const texts = new Map<string, string>();
+    for (const quest of cell.quests) {
+      for (const step of quest.steps)
+        step.discover?.pages.forEach((page, p) =>
+          page.items.forEach((item, i) => {
+            const at = `steps.${step.id}.discover.pages.${p}.items.${i}`;
+            if (item.type === "sentence")
+              texts.set(`${quest.id}|${at}.sentence.gloss`, item.sentence.ko);
+            if (item.type === "pattern") {
+              texts.set(`${quest.id}|${at}.frame.gloss`, item.frame.ko.replace(/___\S*/g, ""));
+              for (const ex of item.examples)
+                texts.set(
+                  `${quest.id}|${at}.examples.${ex.romanization.replace(/ /g, "-")}.gloss`,
+                  ex.ko,
+                );
+            }
+          }),
+        );
+      for (const scope of quest.scopes) {
+        if (scope.kind === "order-it")
+          for (const r of scope.rounds) {
+            texts.set(`${scope.ref}|orderIt.rounds.${r.id}.sentence.gloss`, r.sentence.ko);
+            for (const d of r.distractors)
+              texts.set(`${scope.ref}|orderIt.rounds.${r.id}.distractors.${d.romanization}.gloss`, d.ko);
+          }
+        if (scope.kind === "listen-pick")
+          for (const r of scope.rounds)
+            texts.set(`${scope.ref}|listenPick.rounds.${r.id}.prompt`, r.prompt.ko);
+      }
+    }
+    let checked = 0;
+    for (const [id, entry] of Object.entries(overlays[1]!.entries))
+      for (const [field, gloss] of Object.entries(entry)) {
+        const ko = texts.get(`${id}|${field}`);
+        if (ko === undefined) continue;
+        checked += 1;
+        for (const w of echoes(ko))
+          // 동물 (animal) is not 물 (water).
+          expect(
+            gloss.replace(/동물/g, "").includes(w),
+            `${id} ${field}: "${gloss}" repeats ${w}`,
+          ).toBe(false);
+      }
+    expect(checked).toBe(59);
   });
 });
