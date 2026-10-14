@@ -687,6 +687,33 @@ describe('U-3 new-item caps and U-6 reuse (F-CURR-001 section 3.1 rules 4 and 5)
     expect(reuseProblems('stage6', [tooMany], new Set())).toEqual(['U-3 quest:stage3-life-q1: 8 new words (원, 얼마, 배고파요, 목말라요, 빨리요, 천천히요, 여기서요, numbers(천)), cap 6']);
   });
 
+  it('counts the fixed words of a new frame as that frame, not as new words beside it (S7-5)', () => {
+    const framed = {
+      id: 'quest:stage7-crafts-q1',
+      steps: [
+        {
+          id: 's2',
+          kind: 'discover',
+          titleEn: 'x',
+          discover: {
+            pages: [
+              {
+                items: [
+                  { type: 'pattern', frame: kt('___을/를 접어요.'), noteEn: 'x', examples: [kt('비행기를 접어요.'), kt('배를 접어요.')] },
+                  { type: 'sentence', sentence: kt('가위로 잘라요.') },
+                  { type: 'sentence', sentence: kt('꽃을 그려요.') },
+                ],
+              },
+            ],
+          },
+        },
+      ],
+      scopes: [],
+    } as unknown as LessonQuest;
+    expect(reuseProblems('stage7', [framed], new Set(['비행기', '배', '꽃']))).toEqual([]);
+    expect(reuseProblems('stage7', [framed], new Set(['비행기', '배']))).toEqual(['U-3 quest:stage7-crafts-q1: 4 new words (가위로, 잘라요, 꽃, 그려요), cap 3']);
+  });
+
   it('counts a particle choice as no word, and a heard prompt as shown', () => {
     const lp = { kind: 'listen-pick', rounds: [{ id: 'c1', prompt: kt('바다에 가요.'), options: [{ id: 'o1', text: kt('산에 가요.') }], answerId: 'o1' }] };
     expect(scopeTexts(lp as unknown as LessonScope)).toEqual({ read: ['산에 가요.'], heard: ['바다에 가요.'], particles: [] });

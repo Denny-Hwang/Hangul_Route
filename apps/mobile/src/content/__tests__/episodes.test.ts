@@ -164,10 +164,14 @@ describe('previewEpisodesFor', () => {
     }
   });
 
+  // Every grid cell is claimed since F-CURR-001 S7-5, so these two cases start from the bundle without
+  // Make & Share: Stage 7 crafts is a placeholder again.
+  const withoutCrafts = handWritten.filter((e) => e.id !== 'episode:stage7-crafts');
+
   it('drops the preview of a cell once a hand-written episode claims it, with no exclusion list to edit', () => {
     const stage7Crafts = episode('episode:stage7-crafts-new', { stage: 'stage7', theme: 'crafts', order: 5 });
-    const before = previewEpisodesFor(handWritten).map((e) => e.id);
-    const after = previewEpisodesFor([...handWritten, stage7Crafts]).map((e) => e.id);
+    const before = previewEpisodesFor(withoutCrafts).map((e) => e.id);
+    const after = previewEpisodesFor([...withoutCrafts, stage7Crafts]).map((e) => e.id);
     expect(before).toContain('episode:stage7-crafts');
     expect(after).not.toContain('episode:stage7-crafts');
     expect(after).toEqual(before.filter((id) => id !== 'episode:stage7-crafts'));
@@ -175,7 +179,7 @@ describe('previewEpisodesFor', () => {
 
   it('ignores shelf episodes when deciding which cells are claimed', () => {
     const shelfAtStage7 = episode('episode:shelf-x', { stage: 'stage7', theme: 'crafts', placement: 'shelf' });
-    expect(previewEpisodesFor([...handWritten, shelfAtStage7]).map((e) => e.id)).toContain('episode:stage7-crafts');
+    expect(previewEpisodesFor([...withoutCrafts, shelfAtStage7]).map((e) => e.id)).toContain('episode:stage7-crafts');
   });
 });
 
@@ -296,6 +300,8 @@ describe('grid golden (F-STORY-005 §3.1 rule 2)', () => {
       { id: 'episode:stage7-rites', order: 3, questIds: ['quest:stage7-rites-q1', 'quest:stage7-rites-q2', 'quest:stage7-rites-q3'], status: 'shipped' },
       // S7-4 My Favorite Animal.
       { id: 'episode:stage7-nature', order: 4, questIds: ['quest:stage7-nature-q1', 'quest:stage7-nature-q2', 'quest:stage7-nature-q3'], status: 'shipped' },
+      // S7-5 Make & Share.
+      { id: 'episode:stage7-crafts', order: 5, questIds: ['quest:stage7-crafts-q1', 'quest:stage7-crafts-q2', 'quest:stage7-crafts-q3'], status: 'shipped' },
       // F-STORY-005 PR 5.6: the five Stage 5 books (books.ts), each cell's placeholder id kept.
       {
         id: 'episode:stage5-letters',
@@ -401,6 +407,8 @@ describe('pillar tags of the shipped lessons (F-STORY-005 §3.2)', () => {
       'episode:stage7-rites': ['B5'],
       // F-CURR-001 S7-4 (generated from content/episodes/stage-7/nature.json).
       'episode:stage7-nature': ['D5', 'D2'],
+      // F-CURR-001 S7-5 (generated from content/episodes/stage-7/crafts.json).
+      'episode:stage7-crafts': ['E1'],
       'episode:stage5-letters': ['A1'],
       'episode:stage5-life': ['B1', 'B5', 'E4'],
       'episode:stage5-rites': ['B5'],
@@ -452,5 +460,5 @@ const GRID_GOLDEN: Record<string, string> = {
   'stage7:life': 'episode:stage7-life | My Day in Korean | shipped',
   'stage7:rites': 'episode:stage7-rites | My Holiday Memory | shipped',
   'stage7:nature': 'episode:stage7-nature | My Favorite Animal | shipped',
-  'stage7:crafts': 'episode:stage7-crafts | Make & Share | preview',
+  'stage7:crafts': 'episode:stage7-crafts | Make & Share | shipped',
 };

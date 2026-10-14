@@ -1029,6 +1029,44 @@ const CELLS: readonly UpperCell[] = [
       await expect(page.getByRole('button', { name: /^Nature & Animals: My Favorite Animal\./ })).toBeVisible();
     },
   },
+  // F-CURR-001 S7-5: Make & Share, q1 "Fold, Cut, Draw" played through its real games at 320 px.
+  {
+    episodeId: 'episode:stage7-crafts',
+    cellButton: journeyCellName(7, 'Play & Crafts'),
+    title: 'Make & Share',
+    playFirstQuest: async (page) => {
+      await page.setViewportSize({ width: 320, height: 720 });
+      await page.getByRole('button', { name: 'Start', exact: true }).first().click();
+      await page.getByRole('button', { name: 'Continue' }).click();
+      // Discover: the frame page (fold) and the sentence page (cut with scissors, draw).
+      await expect(page.getByText('Look and learn', { exact: true })).toBeVisible();
+      await shot(page, 'make-share-q1-discover-320');
+      await passDiscover(page);
+      await page.getByRole('button', { name: 'Play minigame' }).click();
+      // Type Hangul on the in-app keyboard: fold, cut, draw, plane.
+      await typeRound(page, 1, 4, '접어요');
+      await shot(page, 'make-share-q1-typed-320');
+      await typeRound(page, 2, 4, '잘라요');
+      await typeRound(page, 3, 4, '그려요');
+      await typeRound(page, 4, 4, '비행기');
+      await page.getByRole('button', { name: 'Play minigame' }).click();
+      // Sentence Builder: a particle round (를 after a vowel), then two built sentences.
+      await build(page, 1, 3, ['를, reul']);
+      await build(page, 2, 3, ['꽃을, kkocheul', '그려요, geuryeoyo']);
+      await build(page, 3, 3, ['가위로, gawiro', '잘라요, jallayo']);
+      // The Stage 7 Check is two Sentence Builder rounds: 을 after a final consonant, then one sentence.
+      await page.getByRole('button', { name: 'Go', exact: true }).click();
+      await buildCheck(page, ['을, eul']);
+      await buildCheck(page, ['별을, byeoreul', '그려요, geuryeoyo']);
+      await expect(page.getByText('Finish', { exact: true }).first()).toBeVisible();
+    },
+    expectRouteDay: async (page) => {
+      await page.goto('/');
+      await page.getByText('Learning Route', { exact: true }).last().click();
+      await page.getByRole('button', { name: /^Stage 7, Self-expression\./ }).click();
+      await expect(page.getByRole('button', { name: /^Play & Crafts: Make & Share\./ })).toBeVisible();
+    },
+  },
 ];
 
 async function openJourney(page: Page): Promise<void> {

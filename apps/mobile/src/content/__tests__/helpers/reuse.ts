@@ -67,6 +67,17 @@ export function discoverTexts(quest: LessonQuest): string[] {
   return quest.steps.flatMap((s) => s.discover?.pages.flatMap((p) => p.items.flatMap((i) => discoverItemTexts(i).map((t) => t.ko))) ?? []);
 }
 
+/**
+ * The fixed words of a quest's Discover frames (`___을/를 접어요.` -> 접어요): rule 4 counts a new frame as
+ * its own item ("one new frame" in Stage 7, "one new pattern" in Stage 3), so the words that make up the
+ * frame are that item, not new words beside it (F-CURR-001 S7-5).
+ */
+export function frameTexts(quest: LessonQuest): string[] {
+  return quest.steps.flatMap(
+    (s) => s.discover?.pages.flatMap((p) => p.items.flatMap((i) => (i.type === 'pattern' ? [i.frame.ko.replace(/___\S*/g, ' ')] : []))) ?? [],
+  );
+}
+
 /** The pattern items of a quest's Discover step (rule 4: one new pattern a quest in Stage 3). */
 export const discoverPatterns = (quest: LessonQuest): number =>
   quest.steps.flatMap((s) => s.discover?.pages.flatMap((p) => p.items.filter((i) => i.type === 'pattern')) ?? []).length;
@@ -141,7 +152,11 @@ export function reuseProblems(stage: StageKey, quests: readonly LessonQuest[], b
     // Rule 4's number-set item: the numbers a Discover shows (일 이 삼 사 오; 천, 이천, 삼천 on one price page)
     // count as one item, and a number composed of numerals already taught is no new item (S6-1, S6-2).
     const numbers = shown.filter((w) => !taught.has(w) && isNumberWord(w) && !isComposedNumber(w, taught));
-    const freshAll = [...shown.filter((w) => !taught.has(w) && !isNumberWord(w)), ...(numbers.length > 0 ? [`numbers(${numbers.join('·')})`] : [])];
+    const frameWords = new Set(wordsOf(frameTexts(quest), taught));
+    const freshAll = [
+      ...shown.filter((w) => !taught.has(w) && !isNumberWord(w) && !frameWords.has(w)),
+      ...(numbers.length > 0 ? [`numbers(${numbers.join('·')})`] : []),
+    ];
     // A word of a new set phrase (반가워요 in 만나서 반가워요, then 저도 반가워요) is that one item.
     const phraseWords = new Set(freshAll.filter((w) => w.includes('_')).flatMap((w) => w.split('_')));
     const fresh = freshAll.filter((w) => !phraseWords.has(w));
