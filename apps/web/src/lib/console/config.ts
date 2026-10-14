@@ -98,15 +98,19 @@ export function contentGatingEnabled(env: ConsoleEnv = buildEnv()): boolean {
   return raw === 'true' || raw === '1';
 }
 
+/** The notes launch default: on since F-FEEDBACK-001 FB-14 (owner decision 2026-10-13, OD-19). */
+const NOTES_LAUNCH_DEFAULT = true;
+
 /**
  * Notes from grown-ups (F-FEEDBACK-001 section 6.13): the notes pages, the composer and every entry
- * (adult nav, roster card, parent home, report slot) render only with `NEXT_PUBLIC_NOTES_ENABLED`
- * set to `'true'` or `'1'`, parsed like the learner app's flag. Off by default; FB-14 turns it on.
- * Sending also needs the Worker switch `NOTES_SEND` (section 7.8), which this flag never changes.
+ * (adult nav, roster card, parent home, report slot). Parsed like the learner app's flag: `'false'` or
+ * `'0'` in `NEXT_PUBLIC_NOTES_ENABLED` is off, anything else (or unset) is the launch default, on since
+ * FB-14 in every UI locale (en, es, ko reviewed in FB-5b). Sending also needs the Worker switch
+ * `NOTES_SEND` (section 7.8), which this flag never changes; the safety routes have no switch.
  */
 export function notesEnabled(env: ConsoleEnv = buildEnv()): boolean {
   const raw = env.NEXT_PUBLIC_NOTES_ENABLED;
-  return raw === 'true' || raw === '1';
+  return raw === 'false' || raw === '0' ? false : NOTES_LAUNCH_DEFAULT;
 }
 
 /**

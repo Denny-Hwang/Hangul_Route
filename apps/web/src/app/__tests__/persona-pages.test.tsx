@@ -389,14 +389,15 @@ describe('/teachers (S-4b)', () => {
 });
 
 /**
- * The claim hand-off of F-REPORT-001 RP-11 (F-SITE-002 section 3.9): both report flags are on in production, so the
- * pages as served (`SITE_CLAIMS`) carry the reports lines, word for word, and no other feature line.
+ * The claim hand-offs of F-REPORT-001 RP-11 and F-FEEDBACK-001 FB-14 (F-SITE-002 section 3.9): both report flags and
+ * both notes flags are on in production, so the pages as served (`SITE_CLAIMS`) carry the reports lines and the
+ * notes line, word for word, and no other feature line.
  */
-describe('today\'s claims: the reports lines are live (F-REPORT-001 RP-11)', () => {
+describe('today\'s claims: the reports lines (F-REPORT-001 RP-11) and the notes line (F-FEEDBACK-001 FB-14) are live', () => {
   it('/parents: the reports line under Follow along and the reports answer to "What can I see?"', () => {
     const html = render(ParentsPage);
     expect(SITE_CLAIMS.parentReports).toBe(true);
-    expect(linesOf(html, P.follow.title)).toEqual([P.follow.body, P.follow.reports]);
+    expect(linesOf(html, P.follow.title)).toEqual([P.follow.body, P.follow.reports, P.follow.notes]);
     expect(P.follow.reports).toBe('Reports for today, this week, this month and all time show what went well and what to practise next.');
     const text = textOf(mainOf(html));
     expect(text).toContain(P.faq.whatSee.reports);
@@ -407,7 +408,8 @@ describe('today\'s claims: the reports lines are live (F-REPORT-001 RP-11)', () 
   it('/teachers: the reports line under See how the class is doing, never a ranking', () => {
     const html = render(TeachersPage);
     expect(SITE_CLAIMS.teacherReports).toBe(true);
-    expect(linesOf(html, T.class.title)).toEqual([T.class.body, T.class.reports]);
+    expect(linesOf(html, T.class.title)).toEqual([T.class.body, T.class.reports, T.class.notes]);
+    expect(T.class.notes).toBe('Send students a short note of encouragement.');
     expect(T.class.reports).toBe('Reports for each student and statistics for the whole class, by day, week, month or all time. Never a ranking.');
   });
 
@@ -415,15 +417,15 @@ describe('today\'s claims: the reports lines are live (F-REPORT-001 RP-11)', () 
     expect(renderToStaticMarkup(<LearnersPage locale="en" />)).toBe(renderToStaticMarkup(<LearnersPage locale="en" claims={ALL_CLAIMS_OFF} />));
   });
 
-  it.each(['ko', 'es'] as const)('%s: the reports lines too, since its report words are signed (F-SITE-002 G6; MAR re-review)', (locale) => {
+  it.each(['ko', 'es'] as const)('%s: the reports lines and the notes line, since its report words are signed (F-SITE-002 G6; MAR re-review)', (locale) => {
     const persona = getMessages(locale).landing.persona;
     const parents = renderToStaticMarkup(<ParentsPage locale={locale} />);
     const teachers = renderToStaticMarkup(<TeachersPage locale={locale} />);
-    expect(linesOf(parents, persona.parents.follow.title)).toEqual([persona.parents.follow.body, persona.parents.follow.reports]);
+    expect(linesOf(parents, persona.parents.follow.title)).toEqual([persona.parents.follow.body, persona.parents.follow.reports, persona.parents.follow.notes]);
     const parentsText = textOf(mainOf(parents));
     expect(parentsText).toContain(persona.parents.faq.whatSee.reports);
     expect(parentsText).not.toContain(persona.parents.faq.whatSee.a);
-    expect(linesOf(teachers, persona.teachers.class.title)).toEqual([persona.teachers.class.body, persona.teachers.class.reports]);
+    expect(linesOf(teachers, persona.teachers.class.title)).toEqual([persona.teachers.class.body, persona.teachers.class.reports, persona.teachers.class.notes]);
   });
 
   it('the reports lines name no speaking and no price, in every locale', () => {

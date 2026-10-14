@@ -60,6 +60,14 @@ describe('grownUpOrigin', () => {
     expect(grownUpOrigin({ CONSOLE_ORIGIN: 'http://[::1]:3000' })).toBe('http://[::1]:3000');
   });
 
+  it('ignores an https host outside hangulroute.com, so a mistyped domain never receives grown-ups', () => {
+    for (const value of ['https://app.hangulroute.co', 'https://app-hangulroute.com', 'https://hangulroute.com.example.com', 'https://evilhangulroute.com', 'https://console.example.com']) {
+      expect(grownUpOrigin({ CONSOLE_ORIGIN: value }), value).toBe(SITE_DEFAULT_CONSOLE_ORIGIN);
+    }
+    expect(grownUpOrigin({ CONSOLE_ORIGIN: 'https://hangulroute.com' })).toBe('https://hangulroute.com');
+    expect(grownUpOrigin({ CONSOLE_ORIGIN: 'https://preview.app.hangulroute.com' })).toBe('https://preview.app.hangulroute.com');
+  });
+
   it('reads the build variable by default', () => {
     expect(grownUpOrigin()).toBe('');
     vi.stubEnv('CONSOLE_ORIGIN', 'https://app.hangulroute.com/');
@@ -177,7 +185,7 @@ describe('next.config.js passes CONSOLE_ORIGIN to server and client code', () =>
     expect(freshConfig().env).toEqual({ CONSOLE_ORIGIN: '  ' });
   });
 
-  it.each(['app.hangulroute.com', 'http://app.hangulroute.com', 'not a url', 'javascript:alert(1)'])(
+  it.each(['app.hangulroute.com', 'http://app.hangulroute.com', 'not a url', 'javascript:alert(1)', 'https://app.hangulroute.co', 'https://app-hangulroute.com'])(
     'fails the build for %j, so a mistyped origin never ships links that silently stay on the site',
     (value) => {
       vi.stubEnv('CONSOLE_ORIGIN', value);
@@ -197,6 +205,9 @@ describe('next.config.js passes CONSOLE_ORIGIN to server and client code', () =>
     'app.hangulroute.com',
     'http://app.hangulroute.com',
     'ftp://app.hangulroute.com',
+    'https://app.hangulroute.co',
+    'https://app-hangulroute.com',
+    'https://hangulroute.com.example.com',
     'javascript:alert(1)',
     'not a url',
   ])('agrees with grownUpOrigin on %j', (value) => {

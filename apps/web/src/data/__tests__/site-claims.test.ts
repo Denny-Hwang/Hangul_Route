@@ -1,7 +1,7 @@
 import { readFileSync, readdirSync } from 'node:fs';
 import { dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { en, UI_LOCALES } from '@hangul-route/i18n';
+import { en, getMessages, UI_LOCALES } from '@hangul-route/i18n';
 import { REPORT_REVIEWED_LOCALES, browseEnabled } from '../../lib/console/config';
 import { describe, expect, expectTypeOf, it } from 'vitest';
 import { CLAIM_LOCALES, CLAIM_REQUIRES_PAID, SITE_CLAIMS, claimLiveIn, showsClaim, type BooleanClaimKey, type SiteClaims } from '../site-claims';
@@ -17,14 +17,14 @@ const BOOLEAN_KEYS = KEYS.filter((key) => typeof SITE_CLAIMS[key as keyof SiteCl
 const PAID_PLANS: readonly SiteClaims['paidPlans'][] = ['coming', 'inApp'];
 
 describe('SITE_CLAIMS (what the site says today)', () => {
-  it('is what is live: Stage 1 free, plans coming, the reports lines on (F-REPORT-001 RP-11), All lessons on (F-BROWSE-001 BR-14), every other feature line off', () => {
+  it('is what is live: Stage 1 free, plans coming, the reports lines (F-REPORT-001 RP-11), All lessons (F-BROWSE-001 BR-14) and the notes line (F-FEEDBACK-001 FB-14) on, every other feature line off', () => {
     expect(SITE_CLAIMS).toEqual({
       freePlan: 'stage1',
       paidPlans: 'coming',
       learningRoute: false,
       parentReports: true,
       teacherReports: true,
-      feedbackNotes: false,
+      feedbackNotes: true,
       browseAsLearner: true,
       lectureMode: false,
     });
@@ -43,9 +43,42 @@ describe('SITE_CLAIMS (what the site says today)', () => {
     expect(SITE_CLAIMS.learningRoute).toBe(false);
   });
 
-  it('shows only the reports lines today: both report flags are on in production (F-SITE-002 section 3.9 hand-off)', () => {
-    const shown = BOOLEAN_KEYS.filter((key) => showsClaim(SITE_CLAIMS, key, 'en'));
-    expect(shown).toEqual(['parentReports', 'teacherReports']);
+  it('shows the reports and notes lines today: their flags are on in production (F-SITE-002 section 3.9 hand-off)', () => {
+    for (const locale of UI_LOCALES) {
+      const shown = BOOLEAN_KEYS.filter((key) => showsClaim(SITE_CLAIMS, key, locale));
+      // The reports lines follow REPORT_REVIEWED_LOCALES; the notes line is live in every UI locale (FB-5b).
+      const reports = REPORT_REVIEWED_LOCALES.includes(locale) ? (['parentReports', 'teacherReports'] as const) : [];
+      expect(shown, locale).toEqual(['feedbackNotes', ...reports]);
+    }
+  });
+
+  it('turns the notes line on only with the notes flags on by default in both apps (F-FEEDBACK-001 FB-14, OD-19)', () => {
+    const root = join(dirname(fileURLToPath(import.meta.url)), '..', '..', '..', '..');
+    const consoleConfig = readFileSync(join(root, 'web', 'src', 'lib', 'console', 'config.ts'), 'utf8');
+    const learnerFlags = readFileSync(join(root, 'mobile', 'src', 'config', 'flags.ts'), 'utf8');
+    const consoleOn = /const NOTES_LAUNCH_DEFAULT = true;/.test(consoleConfig);
+    const learnerOn = /launchDefaults: Flags = \{[^}]*\bnotesEnabled: true,/.test(learnerFlags);
+    expect(!SITE_CLAIMS.feedbackNotes || (consoleOn && learnerOn)).toBe(true);
+  });
+
+  it('the notes line has its reviewed copy in every UI locale, with no price and no age wording', () => {
+    for (const locale of ['en', 'es', 'ko'] as const) {
+      const { persona } = getMessages(locale).landing;
+      const lines = [persona.parents.follow.notes, persona.teachers.class.notes];
+      for (const line of lines) {
+        expect(line.trim().length).toBeGreaterThan(0);
+        expect(line).not.toMatch(/[$€£]\s?\d|lifetime|\bkids?\b|\bchild(ren)?\b|\bages?\b/i);
+      }
+    }
+    expect(en.landing.persona.parents.follow.notes).toBe('Send a short note of encouragement that your learner sees in the app.');
+    expect(en.landing.persona.teachers.class.notes).toBe('Send students a short note of encouragement.');
+    // The reviewed FB-5b es and ko lines, pinned word for word (ko written as escapes: no Hangul in this file).
+    const es = getMessages('es').landing.persona;
+    expect(es.parents.follow.notes).toBe('Envía una nota corta de ánimo que tu estudiante ve en la app.');
+    expect(es.teachers.class.notes).toBe('Envía a tus estudiantes una nota corta de ánimo.');
+    const ko = getMessages('ko').landing.persona;
+    expect(ko.parents.follow.notes).toBe('학습자가 앱에서 보는 짧은 격려 쪽지를 보내요.');
+    expect(ko.teachers.class.notes).toBe('학생에게 짧은 격려 쪽지를 보내요.');
   });
 
   it('turns the reports lines on only with the report flags on by default in both apps (F-REPORT-001 RP-11)', () => {

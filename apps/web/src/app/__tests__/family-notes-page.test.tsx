@@ -628,7 +628,7 @@ describe('page states (screen spec, States)', () => {
   });
 
   it('flag off: nothing is asked of the Worker', async () => {
-    vi.stubEnv('NEXT_PUBLIC_NOTES_ENABLED', '');
+    vi.stubEnv('NEXT_PUBLIC_NOTES_ENABLED', 'false');
     await page('id=space%3Af1');
     expect(calls).toHaveLength(0);
   });

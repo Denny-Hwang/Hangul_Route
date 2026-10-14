@@ -130,7 +130,8 @@ const reportCalls = (): unknown[][] => calls.filter((c) => c.name === 'getLearne
 const sendNote = (root: ReactTestInstance): ReactTestInstance[] => byTestId(root, 'report-send-note');
 
 describe('Send a note on the learner report (FB-11b)', () => {
-  it('notes off (the default): not drawn', async () => {
+  it('notes switched off (NEXT_PUBLIC_NOTES_ENABLED=false): not drawn', async () => {
+    vi.stubEnv('NEXT_PUBLIC_NOTES_ENABLED', 'false');
     const root = await page();
     expect(sendNote(root)).toHaveLength(0);
     expect(textOf(root)).not.toContain(en.report.action.sendNote);
