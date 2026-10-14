@@ -1256,10 +1256,10 @@
         }
       ],
       "verification": {
-        "passes": 1,
+        "passes": 2,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "Pass 1 (author sourcing, 2026-10-14): both pages fetched; each supports 'traditional game' (MCST lists it under 전통놀이; the encyclopedia files it under 놀이), the weighted core wrapped in paper or cloth with a fringe, and kicking to keep it up for the highest count. Seasonal timing (New Year in the encyclopedia, winter on the MCST page) deliberately left out of the note."
+        "notes": "Pass 1 (author sourcing, 2026-10-14): both pages fetched; each supports 'traditional game' (MCST lists it under 전통놀이; the encyclopedia files it under 놀이), the weighted core wrapped in paper or cloth with a fringe, and kicking to keep it up for the highest count. Seasonal timing (New Year in the encyclopedia, winter on the MCST page) deliberately left out of the note.\nPass 2 (independent fact-check, 2026-10-14): re-opened both pages. Encyclopedia 정의 gives kicking the jegi without letting it drop and competing on the count, and 내용 paragraph 1 gives a coin wrapped in hanji or silk with the ends torn into fringes; MCST 놀이방법 gives repeated kicks so it does not touch the ground, higher count wins, and lists it under 전통놀이. Every clause of the note is supported; 'weighted' follows from the coin or metal core. Note is an English paraphrase with no wording copied from either page. Outcome: pass, no change."
       }
     },
     {
@@ -1283,10 +1283,10 @@
         }
       ],
       "verification": {
-        "passes": 1,
+        "passes": 2,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "Pass 1 (author sourcing, 2026-10-14): both pages fetched; each supports 'traditional (folk) game', a wooden top kept spinning by striking it with a whip, play on ice in winter, and a longest-spin contest. Origin dating (Three Kingdoms, Nihon Shoki) deliberately left out of the note."
+        "notes": "Pass 1 (author sourcing, 2026-10-14): both pages fetched; each supports 'traditional (folk) game', a wooden top kept spinning by striking it with a whip, play on ice in winter, and a longest-spin contest. Origin dating (Three Kingdoms, Nihon Shoki) deliberately left out of the note.\nPass 2 (independent fact-check, 2026-10-14): re-opened both pages. Encyclopedia 정의 gives striking a top with a whip on ice in winter, 내용 gives tops carved from hard wood, a whip made of a stick with cord, and 오래돌리기 (which top spins longer); MCST 유래 calls it a winter folk game on ice made of wood and string, and 놀이방법 lists 오래 돌리기. Every clause of the note is supported. Note is an English paraphrase with no wording copied from either page. Outcome: pass, no change."
       }
     }
   ],
