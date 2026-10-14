@@ -59,10 +59,13 @@
 | S-2 | (F-APP-001 M2) Clerk Production 이 `app.hangulroute.com` 을 받는지 확인 + 브라우저와 설치한 PWA (iOS · Android) 에서 Google · 이메일 코드 로그인 | 30분 |
 | S-0 | (F-APP-001, S-3 직전) 운영 `sw.js` 에 어른 경로 거부 목록이 있고 A-2 가 7일 이상 운영에 있었는지 | 5분 |
 | S-3 | (F-APP-001 M3) `EXPO_PUBLIC_GROWN_UP_HOME=true` · `EXPO_PUBLIC_SITE_URL=https://hangulroute.com` → Retry · 학습자 앱의 어른 진입점이 켜진다 | 5분 |
+| S-10 | (F-SITE-002 S-10, F-APP-001 A-10 과 함께, 2026-10-14) 할 일 없음: 사이트 빌드가 `CONSOLE_ORIGIN` 없이도 어른 링크와 `_redirects` 를 앱 호스트로 보낸다 (코드 기본값). 대시보드의 `CONSOLE_ORIGIN=https://app.hangulroute.com` 은 같은 값이라 남겨 둬도 무해하다. 끄기: `CONSOLE_ORIGIN=false` → Retry | 0분 |
 
 프로젝트 3개의 Project name / Build / Deploy command / Build variables / 런타임 변수·시크릿 표는 `owner-runbook.md` §0.
 
 > **F-APP-001 (2026-10-11)**: 어른 페이지 (콘솔) 의 운영 주소가 `hangulroute.com/teach` 에서 **`app.hangulroute.com`** (`/signin` · `/start` · `/teach` · `/parent` · `/account/billing`) 으로 옮겨 간다. `hangul-route-app` 이 같은 빌드에서 콘솔을 함께 서빙하고 (빌드 명령 불변), 서비스 워커는 어른 경로를 프리캐시하지 않으며 오프라인이면 `/grown-ups-offline.html` 을 보여 준다 (학습자 오프라인 동작은 그대로). hangulroute.com 은 소개·가이드 전용 (사이트 빌드 변수 `CONSOLE_ORIGIN` 을 넣으면 빌드가 `_redirects` 로 옛 어른 주소를 앱 호스트로 보낸다, `owner-runbook.md` §E2 S-3b). 순서와 확인 기준은 `owner-runbook.md` §E.
+>
+> **F-SITE-002 S-10 (2026-10-14)**: M3 는 2026-10-14 에 끝났고 운영에서 확인됐다 (hangulroute.com 의 어른 경로가 앱 호스트로 302, 사이트의 Sign in 이 `https://app.hangulroute.com/signin`). 오너 결정 (2026-10-14): M3 뒤 14일 대기를 건너뛴다. 그래서 S-10 이 사이트의 코드 기본값을 앱 호스트로 바꿨다 (`SITE_DEFAULT_CONSOLE_ORIGIN = APP_ORIGIN`, `site-redirects.mjs` 의 `DEFAULT_REDIRECT_ORIGIN` 도 같은 값). `CONSOLE_ORIGIN` 이 없는 사이트 빌드도 Sign in 링크와 `_redirects` 를 앱 호스트로 보낸다. 끄는 스위치: `hangul-route-web` 빌드 변수 `CONSOLE_ORIGIN=false` (또는 `0`) → Retry deployment. 빌드가 `_redirects` 를 쓰지 않고 링크도 사이트로 돌아온다 (302 라 브라우저에 남지 않는다). 변수를 **지우면** 이제 기본값 (앱 호스트) 이다.
 
 ## 3. 웹에서 다른 점 (사용자 안내용)
 
