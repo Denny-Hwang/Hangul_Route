@@ -44,7 +44,7 @@ const browseScreens = readdirSync(resolve(SRC, 'screens/browse'))
 describe('the All lessons stack (section 4.1)', () => {
   it('every typed route is registered and mounted once BR-8 lands, and nothing else is', () => {
     const typed = paramListRoutes().sort();
-    expect(typed).toEqual(['BrowseAccess', 'BrowseEpisode', 'BrowseHome', 'BrowseItem', 'CardDetail', 'Minigame', 'PreviewEnd', 'PreviewQuest', 'StoryReader', 'StorySources']);
+    expect(typed).toEqual(['BrowseAccess', 'BrowseEpisode', 'BrowseHome', 'BrowseItem', 'CardDetail', 'Minigame', 'PreviewEnd', 'PreviewFlashcards', 'PreviewQuest', 'StoryReader', 'StorySources']);
     expect(registeredRoutes().sort()).toEqual(typed);
     expect(mountedRoutes().sort()).toEqual(typed);
   });
@@ -61,7 +61,7 @@ describe('the All lessons stack (section 4.1)', () => {
       expect(source, file).not.toMatch(/CommonActions|StackActions|navigation\/types|RootStackParamList/);
     }
     // the scan saw the preview's own exits
-    expect(dispatched).toEqual(expect.arrayContaining(['PreviewQuest', 'PreviewEnd', 'StoryReader', 'StorySources', 'Minigame', 'BrowseItem', 'BrowseHome', 'CardDetail']));
+    expect(dispatched).toEqual(expect.arrayContaining(['PreviewQuest', 'PreviewEnd', 'PreviewFlashcards', 'StoryReader', 'StorySources', 'Minigame', 'BrowseItem', 'BrowseHome', 'CardDetail']));
   });
 });
 
@@ -107,10 +107,26 @@ describe('the learner screens inside All lessons (section 4.7, the navigation ad
 
   it('the strip is on the lesson screens and the end screen only (section 4.7)', () => {
     const framed = browseScreens.filter(({ source }) => source.includes('<PreviewFrame')).map(({ file }) => file).sort();
-    expect(framed).toEqual(['screens/browse/BrowseLessonScreens.tsx', 'screens/browse/PreviewEndScreen.tsx', 'screens/browse/PreviewQuestScreen.tsx']);
+    expect(framed).toEqual([
+      'screens/browse/BrowseLessonScreens.tsx',
+      'screens/browse/PreviewEndScreen.tsx',
+      'screens/browse/PreviewFlashcardsScreen.tsx',
+      'screens/browse/PreviewQuestScreen.tsx',
+    ]);
     // the end screen's strip has no Leave button; the sources page has no strip
     expect(read('screens/browse/PreviewEndScreen.tsx')).toMatch(/<PreviewFrame>/);
     expect(element(lessons, 'StorySourcesScreen')).not.toContain('PreviewFrame');
     expect(/export function BrowseStorySourcesScreen[\s\S]*?\n\}/.exec(lessons)?.[0]).not.toContain('PreviewFrame');
+  });
+
+  it('the flashcards (BR-9b) run the learner session with the preview ports and the browse exits only', () => {
+    const cards = read('screens/browse/PreviewFlashcardsScreen.tsx');
+    const session = element(cards, 'CardsSession');
+    expect(session).toMatch(/ports=\{ports\}/);
+    expect(cards).toMatch(/const ports = useMemo\(\(\) => previewCardsPorts\(\), \[\]\)/);
+    expect(cards).not.toMatch(/learnerCardsPorts|ACTIVITY_ROUTES|VocabTopic/);
+    // No Speed round in a preview; every exit returns to the topic page or plays another run here.
+    expect(cards).toMatch(/speed: null/);
+    expect(cards).toMatch(/back: toItem/);
   });
 });

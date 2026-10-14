@@ -995,8 +995,7 @@ test('a story plays as the learner replay reader under the strip, ends on the st
 /* ---------------------------------------------------------------------------------------------
  * BR-9: the word topic page (section 4.6 topic, section 4.7 vocabulary topic; mock
  * design/screens/browse/topic.md). Every word with its picture, romanization, gloss and a Hear
- * button; until F-VOC-003's flashcards come here (its C-5) the list is the topic's preview, so it
- * has no primary action.
+ * button; the flashcards (BR-9b, below) are its preview.
  * ------------------------------------------------------------------------------------------- */
 
 test('a word topic lists every word with its Hear button, keeps 64 targets at 320 and writes nothing when heard', async ({ page }) => {
@@ -1016,9 +1015,8 @@ test('a word topic lists every word with its Hear button, keeps 64 targets at 32
   await expect(page.getByRole('button', { name: /^Hear / })).toHaveCount(12);
   const sagwa = page.getByRole('button', { name: 'Hear sagwa' });
   await expect(sagwa).toBeVisible();
-  // No flashcard button and no preview primary until F-VOC-003 C-5.
-  await expect(page.getByTestId('browse-preview')).toHaveCount(0);
-  await expect(page.getByRole('button', { name: /flashcards/i })).toHaveCount(0);
+  // The flashcards are the topic's preview (BR-9b): one primary, pinned like the item page's.
+  await expect(page.getByTestId('browse-preview')).toHaveText('Preview the flashcards');
 
   for (const box of await pressableBoxes(page)) {
     expect(box.height, box.name).toBeGreaterThanOrEqual(64);
@@ -1046,6 +1044,83 @@ test('a word topic lists every word with its Hear button, keeps 64 targets at 32
   const deviceAfter = await snapshotDevice(page);
   expect(changedOutsideBrowse(deviceBefore, deviceAfter).filter((k) => !k.startsWith('session:hr:grownup') && !k.startsWith('session:hr:console'))).toEqual([]);
   expect((await readAllStored(page))[LEARNER_QUEUE]).toBe(SEEDED_QUEUE);
+});
+
+/* ---------------------------------------------------------------------------------------------
+ * BR-9b: [[ Preview the flashcards ]] on the word topic page (section 4.7, vocabulary topic; mock
+ * design/screens/browse/topic-states.html). The learner F-VOC-003 flashcards run under the strip
+ * in host mode 'preview': no reading practice switch, no vocabulary progress, no learner event.
+ * Leave (the strip's, after its confirm, or the cards' own back and Stop) returns to the topic.
+ * ------------------------------------------------------------------------------------------- */
+
+test('BR-9b: Preview the flashcards plays the learner cards under the strip, leaves both ways to the topic page, and writes nothing', async ({ page }) => {
+  await onboardChild(page, { name: 'Mina' });
+  await page.goto('/');
+  await expect(page.getByText('Hi, Mina!')).toBeVisible();
+  await putStored(page, LEARNER_QUEUE, SEEDED_QUEUE);
+  const storedBefore = await readAllStored(page);
+  const deviceBefore = await snapshotDevice(page);
+  await writeAccountPass(page);
+  await page.evaluate(() => window.location.assign('/browse#t=vocab-topic:food&s=report'));
+  const topicTitle = page.getByRole('heading', { name: 'Food' });
+  await expect(topicTitle).toBeVisible();
+  await bootSettled(page);
+
+  // The primary sits in the pinned footer, after the word list in reading order.
+  const preview = page.getByTestId('browse-preview');
+  await expect(preview).toHaveText('Preview the flashcards');
+  await expect(strip(page)).toHaveCount(0);
+  await shot(page, 'br9b-browse-topic-flashcards-pixel5');
+  await preview.click();
+
+  // The learner cards under the strip; a preview is nobody's, so there is no reading practice switch.
+  await expect(strip(page)).toBeVisible();
+  await expect(page.getByTestId('preview-strip-text')).toHaveText('Preview. Nothing is saved.');
+  await expect(page.getByTestId('vocab-cards')).toBeVisible();
+  await expect(page.getByTestId('vocab-cards-reading-practice')).toHaveCount(0);
+  await expect(announced(page)).toHaveCount(1);
+  await page.getByTestId('vocab-card-flip').click();
+  await expect(page.getByTestId('vocab-card-got-it')).toBeVisible();
+  await shot(page, 'br9b-browse-flashcards-back-pixel5');
+  await page.getByTestId('vocab-card-got-it').click();
+
+  // The strip's Leave asks once, then returns to the topic page with no end screen.
+  await page.getByTestId('preview-leave').click();
+  await expect(page.getByRole('alertdialog', { name: 'Leave this preview?' })).toBeVisible();
+  await page.getByTestId('browse-leave-confirm').click();
+  await expect(topicTitle).toBeVisible();
+  await expect(strip(page)).toHaveCount(0);
+  await expect(page.getByTestId('vocab-cards-leave')).toHaveCount(0);
+
+  // Started again, the cards' own back keeps the learner question; Stop returns to the topic page too.
+  await page.getByTestId('browse-preview').click();
+  await expect(page.getByTestId('vocab-cards')).toBeVisible();
+  await page.getByTestId('vocab-back').click();
+  await expect(page.getByRole('heading', { name: 'Keep going or stop for now?' })).toBeVisible();
+  await page.getByTestId('vocab-cards-stop').click();
+  await expect(topicTitle).toBeVisible();
+  await expect(strip(page)).toHaveCount(0);
+
+  // Playback writes asynchronously: compare only once nothing more changes for 500 ms.
+  let previous = '';
+  await expect
+    .poll(
+      async () => {
+        const now = JSON.stringify(await snapshotDevice(page));
+        const settled = now === previous;
+        previous = now;
+        return settled;
+      },
+      { intervals: [500], timeout: 10_000 },
+    )
+    .toBe(true);
+  const deviceAfter = await snapshotDevice(page);
+  expect(changedOutsideBrowse(deviceBefore, deviceAfter).filter((k) => !k.startsWith('session:hr:grownup') && !k.startsWith('session:hr:console'))).toEqual([]);
+  // No vocabulary progress, profile or setting of the learner's changed; only `browse:*` may differ.
+  const stored = await readAllStored(page);
+  const changed = [...new Set([...Object.keys(storedBefore), ...Object.keys(stored)])].filter((k) => storedBefore[k] !== stored[k]);
+  expect(changed.filter((k) => !k.startsWith('hr:browse:'))).toEqual([]);
+  expect(stored[LEARNER_QUEUE]).toBe(SEEDED_QUEUE);
 });
 
 /* -------------------------------------------------------------------------------------------

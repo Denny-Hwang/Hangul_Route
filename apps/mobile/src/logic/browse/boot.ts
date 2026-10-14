@@ -23,6 +23,7 @@ export type BrowseRouteName =
   | 'BrowseEpisode'
   | 'BrowseItem'
   | 'PreviewQuest'
+  | 'PreviewFlashcards'
   | 'Minigame'
   | 'StoryReader'
   | 'StorySources'
