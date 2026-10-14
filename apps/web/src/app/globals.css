@@ -594,3 +594,12 @@ button {
     }
   }
 }
+
+/* /licenses (open-source notices, 2026-10-14): one caption line under each package name. A class, not an inline
+   style, because the page lists every production dependency (several hundred items). */
+.hr-site-licenses-meta {
+  display: block;
+  color: var(--hr-site-text-muted);
+  font-size: var(--hr-site-size-caption);
+  overflow-wrap: anywhere;
+}

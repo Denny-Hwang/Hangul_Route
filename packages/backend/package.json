@@ -2,6 +2,7 @@
   "name": "@hangul-route/backend",
   "version": "0.0.0",
   "private": true,
+  "license": "UNLICENSED",
   "description": "Hangul Route backend handlers (Cloudflare Workers + Hono)",
   "type": "module",
   "exports": {

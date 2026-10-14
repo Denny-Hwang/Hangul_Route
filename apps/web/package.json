@@ -2,6 +2,7 @@
   "name": "@hangul-route/web",
   "version": "0.0.0",
   "private": true,
+  "license": "UNLICENSED",
   "description": "Hangul Route web app (Next.js App Router) — landing + Parent Dashboard",
   "scripts": {
     "dev": "next dev",

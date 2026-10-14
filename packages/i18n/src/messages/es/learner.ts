@@ -143,6 +143,7 @@ export const learner = {
       details: { cta: 'Detalles del plan' },
     },
     install: { label: 'Instalar aquí', a11yLabel: 'Instalar Hangul Route en este dispositivo' },
+    licenses: { label: 'Avisos de código abierto', fallback: 'Abre hangulroute.com/licenses en un navegador.', gateDone: 'Revisión de adultos lista. Toca Avisos de código abierto otra vez para abrir la página.' },
     language: {
       title: 'Idioma',
       thisProfile: 'Este perfil',
