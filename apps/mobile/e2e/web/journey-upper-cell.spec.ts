@@ -522,9 +522,16 @@ const CELLS: readonly UpperCell[] = [
       await passDiscover(page);
       await page.getByRole('button', { name: 'Play minigame' }).click();
       await shot(page, 's4-4-q1-tap-respond-320');
-      await reply(page, '좋아!');
-      await reply(page, '윷놀이 하자!');
-      await reply(page, '좋아!');
+      const turns = ['좋아!', '윷놀이 하자!', '좋아!'];
+      for (const [i, line] of turns.entries()) {
+        await expect(page.getByText(`${i + 1} / ${turns.length}`, { exact: true })).toBeVisible();
+        // A tap inside the game's double-touch window is dropped (the same 좋아! twice): tap again until the turn moves on.
+        const after = i + 1 < turns.length ? page.getByText(`${i + 2} / ${turns.length}`, { exact: true }) : page.getByRole('button', { name: 'Play minigame' });
+        await expect(async () => {
+          await reply(page, line);
+          await expect(after).toBeVisible({ timeout: 1500 });
+        }).toPass();
+      }
       await page.getByRole('button', { name: 'Play minigame' }).click();
       await orderLines(page, ['l1', 'l2', 'l3']);
       await playCheckByIds(page, [{ answer: 'a' }, { answer: 'a' }]);

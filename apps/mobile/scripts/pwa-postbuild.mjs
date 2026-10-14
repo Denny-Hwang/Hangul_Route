@@ -136,7 +136,10 @@ const precache = {
   // Workbox's default ignore, the clip groups served by the runtime rule below, and
   // every console file (grown-up paths and _next/): never in the learner's offline bundle.
   globIgnores: ['**/node_modules/**/*', ...AUDIO_PRECACHE_IGNORES, ...grownUpGlobIgnores(GROWN_UP_PREFIXES)],
-  maximumFileSizeToCacheInBytes: 6 * 1024 * 1024,
+  // 8 MiB (was 6 MiB): with the F-CURR-001 lesson cells the app bundle is about 6.6 MB, and a file over this
+  // limit is silently left out of the precache, so the app would not start offline. The bundle is downloaded
+  // anyway; the limit only decides whether it is kept for offline use.
+  maximumFileSizeToCacheInBytes: 8 * 1024 * 1024,
 };
 
 const { count, size, warnings } = await generateSW({
@@ -177,5 +180,11 @@ if (leaks.length > 0) throw new Error(`pwa-postbuild: runtime-cached clips found
 assertLearnerPrecache(manifestUrls, isGrownUpPath, (url) => readFileSync(join(dist, url), 'utf8'));
 // The lecture presenter's Hangul font works offline (F-TCH-004 §3.6, §3.8).
 assertPresenterFontPrecached(manifestUrls);
+// The app's own JS bundle works offline: Workbox only warns when a file is over the size limit.
+const jsDir = join(dist, '_expo', 'static', 'js', 'web');
+const unprecachedJs = existsSync(jsDir)
+  ? readdirSync(jsDir).filter((f) => f.endsWith('.js')).map((f) => `_expo/static/js/web/${f}`).filter((url) => !manifestUrls.includes(url))
+  : [];
+if (unprecachedJs.length > 0) throw new Error(`pwa-postbuild: app bundles missing from the precache (over maximumFileSizeToCacheInBytes?): ${unprecachedJs.join(', ')}`);
 
 process.stdout.write(`pwa-postbuild: precached ${count} files (${(size / 1024 / 1024).toFixed(2)} MB), ${clips.length} audio clips built\n`);
