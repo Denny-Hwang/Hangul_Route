@@ -2,7 +2,7 @@
   "id": "episode:stage7-life",
   "stage": "stage7",
   "theme": "life",
-  "status": "draft",
+  "status": "ready",
   "titleEn": "My Day in Korean",
   "subtitleEn": "Write about your meals and where your day takes you.",
   "hoyaIntroEn": "Morning, lunchtime, evening. Let's write about your day in Korean!",
@@ -48,7 +48,7 @@
                     "word": {
                       "ko": "점심",
                       "romanization": "jeomsim",
-                      "en": "lunchtime, midday"
+                      "en": "lunch, lunchtime"
                     },
                     "noteEn": "The middle of the day, around noon."
                   }
@@ -71,7 +71,7 @@
                     "frame": {
                       "ko": "___에 밥을 먹어요.",
                       "romanization": "___e babeul meogeoyo",
-                      "en": "At ___, I eat a meal."
+                      "en": "When: ___. I eat a meal."
                     },
                     "noteEn": "Put {ko:에} after a time word to say when: {ko:아침에} means in the morning.",
                     "examples": [
@@ -144,7 +144,7 @@
               "word": {
                 "ko": "점심",
                 "romanization": "jeomsim",
-                "en": "lunchtime, midday"
+                "en": "lunch, lunchtime"
               }
             },
             {
@@ -222,9 +222,9 @@
               "pictureRef": "card:rice",
               "distractors": [
                 {
-                  "ko": "저녁에",
-                  "romanization": "jeonyeoge",
-                  "en": "in the evening"
+                  "ko": "가요",
+                  "romanization": "gayo",
+                  "en": "I go"
                 }
               ]
             },
@@ -238,9 +238,9 @@
               "pictureRef": "card:rice",
               "distractors": [
                 {
-                  "ko": "마셔요",
-                  "romanization": "masyeoyo",
-                  "en": "I drink"
+                  "ko": "가요",
+                  "romanization": "gayo",
+                  "en": "I go"
                 }
               ]
             }
@@ -259,7 +259,7 @@
           "id": "s1",
           "kind": "intro",
           "titleEn": "What I Eat",
-          "hoyaLineEn": "What do you eat in the morning? Any food you like works here!",
+          "hoyaLineEn": "What could you eat in the morning? Pick any food you like from the list!",
           "durationSeconds": 7
         },
         {
@@ -383,6 +383,7 @@
                 "en": "In the morning, I eat an apple."
               },
               "pictureRef": "word:food-apple",
+              "distractors": [],
               "particle": {
                 "tile": 1,
                 "choices": [
@@ -407,6 +408,7 @@
                 "en": "At lunchtime, I eat gimbap."
               },
               "pictureRef": "card:kimbap",
+              "distractors": [],
               "particle": {
                 "tile": 1,
                 "choices": [
@@ -474,7 +476,7 @@
                     {
                       "ko": "밥",
                       "romanization": "bap",
-                      "en": "rice, a meal"
+                      "en": "rice"
                     },
                     {
                       "ko": "빵",
@@ -484,17 +486,17 @@
                     {
                       "ko": "사과",
                       "romanization": "sagwa",
-                      "en": "apple"
+                      "en": "an apple"
                     },
                     {
                       "ko": "달걀",
                       "romanization": "dalgyal",
-                      "en": "egg"
+                      "en": "an egg"
                     },
                     {
                       "ko": "김밥",
                       "romanization": "gimbap",
-                      "en": "gimbap (seaweed rice roll)"
+                      "en": "gimbap (a seaweed rice roll)"
                     }
                   ]
                 }
@@ -516,7 +518,7 @@
                     {
                       "ko": "밥",
                       "romanization": "bap",
-                      "en": "rice, a meal"
+                      "en": "rice"
                     },
                     {
                       "ko": "빵",
@@ -526,17 +528,17 @@
                     {
                       "ko": "사과",
                       "romanization": "sagwa",
-                      "en": "apple"
+                      "en": "an apple"
                     },
                     {
                       "ko": "달걀",
                       "romanization": "dalgyal",
-                      "en": "egg"
+                      "en": "an egg"
                     },
                     {
                       "ko": "김밥",
                       "romanization": "gimbap",
-                      "en": "gimbap (seaweed rice roll)"
+                      "en": "gimbap (a seaweed rice roll)"
                     }
                   ]
                 }
@@ -558,7 +560,7 @@
                     {
                       "ko": "밥",
                       "romanization": "bap",
-                      "en": "rice, a meal"
+                      "en": "rice"
                     },
                     {
                       "ko": "빵",
@@ -568,17 +570,17 @@
                     {
                       "ko": "사과",
                       "romanization": "sagwa",
-                      "en": "apple"
+                      "en": "an apple"
                     },
                     {
                       "ko": "달걀",
                       "romanization": "dalgyal",
-                      "en": "egg"
+                      "en": "an egg"
                     },
                     {
                       "ko": "김밥",
                       "romanization": "gimbap",
-                      "en": "gimbap (seaweed rice roll)"
+                      "en": "gimbap (a seaweed rice roll)"
                     }
                   ]
                 }
@@ -600,6 +602,7 @@
                 "en": "In the morning, I eat an egg."
               },
               "pictureRef": "word:food-egg",
+              "distractors": [],
               "particle": {
                 "tile": 1,
                 "choices": [
@@ -626,9 +629,9 @@
               "pictureRef": "word:food-bread",
               "distractors": [
                 {
-                  "ko": "점심에",
-                  "romanization": "jeomsime",
-                  "en": "at lunchtime"
+                  "ko": "가요",
+                  "romanization": "gayo",
+                  "en": "I go"
                 }
               ]
             }
@@ -658,32 +661,6 @@
               {
                 "items": [
                   {
-                    "type": "pattern",
-                    "frame": {
-                      "ko": "오늘 ___에 가요.",
-                      "romanization": "oneul ___e gayo",
-                      "en": "Today I go to ___."
-                    },
-                    "noteEn": "{ko:오늘} means today. Put a place in the slot; {ko:에} after it means to.",
-                    "examples": [
-                      {
-                        "ko": "오늘 학교에 가요.",
-                        "romanization": "oneul hakgyoe gayo",
-                        "en": "Today I go to school."
-                      },
-                      {
-                        "ko": "오늘 회사에 가요.",
-                        "romanization": "oneul hoesae gayo",
-                        "en": "Today I go to work."
-                      }
-                    ]
-                  }
-                ],
-                "captionEn": "Say where your day takes you."
-              },
-              {
-                "items": [
-                  {
                     "type": "word",
                     "word": {
                       "ko": "오늘",
@@ -699,10 +676,36 @@
                       "romanization": "hoesa",
                       "en": "work, the office"
                     },
-                    "noteEn": "School or work: pick the one that fits your day."
+                    "noteEn": "A company or workplace; {ko:회사에 가요} means you go to work."
                   }
                 ],
-                "captionEn": "A word for when, and a place to go."
+                "captionEn": "A word for when, and a place to go: school, work, the park or home."
+              },
+              {
+                "items": [
+                  {
+                    "type": "pattern",
+                    "frame": {
+                      "ko": "오늘 ___에 가요.",
+                      "romanization": "oneul ___e gayo",
+                      "en": "Today I go to ___."
+                    },
+                    "noteEn": "{ko:오늘} is today. A place goes in the slot; {ko:에} after a place means to, as in {ko:아침에} it said when.",
+                    "examples": [
+                      {
+                        "ko": "오늘 학교에 가요.",
+                        "romanization": "oneul hakgyoe gayo",
+                        "en": "Today I go to school."
+                      },
+                      {
+                        "ko": "오늘 회사에 가요.",
+                        "romanization": "oneul hoesae gayo",
+                        "en": "Today I go to work."
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "Say where your day takes you."
               },
               {
                 "items": [
@@ -814,7 +817,7 @@
               "frame": {
                 "ko": "오늘 ___에 가요.",
                 "romanization": "oneul ___e gayo",
-                "en": "Today I go to ___."
+                "en": "Today I go ___."
               },
               "slots": [
                 {
@@ -823,17 +826,17 @@
                     {
                       "ko": "학교",
                       "romanization": "hakgyo",
-                      "en": "school"
+                      "en": "to school"
                     },
                     {
                       "ko": "회사",
                       "romanization": "hoesa",
-                      "en": "work, the office"
+                      "en": "to work"
                     },
                     {
                       "ko": "공원",
                       "romanization": "gongwon",
-                      "en": "park"
+                      "en": "to the park"
                     },
                     {
                       "ko": "집",
@@ -851,7 +854,7 @@
               "frame": {
                 "ko": "아침에 ___에 가요.",
                 "romanization": "achime ___e gayo",
-                "en": "In the morning, I go to ___."
+                "en": "In the morning, I go ___."
               },
               "slots": [
                 {
@@ -860,17 +863,17 @@
                     {
                       "ko": "학교",
                       "romanization": "hakgyo",
-                      "en": "school"
+                      "en": "to school"
                     },
                     {
                       "ko": "회사",
                       "romanization": "hoesa",
-                      "en": "work, the office"
+                      "en": "to work"
                     },
                     {
                       "ko": "공원",
                       "romanization": "gongwon",
-                      "en": "park"
+                      "en": "to the park"
                     },
                     {
                       "ko": "집",
@@ -888,7 +891,7 @@
               "frame": {
                 "ko": "___에 ___에 가요.",
                 "romanization": "___e ___e gayo",
-                "en": "At ___, I go to ___."
+                "en": "___, I go ___."
               },
               "slots": [
                 {
@@ -897,17 +900,17 @@
                     {
                       "ko": "아침",
                       "romanization": "achim",
-                      "en": "morning"
+                      "en": "In the morning"
                     },
                     {
                       "ko": "점심",
                       "romanization": "jeomsim",
-                      "en": "lunchtime, midday"
+                      "en": "At lunchtime"
                     },
                     {
                       "ko": "저녁",
                       "romanization": "jeonyeok",
-                      "en": "evening"
+                      "en": "In the evening"
                     }
                   ]
                 },
@@ -917,17 +920,17 @@
                     {
                       "ko": "학교",
                       "romanization": "hakgyo",
-                      "en": "school"
+                      "en": "to school"
                     },
                     {
                       "ko": "회사",
                       "romanization": "hoesa",
-                      "en": "work, the office"
+                      "en": "to work"
                     },
                     {
                       "ko": "공원",
                       "romanization": "gongwon",
-                      "en": "park"
+                      "en": "to the park"
                     },
                     {
                       "ko": "집",
@@ -955,9 +958,9 @@
               },
               "distractors": [
                 {
-                  "ko": "와요",
-                  "romanization": "wayo",
-                  "en": "I come"
+                  "ko": "밥을",
+                  "romanization": "babeul",
+                  "en": "rice, a meal (object)"
                 }
               ]
             },
@@ -983,9 +986,14 @@
   ],
   "culture": [],
   "review": {
-    "language": "draft",
-    "culture": "draft",
-    "notes": []
+    "language": "native-reviewed",
+    "culture": "culture-reviewed",
+    "reviewedBy": "MAR",
+    "reviewedAt": "2026-10-14",
+    "notes": [
+      "Language pass 4 (MAR): 해요체, spacing, 에 and 을/를 and romanization clean; applied: write-frame glosses compose with every bank pick in en, es and ko (ko colon form, no particle after the slot), no untaught or swappable Check distractors, q3 words before the frame, 점심 glossed lunch, ko typing term 자판으로 쓰기, es Teclea and marca de objeto.",
+      "Culture pass 5 (MAR): no culture claim (section 3.7 lists none); the particle notes restate dictionary senses of 에 and 을/를, no source needed; ko 오늘 and 저녁 glosses reworded away from dictionary wording; q2 intro offers food without assuming a breakfast; school, work, park and home give any age a true answer; no real person, brand or price."
+    ]
   },
   "contentVer": 1
 }
