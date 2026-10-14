@@ -171,7 +171,7 @@ const rowOf = (over: Partial<Extract<SentNoteRow, { to: 'learner' }>> = {}): Sen
   ...over,
 });
 
-describe('flag off (the default until FB-14)', () => {
+describe('flag switched off (NEXT_PUBLIC_NOTES_ENABLED=false; on by default since FB-14)', () => {
   it('renders nothing, asks the Worker nothing and goes back to the space page', async () => {
     vi.stubEnv('NEXT_PUBLIC_NOTES_ENABLED', 'false');
     const root = await page('id=space%3Ac1');
