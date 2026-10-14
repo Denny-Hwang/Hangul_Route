@@ -70,7 +70,7 @@ export const landing = {
           body: 'Misiones de cinco minutos, una guía que nunca regaña y tarjetas de cultura coreana.',
         },
         parents: {
-          title: 'Familias',
+          title: 'Madres, padres y quien cuide',
           body: 'Mira qué practica tu estudiante, con control para adultos y sin anuncios.',
         },
         teachers: {
@@ -156,7 +156,7 @@ export const landing = {
     },
     parents: {
       title: 'Para madres, padres y quien cuide',
-      lead: 'También para abuelos y toda persona que cuide: lecciones cortas y amables que mantienen privados los datos de tu estudiante.',
+      lead: 'También para abuelas, abuelos y toda persona que cuide: lecciones cortas y amables que mantienen privados los datos de tu estudiante.',
       signIn: 'Entrar como familia',
       learn: {
         title: 'Qué aprenden',
