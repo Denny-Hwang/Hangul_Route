@@ -680,7 +680,8 @@ export const stage4Quests: Quest[] = [
  * then the lesson quests of Stages 6-7.
  */
 export const questsAll: Quest[] = questsInCursorOrder({
-  early: [...stage1Quests, ...stage2Quests, ...stage4Quests],
+  // A taste quest whose refreshed lesson cell is ready comes from the cell (F-CURR-001 T-1 / T-2).
+  early: [...stage1Quests, ...[...stage2Quests, ...stage4Quests].filter((q) => !lessonQuests.some((l) => l.id === q.id))],
   lessons: lessonQuests,
   middle: [...storyQuests, ...bookQuests],
   episodes: [...handWrittenEpisodes],

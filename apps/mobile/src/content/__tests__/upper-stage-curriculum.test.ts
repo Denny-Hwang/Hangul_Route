@@ -51,6 +51,8 @@ function readCells(): CellFile[] {
 }
 
 const CELLS = readCells();
+/** The hand-written taste cells that rows T-1 / T-2 move into cell files (F-CURR-001 OD-3). */
+const TASTE_CELLS: ReadonlySet<string> = new Set(['episode:stage2-life', 'episode:stage2-nature', 'episode:stage4-rites']);
 const READY = CELLS.filter((c) => c.cell.status === 'ready');
 
 /** Section 3.1 rule 2: the summed seconds of a quest's six steps, per stage. */
@@ -131,7 +133,14 @@ describe('the lesson cell files (F-CURR-001 section 3.10)', () => {
     expect(LESSON_EPISODES.map((e) => e.id).sort()).toEqual(READY.map((c) => c.cell.id).sort());
     expect(LESSON_QUESTS.map((q) => q.id).sort()).toEqual(READY.flatMap((c) => c.cell.quests.map((q) => q.id)).sort());
     for (const { cell } of CELLS.filter((c) => c.cell.status === 'draft')) {
-      expect(episodesAll.find((e) => e.id === cell.id)?.status, cell.id).toBe('preview');
+      const bundled = episodesAll.find((e) => e.id === cell.id);
+      if (TASTE_CELLS.has(cell.id)) {
+        // A refreshed taste cell (T-1 / T-2) keeps playing its shipped hand-written quest until ready.
+        expect(bundled?.status, cell.id).toBe('shipped');
+        expect(bundled?.questIds, cell.id).toEqual([cell.quests[0]?.id]);
+      } else {
+        expect(bundled?.status, cell.id).toBe('preview');
+      }
     }
   });
 
