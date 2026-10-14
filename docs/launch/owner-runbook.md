@@ -214,7 +214,7 @@ A-3 이 아니라 **A-4b 머지 후**에 한다: A-4b 의 공통 어른 레이�
 
 ### S-2. Clerk Production 확인 + M2 실기기 로그인 (30분, A-4b 와 A-5c 가 앱 호스트에 배포된 뒤)
 1. Clerk 대시보드 (Production 인스턴스) → `https://app.hangulroute.com/signin` 로그인이 되는지 본다 (루트 도메인의 서브도메인은 같은 인스턴스가 서빙). 허용 redirect origin 목록이 보이면 `https://app.hangulroute.com` 을 추가. "verify email at sign-up" 이 켜져 있는지 확인.
-2. M2: 데스크톱 브라우저에서, 그리고 **설치한 PWA** (iPad 또는 iPhone, Android Chrome) 에서 각각 Google 과 이메일 코드로 로그인 → 학급 하나 열기 → `/parent` → `/account/billing` 열기.
+2. M2: 데스크톱 브라우저, iPad 또는 iPhone 의 Safari, Android Chrome 의 **설치한 PWA** 에서 각각 Google 과 이메일 코드로 로그인 → 학급 하나 열기 → `/parent` → `/account/billing` 열기. iOS 의 **설치한 앱 창**은 플래그가 꺼진 동안 들어갈 길이 없으므로 S-3 직후 (§E2 의 S-3a 확인 2) 에 확인한다.
 **확인**: 여섯 조합 (기기 3 × 방식 2) 이 모두 페르소나 홈에 도착하고, 설치한 PWA 창 안에 **Back to learning** 이 보인다. 안 되는 조합은 기기·방식·화면 캡처를 보낸다.
 
 ### S-0. 운영 서비스 워커 확인 (5분, S-3 바로 전)
@@ -259,7 +259,7 @@ A-3 이 아니라 **A-4b 머지 후**에 한다: A-4b 의 공통 어른 레이�
 4. (M2, 2026-10-19 16:19 UTC 이후) 아래 여섯 조합을 각각 **Google** 과 **이메일 코드**로 한 번씩 한다. 매번: 로그인 → 페르소나 홈에 도착 → 학급 하나 열기 (`/teach/home` 의 학급) → `/parent` → `/account/billing` → Sign out.
    - 데스크톱 Chrome: https://app.hangulroute.com/signin?persona=teacher 와 https://app.hangulroute.com/signin?persona=parent
    - Android Chrome, **설치한 앱** (홈 화면 아이콘): 메시지·메일로 자신에게 `https://app.hangulroute.com/signin?persona=parent` 를 보내 링크를 누르면 설치한 앱 창에서 열린다 (scope `/`). 주소창 대신 앱 창이 열리는지 본다.
-   - iPhone 또는 iPad: Safari 에서 위 주소로 한 번. **설치한 앱 창**에는 주소창이 없고 플래그가 꺼진 동안 진입 버튼도 없으므로, 설치한 앱 창의 확인은 아래 S-3a 의 **확인 2** 에서 한다 (오너 결정 필요 시 PR 본문의 질문 참조).
+   - iPhone 또는 iPad: Safari 에서 위 주소로 한 번. **설치한 앱 창**에는 주소창이 없고 플래그가 꺼진 동안 진입 버튼도 없으며, iOS 는 메시지 링크를 설치한 앱이 아니라 Safari 로 연다. 그래서 iOS 설치한 앱 창의 확인은 아래 S-3a 의 **확인 2** 에서 하고, 그 확인이 통과해야 S-3b 로 간다 (F-APP-001 M2 · S-2 · OD-10, 2026-10-13).
 **확인**: 모든 조합이 페르소나 홈에 도착하고, 각 화면 아래에 **Back to learning** (또는 **Open the learner app**) 이 보인다. 설치한 앱 창에서는 로그인이 Safari 로 튀어 나가지 않는다 (iOS 는 이메일 코드가 먼저 보인다, OD-15). 안 되는 조합은 기기 · 방식 · 화면 캡처를 보낸다. 그 경우 아래 단계는 멈춘다.
 **되돌리기**: 없음 (확인만 한다). 2 에서 추가한 origin 은 남겨 둬도 무해하다.
 
@@ -274,19 +274,23 @@ A-3 이 아니라 **A-4b 머지 후**에 한다: A-4b 의 공통 어른 레이�
 3. Deployments → **Retry deployment** → Success 까지.
 **확인 1**: 학습자 프로필이 없는 시크릿 창에서 https://app.hangulroute.com 을 연다. Welcome 에 "Here to support a learner?" 행이 보이고 **Parent or caregiver** 가 `/signin?persona=parent` 로 간다. 학습자 프로필이 있는 기기에서 Profile → **Grown-up home** → PIN → 어른 영역이 열리고, **Back to learning** 이 학습자 앱으로 돌아온다. 학습자 앱의 Privacy 링크 (Profile 또는 Welcome) 는 `https://hangulroute.com/privacy` 로 간다.
 **확인 2 (설치한 앱 창, iPhone 또는 iPad 와 Android)**: 설치한 앱을 연다 (업데이트 배너가 뜨면 누른다) → Profile → Grown-up home (또는 Welcome 의 행) → 로그인 (Google 한 번, 이메일 코드 한 번) → 학급 · `/parent` · `/account/billing` 을 연다 → **Back to learning** 으로 학습자 화면에 돌아온다.
+**확인 2 가 실패하면** (예: iOS 설치한 앱 창에서 로그인이 끝나지 않음): 아래 되돌리기를 하고 S-3b · S-3c 로 가지 않는다. 기기 · 방식 · 화면 캡처를 보낸다.
 **되돌리기**: `EXPO_PUBLIC_GROWN_UP_HOME` 을 지우거나 `false` → Retry deployment. 진입점만 사라지고 학습 기록 · PIN · 프로필은 그대로다.
 
 ### 5. S-3b — 사이트의 어른 링크와 옛 주소 리다이렉트 (5분, 3a 확인 뒤 같은 날)
-1. **`hangul-route-web`** → Settings → Build → Variables and Secrets → **Add** → Name `CONSOLE_ORIGIN` (접두어 없음, `NEXT_PUBLIC_` 아님), Value `https://app.hangulroute.com` (끝에 `/` 나 경로 없이) → Save. 값이 https 주소가 아니면 빌드가 일부러 실패하고 이전 배포가 그대로 남는다.
-2. Deployments → **Retry deployment** → 빌드 로그에 `site-redirects: 10 rules to https://app.hangulroute.com in out/_redirects` 줄이 있는지 본다 → Success 까지.
+1. **`hangul-route-web`** → Settings → Build → Variables and Secrets → **Add** → Name `CONSOLE_ORIGIN` (접두어 없음, `NEXT_PUBLIC_` 아님), Value `https://app.hangulroute.com` (끝에 `/` 나 경로 없이) → Save. 값이 `hangulroute.com` (또는 그 서브도메인) 의 https 주소가 아니면 (예: `https://app.hangulroute.co` 같은 오타) 빌드가 일부러 실패하고 이전 배포가 그대로 남는다.
+2. Deployments → **Retry deployment** → 빌드 로그에 `site-redirects: N rules to https://app.hangulroute.com` 로 시작하는 줄이 있는지 본다 (N 은 어른 경로 수의 두 배, 2026-10-13 기준 10) → Success 까지.
 **확인** (시크릿 창):
    - https://hangulroute.com 의 **Sign in** (헤더) 과 /parents · /teachers 의 어른 버튼이 `https://app.hangulroute.com/signin…` 으로 간다. **Start learning** 은 그대로 앱 호스트 `/` 로 간다.
    - `https://hangulroute.com/teach/space?id=x#y` → 주소창이 `https://app.hangulroute.com/teach/space?id=x#y` 가 된다 (F-APP-001 행동 12).
    - `https://hangulroute.com/teach/billing?checkout=cancel` → `https://app.hangulroute.com/account/billing?checkout=cancel` 에 도착한다 (행동 13; 앱 호스트의 `/teach/billing` 페이지가 한 번 더 옮긴다).
    - `https://hangulroute.com/parent/mina` → `https://app.hangulroute.com/parent` (옛 데모 주소).
+   - 위 두 줄 (`/teach/billing` → `/account/billing`, `/parent/mina` → `/parent`) 의 마지막 이동은 **앱 호스트**의 클라이언트 리다이렉트 페이지 (A-5c, A-6) 가 한다. 주소창이 이미 `https://app.hangulroute.com/teach/billing…` 이나 `/parent/mina` 인데 거기서 멈추면 사이트 리다이렉트는 제대로 된 것이므로 S-3b 를 되돌리지 않는다. 그 화면 캡처를 보낸다 (앱 호스트 문제).
+   - 3b 전에 hangulroute.com/teach 에 로그인해 있던 브라우저로 `https://hangulroute.com/teach/home` 을 연다 → 앱 호스트에서 로그인된 채로 열리거나, 한 번 로그인하라고 나온다. 둘 다 정상이다. 옛 주소 (hangulroute.com) 에 브라우저가 기억하던 것 (마지막 페르소나, 콘솔 언어 선택, 보내지 않은 쪽지 초안) 은 앱 호스트로 넘어가지 않는다. 서버의 데이터 (학급, 가족, 결제) 는 그대로다.
    - `https://hangulroute.com/privacy`, `/terms`, `/about`, `/design-preview` 는 **사이트에 그대로** 열린다 (리다이렉트 없음).
    - (선택, 터미널이 있으면) `curl -sI https://hangulroute.com/teach/home` 이 `302` 와 `location: https://app.hangulroute.com/teach/home` 을 보여 준다.
 **되돌리기**: `hangul-route-web` 에서 `CONSOLE_ORIGIN` 을 지운다 → Retry deployment. 빌드가 `_redirects` 를 쓰지 않으므로 사이트가 다시 콘솔을 직접 서빙하고 링크도 사이트로 돌아온다. 302 (임시) 라 브라우저에 남지 않는다.
+**되돌리기 확인**: 그 빌드 로그에 `site-redirects: CONSOLE_ORIGIN is unset, no _redirects` 줄이 있고, `curl -sI https://hangulroute.com/teach/home` 이 `200` 을 보여 준다 (`location:` 줄 없음).
 
 ### 6. S-3c — Stripe 결제 복귀 주소를 앱 호스트로 (3분, 3b 뒤, Stripe 는 Test mode 그대로)
 1. **`hangul-route-api`** → Settings → Variables and Secrets (런타임) → `CONSOLE_URL` (Type Text) 의 값을 `https://hangulroute.com` 에서 **`https://app.hangulroute.com`** 으로 바꾼다 → **Deploy**. 다른 변수 · Secret 은 건드리지 않는다. `BILLING_URL` 은 만들지 않는다 (F-BILL-002 가 뺐다).
