@@ -558,7 +558,7 @@ describe('reviewed story and set cards (F-STORY-006 6.8)', () => {
     }
     const sets = heritageCardsAll.filter((c) => c.unlockedBy.startsWith('set:') && !heldSetCardIds.includes(c.id));
     expect(sets.length).toBeGreaterThan(0);
-    expect(sets).toHaveLength(storySetDefs.length - heldSetCardIds.length);
+    expect(sets).toHaveLength(storySets.length - heldSetCardIds.length);
     for (const card of sets) {
       const src = cardArtSource(card, deps);
       expect(src.kind, card.id).toBe('plate');

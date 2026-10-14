@@ -13,10 +13,12 @@ import { heritageCardsAll } from '../heritage-cards';
  * verbatim (F-STORY-006 T-AWARD-6), so it is reworded only in the story with its sources.
  */
 const AGE_WORDS: Record<'en' | 'es' | 'ko', RegExp> = {
-  en: /\b(kids?|child(ren|hood)?)\b/i,
-  es: /\b(niñ[oa]s?|infantil(es)?|infancia)\b/iu,
-  // eorini, aideul (Korean words for "child" and "children"), written as escapes so this file holds no Hangul.
-  ko: /\uC5B4\uB9B0\uC774|\uC544\uC774\uB4E4/u,
+  en: /\b(kids?|child(ren|hood)?|little ones?|toddlers?|young (learners?|readers?))\b/i,
+  es: /\b(niñ[oa]s?|niñez|chic[oa]s?|infantil(es)?|infancia)\b/iu,
+  // eorini, aideul, kkoma, aedeul (Korean words for "child", "children", "little one", "kids"), and a word-bounded
+  // ai ("child") with its common particles, written as escapes so this file holds no Hangul. The bound keeps
+  // longer words that start with the same two syllables (aiseukeurim, "ice cream") out of the match.
+  ko: /\uC5B4\uB9B0\uC774|\uAF2C\uB9C8|\uC560\uB4E4|(^|[\s"'(])\uC544\uC774(\uB4E4|\uAC00|\uB294|\uC758|\uB97C|\uB3C4|\uC640)?(?=[\s.,!?"')]|$)/u,
 };
 
 const REPO = join(__dirname, '../../../../..');
@@ -39,6 +41,17 @@ describe('heritage card copy has no age words (#589)', () => {
     expect(AGE_WORDS.en.test('Kidney beans and a skidding sled')).toBe(false);
     expect(AGE_WORDS.es.test('los niños cantan')).toBe(true);
     expect(AGE_WORDS.ko.test('\uC5B4\uB9B0\uC774')).toBe(true);
+    expect(AGE_WORDS.en.test('for little ones and young learners')).toBe(true);
+    expect(AGE_WORDS.es.test('los chicos juegan')).toBe(true);
+    expect(AGE_WORDS.es.test('desde la niñez')).toBe(true);
+    // ai-ga (a child, subject), ai alone, kkoma, aedeul.
+    expect(AGE_WORDS.ko.test('\uC544\uC774\uAC00 \uC77D\uC5B4\uC694')).toBe(true);
+    expect(AGE_WORDS.ko.test('\uC544\uC774')).toBe(true);
+    expect(AGE_WORDS.ko.test('\uAF2C\uB9C8')).toBe(true);
+    expect(AGE_WORDS.ko.test('\uC560\uB4E4')).toBe(true);
+    // Not age words: aiseukeurim ("ice cream") and a Spanish "chicle".
+    expect(AGE_WORDS.ko.test('\uC544\uC774\uC2A4\uD06C\uB9BC')).toBe(false);
+    expect(AGE_WORDS.es.test('un chicle')).toBe(false);
   });
 
   it('no hand-written English card title, blurb or fact carries an age word', () => {

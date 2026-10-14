@@ -204,6 +204,11 @@ describe('caregiver.browse (BR-7)', () => {
     // A closed Words row (switch on, sampler pass) says so, with the learner's own words (section 4.2).
     expect(browse.home.wordsRowClosedA11y('Food', 12)).toBe('Food, 12 words. Not open yet. Opens the topic.');
     expect(browse.home.wordsRowClosedA11y('Food', 1)).toBe('Food, 1 word. Not open yet. Opens the topic.');
+    // The spoken name holds the words the row draws, in every locale (WCAG 2.5.3 label in name).
+    for (const locale of ['en', 'es', 'ko'] as const) {
+      const m = getMessages(locale);
+      expect(m.caregiver.browse.home.wordsRowClosedA11y('Food', 12), locale).toContain(m.learner.access.notOpen);
+    }
     expect(browse.home.storyTileA11y('The Moon Rabbit', 4)).toBe('The Moon Rabbit. About 4 minutes.');
     expect(browse.home.storyTileA11y('The Moon Rabbit', 1)).toBe('The Moon Rabbit. About 1 minute.');
     expect(browse.keep.failed).toBe('Lessons could not be kept on this device.');

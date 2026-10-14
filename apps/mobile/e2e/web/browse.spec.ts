@@ -1266,13 +1266,7 @@ test.describe(SWITCH_ON_SUITE, () => {
     await shot(page, 'switch-on-browse-home-words-pixel5');
   });
 
-  test('a closed lesson page: the grown-up caption in place of the preview, and Open billing goes to billing and sends browse.plans_tapped', async ({ page }) => {
-    const tapped: Array<Record<string, unknown>> = [];
-    await page.route('**/api/telemetry', async (route) => {
-      const body = route.request().postDataJSON() as { name?: string; payload?: Record<string, unknown> } | null;
-      if (body?.name === 'browse.plans_tapped' && body.payload) tapped.push(body.payload);
-      await route.fulfill({ status: 200, contentType: 'application/json', body: '{"ok":true}' });
-    });
+  test('a closed lesson page: the grown-up caption in place of the preview, and Open billing goes to billing', async ({ page }) => {
     await page.route('**/account/billing', (route) => route.fulfill({ status: 200, contentType: 'text/html', body: '<!doctype html><title>billing</title>' }));
 
     await openSampler(page, `#t=${CLOSED_QUEST}&s=plan`);
@@ -1287,8 +1281,27 @@ test.describe(SWITCH_ON_SUITE, () => {
 
     await page.getByRole('button', { name: browse.item.openBilling.cta }).click();
     await expect(page).toHaveURL(/\/account\/billing$/);
-    // The event is sent on a build with an API address (E2E_TELEMETRY=1); without one the client sends nothing.
-    if (process.env.E2E_TELEMETRY === '1') await expect.poll(() => tapped).toEqual([{ kind: 'quest' }]);
+  });
+
+  /*
+   * The event is sent only by a build with an API address (EXPO_PUBLIC_API_BASE_URL, E2E_TELEMETRY=1); without one
+   * the client sends nothing, so this case is reported as skipped, not passed (the my-route.spec.ts R-10 pattern):
+   *   E2E_CONTENT_GATING=1 E2E_TELEMETRY=1 pnpm --filter @hangul-route/mobile exec playwright test browse -g "plans_tapped"
+   */
+  test('a closed lesson page: Open billing sends browse.plans_tapped with its kind only', async ({ page }) => {
+    test.skip(process.env.E2E_TELEMETRY !== '1', 'needs a web build with an API address (E2E_TELEMETRY=1)');
+    const tapped: Array<Record<string, unknown>> = [];
+    await page.route('**/api/telemetry', async (route) => {
+      const body = route.request().postDataJSON() as { name?: string; payload?: Record<string, unknown> } | null;
+      if (body?.name === 'browse.plans_tapped' && body.payload) tapped.push(body.payload);
+      await route.fulfill({ status: 200, contentType: 'application/json', body: '{"ok":true}' });
+    });
+    await page.route('**/account/billing', (route) => route.fulfill({ status: 200, contentType: 'text/html', body: '<!doctype html><title>billing</title>' }));
+
+    await openSampler(page, `#t=${CLOSED_QUEST}&s=plan`);
+    await page.getByRole('button', { name: browse.item.openBilling.cta }).click();
+    await expect(page).toHaveURL(/\/account\/billing$/);
+    await expect.poll(() => tapped).toEqual([{ kind: 'quest' }]);
   });
 
   test("a closed lesson's Journey cell and outline row carry the learner's mark and the caption, and Open still opens its page", async ({ page }) => {
