@@ -22,4 +22,5 @@ export const PLAYABLE_KINDS: ReadonlySet<MinigameKind> = new Set<MinigameKind>([
   'tap-respond',
   'story-read',
   'story-check',
+  'trace-word',
 ]);

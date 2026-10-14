@@ -434,6 +434,13 @@ export const learner = {
         start: 'Prueba otra vez: ¡empieza arriba!',
       },
     },
+    traceWord: {
+      heading: 'Traza la palabra',
+      idle: 'Escribe cada bloque. Empieza por la primera letra.',
+      letterIdle: 'Traza la letra del recuadro iluminado.',
+      blockDone: '¡Un bloque listo! Ahora el siguiente.',
+      wordDone: '¡Escribiste toda la palabra!',
+    },
     picWord: {
       heading: 'Une cada imagen',
       instruction: 'Toca una imagen y luego su palabra.',

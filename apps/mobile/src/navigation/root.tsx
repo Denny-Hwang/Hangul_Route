@@ -53,6 +53,7 @@ import { cellStoriesRouteId } from '../logic/story/cell-stories';
 import { STORY_FIXTURES_BUILD, StoryE2eHook } from './story-e2e';
 import { PlacementE2eHook } from './placement-e2e';
 import { VocabE2eHook, VocabQuestionE2eScreen } from './vocab-question-e2e';
+import { TraceWordE2eHook, TraceWordE2eScreen } from './trace-word-e2e';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -83,6 +84,7 @@ export function RootNavigator(): React.ReactElement {
       {STORY_FIXTURES_BUILD ? <StoryE2eHook /> : null}
       {STORY_FIXTURES_BUILD ? <PlacementE2eHook /> : null}
       {STORY_FIXTURES_BUILD ? <VocabE2eHook /> : null}
+      {STORY_FIXTURES_BUILD ? <TraceWordE2eHook /> : null}
       <Stack.Navigator
         screenOptions={{ headerShown: false, animation: 'fade_from_bottom' }}
         initialRouteName={hasProfile ? 'Main' : 'Onboarding'}
@@ -141,6 +143,7 @@ export function RootNavigator(): React.ReactElement {
         <Stack.Screen name="VocabSpeedRound" component={VocabSpeedRoundScreen} />
         <Stack.Screen name="VocabResults" component={VocabResultsScreen} />
         {STORY_FIXTURES_BUILD ? <Stack.Screen name="VocabQuestionE2e" component={VocabQuestionE2eScreen} /> : null}
+        {STORY_FIXTURES_BUILD ? <Stack.Screen name="TraceWordE2e" component={TraceWordE2eScreen} /> : null}
       </Stack.Navigator>
       {/* After the stack, so the navigator is registered when the boot intent opens the PIN screen (F-APP-001 section 3.9). */}
       <BootIntentHook />
