@@ -524,7 +524,7 @@ export const consoleMsgs = {
       sessionsNote: (sessions: number, weeks: number) => `모두 ${weeks}주 동안 ${sessions}회예요.`,
       tooMany: '계획에 담을 수 있는 양보다 많아요. 주 수나 학습 횟수를 줄여 주세요.',
       pace: '일주일에 며칠 할까요?',
-      paces: { gentle: '여유롭게', steady: '꾸준히', brisk: '활발하게' },
+      paces: { gentle: '여유롭게', steady: '꾸준히', brisk: '빠르게' },
       paceOption: (pace: string, n: number) => `${pace} · 주 ${n}일`,
       suggested: '추천',
       offChips: '고른 요일 수가 학습 속도를 정해요. 추천 기간을 보려면 속도를 하나 골라 주세요.',

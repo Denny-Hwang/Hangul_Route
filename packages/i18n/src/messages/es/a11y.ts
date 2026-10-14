@@ -55,6 +55,8 @@ export const a11y = {
   discoverLetter: (romanization: string, soundHint?: string) =>
     soundHint === undefined ? `Letra coreana ${romanization}` : `Letra coreana ${romanization}. ${soundHint}`,
   discoverFinal: (romanization: string) => `Consonante final coreana ${romanization}`,
+  practiceLetter: (romanization: string) => `Practicar otra vez la letra ${romanization}`,
+  practiceFinal: (romanization: string) => `Practicar otra vez la consonante final ${romanization}`,
   lockedCard: 'Tarjeta bloqueada',
   lockedCardHint: (hint: string) => `Tarjeta bloqueada. ${hint}`,
   newCard: (title: string) => `${title}. Nueva`,
@@ -226,11 +228,15 @@ export const a11y = {
   },
   shell: {
     redirecting: 'Te llevamos a tu inicio…',
+    personaSwitch: 'Cambiar entre Familia y Docente',
   },
   access: {
     next: 'Siguiente',
     inPlan: 'En tu plan',
     notOpen: (title: string) => `${title}: aún sin abrir. Abre la página de la lección.`,
+    /** Title, lines and tags joined by ". ", as in English: the parts arrive in Spanish, so the joiner has no word of its own. */
+    row: (title: string, details: readonly string[], tags: readonly string[]) =>
+      `${[title, ...details, ...tags].map((part) => part.trim().replace(/[.!?]+$/, '')).join('. ')}.`,
   },
   presenter: {
     slide: (i: number, n: number, what: string) => `Diapositiva ${i} de ${n}, ${what}`,
