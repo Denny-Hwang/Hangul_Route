@@ -24,6 +24,7 @@ import {
   TEACHER_VISIBLE_SUMMARY_KEYS,
   TRANSFER_CONSENT_LOCALES,
   TRANSFER_CONSENT_TEXT,
+  classScopeItems,
   isFullScopeVersion,
   type ClassScopeLineId,
   type TransferConsentLocale,
@@ -32,14 +33,14 @@ import {
 /** Pinned hash of the class-scope text per version and locale: edit a word, bump CLASS_SCOPE_TEXT_VERSION. */
 const PINNED: Record<string, Record<TransferConsentLocale, string>> = {
   'class-scope-2026-10': {
-    en: 'a26462e0c5344ef1a0e8f60d7b2c65c5b35bdf931782a87e64d49a2850bb0d7b',
-    ko: '8baa7825471599888b7e243d7f3fdd4208963ac62dc32abaad771b1e08bad4b4',
-    es: 'c1af7c2d7ee46ce84fec8e83e514894db938f665e75b384b9c2592e93fd74166',
+    en: 'cc00edaebcdcedbeef4287e2d9ac9abcdf7b8e127fa67d1c30896c384f2d116d',
+    ko: '691424a8a69d2b01bd75a91929ccc095096958a4daa6046e9fa2e6ba77f3caa8',
+    es: '48ca589628c8f4e8e57a4c8abfa3c2372a777ff31f37a6b7b8ff40ead980b611',
   },
 };
 
 const sha256 = (value: string): string => createHash('sha256').update(value).digest('hex');
-const canonical = (locale: TransferConsentLocale): string => JSON.stringify(CLASS_SCOPE_LINE_IDS.map((id) => [id, CLASS_SCOPE_TEXT[locale].lines[id]]));
+const canonical = (locale: TransferConsentLocale): string => JSON.stringify({ lines: CLASS_SCOPE_LINE_IDS.map((id) => [id, CLASS_SCOPE_TEXT[locale].lines[id]]), items: CLASS_SCOPE_TEXT[locale].items });
 const placeholders = (s: string): string[] => [...s.matchAll(/\{([a-z]+)\}/g)].map((m) => m[1] as string).sort();
 function sentenceWordCounts(text: string): number[] {
   return text
@@ -141,6 +142,21 @@ describe('[TV] the class-scope text', () => {
     for (const id of CLASS_SCOPE_LINE_IDS as readonly ClassScopeLineId[]) {
       expect(CLASS_SCOPE_TEXT.en.lines[id]).not.toMatch(/\b(kids?|missed|failed|behind|lazy)\b/i);
     }
+  });
+});
+
+describe('[TV] the update lists every item, one class-neutral', () => {
+  it('lists every item of the class-move text in its order; only plan_progress has its own wording', () => {
+    for (const locale of TRANSFER_CONSENT_LOCALES) {
+      const items = classScopeItems(locale);
+      expect(items.map((i) => i.id)).toEqual([...TEACHER_VISIBLE_ITEM_IDS]);
+      for (const item of items) {
+        expect(item.text).not.toContain('{destination}');
+        if (item.id !== 'plan_progress') expect(item.text).toBe(TRANSFER_CONSENT_TEXT[locale].items[item.id]);
+      }
+    }
+    expect(classScopeItems('en').find((i) => i.id === 'plan_progress')?.text).toBe('Progress on homework from that class');
+    expect(CLASS_SCOPE_TEXT.ko.items.plan_progress).toMatch(/진도$/);
   });
 });
 
