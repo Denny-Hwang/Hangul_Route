@@ -28,6 +28,17 @@ describe('compareGrid: the block compare fits the panel (G-3 follow-up 1)', () =
     for (const row of chunkRows(Array.from({ length: 9 }), perRow)) expect(rowWidth(row.length, cell)).toBeLessThanOrEqual(288);
   });
 
+  it('wrapped lines are filled evenly and the cell grows to fit them (9 at 288 px: 5 + 4 at 54, not 8 + 1 at 32)', () => {
+    expect(compareGrid(9, 288, GAP, MIN, MAX)).toEqual({ cell: 54, perRow: 5 });
+    expect(chunkRows(Array.from({ length: 9 }), 5).map((r) => r.length)).toEqual([5, 4]);
+    // 17 blocks: 3 lines of at most 6, cell floor((288 - 20) / 6) = 44.
+    const { cell, perRow } = compareGrid(17, 288, GAP, MIN, MAX);
+    expect({ cell, perRow }).toEqual({ cell: 44, perRow: 6 });
+    expect(rowWidth(perRow, cell)).toBeLessThanOrEqual(288);
+    // Never above the largest cell.
+    expect(compareGrid(9, 200, GAP, 16, 20).cell).toBeLessThanOrEqual(20);
+  });
+
   it('a wide panel keeps every block on one line', () => {
     const { cell, perRow } = compareGrid(12, 640, GAP, MIN, MAX);
     expect(perRow).toBe(12);

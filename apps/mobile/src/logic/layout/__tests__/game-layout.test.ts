@@ -1,7 +1,16 @@
 import { layoutClassFor } from '@hangul-route/design-system/layout';
 import { spacing, touchTarget } from '@hangul-route/design-system/tokens';
 import { describe, expect, it } from 'vitest';
-import { answersColumnWidth, gameArrangement, pictureTextArrangement, stickyPromptColumn, stickyPromptMode, tileGridWidth, twoUpFits } from '../game-layout';
+import {
+  answersColumnWidth,
+  gameArrangement,
+  pictureTextArrangement,
+  screenScrollsWithColumns,
+  stickyPromptColumn,
+  stickyPromptMode,
+  tileGridWidth,
+  twoUpFits,
+} from '../game-layout';
 
 const at = (width: number, height: number) => layoutClassFor({ width, height });
 
@@ -142,6 +151,18 @@ describe('stickyPromptMode', () => {
     for (const os of ['web', 'ios', 'android']) {
       expect(stickyPromptMode('stacked', true, os)).toBe('none');
       expect(stickyPromptMode('side', false, os)).toBe('none');
+    }
+  });
+});
+
+describe('screenScrollsWithColumns', () => {
+  it('the screen stops scrolling only in native columns mode', () => {
+    expect(screenScrollsWithColumns('side', true, 'ios')).toBe(false);
+    expect(screenScrollsWithColumns('side', true, 'android')).toBe(false);
+    expect(screenScrollsWithColumns('side', true, 'web')).toBe(true);
+    for (const os of ['web', 'ios', 'android']) {
+      expect(screenScrollsWithColumns('stacked', true, os)).toBe(true);
+      expect(screenScrollsWithColumns('side', false, os)).toBe(true);
     }
   });
 });

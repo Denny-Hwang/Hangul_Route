@@ -20,7 +20,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Platform, View } from 'react-native';
 import { useMessages } from '../../i18n/use-messages';
 import { useRomanizationMode } from '../../i18n/use-romanization-mode';
-import { stickyPromptMode } from '../../logic/layout/game-layout';
+import { screenScrollsWithColumns } from '../../logic/layout/game-layout';
 import type { MinigameScope } from '../../logic/minigame-config';
 import {
   lineSpeech,
@@ -62,6 +62,9 @@ interface Props {
   /** Leave an empty scope (never a dead end). */
   onBack?: () => void;
 }
+
+/** D-2 D7: the realia stays in view beside the options. One flag for the Screen and GameColumns. */
+const STICKY_PROMPT = true;
 
 export function RealiaReadGame({ scope, host, onBack }: Props): React.ReactElement {
   const [seed] = useState(() => Math.floor(Math.random() * 0x7fffffff));
@@ -166,10 +169,10 @@ export function RealiaReadGame({ scope, host, onBack }: Props): React.ReactEleme
   const arrangement = realiaArrangement(layoutClass.windowWidth, layout.sideBySideMin);
   const columns = arrangement === 'side' ? 1 : realiaOptionColumns(round, layoutClass.windowWidth);
   // D7 on native: the sheet stays put beside the options, so the screen does not scroll; each column does.
-  const pinnedColumns = stickyPromptMode(arrangement, true, Platform.OS) === 'columns';
+  const screenScrolls = screenScrollsWithColumns(arrangement, STICKY_PROMPT, Platform.OS);
 
   return (
-    <Screen tone="canvas" scrollable={!pinnedColumns}>
+    <Screen tone="canvas" scrollable={screenScrolls}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
         <View style={{ flex: 1 }}>
           {header.kind === 'dots' ? (
@@ -186,7 +189,9 @@ export function RealiaReadGame({ scope, host, onBack }: Props): React.ReactEleme
       <GameColumns
         arrangement={arrangement}
         stackedGap="lg"
-        stickyPrompt
+        stickyPrompt={STICKY_PROMPT}
+        resetKey={round.id}
+        feedbackKey={status.hoya || status.lookHere ? `${state.wrongIds.length}|${status.hoya ?? ''}|${status.lookHere ?? ''}` : undefined}
         prompt={
           <View testID="realia-read-sheet-column" style={{ gap: spacing.sm }}>
             <RealiaSheet

@@ -159,6 +159,7 @@ pass                                    near miss (호야 typed as 호여)
 
 - **Pass**: the field takes the correct look with a check glyph, success haptic, Hoya cheering in the panel, auto-advance after the pause Trace uses (no Next button).
 - **Not a match**: nudge haptic, Hoya thinking (amber, never red), the two rows "You typed" and "The word", block under block; each block that differs is marked (amber border plus a small mark), a missing or extra block shows as an empty dashed box. [[ Fix it ]] brings the keyboard back with the typed text kept and the caret at the end, so the learner changes only what differs. The word stays in the panel's place above the keyboard (one line: `~~ 호야 ~~ (hoya)`) until the next Done.
+- **A long guess on a narrow panel** (F-CURR-001 G-3 follow-up 1): when the blocks do not fit one line at the minimum cell (`spacing.xxl`), the compare wraps into chunks of at most N = floor((inner + gap) / (cell + gap)) blocks, spread evenly over the lines it takes (9 blocks at 320 px: 5 + 4), with the cell as large as the fuller line allows. Each chunk draws its typed line over its word line, so the columns stay paired, and each chunk repeats the "You typed" / "The word" captions. The readout stays one accessible label.
 - **Near or far**: one block different (or one missing or extra) is a near miss ("Almost! Check the marked block."); more is far ("Here is how it is written. Try again."). Same panel, same button; only Hoya's line changes.
 
 ## Prompt modes

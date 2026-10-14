@@ -269,6 +269,14 @@ describe('Type Hangul: the block compare stays on screen at 320 px (G-3 follow-u
     const marked = score.blocks.filter((b) => b.status !== 'same');
     expect(views(r, 'type-hangul-typed-marked')).toHaveLength(marked.length);
     expect(views(r, 'type-hangul-target-marked')).toHaveLength(marked.length);
+    // Every pair is captioned ("You typed" over "The word"), not only the first one.
+    const chunks = views(r, 'type-hangul-compare-chunk');
+    expect(chunks).toHaveLength(typedRows.length);
+    for (const chunk of chunks) {
+      const words = screenTexts(chunk);
+      expect(words).toContain('You typed');
+      expect(words).toContain('The word');
+    }
     // The readout is one item, unchanged by the wrap.
     expect(views(r, 'type-hangul-compare')).toHaveLength(1);
   });

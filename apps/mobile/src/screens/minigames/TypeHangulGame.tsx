@@ -443,10 +443,11 @@ export function ResultPanel({ state, round, width, height, gutter, panelRef, onF
           <>
             <View accessible accessibilityLabel={readout} style={{ gap: spacing.xs }} testID="type-hangul-compare">
               {chunks.map((chunk, c) => (
-                <View key={c} style={{ gap: spacing.xs, paddingTop: c === 0 ? 0 : spacing.sm }} testID="type-hangul-compare-chunk">
-                  {c === 0 ? <Caption tone="secondary">{t.typedLabel}</Caption> : null}
+                // Every chunk carries both captions, so a lower pair is never two unlabelled rows of boxes.
+                <View key={c} style={{ gap: spacing.xs, paddingTop: c === 0 ? 0 : spacing.md }} testID="type-hangul-compare-chunk">
+                  <Caption tone="secondary">{t.typedLabel}</Caption>
                   <BlockRow blocks={chunk} side="typed" cell={cell} />
-                  {c === 0 ? <Caption tone="secondary">{t.targetLabel}</Caption> : null}
+                  <Caption tone="secondary">{t.targetLabel}</Caption>
                   <BlockRow blocks={chunk} side="target" cell={cell} />
                 </View>
               ))}

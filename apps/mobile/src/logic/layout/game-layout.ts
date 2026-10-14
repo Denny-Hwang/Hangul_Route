@@ -81,3 +81,12 @@ export function stickyPromptMode(arrangement: GameArrangement, requested: boolea
 export function stickyPromptColumn(arrangement: GameArrangement, requested: boolean, os: string): boolean {
   return stickyPromptMode(arrangement, requested, os) !== 'none';
 }
+
+/**
+ * Whether the game's `Screen` scrolls (`scrollable`): every arrangement except native `columns`,
+ * where each column scrolls on its own and the screen must give them a bounded height. The caller
+ * and GameColumns read the same flag through this, so the two decisions cannot drift apart.
+ */
+export function screenScrollsWithColumns(arrangement: GameArrangement, stickyPrompt: boolean, os: string): boolean {
+  return stickyPromptMode(arrangement, stickyPrompt, os) !== 'columns';
+}

@@ -7,7 +7,7 @@
  * cannot hold every block on one line (a 320 px phone with a long guess: MAX_TYPED allows 24), the
  * blocks are cut into chunks that fit the line, and the panel draws the typed row and the word row
  * per chunk, so each pair stays in one column and every block stays on screen (F-CURR-001 G-3
- * follow-up 1).
+ * follow-up 1). The lines are filled evenly and the cell grows to what the fuller line allows.
  */
 export interface CompareGrid {
   /** Side of one block cell. */
@@ -19,9 +19,14 @@ export interface CompareGrid {
 export function compareGrid(count: number, inner: number, gap: number, min: number, max: number): CompareGrid {
   const n = Math.max(count, 1);
   const room = Math.max(0, inner);
-  const cell = Math.max(min, Math.min(max, Math.floor((room - (n - 1) * gap) / n)));
+  const fit = (k: number): number => Math.floor((room - (k - 1) * gap) / k);
+  const cell = Math.max(min, Math.min(max, fit(n)));
   const perRow = Math.max(1, Math.min(n, Math.floor((room + gap) / (cell + gap))));
-  return { cell, perRow };
+  if (perRow >= n) return { cell, perRow };
+  // Wrapping: spread the blocks evenly over the lines it takes (9 at 288 px: 5 + 4, not 8 + 1), so
+  // each cell is as large as those lines allow instead of staying at the minimum.
+  const even = Math.ceil(n / Math.ceil(n / perRow));
+  return { cell: Math.max(min, Math.min(max, fit(even))), perRow: even };
 }
 
 /** `items` cut into lines of `perRow` (the last one may be shorter). */
