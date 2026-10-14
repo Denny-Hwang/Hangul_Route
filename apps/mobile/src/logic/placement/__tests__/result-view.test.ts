@@ -1,5 +1,6 @@
 import type { PlacementResult, RouteCatalog, RouteQuest, RouteSeed } from '@hangul-route/content-schema';
 import { getMessages } from '@hangul-route/i18n';
+import { routeEnabledFor } from '../../../config/flags';
 import { describe, expect, it } from 'vitest';
 import { stripCopyProblems } from '../copy';
 import {
@@ -69,6 +70,19 @@ const input = (over: Partial<ResultViewInput> = {}): ResultViewInput => ({
   hasReviewedShelfStory: true,
   gateRequired: false,
   ...over,
+});
+
+describe('the weekly-plan strip follows the UI locale (P2-8b)', () => {
+  it('an es or ko UI with the flag on gets no strip and no plan link for the grown-up: Start leads', () => {
+    for (const locale of ['es', 'ko'] as const) {
+      const routeEnabled = routeEnabledFor(locale, { routeEnabled: true }, false);
+      const self = resultView(input({ routeEnabled }));
+      expect(self).toMatchObject({ strip: false, primary: 'start', secondary: null });
+      expect(resultView(input({ routeEnabled, profileType: 'child' })).links).not.toContain('forGrownUpsPlan');
+    }
+    const en = resultView(input({ routeEnabled: routeEnabledFor('en', { routeEnabled: true }, false) }));
+    expect(en).toMatchObject({ strip: true, primary: 'usePlan', secondary: 'justStart' });
+  });
 });
 
 describe('shortHintFires (section 3.9)', () => {

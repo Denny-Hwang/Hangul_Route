@@ -229,7 +229,7 @@ export interface MyRouteViewInput {
   letterWall?: readonly LetterTile[];
   /** The current week of the goal's weekly plan (`planWeekOf`); absent or null shows no plan line. */
   week?: number | null;
-  /** F-PLAN-002's `RouteOverview` is in the navigator (`flags.routeEnabled`); false or absent shows no Open plan link. */
+  /** The weekly plan entries are on for this UI locale (`routeEnabledFor(locale)`, P2-8b); false or absent shows no Open plan link. */
   planOverview?: boolean;
   /** Formats the plan's last day for the grown-up "Plan ends" line (LR-OD-7). */
   formatDay?: (day: DateKey) => string;

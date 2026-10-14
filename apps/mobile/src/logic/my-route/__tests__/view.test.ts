@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { MinigameKindSchema, type ProgressSnapshot, type StageKey, type ThemeKey } from '@hangul-route/content-schema';
 import { getMessages } from '@hangul-route/i18n';
+import { routeEnabledFor } from '../../../config/flags';
 import { buildMyRoute } from '../model';
 import { letterWallView, type LetterTile } from '../letter-wall';
 import { SKILL_OF_KIND } from '../skills';
@@ -450,6 +451,15 @@ describe('myRouteView: the route card, the weekly plan line and the plan cells (
     expect(view(own, { viewer: 'grownup', week: 3, planOverview: true }).planOpen).toBeNull();
     expect(view(own, { week: 3, planOverview: false }).planOpen).toBeNull();
     expect(view(own, { week: 3 }).planOpen).toBeNull();
+  });
+
+  it('an es or ko UI with the flag on shows no Open plan link: the screen passes routeEnabledFor(locale) (P2-8b)', () => {
+    const own = { ...model(APPENDIX_C), goal: { stage: 'stage1' as const, from: 'self' as const, sourceId: 'route:1', endsOn: '2026-11-01', reached: false, taste: false } };
+    for (const locale of ['es', 'ko'] as const) {
+      const planOverview = routeEnabledFor(locale, { routeEnabled: true }, false);
+      expect(view(own, { week: 3, planOverview, messages: getMessages(locale) }).planOpen).toBeNull();
+    }
+    expect(view(own, { week: 3, planOverview: routeEnabledFor('en', { routeEnabled: true }, false) }).planOpen).toBe('Open plan');
   });
 
   it('Open plan reads in every UI locale', () => {

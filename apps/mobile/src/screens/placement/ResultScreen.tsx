@@ -40,7 +40,7 @@ import { PlanStrip, PlanUpdateCard } from './PlanParts';
  * level: never a number, ratio, percent or "score"), a mini map with a pin on
  * the start cell and a light outline on cells the route skips ahead of, and
  * three route cards. A retake that changes nothing says so; a route with no
- * entitled quest left says "You know a lot!". Behind `flags.routeEnabled`
+ * entitled quest left says "You know a lot!". Behind `routeEnabledFor(locale)`
  * (P-7b, wireframe journey/my-route-overview.md J1, J3, K3): a self profile
  * gets the weekly-plan strip (**Use this plan** with one tap, no PIN, OD-14;
  * **Change**; **Just start**), below the not-tested line when reading was not

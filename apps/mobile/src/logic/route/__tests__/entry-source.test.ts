@@ -1,6 +1,7 @@
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { readdirSync, readFileSync } from 'node:fs';
+import { join, relative, sep } from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { routeEnabledFor } from '../../../config/flags';
 
 /**
  * F-PLAN-002 P2-8b: with `flags.routeEnabled` on by default, the learner entries to the weekly plan
@@ -28,6 +29,67 @@ describe('weekly plan entries follow routeEnabledFor(locale) (P2-8b)', () => {
     for (const name of ['RouteProposal', 'RouteSetup', 'RoutePreview', 'RouteOverview']) {
       expect(root).toMatch(new RegExp(`\\{flags\\.routeEnabled \\? <Stack\\.Screen name="${name}"`));
     }
+  });
+});
+
+describe('every learner-facing weekly plan entry reads routeEnabledFor(locale) (P2-8b follow-up, #577)', () => {
+  // The only places that may read the raw flag: the stack registering the plan screens (the entries gate) and the
+  // daily re-pace of a plan the learner already has (#577: it keeps a made plan current whatever the UI locale).
+  const RAW_FLAG_READERS: Readonly<Record<string, number>> = {
+    'navigation/root.tsx': 4,
+    'store/membership-store.ts': 2,
+  };
+  const SCREEN_ENTRIES: Readonly<Record<string, string>> = {
+    'screens/route/PlanPromptCard.tsx': 'routeEnabledFor(useLocale())',
+    'screens/profile/ProfileScreen.tsx': 'routeEnabledFor(locale)',
+    'screens/my-route/MyRouteScreen.tsx': 'planOverview: routeEnabledFor(locale)',
+    'screens/parent/SuggestedPlanCard.tsx': 'routeEnabledFor(useLocale())',
+    'screens/placement/PlacementScreen.tsx': 'routeEnabledFor(uiLocale)',
+  };
+
+  const walk = (dir: string): string[] =>
+    readdirSync(dir, { withFileTypes: true }).flatMap((e) => {
+      const full = join(dir, e.name);
+      if (e.isDirectory()) return e.name === '__tests__' || e.name === '__generated__' ? [] : walk(full);
+      return /\.tsx?$/.test(e.name) && !/\.test\.tsx?$/.test(e.name) ? [full] : [];
+    });
+  const root = join(__dirname, '../../..');
+  // Code reads only: a doc comment or a line comment that names the flag is not a reader.
+  const codeReads = (text: string): number =>
+    text
+      .split('\n')
+      .filter((line) => !/^\s*(\*|\/\/|\/\*|\{\/\*)/.test(line))
+      .filter((line) => line.includes('flags.routeEnabled')).length;
+
+  it('no file outside the allow list reads flags.routeEnabled', () => {
+    const readers: Record<string, number> = {};
+    for (const file of walk(root)) {
+      const n = codeReads(readFileSync(file, 'utf8'));
+      if (n > 0) readers[relative(root, file).split(sep).join('/')] = n;
+    }
+    expect(readers).toEqual(RAW_FLAG_READERS);
+  });
+
+  it('each entry screen reads the locale switch', () => {
+    for (const [file, call] of Object.entries(SCREEN_ENTRIES)) {
+      expect(src(file), file).toContain(call);
+      expect(codeReads(src(file)), file).toBe(0);
+    }
+  });
+
+  it('the report card (SuggestedPlanCard) neither reads the offer nor draws in an es or ko UI', () => {
+    const card = src('screens/parent/SuggestedPlanCard.tsx');
+    expect(card).toContain('const enabled = routeEnabledFor(useLocale());');
+    expect(card).toContain('if (!enabled) return;');
+    expect(card).toContain('if (!enabled) return null;');
+    expect(routeEnabledFor('es', { routeEnabled: true }, false)).toBe(false);
+    expect(routeEnabledFor('ko', { routeEnabled: true }, false)).toBe(false);
+  });
+
+  it('the placement strip and its offer read the same locale switch', () => {
+    const placement = src('screens/placement/PlacementScreen.tsx');
+    expect(placement).toContain('planOfferNow(profile.id, planOn, new Date())');
+    expect(placement).toContain('routeEnabled: planOn,');
   });
 });
 
