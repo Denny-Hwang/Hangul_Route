@@ -282,6 +282,18 @@ describe('questAccess (F-ENT-003 section 3.3)', () => {
     }
   });
 
+  it('golden: the Playdate Talk quests are paid grid lessons (F-CURR-001 S4-4, section 3.13)', () => {
+    for (const questId of ['quest:stage4-crafts-q1', 'quest:stage4-crafts-q2', 'quest:stage4-crafts-q3']) {
+      expect(questsAll.some((q) => q.id === questId), questId).toBe(true);
+      const at = (tier: Tier, gatingEnabled: boolean, done: boolean): QuestAccess =>
+        questAccess({ questId, tier, gatingEnabled, completedQuestIds: done ? kept(questId) : none });
+      expect(at('free', true, false), questId).toBe('closed');
+      expect(at('premium', true, false), questId).toBe('open-premium');
+      expect(at('free', false, false), questId).toBe('open-switch-off');
+      expect(at('free', true, true), questId).toBe('open-kept');
+    }
+  });
+
   it('golden: the Daily Mini-Sentences quests (F-CURR-001 S3-2) are grid lessons past the free ones (section 3.13)', () => {
     const ids = ['quest:stage3-life-q1', 'quest:stage3-life-q2', 'quest:stage3-life-q3'];
     for (const id of ids) {

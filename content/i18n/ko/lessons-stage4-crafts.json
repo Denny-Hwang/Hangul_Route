@@ -1,0 +1,153 @@
+{
+  "locale": "ko",
+  "domain": "lessons-stage4-crafts",
+  "entries": {
+    "quest:stage4-crafts-q1": {
+      "blurb": "두 친구가 같이 놀자고 하는 말을 읽어요.",
+      "steps.s1.hoyaLine": "미나가 놀고 싶대요. 미나가 하는 말을 읽어 봐요!",
+      "steps.s1.title": "놀 시간",
+      "steps.s2.discover.pages.0.caption": "친한 친구끼리는 말끝에 공손한 ‘요’를 붙이지 않고 편하게 말할 때가 많아요.",
+      "steps.s2.discover.pages.0.items.0.lines.0.line.gloss": "함께 놀자고 친구에게 하는 말",
+      "steps.s2.discover.pages.0.items.0.lines.0.speaker": "미나",
+      "steps.s2.discover.pages.0.items.0.lines.1.line.gloss": "친구에게 좋다고 대답하는 말",
+      "steps.s2.discover.pages.0.items.0.lines.1.speaker": "호야",
+      "steps.s2.discover.pages.1.caption": "호야가 무슨 놀이를 할지 묻고, 미나가 윷을 던지며 노는 윷놀이를 골라요.",
+      "steps.s2.discover.pages.1.items.0.lines.0.line.gloss": "무슨 놀이를 할지 친구에게 묻는 말",
+      "steps.s2.discover.pages.1.items.0.lines.0.speaker": "호야",
+      "steps.s2.discover.pages.1.items.0.lines.1.line.gloss": "윷을 던지는 놀이를 하자는 말",
+      "steps.s2.discover.pages.1.items.0.lines.1.speaker": "미나",
+      "steps.s2.hoyaLine": "‘들어 보기’를 눌러 한 줄씩 들어 봐요.",
+      "steps.s2.title": "친구끼리 하는 말",
+      "steps.s3.title": "호야의 대답 고르기",
+      "steps.s4.title": "대화 순서 맞추기",
+      "steps.s5.title": "듣고 대답 고르기",
+      "steps.s6.hoyaLine": "친구끼리 하는 진짜 대화를 따라갔어요!",
+      "steps.s6.title": "이제 놀아요!",
+      "teaser": "다음: 윷놀이에서 차례를 지켜요.",
+      "title": "무슨 놀이를 할지 정해요"
+    },
+    "minigame:s4-crafts-q1-practice": {
+      "dialogue.0.npc": "함께 놀자고 친구에게 하는 말",
+      "dialogue.0.options.chaegieyo.gloss": "읽는 물건이 무엇인지 알려 주는 말",
+      "dialogue.0.options.hakgyoe-gayo.gloss": "배우러 가는 곳으로 간다는 말",
+      "dialogue.0.options.joa.gloss": "친구에게 좋다고 대답하는 말",
+      "dialogue.1.npc": "무슨 놀이를 할지 친구에게 묻는 말",
+      "dialogue.1.options.joa.gloss": "친구에게 좋다고 대답하는 말",
+      "dialogue.1.options.mureul-masyeoyo.gloss": "목마를 때 맑은 액체를 마신다는 말",
+      "dialogue.1.options.yunnori-haja.gloss": "윷을 던지는 놀이를 하자는 말",
+      "dialogue.2.npc": "윷을 던지는 놀이를 하자는 말",
+      "dialogue.2.options.joa.gloss": "친구에게 좋다고 대답하는 말",
+      "dialogue.2.options.mureul-masyeoyo.gloss": "목마를 때 맑은 액체를 마신다는 말",
+      "dialogue.2.options.mwo-hago-nolkka.gloss": "무슨 놀이를 할지 친구에게 묻는 말"
+    },
+    "minigame:s4-crafts-q1-apply": {
+      "storySteps.l1.label": "함께 놀자고 친구에게 하는 말",
+      "storySteps.l2.label": "좋다며 무슨 놀이를 할지 묻는 말",
+      "storySteps.l3.label": "윷을 던지는 놀이를 하자는 말"
+    },
+    "minigame:s4-crafts-q1-check": {
+      "listenPick.rounds.r1.prompt": "윷을 던지는 놀이를 하자는 말",
+      "listenPick.rounds.r2.prompt": "무슨 놀이를 할지 친구에게 묻는 말"
+    },
+    "quest:stage4-crafts-q2": {
+      "blurb": "미나와 윷놀이를 하며 차례를 지켜요.",
+      "steps.s1.hoyaLine": "우리는 윷놀이를 하고 있어요. 차례대로 해 봐요!",
+      "steps.s1.title": "누구 차례?",
+      "steps.s2.discover.pages.0.caption": "친구끼리는 ‘요’ 없이 ‘야’나 ‘어’로 말을 맺기도 해요. 예를 들어 ‘내 차례야’, ‘고마워’처럼요.",
+      "steps.s2.discover.pages.0.items.0.lines.0.line.gloss": "자기 순서라고 하는 말",
+      "steps.s2.discover.pages.0.items.0.lines.0.speaker": "호야",
+      "steps.s2.discover.pages.0.items.0.lines.1.line.gloss": "친구에게 좋다고 대답하는 말",
+      "steps.s2.discover.pages.0.items.0.lines.1.speaker": "미나",
+      "steps.s2.discover.pages.1.caption": "미나가 칭찬하고, 호야가 순서를 넘겨요.",
+      "steps.s2.discover.pages.1.items.0.lines.0.line.gloss": "친구를 칭찬하는 말",
+      "steps.s2.discover.pages.1.items.0.lines.0.speaker": "미나",
+      "steps.s2.discover.pages.1.items.0.lines.1.line.gloss": "고맙다며 상대 순서라고 하는 말",
+      "steps.s2.discover.pages.1.items.0.lines.1.speaker": "호야",
+      "steps.s2.hoyaLine": "‘들어 보기’를 눌러 한 줄씩 들어 봐요.",
+      "steps.s2.title": "차례대로 하기",
+      "steps.s3.title": "호야의 대답 고르기",
+      "steps.s4.title": "대화 순서 맞추기",
+      "steps.s5.title": "듣고 대답 고르기",
+      "steps.s6.hoyaLine": "진짜 놀이할 때처럼 차례를 잘 지켰어요!",
+      "steps.s6.title": "재미있었어요!",
+      "teaser": "다음: 공손하게 말하기와 편하게 말하기.",
+      "title": "차례대로 해요"
+    },
+    "minigame:s4-crafts-q2-practice": {
+      "dialogue.0.npc": "상대 순서라고 하는 말",
+      "dialogue.0.options.hakgyoe-gayo.gloss": "배우러 가는 곳으로 간다는 말",
+      "dialogue.0.options.jalhaesseo.gloss": "친구를 칭찬하는 말",
+      "dialogue.0.options.joa-nae-charyeya.gloss": "좋다며 자기 순서라고 하는 말",
+      "dialogue.1.npc": "친구를 칭찬하는 말",
+      "dialogue.1.options.chaegieyo.gloss": "읽는 물건이 무엇인지 알려 주는 말",
+      "dialogue.1.options.gomawo.gloss": "친구에게 고마운 마음을 전하는 말",
+      "dialogue.1.options.nae-charyeya.gloss": "자기 순서라고 하는 말",
+      "dialogue.2.npc": "자기 순서라고 하는 말",
+      "dialogue.2.options.gomawo.gloss": "친구에게 고마운 마음을 전하는 말",
+      "dialogue.2.options.joa.gloss": "친구에게 좋다고 대답하는 말",
+      "dialogue.2.options.mureul-masyeoyo.gloss": "목마를 때 맑은 액체를 마신다는 말"
+    },
+    "minigame:s4-crafts-q2-apply": {
+      "storySteps.l1.label": "윷을 던지는 놀이를 하자는 말",
+      "storySteps.l2.label": "좋다며 자기 순서라고 하는 말",
+      "storySteps.l3.label": "친구를 칭찬하는 말",
+      "storySteps.l4.label": "고맙다며 상대 순서라고 하는 말"
+    },
+    "minigame:s4-crafts-q2-check": {
+      "listenPick.rounds.r1.prompt": "친구를 칭찬하는 말",
+      "listenPick.rounds.r2.prompt": "상대 순서라고 하는 말"
+    },
+    "quest:stage4-crafts-q3": {
+      "blurb": "공손하게 묻는 말과 편하게 묻는 말을 읽어요.",
+      "steps.s1.hoyaLine": "다미도 놀고 싶대요. 다미가 어떻게 묻는지 봐요!",
+      "steps.s1.title": "묻는 두 가지 방법",
+      "steps.s2.discover.pages.0.caption": "친한 친구 미나에게 호야는 편하게 말해요.",
+      "steps.s2.discover.pages.0.items.0.lines.0.line.gloss": "함께 할지 친구에게 편하게 묻는 말",
+      "steps.s2.discover.pages.0.items.0.lines.0.speaker": "미나",
+      "steps.s2.discover.pages.0.items.0.lines.1.line.gloss": "친구에게 좋다고 대답하는 말",
+      "steps.s2.discover.pages.0.items.0.lines.1.speaker": "호야",
+      "steps.s2.discover.pages.1.caption": "호야와 다미는 서로 말끝에 공손한 ‘요’를 붙여요.",
+      "steps.s2.discover.pages.1.items.0.lines.0.line.gloss": "함께 할지 공손하게 묻는 말",
+      "steps.s2.discover.pages.1.items.0.lines.0.speaker": "다미",
+      "steps.s2.discover.pages.1.items.0.lines.1.line.gloss": "좋다고 공손하게 대답하는 말",
+      "steps.s2.discover.pages.1.items.0.lines.1.speaker": "호야",
+      "steps.s2.hoyaLine": "‘들어 보기’를 눌러 한 줄씩 들어 봐요.",
+      "steps.s2.title": "공손한 말과 편한 말",
+      "steps.s3.title": "호야의 대답 고르기",
+      "steps.s4.title": "대화 순서 맞추기",
+      "steps.s5.title": "듣고 대답 고르기",
+      "steps.s6.hoyaLine": "공손한 말과 편한 말을 읽을 수 있어요. 정말 멋져요!",
+      "steps.s6.title": "다 같이 놀았어요!",
+      "title": "같이 할지 물어봐요"
+    },
+    "minigame:s4-crafts-q3-practice": {
+      "dialogue.0.npc": "함께 할지 친구에게 편하게 묻는 말",
+      "dialogue.0.options.hakgyoe-gayo.gloss": "배우러 가는 곳으로 간다는 말",
+      "dialogue.0.options.jalhaesseo.gloss": "친구를 칭찬하는 말",
+      "dialogue.0.options.joa.gloss": "친구에게 좋다고 대답하는 말",
+      "dialogue.1.npc": "무슨 놀이를 할지 친구에게 묻는 말",
+      "dialogue.1.options.joa.gloss": "친구에게 좋다고 대답하는 말",
+      "dialogue.1.options.tokkiga-jagayo.gloss": "귀가 긴 동물의 크기가 작다는 말",
+      "dialogue.1.options.yunnori-haja.gloss": "윷을 던지는 놀이를 하자는 말",
+      "dialogue.2.npc": "함께 할지 공손하게 묻는 말",
+      "dialogue.2.options.chaegieyo.gloss": "읽는 물건이 무엇인지 알려 주는 말",
+      "dialogue.2.options.joayo.gloss": "좋다고 공손하게 대답하는 말",
+      "dialogue.2.options.nae-charyeya.gloss": "자기 순서라고 하는 말"
+    },
+    "minigame:s4-crafts-q3-apply": {
+      "storySteps.l1.label": "함께 할지 친구에게 편하게 묻는 말",
+      "storySteps.l2.label": "좋다며 무슨 놀이를 할지 묻는 말",
+      "storySteps.l3.label": "윷을 던지는 놀이를 하자는 말",
+      "storySteps.l4.label": "좋다며 자기 순서라고 하는 말"
+    },
+    "minigame:s4-crafts-q3-check": {
+      "listenPick.rounds.r1.prompt": "함께 할지 공손하게 묻는 말",
+      "listenPick.rounds.r2.prompt": "함께 할지 친구에게 편하게 묻는 말"
+    },
+    "episode:stage4-crafts": {
+      "hoyaIntro": "미나랑 나랑 놀이를 하고 있어요. 우리가 하는 말을 읽어 봐요!",
+      "subtitle": "친구들이 놀이를 고르고 차례대로 해요.",
+      "title": "놀이 대화"
+    }
+  }
+}

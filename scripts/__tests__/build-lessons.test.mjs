@@ -120,6 +120,8 @@ describe("build-lessons.mjs: cells", () => {
     assert.doesNotMatch(index, /"scopes"|stage2-crafts|"sources"|stdict/);
     const stage2 = read(root, "lessons-stage2.ts");
     assert.match(stage2, /"minigame:s2-rites-q1-practice":\{"kind":"card-match"/);
+    // Compact literals (S4-4): one line per export, no pretty-printing.
+    assert.doesNotMatch(index, /\n  "/);
     assert.doesNotMatch(stage2, /stage2-crafts/);
     assert.match(read(root, "lessons-stage3.ts"), /= \{\};/);
   });

@@ -1315,7 +1315,7 @@ export const learner = {
         1: 'Read any Hangul letter and syllable and know its sound.',
         2: 'Read everyday words and know what they mean.',
         3: 'Read and build short, simple sentences.',
-        4: 'Follow a short greeting conversation and pick a reply.',
+        4: 'Follow a short everyday conversation and pick a reply.',
         5: 'Read a short story from start to end.',
         6: 'Read menus, signs and short messages.',
         7: 'Write a few sentences about daily life and favorite things.',

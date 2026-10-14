@@ -1016,7 +1016,7 @@ export const learner = {
         1: 'Leer cualquier letra y sílaba del hangul y saber su sonido.',
         2: 'Leer palabras de todos los días y saber qué significan.',
         3: 'Leer y armar oraciones cortas y simples.',
-        4: 'Seguir una conversación corta de saludo y elegir una respuesta.',
+        4: 'Seguir una conversación corta de todos los días y elegir una respuesta.',
         5: 'Leer una historia corta de principio a fin.',
         6: 'Leer menús, letreros y mensajes cortos.',
         7: 'Escribir unas oraciones sobre tu día y tus cosas favoritas.',

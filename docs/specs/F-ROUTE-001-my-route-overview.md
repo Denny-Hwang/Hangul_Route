@@ -577,7 +577,7 @@ From the stage titles and anchors (`apps/mobile/src/content/stages.ts:9-61`). De
 | 1 | Hangul | Read, Listen, Write | "Read any Hangul letter and syllable and know its sound." |
 | 2 | Words | Read, Listen, Write | "Read everyday words and know what they mean." |
 | 3 | Sentences | Read, Write | "Read and build short, simple sentences." |
-| 4 | Dialogue | Listen, Read | "Follow a short greeting conversation and pick a reply." |
+| 4 | Dialogue | Listen, Read | "Follow a short everyday conversation and pick a reply." (F-CURR-001 OD-12; was "a short greeting conversation") |
 | 5 | Stories | Read, Listen | "Read a short story from start to end." |
 | 6 | Real-use | Read, Write | "Read menus, signs and short messages." |
 | 7 | Self-expression | Write | "Write a few sentences about daily life and favorite things." (no "you": the grown-up view shows the same line) |

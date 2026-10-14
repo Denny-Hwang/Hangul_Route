@@ -508,6 +508,36 @@ const CELLS: readonly UpperCell[] = [
       await expect(page.getByRole('button', { name: /^Nature & Animals: Park Conversations\./ })).toBeVisible();
     },
   },
+  // F-CURR-001 S4-4: Playdate Talk, q1 "What Shall We Play?" at 320 px: Discover (two exchange pages),
+  // Tap to Respond (three turns), Story Sequence (three lines), the two-round Check, the reward.
+  {
+    episodeId: 'episode:stage4-crafts',
+    cellButton: journeyCellName(4, 'Play & Crafts'),
+    title: 'Playdate Talk',
+    playFirstQuest: async (page) => {
+      await page.setViewportSize({ width: 320, height: 640 });
+      await startFirstQuest(page);
+      await expect(page.getByText('Page 1 of 2')).toBeVisible();
+      await shot(page, 's4-4-q1-discover-320');
+      await passDiscover(page);
+      await page.getByRole('button', { name: 'Play minigame' }).click();
+      await shot(page, 's4-4-q1-tap-respond-320');
+      await reply(page, '좋아!');
+      await reply(page, '윷놀이 하자!');
+      await reply(page, '좋아!');
+      await page.getByRole('button', { name: 'Play minigame' }).click();
+      await orderLines(page, ['l1', 'l2', 'l3']);
+      await playCheckByIds(page, [{ answer: 'a' }, { answer: 'a' }]);
+      await expect(page.getByText('Finish', { exact: true }).first()).toBeVisible();
+      await shot(page, 's4-4-q1-reward-320');
+    },
+    expectRouteDay: async (page) => {
+      await page.goto('/');
+      await page.getByText('Learning Route', { exact: true }).last().click();
+      await page.getByRole('button', { name: /^Stage 4, Dialogue\./ }).click();
+      await expect(page.getByRole('button', { name: /^Play & Crafts: Playdate Talk\./ })).toBeVisible();
+    },
+  },
 ];
 
 async function openJourney(page: Page): Promise<void> {
