@@ -11,7 +11,7 @@ vi.mock('../locale', () => ({ deviceLanguages: () => [], takeLangHandoff: () => 
 
 import * as native from '../present-handoff';
 import * as web from '../present-handoff.web';
-import { PRESENTER_MOUNTED } from '../presenter-mount';
+import { PRESENTER_PATH } from '../presenter.web';
 
 /**
  * F-BROWSE-001 BR-13: [ Present this ] opens the presenter in a new tab of
@@ -23,12 +23,13 @@ type Tab = { opener: unknown };
 describe('platform/present-handoff (web)', () => {
   afterEach(() => vi.unstubAllGlobals());
 
-  it('counts the presenter root only once index.ts mounts PresenterApp (F-TCH-004 TD1)', () => {
-    // The default reads PRESENTER_MOUNTED, which presenter-mount.test.ts keeps equal to the real mount.
-    expect(web.presenterRootExists()).toBe(PRESENTER_MOUNTED);
-    expect(web.presenterRootExists(false)).toBe(false);
-    // Mounted: the root chooser picks the presenter root for /present.
-    expect(web.presenterRootExists(true)).toBe(true);
+  it('counts the presenter root the chooser picks for /present (index.ts mounts PresenterApp for it, #591)', () => {
+    expect(web.presenterRootExists()).toBe(true);
+  });
+
+  it('accepts the link presentHref builds from the one PRESENTER_PATH', () => {
+    vi.stubGlobal('open', () => ({ opener: null }));
+    expect(web.openPresenter(`${PRESENTER_PATH}#d=1.abc`)).toBe(true);
   });
 
   it('opens the same-origin link in a new tab and clears its opener, so no handle comes back', () => {

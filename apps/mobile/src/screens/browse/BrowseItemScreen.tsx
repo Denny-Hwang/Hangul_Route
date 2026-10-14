@@ -8,7 +8,7 @@ import { useLocale, useMessages } from '../../i18n/use-messages';
 import { episodeOfQuest } from '../../logic/browse/bundle';
 import { itemFacts, type ItemFacts, type QuestFacts, type StoryFacts } from '../../logic/browse/facts';
 import { accessOf, billingShown, itemViewedEvent, plansTappedEvent, stepsLine, whereLine } from '../../logic/browse/home-view';
-import { presentDeck, presentHref, presentItemShown } from '../../logic/browse/present';
+import { presentDeck, presentHref, presentItemShown, presentPlacement, type PresentSlot } from '../../logic/browse/present';
 import { storyPreviewParams } from '../../logic/browse/preview';
 import { topicHearShown } from '../../logic/browse/topic-view';
 import { BROWSE_REGISTERED_ROUTES, type BrowseStackParamList } from '../../navigation/browse';
@@ -18,7 +18,7 @@ import { openPresenter, presenterRootExists } from '../../platform/present-hando
 import { CardRow, HeaderBack, HeaderRow, KoChip, SkillChips, WordChip, focusRing, sendBrowseEvent, useItemViewed, type FocusState } from './browse-ui';
 import { useBrowseSession } from './browse-session';
 import { LessonDisplaySheet } from './LessonDisplaySheet';
-import { BROWSE_ACTION_MAX_WIDTH, BROWSE_LABEL_COLUMN, BROWSE_PIN_SECONDARY_MIN_HEIGHT } from '../../logic/browse/layout';
+import { BROWSE_ACTION_MAX_WIDTH, BROWSE_LABEL_COLUMN } from '../../logic/browse/layout';
 import { beginPreview } from './preview-session';
 import { TopicWordList } from './TopicWordList';
 
@@ -52,6 +52,9 @@ export function BrowseItemScreen({ route, navigation }: Props): React.ReactEleme
   const [level, setLevel] = useState<StoryLevel | null>(null);
   // The same mounted page can get new params (Next story to a closed story): the pick belongs to one story.
   useEffect(() => setLevel(null), [kind, id]);
+  // The browser gave no new tab for the last Present this (a pop-up blocker): one line says what to do.
+  const [presentBlocked, setPresentBlocked] = useState(false);
+  useEffect(() => setPresentBlocked(false), [kind, id]);
   const compact = useLayoutClass().width === 'compact';
   const windowHeight = useWindowDimensions().height;
   const presentTitleText = facts ? (facts.kind === 'story' ? facts.title.gloss : facts.title) : '';
@@ -105,22 +108,31 @@ export function BrowseItemScreen({ route, navigation }: Props): React.ReactEleme
   const presentItem = (): void => {
     // A fresh deck per press: its own id, clock and quiz seed, no names (numbers picker).
     const deck = presentDeck({ kind, id, title: presentTitleText }, { now: new Date(), rng: Math.random, uiLocale: locale });
-    if (deck) openPresenter(presentHref(deck));
+    if (deck) setPresentBlocked(!openPresenter(presentHref(deck)));
   };
-  const presentButton = presentShown ? (
-    <Button
-      label={m.item.present.cta}
-      accessibilityHint={m.item.presentNote}
-      tone="ghost"
-      size="lg"
-      fullWidth
-      onPress={presentItem}
-      testID="browse-present"
-    />
-  ) : null;
+  const presentButton = (
+    <View>
+      <Button
+        label={m.item.present.cta}
+        accessibilityHint={m.item.presentNote}
+        tone="ghost"
+        size="lg"
+        fullWidth
+        onPress={presentItem}
+        testID="browse-present"
+      />
+      <View role="status" aria-live="polite" accessibilityLiveRegion="polite">
+        {presentBlocked ? (
+          <Body size="sm" tone="secondary" testID="browse-present-blocked">
+            {m.item.presentBlocked}
+          </Body>
+        ) : null}
+      </View>
+    </View>
+  );
 
-  const actionBar = (withPresent: boolean): React.ReactElement | null =>
-    closed ? (
+  const actionBar = (slot: PresentSlot | 'closed' | null): React.ReactElement | null =>
+    slot === 'closed' ? (
     <View testID="browse-item-closed" style={{ backgroundColor: colors.surface.sunken, borderRadius: radii.lg, padding: spacing.lg, gap: spacing.sm, alignItems: 'flex-start' }}>
       <Body weight="semibold">{m.item.closed}</Body>
       {billingShown(pass) ? (
@@ -136,27 +148,24 @@ export function BrowseItemScreen({ route, navigation }: Props): React.ReactEleme
         />
       ) : null}
     </View>
-  ) : canPreview || (withPresent && presentButton) ? (
-    <View style={{ width: '100%', maxWidth: compact ? undefined : PRIMARY_MAX }}>
-      {canPreview ? (
+  ) : slot ? (
+    // The gap sits only between the buttons a group draws, so a group without the preview starts with its first button.
+    <View style={{ width: '100%', maxWidth: compact ? undefined : PRIMARY_MAX, gap: spacing.sm }}>
+      {slot.preview ? (
         <Button label={facts.kind === 'story' ? m.item.previewStory.cta : m.item.preview.cta} tone="primary" size="lg" fullWidth onPress={previewItem} testID="browse-preview" />
       ) : null}
-      {facts.kind === 'story' && BROWSE_REGISTERED_ROUTES.has('PreviewQuest') ? (
-        <>
-          <Spacer size="sm" />
-          <Button label={m.item.previewQuestions.cta} tone="ghost" size="md" fullWidth onPress={() => playQuest(facts.questId)} testID="browse-preview-questions" />
-        </>
+      {slot.main && facts.kind === 'story' && BROWSE_REGISTERED_ROUTES.has('PreviewQuest') ? (
+        <Button label={m.item.previewQuestions.cta} tone="ghost" size="md" fullWidth onPress={() => playQuest(facts.questId)} testID="browse-preview-questions" />
       ) : null}
-      {withPresent && presentButton && canPreview ? <Spacer size="sm" /> : null}
-      {withPresent ? presentButton : null}
+      {slot.present ? presentButton : null}
     </View>
   ) : null;
 
   // On a short phone window (landscape) the pinned footer keeps only the preview; Present this
   // moves to the end of the page, so the facts keep their room (review of #590).
-  const pinPresent = windowHeight >= BROWSE_PIN_SECONDARY_MIN_HEIGHT;
-  const footerAction = compact && !closed ? actionBar(pinPresent) : null;
-  const inlineAction = closed || !compact ? actionBar(true) : pinPresent ? null : presentButton;
+  const placement = presentPlacement({ compact, closed, canPreview, presentShown, windowHeight });
+  const footerAction = actionBar(placement.footer);
+  const inlineAction = actionBar(placement.inline);
 
   return (
     <Screen tone="canvas" scrollable width="reading" testID="browse-item" footer={footerAction ?? undefined}>

@@ -8,8 +8,10 @@ import {
   type LecturePicker,
   type UiLocale,
 } from '@hangul-route/content-schema';
+import { PRESENTER_PATH } from '../../platform/presenter';
 import { expandDeck, type LectureBundle } from '../lecture/deck-builder';
 import type { ItemAccess } from './access';
+import { BROWSE_PIN_SECONDARY_MIN_HEIGHT } from './layout';
 
 /**
  * [ Present this ] on the All lessons item page (F-BROWSE-001 section 4.6
@@ -28,7 +30,6 @@ type PassScope = BrowseKeptPass['scope'];
 /** Numbers 1 to 12: All lessons never hands names to the presenter. */
 export const PRESENT_PICKER: LecturePicker = { mode: 'numbers', count: 12 };
 
-const PRESENTER_PATH = '/present';
 const TITLE_MAX = 60;
 const ID_CHARS = 'abcdefghijklmnopqrstuvwxyz0123456789';
 const DECK_ID_LENGTH = 10;
@@ -110,7 +111,7 @@ const CHECK_ENV = { now: new Date(0), rng: () => 0 } as const;
 /**
  * The item page's whole rule for [ Present this ] (BR-13): an item this build holds, a pass, an
  * item the pass does not close, and `presentThisShown` on the item's own one-block deck. A story
- * gives its English title (`title.gloss`), which is what the deck grammar can carry.
+ * gives its title in the page's language (`title.gloss`, localized by `localizeStory`), as a lesson does.
  */
 export function presentItemShown(input: {
   item: { kind: PresentItemKind; id: string; title: string } | null;
@@ -127,4 +128,37 @@ export function presentItemShown(input: {
     deck: presentDeck(input.item, { ...CHECK_ENV, uiLocale: input.uiLocale }),
     bundle: input.bundle,
   });
+}
+
+/** One group of the item page's actions: the preview (and a story's questions, on the `main` group) and Present this. */
+export interface PresentSlot {
+  preview: boolean;
+  present: boolean;
+  /** The group that holds the preview's companions (a story's [ Preview the questions ]). */
+  main: boolean;
+}
+
+/**
+ * Where the item page draws its actions (BR-13, D16; review of #590). A phone pins them to the
+ * bottom edge; a short phone window (below `BROWSE_PIN_SECONDARY_MIN_HEIGHT`, a phone in
+ * landscape) pins only the preview and ends the page with Present this. A height of 0 is a first
+ * frame with no size yet and counts as tall, the usual case, so nothing jumps. From the regular
+ * class the bar is inline. A closed item shows its closed line inline instead.
+ */
+export function presentPlacement(input: {
+  compact: boolean;
+  closed: boolean;
+  canPreview: boolean;
+  presentShown: boolean;
+  windowHeight: number;
+}): { footer: PresentSlot | 'closed' | null; inline: PresentSlot | 'closed' | null } {
+  if (input.closed) return { footer: null, inline: 'closed' };
+  const slot = (present: boolean): PresentSlot | null => (input.canPreview || present ? { preview: input.canPreview, present, main: true } : null);
+  if (!input.compact) return { footer: null, inline: slot(input.presentShown) };
+  const pinPresent = input.windowHeight === 0 || input.windowHeight >= BROWSE_PIN_SECONDARY_MIN_HEIGHT;
+  const overflow = input.presentShown && !pinPresent;
+  return {
+    footer: slot(input.presentShown && pinPresent),
+    inline: overflow ? { preview: false, present: true, main: !input.canPreview } : null,
+  };
 }

@@ -1,5 +1,5 @@
 import { pickRoot } from './app-root.web';
-import { PRESENTER_MOUNTED } from './presenter-mount';
+import { PRESENTER_PATH } from './presenter.web';
 
 /**
  * [ Present this ] hand-off on the web (F-BROWSE-001 BR-13, section 4.6;
@@ -7,16 +7,13 @@ import { PRESENTER_MOUNTED } from './presenter-mount';
  * the link is same-origin and the deck rides only in the fragment.
  */
 
-const PRESENTER_PATH = '/present';
-
 /**
- * True only when a tab at `/present` really mounts `PresenterApp`: the root chooser picks the
- * presenter root for it and `index.ts` hands that root to `PresenterApp` (`presenter-mount.ts`,
- * F-TCH-004 TD1). A chosen root alone is not enough, because until PR 6 mounts `PresenterApp`
- * that root boots the learner `App`, which must never open on a classroom screen.
+ * True when a tab at `/present` boots the presenter: the root chooser picks the presenter root for
+ * it, and `index.ts` hands that root to `PresenterApp` (F-TCH-004 PR 6, #591; the presenter
+ * isolation e2e opens `/present` on the release build and finds the presenter, not the learner app).
  */
-export function presenterRootExists(mounted: boolean = PRESENTER_MOUNTED): boolean {
-  return mounted && pickRoot({ pathname: PRESENTER_PATH }) === 'presenter';
+export function presenterRootExists(): boolean {
+  return pickRoot({ pathname: PRESENTER_PATH }) === 'presenter';
 }
 
 type TabHandle = { opener: unknown } | null;

@@ -2,7 +2,8 @@ import { LECTURE_TITLE_RE, LectureDeckSchema, decodeDeck } from '@hangul-route/c
 import { describe, expect, it } from 'vitest';
 import { VOCAB_TOPICS } from '../../../content/__generated__/vocab';
 import { lectureBundle } from '../../lecture/content';
-import { PRESENT_PICKER, presentBlock, presentDeck, presentHref, presentItemShown, presentThisShown, presentTitle } from '../present';
+import { PRESENT_PICKER, presentBlock, presentDeck, presentHref, presentItemShown, presentPlacement, presentThisShown, presentTitle } from '../present';
+import { PRESENTER_PATH } from '../../../platform/presenter';
 import { TALE_ID } from './browse-fixture';
 
 /**
@@ -160,5 +161,47 @@ describe('presentItemShown, the item page rule', () => {
     expect(presentItemShown({ ...page, item: { kind: 'story', id: TALE_ID, title: 'The tale' } })).toBe(false);
     expect(presentItemShown({ ...page, item: { kind: 'vocab-topic', id: TOPIC, title: 'Food' } })).toBe(false);
     expect(presentItemShown({ ...page, item: { ...quest, title: '&&' } })).toBe(false);
+  });
+});
+
+describe('presentHref', () => {
+  it('starts with the presenter path #591 exports, so openPresenter accepts it', () => {
+    expect(presentHref(deckOf('quest', QUEST)).startsWith(`${PRESENTER_PATH}#d=`)).toBe(true);
+  });
+});
+
+describe('presentPlacement (the item page action bar, review of #590)', () => {
+  const base = { compact: true, closed: false, canPreview: true, presentShown: true, windowHeight: 568 };
+
+  it('pins the preview and Present this together on a phone of 480 or taller', () => {
+    expect(presentPlacement(base)).toEqual({ footer: { preview: true, present: true, main: true }, inline: null });
+  });
+
+  it('pins only the preview on a short phone window and ends the page with Present this', () => {
+    expect(presentPlacement({ ...base, windowHeight: 320 })).toEqual({
+      footer: { preview: true, present: false, main: true },
+      inline: { preview: false, present: true, main: false },
+    });
+  });
+
+  it('treats a first frame with no height yet (0) as tall, so the button does not jump into the footer', () => {
+    expect(presentPlacement({ ...base, windowHeight: 0 })).toEqual(presentPlacement(base));
+  });
+
+  it('draws Present this alone, with no preview, when this build cannot preview the item', () => {
+    expect(presentPlacement({ ...base, canPreview: false })).toEqual({ footer: { preview: false, present: true, main: true }, inline: null });
+    expect(presentPlacement({ ...base, canPreview: false, compact: false })).toEqual({ footer: null, inline: { preview: false, present: true, main: true } });
+    // Nothing to pin on a short window: Present this ends the page as the one group, a story's questions with it.
+    expect(presentPlacement({ ...base, canPreview: false, windowHeight: 320 })).toEqual({ footer: null, inline: { preview: false, present: true, main: true } });
+  });
+
+  it('puts the whole bar inline from the regular class', () => {
+    expect(presentPlacement({ ...base, compact: false })).toEqual({ footer: null, inline: { preview: true, present: true, main: true } });
+  });
+
+  it('draws no bar with neither action, and the closed line inline when the pass closes the item', () => {
+    expect(presentPlacement({ ...base, canPreview: false, presentShown: false })).toEqual({ footer: null, inline: null });
+    expect(presentPlacement({ ...base, closed: true })).toEqual({ footer: null, inline: 'closed' });
+    expect(presentPlacement({ ...base, closed: true, compact: false })).toEqual({ footer: null, inline: 'closed' });
   });
 });
