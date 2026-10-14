@@ -453,11 +453,13 @@ describe('myRouteView: the route card, the weekly plan line and the plan cells (
     expect(view(own, { week: 3 }).planOpen).toBeNull();
   });
 
-  it('view contract: the value routeEnabledFor gives an es or ko UI with the flag on shows no Open plan link (P2-8b; the screen wiring is pinned in entry-source.test.ts)', () => {
+  it('view contract: routeEnabledFor gives a signed es or ko UI the Open plan link with the flag on, and none with it off (P2-8b; the screen wiring is pinned in entry-source.test.ts)', () => {
     const own = { ...model(APPENDIX_C), goal: { stage: 'stage1' as const, from: 'self' as const, sourceId: 'route:1', endsOn: '2026-11-01', reached: false, taste: false } };
     for (const locale of ['es', 'ko'] as const) {
       const planOverview = routeEnabledFor(locale, { routeEnabled: true }, false);
-      expect(view(own, { week: 3, planOverview, messages: getMessages(locale) }).planOpen).toBeNull();
+      expect(view(own, { week: 3, planOverview, messages: getMessages(locale) }).planOpen).toBe(getMessages(locale).learner.myRoute.plan.open);
+      const off = routeEnabledFor(locale, { routeEnabled: false }, false);
+      expect(view(own, { week: 3, planOverview: off, messages: getMessages(locale) }).planOpen).toBeNull();
     }
     expect(view(own, { week: 3, planOverview: routeEnabledFor('en', { routeEnabled: true }, false) }).planOpen).toBe('Open plan');
   });

@@ -73,12 +73,13 @@ const input = (over: Partial<ResultViewInput> = {}): ResultViewInput => ({
 });
 
 describe('the weekly-plan strip follows the UI locale (P2-8b)', () => {
-  it('view contract: the value routeEnabledFor gives an es or ko UI with the flag on draws no strip and no plan link for the grown-up (the screen wiring is pinned in entry-source.test.ts)', () => {
+  it('view contract: routeEnabledFor gives a signed es or ko UI the strip with the flag on, and no strip with it off (the screen wiring is pinned in entry-source.test.ts)', () => {
     for (const locale of ['es', 'ko'] as const) {
       const routeEnabled = routeEnabledFor(locale, { routeEnabled: true }, false);
-      const self = resultView(input({ routeEnabled }));
-      expect(self).toMatchObject({ strip: false, primary: 'start', secondary: null });
-      expect(resultView(input({ routeEnabled, profileType: 'child' })).links).not.toContain('forGrownUpsPlan');
+      expect(resultView(input({ routeEnabled }))).toMatchObject({ strip: true, primary: 'usePlan', secondary: 'justStart' });
+      const off = routeEnabledFor(locale, { routeEnabled: false }, false);
+      expect(resultView(input({ routeEnabled: off }))).toMatchObject({ strip: false, primary: 'start', secondary: null });
+      expect(resultView(input({ routeEnabled: off, profileType: 'child' })).links).not.toContain('forGrownUpsPlan');
     }
     const en = resultView(input({ routeEnabled: routeEnabledFor('en', { routeEnabled: true }, false) }));
     expect(en).toMatchObject({ strip: true, primary: 'usePlan', secondary: 'justStart' });
