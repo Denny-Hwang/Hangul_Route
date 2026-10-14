@@ -59,13 +59,14 @@ export const DiscoverItemSchema = z.discriminatedUnion('type', [
     picture: PictureRefSchema.optional(),
   }),
   /**
-   * A sentence pattern: a frame with exactly one slot marker `___`, a one-line
-   * note in the UI language (Korean only inside `{ko:}` tokens) and two examples.
+   * A sentence pattern: a frame with one or two slot markers `___` (two for a
+   * Stage 7 two-slot frame, a day slot then a food slot in My Holiday Memory q2, F-CURR-001 S7-3), a
+   * one-line note in the UI language (Korean only inside `{ko:}` tokens) and two examples.
    */
   z.object({
     type: z.literal('pattern'),
-    frame: KoTextSchema.refine((t) => slotCount(t.ko) === 1, {
-      message: 'a pattern frame has exactly one slot marker ___',
+    frame: KoTextSchema.refine((t) => slotCount(t.ko) >= 1 && slotCount(t.ko) <= 2, {
+      message: 'a pattern frame has one or two slot markers ___',
       path: ['ko'],
     }),
     noteEn: z.string().trim().min(1).max(120),
