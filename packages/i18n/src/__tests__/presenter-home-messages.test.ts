@@ -27,8 +27,9 @@ function rendered(locale: UiLocale, root: 'learner.presenter' | 'a11y.presenter'
 }
 
 const en = getMessages('en');
-const learnerPaths = leafPaths(en.learner.presenter);
-const a11yPaths = leafPaths(en.a11y.presenter);
+// The keys this PR adds (PR 6 owns the rest of the presenter tree, such as the `1 / 12` counter shared by every locale).
+const learnerPaths = leafPaths(en.learner.presenter).filter((p) => p.startsWith('home.') || p.startsWith('language.'));
+const a11yPaths = leafPaths(en.a11y.presenter).filter((p) => p === 'removeRecent');
 
 describe('learner.presenter home strings (F-TCH-004 PR 8)', () => {
   it('has the README keys with their English values', () => {
