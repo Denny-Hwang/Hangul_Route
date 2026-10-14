@@ -85,7 +85,7 @@ describe('rosterFreeLessonsLine: the plan-waiting line on a roster card', () => 
   });
 
   it('counts the plan\'s closed lessons, never unreleased items, and shows nothing when only those were skipped', () => {
-    const withSoon = plan('plan:1', { items: [...ITEMS, { kind: 'episode', id: 'episode:stage2-letters' }, { kind: 'episode', id: 'episode:stage3-rites' }] });
+    const withSoon = plan('plan:1', { items: [...ITEMS, { kind: 'episode', id: 'episode:stage2-letters' }, { kind: 'episode', id: 'episode:stage3-nature' }] });
     expect(rosterFreeLessonsLine(input({ plans: [withSoon], learner: learner({ 'plan:1': { done: 2, total: 2, notReady: 5 } }) }), 'en')?.text).toBe(words.planWaiting('Mina', 3, words.product.class));
     const onlySoon = plan('plan:1', { items: [quest('quest:stage1-letters-q1'), { kind: 'episode', id: 'episode:stage2-letters' }] });
     expect(rosterFreeLessonsLine(input({ plans: [onlySoon], learner: learner({ 'plan:1': { done: 1, total: 1, notReady: 1 } }) }), 'en')).toBeNull();

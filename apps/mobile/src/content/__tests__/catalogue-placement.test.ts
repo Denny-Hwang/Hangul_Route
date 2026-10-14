@@ -105,7 +105,8 @@ const PLACEMENT: readonly PlacementRow[] = [
   // F-CURR-001 S3-1: First Sentences ships into these two stories' home cell.
   row('seungjeongwon-ilgi-every-day', "The Royal Secretariat's Everyday Diary", 'letters', 3, 5, 'L', 'culture', 13, '', ['A4'], 'records-joseon'),
   row('nanjung-ilgi', "Admiral Yi's Diary", 'letters', 3, 4, 'L', 'culture', 14, '', ['A4'], 'science-art-life'),
-  row('donguibogam', "Heo Jun's Treasured Mirror of Medicine", 'life', 3, 5, '-', 'culture', 15, '', ['E4'], 'science-art-life'),
+  // F-CURR-001 S3-2: Daily Mini-Sentences ships into this story's home cell.
+  row('donguibogam', "Heo Jun's Treasured Mirror of Medicine", 'life', 3, 5, 'L', 'culture', 15, '', ['E4'], 'science-art-life'),
   // F-CURR-001 S4-1: Read Along ships into this story's home cell.
   row('ilseongnok-daily-reflection', "King Jeongjo's Diary of Daily Reflection", 'letters', 4, 4, 'L', 'culture', 16, '', ['A4'], 'records-joseon'),
   row('uigwe-royal-birthday', 'A Picture Record of a Royal Birthday', 'rites', 5, 5, '-', 'culture', 17, '', ['C2', 'A3'], 'records-joseon'),
@@ -116,7 +117,7 @@ const PLACEMENT: readonly PlacementRow[] = [
 const MATRIX: Record<StageKey, Record<ThemeKey, string>> = {
   stage1: { letters: 'L+5', life: 'L+1', rites: 'L+2', nature: 'L+1', crafts: 'L+1' },
   stage2: { letters: 'S2', life: 'L+1', rites: 'S1', nature: 'L+1', crafts: 'L+3' },
-  stage3: { letters: 'L+2', life: 'S1', rites: 'L+0', nature: '-', crafts: 'L+0' },
+  stage3: { letters: 'L+2', life: 'L+1', rites: 'L+0', nature: '-', crafts: 'L+0' },
   stage4: { letters: 'L+1', life: '-', rites: 'L+0', nature: '-', crafts: '-' },
   stage5: { letters: '-', life: '-', rites: 'S1', nature: '-', crafts: '-' },
   stage6: { letters: 'S1', life: '-', rites: '-', nature: '-', crafts: '-' },
@@ -208,11 +209,11 @@ describe('placement table (F-STORY-005 §3.3) against the story files', () => {
     }
   });
 
-  it('totals 112 minutes, 18 stories in lesson cells and 6 in cells without a lesson (Read Along S4-1, First Sentences S3-1, Playground Words S2-3)', () => {
+  it('totals 112 minutes, 19 stories in lesson cells and 5 in cells without a lesson (Read Along S4-1, First Sentences S3-1, Playground Words S2-3, Daily Mini-Sentences S3-2)', () => {
     expect(storyFiles.reduce((sum, story) => sum + story.minutes, 0)).toBe(112);
     const inLessonCells = storyFiles.filter((story) => lessonCells.has(homeKey(story)));
-    expect(inLessonCells, GRID_HINT).toHaveLength(18);
-    expect(storyFiles.length - inLessonCells.length, GRID_HINT).toBe(6);
+    expect(inLessonCells, GRID_HINT).toHaveLength(19);
+    expect(storyFiles.length - inLessonCells.length, GRID_HINT).toBe(5);
   });
 
   it('gives every row the "cell holds" of the shipped grid', () => {

@@ -119,6 +119,48 @@
     "minigame:s3-crafts-q3-check": {
       "listenPick.rounds.hear-jegi.prompt": "술이 달린 작은 놀잇감을 발로 툭툭 올린다는 말",
       "listenPick.rounds.read-paengi.prompt": "뾰족한 놀잇감을 빙글빙글 움직이게 한다는 말"
+    },
+    "minigame:s3-crafts-q1-apply": {
+      "picWord.boards.0.pairs.yunnori.word.gloss": "막대 네 개를 던지며 노는 놀이를 바라는 말",
+      "picWord.boards.0.pairs.yeon.word.gloss": "종이 놀잇감을 하늘에 띄우기를 바라는 말",
+      "picWord.boards.0.pairs.chukgu.word.gloss": "공을 차서 골을 넣는 경기를 바라는 말",
+      "picWord.boards.1.pairs.julleomgi.word.gloss": "돌리는 줄을 뛰어넘는 놀이를 바라는 말",
+      "picWord.boards.1.pairs.yagu.word.gloss": "방망이로 공을 치는 경기를 바라는 말",
+      "picWord.boards.1.pairs.yunnori.word.gloss": "막대 네 개를 던지며 노는 놀이를 바라는 말",
+      "picWord.boards.2.pairs.nonggu.word.gloss": "공을 높이 걸린 바구니에 던져 넣는 경기를 바라는 말",
+      "picWord.boards.2.pairs.yeon.word.gloss": "종이 놀잇감을 하늘에 띄우기를 바라는 말",
+      "picWord.boards.2.pairs.julleomgi.word.gloss": "돌리는 줄을 뛰어넘는 놀이를 바라는 말",
+      "picWord.boards.3.pairs.chukgu.word.gloss": "공을 차서 골을 넣는 경기를 바라는 말",
+      "picWord.boards.3.pairs.yunnori.word.gloss": "막대 네 개를 던지며 노는 놀이를 바라는 말",
+      "picWord.boards.3.pairs.yeon.word.gloss": "종이 놀잇감을 하늘에 띄우기를 바라는 말"
+    },
+    "minigame:s3-crafts-q2-apply": {
+      "picWord.boards.0.pairs.bada.word.gloss": "짠물이 끝없이 펼쳐진 곳으로 향한다는 말",
+      "picWord.boards.0.pairs.san.word.gloss": "높이 솟은 땅으로 향한다는 말",
+      "picWord.boards.0.pairs.hakgyo.word.gloss": "공부하는 곳으로 간다는 뜻",
+      "picWord.boards.1.pairs.yeon.word.gloss": "종이 놀잇감을 하늘에 띄우기를 바라는 말",
+      "picWord.boards.1.pairs.bada.word.gloss": "짠물이 끝없이 펼쳐진 곳으로 향한다는 말",
+      "picWord.boards.1.pairs.chukgu.word.gloss": "공을 차서 골을 넣는 경기를 바라는 말",
+      "picWord.boards.2.pairs.hakgyo.word.gloss": "공부하는 곳으로 간다는 뜻",
+      "picWord.boards.2.pairs.yunnori.word.gloss": "막대 네 개를 던지며 노는 놀이를 바라는 말",
+      "picWord.boards.2.pairs.san.word.gloss": "높이 솟은 땅으로 향한다는 말",
+      "picWord.boards.3.pairs.san.word.gloss": "높이 솟은 땅으로 향한다는 말",
+      "picWord.boards.3.pairs.julleomgi.word.gloss": "돌리는 줄을 뛰어넘는 놀이를 바라는 말",
+      "picWord.boards.3.pairs.bada.word.gloss": "짠물이 끝없이 펼쳐진 곳으로 향한다는 말"
+    },
+    "minigame:s3-crafts-q3-apply": {
+      "picWord.boards.0.pairs.jegi.word.gloss": "술이 달린 작은 놀잇감을 발로 툭툭 올린다는 말",
+      "picWord.boards.0.pairs.paengi.word.gloss": "뾰족한 놀잇감을 빙글빙글 움직이게 한다는 말",
+      "picWord.boards.0.pairs.yut.word.gloss": "나무 막대 네 개를 위로 휙 올려 보낸다는 말",
+      "picWord.boards.1.pairs.gong.word.gloss": "동그란 놀잇감을 발끝으로 힘껏 보낸다는 말",
+      "picWord.boards.1.pairs.yut.word.gloss": "나무 막대 네 개를 위로 휙 올려 보낸다는 말",
+      "picWord.boards.1.pairs.paengi.word.gloss": "뾰족한 놀잇감을 빙글빙글 움직이게 한다는 말",
+      "picWord.boards.2.pairs.yut.word.gloss": "나무 막대 네 개를 위로 휙 올려 보낸다는 말",
+      "picWord.boards.2.pairs.jegi.word.gloss": "술이 달린 작은 놀잇감을 발로 툭툭 올린다는 말",
+      "picWord.boards.2.pairs.gong.word.gloss": "동그란 놀잇감을 발끝으로 힘껏 보낸다는 말",
+      "picWord.boards.3.pairs.paengi.word.gloss": "뾰족한 놀잇감을 빙글빙글 움직이게 한다는 말",
+      "picWord.boards.3.pairs.gong.word.gloss": "동그란 놀잇감을 발끝으로 힘껏 보낸다는 말",
+      "picWord.boards.3.pairs.jegi.word.gloss": "술이 달린 작은 놀잇감을 발로 툭툭 올린다는 말"
     }
   }
 }
