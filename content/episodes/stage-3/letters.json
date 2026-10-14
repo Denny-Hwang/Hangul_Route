@@ -1,0 +1,1334 @@
+{
+  "id": "episode:stage3-letters",
+  "stage": "stage3",
+  "theme": "letters",
+  "status": "ready",
+  "titleEn": "First Sentences",
+  "subtitleEn": "Sentences that name things, what there is and who you are.",
+  "hoyaIntroEn": "You can read words. Now let us put them into sentences!",
+  "order": 1,
+  "pillarTags": [
+    "A1"
+  ],
+  "rewardCardIds": [],
+  "quests": [
+    {
+      "id": "quest:stage3-letters-q1",
+      "titleEn": "It Is a Book",
+      "blurbEn": "Name a thing with a whole sentence.",
+      "teaserEn": "Next: read what there is.",
+      "estimatedMinutes": 5,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "It Is a Book",
+          "hoyaLineEn": "Let us name things with a whole sentence!",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "It Is ...",
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "pattern",
+                    "frame": {
+                      "ko": "___이에요/예요.",
+                      "romanization": "___ieyo/yeyo",
+                      "en": "It is ___."
+                    },
+                    "noteEn": "Use {ko:이에요} after a final consonant, {ko:예요} after a vowel.",
+                    "examples": [
+                      {
+                        "ko": "책이에요.",
+                        "romanization": "chaegieyo",
+                        "en": "It is a book."
+                      },
+                      {
+                        "ko": "학교예요.",
+                        "romanization": "hakgyoyeyo",
+                        "en": "It is a school."
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "Name the thing, then add the ending."
+              },
+              {
+                "items": [
+                  {
+                    "type": "sentence",
+                    "sentence": {
+                      "ko": "가방이에요.",
+                      "romanization": "gabangieyo",
+                      "en": "It is a bag."
+                    },
+                    "picture": "word:school-bag"
+                  },
+                  {
+                    "type": "sentence",
+                    "sentence": {
+                      "ko": "네, 책이에요.",
+                      "romanization": "ne chaegieyo",
+                      "en": "Yes, it is a book."
+                    },
+                    "picture": "card:book"
+                  }
+                ],
+                "captionEn": "Put yes in front to answer."
+              }
+            ]
+          },
+          "durationSeconds": 60
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Build the Sentence",
+          "minigameKind": "order-it",
+          "minigameRef": "minigame:s3-letters-q1-practice",
+          "durationSeconds": 90
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Hear and Pick",
+          "minigameKind": "listen-pick",
+          "minigameRef": "minigame:s3-letters-q1-apply",
+          "durationSeconds": 75
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Two Quick Ones",
+          "minigameKind": "listen-pick",
+          "minigameRef": "minigame:s3-letters-q1-check",
+          "durationSeconds": 40
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "You Named It!",
+          "hoyaLineEn": "You built whole sentences in Korean!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s3-letters-q1-practice",
+          "kind": "order-it",
+          "rounds": [
+            {
+              "id": "r1",
+              "sentence": {
+                "ko": "네, 책이에요.",
+                "romanization": "ne chaegieyo",
+                "en": "Yes, it is a book."
+              },
+              "pictureRef": "card:book",
+              "distractors": [
+                {
+                  "ko": "가방이에요",
+                  "romanization": "gabangieyo",
+                  "en": "it is a bag"
+                }
+              ]
+            },
+            {
+              "id": "r2",
+              "sentence": {
+                "ko": "네, 가방이에요.",
+                "romanization": "ne gabangieyo",
+                "en": "Yes, it is a bag."
+              },
+              "pictureRef": "word:school-bag",
+              "distractors": [],
+              "particle": {
+                "tile": 1,
+                "choices": [
+                  {
+                    "ko": "이에요",
+                    "romanization": "ieyo",
+                    "en": "it is (after a final consonant)"
+                  },
+                  {
+                    "ko": "예요",
+                    "romanization": "yeyo",
+                    "en": "it is (after a vowel)"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "r3",
+              "sentence": {
+                "ko": "네, 학교예요.",
+                "romanization": "ne hakgyoyeyo",
+                "en": "Yes, it is a school."
+              },
+              "pictureRef": "word:school-school",
+              "distractors": [],
+              "particle": {
+                "tile": 1,
+                "choices": [
+                  {
+                    "ko": "이에요",
+                    "romanization": "ieyo",
+                    "en": "it is (after a final consonant)"
+                  },
+                  {
+                    "ko": "예요",
+                    "romanization": "yeyo",
+                    "en": "it is (after a vowel)"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "r4",
+              "sentence": {
+                "ko": "네, 가방이에요.",
+                "romanization": "ne gabangieyo",
+                "en": "Yes, it is a bag."
+              },
+              "pictureRef": "word:school-bag",
+              "distractors": [
+                {
+                  "ko": "학교예요",
+                  "romanization": "hakgyoyeyo",
+                  "en": "it is a school"
+                }
+              ]
+            },
+            {
+              "id": "r5",
+              "sentence": {
+                "ko": "네, 책이에요.",
+                "romanization": "ne chaegieyo",
+                "en": "Yes, it is a book."
+              },
+              "pictureRef": "card:book",
+              "distractors": [],
+              "particle": {
+                "tile": 1,
+                "choices": [
+                  {
+                    "ko": "이에요",
+                    "romanization": "ieyo",
+                    "en": "it is (after a final consonant)"
+                  },
+                  {
+                    "ko": "예요",
+                    "romanization": "yeyo",
+                    "en": "it is (after a vowel)"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s3-letters-q1-apply",
+          "kind": "listen-pick",
+          "rounds": [
+            {
+              "id": "a1",
+              "prompt": {
+                "ko": "가방이에요.",
+                "romanization": "gabangieyo",
+                "en": "It is a bag."
+              },
+              "options": [
+                {
+                  "id": "book",
+                  "pictureRef": "card:book",
+                  "labelEn": "Book"
+                },
+                {
+                  "id": "school-bag",
+                  "pictureRef": "word:school-bag",
+                  "labelEn": "Bag"
+                },
+                {
+                  "id": "school-school",
+                  "pictureRef": "word:school-school",
+                  "labelEn": "School"
+                }
+              ],
+              "answerId": "school-bag"
+            },
+            {
+              "id": "a2",
+              "prompt": {
+                "ko": "학교예요.",
+                "romanization": "hakgyoyeyo",
+                "en": "It is a school."
+              },
+              "options": [
+                {
+                  "id": "school-school",
+                  "pictureRef": "word:school-school",
+                  "labelEn": "School"
+                },
+                {
+                  "id": "book",
+                  "pictureRef": "card:book",
+                  "labelEn": "Book"
+                },
+                {
+                  "id": "school-bag",
+                  "pictureRef": "word:school-bag",
+                  "labelEn": "Bag"
+                }
+              ],
+              "answerId": "school-school"
+            },
+            {
+              "id": "a3",
+              "prompt": {
+                "ko": "책이에요.",
+                "romanization": "chaegieyo",
+                "en": "It is a book."
+              },
+              "options": [
+                {
+                  "id": "school-bag",
+                  "pictureRef": "word:school-bag",
+                  "labelEn": "Bag"
+                },
+                {
+                  "id": "school-school",
+                  "pictureRef": "word:school-school",
+                  "labelEn": "School"
+                },
+                {
+                  "id": "book",
+                  "pictureRef": "card:book",
+                  "labelEn": "Book"
+                }
+              ],
+              "answerId": "book"
+            },
+            {
+              "id": "a4",
+              "prompt": {
+                "ko": "네, 학교예요.",
+                "romanization": "ne hakgyoyeyo",
+                "en": "Yes, it is a school."
+              },
+              "options": [
+                {
+                  "id": "book",
+                  "pictureRef": "card:book",
+                  "labelEn": "Book"
+                },
+                {
+                  "id": "school-bag",
+                  "pictureRef": "word:school-bag",
+                  "labelEn": "Bag"
+                },
+                {
+                  "id": "school-school",
+                  "pictureRef": "word:school-school",
+                  "labelEn": "School"
+                }
+              ],
+              "answerId": "school-school"
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s3-letters-q1-check",
+          "kind": "listen-pick",
+          "rounds": [
+            {
+              "id": "c1",
+              "prompt": {
+                "ko": "네, 가방이에요.",
+                "romanization": "ne gabangieyo",
+                "en": "Yes, it is a bag."
+              },
+              "options": [
+                {
+                  "id": "school-bag",
+                  "pictureRef": "word:school-bag",
+                  "labelEn": "Bag"
+                },
+                {
+                  "id": "school-school",
+                  "pictureRef": "word:school-school",
+                  "labelEn": "School"
+                },
+                {
+                  "id": "book",
+                  "pictureRef": "card:book",
+                  "labelEn": "Book"
+                }
+              ],
+              "answerId": "school-bag"
+            },
+            {
+              "id": "c2",
+              "prompt": {
+                "ko": "네, 책이에요.",
+                "romanization": "ne chaegieyo",
+                "en": "Yes, it is a book."
+              },
+              "options": [
+                {
+                  "id": "a",
+                  "text": {
+                    "ko": "네, 책이에요.",
+                    "romanization": "ne chaegieyo",
+                    "en": "Yes, it is a book."
+                  }
+                },
+                {
+                  "id": "b",
+                  "text": {
+                    "ko": "네, 학교예요.",
+                    "romanization": "ne hakgyoyeyo",
+                    "en": "Yes, it is a school."
+                  }
+                },
+                {
+                  "id": "c",
+                  "text": {
+                    "ko": "네, 가방이에요.",
+                    "romanization": "ne gabangieyo",
+                    "en": "Yes, it is a bag."
+                  }
+                }
+              ],
+              "answerId": "a"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "quest:stage3-letters-q2",
+      "titleEn": "There Is a Book",
+      "blurbEn": "Read what there is, and what there is not.",
+      "teaserEn": "Next: point at a thing and name it.",
+      "estimatedMinutes": 5,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "There Is a Book",
+          "hoyaLineEn": "What is in the bag today? Let us look!",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "There Is ...",
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "pattern",
+                    "frame": {
+                      "ko": "___이/가 있어요.",
+                      "romanization": "___i/ga isseoyo",
+                      "en": "There is ___."
+                    },
+                    "noteEn": "Use {ko:이} after a final consonant, {ko:가} after a vowel.",
+                    "examples": [
+                      {
+                        "ko": "책이 있어요.",
+                        "romanization": "chaegi isseoyo",
+                        "en": "There is a book."
+                      },
+                      {
+                        "ko": "친구가 있어요.",
+                        "romanization": "chinguga isseoyo",
+                        "en": "I have a friend."
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "The same words also say what you have."
+              },
+              {
+                "items": [
+                  {
+                    "type": "sentence",
+                    "sentence": {
+                      "ko": "가방이 있어요.",
+                      "romanization": "gabangi isseoyo",
+                      "en": "There is a bag."
+                    },
+                    "picture": "word:school-bag"
+                  },
+                  {
+                    "type": "sentence",
+                    "sentence": {
+                      "ko": "연필이 없어요.",
+                      "romanization": "yeonpiri eopseoyo",
+                      "en": "There is no pencil."
+                    }
+                  }
+                ],
+                "captionEn": "Swap the last word to mean there is none."
+              }
+            ]
+          },
+          "durationSeconds": 60
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Build the Sentence",
+          "minigameKind": "order-it",
+          "minigameRef": "minigame:s3-letters-q2-practice",
+          "durationSeconds": 90
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Hear and Pick",
+          "minigameKind": "listen-pick",
+          "minigameRef": "minigame:s3-letters-q2-apply",
+          "durationSeconds": 75
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Two Quick Ones",
+          "minigameKind": "listen-pick",
+          "minigameRef": "minigame:s3-letters-q2-check",
+          "durationSeconds": 40
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Bag Checked!",
+          "hoyaLineEn": "You read what there is, and what there is not!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s3-letters-q2-practice",
+          "kind": "order-it",
+          "rounds": [
+            {
+              "id": "r1",
+              "sentence": {
+                "ko": "책이 있어요.",
+                "romanization": "chaegi isseoyo",
+                "en": "There is a book."
+              },
+              "pictureRef": "card:book",
+              "distractors": [
+                {
+                  "ko": "가방이",
+                  "romanization": "gabangi",
+                  "en": "bag (as the subject)"
+                }
+              ]
+            },
+            {
+              "id": "r2",
+              "sentence": {
+                "ko": "친구가 있어요.",
+                "romanization": "chinguga isseoyo",
+                "en": "I have a friend."
+              },
+              "pictureRef": "word:school-friend",
+              "distractors": [],
+              "particle": {
+                "tile": 0,
+                "choices": [
+                  {
+                    "ko": "이",
+                    "romanization": "i",
+                    "en": "subject marker (after a final consonant)"
+                  },
+                  {
+                    "ko": "가",
+                    "romanization": "ga",
+                    "en": "subject marker (after a vowel)"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "r3",
+              "sentence": {
+                "ko": "연필이 있어요.",
+                "romanization": "yeonpiri isseoyo",
+                "en": "There is a pencil."
+              },
+              "pictureRef": "word:school-pencil",
+              "distractors": [],
+              "particle": {
+                "tile": 0,
+                "choices": [
+                  {
+                    "ko": "이",
+                    "romanization": "i",
+                    "en": "subject marker (after a final consonant)"
+                  },
+                  {
+                    "ko": "가",
+                    "romanization": "ga",
+                    "en": "subject marker (after a vowel)"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "r4",
+              "sentence": {
+                "ko": "가방이 있어요.",
+                "romanization": "gabangi isseoyo",
+                "en": "There is a bag."
+              },
+              "pictureRef": "word:school-bag",
+              "distractors": [],
+              "particle": {
+                "tile": 0,
+                "choices": [
+                  {
+                    "ko": "이",
+                    "romanization": "i",
+                    "en": "subject marker (after a final consonant)"
+                  },
+                  {
+                    "ko": "가",
+                    "romanization": "ga",
+                    "en": "subject marker (after a vowel)"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "r5",
+              "sentence": {
+                "ko": "네, 책이 있어요.",
+                "romanization": "ne chaegi isseoyo",
+                "en": "Yes, there is a book."
+              },
+              "pictureRef": "card:book",
+              "distractors": [
+                {
+                  "ko": "연필이",
+                  "romanization": "yeonpiri",
+                  "en": "pencil (as the subject)"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s3-letters-q2-apply",
+          "kind": "listen-pick",
+          "rounds": [
+            {
+              "id": "a1",
+              "prompt": {
+                "ko": "친구가 있어요.",
+                "romanization": "chinguga isseoyo",
+                "en": "I have a friend."
+              },
+              "options": [
+                {
+                  "id": "school-pencil",
+                  "pictureRef": "word:school-pencil",
+                  "labelEn": "Pencil"
+                },
+                {
+                  "id": "school-friend",
+                  "pictureRef": "word:school-friend",
+                  "labelEn": "Friend"
+                },
+                {
+                  "id": "school-bag",
+                  "pictureRef": "word:school-bag",
+                  "labelEn": "Bag"
+                }
+              ],
+              "answerId": "school-friend"
+            },
+            {
+              "id": "a2",
+              "prompt": {
+                "ko": "연필이 있어요.",
+                "romanization": "yeonpiri isseoyo",
+                "en": "There is a pencil."
+              },
+              "options": [
+                {
+                  "id": "school-pencil",
+                  "pictureRef": "word:school-pencil",
+                  "labelEn": "Pencil"
+                },
+                {
+                  "id": "school-friend",
+                  "pictureRef": "word:school-friend",
+                  "labelEn": "Friend"
+                },
+                {
+                  "id": "book",
+                  "pictureRef": "card:book",
+                  "labelEn": "Book"
+                }
+              ],
+              "answerId": "school-pencil"
+            },
+            {
+              "id": "a3",
+              "prompt": {
+                "ko": "책이 있어요.",
+                "romanization": "chaegi isseoyo",
+                "en": "There is a book."
+              },
+              "options": [
+                {
+                  "id": "school-pencil",
+                  "pictureRef": "word:school-pencil",
+                  "labelEn": "Pencil"
+                },
+                {
+                  "id": "school-bag",
+                  "pictureRef": "word:school-bag",
+                  "labelEn": "Bag"
+                },
+                {
+                  "id": "book",
+                  "pictureRef": "card:book",
+                  "labelEn": "Book"
+                }
+              ],
+              "answerId": "book"
+            },
+            {
+              "id": "a4",
+              "prompt": {
+                "ko": "네, 연필이 있어요.",
+                "romanization": "ne yeonpiri isseoyo",
+                "en": "Yes, there is a pencil."
+              },
+              "options": [
+                {
+                  "id": "a",
+                  "text": {
+                    "ko": "네, 친구가 있어요.",
+                    "romanization": "ne chinguga isseoyo",
+                    "en": "Yes, I have a friend."
+                  }
+                },
+                {
+                  "id": "b",
+                  "text": {
+                    "ko": "네, 연필이 있어요.",
+                    "romanization": "ne yeonpiri isseoyo",
+                    "en": "Yes, there is a pencil."
+                  }
+                },
+                {
+                  "id": "c",
+                  "text": {
+                    "ko": "네, 가방이 있어요.",
+                    "romanization": "ne gabangi isseoyo",
+                    "en": "Yes, there is a bag."
+                  }
+                }
+              ],
+              "answerId": "b"
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s3-letters-q2-check",
+          "kind": "listen-pick",
+          "rounds": [
+            {
+              "id": "c1",
+              "prompt": {
+                "ko": "가방이 있어요.",
+                "romanization": "gabangi isseoyo",
+                "en": "There is a bag."
+              },
+              "options": [
+                {
+                  "id": "school-bag",
+                  "pictureRef": "word:school-bag",
+                  "labelEn": "Bag"
+                },
+                {
+                  "id": "school-pencil",
+                  "pictureRef": "word:school-pencil",
+                  "labelEn": "Pencil"
+                },
+                {
+                  "id": "school-friend",
+                  "pictureRef": "word:school-friend",
+                  "labelEn": "Friend"
+                }
+              ],
+              "answerId": "school-bag"
+            },
+            {
+              "id": "c2",
+              "prompt": {
+                "ko": "네, 책이 있어요.",
+                "romanization": "ne chaegi isseoyo",
+                "en": "Yes, there is a book."
+              },
+              "options": [
+                {
+                  "id": "a",
+                  "text": {
+                    "ko": "네, 가방이 있어요.",
+                    "romanization": "ne gabangi isseoyo",
+                    "en": "Yes, there is a bag."
+                  }
+                },
+                {
+                  "id": "b",
+                  "text": {
+                    "ko": "네, 친구가 있어요.",
+                    "romanization": "ne chinguga isseoyo",
+                    "en": "Yes, I have a friend."
+                  }
+                },
+                {
+                  "id": "c",
+                  "text": {
+                    "ko": "네, 책이 있어요.",
+                    "romanization": "ne chaegi isseoyo",
+                    "en": "Yes, there is a book."
+                  }
+                }
+              ],
+              "answerId": "c"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "quest:stage3-letters-q3",
+      "titleEn": "This Is Hangul",
+      "blurbEn": "Point at a thing and name it, then introduce yourself.",
+      "estimatedMinutes": 5,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "This Is Hangul",
+          "hoyaLineEn": "Point at something near you. What is it?",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "This Is ...",
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "pattern",
+                    "frame": {
+                      "ko": "이건 ___이에요/예요.",
+                      "romanization": "igeon ___ieyo/yeyo",
+                      "en": "This is ___."
+                    },
+                    "noteEn": "{ko:이건} is short for {ko:이것은}: this one, the thing near you.",
+                    "examples": [
+                      {
+                        "ko": "이건 책이에요.",
+                        "romanization": "igeon chaegieyo",
+                        "en": "This is a book."
+                      },
+                      {
+                        "ko": "이건 한글이에요.",
+                        "romanization": "igeon hangeurieyo",
+                        "en": "This is Hangul."
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "Point at a thing near you, then name it."
+              },
+              {
+                "items": [
+                  {
+                    "type": "sentence",
+                    "sentence": {
+                      "ko": "저는 호야예요.",
+                      "romanization": "jeoneun Hoyayeyo",
+                      "en": "I am Hoya."
+                    }
+                  }
+                ],
+                "captionEn": "A polite way to tell who you are."
+              }
+            ]
+          },
+          "durationSeconds": 60
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Build the Sentence",
+          "minigameKind": "order-it",
+          "minigameRef": "minigame:s3-letters-q3-practice",
+          "durationSeconds": 90
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Hear and Pick",
+          "minigameKind": "listen-pick",
+          "minigameRef": "minigame:s3-letters-q3-apply",
+          "durationSeconds": 75
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Two Quick Ones",
+          "minigameKind": "listen-pick",
+          "minigameRef": "minigame:s3-letters-q3-check",
+          "durationSeconds": 40
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "First Sentences!",
+          "hoyaLineEn": "You read and built your first Korean sentences!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s3-letters-q3-practice",
+          "kind": "order-it",
+          "rounds": [
+            {
+              "id": "r1",
+              "sentence": {
+                "ko": "이건 책이에요.",
+                "romanization": "igeon chaegieyo",
+                "en": "This is a book."
+              },
+              "pictureRef": "card:book",
+              "distractors": [
+                {
+                  "ko": "있어요",
+                  "romanization": "isseoyo",
+                  "en": "there is"
+                }
+              ]
+            },
+            {
+              "id": "r2",
+              "sentence": {
+                "ko": "이건 한글이에요.",
+                "romanization": "igeon hangeurieyo",
+                "en": "This is Hangul."
+              },
+              "pictureRef": "word:culture-hangul",
+              "distractors": [],
+              "particle": {
+                "tile": 1,
+                "choices": [
+                  {
+                    "ko": "이에요",
+                    "romanization": "ieyo",
+                    "en": "it is (after a final consonant)"
+                  },
+                  {
+                    "ko": "예요",
+                    "romanization": "yeyo",
+                    "en": "it is (after a vowel)"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "r3",
+              "sentence": {
+                "ko": "저는 호야예요.",
+                "romanization": "jeoneun Hoyayeyo",
+                "en": "I am Hoya."
+              },
+              "distractors": [],
+              "particle": {
+                "tile": 1,
+                "choices": [
+                  {
+                    "ko": "이에요",
+                    "romanization": "ieyo",
+                    "en": "it is (after a final consonant)"
+                  },
+                  {
+                    "ko": "예요",
+                    "romanization": "yeyo",
+                    "en": "it is (after a vowel)"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "r4",
+              "sentence": {
+                "ko": "이건 가방이에요.",
+                "romanization": "igeon gabangieyo",
+                "en": "This is a bag."
+              },
+              "pictureRef": "word:school-bag",
+              "distractors": [],
+              "particle": {
+                "tile": 1,
+                "choices": [
+                  {
+                    "ko": "이에요",
+                    "romanization": "ieyo",
+                    "en": "it is (after a final consonant)"
+                  },
+                  {
+                    "ko": "예요",
+                    "romanization": "yeyo",
+                    "en": "it is (after a vowel)"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "r5",
+              "sentence": {
+                "ko": "네, 이건 연필이에요.",
+                "romanization": "ne igeon yeonpirieyo",
+                "en": "Yes, this is a pencil."
+              },
+              "pictureRef": "word:school-pencil",
+              "distractors": [
+                {
+                  "ko": "친구가",
+                  "romanization": "chinguga",
+                  "en": "friend (as the subject)"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s3-letters-q3-apply",
+          "kind": "listen-pick",
+          "rounds": [
+            {
+              "id": "a1",
+              "prompt": {
+                "ko": "이건 한글이에요.",
+                "romanization": "igeon hangeurieyo",
+                "en": "This is Hangul."
+              },
+              "options": [
+                {
+                  "id": "book",
+                  "pictureRef": "card:book",
+                  "labelEn": "Book"
+                },
+                {
+                  "id": "culture-hangul",
+                  "pictureRef": "word:culture-hangul",
+                  "labelEn": "Hangul"
+                },
+                {
+                  "id": "school-bag",
+                  "pictureRef": "word:school-bag",
+                  "labelEn": "Bag"
+                }
+              ],
+              "answerId": "culture-hangul"
+            },
+            {
+              "id": "a2",
+              "prompt": {
+                "ko": "이건 연필이에요.",
+                "romanization": "igeon yeonpirieyo",
+                "en": "This is a pencil."
+              },
+              "options": [
+                {
+                  "id": "school-pencil",
+                  "pictureRef": "word:school-pencil",
+                  "labelEn": "Pencil"
+                },
+                {
+                  "id": "book",
+                  "pictureRef": "card:book",
+                  "labelEn": "Book"
+                },
+                {
+                  "id": "culture-hangul",
+                  "pictureRef": "word:culture-hangul",
+                  "labelEn": "Hangul"
+                }
+              ],
+              "answerId": "school-pencil"
+            },
+            {
+              "id": "a3",
+              "prompt": {
+                "ko": "이건 책이에요.",
+                "romanization": "igeon chaegieyo",
+                "en": "This is a book."
+              },
+              "options": [
+                {
+                  "id": "culture-hangul",
+                  "pictureRef": "word:culture-hangul",
+                  "labelEn": "Hangul"
+                },
+                {
+                  "id": "school-pencil",
+                  "pictureRef": "word:school-pencil",
+                  "labelEn": "Pencil"
+                },
+                {
+                  "id": "book",
+                  "pictureRef": "card:book",
+                  "labelEn": "Book"
+                }
+              ],
+              "answerId": "book"
+            },
+            {
+              "id": "a4",
+              "prompt": {
+                "ko": "이건 가방이에요.",
+                "romanization": "igeon gabangieyo",
+                "en": "This is a bag."
+              },
+              "options": [
+                {
+                  "id": "school-pencil",
+                  "pictureRef": "word:school-pencil",
+                  "labelEn": "Pencil"
+                },
+                {
+                  "id": "book",
+                  "pictureRef": "card:book",
+                  "labelEn": "Book"
+                },
+                {
+                  "id": "school-bag",
+                  "pictureRef": "word:school-bag",
+                  "labelEn": "Bag"
+                }
+              ],
+              "answerId": "school-bag"
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s3-letters-q3-check",
+          "kind": "listen-pick",
+          "rounds": [
+            {
+              "id": "c1",
+              "prompt": {
+                "ko": "네, 이건 연필이에요.",
+                "romanization": "ne igeon yeonpirieyo",
+                "en": "Yes, this is a pencil."
+              },
+              "options": [
+                {
+                  "id": "school-pencil",
+                  "pictureRef": "word:school-pencil",
+                  "labelEn": "Pencil"
+                },
+                {
+                  "id": "school-bag",
+                  "pictureRef": "word:school-bag",
+                  "labelEn": "Bag"
+                },
+                {
+                  "id": "culture-hangul",
+                  "pictureRef": "word:culture-hangul",
+                  "labelEn": "Hangul"
+                }
+              ],
+              "answerId": "school-pencil"
+            },
+            {
+              "id": "c2",
+              "prompt": {
+                "ko": "저는 호야예요.",
+                "romanization": "jeoneun Hoyayeyo",
+                "en": "I am Hoya."
+              },
+              "options": [
+                {
+                  "id": "a",
+                  "text": {
+                    "ko": "이건 한글이에요.",
+                    "romanization": "igeon hangeurieyo",
+                    "en": "This is Hangul."
+                  }
+                },
+                {
+                  "id": "b",
+                  "text": {
+                    "ko": "저는 호야예요.",
+                    "romanization": "jeoneun Hoyayeyo",
+                    "en": "I am Hoya."
+                  }
+                },
+                {
+                  "id": "c",
+                  "text": {
+                    "ko": "친구가 있어요.",
+                    "romanization": "chinguga isseoyo",
+                    "en": "I have a friend."
+                  }
+                }
+              ],
+              "answerId": "b"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "culture": [
+    {
+      "id": "n1",
+      "kind": "language",
+      "textEn": "The ending {ko:이에요} follows a word that ends in a final consonant, and {ko:예요} a word that ends in a vowel: {ko:책이에요}, {ko:학교예요}.",
+      "sources": [
+        {
+          "title": "표준어 규정 제1부 제26항 해설 (복수 표준어 ‘-이에요/-이어요’)",
+          "publisher": "국립국어원 (National Institute of Korean Language)",
+          "url": "https://korean.go.kr/kornorms/regltn/regltnView.do?regltn_code=0002&regltn_no=191",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "제1부 제26항 해설 ⑰: “‘이에요’와 ‘이어요’는 체언 뒤에 붙는데 받침이 없는 체언에 붙을 때는 ‘예요’, ‘여요’로 줄어든다.” 예시 (3) 받침이 있는 명사 ‘장남이에요’, (4) 받침이 없는 명사 ‘손자예요’."
+        },
+        {
+          "title": "이다 (조사), 한 걸음 더",
+          "publisher": "국립국어원 표준국어대사전 (Standard Korean Language Dictionary)",
+          "url": "https://stdict.korean.go.kr/search/searchView.do?word_no=469673&searchKeywordTo=3",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "표제어 ‘이다 3’(word_no 469673) 「조사」, 한 걸음 더: “‘-이에요’와 ‘-이어요’는 체언 뒤에 붙는데 받침이 없는 체언에 붙을 때는 ‘-예요’, ‘-여요’로 줄어들기도 한다.” 예: ‘지우개예요’, ‘연필이에요’."
+        }
+      ],
+      "verification": {
+        "passes": 3,
+        "checkedAt": "2026-10-14",
+        "scope": "lesson",
+        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): both pages fetched. The commentary to article 26 of the NIKL standard language rules and the 한 걸음 더 box of the dictionary entry 이다 3 both say 이에요 attaches to a noun and shortens to 예요 when the noun has no final consonant, with 장남이에요 / 손자예요 and 연필이에요 / 지우개예요 as examples. The note restates this in its own words with this cell's words (책, 학교); no wording is copied. Carried by: q1 Discover pattern noteEn, and the 이에요/예요 particle rounds of q1 and q3.\nLine 2 (pass 2b, independent fact check, 2026-10-14): both pages re-fetched (the stdict entry body via contentViewOne.do). Commentary item 17 to article 26 and the 한 걸음 더 box of 이다 3 carry the quoted sentence word for word, with 장남이에요 / 손자예요 and 연필이에요 / 지우개예요. The note matches: 이에요 after a noun with a final consonant, 예요 after one without (both sources also note that a name with a final consonant takes 이 first, as in 영숙이예요; the note uses common nouns only, so it stays true). The English is the author's own; no wording is copied. Outcome: pass, no change.\nLine 3 (pass 5, MAR culture review, 2026-10-14): both pages re-fetched; commentary item 17 to article 26 and the 한 걸음 더 box of 이다 3 say what the note says (이에요 after a final consonant, 예요 after a vowel); the note uses common nouns only; no wording copied. Outcome: pass, no change."
+      }
+    },
+    {
+      "id": "n2",
+      "kind": "language",
+      "textEn": "The subject marker is {ko:이} after a final consonant and {ko:가} after a vowel: {ko:책이}, {ko:친구가}.",
+      "sources": [
+        {
+          "title": "이 (조사)",
+          "publisher": "국립국어원 표준국어대사전 (Standard Korean Language Dictionary)",
+          "url": "https://stdict.korean.go.kr/search/searchView.do?word_no=471254&searchKeywordTo=3",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "표제어 ‘이 25’(word_no 471254) 「조사」 1: “((받침 있는 체언 뒤에 붙어))” … “앞말이 서술어와 호응하는 주어임을 나타낸다.” 「참고 어휘」 가, 께서."
+        },
+        {
+          "title": "가 (조사)",
+          "publisher": "국립국어원 표준국어대사전 (Standard Korean Language Dictionary)",
+          "url": "https://stdict.korean.go.kr/search/searchView.do?word_no=382734&searchKeywordTo=3",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "표제어 ‘가 11’(word_no 382734) 「조사」 1: “((받침 없는 체언 뒤에 붙어))” … “앞말이 서술어와 호응하는 주어임을 나타낸다.” 「참고 어휘」 께서, 이."
+        },
+        {
+          "title": "조사(助詞)",
+          "publisher": "한국학중앙연구원 한국민족문화대백과사전 (Encyclopedia of Korean Culture)",
+          "url": "https://encykorea.aks.ac.kr/Article/E0051845",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "내용, (3) 특징: “조사는 선행체언의 음운론적 조건에 따라 이형태(異形態)가 존재하기도 한다(‘이·가’, ‘을·를·ㄹ’ 등).”; (1) 격조사: 주격(이·가)."
+        }
+      ],
+      "verification": {
+        "passes": 3,
+        "checkedAt": "2026-10-14",
+        "scope": "lesson",
+        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): the three pages fetched. The dictionary entries 이 25 and 가 11 give the same subject-marker sense, 이 after a noun with a final consonant and 가 after one without; the Encyclopedia of Korean Culture entry 조사 says particles such as 이 / 가 have forms that follow the sound of the word before them and lists 이·가 as the nominative. The note restates this with this cell's words (책이, 친구가); no wording is copied. Carried by: q2 Discover pattern noteEn and the 이/가 particle rounds of q2.\nLine 2 (pass 2b, independent fact check, 2026-10-14): the three pages re-fetched. 이 25 sense 1 is marked for a noun with a final consonant and 가 11 sense 1 for a noun without one, both with the subject sense quoted in the locators; the Encyclopedia of Korean Culture entry 조사, section (3), names 이·가 as forms that depend on the sound of the noun before them, and section (1) lists 이·가 as the nominative. The note matches; the English is the author's own; no wording is copied. Outcome: pass, no change.\nLine 3 (pass 5, MAR culture review, 2026-10-14): the three pages re-fetched; 이 25 and 가 11 (subject sense, with and without a final consonant) and the Encyclopedia of Korean Culture entry 조사, sections (1) and (3), match the note; no wording copied. Outcome: pass, no change."
+      }
+    },
+    {
+      "id": "n3",
+      "kind": "language",
+      "textEn": "{ko:이건} is the short form of {ko:이것은}, and {ko:이것} points to a thing near the one who speaks.",
+      "sources": [
+        {
+          "title": "한글 맞춤법 제33항 (체언과 조사가 어울려 줄어지는 경우)",
+          "publisher": "국립국어원 (National Institute of Korean Language)",
+          "url": "https://korean.go.kr/kornorms/regltn/regltnView.do?regltn_code=0001&regltn_no=186",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "제4장 제5절 제33항: “체언과 조사가 어울려 줄어지는 경우에는 준 대로 적는다.” 예시 표: 본말 ‘그것은’, 준말 ‘그건’; 해설에 ‘이것’, ‘저것’도 같은 방식으로 줄어드는 예 (이것으로→이걸로)."
+        },
+        {
+          "title": "이것 (대명사)",
+          "publisher": "국립국어원 표준국어대사전 (Standard Korean Language Dictionary)",
+          "url": "https://stdict.korean.go.kr/search/searchView.do?word_no=467524&searchKeywordTo=3",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "표제어 ‘이것’(word_no 467524) 「대명사」 「1」: “말하는 이에게 가까이 있거나 말하는 이가 생각하고 있는 사물을 가리키는 지시 대명사.” 용례 ‘이것은 연필이다.’"
+        }
+      ],
+      "verification": {
+        "passes": 3,
+        "checkedAt": "2026-10-14",
+        "scope": "lesson",
+        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): both pages fetched. Article 33 of the Korean orthography writes a noun-and-particle contraction as it is said, with 그것은 -> 그건 in its table and 이것 / 저것 contracting the same way in its commentary, which is the rule that gives 이것은 -> 이건; the dictionary defines 이것 as pointing to a thing near the speaker. The note says this in its own words; no wording is copied. Carried by: q3 Discover pattern noteEn and the q3 Discover page 1 caption (point at a thing near you).\nLine 2 (pass 2b, independent fact check, 2026-10-14): both pages re-fetched. Article 33 states the rule (a noun-and-particle contraction is written as it is said), its table gives 그것은 -> 그건, and its commentary shows 이것 and 저것 contracting the same way as 그것 (이것으로 -> 이걸로); 이것은 -> 이건 is not printed as a row, so the support is the rule plus the exactly parallel 그것은 -> 그건, which the locator already says. The dictionary entry 이것 sense 1 points to a thing near the speaker (or one the speaker has in mind), with 이것은 연필이다. The note matches; no wording is copied. Outcome: pass, no change.\nLine 3 (pass 5, MAR culture review, 2026-10-14): both pages re-fetched. The contraction rests on article 33's rule plus its parallel 그것은 -> 그건 row and the commentary's 이것 contraction; no allowlisted source prints 이것은 -> 이건 as its own row, and the cell accepts the rule as the basis (a direct 우리말샘 entry would need a reviewed host PR). 이것 sense 1 supports 'near the speaker'. No wording copied. Outcome: pass, no change."
+      }
+    },
+    {
+      "id": "n4",
+      "kind": "language",
+      "textEn": "{ko:저} is a humble, polite word for I, used with people senior to you or people you are not close to; {ko:나} is the plain word for I among equals.",
+      "sources": [
+        {
+          "title": "저 (대명사)",
+          "publisher": "국립국어원 표준국어대사전 (Standard Korean Language Dictionary)",
+          "url": "https://stdict.korean.go.kr/search/searchView.do?word_no=473730&searchKeywordTo=3",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "표제어 ‘저 3’(word_no 473730) 「대명사」 「1」: “말하는 이가 윗사람이나 그다지 가깝지 아니한 사람을 상대하여 자기를 낮추어 가리키는 일인칭 대명사.” 용례 ‘저는 가 볼게요.’"
+        },
+        {
+          "title": "나 (대명사)",
+          "publisher": "국립국어원 표준국어대사전 (Standard Korean Language Dictionary)",
+          "url": "https://stdict.korean.go.kr/search/searchView.do?word_no=58349&searchKeywordTo=3",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "표제어 ‘나 3’(word_no 58349) [Ⅰ] 「대명사」: “말하는 이가 대등한 관계에 있는 사람이나 아랫사람을 상대하여 자기를 가리키는 일인칭 대명사.” 용례 ‘나는 학생이다.’"
+        }
+      ],
+      "verification": {
+        "passes": 3,
+        "checkedAt": "2026-10-14",
+        "scope": "lesson",
+        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): both entries fetched. The dictionary defines 저 as the first-person pronoun a speaker uses to lower themselves toward a senior or someone not close, and 나 as the one used toward an equal or a junior. The note says this in its own words, names no age range for the learner and copies no wording. Carried by: q3 Discover page 2 caption (a polite way to say who you are) and the 저는 호야예요 rounds.\nLine 2 (pass 2b, independent fact check, 2026-10-14): both entries re-fetched. 저 3 sense 1 is the first-person pronoun a speaker uses to lower themselves toward a senior or someone not very close; the note's 'people you are not close to or want to show respect to' matches. The entry for 나 is headword 나 3 (sense [I], pronoun), used toward an equal or a junior; the note's 'among equals' is a true subset. Locator fixed: the headword read 나 and now reads 나 3. No wording is copied; no age range is named. Outcome: pass, locator corrected.\nLine 3 (pass 5, MAR culture review, 2026-10-14): 저 3 sense 1 and 나 3 [I] re-fetched; the note matches both. Each half of the register claim rests on one entry of the same NIKL dictionary; the note has the two sources section 3.9 asks for and the cell accepts this. No wording copied; no age range named. Outcome: pass, no change. Pass 6 adjudication (2026-10-14): wording narrowed to the source's 윗사람 (people senior to you) in place of 'want to show respect to'; still true to 저 3 「1」."
+      }
+    }
+  ],
+  "review": {
+    "language": "native-reviewed",
+    "culture": "culture-reviewed",
+    "reviewedBy": "MAR",
+    "reviewedAt": "2026-10-14",
+    "notes": [
+      "Language pass 4 (MAR): 해요체, spacing, marks, 이에요/예요 and 이/가 clean; applied: no 없어요 in scored reading, Checks repeat no apply sentence (q1 c2), ko glosses as definitions matching stage 4, one ko term each for 네 and 이에요/예요, es friend wording without gender; 저는 is an unanalysed chunk until a later 은/는 cell.",
+      "Culture pass 5 (MAR): no culture claim (section 3.9); the four language notes re-checked against all nine cited NIKL and AKS pages, two or three sources each, nothing copied, n4 worded as the source's 윗사람; no real person, brand or price; no age wording; Hoya is the cast name."
+    ]
+  },
+  "contentVer": 1
+}
