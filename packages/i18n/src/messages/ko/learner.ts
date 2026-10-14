@@ -173,6 +173,9 @@ export const learner = {
       line: (count: number) => `이미 받은 카드 ${count}장을 호야가 찾았어요!`,
       cta: '내 카드 보기',
     },
+    lockedCard: {
+      a11y: (cardLabel: string) => `${cardLabel} 아직 안 열렸어요.`,
+    },
   },
 
   journey: {

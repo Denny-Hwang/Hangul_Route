@@ -14,6 +14,7 @@ import {
   StarRow,
   StoryScene,
   TAB_SCREEN_EDGES,
+  TagMark,
   colors,
   spacing,
   touchTarget,
@@ -46,7 +47,7 @@ import {
   type MissionCard,
 } from '../../logic/homework/mission-builder';
 import { dueTodayCount, showsTodayCount } from '../../logic/homework/assignment-groups';
-import { homeCardLock } from '../../logic/homework/home-card-access';
+import { homeCardLock, isHomeCardLocked } from '../../logic/homework/home-card-access';
 import { mergeAssignments } from '../../logic/homework/assignment-merger';
 import { gridQuestProgress } from '../../logic/journey';
 import { homeColumns } from '../../logic/layout/home-columns';
@@ -129,12 +130,17 @@ const catchUpAnnounced = new Set<string>();
 /**
  * One of the three Today's mission cards (F-HW-001 §3.1).
  * A collected card keeps its slot and switches tone — it never disappears and
- * the cards below it never move up (§3.2).
+ * the cards below it never move up (§3.2). A pinned card that is no longer open (F-STORY-004
+ * PR 4.8f, gating on only) shows the sunken tone, the dotted ring and "Not open yet", says so in
+ * its label and gives the ask as its hint, as a closed Library tile does (F-ENT-003 section 3.7;
+ * never a lock glyph, OD-6). Design: design/wireframes/home/story-time-card.md (state "not open").
  */
 function MissionTile({
   card,
   cover,
   picture,
+  locked,
+  askHint,
   onPress,
 }: {
   card: MissionCard;
@@ -142,17 +148,23 @@ function MissionTile({
   cover?: SceneArt | null;
   /** A practice card's word topic cover (F-ENT-003 E3-7); absent keeps the icon. */
   picture?: { pictureRef: string | undefined } | null;
+  /** The card's story or quest is no longer open (`isHomeCardLocked`); a tap opens the grown-up gate. */
+  locked: boolean;
+  /** The ask (`askFor`), read as the hint of a locked card. */
+  askHint: string;
   onPress: () => void;
 }): React.ReactElement {
   const m = useMessages();
   const locale = useLocale();
   const { title, subtitle } = missionCardText(localizeMissionCard(card, locale), m.learner);
+  const label = m.a11y.missionCard(title, subtitle, card.collected);
   return (
     <Card
       padding="md"
-      tone={card.collected ? 'success' : 'paper'}
+      tone={locked ? 'sunken' : card.collected ? 'success' : 'paper'}
       onPress={onPress}
-      accessibilityLabel={m.a11y.missionCard(title, subtitle, card.collected)}
+      accessibilityLabel={locked ? m.learner.home.lockedCard.a11y(label) : label}
+      accessibilityHint={locked ? askHint : undefined}
     >
       <View
         style={{
@@ -177,6 +189,14 @@ function MissionTile({
             {title}
           </Body>
           <Caption tone="muted">{subtitle}</Caption>
+          {locked ? (
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
+              <TagMark kind="notOpen" testID={`home-mission-not-open-${card.slot}`} />
+              <Body size="sm" weight="semibold" tone="secondary">
+                {m.learner.access.notOpen}
+              </Body>
+            </View>
+          ) : null}
         </View>
         {card.collected ? <Icon name="sparkle" size={28} color={colors.brand.primary} /> : null}
       </View>
@@ -601,6 +621,8 @@ export function HomeScreen(): React.ReactElement {
                 card={card}
                 cover={entry ? storyCoverArt(entry.story) : null}
                 picture={topicCover ?? null}
+                locked={isHomeCardLocked({ card, entries: storyIndex, isQuestOpen: questOpen, isStoryLocked })}
+                askHint={ask.label}
                 onPress={() => openCard(card)}
               />
             );

@@ -45,3 +45,12 @@ export function homeCardLock(input: HomeCardAccessInput): HomeCardLock | null {
   if (card.questId && card.episodeId && !input.isQuestOpen(card.questId)) return locked(null);
   return null;
 }
+
+/**
+ * Whether a Home card shows the locked look (F-STORY-004 PR 4.8f): exactly when a tap would take the
+ * locked path of `homeCardLock`, so the tile never looks open and then lands on the gate, and never
+ * looks closed and then opens. The gate's route plays no part in the look. False while gating is off.
+ */
+export function isHomeCardLocked(input: Omit<HomeCardAccessInput, 'opensDirectly'>): boolean {
+  return homeCardLock({ ...input, opensDirectly: false }) !== null;
+}
