@@ -54,7 +54,7 @@ export const OUT_DIR = join("apps", "mobile", "src", "content", "__generated__")
  * with the measured numbers in the PR.
  */
 export const BUDGET = Object.freeze({
-  perQuestRawAvg: 9_000, // average per quest in a cell (S4-1 raise, measured Stage 4 cells 24.1-25.8 KB for three): 54 KB for six, 27 KB for three
+  perQuestRawAvg: 7_500, // average per quest in a cell (§3.12): 45 KB for six, 22.5 KB for three; measured on the compact literal (S3-2)
   stageRaw: 150_000,
   stageGzip: 32_000,
   totalRaw: 600_000,
@@ -69,7 +69,22 @@ export class ContentError extends Error {
 }
 
 const isObject = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
-const literal = (value) => JSON.stringify(value, null, 2);
+/**
+ * A literal with one top-level element (a quest, a scope, a locale) per line and nothing
+ * indented inside it (S3-2): the two-space indent was 40-50 % of an upper-stage cell's
+ * bytes, which a release build strips anyway, so the budget now measures content. A
+ * diff still shows which quest or scope changed.
+ */
+const literal = (value) => {
+  const lines = Array.isArray(value)
+    ? value.map((v) => JSON.stringify(v))
+    : isObject(value)
+      ? Object.entries(value).map(([k, v]) => `${JSON.stringify(k)}: ${JSON.stringify(v)}`)
+      : null;
+  if (lines === null) return JSON.stringify(value);
+  const [open, close] = Array.isArray(value) ? ["[", "]"] : ["{", "}"];
+  return lines.length === 0 ? `${open}${close}` : `${open}\n${lines.map((l) => `  ${l}`).join(",\n")}\n${close}`;
+};
 const bytes = (text) => Buffer.byteLength(text, "utf8");
 
 function need(obj, field, where, kind = "string") {
@@ -142,7 +157,8 @@ export function runtimeScope(scope, where) {
         storySteps: scope.lines.map((l) => ({ id: l.id, labelEn: l.line.en, labelKo: l.line.ko, romanization: l.line.romanization })),
       };
     case "order-it":
-      return { kind, rounds: scope.rounds.length, orderIt: { rounds: scope.rounds } };
+      // OrderItRoundSchema's default: a particle round may leave out its distractor tiles; the game reads [].
+      return { kind, rounds: scope.rounds.length, orderIt: { rounds: scope.rounds.map((r) => ({ ...r, distractors: r.distractors ?? [] })) } };
     case "realia-read":
       return { kind, rounds: scope.rounds.length, realiaRead: { realia: scope.realia, rounds: scope.rounds } };
     case "type-hangul":

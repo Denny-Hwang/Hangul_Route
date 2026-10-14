@@ -112,14 +112,14 @@ describe("build-lessons.mjs: cells", () => {
     assert.equal(r.status, 0, r.stdout + r.stderr);
     assert.match(r.stdout, /ready cells: 1, drafts left out: 1/);
     const index = read(root, "lessons-index.ts");
-    assert.match(index, /"id": "episode:stage2-rites"/);
-    assert.match(index, /"status": "shipped"/);
+    // One top-level element per line, compact inside (the budget measures content, not indent).
+    assert.match(index, /^  \{"id":"episode:stage2-rites",.*"status":"shipped"\}$/m);
     // 3 quests x 250 s = 750 s = 12.5 minutes, rounded.
-    assert.match(index, /"estimatedMinutes": 13/);
-    assert.match(index, /"questIds": \[\n\s+"quest:stage2-rites-q1"/);
+    assert.match(index, /"estimatedMinutes":13/);
+    assert.match(index, /"questIds":\["quest:stage2-rites-q1"/);
     assert.doesNotMatch(index, /"scopes"|stage2-crafts|"sources"|stdict/);
     const stage2 = read(root, "lessons-stage2.ts");
-    assert.match(stage2, /"minigame:s2-rites-q1-practice": \{\n\s+"kind": "card-match"/);
+    assert.match(stage2, /^  "minigame:s2-rites-q1-practice": \{"kind":"card-match"/m);
     assert.doesNotMatch(stage2, /stage2-crafts/);
     assert.match(read(root, "lessons-stage3.ts"), /= \{\};/);
   });
@@ -155,12 +155,12 @@ describe("build-lessons.mjs: cells", () => {
     put(root, "content/i18n/ko/lessons-stage2-rites.json", overlay("ko", "lessons-stage2-rites", { "episode:stage2-rites": { title: "명절 낱말" } }));
     assert.equal(run(root).status, 0);
     const index = read(root, "lessons-index.ts");
-    assert.match(index, /"episode:stage2-rites": \{\n\s+"title": "Palabras de fiesta"\n/);
-    assert.match(index, /"title": "명절 낱말"/);
-    assert.match(index, /"steps.s1.title": "Hola"/);
+    assert.match(index, /"episode:stage2-rites":\{"title":"Palabras de fiesta"\}/);
+    assert.match(index, /"title":"명절 낱말"/);
+    assert.match(index, /"steps.s1.title":"Hola"/);
     assert.doesNotMatch(index, /nope|cometa/);
     const stage2 = read(root, "lessons-stage2.ts");
-    assert.match(stage2, /"cardPairs.yeon.gloss": "cometa"/);
+    assert.match(stage2, /"cardPairs.yeon.gloss":"cometa"/);
     assert.doesNotMatch(stage2, /cardPairs.gong/);
   });
 
@@ -219,7 +219,15 @@ describe("build-lessons.mjs: runtime scopes (the app's MinigameScope)", () => {
       [{ kind: "listen-pick", rounds: [lp("a")] }, { kind: "listen-pick", rounds: 1, listenPick: { rounds: [lp("a")] } }],
       [{ kind: "pic-word-match", boards: [{ pairs: [] }] }, { kind: "pic-word-match", rounds: 1, picWord: { boards: [{ pairs: [] }] } }],
       [{ kind: "card-match", pairs: [kt("연", "yeon", "kite", { audioRef: "x" })] }, { kind: "card-match", rounds: 1, cardPairs: [kt("연", "yeon", "kite")] }],
-      [{ kind: "order-it", rounds: [1, 2] }, { kind: "order-it", rounds: 2, orderIt: { rounds: [1, 2] } }],
+      // A particle round may leave out its distractors (the schema default): the game reads [].
+      [
+        { kind: "order-it", rounds: [{ id: "r1", distractors: [kt("물을", "mureul", "water")] }, { id: "r2", particle: { tile: 0 } }] },
+        {
+          kind: "order-it",
+          rounds: 2,
+          orderIt: { rounds: [{ id: "r1", distractors: [kt("물을", "mureul", "water")] }, { id: "r2", particle: { tile: 0 }, distractors: [] }] },
+        },
+      ],
       [{ kind: "realia-read", realia, rounds: [1] }, { kind: "realia-read", rounds: 1, realiaRead: { realia, rounds: [1] } }],
       [{ kind: "type-hangul", rounds: [1] }, { kind: "type-hangul", rounds: 1, typeHangul: { rounds: [1] } }],
       [{ kind: "trace-word", rounds: [1, 2, 3] }, { kind: "trace-word", rounds: 3, traceWord: { rounds: [1, 2, 3] } }],
@@ -303,7 +311,7 @@ describe("build-lessons.mjs: --check and --report", () => {
     assert.match(r.stdout, /episode:stage2-rites {2}3 quests {2}\d+ B raw {2}\d+ B gzip/);
     assert.match(r.stdout, /lessons-stage2\.ts {2}\d+ B raw/);
     assert.match(r.stdout, /total {2}\d+ B raw {2}\d+ B gzip/);
-    assert.match(r.stdout, /Budget: 9000 B raw per quest/);
+    assert.match(r.stdout, /Budget: 7500 B raw per quest/);
   });
 
   test("--report fails over budget; a draft is never measured", () => {
@@ -314,13 +322,13 @@ describe("build-lessons.mjs: --check and --report", () => {
     put(root, "content/episodes/stage-2/crafts.json", cell("stage2", "crafts", "draft", { order: 5 }));
     const r = run(root, ["--report"]);
     assert.equal(r.status, 1);
-    assert.match(r.stdout, /::error file=apps\/mobile\/src\/content\/__generated__::episode:stage2-rites is \d+ B raw for 3 quests, over its ceiling of 27000 B/);
+    assert.match(r.stdout, /::error file=apps\/mobile\/src\/content\/__generated__::episode:stage2-rites is \d+ B raw for 3 quests, over its ceiling of 22500 B/);
     assert.doesNotMatch(r.stdout, /stage2-crafts/);
   });
 
   test("checkBudget names every ceiling it crosses", () => {
     const over = checkBudget({
-      perCell: [{ id: "episode:x", quests: 6, raw: 54_001, gzip: 1 }],
+      perCell: [{ id: "episode:x", quests: 6, raw: 45_001, gzip: 1 }],
       perModule: [
         { name: "lessons-index.ts", raw: 999_999, gzip: 999_999 },
         { name: "lessons-stage2.ts", raw: BUDGET.stageRaw + 1, gzip: BUDGET.stageGzip + 1 },
@@ -328,7 +336,7 @@ describe("build-lessons.mjs: --check and --report", () => {
       total: { raw: BUDGET.totalRaw + 1, gzip: BUDGET.totalGzip + 1 },
     });
     assert.equal(over.length, 5);
-    assert.match(over[0], /episode:x is 54001 B raw for 6 quests, over its ceiling of 54000 B/);
+    assert.match(over[0], /episode:x is 45001 B raw for 6 quests, over its ceiling of 45000 B/);
     assert.deepEqual(checkBudget({ perCell: [], perModule: [], total: { raw: 0, gzip: 0 } }), []);
     const report = sizes([{ status: "draft", episode: { id: "d" }, quests: [], scopes: {} }], buildModules([]));
     assert.deepEqual(report.perCell, []);
