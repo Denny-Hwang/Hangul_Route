@@ -100,7 +100,6 @@ export function useStepUp(): StepUpControl {
   return { run, dialog: phase ? { phase, onContinue, onCancel } : null };
 }
 
-/** Makes every element outside the dialog's ancestor chain inert; returns the undo. */
 /**
  * Clerk mounts its UI in a root of its own under `body` (`#clerk-components`, elements carrying `data-clerk-*` or a
  * `cl-` class). It is never made inert: a Clerk modal must stay usable whenever it shows.
@@ -111,6 +110,7 @@ function isClerkRoot(el: Element): boolean {
   return Array.from(el.classList).some((c) => c.startsWith('cl-'));
 }
 
+/** Makes every element outside the dialog's ancestor chain inert; returns the undo. */
 function inertOutside(dialog: HTMLElement): () => void {
   const changed: Element[] = [];
   let node: HTMLElement | null = dialog;

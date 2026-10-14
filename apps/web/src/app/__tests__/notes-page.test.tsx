@@ -50,11 +50,19 @@ const learner = (id: string, displayName: string) => ({ id, displayName, ageGrou
 let rosterLearners = [learner('profile:mina', 'Mina'), learner('profile:jun', 'Jun')];
 let role = 'teacher';
 let rosterFailure: 'forbidden' | 'not_found' | 'network' | null = null;
+// While set, the roster and spaces reads wait for it (the page's loading moment).
+let rosterGate: Promise<void> | null = null;
 
 const ok = <T,>(data: T) => ({ ok: true as const, data });
 const api = {
-  roster: async () => (rosterFailure ? { ok: false as const, error: rosterFailure } : ok({ space: SPACE, learners: rosterLearners, joinCode: null, joinCodeExpiresAt: null })),
-  listSpaces: async () => ok([{ space: SPACE, role, counts: { learners: rosterLearners.length, accounts: 1, classes: 0 }, joinCode: null, joinCodeExpiresAt: null }]),
+  roster: async () => {
+    if (rosterGate) await rosterGate;
+    return rosterFailure ? { ok: false as const, error: rosterFailure } : ok({ space: SPACE, learners: rosterLearners, joinCode: null, joinCodeExpiresAt: null });
+  },
+  listSpaces: async () => {
+    if (rosterGate) await rosterGate;
+    return ok([{ space: SPACE, role, counts: { learners: rosterLearners.length, accounts: 1, classes: 0 }, joinCode: null, joinCodeExpiresAt: null }]);
+  },
   entitlements: async () => ok([]),
 };
 
@@ -121,6 +129,7 @@ afterEach(() => {
   nav.replaced = [];
   nav.backs = 0;
   rosterFailure = null;
+  rosterGate = null;
   sentQueue = [];
   withdrawAnswer = { ok: true, data: { withdrawn: 1 } };
   SPACE.kind = 'class';
@@ -416,6 +425,51 @@ describe('review follow-ups: who sees what, and the list states', () => {
     expect(byText(root, 'button', n.newNote.cta)).toHaveLength(0);
     expect(textOf(root)).toContain(n.sent.empty);
     expect(dialog(root)).toBeUndefined();
+  });
+
+  it('a school admin never sees New note while the roster and spaces are still loading', async () => {
+    role = 'admin';
+    let release: () => void = () => undefined;
+    rosterGate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const root = await page('id=space%3Ac1');
+    expect(newNote(root)).toHaveLength(0);
+    expect(byText(root, 'button', n.newNote.cta)).toHaveLength(0);
+    await act(async () => release());
+    await act(async () => undefined);
+    expect(newNote(root)).toHaveLength(0);
+    expect(byText(root, 'button', n.newNote.cta)).toHaveLength(0);
+  });
+
+  it('a teacher sees New note only once the roster has loaded', async () => {
+    let release: () => void = () => undefined;
+    rosterGate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const root = await page('id=space%3Ac1');
+    expect(newNote(root)).toHaveLength(0);
+    await act(async () => release());
+    await act(async () => undefined);
+    expect(newNote(root)).toHaveLength(1);
+  });
+
+  it('moving to another space: the earlier space role never shows New note while the new reads load', async () => {
+    const root = await page('id=space%3Ac1');
+    expect(newNote(root)).toHaveLength(1);
+    role = 'admin';
+    let release: () => void = () => undefined;
+    rosterGate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    nav.query = 'id=space%3Ac2';
+    await act(async () => mounted?.update(<Page />));
+    await act(async () => undefined);
+    expect(newNote(root)).toHaveLength(0);
+    expect(byText(root, 'button', n.newNote.cta)).toHaveLength(0);
+    await act(async () => release());
+    await act(async () => undefined);
+    expect(newNote(root)).toHaveLength(0);
   });
 
   it('a roster the viewer cannot open: the access line only, no send action, no tabs and no sent list', async () => {
