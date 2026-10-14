@@ -98,8 +98,8 @@ describe('resolveBoot', () => {
 });
 
 describe('runDeck: the slides this build draws', () => {
-  it('draws title, letter, syllable, word, order, card, activity and End slides (PR 6 and PR 7)', () => {
-    expect([...SHELL_SLIDE_KINDS].sort()).toEqual(['activity', 'card', 'end', 'letter', 'sequence', 'syllable', 'title', 'vocab']);
+  it('draws title, letter, syllable, word, order, card, activity, quiz and End slides (PR 6, PR 7 and PR 9)', () => {
+    expect([...SHELL_SLIDE_KINDS].sort()).toEqual(['activity', 'card', 'end', 'letter', 'quiz', 'sequence', 'syllable', 'title', 'vocab']);
     const deck = deckOf([
       { kind: 'episode', id: 'episode:stage1-letters' },
       { kind: 'quest', id: 'quest:stage1-life-q1' },
@@ -110,10 +110,10 @@ describe('runDeck: the slides this build draws', () => {
     ]);
     const expanded = expandDeck(deck, lectureBundle('en'), { canPlayKorean: true });
     const run = runDeck(deck, expanded);
-    expect(new Set(run.slides.map((s) => s.kind))).toEqual(new Set(['title', 'letter', 'syllable', 'vocab', 'sequence', 'card', 'activity', 'end']));
-    // The activity's minutes stay in the estimate with its slide.
-    const quizzes = expanded.slides.filter((s) => s.kind === 'quiz').length;
-    expect(run.minutes).toBe(expanded.minutes - quizzes);
+    expect(new Set(run.slides.map((s) => s.kind))).toEqual(new Set(['title', 'letter', 'syllable', 'vocab', 'sequence', 'card', 'quiz', 'activity', 'end']));
+    // Every slide is drawn, so the estimate is the builder's.
+    expect(run.slides).toHaveLength(expanded.slides.length);
+    expect(run.minutes).toBe(expanded.minutes);
   });
 
   it('a word whose card the art cannot draw loses its art build, so no press reveals nothing', () => {
@@ -145,7 +145,7 @@ describe('runDeck: the slides this build draws', () => {
     expect(runDeck(deck, { slides: [undrawn, end], skipped: [], taught: [], minutes: 2 }, SHELL_SLIDE_KINDS, ['card:book']).slides[0]).toEqual(undrawn);
   });
 
-  it('everything else is a skipped part, one per block and kind', () => {
+  it('a quiz block is drawn (PR 9): its slides and minutes stay', () => {
     const deck = deckOf([
       { kind: 'episode', id: 'episode:stage1-letters' },
       { kind: 'quiz', from: 'all', rounds: 3 },
@@ -156,17 +156,30 @@ describe('runDeck: the slides this build draws', () => {
     const run = runDeck(deck, expanded);
     expect(run.slides.at(-1)?.kind).toBe('end');
     expect(run.slides.filter((s) => s.kind === 'letter').length).toBeGreaterThan(4);
-    const dropped = expanded.slides.filter((s) => !SHELL_SLIDE_KINDS.has(s.kind));
-    expect(dropped.length).toBeGreaterThan(0);
-    expect(dropped.every((s) => s.kind === 'quiz')).toBe(true);
-    // The skipped parts: the builder's own, plus the undrawn runs; the quiz block is one part.
-    const added = run.parts.slice(expanded.skipped.length);
-    expect(added.every((p) => p.reason === 'unsupported-step')).toBe(true);
-    expect(added.filter((p) => p.blockIndex === 1)).toHaveLength(1);
-    expect(added.filter((p) => p.blockIndex === 2)).toHaveLength(0);
-    expect(added.length).toBeLessThan(dropped.length);
-    // Quiz minutes leave the estimate with their slides; the activity's stay.
-    expect(run.minutes).toBe(expanded.minutes - dropped.length);
+    expect(run.slides.filter((s) => s.kind === 'quiz').length).toBeGreaterThan(0);
+    expect(run.parts).toEqual(expanded.skipped.map((s) => ({ blockIndex: s.blockIndex, reason: s.reason })));
+    expect(run.minutes).toBe(expanded.minutes);
+  });
+
+  it('a story check waits for the story slides (PR 11): one skipped part per block, its minute out of the estimate', () => {
+    const end: Slide = { kind: 'end', letters: [], words: [], key: 'end', builds: ['summary'] };
+    const check = (n: number): Slide => ({
+      kind: 'quiz',
+      prompt: { ask: 'check', text: 'Who made the letters?' },
+      options: [],
+      textPrompt: false,
+      key: `story:x/check-${n}`,
+      builds: ['question', 'answer'],
+    });
+    const odd: Slide = { kind: 'quiz', prompt: { ask: 'odd-one-out' }, options: [], textPrompt: false, key: 'quiz/q1', builds: ['question', 'answer'] };
+    const deck = deckOf([
+      { kind: 'story', storyId: 'story:x', checks: true },
+      { kind: 'quiz', from: 'all', rounds: 3 },
+    ]);
+    const run = runDeck(deck, { slides: [check(1), check(2), odd, end], skipped: [], taught: [], minutes: 5 });
+    expect(run.slides.map((s) => s.key)).toEqual(['quiz/q1', 'end']);
+    expect(run.parts).toEqual([{ blockIndex: 0, reason: 'unsupported-step' }]);
+    expect(run.minutes).toBe(3);
   });
 
   it('an undrawn activity slide takes its minutes out of the estimate', () => {
@@ -181,9 +194,9 @@ describe('runDeck: the slides this build draws', () => {
 
   it('a deck with nothing to draw but the End slide is empty (the invalid-deck screen)', () => {
     const end: Slide = { kind: 'end', letters: [], words: [], key: 'end', builds: ['summary'] };
-    const quiz: Slide = { kind: 'quiz', prompt: { ask: 'odd-one-out' }, options: [], textPrompt: false, key: 'quiz/q1', builds: ['question', 'answer'] };
-    const expanded: ExpandedDeck = { slides: [quiz, end], skipped: [], taught: [], minutes: 4 };
-    const run = runDeck(deckOf([{ kind: 'quiz', from: 'all', rounds: 3 }]), expanded);
+    const check: Slide = { kind: 'quiz', prompt: { ask: 'check', text: 'Who?' }, options: [], textPrompt: false, key: 'story:x/check-1', builds: ['question', 'answer'] };
+    const expanded: ExpandedDeck = { slides: [check, end], skipped: [], taught: [], minutes: 4 };
+    const run = runDeck(deckOf([{ kind: 'story', storyId: 'story:x', checks: true }]), expanded);
     expect(run.slides).toEqual([]);
     expect(run.parts).toEqual([{ blockIndex: 0, reason: 'unsupported-step' }]);
     expect(runDeck(deckOf([{ kind: 'quiz', from: 'all', rounds: 3 }]), { slides: [], skipped: [], taught: [], minutes: 0 }).slides).toEqual([]);
