@@ -6,7 +6,7 @@ export const storiesAll: Story[] = [
     "v": 1,
     "id": "story:angbuilgu-sundial",
     "state": "ready",
-    "contentVer": 3,
+    "contentVer": 4,
     "title": {
       "ko": "하늘을 바라보는 해시계, 앙부일구",
       "romanization": "Haneureul baraboneun haesigye, angbuilgu",
@@ -473,6 +473,356 @@ export const storiesAll: Story[] = [
           "geurimja",
           "gil"
         ]
+      },
+      {
+        "level": "read",
+        "scenes": [
+          {
+            "id": "s1",
+            "narrationEn": "The sun, {kw:hae}, makes a shadow, {kw:geurimja}. In Joseon, a shadow told the time.",
+            "captionEn": "A shadow tells the time",
+            "line": {
+              "ko": "해가 만든 그림자로 시간을 알아요.",
+              "romanization": "Haega mandeun geurimjaro siganeul arayo.",
+              "en": "People tell the time by the shadow the sun makes.",
+              "speaker": "narrator"
+            },
+            "factIds": [
+              "f1"
+            ],
+            "framing": false,
+            "approximations": [],
+            "art": {
+              "setting": "scene:palace-courtyard",
+              "layers": [
+                {
+                  "ref": "prop:glow-burst",
+                  "x": 330,
+                  "y": 130,
+                  "s": 0.6
+                },
+                {
+                  "ref": "prop:ground-shadow",
+                  "x": 166,
+                  "y": 291,
+                  "s": 1,
+                  "flip": true
+                },
+                {
+                  "ref": "hoya:thinking",
+                  "x": 220,
+                  "y": 290,
+                  "s": 0.9
+                }
+              ],
+              "altEn": "Hoya looks up at the bright sun in a palace courtyard, his shadow stretching across the stone paving."
+            }
+          },
+          {
+            "id": "s2",
+            "narrationEn": "In 1434, a new sundial was set up. Its bowl looks like a pot facing the sky: the {kw:angbuilgu}.",
+            "captionEn": "A pot-shaped sundial",
+            "line": {
+              "ko": "앙부일구는 솥 모양이에요.",
+              "romanization": "Angbuilguneun sot moyangieyo.",
+              "en": "The angbuilgu is shaped like a pot.",
+              "speaker": "narrator"
+            },
+            "factIds": [
+              "f2"
+            ],
+            "framing": false,
+            "approximations": [],
+            "art": {
+              "setting": "scene:palace-courtyard",
+              "layers": [
+                {
+                  "ref": "prop:glow-burst",
+                  "x": 336,
+                  "y": 120,
+                  "s": 0.5
+                },
+                {
+                  "ref": "prop:sundial",
+                  "x": 200,
+                  "y": 280,
+                  "s": 2
+                }
+              ],
+              "altEn": "A bronze bowl-shaped sundial on four short legs faces the open sky, with a slim pointer set inside the bowl."
+            }
+          },
+          {
+            "id": "s3",
+            "narrationEn": "A pointer inside the bowl casts a shadow. Lines show the time of day and the time of year.",
+            "captionEn": "A pointer's shadow shows the time",
+            "line": {
+              "ko": "그림자가 시간을 알려 줘요.",
+              "romanization": "Geurimjaga siganeul allyeo jwoyo.",
+              "en": "The shadow shows the time.",
+              "speaker": "narrator"
+            },
+            "factIds": [
+              "f3"
+            ],
+            "framing": false,
+            "approximations": [],
+            "art": {
+              "setting": "scene:hanji-backdrop",
+              "layers": [
+                {
+                  "ref": "prop:sundial",
+                  "x": 200,
+                  "y": 286,
+                  "s": 3
+                }
+              ],
+              "altEn": "Close up inside the sundial's bowl, the pointer's shadow falls across curved lines that show the time of day and year."
+            }
+          },
+          {
+            "id": "s4",
+            "narrationEn": "The sundials stood beside busy roads, {kw:gil}, so people passing by could see the time.",
+            "captionEn": "Sundials beside busy roads",
+            "line": {
+              "ko": "앙부일구를 길가에 두었어요.",
+              "romanization": "Angbuilgureul gilgae dueosseoyo.",
+              "en": "They set the sundials beside the roads.",
+              "speaker": "narrator"
+            },
+            "factIds": [
+              "f4"
+            ],
+            "framing": false,
+            "approximations": [],
+            "art": {
+              "setting": "scene:village-lane",
+              "layers": [
+                {
+                  "ref": "prop:fig-villager",
+                  "x": 96,
+                  "y": 276,
+                  "s": 1
+                },
+                {
+                  "ref": "prop:sundial",
+                  "x": 200,
+                  "y": 272,
+                  "s": 1.3
+                },
+                {
+                  "ref": "prop:fig-child",
+                  "x": 278,
+                  "y": 284,
+                  "s": 0.9
+                },
+                {
+                  "ref": "prop:fig-villager",
+                  "x": 336,
+                  "y": 278,
+                  "s": 0.95,
+                  "flip": true,
+                  "tint": "surface.paper"
+                }
+              ],
+              "altEn": "On a busy Joseon street, people in white clothes and a child gather around a sundial to see what time it is."
+            }
+          },
+          {
+            "id": "s5",
+            "narrationEn": "The hours were shown with zodiac animal pictures, so people who could not read could tell the time.",
+            "captionEn": "Animal pictures show the hours",
+            "line": {
+              "ko": "글자 대신 동물 그림을 그렸어요.",
+              "romanization": "Geulja daesin dongmul geurimeul geuryeosseoyo.",
+              "en": "They drew animal pictures instead of letters.",
+              "speaker": "narrator"
+            },
+            "factIds": [
+              "f5"
+            ],
+            "framing": false,
+            "approximations": [],
+            "art": {
+              "setting": "scene:countryside",
+              "layers": [
+                {
+                  "ref": "prop:zodiac-ring",
+                  "x": 196,
+                  "y": 250,
+                  "s": 1.5
+                },
+                {
+                  "ref": "hoya:waving",
+                  "x": 342,
+                  "y": 296,
+                  "s": 0.6
+                }
+              ],
+              "altEn": "The heads of the twelve zodiac animals form a ring on a grassy hill, and Hoya waves happily at the tiger."
+            }
+          },
+          {
+            "id": "s6",
+            "narrationEn": "The sundials we see today were made later in Joseon, and several are Treasures, {kw:bomul}.",
+            "captionEn": "Some sundials are Treasures",
+            "line": {
+              "ko": "몇몇 앙부일구는 보물이에요.",
+              "romanization": "Myeonmyeot angbuilguneun bomurieyo.",
+              "en": "Some angbuilgu are Treasures.",
+              "speaker": "narrator"
+            },
+            "factIds": [
+              "f7"
+            ],
+            "framing": false,
+            "approximations": [],
+            "art": {
+              "setting": "scene:modern-room",
+              "layers": [
+                {
+                  "ref": "prop:display-case",
+                  "x": 200,
+                  "y": 300,
+                  "s": 2
+                },
+                {
+                  "ref": "prop:sundial",
+                  "x": 152,
+                  "y": 202,
+                  "s": 0.95,
+                  "z": "back"
+                },
+                {
+                  "ref": "prop:sundial",
+                  "x": 234,
+                  "y": 214,
+                  "s": 1.2
+                }
+              ],
+              "altEn": "Two later Joseon bronze sundials on cross-shaped bases stand side by side in a museum display case."
+            }
+          }
+        ],
+        "checks": [
+          {
+            "id": "r1",
+            "kind": "pick-meaning",
+            "promptEn": "What does {target} mean?",
+            "target": {
+              "ko": "그림자",
+              "romanization": "geurimja",
+              "en": "shadow"
+            },
+            "options": [
+              {
+                "id": "a",
+                "en": "Sun",
+                "isCorrect": false
+              },
+              {
+                "id": "b",
+                "en": "Shadow",
+                "isCorrect": true
+              },
+              {
+                "id": "c",
+                "en": "Road",
+                "isCorrect": false
+              },
+              {
+                "id": "d",
+                "en": "Pot",
+                "isCorrect": false
+              }
+            ],
+            "explainEn": "Geurimja means shadow. The sun's shadow told the time.",
+            "factIds": [
+              "f1"
+            ]
+          },
+          {
+            "id": "r2",
+            "kind": "pick-meaning",
+            "promptEn": "What does {target} mean?",
+            "target": {
+              "ko": "길",
+              "romanization": "gil",
+              "en": "road"
+            },
+            "options": [
+              {
+                "id": "a",
+                "en": "Road",
+                "isCorrect": true
+              },
+              {
+                "id": "b",
+                "en": "Tiger",
+                "isCorrect": false
+              },
+              {
+                "id": "c",
+                "en": "Treasure",
+                "isCorrect": false
+              },
+              {
+                "id": "d",
+                "en": "Shadow",
+                "isCorrect": false
+              }
+            ],
+            "explainEn": "Gil means road. The sundials stood beside busy roads.",
+            "factIds": [
+              "f4"
+            ]
+          },
+          {
+            "id": "r3",
+            "kind": "detail",
+            "promptEn": "In the story, why were animal pictures used for the hours?",
+            "options": [
+              {
+                "id": "a",
+                "en": "To make the bowl heavier",
+                "isCorrect": false
+              },
+              {
+                "id": "b",
+                "en": "To scare birds away",
+                "isCorrect": false
+              },
+              {
+                "id": "c",
+                "en": "So people who could not read could tell the time",
+                "isCorrect": true
+              },
+              {
+                "id": "d",
+                "en": "To show the weather",
+                "isCorrect": false
+              }
+            ],
+            "explainEn": "Animal pictures took the place of letters, so people who could not read could tell the time.",
+            "factIds": [
+              "f5"
+            ]
+          }
+        ],
+        "checkpoints": [],
+        "sequenceSceneIds": [
+          "s1",
+          "s3",
+          "s4",
+          "s6"
+        ],
+        "newKeywordIds": [
+          "hae",
+          "geurimja",
+          "angbuilgu",
+          "gil"
+        ],
+        "grammarFocusEn": "-ro/-euro (by, with): geurimjaro; daesin (instead of)"
       }
     ],
     "coverSceneId": "s1",
@@ -704,7 +1054,7 @@ export const storiesAll: Story[] = [
       "passes": 3,
       "checkedAt": "2026-10-10",
       "scope": "cluster",
-      "notes": "Third independent pass. All quotes re-checked programmatically against fetched pages (Sillok, encykorea, 우리역사넷, NMK, KMA; KHS descriptions via the khs.go.kr open API SearchKindOpenapiDt.do?ccbaCpno=...). unesco.org/ich.unesco.org pages could not be fetched directly (connection reset); UNESCO wording and years (2009, 2013, 2018) confirmed from search excerpts of the UNESCO pages and KHS lists. Corrections: Heo Jun birth year dropped from narration/fact (sources conflict: 1539 vs 1546, encykorea internally inconsistent); Jang Yeong-sil rank sentence softened to match the Sillok ('decided to give'); 우리역사넷 added as second source for Donguibogam f4/f5; Ssirum UNESCO locator de-quoted. MAR 2026-10-13 language review (F-STORY-001 PR 1.9): Korean strings, romanization and glosses read; findings and outcomes in the PR. MAR 2026-10-13 culture review (F-STORY-001 PR 1.9): heritage accuracy, framing, tone and advisories read; review.advisory confirmed; findings and outcomes in the PR."
+      "notes": "Third independent pass. All quotes re-checked programmatically against fetched pages (Sillok, encykorea, 우리역사넷, NMK, KMA; KHS descriptions via the khs.go.kr open API SearchKindOpenapiDt.do?ccbaCpno=...). unesco.org/ich.unesco.org pages could not be fetched directly (connection reset); UNESCO wording and years (2009, 2013, 2018) confirmed from search excerpts of the UNESCO pages and KHS lists. Corrections: Heo Jun birth year dropped from narration/fact (sources conflict: 1539 vs 1546, encykorea internally inconsistent); Jang Yeong-sil rank sentence softened to match the Sillok ('decided to give'); 우리역사넷 added as second source for Donguibogam f4/f5; Ssirum UNESCO locator de-quoted. MAR 2026-10-13 language review (F-STORY-001 PR 1.9): Korean strings, romanization and glosses read; findings and outcomes in the PR. MAR 2026-10-13 culture review (F-STORY-001 PR 1.9): heritage accuracy, framing, tone and advisories read; review.advisory confirmed; findings and outcomes in the PR. MAR 2026-10-13 language review of the read tier (F-STORY-005 PR 5.6): 6 Korean lines, their romanization (machine-checked) and glosses read for spelling, naturalness and Stage 5 level; 2 changes (s1 haega mandeun geurimja, as in the cited fact; s5 past geuryeosseoyo for the Sejong-era sundials); findings and outcomes in the PR. MAR 2026-10-13 culture review of the read tier (F-STORY-005 PR 5.6): every line and check compared with its cited facts (no new claim), framing, tone and respectful wording read; s5 cites f5 only (no tiger named); review.advisory unchanged; findings and outcomes in the PR."
     },
     "authorNotes": "Makers deliberately not named: KHS entries list different makers (1985 Treasure: 장영실·이천·김조; 2022-1 Treasure: 장영실·이천·이순지) and encykorea says the maker is unclear (citing the Sejo Sillok, 이순지 led instrument-making). The Sillok inscription says '神의 몸을 그렸으니 어리석은 백성을 위한 것' (drew the bodies of spirits, for ordinary people); KHS and encykorea interpret these as the twelve zodiac animal spirits; narration follows them. Omitted: KHS's description of it as Korea's first public clock ('first' claim); line counts (KHS 1985: 7 vertical/13 horizontal; KHS 2022-1: 15-minute hour lines), because they vary by instrument; the sundial returned from the United States in 2020 (KHS 2022-1). Surviving Treasures date from the 17th–18th centuries (KHS). Theme set to 'nature' (sun, sky, seasons, zodiac animals); BP04 places Sejong science under Pillar E, so 'crafts' is an alternative. REVISION: 'seasons' replaced by 'time of year' (KHS: 계절선; encykorea: 13 절기선). Scene 5 now says explicitly that the animal-picture dials are those of Sejong's time (encykorea notes later versions used written characters). The reading of 'drew the bodies of spirits (신의 몸)' as the twelve zodiac animals is the interpretation of KHS and encykorea, not stated in the Sillok inscription itself. PR 1.8c: keyword gloss 'bowl-shaped sundial' replaces the research vocab 'hemispherical sundial' as plainer English consistent with f2 (cauldron-like bowl). s3 says 'pointer' (f3: pointer, yeongchim) to match check c1. s5 and c2 say 'twelve zodiac animal spirits' and keep the Sejong-era qualifier (f5).",
     "errata": []
@@ -713,7 +1063,7 @@ export const storiesAll: Story[] = [
     "v": 1,
     "id": "story:cheugugi-rain-gauge",
     "state": "ready",
-    "contentVer": 4,
+    "contentVer": 5,
     "title": {
       "ko": "비를 재는 그릇, 측우기",
       "romanization": "Bireul jaeneun geureut, cheugugi",
@@ -1203,6 +1553,385 @@ export const storiesAll: Story[] = [
           "geureut",
           "cheugugi"
         ]
+      },
+      {
+        "level": "read",
+        "scenes": [
+          {
+            "id": "s2",
+            "narrationEn": "The crown prince, {kw:seja}, worried about drought. After rain, he dug into the ground to check.",
+            "captionEn": "The crown prince digs to check",
+            "line": {
+              "ko": "세자가 땅을 파 보았어요.",
+              "romanization": "Sejaga ttangeul pa boasseoyo.",
+              "en": "The crown prince dug into the ground to check.",
+              "speaker": "narrator"
+            },
+            "factIds": [
+              "f1"
+            ],
+            "framing": false,
+            "approximations": [],
+            "art": {
+              "setting": "scene:palace-courtyard",
+              "layers": [
+                {
+                  "ref": "prop:fig-king",
+                  "x": 176,
+                  "y": 270,
+                  "s": 0.95
+                },
+                {
+                  "ref": "prop:dug-soil",
+                  "x": 268,
+                  "y": 268,
+                  "s": 1.2
+                }
+              ],
+              "altEn": "The young crown prince stands in the palace grounds beside a small hole, checking how deep the rain soaked in."
+            }
+          },
+          {
+            "id": "s3",
+            "narrationEn": "Digging could not show the exact amount, so he collected rainwater in a copper vessel, {kw:geureut}.",
+            "captionEn": "A vessel collects the rain",
+            "line": {
+              "ko": "그릇에 빗물을 모았어요.",
+              "romanization": "Geureuse binmureul moasseoyo.",
+              "en": "He collected rainwater in a vessel.",
+              "speaker": "narrator"
+            },
+            "factIds": [
+              "f1"
+            ],
+            "framing": false,
+            "approximations": [],
+            "art": {
+              "setting": "scene:palace-courtyard",
+              "layers": [
+                {
+                  "ref": "prop:rain-cloud",
+                  "x": 200,
+                  "y": 200,
+                  "s": 1
+                },
+                {
+                  "ref": "prop:rain-gauge",
+                  "x": 190,
+                  "y": 276,
+                  "s": 1.3
+                },
+                {
+                  "ref": "prop:fig-king",
+                  "x": 320,
+                  "y": 236,
+                  "s": 0.7
+                }
+              ],
+              "altEn": "Rain falls into a plain metal vessel standing in the palace courtyard while the crown prince watches from near the hall."
+            }
+          },
+          {
+            "id": "s4",
+            "narrationEn": "In 1442, the rain gauge was named {kw:cheugugi}. After each rain, an official measured the water.",
+            "captionEn": "Measuring the rain",
+            "line": {
+              "ko": "측우기로 빗물의 깊이를 쟀어요.",
+              "romanization": "Cheugugiro binmurui gipireul jaesseoyo.",
+              "en": "With the cheugugi, they measured how deep the rainwater was.",
+              "speaker": "narrator"
+            },
+            "factIds": [
+              "f3"
+            ],
+            "framing": false,
+            "approximations": [],
+            "art": {
+              "setting": "scene:palace-courtyard",
+              "layers": [
+                {
+                  "ref": "prop:ruler",
+                  "x": 196,
+                  "y": 192,
+                  "s": 1.15
+                },
+                {
+                  "ref": "prop:rain-gauge",
+                  "x": 190,
+                  "y": 266,
+                  "s": 1.15
+                },
+                {
+                  "ref": "prop:fig-official",
+                  "x": 96,
+                  "y": 264,
+                  "s": 1
+                },
+                {
+                  "ref": "prop:book-open-entry",
+                  "x": 300,
+                  "y": 282,
+                  "s": 0.75
+                },
+                {
+                  "ref": "prop:writing-set",
+                  "x": 300,
+                  "y": 238,
+                  "s": 0.6
+                }
+              ],
+              "altEn": "A Joseon official measures the rain in a metal rain gauge on a stone stand with a ruler, a record book and brush beside him."
+            }
+          },
+          {
+            "id": "s5",
+            "narrationEn": "Rain gauges and rulers, {kw:ja}, were sent from the capital to every province.",
+            "captionEn": "Gauges for every province",
+            "line": {
+              "ko": "측우기를 각 도에 보냈어요.",
+              "romanization": "Cheugugireul gak doe bonaesseoyo.",
+              "en": "Rain gauges were sent to each province.",
+              "speaker": "narrator"
+            },
+            "factIds": [
+              "f4"
+            ],
+            "framing": false,
+            "approximations": [],
+            "art": {
+              "setting": "scene:countryside",
+              "layers": [
+                {
+                  "ref": "prop:leafy-tree",
+                  "x": 352,
+                  "y": 236,
+                  "s": 0.9,
+                  "z": "back"
+                },
+                {
+                  "ref": "prop:fig-official",
+                  "x": 150,
+                  "y": 264,
+                  "s": 1
+                },
+                {
+                  "ref": "prop:ruler",
+                  "x": 266,
+                  "y": 192,
+                  "s": 1.15
+                },
+                {
+                  "ref": "prop:rain-gauge",
+                  "x": 260,
+                  "y": 266,
+                  "s": 1.15,
+                  "tint": "feedback.nudgeLight"
+                }
+              ],
+              "altEn": "In a country town a local official measures the rain in a pottery rain gauge on a stone stand, with green hills behind."
+            }
+          },
+          {
+            "id": "s6",
+            "narrationEn": "Only one Joseon rain gauge vessel is known to survive. Made in 1837, it is a {kw:gukbo}.",
+            "captionEn": "The one surviving gauge",
+            "line": {
+              "ko": "하나 남은 측우기는 국보예요.",
+              "romanization": "Hana nameun cheugugineun gukboyeyo.",
+              "en": "The one rain gauge known to survive is a National Treasure.",
+              "speaker": "narrator"
+            },
+            "factIds": [
+              "f5"
+            ],
+            "framing": false,
+            "approximations": [],
+            "art": {
+              "setting": "scene:modern-room",
+              "layers": [
+                {
+                  "ref": "prop:display-case",
+                  "x": 180,
+                  "y": 292,
+                  "s": 1.45
+                },
+                {
+                  "ref": "prop:rain-gauge",
+                  "x": 180,
+                  "y": 219.5,
+                  "s": 1.1
+                },
+                {
+                  "ref": "hoya:thinking",
+                  "x": 322,
+                  "y": 292,
+                  "s": 0.6,
+                  "flip": true
+                }
+              ],
+              "altEn": "The bronze rain gauge from Gongju, made in 1837, stands in a museum case, and Hoya looks up at it in wonder."
+            }
+          },
+          {
+            "id": "s7",
+            "narrationEn": "Today it is kept at the National Meteorological Museum of Korea in Seoul.",
+            "captionEn": "The gauge rests in Seoul",
+            "line": {
+              "ko": "이 측우기는 서울의 박물관에 있어요.",
+              "romanization": "I cheugugineun seourui bangmulgwane isseoyo.",
+              "en": "The rain gauge is in a museum in Seoul.",
+              "speaker": "narrator"
+            },
+            "factIds": [
+              "f6"
+            ],
+            "framing": false,
+            "approximations": [],
+            "art": {
+              "setting": "scene:countryside",
+              "layers": [
+                {
+                  "ref": "prop:rain-cloud",
+                  "x": 200,
+                  "y": 200,
+                  "s": 1
+                },
+                {
+                  "ref": "prop:museum-building",
+                  "x": 190,
+                  "y": 224,
+                  "s": 1.3
+                },
+                {
+                  "ref": "hoya:waving",
+                  "x": 318,
+                  "y": 290,
+                  "s": 0.8
+                }
+              ],
+              "altEn": "Hoya waves happily at the rainy sky in front of the museum where the rain gauge is kept today."
+            }
+          }
+        ],
+        "checks": [
+          {
+            "id": "r1",
+            "kind": "pick-meaning",
+            "promptEn": "What does {target} mean?",
+            "target": {
+              "ko": "그릇",
+              "romanization": "geureut",
+              "en": "bowl; vessel"
+            },
+            "options": [
+              {
+                "id": "a",
+                "en": "Ruler",
+                "isCorrect": false
+              },
+              {
+                "id": "b",
+                "en": "Rain",
+                "isCorrect": false
+              },
+              {
+                "id": "c",
+                "en": "Bowl",
+                "isCorrect": true
+              },
+              {
+                "id": "d",
+                "en": "Crown prince",
+                "isCorrect": false
+              }
+            ],
+            "explainEn": "Geureut means bowl or vessel. A vessel collected the rainwater.",
+            "factIds": [
+              "f1"
+            ]
+          },
+          {
+            "id": "r2",
+            "kind": "pick-meaning",
+            "promptEn": "What does {target} mean?",
+            "target": {
+              "ko": "세자",
+              "romanization": "seja",
+              "en": "crown prince"
+            },
+            "options": [
+              {
+                "id": "a",
+                "en": "Crown prince",
+                "isCorrect": true
+              },
+              {
+                "id": "b",
+                "en": "Official",
+                "isCorrect": false
+              },
+              {
+                "id": "c",
+                "en": "Farmer",
+                "isCorrect": false
+              },
+              {
+                "id": "d",
+                "en": "Museum guide",
+                "isCorrect": false
+              }
+            ],
+            "explainEn": "Seja means crown prince, the king's son who will be the next king.",
+            "factIds": [
+              "f1"
+            ]
+          },
+          {
+            "id": "r3",
+            "kind": "detail",
+            "promptEn": "In the story, what did the rain gauge measure?",
+            "options": [
+              {
+                "id": "a",
+                "en": "How strong the wind was",
+                "isCorrect": false
+              },
+              {
+                "id": "b",
+                "en": "How deep the rainwater was",
+                "isCorrect": true
+              },
+              {
+                "id": "c",
+                "en": "How hot the day was",
+                "isCorrect": false
+              },
+              {
+                "id": "d",
+                "en": "How long the day was",
+                "isCorrect": false
+              }
+            ],
+            "explainEn": "After each rain, an official measured how deep the water in the gauge was.",
+            "factIds": [
+              "f3"
+            ]
+          }
+        ],
+        "checkpoints": [],
+        "sequenceSceneIds": [
+          "s2",
+          "s4",
+          "s5",
+          "s7"
+        ],
+        "newKeywordIds": [
+          "seja",
+          "geureut",
+          "cheugugi",
+          "gukbo"
+        ],
+        "grammarFocusEn": "Past -asseoyo/-eosseoyo; -ro (with) and -e (to): gak doe"
       }
     ],
     "coverSceneId": "s1",
@@ -1411,7 +2140,7 @@ export const storiesAll: Story[] = [
       "passes": 3,
       "checkedAt": "2026-10-10",
       "scope": "cluster",
-      "notes": "Third independent pass. All quotes re-checked programmatically against fetched pages (Sillok, encykorea, 우리역사넷, NMK, KMA; KHS descriptions via the khs.go.kr open API SearchKindOpenapiDt.do?ccbaCpno=...). unesco.org/ich.unesco.org pages could not be fetched directly (connection reset); UNESCO wording and years (2009, 2013, 2018) confirmed from search excerpts of the UNESCO pages and KHS lists. Corrections: Heo Jun birth year dropped from narration/fact (sources conflict: 1539 vs 1546, encykorea internally inconsistent); Jang Yeong-sil rank sentence softened to match the Sillok ('decided to give'); 우리역사넷 added as second source for Donguibogam f4/f5; Ssirum UNESCO locator de-quoted. MAR 2026-10-13 language review (F-STORY-001 PR 1.9): Korean strings, romanization and glosses read; findings and outcomes in the PR. MAR 2026-10-13 culture review (F-STORY-001 PR 1.9): heritage accuracy, framing, tone and advisories read; review.advisory confirmed; findings and outcomes in the PR. MAR 2026-10-13 culture review: f7 added for the story card, a shortened restatement of f3 with the same sources."
+      "notes": "Third independent pass. All quotes re-checked programmatically against fetched pages (Sillok, encykorea, 우리역사넷, NMK, KMA; KHS descriptions via the khs.go.kr open API SearchKindOpenapiDt.do?ccbaCpno=...). unesco.org/ich.unesco.org pages could not be fetched directly (connection reset); UNESCO wording and years (2009, 2013, 2018) confirmed from search excerpts of the UNESCO pages and KHS lists. Corrections: Heo Jun birth year dropped from narration/fact (sources conflict: 1539 vs 1546, encykorea internally inconsistent); Jang Yeong-sil rank sentence softened to match the Sillok ('decided to give'); 우리역사넷 added as second source for Donguibogam f4/f5; Ssirum UNESCO locator de-quoted. MAR 2026-10-13 language review (F-STORY-001 PR 1.9): Korean strings, romanization and glosses read; findings and outcomes in the PR. MAR 2026-10-13 culture review (F-STORY-001 PR 1.9): heritage accuracy, framing, tone and advisories read; review.advisory confirmed; findings and outcomes in the PR. MAR 2026-10-13 culture review: f7 added for the story card, a shortened restatement of f3 with the same sources. MAR 2026-10-13 language review of the read tier (F-STORY-005 PR 5.6): 6 Korean lines, their romanization (machine-checked) and glosses read for spelling, naturalness and Stage 5 level; 1 change (s7 i cheugugineun seourui bangmulgwane, the one gauge, not every gauge); findings and outcomes in the PR. MAR 2026-10-13 culture review of the read tier (F-STORY-005 PR 5.6): every line and check compared with its cited facts (no new claim), framing, tone and respectful wording read; s6 gloss keeps the hedge of f5 (known to survive); review.advisory unchanged; findings and outcomes in the PR."
     },
     "authorNotes": "Attribution: popular retellings often say Jang Yeong-sil invented the rain gauge, but the Sejong Sillok (1441-04-29, lunar) credits the crown prince's (later King Munjong's) experiments and encykorea's 통영 측우대 entry says the system was made under the crown prince's lead; Jang Yeong-sil is therefore not mentioned. Deliberately omitted: the KHS description's comparative claim that the cheugugi was the world's first scientific rain gauge, about 200 years before the West (priority claims are contested); the 1441-08-18 proposal's dimensions and the 1442 standard size (1 cheok 5 chon by 7 chon); the Gongju gauge's removal to Japan (KHS: c.1915; encykorea: early 1910s) and return in 1971 (colonial-era history is out of scope); the 1770/1771 revival under King Yeongjo (sources differ on the year). Materials: the Sillok uses 銅 (copper/bronze) for the crown prince's 1441 vessel and 鐵 (cast metal/iron) for the 1442 standard, so narration says 'copper' and 'metal' respectively; the Gongju gauge is bronze (encykorea). All Sillok dates are lunar. Theme set to 'crafts' to match BP04/BP05 Pillar E (E3 측우기). REVISION: (a) Scene 6/summary/learning goal now say only one gauge VESSEL survives; stone stands (대석/측우대) also survive (encykorea E0007902; Tongyeong stand is a Treasure, E0068941). (b) Museum English name 'National Meteorological Museum of Korea' taken from the museum's own website footer (science.kma.go.kr/museum/); the KHS portal lists only the Korean name. (c) Romanization of 서운관 is Seoun-gwan (seo-un-gwan); 'Seounwan' (proposed by one fact-check) would transcribe 서운완, so it was not adopted. (d) Second source added for f2 (신편한국사 via 우리역사넷); new sources accessed 2026-10-10. PR 1.8c: check c1 distractors replaced with options the story contradicts (s2: the water soaked in; the crown prince dug), so the item has one answer from the story text.",
     "errata": []
@@ -4155,7 +4884,7 @@ export const storiesAll: Story[] = [
     "v": 1,
     "id": "story:donguibogam",
     "state": "ready",
-    "contentVer": 4,
+    "contentVer": 5,
     "title": {
       "ko": "허준의 동의보감",
       "romanization": "Heojunui Donguibogam",
@@ -4677,6 +5406,376 @@ export const storiesAll: Story[] = [
           "chaek",
           "donguibogam"
         ]
+      },
+      {
+        "level": "read",
+        "scenes": [
+          {
+            "id": "s2",
+            "narrationEn": "{kw:heo-jun} was a royal doctor, {kw:uisa}, in Joseon. The king asked him to write a medical book.",
+            "captionEn": "Heo Jun, a royal doctor",
+            "line": {
+              "ko": "허준은 궁궐의 의사였어요.",
+              "romanization": "Heojuneun gunggworui uisayeosseoyo.",
+              "en": "Heo Jun was a doctor at the royal court.",
+              "speaker": "narrator"
+            },
+            "factIds": [
+              "f1"
+            ],
+            "framing": false,
+            "approximations": [],
+            "art": {
+              "setting": "scene:palace-hall",
+              "layers": [
+                {
+                  "ref": "prop:fig-king-seated",
+                  "x": 200,
+                  "y": 188,
+                  "s": 1
+                },
+                {
+                  "ref": "prop:fig-officials-kneeling",
+                  "x": 196,
+                  "y": 292,
+                  "s": 1.35
+                },
+                {
+                  "ref": "prop:papers-loose",
+                  "x": 344,
+                  "y": 290,
+                  "s": 0.8
+                }
+              ],
+              "altEn": "Royal doctors in official dress kneel before King Seonjo in his palace hall as he asks for a new medical book."
+            }
+          },
+          {
+            "id": "s3",
+            "narrationEn": "A war stopped the work. Later the king asked Heo Jun to write the book alone.",
+            "captionEn": "Heo Jun writes the book alone",
+            "line": {
+              "ko": "허준이 혼자 책을 썼어요.",
+              "romanization": "Heojuni honja chaegeul sseosseoyo.",
+              "en": "Heo Jun wrote the book alone.",
+              "speaker": "narrator"
+            },
+            "factIds": [
+              "f2"
+            ],
+            "framing": false,
+            "approximations": [],
+            "art": {
+              "setting": "scene:hanok-room",
+              "layers": [
+                {
+                  "ref": "prop:books-stack",
+                  "x": 76,
+                  "y": 286,
+                  "s": 0.9
+                },
+                {
+                  "ref": "prop:fig-historian",
+                  "x": 200,
+                  "y": 286,
+                  "s": 1.3
+                },
+                {
+                  "ref": "prop:oil-lamp",
+                  "x": 296,
+                  "y": 278,
+                  "s": 1
+                },
+                {
+                  "ref": "prop:books-stack",
+                  "x": 350,
+                  "y": 290,
+                  "s": 0.75,
+                  "flip": true
+                }
+              ],
+              "altEn": "By lamplight Heo Jun sits writing with a brush, surrounded by stacks of old thread-bound books."
+            }
+          },
+          {
+            "id": "s4",
+            "narrationEn": "In 1610, Heo Jun finished {kw:donguibogam}. 'Bogam' means a treasured mirror, a model to learn from.",
+            "captionEn": "Heo Jun finishes Donguibogam",
+            "line": {
+              "ko": "허준이 동의보감을 완성했어요.",
+              "romanization": "Heojuni donguibogameul wanseonghaesseoyo.",
+              "en": "Heo Jun finished Donguibogam.",
+              "speaker": "narrator"
+            },
+            "factIds": [
+              "f3",
+              "f4"
+            ],
+            "framing": false,
+            "approximations": [],
+            "art": {
+              "setting": "scene:hanji-backdrop",
+              "layers": [
+                {
+                  "ref": "prop:books-stack",
+                  "x": 150,
+                  "y": 262,
+                  "s": 1.6
+                },
+                {
+                  "ref": "prop:bronze-mirror",
+                  "x": 286,
+                  "y": 262,
+                  "s": 1.6
+                }
+              ],
+              "altEn": "The finished volumes of Donguibogam lie stacked beside a round bronze mirror, since 'bogam' means a treasured mirror."
+            }
+          },
+          {
+            "id": "s5",
+            "narrationEn": "Donguibogam taught that keeping your {kw:geongang}, health, comes before curing sickness.",
+            "captionEn": "Staying healthy comes first",
+            "line": {
+              "ko": "병을 미리 막는 것이 중요해요.",
+              "romanization": "Byeongeul miri mangneun geosi jungyohaeyo.",
+              "en": "Preventing illness early is important.",
+              "speaker": "narrator"
+            },
+            "factIds": [
+              "f5"
+            ],
+            "framing": false,
+            "approximations": [],
+            "art": {
+              "setting": "scene:mountains",
+              "layers": [
+                {
+                  "ref": "prop:pine-tree",
+                  "x": 50,
+                  "y": 262,
+                  "s": 1.3,
+                  "z": "back"
+                },
+                {
+                  "ref": "prop:pine-tree",
+                  "x": 352,
+                  "y": 258,
+                  "s": 1.2,
+                  "z": "back",
+                  "flip": true
+                },
+                {
+                  "ref": "prop:fig-child",
+                  "x": 124,
+                  "y": 284,
+                  "s": 1
+                },
+                {
+                  "ref": "hoya:waving",
+                  "x": 206,
+                  "y": 292,
+                  "s": 0.85
+                },
+                {
+                  "ref": "prop:fig-child",
+                  "x": 286,
+                  "y": 284,
+                  "s": 1,
+                  "tint": "brand.secondaryLight"
+                }
+              ],
+              "altEn": "Hoya and two friends walk happily through a pine forest, breathing the fresh air to stay healthy."
+            }
+          },
+          {
+            "id": "s6",
+            "narrationEn": "The book wrote the everyday Korean names of medicinal herbs, {kw:yakcho}, in Hangul.",
+            "captionEn": "Herb names in Hangul",
+            "line": {
+              "ko": "약초 이름을 한글로 적었어요.",
+              "romanization": "Yakcho ireumeul hangeullo jeogeosseoyo.",
+              "en": "They wrote herb names in Hangul.",
+              "speaker": "narrator"
+            },
+            "factIds": [
+              "f7"
+            ],
+            "framing": false,
+            "approximations": [],
+            "art": {
+              "setting": "scene:mountains",
+              "layers": [
+                {
+                  "ref": "prop:herbs",
+                  "x": 180,
+                  "y": 264,
+                  "s": 2
+                },
+                {
+                  "ref": "prop:basket",
+                  "x": 330,
+                  "y": 276,
+                  "s": 1.1
+                }
+              ],
+              "altEn": "Wild medicinal herbs such as bellflower and mugwort grow on a sunny hillside beside a basket of picked greens."
+            }
+          },
+          {
+            "id": "s8",
+            "narrationEn": "Copies from the first printing, in 1613, are now National Treasures of Korea.",
+            "captionEn": "First-printing copies are treasures",
+            "line": {
+              "ko": "처음 찍은 책은 국보예요.",
+              "romanization": "Cheoeum jjigeun chaegeun gukboyeyo.",
+              "en": "Copies from the first printing are National Treasures.",
+              "speaker": "narrator"
+            },
+            "factIds": [
+              "f9"
+            ],
+            "framing": false,
+            "approximations": [],
+            "art": {
+              "setting": "scene:modern-room",
+              "layers": [
+                {
+                  "ref": "prop:museum-case",
+                  "x": 150,
+                  "y": 288,
+                  "s": 1.6
+                },
+                {
+                  "ref": "hoya:reading",
+                  "x": 296,
+                  "y": 292,
+                  "s": 0.8
+                }
+              ],
+              "altEn": "Hoya holds a book close beside a museum case that keeps a treasured first-printing copy of Donguibogam."
+            }
+          }
+        ],
+        "checks": [
+          {
+            "id": "r1",
+            "kind": "pick-meaning",
+            "promptEn": "What does {target} mean?",
+            "target": {
+              "ko": "의사",
+              "romanization": "uisa",
+              "en": "doctor"
+            },
+            "options": [
+              {
+                "id": "a",
+                "en": "Book",
+                "isCorrect": false
+              },
+              {
+                "id": "b",
+                "en": "Doctor",
+                "isCorrect": true
+              },
+              {
+                "id": "c",
+                "en": "King",
+                "isCorrect": false
+              },
+              {
+                "id": "d",
+                "en": "Herb",
+                "isCorrect": false
+              }
+            ],
+            "explainEn": "Uisa means doctor. Heo Jun was a royal doctor.",
+            "factIds": [
+              "f1"
+            ]
+          },
+          {
+            "id": "r2",
+            "kind": "pick-meaning",
+            "promptEn": "What does {target} mean?",
+            "target": {
+              "ko": "약초",
+              "romanization": "yakcho",
+              "en": "medicinal herb"
+            },
+            "options": [
+              {
+                "id": "a",
+                "en": "Health",
+                "isCorrect": false
+              },
+              {
+                "id": "b",
+                "en": "Body",
+                "isCorrect": false
+              },
+              {
+                "id": "c",
+                "en": "Medicinal herb",
+                "isCorrect": true
+              },
+              {
+                "id": "d",
+                "en": "Treasure",
+                "isCorrect": false
+              }
+            ],
+            "explainEn": "Yakcho means medicinal herb. The book wrote herb names in Hangul.",
+            "factIds": [
+              "f7"
+            ]
+          },
+          {
+            "id": "r3",
+            "kind": "detail",
+            "promptEn": "In the story, what did Donguibogam put before curing sickness?",
+            "options": [
+              {
+                "id": "a",
+                "en": "Staying healthy and preventing illness",
+                "isCorrect": true
+              },
+              {
+                "id": "b",
+                "en": "Printing more books",
+                "isCorrect": false
+              },
+              {
+                "id": "c",
+                "en": "Collecting rare stones",
+                "isCorrect": false
+              },
+              {
+                "id": "d",
+                "en": "Writing poems",
+                "isCorrect": false
+              }
+            ],
+            "explainEn": "Donguibogam taught that preventing illness and staying healthy come before curing sickness.",
+            "factIds": [
+              "f5"
+            ]
+          }
+        ],
+        "checkpoints": [],
+        "sequenceSceneIds": [
+          "s2",
+          "s4",
+          "s6",
+          "s8"
+        ],
+        "newKeywordIds": [
+          "heo-jun",
+          "uisa",
+          "donguibogam",
+          "yakcho"
+        ],
+        "grammarFocusEn": "Past -eosseoyo (wrote, finished); -euro/-ro (in): hangeullo"
       }
     ],
     "coverSceneId": "s1",
@@ -4959,7 +6058,7 @@ export const storiesAll: Story[] = [
       "passes": 3,
       "checkedAt": "2026-10-10",
       "scope": "cluster",
-      "notes": "Third independent pass. All quotes re-checked programmatically against fetched pages (Sillok, encykorea, 우리역사넷, NMK, KMA; KHS descriptions via the khs.go.kr open API SearchKindOpenapiDt.do?ccbaCpno=...). unesco.org/ich.unesco.org pages could not be fetched directly (connection reset); UNESCO wording and years (2009, 2013, 2018) confirmed from search excerpts of the UNESCO pages and KHS lists. Corrections: Heo Jun birth year dropped from narration/fact (sources conflict: 1539 vs 1546, encykorea internally inconsistent); Jang Yeong-sil rank sentence softened to match the Sillok ('decided to give'); 우리역사넷 added as second source for Donguibogam f4/f5; Ssirum UNESCO locator de-quoted. MAR 2026-10-13 language review (F-STORY-001 PR 1.9): Korean strings, romanization and glosses read; findings and outcomes in the PR. MAR 2026-10-13 culture review (F-STORY-001 PR 1.9): heritage accuracy, framing, tone and advisories read; review.advisory confirmed; findings and outcomes in the PR."
+      "notes": "Third independent pass. All quotes re-checked programmatically against fetched pages (Sillok, encykorea, 우리역사넷, NMK, KMA; KHS descriptions via the khs.go.kr open API SearchKindOpenapiDt.do?ccbaCpno=...). unesco.org/ich.unesco.org pages could not be fetched directly (connection reset); UNESCO wording and years (2009, 2013, 2018) confirmed from search excerpts of the UNESCO pages and KHS lists. Corrections: Heo Jun birth year dropped from narration/fact (sources conflict: 1539 vs 1546, encykorea internally inconsistent); Jang Yeong-sil rank sentence softened to match the Sillok ('decided to give'); 우리역사넷 added as second source for Donguibogam f4/f5; Ssirum UNESCO locator de-quoted. MAR 2026-10-13 language review (F-STORY-001 PR 1.9): Korean strings, romanization and glosses read; findings and outcomes in the PR. MAR 2026-10-13 culture review (F-STORY-001 PR 1.9): heritage accuracy, framing, tone and advisories read; review.advisory confirmed; findings and outcomes in the PR. MAR 2026-10-13 language review of the read tier (F-STORY-005 PR 5.6): 6 Korean lines, their romanization (machine-checked) and glosses read for spelling, naturalness and Stage 5 level; 1 gloss change (s5 early, for miri); findings and outcomes in the PR. MAR 2026-10-13 culture review of the read tier (F-STORY-005 PR 5.6): every line and check compared with its cited facts (no new claim), framing, tone and respectful wording read; no change; the war stays one plain clause (advisory unchanged); review.advisory unchanged; findings and outcomes in the PR."
     },
     "authorNotes": "Sources disagree on the start year of compilation (KHS designation text and encykorea: 1596; KHS portal Memory-of-the-World page: 1597) and on its length (14 vs 16 years), so narration omits both. The number of royal books given to Heo Jun ('500여 권') comes from encykorea only, so narration says 'many'. UNESCO's page says 'compiled in 1613' (the printing year); KHS and encykorea give completion in 1610 and printing in 1613. Omitted: Heo Jun's exile to Uiju (1608–1609); the Jeongyu invasion is referred to only as 'a war broke out'. No remedies or medical advice are presented; prevention is described only as the book's stated principle. Herb names in Hangul: encykorea (compiling principles) plus 우리역사넷/신편한국사 ('모든 향약명을 한글로 표시'). Theme set to 'life' (body and health); BP05 lists 동의보감 at Pillar E (6.E4), so 'crafts' is the grid-aligned alternative. Scene 7 keyword changed to 세계기록유산 so 책 is not repeated. REVISION: the folk-tale entry 허준 설화 (E0063156) was replaced by the person entry 허준 (E0063152) as f1's second source. Birth year: DROPPED in pass 3. KHS gives 1539; encykorea E0063152 is internally inconsistent (infobox 1539 labelled 중종 32 which would be 1537, summary 1539/중종 34, photo captions 1546/명종 1), and other references give 1546, so narration and f1 give no birth year. PASS 3: added 우리역사넷 (신편한국사) as a second source for f4 ('Dongui' = Korea's own medicine, 集例) and f5 (prevention over treatment). PR 1.8c: Hoya's s8 line is 보배 같은 책 rather than the research vocab 보물 같은 책, to avoid the heritage grade 보물 and to echo 보감. s3 keeps 'the doctors were scattered' (f2) and drops 'again' because the story never names an earlier war.",
     "errata": []
@@ -4968,7 +6067,7 @@ export const storiesAll: Story[] = [
     "v": 1,
     "id": "story:gimjang-arirang",
     "state": "ready",
-    "contentVer": 4,
+    "contentVer": 5,
     "title": {
       "ko": "김장하는 날과 아리랑",
       "romanization": "Gimjanghaneun nalgwa Arirang",
@@ -5562,6 +6661,401 @@ export const storiesAll: Story[] = [
           "baechu",
           "gimchi"
         ]
+      },
+      {
+        "level": "read",
+        "scenes": [
+          {
+            "id": "s1",
+            "narrationEn": "In late autumn, families make lots of kimchi at once for the {kw:gyeoul}, winter. This is {kw:gimjang}.",
+            "captionEn": "Lots of kimchi before winter",
+            "line": {
+              "ko": "겨울이 오기 전에 김치를 많이 담가요.",
+              "romanization": "Gyeouri ogi jeone gimchireul mani damgayo.",
+              "en": "Before winter, families make lots of kimchi.",
+              "speaker": "narrator"
+            },
+            "factIds": [
+              "f11"
+            ],
+            "framing": false,
+            "approximations": [],
+            "art": {
+              "setting": "scene:village-lane",
+              "layers": [
+                {
+                  "ref": "prop:persimmon-tree",
+                  "x": 54,
+                  "y": 250,
+                  "s": 1.1,
+                  "z": "back",
+                  "tint": "feedback.nudge"
+                },
+                {
+                  "ref": "prop:kimchi-jars",
+                  "x": 206,
+                  "y": 262,
+                  "s": 1.15
+                },
+                {
+                  "ref": "prop:cabbages",
+                  "x": 328,
+                  "y": 292,
+                  "s": 1.3
+                },
+                {
+                  "ref": "hoya:idle",
+                  "x": 104,
+                  "y": 294,
+                  "s": 0.72
+                }
+              ],
+              "altEn": "Hoya arrives in a village yard as winter nears, with napa cabbages piled up and big kimchi jars waiting for gimjang."
+            }
+          },
+          {
+            "id": "s3",
+            "narrationEn": "Relatives and neighbors, {kw:iut}, help one another salt the napa cabbages, {kw:baechu}.",
+            "captionEn": "Neighbors salt cabbages together",
+            "line": {
+              "ko": "이웃과 함께 배추를 절여요.",
+              "romanization": "Iutgwa hamkke baechureul jeoryeoyo.",
+              "en": "With the neighbors, they salt napa cabbages.",
+              "speaker": "narrator"
+            },
+            "factIds": [
+              "f3"
+            ],
+            "framing": false,
+            "approximations": [],
+            "art": {
+              "setting": "scene:countryside",
+              "layers": [
+                {
+                  "ref": "prop:fig-woman",
+                  "x": 66,
+                  "y": 282,
+                  "s": 1,
+                  "tint": "brand.secondaryLight"
+                },
+                {
+                  "ref": "hoya:idle",
+                  "x": 146,
+                  "y": 294,
+                  "s": 0.6
+                },
+                {
+                  "ref": "prop:cabbages",
+                  "x": 240,
+                  "y": 292,
+                  "s": 2,
+                  "tint": "brand.primary"
+                },
+                {
+                  "ref": "prop:fig-woman",
+                  "x": 344,
+                  "y": 282,
+                  "s": 1,
+                  "flip": true,
+                  "tint": "surface.paper"
+                }
+              ],
+              "altEn": "Neighbors gather for gimjang and rub red seasoning into salted napa cabbages, and Hoya helps."
+            }
+          },
+          {
+            "id": "s4",
+            "narrationEn": "Every region makes {kw:gimchi} its own way, so there are countless kinds.",
+            "captionEn": "Every region's own kimchi",
+            "line": {
+              "ko": "지역마다 김치가 달라요.",
+              "romanization": "Jiyeongmada gimchiga dallayo.",
+              "en": "Kimchi is different in every region.",
+              "speaker": "narrator"
+            },
+            "factIds": [
+              "f4"
+            ],
+            "framing": false,
+            "approximations": [],
+            "art": {
+              "setting": "scene:hanji-backdrop",
+              "layers": [
+                {
+                  "ref": "prop:soban",
+                  "x": 86,
+                  "y": 292,
+                  "s": 1.4,
+                  "tint": "feedback.nudgeLight"
+                },
+                {
+                  "ref": "hoya:thinking",
+                  "x": 200,
+                  "y": 292,
+                  "s": 0.95
+                },
+                {
+                  "ref": "prop:soban",
+                  "x": 314,
+                  "y": 292,
+                  "s": 1.4,
+                  "tint": "brand.primary"
+                }
+              ],
+              "altEn": "Hoya compares two tables of kimchi: a milder, paler kind from the cold north and a saltier, redder kind from the south."
+            }
+          },
+          {
+            "id": "s5",
+            "narrationEn": "Families share kimchi with one another. Working together and sharing, {kw:nanum}, are the heart of gimjang.",
+            "captionEn": "Sharing kimchi with neighbors",
+            "line": {
+              "ko": "김치를 이웃과 나눠요.",
+              "romanization": "Gimchireul iutgwa nanwoyo.",
+              "en": "They share kimchi with the neighbors.",
+              "speaker": "narrator"
+            },
+            "factIds": [
+              "f5"
+            ],
+            "framing": false,
+            "approximations": [],
+            "art": {
+              "setting": "scene:village-lane",
+              "layers": [
+                {
+                  "ref": "prop:crowd-seated",
+                  "x": 160,
+                  "y": 262,
+                  "s": 1.4,
+                  "tint": "brand.secondaryLight"
+                },
+                {
+                  "ref": "prop:soban",
+                  "x": 160,
+                  "y": 296,
+                  "s": 1.3,
+                  "tint": "surface.paper"
+                },
+                {
+                  "ref": "hoya:waving",
+                  "x": 262,
+                  "y": 296,
+                  "s": 0.6
+                },
+                {
+                  "ref": "prop:fig-child",
+                  "x": 336,
+                  "y": 286,
+                  "s": 1.1
+                }
+              ],
+              "altEn": "Helpers share boiled pork and cabbage leaves after gimjang, a child heads off to give kimchi next door, and Hoya waves."
+            }
+          },
+          {
+            "id": "s7",
+            "narrationEn": "{kw:arirang} is a folk song made and passed down by ordinary people over many generations.",
+            "captionEn": "Arirang, a Korean folk song",
+            "line": {
+              "ko": "아리랑은 한국의 민요예요.",
+              "romanization": "Arirangeun hangugui minyoyeyo.",
+              "en": "Arirang is a Korean folk song.",
+              "speaker": "narrator"
+            },
+            "factIds": [
+              "f7"
+            ],
+            "framing": false,
+            "approximations": [],
+            "art": {
+              "setting": "scene:mountains",
+              "layers": [
+                {
+                  "ref": "prop:fig-elder-seated",
+                  "x": 190,
+                  "y": 276,
+                  "s": 1.6
+                },
+                {
+                  "ref": "hoya:idle",
+                  "x": 298,
+                  "y": 296,
+                  "s": 0.68
+                }
+              ],
+              "altEn": "As the day ends Grandma rests and hums Arirang, a folk song known all over Korea, with Hoya close beside her."
+            }
+          },
+          {
+            "id": "s8",
+            "narrationEn": "Arirang has many regional versions, and anyone can make up new verses.",
+            "captionEn": "Anyone can make up new verses",
+            "line": {
+              "ko": "누구나 새 노랫말을 지을 수 있어요.",
+              "romanization": "Nuguna sae noraenmareul jieul su isseoyo.",
+              "en": "Anyone can make up new lyrics.",
+              "speaker": "narrator"
+            },
+            "factIds": [
+              "f8"
+            ],
+            "framing": false,
+            "approximations": [],
+            "art": {
+              "setting": "scene:mountains",
+              "layers": [
+                {
+                  "ref": "prop:crowd-seated",
+                  "x": 90,
+                  "y": 234,
+                  "s": 0.55,
+                  "tint": "surface.paper"
+                },
+                {
+                  "ref": "prop:fig-woman",
+                  "x": 262,
+                  "y": 232,
+                  "s": 0.45,
+                  "tint": "brand.secondaryLight"
+                },
+                {
+                  "ref": "prop:crowd-seated",
+                  "x": 330,
+                  "y": 222,
+                  "s": 0.5,
+                  "tint": "surface.paper"
+                },
+                {
+                  "ref": "hoya:waving",
+                  "x": 200,
+                  "y": 292,
+                  "s": 0.9
+                }
+              ],
+              "altEn": "Hoya waves beside a winding mountain path past little groups of people, each singing their own Arirang."
+            }
+          }
+        ],
+        "checks": [
+          {
+            "id": "r1",
+            "kind": "pick-meaning",
+            "promptEn": "What does {target} mean?",
+            "target": {
+              "ko": "배추",
+              "romanization": "baechu",
+              "en": "napa cabbage"
+            },
+            "options": [
+              {
+                "id": "a",
+                "en": "Red chili powder",
+                "isCorrect": false
+              },
+              {
+                "id": "b",
+                "en": "Napa cabbage",
+                "isCorrect": true
+              },
+              {
+                "id": "c",
+                "en": "Neighbor",
+                "isCorrect": false
+              },
+              {
+                "id": "d",
+                "en": "Winter",
+                "isCorrect": false
+              }
+            ],
+            "explainEn": "Baechu means napa cabbage. Families salt napa cabbages for gimjang.",
+            "factIds": [
+              "f3"
+            ]
+          },
+          {
+            "id": "r2",
+            "kind": "pick-meaning",
+            "promptEn": "What does {target} mean?",
+            "target": {
+              "ko": "이웃",
+              "romanization": "iut",
+              "en": "neighbor"
+            },
+            "options": [
+              {
+                "id": "a",
+                "en": "Song",
+                "isCorrect": false
+              },
+              {
+                "id": "b",
+                "en": "Kimchi",
+                "isCorrect": false
+              },
+              {
+                "id": "c",
+                "en": "Neighbor",
+                "isCorrect": true
+              },
+              {
+                "id": "d",
+                "en": "Winter",
+                "isCorrect": false
+              }
+            ],
+            "explainEn": "Iut means neighbor. Neighbors help one another with gimjang.",
+            "factIds": [
+              "f3"
+            ]
+          },
+          {
+            "id": "r3",
+            "kind": "detail",
+            "promptEn": "In the story, what can anyone do with Arirang?",
+            "options": [
+              {
+                "id": "a",
+                "en": "Make up new lyrics",
+                "isCorrect": true
+              },
+              {
+                "id": "b",
+                "en": "Sing it only in winter",
+                "isCorrect": false
+              },
+              {
+                "id": "c",
+                "en": "Sing only one version",
+                "isCorrect": false
+              },
+              {
+                "id": "d",
+                "en": "Play it only on a drum",
+                "isCorrect": false
+              }
+            ],
+            "explainEn": "Arirang has many versions, and anyone can make up new lyrics.",
+            "factIds": [
+              "f8"
+            ]
+          }
+        ],
+        "checkpoints": [],
+        "sequenceSceneIds": [
+          "s1",
+          "s3",
+          "s5",
+          "s8"
+        ],
+        "newKeywordIds": [
+          "gyeoul",
+          "gimjang",
+          "iut",
+          "baechu"
+        ],
+        "grammarFocusEn": "-mada (every), -gwa hamkke (together with); -eul su isseoyo (can)"
       }
     ],
     "coverSceneId": "s1",
@@ -5911,7 +7405,7 @@ export const storiesAll: Story[] = [
       "passes": 3,
       "checkedAt": "2026-10-10",
       "scope": "cluster",
-      "notes": "Third independent pass over 6 episodes / 61 facts / 161 source entries (70 unique URLs). Every URL was re-fetched with my own scripts (UNESCO pages via Wayback copies; heritage.go.kr descriptions via the portal ajax html and khs.go.kr open API; folkency via its JSON API) and each quote or locator was machine-matched to the page text; the few non-matching strings were checked by hand (portal metadata fields, hanja or footnote punctuation, label text). Corrections: (1) pansori scene 2 now gives both UNESCO steps (2003 masterpiece proclamation, 2008 Representative List); (2) pansori f11 states the Aesop title as in the cited Townsend text and the common alternate title; (3) added sources: NFM 놀보박타령 for 'greedy' (f5), 표준국어대사전 타다 for 'sawed' (f6), 한국민족문화대백과사전 선도해 for the Samguk sagi tale (f12); (4) Seollal f9/f10 designation-date locators now cite the KHS open API field. No other change. See seasons-tales.signoff.md. MAR 2026-10-13 language review (F-STORY-001 PR 1.9): Korean strings, romanization and glosses read; findings and outcomes in the PR. MAR 2026-10-13 culture review (F-STORY-001 PR 1.9): heritage accuracy, framing, tone and advisories read; review.advisory confirmed; findings and outcomes in the PR. MAR 2026-10-13 culture review: f11 added for the story card, a shortened restatement of f1 with the same sources."
+      "notes": "Third independent pass over 6 episodes / 61 facts / 161 source entries (70 unique URLs). Every URL was re-fetched with my own scripts (UNESCO pages via Wayback copies; heritage.go.kr descriptions via the portal ajax html and khs.go.kr open API; folkency via its JSON API) and each quote or locator was machine-matched to the page text; the few non-matching strings were checked by hand (portal metadata fields, hanja or footnote punctuation, label text). Corrections: (1) pansori scene 2 now gives both UNESCO steps (2003 masterpiece proclamation, 2008 Representative List); (2) pansori f11 states the Aesop title as in the cited Townsend text and the common alternate title; (3) added sources: NFM 놀보박타령 for 'greedy' (f5), 표준국어대사전 타다 for 'sawed' (f6), 한국민족문화대백과사전 선도해 for the Samguk sagi tale (f12); (4) Seollal f9/f10 designation-date locators now cite the KHS open API field. No other change. See seasons-tales.signoff.md. MAR 2026-10-13 language review (F-STORY-001 PR 1.9): Korean strings, romanization and glosses read; findings and outcomes in the PR. MAR 2026-10-13 culture review (F-STORY-001 PR 1.9): heritage accuracy, framing, tone and advisories read; review.advisory confirmed; findings and outcomes in the PR. MAR 2026-10-13 culture review: f11 added for the story card, a shortened restatement of f1 with the same sources. MAR 2026-10-13 language review of the read tier (F-STORY-005 PR 5.6): 6 Korean lines, their romanization (machine-checked) and glosses read for spelling, naturalness and Stage 5 level; 1 change (s1 gyeouri ogi jeone, more natural than gyeoul jeone); findings and outcomes in the PR. MAR 2026-10-13 culture review of the read tier (F-STORY-005 PR 5.6): every line and check compared with its cited facts (no new claim), framing, tone and respectful wording read; no change; the UNESCO entries (f6, f9, f10) are left out of this tier; review.advisory unchanged; findings and outcomes in the PR."
     },
     "authorNotes": "Spelling: RR for 김장/김치 is gimjang/gimchi. UNESCO's official title uses 'Kimjang', and 'kimchi' is the usual English word. The narration uses 'gimjang' and 'kimchi'; UNESCO's spelling 'Kimjang' stays in f1, f6 and the Sources screen (review 2026-10-11: the spoken aside was removed). Grandma humming Arirang at the end of the day is a story moment. The narration does not claim Arirang is a gimjang work song. The sources don't link the two, though some Arirang types are work songs (Encyclopedia of Korean Culture). The refrain quoted is the widely known one. The Encyclopedia notes the best-known 'Arirang' (경기/본조 아리랑) is a new folk-song (신민요) form; traditional regional ones include Jeongseon, Jindo and Miryang. Left out on purpose: UNESCO's estimate of 'some 3,600 variations'. Only one authoritative source for it was found, so it isn't in the narration. Also left out: theories about what 'Arirang' means (folk etymology), the DPRK listings (Arirang 2014; kimchi-making 2015), and the old practice of burying kimchi jars in the ground. National designations: 아리랑 (2015-09-22) and 김치 담그기 (2017-11-15) are National Intangible Heritage per the 국가유산포털. They aren't used in the narration. REVISION 2026-10-10: 'takes all year' -> 'takes months' (Encyclopedia: more than half a year; UNESCO: yearly cycle); 'sweet' and 'everyone' removed from scene 5; UNESCO title 'Kimjang, making and sharing kimchi in the Republic of Korea' (2013) and the Korea Heritage Service's Korean name 김치와 김장문화 now used; Arirang 2012 labelled South Korea's entry and the separate DPRK entry (2014) added as f10 (narration mentions 'separate listing' only; the 2014 year lives in f10); 'no exact translation' replaced by 'sung syllables' (encykorea: meaningless refrain, origin theories = folk etymology; 한국민속문학사전: 입타령 refrain). AUTHORING 2026-10-11 (F-STORY-001 PR 1.8d): title romanization, scene captions and check explanations written from the cited facts; every scene is artPending (text-only tile) until the art PRs; no claim or source changed. Korean name (review 2026-10-11): the learner term shows the Korea Heritage Service's official form 김치와 김장문화 (gimchiwa gimjangmunhwa, keyword id gimchiwa-gimjangmunhwa), the same spelling as f6. REVIEW 2026-10-11 (PR 1.8d review fixes): s5 follows f5 (on gimjang day the host family serves the helpers); s6 and s8 say 'added to its heritage list' in plain words, and the exact UNESCO titles stay in f6, f9, f10; the iut and gyeoul keywords are used as tokens; learning goals use receptive verbs. PR #208 REVIEW FIXES 2026-10-11: s6 says the Heritage Service calls this listing 김치와 김장문화 (f6), so the Korean name is not read as gimjang's own name (김장, s1).",
     "errata": []
@@ -5920,7 +7414,7 @@ export const storiesAll: Story[] = [
     "v": 1,
     "id": "story:hangeul-day",
     "state": "ready",
-    "contentVer": 3,
+    "contentVer": 4,
     "title": {
       "ko": "한글날을 축하해요!",
       "romanization": "Hangeullareul chukhahaeyo!",
@@ -6471,6 +7965,400 @@ export const storiesAll: Story[] = [
           "chaek",
           "gukbo"
         ]
+      },
+      {
+        "level": "read",
+        "scenes": [
+          {
+            "id": "s1",
+            "narrationEn": "In South Korea, October 9 is {kw:hangeullal}, Hangul Day.",
+            "captionEn": "Hangul Day is October 9",
+            "line": {
+              "ko": "한글날은 시월 구일이에요.",
+              "romanization": "Hangeullareun siwol guirieyo.",
+              "en": "Hangul Day is October 9.",
+              "speaker": "narrator"
+            },
+            "factIds": [
+              "f1"
+            ],
+            "framing": false,
+            "approximations": [],
+            "art": {
+              "setting": "scene:countryside",
+              "layers": [
+                {
+                  "ref": "prop:leafy-tree",
+                  "x": 56,
+                  "y": 254,
+                  "s": 1.1,
+                  "tint": "feedback.nudge"
+                },
+                {
+                  "ref": "prop:fig-modern",
+                  "x": 168,
+                  "y": 272,
+                  "s": 1,
+                  "tint": "theme.letters"
+                },
+                {
+                  "ref": "prop:fig-child",
+                  "x": 228,
+                  "y": 276,
+                  "s": 1
+                },
+                {
+                  "ref": "prop:fig-child",
+                  "x": 278,
+                  "y": 280,
+                  "s": 0.9,
+                  "tint": "theme.letters"
+                },
+                {
+                  "ref": "hoya:waving",
+                  "x": 350,
+                  "y": 290,
+                  "s": 0.6
+                }
+              ],
+              "altEn": "On a bright autumn day families gather in a park to celebrate Hangul Day on October 9, and Hoya waves hello."
+            }
+          },
+          {
+            "id": "s2",
+            "narrationEn": "At the end of the Haerye book, Jeong Inji wrote a date by the {kw:eumnyeok}, the lunar calendar.",
+            "captionEn": "A date in the old book",
+            "line": {
+              "ko": "해례본 끝에 날짜가 있어요.",
+              "romanization": "Haeryebon kkeute naljjaga isseoyo.",
+              "en": "There is a date at the end of the Haerye book.",
+              "speaker": "narrator"
+            },
+            "factIds": [
+              "f3"
+            ],
+            "framing": false,
+            "approximations": [],
+            "art": {
+              "setting": "scene:hanok-room",
+              "layers": [
+                {
+                  "ref": "prop:night-window",
+                  "x": 302,
+                  "y": 196,
+                  "s": 1
+                },
+                {
+                  "ref": "prop:book-open",
+                  "x": 190,
+                  "y": 276,
+                  "s": 1.6
+                },
+                {
+                  "ref": "hoya:idle",
+                  "x": 64,
+                  "y": 290,
+                  "s": 0.6
+                }
+              ],
+              "altEn": "By moonlight Hoya rests a paw beside the last page of the Haerye book, where Jeong Inji wrote down a date."
+            }
+          },
+          {
+            "id": "s3",
+            "narrationEn": "People took the last of those days and changed it to the solar calendar. By their method, that gave October 9.",
+            "captionEn": "From a lunar date to October 9",
+            "line": {
+              "ko": "음력 날짜를 양력으로 바꿨어요.",
+              "romanization": "Eumnyeok naljjareul yangnyeogeuro bakkwosseoyo.",
+              "en": "People changed the lunar date to the solar calendar.",
+              "speaker": "narrator"
+            },
+            "factIds": [
+              "f3"
+            ],
+            "framing": false,
+            "approximations": [],
+            "art": {
+              "setting": "scene:modern-room",
+              "layers": [
+                {
+                  "ref": "prop:full-moon",
+                  "x": 78,
+                  "y": 118,
+                  "s": 1.2
+                },
+                {
+                  "ref": "prop:glow-burst",
+                  "x": 322,
+                  "y": 150,
+                  "s": 0.45
+                },
+                {
+                  "ref": "prop:calendar-page",
+                  "x": 200,
+                  "y": 206,
+                  "s": 1.25
+                },
+                {
+                  "ref": "hoya:waving",
+                  "x": 330,
+                  "y": 294,
+                  "s": 0.6
+                }
+              ],
+              "altEn": "Hoya stamps a paw print on one square of a blank calendar, with a moon for the lunar calendar and a sun for the solar one."
+            }
+          },
+          {
+            "id": "s4",
+            "narrationEn": "Around 1940, an original copy of the book, {kw:chaek}, was found in an old house in Andong.",
+            "captionEn": "An original copy is found in Andong",
+            "line": {
+              "ko": "해례본이 안동에서 발견됐어요.",
+              "romanization": "Haeryeboni andongeseo balgyeondwaesseoyo.",
+              "en": "An original copy of the Haerye book was found in Andong.",
+              "speaker": "narrator"
+            },
+            "factIds": [
+              "f4"
+            ],
+            "framing": false,
+            "approximations": [],
+            "art": {
+              "setting": "scene:hanok-room",
+              "layers": [
+                {
+                  "ref": "prop:book-bundle",
+                  "x": 86,
+                  "y": 280,
+                  "s": 1.2
+                },
+                {
+                  "ref": "prop:book-open",
+                  "x": 222,
+                  "y": 290,
+                  "s": 1.9
+                },
+                {
+                  "ref": "hoya:thinking",
+                  "x": 346,
+                  "y": 292,
+                  "s": 0.55
+                }
+              ],
+              "altEn": "In an old house a wrapped bundle has been opened to show an old book, the copy found around 1940 in Andong; Hoya looks on."
+            }
+          },
+          {
+            "id": "s5",
+            "narrationEn": "The book is a {kw:gukbo}, a National Treasure, and it is on UNESCO's Memory of the World Register.",
+            "captionEn": "A National Treasure",
+            "line": {
+              "ko": "이 책은 국보예요.",
+              "romanization": "I chaegeun gukboyeyo.",
+              "en": "This book is a National Treasure.",
+              "speaker": "narrator"
+            },
+            "factIds": [
+              "f7"
+            ],
+            "framing": false,
+            "approximations": [],
+            "art": {
+              "setting": "scene:modern-room",
+              "layers": [
+                {
+                  "ref": "prop:museum-case",
+                  "x": 200,
+                  "y": 290,
+                  "s": 1.6
+                },
+                {
+                  "ref": "prop:fig-child",
+                  "x": 310,
+                  "y": 288,
+                  "s": 0.9,
+                  "tint": "theme.nature"
+                },
+                {
+                  "ref": "hoya:idle",
+                  "x": 86,
+                  "y": 290,
+                  "s": 0.6
+                }
+              ],
+              "altEn": "The Haerye book, a National Treasure on UNESCO's Memory of the World Register, rests in a glass case as Hoya and a child look."
+            }
+          },
+          {
+            "id": "s6",
+            "narrationEn": "The first celebration, in 1926, was called {kw:gagyanal}. In 1928 it became Hangeullal.",
+            "captionEn": "The first name: Gagyanal",
+            "line": {
+              "ko": "처음 이름은 가갸날이었어요.",
+              "romanization": "Cheoeum ireumeun gagyanarieosseoyo.",
+              "en": "Its first name was Gagyanal.",
+              "speaker": "narrator"
+            },
+            "factIds": [
+              "f8"
+            ],
+            "framing": false,
+            "approximations": [],
+            "art": {
+              "setting": "scene:hanok-room",
+              "layers": [
+                {
+                  "ref": "prop:fig-scholar",
+                  "x": 120,
+                  "y": 272,
+                  "s": 1,
+                  "tint": "surface.paper"
+                },
+                {
+                  "ref": "prop:fig-villager",
+                  "x": 200,
+                  "y": 270,
+                  "s": 1
+                },
+                {
+                  "ref": "prop:fig-modern",
+                  "x": 272,
+                  "y": 272,
+                  "s": 1,
+                  "tint": "text.secondary"
+                },
+                {
+                  "ref": "hoya:cheering",
+                  "x": 344,
+                  "y": 294,
+                  "s": 0.55
+                }
+              ],
+              "altEn": "In 1926 people in hanbok and in early modern clothes gather for the first celebration, Gagyanal, with Hoya smiling at the front."
+            }
+          }
+        ],
+        "checks": [
+          {
+            "id": "r1",
+            "kind": "pick-meaning",
+            "promptEn": "What does {target} mean?",
+            "target": {
+              "ko": "책",
+              "romanization": "chaek",
+              "en": "book"
+            },
+            "options": [
+              {
+                "id": "a",
+                "en": "Book",
+                "isCorrect": true
+              },
+              {
+                "id": "b",
+                "en": "Letter",
+                "isCorrect": false
+              },
+              {
+                "id": "c",
+                "en": "Calendar",
+                "isCorrect": false
+              },
+              {
+                "id": "d",
+                "en": "House",
+                "isCorrect": false
+              }
+            ],
+            "explainEn": "Chaek means book. An original copy of the Haerye book was found in Andong.",
+            "factIds": [
+              "f4"
+            ]
+          },
+          {
+            "id": "r2",
+            "kind": "pick-meaning",
+            "promptEn": "What does {target} mean?",
+            "target": {
+              "ko": "국보",
+              "romanization": "gukbo",
+              "en": "National Treasure"
+            },
+            "options": [
+              {
+                "id": "a",
+                "en": "Old house",
+                "isCorrect": false
+              },
+              {
+                "id": "b",
+                "en": "National Treasure",
+                "isCorrect": true
+              },
+              {
+                "id": "c",
+                "en": "Lunar calendar",
+                "isCorrect": false
+              },
+              {
+                "id": "d",
+                "en": "Holiday",
+                "isCorrect": false
+              }
+            ],
+            "explainEn": "Gukbo means National Treasure. The Haerye book is one.",
+            "factIds": [
+              "f7"
+            ]
+          },
+          {
+            "id": "r3",
+            "kind": "detail",
+            "promptEn": "In the story, what was Hangul Day first called?",
+            "options": [
+              {
+                "id": "a",
+                "en": "Seollal",
+                "isCorrect": false
+              },
+              {
+                "id": "b",
+                "en": "Dano",
+                "isCorrect": false
+              },
+              {
+                "id": "c",
+                "en": "Chuseok",
+                "isCorrect": false
+              },
+              {
+                "id": "d",
+                "en": "Gagyanal",
+                "isCorrect": true
+              }
+            ],
+            "explainEn": "The first celebration, in 1926, was called Gagyanal. In 1928 it became Hangeullal.",
+            "factIds": [
+              "f8"
+            ]
+          }
+        ],
+        "checkpoints": [],
+        "sequenceSceneIds": [
+          "s1",
+          "s3",
+          "s4",
+          "s6"
+        ],
+        "newKeywordIds": [
+          "hangeullal",
+          "eumnyeok",
+          "chaek",
+          "gukbo"
+        ],
+        "grammarFocusEn": "-eo isseoyo (is written) and -dwaesseoyo (was found); -euro/-ro bakkwosseoyo (changed to)"
       }
     ],
     "coverSceneId": "s1",
@@ -6792,7 +8680,7 @@ export const storiesAll: Story[] = [
       "passes": 3,
       "checkedAt": "2026-10-10",
       "scope": "cluster",
-      "notes": "Third independent pass. Every cited URL for all 6 episodes (52 facts) was re-opened (UNESCO pages via Wayback copies when the live site resets connections) and quotes/locators were compared; the one exception is unesco.org/en/prizes/literacy (unreachable from here; its claim is now also backed by a Korean MCST press release). Eight minimal corrections were made: (1) Hangeul Day f3 no longer says 'Gregorian' (no cited source says the October 9 conversion was Gregorian; encykorea separates Julian/Gregorian only for 1932-45) and dates the October 29/28 observances; (2) f10 gains a third source (SBS 2018 with 국립한글박물관 curator); (3) Shapes scene 8, learning goal and f7 now say 'South Korea's spelling rules' count 24 (North Korea counts 40, 국립한글박물관 webzine 59); (4) Sejong scene 4/f4: 백성 is 'an old-fashioned word' with 표준국어대사전 added; (5) Jikji f8 quote no longer repeats a prize amount that differs between UNESCO page versions; (6) Tripitaka f6 wood and corner plates now have two further sources (정책브리핑; 박상진 wood-identification study); (8) Hangeul Day f9 gains a second source (문화체육관광부 press release); (7) Panjeon scene 8/f9: 'visitors cannot walk inside' replaced by 'visitor entry is restricted' because Haeinsa has run pre-booked tours inside Beopbojeon since June 2021. See hangul-printing.signoff.md. MAR 2026-10-13 language review (F-STORY-001 PR 1.9): Korean strings, romanization and glosses read; findings and outcomes in the PR. MAR 2026-10-13 culture review (F-STORY-001 PR 1.9): heritage accuracy, framing, tone and advisories read; review.advisory confirmed; findings and outcomes in the PR. MAR 2026-10-13 culture review: f11 added for the story card, a shortened restatement of f7 with its first two sources."
+      "notes": "Third independent pass. Every cited URL for all 6 episodes (52 facts) was re-opened (UNESCO pages via Wayback copies when the live site resets connections) and quotes/locators were compared; the one exception is unesco.org/en/prizes/literacy (unreachable from here; its claim is now also backed by a Korean MCST press release). Eight minimal corrections were made: (1) Hangeul Day f3 no longer says 'Gregorian' (no cited source says the October 9 conversion was Gregorian; encykorea separates Julian/Gregorian only for 1932-45) and dates the October 29/28 observances; (2) f10 gains a third source (SBS 2018 with 국립한글박물관 curator); (3) Shapes scene 8, learning goal and f7 now say 'South Korea's spelling rules' count 24 (North Korea counts 40, 국립한글박물관 webzine 59); (4) Sejong scene 4/f4: 백성 is 'an old-fashioned word' with 표준국어대사전 added; (5) Jikji f8 quote no longer repeats a prize amount that differs between UNESCO page versions; (6) Tripitaka f6 wood and corner plates now have two further sources (정책브리핑; 박상진 wood-identification study); (8) Hangeul Day f9 gains a second source (문화체육관광부 press release); (7) Panjeon scene 8/f9: 'visitors cannot walk inside' replaced by 'visitor entry is restricted' because Haeinsa has run pre-booked tours inside Beopbojeon since June 2021. See hangul-printing.signoff.md. MAR 2026-10-13 language review (F-STORY-001 PR 1.9): Korean strings, romanization and glosses read; findings and outcomes in the PR. MAR 2026-10-13 culture review (F-STORY-001 PR 1.9): heritage accuracy, framing, tone and advisories read; review.advisory confirmed; findings and outcomes in the PR. MAR 2026-10-13 culture review: f11 added for the story card, a shortened restatement of f7 with its first two sources. MAR 2026-10-13 language review of the read tier (F-STORY-005 PR 5.6): 6 Korean lines, their romanization (machine-checked) and glosses read for spelling, naturalness and Stage 5 level; 1 change (s2 kkeute naljjaga isseoyo, simpler than the passive jeokyeo isseoyo) and 1 gloss made active (s3); findings and outcomes in the PR. MAR 2026-10-13 culture review of the read tier (F-STORY-005 PR 5.6): every line and check compared with its cited facts (no new claim), framing, tone and respectful wording read; s3 narration keeps the hedge of f3 (by their method); North Korea day (f10) is left out, not contradicted; review.advisory unchanged; findings and outcomes in the PR."
     },
     "authorNotes": "REVISED. (1) The narration no longer says the date conversion is settled: it says People converted the last of the ten days to the solar calendar and 'by the method they used' got October 9. The conversion method is not treated as settled: earlier observances (which assumed the last day of the lunar 9th month) used Oct 29, then Oct 28, before Oct 9 was adopted (encykorea E0061511, 국립국어원 origin/001); one fact-checker also found press commentary arguing that Oct 9 does not match a strict Julian or Gregorian conversion (low-authority sources, not re-verified here). f3 records the first point and the narration says only 'by the method they used'. (2) 'Korea celebrates' -> 'South Korea celebrates'; North Korea's January 15 (조선글날) is stated in scene 1 (f10, sourced to 국립국어원 KTV programme and 서울신문 1990). Caveat: the 국립한글박물관 webzine 59 calls one theory about how that North Korean date is derived 'unconfirmed' (확인되지 않은 것), so the story states only that the day is marked on January 15, not how it was derived. (3) 'Kansong Art Museum in Seoul' -> 'kept by the Kansong Art Museum': in 2024 the book travelled to the new Kansong Art Museum in Daegu for its opening show (서울신문 2024-05-08), and UNESCO gives no city. RR would be 'Gansong'; the museum's own English spelling 'Kansong' (used by UNESCO) is kept. (4) Scene 4 no longer says 'nobody knew the exact day'. The sources disagree on when October 9 was first celebrated (1945 according to 국립한글박물관, 1946 according to 한국민족문화대백과사전), so no year is given. 'Said to' in scene 6 hedges the 'ga-gya-geo-gyeo' origin, as the museum itself reports it as hearsay. The second, privately held Haerye copy (the 'Sangju copy') is left out because its status is unresolved. The purchase by Jeon Hyeong-pil is left out for brevity. The founding year of the King Sejong Literacy Prize (1989) is on the UNESCO page only, so the narration does not give it. The UNESCO 'country overview' source in f7 was dropped because its page could not be loaded. The official title in the heritage register is simply 'Hunminjeongeum' (국보 훈민정음). Fact f3 also names the Gregorian calendar (second-checker request); the narration keeps the simpler 'solar calendar'. FINAL PASS (3rd check): f3 no longer says 'Gregorian' because no cited source states the calendar used for the October 9 conversion (encykorea: 1932-33 Julian -> Oct 29, 1934-45 Gregorian -> Oct 28; 국립국어원: Oct 9 = Oct 29 minus about 20 days). f10 now has three sources. Book location: 국가유산포털 still lists Seoul (성북동), while the book was shown at the new Kansong Art Museum in Daegu in autumn 2024; the story only says 'kept by the Kansong Art Museum' (UNESCO wording). REVIEW PASS (PR 1.8b): c2 explanation keeps the hedge (converted when the holiday was set) and names the 9th lunar month; s3 caption says the date was set, not that it simply is October 9. ROUND 2: s2 drops once more; c2 says the last of them (the ten days), not the last day (the superseded Oct 29/28 reading), and names both calendars.",
     "errata": []
@@ -7590,7 +9478,7 @@ export const storiesAll: Story[] = [
     "v": 1,
     "id": "story:jagyeongnu-water-clock",
     "state": "ready",
-    "contentVer": 3,
+    "contentVer": 4,
     "title": {
       "ko": "장영실과 스스로 울리는 물시계, 자격루",
       "romanization": "Jangyeongsilgwa seuseuro ullineun mulsigye, jagyeongnu",
@@ -8084,6 +9972,354 @@ export const storiesAll: Story[] = [
           "mulsigye",
           "jagyeongnu"
         ]
+      },
+      {
+        "level": "read",
+        "scenes": [
+          {
+            "id": "s1",
+            "narrationEn": "A water clock, {kw:mulsigye}, measures time, {kw:sigan}, by how much water there is.",
+            "captionEn": "A clock that uses water",
+            "line": {
+              "ko": "물시계는 물로 시간을 재요.",
+              "romanization": "Mulsigyeneun mullo siganeul jaeyo.",
+              "en": "A water clock measures time with water.",
+              "speaker": "narrator"
+            },
+            "factIds": [
+              "f1"
+            ],
+            "framing": false,
+            "approximations": [],
+            "art": {
+              "setting": "scene:hanji-backdrop",
+              "layers": [
+                {
+                  "ref": "prop:bronze-jar",
+                  "x": 140,
+                  "y": 200,
+                  "s": 1
+                },
+                {
+                  "ref": "prop:water-stream",
+                  "x": 197,
+                  "y": 202,
+                  "s": 1
+                },
+                {
+                  "ref": "prop:float-vessel",
+                  "x": 215,
+                  "y": 286,
+                  "s": 0.8
+                },
+                {
+                  "ref": "hoya:thinking",
+                  "x": 318,
+                  "y": 292,
+                  "s": 0.7,
+                  "flip": true
+                }
+              ],
+              "altEn": "Hoya watches water trickle drop by drop from a large bronze jar into a tall vessel, the heart of a water clock."
+            }
+          },
+          {
+            "id": "s2",
+            "narrationEn": "{kw:jang-yeongsil} was so skilled that he took charge of craft work in the palace.",
+            "captionEn": "Jang Yeongsil, a skilled maker",
+            "line": {
+              "ko": "장영실은 솜씨가 좋았어요.",
+              "romanization": "Jangyeongsireun somssiga joasseoyo.",
+              "en": "Jang Yeongsil was very skilled.",
+              "speaker": "narrator"
+            },
+            "factIds": [
+              "f2"
+            ],
+            "framing": false,
+            "approximations": [],
+            "art": {
+              "setting": "scene:hanok-room",
+              "layers": [
+                {
+                  "ref": "prop:fig-artisan",
+                  "x": 180,
+                  "y": 288,
+                  "s": 1.25
+                },
+                {
+                  "ref": "prop:desk-low",
+                  "x": 310,
+                  "y": 284,
+                  "s": 1
+                },
+                {
+                  "ref": "prop:bronze-jar",
+                  "x": 310,
+                  "y": 231,
+                  "s": 0.5
+                }
+              ],
+              "altEn": "Jang Yeongsil, a skilled craftsman in plain clothes and a head cloth, works on the bronze parts of a new clock."
+            }
+          },
+          {
+            "id": "s3",
+            "narrationEn": "King Sejong said the clock could not have been made without Jang Yeongsil.",
+            "captionEn": "King Sejong praises Jang Yeongsil",
+            "line": {
+              "ko": "세종대왕이 장영실을 칭찬했어요.",
+              "romanization": "Sejongdaewangi jangyeongsireul chingchanhaesseoyo.",
+              "en": "King Sejong praised Jang Yeongsil.",
+              "speaker": "narrator"
+            },
+            "factIds": [
+              "f3"
+            ],
+            "framing": false,
+            "approximations": [],
+            "art": {
+              "setting": "scene:palace-hall",
+              "layers": [
+                {
+                  "ref": "prop:fig-king",
+                  "x": 196,
+                  "y": 252,
+                  "s": 0.95
+                },
+                {
+                  "ref": "prop:fig-artisan",
+                  "x": 306,
+                  "y": 284,
+                  "s": 1,
+                  "flip": true
+                }
+              ],
+              "altEn": "In a palace hall King Sejong praises Jang Yeongsil for building the water clock, and the craftsman bows."
+            }
+          },
+          {
+            "id": "s4",
+            "narrationEn": "In the {kw:jagyeongnu}, water flowed into a tall vessel, and a floating rod rose as it filled.",
+            "captionEn": "Rising water lifts a rod",
+            "line": {
+              "ko": "물이 차면 잣대가 올라가요.",
+              "romanization": "Muri chamyeon jatdaega ollagayo.",
+              "en": "When the water fills up, the rod rises.",
+              "speaker": "narrator"
+            },
+            "factIds": [
+              "f4"
+            ],
+            "framing": false,
+            "approximations": [],
+            "art": {
+              "setting": "scene:hanji-backdrop",
+              "layers": [
+                {
+                  "ref": "prop:bronze-jar",
+                  "x": 150,
+                  "y": 214,
+                  "s": 1.3
+                },
+                {
+                  "ref": "prop:water-stream",
+                  "x": 224,
+                  "y": 216.5,
+                  "s": 1.3
+                },
+                {
+                  "ref": "prop:float-vessel",
+                  "x": 247.5,
+                  "y": 296,
+                  "s": 1
+                }
+              ],
+              "altEn": "How the clock works: water pours from a bronze jar into a tall vessel, and a marked rod floats up as it fills."
+            }
+          },
+          {
+            "id": "s5",
+            "narrationEn": "Wooden figures struck a bell, {kw:jong}, a drum, {kw:buk}, and a gong, {kw:jing}, to tell the time.",
+            "captionEn": "A bell, a drum and a gong",
+            "line": {
+              "ko": "나무 인형이 종, 북, 징을 쳐요.",
+              "romanization": "Namu inhyeongi jong buk jingeul chyeoyo.",
+              "en": "Wooden figures strike a bell, a drum and a gong.",
+              "speaker": "narrator"
+            },
+            "factIds": [
+              "f5"
+            ],
+            "framing": false,
+            "approximations": [],
+            "art": {
+              "setting": "scene:hanji-backdrop",
+              "layers": [
+                {
+                  "ref": "prop:striking-figures",
+                  "x": 200,
+                  "y": 262,
+                  "s": 2
+                }
+              ],
+              "altEn": "Metal balls roll down a chute and three wooden figures strike a bell, a drum and a gong to tell the time."
+            }
+          },
+          {
+            "id": "s6",
+            "narrationEn": "From 1434, the clock kept time at {kw:gyeongbokgung}, and the city could hear the time.",
+            "captionEn": "Telling the time at the palace",
+            "line": {
+              "ko": "경복궁에서 시간을 알렸어요.",
+              "romanization": "Gyeongbokgungeseo siganeul allyeosseoyo.",
+              "en": "It told the time at Gyeongbokgung Palace.",
+              "speaker": "narrator"
+            },
+            "factIds": [
+              "f6"
+            ],
+            "framing": false,
+            "approximations": [],
+            "art": {
+              "setting": "scene:palace-courtyard",
+              "layers": [
+                {
+                  "ref": "prop:night-sky",
+                  "x": 200,
+                  "y": 196,
+                  "s": 1
+                },
+                {
+                  "ref": "prop:drum",
+                  "x": 200,
+                  "y": 282,
+                  "s": 1.6
+                }
+              ],
+              "altEn": "Evening falls at Gyeongbokgung Palace, and a big drum stands ready to pass the clock's sound on to the city."
+            }
+          }
+        ],
+        "checks": [
+          {
+            "id": "r1",
+            "kind": "pick-meaning",
+            "promptEn": "What does {target} mean?",
+            "target": {
+              "ko": "물",
+              "romanization": "mul",
+              "en": "water"
+            },
+            "options": [
+              {
+                "id": "a",
+                "en": "Water",
+                "isCorrect": true
+              },
+              {
+                "id": "b",
+                "en": "Time",
+                "isCorrect": false
+              },
+              {
+                "id": "c",
+                "en": "Bell",
+                "isCorrect": false
+              },
+              {
+                "id": "d",
+                "en": "Fire",
+                "isCorrect": false
+              }
+            ],
+            "explainEn": "Mul means water. The water clock measured time with water.",
+            "factIds": [
+              "f1"
+            ]
+          },
+          {
+            "id": "r2",
+            "kind": "pick-meaning",
+            "promptEn": "What does {target} mean?",
+            "target": {
+              "ko": "종",
+              "romanization": "jong",
+              "en": "bell"
+            },
+            "options": [
+              {
+                "id": "a",
+                "en": "Drum",
+                "isCorrect": false
+              },
+              {
+                "id": "b",
+                "en": "Bell",
+                "isCorrect": true
+              },
+              {
+                "id": "c",
+                "en": "Gong",
+                "isCorrect": false
+              },
+              {
+                "id": "d",
+                "en": "Clock",
+                "isCorrect": false
+              }
+            ],
+            "explainEn": "Jong means bell. Wooden figures struck a bell, a drum and a gong.",
+            "factIds": [
+              "f5"
+            ]
+          },
+          {
+            "id": "r3",
+            "kind": "detail",
+            "promptEn": "In the story, what rises when the water fills up?",
+            "options": [
+              {
+                "id": "a",
+                "en": "A floating rod",
+                "isCorrect": true
+              },
+              {
+                "id": "b",
+                "en": "A palace gate",
+                "isCorrect": false
+              },
+              {
+                "id": "c",
+                "en": "A metal bowl",
+                "isCorrect": false
+              },
+              {
+                "id": "d",
+                "en": "A drum",
+                "isCorrect": false
+              }
+            ],
+            "explainEn": "As the water filled the tall vessel, a floating rod slowly rose.",
+            "factIds": [
+              "f4"
+            ]
+          }
+        ],
+        "checkpoints": [],
+        "sequenceSceneIds": [
+          "s1",
+          "s3",
+          "s4",
+          "s6"
+        ],
+        "newKeywordIds": [
+          "mulsigye",
+          "sigan",
+          "jang-yeongsil",
+          "jagyeongnu"
+        ],
+        "grammarFocusEn": "-myeon (when): muri chamyeon; -ro (with): mullo"
       }
     ],
     "coverSceneId": "s1",
@@ -8313,7 +10549,7 @@ export const storiesAll: Story[] = [
       "passes": 3,
       "checkedAt": "2026-10-10",
       "scope": "cluster",
-      "notes": "Third independent pass. All quotes re-checked programmatically against fetched pages (Sillok, encykorea, 우리역사넷, NMK, KMA; KHS descriptions via the khs.go.kr open API SearchKindOpenapiDt.do?ccbaCpno=...). unesco.org/ich.unesco.org pages could not be fetched directly (connection reset); UNESCO wording and years (2009, 2013, 2018) confirmed from search excerpts of the UNESCO pages and KHS lists. Corrections: Heo Jun birth year dropped from narration/fact (sources conflict: 1539 vs 1546, encykorea internally inconsistent); Jang Yeong-sil rank sentence softened to match the Sillok ('decided to give'); 우리역사넷 added as second source for Donguibogam f4/f5; Ssirum UNESCO locator de-quoted. MAR 2026-10-13 language review (F-STORY-001 PR 1.9): Korean strings, romanization and glosses read; findings and outcomes in the PR. MAR 2026-10-13 culture review (F-STORY-001 PR 1.9): heritage accuracy, framing, tone and advisories read; review.advisory confirmed; findings and outcomes in the PR."
+      "notes": "Third independent pass. All quotes re-checked programmatically against fetched pages (Sillok, encykorea, 우리역사넷, NMK, KMA; KHS descriptions via the khs.go.kr open API SearchKindOpenapiDt.do?ccbaCpno=...). unesco.org/ich.unesco.org pages could not be fetched directly (connection reset); UNESCO wording and years (2009, 2013, 2018) confirmed from search excerpts of the UNESCO pages and KHS lists. Corrections: Heo Jun birth year dropped from narration/fact (sources conflict: 1539 vs 1546, encykorea internally inconsistent); Jang Yeong-sil rank sentence softened to match the Sillok ('decided to give'); 우리역사넷 added as second source for Donguibogam f4/f5; Ssirum UNESCO locator de-quoted. MAR 2026-10-13 language review (F-STORY-001 PR 1.9): Korean strings, romanization and glosses read; findings and outcomes in the PR. MAR 2026-10-13 culture review (F-STORY-001 PR 1.9): heritage accuracy, framing, tone and advisories read; review.advisory confirmed; findings and outcomes in the PR. MAR 2026-10-13 language review of the read tier (F-STORY-005 PR 5.6): 6 Korean lines, their romanization (machine-checked) and glosses read for spelling, naturalness and Stage 5 level; no change; findings and outcomes in the PR. MAR 2026-10-13 culture review of the read tier (F-STORY-005 PR 5.6): every line and check compared with its cited facts (no new claim), framing, tone and respectful wording read; no change; Jang Yeongsil is named for his skill only (advisory unchanged); review.advisory unchanged; findings and outcomes in the PR."
     },
     "authorNotes": "Dating: the Sillok entry in which Sejong praises Jang and grants the rank 호군 is dated 1433-09-16 (lunar), while KHS and encykorea give 1434 as the year the clock was made/completed; narration avoids a making year and gives only the start of use (1434-07-01 lunar), on which the Sillok and encykorea agree. Other makers: encykorea's 자격루 entry lists 장영실·이천·김조 and its 장영실 entry mentions 김빈; the story names only Jang Yeong-sil, whom the Sillok (1433, 1434) and KHS credit. Location: encykorea says the 1536 vessels are at Deoksugung (outdated); KHS lists the National Palace Museum of Korea. Simplified mechanism: the Sillok distinguishes small copper balls and large iron balls and also describes 12 zodiac figures holding time plaques; narration says 'metal balls'. Jang Yeong-sil's later career and other instruments (e.g., 옥루, 혼천의) omitted.  REVISION: 관노 is described as a government-owned servant (Sillok 1434: 동래현 관노), worded neutrally; encykorea adds he was later freed and given a court post, so narration says 'first a servant owned by the government'. Illustration of the 1536 vessels no longer shows dragons: KHS describes plain bronze vessels, and the only decoration mention found is an encykorea image caption ('수수통의 용문양'), which is not in the KHS text, so decoration is left out entirely. PASS 3: scene 3/f3 now say the king 'decided to give' the rank (Sillok 1433-09-16: 'I wish to add the post of hogun'; Hwang Hui and others agreed and 'the king followed'). PR 1.8c: s2 now says 'first a servant owned by the government in Dongnae' and adds the encykorea ending from f2 ('Later he was freed and given a post at court'); the bare romanized 'gwanno' was removed; advisory 'historical-hardship' added. s6 says the gate drums and bells 'repeated the sound' (f6: relayed). s1 now tokens 시간 so the s7 line builds on a known word.",
     "errata": []
@@ -10861,7 +13097,7 @@ export const storiesAll: Story[] = [
     "v": 1,
     "id": "story:kim-hongdo-genre-paintings",
     "state": "ready",
-    "contentVer": 4,
+    "contentVer": 5,
     "title": {
       "ko": "김홍도의 풍속화, 씨름과 서당",
       "romanization": "Gimhongdoui pungsokhwa, ssireumgwa seodang",
@@ -11386,6 +13622,406 @@ export const storiesAll: Story[] = [
           "pungsokhwa",
           "ssireum"
         ]
+      },
+      {
+        "level": "read",
+        "scenes": [
+          {
+            "id": "s1",
+            "narrationEn": "A genre painting, {kw:pungsokhwa}, shows the everyday life of ordinary people, not the royal court.",
+            "captionEn": "Pictures of everyday life",
+            "line": {
+              "ko": "풍속화는 사람들의 생활을 그린 그림이에요.",
+              "romanization": "Pungsokhwaneun saramdeurui saenghwareul geurin geurimieyo.",
+              "en": "A genre painting is a picture of people's everyday life.",
+              "speaker": "narrator"
+            },
+            "factIds": [
+              "f1"
+            ],
+            "framing": false,
+            "approximations": [],
+            "art": {
+              "setting": "scene:hanji-backdrop",
+              "layers": [
+                {
+                  "ref": "hoya:idle",
+                  "x": 150,
+                  "y": 286,
+                  "s": 1
+                },
+                {
+                  "ref": "prop:blank-sheet",
+                  "x": 270,
+                  "y": 276,
+                  "s": 1.4
+                },
+                {
+                  "ref": "prop:writing-set",
+                  "x": 300,
+                  "y": 294,
+                  "s": 1
+                }
+              ],
+              "altEn": "Hoya gets ready to paint, with a brush, an inkstone and a sheet of plain paper beside him."
+            }
+          },
+          {
+            "id": "s2",
+            "narrationEn": "{kw:kim-hong-do}, born in 1745, was a court painter, {kw:hwaga}, famous for genre paintings.",
+            "captionEn": "Kim Hongdo, a Joseon painter",
+            "line": {
+              "ko": "김홍도는 조선의 화가였어요.",
+              "romanization": "Gimhongdoneun joseonui hwagayeosseoyo.",
+              "en": "Kim Hongdo was a painter of Joseon.",
+              "speaker": "narrator"
+            },
+            "factIds": [
+              "f2"
+            ],
+            "framing": false,
+            "approximations": [],
+            "art": {
+              "setting": "scene:hanok-room",
+              "layers": [
+                {
+                  "ref": "prop:fig-writer-seated",
+                  "x": 196,
+                  "y": 288,
+                  "s": 1.5
+                },
+                {
+                  "ref": "prop:writing-set",
+                  "x": 330,
+                  "y": 290,
+                  "s": 0.9
+                }
+              ],
+              "altEn": "Kim Hongdo, a court painter in a light robe, sits on the floor painting on a sheet of paper."
+            }
+          },
+          {
+            "id": "s4",
+            "narrationEn": "In the painting {kw:ssireum}, two wrestlers test their strength in the middle of a crowd.",
+            "captionEn": "Two wrestlers in the middle",
+            "line": {
+              "ko": "두 사람이 씨름을 해요.",
+              "romanization": "Du sarami ssireumeul haeyo.",
+              "en": "Two people are wrestling (ssireum).",
+              "speaker": "narrator"
+            },
+            "factIds": [
+              "f4"
+            ],
+            "framing": false,
+            "approximations": [],
+            "art": {
+              "setting": "scene:hanji-backdrop",
+              "layers": [
+                {
+                  "ref": "prop:crowd-seated",
+                  "x": 104,
+                  "y": 160,
+                  "s": 0.75,
+                  "z": "back",
+                  "tint": "surface.paper"
+                },
+                {
+                  "ref": "prop:crowd-seated",
+                  "x": 296,
+                  "y": 160,
+                  "s": 0.75,
+                  "z": "back",
+                  "tint": "surface.paper"
+                },
+                {
+                  "ref": "prop:fig-wrestlers",
+                  "x": 200,
+                  "y": 252,
+                  "s": 1.45,
+                  "tint": "surface.paper"
+                },
+                {
+                  "ref": "prop:crowd-seated",
+                  "x": 200,
+                  "y": 300,
+                  "s": 1.05,
+                  "z": "front",
+                  "tint": "surface.paper"
+                }
+              ],
+              "altEn": "In Kim Hongdo's Ssireum two wrestlers grapple in the middle while two curved rows of onlookers watch closely."
+            }
+          },
+          {
+            "id": "s5",
+            "narrationEn": "A taffy seller, {kw:yeotjangsu}, stands at the left, away from the crowd.",
+            "captionEn": "A taffy seller at the left",
+            "line": {
+              "ko": "왼쪽에 엿장수가 서 있어요.",
+              "romanization": "Oenjjoge yeotjangsuga seo isseoyo.",
+              "en": "A taffy seller stands at the left.",
+              "speaker": "narrator"
+            },
+            "factIds": [
+              "f5"
+            ],
+            "framing": false,
+            "approximations": [],
+            "art": {
+              "setting": "scene:hanji-backdrop",
+              "layers": [
+                {
+                  "ref": "prop:crowd-seated",
+                  "x": 270,
+                  "y": 196,
+                  "s": 0.9,
+                  "z": "back"
+                },
+                {
+                  "ref": "prop:fig-child",
+                  "x": 144,
+                  "y": 276,
+                  "s": 1.3
+                },
+                {
+                  "ref": "prop:taffy-tray",
+                  "x": 70,
+                  "y": 286,
+                  "s": 1.2
+                },
+                {
+                  "ref": "prop:shoes",
+                  "x": 330,
+                  "y": 282,
+                  "s": 1.6
+                }
+              ],
+              "altEn": "At the edges of the painting a young taffy seller stands by his tray on the left, and a pair of shoes rests on the right."
+            }
+          },
+          {
+            "id": "s6",
+            "narrationEn": "In the painting {kw:seodang}, the class gathers around one boy who has turned away, sniffling.",
+            "captionEn": "A class around one boy",
+            "line": {
+              "ko": "서당에서 한 아이가 울고 있어요.",
+              "romanization": "Seodangeseo han aiga ulgo isseoyo.",
+              "en": "At the village school, one child is crying.",
+              "speaker": "narrator"
+            },
+            "factIds": [
+              "f6"
+            ],
+            "framing": false,
+            "approximations": [],
+            "art": {
+              "setting": "scene:hanok-room",
+              "layers": [
+                {
+                  "ref": "prop:fig-child",
+                  "x": 76,
+                  "y": 276,
+                  "s": 0.9
+                },
+                {
+                  "ref": "prop:fig-child",
+                  "x": 126,
+                  "y": 286,
+                  "s": 0.85,
+                  "tint": "surface.sunken"
+                },
+                {
+                  "ref": "prop:fig-child-back",
+                  "x": 200,
+                  "y": 284,
+                  "s": 1.6
+                },
+                {
+                  "ref": "prop:fig-writer-seated",
+                  "x": 308,
+                  "y": 280,
+                  "s": 0.9,
+                  "tint": "surface.paper"
+                }
+              ],
+              "altEn": "In Kim Hongdo's Seodang, a teacher and his students gather around one boy who sits turned away, sniffling."
+            }
+          },
+          {
+            "id": "s7",
+            "narrationEn": "Ssireum is a National Intangible Heritage of Korea, and UNESCO inscribed it in 2018.",
+            "captionEn": "Ssireum, a living heritage",
+            "line": {
+              "ko": "씨름은 국가무형유산이에요.",
+              "romanization": "Ssireumeun gukgamuhyeongyusanieyo.",
+              "en": "Ssireum is a National Intangible Heritage of Korea.",
+              "speaker": "narrator"
+            },
+            "factIds": [
+              "f7"
+            ],
+            "framing": false,
+            "approximations": [],
+            "art": {
+              "setting": "scene:countryside",
+              "layers": [
+                {
+                  "ref": "prop:sand-ring",
+                  "x": 200,
+                  "y": 292,
+                  "s": 1.4
+                },
+                {
+                  "ref": "prop:fig-child",
+                  "x": 56,
+                  "y": 268,
+                  "s": 0.8,
+                  "tint": "feedback.nudgeLight"
+                },
+                {
+                  "ref": "hoya:cheering",
+                  "x": 168,
+                  "y": 284,
+                  "s": 0.8
+                },
+                {
+                  "ref": "prop:fig-child",
+                  "x": 248,
+                  "y": 280,
+                  "s": 1.05
+                },
+                {
+                  "ref": "prop:fig-child",
+                  "x": 350,
+                  "y": 268,
+                  "s": 0.8,
+                  "tint": "brand.secondaryLight"
+                }
+              ],
+              "altEn": "Today Hoya cheers in a sand ring beside a friend, set for a friendly round of ssireum, as other friends look on."
+            }
+          }
+        ],
+        "checks": [
+          {
+            "id": "r1",
+            "kind": "pick-meaning",
+            "promptEn": "What does {target} mean?",
+            "target": {
+              "ko": "그림",
+              "romanization": "geurim",
+              "en": "picture"
+            },
+            "options": [
+              {
+                "id": "a",
+                "en": "Painter",
+                "isCorrect": false
+              },
+              {
+                "id": "b",
+                "en": "Wrestling",
+                "isCorrect": false
+              },
+              {
+                "id": "c",
+                "en": "Picture",
+                "isCorrect": true
+              },
+              {
+                "id": "d",
+                "en": "School",
+                "isCorrect": false
+              }
+            ],
+            "explainEn": "Geurim means picture or painting.",
+            "factIds": [
+              "f1"
+            ]
+          },
+          {
+            "id": "r2",
+            "kind": "pick-meaning",
+            "promptEn": "What does {target} mean?",
+            "target": {
+              "ko": "서당",
+              "romanization": "seodang",
+              "en": "village school"
+            },
+            "options": [
+              {
+                "id": "a",
+                "en": "Village school",
+                "isCorrect": true
+              },
+              {
+                "id": "b",
+                "en": "Taffy seller",
+                "isCorrect": false
+              },
+              {
+                "id": "c",
+                "en": "Museum",
+                "isCorrect": false
+              },
+              {
+                "id": "d",
+                "en": "Market",
+                "isCorrect": false
+              }
+            ],
+            "explainEn": "Seodang means village school. Kim Hongdo painted a class at a seodang.",
+            "factIds": [
+              "f6"
+            ]
+          },
+          {
+            "id": "r3",
+            "kind": "detail",
+            "promptEn": "In the painting Ssireum, who stands at the left?",
+            "options": [
+              {
+                "id": "a",
+                "en": "A teacher",
+                "isCorrect": false
+              },
+              {
+                "id": "b",
+                "en": "A king",
+                "isCorrect": false
+              },
+              {
+                "id": "c",
+                "en": "A drummer",
+                "isCorrect": false
+              },
+              {
+                "id": "d",
+                "en": "A taffy seller",
+                "isCorrect": true
+              }
+            ],
+            "explainEn": "A taffy seller stands at the left, away from the crowd.",
+            "factIds": [
+              "f5"
+            ]
+          }
+        ],
+        "checkpoints": [],
+        "sequenceSceneIds": [
+          "s1",
+          "s4",
+          "s6",
+          "s7"
+        ],
+        "newKeywordIds": [
+          "pungsokhwa",
+          "hwaga",
+          "ssireum",
+          "yeotjangsu"
+        ],
+        "grammarFocusEn": "-n geurim (a picture that ...); -a isseoyo and -go isseoyo (is standing, is crying)"
       }
     ],
     "coverSceneId": "s1",
@@ -11587,7 +14223,7 @@ export const storiesAll: Story[] = [
       "passes": 3,
       "checkedAt": "2026-10-10",
       "scope": "cluster",
-      "notes": "Third independent pass. All quotes re-checked programmatically against fetched pages (Sillok, encykorea, 우리역사넷, NMK, KMA; KHS descriptions via the khs.go.kr open API SearchKindOpenapiDt.do?ccbaCpno=...). unesco.org/ich.unesco.org pages could not be fetched directly (connection reset); UNESCO wording and years (2009, 2013, 2018) confirmed from search excerpts of the UNESCO pages and KHS lists. Corrections: Heo Jun birth year dropped from narration/fact (sources conflict: 1539 vs 1546, encykorea internally inconsistent); Jang Yeong-sil rank sentence softened to match the Sillok ('decided to give'); 우리역사넷 added as second source for Donguibogam f4/f5; Ssirum UNESCO locator de-quoted. MAR 2026-10-13 language review (F-STORY-001 PR 1.9): Korean strings, romanization and glosses read; findings and outcomes in the PR. MAR 2026-10-13 culture review (F-STORY-001 PR 1.9): heritage accuracy, framing, tone and advisories read; review.advisory confirmed; findings and outcomes in the PR."
+      "notes": "Third independent pass. All quotes re-checked programmatically against fetched pages (Sillok, encykorea, 우리역사넷, NMK, KMA; KHS descriptions via the khs.go.kr open API SearchKindOpenapiDt.do?ccbaCpno=...). unesco.org/ich.unesco.org pages could not be fetched directly (connection reset); UNESCO wording and years (2009, 2013, 2018) confirmed from search excerpts of the UNESCO pages and KHS lists. Corrections: Heo Jun birth year dropped from narration/fact (sources conflict: 1539 vs 1546, encykorea internally inconsistent); Jang Yeong-sil rank sentence softened to match the Sillok ('decided to give'); 우리역사넷 added as second source for Donguibogam f4/f5; Ssirum UNESCO locator de-quoted. MAR 2026-10-13 language review (F-STORY-001 PR 1.9): Korean strings, romanization and glosses read; findings and outcomes in the PR. MAR 2026-10-13 culture review (F-STORY-001 PR 1.9): heritage accuracy, framing, tone and advisories read; review.advisory confirmed; findings and outcomes in the PR. MAR 2026-10-13 language review of the read tier (F-STORY-005 PR 5.6): 6 Korean lines, their romanization (machine-checked) and glosses read for spelling, naturalness and Stage 5 level; no change; findings and outcomes in the PR. MAR 2026-10-13 culture review of the read tier (F-STORY-005 PR 5.6): every line and check compared with its cited facts (no new claim), framing, tone and respectful wording read; s7 states only f7 (a National Intangible Heritage) instead of 'still loved'; review.advisory unchanged; findings and outcomes in the PR."
     },
     "authorNotes": "Attribution caution: NMK and encykorea both report scholarly debate about the album (differences in skill between leaves, retouching, many similar copies); some scholars regard leaves such as Ssireum and Mudong as genuine and weaker leaves as copies, and one view treats the whole album as a later model book. Only 13 of the 25 leaves bear the seal 김홍도인 (encykorea). Narration therefore calls it the album 'known as' Danwon's album and describes what the paintings show; the fact claim says 'attributed to'. The KHS designation text names the school leaf 〈글방〉; NMK and encykorea use 서당. Omitted: the switch (회초리) mentioned in an encykorea media caption for 서당; the album's purchase history (1918) and the 1957 remounting that separated two 군선도 leaves (NMK); Kim Hong-do's death (c.1806 per encykorea; KHS gives '?'). The 2018 UNESCO inscription was a joint inscription by both Koreas; this is not mentioned in narration. Scene 5 claim about shoes follows NMK ('벗어 놓은 신발'), without saying whose shoes they are. REVISION: (a) 'kicked-off shoes' removed; museum text says only 벗어 놓은 신발 (shoes taken off), at the right, narrowing the open space (NMK relicId=551); seller at the left, 'outside the spectators' attention'. 우리역사넷 says the shoes are the two wrestlers' and the seller looks into the distance; NMK's curator page says the seller looks outward, but narration stays with the museum's catalog wording. (b) Seodang layout softened to 'gathered around' because NMK says 둥글게 배치 around the boy while an encykorea caption says pupils sit side by side on both sides of the teacher. (c) Ssireum crowd: NMK says two groups arranged roundly above and below; narration says 'two curved groups'. (d) Quiz distractor for museum changed to other national museums. PR 1.8c review: check c3 now asks who stands at the left of Ssireum (f5), because three similar museum names tested memory of a name rather than the story. Check c3 says 'outside the crowd's attention', following f5 and the museum text, not 'away from the crowd'.",
     "errata": []
@@ -12369,7 +15005,7 @@ export const storiesAll: Story[] = [
     "v": 1,
     "id": "story:pansori-tales",
     "state": "ready",
-    "contentVer": 4,
+    "contentVer": 5,
     "title": {
       "ko": "판소리로 듣는 흥부와 놀부, 토끼와 자라",
       "romanization": "Pansoriro deunneun Heungbuwa Nolbu, tokkiwa jara",
@@ -12984,6 +15620,369 @@ export const storiesAll: Story[] = [
           "jebi",
           "bak"
         ]
+      },
+      {
+        "level": "read",
+        "scenes": [
+          {
+            "id": "s1",
+            "narrationEn": "In {kw:pansori}, one singer tells a long story, and a drummer keeps the rhythm on a {kw:buk}.",
+            "captionEn": "One singer and one drummer",
+            "line": {
+              "ko": "판소리에서는 한 사람이 노래로 이야기해요.",
+              "romanization": "Pansorieseoneun han sarami noraero iyagihaeyo.",
+              "en": "In pansori, one person tells a story in song.",
+              "speaker": "narrator"
+            },
+            "factIds": [
+              "f1"
+            ],
+            "framing": false,
+            "approximations": [],
+            "art": {
+              "setting": "scene:hanji-backdrop",
+              "layers": [
+                {
+                  "ref": "prop:fig-elder-seated",
+                  "x": 318,
+                  "y": 262,
+                  "s": 1,
+                  "z": "back"
+                },
+                {
+                  "ref": "prop:fig-pansori",
+                  "x": 190,
+                  "y": 262,
+                  "s": 1.3
+                },
+                {
+                  "ref": "prop:drum",
+                  "x": 302,
+                  "y": 272,
+                  "s": 0.9
+                },
+                {
+                  "ref": "prop:crowd-seated",
+                  "x": 132,
+                  "y": 300,
+                  "s": 1.05,
+                  "z": "front"
+                },
+                {
+                  "ref": "hoya:idle",
+                  "x": 40,
+                  "y": 298,
+                  "s": 0.6
+                }
+              ],
+              "altEn": "A pansori singer with a fan stands beside a seated drummer and his barrel drum, and Hoya watches from the audience."
+            }
+          },
+          {
+            "id": "s3",
+            "narrationEn": "In the tale, kind Heungbu binds the broken leg of a baby swallow, {kw:jebi}.",
+            "captionEn": "Heungbu helps a hurt swallow",
+            "line": {
+              "ko": "흥부가 제비의 다리를 매어 줘요.",
+              "romanization": "Heungbuga jebiui darireul maeeo jwoyo.",
+              "en": "Heungbu binds the swallow's leg.",
+              "speaker": "narrator"
+            },
+            "factIds": [
+              "f5"
+            ],
+            "framing": false,
+            "approximations": [],
+            "art": {
+              "setting": "scene:village-lane",
+              "layers": [
+                {
+                  "ref": "prop:fig-villager",
+                  "x": 200,
+                  "y": 280,
+                  "s": 1.35,
+                  "tint": "surface.paper"
+                },
+                {
+                  "ref": "prop:swallow",
+                  "x": 250,
+                  "y": 198,
+                  "s": 1.1
+                }
+              ],
+              "altEn": "Kind Heungbu stands outside his straw-roofed home as the baby swallow he helped flies beside him."
+            }
+          },
+          {
+            "id": "s4",
+            "narrationEn": "The swallow brings a seed. Heungbu grows big gourds, {kw:bak}, and treasures pour out.",
+            "captionEn": "Treasure pours out of the gourds",
+            "line": {
+              "ko": "박에서 돈과 쌀이 나와요.",
+              "romanization": "Bageseo dongwa ssari nawayo.",
+              "en": "Money and rice come out of the gourds.",
+              "speaker": "narrator"
+            },
+            "factIds": [
+              "f6"
+            ],
+            "framing": false,
+            "approximations": [],
+            "art": {
+              "setting": "scene:village-lane",
+              "layers": [
+                {
+                  "ref": "prop:gourds",
+                  "x": 200,
+                  "y": 290,
+                  "s": 1.6
+                },
+                {
+                  "ref": "prop:fig-villager",
+                  "x": 62,
+                  "y": 284,
+                  "s": 0.95
+                },
+                {
+                  "ref": "prop:fig-woman",
+                  "x": 338,
+                  "y": 284,
+                  "s": 0.95,
+                  "tint": "brand.secondaryLight"
+                },
+                {
+                  "ref": "prop:swallow",
+                  "x": 290,
+                  "y": 110,
+                  "s": 0.9
+                }
+              ],
+              "altEn": "Heungbu's family splits open a huge gourd and rice and gold coins pour out, while the swallow circles overhead."
+            }
+          },
+          {
+            "id": "s7",
+            "narrationEn": "The rabbit, {kw:tokki}, is fooled and follows the turtle, {kw:jara}, to the sea palace.",
+            "captionEn": "The rabbit follows the turtle",
+            "line": {
+              "ko": "토끼가 자라를 따라가요.",
+              "romanization": "Tokkiga jarareul ttaragayo.",
+              "en": "The rabbit follows the turtle.",
+              "speaker": "narrator"
+            },
+            "factIds": [
+              "f9"
+            ],
+            "framing": false,
+            "approximations": [],
+            "art": {
+              "setting": "scene:sea-palace",
+              "layers": [
+                {
+                  "ref": "prop:fig-king-seated",
+                  "x": 200,
+                  "y": 232,
+                  "s": 1.2
+                },
+                {
+                  "ref": "prop:fig-officials-kneeling",
+                  "x": 86,
+                  "y": 282,
+                  "s": 0.75
+                },
+                {
+                  "ref": "prop:turtle",
+                  "x": 282,
+                  "y": 288,
+                  "s": 1,
+                  "flip": true
+                },
+                {
+                  "ref": "prop:rabbit",
+                  "x": 346,
+                  "y": 286,
+                  "s": 1.05,
+                  "flip": true
+                }
+              ],
+              "altEn": "The rabbit arrives at the undersea palace beside the turtle, and the Dragon King and his courtiers look on."
+            }
+          },
+          {
+            "id": "s8",
+            "narrationEn": "The clever rabbit says he left his liver on land. Back on the shore, he hops into the forest.",
+            "captionEn": "The clever rabbit escapes",
+            "line": {
+              "ko": "토끼는 간을 육지에 두고 왔다고 해요.",
+              "romanization": "Tokkineun ganeul yukjie dugo watdago haeyo.",
+              "en": "The rabbit says he left his liver on land.",
+              "speaker": "narrator"
+            },
+            "factIds": [
+              "f10"
+            ],
+            "framing": false,
+            "approximations": [],
+            "art": {
+              "setting": "scene:seashore",
+              "layers": [
+                {
+                  "ref": "prop:leafy-tree",
+                  "x": 58,
+                  "y": 250,
+                  "s": 1.5,
+                  "z": "back"
+                },
+                {
+                  "ref": "prop:leafy-tree",
+                  "x": 126,
+                  "y": 232,
+                  "s": 1.1,
+                  "z": "back"
+                },
+                {
+                  "ref": "prop:rabbit",
+                  "x": 180,
+                  "y": 264,
+                  "s": 1.5,
+                  "flip": true
+                },
+                {
+                  "ref": "prop:turtle",
+                  "x": 296,
+                  "y": 210,
+                  "s": 0.9
+                },
+                {
+                  "ref": "hoya:cheering",
+                  "x": 336,
+                  "y": 296,
+                  "s": 0.68
+                }
+              ],
+              "altEn": "Back on the shore the clever rabbit hops off into the forest, the turtle watches from the waves, and Hoya cheers."
+            }
+          }
+        ],
+        "checks": [
+          {
+            "id": "r1",
+            "kind": "pick-meaning",
+            "promptEn": "What does {target} mean?",
+            "target": {
+              "ko": "제비",
+              "romanization": "jebi",
+              "en": "swallow (bird)"
+            },
+            "options": [
+              {
+                "id": "a",
+                "en": "Rabbit",
+                "isCorrect": false
+              },
+              {
+                "id": "b",
+                "en": "Turtle",
+                "isCorrect": false
+              },
+              {
+                "id": "c",
+                "en": "Swallow",
+                "isCorrect": true
+              },
+              {
+                "id": "d",
+                "en": "Gourd",
+                "isCorrect": false
+              }
+            ],
+            "explainEn": "Jebi means swallow, a small bird. Heungbu helps a hurt swallow.",
+            "factIds": [
+              "f5"
+            ]
+          },
+          {
+            "id": "r2",
+            "kind": "pick-meaning",
+            "promptEn": "What does {target} mean?",
+            "target": {
+              "ko": "토끼",
+              "romanization": "tokki",
+              "en": "rabbit"
+            },
+            "options": [
+              {
+                "id": "a",
+                "en": "Rabbit",
+                "isCorrect": true
+              },
+              {
+                "id": "b",
+                "en": "Tiger",
+                "isCorrect": false
+              },
+              {
+                "id": "c",
+                "en": "Turtle",
+                "isCorrect": false
+              },
+              {
+                "id": "d",
+                "en": "Swallow",
+                "isCorrect": false
+              }
+            ],
+            "explainEn": "Tokki means rabbit. The clever rabbit escapes from the sea palace.",
+            "factIds": [
+              "f9"
+            ]
+          },
+          {
+            "id": "r3",
+            "kind": "detail",
+            "promptEn": "In the story, what came out of Heungbu's gourds?",
+            "options": [
+              {
+                "id": "a",
+                "en": "Only seeds",
+                "isCorrect": false
+              },
+              {
+                "id": "b",
+                "en": "Money, rice and treasures",
+                "isCorrect": true
+              },
+              {
+                "id": "c",
+                "en": "Water",
+                "isCorrect": false
+              },
+              {
+                "id": "d",
+                "en": "More swallows",
+                "isCorrect": false
+              }
+            ],
+            "explainEn": "When Heungbu's family sawed the gourds open, money, rice and treasures poured out.",
+            "factIds": [
+              "f6"
+            ]
+          }
+        ],
+        "checkpoints": [],
+        "sequenceSceneIds": [
+          "s1",
+          "s3",
+          "s7",
+          "s8"
+        ],
+        "newKeywordIds": [
+          "pansori",
+          "jebi",
+          "bak",
+          "tokki"
+        ],
+        "grammarFocusEn": "-a/-eo jwoyo (do for someone); -dago haeyo (says that)"
       }
     ],
     "coverSceneId": "s1",
@@ -13377,7 +16376,7 @@ export const storiesAll: Story[] = [
       "passes": 3,
       "checkedAt": "2026-10-10",
       "scope": "cluster",
-      "notes": "Third independent pass over 6 episodes / 61 facts / 161 source entries (70 unique URLs). Every URL was re-fetched with my own scripts (UNESCO pages via Wayback copies; heritage.go.kr descriptions via the portal ajax html and khs.go.kr open API; folkency via its JSON API) and each quote or locator was machine-matched to the page text; the few non-matching strings were checked by hand (portal metadata fields, hanja or footnote punctuation, label text). Corrections: (1) pansori scene 2 now gives both UNESCO steps (2003 masterpiece proclamation, 2008 Representative List); (2) pansori f11 states the Aesop title as in the cited Townsend text and the common alternate title; (3) added sources: NFM 놀보박타령 for 'greedy' (f5), 표준국어대사전 타다 for 'sawed' (f6), 한국민족문화대백과사전 선도해 for the Samguk sagi tale (f12); (4) Seollal f9/f10 designation-date locators now cite the KHS open API field. No other change. See seasons-tales.signoff.md. MAR 2026-10-13 language review (F-STORY-001 PR 1.9): Korean strings, romanization and glosses read; findings and outcomes in the PR. MAR 2026-10-13 culture review (F-STORY-001 PR 1.9): heritage accuracy, framing, tone and advisories read; review.advisory confirmed; findings and outcomes in the PR."
+      "notes": "Third independent pass over 6 episodes / 61 facts / 161 source entries (70 unique URLs). Every URL was re-fetched with my own scripts (UNESCO pages via Wayback copies; heritage.go.kr descriptions via the portal ajax html and khs.go.kr open API; folkency via its JSON API) and each quote or locator was machine-matched to the page text; the few non-matching strings were checked by hand (portal metadata fields, hanja or footnote punctuation, label text). Corrections: (1) pansori scene 2 now gives both UNESCO steps (2003 masterpiece proclamation, 2008 Representative List); (2) pansori f11 states the Aesop title as in the cited Townsend text and the common alternate title; (3) added sources: NFM 놀보박타령 for 'greedy' (f5), 표준국어대사전 타다 for 'sawed' (f6), 한국민족문화대백과사전 선도해 for the Samguk sagi tale (f12); (4) Seollal f9/f10 designation-date locators now cite the KHS open API field. No other change. See seasons-tales.signoff.md. MAR 2026-10-13 language review (F-STORY-001 PR 1.9): Korean strings, romanization and glosses read; findings and outcomes in the PR. MAR 2026-10-13 culture review (F-STORY-001 PR 1.9): heritage accuracy, framing, tone and advisories read; review.advisory confirmed; findings and outcomes in the PR. MAR 2026-10-13 language review of the read tier (F-STORY-005 PR 5.6): 5 Korean lines, their romanization (machine-checked) and glosses read for spelling, naturalness and Stage 5 level; 1 change (s1 pansorieseoneun, so the topic and subject agree); findings and outcomes in the PR. MAR 2026-10-13 culture review of the read tier (F-STORY-005 PR 5.6): every line and check compared with its cited facts (no new claim), framing, tone and respectful wording read; no change; told as traditional tales (In the tale); review.advisory unchanged; findings and outcomes in the PR."
     },
     "authorNotes": "REVISED 2026-10-10. Traditional stories: narration describes the tales' content (basic plot per the Encyclopedia of Korean Culture and the National Folk Museum's folk-literature dictionary), not history. Names: the pansori work is 흥보가 (Heungbo/Nolbo) and the novel is 흥부전 (Heungbu/Nolbu); narration uses Heungbu/Nolbu. Ending: the repentance/reconciliation is in the basic plot of the novel Heungbu-jeon (E0066012) AND in the Park Bong-sul and Jeong Gwang-su sung texts (한국민속문학사전 '놀보박타령'); the Encyclopedia's Heungboga entry itself says only that Nolbo is ruined; endings differ (e.g. the 경판본 version ends differently; 신재효's text is described as similar to Jeong Gwang-su's), so narration says 'In well-known versions'. Softened on purpose: Heungbu being beaten and his paid stand-in beatings (매품팔이); Nolbu breaking the swallow's leg is shown only as 'hurt a swallow on purpose'; harmful things from Nolbu's gourds not detailed. Rabbit tale: 'liver' kept because the plot needs it, with a reassurance line right after; the turtle's fate (dies on land or returns empty-handed; in some versions the rabbit's droppings cure the king) is left out. 별주부 (鼈主簿) is the turtle's title, not a name; the 도사 is a sage (道士: one who cultivates the Way). The Korean tale is explicitly distinguished from Aesop's race (summary, scene 6, reference_display, f11). 구토지설: 한국민속문학사전 '수궁가' says Sugungga's frame is the 구토지설 told by Seon Do-hae to Kim Chun-chu and recorded in the Samguk sagi's biographies; the Encyclopedia ('토끼전') names the 구토 tale in the Kim Yu-sin biography as a documented example - narration says only 'an early form is recorded in the Samguk sagi'. Both sources note the older Indian Buddhist (Jataka) roots; not used. 추임새 is now taught in scene 2 and added to vocab (형제 dropped from vocab; it remains the scene 5 Korean word). Combined in one episode to keep the cluster at 6. Theme 'crafts' because the app files performing arts under Play & Crafts. FINAL PASS (3rd check, 2026-10-10): scene 2 now says UNESCO named pansori a masterpiece in 2003 and added it to the Representative List in 2008 (UNESCO page: inscribed 2008, originally proclaimed 2003). f11 now gives the Aesop title as in the cited Townsend text ('The Hare and the Tortoise', also known as 'The Tortoise and the Hare'). 'Greedy' for Nolbu rests on the NFM 놀보박타령 entry, which was added to f5. AUTHORING 2026-10-11 (F-STORY-001 PR 1.8d): title romanization, scene captions and check explanations written from the cited facts; every scene is artPending (text-only tile) until the art PRs; no claim or source changed. Fact scope: f1-f3, f5, f8 (the works and novels), f11 and f12 are documented; f6, f7, f9, f10 (plot) are in-the-tale. 'Let's hear two' (s2) carries an approximation entry. Advisory note now names the hurt swallow. REVIEW 2026-10-11 (PR 1.8d): narration spells Heungbujeon, Tokkijeon; s3 'One day' (rescue undated); s5 follows f7; s6-s8 past tense; PR #208 fixes: s6 caption drops 'loyal' (f8); 'the rabbit' in s7-s8.",
     "errata": []
@@ -13386,7 +16385,7 @@ export const storiesAll: Story[] = [
     "v": 1,
     "id": "story:sejong-new-letters",
     "state": "ready",
-    "contentVer": 3,
+    "contentVer": 4,
     "title": {
       "ko": "세종대왕의 새 글자",
       "romanization": "Sejongdaewangui sae geulja",
@@ -13973,6 +16972,421 @@ export const storiesAll: Story[] = [
           "jiphyeonjeon",
           "hangeul"
         ]
+      },
+      {
+        "level": "read",
+        "scenes": [
+          {
+            "id": "s1",
+            "narrationEn": "{kw:sejong-daewang} was the fourth king of the Joseon dynasty.",
+            "captionEn": "King Sejong, a king of Joseon",
+            "line": {
+              "ko": "세종대왕은 조선의 왕이었어요.",
+              "romanization": "Sejongdaewangeun joseonui wangieosseoyo.",
+              "en": "King Sejong the Great was a king of Joseon.",
+              "speaker": "narrator"
+            },
+            "factIds": [
+              "f1"
+            ],
+            "framing": false,
+            "approximations": [],
+            "art": {
+              "setting": "scene:palace-courtyard",
+              "layers": [
+                {
+                  "ref": "prop:glow-burst",
+                  "x": 110,
+                  "y": 290,
+                  "s": 0.8
+                },
+                {
+                  "ref": "prop:book-open",
+                  "x": 110,
+                  "y": 288,
+                  "s": 1.2
+                },
+                {
+                  "ref": "hoya:waving",
+                  "x": 112,
+                  "y": 246,
+                  "s": 0.6
+                },
+                {
+                  "ref": "prop:fig-king",
+                  "x": 272,
+                  "y": 262,
+                  "s": 1.1
+                }
+              ],
+              "altEn": "Hoya steps out of a glowing open book into a Joseon palace courtyard, where King Sejong stands in his royal robe."
+            }
+          },
+          {
+            "id": "s2",
+            "narrationEn": "Before Hangul, Korean was written with {kw:hanja}, Chinese characters that were hard to learn.",
+            "captionEn": "Writing with hard Chinese characters",
+            "line": {
+              "ko": "옛날에는 한자로 글을 썼어요.",
+              "romanization": "Yennareneun hanjaro geureul sseosseoyo.",
+              "en": "Long ago, people wrote with Chinese characters (hanja).",
+              "speaker": "narrator"
+            },
+            "factIds": [
+              "f2"
+            ],
+            "framing": false,
+            "approximations": [],
+            "art": {
+              "setting": "scene:village-lane",
+              "layers": [
+                {
+                  "ref": "prop:fig-villager",
+                  "x": 116,
+                  "y": 270,
+                  "s": 1,
+                  "tint": "surface.paper"
+                },
+                {
+                  "ref": "prop:sheet-cursive",
+                  "x": 184,
+                  "y": 236,
+                  "s": 0.9
+                },
+                {
+                  "ref": "prop:fig-child",
+                  "x": 244,
+                  "y": 274,
+                  "s": 0.9
+                },
+                {
+                  "ref": "hoya:thinking",
+                  "x": 312,
+                  "y": 286,
+                  "s": 0.65
+                }
+              ],
+              "altEn": "In a village lane a farmer and a child puzzle over a sheet of hard borrowed characters, and Hoya scratches his head."
+            }
+          },
+          {
+            "id": "s3",
+            "narrationEn": "In 1443, King Sejong himself created 28 new letters, {kw:sae-geulja}.",
+            "captionEn": "King Sejong makes new letters",
+            "line": {
+              "ko": "세종대왕이 새 글자를 만들었어요.",
+              "romanization": "Sejongdaewangi sae geuljareul mandeureosseoyo.",
+              "en": "King Sejong made new letters.",
+              "speaker": "narrator"
+            },
+            "factIds": [
+              "f3"
+            ],
+            "framing": false,
+            "approximations": [],
+            "art": {
+              "setting": "scene:hanok-room",
+              "layers": [
+                {
+                  "ref": "prop:oil-lamp",
+                  "x": 86,
+                  "y": 252,
+                  "s": 1.2
+                },
+                {
+                  "ref": "prop:stroke-sparks",
+                  "x": 205,
+                  "y": 150,
+                  "s": 0.9
+                },
+                {
+                  "ref": "prop:fig-king-seated",
+                  "x": 200,
+                  "y": 282,
+                  "s": 1.4
+                },
+                {
+                  "ref": "hoya:thinking",
+                  "x": 322,
+                  "y": 292,
+                  "s": 0.6
+                }
+              ],
+              "altEn": "By lamplight King Sejong writes as simple dots, strokes and circles float up like sparks, and Hoya peeks in with wide eyes."
+            }
+          },
+          {
+            "id": "s4",
+            "narrationEn": "He named the letters {kw:hunminjeongeum}. {kw:baekseong} is an old word for the common people.",
+            "captionEn": "The meaning of Hunminjeongeum",
+            "line": {
+              "ko": "훈민정음은 백성을 가르치는 바른 소리라는 뜻이에요.",
+              "romanization": "Hunminjeongeumeun baekseongeul gareuchineun bareun soriraneun tteusieyo.",
+              "en": "Hunminjeongeum means \"the proper sounds for teaching the people.\"",
+              "speaker": "narrator"
+            },
+            "factIds": [
+              "f4"
+            ],
+            "framing": false,
+            "approximations": [],
+            "art": {
+              "setting": "scene:village-lane",
+              "layers": [
+                {
+                  "ref": "prop:fig-villager",
+                  "x": 100,
+                  "y": 268,
+                  "s": 1
+                },
+                {
+                  "ref": "prop:blank-sheet",
+                  "x": 150,
+                  "y": 214,
+                  "s": 0.7
+                },
+                {
+                  "ref": "prop:fig-grandmother",
+                  "x": 205,
+                  "y": 268,
+                  "s": 1
+                },
+                {
+                  "ref": "prop:blank-sheet",
+                  "x": 252,
+                  "y": 216,
+                  "s": 0.7
+                },
+                {
+                  "ref": "prop:fig-child",
+                  "x": 292,
+                  "y": 274,
+                  "s": 0.9
+                },
+                {
+                  "ref": "prop:fig-child",
+                  "x": 350,
+                  "y": 278,
+                  "s": 0.8,
+                  "tint": "theme.nature"
+                }
+              ],
+              "altEn": "On a sunny village street a merchant, a grandmother and two children gather by small blank sheets of paper they can now write on."
+            }
+          },
+          {
+            "id": "s5",
+            "narrationEn": "King Sejong made the letters so that people could learn them easily and use them every day.",
+            "captionEn": "Letters that are easy to learn",
+            "line": {
+              "ko": "새 글자는 배우기 쉬워요.",
+              "romanization": "Sae geuljaneun baeugi swiwoyo.",
+              "en": "The new letters are easy to learn.",
+              "speaker": "narrator"
+            },
+            "factIds": [
+              "f5"
+            ],
+            "framing": false,
+            "approximations": [],
+            "art": {
+              "setting": "scene:palace-courtyard",
+              "layers": [
+                {
+                  "ref": "prop:glow-burst",
+                  "x": 64,
+                  "y": 96,
+                  "s": 0.6
+                },
+                {
+                  "ref": "hoya:idle",
+                  "x": 140,
+                  "y": 288,
+                  "s": 0.7
+                },
+                {
+                  "ref": "prop:blank-sheet",
+                  "x": 180,
+                  "y": 290,
+                  "s": 0.8
+                },
+                {
+                  "ref": "prop:fig-scholar",
+                  "x": 310,
+                  "y": 272,
+                  "s": 1
+                }
+              ],
+              "altEn": "As the morning sun rises over the palace, Hoya stands beside a blank sheet of paper while a scholar in a black gat watches kindly."
+            }
+          },
+          {
+            "id": "s7",
+            "narrationEn": "Today we call King Sejong's letters {kw:hangeul}.",
+            "captionEn": "Today they are called Hangul",
+            "line": {
+              "ko": "오늘날 이 글자를 한글이라고 해요.",
+              "romanization": "Oneullal i geuljareul hangeurirago haeyo.",
+              "en": "Today these letters are called Hangul.",
+              "speaker": "narrator"
+            },
+            "factIds": [
+              "f9"
+            ],
+            "framing": false,
+            "approximations": [],
+            "art": {
+              "setting": "scene:modern-room",
+              "layers": [
+                {
+                  "ref": "prop:fig-modern",
+                  "x": 176,
+                  "y": 280,
+                  "s": 0.75,
+                  "tint": "theme.letters"
+                },
+                {
+                  "ref": "prop:desk-low",
+                  "x": 256,
+                  "y": 290,
+                  "s": 0.75
+                },
+                {
+                  "ref": "prop:writing-lines",
+                  "x": 256,
+                  "y": 250,
+                  "s": 0.55
+                },
+                {
+                  "ref": "hoya:waving",
+                  "x": 92,
+                  "y": 288,
+                  "s": 0.5
+                }
+              ],
+              "altEn": "Today Hoya waves beside a child at a little desk with a notebook, because people in Korea read and write Hangul every day."
+            }
+          }
+        ],
+        "checks": [
+          {
+            "id": "r1",
+            "kind": "pick-meaning",
+            "promptEn": "What does {target} mean?",
+            "target": {
+              "ko": "글자",
+              "romanization": "geulja",
+              "en": "letter"
+            },
+            "options": [
+              {
+                "id": "a",
+                "en": "A king",
+                "isCorrect": false
+              },
+              {
+                "id": "b",
+                "en": "A letter",
+                "isCorrect": true
+              },
+              {
+                "id": "c",
+                "en": "A book",
+                "isCorrect": false
+              },
+              {
+                "id": "d",
+                "en": "A scholar",
+                "isCorrect": false
+              }
+            ],
+            "explainEn": "Geulja means letter. King Sejong made 28 new letters.",
+            "factIds": [
+              "f3"
+            ]
+          },
+          {
+            "id": "r2",
+            "kind": "pick-meaning",
+            "promptEn": "What does {target} mean?",
+            "target": {
+              "ko": "백성",
+              "romanization": "baekseong",
+              "en": "the common people"
+            },
+            "options": [
+              {
+                "id": "a",
+                "en": "A king",
+                "isCorrect": false
+              },
+              {
+                "id": "b",
+                "en": "A new book",
+                "isCorrect": false
+              },
+              {
+                "id": "c",
+                "en": "The common people",
+                "isCorrect": true
+              },
+              {
+                "id": "d",
+                "en": "A teacher",
+                "isCorrect": false
+              }
+            ],
+            "explainEn": "Baekseong is an old word for the common people.",
+            "factIds": [
+              "f4"
+            ]
+          },
+          {
+            "id": "r3",
+            "kind": "detail",
+            "promptEn": "In the story, what are the new letters called today?",
+            "options": [
+              {
+                "id": "a",
+                "en": "Hangul",
+                "isCorrect": true
+              },
+              {
+                "id": "b",
+                "en": "Hanja",
+                "isCorrect": false
+              },
+              {
+                "id": "c",
+                "en": "Haerye",
+                "isCorrect": false
+              },
+              {
+                "id": "d",
+                "en": "Sillok",
+                "isCorrect": false
+              }
+            ],
+            "explainEn": "Today King Sejong's letters are called Hangul.",
+            "factIds": [
+              "f9"
+            ]
+          }
+        ],
+        "checkpoints": [],
+        "sequenceSceneIds": [
+          "s1",
+          "s3",
+          "s5",
+          "s7"
+        ],
+        "newKeywordIds": [
+          "sejong-daewang",
+          "hanja",
+          "sae-geulja",
+          "hunminjeongeum"
+        ],
+        "grammarFocusEn": "Past -asseoyo/-eosseoyo for what happened; -irago haeyo (is called)"
       }
     ],
     "coverSceneId": "s1",
@@ -14255,7 +17669,7 @@ export const storiesAll: Story[] = [
       "passes": 3,
       "checkedAt": "2026-10-10",
       "scope": "cluster",
-      "notes": "Third independent pass. Every cited URL for all 6 episodes (52 facts) was re-opened (UNESCO pages via Wayback copies when the live site resets connections) and quotes/locators were compared; the one exception is unesco.org/en/prizes/literacy (unreachable from here; its claim is now also backed by a Korean MCST press release). Eight minimal corrections were made: (1) Hangeul Day f3 no longer says 'Gregorian' (no cited source says the October 9 conversion was Gregorian; encykorea separates Julian/Gregorian only for 1932-45) and dates the October 29/28 observances; (2) f10 gains a third source (SBS 2018 with 국립한글박물관 curator); (3) Shapes scene 8, learning goal and f7 now say 'South Korea's spelling rules' count 24 (North Korea counts 40, 국립한글박물관 webzine 59); (4) Sejong scene 4/f4: 백성 is 'an old-fashioned word' with 표준국어대사전 added; (5) Jikji f8 quote no longer repeats a prize amount that differs between UNESCO page versions; (6) Tripitaka f6 wood and corner plates now have two further sources (정책브리핑; 박상진 wood-identification study); (8) Hangeul Day f9 gains a second source (문화체육관광부 press release); (7) Panjeon scene 8/f9: 'visitors cannot walk inside' replaced by 'visitor entry is restricted' because Haeinsa has run pre-booked tours inside Beopbojeon since June 2021. See hangul-printing.signoff.md. MAR 2026-10-13 language review (F-STORY-001 PR 1.9): Korean strings, romanization and glosses read; findings and outcomes in the PR. MAR 2026-10-13 culture review (F-STORY-001 PR 1.9): heritage accuracy, framing, tone and advisories read; review.advisory confirmed; findings and outcomes in the PR."
+      "notes": "Third independent pass. Every cited URL for all 6 episodes (52 facts) was re-opened (UNESCO pages via Wayback copies when the live site resets connections) and quotes/locators were compared; the one exception is unesco.org/en/prizes/literacy (unreachable from here; its claim is now also backed by a Korean MCST press release). Eight minimal corrections were made: (1) Hangeul Day f3 no longer says 'Gregorian' (no cited source says the October 9 conversion was Gregorian; encykorea separates Julian/Gregorian only for 1932-45) and dates the October 29/28 observances; (2) f10 gains a third source (SBS 2018 with 국립한글박물관 curator); (3) Shapes scene 8, learning goal and f7 now say 'South Korea's spelling rules' count 24 (North Korea counts 40, 국립한글박물관 webzine 59); (4) Sejong scene 4/f4: 백성 is 'an old-fashioned word' with 표준국어대사전 added; (5) Jikji f8 quote no longer repeats a prize amount that differs between UNESCO page versions; (6) Tripitaka f6 wood and corner plates now have two further sources (정책브리핑; 박상진 wood-identification study); (8) Hangeul Day f9 gains a second source (문화체육관광부 press release); (7) Panjeon scene 8/f9: 'visitors cannot walk inside' replaced by 'visitor entry is restricted' because Haeinsa has run pre-booked tours inside Beopbojeon since June 2021. See hangul-printing.signoff.md. MAR 2026-10-13 language review (F-STORY-001 PR 1.9): Korean strings, romanization and glosses read; findings and outcomes in the PR. MAR 2026-10-13 culture review (F-STORY-001 PR 1.9): heritage accuracy, framing, tone and advisories read; review.advisory confirmed; findings and outcomes in the PR. MAR 2026-10-13 language review of the read tier (F-STORY-005 PR 5.6): 6 Korean lines, their romanization (machine-checked) and glosses read for spelling, naturalness and Stage 5 level; no change; findings and outcomes in the PR. MAR 2026-10-13 culture review of the read tier (F-STORY-005 PR 5.6): every line and check compared with its cited facts (no new claim), framing, tone and respectful wording read; no change; review.advisory unchanged; findings and outcomes in the PR."
     },
     "authorNotes": "Revised after two independent checks. 'Promulgation' wording removed from the narration and summary: the Sillok 1446/9 entry only records that Hunminjeongeum was completed ('是月, 訓民正音成'), and 국립국어원 says no official promulgation ceremony is recorded and that a September 1446 promulgation is unsupported; UNESCO, 국가유산포털 and 국립한글박물관 do use 'published/promulgated 1446', so f7 states both. Scene 2 now gives both reasons from Sejong's preface (Korean differs from Chinese; the characters were hard to learn). Scene 5 phrase fixed to 배우기 쉬워요 (baeugi swiwoyo, 'it's easy to learn'). The word 백성 now appears in scene 4 narration; scene 6 key word is 집현전. The 1443 and 1446 Sillok entries are month-end entries in the lunar calendar with no specific day (the 12th lunar month of Sejong 25 falls in early 1444 in the Gregorian calendar, but UNESCO, 국가유산포털 and encykorea all say 1443, so the story follows that convention). Scene 5 quotes only the first half of Jeong In-ji's line. The 'almost 600 years ago' wording is worked out from 1443. The companion 훈이 ('Sejong's cat' in BP04) was deliberately not used. Illustrations must not show a proclamation ceremony. Do not name a specific palace or a royal robe colour. f9: the 표준국어대사전 quotation could not be read (dynamic page) and was replaced by the UNESCO wording ('now called han-gul'); the 한국민족문화대백과사전 한글 entry also states the point. The 국가유산포털 description text quoted in f1, f7, f8 was re-read from the portal's description fragment (hub_img/html/cul_1111100700000) in the research folder. FINAL PASS (3rd check): scene 4 now says 'An old-fashioned word for the people is baekseong' and f4 cites 표준국어대사전 for 백성. All other facts re-verified unchanged. REVIEW PASS (PR 1.8b): learner prose writes the scholar's name Jeong Inji (F-CNT-002 rule 8); f6 and f8 keep the researched spelling Jeong In-ji. Check c3 options rebalanced so the answer is not the longest.",
     "errata": []
@@ -16436,7 +19850,7 @@ export const storiesAll: Story[] = [
     "v": 1,
     "id": "story:shapes-of-hangeul",
     "state": "ready",
-    "contentVer": 4,
+    "contentVer": 5,
     "title": {
       "ko": "한글 모양의 비밀",
       "romanization": "Hangeul moyangui bimil",
@@ -17051,6 +20465,352 @@ export const storiesAll: Story[] = [
           "ip",
           "mokgumeong"
         ]
+      },
+      {
+        "level": "read",
+        "scenes": [
+          {
+            "id": "s1",
+            "narrationEn": "The {kw:haeryebon}, made in 1446, explains how the letters were designed.",
+            "captionEn": "A book that explains the letters",
+            "line": {
+              "ko": "해례본은 글자를 풀이한 책이에요.",
+              "romanization": "Haeryeboneun geuljareul purihan chaegieyo.",
+              "en": "The Haerye edition is a book that explains the letters.",
+              "speaker": "narrator"
+            },
+            "factIds": [
+              "f1"
+            ],
+            "framing": false,
+            "approximations": [],
+            "art": {
+              "setting": "scene:hanok-room",
+              "layers": [
+                {
+                  "ref": "prop:glow-burst",
+                  "x": 216,
+                  "y": 250,
+                  "s": 0.9
+                },
+                {
+                  "ref": "prop:desk-low",
+                  "x": 216,
+                  "y": 290,
+                  "s": 1.3
+                },
+                {
+                  "ref": "prop:book-open",
+                  "x": 216,
+                  "y": 230,
+                  "s": 1.5
+                },
+                {
+                  "ref": "hoya:idle",
+                  "x": 82,
+                  "y": 290,
+                  "s": 0.7
+                }
+              ],
+              "altEn": "Hoya finds a very special old book, the Hunminjeongeum Haerye of 1446, lying open and glowing on a low table."
+            }
+          },
+          {
+            "id": "s2",
+            "narrationEn": "The five basic consonants copy the shapes of the parts of the body we speak with.",
+            "captionEn": "Consonants copy shapes of the body",
+            "line": {
+              "ko": "기본 자음은 소리 내는 곳의 모양을 본떴어요.",
+              "romanization": "Gibon jaeumeun sori naeneun gosui moyangeul bontteosseoyo.",
+              "en": "The basic consonants copy the shapes of the parts that make the sounds.",
+              "speaker": "narrator"
+            },
+            "factIds": [
+              "f2"
+            ],
+            "framing": false,
+            "approximations": [],
+            "art": {
+              "setting": "scene:hanji-backdrop",
+              "layers": [
+                {
+                  "ref": "prop:speech-g",
+                  "x": 190,
+                  "y": 262,
+                  "s": 1.5
+                },
+                {
+                  "ref": "hoya:waving",
+                  "x": 326,
+                  "y": 290,
+                  "s": 0.65
+                }
+              ],
+              "altEn": "Hoya waves beside a side-view picture of the mouth: the root of the tongue rises to close the throat, the shape behind the first letter."
+            }
+          },
+          {
+            "id": "s3",
+            "narrationEn": "{kw:jamo-m} copies the shape of the mouth, {kw:ip}.",
+            "captionEn": "Mieum copies the mouth",
+            "line": {
+              "ko": "입 모양을 본뜬 자음이 있어요.",
+              "romanization": "Ip moyangeul bontteun jaeumi isseoyo.",
+              "en": "One consonant copies the shape of the mouth.",
+              "speaker": "narrator"
+            },
+            "factIds": [
+              "f3"
+            ],
+            "framing": false,
+            "approximations": [],
+            "art": {
+              "setting": "scene:hanji-backdrop",
+              "layers": [
+                {
+                  "ref": "prop:speech-nm",
+                  "x": 180,
+                  "y": 236,
+                  "s": 1.4
+                },
+                {
+                  "ref": "hoya:cheering",
+                  "x": 340,
+                  "y": 294,
+                  "s": 0.55
+                }
+              ],
+              "altEn": "Two pictures: the tongue tip touching the upper gum, and a wide square mouth, while Hoya opens his own mouth wide."
+            }
+          },
+          {
+            "id": "s4",
+            "narrationEn": "{kw:jamo-silent-ng} copies the shape of the throat, {kw:mokgumeong}.",
+            "captionEn": "Ieung copies the throat",
+            "line": {
+              "ko": "목구멍 모양을 본뜬 자음도 있어요.",
+              "romanization": "Mokgumeong moyangeul bontteun jaeumdo isseoyo.",
+              "en": "Another consonant copies the shape of the throat.",
+              "speaker": "narrator"
+            },
+            "factIds": [
+              "f3"
+            ],
+            "framing": false,
+            "approximations": [],
+            "art": {
+              "setting": "scene:countryside",
+              "layers": [
+                {
+                  "ref": "prop:organ-stones",
+                  "x": 200,
+                  "y": 290,
+                  "s": 1.4
+                },
+                {
+                  "ref": "hoya:cheering",
+                  "x": 152,
+                  "y": 204,
+                  "s": 0.6
+                }
+              ],
+              "altEn": "Hoya hops across five stepping stones showing the tongue root, the tongue tip, the mouth, a tooth and the throat."
+            }
+          },
+          {
+            "id": "s5",
+            "narrationEn": "For a stronger sound, add a stroke, {kw:hoek}: {kw:jamo-n}, then {kw:jamo-d}, then {kw:jamo-t}.",
+            "captionEn": "Add a stroke for a stronger sound",
+            "line": {
+              "ko": "소리가 세게 나면 획을 더해요.",
+              "romanization": "Soriga sege namyeon hoegeul deohaeyo.",
+              "en": "When a sound is stronger, a stroke is added.",
+              "speaker": "narrator"
+            },
+            "factIds": [
+              "f4"
+            ],
+            "framing": false,
+            "approximations": [],
+            "art": {
+              "setting": "scene:hanji-backdrop",
+              "layers": [
+                {
+                  "ref": "prop:ribbon-trails",
+                  "x": 236,
+                  "y": 196,
+                  "s": 2.2
+                },
+                {
+                  "ref": "hoya:cheering",
+                  "x": 80,
+                  "y": 290,
+                  "s": 0.7
+                }
+              ],
+              "altEn": "Hoya swishes his tail and leaves three glowing trails in the air, each with one more line than the last."
+            }
+          },
+          {
+            "id": "s6",
+            "narrationEn": "The basic vowels copy the sky, {kw:haneul}, the earth, {kw:ttang}, and a person, {kw:saram}.",
+            "captionEn": "Vowels: sky, earth and a person",
+            "line": {
+              "ko": "기본 모음은 하늘, 땅, 사람을 본떴어요.",
+              "romanization": "Gibon moeumeun haneul ttang sarameul bontteosseoyo.",
+              "en": "The basic vowels copy the sky, the earth and a person.",
+              "speaker": "narrator"
+            },
+            "factIds": [
+              "f5"
+            ],
+            "framing": false,
+            "approximations": [],
+            "art": {
+              "setting": "scene:countryside",
+              "layers": [
+                {
+                  "ref": "prop:glow-burst",
+                  "x": 110,
+                  "y": 128,
+                  "s": 0.5
+                },
+                {
+                  "ref": "prop:fig-child",
+                  "x": 230,
+                  "y": 276,
+                  "s": 1.2
+                },
+                {
+                  "ref": "hoya:idle",
+                  "x": 312,
+                  "y": 286,
+                  "s": 0.6
+                }
+              ],
+              "altEn": "A round dot shining in the round sky, the flat earth and a child standing tall: sky, earth and person, the ideas behind three vowels."
+            }
+          }
+        ],
+        "checks": [
+          {
+            "id": "r1",
+            "kind": "pick-meaning",
+            "promptEn": "What does {target} mean?",
+            "target": {
+              "ko": "입",
+              "romanization": "ip",
+              "en": "mouth"
+            },
+            "options": [
+              {
+                "id": "a",
+                "en": "Throat",
+                "isCorrect": false
+              },
+              {
+                "id": "b",
+                "en": "Mouth",
+                "isCorrect": true
+              },
+              {
+                "id": "c",
+                "en": "Sky",
+                "isCorrect": false
+              },
+              {
+                "id": "d",
+                "en": "Person",
+                "isCorrect": false
+              }
+            ],
+            "explainEn": "Ip means mouth. The letter mieum copies the shape of the mouth.",
+            "factIds": [
+              "f3"
+            ]
+          },
+          {
+            "id": "r2",
+            "kind": "pick-meaning",
+            "promptEn": "What does {target} mean?",
+            "target": {
+              "ko": "하늘",
+              "romanization": "haneul",
+              "en": "sky"
+            },
+            "options": [
+              {
+                "id": "a",
+                "en": "Earth",
+                "isCorrect": false
+              },
+              {
+                "id": "b",
+                "en": "Person",
+                "isCorrect": false
+              },
+              {
+                "id": "c",
+                "en": "Stroke",
+                "isCorrect": false
+              },
+              {
+                "id": "d",
+                "en": "Sky",
+                "isCorrect": true
+              }
+            ],
+            "explainEn": "Haneul means sky. A round dot copies the round sky.",
+            "factIds": [
+              "f5"
+            ]
+          },
+          {
+            "id": "r3",
+            "kind": "detail",
+            "promptEn": "In the story, what is added to a letter for a stronger sound?",
+            "options": [
+              {
+                "id": "a",
+                "en": "A stroke",
+                "isCorrect": true
+              },
+              {
+                "id": "b",
+                "en": "A dot",
+                "isCorrect": false
+              },
+              {
+                "id": "c",
+                "en": "A circle",
+                "isCorrect": false
+              },
+              {
+                "id": "d",
+                "en": "A vowel",
+                "isCorrect": false
+              }
+            ],
+            "explainEn": "For a stronger sound a stroke is added: nieun, then digeut, then tieut.",
+            "factIds": [
+              "f4"
+            ]
+          }
+        ],
+        "checkpoints": [],
+        "sequenceSceneIds": [
+          "s2",
+          "s4",
+          "s5",
+          "s6"
+        ],
+        "newKeywordIds": [
+          "ip",
+          "mokgumeong",
+          "hoek",
+          "haneul"
+        ],
+        "grammarFocusEn": "-eul/-reul bontteosseoyo (copied the shape of); -myeon (when)"
       }
     ],
     "coverSceneId": "s1",
@@ -17310,7 +21070,7 @@ export const storiesAll: Story[] = [
       "passes": 3,
       "checkedAt": "2026-10-10",
       "scope": "cluster",
-      "notes": "Third independent pass. Every cited URL for all 6 episodes (52 facts) was re-opened (UNESCO pages via Wayback copies when the live site resets connections) and quotes/locators were compared; the one exception is unesco.org/en/prizes/literacy (unreachable from here; its claim is now also backed by a Korean MCST press release). Eight minimal corrections were made: (1) Hangeul Day f3 no longer says 'Gregorian' (no cited source says the October 9 conversion was Gregorian; encykorea separates Julian/Gregorian only for 1932-45) and dates the October 29/28 observances; (2) f10 gains a third source (SBS 2018 with 국립한글박물관 curator); (3) Shapes scene 8, learning goal and f7 now say 'South Korea's spelling rules' count 24 (North Korea counts 40, 국립한글박물관 webzine 59); (4) Sejong scene 4/f4: 백성 is 'an old-fashioned word' with 표준국어대사전 added; (5) Jikji f8 quote no longer repeats a prize amount that differs between UNESCO page versions; (6) Tripitaka f6 wood and corner plates now have two further sources (정책브리핑; 박상진 wood-identification study); (8) Hangeul Day f9 gains a second source (문화체육관광부 press release); (7) Panjeon scene 8/f9: 'visitors cannot walk inside' replaced by 'visitor entry is restricted' because Haeinsa has run pre-booked tours inside Beopbojeon since June 2021. See hangul-printing.signoff.md. MAR 2026-10-13 language review (F-STORY-001 PR 1.9): Korean strings, romanization and glosses read; findings and outcomes in the PR. MAR 2026-10-13 culture review (F-STORY-001 PR 1.9): heritage accuracy, framing, tone and advisories read; review.advisory confirmed; findings and outcomes in the PR. MAR 2026-10-13 culture review: f8 added for the story card, a restatement of f2 without the letters, with the same sources."
+      "notes": "Third independent pass. Every cited URL for all 6 episodes (52 facts) was re-opened (UNESCO pages via Wayback copies when the live site resets connections) and quotes/locators were compared; the one exception is unesco.org/en/prizes/literacy (unreachable from here; its claim is now also backed by a Korean MCST press release). Eight minimal corrections were made: (1) Hangeul Day f3 no longer says 'Gregorian' (no cited source says the October 9 conversion was Gregorian; encykorea separates Julian/Gregorian only for 1932-45) and dates the October 29/28 observances; (2) f10 gains a third source (SBS 2018 with 국립한글박물관 curator); (3) Shapes scene 8, learning goal and f7 now say 'South Korea's spelling rules' count 24 (North Korea counts 40, 국립한글박물관 webzine 59); (4) Sejong scene 4/f4: 백성 is 'an old-fashioned word' with 표준국어대사전 added; (5) Jikji f8 quote no longer repeats a prize amount that differs between UNESCO page versions; (6) Tripitaka f6 wood and corner plates now have two further sources (정책브리핑; 박상진 wood-identification study); (8) Hangeul Day f9 gains a second source (문화체육관광부 press release); (7) Panjeon scene 8/f9: 'visitors cannot walk inside' replaced by 'visitor entry is restricted' because Haeinsa has run pre-booked tours inside Beopbojeon since June 2021. See hangul-printing.signoff.md. MAR 2026-10-13 language review (F-STORY-001 PR 1.9): Korean strings, romanization and glosses read; findings and outcomes in the PR. MAR 2026-10-13 culture review (F-STORY-001 PR 1.9): heritage accuracy, framing, tone and advisories read; review.advisory confirmed; findings and outcomes in the PR. MAR 2026-10-13 culture review: f8 added for the story card, a restatement of f2 without the letters, with the same sources. MAR 2026-10-13 language review of the read tier (F-STORY-005 PR 5.6): 6 Korean lines, their romanization (machine-checked) and glosses read for spelling, naturalness and Stage 5 level; 2 changes (s2 sori naeneun gos-ui moyang, the parts that make the sounds, not the whole body; s5 sege namyeon, clearer than semyeon); findings and outcomes in the PR. MAR 2026-10-13 culture review of the read tier (F-STORY-005 PR 5.6): every line and check compared with its cited facts (no new claim), framing, tone and respectful wording read; no change; review.advisory unchanged; findings and outcomes in the PR."
     },
     "authorNotes": "The letter-shape explanations follow the Haerye's 'Jejahae' (제자해) as summarized by 한국민족문화대백과사전. The Haerye's yin-yang and five-elements philosophy is left out as too advanced. The add-a-stroke rule has exceptions (ㆁ, ㄹ, ㅿ, per 한국민족문화대백과사전), so the narration gives only the ㄴ→ㄷ→ㅌ example. The narration says 'a few old ones are no longer used' rather than naming exactly four, because ㆁ merged with ㅇ rather than disappearing. The 국립국어원 essay (004d/004g) notes that a few details of the design principle are still debated among scholars; the story keeps to the consensus points. Because illustrations must contain no text, the app should overlay the jamo (ㄱ, ㄴ, ㅏ and so on) as UI text on the scene art. REVISED: the shape descriptions now follow the Haerye wording exactly (ㄱ = root of the tongue closing the throat, 象舌根閉喉之形; ㄴ = tongue touching the upper gum, 象舌附上腭之形) and no longer promise a physical sensation or add modern phonetics ('back of the tongue blocks the throat', 'ridge behind the upper teeth' removed; narration and illustration). The summary now says 'five basic consonants' (only ㄱ ㄴ ㅁ ㅅ ㅇ copy speech organs; others add strokes). Scene 2 no longer lists 'lips' (the Haerye names tongue root, tongue, mouth, tooth, throat). Vocab 혀 removed because no scene shows it. FINAL PASS (3rd check): scene 8, goal 4 and f7 now say South Korea's spelling rules count 24 (North Korea's norms count 40). The ㄴ wording follows the standard Korean rendering of 象舌附上腭之形 ('tongue touching the upper gum'); the Chinese 上腭 literally means the upper palate/jaw, so no finer anatomical claim is made. REVIEW PASS (PR 1.8b): the old vowel arae-a is named 'the round dot' in learner text, never typed as a bare middle dot (screen readers skip it); the art overlay draws it. REVIEW FIX (PR 1.8b round 2): isolated jamo use the F-CNT-002 C6 sound-value table: ㄱ 'g/k' and ㄷ 'd/t' in keywords, the s2 keyword, the c3 target and the learning goals (ㅇ already 'silent/ng'). The goal glosses are modern reading aids; in the Haerye the throat letter ㅇ was the null letter and ng was written with the separate letter ㆁ, which the narration does not claim otherwise.",
     "errata": []
@@ -19030,7 +22790,7 @@ export const storiesAll: Story[] = [
     "v": 1,
     "id": "story:sun-and-moon",
     "state": "ready",
-    "contentVer": 4,
+    "contentVer": 5,
     "title": {
       "ko": "해님 달님",
       "romanization": "Haenim Dallim",
@@ -19644,6 +23404,395 @@ export const storiesAll: Story[] = [
           "horangi",
           "susu"
         ]
+      },
+      {
+        "level": "read",
+        "scenes": [
+          {
+            "id": "s1",
+            "narrationEn": "{kw:haenim-dallim} is an old Korean folk tale, told in many versions. Our retelling is gentle.",
+            "captionEn": "An old folk tale",
+            "line": {
+              "ko": "해님 달님은 오래된 이야기예요.",
+              "romanization": "Haenim dallimeun oraedoen iyagiyeyo.",
+              "en": "Haenim Dallim is an old story.",
+              "speaker": "narrator"
+            },
+            "factIds": [
+              "f1"
+            ],
+            "framing": false,
+            "approximations": [],
+            "art": {
+              "setting": "scene:hanok-room",
+              "layers": [
+                {
+                  "ref": "prop:sun-moon-screen",
+                  "x": 200,
+                  "y": 232,
+                  "s": 1.4,
+                  "z": "back"
+                },
+                {
+                  "ref": "hoya:idle",
+                  "x": 200,
+                  "y": 294,
+                  "s": 0.9
+                }
+              ],
+              "altEn": "Hoya is ready for story time in front of a folding screen painted with the sun, the moon and five peaks."
+            }
+          },
+          {
+            "id": "s3",
+            "narrationEn": "In the tale, a tiger goes to the house of a brother and sister, {kw:onui}, pretending to be their mother.",
+            "captionEn": "The tiger pretends to be Mother",
+            "line": {
+              "ko": "호랑이가 엄마인 척해요.",
+              "romanization": "Horangiga eommain cheokaeyo.",
+              "en": "The tiger pretends to be Mother.",
+              "speaker": "narrator"
+            },
+            "factIds": [
+              "f3"
+            ],
+            "framing": false,
+            "approximations": [],
+            "art": {
+              "setting": "scene:hanok-room",
+              "layers": [
+                {
+                  "ref": "prop:fig-child",
+                  "x": 150,
+                  "y": 286,
+                  "s": 1.4
+                },
+                {
+                  "ref": "prop:fig-child",
+                  "x": 222,
+                  "y": 286,
+                  "s": 1.3,
+                  "tint": "brand.secondaryLight"
+                }
+              ],
+              "altEn": "Inside the house a brother and sister look toward the closed door, unsure who is knocking."
+            }
+          },
+          {
+            "id": "s4",
+            "narrationEn": "The children see it is the {kw:horangi}, and they climb a tall tree, {kw:namu}.",
+            "captionEn": "The children climb a tree",
+            "line": {
+              "ko": "오누이가 나무 위로 올라가요.",
+              "romanization": "Onuiga namu wiro ollagayo.",
+              "en": "The brother and sister climb up the tree.",
+              "speaker": "narrator"
+            },
+            "factIds": [
+              "f3"
+            ],
+            "framing": false,
+            "approximations": [],
+            "art": {
+              "setting": "scene:countryside",
+              "layers": [
+                {
+                  "ref": "prop:night-sky",
+                  "x": 200,
+                  "y": 196,
+                  "s": 1
+                },
+                {
+                  "ref": "prop:leafy-tree",
+                  "x": 200,
+                  "y": 300,
+                  "s": 2.3,
+                  "z": "back"
+                },
+                {
+                  "ref": "prop:fig-child",
+                  "x": 172,
+                  "y": 188,
+                  "s": 0.72
+                },
+                {
+                  "ref": "prop:fig-child",
+                  "x": 236,
+                  "y": 196,
+                  "s": 0.68,
+                  "tint": "brand.secondaryLight"
+                },
+                {
+                  "ref": "hoya:waving",
+                  "x": 348,
+                  "y": 244,
+                  "s": 0.8
+                }
+              ],
+              "altEn": "Under the night stars the brother and sister sit safe up in a tall tree, and Hoya waves: it is only a story."
+            }
+          },
+          {
+            "id": "s6",
+            "narrationEn": "The children pray to the sky, and a strong new rope, {kw:dongajul}, comes down. Up they climb.",
+            "captionEn": "A strong new rope comes down",
+            "line": {
+              "ko": "하늘에서 새 동아줄이 내려와요.",
+              "romanization": "Haneureseo sae dongajuri naeryeowayo.",
+              "en": "A new rope comes down from the sky.",
+              "speaker": "narrator"
+            },
+            "factIds": [
+              "f5"
+            ],
+            "framing": false,
+            "approximations": [],
+            "art": {
+              "setting": "scene:countryside",
+              "layers": [
+                {
+                  "ref": "prop:glow-burst",
+                  "x": 190,
+                  "y": 130,
+                  "s": 0.9
+                },
+                {
+                  "ref": "prop:sky-rope",
+                  "x": 200,
+                  "y": 262,
+                  "s": 1
+                },
+                {
+                  "ref": "prop:fig-child",
+                  "x": 112,
+                  "y": 250,
+                  "s": 0.75
+                },
+                {
+                  "ref": "prop:fig-child",
+                  "x": 152,
+                  "y": 262,
+                  "s": 0.72,
+                  "tint": "brand.secondaryLight"
+                },
+                {
+                  "ref": "prop:leafy-tree",
+                  "x": 344,
+                  "y": 290,
+                  "s": 1.2
+                }
+              ],
+              "altEn": "A strong new rope comes down from the glowing sky for the brother and sister, while an old frayed rope snaps."
+            }
+          },
+          {
+            "id": "s7",
+            "narrationEn": "The tiger's rope is old and breaks. It falls into a field of sorghum, {kw:susu}, and its tricks are over.",
+            "captionEn": "The tiger falls into the sorghum",
+            "line": {
+              "ko": "호랑이는 수수밭에 떨어져요.",
+              "romanization": "Horangineun susubate tteoreojyeoyo.",
+              "en": "The tiger falls into the sorghum field.",
+              "speaker": "narrator"
+            },
+            "factIds": [
+              "f5",
+              "f6"
+            ],
+            "framing": false,
+            "approximations": [],
+            "art": {
+              "setting": "scene:countryside",
+              "layers": [
+                {
+                  "ref": "prop:sorghum",
+                  "x": 110,
+                  "y": 290,
+                  "s": 1.25
+                },
+                {
+                  "ref": "prop:sorghum",
+                  "x": 200,
+                  "y": 296,
+                  "s": 1.5
+                },
+                {
+                  "ref": "prop:sorghum",
+                  "x": 296,
+                  "y": 288,
+                  "s": 1.2,
+                  "flip": true
+                }
+              ],
+              "altEn": "Tall sorghum stalks sway in a field with red stems; storytellers say that is how sorghum turned red."
+            }
+          },
+          {
+            "id": "s8",
+            "narrationEn": "In the sky, the children become the sun, {kw:hae}, and the moon, {kw:dal}. They are safe and sound.",
+            "captionEn": "The sun and the moon",
+            "line": {
+              "ko": "오누이는 해와 달이 되었어요.",
+              "romanization": "Onuineun haewa dari doeeosseoyo.",
+              "en": "The brother and sister became the sun and the moon.",
+              "speaker": "narrator"
+            },
+            "factIds": [
+              "f7"
+            ],
+            "framing": false,
+            "approximations": [],
+            "art": {
+              "setting": "scene:mountains",
+              "layers": [
+                {
+                  "ref": "prop:glow-burst",
+                  "x": 100,
+                  "y": 130,
+                  "s": 0.8
+                },
+                {
+                  "ref": "prop:full-moon",
+                  "x": 300,
+                  "y": 110,
+                  "s": 1.6
+                },
+                {
+                  "ref": "prop:flat-rock",
+                  "x": 282,
+                  "y": 292,
+                  "s": 1.3
+                },
+                {
+                  "ref": "hoya:waving",
+                  "x": 190,
+                  "y": 292,
+                  "s": 0.9
+                }
+              ],
+              "altEn": "The sister now shines as the sun and the brother glows as the moon over the mountains, and Hoya waves goodbye."
+            }
+          }
+        ],
+        "checks": [
+          {
+            "id": "r1",
+            "kind": "pick-meaning",
+            "promptEn": "What does {target} mean?",
+            "target": {
+              "ko": "호랑이",
+              "romanization": "horangi",
+              "en": "tiger"
+            },
+            "options": [
+              {
+                "id": "a",
+                "en": "Rabbit",
+                "isCorrect": false
+              },
+              {
+                "id": "b",
+                "en": "Tiger",
+                "isCorrect": true
+              },
+              {
+                "id": "c",
+                "en": "Sun",
+                "isCorrect": false
+              },
+              {
+                "id": "d",
+                "en": "Moon",
+                "isCorrect": false
+              }
+            ],
+            "explainEn": "Horangi means tiger. In the tale, the tiger pretends to be Mother.",
+            "factIds": [
+              "f3"
+            ]
+          },
+          {
+            "id": "r2",
+            "kind": "pick-meaning",
+            "promptEn": "What does {target} mean?",
+            "target": {
+              "ko": "동아줄",
+              "romanization": "dongajul",
+              "en": "thick, strong rope"
+            },
+            "options": [
+              {
+                "id": "a",
+                "en": "A tall tree",
+                "isCorrect": false
+              },
+              {
+                "id": "b",
+                "en": "A door",
+                "isCorrect": false
+              },
+              {
+                "id": "c",
+                "en": "A field",
+                "isCorrect": false
+              },
+              {
+                "id": "d",
+                "en": "A strong rope",
+                "isCorrect": true
+              }
+            ],
+            "explainEn": "Dongajul means a thick, strong rope. A new one comes down from the sky.",
+            "factIds": [
+              "f5"
+            ]
+          },
+          {
+            "id": "r3",
+            "kind": "detail",
+            "promptEn": "In the tale, what did the brother and sister become?",
+            "options": [
+              {
+                "id": "a",
+                "en": "The sun and the moon",
+                "isCorrect": true
+              },
+              {
+                "id": "b",
+                "en": "Two stars",
+                "isCorrect": false
+              },
+              {
+                "id": "c",
+                "en": "Two trees",
+                "isCorrect": false
+              },
+              {
+                "id": "d",
+                "en": "Two birds",
+                "isCorrect": false
+              }
+            ],
+            "explainEn": "In the tale, the brother and sister became the sun and the moon.",
+            "factIds": [
+              "f7"
+            ]
+          }
+        ],
+        "checkpoints": [],
+        "sequenceSceneIds": [
+          "s1",
+          "s4",
+          "s6",
+          "s8"
+        ],
+        "newKeywordIds": [
+          "haenim-dallim",
+          "onui",
+          "horangi",
+          "dongajul"
+        ],
+        "grammarFocusEn": "-in cheok haeyo (pretends to be); -i/-ga doeeosseoyo (became)"
       }
     ],
     "coverSceneId": "s1",
@@ -19831,7 +23980,7 @@ export const storiesAll: Story[] = [
       "passes": 3,
       "checkedAt": "2026-10-10",
       "scope": "cluster",
-      "notes": "Third independent pass over 6 episodes / 61 facts / 161 source entries (70 unique URLs). Every URL was re-fetched with my own scripts (UNESCO pages via Wayback copies; heritage.go.kr descriptions via the portal ajax html and khs.go.kr open API; folkency via its JSON API) and each quote or locator was machine-matched to the page text; the few non-matching strings were checked by hand (portal metadata fields, hanja or footnote punctuation, label text). Corrections: (1) pansori scene 2 now gives both UNESCO steps (2003 masterpiece proclamation, 2008 Representative List); (2) pansori f11 states the Aesop title as in the cited Townsend text and the common alternate title; (3) added sources: NFM 놀보박타령 for 'greedy' (f5), 표준국어대사전 타다 for 'sawed' (f6), 한국민족문화대백과사전 선도해 for the Samguk sagi tale (f12); (4) Seollal f9/f10 designation-date locators now cite the KHS open API field. No other change. See seasons-tales.signoff.md. MAR 2026-10-13 language review (F-STORY-001 PR 1.9): Korean strings, romanization and glosses read; findings and outcomes in the PR. MAR 2026-10-13 culture review (F-STORY-001 PR 1.9): heritage accuracy, framing, tone and advisories read; review.advisory confirmed; findings and outcomes in the PR."
+      "notes": "Third independent pass over 6 episodes / 61 facts / 161 source entries (70 unique URLs). Every URL was re-fetched with my own scripts (UNESCO pages via Wayback copies; heritage.go.kr descriptions via the portal ajax html and khs.go.kr open API; folkency via its JSON API) and each quote or locator was machine-matched to the page text; the few non-matching strings were checked by hand (portal metadata fields, hanja or footnote punctuation, label text). Corrections: (1) pansori scene 2 now gives both UNESCO steps (2003 masterpiece proclamation, 2008 Representative List); (2) pansori f11 states the Aesop title as in the cited Townsend text and the common alternate title; (3) added sources: NFM 놀보박타령 for 'greedy' (f5), 표준국어대사전 타다 for 'sawed' (f6), 한국민족문화대백과사전 선도해 for the Samguk sagi tale (f12); (4) Seollal f9/f10 designation-date locators now cite the KHS open API field. No other change. See seasons-tales.signoff.md. MAR 2026-10-13 language review (F-STORY-001 PR 1.9): Korean strings, romanization and glosses read; findings and outcomes in the PR. MAR 2026-10-13 culture review (F-STORY-001 PR 1.9): heritage accuracy, framing, tone and advisories read; review.advisory confirmed; findings and outcomes in the PR. MAR 2026-10-13 language review of the read tier (F-STORY-005 PR 5.6): 6 Korean lines, their romanization (machine-checked) and glosses read for spelling, naturalness and Stage 5 level; 1 romanization exception (s3 cheokaeyo, the verb aspirates across the noun-verb join of cheokada); findings and outcomes in the PR. MAR 2026-10-13 culture review of the read tier (F-STORY-005 PR 5.6): every line and check compared with its cited facts (no new claim), framing, tone and respectful wording read; s7 also cites f5 (the rotten rope); the gentle retelling of the listen tier is kept; review.advisory unchanged; findings and outcomes in the PR."
     },
     "authorNotes": "REVISED 2026-10-10. Traditional tale: narration describes what happens in the tale, not history. Two authoritative sources now: the Encyclopedia of Korean Culture (E0062663; basic version with three siblings) and the National Folk Museum's 한국민속문학사전 entry by 조현설 (topic 6006; summary with two children, whose folk-literature dictionary cites 한국구비문학대계 1-4, 811; 1-5, 308; 2-6, 473; 2-7, 513 as its sources - the 구비문학대계 recordings themselves could not be opened with the tools used, gubi.aks.ac.kr returned nothing). The sesame-oil episode (f4) rests on the Encyclopedia only (the NFM summary does not mention it); claims kept minimal. Differences between sources, stated openly in the facts: Encyclopedia - mother met at successive hill passes with demands rice cake, clothes, arms, legs, torso; children open the door when the tiger says it must nurse the baby; the sun-sister pricks people's eyes with needles. NFM - children see the tiger through a hole in the door and flee by the back door; the sun-sister gives off a strong light. This retelling follows the gentler options where they exist. Softened on purpose: the tiger eating the mother and the baby; the demands for clothes, arms, legs and torso; the axe; the tiger's death on the sorghum stalks (told as 'the end of its tricks'); the needles. Three siblings (삼 남매) in the Encyclopedia vs. two (오누이) in the NFM summary: narration says 'the children' (s3: 'a brother and sister') and does not mention the baby (review 2026-10-11: naming the baby made listeners ask what happened to it). 님 is a gender-neutral respectful suffix; in this retelling the sun is the sister and the moon the brother, so the 'Mr. Sun, Ms. Moon' gloss was removed. Reassurance beats added in scenes 4, 7 and 8. The line '떡 하나 주면 안 잡아먹지' is not used (not in the sources; too scary for young children). Hoya's 'not like me!' is character banter. Stage 5 'Tiger Folktales' is a natural placement, but the language is at Listen level, hence recommended_stage 1. AUTHORING 2026-10-11 (F-STORY-001 PR 1.8d): title romanization, scene captions and check explanations written from the cited facts; every scene is artPending (text-only tile) until the art PRs; no claim or source changed. Fact scope: f1 (the tale exists and is told widely) is documented; f3 and f7 (what happens in the tale) are in-the-tale. Title: 해님 달님 (Haenim Dallim); the 'traditional tale' label lives in title.en and origin, not in brackets in the Korean title. 'these two' (s4) carries an approximation entry. REVIEW 2026-10-11 (PR 1.8d review fixes): advisory adds 'loss' and the note names the mother's fate as left out; s2 and s8 in plainer sentences; the hae, dal, onui, namu and dongajul keywords appear as tokens; -nim glossed as an honorific suffix; learning goals use receptive verbs. PR #208 fixes: s3 'played a clever trick' generalises f3's nursing excuse (baby kept out, no invented cause); the advisory gives the mother's fate as the traditional tale's, not 'older versions'.",
     "errata": []

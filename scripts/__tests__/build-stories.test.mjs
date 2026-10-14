@@ -618,10 +618,10 @@ describe("build-stories.mjs: --report and the bundle budget", () => {
     assert.ok(problems.some((p) => /gzip/.test(p)));
   });
 
-  test("the budget matches the spec (1.2 MB raw since the first Stage 5 book, 260 KB gzip, 60 KB per story, 130 KB scene art)", () => {
-    assert.equal(BUDGET.totalRaw, 1_200_000);
+  test("the budget matches the spec (1.3 MB raw and 65 KB per story since the five Stage 5 books, 260 KB gzip, 130 KB scene art)", () => {
+    assert.equal(BUDGET.totalRaw, 1_300_000);
     assert.equal(BUDGET.totalGzip, 260_000);
-    assert.equal(BUDGET.perStoryRaw, 60_000);
+    assert.equal(BUDGET.perStoryRaw, 65_000);
     assert.equal(BUDGET.artRaw, 130_000);
   });
 

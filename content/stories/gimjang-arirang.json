@@ -2,7 +2,7 @@
   "v": 1,
   "id": "story:gimjang-arirang",
   "state": "ready",
-  "contentVer": 4,
+  "contentVer": 5,
   "title": {
     "ko": "김장하는 날과 아리랑",
     "romanization": "Gimjanghaneun nalgwa Arirang",
@@ -596,6 +596,401 @@
         "baechu",
         "gimchi"
       ]
+    },
+    {
+      "level": "read",
+      "scenes": [
+        {
+          "id": "s1",
+          "narrationEn": "In late autumn, families make lots of kimchi at once for the {kw:gyeoul}, winter. This is {kw:gimjang}.",
+          "captionEn": "Lots of kimchi before winter",
+          "line": {
+            "ko": "겨울이 오기 전에 김치를 많이 담가요.",
+            "romanization": "Gyeouri ogi jeone gimchireul mani damgayo.",
+            "en": "Before winter, families make lots of kimchi.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f11"
+          ],
+          "framing": false,
+          "approximations": [],
+          "art": {
+            "setting": "scene:village-lane",
+            "layers": [
+              {
+                "ref": "prop:persimmon-tree",
+                "x": 54,
+                "y": 250,
+                "s": 1.1,
+                "z": "back",
+                "tint": "feedback.nudge"
+              },
+              {
+                "ref": "prop:kimchi-jars",
+                "x": 206,
+                "y": 262,
+                "s": 1.15
+              },
+              {
+                "ref": "prop:cabbages",
+                "x": 328,
+                "y": 292,
+                "s": 1.3
+              },
+              {
+                "ref": "hoya:idle",
+                "x": 104,
+                "y": 294,
+                "s": 0.72
+              }
+            ],
+            "altEn": "Hoya arrives in a village yard as winter nears, with napa cabbages piled up and big kimchi jars waiting for gimjang."
+          }
+        },
+        {
+          "id": "s3",
+          "narrationEn": "Relatives and neighbors, {kw:iut}, help one another salt the napa cabbages, {kw:baechu}.",
+          "captionEn": "Neighbors salt cabbages together",
+          "line": {
+            "ko": "이웃과 함께 배추를 절여요.",
+            "romanization": "Iutgwa hamkke baechureul jeoryeoyo.",
+            "en": "With the neighbors, they salt napa cabbages.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f3"
+          ],
+          "framing": false,
+          "approximations": [],
+          "art": {
+            "setting": "scene:countryside",
+            "layers": [
+              {
+                "ref": "prop:fig-woman",
+                "x": 66,
+                "y": 282,
+                "s": 1.0,
+                "tint": "brand.secondaryLight"
+              },
+              {
+                "ref": "hoya:idle",
+                "x": 146,
+                "y": 294,
+                "s": 0.6
+              },
+              {
+                "ref": "prop:cabbages",
+                "x": 240,
+                "y": 292,
+                "s": 2.0,
+                "tint": "brand.primary"
+              },
+              {
+                "ref": "prop:fig-woman",
+                "x": 344,
+                "y": 282,
+                "s": 1.0,
+                "flip": true,
+                "tint": "surface.paper"
+              }
+            ],
+            "altEn": "Neighbors gather for gimjang and rub red seasoning into salted napa cabbages, and Hoya helps."
+          }
+        },
+        {
+          "id": "s4",
+          "narrationEn": "Every region makes {kw:gimchi} its own way, so there are countless kinds.",
+          "captionEn": "Every region's own kimchi",
+          "line": {
+            "ko": "지역마다 김치가 달라요.",
+            "romanization": "Jiyeongmada gimchiga dallayo.",
+            "en": "Kimchi is different in every region.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f4"
+          ],
+          "framing": false,
+          "approximations": [],
+          "art": {
+            "setting": "scene:hanji-backdrop",
+            "layers": [
+              {
+                "ref": "prop:soban",
+                "x": 86,
+                "y": 292,
+                "s": 1.4,
+                "tint": "feedback.nudgeLight"
+              },
+              {
+                "ref": "hoya:thinking",
+                "x": 200,
+                "y": 292,
+                "s": 0.95
+              },
+              {
+                "ref": "prop:soban",
+                "x": 314,
+                "y": 292,
+                "s": 1.4,
+                "tint": "brand.primary"
+              }
+            ],
+            "altEn": "Hoya compares two tables of kimchi: a milder, paler kind from the cold north and a saltier, redder kind from the south."
+          }
+        },
+        {
+          "id": "s5",
+          "narrationEn": "Families share kimchi with one another. Working together and sharing, {kw:nanum}, are the heart of gimjang.",
+          "captionEn": "Sharing kimchi with neighbors",
+          "line": {
+            "ko": "김치를 이웃과 나눠요.",
+            "romanization": "Gimchireul iutgwa nanwoyo.",
+            "en": "They share kimchi with the neighbors.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f5"
+          ],
+          "framing": false,
+          "approximations": [],
+          "art": {
+            "setting": "scene:village-lane",
+            "layers": [
+              {
+                "ref": "prop:crowd-seated",
+                "x": 160,
+                "y": 262,
+                "s": 1.4,
+                "tint": "brand.secondaryLight"
+              },
+              {
+                "ref": "prop:soban",
+                "x": 160,
+                "y": 296,
+                "s": 1.3,
+                "tint": "surface.paper"
+              },
+              {
+                "ref": "hoya:waving",
+                "x": 262,
+                "y": 296,
+                "s": 0.6
+              },
+              {
+                "ref": "prop:fig-child",
+                "x": 336,
+                "y": 286,
+                "s": 1.1
+              }
+            ],
+            "altEn": "Helpers share boiled pork and cabbage leaves after gimjang, a child heads off to give kimchi next door, and Hoya waves."
+          }
+        },
+        {
+          "id": "s7",
+          "narrationEn": "{kw:arirang} is a folk song made and passed down by ordinary people over many generations.",
+          "captionEn": "Arirang, a Korean folk song",
+          "line": {
+            "ko": "아리랑은 한국의 민요예요.",
+            "romanization": "Arirangeun hangugui minyoyeyo.",
+            "en": "Arirang is a Korean folk song.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f7"
+          ],
+          "framing": false,
+          "approximations": [],
+          "art": {
+            "setting": "scene:mountains",
+            "layers": [
+              {
+                "ref": "prop:fig-elder-seated",
+                "x": 190,
+                "y": 276,
+                "s": 1.6
+              },
+              {
+                "ref": "hoya:idle",
+                "x": 298,
+                "y": 296,
+                "s": 0.68
+              }
+            ],
+            "altEn": "As the day ends Grandma rests and hums Arirang, a folk song known all over Korea, with Hoya close beside her."
+          }
+        },
+        {
+          "id": "s8",
+          "narrationEn": "Arirang has many regional versions, and anyone can make up new verses.",
+          "captionEn": "Anyone can make up new verses",
+          "line": {
+            "ko": "누구나 새 노랫말을 지을 수 있어요.",
+            "romanization": "Nuguna sae noraenmareul jieul su isseoyo.",
+            "en": "Anyone can make up new lyrics.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f8"
+          ],
+          "framing": false,
+          "approximations": [],
+          "art": {
+            "setting": "scene:mountains",
+            "layers": [
+              {
+                "ref": "prop:crowd-seated",
+                "x": 90,
+                "y": 234,
+                "s": 0.55,
+                "tint": "surface.paper"
+              },
+              {
+                "ref": "prop:fig-woman",
+                "x": 262,
+                "y": 232,
+                "s": 0.45,
+                "tint": "brand.secondaryLight"
+              },
+              {
+                "ref": "prop:crowd-seated",
+                "x": 330,
+                "y": 222,
+                "s": 0.5,
+                "tint": "surface.paper"
+              },
+              {
+                "ref": "hoya:waving",
+                "x": 200,
+                "y": 292,
+                "s": 0.9
+              }
+            ],
+            "altEn": "Hoya waves beside a winding mountain path past little groups of people, each singing their own Arirang."
+          }
+        }
+      ],
+      "checks": [
+        {
+          "id": "r1",
+          "kind": "pick-meaning",
+          "promptEn": "What does {target} mean?",
+          "target": {
+            "ko": "배추",
+            "romanization": "baechu",
+            "en": "napa cabbage"
+          },
+          "options": [
+            {
+              "id": "a",
+              "en": "Red chili powder",
+              "isCorrect": false
+            },
+            {
+              "id": "b",
+              "en": "Napa cabbage",
+              "isCorrect": true
+            },
+            {
+              "id": "c",
+              "en": "Neighbor",
+              "isCorrect": false
+            },
+            {
+              "id": "d",
+              "en": "Winter",
+              "isCorrect": false
+            }
+          ],
+          "explainEn": "Baechu means napa cabbage. Families salt napa cabbages for gimjang.",
+          "factIds": [
+            "f3"
+          ]
+        },
+        {
+          "id": "r2",
+          "kind": "pick-meaning",
+          "promptEn": "What does {target} mean?",
+          "target": {
+            "ko": "이웃",
+            "romanization": "iut",
+            "en": "neighbor"
+          },
+          "options": [
+            {
+              "id": "a",
+              "en": "Song",
+              "isCorrect": false
+            },
+            {
+              "id": "b",
+              "en": "Kimchi",
+              "isCorrect": false
+            },
+            {
+              "id": "c",
+              "en": "Neighbor",
+              "isCorrect": true
+            },
+            {
+              "id": "d",
+              "en": "Winter",
+              "isCorrect": false
+            }
+          ],
+          "explainEn": "Iut means neighbor. Neighbors help one another with gimjang.",
+          "factIds": [
+            "f3"
+          ]
+        },
+        {
+          "id": "r3",
+          "kind": "detail",
+          "promptEn": "In the story, what can anyone do with Arirang?",
+          "options": [
+            {
+              "id": "a",
+              "en": "Make up new lyrics",
+              "isCorrect": true
+            },
+            {
+              "id": "b",
+              "en": "Sing it only in winter",
+              "isCorrect": false
+            },
+            {
+              "id": "c",
+              "en": "Sing only one version",
+              "isCorrect": false
+            },
+            {
+              "id": "d",
+              "en": "Play it only on a drum",
+              "isCorrect": false
+            }
+          ],
+          "explainEn": "Arirang has many versions, and anyone can make up new lyrics.",
+          "factIds": [
+            "f8"
+          ]
+        }
+      ],
+      "checkpoints": [],
+      "sequenceSceneIds": [
+        "s1",
+        "s3",
+        "s5",
+        "s8"
+      ],
+      "newKeywordIds": [
+        "gyeoul",
+        "gimjang",
+        "iut",
+        "baechu"
+      ],
+      "grammarFocusEn": "-mada (every), -gwa hamkke (together with); -eul su isseoyo (can)"
     }
   ],
   "coverSceneId": "s1",
@@ -945,7 +1340,7 @@
     "passes": 3,
     "checkedAt": "2026-10-10",
     "scope": "cluster",
-    "notes": "Third independent pass over 6 episodes / 61 facts / 161 source entries (70 unique URLs). Every URL was re-fetched with my own scripts (UNESCO pages via Wayback copies; heritage.go.kr descriptions via the portal ajax html and khs.go.kr open API; folkency via its JSON API) and each quote or locator was machine-matched to the page text; the few non-matching strings were checked by hand (portal metadata fields, hanja or footnote punctuation, label text). Corrections: (1) pansori scene 2 now gives both UNESCO steps (2003 masterpiece proclamation, 2008 Representative List); (2) pansori f11 states the Aesop title as in the cited Townsend text and the common alternate title; (3) added sources: NFM 놀보박타령 for 'greedy' (f5), 표준국어대사전 타다 for 'sawed' (f6), 한국민족문화대백과사전 선도해 for the Samguk sagi tale (f12); (4) Seollal f9/f10 designation-date locators now cite the KHS open API field. No other change. See seasons-tales.signoff.md. MAR 2026-10-13 language review (F-STORY-001 PR 1.9): Korean strings, romanization and glosses read; findings and outcomes in the PR. MAR 2026-10-13 culture review (F-STORY-001 PR 1.9): heritage accuracy, framing, tone and advisories read; review.advisory confirmed; findings and outcomes in the PR. MAR 2026-10-13 culture review: f11 added for the story card, a shortened restatement of f1 with the same sources."
+    "notes": "Third independent pass over 6 episodes / 61 facts / 161 source entries (70 unique URLs). Every URL was re-fetched with my own scripts (UNESCO pages via Wayback copies; heritage.go.kr descriptions via the portal ajax html and khs.go.kr open API; folkency via its JSON API) and each quote or locator was machine-matched to the page text; the few non-matching strings were checked by hand (portal metadata fields, hanja or footnote punctuation, label text). Corrections: (1) pansori scene 2 now gives both UNESCO steps (2003 masterpiece proclamation, 2008 Representative List); (2) pansori f11 states the Aesop title as in the cited Townsend text and the common alternate title; (3) added sources: NFM 놀보박타령 for 'greedy' (f5), 표준국어대사전 타다 for 'sawed' (f6), 한국민족문화대백과사전 선도해 for the Samguk sagi tale (f12); (4) Seollal f9/f10 designation-date locators now cite the KHS open API field. No other change. See seasons-tales.signoff.md. MAR 2026-10-13 language review (F-STORY-001 PR 1.9): Korean strings, romanization and glosses read; findings and outcomes in the PR. MAR 2026-10-13 culture review (F-STORY-001 PR 1.9): heritage accuracy, framing, tone and advisories read; review.advisory confirmed; findings and outcomes in the PR. MAR 2026-10-13 culture review: f11 added for the story card, a shortened restatement of f1 with the same sources. MAR 2026-10-13 language review of the read tier (F-STORY-005 PR 5.6): 6 Korean lines, their romanization (machine-checked) and glosses read for spelling, naturalness and Stage 5 level; 1 change (s1 gyeouri ogi jeone, more natural than gyeoul jeone); findings and outcomes in the PR. MAR 2026-10-13 culture review of the read tier (F-STORY-005 PR 5.6): every line and check compared with its cited facts (no new claim), framing, tone and respectful wording read; no change; the UNESCO entries (f6, f9, f10) are left out of this tier; review.advisory unchanged; findings and outcomes in the PR."
   },
   "authorNotes": "Spelling: RR for 김장/김치 is gimjang/gimchi. UNESCO's official title uses 'Kimjang', and 'kimchi' is the usual English word. The narration uses 'gimjang' and 'kimchi'; UNESCO's spelling 'Kimjang' stays in f1, f6 and the Sources screen (review 2026-10-11: the spoken aside was removed). Grandma humming Arirang at the end of the day is a story moment. The narration does not claim Arirang is a gimjang work song. The sources don't link the two, though some Arirang types are work songs (Encyclopedia of Korean Culture). The refrain quoted is the widely known one. The Encyclopedia notes the best-known 'Arirang' (경기/본조 아리랑) is a new folk-song (신민요) form; traditional regional ones include Jeongseon, Jindo and Miryang. Left out on purpose: UNESCO's estimate of 'some 3,600 variations'. Only one authoritative source for it was found, so it isn't in the narration. Also left out: theories about what 'Arirang' means (folk etymology), the DPRK listings (Arirang 2014; kimchi-making 2015), and the old practice of burying kimchi jars in the ground. National designations: 아리랑 (2015-09-22) and 김치 담그기 (2017-11-15) are National Intangible Heritage per the 국가유산포털. They aren't used in the narration. REVISION 2026-10-10: 'takes all year' -> 'takes months' (Encyclopedia: more than half a year; UNESCO: yearly cycle); 'sweet' and 'everyone' removed from scene 5; UNESCO title 'Kimjang, making and sharing kimchi in the Republic of Korea' (2013) and the Korea Heritage Service's Korean name 김치와 김장문화 now used; Arirang 2012 labelled South Korea's entry and the separate DPRK entry (2014) added as f10 (narration mentions 'separate listing' only; the 2014 year lives in f10); 'no exact translation' replaced by 'sung syllables' (encykorea: meaningless refrain, origin theories = folk etymology; 한국민속문학사전: 입타령 refrain). AUTHORING 2026-10-11 (F-STORY-001 PR 1.8d): title romanization, scene captions and check explanations written from the cited facts; every scene is artPending (text-only tile) until the art PRs; no claim or source changed. Korean name (review 2026-10-11): the learner term shows the Korea Heritage Service's official form 김치와 김장문화 (gimchiwa gimjangmunhwa, keyword id gimchiwa-gimjangmunhwa), the same spelling as f6. REVIEW 2026-10-11 (PR 1.8d review fixes): s5 follows f5 (on gimjang day the host family serves the helpers); s6 and s8 say 'added to its heritage list' in plain words, and the exact UNESCO titles stay in f6, f9, f10; the iut and gyeoul keywords are used as tokens; learning goals use receptive verbs. PR #208 REVIEW FIXES 2026-10-11: s6 says the Heritage Service calls this listing 김치와 김장문화 (f6), so the Korean name is not read as gimjang's own name (김장, s1).",
   "errata": []
