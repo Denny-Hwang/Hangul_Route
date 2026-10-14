@@ -1,0 +1,93 @@
+{
+  "locale": "es",
+  "domain": "lessons-stage2-rites",
+  "entries": {
+    "episode:stage2-rites": {
+      "title": "Palabras de fiesta",
+      "subtitle": "Palabras de Seollal, Chuseok y juegos de fiesta",
+      "hoyaIntro": "¡Las fiestas están llenas de palabras! Vamos a leer las palabras de Seollal y Chuseok."
+    },
+    "quest:stage2-rites-q1": {
+      "title": "Palabras de Seollal",
+      "blurb": "Lee cuatro palabras de Seollal, el Año Nuevo lunar.",
+      "teaser": "Después: Chuseok y la luna llena",
+      "steps.s1.title": "¡Feliz Seollal!",
+      "steps.s2.title": "Cuatro palabras de Seollal",
+      "steps.s3.title": "Une las imágenes",
+      "steps.s4.title": "Arma palabras de Seollal",
+      "steps.s5.title": "Escucha y lee",
+      "steps.s6.title": "¡Palabras de Seollal!",
+      "steps.s1.hoyaLine": "Seollal es el Año Nuevo lunar. ¡Vamos a leer sus palabras!",
+      "steps.s2.hoyaLine": "Toca Escuchar para oír cada palabra.",
+      "steps.s6.hoyaLine": "Leíste las palabras de Seollal. ¡Muy bien!",
+      "steps.s2.discover.pages.0.caption": "Palabras de Seollal",
+      "steps.s2.discover.pages.1.caption": "La reverencia de Año Nuevo y el hanbok",
+      "steps.s2.discover.pages.0.items.0.word.gloss": "día del Año Nuevo lunar",
+      "steps.s2.discover.pages.0.items.1.word.gloss": "sopa de pastel de arroz",
+      "steps.s2.discover.pages.1.items.0.word.gloss": "reverencia de Año Nuevo",
+      "steps.s2.discover.pages.1.items.1.word.gloss": "hanbok, ropa tradicional",
+      "steps.s2.discover.pages.1.items.0.note": "Una reverencia profunda a los mayores, el primer saludo del año"
+    },
+    "quest:stage2-rites-q2": {
+      "title": "Palabras de Chuseok",
+      "blurb": "Lee cuatro palabras de Chuseok, la fiesta de la cosecha de otoño.",
+      "teaser": "Después: juegos y regalos de Año Nuevo",
+      "steps.s1.title": "¡Chuseok!",
+      "steps.s2.title": "Cuatro palabras de Chuseok",
+      "steps.s3.title": "Une las imágenes",
+      "steps.s4.title": "Arma palabras de Chuseok",
+      "steps.s5.title": "Escucha y lee",
+      "steps.s6.title": "¡Palabras de Chuseok!",
+      "steps.s1.hoyaLine": "Chuseok es la fiesta de la cosecha y de la luna llena. ¡Vamos a leer sus palabras!",
+      "steps.s2.hoyaLine": "Toca Escuchar para oír cada palabra.",
+      "steps.s6.hoyaLine": "Leíste las palabras de Chuseok. ¡Qué buen trabajo!",
+      "steps.s2.discover.pages.0.caption": "Palabras de Chuseok",
+      "steps.s2.discover.pages.1.caption": "Bajo la luna llena",
+      "steps.s2.discover.pages.0.items.0.word.gloss": "Chuseok, la fiesta de la cosecha de otoño",
+      "steps.s2.discover.pages.0.items.1.word.gloss": "pastel de arroz en forma de media luna",
+      "steps.s2.discover.pages.1.items.0.word.gloss": "luna llena",
+      "steps.s2.discover.pages.1.items.1.word.gloss": "familia",
+      "steps.s2.discover.pages.0.items.1.note": "Pasteles de arroz en forma de media luna, que a menudo se hacen juntos para Chuseok"
+    },
+    "quest:stage2-rites-q3": {
+      "title": "Juegos y regalos de fiesta",
+      "blurb": "Lee cuatro palabras de juegos y regalos de Año Nuevo.",
+      "steps.s1.title": "Juegos y regalos",
+      "steps.s2.title": "Cuatro palabras de fiesta",
+      "steps.s3.title": "Une las imágenes",
+      "steps.s4.title": "Une los significados",
+      "steps.s5.title": "Escucha y lee",
+      "steps.s6.title": "¡Palabras de fiesta!",
+      "steps.s1.hoyaLine": "Los juegos y regalos de Año Nuevo también tienen palabras. ¡Vamos a leerlas!",
+      "steps.s2.hoyaLine": "Toca Escuchar para oír cada palabra.",
+      "steps.s6.hoyaLine": "Leíste todas las palabras de fiesta. ¡Estupendo!",
+      "steps.s2.discover.pages.0.caption": "Juegos de Año Nuevo",
+      "steps.s2.discover.pages.1.caption": "Regalos de Año Nuevo",
+      "steps.s2.discover.pages.0.items.0.word.gloss": "yut, el juego de tablero en el que se lanzan palitos",
+      "steps.s2.discover.pages.0.items.1.word.gloss": "cometa",
+      "steps.s2.discover.pages.1.items.0.word.gloss": "bolsita de la suerte",
+      "steps.s2.discover.pages.1.items.1.word.gloss": "dinero de Año Nuevo",
+      "steps.s2.discover.pages.0.items.0.note": "Un juego de tablero en el que se lanzan cuatro palitos de yut",
+      "steps.s2.discover.pages.1.items.0.note": "Una bolsita que lleva un deseo de buena suerte",
+      "steps.s2.discover.pages.1.items.1.note": "Un poco de dinero que los mayores pueden dar tras la reverencia de Año Nuevo"
+    },
+    "minigame:s2-rites-q1-check": {
+      "listenPick.rounds.r1.prompt": "reverencia de Año Nuevo",
+      "listenPick.rounds.r2.prompt": "día del Año Nuevo lunar"
+    },
+    "minigame:s2-rites-q2-check": {
+      "listenPick.rounds.r1.prompt": "luna llena",
+      "listenPick.rounds.r2.prompt": "familia"
+    },
+    "minigame:s2-rites-q3-apply": {
+      "cardPairs.yunnori.gloss": "yut, el juego de tablero en el que se lanzan palitos",
+      "cardPairs.yeon.gloss": "cometa",
+      "cardPairs.bokjumeoni.gloss": "bolsita de la suerte",
+      "cardPairs.sebaetdon.gloss": "dinero de Año Nuevo"
+    },
+    "minigame:s2-rites-q3-check": {
+      "listenPick.rounds.r1.prompt": "cometa",
+      "listenPick.rounds.r2.prompt": "bolsita de la suerte"
+    }
+  }
+}
