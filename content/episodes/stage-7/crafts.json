@@ -843,10 +843,10 @@
         }
       ],
       "verification": {
-        "passes": 1,
+        "passes": 2,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): both pages fetched. The AKS entry 종이접기 defines it as folding paper by hand into many shapes, lists boats and planes among them, names a basic fold for the crane, and says white paper, colored paper and foil are used; the dictionary entry 종이-접기 defines it as folding paper into the shape of a crane, a boat, a plane and the like. The note restates this in its own words; the AKS definition also calls it a children's game, which the note leaves out (audience any age, no age wording). Nothing is copied. Carried by: q1 Discover page 1 caption, and the plane and boat sentences of q1 and q2."
+        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): both pages fetched. The AKS entry 종이접기 defines it as folding paper by hand into many shapes, lists boats and planes among them, names a basic fold for the crane, and says white paper, colored paper and foil are used; the dictionary entry 종이-접기 defines it as folding paper into the shape of a crane, a boat, a plane and the like. The note restates this in its own words; the AKS definition also calls it a children's game, which the note leaves out (audience any age, no age wording). Nothing is copied. Carried by: q1 Discover page 1 caption, and the plane and boat sentences of q1 and q2.\nLine 2 (pass 2b, independent fact check, 2026-10-14): both pages re-fetched (the stdict entry body via contentViewOne.do). The AKS entry 종이접기 carries the quoted definition (folding paper by hand into many shapes), lists boats and planes among the things made, names a basic fold for the crane, and says white paper as well as colored paper and foil are used; the dictionary entry 종이-접기 (word_no 516424) defines it as folding paper into the shape of a crane, a boat, a plane and the like. The note matches both: by hand, crane / boat / plane, plain or colored paper ('plain' renders 흰 종이). The AKS framing as a children's game is left out, which narrows nothing that is true. The q1 caption (a plane or a boat) stays inside the sources. The English is the author's own; no wording is copied. Outcome: pass, no change."
       }
     },
     {
@@ -870,10 +870,10 @@
         }
       ],
       "verification": {
-        "passes": 1,
+        "passes": 2,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): both pages fetched. The AKS entry 한지 defines it as traditional Korean paper made by hand and says the traditional paper made from the bark of the paper mulberry (닥나무) is called hanji today; the dictionary entry 한지 7 defines it as paper made by Korea's own method from fibres such as paper-mulberry bark. The note says 'mainly' because the dictionary says 'such as'. Own wording, nothing copied, no heritage designation number. Carried by: q3 Discover page 2 caption."
+        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): both pages fetched. The AKS entry 한지 defines it as traditional Korean paper made by hand and says the traditional paper made from the bark of the paper mulberry (닥나무) is called hanji today; the dictionary entry 한지 7 defines it as paper made by Korea's own method from fibres such as paper-mulberry bark. The note says 'mainly' because the dictionary says 'such as'. Own wording, nothing copied, no heritage designation number. Carried by: q3 Discover page 2 caption.\nLine 2 (pass 2b, independent fact check, 2026-10-14): both pages re-fetched (the stdict entry body via contentViewOne.do). The AKS entry 한지 defines it as Korea's traditional paper made by hand (손으로 떠서) and says the traditional paper made from paper-mulberry (닥나무) bark is today called hanji; the dictionary entry 한지 7 (韓紙, word_no 365052) defines it as paper made by Korea's own method from fibres such as paper-mulberry bark. The note matches: made by hand in the traditional way, mainly from paper-mulberry bark ('mainly' is a fair reading of the dictionary's 'such as'). The q3 caption ('made by hand from tree bark') stays inside the sources. No heritage designation number. The English is the author's own; no wording is copied. Outcome: pass, no change."
       }
     },
     {
@@ -897,10 +897,10 @@
         }
       ],
       "verification": {
-        "passes": 1,
+        "passes": 2,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): both pages fetched (the dictionary body via contentViewOne.do). Sense 1 of -고 25 joins two or more facts side by side; sense 2, after a verb stem, marks a sequential (계기적) relation between the two clauses. The AKS entry 어말어미 says a connective ending joins one sentence to another and lists -고 among them. The note keeps to these two points in its own words ('can show', since sense 1 also exists); nothing copied. Carried by: q3 Discover pattern noteEn, q3 practice, apply and Check."
+        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): both pages fetched (the dictionary body via contentViewOne.do). Sense 1 of -고 25 joins two or more facts side by side; sense 2, after a verb stem, marks a sequential (계기적) relation between the two clauses. The AKS entry 어말어미 says a connective ending joins one sentence to another and lists -고 among them. The note keeps to these two points in its own words ('can show', since sense 1 also exists); nothing copied. Carried by: q3 Discover pattern noteEn, q3 practice, apply and Check.\nLine 2 (pass 2b, independent fact check, 2026-10-14): both pages re-fetched (the stdict entry body via contentViewOne.do). The dictionary entry -고 25 (word_no 394721) 「어미」 carries sense 1 (a connective ending that sets two or more facts side by side) and sense 2 (after a verb stem, a connective ending marking a sequential relation between the two clauses), as quoted; the AKS entry 어말어미 says a connective ending joins one sentence to another and lists -고 among the coordinating connective endings. The note matches: -고 joins one action to the next, and after an action word it can show one step and then the next ('can', since sense 1 also exists); 접고 잘라요 is a verb stem plus -고, so sense 2 applies. The q3 pattern noteEn stays inside the sources. The English is the author's own; no wording is copied. Outcome: pass, no change."
       }
     }
   ],
