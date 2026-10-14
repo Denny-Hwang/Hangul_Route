@@ -59,7 +59,7 @@ interface WakeLockSentinelLike {
 
 export interface PresenterEnv {
   location?: { pathname: string; hash: string } | null;
-  history?: { replaceState: (state: unknown, unused: string, url: string) => void } | null;
+  history?: { state?: unknown; replaceState: (state: unknown, unused: string, url: string) => void } | null;
   document?: DocumentLike | null;
   /** The target `keydown` is read from (the document). */
   keyTarget?: EventTargetLike | null;
@@ -69,7 +69,6 @@ export interface PresenterEnv {
   window?: EventTargetLike | null;
   opener?: unknown;
   consoleOrigins?: readonly string[];
-  performance?: { getEntriesByType: (type: string) => readonly { type?: string }[] } | null;
   navigator?: { wakeLock?: { request: (type: 'screen') => Promise<WakeLockSentinelLike> } } | null;
   screen?: { orientation?: { lock?: (o: string) => Promise<void>; unlock?: () => void } } | null;
 }
@@ -79,7 +78,6 @@ type Globals = {
   history?: PresenterEnv['history'];
   document?: DocumentLike & { activeElement?: unknown };
   opener?: unknown;
-  performance?: PresenterEnv['performance'];
   navigator?: PresenterEnv['navigator'];
   screen?: PresenterEnv['screen'];
   addEventListener?: EventTargetLike['addEventListener'];
@@ -99,7 +97,6 @@ function browserEnv(): PresenterEnv {
     window: win,
     opener: g.opener ?? null,
     consoleOrigins: presenterConsoleOrigins(process.env.EXPO_PUBLIC_CONSOLE_ORIGINS),
-    performance: g.performance ?? null,
     navigator: g.navigator ?? null,
     screen: g.screen ?? null,
   };
@@ -145,14 +142,29 @@ export function setPresenterDocTitle(title: string, env: PresenterEnv = browserE
   if (env.document) env.document.title = title;
 }
 
-/** The page was reloaded (the fragment is gone by then, so the open lesson comes back from Recent). */
-export function isReloadNavigation(env: PresenterEnv = browserEnv()): boolean {
+/** The history-state key that marks the open lesson of this tab (a deck id, never a name). */
+const OPEN_DECK_STATE = 'hrLectureDeck';
+
+/**
+ * Marks the lesson open in this tab in the history entry's state (`null` clears it on Exit). A
+ * reload keeps the state but not the fragment (already stripped), so the presenter can reopen the
+ * lesson from Recent at the slide that was open (section 3.5); a new tab or a typed address has
+ * none. Nothing else is written, and the deck id is all it holds.
+ */
+export function markOpenDeck(deckId: string | null, env: PresenterEnv = browserEnv()): void {
   try {
-    const entry = env.performance?.getEntriesByType('navigation')[0];
-    return entry?.type === 'reload';
+    env.history?.replaceState(deckId === null ? null : { [OPEN_DECK_STATE]: deckId }, '', PRESENTER_PATH);
   } catch {
-    return false;
+    // A refusing history: a reload shows the home instead.
   }
+}
+
+/** The deck id `markOpenDeck` left in this tab's history entry, or null. */
+export function openDeckId(env: PresenterEnv = browserEnv()): string | null {
+  const state = env.history?.state;
+  if (state === null || typeof state !== 'object') return null;
+  const id = (state as Record<string, unknown>)[OPEN_DECK_STATE];
+  return typeof id === 'string' ? id : null;
 }
 
 // --- roster hand-off --------------------------------------------------------------------------

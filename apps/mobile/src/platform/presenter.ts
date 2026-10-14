@@ -22,8 +22,12 @@ export function setPresenterDocTitle(_title: string): void {
   // No document on native.
 }
 
-export function isReloadNavigation(): boolean {
-  return false;
+export function markOpenDeck(_deckId: string | null): void {
+  // No history on native.
+}
+
+export function openDeckId(): string | null {
+  return null;
 }
 
 export function presenterConsoleOrigins(_extraCsv?: string): readonly string[] {

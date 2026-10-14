@@ -141,6 +141,26 @@ const STORY_LEVEL_ORDER: readonly StoryLevel[] = ['listen', 'read-along', 'read'
 const QUIZ_MIN_ITEMS = 4;
 const REVISIT_MAX_ROUNDS = 4;
 
+/**
+ * The key a block's slides start with (`<blockKey>/<path>`, section 3.3); a repeated block gets
+ * `#2`, `#3` after it. Exported so the presenter can tell which block a slide came from.
+ */
+export function blockKeyOf(block: LectureBlock): string {
+  switch (block.kind) {
+    case 'episode':
+    case 'quest':
+      return block.id;
+    case 'story':
+      return block.storyId;
+    case 'vocab':
+      return block.topicId;
+    case 'activity':
+      return `activity:${block.preset}`;
+    default:
+      return block.kind;
+  }
+}
+
 /** Recompute every slide's builds for new options (the live romanization flip, §3.7). */
 export function withBuilds(slides: readonly Slide[], opts: BuildOptions): Slide[] {
   return slides.map((slide) => ({ ...slide, builds: buildsFor(slide, opts) }));
@@ -628,22 +648,6 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
   // ---- the deck -------------------------------------------------------------------
 
   let classCode: string | undefined;
-  const blockKeyOf = (block: LectureBlock): string => {
-    switch (block.kind) {
-      case 'episode':
-      case 'quest':
-        return block.id;
-      case 'story':
-        return block.storyId;
-      case 'vocab':
-        return block.topicId;
-      case 'activity':
-        return `activity:${block.preset}`;
-      default:
-        return block.kind;
-    }
-  };
-
   deck.blocks.forEach((block, i) => {
     blockIndex = i;
     const key = nthKey(blockKeys, blockKeyOf(block));

@@ -10,9 +10,10 @@ import {
   fullscreenSupported,
   isFullscreen,
   isPresenterRoute,
-  isReloadNavigation,
   keepScreenAwake,
   listenForRoster,
+  markOpenDeck,
+  openDeckId,
   lockLandscape,
   presenterConsoleOrigins,
   releaseScreenAwake,
@@ -79,7 +80,8 @@ describe('route', () => {
     expect(native.announceReady(deck({ mode: 'names', count: 2 }))).toBe(0);
     expect(native.fullscreenSupported()).toBe(false);
     expect(native.wakeLockSupported()).toBe(false);
-    expect(native.isReloadNavigation()).toBe(false);
+    expect(native.openDeckId()).toBeNull();
+    native.markOpenDeck('lecture:abc123');
     expect(native.isFullscreen()).toBe(false);
     expect(await native.waitForPresenterFont(1)).toBe(false);
     expect(native.presenterConsoleOrigins()).toEqual([...LECTURE_CONSOLE_ORIGINS]);
@@ -170,23 +172,26 @@ describe('document title and navigation type', () => {
     expect(() => setPresenterDocTitle('x', env())).not.toThrow();
   });
 
-  it('reads a reload from the navigation timing entry', () => {
-    const perf = (type: string) => ({ getEntriesByType: () => [{ type }] });
-    expect(isReloadNavigation(env({ performance: perf('reload') }))).toBe(true);
-    expect(isReloadNavigation(env({ performance: perf('navigate') }))).toBe(false);
-    expect(isReloadNavigation(env({ performance: { getEntriesByType: () => [] } }))).toBe(false);
-    expect(
-      isReloadNavigation(
-        env({
-          performance: {
-            getEntriesByType: () => {
-              throw new Error('no');
-            },
-          },
-        }),
-      ),
-    ).toBe(false);
-    expect(isReloadNavigation(env())).toBe(false);
+  it('marks the open lesson in the history state, reads it back after a reload, and clears it', () => {
+    const history = {
+      state: null as unknown,
+      replaceState(state: unknown, _unused: string, url: string) {
+        this.state = state;
+        expect(url).toBe(PRESENTER_PATH);
+      },
+    };
+    const e = env({ history });
+    expect(openDeckId(e)).toBeNull();
+    markOpenDeck('lecture:abc123', e);
+    expect(history.state).toEqual({ hrLectureDeck: 'lecture:abc123' });
+    expect(openDeckId(e)).toBe('lecture:abc123');
+    markOpenDeck(null, e);
+    expect(openDeckId(e)).toBeNull();
+    expect(openDeckId(env({ history: { state: { hrLectureDeck: 3 }, replaceState: () => undefined } }))).toBeNull();
+    expect(openDeckId(env())).toBeNull();
+    expect(() =>
+      markOpenDeck('lecture:abc123', env({ history: { replaceState: () => { throw new Error('SecurityError'); } } })),
+    ).not.toThrow();
   });
 });
 
