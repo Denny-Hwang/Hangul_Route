@@ -1,4 +1,6 @@
 import type { RuntimeVocabItem } from '@hangul-route/content-schema';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { VOCAB_ITEMS } from '../../../content/__generated__/vocab';
 import {
@@ -20,6 +22,29 @@ import { progress, state, word } from './fixtures';
 const words = (n: number): RuntimeVocabItem[] =>
   Array.from({ length: n }, (_, i) => word(`w${String(i + 1).padStart(2, '0')}`));
 const slugs = (list: readonly { id: string }[]): string[] => list.map((w) => w.id.slice(6));
+
+describe('C-5: VocabCards honours route.params.ids (the Speed Round results "Practice these", F-VOC-004 section 3.6)', () => {
+  const screen = readFileSync(join(__dirname, '../../../screens/vocab/VocabCardsScreen.tsx'), 'utf8');
+  const results = readFileSync(join(__dirname, '../../../screens/vocab/VocabResultsScreen.tsx'), 'utf8');
+
+  it('the screen hands the route params, ids included, to cardsRun unchanged', () => {
+    expect(screen).toContain('params={route.params}');
+    expect(screen).toContain('cardsRun(items, { size: chunkSize(level), fixedOrder: source.fixedOrder, progress, params })');
+    expect(results).toContain('navigation.navigate(ACTIVITY_ROUTES.learn, { topicKey, ids: tiles.map((t) => t.item.id) })');
+  });
+
+  it('a real topic opened with ids plays only those words, in that order, from the first card', () => {
+    const food = VOCAB_ITEMS.filter((item) => item.topics.includes('food'));
+    expect(food.length).toBeGreaterThan(5);
+    // Words to see again, as the results list them: not in topic or chunk order.
+    const ids = [food[5]!.id, food[0]!.id, food[3]!.id];
+    const run = cardsRun(food, { size: 4, fixedOrder: false, progress: progress(), params: { ids } });
+    expect(run.words.map((w) => w.id)).toEqual(ids);
+    expect(run.inOrder.map((w) => w.id)).toEqual(ids);
+    expect(run.index).toBe(-1);
+    expect(initCardsFlash(run.words, run.startId).queue).toEqual(ids);
+  });
+});
 
 describe('cardsRun (section 3.1 params, section 3.5 resume)', () => {
   const items = words(12);

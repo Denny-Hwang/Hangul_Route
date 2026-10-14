@@ -22,8 +22,7 @@ The note goes away for Mina on every device. Our team looks at every report.   r
 (              Just hide it             )         secondary, report.justHide.cta
 ```
 
-- Report and hide stays `aria-disabled` (focusable, described by the line) until a reason is picked.
-  - Built (FB-9): the design-system `Button` has no focusable disabled variant yet, so the button is `disabled` (not focusable) until a reason is picked; the line under it stays on screen and describes it. Adding that variant is a design-system change of its own.
+- Report and hide stays `aria-disabled` (focusable, described by the line) until a reason is picked: the design-system `Button`'s `softDisabled`. While the report is sending it is plainly `disabled`.
 - No free-text field: nothing typed about a learner is collected. The person who reports is never told what happens to the sender.
 
 ## States (board)

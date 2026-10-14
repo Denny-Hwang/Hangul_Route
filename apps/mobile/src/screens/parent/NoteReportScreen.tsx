@@ -5,7 +5,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { useOnline } from '../../components/use-online';
 import { useMessages } from '../../i18n/use-messages';
-import { attestFor, endsGateOnLeave, grownUpNotes, noteReportDoneTarget, reportSentEvent, type ReportAnswer } from '../../logic/notes/grown-up';
+import { attestFor, endsGateOnLeave, grownUpNotes, noteReportDoneTarget, reportSentEvent, reportSubmitState, type ReportAnswer } from '../../logic/notes/grown-up';
 import type { RootStackParamList } from '../../navigation/types';
 import { track } from '../../platform/telemetry';
 import { useAudience } from '../../store/audience';
@@ -272,7 +272,7 @@ export function NoteReportScreen({ navigation, route }: Props): React.ReactEleme
           tone="primary"
           size="lg"
           fullWidth
-          disabled={reason === null || busy}
+          {...reportSubmitState(reason, busy)}
           accessibilityHint={r.line(name)}
           onPress={() => void submit()}
           testID="note-report-submit"
