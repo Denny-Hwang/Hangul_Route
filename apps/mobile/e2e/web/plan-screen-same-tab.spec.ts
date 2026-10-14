@@ -8,8 +8,8 @@ import { onboardChild, onboardSelf, unlockWithPin } from './helpers';
  * the Plan screen's Open billing hands off to `/account/billing` in the **same tab** through
  * `openGrownUpArea({ via: 'plan' })`, never a new tab. A PIN older than 2 minutes asks on the
  * grown-up area's PIN screen first. (Offline, Open billing is disabled with "Needs the internet":
- * F-APP-001 A-7's state, in grown-up-entries.spec.ts.) The flag is off by default, so these run on a
- * build made with it on (as A-7's grown-up-entries.spec.ts):
+ * F-APP-001 A-7's state, in grown-up-entries.spec.ts.) The flag is on by default since F-APP-001 A-10; these run in
+ * the billing and grown-up home lane (F-BILL-002 B-14), on a build made with it on (as A-7's grown-up-entries.spec.ts):
  *
  *   EXPO_PUBLIC_GROWN_UP_HOME=true pnpm --filter @hangul-route/mobile build:web
  *   E2E_GROWN_UP_HOME=1 pnpm --filter @hangul-route/mobile exec playwright test plan-screen-same-tab
