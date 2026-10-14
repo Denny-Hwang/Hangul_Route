@@ -1,6 +1,8 @@
 import type { Page } from '@playwright/test';
 import { keysFor } from '@hangul-route/content-schema';
 import { LESSON_EPISODES } from '../../src/content/__generated__/lessons-index';
+import { strokesForJamo } from '../../src/content/jamo-strokes';
+import { placeWordStrokes } from '../../src/logic/trace-word/block-strokes';
 import { expect, test } from './fixtures';
 import { completeChildForm, journeyCellName, keepSidewaysIfAsked, passDiscover, playCheckByIds, waitForNextListenPickRound } from './helpers';
 import { shot } from './shots';
@@ -23,6 +25,30 @@ interface UpperCell {
   playFirstQuest: (page: Page) => Promise<void>;
   /** Checks the Learning Route shows the cell's day. */
   expectRouteDay: (page: Page) => Promise<void>;
+}
+
+/**
+ * Trace a Word: trace `word` block by block over its placed ghost (the canvas's 200 viewBox, the
+ * same placement the game draws, computed here), one finger stroke per stroke. A fully drawn block
+ * is scored by the idle timer or by Done, whichever comes first; the game then moves on by itself.
+ */
+async function traceWord(page: Page, word: string, romanization: string): Promise<void> {
+  const blocks = placeWordStrokes(word, strokesForJamo);
+  expect(blocks, word).not.toBeNull();
+  await expect(page.getByRole('heading', { name: new RegExp(`^Trace the word ${romanization},`) })).toBeVisible({ timeout: 5_000 });
+  for (const [i, block] of blocks!.entries()) {
+    const canvas = page.getByTestId('trace-word-canvas');
+    await expect(canvas).toHaveAttribute('aria-label', new RegExp(`block ${i + 1} of ${blocks!.length}`));
+    const box = (await canvas.boundingBox())!;
+    const at = (p: { x: number; y: number }): [number, number] => [box.x + (p.x * box.width) / 200, box.y + (p.y * box.height) / 200];
+    for (const stroke of block.letters.flatMap((l) => l.strokes)) {
+      await page.mouse.move(...at(stroke[0]!));
+      await page.mouse.down();
+      for (const point of stroke.slice(1)) await page.mouse.move(...at(point), { steps: 12 });
+      await page.mouse.up();
+    }
+    await page.getByRole('button', { name: 'Done', exact: true }).click({ timeout: 1_500 }).catch(() => undefined);
+  }
 }
 
 /** Sentence Builder in the Stage 7 Check (no round counter, no Skip): build each round by its tiles. */
@@ -965,6 +991,42 @@ const CELLS: readonly UpperCell[] = [
       await page.getByText('Learning Route', { exact: true }).last().click();
       await page.getByRole('button', { name: /^Stage 7, Self-expression\./ }).click();
       await expect(page.getByRole('button', { name: /^Holidays & Traditions: My Holiday Memory\./ })).toBeVisible();
+    },
+  },
+  // F-CURR-001 S7-4: My Favorite Animal, q1 "Animals I Like": Trace a Word, Type Hangul, the order-it Check.
+  {
+    episodeId: 'episode:stage7-nature',
+    cellButton: journeyCellName(7, 'Nature & Animals'),
+    title: 'My Favorite Animal',
+    playFirstQuest: async (page) => {
+      await page.setViewportSize({ width: 320, height: 720 });
+      await startFirstQuest(page);
+      await expect(page.getByText('Look and learn', { exact: true })).toBeVisible();
+      await shot(page, 'favorite-animal-q1-discover-320');
+      await passDiscover(page);
+      await page.getByRole('button', { name: 'Play minigame' }).click();
+      await traceWord(page, '곰', 'gom');
+      await shot(page, 'favorite-animal-q1-trace-320');
+      await traceWord(page, '새', 'sae');
+      await traceWord(page, '토끼', 'tokki');
+      await traceWord(page, '동물', 'dongmul');
+      await page.getByRole('button', { name: 'Play minigame' }).click();
+      await typeRound(page, 1, 4, '호랑이');
+      await typeRound(page, 2, 4, '고양이');
+      await typeRound(page, 3, 4, '곰이 좋아요');
+      await shot(page, 'favorite-animal-q1-type-320');
+      await typeRound(page, 4, 4, '새가 좋아요');
+      await page.getByRole('button', { name: 'Go', exact: true }).click();
+      // Check round 1 is a particle round (the noun is given, 가 is picked); round 2 builds the sentence.
+      await buildCheck(page, 'I like cats.', ['가, ga']);
+      await buildCheck(page, 'I like tigers.', ['호랑이가, horangiga', '좋아요, joayo']);
+      await expect(page.getByText('Finish', { exact: true }).first()).toBeVisible();
+    },
+    expectRouteDay: async (page) => {
+      await page.goto('/');
+      await page.getByText('Learning Route', { exact: true }).last().click();
+      await page.getByRole('button', { name: /^Stage 7, / }).click();
+      await expect(page.getByRole('button', { name: /^Nature & Animals: My Favorite Animal\./ })).toBeVisible();
     },
   },
 ];

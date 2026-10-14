@@ -100,6 +100,16 @@ function classPlan(patch: Partial<WizardState> = {}, source: Catalog = CATALOG):
   return { id: 'plan:route', meta: toMeta(draft), items: toPlanItems(draft) };
 }
 
+/**
+ * Every grid cell has shipped since F-CURR-001, so the coming-soon cases read a copy of the catalogue
+ * with the Stage 7 cells taken back to "Coming later" placeholders.
+ */
+const SOON: Catalog = {
+  ...CATALOG,
+  cells: CATALOG.cells.map((cell) => (cell.stage === 'stage7' ? { ...cell, status: 'preview' as const, minutes: 10, questIds: [] } : cell)),
+  quests: CATALOG.quests.filter((quest) => quest.stage !== 'stage7'),
+};
+
 describe('starting points (section 3.8 step 1)', () => {
   it('has six cards mapped to placement levels, from Brand new to Reads first sentences', () => {
     expect(STARTING_POINT_IDS).toEqual(['brand-new', 'some-letters', 'all-letters', 'reads-words', 'first-words', 'first-sentences']);
@@ -288,7 +298,7 @@ describe('weekGroups: preview rows and the builder week groups', () => {
       { kind: 'episode', id: 'episode:stage7-nature', week: 9, note: 'Coming soon' },
       { kind: 'quest', id: 'quest:stage1-rites-q1', targetDate: '2027-03-01' },
     ];
-    const { rows, unscheduled } = weekGroups(plan.meta.weeks, items);
+    const { rows, unscheduled } = weekGroups(plan.meta.weeks, items, SOON);
     expect(rows[1]?.items.map((i) => i.index)).toEqual([0]);
     expect(unscheduled.map((i) => [i.index, i.date, i.category])).toEqual([
       [1, null, 'lesson'],
@@ -360,7 +370,7 @@ describe('route builder: up and down trade places on the calendar (section 3.8 s
 
 describe('weekLabel, extras and dates (codes worded at render time)', () => {
   const week = (patch: Partial<WeekMeta>): WeekMeta => ({ index: 1, startDate: TODAY, kind: 'learn', focus: { episodeId: null, storyIds: [], festival: null }, extras: [], ...patch });
-  const row = (w: WeekMeta, items: PlanItem[] = []) => weekGroups([w], items.map((i) => ({ ...i, week: 1 }))).rows[0]!;
+  const row = (w: WeekMeta, items: PlanItem[] = [], source: Catalog = CATALOG) => weekGroups([w], items.map((i) => ({ ...i, week: 1 })), source).rows[0]!;
 
   it('names review, break and culture weeks', () => {
     expect(weekLabel(row(week({ kind: 'review' })), 'en')).toBe('Review and collect');
@@ -372,7 +382,7 @@ describe('weekLabel, extras and dates (codes worded at render time)', () => {
   it('names a learn week by its lesson, its stories, its coming-soon items or free practice', () => {
     expect(weekLabel(row(week({ focus: { episodeId: 'episode:stage1-nature', storyIds: [], festival: null } })), 'en')).toBe('Tigers, Mountains, Moon');
     expect(weekLabel(row(week({ focus: { episodeId: null, storyIds: ['story:sun-and-moon'], festival: null } })), 'en')).toBe('Heritage stories');
-    expect(weekLabel(row(week({}), [{ kind: 'episode', id: 'episode:stage7-nature' }]), 'en')).toBe('New episodes are on the way');
+    expect(weekLabel(row(week({}), [{ kind: 'episode', id: 'episode:stage7-nature' }], SOON), 'en', SOON)).toBe('New episodes are on the way');
     expect(weekLabel(row(week({})), 'en')).toBe('Free practice');
   });
 
@@ -570,8 +580,8 @@ describe('re-pace from today (console mode shift, section 3.7)', () => {
     return { id: 'plan:route', meta: toMeta(draft), items: toPlanItems(draft) };
   }
 
-  it('offers Refresh route on every route saved from catalogue version 1 to 29 (F-QUEST-002 Q-6a bumps it to 2, Q-6b to 3, Q-7b to 4, Q-8 to 5, F-STORY-001 PR 1.9 to 6, F-STORY-005 PR 5.6 to 7 for the rites book and to 8 for the other four books, F-CURR-001 S4-1 to 9 for Read Along, S3-1 to 10 for First Sentences, S2-3 to 11 for Playground Words, S3-3 to 12 for Festival Sentences, S3-5 to 13 for Game Sentences, S3-2 to 14 for Daily Mini-Sentences, T-2 to 15 for Greeting Dialogues, S2-1 to 16 for Word Builder, S2-2 to 17 for Holiday Words, S4-2 to 18 for Kitchen Talk, S4-3 to 19 for Park Conversations, S4-4 to 20 for Playdate Talk, S6-1 to 21 for Read the Menu, S6-2 to 22 for Order Food, S6-3 to 23 for Travel for Chuseok, S6-4 to 24 for Hike & Ask, S6-5 to 25 for Buy at Market, S3-4 to 26 for Animal Sentences, T-1 to 27 for Lunch Box Words and Outdoor Words, S7-1 to 28 for Write Your Name, S7-2 to 29 for My Day in Korean, S7-3 to 30 for My Holiday Memory)', () => {
-    expect(CATALOG.version).toBe(30);
+  it('offers Refresh route on every route saved from catalogue version 1 to 30 (F-QUEST-002 Q-6a bumps it to 2, Q-6b to 3, Q-7b to 4, Q-8 to 5, F-STORY-001 PR 1.9 to 6, F-STORY-005 PR 5.6 to 7 for the rites book and to 8 for the other four books, F-CURR-001 S4-1 to 9 for Read Along, S3-1 to 10 for First Sentences, S2-3 to 11 for Playground Words, S3-3 to 12 for Festival Sentences, S3-5 to 13 for Game Sentences, S3-2 to 14 for Daily Mini-Sentences, T-2 to 15 for Greeting Dialogues, S2-1 to 16 for Word Builder, S2-2 to 17 for Holiday Words, S4-2 to 18 for Kitchen Talk, S4-3 to 19 for Park Conversations, S4-4 to 20 for Playdate Talk, S6-1 to 21 for Read the Menu, S6-2 to 22 for Order Food, S6-3 to 23 for Travel for Chuseok, S6-4 to 24 for Hike & Ask, S6-5 to 25 for Buy at Market, S3-4 to 26 for Animal Sentences, T-1 to 27 for Lunch Box Words and Outdoor Words, S7-1 to 28 for Write Your Name, S7-2 to 29 for My Day in Korean, S7-3 to 30 for My Holiday Memory, S7-4 to 31 for My Favorite Animal)', () => {
+    expect(CATALOG.version).toBe(31);
     expect(v1Plan('brand-new').meta.catalogVersion).toBe(1);
     expect(isStaleCatalog(v1Plan('brand-new').meta)).toBe(true);
     expect(isStaleCatalog(v1Plan('some-letters').meta)).toBe(true);
@@ -631,6 +641,8 @@ describe('re-pace from today (console mode shift, section 3.7)', () => {
     expect(isStaleCatalog({ ...v1Plan('brand-new').meta, catalogVersion: 28 })).toBe(true);
     // A route saved before My Holiday Memory shipped (version 29) asks once too.
     expect(isStaleCatalog({ ...v1Plan('brand-new').meta, catalogVersion: 29 })).toBe(true);
+    // A route saved before My Favorite Animal shipped (version 30) asks once too.
+    expect(isStaleCatalog({ ...v1Plan('brand-new').meta, catalogVersion: 30 })).toBe(true);
   });
 
   it('a new route on the shipped catalogue can schedule the new nature and crafts quests after their q1 (F-QUEST-002 Q-8)', () => {

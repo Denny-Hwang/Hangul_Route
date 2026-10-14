@@ -117,6 +117,16 @@ describe('freeLessonsLine: codes, never words', () => {
   });
 });
 
+/**
+ * Every grid cell has shipped since F-CURR-001, so the coming-soon cases read a copy of the catalogue
+ * with the Stage 7 cells taken back to "Coming later" placeholders.
+ */
+const SOON: Catalog = {
+  ...CATALOG,
+  cells: CATALOG.cells.map((cell) => (cell.stage === 'stage7' ? { ...cell, status: 'preview' as const, minutes: 10, questIds: [] } : cell)),
+  quests: CATALOG.quests.filter((quest) => quest.stage !== 'stage7'),
+};
+
 describe('planFreeFacts: what a plan\'s own items say about the free plan', () => {
   const quest = (id: string, targetDate?: string): PlanItem => ({ kind: 'quest', id, ...(targetDate ? { targetDate } : {}) });
   const episode = (id: string, targetDate?: string): PlanItem => ({ kind: 'episode', id, ...(targetDate ? { targetDate } : {}) });
@@ -130,7 +140,7 @@ describe('planFreeFacts: what a plan\'s own items say about the free plan', () =
 
   it('never counts a coming-soon episode, a story, an unknown id or a free lesson', () => {
     const items = [episode('episode:stage7-crafts'), episode('episode:stage7-nature'), episode('episode:nowhere'), quest(story), quest('quest:unknown'), episode('episode:stage1-letters')];
-    expect(planFreeFacts(items, CATALOG, null)).toEqual({ closed: 0, closedInHorizon: 0, openAhead: false });
+    expect(planFreeFacts(items, SOON, null)).toEqual({ closed: 0, closedInHorizon: 0, openAhead: false });
   });
 
   it('finds an open item dated after the horizon of a curriculum; a classic plan has none', () => {
@@ -138,7 +148,7 @@ describe('planFreeFacts: what a plan\'s own items say about the free plan', () =
     expect(planFreeFacts(later, CATALOG, '2026-10-25')).toEqual({ closed: 1, closedInHorizon: 0, openAhead: true });
     expect(planFreeFacts(later, CATALOG, null)).toEqual({ closed: 1, closedInHorizon: 1, openAhead: false });
     // A free lesson inside the horizon, a closed lesson or a coming-soon episode after it, or an undated item, is not open ahead.
-    expect(planFreeFacts([quest('quest:stage1-letters-q1', '2026-10-25'), quest('quest:stage2-life-q1', '2026-12-30'), episode('episode:stage7-nature', '2026-12-30'), quest('quest:stage1-life-q1')], CATALOG, '2026-10-25')).toEqual({ closed: 1, closedInHorizon: 0, openAhead: false });
+    expect(planFreeFacts([quest('quest:stage1-letters-q1', '2026-10-25'), quest('quest:stage2-life-q1', '2026-12-30'), episode('episode:stage7-nature', '2026-12-30'), quest('quest:stage1-life-q1')], SOON, '2026-10-25')).toEqual({ closed: 1, closedInHorizon: 0, openAhead: false });
     expect(planFreeFacts([episode('episode:stage1-life', '2026-11-30')], CATALOG, '2026-10-25').openAhead).toBe(true);
     expect(planFreeFacts([quest(story, '2026-11-30')], CATALOG, '2026-10-25').openAhead).toBe(true);
   });

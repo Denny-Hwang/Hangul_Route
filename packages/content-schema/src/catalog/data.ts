@@ -39,8 +39,9 @@ import type { Catalog, CatalogCell, CatalogQuest, CatalogStory, CatalogTopic } f
  * Version 28 (F-CURR-001 S7-1): Write Your Name ships (Stage 7 letters, 3 lesson quests); Stage 7 is a taste.
  * Version 29 (F-CURR-001 S7-2): My Day in Korean ships (Stage 7 life, 3 lesson quests).
  * Version 30 (F-CURR-001 S7-3): My Holiday Memory ships (Stage 7 rites, 3 lesson quests).
+ * Version 31 (F-CURR-001 S7-4): My Favorite Animal ships (Stage 7 nature, 3 lesson quests).
  */
-export const CATALOG_VERSION = 30;
+export const CATALOG_VERSION = 31;
 
 const cell = (
   stage: StageKey,
@@ -113,7 +114,7 @@ const cells: CatalogCell[] = [
   cell('stage7', 'letters', 'Write Your Name', 'shipped', 15, ['quest:stage7-letters-q1', 'quest:stage7-letters-q2', 'quest:stage7-letters-q3']),
   cell('stage7', 'life', 'My Day in Korean', 'shipped', 15, ['quest:stage7-life-q1', 'quest:stage7-life-q2', 'quest:stage7-life-q3']),
   cell('stage7', 'rites', 'My Holiday Memory', 'shipped', 15, ['quest:stage7-rites-q1', 'quest:stage7-rites-q2', 'quest:stage7-rites-q3']),
-  soon('stage7', 'nature', 'My Favorite Animal'),
+  cell('stage7', 'nature', 'My Favorite Animal', 'shipped', 15, ['quest:stage7-nature-q1', 'quest:stage7-nature-q2', 'quest:stage7-nature-q3']),
   soon('stage7', 'crafts', 'Make & Share'),
 ];
 
@@ -213,6 +214,9 @@ const lessonQuests: CatalogQuest[] = [
   lesson('stage7-rites-q1', 'stage7', 'rites', 'I Ate Tteokguk', 5),
   lesson('stage7-rites-q2', 'stage7', 'rites', 'On Seollal I Ate ...', 5),
   lesson('stage7-rites-q3', 'stage7', 'rites', 'My Favorite Day', 5),
+  lesson('stage7-nature-q1', 'stage7', 'nature', 'Animals I Like', 5),
+  lesson('stage7-nature-q2', 'stage7', 'nature', 'Big Tiger, Cute Cat', 5),
+  lesson('stage7-nature-q3', 'stage7', 'nature', 'My Favorite Animal', 5),
   // The Stage 5 books (F-STORY-005 PR 5.6): grid quests that play their stories at the read level.
   lesson('story-sejong-new-letters-read', 'stage5', 'letters', "King Sejong's New Letters", 4),
   lesson('story-shapes-of-hangeul-read', 'stage5', 'letters', 'The Secret in the Shapes', 5),

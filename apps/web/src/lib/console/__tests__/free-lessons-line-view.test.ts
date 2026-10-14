@@ -1,4 +1,4 @@
-import { CATALOG, type CurriculumMeta, type PlanItem } from '@hangul-route/content-schema';
+import { CATALOG, type Catalog, type CurriculumMeta, type PlanItem } from '@hangul-route/content-schema';
 import { getMessages } from '@hangul-route/i18n';
 import { describe, expect, it } from 'vitest';
 import type { PlanView, RosterLearner } from '../api';
@@ -55,6 +55,16 @@ const input = (over: Partial<RosterFreeLineInput> = {}): RosterFreeLineInput => 
   ...over,
 });
 
+/**
+ * Every grid cell has shipped since F-CURR-001, so the coming-soon cases read a copy of the catalogue
+ * with the Stage 7 cells taken back to "Coming later" placeholders.
+ */
+const SOON: Catalog = {
+  ...CATALOG,
+  cells: CATALOG.cells.map((cell) => (cell.stage === 'stage7' ? { ...cell, status: 'preview' as const, minutes: 10, questIds: [] } : cell)),
+  quests: CATALOG.quests.filter((quest) => quest.stage !== 'stage7'),
+};
+
 describe('rosterFreeLessonsLine: the plan-waiting line on a roster card', () => {
   it('shows for the owner of an uncovered class with the switch on, with Open billing', () => {
     expect(rosterFreeLessonsLine(input(), 'en')).toEqual({
@@ -86,9 +96,9 @@ describe('rosterFreeLessonsLine: the plan-waiting line on a roster card', () => 
 
   it('counts the plan\'s closed lessons, never unreleased items, and shows nothing when only those were skipped', () => {
     const withSoon = plan('plan:1', { items: [...ITEMS, { kind: 'episode', id: 'episode:stage7-crafts' }, { kind: 'episode', id: 'episode:stage7-nature' }] });
-    expect(rosterFreeLessonsLine(input({ plans: [withSoon], learner: learner({ 'plan:1': { done: 2, total: 2, notReady: 5 } }) }), 'en')?.text).toBe(words.planWaiting('Mina', 3, words.product.class));
+    expect(rosterFreeLessonsLine(input({ plans: [withSoon], learner: learner({ 'plan:1': { done: 2, total: 2, notReady: 5 } }) }), 'en', SOON)?.text).toBe(words.planWaiting('Mina', 3, words.product.class));
     const onlySoon = plan('plan:1', { items: [quest('quest:stage1-letters-q1'), { kind: 'episode', id: 'episode:stage7-crafts' }] });
-    expect(rosterFreeLessonsLine(input({ plans: [onlySoon], learner: learner({ 'plan:1': { done: 1, total: 1, notReady: 1 } }) }), 'en')).toBeNull();
+    expect(rosterFreeLessonsLine(input({ plans: [onlySoon], learner: learner({ 'plan:1': { done: 1, total: 1, notReady: 1 } }) }), 'en', SOON)).toBeNull();
   });
 
   it('waits while a curriculum still holds open lessons past its horizon', () => {
@@ -127,8 +137,8 @@ describe('rosterFreeLessonsLine: the plan-waiting line on a roster card', () => 
   it('never shows when the device skipped fewer items than the closed lessons it derived (they were open for this learner)', () => {
     // Premium through another space: the three closed lessons were open and done; one unreleased episode was skipped.
     const withSoon = plan('plan:1', { items: [...ITEMS, { kind: 'episode', id: 'episode:stage7-crafts' }] });
-    expect(rosterFreeLessonsLine(input({ plans: [withSoon], learner: learner({ 'plan:1': { done: 5, total: 5, notReady: 1 } }) }), 'en')).toBeNull();
-    expect(rosterFreeLessonsLine(input({ plans: [withSoon], learner: learner({ 'plan:1': { done: 2, total: 2, notReady: 4 } }) }), 'en')?.text).toBe(words.planWaiting('Mina', 3, words.product.class));
+    expect(rosterFreeLessonsLine(input({ plans: [withSoon], learner: learner({ 'plan:1': { done: 5, total: 5, notReady: 1 } }) }), 'en', SOON)).toBeNull();
+    expect(rosterFreeLessonsLine(input({ plans: [withSoon], learner: learner({ 'plan:1': { done: 2, total: 2, notReady: 4 } }) }), 'en', SOON)?.text).toBe(words.planWaiting('Mina', 3, words.product.class));
   });
 
   it('shows nothing for a learner who has not synced, or a plan the device has not reported yet', () => {

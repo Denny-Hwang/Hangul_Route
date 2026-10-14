@@ -58,7 +58,7 @@ export const BUDGET = Object.freeze({
   stageRaw: 150_000,
   stageGzip: 32_000,
   totalRaw: 950_000, // F-CURR-001 integration of S6-1..S7-5, S3-4, T-1: all 24 cells measure about 0.9 MB raw on the compact literal (section 9)
-  totalGzip: 128_000,
+  totalGzip: 140_000, // F-CURR-001 integration of S6-1..S7-5, S3-4, T-1: all 24 cells measure about 133 KB gzip (section 9)
 });
 
 export class ContentError extends Error {
