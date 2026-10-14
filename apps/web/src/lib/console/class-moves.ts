@@ -127,13 +127,18 @@ export function readPreview(data: unknown): ClassMovePreview | null {
   return { destination: { id: data.destination.id, name: data.destination.name }, direct: data.direct };
 }
 
-/** The report's `scope` and `settings` (lenient: anything else reads as unknown, never a failed report). */
-export function readReportScope(raw: Plain): { scope: 'base' | 'full' | null; settings: { classNotes: NotesMode | null } | null } {
-  const scope = raw.scope === 'base' || raw.scope === 'full' ? raw.scope : null;
-  const settings = isPlain(raw.settings)
-    ? { classNotes: str(raw.settings.classNotes) && (NOTES_MODES as readonly string[]).includes(raw.settings.classNotes) ? (raw.settings.classNotes as NotesMode) : null }
-    : null;
-  return { scope, settings };
+/**
+ * The report's `scope` and `settings` (lenient: anything else reads as unknown, never a failed report). Only the keys
+ * the Worker sent come back, so a body from an older Worker reads exactly as before.
+ */
+export function readReportScope(raw: Plain): { scope?: 'base' | 'full'; settings?: { classNotes: NotesMode | null } } {
+  const out: { scope?: 'base' | 'full'; settings?: { classNotes: NotesMode | null } } = {};
+  if (raw.scope === 'base' || raw.scope === 'full') out.scope = raw.scope;
+  if (isPlain(raw.settings)) {
+    const notes = raw.settings.classNotes;
+    out.settings = { classNotes: str(notes) && (NOTES_MODES as readonly string[]).includes(notes) ? (notes as NotesMode) : null };
+  }
+  return out;
 }
 
 // ---------------------------------------------------------------------------

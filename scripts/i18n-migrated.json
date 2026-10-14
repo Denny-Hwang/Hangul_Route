@@ -112,7 +112,11 @@
     "apps/mobile/src/screens/parent/SuggestedPlanCard.tsx",
     "apps/web/src/components/console/FamilyNotesParts.tsx",
     "apps/mobile/PresenterApp.tsx",
-    "apps/mobile/src/screens/presenter/**"
+    "apps/mobile/src/screens/presenter/**",
+    "apps/web/src/components/console/TeacherMoveSheet.tsx",
+    "apps/web/src/components/console/TeacherMovesSection.tsx",
+    "apps/web/src/components/console/FamilyClassCards.tsx",
+    "apps/web/src/components/console/ReportScopeBlock.tsx"
   ],
   "pluralTernaryBaseline": {
     "packages/content-schema/src/romanization/compare.ts": 1
