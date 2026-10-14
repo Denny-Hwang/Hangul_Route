@@ -124,6 +124,8 @@ export const CATALOG_QUEST_ADDITIONS: Readonly<Record<number, readonly string[]>
   27: Object.freeze(['quest:stage2-life-q2', 'quest:stage2-life-q3', 'quest:stage2-nature-q2', 'quest:stage2-nature-q3']),
   // F-CURR-001 S7-1: Write Your Name.
   28: Object.freeze(['quest:stage7-letters-q1', 'quest:stage7-letters-q2', 'quest:stage7-letters-q3']),
+  // F-CURR-001 S7-2: My Day in Korean.
+  29: Object.freeze(['quest:stage7-life-q1', 'quest:stage7-life-q2', 'quest:stage7-life-q3']),
 });
 
 /** The quest ids the catalogue held at `version` (versions before 8 read as 8). */
