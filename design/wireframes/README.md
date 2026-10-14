@@ -30,6 +30,7 @@
 | `minigame/build-letter.md` | R | F-QUEST-002 §3.7 (Q-7a) |
 | `minigame/listen-pick.md` | R | F-QUEST-002 §3.10 (Q-3b) |
 | `minigame/pic-word-match.md` | R | F-QUEST-002 §3.11 (Q-4) |
+| `minigame/type-hangul.md` · `minigame/trace-word.md` · `minigame/write-frame.md` | R | F-CURR-001 §3.7 (D-3; mocks `design/screens/minigame-writing/`; built in G-3, G-4, G-5) |
 | `story/check.md` · `story/word-recap.md` · `results/celebrate-story.md` | R | F-STORY-003 §3.4 · §3.6 · §3.7 (PR 3.0; brief `screens/22-story-check`, `components/choice-card`) |
 | `story/sequence.md` | S | F-STORY-003 §3.5 (Story Order v2 built in PR 3.5a; art in 3.5b; brief `screens/12-minigame-story-sequence` revised) |
 | `results/celebrate.md` | S | F-MOTION-003 |

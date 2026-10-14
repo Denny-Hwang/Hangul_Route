@@ -1,0 +1,357 @@
+/*
+ * D-3: static design mock of Type Hangul, Trace a Word and Write Frame (not shipped code). Spec:
+ * docs/specs/F-CURR-001-upper-stage-content.md (sections 3.7, 3.14; OD-6, OD-10). Wireframes:
+ * design/wireframes/minigame/type-hangul.md, trace-word.md, write-frame.md.
+ * Every value below is a token of packages/design-system/src/tokens.ts, copied once as a custom property named
+ * after it (the token block of design/screens/learning-route/mock/learning-route.css, checked against tokens.ts
+ * on this commit, plus the layout tokens this pass needs): --spacing-xl is spacing.xl, --colors-brand-primary is
+ * colors.brand.primary. Each device frame is a size container, so one page draws a 320 phone and a tablet side by
+ * side; container queries stand in for the app's window classes (layout.breakpoint 600 / 900). The few numbers
+ * that are not tokens are in ../README.md, "Constants", each with what it derives from.
+ */
+:root {
+  --colors-brand-primary: #B24915;
+  --colors-brand-primaryDark: #8D3A11;
+  --colors-brand-primaryLight: #FAD9C6;
+  --colors-brand-secondary: #2672A6;
+  --colors-brand-secondaryDark: #1D5881;
+  --colors-brand-secondaryLight: #CDE5F4;
+  --colors-surface-canvas: #FCF8F1;
+  --colors-surface-paper: #FFFFFF;
+  --colors-surface-sunken: #F2EBDE;
+  --colors-surface-overlay: rgba(20, 14, 8, 0.40);
+  --colors-surface-inkScrim: rgba(20, 14, 8, 0.06);
+  --colors-text-primary: #2A1F14;
+  --colors-text-secondary: #5C4A36;
+  --colors-text-muted: #6F614D;
+  --colors-text-inverse: #FFFFFF;
+  --colors-text-onPrimary: #FFFFFF;
+  --colors-text-onSecondary: #FFFFFF;
+  --colors-feedback-success: #397952;
+  --colors-feedback-successDark: #2C5E3F;
+  --colors-feedback-successLight: #D6EFDF;
+  --colors-feedback-nudge: #F2B33D;
+  --colors-feedback-nudgeLight: #FCEED1;
+  --colors-feedback-info: #5B8DEF;
+  --colors-feedback-infoLight: #D9E5FB;
+  --colors-feedback-danger: #C84B3D;
+  --colors-feedback-dangerLight: #F8DBD8;
+  --colors-stage-stage1: #E8743B;
+  --colors-stage-stage2: #D89B2B;
+  --colors-stage-stage3: #7BB552;
+  --colors-stage-stage4: #4A9DD6;
+  --colors-stage-stage5: #8265C2;
+  --colors-stage-stage6: #C84B7D;
+  --colors-stage-stage7: #3D9B8C;
+  --colors-border-subtle: #E8DFCD;
+  --colors-border-strong: #C5B8A1;
+  --colors-border-focus: #3A7FB5;
+  --colors-border-shape: #857360;
+  --colors-hoya-fur: #F2B33D;
+  --colors-hoya-furDark: #B5862A;
+  --colors-hoya-stripes: #2A1F14;
+  --colors-hoya-belly: #FCF8F1;
+  --colors-hoya-nose: #2A1F14;
+  --colors-hoya-cheek: #F8B4B4;
+  --colors-hoya-furBlue: #4891CB;
+  --colors-hoya-furBlueDark: #2E6A9E;
+  --colors-hoya-furGreen: #5E9E3E;
+  --colors-hoya-furGreenDark: #437A2A;
+  --colors-hoya-furPurple: #7C57C0;
+  --colors-hoya-furPurpleDark: #5B3F9A;
+  --colors-hoya-furPink: #D0527F;
+  --colors-hoya-furPinkDark: #A33A62;
+  --spacing-none: 0px;
+  --spacing-xxs: 2px;
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 12px;
+  --spacing-lg: 16px;
+  --spacing-xl: 24px;
+  --spacing-xxl: 32px;
+  --spacing-xxxl: 48px;
+  --spacing-jumbo: 64px;
+  --radii-none: 0px;
+  --radii-xs: 4px;
+  --radii-sm: 8px;
+  --radii-md: 12px;
+  --radii-lg: 16px;
+  --radii-xl: 24px;
+  --radii-xxl: 32px;
+  --radii-pill: 999px;
+  --radii-circle: 9999px;
+  --size-caption: 0.875rem; /* 14 */
+  --size-bodySm: 1rem; /* 16 */
+  --size-body: 1.125rem; /* 18 */
+  --size-bodyLg: 1.25rem; /* 20 */
+  --size-prompt: 1.375rem; /* 22 */
+  --size-title: 1.75rem; /* 28 */
+  --size-display: 2.25rem; /* 36 */
+  --size-hero: 3rem; /* 48 */
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+  --leading-tight: 1.15;
+  --leading-normal: 1.35;
+  --leading-relaxed: 1.55;
+  --family-mono: Menlo, Courier, monospace;
+  --z-base: 0;
+  --z-raised: 10;
+  --z-sticky: 20;
+  --z-drawer: 30;
+  --z-modal: 40;
+  --z-toast: 50;
+  --z-hoyaBubble: 60;
+  --touch-min: 64px;
+  --touch-child: 80px;
+  --touch-hero: 96px;
+  --border-width-thin: 1px;
+  --border-width-base: 2px;
+  --border-width-thick: 3px;
+  --max-width-reading: 720px;
+  --max-width-full: 1120px;
+  --gutter-compact: 16px;
+  --gutter-regular: 24px;
+  --gutter-wide: 32px;
+  --shadow-card: 0 2px 8px rgba(42, 31, 20, 0.06); /* shadows.card (shadowColor text.primary) */
+}
+:root {
+  /* tokens this pass adds to the block: layout.*, shadows.raised and the two WordArt colours its pictures use */
+  --colors-vocab-green: #3FA34D;
+  --colors-vocab-red: #D83A34;
+  --breakpoint-regular: 600px;
+  --breakpoint-wide: 900px;
+  --compact-height: 640px;
+  --short-height: 480px;
+  --media-scale-regular: 1.2;
+  --media-scale-wide: 1.4;
+  --shadow-raised: 0 4px 16px rgba(42, 31, 20, 0.10); /* shadows.raised (shadowColor text.primary) */
+}
+:root {
+  /* Constants (../README.md, "Constants") */
+  --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; /* typography.family.sans ('System') on the web build */
+  --keys-standard: 10;          /* KS X 5002 row 1: ten keys; standard needs 10 x touchTarget.min */
+  --keys-split: 5;              /* one half of row 1: five keys */
+  --progress-height: var(--spacing-md); /* Progress default height 12 (Progress.tsx) = spacing.md */
+  --trace-canvas-min: 160px;    /* TRACE_CANVAS_MIN, logic/trace-layout.ts */
+  --trace-canvas-max: 320px;    /* TRACE_CANVAS_MAX, logic/trace-layout.ts */
+  --trace-canvas-roomy: 240px;  /* the roomy-mode canvas floor of trace-layout (TRACE_ROOMY_MIN_HEIGHT note) */
+  --ghost-opacity: 0.12;        /* the trace ghost's strokeOpacity in TraceStrokeGame.tsx */
+  --ghost-stroke: 18;           /* the trace ghost's strokeWidth (viewBox 200) */
+  --ink-stroke: 8;              /* the learner's strokeWidth (viewBox 200) */
+  --key-glyph: 28px;            /* typography.size.title in dp: a key face is media (LD4), so it does not follow the text size */
+  --key-hint: 14px;             /* typography.size.caption in dp, same reason */
+  --key-glyph-tablet: 36px;     /* typography.size.display in dp */
+  --key-hint-tablet: 16px;      /* typography.size.bodySm in dp */
+  --board-gap: var(--spacing-xxl);
+}
+
+/* ------------------------------------------------------------------------------------------ */
+/* Base and the design board (annotations are board notes, not UI)                             */
+/* ------------------------------------------------------------------------------------------ */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 100%; }
+body { font-family: var(--font-stack); color: var(--colors-text-primary); background: var(--colors-surface-sunken); line-height: var(--leading-normal); }
+body.page { background: var(--colors-surface-canvas); }
+.board { padding: var(--spacing-xl); display: flex; flex-direction: column; gap: var(--spacing-xl); }
+.board-title { font-family: var(--family-mono); font-size: var(--size-bodySm); font-weight: var(--weight-bold); color: var(--colors-text-secondary); }
+.board-row { display: flex; flex-wrap: wrap; align-items: flex-start; gap: var(--board-gap); }
+.board-item { display: flex; flex-direction: column; gap: var(--spacing-sm); }
+.board-label { font-family: var(--family-mono); font-size: var(--size-caption); color: var(--colors-text-secondary); max-width: 20rem; }
+.note { font-family: var(--family-mono); font-size: var(--size-caption); color: var(--colors-text-secondary); border: var(--border-width-thin) dashed var(--colors-border-strong); border-radius: var(--radii-sm); padding: var(--spacing-xs) var(--spacing-sm); max-width: 20rem; }
+.visually-hidden { position: absolute; width: var(--border-width-thin); height: var(--border-width-thin); overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+/* A device: the window the app gets. Board devices have a fixed size; a page fills the viewport. */
+.device { container-type: size; container-name: device; position: relative; overflow: hidden; background: var(--colors-surface-canvas); border: var(--border-width-thin) solid var(--colors-border-strong); border-radius: var(--radii-md); }
+.device.fill { width: 100vw; height: 100vh; border: none; border-radius: var(--radii-none); }
+
+/* ------------------------------------------------------------------------------------------ */
+/* Learner parts (Button, Pill, Progress, KoreanText as the app draws them)                      */
+/* ------------------------------------------------------------------------------------------ */
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: var(--spacing-sm); min-height: var(--touch-min); min-width: var(--touch-min); padding: 0 var(--spacing-xl); border-radius: var(--radii-pill); border: var(--border-width-base) solid transparent; font-size: var(--size-body); font-weight: var(--weight-bold); line-height: var(--leading-tight); text-align: center; background: transparent; color: var(--colors-text-primary); cursor: pointer; }
+.btn-primary { background: var(--colors-brand-primary); color: var(--colors-text-onPrimary); }
+.btn-secondary { background: var(--colors-brand-secondary); color: var(--colors-text-onSecondary); }
+.btn-ghost { border-color: var(--colors-brand-primary); color: var(--colors-brand-primary); }
+.btn-sm { font-size: var(--size-bodySm); padding: 0 var(--spacing-lg); }
+.btn-block { width: 100%; }
+.btn[aria-disabled="true"] { background: var(--colors-surface-sunken); border-color: var(--colors-surface-sunken); color: var(--colors-text-muted); }
+.pill { display: inline-flex; align-items: center; padding: var(--spacing-xxs) var(--spacing-sm); border-radius: var(--radii-pill); background: var(--colors-surface-sunken); color: var(--colors-text-secondary); font-size: var(--size-caption); font-weight: var(--weight-bold); white-space: nowrap; }
+.bar { flex: 1; min-width: 0; height: var(--progress-height); border-radius: var(--radii-pill); background: var(--colors-surface-sunken); overflow: hidden; }
+.bar > i { display: block; height: 100%; border-radius: var(--radii-pill); background: var(--colors-brand-primary); }
+.ko { font-weight: var(--weight-bold); }
+.rom { font-size: var(--size-bodySm); color: var(--colors-text-secondary); font-weight: var(--weight-regular); }
+.gloss { font-size: var(--size-bodySm); color: var(--colors-text-secondary); font-weight: var(--weight-regular); }
+.icon { display: block; flex: none; }
+
+/* ------------------------------------------------------------------------------------------ */
+/* Game screen frame: the part above the keyboard scrolls; the keyboard is pinned under it.      */
+/* ------------------------------------------------------------------------------------------ */
+.screen { display: flex; flex-direction: column; height: 100%; }
+.screen-top { flex: 1 1 auto; min-height: 0; overflow: auto; padding: var(--spacing-xs) var(--gutter-compact); display: flex; flex-direction: column; gap: var(--spacing-xs); }
+.screen.scroll .screen-top { gap: var(--spacing-md); padding-bottom: var(--spacing-lg); }
+.topbar { display: flex; align-items: center; gap: var(--spacing-sm); min-height: var(--touch-min); }
+.heading { font-size: var(--size-prompt); font-weight: var(--weight-bold); line-height: var(--leading-tight); }
+.prompt { display: flex; flex-wrap: wrap; align-items: baseline; column-gap: var(--spacing-sm); font-size: var(--size-prompt); line-height: var(--leading-normal); }
+.prompt .lead { font-size: var(--size-bodySm); font-weight: var(--weight-semibold); color: var(--colors-text-secondary); }
+.answer { display: flex; align-items: stretch; gap: var(--spacing-sm); }
+.field { flex: 1; min-width: 0; min-height: var(--touch-min); display: flex; align-items: center; padding: 0 var(--spacing-md); background: var(--colors-surface-paper); border: var(--border-width-base) solid var(--colors-border-strong); border-radius: var(--radii-md); font-size: var(--size-title); font-weight: var(--weight-semibold); line-height: var(--leading-tight); white-space: nowrap; overflow: hidden; }
+.field .open { text-decoration: underline; text-decoration-thickness: var(--border-width-base); text-underline-offset: var(--spacing-xs); text-decoration-color: var(--colors-brand-secondary); }
+.field .caret { display: inline-block; width: var(--border-width-base); height: 1.15em; margin-left: var(--spacing-xxs); background: var(--colors-text-primary); }
+.field .placeholder { font-size: var(--size-bodySm); font-weight: var(--weight-regular); color: var(--colors-text-muted); white-space: normal; }
+.field.pass { background: var(--colors-feedback-successLight); border-color: var(--colors-feedback-success); }
+.field.miss { background: var(--colors-feedback-nudgeLight); border-color: var(--colors-feedback-nudge); }
+.field .mark { margin-left: auto; }
+.done-under { display: none; }
+.skip-under { display: none; }
+.full-top { display: flex; flex-direction: column; gap: var(--spacing-xs); }
+.compact-top { display: none; }
+.cprompt { flex: 1; min-width: 0; }
+.cprompt .prompt { row-gap: var(--spacing-none); }
+.answer-bar { flex: none; padding: var(--spacing-xs) var(--gutter-compact); }
+
+/* Hoya strip / panel (TraceFeedback and the result panel) */
+.strip { display: flex; align-items: center; gap: var(--spacing-sm); padding: var(--spacing-sm) var(--spacing-md); border-radius: var(--radii-lg); border: var(--border-width-base) solid var(--colors-border-subtle); background: var(--colors-surface-paper); font-size: var(--size-bodySm); font-weight: var(--weight-semibold); line-height: var(--leading-normal); }
+.strip.cheering { background: var(--colors-feedback-successLight); border-color: var(--colors-feedback-success); }
+.strip.thinking { background: var(--colors-feedback-nudgeLight); border-color: var(--colors-feedback-nudge); }
+.strip .hoya { flex: none; }
+
+/* ------------------------------------------------------------------------------------------ */
+/* HangulKeyboard. Cells are hit areas with no gap between them; the key is drawn inside, inset    */
+/* by spacing.xxs. Split (default): 5 columns, edge to edge on a compact window. Standard: from a   */
+/* keyboard width of 10 x touchTarget.min (the 688 container below = 640 + 2 x gutter.regular).     */
+/* ------------------------------------------------------------------------------------------ */
+.kbd { flex: none; background: var(--colors-surface-canvas); border-top: var(--border-width-thin) solid var(--colors-border-subtle); padding-bottom: env(safe-area-inset-bottom, 0px); }
+.kbd { --cw: min(calc(100cqw / var(--keys-split)), var(--touch-hero)); --ch: var(--touch-min); }
+.split .half { display: grid; grid-template-columns: repeat(var(--keys-split), var(--cw)); grid-auto-rows: var(--ch); justify-content: center; }
+.split .half + .half { margin-top: var(--spacing-sm); }
+.standard { display: none; }
+.cell { padding: var(--spacing-xxs); min-width: 0; }
+.cell.w2 { grid-column: span 2; }
+.key { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--spacing-none); border-radius: var(--radii-sm); border: var(--border-width-thin) solid var(--colors-border-subtle); background: var(--colors-surface-paper); color: var(--colors-text-primary); }
+.key.v { background: var(--colors-surface-sunken); }
+.key .g { font-size: var(--key-glyph); font-weight: var(--weight-semibold); line-height: var(--leading-tight); }
+.key .h { font-size: var(--key-hint); color: var(--colors-text-secondary); line-height: var(--leading-tight); letter-spacing: var(--tracking-tight); white-space: nowrap; }
+.key.act { background: var(--colors-surface-paper); border: var(--border-width-base) solid var(--colors-border-strong); font-size: var(--key-hint-tablet); font-weight: var(--weight-bold); }
+.key.on { background: var(--colors-brand-secondaryLight); border: var(--border-width-thick) solid var(--colors-brand-secondaryDark); }
+.key.shifted .g { color: var(--colors-brand-secondaryDark); }
+.key.dim { opacity: 1; color: var(--colors-text-muted); }
+.kbd.inactive .key { background: var(--colors-surface-sunken); color: var(--colors-text-muted); border-color: var(--colors-surface-sunken); }
+.kbd.inactive .key .h { color: var(--colors-text-muted); }
+.standard .rows { display: grid; grid-template-columns: repeat(calc(var(--keys-standard) * 2), calc(var(--cw) / 2)); grid-auto-rows: var(--ch); justify-content: center; }
+.standard .cell { grid-column: span 2; }
+.standard .cell.r2first { grid-column: 2 / span 2; }
+.standard .cell.w15 { grid-column: span 3; }
+.standard .cell.space { grid-column: 6 / span 10; }
+
+/* Result panel: takes the keyboard's place at the keyboard's height. */
+.result { flex: none; height: calc(6 * var(--touch-min) + var(--spacing-sm)); padding: var(--spacing-md) var(--gutter-compact); border-top: var(--border-width-thin) solid var(--colors-border-subtle); background: var(--colors-surface-canvas); display: flex; flex-direction: column; gap: var(--spacing-md); overflow: auto; }
+.compare { display: grid; grid-template-columns: auto 1fr; align-items: center; column-gap: var(--spacing-md); row-gap: var(--spacing-sm); }
+.compare .lbl { font-size: var(--size-bodySm); color: var(--colors-text-secondary); font-weight: var(--weight-semibold); }
+.blocks { display: flex; flex-wrap: wrap; gap: var(--spacing-xs); }
+.blk { position: relative; min-width: var(--touch-min); height: var(--touch-min); display: inline-flex; align-items: center; justify-content: center; border-radius: var(--radii-md); border: var(--border-width-base) solid var(--colors-border-subtle); background: var(--colors-surface-paper); font-size: var(--size-title); font-weight: var(--weight-semibold); }
+.blk.diff { border: var(--border-width-thick) solid var(--colors-feedback-nudge); background: var(--colors-feedback-nudgeLight); }
+.blk.diff::after { content: ""; position: absolute; top: calc(-1 * var(--spacing-xs)); right: calc(-1 * var(--spacing-xs)); width: var(--spacing-md); height: var(--spacing-md); border-radius: var(--radii-circle); background: var(--colors-feedback-nudge); border: var(--border-width-base) solid var(--colors-surface-paper); }
+.blk.missing { border: var(--border-width-base) dashed var(--colors-border-shape); background: transparent; }
+.target-line { font-size: var(--size-prompt); }
+
+/* ------------------------------------------------------------------------------------------ */
+/* Trace a Word                                                                                 */
+/* ------------------------------------------------------------------------------------------ */
+.wordstrip { display: flex; justify-content: center; gap: var(--spacing-sm); }
+.chip { min-width: var(--touch-min); height: var(--touch-min); display: inline-flex; align-items: center; justify-content: center; gap: var(--spacing-xxs); padding: 0 var(--spacing-sm); border-radius: var(--radii-md); border: var(--border-width-base) solid var(--colors-border-subtle); background: var(--colors-surface-paper); font-size: var(--size-title); font-weight: var(--weight-semibold); }
+.chip.current { border: var(--border-width-thick) solid var(--colors-brand-primary); background: var(--colors-brand-primaryLight); }
+.chip.done { border-color: var(--colors-feedback-success); background: var(--colors-feedback-successLight); }
+.canvas-row { flex: 1 1 auto; min-height: var(--trace-canvas-min); display: flex; justify-content: center; align-items: center; gap: var(--spacing-lg); }
+.canvas { position: relative; height: 100%; min-height: var(--trace-canvas-min); max-height: var(--trace-canvas-max); width: auto; max-width: 100%; aspect-ratio: 1 / 1; flex: none; border-radius: var(--radii-xxl); border: var(--border-width-thick) solid var(--colors-brand-primary); background: var(--colors-brand-primaryLight); overflow: hidden; }
+.canvas.pass { border-color: var(--colors-feedback-success); background: var(--colors-feedback-successLight); }
+.canvas.retry { border-color: var(--colors-feedback-nudge); background: var(--colors-feedback-nudgeLight); }
+.canvas.quiet { border: var(--border-width-base) solid var(--colors-border-subtle); background: var(--colors-surface-paper); }
+.canvas svg { width: 100%; height: 100%; display: block; }
+.helpers { display: flex; justify-content: center; gap: var(--spacing-md); }
+.actions { display: flex; gap: var(--spacing-sm); }
+.actions > * { flex: 1; }
+.partdots { display: flex; align-items: center; justify-content: center; gap: var(--spacing-sm); font-size: var(--size-bodySm); color: var(--colors-text-secondary); }
+
+/* ------------------------------------------------------------------------------------------ */
+/* Write Frame                                                                                  */
+/* ------------------------------------------------------------------------------------------ */
+.frame-card { background: var(--colors-surface-paper); border: var(--border-width-thin) solid var(--colors-border-subtle); border-radius: var(--radii-lg); padding: var(--spacing-md) var(--spacing-lg); box-shadow: var(--shadow-card); display: flex; flex-direction: column; gap: var(--spacing-xxs); }
+.frame-ko { font-size: var(--size-prompt); font-weight: var(--weight-bold); line-height: var(--leading-normal); word-break: keep-all; }
+.slot { display: inline-block; min-width: var(--touch-min); padding: 0 var(--spacing-xs); border-bottom: var(--border-width-thick) solid var(--colors-brand-secondaryDark); color: var(--colors-brand-secondaryDark); text-align: center; }
+.slot.empty { color: transparent; }
+.slot.ghost { color: var(--colors-text-muted); }
+.slot.current { background: var(--colors-brand-secondaryLight); border-radius: var(--radii-xs) var(--radii-xs) var(--radii-none) var(--radii-none); }
+.particle { color: var(--colors-brand-secondaryDark); }
+.frame-line { font-size: var(--size-bodySm); font-weight: var(--weight-semibold); line-height: var(--leading-normal); word-break: keep-all; }
+.bank { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--spacing-sm); }
+.word-card { min-height: var(--touch-child); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--spacing-xxs); padding: var(--spacing-sm); border-radius: var(--radii-lg); border: var(--border-width-base) solid var(--colors-border-subtle); background: var(--colors-surface-paper); text-align: center; }
+.word-card .ko { font-size: var(--size-prompt); }
+.word-card.picked { border: var(--border-width-thick) solid var(--colors-brand-secondaryDark); background: var(--colors-brand-secondaryLight); }
+.word-card svg { width: var(--touch-min); height: var(--touch-min); }
+.link { display: inline-flex; align-items: center; min-height: var(--touch-min); color: var(--colors-brand-secondaryDark); font-weight: var(--weight-semibold); text-decoration: underline; text-underline-offset: var(--spacing-xs); font-size: var(--size-bodySm); }
+.mypage { flex: 1; overflow: auto; padding: var(--spacing-lg) var(--gutter-compact); display: flex; flex-direction: column; align-items: center; gap: var(--spacing-md); }
+.mypage h1 { font-size: var(--size-title); line-height: var(--leading-tight); }
+.page-sheet { width: 100%; background: var(--colors-surface-paper); border: var(--border-width-thin) solid var(--colors-border-subtle); border-radius: var(--radii-lg); box-shadow: var(--shadow-card); padding: var(--spacing-lg); display: flex; flex-direction: column; gap: var(--spacing-lg); }
+.page-sheet .s { display: flex; flex-direction: column; gap: var(--spacing-xxs); }
+.page-sheet .s .ko { font-size: var(--size-prompt); word-break: keep-all; }
+.quiet-line { font-size: var(--size-bodySm); color: var(--colors-text-secondary); text-align: center; }
+.tabs { display: flex; gap: var(--spacing-xs); padding: var(--spacing-xs) var(--gutter-compact) var(--spacing-none); }
+.tab { flex: 1; min-height: var(--touch-min); display: inline-flex; align-items: center; justify-content: center; border-radius: var(--radii-md) var(--radii-md) var(--radii-none) var(--radii-none); border: var(--border-width-base) solid var(--colors-border-subtle); border-bottom: none; background: var(--colors-surface-sunken); font-size: var(--size-bodySm); font-weight: var(--weight-bold); color: var(--colors-text-secondary); }
+.tab[aria-selected="true"] { background: var(--colors-surface-paper); color: var(--colors-text-primary); border-color: var(--colors-brand-primary); border-width: var(--border-width-thick); }
+.sounds { flex: none; height: calc(6 * var(--touch-min) + var(--spacing-sm) - var(--touch-min)); overflow: auto; padding: var(--spacing-sm) var(--gutter-compact); background: var(--colors-surface-paper); border-top: var(--border-width-thin) solid var(--colors-border-subtle); display: flex; flex-direction: column; gap: var(--spacing-xs); }
+.sounds-head { display: flex; align-items: center; justify-content: space-between; font-size: var(--size-bodySm); font-weight: var(--weight-bold); color: var(--colors-text-secondary); }
+.tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(var(--touch-min), 1fr)); gap: var(--spacing-xs); }
+.tile { min-height: var(--touch-min); display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: var(--radii-lg); border: var(--border-width-base) solid var(--colors-border-subtle); background: var(--colors-surface-canvas); }
+.tile .g { font-size: var(--size-prompt); font-weight: var(--weight-semibold); line-height: var(--leading-tight); }
+.tile .h { font-size: var(--size-caption); color: var(--colors-text-secondary); line-height: var(--leading-tight); }
+.tile.final { background: var(--colors-surface-sunken); }
+
+/* ------------------------------------------------------------------------------------------ */
+/* Window classes (container queries stand in for layout.breakpoint)                            */
+/* ------------------------------------------------------------------------------------------ */
+@container device (min-width: 600px) {
+  .screen-top { padding: var(--spacing-lg) var(--gutter-regular) var(--spacing-xs); gap: var(--spacing-md); width: 100%; max-width: var(--max-width-reading); margin: 0 auto; flex: 0 0 auto; }
+  .answer-bar { width: 100%; max-width: calc(var(--max-width-reading) + 2 * var(--gutter-regular)); margin: 0 auto; padding: var(--spacing-xs) var(--gutter-regular) var(--spacing-md); }
+  .kbd { width: calc(100% - 2 * var(--gutter-regular)); max-width: var(--max-width-reading); margin: 0 auto; border-top: none; --cw: min(calc(min(100cqw - 2 * var(--gutter-regular), var(--max-width-reading)) / var(--keys-split)), var(--touch-hero)); --ch: min(calc(var(--touch-min) * var(--media-scale-regular)), var(--touch-hero)); }
+  .done-inline { display: none; }
+  .skip-top { display: none; }
+  .done-under, .skip-under { display: flex; width: calc(100% - 2 * var(--gutter-regular)); max-width: var(--max-width-reading); margin: var(--spacing-sm) auto 0; }
+  .skip-under { margin-bottom: var(--spacing-lg); }
+  .key .g { font-size: var(--key-glyph-tablet); }
+  .key .h { font-size: var(--key-hint-tablet); }
+  .prompt { font-size: var(--size-title); }
+  .field { font-size: var(--size-display); }
+  .result { width: calc(100% - 2 * var(--gutter-regular)); max-width: var(--max-width-reading); margin: 0 auto; height: auto; min-height: calc(4 * var(--touch-min) * var(--media-scale-regular)); border-top: none; }
+  .bank { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .screen.scroll .screen-top { flex: 1 1 auto; }
+  .tabs, .sounds { width: calc(100% - 2 * var(--gutter-regular)); max-width: var(--max-width-reading); margin: 0 auto; }
+}
+@container device (min-width: 688px) {
+  .split { display: none; }
+  .standard { display: block; }
+  .kbd { --cw: calc(min(100cqw - 2 * var(--gutter-regular), var(--max-width-reading)) / var(--keys-standard)); }
+}
+@container device (min-width: 900px) {
+  .screen-top { padding-left: var(--gutter-wide); padding-right: var(--gutter-wide); }
+  .kbd { --ch: min(calc(var(--touch-min) * var(--media-scale-wide)), var(--touch-hero)); }
+  .bank { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+/* Below layout.compactHeight (320 x 568, landscape phones): count, prompt and Skip share one row; no round bar. */
+@container device (max-height: 639px) {
+  .full-top { display: none; }
+  .compact-top { display: flex; }
+  .done-under, .skip-under { display: none; }
+  .done-inline { display: inline-flex; }
+}
+/* A short window (landscape phone): the floor height; the standard rows when the window is wide enough. */
+@container device (max-height: 479px) {
+  .kbd { --ch: var(--touch-min); width: 100%; max-width: none; }
+  .screen-top { flex: 1 1 auto; max-width: none; padding-top: var(--spacing-xxs); padding-bottom: var(--spacing-none); }
+  .answer-bar { max-width: none; padding-top: var(--spacing-xxs); padding-bottom: var(--spacing-none); }
+}
+@container device (max-height: 479px) and (min-width: 640px) {
+  .split { display: none; }
+  .standard { display: block; }
+  .kbd { --cw: calc(100cqw / var(--keys-standard)); }
+}
