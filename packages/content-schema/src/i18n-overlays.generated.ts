@@ -2744,280 +2744,280 @@ export const OVERLAYS: Overlays = {
       "listenPick.rounds.lp-sym-jamo-yu.prompt": "글자 yu"
     },
     "pitem:recog-odd-a-eo": {
-      "gloss": "다른 하나를 찾아요: 모음 어 사이의 모음 아",
+      "gloss": "다른 하나를 찾아요: 모음 어 사이에 있는 아",
       "options.t1.gloss": "모음 어",
       "options.t2.gloss": "모음 어",
       "options.t3.gloss": "모음 아",
       "options.t4.gloss": "모음 어"
     },
     "pitem:recog-odd-a-ya": {
-      "gloss": "다른 하나를 찾아요: 모음 야 사이의 모음 아",
+      "gloss": "다른 하나를 찾아요: 모음 야 사이에 있는 아",
       "options.t1.gloss": "모음 야",
       "options.t2.gloss": "모음 야",
       "options.t3.gloss": "모음 아",
       "options.t4.gloss": "모음 야"
     },
     "pitem:recog-odd-bieup-mieum": {
-      "gloss": "다른 하나를 찾아요: 자음 미음 사이의 자음 비읍",
+      "gloss": "다른 하나를 찾아요: 자음 미음 사이에 있는 비읍",
       "options.t1.gloss": "자음 미음",
       "options.t2.gloss": "자음 미음",
       "options.t3.gloss": "자음 비읍",
       "options.t4.gloss": "자음 미음"
     },
     "pitem:recog-odd-chieut-jieut": {
-      "gloss": "다른 하나를 찾아요: 자음 지읒 사이의 자음 치읓",
+      "gloss": "다른 하나를 찾아요: 자음 지읒 사이에 있는 치읓",
       "options.t1.gloss": "자음 지읒",
       "options.t2.gloss": "자음 지읒",
       "options.t3.gloss": "자음 치읓",
       "options.t4.gloss": "자음 지읒"
     },
     "pitem:recog-odd-digeut-nieun": {
-      "gloss": "다른 하나를 찾아요: 자음 니은 사이의 자음 디귿",
+      "gloss": "다른 하나를 찾아요: 자음 니은 사이에 있는 디귿",
       "options.t1.gloss": "자음 니은",
       "options.t2.gloss": "자음 니은",
       "options.t3.gloss": "자음 디귿",
       "options.t4.gloss": "자음 니은"
     },
     "pitem:recog-odd-digeut-rieul": {
-      "gloss": "다른 하나를 찾아요: 자음 리을 사이의 자음 디귿",
+      "gloss": "다른 하나를 찾아요: 자음 리을 사이에 있는 디귿",
       "options.t1.gloss": "자음 리을",
       "options.t2.gloss": "자음 리을",
       "options.t3.gloss": "자음 디귿",
       "options.t4.gloss": "자음 리을"
     },
     "pitem:recog-odd-digeut-tieut": {
-      "gloss": "다른 하나를 찾아요: 자음 티읕 사이의 자음 디귿",
+      "gloss": "다른 하나를 찾아요: 자음 티읕 사이에 있는 디귿",
       "options.t1.gloss": "자음 티읕",
       "options.t2.gloss": "자음 티읕",
       "options.t3.gloss": "자음 디귿",
       "options.t4.gloss": "자음 티읕"
     },
     "pitem:recog-odd-eo-a": {
-      "gloss": "다른 하나를 찾아요: 모음 아 사이의 모음 어",
+      "gloss": "다른 하나를 찾아요: 모음 아 사이에 있는 어",
       "options.t1.gloss": "모음 아",
       "options.t2.gloss": "모음 아",
       "options.t3.gloss": "모음 어",
       "options.t4.gloss": "모음 아"
     },
     "pitem:recog-odd-eo-yeo": {
-      "gloss": "다른 하나를 찾아요: 모음 여 사이의 모음 어",
+      "gloss": "다른 하나를 찾아요: 모음 여 사이에 있는 어",
       "options.t1.gloss": "모음 여",
       "options.t2.gloss": "모음 여",
       "options.t3.gloss": "모음 어",
       "options.t4.gloss": "모음 여"
     },
     "pitem:recog-odd-eu-i": {
-      "gloss": "다른 하나를 찾아요: 모음 이 사이의 모음 으",
+      "gloss": "다른 하나를 찾아요: 모음 이 사이에 있는 으",
       "options.t1.gloss": "모음 이",
       "options.t2.gloss": "모음 이",
       "options.t3.gloss": "모음 으",
       "options.t4.gloss": "모음 이"
     },
     "pitem:recog-odd-giyeok-kieuk": {
-      "gloss": "다른 하나를 찾아요: 자음 키읔 사이의 자음 기역",
+      "gloss": "다른 하나를 찾아요: 자음 키읔 사이에 있는 기역",
       "options.t1.gloss": "자음 키읔",
       "options.t2.gloss": "자음 키읔",
       "options.t3.gloss": "자음 기역",
       "options.t4.gloss": "자음 키읔"
     },
     "pitem:recog-odd-giyeok-nieun": {
-      "gloss": "다른 하나를 찾아요: 자음 니은 사이의 자음 기역",
+      "gloss": "다른 하나를 찾아요: 자음 니은 사이에 있는 기역",
       "options.t1.gloss": "자음 니은",
       "options.t2.gloss": "자음 니은",
       "options.t3.gloss": "자음 기역",
       "options.t4.gloss": "자음 니은"
     },
     "pitem:recog-odd-hieut-ieung": {
-      "gloss": "다른 하나를 찾아요: 자음 이응 사이의 자음 히읗",
+      "gloss": "다른 하나를 찾아요: 자음 이응 사이에 있는 히읗",
       "options.t1.gloss": "자음 이응",
       "options.t2.gloss": "자음 이응",
       "options.t3.gloss": "자음 히읗",
       "options.t4.gloss": "자음 이응"
     },
     "pitem:recog-odd-i-eu": {
-      "gloss": "다른 하나를 찾아요: 모음 으 사이의 모음 이",
+      "gloss": "다른 하나를 찾아요: 모음 으 사이에 있는 이",
       "options.t1.gloss": "모음 으",
       "options.t2.gloss": "모음 으",
       "options.t3.gloss": "모음 이",
       "options.t4.gloss": "모음 으"
     },
     "pitem:recog-odd-ieung-hieut": {
-      "gloss": "다른 하나를 찾아요: 자음 히읗 사이의 자음 이응",
+      "gloss": "다른 하나를 찾아요: 자음 히읗 사이에 있는 이응",
       "options.t1.gloss": "자음 히읗",
       "options.t2.gloss": "자음 히읗",
       "options.t3.gloss": "자음 이응",
       "options.t4.gloss": "자음 히읗"
     },
     "pitem:recog-odd-ieung-mieum": {
-      "gloss": "다른 하나를 찾아요: 자음 미음 사이의 자음 이응",
+      "gloss": "다른 하나를 찾아요: 자음 미음 사이에 있는 이응",
       "options.t1.gloss": "자음 미음",
       "options.t2.gloss": "자음 미음",
       "options.t3.gloss": "자음 이응",
       "options.t4.gloss": "자음 미음"
     },
     "pitem:recog-odd-ieung-siot": {
-      "gloss": "다른 하나를 찾아요: 자음 시옷 사이의 자음 이응",
+      "gloss": "다른 하나를 찾아요: 자음 시옷 사이에 있는 이응",
       "options.t1.gloss": "자음 시옷",
       "options.t2.gloss": "자음 시옷",
       "options.t3.gloss": "자음 이응",
       "options.t4.gloss": "자음 시옷"
     },
     "pitem:recog-odd-jieut-chieut": {
-      "gloss": "다른 하나를 찾아요: 자음 치읓 사이의 자음 지읒",
+      "gloss": "다른 하나를 찾아요: 자음 치읓 사이에 있는 지읒",
       "options.t1.gloss": "자음 치읓",
       "options.t2.gloss": "자음 치읓",
       "options.t3.gloss": "자음 지읒",
       "options.t4.gloss": "자음 치읓"
     },
     "pitem:recog-odd-jieut-siot": {
-      "gloss": "다른 하나를 찾아요: 자음 시옷 사이의 자음 지읒",
+      "gloss": "다른 하나를 찾아요: 자음 시옷 사이에 있는 지읒",
       "options.t1.gloss": "자음 시옷",
       "options.t2.gloss": "자음 시옷",
       "options.t3.gloss": "자음 지읒",
       "options.t4.gloss": "자음 시옷"
     },
     "pitem:recog-odd-kieuk-giyeok": {
-      "gloss": "다른 하나를 찾아요: 자음 기역 사이의 자음 키읔",
+      "gloss": "다른 하나를 찾아요: 자음 기역 사이에 있는 키읔",
       "options.t1.gloss": "자음 기역",
       "options.t2.gloss": "자음 기역",
       "options.t3.gloss": "자음 키읔",
       "options.t4.gloss": "자음 기역"
     },
     "pitem:recog-odd-mieum-bieup": {
-      "gloss": "다른 하나를 찾아요: 자음 비읍 사이의 자음 미음",
+      "gloss": "다른 하나를 찾아요: 자음 비읍 사이에 있는 미음",
       "options.t1.gloss": "자음 비읍",
       "options.t2.gloss": "자음 비읍",
       "options.t3.gloss": "자음 미음",
       "options.t4.gloss": "자음 비읍"
     },
     "pitem:recog-odd-mieum-ieung": {
-      "gloss": "다른 하나를 찾아요: 자음 이응 사이의 자음 미음",
+      "gloss": "다른 하나를 찾아요: 자음 이응 사이에 있는 미음",
       "options.t1.gloss": "자음 이응",
       "options.t2.gloss": "자음 이응",
       "options.t3.gloss": "자음 미음",
       "options.t4.gloss": "자음 이응"
     },
     "pitem:recog-odd-nieun-digeut": {
-      "gloss": "다른 하나를 찾아요: 자음 디귿 사이의 자음 니은",
+      "gloss": "다른 하나를 찾아요: 자음 디귿 사이에 있는 니은",
       "options.t1.gloss": "자음 디귿",
       "options.t2.gloss": "자음 디귿",
       "options.t3.gloss": "자음 니은",
       "options.t4.gloss": "자음 디귿"
     },
     "pitem:recog-odd-nieun-giyeok": {
-      "gloss": "다른 하나를 찾아요: 자음 기역 사이의 자음 니은",
+      "gloss": "다른 하나를 찾아요: 자음 기역 사이에 있는 니은",
       "options.t1.gloss": "자음 기역",
       "options.t2.gloss": "자음 기역",
       "options.t3.gloss": "자음 니은",
       "options.t4.gloss": "자음 기역"
     },
     "pitem:recog-odd-o-u": {
-      "gloss": "다른 하나를 찾아요: 모음 우 사이의 모음 오",
+      "gloss": "다른 하나를 찾아요: 모음 우 사이에 있는 오",
       "options.t1.gloss": "모음 우",
       "options.t2.gloss": "모음 우",
       "options.t3.gloss": "모음 오",
       "options.t4.gloss": "모음 우"
     },
     "pitem:recog-odd-o-yo": {
-      "gloss": "다른 하나를 찾아요: 모음 요 사이의 모음 오",
+      "gloss": "다른 하나를 찾아요: 모음 요 사이에 있는 오",
       "options.t1.gloss": "모음 요",
       "options.t2.gloss": "모음 요",
       "options.t3.gloss": "모음 오",
       "options.t4.gloss": "모음 요"
     },
     "pitem:recog-odd-rieul-digeut": {
-      "gloss": "다른 하나를 찾아요: 자음 디귿 사이의 자음 리을",
+      "gloss": "다른 하나를 찾아요: 자음 디귿 사이에 있는 리을",
       "options.t1.gloss": "자음 디귿",
       "options.t2.gloss": "자음 디귿",
       "options.t3.gloss": "자음 리을",
       "options.t4.gloss": "자음 디귿"
     },
     "pitem:recog-odd-siot-ieung": {
-      "gloss": "다른 하나를 찾아요: 자음 이응 사이의 자음 시옷",
+      "gloss": "다른 하나를 찾아요: 자음 이응 사이에 있는 시옷",
       "options.t1.gloss": "자음 이응",
       "options.t2.gloss": "자음 이응",
       "options.t3.gloss": "자음 시옷",
       "options.t4.gloss": "자음 이응"
     },
     "pitem:recog-odd-siot-jieut": {
-      "gloss": "다른 하나를 찾아요: 자음 지읒 사이의 자음 시옷",
+      "gloss": "다른 하나를 찾아요: 자음 지읒 사이에 있는 시옷",
       "options.t1.gloss": "자음 지읒",
       "options.t2.gloss": "자음 지읒",
       "options.t3.gloss": "자음 시옷",
       "options.t4.gloss": "자음 지읒"
     },
     "pitem:recog-odd-tieut-digeut": {
-      "gloss": "다른 하나를 찾아요: 자음 디귿 사이의 자음 티읕",
+      "gloss": "다른 하나를 찾아요: 자음 디귿 사이에 있는 티읕",
       "options.t1.gloss": "자음 디귿",
       "options.t2.gloss": "자음 디귿",
       "options.t3.gloss": "자음 티읕",
       "options.t4.gloss": "자음 디귿"
     },
     "pitem:recog-odd-u-o": {
-      "gloss": "다른 하나를 찾아요: 모음 오 사이의 모음 우",
+      "gloss": "다른 하나를 찾아요: 모음 오 사이에 있는 우",
       "options.t1.gloss": "모음 오",
       "options.t2.gloss": "모음 오",
       "options.t3.gloss": "모음 우",
       "options.t4.gloss": "모음 오"
     },
     "pitem:recog-odd-u-yu": {
-      "gloss": "다른 하나를 찾아요: 모음 유 사이의 모음 우",
+      "gloss": "다른 하나를 찾아요: 모음 유 사이에 있는 우",
       "options.t1.gloss": "모음 유",
       "options.t2.gloss": "모음 유",
       "options.t3.gloss": "모음 우",
       "options.t4.gloss": "모음 유"
     },
     "pitem:recog-odd-ya-a": {
-      "gloss": "다른 하나를 찾아요: 모음 아 사이의 모음 야",
+      "gloss": "다른 하나를 찾아요: 모음 아 사이에 있는 야",
       "options.t1.gloss": "모음 아",
       "options.t2.gloss": "모음 아",
       "options.t3.gloss": "모음 야",
       "options.t4.gloss": "모음 아"
     },
     "pitem:recog-odd-ya-yeo": {
-      "gloss": "다른 하나를 찾아요: 모음 여 사이의 모음 야",
+      "gloss": "다른 하나를 찾아요: 모음 여 사이에 있는 야",
       "options.t1.gloss": "모음 여",
       "options.t2.gloss": "모음 여",
       "options.t3.gloss": "모음 야",
       "options.t4.gloss": "모음 여"
     },
     "pitem:recog-odd-yeo-eo": {
-      "gloss": "다른 하나를 찾아요: 모음 어 사이의 모음 여",
+      "gloss": "다른 하나를 찾아요: 모음 어 사이에 있는 여",
       "options.t1.gloss": "모음 어",
       "options.t2.gloss": "모음 어",
       "options.t3.gloss": "모음 여",
       "options.t4.gloss": "모음 어"
     },
     "pitem:recog-odd-yeo-ya": {
-      "gloss": "다른 하나를 찾아요: 모음 야 사이의 모음 여",
+      "gloss": "다른 하나를 찾아요: 모음 야 사이에 있는 여",
       "options.t1.gloss": "모음 야",
       "options.t2.gloss": "모음 야",
       "options.t3.gloss": "모음 여",
       "options.t4.gloss": "모음 야"
     },
     "pitem:recog-odd-yo-o": {
-      "gloss": "다른 하나를 찾아요: 모음 오 사이의 모음 요",
+      "gloss": "다른 하나를 찾아요: 모음 오 사이에 있는 요",
       "options.t1.gloss": "모음 오",
       "options.t2.gloss": "모음 오",
       "options.t3.gloss": "모음 요",
       "options.t4.gloss": "모음 오"
     },
     "pitem:recog-odd-yo-yu": {
-      "gloss": "다른 하나를 찾아요: 모음 유 사이의 모음 요",
+      "gloss": "다른 하나를 찾아요: 모음 유 사이에 있는 요",
       "options.t1.gloss": "모음 유",
       "options.t2.gloss": "모음 유",
       "options.t3.gloss": "모음 요",
       "options.t4.gloss": "모음 유"
     },
     "pitem:recog-odd-yu-u": {
-      "gloss": "다른 하나를 찾아요: 모음 우 사이의 모음 유",
+      "gloss": "다른 하나를 찾아요: 모음 우 사이에 있는 유",
       "options.t1.gloss": "모음 우",
       "options.t2.gloss": "모음 우",
       "options.t3.gloss": "모음 유",
       "options.t4.gloss": "모음 우"
     },
     "pitem:recog-odd-yu-yo": {
-      "gloss": "다른 하나를 찾아요: 모음 요 사이의 모음 유",
+      "gloss": "다른 하나를 찾아요: 모음 요 사이에 있는 유",
       "options.t1.gloss": "모음 요",
       "options.t2.gloss": "모음 요",
       "options.t3.gloss": "모음 유",
@@ -3255,7 +3255,7 @@ export const OVERLAYS: Overlays = {
     },
     "pitem:syl-cv-build-da": {
       "gloss": "‘da’ 음절을 만들어요",
-      "options.a.gloss": "자음 이응과 모음 아를 합친 음절",
+      "options.a.gloss": "소리 없는 이응과 모음 아를 합친 음절",
       "options.da.gloss": "자음 디귿과 모음 아를 합친 음절",
       "options.du.gloss": "자음 디귿과 모음 우를 합친 음절",
       "options.ra.gloss": "자음 리을과 모음 아를 합친 음절"
@@ -3286,7 +3286,7 @@ export const OVERLAYS: Overlays = {
       "options.mi.gloss": "자음 미음과 모음 이를 합친 음절",
       "options.mo.gloss": "자음 미음과 모음 오를 합친 음절",
       "options.no.gloss": "자음 니은과 모음 오를 합친 음절",
-      "options.o.gloss": "자음 이응과 모음 오를 합친 음절"
+      "options.o.gloss": "소리 없는 이응과 모음 오를 합친 음절"
     },
     "pitem:syl-cv-build-na": {
       "gloss": "‘na’ 음절을 만들어요",
@@ -3307,7 +3307,7 @@ export const OVERLAYS: Overlays = {
       "options.deo.gloss": "자음 디귿과 모음 어를 합친 음절",
       "options.di.gloss": "자음 디귿과 모음 이를 합친 음절",
       "options.do.gloss": "자음 디귿과 모음 오를 합친 음절",
-      "options.eo.gloss": "자음 이응과 모음 어를 합친 음절"
+      "options.eo.gloss": "소리 없는 이응과 모음 어를 합친 음절"
     },
     "pitem:syl-cv-hear-do": {
       "gloss": "‘do’ 음절을 들어요",
@@ -3341,7 +3341,7 @@ export const OVERLAYS: Overlays = {
       "gloss": "‘go’ 음절을 들어요",
       "options.go.gloss": "자음 기역과 모음 오를 합친 음절",
       "options.gu.gloss": "자음 기역과 모음 우를 합친 음절",
-      "options.o.gloss": "자음 이응과 모음 오를 합친 음절",
+      "options.o.gloss": "소리 없는 이응과 모음 오를 합친 음절",
       "options.ro.gloss": "자음 리을과 모음 오를 합친 음절"
     },
     "pitem:syl-cv-hear-gu": {
@@ -3354,13 +3354,13 @@ export const OVERLAYS: Overlays = {
     "pitem:syl-cv-hear-i": {
       "gloss": "‘i’ 음절을 들어요",
       "options.di.gloss": "자음 디귿과 모음 이를 합친 음절",
-      "options.eu.gloss": "자음 이응과 모음 으를 합친 음절",
-      "options.i.gloss": "자음 이응과 모음 이를 합친 음절",
-      "options.o.gloss": "자음 이응과 모음 오를 합친 음절"
+      "options.eu.gloss": "소리 없는 이응과 모음 으를 합친 음절",
+      "options.i.gloss": "소리 없는 이응과 모음 이를 합친 음절",
+      "options.o.gloss": "소리 없는 이응과 모음 오를 합친 음절"
     },
     "pitem:syl-cv-hear-ma": {
       "gloss": "‘ma’ 음절을 들어요",
-      "options.a.gloss": "자음 이응과 모음 아를 합친 음절",
+      "options.a.gloss": "소리 없는 이응과 모음 아를 합친 음절",
       "options.da.gloss": "자음 디귿과 모음 아를 합친 음절",
       "options.ma.gloss": "자음 미음과 모음 아를 합친 음절",
       "options.mu.gloss": "자음 미음과 모음 우를 합친 음절"
@@ -3377,7 +3377,7 @@ export const OVERLAYS: Overlays = {
       "options.mi.gloss": "자음 미음과 모음 이를 합친 음절",
       "options.mo.gloss": "자음 미음과 모음 오를 합친 음절",
       "options.no.gloss": "자음 니은과 모음 오를 합친 음절",
-      "options.o.gloss": "자음 이응과 모음 오를 합친 음절"
+      "options.o.gloss": "소리 없는 이응과 모음 오를 합친 음절"
     },
     "pitem:syl-cv-hear-mu": {
       "gloss": "‘mu’ 음절을 들어요",
@@ -3388,7 +3388,7 @@ export const OVERLAYS: Overlays = {
     },
     "pitem:syl-cv-hear-na": {
       "gloss": "‘na’ 음절을 들어요",
-      "options.a.gloss": "자음 이응과 모음 아를 합친 음절",
+      "options.a.gloss": "소리 없는 이응과 모음 아를 합친 음절",
       "options.da.gloss": "자음 디귿과 모음 아를 합친 음절",
       "options.na.gloss": "자음 니은과 모음 아를 합친 음절",
       "options.ni.gloss": "자음 니은과 모음 이를 합친 음절"
@@ -3571,10 +3571,10 @@ export const OVERLAYS: Overlays = {
     },
     "pitem:syl-cvc-hear-ip": {
       "gloss": "‘ip’ 음절을 들어요",
-      "options.im.gloss": "자음 이응, 모음 이, 받침 미음을 합친 음절",
-      "options.ing.gloss": "자음 이응, 모음 이, 받침 이응을 합친 음절",
-      "options.ip.gloss": "자음 이응, 모음 이, 받침 비읍을 합친 음절",
-      "options.op.gloss": "자음 이응, 모음 오, 받침 비읍을 합친 음절"
+      "options.im.gloss": "소리 없는 이응, 모음 이, 받침 미음을 합친 음절",
+      "options.ing.gloss": "소리 없는 이응, 모음 이, 받침 이응을 합친 음절",
+      "options.ip.gloss": "소리 없는 이응, 모음 이, 받침 비읍을 합친 음절",
+      "options.op.gloss": "소리 없는 이응, 모음 오, 받침 비읍을 합친 음절"
     },
     "pitem:syl-cvc-hear-jip": {
       "gloss": "‘jip’ 음절을 들어요",
@@ -3620,10 +3620,10 @@ export const OVERLAYS: Overlays = {
     },
     "pitem:syl-cvc-hear-yeon": {
       "gloss": "‘yeon’ 음절을 들어요",
-      "options.an.gloss": "자음 이응, 모음 아, 받침 니은을 합친 음절",
-      "options.yeok.gloss": "자음 이응, 모음 여, 받침 기역을 합친 음절",
-      "options.yeon.gloss": "자음 이응, 모음 여, 받침 니은을 합친 음절",
-      "options.yeop.gloss": "자음 이응, 모음 여, 받침 비읍을 합친 음절"
+      "options.an.gloss": "소리 없는 이응, 모음 아, 받침 니은을 합친 음절",
+      "options.yeok.gloss": "소리 없는 이응, 모음 여, 받침 기역을 합친 음절",
+      "options.yeon.gloss": "소리 없는 이응, 모음 여, 받침 니은을 합친 음절",
+      "options.yeop.gloss": "소리 없는 이응, 모음 여, 받침 비읍을 합친 음절"
     },
     "pitem:syl-cvc-see-bap": {
       "gloss": "‘bap’ 음절을 보고 소리를 골라요"
