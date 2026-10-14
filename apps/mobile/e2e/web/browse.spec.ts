@@ -1051,9 +1051,83 @@ test('a word topic lists every word with its Hear button, keeps 64 targets at 32
  * design/screens/browse/topic-states.html). The learner F-VOC-003 flashcards run under the strip
  * in host mode 'preview': no reading practice switch, no vocabulary progress, no learner event.
  * Leave (the strip's, after its confirm, or the cards' own back and Stop) returns to the topic.
+ * The whole chunk, its quick check and its summary run as the learner's, with no Speed round;
+ * Next words plays the next run in place and Back to topic returns.
  * ------------------------------------------------------------------------------------------- */
 
-test('BR-9b: Preview the flashcards plays the learner cards under the strip, leaves both ways to the topic page, and writes nothing', async ({ page }) => {
+/** Food's words by romanization (this file holds no Hangul): the quick check is answered by the word it shows. */
+const FOOD_ROMANIZED: Record<string, string> = {
+  'vocab:sagwa-apple': 'sagwa',
+  'vocab:banana': 'banana',
+  'vocab:uyu': 'uyu',
+  'vocab:ppang': 'ppang',
+  'vocab:bap': 'bap',
+  'vocab:gimchi': 'gimchi',
+  'vocab:gimbap': 'gimbap',
+  'vocab:ramyeon': 'ramyeon',
+  'vocab:mul': 'mul',
+  'vocab:dalgyal': 'dalgyal',
+  'vocab:ttalgi': 'ttalgi',
+  'vocab:tteok': 'tteok',
+};
+
+/** Got it on every card of the run on screen, then the quick check answered right, to the chunk summary. */
+async function finishFlashcardChunk(page: Page): Promise<void> {
+  const cards = page.getByTestId('vocab-cards');
+  const check = page.getByTestId('vocab-cards-check');
+  await expect(cards).toBeVisible();
+  for (let turned = 0; await cards.isVisible(); turned += 1) {
+    expect(turned, 'a chunk is at most a handful of cards').toBeLessThan(8);
+    await page.getByTestId('vocab-card-flip').click();
+    await page.getByTestId('vocab-card-got-it').click();
+    await expect(cards.or(check)).toBeVisible();
+  }
+  await expect(check).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Quick check' })).toBeVisible();
+  const summary = page.getByTestId('vocab-cards-summary');
+  const question = page.getByTestId('vocab-question-word');
+  // At most two questions, each answered right.
+  for (let i = 0; i < 2 && !(await summary.isVisible()); i += 1) {
+    await expect(question).toBeVisible();
+    const asked = await question.innerText();
+    const id = Object.keys(FOOD_ROMANIZED).find((key) => asked.split(/\s+/).includes(FOOD_ROMANIZED[key]!));
+    if (!id) throw new Error(`no Food word in "${asked}"`);
+    // The answered word stays on screen with its gloss for a moment; the next question names another word.
+    const stillAsking = async (): Promise<boolean> =>
+      !(await summary.isVisible()) && (await question.innerText({ timeout: 500 }).catch(() => '')).split(/\s+/).includes(FOOD_ROMANIZED[id]!);
+    await page.getByTestId(`vocab-question-option-${id}`).click();
+    await expect(async () => {
+      expect(await stillAsking(), `the check moved on from "${asked}"`).toBe(false);
+    }).toPass({ intervals: [300], timeout: 5000 });
+  }
+  await expect(summary).toBeVisible({ timeout: 3000 });
+}
+
+/** The device and the stored keys, once playback has stopped writing (no change for 500 ms). */
+async function expectNothingWritten(page: Page, deviceBefore: Stored, storedBefore: Stored): Promise<void> {
+  let previous = '';
+  await expect
+    .poll(
+      async () => {
+        const now = JSON.stringify(await snapshotDevice(page));
+        const settled = now === previous;
+        previous = now;
+        return settled;
+      },
+      { intervals: [500], timeout: 10_000 },
+    )
+    .toBe(true);
+  const deviceAfter = await snapshotDevice(page);
+  expect(changedOutsideBrowse(deviceBefore, deviceAfter).filter((k) => !k.startsWith('session:hr:grownup') && !k.startsWith('session:hr:console'))).toEqual([]);
+  // No vocabulary progress, profile or setting of the learner's changed; only `browse:*` may differ.
+  const stored = await readAllStored(page);
+  const changed = [...new Set([...Object.keys(storedBefore), ...Object.keys(stored)])].filter((k) => storedBefore[k] !== stored[k]);
+  expect(changed.filter((k) => !k.startsWith('hr:browse:'))).toEqual([]);
+  expect(stored[LEARNER_QUEUE]).toBe(SEEDED_QUEUE);
+}
+
+/** A learner on the device, the snapshots taken, then the Food topic page in All lessons with a pass. */
+async function openFoodTopic(page: Page): Promise<{ storedBefore: Stored; deviceBefore: Stored }> {
   await onboardChild(page, { name: 'Mina' });
   await page.goto('/');
   await expect(page.getByText('Hi, Mina!')).toBeVisible();
@@ -1062,9 +1136,14 @@ test('BR-9b: Preview the flashcards plays the learner cards under the strip, lea
   const deviceBefore = await snapshotDevice(page);
   await writeAccountPass(page);
   await page.evaluate(() => window.location.assign('/browse#t=vocab-topic:food&s=report'));
-  const topicTitle = page.getByRole('heading', { name: 'Food' });
-  await expect(topicTitle).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Food' })).toBeVisible();
   await bootSettled(page);
+  return { storedBefore, deviceBefore };
+}
+
+test('BR-9b: Preview the flashcards plays the learner cards under the strip, leaves both ways to the topic page, and writes nothing', async ({ page }) => {
+  const { storedBefore, deviceBefore } = await openFoodTopic(page);
+  const topicTitle = page.getByRole('heading', { name: 'Food' });
 
   // The primary sits in the pinned footer, after the word list in reading order.
   const preview = page.getByTestId('browse-preview');
@@ -1101,26 +1180,82 @@ test('BR-9b: Preview the flashcards plays the learner cards under the strip, lea
   await expect(topicTitle).toBeVisible();
   await expect(strip(page)).toHaveCount(0);
 
-  // Playback writes asynchronously: compare only once nothing more changes for 500 ms.
-  let previous = '';
-  await expect
-    .poll(
-      async () => {
-        const now = JSON.stringify(await snapshotDevice(page));
-        const settled = now === previous;
-        previous = now;
-        return settled;
-      },
-      { intervals: [500], timeout: 10_000 },
-    )
-    .toBe(true);
-  const deviceAfter = await snapshotDevice(page);
-  expect(changedOutsideBrowse(deviceBefore, deviceAfter).filter((k) => !k.startsWith('session:hr:grownup') && !k.startsWith('session:hr:console'))).toEqual([]);
-  // No vocabulary progress, profile or setting of the learner's changed; only `browse:*` may differ.
-  const stored = await readAllStored(page);
-  const changed = [...new Set([...Object.keys(storedBefore), ...Object.keys(stored)])].filter((k) => storedBefore[k] !== stored[k]);
-  expect(changed.filter((k) => !k.startsWith('hr:browse:'))).toEqual([]);
-  expect(stored[LEARNER_QUEUE]).toBe(SEEDED_QUEUE);
+  await expectNothingWritten(page, deviceBefore, storedBefore);
+});
+
+test('BR-9b: a whole flashcard chunk, its quick check and its summary run under the strip with no Speed round; Next words plays on and Back to topic returns', async ({ page }) => {
+  const { storedBefore, deviceBefore } = await openFoodTopic(page);
+  const topicTitle = page.getByRole('heading', { name: 'Food' });
+  await page.getByTestId('browse-preview').click();
+
+  // The first chunk to its summary, the check in host mode preview; the strip stays over all of it.
+  await finishFlashcardChunk(page);
+  await expect(strip(page)).toBeVisible();
+  await expect(page.getByTestId('vocab-cards-summary-line')).toBeVisible();
+  await expect(page.getByTestId('vocab-cards-speed')).toHaveCount(0);
+  await expect(page.getByTestId('vocab-cards-topic')).toBeVisible();
+  await shot(page, 'br9b-browse-flashcards-summary-pixel5');
+
+  // Next words plays the next run here, under the strip, from its first card.
+  await page.getByTestId('vocab-cards-next').click();
+  await expect(page.getByTestId('vocab-cards')).toBeVisible();
+  await expect(page.getByTestId('vocab-card-front')).toBeVisible();
+  await expect(strip(page)).toBeVisible();
+  await expect(topicTitle).toHaveCount(0);
+
+  // That run to its summary too, then Back to topic.
+  await finishFlashcardChunk(page);
+  await expect(page.getByTestId('vocab-cards-speed')).toHaveCount(0);
+  await page.getByTestId('vocab-cards-topic').click();
+  await expect(topicTitle).toBeVisible();
+  await expect(strip(page)).toHaveCount(0);
+  await expect(page.getByTestId('browse-preview')).toHaveText('Preview the flashcards');
+
+  await expectNothingWritten(page, deviceBefore, storedBefore);
+});
+
+/*
+ * The preview events are sent only by a build with an API address (EXPO_PUBLIC_API_BASE_URL, E2E_TELEMETRY=1); without
+ * one the client sends nothing, so this case is reported as skipped, not passed:
+ *   E2E_TELEMETRY=1 pnpm --filter @hangul-route/mobile exec playwright test browse -g "BR-9b: the preview events"
+ */
+test('BR-9b: the preview events: started with kind vocab-topic per run, ended once with reachedEnd after a summary', async ({ page }) => {
+  test.skip(process.env.E2E_TELEMETRY !== '1', 'needs a web build with an API address (E2E_TELEMETRY=1)');
+  const sent: Array<{ name: string; payload: Record<string, unknown> }> = [];
+  await page.route('**/api/telemetry', async (route) => {
+    const body = route.request().postDataJSON() as { name?: string; payload?: Record<string, unknown> } | null;
+    if (body?.name?.startsWith('browse.preview_') && body.payload) sent.push({ name: body.name, payload: body.payload });
+    await route.fulfill({ status: 200, contentType: 'application/json', body: '{"ok":true}' });
+  });
+  await openFoodTopic(page);
+  const topicTitle = page.getByRole('heading', { name: 'Food' });
+
+  // Left early by the strip: one started, one ended without reaching the end.
+  await page.getByTestId('browse-preview').click();
+  await expect(page.getByTestId('vocab-cards')).toBeVisible();
+  await page.getByTestId('preview-leave').click();
+  await page.getByTestId('browse-leave-confirm').click();
+  await expect(topicTitle).toBeVisible();
+  await expect.poll(() => sent.map((e) => [e.name, e.payload.kind, e.payload.itemId, e.payload.reachedEnd])).toEqual([
+    ['browse.preview_started', 'vocab-topic', 'vocab-topic:food', undefined],
+    ['browse.preview_ended', 'vocab-topic', 'vocab-topic:food', false],
+  ]);
+  sent.length = 0;
+
+  // A whole chunk: the summary ends it (reachedEnd); Next words starts another run, Back to topic sends nothing more.
+  await page.getByTestId('browse-preview').click();
+  await finishFlashcardChunk(page);
+  await page.getByTestId('vocab-cards-next').click();
+  await expect(page.getByTestId('vocab-cards')).toBeVisible();
+  await finishFlashcardChunk(page);
+  await page.getByTestId('vocab-cards-topic').click();
+  await expect(topicTitle).toBeVisible();
+  await expect.poll(() => sent.map((e) => [e.name, e.payload.kind, e.payload.itemId, e.payload.reachedEnd])).toEqual([
+    ['browse.preview_started', 'vocab-topic', 'vocab-topic:food', undefined],
+    ['browse.preview_ended', 'vocab-topic', 'vocab-topic:food', true],
+    ['browse.preview_started', 'vocab-topic', 'vocab-topic:food', undefined],
+    ['browse.preview_ended', 'vocab-topic', 'vocab-topic:food', true],
+  ]);
 });
 
 /* -------------------------------------------------------------------------------------------

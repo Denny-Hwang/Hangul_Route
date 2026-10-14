@@ -6,7 +6,7 @@ import { useMessages } from '../../i18n/use-messages';
 import { previewCardsPorts } from '../../logic/vocab/cards-ports';
 import type { BrowseStackParamList } from '../../navigation/browse';
 import { OopsScreen } from '../system/OopsScreen';
-import { pickerTopic } from '../vocab/topic-data';
+import { pickerTopic, wordsOffered } from '../vocab/topic-data';
 import { CardsSession, type CardsExits } from '../vocab/VocabCardsScreen';
 import { LeavePreviewSheet } from './LeavePreviewSheet';
 import { PreviewFrame } from './PreviewFrame';
@@ -29,7 +29,8 @@ type Props = NativeStackScreenProps<BrowseStackParamList, 'PreviewFlashcards'>;
 export function PreviewFlashcardsScreen({ route, navigation }: Props): React.ReactElement {
   const m = useMessages().caregiver.browse;
   const { topicId, topicKey } = route.params;
-  const topic = pickerTopic(topicKey);
+  // The learner picker's topic, only while Words is on for learners (the item page offers the preview on the same terms).
+  const topic = wordsOffered() ? pickerTopic(topicKey) : undefined;
   const [confirming, setConfirming] = useState(false);
   // The run on screen: Next words and Review these open another run of the same topic in place.
   const [run, setRun] = useState<{ n: number; chunk?: number; ids?: string[] }>({ n: 0 });

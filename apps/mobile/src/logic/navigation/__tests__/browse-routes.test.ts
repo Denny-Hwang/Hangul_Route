@@ -128,5 +128,8 @@ describe('the learner screens inside All lessons (section 4.7, the navigation ad
     // No Speed round in a preview; every exit returns to the topic page or plays another run here.
     expect(cards).toMatch(/speed: null/);
     expect(cards).toMatch(/back: toItem/);
+    // Shown and opened on the learner picker's terms: Words is on for learners and the topic is listed.
+    expect(cards).toMatch(/const topic = wordsOffered\(\) \? pickerTopic\(topicKey\) : undefined/);
+    expect(read('screens/browse/BrowseItemScreen.tsx')).toMatch(/has\('PreviewFlashcards'\) && wordsOffered\(\) && pickerTopic\(facts\.key\) !== undefined/);
   });
 });
