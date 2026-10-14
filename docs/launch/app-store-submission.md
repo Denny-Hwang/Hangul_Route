@@ -62,6 +62,7 @@ eas submit --platform ios --profile production     # TestFlight 업로드
   - [ ] Homework: 배정 없을 때 "All clear!" 카드, 있을 때 행 탭 → 퀘스트
   - [ ] 설정 Sound Off → 자모 TTS 무음, On → 복귀
   - [ ] 카드 Share → 공유시트 / 취소 → 무반응
+  - [ ] 수준 확인 (F-PLC-001, P-10 부터 네이티브에서도 기본 켜짐; 지금까지 웹에서만 e2e 로 확인됨): 새 프로필 → "Where should we start?" 갈림길에서 "I am new to Korean" → 바로 첫 카드 / 다른 새 프로필에서 "I already know some Korean" → Standard 끝까지 → 결과의 주간 계획 줄 → Me 프로필에서 **Use this plan** 한 번 탭 (PIN 없음) → Learning Route 에 계획 / 아이 프로필의 결과 → "For grown-ups" → PIN 뒤 리포트 / 소리 켜고 Short 한 번 끝까지 / 비행기 모드에서 Short 를 한 번 더 (멈추거나 빈 화면이 나오지 않는다). 결과는 #264 에 기록
   - [ ] 비행기 모드에서 위 전부 동작 (오프라인)
   - [ ] 강제 크래시 확인이 필요하면 dev 빌드에서 `throw` 후 OopsScreen → Try again
 - [ ] iPad: 세로 고정 + 레이아웃 깨짐 없음 (supportsTablet = true 이므로 iPad 스크린샷 필수)

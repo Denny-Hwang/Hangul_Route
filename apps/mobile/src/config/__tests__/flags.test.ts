@@ -141,17 +141,39 @@ describe('flags', () => {
     expect(mod.flags.showUnreviewedStories).toBe(true);
   });
 
-  it('placementEnabled is OFF by default (F-PLC-001 section 6)', async () => {
+  it('placementEnabled (F-PLC-001 P-10 beta flip) is ON by default on every platform', async () => {
     delete process.env.EXPO_PUBLIC_PLACEMENT_ENABLED;
-    const mod = await reload();
-    expect(mod.flags.placementEnabled).toBe(false);
-    expect(mod.launchDefaultFlags.placementEnabled).toBe(false);
+    for (const os of ['web', 'ios', 'android', undefined]) {
+      if (os === undefined) delete process.env.EXPO_OS;
+      else process.env.EXPO_OS = os;
+      const mod = await reload();
+      expect(mod.flags.placementEnabled).toBe(true);
+      expect(mod.launchDefaultFlags.placementEnabled).toBe(true);
+    }
   });
 
-  it('placementEnabled flips on with "true"', async () => {
+  it('placementEnabled stays a kill switch: "false" or "0" turns it off, "true" or "1" keeps it on', async () => {
+    process.env.EXPO_PUBLIC_PLACEMENT_ENABLED = 'false';
+    let mod = await reload();
+    expect(mod.flags.placementEnabled).toBe(false);
+    process.env.EXPO_PUBLIC_PLACEMENT_ENABLED = '0';
+    mod = await reload();
+    expect(mod.flags.placementEnabled).toBe(false);
     process.env.EXPO_PUBLIC_PLACEMENT_ENABLED = 'true';
-    const mod = await reload();
+    mod = await reload();
     expect(mod.flags.placementEnabled).toBe(true);
+    process.env.EXPO_PUBLIC_PLACEMENT_ENABLED = '1';
+    mod = await reload();
+    expect(mod.flags.placementEnabled).toBe(true);
+    process.env.EXPO_PUBLIC_PLACEMENT_ENABLED = 'maybe';
+    mod = await reload();
+    expect(mod.flags.placementEnabled).toBe(true);
+  });
+
+  it('placementEnabled is read by its literal name, so the kill switch reaches the web bundle', () => {
+    const src = readFileSync(join(__dirname, '../flags.ts'), 'utf8');
+    expect(src).toContain('process.env.EXPO_PUBLIC_PLACEMENT_ENABLED');
+    expect(src).not.toContain("readBool('EXPO_PUBLIC_PLACEMENT_ENABLED'");
   });
 
   it('audioClips (F-AUDIO-004 A-6) is ON by default and switches off with "false" or "0"', async () => {
