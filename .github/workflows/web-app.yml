@@ -16,7 +16,10 @@ name: Web App (PWA)
 # (dist-e2e-route/, F-PLAN-002 P2-8). The required check
 # 'Build PWA · offline e2e' is the last job: it always runs and passes only
 # when every job above passed (or when nothing the PWA depends on changed, and
-# the build job skipped its steps on purpose).
+# the build job skipped its steps on purpose). The billing and grown-up home
+# job (F-BILL-002 B-14) runs beside the shards on its own app-host build (an
+# API base at a mock host, the grown-up home flag on); the required check
+# stands for it too.
 # A failed shard can be re-run alone; it downloads the same bundles.
 # scripts/__tests__/ci-workflows.test.mjs keeps this layout honest.
 
@@ -396,9 +399,92 @@ jobs:
           path: ~/.cache/ms-playwright
           key: playwright-chromium-${{ runner.os }}-${{ steps.pw.outputs.version }}
 
+  # F-BILL-002 B-14: the billing and grown-up home lane. F-APP-001's merged
+  # app-host dist (build:web copies the console role of apps/web into dist
+  # under the grown-up prefixes) built with an API base at a mock host (the
+  # specs answer every call to it with page.route; Stripe is never reached)
+  # and the grown-up home flag on. Then the web billing specs run against that
+  # dist (BILLING_E2E=1, E2E_OUT=../mobile/dist) and the flag-on PWA specs
+  # (E2E_GROWN_UP_HOME=1) on the same dist. Its own runner and its own build:
+  # the release dist of the build job must keep the production values.
+  billing-e2e:
+    name: PWA · billing and grown-up home e2e (app-host build, API base at a mock host)
+    needs: [build]
+    if: needs.build.outputs.run == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      WRANGLER_SEND_METRICS: "false"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm, Node and dependencies
+        uses: ./.github/actions/setup-workspace
+
+      - name: Playwright version
+        id: pw
+        run: echo "version=$(node -p "require('./apps/mobile/node_modules/@playwright/test/package.json').version")" >> "$GITHUB_OUTPUT"
+
+      - name: Restore the Playwright browsers
+        uses: actions/cache/restore@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-chromium-${{ runner.os }}-${{ steps.pw.outputs.version }}
+
+      - name: Install Playwright Chromium (system deps; the browser only on a cache miss)
+        run: pnpm --filter @hangul-route/mobile exec playwright install --with-deps chromium
+
+      # Metro inlines EXPO_PUBLIC_* values and caches its transforms in
+      # os.tmpdir()/metro-cache, so the export runs on a fresh, empty TMPDIR and
+      # restores no Metro or Next cache (a flag-off transform must never be
+      # served here, and none of these transforms reaches the cache main saves).
+      # merge-console.mjs gives the console the same API base
+      # (NEXT_PUBLIC_API_BASE_URL) and keeps its dev sign-in form off.
+      - name: Build the app-host bundle (dist, API base at a mock host, grown-up home on, Metro cache of its own)
+        env:
+          EXPO_PUBLIC_API_BASE_URL: "https://api.billing-e2e.test"
+          EXPO_PUBLIC_GROWN_UP_HOME: "true"
+        shell: bash
+        run: |
+          export TMPDIR="$RUNNER_TEMP/billing-e2e-tmp"
+          rm -rf "$TMPDIR" && mkdir -p "$TMPDIR"
+          pnpm --filter @hangul-route/mobile build:web
+
+      # The grown-up's billing journey and the step-up dialog, on the console
+      # pages of the merged dist (apps/web's serve-out.mjs serves E2E_OUT).
+      - name: Billing e2e (web specs on the merged dist, BILLING_E2E=1)
+        working-directory: apps/web
+        env:
+          BILLING_E2E: "1"
+          E2E_OUT: ../mobile/dist
+        run: pnpm exec playwright test --output test-results/billing e2e/billing.spec.ts e2e/billing-step-up.spec.ts
+
+      # The learner app's flag-on halves: Plan status and its hand-off to the
+      # real billing page, the same-tab hand-off and the grown-up entries.
+      - name: Grown-up home e2e (flag-on PWA specs, E2E_GROWN_UP_HOME=1)
+        if: ${{ !cancelled() }}
+        working-directory: apps/mobile
+        env:
+          E2E_GROWN_UP_HOME: "1"
+        run: pnpm exec playwright test --output test-results/grown-up-home e2e/web/plan-status.spec.ts e2e/web/plan-screen-same-tab.spec.ts e2e/web/grown-up-entries.spec.ts
+
+      - name: Upload the billing e2e results (on failure)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: billing-e2e-results
+          path: |
+            apps/web/test-results
+            apps/mobile/test-results
+          overwrite: true
+          if-no-files-found: ignore
+          retention-days: 7
+
   pwa:
     name: Build PWA · offline e2e
-    needs: [build, e2e]
+    needs: [build, e2e, billing-e2e]
     if: always()
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -409,9 +495,11 @@ jobs:
           BUILD: ${{ needs.build.result }}
           RUN: ${{ needs.build.outputs.run }}
           E2E: ${{ needs.e2e.result }}
+          BILLING: ${{ needs.billing-e2e.result }}
         run: |
           echo "build: $BUILD (PWA-relevant change: $RUN)"
           echo "e2e shards (release build + fixture bundle): $E2E"
+          echo "billing and grown-up home e2e (app-host build): $BILLING"
           if [ "$BUILD" != success ]; then
             echo "::error::The PWA build job did not pass."
             exit 1
@@ -422,5 +510,9 @@ jobs:
           fi
           if [ "$E2E" != success ]; then
             echo "::error::An e2e job did not pass."
+            exit 1
+          fi
+          if [ "$BILLING" != success ]; then
+            echo "::error::The billing and grown-up home e2e job did not pass."
             exit 1
           fi

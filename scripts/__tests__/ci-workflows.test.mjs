@@ -507,3 +507,86 @@ describe("switch-on e2e lane (F-ENT-003 E3-13)", () => {
     assert.match(upload, /overwrite: true/);
   });
 });
+
+// F-BILL-002 B-14: the billing and grown-up home lane. A job of web-app.yml (so the required check
+// 'Build PWA · offline e2e' stands for it) that builds F-APP-001's merged app-host dist with an API base at a
+// mock host and the grown-up home flag on, on a Metro cache of its own, then runs the web billing specs
+// against that dist (BILLING_E2E=1, E2E_OUT=../mobile/dist) and the flag-on PWA specs (E2E_GROWN_UP_HOME=1).
+// Before B-14 these ran by hand only (B-11).
+describe("billing and grown-up home e2e (F-BILL-002 B-14)", () => {
+  const text = read(".github/workflows/web-app.yml");
+  const all = jobs(text);
+  const lane = all["billing-e2e"];
+  /** One step of the lane, by the start of its name. */
+  const step = (name) => {
+    const at = lane.text.indexOf(`- name: ${name}`);
+    assert.ok(at >= 0, `a billing e2e step named '${name}...'`);
+    return lane.text.slice(at).split(/\n\s+- name: /)[0];
+  };
+  const MOCK_API = "https://api.billing-e2e.test";
+  /** The spec paths a step passes to playwright test (its --output folder left out). */
+  const specArgs = (run) =>
+    (run.match(/pnpm exec playwright test ([^\n]+)/)?.[1] ?? "").replace(/--output \S+/, "").split(/\s+/).filter(Boolean);
+
+  test("the lane is a job of web-app.yml that the required PWA check stands for, skipped with the PWA build", () => {
+    assert.ok(lane, "web-app.yml has a billing-e2e job");
+    assert.ok(!REQUIRED.includes(lane.name), "the lane is not itself a required check name");
+    assert.deepEqual(lane.needs, ["build"]);
+    assert.equal(lane.if, "needs.build.outputs.run == 'true'");
+    assert.match(lane.text, /^    timeout-minutes: \d+$/m);
+    const [, gate] = Object.entries(all).find(([, j]) => j.name === REQUIRED[1]);
+    assert.ok(gate.needs.includes("billing-e2e"));
+  });
+
+  test("the app-host build is dist/ with the API base at the mock host and the grown-up home flag on, on a Metro cache of its own", () => {
+    const build = step("Build the app-host bundle");
+    assert.match(build, new RegExp(`EXPO_PUBLIC_API_BASE_URL: "${MOCK_API.replace(/[.]/g, "\\.")}"`));
+    assert.match(build, /EXPO_PUBLIC_GROWN_UP_HOME: "true"/);
+    assert.match(build, /export TMPDIR="\$RUNNER_TEMP\/billing-e2e-tmp"/);
+    assert.match(build, /pnpm --filter @hangul-route\/mobile build:web$/m);
+    assert.doesNotMatch(lane.text, /actions\/cache(\/restore)?@\S+\n\s+with:\n\s+path: (\/tmp\/metro-cache|apps\/web\/\.next\/cache)/, "a restored Metro or Next cache could serve flag-off values");
+    // The specs mock this host; merge-console.mjs passes it to the console as NEXT_PUBLIC_API_BASE_URL.
+    assert.ok(read("apps/web/e2e/billing-step-up.spec.ts").includes(`const API = '${MOCK_API}';`));
+    assert.match(read("apps/mobile/scripts/app-host/merge-console.mjs"), /out\.NEXT_PUBLIC_API_BASE_URL = env\.EXPO_PUBLIC_API_BASE_URL/);
+  });
+
+  test("the web billing run plays every spec that reads BILLING_E2E, on the merged dist", () => {
+    const run = step("Billing e2e (web specs");
+    assert.match(run, /working-directory: apps\/web/);
+    assert.match(run, /BILLING_E2E: "1"/);
+    assert.match(run, /E2E_OUT: \.\.\/mobile\/dist/);
+    const listed = specArgs(run);
+    const dir = join(ROOT, "apps", "web", "e2e");
+    const reads = readdirSync(dir).filter((n) => n.endsWith(".spec.ts") && readFileSync(join(dir, n), "utf8").includes("BILLING_E2E"));
+    assert.deepEqual(reads.sort(), ["billing-step-up.spec.ts", "billing.spec.ts"]);
+    assert.deepEqual(listed.sort(), reads.map((n) => `e2e/${n}`).sort());
+  });
+
+  test("the PWA run plays every spec with a flag-on block (test.skip(!ON)) with E2E_GROWN_UP_HOME=1, on the same dist", () => {
+    const run = step("Grown-up home e2e (flag-on PWA specs");
+    assert.match(run, /if: \$\{\{ !cancelled\(\) \}\}/, "runs even when the web billing run failed");
+    assert.match(run, /working-directory: apps\/mobile/);
+    assert.match(run, /E2E_GROWN_UP_HOME: "1"/);
+    assert.doesNotMatch(run, /STORY_FIXTURES|E2E_ROUTE/, "serves dist/, not a fixture or plan bundle");
+    const listed = specArgs(run);
+    const dir = join(ROOT, "apps", "mobile", "e2e", "web");
+    const flagOn = readdirSync(dir).filter((n) => {
+      if (!n.endsWith(".spec.ts")) return false;
+      const src = readFileSync(join(dir, n), "utf8");
+      return /const ON = process\.env\.E2E_GROWN_UP_HOME === '1'/.test(src) && /test\.skip\(\s*!ON\b/.test(src);
+    });
+    assert.deepEqual(flagOn.sort(), ["grown-up-entries.spec.ts", "plan-screen-same-tab.spec.ts", "plan-status.spec.ts"]);
+    assert.deepEqual(listed.sort(), flagOn.map((n) => `e2e/web/${n}`).sort());
+  });
+
+  test("both runs keep their own output folder and the results upload on failure", () => {
+    assert.match(step("Billing e2e (web specs"), /--output test-results\/billing/);
+    assert.match(step("Grown-up home e2e (flag-on PWA specs"), /--output test-results\/grown-up-home/);
+    const upload = step("Upload the billing e2e results");
+    assert.match(upload, /if: failure\(\)/);
+    assert.match(upload, /uses: actions\/upload-artifact@/);
+    assert.match(upload, /apps\/web\/test-results/);
+    assert.match(upload, /apps\/mobile\/test-results/);
+    assert.match(upload, /overwrite: true/);
+  });
+});
