@@ -29,6 +29,9 @@ export const a11y = {
   /** One of Today's mission cards; a collected card keeps its slot and says so. */
   missionCard: (title: string, subtitle: string, collected: boolean) =>
     `${title}. ${subtitle}.${collected ? ' Collected.' : ''}`,
+  /** The Home vocabulary card's button (F-VOC-005 section 3.10): the card's lines, then where it goes. */
+  vocabMissionCard: (title: string, subtitle: string, collected: boolean) =>
+    `${title}. ${subtitle}.${collected ? ' Collected.' : ''} Opens a quick round.`,
   /**
    * A Journey grid cell (F-STORY-005 §3.5, §3.12): the stage by its number and title, the theme, what the
    * cell holds (`kind` is the cell's `CellKind`) and how many heritage stories call it home; then the
@@ -241,6 +244,19 @@ export const a11y = {
    * tap (`gloss` is the answer's meaning in the UI language, content), and the homonym topic chip.
    */
   vocab: {
+    /**
+     * The flashcard (F-VOC-003 C-5, design/screens/vocab/cards.md): the card button's name carries the word on its
+     * front and the word with its meaning on its back (design/components/FlipCard/spec.md), and the new face is said
+     * after a flip. `word` is `a11y.koreanItem` without a gloss, or `word(ko)` while reading practice hides the
+     * romanization; `gloss` is the meaning in the UI language (content).
+     */
+    cards: {
+      word: (ko: string) => `Korean: ${ko}`,
+      front: (word: string) => `${word}. Show meaning.`,
+      back: (word: string, gloss: string) => `${word}, ${gloss}. Show word.`,
+      turnedBack: (word: string, gloss: string) => `Meaning: ${gloss}. ${word}.`,
+      turnedFront: (word: string) => `Back to the word. ${word}.`,
+    },
     question: {
       speaker: 'Play the word again',
       /** The meaning starts the sentence, so its first letter is upper case ("Right. Apple."). */
@@ -257,6 +273,11 @@ export const a11y = {
     speed: {
       sparks: (n: number) => plural('en', n, { one: '1 spark', other: `${n} sparks` }),
       sparksFull: 'Full of sparks',
+      /** The Challenge clock (§3.8): read on focus only, never a live region; `seconds` rounded up. */
+      timeLeft: (seconds: number) => plural('en', seconds, { one: 'Time left: 1 second', other: `Time left: ${seconds} seconds` }),
+      /** The start sheet's round type choice and the clock scale choice. */
+      modes: 'Round type',
+      scales: 'Clock length',
     },
   },
   /**

@@ -138,7 +138,7 @@ export interface Flags {
   /**
    * Progress reports in the learner app (F-REPORT-001 section 3.1, RP-9): the **See report** button on each
    * grown-up dashboard card and the `LearnerReport` screen behind the gate. With it off the button is not
-   * drawn and the screen is not registered. OFF until RP-11 flips it. The stack registers the screen on this flag;
+   * drawn and the screen is not registered. ON since RP-11 (`EXPO_PUBLIC_REPORTS_ENABLED=false` switches it off). The stack registers the screen on this flag;
    * the button and the screen read `reportsEnabledFor(locale)`, which also holds reports back in a UI locale whose
    * `report.*` words are not reviewed yet.
    */
@@ -168,7 +168,7 @@ const launchDefaults: Flags = {
   vocabShowDrafts: false,
   grownUpHomeEnabled: false,
   notesEnabled: false,
-  reportsEnabled: false,
+  reportsEnabled: true,
   routeEnabled: true,
 };
 

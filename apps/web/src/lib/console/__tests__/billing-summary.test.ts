@@ -36,7 +36,9 @@ const card = (over: Partial<BillingSpaceCard> = {}): BillingSpaceCard => ({
 });
 const own = (over: Partial<Extract<BillingSpaceCard['coverage'], { state: 'own' }>> = {}): BillingSpaceCard['coverage'] => ({ state: 'own', planKey: 'family_lifetime', status: 'active', expiresAt: YEAR_ON, statusSince: '2026-10-01T00:00:00.000Z', endsAtPeriodEnd: false, ...over });
 const summary = (cards: BillingSpaceCard[], over: Partial<BillingSummary> = {}): BillingSummary => ({ mode: 'test', purchasesOpen: true, cards, account: [], ...over });
-const view = (s: BillingSummary, claims: Readonly<SiteClaims> = SITE_CLAIMS, promo: Promo | null = null): BillingHomeView => billingHomeView(s, { now, locale: 'en', claims, promo });
+/** Every feature claim off: the base includes lines. Today's claims (`SITE_CLAIMS`, reports on since F-REPORT-001 RP-11) are tested below. */
+const OFF: Readonly<SiteClaims> = { ...SITE_CLAIMS, learningRoute: false, parentReports: false, teacherReports: false, feedbackNotes: false, browseAsLearner: false, lectureMode: false };
+const view = (s: BillingSummary, claims: Readonly<SiteClaims> = OFF, promo: Promo | null = null): BillingHomeView => billingHomeView(s, { now, locale: 'en', claims, promo });
 const ALL_ON: Readonly<SiteClaims> = { ...SITE_CLAIMS, browseAsLearner: true, parentReports: true, teacherReports: true, feedbackNotes: true };
 
 describe('billingHomeView: the mode banner and whether buttons work (section 4.3 item 2, section 4.9)', () => {
@@ -241,23 +243,33 @@ describe('billingHomeView: order and offers', () => {
 describe('includesLines: feature lines only while SITE_CLAIMS says the feature is live', () => {
   it('family: base lines always; browse, reports and notes only when their claims are on', () => {
     const base = [b.includesLines.family.everyLesson, b.includesLines.family.learners(FAMILY_LIFETIME_LEARNERS), b.includesLines.family.cloudSave];
-    expect(includesLines('family_lifetime', 'family', 'en', SITE_CLAIMS)).toEqual(base);
+    expect(includesLines('family_lifetime', 'family', 'en', OFF)).toEqual(base);
     expect(includesLines('family_lifetime', 'family', 'en', ALL_ON)).toEqual([...base, b.includesLines.family.browse, b.includesLines.family.reports, b.includesLines.family.notes]);
-    expect(includesLines('family_lifetime', 'family', 'en', { ...SITE_CLAIMS, parentReports: true })).toEqual([...base, b.includesLines.family.reports]);
+    expect(includesLines('family_lifetime', 'family', 'en', { ...OFF, parentReports: true })).toEqual([...base, b.includesLines.family.reports]);
     // teacherReports is not a family claim.
-    expect(includesLines('family_lifetime', 'family', 'en', { ...SITE_CLAIMS, teacherReports: true })).toEqual(base);
+    expect(includesLines('family_lifetime', 'family', 'en', { ...OFF, teacherReports: true })).toEqual(base);
   });
 
   it('license: the school line only for a school; feature lines per claim', () => {
     const base = [b.includesLines.license.everyStudent, b.includesLines.license.noCap(FREE_CLASS_STUDENT_CAP)];
-    expect(includesLines('group_license', 'class', 'en', SITE_CLAIMS)).toEqual(base);
-    expect(includesLines('group_license', 'school', 'en', SITE_CLAIMS)).toEqual([...base, b.includesLines.license.school(SCHOOL_LICENSE_TEACHERS, SCHOOL_LICENSE_STUDENTS)]);
+    expect(includesLines('group_license', 'class', 'en', OFF)).toEqual(base);
+    expect(includesLines('group_license', 'school', 'en', OFF)).toEqual([...base, b.includesLines.license.school(SCHOOL_LICENSE_TEACHERS, SCHOOL_LICENSE_STUDENTS)]);
     expect(includesLines('group_license', 'class', 'en', ALL_ON)).toEqual([...base, b.includesLines.license.browse, b.includesLines.license.reports, b.includesLines.license.notes]);
-    expect(includesLines('group_license', 'class', 'en', { ...SITE_CLAIMS, parentReports: true })).toEqual(base);
+    expect(includesLines('group_license', 'class', 'en', { ...OFF, parentReports: true })).toEqual(base);
   });
 
-  it('reads SITE_CLAIMS by default, where no feature claim is on yet', () => {
+  it.each(['ko', 'es'] as const)('%s: no reports line while reports render only in a reviewed locale', (locale) => {
+    const lines = getMessages(locale).console.billing.includesLines;
+    expect(includesLines('family_lifetime', 'family', locale, SITE_CLAIMS)).toEqual(includesLines('family_lifetime', 'family', locale, OFF));
+    expect(includesLines('family_lifetime', 'family', locale, ALL_ON)).not.toContain(lines.family.reports);
+    expect(includesLines('group_license', 'class', locale, SITE_CLAIMS)).not.toContain(lines.license.reports);
+    expect(includesLines('group_license', 'class', locale, ALL_ON)).toEqual([...includesLines('group_license', 'class', locale, OFF), lines.license.browse, lines.license.notes]);
+  });
+
+  it('reads SITE_CLAIMS by default, where the reports claims are on (F-REPORT-001 RP-11)', () => {
     expect(billingHomeView(summary([card()]), { now }).cards[0]?.offer?.includes).toEqual(includesLines('family_lifetime', 'family', 'en', SITE_CLAIMS));
+    expect(includesLines('family_lifetime', 'family', 'en')).toEqual([...includesLines('family_lifetime', 'family', 'en', OFF), b.includesLines.family.reports]);
+    expect(includesLines('group_license', 'class', 'en')).toEqual([...includesLines('group_license', 'class', 'en', OFF), b.includesLines.license.reports]);
   });
 });
 

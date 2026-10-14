@@ -18,6 +18,8 @@ export const a11y = {
   profileEntry: '프로필과 설정',
   openHomework: '숙제 열기',
   missionCard: (title: string, subtitle: string, collected: boolean) => `${title}. ${subtitle}.${collected ? ' 모았어요.' : ''}`,
+  vocabMissionCard: (title: string, subtitle: string, collected: boolean) =>
+    `${title}. ${subtitle}.${collected ? ' 모았어요.' : ''} 짧은 라운드가 열려요.`,
   journeyCell: (c: {
     stage: number;
     stageTitle: string;
@@ -174,6 +176,13 @@ export const a11y = {
     letter: (letter: string, sound: string, state: string) => `${letter}, ${sound}. ${state}.`,
   },
   vocab: {
+    cards: {
+      word: (ko: string) => `한글: ${ko}`,
+      front: (word: string) => `${word}. 뜻 보기.`,
+      back: (word: string, gloss: string) => `${word}, ${gloss}. 낱말 보기.`,
+      turnedBack: (word: string, gloss: string) => `뜻: ${gloss}. ${word}.`,
+      turnedFront: (word: string) => `다시 낱말이에요. ${word}.`,
+    },
     question: {
       speaker: '낱말 다시 듣기',
       right: (gloss: string) => `맞아요. ${gloss}.`,
@@ -186,6 +195,9 @@ export const a11y = {
     speed: {
       sparks: (n: number) => `반짝이 ${n}개`,
       sparksFull: '반짝이가 가득해요',
+      timeLeft: (seconds: number) => `남은 시간: ${seconds}초`,
+      modes: '라운드 종류',
+      scales: '시계 길이',
     },
   },
   report: {

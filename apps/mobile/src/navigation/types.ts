@@ -20,6 +20,8 @@ import type { VocabQuestionE2eParams } from './vocab-question-e2e';
  * grown-up pages on the app host; its PIN screen only verifies, never creates or resets a PIN.
  * `Billing` (F-BILL-002 §4.7, web only): back to the Plan screen, which opens the billing page for
  * the press that waited on the gate.
+ *
+ * Append-only: add a member as a new `| 'Name'` line above the marker; the lone `;` stays last.
  */
 export type GrownUpDestination =
   | 'ParentDashboard'
@@ -41,13 +43,26 @@ export type GrownUpDestination =
   | 'LearnerReport'
   /** F-PLAN-002 section 3.9 (P2-7a): a child profile's "Make a weekly plan" row, through the gate when the device needs it (`PinEntry.profileId`). */
   | 'RouteProposal'
+  /** F-SPACE-002 section 4.12 (T-7c): a class move from this device (`PinEntry.profileId`, `PinEntry.fromSpaceId`; without a class, Set up PIN returns to the card). */
+  | 'MoveClass'
+  /** F-SPACE-002 section 4.12 (T-7c): the sheet of one open move request (`PinEntry.profileId`, `PinEntry.transferId`). */
+  | 'ApproveTransfer'
   /** F-PLAN-002 section 3.9 (P2-7b): a child's **Change the plan** when the gate is closed (`PinEntry.profileId`). */
   | 'RouteSetup'
   /** F-PLAN-002 section 3.9 (P2-7b): a child's **Stop this plan** when the gate is closed; back to the overview underneath (`PinEntry.profileId`). */
   | 'RouteOverview'
   /** F-BROWSE-001 section 4.3 (BR-12a, web only): All lessons; a correct PIN writes a fresh gate pass (`PinEntry.browseTarget`). */
-  | 'BrowseLessons';
+  | 'BrowseLessons'
+  // add new members above this line
+;
 
+/**
+ * Append-only layout (every list in this file): add a new route as new lines just above the closing
+ * line, never by editing an existing line. Two parallel PRs that insert at the same spot can still
+ * conflict, but the fix is always to keep both inserted lines; no existing line is rewritten.
+ * Every multi-line top-level union in this file: one `| member` per line, closed by the marker
+ * comment and a lone `;` (pinned by logic/__tests__/nav-types-append.test.ts).
+ */
 export type RootStackParamList = {
   Onboarding: NavigatorScreenParams<OnboardingStackParamList>;
   Main: NavigatorScreenParams<MainTabParamList>;
@@ -140,6 +155,10 @@ export type RootStackParamList = {
     noteId?: string;
     /** `next: 'NoteReport'`: where the report sheet came from (default `note_page`), kept when a lapsed session asks for the PIN again. */
     noteVia?: 'note_page' | 'grown_up_zone';
+    /** `next: 'MoveClass'`: the class the move starts from. */
+    fromSpaceId?: string;
+    /** `next: 'ApproveTransfer'`: the request whose sheet opens. */
+    transferId?: string;
     /** `next: 'BrowseLessons'`: where All lessons opens (a content target, never a learner id); absent opens its home. */
     browseTarget?: BrowseTarget;
   };
@@ -149,6 +168,17 @@ export type RootStackParamList = {
   Restore: { from: 'welcome' | 'settings' } | undefined;
   /** sync/save-progress — the Rescue Code, PIN-gated (F-RESTORE-001 §3.3). */
   SaveProgress: undefined;
+  /**
+   * A class move from this device (F-SPACE-002 section 4.12, T-7c; `design/screens/transfer/app-sheets.md`):
+   * enter the new class code, Find class, read the consent sheet, send. Behind the grown-up gate unless it
+   * opens directly; online only (consent is never queued).
+   */
+  MoveClass: { profileId: string; fromSpaceId: string };
+  /**
+   * The sheet of one open move request: ApproveTransfer (a yes again, route `device`), the read-only sheet
+   * whose only actions are the veto and Back (guard 11), or the planned sheet with Cancel the move.
+   */
+  ApproveTransfer: { profileId: string; transferId: string };
   /** sync/join-space — enter a class or family code (F-SPACE-001 §3.5). Not PIN-gated. */
   JoinSpace: undefined;
   /** billing/plan-status — the learner Plan screen: status only, no PIN (F-BILL-002 §4.7; F-ENT-003's "Ask a grown-up" still arrives through the gate). */
@@ -207,7 +237,8 @@ export type RootStackParamList = {
   VocabMatch: { topicKey: string };
   /**
    * vocab/speed-start — the Speed Round (F-VOC-004 section 3.1, S-5): the start sheet, then the questions. The topic
-   * page launches it. `mode` is read once Challenge ships (S-6); until then every round is Relaxed.
+   * page launches it. `mode` preselects Challenge only for a profile that has opted in (`initialMode`, S8); Play
+   * again passes the previous round's mode.
    */
   VocabSpeedRound: { topicKey: string; mode?: 'relaxed' | 'challenge' };
   /**

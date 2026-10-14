@@ -5,7 +5,7 @@ Drift detected by `.github/workflows/design-token-sync.yml` (the `presenter` exp
 
 Spec: `docs/specs/F-TCH-004-lecture-mode.md` §3.6 · Wireframe: `design/wireframes/classroom/lecture-presenter.md`
 
-Last updated: 2026-10-11 · Version: v1
+Last updated: 2026-10-13 ("Used for" wording after the design pass, design/screens/presenter; no value changed) · Version: v1
 
 Rows are `presenter.<path>` so the parity test can compare them to the flattened export. A list value is written comma-separated, in order.
 
@@ -27,10 +27,10 @@ Slides size text as `unit * n`, never with a CSS `transform: scale`. Nothing pro
 
 | Token | Value | Used for |
 |---|---|---|
-| `presenter.size.glyph` | 380 | the letter on a letter slide |
-| `presenter.size.display` | 140 | a syllable, a vocabulary word, a quiz option in Korean |
-| `presenter.size.title` | 80 | slide and deck titles |
-| `presenter.size.prompt` | 56 | quiz prompts, the picker result, the timer numbers |
+| `presenter.size.glyph` | 380 | the one taught item a slide is about: the letter on a letter slide, the joined block on a syllable slide (design/screens/presenter D5) |
+| `presenter.size.display` | 140 | a syllable's parts before they join, a vocabulary word, a quiz option in Korean, the full-screen timer numbers |
+| `presenter.size.title` | 80 | slide and deck titles, the helper picker's drawn label, the class code |
+| `presenter.size.prompt` | 56 | quiz prompts, the picker question, Korean beside a slide's main item |
 | `presenter.size.body` | 40 | romanization, gloss, story narration |
 | `presenter.size.caption` | 28 | captions ("Simplified stroke guide"), the smallest projected text |
 

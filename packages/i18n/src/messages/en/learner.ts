@@ -196,6 +196,15 @@ export const learner = {
         assigned: 'Picked just for you',
         dailyTest: 'About a minute with Hoya',
       },
+      /**
+       * The vocabulary card (F-VOC-005 section 3.7, slot 3): shown from three due words, it opens a Relaxed
+       * Speed Round. A gift, not a guilt trip: never a day count, "overdue", "missed", "behind" or "you forgot".
+       */
+      vocab: {
+        title: 'Words are ready',
+        subtitle: (n: number) => plural('en', n, { one: '1 word would like another look', other: `${n} words would like another look` }),
+        cta: 'Say hello again',
+      },
     },
     progress: {
       heading: 'Stage 1 progress',
@@ -1354,6 +1363,41 @@ export const learner = {
         practice: 'Practice these',
         playAgain: 'Play again',
         backToTopic: 'Back to topic',
+      },
+      /**
+       * Challenge mode (F-VOC-004 S8, §3.5, §3.6, §3.8; S-6): opt-in per profile, off by default. One clock for the
+       * whole round that stops during every answer and while paused; never red, never a countdown sound. The last
+       * seconds only add `fewSeconds`. `seconds`: the round's clock (60 x the chosen scale).
+       */
+      challenge: {
+        label: 'Challenge',
+        line: (seconds: number) => `One clock: ${seconds} seconds for the whole round.`,
+        /** The quiet switch for a profile that has not opted in; turning it on changes the profile setting. */
+        try: 'Try Challenge',
+        /** `seconds`: the clock an opt-in gives (60 at the default scale; more for a stored or screen-reader scale). */
+        tryLine: (seconds: number) => `Adds a ${seconds}-second clock. You can turn it off any time.`,
+        scale: {
+          title: 'Clock',
+          normal: 'Normal',
+          longer: 'A bit longer',
+          twice: 'Twice as long',
+        },
+        stopsLine: 'The clock stops while you read the answer.',
+        /** Shown when a screen reader is on and Challenge is turned on: the scale is set to Twice as long. */
+        screenReaderLine: 'Twice as long is chosen for you. You can change it.',
+        pause: 'Pause',
+        paused: 'Paused',
+        resume: 'Resume',
+        stop: 'Stop',
+        fewSeconds: 'A few seconds left',
+        timeUp: "That's the time! Nice work.",
+        /** The Profile switch (§3.8: a learner can leave Challenge at any time). */
+        profile: {
+          title: 'Challenge',
+          line: 'Adds a clock to Speed rounds. You can turn it off any time.',
+          on: 'On',
+          off: 'Off',
+        },
       },
     },
     /**

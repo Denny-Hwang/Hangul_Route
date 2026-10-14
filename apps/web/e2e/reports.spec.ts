@@ -4,13 +4,21 @@ import { touchTarget } from '@hangul-route/design-system/tokens';
 import { EMPTY, LEGACY, PARTIAL, SESSION_KEY, classUrl, mockClass, mockReport, reportUrl, spaceId } from './report-fixtures';
 
 /**
- * F-REPORT-001 section 5, `web/e2e/reports.spec.ts` (RP-7a2 cases): the learner report page on the static export,
- * the API mocked with `page.route`. Reports are a build-time switch, so the full cases need an export made with
- * `NEXT_PUBLIC_REPORTS_ENABLED=true`, `NEXT_PUBLIC_API_BASE_URL=https://api.report-e2e.test` and
- * `NEXT_PUBLIC_CONSOLE_DEV_AUTH=true`, run with `REPORTS_E2E=1`. On the default export (the preview gate's) only the
- * switched-off case runs. RP-7b adds the All-time growth line and the print cases; RP-11 runs these with the flag flipped.
+ * F-REPORT-001 section 5, `web/e2e/reports.spec.ts`: the learner report, the class report and the parent chooser on
+ * the static export, the API mocked with `page.route`. Since RP-11 reports are on by default; the full cases need an
+ * export that also points at the mocked API and lets the dev sign-in through:
+ *
+ *   NEXT_PUBLIC_API_BASE_URL=https://api.report-e2e.test NEXT_PUBLIC_CONSOLE_DEV_AUTH=true pnpm --filter @hangul-route/web build
+ *   REPORTS_E2E=1 pnpm --filter @hangul-route/web exec playwright test reports.spec
+ *
+ * Each report PR runs that build and suite locally (no CI lane runs it yet: adding one is a workflow change, left
+ * out of RP-11 by owner decision). The owner's off switch, an export built with
+ * `NEXT_PUBLIC_REPORTS_ENABLED=false`, is checked with `REPORTS_E2E=off`. On the default export (the preview gate's
+ * run) only the print-margin case of a site page runs.
  */
-const FULL = process.env.REPORTS_E2E === '1';
+const MODE = process.env.REPORTS_E2E;
+const FULL = MODE === '1';
+const SWITCHED_OFF = MODE === 'off';
 
 const VIEWPORTS = [
   { width: 320, height: 568 },
@@ -47,8 +55,8 @@ async function zeroMarginPageRules(page: Page): Promise<number> {
 
 const headline = (page: Page) => page.getByTestId('report-headline');
 
-test.describe('reports switched off (the default export)', () => {
-  test.skip(FULL, 'the export was built with reports on');
+test.describe('reports switched off (NEXT_PUBLIC_REPORTS_ENABLED=false)', () => {
+  test.skip(!SWITCHED_OFF, 'needs an export built with NEXT_PUBLIC_REPORTS_ENABLED=false (REPORTS_E2E=off)');
 
   test('the page says reports are not available yet, as its h1, with the back link', async ({ page }) => {
     await page.addInitScript(
@@ -60,7 +68,9 @@ test.describe('reports switched off (the default export)', () => {
     await expect(page.getByTestId('report-back')).toBeVisible();
     await expect(page).toHaveTitle('Report - Hangul Route');
   });
+});
 
+test.describe('print margins on a site page (every export)', () => {
   test('a page that is not a report keeps the default print margins: no zero-margin @page rule is loaded', async ({ page }) => {
     await page.goto('/');
     await page.emulateMedia({ media: 'print' });
@@ -69,7 +79,7 @@ test.describe('reports switched off (the default export)', () => {
 });
 
 test.describe('the learner report (RP-7a2)', () => {
-  test.skip(!FULL, 'needs an export built with reports on (REPORTS_E2E=1)');
+  test.skip(!FULL, 'needs the export built against the mocked report API (REPORTS_E2E=1)');
 
   for (const viewport of VIEWPORTS) {
     test(`no sideways scroll at ${viewport.width} x ${viewport.height}, More detail closed and open`, async ({ page }) => {
@@ -352,7 +362,7 @@ test.describe('the learner report (RP-7a2)', () => {
 
 /** RP-10: the plan builder takes `&add=<questId>` from Add to a plan and pre-adds the quest as a draft item. */
 test.describe('Add to a plan opens the builder with the quest pre-added (RP-10)', () => {
-  test.skip(!FULL, 'needs an export built with reports on (REPORTS_E2E=1)');
+  test.skip(!FULL, 'needs the export built against the mocked report API (REPORTS_E2E=1)');
 
   const planUrl = (extra: string) => `/teach/space/plan?id=${encodeURIComponent(spaceId('class'))}&${extra}`;
   const yours = (page: Page) => page.getByLabel('Your plan', { exact: true });
@@ -439,7 +449,7 @@ test.describe('Add to a plan opens the builder with the quest pre-added (RP-10)'
 });
 
 test.describe('the class report (RP-8)', () => {
-  test.skip(!FULL, 'needs an export built with reports on (REPORTS_E2E=1)');
+  test.skip(!FULL, 'needs the export built against the mocked report API (REPORTS_E2E=1)');
 
   for (const viewport of VIEWPORTS) {
     test(`no sideways scroll at ${viewport.width} x ${viewport.height}`, async ({ page }) => {
@@ -518,7 +528,7 @@ test.describe('the class report (RP-8)', () => {
 
 
 test.describe('the family report at /parent/learner and the report nav items (RP-7c)', () => {
-  test.skip(!FULL, 'needs the export built with reports on');
+  test.skip(!FULL, 'needs the export built against the mocked report API (REPORTS_E2E=1)');
 
   const familyReport = '/parent/learner?id=space%3Akim-family&learner=profile%3Amina&period=week&from=home';
 

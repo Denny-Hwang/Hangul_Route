@@ -192,6 +192,17 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
       const { profileId } = route.params;
       if (profileId === undefined) navigation.replace('ParentDashboard');
       else navigation.replace('NotesGrownUp', { profileId });
+    } else if (route.params.next === 'MoveClass') {
+      // A class move (F-SPACE-002 section 4.12). Without a class this was Set up PIN on the Classes card:
+      // back to the card, which now says when moves open.
+      const { profileId, fromSpaceId } = route.params;
+      if (profileId === undefined || fromSpaceId === undefined) navigation.goBack();
+      else navigation.replace('MoveClass', { profileId, fromSpaceId });
+    } else if (route.params.next === 'ApproveTransfer') {
+      // The request's sheet; on a device whose PIN was made just now it is the read-only veto (D24).
+      const { profileId, transferId } = route.params;
+      if (profileId === undefined || transferId === undefined) navigation.goBack();
+      else navigation.replace('ApproveTransfer', { profileId, transferId });
     } else if (route.params.next === 'BrowseLessons') {
       // All lessons (F-BROWSE-001 section 4.3, BR-12a): the gate hand-off writes a fresh gate pass and leaves in this
       // tab. A browser that refuses the pass opens the dashboard, which says why under Open all lessons.

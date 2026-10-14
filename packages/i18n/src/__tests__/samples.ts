@@ -344,6 +344,8 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'learner.vocab.speed.nudge.miss.second': [['apple']],
   'learner.vocab.speed.relaxed.line': [[1], [8], [10]],
   'learner.vocab.speed.results.caught': [[0], [1], [7]],
+  'learner.vocab.speed.challenge.line': [[60], [90], [120]],
+  'learner.vocab.speed.challenge.tryLine': [[60], [90], [120]],
   'learner.vocab.library.collected': [[0], [1], [12]],
   'learner.vocab.topics.collected': [[0], [5]],
   'learner.vocab.topics.tileA11y': [['Food', 1], ['Food', 5]],
@@ -431,6 +433,12 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'a11y.vocab.question.reveal': [['apple']],
   'a11y.vocab.question.topic': [['Food']],
   'a11y.vocab.speed.sparks': [[0], [1], [3]],
+  'a11y.vocab.speed.timeLeft': [[1], [42], [120]],
+  'a11y.vocab.cards.word': [['x']],
+  'a11y.vocab.cards.front': [['Korean: x, sagwa'], ['Korean: x']],
+  'a11y.vocab.cards.back': [['Korean: x, sagwa', 'apple'], ['Korean: x', 'sky blue']],
+  'a11y.vocab.cards.turnedBack': [['Korean: x, sagwa', 'apple']],
+  'a11y.vocab.cards.turnedFront': [['Korean: x, sagwa']],
   // F-REPORT-001 RP-6: the report namespace and a11y.report. Names run to the 20-character display name and dates to
   // the longest short form, so the length budgets see the long case; taught letters and words are stand-ins (no Hangul).
   'report.title.learner': [['Mina'], ['Alexandria Kimberley']],
@@ -753,4 +761,8 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'caregiver.browse.home.storyTileA11y': [['The Moon Rabbit', 1], ['The Moon Rabbit', 4]],
   'caregiver.browse.item.wordCount': [[1], [12]],
   'caregiver.browse.topic.hearA11y': [['sagwa']],
+  'learner.home.mission.vocab.subtitle': [[1], [5]],
+  'a11y.vocabMissionCard': [['Words are ready', '5 words would like another look', false], ['Words are ready', '5 words would like another look', true]],
+  'caregiver.dashboard.words.counts': [[1, 0], [24, 7]],
+  'caregiver.dashboard.words.firstTry': [[0], [85]],
 };

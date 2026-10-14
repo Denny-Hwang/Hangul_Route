@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { Page } from '@playwright/test';
+import { availableLocales, getMessages } from '@hangul-route/i18n';
 import { expect, test } from './fixtures';
 import { completeChildForm, keepSidewaysIfAsked, readStored, seedStored } from './helpers';
 import { shot } from './shots';
@@ -36,6 +37,7 @@ const FIVE = FOOD_IDS.slice(0, 5);
 interface ContentItem {
   id: string;
   ko: string;
+  romanization: string;
   en: string;
 }
 const FOOD: readonly ContentItem[] = (
@@ -61,6 +63,11 @@ interface StoredProgress {
     items: Array<{ id: string; seen: number; right: number }>;
     topics: Array<{ topic: string; bestStars: number; sessions: number; bestCaught: number }>;
   };
+}
+
+interface StoredSettings {
+  challengeMode?: boolean;
+  clockScale?: number;
 }
 
 /** A new learner on Home, past the install guide, with sound off (no sound questions: every prompt can be read). */
@@ -181,7 +188,8 @@ test.describe('Speed Round, Relaxed (fixture bundle)', () => {
     await expect(launch).toHaveAccessibleName('Speed round');
     await launch.click();
 
-    // A: Relaxed, its question count, the no-sound line, Start; no Challenge, no clock (S-5 ships Relaxed only).
+    // A: Relaxed, its question count, the no-sound line, Start; the only Challenge affordance is the quiet
+    // "Try Challenge" switch (behaviour 1, S8): no round type choice and no clock length.
     const sheet = page.getByTestId('vocab-speed-sheet');
     await expect(sheet).toBeVisible();
     await expect(page.getByTestId('vocab-speed-topic')).toHaveText('Food');
@@ -189,7 +197,9 @@ test.describe('Speed Round, Relaxed (fixture bundle)', () => {
     await expect(page.getByTestId('vocab-speed-mode')).toContainText('Relaxed');
     await expect(page.getByTestId('vocab-speed-mode')).toContainText('10 words. No clock.');
     await expect(page.getByTestId('vocab-speed-no-sound')).toHaveText('No sound on this device. Pictures and words only.');
-    await expect(page.getByText(/Challenge|second clock/)).toHaveCount(0);
+    await expect(page.getByTestId('vocab-speed-try-challenge')).toHaveAttribute('aria-checked', 'false');
+    await expect(page.getByRole('radiogroup')).toHaveCount(0);
+    await expect(page.getByTestId('vocab-speed-challenge')).toHaveCount(0);
     expect((await page.getByTestId('vocab-speed-start').boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(80);
     await expectNoShame(page);
     await expectFits(page);
@@ -253,8 +263,8 @@ test.describe('Speed Round, Relaxed (fixture bundle)', () => {
     const missed = FOOD.find((i) => i.id === second.id)!;
     await expect(page.getByTestId(`vocab-results-tile-${second.id}`)).toContainText(missed.ko);
     await expect(page.getByTestId(`vocab-results-tile-${second.id}`)).toContainText(missed.en);
-    // Practice these waits for the flashcards (C-5); Play again is the primary meanwhile.
-    await expect(page.getByTestId('vocab-results-practice')).toHaveCount(0);
+    // Practice these opens the flashcards (F-VOC-003 C-5) on the words to see again; it is the primary.
+    await expect(page.getByTestId('vocab-results-practice')).toBeVisible();
     await expect(page.getByTestId('vocab-results-play-again')).toBeVisible();
     await expect(page.getByTestId('vocab-results-back')).toBeVisible();
     await expectNoShame(page);
@@ -286,9 +296,14 @@ test.describe('Speed Round, Relaxed (fixture bundle)', () => {
     const stored = await readStored<StoredProgress>(page, `progress:${profileId}`);
     expect(stored?.vocab?.items.reduce((n, item) => n + item.seen, 0)).toBe(10);
 
-    // Back to topic.
-    await page.getByTestId('vocab-results-back').click();
-    await expect(page.getByTestId('vocab-topic')).toBeVisible();
+    // Practice these: only the words to see again, as flashcards (F-VOC-003 C-5, `VocabCards.ids`).
+    await page.getByTestId('vocab-results-practice').click();
+    await expect(page.getByTestId('vocab-cards')).toBeVisible();
+    await expect(page.getByTestId('vocab-card-flip')).toHaveAccessibleName(new RegExp(`^Korean: \\S+, ${missed.romanization}\\. Show meaning\\.$`));
+    await expect(page.getByTestId('vocab-cards-dots')).toBeAttached();
+    expect((await events(page)).filter((e) => e.name === 'vocab.cards.start').map((e) => e.payload)).toEqual([
+      expect.objectContaining({ topicKey: 'food', chunk: -1, words: 1 }),
+    ]);
     expect(errors).toEqual([]);
   });
 
@@ -359,8 +374,9 @@ test.describe('Speed Round, Relaxed (fixture bundle)', () => {
     await expect(page.getByTestId('vocab-speed-start')).toHaveCount(0);
     await expectFits(page);
     await shot(page, 'vocab-speed-learn-first');
-    await page.getByTestId('vocab-speed-back-to-topic').click();
-    await expect(page.getByTestId('vocab-topic')).toBeVisible();
+    // Learn opens the flashcards (F-VOC-003 C-5).
+    await page.getByTestId('vocab-speed-learn').click();
+    await expect(page.getByTestId('vocab-cards')).toBeVisible();
   });
 
   test('an unknown topic goes to "Topic not found"', async ({ page }) => {
@@ -400,5 +416,315 @@ test.describe('Speed Round, Relaxed (fixture bundle)', () => {
     await expectFits(page);
     await shot(page, 'vocab-speed-results-320');
     await context.setOffline(false);
+  });
+});
+
+test.describe('Speed Round, reduced motion (fixture bundle)', () => {
+  test.skip(!FIXTURE_BUILD, 'needs the fixture bundle: build:web:fixtures, then STORY_FIXTURES=1');
+
+  test('with reduced motion a whole Relaxed round plays to the results with no error (section 5)', async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    const errors: string[] = [];
+    page.on('pageerror', (e) => errors.push(String(e)));
+    await newLearner(page);
+    await collect(page, FIVE);
+    await openSpeed(page, 'food');
+    await page.getByTestId('vocab-speed-start').click();
+    const n = await roundLength(page);
+    for (let i = 0; i < n; i += 1) {
+      await answer(page, true);
+      if (i < n - 1) await expect(page.getByTestId('vocab-question-hoya')).toHaveCount(0, { timeout: 3000 });
+    }
+    await expect(page.getByTestId('vocab-results')).toBeVisible({ timeout: 5000 });
+    await expect(page.getByTestId('vocab-results-stars')).toHaveAccessibleName(/3/);
+    await expectNoShame(page);
+    expect(errors).toEqual([]);
+  });
+});
+
+/** Hides the page (the PWA sent to the background) or shows it again: what `visibilitychange` reports. */
+async function setVisible(page: Page, visible: boolean): Promise<void> {
+  await page.evaluate((v) => {
+    Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => (v ? 'visible' : 'hidden') });
+    document.dispatchEvent(new Event('visibilitychange'));
+  }, visible);
+}
+
+const toggled = async (page: Page): Promise<TelemetryEvent[]> => (await events(page)).filter((e) => e.name === 'vocab.challenge_toggled');
+
+test.describe('Speed Round, Challenge (fixture bundle)', () => {
+  test.skip(!FIXTURE_BUILD, 'needs the fixture bundle: build:web:fixtures, then STORY_FIXTURES=1');
+
+  test('Try Challenge opts in, the scale is chosen, the clock counts down, stops in a pause and comes back (behaviours 7, 8)', async ({ page }) => {
+    const errors: string[] = [];
+    page.on('pageerror', (e) => errors.push(String(e)));
+    const profileId = await newLearner(page);
+    await collect(page, FOOD_IDS);
+    await openTopic(page, 'food');
+    await page.getByTestId('vocab-activity-speed').click();
+
+    // A1 -> A2: the switch is the explicit opt-in; it stores the setting and picks Challenge for this round.
+    await expect(page.getByTestId('vocab-speed-try-challenge')).toContainText('Adds a 60-second clock. You can turn it off any time.');
+    await page.getByTestId('vocab-speed-try-challenge').click();
+    await expect(page.getByTestId('vocab-speed-try-challenge')).toHaveCount(0);
+    const modes = page.getByRole('radiogroup', { name: 'Round type' });
+    await expect(modes.getByRole('radio', { name: 'Challenge' })).toHaveAttribute('aria-checked', 'true');
+    await expect(modes.getByRole('radio', { name: 'Relaxed' })).toHaveAttribute('aria-checked', 'false');
+    await expect(page.getByTestId('vocab-speed-mode')).toHaveText('One clock: 60 seconds for the whole round.');
+    await expect(page.getByText('The clock stops while you read the answer.')).toBeVisible();
+    await expect.poll(() => readStored<StoredSettings>(page, `settings:${profileId}`)).toMatchObject({ challengeMode: true });
+    await expect.poll(() => toggled(page)).toEqual([expect.objectContaining({ payload: { on: true, source: 'start_sheet', clockScale: 1 } })]);
+
+    const scales = page.getByRole('radiogroup', { name: 'Clock length' });
+    await expect(scales.getByRole('radio', { name: 'Normal' })).toHaveAttribute('aria-checked', 'true');
+    await scales.getByRole('radio', { name: 'A bit longer' }).click();
+    await expect(scales.getByRole('radio', { name: 'A bit longer' })).toHaveAttribute('aria-checked', 'true');
+    await expect(page.getByTestId('vocab-speed-mode')).toHaveText('One clock: 90 seconds for the whole round.');
+    await expect.poll(() => readStored<StoredSettings>(page, `settings:${profileId}`)).toMatchObject({ challengeMode: true, clockScale: 1.5 });
+    await expectNoShame(page);
+    await expectFits(page);
+    await shot(page, 'vocab-speed-sheet-challenge');
+
+    await page.getByTestId('vocab-speed-start').click();
+    const start = (await events(page)).filter((e) => e.name === 'vocab.round.start').pop();
+    expect(start?.payload).toMatchObject({ mode: 'challenge', clockScale: 1.5 });
+
+    // G: the digits (one element, read on focus, never live), Pause, the meter and the bar; no dots, no hints.
+    const clock = page.getByTestId('vocab-speed-clock');
+    await expect(clock).toHaveAccessibleName(/^Time left: (90|89|88) seconds$/);
+    // One timer control (its implicit aria-live is off), not a heading: heading navigation never lands on it.
+    await expect(page.getByRole('timer', { name: /^Time left: \d+ seconds$/ })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /^\d+:\d\d$/ })).toHaveCount(0);
+    await expect(clock).not.toHaveAttribute('aria-live', /.+/);
+    expect(await clock.evaluate((el) => el.closest('[aria-live]')?.getAttribute('aria-live') ?? null)).toBeNull();
+    await expect(page.getByTestId('vocab-speed-dots')).toHaveCount(0);
+    await expect(page.getByTestId('vocab-speed-clock-bar')).toBeAttached();
+    const pause = page.getByRole('button', { name: 'Pause' });
+    expect((await pause.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(64);
+    await expectFits(page);
+    await shot(page, 'vocab-speed-challenge-question');
+
+    // The clock runs while a question is on screen.
+    await expect.poll(async () => clock.innerText(), { timeout: 5000 }).not.toBe('1:30');
+    await answer(page, true);
+    expect(await sparks(page)).toBe('1 spark');
+
+    // Pause: the question is replaced (not dimmed) and the time stands still.
+    await pause.click();
+    await expect(page.getByTestId('vocab-speed-paused')).toBeVisible();
+    await expect(page.getByTestId('vocab-question')).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'Pause' })).toHaveCount(0);
+    // The tapped Pause is gone, so focus moves to Resume and is never lost (§3.8).
+    await expect(page.getByTestId('vocab-speed-resume')).toBeFocused();
+    const frozen = await clock.innerText();
+    await expectFits(page);
+    await shot(page, 'vocab-speed-paused');
+    await page.waitForTimeout(2200);
+    expect(await clock.innerText()).toBe(frozen);
+
+    // Resume: the same time left (the 250 ms ticks start again at once, so at most a second less) and the question.
+    await page.getByTestId('vocab-speed-resume').click();
+    await expect(page.getByTestId('vocab-question')).toBeVisible();
+    const seconds = (digits: string): number => {
+      const [m = '0', sec = '0'] = digits.split(':');
+      return Number(m) * 60 + Number(sec);
+    };
+    // One reading, with room for a slow runner between the click and the read (the digits round up).
+    const resumed = seconds(await clock.innerText());
+    expect(seconds(frozen) - resumed).toBeGreaterThanOrEqual(0);
+    expect(seconds(frozen) - resumed).toBeLessThanOrEqual(2);
+
+    // The app going to the background pauses the round; coming back shows the paused panel until Resume.
+    await setVisible(page, false);
+    await expect(page.getByTestId('vocab-speed-paused')).toBeVisible();
+    await setVisible(page, true);
+    await expect(page.getByTestId('vocab-speed-paused')).toBeVisible();
+    await page.getByTestId('vocab-speed-resume').click();
+    await expect(page.getByTestId('vocab-question')).toBeVisible();
+
+    // "Stop for now?" pauses the round first: the question is hidden under the sheet and the time stands still;
+    // Keep playing lands on Resume.
+    await page.getByTestId('vocab-speed-round').getByTestId('vocab-back').click();
+    await expect(page.getByTestId('vocab-speed-keep')).toBeVisible();
+    await expect(page.getByTestId('vocab-question')).toHaveCount(0);
+    const atStop = await clock.innerText();
+    await page.waitForTimeout(1200);
+    expect(await clock.innerText()).toBe(atStop);
+    await page.getByTestId('vocab-speed-keep').click();
+    await expect(page.getByTestId('vocab-speed-paused')).toBeVisible();
+    await expect(page.getByTestId('vocab-question')).toHaveCount(0);
+    await expect(page.getByTestId('vocab-speed-resume')).toBeFocused();
+
+    // Stop from the round: no results, the answer given stays written.
+    await page.getByTestId('vocab-speed-round').getByTestId('vocab-back').click();
+    await page.getByTestId('vocab-speed-stop-confirm').click();
+    await expect(page.getByTestId('vocab-topic')).toBeVisible();
+    await expect(page.getByTestId('vocab-results')).toHaveCount(0);
+    expect(errors).toEqual([]);
+  });
+
+  test('the clock ends the round: the question on screen is dropped, a calm time-up line, then the results (behaviours 6, 11)', async ({ page }) => {
+    await page.clock.install();
+    const profileId = await newLearner(page);
+    await seedStored(page, `settings:${profileId}`, { romanizationMode: 'always', challengeMode: true });
+    await page.goto('/');
+    await expect(page.getByText('Hi, Dami!')).toBeVisible();
+    await collect(page, FOOD_IDS);
+    await openSpeed(page, 'food');
+
+    // Opted in: the round type choice, Relaxed selected (never preselected), then Challenge chosen.
+    const modes = page.getByRole('radiogroup', { name: 'Round type' });
+    await expect(modes.getByRole('radio', { name: 'Relaxed' })).toHaveAttribute('aria-checked', 'true');
+    await expect(page.getByTestId('vocab-speed-try-challenge')).toHaveCount(0);
+    await modes.getByRole('radio', { name: 'Challenge' }).click();
+    await page.getByTestId('vocab-speed-start').click();
+    await expect(page.getByTestId('vocab-speed-clock')).toBeVisible();
+
+    const first = await answer(page, true);
+    await page.clock.runFor(1200);
+    const second = await answer(page, true);
+    await page.clock.runFor(1200);
+    await expect(page.getByTestId('vocab-question')).toBeVisible();
+
+    // Let the whole minute run out on the third question, unanswered, a second at a time (the time-up beat is 1 s).
+    const timeUp = page.getByTestId('vocab-speed-time-up');
+    for (let s = 0; s < 70 && (await timeUp.count()) === 0; s += 1) await page.clock.runFor(1000);
+    await expect(timeUp).toHaveText("That's the time! Nice work.");
+    // Said politely by a region that was on screen (empty) for the whole round, so the web reads it.
+    expect(await timeUp.evaluate((el) => el.closest('[aria-live]')?.getAttribute('aria-live') ?? null)).toBe('polite');
+    await expect(page.getByTestId('vocab-speed-few-seconds')).toHaveCount(0);
+    // The round is over and saved: no Back (nothing to stop) and no Pause during the beat.
+    await expect(page.getByTestId('vocab-speed-round').getByTestId('vocab-back')).toHaveCount(0);
+    await expect(page.getByTestId('vocab-speed-pause')).toHaveCount(0);
+    await shot(page, 'vocab-speed-time-up');
+    await page.clock.runFor(1200);
+
+    await expect(page.getByTestId('vocab-results')).toBeVisible();
+    await expect(page.getByText("Time's up. Here is what you caught.")).toBeVisible();
+    await expect(page.getByTestId('vocab-results-caught')).toHaveText(first.id === second.id ? '1 word caught' : '2 words caught');
+    await expect(page.getByTestId('vocab-results-new-best')).toHaveText('New best!');
+    await expect(page.getByTestId('vocab-results-see-again')).toHaveCount(0);
+    await expectNoShame(page);
+    await shot(page, 'vocab-speed-results-challenge');
+
+    const complete = (await events(page)).filter((e) => e.name === 'vocab.round.complete');
+    expect(complete).toEqual([expect.objectContaining({ payload: expect.objectContaining({ mode: 'challenge', endedBy: 'clock', answered: 2, newBest: true }) })]);
+    // Only the two answers were written: the dropped question is neither a miss nor a seen word.
+    const stored = await readStored<StoredProgress>(page, `progress:${profileId}`);
+    const seen = (stored?.vocab?.items ?? []).reduce((n, i) => n + i.seen, 0);
+    expect(seen).toBe(2);
+    const best = first.id === second.id ? 1 : 2;
+    expect(stored?.vocab?.topics.find((t) => t.topic === 'food')?.bestCaught).toBe(best);
+
+    // Play again keeps Challenge; one word caught is not above the best, so no "New best!" (behaviour 11).
+    await page.getByTestId('vocab-results-play-again').click();
+    await expect(page.getByRole('radiogroup', { name: 'Round type' }).getByRole('radio', { name: 'Challenge' })).toHaveAttribute('aria-checked', 'true');
+    await page.getByTestId('vocab-speed-start').click();
+    await answer(page, true);
+    for (let s = 0; s < 70 && (await timeUp.count()) === 0; s += 1) await page.clock.runFor(1000);
+    await page.clock.runFor(1200);
+    await expect(page.getByTestId('vocab-results')).toBeVisible();
+    await expect(page.getByTestId('vocab-results-caught')).toHaveText('1 word caught');
+    await expect(page.getByTestId('vocab-results-new-best')).toHaveCount(0);
+    await expectNoShame(page);
+  });
+
+  test('a Challenge round the clock ends with no answer still shows the time-up line, then goes back to the topic', async ({ page }) => {
+    await page.clock.install();
+    const profileId = await newLearner(page);
+    await seedStored(page, `settings:${profileId}`, { romanizationMode: 'always', challengeMode: true });
+    await page.goto('/');
+    await expect(page.getByText('Hi, Dami!')).toBeVisible();
+    await collect(page, FOOD_IDS);
+    await openTopic(page, 'food');
+    await page.getByTestId('vocab-activity-speed').click();
+    await page.getByRole('radiogroup', { name: 'Round type' }).getByRole('radio', { name: 'Challenge' }).click();
+    await page.getByTestId('vocab-speed-start').click();
+    await expect(page.getByTestId('vocab-question')).toBeVisible();
+
+    const timeUp = page.getByTestId('vocab-speed-time-up');
+    for (let s = 0; s < 70 && (await timeUp.count()) === 0; s += 1) await page.clock.runFor(1000);
+    await expect(timeUp).toHaveText("That's the time! Nice work.");
+    await expectNoShame(page);
+    await page.clock.runFor(1200);
+    await expect(page.getByTestId('vocab-topic')).toBeVisible();
+    await expect(page.getByTestId('vocab-results')).toHaveCount(0);
+    expect((await events(page)).filter((e) => e.name === 'vocab.round.complete')).toEqual([]);
+  });
+
+  // The Challenge sheet (the wrapping scale chips) and the two-line round header at the narrowest phone, in each
+  // UI locale the build ships (es and ko with EXPO_PUBLIC_SHOW_ALL_LOCALES=1 and E2E_ALL_LOCALES=1). Test ids only,
+  // so the walk does not depend on the locale's words.
+  for (const locale of availableLocales(process.env.E2E_ALL_LOCALES === '1')) {
+    test(`320 x 568, ${locale}: the Challenge sheet and the round header fit; Pause stays on screen`, async ({ page }) => {
+      await page.setViewportSize({ width: 320, height: 568 });
+      await newLearner(page);
+      if (locale !== 'en') {
+        // The locale is read at start-up: store it, then reload so the whole app comes up in it.
+        await seedStored(page, 'device:settings', { uiLocale: locale });
+        await page.reload();
+        const guide = page.getByTestId('install-guide');
+        await guide.waitFor({ state: 'visible', timeout: 1500 }).catch(() => undefined);
+        const notNow = getMessages(locale).caregiver.install.notNow.cta;
+        if (await guide.isVisible()) await guide.getByRole('button', { name: notNow }).click();
+      }
+      await expect(page.locator('html')).toHaveAttribute('lang', new RegExp(`^${locale}`));
+      await collect(page, FOOD_IDS);
+      await openSpeed(page, 'food');
+      await page.getByTestId('vocab-speed-try-challenge').click();
+      await expect(page.getByTestId('vocab-speed-scale')).toBeVisible();
+      await expectFits(page);
+      await shot(page, `vocab-speed-sheet-challenge-320-${locale}`);
+
+      await page.getByTestId('vocab-speed-start').click();
+      await expect(page.getByTestId('vocab-question')).toBeVisible();
+      await expect(page.getByTestId('vocab-speed-pause')).toBeInViewport();
+      await expectFits(page);
+      await shot(page, `vocab-speed-challenge-question-320-${locale}`);
+    });
+  }
+
+  test('the Profile switch turns Challenge on and off and sets the clock length; the sheet follows', async ({ page }) => {
+    const profileId = await newLearner(page);
+    await page.getByRole('button', { name: 'Profile and settings' }).click();
+    const card = page.getByTestId('profile-challenge');
+    await card.scrollIntoViewIfNeeded();
+    const toggle = page.getByRole('switch', { name: /^Challenge\./ });
+    await expect(toggle).toHaveAttribute('aria-checked', 'false');
+    await expect(page.getByTestId('profile-challenge-scale')).toHaveCount(0);
+    await toggle.click();
+    await expect(toggle).toHaveAttribute('aria-checked', 'true');
+    await page.getByRole('radiogroup', { name: 'Clock length' }).getByRole('radio', { name: 'Twice as long' }).click();
+    await expect.poll(() => readStored<StoredSettings>(page, `settings:${profileId}`)).toMatchObject({ challengeMode: true, clockScale: 2 });
+    await expect.poll(async () => (await toggled(page)).map((e) => e.payload)).toEqual([
+      { on: true, source: 'profile', clockScale: 1 },
+      { on: true, source: 'profile', clockScale: 2 },
+    ]);
+    await expectFits(page);
+    await shot(page, 'vocab-speed-profile-challenge');
+
+    // Off again: the sheet is back to Relaxed with the quiet switch.
+    await toggle.click();
+    await expect(toggle).toHaveAttribute('aria-checked', 'false');
+    await expect.poll(() => readStored<StoredSettings>(page, `settings:${profileId}`)).toMatchObject({ challengeMode: false, clockScale: 2 });
+    await collect(page, FOUR);
+    await openSpeed(page, 'food');
+    await expect(page.getByTestId('vocab-speed-try-challenge')).toBeVisible();
+    // The quiet switch names the clock an opt-in would give: the stored twice-as-long scale.
+    await expect(page.getByTestId('vocab-speed-try-challenge')).toContainText('Adds a 120-second clock.');
+    await expect(page.getByRole('radiogroup')).toHaveCount(0);
+  });
+});
+
+test.describe('Speed Round with the flag off (the release build, dist/)', () => {
+  test.skip(FIXTURE_BUILD || process.env.E2E_VOCAB_TOPICS === '1', 'the fixture bundle and the Words build offer Words');
+
+  test('no way in: Profile has no Challenge card (the Library has no Words tab, vocab-topics.spec)', async ({ page }) => {
+    await newLearner(page);
+    await page.getByRole('button', { name: 'Profile and settings' }).click();
+    // The Sound card, just above where the Challenge card would sit, is drawn: the screen is up.
+    await expect(page.getByTestId('sound-voice-status')).toBeAttached();
+    await expect(page.getByTestId('profile-challenge')).toHaveCount(0);
+    await expect(page.getByRole('switch', { name: /^Challenge\./ })).toHaveCount(0);
   });
 });

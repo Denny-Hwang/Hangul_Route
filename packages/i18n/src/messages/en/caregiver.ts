@@ -118,6 +118,16 @@ export const caregiver = {
     noProfiles: 'No profiles yet.',
     stats: { quests: 'Quests', cards: 'Cards', sessions: 'Sessions', minutes: 'Minutes' },
     recent: 'Recent',
+    /**
+     * The Words row (F-VOC-005 section 3.8): counts, the first-try rate (the caregiver channel may show a
+     * percent) and up to three words, each drawn with its romanization and gloss. Plain text, never a rank.
+     */
+    words: {
+      label: 'Words',
+      counts: (collected: number, strong: number) => `${collected} collected, ${strong} strong`,
+      firstTry: (percent: number) => `First-try rate: ${percent}%`,
+      together: 'To look at together',
+    },
     privacy: {
       title: 'Privacy',
       /** Leads with `landing.persona.parents.safe.bullets.backup`, word for word: the app backs up every learner with no sign-in. */
@@ -977,6 +987,7 @@ export const caregiver = {
       destinationBusy: 'That class has many moves waiting. Try again in a few days.',
       tooManyRequests: 'Too many moves were started today. Try again tomorrow.',
       localeUnavailable: 'Not available in your language yet.',
+      updateApp: 'Update the app to see the new text.',
     },
     /** The self-audience consent frame; the rest of the frame is `console.transfer.consent`. */
     consent: {

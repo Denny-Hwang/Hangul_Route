@@ -24,6 +24,7 @@ import { backOrHome } from '../../logic/navigation/screen-exits';
 import { lockedStoryGate } from '../../logic/story/story-tile';
 import { ACTIVITY_ROUTES, VOCAB_SCREENS, capabilities } from '../../logic/vocab/caps';
 import { vocabCopyOf } from '../../logic/vocab/copy';
+import { matchPlayable } from '../../logic/vocab/match-board';
 import { emptyVocab, vocabOf } from '../../logic/vocab/progress';
 import { suggestActivity, type VocabActivity } from '../../logic/vocab/suggest';
 import {
@@ -42,7 +43,7 @@ import { activeProfileSelector, useProfileStore } from '../../store/profile-stor
 import { useProgressStore } from '../../store/progress-store';
 import { useAccessTier } from '../../store/tier-store';
 import { BackButton } from './BackButton';
-import { pickerTopic, topicIntroMemory, topicWords } from './topic-data';
+import { canRenderPicture, pickerTopic, topicIntroMemory, topicWords } from './topic-data';
 import { WordWall } from './WordWall';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'VocabTopic'>;
@@ -130,6 +131,7 @@ function TopicPage({ source, navigation, onBack }: { source: VocabTopic; navigat
         suggestion: suggestActivity(topic.key, progress, new Date(), { wordIds: items.map((item) => item.id), optionCount }),
         optionCount,
         picWordMatch: capabilities.picWordMatch,
+        matchPlayable: VOCAB_SCREENS.match && matchPlayable(items, progress, canRenderPicture),
         screens: VOCAB_SCREENS,
         copy,
       }),

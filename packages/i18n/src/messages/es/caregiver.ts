@@ -92,6 +92,12 @@ export const caregiver = {
     noProfiles: 'Aún no hay perfiles.',
     stats: { quests: 'Misiones', cards: 'Tarjetas', sessions: 'Sesiones', minutes: 'Minutos' },
     recent: 'Reciente',
+    words: {
+      label: 'Palabras',
+      counts: (collected: number, strong: number) => `${collected} reunidas, ${strong} bien aprendidas`,
+      firstTry: (percent: number) => `Acierto a la primera: ${percent} %`,
+      together: 'Para ver juntos',
+    },
     privacy: {
       title: 'Privacidad',
       body: 'El apodo y el progreso de cada estudiante se guardan en el dispositivo y se respaldan en nuestros servidores, para recuperarlos con un código de rescate. Cuando un estudiante se une a una clase o familia con un código, ese espacio ve el nombre con que se une y su progreso. Los adultos de una familia también pueden recuperar su progreso. No compartimos nada con terceros.',
@@ -601,6 +607,7 @@ export const caregiver = {
       destinationBusy: 'Esa clase tiene muchos cambios pendientes. Inténtalo en unos días.',
       tooManyRequests: 'Hoy se empezaron muchos cambios. Inténtalo mañana.',
       localeUnavailable: 'Aún no está disponible en tu idioma.',
+      updateApp: 'Actualiza la app para ver el texto nuevo.',
     },
     consent: {
       titleSelf: (destination: string) => `¿Cambiarte a ${destination}?`,

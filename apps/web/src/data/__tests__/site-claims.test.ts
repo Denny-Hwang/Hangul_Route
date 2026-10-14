@@ -1,10 +1,11 @@
 import { readFileSync, readdirSync } from 'node:fs';
 import { dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { en } from '@hangul-route/i18n';
+import { en, UI_LOCALES } from '@hangul-route/i18n';
+import { REPORT_REVIEWED_LOCALES } from '../../lib/console/config';
 import { describe, expect, expectTypeOf, it } from 'vitest';
-import { CLAIM_REQUIRES_PAID, SITE_CLAIMS, showsClaim, type BooleanClaimKey, type SiteClaims } from '../site-claims';
-import { ALL_CLAIMS_ON } from './site-claims-fixtures';
+import { CLAIM_LOCALES, CLAIM_REQUIRES_PAID, SITE_CLAIMS, claimLiveIn, showsClaim, type BooleanClaimKey, type SiteClaims } from '../site-claims';
+import { ALL_CLAIMS_OFF, ALL_CLAIMS_ON } from './site-claims-fixtures';
 
 /**
  * Feature lines on hangulroute.com appear only when the feature is live (F-SITE-002 §3.9, PR S-2). A code
@@ -16,13 +17,13 @@ const BOOLEAN_KEYS = KEYS.filter((key) => typeof SITE_CLAIMS[key as keyof SiteCl
 const PAID_PLANS: readonly SiteClaims['paidPlans'][] = ['coming', 'inApp'];
 
 describe('SITE_CLAIMS (what the site says today)', () => {
-  it('is exactly the defaults: Stage 1 free, plans coming, every feature line off', () => {
+  it('is what is live: Stage 1 free, plans coming, the reports lines on (F-REPORT-001 RP-11), every other feature line off', () => {
     expect(SITE_CLAIMS).toEqual({
       freePlan: 'stage1',
       paidPlans: 'coming',
       learningRoute: false,
-      parentReports: false,
-      teacherReports: false,
+      parentReports: true,
+      teacherReports: true,
       feedbackNotes: false,
       browseAsLearner: false,
       lectureMode: false,
@@ -42,8 +43,19 @@ describe('SITE_CLAIMS (what the site says today)', () => {
     expect(SITE_CLAIMS.learningRoute).toBe(false);
   });
 
-  it('shows no feature line while every claim is at its default', () => {
-    for (const key of BOOLEAN_KEYS) expect(showsClaim(SITE_CLAIMS, key), key).toBe(false);
+  it('shows only the reports lines today: both report flags are on in production (F-SITE-002 section 3.9 hand-off)', () => {
+    const shown = BOOLEAN_KEYS.filter((key) => showsClaim(SITE_CLAIMS, key, 'en'));
+    expect(shown).toEqual(['parentReports', 'teacherReports']);
+  });
+
+  it('turns the reports lines on only with the report flags on by default in both apps (F-REPORT-001 RP-11)', () => {
+    const root = join(dirname(fileURLToPath(import.meta.url)), '..', '..', '..', '..');
+    const consoleConfig = readFileSync(join(root, 'web', 'src', 'lib', 'console', 'config.ts'), 'utf8');
+    const learnerFlags = readFileSync(join(root, 'mobile', 'src', 'config', 'flags.ts'), 'utf8');
+    const consoleOn = /const REPORTS_LAUNCH_DEFAULT = true;/.test(consoleConfig);
+    const learnerOn = /launchDefaults: Flags = \{[^}]*\breportsEnabled: true,/.test(learnerFlags);
+    expect(!SITE_CLAIMS.parentReports || (consoleOn && learnerOn)).toBe(true);
+    expect(!SITE_CLAIMS.teacherReports || consoleOn).toBe(true);
   });
 
   it('has six feature claims', () => {
@@ -65,6 +77,16 @@ describe('SITE_CLAIMS (what the site says today)', () => {
   });
 });
 
+describe('ALL_CLAIMS_OFF (test fixture, the shortest state of every page)', () => {
+  it('covers every key, read-only, every feature line off', () => {
+    expect(Object.keys(ALL_CLAIMS_OFF).sort()).toEqual(KEYS);
+    expectTypeOf(ALL_CLAIMS_OFF).toEqualTypeOf<Readonly<SiteClaims>>();
+    expect(Object.isFrozen(ALL_CLAIMS_OFF)).toBe(true);
+    for (const key of BOOLEAN_KEYS) expect(showsClaim(ALL_CLAIMS_OFF, key, 'en'), key).toBe(false);
+    expect(ALL_CLAIMS_OFF.paidPlans).toBe('coming');
+  });
+});
+
 describe('ALL_CLAIMS_ON (test fixture, the longest state of every page)', () => {
   it('covers every key', () => {
     expect(Object.keys(ALL_CLAIMS_ON).sort()).toEqual(KEYS);
@@ -79,7 +101,7 @@ describe('ALL_CLAIMS_ON (test fixture, the longest state of every page)', () => 
     for (const key of BOOLEAN_KEYS) expect(ALL_CLAIMS_ON[key], key).toBe(true);
     expect(ALL_CLAIMS_ON.paidPlans).toBe('inApp');
     expect(ALL_CLAIMS_ON.freePlan).toBe('stage1');
-    for (const key of BOOLEAN_KEYS) expect(showsClaim(ALL_CLAIMS_ON, key), key).toBe(true);
+    for (const key of BOOLEAN_KEYS) expect(showsClaim(ALL_CLAIMS_ON, key, 'en'), key).toBe(true);
   });
 
   it('is imported by no page, component or module of the site (only by tests)', () => {
@@ -100,7 +122,7 @@ describe('ALL_CLAIMS_ON (test fixture, the longest state of every page)', () => 
     expect(scanned).toContain(join('data', 'site-claims.ts'));
     expect(scanned).toContain(join('app', '(en)', 'page.tsx'));
     const offenders = files
-      .filter((file) => /site-claims-fixtures|ALL_CLAIMS_ON/.test(readFileSync(file, 'utf8')))
+      .filter((file) => /site-claims-fixtures|ALL_CLAIMS_ON|ALL_CLAIMS_OFF/.test(readFileSync(file, 'utf8')))
       .map((file) => relative(src, file));
     expect(offenders).toEqual([]);
   });
@@ -141,18 +163,18 @@ describe('showsClaim', () => {
   it.each(cases)('$key on=$on paidPlans=$paidPlans', ({ key, on, paidPlans }) => {
     const claims: SiteClaims = { ...SITE_CLAIMS, paidPlans, [key]: on };
     const expected = on && (!CLAIM_REQUIRES_PAID[key] || paidPlans === 'inApp');
-    expect(showsClaim(claims, key)).toBe(expected);
+    expect(showsClaim(claims, key, 'en')).toBe(expected);
   });
 
   it('hides the browse line while plans are coming, even with its claim on', () => {
-    expect(showsClaim({ ...SITE_CLAIMS, browseAsLearner: true, paidPlans: 'coming' }, 'browseAsLearner')).toBe(false);
-    expect(showsClaim({ ...SITE_CLAIMS, browseAsLearner: true, paidPlans: 'inApp' }, 'browseAsLearner')).toBe(true);
-    expect(showsClaim({ ...SITE_CLAIMS, browseAsLearner: false, paidPlans: 'inApp' }, 'browseAsLearner')).toBe(false);
+    expect(showsClaim({ ...SITE_CLAIMS, browseAsLearner: true, paidPlans: 'coming' }, 'browseAsLearner', 'en')).toBe(false);
+    expect(showsClaim({ ...SITE_CLAIMS, browseAsLearner: true, paidPlans: 'inApp' }, 'browseAsLearner', 'en')).toBe(true);
+    expect(showsClaim({ ...SITE_CLAIMS, browseAsLearner: false, paidPlans: 'inApp' }, 'browseAsLearner', 'en')).toBe(false);
   });
 
   it('shows a free feature line as soon as its claim is on', () => {
-    expect(showsClaim({ ...SITE_CLAIMS, learningRoute: true }, 'learningRoute')).toBe(true);
-    expect(showsClaim({ ...SITE_CLAIMS, lectureMode: true, paidPlans: 'coming' }, 'lectureMode')).toBe(true);
+    expect(showsClaim({ ...SITE_CLAIMS, learningRoute: true }, 'learningRoute', 'en')).toBe(true);
+    expect(showsClaim({ ...SITE_CLAIMS, lectureMode: true, paidPlans: 'coming' }, 'lectureMode', 'en')).toBe(true);
   });
 
   it('takes only a feature claim (by type)', () => {
@@ -160,6 +182,39 @@ describe('showsClaim', () => {
       'learningRoute' | 'parentReports' | 'teacherReports' | 'feedbackNotes' | 'browseAsLearner' | 'lectureMode'
     >();
     // @ts-expect-error the cost line reads freePlan and paidPlans directly, not through showsClaim
-    expect(() => showsClaim(SITE_CLAIMS, 'paidPlans')).not.toThrow();
+    expect(() => showsClaim(SITE_CLAIMS, 'paidPlans', 'en')).not.toThrow();
+  });
+});
+
+describe('CLAIM_LOCALES (a claim live in some UI locales only)', () => {
+  it('limits only the reports lines, to the locales whose report words passed review (F-REPORT-001 section 3.1)', () => {
+    expect(Object.keys(CLAIM_LOCALES).sort()).toEqual(['parentReports', 'teacherReports']);
+    expect(CLAIM_LOCALES.parentReports).toBe(REPORT_REVIEWED_LOCALES);
+    expect(CLAIM_LOCALES.teacherReports).toBe(REPORT_REVIEWED_LOCALES);
+    expect(Object.isFrozen(CLAIM_LOCALES)).toBe(true);
+  });
+
+  it.each(UI_LOCALES)('shows the reports lines in %s only when reports render there', (locale) => {
+    const live = REPORT_REVIEWED_LOCALES.includes(locale);
+    expect(showsClaim(SITE_CLAIMS, 'parentReports', locale)).toBe(live);
+    expect(showsClaim(SITE_CLAIMS, 'teacherReports', locale)).toBe(live);
+    expect(claimLiveIn(SITE_CLAIMS, 'parentReports', locale)).toBe(live);
+  });
+
+  it('hides the reports lines in ko and es today, and shows them in en', () => {
+    expect(showsClaim(SITE_CLAIMS, 'parentReports', 'en')).toBe(true);
+    expect(showsClaim(SITE_CLAIMS, 'parentReports', 'ko')).toBe(false);
+    expect(showsClaim(SITE_CLAIMS, 'teacherReports', 'es')).toBe(false);
+  });
+
+  it('leaves every other claim live in every locale', () => {
+    for (const locale of UI_LOCALES) {
+      expect(showsClaim({ ...SITE_CLAIMS, learningRoute: true }, 'learningRoute', locale)).toBe(true);
+      expect(claimLiveIn({ ...SITE_CLAIMS, feedbackNotes: true }, 'feedbackNotes', locale)).toBe(true);
+    }
+  });
+
+  it('never shows a claim that is off, in any locale', () => {
+    for (const locale of UI_LOCALES) expect(claimLiveIn(ALL_CLAIMS_OFF, 'parentReports', locale)).toBe(false);
   });
 });

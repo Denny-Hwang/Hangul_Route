@@ -91,6 +91,12 @@ export const caregiver = {
     noProfiles: '아직 프로필이 없어요.',
     stats: { quests: '퀘스트', cards: '카드', sessions: '학습 횟수', minutes: '분' },
     recent: '최근 기록',
+    words: {
+      label: '낱말',
+      counts: (collected: number, strong: number) => `모은 낱말 ${collected}개, 탄탄한 낱말 ${strong}개`,
+      firstTry: (percent: number) => `첫 시도 정답률: ${percent}%`,
+      together: '함께 볼 낱말',
+    },
     privacy: {
       title: '개인정보',
       body: '학습자의 별명과 진도는 기기에 저장되고, 복구 코드로 되찾을 수 있도록 저희 서버에도 백업돼요. 학습자가 코드로 반이나 가족에 참여하면, 그 공간에서는 참여할 때 쓴 이름과 진도를 볼 수 있어요. 가족의 어른도 진도를 되찾을 수 있어요. 제삼자와는 공유하지 않아요.',
@@ -726,6 +732,7 @@ export const caregiver = {
       destinationBusy: '그 반에 기다리는 이동이 많아요. 며칠 뒤에 다시 해 주세요.',
       tooManyRequests: '오늘은 이동을 많이 시작했어요. 내일 다시 해 주세요.',
       localeUnavailable: '아직 이 언어로는 볼 수 없어요.',
+      updateApp: '앱을 업데이트하면 새 내용을 볼 수 있어요.',
     },
     consent: {
       titleSelf: (destination: string) => `새 반(${destination})으로 옮기시겠습니까?`,
