@@ -25,10 +25,14 @@
 // When `CATALOG` carries the review gate, this script is retired (ids are the
 // contract, so no deck changes).
 //
-// Stories are listed (STORIES_IN_LECTURE, true since F-TCH-004 PR 11) now the
-// presenter's story adapter exists (`logic/lecture/sources/story.ts`, the same
-// review gate), so a chosen story is never skipped as not ready. Story files
-// are read and shaped either way, so a broken story file fails here.
+// Stories are held back by STORIES_IN_LECTURE (false) until F-TCH-004 PR 11
+// lands the presenter's story adapter: the mobile `lectureBundle()` has no
+// `story()` yet, so a chosen story would be skipped as not ready and a
+// stories-only deck would have no slides. PR 11 adds the adapter; the switch
+// flips to true (and this module is regenerated) in the follow-up PR that
+// merges once that presenter is in production, so no cached presenter meets a
+// story the console offers. Story files are still read and shaped, so a broken
+// story file fails here either way.
 //
 // Usage:
 //   node scripts/build-lecture-catalogue.mjs            write the module
@@ -47,8 +51,8 @@ export const GENERATED_HEADER =
 
 export const OUTPUT_REL = ["apps", "web", "src", "data", "lecture-catalogue.generated.ts"];
 
-/** On since F-TCH-004 PR 11 added the presenter's story adapter. */
-export const STORIES_IN_LECTURE = true;
+/** Off until the presenter's story adapter (F-TCH-004 PR 11) is in production; its follow-up PR flips this to true. */
+export const STORIES_IN_LECTURE = false;
 
 const LISTED_TOPIC_STATUS = new Set(["ready", "shipped"]);
 

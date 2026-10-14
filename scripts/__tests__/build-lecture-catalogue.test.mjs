@@ -93,30 +93,16 @@ describe("lecture catalogue shaping (F-TCH-004 §3.11)", () => {
     });
   });
 
-  test("stories are listed now the presenter has its story adapter (F-TCH-004 PR 11 flipped the gate)", () => {
-    assert.equal(STORIES_IN_LECTURE, true);
-    const model = buildCatalogue({
-      stories: [
-        { name: "b.json", json: story("sun-moon", "The Sun and the Moon") },
-        { name: "c.json", json: story("draft-one", "A Draft", { review: { language: "draft", culture: "draft" } }) },
-      ],
-      topicFiles: [{ name: "food.json", json: topic("food", 2) }],
-    });
-    assert.deepEqual(model.stories, [{ id: "story:sun-moon", titleEn: "The Sun and the Moon", minutes: 5 }]);
-    assert.deepEqual(model.topics, [{ id: "vocab-topic:food", titleEn: "Food", words: 3 }]);
-  });
-
-  test("with the gate off, stories stay out but story files are still shaped", () => {
+  test("stories stay out while the presenter has no story adapter (F-TCH-004 PR 11 flips the gate)", () => {
+    assert.equal(STORIES_IN_LECTURE, false);
     const model = buildCatalogue({
       stories: [{ name: "b.json", json: story("sun-moon", "The Sun and the Moon") }],
-      topicFiles: [],
-      storiesInLecture: false,
+      topicFiles: [{ name: "food.json", json: topic("food", 2) }],
     });
     assert.deepEqual(model.stories, []);
-    assert.throws(
-      () => buildCatalogue({ stories: [{ name: "x.json", json: [] }], topicFiles: [], storiesInLecture: false }),
-      /x.json: a story file/,
-    );
+    assert.deepEqual(model.topics, [{ id: "vocab-topic:food", titleEn: "Food", words: 3 }]);
+    // Story files are still shaped, so a broken file fails even with the gate off.
+    assert.throws(() => buildCatalogue({ stories: [{ name: "x.json", json: [] }], topicFiles: [] }), /x.json: a story file/);
   });
 
   test("fails on a file it cannot shape", () => {
@@ -142,11 +128,10 @@ describe("lecture catalogue CLI", () => {
     seed(root);
     const write = run(root);
     assert.equal(write.status, 0, write.stdout + write.stderr);
-    assert.match(write.stdout, /2 stories, 2 vocabulary topics/);
+    assert.match(write.stdout, /0 stories, 2 vocabulary topics/);
     const source = readFileSync(join(root, OUT_REL), "utf8");
-    assert.match(source, /"id": "story:hangeul-day"/);
-    assert.match(source, /"id": "story:sun-moon"/);
-    assert.doesNotMatch(source, /draft-one|vocab-topic:colors/);
+    assert.match(source, /export const LECTURE_STORIES: readonly LectureCatalogueStory\[\] = \[\];/);
+    assert.doesNotMatch(source, /story:hangeul-day|draft-one|vocab-topic:colors/);
     assert.equal(run(root, ["--check"]).status, 0);
 
     put(root, "content/vocab/food.json", topic("food", 2, "ready", 4));
