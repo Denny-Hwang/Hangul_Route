@@ -41,7 +41,7 @@
 
 주석:
 - `apps/api` 는 워크스페이스가 실재해 gate 에 포함 (위 영역별 목표 표에는 백엔드로 묶여 있었음).
-- `apps/mobile` 은 F-COV-003 (T-022) 에 따라 2-lane 게이트: `src/logic` (business, 90%) / `src/platform` (wrappers, 70%). coverage-gate.mjs 가 `apps/mobile/coverage/coverage-summary.json` 의 파일별 항목을 lane 경로로 집계한다. `src/platform/motion.ts` 는 렌더러 하니스가 필요한 hook 이라 측정 제외 (Detox nightly 대상).
+- `apps/mobile` 은 F-COV-003 (T-022) 에 따라 2-lane 게이트: `src/logic` (business, 90%) / `src/platform` (wrappers, 70%). coverage-gate.mjs 가 `apps/mobile/coverage/coverage-summary.json` 의 파일별 항목을 lane 경로로 집계한다. `src/platform/motion.ts` 는 렌더러 하니스가 필요한 hook 이라 측정 제외 (Detox nightly 대상). Since F-BILL-002 B-13 the mobile `vitest run` is a workspace of two projects (`vitest.workspace.ts`: `unit` and the screen `render` project), and coverage is collected across the whole run, so the lane numbers include `src/logic` and `src/platform` lines reached through screen renders as well as unit tests. Logic that a screen reaches still needs its own unit tests: a render test checks what the screen shows, not every branch of the logic under it.
 
 ## Rolling 의미
 - "W4" = 알파(한글학교 베타) 직전 시점.
