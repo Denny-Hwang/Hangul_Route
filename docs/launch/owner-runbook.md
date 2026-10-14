@@ -338,7 +338,7 @@ WHERE account_id = '<sender_account_id>' AND lifted_at IS NULL;
 
 `NOTES_SEND` 가 없거나 `enabled` 가 아니면 아무도 쪽지를 보낼 수 없다 (보내기 두 경로가 `404`). 받은 쪽지·숨기기·신고·정지·가족 보기는 스위치와 무관하게 항상 동작한다.
 
-- **오너 결정 2026-10-13: 지금 켠다** (OD-19, FB-14). 안전 경로 (숨기기·신고·가족 보기·정지·hold: FB-3b #464, FB-4b-device #468, FB-4b-family #508) 는 배포되어 있고 FB-12 #562 도 머지됨. FB-14 PR 을 머지하기 직전이나 직후에 아래 "켜기" 를 한다 (서버 먼저가 원칙: 켜 둔 뒤 머지해도 화면은 머지 전까지 쪽지 보내기를 보이지 않는다). 켜기 전에 F-1 (신고 보기) 과 F-3 (정지) 을 한 번 읽어 둔다.
+- **오너 결정 2026-10-13: 지금 켠다** (OD-19, FB-14). 안전 경로 (숨기기·신고·가족 보기·정지·hold: FB-3b #464, FB-4b-device #468, FB-4b-family #508) 는 배포되어 있고 FB-12 #562 도 머지됨. FB-14 PR 을 머지하기 **전에** 아래 "켜기" 를 하고 "확인" (`/health` 의 `features.notesSend` 가 `true`) 까지 본 뒤 머지한다 (서버 먼저: 켜 둔 뒤 머지해도 화면은 머지 전까지 쪽지 보내기를 보이지 않고, 머지 뒤 사이트 안내와 콘솔 보내기가 Worker 보다 먼저 열리는 틈이 없다). 켜기 전에 F-1 (신고 보기) 과 F-3 (정지) 을 한 번 읽어 둔다.
 - `wrangler.toml` 의 `[vars]` 에는 넣지 않는다: 그러면 배포 (main 머지) 때마다 값이 되살아나서, 끄기가 배포 없이 되지 않는다.
 - 켜기: Cloudflare 대시보드 → **Workers & Pages** → `hangul-route-api` → Settings → **Variables and Secrets** → Add → Type **Text**, 이름 `NOTES_SEND`, 값 `enabled` (소문자, 정확히) → **Deploy**. (`keep_vars = true` 라서 이후 배포에도 남는다.)
 - 끄기 (문제가 생기면 즉시): 같은 화면에서 `NOTES_SEND` 를 삭제 (또는 값을 `off` 로) → **Deploy**. 이미 보낸 쪽지는 그대로 남고, 신고·숨기기는 계속 된다.
