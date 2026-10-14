@@ -626,7 +626,7 @@ Flag `flags.placementEnabled` (`apps/mobile/src/config/flags.ts`, `readBool('EXP
 | P-8 | `feat(mobile)`: parent report (Short not-tested line and hint, Deep status words and "checked twice", Spelling with tiles by bank lookup, retake offer location by profile type; AM-38), override, dashboard row | M | P-6, wireframe W-8 |
 | P-7b | `feat(mobile)`: result weekly-plan strip and not-tested copy, `RouteProposal` entry from the result, report "Suggested weekly plan" card (AM-10). **Done (#573)**, behind `flags.routeEnabled` | M | P-6, P-8, F-PLAN-002 P2-3b (`proposeRoute`) and P2-7a (`RouteProposal`); no owner gate from OD-12 / OD-13 (decided 2026-10-12, accepted as proposed) |
 | P-9 | `feat(web)`: roster line, advisory plan prefill, `lib/console/placement.ts` | S | P-2 |
-| P-10 | `test(e2e)` + flag flip for beta | S | P-7, P-7b, P-8, **the P-3b Worker deploy** (AM-38), and **a store build carrying P-3b's schema shipped at least one release earlier on iOS and Android** (older builds reject backups with a long Deep result, section 3.8) |
+| P-10 | `test(e2e)` + flag flip for beta | S | P-7, P-7b, P-8, OD-14 (the owner confirms the one-tap default), **the P-3b Worker deploy** (AM-38), and **a store build carrying P-3b's schema shipped at least one release earlier on iOS and Android** (older builds reject backups with a long Deep result, section 3.8) |
 
 ## 7. Dependencies
 
@@ -857,4 +857,4 @@ Reading the table: a guesser is placed at band 1 or lower in more than 98 % of r
 
 ## Review log
 
-- 2026-10-13, docs follow-ups after the 2026-10-13 merges. Row P-7b is marked done (#573: the result weekly-plan strip, the `RouteProposal` entry and the report's Suggested weekly plan card, all behind `flags.routeEnabled`). OD-14's proposed default (one tap, no PIN, for a self profile) is what P-7b built; the owner confirms it before P-10's flag flip.
+- 2026-10-13, docs follow-ups after the 2026-10-13 merges. Row P-7b is marked done (#573: the result weekly-plan strip, the `RouteProposal` entry and the report's Suggested weekly plan card, all behind `flags.routeEnabled`). OD-14's proposed default (one tap, no PIN, for a self profile) is what P-7b built; the owner confirms it before P-10's flag flip, and P-10's Needs list OD-14.
