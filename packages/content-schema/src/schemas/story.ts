@@ -306,6 +306,10 @@ function storyCrossFieldRules(story: Story, ctx: z.RefinementCtx): void {
   );
 
   const levels = new Set<string>();
+  // A check or checkpoint id names one question in the whole story: the locale overlay keys
+  // `checks.<id>` / `checkpoints.<id>` carry no tier (F-I18N-001), so one id in two tiers
+  // would give both tiers one translation of two different English prompts.
+  const checkTier = new Map<string, string>();
   story.tiers.forEach((tier, ti) => {
     const at = (...rest: Path): Path => ['tiers', ti, ...rest];
     if (levels.has(tier.level)) report(ctx, at('level'), 'tier levels must be unique');
@@ -393,6 +397,11 @@ function storyCrossFieldRules(story: Story, ctx: z.RefinementCtx): void {
       list.forEach((check, ci) => {
         if (checkIds.has(check.id)) report(ctx, at(group, ci, 'id'), `check ids must be unique in a tier (${check.id})`);
         checkIds.add(check.id);
+        const otherTier = checkTier.get(check.id);
+        if (otherTier !== undefined && otherTier !== tier.level) {
+          report(ctx, at(group, ci, 'id'), `check ids must be unique across tiers (${check.id} is also in the ${otherTier} tier)`);
+        }
+        if (otherTier === undefined) checkTier.set(check.id, tier.level);
         check.factIds.forEach((id, fi) => checkFact(at(group, ci, 'factIds', fi), id));
       });
     }

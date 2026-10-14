@@ -28,6 +28,8 @@
 //   overlay-ko-particle      a ko lesson overlay with 를 / 와 after a final consonant, or 가 after
 //                            a gloss head noun with one ('물건가' for '물건이')
 //   banned-on-learner-surface  a learner-banned word of the locale (banned-words.json)
+//   overlay-shadowed         warning: an entry gives both the untiered and the tier-qualified
+//                            field for one primary-tier scene; the tier-qualified one wins
 //   overlay-missing          warning (error for HANGUL_ROUTE_STRICT_LOCALES): a translatable
 //                            English field of a base entity that the locale lacks, counted
 //                            per story tier (a read-tier scene needs its tiers.read.* field;
@@ -227,7 +229,15 @@ function checkField(locale, id, field, value, base, add, ctx) {
   if (!allowed || base === undefined) return;
 
   const missing = missingSelector(base, field);
-  if (missing !== null) return add(`overlay-unknown-id: ${id} has no ${missing.collection} element ${missing.key}`);
+  if (missing !== null) {
+    const elsewhere = untieredSceneElsewhere(id, field, base);
+    if (elsewhere !== null) {
+      return add(
+        `overlay-unknown-id: ${id} has no primary-tier scene ${elsewhere.scene}; untiered scenes.* reach only the primary tier (listen when the story has one), so write tiers.${elsewhere.level}.${field}`,
+      );
+    }
+    return add(`overlay-unknown-id: ${id} has no ${missing.collection} element ${missing.key}`);
+  }
 
   for (const path of overlayTargets(base, field)) {
     const key = path[path.length - 1];
@@ -253,6 +263,19 @@ function checkField(locale, id, field, value, base, add, ctx) {
       }
     }
   }
+}
+
+/**
+ * An untiered story `scenes.<id>.<field>` whose scene is not in the primary tier but is in
+ * another one: `{ scene, level }` of the first such tier, so the error can name the
+ * tier-qualified key to write instead. Null otherwise.
+ */
+function untieredSceneElsewhere(id, field, base) {
+  if (overlayPrefix(id) !== "story" || !Array.isArray(base?.tiers)) return null;
+  const match = /^scenes\.([^.]+)\./.exec(field);
+  if (match === null) return null;
+  const tier = base.tiers.find((t) => isObject(t) && Array.isArray(t.scenes) && t.scenes.some((sc) => isObject(sc) && sc.id === match[1]));
+  return tier === undefined || typeof tier.level !== "string" ? null : { scene: match[1], level: tier.level };
 }
 
 // ---- the whole tree ------------------------------------------------------------------
@@ -285,7 +308,15 @@ export function checkOverlayTree(tree, { strictLocales = [] } = {}) {
       if (OVERLAY_FIELDS[overlayPrefix(id)] === undefined) continue;
       const entry = ctx.entries[locale].get(id) ?? {};
       for (const { field, alternates = [] } of translatableFields(id, entity)) {
-        if ([field, ...alternates].some((key) => typeof entry[key] === "string" && entry[key].trim() !== "")) continue;
+        const given = [field, ...alternates].filter((key) => typeof entry[key] === "string" && entry[key].trim() !== "");
+        if (given.length > 1) {
+          ctx.warnings.push({
+            file: ctx.owner.get(`${locale}:${id}`) ?? file,
+            path: `entries.${id}.${given[0]}`,
+            rule: `overlay-shadowed: ${given.join(" and ")} translate the same English; ${given[given.length - 1]} wins, so drop ${given.slice(0, -1).join(", ")}`,
+          });
+        }
+        if (given.length > 0) continue;
         missing[locale] += 1;
         if (strict) {
           ctx.violations.push({

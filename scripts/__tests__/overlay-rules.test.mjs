@@ -458,10 +458,36 @@ describe("overlay-rules: two-tier stories (tiers.<level>.scenes.<id>.*)", () => 
     assert.deepEqual(unknownTier.map((v) => v.rule), ["overlay-unknown-id: story:tiers has no tiers element write"]);
     // s2 is a read-tier scene: the untiered form (the listen tier) does not reach it.
     assert.deepEqual(rules(tree({ "scenes.s2.narration": "Noche." })), ["overlay-unknown-id"]);
+    // ... and the error names the tier-qualified key to write instead.
+    assert.deepEqual(checkOverlayTree(tree({ "scenes.s2.narration": "Noche." })).violations.map((v) => v.rule), [
+      "overlay-unknown-id: story:tiers has no primary-tier scene s2; untiered scenes.* reach only the primary tier (listen when the story has one), so write tiers.read.scenes.s2.narration",
+    ]);
     assert.deepEqual(rules(tree({ "tiers.read.scenes.s2.narration": "Noche." })), []);
     assert.deepEqual(rules(tree({ "tiers.listen.scenes.s2.narration": "Noche." })), ["overlay-unknown-id"]);
     // Check ids differ per tier, so the untiered check path still reaches the read tier.
     assert.deepEqual(rules(tree({ "checks.r1.prompt": "¿Cuál?" })), []);
+  });
+
+  test("warns (overlay-shadowed) when an entry gives both forms for one listen-tier scene", () => {
+    const shadowed = (result) => result.warnings.filter((w) => ruleOf(w) === "overlay-shadowed");
+    const both = checkOverlayTree(tree({ "scenes.s1.narration": "Hoya ve {kw:dal}.", "tiers.listen.scenes.s1.narration": "Hoya mira {kw:dal}." }));
+    assert.deepEqual(both.violations, []);
+    assert.deepEqual(
+      shadowed(both).map((w) => [w.path, w.rule]),
+      [
+        [
+          "entries.story:tiers.scenes.s1.narration",
+          "overlay-shadowed: scenes.s1.narration and tiers.listen.scenes.s1.narration translate the same English; tiers.listen.scenes.s1.narration wins, so drop scenes.s1.narration",
+        ],
+      ],
+    );
+    assert.equal(shadowed(both)[0].file, "content/i18n/es/x.json");
+    // One form per scene, or the same scene id in two different tiers, is not shadowing.
+    assert.deepEqual(shadowed(checkOverlayTree(tree({ "scenes.s1.narration": "Hoya ve {kw:dal}." }))), []);
+    assert.deepEqual(
+      shadowed(checkOverlayTree(tree({ "scenes.s1.narration": "Hoya ve {kw:dal}.", "tiers.read.scenes.s1.narration": "{kw:byeol} y {kw:dal}." }))),
+      [],
+    );
   });
 
   test("counts missing scene fields per tier; a listen-tier scene is covered by either form", () => {

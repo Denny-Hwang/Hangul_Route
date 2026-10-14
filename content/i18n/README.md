@@ -73,8 +73,11 @@ in both tiers with different English and different `{kw:}` tokens, so a scene is
   tier named by its `level` (`tiers.read.scenes.s1.narration`). The read tier's scenes are reached
   **only** this way; until they have one, the read tier shows its English.
 - On the listen tier both forms may be present: the tier-qualified one wins. Write one or the other
-  for a scene, not both.
-- Checks (`checks.<checkId>...`) need no tier: their ids differ per tier (`c1`, `r1`).
+  for a scene, not both (the validator warns `overlay-shadowed` when an entry has both).
+- An untiered `scenes.<sceneId>.*` for a scene only the read tier has is `overlay-unknown-id`; the
+  message names the `tiers.read.*` key to write instead.
+- Checks (`checks.<checkId>...`) need no tier: a check or checkpoint id is unique across a story's
+  tiers (`c1`, `r1`), which the story schema enforces.
 
 ```json
 "story:sun-and-moon": {
