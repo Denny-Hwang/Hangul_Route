@@ -653,7 +653,7 @@ async function startLesson320(page: Page): Promise<void> {
 }
 
 // F-TCH-004 PR 11: story slides. "King Sejong's New Letters" is reviewed (the Library lists it):
-// its cover title, seven scenes and three checks; the order slide waits for PR 7.
+// its cover title, seven scenes, the order slide (PR 7) and three checks.
 const STORY_DECK: LectureDeckInput = {
   v: 1,
   id: 'lecture:e2e011',
@@ -686,10 +686,9 @@ test.describe('presenter story slides at 1280 x 720 (PR 11)', () => {
     });
     await page.goto(link(STORY_DECK));
     await expect(page.getByTestId('presenter-start')).toBeVisible();
-    // Title, 7 scenes, 3 checks and the End slide; the order slide is one part not shown yet.
-    await expect(page.getByTestId('presenter-start-facts')).toHaveText(/^12 slides · about \d+ minutes?$/);
-    await page.getByTestId('presenter-see-which').click();
-    await expect(page.getByTestId('presenter-skipped-list').getByText('A step the slides do not show')).toHaveCount(1);
+    // Title, 7 scenes, the order slide, 3 checks and the End slide; nothing is left out.
+    await expect(page.getByTestId('presenter-start-facts')).toHaveText(/^13 slides · about \d+ minutes?$/);
+    await expect(page.getByTestId('presenter-see-which')).toHaveCount(0);
     await startLesson(page);
 
     // The cover title: the cover scene instead of Hoya, the Story label, the title and Hoya's line.
@@ -703,9 +702,9 @@ test.describe('presenter story slides at 1280 x 720 (PR 11)', () => {
     // The fourth scene: art first (named by its caption, README D8), then narration, then the Korean line.
     await page.keyboard.press('ArrowRight');
     await expect(page.getByTestId('presenter-story')).toBeVisible();
-    await expect(page.getByTestId('presenter-live')).toHaveText("Slide 2 of 12, Story, Hoya lands in King Sejong's Joseon");
+    await expect(page.getByTestId('presenter-live')).toHaveText("Slide 2 of 13, Story, Hoya lands in King Sejong's Joseon");
     await goToSlide(page, 5);
-    await expect(page.getByTestId('presenter-live')).toHaveText('Slide 5 of 12, Story, He names them Hunminjeongeum');
+    await expect(page.getByTestId('presenter-live')).toHaveText('Slide 5 of 13, Story, He names them Hunminjeongeum');
     await expect(page.getByRole('img', { name: 'He names them Hunminjeongeum' })).toBeVisible();
     // The caption is the art's name only, never drawn as text.
     await expect(stage.getByText('He names them Hunminjeongeum', { exact: true })).toHaveCount(0);
@@ -725,7 +724,7 @@ test.describe('presenter story slides at 1280 x 720 (PR 11)', () => {
 
     // The first check: its own prompt and four options with shape-and-number markers; no answer yet.
     await nextUntil(page, 'presenter-check');
-    await expect(page.getByTestId('presenter-live')).toHaveText('Slide 9 of 12, Question');
+    await expect(page.getByTestId('presenter-live')).toHaveText('Slide 10 of 13, Question');
     await expect(page.getByTestId('presenter-check-prompt')).toHaveText('Who created Hangul?');
     await expect(page.getByRole('img', { name: 'Option 1, circle' })).toBeVisible();
     await expect(page.getByRole('img', { name: 'Option 4, star' })).toBeVisible();
@@ -761,7 +760,7 @@ test.describe('presenter story slides at 1280 x 720 (PR 11)', () => {
     await page.goto(link({ ...STORY_DECK, id: 'lecture:e2e012', options: { romanization: 'tap' } }));
     await startLesson(page);
     await goToSlide(page, 5);
-    await expect(page.getByTestId('presenter-live')).toHaveText('Slide 5 of 12, Story, He names them Hunminjeongeum');
+    await expect(page.getByTestId('presenter-live')).toHaveText('Slide 5 of 13, Story, He names them Hunminjeongeum');
     expect(await revealAll(page)).toBe(3);
     await expect(page.getByTestId('presenter-story-korean').getByText('Hunminjeongeum', { exact: true })).toHaveCSS('opacity', '1');
     await page.keyboard.press('ArrowLeft');

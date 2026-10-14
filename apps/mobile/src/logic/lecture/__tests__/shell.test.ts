@@ -98,8 +98,8 @@ describe('resolveBoot', () => {
 });
 
 describe('runDeck: the slides this build draws', () => {
-  it('draws title, letter, syllable, word, order, card, activity and End slides (PR 6 and PR 7)', () => {
-    expect([...SHELL_SLIDE_KINDS].sort()).toEqual(['activity', 'card', 'end', 'letter', 'sequence', 'syllable', 'title', 'vocab']);
+  it('draws title, letter, syllable, word, order, card, activity, story, story check and End slides (PR 6, PR 7 and PR 11)', () => {
+    expect([...SHELL_SLIDE_KINDS].sort()).toEqual(['activity', 'card', 'end', 'letter', 'quiz', 'sequence', 'story', 'syllable', 'title', 'vocab']);
     const deck = deckOf([
       { kind: 'episode', id: 'episode:stage1-letters' },
       { kind: 'quest', id: 'quest:stage1-life-q1' },
