@@ -5,7 +5,4 @@ import type { MinigameScope } from '../../logic/minigame-config';
 /** The game content of the Stage 3 lesson quests, by minigame ref (reached lazily, never from lessons-index.ts). */
 export const LESSON_SCOPES: Readonly<Record<string, MinigameScope>> = {};
 
-export const LESSON_SCOPE_OVERLAYS: Overlays = {
-  "es": {},
-  "ko": {}
-};
+export const LESSON_SCOPE_OVERLAYS: Overlays = {"es":{},"ko":{}};
