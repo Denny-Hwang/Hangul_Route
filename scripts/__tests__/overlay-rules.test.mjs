@@ -244,6 +244,31 @@ describe("overlay-rules: overlay-token-mismatch", () => {
   });
 });
 
+describe("overlay-rules: {ko:} tokens of a lesson cell (F-CURR-001 section 3.4)", () => {
+  const lessonQuest = {
+    id: "quest:stage3-life-q1",
+    titleEn: "I Eat",
+    steps: [{ id: "s2", kind: "discover", titleEn: "What I Eat", discover: { pages: [{ items: [], captionEn: "Use {ko:을} after a consonant, {ko:를} after a vowel." }] } }],
+  };
+  const lessonTree = (locale, value) =>
+    base({
+      "content/episodes/stage-3/life.json": { id: "episode:stage3-life", quests: [lessonQuest] },
+      ...(locale === "es" ? es : ko)({ "quest:stage3-life-q1": { "steps.s2.discover.pages.0.caption": value } }, "lessons-stage3-life"),
+    });
+  test("a lesson value may carry the Hangul of exactly its source's {ko:} tokens", () => {
+    assert.deepEqual(rules(lessonTree("es", "Usa {ko:을} tras consonante y {ko:를} tras vocal.")), []);
+    assert.deepEqual(rules(lessonTree("ko", "받침 뒤에는 {ko:을}, 모음 뒤에는 {ko:를}을 써요.")), []);
+  });
+  test("Hangul outside a token, or tokens that differ from the source, still fail", () => {
+    assert.deepEqual(rules(lessonTree("es", "Usa 을 tras consonante y {ko:를} tras vocal.")), ["korean-in-ui-field", "overlay-token-mismatch"]);
+    assert.deepEqual(rules(lessonTree("es", "Usa {ko:을} tras consonante.")), ["overlay-token-mismatch"]);
+    assert.deepEqual(rules(lessonTree("ko", "받침 뒤에는 {ko:이}를 써요.")), ["overlay-token-mismatch"]);
+  });
+  test("a token outside a lesson cell is still Hangul in a Spanish value", () => {
+    assert.deepEqual(rules(base(es({ "vocab:sagwa": { gloss: "manzana {ko:사과}" } }))), ["korean-in-ui-field"]);
+  });
+});
+
 describe("overlay-rules: banned-on-learner-surface", () => {
   test("the locale's learner list from banned-words.json, token match for es, substring for ko", () => {
     assert.deepEqual(rules(base(es({ "card:gangaji": { blurb: "¡Fallaste!" } }))), ["banned-on-learner-surface"]);

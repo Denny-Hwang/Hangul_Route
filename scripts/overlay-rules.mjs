@@ -18,7 +18,9 @@
 //   korean-in-ui-field       es: Hangul in any value; ko: Hangul outside translatable fields
 //   overlay-circular-gloss   a ko gloss equal to the Korean it glosses (warning when it only
 //                            wraps it in spaces or punctuation)
-//   overlay-token-mismatch   a story narration whose {kw:id} tokens are not the base multiset
+//   overlay-token-mismatch   a story narration whose {kw:id} tokens are not the base multiset;
+//                            a lesson field (content/episodes/stage-<n>/) whose {ko:...} tokens
+//                            are not its English source's (F-CURR-001 §3.4)
 //   banned-on-learner-surface  a learner-banned word of the locale (banned-words.json)
 //   overlay-missing          warning (error for HANGUL_ROUTE_STRICT_LOCALES): a translatable
 //                            English field of a base entity that the locale lacks
@@ -74,6 +76,17 @@ function getIn(root, path) {
 const bare = (s) => s.replace(/[^ㄱ-㆏가-힣a-z0-9]/gi, "");
 
 const tokenList = (text) => Array.from(text.matchAll(TOKEN), (m) => m[1]).sort();
+
+/**
+ * F-CURR-001 §3.4: a lesson cell's English note or caption may carry taught Korean as
+ * `{ko:...}` tokens (rendered through KoreanText with its romanization, not UI text), so
+ * its es / ko value carries the same tokens. Only there is a token's Hangul lifted from
+ * `korean-in-ui-field`; everywhere else Hangul in a Spanish value still fails.
+ */
+const KO_TOKEN = /\{ko:([^}]*)\}/g;
+const LESSON_BASE = /^content\/episodes\/stage-[2-467]\/[a-z]+\.json$/;
+const koTokenList = (text) => Array.from(String(text).matchAll(KO_TOKEN), (m) => m[1]).sort();
+const withoutKoTokens = (text) => text.replace(KO_TOKEN, " ");
 
 /**
  * id -> { entity, file } for every object with an entity id in the base content (first
@@ -147,7 +160,9 @@ function checkField(locale, id, field, value, base, add, ctx) {
   if (typeof value !== "string" || value.trim() === "") return add("overlay-bad-shape: a translated field is a non-blank string");
   const allowed = isOverlayFieldAllowed(id, field);
   if (!allowed) add(`overlay-forbidden-field: ${field} cannot be translated on ${id}`);
-  if (HANGUL.test(value) && (locale === "es" || !allowed)) add("korean-in-ui-field");
+  const lesson = LESSON_BASE.test(ctx.base.get(id)?.file ?? "");
+  const shown = lesson && allowed ? withoutKoTokens(value) : value;
+  if (HANGUL.test(shown) && (locale === "es" || !allowed)) add("korean-in-ui-field");
   const banned = bannedWordIn(value, locale);
   if (banned !== null) add(`banned-on-learner-surface: "${banned}"`);
   if (!allowed || base === undefined) return;
@@ -162,6 +177,13 @@ function checkField(locale, id, field, value, base, add, ctx) {
       if (value.trim() === holder.ko.trim()) add(`overlay-circular-gloss: the Korean gloss repeats the taught ${holder.ko}`);
       else if (bare(value) === bare(holder.ko)) {
         ctx.warnings.push({ file: ctx.current, path: `entries.${id}.${field}`, rule: `overlay-circular-gloss: the Korean gloss only wraps ${holder.ko}; describe it instead` });
+      }
+    }
+    if (lesson) {
+      const want = koTokenList(getIn(base, path));
+      const got = koTokenList(value);
+      if (want.join(",") !== got.join(",")) {
+        add(`overlay-token-mismatch: the field needs exactly the tokens ${want.map((t) => `{ko:${t}}`).join(", ") || "(none)"}; found ${got.map((t) => `{ko:${t}}`).join(", ") || "(none)"}`);
       }
     }
     if (overlayPrefix(id) === "story" && /^scenes\.[^.]+\.narration$/.test(field)) {
