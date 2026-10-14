@@ -505,7 +505,7 @@ DELETE FROM feedback_notes WHERE id = '<note_id>' AND NOT EXISTS (SELECT 1 FROM 
 
 - API Worker `hangul-route-api`: 변수 `CLASS_TRANSFER` 가 **없거나** 값이 `enabled` 이면 반 옮기기가 열린다. 다른 값이면 (예: `disabled`) 닫힌다.
 - 콘솔 빌드 변수 `NEXT_PUBLIC_CLASS_TRANSFER`: 없으면 켜짐. `false`, `0`, `off`, `disabled` 이면 콘솔의 반 옮기기 버튼이 숨는다.
-- 확인 (운영 요청은 이것 하나만): `https://api.hangulroute.com/health` 의 `features.classTransfer` 가 `true`.
+- 확인 (운영 요청은 이것 하나만): `https://api.hangulroute.com/health` 의 `features.classTransfer` 가 `true` (같은 응답의 `features.classScopeFull` 도 `true`).
 - 학습자 기기의 동의 경로 `CLASS_TRANSFER_DEVICE_CONSENT` 는 **그대로 꺼 둔다** (gate G6, 변경 없음).
 
 ### H-2. 즉시 끄기 (kill switch, 1분)
@@ -517,7 +517,19 @@ DELETE FROM feedback_notes WHERE id = '<note_id>' AND NOT EXISTS (SELECT 1 FROM 
 
 끄더라도 이미 끝난 이동, 학습 기록, 카드와 별은 바뀌지 않는다. 가족의 반 안내 확인 (class-scope acknowledgement) 은 스위치와 무관하게 계속 동작한다.
 
-### H-3. 반 안내를 읽은 학습자 수 보기 (선택, D1 Console)
+### H-3. 교사가 보는 범위 즉시 줄이기 (`CLASS_SCOPE_FULL` kill switch, 1분)
+
+- 기본은 켜짐: 변수 `CLASS_SCOPE_FULL` 이 **없거나** 비어 있거나 `enabled` 이면, 가족이 반 안내를 읽은 학습자에 대해 교사·학교 관리자가 낱말을 포함한 전체 진도를 본다.
+- 끄기: `hangul-route-api` → Settings → **Variables and Secrets** → Add → Type **Text**, 이름 `CLASS_SCOPE_FULL`, 값 `disabled` → **Deploy**. 다른 값도 모두 꺼짐으로 처리된다 (오타는 닫힌 쪽). 모든 반·학교 화면이 곧바로 예전 범위 (낱말 없음, 반에 들어온 날부터의 기록) 로 돌아간다. 가족 화면은 그대로이고, 가족의 반 안내 확인은 계속 기록된다.
+- 확인: `/health` 의 `features.classScopeFull` 이 `false`.
+- 다시 켜기: 변수를 지우고 Deploy. 이미 받은 확인이 다시 그대로 적용된다.
+- `CLASS_TRANSFER` 와 따로 움직인다 (반 옮기기는 그대로 둔 채 보는 범위만 줄일 수 있다).
+
+### H-4. 이동 기록 보관 (자동)
+
+반 옮기기 기록 (`class_moves`) 은 끝나거나 실행되거나 기한이 지난 뒤 90일이 되면 매일 정해진 시간의 자동 정리 (Cron Trigger) 가 지운다. 개인정보처리방침의 "90일" 문장이 이것이다. 할 일은 없다.
+
+### H-5. 반 안내를 읽은 학습자 수 보기 (선택, D1 Console)
 
 ```sql
 SELECT text_version, basis, COUNT(*) AS learners FROM class_scope_acks GROUP BY text_version, basis;
