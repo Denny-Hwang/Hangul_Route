@@ -1,5 +1,6 @@
 import { expect, test } from './fixtures';
 import {
+  answerForkNew,
   E2E_PIN,
   onboardChild,
   openGrownUpZone,
@@ -122,6 +123,7 @@ for (const vp of VIEWPORTS) {
       await typeDigits(page);
       await page.getByRole('checkbox').click();
       await page.getByRole('button', { name: 'Continue' }).click();
+      await answerForkNew(page);
       await expect(page.getByText('Your first card is waiting.')).toBeVisible();
       await page.getByRole('button', { name: 'Start my journey' }).click();
 

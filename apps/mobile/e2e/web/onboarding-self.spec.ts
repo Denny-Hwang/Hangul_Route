@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { WHO_CHILD, WHO_SELF, agreeOnPrivacy, fillWhoAndProfile, readStored, typeDigits, waitForSaved } from './helpers';
+import { WHO_CHILD, WHO_SELF, agreeOnPrivacy, answerForkNew, fillWhoAndProfile, readStored, typeDigits, waitForSaved } from './helpers';
 
 /**
  * F-LEARN-001 §3.2, §3.3, §3.14, §3.15: the "Me" path in three steps. Step 1
@@ -91,6 +91,10 @@ for (const vp of VIEWPORTS) {
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
       await next.click();
 
+      // The level check's fork (F-PLC-001 P-10): no age or grown-up words there either.
+      await expect(page.getByTestId('placement-invite')).toBeVisible();
+      expect(await screenText(page)).not.toMatch(/\bAges?\b|grown-up/i);
+      await answerForkNew(page);
       await expect(page.getByText('Your first card is waiting.')).toBeVisible();
       const preview = await screenText(page);
       expect(preview).not.toMatch(/\bAges?\b|grown-up/i);
@@ -144,6 +148,7 @@ for (const vp of VIEWPORTS) {
       await agreeOnPrivacy(page, 'child');
       await expect(next).toBeEnabled();
       await next.click();
+      await answerForkNew(page);
       await expect(page.getByText('Your first card is waiting.')).toBeVisible();
       await page.getByRole('button', { name: 'Start my journey' }).click();
       await waitForSaved(page, ['profiles', 'account:parentPinHash', 'account:guardianConsentAcceptedAt']);

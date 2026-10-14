@@ -1,12 +1,12 @@
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { readStored, waitForSaved } from './helpers';
+import { answerForkNew, readStored, waitForSaved } from './helpers';
 import { shot } from './shots';
 
 /**
- * F-PLC-001 P-6: the level check's screens. The check has no learner entry
- * point until P-7 (and `flags.placementEnabled` stays off), so this suite
- * opens it through the `window.__hrPlacementE2E` hook, which exists only in
+ * F-PLC-001 P-6: the level check's screens, opened through the
+ * `window.__hrPlacementE2E` hook (the real entries, on since P-10, are
+ * covered by `placement.spec.ts` on the release build), which exists only in
  * the fixture bundle (served from dist-e2e/):
  *
  *   pnpm --filter @hangul-route/mobile build:web:fixtures
@@ -106,6 +106,7 @@ async function onboard(page: Page, level: 'Pictures first' | 'Some reading' = 'S
   await page.getByRole('button', { name: 'Continue' }).click();
   await page.getByRole('checkbox').click();
   await page.getByRole('button', { name: 'Continue' }).click();
+  await answerForkNew(page);
   await page.getByRole('button', { name: 'Start my journey' }).click();
   await waitForSaved(page, ['profiles']);
   await page.goto('/');

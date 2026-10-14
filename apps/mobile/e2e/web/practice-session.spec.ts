@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { completeChildForm, keepSidewaysIfAsked, readStored, waitForSaved } from './helpers';
+import { answerForkNew, completeChildForm, keepSidewaysIfAsked, readStored, waitForSaved } from './helpers';
 import { next } from './story-reader-helpers';
 
 /**
@@ -92,6 +92,7 @@ test.describe('practice sessions (F-REPORT-001 section 3.3.2)', () => {
     await page.getByRole('button', { name: 'Continue' }).click();
     await page.getByRole('checkbox').click();
     await page.getByRole('button', { name: 'Continue' }).click();
+    await answerForkNew(page);
     await page.getByRole('button', { name: 'Start my journey' }).click();
     await waitForSaved(page, ['profiles']);
     await page.goto('/');

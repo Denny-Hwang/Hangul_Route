@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { onboardChild, readStored, seedStored, waitForSaved } from './helpers';
+import { answerForkNew, onboardChild, readStored, seedStored, waitForSaved } from './helpers';
 import { shot } from './shots';
 
 /**
@@ -15,7 +15,8 @@ import { shot } from './shots';
  *     (with the web server pointed at dist-e2e-route/)
  *
  * Metro caches the inlined `EXPO_PUBLIC_*` values: export with a Metro cache of its own (TMPDIR)
- * or `--clear` when switching the flag. P-10 adds this flow to the nightly run with the flag flip.
+ * or `--clear` when switching the flag. Since P-10, `placement.spec.ts` plays the same flow on the release build
+ * through the real entries (every PR).
  */
 
 const ROUTE = process.env.E2E_ROUTE === '1' && process.env.STORY_FIXTURES === '1';
@@ -48,6 +49,7 @@ async function onboardSelf(page: Page): Promise<string> {
   await page.getByRole('button', { name: 'Continue' }).click();
   await page.getByRole('checkbox').click();
   await page.getByRole('button', { name: 'Continue' }).click();
+  await answerForkNew(page);
   await page.getByRole('button', { name: 'Start my journey' }).click();
   await waitForSaved(page, ['profiles']);
   await page.goto('/');

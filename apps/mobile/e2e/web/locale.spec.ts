@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { LOCALE_META, pseudoText, type Messages } from '@hangul-route/i18n';
 import type { Locator, Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { onboardChild, readStored, waitForSaved } from './helpers';
+import { answerForkNew, onboardChild, readStored, waitForSaved } from './helpers';
 import {
   allowedSmall,
   BROWSER_LOCALE,
@@ -277,6 +277,8 @@ async function walkMatrix(page: Page, locale: MatrixLocale): Promise<void> {
   await page.getByRole('checkbox').click();
   await checkScreen(page, locale, 'CreateProfile', cont);
   await cont.click();
+  // The level check's fork (F-PLC-001, on since P-10): "I am new to Korean" goes on to the first-quest preview.
+  await answerForkNew(page);
 
   // The first-quest preview opens the first quest: intro, Discover, skip the game, skip Build a Letter, the Check.
   await expect(page.getByText(n((m) => m.learner.firstQuest.title))).toBeVisible();

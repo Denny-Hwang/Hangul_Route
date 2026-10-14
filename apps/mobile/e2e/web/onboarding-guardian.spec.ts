@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { E2E_PIN, WHO_CHILD, onboardChild, openGrownUpZone, readStored, seedRescueCode, typeDigits, unlockWithPin } from './helpers';
+import { answerForkNew, E2E_PIN, WHO_CHILD, onboardChild, openGrownUpZone, readStored, seedRescueCode, typeDigits, unlockWithPin } from './helpers';
 
 /**
  * F-LEARN-001 §3.3, §3.4, §3.14, §3.15: the "Someone I look after" path. On
@@ -96,6 +96,7 @@ for (const vp of VIEWPORTS) {
       await typeDigits(page, '1234');
       await expect(next).toBeEnabled();
       await next.click();
+      await answerForkNew(page);
       await expect(page.getByText('Your first card is waiting.')).toBeVisible();
     });
 
