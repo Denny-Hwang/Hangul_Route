@@ -37,7 +37,7 @@ import {
   traceSidePanelWidth,
 } from '../../logic/trace-layout';
 import { TRACE_IDLE_MS, createTraceEvaluator, type TraceEvaluator } from '../../logic/trace-evaluator';
-import { StrokeHint } from './StrokeHint';
+import { StrokeHint } from '../../components/StrokeHint';
 import { playJamo } from '../../platform/audio';
 import { nudge, success } from '../../platform/haptics';
 import { useQuestRunStore } from '../../store/quest-run-store';
