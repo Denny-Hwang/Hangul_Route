@@ -415,18 +415,15 @@ describe('today\'s claims: the reports lines are live (F-REPORT-001 RP-11)', () 
     expect(renderToStaticMarkup(<LearnersPage locale="en" />)).toBe(renderToStaticMarkup(<LearnersPage locale="en" claims={ALL_CLAIMS_OFF} />));
   });
 
-  it.each(['ko', 'es'] as const)('%s: no reports line yet, since reports render only in a reviewed locale (F-SITE-002 G6)', (locale) => {
+  it.each(['ko', 'es'] as const)('%s: the reports lines too, since its report words are signed (F-SITE-002 G6; MAR re-review)', (locale) => {
     const persona = getMessages(locale).landing.persona;
     const parents = renderToStaticMarkup(<ParentsPage locale={locale} />);
     const teachers = renderToStaticMarkup(<TeachersPage locale={locale} />);
-    expect(linesOf(parents, persona.parents.follow.title)).toEqual([persona.parents.follow.body]);
+    expect(linesOf(parents, persona.parents.follow.title)).toEqual([persona.parents.follow.body, persona.parents.follow.reports]);
     const parentsText = textOf(mainOf(parents));
-    expect(parentsText).not.toContain(persona.parents.follow.reports);
-    expect(parentsText).not.toContain(persona.parents.faq.whatSee.reports);
-    expect(parentsText).toContain(persona.parents.faq.whatSee.a);
-    expect(linesOf(teachers, persona.teachers.class.title)).toEqual([persona.teachers.class.body]);
-    expect(parents).toBe(renderToStaticMarkup(<ParentsPage locale={locale} claims={ALL_CLAIMS_OFF} />));
-    expect(teachers).toBe(renderToStaticMarkup(<TeachersPage locale={locale} claims={ALL_CLAIMS_OFF} />));
+    expect(parentsText).toContain(persona.parents.faq.whatSee.reports);
+    expect(parentsText).not.toContain(persona.parents.faq.whatSee.a);
+    expect(linesOf(teachers, persona.teachers.class.title)).toEqual([persona.teachers.class.body, persona.teachers.class.reports]);
   });
 
   it('the reports lines name no speaking and no price, in every locale', () => {

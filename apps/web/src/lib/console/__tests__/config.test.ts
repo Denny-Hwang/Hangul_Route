@@ -146,11 +146,12 @@ describe('reportsEnabled', () => {
     for (const other of ['enabled', 'TRUE', 'FALSE', '', ' false']) expect(reportsEnabled('en', { NEXT_PUBLIC_REPORTS_ENABLED: other }), other).toBe(true);
   });
 
-  it('stays off for a console locale whose report words are not reviewed yet (ko, es)', () => {
+  it('renders in ko and es too once their report words are signed (F-I18N-001 MAR re-review, 2026-10-13)', () => {
     const on = { NEXT_PUBLIC_REPORTS_ENABLED: 'true' };
-    expect(reportsEnabled('ko', on)).toBe(false);
-    expect(reportsEnabled('es', on)).toBe(false);
-    expect(REPORT_REVIEWED_LOCALES).toEqual(['en']);
+    expect(reportsEnabled('ko', on)).toBe(true);
+    expect(reportsEnabled('es', on)).toBe(true);
+    expect(reportsEnabled('ko', { NEXT_PUBLIC_REPORTS_ENABLED: 'false' })).toBe(false);
+    expect(REPORT_REVIEWED_LOCALES).toEqual(['en', 'es', 'ko']);
   });
 
   it('reads the build value by its literal name and is on by default, so the owner can switch it off with "false"', () => {
@@ -161,7 +162,7 @@ describe('reportsEnabled', () => {
     expect(reportsEnabled('en')).toBe(false);
     vi.stubEnv('NEXT_PUBLIC_REPORTS_ENABLED', 'true');
     expect(reportsEnabled('en')).toBe(true);
-    expect(reportsEnabled('ko')).toBe(false);
+    expect(reportsEnabled('ko')).toBe(true);
   });
 });
 
