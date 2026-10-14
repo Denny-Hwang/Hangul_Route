@@ -38,7 +38,7 @@ describe('C-5: VocabCards honours route.params.ids (the Speed Round results "Pra
     expect(food.length).toBeGreaterThan(5);
     // Words to see again, as the results list them: not in topic or chunk order.
     const ids = [food[5]!.id, food[0]!.id, food[3]!.id];
-    const run = cardsRun(food, { size: 4, fixedOrder: false, progress: progress(), params: { topicKey: 'food', ids } });
+    const run = cardsRun(food, { size: 4, fixedOrder: false, progress: progress(), params: { ids } });
     expect(run.words.map((w) => w.id)).toEqual(ids);
     expect(run.inOrder.map((w) => w.id)).toEqual(ids);
     expect(run.index).toBe(-1);
