@@ -6,6 +6,7 @@ import {
   BLOCK_TOLERANCE,
   INK_MARGIN,
   LOOP_FILL_SPLIT,
+  distanceToStrokes,
   SHORT_STROKE,
   createTraceWordGate,
   everyLetterInked,
@@ -174,6 +175,30 @@ describe('scoreTraceUnit at block size (open question 2: pass rates and near mis
     const h = block.letters[0]!;
     expect(scoreTraceUnit([h], trace(h.strokes)).passed).toBe(true);
     expect(scoreTraceUnit([h], trace(block.letters[1]!.strokes)).passed).toBe(false);
+  });
+});
+
+describe('the geometry under the precision and outline checks', () => {
+  it('measures a point against a one-point stroke and a zero-length segment', () => {
+    expect(distanceToStrokes({ x: 3, y: 4 }, [[{ x: 0, y: 0 }]])).toBe(5);
+    expect(distanceToStrokes({ x: 3, y: 4 }, [[{ x: 0, y: 0 }, { x: 0, y: 0 }]])).toBe(5);
+    expect(distanceToStrokes({ x: 5, y: 3 }, [[{ x: 0, y: 0 }, { x: 10, y: 0 }]])).toBe(3);
+    expect(distanceToStrokes({ x: 0, y: 0 }, [])).toBe(Number.POSITIVE_INFINITY);
+  });
+
+  it('reads no fill from a line or from fewer than three points', () => {
+    expect(hullFill([{ x: 0, y: 0 }, { x: 1, y: 1 }])).toBe(0);
+    expect(hullFill([{ x: 0, y: 0 }, { x: 5, y: 0 }, { x: 10, y: 0 }])).toBe(0);
+    expect(hullFill([{ x: 0, y: 0 }, { x: 10, y: 0 }, { x: 10, y: 10 }, { x: 0, y: 10 }])).toBeCloseTo(1);
+  });
+
+  it('skips the outline check for a letter given without its character, and a unit with no ink', () => {
+    const final = place('공').letters[2]!;
+    const square = [[{ x: final.zones[0]!.x, y: final.zones[0]!.y }, { x: final.zones[0]!.x + 100, y: final.zones[0]!.y + 50 }]];
+    expect(scoreTraceUnit([{ strokes: final.strokes }], trace(final.strokes)).passed).toBe(true);
+    expect(scoreTraceUnit([final], []).passed).toBe(false);
+    expect(scoreTraceUnit([final], []).orderCorrect).toBe(false);
+    expect(scoreTraceUnit([final], trace(square)).passed).toBe(false);
   });
 });
 

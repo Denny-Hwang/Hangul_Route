@@ -26,7 +26,7 @@ export type UnitLetter = Pick<PlacedLetter, 'strokes'> & Partial<Pick<PlacedLett
 /**
  * The coverage tolerance at block size (viewBox units). The shipped 24 was set for one letter
  * on the whole 200 canvas; a letter in a block is drawn about half as large, so 24 let a
- * near-miss letter (가 traced as 기, 야 as 여) cover the target. 12 still passes every Stage 7
+ * near-miss letter (ㅣ drawn for ㅏ, ㅕ for ㅑ) cover the target. 12 still passes every Stage 7
  * block traced 6 units off the line, or drawn 10 % larger or smaller than the ghost
  * (F-CURR-001 §9 assumption 3; wireframe open question 2). A round's own `tolerancePx` wins.
  */
