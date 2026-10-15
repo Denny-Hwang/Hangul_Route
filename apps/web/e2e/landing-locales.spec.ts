@@ -173,3 +173,47 @@ test.describe('Korean pages at 200% text', () => {
     });
   }
 });
+
+/**
+ * F-I18N-001 rows 15b / 16b: from 45em the locale switcher shares the footer's end row with the copyright line
+ * (globals.css `hr-site-footer-end`). Each link there keeps its 64 px hit area with negative block margins, so where
+ * the switcher wraps under the copyright row (a longer label or locale name, or larger text), the row gap must keep
+ * the open-source link's area and the locale links' areas apart. In en, es and ko the row fits on one line from 720 px
+ * (text size scales the em breakpoint with it), so the last case forces the wrap (the switcher on a line of its own),
+ * the layout a longer locale name or label would get, which is the case the gap is for.
+ */
+const FOOTER_END_CASES = [
+  { width: 720, wrap: false },
+  { width: 760, wrap: false },
+  { width: 1024, wrap: false },
+  { width: 760, wrap: true },
+] as const;
+
+test.describe("the footer's end row: no two hit areas overlap", () => {
+  for (const path of ['/', '/es', '/ko']) {
+    test(`${path} at ${FOOTER_END_CASES.map((c) => `${c.width}${c.wrap ? ' (wrapped)' : ''}`).join(' / ')} px`, async ({ page }) => {
+      for (const { width, wrap } of FOOTER_END_CASES) {
+        await page.setViewportSize({ width, height: HEIGHT });
+        await page.goto(path);
+        if (wrap) await page.addStyleTag({ content: '.hr-site-footer-end > .hr-site-locales { flex-basis: 100%; }' });
+        const rects = await page.locator('.hr-site-footer-end a').evaluateAll((links) =>
+          links.map((a) => {
+            const r = a.getBoundingClientRect();
+            return { name: (a.textContent ?? '').trim(), top: r.top, bottom: r.bottom, left: r.left, right: r.right };
+          }),
+        );
+        const at = `${path} at ${width}px${wrap ? ', the switcher wrapped' : ''}`;
+        expect(rects.length, `${at}: the open-source link and three locale links`).toBe(4);
+        const overlaps: string[] = [];
+        rects.forEach((a, i) =>
+          rects.slice(i + 1).forEach((b) => {
+            const x = Math.min(a.right, b.right) - Math.max(a.left, b.left);
+            const y = Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top);
+            if (x > 0.5 && y > 0.5) overlaps.push(`"${a.name}" and "${b.name}" (${Math.round(x)} x ${Math.round(y)} px)`);
+          }),
+        );
+        expect(overlaps, at).toEqual([]);
+      }
+    });
+  }
+});

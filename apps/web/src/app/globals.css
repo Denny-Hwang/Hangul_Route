@@ -337,13 +337,19 @@ button {
     display: inline-flex;
   }
 
-  /* The footer's end row: the locale switcher on the copyright row's line, its first baseline on the copyright's. */
+  /*
+   * The footer's end row: the locale switcher on the copyright row's line, its first baseline on the copyright's.
+   * Where it wraps under the copyright row (a long locale name or label), the row gap keeps the hit areas apart: the
+   * open-source link's area reaches the copyright row's padding plus --hr-site-sm below it (LEGAL_ROW), and each
+   * locale link's reaches the overflow above its line.
+   */
   .hr-site-footer-end {
     display: flex;
     flex-wrap: wrap;
     align-items: baseline;
     justify-content: space-between;
     column-gap: var(--hr-site-lg);
+    row-gap: calc(var(--hr-site-caption-overflow) + var(--hr-site-sm));
   }
 
   .hr-site-footer-end > .hr-site-locales > nav {

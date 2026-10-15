@@ -59,6 +59,43 @@ const PAGES: readonly SitePageBudget[] = [
   { path: '/teachers', h1: en.persona.teachers.title, lead: en.persona.teachers.lead, primary: en.persona.teachers.signIn, ...PERSONA },
 ];
 
+/**
+ * The Spanish and Korean pages (indexable since F-I18N-001 rows 15b / 16b) are held to the same height and word
+ * budgets (F-SITE-002 §3.11, "Locales"), times a text-expansion allowance: Korean fits the English budgets as they
+ * are; Spanish runs about 8 % taller on the home (3,039 px against 2,805 at 375 x 812 when it shipped), so its
+ * allowance is 10 %. Only the budgets are checked here; the layout checks of these pages are in
+ * `landing-locales.spec.ts`.
+ */
+const LOCALE_ALLOWANCE = { es: 1.1, ko: 1 } as const;
+const LOCALE_PAGES = (['es', 'ko'] as const).flatMap((lang) =>
+  PAGES.map((budget) => ({ lang, path: budget.path === '/' ? `/${lang}` : `/${lang}${budget.path}`, budget })),
+);
+
+for (const { lang, path, budget } of LOCALE_PAGES) {
+  const allow = (value: number): number => Math.round(value * LOCALE_ALLOWANCE[lang]);
+  test.describe(`${path} budgets`, () => {
+    test(`at 375 x 812: at most ${allow(budget.phoneMax)} px tall (headroom ${allow(budget.phoneHeadroom)}) and ${allow(budget.words)} visible words`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width: 375, height: 812 });
+      await page.goto(path);
+      await expect(page.locator('html')).toHaveAttribute('lang', lang);
+      const height = await page.evaluate(() => document.documentElement.scrollHeight);
+      expect(height).toBeLessThanOrEqual(allow(budget.phoneMax));
+      expect(height, 'headroom budget while claims are off').toBeLessThanOrEqual(allow(budget.phoneHeadroom));
+      const words = await page.evaluate(() => document.body.innerText.split(/\s+/).filter((w) => /[\p{L}\p{N}]/u.test(w)).length);
+      expect(words).toBeGreaterThan(50);
+      expect(words).toBeLessThanOrEqual(allow(budget.words));
+    });
+
+    test(`at 1280 x 800: at most ${allow(budget.wideMax)} px tall`, async ({ page }) => {
+      await page.setViewportSize({ width: 1280, height: 800 });
+      await page.goto(path);
+      expect(await page.evaluate(() => document.documentElement.scrollHeight)).toBeLessThanOrEqual(allow(budget.wideMax));
+    });
+  });
+}
+
 /** One row of 64 px targets plus padding (§3.11). */
 const HEADER_MAX = 96;
 /** The browser default font size for 200 % text (16 px is 100 %). */

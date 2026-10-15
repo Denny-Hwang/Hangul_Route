@@ -32,6 +32,12 @@ const FIXTURE_BUILD = process.env.STORY_FIXTURES === '1';
 const LOCALES: UiLocale[] = availableLocales();
 /** Locales whose four tab labels fit their 80 px items at the 1.3 x cap, so the native shrink-to-fit never starts. */
 const SHRINK_FREE: readonly UiLocale[] = ['en', 'ko'];
+/**
+ * The widest a tab item may get at the cap in the other locales (Spanish: "Recorrido" and "Colección" measured 83 and
+ * 84 px when es shipped, F-I18N-001 row 15b). The native shrink-to-fit could absorb more (down to 1 / 1.3), but a
+ * label that grows past this is a copy change to look at, so it fails here first.
+ */
+const SHRINK_MAX_ITEM = 84;
 const en = getMessages('en');
 
 const tabLinks = (page: Page) => page.getByRole('tablist').getByRole('link');
@@ -173,16 +179,18 @@ test.describe('the Route tab (LR-4)', () => {
             const leaves = [...item.querySelectorAll('div, span')].filter((el) => el.children.length === 0 && (el.textContent ?? '').trim() !== '');
             const label = leaves[leaves.length - 1] as HTMLElement;
             const width = item.getBoundingClientRect().width;
+            const before = Math.round(width);
             if (width > 80) {
               const scale = 80 / width;
               label.style.fontSize = `${Number.parseFloat(getComputedStyle(label).fontSize) * scale}px`;
               const lineHeight = Number.parseFloat(getComputedStyle(label).lineHeight);
               if (Number.isFinite(lineHeight)) label.style.lineHeight = `${lineHeight * scale}px`;
             }
-            return { item: Math.round(item.getBoundingClientRect().width), now: Number.parseFloat(getComputedStyle(label).fontSize) };
+            return { before, item: Math.round(item.getBoundingClientRect().width), now: Number.parseFloat(getComputedStyle(label).fontSize) };
           }),
         );
         shrunk.forEach((s, i) => {
+          expect(s.before, `${locale} tab ${i + 1} at the cap, before the shrink`).toBeLessThanOrEqual(SHRINK_MAX_ITEM);
           expect(s.item).toBeLessThanOrEqual(80);
           // minimumFontScale (1 / 1.3): a shrunk label is never smaller than the caption size.
           expect(s.now).toBeGreaterThanOrEqual(sizes[i]!.base);
