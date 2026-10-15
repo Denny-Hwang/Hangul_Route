@@ -84,6 +84,7 @@ A learner renamed on the device ("test" → "Sungjoo") kept the old name on the 
 | 7 | Privacy | The name travels in the JSON body only: never in a URL, a log line, a server event or telemetry |
 | 8 | No-store | `Cache-Control: no-store` on every GET under `/api/spaces/*` and on the inbox |
 | 9 | Migration and deploy order | Migration 0010 (one `ADD COLUMN`) and this Worker deploy before the app PR that sends the PATCH (PR2). Until PR2, a renamed learner on the current build is repaired by joining again through **new here** → confirm name (picking the old name from the list sends a relink request, not a name). Rollback: an older Worker never reads the column |
+| 10 | App one-time repair (`hr:profilePushedV1`, PR2) | On the first sync of the build that sends the PATCH, each registered learner's name, level and cub are checked once against the inbox `learner` block. A row another device's PATCH stamped wins and comes down. On an unstamped row, the values that differ from the device profile go up, the name included. That includes a name a grown-up typed at join on an older build that differs from the profile: the device cannot tell it from a rename that never synced, and the learner has one name everywhere (F-LEARN-001 §3.11). A class that should not see full names uses the space's anonymized roster, and the name can be changed on purpose in Edit profile. A class tablet (scope marker `class`) skips the check with no request and no error; the learner's own device sends the values |
 
 ## 4. Out of scope (later stages)
 

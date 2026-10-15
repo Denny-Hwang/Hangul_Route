@@ -21,6 +21,7 @@ import {
 } from '@hangul-route/content-schema';
 import { z } from 'zod';
 import type { PutResult } from '../logic/sync/engine';
+import { notifyInboxRead } from './inbox-events';
 
 /**
  * Transport for /api/sync (F-SYNC-001 §3.2). Typed results, never throws;
@@ -93,6 +94,37 @@ export type RelinkPollResult =
   | { status: 'error'; code: 'network' | 'not_found' | 'unknown' };
 
 export type InboxResult = { status: 'ok'; inbox: SyncInbox } | { status: 'error'; code: string };
+
+/** The learner fields a device may change on the server (F-PROF-001): never who is learning, the PIN or consent. */
+export interface LearnerProfileFields {
+  displayName?: string;
+  ageGroup?: LearnerLevelId;
+  avatar?: string;
+}
+
+/**
+ * PATCH /learners/:id. `ok` covers every 2xx: `applied` is false when the server already held a newer edit.
+ * `profileUpdatedAt` is the edit time the server stored (its own clock caps a device clock that runs ahead), and
+ * `learner` the row as it stands after the request; both are null when a Worker does not send them.
+ * `scope_limited` (403, a class tablet) and `invalid` (400/422, a value the Worker refuses) never succeed on a
+ * retry; `error` (no network, 5xx, a Worker without the route) may.
+ */
+export type ProfilePatchResult =
+  | { status: 'ok'; applied: boolean; profileUpdatedAt: string | null; learner: { displayName: string; ageGroup: string | null; avatar: string } | null }
+  | { status: 'scope_limited' }
+  | { status: 'invalid'; code: string }
+  | { status: 'error'; code: string };
+
+// Lenient past `applied`: an unreadable stamp or row reads as null and never turns a 2xx into a failure.
+const ProfilePatchDataSchema = z.object({
+  applied: z.boolean(),
+  profileUpdatedAt: z.string().nullable().optional().catch(null),
+  learner: z
+    .object({ displayName: z.string(), ageGroup: z.string().nullable().catch(null), avatar: z.string().catch('') })
+    .nullable()
+    .optional()
+    .catch(null),
+});
 
 export type GetResult =
   | { status: 'ok'; rev: number; snapshot: ProgressSnapshot; summary: ProgressSummary | null }
@@ -354,7 +386,37 @@ export function createSyncApi(opts: SyncApiOptions) {
       if (r.status === -1) return { status: 'error', code: 'network' };
       if (r.status !== 200) return { status: 'error', code: `http_${r.status}` };
       const parsed = SyncInboxSchema.safeParse(r.body.data);
-      return parsed.success ? { status: 'ok', inbox: parsed.data } : { status: 'error', code: 'invalid' };
+      if (!parsed.success) return { status: 'error', code: 'invalid' };
+      notifyInboxRead(learnerId, parsed.data);
+      return { status: 'ok', inbox: parsed.data };
+    },
+
+    /**
+     * PATCH /learners/:id: the learner's new name, level or picture, with `at`, when the device made the edit (the
+     * server keeps the newest). Only these three fields and `at` are sent, whatever the caller passes.
+     */
+    async updateLearnerProfile(learnerId: string, secret: string, deviceId: string, patch: LearnerProfileFields & { at: string }): Promise<ProfilePatchResult> {
+      const body: LearnerProfileFields & { at: string } = { at: patch.at };
+      if (patch.displayName !== undefined) body.displayName = patch.displayName;
+      if (patch.ageGroup !== undefined) body.ageGroup = patch.ageGroup;
+      if (patch.avatar !== undefined) body.avatar = patch.avatar;
+      const r = await call(fetchImpl, `${base}/learners/${encodeURIComponent(learnerId)}`, {
+        method: 'PATCH',
+        headers: authHeader({ deviceId, secret }),
+        body: JSON.stringify(body),
+      });
+      if (r.status === -1) return { status: 'error', code: 'network' };
+      const code = errorCode(r.body);
+      if (r.status >= 200 && r.status < 300) {
+        const parsed = ProfilePatchDataSchema.safeParse(r.body.data);
+        // A 2xx the app cannot read still means the server took the request: there is nothing to send again.
+        if (!parsed.success) return { status: 'ok', applied: true, profileUpdatedAt: null, learner: null };
+        const { applied, profileUpdatedAt, learner } = parsed.data;
+        return { status: 'ok', applied, profileUpdatedAt: profileUpdatedAt ?? null, learner: learner ? { displayName: learner.displayName, ageGroup: learner.ageGroup, avatar: learner.avatar } : null };
+      }
+      if (r.status === 403 && code === 'scope_limited') return { status: 'scope_limited' };
+      if (r.status === 400 || r.status === 422) return { status: 'invalid', code: code ?? `http_${r.status}` };
+      return { status: 'error', code: code ?? `http_${r.status}` };
     },
 
     // Class moves from the learner's own device (F-SPACE-002 section 4.4). Online only: consent is never queued.

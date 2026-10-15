@@ -6,7 +6,7 @@ import type { JoinErrorCode } from '../logic/spaces/join-code';
 import type { RestorePlan } from '../logic/sync/restore';
 import { getDeviceId } from '../platform/device';
 import { readJson, writeJson } from '../platform/storage';
-import { classScopeMarker, deviceScopeOf } from '../logic/transfers/device-scope';
+import { TRANSFER_SCOPE_KEY, classScopeMarker, deviceScopeOf } from '../logic/transfers/device-scope';
 import type { DeviceCredentials, DeviceTransferPreview, RosterName, SyncApiClient, TransferCallError } from '../platform/sync-api';
 import { track } from '../platform/telemetry';
 import { useAccountStore } from './account-store';
@@ -53,7 +53,7 @@ export type TransferPreviewOutcome = { ok: true; preview: DeviceTransferPreview 
 export type TransferRequestOutcome = { ok: true; request: InboxTransfer } | TransferFailure;
 
 /** The device's scope marker for a learner (`logic/transfers/device-scope.ts`). */
-export const TRANSFER_SCOPE_KEY = (learnerId: string): string => `transfer-scope:${learnerId}`;
+export { TRANSFER_SCOPE_KEY };
 /**
  * Whether the last inbox said moves are on for this learner. Only this switch is kept across restarts (no request,
  * no prompt): a class tablet revoked while the app was closed still learns on its first read that it must join again.

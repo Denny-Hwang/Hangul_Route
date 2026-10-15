@@ -117,7 +117,9 @@ syncRoutes.patch('/learners/:id', async (c) => {
   const applied = await db.updateLearnerProfile(learnerId, fields, when);
   const learner = await db.getLearner(learnerId);
   if (!learner) return fail(c, 'not_found', 'Learner not found', 404);
-  return ok(c, { learner: publicLearner(learner), applied });
+  // `profileUpdatedAt`: the edit time stored (a device clock ahead of the server's is capped at now), so the device
+  // orders later inbox rows against the server's clock, not its own.
+  return ok(c, { learner: publicLearner(learner), applied, profileUpdatedAt: learner.profileUpdatedAt ?? null });
 });
 
 syncRoutes.get('/learners/:id/snapshot', async (c) => {

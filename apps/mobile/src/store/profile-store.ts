@@ -11,7 +11,9 @@ import {
   type ProfilePatch,
   type ProfileSet,
 } from '../logic/profiles/profile-model';
+import { changedServerFields, hasFields, serverProfileChanges, type ServerLearnerFields } from '../logic/sync/learner-profile';
 import { readJson, writeJson } from '../platform/storage';
+import { notifyProfileEdited } from './profile-edits';
 import { notifyProfileRemoved } from './profile-removal';
 
 /**
@@ -37,8 +39,16 @@ interface Actions {
     role?: CreateProfileInput['role'];
     learnerType?: LearnerType;
   }) => Profile;
-  /** Changes name, level, avatar or who-is-learning; throws on an invalid value, ignores an unknown id. */
+  /**
+   * Changes name, level, avatar or who-is-learning; throws on an invalid value, ignores an unknown id. A change to a
+   * learner's name, level or avatar is announced (`profile-edits`) so the sync store sends it to the server.
+   */
   updateProfile: (id: string, patch: ProfilePatch) => void;
+  /**
+   * Takes the server's name, level and avatar for a learner (inbox pull, restore). Only values that differ and pass
+   * the local rules apply; nothing is announced, so the change is never sent back. Returns whether anything changed.
+   */
+  applyServerProfile: (id: string, server: ServerLearnerFields) => boolean;
   setActive: (id: string) => void;
   remove: (id: string) => void;
   setParentPin: (pinHash: string) => void;
@@ -81,6 +91,24 @@ export const useProfileStore = create<State & Actions>((set, get) => ({
     if (next.profiles === profiles) return;
     set(next);
     persist(next);
+    const before = profiles.find((p) => p.id === id);
+    const after = next.profiles.find((p) => p.id === id);
+    if (!before || !after || after.role !== 'learner') return;
+    // Only what the server keeps (never who-is-learning, the PIN or consent, F-LEARN-001 L2).
+    const changed = changedServerFields(before, after);
+    if (hasFields(changed)) notifyProfileEdited(id, changed);
+  },
+
+  applyServerProfile: (id, server) => {
+    const { profiles, activeId } = get();
+    const current = profiles.find((p) => p.id === id);
+    if (!current) return false;
+    const changes = serverProfileChanges(current, server);
+    if (!hasFields(changes)) return false;
+    const next = { profiles: profiles.map((p) => (p.id === id ? { ...p, ...changes } : p)), activeId };
+    set(next);
+    persist(next);
+    return true;
   },
 
   setActive: (id) => {

@@ -16,6 +16,9 @@ export interface ScopeMarker {
   credential: string;
 }
 
+/** Storage key of the scope marker for one learner (read by the membership and sync stores). */
+export const TRANSFER_SCOPE_KEY = (learnerId: string): string => `transfer-scope:${learnerId}`;
+
 export function classScopeMarker(secret: string): ScopeMarker {
   return { scope: 'class', credential: pinHashFingerprint(secret) };
 }

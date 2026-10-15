@@ -3,16 +3,30 @@ import { create } from 'zustand';
 import { flags } from '../config/flags';
 import { journeyContent, questJamo, stage1QuestIds } from '../content/sync-context';
 import { journeySummaryOf, routeGoalSummaryOf } from '../logic/my-route/summary';
+import {
+  hasFields,
+  mergePending,
+  queueRepair,
+  sendableFields,
+  serverFieldsOf,
+  shouldPullServerProfile,
+  type PendingProfile,
+  type ProfileServerFields,
+  type ServerLearnerFields,
+} from '../logic/sync/learner-profile';
 import { buildActivity, deviceLocalDay } from '../logic/reports/activity';
 import { syncLearner } from '../logic/sync/engine';
 import { mergeSnapshots, rebaseSnapshot } from '../logic/sync/merge';
 import { planRestore, type RestorePlan } from '../logic/sync/restore';
 import { createSyncScheduler } from '../logic/sync/scheduler';
 import { summarize } from '../logic/sync/summarize';
+import { TRANSFER_SCOPE_KEY, deviceScopeOf } from '../logic/transfers/device-scope';
 import { getDeviceId } from '../platform/device';
+import { onInboxRead } from '../platform/inbox-events';
 import { readJson, writeJson } from '../platform/storage';
 import { apiBaseUrl, createSyncApi, type SyncApiClient } from '../platform/sync-api';
 import { usePlanStore } from './plan-store';
+import { onProfileEdited } from './profile-edits';
 import { useProfileStore } from './profile-store';
 import { useProgressStore } from './progress-store';
 import { questOpenFor } from './tier-store';
@@ -33,7 +47,20 @@ export interface LearnerSyncState {
   status: SyncStatus;
   /** Rescue Code shown to a parent (F-RESTORE-001); kept locally, never synced. */
   rescueCode: string | null;
+  /**
+   * A name, level or avatar edit the server has not confirmed (F-PROF-001). Kept across restarts until a sync sends
+   * it; a registration in the same pass already carried the current values, so it clears the edit too.
+   */
+  pendingProfile: PendingProfile | null;
+  /** When the server copy of those fields was last set from this device (sent or taken); older inbox rows are stale. */
+  profileAt: string | null;
 }
+
+/** The server's learner row on the inbox of the learner's own device (null `profileUpdatedAt`: never edited). */
+export type InboxLearnerRow = ServerLearnerFields & { profileUpdatedAt: string | null };
+
+/** Set once every registered learner's current name, level and avatar is queued for the server (one-time repair). */
+export const PROFILE_PUSH_REPAIR_KEY = 'profilePushedV1';
 
 interface State {
   byLearner: Record<string, LearnerSyncState>;
@@ -53,6 +80,13 @@ interface Actions {
   issueRescueCode: (learnerId: string) => Promise<string | null>;
   /** Restore from a Rescue Code on this device. */
   claimRescueCode: (code: string) => Promise<{ ok: true; plan: RestorePlan } | { ok: false; error: 'code_not_found' | 'too_many_attempts' | 'network' | 'invalid' | 'unknown' | 'off' }>;
+  /**
+   * Queue a learner's changed name, level or avatar for the server (F-PROF-001): the values fold into any edit still
+   * waiting, `at` moves to now, and a sync is requested. Offline it simply waits for the next sync.
+   */
+  markProfileDirty: (learnerId: string, fields: ProfileServerFields) => Promise<void>;
+  /** The learner row from an inbox: taken when no local edit waits and it is newer than what this device holds. */
+  applyInboxLearner: (learnerId: string, learner: InboxLearnerRow) => Promise<void>;
   /** Take over a learner the server handed us (rescue claim, re-link approval): profile, snapshot, credentials. */
   adoptServerLearner: (input: AdoptInput) => Promise<RestorePlan>;
 }
@@ -67,11 +101,29 @@ export interface AdoptInput {
 const key = (learnerId: string): string => `sync:${learnerId}`;
 
 function blank(learnerId: string): LearnerSyncState {
-  return { learnerId, secret: null, rev: 0, lastSyncedAt: null, lastError: null, status: apiBaseUrl() ? 'idle' : 'off', rescueCode: null };
+  return { learnerId, secret: null, rev: 0, lastSyncedAt: null, lastError: null, status: apiBaseUrl() ? 'idle' : 'off', rescueCode: null, pendingProfile: null, profileAt: null };
 }
 
-function persistable(s: LearnerSyncState): Pick<LearnerSyncState, 'secret' | 'rev' | 'lastSyncedAt' | 'rescueCode'> {
-  return { secret: s.secret, rev: s.rev, lastSyncedAt: s.lastSyncedAt, rescueCode: s.rescueCode };
+type Persisted = Pick<LearnerSyncState, 'secret' | 'rev' | 'lastSyncedAt' | 'rescueCode' | 'pendingProfile' | 'profileAt'>;
+
+function persistable(s: LearnerSyncState): Persisted {
+  return { secret: s.secret, rev: s.rev, lastSyncedAt: s.lastSyncedAt, rescueCode: s.rescueCode, pendingProfile: s.pendingProfile, profileAt: s.profileAt };
+}
+
+/** Now, or one millisecond past `previous`: every queued edit gets a later `at`, so "unchanged since the send" is exact. */
+function editStamp(previous: string | null | undefined): string {
+  const now = Date.now();
+  const last = previous ? Date.parse(previous) : Number.NaN;
+  return new Date(Number.isNaN(last) || now > last ? now : last + 1).toISOString();
+}
+
+/** The fields of `fields` whose value is not what the server row already holds. */
+function differingFrom(fields: ProfileServerFields, server: ServerLearnerFields): ProfileServerFields {
+  const out: ProfileServerFields = {};
+  if (fields.displayName !== undefined && fields.displayName.trim() !== server.displayName.trim()) out.displayName = fields.displayName;
+  if (fields.ageGroup !== undefined && fields.ageGroup !== server.ageGroup) out.ageGroup = fields.ageGroup;
+  if (fields.avatar !== undefined && fields.avatar !== server.avatar) out.avatar = fields.avatar;
+  return out;
 }
 
 let apiClient: SyncApiClient | null = null;
@@ -127,6 +179,13 @@ export function onSynced(listener: (learnerId: string) => void): () => void {
   };
 }
 
+/**
+ * Local edits seen per learner, counted the moment `profile-store` reports them (before the queued edit is stored,
+ * which waits for the sync record to load). An inbox pull that started before an edit never writes over it.
+ */
+const editCounts = new Map<string, number>();
+const editCountOf = (learnerId: string): number => editCounts.get(learnerId) ?? 0;
+
 export const useSyncStore = create<State & Actions>((set, get) => {
   const update = (learnerId: string, patch: Partial<LearnerSyncState>): LearnerSyncState => {
     const current = get().byLearner[learnerId] ?? blank(learnerId);
@@ -153,6 +212,109 @@ export const useSyncStore = create<State & Actions>((set, get) => {
       return null;
     }
     return update(profile.id, { secret: result.secret, rev: 0, lastError: null });
+  }
+
+  /** Drop the queued edit if it is still the one sent (a newer edit made meanwhile stays for the next pass). */
+  function settlePending(learnerId: string, sentAt: string, patch: Partial<LearnerSyncState> = {}): void {
+    const current = get().byLearner[learnerId]?.pendingProfile;
+    update(learnerId, { ...patch, ...(current?.at === sentAt ? { pendingProfile: null } : {}) });
+  }
+
+  /** Take the server's learner row (inbox pull): only with no local edit waiting, and only a row newer than ours. */
+  function applyServerLearner(learnerId: string, learner: InboxLearnerRow): void {
+    const state = get().byLearner[learnerId];
+    if (!state) return;
+    if (!shouldPullServerProfile({ profileUpdatedAt: learner.profileUpdatedAt, pending: state.pendingProfile, profileAt: state.profileAt })) return;
+    useProfileStore.getState().applyServerProfile(learnerId, learner);
+    update(learnerId, { profileAt: learner.profileUpdatedAt });
+  }
+
+  /**
+   * Send the queued name, level or avatar edit (PATCH, F-PROF-001). A 2xx settles it: `profileAt` takes the edit time
+   * the server stored (its clock caps a device clock that runs ahead), and `applied` false (the server already held a
+   * newer edit) takes the row the server answers with right away. A class tablet (403 `scope_limited`) or a value the
+   * Worker refuses (422) is dropped with no retry; no network or a 5xx keeps it for the next sync. Answers the error
+   * to record, or null.
+   */
+  async function pushProfile(learnerId: string, creds: { deviceId: string; secret: string }, client: SyncApiClient): Promise<string | null> {
+    const pending = get().byLearner[learnerId]?.pendingProfile;
+    if (!pending) return null;
+    let toSend: ProfileServerFields = pending.fields;
+    if (pending.repair && !hasFields(pending.fields) && deviceScopeOf(await readJson<unknown>(TRANSFER_SCOPE_KEY(learnerId)), creds.secret) === 'class') {
+      // A class tablet may not PATCH (403 `scope_limited`), and the one-time check has no edit behind it: it settles
+      // quietly, with no request and no error recorded. The learner's own device sends its values.
+      settlePending(learnerId, pending.at);
+      return null;
+    }
+    if (pending.repair) {
+      // The one-time repair's values have no edit behind them. Only a PATCH sets `profileUpdatedAt` (a join never
+      // does, F-SPACE-001), so a stamped row means another device edited this learner: its values win for every
+      // field not edited here, and only the fields edited here go up.
+      const inbox = await client.getInbox(learnerId, creds);
+      if (inbox.status !== 'ok') return null;
+      // An edit made while the inbox was read: the next pass looks again with it.
+      if (get().byLearner[learnerId]?.pendingProfile?.at !== pending.at) return null;
+      const server = inbox.inbox.learner;
+      if (server && server.profileUpdatedAt !== null) {
+        const local = pending.fields;
+        useProfileStore.getState().applyServerProfile(learnerId, {
+          displayName: local.displayName ?? server.displayName,
+          ageGroup: local.ageGroup ?? server.ageGroup,
+          avatar: local.avatar ?? server.avatar,
+        });
+        if (!hasFields(local)) {
+          settlePending(learnerId, pending.at, { profileAt: server.profileUpdatedAt });
+          return null;
+        }
+      } else {
+        // Only the values that differ from the server go up: a device that never saw the rename sends nothing, so
+        // it never stamps the old name as the newest edit before the device that made the rename starts this build.
+        toSend = { ...(server ? differingFrom(pending.repair, server) : pending.repair), ...pending.fields };
+      }
+    }
+    const fields = sendableFields(toSend);
+    if (!hasFields(fields)) {
+      settlePending(learnerId, pending.at);
+      return null;
+    }
+    const result = await client.updateLearnerProfile(learnerId, creds.secret, creds.deviceId, { ...fields, at: pending.at });
+    if (result.status === 'ok') {
+      if (result.applied) {
+        settlePending(learnerId, pending.at, { profileAt: result.profileUpdatedAt ?? pending.at });
+        return null;
+      }
+      // The server kept a newer edit: show it now rather than wait for the inbox (unless an edit made meanwhile waits).
+      // With no stored time in the answer, the next inbox row counts as newer.
+      settlePending(learnerId, pending.at, { profileAt: result.profileUpdatedAt });
+      if (result.learner && !get().byLearner[learnerId]?.pendingProfile) useProfileStore.getState().applyServerProfile(learnerId, result.learner);
+      return null;
+    }
+    if (result.status === 'scope_limited' || result.status === 'invalid') {
+      // Never retried: the same body would be refused again. Only a fixed code is recorded, never the value sent.
+      settlePending(learnerId, pending.at);
+      return result.status === 'scope_limited' ? 'scope_limited' : 'profile_invalid';
+    }
+    return null;
+  }
+
+  /**
+   * One-time repair (builds before profile edits reached the server kept a rename on the device): queue every
+   * registered learner's current name, level and avatar once, then set the marker. Learners not registered yet send
+   * theirs when they register.
+   */
+  async function repairProfilePushes(): Promise<void> {
+    if (await readJson<boolean>(PROFILE_PUSH_REPAIR_KEY)) return;
+    const profiles = useProfileStore.getState();
+    const learners = profiles.profiles.filter((p) => p.role === 'learner');
+    // Nothing loaded yet (or a read that failed): try again on the next start rather than mark it done.
+    if (!profiles.hydrated || learners.length === 0) return;
+    for (const p of learners) {
+      const state = await get().hydrate(p.id);
+      if (!state.secret) continue;
+      const previous = get().byLearner[p.id]?.pendingProfile ?? state.pendingProfile;
+      update(p.id, { pendingProfile: queueRepair(previous, serverFieldsOf(p), editStamp(previous?.at)) });
+    }
+    await writeJson(PROFILE_PUSH_REPAIR_KEY, true);
   }
 
   /**
@@ -184,6 +346,8 @@ export const useSyncStore = create<State & Actions>((set, get) => {
     const state = await get().hydrate(learnerId);
     if (!client) return update(learnerId, { status: 'off' });
     const profile = useProfileStore.getState().profiles.find((p) => p.id === learnerId);
+    // The edit the registration below would carry: the profile is read now, so this is the edit it holds.
+    const pendingAt = get().byLearner[learnerId]?.pendingProfile?.at ?? null;
     // Never upload what is in memory before the saved snapshot has loaded:
     // a blank record there would replace the server copy (audit UX-01).
     await useProgressStore.getState().hydrate(learnerId);
@@ -194,6 +358,13 @@ export const useSyncStore = create<State & Actions>((set, get) => {
     const registered = await ensureRegistered(profile, state, client);
     if (!registered?.secret) return get().byLearner[learnerId] ?? state;
     const creds = { deviceId: await getDeviceId(), secret: registered.secret };
+    let profileError: string | null = null;
+    if (!state.secret) {
+      // Registered in this pass: the server already has the current name, level and avatar.
+      if (pendingAt !== null) settlePending(learnerId, pendingAt);
+    } else {
+      profileError = await pushProfile(learnerId, creds, client);
+    }
 
     const outcome = await syncLearner({
       learnerId,
@@ -209,10 +380,11 @@ export const useSyncStore = create<State & Actions>((set, get) => {
     if (outcome.status === 'error') return update(learnerId, { status: 'error', lastError: outcome.code });
     if (outcome.status === 'retry-later') {
       applyServerSnapshot(learnerId, local, outcome.snapshot);
-      return update(learnerId, { status: 'idle', rev: outcome.rev, lastError: 'conflict' });
+      // A dropped profile edit is the more lasting news: the conflict retries by itself.
+      return update(learnerId, { status: 'idle', rev: outcome.rev, lastError: profileError ?? 'conflict' });
     }
     if (outcome.merged) applyServerSnapshot(learnerId, local, outcome.snapshot);
-    const synced = update(learnerId, { status: 'synced', rev: outcome.rev, lastSyncedAt: new Date().toISOString(), lastError: null });
+    const synced = update(learnerId, { status: 'synced', rev: outcome.rev, lastSyncedAt: new Date().toISOString(), lastError: profileError });
     // Owner decision 2026-09-20: every learner gets a Rescue Code after the first cloud save.
     if (!synced.rescueCode) await get().issueRescueCode(learnerId);
     for (const listener of syncedListeners) listener(learnerId);
@@ -225,7 +397,10 @@ export const useSyncStore = create<State & Actions>((set, get) => {
     hydrate: async (learnerId) => {
       const existing = get().byLearner[learnerId];
       if (existing) return existing;
-      const saved = await readJson<Pick<LearnerSyncState, 'secret' | 'rev' | 'lastSyncedAt' | 'rescueCode'>>(key(learnerId));
+      const saved = await readJson<Partial<Persisted>>(key(learnerId));
+      // A hydrate that raced this one (an edit queued meanwhile) wins: its record is newer than the stored one.
+      const raced = get().byLearner[learnerId];
+      if (raced) return raced;
       const state: LearnerSyncState = { ...blank(learnerId), ...(saved ?? {}) };
       set((s) => ({ byLearner: { ...s.byLearner, [learnerId]: state } }));
       return state;
@@ -256,10 +431,27 @@ export const useSyncStore = create<State & Actions>((set, get) => {
 
     syncAll: async () => {
       if (!api()) return;
+      await repairProfilePushes().catch(() => undefined);
       scheduler.flush();
       const learners = useProfileStore.getState().profiles.filter((p) => p.role === 'learner');
       // A learner the flush just started is awaited, not synced a second time.
       for (const p of learners) await (inflight.get(p.id) ?? get().syncNow(p.id));
+    },
+
+    markProfileDirty: async (learnerId, fields) => {
+      if (!hasFields(fields)) return;
+      const state = await get().hydrate(learnerId);
+      const previous = get().byLearner[learnerId]?.pendingProfile ?? state.pendingProfile;
+      update(learnerId, { pendingProfile: mergePending(previous, fields, editStamp(previous?.at)) });
+      get().requestSync(learnerId);
+    },
+
+    applyInboxLearner: async (learnerId, learner) => {
+      const edits = editCountOf(learnerId);
+      await get().hydrate(learnerId);
+      // A local edit reported while the record loaded: its queued push is about to land and wins.
+      if (editCountOf(learnerId) !== edits) return;
+      applyServerLearner(learnerId, learner);
     },
 
     adoptCredentials: (learnerId, secret, rev) => {
@@ -293,8 +485,13 @@ export const useSyncStore = create<State & Actions>((set, get) => {
       const learnerId = learner.id;
       // Let a running sync finish first: its fold would read the restored copy as a local write.
       await inflight.get(learnerId);
+      // Loaded first: `update` below would otherwise start from a blank record and lose a queued edit.
+      const syncState = await get().hydrate(learnerId);
       const profiles = useProfileStore.getState();
-      const existingProfile = profiles.profiles.find((p) => p.id === learnerId) ?? null;
+      // The server row is current (profile edits reach it, F-PROF-001): it replaces this device's copy unless an edit
+      // made here still waits to go up, which keeps its values and is sent on the next sync.
+      if (!syncState.pendingProfile && profiles.profiles.some((p) => p.id === learnerId)) profiles.applyServerProfile(learnerId, learner);
+      const existingProfile = useProfileStore.getState().profiles.find((p) => p.id === learnerId) ?? null;
       const profile: Profile = existingProfile ?? {
         id: learnerId,
         displayName: learner.displayName,
@@ -320,7 +517,7 @@ export const useSyncStore = create<State & Actions>((set, get) => {
         const snapshot = localSnapshot ?? progress.ensure(learnerId);
         plan = { action: existingProfile ? 'merge' : 'create', profile, snapshot: mergeSnapshots(snapshot, snapshot, { now }), added: { cards: 0, quests: 0 } };
       }
-      if (!existingProfile) profiles.adoptProfile(profile);
+      if (!existingProfile) useProfileStore.getState().adoptProfile(profile);
       progress.replaceSnapshot(learnerId, plan.snapshot);
       update(learnerId, { secret, rev: server?.rev ?? 0, status: 'idle', lastError: null, ...(rescueCode ? { rescueCode } : {}) });
       // Merging may have added local-only progress; push it back.
@@ -328,4 +525,14 @@ export const useSyncStore = create<State & Actions>((set, get) => {
       return plan;
     },
   };
+});
+
+// Every learner name, level or avatar edit on this device is queued for the server (F-PROF-001).
+onProfileEdited((learnerId, fields) => {
+  editCounts.set(learnerId, editCountOf(learnerId) + 1);
+  void useSyncStore.getState().markProfileDirty(learnerId, fields);
+});
+// The learner row an inbox carries: a newer edit made on another device comes down (F-PROF-001 profile pull).
+onInboxRead((learnerId, inbox) => {
+  if (inbox.learner) void useSyncStore.getState().applyInboxLearner(learnerId, inbox.learner);
 });

@@ -6,6 +6,7 @@ vi.mock('../../platform/storage', () => ({
 }));
 
 import { readJson, writeJson } from '../../platform/storage';
+import { onProfileEdited } from '../profile-edits';
 import { onProfileRemoved } from '../profile-removal';
 import { activeProfileSelector, useProfileStore } from '../profile-store';
 
@@ -158,3 +159,45 @@ describe('profile-store', () => {
     });
   });
 });
+
+describe('profile-store server fields (F-PROF-001)', () => {
+  beforeEach(() => {
+    useProfileStore.setState({ profiles: [], activeId: null, hydrated: false });
+  });
+
+  it('updateProfile announces only the changed name, level or avatar of a learner', () => {
+    const p = useProfileStore.getState().createProfile(input);
+    const seen: unknown[] = [];
+    const off = onProfileEdited((id, fields) => seen.push([id, fields]));
+    useProfileStore.getState().updateProfile(p.id, { displayName: 'Sungjoo', avatar: 'hoya-blue' });
+    useProfileStore.getState().updateProfile(p.id, { learnerType: 'self' });
+    useProfileStore.getState().updateProfile(p.id, { ageGroup: '10-11' });
+    off();
+    expect(seen).toEqual([
+      [p.id, { displayName: 'Sungjoo' }],
+      [p.id, { ageGroup: '10-11' }],
+    ]);
+  });
+
+  it('a grown-up profile edit is not announced', () => {
+    const parent = useProfileStore.getState().createProfile({ ...input, role: 'parent' });
+    const seen: unknown[] = [];
+    const off = onProfileEdited((id) => seen.push(id));
+    useProfileStore.getState().updateProfile(parent.id, { displayName: 'Mom' });
+    off();
+    expect(seen).toEqual([]);
+  });
+
+  it('applyServerProfile takes differing valid values without announcing them', () => {
+    const p = useProfileStore.getState().createProfile(input);
+    const seen: unknown[] = [];
+    const off = onProfileEdited((id) => seen.push(id));
+    expect(useProfileStore.getState().applyServerProfile(p.id, { displayName: 'Sungjoo', ageGroup: 'adult', avatar: 'not-an-avatar' })).toBe(true);
+    expect(useProfileStore.getState().profiles[0]).toMatchObject({ displayName: 'Sungjoo', ageGroup: '8-9', avatar: 'hoya-blue' });
+    expect(useProfileStore.getState().applyServerProfile(p.id, { displayName: 'Sungjoo', ageGroup: '8-9', avatar: 'hoya-blue' })).toBe(false);
+    expect(useProfileStore.getState().applyServerProfile('profile:none', { displayName: 'X', ageGroup: '8-9', avatar: 'hoya-blue' })).toBe(false);
+    off();
+    expect(seen).toEqual([]);
+  });
+});
+
