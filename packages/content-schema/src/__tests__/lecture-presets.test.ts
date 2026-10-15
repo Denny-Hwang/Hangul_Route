@@ -21,7 +21,10 @@ import {
   presetLength,
   presetMinutesOf,
   presetOrder,
+  learnerPosition,
+  questIdsOfBlocks,
   resolvePreset,
+  storyIdsOfBlocks,
   warmUpChars,
   wordReviewCardCap,
   type Catalog,
@@ -120,9 +123,24 @@ describe('every preset at every length against CATALOG', () => {
     ['by-stage', 10, 'by-stage', 10, 'stage1-letters-q1 · stage1-letters-q2', null],
     ['by-stage', 20, 'by-stage', 19, 'stage1-letters-q1 · stage1-letters-q2 · stage1-letters-q3 · stage1-life-q1', null],
     ['by-stage', 30, 'by-stage', 30, 'stage1-letters-q1 · stage1-letters-q2 · stage1-letters-q3 · stage1-life-q1 · stage1-life-q2 · stage1-life-q3 · air-write 3', null],
-    ['story-time', 10, 'story-time', 4, 'story:sejong-new-letters', null],
-    ['story-time', 20, 'story-time', 4, 'story:sejong-new-letters+checks', null],
-    ['story-time', 30, 'story-time', 13, 'story:sejong-new-letters+checks · quiz 4 · copy-on-paper 5', null],
+    // Section 4.2 T: ready stories by order, filled to the length (4 to 6 minutes each); checks from 20 min.
+    ['story-time', 10, 'story-time', 9, 'story:sejong-new-letters · story:shapes-of-hangeul', null],
+    [
+      'story-time',
+      20,
+      'story-time',
+      20,
+      'story:sejong-new-letters+checks · story:shapes-of-hangeul+checks · story:hangeul-day+checks · story:tripitaka-koreana+checks · copy-on-paper 2',
+      null,
+    ],
+    [
+      'story-time',
+      30,
+      'story-time',
+      30,
+      'story:sejong-new-letters+checks · story:shapes-of-hangeul+checks · story:hangeul-day+checks · story:tripitaka-koreana+checks · story:sillok-royal-historians+checks · story:kim-hongdo-genre-paintings+checks · copy-on-paper 3',
+      null,
+    ],
     ['word-review', 10, 'warm-up', 10, 'revisit ㄱㄴㄷㅏㅓㅗ · air-write 3', 'warm-up'],
     ['word-review', 20, 'warm-up', 10, 'revisit ㄱㄴㄷㅏㅓㅗ · air-write 3', 'warm-up'],
     ['warm-up', 10, 'warm-up', 10, 'revisit ㄱㄴㄷㅏㅓㅗ · air-write 3', null],
@@ -150,7 +168,13 @@ describe('every preset at every length against CATALOG', () => {
       'stage3-life-q2 · stage3-life-q3 · stage3-rites-q1 · stage3-rites-q2 · stage3-rites-q3 · stage3-nature-q1',
     ],
     ['next-lesson', 20, { catalog: CATALOG, position: { questId: 'quest:stage1-life-q3' } }, 20, 'stage1-life-q3 · stage1-rites-q1 · stage1-rites-q2 · stage1-rites-q3 · air-write 2'],
-    ['story-time', 20, { catalog: CATALOG, shown: { questIds: [], storyIds: ['story:sejong-new-letters'] } }, 5, 'story:shapes-of-hangeul+checks'],
+    [
+      'story-time',
+      20,
+      { catalog: CATALOG, shown: { questIds: [], storyIds: ['story:sejong-new-letters'] } },
+      20,
+      'story:shapes-of-hangeul+checks · story:hangeul-day+checks · story:tripitaka-koreana+checks · story:sillok-royal-historians+checks · copy-on-paper 2',
+    ],
     // W: 10 min = ceil(10 cards / 2) + 5 rounds; 20 min = ceil(20 / 2) + 10 (section 4.2 W, rule 12).
     ['word-review', 10, { catalog: CATALOG, recentWords: { questIds: ['quest:stage2-life-q1'], vocabIds: ['vocab:apple'] } }, 10, 'word-review 1q 1w 5r'],
     ['word-review', 20, { catalog: CATALOG, recentWords: { questIds: ['quest:stage2-life-q1'], vocabIds: [] } }, 20, 'word-review 1q 0w 10r'],
@@ -222,22 +246,34 @@ describe('every preset at every length against CATALOG', () => {
 });
 
 describe('titles', () => {
-  it('each preset names its title key; the story and the stage travel as ids and numbers', () => {
+  it('each preset names its title key; the stage travels as a number; Story time is never a story title', () => {
     expect(resolvePreset('hangul-week-1', 20, empty).titleKey).toBe('zero.short');
     expect(resolvePreset('warm-up', 10, empty).titleKey).toBe('warmup.short');
     expect(resolvePreset('next-lesson', 20, { catalog: CATALOG, position: { questId: 'quest:stage2-life-q1' } }).titleKey).toBe('next.title');
     const story = resolvePreset('story-time', 20, empty);
-    expect([story.titleKey, story.storyId]).toEqual(['story', 'story:sejong-new-letters']);
+    expect(story.titleKey).toBe('story.title');
+    expect(story).not.toHaveProperty('storyId');
     const words = resolvePreset('word-review', 10, { catalog: CATALOG, recentWords: { questIds: [], vocabIds: ['vocab:apple'] } });
     expect(words.titleKey).toBe('words.title');
   });
 
-  it('N1: the plan title when it is a valid deck title, else the preset name', () => {
+  it('N1: the plan title only when the caller title check (titleProblem) accepts it and it is a valid deck title, else the preset name', () => {
     const blocks: LectureBlock[] = [{ kind: 'quest', id: 'quest:stage1-life-q1' }];
-    const named = resolvePreset('next-lesson', 20, { catalog: CATALOG, plan: { title: '  Week 3: food  ', blocks } });
+    const ok = (): boolean => true;
+    const named = resolvePreset('next-lesson', 20, { catalog: CATALOG, plan: { title: '  Week 3: food  ', blocks }, planTitleOk: ok });
     expect([named.titleKey, named.planTitle]).toEqual(['plan', 'Week 3: food']);
+    // No check given: never the plan title.
+    const unchecked = resolvePreset('next-lesson', 20, { catalog: CATALOG, plan: { title: 'Week 3: food', blocks } });
+    expect([unchecked.titleKey, unchecked.planTitle]).toEqual(['next.title', undefined]);
+    // A roster name in the plan title: the console's titleProblem rejects it, so the preset name.
+    const roster = ['Minho', 'Ji-woo'];
+    const titleOk = (t: string): boolean => !roster.some((n) => t.toLowerCase().includes(n.toLowerCase()));
+    for (const title of ["Minho's week", 'Ji-woo review']) {
+      const r = resolvePreset('next-lesson', 20, { catalog: CATALOG, plan: { title, blocks }, planTitleOk: titleOk });
+      expect([r.titleKey, r.planTitle]).toEqual(['next.title', undefined]);
+    }
     for (const title of ['Week 🐯', '', 'x'.repeat(61), '第三週']) {
-      const r = resolvePreset('next-lesson', 20, { catalog: CATALOG, plan: { title, blocks } });
+      const r = resolvePreset('next-lesson', 20, { catalog: CATALOG, plan: { title, blocks }, planTitleOk: ok });
       expect([r.titleKey, r.planTitle]).toEqual(['next.title', undefined]);
     }
   });
@@ -383,21 +419,77 @@ describe('by-stage', () => {
 });
 
 describe('story-time', () => {
-  it('skips the stories shown here and stories more than one stage above the position', () => {
-    const positioned = resolvePreset('story-time', 20, {
-      catalog: CATALOG,
-      position: { questId: 'quest:stage1-life-q1' },
-      shown: { questIds: [], storyIds: CATALOG.stories.filter((s) => s.recommendedStage <= 1).map((s) => s.id) },
-    });
-    expect(positioned.storyId).toBe('story:sillok-mountain-archives');
-    const higher = CATALOG.stories.filter((s) => s.recommendedStage <= 2).map((s) => s.id);
-    const restart = resolvePreset('story-time', 20, { catalog: CATALOG, position: { questId: 'quest:stage1-life-q1' }, shown: { questIds: [], storyIds: higher } });
-    expect([restart.storyId, restart.fallback]).toEqual(['story:sejong-new-letters', 'restart']);
+  const ready = CATALOG.stories.filter((st) => st.status === 'ready').sort((x, y) => x.order - y.order);
+  const storiesOf = (r: ResolvedPreset): string[] => r.blocks.flatMap((bl) => (bl.kind === 'story' ? [bl.storyId] : []));
+
+  it('the catalogue has ready stories enough to fill 30 minutes', () => {
+    expect(ready.length).toBeGreaterThanOrEqual(8);
   });
 
-  it('every story shown: the first story again, with the restart line', () => {
-    const r = resolvePreset('story-time', 10, { catalog: CATALOG, shown: { questIds: [], storyIds: CATALOG.stories.map((s) => s.id) } });
-    expect([outline(r), r.fallback]).toEqual(['story:sejong-new-letters', 'restart']);
+  // Section 14: at 10 / 20 / 30, minutes no more than T and no less than T - 5, with 0, 1 and all stories in Recent.
+  const recents: [string, string[]][] = [
+    ['nothing shown', []],
+    ['one story shown', [ready[0]?.id as string]],
+    ['every story shown', ready.map((st) => st.id)],
+  ];
+  for (const [label, storyIds] of recents) {
+    it.each([10, 20, 30])(`${label}: %i min fills to the length, each story once, copy-on-paper`, (minutes) => {
+      const r = resolvePreset('story-time', minutes, { catalog: CATALOG, shown: { questIds: [], storyIds } });
+      expect(minutesOf(r)).toBeLessThanOrEqual(minutes);
+      expect(minutesOf(r)).toBeGreaterThanOrEqual(minutes - 5);
+      const ids = storiesOf(r);
+      expect(new Set(ids).size).toBe(ids.length);
+      expect(r.blocks.some((bl) => bl.kind === 'activity' && bl.preset === 'air-write')).toBe(false);
+      expect(r.blocks.every((bl) => bl.kind !== 'story' || bl.checks === minutes >= 20)).toBe(true);
+      expect(r.fallback).toBe(storyIds.length === ready.length ? 'restart' : null);
+      expect(r.titleKey).toBe('story.title');
+    });
+  }
+
+  it('the stories not shown come first, then the shown ones by order', () => {
+    const shown = ready.slice(0, 22).map((st) => st.id);
+    const r = resolvePreset('story-time', 20, { catalog: CATALOG, shown: { questIds: [], storyIds: shown } });
+    expect(storiesOf(r).slice(0, 3)).toEqual([ready[22]?.id, ready[23]?.id, ready[0]?.id]);
+    expect(r.fallback).toBeNull();
+  });
+
+  it('every story shown: from the first story again, with the restart line', () => {
+    const r = resolvePreset('story-time', 10, { catalog: CATALOG, shown: { questIds: [], storyIds: CATALOG.stories.map((st) => st.id) } });
+    expect([outline(r), r.fallback]).toEqual(['story:sejong-new-letters · story:shapes-of-hangeul', 'restart']);
+  });
+
+  it('the console (a class position with stage S) never takes a story more than one stage above S; the app position has no bound', () => {
+    const position = classPosition([{ journey: journey('stage1', [['stage1', 3, 0]]) }], CATALOG);
+    expect(position?.stage).toBe('stage1');
+    const shown = ready.filter((st) => st.recommendedStage <= 1).map((st) => st.id);
+    const console = resolvePreset('story-time', 30, { catalog: CATALOG, position, shown: { questIds: [], storyIds: shown } });
+    const levels = storiesOf(console).map((id) => ready.find((st) => st.id === id)?.recommendedStage);
+    expect(levels.every((n) => n !== undefined && n <= 2)).toBe(true);
+    expect(storiesOf(console)[0]).toBe('story:sillok-mountain-archives');
+    // A class past the end of Stage 1: the quest is in Stage 2, the bound stays Stage 1 + 1.
+    const past = classPosition([{ journey: journey('stage1', [['stage1', 15, 0]]) }], CATALOG);
+    expect(past).toEqual({ questId: 'quest:stage2-letters-q1', stage: 'stage1' });
+    const all = resolvePreset('story-time', 30, { catalog: CATALOG, position: past, shown: { questIds: [], storyIds: ready.filter((st) => st.recommendedStage <= 2).map((st) => st.id) } });
+    expect(all.fallback).toBe('restart');
+    expect(storiesOf(all).every((id) => (ready.find((st) => st.id === id)?.recommendedStage ?? 9) <= 2)).toBe(true);
+    // The app's position (N3) carries no stage: every ready story is a candidate.
+    const app = resolvePreset('story-time', 10, { catalog: CATALOG, position: { questId: 'quest:stage1-life-q1' }, shown: { questIds: [], storyIds: ready.slice(0, 23).map((st) => st.id) } });
+    expect(storiesOf(app)[0]).toBe('story:joseon-records-today');
+  });
+
+  // Section 14: every ready story in every UI locale builds a deck the schema accepts, titled "Story time" (section 12.2 presets.story.title).
+  const STORY_TITLE = { en: 'Story time', es: 'Hora del cuento', ko: '이야기 시간' } as const;
+  it.each(Object.entries(STORY_TITLE))('every ready story, %s', (uiLocale, title) => {
+    for (const [i, st] of ready.entries()) {
+      for (const minutes of [10, 20, 30]) {
+        const shownBefore = ready.slice(0, i).map((x) => x.id);
+        const r = resolvePreset('story-time', minutes, { catalog: CATALOG, shown: { questIds: [], storyIds: shownBefore } });
+        expect(storiesOf(r)[0]).toBe(st.id);
+        const deck = presetDeck(r, { id: 'lecture:story001', title, createdAt: '2026-10-15T09:00:00.000Z', seed: 3, options: { uiLocale: uiLocale as 'en' | 'es' | 'ko' }, source: 'quick' });
+        expect(LectureDeckSchema.safeParse(deck).success).toBe(true);
+        expect(deck.v).toBe(1);
+      }
+    }
   });
 });
 
@@ -461,6 +553,72 @@ describe('warm-up', () => {
   });
 });
 
+describe('warm-up from a Recent of the Stage 1 rites quests', () => {
+  it('keeps only plain jamo (no ㄴ/final entries), tops up to at least 4 and gives a deck the schema accepts', () => {
+    const rites = CATALOG.quests.filter((q) => q.id.startsWith('quest:stage1-rites-'));
+    const teaches = rites.flatMap((q) => q.teaches);
+    expect(teaches.some((t) => t.includes('/'))).toBe(true);
+    const r = resolvePreset('warm-up', 10, { catalog: CATALOG, revisitChars: teaches });
+    const revisit = r.blocks[0];
+    if (revisit?.kind !== 'revisit') throw new Error('expected a revisit block');
+    expect(revisit.chars.every((c) => !c.includes('/'))).toBe(true);
+    expect(revisit.chars.length).toBeGreaterThanOrEqual(WARM_UP_MIN_LETTERS);
+    expect(new Set(revisit.chars).size).toBe(revisit.chars.length);
+    const deck = presetDeck(r, { id: 'lecture:warm0001', title: 'Quick warm-up', createdAt: '2026-10-15T09:00:00.000Z', seed: 1, source: 'quick' });
+    expect(LectureDeckSchema.safeParse(deck).success).toBe(true);
+  });
+});
+
+describe('questIdsOfBlocks (section 4.3)', () => {
+  it('a quest gives its id, an episode its cell quests in cell order, every other kind none; de-duplicated, first kept', () => {
+    const cell = CATALOG.cells.find((c) => c.episodeId === 'episode:stage1-letters');
+    const blocks: LectureBlock[] = [
+      { kind: 'quest', id: 'quest:stage1-letters-q2' },
+      { kind: 'episode', id: 'episode:stage1-letters' },
+      { kind: 'episode', id: 'episode:nope' },
+      { kind: 'story', storyId: 'story:sun-and-moon', checks: true },
+      { kind: 'revisit', chars: ['ㄱ'] },
+      { kind: 'jamo-set', jamoIds: ['jamo:giyeok'] },
+      { kind: 'cards', cardIds: ['card:book'] },
+      { kind: 'vocab', topicId: 'vocab-topic:food' },
+      { kind: 'word-review', questIds: ['quest:stage2-life-q1'], vocabIds: [], rounds: 5 },
+      { kind: 'activity', preset: 'air-write', minutes: 3 },
+      { kind: 'quiz', from: 'previous', rounds: 4 },
+      { kind: 'class-code', code: 'ABC234' },
+      { kind: 'quest', id: 'quest:stage2-life-q1' },
+      { kind: 'story', storyId: 'story:sun-and-moon', checks: false },
+    ];
+    expect(questIdsOfBlocks(blocks, CATALOG)).toEqual(['quest:stage1-letters-q2', ...(cell?.questIds ?? []).filter((id) => id !== 'quest:stage1-letters-q2'), 'quest:stage2-life-q1']);
+    expect(cell?.questIds[0]).toBe('quest:stage1-letters-q1');
+    expect(storyIdsOfBlocks(blocks)).toEqual(['story:sun-and-moon']);
+    expect(questIdsOfBlocks([], CATALOG)).toEqual([]);
+  });
+
+  it('feeds N4 the same way a stored episode deck reads', () => {
+    const shown = { questIds: questIdsOfBlocks([{ kind: 'episode', id: 'episode:stage1-letters' }], CATALOG), storyIds: [] };
+    expect(outline(resolvePreset('next-lesson', 10, { catalog: CATALOG, shown }))).toBe('stage1-life-q1 · stage1-life-q2 · air-write 2');
+  });
+});
+
+describe('learnerPosition (N3)', () => {
+  it('the routeNext quest when it is a route quest', () => {
+    expect(learnerPosition('quest:stage2-life-q1', [], CATALOG)).toEqual({ questId: 'quest:stage2-life-q1' });
+  });
+
+  it('a routeNext quest off the route starts after the furthest done route quest, by route order', () => {
+    const done = ['quest:stage1-letters-q1', 'quest:stage1-life-q2', 'quest:stage1-letters-q2', 'quest:story-sun-and-moon-listen'];
+    const position = learnerPosition('quest:story-sun-and-moon-listen', done, CATALOG);
+    expect(position).toEqual({ questId: 'quest:stage1-life-q3' });
+    expect(outline(resolvePreset('next-lesson', 10, { catalog: CATALOG, position }))).toBe('stage1-life-q3 · stage1-rites-q1 · air-write 2');
+  });
+
+  it('none done: the first route quest; no routeNext quest reads the same; the last route quest done: null (the fallback)', () => {
+    expect(learnerPosition('quest:homework-x', [], CATALOG)).toEqual({ questId: 'quest:stage1-letters-q1' });
+    expect(learnerPosition(null, [], CATALOG)).toEqual({ questId: 'quest:stage1-letters-q1' });
+    expect(learnerPosition(null, ['quest:stage7-crafts-q3'], CATALOG)).toBeNull();
+  });
+});
+
 describe('fallbacks on a catalogue missing what a preset needs', () => {
   const withCells = (ready: (stage: StageKey) => boolean): Catalog => ({
     ...CATALOG,
@@ -476,17 +634,21 @@ describe('fallbacks on a catalogue missing what a preset needs', () => {
     expect(resolvePreset('by-stage', 10, empty).stageNumber).toBe(1);
   });
 
-  it('no ready story: Hangul week 1; no story near the level: any ready story', () => {
+  it('no ready story: Hangul week 1; no story near the class level: any ready story', () => {
     const none = resolvePreset('story-time', 20, { catalog: { ...CATALOG, stories: CATALOG.stories.map((s) => ({ ...s, status: 'draft' as const })) } });
     expect([none.preset, none.fallback]).toEqual(['hangul-week-1', 'zero']);
     const high = { ...CATALOG, stories: CATALOG.stories.filter((s) => s.recommendedStage === 6) };
-    const far = resolvePreset('story-time', 20, { catalog: high, position: { questId: 'quest:stage1-life-q1' } });
-    expect([far.storyId, far.fallback]).toEqual(['story:joseon-records-today', null]);
+    const far = resolvePreset('story-time', 10, { catalog: high, position: { questId: 'quest:stage1-life-q1', stage: 'stage1' } });
+    expect([outline(far), far.fallback]).toEqual(['story:joseon-records-today · quiz 4 · copy-on-paper 2', null]);
+    // A stage that is not a stage key reads as no bound.
+    const odd = resolvePreset('story-time', 10, { catalog: high, position: { questId: 'quest:stage1-life-q1', stage: 'stage9' as StageKey } });
+    expect(outline(odd)).toBe('story:joseon-records-today · quiz 4 · copy-on-paper 2');
   });
 
-  it('no Hangul week 1 cell: the warm-up blocks', () => {
+  it('no Hangul week 1 cell: the warm-up, named as the warm-up', () => {
     const noCell = { ...CATALOG, cells: CATALOG.cells.map((c) => (c.episodeId === 'episode:stage1-letters' ? { ...c, questIds: [] } : c)) };
-    expect(outline(resolvePreset('hangul-week-1', 20, { catalog: noCell }))).toBe('revisit ㄱㄴㄷㅏㅓㅗ · air-write 3');
+    const r = resolvePreset('hangul-week-1', 20, { catalog: noCell });
+    expect([r.preset, r.titleKey, outline(r)]).toEqual(['warm-up', 'warmup.short', 'revisit ㄱㄴㄷㅏㅓㅗ · air-write 3']);
     const gone = { ...CATALOG, cells: CATALOG.cells.filter((c) => c.episodeId !== 'episode:stage1-letters') };
     expect(outline(resolvePreset('hangul-week-1', 20, { catalog: gone }))).toBe('revisit ㄱㄴㄷㅏㅓㅗ · air-write 3');
   });
@@ -635,6 +797,8 @@ describe('no output contains a roster string', () => {
       ];
       const ctx: PresetContext = {
         catalog: CATALOG,
+        // A name in the plan title: without the console title check it never becomes the deck title.
+        plan: pick(2) === 0 ? { title: `${name} week`, blocks: [{ kind: 'quest', id: realQuest }] } : null,
         position: pick(3) === 0 ? { questId: name } : classPosition(rows, CATALOG),
         shown: { questIds: [name, realQuest], storyIds: [name, `story:${name}`] },
         // Word ids pass by grammar (a roll-up's ids, never a name field), so a name is offered raw here.

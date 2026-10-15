@@ -180,20 +180,18 @@ export function blockMinutes(block: LectureBlock, stories: readonly LectureCatal
       return stories.find((s) => s.id === block.storyId)?.minutes ?? null;
     case 'vocab':
       return vocabMinutes(block.topicId);
-    case 'jamo-set':
-      return block.jamoIds.length;
-    case 'cards':
-      return block.cardIds.length;
-    case 'revisit':
-      return block.chars.length + Math.min(4, block.chars.length);
     case 'quiz':
       return block.rounds;
     case 'activity':
       return block.minutes;
     case 'class-code':
       return 0;
+    case 'jamo-set':
+    case 'cards':
+    case 'revisit':
     case 'word-review':
-      // v2 (AMENDMENTS-LECTURE-V2 4.4): the console composes none until LV-4; same estimate as the presets.
+      // Rule 12 as amended (AMENDMENTS-LECTURE-V2 4.4): ceil(slides / 2) for the non-quiz slides,
+      // 1 per quiz slide, from the block size, the same count the presets use.
       return presetBlockMinutes(block, CATALOG);
   }
 }

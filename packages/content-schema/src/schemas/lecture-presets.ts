@@ -22,7 +22,7 @@ import { VocabIdSchema } from './vocab';
 
 /**
  * Lecture presets (AMENDMENTS-LECTURE-V2 section 4): six ready-made lessons a
- * first-time presenter starts in one tap. A preset is a rule that turns what is
+ * first-time presenter starts without picking items. A preset is a rule that turns what is
  * known (a plan, a Learning Route position, what this screen showed before, the
  * bundled catalogue) into ordinary deck blocks. One pure resolver for the
  * console, the presenter and the learner app: it reads only its arguments and
@@ -33,7 +33,9 @@ import { VocabIdSchema } from './vocab';
  * compatibility jamo and two counts per learner (`classPosition`), every id is
  * checked against its grammar before it reaches a block, and a preset never adds
  * a `class-code` block (LV-D7). Deck titles are the caller's localized preset
- * names (`titleKey`), the plan's own title (N1) or the story's own title (T).
+ * names (`titleKey`) or, for N1 only, the plan's own title when the caller's
+ * `planTitleOk` (the console's `titleProblem`) accepts it. Story time never uses
+ * a story's own title.
  */
 
 export type PresetMinutes = 10 | 20 | 30;
@@ -80,9 +82,9 @@ export type PresetTitleKey =
   | 'words.title'
   /** `warmup.short`: "Quick warm-up". */
   | 'warmup.short'
-  /** The story's own (content) title, `storyId`. */
-  | 'story'
-  /** The plan's own title, `planTitle` (N1, when it is a valid deck title). */
+  /** `story.title`: "Story time" (never a story's own title: those are English only and can pass 60 characters). */
+  | 'story.title'
+  /** The plan's own title, `planTitle` (N1, only when `planTitleOk` accepts it). */
   | 'plan';
 
 /** Which `fallback.*` line the preview shows under a preset that could not build what it names. */
@@ -93,8 +95,18 @@ export interface PresetContext {
   catalog: Catalog;
   /** N1, W1 (console only): this week's plan outline (`planOutline`). */
   plan?: { title: string; blocks: readonly LectureBlock[] } | null;
-  /** The quest to start at: N2 `classPosition` (console), N3 `routeNext` (app). */
-  position?: { questId: string } | null;
+  /**
+   * N1 (console only): whether the plan title may be the deck title. The console
+   * passes `(t) => titleProblem(t, roster) === null`, which rejects roster names
+   * and banned words. Absent, the plan title is never used: the deck takes the
+   * preset name, so a name in a plan title cannot reach the link (TD8).
+   */
+  planTitleOk?: (title: string) => boolean;
+  /**
+   * The quest to start at: N2 `classPosition` (console, with the class's stage S,
+   * which also bounds Story time's levels), N3 `learnerPosition` (app).
+   */
+  position?: { questId: string; stage?: StageKey } | null;
   /** What this screen showed in the last 60 days (presenter Recent): N4, S, T. */
   shown?: { questIds: readonly string[]; storyIds: readonly string[] } | null;
   /** W1-W3: quest ids of recent lessons (newest first) and extra word ids. */
@@ -114,8 +126,6 @@ export interface ResolvedPreset {
   titleKey: PresetTitleKey;
   /** `titleKey: 'stage.chip'`. */
   stageNumber?: number;
-  /** `titleKey: 'story'`. */
-  storyId?: string;
   /** `titleKey: 'plan'`. */
   planTitle?: string;
   fallback: PresetFallback | null;
@@ -184,7 +194,7 @@ const REVIEW_QUIZ_MIN_LEFT = 5;
 const ACTIVITY_MIN_LEFT = 2;
 const ACTIVITY_MAX_MINUTES = 5;
 
-/** Whether every taken content block is a Stage 1 quest or episode (then the class writes in the air). */
+/** Whether every taken content block is a Stage 1 quest or episode (then the class writes in the air); stories are not. */
 function allStage1(blocks: readonly LectureBlock[], catalog: Catalog): boolean {
   return blocks.every((b) => {
     if (b.kind === 'quest') return catalog.quests.find((q) => q.id === b.id)?.stage === 'stage1';
@@ -254,12 +264,14 @@ const questIdsOf = (values: readonly string[] | undefined): string[] =>
 
 type Built = Omit<ResolvedPreset, 'minutes'>;
 
-function hangulWeek1(minutes: PresetMinutes, catalog: Catalog, fallback: PresetFallback | null): Built {
+function hangulWeek1(minutes: PresetMinutes, ctx: PresetContext, fallback: PresetFallback | null): Built {
+  const { catalog } = ctx;
   const cell = catalog.cells.find((c) => c.episodeId === 'episode:stage1-letters');
   const known = new Set(catalog.quests.map((q) => q.id));
   const candidates: LectureBlock[] = (cell?.questIds ?? []).filter((id) => known.has(id)).map((id) => ({ kind: 'quest', id }));
-  const blocks = candidates.length > 0 ? fillToLength(candidates, minutes, true, catalog) : warmUpBlocks([]);
-  return { preset: 'hangul-week-1', blocks, titleKey: 'zero.short', fallback };
+  // Unreachable with the shipped catalogue (the cell is ready): the warm-up, named as the warm-up.
+  if (candidates.length === 0) return warmUp(ctx, fallback);
+  return { preset: 'hangul-week-1', blocks: fillToLength(candidates, minutes, true, catalog), titleKey: 'zero.short', fallback };
 }
 
 /** A warm-up holds at least this many different letters, so its sound quiz always has 4 questions. */
@@ -298,7 +310,7 @@ function nextLesson(minutes: PresetMinutes, ctx: PresetContext): Built {
   if (ctx.plan && planBlocks.length > 0) {
     const blocks = fillToLength(planBlocks, minutes, true, catalog);
     const title = ctx.plan.title.trim();
-    if (isDeckTitle(title)) return { preset: 'next-lesson', blocks, titleKey: 'plan', planTitle: title, fallback: null };
+    if (isDeckTitle(title) && ctx.planTitleOk?.(title) === true) return { preset: 'next-lesson', blocks, titleKey: 'plan', planTitle: title, fallback: null };
     return { preset: 'next-lesson', blocks, titleKey: 'next.title', fallback: null };
   }
 
@@ -314,16 +326,19 @@ function nextLesson(minutes: PresetMinutes, ctx: PresetContext): Built {
     if (furthest >= 0) from = furthest + 1;
   }
   const candidates = from >= 0 ? route.slice(from).map((q) => questBlock(q, catalog, false)) : [];
-  if (candidates.length === 0) return hangulWeek1(minutes, catalog, 'zero');
+  if (candidates.length === 0) return hangulWeek1(minutes, ctx, 'zero');
   return { preset: 'next-lesson', blocks: fillToLength(candidates, minutes, true, catalog), titleKey: 'next.title', fallback: null };
 }
 
 /** S: the chosen stage from the first lesson this context has not had, through that stage only. */
 function byStage(minutes: PresetMinutes, ctx: PresetContext): Built {
   const { catalog } = ctx;
+  // Every surface draws only the chips of stages with a ready cell, so a missing or
+  // unknown stage, or a stage with no route quest, is not reachable from a chip:
+  // Stage 1, or Hangul week 1, keeps the lesson from being empty.
   const stage = ctx.stage ?? 'stage1';
   const ofStage = routeQuests(catalog).filter((q) => q.stage === stage);
-  if (ofStage.length === 0) return hangulWeek1(minutes, catalog, 'zero');
+  if (ofStage.length === 0) return hangulWeek1(minutes, ctx, 'zero');
   const shown = new Set(questIdsOf(ctx.shown?.questIds));
   let from = ctx.position ? ofStage.findIndex((q) => q.id === ctx.position?.questId) : -1;
   if (from < 0) from = ofStage.findIndex((q) => !shown.has(q.id));
@@ -338,24 +353,31 @@ function byStage(minutes: PresetMinutes, ctx: PresetContext): Built {
   };
 }
 
-/** T: the next ready story not shown here, at its lowest level; within one stage of the position's stage when there is one. */
+/**
+ * T: ready stories by `order`, first the ones this context has not shown, then the
+ * shown ones; a story is never twice in one deck. The console (a position with the
+ * class's stage S) never takes a story recommended more than one stage above S.
+ * Filled to the length like every other preset; the restart line shows when every
+ * candidate was shown before.
+ */
 function storyTime(minutes: PresetMinutes, ctx: PresetContext): Built {
   const { catalog } = ctx;
   const ready = catalog.stories.filter(storyIsReady).sort((a, b) => a.order - b.order);
-  if (ready.length === 0) return hangulWeek1(minutes, catalog, 'zero');
-  const positionStage = ctx.position ? catalog.quests.find((q) => q.id === ctx.position?.questId)?.stage : undefined;
-  const levelOk = positionStage === undefined ? ready : ready.filter((s) => s.recommendedStage <= stageNumberOf(positionStage) + 1);
+  if (ready.length === 0) return hangulWeek1(minutes, ctx, 'zero');
+  const classStage = ctx.position?.stage !== undefined ? StageKeySchema.safeParse(ctx.position.stage) : undefined;
+  const levelOk = classStage?.success === true ? ready.filter((s) => s.recommendedStage <= stageNumberOf(classStage.data) + 1) : ready;
+  // Unreachable with the shipped catalogue (Stage 1 stories are always in range): any ready story.
   const pool = levelOk.length > 0 ? levelOk : ready;
   const shown = new Set(ctx.shown?.storyIds ?? []);
-  const unseen = pool.find((s) => !shown.has(s.id));
-  const story = unseen ?? (pool[0] as (typeof pool)[number]);
-  const blocks: LectureBlock[] = [{ kind: 'story', storyId: story.id, checks: minutes >= 20 }];
-  if (minutes >= 30) {
-    blocks.push(REVIEW_QUIZ);
-    const left = minutes - presetMinutesOf(blocks, catalog);
-    if (left >= ACTIVITY_MIN_LEFT) blocks.push({ kind: 'activity', preset: 'copy-on-paper', minutes: Math.min(ACTIVITY_MAX_MINUTES, left) });
-  }
-  return { preset: 'story-time', blocks, titleKey: 'story', storyId: story.id, fallback: unseen === undefined ? 'restart' : null };
+  const unseen = pool.filter((s) => !shown.has(s.id));
+  const ordered = [...unseen, ...pool.filter((s) => shown.has(s.id))];
+  const candidates: LectureBlock[] = ordered.map((s) => ({ kind: 'story', storyId: s.id, checks: minutes >= 20 }));
+  return {
+    preset: 'story-time',
+    blocks: fillToLength(candidates, minutes, true, catalog),
+    titleKey: 'story.title',
+    fallback: unseen.length === 0 ? 'restart' : null,
+  };
 }
 
 /** W: one v2 `word-review` block over recent quests and words, else the warm-up. */
@@ -389,7 +411,7 @@ export function resolvePreset(preset: LecturePreset, minutes: number, ctx: Prese
       case 'next-lesson':
         return nextLesson(length, ctx);
       case 'hangul-week-1':
-        return hangulWeek1(length, ctx.catalog, null);
+        return hangulWeek1(length, ctx, null);
       case 'by-stage':
         return byStage(length, ctx);
       case 'story-time':
@@ -411,10 +433,14 @@ export function resolvePreset(preset: LecturePreset, minutes: number, ctx: Prese
  * S = the stage most of them are in (a tie goes to the earlier stage); p = the
  * smallest `done + known` of their entries for S (a missing entry counts 0). The
  * result is the route quest at index p of stage S, or the first route quest of a
- * later stage when p is past S. Only those two numbers are read: no learner is
- * named, compared or counted. Null with no usable summary.
+ * later stage when p is past S. `stage` is S itself (Story time's level bound),
+ * even when the quest is in the next stage. Only those two numbers are read: no
+ * learner is named, compared or counted. Null with no usable summary.
  */
-export function classPosition(rows: readonly { journey?: JourneySummary | null }[], catalog: Catalog): { questId: string } | null {
+export function classPosition(
+  rows: readonly { journey?: JourneySummary | null }[],
+  catalog: Catalog,
+): { questId: string; stage: StageKey } | null {
   const here: { stage: StageKey; reached: number }[] = [];
   for (const row of rows) {
     const journey = row.journey;
@@ -443,8 +469,48 @@ export function classPosition(rows: readonly { journey?: JourneySummary | null }
   if (first < 0) return null;
   const ofStage = route.filter((q) => q.stage === S).length;
   const quest = p < ofStage ? route[first + p] : route.slice(first + ofStage)[0];
+  return quest ? { questId: quest.id, stage: S } : null;
+}
+
+// ---- N3: the learner's place (the learner app) ------------------------------------------------
+
+/**
+ * N3 (section 4.2): the learner's `routeNext` quest when it is a route quest.
+ * `routeNext` can return a homework or plan quest off the route; then the route
+ * quest after the learner's furthest done route quest (by route order), or the
+ * first route quest when none is done. Null past the end of the route.
+ */
+export function learnerPosition(nextQuestId: string | null, doneQuestIds: readonly string[], catalog: Catalog): { questId: string } | null {
+  const route = routeQuests(catalog);
+  if (nextQuestId !== null && route.some((q) => q.id === nextQuestId)) return { questId: nextQuestId };
+  const done = new Set(doneQuestIds);
+  let furthest = -1;
+  route.forEach((q, i) => {
+    if (done.has(q.id)) furthest = i;
+  });
+  const quest = route[furthest + 1];
   return quest ? { questId: quest.id } : null;
 }
+
+// ---- reading a stored deck (N4, S, W2, T) --------------------------------------------------------
+
+/**
+ * The one reading of a stored deck's quests (section 4.3): a `quest` block gives
+ * its id, an `episode` block its cell's quests in cell order, every other kind
+ * none; de-duplicated, first occurrence kept.
+ */
+export function questIdsOfBlocks(blocks: readonly LectureBlock[], catalog: Catalog): string[] {
+  const ids: string[] = [];
+  for (const block of blocks) {
+    if (block.kind === 'quest') ids.push(block.id);
+    else if (block.kind === 'episode') ids.push(...(catalog.cells.find((c) => c.episodeId === block.id)?.questIds ?? []));
+  }
+  return unique(ids);
+}
+
+/** A stored deck's shown stories (section 4.3): its `story` blocks' ids, de-duplicated. */
+export const storyIdsOfBlocks = (blocks: readonly LectureBlock[]): string[] =>
+  unique(blocks.flatMap((b) => (b.kind === 'story' ? [b.storyId] : [])));
 
 // ---- W1: the console's recent words --------------------------------------------------------------
 
