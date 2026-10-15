@@ -66,7 +66,7 @@ The map keeps its single job (pick a cell); a cell with stories adds a count mar
 └──────────────────────────────────┘
 ```
 
-Cell looks (5): **lesson** (theme initial, stage-tinted border; success tint when complete; `#n` mark when stories exist) · **lesson, complete** · **stories-only** (`library` icon + `#n`, subtle border, paper fill, tappable) · **book** (Stage 5, future: a grid episode of `format: story`; drawn like a lesson cell) · **placeholder** (lock, disabled, "coming soon").
+Cell looks (5): **lesson** (theme glyph, `design/components/Icon/theme-glyphs.md` since 2026-10-14 (was the theme initial), stage-tinted border; success tint when complete; `#n` mark when stories exist) · **lesson, complete** · **stories-only** (`library` icon + `#n`, subtle border, paper fill, tappable) · **book** (Stage 5, future: a grid episode of `format: story`; drawn like a lesson cell) · **placeholder** (lock, disabled, "coming soon").
 
 - `#n` is a 20 dp mark in the cell's top-right corner, not a separate target (cells are ~54 dp wide at 320 dp). It reads "5+" from 6 stories. It is inside the cell's accessibility label, not a second element.
 - The stage pill (Open / A taste / Coming later) still reflects **lesson/book cells only**; stories-only cells do not change it. No cell is ever routed through the grown-up PIN for being a story cell.
@@ -108,7 +108,7 @@ The card surfaces of F-STORY-006 have their own files now (same letters):
     [book] [book] [book] [lock] [lock]   <- a cell with one book episode (3 story quests)
 ```
 
-- A book cell looks like a lesson cell (stage-tinted border, theme initial, completion tint). With volumes (later) a cell shows 2 small dots under the initial; a filled dot = that volume complete; tapping opens the first incomplete volume. Not part of this release.
+- A book cell looks like a lesson cell (stage-tinted border, theme glyph, completion tint). With volumes (later) a cell shows 2 small dots under the glyph; a filled dot = that volume complete; tapping opens the first incomplete volume. Not part of this release.
 
 ## I. States
 

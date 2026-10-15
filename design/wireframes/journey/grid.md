@@ -20,19 +20,20 @@ Then: they can see where they are, which cells are open right now, and pick one 
 +----------------------------------+
 |  Heritage Journey                |  <- title + 1 muted line ("draw your route")
 |                                  |
+|   [가] [bowl][lant][leaf][top]   |  <- theme glyph over each column label
 |   Letters Food Holidays Nat. Play|  <- 5 column labels: first word of each theme title
 |  (1) Hangul            [open]    |  <- stage row header: number badge, title,
 |      1-liner                     |     1-liner, status pill
-|      [L*] [F ] [H ] [N ] [P ]    |  <- 5 cells = header initials (all distinct); * = completed
+|      [가*][bowl][lant][leaf][top] |  <- 5 cells = the column's theme glyph; * = completed
 |                                  |
 |  (2) Words             [soon]    |
-|      [ # ] [F ] [ # ] [N ] [ # ] |  <- # = preview (lock glyph, disabled)
-|      (lock) 1-line unlock hint   |     F / N = shipped taste cells
+|      [ # ][bowl][ # ][leaf][ # ]  |  <- # = coming later (sunken, empty)
+|      1-line taste note           |     bowl / leaf = shipped taste cells
 |                                  |
 |  (3) Sentences         [soon]    |
 |      [ # ] [ # ] [ # ] [ # ] [ # ] |
 |  (4) Dialogue          [soon]    |
-|      [ # ] [ # ] [H ] [ # ] [ # ] |
+|      [ # ] [ # ][lant][ # ] [ # ] |
 |  (5)(6)(7) ... same pattern      |
 |                                  |
 |  +----------------------------+  |
@@ -41,7 +42,7 @@ Then: they can see where they are, which cells are open right now, and pick one 
 +----------------------------------+
 ```
 
-Cell looks (4): **shipped** (initial of its column label — `logic/journey.themeCellInitial`, never two alike; stage-tinted border) · **completed** (success tint) · **preview** (lock glyph, disabled) · **premium-locked** (lock glyph + tappable, future — see below).
+Cell looks (4): **shipped** (its column's theme glyph — `logic/journey.themeGlyph`, `design/components/Icon/theme-glyphs.md`; owner decision 2026-10-14 replaced the single letters L / F / H / N / P, which learners could not decode; stage-tinted border; the glyph is decorative and the cell label names the theme in words) · **completed** (success tint) · **preview** (lock glyph, disabled) · **premium-locked** (lock glyph + tappable, future — see below).
 
 - Rows scroll vertically; the 5 columns always fit one screen width (no horizontal scroll — a child must never lose a column).
 - Stage 1 row is first and open by default (`unlockedByDefault`).

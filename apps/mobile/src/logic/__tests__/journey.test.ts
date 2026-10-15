@@ -1,5 +1,7 @@
 import type { Episode } from '@hangul-route/content-schema';
 import { getMessages } from '@hangul-route/i18n';
+import { iconNames } from '@hangul-route/design-system/icon-glyphs';
+import { ThemeKeySchema } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
 import { episodesAll, gridEpisodes, questsAll, themes } from '../../content';
 import { storyQuests } from '../../content/stories';
@@ -10,8 +12,8 @@ import {
   stageAvailability,
   stagePillLabel,
   stagePillState,
-  themeCellInitial,
   themeColumnLabel,
+  themeGlyph,
 } from '../journey';
 import { completeStages } from '../my-route/latch';
 
@@ -168,22 +170,19 @@ describe('theme column labels (audit UX-11: two columns both read "L")', () => {
     expect(themes.map(themeColumnLabel)).toEqual(['Letters', 'Food', 'Holidays', 'Nature', 'Play']);
   });
 
-  it('cell initials match their column header', () => {
-    for (const t of themes) {
-      expect(themeCellInitial(t)).toBe(themeColumnLabel(t).charAt(0).toUpperCase());
-    }
-    expect(themes.map(themeCellInitial)).toEqual(['L', 'F', 'H', 'N', 'P']);
+  it('cells draw a theme glyph, never a letter: L / F / H / N / P could not be decoded (owner decision 2026-10-14)', () => {
+    expect(themes.map((t) => themeGlyph(t.key))).toEqual(['hangul-tile', 'rice-bowl', 'lantern', 'leaf', 'spinning-top']);
   });
 
-  it('every column has its own initial', () => {
-    const initials = themes.map(themeCellInitial);
-    expect(new Set(initials).size).toBe(themes.length);
+  it('every theme key has its own glyph from the design-system set', () => {
+    const glyphs = ThemeKeySchema.options.map(themeGlyph);
+    expect(new Set(glyphs).size).toBe(ThemeKeySchema.options.length);
+    for (const glyph of glyphs) expect(iconNames).toContain(glyph);
   });
 
   it('copes with a one-word or padded title', () => {
     expect(themeColumnLabel({ titleEn: 'Music' })).toBe('Music');
     expect(themeColumnLabel({ titleEn: '  Sea & Sky ' })).toBe('Sea');
-    expect(themeCellInitial({ titleEn: 'music' })).toBe('M');
   });
 });
 

@@ -236,7 +236,7 @@ export function cellLabel(m: CellModel, stageTitle: string, themeTitle: string):
 
 - Line 63: `stageAvailability(stage.key, gridEpisodes(episodesAll))`.
 - `GridCell` (`:148-181`) renders from `cellModel` (props: `model`, `stageTitle`, `themeTitle`, `onOpenEpisode(id)`, `onOpenStories(stage, theme)`):
-  - `lesson`/`book`: as today (stage-tinted border, theme initial, success tint when complete) **plus** a small count mark when `storyCount > 0` (§3.6).
+  - `lesson`/`book`: as today (stage-tinted border, theme glyph (`design/components/Icon/theme-glyphs.md`), success tint when complete) **plus** a small count mark when `storyCount > 0` (§3.6).
   - `stories-only`: border `colors.border.subtle`, background `colors.surface.paper`, `Icon name="library"` (replaces the lock) and the count mark; `onPress` → `onOpenStories`. **Not disabled**, never routed through `PinEntry`.
   - `placeholder`: unchanged (lock, disabled).
   - `accessibilityLabel` = `cellLabel(...)` (fixes "`letters episode for stage1`", `:160`: it names the stage title and the state, including "coming soon" and "N stories").

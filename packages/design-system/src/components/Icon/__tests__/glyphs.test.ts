@@ -37,6 +37,11 @@ const EXPECTED_NAMES: IconName[] = [
   'shift',
   'shift-on',
   'backspace',
+  'hangul-tile',
+  'rice-bowl',
+  'lantern',
+  'leaf',
+  'spinning-top',
 ];
 
 describe('icon glyphs', () => {
@@ -317,87 +322,89 @@ describe('notes glyphs (F-FEEDBACK-001 FB-6; design/components/Icon/spec.md)', (
   });
 });
 
+/** Path sampling shared by the glyph blocks below (absolute M / H / V / L / C / A / Z only). */
+type Point = [number, number];
+/** Splits a path into its subpaths (each starts at an M). */
+const subpaths = (d: string): string[] => d.split(/(?=M)/).map((chunk) => chunk.trim()).filter(Boolean);
+/** Samples one subpath of absolute M / H / V / L / C / A / Z commands (circular arcs, rotation 0) into points along the drawn outline. */
+const sample = (d: string, steps = 24): Point[] => {
+  expect(d, 'absolute M / H / V / L / C / A / Z commands only').toMatch(/^[MHVLCAZ\d.\s-]+$/);
+  const tokens = d.match(/[MHVLCAZ]|-?\d+(\.\d+)?/g) ?? [];
+  const out: Point[] = [];
+  let at: Point = [0, 0];
+  let i = 0;
+  const num = (): number => Number(tokens[i++]);
+  while (i < tokens.length) {
+    const command = tokens[i++];
+    if (command === 'M' || command === 'L') {
+      at = [num(), num()];
+      out.push(at);
+    } else if (command === 'H') {
+      at = [num(), at[1]];
+      out.push(at);
+    } else if (command === 'V') {
+      at = [at[0], num()];
+      out.push(at);
+    } else if (command === 'C') {
+      const p0 = at;
+      const p1: Point = [num(), num()];
+      const p2: Point = [num(), num()];
+      const p3: Point = [num(), num()];
+      const bezier = (t: number, k: 0 | 1): number => {
+        const u = 1 - t;
+        return u ** 3 * p0[k] + 3 * u ** 2 * t * p1[k] + 3 * u * t ** 2 * p2[k] + t ** 3 * p3[k];
+      };
+      for (let s = 1; s <= steps; s += 1) out.push([bezier(s / steps, 0), bezier(s / steps, 1)]);
+      at = p3;
+    } else if (command === 'A') {
+      const [rx, ry, rotation, large, sweep, x2, y2] = [num(), num(), num(), num(), num(), num(), num()];
+      expect(rx).toBe(ry);
+      expect(rotation).toBe(0);
+      // endpoint to centre parameterisation for a circle (SVG 1.1 F.6.5, rotation 0)
+      const [x1, y1] = at;
+      const [mx, my] = [(x1 - x2) / 2, (y1 - y2) / 2];
+      const chordHalf = Math.hypot(mx, my);
+      const r = Math.max(rx, chordHalf);
+      const factor = (large === sweep ? -1 : 1) * Math.sqrt(Math.max(0, r * r - chordHalf * chordHalf)) / (chordHalf || 1);
+      // centre = midpoint + sign * k * (y1', -x1') (SVG 1.1 F.6.5.2); half-turn arcs (k = 0) never showed a sign slip here
+      const [cx, cy] = [(x1 + x2) / 2 + factor * my, (y1 + y2) / 2 - factor * mx];
+      const start = Math.atan2(y1 - cy, x1 - cx);
+      let delta = Math.atan2(y2 - cy, x2 - cx) - start;
+      if (sweep === 1 && delta < 0) delta += 2 * Math.PI;
+      if (sweep === 0 && delta > 0) delta -= 2 * Math.PI;
+      if (Math.abs(delta) < 1e-9) delta = sweep === 1 ? 2 * Math.PI : -2 * Math.PI;
+      for (let s = 1; s <= steps; s += 1) {
+        const angle = start + (delta * s) / steps;
+        out.push([cx + r * Math.cos(angle), cy + r * Math.sin(angle)]);
+      }
+      at = [x2, y2];
+    } else if (command !== 'Z') {
+      throw new Error(`unexpected command ${command ?? ''} in ${d}`);
+    }
+  }
+  return out;
+};
+/** Shoelace sum over the sampled outline: positive is clockwise on screen (y down), negative counter-clockwise. */
+const signedArea = (points: Point[]): number =>
+  points.reduce((sum, [x1, y1], k) => {
+    const [x2, y2] = points[(k + 1) % points.length] ?? [x1, y1];
+    return sum + (x1 * y2 - x2 * y1) / 2;
+  }, 0);
+const bounds = (points: Point[]) => {
+  const xs = points.map(([x]) => x);
+  const ys = points.map(([, y]) => y);
+  return { left: Math.min(...xs), right: Math.max(...xs), top: Math.min(...ys), bottom: Math.max(...ys) };
+};
+const inside = (points: Point[], [px, py]: Point): boolean =>
+  points.reduce((odd, [x1, y1], k) => {
+    const [x2, y2] = points[(k + 1) % points.length] ?? [x1, y1];
+    return y1 > py !== y2 > py && px < ((x2 - x1) * (py - y1)) / (y2 - y1) + x1 ? !odd : odd;
+  }, false);
+
 describe('Learning Route glyphs (AMENDMENTS-ROUTE-LEARNING-ROUTE LR-2; design/components/Icon/learning-route-glyphs.md)', () => {
   const strokes = (name: IconName) => iconGlyphs[name].filter((part) => part.kind === 'stroke');
   const fills = (name: IconName) => iconGlyphs[name].filter((part) => part.kind === 'fill');
   const widthOf = (part: IconGlyphPart | undefined): number => (part?.kind === 'stroke' ? part.width ?? 2 : 0);
-  type Point = [number, number];
-  /** Splits a path into its subpaths (each starts at an M). */
-  const subpaths = (d: string): string[] => d.split(/(?=M)/).map((chunk) => chunk.trim()).filter(Boolean);
-  /** Samples one subpath of absolute M / H / V / L / C / A / Z commands (circular arcs, rotation 0) into points along the drawn outline. */
-  const sample = (d: string, steps = 24): Point[] => {
-    expect(d, 'absolute M / H / V / L / C / A / Z commands only').toMatch(/^[MHVLCAZ\d.\s-]+$/);
-    const tokens = d.match(/[MHVLCAZ]|-?\d+(\.\d+)?/g) ?? [];
-    const out: Point[] = [];
-    let at: Point = [0, 0];
-    let i = 0;
-    const num = (): number => Number(tokens[i++]);
-    while (i < tokens.length) {
-      const command = tokens[i++];
-      if (command === 'M' || command === 'L') {
-        at = [num(), num()];
-        out.push(at);
-      } else if (command === 'H') {
-        at = [num(), at[1]];
-        out.push(at);
-      } else if (command === 'V') {
-        at = [at[0], num()];
-        out.push(at);
-      } else if (command === 'C') {
-        const p0 = at;
-        const p1: Point = [num(), num()];
-        const p2: Point = [num(), num()];
-        const p3: Point = [num(), num()];
-        const bezier = (t: number, k: 0 | 1): number => {
-          const u = 1 - t;
-          return u ** 3 * p0[k] + 3 * u ** 2 * t * p1[k] + 3 * u * t ** 2 * p2[k] + t ** 3 * p3[k];
-        };
-        for (let s = 1; s <= steps; s += 1) out.push([bezier(s / steps, 0), bezier(s / steps, 1)]);
-        at = p3;
-      } else if (command === 'A') {
-        const [rx, ry, rotation, large, sweep, x2, y2] = [num(), num(), num(), num(), num(), num(), num()];
-        expect(rx).toBe(ry);
-        expect(rotation).toBe(0);
-        // endpoint to centre parameterisation for a circle (SVG 1.1 F.6.5, rotation 0)
-        const [x1, y1] = at;
-        const [mx, my] = [(x1 - x2) / 2, (y1 - y2) / 2];
-        const chordHalf = Math.hypot(mx, my);
-        const r = Math.max(rx, chordHalf);
-        const factor = (large === sweep ? -1 : 1) * Math.sqrt(Math.max(0, r * r - chordHalf * chordHalf)) / (chordHalf || 1);
-        const [cx, cy] = [(x1 + x2) / 2 + factor * -my, (y1 + y2) / 2 + factor * mx];
-        const start = Math.atan2(y1 - cy, x1 - cx);
-        let delta = Math.atan2(y2 - cy, x2 - cx) - start;
-        if (sweep === 1 && delta < 0) delta += 2 * Math.PI;
-        if (sweep === 0 && delta > 0) delta -= 2 * Math.PI;
-        if (Math.abs(delta) < 1e-9) delta = sweep === 1 ? 2 * Math.PI : -2 * Math.PI;
-        for (let s = 1; s <= steps; s += 1) {
-          const angle = start + (delta * s) / steps;
-          out.push([cx + r * Math.cos(angle), cy + r * Math.sin(angle)]);
-        }
-        at = [x2, y2];
-      } else if (command !== 'Z') {
-        throw new Error(`unexpected command ${command ?? ''} in ${d}`);
-      }
-    }
-    return out;
-  };
-  /** Shoelace sum over the sampled outline: positive is clockwise on screen (y down), negative counter-clockwise. */
-  const signedArea = (points: Point[]): number =>
-    points.reduce((sum, [x1, y1], k) => {
-      const [x2, y2] = points[(k + 1) % points.length] ?? [x1, y1];
-      return sum + (x1 * y2 - x2 * y1) / 2;
-    }, 0);
-  const bounds = (points: Point[]) => {
-    const xs = points.map(([x]) => x);
-    const ys = points.map(([, y]) => y);
-    return { left: Math.min(...xs), right: Math.max(...xs), top: Math.min(...ys), bottom: Math.max(...ys) };
-  };
-  const inside = (points: Point[], [px, py]: Point): boolean =>
-    points.reduce((odd, [x1, y1], k) => {
-      const [x2, y2] = points[(k + 1) % points.length] ?? [x1, y1];
-      return y1 > py !== y2 > py && px < ((x2 - x1) * (py - y1)) / (y2 - y1) + x1 ? !odd : odd;
-    }, false);
-
   it('adds route (the Route tab) and flag (the goal stage) to IconName, both apart from journey and pin', () => {
     for (const name of ['route', 'flag'] as const) {
       expect(iconNames, name).toContain(name);
@@ -477,5 +484,173 @@ describe('Learning Route glyphs (AMENDMENTS-ROUTE-LEARNING-ROUTE LR-2; design/co
     const notch = outline.filter(([x, y]) => x > box.left && x < box.right && y > box.top && y < box.bottom);
     expect(notch).toEqual([[15.5, 8]]);
     expect(box.right - box.left).toBeGreaterThanOrEqual(10);
+  });
+});
+
+describe('theme glyphs (Heritage Journey grid; design/components/Icon/theme-glyphs.md)', () => {
+  const THEME_GLYPHS = ['hangul-tile', 'rice-bowl', 'lantern', 'leaf', 'spinning-top'] as const;
+  const strokes = (name: IconName) => iconGlyphs[name].filter((part) => part.kind === 'stroke');
+  const fills = (name: IconName) => iconGlyphs[name].filter((part) => part.kind === 'fill');
+  const widthOf = (part: IconGlyphPart | undefined): number => (part?.kind === 'stroke' ? part.width ?? 2 : 0);
+  /** The drawn outline of a part: its sampled points, with straight runs filled in every 0.25 units. */
+  const outline = (part: IconGlyphPart): Point[] =>
+    subpaths(part.d).flatMap((sub) => {
+      const points = sample(sub);
+      const closed = /Z\s*$/.test(sub) ? [...points, points[0] as Point] : points;
+      const out: Point[] = [];
+      closed.forEach((point, k) => {
+        const prev = closed[k - 1];
+        if (prev) {
+          const steps = Math.max(1, Math.ceil(Math.hypot(point[0] - prev[0], point[1] - prev[1]) / 0.25));
+          for (let s = 1; s < steps; s += 1) out.push([prev[0] + ((point[0] - prev[0]) * s) / steps, prev[1] + ((point[1] - prev[1]) * s) / steps]);
+        }
+        out.push(point);
+      });
+      return out;
+    });
+  /** The visible gap between two parts: the nearest outline points less each stroke's half width. */
+  const gap = (a: IconGlyphPart, b: IconGlyphPart): number => {
+    const pa = outline(a);
+    const pb = outline(b);
+    let nearest = Infinity;
+    for (const [x1, y1] of pa) for (const [x2, y2] of pb) nearest = Math.min(nearest, Math.hypot(x1 - x2, y1 - y2));
+    return nearest - widthOf(a) / 2 - widthOf(b) / 2;
+  };
+  const GAP = 0.5; // visible gap between two drawn parts at 20 dp
+  const part = (name: IconName, index: number): IconGlyphPart => {
+    const found = iconGlyphs[name][index];
+    if (!found) throw new Error(`${name} has no part ${index}`);
+    return found;
+  };
+
+  it('adds one glyph per theme, each with more than one part so none is a bare shape', () => {
+    for (const name of THEME_GLYPHS) {
+      expect(iconNames, name).toContain(name);
+      expect(iconGlyphs[name].length, name).toBeGreaterThan(1);
+    }
+  });
+
+  it('draws their lines at the hairline-safe width (2 to 2.6), so they hold at 20 dp in the column header', () => {
+    for (const name of THEME_GLYPHS) {
+      for (const stroke of strokes(name)) {
+        expect(widthOf(stroke), name).toBeGreaterThanOrEqual(2);
+        expect(widthOf(stroke), name).toBeLessThanOrEqual(2.6);
+      }
+    }
+  });
+
+  it('stays inside the 24 x 24 box with its stroke caps, and fills most of it (the cell art is one glyph)', () => {
+    for (const name of THEME_GLYPHS) {
+      const all = iconGlyphs[name].flatMap((p) => outline(p).map(([x, y]) => ({ x, y, half: widthOf(p) / 2 })));
+      expect(Math.min(...all.map((p) => p.x - p.half)), name).toBeGreaterThanOrEqual(0);
+      expect(Math.min(...all.map((p) => p.y - p.half)), name).toBeGreaterThanOrEqual(0);
+      expect(Math.max(...all.map((p) => p.x + p.half)), name).toBeLessThanOrEqual(24);
+      expect(Math.max(...all.map((p) => p.y + p.half)), name).toBeLessThanOrEqual(24);
+      const box = bounds(all.map(({ x, y }) => [x, y] as Point));
+      expect(Math.max(box.right - box.left, box.bottom - box.top), name).toBeGreaterThanOrEqual(16);
+    }
+  });
+
+  it('hangul-tile is a closed square tile with the syllable ga inside it, apart from its edge', () => {
+    const [tile, ...letter] = strokes('hangul-tile');
+    expect(fills('hangul-tile')).toHaveLength(0);
+    expect(tile?.d).toMatch(/Z$/);
+    const edge = bounds(outline(tile as IconGlyphPart));
+    expect(edge.right - edge.left).toBeCloseTo(edge.bottom - edge.top, 5);
+    // the giyeok, then the vertical and the short bar of the vowel a
+    expect(letter).toHaveLength(3);
+    for (const stroke of letter) {
+      for (const point of outline(stroke)) expect(inside(outline(tile as IconGlyphPart), point)).toBe(true);
+      expect(gap(tile as IconGlyphPart, stroke)).toBeGreaterThanOrEqual(GAP);
+    }
+    // the consonant sits left of the vowel with a gap between them
+    expect(gap(letter[0] as IconGlyphPart, letter[1] as IconGlyphPart)).toBeGreaterThanOrEqual(GAP);
+    expect(bounds(outline(letter[0] as IconGlyphPart)).right).toBeLessThan(bounds(outline(letter[1] as IconGlyphPart)).left);
+  });
+
+  it('rice-bowl is a solid bowl, wider than deep, with the rice mound above its rim and a foot below, each apart', () => {
+    const [bowl] = fills('rice-bowl');
+    const [rice, foot] = strokes('rice-bowl');
+    expect(fills('rice-bowl')).toHaveLength(1);
+    expect(strokes('rice-bowl')).toHaveLength(2);
+    const box = bounds(outline(bowl as IconGlyphPart));
+    expect(box.right - box.left).toBeGreaterThan(box.bottom - box.top);
+    expect(bounds(outline(rice as IconGlyphPart)).bottom).toBeLessThan(box.top);
+    expect(bounds(outline(foot as IconGlyphPart)).top).toBeGreaterThan(box.bottom);
+    expect(gap(bowl as IconGlyphPart, rice as IconGlyphPart)).toBeGreaterThanOrEqual(GAP);
+    expect(gap(bowl as IconGlyphPart, foot as IconGlyphPart)).toBeGreaterThanOrEqual(GAP);
+  });
+
+  it('lantern hangs on the centre line: a hook, a cap, the round body, a base and a tassel, mirror-symmetric on x 12', () => {
+    for (const p of iconGlyphs.lantern) {
+      const box = bounds(outline(p));
+      expect((box.left + box.right) / 2, p.d).toBeCloseTo(12, 5);
+    }
+    const [cap, base] = fills('lantern');
+    const body = strokes('lantern').find((s) => /Z$/.test(s.d));
+    expect(body).toBeDefined();
+    // the body is the widest part, and the caps sit apart from it above and below
+    const bodyBox = bounds(outline(body as IconGlyphPart));
+    for (const p of iconGlyphs.lantern) {
+      const box = bounds(outline(p));
+      expect(box.right - box.left).toBeLessThanOrEqual(bodyBox.right - bodyBox.left);
+    }
+    expect(bounds(outline(cap as IconGlyphPart)).bottom).toBeLessThan(bodyBox.top);
+    expect(bounds(outline(base as IconGlyphPart)).top).toBeGreaterThan(bodyBox.bottom);
+    expect(gap(cap as IconGlyphPart, body as IconGlyphPart)).toBeGreaterThanOrEqual(GAP);
+    expect(gap(base as IconGlyphPart, body as IconGlyphPart)).toBeGreaterThanOrEqual(GAP);
+  });
+
+  /**
+   * Where the story count mark sits over a cell's glyph on the narrowest grid (320 px, 24 dp glyph),
+   * in glyph units: a 20 dp mark centred at (25.2, -1.2), measured by journey-theme-glyphs.spec.ts.
+   * The corner of a frame (the tile, the flat top) may sit under it; the part that names the theme may not.
+   */
+  const COUNT_MARK_CENTRE: Point = [25.2, -1.2];
+  const COUNT_MARK_RADIUS = 10;
+  const clearOfCountMark = (p: IconGlyphPart): number =>
+    Math.min(...outline(p).map(([x, y]) => Math.hypot(x - COUNT_MARK_CENTRE[0], y - COUNT_MARK_CENTRE[1]))) - widthOf(p) / 2 - COUNT_MARK_RADIUS;
+
+  it('keeps the part that names each theme clear of the story count mark at 320 px (the leaf tip points up-left)', () => {
+    const [blade, vein] = strokes('leaf');
+    const tip = outline(blade as IconGlyphPart).reduce((top, point) => (point[1] < top[1] ? point : top));
+    expect(tip[0]).toBeLessThan(12);
+    expect(clearOfCountMark(blade as IconGlyphPart)).toBeGreaterThan(0);
+    expect(clearOfCountMark(vein as IconGlyphPart)).toBeGreaterThan(0);
+    // the letter inside the tile, the lantern, and the bowl with its rice
+    for (const stroke of strokes('hangul-tile').slice(1)) expect(clearOfCountMark(stroke)).toBeGreaterThan(0);
+    for (const p of iconGlyphs.lantern) expect(clearOfCountMark(p), p.d).toBeGreaterThan(0);
+    for (const p of iconGlyphs['rice-bowl']) expect(clearOfCountMark(p), p.d).toBeGreaterThan(0);
+    // the cone of the top
+    expect(clearOfCountMark(fills('spinning-top')[1] as IconGlyphPart)).toBeGreaterThan(0);
+  });
+
+  it('leaf is one closed outline with its vein inside it, on the diagonal (never a ring like check-circle)', () => {
+    const [blade, vein] = strokes('leaf');
+    expect(blade?.d).toMatch(/Z$/);
+    const edge = outline(blade as IconGlyphPart);
+    // the vein runs from the stem point into the blade; every point past its first lies inside
+    const veinPoints = outline(vein as IconGlyphPart).slice(1);
+    for (const point of veinPoints) expect(inside(edge, point), point.join(',')).toBe(true);
+    const box = bounds(edge);
+    expect(box.right - box.left).toBeGreaterThanOrEqual(14);
+    expect(box.bottom - box.top).toBeGreaterThanOrEqual(14);
+  });
+
+  it('spinning-top is a whip top (paengi): a solid flat top and a solid cone that comes to one point, a clear gap between them, no handle', () => {
+    // exactly the two solid parts: a paengi is spun by a whip, so no stem or handle is drawn on top
+    expect(iconGlyphs['spinning-top']).toHaveLength(2);
+    expect(fills('spinning-top')).toHaveLength(2);
+    const [rim, cone] = fills('spinning-top');
+    const rimBox = bounds(outline(rim as IconGlyphPart));
+    const coneBox = bounds(outline(cone as IconGlyphPart));
+    expect(rimBox.bottom).toBeLessThan(coneBox.top);
+    // the gap between the flat top and the cone stays clear at 20 dp
+    expect(gap(rim as IconGlyphPart, cone as IconGlyphPart)).toBeGreaterThanOrEqual(1.5);
+    // the flat top (a rim wider than it is tall) keeps it apart from the round-headed pin
+    expect(rimBox.right - rimBox.left).toBeGreaterThan(3 * (rimBox.bottom - rimBox.top));
+    // the cone's tip: its lowest sampled point is on the centre line
+    const tip = outline(cone as IconGlyphPart).reduce((low, point) => (point[1] > low[1] ? point : low));
+    expect(tip[0]).toBeCloseTo(12, 5);
   });
 });
