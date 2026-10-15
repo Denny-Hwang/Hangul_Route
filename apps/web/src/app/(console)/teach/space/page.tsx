@@ -4,7 +4,7 @@ import { colors, radii, spacing, touchTarget, typography } from '@hangul-route/d
 import type { UiLocale } from '@hangul-route/i18n';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { Suspense, useCallback, useEffect, useState } from 'react';
+import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { Button, Muted, Notice, buttonBase, panelStyle } from '@/components/console/ui';
 import { AdultFrame } from '@/components/console/AdultFrame';
 import { RevisitLetterLinks } from '@/components/console/BrowseLink';
@@ -62,10 +62,16 @@ function SpaceInner(): JSX.Element {
   const [copied, setCopied] = useState(false);
   const now = new Date();
 
+  // Which read may still draw. A read the user started (open, Try again, a saved plan) takes a new number, so an older
+  // read that ends later never puts back what it replaced (a removed learner, an old name). A quiet read takes none: it
+  // draws only while no newer user read started after it.
+  const loadSeq = useRef(0);
+
   // `quiet`: the read again when the tab comes back into view (F-LEARN-001 section 3.11). It keeps what is drawn while it
   // reads, and a failed quiet read changes nothing: the page never turns into an error because a background read failed.
   const load = useCallback(async (quiet = false): Promise<void> => {
     if (!api) return;
+    const call = quiet ? loadSeq.current : ++loadSeq.current;
     if (!quiet) {
       setError(null);
       setCoverage('unknown');
@@ -80,6 +86,7 @@ function SpaceInner(): JSX.Element {
       lectureModeEnabled() || gating || notesEnabled() ? api.listSpaces() : null,
       gating ? api.entitlements() : null,
     ]);
+    if (call !== loadSeq.current) return;
     if (spaceList?.ok) setSpaces(spaceList.data);
     if (gating && result.ok) setCoverage(spaceCoverage(entitlements?.ok ? entitlements.data : null, spaceList?.ok ? spaceList.data : null, result.data.space, new Date()));
     if (planList.ok) setPlans(planList.data);
@@ -95,7 +102,8 @@ function SpaceInner(): JSX.Element {
   }, [load]);
 
   // An open roster shows a renamed learner, a new practice day or a new member without a reload.
-  useVisibleRefresh(() => void load(true), !!api);
+  // A roster page also reads slowly while it stays in front (a classroom screen), never a report page.
+  useVisibleRefresh(() => void load(true), !!api, { poll: true });
 
   if (!ready || !session) return <AdultFrame>{null}</AdultFrame>;
   // School spaces get the admin view (F-SCHOOL-001 §3.3); classes and families the roster.

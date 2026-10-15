@@ -156,7 +156,7 @@ test('a join under a changed name makes it the profile name, and the field says 
   await expect(page.getByText('Hi, Sungjoo!')).toBeVisible();
 });
 
-test('on a class device the name, level and cub rows are closed, with who can change them', async ({ page, context }) => {
+test('on a class device the name, level and cub rows are closed, with where they change', async ({ page, context }) => {
   await mockApi(context, 'class', true);
   await onboardSelf(page, { name: 'test' });
   await seedSynced(page, true);
@@ -166,7 +166,7 @@ test('on a class device the name, level and cub rows are closed, with who can ch
   await page.waitForTimeout(1500);
   await openEdit(page, 'test');
 
-  await expect(page.getByTestId('edit-class-device')).toHaveText("A grown-up can change the name, level and Hoya on the learner's own device.");
+  await expect(page.getByTestId('edit-class-device')).toHaveText("The name, level and Hoya can be changed on the learner's own device.");
   await expect(page.getByRole('textbox', { name: 'Name' })).not.toBeEditable();
   await expect(page.getByRole('radio', { name: 'Home Tiger' })).toBeDisabled();
   // The class roster line would promise an update this device cannot send.

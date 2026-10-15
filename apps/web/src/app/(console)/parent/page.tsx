@@ -136,15 +136,25 @@ export default function ParentHomePage(): JSX.Element {
   // [TV] The class-scope update and the one-time move notices (AMENDMENTS-TEACHER-VISIBILITY-TRANSFER TV-D5, TV-D10).
   const movesShown = useTransfersShown();
 
+  // Which read may still draw, for the family list and for each family's roster. A read the user started (open, Try
+  // again) takes a new number, so an older read that ends later never puts back what it replaced. A quiet read takes
+  // none: it draws only while no newer user read started after it.
+  const loadSeq = useRef(0);
+  const rosterSeq = useRef<Record<string, number>>({});
+
   // `quiet`: the read again when the tab comes back into view (F-LEARN-001 section 3.11). The drawn cards stay while it
   // reads, and a failed quiet read keeps them: a background read never turns a family into an error.
   const loadRoster = useCallback(
     async (spaceId: string, role: SpaceListItem['role'], quiet = false): Promise<void> => {
       if (!api) return;
+      const seen = rosterSeq.current[spaceId] ?? 0;
+      const call = quiet ? seen : seen + 1;
+      rosterSeq.current[spaceId] = call;
       if (!quiet) setRosters((prev) => ({ ...prev, [spaceId]: { state: 'loading' } }));
       // Plans only for a family this account owns: the line is owner only, so a co-caregiver's family needs no plan read.
       const readPlans = contentGatingEnabled() && role === 'owner';
       const [result, planList] = await Promise.all([api.roster(spaceId).catch(() => null), readPlans ? api.listPlans(spaceId).catch(() => null) : null]);
+      if (call !== rosterSeq.current[spaceId]) return;
       if (planList?.ok) setPlans((prev) => ({ ...prev, [spaceId]: planList.data }));
       setRosters((prev) => {
         if (result?.ok) return { ...prev, [spaceId]: { state: 'ready', roster: result.data } };
@@ -158,8 +168,10 @@ export default function ParentHomePage(): JSX.Element {
   const load = useCallback(
     async (quiet = false): Promise<void> => {
       if (!api) return;
+      const call = quiet ? loadSeq.current : ++loadSeq.current;
       if (!quiet) setFailed(false);
       const [result, owned] = await Promise.all([api.listSpaces(), contentGatingEnabled() ? api.entitlements().catch(() => null) : null]);
+      if (call !== loadSeq.current) return;
       if (!result.ok) {
         if (!quiet) {
           setEntitlements(owned?.ok ? owned.data : null);
@@ -181,7 +193,8 @@ export default function ParentHomePage(): JSX.Element {
   }, [load]);
 
   // An open family home shows a renamed learner or a new member without a reload.
-  useVisibleRefresh(() => void load(true), !!api);
+  // A roster page: it also reads slowly while it stays in front.
+  useVisibleRefresh(() => void load(true), !!api, { poll: true });
 
   const frameSpaces: FrameSpaces = !api || (failed && !items) ? 'failed' : items;
   if (!ready || !session) return <AdultFrame spaces={frameSpaces}>{null}</AdultFrame>;

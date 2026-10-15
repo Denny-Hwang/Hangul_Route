@@ -157,8 +157,10 @@ describe('learner.editProfile (F-LEARN-001 §3.11)', () => {
     for (const line of flat(e)) expect(line).not.toMatch(/join again/i);
   });
 
-  it('says who can change the name, level and Hoya on a class device', () => {
-    expect(e.classDevice).toBe("A grown-up can change the name, level and Hoya on the learner's own device.");
+  it('says where the name, level and Hoya change on a class device, for a learner of any age', () => {
+    expect(e.classDevice).toBe("The name, level and Hoya can be changed on the learner's own device.");
+    // Any age learns here: the line names no grown-up, so it reads true for an adult learner too.
+    expect(e.classDevice).not.toMatch(/grown-up|adult|parent/i);
   });
 
   it('names an age nowhere but the 13-or-older statement, and never scolds', () => {
@@ -179,16 +181,25 @@ describe('one learner name everywhere (F-LEARN-001 section 3.11), en, ko and es'
     expect(es.caregiver.join.confirm.sameEverywhere).toBe('Este nombre es el mismo en todas partes, no solo aquí.');
   });
 
+  it('a locked join name field says where the name changes', () => {
+    expect(m.caregiver.join.confirm.nameLocked).toBe('The name can be changed in Edit profile.');
+    expect(ko.caregiver.join.confirm.nameLocked).toBe('이름은 프로필 편집에서 바꿀 수 있어요.');
+    expect(es.caregiver.join.confirm.nameLocked).toBe('El nombre se puede cambiar en Editar perfil.');
+    // It names the screen by its own title in each language.
+    for (const locale of [m, ko, es]) expect(locale.caregiver.join.confirm.nameLocked).toContain(locale.learner.editProfile.title);
+  });
+
   it('Edit profile tells when the class list updates and who changes a class device, in each language', () => {
     expect(ko.learner.editProfile.classNote).toBe('다음에 인터넷에 연결되면 선생님 명단도 바뀌어요.');
     expect(es.learner.editProfile.classNote).toBe('La lista de tu docente se actualiza la próxima vez que tengas conexión.');
-    expect(ko.learner.editProfile.classDevice).toBe('이름, 읽기 수준, 호야는 어른이 학습자 본인의 기기에서 바꿀 수 있어요.');
-    expect(es.learner.editProfile.classDevice).toBe('Un adulto puede cambiar el nombre, el nivel y el Hoya en el dispositivo de quien aprende.');
+    expect(ko.learner.editProfile.classDevice).toBe('이름, 읽기 수준, 호야는 학습자 본인의 기기에서 바꿀 수 있어요.');
+    expect(es.learner.editProfile.classDevice).toBe('El nombre, el nivel y el Hoya se pueden cambiar en el dispositivo de quien aprende.');
   });
 
   it('every new line is translated, never the English fallback', () => {
     for (const locale of [ko, es]) {
       expect(locale.caregiver.join.confirm.sameEverywhere).not.toBe(m.caregiver.join.confirm.sameEverywhere);
+      expect(locale.caregiver.join.confirm.nameLocked).not.toBe(m.caregiver.join.confirm.nameLocked);
       expect(locale.learner.editProfile.classNote).not.toBe(m.learner.editProfile.classNote);
       expect(locale.learner.editProfile.classDevice).not.toBe(m.learner.editProfile.classDevice);
     }

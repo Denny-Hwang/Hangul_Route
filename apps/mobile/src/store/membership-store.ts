@@ -8,6 +8,7 @@ import { getDeviceId } from '../platform/device';
 import { readJson, writeJson } from '../platform/storage';
 import { TRANSFER_SCOPE_KEY, classScopeMarker, deviceScopeOf } from '../logic/transfers/device-scope';
 import { validateDisplayName } from '../logic/profiles/profile-model';
+import { gateOpensDirectlyNow } from './gate-now';
 import type { DeviceCredentials, DeviceTransferPreview, RosterName, SyncApiClient, TransferCallError } from '../platform/sync-api';
 import { track } from '../platform/telemetry';
 import { useAccountStore } from './account-store';
@@ -127,9 +128,12 @@ function failure(r: TransferCallError): TransferFailure {
  * The profile name is the learner's one name (F-LEARN-001 section 3.11): the Worker writes the join name over the
  * learner's name for the family and every class, so a join under a changed name changes the profile too, and the
  * edit goes to the server the way any profile edit does. A name the profile rule refuses, or the same name, changes nothing.
+ * A rename is a grown-up action (Edit profile opens behind the PIN gate), so with the gate closed the join renames
+ * nothing either; the Join screen keeps the profile name in its field then.
  */
 function adoptJoinName(learnerId: string, displayName: string | undefined): void {
   if (displayName === undefined || validateDisplayName(displayName) !== null) return;
+  if (!gateOpensDirectlyNow()) return;
   const name = displayName.trim();
   const profile = useProfileStore.getState().profiles.find((p) => p.id === learnerId);
   if (!profile || profile.displayName === name) return;

@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 import { act, create, type ReactTestInstance, type ReactTestRenderer } from 'react-test-renderer';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { NOW, STEADY, response } from '@/lib/console/__tests__/fixtures/report';
-import { VISIBLE_REFRESH_GAP_MS } from '@/lib/console/visible-refresh';
+import { VISIBLE_POLL_MS, VISIBLE_REFRESH_GAP_MS } from '@/lib/console/visible-refresh';
 import TeachSpacePage from '@/app/(console)/teach/space/page';
 import ParentSpacePage from '@/app/(console)/parent/space/page';
 import ParentHomePage from '@/app/(console)/parent/page';
@@ -40,7 +40,7 @@ type Result = { ok: true; data: unknown } | { ok: false; error: string; status: 
 const ok = (data: unknown): Result => ({ ok: true, data });
 const down: Result = { ok: false, error: 'network', status: 0 };
 
-const state = { name: 'Test', failing: false };
+const state: { name: string; failing: boolean; rosterFails: boolean; hold: Promise<void> | null } = { name: 'Test', failing: false, rosterFails: false, hold: null };
 const calls: string[] = [];
 
 function space(kind: 'class' | 'family') {
@@ -54,9 +54,9 @@ function space(kind: 'class' | 'family') {
     createdAt: '2026-09-01T00:00:00.000Z',
   };
 }
-const learner = () => ({
+const learner = (name: string = state.name) => ({
   id: 'profile:mina',
-  displayName: state.name,
+  displayName: name,
   ageGroup: 'starter',
   avatar: 'tiger',
   joinedAt: '2026-09-02T00:00:00.000Z',
@@ -78,10 +78,14 @@ const api = new Proxy(
       (_target, name: string) =>
       async (...args: unknown[]) => {
         calls.push(name);
+        // The name as the server holds it when the read starts; `hold` keeps this read open (a slow network).
+        const atStart = state.name;
+        if (name === 'roster' && state.hold) await state.hold;
+        if (state.rosterFails && name === 'roster') return down;
         if (state.failing && (name === 'roster' || name === 'getLearnerReport' || name === 'listSpaces')) return down;
         if (name === 'listSpaces') return ok(listed());
         // The family has a second learner, so the parent chooser lists both instead of opening the one report.
-        if (name === 'roster') return ok({ space: space(kindOf(args[0])), learners: kindOf(args[0]) === 'family' ? [learner(), hana] : [learner()], joinCode: null, joinCodeExpiresAt: null });
+        if (name === 'roster') return ok({ space: space(kindOf(args[0])), learners: kindOf(args[0]) === 'family' ? [learner(atStart), hana] : [learner(atStart)], joinCode: null, joinCodeExpiresAt: null });
         if (name === 'transferRequests') return ok({ requests: [] });
         if (name === 'getLearnerReport') return ok(response(STEADY, { kind: kindOf(args[0]), name: state.name }));
         return ok([]);
@@ -96,6 +100,19 @@ vi.mock('@/components/console/use-console', async () => {
 
 /** A document stub that holds the visibilitychange listeners, so a test can bring the tab back into view. */
 const listeners = new Set<() => void>();
+/** The window's `focus` and `pageshow` listeners: a desktop window brought back to the front. */
+const windowListeners = new Set<() => void>();
+const fakeWindow = {
+  location: { pathname: '/teach/space', search: '', origin: 'https://app.hangulroute.com' },
+  print: () => undefined,
+  confirm: () => false,
+  addEventListener: (type: string, l: () => void) => {
+    if (type === 'focus' || type === 'pageshow') windowListeners.add(l);
+  },
+  removeEventListener: (type: string, l: () => void) => {
+    if (type === 'focus' || type === 'pageshow') windowListeners.delete(l);
+  },
+};
 const fakeDocument = {
   title: 'Console',
   activeElement: null as unknown,
@@ -117,7 +134,7 @@ beforeEach(() => {
   vi.useFakeTimers({ toFake: ['Date'] });
   vi.setSystemTime(NOW);
   vi.stubGlobal('document', fakeDocument);
-  vi.stubGlobal('window', { location: { pathname: '/teach/space', search: '', origin: 'https://app.hangulroute.com' }, print: () => undefined, confirm: () => false });
+  vi.stubGlobal('window', fakeWindow);
   vi.stubEnv('NEXT_PUBLIC_REPORTS_ENABLED', 'true');
 });
 
@@ -127,8 +144,11 @@ afterEach(() => {
   mounted = null;
   calls.length = 0;
   listeners.clear();
+  windowListeners.clear();
   state.name = 'Test';
   state.failing = false;
+  state.rosterFails = false;
+  state.hold = null;
   nav.query = '';
   fakeDocument.visibilityState = 'visible';
   vi.useRealTimers();
@@ -213,8 +233,77 @@ describe('an open console tab shows a renamed learner (F-LEARN-001 section 3.11)
   it('stops listening when the page leaves', async () => {
     await render(TeachSpacePage, 'id=space%3Asunflower');
     expect(listeners.size).toBeGreaterThan(0);
+    expect(windowListeners.size).toBeGreaterThan(0);
     act(() => mounted?.unmount());
     mounted = null;
     expect(listeners.size).toBe(0);
+    expect(windowListeners.size).toBe(0);
+  });
+
+  for (const { label, Page, query } of [PAGES[0], PAGES[4]]) {
+    it(`${label}: a window that gets focus again reads again (two desktop windows side by side never hide the tab)`, async () => {
+      const text = await render(Page, query);
+      expect(text()).toContain('Test');
+      state.name = 'Sungjoo';
+      vi.setSystemTime(NOW.getTime() + VISIBLE_REFRESH_GAP_MS);
+      await act(async () => {
+        for (const l of [...windowListeners]) l();
+      });
+      expect(text()).toContain('Sungjoo');
+    });
+  }
+
+  it('a roster that stays in front reads again every 90 seconds; a report never polls', async () => {
+    // The clock beforeEach installed fakes Date only; this test also needs the interval.
+    vi.useRealTimers();
+    vi.useFakeTimers({ toFake: ['Date', 'setInterval', 'clearInterval'] });
+    vi.setSystemTime(NOW);
+    const text = await render(TeachSpacePage, 'id=space%3Asunflower');
+    expect(text()).toContain('Test');
+    state.name = 'Sungjoo';
+    const before = count('roster');
+    await act(async () => {
+      vi.advanceTimersByTime(VISIBLE_POLL_MS);
+    });
+    expect(count('roster')).toBeGreaterThan(before);
+    expect(text()).toContain('Sungjoo');
+    act(() => mounted?.unmount());
+    mounted = null;
+
+    await render(TeachLearnerPage, PAGES[4].query);
+    const reads = count('getLearnerReport');
+    await act(async () => {
+      vi.advanceTimersByTime(VISIBLE_POLL_MS * 3);
+    });
+    expect(count('getLearnerReport')).toBe(reads);
+  });
+
+  it('a slow background read that ends after a newer Try again never puts the old name back (/parent)', async () => {
+    // The family roster fails first, so its card offers Try again.
+    state.rosterFails = true;
+    const text = await render(ParentHomePage, '');
+    state.rosterFails = false;
+    const retry = (): ReactTestInstance => mounted!.root.find((n) => n.type === 'button' && n.props['data-testid'] === 'family-retry-space:kim-family');
+    expect(retry()).toBeTruthy();
+    // A background read starts while the server still says "Test", and its roster read hangs.
+    let release!: () => void;
+    state.hold = new Promise<void>((resolve) => (release = resolve));
+    await comeBack(VISIBLE_REFRESH_GAP_MS);
+    // The learner renames; the grown-up taps Try again, which answers at once.
+    state.name = 'Sungjoo';
+    const held = state.hold;
+    state.hold = null;
+    await act(async () => {
+      retry().props.onClick();
+    });
+    expect(text()).toContain('Sungjoo');
+    // The slow read ends last, with the old name: it is dropped.
+    state.hold = held;
+    await act(async () => {
+      release();
+      await held;
+    });
+    expect(text()).toContain('Sungjoo');
+    expect(text()).not.toContain('Test');
   });
 });

@@ -188,7 +188,7 @@ export const learner = {
     privacyLink: '개인정보 처리방침 읽기',
     privacyFallback: '브라우저에서 hangulroute.com/privacy를 열어 주세요.',
     classNote: '다음에 인터넷에 연결되면 선생님 명단도 바뀌어요.',
-    classDevice: '이름, 읽기 수준, 호야는 어른이 학습자 본인의 기기에서 바꿀 수 있어요.',
+    classDevice: '이름, 읽기 수준, 호야는 학습자 본인의 기기에서 바꿀 수 있어요.',
     pinFailed: 'PIN을 설정하지 못했어요. 다시 해 보세요.',
     saveFailed: '저장하지 못했어요. 다시 해 보세요.',
     missing: {

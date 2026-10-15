@@ -13,6 +13,9 @@ import { apiBaseUrl } from '../../platform/sync-api';
 import { useMembershipStore, type LookupOutcome } from '../../store/membership-store';
 import type { RosterName } from '../../platform/sync-api';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
+import { useAudience } from '../../store/audience';
+import { useUiStore } from '../../store/ui-store';
+import { isParentSessionValid } from '../../logic/profiles/session';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'JoinSpace'>;
 type Found = Extract<LookupOutcome, { ok: true }>['space'];
@@ -32,6 +35,8 @@ export const RELINK_POLL_MS = 4000;
  * The name (F-LEARN-001 section 3.11): the field starts from the profile name and follows the profile rule
  * (`validateDisplayName`, the create form's hints). The Worker writes the join name over the learner's name for the
  * family and every class, so a changed name becomes the profile name after the join (`membership-store.join`).
+ * The screen is not PIN-gated, but a rename is a grown-up action (Edit profile opens behind the gate): on a device
+ * whose gate is closed the field keeps the profile name and says the name changes in Edit profile.
  */
 export function JoinSpaceScreen({ navigation }: Props): React.ReactElement {
   const messages = useMessages();
@@ -52,6 +57,11 @@ export function JoinSpaceScreen({ navigation }: Props): React.ReactElement {
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState<{ name: string; alreadyMember: boolean; notice?: string } | null>(null);
   const cloudAvailable = !!apiBaseUrl();
+  // The grown-up gate (F-LEARN-001 L7), read like ProfileScreen reads it: closed means the name cannot change here.
+  const { opensDirectly } = useAudience();
+  const parentGateOpenedAt = useUiStore((s) => s.parentGateOpenedAt);
+  const nameLocked = !opensDirectly(isParentSessionValid(parentGateOpenedAt === null ? null : { openedAt: parentGateOpenedAt, profileId: 'family' }, Date.now()));
+  const joinName = nameLocked ? (profile?.displayName ?? '') : name;
 
   useEffect(() => {
     const handed = takeJoinHandoff();
@@ -118,15 +128,15 @@ export function JoinSpaceScreen({ navigation }: Props): React.ReactElement {
 
   // The create form's calm hints (too long, a character the rule refuses); an empty field only keeps the button closed.
   // A stored name that predates the rule joins as it is (it stays the profile name), so only a changed name is checked.
-  const unchanged = profile !== null && name.trim() === profile.displayName;
-  const hint = unchanged ? null : nameHint(name, messages.learner.createProfile.nameHint);
-  const nameOk = name.trim().length > 0 && (unchanged || validateDisplayName(name) === null);
+  const unchanged = profile !== null && joinName.trim() === profile.displayName;
+  const hint = unchanged ? null : nameHint(joinName, messages.learner.createProfile.nameHint);
+  const nameOk = joinName.trim().length > 0 && (unchanged || validateDisplayName(joinName) === null);
 
   const confirmName = async (): Promise<void> => {
     if (!profile || !found || !nameOk) return;
     setMessage(null);
     setBusy(true);
-    const result = await join(profile.id, found.id, code, name.trim() || undefined);
+    const result = await join(profile.id, found.id, code, joinName.trim() || undefined);
     setBusy(false);
     if (!result.ok) {
       setMessage(joinErrorMessage(result.error, messages.caregiver));
@@ -180,8 +190,11 @@ export function JoinSpaceScreen({ navigation }: Props): React.ReactElement {
           <Caption tone="muted">{seeYouAs}</Caption>
           <Spacer size="xs" />
           <TextInput
-            value={name}
+            value={joinName}
             onChangeText={setName}
+            editable={!nameLocked}
+            aria-disabled={nameLocked}
+            testID="join-name"
             maxLength={Math.max(NAME_MAX, profile?.displayName.length ?? 0)}
             autoCorrect={false}
             // Names start with a capital in every word, on purpose: "sungjoo" becomes "Sungjoo", never only the first word.
@@ -192,8 +205,8 @@ export function JoinSpaceScreen({ navigation }: Props): React.ReactElement {
               paddingHorizontal: spacing.md,
               fontSize: typography.size.title,
               fontWeight: '700',
-              color: colors.text.primary,
-              backgroundColor: colors.surface.paper,
+              color: nameLocked ? colors.text.secondary : colors.text.primary,
+              backgroundColor: nameLocked ? colors.surface.sunken : colors.surface.paper,
               borderWidth: 2,
               borderColor: colors.border.subtle,
               borderRadius: radii.lg,
@@ -207,6 +220,14 @@ export function JoinSpaceScreen({ navigation }: Props): React.ReactElement {
           ) : null}
           <Spacer size="xs" />
           <Caption tone="muted">{m.confirm.sameEverywhere}</Caption>
+          {nameLocked ? (
+            <>
+              <Spacer size="xs" />
+              <Caption tone="muted" testID="join-name-locked">
+                {m.confirm.nameLocked}
+              </Caption>
+            </>
+          ) : null}
           <Spacer size="md" />
           <Button label={busy ? m.confirm.joining.cta : m.confirm.me.cta} tone="primary" size="lg" fullWidth disabled={busy || !nameOk} onPress={() => void confirmName()} />
           <Spacer size="sm" />

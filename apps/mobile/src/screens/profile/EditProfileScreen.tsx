@@ -79,8 +79,12 @@ export function EditProfileScreen({ navigation, route }: Props): React.ReactElem
   const inClass = useMembershipStore((s) => (s.byLearner[profileId] ?? []).some((r) => r.kind === 'class'));
   const hydrateMemberships = useMembershipStore((s) => s.hydrate);
   const deviceScope = useMembershipStore((s) => s.deviceScope);
-  /** A class device: the server refuses name, level and cub edits from it (§3.11). */
-  const [classDevice, setClassDevice] = useState(false);
+  /**
+   * Whether this is a class device, where the server refuses name, level and cub edits (§3.11). Until the answer is
+   * read (a storage read) Save stays closed, so a quick tap cannot queue an edit a class device's server would refuse.
+   */
+  const [scope, setScope] = useState<'unknown' | 'full' | 'class'>('unknown');
+  const classDevice = scope === 'class';
 
   const [draft, setDraft] = useState<EditDraft | null>(() => (original ? initialEditDraft(original) : null));
   const [agreed, setAgreed] = useState(false);
@@ -104,10 +108,12 @@ export function EditProfileScreen({ navigation, route }: Props): React.ReactElem
 
   useEffect(() => {
     let live = true;
+    setScope('unknown');
     void deviceScope(profileId).then(
-      (scope) => {
-        if (!live || scope !== 'class') return;
-        setClassDevice(true);
+      (answer) => {
+        if (!live) return;
+        setScope(answer);
+        if (answer !== 'class') return;
         // Anything typed before the answer came back goes back to the stored values: those rows cannot save here.
         const stored = useProfileStore.getState().profiles.find((p) => p.id === profileId);
         if (stored) {
@@ -115,7 +121,10 @@ export function EditProfileScreen({ navigation, route }: Props): React.ReactElem
           setDraft((d) => (d ? { ...d, name: start.name, level: start.level, avatar: start.avatar } : d));
         }
       },
-      () => undefined,
+      // A storage read that fails reads as a full device: the server still refuses a class device's edit, and nothing else changes.
+      () => {
+        if (live) setScope('full');
+      },
     );
     return () => {
       live = false;
@@ -195,7 +204,7 @@ export function EditProfileScreen({ navigation, route }: Props): React.ReactElem
   };
 
   const onSave = async (): Promise<void> => {
-    if (missing !== null || submitting.current) return;
+    if (missing !== null || scope === 'unknown' || submitting.current) return;
     submitting.current = true;
     setBusy(true);
     setPinError(null);
@@ -472,7 +481,7 @@ export function EditProfileScreen({ navigation, route }: Props): React.ReactElem
         tone="primary"
         size="hero"
         fullWidth
-        disabled={missing !== null || busy}
+        disabled={missing !== null || busy || scope === 'unknown'}
         onPress={() => void onSave()}
       />
       {saveError !== null || missing !== null ? (

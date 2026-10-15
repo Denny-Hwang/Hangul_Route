@@ -304,6 +304,7 @@ export const caregiver = {
     confirm: {
       seeYouAs: { family: 'Tu familia te verá como:', teacher: 'Tu docente te verá como:' },
       sameEverywhere: 'Este nombre es el mismo en todas partes, no solo aquí.',
+      nameLocked: 'El nombre se puede cambiar en Editar perfil.',
       me: { cta: 'Soy yo' },
       joining: { cta: 'Uniéndote…' },
       alreadyIn: { cta: 'Ya estaba en esta clase' },
