@@ -81,17 +81,28 @@ describe('SentenceBuilderGame: the prompt slot follows the round, the clips are 
 
     // Build round 1 in order (w0, w1, w2), each tap a second apart (past the double-tap window);
     // the built sentence is heard, then the next round opens.
+    // The clock holds still during each tap and moves only between taps.
     const round1 = slotArgs.length;
-    let clock = Date.now();
-    const now = vi.spyOn(Date, 'now').mockImplementation(() => (clock += 1000));
-    for (const id of ['w0', 'w1', 'w2']) await tapTile(r, id);
+    const start = Date.now();
+    const now = vi.spyOn(Date, 'now');
+    for (const [i, id] of ['w0', 'w1', 'w2'].entries()) {
+      now.mockReturnValue(start + (i + 1) * 1000);
+      await tapTile(r, id);
+    }
     now.mockRestore();
     expect(byTestId(r.root, 'sentence-builder-done').length).toBeGreaterThan(0);
-    await act(async () => {
-      await new Promise((resolve) => setTimeout(resolve, motion.duration.crawl + 50));
-    });
 
-    expect(byTestId(r.root, 'sentence-builder-gloss').some((n) => n.props.children === EAT_RICE.sentence.en)).toBe(true);
+    // With no sound played the next round opens `crawl` later: poll for it (bounded), not a fixed sleep.
+    const round2Open = (): boolean =>
+      byTestId(r.root, 'sentence-builder-gloss').some((n) => n.props.children === EAT_RICE.sentence.en);
+    const deadline = Date.now() + motion.duration.crawl + 5000;
+    while (!round2Open() && Date.now() < deadline) {
+      await act(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 25));
+      });
+    }
+
+    expect(round2Open()).toBe(true);
     const later = slotArgs.slice(round1);
     expect(later.at(-1)).toEqual({ source: 'sentence-builder', hasClip: false, textOnScreen: true });
     expect(audio.hasClip).toHaveBeenLastCalledWith(undefined);

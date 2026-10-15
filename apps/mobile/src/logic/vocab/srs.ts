@@ -37,7 +37,11 @@ function dayMs(day: string): number {
 /** The last day a `YYYY-MM-DD` key can hold: past it `toISOString` writes a six-digit year. */
 const LAST_DAY = '9999-12-31';
 
-/** `day` plus `n` calendar days, never past `9999-12-31` (an absurd device clock still yields a valid key). */
+/**
+ * `day` plus `n` calendar days, never past `9999-12-31`, so a far-future device clock still yields a
+ * valid key. At the cap the result can equal `day`: a schedule then comes due again at once and a
+ * list of following days repeats, so callers that need distinct days must not rely on it past 9999.
+ */
 export function addDays(day: string, n: number): string {
   const ms = dayMs(day) + n * DAY_MS;
   return ms > dayMs(LAST_DAY) ? LAST_DAY : new Date(ms).toISOString().slice(0, 10);

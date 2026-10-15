@@ -55,6 +55,8 @@ describe('day arithmetic', () => {
     expect(addDays('9999-12-20', 30)).toBe('9999-12-31');
     expect(addDays('9999-12-30', 1)).toBe('9999-12-31');
     expect(addDays('9999-12-31', -1)).toBe('9999-12-30');
+    // At the cap a right answer comes due the same day: the key stays valid, the box still moves.
+    expect(onRight({ box: 1, bestBox: 1, due: '9999-12-31' }, '9999-12-31').due).toBe('9999-12-31');
   });
 
   it('addDays is calendar arithmetic, so a daylight-saving change never shifts the day', () => {
