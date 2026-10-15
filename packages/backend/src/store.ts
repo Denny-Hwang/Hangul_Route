@@ -61,7 +61,15 @@ export interface Learner {
   recoveryHash: string | null;
   createdAt: string;
   lastActiveAt: string;
+  /**
+   * When the name, level or picture last changed after registration (the device's `at` of the newest applied
+   * edit, migration 0010). Null or absent until the first edit.
+   */
+  profileUpdatedAt?: string | null;
 }
+
+/** The learner columns a device may change after registration (PATCH /api/sync/learners/:id). */
+export type LearnerProfileFields = Partial<Pick<Learner, 'displayName' | 'ageGroup' | 'avatar'>>;
 
 /**
  * What a device binding may do (SEC-4). `full`: the learner's own device —

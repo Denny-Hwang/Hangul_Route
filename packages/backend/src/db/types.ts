@@ -1,7 +1,7 @@
 import { isStripeSubscriptionRef, type BillingEvent, type BillingEventKind, type Entitlement, type EntitlementApply, type MemberKind, type Membership, type Plan, type RelinkRequest, type Space } from '@hangul-route/content-schema';
 import type { TransferBlockReason, TransferEndReason, TransferSlot } from '@hangul-route/content-schema';
 import { isEntitlementActive } from '../lib/entitlement';
-import type { Account, Learner, LearnerDevice, SnapshotRecord } from '../store';
+import type { Account, Learner, LearnerDevice, LearnerProfileFields, SnapshotRecord } from '../store';
 import type {
   ConsentResetReason,
   ExecuteTransferInput,
@@ -81,7 +81,25 @@ export interface Db {
 
   // learners + devices (F-SYNC-001)
   getLearner(id: string): Promise<Learner | null>;
+  /** Whole-row upsert: the first insert (registration) only. Every later write targets its own columns. */
   putLearner(learner: Learner): Promise<void>;
+  /** Sets `last_active_at` only, so a concurrent rename or Rescue Code write is never undone. */
+  touchLearner(learnerId: string, lastActiveAt: string): Promise<void>;
+  /**
+   * Sets only the given profile columns and `profile_updated_at = at`, while the stored `profile_updated_at` is
+   * null or not newer than `at` (the newest edit wins). Returns whether it applied; false for a stale edit, an
+   * empty `fields` or a missing learner.
+   */
+  updateLearnerProfile(learnerId: string, fields: LearnerProfileFields, at: string): Promise<boolean>;
+  /**
+   * Sets `display_name` only while the learner has no profile edit yet (`profile_updated_at` is null), and leaves
+   * `profile_updated_at` null: the join path's repair for app builds that cannot PATCH. Server time never enters
+   * the device-time order of PATCH edits, and once a PATCH has applied, PATCH is the only writer of the name.
+   * Returns whether it applied.
+   */
+  setDisplayNameIfUnedited(learnerId: string, displayName: string): Promise<boolean>;
+  /** Sets `recovery_hash` only. Throws on a UNIQUE collision, as D1 does. */
+  setRecoveryHash(learnerId: string, hash: string): Promise<void>;
   learnerByRecoveryHash(hash: string): Promise<Learner | null>;
   /** Erase a learner everywhere (devices, snapshot, memberships, relink requests, transfer requests + events, transfer prefs, notes, note reports, note prefs, sender blocks, learner rate counters, class-scope acknowledgement, teacher moves). */
   deleteLearner(id: string): Promise<boolean>;

@@ -1,5 +1,5 @@
 import { TRANSFER_COOLING_OFF_MS, type BillingEvent, type ClassMoveEndReason, type BillingEventKind, type Entitlement, type EntitlementApply, type MemberKind, type Membership, type Plan, type Space, type TransferBlockReason, type TransferEndReason, type TransferSlot } from '@hangul-route/content-schema';
-import { id, type Account, type Learner, type LearnerDevice, type SnapshotRecord } from '../store';
+import { id, type Account, type Learner, type LearnerDevice, type LearnerProfileFields, type SnapshotRecord } from '../store';
 import { assertBillingLimit, billingEventFields, newestBillingEvent, REFUNDABLE_BILLING_KINDS } from './billing-rules';
 import { assertNoteChecks, assertOneSender } from './feedback-rules';
 import {
@@ -119,7 +119,37 @@ export class MemoryDb implements Db {
     // learners.recovery_hash is UNIQUE on D1; mirror it so collisions surface here too.
     const holder = learner.recoveryHash === null ? undefined : [...this.learners.values()].find((l) => l.recoveryHash === learner.recoveryHash && l.id !== learner.id);
     if (holder) throw new Error('UNIQUE constraint failed: learners.recovery_hash');
-    this.learners.set(learner.id, clone(learner));
+    // The column is nullable on D1 (migration 0010): a row read back always carries it. Like D1's upsert, a
+    // re-save never resets an applied edit time.
+    const profileUpdatedAt = learner.profileUpdatedAt ?? this.learners.get(learner.id)?.profileUpdatedAt ?? null;
+    this.learners.set(learner.id, clone({ ...learner, profileUpdatedAt }));
+  }
+  async touchLearner(learnerId: string, lastActiveAt: string): Promise<void> {
+    const learner = this.learners.get(learnerId);
+    if (learner) learner.lastActiveAt = lastActiveAt;
+  }
+  async updateLearnerProfile(learnerId: string, fields: LearnerProfileFields, at: string): Promise<boolean> {
+    const learner = this.learners.get(learnerId);
+    const given = (['displayName', 'ageGroup', 'avatar'] as const).filter((k) => fields[k] !== undefined);
+    if (!learner || given.length === 0) return false;
+    if (learner.profileUpdatedAt && learner.profileUpdatedAt > at) return false;
+    if (fields.displayName !== undefined) learner.displayName = fields.displayName;
+    if (fields.ageGroup !== undefined) learner.ageGroup = fields.ageGroup;
+    if (fields.avatar !== undefined) learner.avatar = fields.avatar;
+    learner.profileUpdatedAt = at;
+    return true;
+  }
+  async setDisplayNameIfUnedited(learnerId: string, displayName: string): Promise<boolean> {
+    const learner = this.learners.get(learnerId);
+    if (!learner || learner.profileUpdatedAt) return false;
+    learner.displayName = displayName;
+    return true;
+  }
+  async setRecoveryHash(learnerId: string, hash: string): Promise<void> {
+    const holder = [...this.learners.values()].find((l) => l.recoveryHash === hash && l.id !== learnerId);
+    if (holder) throw new Error('UNIQUE constraint failed: learners.recovery_hash');
+    const learner = this.learners.get(learnerId);
+    if (learner) learner.recoveryHash = hash;
   }
   async learnerByRecoveryHash(hash: string): Promise<Learner | null> {
     return clone([...this.learners.values()].find((l) => l.recoveryHash === hash) ?? null);

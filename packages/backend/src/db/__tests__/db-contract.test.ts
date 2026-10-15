@@ -24,11 +24,59 @@ function contract(name: string, make: () => Db): void {
       expect(await db.getAccount('mom')).toEqual({ id: 'mom', email: 'mom@example.com', displayName: 'Mom K', consent: { at: T, scope: 'parent' }, createdAt: T });
     });
 
+    it('column-targeted learner writes: touch, profile edit (newest wins) and the rescue hash', async () => {
+      const learner = { id: 'profile:suni', displayName: 'test', ageGroup: '5-7' as const, avatar: 'hoya-orange', recoveryHash: null, createdAt: T, lastActiveAt: T };
+      await db.putLearner(learner);
+      await db.putLearner({ ...learner, id: 'profile:other', displayName: 'Other' });
+
+      await db.touchLearner('profile:suni', '2026-10-08T00:00:00.000Z');
+      expect(await db.getLearner('profile:suni')).toEqual({ ...learner, lastActiveAt: '2026-10-08T00:00:00.000Z', profileUpdatedAt: null });
+
+      // the join repair writes the name column only, leaves profile_updated_at null, and only before any edit
+      expect(await db.setDisplayNameIfUnedited('profile:suni', 'Joined')).toBe(true);
+      expect(await db.getLearner('profile:suni')).toEqual({ ...learner, displayName: 'Joined', lastActiveAt: '2026-10-08T00:00:00.000Z', profileUpdatedAt: null });
+      expect(await db.setDisplayNameIfUnedited('profile:nobody', 'X')).toBe(false);
+
+      expect(await db.updateLearnerProfile('profile:suni', { displayName: 'Sungjoo' }, '2026-10-09T00:00:00.000Z')).toBe(true);
+      expect(await db.getLearner('profile:suni')).toMatchObject({ displayName: 'Sungjoo', ageGroup: '5-7', avatar: 'hoya-orange', lastActiveAt: '2026-10-08T00:00:00.000Z', profileUpdatedAt: '2026-10-09T00:00:00.000Z' });
+      // only the given columns change
+      expect(await db.updateLearnerProfile('profile:suni', { ageGroup: '8-9', avatar: 'hoya-blue' }, '2026-10-10T00:00:00.000Z')).toBe(true);
+      expect(await db.getLearner('profile:suni')).toMatchObject({ displayName: 'Sungjoo', ageGroup: '8-9', avatar: 'hoya-blue', profileUpdatedAt: '2026-10-10T00:00:00.000Z' });
+      // an older edit is refused and changes nothing; an equal time applies
+      expect(await db.updateLearnerProfile('profile:suni', { displayName: 'Old' }, '2026-10-09T12:00:00.000Z')).toBe(false);
+      expect((await db.getLearner('profile:suni'))?.displayName).toBe('Sungjoo');
+      // after an edit, the join repair never writes the name
+      expect(await db.setDisplayNameIfUnedited('profile:suni', 'Joined')).toBe(false);
+      expect((await db.getLearner('profile:suni'))?.displayName).toBe('Sungjoo');
+      expect(await db.updateLearnerProfile('profile:suni', { displayName: 'Same' }, '2026-10-10T00:00:00.000Z')).toBe(true);
+      expect((await db.getLearner('profile:suni'))?.displayName).toBe('Same');
+      // nothing to write, or no such learner: not applied
+      expect(await db.updateLearnerProfile('profile:suni', {}, '2026-10-11T00:00:00.000Z')).toBe(false);
+      expect((await db.getLearner('profile:suni'))?.profileUpdatedAt).toBe('2026-10-10T00:00:00.000Z');
+      expect(await db.updateLearnerProfile('profile:nobody', { displayName: 'X' }, '2026-10-11T00:00:00.000Z')).toBe(false);
+      expect(await db.getLearner('profile:nobody')).toBeNull();
+      // the other learner is untouched
+      expect(await db.getLearner('profile:other')).toEqual({ ...learner, id: 'profile:other', displayName: 'Other', profileUpdatedAt: null });
+
+      await db.setRecoveryHash('profile:suni', 'hash-1');
+      expect(await db.getLearner('profile:suni')).toMatchObject({ recoveryHash: 'hash-1', displayName: 'Same', ageGroup: '8-9', lastActiveAt: '2026-10-08T00:00:00.000Z' });
+      expect((await db.learnerByRecoveryHash('hash-1'))?.id).toBe('profile:suni');
+      await expect(db.setRecoveryHash('profile:other', 'hash-1')).rejects.toThrow(/UNIQUE/);
+      expect((await db.getLearner('profile:other'))?.recoveryHash).toBeNull();
+      // a touch and a hash write never undo the profile edit
+      await db.touchLearner('profile:suni', '2026-10-12T00:00:00.000Z');
+      expect(await db.getLearner('profile:suni')).toMatchObject({ displayName: 'Same', recoveryHash: 'hash-1', lastActiveAt: '2026-10-12T00:00:00.000Z' });
+      // a re-save of an edited row without the edit time never resets it (both adapters keep it)
+      const { profileUpdatedAt: _kept, ...row } = (await db.getLearner('profile:suni'))!;
+      await db.putLearner(row);
+      expect((await db.getLearner('profile:suni'))?.profileUpdatedAt).toBe('2026-10-10T00:00:00.000Z');
+    });
+
     it('learners, devices and snapshots; deleteLearner erases everything of theirs', async () => {
       const learner = { id: 'profile:suni', displayName: 'Suni', ageGroup: '5-7' as const, avatar: 'hoya-orange', recoveryHash: null, createdAt: T, lastActiveAt: T };
       await db.putLearner(learner);
       const read = await db.getLearner('profile:suni');
-      expect(read).toEqual(learner);
+      expect(read).toEqual({ ...learner, profileUpdatedAt: null }); // never edited since registration (migration 0010)
       if (read) {
         read.recoveryHash = 'hash-1';
         read.lastActiveAt = '2026-10-08T00:00:00.000Z';

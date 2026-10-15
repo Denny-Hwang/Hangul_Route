@@ -1,10 +1,11 @@
-import { LearnerRegisterSchema, NoteDevicePrefsPutSchema, NoteReportSchema, NoteStatePutSchema, SnapshotPutSchema, TIER_GRACE_MS } from '@hangul-route/content-schema';
+import { LearnerProfilePatchSchema, LearnerRegisterSchema, NoteDevicePrefsPutSchema, NoteReportSchema, NoteStatePutSchema, SnapshotPutSchema, TIER_GRACE_MS } from '@hangul-route/content-schema';
 import { Hono } from 'hono';
 import { dbFor, NOTE_INBOX_LIMIT, noteRateKey, noteRetentionCuts, type Db, type NoteDeviceScope, type StoredNote } from '../db';
 import { fail, ok } from '../envelope';
 import { authorizeDevice, hashSecret, newDeviceSecret } from '../lib/device-auth';
 import { preserveAdditiveFields } from '../lib/additive-fields';
 import { tierForLearner } from '../lib/entitlement';
+import { publicLearner } from '../lib/learners';
 import { deviceReporterKey, holdAfterReport } from '../lib/note-holds';
 import { NOTE_LIMIT_DEVICE_REPORTS_PER_LEARNER_PER_DAY, NOTE_LIMIT_WINDOW_MS } from '../lib/note-limits';
 import { inboxNoteView, notePrefsView } from '../lib/note-views';
@@ -39,6 +40,7 @@ syncRoutes.post('/learners', async (c) => {
     recoveryHash: null,
     createdAt: now,
     lastActiveAt: now,
+    profileUpdatedAt: null,
   };
   await db.putLearner(learner);
 
@@ -88,9 +90,34 @@ syncRoutes.put('/learners/:id/snapshot', async (c) => {
   };
   // Compare-and-set: another device may have written between the read above and here (SYNC-1).
   if (!(await db.putSnapshot(record, currentRev))) return conflict(await db.getSnapshot(learnerId));
-  const learner = await db.getLearner(learnerId);
-  if (learner) await db.putLearner({ ...learner, lastActiveAt: record.updatedAt });
+  // Column-only: a whole-row write here would undo a rename or a Rescue Code stored since the read.
+  await db.touchLearner(learnerId, record.updatedAt);
   return ok(c, { rev: record.rev, updatedAt: record.updatedAt });
+});
+
+/**
+ * The learner's name, level or picture, changed on the learner's own device (F-PROF-001, F-LEARN-001 L2).
+ * Full-scope devices only: a class tablet cannot rename the learner (403 `scope_limited`, SEC-4). Only the
+ * sent columns are written, and only while the stored edit is not newer than `at` (an `at` in the future is
+ * read as now), so a late queued edit answers 200 `applied: false` and changes nothing. The name travels in
+ * the body only: it is never logged, put in a URL, a server event or telemetry.
+ */
+syncRoutes.patch('/learners/:id', async (c) => {
+  const learnerId = c.req.param('id');
+  const auth = await authorizeDevice(c, learnerId);
+  if (typeof auth !== 'string') return auth;
+  const parsed = LearnerProfilePatchSchema.safeParse(await c.req.json().catch(() => null));
+  // Issue paths and codes only: an issue's message or received value could echo the name back into a log.
+  if (!parsed.success) return fail(c, 'bad_request', 'Invalid learner profile body', 422, { issues: parsed.error.issues.map((i) => ({ path: i.path, code: i.code })) });
+  const { at, ...fields } = parsed.data;
+  const now = new Date();
+  const sent = new Date(at);
+  const when = (sent.getTime() > now.getTime() ? now : sent).toISOString();
+  const db = dbFor(c);
+  const applied = await db.updateLearnerProfile(learnerId, fields, when);
+  const learner = await db.getLearner(learnerId);
+  if (!learner) return fail(c, 'not_found', 'Learner not found', 404);
+  return ok(c, { learner: publicLearner(learner), applied });
 });
 
 syncRoutes.get('/learners/:id/snapshot', async (c) => {
@@ -108,6 +135,12 @@ syncRoutes.get('/learners/:id/snapshot', async (c) => {
     contentVer: record.contentVer,
   });
 });
+
+/** The inbox `learner` block: name, level, picture and the last edit time. Empty when the row is gone. */
+async function inboxLearner(db: Db, learnerId: string): Promise<{ learner?: { displayName: string; ageGroup: string; avatar: string; profileUpdatedAt: string | null } }> {
+  const row = await db.getLearner(learnerId);
+  return row ? { learner: { displayName: row.displayName, ageGroup: row.ageGroup, avatar: row.avatar, profileUpdatedAt: row.profileUpdatedAt ?? null } } : {};
+}
 
 /** Capabilities an app declares on the inbox read: `?cap=a,b` or `?cap=a&cap=b`. */
 export function acceptsCurriculum(caps: readonly string[] | undefined): boolean {
@@ -134,6 +167,7 @@ syncRoutes.get('/learners/:id/inbox', async (c) => {
   const notes = await db.notesForLearner(learnerId, classScoped ? 'class' : 'full', now, NOTE_INBOX_LIMIT);
   // [TV] the class-scope update and the one-time move notices (AMENDMENTS-TEACHER-VISIBILITY-TRANSFER section 4.3); never on a class tablet.
   const classFields = await inboxClassFields(db, learnerId, classScoped ? 'class' : 'full', memberships.some((m) => m.kind === 'class'), c.env as TransferEnv | undefined, now);
+  c.header('Cache-Control', 'no-store');
   return ok(c, {
     rev: (await db.getSnapshot(learnerId))?.rev ?? 0,
     plans: classScoped ? plans.filter((p) => p.spaceKind !== 'family') : plans,
@@ -146,6 +180,8 @@ syncRoutes.get('/learners/:id/inbox', async (c) => {
     notePrefs: notePrefsView(notes.prefs),
     ...transfers,
     ...classFields,
+    // The server's learner row, so the learner's own device can see a name the server holds (never a class tablet).
+    ...(classScoped ? {} : await inboxLearner(db, learnerId)),
     // The calling device's own scope (F-SPACE-002 section 4.12): a tablet a class relinked before the app kept a
     // marker learns it here, locked or not (no extra read).
     deviceScope: classScoped ? 'class' : 'full',

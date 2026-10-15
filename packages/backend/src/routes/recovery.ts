@@ -39,12 +39,15 @@ export function setRescueCodeSourceForTests(source: (() => string) | null): void
 
 const isUniqueViolation = (err: unknown): boolean => err instanceof Error && /UNIQUE constraint failed/i.test(err.message);
 
-/** Stores a fresh code for the learner, drawing again if its hash is already taken. Null when every draw collided. */
-async function storeNewCode(save: (learner: Learner) => Promise<void>, learner: Learner, pepper: string | undefined): Promise<string | null> {
+/**
+ * Stores a fresh code for the learner, drawing again if its hash is already taken. Null when every draw collided.
+ * Writes the hash column only, so a rename stored since the learner was read is kept.
+ */
+async function storeNewCode(save: (learnerId: string, hash: string) => Promise<void>, learnerId: string, pepper: string | undefined): Promise<string | null> {
   for (let attempt = 0; attempt < ISSUE_ATTEMPTS; attempt += 1) {
     const code = nextCode();
     try {
-      await save({ ...learner, recoveryHash: await rescueHash(code, pepper) }); // replaces any previous code
+      await save(learnerId, await rescueHash(code, pepper)); // replaces any previous code
       return code;
     } catch (err) {
       if (!isUniqueViolation(err)) throw err;
@@ -72,7 +75,7 @@ recoveryRoutes.post('/issue', async (c) => {
   }
   const learner = await db.getLearner(learnerId);
   if (!learner) return fail(c, 'not_found', 'Learner not found', 404);
-  const code = await storeNewCode((l) => db.putLearner(l), learner, rescuePepper(c.env as RuntimeEnv | undefined));
+  const code = await storeNewCode((learnerId, hash) => db.setRecoveryHash(learnerId, hash), learner.id, rescuePepper(c.env as RuntimeEnv | undefined));
   if (!code) return fail(c, 'code_unavailable', 'Could not issue a code right now — try again', 500);
   return ok(c, { code, issuedAt: new Date().toISOString() }, 201);
 });

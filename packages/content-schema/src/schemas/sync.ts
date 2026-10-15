@@ -4,6 +4,8 @@ import { ProgressSnapshotSchema, type ProgressSnapshot } from './progress';
 import { TierSourceSchema } from './entitlement';
 import { InboxPlanSchema, type InboxPlan } from './plan';
 import { LearnerMembershipSchema } from './space';
+import { AvatarKindSchema } from './profile';
+import { LegacyDisplayNameSchema } from './display-name';
 import { LearnerLevelIdSchema } from './learner-level';
 import { PlacementSummarySchema } from './placement';
 import { InboxClassMoveSchema, InboxClassScopeSchema } from './class-scope';
@@ -177,12 +179,51 @@ export const LearnerRegisterSchema = z.object({
   deviceId: z.string().min(8).max(64),
   learner: z.object({
     id: z.string().regex(/^profile:[a-z0-9-]+$/).optional(),
-    displayName: z.string().min(1).max(20),
+    displayName: LegacyDisplayNameSchema,
     ageGroup: LearnerLevelIdSchema,
     avatar: z.string().min(1),
   }),
 });
 export type LearnerRegister = z.infer<typeof LearnerRegisterSchema>;
+
+/**
+ * PATCH /api/sync/learners/:id body: the learner's name, level or picture,
+ * changed on the learner's own device after registration. Strict, so the
+ * fields that stay on the device (who is learning, the grown-up PIN, consent;
+ * F-LEARN-001 decision L2) are refused, never stored. `at` is when the device
+ * made the change: the server keeps the newest edit, so a queued older edit
+ * that arrives late does not undo a newer one. The name takes the lenient
+ * server rule (`LegacyDisplayNameSchema`, trim, 1-20), so the app's one-time
+ * push of a legacy name it already holds is never refused on every retry; the
+ * strict rule applies to a newly typed name in the app's edit screen.
+ */
+export const LearnerProfilePatchSchema = z
+  .object({
+    displayName: LegacyDisplayNameSchema.optional(),
+    ageGroup: LearnerLevelIdSchema.optional(),
+    avatar: AvatarKindSchema.optional(),
+    at: z.string().datetime({ offset: true }),
+  })
+  .strict()
+  .refine((p) => p.displayName !== undefined || p.ageGroup !== undefined || p.avatar !== undefined, {
+    message: 'Send at least one of displayName, ageGroup or avatar',
+  });
+export type LearnerProfilePatch = z.infer<typeof LearnerProfilePatchSchema>;
+
+/**
+ * The learner row as the server holds it, on the inbox of a full-scope device
+ * (the learner's own). Lenient per field: a stale level or picture on a legacy
+ * row reads as null or empty and never hides the name; only a missing name
+ * drops the block (never the inbox). `profileUpdatedAt` is null until the
+ * first edit after registration.
+ */
+export const InboxLearnerSchema = z.object({
+  displayName: z.string(),
+  ageGroup: LearnerLevelIdSchema.nullable().catch(null),
+  avatar: z.string().catch(''),
+  profileUpdatedAt: z.string().nullable().catch(null),
+});
+export type InboxLearner = z.infer<typeof InboxLearnerSchema>;
 
 /** GET /api/sync/learners/:id/inbox response. */
 export const SyncInboxSchema = z.object({
@@ -221,6 +262,8 @@ export const SyncInboxSchema = z.object({
    */
   classScope: InboxClassScopeSchema.nullable().default(null).catch(null),
   classMoves: lenientArray(InboxClassMoveSchema).default([]),
+  /** The server's learner row (full-scope devices only). Absent from an older Worker and on a class tablet; malformed reads as absent. */
+  learner: InboxLearnerSchema.optional().catch(undefined),
 });
 /**
  * Plans are typed as `InboxPlan` (meta optional) so a parsed inbox and the

@@ -21,7 +21,7 @@ The learner device is unauthenticated (children have no accounts), so the device
 
 ### 3.1 Schema v2 (additive)
 
-- `learners(id, display_name, age_group, avatar, recovery_hash, created_at, last_active_at)`
+- `learners(id, display_name, age_group, avatar, recovery_hash, created_at, last_active_at)`; migration 0010 (additive, 2026-10-14) adds `profile_updated_at TEXT NULL` (§3.7)
 - `learner_devices(learner_id, device_id, secret_hash, created_at, last_seen_at)` — the principal for learner traffic.
 - `snapshots(learner_id PK, rev, schema_ver, content_ver, device_id, summary_json, payload_json, updated_at)` — one row per learner.
 - Legacy v1 tables and routes stay until the client stops using them (they are unused by the shipped client today).
@@ -35,7 +35,8 @@ The learner device is unauthenticated (children have no accounts), so the device
   - the rev check and the write are **one compare-and-set** (SYNC-1, 2026-10-09): `INSERT … ON CONFLICT DO NOTHING` for base rev 0, `UPDATE … WHERE learner_id = ? AND rev = ?` otherwise, success only when `meta.changes === 1`. Two devices uploading on the same base rev get one 200 and one 409, never two 200s
   - body validated with `ProgressSnapshotSchema` / `ProgressSummarySchema`; `snapshot.profileId` must equal `:id`
 - `GET /learners/:id/snapshot` → `{ rev, snapshot, summary, updatedAt, schemaVer, contentVer }` or 404 `no_snapshot`
-- `GET /learners/:id/inbox?since=` → `{ rev, plans: [], memberships: [], tier: 'free', serverTime }` (plans / memberships / tier fill in S3–S6; the shape is fixed now)
+- `GET /learners/:id/inbox?since=` → `{ rev, plans: [], memberships: [], tier: 'free', serverTime }` (plans / memberships / tier fill in S3–S6; the shape is fixed now). Since 2026-10-14 a full-scope device also gets `learner: { displayName, ageGroup, avatar, profileUpdatedAt }` (§3.7); a class tablet never does. Sent with `Cache-Control: no-store`.
+- `PATCH /learners/:id` → the learner's name, level or picture after registration (§3.7).
 - Wrong or missing device secret → 401; a device bound to another learner → 403.
 
 ### 3.3 Merge is deterministic (`logic/sync/merge.ts`)
@@ -68,6 +69,22 @@ Merging is idempotent and commutative on the sets above (`merge(a,b) ≡ merge(b
 - `logic/sync/backup.ts` encodes `{ format: 'hangul-route-backup', version: 1, exportedAt, profile, snapshot }` and decodes/validates with `BackupFileSchema`; unknown versions or malformed JSON produce a typed error, never a throw.
 - The file name is `hangul-route-<name>-<date>.hangulroute.json`.
 
+### 3.7 Learner profile edits after registration (SYNC-PROF-1, 2026-10-14)
+
+A learner renamed on the device ("test" → "Sungjoo") kept the old name on the teacher and family consoles: nothing on the server changed `learners.display_name` after registration, and two whole-row writes could undo a concurrent write. Every console view reads the live row, so fixing the row fixes the consoles.
+
+| # | Deliverable | Acceptance |
+|---|---|---|
+| 1 | `DisplayNameSchema` (content-schema) | The device rule of F-PROF-001 §3.2 (`validateDisplayName`): trim, 1–12, Latin and accents U+00C0–U+024F, Hangul syllables, digits, space, `'` / U+2019, hyphen. Checks a name newly typed in the app's edit screen, on the device. The server checks incoming names on `POST /learners`, `PATCH /learners/:id` and the join with the lenient `LegacyDisplayNameSchema` (trim, 1–20, the bound `ProfileSchema` keeps; no C0/C1 control characters, U+200B, U+200E–U+200F, U+202A–U+202E, U+2060–U+2069 or U+FEFF, which no device rule ever produced and which would reach every console; other characters, emoji included, stay accepted for legacy names), because apps hold legacy names ("Alexandria Mae", "Mina_K") and send them unchanged: a stricter server rule would refuse first-time registration, and the one-time re-push of the current name, on every retry. A stored legacy name is never re-checked or rewritten. Its message is for developers; clients map errors by code through `packages/i18n` |
+| 2 | `PATCH /learners/:id` `{ displayName?, ageGroup?, avatar?, at }` | Strict body, at least one field; no rate limit (newest-edit-wins makes a repeat harmless); `learnerType`, `parentPinHash`, consent, `recoveryHash` or any other key → 422 (L2: those stay on the device). Full-scope device only: a class tablet → 403 `scope_limited` (SEC-4); bad secret → 401/403. 422 issues carry path and code only. 200 `{ learner, applied }` |
+| 3 | Newest edit wins, by the device clock | `at` is the device's edit time; an `at` in the future is read as server time. Writes only the sent columns plus `profile_updated_at = at`, while the stored value is null or not newer. A stale edit → 200 `applied: false`, nothing changed; the app then adopts `learner` from the response (or the inbox block) as the truth and does not retry (a device clock behind a newer edit). Only PATCH writes `profile_updated_at`, so server time never enters this order |
+| 4 | Join repair (`POST /api/spaces/:id/join`, F-SPACE-001 §3) | For app builds that cannot PATCH: a join (first or again) with a `displayName` (trim, 1–20, the lenient server rule of #1) writes the name column only, and only while `profile_updated_at` is null. Once a PATCH has applied, PATCH is the only writer of the name. A legacy name never fails the join and applies as sent. Best effort: a failed name write never fails the join (a fixed log code, never the name) |
+| 5 | Column-targeted writes (no lost update) | The snapshot PUT writes `last_active_at` only (`touchLearner`); the Rescue Code issue writes `recovery_hash` only (`setRecoveryHash`); `putLearner` is the first insert only. Both Db adapters, in `db-contract.test.ts` |
+| 6 | Inbox `learner` block | Full-scope devices only. Lenient per field in `SyncInboxSchema` (a legacy level reads as null, never hides the name); optional, so older apps parse the inbox |
+| 7 | Privacy | The name travels in the JSON body only: never in a URL, a log line, a server event or telemetry |
+| 8 | No-store | `Cache-Control: no-store` on every GET under `/api/spaces/*` and on the inbox |
+| 9 | Migration and deploy order | Migration 0010 (one `ADD COLUMN`) and this Worker deploy before the app PR that sends the PATCH (PR2). Until PR2, a renamed learner on the current build is repaired by joining again through **new here** → confirm name (picking the old name from the list sends a relink request, not a name). Rollback: an older Worker never reads the column |
+
 ## 4. Out of scope (later stages)
 
 - Client wiring (upload triggers, sync store, settings rows, file pickers) → F-SYNC-002 (same roadmap S1, second PR).
@@ -85,6 +102,9 @@ Merging is idempotent and commutative on the sets above (`merge(a,b) ≡ merge(b
 | `content-schema/__tests__/sync.test.ts` | summary / put body / backup file schemas parse and reject |
 | `backend/__tests__/sync.test.ts` | register, device auth (401/403), put/get, 409 conflict + merged retry, concurrent PUTs on one base rev (one wins), inbox shape |
 | `backend/db/__tests__/db-contract.test.ts` | `putSnapshot(record, baseRev)` compare-and-set on both backends |
+| `backend/__tests__/learner-rename.test.ts` | §3.7: rename shows on every console view (alias too), PATCH refusals, stale and future `at`, slow device clock, join repair and its limits, inbox block, no name in events or logs, lost-update races |
+| `backend/db/__tests__/migration-0010.test.ts` | §3.7 #9: one additive column; old rows read `profileUpdatedAt: null` |
+| `content-schema/__tests__/display-name.test.ts` | §3.7 #1, #2, #6 |
 | `mobile/logic/sync/__tests__/merge.test.ts` | every rule in §3.3, commutativity, idempotence; `rebaseSnapshot` attempts subtraction and kept `completedAt` |
 | `mobile/logic/sync/__tests__/summarize.test.ts` | §3.4 fields on fixtures |
 | `mobile/logic/sync/__tests__/engine.test.ts` | ok / conflict-then-ok / double conflict / error |

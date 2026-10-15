@@ -296,7 +296,25 @@ spacesRoutes.post('/:id/join', async (c) => {
     if (typeof auth !== 'string') return auth;
     if (space.kind === 'school') return fail(c, 'not_joinable', 'Learners join a class or a family, not a school', 422);
     const existing = await db.membership(space.id, 'learner', learnerId);
-    if (existing) return ok(c, { alreadyMember: true, membership: existing, space: { id: space.id, kind: space.kind, name: space.name } });
+    // The device's current name becomes the roster name, also on a join again: the repair path for a learner
+    // renamed on an app build that cannot PATCH. Column-only, and only while the learner has no PATCH edit (PATCH
+    // orders edits by device time; a server-time join must not enter that order). The body already holds the
+    // server's lenient name rule (trim, 1-20, `LegacyDisplayNameSchema`), the same one registration and PATCH use,
+    // so a legacy name the device keeps applies as sent. Best effort: a failed repair never fails the join (the
+    // membership may already be committed, and a retry would fail the same way). Only a fixed code is logged,
+    // never the name.
+    const applyName = async (): Promise<void> => {
+      if (displayName === undefined) return;
+      try {
+        await db.setDisplayNameIfUnedited(learnerId, displayName);
+      } catch {
+        console.warn('join_name_repair_failed');
+      }
+    };
+    if (existing) {
+      await applyName();
+      return ok(c, { alreadyMember: true, membership: existing, space: { id: space.id, kind: space.kind, name: space.name } });
+    }
     const seat = await classSeatCheck(db, space, learnerId, now);
     if (seat) return fail(c, seat, SEAT_MESSAGES[seat], 409);
     if (space.kind === 'family' && (await studentsIn(db, space.id)) >= FAMILY_LIFETIME_LEARNERS) {
@@ -304,10 +322,7 @@ spacesRoutes.post('/:id/join', async (c) => {
     }
     const membership: Membership = { spaceId: space.id, memberKind: 'learner', memberId: learnerId, role: 'student', joinedAt: now.toISOString() };
     await db.addMembership(membership);
-    if (displayName) {
-      const learner = await db.getLearner(learnerId);
-      if (learner) await db.putLearner({ ...learner, displayName });
-    }
+    await applyName();
     return ok(c, { alreadyMember: false, membership, space: { id: space.id, kind: space.kind, name: space.name } }, 201);
   }
 
