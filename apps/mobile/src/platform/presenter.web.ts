@@ -74,6 +74,26 @@ export interface PresenterEnv {
   screen?: { orientation?: { lock?: (o: string) => Promise<void>; unlock?: () => void } } | null;
   /** Makes the Web Audio context the timer chime plays on; null without Web Audio. */
   createAudioContext?: (() => ChimeContextLike) | null;
+  /** `navigator.serviceWorker`; null without one (the stale-presenter Reload then only reloads). */
+  serviceWorker?: ServiceWorkerContainerLike | null;
+}
+
+interface ServiceWorkerLike {
+  state?: string;
+  postMessage(message: unknown): void;
+  addEventListener?(type: 'statechange', fn: () => void): void;
+}
+
+interface ServiceWorkerRegistrationLike {
+  update(): Promise<unknown>;
+  waiting?: ServiceWorkerLike | null;
+  installing?: ServiceWorkerLike | null;
+}
+
+/** The slice of `navigator.serviceWorker` the stale-presenter Reload uses. */
+export interface ServiceWorkerContainerLike {
+  getRegistration(): Promise<ServiceWorkerRegistrationLike | undefined>;
+  addEventListener?(type: 'controllerchange', fn: () => void): void;
 }
 
 interface AudioParamLike {
@@ -102,7 +122,7 @@ type Globals = {
   history?: PresenterEnv['history'];
   document?: DocumentLike & { activeElement?: unknown };
   opener?: unknown;
-  navigator?: PresenterEnv['navigator'];
+  navigator?: PresenterEnv['navigator'] & { serviceWorker?: ServiceWorkerContainerLike };
   screen?: PresenterEnv['screen'];
   addEventListener?: EventTargetLike['addEventListener'];
   removeEventListener?: EventTargetLike['removeEventListener'];
@@ -125,6 +145,7 @@ function browserEnv(): PresenterEnv {
     navigator: g.navigator ?? null,
     screen: g.screen ?? null,
     createAudioContext: browserAudioContext,
+    serviceWorker: g.navigator?.serviceWorker ?? null,
   };
 }
 
@@ -250,6 +271,89 @@ export function reloadOnDeckLink(env: PresenterEnv = browserEnv()): () => void {
   };
   target.addEventListener('hashchange', onHash);
   return () => target.removeEventListener('hashchange', onHash);
+}
+
+// --- stale presenter (AMENDMENTS-LECTURE-V2 section 4.5) ------------------------------------------
+
+/** How long Reload waits for a newer presenter to install and take over before it reloads anyway. */
+export const UPDATE_WAIT_MS = 8000;
+
+/** `promise`'s value, or undefined once `ms` pass or it fails. */
+function within<T>(promise: Promise<T>, ms: number): Promise<T | undefined> {
+  return new Promise((resolve) => {
+    const timer = setTimeout(() => resolve(undefined), ms);
+    promise.then(
+      (value) => {
+        clearTimeout(timer);
+        resolve(value);
+      },
+      () => {
+        clearTimeout(timer);
+        resolve(undefined);
+      },
+    );
+  });
+}
+
+async function registration(env: PresenterEnv, ms: number): Promise<ServiceWorkerRegistrationLike | undefined> {
+  const container = env.serviceWorker;
+  if (!container) return undefined;
+  try {
+    return await within(container.getRegistration(), ms);
+  } catch {
+    return undefined;
+  }
+}
+
+/** The worker that installs after an update, once it is installed (it then waits); undefined after `ms`. */
+function installed(worker: ServiceWorkerLike, ms: number): Promise<ServiceWorkerLike | undefined> {
+  return within(
+    new Promise<ServiceWorkerLike>((resolve) => {
+      if (worker.state === 'installed') resolve(worker);
+      worker.addEventListener?.('statechange', () => {
+        if (worker.state === 'installed') resolve(worker);
+      });
+    }),
+    ms,
+  );
+}
+
+/**
+ * A link this presenter cannot read (`unsupported_version`) usually comes from a newer one: asks
+ * the service worker to look for it now, so a Reload finds it installed. Never throws.
+ */
+export async function checkForUpdate(env: PresenterEnv = browserEnv(), ms: number = UPDATE_WAIT_MS): Promise<void> {
+  const reg = await registration(env, ms);
+  if (reg) await within(Promise.resolve().then(() => reg.update()), ms);
+}
+
+/**
+ * The invalid-link page's Reload: holds the link in this tab again (the invalid page let it go),
+ * so the reload opens it; asks the service worker for a newer presenter and, when one installed,
+ * lets it take over (`SKIP_WAITING`) and reloads on `controllerchange`; otherwise, offline or with
+ * nothing newer, reloads at once. Reloads after `ms` at the latest. Never throws.
+ */
+export async function reloadForUpdate(raw: string, env: PresenterEnv = browserEnv(), ms: number = UPDATE_WAIT_MS): Promise<void> {
+  holdOpenDeck(raw, {}, env);
+  const reload = (): void => env.reload?.();
+  const reg = await registration(env, ms);
+  if (!reg) return reload();
+  await within(Promise.resolve().then(() => reg.update()), ms);
+  const waiting = reg.waiting ?? (reg.installing ? await installed(reg.installing, ms) : undefined);
+  if (!waiting) return reload();
+  let done = false;
+  const once = (): void => {
+    if (done) return;
+    done = true;
+    reload();
+  };
+  env.serviceWorker?.addEventListener?.('controllerchange', once);
+  try {
+    waiting.postMessage({ type: 'SKIP_WAITING' });
+  } catch {
+    return once();
+  }
+  setTimeout(once, ms);
 }
 
 /** The fixed tab title (`learner.presenter.docTitle`); the deck title never goes here (section 3.2). */

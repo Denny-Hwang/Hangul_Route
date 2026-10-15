@@ -5,6 +5,7 @@ import * as native from '../presenter';
 import {
   PRESENTER_PATH,
   announceReady,
+  checkForUpdate,
   enterFullscreen,
   enterFullscreenLandscape,
   exitFullscreen,
@@ -20,6 +21,7 @@ import {
   playChime,
   presenterConsoleOrigins,
   releaseScreenAwake,
+  reloadForUpdate,
   reloadOnDeckLink,
   setPresenterDocTitle,
   subscribeActivity,
@@ -93,6 +95,8 @@ describe('route', () => {
     native.forgetOpenDeck();
     native.holdOpenDeck('1.abc');
     native.reloadOnDeckLink()();
+    await native.checkForUpdate();
+    await native.reloadForUpdate('2.abc');
     expect(native.isFullscreen()).toBe(false);
     expect(await native.waitForPresenterFont(1, 'HR Presenter KR')).toBe(false);
     expect(native.playChime(false)).toBe(false);
@@ -759,5 +763,105 @@ describe('focusablesIn and rememberFocus (every covering overlay keeps Tab insid
     expect(removed.focus).not.toHaveBeenCalled();
     expect(() => rememberFocus(env({ activeElement: () => null }))()).not.toThrow();
     expect(() => rememberFocus(env())()).not.toThrow();
+  });
+});
+
+describe('stale presenter: checkForUpdate and reloadForUpdate (AMENDMENTS-LECTURE-V2 section 4.5)', () => {
+  type Worker = { state?: string; postMessage: ReturnType<typeof vi.fn>; addEventListener?: (type: 'statechange', fn: () => void) => void };
+  function swEnv(reg: { update: () => Promise<unknown>; waiting?: Worker | null; installing?: Worker | null } | undefined | 'throws') {
+    const container = fakeTarget();
+    const history = { state: null as unknown, replaceState: vi.fn((next: unknown) => void (history.state = next)) };
+    const reload = vi.fn();
+    const e = env({
+      location: { pathname: '/present', hash: '' },
+      history,
+      reload,
+      serviceWorker: {
+        getRegistration: vi.fn(async () => {
+          if (reg === 'throws') throw new Error('no sw');
+          return reg;
+        }),
+        addEventListener: container.addEventListener,
+      },
+    });
+    return { e, reload, history, container };
+  }
+  const worker = (state?: string): Worker => {
+    const w: Worker & { fire?: () => void } = { state, postMessage: vi.fn() };
+    w.addEventListener = (_type, fn) => {
+      w.fire = fn;
+    };
+    return w;
+  };
+
+  it('checkForUpdate asks the registration for an update and never throws', async () => {
+    const update = vi.fn(async () => undefined);
+    await checkForUpdate(swEnv({ update }).e, 50);
+    expect(update).toHaveBeenCalledTimes(1);
+    await expect(checkForUpdate(swEnv({ update: async () => Promise.reject(new Error('offline')) }).e, 50)).resolves.toBeUndefined();
+    await expect(checkForUpdate(swEnv({ update: () => { throw new Error('sync'); } }).e, 50)).resolves.toBeUndefined();
+    await expect(checkForUpdate(swEnv('throws').e, 50)).resolves.toBeUndefined();
+    await expect(checkForUpdate(swEnv(undefined).e, 50)).resolves.toBeUndefined();
+    await expect(checkForUpdate(env(), 50)).resolves.toBeUndefined();
+  });
+
+  it('holds the link in the tab again, so the reload opens it', async () => {
+    const { e, reload } = swEnv(undefined);
+    await reloadForUpdate('2.abc', e, 50);
+    expect(takeDeckFragment(e)).toEqual({ raw: '2.abc', reloaded: true });
+    expect(reload).toHaveBeenCalledTimes(1);
+  });
+
+  it('no service worker, no registration, or nothing newer: reloads at once', async () => {
+    for (const reg of [undefined, 'throws' as const, { update: async () => undefined }, { update: async () => Promise.reject(new Error('offline')) }]) {
+      const { e, reload } = swEnv(reg);
+      await reloadForUpdate('2.abc', e, 50);
+      expect(reload).toHaveBeenCalledTimes(1);
+    }
+    const bare = vi.fn();
+    await reloadForUpdate('2.abc', env({ reload: bare }), 50);
+    expect(bare).toHaveBeenCalledTimes(1);
+  });
+
+  it('a waiting presenter takes over (SKIP_WAITING) and the page reloads once on controllerchange', async () => {
+    const waiting = worker('installed');
+    const { e, reload, container } = swEnv({ update: async () => undefined, waiting });
+    await reloadForUpdate('2.abc', e, 50);
+    expect(waiting.postMessage).toHaveBeenCalledWith({ type: 'SKIP_WAITING' });
+    expect(reload).not.toHaveBeenCalled();
+    container.fire('controllerchange', {});
+    expect(reload).toHaveBeenCalledTimes(1);
+    await new Promise((r) => setTimeout(r, 80));
+    expect(reload).toHaveBeenCalledTimes(1);
+  });
+
+  it('an installing presenter is awaited until installed; a takeover that never comes still reloads after the wait', async () => {
+    const installing = worker('installing') as Worker & { fire?: () => void };
+    const reg = { update: async () => undefined, installing };
+    const { e, reload } = swEnv(reg);
+    const done = reloadForUpdate('2.abc', e, 50);
+    await new Promise((r) => setTimeout(r, 5));
+    installing.state = 'activating';
+    installing.fire?.();
+    installing.state = 'installed';
+    installing.fire?.();
+    await done;
+    expect(installing.postMessage).toHaveBeenCalledWith({ type: 'SKIP_WAITING' });
+    expect(reload).not.toHaveBeenCalled();
+    await new Promise((r) => setTimeout(r, 80));
+    expect(reload).toHaveBeenCalledTimes(1);
+  });
+
+  it('an install that does not finish in time, or a worker that refuses the message, reloads', async () => {
+    const stuck = swEnv({ update: async () => undefined, installing: worker('installing') });
+    await reloadForUpdate('2.abc', stuck.e, 20);
+    expect(stuck.reload).toHaveBeenCalledTimes(1);
+    const refusing = worker('installed');
+    refusing.postMessage.mockImplementation(() => {
+      throw new Error('gone');
+    });
+    const refused = swEnv({ update: async () => undefined, waiting: refusing });
+    await reloadForUpdate('2.abc', refused.e, 50);
+    expect(refused.reload).toHaveBeenCalledTimes(1);
   });
 });

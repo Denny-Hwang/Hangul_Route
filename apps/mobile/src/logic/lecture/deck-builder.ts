@@ -109,6 +109,8 @@ export interface LectureBundle {
   story?(id: string): LectureStory | 'not-ready' | undefined;
   /** A topic the presenter may show; `'not-ready'` for a draft or preview one. Absent: none yet. */
   vocabTopic?(id: string): LectureVocabTopic | 'not-ready' | undefined;
+  /** One word by id (a Word review's `vocabIds`); `'not-ready'` when no topic of it is ready. Absent: none yet. */
+  vocabWord?(id: string): LectureVocabTopic['words'][number] | 'not-ready' | undefined;
 }
 
 export interface VoiceInfo {
@@ -198,7 +200,7 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
   };
   const seed = (): number => deck.seed + slides.length;
   /** A word card, once per deck; the word is taught either way (a later gloss still upgrades it). */
-  const wordCard = (key: string, word: KoLine, extra: Partial<Extract<SlideBody, { kind: 'vocab' }>> = {}): void => {
+  const wordCard = (key: string, word: KoLine & { gloss: string }, extra: { wordId?: string; cardId?: string; wordArt?: string } = {}): void => {
     if (!seenWords.has(word.ko)) {
       seenWords.add(word.ko);
       push(key, { kind: 'vocab', word, ...extra });

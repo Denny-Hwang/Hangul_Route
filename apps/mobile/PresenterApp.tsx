@@ -53,6 +53,7 @@ import { isOnline, subscribeOnline } from './src/platform/online';
 import { useReducedMotion } from './src/platform/motion';
 import {
   announceReady,
+  checkForUpdate,
   enterFullscreenLandscape,
   exitFullscreen,
   fullscreenSupported,
@@ -64,6 +65,7 @@ import {
   holdOpenDeck,
   playChime,
   releaseScreenAwake,
+  reloadForUpdate,
   reloadOnDeckLink,
   setPresenterDocTitle,
   subscribeActivity,
@@ -127,13 +129,15 @@ function readAddress(): DeckAddress | null {
 
 type Phase =
   | { kind: 'boot' }
-  | { kind: 'invalid' }
+  | { kind: 'invalid'; stale?: true }
   | { kind: 'home' }
   | { kind: 'ready'; deck: LectureDeck; source: StartSource; resumeKey?: string }
   | { kind: 'running'; deck: LectureDeck; source: StartSource };
 
 function phaseOf(result: BootResult): Phase {
   if (result.kind === 'deck') return { kind: 'ready', deck: result.deck, source: result.source, ...(result.resumeKey !== undefined ? { resumeKey: result.resumeKey } : {}) };
+  // A link from a newer presenter (AMENDMENTS-LECTURE-V2 section 4.5): the page offers Reload.
+  if (result.kind === 'invalid') return result.reason === 'unsupported_version' ? { kind: 'invalid', stale: true } : { kind: 'invalid' };
   return { kind: result.kind };
 }
 
@@ -236,6 +240,8 @@ export default function PresenterApp(): React.ReactElement {
       const decoded = resolveBoot(address, emptyRecent());
       void track({ name: 'lecture.deck_rejected', payload: { reason: decoded.kind === 'invalid' ? decoded.reason : 'invalid' } });
       forgetOpenDeck();
+      // Look for the newer presenter now, so Reload finds it installed.
+      if (phase.stale) void checkForUpdate();
     }
     if (phase.kind === 'ready' && run !== null && run.slides.length === 0) {
       if (!rejected.current) {
@@ -574,19 +580,25 @@ export default function PresenterApp(): React.ReactElement {
     body = <StatePage testID="presenter-loading" pose="idle" status={messages.learner.presenter.state.loading} />;
   } else if (phase.kind === 'invalid') {
     const m = messages.learner.presenter.state.invalid;
-    body = (
-      <StatePage
-        testID="presenter-invalid"
-        pose="thinking"
-        title={m.title}
-        line={m.line}
-        cta={m.cta}
-        onCta={() => {
-          setHomeFocus(true);
-          setPhase({ kind: 'home' });
-        }}
-      />
-    );
+    const openHome = (): void => {
+      setHomeFocus(true);
+      setPhase({ kind: 'home' });
+    };
+    const raw = address?.raw;
+    body =
+      phase.stale && raw !== undefined ? (
+        <StatePage
+          testID="presenter-invalid"
+          pose="thinking"
+          title={m.title}
+          line={m.line}
+          cta={m.reload}
+          onCta={() => void reloadForUpdate(raw)}
+          secondary={{ label: m.cta, onPress: openHome, testID: 'presenter-invalid-home' }}
+        />
+      ) : (
+        <StatePage testID="presenter-invalid" pose="thinking" title={m.title} line={m.line} cta={m.cta} onCta={openHome} />
+      );
   } else if (phase.kind === 'home') {
     body = (
       <View style={{ flex: 1 }}>

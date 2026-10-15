@@ -1779,6 +1779,7 @@ export const learner = {
         title: 'Este enlace no funciona',
         line: 'Abre una lección rápida o pide un enlace nuevo en la página de la consola.',
         cta: 'Abrir lección rápida',
+        reload: 'Volver a cargar',
       },
       loading: 'Cargando la lección',
       tooSmall: 'Agranda la ventana o gira la pantalla.',

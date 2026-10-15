@@ -2228,6 +2228,8 @@ export const learner = {
         title: 'This link does not work',
         line: 'Open a Quick lesson, or get a new link from the console page.',
         cta: 'Open Quick lesson',
+        /** A link from a newer presenter (`unsupported_version`, AMENDMENTS-LECTURE-V2 section 4.5): update this one and open the link again. */
+        reload: 'Reload',
       },
       loading: 'Loading lesson',
       tooSmall: 'Make the window bigger or turn the screen.',
