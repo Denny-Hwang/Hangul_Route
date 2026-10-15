@@ -287,6 +287,17 @@ describe('GET /api/spaces/:id/learners/:learnerId/report (F-REPORT-001 section 3
     }
   });
 
+  it('a background read of an open report (refresh=1) is served the same and records no report.viewed', async () => {
+    const fam = await createSpace('mom', 'family', 'Kim family');
+    const mina = await registerLearner('device-mina0001', 'Mina');
+    await join(fam.space.id, mina.auth, { code: await issueCode('mom', fam.space.id), learnerId: mina.learnerId });
+    const first = await get(reportPath(fam.space.id, mina.learnerId, 'week'), bearer('mom'));
+    const again = await get(`${reportPath(fam.space.id, mina.learnerId, 'week')}&refresh=1`, bearer('mom'));
+    expect(again.status).toBe(200);
+    expect((again.body.data as { learner: unknown }).learner).toEqual((first.body.data as { learner: unknown }).learner);
+    expect(viewed()).toHaveLength(1);
+  });
+
   it('fails closed in production: 503 without D1, 503 auth_not_configured without a Clerk key, 401 for a forged bearer with one (audit SEC-2)', async () => {
     const path = reportPath('space:fam', 'profile:any');
     setDevFallbacksDefaultForTests(false);

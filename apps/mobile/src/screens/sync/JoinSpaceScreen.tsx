@@ -36,7 +36,9 @@ export const RELINK_POLL_MS = 4000;
  * (`validateDisplayName`, the create form's hints). The Worker writes the join name over the learner's name for the
  * family and every class, so a changed name becomes the profile name after the join (`membership-store.join`).
  * The screen is not PIN-gated, but a rename is a grown-up action (Edit profile opens behind the gate): on a device
- * whose gate is closed the field keeps the profile name and says the name changes in Edit profile.
+ * whose gate is closed the field keeps the profile name and says the name changes in Edit profile. A class tablet
+ * keeps the profile name too, with Edit profile's class-device line. The store decides again when the join is sent
+ * (`membership-store.join`), so a session that ends between this render and the tap renames nothing anywhere.
  */
 export function JoinSpaceScreen({ navigation }: Props): React.ReactElement {
   const messages = useMessages();
@@ -60,7 +62,25 @@ export function JoinSpaceScreen({ navigation }: Props): React.ReactElement {
   // The grown-up gate (F-LEARN-001 L7), read like ProfileScreen reads it: closed means the name cannot change here.
   const { opensDirectly } = useAudience();
   const parentGateOpenedAt = useUiStore((s) => s.parentGateOpenedAt);
-  const nameLocked = !opensDirectly(isParentSessionValid(parentGateOpenedAt === null ? null : { openedAt: parentGateOpenedAt, profileId: 'family' }, Date.now()));
+  const gateClosed = !opensDirectly(isParentSessionValid(parentGateOpenedAt === null ? null : { openedAt: parentGateOpenedAt, profileId: 'family' }, Date.now()));
+  // A class tablet cannot rename the learner (Edit profile's rule): the field keeps the profile name there too.
+  const deviceScope = useMembershipStore((s) => s.deviceScope);
+  const [classDevice, setClassDevice] = useState(false);
+  const profileId = profile?.id ?? null;
+  useEffect(() => {
+    if (profileId === null) return undefined;
+    let live = true;
+    void deviceScope(profileId).then(
+      (scope) => {
+        if (live) setClassDevice(scope === 'class');
+      },
+      () => undefined,
+    );
+    return () => {
+      live = false;
+    };
+  }, [profileId, deviceScope]);
+  const nameLocked = gateClosed || classDevice;
   const joinName = nameLocked ? (profile?.displayName ?? '') : name;
 
   useEffect(() => {
@@ -224,7 +244,7 @@ export function JoinSpaceScreen({ navigation }: Props): React.ReactElement {
             <>
               <Spacer size="xs" />
               <Caption tone="muted" testID="join-name-locked">
-                {m.confirm.nameLocked}
+                {classDevice ? messages.learner.editProfile.classDevice : m.confirm.nameLocked}
               </Caption>
             </>
           ) : null}

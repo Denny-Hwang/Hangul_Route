@@ -25,7 +25,7 @@ const m = en.caregiver.join;
 const hints = en.learner.createProfile.nameHint;
 const LEARNER_ID = 'profile:test';
 const navigation = { navigate: vi.fn(), goBack: vi.fn() };
-const real = { lookup: useMembershipStore.getState().lookup, join: useMembershipStore.getState().join };
+const real = { lookup: useMembershipStore.getState().lookup, join: useMembershipStore.getState().join, deviceScope: useMembershipStore.getState().deviceScope };
 const join = vi.fn(async (..._args: unknown[]) => ({
   ok: true as const,
   alreadyMember: false,
@@ -37,7 +37,7 @@ function learner(over: Partial<Profile> = {}): Profile {
 }
 
 /** `gated`: a family device with a PIN and no open grown-up session. Otherwise a self-only device with no PIN. */
-function seed(profile: Profile, gated = false): void {
+function seed(profile: Profile, gated = false, scope: 'full' | 'class' = 'full'): void {
   useProfileStore.setState({ profiles: [profile], activeId: LEARNER_ID });
   useAccountStore.setState({ parentPinHash: gated ? 'pin-hash' : null });
   useUiStore.setState({ parentGateOpenedAt: null });
@@ -45,6 +45,7 @@ function seed(profile: Profile, gated = false): void {
   useMembershipStore.setState({
     lookup: vi.fn(async () => ({ ok: true as const, space: { id: 'space:c', kind: 'class' as const, name: 'Sunflower' }, full: false, roster: [] })),
     join: join as never,
+    deviceScope: vi.fn(async () => scope),
   });
 }
 
@@ -133,6 +134,17 @@ describe('JoinSpaceScreen name field (F-LEARN-001 section 3.11)', () => {
     // Even a change that reached the field joins under the profile name.
     await type(renderer.root, 'join-name', 'Sungjoo');
     expect(input(renderer.root, 'join-name').props.value).toBe('test');
+    await press(meButton(renderer.root));
+    expect(join).toHaveBeenCalledWith(LEARNER_ID, 'space:c', 'K7M2X9', 'test');
+    await unmount(renderer);
+  });
+
+  it('on a class tablet, the field keeps the profile name with the class-device line, even with the gate open', async () => {
+    seed(learner(), false, 'class');
+    const renderer = await reachName();
+    expect(input(renderer.root, 'join-name').props.editable).toBe(false);
+    expect(screenTexts(renderer.root)).toContain(en.learner.editProfile.classDevice);
+    expect(screenTexts(renderer.root)).not.toContain(m.confirm.nameLocked);
     await press(meButton(renderer.root));
     expect(join).toHaveBeenCalledWith(LEARNER_ID, 'space:c', 'K7M2X9', 'test');
     await unmount(renderer);

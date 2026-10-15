@@ -232,6 +232,8 @@ describe('membership-store (F-SPACE-001 §3.5)', () => {
   });
 
   it('registers a never-synced learner first, then joins and caches the membership', async () => {
+    // A grown-up session is open, so the changed name is sent (with the gate closed the join carries the profile name).
+    openGate();
     // After the join the server lists the new class; the inbox read right after it says so.
     const api = fakeApi({ getInbox: vi.fn(async () => ({ status: 'ok', inbox: { rev: 1, plans: [], memberships: [classRow], tier: 'free', serverTime: 't' } })) });
     setSyncApiForTests(api as never);
@@ -332,6 +334,46 @@ describe('membership-store (F-SPACE-001 §3.5)', () => {
       openGate();
       await useMembershipStore.getState().join('profile:a', 'space:cls', 'K7M2X9', 'Sungjoo');
       expect(update).toHaveBeenCalledWith('profile:a', { displayName: 'Sungjoo' });
+    } finally {
+      restoreUpdateProfile();
+    }
+  });
+
+  it('with the gate closed, a changed join name is not sent: the join carries the profile name, so the rosters keep one name', async () => {
+    useAccountStore.setState({ parentPinHash: 'pin-hash' });
+    useSyncStore.getState().adoptCredentials('profile:a', 'sec', 1);
+    const joinSpace = vi.fn(async (_spaceId: string, _body: { displayName?: string }) => ({ status: 'ok', alreadyMember: false, membership: classRow }));
+    setSyncApiForTests(fakeApi({ joinSpace }) as never);
+    await useMembershipStore.getState().join('profile:a', 'space:cls', 'K7M2X9', 'Sungjoo');
+    expect(joinSpace.mock.calls[0]?.[1]).toMatchObject({ displayName: 'Suni' });
+    expect(useProfileStore.getState().profiles[0]?.displayName).toBe('Suni');
+  });
+
+  it('a grown-up session that ends while the join is in flight still renames the profile it sent', async () => {
+    useAccountStore.setState({ parentPinHash: 'pin-hash' });
+    openGate();
+    useSyncStore.getState().adoptCredentials('profile:a', 'sec', 1);
+    const joinSpace = vi.fn(async (_spaceId: string, _body: { displayName?: string }) => {
+      useUiStore.setState({ parentGateOpenedAt: null });
+      return { status: 'ok', alreadyMember: false, membership: classRow };
+    });
+    setSyncApiForTests(fakeApi({ joinSpace }) as never);
+    await useMembershipStore.getState().join('profile:a', 'space:cls', 'K7M2X9', 'Sungjoo');
+    expect(joinSpace.mock.calls[0]?.[1]).toMatchObject({ displayName: 'Sungjoo' });
+    expect(useProfileStore.getState().profiles[0]?.displayName).toBe('Sungjoo');
+  });
+
+  it('a class tablet never renames at join: the join carries the profile name, even with the gate open', async () => {
+    openGate();
+    useSyncStore.getState().adoptCredentials('profile:a', 'sec', 1);
+    mem.set(TRANSFER_SCOPE_KEY('profile:a'), classScopeMarker('sec'));
+    const joinSpace = vi.fn(async (_spaceId: string, _body: { displayName?: string }) => ({ status: 'ok', alreadyMember: true, membership: classRow }));
+    setSyncApiForTests(fakeApi({ joinSpace }) as never);
+    const update = spyUpdateProfile();
+    try {
+      await useMembershipStore.getState().join('profile:a', 'space:cls', 'K7M2X9', 'Sungjoo');
+      expect(joinSpace.mock.calls[0]?.[1]).toMatchObject({ displayName: 'Suni' });
+      expect(update).not.toHaveBeenCalled();
     } finally {
       restoreUpdateProfile();
     }

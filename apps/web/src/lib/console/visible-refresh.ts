@@ -8,8 +8,8 @@
  *   side by side never changes `visibilityState`;
  * - on a roster page, also every `VISIBLE_POLL_MS` while the tab is in view (a classroom screen that stays in front).
  *
- * Every trigger shares one gap: at most one read every 30 seconds. Each read of a report records one `report.viewed`
- * on the Worker, so report pages never poll, and the gap keeps that count calm.
+ * Every trigger shares one gap: at most one read every 30 seconds. A report page's read again is a background read
+ * (`refresh=1`), which the Worker does not count as a `report.viewed`; report pages still never poll.
  */
 export const VISIBLE_REFRESH_GAP_MS = 30_000;
 /** The slow read while a roster tab stays in view. */

@@ -58,7 +58,7 @@ const CHECKBOX_SIZE = spacing.xl + spacing.xs;
  * the consent the create form would, and a PIN for a child on a device with
  * none. Name, level and cub edits reach the server with the next sync, and the class roster with them; on a
  * class device (a class re-link, `logic/transfers/device-scope`) the server refuses them, so those rows stay as
- * they are and a line says where a grown-up changes them (§3.11).
+ * they are and a line says the learner's own device changes them (§3.11).
  * Design reference: design/wireframes/onboarding/all-ages-onboarding.md, I, and
  * onboarding/setup-steps.md, G (the Privacy block and "I'm under 13", F-LEARN-001 §3.15.6).
  * Rules live in logic/profiles/edit-profile (tested); this file paints them.

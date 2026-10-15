@@ -128,13 +128,23 @@ function failure(r: TransferCallError): TransferFailure {
  * The profile name is the learner's one name (F-LEARN-001 section 3.11): the Worker writes the join name over the
  * learner's name for the family and every class, so a join under a changed name changes the profile too, and the
  * edit goes to the server the way any profile edit does. A name the profile rule refuses, or the same name, changes nothing.
- * A rename is a grown-up action (Edit profile opens behind the PIN gate), so with the gate closed the join renames
- * nothing either; the Join screen keeps the profile name in its field then.
+ * A rename is a grown-up action (Edit profile opens behind the PIN gate) that a class tablet cannot make (the PATCH
+ * answers 403 there). Both are decided once, before the join is sent: when the rename is not allowed, the join carries
+ * the profile name instead, so the Worker and the device never end up with two names (a gate that closes while the
+ * request is in flight changes nothing). Answers the name to send and whether the profile takes it after the join.
  */
-function adoptJoinName(learnerId: string, displayName: string | undefined): void {
-  if (displayName === undefined || validateDisplayName(displayName) !== null) return;
-  if (!gateOpensDirectlyNow()) return;
+function joinNamePlan(learnerId: string, displayName: string | undefined, scope: 'full' | 'class'): { send: string | undefined; rename: string | null } {
+  const profile = useProfileStore.getState().profiles.find((p) => p.id === learnerId);
+  if (displayName === undefined || !profile) return { send: displayName, rename: null };
   const name = displayName.trim();
+  if (name === profile.displayName) return { send: displayName, rename: null };
+  if (scope === 'class' || !gateOpensDirectlyNow()) return { send: profile.displayName, rename: null };
+  // A name the profile rule refuses is sent as typed (the Worker's lenient rule decides) and never renames the profile.
+  return { send: displayName, rename: validateDisplayName(displayName) === null ? name : null };
+}
+
+function adoptJoinName(learnerId: string, name: string | null): void {
+  if (name === null) return;
   const profile = useProfileStore.getState().profiles.find((p) => p.id === learnerId);
   if (!profile || profile.displayName === name) return;
   useProfileStore.getState().updateProfile(learnerId, { displayName: name });
@@ -426,7 +436,8 @@ export const useMembershipStore = create<State & Actions>((set, get) => {
         void track({ name: 'space.join.failed', profileId: learnerId, payload: { reason: 'network' } });
         return { ok: false, error: 'network' };
       }
-      const result = await client.joinSpace(spaceId, { code, learnerId, displayName }, creds);
+      const namePlan = joinNamePlan(learnerId, displayName, await scopeOf(learnerId, creds));
+      const result = await client.joinSpace(spaceId, { code, learnerId, displayName: namePlan.send }, creds);
       if (result.status !== 'ok') {
         void track({ name: 'space.join.failed', profileId: learnerId, payload: { reason: result.code } });
         return { ok: false, error: result.code };
@@ -434,7 +445,7 @@ export const useMembershipStore = create<State & Actions>((set, get) => {
       const current = await get().hydrate(learnerId);
       put(learnerId, [...current.filter((m) => m.spaceId !== result.membership.spaceId), result.membership]);
       void track({ name: 'space.join.succeeded', profileId: learnerId, payload: { kind: result.membership.kind, alreadyMember: result.alreadyMember } });
-      adoptJoinName(learnerId, displayName);
+      adoptJoinName(learnerId, namePlan.rename);
       // The join changes the server's tier and plans for this learner: read them now, not at the next sync
       // (F-ENT-003 section 3.4). A failed read leaves the join as it is; the next sync tries again.
       await get().refresh(learnerId);

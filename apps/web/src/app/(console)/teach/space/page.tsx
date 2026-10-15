@@ -68,7 +68,8 @@ function SpaceInner(): JSX.Element {
   const loadSeq = useRef(0);
 
   // `quiet`: the read again when the tab comes back into view (F-LEARN-001 section 3.11). It keeps what is drawn while it
-  // reads, and a failed quiet read changes nothing: the page never turns into an error because a background read failed.
+  // reads, and a quiet read that cannot reach the Worker changes nothing: the page never turns into an error because a
+  // background read failed. A removed teacher or a deleted space is the exception (below).
   const load = useCallback(async (quiet = false): Promise<void> => {
     if (!api) return;
     const call = quiet ? loadSeq.current : ++loadSeq.current;
@@ -95,6 +96,12 @@ function SpaceInner(): JSX.Element {
       setRoster(result.data);
       if (quiet) setError(null);
     } else if (!quiet) setError(result.error === 'forbidden' ? 'forbidden' : result.error === 'not_found' ? 'gone' : 'cantReach');
+    else if (result.error === 'forbidden' || result.error === 'not_found') {
+      // A background read that says the teacher was removed or the space is gone is final: the old roster goes, the
+      // usual line shows, and the background reads stop. Only a failure to reach the Worker stays silent.
+      setRoster(null);
+      setError(result.error === 'forbidden' ? 'forbidden' : 'gone');
+    }
   }, [api, spaceId]);
 
   useEffect(() => {
@@ -103,7 +110,7 @@ function SpaceInner(): JSX.Element {
 
   // An open roster shows a renamed learner, a new practice day or a new member without a reload.
   // A roster page also reads slowly while it stays in front (a classroom screen), never a report page.
-  useVisibleRefresh(() => void load(true), !!api, { poll: true });
+  useVisibleRefresh(() => void load(true), !!api && error !== 'forbidden' && error !== 'gone', { poll: true });
 
   if (!ready || !session) return <AdultFrame>{null}</AdultFrame>;
   // School spaces get the admin view (F-SCHOOL-001 §3.3); classes and families the roster.

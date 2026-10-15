@@ -87,7 +87,7 @@ function LearnerReportInner(): JSX.Element {
     const background = quiet.current;
     quiet.current = false;
     if (!background) setLoad(null);
-    void api.getLearnerReport(spaceId, learnerId, period).then((result) => {
+    void (background ? api.getLearnerReport(spaceId, learnerId, period, { refresh: true }) : api.getLearnerReport(spaceId, learnerId, period)).then((result) => {
       if (call !== latest.current) return;
       if (background && !result.ok) return;
       if (result.ok) REPORT_CACHE.set(key, result.data);
@@ -176,8 +176,8 @@ function LearnerReportInner(): JSX.Element {
     [router],
   );
   const retry = (): void => setNonce((n) => n + 1);
-  // An open report shows a renamed learner and the newest practice without a reload (one more `report.viewed`, at most
-  // every 30 seconds).
+  // An open report shows a renamed learner and the newest practice without a reload. The read again is marked as a
+  // background read (`refresh`), so the Worker records no further `report.viewed` for it.
   useVisibleRefresh(() => {
     quiet.current = true;
     setNonce((n) => n + 1);

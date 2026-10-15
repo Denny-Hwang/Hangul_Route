@@ -44,6 +44,9 @@ import { START_CLASS, START_FAMILY } from '@/lib/console/teacher-home';
  * the family actions gain "N class moves waiting" to the family's page, only while a move waits for the family.
  */
 
+/** Background reads of the family list that may fail in a row before they stop (a signed-out answer stops them at once). */
+const QUIET_FAILURES_BEFORE_STOP = 3;
+
 /** One family's roster read: loading, failed (that section alone shows Try again) or loaded. */
 type FamilyRoster = { state: 'loading' } | { state: 'failed' } | { state: 'ready'; roster: Roster };
 
@@ -165,6 +168,11 @@ export default function ParentHomePage(): JSX.Element {
     [api],
   );
 
+  // Background reads that failed in a row. A signed-out answer, or the third failure, stops the background reads and
+  // shows the usual "can't reach" line with Try again, so a home left open never sends failing reads with no sign.
+  const quietFailures = useRef(0);
+  const [refreshStopped, setRefreshStopped] = useState(false);
+
   const load = useCallback(
     async (quiet = false): Promise<void> => {
       if (!api) return;
@@ -176,9 +184,17 @@ export default function ParentHomePage(): JSX.Element {
         if (!quiet) {
           setEntitlements(owned?.ok ? owned.data : null);
           setFailed(true);
+        } else {
+          quietFailures.current += 1;
+          if (result.error === 'unauthorized' || quietFailures.current >= QUIET_FAILURES_BEFORE_STOP) {
+            setFailed(true);
+            setRefreshStopped(true);
+          }
         }
         return;
       }
+      quietFailures.current = 0;
+      setRefreshStopped(false);
       if (!quiet || owned?.ok) setEntitlements(owned?.ok ? owned.data : null);
       setFailed(false);
       setItems(result.data);
@@ -194,7 +210,7 @@ export default function ParentHomePage(): JSX.Element {
 
   // An open family home shows a renamed learner or a new member without a reload.
   // A roster page: it also reads slowly while it stays in front.
-  useVisibleRefresh(() => void load(true), !!api, { poll: true });
+  useVisibleRefresh(() => void load(true), !!api && !refreshStopped, { poll: true });
 
   const frameSpaces: FrameSpaces = !api || (failed && !items) ? 'failed' : items;
   if (!ready || !session) return <AdultFrame spaces={frameSpaces}>{null}</AdultFrame>;

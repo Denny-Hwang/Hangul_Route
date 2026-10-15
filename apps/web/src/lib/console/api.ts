@@ -367,9 +367,11 @@ export function createConsoleApi(opts: ConsoleApiOptions) {
      * learner or a class figure. `period` only labels the Worker's `report.viewed` event. The body is parsed, so the
      * report module reads a known shape: keys it does not read are stripped, a malformed `activity` reads as absent
      * (the legacy state), and a body it cannot read at all (a space kind this bundle does not know) is a failed load.
+     * `refresh`: the background read of a report already open (F-LEARN-001 section 3.11), which the Worker does not count
+     * as a view.
      */
-    getLearnerReport: (spaceId: string, learnerId: string, period: ReportPeriod): Promise<ApiResult<LearnerReportBody>> =>
-      call<unknown>(`${base}/${encodeURIComponent(spaceId)}/learners/${encodeURIComponent(learnerId)}/report?period=${period}`, { method: 'GET' }, [200]).then(
+    getLearnerReport: (spaceId: string, learnerId: string, period: ReportPeriod, options: { refresh?: boolean } = {}): Promise<ApiResult<LearnerReportBody>> =>
+      call<unknown>(`${base}/${encodeURIComponent(spaceId)}/learners/${encodeURIComponent(learnerId)}/report?period=${period}${options.refresh ? '&refresh=1' : ''}`, { method: 'GET' }, [200]).then(
         (r): ApiResult<LearnerReportBody> => {
           if (!r.ok) return r;
           const data = parseLearnerReport(r.data);
