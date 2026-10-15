@@ -1,5 +1,5 @@
 import { TRANSFER_COOLING_OFF_MS, type BillingEvent, type ClassMoveEndReason, type ClassMoveKind, type ClassMoveStatus, type ClassMoveVia, type ClassScopeBasis, type BillingEventKind, type Entitlement, type EntitlementApply, type MemberKind, type Membership, type Plan, type Space, type TransferBlockReason, type TransferEndReason, type TransferSlot } from '@hangul-route/content-schema';
-import { id, type Account, type Learner, type LearnerDevice, type SnapshotRecord } from '../store';
+import { id, type Account, type Learner, type LearnerDevice, type LearnerProfileFields, type SnapshotRecord } from '../store';
 import {
   learnerRateKeys,
   mergeEntitlement,
@@ -78,7 +78,13 @@ const nnum = (v: unknown): number | null => (v === null || v === undefined ? nul
 const json = (v: unknown): unknown => (typeof v === 'string' && v.length > 0 ? JSON.parse(v) : null);
 
 const toAccount = (r: Row): Account => ({ id: str(r.id), email: nstr(r.email), displayName: nstr(r.display_name), consent: json(r.consent_json), createdAt: str(r.created_at) });
-const toLearner = (r: Row): Learner => ({ id: str(r.id), displayName: str(r.display_name), ageGroup: str(r.age_group) as Learner['ageGroup'], avatar: str(r.avatar), recoveryHash: nstr(r.recovery_hash), createdAt: str(r.created_at), lastActiveAt: str(r.last_active_at) });
+/** The profile fields a device may change and their columns (fixed names: never built from input). */
+const LEARNER_PROFILE_COLUMNS: ReadonlyArray<readonly [keyof LearnerProfileFields, string]> = [
+  ['displayName', 'display_name'],
+  ['ageGroup', 'age_group'],
+  ['avatar', 'avatar'],
+];
+const toLearner = (r: Row): Learner => ({ id: str(r.id), displayName: str(r.display_name), ageGroup: str(r.age_group) as Learner['ageGroup'], avatar: str(r.avatar), recoveryHash: nstr(r.recovery_hash), createdAt: str(r.created_at), lastActiveAt: str(r.last_active_at), profileUpdatedAt: nstr(r.profile_updated_at) });
 const toDevice = (r: Row): LearnerDevice => ({ learnerId: str(r.learner_id), deviceId: str(r.device_id), secretHash: str(r.secret_hash), scope: r.scope === 'class' ? 'class' : 'full', createdAt: str(r.created_at), lastSeenAt: str(r.last_seen_at) });
 const toSnapshot = (r: Row): SnapshotRecord => ({ learnerId: str(r.learner_id), rev: num(r.rev), schemaVer: num(r.schema_ver), contentVer: str(r.content_ver), deviceId: str(r.device_id), summary: json(r.summary_json), payload: json(r.payload_json), updatedAt: str(r.updated_at) });
 const toStoredSummary = (r: Row): StoredSummary => ({ learnerId: str(r.learner_id), summary: json(r.summary_json), updatedAt: str(r.updated_at) });
@@ -540,6 +546,25 @@ export class D1Db implements Db {
       'INSERT INTO learners (id, display_name, age_group, avatar, recovery_hash, created_at, last_active_at) VALUES (?, ?, ?, ?, ?, ?, ?) ON CONFLICT(id) DO UPDATE SET display_name = excluded.display_name, age_group = excluded.age_group, avatar = excluded.avatar, recovery_hash = excluded.recovery_hash, last_active_at = excluded.last_active_at',
       [l.id, l.displayName, l.ageGroup, l.avatar, l.recoveryHash, l.createdAt, l.lastActiveAt],
     );
+  }
+  touchLearner(learnerId: string, lastActiveAt: string): Promise<void> {
+    return this.run('UPDATE learners SET last_active_at = ? WHERE id = ?', [lastActiveAt, learnerId]);
+  }
+  async updateLearnerProfile(learnerId: string, fields: LearnerProfileFields, at: string): Promise<boolean> {
+    const sets: string[] = [];
+    const params: unknown[] = [];
+    for (const [key, column] of LEARNER_PROFILE_COLUMNS) {
+      const value = fields[key];
+      if (value === undefined) continue;
+      sets.push(`${column} = ?`);
+      params.push(value);
+    }
+    if (sets.length === 0) return false;
+    const sql = `UPDATE learners SET ${sets.join(', ')}, profile_updated_at = ? WHERE id = ? AND (profile_updated_at IS NULL OR profile_updated_at <= ?)`;
+    return (await this.changes(sql, [...params, at, learnerId, at])) > 0;
+  }
+  setRecoveryHash(learnerId: string, hash: string): Promise<void> {
+    return this.run('UPDATE learners SET recovery_hash = ? WHERE id = ?', [hash, learnerId]);
   }
   learnerByRecoveryHash(hash: string): Promise<Learner | null> {
     return this.one('SELECT * FROM learners WHERE recovery_hash = ?', [hash], toLearner);

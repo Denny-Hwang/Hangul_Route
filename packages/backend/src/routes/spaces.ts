@@ -296,7 +296,15 @@ spacesRoutes.post('/:id/join', async (c) => {
     if (typeof auth !== 'string') return auth;
     if (space.kind === 'school') return fail(c, 'not_joinable', 'Learners join a class or a family, not a school', 422);
     const existing = await db.membership(space.id, 'learner', learnerId);
-    if (existing) return ok(c, { alreadyMember: true, membership: existing, space: { id: space.id, kind: space.kind, name: space.name } });
+    // The device's current name becomes the roster name, also on a join again (the repair path for a renamed
+    // learner): column-only, so nothing else of the row is rewritten, and an edit newer than now is kept.
+    const applyName = async (): Promise<void> => {
+      if (displayName) await db.updateLearnerProfile(learnerId, { displayName }, now.toISOString());
+    };
+    if (existing) {
+      await applyName();
+      return ok(c, { alreadyMember: true, membership: existing, space: { id: space.id, kind: space.kind, name: space.name } });
+    }
     const seat = await classSeatCheck(db, space, learnerId, now);
     if (seat) return fail(c, seat, SEAT_MESSAGES[seat], 409);
     if (space.kind === 'family' && (await studentsIn(db, space.id)) >= FAMILY_LIFETIME_LEARNERS) {
@@ -304,10 +312,7 @@ spacesRoutes.post('/:id/join', async (c) => {
     }
     const membership: Membership = { spaceId: space.id, memberKind: 'learner', memberId: learnerId, role: 'student', joinedAt: now.toISOString() };
     await db.addMembership(membership);
-    if (displayName) {
-      const learner = await db.getLearner(learnerId);
-      if (learner) await db.putLearner({ ...learner, displayName });
-    }
+    await applyName();
     return ok(c, { alreadyMember: false, membership, space: { id: space.id, kind: space.kind, name: space.name } }, 201);
   }
 

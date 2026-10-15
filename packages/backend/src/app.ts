@@ -33,6 +33,12 @@ app.use(
   }),
 );
 
+// Console reads carry learner names that a device can change at any time: never cached by a browser or proxy.
+app.use('/api/spaces/*', async (c, next) => {
+  await next();
+  if (c.req.method === 'GET') c.header('Cache-Control', 'no-store');
+});
+
 // Legacy hello-hoya envelope (kept for F-INFRA-001 self-tests).
 app.get('/', (c) =>
   c.json({

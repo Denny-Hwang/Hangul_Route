@@ -63,3 +63,4 @@ export * from './schemas/feedback';
 export * from './reports';
 export * from './story-card';
 export * from './schemas/class-scope';
+export * from './schemas/display-name';

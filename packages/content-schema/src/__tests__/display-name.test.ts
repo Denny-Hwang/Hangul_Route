@@ -1,0 +1,82 @@
+import { describe, expect, it } from 'vitest';
+import {
+  DISPLAY_NAME_MAX,
+  DisplayNameSchema,
+  InboxLearnerSchema,
+  LearnerProfilePatchSchema,
+  LearnerRegisterSchema,
+  SpaceJoinSchema,
+  SyncInboxSchema,
+} from '../index';
+
+const AT = '2026-10-14T00:00:00.000Z';
+
+describe('DisplayNameSchema — the shared learner name rule', () => {
+  it('accepts what a device accepts, trimmed: accents, Hangul, digits, spaces, apostrophes, hyphens', () => {
+    for (const name of ['Sungjoo', 'María', 'Zoë', '수니', "O'Neil", 'O’Neil', 'Ann-Marie', 'Min 2', 'A'.repeat(DISPLAY_NAME_MAX)]) {
+      expect(DisplayNameSchema.parse(name), name).toBe(name);
+    }
+    expect(DisplayNameSchema.parse('  Sungjoo  ')).toBe('Sungjoo');
+  });
+
+  it('refuses empty, whitespace-only, too long and other characters', () => {
+    for (const name of ['', '   ', 'A'.repeat(DISPLAY_NAME_MAX + 1), 'Sung<joo>', 'Sung\u{1F600}', 'Сунджу', 'さくら', 'a\nb', 'a\tb', 'a@b']) {
+      expect(DisplayNameSchema.safeParse(name).success, JSON.stringify(name)).toBe(false);
+    }
+  });
+
+  it('keeps the device limit of 12 characters', () => {
+    expect(DISPLAY_NAME_MAX).toBe(12);
+  });
+});
+
+describe('LearnerProfilePatchSchema', () => {
+  it('takes any of name, level and picture with the edit time', () => {
+    expect(LearnerProfilePatchSchema.parse({ displayName: ' Sungjoo ', at: AT })).toEqual({ displayName: 'Sungjoo', at: AT });
+    expect(LearnerProfilePatchSchema.parse({ ageGroup: '8-9', avatar: 'hoya-blue', at: '2026-10-14T09:00:00+09:00' })).toEqual({ ageGroup: '8-9', avatar: 'hoya-blue', at: '2026-10-14T09:00:00+09:00' });
+  });
+
+  it('needs at least one field and a datetime', () => {
+    expect(LearnerProfilePatchSchema.safeParse({ at: AT }).success).toBe(false);
+    expect(LearnerProfilePatchSchema.safeParse({ displayName: 'Sungjoo' }).success).toBe(false);
+    expect(LearnerProfilePatchSchema.safeParse({ displayName: 'Sungjoo', at: '2026-10-14' }).success).toBe(false);
+  });
+
+  it('refuses the fields that stay on the device and unknown values', () => {
+    for (const extra of [{ learnerType: 'adult' }, { parentPinHash: 'x' }, { consent: {} }, { role: 'learner' }, { id: 'profile:x' }]) {
+      expect(LearnerProfilePatchSchema.safeParse({ displayName: 'Sungjoo', at: AT, ...extra }).success, JSON.stringify(extra)).toBe(false);
+    }
+    expect(LearnerProfilePatchSchema.safeParse({ ageGroup: '12-99', at: AT }).success).toBe(false);
+    expect(LearnerProfilePatchSchema.safeParse({ avatar: 'dragon', at: AT }).success).toBe(false);
+    expect(LearnerProfilePatchSchema.safeParse({ displayName: '   ', at: AT }).success).toBe(false);
+  });
+});
+
+describe('incoming names on registration and join', () => {
+  const register = (displayName: string) => LearnerRegisterSchema.safeParse({ deviceId: 'device-0001', learner: { displayName, ageGroup: '5-7', avatar: 'hoya-orange' } });
+
+  it('registration uses the shared rule', () => {
+    expect(register('test').success).toBe(true);
+    expect(register('A'.repeat(13)).success).toBe(false);
+    expect(register('Bad<Name').success).toBe(false);
+  });
+
+  it('a join uses the shared rule; the name stays optional', () => {
+    expect(SpaceJoinSchema.parse({ code: 'ABCDEF', displayName: ' Sungjoo ' }).displayName).toBe('Sungjoo');
+    expect(SpaceJoinSchema.safeParse({ code: 'ABCDEF', displayName: 'A'.repeat(13) }).success).toBe(false);
+    expect(SpaceJoinSchema.safeParse({ code: 'ABCDEF', displayName: 'Bad<Name' }).success).toBe(false);
+    expect(SpaceJoinSchema.parse({ code: 'ABCDEF' }).displayName).toBeUndefined();
+  });
+});
+
+describe('SyncInboxSchema learner block', () => {
+  const base = { rev: 0, plans: [], memberships: [], tier: 'free', serverTime: AT };
+  const learner = { displayName: 'Sungjoo', ageGroup: '5-7', avatar: 'hoya-orange', profileUpdatedAt: AT };
+
+  it('is optional and lenient', () => {
+    expect(SyncInboxSchema.parse(base).learner).toBeUndefined();
+    expect(SyncInboxSchema.parse({ ...base, learner }).learner).toEqual(learner);
+    expect(SyncInboxSchema.parse({ ...base, learner: { ...learner, ageGroup: 'old' } }).learner).toBeUndefined();
+    expect(InboxLearnerSchema.parse({ ...learner, profileUpdatedAt: null }).profileUpdatedAt).toBeNull();
+  });
+});
