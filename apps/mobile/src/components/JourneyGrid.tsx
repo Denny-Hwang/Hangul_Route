@@ -275,7 +275,7 @@ function GridCell({ cell, stage, theme, paneMode, onOpen, onOpenStories, episode
   const disabled = cell.disabled || (storiesOnly && !onOpenStories);
   const count = countMarkOf(model.storyCount);
   const glyphSize = useMediaSize(CELL.glyph);
-  const cellLayout = journeyCellLayout(CELL, glyphSize, useMediaSize(ROUTE_RING_SIZE));
+  const cellLayout = journeyCellLayout(CELL, glyphSize, useMediaSize(ROUTE_RING_SIZE), { placedOut, isStart });
   const countSlot = countMarkSlot(CELL, { placedOut, isStart });
 
   const press = (): void => {
@@ -385,7 +385,7 @@ function GridCell({ cell, stage, theme, paneMode, onOpen, onOpenStories, episode
         </View>
       ) : null}
       {placedOut ? (
-        <View pointerEvents="none" style={{ position: 'absolute', top: CELL.inset, right: CELL.inset }}>
+        <View pointerEvents="none" testID="journey-placed-out-check" style={{ position: 'absolute', top: CELL.inset, right: CELL.inset }}>
           {ring !== null ? (
             <StickerIcon name="check-circle" size={CELL.markSize} color={tone} />
           ) : (
@@ -393,9 +393,10 @@ function GridCell({ cell, stage, theme, paneMode, onOpen, onOpenStories, episode
           )}
         </View>
       ) : null}
-      {count !== null && countSlot !== null ? (
+      {count !== null ? (
         // Not a target and not read on its own: the number is in the cell's label (F-STORY-005 §3.6).
-        // Top right; top left when the placed-out check owns that corner (the theme word is at the bottom).
+        // Top right; top left when the placed-out check owns that corner; under the check when the pin owns the
+        // other (logic/journey-cell-layout.ts). Never at the bottom: the theme word is there.
         <View
           pointerEvents="none"
           aria-hidden

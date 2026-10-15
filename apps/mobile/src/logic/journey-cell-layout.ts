@@ -7,7 +7,8 @@ import type { borderWidth, spacing, typography } from '@hangul-route/design-syst
  *
  * - the corner band on top holds the start pin (top left), the placed-out check (top right) and the
  *   story count mark; the theme glyph starts under it, so no corner mark covers any part of a glyph
- *   (the leaf's tip points up-left, under the start pin, so it needs this);
+ *   (the leaf's tip points up-left, under the start pin, so it needs this); a cell with both the pin and
+ *   the check gets a second band row for the count mark, under the check (`countMarkSlot`);
  * - the glyph box is as tall as the In your plan / Not open yet ring, so the ring is drawn around the
  *   glyph and never through the word under it;
  * - the theme word sits under the glyph box on one line (`typography.size.caption`, `leading.tight`);
@@ -34,7 +35,10 @@ export interface CellMetrics {
   countMark: number;
   /** How far each corner mark sits from the cell's inner edge (`spacing.xxs`). */
   inset: number;
-  /** The corner band: the tallest corner mark and its inset. Nothing but corner marks and the Next triangle draws in it. */
+  /**
+   * The corner band: the tallest corner mark and its inset. Nothing but corner marks and the Next triangle draws in
+   * it (a cell with the pin and the check adds a second row for the count mark, `journeyCellLayout`).
+   */
   band: number;
   /**
    * A cell's theme glyph before `useMediaSize`: 20 dp (owner request 2026-10-14 put the theme word under it,
@@ -85,10 +89,29 @@ export interface CellLayout {
   minHeight: number;
 }
 
-/** The layout for a glyph of `glyph` dp inside a ring of `ring` dp (both after `useMediaSize`). */
-export function journeyCellLayout(m: CellMetrics, glyph: number, ring: number): CellLayout {
+/** The corner marks a cell draws: a cell with both has its count mark in a second row of the band. */
+export interface CellCornerMarks {
+  placedOut: boolean;
+  isStart: boolean;
+}
+
+const NO_MARKS: CellCornerMarks = { placedOut: false, isStart: false };
+
+/**
+ * The top of the glyph (the bottom of the band it starts under). A cell with the start pin and the placed-out
+ * check keeps its count mark under the check, so its band is a row deeper: the check's row, then the count's.
+ */
+function bandBottom(m: CellMetrics, marks: CellCornerMarks): number {
+  return marks.placedOut && marks.isStart ? 3 * m.inset + m.markSize + m.countMark : m.band;
+}
+
+/**
+ * The layout for a glyph of `glyph` dp inside a ring of `ring` dp (both after `useMediaSize`). Only a cell that
+ * draws both corner marks (`marks`) grows, by the count mark's row; every other cell keeps the same height.
+ */
+export function journeyCellLayout(m: CellMetrics, glyph: number, ring: number, marks: CellCornerMarks = NO_MARKS): CellLayout {
   const glyphBox = Math.max(glyph, ring);
-  const padTop = Math.max(0, m.band - (glyphBox - glyph) / 2);
+  const padTop = Math.max(0, bandBottom(m, marks) - (glyphBox - glyph) / 2);
   const padBottom = m.bottomPad;
   return { padTop, padBottom, glyphBox, minHeight: 2 * m.maxEdge + padTop + glyphBox + m.wordLine + padBottom };
 }
@@ -97,12 +120,15 @@ export type CountSlot = { top: number; right: number } | { top: number; left: nu
 
 /**
  * Where the story count mark goes. Top right; when the placed-out check owns that corner, top left
- * (the start pin's corner: the start quest is never placed out, so a cell is placed out or the start).
- * It never moves to the bottom: the theme word is there. A cell marked both (no learner state makes one)
- * has no free corner, so it draws no count mark; the number stays in the cell's label.
+ * (the start pin's corner). A cell can draw both corner marks: the pin comes from the fixed level-check
+ * result and the check from live progress (the start cell's earlier quest was placed out and the learner
+ * finished the rest). Then the count mark sits under the check, in the band's second row
+ * (`journeyCellLayout` starts the glyph under it): the corner band has no room for a third mark beside
+ * the pin and the check in a 54 dp cell, and its centre is the Next triangle's.
+ * It never moves to the bottom: the theme word is there.
  */
-export function countMarkSlot(m: Pick<CellMetrics, 'inset'>, marks: { placedOut: boolean; isStart: boolean }): CountSlot | null {
+export function countMarkSlot(m: Pick<CellMetrics, 'inset' | 'markSize'>, marks: CellCornerMarks): CountSlot {
   if (!marks.placedOut) return { top: m.inset, right: m.inset };
   if (!marks.isStart) return { top: m.inset, left: m.inset };
-  return null;
+  return { top: 2 * m.inset + m.markSize, right: m.inset };
 }

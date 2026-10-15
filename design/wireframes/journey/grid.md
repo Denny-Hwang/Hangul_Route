@@ -55,6 +55,17 @@ One cell, top to bottom (owner request 2026-10-14; `logic/journey-cell-layout.ts
 +------------+
 ```
 
+A cell with both the start pin and the placed-out check (pin from the stored level check, check from live progress) keeps its count mark, under the check, in a second band row; the glyph starts under it and that cell's row grows by the row (about 96 dp tall at 320 px):
+
+```
++------------+
+|pin  ▼   ok |  <- corner band: start pin top left, placed-out check top right
+|        [5] |  <- second band row: the count mark under the check
+|    (gl)    |
+|   Letters  |
++------------+
+```
+
 - Nothing covers the glyph or the word: the glyph starts under the corner band, and the ring ends above the word.
 - 320 px: the cell is 54 dp wide and about 76 dp tall (taller than wide so the word fits). 768 px (portrait tablet): square (112 dp). Wide window (two panes): the grid fills the 400 dp master pane, so the cells are 76 dp wide and about 88 dp tall. The height reserves the selected border, so a selected cell keeps its size.
 - The glyph is 20 dp on a phone (24 regular, 28 wide); the word is `typography.size.caption` with `tracking.tight`, `text.secondary`.

@@ -285,4 +285,38 @@ describe('JourneyGrid cell word (owner request 2026-10-14)', () => {
     expect(style.bottom).toBeUndefined();
     expect(style.right).toBeUndefined();
   });
+
+  it('a cell with the start pin and the placed-out check still draws its count mark, under the check, and grows to hold it', async () => {
+    const all = gridEpisodes(episodesAll);
+    const M = journeyCellMetrics({ spacing, borderWidth, typography });
+    const r = await render(
+      <JourneyGrid
+        stages={stages}
+        themes={themes}
+        gridEpisodes={all}
+        paneMode={false}
+        selectedId={null}
+        onOpen={() => undefined}
+        storyEntries={defaultStoryIndex()}
+        marksOf={(stage, theme) =>
+          stage === 'stage1' && theme === 'nature' ? { completed: false, isStart: true, placedOut: true } : { completed: false, isStart: false, placedOut: false }
+        }
+      />,
+    );
+    const [count] = byTestId(r.root, 'journey-count-stage1-nature');
+    expect(count).toBeDefined();
+    const cell = buttonOf(count as ReactTestInstance) as ReactTestInstance;
+    expect(byTestId(cell, 'journey-start-pin').length).toBeGreaterThan(0);
+    const style = Object.assign({}, ...[count?.props.style].flat());
+    expect(style).toMatchObject({ top: `${2 * M.inset + M.markSize}px`, right: `${M.inset}px` });
+    expect(style.left).toBeUndefined();
+    expect(style.bottom).toBeUndefined();
+    // only this cell grows; its row neighbour keeps the plain height
+    const heightOf = (n: ReactTestInstance): number => parseFloat(String(Object.assign({}, ...[n.props.style].flat()).minHeight));
+    const [lifeGlyph] = byTestId(r.root, 'journey-glyph-stage1-life');
+    const neighbour = buttonOf(lifeGlyph as ReactTestInstance) as ReactTestInstance;
+    expect(heightOf(cell)).toBeGreaterThan(heightOf(neighbour));
+    // the label still says the count
+    expect(String(cell.props['aria-label'])).toMatch(/stor/i);
+  });
 });

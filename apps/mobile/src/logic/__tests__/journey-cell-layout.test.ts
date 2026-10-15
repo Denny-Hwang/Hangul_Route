@@ -46,15 +46,27 @@ const SIZES = [
   { name: 'wide (two-pane master)', width: CELL_WIDE_MASTER, scale: layout.mediaScale.wide },
 ] as const;
 
+const MARKS = [
+  { placedOut: false, isStart: false },
+  { placedOut: false, isStart: true },
+  { placedOut: true, isStart: false },
+  { placedOut: true, isStart: true },
+] as const;
+
 const CASES = SIZES.flatMap((s) => [
   { ...s, edge: borderWidth.base },
   { ...s, name: `${s.name}, selected`, edge: borderWidth.thick },
 ]);
 
-function cellRects(width: number, scale: number, edge: number = CELL_EDGE): Record<'glyph' | 'ring' | 'word' | 'pin' | 'check' | 'next', Rect> & { height: number; innerW: number; innerH: number } {
+function cellRects(
+  width: number,
+  scale: number,
+  edge: number = CELL_EDGE,
+  marks: { placedOut: boolean; isStart: boolean } = { placedOut: false, isStart: false },
+): Record<'glyph' | 'ring' | 'word' | 'pin' | 'check' | 'next', Rect> & { height: number; innerW: number; innerH: number } {
   const glyph = scaleMedia(CELL_THEME_GLYPH, scale);
   const ring = scaleMedia(CELL_RING, scale);
-  const l = journeyCellLayout(M, glyph, ring);
+  const l = journeyCellLayout(M, glyph, ring, marks);
   const height = Math.max(width, l.minHeight);
   const innerW = width - 2 * edge;
   const innerH = height - 2 * edge;
@@ -93,18 +105,16 @@ describe('journeyCellLayout', () => {
   });
 
   it.each(CASES)('$name: no corner mark covers the glyph (the start pin clears the leaf tip)', ({ width, scale, edge }) => {
-    const r = cellRects(width, scale, edge);
-    expect(overlap(r.pin, r.glyph)).toBe(0);
-    expect(overlap(r.check, r.glyph)).toBe(0);
-    for (const marks of [
-      { placedOut: false, isStart: false },
-      { placedOut: false, isStart: true },
-      { placedOut: true, isStart: false },
-      { placedOut: true, isStart: true },
-    ]) {
-      const slot = countMarkSlot(M, marks);
-      if (slot === null) continue;
-      const count = countRect(slot, r.innerW);
+    for (const marks of MARKS) {
+      const r = cellRects(width, scale, edge, marks);
+      expect(overlap(r.pin, r.glyph), JSON.stringify(marks)).toBe(0);
+      expect(overlap(r.check, r.glyph), JSON.stringify(marks)).toBe(0);
+      const count = countRect(countMarkSlot(M, marks), r.innerW);
+      // inside the cell's padding box
+      expect(count.x, JSON.stringify(marks)).toBeGreaterThanOrEqual(0);
+      expect(count.x + count.w, JSON.stringify(marks)).toBeLessThanOrEqual(r.innerW);
+      expect(count.y + count.h, JSON.stringify(marks)).toBeLessThanOrEqual(r.innerH);
+      expect(overlap(count, r.next), JSON.stringify(marks)).toBe(0);
       expect(overlap(count, r.glyph), JSON.stringify(marks)).toBe(0);
       expect(overlap(count, r.word), JSON.stringify(marks)).toBe(0);
       if (marks.isStart) expect(overlap(count, r.pin), JSON.stringify(marks)).toBe(0);
@@ -120,8 +130,8 @@ describe('journeyCellLayout', () => {
     expect(overlap(r.next, r.glyph)).toBe(0);
   });
 
-  it.each(CASES)('$name: the ring goes round the glyph and ends above the word', ({ width, scale, edge }) => {
-    const r = cellRects(width, scale, edge);
+  it.each(CASES.flatMap((c) => [c, { ...c, name: `${c.name}, pin and check`, both: true }]))('$name: the ring goes round the glyph and ends above the word', ({ width, scale, edge, ...c }) => {
+    const r = cellRects(width, scale, edge, { placedOut: 'both' in c, isStart: 'both' in c });
     expect(r.ring.x).toBeLessThanOrEqual(r.glyph.x);
     expect(r.ring.y).toBeLessThanOrEqual(r.glyph.y);
     expect(r.ring.x + r.ring.w).toBeGreaterThanOrEqual(r.glyph.x + r.glyph.w);
@@ -162,10 +172,37 @@ describe('journeyCellLayout', () => {
 });
 
 describe('countMarkSlot', () => {
-  it('top right, top left when the check owns top right, none when both corners are taken; never the bottom', () => {
+  it('top right, top left when the check owns top right, never the bottom', () => {
     expect(countMarkSlot(M, { placedOut: false, isStart: false })).toEqual({ top: CELL_CORNER_INSET, right: CELL_CORNER_INSET });
     expect(countMarkSlot(M, { placedOut: false, isStart: true })).toEqual({ top: CELL_CORNER_INSET, right: CELL_CORNER_INSET });
     expect(countMarkSlot(M, { placedOut: true, isStart: false })).toEqual({ top: CELL_CORNER_INSET, left: CELL_CORNER_INSET });
-    expect(countMarkSlot(M, { placedOut: true, isStart: true })).toBeNull();
+  });
+
+  it('a cell with the start pin and the placed-out check keeps its count mark: right, under the check', () => {
+    // Placed out from live progress, the pin from the fixed level-check result: the start cell's earlier quest was
+    // placed out and the learner finished the rest.
+    expect(countMarkSlot(M, { placedOut: true, isStart: true })).toEqual({ top: CELL_CORNER_INSET + CELL_MARK_SIZE + CELL_CORNER_INSET, right: CELL_CORNER_INSET });
+  });
+
+  it.each(CASES)('$name: pin, check and count all drawn, none overlaps another, the glyph, the word or the Next triangle', ({ width, scale, edge }) => {
+    const marks = { placedOut: true, isStart: true };
+    const r = cellRects(width, scale, edge, marks);
+    const count = countRect(countMarkSlot(M, marks), r.innerW);
+    expect(overlap(r.pin, r.check)).toBe(0);
+    for (const other of [r.pin, r.check, r.glyph, r.word, r.next]) expect(overlap(count, other)).toBe(0);
+    expect(r.glyph.y).toBeGreaterThanOrEqual(count.y + count.h);
+    expect(r.word.y + r.word.h).toBeLessThanOrEqual(r.innerH);
+  });
+
+  it('only a cell with both corner marks grows: the others keep their height', () => {
+    for (const { scale } of SIZES) {
+      const glyph = scaleMedia(CELL_THEME_GLYPH, scale);
+      const ring = scaleMedia(CELL_RING, scale);
+      const plain = journeyCellLayout(M, glyph, ring);
+      for (const marks of MARKS.slice(0, 3)) expect(journeyCellLayout(M, glyph, ring, marks)).toEqual(plain);
+      const both = journeyCellLayout(M, glyph, ring, { placedOut: true, isStart: true });
+      expect(both.padTop).toBeGreaterThan(plain.padTop);
+      expect(both.minHeight - plain.minHeight).toBe(both.padTop - plain.padTop);
+    }
   });
 });

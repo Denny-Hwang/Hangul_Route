@@ -40,7 +40,12 @@ async function boxOf(locator: Locator): Promise<Box> {
 
 const AT = '2026-10-09T10:00:00.000Z';
 /** A level-check result in Stage 1 (F-PLC-001 section 3.7), so the grid draws its start pin. */
-async function seedStart(page: Page): Promise<void> {
+interface SeedOptions {
+  placedOutQuestIds?: string[];
+  completedQuestIds?: { questId: string; episodeId: string }[];
+}
+
+async function seedStart(page: Page, opts: SeedOptions = {}): Promise<void> {
   const profileId = (await readStored<Array<{ id: string }>>(page, 'profiles'))?.[0]?.id ?? '';
   expect(profileId).not.toBe('');
   const progress = (await readStored<Record<string, unknown>>(page, `progress:${profileId}`)) ?? {
@@ -56,6 +61,7 @@ async function seedStart(page: Page): Promise<void> {
   };
   await seedStored(page, `progress:${profileId}`, {
     ...progress,
+    quests: (opts.completedQuestIds ?? []).map((q) => ({ ...q, startedAt: AT, completedAt: AT, stars: 3, attempts: 1, accuracy: 1 })),
     placements: [
       {
         id: 'placement:seeded',
@@ -75,7 +81,7 @@ async function seedStart(page: Page): Promise<void> {
         oralStage: null,
         beyondContent: false,
         startQuestId: 'quest:stage1-nature-q1',
-        placedOutQuestIds: [],
+        placedOutQuestIds: opts.placedOutQuestIds ?? [],
         priorityTokens: [],
         needsStage: null,
         stopReason: 'complete',
@@ -84,14 +90,14 @@ async function seedStart(page: Page): Promise<void> {
   });
 }
 
-async function openJourney(page: Page, width: number, height: number, locale: Locale): Promise<void> {
+async function openJourney(page: Page, width: number, height: number, locale: Locale, seed: SeedOptions = {}): Promise<void> {
   await page.setViewportSize({ width, height });
   await page.goto('/');
   await keepSidewaysIfAsked(page);
   await page.getByRole('button', { name: "Let's start" }).click();
   await completeChildForm(page, { name: 'Dami' });
   await waitForSaved(page, ['profiles']);
-  await seedStart(page);
+  await seedStart(page, seed);
   if (locale !== 'en') {
     // The locale is read at start-up: store it, then reload so the whole app comes up in it.
     await seedStored(page, 'device:settings', { uiLocale: locale });
@@ -230,4 +236,67 @@ for (const locale of availableLocales(process.env.E2E_ALL_LOCALES === '1')) {
       await shot(page, `journey-theme-glyphs-${width}-${locale}`);
     });
   }
+}
+
+/**
+ * A cell with the start pin, the placed-out check and a story count (the pin comes from the stored level check,
+ * the check from live progress): Letters' first quest was placed out, so the pin is on its second, and the
+ * learner then finished the second and the third. The count mark stays, under the check, and nothing in the
+ * cell overlaps anything else or leaves the cell.
+ */
+for (const [width, height] of [
+  [320, 568],
+  [768, 1024],
+  [1180, 820],
+] as const) {
+  test(`${width} px: a cell with the start pin, the placed-out check and a story count draws all three, clear of each other`, async ({ page }) => {
+    await openJourney(page, width, height, 'en', {
+      placedOutQuestIds: ['quest:stage1-letters-q1'],
+      completedQuestIds: [
+        { questId: 'quest:stage1-letters-q2', episodeId: 'episode:stage1-letters' },
+        { questId: 'quest:stage1-letters-q3', episodeId: 'episode:stage1-letters' },
+      ],
+    });
+    const cell = page.getByRole('button').filter({ has: page.getByTestId('journey-glyph-stage1-letters') });
+    await expect(cell).toHaveCount(1);
+    await expect(cell).toHaveAttribute('data-testid', 'journey-cell-start');
+    const pin = cell.getByTestId('journey-start-pin');
+    const check = cell.getByTestId('journey-placed-out-check');
+    const count = cell.getByTestId('journey-count-stage1-letters');
+    await expect(count).toBeVisible();
+    await expect(count).toHaveAttribute('aria-hidden', 'true');
+    const [c, p, k, n, g, w] = await Promise.all([
+      boxOf(cell),
+      boxOf(pin),
+      boxOf(check),
+      boxOf(count),
+      boxOf(page.getByTestId('journey-glyph-stage1-letters')),
+      boxOf(page.getByTestId('journey-word-stage1-letters')),
+    ]);
+    for (const [name, b] of [
+      ['pin', p],
+      ['check', k],
+      ['count', n],
+      ['glyph', g],
+      ['word', w],
+    ] as const) {
+      expect(b.x, name).toBeGreaterThanOrEqual(c.x);
+      expect(b.y, name).toBeGreaterThanOrEqual(c.y);
+      expect(b.x + b.width, name).toBeLessThanOrEqual(c.x + c.width);
+      expect(b.y + b.height, name).toBeLessThanOrEqual(c.y + c.height);
+    }
+    expect(area(n, p)).toBe(0);
+    expect(area(n, k)).toBe(0);
+    expect(area(p, k)).toBe(0);
+    expect(area(n, g)).toBe(0);
+    expect(area(n, w)).toBe(0);
+    expect(area(k, g)).toBe(0);
+    // the count sits right of centre, under the check that owns the top right corner
+    expect(n.x + n.width / 2).toBeGreaterThan(c.x + c.width / 2);
+    expect(n.y).toBeGreaterThanOrEqual(k.y + k.height);
+    // the label still names the stories
+    expect(String(await cell.getAttribute('aria-label'))).toMatch(/stor/i);
+    await expectNoHorizontalOverflow(page);
+    await shot(page, `journey-cell-pin-check-count-${width}`);
+  });
 }
