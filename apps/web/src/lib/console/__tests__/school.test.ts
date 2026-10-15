@@ -1,3 +1,4 @@
+import { FREE_CLASS_STUDENT_CAP } from '@hangul-route/content-schema';
 import { getMessages, type UiLocale } from '@hangul-route/i18n';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { assignableTeachers, limitNote, limitState, usageLine, weekLine } from '../school';
@@ -39,7 +40,7 @@ describe('school words per locale (F-I18N-001 PR 10c)', () => {
       const s = getMessages(locale).console;
       expect(usageLine({ students: 38, teachers: 4 }, { licensed: true, students: 300, teachers: 10 }, locale)).toBe(s.school.licence.usage(38, 300, 4, 10));
       expect(usageLine({ students: 38, teachers: 4 }, { licensed: true, students: null, teachers: null }, locale)).toBe(s.school.licence.usage(38, null, 4, null));
-      expect(limitNote('unlicensed', locale)).toBe(s.schoolNoLicence);
+      expect(limitNote('unlicensed', locale)).toBe(s.schoolNoLicence(FREE_CLASS_STUDENT_CAP));
       expect(limitNote('near', locale)).toBe(s.schoolNearLimit);
       expect(limitNote('at', locale)).toBe(s.schoolAtLimit);
       expect(limitNote('ok', locale)).toBeNull();

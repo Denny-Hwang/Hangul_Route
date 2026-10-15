@@ -60,3 +60,6 @@ High-risk items confirmed against primary pages:
 - story-gimjang-arirang: YES
 - story-sun-and-moon: YES (traditional tale; version choice and "simplified" disclosure present; gentle)
 - story-pansori-tales: YES (after correction 1 and 2)
+
+## Addendum 2026-10-14 (PR #718)
+- Remaining uncertainty 4: Chuseok f6 is no longer single-source. It now also cites 한국민족문화대백과사전 추석 (E0057862), which supports "the holiday of the moon" and the harvest-thanks context; the "symbol of plenty" half still rests on the KHS source. Chuseok f10, Sun-and-Moon f4 and Pansori f9 stay single-source tale or word-meaning exceptions as listed above.

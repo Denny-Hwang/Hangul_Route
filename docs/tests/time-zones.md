@@ -39,8 +39,3 @@ which CI runs) re-runs the files that pin day boundaries under
 `America/Los_Angeles`, `Asia/Seoul` and `Australia/Sydney` (DST starts in early
 October, inside the fixture windows). Add a file to its `FILES` list when a
 test pins a day boundary (relative days, day stamps, due dates).
-
-Not yet listed: `apps/mobile/src/store/__tests__/progress-store.test.ts`
-(`recordVocab` builds its clock from a UTC instant). It is waiting for the open
-F-CURR-001 content PRs that also edit that file; the fix is `localDay(NOW)` as in
-`vocab-run-store.test.ts`.

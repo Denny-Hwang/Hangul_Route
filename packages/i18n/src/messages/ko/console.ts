@@ -59,7 +59,7 @@ export const consoleMsgs = {
   promoNotConfigured: '이 배포에는 아직 코드가 설정되어 있지 않아요.',
   schoolInviteHint: '선생님이 로그인해서 이 코드를 입력한 뒤 반을 만들어요 — 또는 관리자가 반을 만들고 선생님을 배정해요.',
   schoolEmpty: '코드로 선생님을 초대하거나, 반을 만들고 선생님을 배정해 주세요.',
-  schoolNoLicence: '아직 라이선스가 없어요 — 반마다 무료 한도인 학생 20명이 그대로 적용돼요.',
+  schoolNoLicence: (cap: number) => `아직 라이선스가 없어요 — 반마다 무료 한도인 학생 ${cap}명이 그대로 적용돼요.`,
   schoolNearLimit: '라이선스 한도에 가까워요 — 다음 반이 차기 전에 결제 화면을 확인해 주세요.',
   schoolAtLimit: '라이선스 한도에 도달했어요 — 새 학생은 선생님에게 확인해 달라는 안내를 받아요.',
   schoolLicenceLapsed: '라이선스를 확인해 주세요. 반은 계속 볼 수 있고, 학생은 어느 경우든 1단계를 계속 이용해요.',

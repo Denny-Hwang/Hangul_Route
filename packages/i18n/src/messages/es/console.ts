@@ -75,7 +75,7 @@ export const consoleMsgs = {
   promoNotConfigured: 'Los códigos aún no están configurados aquí.',
   schoolInviteHint: 'Los docentes inician sesión, escriben este código y crean su clase; o la creas tú y se la asignas.',
   schoolEmpty: 'Invita a un docente con el código, o crea una clase y asígnala.',
-  schoolNoLicence: 'Aún no hay licencia: cada clase mantiene el tope gratuito de 20 estudiantes.',
+  schoolNoLicence: (cap: number) => `Aún no hay licencia: cada clase mantiene el tope gratuito de ${cap} estudiantes.`,
   schoolNearLimit: 'Cerca del límite de la licencia: revisa la facturación antes de que se llene la próxima clase.',
   schoolAtLimit: 'En el límite de la licencia: a los estudiantes nuevos se les pedirá que hablen con su docente.',
   schoolLicenceLapsed: 'La licencia necesita atención. Las clases siguen visibles; los estudiantes conservan la Etapa 1 de todos modos.',
@@ -995,7 +995,7 @@ export const consoleMsgs = {
       label: 'Esta semana',
       title: 'Esta semana (toda la escuela)',
       line: (practiced: number, students: number, classesWithPlan: number, classes: number) =>
-        `${practiced} de ${plural('es', students, { one: `${students} estudiante`, other: `${students} estudiantes` })} ${plural('es', practiced, { one: 'practicó', other: 'practicaron' })} · ${classesWithPlan} de ${plural('es', classes, { one: `${classes} clase`, other: `${classes} clases` })} ${plural('es', classesWithPlan, { one: 'tiene', other: 'tienen' })} un plan publicado`,
+        `${practiced} de ${plural('es', students, { one: `${students} estudiante`, other: `${students} estudiantes` })} ${plural('es', practiced === 0 ? students : practiced, { one: 'practicó', other: 'practicaron' })} · ${classesWithPlan} de ${plural('es', classes, { one: `${classes} clase`, other: `${classes} clases` })} ${plural('es', classesWithPlan === 0 ? classes : classesWithPlan, { one: 'tiene', other: 'tienen' })} un plan publicado`,
     },
     classes: {
       title: 'Clases',

@@ -50,11 +50,12 @@ const NO_FACT_SCENE = 2; // "Look at the first consonant, {kw:jamo-g}." has no n
 
 describe('story-sources', () => {
   it('seeds the allow-list with the 31 hosts of the research set plus reviewed additions, sorted and unique', () => {
-    expect(SOURCE_HOST_ALLOWLIST).toHaveLength(32);
-    expect(new Set(SOURCE_HOST_ALLOWLIST).size).toBe(32);
+    expect(SOURCE_HOST_ALLOWLIST).toHaveLength(33);
+    expect(new Set(SOURCE_HOST_ALLOWLIST).size).toBe(33);
     expect([...SOURCE_HOST_ALLOWLIST]).toEqual([...SOURCE_HOST_ALLOWLIST].sort());
     expect(SOURCE_HOST_ALLOWLIST).toContain('www.heritage.go.kr');
     expect(SOURCE_HOST_ALLOWLIST).toContain('www.knps.or.kr'); // F-CURR-001 S6-4 (Korea National Park Service)
+    expect(SOURCE_HOST_ALLOWLIST).toContain('db.itkc.or.kr'); // Ilseongnok translation DB (Institute for the Translation of Korean Classics)
   });
 
   it('pins the authoritative suffixes of the research brief', () => {
