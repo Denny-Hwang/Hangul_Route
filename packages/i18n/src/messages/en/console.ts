@@ -1184,7 +1184,7 @@ export const consoleMsgs = {
       label: 'This week',
       title: 'This week (whole school)',
       line: (practiced: number, students: number, classesWithPlan: number, classes: number) =>
-        `${practiced} of ${students} students practiced · ${classesWithPlan} of ${classes} classes have a published plan`,
+        `${practiced} of ${plural('en', students, { one: `${students} student`, other: `${students} students` })} practiced · ${classesWithPlan} of ${plural('en', classes, { one: `${classes} class`, other: `${classes} classes` })} ${plural('en', classesWithPlan, { one: 'has', other: 'have' })} a published plan`,
     },
     classes: {
       title: 'Classes',
