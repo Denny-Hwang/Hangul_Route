@@ -197,10 +197,12 @@ const BILLING_PAYLOAD_RULES: Readonly<Record<string, Readonly<Record<string, Fie
 /**
  * Lecture events (F-TCH-004 section 3.14 as amended by AMENDMENTS-LECTURE-V2
  * section 11) carry no profile id and, per name, only the documented keys:
- * codes from their lists, booleans, and whole-number counts within bounds well
- * above the largest deck (172 slides for one cell; `LECTURE_MAX_BLOCKS` 30).
- * A deck title, a picker label, a deck id or any other key is dropped. Worker
- * first: this rule ships before any presenter sends `source: 'preset'`.
+ * codes from their lists, booleans, and whole-number counts within bounds that
+ * hold the largest deck the schema allows (`LECTURE_MAX_BLOCKS` 30 episode blocks
+ * of the largest cell, 172 slides today, is about 5200 slides; reveals are several
+ * builds a slide). `preset` is kept only beside `source: 'preset'`. A deck title,
+ * a picker label, a deck id or any other key is dropped. Worker first: this rule
+ * ships before any presenter sends `source: 'preset'`.
  */
 const LECTURE_EVENT_PREFIX = 'lecture.';
 
@@ -208,12 +210,14 @@ const wholeUpTo =
   (max: number): FieldRule =>
   (value) =>
     typeof value === 'number' && Number.isInteger(value) && value >= 0 && value <= max;
-const LECTURE_SLIDES_MAX = 2000;
+const LECTURE_SLIDES_MAX = 10_000;
+const LECTURE_REVEALS_MAX = 100_000;
+const isLecturePreset = oneOf(LECTURE_PRESETS);
 
 const LECTURE_PAYLOAD_RULES: Readonly<Record<string, Readonly<Record<string, FieldRule>>>> = {
   'lecture.start': {
     source: oneOf(['console', 'quick', 'recent', 'preset']),
-    preset: oneOf(LECTURE_PRESETS),
+    preset: (value, payload) => payload.source === 'preset' && isLecturePreset(value, payload),
     blocks: wholeUpTo(30),
     slides: wholeUpTo(LECTURE_SLIDES_MAX),
     skipped: wholeUpTo(LECTURE_SLIDES_MAX),
@@ -222,7 +226,7 @@ const LECTURE_PAYLOAD_RULES: Readonly<Record<string, Readonly<Record<string, Fie
     voice: oneOf(['ready', 'none', 'unknown']),
     offlineReady: isBoolean,
   },
-  'lecture.complete': { slidesShown: wholeUpTo(LECTURE_SLIDES_MAX), minutes: wholeUpTo(600), reveals: wholeUpTo(20_000) },
+  'lecture.complete': { slidesShown: wholeUpTo(LECTURE_SLIDES_MAX), minutes: wholeUpTo(600), reveals: wholeUpTo(LECTURE_REVEALS_MAX) },
   'lecture.tool_used': { tool: oneOf(['timer', 'picker', 'blank', 'pause', 'grid', 'fullscreen']) },
   'lecture.deck_rejected': { reason: oneOf(LECTURE_DECODE_FAILURES) },
 };

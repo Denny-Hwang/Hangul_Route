@@ -218,23 +218,37 @@ describe('lecture events (AMENDMENTS-LECTURE-V2 section 11: codes and bounded co
     for (const reason of LECTURE_DECODE_FAILURES) expect(keptEventFields('lecture.deck_rejected', { reason }, undefined).payload).toEqual({ reason });
   });
 
-  it('the bounds: 0 to 30 blocks, 0 to 2000 slides and skips, 600 minutes, 20000 reveals, whole numbers only', () => {
-    const edge = { ...start, blocks: 30, slides: 2000, skipped: 2000 };
+  it('the bounds: 0 to 30 blocks, 0 to 10000 slides and skips, 600 minutes, 100000 reveals, whole numbers only', () => {
+    const edge = { ...start, blocks: 30, slides: 10_000, skipped: 10_000 };
     expect(keptEventFields('lecture.start', edge, undefined).payload).toEqual(edge);
     expect(keptEventFields('lecture.start', { ...start, blocks: 0, slides: 0, skipped: 0 }, undefined).payload).toMatchObject({ blocks: 0, slides: 0, skipped: 0 });
-    expect(keptEventFields('lecture.complete', { slidesShown: 2000, minutes: 600, reveals: 20_000 }, undefined).payload).toEqual({ slidesShown: 2000, minutes: 600, reveals: 20_000 });
+    expect(keptEventFields('lecture.complete', { slidesShown: 10_000, minutes: 600, reveals: 100_000 }, undefined).payload).toEqual({
+      slidesShown: 10_000,
+      minutes: 600,
+      reveals: 100_000,
+    });
     for (const bad of [-1, 2.5, '4', Number.NaN, Number.POSITIVE_INFINITY, null, true]) {
       expect(keptEventFields('lecture.start', { ...start, blocks: bad }, undefined).payload).not.toHaveProperty('blocks');
       expect(keptEventFields('lecture.complete', { slidesShown: bad, minutes: 1, reveals: 1 }, undefined).payload).toEqual({ minutes: 1, reveals: 1 });
     }
-    expect(keptEventFields('lecture.start', { ...start, blocks: 31, slides: 2001, skipped: 2001 }, undefined).payload).toEqual({
+    // One past each bound is dropped.
+    expect(keptEventFields('lecture.start', { ...start, blocks: 31, slides: 10_001, skipped: 10_001 }, undefined).payload).toEqual({
       source: 'console',
       picker: 'numbers',
       romanization: 'always',
       voice: 'ready',
       offlineReady: true,
     });
-    expect(keptEventFields('lecture.complete', { slidesShown: 1, minutes: 601, reveals: 20_001 }, undefined).payload).toEqual({ slidesShown: 1 });
+    expect(keptEventFields('lecture.complete', { slidesShown: 10_001, minutes: 601, reveals: 100_001 }, undefined).payload).toBeUndefined();
+    expect(keptEventFields('lecture.complete', { slidesShown: 1, minutes: 601, reveals: 100_001 }, undefined).payload).toEqual({ slidesShown: 1 });
+  });
+
+  it('preset is kept only with source preset', () => {
+    expect(keptEventFields('lecture.start', { ...start, source: 'preset', preset: 'warm-up' }, undefined).payload).toEqual({ ...start, source: 'preset', preset: 'warm-up' });
+    for (const source of ['console', 'quick', 'recent', 'plan', undefined]) {
+      expect(keptEventFields('lecture.start', { ...start, source, preset: 'warm-up' }, undefined).payload).not.toHaveProperty('preset');
+    }
+    expect(keptEventFields('lecture.start', { preset: 'warm-up' }, undefined).payload).toBeUndefined();
   });
 
   it('drops an extra key (a name, a deck title or id), the profile id, and codes off their lists', () => {
