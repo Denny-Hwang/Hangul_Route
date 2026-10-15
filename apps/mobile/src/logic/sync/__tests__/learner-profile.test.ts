@@ -1,0 +1,48 @@
+import type { Profile } from '@hangul-route/content-schema';
+import { describe, expect, it } from 'vitest';
+import { changedServerFields, hasFields, mergePending, sendableFields, serverFieldsOf, serverProfileChanges, shouldPullServerProfile } from '../learner-profile';
+
+const profile: Profile = { id: 'profile:a', displayName: 'test', ageGroup: '5-7', avatar: 'hoya-orange', role: 'learner', createdAt: 't', learnerType: 'self', parentPinHash: 'h' };
+
+describe('logic/sync/learner-profile (F-PROF-001)', () => {
+  it('serverFieldsOf and changedServerFields carry only name, level and avatar', () => {
+    expect(serverFieldsOf(profile)).toEqual({ displayName: 'test', ageGroup: '5-7', avatar: 'hoya-orange' });
+    expect(changedServerFields(profile, { ...profile, learnerType: 'child', parentPinHash: 'x' })).toEqual({});
+    expect(changedServerFields(profile, { ...profile, displayName: 'Sungjoo', ageGroup: '8-9', avatar: 'hoya-blue' })).toEqual({ displayName: 'Sungjoo', ageGroup: '8-9', avatar: 'hoya-blue' });
+  });
+
+  it('hasFields', () => {
+    expect(hasFields({})).toBe(false);
+    expect(hasFields({ avatar: 'hoya-blue' })).toBe(true);
+  });
+
+  it('mergePending folds a newer edit over the waiting one and drops anything else', () => {
+    const first = mergePending(null, { displayName: 'A' }, 't1');
+    expect(first).toEqual({ fields: { displayName: 'A' }, at: 't1' });
+    const extra = { learnerType: 'self' } as unknown as Record<string, never>;
+    expect(mergePending(first, { displayName: 'B', ageGroup: '8-9', ...extra }, 't2')).toEqual({ fields: { displayName: 'B', ageGroup: '8-9' }, at: 't2' });
+  });
+
+  it('sendableFields keeps only values the shared rules accept, trimmed', () => {
+    expect(sendableFields({ displayName: ' Sungjoo ', ageGroup: '8-9', avatar: 'hoya-blue' })).toEqual({ displayName: 'Sungjoo', ageGroup: '8-9', avatar: 'hoya-blue' });
+    expect(sendableFields({ displayName: 'A name far too long', ageGroup: 'adult' as never, avatar: 'x' as never })).toEqual({});
+  });
+
+  it('serverProfileChanges takes differing values that pass the local rules', () => {
+    expect(serverProfileChanges(profile, { displayName: 'Sungjoo', ageGroup: '8-9', avatar: 'hoya-blue' })).toEqual({ displayName: 'Sungjoo', ageGroup: '8-9', avatar: 'hoya-blue' });
+    expect(serverProfileChanges(profile, { displayName: 'test', ageGroup: '5-7', avatar: 'hoya-orange' })).toEqual({});
+    expect(serverProfileChanges(profile, { displayName: 'emoji \u{1F600}', ageGroup: 'adult', avatar: 'nope' })).toEqual({});
+  });
+
+  it('shouldPullServerProfile: only a server edit newer than ours, never over a waiting edit', () => {
+    const at = '2026-10-14T10:00:00.000Z';
+    expect(shouldPullServerProfile({ profileUpdatedAt: at, pending: null, profileAt: null })).toBe(true);
+    expect(shouldPullServerProfile({ profileUpdatedAt: at, pending: { fields: {}, at: 't' }, profileAt: null })).toBe(false);
+    expect(shouldPullServerProfile({ profileUpdatedAt: null, pending: null, profileAt: null })).toBe(false);
+    expect(shouldPullServerProfile({ profileUpdatedAt: 'garbage', pending: null, profileAt: null })).toBe(false);
+    expect(shouldPullServerProfile({ profileUpdatedAt: at, pending: null, profileAt: at })).toBe(false);
+    expect(shouldPullServerProfile({ profileUpdatedAt: at, pending: null, profileAt: '2026-10-14T11:00:00.000Z' })).toBe(false);
+    expect(shouldPullServerProfile({ profileUpdatedAt: at, pending: null, profileAt: '2026-10-14T09:00:00.000Z' })).toBe(true);
+    expect(shouldPullServerProfile({ profileUpdatedAt: at, pending: null, profileAt: 'garbage' })).toBe(true);
+  });
+});

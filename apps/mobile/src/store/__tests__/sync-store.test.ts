@@ -47,6 +47,9 @@ function fakeApi(over: Partial<{ register: unknown; putSnapshot: unknown; issueR
     getSnapshot: vi.fn(),
     issueRescueCode: vi.fn(async () => ({ status: 'ok', code: 'TIGER-MOON-4821' })),
     claimRescueCode: vi.fn(),
+    // The one-time profile repair (F-PROF-001) reads the inbox, then sends the profile once.
+    getInbox: vi.fn(async () => ({ status: 'error', code: 'network' })),
+    updateLearnerProfile: vi.fn(async () => ({ status: 'ok', applied: true })),
     ...over,
   };
 }

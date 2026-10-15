@@ -1,5 +1,6 @@
 import type { ProgressSnapshot, ProgressSummary } from '@hangul-route/content-schema';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { onInboxRead } from '../inbox-events';
 import { apiBaseUrl, createSyncApi } from '../sync-api';
 
 const snapshot: ProgressSnapshot = { profileId: 'profile:a', updatedAt: 't', episodes: [], quests: [], cards: [], sessions: [], homework: [], reviews: [], streakDays: 0 };
@@ -295,5 +296,54 @@ describe('platform/sync-api note routes', () => {
     expect(JSON.parse(String(prefsInit.body))).toEqual({ classes: 'presets', acknowledge: true, attest: 'self' });
     expect(await api.putNotePrefs('profile:a', { classes: 'off' }, creds)).toEqual({ status: 'error', http: 403, code: 'scope' });
     expect(await api.hideNote('profile:a', 'note:aaaaaaaa', creds)).toEqual({ status: 'error', http: 404, code: 'http_404' });
+  });
+
+  it('updateLearnerProfile PATCHes only name, level, avatar and at with the device header', async () => {
+    const fetchImpl = vi.fn<typeof fetch>().mockResolvedValue(json(200, { data: { learner: { id: 'profile:a' }, applied: true } }));
+    const api = createSyncApi({ endpoint: 'https://api.example.com', fetchImpl });
+    const extra = { learnerType: 'self', parentPinHash: 'h', consent: { guardian: 't' } } as unknown as Record<string, never>;
+    const result = await api.updateLearnerProfile('profile:a', 's3cret', 'device-x', { displayName: 'Sungjoo', avatar: 'hoya-orange', at: '2026-10-14T00:00:00.000Z', ...extra });
+    expect(result).toEqual({ status: 'ok', applied: true });
+    expect(fetchImpl.mock.calls[0]?.[0]).toBe('https://api.example.com/api/sync/learners/profile%3Aa');
+    const init = fetchImpl.mock.calls[0]?.[1] as RequestInit;
+    expect(init.method).toBe('PATCH');
+    expect((init.headers as Record<string, string>).Authorization).toBe('Device device-x:s3cret');
+    const body = JSON.parse(String(init.body)) as Record<string, unknown>;
+    expect(body).toEqual({ displayName: 'Sungjoo', avatar: 'hoya-orange', at: '2026-10-14T00:00:00.000Z' });
+    for (const key of ['learnerType', 'parentPinHash', 'consent']) expect(body).not.toHaveProperty(key);
+  });
+
+  it('updateLearnerProfile maps applied false, scope_limited, 422, 5xx, other 403 and no network', async () => {
+    const fetchImpl = vi.fn<typeof fetch>()
+      .mockResolvedValueOnce(json(200, { data: { applied: false } }))
+      .mockResolvedValueOnce(json(200, { data: {} }))
+      .mockResolvedValueOnce(json(403, { error: { code: 'scope_limited' } }))
+      .mockResolvedValueOnce(json(422, { error: { code: 'bad_request' } }))
+      .mockResolvedValueOnce(json(400, {}))
+      .mockResolvedValueOnce(json(503, {}))
+      .mockResolvedValueOnce(json(403, { error: { code: 'forbidden' } }))
+      .mockRejectedValueOnce(new Error('offline'));
+    const api = createSyncApi({ endpoint: 'https://api.example.com', fetchImpl });
+    const send = () => api.updateLearnerProfile('profile:a', 's', 'device-x', { ageGroup: '8-9', at: '2026-10-14T00:00:00.000Z' });
+    expect(await send()).toEqual({ status: 'ok', applied: false });
+    expect(await send()).toEqual({ status: 'ok', applied: true });
+    expect(await send()).toEqual({ status: 'scope_limited' });
+    expect(await send()).toEqual({ status: 'invalid', code: 'bad_request' });
+    expect(await send()).toEqual({ status: 'invalid', code: 'http_400' });
+    expect(await send()).toEqual({ status: 'error', code: 'http_503' });
+    expect(await send()).toEqual({ status: 'error', code: 'forbidden' });
+    expect(await send()).toEqual({ status: 'error', code: 'network' });
+  });
+
+  it('getInbox announces every inbox it reads, with its learner row', async () => {
+    const inbox = { rev: 0, plans: [], memberships: [], tier: 'free', serverTime: 't', learner: { displayName: 'Sungjoo', ageGroup: '8-9', avatar: 'hoya-orange', profileUpdatedAt: '2026-10-14T00:00:00.000Z' } };
+    const fetchImpl = vi.fn<typeof fetch>().mockResolvedValueOnce(json(200, { data: inbox })).mockResolvedValueOnce(json(200, { data: { rev: 'x' } }));
+    const seen: Array<[string, unknown]> = [];
+    const off = onInboxRead((id, read) => seen.push([id, read.learner]));
+    const api = createSyncApi({ endpoint: 'https://api.example.com', fetchImpl });
+    await api.getInbox('profile:a', creds);
+    await api.getInbox('profile:a', creds);
+    off();
+    expect(seen).toEqual([['profile:a', inbox.learner]]);
   });
 });

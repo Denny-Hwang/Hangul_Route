@@ -1,5 +1,8 @@
 import {
   AvatarKindSchema,
+  DISPLAY_NAME_CHARS,
+  DISPLAY_NAME_MAX,
+  DISPLAY_NAME_MIN,
   LearnerTypeSchema,
   isLearnerLevelId,
   type AvatarKind,
@@ -16,8 +19,9 @@ import {
  * store or AsyncStorage.
  */
 
-export const NAME_MIN = 1;
-export const NAME_MAX = 12;
+/** The shared name rule (`DisplayNameSchema` in content-schema), so the device and the Worker accept the same names. */
+export const NAME_MIN = DISPLAY_NAME_MIN;
+export const NAME_MAX = DISPLAY_NAME_MAX;
 
 export interface ProfileSet {
   profiles: Profile[];
@@ -45,10 +49,11 @@ export type NameError = 'too-short' | 'too-long' | 'unsupported-character';
  * Learner names are user data, not UI text, so they are valid in every UI
  * language: Latin letters including accents (María, Zoë), Hangul syllables
  * (수니), digits, spaces, apostrophes and hyphens. Emoji, other scripts and
- * control characters stay out (§3.2). Explicit ranges, not \p{…}: Hermes
- * support for Unicode property escapes is not guaranteed (F-I18N-001 §3.9).
+ * control characters stay out (§3.2). The characters and lengths come from
+ * content-schema (`DisplayNameSchema`), the rule the Worker checks too; this
+ * keeps the device's own error codes for the forms.
  */
-const NAME_CHARS = /^[A-Za-zÀ-ɏ가-힣0-9 '’-]+$/;
+const NAME_CHARS = DISPLAY_NAME_CHARS;
 
 export function validateDisplayName(raw: string): NameError | null {
   const name = raw.trim();
