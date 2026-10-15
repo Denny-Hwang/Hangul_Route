@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { LegacyDisplayNameSchema } from './display-name';
 
 /**
  * Spaces & memberships — F-SPACE-001. One concept for family / class /
@@ -85,13 +86,13 @@ export type SpaceLookup = z.infer<typeof SpaceLookupSchema>;
 
 /**
  * POST /api/spaces/:id/join body. Devices send `learnerId` (siblings share a device); `displayName` is the roster
- * name. Lenient on purpose (trim, 1-20, as shipped apps send it; the same bound as `LegacyDisplayNameSchema`, used
- * by registration and PATCH): a legacy name the device keeps never fails the join and applies as sent.
+ * name. Lenient on purpose: `LegacyDisplayNameSchema` (trim, 1-20, no control, zero-width or direction characters),
+ * the rule registration and PATCH use, so a legacy name the device keeps never fails the join and applies as sent.
  */
 export const SpaceJoinSchema = z.object({
   code: JoinCodeFieldSchema,
   learnerId: z.string().regex(/^profile:[a-z0-9-]+$/).optional(),
-  displayName: z.string().trim().min(1).max(20).optional(),
+  displayName: LegacyDisplayNameSchema.optional(),
 });
 export type SpaceJoin = z.infer<typeof SpaceJoinSchema>;
 

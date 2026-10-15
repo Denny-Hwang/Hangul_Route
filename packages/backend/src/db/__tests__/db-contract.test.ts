@@ -66,6 +66,10 @@ function contract(name: string, make: () => Db): void {
       // a touch and a hash write never undo the profile edit
       await db.touchLearner('profile:suni', '2026-10-12T00:00:00.000Z');
       expect(await db.getLearner('profile:suni')).toMatchObject({ displayName: 'Same', recoveryHash: 'hash-1', lastActiveAt: '2026-10-12T00:00:00.000Z' });
+      // a re-save of an edited row without the edit time never resets it (both adapters keep it)
+      const { profileUpdatedAt: _kept, ...row } = (await db.getLearner('profile:suni'))!;
+      await db.putLearner(row);
+      expect((await db.getLearner('profile:suni'))?.profileUpdatedAt).toBe('2026-10-10T00:00:00.000Z');
     });
 
     it('learners, devices and snapshots; deleteLearner erases everything of theirs', async () => {

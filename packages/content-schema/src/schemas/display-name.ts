@@ -40,4 +40,17 @@ export type DisplayName = z.infer<typeof DisplayNameSchema>;
  * device.
  */
 export const LEGACY_DISPLAY_NAME_MAX = 20;
-export const LegacyDisplayNameSchema = z.string().trim().min(DISPLAY_NAME_MIN).max(LEGACY_DISPLAY_NAME_MAX);
+/**
+ * Characters no name may carry, legacy or not: C0 and C1 control characters (newline, tab), the zero-width space
+ * U+200B, the direction marks U+200E-U+200F, the bidi embeddings and overrides U+202A-U+202E, the word joiner and
+ * bidi isolates U+2060-U+2069, and the byte order mark U+FEFF. No device rule ever produced them, and they would
+ * reach every console that shows the roster. U+200C and U+200D stay allowed: some scripts and emoji sequences need
+ * them, and a legacy name that holds one must not be refused on every retry. Explicit ranges, no `u` flag.
+ */
+export const DISPLAY_NAME_FORBIDDEN = /[\u0000-\u001F\u007F-\u009F\u200B\u200E\u200F\u202A-\u202E\u2060-\u2069\uFEFF]/;
+export const LegacyDisplayNameSchema = z
+  .string()
+  .trim()
+  .min(DISPLAY_NAME_MIN)
+  .max(LEGACY_DISPLAY_NAME_MAX)
+  .refine((s) => !DISPLAY_NAME_FORBIDDEN.test(s), 'Names carry no control, zero-width or direction characters');

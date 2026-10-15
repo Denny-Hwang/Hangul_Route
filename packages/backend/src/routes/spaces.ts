@@ -300,9 +300,16 @@ spacesRoutes.post('/:id/join', async (c) => {
     // renamed on an app build that cannot PATCH. Column-only, and only while the learner has no PATCH edit (PATCH
     // orders edits by device time; a server-time join must not enter that order). The body already holds the
     // server's lenient name rule (trim, 1-20, `LegacyDisplayNameSchema`), the same one registration and PATCH use,
-    // so a legacy name the device keeps applies as sent. Nothing about the name is logged.
+    // so a legacy name the device keeps applies as sent. Best effort: a failed repair never fails the join (the
+    // membership may already be committed, and a retry would fail the same way). Only a fixed code is logged,
+    // never the name.
     const applyName = async (): Promise<void> => {
-      if (displayName !== undefined) await db.setDisplayNameIfUnedited(learnerId, displayName);
+      if (displayName === undefined) return;
+      try {
+        await db.setDisplayNameIfUnedited(learnerId, displayName);
+      } catch {
+        console.warn('join_name_repair_failed');
+      }
     };
     if (existing) {
       await applyName();

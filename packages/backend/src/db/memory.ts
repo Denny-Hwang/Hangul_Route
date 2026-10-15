@@ -119,8 +119,10 @@ export class MemoryDb implements Db {
     // learners.recovery_hash is UNIQUE on D1; mirror it so collisions surface here too.
     const holder = learner.recoveryHash === null ? undefined : [...this.learners.values()].find((l) => l.recoveryHash === learner.recoveryHash && l.id !== learner.id);
     if (holder) throw new Error('UNIQUE constraint failed: learners.recovery_hash');
-    // The column is nullable on D1 (migration 0010): a row read back always carries it.
-    this.learners.set(learner.id, clone({ ...learner, profileUpdatedAt: learner.profileUpdatedAt ?? null }));
+    // The column is nullable on D1 (migration 0010): a row read back always carries it. Like D1's upsert, a
+    // re-save never resets an applied edit time.
+    const profileUpdatedAt = learner.profileUpdatedAt ?? this.learners.get(learner.id)?.profileUpdatedAt ?? null;
+    this.learners.set(learner.id, clone({ ...learner, profileUpdatedAt }));
   }
   async touchLearner(learnerId: string, lastActiveAt: string): Promise<void> {
     const learner = this.learners.get(learnerId);

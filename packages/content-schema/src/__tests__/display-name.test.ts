@@ -39,6 +39,15 @@ describe('LegacyDisplayNameSchema — the server rule for incoming names', () =>
     expect(LegacyDisplayNameSchema.parse('Mina_K')).toBe('Mina_K');
     for (const name of ['', '   ', 'A'.repeat(21)]) expect(LegacyDisplayNameSchema.safeParse(name).success, JSON.stringify(name)).toBe(false);
   });
+
+  it('refuses control, zero-width and direction characters inside a name', () => {
+    for (const name of ['a\nb', 'a\tb', 'a\u0000b', 'a\u0085b', 'a\u200Bb', 'a\u200Eb', 'a\u202Eb', 'a\u2066b', 'a\uFEFFb']) {
+      expect(LegacyDisplayNameSchema.safeParse(name).success, JSON.stringify(name)).toBe(false);
+    }
+    // joiners that scripts and emoji sequences need stay allowed, so a legacy name holding one still registers
+    expect(LegacyDisplayNameSchema.safeParse('a\u200Db').success).toBe(true);
+    expect(LegacyDisplayNameSchema.safeParse('a\u200Cb').success).toBe(true);
+  });
 });
 
 describe('LearnerProfilePatchSchema', () => {
@@ -90,6 +99,7 @@ describe('incoming names on registration and join', () => {
     expect(SpaceJoinSchema.parse({ code: 'ABCDEF', displayName: 'A'.repeat(15) }).displayName).toBe('A'.repeat(15));
     expect(SpaceJoinSchema.parse({ code: 'ABCDEF', displayName: 'Bad<Name' }).displayName).toBe('Bad<Name');
     expect(SpaceJoinSchema.safeParse({ code: 'ABCDEF', displayName: 'A'.repeat(21) }).success).toBe(false);
+    expect(SpaceJoinSchema.safeParse({ code: 'ABCDEF', displayName: 'a\u202Eb' }).success).toBe(false);
     expect(SpaceJoinSchema.parse({ code: 'ABCDEF' }).displayName).toBeUndefined();
   });
 });

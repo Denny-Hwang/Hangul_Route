@@ -162,7 +162,7 @@ describe('PATCH /api/sync/learners/:id — the reported rename (test -> Sungjoo)
 
   it('refuses bad names with 422 and keeps the stored one', async () => {
     const { learner } = await reportedWorld();
-    for (const displayName of ['', '   ', 'A'.repeat(21), 'Alexandria Mae Smithe']) {
+    for (const displayName of ['', '   ', 'A'.repeat(21), 'Alexandria Mae Smithe', 'Sun\nJoo', 'Sun\tJoo', 'Sun\u202EJoo', 'Sun\u200BJoo']) {
       const r = await patch(learner, { displayName, at: at() });
       expect(r.status, JSON.stringify(displayName)).toBe(422);
       expect(r.body.error?.code).toBe('bad_request');
@@ -271,6 +271,10 @@ describe('POST /api/sync/learners — legacy names always register', () => {
     }
     const long = await post('/api/sync/learners', json, { deviceId: 'device-legacy0009', learner: { displayName: 'A'.repeat(21), ageGroup: '5-7', avatar: 'hoya-orange' } });
     expect(long.status).toBe(422);
+    for (const [i, displayName] of ['Mi\nna', 'Mi\u202Ena'].entries()) {
+      const bad = await post('/api/sync/learners', json, { deviceId: `device-legacy001${i}`, learner: { displayName, ageGroup: '5-7', avatar: 'hoya-orange' } });
+      expect(bad.status, JSON.stringify(displayName)).toBe(422);
+    }
   });
 });
 
@@ -308,6 +312,24 @@ describe('POST /api/spaces/:id/join — the device name repairs the roster', () 
     }
     // over the body limit is still a bad body, as before
     expect((await join(cls, learner, 'A'.repeat(21))).status).toBe(422);
+    for (const name of ['Mi\nna', 'Mi\u202Ena', 'Mi\u200Bna']) expect((await join(cls, learner, name)).status, JSON.stringify(name)).toBe(422);
+    expect(await storedName(learner.learnerId)).toBe('A'.repeat(20));
+  });
+
+  it('a failed name repair never fails the join, and logs only a fixed code', async () => {
+    const learner = await registerLearner('device-test0001', 'test');
+    const cls = await createSpace('teacher', 'class', 'Kpccw class1');
+    const logged: unknown[] = [];
+    vi.spyOn(console, 'warn').mockImplementation((...args) => void logged.push(args));
+    vi.spyOn(db, 'setDisplayNameIfUnedited').mockRejectedValue(new Error('no such column: profile_updated_at'));
+    const first = await join(cls, learner, 'Sungjoo');
+    expect(first.status).toBe(201);
+    const again = await join(cls, learner, 'Sungjoo');
+    expect(again.status).toBe(200);
+    expect(again.body.data?.alreadyMember).toBe(true);
+    expect(await storedName(learner.learnerId)).toBe('test');
+    expect(JSON.stringify(logged)).not.toContain('Sungjoo');
+    expect(logged).toEqual([['join_name_repair_failed'], ['join_name_repair_failed']]);
   });
 
   it('a join with an older name never undoes a PATCH, and leaves the edit time alone', async () => {
