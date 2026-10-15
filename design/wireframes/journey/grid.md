@@ -56,7 +56,7 @@ One cell, top to bottom (owner request 2026-10-14; `logic/journey-cell-layout.ts
 ```
 
 - Nothing covers the glyph or the word: the glyph starts under the corner band, and the ring ends above the word.
-- 320 px: the cell is 54 dp wide and about 74 dp tall (taller than wide so the word fits). 768 px: square (112 dp).
+- 320 px: the cell is 54 dp wide and about 76 dp tall (taller than wide so the word fits). 768 px (portrait tablet): square (112 dp). Wide window (two panes): the grid fills the 400 dp master pane, so the cells are 76 dp wide and about 88 dp tall. The height reserves the selected border, so a selected cell keeps its size.
 - The glyph is 20 dp on a phone (24 regular, 28 wide); the word is `typography.size.caption` with `tracking.tight`, `text.secondary`.
 - Every word fits one line of a 320 px cell in en, es and ko (`journey-theme-word-messages.test.ts`, e2e `journey-theme-glyphs`).
 - A stories-only cell shows the books glyph with the theme word; a coming-later cell stays empty.

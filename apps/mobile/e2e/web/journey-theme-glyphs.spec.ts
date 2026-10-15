@@ -1,7 +1,7 @@
 import type { Locator, Page } from '@playwright/test';
 import { availableLocales, getMessages, type Locale } from '@hangul-route/i18n';
 import { expect, test } from './fixtures';
-import { completeChildForm, keepSidewaysIfAsked, seedStored, waitForSaved } from './helpers';
+import { completeChildForm, keepSidewaysIfAsked, readStored, seedStored, waitForSaved } from './helpers';
 import { shot } from './shots';
 import { expectNoHorizontalOverflow } from './viewport';
 
@@ -11,8 +11,9 @@ import { expectNoHorizontalOverflow } from './viewport';
  * instead of the letters L / F / H / N / P with the theme word under it, each column label shows the
  * same glyph over the same word, the glyphs and the cell word are hidden from screen readers, and each
  * cell's accessible name names its theme in words. The corner marks (story count, start pin), the Next
- * triangle and the rings never cover the glyph or the word. Checked at 320 px and 768 px, in English on
- * every run and in Spanish and Korean on a build that shows every language:
+ * triangle and the rings never cover the glyph or the word. The learner has a level-check result in
+ * Stage 1, so the grid draws the start pin and the spec checks it too. Checked at 320 px, 768 px and a 1180 px wide window (two panes, the grid in the 400 dp master
+ * pane), in English on every run and in Spanish and Korean on a build that shows every language:
  *
  *   HR_SHOTS=1 pnpm --filter @hangul-route/mobile test:e2e:web journey-theme-glyphs
  *   EXPO_PUBLIC_SHOW_ALL_LOCALES=1 build, then E2E_ALL_LOCALES=1 HR_SHOTS=1 ... journey-theme-glyphs
@@ -37,6 +38,52 @@ async function boxOf(locator: Locator): Promise<Box> {
   return box as Box;
 }
 
+const AT = '2026-10-09T10:00:00.000Z';
+/** A level-check result in Stage 1 (F-PLC-001 section 3.7), so the grid draws its start pin. */
+async function seedStart(page: Page): Promise<void> {
+  const profileId = (await readStored<Array<{ id: string }>>(page, 'profiles'))?.[0]?.id ?? '';
+  expect(profileId).not.toBe('');
+  const progress = (await readStored<Record<string, unknown>>(page, `progress:${profileId}`)) ?? {
+    profileId,
+    updatedAt: AT,
+    episodes: [],
+    quests: [],
+    cards: [],
+    sessions: [],
+    homework: [],
+    reviews: [],
+    streakDays: 0,
+  };
+  await seedStored(page, `progress:${profileId}`, {
+    ...progress,
+    placements: [
+      {
+        id: 'placement:seeded',
+        startedAt: AT,
+        completedAt: AT,
+        source: 'home',
+        testLocale: 'en',
+        length: 'full',
+        mode: 'standard',
+        revealMode: 'tap',
+        bankVersion: 1,
+        contentVer: 'e2e',
+        responses: [],
+        gates: [],
+        strands: { 'hangul-recognition': 'not-tested', 'sound-letter': 'not-tested', 'syllable-reading': 'not-tested', vocabulary: 'not-tested', sentences: 'not-tested' },
+        level: { stage: 'stage1', band: 1 },
+        oralStage: null,
+        beyondContent: false,
+        startQuestId: 'quest:stage1-nature-q1',
+        placedOutQuestIds: [],
+        priorityTokens: [],
+        needsStage: null,
+        stopReason: 'complete',
+      },
+    ],
+  });
+}
+
 async function openJourney(page: Page, width: number, height: number, locale: Locale): Promise<void> {
   await page.setViewportSize({ width, height });
   await page.goto('/');
@@ -44,6 +91,7 @@ async function openJourney(page: Page, width: number, height: number, locale: Lo
   await page.getByRole('button', { name: "Let's start" }).click();
   await completeChildForm(page, { name: 'Dami' });
   await waitForSaved(page, ['profiles']);
+  await seedStart(page);
   if (locale !== 'en') {
     // The locale is read at start-up: store it, then reload so the whole app comes up in it.
     await seedStored(page, 'device:settings', { uiLocale: locale });
@@ -63,6 +111,7 @@ for (const locale of availableLocales(process.env.E2E_ALL_LOCALES === '1')) {
   for (const [width, height] of [
     [320, 568],
     [768, 1024],
+    [1180, 820],
   ] as const) {
     test(`${width} px, ${locale}: theme glyphs with their word in the cells and over the column labels; no mark covers them`, async ({ page }) => {
       await openJourney(page, width, height, locale);
@@ -142,19 +191,34 @@ for (const locale of availableLocales(process.env.E2E_ALL_LOCALES === '1')) {
         expect(area(n, w)).toBe(0);
       }
 
-      // The start pin (a learner with a level-check result) never covers the glyph: the leaf's tip points up-left.
+      // The start pin (the seeded level check) never covers its cell's glyph or word. The pin follows the
+      // cursor's stage rule (OD-4), so it lands on the cell the learner starts from; the unit geometry
+      // (journey-cell-layout.test.ts) checks the pin against every glyph, the leaf's up-left tip included.
       const start = page.getByTestId('journey-cell-start');
-      if ((await start.count()) === 1) {
-        const pin = start.locator('svg').first();
-        const glyphs = start.locator('[data-testid^="journey-glyph-"]');
-        expect(area(await boxOf(pin), await boxOf(glyphs))).toBe(0);
-      }
+      await expect(start).toHaveCount(1);
+      const startGlyph = start.locator('[data-testid^="journey-glyph-"]');
+      await expect(startGlyph).toHaveCount(1);
+      const startId = String(await startGlyph.getAttribute('data-testid')).replace('journey-glyph-', '');
+      const pin = start.getByTestId('journey-start-pin');
+      const [p, pg, pw] = await Promise.all([boxOf(pin), boxOf(startGlyph), boxOf(page.getByTestId(`journey-word-${startId}`))]);
+      expect(area(p, pg), startId).toBe(0);
+      expect(area(p, pw), startId).toBe(0);
 
-      // A ring (In your plan, Not open yet) goes round the glyph and ends above the word.
+      // A ring (In your plan, Not open yet) goes round the glyph and ends above the word; on a coming-later
+      // cell (no word) it stays inside its cell.
       for (const ring of await page.locator('[data-testid^="journey-ring-"]').all()) {
         const id = String(await ring.getAttribute('data-testid')).replace(/^journey-ring-(inPlan|notOpen)-/, '');
-        const [r, w] = await Promise.all([boxOf(ring), boxOf(page.getByTestId(`journey-word-${id}`))]);
-        expect(r.y + r.height, id).toBeLessThanOrEqual(w.y + 0.5);
+        const r = await boxOf(ring);
+        const word = page.getByTestId(`journey-word-${id}`);
+        if ((await word.count()) === 1) {
+          expect(r.y + r.height, id).toBeLessThanOrEqual((await boxOf(word)).y + 0.5);
+        } else {
+          const c = await boxOf(page.getByRole('button').filter({ has: ring }));
+          expect(r.x, id).toBeGreaterThanOrEqual(c.x);
+          expect(r.y, id).toBeGreaterThanOrEqual(c.y);
+          expect(r.x + r.width, id).toBeLessThanOrEqual(c.x + c.width);
+          expect(r.y + r.height, id).toBeLessThanOrEqual(c.y + c.height);
+        }
       }
 
       // No cell anywhere on the grid shows a bare letter.

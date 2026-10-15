@@ -11,7 +11,11 @@ import type { borderWidth, spacing, typography } from '@hangul-route/design-syst
  * - the glyph box is as tall as the In your plan / Not open yet ring, so the ring is drawn around the
  *   glyph and never through the word under it;
  * - the theme word sits under the glyph box on one line (`typography.size.caption`, `leading.tight`);
- * - the cell is square where that fits (768 px) and grows taller than wide where it does not (320 px).
+ * - the cell is square where that fits (a 112 dp cell, 768 px) and grows taller than wide where it does not
+ *   (54 dp at 320 px; the 76 dp cells of the 400 dp master pane on a wide window, where the glyph and ring
+ *   are at their wide size);
+ * - the smallest height reserves the thickest border a cell draws (`borderWidth.thick`, selected in two
+ *   panes), so selecting a cell never pushes the word into its border or shifts the glyph into the band.
  *
  * The sizes come from the design tokens the caller passes (`journeyCellMetrics(tokens)`), so this file
  * stays free of React Native for the unit lane.
@@ -42,8 +46,10 @@ export interface CellMetrics {
    * from the same tokens (the JourneyGrid render test checks they match).
    */
   ring: number;
-  /** The cell border (`border.focus` at `borderWidth.thick` when selected in two panes). */
+  /** The cell border when not selected (`borderWidth.base`). */
   edge: number;
+  /** The thickest border a cell draws (`border.focus` at `borderWidth.thick` when selected in two panes). */
+  maxEdge: number;
   /** One line of the theme word. */
   wordLine: number;
   /** Under the word. */
@@ -60,6 +66,7 @@ export function journeyCellMetrics(t: CellTokens): CellMetrics {
     glyph: t.spacing.lg + t.spacing.xs,
     ring: t.typography.size.title + t.spacing.md,
     edge: t.borderWidth.base,
+    maxEdge: Math.max(t.borderWidth.base, t.borderWidth.thick),
     wordLine: t.typography.size.caption * t.typography.leading.tight,
     bottomPad: t.spacing.xxs,
   };
@@ -71,7 +78,10 @@ export interface CellLayout {
   padBottom: number;
   /** The glyph box: square, the ring's size; the glyph is centred in it. */
   glyphBox: number;
-  /** The smallest cell height (its border included) that holds the band, the glyph box and one line of the word. */
+  /**
+   * The smallest cell height (its border included) that holds the band, the glyph box and one line of the word,
+   * with the thickest border (`maxEdge`) on both sides, so it holds whether or not the cell is selected.
+   */
   minHeight: number;
 }
 
@@ -80,7 +90,7 @@ export function journeyCellLayout(m: CellMetrics, glyph: number, ring: number): 
   const glyphBox = Math.max(glyph, ring);
   const padTop = Math.max(0, m.band - (glyphBox - glyph) / 2);
   const padBottom = m.bottomPad;
-  return { padTop, padBottom, glyphBox, minHeight: 2 * m.edge + padTop + glyphBox + m.wordLine + padBottom };
+  return { padTop, padBottom, glyphBox, minHeight: 2 * m.maxEdge + padTop + glyphBox + m.wordLine + padBottom };
 }
 
 export type CountSlot = { top: number; right: number } | { top: number; left: number };

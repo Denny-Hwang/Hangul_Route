@@ -356,6 +356,10 @@ function GridCell({ cell, stage, theme, paneMode, onOpen, onOpenStories, episode
           style={{ alignSelf: 'stretch' }}
         >
           <Text
+            // One line on every platform: a native font that draws wider than the web measurement clips, never wraps
+            // into the border (the length budget and the e2e keep every word inside the line).
+            numberOfLines={1}
+            ellipsizeMode="clip"
             maxFontSizeMultiplier={1}
             style={{
               fontSize: typography.size.caption,
@@ -372,7 +376,7 @@ function GridCell({ cell, stage, theme, paneMode, onOpen, onOpenStories, episode
       )}
       {/* Corner glyphs sit over a ring as paper stickers (E3-D D3). */}
       {isStart ? (
-        <View pointerEvents="none" style={{ position: 'absolute', top: CELL.inset, left: CELL.inset }}>
+        <View pointerEvents="none" testID="journey-start-pin" style={{ position: 'absolute', top: CELL.inset, left: CELL.inset }}>
           {ring !== null ? (
             <StickerIcon name="pin" size={CELL.markSize} color={colors.brand.primary} />
           ) : (
