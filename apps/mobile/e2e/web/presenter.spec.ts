@@ -363,6 +363,30 @@ test.describe('presenter at 1280 x 720', () => {
     await expect(page.getByTestId('presenter-home')).toBeVisible();
   });
 
+  test('a link from a newer presenter offers Reload, which opens the same link again (AMENDMENTS-LECTURE-V2 4.5)', async ({ page }) => {
+    // A version this build does not read: the newer presenter's link.
+    await page.goto('/present#d=9.eyJ2Ijo5fQ');
+    await expect(page.getByText('This link does not work')).toBeVisible();
+    expect(new URL(page.url()).hash).toBe('');
+    const reload = page.getByRole('button', { name: 'Reload' });
+    await expect(reload).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Open Quick lesson' })).toBeVisible();
+    await shot(page, 'presenter-invalid-stale-1280x720');
+    await page.evaluate(() => ((window as unknown as { __beforeReload?: boolean }).__beforeReload = true));
+    await reload.click();
+    // The page reloads with the link held in the tab: still unreadable here, so the same page, never the home.
+    await expect.poll(() => page.evaluate(() => (window as unknown as { __beforeReload?: boolean }).__beforeReload === true)).toBe(false);
+    await expect(page.getByRole('button', { name: 'Reload' })).toBeVisible();
+    await page.getByRole('button', { name: 'Open Quick lesson' }).click();
+    await expect(page.getByTestId('presenter-home')).toBeVisible();
+  });
+
+  test('a broken link (not a newer one) has no Reload', async ({ page }) => {
+    await page.goto('/present#d=1.not-a-deck!!');
+    await expect(page.getByText('This link does not work')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Reload' })).toHaveCount(0);
+  });
+
   test('an unknown path under /present shows the presenter home', async ({ page }) => {
     await page.goto('/present/some/old/link');
     await expect(page.getByTestId('presenter-home')).toBeVisible();
