@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Family home with the Lecture mode card (LV-5)</title>
+<link rel="stylesheet" href="app-shell.css">
+<link rel="stylesheet" href="lecture-card.css">
+</head>
+<body>
+<!-- Design mock (LV-0b, docs/specs/AMENDMENTS-LECTURE-V2.md section 3), not shipped code. Every UI string is a dictionary value or a key of the amendment's section 12 (or a key proposed in ../lecture-card.md "Strings"). -->
+<div class="frame">
+<header class="frame-top">
+  <div class="frame-bar has-switch">
+    <a class="brand" href="#"><span class="brand-mark" aria-hidden="true">HR</span><span class="brand-name">Hangul Route</span></a>
+    <div class="persona-switch" role="radiogroup" aria-label="Switch between Family and Teacher"><button type="button" role="radio" aria-checked="true" tabindex="0">Family</button><button type="button" role="radio" aria-checked="false" tabindex="-1">Teacher</button></div>
+    <a class="way-back" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14.5 6 L8.5 12 L14.5 18" style="fill: none; stroke: var(--colors-text-primary); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round"/></svg><span>Back to learning</span></a>
+    <select class="select wide-only" aria-label="Language"><option>English</option></select>
+    <button type="button" class="btn btn-quiet btn-small wide-only">Sign out</button>
+  </div>
+  <nav class="frame-nav" aria-label="Family"><ul class="nav-list"><li><a class="nav-item" href="#" aria-current="page">Home</a></li><li><a class="nav-item" href="#">Reports</a></li><li><a class="nav-item" href="#">Notes</a></li><li><a class="nav-item" href="#">Lessons</a></li><li><a class="nav-item" href="#">Lecture mode</a></li><li><a class="nav-item" href="#">Billing</a></li></ul></nav>
+</header>
+<main class="frame-main" id="content">
+<h1 class="visually-hidden">Family home</h1>
+<div class="home-layout with-side">
+  <div class="stack-md"><section class="family" aria-labelledby="fam-Kimfamily">
+  <h2 class="family-head" id="fam-Kimfamily">Kim family</h2>
+  <div class="cards"><article class="learner-card" aria-label="Sam">
+  <div class="who"><span class="chip" role="img" aria-label="Home Tiger" style="background: var(--colors-hoya-furBlueDark)"></span><h3 class="who-name">Sam</h3></div>
+  <div class="facts"><p>Last active today</p><p>Minutes, last 7 days: 42</p></div>
+  <div class="card-actions"><a class="btn btn-primary btn-block" href="#">See report</a><div class="row-wrap"><a class="btn btn-small" href="#">Send a note</a><a class="btn btn-small" href="#">Learning Route</a></div></div>
+</article><!-- Below 70em the card follows the first learner card (one column) or the first row of learner cards (two columns, 45em to 70em). -->
+<section class="lecture-card lm-narrow" id="lecture-mode" aria-labelledby="lm-h"><h2 id="lm-h" tabindex="-1">Lecture mode</h2><p class="lm-tag">Teach on a big screen</p><p class="lm-body">Put a lesson on your TV and learn together at home. No setup needed.</p><a class="btn btn-primary lm-cta" href="#">Start lecture mode</a></section><article class="learner-card" aria-label="Mina">
+  <div class="who"><span class="chip" role="img" aria-label="Feast Tiger" style="background: var(--colors-hoya-furGreenDark)"></span><h3 class="who-name">Mina</h3></div>
+  <div class="facts"><p>Last active Monday</p><p>Minutes, last 7 days: 15</p></div>
+  <div class="card-actions"><a class="btn btn-primary btn-block" href="#">See report</a><div class="row-wrap"><a class="btn btn-small" href="#">Send a note</a><a class="btn btn-small" href="#">Learning Route</a></div></div>
+</article></div>
+</section></div>
+  <!-- The same card in its wide slot (from 70em, first in the side column). LV-5 renders one card, in the slot for the current width. -->
+  <section class="lecture-card lm-wide" id="lecture-mode-wide" aria-labelledby="lm-h-wide"><h2 id="lm-h-wide" tabindex="-1">Lecture mode</h2><p class="lm-tag">Teach on a big screen</p><p class="lm-body">Put a lesson on your TV and learn together at home. No setup needed.</p><a class="btn btn-primary lm-cta" href="#">Start lecture mode</a></section>
+  <aside class="stack-md" aria-label="Kim family"><div class="family-actions">
+  <div class="row-wrap"><a class="btn btn-small" href="#">Lessons</a><a class="btn btn-small" href="#">Plan the week</a><a class="btn btn-small" href="#">Plan the term</a><a class="btn btn-small" href="#">Family settings</a><button type="button" class="btn btn-small" aria-expanded="false" aria-controls="add-learner">Add a learner</button></div>
+  
+</div><p class="cross"><a class="text-link" href="#">Your classes are under Teacher</a></p></aside>
+</div>
+</main>
+<footer class="frame-foot"><div class="frame-foot-inner">
+  <div class="foot-links"><a href="#">About Hangul Route</a><a href="#">Privacy</a><a href="#">Terms</a></div>
+  <div class="foot-tools"><select class="select" aria-label="Language"><option>English</option></select><button type="button" class="btn btn-small">Sign out</button></div>
+</div></footer>
+</div>
+</body>
+</html>
