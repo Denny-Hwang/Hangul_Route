@@ -1,4 +1,4 @@
-import { Icon, colors, radii, spacing, typography } from '@hangul-route/design-system';
+import { Icon, colors, radii, spacing, typography, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
 import React from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { useMessages } from '../i18n/use-messages';
@@ -80,7 +80,7 @@ export function PinPad({ value, onChange, disabled = false, layout, testID }: Pi
               opacity: disabled ? 0.5 : 1,
             }}
           >
-            <Text style={{ fontSize: typography.size.title, fontWeight: '700', color: colors.text.primary }}>{k}</Text>
+            <Text {...KOREAN_LINE_BREAK} style={{ fontSize: typography.size.title, fontWeight: '700', color: colors.text.primary }}>{k}</Text>
           </Pressable>
         ),
       )}

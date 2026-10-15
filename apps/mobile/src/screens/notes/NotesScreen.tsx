@@ -14,6 +14,7 @@ import {
   touchTarget,
   typography,
   useLayoutClass,
+  KOREAN_LINE_BREAK,
 } from '@hangul-route/design-system';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -212,12 +213,12 @@ function NoteRow({ row, current, onPress }: { row: NoteRowView; current: boolean
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
         <Icon name="note" size={ROW_GLYPH} color={glyphColor} />
         {row.isNew ? <NewPill /> : null}
-        <Text style={{ marginLeft: 'auto', fontSize: typography.size.bodySm, color: colors.text.muted }}>{row.date}</Text>
+        <Text {...KOREAN_LINE_BREAK} style={{ marginLeft: 'auto', fontSize: typography.size.bodySm, color: colors.text.muted }}>{row.date}</Text>
       </View>
       <Body weight="bold">{row.sender}</Body>
       <Body tone="secondary">{row.preset}</Body>
       {row.text !== null ? (
-        <Text {...langProps} numberOfLines={1} style={{ fontSize: typography.size.body, color: colors.text.secondary }}>
+        <Text {...KOREAN_LINE_BREAK} {...langProps} numberOfLines={1} style={{ fontSize: typography.size.body, color: colors.text.secondary }}>
           {row.text}
         </Text>
       ) : null}

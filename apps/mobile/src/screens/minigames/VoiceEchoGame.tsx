@@ -14,6 +14,7 @@ import {
   spacing,
   typography,
   useMediaSize,
+  KOREAN_LINE_BREAK,
 } from '@hangul-route/design-system';
 import React, { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
@@ -92,7 +93,7 @@ export function VoiceEchoGame({ scope: _scope, onFinish }: Props): React.ReactEl
           }}
         >
           <Icon name="speaker" size={speakerIcon} />
-          <Text style={{ fontSize: typography.size.title, fontWeight: '700', marginTop: spacing.sm }}>{target}</Text>
+          <Text {...KOREAN_LINE_BREAK} style={{ fontSize: typography.size.title, fontWeight: '700', marginTop: spacing.sm }}>{target}</Text>
           {targetRomanization ? <Caption tone="secondary">{targetRomanization}</Caption> : null}
         </Pressable>
       </View>

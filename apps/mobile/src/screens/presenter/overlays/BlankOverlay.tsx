@@ -1,4 +1,4 @@
-import { Hoya, colors, koreanTextLabel, presenter, spacing, typography } from '@hangul-route/design-system';
+import { Hoya, colors, koreanTextLabel, presenter, spacing, typography, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
 import React, { useRef } from 'react';
 import { Text, View } from 'react-native';
 import { PAUSE_WORD } from '../../../logic/lecture/content';
@@ -24,7 +24,7 @@ export function BlankOverlay({ onPause }: { onPause: () => void }): React.ReactE
     <Cover label={m.line} testID="presenter-blank" focusables={() => [pause.current]}>
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', gap: units(unit, STAGE_GAP_INNER) }}>
         <Hoya pose="waving" size={units(unit, HOYA_STAGE)} accessibilityLabel={messages.a11y.hoya('waving')} />
-        <Text role="heading" style={{ fontSize: size(presenter.size.title), fontWeight: typography.weight.bold, color: colors.text.primary, textAlign: 'center' }}>
+        <Text {...KOREAN_LINE_BREAK} role="heading" style={{ fontSize: size(presenter.size.title), fontWeight: typography.weight.bold, color: colors.text.primary, textAlign: 'center' }}>
           {m.line}
         </Text>
         <ToolButton ref={pause} testID="presenter-blank-pause" label={m.pause.cta} onPress={onPause} />
@@ -59,9 +59,9 @@ export function PauseOverlay(): React.ReactElement {
         >
           <TaughtKo size={promptSize}>{PAUSE_WORD.ko}</TaughtKo>
           {/* text.secondary misses 7:1 on brand.secondaryLight (presenter.v1.md), so the romanization is text.primary here. */}
-          <Text style={{ fontSize: bodySize, fontWeight: typography.weight.semibold, color: colors.text.primary }}>{PAUSE_WORD.romanization}</Text>
+          <Text {...KOREAN_LINE_BREAK} style={{ fontSize: bodySize, fontWeight: typography.weight.semibold, color: colors.text.primary }}>{PAUSE_WORD.romanization}</Text>
         </View>
-        <Text testID="presenter-pause-gloss" style={{ fontSize: bodySize, fontWeight: typography.weight.bold, color: colors.text.secondary }}>
+        <Text {...KOREAN_LINE_BREAK} testID="presenter-pause-gloss" style={{ fontSize: bodySize, fontWeight: typography.weight.bold, color: colors.text.secondary }}>
           {gloss}
         </Text>
       </View>

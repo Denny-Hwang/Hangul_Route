@@ -1,5 +1,5 @@
 import type { RomanizationMode } from '@hangul-route/content-schema';
-import { Body, Button, Heading, Spacer, borderWidth, colors, radii, shadows, spacing, touchTarget, typography, useLayoutClass } from '@hangul-route/design-system';
+import { Body, Button, Heading, Spacer, borderWidth, colors, radii, shadows, spacing, touchTarget, typography, useLayoutClass, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
 import { LOCALE_META } from '@hangul-route/i18n';
 import React, { useEffect } from 'react';
 import { Modal, Pressable, ScrollView, Text, View } from 'react-native';
@@ -140,7 +140,7 @@ export function LessonDisplaySheet({ visible, onClose }: { visible: boolean; onC
                           borderWidth: focused ? borderWidth.thick : borderWidth.base,
                         })}
                       >
-                        <Text
+                        <Text {...KOREAN_LINE_BREAK}
                           {...{ lang: LOCALE_META[l].htmlLang }}
                           style={{ fontSize: typography.size.body, fontWeight: typography.weight.semibold, color: selected ? colors.text.onPrimary : colors.text.primary }}
                         >

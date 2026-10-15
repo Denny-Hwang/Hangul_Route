@@ -1,5 +1,5 @@
 import type { RomanizationMode } from '@hangul-route/content-schema';
-import { Hoya, Icon, colors, presenter, spacing, touchTarget, typography } from '@hangul-route/design-system';
+import { Hoya, Icon, colors, presenter, spacing, touchTarget, typography, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
 import React, { useState } from 'react';
 import { Text, View } from 'react-native';
 import type { QuizOption } from '../../../logic/lecture/build-steps';
@@ -100,7 +100,7 @@ function OptionCard({ option, index, revealed, romOn, rowHeight }: { option: Qui
               {content.ko.text}
             </TaughtKo>
             {content.ko.romanization !== undefined ? (
-              <Text
+              <Text {...KOREAN_LINE_BREAK}
                 accessibilityElementsHidden={!romOn}
                 aria-hidden={!romOn}
                 style={{
@@ -117,7 +117,7 @@ function OptionCard({ option, index, revealed, romOn, rowHeight }: { option: Qui
           </View>
         ) : null}
         {content.gloss !== null ? (
-          <Text style={{ fontSize: glossSize, fontWeight: typography.weight.semibold, color: colors.text.primary, lineHeight: Math.round(glossSize * typography.leading.tight) }}>
+          <Text {...KOREAN_LINE_BREAK} style={{ fontSize: glossSize, fontWeight: typography.weight.semibold, color: colors.text.primary, lineHeight: Math.round(glossSize * typography.leading.tight) }}>
             {content.gloss.text}
           </Text>
         ) : null}
@@ -143,7 +143,7 @@ export function AnswerLine({ shown }: { shown: boolean }): React.ReactElement {
       style={{ flexDirection: 'row', alignItems: 'center', gap: units(unit, STAGE_GAP_INNER), flexShrink: 0, maxWidth: '40%', opacity: shown ? 1 : 0 }}
     >
       <Hoya pose="cheering" size={units(unit, touchTarget.hero)} accessibilityLabel={messages.a11y.hoya('cheering')} />
-      <Text style={{ flexShrink: 1, fontSize: size(presenter.size.body), fontWeight: typography.weight.semibold, color: colors.text.primary }}>
+      <Text {...KOREAN_LINE_BREAK} style={{ flexShrink: 1, fontSize: size(presenter.size.body), fontWeight: typography.weight.semibold, color: colors.text.primary }}>
         {messages.learner.presenter.quiz.answer}
       </Text>
     </View>

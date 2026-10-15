@@ -1,4 +1,4 @@
-import { Hoya, borderWidth, colors, presenter, radii, spacing, touchTarget, typography } from '@hangul-route/design-system';
+import { Hoya, borderWidth, colors, presenter, radii, spacing, touchTarget, typography, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
 import React from 'react';
 import { Pressable, Text, View } from 'react-native';
 import type { Slide } from '../../../logic/lecture/deck-builder';
@@ -28,11 +28,11 @@ export function ActivitySlide({ slide, onStartTimer }: { slide: ActivityBody; on
     <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: units(unit, STAGE_GAP) }}>
       <Hoya pose="cheering" size={units(unit, HOYA_STAGE)} accessibilityLabel={messages.a11y.hoya('cheering')} />
       <View style={{ flex: 1, gap: units(unit, STAGE_GAP_INNER), alignItems: 'flex-start' }}>
-        <Text style={{ fontSize: size(presenter.size.caption), fontWeight: typography.weight.semibold, color: colors.text.secondary }}>{m.grid.kind.activity}</Text>
-        <Text role="heading" style={{ fontSize: titleSize, lineHeight: Math.round(titleSize * typography.leading.tight), fontWeight: typography.weight.bold, color: colors.text.primary }}>
+        <Text {...KOREAN_LINE_BREAK} style={{ fontSize: size(presenter.size.caption), fontWeight: typography.weight.semibold, color: colors.text.secondary }}>{m.grid.kind.activity}</Text>
+        <Text {...KOREAN_LINE_BREAK} role="heading" style={{ fontSize: titleSize, lineHeight: Math.round(titleSize * typography.leading.tight), fontWeight: typography.weight.bold, color: colors.text.primary }}>
           {m.activity[slide.preset]}
         </Text>
-        <Text style={{ fontSize: promptSize, fontWeight: typography.weight.bold, color: colors.text.secondary }}>{m.slide.activity.minutes(slide.minutes)}</Text>
+        <Text {...KOREAN_LINE_BREAK} style={{ fontSize: promptSize, fontWeight: typography.weight.bold, color: colors.text.secondary }}>{m.slide.activity.minutes(slide.minutes)}</Text>
         <Pressable
           testID="presenter-start-timer"
           role="button"
@@ -59,7 +59,7 @@ export function ActivitySlide({ slide, onStartTimer }: { slide: ActivityBody; on
             };
           }}
         >
-          <Text style={{ fontSize: promptSize, fontWeight: typography.weight.bold, color: enabled ? colors.text.onPrimary : colors.text.primary, textAlign: 'center' }}>{m.slide.activity.startTimer.cta}</Text>
+          <Text {...KOREAN_LINE_BREAK} style={{ fontSize: promptSize, fontWeight: typography.weight.bold, color: enabled ? colors.text.onPrimary : colors.text.primary, textAlign: 'center' }}>{m.slide.activity.startTimer.cta}</Text>
         </Pressable>
       </View>
     </View>

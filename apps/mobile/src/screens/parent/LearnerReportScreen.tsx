@@ -16,6 +16,7 @@ import {
   spacing,
   touchTarget,
   typography,
+  KOREAN_LINE_BREAK,
 } from '@hangul-route/design-system';
 import { CATALOG, type ReportPeriod, type StageKey } from '@hangul-route/content-schema';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -98,7 +99,7 @@ const headingLevel = (level: 1 | 2 | 3): Record<string, string | number> => ({ r
 function ReportHeading({ level, children, testID }: { level: 1 | 2 | 3; children: React.ReactNode; testID?: string }): React.ReactElement {
   const size = level === 1 ? typography.size.title : level === 2 ? typography.size.prompt : typography.size.body;
   return (
-    <Text
+    <Text {...KOREAN_LINE_BREAK}
       {...headingLevel(level)}
       accessibilityRole="header"
       testID={testID}
@@ -373,7 +374,7 @@ function ReportBody({ profileId, name, voice, navigation, locale, messages }: Bo
       {view.headline !== null ? (
         <>
           <Spacer size="md" />
-          <Text testID="learner-report-headline" style={{ fontSize: typography.size.prompt, lineHeight: typography.size.prompt * typography.leading.normal, fontWeight: typography.weight.bold, color: colors.text.primary }}>
+          <Text {...KOREAN_LINE_BREAK} testID="learner-report-headline" style={{ fontSize: typography.size.prompt, lineHeight: typography.size.prompt * typography.leading.normal, fontWeight: typography.weight.bold, color: colors.text.primary }}>
             {view.headline.text}
           </Text>
           {view.headline.horizon !== null ? <Caption tone="muted">{view.headline.horizon}</Caption> : null}
@@ -404,7 +405,7 @@ function ReportBody({ profileId, name, voice, navigation, locale, messages }: Bo
                   testID={`learner-report-figure-${figure.key}`}
                   style={{ flexGrow: 1, flexBasis: FIGURE_TILE_MIN, minWidth: FIGURE_TILE_MIN, padding: spacing.md, borderRadius: radii.md, backgroundColor: colors.surface.paper, borderWidth: borderWidth.thin, borderColor: colors.border.subtle }}
                 >
-                  <Text style={{ fontSize: typography.size.title, lineHeight: typography.size.title * typography.leading.tight, fontWeight: typography.weight.bold, color: colors.text.primary }}>{figure.count}</Text>
+                  <Text {...KOREAN_LINE_BREAK} style={{ fontSize: typography.size.title, lineHeight: typography.size.title * typography.leading.tight, fontWeight: typography.weight.bold, color: colors.text.primary }}>{figure.count}</Text>
                   <Body size="sm" tone="secondary">
                     {figure.label}
                   </Body>
@@ -511,7 +512,7 @@ function ReportBody({ profileId, name, voice, navigation, locale, messages }: Bo
           ) : null}
           {/* A polite announcement after a period change or a step (section 3.12). */}
           <View style={srOnly} accessibilityLiveRegion="polite" {...{ 'aria-live': 'polite' }}>
-            <Text>{announce ?? ''}</Text>
+            <Text {...KOREAN_LINE_BREAK}>{announce ?? ''}</Text>
           </View>
           <View {...{ role: 'tabpanel', id: PANEL_ID, 'aria-labelledby': sectionTabId(PANEL_ID, view.tabs.value) }}>{body}</View>
         </>
@@ -527,12 +528,12 @@ function SentenceText({ sentence }: { sentence: ReportSentence }): React.ReactEl
   return (
     <Body>
       {sentence.parts.map((part, k) => {
-        if (part.kind === 'text') return <Text key={k}>{part.text}</Text>;
-        if (part.kind === 'quest') return <Text key={k}>{part.title}</Text>;
+        if (part.kind === 'text') return <Text {...KOREAN_LINE_BREAK} key={k}>{part.text}</Text>;
+        if (part.kind === 'quest') return <Text {...KOREAN_LINE_BREAK} key={k}>{part.title}</Text>;
         return (
-          <Text key={k}>
+          <Text {...KOREAN_LINE_BREAK} key={k}>
             {part.before}
-            <Text {...koreanSpeech}>{part.letter}</Text>
+            <Text {...KOREAN_LINE_BREAK} {...koreanSpeech}>{part.letter}</Text>
             {part.after}
           </Text>
         );
@@ -747,7 +748,7 @@ function LetterTiles({ heading, tiles, id }: { heading: string; tiles: ReportLet
                 borderColor: expanded ? colors.brand.primary : colors.border.strong,
               }}
             >
-              <Text {...koreanSpeech} style={{ fontSize: typography.size.prompt, color: colors.text.primary }}>
+              <Text {...KOREAN_LINE_BREAK} {...koreanSpeech} style={{ fontSize: typography.size.prompt, color: colors.text.primary }}>
                 {tile.letter}
               </Text>
               {tile.romanization !== null ? <Caption tone="secondary">{tile.romanization}</Caption> : null}
@@ -758,7 +759,7 @@ function LetterTiles({ heading, tiles, id }: { heading: string; tiles: ReportLet
       <View nativeID={expansionId} {...{ id: expansionId }}>
         {opened !== null ? (
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md, marginTop: spacing.sm, padding: spacing.md, borderRadius: radii.md, backgroundColor: colors.surface.sunken }} testID={`learner-report-tile-detail-${id}`}>
-            <Text {...koreanSpeech} style={{ fontSize: typography.size.display, color: colors.text.primary }}>
+            <Text {...KOREAN_LINE_BREAK} {...koreanSpeech} style={{ fontSize: typography.size.display, color: colors.text.primary }}>
               {opened.letter}
             </Text>
             <View style={{ flex: 1 }}>

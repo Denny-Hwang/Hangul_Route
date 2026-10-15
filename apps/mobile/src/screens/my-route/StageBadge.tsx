@@ -1,4 +1,4 @@
-import { Icon, borderWidth, colors, radii, typography, useMediaSize } from '@hangul-route/design-system';
+import { Icon, borderWidth, colors, radii, typography, useMediaSize, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
 import type { StageKey } from '@hangul-route/content-schema';
 import React from 'react';
 import { Text, View } from 'react-native';
@@ -29,7 +29,7 @@ export function StageBadge({ look, stage, order }: { look: BadgeLook; stage: Sta
         <Svg width={size} height={size} style={{ position: 'absolute' }}>
           <Circle cx={size / 2} cy={size / 2} r={r} stroke={colors.border.shape} strokeWidth={stroke} strokeDasharray={`${dash * 0.55} ${dash * 0.45}`} fill="none" />
         </Svg>
-        {order === null ? null : <Text style={{ color: colors.text.muted, fontWeight: typography.weight.bold, fontSize: typography.size.body }}>{order}</Text>}
+        {order === null ? null : <Text {...KOREAN_LINE_BREAK} style={{ color: colors.text.muted, fontWeight: typography.weight.bold, fontSize: typography.size.body }}>{order}</Text>}
       </View>
     );
   }
@@ -55,7 +55,7 @@ export function StageBadge({ look, stage, order }: { look: BadgeLook; stage: Sta
       {look === 'explored' ? (
         <Icon name="check" size={Math.round(size * 0.55)} color={colors.text.primary} />
       ) : (
-        <Text style={{ color: colors.text.primary, fontWeight: typography.weight.bold, fontSize: typography.size.body }}>{order}</Text>
+        <Text {...KOREAN_LINE_BREAK} style={{ color: colors.text.primary, fontWeight: typography.weight.bold, fontSize: typography.size.body }}>{order}</Text>
       )}
     </View>
   );

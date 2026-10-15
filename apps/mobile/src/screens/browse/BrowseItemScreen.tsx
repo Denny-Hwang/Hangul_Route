@@ -1,5 +1,5 @@
 import { APP_ROUTES, type StageKey, type StoryLevel } from '@hangul-route/content-schema';
-import { Body, Button, Card, Heading, Pill, Screen, Spacer, borderWidth, colors, radii, spacing, touchTarget, typography, useLayoutClass } from '@hangul-route/design-system';
+import { Body, Button, Card, Heading, Pill, Screen, Spacer, borderWidth, colors, radii, spacing, touchTarget, typography, useLayoutClass, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useEffect, useMemo, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
@@ -276,7 +276,7 @@ function FactRow({ label, children, testID }: { label: string; children: React.R
   return (
     <View testID={testID} style={{ flexDirection: compact ? 'column' : 'row', gap: compact ? spacing.xs : spacing.md, paddingVertical: spacing.sm }}>
       <View style={compact ? undefined : { width: LABEL_COLUMN }}>
-        <Text style={{ fontSize: typography.size.bodySm, fontWeight: typography.weight.bold, color: colors.text.secondary }}>{label}</Text>
+        <Text {...KOREAN_LINE_BREAK} style={{ fontSize: typography.size.bodySm, fontWeight: typography.weight.bold, color: colors.text.secondary }}>{label}</Text>
       </View>
       <View style={{ flex: compact ? undefined : 1 }}>{children}</View>
     </View>
@@ -381,7 +381,7 @@ function StoryRows({
                   borderWidth: focused ? borderWidth.thick : borderWidth.base,
                 })}
               >
-                <Text style={{ fontSize: typography.size.body, fontWeight: typography.weight.semibold, color: selected ? colors.text.onPrimary : colors.text.primary }}>{m.facts.level[LEVEL_KEY[l.level]]}</Text>
+                <Text {...KOREAN_LINE_BREAK} style={{ fontSize: typography.size.body, fontWeight: typography.weight.semibold, color: selected ? colors.text.onPrimary : colors.text.primary }}>{m.facts.level[LEVEL_KEY[l.level]]}</Text>
               </Pressable>
             );
           })}

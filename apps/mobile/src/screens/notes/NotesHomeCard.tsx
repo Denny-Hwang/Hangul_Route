@@ -1,4 +1,4 @@
-import { Body, Card, Icon, Pill, borderWidth, colors, radii, spacing, touchTarget, typography } from '@hangul-route/design-system';
+import { Body, Card, Icon, Pill, borderWidth, colors, radii, spacing, touchTarget, typography, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useEffect, useMemo } from 'react';
@@ -70,7 +70,7 @@ function NotesHomeCardInner({ gap }: { gap: 'after' | 'top' }): React.ReactEleme
             backgroundColor: colors.brand.primary,
           }}
         >
-          <Text style={{ color: colors.text.inverse, fontSize: typography.size.body, fontWeight: typography.weight.bold }}>{home.read.cta}</Text>
+          <Text {...KOREAN_LINE_BREAK} style={{ color: colors.text.inverse, fontSize: typography.size.body, fontWeight: typography.weight.bold }}>{home.read.cta}</Text>
         </View>
       </View>
     </Card>

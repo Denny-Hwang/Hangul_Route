@@ -19,6 +19,7 @@ import {
   spacing,
   touchTarget,
   typography,
+  KOREAN_LINE_BREAK,
 } from '@hangul-route/design-system';
 import type { Messages } from '@hangul-route/i18n';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -447,7 +448,7 @@ function ExampleBlocks({ blocks }: { blocks: Array<{ text: string; emphasised: b
             backgroundColor: block.emphasised ? colors.brand.primaryLight : colors.surface.paper,
           }}
         >
-          <Text
+          <Text {...KOREAN_LINE_BREAK}
             style={{
               fontFamily: typography.family.sansKr,
               fontSize: typography.size.display,
@@ -506,7 +507,7 @@ function ExchangeCard({
         </Body>
       ) : null}
       {/* The lit line, said politely; visually hidden (the line card carries the visible cues). */}
-      <Text aria-live="polite" accessibilityLiveRegion="polite" style={srOnly} testID="discover-read-along-live">
+      <Text {...KOREAN_LINE_BREAK} aria-live="polite" accessibilityLiveRegion="polite" style={srOnly} testID="discover-read-along-live">
         {render.liveLine ?? ''}
       </Text>
       {render.lines.map((r) => (

@@ -1,4 +1,4 @@
-import { Icon, borderWidth, colors, layout, radii, spacing, touchTarget, typography, type IconName } from '@hangul-route/design-system';
+import { Icon, borderWidth, colors, layout, radii, spacing, touchTarget, typography, type IconName, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
 import React, { useEffect, useRef, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { distinctParts, type SkipPart, type VoiceCheck } from '../../logic/lecture/shell';
@@ -56,7 +56,7 @@ function Check({ ok, children, testID }: { ok: boolean; children: React.ReactNod
 
 function Line({ children, secondary, bold }: { children: React.ReactNode; secondary?: boolean; bold?: boolean }): React.ReactElement {
   return (
-    <Text
+    <Text {...KOREAN_LINE_BREAK}
       style={{
         fontSize: typography.size.body,
         color: secondary ? colors.text.secondary : colors.text.primary,
@@ -134,18 +134,18 @@ export function StartScreen(props: StartScreenProps): React.ReactElement {
               <GhostButton testID="presenter-start-back" label={m.back.cta} onPress={props.onBack} />
             </View>
           ) : null}
-          <Text style={{ fontSize: typography.size.body, color: colors.text.secondary }}>{messages.learner.presenter.home.title}</Text>
+          <Text {...KOREAN_LINE_BREAK} style={{ fontSize: typography.size.body, color: colors.text.secondary }}>{messages.learner.presenter.home.title}</Text>
           {/* The deck title is the teacher's own text (TD8): shown here, never in document.title. */}
-          <Text role="heading" aria-level={1} style={{ fontSize: typography.size.hero, fontWeight: typography.weight.bold, color: colors.text.primary, lineHeight: Math.round(typography.size.hero * typography.leading.tight) }}>
+          <Text {...KOREAN_LINE_BREAK} role="heading" aria-level={1} style={{ fontSize: typography.size.hero, fontWeight: typography.weight.bold, color: colors.text.primary, lineHeight: Math.round(typography.size.hero * typography.leading.tight) }}>
             {props.deckTitle}
           </Text>
-          <Text testID="presenter-start-facts" style={{ fontSize: typography.size.bodyLg, color: colors.text.secondary }}>
+          <Text {...KOREAN_LINE_BREAK} testID="presenter-start-facts" style={{ fontSize: typography.size.bodyLg, color: colors.text.secondary }}>
             {`${m.slides(props.slides)} · ${m.minutes(props.minutes)}`}
           </Text>
         </View>
 
         <View style={{ gap: spacing.md }}>
-          <Text role="heading" aria-level={2} style={{ fontSize: typography.size.bodyLg, fontWeight: typography.weight.bold, color: colors.text.primary }}>
+          <Text {...KOREAN_LINE_BREAK} role="heading" aria-level={2} style={{ fontSize: typography.size.bodyLg, fontWeight: typography.weight.bold, color: colors.text.primary }}>
             {m.checks}
           </Text>
           <Check ok={props.offlineReady} testID="presenter-check-offline">
@@ -246,7 +246,7 @@ function PickerRowView({ row, onCount }: { row: NonNullable<PickerRow>; onCount:
       {row.kind === 'numbers' ? (
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
           <StepButton icon="dash" label={m.fewer} disabled={row.count <= PICKER_COUNT_MIN} onPress={() => onCount(Math.max(PICKER_COUNT_MIN, row.count - 1))} />
-          <Text role="status" style={{ fontSize: typography.size.title, fontWeight: typography.weight.bold, color: colors.text.primary, minWidth: touchTarget.min, textAlign: 'center' }}>
+          <Text {...KOREAN_LINE_BREAK} role="status" style={{ fontSize: typography.size.title, fontWeight: typography.weight.bold, color: colors.text.primary, minWidth: touchTarget.min, textAlign: 'center' }}>
             {String(row.count)}
           </Text>
           <StepButton icon="plus" label={m.more} disabled={row.count >= PICKER_COUNT_MAX} onPress={() => onCount(Math.min(PICKER_COUNT_MAX, row.count + 1))} />

@@ -21,6 +21,7 @@ import {
   typography,
   useLayoutClass,
   useMediaSize,
+  KOREAN_LINE_BREAK,
 } from '@hangul-route/design-system';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Platform, Pressable, Text, View, type TextStyle } from 'react-native';
@@ -262,7 +263,7 @@ export function SentenceBuilderGame({ scope, host, patternNote, onBack }: Props)
           {round.pictureRef !== undefined ? <PictureArt pictureRef={round.pictureRef} gloss={gloss} size={picture} decorative /> : null}
           <View style={{ flexGrow: 1, flexShrink: 1, flexBasis: touchTarget.hero, gap: spacing.xxs }}>
             <Caption tone="secondary">{copy.sentenceBuilder.meaning}</Caption>
-            <Text
+            <Text {...KOREAN_LINE_BREAK}
               testID="sentence-builder-gloss"
               style={{ fontSize: typography.size.bodyLg, fontWeight: typography.weight.semibold, color: colors.text.primary, lineHeight: typography.size.bodyLg * typography.leading.normal }}
             >
@@ -296,7 +297,7 @@ export function SentenceBuilderGame({ scope, host, patternNote, onBack }: Props)
       </View>
 
       {/* A right tile landing is announced by its place (wireframe "States", screen reader). */}
-      <Text testID="sentence-builder-live" style={srOnly} accessibilityLiveRegion="polite" {...{ 'aria-live': 'polite' }}>
+      <Text {...KOREAN_LINE_BREAK} testID="sentence-builder-live" style={srOnly} accessibilityLiveRegion="polite" {...{ 'aria-live': 'polite' }}>
         {announcement}
       </Text>
 
@@ -354,7 +355,7 @@ export function SentenceBuilderGame({ scope, host, patternNote, onBack }: Props)
 function TileFace({ ko, romanization }: { ko: string; romanization: string }): React.ReactElement {
   return (
     <>
-      <Text
+      <Text {...KOREAN_LINE_BREAK}
         {...koreanSpeech}
         style={{
           ...wholeWord,
@@ -368,7 +369,7 @@ function TileFace({ ko, romanization }: { ko: string; romanization: string }): R
         {ko}
       </Text>
       {romanization !== '' ? (
-        <Text style={{ fontSize: typography.size.caption, color: colors.text.muted, fontWeight: typography.weight.medium }}>{romanization}</Text>
+        <Text {...KOREAN_LINE_BREAK} style={{ fontSize: typography.size.caption, color: colors.text.muted, fontWeight: typography.weight.medium }}>{romanization}</Text>
       ) : null}
     </>
   );
@@ -529,19 +530,19 @@ function TrayTile({ tile, tileMin, reducedMotion, onPress }: { tile: TileView; t
  */
 function NoteLine({ parts }: { parts: NotePart[] }): React.ReactElement {
   return (
-    <Text
+    <Text {...KOREAN_LINE_BREAK}
       testID="sentence-builder-note"
       style={{ marginTop: spacing.sm, fontSize: typography.size.bodySm, color: colors.text.secondary, lineHeight: typography.size.bodySm * typography.leading.relaxed }}
     >
       {parts.map((part, i) =>
         'text' in part ? (
-          <Text key={i}>{part.text}</Text>
+          <Text {...KOREAN_LINE_BREAK} key={i}>{part.text}</Text>
         ) : (
-          <Text key={i}>
-            <Text {...koreanSpeech} style={{ fontWeight: typography.weight.semibold, color: colors.text.primary, backgroundColor: colors.surface.sunken }}>
+          <Text {...KOREAN_LINE_BREAK} key={i}>
+            <Text {...KOREAN_LINE_BREAK} {...koreanSpeech} style={{ fontWeight: typography.weight.semibold, color: colors.text.primary, backgroundColor: colors.surface.sunken }}>
               {` ${part.ko} `}
             </Text>
-            {part.romanization !== '' ? <Text style={{ fontSize: typography.size.caption }}>{` ${part.romanization}`}</Text> : null}
+            {part.romanization !== '' ? <Text {...KOREAN_LINE_BREAK} style={{ fontSize: typography.size.caption }}>{` ${part.romanization}`}</Text> : null}
           </Text>
         ),
       )}

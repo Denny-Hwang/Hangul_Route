@@ -14,6 +14,7 @@ import {
   useLayoutClass,
   useMediaSize,
   type HoyaTone,
+  KOREAN_LINE_BREAK,
 } from '@hangul-route/design-system';
 import React, { useCallback, useEffect, useReducer, useRef, useState } from 'react';
 import { AccessibilityInfo, Platform, Pressable, Text, View, type LayoutChangeEvent } from 'react-native';
@@ -447,7 +448,7 @@ export function VocabQuestionView({
         // One polite line for the outcome; a new node on every accepted tap, so the same words are said again.
         <View accessibilityLiveRegion="polite">
           {line !== null ? (
-            <Text key={lineKey ?? undefined} style={SCREEN_READER_ONLY} testID={`${testID}-outcome`}>
+            <Text {...KOREAN_LINE_BREAK} key={lineKey ?? undefined} style={SCREEN_READER_ONLY} testID={`${testID}-outcome`}>
               {line}
             </Text>
           ) : null}

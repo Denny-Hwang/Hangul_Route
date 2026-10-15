@@ -1,5 +1,5 @@
 import { CATALOG, freeLessonsFacts } from '@hangul-route/content-schema';
-import { Body, Button, Caption, Heading, Hoya, Icon, Screen, Spacer, colors, spacing, touchTarget, typography } from '@hangul-route/design-system';
+import { Body, Button, Caption, Heading, Hoya, Icon, Screen, Spacer, colors, spacing, touchTarget, typography, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
 import { useFocusEffect } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -169,7 +169,7 @@ export function PaywallScreen({ navigation, route }: Props): React.ReactElement 
     <Screen tone="canvas" scrollable>
       {/* The heading comes first in reading order and carries the summary (§8); the back button sits over its left edge. */}
       <View style={{ minHeight: touchTarget.min, justifyContent: 'center', paddingHorizontal: touchTarget.min }}>
-        <Text
+        <Text {...KOREAN_LINE_BREAK}
           accessibilityRole="header"
           accessibilityLabel={view.summary}
           style={{

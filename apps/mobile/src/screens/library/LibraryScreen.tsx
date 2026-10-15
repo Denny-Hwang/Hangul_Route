@@ -20,6 +20,7 @@ import {
   typography,
   useLayoutClass,
   useMediaSize,
+  KOREAN_LINE_BREAK,
 } from '@hangul-route/design-system';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
@@ -312,7 +313,7 @@ function FilterChip({ label, active, onPress }: { label: string; active: boolean
         borderColor: active ? colors.brand.primary : colors.border.subtle,
       }}
     >
-      <Text style={{ color: active ? colors.text.inverse : colors.text.primary, fontWeight: '600' }}>{label}</Text>
+      <Text {...KOREAN_LINE_BREAK} style={{ color: active ? colors.text.inverse : colors.text.primary, fontWeight: '600' }}>{label}</Text>
     </Pressable>
   );
 }
@@ -366,7 +367,7 @@ function CardThumb({
         <View style={{ alignItems: 'center', justifyContent: 'center', flex: 1, gap: spacing.xs }}>
           <Icon name="lock" size={32} color={colors.text.muted} />
           {/* The earn hint, at most two lines; the full text is in the label and on the card page. */}
-          <Text
+          <Text {...KOREAN_LINE_BREAK}
             numberOfLines={2}
             style={{
               fontSize: typography.size.caption,
@@ -390,7 +391,7 @@ function CardThumb({
             <CardArt card={card} size={artSize} accessibilityLabel={messages.a11y.cardArt(card.titleEn)} style={{ borderRadius: radii.md }} />
           </View>
           <Spacer size="xs" />
-          <Text style={{ fontSize: narrow ? typography.size.prompt : typography.size.title, fontWeight: '700', color: colors.text.primary }}>
+          <Text {...KOREAN_LINE_BREAK} style={{ fontSize: narrow ? typography.size.prompt : typography.size.title, fontWeight: '700', color: colors.text.primary }}>
             {card.subtitleKo ?? card.titleEn}
           </Text>
           {card.romanization ? (

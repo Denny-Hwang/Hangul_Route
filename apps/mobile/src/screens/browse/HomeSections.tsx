@@ -16,6 +16,7 @@ import {
   touchTarget,
   typography,
   useLayoutClass,
+  KOREAN_LINE_BREAK,
 } from '@hangul-route/design-system';
 import React, { useMemo, useRef, useState } from 'react';
 import { Pressable, Text, View, type LayoutChangeEvent } from 'react-native';
@@ -115,7 +116,7 @@ export function SectionControl({ sections, value, onChange }: { sections: readon
               ...focusRing(focused),
             })}
           >
-            <Text
+            <Text {...KOREAN_LINE_BREAK}
               numberOfLines={1}
               adjustsFontSizeToFit
               maxFontSizeMultiplier={SEGMENT_FONT_CAP}
@@ -331,7 +332,7 @@ function CardsGroup({ cards, title, open }: { cards: readonly HeritageCard[]; ti
                 ...focusRing(focused, active ? colors.brand.primary : colors.border.subtle),
               })}
             >
-              <Text style={{ fontSize: typography.size.bodySm, fontWeight: typography.weight.semibold, color: active ? colors.text.onPrimary : colors.text.primary }}>{f.label}</Text>
+              <Text {...KOREAN_LINE_BREAK} style={{ fontSize: typography.size.bodySm, fontWeight: typography.weight.semibold, color: active ? colors.text.onPrimary : colors.text.primary }}>{f.label}</Text>
             </Pressable>
           );
         })}
@@ -381,7 +382,7 @@ function CardSlot({ card: source, basis, onPress }: { card: HeritageCard; basis:
       </View>
       <View style={{ alignItems: 'center' }}>{face > 0 ? <CardArt card={card} size={face} style={{ borderRadius: radii.md }} /> : null}</View>
       {card.subtitleKo ? (
-        <Text {...{ lang: 'ko' }} style={{ fontSize: typography.size.prompt, fontWeight: typography.weight.bold, color: colors.text.primary }}>
+        <Text {...KOREAN_LINE_BREAK} {...{ lang: 'ko' }} style={{ fontSize: typography.size.prompt, fontWeight: typography.weight.bold, color: colors.text.primary }}>
           {card.subtitleKo}
         </Text>
       ) : null}

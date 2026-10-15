@@ -15,6 +15,7 @@ import {
   radii,
   spacing,
   typography,
+  KOREAN_LINE_BREAK,
 } from '@hangul-route/design-system';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
@@ -376,15 +377,15 @@ function CitationLines({ view, face }: { view: CardCitationView; face: 'back' | 
   return (
     <>
       <Spacer size="xs" />
-      <Text numberOfLines={face === 'back' ? 2 : undefined} testID="card-detail-citation" style={line}>
+      <Text {...KOREAN_LINE_BREAK} numberOfLines={face === 'back' ? 2 : undefined} testID="card-detail-citation" style={line}>
         {view.runs.map((run, i) => (
-          <Text key={i} {...(run.korean ? koreanSpeech : {})}>
+          <Text {...KOREAN_LINE_BREAK} key={i} {...(run.korean ? koreanSpeech : {})}>
             {run.text}
           </Text>
         ))}
       </Text>
       {view.more ? (
-        <Text testID="card-detail-citation-more" style={line}>
+        <Text {...KOREAN_LINE_BREAK} testID="card-detail-citation-more" style={line}>
           {view.more}
         </Text>
       ) : null}

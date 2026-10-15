@@ -240,15 +240,21 @@ export function EditProfileScreen({ navigation, route }: Props): React.ReactElem
           <Body weight="semibold">{e.levelHeading}</Body>
           <Spacer size="sm" />
           <View accessibilityRole="radiogroup" accessibilityLabel={e.levelHeading} style={{ gap: spacing.sm }}>
-            {LEARNER_LEVELS.map((l) => (
-              <OptionCard
-                key={l.id}
-                label={levelWords(messages, l.id)?.label ?? l.label}
-                description={levelWords(messages, l.id)?.description ?? l.description}
-                selected={draft.level === l.id}
-                onPress={() => change({ level: l.id })}
-              />
-            ))}
+            {/* Every LEARNER_LEVELS id has dictionary words; an id without them is skipped, never drawn in English. */}
+            {LEARNER_LEVELS.flatMap((l) => {
+              const levelText = levelWords(messages, l.id);
+              return levelText === null
+                ? []
+                : [
+                    <OptionCard
+                      key={l.id}
+                      label={levelText.label}
+                      description={levelText.description}
+                      selected={draft.level === l.id}
+                      onPress={() => change({ level: l.id })}
+                    />,
+                  ];
+            })}
           </View>
         </>
       ) : null}

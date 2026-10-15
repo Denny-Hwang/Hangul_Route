@@ -1,4 +1,4 @@
-import { colors, presenter, radii, spacing, typography } from '@hangul-route/design-system';
+import { colors, presenter, radii, spacing, typography, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Text, View, type LayoutChangeEvent } from 'react-native';
 import type { KoLine } from '../../../logic/lecture/build-steps';
@@ -27,13 +27,13 @@ export function EndSlide({ slide, joinCta }: { slide: EndBody; joinCta: string }
     <View style={{ flex: 1, flexDirection: 'row', gap: units(unit, STAGE_GAP) }}>
       <View style={{ flex: 1, gap: units(unit, STAGE_GAP_INNER), justifyContent: 'space-between' }}>
         <View style={{ gap: units(unit, STAGE_GAP_INNER) }}>
-          <Text role="heading" style={{ fontSize: title, fontWeight: typography.weight.bold, color: colors.text.primary, lineHeight: Math.round(title * typography.leading.tight) }}>
+          <Text {...KOREAN_LINE_BREAK} role="heading" style={{ fontSize: title, fontWeight: typography.weight.bold, color: colors.text.primary, lineHeight: Math.round(title * typography.leading.tight) }}>
             {m.title}
           </Text>
           {letters.length > 0 ? <EndList label={m.letters} items={letters} moreLabel={m.more} testID="presenter-end-letters" /> : null}
           {slide.words.length > 0 ? <EndList label={m.words} items={slide.words} moreLabel={m.more} testID="presenter-end-words" /> : null}
         </View>
-        <Text style={{ fontSize: size(presenter.size.prompt), fontWeight: typography.weight.bold, color: colors.text.primary }}>{m.practice}</Text>
+        <Text {...KOREAN_LINE_BREAK} style={{ fontSize: size(presenter.size.prompt), fontWeight: typography.weight.bold, color: colors.text.primary }}>{m.practice}</Text>
       </View>
       {slide.classCode !== undefined ? <CodePanel code={slide.classCode} joinCta={joinCta} /> : null}
     </View>
@@ -81,14 +81,14 @@ function EndList({
   const hidden = items.length - shown;
   return (
     <View testID={testID} style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'baseline', columnGap: units(unit, spacing.xxl), rowGap: units(unit, spacing.md) }}>
-      <Text key={`label-${shown}`} onLayout={measured(-1)} style={{ fontSize: caption, fontWeight: typography.weight.semibold, color: colors.text.secondary }}>
+      <Text {...KOREAN_LINE_BREAK} key={`label-${shown}`} onLayout={measured(-1)} style={{ fontSize: caption, fontWeight: typography.weight.semibold, color: colors.text.secondary }}>
         {label}
       </Text>
       {items.slice(0, shown).map((item, i) => (
         <View key={`${i}-${item.ko}-${shown}`} onLayout={measured(i)} style={{ flexDirection: 'row', alignItems: 'baseline', gap: units(unit, spacing.sm) }}>
           <TaughtKo size={body}>{item.ko}</TaughtKo>
-          <Text style={{ fontSize: caption, fontWeight: typography.weight.semibold, color: colors.text.secondary }}>{item.romanization}</Text>
-          {item.gloss !== undefined ? <Text style={{ fontSize: caption, color: colors.text.primary }}>{item.gloss}</Text> : null}
+          <Text {...KOREAN_LINE_BREAK} style={{ fontSize: caption, fontWeight: typography.weight.semibold, color: colors.text.secondary }}>{item.romanization}</Text>
+          {item.gloss !== undefined ? <Text {...KOREAN_LINE_BREAK} style={{ fontSize: caption, color: colors.text.primary }}>{item.gloss}</Text> : null}
         </View>
       ))}
       {hidden > 0 ? (
@@ -102,7 +102,7 @@ function EndList({
             borderRadius: radii.pill,
           }}
         >
-          <Text style={{ fontSize: caption, fontWeight: typography.weight.bold, color: colors.text.primary }}>{moreLabel(hidden)}</Text>
+          <Text {...KOREAN_LINE_BREAK} style={{ fontSize: caption, fontWeight: typography.weight.bold, color: colors.text.primary }}>{moreLabel(hidden)}</Text>
         </View>
       ) : null}
     </View>
@@ -128,9 +128,9 @@ function CodePanel({ code, joinCta }: { code: string; joinCta: string }): React.
         borderColor: colors.border.strong,
       }}
     >
-      <Text style={{ fontSize: prompt, fontWeight: typography.weight.bold, color: colors.text.primary, lineHeight: Math.round(prompt * typography.leading.tight) }}>{m.codeTitle}</Text>
+      <Text {...KOREAN_LINE_BREAK} style={{ fontSize: prompt, fontWeight: typography.weight.bold, color: colors.text.primary, lineHeight: Math.round(prompt * typography.leading.tight) }}>{m.codeTitle}</Text>
       {/* The code is read letter by letter. */}
-      <Text
+      <Text {...KOREAN_LINE_BREAK}
         testID="presenter-class-code"
         accessibilityLabel={code.split('').join(' ')}
         style={{
@@ -143,7 +143,7 @@ function CodePanel({ code, joinCta }: { code: string; joinCta: string }): React.
       >
         {code}
       </Text>
-      <Text style={{ fontSize: size(presenter.size.caption), color: colors.text.secondary, lineHeight: Math.round(size(presenter.size.caption) * typography.leading.normal) }}>
+      <Text {...KOREAN_LINE_BREAK} style={{ fontSize: size(presenter.size.caption), color: colors.text.secondary, lineHeight: Math.round(size(presenter.size.caption) * typography.leading.normal) }}>
         {m.howToJoin(joinCta)}
       </Text>
     </View>
