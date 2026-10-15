@@ -79,12 +79,12 @@ Stage 5 (the five story books) and the 24 shelf stories expand completely (story
 
 | # | Decision | Why |
 |---|---|---|
-| LV-D1 | **Lecture mode is on by default.** `lectureModeEnabled()` reads like `reportsEnabled()`: on when unset; only `false`, `0` or `disabled` (case and surrounding spaces ignored) switch it off. The flip ships in row LV-7 with the `lectureMode` site claim, after the presets (LV-3, LV-4) and the entry points (LV-5) so first-time presenters land on one-tap lessons. | The presenter (F-TCH-004 PR 6-12) is merged and served at `app.hangulroute.com/present`; a flag nobody sets hides a finished feature. The kill switch stays for an incident. |
-| LV-D2 | **One plain name in every locale**: **Lecture mode** with the line **Teach on a big screen** (es **Modo proyección** · "Enseña en una pantalla grande"; ko **강의 모드** · "큰 화면으로 가르쳐요"). The console page title, its entry button, the nav item, the cards and the site lines all use it. | Today the same feature is "Lecture", "Proyectar" and "강의" in three places and has no line saying what it does. |
+| LV-D1 | **Lecture mode is on by default, with two kill switches.** Web: `lectureModeEnabled()` reads like `reportsEnabled()`: on when unset; only `false`, `0`, `off`, `no` or `disabled` (case and surrounding spaces ignored) switch it off; it hides E1-E4 and the site lines (E7). Learner app: a new `flags.lectureModeEnabled` reads `EXPO_PUBLIC_LECTURE_MODE` with the same off values (`parseKillSwitch` plus `disabled`) and hides E5. LV-6 adds the app flag with launch default **off**; LV-7 turns both launch defaults on in one PR with the `lectureMode` site claim, after the presets (LV-3, LV-4) and the entry points (LV-5, LV-6), so first-time presenters land on one-tap lessons. Both variables are build-time (`NEXT_PUBLIC_*`, `EXPO_PUBLIC_*`): switching one off needs a Pages rebuild and redeploy of that app. They hide the **entry points only**; `/present` and its presets stay reachable by URL, by design (F-TCH-004 TD2). | The presenter (F-TCH-004 PR 6-12) is merged and served at `app.hangulroute.com/present`; a flag nobody sets hides a finished feature. The kill switches stay for an incident. |
+| LV-D2 | **One plain name in every locale**: **Lecture mode** with the line **Teach on a big screen** (es **Modo proyección** · "Enseña en una pantalla grande"; ko **강의 모드** · "큰 화면으로 가르쳐요"). The console page title (and its `titleFor` tab title and `comingSoon` line), its entry button, the nav item, the cards, the presenter's own home title and tab title (`learner.presenter.home.title`, `learner.presenter.docTitle`) and the site lines all use it (section 12, rows marked changed). A test asserts the same title value across `console.lecture.title`, `console.shell.nav.lecture`, `caregiver.lecture.title` and `learner.presenter.home.title` in each locale. | Today the same feature is "Lecture", "Proyectar" and "강의" in three places and has no line saying what it does. |
 | LV-D3 | **Parents and teachers have the same lecture mode.** Every family `owner` / `caregiver` and class `owner` / `teacher` can open it (the existing `plan.write` predicate, `canComposeIn`); a family needs no learners; the presenter itself still needs no sign-in (F-TCH-004 TD2). Copy addresses a family as a family (section 6). | The spec already allows `family` `caregiver` (§3.11); the gap is wording, findability and the flag. |
-| LV-D4 | **Six presets, one tap, Customize optional.** A preset is a rule that turns what is known (a plan, the Learning Route position, what this screen showed before, the bundled catalogue) into ordinary deck blocks. The same pure resolver runs in the console, the presenter and the learner app (`resolvePreset`, content-schema, section 4.3). The resolved outline is shown before Start; **Customize** opens today's item-by-item editor prefilled with it. | A first-time presenter should not need to know the catalogue. Ordinary blocks keep one deck format, one builder and one codec. |
+| LV-D4 | **Six presets, one tap, Customize optional.** A preset is a rule that turns what is known (a plan, the Learning Route position, what this screen showed before, the bundled catalogue) into ordinary deck blocks. The same pure resolver runs in the console, the presenter and the learner app (`resolvePreset`, content-schema, section 4.3). The resolved outline is shown before Start. On the console, **Customize** opens the item editor prefilled with that outline; on the presenter it opens Quick lesson (which cannot hold every block kind) with nothing chosen (section 4.6). | A first-time presenter should not need to know the catalogue. Ordinary blocks keep one deck format, one builder and one codec. |
 | LV-D5 | **Every shipped step kind gets a slide.** Reading pages (sentence, pattern, read along, realia), questions (listen, reply, realia question), sentence building, and write together (type, trace, frame). The class writes on paper or on its own devices; the big screen never takes typed input and stores nothing typed. | Stages 2-7 must be teachable from the front; the skip list (section 1) is the defect list. |
-| LV-D6 | **Deck format v2, additive.** A v2 deck may hold a `word-review` block and `source: 'preset'` with a `preset` id; everything else is v1. The encoder writes `v: 1` whenever a deck uses no v2 feature, so a v1-only link keeps working everywhere; the presenter accepts v2 (LV-2) before any surface emits one (LV-3, LV-4, LV-6). | F-TCH-004 §3.2 amendment (6): a new block kind means `v: 2`, accepted before emitted. |
+| LV-D6 | **Deck format v2, additive and only when needed.** Only a deck holding a `word-review` block is v2 (it may also carry an optional `preset` id). Every other preset resolves to an ordinary **v1** deck with an existing `source` (`plan` for N1, `revisit` for a revisit warm-up, `catalogue` for every other console preset, `quick` for presets resolved on the presenter or in the learner app), so an older cached presenter opens it. The encoder writes the lowest version the deck needs; the presenter accepts v2 (LV-2) before any surface emits one (LV-3, LV-4, LV-6). Which preset was used reaches telemetry through the presenter's own in-session state when it resolved the preset itself, or the v2 `preset` field; never through a v1 deck. | F-TCH-004 §3.2 amendment (6): a new block kind means `v: 2`, accepted before emitted. Emitting v2 for every preset would make every preset link fail (`unsupported_version`) on a classroom PC still running an older cached build. |
 | LV-D7 | **Presets never add names or codes.** A preset never adds a `class-code` block (the join code would ride in the link, F-TCH-004 §8 item 4) and never puts a learner's name in the deck title (titles are the localized preset names). The picker default is `numbers` on `/present`, the roster rule of §3.10 on the console, and `none` for a family of one. | Privacy by default; a teacher can still add the class code and choose names in Customize. |
 | LV-D8 | **Write together, never type here.** Write-together slides show a prompt, a frame or a ghost word and reveal an answer on the next click. The Stage 7 "Write your name" free-entry round becomes "Write your own name in Hangul on paper" with the sound table shown; no name is ever typed, shown or stored. | Keeps the presenter free of user text (TD8) and of any learner name (§3.10). |
 | LV-D9 | **No speaking.** Presets use only the activities `air-write`, `copy-on-paper` and `stretch-break`; no new slide asks the room to speak, and nothing is recorded or measured. `say-together` and `pair-share` stay available in Customize as they shipped. | Owner rule: reading, listening and writing focus. |
@@ -93,15 +93,15 @@ Stage 5 (the five story books) and the 24 shelf stories expand completely (story
 
 ## 3. Entry points per persona (amends F-TCH-004 §3.1 and §3.11, F-APP-001 §3.8, F-SITE-002 §3.5 / §3.6)
 
-All entry points are drawn only while `lectureModeEnabled()` (on by default from LV-7). Wireframe: `classroom/lecture-entry-points.md`.
+E1-E4 and E7 are drawn only while the web `lectureModeEnabled()` is on; E5 only while the learner app's `flags.lectureModeEnabled` is on (both on by default from LV-7, LV-D1). E1-E3 count only spaces where `canComposeIn` (`lib/console/lecture.ts:251-257`) is true: a school admin with no `teacher` or `owner` role in any class gets the no-space path (`/present`). Wireframe: `classroom/lecture-entry-points.md`.
 
 | # | Where | Who | What | Opens |
 |---|---|---|---|---|
-| E1 | **Teacher home** `/teach/home` (`shell/teacher-home`) | teacher, school admin with a class | A **Lecture mode** card at the top, above Classes: title, the line "Teach on a big screen", one body line, **[[ Start lecture mode ]]**. | One composable class: `ROUTES.spaceLecture(id)`. Several: a class choice inside the card (radio rows by class name, most recent first; no counts, no ranking), then the setup page. None: `${APP_URL}/present` in a new tab (presets work with no class). |
+| E1 | **Teacher home** `/teach/home` (`shell/teacher-home`) | teacher (class `owner` or `teacher`); a school admin without either role sees the card with the no-space target | A **Lecture mode** card at the top, above Classes: title, the line "Teach on a big screen", one body line, **[[ Start lecture mode ]]**. | One composable class: `ROUTES.spaceLecture(id)`. Several: a class choice inside the card (radio rows by class name, most recent first; no counts, no ranking), then the setup page. None: `${APP_URL}/present` in a new tab (presets work with no class). |
 | E2 | **Family home** `/parent` (`shell/parent-home`) | family owner or caregiver | The same card above the learner cards, with the family body line ("Put a lesson on your TV and learn together at home. No setup needed."). | One family: `ROUTES.spaceLecture(id, …, 'family')` (`/parent/space/lecture?id=`). Several families: a family choice inside the card. No family: `/present`. |
 | E3 | **Navigation** (`ADULT_NAV`, `lib/console/shell-nav.ts`) | both personas | A **Lecture mode** item (`console.shell.nav.lecture`) after Lessons, shown when `lectureModeEnabled()`. | The persona's single composable space's lecture page; with zero or several, the persona home scrolled to the card (`#lecture-mode`). |
-| E4 | **Space page** action row (`teach/space/page.tsx:230-235`) | composers | The button keeps its place but reads **Lecture mode** and is the second primary-weight button after the plan button. "Present this plan" and "Revisit together" stay. | Unchanged. |
-| E5 | **Learner app, grown-up area** (`ParentDashboardScreen`, behind the grown-up gate; web only, as `GateLessonsButton`) | whoever passed the gate | A **Lecture mode** card after `GrownUpHomeCard`: one line, **[ Open lecture mode ]** (`/present`, same tab, nothing handed over), and per learner on this device a **Next lesson for {name}** row (the learner name is on the grown-up screen only, never in the deck or link). | `/present#d=<deck>` built in the app root from that learner's `routeNext` (section 4.2, rule N3). The press asks the gate again after the grown-up session lapses (`gateOpensDirectlyNow`), like See report. |
+| E4 | **Space page** action row (`teach/space/page.tsx:230-235`) | composers | The button keeps its place and its secondary weight but reads **Lecture mode** (one primary per row; the home cards and the nav item carry the visibility). "Present this plan" and "Revisit together" stay. | Unchanged. |
+| E5 | **Learner app, grown-up area** (`ParentDashboardScreen`, behind the grown-up gate; web only, as `GateLessonsButton`; drawn only while `flags.lectureModeEnabled`, LV-D1) | whoever passed the gate | A **Lecture mode** card after `GrownUpHomeCard`: one line, **[ Open lecture mode ]** (`/present`, same tab, nothing handed over), and per learner on this device a **Next lesson for {name}** row (the learner name is on the grown-up screen only, never in the deck or link). | `/present#d=<deck>` built in the app root from that learner's `routeNext` (section 4.2, rule N3). The press asks the gate again after the grown-up session lapses (`gateOpensDirectlyNow`), like See report. |
 | E6 | **Presenter home** `/present` | anyone | **Start in one tap** (the six presets) is the first section; Recent lessons second; Quick lesson becomes **Customize** (folded). | Section 4. |
 | E7 | **Site** `/teachers` §3.6 item 4 and `/parents` §3.5 item 4 | visitors | `/teachers`: the existing `lectureMode` line is reworded to name the feature. `/parents`: a new line behind the same claim. Both are claim lines (F-SITE-002 §3.9); no link to `/present` or to a console path (the site never links grown-up paths, §3.8). | — |
 | E8 | **Class report** "Plan a lesson" (F-REPORT-001) and plan page "Present this plan" | composers | Unchanged; they open the setup page, which now leads with presets (the source they carry, plan or revisit, is preselected as the outline under the presets). | Unchanged. |
@@ -122,7 +122,7 @@ All entry points are drawn only while `lectureModeEnabled()` (on by default from
 | `hangul-week-1` | **Start from zero: Hangul week 1** | 20 min | 10 · 20 · 30 | The quests of the Stage 1 letters cell (`episode:stage1-letters`) in order, then a quiz and writing in the air | — |
 | `by-stage` | **Stage by stage** | 20 min | 10 · 20 · 30 | One tap on a stage chip (only stages with a ready cell are drawn); the next lessons of that stage | First lesson of the stage |
 | `story-time` | **Story time** | 20 min | 10 · 20 · 30 | The next ready story this screen (or this class) has not had, at its lowest level | When all were shown: the first story again, with the line "Every story was shown here, so this starts again from the first." |
-| `word-review` | **Word review** | 10 min | 10 · 20 | Words met this week (section 4.2, W1-W3), word cards then a word-to-meaning quiz | `warm-up`, with the line "No words this week yet, so this is the warm-up instead." |
+| `word-review` | **Word review** | 10 min | 10 · 20 | Words from recent lessons (section 4.2, W1-W3), word cards then a word-to-meaning quiz | `warm-up`, with the line "No words this week yet, so this is the warm-up instead." |
 | `warm-up` | **Quick 10-minute warm-up** | 10 min | 10 (no chips) | Letters to revisit, a 4-question sound quiz, writing in the air | Hangul week 1's first six letters |
 
 Order on every surface: the table order, except that `next-lesson` is first only when there is something to follow (a plan, a position or a Recent lesson); with nothing to follow, `hangul-week-1` is first and `next-lesson` is drawn last with its fallback line under it.
@@ -133,32 +133,32 @@ Common terms: **route quests** = `routeCatalogOf(CATALOG)` (`packages/content-sc
 
 **Fill rule `fillToLength(candidates, T, review)`** (pure):
 1. Take candidate content blocks in order while `running + m(block) <= T`; the first candidate is always taken (a lesson is never empty).
-2. If `review` and `T - running >= 5` and at least 4 letters or words are taught by the taken blocks (the console estimates this from `CatalogQuest.teaches` and the story / topic word counts; the presenter knows exactly), add `{ kind: 'quiz', from: 'previous', rounds: 4 }`.
+2. If `review` and `T - running >= 5`, add `{ kind: 'quiz', from: 'previous', rounds: 4 }` (4 minutes). The resolver does not count taught items: it reads the catalogue only, and Stage 3-7 quests carry `teaches: []` (`catalog/data.ts`), so a count there would drop the quiz from every upper-stage preset. The builder already skips a quiz whose scope has fewer than 4 letters or words (`scope-too-small`, `deck-builder.ts:644-656`), so the decision stays pure and gives the same blocks on every surface.
 3. If `T - running >= 2`, add one activity: `air-write` when every taken quest is Stage 1, otherwise `copy-on-paper`, with `minutes = min(5, T - running)`.
 4. At most `LECTURE_MAX_BLOCKS` (30) blocks; never a `class-code` block (LV-D7).
 
 **N — `next-lesson`**
 - **N1, console, a live plan this week**: the blocks of `planOutline(plan, today)` (`lib/console/lecture.ts:96`, the existing "Present this plan" rule), then `fillToLength(…, review: true)`. Deck title: the plan title when it passes `titleProblem` (`lecture.ts:346`), else the preset name.
-- **N2, console, no plan: the Learning Route position.** From the roster rows' `summary.journey` (`JourneySummarySchema`, `schemas/sync.ts:49`): learners with a non-null `here`; **S** = the stage most of them are in (ties: the earlier stage); **p** = the smallest `stages[S].done` among them. Candidates: route quests of stage S from index p, then the following stages' route quests. One learner (a family of one) gives that learner's place. Only these two numbers are read; no learner is named, compared or counted on screen. No usable summary: fallback.
+- **N2, console, no plan: the Learning Route position.** From the roster rows' `summary.journey` (`JourneySummarySchema`, `schemas/sync.ts:49`): learners with a non-null `here`; **S** = the stage most of them are in (ties: the earlier stage); **p** = the smallest `done + known` of `stages.find(s => s.stage === S)` among them (`known` = placed out and not done, so a class that placed out of early lessons does not restart at them; a missing entry counts 0). Candidates: route quests of stage S from index p, then the following stages' route quests. One learner (a family of one) gives that learner's place. Only these two numbers are read; no learner is named, compared or counted on screen. No usable summary: fallback.
 - **N3, learner app grown-up card (E5)**: the learner's `routeNext` quest (`apps/mobile/src/logic/route-next.ts`; a `quest` result only; `free-end` and `rest` give the fallback) and the route quests after it. Built in the app root, which owns the profile; the deck holds quest ids only.
 - **N4, presenter `/present`, no console**: the route quest after the furthest route quest that any Recent lesson started in the last 60 days contains (by route order); no Recent lesson: fallback.
 - Then `fillToLength(candidates, T, review: true)`. Deck title: "Next lesson" (`presets.next.title`) in the presenter language.
 
-**H — `hangul-week-1`**: candidates = the quests of the Stage 1 letters cell in cell order; `fillToLength(…, review: true)`. 10 min: quest 1 + writing in the air. 20 min: quests 1-2 (or as many as fit) + quiz + air-write. 30 min: quests 1-3 + quiz + air-write. Title: "Hangul week 1".
+**H — `hangul-week-1`**: candidates = the quests of the Stage 1 letters cell in cell order (q1, q2, q3: 5 catalogue minutes each, `catalog/data.ts:131-133`); `fillToLength(…, review: true)`. What the rule gives: **10 min**: q1 + q2 (10; nothing fits after). **20 min**: q1-q3 + quiz (15 + 4 = 19; 1 minute left, no activity). **30 min**: q1-q3 + quiz + air-write 5 (24). Title: "Hangul week 1". `lecture-presets.test.ts` holds a table of every preset at every length against `CATALOG`, and these three rows are in it.
 
 **S — `by-stage`** (needs the stage chip; one more tap, nothing else): candidates = the route quests of the chosen stage from the first one this context has not shown (console: the class position N2 when S is the class's stage, else the stage's first quest; presenter: the first route quest of S that no Recent lesson in the last 60 days contained), in route order, continuing through that stage only. Stage 5 (the book) uses its story quests as `story` blocks. `fillToLength(…, review: true)`. Title: "Stage {n}" (`presets.stage.chip`).
 
 **T — `story-time`**: candidates = ready stories (`CatalogStory.status === 'ready'`, the Library's review gate, F-TCH-004 §3.3 rule 5), by `order`, skipping those in Recent (presenter) or those the class's level is far below (console: skip a story whose `recommendedStage` is more than one above stage S of N2). One story block: `{ kind: 'story', storyId, checks: T >= 20 }`. 30 min adds the quiz over its words (`from: 'previous'`, 4 rounds) and `copy-on-paper`. Title: the story's own title.
 
 **W — `word-review`** (deck v2 block, section 4.5):
-- **W1 console**: quest ids of this week's plan items (≤ 12) plus up to 24 `rollup.vocabRevisit` word ids (`lib/console/rollup.ts:26`).
+- **W1 console**: quest ids of the plan items of this week and last week (≤ 12, this week first), plus the `rollup.vocabRevisit` word ids (at most 3, `lib/console/rollup.ts:21-26`) only when at least 2 learners in the space carry `summary.vocab`, so a family of one or a class of one never projects one person's needs-practice list.
 - **W2 presenter**: quest ids from the Recent lessons started in the last 7 days (≤ 12, newest first).
 - **W3 learner app**: quest ids that learner finished in the last 7 days (≤ 12, from the app's own progress; nothing leaves the device but ids).
 - Block: `{ kind: 'word-review', questIds, vocabIds, rounds: T === 10 ? 5 : 10 }`; the presenter shows at most 12 (10 min) or 24 (20 min) word cards. No ids, or fewer than 4 words once expanded: fallback.
 
 **U — `warm-up`** (10 min, fixed): `{ kind: 'revisit', chars }` (it already ends with a 4-round sound quiz, §3.3 rule 3) + `{ kind: 'activity', preset: 'air-write', minutes: 3 }`. `chars`: console `rollup.revisit` (≤ 3, topped up from the plan's taught letters to 6); presenter and learner app: the letters taught by Recent lessons of the last 7 days (≤ 6); else ㄱ ㄴ ㄷ ㅏ ㅓ ㅗ (the first six letters of Hangul week 1). Title: "Quick warm-up".
 
-Every resolved deck: `seed` from the caller's clock (`Date.now() % 2^31`, as Quick lesson), `options` = the defaults (romanization `always`, stroke guide on, 5 quiz rounds, sound on, `uiLocale` = the surface's locale), `picker` per LV-D7, `source: 'preset'`, `preset: <id>`.
+Every resolved deck: `seed` from the caller's clock (`Date.now() % 2^31`, as Quick lesson), `options` = the defaults (romanization `always`, stroke guide on, 5 quiz rounds, sound on, `uiLocale` = the surface's locale), `picker` per LV-D7, `source` per LV-D6 (`plan`, `revisit`, `catalogue` on the console; `quick` on the presenter and in the learner app). Only a deck with a `word-review` block is v2, and only it may carry `preset: <id>`.
 
 ### 4.3 One resolver, three callers
 
@@ -183,6 +183,7 @@ export function classPosition(rows: readonly { journey?: JourneySummary }[], cat
 
 - The caller turns `titleKey` into the localized title and builds the deck (`buildDeck` in the console, `quick-lesson.ts`'s deck maker on the presenter, `logic/browse/present.ts`'s on the app).
 - The console estimates minutes from the catalogue; the presenter's start screen shows the exact slide count and its own estimate (rule 12 as amended in 4.4). A difference is expected and is not shown as an error.
+- **Parity**: `resolvePreset` reads only its arguments and the catalogue, so the same preset, length and context give identical blocks on the console, the presenter and the app. `lecture-presets.test.ts` asserts this with the three callers' context builders fed the same inputs.
 
 ### 4.4 Rule 12 amendment (minutes)
 
@@ -197,13 +198,14 @@ z.object({ kind: z.literal('word-review'),
   questIds: z.array(z.string().regex(/^quest:[a-z0-9-]+$/)).max(12),
   vocabIds: z.array(VocabIdSchema).max(24),
   rounds: z.number().int().min(1).max(10) }).strict()      // refine: questIds.length + vocabIds.length >= 1
-source: z.enum(['plan', 'catalogue', 'revisit', 'quick', 'preset']).optional()   // 'preset' is v2
-preset: z.enum(LECTURE_PRESETS).optional()                                    // v2, telemetry only
+// `source` is unchanged (plan | catalogue | revisit | quick); presets use those values (LV-D6)
+preset: z.enum(LECTURE_PRESETS).optional()   // v2 only (a deck that already holds word-review), telemetry only
 ```
 
 - `encodeDeck` writes the lowest version the deck needs (`deckVersion(deck)`); a v1 deck is byte-for-byte what it is today. `decodeDeck` accepts 1 and 2; a v1 fragment holding a v2 feature is `invalid`. The worst-case size test adds a v2 deck with 12 quest ids and 24 vocab ids (still under 8192 characters and 6144 bytes).
 - **Builder** (`expandDeck`): `word-review` expands each quest silently (no slides) to collect its `taught` words, adds the `vocabIds` words through the vocab adapter, de-duplicates by Korean, keeps the first 12 (`rounds` 5) or 24 (`rounds` 10), pushes one `vocab` slide each, then the word-to-meaning quiz (`buildCultureQuizRounds`, ≥ 4 words). Unknown ids are counted skips (`unknown-id`), never a crash.
-- `lecture:recent` items keep the deck as decoded; Recent of an older build ignores a v2 item it cannot parse (corrupt-item rule, §3.12).
+- **Recent pass-through (LV-2, before any surface emits v2).** Today `parseRecent` (`apps/mobile/src/logic/lecture/recent.ts:59-69`) drops every item that fails the strict v1 `RecentItemSchema`, and the next Start saves the filtered list, so a build that cannot read an item would erase it. LV-2 changes the load and save path to keep items it cannot parse unchanged in the raw list it writes back (still capped at `RECENT_MAX` by position, de-duplicated by deck id where readable); only parsed items are shown. A build from before LV-2 still drops them; that is bounded because only `word-review` decks are v2 (LV-D6). `recent.test.ts` adds: a list holding an unknown-version item, then a Start, still holds that item.
+- **Stale presenter** (`unsupported_version`): the invalid-link screen asks the service worker to update (`registration.update()`) and offers **Reload** (`learner.presenter.invalid.reload`, section 12.3), so an older cached presenter recovers in one step. An e2e opens a v2 link on the previous build's cached service worker and reaches the deck after Reload.
 
 ### 4.6 Customize (never required)
 
@@ -302,8 +304,17 @@ Reduced motion: every tile move and highlight is an instant swap. Keyboard and c
 
 ## 11. Telemetry (amends F-TCH-004 §3.14)
 
-- `lecture.start` payload gains `preset: LecturePreset | null` and `source` gains `'preset'`. No new event names.
-- **Worker first** (row LV-1): the Worker gains a codes-only rule for the four `lecture.*` events (the `BROWSE_PAYLOAD_RULES` pattern, `packages/backend/src/lib/server-events.ts:215-226`): only the documented keys, each an enum, a boolean or a small integer, are kept. Today these payloads pass through unfiltered (`keptEventFields` falls through to `payload`).
+- `lecture.start`'s `source` is the presenter's `StartSource` (`apps/mobile/src/logic/lecture/shell.ts:19`, `'console' | 'quick' | 'recent'`), not the deck's `source`. It gains **`'preset'`**: a start of a preset the presenter resolved itself (the in-session state, LV-D6) or of a v2 deck carrying `preset`. LV-3 fixes the mapping in `resolveBoot` / `startPayload` so such a start is not reported as `'console'`. The payload gains an optional **`preset`** key (a `LECTURE_PRESETS` value), present only with `source: 'preset'`. No new event names.
+- **Worker first** (row LV-1): the Worker gains a payload rule for the four `lecture.*` events (the `BROWSE_PAYLOAD_RULES` pattern, `packages/backend/src/lib/server-events.ts:133-144, 220`): only these keys are kept, `profileId` is always dropped, and a key outside its rule is dropped. Today these payloads pass through unfiltered (`keptEventFields` falls through to `payload`).
+
+| Event | Kept keys and rules |
+|---|---|
+| `lecture.start` | `source` one of `console`, `quick`, `recent`, `preset` · `preset` one of `LECTURE_PRESETS` · `blocks` integer 0-30 · `slides` integer 0-2000 · `skipped` integer 0-2000 · `picker` one of `none`, `names`, `initials`, `numbers` · `romanization` one of `always`, `tap` · `voice` one of `ready`, `none`, `unknown` · `offlineReady` boolean |
+| `lecture.complete` | `slidesShown` integer 0-2000 · `minutes` integer 0-600 · `reveals` integer 0-20000 |
+| `lecture.tool_used` | `tool` one of `timer`, `picker`, `blank`, `pause`, `grid`, `fullscreen` |
+| `lecture.deck_rejected` | `reason` one of `LECTURE_DECODE_FAILURES` |
+
+  The bounds sit well above today's largest deck (172 slides for one cell, section 1) and `LECTURE_MAX_BLOCKS`. `server-events.test.ts` asserts that every key the shipped client sends today (`startPayload`, `completePayload`, the tool and rejected events) survives the rule, that an extra key (a name) and `profileId` are dropped, and that an out-of-bounds value is dropped.
 - The console and the learner app's E5 card send nothing (the console has no telemetry client; E5 hands off to the presenter, which sends `lecture.start` itself).
 
 ## 12. Strings (en / es / ko)
@@ -330,6 +341,8 @@ Every value below lands in the row that draws it, in all three locales, through 
 | `lecture.outline.block.familyCode` | Family code on the last slide | Código de familia en la última diapositiva | 마지막 슬라이드에 가족 코드 |
 | `lecture.copyHasFamilyCode` | This link holds your family join code. Anyone with the link can join until you make a new code. Copy it anyway? | Este enlace incluye el código de tu familia. Cualquiera con el enlace puede unirse hasta que crees un código nuevo. ¿Copiarlo de todos modos? | 이 링크에는 가족 참여 코드가 들어 있어요. 새 코드를 만들 때까지 링크가 있으면 누구나 참여할 수 있어요. 그래도 복사할까요? |
 | `lecture.titleField.hint` (changed) | Do not put anyone's name in the title. | No pongas el nombre de nadie en el título. | 제목에 이름은 넣지 마세요. |
+| `lecture.titleFor` (`space`) (changed) | {space} · lecture mode | {space} · modo proyección | {space} · 강의 모드 |
+| `lecture.comingSoon` (changed) | Lecture mode is coming soon: slide lessons you can show on a projector or TV. | El modo proyección llega muy pronto: lecciones con diapositivas para mostrar en un proyector o una TV. | 강의 모드는 곧 열려요: 프로젝터나 TV에 보여 줄 수 있는 슬라이드 수업이에요. |
 
 ### 12.2 Presets (the same values under `console.lecture.presets.*` and `learner.presenter.presets.*`)
 
@@ -338,13 +351,13 @@ Every value below lands in the row that draws it, in all three locales, through 
 | `title` | Start in one tap | Empieza con un toque | 한 번에 시작해요 |
 | `lead` | Pick a ready lesson. You can look at it before you start. | Elige una lección lista. Puedes verla antes de empezar. | 준비된 수업을 골라요. 시작하기 전에 미리 볼 수 있어요. |
 | `next.title` | Next lesson | Siguiente lección | 다음 수업 |
-| `next.class` | Follows your class's Learning Route. | Sigue la Ruta de aprendizaje de tu clase. | 우리 반의 학습 루트를 따라가요. |
-| `next.family` | Follows your family's Learning Route. | Sigue la Ruta de aprendizaje de tu familia. | 우리 가족의 학습 루트를 따라가요. |
+| `next.class` | Picks up where your class is. | Sigue desde donde va tu clase. | 우리 반이 배우고 있는 곳부터 이어 가요. |
+| `next.family` | Picks up where your family is. | Sigue desde donde va tu familia. | 우리 가족이 배우고 있는 곳부터 이어 가요. |
 | `next.plan` (`plan`) | From this week's plan: {plan} | Del plan de esta semana: {plan} | 이번 주 계획: {plan} |
 | `next.device` | Picks up after the last lesson shown on this screen. | Sigue después de la última lección que se mostró en esta pantalla. | 이 화면에서 마지막으로 한 수업 다음부터 해요. |
 | `zero.title` | Start from zero: Hangul week 1 | Desde cero: semana 1 de hangul | 처음부터: 한글 1주차 |
 | `zero.short` (deck title) | Hangul week 1 | Semana 1 de hangul | 한글 1주차 |
-| `zero.body` | The first letters, their sounds and simple syllables. | Las primeras letras, sus sonidos y sílabas sencillas. | 첫 글자와 소리, 쉬운 글자를 배워요. |
+| `zero.body` | The first letters, their sounds and simple syllables. | Las primeras letras, sus sonidos y sílabas sencillas. | 첫 글자와 소리, 쉬운 음절을 배워요. |
 | `stage.title` | Stage by stage | Etapa por etapa | 단계별로 |
 | `stage.body` | Pick a stage. The lesson is built for you. | Elige una etapa. La lección se arma sola. | 단계를 고르면 수업이 만들어져요. |
 | `stage.choose` | Choose a stage | Elige una etapa | 단계를 골라요 |
@@ -352,7 +365,7 @@ Every value below lands in the row that draws it, in all three locales, through 
 | `story.title` | Story time | Hora del cuento | 이야기 시간 |
 | `story.body` | A Korean story with pictures, then a few questions. | Un cuento coreano con dibujos y luego algunas preguntas. | 그림과 함께 한국 이야기를 읽고 질문 몇 개를 풀어요. |
 | `words.title` | Word review | Repaso de palabras | 낱말 복습 |
-| `words.body` | Words met this week, then a short quiz. | Palabras de esta semana y luego un quiz corto. | 이번 주에 만난 낱말을 보고 짧은 퀴즈를 풀어요. |
+| `words.body` | Words from recent lessons, then a short quiz. | Palabras de las lecciones recientes y luego un quiz corto. | 최근 수업의 낱말을 보고 짧은 퀴즈를 풀어요. |
 | `warmup.title` | Quick 10-minute warm-up | Calentamiento rápido de 10 minutos | 10분 가볍게 시작하기 |
 | `warmup.short` (deck title) | Quick warm-up | Calentamiento rápido | 가볍게 시작하기 |
 | `warmup.body` | Letters to revisit, a few questions and writing in the air. | Letras para repasar, algunas preguntas y escribir en el aire. | 다시 볼 글자, 질문 몇 개, 허공에 글자 쓰기를 해요. |
@@ -366,10 +379,13 @@ Every value below lands in the row that draws it, in all three locales, through 
 | `fallback.warmUp` | No words this week yet, so this is the warm-up instead. | Todavía no hay palabras de esta semana, así que se hace el calentamiento. | 이번 주 낱말이 아직 없어서 가볍게 시작하기로 해요. |
 | `fallback.restart` | Every story was shown here, so this starts again from the first. | Ya se mostraron todos los cuentos aquí, así que se empieza otra vez por el primero. | 모든 이야기를 이미 봤어요. 첫 이야기부터 다시 해요. |
 
-### 12.3 New slides (`learner.presenter.slide.*`) and accessibility (`a11y.presenter.*`)
+### 12.3 Presenter (`learner.presenter.*`): its own title, new slides, and accessibility (`a11y.presenter.*`)
 
 | Key | en | es | ko |
 |---|---|---|---|
+| `home.title` (changed) | Lecture mode | Modo proyección | 강의 모드 |
+| `docTitle` (changed) | Hangul Route lecture mode | Modo proyección de Hangul Route | Hangul Route 강의 모드 |
+| `invalid.reload` | Reload | Volver a cargar | 다시 불러오기 |
 | `slide.sentence.label` | Sentence | Oración | 문장 |
 | `slide.pattern.label` | Sentence pattern | Patrón de oración | 문장 틀 |
 | `slide.readAlong.label` | Read along | Leer juntos | 함께 읽기 |
@@ -412,7 +428,7 @@ Length budgets (F-I18N-001 §3.11): every `cta` ≤ 28 in all locales (longest: 
 
 ## 13. Edits to the amended specs (applied in the rows named)
 
-- **F-TCH-004**: §3.1 entry points → section 3 here (LV-5); §3.2 deck v2 → section 4.5 (LV-1); §3.3 rule 2 and the new-kind rows → section 5.1 (LV-2, LV-S1 to LV-S4); rule 12 → section 4.4 (LV-2); §3.4 new kinds → section 5.2; §3.10 / §3.11 family wording and presets-first → sections 4.6 and 6 (LV-4); §3.12 presets on the home → section 4 (LV-3); §3.14 payload → section 11 (LV-1); §3.15 "Stage 2 / 4 `tap-respond` dialogue slides" moves from later phase to LV-S2. A pointer line goes at the top of F-TCH-004 in this PR.
+- **F-TCH-004**: §3.1 entry points → section 3 here (LV-5, LV-6); §3.2 deck v2 → section 4.5 (LV-1); §3.3 rule 2 and the new-kind rows → section 5.1 (LV-2, LV-S1 to LV-S4); rule 12 → section 4.4 (LV-2); §3.4 new kinds → section 5.2; §3.10 / §3.11 family wording and presets-first → sections 4.6 and 6 (LV-4); §3.12 presets on the home → section 4 (LV-3); §3.14 payload → section 11 (LV-1); §3.15 "Stage 2 / 4 `tap-respond` dialogue slides" moves from later phase to LV-S2. A pointer line goes at the top of F-TCH-004 in this PR.
 - **F-APP-001**: §3.8 nav registry gains **Lecture mode** (both personas, `lectureModeEnabled()`); the teacher and family homes gain the card (LV-5); a pointer line in this PR.
 - **F-SITE-002**: §3.5 item 4 gains the `lectureMode` claim line; §3.6 item 4's line is reworded; §3.9's table names **LV-7** as the `lectureMode` flip PR; OD-16 default (a) applies and LV-7 runs `site-budgets.spec.ts` with the claim on and records the outcome in §3.9 (LV-7); a pointer line in this PR.
 
@@ -420,19 +436,21 @@ Length budgets (F-I18N-001 §3.11): every `cta` ≤ 28 in all locales (longest: 
 
 | File | Row | Asserts |
 |---|---|---|
-| `packages/content-schema/src/__tests__/lecture-presets.test.ts` | LV-1 | every preset × every length resolves against `CATALOG`; fill rule (first block always, quiz only with ≥ 4 taught and ≥ 5 minutes left, activity choice, never `class-code`, ≤ 30 blocks); N2 `classPosition` (mode, ties, smallest done, no summaries); every fallback; determinism; no output contains a roster string (property test with awkward names) |
+| `packages/content-schema/src/__tests__/lecture-presets.test.ts` | LV-1 | an explicit table of every preset × every length against `CATALOG` (blocks and minutes; the section 4.2 H rows among them); fill rule (first block always, quiz only with ≥ 5 minutes left, activity choice, never `class-code`, ≤ 30 blocks); N2 `classPosition` (mode, ties, smallest `done + known`, a case with `known > 0`, no summaries); W1 rollup words only with ≥ 2 vocab summaries; every fallback; determinism and console / presenter / app parity; only `word-review` decks are v2; no output contains a roster string (property test with awkward names) |
 | `packages/content-schema/src/__tests__/lecture.test.ts` (extend) | LV-1 | v2 grammar; `word-review` bounds; a v1 deck encodes as v1 byte-for-byte; a v1 fragment with a v2 feature is `invalid`; v2 worst-case size |
-| `packages/backend/src/lib/__tests__/server-events.test.ts` (extend) | LV-1 | lecture payloads keep only documented codes; an extra key (a name) is dropped |
+| `packages/backend/src/lib/__tests__/server-events.test.ts` (extend) | LV-1 | the section 11 rule table: every key the shipped client sends survives; an extra key (a name), `profileId` and out-of-bounds values are dropped |
+| `apps/mobile/src/logic/lecture/__tests__/recent.test.ts` (extend) | LV-2 | an item the build cannot parse (unknown version) is kept through a Start and a save |
+| `packages/i18n/src/__tests__/lecture-name.test.ts` (new) | LV-4 (last of the renames) | `console.lecture.title`, `console.shell.nav.lecture`, `caregiver.lecture.title`, `learner.presenter.home.title` hold the same value in each locale (keys present so far; LV-6 adds the caregiver key to it) |
 | `apps/mobile/src/logic/lecture/__tests__/deck-coverage.test.ts` (new) | LV-2, then every LV-S row | the section 1 walk over every shipped episode: per cell, `unsupported-step` skips ≤ the committed table, which each LV-S row lowers; after LV-S4 the table is all zero; repeated word cards = 0 |
 | `deck-builder.test.ts` (extend) | LV-2, LV-S1-S4 | `seenWords`; card-match / pic-word quiz when all shown; `word-review`; each new kind's slides and builds; romanization skips; text-variant prompts; seeds deterministic |
 | `presenter-glyphs.test.ts`, `scripts/__tests__/build-presenter-font.test.mjs` (extend) | LV-S1-S4 | every projected glyph of the new slides is in the sidecar |
-| `apps/mobile/src/logic/lecture/__tests__/preset-source.test.ts` (new) | LV-3 | presenter context from Recent (60-day and 7-day windows by `savedAt`, corrupt items ignored), deck from a resolved preset, no name field |
+| `apps/mobile/src/logic/lecture/__tests__/preset-source.test.ts` (new) | LV-3 | presenter context from Recent (60-day and 7-day windows by `savedAt`, corrupt items ignored), deck from a resolved preset (v1, `source: 'quick'` unless it holds `word-review`), no name field; `lecture.start` `source: 'preset'` for a presenter-resolved preset |
 | `apps/web/src/lib/console/__tests__/lecture.test.ts` (extend) | LV-4 | presets-first state, `?from=` preselects, family wording by kind, family picker default `none` for ≤ 1 learner, URL has no roster substring for every preset |
-| `apps/web/src/lib/console/__tests__/shell-nav.test.ts`, `teacher-home.test.ts`, `parent-home.test.ts` (extend) | LV-5 | nav item predicate and target (one space, several, none); card targets; nothing drawn while the flag is off |
-| `apps/web/src/lib/console/__tests__/config.test.ts` (extend) | LV-7 | launch default on; `false` / `0` / `disabled` off, case and spaces ignored |
+| `apps/web/src/lib/console/__tests__/shell-nav.test.ts`, `teacher-home.test.ts`, `parent-home.test.ts` (extend) | LV-5 | nav item predicate and target (one space, several, none); only `canComposeIn` spaces count (a school admin without a teacher or owner role gets the no-space path); card targets; nothing drawn while the flag is off |
+| `apps/web/src/lib/console/__tests__/config.test.ts` (extend), `apps/mobile/src/config/__tests__/flags.test.ts` (extend) | LV-6 (app flag, default off), LV-7 (both defaults on) | launch default; `false` / `0` / `off` / `no` / `disabled` off, case and spaces ignored |
 | `apps/web/src/app/__tests__/persona-pages.test.tsx` (extend) | LV-7 | `/parents` line with the claim on; `/teachers` reworded line |
-| `apps/mobile/src/screens/parent/__tests__/LectureCard.test.tsx` (new) | LV-6 | web only; gate asked again after lapse; deck carries no profile id or name |
-| Playwright `apps/mobile/e2e/web/presenter-presets.spec.ts` (new) | LV-3, LV-S rows | home at 320 / 768 / 1180: one tap on a preset, Start, step through; offline reload; IndexedDB keys unchanged except allowed; each new slide family at 1280 x 720 (screenshots checked by eye) |
+| `apps/mobile/src/screens/parent/__tests__/LectureCard.test.tsx` (new) | LV-6 | web only; card absent while `flags.lectureModeEnabled` is off; gate asked again after lapse; deck carries no profile id or name |
+| Playwright `apps/mobile/e2e/web/presenter-presets.spec.ts` (new) | LV-3, LV-S rows | at 320 / 768 / 1180: no horizontal overflow (`scrollWidth <= clientWidth`), every preset card reachable and named "{title}, about {n} minutes", one tap then Start reaches slide 1; offline reload; IndexedDB keys unchanged except allowed; a v2 link on the previous build's cached service worker reaches the deck after Reload; each new slide family at 1280 x 720: its announced kind label is visible, its Korean text is non-empty and the slide does not overflow the stage (screenshots attached as well, never the only check) |
 | Playwright `apps/web/e2e/console-lecture-presets.spec.ts` (new) | LV-4, LV-5 | teacher and family homes show the card; presets-first setup; Customize prefilled |
 | i18n coverage ratchets (`es-coverage.ts`, `ko-coverage.ts`), `length-budget.test.ts`, banned-word lint | every UI row | es and ko present for every new key |
 
@@ -444,17 +462,17 @@ Every UI row waits for its mock (LV-0b) and attaches screenshots; every row adds
 |---|---|---|---|
 | **LV-0** (this PR) | `docs(specs,design)`: this amendment, the three wireframes, wireframe index rows, pointer lines in F-TCH-004, F-APP-001, F-SITE-002 | S | — |
 | **LV-0b** | `design(presenter,console)`: agent design pass with multi-agent review: mocks under `design/screens/presenter/` (`presets.md` home with presets at 320 / 768 / 1180, preset preview, each new slide family at 1280 x 720 and 1920 x 1080) and `design/screens/app-shell/` (lecture card on both homes, nav item), `design/screens/lecture-entry/learner-card.md`; shots; strings table checked against section 12 | M | LV-0 |
-| **LV-1** | `feat(content-schema,backend)`: deck v2 (`word-review`, `source: 'preset'`, `preset`), `deckVersion`, codec accepts 1 and 2; `lecture-presets.ts` (`LECTURE_PRESETS`, defaults, lengths, `resolvePreset`, `classPosition`, `fillToLength`); Worker codes-only rule for `lecture.*` payloads (**worker first**: deploys before LV-3 sends `preset`) | M | LV-0 |
-| **LV-2** | `feat(mobile)`: deck builder: `seenWords`, card-match / pic-word quiz when all shown, `word-review` expansion, rule 12 amendment; `deck-coverage.test.ts` with the committed section 1 table; the presenter accepts v2 decks | M | LV-1 |
+| **LV-1** | `feat(content-schema,backend)`: deck v2 (`word-review`, optional `preset`), `deckVersion`, codec accepts 1 and 2; `lecture-presets.ts` (`LECTURE_PRESETS`, defaults, lengths, `resolvePreset`, `classPosition`, `fillToLength`); Worker payload rule for `lecture.*` (section 11 table; **worker first**: deploys before LV-3 sends `preset`) | M | LV-0 |
+| **LV-2** | `feat(mobile)`: deck builder: `seenWords`, card-match / pic-word quiz when all shown, `word-review` expansion, rule 12 amendment; `deck-coverage.test.ts` with the committed section 1 table verbatim as the ratchet baseline; the presenter accepts v2 decks; Recent pass-through of unreadable items; the invalid-link Reload with a service-worker update | M | LV-1 |
 | **LV-S1** | `feat(mobile)`: reading slides: `sentence`, `pattern`, `read-along` (Discover exchange), `realia` (Discover realia); `PictureArt` to `components/`; font glyphs; coverage table lowered | M | LV-2, LV-0b |
 | **LV-S2** | `feat(mobile)`: question slides: `listen` quizzes (practice, apply, Check), `reply` quizzes (`tap-respond`), `realia` + `realia-question` (`realia-read`); text-variant prompts; font; coverage lowered | M | LV-S1 |
 | **LV-S3** | `feat(mobile)`: `sentence-build` (`order-it`, including the Stage 7 Check): tiles, particle build, distractors set back, announcements; font; coverage lowered | M | LV-S1 |
 | **LV-S4** | `feat(mobile)`: `write-together` (`type-hangul`, `trace-word`, `write-frame`, `own-name`); font; coverage table all zero | M | LV-S1 |
-| **LV-3** | `feat(mobile)`: presenter home: **Start in one tap** (six preset cards, length chips, stage chips), preview with Customize, Quick lesson folded under Customize; `preset-source.ts` (Recent windows); `lecture.start` `preset` | M | LV-2, LV-1 deployed, LV-0b |
-| **LV-4** | `feat(web)`: console setup page presets-first, Customize prefilled, `?from=` preselects; parent access: family wording by space kind, family picker default, neutral intro and title hint; renamed `lecture.title` / `entry.cta` | M | LV-1, LV-2 merged (the presenter must accept v2 first), LV-0b |
-| **LV-5** | `feat(web)`: entry points: Lecture mode card on `/teach/home` and `/parent` (one, several, no space), `ADULT_NAV` item, space action row weight | S | LV-4 |
-| **LV-6** | `feat(mobile)`: learner app grown-up card (E5): Open lecture mode, Next lesson for each learner on the device (`routeNext`, W3 quest ids), gate re-ask; web only | S | LV-3 |
-| **LV-7** | `feat(web,i18n)`: launch default of `lectureModeEnabled()` on (kill switch kept), `lectureMode` claim on, `/parents` line, `/teachers` reworded line, F-SITE-002 §3.9 table and OD-16 outcome, `site-budgets.spec.ts` with the claim on; owner runbook line updated (the variable is now only a kill switch) | S | LV-3, LV-4, LV-5 |
+| **LV-3** | `feat(mobile)`: presenter home: **Start in one tap** (six preset cards, length chips, stage chips), preview with Customize, Quick lesson folded under Customize; `preset-source.ts` (Recent windows); renamed `learner.presenter.home.title` and `docTitle`; `lecture.start` `source: 'preset'` and `preset`, with the `resolveBoot` / `startPayload` mapping fixed | M | LV-2, LV-1 deployed, LV-0b |
+| **LV-4** | `feat(web)`: console setup page presets-first, Customize prefilled, `?from=` preselects; parent access: family wording by space kind, family picker default, neutral intro and title hint; renamed `lecture.title`, `entry.cta`, `titleFor`, `comingSoon`; `lecture-name.test.ts` | M | LV-1, LV-2 merged (the presenter must accept v2 first), LV-0b |
+| **LV-5** | `feat(web)`: entry points: Lecture mode card on `/teach/home` and `/parent` (one, several, no space; `canComposeIn` spaces only), `ADULT_NAV` item, the space action button renamed at secondary weight | S | LV-4 |
+| **LV-6** | `feat(mobile)`: learner app grown-up card (E5): Open lecture mode, Next lesson for each learner on the device (`routeNext`, W3 quest ids), gate re-ask; web only; the app flag `flags.lectureModeEnabled` (`EXPO_PUBLIC_LECTURE_MODE`) with launch default **off**, so the card stays hidden until LV-7 | S | LV-3 |
+| **LV-7** | `feat(web,mobile,i18n)`: launch defaults of the web `lectureModeEnabled()` and the app `flags.lectureModeEnabled` on (kill switches kept), `lectureMode` claim on, `/parents` line, `/teachers` reworded line, F-SITE-002 §3.9 table and OD-16 outcome, `site-budgets.spec.ts` with the claim on; owner runbook lines updated (the variables are now only kill switches; switching one off needs a rebuild and redeploy of that app, and hides the entry points only, `/present` stays reachable by URL) | S | LV-3, LV-4, LV-5, LV-6 |
 
 Parallel lanes: LV-S1 to LV-S4 can run beside LV-3 / LV-4 / LV-5 once LV-2 is in; LV-7 does not wait for the slide rows (Stage 1, 5 and the shelf stories are complete today, and every upper-stage skip is counted on the start screen until its row lands).
 
@@ -466,4 +484,5 @@ Parallel lanes: LV-S1 to LV-S4 can run beside LV-3 / LV-4 / LV-5 once LV-2 is in
 
 ## 17. Review log
 
+- 2026-10-15, LV-0 review round 1 (two reviews, PR #724): fixed the Hangul week 1 worked examples to what the fill rule gives; the quiz condition no longer counts taught items (catalogue-only, upper-stage `teaches` is empty); one name everywhere including the presenter's own titles and the console tab title; a learner-app kill switch for E5, off until LV-7; deck v2 only for `word-review` (other presets stay v1 for cached presenters); Recent keeps unreadable items; the Worker rule table and the `StartSource` mapping; W1 vocab bound (≤ 3, only with ≥ 2 vocab summaries); N2 uses `done + known`; `canComposeIn` for E1 / E3; E4 stays secondary; flag-independent "Next lesson" lines; ko 음절; real Playwright assertions; build-time kill-switch notes.
 - 2026-10-15, LV-0: measurement taken at `3b52a3969` (section 1); entry-point audit of the console (`teach/space/page.tsx`, `shell-nav.ts`, homes), learner app (`ParentDashboardScreen`), presenter home (`HomeScreen`, `quick-lesson.ts`), site (`site-claims.ts`, landing messages); deck builder and schema read in full. Wireframes in this PR; mocks in LV-0b.

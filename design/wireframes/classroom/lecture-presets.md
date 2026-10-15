@@ -124,14 +124,14 @@ Panel E — the start screen (the big screen before Start) for a preset: what is
 +------------------------------------------------------------------------------+
 | [<- Back to lessons]                                                         |
 |                                                                              |
-|   Next lesson                                   (deck title, teacher text)   |
-|   18 slides · about 20 min                                                   |
+|   Hangul week 1                                 (deck title, teacher text)   |
+|   47 slides · about 19 min                                                   |
 |   What's in this lesson                                                      |
-|    1  Lunch Box Words · lesson 2          about 5 min                        |
-|    2  Lunch Box Words · lesson 3          about 5 min                        |
-|    3  Quick quiz: 4 questions                                                |
-|    4  Copy it on paper                    about 4 min                        |
-|   ( 2 parts are not shown as slides. [See which] )   <- only while a skip remains |
+|    1  Meet a, eo, g, n                    about 5 min                        |
+|    2  Meet o, u, m and the circle         about 5 min                        |
+|    3  Meet eu, i, d, r                    about 5 min                        |
+|    4  Quick quiz: 4 questions             about 4 min                        |
+|   ( 3 parts are not shown as slides. [See which] )   <- only while a skip remains |
 |   checks: Korean voice · Ready for offline · Full screen                     |
 |   Helper picker: numbers 1-12  [-][+]                                        |
 |                                                                              |

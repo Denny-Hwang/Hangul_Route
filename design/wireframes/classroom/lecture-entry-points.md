@@ -70,10 +70,10 @@ Panel E3 — the nav item (both personas): after Lessons, before Billing; highli
 | Home | Reports | Notes | Lessons | [Lecture mode] | Billing |
 ```
 
-Panel E4 — space page action row (unchanged place, new name and weight)
+Panel E4 — space page action row (unchanged place and secondary weight, new name; the home cards E1 / E2 and the nav item E3 carry the visibility)
 
 ```
-| [[ Plan this week ]] [[ Lecture mode ]] [ Plan the term ] [ Relink requests ] ... |
+| [[ Plan this week ]] [ Lecture mode ] [ Plan the term ] [ Relink requests ] ... |
 ```
 
 Panel E5 — learner app, grown-up area (`ParentDashboardScreen`, after the gate; web only)
@@ -114,7 +114,7 @@ Panel E7 — site lines (claim lines, F-SITE-002 §3.9; no link to the app)
 - Class / family choice rows → select (radio group); Start uses the selection.
 - Nav "Lecture mode" → the single composable space's lecture page; with zero or several → the persona home scrolled to the card (`#lecture-mode`), focus on the card heading.
 - E5 rows → `/present#d=…` same tab; [ Open lecture mode ] → `/present` same tab.
-- Nothing in E1-E7 is drawn while `lectureModeEnabled()` is off (kill switch); never a disabled control.
+- Nothing in E1-E4 and E7 is drawn while the web `lectureModeEnabled()` is off, and nothing in E5 while the learner app's `flags.lectureModeEnabled` (`EXPO_PUBLIC_LECTURE_MODE`) is off (kill switches); never a disabled control.
 
 ## Navigation graph
 
@@ -128,7 +128,7 @@ Exit to: `/teach/space/lecture?id=` · `/parent/space/lecture?id=` · `/present`
 - **several spaces**: the choice row; the most recent first.
 - **loading**: the card shows its title and line; Start waits for the spaces list (spinner in the button, no layout jump).
 - **error** (spaces failed): the card stays with Start opening `/present`; the home's own error notice is unchanged.
-- **flag off**: no card, no nav item, the space button hidden; the site lines hidden (claim off).
+- **flag off**: no card, no nav item, the space button hidden; the site lines hidden (claim off); the learner app's E5 card hidden by its own flag.
 - **native app** (E5): the card is not drawn (the presenter is a web root).
 
 ## Data needs

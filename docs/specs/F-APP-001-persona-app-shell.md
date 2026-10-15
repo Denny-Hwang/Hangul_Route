@@ -2,7 +2,7 @@ Status: ready
 
 # F-APP-001 — One product app: app.hangulroute.com with persona sign-in (learner, family, teacher) and a home per persona
 
-> **Amendment 2026-10-15 (`AMENDMENTS-LECTURE-V2.md`).** Lecture mode gets a nav item for both personas (section 3.8 table, row `lecture`) and a card at the top of the teacher home and the family home; the learner app's grown-up area gains a Lecture mode card (web only, behind the grown-up gate). Rows LV-5 and LV-6 build them; the wireframe is `design/wireframes/classroom/lecture-entry-points.md`.
+> **Amendment 2026-10-15 (`AMENDMENTS-LECTURE-V2.md`).** Lecture mode gets a nav item for both personas (section 3.8 table, row `lecture`) and a card at the top of the teacher home and the family home; the learner app's grown-up area gains a Lecture mode card (web only, behind the grown-up gate and the learner app's own `EXPO_PUBLIC_LECTURE_MODE` kill switch). Rows LV-5 and LV-6 build them; the wireframe is `design/wireframes/classroom/lecture-entry-points.md`.
 >
 > **Status note.** `ready` means the spec can be implemented PR by PR in the order of section 6. Owner decisions do **not** gate the whole spec: each one gates only the PRs named in section 8, and each has a default that applies until the owner answers. Basis: `origin/main` `b19885d8` (2026-10-11; the code facts below were read at `ea9049e4`, and nothing they cite changed between the two commits). Revised the same day after two reviews (review log at the end).
 >
