@@ -16,6 +16,7 @@ import {
   spacing,
   touchTarget,
   useMediaSize,
+  KOREAN_LINE_BREAK,
 } from '@hangul-route/design-system';
 import { romanizationShown as showRomanization } from '@hangul-route/i18n';
 import type { EventArg, NavigationAction } from '@react-navigation/native';
@@ -577,7 +578,7 @@ function CardsPhase({
       {Platform.OS === 'web' ? (
         <View accessibilityLiveRegion="polite">
           {said ? (
-            <Text key={said.n} style={SCREEN_READER_ONLY} testID="vocab-card-said">
+            <Text {...KOREAN_LINE_BREAK} key={said.n} style={SCREEN_READER_ONLY} testID="vocab-card-said">
               {said.text}
             </Text>
           ) : null}

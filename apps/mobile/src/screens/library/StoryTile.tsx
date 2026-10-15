@@ -13,6 +13,7 @@ import {
   spacing,
   touchTarget,
   typography,
+  KOREAN_LINE_BREAK,
 } from '@hangul-route/design-system';
 import React from 'react';
 import { Pressable, Text, View } from 'react-native';
@@ -42,7 +43,7 @@ const FALLBACK_MAX_FONT_SCALE = 1.3;
 export function CoverFallback({ ko, coverWidth }: { ko: string; coverWidth: number }): React.ReactElement {
   const size = storyCoverVariant(coverWidth) === 'thumb' ? typography.size.bodyLg : typography.size.title;
   return (
-    <Text
+    <Text {...KOREAN_LINE_BREAK}
       {...koreanSpeech}
       numberOfLines={FALLBACK_LINES}
       maxFontSizeMultiplier={FALLBACK_MAX_FONT_SCALE}

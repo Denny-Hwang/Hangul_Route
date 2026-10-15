@@ -24,6 +24,7 @@ import {
   typography,
   useLayoutClass,
   useMediaSize,
+  KOREAN_LINE_BREAK,
 } from '@hangul-route/design-system';
 import { romanizationShown } from '@hangul-route/i18n';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -279,12 +280,12 @@ export function TypeHangulGame({ scope, host, onBack }: Props): React.ReactEleme
       }}
     >
       {field.empty ? (
-        <Text style={{ flex: 1, fontSize: typography.size.bodySm, color: colors.text.muted }}>{instruction}</Text>
+        <Text {...KOREAN_LINE_BREAK} style={{ flex: 1, fontSize: typography.size.bodySm, color: colors.text.muted }}>{instruction}</Text>
       ) : (
-        <Text {...koreanSpeech} style={{ flexShrink: 1, fontSize: fieldFont, color: colors.text.primary }}>
+        <Text {...KOREAN_LINE_BREAK} {...koreanSpeech} style={{ flexShrink: 1, fontSize: fieldFont, color: colors.text.primary }}>
           {state.phase === 'typing' ? field.settled : field.text}
           {field.open && state.phase === 'typing' ? (
-            <Text
+            <Text {...KOREAN_LINE_BREAK}
               testID="type-hangul-open-block"
               style={{ textDecorationLine: 'underline', textDecorationColor: colors.brand.secondary, textDecorationStyle: 'solid' }}
             >
@@ -301,7 +302,7 @@ export function TypeHangulGame({ scope, host, onBack }: Props): React.ReactEleme
           <Icon name="check-circle" size={spacing.xl} color={colors.feedback.success} />
         </View>
       ) : null}
-      <Text style={srOnly} accessibilityLiveRegion="polite">
+      <Text {...KOREAN_LINE_BREAK} style={srOnly} accessibilityLiveRegion="polite">
         {field.live === '' ? '' : readTyped(field.live)}
       </Text>
     </View>
@@ -487,7 +488,7 @@ function BlockRow({ blocks, side, cell }: { blocks: readonly BlockCompare[]; sid
             }}
           >
             {empty ? null : (
-              <Text {...koreanSpeech} style={{ fontSize: Math.round(cell * 0.5), color: colors.text.primary }}>
+              <Text {...KOREAN_LINE_BREAK} {...koreanSpeech} style={{ fontSize: Math.round(cell * 0.5), color: colors.text.primary }}>
                 {text}
               </Text>
             )}
@@ -538,11 +539,11 @@ function WordLine({ round, romanizationVisible, onReveal, testID }: WordLineProp
       >
         {/* `lang="ko"` (koreanSpeech) also gives the web its keep-all wrapping: the PWA shell's `:lang(ko)`
             rule breaks a sentence at its spaces, never inside a word (F-I18N-001 PR 16). */}
-        <Text {...koreanSpeech} style={{ fontSize: typography.size.prompt, fontWeight: typography.weight.bold, color: colors.text.primary }}>
+        <Text {...KOREAN_LINE_BREAK} {...koreanSpeech} style={{ fontSize: typography.size.prompt, fontWeight: typography.weight.bold, color: colors.text.primary }}>
           {ko}
         </Text>
-        {hidden ? null : <Text style={{ fontSize: typography.size.bodySm, fontStyle: 'italic', color: colors.text.secondary }}>{romanization}</Text>}
-        <Text style={{ fontSize: typography.size.bodySm, color: colors.text.secondary }}>{`· ${en}`}</Text>
+        {hidden ? null : <Text {...KOREAN_LINE_BREAK} style={{ fontSize: typography.size.bodySm, fontStyle: 'italic', color: colors.text.secondary }}>{romanization}</Text>}
+        <Text {...KOREAN_LINE_BREAK} style={{ fontSize: typography.size.bodySm, color: colors.text.secondary }}>{`· ${en}`}</Text>
       </View>
       {hidden && onReveal ? (
         <Button label={m.learner.minigame.typeHangul.showRomanization.cta} tone="ghost" size="sm" onPress={onReveal} testID="type-hangul-reveal" />

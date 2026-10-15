@@ -17,8 +17,8 @@ import {
 
 /**
  * F-I18N-001 PR 14 (§3.11, §5): the landing half of the locale layout matrix, over the static export.
- * `/`, `/about` and, on a build that shows every locale (`NEXT_PUBLIC_SHOW_ALL_LOCALES=1`, on demand: no
- * pipeline runs it yet, F-I18N-001 §10), `/es`, `/ko`, `/es/about` and `/ko/about`, each at 320 / 375 / 768: the right `<html lang>`, no
+ * `/`, `/about`, `/es`, `/ko`, `/es/about`, `/ko/about` and the persona pages in each locale (es and ko ship,
+ * F-I18N-001 rows 15b / 16b, so every export has them), each at 320 / 375 / 768: the right `<html lang>`, no
  * sideways scroll, the primary CTA on screen without scrolling, and no control under `touchTarget.min`
  * beyond the ones listed today (`fixtures/landing-touch-allowlist.json`, a ratchet that only shrinks). The
  * es and ko dictionaries are filled (PR 15 / 16), so those pages read Spanish and Korean; the checks hold
@@ -27,7 +27,6 @@ import {
  * The pseudo-locale's layout is covered on the learner app (`apps/mobile/e2e/web/locale.spec.ts`); on the site
  * `src/app/__tests__/landing-pseudo.test.tsx` checks that every word comes from the dictionary.
  */
-const QA = process.env.NEXT_PUBLIC_SHOW_ALL_LOCALES === '1';
 const HEIGHT = 800;
 const allowlist = JSON.parse(readFileSync(join(__dirname, 'fixtures', 'landing-touch-allowlist.json'), 'utf8')) as LandingTouchAllowlist;
 
@@ -84,8 +83,6 @@ async function smallKeys(page: Page): Promise<Map<string, string>> {
 
 for (const landing of PAGES) {
   test.describe(`${landing.path} (${landing.lang})`, () => {
-    test.skip(landing.lang !== 'en' && !QA, 'es and ko are exported only by a build that shows every locale');
-
     test(`at ${LANDING_WIDTHS.join(' / ')}: its lang, no sideways scroll, the primary CTA on screen and no new small control`, async ({
       page,
     }) => {
@@ -117,7 +114,7 @@ for (const landing of PAGES) {
         for (const [key, size] of await smallKeys(page)) found.set(key, `${size} at ${width}px`);
       }
 
-      const { added, gone } = ratchet([...found.keys()], allowedFor(allowlist, baselinePage(landing.path), QA));
+      const { added, gone } = ratchet([...found.keys()], allowedFor(allowlist, baselinePage(landing.path), true));
       expect(
         added.map((key) => `${key} (${found.get(key) ?? '?'})`),
         `New controls under ${TARGET_MIN} on ${landing.path}; make them at least ${TARGET_MIN} x ${TARGET_MIN}`,
@@ -131,8 +128,6 @@ for (const landing of PAGES) {
 }
 
 test.describe('the locale switcher on /es and /ko', () => {
-  test.skip(!QA, 'needs NEXT_PUBLIC_SHOW_ALL_LOCALES=1');
-
   for (const lang of ['es', 'ko'] as const) {
     test(`/${lang}: links every locale's landing, marks its own, and fits a 320 px screen`, async ({ page }) => {
       await page.setViewportSize({ width: 320, height: HEIGHT });
@@ -162,8 +157,6 @@ test.describe('the locale switcher on /es and /ko', () => {
  * so this runs the Korean pages at 320 px with the root font at 200%.
  */
 test.describe('Korean pages at 200% text', () => {
-  test.skip(!QA, 'needs NEXT_PUBLIC_SHOW_ALL_LOCALES=1');
-
   for (const path of ['/ko', '/ko/about', '/ko/learners']) {
     test(`${path} at 320 px and 200% text: no sideways scroll`, async ({ page }) => {
       await page.setViewportSize({ width: 320, height: HEIGHT });
@@ -177,6 +170,50 @@ test.describe('Korean pages at 200% text', () => {
       expect(wrap, `${path}: Korean keeps overflow-wrap anywhere`).toBe('anywhere');
       expect(doc, `${path} at 200% text: document scrollWidth`).toBeLessThanOrEqual(320);
       expect(body, `${path} at 200% text: body scrollWidth`).toBeLessThanOrEqual(320);
+    });
+  }
+});
+
+/**
+ * F-I18N-001 rows 15b / 16b: from 45em the locale switcher shares the footer's end row with the copyright line
+ * (globals.css `hr-site-footer-end`). Each link there keeps its 64 px hit area with negative block margins, so where
+ * the switcher wraps under the copyright row (a longer label or locale name, or larger text), the row gap must keep
+ * the open-source link's area and the locale links' areas apart. In en, es and ko the row fits on one line from 720 px
+ * (text size scales the em breakpoint with it), so the last case forces the wrap (the switcher on a line of its own),
+ * the layout a longer locale name or label would get, which is the case the gap is for.
+ */
+const FOOTER_END_CASES = [
+  { width: 720, wrap: false },
+  { width: 760, wrap: false },
+  { width: 1024, wrap: false },
+  { width: 760, wrap: true },
+] as const;
+
+test.describe("the footer's end row: no two hit areas overlap", () => {
+  for (const path of ['/', '/es', '/ko']) {
+    test(`${path} at ${FOOTER_END_CASES.map((c) => `${c.width}${c.wrap ? ' (wrapped)' : ''}`).join(' / ')} px`, async ({ page }) => {
+      for (const { width, wrap } of FOOTER_END_CASES) {
+        await page.setViewportSize({ width, height: HEIGHT });
+        await page.goto(path);
+        if (wrap) await page.addStyleTag({ content: '.hr-site-footer-end > .hr-site-locales { flex-basis: 100%; }' });
+        const rects = await page.locator('.hr-site-footer-end a').evaluateAll((links) =>
+          links.map((a) => {
+            const r = a.getBoundingClientRect();
+            return { name: (a.textContent ?? '').trim(), top: r.top, bottom: r.bottom, left: r.left, right: r.right };
+          }),
+        );
+        const at = `${path} at ${width}px${wrap ? ', the switcher wrapped' : ''}`;
+        expect(rects.length, `${at}: the open-source link and three locale links`).toBe(4);
+        const overlaps: string[] = [];
+        rects.forEach((a, i) =>
+          rects.slice(i + 1).forEach((b) => {
+            const x = Math.min(a.right, b.right) - Math.max(a.left, b.left);
+            const y = Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top);
+            if (x > 0.5 && y > 0.5) overlaps.push(`"${a.name}" and "${b.name}" (${Math.round(x)} x ${Math.round(y)} px)`);
+          }),
+        );
+        expect(overlaps, at).toEqual([]);
+      }
     });
   }
 });

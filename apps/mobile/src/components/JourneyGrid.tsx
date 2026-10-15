@@ -16,6 +16,7 @@ import {
   spacing,
   typography,
   useMediaSize,
+  KOREAN_LINE_BREAK,
 } from '@hangul-route/design-system';
 import React from 'react';
 import { Pressable, Text, View } from 'react-native';
@@ -186,7 +187,7 @@ export function JourneyGrid({
                   justifyContent: 'center',
                 }}
               >
-                <Text style={{ color: isLocked ? colors.text.muted : colors.text.primary, fontWeight: '700' }}>{stage.order}</Text>
+                <Text {...KOREAN_LINE_BREAK} style={{ color: isLocked ? colors.text.muted : colors.text.primary, fontWeight: '700' }}>{stage.order}</Text>
               </View>
               <View style={{ flex: 1 }}>
                 <Body weight="bold" tone={isLocked ? 'secondary' : 'primary'}>
@@ -375,7 +376,7 @@ function GridCell({ cell, stage, theme, paneMode, onOpen, onOpenStories, episode
           }}
         >
           {/* Decorative (the number is in the label), so it keeps its size at large text and stays in its circle. */}
-          <Text maxFontSizeMultiplier={1} style={{ fontSize: typography.size.caption, fontWeight: '700', color: colors.text.primary }}>
+          <Text {...KOREAN_LINE_BREAK} maxFontSizeMultiplier={1} style={{ fontSize: typography.size.caption, fontWeight: '700', color: colors.text.primary }}>
             {messages.learner.journey.countMark(count.value, count.more)}
           </Text>
         </View>

@@ -18,6 +18,7 @@ import {
   touchTarget,
   typography,
   useMediaSize,
+  KOREAN_LINE_BREAK,
 } from '@hangul-route/design-system';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AccessibilityInfo, Platform, Pressable, Text, View } from 'react-native';
@@ -336,7 +337,7 @@ export function StoryCheckGame({ scope, onFinish, onBack }: Props): React.ReactE
               <Heading level="prompt" testID="story-check-prompt">
                 {item.promptParts.map((part, i) =>
                   'target' in part ? (
-                    <Text key={i} {...koreanSpeech} style={{ fontWeight: typography.weight.bold }}>
+                    <Text {...KOREAN_LINE_BREAK} key={i} {...koreanSpeech} style={{ fontWeight: typography.weight.bold }}>
                       {part.target.ko}
                     </Text>
                   ) : (

@@ -1,7 +1,7 @@
 import type { Page } from '@playwright/test';
 import { getMessages } from '@hangul-route/i18n';
 import { expect, test } from './fixtures';
-import { completeChildForm, completeSelfForm, readStored, unlockWithPin, waitForSaved } from './helpers';
+import { completeChildForm, completeSelfForm, readStored, unlockWithPin, waitForSaved, passPlacementLanguage } from './helpers';
 import { shot } from './shots';
 import { controlsPastEdge, expectNoHorizontalOverflow } from './viewport';
 
@@ -117,6 +117,7 @@ async function runWithoutSound(
 ): Promise<void> {
   // The check speaks and writes in its test language (section 3.1 step 2).
   const labels = getMessages(testLocale).learner.placement.options.mode;
+  await passPlacementLanguage(page);
   await expect(page.getByTestId('placement-options')).toBeVisible();
   if (mode === 'deep') await page.getByRole('radio', { name: labels.deep.label, exact: true }).click();
   await expect(page.getByRole('radio', { name: labels[mode].label, exact: true })).toHaveAttribute('aria-checked', 'true');
@@ -168,8 +169,11 @@ test.describe('the level check end to end (release build, flag on by default)', 
     await expect(page.getByTestId('placement-invite-new')).toBeVisible();
     await shot(page, 'placement-e2e-invite');
     await page.getByTestId('placement-invite-know').click();
-    // English is the only shipped UI locale, so the test-language screen is skipped (section 3.1 step 2).
-    await expect(page.getByTestId('placement-language')).toHaveCount(0);
+    // es and ko ship (F-I18N-001 rows 15b / 16b), so the check asks for its test language first (section 3.1 step 2);
+    // Continue keeps English, the UI language (the test-language describe below picks another one).
+    await expect(page.getByTestId('placement-language')).toBeVisible();
+    for (const locale of ['en', 'es', 'ko']) await expect(page.getByTestId(`placement-locale-${locale}`)).toBeVisible();
+    await passPlacementLanguage(page);
     await runWithoutSound(page, 'standard');
 
     const id = await activeProfileId(page);
@@ -266,6 +270,7 @@ test.describe('the level check end to end (release build, flag on by default)', 
     await voicedSpeech(page);
     await selfToFork(page, 'Bo', 'Pictures first');
     await page.getByTestId('placement-invite-know').click();
+    await passPlacementLanguage(page);
     await expect(page.getByTestId('placement-short-card')).toBeVisible();
     await page.getByTestId('placement-start').click();
     await page.getByTestId('placement-hoya-start').click();
@@ -307,6 +312,7 @@ test.describe('the level check end to end (release build, flag on by default)', 
     await card.scrollIntoViewIfNeeded();
     await shot(page, 'placement-e2e-home-card');
     await page.getByTestId('home-level-check-open').click();
+    await passPlacementLanguage(page);
     await expect(page.getByTestId('placement-options')).toBeVisible();
     await page.goto('/');
     await expect(page.getByText(hi('Lee'))).toBeVisible();
@@ -316,6 +322,7 @@ test.describe('the level check end to end (release build, flag on by default)', 
     await expect(row).toHaveText(t.profileRow);
     await row.click();
     // Not behind the PIN: a learner may do this alone.
+    await passPlacementLanguage(page);
     await expect(page.getByTestId('placement-options')).toBeVisible();
     await runWithoutSound(page, 'standard');
     expect(await storedResult(page, id)).toMatchObject({ source: 'profile' });

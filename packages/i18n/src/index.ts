@@ -53,5 +53,6 @@ export {
 } from './banned';
 export { KIDS_ONLY_FRAMING, type AudiencePattern } from './audience';
 export { romanizationShown, type RomanizationMode } from './romanization';
+export { levelWords, type LevelWords } from './levels';
 export { PSEUDO_LOCALE, pseudoLocalize, pseudoText } from './pseudo';
 export { RETIRED_DATA_PROMISES, retiredDataPromises, type DataPromisePattern } from './data-promises';

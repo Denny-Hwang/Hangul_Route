@@ -1,4 +1,4 @@
-import { borderWidth, colors, radii, spacing, touchTarget, typography, useLayoutClass } from '@hangul-route/design-system';
+import { borderWidth, colors, radii, spacing, touchTarget, typography, useLayoutClass, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
 import { useFocusEffect } from '@react-navigation/native';
 import React, { useCallback, useState } from 'react';
 import { AccessibilityInfo, Platform, Pressable, Text, View, type PressableStateCallbackType } from 'react-native';
@@ -66,7 +66,7 @@ export function PreviewFrame({ children, onLeave }: PreviewFrameProps): React.Re
         }}
       >
         <View style={{ flex: 1 }}>
-          <Text
+          <Text {...KOREAN_LINE_BREAK}
             testID="preview-strip-text"
             maxFontSizeMultiplier={BROWSE_TEXT_SCALE_CAP}
             style={{
@@ -80,7 +80,7 @@ export function PreviewFrame({ children, onLeave }: PreviewFrameProps): React.Re
           </Text>
           {/* The status region: the text joins it when the screen gains focus, so it is announced once. */}
           <View role="status" aria-live="polite" accessibilityLiveRegion="polite" style={srOnly}>
-            {focused ? <Text testID="preview-strip-status">{m.strip}</Text> : null}
+            {focused ? <Text {...KOREAN_LINE_BREAK} testID="preview-strip-status">{m.strip}</Text> : null}
           </View>
         </View>
         {onLeave ? (
@@ -102,7 +102,7 @@ export function PreviewFrame({ children, onLeave }: PreviewFrameProps): React.Re
             })}
           >
             {({ pressed }) => (
-              <Text
+              <Text {...KOREAN_LINE_BREAK}
                 maxFontSizeMultiplier={BROWSE_TEXT_SCALE_CAP}
                 style={{
                   color: pressed ? colors.brand.primaryDark : colors.brand.primary,

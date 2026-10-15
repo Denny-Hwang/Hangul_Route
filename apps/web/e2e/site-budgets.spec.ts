@@ -23,11 +23,9 @@ import { expect, test, type Locator, type Page } from '@playwright/test';
  */
 const en = getMessages('en').landing;
 /**
- * A QA build shows every locale, so the footer adds the locale switcher (one row) that production only shows once a
- * second locale ships. The heights are budgets of the production export; F-I18N-001's ship PR for a locale runs this
- * spec on its own export, so they are checked again then.
+ * The footer carries the locale switcher (one row) since es and ko shipped (F-I18N-001 rows 15b / 16b); the heights
+ * are budgets of the production export with it.
  */
-const QA = process.env.NEXT_PUBLIC_SHOW_ALL_LOCALES === '1';
 
 interface SitePageBudget {
   path: string;
@@ -48,8 +46,11 @@ interface SitePageBudget {
 
 /** Persona page budgets (§3.11): 5 screens at 375 x 812 (headroom 3,700), 3,200 px at 1280 x 800, 550 words. */
 const PERSONA = { phoneMax: 4060, phoneHeadroom: 3700, wideMax: 3200, words: 550, current: true, folds: true } as const;
-/** Home budgets (§3.11): about 3.5 screens at 375 x 812 (headroom 2,750), 2,100 px at 1280 x 800, 280 words. */
-const HOME = { phoneMax: 2900, phoneHeadroom: 2750, wideMax: 2100, words: 280, current: false, folds: false } as const;
+/**
+ * Home budgets (§3.11): about 3.5 screens at 375 x 812 (headroom 2,810: 2,750 plus the footer's locale switcher row on
+ * phones, F-I18N-001 rows 15b / 16b), 2,100 px at 1280 x 800 (the switcher sits on the copyright line there), 280 words.
+ */
+const HOME = { phoneMax: 2900, phoneHeadroom: 2810, wideMax: 2100, words: 280, current: false, folds: false } as const;
 
 const PAGES: readonly SitePageBudget[] = [
   { path: '/', h1: en.home.hero.title, lead: en.home.hero.lead, primary: en.home.hero.start, ...HOME },
@@ -57,6 +58,43 @@ const PAGES: readonly SitePageBudget[] = [
   { path: '/parents', h1: en.persona.parents.title, lead: en.persona.parents.lead, primary: en.persona.parents.signIn, ...PERSONA },
   { path: '/teachers', h1: en.persona.teachers.title, lead: en.persona.teachers.lead, primary: en.persona.teachers.signIn, ...PERSONA },
 ];
+
+/**
+ * The Spanish and Korean pages (indexable since F-I18N-001 rows 15b / 16b) are held to the same height and word
+ * budgets (F-SITE-002 §3.11, "Locales"), times a 10 % text allowance. Spanish runs longer (the home measured 3,039 px
+ * against English 2,805 at 375 x 812 when it shipped); Korean's height depends on the CJK font the platform has (the
+ * home measured 2,805 px with macOS's Korean font and 2,979 px on the CI image's). Only the budgets are checked here;
+ * the layout checks of these pages are in `landing-locales.spec.ts`.
+ */
+const LOCALE_ALLOWANCE = { es: 1.1, ko: 1.1 } as const;
+const LOCALE_PAGES = (['es', 'ko'] as const).flatMap((lang) =>
+  PAGES.map((budget) => ({ lang, path: budget.path === '/' ? `/${lang}` : `/${lang}${budget.path}`, budget })),
+);
+
+for (const { lang, path, budget } of LOCALE_PAGES) {
+  const allow = (value: number): number => Math.round(value * LOCALE_ALLOWANCE[lang]);
+  test.describe(`${path} budgets`, () => {
+    test(`at 375 x 812: at most ${allow(budget.phoneMax)} px tall (headroom ${allow(budget.phoneHeadroom)}) and ${allow(budget.words)} visible words`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width: 375, height: 812 });
+      await page.goto(path);
+      await expect(page.locator('html')).toHaveAttribute('lang', lang);
+      const height = await page.evaluate(() => document.documentElement.scrollHeight);
+      expect(height).toBeLessThanOrEqual(allow(budget.phoneMax));
+      expect(height, 'headroom budget while claims are off').toBeLessThanOrEqual(allow(budget.phoneHeadroom));
+      const words = await page.evaluate(() => document.body.innerText.split(/\s+/).filter((w) => /[\p{L}\p{N}]/u.test(w)).length);
+      expect(words).toBeGreaterThan(50);
+      expect(words).toBeLessThanOrEqual(allow(budget.words));
+    });
+
+    test(`at 1280 x 800: at most ${allow(budget.wideMax)} px tall`, async ({ page }) => {
+      await page.setViewportSize({ width: 1280, height: 800 });
+      await page.goto(path);
+      expect(await page.evaluate(() => document.documentElement.scrollHeight)).toBeLessThanOrEqual(allow(budget.wideMax));
+    });
+  });
+}
 
 /** One row of 64 px targets plus padding (§3.11). */
 const HEADER_MAX = 96;
@@ -111,10 +149,8 @@ for (const budget of PAGES) {
       await page.setViewportSize({ width: 375, height: 812 });
       await page.goto(budget.path);
       const height = await page.evaluate(() => document.documentElement.scrollHeight);
-      if (!QA) {
-        expect(height).toBeLessThanOrEqual(budget.phoneMax);
-        expect(height, 'headroom budget while claims are off').toBeLessThanOrEqual(budget.phoneHeadroom);
-      }
+      expect(height).toBeLessThanOrEqual(budget.phoneMax);
+      expect(height, 'headroom budget while claims are off').toBeLessThanOrEqual(budget.phoneHeadroom);
       const words = await page.evaluate(() => document.body.innerText.split(/\s+/).filter((w) => /[\p{L}\p{N}]/u.test(w)).length);
       expect(words).toBeGreaterThan(50);
       expect(words).toBeLessThanOrEqual(budget.words);
@@ -123,7 +159,7 @@ for (const budget of PAGES) {
     test(`at 1280 x 800: at most ${budget.wideMax} px tall and ${budget.words} visible words`, async ({ page }) => {
       await page.setViewportSize({ width: 1280, height: 800 });
       await page.goto(budget.path);
-      if (!QA) expect(await page.evaluate(() => document.documentElement.scrollHeight)).toBeLessThanOrEqual(budget.wideMax);
+      expect(await page.evaluate(() => document.documentElement.scrollHeight)).toBeLessThanOrEqual(budget.wideMax);
       const words = await page.evaluate(() => document.body.innerText.split(/\s+/).filter((w) => /[\p{L}\p{N}]/u.test(w)).length);
       expect(words).toBeLessThanOrEqual(budget.words);
     });

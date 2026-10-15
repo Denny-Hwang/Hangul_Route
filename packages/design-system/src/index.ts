@@ -34,6 +34,8 @@ export * from './scene-art';
 export { KOREAN_LANGUAGE, KOREAN_TEXT_SIZES, koreanTextLabel, koreanTextView } from './korean-text';
 export type { KoreanTextSize, KoreanTextView, KoreanTextViewInput } from './korean-text';
 export * from './labels';
+// Native Korean line breaking for every Text (F-I18N-001 §10 reason (5)).
+export { KOREAN_LINE_BREAK } from './line-break';
 export { SPARK_DEFAULT_MAX_ROWS, SPARK_DEFAULT_SLOTS, SPARK_FILL_MS, sparkLayout } from './spark';
 export type { SparkLayout } from './spark';
 // The in-app two-set Hangul keyboard (F-CURR-001 G-3): the paint and its pure layout.

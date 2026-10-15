@@ -12,6 +12,7 @@ import {
   spacing,
   typography,
   useLayoutClass,
+  KOREAN_LINE_BREAK,
 } from '@hangul-route/design-system';
 import React from 'react';
 import { Text, View } from 'react-native';
@@ -71,7 +72,7 @@ export function EpisodeOutlineView({ episodeId, onOpenItem, onOpenCard, asPane =
   );
   const title = (
     <View accessibilityRole="header" aria-level={asPane ? 2 : 1}>
-      <Text style={{ fontSize: typography.size.title, fontWeight: typography.weight.bold, color: colors.text.primary }}>{episode.titleEn}</Text>
+      <Text {...KOREAN_LINE_BREAK} style={{ fontSize: typography.size.title, fontWeight: typography.weight.bold, color: colors.text.primary }}>{episode.titleEn}</Text>
     </View>
   );
 
@@ -199,7 +200,7 @@ function LessonRow({ row, number, closed, onOpen }: { row: OutlineQuestRow; numb
     <Card padding="md" testID={`browse-outline-${row.id}`}>
       <View style={{ flexDirection: 'row', gap: spacing.md }}>
         <View style={{ width: DISC, height: DISC, borderRadius: radii.circle, backgroundColor: colors.surface.sunken, alignItems: 'center', justifyContent: 'center' }}>
-          <Text style={{ fontSize: typography.size.bodyLg, fontWeight: typography.weight.bold, color: colors.text.primary }}>{number}</Text>
+          <Text {...KOREAN_LINE_BREAK} style={{ fontSize: typography.size.bodyLg, fontWeight: typography.weight.bold, color: colors.text.primary }}>{number}</Text>
         </View>
         <View style={{ flex: 1, gap: spacing.xs }}>
           <Body weight="bold">{row.title}</Body>

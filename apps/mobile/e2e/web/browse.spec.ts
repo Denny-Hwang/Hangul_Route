@@ -739,8 +739,10 @@ test('Lesson display: romanization choices apply at once, Done and Escape close,
   const sheet = page.getByRole('dialog', { name: 'Lesson display' });
   await expect(sheet).toBeVisible();
   await expect(sheet.getByRole('radio', { name: 'Always shown' })).toHaveAttribute('aria-checked', 'true');
-  // Only English ships: no Language row.
-  await expect(sheet.getByText('Language')).toHaveCount(0);
+  // es and ko ship (F-I18N-001 rows 15b / 16b): the Language row lists all three, English chosen.
+  const language = sheet.getByRole('radiogroup', { name: 'Language' });
+  await expect(language.getByRole('radio')).toHaveText(['English', 'Español', '한국어']);
+  await expect(sheet.getByTestId('browse-display-language-en')).toHaveAttribute('aria-checked', 'true');
   await expect(sheet.getByText("These choices change only this preview. No learner's settings change.")).toBeVisible();
   await sheet.getByRole('radio', { name: 'Hidden until tap' }).click();
   await expect(sheet.getByRole('radio', { name: 'Hidden until tap' })).toHaveAttribute('aria-checked', 'true');

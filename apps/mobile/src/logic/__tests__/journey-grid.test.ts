@@ -262,7 +262,7 @@ describe('JourneyGrid sources', () => {
   });
 
   it('the count mark keeps its size at large text and grows rather than clips (F-STORY-005 §3.12)', () => {
-    expect(grid).toMatch(/<Text maxFontSizeMultiplier=\{1\}[^>]*>\s*\{messages\.learner\.journey\.countMark\(/);
+    expect(grid).toMatch(/<Text \{\.\.\.KOREAN_LINE_BREAK\} maxFontSizeMultiplier=\{1\}[^>]*>\s*\{messages\.learner\.journey\.countMark\(/);
     expect(grid).toContain('minHeight: COUNT_MARK');
     expect(grid).not.toMatch(/\bheight: COUNT_MARK/);
   });

@@ -18,6 +18,8 @@ type LegalItem = string | ((values: LegalValues) => string);
 export function PrivacyPage({ locale = DEFAULT_LOCALE }: { locale?: UiLocale }): JSX.Element {
   const legal = getMessages(locale).landing.legal;
   const t = legal.privacy;
+  // English level names on purpose: the legal body stays English in every locale (L10), so it quotes the English
+  // `LEARNER_LEVELS` labels, not `common.levels` (the UI-locale words the app and console draw).
   const values: LegalValues = { email: CONTACT_EMAIL, levels: LEARNER_LEVELS.map((l) => l.label).join(' / ') };
   const text = (item: LegalItem): string => (typeof item === 'function' ? item(values) : item);
   // The document stays English in every locale (L10): marked `lang="en"` inside a `/es` or `/ko` page, unmarked on the English page.

@@ -14,6 +14,7 @@ import {
   touchTarget,
   typography,
   type IconName,
+  KOREAN_LINE_BREAK,
 } from '@hangul-route/design-system';
 import { NOTE_REACTION_IDS, type NoteReactionId } from '@hangul-route/content-schema';
 import React from 'react';
@@ -85,7 +86,7 @@ export function NotePage({ view, questTitle, picked, onPick, onStart, onPutAway,
         <>
           <Spacer size="lg" />
           <Card padding="md" testID="note-words">
-            <Text {...langProps} style={{ fontSize: typography.size.bodyLg, color: colors.text.primary, lineHeight: typography.size.bodyLg * typography.leading.normal }}>
+            <Text {...KOREAN_LINE_BREAK} {...langProps} style={{ fontSize: typography.size.bodyLg, color: colors.text.primary, lineHeight: typography.size.bodyLg * typography.leading.normal }}>
               {view.text}
             </Text>
             <Spacer size="xs" />
@@ -116,7 +117,7 @@ export function NotePage({ view, questTitle, picked, onPick, onStart, onPutAway,
                 <Icon name="book" size={GLYPH} color={colors.brand.primaryDark} />
               </View>
               <View style={{ flex: 1, minWidth: 0 }}>
-                <Text nativeID={QUEST_TITLE_ID} style={{ fontSize: typography.size.body, fontWeight: typography.weight.semibold, color: colors.text.primary }}>
+                <Text {...KOREAN_LINE_BREAK} nativeID={QUEST_TITLE_ID} style={{ fontSize: typography.size.body, fontWeight: typography.weight.semibold, color: colors.text.primary }}>
                   {quest.title}
                 </Text>
                 {quest.open ? null : (
@@ -185,18 +186,18 @@ export function NotePage({ view, questTitle, picked, onPick, onStart, onPutAway,
                 {selected ? <View style={{ width: spacing.md, height: spacing.md, borderRadius: radii.circle, backgroundColor: colors.brand.primary }} /> : null}
               </View>
               <Icon name={REACTION_GLYPH[id]} size={GLYPH} color={colors.text.primary} />
-              <Text style={{ flex: 1, fontSize: typography.size.body, color: colors.text.primary, fontWeight: selected ? typography.weight.bold : typography.weight.regular }}>
+              <Text {...KOREAN_LINE_BREAK} style={{ flex: 1, fontSize: typography.size.body, color: colors.text.primary, fontWeight: selected ? typography.weight.bold : typography.weight.regular }}>
                 {label}
               </Text>
               {selected ? <Icon name="check" size={GLYPH} color={colors.brand.primary} /> : null}
             </Pressable>
           );
         })}
-        <Text nativeID={SEEN_BY_ID} style={{ fontSize: typography.size.body, color: colors.text.secondary }} testID="note-seen-by">
+        <Text {...KOREAN_LINE_BREAK} nativeID={SEEN_BY_ID} style={{ fontSize: typography.size.body, color: colors.text.secondary }} testID="note-seen-by">
           {view.seenBy}
         </Text>
         <View style={srOnly} accessibilityLiveRegion="polite" {...{ 'aria-live': 'polite' }}>
-          {picked !== null ? <Text>{picked}</Text> : null}
+          {picked !== null ? <Text {...KOREAN_LINE_BREAK}>{picked}</Text> : null}
         </View>
       </View>
 
@@ -232,7 +233,7 @@ function QuietLink({
       testID={testID}
       style={{ minHeight: touchTarget.min, justifyContent: 'center' }}
     >
-      <Text style={{ fontSize: typography.size.body, color: colors.text.secondary, textDecorationLine: 'underline' }}>{label}</Text>
+      <Text {...KOREAN_LINE_BREAK} style={{ fontSize: typography.size.body, color: colors.text.secondary, textDecorationLine: 'underline' }}>{label}</Text>
     </Pressable>
   );
 }

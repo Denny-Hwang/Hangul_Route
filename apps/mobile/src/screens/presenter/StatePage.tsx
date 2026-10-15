@@ -1,4 +1,4 @@
-import { Hoya, borderWidth, colors, layout, radii, spacing, touchTarget, typography, type HoyaPose } from '@hangul-route/design-system';
+import { Hoya, borderWidth, colors, layout, radii, spacing, touchTarget, typography, type HoyaPose, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
 import { READABLE_LINE, STATE_HOYA } from './stage-metrics';
 import React, { useEffect, useRef } from 'react';
 import { Pressable, Text, View } from 'react-native';
@@ -47,17 +47,17 @@ export function StatePage({
     >
       <Hoya pose={pose} size={STATE_HOYA} accessibilityLabel={messages.a11y.hoya(pose)} />
       {title !== undefined ? (
-        <Text role="heading" style={{ fontSize: typography.size.display, fontWeight: typography.weight.bold, color: colors.text.primary, textAlign: 'center' }}>
+        <Text {...KOREAN_LINE_BREAK} role="heading" style={{ fontSize: typography.size.display, fontWeight: typography.weight.bold, color: colors.text.primary, textAlign: 'center' }}>
           {title}
         </Text>
       ) : null}
       {status !== undefined ? (
-        <Text role="status" style={{ fontSize: typography.size.bodyLg, color: colors.text.primary, textAlign: 'center' }}>
+        <Text {...KOREAN_LINE_BREAK} role="status" style={{ fontSize: typography.size.bodyLg, color: colors.text.primary, textAlign: 'center' }}>
           {status}
         </Text>
       ) : null}
       {line !== undefined ? (
-        <Text style={{ fontSize: typography.size.body, color: colors.text.secondary, textAlign: 'center', maxWidth: READABLE_LINE, lineHeight: Math.round(typography.size.body * typography.leading.normal) }}>
+        <Text {...KOREAN_LINE_BREAK} style={{ fontSize: typography.size.body, color: colors.text.secondary, textAlign: 'center', maxWidth: READABLE_LINE, lineHeight: Math.round(typography.size.body * typography.leading.normal) }}>
           {line}
         </Text>
       ) : null}
@@ -95,7 +95,7 @@ export const PrimaryButton = React.forwardRef<View, { label: string; onPress: ()
           };
         }}
       >
-        <Text style={{ fontSize: large ? typography.size.display : typography.size.bodyLg, fontWeight: typography.weight.bold, color: colors.text.onPrimary }}>{label}</Text>
+        <Text {...KOREAN_LINE_BREAK} style={{ fontSize: large ? typography.size.display : typography.size.bodyLg, fontWeight: typography.weight.bold, color: colors.text.onPrimary }}>{label}</Text>
       </Pressable>
     );
   },
@@ -128,7 +128,7 @@ export const GhostButton = React.forwardRef<View, { label: string; onPress: () =
         };
       }}
     >
-      <Text style={{ fontSize: typography.size.bodyLg, fontWeight: typography.weight.bold, color: colors.text.primary }}>{label}</Text>
+      <Text {...KOREAN_LINE_BREAK} style={{ fontSize: typography.size.bodyLg, fontWeight: typography.weight.bold, color: colors.text.primary }}>{label}</Text>
     </Pressable>
   );
 });

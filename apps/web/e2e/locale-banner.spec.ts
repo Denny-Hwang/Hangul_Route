@@ -3,31 +3,15 @@ import { expect, test } from '@playwright/test';
 
 /**
  * F-I18N-001 PR 11c (§3.3): the "View in <language>" banner on `/`, the footer locale switcher and the
- * `?lang=` hand-off, over the static export. While es and ko are hidden none of it is on the page; a QA build
- * (`NEXT_PUBLIC_SHOW_ALL_LOCALES=1`) shows all three locales.
+ * `?lang=` hand-off, over the static export. es and ko ship (F-I18N-001 rows 15b / 16b), so every export shows
+ * all three locales.
  */
-const QA = process.env.NEXT_PUBLIC_SHOW_ALL_LOCALES === '1';
 /** The banner is worded in the locale it suggests (its own dictionary): Spanish since F-I18N-001 PR 15. */
 const banner = `aside[aria-label="${getMessages('es').landing.localeBanner.label}"]`;
-/** Any banner, whatever language it is worded in (the hidden-locale build must show none). */
+/** Any banner, whatever language it is worded in (an English browser must get none). */
 const anyBanner = 'aside[lang]';
 
-test.describe('while es and ko are hidden', () => {
-  test.skip(QA, 'a QA build shows every locale');
-  test.use({ locale: 'es-ES' });
-
-  test('/ shows no banner and no switcher, even to a Spanish browser', async ({ page }) => {
-    await page.goto('/');
-    await expect(page.locator('footer')).toBeVisible();
-    await expect(page.locator(anyBanner)).toHaveCount(0);
-    await expect(page.locator('nav[aria-label="Language"]')).toHaveCount(0);
-    await expect(page.locator('a[href^="https://app.hangulroute.com?lang="]')).toHaveCount(0);
-  });
-});
-
-test.describe('on a QA build', () => {
-  test.skip(!QA, 'needs NEXT_PUBLIC_SHOW_ALL_LOCALES=1');
-
+test.describe('es and ko ship (F-I18N-001 rows 15b / 16b)', () => {
   test.describe('a Spanish browser', () => {
     test.use({ locale: 'es-ES' });
 

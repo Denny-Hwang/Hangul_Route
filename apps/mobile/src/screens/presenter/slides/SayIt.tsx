@@ -1,4 +1,4 @@
-import { colors, koreanTextLabel, presenter, spacing, typography } from '@hangul-route/design-system';
+import { colors, koreanTextLabel, presenter, spacing, typography, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
 import React from 'react';
 import { Text, View } from 'react-native';
 import type { SpokenForm } from '../../../logic/audio/spoken';
@@ -32,12 +32,12 @@ export function SayIt({ spoken, ipa }: { spoken: SpokenForm; ipa?: string }): Re
         alignSelf: 'flex-start',
       }}
     >
-      <Text style={{ fontSize: size(presenter.size.caption), fontWeight: typography.weight.semibold, color: colors.text.primary }}>{messages.learner.presenter.slide.sayIt}</Text>
+      <Text {...KOREAN_LINE_BREAK} style={{ fontSize: size(presenter.size.caption), fontWeight: typography.weight.semibold, color: colors.text.primary }}>{messages.learner.presenter.slide.sayIt}</Text>
       <View accessibilityLabel={koreanTextLabel(spoken.text, spoken.romanization)} style={{ flexDirection: 'row', alignItems: 'baseline', gap: units(unit, spacing.md) }}>
         <TaughtKo size={promptSize}>{spoken.text}</TaughtKo>
-        <Text style={{ fontSize: promptSize, fontWeight: typography.weight.bold, color: colors.text.primary }}>{spoken.romanization}</Text>
+        <Text {...KOREAN_LINE_BREAK} style={{ fontSize: promptSize, fontWeight: typography.weight.bold, color: colors.text.primary }}>{spoken.romanization}</Text>
       </View>
-      {ipa !== undefined ? <Text style={{ fontSize: promptSize, color: colors.text.primary }}>{`[${ipa}]`}</Text> : null}
+      {ipa !== undefined ? <Text {...KOREAN_LINE_BREAK} style={{ fontSize: promptSize, color: colors.text.primary }}>{`[${ipa}]`}</Text> : null}
     </View>
   );
 }

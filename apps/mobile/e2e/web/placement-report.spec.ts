@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { answerForkNew, onboardChild, readStored, seedStored, waitForSaved } from './helpers';
+import { answerForkNew, onboardChild, readStored, seedStored, waitForSaved, passPlacementLanguage } from './helpers';
 import { shot } from './shots';
 
 /**
@@ -130,6 +130,7 @@ test.describe('placement report (fixture bundle)', () => {
     const id = await onboardSelf(page);
     await hook(page);
     await page.evaluate(() => (window as E2eWindow).__hrPlacementE2E?.open('home'));
+    await passPlacementLanguage(page);
     await expect(page.getByTestId('placement-options')).toBeVisible();
     await page.getByTestId('placement-guide-tap').click();
     await page.getByTestId('placement-next').click();
@@ -234,6 +235,7 @@ test.describe('placement report (fixture bundle)', () => {
 
     // Try the standard check opens the check with Standard pre-selected (defaultMode rule 1).
     await page.getByTestId('placement-report-try-standard').click();
+    await passPlacementLanguage(page);
     await expect(page.getByTestId('placement-options')).toBeVisible();
     await expect(page.getByRole('radio', { name: 'Standard' })).toHaveAttribute('aria-checked', 'true');
   });
@@ -321,6 +323,7 @@ test.describe('placement report (fixture bundle)', () => {
     await expect(page.getByTestId('placement-report-retake')).toHaveText('Take the level check');
     await shot(page, 'placement-report-empty');
     await page.getByTestId('placement-report-retake').click();
+    await passPlacementLanguage(page);
     await expect(page.getByTestId('placement-options')).toBeVisible();
   });
 });

@@ -1,4 +1,4 @@
-import { colors, presenter, radii, spacing, typography } from '@hangul-route/design-system';
+import { colors, presenter, radii, spacing, typography, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
 import React, { useRef } from 'react';
 import { Text, View, type GestureResponderEvent, type ViewStyle } from 'react-native';
 import type { RomanizationMode } from '@hangul-route/content-schema';
@@ -91,7 +91,7 @@ export function Stage(props: StageProps): React.ReactElement {
         overflow: 'hidden',
       }}
     >
-      <Text
+      <Text {...KOREAN_LINE_BREAK}
         aria-hidden
         testID="presenter-counter"
         style={{
@@ -105,7 +105,7 @@ export function Stage(props: StageProps): React.ReactElement {
       >
         {messages.learner.presenter.bar.counter(slideIdx + 1, slides.length)}
       </Text>
-      <Text testID="presenter-live" aria-live="polite" accessibilityLiveRegion="polite" style={visuallyHidden}>
+      <Text {...KOREAN_LINE_BREAK} testID="presenter-live" aria-live="polite" accessibilityLiveRegion="polite" style={visuallyHidden}>
         {live}
       </Text>
       <View style={{ flex: 1 }} key={slide.key}>
@@ -173,7 +173,7 @@ export function StageHint({ text, bottom }: { text: string; bottom?: boolean }):
         paddingHorizontal: spacing.lg,
       }}
     >
-      <Text style={{ fontSize: typography.size.body, color: colors.text.primary }}>{text}</Text>
+      <Text {...KOREAN_LINE_BREAK} style={{ fontSize: typography.size.body, color: colors.text.primary }}>{text}</Text>
     </View>
   );
 }

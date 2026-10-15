@@ -8,6 +8,7 @@ import {
   radii,
   supportedCardIds,
   typography,
+  KOREAN_LINE_BREAK,
 } from '@hangul-route/design-system';
 import React, { useMemo } from 'react';
 import { Text, View, type ViewStyle } from 'react-native';
@@ -40,7 +41,7 @@ const koreanSpeech = { accessibilityLanguage: KOREAN_LANGUAGE, lang: KOREAN_LANG
 function CardWord({ word, size, fontFamily }: { word: string; size: number; fontFamily?: string }): React.ReactElement {
   const fontSize = cardWordFontSize(size, word, typography.size.caption);
   return (
-    <Text
+    <Text {...KOREAN_LINE_BREAK}
       {...koreanSpeech}
       numberOfLines={1}
       maxFontSizeMultiplier={1}

@@ -1,5 +1,5 @@
 import type { RomanizationMode } from '@hangul-route/content-schema';
-import { Hoya, Icon, colors, koreanTextLabel, presenter, spacing, typography } from '@hangul-route/design-system';
+import { Hoya, Icon, colors, koreanTextLabel, presenter, spacing, typography, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
 import React from 'react';
 import { Text, View } from 'react-native';
 import type { BuildName } from '../../../logic/lecture/build-steps';
@@ -61,7 +61,7 @@ function Question({ slide, sayIt, onPlaySound }: { slide: QuizBody; sayIt: boole
   const m = messages.learner.presenter.quiz;
   const promptSize = size(presenter.size.prompt);
   const heading = (text: string): React.ReactElement => (
-    <Text role="heading" testID="presenter-quiz-question" style={{ fontSize: promptSize, fontWeight: typography.weight.bold, color: colors.text.primary, lineHeight: Math.round(promptSize * typography.leading.tight) }}>
+    <Text {...KOREAN_LINE_BREAK} role="heading" testID="presenter-quiz-question" style={{ fontSize: promptSize, fontWeight: typography.weight.bold, color: colors.text.primary, lineHeight: Math.round(promptSize * typography.leading.tight) }}>
       {text}
     </Text>
   );
@@ -99,7 +99,7 @@ function Question({ slide, sayIt, onPlaySound }: { slide: QuizBody; sayIt: boole
             {prompt.ko}
           </TaughtKo>
           {/* text.secondary misses 7:1 on brand.secondaryLight (presenter.v1.md), so the romanization is text.primary here. */}
-          <Text style={{ fontSize: promptSize, fontWeight: typography.weight.semibold, color: colors.text.primary }}>{prompt.romanization}</Text>
+          <Text {...KOREAN_LINE_BREAK} style={{ fontSize: promptSize, fontWeight: typography.weight.semibold, color: colors.text.primary }}>{prompt.romanization}</Text>
         </View>
       </View>
     );
@@ -126,7 +126,7 @@ function AnswerLine({ shown }: { shown: boolean }): React.ReactElement {
       style={{ alignItems: 'center', flexShrink: 0, opacity: shown ? 1 : 0 }}
     >
       <Hoya pose="cheering" size={units(unit, QUIZ_ANSWER_HOYA)} accessibilityLabel={messages.a11y.hoya('cheering')} />
-      <Text style={{ fontSize: size(presenter.size.caption), fontWeight: typography.weight.bold, color: colors.text.primary }}>{messages.learner.presenter.quiz.answer}</Text>
+      <Text {...KOREAN_LINE_BREAK} style={{ fontSize: size(presenter.size.caption), fontWeight: typography.weight.bold, color: colors.text.primary }}>{messages.learner.presenter.quiz.answer}</Text>
     </View>
   );
 }

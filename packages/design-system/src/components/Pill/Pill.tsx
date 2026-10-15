@@ -2,6 +2,7 @@ import React from 'react';
 import { Text, View } from 'react-native';
 import { colors, radii, spacing, typography } from '../../tokens';
 import type { PillProps, PillTone } from './types';
+import { KOREAN_LINE_BREAK } from '../../line-break';
 
 const bg: Record<PillTone, string> = {
   neutral: colors.surface.sunken,
@@ -37,7 +38,7 @@ export function Pill({ label, tone = 'neutral', size = 'md', testID }: PillProps
         alignSelf: 'flex-start',
       }}
     >
-      <Text
+      <Text {...KOREAN_LINE_BREAK}
         style={{
           color: fg[tone],
           fontSize,

@@ -1,4 +1,4 @@
-import { Hoya, colors, presenter, spacing, typography } from '@hangul-route/design-system';
+import { Hoya, colors, presenter, spacing, typography, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
 import React from 'react';
 import { Text, View } from 'react-native';
 import type { Slide } from '../../../logic/lecture/deck-builder';
@@ -30,7 +30,7 @@ export function TitleSlide({ slide, deckTitle, cover }: { slide: TitleBody; deck
       )}
       <View style={{ flex: 1, gap: units(unit, STAGE_GAP_INNER) }}>
         {deckTitle !== undefined ? (
-          <Text
+          <Text {...KOREAN_LINE_BREAK}
             accessibilityLabel={`${messages.learner.presenter.slide.deckTitle}: ${deckTitle}`}
             style={{ fontSize: size(presenter.size.caption), color: colors.text.secondary, lineHeight: Math.round(size(presenter.size.caption) * typography.leading.tight) }}
           >
@@ -38,16 +38,16 @@ export function TitleSlide({ slide, deckTitle, cover }: { slide: TitleBody; deck
           </Text>
         ) : null}
         {slide.source === 'story' ? (
-          <Text style={{ fontSize: size(presenter.size.caption), fontWeight: typography.weight.semibold, color: colors.text.secondary }}>
+          <Text {...KOREAN_LINE_BREAK} style={{ fontSize: size(presenter.size.caption), fontWeight: typography.weight.semibold, color: colors.text.secondary }}>
             {messages.learner.presenter.grid.kind.story}
           </Text>
         ) : null}
         {slide.source === 'topic' ? (
-          <Text testID="presenter-title-kind" style={{ fontSize: size(presenter.size.caption), fontWeight: typography.weight.semibold, color: colors.text.secondary }}>
+          <Text {...KOREAN_LINE_BREAK} testID="presenter-title-kind" style={{ fontSize: size(presenter.size.caption), fontWeight: typography.weight.semibold, color: colors.text.secondary }}>
             {messages.learner.presenter.slide.topic}
           </Text>
         ) : null}
-        <Text
+        <Text {...KOREAN_LINE_BREAK}
           role="heading"
           style={{
             fontSize: size(presenter.size.title),
@@ -59,7 +59,7 @@ export function TitleSlide({ slide, deckTitle, cover }: { slide: TitleBody; deck
           {slide.title}
         </Text>
         {slide.subtitle !== undefined ? (
-          <Text style={{ fontSize: size(presenter.size.body), color: colors.text.secondary, lineHeight: Math.round(size(presenter.size.body) * typography.leading.normal) }}>
+          <Text {...KOREAN_LINE_BREAK} style={{ fontSize: size(presenter.size.body), color: colors.text.secondary, lineHeight: Math.round(size(presenter.size.body) * typography.leading.normal) }}>
             {slide.subtitle}
           </Text>
         ) : null}
@@ -73,7 +73,7 @@ export function TitleSlide({ slide, deckTitle, cover }: { slide: TitleBody; deck
               paddingHorizontal: units(unit, spacing.xxl),
             }}
           >
-            <Text style={{ fontSize: size(presenter.size.body), color: colors.text.primary, lineHeight: Math.round(size(presenter.size.body) * typography.leading.normal) }}>
+            <Text {...KOREAN_LINE_BREAK} style={{ fontSize: size(presenter.size.body), color: colors.text.primary, lineHeight: Math.round(size(presenter.size.body) * typography.leading.normal) }}>
               {slide.line}
             </Text>
           </View>

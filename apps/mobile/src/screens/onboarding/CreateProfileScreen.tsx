@@ -5,6 +5,7 @@ import {
   type LearnerLevelId,
   type LearnerType,
 } from '@hangul-route/content-schema';
+import { levelWords } from '@hangul-route/i18n';
 import {
   Body,
   Button,
@@ -371,15 +372,21 @@ export function CreateProfileScreen({ navigation, route }: Props): React.ReactEl
         <Body weight="semibold">{words.levelHeading}</Body>
         <Spacer size="sm" />
         <View accessibilityRole="radiogroup" accessibilityLabel={words.levelHeading} style={{ gap: spacing.sm }}>
-          {LEARNER_LEVELS.map((l) => (
-            <OptionCard
-              key={l.id}
-              label={l.label}
-              description={l.description}
-              selected={level === l.id}
-              onPress={() => chooseLevel(l.id)}
-            />
-          ))}
+          {/* Every LEARNER_LEVELS id has dictionary words; an id without them is skipped, never drawn in English. */}
+          {LEARNER_LEVELS.flatMap((l) => {
+            const levelText = levelWords(messages, l.id);
+            return levelText === null
+              ? []
+              : [
+                  <OptionCard
+                    key={l.id}
+                    label={levelText.label}
+                    description={levelText.description}
+                    selected={level === l.id}
+                    onPress={() => chooseLevel(l.id)}
+                  />,
+                ];
+          })}
         </View>
         <Spacer size="xs" />
         <Caption tone="secondary">{c.levelHelper}</Caption>

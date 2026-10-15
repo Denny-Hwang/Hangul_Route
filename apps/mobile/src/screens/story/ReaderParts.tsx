@@ -20,6 +20,7 @@ import {
   typography,
   useLayoutClass,
   useMediaSize,
+  KOREAN_LINE_BREAK,
 } from '@hangul-route/design-system';
 import type { KoText, ThemeKey } from '@hangul-route/content-schema';
 import type { Messages } from '@hangul-route/i18n';
@@ -147,7 +148,7 @@ export function NarrationText({
   onTerm: (keywordId: string) => void;
 }): React.ReactElement {
   return (
-    <Text
+    <Text {...KOREAN_LINE_BREAK}
       testID="story-reader-narration-text"
       style={{
         fontSize: typography.size.bodyLg,
@@ -156,7 +157,7 @@ export function NarrationText({
       }}
     >
       {parts.map((part, i) => {
-        if ('text' in part) return <Text key={`t${i}`}>{part.text}</Text>;
+        if ('text' in part) return <Text {...KOREAN_LINE_BREAK} key={`t${i}`}>{part.text}</Text>;
         const state = chipState(part.kw.id);
         return (
           <View
@@ -500,7 +501,7 @@ export function AdvisoryRow({
         {/* A 64 dp Dismiss (close icon, labelled "Dismiss") beside the text keeps the row short on a narrow phone. */}
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
           <View style={{ flex: 1, minWidth: 0, paddingLeft: spacing.xs }}>
-            <Text
+            <Text {...KOREAN_LINE_BREAK}
               numberOfLines={compact ? ADVISORY_COMPACT_LINES : undefined}
               style={{
                 fontSize: typography.size.body,

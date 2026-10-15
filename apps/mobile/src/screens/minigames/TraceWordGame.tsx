@@ -18,6 +18,7 @@ import {
   touchTarget,
   typography,
   useLayoutClass,
+  KOREAN_LINE_BREAK,
 } from '@hangul-route/design-system';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, Text, View, type LayoutChangeEvent, type ViewStyle } from 'react-native';
@@ -380,7 +381,7 @@ export function TraceWordGame({ scope, host, onBack }: Props): React.ReactElemen
       style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'baseline', columnGap: spacing.sm }}
     >
       <Heading level="prompt">{copy.traceWord.heading}</Heading>
-      <Text {...koreanSpeech} style={koreanWordStyle}>
+      <Text {...KOREAN_LINE_BREAK} {...koreanSpeech} style={koreanWordStyle}>
         {round.word.ko}
       </Text>
     </View>
@@ -405,7 +406,7 @@ export function TraceWordGame({ scope, host, onBack }: Props): React.ReactElemen
         <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={{ flexDirection: 'row', gap: spacing.xs, alignItems: 'center' }}>
           {block.placed.letters.map((l, i) => (
             <View key={l.role} style={{ flexDirection: 'row', alignItems: 'center' }}>
-              <Text {...koreanSpeech} style={[partMarkStyle, i === state.letter && phase === 'drawing' ? { fontWeight: typography.weight.bold, color: colors.text.primary } : null]}>
+              <Text {...KOREAN_LINE_BREAK} {...koreanSpeech} style={[partMarkStyle, i === state.letter && phase === 'drawing' ? { fontWeight: typography.weight.bold, color: colors.text.primary } : null]}>
                 {l.char}
               </Text>
               {i < lettersDone ? <Icon name="check" size={16} color={colors.feedback.success} /> : null}
@@ -647,7 +648,7 @@ function BlockChip({
           ))}
         </Svg>
       ) : (
-        <Text {...koreanSpeech} style={{ fontFamily: typography.family.sansKr, fontSize: typography.size.title, fontWeight: typography.weight.bold, color: colors.text.primary }}>
+        <Text {...KOREAN_LINE_BREAK} {...koreanSpeech} style={{ fontFamily: typography.family.sansKr, fontSize: typography.size.title, fontWeight: typography.weight.bold, color: colors.text.primary }}>
           {block.syllable}
         </Text>
       )}

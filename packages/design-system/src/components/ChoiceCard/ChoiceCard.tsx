@@ -5,6 +5,7 @@ import { Icon } from '../Icon';
 import { KoreanText } from '../KoreanText';
 import { choiceCardStyle } from './style';
 import type { ChoiceCardProps } from './types';
+import { KOREAN_LINE_BREAK } from '../../line-break';
 
 /**
  * ChoiceCard — the one option card for "pick one" questions (F-STORY-003 §3.4):
@@ -60,7 +61,7 @@ export function ChoiceCard({
           </View>
         ) : null}
         {hasLabel ? (
-          <Text
+          <Text {...KOREAN_LINE_BREAK}
             style={{
               fontSize: typography.size.body,
               fontWeight: typography.weight.semibold,

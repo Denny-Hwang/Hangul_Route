@@ -12,9 +12,8 @@ import { shot } from './shots';
  * runs this spec on the release build, and the assumption h case on the gating fixture bundle. The evidence run
  * with every UI locale and the telemetry case:
  *
- *   EXPO_PUBLIC_SHOW_ALL_LOCALES=1 EXPO_PUBLIC_API_BASE_URL=https://api.e2e.invalid \
- *     pnpm --filter @hangul-route/mobile build:web
- *   E2E_ALL_LOCALES=1 E2E_TELEMETRY=1 pnpm --filter @hangul-route/mobile exec playwright test my-route route-tab
+ *   EXPO_PUBLIC_API_BASE_URL=https://api.e2e.invalid pnpm --filter @hangul-route/mobile build:web
+ *   E2E_TELEMETRY=1 pnpm --filter @hangul-route/mobile exec playwright test my-route route-tab
  *
  * The tab labels per shipped UI locale are measured by `route-tab.spec.ts`; the 5-second comprehension check
  * (LR-OD-3, assumption g) reads this spec's screenshots.

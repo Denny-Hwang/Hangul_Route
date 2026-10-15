@@ -1,4 +1,4 @@
-import { borderWidth, colors, radii, spacing, touchTarget, typography, z } from '@hangul-route/design-system';
+import { borderWidth, colors, radii, spacing, touchTarget, typography, z, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
 import React, { forwardRef, useEffect, useRef } from 'react';
 import { Pressable, Text, View, type ViewStyle } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
@@ -52,7 +52,7 @@ export const ToolButton = forwardRef<
         };
       }}
     >
-      <Text style={{ fontSize: typography.size.bodyLg, fontWeight: typography.weight.bold, color: fg, textAlign: 'center' }}>{label}</Text>
+      <Text {...KOREAN_LINE_BREAK} style={{ fontSize: typography.size.bodyLg, fontWeight: typography.weight.bold, color: fg, textAlign: 'center' }}>{label}</Text>
     </Pressable>
   );
 });
@@ -187,7 +187,7 @@ export function ChipRadios<T extends string>({
               };
             }}
           >
-            <Text style={{ fontSize: typography.size.body, fontWeight: on ? typography.weight.bold : typography.weight.semibold, color: colors.text.primary }}>{o.label}</Text>
+            <Text {...KOREAN_LINE_BREAK} style={{ fontSize: typography.size.body, fontWeight: on ? typography.weight.bold : typography.weight.semibold, color: colors.text.primary }}>{o.label}</Text>
           </Pressable>
         );
       })}
@@ -224,7 +224,7 @@ export function TimerRing({ size, fraction, text, numberSize, showNumbers, label
         />
       </Svg>
       {showNumbers ? (
-        <Text aria-hidden testID="presenter-timer-text" style={{ fontSize: numberSize, fontWeight: typography.weight.bold, color: colors.text.primary, fontVariant: ['tabular-nums'] }}>
+        <Text {...KOREAN_LINE_BREAK} aria-hidden testID="presenter-timer-text" style={{ fontSize: numberSize, fontWeight: typography.weight.bold, color: colors.text.primary, fontVariant: ['tabular-nums'] }}>
           {text}
         </Text>
       ) : null}

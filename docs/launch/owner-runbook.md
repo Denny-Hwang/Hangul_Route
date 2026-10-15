@@ -473,7 +473,7 @@ DELETE FROM feedback_notes WHERE id = '<note_id>' AND NOT EXISTS (SELECT 1 FROM 
 
 **선행 조건 (모두 예일 때만)**
 1. F-ENT-003 E3-12b 와 E3-12c 가 머지됨 (어른 화면의 무료 레슨 줄).
-2. 다음 문구 그룹의 ko · es 오버레이가 들어 있고 원어민 검토를 마침: `console.access`, `console.curriculum.freeDays`, `caregiver.access`, `caregiver.plan.freePlan`. 없으면 한국어·스페인어 콘솔과 Plan 화면이 이 줄들을 영어로 보여 준다.
+2. 다음 문구 그룹의 ko · es 오버레이가 들어 있고 다국어 검토 (multi-agent review, ledger `MAR`) 를 마침: `console.access`, `console.curriculum.freeDays`, `caregiver.access`, `caregiver.plan.freePlan`. 없으면 한국어·스페인어 콘솔과 Plan 화면이 이 줄들을 영어로 보여 준다.
 3. 배포할 커밋에서 스위치를 켠 e2e 레인이 통과함 (F-ENT-003 E3-13 부터 CI 레인이 있다):
    - CI 레인: GitHub → Actions → **Switch-on e2e (content gating on)** → **Run workflow** (브랜치 `main`, 배포할 커밋이 main 의 맨 위일 때). 쪽지 빌드 플래그도 같은 릴리스에서 켜면 **notes** 를 체크한다 (앱과 콘솔의 쪽지 플래그를 함께 켜고, `E2E_NOTES` 를 읽는 모든 spec 도 `E2E_NOTES=1` 로 돈다). 잡 **PWA · switch-on e2e (content gating on, nightly and on demand)** 가 초록이고, 그 실행의 커밋 SHA 가 배포할 커밋과 같아야 한다. 이 잡은 두 스위치를 켠 `dist` 를 Metro · Next 캐시 없이 빌드하고, `E2E_CONTENT_GATING` 을 읽는 모든 spec 을 `E2E_CONTENT_GATING=1` 로 (새 spec 도 자동으로) 돌린 뒤, 게이팅 픽스처 번들에서 `story-shelf-gated.spec` 과 `free-days.spec` 을 돌린다. 매일 밤 (UTC 09:23) main 에서도 같은 잡이 돈다. 필수 체크가 아니므로, 빨간 밤 실행은 머지를 막지 않고 알림도 소유자에게 오지 않을 수 있다. 스위치를 켜기 전에 이 워크플로의 최근 밤 실행 결과를 직접 확인한다.
    - main 이 배포할 커밋보다 앞서 나갔으면: 그 SHA 에 브랜치나 태그를 만들고 (`git push origin <SHA>:refs/heads/switch-on-check`), **Run workflow** 에서 그 브랜치를 고른 뒤, 실행의 SHA 가 배포할 커밋과 같은지 확인한다. 그렇게 할 수 없으면 아래 수동 실행을 쓴다.
@@ -534,6 +534,23 @@ DELETE FROM feedback_notes WHERE id = '<note_id>' AND NOT EXISTS (SELECT 1 FROM 
 ```sql
 SELECT text_version, basis, COUNT(*) AS learners FROM class_scope_acks GROUP BY text_version, basis;
 ```
+
+## I. 스페인어 · 한국어 화면 (F-I18N-001 15b / 16b, 2026-10-14 오너 결정)
+
+> es 와 ko 가 출시되었다 (`LOCALE_STATUS` 가 셋 모두 `'shipped'`). 대시보드 변수는 바뀌지 않는다: 머지 후 평소처럼 배포되면 켜진다. 언어 검토는 다국어 검토 (multi-agent review, ledger `MAR`) 이며, 어떤 화면·사이트·스토어 문구도 원어민이나 사람 전문가가 검토했다고 말하지 않는다.
+
+**무엇이 보이나**
+- 학습자 앱: Welcome 과 Profile 의 언어 선택 (English · Español · 한국어). 기기 언어가 스페인어나 한국어면 처음부터 그 언어로 열린다. 사이트의 `?lang=es` / `?lang=ko` 도 처음 한 번 적용된다.
+- 어른 화면 (콘솔): 머리글의 언어 선택.
+- 사이트: 바닥글의 언어 링크, `/es` · `/ko` 페이지가 검색에 열리고 (hreflang, sitemap), `/` 에서 브라우저 언어가 스페인어나 한국어면 "그 언어로 보기" 안내가 뜬다 (자동 이동은 없다). Privacy Policy 와 Terms 는 영어 원문 그대로이고, 위에 그 언어로 된 안내가 붙는다 (L10).
+- iOS 네이티브 빌드: 디자인 시스템의 글자 (`Heading`, `Body`, `Button`, `Pill`, `Tile` 등) 가 한국어를 낱말 단위로 줄바꿈한다 (`lineBreakStrategyIOS: 'hangul-word'`). Android 는 React Native 0.76 에 해당 속성이 없어 음절 단위 줄바꿈이 남는다 (낱말이 넘치지는 않는다).
+
+**확인 (10분, 배포 뒤)**
+1. https://hangulroute.com/es 와 https://hangulroute.com/ko 가 열리고, 바닥글의 English · Español · 한국어 링크가 같은 페이지를 연다.
+2. https://app.hangulroute.com/?lang=ko 를 새 시크릿 창에서 열면 Welcome 이 한국어로 나온다. Profile → 언어에서 English 로 되돌릴 수 있다.
+3. Xcode 빌드 (실기기, 한국어 설정): Welcome · Home 의 긴 한국어 줄이 낱말 가운데에서 끊기지 않는다 ("처음부 / 터" 같은 줄이 없다).
+
+**되돌리기**: 한 언어만 숨기려면 `packages/i18n/src/locales.ts` 의 `LOCALE_STATUS` 에서 그 언어를 `'hidden'` 으로 바꾸는 PR (같은 PR 에서 `.github/workflows/content-validation.yml` 의 `HANGUL_ROUTE_STRICT_LOCALES` 에서도 뺀다). 대시보드 변수는 없다. 저장된 언어 선택은 지워지지 않고, 다시 출시하면 그대로 돌아온다. 숨긴 언어의 `/es` · `/ko` 페이지는 빌드에서 빠진다.
 
 ## 나중에 (법률 검토 후)
 변호사에게 넘길 검토 자료: `docs/legal/counsel-packet-2026-10.md` (영문 — 반 이동 T-8 · G2/G6 와 낱말 동의 항목 P-4b 의 질문·초안 문구·요약표). 2026-10-14 오너 결정으로 T-8 과 P-4b 는 법률 검토 없이 진행했다 (위 §H). 변호사 답을 받으면 새 문구 버전 (`class-scope-…`, `transfer-…`) 으로 반영한다.

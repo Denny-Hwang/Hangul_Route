@@ -53,7 +53,7 @@ on:
 # Add a locale here in the PR that flips its LOCALE_STATUS to 'shipped'; scripts/i18n-status.mjs
 # (ci.yml) fails a shipped locale that is not listed. Read by validate-content.mjs and the vocab suite.
 env:
-  HANGUL_ROUTE_STRICT_LOCALES: ""
+  HANGUL_ROUTE_STRICT_LOCALES: "es,ko"
 
 concurrency:
   group: content-validation-${{ github.ref }}

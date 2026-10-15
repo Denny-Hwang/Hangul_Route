@@ -1,4 +1,4 @@
-import { Hoya, Icon, borderWidth, colors, layout, radii, shadows, spacing, touchTarget, typography } from '@hangul-route/design-system';
+import { Hoya, Icon, borderWidth, colors, layout, radii, shadows, spacing, touchTarget, typography, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
 import type { LectureDeck } from '@hangul-route/content-schema';
 import type { Messages, UiLocale } from '@hangul-route/i18n';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
@@ -67,7 +67,7 @@ const text = (size: number, weight: keyof typeof typography.weight, color: strin
 
 function H({ level, children, style }: { level: 1 | 2 | 3; children: string; style: TextStyle }): React.ReactElement {
   return (
-    <Text role="heading" aria-level={level} style={style}>
+    <Text {...KOREAN_LINE_BREAK} role="heading" aria-level={level} style={style}>
       {children}
     </Text>
   );
@@ -121,7 +121,7 @@ function HomeButton({
         ...ring(focused),
       })}
     >
-      <Text
+      <Text {...KOREAN_LINE_BREAK}
         style={{
           ...text(compact ? typography.size.body : typography.size.bodyLg, 'bold', primary && !disabled ? colors.text.onPrimary : colors.text.primary),
           textAlign: 'center',
@@ -173,7 +173,7 @@ export function PresenterHomeScreen(props: PresenterHomeProps): React.ReactEleme
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: spacing.md }}>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: spacing.md, maxWidth: '100%' }}>
             <Hoya pose="waving" size={touchTarget.min} />
-            <Text ref={titleRef} role="heading" aria-level={1} {...{ tabIndex: -1 }} testID="presenter-home-title" style={{ ...text(typography.size.title, 'bold', colors.text.primary), flexShrink: 1 }}>
+            <Text {...KOREAN_LINE_BREAK} ref={titleRef} role="heading" aria-level={1} {...{ tabIndex: -1 }} testID="presenter-home-title" style={{ ...text(typography.size.title, 'bold', colors.text.primary), flexShrink: 1 }}>
               {m.home.title}
             </Text>
           </View>
@@ -251,7 +251,7 @@ function LanguageRadios({
               ...ring(focused),
             })}
           >
-            <Text style={text(typography.size.body, 'bold', colors.text.primary)}>{o.endonym}</Text>
+            <Text {...KOREAN_LINE_BREAK} style={text(typography.size.body, 'bold', colors.text.primary)}>{o.endonym}</Text>
           </Pressable>
         );
       })}
@@ -283,7 +283,7 @@ function RecentPanel({ messages, locale, recent, onResume, onStartOver, onRemove
   const day = { today: messages.common.notes.date.today, yesterday: messages.common.notes.date.yesterday };
   const today = (now ?? (() => new Date()))();
   const line = (copy: string, testID: string): React.ReactElement => (
-    <Text
+    <Text {...KOREAN_LINE_BREAK}
       testID={testID}
       style={{
         ...text(typography.size.body, 'regular', colors.text.secondary),
@@ -321,8 +321,8 @@ function RecentPanel({ messages, locale, recent, onResume, onStartOver, onRemove
           >
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: spacing.md }}>
               <View style={{ flex: 1, minWidth: 0 }}>
-                <Text style={{ ...text(typography.size.bodyLg, 'bold', colors.text.primary), overflowWrap: 'anywhere' } as TextStyle}>{item.deck.title}</Text>
-                <Text style={text(typography.size.body, 'regular', colors.text.secondary)}>{recentDayLabel(locale, day, item.savedAt, today)}</Text>
+                <Text {...KOREAN_LINE_BREAK} style={{ ...text(typography.size.bodyLg, 'bold', colors.text.primary), overflowWrap: 'anywhere' } as TextStyle}>{item.deck.title}</Text>
+                <Text {...KOREAN_LINE_BREAK} style={text(typography.size.body, 'regular', colors.text.secondary)}>{recentDayLabel(locale, day, item.savedAt, today)}</Text>
               </View>
               <Pressable
                 role="button"
@@ -357,7 +357,7 @@ function RecentPanel({ messages, locale, recent, onResume, onStartOver, onRemove
     );
   return (
     <View role="region" aria-label={m.title} style={{ gap: spacing.md }} testID="presenter-home-recent">
-      <Text ref={headingRef} role="heading" aria-level={2} {...{ tabIndex: -1 }} style={text(typography.size.prompt, 'bold', colors.text.primary)}>
+      <Text {...KOREAN_LINE_BREAK} ref={headingRef} role="heading" aria-level={2} {...{ tabIndex: -1 }} style={text(typography.size.prompt, 'bold', colors.text.primary)}>
         {m.title}
       </Text>
       {body}
@@ -390,7 +390,7 @@ function QuickPanel({ messages, sessionLocale, quick, onBuild, now, rng }: Prese
       <H level={2} style={text(typography.size.prompt, 'bold', colors.text.primary)}>
         {m.title}
       </H>
-      <Text style={text(typography.size.body, 'regular', colors.text.secondary)}>{m.line}</Text>
+      <Text {...KOREAN_LINE_BREAK} style={text(typography.size.body, 'regular', colors.text.secondary)}>{m.line}</Text>
       {groups.map((group) => (
         <View key={group.id} style={{ gap: spacing.xs }}>
           <H level={3} style={{ ...text(typography.size.body, 'bold', colors.text.secondary), paddingTop: spacing.sm }}>
@@ -422,12 +422,12 @@ function QuickPanel({ messages, sessionLocale, quick, onBuild, now, rng }: Prese
           gap: spacing.md,
         }}
       >
-        <Text role="status" aria-live="polite" testID="presenter-home-chosen" style={{ ...text(typography.size.body, 'regular', colors.text.primary), flexShrink: 1 }}>
+        <Text {...KOREAN_LINE_BREAK} role="status" aria-live="polite" testID="presenter-home-chosen" style={{ ...text(typography.size.body, 'regular', colors.text.primary), flexShrink: 1 }}>
           {chosen.length === 0 ? m.nothing : full ? `${m.chosen(chosen.length)} ${m.full}` : m.chosen(chosen.length)}
         </Text>
         <HomeButton label={m.build.cta} onPress={build} primary disabled={chosen.length === 0} testID="presenter-home-build" />
       </View>
-      <Text style={text(typography.size.body, 'regular', colors.text.secondary)}>{messages.learner.presenter.language.note}</Text>
+      <Text {...KOREAN_LINE_BREAK} style={text(typography.size.body, 'regular', colors.text.secondary)}>{messages.learner.presenter.language.note}</Text>
     </View>
   );
 }
@@ -485,8 +485,8 @@ function QuickRow({
         {on ? <Icon name="check" size={spacing.xl} color={colors.text.primary} /> : null}
       </View>
       <View style={{ flex: 1, minWidth: 0 }}>
-        <Text style={text(typography.size.body, 'bold', colors.text.primary)}>{item.title}</Text>
-        <Text style={text(typography.size.body, 'regular', colors.text.secondary)}>{detail}</Text>
+        <Text {...KOREAN_LINE_BREAK} style={text(typography.size.body, 'bold', colors.text.primary)}>{item.title}</Text>
+        <Text {...KOREAN_LINE_BREAK} style={text(typography.size.body, 'regular', colors.text.secondary)}>{detail}</Text>
       </View>
     </Pressable>
   );

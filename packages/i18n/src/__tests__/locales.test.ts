@@ -32,19 +32,19 @@ describe('locales', () => {
     });
   });
 
-  it('ships English only until native review flips es and ko', () => {
-    expect(LOCALE_STATUS).toEqual({ en: 'shipped', es: 'hidden', ko: 'hidden' });
+  it('ships English, Spanish and Korean (F-I18N-001 rows 15b / 16b)', () => {
+    expect(LOCALE_STATUS).toEqual({ en: 'shipped', es: 'shipped', ko: 'shipped' });
   });
 });
 
 describe('availableLocales', () => {
-  it('lists only shipped locales by default', () => {
-    expect(availableLocales()).toEqual(['en']);
+  it('lists only shipped locales by default (all three since rows 15b / 16b)', () => {
+    expect(availableLocales()).toEqual(['en', 'es', 'ko']);
   });
 
   it('lists all locales for QA builds (explicit flag)', () => {
     expect(availableLocales(true)).toEqual(['en', 'es', 'ko']);
-    expect(availableLocales(false)).toEqual(['en']);
+    expect(availableLocales(false)).toEqual(['en', 'es', 'ko']);
   });
 
   it('reads the Expo and Next QA flags from the environment', () => {
@@ -55,7 +55,7 @@ describe('availableLocales', () => {
     expect(availableLocales()).toEqual(['en', 'es', 'ko']);
     vi.unstubAllEnvs();
     vi.stubEnv('NEXT_PUBLIC_SHOW_ALL_LOCALES', '0');
-    expect(availableLocales()).toEqual(['en']);
+    expect(availableLocales()).toEqual(['en', 'es', 'ko']);
   });
 });
 

@@ -32,13 +32,13 @@ describe('console LocaleProvider (F-I18N-001 §3.2)', () => {
     expect(html).toBe('<p>en|Language|en,es,ko|true</p>');
   });
 
-  it('lists only shipped locales by default (es and ko are hidden)', () => {
+  it('lists the shipped locales by default: all three since F-I18N-001 rows 15b / 16b', () => {
     const html = renderToStaticMarkup(
       <LocaleProvider>
         <Probe />
       </LocaleProvider>,
     );
-    expect(html).toBe('<p>en|Language|en|true</p>');
+    expect(html).toBe('<p>en|Language|en,es,ko|true</p>');
   });
 
   it('lists every locale on a QA build (NEXT_PUBLIC_SHOW_ALL_LOCALES=1)', () => {

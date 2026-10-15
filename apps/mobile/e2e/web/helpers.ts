@@ -32,6 +32,21 @@ export interface OnboardOptions {
 }
 
 /**
+ * Past the level check's test-language screen (F-PLC-001 §3.1 step 2). A build that shows more than one UI language
+ * asks for the check's language before its options (es and ko ship, F-I18N-001 rows 15b / 16b); Continue keeps the
+ * language it starts on, the UI language. A one-language build, or a screen already past it, goes straight on.
+ */
+export async function passPlacementLanguage(page: Page): Promise<void> {
+  const language = page.getByTestId('placement-language');
+  const options = page.getByTestId('placement-options').or(page.getByTestId('placement-options-card'));
+  await expect(language.or(options).first()).toBeVisible();
+  if (await language.isVisible()) {
+    await page.getByTestId('placement-language-continue').click();
+    await expect(language).toHaveCount(0);
+  }
+}
+
+/**
  * The onboarding fork, "Where should we start?" (F-PLC-001 P-7; on by default since P-10): "I am new to
  * Korean" goes on to the first-quest preview exactly as before the fork existed.
  */

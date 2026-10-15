@@ -1,4 +1,4 @@
-import { colors, koreanTextLabel, presenter, spacing, typography } from '@hangul-route/design-system';
+import { colors, koreanTextLabel, presenter, spacing, typography, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
 import React, { useMemo } from 'react';
 import { Text, View } from 'react-native';
 import Svg, { Circle, Path, Text as SvgText } from 'react-native-svg';
@@ -55,7 +55,7 @@ export function LetterSlide({
             {slide.char}
           </TaughtKo>
         </View>
-        <Text style={[{ fontSize: promptSize, fontWeight: typography.weight.semibold, color: colors.text.secondary }, reveal(romShown)]}>
+        <Text {...KOREAN_LINE_BREAK} style={[{ fontSize: promptSize, fontWeight: typography.weight.semibold, color: colors.text.secondary }, reveal(romShown)]}>
           {slide.romanization}
         </Text>
       </View>
@@ -63,7 +63,7 @@ export function LetterSlide({
         <View style={[{ alignItems: 'center', gap: units(unit, spacing.md), flexShrink: 0 }, reveal(shown.has('stroke'))]}>
           <StrokePanel jamoId={slide.jamoId} playToken={shown.has('stroke') ? strokeToken : 0} />
           {!slide.strokeReviewed ? (
-            <Text style={{ fontSize: size(presenter.size.caption), color: colors.text.secondary }}>{m.slide.strokeCaption}</Text>
+            <Text {...KOREAN_LINE_BREAK} style={{ fontSize: size(presenter.size.caption), color: colors.text.secondary }}>{m.slide.strokeCaption}</Text>
           ) : null}
         </View>
       ) : null}
@@ -77,14 +77,14 @@ export function LetterSlide({
           <SpeakerButton enabled={shown.has('sound')} onPress={onPlaySound} />
           <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: units(unit, spacing.md), flexShrink: 1, flexWrap: 'wrap' }}>
             <TaughtKo size={promptSize}>{slide.spoken.text}</TaughtKo>
-            <Text style={{ fontSize: promptSize, fontWeight: typography.weight.bold, color: colors.text.secondary }}>{slide.spoken.romanization}</Text>
+            <Text {...KOREAN_LINE_BREAK} style={{ fontSize: promptSize, fontWeight: typography.weight.bold, color: colors.text.secondary }}>{slide.spoken.romanization}</Text>
           </View>
         </View>
         )}
         <View style={[{ gap: units(unit, spacing.md) }, reveal(shown.has('name'))]}>
-          <Text style={{ fontSize: bodySize, fontWeight: typography.weight.bold, color: colors.text.primary }}>{m.slide.letterName(slide.nameEn)}</Text>
+          <Text {...KOREAN_LINE_BREAK} style={{ fontSize: bodySize, fontWeight: typography.weight.bold, color: colors.text.primary }}>{m.slide.letterName(slide.nameEn)}</Text>
           {slide.soundHint !== undefined ? (
-            <Text style={{ fontSize: bodySize, color: colors.text.secondary, lineHeight: Math.round(bodySize * typography.leading.normal) }}>{slide.soundHint}</Text>
+            <Text {...KOREAN_LINE_BREAK} style={{ fontSize: bodySize, color: colors.text.secondary, lineHeight: Math.round(bodySize * typography.leading.normal) }}>{slide.soundHint}</Text>
           ) : null}
         </View>
         {slide.example !== undefined ? (
@@ -106,10 +106,10 @@ export function LetterSlide({
             >
               <TaughtKo size={promptSize}>{slide.example.ko}</TaughtKo>
               {/* text.secondary misses 7:1 on brand.secondaryLight (presenter.v1.md), so the romanization is text.primary here. */}
-              <Text style={{ fontSize: bodySize, fontWeight: typography.weight.semibold, color: colors.text.primary }}>{slide.example.romanization}</Text>
+              <Text {...KOREAN_LINE_BREAK} style={{ fontSize: bodySize, fontWeight: typography.weight.semibold, color: colors.text.primary }}>{slide.example.romanization}</Text>
             </View>
             {slide.example.gloss !== undefined ? (
-              <Text style={{ fontSize: bodySize, fontWeight: typography.weight.bold, color: colors.text.secondary }}>{slide.example.gloss}</Text>
+              <Text {...KOREAN_LINE_BREAK} style={{ fontSize: bodySize, fontWeight: typography.weight.bold, color: colors.text.secondary }}>{slide.example.gloss}</Text>
             ) : null}
           </View>
         ) : null}

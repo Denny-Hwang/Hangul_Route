@@ -2,6 +2,7 @@ import React from 'react';
 import { Text } from 'react-native';
 import { colors, typography } from '../../tokens';
 import type { BodyProps, HeadingLevel, HeadingProps, TextTone } from './types';
+import { KOREAN_LINE_BREAK } from '../../line-break';
 
 const sizeOf: Record<HeadingLevel, number> = {
   display: typography.size.display,
@@ -29,7 +30,7 @@ export function Heading({
   testID,
 }: HeadingProps): React.ReactElement {
   return (
-    <Text
+    <Text {...KOREAN_LINE_BREAK}
       testID={testID}
       accessibilityRole="header"
       style={[
@@ -65,7 +66,7 @@ export function Body({
         : typography.size.body;
 
   return (
-    <Text
+    <Text {...KOREAN_LINE_BREAK}
       testID={testID}
       style={[
         {
@@ -92,7 +93,7 @@ export function Caption({
   testID,
 }: Omit<BodyProps, 'size'>): React.ReactElement {
   return (
-    <Text
+    <Text {...KOREAN_LINE_BREAK}
       testID={testID}
       style={[
         {

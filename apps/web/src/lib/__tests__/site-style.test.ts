@@ -4,6 +4,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import {
+  CAPTION_HIT_OVERFLOW,
   HIT,
   HIT_SIZE,
   PRIMARY_ACTION,
@@ -86,6 +87,8 @@ describe('siteCssVars', () => {
     expect(vars['--hr-site-size-caption']).toBe(rem(typography.size.caption));
     expect(vars['--hr-site-size-body-sm']).toBe(rem(typography.size.bodySm));
     expect(vars['--hr-site-text-muted']).toBe(colors.text.muted);
+    expect(vars['--hr-site-caption-overflow']).toBe(`calc(${CAPTION_HIT_OVERFLOW})`);
+    expect(CAPTION_HIT_OVERFLOW).toBe(`((${touchTarget.min}px - ${rem(typography.size.caption)} * ${typography.leading.normal}) / 2)`);
     const tokenValues = new Set<string>([
       ...Object.values(colors).flatMap((group) => Object.values(group as Record<string, string>)),
       ...Object.values(spacing).map((v) => `${v}px`),
@@ -99,6 +102,8 @@ describe('siteCssVars', () => {
       SITE_SIZES.heroArtMax,
       SITE_SIZES.heroArtMaxWide,
       SITE_SIZES.heroRatio,
+      // Derived from tokens only (touchTarget.min, the caption size and normal leading), checked above.
+      `calc(${CAPTION_HIT_OVERFLOW})`,
     ]);
     for (const [key, value] of Object.entries(vars)) expect(tokenValues, key).toContain(value);
   });

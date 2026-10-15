@@ -1,4 +1,4 @@
-import { colors, koreanTextLabel, presenter, spacing, typography } from '@hangul-route/design-system';
+import { colors, koreanTextLabel, presenter, spacing, typography, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
 import React from 'react';
 import { Text, View } from 'react-native';
 import { CardArt } from '../../../components/CardArt';
@@ -43,8 +43,8 @@ export function CardSlide({ slide, reveal }: { slide: CardBody; reveal: number }
         />
       ) : null}
       <View style={{ flex: 1, gap: units(unit, STAGE_GAP_INNER), alignItems: 'flex-start' }}>
-        <Text style={{ fontSize: size(presenter.size.caption), fontWeight: typography.weight.semibold, color: colors.text.secondary }}>{messages.learner.presenter.slide.card}</Text>
-        <Text role="heading" style={{ fontSize: titleSize, lineHeight: Math.round(titleSize * typography.leading.tight), fontWeight: typography.weight.bold, color: colors.text.primary }}>
+        <Text {...KOREAN_LINE_BREAK} style={{ fontSize: size(presenter.size.caption), fontWeight: typography.weight.semibold, color: colors.text.secondary }}>{messages.learner.presenter.slide.card}</Text>
+        <Text {...KOREAN_LINE_BREAK} role="heading" style={{ fontSize: titleSize, lineHeight: Math.round(titleSize * typography.leading.tight), fontWeight: typography.weight.bold, color: colors.text.primary }}>
           {slide.title}
         </Text>
         {slide.ko !== undefined && slide.romanization !== undefined ? (
@@ -67,13 +67,13 @@ export function CardSlide({ slide, reveal }: { slide: CardBody; reveal: number }
             <TaughtKo size={promptSize}>{slide.ko}</TaughtKo>
             {/* text.secondary misses 7:1 on brand.secondaryLight (presenter.v1.md), so the romanization is text.primary here. */}
             <View {...revealProps(view.rom)}>
-              <Text testID="presenter-card-chip-rom" style={{ fontSize: bodySize, fontWeight: typography.weight.semibold, color: colors.text.primary }}>{slide.romanization}</Text>
+              <Text {...KOREAN_LINE_BREAK} testID="presenter-card-chip-rom" style={{ fontSize: bodySize, fontWeight: typography.weight.semibold, color: colors.text.primary }}>{slide.romanization}</Text>
             </View>
           </View>
         ) : null}
         {slide.fact !== undefined ? (
           <View {...revealProps(view.fact)}>
-            <Text testID="presenter-card-fact" style={{ fontSize: bodySize, lineHeight: Math.round(bodySize * typography.leading.normal), color: colors.text.primary }}>
+            <Text {...KOREAN_LINE_BREAK} testID="presenter-card-fact" style={{ fontSize: bodySize, lineHeight: Math.round(bodySize * typography.leading.normal), color: colors.text.primary }}>
               {slide.fact}
             </Text>
           </View>

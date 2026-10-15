@@ -14,7 +14,7 @@ const HEIGHT = 800;
  * Pages whose footer or body once pushed the document wider than the screen: the English site, `src/app/(en)/`
  * (F-I18N-001 PR 11b), and the layered site's persona pages (F-SITE-002 §3.11: `/learners` in S-4a, `/parents` and
  * `/teachers` in S-4b).
- * `/es` and `/ko` render the same bodies and are not exported until they ship.
+ * `/es` and `/ko` render the same bodies; their no-sideways-scroll matrix is `landing-locales.spec.ts`.
  */
 const PAGES = ['/', '/about', '/privacy', '/terms', '/learners', '/parents', '/teachers'] as const;
 /** Each page with a primary action, and its name (F-SITE-002 §3.1 rule 1). */

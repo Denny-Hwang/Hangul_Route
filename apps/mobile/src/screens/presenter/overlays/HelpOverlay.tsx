@@ -1,6 +1,6 @@
 import type { RomanizationMode } from '@hangul-route/content-schema';
 import type { UiLocale } from '@hangul-route/i18n';
-import { Icon, borderWidth, colors, layout, radii, spacing, touchTarget, typography } from '@hangul-route/design-system';
+import { Icon, borderWidth, colors, layout, radii, spacing, touchTarget, typography, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
 import React, { useRef } from 'react';
 import { Pressable, ScrollView, Text, View, useWindowDimensions, type ViewStyle } from 'react-native';
 import { HELP_KEYS, type KeyCap } from '../../../logic/lecture/help-keys';
@@ -63,7 +63,7 @@ export function HelpOverlay({
           <Icon name={c.dir === 'right' || c.dir === 'down' ? 'arrow-right' : 'arrow-left'} size={typography.size.body} color={colors.text.primary} />
         </View>
       ) : (
-        <Text style={{ fontSize: typography.size.body, fontWeight: typography.weight.bold, color: colors.text.primary }}>{c.kind === 'named' ? m.key[c.name] : c.text}</Text>
+        <Text {...KOREAN_LINE_BREAK} style={{ fontSize: typography.size.body, fontWeight: typography.weight.bold, color: colors.text.primary }}>{c.kind === 'named' ? m.key[c.name] : c.text}</Text>
       )}
     </View>
   );
@@ -72,7 +72,7 @@ export function HelpOverlay({
       <ScrollView contentContainerStyle={{ alignItems: 'center', padding: layout.gutter.regular }}>
         <View style={{ width: '100%', maxWidth: HELP_WIDTH, gap: spacing.lg }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.lg }}>
-            <Text role="heading" aria-level={2} style={{ fontSize: typography.size.title, fontWeight: typography.weight.bold, color: colors.text.primary }}>
+            <Text {...KOREAN_LINE_BREAK} role="heading" aria-level={2} style={{ fontSize: typography.size.title, fontWeight: typography.weight.bold, color: colors.text.primary }}>
               {m.title}
             </Text>
             <ToolButton ref={close} testID="presenter-help-close" label={messages.common.buttons.close} onPress={onClose} />
@@ -81,14 +81,14 @@ export function HelpOverlay({
             {HELP_KEYS.map((row) => (
               <View key={row.row} role="listitem" style={{ width: twoColumns ? '47%' : '100%', flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
                 <View style={{ width: KEY_COL, flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs }}>{row.caps.map(cap)}</View>
-                <Text style={{ flex: 1, fontSize: typography.size.body, color: colors.text.primary }}>{m.row[row.row]}</Text>
+                <Text {...KOREAN_LINE_BREAK} style={{ flex: 1, fontSize: typography.size.body, color: colors.text.primary }}>{m.row[row.row]}</Text>
               </View>
             ))}
           </View>
-          <Text style={{ fontSize: typography.size.body, color: colors.text.secondary }}>{m.clicker}</Text>
+          <Text {...KOREAN_LINE_BREAK} style={{ fontSize: typography.size.body, color: colors.text.secondary }}>{m.clicker}</Text>
           {romanization !== null ? (
             <View style={{ gap: spacing.sm }}>
-              <Text style={{ fontSize: typography.size.body, fontWeight: typography.weight.bold, color: colors.text.primary }}>{m.romanization}</Text>
+              <Text {...KOREAN_LINE_BREAK} style={{ fontSize: typography.size.body, fontWeight: typography.weight.bold, color: colors.text.primary }}>{m.romanization}</Text>
               <ChipRadios
                 testID="presenter-help-romanization"
                 label={m.romanization}
@@ -103,7 +103,7 @@ export function HelpOverlay({
           ) : null}
           {languages !== null ? (
             <View style={{ gap: spacing.sm }}>
-              <Text style={{ fontSize: typography.size.body, fontWeight: typography.weight.bold, color: colors.text.primary }}>{messages.learner.presenter.language.title}</Text>
+              <Text {...KOREAN_LINE_BREAK} style={{ fontSize: typography.size.body, fontWeight: typography.weight.bold, color: colors.text.primary }}>{messages.learner.presenter.language.title}</Text>
               <ChipRadios testID="presenter-help-language" label={messages.learner.presenter.language.title} options={languages} selected={locale} onSelect={onLanguage} />
             </View>
           ) : null}
@@ -150,7 +150,7 @@ function KeepVisibleSwitch({ on, label, onChange }: { on: boolean; label: string
       >
         {on ? <Icon name="check" size={spacing.xl} color={colors.text.primary} /> : null}
       </View>
-      <Text style={{ fontSize: typography.size.body, fontWeight: typography.weight.semibold, color: colors.text.primary }}>{label}</Text>
+      <Text {...KOREAN_LINE_BREAK} style={{ fontSize: typography.size.body, fontWeight: typography.weight.semibold, color: colors.text.primary }}>{label}</Text>
     </Pressable>
   );
 }

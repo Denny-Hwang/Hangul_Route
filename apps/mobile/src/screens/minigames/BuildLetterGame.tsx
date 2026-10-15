@@ -16,6 +16,7 @@ import {
   touchTarget,
   typography,
   useMediaSize,
+  KOREAN_LINE_BREAK,
 } from '@hangul-route/design-system';
 import React, { useEffect, useMemo, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
@@ -157,7 +158,7 @@ export function BuildLetterGame({ scope, onFinish }: Props): React.ReactElement 
             justifyContent: 'center',
           }}
         >
-          <Text style={{ fontSize: targetGlyph, fontWeight: '800', color: colors.text.primary }}>{round.targetSyllable}</Text>
+          <Text {...KOREAN_LINE_BREAK} style={{ fontSize: targetGlyph, fontWeight: '800', color: colors.text.primary }}>{round.targetSyllable}</Text>
           <Caption tone="secondary">{round.romanization}</Caption>
         </Pressable>
       </View>
@@ -196,7 +197,7 @@ export function BuildLetterGame({ scope, onFinish }: Props): React.ReactElement 
                 justifyContent: 'center',
               }}
             >
-              <Text style={{ fontSize: slotGlyph, fontWeight: '700' }}>{jamoChar}</Text>
+              <Text {...KOREAN_LINE_BREAK} style={{ fontSize: slotGlyph, fontWeight: '700' }}>{jamoChar}</Text>
             </View>
           );
         }}

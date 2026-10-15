@@ -1,5 +1,5 @@
 import type { HeritageCard } from '@hangul-route/content-schema';
-import { Body, Caption, Card, Spacer, borderWidth, colors, radii, spacing } from '@hangul-route/design-system';
+import { Body, Caption, Card, Spacer, borderWidth, colors, radii, spacing, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
 import type { Messages } from '@hangul-route/i18n';
 import React, { useEffect, useState } from 'react';
 import { Pressable, Text, View, type PressableStateCallbackType } from 'react-native';
@@ -82,7 +82,7 @@ export function ExtraCardsBanner({
   return (
     <Animated.View style={style} pointerEvents={settled ? 'auto' : 'none'} testID="extra-cards-banner">
       <Card padding="md" tone="brand">
-        <Text style={srOnly}>{announcement}</Text>
+        <Text {...KOREAN_LINE_BREAK} style={srOnly}>{announcement}</Text>
         <View {...a11yHidden}>
           {episodeTitle ? (
             <>

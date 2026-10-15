@@ -14,6 +14,7 @@ import {
   touchTarget,
   typography,
   useMediaSize,
+  KOREAN_LINE_BREAK,
 } from '@hangul-route/design-system';
 import type { Messages } from '@hangul-route/i18n';
 import React, { useEffect, useRef } from 'react';
@@ -138,7 +139,7 @@ export function CheckpointCard({
               <Heading level="prompt" testID="story-reader-checkpoint-prompt">
                 {item.promptParts.map((part, i) =>
                   'target' in part ? (
-                    <Text key={i} {...koreanSpeech} style={{ fontWeight: typography.weight.bold }}>
+                    <Text {...KOREAN_LINE_BREAK} key={i} {...koreanSpeech} style={{ fontWeight: typography.weight.bold }}>
                       {part.target.ko}
                     </Text>
                   ) : (

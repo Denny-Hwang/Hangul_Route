@@ -12,8 +12,8 @@ import {
   colors,
   spacing,
 } from '@hangul-route/design-system';
-import { levelLabel, type StageKey } from '@hangul-route/content-schema';
-import { formatDate, type Messages } from '@hangul-route/i18n';
+import { type StageKey } from '@hangul-route/content-schema';
+import { formatDate, levelWords, type Messages } from '@hangul-route/i18n';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useEffect, useRef } from 'react';
 import { Platform, Pressable, View } from 'react-native';
@@ -112,7 +112,7 @@ export function ParentDashboardScreen({ navigation, route }: Props): React.React
       ) : (
         profiles.map((p) => {
           const snap = byProfile[p.id];
-          const level = levelLabel(p.ageGroup);
+          const level = levelWords(messages, p.ageGroup)?.label ?? null;
           const completed = snap?.quests.filter((q) => q.completedAt).length ?? 0;
           const cards = snap?.cards.length ?? 0;
           // Quest sessions only, and capped minutes (F-REPORT-001 section 3.3.2): a story, game or
