@@ -34,6 +34,7 @@ export const FILES = {
     "src/logic/homework/__tests__/mission-builder-vocab-day.test.ts",
     "src/logic/reports/__tests__/activity.test.ts",
     "src/logic/vocab/__tests__/word-progress.integration.test.ts",
+    "src/store/__tests__/progress-store.test.ts",
   ],
 };
 
