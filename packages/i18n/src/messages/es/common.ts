@@ -62,4 +62,10 @@ export const common = {
     date: { today: 'Hoy', yesterday: 'Ayer' },
     new: { pill: 'Nueva' },
   },
+  /** Niveles de lectura (F-LEARN-001 §3.7): cuánto lee la persona, nunca una edad. */
+  levels: {
+    pictures: { label: 'Primero imágenes', description: 'Fichas grandes e imágenes, muy poco para leer.' },
+    someReading: { label: 'Algo de lectura', description: 'Palabras cortas y oraciones cortas.' },
+    readsEasily: { label: 'Lee con facilidad', description: 'Textos más largos, historias y conversaciones.' },
+  },
 } satisfies DeepPartial<Messages['common']>;

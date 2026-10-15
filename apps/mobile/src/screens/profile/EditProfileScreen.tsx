@@ -1,4 +1,5 @@
 import { LEARNER_LEVELS, type LearnerType } from '@hangul-route/content-schema';
+import { levelWords } from '@hangul-route/i18n';
 import {
   Body,
   Button,
@@ -242,8 +243,8 @@ export function EditProfileScreen({ navigation, route }: Props): React.ReactElem
             {LEARNER_LEVELS.map((l) => (
               <OptionCard
                 key={l.id}
-                label={l.label}
-                description={l.description}
+                label={levelWords(messages, l.id)?.label ?? l.label}
+                description={levelWords(messages, l.id)?.description ?? l.description}
                 selected={draft.level === l.id}
                 onPress={() => change({ level: l.id })}
               />

@@ -268,7 +268,7 @@ function SourceCard({ view, now, busy, online, readOnly, direct, note, run, api,
 }
 
 function DestinationCard({ view, now, busy, online, readOnly, note, run, api, spaceId, onRefresh }: CardProps & { view: TransferDestinationView }): JSX.Element {
-  const { messages } = useConsoleLocale();
+  const { messages, locale } = useConsoleLocale();
   const t = messages.console.transfer;
   const whoId = useId();
   const reasonsId = useId();
@@ -276,7 +276,7 @@ function DestinationCard({ view, now, busy, online, readOnly, note, run, api, sp
   const answers = !readOnly && ownAnswerWaits(view);
   const retry = !readOnly && retryShown(view);
   const off = busy || !online;
-  const level = view.learner ? levelPillLabel(view.learner.level) : null;
+  const level = view.learner ? levelPillLabel(view.learner.level, locale) : null;
   const decline = (reason: 'not_now' | 'no_room'): void => run(view, () => api.declineTransfer(spaceId, view.id, { slot: 'destination', reason }));
   return (
     <article style={cardStyle} aria-labelledby={whoId} data-testid="move-card" data-move-card="">

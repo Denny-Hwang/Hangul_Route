@@ -238,9 +238,9 @@ function SpaceInner(): JSX.Element {
                         <AvatarChip avatar={l.avatar} />
                         <strong id={`roster-learner-${index}`}>{l.displayName}</strong>
                       </span>
-                      {levelPillLabel(l.ageGroup) ? (
+                      {levelPillLabel(l.ageGroup, locale) ? (
                         <span style={{ fontSize: typography.size.caption, color: colors.text.muted, padding: `${spacing.xxs}px ${spacing.sm}px`, backgroundColor: colors.surface.sunken, borderRadius: radii.pill }}>
-                          {levelPillLabel(l.ageGroup)}
+                          {levelPillLabel(l.ageGroup, locale)}
                         </span>
                       ) : null}
                     </div>

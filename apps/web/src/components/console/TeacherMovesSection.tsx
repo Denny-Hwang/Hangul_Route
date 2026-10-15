@@ -149,7 +149,7 @@ export function TeacherMovesSection({ spaceId, api, online, readOnly, refreshMs,
       <div style={{ display: 'flex', flexDirection: 'column', gap: spacing.sm }}>
         {waitingIn.map((m) => {
           const alias = m.learner && 'alias' in m.learner ? m.learner : null;
-          const level = alias ? levelPillLabel(alias.level) : null;
+          const level = alias ? levelPillLabel(alias.level, locale) : null;
           return (
             <article key={m.id} style={card} data-testid="teacher-move-incoming">
               <div style={row}>

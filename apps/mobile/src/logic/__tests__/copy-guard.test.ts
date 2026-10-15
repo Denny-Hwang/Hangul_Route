@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest';
 
 /**
  * Copy guard — F-LEARN-001 §3.7 / §5. Hangul Route has no age bands in its
- * wording: the learner's level is drawn from `levelLabel()` and nowhere else.
+ * wording: the learner's level is drawn from `levelWords()` (the dictionary) and nowhere else.
  * This test reads the non-test sources of both apps and fails on the phrases
  * that bring an age back ("Age 8-9" pills, "How old are you", "Age group").
  */
