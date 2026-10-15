@@ -1,6 +1,6 @@
 import type { Profile } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
-import { changedServerFields, hasFields, mergePending, sendableFields, serverFieldsOf, serverProfileChanges, shouldPullServerProfile } from '../learner-profile';
+import { changedServerFields, hasFields, mergePending, queueRepair, sendableFields, serverFieldsOf, serverProfileChanges, shouldPullServerProfile } from '../learner-profile';
 
 const profile: Profile = { id: 'profile:a', displayName: 'test', ageGroup: '5-7', avatar: 'hoya-orange', role: 'learner', createdAt: 't', learnerType: 'self', parentPinHash: 'h' };
 
@@ -21,6 +21,22 @@ describe('logic/sync/learner-profile (F-PROF-001)', () => {
     expect(first).toEqual({ fields: { displayName: 'A' }, at: 't1' });
     const extra = { learnerType: 'self' } as unknown as Record<string, never>;
     expect(mergePending(first, { displayName: 'B', ageGroup: '8-9', ...extra }, 't2')).toEqual({ fields: { displayName: 'B', ageGroup: '8-9' }, at: 't2' });
+  });
+
+  it('queueRepair queues the current values as repair values, except fields a waiting edit carries', () => {
+    expect(queueRepair(null, { displayName: 'Sungjoo', ageGroup: '5-7', avatar: 'hoya-orange' }, 't1')).toEqual({ fields: {}, at: 't1', repair: { displayName: 'Sungjoo', ageGroup: '5-7', avatar: 'hoya-orange' } });
+    expect(queueRepair({ fields: { displayName: 'Sungjoo' }, at: 't0' }, { displayName: 'Sungjoo', ageGroup: '5-7' }, 't1')).toEqual({ fields: { displayName: 'Sungjoo' }, at: 't1', repair: { ageGroup: '5-7' } });
+    expect(queueRepair({ fields: { displayName: 'Sungjoo' }, at: 't0' }, { displayName: 'Sungjoo' }, 't1')).toEqual({ fields: { displayName: 'Sungjoo' }, at: 't1' });
+  });
+
+  it('mergePending moves an edited field out of the repair values and keeps the rest', () => {
+    const repaired = queueRepair(null, { displayName: 'Sungjoo', ageGroup: '5-7', avatar: 'hoya-orange' }, 't1');
+    expect(mergePending(repaired, { ageGroup: '8-9' }, 't2')).toEqual({ fields: { ageGroup: '8-9' }, at: 't2', repair: { displayName: 'Sungjoo', avatar: 'hoya-orange' } });
+    expect(mergePending({ fields: {}, at: 't1', repair: { avatar: 'hoya-orange' } }, { avatar: 'hoya-blue' }, 't2')).toEqual({ fields: { avatar: 'hoya-blue' }, at: 't2' });
+  });
+
+  it('serverProfileChanges skips a level the server row has as null', () => {
+    expect(serverProfileChanges(profile, { displayName: 'test', ageGroup: null, avatar: 'hoya-orange' })).toEqual({});
   });
 
   it('sendableFields keeps only values the shared rules accept, trimmed', () => {

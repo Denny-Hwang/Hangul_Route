@@ -104,16 +104,27 @@ export interface LearnerProfileFields {
 
 /**
  * PATCH /learners/:id. `ok` covers every 2xx: `applied` is false when the server already held a newer edit.
+ * `profileUpdatedAt` is the edit time the server stored (its own clock caps a device clock that runs ahead), and
+ * `learner` the row as it stands after the request; both are null when a Worker does not send them.
  * `scope_limited` (403, a class tablet) and `invalid` (400/422, a value the Worker refuses) never succeed on a
  * retry; `error` (no network, 5xx, a Worker without the route) may.
  */
 export type ProfilePatchResult =
-  | { status: 'ok'; applied: boolean }
+  | { status: 'ok'; applied: boolean; profileUpdatedAt: string | null; learner: { displayName: string; ageGroup: string | null; avatar: string } | null }
   | { status: 'scope_limited' }
   | { status: 'invalid'; code: string }
   | { status: 'error'; code: string };
 
-const ProfilePatchDataSchema = z.object({ applied: z.boolean() });
+// Lenient past `applied`: an unreadable stamp or row reads as null and never turns a 2xx into a failure.
+const ProfilePatchDataSchema = z.object({
+  applied: z.boolean(),
+  profileUpdatedAt: z.string().nullable().optional().catch(null),
+  learner: z
+    .object({ displayName: z.string(), ageGroup: z.string().nullable().catch(null), avatar: z.string().catch('') })
+    .nullable()
+    .optional()
+    .catch(null),
+});
 
 export type GetResult =
   | { status: 'ok'; rev: number; snapshot: ProgressSnapshot; summary: ProgressSummary | null }
@@ -399,7 +410,9 @@ export function createSyncApi(opts: SyncApiOptions) {
       if (r.status >= 200 && r.status < 300) {
         const parsed = ProfilePatchDataSchema.safeParse(r.body.data);
         // A 2xx the app cannot read still means the server took the request: there is nothing to send again.
-        return { status: 'ok', applied: parsed.success ? parsed.data.applied : true };
+        if (!parsed.success) return { status: 'ok', applied: true, profileUpdatedAt: null, learner: null };
+        const { applied, profileUpdatedAt, learner } = parsed.data;
+        return { status: 'ok', applied, profileUpdatedAt: profileUpdatedAt ?? null, learner: learner ? { displayName: learner.displayName, ageGroup: learner.ageGroup, avatar: learner.avatar } : null };
       }
       if (r.status === 403 && code === 'scope_limited') return { status: 'scope_limited' };
       if (r.status === 400 || r.status === 422) return { status: 'invalid', code: code ?? `http_${r.status}` };

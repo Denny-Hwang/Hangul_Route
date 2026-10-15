@@ -303,7 +303,7 @@ describe('platform/sync-api note routes', () => {
     const api = createSyncApi({ endpoint: 'https://api.example.com', fetchImpl });
     const extra = { learnerType: 'self', parentPinHash: 'h', consent: { guardian: 't' } } as unknown as Record<string, never>;
     const result = await api.updateLearnerProfile('profile:a', 's3cret', 'device-x', { displayName: 'Sungjoo', avatar: 'hoya-orange', at: '2026-10-14T00:00:00.000Z', ...extra });
-    expect(result).toEqual({ status: 'ok', applied: true });
+    expect(result).toEqual({ status: 'ok', applied: true, profileUpdatedAt: null, learner: null });
     expect(fetchImpl.mock.calls[0]?.[0]).toBe('https://api.example.com/api/sync/learners/profile%3Aa');
     const init = fetchImpl.mock.calls[0]?.[1] as RequestInit;
     expect(init.method).toBe('PATCH');
@@ -325,14 +325,26 @@ describe('platform/sync-api note routes', () => {
       .mockRejectedValueOnce(new Error('offline'));
     const api = createSyncApi({ endpoint: 'https://api.example.com', fetchImpl });
     const send = () => api.updateLearnerProfile('profile:a', 's', 'device-x', { ageGroup: '8-9', at: '2026-10-14T00:00:00.000Z' });
-    expect(await send()).toEqual({ status: 'ok', applied: false });
-    expect(await send()).toEqual({ status: 'ok', applied: true });
+    expect(await send()).toEqual({ status: 'ok', applied: false, profileUpdatedAt: null, learner: null });
+    expect(await send()).toEqual({ status: 'ok', applied: true, profileUpdatedAt: null, learner: null });
     expect(await send()).toEqual({ status: 'scope_limited' });
     expect(await send()).toEqual({ status: 'invalid', code: 'bad_request' });
     expect(await send()).toEqual({ status: 'invalid', code: 'http_400' });
     expect(await send()).toEqual({ status: 'error', code: 'http_503' });
     expect(await send()).toEqual({ status: 'error', code: 'forbidden' });
     expect(await send()).toEqual({ status: 'error', code: 'network' });
+  });
+
+  it('updateLearnerProfile reads the stored edit time and the row the server holds, leniently', async () => {
+    const row = { id: 'profile:a', displayName: 'Mina', ageGroup: '8-9', avatar: 'hoya-orange', createdAt: 't', lastActiveAt: 't' };
+    const fetchImpl = vi.fn<typeof fetch>()
+      .mockResolvedValueOnce(json(200, { data: { learner: row, applied: false, profileUpdatedAt: '2026-10-14T01:00:00.000Z' } }))
+      .mockResolvedValueOnce(json(200, { data: { learner: { ...row, ageGroup: 7 }, applied: true, profileUpdatedAt: 42 } }));
+    const api = createSyncApi({ endpoint: 'https://api.example.com', fetchImpl });
+    const send = () => api.updateLearnerProfile('profile:a', 's', 'device-x', { displayName: 'Sungjoo', at: '2026-10-14T00:00:00.000Z' });
+    expect(await send()).toEqual({ status: 'ok', applied: false, profileUpdatedAt: '2026-10-14T01:00:00.000Z', learner: { displayName: 'Mina', ageGroup: '8-9', avatar: 'hoya-orange' } });
+    // A stamp or level the app cannot read is null; the request still counts as done.
+    expect(await send()).toEqual({ status: 'ok', applied: true, profileUpdatedAt: null, learner: { displayName: 'Mina', ageGroup: null, avatar: 'hoya-orange' } });
   });
 
   it('getInbox announces every inbox it reads, with its learner row', async () => {

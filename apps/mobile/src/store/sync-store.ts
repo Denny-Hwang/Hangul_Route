@@ -6,6 +6,7 @@ import { journeySummaryOf, routeGoalSummaryOf } from '../logic/my-route/summary'
 import {
   hasFields,
   mergePending,
+  queueRepair,
   sendableFields,
   serverFieldsOf,
   shouldPullServerProfile,
@@ -56,9 +57,6 @@ export interface LearnerSyncState {
 
 /** The server's learner row on the inbox of the learner's own device (null `profileUpdatedAt`: never edited). */
 export type InboxLearnerRow = ServerLearnerFields & { profileUpdatedAt: string | null };
-
-/** A queued profile edit the one-time repair made (no edit behind it): it waits if another device already edited. */
-type QueuedProfile = PendingProfile & { repair?: true };
 
 /** Set once every registered learner's current name, level and avatar is queued for the server (one-time repair). */
 export const PROFILE_PUSH_REPAIR_KEY = 'profilePushedV1';
@@ -116,6 +114,15 @@ function editStamp(previous: string | null | undefined): string {
   const now = Date.now();
   const last = previous ? Date.parse(previous) : Number.NaN;
   return new Date(Number.isNaN(last) || now > last ? now : last + 1).toISOString();
+}
+
+/** The fields of `fields` whose value is not what the server row already holds. */
+function differingFrom(fields: ProfileServerFields, server: ServerLearnerFields): ProfileServerFields {
+  const out: ProfileServerFields = {};
+  if (fields.displayName !== undefined && fields.displayName.trim() !== server.displayName.trim()) out.displayName = fields.displayName;
+  if (fields.ageGroup !== undefined && fields.ageGroup !== server.ageGroup) out.ageGroup = fields.ageGroup;
+  if (fields.avatar !== undefined && fields.avatar !== server.avatar) out.avatar = fields.avatar;
+  return out;
 }
 
 let apiClient: SyncApiClient | null = null;
@@ -215,34 +222,57 @@ export const useSyncStore = create<State & Actions>((set, get) => {
   }
 
   /**
-   * Send the queued name, level or avatar edit (PATCH, F-PROF-001). A 2xx settles it (`applied` false means the
-   * server already held a newer edit, which the inbox brings down); a class tablet (403 `scope_limited`) or a value
-   * the Worker refuses (422) is dropped with no retry; no network or a 5xx keeps it for the next sync. Answers the
-   * error to record, or null.
+   * Send the queued name, level or avatar edit (PATCH, F-PROF-001). A 2xx settles it: `profileAt` takes the edit time
+   * the server stored (its clock caps a device clock that runs ahead), and `applied` false (the server already held a
+   * newer edit) takes the row the server answers with right away. A class tablet (403 `scope_limited`) or a value the
+   * Worker refuses (422) is dropped with no retry; no network or a 5xx keeps it for the next sync. Answers the error
+   * to record, or null.
    */
   async function pushProfile(learnerId: string, creds: { deviceId: string; secret: string }, client: SyncApiClient): Promise<string | null> {
-    const pending = get().byLearner[learnerId]?.pendingProfile as QueuedProfile | null | undefined;
+    const pending = get().byLearner[learnerId]?.pendingProfile;
     if (!pending) return null;
+    let toSend: ProfileServerFields = pending.fields;
     if (pending.repair) {
-      // The one-time repair queues values no one just edited: when another device already changed this learner on
-      // the server, its edit is newer, so it is taken instead of overwritten.
+      // The one-time repair's values have no edit behind them. Only a PATCH sets `profileUpdatedAt` (a join never
+      // does, F-SPACE-001), so a stamped row means another device edited this learner: its values win for every
+      // field not edited here, and only the fields edited here go up.
       const inbox = await client.getInbox(learnerId, creds);
       if (inbox.status !== 'ok') return null;
+      // An edit made while the inbox was read: the next pass looks again with it.
+      if (get().byLearner[learnerId]?.pendingProfile?.at !== pending.at) return null;
       const server = inbox.inbox.learner;
       if (server && server.profileUpdatedAt !== null) {
-        settlePending(learnerId, pending.at);
-        applyServerLearner(learnerId, server);
-        return null;
+        const local = pending.fields;
+        useProfileStore.getState().applyServerProfile(learnerId, {
+          displayName: local.displayName ?? server.displayName,
+          ageGroup: local.ageGroup ?? server.ageGroup,
+          avatar: local.avatar ?? server.avatar,
+        });
+        if (!hasFields(local)) {
+          settlePending(learnerId, pending.at, { profileAt: server.profileUpdatedAt });
+          return null;
+        }
+      } else {
+        // Only the values that differ from the server go up: a device that never saw the rename sends nothing, so
+        // it never stamps the old name as the newest edit before the device that made the rename starts this build.
+        toSend = { ...(server ? differingFrom(pending.repair, server) : pending.repair), ...pending.fields };
       }
     }
-    const fields = sendableFields(pending.fields);
+    const fields = sendableFields(toSend);
     if (!hasFields(fields)) {
       settlePending(learnerId, pending.at);
       return null;
     }
     const result = await client.updateLearnerProfile(learnerId, creds.secret, creds.deviceId, { ...fields, at: pending.at });
     if (result.status === 'ok') {
-      settlePending(learnerId, pending.at, { profileAt: pending.at });
+      if (result.applied) {
+        settlePending(learnerId, pending.at, { profileAt: result.profileUpdatedAt ?? pending.at });
+        return null;
+      }
+      // The server kept a newer edit: show it now rather than wait for the inbox (unless an edit made meanwhile waits).
+      // With no stored time in the answer, the next inbox row counts as newer.
+      settlePending(learnerId, pending.at, { profileAt: result.profileUpdatedAt });
+      if (result.learner && !get().byLearner[learnerId]?.pendingProfile) useProfileStore.getState().applyServerProfile(learnerId, result.learner);
       return null;
     }
     if (result.status === 'scope_limited' || result.status === 'invalid') {
@@ -266,8 +296,8 @@ export const useSyncStore = create<State & Actions>((set, get) => {
     for (const p of learners) {
       const state = await get().hydrate(p.id);
       if (!state.secret) continue;
-      const queued: QueuedProfile = { ...mergePending(state.pendingProfile, serverFieldsOf(p), editStamp(state.pendingProfile?.at)), ...(state.pendingProfile ? {} : { repair: true as const }) };
-      update(p.id, { pendingProfile: queued });
+      const previous = get().byLearner[p.id]?.pendingProfile ?? state.pendingProfile;
+      update(p.id, { pendingProfile: queueRepair(previous, serverFieldsOf(p), editStamp(previous?.at)) });
     }
     await writeJson(PROFILE_PUSH_REPAIR_KEY, true);
   }
@@ -335,7 +365,8 @@ export const useSyncStore = create<State & Actions>((set, get) => {
     if (outcome.status === 'error') return update(learnerId, { status: 'error', lastError: outcome.code });
     if (outcome.status === 'retry-later') {
       applyServerSnapshot(learnerId, local, outcome.snapshot);
-      return update(learnerId, { status: 'idle', rev: outcome.rev, lastError: 'conflict' });
+      // A dropped profile edit is the more lasting news: the conflict retries by itself.
+      return update(learnerId, { status: 'idle', rev: outcome.rev, lastError: profileError ?? 'conflict' });
     }
     if (outcome.merged) applyServerSnapshot(learnerId, local, outcome.snapshot);
     const synced = update(learnerId, { status: 'synced', rev: outcome.rev, lastSyncedAt: new Date().toISOString(), lastError: profileError });

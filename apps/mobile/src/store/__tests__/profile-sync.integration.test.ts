@@ -4,8 +4,9 @@ import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 /**
  * The reported bug end to end (F-PROF-001): a learner renamed 'test' to 'Sungjoo' on the learner's device, and the
  * teacher's class roster kept 'test'. Real profile-store, sync-store and sync-api against an in-memory Worker that
- * implements register, PATCH, snapshot, Rescue Codes, join, the inbox and the class and family rosters. Each device
- * has its own storage; a second device loads fresh store modules.
+ * implements register, PATCH, snapshot, Rescue Codes, join, the inbox and the class and family rosters, with the
+ * Worker's rules: PATCH caps a future `at` at its own now and answers the stored time; a join sets the name only while
+ * no PATCH edit exists and never stamps it. Each device has its own storage; a second device loads fresh store modules.
  */
 const devices = vi.hoisted(() => ({ current: new Map<string, unknown>(), id: 'device-one-0001' }));
 vi.mock('../../platform/storage', () => ({
@@ -64,9 +65,11 @@ function fakeWorker() {
         const parsed = LearnerProfilePatchSchema.safeParse(body);
         if (!parsed.success) return send(422, { code: 'bad_request' });
         const { at, ...fields } = parsed.data;
-        const applied = row.profileUpdatedAt === null || Date.parse(at) >= Date.parse(row.profileUpdatedAt);
-        if (applied) learners.set(id, { ...row, ...fields, profileUpdatedAt: at });
-        return send(200, { learner: learners.get(id), applied });
+        const when = new Date(Math.min(Date.parse(at), Date.now())).toISOString();
+        const applied = row.profileUpdatedAt === null || Date.parse(when) >= Date.parse(row.profileUpdatedAt);
+        if (applied) learners.set(id, { ...row, ...fields, profileUpdatedAt: when });
+        const stored = learners.get(id) as LearnerRow;
+        return send(200, { learner: { id, displayName: stored.displayName, ageGroup: stored.ageGroup, avatar: stored.avatar }, applied, profileUpdatedAt: stored.profileUpdatedAt });
       }
       if (method === 'PUT' && m[2] === '/snapshot') return send(200, { rev: Number(body.baseRev) + 1 });
       if (method === 'GET' && m[2] === '/inbox') {
@@ -87,6 +90,9 @@ function fakeWorker() {
     const join = path.match(/^\/api\/spaces\/([^/]+)\/join$/);
     if (method === 'POST' && join) {
       const spaceId = decodeURIComponent(join[1] as string);
+      const row = learners.get(String(body.learnerId));
+      // The join name repairs a row no PATCH has edited, column-only and unstamped (F-SPACE-001).
+      if (row && typeof body.displayName === 'string' && row.profileUpdatedAt === null) learners.set(row.id, { ...row, displayName: body.displayName });
       members.get(spaceId)?.add(String(body.learnerId));
       return send(201, { alreadyMember: false, membership: { role: 'learner', joinedAt: 't' }, space: { id: spaceId, kind: spaceId === 'space:class' ? 'class' : 'family', name: 'Room 3' } });
     }
@@ -94,7 +100,8 @@ function fakeWorker() {
   });
   /** What the teacher console and the family space list: the learner rows of the members. */
   const roster = (spaceId: string): string[] => [...(members.get(spaceId) ?? [])].map((id) => learners.get(id)?.displayName ?? '?');
-  return { fetchImpl, roster, patchBodies, codes };
+  const row = (id: string): LearnerRow | undefined => learners.get(id);
+  return { fetchImpl, roster, patchBodies, codes, row };
 }
 
 const worker = fakeWorker();
@@ -204,16 +211,82 @@ describe('a learner rename reaches the class and family rosters (F-PROF-001)', (
     await old.sync.useSyncStore.getState().syncNow(created.id);
     const client = old.sync.syncApi()!;
     const secret = old.sync.useSyncStore.getState().byLearner[created.id]!.secret!;
-    await client.joinSpace('space:class', { code: 'CLASS1', learnerId: created.id }, { deviceId: 'device-four-004', secret });
+    // The older build sends the device name on join: the row says 'test', still unstamped.
+    await client.joinSpace('space:class', { code: 'CLASS1', learnerId: created.id, displayName: 'test' }, { deviceId: 'device-four-004', secret });
     old.profiles.useProfileStore.setState({ profiles: [{ ...created, displayName: 'Sungjoo' }], hydrated: true });
     expect(worker.roster('space:class')).toContain('test');
+    expect(worker.row(created.id)?.profileUpdatedAt).toBeNull();
 
     const before = worker.patchBodies.length;
     await old.sync.useSyncStore.getState().syncAll();
-    expect(worker.roster('space:class').filter((name) => name === 'test')).toEqual([]);
+    expect(worker.row(created.id)?.displayName).toBe('Sungjoo');
+    expect(old.profiles.useProfileStore.getState().profiles[0]?.displayName).toBe('Sungjoo');
     expect(worker.patchBodies.length).toBe(before + 1);
+    // Only what differs from the server goes up.
+    expect(worker.patchBodies[before]).toEqual({ displayName: 'Sungjoo', at: expect.any(String) });
     await old.sync.useSyncStore.getState().syncAll();
     expect(worker.patchBodies.length).toBe(before + 1);
+  });
+
+  it("two devices on the older build: the one that never saw the rename starts this build first and sends nothing; the renaming one then fixes the row", async () => {
+    // Device six registered 'test'; device five shares the learner through a Rescue Code; five renamed on the older build.
+    const six = await device('device-six-0006');
+    const created = six.profiles.useProfileStore.getState().createProfile({ displayName: 'test', ageGroup: '8-9', avatar: 'hoya-orange' });
+    six.progress.useProgressStore.setState({ byProfile: { [created.id]: snap(created.id) }, hydratedFor: new Set([created.id]) });
+    const registered = await six.sync.useSyncStore.getState().syncNow(created.id);
+    const code = registered.rescueCode ?? '';
+    const five = await device('device-five-005');
+    const claim = await five.sync.syncApi()!.claimRescueCode(code, 'device-five-005');
+    if (claim.status !== 'ok') throw new Error('claim failed');
+    const fiveStorage = devices.current;
+    fiveStorage.set(`sync:${created.id}`, { secret: claim.secret, rev: 1, lastSyncedAt: 't', rescueCode: null });
+    fiveStorage.set('profiles', [{ ...created, displayName: 'Sungjoo' }]);
+
+    // Six starts the new build first: its values are the server's, so the repair sends nothing.
+    const sixAgain = await device('device-six-0006');
+    devices.current.set(`sync:${created.id}`, { secret: registered.secret, rev: 1, lastSyncedAt: 't', rescueCode: code });
+    sixAgain.profiles.useProfileStore.setState({ profiles: [created], activeId: created.id, hydrated: true });
+    sixAgain.progress.useProgressStore.setState({ byProfile: { [created.id]: snap(created.id) }, hydratedFor: new Set([created.id]) });
+    const before = worker.patchBodies.length;
+    await sixAgain.sync.useSyncStore.getState().syncAll();
+    expect(worker.patchBodies.length).toBe(before);
+    expect(worker.row(created.id)?.profileUpdatedAt).toBeNull();
+
+    // Five starts the new build: the row is unstamped, so its rename goes up.
+    const fiveAgain = await device('device-five-005');
+    for (const [k, v] of fiveStorage) devices.current.set(k, v);
+    fiveAgain.profiles.useProfileStore.setState({ profiles: [{ ...created, displayName: 'Sungjoo' }], activeId: created.id, hydrated: true });
+    fiveAgain.progress.useProgressStore.setState({ byProfile: { [created.id]: snap(created.id) }, hydratedFor: new Set([created.id]) });
+    await fiveAgain.sync.useSyncStore.getState().syncAll();
+    expect(worker.row(created.id)?.displayName).toBe('Sungjoo');
+    expect(fiveAgain.profiles.useProfileStore.getState().profiles[0]?.displayName).toBe('Sungjoo');
+  });
+
+  it("a stale device joining again with the old name never brings 'test' back to the device that renamed", async () => {
+    const one = await device('device-seven-07');
+    const created = one.profiles.useProfileStore.getState().createProfile({ displayName: 'test', ageGroup: '8-9', avatar: 'hoya-orange' });
+    one.progress.useProgressStore.setState({ byProfile: { [created.id]: snap(created.id) }, hydratedFor: new Set([created.id]) });
+    devices.current.set(one.sync.PROFILE_PUSH_REPAIR_KEY, true);
+    const first = await one.sync.useSyncStore.getState().syncNow(created.id);
+    const oneStorage = devices.current;
+    one.profiles.useProfileStore.getState().updateProfile(created.id, { displayName: 'Sungjoo' });
+    await vi.waitFor(() => expect(one.sync.useSyncStore.getState().byLearner[created.id]?.pendingProfile).not.toBeNull());
+    await one.sync.useSyncStore.getState().syncNow(created.id);
+    expect(worker.row(created.id)?.displayName).toBe('Sungjoo');
+
+    // Another device that still says 'test' joins a class again with that name.
+    const stale = one.sync.syncApi()!;
+    const claim = await stale.claimRescueCode(first.rescueCode ?? '', 'device-eight-08');
+    if (claim.status !== 'ok') throw new Error('claim failed');
+    await stale.joinSpace('space:class', { code: 'CLASS1', learnerId: created.id, displayName: 'test' }, { deviceId: 'device-eight-08', secret: claim.secret });
+    expect(worker.row(created.id)?.displayName).toBe('Sungjoo');
+
+    // The renaming device reads its inbox: still 'Sungjoo'.
+    devices.current = oneStorage;
+    devices.id = 'device-seven-07';
+    await stale.getInbox(created.id, { deviceId: 'device-seven-07', secret: first.secret! });
+    await new Promise((r) => setTimeout(r, 0));
+    expect(one.profiles.useProfileStore.getState().profiles[0]?.displayName).toBe('Sungjoo');
   });
 });
 

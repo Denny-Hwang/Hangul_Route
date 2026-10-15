@@ -14,14 +14,20 @@ export interface ProfileServerFields {
 
 /** An edit the server has not confirmed yet; `at` is when the device last changed it (the server keeps the newest). */
 export interface PendingProfile {
+  /** Values someone changed on this device: they always go up. */
   fields: ProfileServerFields;
   at: string;
+  /**
+   * Values the one-time repair queued with no edit behind them (a rename an older build kept on the device). They go
+   * up only while no other device has edited the learner on the server; a field edited here since moves to `fields`.
+   */
+  repair?: ProfileServerFields;
 }
 
-/** The server row as an inbox, a Rescue Code claim or a re-link pickup carries it. */
+/** The server row as an inbox, a Rescue Code claim or a re-link pickup carries it (a stale level reads as null). */
 export interface ServerLearnerFields {
   displayName: string;
-  ageGroup: string;
+  ageGroup: string | null;
   avatar: string;
 }
 
@@ -43,9 +49,33 @@ export function changedServerFields(before: Profile, after: Profile): ProfileSer
   return out;
 }
 
-/** A newer edit folds into the one still waiting: the latest value of each field wins, `at` moves to now. */
+/**
+ * A newer edit folds into the one still waiting: the latest value of each field wins, `at` moves to now. A field
+ * edited now leaves the repair values; the repair values of the fields not edited stay repair values.
+ */
 export function mergePending(previous: PendingProfile | null | undefined, fields: ProfileServerFields, at: string): PendingProfile {
-  return { fields: { ...(previous?.fields ?? {}), ...pick(fields) }, at };
+  const merged: PendingProfile = { fields: { ...(previous?.fields ?? {}), ...pick(fields) }, at };
+  const repair = previous?.repair ? withoutKeys(previous.repair, fields) : {};
+  if (hasFields(repair)) merged.repair = repair;
+  return merged;
+}
+
+/**
+ * The one-time repair's entry: the current values queue as repair values, except the fields an edit still waiting
+ * already carries (those are real edits and stay in `fields`).
+ */
+export function queueRepair(previous: PendingProfile | null | undefined, current: ProfileServerFields, at: string): PendingProfile {
+  const fields = { ...(previous?.fields ?? {}) };
+  const repair = withoutKeys({ ...(previous?.repair ?? {}), ...pick(current) }, fields);
+  return { fields, at, ...(hasFields(repair) ? { repair } : {}) };
+}
+
+function withoutKeys(fields: ProfileServerFields, drop: ProfileServerFields): ProfileServerFields {
+  const out = pick(fields);
+  if (drop.displayName !== undefined) delete out.displayName;
+  if (drop.ageGroup !== undefined) delete out.ageGroup;
+  if (drop.avatar !== undefined) delete out.avatar;
+  return out;
 }
 
 /**
@@ -65,7 +95,7 @@ export function serverProfileChanges(profile: Profile, server: ServerLearnerFiel
   const out: ProfileServerFields = {};
   const name = server.displayName.trim();
   if (name !== profile.displayName && validateDisplayName(name) === null) out.displayName = name;
-  if (server.ageGroup !== profile.ageGroup && isLearnerLevelId(server.ageGroup)) out.ageGroup = server.ageGroup;
+  if (server.ageGroup !== null && server.ageGroup !== profile.ageGroup && isLearnerLevelId(server.ageGroup)) out.ageGroup = server.ageGroup;
   if (server.avatar !== profile.avatar) {
     const avatar = AvatarKindSchema.safeParse(server.avatar);
     if (avatar.success) out.avatar = avatar.data;

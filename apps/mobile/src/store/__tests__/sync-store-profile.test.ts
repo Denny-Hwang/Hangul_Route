@@ -250,7 +250,116 @@ describe('one-time repair of renames that never synced (hr:profilePushedV1)', ()
     setSyncApiForTests(api as never);
     await useSyncStore.getState().syncAll();
     expect(api.updateLearnerProfile).not.toHaveBeenCalled();
-    expect(useSyncStore.getState().byLearner[A]?.pendingProfile?.fields).toMatchObject({ displayName: 'test' });
+    expect(useSyncStore.getState().byLearner[A]?.pendingProfile?.repair).toMatchObject({ displayName: 'test' });
+  });
+
+  it('a row a join named but no PATCH edited (unstamped) does not stop the rename: it goes up and stays', async () => {
+    registered(A);
+    // Joined on the older build as 'test' (the join sets the name, never the edit time), renamed on the device after.
+    const getInbox = vi.fn(async () => ({ status: 'ok', inbox: inbox({ displayName: 'test', ageGroup: '5-7', avatar: 'hoya-orange', profileUpdatedAt: null }) }));
+    const api = fakeApi({ getInbox });
+    setSyncApiForTests(api as never);
+    await useSyncStore.getState().syncAll();
+    expect(api.updateLearnerProfile).toHaveBeenCalledTimes(1);
+    // Only the field that differs from the server goes up.
+    expect(api.updateLearnerProfile.mock.calls[0]?.[3]).toEqual({ displayName: 'Sungjoo', at: expect.any(String) });
+    expect(useProfileStore.getState().profiles[0]?.displayName).toBe('Sungjoo');
+    expect(useSyncStore.getState().byLearner[A]?.pendingProfile).toBeNull();
+  });
+
+  it('values that already match the server send nothing (a device that never saw the rename stamps nothing)', async () => {
+    registered(A);
+    const getInbox = vi.fn(async () => ({ status: 'ok', inbox: inbox({ displayName: 'Sungjoo', ageGroup: '5-7', avatar: 'hoya-orange', profileUpdatedAt: null }) }));
+    const api = fakeApi({ getInbox });
+    setSyncApiForTests(api as never);
+    await useSyncStore.getState().syncAll();
+    expect(api.updateLearnerProfile).not.toHaveBeenCalled();
+    expect(useSyncStore.getState().byLearner[A]?.pendingProfile).toBeNull();
+  });
+
+  it('an edit made after the repair queued keeps the repair check for the fields it did not touch', async () => {
+    registered(A);
+    const offline = fakeApi({ getInbox: vi.fn(async () => ({ status: 'error', code: 'network' })) });
+    setSyncApiForTests(offline as never);
+    await useSyncStore.getState().syncAll();
+        await useSyncStore.getState().markProfileDirty(A, { ageGroup: '8-9' });
+    expect(useSyncStore.getState().byLearner[A]?.pendingProfile).toMatchObject({ fields: { ageGroup: '8-9' }, repair: { displayName: 'Sungjoo', avatar: 'hoya-orange' } });
+    expect(useSyncStore.getState().byLearner[A]?.pendingProfile?.repair).not.toHaveProperty('ageGroup');
+
+    // Another device renamed the learner on the server meanwhile: its name wins, only the level edited here goes up.
+    const getInbox = vi.fn(async () => ({ status: 'ok', inbox: inbox({ displayName: 'Mina', ageGroup: '5-7', avatar: 'hoya-orange', profileUpdatedAt: '2026-10-13T10:00:00.000Z' }) }));
+    const api = fakeApi({ getInbox });
+    setSyncApiForTests(api as never);
+    await useSyncStore.getState().syncNow(A);
+    expect(api.updateLearnerProfile).toHaveBeenCalledTimes(1);
+    expect(api.updateLearnerProfile.mock.calls[0]?.[3]).toEqual({ ageGroup: '8-9', at: expect.any(String) });
+    expect(useProfileStore.getState().profiles[0]).toMatchObject({ displayName: 'Mina' });
+    expect(useSyncStore.getState().byLearner[A]?.pendingProfile).toBeNull();
+  });
+});
+
+describe('the server clock orders profile edits', () => {
+  beforeEach(() => {
+    mem.clear();
+    restart();
+    useProfileStore.setState({ profiles: [learner(A, 'test')], activeId: A, hydrated: true });
+    useProgressStore.setState({ byProfile: { [A]: snap(A) }, hydratedFor: new Set([A]) });
+    usePlanStore.setState({ byLearner: {}, notReady: {} });
+    mem.set(PROFILE_PUSH_REPAIR_KEY, true);
+    registered(A);
+  });
+
+  it('a device clock 1 h ahead records the time the server stored, so a newer edit from another device still comes down', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    try {
+      vi.setSystemTime(new Date('2026-10-14T11:00:00.000Z'));
+      const api = fakeApi({ updateLearnerProfile: vi.fn(async () => ({ status: 'ok', applied: true, profileUpdatedAt: '2026-10-14T10:00:00.000Z', learner: null })) });
+      setSyncApiForTests(api as never);
+      await useSyncStore.getState().markProfileDirty(A, { displayName: 'Sungjoo' });
+      await useSyncStore.getState().syncNow(A);
+      expect(useSyncStore.getState().byLearner[A]?.profileAt).toBe('2026-10-14T10:00:00.000Z');
+      await useSyncStore.getState().applyInboxLearner(A, { displayName: 'Mina', ageGroup: '5-7', avatar: 'hoya-orange', profileUpdatedAt: '2026-10-14T10:30:00.000Z' });
+      expect(useProfileStore.getState().profiles[0]?.displayName).toBe('Mina');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('a device clock 1 h behind: the server keeps the newer edit and the device shows it at once (applied false)', async () => {
+    const api = fakeApi({
+      updateLearnerProfile: vi.fn(async () => ({ status: 'ok', applied: false, profileUpdatedAt: '2026-10-14T10:00:00.000Z', learner: { displayName: 'Mina', ageGroup: '5-7', avatar: 'hoya-orange' } })),
+    });
+    setSyncApiForTests(api as never);
+    useProfileStore.getState().updateProfile(A, { displayName: 'Sungjoo' });
+    await vi.waitFor(() => expect(useSyncStore.getState().byLearner[A]?.pendingProfile).not.toBeNull());
+    const state = await useSyncStore.getState().syncNow(A);
+    expect(state.pendingProfile).toBeNull();
+    expect(state.profileAt).toBe('2026-10-14T10:00:00.000Z');
+    expect(useProfileStore.getState().profiles[0]?.displayName).toBe('Mina');
+    // Not queued again: the server row is the newest.
+    await flush();
+    expect(useSyncStore.getState().byLearner[A]?.pendingProfile ?? null).toBeNull();
+  });
+
+  it('a Worker that answers no stored time falls back to the edit time, and applied false then takes the next inbox row', async () => {
+    const api = fakeApi({ updateLearnerProfile: vi.fn(async () => ({ status: 'ok', applied: false, profileUpdatedAt: null, learner: null })) });
+    setSyncApiForTests(api as never);
+    await useSyncStore.getState().markProfileDirty(A, { displayName: 'Sungjoo' });
+    expect((await useSyncStore.getState().syncNow(A)).profileAt).toBeNull();
+    await useSyncStore.getState().applyInboxLearner(A, { displayName: 'Mina', ageGroup: '5-7', avatar: 'hoya-orange', profileUpdatedAt: '2026-10-14T10:00:00.000Z' });
+    expect(useProfileStore.getState().profiles[0]?.displayName).toBe('Mina');
+  });
+
+  it('a dropped edit is recorded even when the snapshot upload meets a conflict', async () => {
+    const api = fakeApi({
+      updateLearnerProfile: vi.fn(async () => ({ status: 'scope_limited' })),
+      putSnapshot: vi.fn(async () => ({ status: 'conflict', rev: 3, snapshot: snap(A) })),
+    });
+    setSyncApiForTests(api as never);
+    await useSyncStore.getState().markProfileDirty(A, { displayName: 'Sungjoo' });
+    const state = await useSyncStore.getState().syncNow(A);
+    expect(state.lastError).toBe('scope_limited');
+    expect(state.pendingProfile).toBeNull();
   });
 });
 
