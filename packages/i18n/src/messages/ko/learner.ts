@@ -586,7 +586,7 @@ export const learner = {
       name: {
         heading: '내 이름을 한글로 써 봐요',
         noWrong: '이름을 쓰는 데 틀린 방법은 없어요.',
-        tabs: { blocks: '글자 블록', keyboard: '자판' },
+        tabs: { blocks: '글자 덩어리', keyboard: '자판' },
         sounds: '소리',
         atTheEnd: '받침',
         longest: '여기에 들어가는 가장 긴 이름이에요.',
