@@ -50,19 +50,11 @@ describe('sitemap.xml (F-SITE-002 S-9)', () => {
     expect(sitemapDynamic).toBe('force-static');
   });
 
-  it('lists every site page in English only while es and ko are hidden, with no alternates', () => {
+  it('lists every site page in all three shipped locales by default (F-I18N-001 rows 15b / 16b)', () => {
     vi.stubEnv('NEXT_PUBLIC_SHOW_ALL_LOCALES', '');
-    expect(shownSiteLocales()).toEqual(['en']);
-    expect(sitemap()).toEqual([
-      { url: 'https://hangulroute.com/' },
-      { url: 'https://hangulroute.com/about' },
-      { url: 'https://hangulroute.com/privacy' },
-      { url: 'https://hangulroute.com/terms' },
-      { url: 'https://hangulroute.com/learners' },
-      { url: 'https://hangulroute.com/parents' },
-      { url: 'https://hangulroute.com/teachers' },
-      { url: 'https://hangulroute.com/licenses' },
-    ]);
+    expect(shownSiteLocales()).toEqual(['en', 'es', 'ko']);
+    expect(sitemap()).toEqual(siteSitemap(true));
+    expect(sitemap()).toHaveLength(SITE_PAGES.length * 3);
   });
 
   it('is SITE_PAGES x shown locales, with absolute hreflang alternates once a second locale ships', () => {

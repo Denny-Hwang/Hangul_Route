@@ -9,11 +9,15 @@ import {
   showLanguagePickers,
 } from '../language-picker';
 
-describe('what ships: English only', () => {
-  it('shows no language picker while es and ko are hidden (the default build)', () => {
-    expect(LOCALE_STATUS).toEqual({ en: 'shipped', es: 'hidden', ko: 'hidden' });
-    expect(showLanguagePickers(availableLocales(false))).toBe(false);
-    expect(languageOptions(availableLocales(false)).map((o) => o.locale)).toEqual(['en']);
+describe('what ships: English, Spanish and Korean (F-I18N-001 rows 15b / 16b)', () => {
+  it('shows the language pickers in the default build, listing all three', () => {
+    expect(LOCALE_STATUS).toEqual({ en: 'shipped', es: 'shipped', ko: 'shipped' });
+    expect(showLanguagePickers(availableLocales(false))).toBe(true);
+    expect(languageOptions(availableLocales(false)).map((o) => o.locale)).toEqual(['en', 'es', 'ko']);
+  });
+
+  it('shows no language picker when only one locale is available (a build with every other locale hidden)', () => {
+    expect(showLanguagePickers(['en'])).toBe(false);
   });
 
   it('shows the pickers when the QA flag lists every locale', () => {

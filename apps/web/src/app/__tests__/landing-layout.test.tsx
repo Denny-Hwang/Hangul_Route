@@ -10,6 +10,7 @@ import { ALL_CLAIMS_ON } from '../../data/__tests__/site-claims-fixtures';
 import { SITE_CLAIMS } from '../../data/site-claims';
 import { learnerStart } from '../../lib/site-links';
 import HomePage from '../(en)/page';
+import { withoutSwitcher } from './locale-switcher-html';
 
 /**
  * The layered home `/` (F-SITE-002 §3.3, appendix B.1; wireframe design/wireframes/site/home.md; mock
@@ -158,7 +159,7 @@ describe('the blocks under the hero (L1)', () => {
 describe('the shared chrome on /', () => {
   it('the header (no current persona page) and the footer', () => {
     expect(html).toMatch(/<header class="hr-site-header"/);
-    expect(html).not.toContain('aria-current="page"');
+    expect(withoutSwitcher(html)).not.toContain('aria-current="page"');
     expect(html).toMatch(/<footer/);
   });
 

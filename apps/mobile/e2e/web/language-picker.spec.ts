@@ -7,20 +7,14 @@ import { answerForkNew, readStored, waitForSaved } from './helpers';
  * F-I18N-001 PR 5: the Welcome language row, the Profile Language card and the
  * reading-practice switch (wireframe profile/language-picker.md A and B).
  *
- * Only English ships (`LOCALE_STATUS`), so the DEFAULT build must draw no
- * language picker at all, even on a device whose browser prefers Spanish. The
- * pickers appear only in a build made with `EXPO_PUBLIC_SHOW_ALL_LOCALES=1`
- * (the QA flag); the second describe covers that build and runs only when
- * `E2E_ALL_LOCALES=1` points the suite at it:
- *
- *   EXPO_PUBLIC_SHOW_ALL_LOCALES=1 expo export --platform web --output-dir dist-all
- *   E2E_ALL_LOCALES=1  (and serve dist-all)
+ * English, Spanish and Korean all ship (`LOCALE_STATUS`, F-I18N-001 rows 15b /
+ * 16b), so the default build draws the pickers; a Spanish-speaking device starts
+ * in Spanish. The suite itself runs as an en-US browser (`playwright.config.ts`).
  *
  * The confirm sheet is written in the language being chosen: Spanish since the
  * Spanish dictionary landed (F-I18N-001 PR 15), Korean since the Korean one did
  * (PR 16). The tests read those lines from the dictionary.
  */
-const ALL_LOCALES = process.env.E2E_ALL_LOCALES === '1';
 /** The Spanish language-picker lines (the sheet is drawn in the language being chosen). */
 const es = getMessages('es').learner.language;
 /** The Korean language-picker lines (F-I18N-001 PR 16). */
@@ -54,33 +48,26 @@ async function onboardAndOpenProfile(page: Page): Promise<string> {
 
 const switchName = 'Hide romanization until I tap';
 
-test.describe('default build (English only)', () => {
-  test.skip(ALL_LOCALES, 'run against the flagged build in the other describe');
-
+test.describe('every build shows English, Spanish and Korean (F-I18N-001 rows 15b / 16b)', () => {
   test.describe('on a Spanish-speaking device', () => {
     test.use({ locale: 'es-MX' });
 
-    test('Welcome stays English and draws no language row', async ({ page }) => {
+    test('Welcome opens in Spanish, with the language row and Spanish marked', async ({ page }) => {
       await page.goto('/');
-      await expect(page.getByText("Hi! I'm Hoya.")).toBeVisible();
-      await expect(page.getByRole('button', { name: "Let's start" })).toBeVisible();
-      await expect(page.getByRole('radiogroup', { name: 'Language' })).toHaveCount(0);
-      for (const endonym of ['English', 'Español', '한국어']) {
-        await expect(page.getByRole('radio', { name: endonym })).toHaveCount(0);
-      }
-      await expect(page.locator('html')).toHaveAttribute('lang', 'en');
+      await expect(page.locator('html')).toHaveAttribute('lang', 'es');
+      const group = page.getByRole('radiogroup', { name: es.groupLabel });
+      await expect(group.getByRole('radio')).toHaveText(['English', 'Español', '한국어']);
+      await expect(page.getByRole('radio', { name: 'Español' })).toHaveAttribute('aria-checked', 'true');
+      // Detection is a default, not a stored choice.
+      expect(await readStored(page, 'device:settings')).toBeNull();
     });
   });
 
-  test('Profile has no language rows, only the reading-practice switch, and it is saved per profile', async ({ page }) => {
+  test('Profile: the reading-practice switch is saved per profile, beside the Language card', async ({ page }) => {
     await page.goto('/');
     const id = await onboardAndOpenProfile(page);
 
-    await expect(page.getByText('This profile', { exact: true })).toHaveCount(0);
-    await expect(page.getByText('New profiles and this device start in:')).toHaveCount(0);
-    await expect(page.getByTestId('language-device')).toHaveCount(0);
-    // The card is titled for reading alone, and the switch is there with its default (off).
-    await expect(page.getByRole('heading', { name: 'Reading practice' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Language' })).toBeVisible();
     const toggle = page.getByRole('switch', { name: switchName });
     await expect(toggle).toHaveAttribute('aria-checked', 'false');
 
@@ -99,10 +86,6 @@ test.describe('default build (English only)', () => {
     // No locale was ever chosen on this device.
     expect(await readStored(page, 'device:settings')).toBeNull();
   });
-});
-
-test.describe('QA build with every language shown (E2E_ALL_LOCALES=1)', () => {
-  test.skip(!ALL_LOCALES, 'needs a build made with EXPO_PUBLIC_SHOW_ALL_LOCALES=1');
 
   test('Welcome: three endonym chips, English marked; a tap stores the device choice and sets <html lang>', async ({ page }) => {
     await page.goto('/');

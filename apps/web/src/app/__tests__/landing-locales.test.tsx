@@ -7,6 +7,7 @@ import { localeBannerOffers } from '../../data/landing-copy';
 import { HomePage as LandingPage } from '../../components/landing/HomePage';
 import { LocaleSwitcher } from '../../components/landing/LocaleSwitcher';
 import { SITE_PAGES, type SitePage, siteMetadataFor } from '../../lib/site-metadata';
+import { withoutSwitcher } from './locale-switcher-html';
 
 /**
  * F-I18N-001 PR 11c (§3.3, §3.4): per-locale metadata with hreflang alternates, the footer locale switcher,
@@ -63,12 +64,14 @@ describe('every site page exports its own metadata', () => {
   });
 });
 
-describe('while es and ko are hidden, the landing is unchanged', () => {
-  it('no switcher, no banner, and Start learning goes to the app as it is', () => {
+describe('es and ko ship (F-I18N-001 rows 15b / 16b): the English landing offers them', () => {
+  it('the footer switcher lists all three, no banner in the static HTML, and Start learning goes to the app as it is', () => {
     const html = renderToStaticMarkup(<LandingPage locale="en" />);
-    expect(html).not.toContain('hrefLang');
-    expect(html).not.toContain('hreflang');
-    expect(html).not.toContain(`aria-label="${getMessages('en').landing.footer.language}"`);
+    expect(html).toContain(`aria-label="${getMessages('en').landing.footer.language}"`);
+    expect(html).toContain('href="/" hrefLang="en"');
+    expect(html).toContain('href="/es" hrefLang="es"');
+    expect(html).toContain('href="/ko" hrefLang="ko"');
+    expect(html).not.toContain('<aside');
     expect(hrefs(html).filter(isStartLearning)).toEqual([APP_URL, APP_URL, APP_URL]);
   });
 
@@ -158,7 +161,7 @@ describe('the legal pages stay English-authoritative under a localized notice (d
   it.each(LEGAL)('%s: English has no notice and no lang marks', async (_name, en) => {
     const html = renderToStaticMarkup((await en()).default());
     expect(html).not.toMatch(NOTICE);
-    expect(html).not.toContain('lang=');
+    expect(withoutSwitcher(html)).not.toContain('lang=');
   });
 
   it.each(LEGAL)('%s: /es and /ko show the notice in their words, above the document marked lang="en"', async (_name, _en, loc) => {

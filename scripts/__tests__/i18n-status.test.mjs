@@ -429,12 +429,12 @@ describe("main (end to end, TypeScript loaded through ts-loader.mjs)", () => {
     assert.match(r.stdout, /unknown option/);
   });
 
-  // PR 15 / PR 16 update this test when they flip es / ko to 'shipped'.
-  test("the repository itself: es and ko hidden, exit 0, every namespace listed", () => {
+  // Rows 15b / 16b flipped es and ko to 'shipped' (with es,ko in HANGUL_ROUTE_STRICT_LOCALES).
+  test("the repository itself: es and ko shipped with nothing missing, exit 0, every namespace listed", () => {
     const r = spawnSync("node", [SCRIPT], { encoding: "utf8", env: { ...process.env, HANGUL_ROUTE_ROOT: "" } });
     assert.equal(r.status, 0, r.stdout + r.stderr);
-    assert.match(r.stdout, /es\s+hidden/);
-    assert.match(r.stdout, /ko\s+hidden/);
+    assert.match(r.stdout, /es\s+shipped\s+0 missing/);
+    assert.match(r.stdout, /ko\s+shipped\s+0 missing/);
     for (const ns of ["common", "a11y", "learner", "caregiver", "console", "landing"]) assert.match(r.stdout, new RegExp(`\\b${ns}\\b`));
     assert.match(r.stdout, /landing\.legal\.privacy\.\*/);
   });

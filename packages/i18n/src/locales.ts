@@ -27,11 +27,11 @@ export const LOCALE_META: Record<UiLocale, LocaleMeta> = {
 
 export type LocaleStatus = 'shipped' | 'hidden';
 
-/** `es` and `ko` stay hidden until native review flips them (F-I18N-001 §3.10 step 5). */
+/** All three ship (F-I18N-001 rows 15b / 16b, owner decision 2026-10-14); a new locale starts `'hidden'` until the §3.10 step 5 gate. */
 export const LOCALE_STATUS: Record<UiLocale, LocaleStatus> = {
   en: 'shipped',
-  es: 'hidden',
-  ko: 'hidden',
+  es: 'shipped',
+  ko: 'shipped',
 };
 
 /**

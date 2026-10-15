@@ -5,8 +5,9 @@ import { SITE_PAGES, SITE_URL, shownSiteLocales, siteAlternates, siteMetadataFor
 
 /**
  * Per-locale metadata and hreflang for the site (F-I18N-001 §3.4, PR 11c). The alternates name only the
- * locales a visitor can reach: while es and ko are hidden the English pages carry none (their HTML is what
- * it was), and a QA build links all three, with English as x-default.
+ * locales a visitor can reach: es and ko ship (F-I18N-001 rows 15b / 16b), so every page links all three,
+ * with English as x-default. The hidden-locale paths (noindex, no alternates) are held by
+ * `site-hidden-locale.test.ts`, which stands a fixture locale in for one that has not shipped.
  */
 beforeEach(() => {
   vi.stubEnv('NEXT_PUBLIC_SHOW_ALL_LOCALES', '');
@@ -15,9 +16,9 @@ beforeEach(() => {
 afterEach(() => vi.unstubAllEnvs());
 
 describe('shownSiteLocales', () => {
-  it('is English alone while es and ko are hidden', () => {
-    expect(shownSiteLocales()).toEqual(['en']);
-    expect(shownSiteLocales(false)).toEqual(['en']);
+  it('is all three now that es and ko ship, English first', () => {
+    expect(shownSiteLocales()).toEqual(['en', 'es', 'ko']);
+    expect(shownSiteLocales(false)).toEqual(['en', 'es', 'ko']);
   });
 
   it('is every locale on a QA build, English first, in the dictionary order', () => {
@@ -28,8 +29,9 @@ describe('shownSiteLocales', () => {
 });
 
 describe('siteAlternates (hreflang)', () => {
-  it('is nothing while only English ships', () => {
-    for (const page of SITE_PAGES) expect(siteAlternates(page, false)).toBeUndefined();
+  it('links every page in all three shipped locales without the QA flag', () => {
+    for (const page of SITE_PAGES) expect(siteAlternates(page, false)).toEqual(siteAlternates(page, true));
+    expect(siteAlternates('/', false)).toEqual({ languages: { en: '/', es: '/es', ko: '/ko', 'x-default': '/' } });
   });
 
   it('links the same page in every shown locale, with English as x-default', () => {
@@ -45,24 +47,24 @@ describe('siteMetadataFor', () => {
     expect(SITE_PAGES).toEqual(['/', '/about', '/privacy', '/terms', '/learners', '/parents', '/teachers', '/licenses']);
   });
 
-  it('English while only English ships: the site metadata as before, plus the base for absolute URLs', () => {
+  it('English: the site metadata, the base for absolute URLs, and hreflang alternates with itself as canonical', () => {
     for (const page of ['/', '/about', '/privacy', '/terms'] as const) {
       const meta = siteMetadataFor('en', page);
-      const { metadataBase, ...rest } = meta;
+      const { metadataBase, alternates, ...rest } = meta;
       expect(rest).toEqual(siteMetadata);
       expect(metadataBase).toEqual(new URL(SITE_URL));
-      expect(meta.alternates).toBeUndefined();
+      expect(alternates).toEqual({ canonical: page, ...siteAlternates(page) });
     }
   });
 
-  it.each(['es', 'ko'] as const)('%s: its own words and og:locale; noindex and no alternates while hidden', (locale) => {
+  it.each(['es', 'ko'] as const)('%s: its own words and og:locale; indexable, with alternates (shipped)', (locale) => {
     const meta = siteMetadataFor(locale, '/about', false);
     const l = getMessages(locale).landing.meta;
     expect(meta.title).toBe(l.title);
     expect(meta.description).toBe(l.description);
     expect(meta.openGraph).toMatchObject({ locale: LOCALE_META[locale].ogLocale, title: l.title });
-    expect(meta.robots).toEqual({ index: false, follow: false });
-    expect(meta.alternates).toBeUndefined();
+    expect(meta.robots).toEqual({ index: true, follow: true });
+    expect(meta.alternates).toEqual({ canonical: `/${locale}/about`, ...siteAlternates('/about', false) });
   });
 
   it.each(['en', 'es', 'ko'] as const)('%s on a QA build: indexable, with hreflang alternates and itself as canonical', (locale) => {

@@ -28,25 +28,23 @@ import { controlsPastEdge, expectNoHorizontalOverflow, expectReachable } from '.
  *
  * - The suite runs as an `en-US` browser (`playwright.config.ts`), so every
  *   other spec's English `getByText` stays English whatever the machine's language.
- * - On the default build es and ko are hidden: a `?lang=` hand-off is ignored.
- * - On a build with every language shown: detection, the Welcome choice and its
- *   persistence, the `?lang=` hand-off and a profile's own language over the device's.
+ * - es and ko ship (F-I18N-001 rows 15b / 16b), so the default build shows all three:
+ *   detection, the Welcome choice and its persistence, the `?lang=` hand-off and a
+ *   profile's own language over the device's.
  * - The layout matrix: Welcome, CreateProfile, Results, Home, Profile and PinEntry at
  *   320 / 375 / 768 in every locale the build shows — no sideways scroll, every control
  *   at least `touchTarget.min` (the touch-target ratchet's listed controls aside) and the
  *   primary CTA fully on screen once the learner scrolls to it.
  *
- * The default build (CI) runs the English half. The rest runs against flagged builds, on
- * demand (no pipeline builds them yet: F-I18N-001 §10), each served in place of `dist`:
+ * The default build (CI) runs en, es and ko. The en-XA half runs against a flagged build, on
+ * demand (no pipeline builds it yet: F-I18N-001 §10), served in place of `dist`:
  *
- *   EXPO_PUBLIC_SHOW_ALL_LOCALES=1 expo export --platform web --output-dir dist   ->  E2E_ALL_LOCALES=1
  *   EXPO_PUBLIC_PSEUDO_LOCALE=1    expo export --platform web --output-dir dist   ->  E2E_PSEUDO_LOCALE=1
  *
  * (`node scripts/pwa-postbuild.mjs dist` after each export; `--clear` keeps Metro from reusing
  * a transform made with other flags.) The es and ko dictionaries are filled (PR 15 / 16); the matrix
  * finds every control by its dictionary message, so those runs read Spanish and Korean.
  */
-const ALL_LOCALES = process.env.E2E_ALL_LOCALES === '1';
 const PSEUDO = process.env.E2E_PSEUDO_LOCALE === '1';
 
 const readFixture = (name: string): unknown => JSON.parse(readFileSync(join(__dirname, 'fixtures', name), 'utf8'));
@@ -79,19 +77,6 @@ test.describe('the en-US pin', () => {
   });
 });
 
-test.describe('default build (only English ships)', () => {
-  test.skip(ALL_LOCALES || PSEUDO, 'runs against the default build');
-  test.use({ locale: 'es-MX' });
-
-  test('a ?lang= hand-off to a hidden locale is ignored, stores nothing and leaves a clean address bar', async ({ page }) => {
-    await page.goto('/?lang=es');
-    await expect(page.getByRole('button', { name: "Let's start" })).toBeVisible();
-    await expect(page.locator('html')).toHaveAttribute('lang', 'en');
-    await expect(page).not.toHaveURL(/lang=/);
-    await expectStoredStays(page, 'device:settings', null, 'en');
-  });
-});
-
 /**
  * The install guide shows from the third cached open, on its own schedule, and covers the Home tabs: whenever
  * it is in the way of an action, Playwright closes it first with "Not now", in whichever language it shows.
@@ -102,8 +87,8 @@ async function dismissInstallGuideWhenShown(page: Page): Promise<void> {
   });
 }
 
-test.describe('every language shown (E2E_ALL_LOCALES=1)', () => {
-  test.skip(!ALL_LOCALES || PSEUDO, 'needs a build made with EXPO_PUBLIC_SHOW_ALL_LOCALES=1 (and no pseudo flag)');
+test.describe('every language shown (es and ko ship)', () => {
+  test.skip(PSEUDO, 'runs against a build with no pseudo flag');
 
   test.describe('a Spanish browser', () => {
     test.use({ locale: 'es-MX' });

@@ -8,6 +8,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { getMessages, type Messages, type UiLocale } from '@hangul-route/i18n';
 import { siteMetadata } from '../../data/landing-copy';
 import { HIDDEN_LOCALE_ATTR, siteLocaleParams } from '../../lib/site-locales';
+import { shownSiteLocales } from '../../lib/site-metadata';
 // Every layout and page is imported here, once, and never with a dynamic import inside a test: loading a page
 // pulls in the whole landing graph (i18n dictionaries, content schema, design-system art), and inside a test body
 // that load counted against the 5 s test timeout, which a busy CI runner exceeded. Imported at the top, it runs
@@ -136,15 +137,16 @@ describe('<html lang> is right in the static HTML', () => {
     expect(body(renderToStaticMarkup(con.default({ children: 'x' })))).toBe(body(enHtml));
   });
 
-  it.each(SITE_LOCALES)('(loc)/[locale] renders lang="%s", marked hidden while it has not shipped', (locale) => {
+  it.each(SITE_LOCALES)('(loc)/[locale] renders lang="%s", with no hidden marker now that it ships (rows 15b / 16b)', (locale) => {
     const mod = locLayout as { default: (p: LayoutProps) => JSX.Element };
-    expect(renderToStaticMarkup(mod.default({ children: 'x', params: { locale } }))).toMatch(
-      new RegExp(`^<html lang="${locale}" ${HIDDEN_LOCALE_ATTR}="${locale}">`),
-    );
+    const html = renderToStaticMarkup(mod.default({ children: 'x', params: { locale } }));
+    expect(html).toMatch(new RegExp(`^<html lang="${locale}"><body `));
+    expect(html).not.toContain(HIDDEN_LOCALE_ATTR);
   });
 });
 
-describe('/es and /ko are prerendered but hidden until shipped', () => {
+// The hidden-locale half (marker, noindex) is route-groups-hidden.test.tsx's, on a fixture locale that has not shipped.
+describe('/es and /ko are prerendered and shipped (F-I18N-001 rows 15b / 16b)', () => {
   type LocaleLayoutModule = {
     dynamicParams: boolean;
     generateStaticParams: () => unknown;
@@ -157,9 +159,9 @@ describe('/es and /ko are prerendered but hidden until shipped', () => {
     expect(mod.generateStaticParams()).toEqual([{ locale: 'es' }, { locale: 'ko' }]);
   });
 
-  it('a hidden locale is noindex, on top of the site metadata', () => {
+  it.each(SITE_LOCALES)('a shipped locale (%s) is indexable: no noindex on top of the site metadata', (locale) => {
     const mod = locLayout as LocaleLayoutModule;
-    expect(mod.generateMetadata({ params: { locale: 'es' } })).toEqual({ robots: { index: false, follow: false } });
+    expect(mod.generateMetadata({ params: { locale } })).toEqual({});
   });
 
   it.each(SITE_LOCALES)('a QA build (NEXT_PUBLIC_SHOW_ALL_LOCALES=1) shows %s: no marker, no noindex', (locale) => {
@@ -169,12 +171,7 @@ describe('/es and /ko are prerendered but hidden until shipped', () => {
     expect(mod.generateMetadata({ params: { locale } })).toEqual({});
   });
 
-  it.each(SITE_LOCALES)('the learner app flag (EXPO_PUBLIC_SHOW_ALL_LOCALES=1) alone keeps %s hidden', (locale) => {
-    vi.stubEnv('EXPO_PUBLIC_SHOW_ALL_LOCALES', '1');
-    const mod = locLayout as LocaleLayoutModule & { default: (p: LayoutProps) => JSX.Element };
-    expect(renderToStaticMarkup(mod.default({ children: 'x', params: { locale } }))).toContain(`${HIDDEN_LOCALE_ATTR}="${locale}"`);
-    expect(mod.generateMetadata({ params: { locale } })).toEqual({ robots: { index: false, follow: false } });
-  });
+
 
   it('a locale that is not a site locale is a 404 in the layout, never an English copy', () => {
     const layout = locLayout as { default: (p: LayoutProps) => JSX.Element };
@@ -249,7 +246,13 @@ describe('locale pages are the English pages with locale links', () => {
             : href === 'https://app.hangulroute.com'
               ? `${href}?lang=${locale}`
               : href;
-      expect(hrefs(locHtml)).toEqual(hrefs(enHtml).map(toLocale));
+      // The footer's locale switcher (last on the page, once a second locale ships) links the same page in every
+      // shown locale, so it is the same list on every locale's page.
+      const tail = shownSiteLocales().length > 1 ? shownSiteLocales().length : 0;
+      const enHrefs = hrefs(enHtml);
+      const locHrefs = hrefs(locHtml);
+      expect(locHrefs.slice(0, locHrefs.length - tail)).toEqual(enHrefs.slice(0, enHrefs.length - tail).map(toLocale));
+      expect(locHrefs.slice(locHrefs.length - tail)).toEqual(enHrefs.slice(enHrefs.length - tail));
       if (translated(locale)) {
         const { own, english } = WORDS[name]!(getMessages(locale as UiLocale));
         expect(locHtml).toContain(escapeText(own));

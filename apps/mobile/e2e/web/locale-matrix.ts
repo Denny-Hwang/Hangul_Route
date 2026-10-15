@@ -33,13 +33,13 @@ export const MATRIX_SCREENS: readonly MatrixScreen[] = ['Welcome', 'CreateProfil
 export const BROWSER_LOCALE: Record<MatrixLocale, string> = { en: 'en-US', 'en-XA': 'en-US', es: 'es-ES', ko: 'ko-KR' };
 
 /**
- * Which locales a build can show. A default build has only English. `E2E_ALL_LOCALES=1` marks a build made
- * with `EXPO_PUBLIC_SHOW_ALL_LOCALES=1` (es and ko shown); `E2E_PSEUDO_LOCALE=1` one made with
+ * Which locales a build shows. Every build shows en, es and ko since es and ko shipped (F-I18N-001 rows 15b /
+ * 16b), so the default build (CI) runs all three. `E2E_PSEUDO_LOCALE=1` marks a build made with
  * `EXPO_PUBLIC_PSEUDO_LOCALE=1`, which draws English as en-XA (`dictionaryLocale`), so en-XA takes its place.
  */
 export function matrixLocales(env: Record<string, string | undefined>): MatrixLocale[] {
   const first: MatrixLocale = env.E2E_PSEUDO_LOCALE === '1' ? 'en-XA' : 'en';
-  return env.E2E_ALL_LOCALES === '1' ? [first, 'es', 'ko'] : [first];
+  return [first, 'es', 'ko'];
 }
 
 const pseudoMessages = pseudoLocalize(getMessages('en'));
