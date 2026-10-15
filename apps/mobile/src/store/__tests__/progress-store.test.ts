@@ -16,6 +16,8 @@ vi.mock('../../platform/telemetry', () => ({
 import { episodesAll } from '../../content/episodes';
 import { setProgressPersistListener } from '../../logic/sync/persist-hook';
 import { readJson, writeJson } from '../../platform/storage';
+import { localDay } from '../../logic/vocab/progress';
+import { addDays } from '../../logic/vocab/srs';
 import { placementResult } from '../../logic/placement/__tests__/fixtures';
 import { selfRoute } from '../../logic/homework/__tests__/curriculum-fixture';
 import { track } from '../../platform/telemetry';
@@ -451,15 +453,17 @@ describe('recordVocab (F-VOC-005 section 3.2)', () => {
   const APPLE = 'vocab:sagwa-apple';
   const EYE = 'vocab:nun-eye';
   const T1 = new Date('2026-10-11T15:00:00.000Z');
+  // Day keys are the device's local calendar day, so they are built from T1's local day (any TZ).
+  const TODAY = localDay(T1);
   const word = (over: Partial<VocabItemState> = {}): VocabItemState => ({
     id: APPLE,
-    first: '2026-10-01',
+    first: addDays(TODAY, -10),
     seen: 4,
     right: 3,
     bestBox: 3,
-    last: '2026-10-08',
+    last: addDays(TODAY, -3),
     box: 3,
-    due: '2026-10-15',
+    due: addDays(TODAY, 4),
     at: '2026-10-08T10:00:00.000Z',
     ...over,
   });
@@ -482,7 +486,7 @@ describe('recordVocab (F-VOC-005 section 3.2)', () => {
     const before = useProgressStore.getState().byProfile['p1'] as ProgressSnapshot;
     useProgressStore.getState().recordVocab('p1', [{ type: 'introduced', id: APPLE }, { type: 'session', topicKey: 'food', kind: 'cards' }], T1);
     const after = useProgressStore.getState().byProfile['p1'] as ProgressSnapshot;
-    expect(vocabIn(after)).toMatchObject({ box: 1, due: '2026-10-12', first: '2026-10-11' });
+    expect(vocabIn(after)).toMatchObject({ box: 1, due: addDays(TODAY, 1), first: TODAY });
     expect(after.vocab?.topics.map((t) => t.topic)).toEqual(['food']);
     expect(after.updatedAt).toBe(T1.toISOString());
     const { vocab: _v, updatedAt: _u, ...restAfter } = after;
@@ -532,9 +536,9 @@ describe('recordVocab (F-VOC-005 section 3.2)', () => {
   it('an answer queued before hydration moves the saved box, in order with later batches', async () => {
     mem.set('progress:p1', withVocab([word()]));
     useProgressStore.getState().recordVocab('p1', [{ type: 'answer', id: APPLE, correct: true, source: 'speed' }], T1);
-    useProgressStore.getState().recordVocab('p1', [{ type: 'answer', id: APPLE, correct: false, source: 'speed' }], new Date('2026-10-11T15:01:00.000Z'));
+    useProgressStore.getState().recordVocab('p1', [{ type: 'answer', id: APPLE, correct: false, source: 'speed' }], new Date(T1.getTime() + 60_000));
     await settle();
-    expect(vocabIn(useProgressStore.getState().byProfile['p1'])).toMatchObject({ box: 3, bestBox: 4, seen: 6, right: 4, due: '2026-10-12' });
+    expect(vocabIn(useProgressStore.getState().byProfile['p1'])).toMatchObject({ box: 3, bestBox: 4, seen: 6, right: 4, due: addDays(TODAY, 1) });
   });
 
   it('with nothing saved, the queued events count once', async () => {
