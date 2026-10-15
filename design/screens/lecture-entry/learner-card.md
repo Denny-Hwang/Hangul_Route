@@ -15,7 +15,7 @@ In `ParentDashboardScreen`, after `GrownUpHomeCard`, the same `rn-card` look: h2
 
 ## Measured
 
-375 and 1280: no overflow in the card, targets at least 64 px. 320 with 200 % text: the card wraps cleanly; the existing "Family Dashboard" heading row (unchanged, F-PAR-001) runs 3 px past 320, which is a separate existing issue (the heading needs `overflow-wrap`), not part of this card.
+375 and 1280: no overflow in the card, targets at least 64 px. 320 with 200 % text: the card wraps cleanly; the existing "Family Dashboard" heading row (unchanged, F-PAR-001) runs 3 px past 320, which is a separate existing issue (the heading needs `overflow-wrap`), not part of this card; it is tracked in the spec's LV-6 row (the fix and a no-sideways-scroll assertion at 320 / 200 % in its e2e).
 
 ## Strings
 

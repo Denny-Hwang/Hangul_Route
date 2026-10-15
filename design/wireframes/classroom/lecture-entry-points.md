@@ -58,7 +58,7 @@ Panel E2 — family home `/parent`, phone 375: the same card above the learner c
 | | setup needed.                 | |
 | | [[   START LECTURE MODE    ]] | |  -> /parent/space/lecture?id= (presets first)
 | +-------------------------------+ |
-|  [learner card] ...               |  <- unchanged; first learner card still fits below at 375 x 667? (see Open questions)
+|  [learner card] ...               |  <- below 70em the card follows the first learner card (see Open questions, resolved)
 +-----------------------------------+
 ```
 
@@ -140,4 +140,4 @@ Exit to: `/teach/space/lecture?id=` · `/parent/space/lecture?id=` · `/present`
 
 ## Open questions
 
-- Family home at 375 x 667: with the card above them, the first learner card may no longer fit whole on the first screen (`parent-home.md` asks for it). The LV-0b mock measures it; if it does not fit, the card moves below the first learner card on narrow screens only (the nav item stays).
+- Resolved in LV-0b (`design/screens/app-shell/lecture-card.md` "Placement"): at 375 x 667 the first learner card does not fit below the card, so below 70em the card goes directly after the first learner card (after the first row of learner cards from 45em); from 70em it is first in the side column. Spec section 3 E2 reads so; the tab row scrolls its current item into view (LV-5).

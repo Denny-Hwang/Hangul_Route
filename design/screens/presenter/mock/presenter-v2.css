@@ -14,6 +14,7 @@
   --pic-opt: calc(var(--u) * 112);  /* a picture option in a listen quiz: two rows of options fit 504 units with the prompt line */
   --pic-md: calc(var(--u) * 300);   /* the picture beside a sentence or a type prompt */
   --cell-w: calc(var(--u) * 84);    /* one sound-table block: 13 across the 1184-unit content area */
+  --trace-stroke: calc(var(--u) * 6); /* the trace ghost outline (V11): thick enough to read from the back at presenter.size.glyph, thin enough to keep the counters open */
 }
 
 /* ------------------------------------------------------------------------------------------ */
@@ -142,7 +143,7 @@
 .write-head .where { font-size: var(--s-caption); color: var(--colors-text-primary); display: flex; align-items: center; gap: calc(var(--u) * var(--spacing-n-sm)); }
 .write-head .where svg { width: calc(var(--u) * 40); height: calc(var(--u) * 40); flex: none; }
 .variant { font-size: var(--s-body); font-weight: var(--weight-semibold); }
-.ghost-word { font-size: var(--s-glyph); line-height: 1; color: transparent; -webkit-text-stroke: calc(var(--u) * 6) var(--colors-text-secondary); paint-order: stroke; word-break: keep-all; }
+.ghost-word { font-size: var(--s-glyph); line-height: 1; color: transparent; -webkit-text-stroke: var(--trace-stroke) var(--colors-text-secondary); paint-order: stroke; word-break: keep-all; }
 .answer { display: flex; flex-direction: column; gap: calc(var(--u) * var(--spacing-n-xs)); }
 .ex-label { font-size: var(--s-caption); color: var(--colors-text-secondary); font-weight: var(--weight-bold); }
 .sound-table { display: flex; flex-direction: column; gap: calc(var(--u) * var(--spacing-n-xs)); }

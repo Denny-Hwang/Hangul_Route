@@ -1,0 +1,49 @@
+/*
+ * Lecture mode v2 design pass (LV-0b): the console setup page, presets first (row LV-4; wireframe
+ * design/wireframes/classroom/lecture-presets.md Panel F). Static design mock, not shipped code. Loaded after app-shell.css;
+ * tokens only. The preset cards follow design/screens/presenter/presets.md, written with the console's rem / em method.
+ * Pairs: text.primary on surface.paper and surface.sunken as the existing console pages; text.onPrimary on brand.primary
+ * as the existing primary button.
+ */
+.setup { display: flex; flex-direction: column; gap: var(--spacing-xl); max-width: var(--max-width-reading); }
+.setup-head { display: flex; flex-direction: column; gap: var(--spacing-sm); align-items: flex-start; }
+.setup-head .page-title { overflow-wrap: anywhere; }
+.setup-section { display: flex; flex-direction: column; gap: var(--spacing-md); }
+.setup-section > h2 { font-size: var(--size-prompt); line-height: var(--leading-tight); font-weight: var(--weight-bold); }
+.preset-cards { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--spacing-md); }
+@media (min-width: 45em) { .preset-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.preset { display: flex; flex-direction: column; background: var(--colors-surface-paper); border: var(--border-width-thin) solid var(--colors-border-subtle); border-radius: var(--radii-lg); box-shadow: var(--shadow-card); min-width: 0; }
+.preset.open { grid-column: 1 / -1; border: var(--border-width-thick) solid var(--colors-text-primary); }
+.preset-btn { display: flex; flex-direction: column; align-items: stretch; gap: var(--spacing-xs); min-height: var(--touch-min); width: 100%; padding: var(--spacing-lg); background: transparent; border: none; border-radius: var(--radii-lg); text-align: left; cursor: pointer; }
+.preset-btn .p-title { font-size: var(--size-bodyLg); font-weight: var(--weight-bold); line-height: var(--leading-tight); overflow-wrap: anywhere; }
+.preset-btn .p-line { color: var(--colors-text-secondary); overflow-wrap: anywhere; }
+.preset-btn .p-meta { display: flex; align-items: center; justify-content: space-between; gap: var(--spacing-sm); margin-top: auto; padding-top: var(--spacing-xs); font-weight: var(--weight-semibold); }
+.preset-open { display: flex; flex-direction: column; gap: var(--spacing-lg); padding: 0 var(--spacing-lg) var(--spacing-lg); }
+.fallback { background: var(--colors-surface-sunken); border-radius: var(--radii-md); padding: var(--spacing-sm) var(--spacing-md); }
+.chip-group { display: flex; flex-direction: column; gap: var(--spacing-xs); }
+.chip-group .label, .sub-title { font-weight: var(--weight-bold); }
+.chip-row { display: flex; flex-wrap: wrap; gap: var(--spacing-sm); }
+.chip-row .btn[aria-checked="true"] { background: var(--colors-text-primary); border-color: var(--colors-text-primary); color: var(--colors-text-inverse); }
+.read-list { display: flex; flex-direction: column; border-top: var(--border-width-thin) solid var(--colors-border-subtle); }
+.read-list li { display: flex; flex-wrap: wrap; justify-content: space-between; column-gap: var(--spacing-md); padding: var(--spacing-sm) 0; border-bottom: var(--border-width-thin) solid var(--colors-border-subtle); }
+.read-list li b { overflow-wrap: anywhere; }
+.read-list li span { color: var(--colors-text-secondary); }
+.list-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; column-gap: var(--spacing-md); }
+.radio-row { display: flex; flex-wrap: wrap; gap: var(--spacing-sm); }
+.radio-row label { display: inline-flex; align-items: center; gap: var(--spacing-sm); min-height: var(--touch-min); padding: var(--spacing-xs) var(--spacing-md); border-radius: var(--radii-pill); border: var(--border-width-thin) solid var(--colors-border-strong); background: var(--colors-surface-paper); font-weight: var(--weight-semibold); }
+.radio-row label.on { border: var(--border-width-thick) solid var(--colors-text-primary); }
+.radio-row input { width: var(--spacing-xl); height: var(--spacing-xl); accent-color: var(--colors-text-primary); }
+.privacy { color: var(--colors-text-secondary); font-size: var(--size-bodySm); }
+.open-actions { display: flex; flex-wrap: wrap; gap: var(--spacing-sm); }
+.open-actions .btn-primary { min-height: var(--touch-hero); flex: 1 1 auto; font-size: var(--size-bodyLg); }
+@media (min-width: 45em) { .open-actions .btn-primary { flex: none; padding-left: var(--spacing-xxl); padding-right: var(--spacing-xxl); } }
+.open-actions .btn:not(.btn-primary) { min-height: var(--touch-hero); }
+.disclosure { align-self: flex-start; }
+.customize { display: flex; flex-direction: column; gap: var(--spacing-md); }
+.customize-body { display: flex; flex-direction: column; gap: var(--spacing-lg); padding: var(--spacing-lg); background: var(--colors-surface-paper); border: var(--border-width-thin) solid var(--colors-border-subtle); border-radius: var(--radii-lg); }
+.outline-rows li { align-items: center; }
+.row-tools { display: flex; flex-wrap: wrap; gap: var(--spacing-xs); }
+.row-tools .btn { min-width: var(--touch-min); padding-left: var(--spacing-md); padding-right: var(--spacing-md); }
+.check-list { display: flex; flex-direction: column; gap: var(--spacing-xs); padding-left: var(--spacing-lg); list-style: disc; }
+.sk-cards { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--spacing-md); }
+@media (min-width: 45em) { .sk-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); } }

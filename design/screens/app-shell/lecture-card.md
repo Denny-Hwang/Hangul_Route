@@ -2,8 +2,8 @@
 
 Spec: `docs/specs/AMENDMENTS-LECTURE-V2.md` sections 3 (E1 to E4), 6, 7, 12.1 · wireframe `design/wireframes/classroom/lecture-entry-points.md` Panels E1 to E4 · row **LV-5** (and the renamed keys of LV-4)
 Mock: `mock/teacher-home-lecture.html`, `mock/parent-home-lecture.html`, `mock/lecture-card-states.html`, `mock/lecture-card.css` (loaded after `app-shell.css`; tokens only)
-Shots: `teacher-home-lecture-375`, `-1280`, `-320-text200`, `-375-first`; `parent-home-lecture-375`, `-1280`, `-320-text200`, `-375-first`; `lecture-card-states-375`, `-1280`
-The learner app card (E5) is in `design/screens/lecture-entry/learner-card.md`.
+Shots: `teacher-home-lecture-375`, `-1280`, `-320-text200`, `-375-first`; `parent-home-lecture-375`, `-768`, `-1280`, `-320-text200`, `-375-first`; `lecture-card-states-375`, `-1280`
+The learner app card (E5) is in `design/screens/lecture-entry/learner-card.md`; the setup page the card opens (presets first, LV-4) is in `lecture-setup.md`.
 
 ## The card (E1 teacher home, E2 family home)
 
@@ -17,17 +17,17 @@ The learner app card (E5) is in `design/screens/lecture-entry/learner-card.md`.
 ## Placement
 
 - **Teacher home**: first in the content column, above Classes, at every width.
-- **Family home** (the wireframe's open question, measured): with the card above the learner cards, the first learner card no longer fits the first screen at 375 x 667 (frame, family heading and the card already take 667 px). So the card is a child of the home layout between the learner cards and the family actions: below 70em it follows the family's learner cards (`parent-home-lecture-375-first.png` keeps the whole first learner card); from 70em it is first in the side column, above the family actions (`parent-home-lecture-1280.png`). The nav item stays the phone's quick way in.
+- **Family home** (the wireframe's open question, measured; spec section 3 E2 amended to match): with the card above the learner cards, the first learner card no longer fits the first screen at 375 x 667 (frame, family heading and the card already take 667 px). So below 70em the card goes **directly after the first learner card** (one column below 45em; from 45em, where learner cards go two across, after the first row of them: `grid-row: 2` spanning the row). The first screen at 375 x 667 then keeps the whole first learner card and shows the top of the card (`parent-home-lecture-375-first.png`), and with two or more learners the card is never pushed below them all (`parent-home-lecture-375.png`, `-768.png`, two learners). From 70em it is first in the side column, level with the learner cards, above the family actions (`parent-home-lecture-1280.png`). The mock draws both slots and shows one per width; LV-5 renders one card, in the slot for the current width (`useWindowDimensions` against 70em), with `id="lecture-mode"` on it.
 
 ## Nav item (E3) and space button (E4)
 
-- **Lecture mode** (`console.shell.nav.lecture`) after Lessons, before Billing, for both personas; `aria-current="page"` on any `/…/space/lecture` page. At 375 the tab row scrolls sideways as it already does (`adult-frame.md`); the family row's fifth and sixth items start off-screen there. Observation for LV-5: scroll the current item into view on load, as the row already should for Billing.
+- **Lecture mode** (`console.shell.nav.lecture`) after Lessons, before Billing, for both personas; `aria-current="page"` on any `/…/space/lecture` page. At 375 the tab row scrolls sideways as it already does (`adult-frame.md`); the family row's fifth and sixth items start off-screen there (`parent-home-lecture-375-first.png` shows "Lecture m…" cut at the edge), so the nav item is not the phone's quick way in by itself. **Requirement for LV-5** (spec section 3 E3 and the LV-5 row): the tab row scrolls its current item into view on load (`scrollIntoView({ inline: 'nearest' })` without smooth motion), which also fixes the same case for Billing; on the family home the card after the first learner card is the first-screen entry.
 - Space page: the button keeps its place and secondary weight and reads **Lecture mode** (`console.lecture.entry.cta`, changed).
 
 ## Strings
 
 Section 12.1 keys drawn: `console.shell.nav.lecture`, `console.lecture.entry.cta` (changed), `card.title`, `card.tagline`, `card.bodyClass`, `card.bodyFamily`, `card.cta`, `card.chooseClass`, `card.chooseFamily`, `card.noSpace`. Existing: the frame and home strings, `console` "Loading…".
-Gaps found against section 12 (add in LV-5, es and ko to F-I18N-001 §3.10):
+Gaps found against section 12 (add in LV-5, es and ko to F-I18N-001 §3.10; now in the spec's section 12.1 table):
 
 | Key | en | es | ko | Note |
 |---|---|---|---|---|

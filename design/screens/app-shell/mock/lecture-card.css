@@ -18,10 +18,16 @@
 .lm-rows li { border-bottom: var(--border-width-thin) solid var(--colors-border-subtle); }
 .lm-next { padding: var(--spacing-xs) 0; color: var(--colors-text-primary); }
 .home-card .rn-btn.rn-ghost { align-self: flex-end; }
-/* Family home: the card is a child of the home layout between the learner cards and the family actions. Below 70em it follows
-   the learner cards, so the first screen at 375 x 667 keeps the whole first learner card (measured in ../lecture-card.md);
-   from 70em it is first in the side column (lecture-entry-points.md Panel E1/E2 wide). */
+/* Family home (measured in ../lecture-card.md "Placement"). Below 70em the card follows the first learner card: one column
+   below 45em, the first row of learner cards from 45em (its grid-row 2 lets the auto-placed learners fill row 1), so the first
+   screen at 375 x 667 keeps the whole first learner card and the card starts on it. From 70em it is first in the side column,
+   above the family actions (lecture-entry-points.md Panel E1/E2 wide). The mock draws both slots; LV-5 renders one. */
+.cards > .lecture-card { grid-column: 1 / -1; }
+@media (min-width: 45em) { .cards > .lecture-card { grid-row: 2; } }
+.home-layout > .lecture-card.lm-wide { display: none; }
 @media (min-width: 70em) {
+  .cards > .lecture-card.lm-narrow { display: none; }
+  .home-layout.with-side > .lecture-card.lm-wide { display: flex; }
   .home-layout.with-side > .stack-md:first-child { grid-column: 1; grid-row: 1 / span 2; }
   .home-layout.with-side > .lecture-card { grid-column: 2; grid-row: 1; }
   .home-layout.with-side > aside { grid-column: 2; grid-row: 2; }

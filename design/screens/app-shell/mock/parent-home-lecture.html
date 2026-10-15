@@ -29,13 +29,15 @@
   <div class="who"><span class="chip" role="img" aria-label="Home Tiger" style="background: var(--colors-hoya-furBlueDark)"></span><h3 class="who-name">Sam</h3></div>
   <div class="facts"><p>Last active today</p><p>Minutes, last 7 days: 42</p></div>
   <div class="card-actions"><a class="btn btn-primary btn-block" href="#">See report</a><div class="row-wrap"><a class="btn btn-small" href="#">Send a note</a><a class="btn btn-small" href="#">Learning Route</a></div></div>
-</article><article class="learner-card" aria-label="Mina">
+</article><!-- Below 70em the card follows the first learner card (one column) or the first row of learner cards (two columns, 45em to 70em). -->
+<section class="lecture-card lm-narrow" id="lecture-mode" aria-labelledby="lm-h"><h2 id="lm-h" tabindex="-1">Lecture mode</h2><p class="lm-tag">Teach on a big screen</p><p class="lm-body">Put a lesson on your TV and learn together at home. No setup needed.</p><a class="btn btn-primary lm-cta" href="#">Start lecture mode</a></section><article class="learner-card" aria-label="Mina">
   <div class="who"><span class="chip" role="img" aria-label="Feast Tiger" style="background: var(--colors-hoya-furGreenDark)"></span><h3 class="who-name">Mina</h3></div>
   <div class="facts"><p>Last active Monday</p><p>Minutes, last 7 days: 15</p></div>
   <div class="card-actions"><a class="btn btn-primary btn-block" href="#">See report</a><div class="row-wrap"><a class="btn btn-small" href="#">Send a note</a><a class="btn btn-small" href="#">Learning Route</a></div></div>
 </article></div>
 </section></div>
-  <section class="lecture-card" id="lecture-mode" aria-labelledby="lm-h"><h2 id="lm-h" tabindex="-1">Lecture mode</h2><p class="lm-tag">Teach on a big screen</p><p class="lm-body">Put a lesson on your TV and learn together at home. No setup needed.</p><a class="btn btn-primary lm-cta" href="#">Start lecture mode</a></section>
+  <!-- The same card in its wide slot (from 70em, first in the side column). LV-5 renders one card, in the slot for the current width. -->
+  <section class="lecture-card lm-wide" id="lecture-mode-wide" aria-labelledby="lm-h-wide"><h2 id="lm-h-wide" tabindex="-1">Lecture mode</h2><p class="lm-tag">Teach on a big screen</p><p class="lm-body">Put a lesson on your TV and learn together at home. No setup needed.</p><a class="btn btn-primary lm-cta" href="#">Start lecture mode</a></section>
   <aside class="stack-md" aria-label="Kim family"><div class="family-actions">
   <div class="row-wrap"><a class="btn btn-small" href="#">Lessons</a><a class="btn btn-small" href="#">Plan the week</a><a class="btn btn-small" href="#">Plan the term</a><a class="btn btn-small" href="#">Family settings</a><button type="button" class="btn btn-small" aria-expanded="false" aria-controls="add-learner">Add a learner</button></div>
   
