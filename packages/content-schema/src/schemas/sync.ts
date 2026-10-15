@@ -209,14 +209,16 @@ export type LearnerProfilePatch = z.infer<typeof LearnerProfilePatchSchema>;
 
 /**
  * The learner row as the server holds it, on the inbox of a full-scope device
- * (the learner's own). Lenient: one bad field drops the whole block, never the
- * inbox. `profileUpdatedAt` is null until the first edit after registration.
+ * (the learner's own). Lenient per field: a stale level or picture on a legacy
+ * row reads as null or empty and never hides the name; only a missing name
+ * drops the block (never the inbox). `profileUpdatedAt` is null until the
+ * first edit after registration.
  */
 export const InboxLearnerSchema = z.object({
   displayName: z.string(),
-  ageGroup: LearnerLevelIdSchema,
-  avatar: z.string(),
-  profileUpdatedAt: z.string().nullable(),
+  ageGroup: LearnerLevelIdSchema.nullable().catch(null),
+  avatar: z.string().catch(''),
+  profileUpdatedAt: z.string().nullable().catch(null),
 });
 export type InboxLearner = z.infer<typeof InboxLearnerSchema>;
 

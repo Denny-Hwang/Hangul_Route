@@ -137,6 +137,12 @@ export class MemoryDb implements Db {
     learner.profileUpdatedAt = at;
     return true;
   }
+  async setDisplayNameIfUnedited(learnerId: string, displayName: string): Promise<boolean> {
+    const learner = this.learners.get(learnerId);
+    if (!learner || learner.profileUpdatedAt) return false;
+    learner.displayName = displayName;
+    return true;
+  }
   async setRecoveryHash(learnerId: string, hash: string): Promise<void> {
     const holder = [...this.learners.values()].find((l) => l.recoveryHash === hash && l.id !== learnerId);
     if (holder) throw new Error('UNIQUE constraint failed: learners.recovery_hash');

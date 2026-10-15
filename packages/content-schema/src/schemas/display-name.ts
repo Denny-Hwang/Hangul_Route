@@ -3,7 +3,7 @@ import { z } from 'zod';
 /**
  * The learner name rule, shared by the app and the Worker (F-PROF-001 section
  * 3.2). Learner names are user data, not UI text, so they are valid in every
- * UI language: Latin letters including accents (María, Zoë), Hangul syllables
+ * UI language: Latin letters including accents (María, Zoë), Hangul
  * syllables, digits, spaces, apostrophes and hyphens. Emoji, other scripts and
  * control characters stay out. Explicit ranges, not \p{...}: Hermes support
  * for Unicode property escapes is not guaranteed (F-I18N-001 section 3.9).
@@ -12,6 +12,9 @@ import { z } from 'zod';
  * apps/mobile/src/logic/profiles/profile-model.ts (`validateDisplayName`), so
  * every name a device accepts is accepted here. It checks incoming writes
  * only: a stored legacy name is read as it is and never rewritten.
+ *
+ * The regex message is for developers only. Clients never show it: they map
+ * the error by its code to their own text through packages/i18n.
  */
 export const DISPLAY_NAME_MIN = 1;
 export const DISPLAY_NAME_MAX = 12;

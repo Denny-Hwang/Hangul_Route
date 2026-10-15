@@ -91,6 +91,13 @@ export interface Db {
    * empty `fields` or a missing learner.
    */
   updateLearnerProfile(learnerId: string, fields: LearnerProfileFields, at: string): Promise<boolean>;
+  /**
+   * Sets `display_name` only while the learner has no profile edit yet (`profile_updated_at` is null), and leaves
+   * `profile_updated_at` null: the join path's repair for app builds that cannot PATCH. Server time never enters
+   * the device-time order of PATCH edits, and once a PATCH has applied, PATCH is the only writer of the name.
+   * Returns whether it applied.
+   */
+  setDisplayNameIfUnedited(learnerId: string, displayName: string): Promise<boolean>;
   /** Sets `recovery_hash` only. Throws on a UNIQUE collision, as D1 does. */
   setRecoveryHash(learnerId: string, hash: string): Promise<void>;
   learnerByRecoveryHash(hash: string): Promise<Learner | null>;

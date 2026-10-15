@@ -563,6 +563,9 @@ export class D1Db implements Db {
     const sql = `UPDATE learners SET ${sets.join(', ')}, profile_updated_at = ? WHERE id = ? AND (profile_updated_at IS NULL OR profile_updated_at <= ?)`;
     return (await this.changes(sql, [...params, at, learnerId, at])) > 0;
   }
+  async setDisplayNameIfUnedited(learnerId: string, displayName: string): Promise<boolean> {
+    return (await this.changes('UPDATE learners SET display_name = ? WHERE id = ? AND profile_updated_at IS NULL', [displayName, learnerId])) > 0;
+  }
   setRecoveryHash(learnerId: string, hash: string): Promise<void> {
     return this.run('UPDATE learners SET recovery_hash = ? WHERE id = ?', [hash, learnerId]);
   }

@@ -271,22 +271,46 @@ describe('POST /api/spaces/:id/join — the device name repairs the roster', () 
     expect(await storedName(learner.learnerId)).toBe('Sungjoo');
   });
 
-  it('a name that fails the rule is refused (422) and never written', async () => {
+  it('a name that fails the rule never fails the join: the learner joins and the stored name is kept', async () => {
     const learner = await registerLearner('device-test0001', 'test');
     const cls = await createSpace('teacher', 'class', 'Kpccw class1');
-    expect((await join(cls, learner, 'A'.repeat(13))).status).toBe(422);
-    expect((await join(cls, learner)).status).toBe(201);
-    expect((await join(cls, learner, '<b>')).status).toBe(422);
+    // a shipped app's join field takes 20 free-text characters
+    const first = await join(cls, learner, 'A'.repeat(15));
+    expect(first.status).toBe(201);
+    expect(first.body.data?.alreadyMember).toBe(false);
     expect(await storedName(learner.learnerId)).toBe('test');
+    for (const name of ['<b>', 'Zoë & Mia', 'A'.repeat(20)]) {
+      const again = await join(cls, learner, name);
+      expect(again.status).toBe(200);
+      expect(again.body.data?.alreadyMember).toBe(true);
+    }
+    expect(await storedName(learner.learnerId)).toBe('test');
+    // over the body limit is still a bad body, as before
+    expect((await join(cls, learner, 'A'.repeat(21))).status).toBe(422);
   });
 
-  it('a join again does not undo a newer edit from the device', async () => {
+  it('a join with an older name never undoes a PATCH, and leaves the edit time alone', async () => {
     const world = await reportedWorld();
-    expect((await patch(world.learner, { displayName: 'Sungjoo', at: at(60_000) })).status).toBe(200);
-    // the edit's time was clamped to now; a join a moment later carries a later time and applies
-    await new Promise((resolve) => setTimeout(resolve, 5));
-    expect((await join(world.cls, world.learner, 'Sungjoo')).status).toBe(200);
+    const edit = at();
+    expect((await patch(world.learner, { displayName: 'Sungjoo', at: edit })).body.data?.applied).toBe(true);
+    expect((await join(world.cls, world.learner, 'test')).status).toBe(200);
     expect(await storedName(world.learner.learnerId)).toBe('Sungjoo');
+    expect(await namesSeen(world, world.learner.learnerId)).toEqual(everywhere('Sungjoo'));
+    const inbox = await get(`/api/sync/learners/${world.learner.learnerId}/inbox`, world.learner.auth);
+    expect(inbox.body.data?.learner).toMatchObject({ displayName: 'Sungjoo', profileUpdatedAt: edit });
+  });
+
+  it('a device clock behind the server: a rename after a join still applies', async () => {
+    const world = await reportedWorld();
+    expect((await join(world.cls, world.learner, 'Joined')).status).toBe(200);
+    expect(await storedName(world.learner.learnerId)).toBe('Joined');
+    // the tablet runs 2 minutes, then a full day, behind; the join stamped no time to compare against
+    const slow = await patch(world.learner, { displayName: 'Sungjoo', at: at(-2 * 60_000) });
+    expect(slow.body.data?.applied).toBe(true);
+    expect(await namesSeen(world, world.learner.learnerId)).toEqual(everywhere('Sungjoo'));
+    const slower = await patch(world.learner, { displayName: 'Suni', at: at(-24 * 60 * 60_000 + 60_000) });
+    // edits are ordered by the device's own clock: the second edit (earlier on that same clock) is stale
+    expect(slower.body.data?.applied).toBe(false);
   });
 });
 

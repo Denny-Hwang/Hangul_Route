@@ -32,6 +32,11 @@ function contract(name: string, make: () => Db): void {
       await db.touchLearner('profile:suni', '2026-10-08T00:00:00.000Z');
       expect(await db.getLearner('profile:suni')).toEqual({ ...learner, lastActiveAt: '2026-10-08T00:00:00.000Z', profileUpdatedAt: null });
 
+      // the join repair writes the name column only, leaves profile_updated_at null, and only before any edit
+      expect(await db.setDisplayNameIfUnedited('profile:suni', 'Joined')).toBe(true);
+      expect(await db.getLearner('profile:suni')).toEqual({ ...learner, displayName: 'Joined', lastActiveAt: '2026-10-08T00:00:00.000Z', profileUpdatedAt: null });
+      expect(await db.setDisplayNameIfUnedited('profile:nobody', 'X')).toBe(false);
+
       expect(await db.updateLearnerProfile('profile:suni', { displayName: 'Sungjoo' }, '2026-10-09T00:00:00.000Z')).toBe(true);
       expect(await db.getLearner('profile:suni')).toMatchObject({ displayName: 'Sungjoo', ageGroup: '5-7', avatar: 'hoya-orange', lastActiveAt: '2026-10-08T00:00:00.000Z', profileUpdatedAt: '2026-10-09T00:00:00.000Z' });
       // only the given columns change
@@ -39,6 +44,9 @@ function contract(name: string, make: () => Db): void {
       expect(await db.getLearner('profile:suni')).toMatchObject({ displayName: 'Sungjoo', ageGroup: '8-9', avatar: 'hoya-blue', profileUpdatedAt: '2026-10-10T00:00:00.000Z' });
       // an older edit is refused and changes nothing; an equal time applies
       expect(await db.updateLearnerProfile('profile:suni', { displayName: 'Old' }, '2026-10-09T12:00:00.000Z')).toBe(false);
+      expect((await db.getLearner('profile:suni'))?.displayName).toBe('Sungjoo');
+      // after an edit, the join repair never writes the name
+      expect(await db.setDisplayNameIfUnedited('profile:suni', 'Joined')).toBe(false);
       expect((await db.getLearner('profile:suni'))?.displayName).toBe('Sungjoo');
       expect(await db.updateLearnerProfile('profile:suni', { displayName: 'Same' }, '2026-10-10T00:00:00.000Z')).toBe(true);
       expect((await db.getLearner('profile:suni'))?.displayName).toBe('Same');

@@ -1,5 +1,4 @@
 import { z } from 'zod';
-import { DisplayNameSchema } from './display-name';
 
 /**
  * Spaces & memberships — F-SPACE-001. One concept for family / class /
@@ -86,12 +85,13 @@ export type SpaceLookup = z.infer<typeof SpaceLookupSchema>;
 
 /**
  * POST /api/spaces/:id/join body. Devices send `learnerId` (siblings share a device); `displayName` is the roster
- * name, checked by the shared learner name rule (the one the device applies).
+ * name. Lenient on purpose (trim, 1-20, as shipped apps send it): a name never fails the join. The Worker applies
+ * the name only when it passes the shared learner name rule (`DisplayNameSchema`) and otherwise keeps the stored one.
  */
 export const SpaceJoinSchema = z.object({
   code: JoinCodeFieldSchema,
   learnerId: z.string().regex(/^profile:[a-z0-9-]+$/).optional(),
-  displayName: DisplayNameSchema.optional(),
+  displayName: z.string().trim().min(1).max(20).optional(),
 });
 export type SpaceJoin = z.infer<typeof SpaceJoinSchema>;
 

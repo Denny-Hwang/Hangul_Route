@@ -1,4 +1,5 @@
 import {
+  DisplayNameSchema,
   FAMILY_LIFETIME_LEARNERS,
   LEARNER_CLASS_CAP,
   SpaceCreateSchema,
@@ -296,10 +297,14 @@ spacesRoutes.post('/:id/join', async (c) => {
     if (typeof auth !== 'string') return auth;
     if (space.kind === 'school') return fail(c, 'not_joinable', 'Learners join a class or a family, not a school', 422);
     const existing = await db.membership(space.id, 'learner', learnerId);
-    // The device's current name becomes the roster name, also on a join again (the repair path for a renamed
-    // learner): column-only, so nothing else of the row is rewritten, and an edit newer than now is kept.
+    // The device's current name becomes the roster name, also on a join again: the repair path for a learner
+    // renamed on an app build that cannot PATCH. Column-only, and only while the learner has no PATCH edit (PATCH
+    // orders edits by device time; a server-time join must not enter that order). A name that fails the shared
+    // rule is skipped and the stored name kept: the name never fails the join (shipped apps send up to 20 free-text
+    // characters), and nothing about the name is logged.
     const applyName = async (): Promise<void> => {
-      if (displayName) await db.updateLearnerProfile(learnerId, { displayName }, now.toISOString());
+      const name = displayName === undefined ? null : DisplayNameSchema.safeParse(displayName);
+      if (name?.success) await db.setDisplayNameIfUnedited(learnerId, name.data);
     };
     if (existing) {
       await applyName();

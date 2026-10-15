@@ -61,10 +61,12 @@ describe('incoming names on registration and join', () => {
     expect(register('Bad<Name').success).toBe(false);
   });
 
-  it('a join uses the shared rule; the name stays optional', () => {
+  it('a join body stays lenient (a name never fails the join); the name stays optional', () => {
     expect(SpaceJoinSchema.parse({ code: 'ABCDEF', displayName: ' Sungjoo ' }).displayName).toBe('Sungjoo');
-    expect(SpaceJoinSchema.safeParse({ code: 'ABCDEF', displayName: 'A'.repeat(13) }).success).toBe(false);
-    expect(SpaceJoinSchema.safeParse({ code: 'ABCDEF', displayName: 'Bad<Name' }).success).toBe(false);
+    // what shipped apps send (a free-text field of up to 20): accepted by the body, checked by the Worker
+    expect(SpaceJoinSchema.parse({ code: 'ABCDEF', displayName: 'A'.repeat(15) }).displayName).toBe('A'.repeat(15));
+    expect(SpaceJoinSchema.parse({ code: 'ABCDEF', displayName: 'Bad<Name' }).displayName).toBe('Bad<Name');
+    expect(SpaceJoinSchema.safeParse({ code: 'ABCDEF', displayName: 'A'.repeat(21) }).success).toBe(false);
     expect(SpaceJoinSchema.parse({ code: 'ABCDEF' }).displayName).toBeUndefined();
   });
 });
@@ -76,7 +78,11 @@ describe('SyncInboxSchema learner block', () => {
   it('is optional and lenient', () => {
     expect(SyncInboxSchema.parse(base).learner).toBeUndefined();
     expect(SyncInboxSchema.parse({ ...base, learner }).learner).toEqual(learner);
-    expect(SyncInboxSchema.parse({ ...base, learner: { ...learner, ageGroup: 'old' } }).learner).toBeUndefined();
+    // a legacy level or picture never hides the name
+    expect(SyncInboxSchema.parse({ ...base, learner: { ...learner, ageGroup: 'old' } }).learner).toEqual({ ...learner, ageGroup: null });
+    expect(SyncInboxSchema.parse({ ...base, learner: { ...learner, avatar: 7, profileUpdatedAt: 3 } }).learner).toEqual({ ...learner, avatar: '', profileUpdatedAt: null });
+    // only a missing or malformed name drops the block, never the inbox
+    expect(SyncInboxSchema.parse({ ...base, learner: { ...learner, displayName: 5 } }).learner).toBeUndefined();
     expect(InboxLearnerSchema.parse({ ...learner, profileUpdatedAt: null }).profileUpdatedAt).toBeNull();
   });
 });
