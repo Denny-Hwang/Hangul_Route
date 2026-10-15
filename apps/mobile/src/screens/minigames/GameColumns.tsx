@@ -71,6 +71,8 @@ export function GameColumns({
 
   useEffect(() => {
     if (mode !== 'columns') return;
+    // A nudge whose size never changed leaves its reveal pending; the new round must not inherit it.
+    revealPending.current = false;
     promptScroll.current?.scrollTo({ y: 0, animated: false });
     answersScroll.current?.scrollTo({ y: 0, animated: false });
   }, [mode, resetKey]);
