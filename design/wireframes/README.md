@@ -49,6 +49,7 @@
 | `console/curriculum-planner.md` | S | F-PLAN-002 (design record; promoted in P2-8 to the files below) |
 | `route/proposal.md` · `route/setup.md` · `route/overview.md` | S | F-PLAN-002 §3.9 (P2-7a, P2-7b; promoted in P2-8; behind `flags.routeEnabled`) |
 | `classroom/lecture-presenter.md` | R | F-TCH-004 |
+| `classroom/lecture-presets.md` · `classroom/lecture-big-screen-v2.md` · `classroom/lecture-entry-points.md` | R | AMENDMENTS-LECTURE-V2 (LV-0: presets on the presenter home and the setup page, the Stage 2-7 slide families, entry points for teachers and parents; mocks in LV-0b) |
 | `layout/wide.md` | S | F-LAYOUT-001 §3.1-3.8 (PR 0; built in PRs 1-7: classes, Home columns, Journey / Library panes, portrait guard also in `pwa/system-banners.md` panel 4; adoption checklist in `.github/pull_request_template.md`) |
 | `console/class-transfer.md` | D | F-SPACE-002 |
 | `journey/grid-plan-and-access.md` · `episode/detail-access-preview.md` · `home/next-and-free-end-card.md` · `results/back-to-plan-and-free-end.md` · `library/access-and-plan-tags.md` | R | F-ENT-003 §3.7-3.8 (E3-0; mock E3-D) |
