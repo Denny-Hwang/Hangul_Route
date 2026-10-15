@@ -90,6 +90,7 @@ F-XXX-<slug>.md
 - `F-PLC-001-placement-test.md` — level check with selectable test language, three check lengths (Short, Standard, Deep; companion `AMENDMENTS-PLC-THREE-MODES.md`, applied), adaptive ladder, route seed · **ready**
 - `F-PLAN-002-curriculum-planner.md` — curriculum generator by level and duration, console wizard, self-route · **ready**
 - `F-TCH-004-lecture-mode.md` — teacher lecture mode for tablets and projectors · **ready**
+  - amended 2026-10-15 by `AMENDMENTS-LECTURE-V2.md` (rows LV-0b to LV-7, LV-S1 to LV-S4): parents and teachers alike, on by default with a kill switch, entry cards on both homes, a nav item and a learner-app grown-up card, six ready-made presets with Customize optional, deck v2 (`word-review`), presenter slides for every Stage 2-7 step kind (measured skip table), also amends F-APP-001 (entry points) and F-SITE-002 (claim lines) · **ready** · wireframes `design/wireframes/classroom/lecture-presets.md`, `lecture-big-screen-v2.md`, `lecture-entry-points.md`
 - `F-LAYOUT-001-responsive-tablet-landscape.md` — tablet, landscape and split-pane layout · **ready**
 - `F-SPACE-002-class-transfer.md` — move a learner between classes with learner-side, releasing and receiving consent (flag-locked) · **ready**
   - amended 2026-10-11 by `AMENDMENTS-BILLING-FAMILY-YEARLY.md` ([BY] premium note: learners keep everything they earned, access follows the active plan; follow-up docs PR #385)
