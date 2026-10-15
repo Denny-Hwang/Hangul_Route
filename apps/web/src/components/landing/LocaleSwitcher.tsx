@@ -10,7 +10,8 @@ import { sitePath } from '../../lib/site-path';
  * the current language still finds their own), each with `hreflang` and `lang`. Plain `<a>`: each locale is
  * its own document (`<html lang>`), so a switch loads a new page. Renders nothing while only English ships.
  * `linkStyle` adds to each link's style: the layered site's footer passes its 64 x 64 hit area (F-SITE-002 §3.2);
- * the old landing passes none, so it renders as before.
+ * the old landing passes none, so it renders as before. `className` names the label and the links for the stylesheet
+ * (the footer sets them on one caption line beside the copyright on wide screens).
  */
 export function LocaleSwitcher({
   locale,
@@ -18,17 +19,20 @@ export function LocaleSwitcher({
   label,
   shown,
   linkStyle,
+  className,
 }: {
   locale: UiLocale;
   page: SitePage;
   label: string;
   shown: readonly UiLocale[];
   linkStyle?: CSSProperties;
+  className?: { label: string; link: string };
 }): JSX.Element | null {
   if (shown.length < 2) return null;
   return (
     <nav aria-label={label}>
       <div
+        className={className?.label}
         style={{
           fontWeight: typography.weight.bold,
           color: colors.text.primary,
@@ -47,6 +51,7 @@ export function LocaleSwitcher({
               hrefLang={htmlLang}
               lang={htmlLang}
               aria-current={current ? 'page' : undefined}
+              className={className?.link}
               style={{ ...linkStyle, color: current ? colors.text.primary : colors.text.secondary, fontWeight: current ? typography.weight.bold : typography.weight.regular }}
             >
               {endonym}

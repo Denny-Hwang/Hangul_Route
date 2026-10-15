@@ -70,6 +70,13 @@ export function cardShadow(): string {
 }
 
 /**
+ * How far a 64 px hit area reaches above and below one caption line (`touchTarget.min` less a caption line, halved),
+ * derived from tokens only. The footer's caption-size links (the open-source notices, the locale switcher from 45em)
+ * take it as negative block margins, so each keeps its hit area on a one-line row.
+ */
+export const CAPTION_HIT_OVERFLOW = `((${touchTarget.min}px - ${rem(typography.size.caption)} * ${typography.leading.normal}) / 2)`;
+
+/**
  * The custom properties `globals.css` reads in the `hr-site-*` rules (breakpoints, hover, focus, the fold chevron).
  * Set once on the site root (`SiteShell`), so the stylesheet holds no value of its own.
  */
@@ -113,6 +120,8 @@ export function siteCssVars(): CSSProperties {
     '--hr-site-hero-ratio': SITE_SIZES.heroRatio,
     '--hr-site-sunken': colors.surface.sunken,
     '--hr-site-size-caption': rem(typography.size.caption),
+    /** How far a caption-size footer link's 64 px hit area reaches above and below its one line (the footer's end row). */
+    '--hr-site-caption-overflow': `calc(${CAPTION_HIT_OVERFLOW})`,
     '--hr-site-size-body-sm': rem(typography.size.bodySm),
     '--hr-site-text-muted': colors.text.muted,
   };

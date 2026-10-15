@@ -1,4 +1,4 @@
-import { colors, spacing, touchTarget, typography } from '@hangul-route/design-system/tokens';
+import { colors, spacing, typography } from '@hangul-route/design-system/tokens';
 import { getMessages, type UiLocale } from '@hangul-route/i18n';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
@@ -6,7 +6,7 @@ import { CONTACT_EMAIL } from '../../data/contact';
 import { learnerStart, signIn } from '../../lib/site-links';
 import { shownSiteLocales, type SitePage } from '../../lib/site-metadata';
 import { sitePath } from '../../lib/site-path';
-import { HIT, WRAP, rem } from '../../lib/site-style';
+import { CAPTION_HIT_OVERFLOW, HIT, WRAP, rem } from '../../lib/site-style';
 import { LocaleSwitcher } from './LocaleSwitcher';
 import { SHIPPED_PERSONA_PAGES, type PersonaPage, type SiteChromeVariant } from './SiteHeader';
 
@@ -27,7 +27,7 @@ const FOOTER_LINK = { ...HIT, justifyContent: 'flex-start' } as const;
  * half the difference between the hit area and one caption line, so the row is one caption line tall.
  */
 /** How far the open-source link's hit area reaches above and below its one caption line. */
-const LEGAL_OVERFLOW = `((${touchTarget.min}px - ${rem(typography.size.caption)} * ${typography.leading.normal}) / 2)`;
+const LEGAL_OVERFLOW = CAPTION_HIT_OVERFLOW;
 
 const LEGAL_LINK = {
   ...FOOTER_LINK,
@@ -171,15 +171,29 @@ export function SiteFooter({ locale, page, current, variant = 'default' }: SiteF
           the row; the rest of the area lies in the margin above and the row's padding below (LEGAL_ROW), so it overlaps no
           other link. It wraps under the line where the row is too narrow.
         */}
-        <div style={LEGAL_ROW}>
-          <p style={{ margin: 0, fontSize: rem(typography.size.caption), color: colors.text.muted }}>{t.footer.copyright(new Date().getFullYear())}</p>
-          <Link href={sitePath(locale, '/licenses')} className="hr-site-footer-link" style={LEGAL_LINK}>
-            {t.footer.licenses}
-          </Link>
-        </div>
-        {/* One row (label, then each locale), so the switcher adds one line once a second locale ships. */}
-        <div className="hr-site-locales">
-          <LocaleSwitcher locale={locale} page={page} label={t.footer.language} shown={shownSiteLocales()} linkStyle={FOOTER_LINK} />
+        {/*
+          The end row: the copyright row, then the locale switcher (es and ko ship, F-I18N-001 rows 15b / 16b). On
+          phones the switcher is one row of its own (label, then each locale); from 45em it sits on the copyright row's
+          line, caption size, each link keeping its 64 px hit area (globals.css `hr-site-footer-end`), so the wide
+          page stays inside its F-SITE-002 §3.11 height budget.
+        */}
+        <div className="hr-site-footer-end">
+          <div style={LEGAL_ROW}>
+            <p style={{ margin: 0, fontSize: rem(typography.size.caption), color: colors.text.muted }}>{t.footer.copyright(new Date().getFullYear())}</p>
+            <Link href={sitePath(locale, '/licenses')} className="hr-site-footer-link" style={LEGAL_LINK}>
+              {t.footer.licenses}
+            </Link>
+          </div>
+          <div className="hr-site-locales">
+            <LocaleSwitcher
+              locale={locale}
+              page={page}
+              label={t.footer.language}
+              shown={shownSiteLocales()}
+              linkStyle={FOOTER_LINK}
+              className={{ label: 'hr-site-locale-label', link: 'hr-site-locale-link' }}
+            />
+          </div>
         </div>
       </div>
     </footer>

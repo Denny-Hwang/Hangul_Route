@@ -337,6 +337,30 @@ button {
     display: inline-flex;
   }
 
+  /* The footer's end row: the locale switcher on the copyright row's line, its first baseline on the copyright's. */
+  .hr-site-footer-end {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    column-gap: var(--hr-site-lg);
+  }
+
+  .hr-site-footer-end > .hr-site-locales > nav {
+    margin-top: 0;
+  }
+
+  .hr-site-locale-label,
+  .hr-site-locale-link {
+    font-size: var(--hr-site-size-caption);
+  }
+
+  /* One caption line tall, the 64 px hit area reaching above and below it (as the open-source link beside it). */
+  .hr-site-locale-link {
+    margin-top: calc(-1 * var(--hr-site-caption-overflow));
+    margin-bottom: calc(-1 * var(--hr-site-caption-overflow));
+  }
+
   .hr-site-nav {
     display: flex;
     margin-left: auto;

@@ -23,11 +23,9 @@ import { expect, test, type Locator, type Page } from '@playwright/test';
  */
 const en = getMessages('en').landing;
 /**
- * A QA build shows every locale, so the footer adds the locale switcher (one row) that production only shows once a
- * second locale ships. The heights are budgets of the production export; F-I18N-001's ship PR for a locale runs this
- * spec on its own export, so they are checked again then.
+ * The footer carries the locale switcher (one row) since es and ko shipped (F-I18N-001 rows 15b / 16b); the heights
+ * are budgets of the production export with it.
  */
-const QA = process.env.NEXT_PUBLIC_SHOW_ALL_LOCALES === '1';
 
 interface SitePageBudget {
   path: string;
@@ -48,8 +46,11 @@ interface SitePageBudget {
 
 /** Persona page budgets (§3.11): 5 screens at 375 x 812 (headroom 3,700), 3,200 px at 1280 x 800, 550 words. */
 const PERSONA = { phoneMax: 4060, phoneHeadroom: 3700, wideMax: 3200, words: 550, current: true, folds: true } as const;
-/** Home budgets (§3.11): about 3.5 screens at 375 x 812 (headroom 2,750), 2,100 px at 1280 x 800, 280 words. */
-const HOME = { phoneMax: 2900, phoneHeadroom: 2750, wideMax: 2100, words: 280, current: false, folds: false } as const;
+/**
+ * Home budgets (§3.11): about 3.5 screens at 375 x 812 (headroom 2,810: 2,750 plus the footer's locale switcher row on
+ * phones, F-I18N-001 rows 15b / 16b), 2,100 px at 1280 x 800 (the switcher sits on the copyright line there), 280 words.
+ */
+const HOME = { phoneMax: 2900, phoneHeadroom: 2810, wideMax: 2100, words: 280, current: false, folds: false } as const;
 
 const PAGES: readonly SitePageBudget[] = [
   { path: '/', h1: en.home.hero.title, lead: en.home.hero.lead, primary: en.home.hero.start, ...HOME },
@@ -111,10 +112,8 @@ for (const budget of PAGES) {
       await page.setViewportSize({ width: 375, height: 812 });
       await page.goto(budget.path);
       const height = await page.evaluate(() => document.documentElement.scrollHeight);
-      if (!QA) {
-        expect(height).toBeLessThanOrEqual(budget.phoneMax);
-        expect(height, 'headroom budget while claims are off').toBeLessThanOrEqual(budget.phoneHeadroom);
-      }
+      expect(height).toBeLessThanOrEqual(budget.phoneMax);
+      expect(height, 'headroom budget while claims are off').toBeLessThanOrEqual(budget.phoneHeadroom);
       const words = await page.evaluate(() => document.body.innerText.split(/\s+/).filter((w) => /[\p{L}\p{N}]/u.test(w)).length);
       expect(words).toBeGreaterThan(50);
       expect(words).toBeLessThanOrEqual(budget.words);
@@ -123,7 +122,7 @@ for (const budget of PAGES) {
     test(`at 1280 x 800: at most ${budget.wideMax} px tall and ${budget.words} visible words`, async ({ page }) => {
       await page.setViewportSize({ width: 1280, height: 800 });
       await page.goto(budget.path);
-      if (!QA) expect(await page.evaluate(() => document.documentElement.scrollHeight)).toBeLessThanOrEqual(budget.wideMax);
+      expect(await page.evaluate(() => document.documentElement.scrollHeight)).toBeLessThanOrEqual(budget.wideMax);
       const words = await page.evaluate(() => document.body.innerText.split(/\s+/).filter((w) => /[\p{L}\p{N}]/u.test(w)).length);
       expect(words).toBeLessThanOrEqual(budget.words);
     });
