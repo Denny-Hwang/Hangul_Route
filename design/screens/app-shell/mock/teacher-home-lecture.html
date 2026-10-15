@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Teacher home with the Lecture mode card (LV-5)</title>
+<link rel="stylesheet" href="app-shell.css">
+<link rel="stylesheet" href="lecture-card.css">
+</head>
+<body>
+<!-- Design mock (LV-0b, docs/specs/AMENDMENTS-LECTURE-V2.md section 3), not shipped code. Every UI string is a dictionary value or a key of the amendment's section 12 (or a key proposed in ../lecture-card.md "Strings"). -->
+<div class="frame">
+<header class="frame-top">
+  <div class="frame-bar">
+    <a class="brand" href="#"><span class="brand-mark" aria-hidden="true">HR</span><span class="brand-name">Hangul Route</span></a>
+    <span class="persona-text">Teacher</span>
+    <a class="way-back" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14.5 6 L8.5 12 L14.5 18" style="fill: none; stroke: var(--colors-text-primary); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round"/></svg><span>Back to learning</span></a>
+    <select class="select wide-only" aria-label="Language"><option>English</option></select>
+    <button type="button" class="btn btn-quiet btn-small wide-only">Sign out</button>
+  </div>
+  <nav class="frame-nav" aria-label="Teacher"><ul class="nav-list"><li><a class="nav-item" href="#" aria-current="page">Classes</a></li><li><a class="nav-item" href="#">Lessons</a></li><li><a class="nav-item" href="#">Lecture mode</a></li><li><a class="nav-item" href="#">Billing</a></li></ul></nav>
+</header>
+<main class="frame-main" id="content">
+<div class="teacher-layout">
+<section class="lecture-card" id="lecture-mode" aria-labelledby="lm-h"><h2 id="lm-h" tabindex="-1">Lecture mode</h2><p class="lm-tag">Teach on a big screen</p><p class="lm-body">Show a ready lesson on a projector or TV: big letters, sounds and a few questions. Nobody's progress changes.</p><fieldset class="lm-choices"><legend>Which class?</legend><label class="lm-choice on"><input type="radio" name="lm-space" checked><span>Saturday class</span></label><label class="lm-choice"><input type="radio" name="lm-space" ><span>Beginners B</span></label></fieldset><a class="btn btn-primary lm-cta" href="#">Start lecture mode</a></section>
+  <div class="page-head"><h1>Classes</h1><a class="btn btn-small" href="#">+ New class</a></div>
+  <div class="space-rows">
+    <article class="space-row">
+  <div class="space-main"><div><p class="space-name">Saturday class</p><p class="space-status">12 students</p></div><a class="btn btn-small" href="#">Open →</a></div>
+  <div class="space-links"><a class="btn btn-small" href="#">Class report</a><a class="btn btn-small" href="#">Notes</a></div>
+</article>
+    <article class="space-row">
+  <div class="space-main"><div><p class="space-name">Beginners B</p><p class="space-status">0 students</p></div><a class="btn btn-small" href="#">Open →</a></div>
+  <div class="space-links"><a class="btn btn-small" href="#">Class report</a><a class="btn btn-small" href="#">Notes</a></div>
+</article>
+    <article class="space-row archived">
+  <div class="space-main"><div><p class="space-name">Spring class <span class="muted">(archived)</span></p><p class="space-status">9 students</p></div><a class="btn btn-small" href="#">Open →</a></div>
+  <div class="space-links"><a class="btn btn-small" href="#">Class report</a></div>
+</article>
+  </div>
+  <section class="stack" aria-labelledby="school"><h2 class="group-title" id="school">School</h2>
+    <div class="space-rows"><article class="space-row">
+  <div class="space-main"><div><p class="space-name">Riverside school</p><p class="space-status">4 classes</p></div><a class="btn btn-small" href="#">Open →</a></div>
+  
+</article></div>
+  </section>
+  <a class="btn btn-small" href="#" style="align-self: flex-start">Lessons</a>
+  <p class="cross"><a class="text-link" href="#">Learning at home too? Set up a family space</a></p>
+</div>
+</main>
+<footer class="frame-foot"><div class="frame-foot-inner">
+  <div class="foot-links"><a href="#">About Hangul Route</a><a href="#">Privacy</a><a href="#">Terms</a></div>
+  <div class="foot-tools"><select class="select" aria-label="Language"><option>English</option></select><button type="button" class="btn btn-small">Sign out</button></div>
+</div></footer>
+</div>
+</body>
+</html>

@@ -1,0 +1,28 @@
+/*
+ * Lecture mode v2 design pass (LV-0b): the Lecture mode card on the teacher and family homes (E1, E2) and in the
+ * learner app's grown-up area (E5). Static design mock, not shipped code. Loaded after app-shell.css; tokens only.
+ * Pairs: text.primary on brand.secondaryLight 12.35:1; text.onPrimary on brand.primary as the existing primary button.
+ */
+.lecture-card { display: flex; flex-direction: column; gap: var(--spacing-sm); padding: var(--spacing-lg); border-radius: var(--radii-lg); background: var(--colors-brand-secondaryLight); border: var(--border-width-base) solid var(--colors-brand-secondary); }
+.lecture-card h2 { font-size: var(--size-title); font-weight: var(--weight-bold); line-height: var(--leading-tight); color: var(--colors-text-primary); }
+.lecture-card .lm-tag { font-size: var(--size-bodyLg); font-weight: var(--weight-semibold); color: var(--colors-text-primary); }
+.lecture-card .lm-body { color: var(--colors-text-primary); }
+.lecture-card .lm-cta { min-height: var(--touch-hero); align-self: stretch; font-size: var(--size-bodyLg); }
+@media (min-width: 45em) { .lecture-card .lm-cta { align-self: flex-start; padding-left: var(--spacing-xxl); padding-right: var(--spacing-xxl); } }
+.lm-choices { border: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--spacing-xs); }
+.lm-choices legend { font-weight: var(--weight-bold); padding: 0; margin-bottom: var(--spacing-xs); }
+.lm-choice { display: flex; align-items: center; gap: var(--spacing-md); min-height: var(--touch-min); padding: var(--spacing-sm) var(--spacing-md); border-radius: var(--radii-md); border: var(--border-width-thin) solid var(--colors-border-strong); background: var(--colors-surface-paper); font-weight: var(--weight-semibold); cursor: pointer; }
+.lm-choice.on { border: var(--border-width-thick) solid var(--colors-text-primary); }
+.lm-choice input { width: var(--spacing-xl); height: var(--spacing-xl); accent-color: var(--colors-text-primary); }
+.lm-rows { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; border-top: var(--border-width-thin) solid var(--colors-border-subtle); }
+.lm-rows li { border-bottom: var(--border-width-thin) solid var(--colors-border-subtle); }
+.lm-next { padding: var(--spacing-xs) 0; color: var(--colors-text-primary); }
+.home-card .rn-btn.rn-ghost { align-self: flex-end; }
+/* Family home: the card is a child of the home layout between the learner cards and the family actions. Below 70em it follows
+   the learner cards, so the first screen at 375 x 667 keeps the whole first learner card (measured in ../lecture-card.md);
+   from 70em it is first in the side column (lecture-entry-points.md Panel E1/E2 wide). */
+@media (min-width: 70em) {
+  .home-layout.with-side > .stack-md:first-child { grid-column: 1; grid-row: 1 / span 2; }
+  .home-layout.with-side > .lecture-card { grid-column: 2; grid-row: 1; }
+  .home-layout.with-side > aside { grid-column: 2; grid-row: 2; }
+}

@@ -4,6 +4,8 @@ Spec: `docs/specs/F-TCH-004-lecture-mode.md` (sections 3.1 to 3.13; PR table row
 Wireframe: `design/wireframes/classroom/lecture-presenter.md` (screens A to L). Tokens: `design/tokens/presenter.v1.md` (PR 2, #238). Font: `HR Presenter KR` (PR 3, #466). Layout: F-LAYOUT-001 PR 2a (#174, uncapped `#root`, manifest `any`).
 Section 6 says "a UI PR waits for its mock"; this folder is that mock. It is a design pass, not a row of the PR table.
 
+> **Lecture mode v2 (LV-0b):** the presets home, the preset preview and the new slide families (sentence, pattern, read along, realia, listen and reply questions, sentence build, write together) are in `lecture-v2.md` and the files it lists; this README's rules, constants and decisions still apply to them.
+
 Built by:
 
 - **PR 6** (presenter shell): `start-screen.md`, `stage-and-bar.md`, `slide-title.md`, `slide-letter.md`, `slide-end.md`, `states.md`, and the Exit confirm in `overlays.md`.
