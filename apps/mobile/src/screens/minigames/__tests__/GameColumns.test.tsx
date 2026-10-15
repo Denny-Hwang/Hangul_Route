@@ -132,4 +132,37 @@ describe('GameColumns native columns: the round starts at the top, a new nudge c
     expect(answers().at(-1)).toEqual({ top: 0, left: 0 });
     expect(answers()).toHaveLength(2);
   });
+
+  it('a nudge that leaves the size unchanged does not carry its reveal into the next round', async () => {
+    setPlatform('ios');
+    for (const k of Object.keys(calls)) delete calls[k];
+    let r!: ReactTestRenderer;
+    await act(async () => {
+      r = TestRenderer.create(tree('q1', undefined), { createNodeMock: nodeMock });
+    });
+    mounted.push(r);
+    const prompt = (): Scroll[] => calls['game-columns-prompt-scroll'] ?? [];
+    const promptScroll = (): ReactTestInstance =>
+      r.root.find((n) => n.type === ScrollView && n.props.testID === 'game-columns-prompt-scroll');
+
+    // A nudge lands, but its content size never changes, so onContentSizeChange does not fire.
+    await act(async () => {
+      r.update(tree('q1', '1|hint|'));
+    });
+    expect(prompt()).toContainEqual({ top: 900, left: 0 });
+
+    // The next round: the reset sends the prompt column to the top.
+    await act(async () => {
+      r.update(tree('q2', undefined));
+    });
+    const afterReset = prompt().length;
+    expect(prompt().at(-1)).toEqual({ top: 0, left: 0 });
+
+    // The new round's content lands; the stale reveal must not scroll it back to the end.
+    await act(async () => {
+      (promptScroll().props.onContentSizeChange as (w: number, h: number) => void)(300, 600);
+    });
+    expect(prompt().slice(afterReset)).not.toContainEqual({ top: 900, left: 0 });
+    expect(prompt().at(-1)).toEqual({ top: 0, left: 0 });
+  });
 });
