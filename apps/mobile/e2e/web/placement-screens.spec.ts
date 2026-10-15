@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { answerForkNew, readStored, waitForSaved } from './helpers';
+import { answerForkNew, readStored, waitForSaved, passPlacementLanguage } from './helpers';
 import { shot } from './shots';
 
 /**
@@ -159,9 +159,11 @@ test.describe('level check screens (fixture bundle)', () => {
     const beforeCheck = await readStored<{ quests?: unknown[]; cards?: unknown[] }>(page, `progress:${learner}`);
     await openCheck(page);
 
-    // English only ships: the language screen is skipped. C2 with three equal radios, Standard pre-selected.
+    // es and ko ship (F-I18N-001 rows 15b / 16b): the language screen comes first and Continue keeps English. Then C2
+    // with three equal radios, Standard pre-selected.
     // (Whether Short is enabled depends on when the browser's voice list arrives: an unknown list counts
     // as available, and the fixture bundle carries Korean clips.)
+    await passPlacementLanguage(page);
     await expect(page.getByTestId('placement-options')).toBeVisible();
     await expect(page.getByRole('radio', { name: 'Standard' })).toHaveAttribute('aria-checked', 'true');
     await expect(page.getByRole('radio', { name: 'Deep' })).toHaveAttribute('aria-checked', 'false');
@@ -241,6 +243,7 @@ test.describe('level check screens (fixture bundle)', () => {
     await openCheck(page);
 
     // C1: one pre-filled Short card, Change and Start; nothing to read or choose.
+    await passPlacementLanguage(page);
     await expect(page.getByTestId('placement-options-card')).toBeVisible();
     await expect(page.getByTestId('placement-short-card')).toBeVisible();
     await expect(page.getByTestId('placement-change')).toBeVisible();
@@ -324,6 +327,7 @@ test.describe('level check screens (fixture bundle)', () => {
     await onboard(page, 'Pictures first');
     await openCheck(page);
     // No instruction voice: Short is disabled, so a Pictures first learner gets Standard on C2.
+    await passPlacementLanguage(page);
     await expect(page.getByTestId('placement-options')).toBeVisible();
     await expect(page.getByRole('radio', { name: 'Short' })).toHaveAttribute('aria-disabled', 'true');
     await expect(page.getByText('The short check needs sound.').first()).toBeVisible();
@@ -336,6 +340,7 @@ test.describe('level check screens (fixture bundle)', () => {
     await expect(page.getByText('Turn on sound to play')).toBeVisible();
     await shot(page, 'placement-sound-needed');
     await page.getByTestId('placement-without-sound').click();
+    await passPlacementLanguage(page);
     await expect(page.getByTestId('placement-options')).toBeVisible();
     await expect(page.getByRole('radio', { name: 'Standard' })).toHaveAttribute('aria-checked', 'true');
     await expect(page.getByRole('radio', { name: 'Short' })).toHaveAttribute('aria-disabled', 'true');
@@ -354,6 +359,7 @@ test.describe('level check screens (fixture bundle)', () => {
     await page.setViewportSize({ width: 320, height: 568 });
     await onboard(page, 'Pictures first');
     await openCheck(page);
+    await passPlacementLanguage(page);
     await page.getByTestId('placement-start').click();
     await page.getByTestId('placement-hoya-start').click();
     await warmUp(page, 'tiger');
@@ -387,6 +393,7 @@ test.describe('level check screens (fixture bundle)', () => {
     await page.clock.install();
     await onboard(page);
     await openCheck(page);
+    await passPlacementLanguage(page);
     await page.getByTestId('placement-guide-tap').click();
     await page.getByTestId('placement-next').click();
     await page.getByTestId('placement-warmup-speaker').click();
@@ -411,6 +418,7 @@ test.describe('level check screens (fixture bundle)', () => {
     await page.setViewportSize({ width: 320, height: 568 });
     await onboard(page, 'Pictures first');
     await openCheck(page);
+    await passPlacementLanguage(page);
     await page.getByTestId('placement-start').click();
     await page.getByTestId('placement-hoya-start').click();
     await warmUp(page, 'tiger');
@@ -454,6 +462,7 @@ test.describe('level check screens (fixture bundle)', () => {
   test('the web: "I use a screen reader" pre-sets Take my time and the run leaves out the visual rung', async ({ page }) => {
     await onboard(page);
     await openCheck(page);
+    await passPlacementLanguage(page);
     await expect(page.getByTestId('placement-options')).toBeVisible();
     await expect(page.getByText('I use a screen reader')).toBeVisible();
     await page.getByTestId('placement-screen-reader').click();
@@ -471,12 +480,14 @@ test.describe('level check screens (fixture bundle)', () => {
     await voicedSpeech(page);
     await onboard(page, 'Pictures first');
     await openCheck(page);
+    await passPlacementLanguage(page);
     await page.getByTestId('placement-start').click();
     await expect(page.getByTestId('placement-handoff')).toBeVisible();
     await page.getByTestId('placement-handoff-exit').click();
     await expect(page.getByText('Hi, Sam!')).toBeVisible();
 
     await openCheck(page);
+    await passPlacementLanguage(page);
     await page.getByTestId('placement-start').click();
     await page.getByTestId('placement-hoya-start').click();
     await expect(page.getByTestId('placement-warmup')).toBeVisible();

@@ -30,14 +30,19 @@ import { shot } from './shots';
 
 const FIXTURE_BUILD = process.env.STORY_FIXTURES === '1';
 const LOCALES: UiLocale[] = availableLocales();
-/** Locales whose four tab labels fit their 80 px items at the 1.3 x cap, so the native shrink-to-fit never starts. */
-const SHRINK_FREE: readonly UiLocale[] = ['en', 'ko'];
 /**
- * The widest a tab item may get at the cap in the other locales (Spanish: "Recorrido" and "Colección" measured 83 and
- * 84 px when es shipped, F-I18N-001 row 15b). The native shrink-to-fit could absorb more (down to 1 / 1.3), but a
- * label that grows past this is a copy change to look at, so it fails here first.
+ * Locales whose four tab labels fit their 80 px items at the 1.3 x cap, so the native shrink-to-fit never starts. Only
+ * English: a Korean label's width follows the platform's CJK font (it fits with macOS's Korean font, and is 90 px on the
+ * CI image's, as on an Android phone's Noto CJK), and two Spanish labels ("Recorrido", "Colección") are wider too.
  */
-const SHRINK_MAX_ITEM = 84;
+const SHRINK_FREE: readonly UiLocale[] = ['en'];
+/**
+ * The widest a tab item may get at the cap in the other locales before the shrink (measured when es and ko shipped,
+ * F-I18N-001 rows 15b / 16b: Spanish 84 px on macOS and 86 on the CI image, Korean 90 on the CI image). The native
+ * shrink-to-fit could absorb up to 104 px (minimumFontScale 1 / 1.3), but a label that grows past this is a copy change
+ * to look at, so it fails here first.
+ */
+const SHRINK_MAX_ITEM = 92;
 const en = getMessages('en');
 
 const tabLinks = (page: Page) => page.getByRole('tablist').getByRole('link');
@@ -172,8 +177,8 @@ test.describe('the Route tab (LR-4)', () => {
       if (SHRINK_FREE.includes(locale)) {
         for (const s of sizes) expect(s.item).toBeLessThanOrEqual(80);
       } else {
-        // A Spanish label ("Recorrido", "Colección") is a few px wider than its item at the cap: the native label
-        // shrinks to fit (FOUR_TAB_LABEL_FIT), never below the caption size. Apply that shrink by hand, as the cap.
+        // A Spanish or Korean label can be a few px wider than its item at the cap: the native label shrinks to fit
+        // (FOUR_TAB_LABEL_FIT), never below the caption size. Apply that shrink by hand, as the cap.
         const shrunk = await page.evaluate(() =>
           [...document.querySelectorAll('[role="tablist"] a')].map((item) => {
             const leaves = [...item.querySelectorAll('div, span')].filter((el) => el.children.length === 0 && (el.textContent ?? '').trim() !== '');
