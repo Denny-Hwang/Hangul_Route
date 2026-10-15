@@ -245,8 +245,10 @@ export const learner = {
     },
     privacyLink: 'Read the Privacy Policy',
     privacyFallback: 'Open hangulroute.com/privacy in a browser.',
-    /** A learner in a class: the roster keeps the registered values until a server route exists. */
-    classNote: "Changes show on your teacher's list after you join again",
+    /** A learner in a class: an edit reaches the class roster with the device's next sync (§3.11). */
+    classNote: "Your teacher's list updates the next time you're online.",
+    /** A class device (a class re-link): the server keeps these rows for the learner's own device (§3.11). */
+    classDevice: "A grown-up can change the name, level and Hoya on the learner's own device.",
     pinFailed: "Couldn't set the PIN. Try again.",
     /** Save did not go through for another reason; nothing was changed. */
     saveFailed: "Couldn't save. Try again.",

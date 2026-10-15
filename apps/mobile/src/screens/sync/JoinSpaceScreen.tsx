@@ -4,6 +4,8 @@ import React, { useEffect, useState } from 'react';
 import { Pressable, TextInput, View } from 'react-native';
 import { useMessages } from '../../i18n/use-messages';
 import { cleanJoinCode, isCodeError, isCompleteJoinCode, joinErrorMessage } from '../../logic/spaces/join-code';
+import { nameHint } from '../../logic/onboarding/create-profile-form';
+import { NAME_MAX, validateDisplayName } from '../../logic/profiles/profile-model';
 import { relinkNotice } from '../../logic/sync/restore';
 import type { RootStackParamList } from '../../navigation/types';
 import { takeJoinHandoff } from '../../platform/join-handoff';
@@ -26,6 +28,10 @@ export const RELINK_POLL_MS = 4000;
  * Join prefill (F-APP-001 A-7, sections 3.6 and 3.8, web): a family join code the family home's
  * "Open the app on this device" left in this tab fills the field the next time this screen is
  * shown within 30 minutes (read once); every step after it is unchanged.
+ *
+ * The name (F-LEARN-001 section 3.11): the field starts from the profile name and follows the profile rule
+ * (`validateDisplayName`, the create form's hints). The Worker writes the join name over the learner's name for the
+ * family and every class, so a changed name becomes the profile name after the join (`membership-store.join`).
  */
 export function JoinSpaceScreen({ navigation }: Props): React.ReactElement {
   const messages = useMessages();
@@ -110,8 +116,14 @@ export function JoinSpaceScreen({ navigation }: Props): React.ReactElement {
     };
   }, [relink, found, pollRelink, setActive, messages]);
 
+  // The create form's calm hints (too long, a character the rule refuses); an empty field only keeps the button closed.
+  // A stored name that predates the rule joins as it is (it stays the profile name), so only a changed name is checked.
+  const unchanged = profile !== null && name.trim() === profile.displayName;
+  const hint = unchanged ? null : nameHint(name, messages.learner.createProfile.nameHint);
+  const nameOk = name.trim().length > 0 && (unchanged || validateDisplayName(name) === null);
+
   const confirmName = async (): Promise<void> => {
-    if (!profile || !found) return;
+    if (!profile || !found || !nameOk) return;
     setMessage(null);
     setBusy(true);
     const result = await join(profile.id, found.id, code, name.trim() || undefined);
@@ -170,8 +182,10 @@ export function JoinSpaceScreen({ navigation }: Props): React.ReactElement {
           <TextInput
             value={name}
             onChangeText={setName}
-            maxLength={20}
+            maxLength={Math.max(NAME_MAX, profile?.displayName.length ?? 0)}
             autoCorrect={false}
+            // Names start with a capital in every word, on purpose: "sungjoo" becomes "Sungjoo", never only the first word.
+            autoCapitalize="words"
             accessibilityLabel={messages.a11y.joinName}
             style={{
               minHeight: touchTarget.child,
@@ -185,8 +199,16 @@ export function JoinSpaceScreen({ navigation }: Props): React.ReactElement {
               borderRadius: radii.lg,
             }}
           />
+          {hint !== null ? (
+            <>
+              <Spacer size="xs" />
+              <Caption tone="secondary">{hint}</Caption>
+            </>
+          ) : null}
+          <Spacer size="xs" />
+          <Caption tone="muted">{m.confirm.sameEverywhere}</Caption>
           <Spacer size="md" />
-          <Button label={busy ? m.confirm.joining.cta : m.confirm.me.cta} tone="primary" size="lg" fullWidth disabled={busy || name.trim().length === 0} onPress={() => void confirmName()} />
+          <Button label={busy ? m.confirm.joining.cta : m.confirm.me.cta} tone="primary" size="lg" fullWidth disabled={busy || !nameOk} onPress={() => void confirmName()} />
           <Spacer size="sm" />
           {roster.length > 0 ? <Button label={m.confirm.alreadyIn.cta} tone="ghost" size="sm" fullWidth onPress={() => setPicking(true)} /> : null}
           <Button label={m.confirm.notThis.cta} tone="ghost" size="sm" fullWidth onPress={() => { setFound(null); setRoster([]); }} />

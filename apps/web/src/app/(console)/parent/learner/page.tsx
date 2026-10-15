@@ -2,11 +2,12 @@
 
 import { APP_ROUTES } from '@hangul-route/content-schema';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Suspense, useEffect, useState } from 'react';
+import { Suspense, useEffect, useRef, useState } from 'react';
 import LearnerReportPage from '@/app/(console)/teach/space/learner/page';
 import { AdultFrame, type FrameSpaces } from '@/components/console/AdultFrame';
 import { REPORT_CSS, ReportBack, ReportChooser, ReportSkeleton } from '@/components/console/ReportParts';
 import { useConsole } from '@/components/console/use-console';
+import { useVisibleRefresh } from '@/components/console/use-visible-refresh';
 import type { RosterLearner, SpaceListItem } from '@/lib/console/api';
 import { reportsEnabled } from '@/lib/console/config';
 import { parentChooserFamilies, parentChooserRows, type ParentChooserRow } from '@/lib/console/report-chooser';
@@ -33,16 +34,24 @@ function ParentChooser(): JSX.Element {
   const [spaces, setSpaces] = useState<FrameSpaces>(null);
   const [load, setLoad] = useState<ChooserLoad>(null);
   const [nonce, setNonce] = useState(0);
+  // Set by the read again when the tab comes back into view (F-LEARN-001 section 3.11): the drawn rows stay while it
+  // reads, and only a complete answer replaces them.
+  const quiet = useRef(false);
 
   useEffect(() => {
     if (!api || !enabled) return undefined;
     let live = true;
-    setLoad(null);
-    setSpaces(null);
+    const background = quiet.current;
+    quiet.current = false;
+    if (!background) {
+      setLoad(null);
+      setSpaces(null);
+    }
     void (async () => {
       try {
         const listed = await api.listSpaces();
         if (!live) return;
+        if (background && !listed.ok) return;
         if (!listed.ok) {
           setSpaces('failed');
           setLoad(listed.error === 'unauthorized' ? { kind: 'signedOut' } : { kind: 'failed' });
@@ -53,6 +62,7 @@ function ParentChooser(): JSX.Element {
         // One roster per family; a roster that fails leaves that family's learners out, never the others, and is said.
         const results = await Promise.all(families.map((item) => api.roster(item.space.id).then((r) => [item.space.id, r] as const)));
         if (!live) return;
+        if (background && results.some(([, r]) => !r.ok)) return;
         if (results.some(([, r]) => !r.ok && r.error === 'unauthorized')) {
           setLoad({ kind: 'signedOut' });
           return;
@@ -67,7 +77,7 @@ function ParentChooser(): JSX.Element {
       } catch {
         // A read that throws in the client (not an API answer) falls back to the error and Try again, never the
         // skeleton forever.
-        if (!live) return;
+        if (!live || background) return;
         setSpaces((current) => current ?? 'failed');
         setLoad({ kind: 'failed' });
       }
@@ -96,6 +106,12 @@ function ParentChooser(): JSX.Element {
   useEffect(() => {
     if (signedOut) router.replace(signedOutTarget(window.location.pathname, window.location.search));
   }, [signedOut, router]);
+
+  // An open chooser shows a renamed learner without a reload.
+  useVisibleRefresh(() => {
+    quiet.current = true;
+    setNonce((n) => n + 1);
+  }, !!api && enabled);
 
   if (!ready || !session || only || signedOut) return <AdultFrame>{null}</AdultFrame>;
 

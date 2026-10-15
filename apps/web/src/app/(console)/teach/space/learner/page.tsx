@@ -21,6 +21,7 @@ import {
 import { ReportScopeBlock } from '@/components/console/ReportScopeBlock';
 import { useGrownUpLocation } from '@/components/console/grown-up-location';
 import { useConsole } from '@/components/console/use-console';
+import { useVisibleRefresh } from '@/components/console/use-visible-refresh';
 import type { ApiResult, LearnerReportBody, SpaceListItem } from '@/lib/console/api';
 import { browseLinksShown } from '@/lib/console/browse-link';
 import { learningRouteEnabled, notesEnabled, reportsEnabled } from '@/lib/console/config';
@@ -76,13 +77,19 @@ function LearnerReportInner(): JSX.Element {
   const prev = useRef<HTMLButtonElement | null>(null);
   const next = useRef<HTMLButtonElement | null>(null);
   const stepped = useRef<'prev' | 'next' | null>(null);
+  // Set by the read again when the tab comes back into view (F-LEARN-001 section 3.11): that read keeps the drawn report
+  // (no busy panel), and a failed one changes nothing.
+  const quiet = useRef(false);
 
   useEffect(() => {
     if (!api || !enabled || !spaceId || !learnerId) return;
     const call = ++latest.current;
-    setLoad(null);
+    const background = quiet.current;
+    quiet.current = false;
+    if (!background) setLoad(null);
     void api.getLearnerReport(spaceId, learnerId, period).then((result) => {
       if (call !== latest.current) return;
+      if (background && !result.ok) return;
       if (result.ok) REPORT_CACHE.set(key, result.data);
       setLoad({ key, period, at, result });
     });
@@ -169,6 +176,12 @@ function LearnerReportInner(): JSX.Element {
     [router],
   );
   const retry = (): void => setNonce((n) => n + 1);
+  // An open report shows a renamed learner and the newest practice without a reload (one more `report.viewed`, at most
+  // every 30 seconds).
+  useVisibleRefresh(() => {
+    quiet.current = true;
+    setNonce((n) => n + 1);
+  }, !!api && enabled && !!spaceId && !!learnerId);
 
   if (!ready || !session) return <AdultFrame>{null}</AdultFrame>;
 

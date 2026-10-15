@@ -151,14 +151,46 @@ describe('learner.editProfile (F-LEARN-001 §3.11)', () => {
     expect(e.guardian.pinHeading).toBe('Create a grown-up PIN');
   });
 
-  it('says where a class roster stands (the change is local until a server route exists)', () => {
-    expect(e.classNote).toBe("Changes show on your teacher's list after you join again");
+  it('says when a class roster shows the change (edits sync with the next connection, section 3.11)', () => {
+    expect(e.classNote).toBe("Your teacher's list updates the next time you're online.");
+    // The old line sent the learner to join again; a join is no longer needed for the roster to change.
+    for (const line of flat(e)) expect(line).not.toMatch(/join again/i);
+  });
+
+  it('says who can change the name, level and Hoya on a class device', () => {
+    expect(e.classDevice).toBe("A grown-up can change the name, level and Hoya on the learner's own device.");
   });
 
   it('names an age nowhere but the 13-or-older statement, and never scolds', () => {
     for (const line of flat(e)) {
       expect(line).not.toMatch(/\bAge\b|How old|ages? \d|for kids/i);
       expect(line).not.toMatch(/\b(failed|missed|overdue|incomplete|wrong)\b/i);
+    }
+  });
+});
+
+describe('one learner name everywhere (F-LEARN-001 section 3.11), en, ko and es', () => {
+  const ko = getMessages('ko');
+  const es = getMessages('es');
+
+  it('the join name field says it is the same name everywhere', () => {
+    expect(m.caregiver.join.confirm.sameEverywhere).toBe('This name is the same everywhere, not just here.');
+    expect(ko.caregiver.join.confirm.sameEverywhere).toBe('이 이름은 여기만이 아니라 어디서나 같아요.');
+    expect(es.caregiver.join.confirm.sameEverywhere).toBe('Este nombre es el mismo en todas partes, no solo aquí.');
+  });
+
+  it('Edit profile tells when the class list updates and who changes a class device, in each language', () => {
+    expect(ko.learner.editProfile.classNote).toBe('다음에 인터넷에 연결되면 선생님 명단도 바뀌어요.');
+    expect(es.learner.editProfile.classNote).toBe('La lista de tu docente se actualiza la próxima vez que tengas conexión.');
+    expect(ko.learner.editProfile.classDevice).toBe('이름, 읽기 수준, 호야는 어른이 학습자 본인의 기기에서 바꿀 수 있어요.');
+    expect(es.learner.editProfile.classDevice).toBe('Un adulto puede cambiar el nombre, el nivel y el Hoya en el dispositivo de quien aprende.');
+  });
+
+  it('every new line is translated, never the English fallback', () => {
+    for (const locale of [ko, es]) {
+      expect(locale.caregiver.join.confirm.sameEverywhere).not.toBe(m.caregiver.join.confirm.sameEverywhere);
+      expect(locale.learner.editProfile.classNote).not.toBe(m.learner.editProfile.classNote);
+      expect(locale.learner.editProfile.classDevice).not.toBe(m.learner.editProfile.classDevice);
     }
   });
 });

@@ -22,7 +22,8 @@ import { readJson } from '../../platform/storage';
 import { apiBaseUrl } from '../../platform/sync-api';
 import { track } from '../../platform/telemetry';
 import { flags } from '../../config/flags';
-import { rederiveAllLocal, repaceAfterSync, useMembershipStore } from '../membership-store';
+import { classScopeMarker } from '../../logic/transfers/device-scope';
+import { TRANSFER_SCOPE_KEY, rederiveAllLocal, repaceAfterSync, useMembershipStore } from '../membership-store';
 import { usePlanStore } from '../plan-store';
 import { useTierStore } from '../tier-store';
 import { useProfileStore } from '../profile-store';
@@ -48,6 +49,17 @@ function fakeApi(over: Record<string, unknown> = {}) {
     getInbox: vi.fn(async () => ({ status: 'ok', inbox: { rev: 1, plans: [], memberships: [familyRow, classRow], tier: 'premium', tierSource: { kind: 'class', spaceId: 'space:cls', name: 'Sunday Class A' }, tierValidUntil: '2099-01-01T00:00:00.000Z', serverTime: 't' } })),
     ...over,
   };
+}
+
+const realUpdateProfile = useProfileStore.getState().updateProfile;
+/** Wraps the store's own updateProfile, so the profile still changes and the call is seen. */
+function spyUpdateProfile() {
+  const update = vi.fn(realUpdateProfile);
+  useProfileStore.setState({ updateProfile: update });
+  return update;
+}
+function restoreUpdateProfile(): void {
+  useProfileStore.setState({ updateProfile: realUpdateProfile });
 }
 
 beforeEach(() => {
@@ -225,6 +237,65 @@ describe('membership-store (F-SPACE-001 §3.5)', () => {
     // joining the same space again replaces rather than duplicates
     await useMembershipStore.getState().join('profile:a', 'space:cls', 'K7M2X9');
     expect(useMembershipStore.getState().byLearner['profile:a']).toHaveLength(1);
+  });
+
+  it('a join under a changed name makes it the profile name (F-LEARN-001 section 3.11)', async () => {
+    useSyncStore.getState().adoptCredentials('profile:a', 'sec', 1);
+    setSyncApiForTests(fakeApi() as never);
+    const update = spyUpdateProfile();
+    try {
+      await useMembershipStore.getState().join('profile:a', 'space:cls', 'K7M2X9', '  Sungjoo ');
+      expect(update).toHaveBeenCalledTimes(1);
+      expect(update).toHaveBeenCalledWith('profile:a', { displayName: 'Sungjoo' });
+      expect(useProfileStore.getState().profiles[0]?.displayName).toBe('Sungjoo');
+      // The edit is pending for the server like any profile edit (PATCH /api/sync/learners/:id on the next sync).
+      await vi.waitFor(() => expect(useSyncStore.getState().byLearner['profile:a']?.pendingProfile?.fields).toEqual({ displayName: 'Sungjoo' }));
+    } finally {
+      restoreUpdateProfile();
+    }
+  });
+
+  it('a join that was already a member still makes a changed name the profile name', async () => {
+    useSyncStore.getState().adoptCredentials('profile:a', 'sec', 1);
+    setSyncApiForTests(fakeApi({ joinSpace: vi.fn(async () => ({ status: 'ok', alreadyMember: true, membership: classRow })) }) as never);
+    await useMembershipStore.getState().join('profile:a', 'space:cls', 'K7M2X9', 'Sungjoo');
+    expect(useProfileStore.getState().profiles[0]?.displayName).toBe('Sungjoo');
+  });
+
+  it('a join under the same name, no name, or a refused join leaves the profile alone', async () => {
+    useSyncStore.getState().adoptCredentials('profile:a', 'sec', 1);
+    const update = spyUpdateProfile();
+    try {
+      setSyncApiForTests(fakeApi() as never);
+      await useMembershipStore.getState().join('profile:a', 'space:cls', 'K7M2X9', ' Suni ');
+      await useMembershipStore.getState().join('profile:a', 'space:cls', 'K7M2X9');
+      setSyncApiForTests(fakeApi({ joinSpace: vi.fn(async () => ({ status: 'error', code: 'cap_class' })) }) as never);
+      await useMembershipStore.getState().join('profile:a', 'space:cls', 'K7M2X9', 'Sungjoo');
+      expect(update).not.toHaveBeenCalled();
+      expect(useProfileStore.getState().profiles[0]?.displayName).toBe('Suni');
+      expect(useSyncStore.getState().byLearner['profile:a']?.pendingProfile ?? null).toBeNull();
+    } finally {
+      restoreUpdateProfile();
+    }
+  });
+
+  it('a join name the profile rule refuses never throws and never reaches the profile', async () => {
+    useSyncStore.getState().adoptCredentials('profile:a', 'sec', 1);
+    setSyncApiForTests(fakeApi() as never);
+    expect((await useMembershipStore.getState().join('profile:a', 'space:cls', 'K7M2X9', 'Suni 🐯')).ok).toBe(true);
+    expect(useProfileStore.getState().profiles[0]?.displayName).toBe('Suni');
+  });
+
+  it('says whether this device holds a class-scoped credential for the learner (F-LEARN-001 section 3.11)', async () => {
+    // Never synced: no secret, so the device is not a class tablet for this learner.
+    expect(await useMembershipStore.getState().deviceScope('profile:a')).toBe('full');
+    useSyncStore.getState().adoptCredentials('profile:a', 'sec', 1);
+    expect(await useMembershipStore.getState().deviceScope('profile:a')).toBe('full');
+    mem.set(TRANSFER_SCOPE_KEY('profile:a'), classScopeMarker('sec'));
+    expect(await useMembershipStore.getState().deviceScope('profile:a')).toBe('class');
+    // A marker written for another secret (a later rescue-code claim) no longer applies.
+    mem.set(TRANSFER_SCOPE_KEY('profile:a'), classScopeMarker('older'));
+    expect(await useMembershipStore.getState().deviceScope('profile:a')).toBe('full');
   });
 
   it('reports join failures without touching the cache', async () => {

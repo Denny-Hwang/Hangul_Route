@@ -13,6 +13,7 @@ import { useTransfersShown } from '@/components/console/TransferParts';
 import { Button, Muted, buttonBase, panelStyle } from '@/components/console/ui';
 import { useMovesWaiting } from '@/components/console/MovesEntry';
 import { useConsole } from '@/components/console/use-console';
+import { useVisibleRefresh } from '@/components/console/use-visible-refresh';
 import type { EntitlementView, PlanView, Roster, RosterLearner, SpaceListItem } from '@/lib/console/api';
 import { browseEntryShown, contentGatingEnabled, learningRouteEnabled, notesEnabled, reportsEnabled } from '@/lib/console/config';
 import { spaceCoverage } from '@/lib/console/curriculum';
@@ -135,36 +136,52 @@ export default function ParentHomePage(): JSX.Element {
   // [TV] The class-scope update and the one-time move notices (AMENDMENTS-TEACHER-VISIBILITY-TRANSFER TV-D5, TV-D10).
   const movesShown = useTransfersShown();
 
+  // `quiet`: the read again when the tab comes back into view (F-LEARN-001 section 3.11). The drawn cards stay while it
+  // reads, and a failed quiet read keeps them: a background read never turns a family into an error.
   const loadRoster = useCallback(
-    async (spaceId: string, role: SpaceListItem['role']): Promise<void> => {
+    async (spaceId: string, role: SpaceListItem['role'], quiet = false): Promise<void> => {
       if (!api) return;
-      setRosters((prev) => ({ ...prev, [spaceId]: { state: 'loading' } }));
+      if (!quiet) setRosters((prev) => ({ ...prev, [spaceId]: { state: 'loading' } }));
       // Plans only for a family this account owns: the line is owner only, so a co-caregiver's family needs no plan read.
       const readPlans = contentGatingEnabled() && role === 'owner';
       const [result, planList] = await Promise.all([api.roster(spaceId).catch(() => null), readPlans ? api.listPlans(spaceId).catch(() => null) : null]);
       if (planList?.ok) setPlans((prev) => ({ ...prev, [spaceId]: planList.data }));
-      setRosters((prev) => ({ ...prev, [spaceId]: result?.ok ? { state: 'ready', roster: result.data } : { state: 'failed' } }));
+      setRosters((prev) => {
+        if (result?.ok) return { ...prev, [spaceId]: { state: 'ready', roster: result.data } };
+        if (quiet && prev[spaceId]?.state === 'ready') return prev;
+        return { ...prev, [spaceId]: { state: 'failed' } };
+      });
     },
     [api],
   );
 
-  const load = useCallback(async (): Promise<void> => {
-    if (!api) return;
-    setFailed(false);
-    const [result, owned] = await Promise.all([api.listSpaces(), contentGatingEnabled() ? api.entitlements().catch(() => null) : null]);
-    setEntitlements(owned?.ok ? owned.data : null);
-    if (!result.ok) {
-      setFailed(true);
-      return;
-    }
-    setItems(result.data);
-    const view = parentHomeView(result.data);
-    if (view.state === 'families') await Promise.all(view.families.map((family) => loadRoster(family.space.id, family.role)));
-  }, [api, loadRoster]);
+  const load = useCallback(
+    async (quiet = false): Promise<void> => {
+      if (!api) return;
+      if (!quiet) setFailed(false);
+      const [result, owned] = await Promise.all([api.listSpaces(), contentGatingEnabled() ? api.entitlements().catch(() => null) : null]);
+      if (!result.ok) {
+        if (!quiet) {
+          setEntitlements(owned?.ok ? owned.data : null);
+          setFailed(true);
+        }
+        return;
+      }
+      if (!quiet || owned?.ok) setEntitlements(owned?.ok ? owned.data : null);
+      setFailed(false);
+      setItems(result.data);
+      const view = parentHomeView(result.data);
+      if (view.state === 'families') await Promise.all(view.families.map((family) => loadRoster(family.space.id, family.role, quiet)));
+    },
+    [api, loadRoster],
+  );
 
   useEffect(() => {
     void load();
   }, [load]);
+
+  // An open family home shows a renamed learner or a new member without a reload.
+  useVisibleRefresh(() => void load(true), !!api);
 
   const frameSpaces: FrameSpaces = !api || (failed && !items) ? 'failed' : items;
   if (!ready || !session) return <AdultFrame spaces={frameSpaces}>{null}</AdultFrame>;

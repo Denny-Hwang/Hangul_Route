@@ -19,6 +19,7 @@ import { StudentWordsLines, WeekWordsRevisit } from '@/components/console/VocabW
 import { useTransfersShown } from '@/components/console/TransferParts';
 import { useMovesWaiting } from '@/components/console/MovesEntry';
 import { useConsole } from '@/components/console/use-console';
+import { useVisibleRefresh } from '@/components/console/use-visible-refresh';
 import type { PlanView, Roster, SpaceListItem } from '@/lib/console/api';
 import { contentGatingEnabled, lectureModeEnabled, notesEnabled, reportsEnabled } from '@/lib/console/config';
 import { canComposeIn } from '@/lib/console/lecture';
@@ -61,10 +62,14 @@ function SpaceInner(): JSX.Element {
   const [copied, setCopied] = useState(false);
   const now = new Date();
 
-  const load = useCallback(async (): Promise<void> => {
+  // `quiet`: the read again when the tab comes back into view (F-LEARN-001 section 3.11). It keeps what is drawn while it
+  // reads, and a failed quiet read changes nothing: the page never turns into an error because a background read failed.
+  const load = useCallback(async (quiet = false): Promise<void> => {
     if (!api) return;
-    setError(null);
-    setCoverage('unknown');
+    if (!quiet) {
+      setError(null);
+      setCoverage('unknown');
+    }
     // The free-plan switch (F-ENT-003 §3.4): only with it on does the roster read the role and the entitlements for the free-lessons line.
     const gating = contentGatingEnabled();
     const [result, planList, relinks, spaceList, entitlements] = await Promise.all([
@@ -79,13 +84,18 @@ function SpaceInner(): JSX.Element {
     if (gating && result.ok) setCoverage(spaceCoverage(entitlements?.ok ? entitlements.data : null, spaceList?.ok ? spaceList.data : null, result.data.space, new Date()));
     if (planList.ok) setPlans(planList.data);
     if (relinks.ok) setPendingRelinks(relinks.data.length);
-    if (result.ok) setRoster(result.data);
-    else setError(result.error === 'forbidden' ? 'forbidden' : result.error === 'not_found' ? 'gone' : 'cantReach');
+    if (result.ok) {
+      setRoster(result.data);
+      if (quiet) setError(null);
+    } else if (!quiet) setError(result.error === 'forbidden' ? 'forbidden' : result.error === 'not_found' ? 'gone' : 'cantReach');
   }, [api, spaceId]);
 
   useEffect(() => {
     void load();
   }, [load]);
+
+  // An open roster shows a renamed learner, a new practice day or a new member without a reload.
+  useVisibleRefresh(() => void load(true), !!api);
 
   if (!ready || !session) return <AdultFrame>{null}</AdultFrame>;
   // School spaces get the admin view (F-SCHOOL-001 §3.3); classes and families the roster.
