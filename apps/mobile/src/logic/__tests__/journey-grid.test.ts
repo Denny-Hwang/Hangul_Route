@@ -263,8 +263,8 @@ describe('JourneyGrid sources', () => {
 
   it('the count mark keeps its size at large text and grows rather than clips (F-STORY-005 §3.12)', () => {
     expect(grid).toMatch(/<Text \{\.\.\.KOREAN_LINE_BREAK\} maxFontSizeMultiplier=\{1\}[^>]*>\s*\{messages\.learner\.journey\.countMark\(/);
-    expect(grid).toContain('minHeight: COUNT_MARK');
-    expect(grid).not.toMatch(/\bheight: COUNT_MARK/);
+    expect(grid).toContain('minHeight: CELL.countMark');
+    expect(grid).not.toMatch(/\bheight: CELL\.countMark/);
   });
 
   it('draws its glyphs at a token size and takes the cell id from cellTestId (F-STORY-005 PR 5.5a review)', () => {
@@ -557,18 +557,13 @@ describe('JourneyGrid sources (F-ENT-003 E3-5)', () => {
     expect(grid).not.toMatch(/'lock'/);
   });
 
-  it('cells and column labels draw the theme glyph, never a letter (owner decision 2026-10-14)', () => {
-    expect(grid).toMatch(/design\/components\/Icon\/theme-glyphs\.md/);
-    expect(grid).not.toMatch(/themeCellInitial/);
-    expect(grid).toMatch(/<Icon name=\{themeGlyph\(theme\.key\)\}/);
-    expect(grid).toMatch(/<Icon name=\{themeGlyph\(t\.key\)\}/);
-  });
+  // The theme glyphs and the cell word: src/screens/journey/__tests__/JourneyGrid.test.tsx renders them.
 
   it('draws the marks from the design system, the legend above the column labels, the taste note by the row rule', () => {
     expect(grid).toMatch(/design\/wireframes\/journey\/grid-plan-and-access\.md/);
     expect(grid).toMatch(/design\/components\/RouteMarkers\/spec\.md/);
     expect(grid).toContain('<RouteLegend');
-    expect(grid.indexOf('<RouteLegend')).toBeLessThan(grid.indexOf('themeColumnLabel(t)'));
+    expect(grid.indexOf('<RouteLegend')).toBeLessThan(grid.indexOf('journey-col-${t.key}'));
     expect(grid).toContain('<NextMarker');
     // The tip is placed from the cell's outer edge: the cell's border comes off the offset.
     expect(grid).toMatch(/<NextMarker[^>]*edge=\{cell\.selected \? borderWidth\.thick : CELL_EDGE\}/);

@@ -1,12 +1,16 @@
-import type { ReactTestInstance } from 'react-test-renderer';
+import { act, type ReactTestInstance } from 'react-test-renderer';
 import React from 'react';
-import { afterEach, describe, expect, it } from 'vitest';
-import { LayoutProvider, colors, layoutClassFor } from '@hangul-route/design-system';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import type { UiLocale } from '@hangul-route/content-schema';
+import { LayoutProvider, ROUTE_RING_SIZE, borderWidth, colors, layoutClassFor, spacing, typography } from '@hangul-route/design-system';
+import { getMessages } from '@hangul-route/i18n';
 import { JourneyGrid } from '../../../components/JourneyGrid';
 import { episodesAll, gridEpisodes, stages, themes } from '../../../content';
 import { themeGlyph } from '../../../logic/journey';
+import { journeyCellMetrics } from '../../../logic/journey-cell-layout';
 import type { JourneyAccessInput, JourneyMarksOf } from '../../../logic/journey-grid';
 import { defaultStoryIndex } from '../../../logic/story/story-index';
+import { useLocaleStore } from '../../../store/locale-store';
 import { byTestId, cleanup, hostNodes, render, resetPlatform } from '../../../test-support/render';
 
 /**
@@ -18,7 +22,15 @@ import { byTestId, cleanup, hostNodes, render, resetPlatform } from '../../../te
 afterEach(async () => {
   await cleanup();
   resetPlatform();
+  vi.unstubAllEnvs();
+  useLocaleStore.setState({ device: 'en', session: null, byProfile: {} });
 });
+
+function useUiLocale(locale: UiLocale): void {
+  // es and ko are hidden until they ship (LOCALE_STATUS); the QA switch shows them.
+  vi.stubEnv('EXPO_PUBLIC_SHOW_ALL_LOCALES', '1');
+  useLocaleStore.setState({ device: locale, session: null, byProfile: {} });
+}
 
 const grid = (episodes = gridEpisodes(episodesAll)): React.ReactElement => (
   <JourneyGrid
@@ -105,7 +117,8 @@ describe('JourneyGrid theme glyphs', () => {
       expect(glyphOf(glyph as ReactTestInstance)).toBe(themeGlyph(theme.key));
       expect(hidden(glyph as ReactTestInstance)).toBe(true);
       const [column] = byTestId(r.root, `journey-col-${theme.key}`);
-      const word = (column as ReactTestInstance).findAll((n) => typeof n.type === 'string' && n.children.includes(theme.titleEn.split(' ')[0] as string));
+      const label = getMessages('en').learner.journey.themeWord[theme.key];
+      const word = (column as ReactTestInstance).findAll((n) => typeof n.type === 'string' && n.children.includes(label));
       expect(word.length, theme.key).toBeGreaterThan(0);
       expect(hidden(word[0] as ReactTestInstance)).toBe(false);
     }
@@ -172,8 +185,8 @@ describe('JourneyGrid theme glyphs', () => {
     const all = gridEpisodes(episodesAll);
     const nature = all.find((e) => e.stage === 'stage1' && e.theme === 'nature');
     for (const [width, glyphSize, ringSize] of [
-      [800, 29, 48],
-      [1280, 34, 56],
+      [800, 24, 48],
+      [1280, 28, 56],
     ] as const) {
       const r = await render(
         <LayoutProvider value={layoutClassFor({ width, height: 1000 })}>
@@ -197,5 +210,132 @@ describe('JourneyGrid theme glyphs', () => {
       expect(glyphSize).toBeLessThan(ringSize);
       await cleanup();
     }
+  });
+});
+
+describe('JourneyGrid cell word (owner request 2026-10-14)', () => {
+  const words = (cell: ReactTestInstance, stage: string, theme: string): ReactTestInstance[] => byTestId(cell, `journey-word-${stage}-${theme}`);
+
+  it('a lesson cell shows its theme word under the glyph, hidden from screen readers (the label already names the theme)', async () => {
+    const r = await render(grid());
+    for (const theme of themes) {
+      const [glyph] = byTestId(r.root, `journey-glyph-stage1-${theme.key}`);
+      const cell = buttonOf(glyph as ReactTestInstance) as ReactTestInstance;
+      const [word] = words(cell, 'stage1', theme.key);
+      expect(word, theme.key).toBeDefined();
+      expect(strings(word as ReactTestInstance)).toEqual([getMessages('en').learner.journey.themeWord[theme.key]]);
+      expect(hidden(word as ReactTestInstance)).toBe(true);
+      // the label names the theme in words once; the word is not a second accessible element
+      expect(String(cell.props['aria-label'])).toContain(theme.titleEn);
+    }
+  });
+
+  it('a stories-only cell names its theme under the books glyph; a coming-later cell stays empty', async () => {
+    // Stage 1 only (the later stages are coming later), and Stage 1 Nature without its lesson: its heritage stories stay (stories-only).
+    const stage1 = gridEpisodes(episodesAll).filter((e) => e.stage === 'stage1' && e.theme !== 'nature');
+    const r = await render(grid(stage1));
+    const later = hostNodes(r.root, (n) => n.props.role === 'button' && /coming soon/i.test(String(n.props['aria-label'])));
+    expect(later.length).toBeGreaterThan(0);
+    for (const cell of later) expect(strings(cell).join('')).toBe('');
+    const storiesOnly = hostNodes(r.root, (n) => String(n.props['data-testid'] ?? '').startsWith('journey-cell-stories-'));
+    expect(storiesOnly.length).toBeGreaterThan(0);
+    for (const cell of storiesOnly) {
+      const [, , , stage, theme] = String(cell.props['data-testid']).split('-');
+      const [word] = words(cell, stage as string, theme as string);
+      expect(word, String(cell.props['data-testid'])).toBeDefined();
+      expect(hidden(word as ReactTestInstance)).toBe(true);
+    }
+  });
+
+  it.each(['es', 'ko'] as const)('in %s the cells and the column labels show the %s theme words', async (locale) => {
+    useUiLocale(locale);
+    const r = await render(grid());
+    const themeWord = getMessages(locale).learner.journey.themeWord;
+    for (const theme of themes) {
+      const [word] = byTestId(r.root, `journey-word-stage1-${theme.key}`);
+      expect(strings(word as ReactTestInstance), theme.key).toEqual([themeWord[theme.key]]);
+      const [column] = byTestId(r.root, `journey-col-${theme.key}`);
+      expect(strings(column as ReactTestInstance), theme.key).toContain(themeWord[theme.key]);
+    }
+  });
+
+  it('the cell sizes from the ring the design system draws', () => {
+    expect(journeyCellMetrics({ spacing, borderWidth, typography }).ring).toBe(ROUTE_RING_SIZE);
+  });
+
+  it('a placed-out cell moves its count mark to the top left, never onto the word at the bottom', async () => {
+    const all = gridEpisodes(episodesAll);
+    const r = await render(
+      <JourneyGrid
+        stages={stages}
+        themes={themes}
+        gridEpisodes={all}
+        paneMode={false}
+        selectedId={null}
+        onOpen={() => undefined}
+        storyEntries={defaultStoryIndex()}
+        marksOf={(stage, theme) => ({ completed: false, isStart: false, placedOut: stage === 'stage1' && theme === 'nature' })}
+      />,
+    );
+    const [count] = byTestId(r.root, 'journey-count-stage1-nature');
+    expect(count).toBeDefined();
+    const style = Object.assign({}, ...[count?.props.style].flat());
+    expect(style.top).toBeDefined();
+    expect(style.left).toBeDefined();
+    expect(style.bottom).toBeUndefined();
+    expect(style.right).toBeUndefined();
+  });
+
+  it('a cell with the start pin and the placed-out check still draws its count mark, under the check, and grows to hold it', async () => {
+    const all = gridEpisodes(episodesAll);
+    const M = journeyCellMetrics({ spacing, borderWidth, typography });
+    const r = await render(
+      <JourneyGrid
+        stages={stages}
+        themes={themes}
+        gridEpisodes={all}
+        paneMode={false}
+        selectedId={null}
+        onOpen={() => undefined}
+        storyEntries={defaultStoryIndex()}
+        marksOf={(stage, theme) =>
+          stage === 'stage1' && theme === 'nature' ? { completed: false, isStart: true, placedOut: true } : { completed: false, isStart: false, placedOut: false }
+        }
+      />,
+    );
+    const [count] = byTestId(r.root, 'journey-count-stage1-nature');
+    expect(count).toBeDefined();
+    const cell = buttonOf(count as ReactTestInstance) as ReactTestInstance;
+    expect(byTestId(cell, 'journey-start-pin').length).toBeGreaterThan(0);
+    const style = Object.assign({}, ...[count?.props.style].flat());
+    expect(style).toMatchObject({ top: `${2 * M.inset + M.markSize}px`, right: `${M.inset}px` });
+    expect(style.left).toBeUndefined();
+    expect(style.bottom).toBeUndefined();
+    // the whole row takes the deeper band, so every cell in it is one height; other rows keep the plain height
+    const styleOf = (n: ReactTestInstance): Record<string, unknown> => Object.assign({}, ...[n.props.style].flat());
+    const heightOf = (n: ReactTestInstance): number => parseFloat(String(styleOf(n).minHeight));
+    const cellsOfRow = (stage: string): ReactTestInstance[] =>
+      themes.map((t) => byTestId(r.root, `journey-word-${stage}-${t.key}`)[0]).filter(Boolean).map((w) => buttonOf(w as ReactTestInstance) as ReactTestInstance);
+    const row1 = cellsOfRow('stage1');
+    expect(row1.length).toBe(themes.length);
+    for (const c of row1) expect(heightOf(c)).toBe(heightOf(cell));
+    const row2 = cellsOfRow('stage2');
+    expect(row2.length).toBeGreaterThan(0);
+    for (const c of row2) expect(heightOf(c)).toBeLessThan(heightOf(cell));
+    // once the grid is measured, every cell in the row gets the same explicit height (no aspectRatio to settle)
+    // react-native-web's View element (not its DOM node) carries onLayout
+    const [colRow] = r.root.findAll((n) => n.props.testID === 'journey-col-row' && typeof n.props.onLayout === 'function');
+    expect(colRow).toBeDefined();
+    await act(async () => {
+      colRow?.props.onLayout({ nativeEvent: { layout: { x: 0, y: 0, width: 288, height: 40 } } });
+    });
+    const heights = cellsOfRow('stage1').map((c) => styleOf(c));
+    for (const st of heights) {
+      expect(st.aspectRatio).toBeUndefined();
+      expect(st.height).toBe(heights[0]?.height);
+    }
+    expect(parseFloat(String(heights[0]?.height))).toBe(heightOf(cell));
+    // the label still says the count
+    expect(String(cell.props['aria-label'])).toMatch(/stor/i);
   });
 });

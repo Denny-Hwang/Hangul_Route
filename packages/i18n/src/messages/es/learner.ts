@@ -263,6 +263,7 @@ export const learner = {
     tasteNote: 'Ya hay una muestra de esta etapa. Vienen más episodios.',
     storiesNote: 'Las historias del patrimonio están en las casillas con el icono de libros.',
     countMark: (value: number, more: boolean) => (more ? `${value}+` : `${value}`),
+    themeWord: { letters: 'Letras', life: 'Comida', rites: 'Fiestas', nature: 'Campo', crafts: 'Juegos' },
     panes: { master: 'Mapa de etapas', detail: 'Detalles del episodio' },
     how: {
       title: 'Cómo funciona el recorrido',

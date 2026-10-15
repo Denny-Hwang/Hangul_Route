@@ -255,6 +255,7 @@ export const learner = {
     tasteNote: '이 단계는 지금 맛보기로 열려 있어요. 에피소드가 더 나올 거예요.',
     storiesNote: '책 아이콘이 있는 칸에서 문화 이야기를 읽을 수 있어요.',
     countMark: (value: number, more: boolean) => (more ? `${value}+` : `${value}`),
+    themeWord: { letters: '글자', life: '음식', rites: '명절', nature: '자연', crafts: '놀이' },
     panes: { master: '여정 지도', detail: '에피소드 정보' },
     how: {
       title: '여정은 이렇게 해요',
