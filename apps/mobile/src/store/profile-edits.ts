@@ -17,5 +17,12 @@ export function onProfileEdited(listener: Listener): () => void {
 }
 
 export function notifyProfileEdited(profileId: string, fields: ProfileServerFields): void {
-  for (const listener of listeners) listener(profileId, fields);
+  for (const listener of listeners) {
+    // A listener that throws never fails the edit, which is already saved by then.
+    try {
+      listener(profileId, fields);
+    } catch {
+      // Swallowed on purpose: the next sync's one-time check or a later edit sends the value.
+    }
+  }
 }

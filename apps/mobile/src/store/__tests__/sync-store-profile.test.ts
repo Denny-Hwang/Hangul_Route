@@ -19,7 +19,9 @@ vi.mock('../../config/flags', () => ({
   gatingActive: () => false,
 }));
 
+import { classScopeMarker } from '../../logic/transfers/device-scope';
 import { notifyInboxRead } from '../../platform/inbox-events';
+import { notifyProfileEdited, onProfileEdited } from '../profile-edits';
 import { useProfileStore } from '../profile-store';
 import { useProgressStore } from '../progress-store';
 import { usePlanStore } from '../plan-store';
@@ -296,6 +298,34 @@ describe('one-time repair of renames that never synced (hr:profilePushedV1)', ()
     expect(useSyncStore.getState().byLearner[A]?.pendingProfile).toBeNull();
   });
 
+  it('a different name typed at join on an older build gives way to the device profile name (one name everywhere, F-SYNC-001 §3.7 #10)', async () => {
+    registered(A);
+    // The older Join screen let a grown-up type 'Mina' for the class while the profile kept 'Mina Kim-Park'; the join
+    // wrote 'Mina' and left the row unstamped. The device cannot tell this from a rename that never synced, and the
+    // rule is one name for the learner everywhere: the profile name goes up. Edit profile changes it on purpose.
+    useProfileStore.setState({ profiles: [learner(A, 'Mina Kim-Park')], activeId: A, hydrated: true });
+    const getInbox = vi.fn(async () => ({ status: 'ok', inbox: inbox({ displayName: 'Mina', ageGroup: '5-7', avatar: 'hoya-orange', profileUpdatedAt: null }) }));
+    const api = fakeApi({ getInbox });
+    setSyncApiForTests(api as never);
+    await useSyncStore.getState().syncAll();
+    expect(api.updateLearnerProfile).toHaveBeenCalledTimes(1);
+    expect(api.updateLearnerProfile.mock.calls[0]?.[3]).toEqual({ displayName: 'Mina Kim-Park', at: expect.any(String) });
+    expect(useProfileStore.getState().profiles[0]?.displayName).toBe('Mina Kim-Park');
+  });
+
+  it('a class tablet settles the one-time check quietly: no PATCH, no error recorded', async () => {
+    registered(A);
+    registered(B);
+    mem.set(`transfer-scope:${A}`, classScopeMarker(`sec-${A}`));
+    mem.set(`transfer-scope:${B}`, classScopeMarker(`sec-${B}`));
+    const api = fakeApi({ getInbox: vi.fn(async () => ({ status: 'ok', inbox: { ...inbox(), deviceScope: 'class' } })) });
+    setSyncApiForTests(api as never);
+    await useSyncStore.getState().syncAll();
+    expect(api.updateLearnerProfile).not.toHaveBeenCalled();
+    for (const id of [A, B]) expect(useSyncStore.getState().byLearner[id]).toMatchObject({ pendingProfile: null, lastError: null });
+    expect(mem.get(PROFILE_PUSH_REPAIR_KEY)).toBe(true);
+  });
+
   it('values that already match the server send nothing (a device that never saw the rename stamps nothing)', async () => {
     registered(A);
     const getInbox = vi.fn(async () => ({ status: 'ok', inbox: inbox({ displayName: 'Sungjoo', ageGroup: '5-7', avatar: 'hoya-orange', profileUpdatedAt: null }) }));
@@ -415,6 +445,17 @@ describe('the server name comes down (inbox pull, restore)', () => {
     expect(useSyncStore.getState().byLearner[A]?.profileAt).toBe('2026-10-13T10:00:00.000Z');
   });
 
+  it('an inbox read while the sync record first loads never writes over an edit made meanwhile', async () => {
+    restart();
+    // The pull starts and waits for the stored record; the learner renames before the edit itself is queued.
+    const pull = useSyncStore.getState().applyInboxLearner(A, row('Sungjoo'));
+    useProfileStore.getState().updateProfile(A, { displayName: 'Local' });
+    await pull;
+    await flush();
+    expect(useProfileStore.getState().profiles[0]?.displayName).toBe('Local');
+    expect(useSyncStore.getState().byLearner[A]?.pendingProfile?.fields).toEqual({ displayName: 'Local' });
+  });
+
   it('a local edit still waiting wins over the inbox', async () => {
     await useSyncStore.getState().markProfileDirty(A, { displayName: 'Local' });
     useProfileStore.getState().updateProfile(A, { displayName: 'Local' });
@@ -446,5 +487,19 @@ describe('the server name comes down (inbox pull, restore)', () => {
     await useSyncStore.getState().adoptServerLearner({ learner: { id: A, displayName: 'Sungjoo', ageGroup: '8-9', avatar: 'hoya-orange' }, secret: 'sec-2', snapshot: null });
     expect(useProfileStore.getState().profiles[0]?.displayName).toBe('Local');
     expect(useSyncStore.getState().byLearner[A]).toMatchObject({ secret: 'sec-2', pendingProfile: { fields: { displayName: 'Local' } } });
+  });
+});
+
+describe('profile edit listeners', () => {
+  it('a listener that throws never reaches the edit; the other listeners still run', () => {
+    const seen: string[] = [];
+    const offBad = onProfileEdited(() => {
+      throw new Error('boom');
+    });
+    const offGood = onProfileEdited((id) => seen.push(id));
+    expect(() => notifyProfileEdited(A, { displayName: 'Sungjoo' })).not.toThrow();
+    expect(seen).toEqual([A]);
+    offBad();
+    offGood();
   });
 });

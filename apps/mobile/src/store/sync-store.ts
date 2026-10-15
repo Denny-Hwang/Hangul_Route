@@ -20,6 +20,7 @@ import { mergeSnapshots, rebaseSnapshot } from '../logic/sync/merge';
 import { planRestore, type RestorePlan } from '../logic/sync/restore';
 import { createSyncScheduler } from '../logic/sync/scheduler';
 import { summarize } from '../logic/sync/summarize';
+import { TRANSFER_SCOPE_KEY, deviceScopeOf } from '../logic/transfers/device-scope';
 import { getDeviceId } from '../platform/device';
 import { onInboxRead } from '../platform/inbox-events';
 import { readJson, writeJson } from '../platform/storage';
@@ -178,6 +179,13 @@ export function onSynced(listener: (learnerId: string) => void): () => void {
   };
 }
 
+/**
+ * Local edits seen per learner, counted the moment `profile-store` reports them (before the queued edit is stored,
+ * which waits for the sync record to load). An inbox pull that started before an edit never writes over it.
+ */
+const editCounts = new Map<string, number>();
+const editCountOf = (learnerId: string): number => editCounts.get(learnerId) ?? 0;
+
 export const useSyncStore = create<State & Actions>((set, get) => {
   const update = (learnerId: string, patch: Partial<LearnerSyncState>): LearnerSyncState => {
     const current = get().byLearner[learnerId] ?? blank(learnerId);
@@ -232,6 +240,12 @@ export const useSyncStore = create<State & Actions>((set, get) => {
     const pending = get().byLearner[learnerId]?.pendingProfile;
     if (!pending) return null;
     let toSend: ProfileServerFields = pending.fields;
+    if (pending.repair && !hasFields(pending.fields) && deviceScopeOf(await readJson<unknown>(TRANSFER_SCOPE_KEY(learnerId)), creds.secret) === 'class') {
+      // A class tablet may not PATCH (403 `scope_limited`), and the one-time check has no edit behind it: it settles
+      // quietly, with no request and no error recorded. The learner's own device sends its values.
+      settlePending(learnerId, pending.at);
+      return null;
+    }
     if (pending.repair) {
       // The one-time repair's values have no edit behind them. Only a PATCH sets `profileUpdatedAt` (a join never
       // does, F-SPACE-001), so a stamped row means another device edited this learner: its values win for every
@@ -433,7 +447,10 @@ export const useSyncStore = create<State & Actions>((set, get) => {
     },
 
     applyInboxLearner: async (learnerId, learner) => {
+      const edits = editCountOf(learnerId);
       await get().hydrate(learnerId);
+      // A local edit reported while the record loaded: its queued push is about to land and wins.
+      if (editCountOf(learnerId) !== edits) return;
       applyServerLearner(learnerId, learner);
     },
 
@@ -511,7 +528,10 @@ export const useSyncStore = create<State & Actions>((set, get) => {
 });
 
 // Every learner name, level or avatar edit on this device is queued for the server (F-PROF-001).
-onProfileEdited((learnerId, fields) => void useSyncStore.getState().markProfileDirty(learnerId, fields));
+onProfileEdited((learnerId, fields) => {
+  editCounts.set(learnerId, editCountOf(learnerId) + 1);
+  void useSyncStore.getState().markProfileDirty(learnerId, fields);
+});
 // The learner row an inbox carries: a newer edit made on another device comes down (F-PROF-001 profile pull).
 onInboxRead((learnerId, inbox) => {
   if (inbox.learner) void useSyncStore.getState().applyInboxLearner(learnerId, inbox.learner);
