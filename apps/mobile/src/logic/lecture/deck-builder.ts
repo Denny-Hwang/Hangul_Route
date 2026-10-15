@@ -2,6 +2,7 @@ import {
   discoverItemTexts,
   parseNarration,
   syllableSplit,
+  wordReviewCardCap,
   type CheckKind,
   type Discover,
   type Episode,
@@ -609,6 +610,45 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
     meaningQuiz(path, topicId, () => buildCultureQuizRounds({ cardPairs: pairs, rounds: deck.options.quizRounds, seed: seed() }));
   };
 
+  /**
+   * Word review (v2, AMENDMENTS-LECTURE-V2 section 4.5): the words each quest teaches (the quest
+   * expanded on its own, no slides), then the `vocabIds` words, one per Korean text, the first
+   * `wordReviewCardCap(rounds)` of them as word cards, then `rounds` word-to-meaning questions over
+   * them. Unknown ids are counted skips; under 4 words, the quiz is a counted `scope-too-small`.
+   */
+  const wordReviewBlock = (path: string, questIds: readonly string[], vocabIds: readonly string[], rounds: number): void => {
+    type ReviewWord = KoLine & { gloss: string; extra?: { wordId: string; cardId?: string; wordArt?: string } };
+    const words: ReviewWord[] = [];
+    const add = (word: ReviewWord): void => {
+      if (!words.some((w) => w.ko === word.ko)) words.push(word);
+    };
+    for (const id of questIds) {
+      if (!bundle.questById(id)) {
+        skip(id, 'unknown-id');
+        continue;
+      }
+      const alone = expandDeck({ ...deck, blocks: [{ kind: 'quest', id }] }, bundle, voice);
+      for (const t of alone.taught) if (t.kind === 'word' && t.gloss !== undefined) add({ ko: t.ko, romanization: t.romanization, gloss: t.gloss });
+    }
+    for (const id of vocabIds) {
+      const found = bundle.vocabWord ? bundle.vocabWord(id) : 'not-ready';
+      if (found === undefined || found === 'not-ready') {
+        skip(id, found ?? 'unknown-id');
+        continue;
+      }
+      const extra = { wordId: found.id, ...(found.cardId !== undefined ? { cardId: found.cardId } : {}), ...(found.wordArt !== undefined ? { wordArt: found.wordArt } : {}) };
+      add({ ko: found.ko, romanization: found.romanization, gloss: found.gloss, extra });
+    }
+    const shown = words.slice(0, wordReviewCardCap(rounds));
+    for (const { extra, ...word } of shown) wordCard(`${path}/${word.ko}`, word, extra);
+    if (shown.length < QUIZ_MIN_ITEMS) {
+      skip(`${path}/quiz`, 'scope-too-small');
+      return;
+    }
+    const cardPairs: CardMatchPair[] = shown.map((w) => ({ ko: w.ko, en: w.gloss, romanization: w.romanization }));
+    meaningQuiz(path, `${path}/quiz`, () => buildCultureQuizRounds({ cardPairs, rounds, seed: seed() }));
+  };
+
   const revisitBlock = (path: string, chars: readonly string[]): void => {
     const focus: Jamo[] = [];
     for (const c of chars) {
@@ -726,8 +766,7 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
         classCode = block.code;
         return;
       case 'word-review':
-        // v2 (AMENDMENTS-LECTURE-V2 4.5): expanded by LV-2; until then a counted skip, never a silent drop.
-        skip(key, 'unsupported-step');
+        bySlides(() => wordReviewBlock(key, block.questIds, block.vocabIds, block.rounds));
         return;
     }
   });

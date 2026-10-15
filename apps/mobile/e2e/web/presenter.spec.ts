@@ -381,6 +381,23 @@ test.describe('presenter at 1280 x 720', () => {
     await expect(page.getByTestId('presenter-home')).toBeVisible();
   });
 
+  test('a v2 Word review link opens: word cards, then the word-to-meaning quiz (AMENDMENTS-LECTURE-V2 4.5)', async ({ page }) => {
+    const review: LectureDeckInput = {
+      v: 2,
+      id: 'lecture:e2ewr1',
+      title: 'Word review',
+      createdAt: '2026-10-15T09:00:00Z',
+      seed: 7,
+      blocks: [{ kind: 'word-review', questIds: ['quest:stage1-life-q1', 'quest:stage1-life-q2'], vocabIds: [], rounds: 5 }],
+      source: 'quick',
+      preset: 'word-review',
+    };
+    await page.goto(link(review));
+    await startLesson(page);
+    await expect.poll(() => counter(page)).toMatch(/^1 \//);
+    await shot(page, 'presenter-word-review-1280x720');
+  });
+
   test('a broken link (not a newer one) has no Reload', async ({ page }) => {
     await page.goto('/present#d=1.not-a-deck!!');
     await expect(page.getByText('This link does not work')).toBeVisible();

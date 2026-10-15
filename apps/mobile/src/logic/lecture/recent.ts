@@ -1,6 +1,4 @@
-import { LECTURE_CREATED_AT_RE, LectureDeckSchema, type LectureDeck } from '@hangul-route/content-schema';
-// Until LV-1's codec exports its version list, v1 is the only deck version this build reads.
-const LECTURE_DECK_VERSIONS = [1] as const;
+import { LECTURE_CREATED_AT_RE, LECTURE_DECK_VERSIONS, LectureDeckSchema, type LectureDeck } from '@hangul-route/content-schema';
 import { z } from 'zod';
 
 /**

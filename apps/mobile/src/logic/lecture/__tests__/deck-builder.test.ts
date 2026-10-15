@@ -1131,3 +1131,110 @@ describe('expandDeck: the warm-up preset (AMENDMENTS-LECTURE-V2 4.2 U, section 1
     expect(skipped.filter((s) => s.reason === 'unknown-id')).toEqual([]);
   });
 });
+
+describe('expandDeck: word-review (deck v2, AMENDMENTS-LECTURE-V2 section 4.5, LV-2)', () => {
+  // Hangul syllables 가, 각, 갂, ... : 30 different words with a gloss each.
+  const many = Array.from({ length: 30 }, (_, i) => ({ ko: String.fromCharCode(0xac00 + i), en: `word ${i + 1}`, romanization: `w${i + 1}` }));
+  const wrScopes: Record<string, MinigameScope> = {
+    'mg:many-a': { kind: 'card-match', cardPairs: many.slice(0, 8) },
+    'mg:many-b': { kind: 'card-match', cardPairs: many.slice(4, 30) },
+  };
+  const wrQuests: Quest[] = [
+    quest('review-a', [['intro'], ['present', 'mg:many-a'], ['apply', 'mg:build']], { rewardCardId: undefined }),
+    quest('review-b', [['present', 'mg:many-b']], { rewardCardId: undefined }),
+  ];
+  const vocabWords: Record<string, LectureVocabTopic['words'][number] | 'not-ready'> = {
+    'vocab:dal': { id: 'vocab:dal', ko: '달', romanization: 'dal', gloss: 'moon', wordArt: 'sky-moon' },
+    'vocab:hae': { id: 'vocab:hae', ko: '해', romanization: 'hae', gloss: 'sun', cardId: 'card:sun' },
+    'vocab:byeol': { id: 'vocab:byeol', ko: '별', romanization: 'byeol', gloss: 'star' },
+    'vocab:gimchi': { id: 'vocab:gimchi', ko: '김치', romanization: 'gimchi', gloss: 'kimchi' },
+    'vocab:draft': 'not-ready',
+  };
+  const wr = bundle({
+    scopeFor: (ref) => wrScopes[ref] ?? scopes[ref],
+    questById: (id) => wrQuests.find((q) => q.id === id) ?? quests.find((q) => q.id === id),
+    vocabWord: (id) => vocabWords[id],
+  });
+  const review = (block: { questIds?: string[]; vocabIds?: string[]; rounds: number }, b: LectureBundle = wr, before: LectureDeckInput['blocks'] = []) =>
+    expandDeck(deckOf([...before, { kind: 'word-review', questIds: block.questIds ?? [], vocabIds: block.vocabIds ?? [], rounds: block.rounds }], { v: 2 }), b, VOICE);
+
+  it('the words its quests teach, one card each with no title slide, then a word-to-meaning quiz of its rounds', () => {
+    const { slides, skipped } = review({ questIds: ['quest:review-a'], rounds: 5 });
+    // Syllables (가 and 물 of mg:build) have no gloss: not reviewed words.
+    expect(kinds(slides)).toEqual([...Array(8).fill('vocab'), ...Array(5).fill('quiz'), 'end']);
+    expect(only(slides, 'vocab').map((s) => s.word.ko)).toEqual(many.slice(0, 8).map((w) => w.ko));
+    expect(only(slides, 'vocab')[0]).toMatchObject({ key: 'word-review/가', word: { ko: '가', romanization: 'w1', gloss: 'word 1' } });
+    for (const q of only(slides, 'quiz')) {
+      expect(q.prompt.ask).toBe('meaning');
+      if (q.prompt.ask === 'meaning') expect(many.slice(0, 8).map((w) => w.ko)).toContain(q.prompt.ko);
+    }
+    expect(skipped).toEqual([]);
+  });
+
+  it('at most 10 cards with 5 rounds and 20 with 10 rounds; a full deck is 10 and 20 minutes (rule 12)', () => {
+    const ten = review({ questIds: ['quest:review-a', 'quest:review-b'], rounds: 5 });
+    expect(only(ten.slides, 'vocab')).toHaveLength(10);
+    expect(only(ten.slides, 'quiz')).toHaveLength(5);
+    expect(ten.minutes).toBe(10);
+    const twenty = review({ questIds: ['quest:review-a', 'quest:review-b'], rounds: 10 });
+    expect(only(twenty.slides, 'vocab')).toHaveLength(20);
+    expect(only(twenty.slides, 'quiz')).toHaveLength(10);
+    expect(twenty.minutes).toBe(20);
+    // The quiz asks only words that had a card.
+    const shownKo = new Set(only(twenty.slides, 'vocab').map((s) => s.word.ko));
+    for (const q of only(twenty.slides, 'quiz')) if (q.prompt.ask === 'meaning') expect(shownKo.has(q.prompt.ko)).toBe(true);
+  });
+
+  it('de-duplicates by Korean across quests and vocabIds, keeping the first; vocab words keep their picture', () => {
+    const { slides } = review({ questIds: ['quest:words'], vocabIds: ['vocab:gimchi', 'vocab:dal', 'vocab:hae', 'vocab:byeol'], rounds: 5 });
+    const cards = only(slides, 'vocab');
+    expect(cards.map((s) => s.word.ko)).toEqual(['김치', '달', '해', '별']);
+    // 김치 came from the quest first (its gloss as the quest teaches it).
+    expect(cards[0]).toMatchObject({ word: { gloss: 'Kimchi' } });
+    expect(cards[0]).not.toHaveProperty('wordId');
+    expect(cards[1]).toMatchObject({ wordId: 'vocab:dal', wordArt: 'sky-moon' });
+    expect(cards[2]).toMatchObject({ wordId: 'vocab:hae', cardId: 'card:sun' });
+    expect(only(slides, 'quiz')).toHaveLength(4);
+  });
+
+  it('expanding its quests adds no slide of theirs and no skip of theirs', () => {
+    const { slides, skipped } = review({ questIds: ['quest:words', 'quest:odd'], vocabIds: ['vocab:dal', 'vocab:hae', 'vocab:byeol'], rounds: 5 });
+    expect(new Set(kinds(slides))).toEqual(new Set(['vocab', 'quiz', 'end']));
+    expect(skipped).toEqual([]);
+  });
+
+  it('unknown and not-ready ids are counted skips; under 4 words the quiz is a counted scope-too-small', () => {
+    const { slides, skipped } = review({ questIds: ['quest:nope'], vocabIds: ['vocab:nope', 'vocab:draft', 'vocab:dal'], rounds: 5 });
+    expect(kinds(slides)).toEqual(['vocab', 'end']);
+    expect(skipped).toEqual([
+      { blockIndex: 0, ref: 'quest:nope', reason: 'unknown-id' },
+      { blockIndex: 0, ref: 'vocab:nope', reason: 'unknown-id' },
+      { blockIndex: 0, ref: 'vocab:draft', reason: 'not-ready' },
+      { blockIndex: 0, ref: 'word-review/quiz', reason: 'scope-too-small' },
+    ]);
+  });
+
+  it('a bundle with no vocab lookup yet counts vocabIds as not ready, never a crash', () => {
+    const noLookup = bundle({ scopeFor: wr.scopeFor, questById: wr.questById });
+    const { slides, skipped } = review({ vocabIds: ['vocab:dal'], rounds: 5 }, noLookup);
+    expect(slides).toEqual([]);
+    expect(skipped).toEqual([
+      { blockIndex: 0, ref: 'vocab:dal', reason: 'not-ready' },
+      { blockIndex: 0, ref: 'word-review/quiz', reason: 'scope-too-small' },
+    ]);
+  });
+
+  it('a word already shown earlier in the deck gets no second card but is still asked', () => {
+    const { slides } = review({ questIds: ['quest:review-a'], rounds: 10 }, wr, [{ kind: 'quest', id: 'quest:review-a' }]);
+    const words = only(slides, 'vocab').map((s) => s.word.ko);
+    expect(words).toEqual(many.slice(0, 8).map((w) => w.ko));
+    expect(only(slides, 'quiz').filter((q) => q.key.startsWith('word-review/'))).toHaveLength(8);
+  });
+
+  it('is deterministic for a seed, and the End slide lists the reviewed words', () => {
+    const blocks = { questIds: ['quest:review-a', 'quest:review-b'], rounds: 10 };
+    expect(review(blocks).slides).toEqual(review(blocks).slides);
+    const end = only(review(blocks).slides, 'end')[0]!;
+    expect(end.words).toHaveLength(20);
+  });
+});
