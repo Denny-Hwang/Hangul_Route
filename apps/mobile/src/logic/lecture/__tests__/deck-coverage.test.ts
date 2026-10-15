@@ -1,4 +1,4 @@
-import { LectureDeckSchema, type Episode, type StageKey, type ThemeKey } from '@hangul-route/content-schema';
+import { discoverItemTexts, LectureDeckSchema, type Episode, type StageKey, type ThemeKey } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
 import { episodesAll, gridEpisodes } from '../../../content';
 import type { MinigameScope } from '../../minigame-config';
@@ -26,7 +26,11 @@ interface CellRow {
   differentWords: number;
   quiz: number;
   skipped: Skips;
-  /** Upper-stage Discover items that reach the class only as plain word cards, by item type. */
+  /**
+   * Upper-stage Discover items that reach the class only as plain word cards, by item type: the
+   * built deck has a word card for one of the item's texts and no other slide of its Discover step
+   * holds any of them (so an LV-S row that gives the item a slide of its own lowers the count).
+   */
   flattened: Readonly<Record<string, number>>;
 }
 
@@ -159,14 +163,20 @@ function measure(episodes: readonly Episode[], bundle: LectureBundle): Measured 
     row.differentWords += new Set(words).size;
     row.repeatedWordCards += words.length - new Set(words).size;
     row.quiz += expanded.slides.filter((s) => s.kind === 'quiz').length;
+    const cardKo = new Set(words);
+    const ownSlides = (questId: string, stepId: string): string =>
+      JSON.stringify(expanded.slides.filter((s) => s.kind !== 'vocab' && s.key.includes(`/${questId}/${stepId}/`)));
     const skippedRefs = expanded.skipped.filter((s) => s.reason === 'unsupported-step').map((s) => s.ref);
     for (const questId of episode.questIds) {
       const quest = bundle.questById(questId);
       if (!quest) continue;
       row.quests += 1;
       for (const step of quest.steps) {
+        const stepSlides = ownSlides(questId, step.id);
         for (const item of step.discover?.pages.flatMap((p) => p.items) ?? []) {
-          if (UPPER_DISCOVER.has(item.type)) flattened[item.type] = (flattened[item.type] ?? 0) + 1;
+          if (!UPPER_DISCOVER.has(item.type)) continue;
+          const texts = discoverItemTexts(item).map((t) => t.ko);
+          if (texts.some((ko) => cardKo.has(ko)) && !texts.some((ko) => stepSlides.includes(ko))) flattened[item.type] = (flattened[item.type] ?? 0) + 1;
         }
         const scope = step.minigameRef === undefined ? undefined : bundle.scopeFor(step.minigameRef);
         if (!scope || step.minigameRef === undefined) continue;
@@ -228,7 +238,7 @@ describe('deck coverage ratchet (AMENDMENTS-LECTURE-V2 section 1, LV-2)', () => 
     }
   });
 
-  it('the totals of section 1 are where the ratchet starts', () => {
+  it('the BASELINE constant matches the section 1 totals (pins the table text, not the builder)', () => {
     const upper = Object.entries(BASELINE).filter(([key]) => /^stage[23467]:/.test(key));
     expect(upper).toHaveLength(25);
     const steps = upper.reduce((n, [, row]) => n + Object.values(row.skipped).reduce((m, [s]) => m + s, 0), 0);

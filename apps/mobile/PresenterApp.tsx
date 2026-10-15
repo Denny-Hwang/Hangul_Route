@@ -591,7 +591,7 @@ export default function PresenterApp(): React.ReactElement {
           testID="presenter-invalid"
           pose="thinking"
           title={m.title}
-          line={m.line}
+          line={m.staleLine}
           cta={m.reload}
           onCta={() => void reloadForUpdate(raw)}
           secondary={{ label: m.cta, onPress: openHome, testID: 'presenter-invalid-home' }}

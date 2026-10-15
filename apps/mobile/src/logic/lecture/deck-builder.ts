@@ -613,7 +613,7 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
   /**
    * Word review (v2, AMENDMENTS-LECTURE-V2 section 4.5): the words each quest teaches (the quest
    * expanded on its own, no slides), then the `vocabIds` words, one per Korean text, the first
-   * `wordReviewCardCap(rounds)` of them as word cards, then `rounds` word-to-meaning questions over
+   * `wordReviewCardCap(rounds)` of them (words not yet shown in this deck first) as word cards, then `rounds` word-to-meaning questions over
    * them. Unknown ids are counted skips; under 4 words, the quiz is a counted `scope-too-small`.
    */
   const wordReviewBlock = (path: string, questIds: readonly string[], vocabIds: readonly string[], rounds: number): void => {
@@ -639,7 +639,10 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
       const extra = { wordId: found.id, ...(found.cardId !== undefined ? { cardId: found.cardId } : {}), ...(found.wordArt !== undefined ? { wordArt: found.wordArt } : {}) };
       add({ ko: found.ko, romanization: found.romanization, gloss: found.gloss, extra });
     }
-    const shown = words.slice(0, wordReviewCardCap(rounds));
+    // Words an earlier block of this deck already showed have no card here (`seenWords`), so
+    // unseen words fill the cap first; the quiz still asks the seen ones that made the cut.
+    const ordered = [...words.filter((w) => !seenWords.has(w.ko)), ...words.filter((w) => seenWords.has(w.ko))];
+    const shown = ordered.slice(0, wordReviewCardCap(rounds));
     for (const { extra, ...word } of shown) wordCard(`${path}/${word.ko}`, word, extra);
     if (shown.length < QUIZ_MIN_ITEMS) {
       skip(`${path}/quiz`, 'scope-too-small');

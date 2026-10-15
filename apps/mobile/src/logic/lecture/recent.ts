@@ -90,6 +90,13 @@ function fromNewerBuild(candidate: unknown): boolean {
 
 type Entry = { item: RecentItem } | { raw: unknown };
 
+/** The deck id of an entry, where readable (a kept item's `deck.id` when it is a string). */
+function idOf(entry: Entry): string | undefined {
+  if ('item' in entry) return entry.item.deck.id;
+  const id = (entry.raw as { deck: { id?: unknown } }).deck.id;
+  return typeof id === 'string' ? id : undefined;
+}
+
 /** The stored order: shown items and kept items merged back at their places. */
 function entriesOf(list: RecentList): Entry[] {
   const out: Entry[] = list.items.map((item) => ({ item }));
@@ -108,18 +115,18 @@ function listOf(entries: readonly Entry[]): RecentList {
   return unread.length > 0 ? { v: 1, items, unread } : { v: 1, items };
 }
 
-/** Keeps the valid items, the first of each deck id, and a newer build's items, at most 10 by place. */
+/** Keeps the valid items and a newer build's items, the first of each readable deck id, at most 10 by place. */
 export function parseRecent(raw: unknown): RecentList {
   const list = RecentListShape.safeParse(raw);
   if (!list.success) return emptyRecent();
   const entries: Entry[] = [];
   for (const candidate of list.data.items) {
     const item = parseItem(candidate);
-    if (item) {
-      if (entries.some((e) => 'item' in e && e.item.deck.id === item.deck.id)) continue;
-      entries.push({ item });
-    } else if (fromNewerBuild(candidate)) entries.push({ raw: candidate });
-    else continue;
+    const entry: Entry | undefined = item ? { item } : fromNewerBuild(candidate) ? { raw: candidate } : undefined;
+    if (!entry) continue;
+    const id = idOf(entry);
+    if (id !== undefined && entries.some((e) => idOf(e) === id)) continue;
+    entries.push(entry);
     if (entries.length === RECENT_MAX) break;
   }
   return listOf(entries);
@@ -137,7 +144,8 @@ export function storedRecent(list: RecentList): { v: 1; items: unknown[] } {
  */
 export function rememberDeck(list: RecentList, deck: LectureDeck, savedAt: string): RecentList {
   if (!SavedAtSchema.safeParse(savedAt).success) return list;
-  const rest = entriesOf(list).filter((e) => !('item' in e) || e.item.deck.id !== deck.id);
+  // The same deck id saved by a newer build is this lesson too: the Start just made replaces it.
+  const rest = entriesOf(list).filter((e) => idOf(e) !== deck.id);
   return listOf([{ item: { deck, savedAt } }, ...rest]);
 }
 
@@ -148,7 +156,7 @@ export function setLastSlide(list: RecentList, deckId: string, lastSlideKey: str
 }
 
 export function forgetDeck(list: RecentList, deckId: string): RecentList {
-  return listOf(entriesOf(list).filter((e) => !('item' in e) || e.item.deck.id !== deckId));
+  return listOf(entriesOf(list).filter((e) => idOf(e) !== deckId));
 }
 
 /**

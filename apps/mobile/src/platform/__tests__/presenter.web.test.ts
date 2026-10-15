@@ -21,6 +21,7 @@ import {
   playChime,
   presenterConsoleOrigins,
   releaseScreenAwake,
+  otherTabsOpen,
   reloadForUpdate,
   reloadOnDeckLink,
   setPresenterDocTitle,
@@ -36,6 +37,7 @@ import {
   waitForPresenterFont,
   wakeLockSupported,
   type PresenterEnv,
+  type TabsChannelLike,
 } from '../presenter.web';
 
 /**
@@ -768,7 +770,7 @@ describe('focusablesIn and rememberFocus (every covering overlay keeps Tab insid
 
 describe('stale presenter: checkForUpdate and reloadForUpdate (AMENDMENTS-LECTURE-V2 section 4.5)', () => {
   type Worker = { state?: string; postMessage: ReturnType<typeof vi.fn>; addEventListener?: (type: 'statechange', fn: () => void) => void };
-  function swEnv(reg: { update: () => Promise<unknown>; waiting?: Worker | null; installing?: Worker | null } | undefined | 'throws') {
+  function swEnv(reg: { update: () => Promise<unknown>; waiting?: Worker | null; installing?: Worker | null } | undefined | 'throws', tabs?: TabsChannelLike) {
     const container = fakeTarget();
     const history = { state: null as unknown, replaceState: vi.fn((next: unknown) => void (history.state = next)) };
     const reload = vi.fn();
@@ -783,6 +785,7 @@ describe('stale presenter: checkForUpdate and reloadForUpdate (AMENDMENTS-LECTUR
         }),
         addEventListener: container.addEventListener,
       },
+      ...(tabs ? { tabs } : {}),
     });
     return { e, reload, history, container };
   }
@@ -849,6 +852,54 @@ describe('stale presenter: checkForUpdate and reloadForUpdate (AMENDMENTS-LECTUR
     expect(installing.postMessage).toHaveBeenCalledWith({ type: 'SKIP_WAITING' });
     expect(reload).not.toHaveBeenCalled();
     await new Promise((r) => setTimeout(r, 80));
+    expect(reload).toHaveBeenCalledTimes(1);
+  });
+
+  /** A `hr-tabs` channel; `answers` other tabs reply to the ping (this tab's own channel never hears itself). */
+  function tabsChannel(answers: number): TabsChannelLike & { posted: unknown[] } {
+    const listeners = new Set<(event: { data?: unknown }) => void>();
+    const posted: unknown[] = [];
+    return {
+      posted,
+      addEventListener: (_type, fn) => void listeners.add(fn),
+      removeEventListener: (_type, fn) => void listeners.delete(fn),
+      postMessage: (message) => {
+        posted.push(message);
+        for (let i = 0; i < answers; i += 1) setTimeout(() => listeners.forEach((fn) => fn({ data: { type: 'hr-tab-here' } })), 5);
+      },
+    };
+  }
+
+  it('otherTabsOpen: true only when another tab answers the ping; no channel or a broken one is false', async () => {
+    const one = tabsChannel(1);
+    expect(await otherTabsOpen(env({ tabs: one }), 50)).toBe(true);
+    expect(one.posted).toEqual([{ type: 'hr-tab-ping' }]);
+    expect(await otherTabsOpen(env({ tabs: tabsChannel(0) }), 30)).toBe(false);
+    expect(await otherTabsOpen(env(), 30)).toBe(false);
+    const broken: TabsChannelLike = {
+      addEventListener: () => undefined,
+      removeEventListener: () => undefined,
+      postMessage: () => {
+        throw new Error('closed');
+      },
+    };
+    expect(await otherTabsOpen(env({ tabs: broken }), 30)).toBe(false);
+  });
+
+  it('with another tab of the app open, a waiting presenter never takes over: the page only reloads', async () => {
+    const waiting = worker('installed');
+    const { e, reload } = swEnv({ update: async () => undefined, waiting }, tabsChannel(1));
+    await reloadForUpdate('2.abc', e, 50);
+    expect(waiting.postMessage).not.toHaveBeenCalled();
+    expect(reload).toHaveBeenCalledTimes(1);
+  });
+
+  it('alone (no tab answers the ping), the waiting presenter takes over as before', async () => {
+    const waiting = worker('installed');
+    const { e, reload, container } = swEnv({ update: async () => undefined, waiting }, tabsChannel(0));
+    await reloadForUpdate('2.abc', e, 50);
+    expect(waiting.postMessage).toHaveBeenCalledWith({ type: 'SKIP_WAITING' });
+    container.fire('controllerchange', {});
     expect(reload).toHaveBeenCalledTimes(1);
   });
 

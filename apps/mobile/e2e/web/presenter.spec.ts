@@ -367,6 +367,7 @@ test.describe('presenter at 1280 x 720', () => {
     // A version this build does not read: the newer presenter's link.
     await page.goto('/present#d=9.eyJ2Ijo5fQ');
     await expect(page.getByText('This link does not work')).toBeVisible();
+    await expect(page.getByText('This link is from a newer version. Close other Hangul Route tabs, then reload.')).toBeVisible();
     expect(new URL(page.url()).hash).toBe('');
     const reload = page.getByRole('button', { name: 'Reload' });
     await expect(reload).toBeVisible();
@@ -396,6 +397,35 @@ test.describe('presenter at 1280 x 720', () => {
     await startLesson(page);
     await expect.poll(() => counter(page)).toMatch(/^1 \//);
     await shot(page, 'presenter-word-review-1280x720');
+  });
+
+  test('another open tab of the app answers the hr-tabs ping, so Reload never takes over under it (AMENDMENTS-LECTURE-V2 4.5)', async ({ page, context }) => {
+    const ping = () =>
+      page.evaluate(
+        () =>
+          new Promise<boolean>((resolve) => {
+            const tabs = (window as unknown as { __hrTabs?: BroadcastChannel | null }).__hrTabs;
+            if (!tabs) return resolve(false);
+            const timer = setTimeout(() => resolve(false), 1000);
+            tabs.addEventListener('message', (e: MessageEvent) => {
+              if ((e.data as { type?: string } | null)?.type === 'hr-tab-here') {
+                clearTimeout(timer);
+                resolve(true);
+              }
+            });
+            tabs.postMessage({ type: 'hr-tab-ping' });
+          }),
+      );
+    await page.goto('/present');
+    await expect(page.getByTestId('presenter-home')).toBeVisible();
+    expect(await page.evaluate(() => (window as unknown as { __hrTabs?: unknown }).__hrTabs != null)).toBe(true);
+    // Alone, the page never hears its own ping.
+    expect(await ping()).toBe(false);
+    const other = await context.newPage();
+    await other.goto('/');
+    await other.waitForLoadState('load');
+    expect(await ping()).toBe(true);
+    await other.close();
   });
 
   test('a broken link (not a newer one) has no Reload', async ({ page }) => {

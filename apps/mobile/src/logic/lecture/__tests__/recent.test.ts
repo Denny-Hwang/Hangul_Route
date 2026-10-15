@@ -255,6 +255,19 @@ describe('Recent keeps items a newer build saved (AMENDMENTS-LECTURE-V2 section 
     expect(after.items.map((i) => i.deck.id)).toEqual(['lecture:deck003']);
   });
 
+  it('de-duplicates by deck id where readable: a Start of the same id replaces the kept item, the first of an id wins on load', () => {
+    const sameId = { ...future(1), deck: { ...future(1).deck, id: 'lecture:deck001' } };
+    const list = parseRecent({ v: 1, items: [{ deck: deck(2), savedAt: at(2) }, sameId] });
+    const after = rememberDeck(list, deck(1), at(3));
+    expect(storedRecent(after).items).toEqual([{ deck: deck(1), savedAt: at(3) }, { deck: deck(2), savedAt: at(2) }]);
+    expect(after.unread).toBeUndefined();
+    expect(storedRecent(parseRecent({ v: 1, items: [sameId, { deck: deck(1), savedAt: at(1) }] })).items).toEqual([sameId]);
+    expect(storedRecent(parseRecent({ v: 1, items: [{ deck: deck(1), savedAt: at(1) }, sameId] })).items).toEqual([{ deck: deck(1), savedAt: at(1) }]);
+    expect(storedRecent(forgetDeck(parseRecent({ v: 1, items: [sameId, { deck: deck(2), savedAt: at(2) }] }), 'lecture:deck001')).items).toEqual([
+      { deck: deck(2), savedAt: at(2) },
+    ]);
+  });
+
   it('a list with nothing from a newer build is stored exactly as before', () => {
     const list = rememberDeck(emptyRecent(), deck(1), at(1));
     expect(storedRecent(list)).toEqual(list);

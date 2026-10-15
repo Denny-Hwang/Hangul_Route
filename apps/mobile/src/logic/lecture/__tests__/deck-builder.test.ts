@@ -1231,6 +1231,13 @@ describe('expandDeck: word-review (deck v2, AMENDMENTS-LECTURE-V2 section 4.5, L
     expect(only(slides, 'quiz').filter((q) => q.key.startsWith('word-review/'))).toHaveLength(8);
   });
 
+  it('words not yet shown in the deck fill the card cap first, so an earlier block never shrinks the review', () => {
+    const { slides } = review({ questIds: ['quest:review-a', 'quest:review-b'], rounds: 5 }, wr, [{ kind: 'quest', id: 'quest:review-a' }]);
+    const reviewCards = only(slides, 'vocab').filter((s) => s.key.startsWith('word-review/'));
+    expect(reviewCards.map((s) => s.word.ko)).toEqual(many.slice(8, 18).map((w) => w.ko));
+    expect(only(slides, 'quiz').filter((q) => q.key.startsWith('word-review/'))).toHaveLength(5);
+  });
+
   it('is deterministic for a seed, and the End slide lists the reviewed words', () => {
     const blocks = { questIds: ['quest:review-a', 'quest:review-b'], rounds: 10 };
     expect(review(blocks).slides).toEqual(review(blocks).slides);

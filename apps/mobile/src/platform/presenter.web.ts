@@ -76,6 +76,18 @@ export interface PresenterEnv {
   createAudioContext?: (() => ChimeContextLike) | null;
   /** `navigator.serviceWorker`; null without one (the stale-presenter Reload then only reloads). */
   serviceWorker?: ServiceWorkerContainerLike | null;
+  /**
+   * The page's `BroadcastChannel('hr-tabs')` (`window.__hrTabs`, made by the PWA shell script),
+   * which every open tab of the app answers; null without one.
+   */
+  tabs?: TabsChannelLike | null;
+}
+
+/** The slice of `BroadcastChannel` the stale-presenter Reload uses to find other open tabs. */
+export interface TabsChannelLike {
+  postMessage(message: unknown): void;
+  addEventListener(type: 'message', fn: (event: { data?: unknown }) => void): void;
+  removeEventListener(type: 'message', fn: (event: { data?: unknown }) => void): void;
 }
 
 interface ServiceWorkerLike {
@@ -146,6 +158,7 @@ function browserEnv(): PresenterEnv {
     screen: g.screen ?? null,
     createAudioContext: browserAudioContext,
     serviceWorker: g.navigator?.serviceWorker ?? null,
+    tabs: (g as { __hrTabs?: TabsChannelLike }).__hrTabs ?? null,
   };
 }
 
@@ -277,6 +290,42 @@ export function reloadOnDeckLink(env: PresenterEnv = browserEnv()): () => void {
 
 /** How long Reload waits for a newer presenter to install and take over before it reloads anyway. */
 export const UPDATE_WAIT_MS = 8000;
+/** How long Reload waits for another open tab of the app to answer the `hr-tabs` ping. */
+export const TABS_WAIT_MS = 300;
+
+/**
+ * Whether another tab of the app is open: pings `hr-tabs` and waits `ms` for an answer. A channel
+ * never delivers a message to the object that sent it, so this tab's own answer never counts.
+ * False without a channel or on any fault.
+ */
+export function otherTabsOpen(env: PresenterEnv = browserEnv(), ms: number = TABS_WAIT_MS): Promise<boolean> {
+  const tabs = env.tabs;
+  if (!tabs) return Promise.resolve(false);
+  return new Promise((resolve) => {
+    let settled = false;
+    const finish = (open: boolean): void => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      try {
+        tabs.removeEventListener('message', onMessage);
+      } catch {
+        // Nothing to remove.
+      }
+      resolve(open);
+    };
+    const onMessage = (event: { data?: unknown }): void => {
+      if ((event.data as { type?: unknown } | null | undefined)?.type === 'hr-tab-here') finish(true);
+    };
+    const timer = setTimeout(() => finish(false), ms);
+    try {
+      tabs.addEventListener('message', onMessage);
+      tabs.postMessage({ type: 'hr-tab-ping' });
+    } catch {
+      finish(false);
+    }
+  });
+}
 
 /** `promise`'s value, or undefined once `ms` pass or it fails. */
 function within<T>(promise: Promise<T>, ms: number): Promise<T | undefined> {
@@ -329,9 +378,13 @@ export async function checkForUpdate(env: PresenterEnv = browserEnv(), ms: numbe
 
 /**
  * The invalid-link page's Reload: holds the link in this tab again (the invalid page let it go),
- * so the reload opens it; asks the service worker for a newer presenter and, when one installed,
- * lets it take over (`SKIP_WAITING`) and reloads on `controllerchange`; otherwise, offline or with
- * nothing newer, reloads at once. Reloads after `ms` at the latest. Never throws.
+ * so the reload opens it; asks the service worker for a newer presenter and, when one installed
+ * and no other tab of the app is open (`otherTabsOpen`), lets it take over (`SKIP_WAITING`) and
+ * reloads on `controllerchange`. With another tab open (a learner mid-quest, a second presenter
+ * mid-lecture) it only reloads: taking over would switch that tab to the new worker and delete the
+ * precache it runs on (`clientsClaim`, `cleanupOutdatedCaches`), and the page's line asks to close
+ * the other tabs. Offline or with nothing newer, it reloads at once. Reloads after `ms` at the
+ * latest. Never throws.
  */
 export async function reloadForUpdate(raw: string, env: PresenterEnv = browserEnv(), ms: number = UPDATE_WAIT_MS): Promise<void> {
   holdOpenDeck(raw, {}, env);
@@ -341,6 +394,7 @@ export async function reloadForUpdate(raw: string, env: PresenterEnv = browserEn
   await within(Promise.resolve().then(() => reg.update()), ms);
   const waiting = reg.waiting ?? (reg.installing ? await installed(reg.installing, ms) : undefined);
   if (!waiting) return reload();
+  if (await otherTabsOpen(env)) return reload();
   let done = false;
   const once = (): void => {
     if (done) return;
