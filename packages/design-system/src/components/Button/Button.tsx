@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useId, useRef, type MutableRefObject } f
 import { Platform, Pressable, Text, View } from 'react-native';
 import { colors, radii, spacing, touchTarget, typography } from '../../tokens';
 import type { ButtonProps, ButtonSize, ButtonTone } from './types';
+import { KOREAN_LINE_BREAK } from '../../line-break';
 
 const toneBg: Record<ButtonTone, string> = {
   primary: colors.brand.primary,
@@ -145,7 +146,7 @@ export function Button({
       {({ pressed }) => (
         <>
           {leading ? <View style={{ marginRight: spacing.sm }}>{leading}</View> : null}
-          <Text
+          <Text {...KOREAN_LINE_BREAK}
             style={{
               color: looksDisabled ? colors.text.muted : pressed ? tonePressedFg[tone] : toneFg[tone],
               fontSize: sizeFont[size],
@@ -157,7 +158,7 @@ export function Button({
           </Text>
           {trailing ? <View style={{ marginLeft: spacing.sm }}>{trailing}</View> : null}
           {webHint ? (
-            <Text id={hintId} style={{ display: 'none' }}>
+            <Text {...KOREAN_LINE_BREAK} id={hintId} style={{ display: 'none' }}>
               {accessibilityHint}
             </Text>
           ) : null}

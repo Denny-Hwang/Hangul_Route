@@ -2,6 +2,7 @@ import React from 'react';
 import { Text, View } from 'react-native';
 import { colors, radii, spacing, typography } from '../../tokens';
 import type { ProgressProps } from './types';
+import { KOREAN_LINE_BREAK } from '../../line-break';
 
 const toneColor = {
   primary: colors.brand.primary,
@@ -41,7 +42,7 @@ export function Progress({
           />
         ))}
         {label ? (
-          <Text
+          <Text {...KOREAN_LINE_BREAK}
             style={{
               marginLeft: spacing.sm,
               color: colors.text.muted,
@@ -76,7 +77,7 @@ export function Progress({
         />
       </View>
       {label ? (
-        <Text
+        <Text {...KOREAN_LINE_BREAK}
           style={{
             marginTop: spacing.xs,
             color: colors.text.muted,

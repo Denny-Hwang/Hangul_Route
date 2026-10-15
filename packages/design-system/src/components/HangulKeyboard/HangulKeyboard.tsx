@@ -4,6 +4,7 @@ import { borderWidth, colors, radii, spacing, typography } from '../../tokens';
 import { Icon } from '../Icon';
 import { keyboardLayout, keyFace, pressLetter, type KeyboardKey } from './layout';
 import type { HangulKeyboardProps } from './types';
+import { KOREAN_LINE_BREAK } from '../../line-break';
 
 /**
  * HangulKeyboard: the in-app two-set (dubeolsik, KS X 5002) Korean keyboard
@@ -57,7 +58,7 @@ export function HangulKeyboard({
     if (key.kind === 'delete') return <Icon name="backspace" size={spacing.xl} color={colors.text.primary} />;
     if (key.kind === 'space') {
       return (
-        <Text style={{ fontSize: typography.size.bodySm, fontWeight: typography.weight.semibold, color: colors.text.primary, textAlign: 'center' }}>
+        <Text {...KOREAN_LINE_BREAK} style={{ fontSize: typography.size.bodySm, fontWeight: typography.weight.semibold, color: colors.text.primary, textAlign: 'center' }}>
           {labels.space}
         </Text>
       );
@@ -66,7 +67,7 @@ export function HangulKeyboard({
     const shifted = face !== key.base;
     return (
       <>
-        <Text
+        <Text {...KOREAN_LINE_BREAK}
           style={{
             fontSize: glyphSize,
             lineHeight: Math.round(glyphSize * 1.1),
@@ -76,7 +77,7 @@ export function HangulKeyboard({
         >
           {face}
         </Text>
-        <Text
+        <Text {...KOREAN_LINE_BREAK}
           numberOfLines={1}
           style={{ fontSize: soundSize, color: colors.text.secondary, letterSpacing: typography.tracking.tight }}
         >

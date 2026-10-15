@@ -23,6 +23,7 @@ import {
   realiaSummaryOnNative,
 } from './style';
 import type { RealiaSheetLine, RealiaSheetProps, RealiaSheetText } from './types';
+import { KOREAN_LINE_BREAK } from '../../line-break';
 
 /**
  * RealiaSheet — a drawn real-world text (F-CURR-001 G-2): a menu board, a train ticket, a
@@ -57,7 +58,7 @@ function Dressing({ refId, height, stretch, width, centered = false }: { refId: 
 function Part({ part, align = 'left' }: { part: RealiaSheetText; align?: 'left' | 'right' | 'center' }): React.ReactElement {
   return (
     <View style={{ alignItems: align === 'right' ? 'flex-end' : align === 'center' ? 'center' : 'flex-start', flexShrink: 1 }}>
-      <Text
+      <Text {...KOREAN_LINE_BREAK}
         {...koreanSpeech}
         style={{
           fontFamily: typography.family.sansKr,
@@ -70,7 +71,7 @@ function Part({ part, align = 'left' }: { part: RealiaSheetText; align?: 'left' 
         {part.ko}
       </Text>
       {part.romanization !== '' ? (
-        <Text style={{ fontSize: typography.size.caption, fontStyle: 'italic', color: colors.text.secondary, textAlign: align }}>{part.romanization}</Text>
+        <Text {...KOREAN_LINE_BREAK} style={{ fontSize: typography.size.caption, fontStyle: 'italic', color: colors.text.secondary, textAlign: align }}>{part.romanization}</Text>
       ) : null}
     </View>
   );
@@ -83,11 +84,11 @@ function Title({ title, label, centered }: { title: RealiaSheetText; label?: str
       accessibilityLabel={label}
       style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'baseline', justifyContent: centered ? 'center' : 'flex-start', gap: spacing.sm }}
     >
-      <Text {...koreanSpeech} style={{ fontFamily: typography.family.sansKr, fontSize: typography.size.bodyLg, fontWeight: typography.weight.bold, color: colors.text.primary }}>
+      <Text {...KOREAN_LINE_BREAK} {...koreanSpeech} style={{ fontFamily: typography.family.sansKr, fontSize: typography.size.bodyLg, fontWeight: typography.weight.bold, color: colors.text.primary }}>
         {title.ko}
       </Text>
       {title.romanization !== '' ? (
-        <Text style={{ fontSize: typography.size.caption, fontStyle: 'italic', color: colors.text.secondary }}>{title.romanization}</Text>
+        <Text {...KOREAN_LINE_BREAK} style={{ fontSize: typography.size.caption, fontStyle: 'italic', color: colors.text.secondary }}>{title.romanization}</Text>
       ) : null}
     </View>
   );
@@ -151,7 +152,7 @@ function LineButton({ line, layout, hint, onPress, testID }: LineProps): React.R
         )}
       </View>
       {line.mark === 'found' && line.gloss ? (
-        <Text style={{ marginTop: spacing.xs, fontSize: typography.size.body, color: colors.text.primary, textAlign: layout === 'stack' ? 'center' : 'left' }}>{line.gloss}</Text>
+        <Text {...KOREAN_LINE_BREAK} style={{ marginTop: spacing.xs, fontSize: typography.size.body, color: colors.text.primary, textAlign: layout === 'stack' ? 'center' : 'left' }}>{line.gloss}</Text>
       ) : null}
     </Pressable>
   );
