@@ -4,7 +4,7 @@ import { colors, radii, spacing, touchTarget, typography } from '@hangul-route/d
 import type { UiLocale } from '@hangul-route/i18n';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { Suspense, useCallback, useEffect, useState } from 'react';
+import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { Button, Muted, Notice, buttonBase, panelStyle } from '@/components/console/ui';
 import { AdultFrame } from '@/components/console/AdultFrame';
 import { RevisitLetterLinks } from '@/components/console/BrowseLink';
@@ -19,6 +19,7 @@ import { StudentWordsLines, WeekWordsRevisit } from '@/components/console/VocabW
 import { useTransfersShown } from '@/components/console/TransferParts';
 import { useMovesWaiting } from '@/components/console/MovesEntry';
 import { useConsole } from '@/components/console/use-console';
+import { useVisibleRefresh } from '@/components/console/use-visible-refresh';
 import type { PlanView, Roster, SpaceListItem } from '@/lib/console/api';
 import { contentGatingEnabled, lectureModeEnabled, notesEnabled, reportsEnabled } from '@/lib/console/config';
 import { canComposeIn } from '@/lib/console/lecture';
@@ -61,10 +62,21 @@ function SpaceInner(): JSX.Element {
   const [copied, setCopied] = useState(false);
   const now = new Date();
 
-  const load = useCallback(async (): Promise<void> => {
+  // Which read may still draw. A read the user started (open, Try again, a saved plan) takes a new number, so an older
+  // read that ends later never puts back what it replaced (a removed learner, an old name). A quiet read takes none: it
+  // draws only while no newer user read started after it.
+  const loadSeq = useRef(0);
+
+  // `quiet`: the read again when the tab comes back into view (F-LEARN-001 section 3.11). It keeps what is drawn while it
+  // reads, and a quiet read that cannot reach the Worker changes nothing: the page never turns into an error because a
+  // background read failed. A removed teacher or a deleted space is the exception (below).
+  const load = useCallback(async (quiet = false): Promise<void> => {
     if (!api) return;
-    setError(null);
-    setCoverage('unknown');
+    const call = quiet ? loadSeq.current : ++loadSeq.current;
+    if (!quiet) {
+      setError(null);
+      setCoverage('unknown');
+    }
     // The free-plan switch (F-ENT-003 §3.4): only with it on does the roster read the role and the entitlements for the free-lessons line.
     const gating = contentGatingEnabled();
     const [result, planList, relinks, spaceList, entitlements] = await Promise.all([
@@ -75,17 +87,30 @@ function SpaceInner(): JSX.Element {
       lectureModeEnabled() || gating || notesEnabled() ? api.listSpaces() : null,
       gating ? api.entitlements() : null,
     ]);
+    if (call !== loadSeq.current) return;
     if (spaceList?.ok) setSpaces(spaceList.data);
     if (gating && result.ok) setCoverage(spaceCoverage(entitlements?.ok ? entitlements.data : null, spaceList?.ok ? spaceList.data : null, result.data.space, new Date()));
     if (planList.ok) setPlans(planList.data);
     if (relinks.ok) setPendingRelinks(relinks.data.length);
-    if (result.ok) setRoster(result.data);
-    else setError(result.error === 'forbidden' ? 'forbidden' : result.error === 'not_found' ? 'gone' : 'cantReach');
+    if (result.ok) {
+      setRoster(result.data);
+      if (quiet) setError(null);
+    } else if (!quiet) setError(result.error === 'forbidden' ? 'forbidden' : result.error === 'not_found' ? 'gone' : 'cantReach');
+    else if (result.error === 'forbidden' || result.error === 'not_found') {
+      // A background read that says the teacher was removed or the space is gone is final: the old roster goes, the
+      // usual line shows, and the background reads stop. Only a failure to reach the Worker stays silent.
+      setRoster(null);
+      setError(result.error === 'forbidden' ? 'forbidden' : 'gone');
+    }
   }, [api, spaceId]);
 
   useEffect(() => {
     void load();
   }, [load]);
+
+  // An open roster shows a renamed learner, a new practice day or a new member without a reload.
+  // A roster page also reads slowly while it stays in front (a classroom screen), never a report page.
+  useVisibleRefresh(() => void load(true), !!api && error !== 'forbidden' && error !== 'gone', { poll: true });
 
   if (!ready || !session) return <AdultFrame>{null}</AdultFrame>;
   // School spaces get the admin view (F-SCHOOL-001 §3.3); classes and families the roster.

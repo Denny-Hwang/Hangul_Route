@@ -4,6 +4,8 @@ import React, { useEffect, useState } from 'react';
 import { Pressable, TextInput, View } from 'react-native';
 import { useMessages } from '../../i18n/use-messages';
 import { cleanJoinCode, isCodeError, isCompleteJoinCode, joinErrorMessage } from '../../logic/spaces/join-code';
+import { nameHint } from '../../logic/onboarding/create-profile-form';
+import { NAME_MAX, validateDisplayName } from '../../logic/profiles/profile-model';
 import { relinkNotice } from '../../logic/sync/restore';
 import type { RootStackParamList } from '../../navigation/types';
 import { takeJoinHandoff } from '../../platform/join-handoff';
@@ -11,6 +13,9 @@ import { apiBaseUrl } from '../../platform/sync-api';
 import { useMembershipStore, type LookupOutcome } from '../../store/membership-store';
 import type { RosterName } from '../../platform/sync-api';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
+import { useAudience } from '../../store/audience';
+import { useUiStore } from '../../store/ui-store';
+import { isParentSessionValid } from '../../logic/profiles/session';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'JoinSpace'>;
 type Found = Extract<LookupOutcome, { ok: true }>['space'];
@@ -26,6 +31,14 @@ export const RELINK_POLL_MS = 4000;
  * Join prefill (F-APP-001 A-7, sections 3.6 and 3.8, web): a family join code the family home's
  * "Open the app on this device" left in this tab fills the field the next time this screen is
  * shown within 30 minutes (read once); every step after it is unchanged.
+ *
+ * The name (F-LEARN-001 section 3.11): the field starts from the profile name and follows the profile rule
+ * (`validateDisplayName`, the create form's hints). The Worker writes the join name over the learner's name for the
+ * family and every class, so a changed name becomes the profile name after the join (`membership-store.join`).
+ * The screen is not PIN-gated, but a rename is a grown-up action (Edit profile opens behind the gate): on a device
+ * whose gate is closed the field keeps the profile name and says the name changes in Edit profile. A class tablet
+ * keeps the profile name too, with Edit profile's class-device line. The store decides again when the join is sent
+ * (`membership-store.join`), so a session that ends between this render and the tap renames nothing anywhere.
  */
 export function JoinSpaceScreen({ navigation }: Props): React.ReactElement {
   const messages = useMessages();
@@ -46,6 +59,29 @@ export function JoinSpaceScreen({ navigation }: Props): React.ReactElement {
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState<{ name: string; alreadyMember: boolean; notice?: string } | null>(null);
   const cloudAvailable = !!apiBaseUrl();
+  // The grown-up gate (F-LEARN-001 L7), read like ProfileScreen reads it: closed means the name cannot change here.
+  const { opensDirectly } = useAudience();
+  const parentGateOpenedAt = useUiStore((s) => s.parentGateOpenedAt);
+  const gateClosed = !opensDirectly(isParentSessionValid(parentGateOpenedAt === null ? null : { openedAt: parentGateOpenedAt, profileId: 'family' }, Date.now()));
+  // A class tablet cannot rename the learner (Edit profile's rule): the field keeps the profile name there too.
+  const deviceScope = useMembershipStore((s) => s.deviceScope);
+  const [classDevice, setClassDevice] = useState(false);
+  const profileId = profile?.id ?? null;
+  useEffect(() => {
+    if (profileId === null) return undefined;
+    let live = true;
+    void deviceScope(profileId).then(
+      (scope) => {
+        if (live) setClassDevice(scope === 'class');
+      },
+      () => undefined,
+    );
+    return () => {
+      live = false;
+    };
+  }, [profileId, deviceScope]);
+  const nameLocked = gateClosed || classDevice;
+  const joinName = nameLocked ? (profile?.displayName ?? '') : name;
 
   useEffect(() => {
     const handed = takeJoinHandoff();
@@ -110,11 +146,17 @@ export function JoinSpaceScreen({ navigation }: Props): React.ReactElement {
     };
   }, [relink, found, pollRelink, setActive, messages]);
 
+  // The create form's calm hints (too long, a character the rule refuses); an empty field only keeps the button closed.
+  // A stored name that predates the rule joins as it is (it stays the profile name), so only a changed name is checked.
+  const unchanged = profile !== null && joinName.trim() === profile.displayName;
+  const hint = unchanged ? null : nameHint(joinName, messages.learner.createProfile.nameHint);
+  const nameOk = joinName.trim().length > 0 && (unchanged || validateDisplayName(joinName) === null);
+
   const confirmName = async (): Promise<void> => {
-    if (!profile || !found) return;
+    if (!profile || !found || !nameOk) return;
     setMessage(null);
     setBusy(true);
-    const result = await join(profile.id, found.id, code, name.trim() || undefined);
+    const result = await join(profile.id, found.id, code, joinName.trim() || undefined);
     setBusy(false);
     if (!result.ok) {
       setMessage(joinErrorMessage(result.error, messages.caregiver));
@@ -168,25 +210,46 @@ export function JoinSpaceScreen({ navigation }: Props): React.ReactElement {
           <Caption tone="muted">{seeYouAs}</Caption>
           <Spacer size="xs" />
           <TextInput
-            value={name}
+            value={joinName}
             onChangeText={setName}
-            maxLength={20}
+            editable={!nameLocked}
+            aria-disabled={nameLocked}
+            testID="join-name"
+            maxLength={Math.max(NAME_MAX, profile?.displayName.length ?? 0)}
             autoCorrect={false}
+            // Names start with a capital in every word, on purpose: "sungjoo" becomes "Sungjoo", never only the first word.
+            autoCapitalize="words"
             accessibilityLabel={messages.a11y.joinName}
             style={{
               minHeight: touchTarget.child,
               paddingHorizontal: spacing.md,
               fontSize: typography.size.title,
               fontWeight: '700',
-              color: colors.text.primary,
-              backgroundColor: colors.surface.paper,
+              color: nameLocked ? colors.text.secondary : colors.text.primary,
+              backgroundColor: nameLocked ? colors.surface.sunken : colors.surface.paper,
               borderWidth: 2,
               borderColor: colors.border.subtle,
               borderRadius: radii.lg,
             }}
           />
+          {hint !== null ? (
+            <>
+              <Spacer size="xs" />
+              <Caption tone="secondary">{hint}</Caption>
+            </>
+          ) : null}
+          <Spacer size="xs" />
+          <Caption tone="muted">{m.confirm.sameEverywhere}</Caption>
+          {nameLocked ? (
+            <>
+              <Spacer size="xs" />
+              <Caption tone="muted" testID="join-name-locked">
+                {classDevice ? messages.learner.editProfile.classDevice : m.confirm.nameLocked}
+              </Caption>
+            </>
+          ) : null}
           <Spacer size="md" />
-          <Button label={busy ? m.confirm.joining.cta : m.confirm.me.cta} tone="primary" size="lg" fullWidth disabled={busy || name.trim().length === 0} onPress={() => void confirmName()} />
+          <Button label={busy ? m.confirm.joining.cta : m.confirm.me.cta} tone="primary" size="lg" fullWidth disabled={busy || !nameOk} onPress={() => void confirmName()} />
           <Spacer size="sm" />
           {roster.length > 0 ? <Button label={m.confirm.alreadyIn.cta} tone="ghost" size="sm" fullWidth onPress={() => setPicking(true)} /> : null}
           <Button label={m.confirm.notThis.cta} tone="ghost" size="sm" fullWidth onPress={() => { setFound(null); setRoster([]); }} />

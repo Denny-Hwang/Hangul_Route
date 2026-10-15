@@ -110,8 +110,9 @@ spaceReportRoutes.get('/:id/learners/:learnerId/report', async (c) => {
     scope,
     settings: scope === 'full' ? await learnerSettingsOf(db, learner.id) : null,
   };
-  // One event per report a grown-up actually views: a HEAD (Hono answers it with this GET handler) records nothing.
-  if (c.req.method === 'GET') recordServerEvent('report.viewed', { scope: 'learner', space: space.kind, period: reportPeriodOf(c.req.query('period')) });
+  // One event per report a grown-up actually views: a HEAD (Hono answers it with this GET handler) records nothing, nor
+  // does the console's background read of a report already open (`refresh=1`, F-LEARN-001 section 3.11).
+  if (c.req.method === 'GET' && c.req.query('refresh') !== '1') recordServerEvent('report.viewed', { scope: 'learner', space: space.kind, period: reportPeriodOf(c.req.query('period')) });
   // A learner's progress never sits in a shared browser's HTTP cache.
   c.header('Cache-Control', 'no-store');
   return ok(c, body);

@@ -7,6 +7,8 @@ import type { RestorePlan } from '../logic/sync/restore';
 import { getDeviceId } from '../platform/device';
 import { readJson, writeJson } from '../platform/storage';
 import { TRANSFER_SCOPE_KEY, classScopeMarker, deviceScopeOf } from '../logic/transfers/device-scope';
+import { validateDisplayName } from '../logic/profiles/profile-model';
+import { gateOpensDirectlyNow } from './gate-now';
 import type { DeviceCredentials, DeviceTransferPreview, RosterName, SyncApiClient, TransferCallError } from '../platform/sync-api';
 import { track } from '../platform/telemetry';
 import { useAccountStore } from './account-store';
@@ -99,6 +101,11 @@ interface Actions {
   clearMoved: (learnerId: string) => void;
   /** The one-off "Join your new class again." line was shown. */
   clearRejoin: (learnerId: string) => void;
+  /**
+   * Whether this device holds the learner's class-scoped credential (a class tablet after a re-link): there the server
+   * refuses profile edits, so Edit profile keeps the name, level and cub as they are (F-LEARN-001 section 3.11).
+   */
+  deviceScope: (learnerId: string) => Promise<'full' | 'class'>;
 }
 
 const key = (learnerId: string): string => `memberships:${learnerId}`;
@@ -115,6 +122,32 @@ function failure(r: TransferCallError): TransferFailure {
   if (r.startedBy) out.startedBy = r.startedBy;
   if (r.retryAfterSeconds !== undefined) out.retryAfterSeconds = r.retryAfterSeconds;
   return out;
+}
+
+/**
+ * The profile name is the learner's one name (F-LEARN-001 section 3.11): the Worker writes the join name over the
+ * learner's name for the family and every class, so a join under a changed name changes the profile too, and the
+ * edit goes to the server the way any profile edit does. A name the profile rule refuses, or the same name, changes nothing.
+ * A rename is a grown-up action (Edit profile opens behind the PIN gate) that a class tablet cannot make (the PATCH
+ * answers 403 there). Both are decided once, before the join is sent: when the rename is not allowed, the join carries
+ * the profile name instead, so the Worker and the device never end up with two names (a gate that closes while the
+ * request is in flight changes nothing). Answers the name to send and whether the profile takes it after the join.
+ */
+function joinNamePlan(learnerId: string, displayName: string | undefined, scope: 'full' | 'class'): { send: string | undefined; rename: string | null } {
+  const profile = useProfileStore.getState().profiles.find((p) => p.id === learnerId);
+  if (displayName === undefined || !profile) return { send: displayName, rename: null };
+  const name = displayName.trim();
+  if (name === profile.displayName) return { send: displayName, rename: null };
+  if (scope === 'class' || !gateOpensDirectlyNow()) return { send: profile.displayName, rename: null };
+  // A name the profile rule refuses is sent as typed (the Worker's lenient rule decides) and never renames the profile.
+  return { send: displayName, rename: validateDisplayName(displayName) === null ? name : null };
+}
+
+function adoptJoinName(learnerId: string, name: string | null): void {
+  if (name === null) return;
+  const profile = useProfileStore.getState().profiles.find((p) => p.id === learnerId);
+  if (!profile || profile.displayName === name) return;
+  useProfileStore.getState().updateProfile(learnerId, { displayName: name });
 }
 
 const OFF: TransferFailure = { ok: false, error: 'off' };
@@ -382,6 +415,11 @@ export const useMembershipStore = create<State & Actions>((set, get) => {
 
     clearRejoin: (learnerId) => set((s) => ({ rejoinByLearner: { ...s.rejoinByLearner, [learnerId]: false } })),
 
+    deviceScope: async (learnerId) => {
+      const creds = await credentialsFor(learnerId, false);
+      return creds ? scopeOf(learnerId, creds) : 'full';
+    },
+
     lookup: async (code) => {
       const client = syncApi();
       if (!client) return { ok: false, error: 'off' };
@@ -398,7 +436,8 @@ export const useMembershipStore = create<State & Actions>((set, get) => {
         void track({ name: 'space.join.failed', profileId: learnerId, payload: { reason: 'network' } });
         return { ok: false, error: 'network' };
       }
-      const result = await client.joinSpace(spaceId, { code, learnerId, displayName }, creds);
+      const namePlan = joinNamePlan(learnerId, displayName, await scopeOf(learnerId, creds));
+      const result = await client.joinSpace(spaceId, { code, learnerId, displayName: namePlan.send }, creds);
       if (result.status !== 'ok') {
         void track({ name: 'space.join.failed', profileId: learnerId, payload: { reason: result.code } });
         return { ok: false, error: result.code };
@@ -406,6 +445,7 @@ export const useMembershipStore = create<State & Actions>((set, get) => {
       const current = await get().hydrate(learnerId);
       put(learnerId, [...current.filter((m) => m.spaceId !== result.membership.spaceId), result.membership]);
       void track({ name: 'space.join.succeeded', profileId: learnerId, payload: { kind: result.membership.kind, alreadyMember: result.alreadyMember } });
+      adoptJoinName(learnerId, namePlan.rename);
       // The join changes the server's tier and plans for this learner: read them now, not at the next sync
       // (F-ENT-003 section 3.4). A failed read leaves the join as it is; the next sync tries again.
       await get().refresh(learnerId);

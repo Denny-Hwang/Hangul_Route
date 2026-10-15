@@ -226,20 +226,21 @@ test.describe('edge cases (375x667)', () => {
     await expect.poll(async () => (await storedProfile(page)).learnerType).toBe('self');
   });
 
-  test('a learner in a class is told the teacher\'s list changes after joining again', async ({ page }) => {
+  test('a learner in a class is told the teacher\'s list updates with the next connection (§3.11)', async ({ page }) => {
     await onboardSelf(page, { name: 'Rio' });
     const { id } = await storedProfile(page);
     await openProfile(page, 'Rio');
     await page.getByRole('button', { name: 'Edit Rio', exact: true }).click();
     await expect(page.getByRole('heading', { name: 'Edit profile' })).toBeVisible();
-    await expect(page.getByText("Changes show on your teacher's list after you join again")).toHaveCount(0);
+    await expect(page.getByText("Your teacher's list updates the next time you're online.")).toHaveCount(0);
 
     await seedStored(page, `memberships:${id}`, [
       { spaceId: 'space-1', kind: 'class', name: 'Saturday class', role: 'learner', joinedAt: '2026-10-01T00:00:00.000Z' },
     ]);
     await openProfile(page, 'Rio');
     await page.getByRole('button', { name: 'Edit Rio', exact: true }).click();
-    await expect(page.getByText("Changes show on your teacher's list after you join again")).toBeVisible();
+    await expect(page.getByText("Your teacher's list updates the next time you're online.")).toBeVisible();
+    await expect(page.getByText(/join again/i)).toHaveCount(0);
   });
 
   test('Forgot PIN from Edit comes back to Edit once the new PIN is set', async ({ page }) => {

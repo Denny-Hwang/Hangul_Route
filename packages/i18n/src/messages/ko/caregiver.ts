@@ -290,6 +290,8 @@ export const caregiver = {
     },
     confirm: {
       seeYouAs: { family: '가족에게 보일 이름:', teacher: '선생님에게 보일 이름:' },
+      sameEverywhere: '이 이름은 여기만이 아니라 어디서나 같아요.',
+      nameLocked: '이름은 프로필 편집에서 바꿀 수 있어요.',
       me: { cta: '나예요' },
       joining: { cta: '참여하는 중…' },
       alreadyIn: { cta: '원래 이 반에 있었어요' },

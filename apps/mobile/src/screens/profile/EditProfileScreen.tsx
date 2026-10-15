@@ -56,7 +56,9 @@ const CHECKBOX_SIZE = spacing.xl + spacing.xs;
  * learning, entered from "Edit" on a switcher card (behind the PIN when the
  * gate is required; ProfileScreen decides). A change of who is learning asks
  * the consent the create form would, and a PIN for a child on a device with
- * none. Edits stay on the device until a server route exists (§3.11).
+ * none. Name, level and cub edits reach the server with the next sync, and the class roster with them; on a
+ * class device (a class re-link, `logic/transfers/device-scope`) the server refuses them, so those rows stay as
+ * they are and a line says the learner's own device changes them (§3.11).
  * Design reference: design/wireframes/onboarding/all-ages-onboarding.md, I, and
  * onboarding/setup-steps.md, G (the Privacy block and "I'm under 13", F-LEARN-001 §3.15.6).
  * Rules live in logic/profiles/edit-profile (tested); this file paints them.
@@ -76,6 +78,13 @@ export function EditProfileScreen({ navigation, route }: Props): React.ReactElem
   const setParentPinHash = useAccountStore((s) => s.setParentPinHash);
   const inClass = useMembershipStore((s) => (s.byLearner[profileId] ?? []).some((r) => r.kind === 'class'));
   const hydrateMemberships = useMembershipStore((s) => s.hydrate);
+  const deviceScope = useMembershipStore((s) => s.deviceScope);
+  /**
+   * Whether this is a class device, where the server refuses name, level and cub edits (§3.11). Until the answer is
+   * read (a storage read) Save stays closed, so a quick tap cannot queue an edit a class device's server would refuse.
+   */
+  const [scope, setScope] = useState<'unknown' | 'full' | 'class'>('unknown');
+  const classDevice = scope === 'class';
 
   const [draft, setDraft] = useState<EditDraft | null>(() => (original ? initialEditDraft(original) : null));
   const [agreed, setAgreed] = useState(false);
@@ -96,6 +105,31 @@ export function EditProfileScreen({ navigation, route }: Props): React.ReactElem
   useEffect(() => {
     void hydrateMemberships(profileId);
   }, [profileId, hydrateMemberships]);
+
+  useEffect(() => {
+    let live = true;
+    setScope('unknown');
+    void deviceScope(profileId).then(
+      (answer) => {
+        if (!live) return;
+        setScope(answer);
+        if (answer !== 'class') return;
+        // Anything typed before the answer came back goes back to the stored values: those rows cannot save here.
+        const stored = useProfileStore.getState().profiles.find((p) => p.id === profileId);
+        if (stored) {
+          const start = initialEditDraft(stored);
+          setDraft((d) => (d ? { ...d, name: start.name, level: start.level, avatar: start.avatar } : d));
+        }
+      },
+      // A storage read that fails reads as a full device: the server still refuses a class device's edit, and nothing else changes.
+      () => {
+        if (live) setScope('full');
+      },
+    );
+    return () => {
+      live = false;
+    };
+  }, [profileId, deviceScope]);
 
   const back = (
     <>
@@ -170,7 +204,7 @@ export function EditProfileScreen({ navigation, route }: Props): React.ReactElem
   };
 
   const onSave = async (): Promise<void> => {
-    if (missing !== null || submitting.current) return;
+    if (missing !== null || scope === 'unknown' || submitting.current) return;
     submitting.current = true;
     setBusy(true);
     setPinError(null);
@@ -205,6 +239,14 @@ export function EditProfileScreen({ navigation, route }: Props): React.ReactElem
     <Screen tone="canvas" scrollable>
       {back}
 
+      {classDevice ? (
+        <>
+          <Spacer size="md" />
+          <Caption tone="secondary" testID="edit-class-device">
+            {e.classDevice}
+          </Caption>
+        </>
+      ) : null}
       <Spacer size="lg" />
       <Body weight="semibold">{e.nameLabel}</Body>
       <Spacer size="xs" />
@@ -216,15 +258,17 @@ export function EditProfileScreen({ navigation, route }: Props): React.ReactElem
         accessibilityLabel={e.nameLabel}
         maxLength={Math.max(NAME_MAX, original.displayName.length)}
         autoCapitalize="words"
+        editable={!classDevice}
+        aria-disabled={classDevice}
         style={{
-          backgroundColor: colors.surface.paper,
+          backgroundColor: classDevice ? colors.surface.sunken : colors.surface.paper,
           borderRadius: radii.lg,
           borderWidth: borderWidth.base,
           borderColor: colors.border.subtle,
           paddingHorizontal: spacing.lg,
           minHeight: touchTarget.child,
           fontSize: typography.size.bodyLg,
-          color: colors.text.primary,
+          color: classDevice ? colors.text.secondary : colors.text.primary,
         }}
       />
       {hint !== null ? (
@@ -251,6 +295,7 @@ export function EditProfileScreen({ navigation, route }: Props): React.ReactElem
                       label={levelText.label}
                       description={levelText.description}
                       selected={draft.level === l.id}
+                      disabled={classDevice}
                       onPress={() => change({ level: l.id })}
                     />,
                   ];
@@ -273,8 +318,9 @@ export function EditProfileScreen({ navigation, route }: Props): React.ReactElem
             <Pressable
               key={a.kind}
               onPress={() => change({ avatar: a.kind })}
+              disabled={classDevice}
               accessibilityRole="radio"
-              accessibilityState={{ checked: active }}
+              accessibilityState={{ checked: active, disabled: classDevice }}
               aria-checked={active}
               accessibilityLabel={m.avatars[a.kind]}
               style={{
@@ -284,7 +330,7 @@ export function EditProfileScreen({ navigation, route }: Props): React.ReactElem
                 alignItems: 'center',
                 gap: spacing.xs,
                 padding: spacing.sm,
-                backgroundColor: active ? colors.brand.primaryLight : colors.surface.paper,
+                backgroundColor: active ? colors.brand.primaryLight : classDevice ? colors.surface.sunken : colors.surface.paper,
                 borderWidth: borderWidth.base,
                 borderColor: active ? colors.brand.primary : colors.border.subtle,
                 borderRadius: radii.lg,
@@ -422,7 +468,7 @@ export function EditProfileScreen({ navigation, route }: Props): React.ReactElem
         </>
       ) : null}
 
-      {inClass ? (
+      {inClass && !classDevice ? (
         <>
           <Spacer size="lg" />
           <Caption tone="secondary">{e.classNote}</Caption>
@@ -435,7 +481,7 @@ export function EditProfileScreen({ navigation, route }: Props): React.ReactElem
         tone="primary"
         size="hero"
         fullWidth
-        disabled={missing !== null || busy}
+        disabled={missing !== null || busy || scope === 'unknown'}
         onPress={() => void onSave()}
       />
       {saveError !== null || missing !== null ? (

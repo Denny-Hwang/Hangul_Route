@@ -403,6 +403,10 @@ export const caregiver = {
     confirm: {
       /** Who sees the roster name: a family space, or a teacher's class or school. */
       seeYouAs: { family: 'Your family will see you as:', teacher: 'Your teacher will see you as:' },
+      /** Under the name field: the join name becomes the profile name, for the family and every class (F-LEARN-001 §3.11). */
+      sameEverywhere: 'This name is the same everywhere, not just here.',
+      /** Under a locked name field: on a device with the grown-up gate closed, the name changes only in Edit profile (behind the PIN). */
+      nameLocked: 'The name can be changed in Edit profile.',
       me: { cta: "That's me" },
       joining: { cta: 'Joining…' },
       alreadyIn: { cta: 'I was already in this class' },

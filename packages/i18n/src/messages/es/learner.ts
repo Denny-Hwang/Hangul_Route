@@ -194,7 +194,8 @@ export const learner = {
     },
     privacyLink: 'Leer la Política de privacidad',
     privacyFallback: 'Abre hangulroute.com/privacy en un navegador.',
-    classNote: 'Los cambios aparecen en la lista de tu docente cuando te unas otra vez',
+    classNote: 'La lista de tu docente se actualiza la próxima vez que tengas conexión.',
+    classDevice: 'El nombre, el nivel y el Hoya se pueden cambiar en el dispositivo de quien aprende.',
     pinFailed: 'No se pudo crear el PIN. Reintenta.',
     saveFailed: 'No se pudo guardar. Reintenta.',
     missing: {
