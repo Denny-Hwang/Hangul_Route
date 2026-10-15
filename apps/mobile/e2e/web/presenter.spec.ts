@@ -395,8 +395,18 @@ test.describe('presenter at 1280 x 720', () => {
     };
     await page.goto(link(review));
     await startLesson(page);
-    await expect.poll(() => counter(page)).toMatch(/^1 \//);
+    // The two quests teach 10 different words: 10 cards, 5 quiz slides, the End slide.
+    await expect.poll(() => counter(page)).toBe('1 / 16');
+    // Slide 1 is a word card: the first word the first quest teaches.
+    await expect(page.getByTestId('presenter-live')).toHaveText(/^Slide 1 of 16, Word\b/);
+    await expect(page.getByTestId('presenter-stage').getByText('고추', { exact: true }).first()).toBeVisible();
     await shot(page, 'presenter-word-review-1280x720');
+    // After the cards, the word-to-meaning quiz.
+    await forwardTo(page, 'Question');
+    await expect(page.getByTestId('presenter-live')).toHaveText(/^Slide 11 of 16, Question\b/);
+    await expect(page.getByTestId('presenter-quiz-options')).toBeVisible();
+    // The v2 deck lands in Recent like any other.
+    await expect.poll(async () => JSON.stringify(await storedValue(page, 'hr:lecture:recent'))).toContain('lecture:e2ewr1');
   });
 
   test('another open tab of the app answers the hr-tabs ping, so Reload never takes over under it (AMENDMENTS-LECTURE-V2 4.5)', async ({ page, context }) => {

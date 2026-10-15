@@ -234,6 +234,8 @@ export default function PresenterApp(): React.ReactElement {
 
   // A link that does not decode, or a deck with nothing to show: the invalid screen, once per page.
   const rejected = useRef(false);
+  // One Reload at a time: a second tap while the newer presenter installs starts nothing new.
+  const reloading = useRef(false);
   useEffect(() => {
     if (phase.kind === 'invalid' && !rejected.current && address !== null) {
       rejected.current = true;
@@ -593,7 +595,13 @@ export default function PresenterApp(): React.ReactElement {
           title={m.title}
           line={m.staleLine}
           cta={m.reload}
-          onCta={() => void reloadForUpdate(raw)}
+          onCta={() => {
+            if (reloading.current) return;
+            reloading.current = true;
+            void reloadForUpdate(raw).finally(() => {
+              reloading.current = false;
+            });
+          }}
           secondary={{ label: m.cta, onPress: openHome, testID: 'presenter-invalid-home' }}
         />
       ) : (

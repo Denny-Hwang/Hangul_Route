@@ -1189,9 +1189,9 @@ describe('expandDeck: word-review (deck v2, AMENDMENTS-LECTURE-V2 section 4.5, L
     const { slides } = review({ questIds: ['quest:words'], vocabIds: ['vocab:gimchi', 'vocab:dal', 'vocab:hae', 'vocab:byeol'], rounds: 5 });
     const cards = only(slides, 'vocab');
     expect(cards.map((s) => s.word.ko)).toEqual(['김치', '달', '해', '별']);
-    // 김치 came from the quest first (its gloss as the quest teaches it).
-    expect(cards[0]).toMatchObject({ word: { gloss: 'Kimchi' } });
-    expect(cards[0]).not.toHaveProperty('wordId');
+    // 김치 came from the quest first (its place and its gloss as the quest teaches it), and the
+    // Word review asked for it by vocab id too, so its card still gets the vocab entry's picture.
+    expect(cards[0]).toMatchObject({ word: { gloss: 'Kimchi' }, wordId: 'vocab:gimchi' });
     expect(cards[1]).toMatchObject({ wordId: 'vocab:dal', wordArt: 'sky-moon' });
     expect(cards[2]).toMatchObject({ wordId: 'vocab:hae', cardId: 'card:sun' });
     expect(only(slides, 'quiz')).toHaveLength(4);

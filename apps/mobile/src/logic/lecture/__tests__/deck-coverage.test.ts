@@ -1,6 +1,21 @@
-import { discoverItemTexts, LectureDeckSchema, type Episode, type StageKey, type ThemeKey } from '@hangul-route/content-schema';
+import {
+  discoverItemTexts,
+  LECTURE_MAX_BLOCKS,
+  LectureDeckSchema,
+  StoryLevelSchema,
+  WORD_REVIEW_MAX_QUESTS,
+  WORD_REVIEW_MAX_WORDS,
+  type Episode,
+  type LectureBlock,
+  type StageKey,
+  type ThemeKey,
+} from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
 import { episodesAll, gridEpisodes } from '../../../content';
+import { VOCAB_ITEMS, VOCAB_TOPICS } from '../../../content/__generated__/vocab';
+import { questsAll } from '../../../content/quests';
+import { storiesAll } from '../../../content/stories';
+import { buildStoryIndex } from '../../story/story-index';
 import type { MinigameScope } from '../../minigame-config';
 import { lectureBundle } from '../content';
 import { expandDeck, type LectureBundle } from '../deck-builder';
@@ -138,6 +153,35 @@ function roundsOf(scope: MinigameScope): number {
 
 const UPPER_DISCOVER = new Set(['sentence', 'pattern', 'exchange', 'realia']);
 
+/**
+ * Every Korean text field the given slides hold (`ko` at any depth: a slide's own text, a prompt,
+ * an option, a line), whole. A Discover item counts as held only when one of its texts is one of
+ * these exactly, never a substring of a longer title, label or option.
+ */
+function koreanFields(slides: readonly unknown[]): Set<string> {
+  const out = new Set<string>();
+  const walk = (value: unknown): void => {
+    if (Array.isArray(value)) {
+      for (const v of value) walk(v);
+      return;
+    }
+    if (value === null || typeof value !== 'object') return;
+    for (const [key, v] of Object.entries(value)) {
+      if (key === 'ko' && typeof v === 'string') out.add(v);
+      else walk(v);
+    }
+  };
+  walk(slides);
+  return out;
+}
+
+/**
+ * The Worker's `lecture.*` slide bound (`LECTURE_SLIDES_MAX` in
+ * `packages/backend/src/lib/server-events.ts`, AMENDMENTS-LECTURE-V2 section 11). The Worker is
+ * not a dependency of the app, so the value is restated here; `server-events.test.ts` pins it there.
+ */
+const WORKER_SLIDES_MAX = 10_000;
+
 interface Measured extends CellRow {
   /** Word cards beyond the first of each word in the deck. */
   repeatedWordCards: number;
@@ -164,8 +208,8 @@ function measure(episodes: readonly Episode[], bundle: LectureBundle): Measured 
     row.repeatedWordCards += words.length - new Set(words).size;
     row.quiz += expanded.slides.filter((s) => s.kind === 'quiz').length;
     const cardKo = new Set(words);
-    const ownSlides = (questId: string, stepId: string): string =>
-      JSON.stringify(expanded.slides.filter((s) => s.kind !== 'vocab' && s.key.includes(`/${questId}/${stepId}/`)));
+    const ownSlides = (questId: string, stepId: string): Set<string> =>
+      koreanFields(expanded.slides.filter((s) => s.kind !== 'vocab' && s.key.includes(`/${questId}/${stepId}/`)));
     const skippedRefs = expanded.skipped.filter((s) => s.reason === 'unsupported-step').map((s) => s.ref);
     for (const questId of episode.questIds) {
       const quest = bundle.questById(questId);
@@ -176,7 +220,7 @@ function measure(episodes: readonly Episode[], bundle: LectureBundle): Measured 
         for (const item of step.discover?.pages.flatMap((p) => p.items) ?? []) {
           if (!UPPER_DISCOVER.has(item.type)) continue;
           const texts = discoverItemTexts(item).map((t) => t.ko);
-          if (texts.some((ko) => cardKo.has(ko)) && !texts.some((ko) => stepSlides.includes(ko))) flattened[item.type] = (flattened[item.type] ?? 0) + 1;
+          if (texts.some((ko) => cardKo.has(ko)) && !texts.some((ko) => stepSlides.has(ko))) flattened[item.type] = (flattened[item.type] ?? 0) + 1;
         }
         const scope = step.minigameRef === undefined ? undefined : bundle.scopeFor(step.minigameRef);
         if (!scope || step.minigameRef === undefined) continue;
@@ -236,6 +280,36 @@ describe('deck coverage ratchet (AMENDMENTS-LECTURE-V2 section 1, LV-2)', () => 
     for (const [key, row] of measured) {
       for (const [type, n] of Object.entries(row.flattened)) expect(n, `${key} ${type}`).toBeLessThanOrEqual(BASELINE[key]!.flattened[type] ?? 0);
     }
+  });
+
+  it('LECTURE_MAX_BLOCKS times the largest one-block deck stays under the Worker slide bound (section 11)', () => {
+    const slidesOf = (v: 1 | 2, block: LectureBlock): number =>
+      expandDeck(
+        LectureDeckSchema.parse({ v, id: 'lecture:coverage', title: 'Coverage', createdAt: '2026-10-15T00:00:00Z', seed: 1, blocks: [block] }),
+        bundle,
+        { canPlayKorean: true },
+      ).slides.length;
+    const blocks: Array<[1 | 2, LectureBlock]> = [];
+    const questIds = [...new Set([...cells.values()].flat().flatMap((e) => e.questIds))];
+    for (const episodes of cells.values()) for (const e of episodes) blocks.push([1, { kind: 'episode', id: e.id }]);
+    for (const id of questIds) blocks.push([1, { kind: 'quest', id }]);
+    const storyIds = [...new Set(buildStoryIndex({ stories: storiesAll, episodes: episodesAll, quests: questsAll, showUnreviewed: false }).map((e) => e.storyId))];
+    for (const storyId of storyIds) for (const level of StoryLevelSchema.options) blocks.push([1, { kind: 'story', storyId, level, checks: true }]);
+    const readyTopics = VOCAB_TOPICS.filter((t) => t.status === 'ready' || t.status === 'shipped');
+    for (const t of readyTopics) blocks.push([1, { kind: 'vocab', topicId: t.id }]);
+    const readyKeys = new Set<string>(readyTopics.map((t) => t.key));
+    const vocabIds = VOCAB_ITEMS.filter((i) => (i.topics as readonly string[]).some((k) => readyKeys.has(k)))
+      .slice(0, WORD_REVIEW_MAX_WORDS)
+      .map((i) => i.id);
+    const fullReview: LectureBlock = { kind: 'word-review', questIds: questIds.slice(0, WORD_REVIEW_MAX_QUESTS), vocabIds, rounds: 10 };
+    blocks.push([2, fullReview]);
+    // A full Word review is 20 cards, 10 quiz slides and the End slide.
+    expect(slidesOf(2, fullReview)).toBe(31);
+    expect(storyIds.length).toBeGreaterThan(0);
+    expect(readyTopics.length).toBeGreaterThan(0);
+    const largest = Math.max(...blocks.map(([v, b]) => slidesOf(v, b)));
+    expect(largest).toBeGreaterThanOrEqual(31);
+    expect(LECTURE_MAX_BLOCKS * largest).toBeLessThan(WORKER_SLIDES_MAX);
   });
 
   it('the BASELINE constant matches the section 1 totals (pins the table text, not the builder)', () => {

@@ -620,7 +620,10 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
     type ReviewWord = KoLine & { gloss: string; extra?: { wordId: string; cardId?: string; wordArt?: string } };
     const words: ReviewWord[] = [];
     const add = (word: ReviewWord): void => {
-      if (!words.some((w) => w.ko === word.ko)) words.push(word);
+      const known = words.find((w) => w.ko === word.ko);
+      if (!known) words.push(word);
+      // A word a quest already taught keeps its place; the vocab entry still gives it its picture.
+      else if (known.extra === undefined && word.extra !== undefined) known.extra = word.extra;
     };
     for (const id of questIds) {
       if (!bundle.questById(id)) {

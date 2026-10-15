@@ -383,31 +383,51 @@ export async function checkForUpdate(env: PresenterEnv = browserEnv(), ms: numbe
  * reloads on `controllerchange`. With another tab open (a learner mid-quest, a second presenter
  * mid-lecture) it only reloads: taking over would switch that tab to the new worker and delete the
  * precache it runs on (`clientsClaim`, `cleanupOutdatedCaches`), and the page's line asks to close
- * the other tabs. Offline or with nothing newer, it reloads at once. Reloads after `ms` at the
- * latest. Never throws.
+ * the other tabs. Offline or with nothing newer, it reloads at once.
+ *
+ * One deadline covers the whole flow: every stage (registration, update, install, the tab ping,
+ * the takeover) gets only what is left of `ms`, so the page reloads exactly once, `ms` after the
+ * tap at the latest. Resolves once the reload has been asked for. Never throws.
+ *
+ * Limit: a background tab the browser has frozen or discarded (tab freezing, the back-forward
+ * cache) cannot answer the ping in time and counts as closed, so a takeover can still reach it;
+ * that is why the page's line asks to close the other tabs first.
  */
-export async function reloadForUpdate(raw: string, env: PresenterEnv = browserEnv(), ms: number = UPDATE_WAIT_MS): Promise<void> {
+export function reloadForUpdate(raw: string, env: PresenterEnv = browserEnv(), ms: number = UPDATE_WAIT_MS): Promise<void> {
   holdOpenDeck(raw, {}, env);
-  const reload = (): void => env.reload?.();
-  const reg = await registration(env, ms);
-  if (!reg) return reload();
-  await within(Promise.resolve().then(() => reg.update()), ms);
-  const waiting = reg.waiting ?? (reg.installing ? await installed(reg.installing, ms) : undefined);
-  if (!waiting) return reload();
-  if (await otherTabsOpen(env)) return reload();
-  let done = false;
-  const once = (): void => {
-    if (done) return;
-    done = true;
-    reload();
-  };
-  env.serviceWorker?.addEventListener?.('controllerchange', once);
-  try {
-    waiting.postMessage({ type: 'SKIP_WAITING' });
-  } catch {
-    return once();
-  }
-  setTimeout(once, ms);
+  const start = Date.now();
+  const left = (): number => Math.max(0, ms - (Date.now() - start));
+  return new Promise<void>((resolve) => {
+    let done = false;
+    const once = (): void => {
+      if (done) return;
+      done = true;
+      clearTimeout(deadline);
+      try {
+        env.reload?.();
+      } catch {
+        // The reload itself is the browser's.
+      }
+      resolve();
+    };
+    const deadline = setTimeout(once, ms);
+    const flow = async (): Promise<void> => {
+      const reg = await registration(env, left());
+      if (done) return;
+      if (!reg) return once();
+      await within(Promise.resolve().then(() => reg.update()), left());
+      if (done) return;
+      const waiting = reg.waiting ?? (reg.installing ? await installed(reg.installing, left()) : undefined);
+      if (done) return;
+      if (!waiting) return once();
+      const others = await otherTabsOpen(env, Math.min(TABS_WAIT_MS, left()));
+      if (done) return;
+      if (others) return once();
+      env.serviceWorker?.addEventListener?.('controllerchange', once);
+      waiting.postMessage({ type: 'SKIP_WAITING' });
+    };
+    flow().catch(once);
+  });
 }
 
 /** The fixed tab title (`learner.presenter.docTitle`); the deck title never goes here (section 3.2). */
