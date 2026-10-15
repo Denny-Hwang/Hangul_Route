@@ -1,11 +1,13 @@
 import type { z } from 'zod';
 import {
-  LECTURE_DECK_VERSION,
+  LECTURE_DECK_VERSIONS,
   LECTURE_MAX_FRAGMENT_CHARS,
   LECTURE_MAX_JSON_BYTES,
   LectureDeckSchema,
   type LectureDeck,
   type LectureDeckInput,
+  type LectureDeckVersion,
+  deckVersion,
 } from './lecture';
 
 /**
@@ -13,7 +15,10 @@ import {
  * console (writes `${APP_URL}/present#d=<fragment>`) and the presenter
  * (reads it, then strips it from the address bar).
  *
- * Format: `'1.' + base64url(utf8(JSON.stringify(deck)))`, no padding.
+ * Format: `'<v>.' + base64url(utf8(JSON.stringify(deck)))`, no padding, where
+ * `<v>` is the deck's own `v`: the lowest version it needs (`deckVersion`), so
+ * a deck without a v2 feature is `1.…` byte-for-byte as before v2 and a
+ * presenter cached before v2 still opens it (AMENDMENTS-LECTURE-V2 4.5).
  * No Buffer: `TextEncoder` / `TextDecoder` + `btoa` / `atob`, present in
  * browsers, Workers and Node 18+.
  *
@@ -69,7 +74,7 @@ interface CodecRuntime {
 }
 const runtime = globalThis as unknown as CodecRuntime;
 
-const VERSION_PREFIX = `${LECTURE_DECK_VERSION}.`;
+const READABLE_VERSIONS: ReadonlySet<number> = new Set(LECTURE_DECK_VERSIONS);
 const BASE64URL_RE = /^[A-Za-z0-9_-]+$/;
 const DIGITS_RE = /^\d+$/;
 
@@ -96,9 +101,11 @@ function fromBase64Url(text: string): Uint8Array | null {
  * Throws `LectureCodecError('too_large')` when the result exceeds the limits.
  */
 export function encodeDeck(deck: LectureDeckInput): string {
-  const parsed = LectureDeckSchema.parse(deck);
+  // The lowest version the deck needs, whatever `v` the author wrote; the schema
+  // writes keys in its own order, so a v1 deck is byte-for-byte what it was.
+  const parsed = LectureDeckSchema.parse({ ...deck, v: deckVersion(deck) });
   const bytes = new runtime.TextEncoder().encode(JSON.stringify(parsed));
-  const fragment = VERSION_PREFIX + toBase64Url(bytes);
+  const fragment = `${parsed.v}.${toBase64Url(bytes)}`;
   if (fragment.length > LECTURE_MAX_FRAGMENT_CHARS || bytes.length > LECTURE_MAX_JSON_BYTES) {
     throw new LectureCodecError('too_large');
   }
@@ -106,7 +113,9 @@ export function encodeDeck(deck: LectureDeckInput): string {
 }
 
 /**
- * Reads a fragment value (`1.…`; a leading `#` and `d=` are tolerated).
+ * Reads a fragment value (`1.…` or `2.…`; a leading `#` and `d=` are tolerated).
+ * A later version is `unsupported_version`; a deck whose `v` is not the
+ * prefix's, or a v1 deck holding a v2 feature, is `invalid`.
  * Never throws: every failure is a reason the presenter can show and count.
  */
 export function decodeDeck(fragment: string): LectureDecodeResult {
@@ -118,7 +127,10 @@ export function decodeDeck(fragment: string): LectureDecodeResult {
 
   const dot = value.indexOf('.');
   if (dot <= 0 || !DIGITS_RE.test(value.slice(0, dot))) return { ok: false, reason: 'bad_encoding' };
-  if (value.slice(0, dot + 1) !== VERSION_PREFIX) return { ok: false, reason: 'unsupported_version' };
+  const prefixVersion = Number(value.slice(0, dot));
+  if (!READABLE_VERSIONS.has(prefixVersion) || value.slice(0, dot) !== String(prefixVersion)) {
+    return { ok: false, reason: 'unsupported_version' };
+  }
 
   const bytes = fromBase64Url(value.slice(dot + 1));
   if (!bytes) return { ok: false, reason: 'bad_encoding' };
@@ -137,7 +149,7 @@ export function decodeDeck(fragment: string): LectureDecodeResult {
     return { ok: false, reason: 'bad_json' };
   }
 
-  if (isRecord(json) && typeof json.v === 'number' && json.v !== LECTURE_DECK_VERSION) {
+  if (isRecord(json) && typeof json.v === 'number' && !READABLE_VERSIONS.has(json.v)) {
     return { ok: false, reason: 'unsupported_version' };
   }
 
@@ -145,6 +157,9 @@ export function decodeDeck(fragment: string): LectureDecodeResult {
   if (!result.success) {
     const issues = result.error.issues.map((issue): LectureDecodeIssue => ({ path: [...issue.path], code: issue.code }));
     return { ok: false, reason: 'invalid', issues };
+  }
+  if (result.data.v !== (prefixVersion as LectureDeckVersion)) {
+    return { ok: false, reason: 'invalid', issues: [{ path: ['v'], code: 'custom' }] };
   }
   return { ok: true, deck: result.data };
 }

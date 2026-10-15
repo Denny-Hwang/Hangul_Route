@@ -27,7 +27,27 @@ import { VocabIdSchema } from './vocab';
  * `unsupported_version` for a link it cannot read, never a half-read deck).
  */
 
+/** The base deck version: every deck without a v2 feature is written as v1, byte-for-byte as before v2. */
 export const LECTURE_DECK_VERSION = 1;
+/**
+ * The versions the codec reads (AMENDMENTS-LECTURE-V2 section 4.5). v2 adds the
+ * `word-review` block and, with it, the optional `preset` id; a deck is v2 only
+ * when it holds a `word-review` block (`deckVersion`), so every other deck stays
+ * readable by a presenter cached before v2.
+ */
+export const LECTURE_DECK_VERSIONS = [1, 2] as const;
+export type LectureDeckVersion = (typeof LECTURE_DECK_VERSIONS)[number];
+
+/**
+ * The ready-made lessons (AMENDMENTS-LECTURE-V2 section 4.1), in their display order.
+ * Here rather than in `lecture-presets.ts` because the v2 deck's `preset` key reads it.
+ */
+export const LECTURE_PRESETS = ['next-lesson', 'hangul-week-1', 'by-stage', 'story-time', 'word-review', 'warm-up'] as const;
+export type LecturePreset = (typeof LECTURE_PRESETS)[number];
+
+/** `word-review` (v2) limits: quest ids from recent lessons and extra word ids. */
+export const WORD_REVIEW_MAX_QUESTS = 12;
+export const WORD_REVIEW_MAX_WORDS = 24;
 /** Same cap as a plan (`PLAN_MAX_ITEMS`). */
 export const LECTURE_MAX_BLOCKS = 30;
 /** `#d=` value length; checked before anything is decoded. */
@@ -89,6 +109,19 @@ export const LectureBlockSchema = z.discriminatedUnion('kind', [
     .object({ kind: z.literal('activity'), preset: z.enum(ACTIVITY_PRESETS), minutes: z.number().int().min(1).max(15) })
     .strict(),
   z.object({ kind: z.literal('class-code'), code: z.string().regex(JOIN_CODE_RE) }).strict(),
+  /**
+   * v2 only (section 4.5): the words the listed quests teach plus `vocabIds`, one card
+   * each, then a word-to-meaning quiz of `rounds`. At least one id in all (checked on the
+   * deck, since a discriminated union member cannot carry a refinement).
+   */
+  z
+    .object({
+      kind: z.literal('word-review'),
+      questIds: z.array(z.string().regex(QUEST_ID_RE).max(64)).max(WORD_REVIEW_MAX_QUESTS),
+      vocabIds: z.array(VocabIdSchema.max(48)).max(WORD_REVIEW_MAX_WORDS),
+      rounds: z.number().int().min(1).max(10),
+    })
+    .strict(),
 ]);
 export type LectureBlock = z.infer<typeof LectureBlockSchema>;
 export type LectureBlockKind = LectureBlock['kind'];
@@ -119,9 +152,19 @@ export const LecturePickerSchema = z
   .strict();
 export type LecturePicker = z.infer<typeof LecturePickerSchema>;
 
+/** The blocks only a v2 deck may hold. */
+const V2_BLOCK_KINDS: ReadonlySet<string> = new Set(['word-review']);
+
+/** The lowest version a deck needs: 2 when it holds a `word-review` block, else 1. */
+export function deckVersion(deck: { blocks?: readonly unknown[] }): LectureDeckVersion {
+  const blocks = Array.isArray(deck.blocks) ? deck.blocks : [];
+  return blocks.some((b) => typeof b === 'object' && b !== null && V2_BLOCK_KINDS.has((b as { kind?: unknown }).kind as string)) ? 2 : 1;
+}
+
 export const LectureDeckSchema = z
   .object({
-    v: z.literal(LECTURE_DECK_VERSION),
+    /** The version the deck needs (`deckVersion`): exactly one encoding per deck. */
+    v: z.union([z.literal(1), z.literal(2)]),
     id: z.string().regex(DECK_ID_RE),
     title: z.string().trim().min(1).max(60).regex(LECTURE_TITLE_RE),
     createdAt: z.string().max(40).regex(LECTURE_CREATED_AT_RE),
@@ -132,8 +175,21 @@ export const LectureDeckSchema = z
     picker: LecturePickerSchema.nullable().default(null),
     /** Telemetry only. */
     source: z.enum(['plan', 'catalogue', 'revisit', 'quick']).optional(),
+    /** v2 only, telemetry only: the preset that built a `word-review` deck (LV-D6). */
+    preset: z.enum(LECTURE_PRESETS).optional(),
   })
-  .strict();
+  .strict()
+  .superRefine((deck, ctx) => {
+    const issue = (path: (string | number)[], message: string): void => ctx.addIssue({ code: z.ZodIssueCode.custom, path, message });
+    const needs = deckVersion(deck);
+    if (deck.v !== needs) issue(['v'], needs === 2 ? 'A word-review block needs a v2 deck' : 'A v2 deck must hold a word-review block');
+    if (deck.preset !== undefined && needs !== 2) issue(['preset'], 'Only a word-review deck carries a preset');
+    deck.blocks.forEach((block, i) => {
+      if (block.kind === 'word-review' && block.questIds.length + block.vocabIds.length === 0) {
+        issue(['blocks', i], 'A word-review block names at least one quest or word');
+      }
+    });
+  });
 /** A parsed deck (defaults filled). */
 export type LectureDeck = z.infer<typeof LectureDeckSchema>;
 /** A deck as written by its author (defaults optional). */

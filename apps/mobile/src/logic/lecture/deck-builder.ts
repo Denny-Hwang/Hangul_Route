@@ -703,6 +703,10 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
       case 'class-code':
         classCode = block.code;
         return;
+      case 'word-review':
+        // v2 (AMENDMENTS-LECTURE-V2 4.5): expanded by LV-2; until then a counted skip, never a silent drop.
+        skip(key, 'unsupported-step');
+        return;
     }
   });
 

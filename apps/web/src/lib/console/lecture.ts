@@ -9,6 +9,7 @@ import {
   LectureDeckSchema,
   PICKER_LABEL_RE,
   encodeDeck,
+  presetBlockMinutes,
   rosterAlias,
   type LectureBlock,
   type LectureDeck,
@@ -191,6 +192,9 @@ export function blockMinutes(block: LectureBlock, stories: readonly LectureCatal
       return block.minutes;
     case 'class-code':
       return 0;
+    case 'word-review':
+      // v2 (AMENDMENTS-LECTURE-V2 4.4): the console composes none until LV-4; same estimate as the presets.
+      return presetBlockMinutes(block, CATALOG);
   }
 }
 

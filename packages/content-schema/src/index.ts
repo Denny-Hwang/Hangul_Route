@@ -50,6 +50,7 @@ export * from './curriculum/generate';
 export * from './curriculum/propose';
 export * from './schemas/lecture';
 export * from './schemas/lecture-codec';
+export * from './schemas/lecture-presets';
 export * from './schemas/locale-overlay';
 export * from './localize';
 export * from './schemas/vocab-progress';

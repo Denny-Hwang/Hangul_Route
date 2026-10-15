@@ -989,3 +989,14 @@ describe('expandDeck: review fixes (never a crash, trace-stroke order, chosen wo
     expect(skipped).toEqual([{ blockIndex: 0, ref: 'story:bad-check/check-c1', reason: 'no-romanization' }]);
   });
 });
+
+describe('expandDeck: a v2 word-review block before LV-2 (AMENDMENTS-LECTURE-V2 4.5)', () => {
+  it('is a counted skip, never a silent drop, and the rest of the deck still builds', () => {
+    const { slides, skipped } = expand(
+      [{ kind: 'quest', id: 'quest:letters' }, { kind: 'word-review', questIds: ['quest:letters'], vocabIds: [], rounds: 5 }],
+      { v: 2 },
+    );
+    expect(slides[0]?.kind).toBe('title');
+    expect(skipped).toContainEqual({ blockIndex: 1, ref: 'word-review', reason: 'unsupported-step' });
+  });
+});
