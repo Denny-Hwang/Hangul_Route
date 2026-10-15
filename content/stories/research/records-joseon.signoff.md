@@ -49,3 +49,6 @@ Evidence/scripts: heritage/v3/ (qcheck.py quote matcher; dl/ = fresh downloads; 
 - story-ilseongnok-daily-reflection: YES
 - story-uigwe-royal-birthday: YES
 - story-joseon-records-today: YES
+
+## Addendum 2026-10-14 (PR #718)
+- Item 5 (ep5 f6 silk gifts) is no longer single-source: f6 now also cites 일성록 정조 19년 윤2월 13일 [03] in the 한국고전종합DB (한국고전번역원), which gives the same order and ages. The narration still has no numbers.
