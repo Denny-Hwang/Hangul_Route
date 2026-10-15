@@ -49,6 +49,14 @@ describe('day arithmetic', () => {
     expect(addDays('2026-10-10', 0)).toBe('2026-10-10');
   });
 
+  it('addDays stops at 9999-12-31, so an absurd device clock still makes a valid day key', () => {
+    expect(addDays('9999-12-31', 1)).toBe('9999-12-31');
+    expect(addDays('9999-12-31', 30)).toBe('9999-12-31');
+    expect(addDays('9999-12-20', 30)).toBe('9999-12-31');
+    expect(addDays('9999-12-30', 1)).toBe('9999-12-31');
+    expect(addDays('9999-12-31', -1)).toBe('9999-12-30');
+  });
+
   it('addDays is calendar arithmetic, so a daylight-saving change never shifts the day', () => {
     // US clocks change on 2026-03-08 and 2026-11-01; Europe on 2026-03-29 and 2026-10-25.
     expect(addDays('2026-03-07', 1)).toBe('2026-03-08');

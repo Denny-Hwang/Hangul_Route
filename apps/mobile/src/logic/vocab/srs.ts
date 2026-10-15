@@ -34,9 +34,13 @@ function dayMs(day: string): number {
   return Date.parse(`${day}T00:00:00Z`);
 }
 
-/** `day` plus `n` calendar days. */
+/** The last day a `YYYY-MM-DD` key can hold: past it `toISOString` writes a six-digit year. */
+const LAST_DAY = '9999-12-31';
+
+/** `day` plus `n` calendar days, never past `9999-12-31` (an absurd device clock still yields a valid key). */
 export function addDays(day: string, n: number): string {
-  return new Date(dayMs(day) + n * DAY_MS).toISOString().slice(0, 10);
+  const ms = dayMs(day) + n * DAY_MS;
+  return ms > dayMs(LAST_DAY) ? LAST_DAY : new Date(ms).toISOString().slice(0, 10);
 }
 
 /** Calendar days from `from` to `to` (negative when `to` is earlier). */
