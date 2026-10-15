@@ -61,12 +61,12 @@ const PAGES: readonly SitePageBudget[] = [
 
 /**
  * The Spanish and Korean pages (indexable since F-I18N-001 rows 15b / 16b) are held to the same height and word
- * budgets (F-SITE-002 §3.11, "Locales"), times a text-expansion allowance: Korean fits the English budgets as they
- * are; Spanish runs about 8 % taller on the home (3,039 px against 2,805 at 375 x 812 when it shipped), so its
- * allowance is 10 %. Only the budgets are checked here; the layout checks of these pages are in
- * `landing-locales.spec.ts`.
+ * budgets (F-SITE-002 §3.11, "Locales"), times a 10 % text allowance. Spanish runs longer (the home measured 3,039 px
+ * against English 2,805 at 375 x 812 when it shipped); Korean's height depends on the CJK font the platform has (the
+ * home measured 2,805 px with macOS's Korean font and 2,979 px on the CI image's). Only the budgets are checked here;
+ * the layout checks of these pages are in `landing-locales.spec.ts`.
  */
-const LOCALE_ALLOWANCE = { es: 1.1, ko: 1 } as const;
+const LOCALE_ALLOWANCE = { es: 1.1, ko: 1.1 } as const;
 const LOCALE_PAGES = (['es', 'ko'] as const).flatMap((lang) =>
   PAGES.map((budget) => ({ lang, path: budget.path === '/' ? `/${lang}` : `/${lang}${budget.path}`, budget })),
 );
