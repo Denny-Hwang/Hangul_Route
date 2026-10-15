@@ -132,6 +132,7 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'learner.story.sources.counts': [[1, 1], [12, 31]],
   'a11y.soundSwitch': [[false, 'Korean voice ready'], [true, 'Looking for a Korean voice']],
   'console.capWarning': [[16, 20]],
+  'console.schoolNoLicence': [[20]],
   'console.codeExpiry.inDays': [[1], [18]],
   'console.spaceCounts.learners': [[1], [2]],
   'console.spaceCounts.students': [[1], [12]],

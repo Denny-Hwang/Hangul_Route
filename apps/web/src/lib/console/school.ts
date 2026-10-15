@@ -1,4 +1,5 @@
 import { DEFAULT_LOCALE, getMessages, type UiLocale } from '@hangul-route/i18n';
+import { FREE_CLASS_STUDENT_CAP } from '@hangul-route/content-schema';
 import type { SchoolView } from './api';
 
 /**
@@ -26,7 +27,7 @@ export function limitNote(state: LimitState, locale: UiLocale = DEFAULT_LOCALE):
   const c = getMessages(locale).console;
   switch (state) {
     case 'unlicensed':
-      return c.schoolNoLicence;
+      return c.schoolNoLicence(FREE_CLASS_STUDENT_CAP);
     case 'near':
       return c.schoolNearLimit;
     case 'at':

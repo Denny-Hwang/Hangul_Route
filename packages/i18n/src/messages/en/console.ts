@@ -89,7 +89,8 @@ export const consoleMsgs = {
   promoNotConfigured: 'Codes are not set up on this deployment yet.',
   schoolInviteHint: 'Teachers sign in, enter this code, then create their class — or you create it and assign them.',
   schoolEmpty: 'Invite a teacher with the code, or create a class and assign one.',
-  schoolNoLicence: 'No licence yet — each class keeps the free cap of 20 students.',
+  /** `cap` is content-schema `FREE_CLASS_STUDENT_CAP`, so no locale types the free cap into its copy. */
+  schoolNoLicence: (cap: number) => `No licence yet — each class keeps the free cap of ${cap} students.`,
   schoolNearLimit: 'Close to the licence limit — see billing before the next class fills up.',
   schoolAtLimit: 'At the licence limit — new students will be asked to check with their teacher.',
   schoolLicenceLapsed: 'The licence needs attention. Classes stay readable; students keep Stage 1 either way.',
@@ -1183,8 +1184,9 @@ export const consoleMsgs = {
     week: {
       label: 'This week',
       title: 'This week (whole school)',
+      /** The verb agrees with `classesWithPlan`; at 0 it follows the total ("0 of 1 class has", "0 of 4 classes have"). */
       line: (practiced: number, students: number, classesWithPlan: number, classes: number) =>
-        `${practiced} of ${plural('en', students, { one: `${students} student`, other: `${students} students` })} practiced · ${classesWithPlan} of ${plural('en', classes, { one: `${classes} class`, other: `${classes} classes` })} ${plural('en', classesWithPlan, { one: 'has', other: 'have' })} a published plan`,
+        `${practiced} of ${plural('en', students, { one: `${students} student`, other: `${students} students` })} practiced · ${classesWithPlan} of ${plural('en', classes, { one: `${classes} class`, other: `${classes} classes` })} ${plural('en', classesWithPlan === 0 ? classes : classesWithPlan, { one: 'has', other: 'have' })} a published plan`,
     },
     classes: {
       title: 'Classes',
