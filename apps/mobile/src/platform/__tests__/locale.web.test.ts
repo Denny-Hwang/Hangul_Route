@@ -98,14 +98,14 @@ describe('platform/locale.web setDocumentLang', () => {
 describe('platform/locale.web against the browser globals', () => {
   afterEach(() => vi.unstubAllGlobals());
 
-  it('reads navigator, location and history from the page, honouring the hidden-locale default', () => {
+  it('reads navigator, location and history from the page, taking a shipped locale from the hand-off', () => {
     const replaceState = vi.fn();
     vi.stubGlobal('navigator', { languages: ['es-MX'], language: 'es-MX' });
     vi.stubGlobal('location', { pathname: '/', search: '?lang=es', hash: '' });
     vi.stubGlobal('history', { replaceState, state: null });
     expect(deviceLanguages()).toEqual(['es-MX']);
-    // Spanish is hidden until it ships, so the hand-off is ignored (URL still cleaned).
-    expect(takeLangHandoff()).toBeNull();
+    // Spanish ships (row 15b), so the hand-off applies and the URL is cleaned.
+    expect(takeLangHandoff()).toBe('es');
     expect(replaceState).toHaveBeenCalledWith(null, '', '/');
   });
 

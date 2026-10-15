@@ -1,4 +1,4 @@
-import { Icon, borderWidth, colors, layout, motion, radii, spacing, touchTarget, typography, type IconName } from '@hangul-route/design-system';
+import { Icon, borderWidth, colors, layout, motion, radii, spacing, touchTarget, typography, type IconName, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
 import React, { forwardRef, useEffect, useRef } from 'react';
 import { Animated, Pressable, Text, View, type LayoutChangeEvent } from 'react-native';
 import type { StatusChip } from '../../logic/lecture/tools';
@@ -89,7 +89,7 @@ const Ctl = forwardRef<View, CtlProps>(function Ctl({ label, icon, primary, pres
       }}
     >
       {icon !== undefined ? <Icon name={icon} size={spacing.xxl} color={fg} /> : null}
-      <Text style={{ fontSize: typography.size.body, fontWeight: typography.weight.bold, color: fg, textAlign: 'center', lineHeight: Math.round(typography.size.body * typography.leading.tight) }}>
+      <Text {...KOREAN_LINE_BREAK} style={{ fontSize: typography.size.body, fontWeight: typography.weight.bold, color: fg, textAlign: 'center', lineHeight: Math.round(typography.size.body * typography.leading.tight) }}>
         {label}
       </Text>
     </Pressable>
@@ -188,7 +188,7 @@ function Chip({ chip, onTurnSoundOn, onFocusWithin }: { chip: StatusChip; onTurn
       }}
     >
       {chip === 'no-voice' || chip === 'sound-off' ? <Icon name="speaker-off" size={spacing.xl} color={colors.text.primary} /> : null}
-      <Text style={{ flexShrink: 1, fontSize: typography.size.body, color: colors.text.primary }}>{text}</Text>
+      <Text {...KOREAN_LINE_BREAK} style={{ flexShrink: 1, fontSize: typography.size.body, color: colors.text.primary }}>{text}</Text>
       {chip === 'sound-off' ? (
         <Pressable
           testID="presenter-turn-sound-on"
@@ -210,7 +210,7 @@ function Chip({ chip, onTurnSoundOn, onFocusWithin }: { chip: StatusChip; onTurn
             };
           }}
         >
-          <Text style={{ fontSize: typography.size.body, fontWeight: typography.weight.bold, color: colors.text.primary }}>{messages.learner.audio.action.turn_on.cta}</Text>
+          <Text {...KOREAN_LINE_BREAK} style={{ fontSize: typography.size.body, fontWeight: typography.weight.bold, color: colors.text.primary }}>{messages.learner.audio.action.turn_on.cta}</Text>
         </Pressable>
       ) : null}
     </View>

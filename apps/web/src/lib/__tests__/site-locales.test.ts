@@ -22,29 +22,24 @@ describe('siteLocaleParams (generateStaticParams for [locale])', () => {
   });
 });
 
-describe('isShippedSiteLocale (hidden until shipped)', () => {
-  it.each(['es', 'ko'] as const)('%s is hidden today', (locale) => {
-    expect(isShippedSiteLocale(locale, false)).toBe(false);
+describe('isShippedSiteLocale (es and ko shipped, F-I18N-001 rows 15b / 16b)', () => {
+  it.each(['es', 'ko'] as const)('%s is shipped', (locale) => {
+    expect(isShippedSiteLocale(locale, false)).toBe(true);
   });
 
   it.each(['es', 'ko'] as const)('%s is shown on a QA build', (locale) => {
     expect(isShippedSiteLocale(locale, true)).toBe(true);
   });
 
-  it('reads the build flag by default (off in tests)', () => {
-    expect(isShippedSiteLocale('es')).toBe(false);
+  it('reads the build flag by default (off in tests); shipped locales need no flag', () => {
+    expect(isShippedSiteLocale('es')).toBe(true);
+    expect(isShippedSiteLocale('ko')).toBe(true);
   });
 
   it('NEXT_PUBLIC_SHOW_ALL_LOCALES=1 shows every site locale', () => {
     vi.stubEnv('NEXT_PUBLIC_SHOW_ALL_LOCALES', '1');
     expect(isShippedSiteLocale('es')).toBe(true);
     expect(isShippedSiteLocale('ko')).toBe(true);
-  });
-
-  it('the learner app flag (EXPO_PUBLIC_SHOW_ALL_LOCALES=1) alone leaves the site locales hidden', () => {
-    vi.stubEnv('EXPO_PUBLIC_SHOW_ALL_LOCALES', '1');
-    expect(isShippedSiteLocale('es')).toBe(false);
-    expect(isShippedSiteLocale('ko')).toBe(false);
   });
 });
 

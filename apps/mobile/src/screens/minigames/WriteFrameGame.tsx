@@ -24,6 +24,7 @@ import {
   touchTarget,
   typography,
   useLayoutClass,
+  KOREAN_LINE_BREAK,
 } from '@hangul-route/design-system';
 import { romanizationShown } from '@hangul-route/i18n';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -343,7 +344,7 @@ export function WriteFrameGame({ scope, host, onBack, inPreview = false }: Props
     <Button label={copy.typeHangul.showRomanization.cta} tone="ghost" size="sm" onPress={reveal} testID="write-frame-reveal" />
   );
   const politeLine = (
-    <Text style={srOnly} accessibilityLiveRegion="polite" testID="write-frame-notice">
+    <Text {...KOREAN_LINE_BREAK} style={srOnly} accessibilityLiveRegion="polite" testID="write-frame-notice">
       {notice}
     </Text>
   );
@@ -454,12 +455,12 @@ export function WriteFrameGame({ scope, host, onBack, inPreview = false }: Props
       }}
     >
       {field.empty ? (
-        <Text style={{ flex: 1, fontSize: typography.size.bodySm, color: colors.text.muted }}>{placeholder}</Text>
+        <Text {...KOREAN_LINE_BREAK} style={{ flex: 1, fontSize: typography.size.bodySm, color: colors.text.muted }}>{placeholder}</Text>
       ) : (
-        <Text {...koreanSpeech} style={{ flexShrink: 1, fontSize: fieldFont, color: colors.text.primary }}>
+        <Text {...KOREAN_LINE_BREAK} {...koreanSpeech} style={{ flexShrink: 1, fontSize: fieldFont, color: colors.text.primary }}>
           {typing ? field.settled : field.text}
           {field.open && typing ? (
-            <Text style={{ textDecorationLine: 'underline', textDecorationColor: colors.brand.secondary, textDecorationStyle: 'solid' }}>{field.open}</Text>
+            <Text {...KOREAN_LINE_BREAK} style={{ textDecorationLine: 'underline', textDecorationColor: colors.brand.secondary, textDecorationStyle: 'solid' }}>{field.open}</Text>
           ) : null}
         </Text>
       )}
@@ -471,7 +472,7 @@ export function WriteFrameGame({ scope, host, onBack, inPreview = false }: Props
           <Icon name="check-circle" size={spacing.xl} color={colors.feedback.success} />
         </View>
       ) : null}
-      <Text style={srOnly} accessibilityLiveRegion="polite">
+      <Text {...KOREAN_LINE_BREAK} style={srOnly} accessibilityLiveRegion="polite">
         {live === '' ? '' : readTyped(live)}
       </Text>
     </View>
@@ -616,14 +617,14 @@ function FrameLine({ parts, current, writing }: FrameLineProps): React.ReactElem
       {parts.map((part, i) => {
         if (part.kind === 'text') {
           return (
-            <Text key={i} {...koreanSpeech} style={{ fontSize: typography.size.prompt, fontWeight: typography.weight.bold, color: colors.text.primary }}>
+            <Text {...KOREAN_LINE_BREAK} key={i} {...koreanSpeech} style={{ fontSize: typography.size.prompt, fontWeight: typography.weight.bold, color: colors.text.primary }}>
               {part.text}
             </Text>
           );
         }
         if (part.kind === 'ending') {
           return (
-            <Text key={i} {...koreanSpeech} testID="write-frame-ending" style={{ fontSize: typography.size.prompt, fontWeight: typography.weight.bold, color: colors.brand.secondaryDark }}>
+            <Text {...KOREAN_LINE_BREAK} key={i} {...koreanSpeech} testID="write-frame-ending" style={{ fontSize: typography.size.prompt, fontWeight: typography.weight.bold, color: colors.brand.secondaryDark }}>
               {part.text}
             </Text>
           );
@@ -646,7 +647,7 @@ function FrameLine({ parts, current, writing }: FrameLineProps): React.ReactElem
               alignItems: 'center',
             }}
           >
-            <Text
+            <Text {...KOREAN_LINE_BREAK}
               {...koreanSpeech}
               style={{ fontSize: typography.size.prompt, fontWeight: typography.weight.bold, color: ghost ? colors.text.muted : colors.brand.secondaryDark }}
             >
@@ -664,7 +665,7 @@ function Sentence({ ko, romanization, gloss }: { ko: string; romanization: strin
   const m = useMessages();
   return (
     <View accessible accessibilityLabel={m.a11y.koreanItem({ ko, romanization, gloss })} style={{ gap: spacing.xxs }} testID="write-frame-sentence-text">
-      <Text {...koreanSpeech} style={{ fontSize: typography.size.prompt, fontWeight: typography.weight.bold, color: colors.text.primary }}>
+      <Text {...KOREAN_LINE_BREAK} {...koreanSpeech} style={{ fontSize: typography.size.prompt, fontWeight: typography.weight.bold, color: colors.text.primary }}>
         {ko}
       </Text>
       <Caption tone="secondary">{romanization}</Caption>
@@ -708,7 +709,7 @@ function WordCard({ word, selected, romanizationVisible, columns, onPress, testI
         backgroundColor: selected ? colors.brand.secondaryLight : colors.surface.paper,
       })}
     >
-      <Text {...koreanSpeech} style={{ fontSize: typography.size.prompt, fontWeight: typography.weight.bold, color: colors.text.primary }}>
+      <Text {...KOREAN_LINE_BREAK} {...koreanSpeech} style={{ fontSize: typography.size.prompt, fontWeight: typography.weight.bold, color: colors.text.primary }}>
         {word.ko}
       </Text>
       {romanizationVisible ? <Caption tone="secondary">{word.romanization}</Caption> : null}
@@ -753,7 +754,7 @@ function SoundPanel({ table, width, height, gutter, onTile, onDelete }: SoundPan
         backgroundColor: final ? colors.surface.sunken : colors.surface.paper,
       })}
     >
-      <Text {...koreanSpeech} style={{ fontSize: typography.size.prompt, fontWeight: typography.weight.bold, color: colors.text.primary }}>
+      <Text {...KOREAN_LINE_BREAK} {...koreanSpeech} style={{ fontSize: typography.size.prompt, fontWeight: typography.weight.bold, color: colors.text.primary }}>
         {ko}
       </Text>
       <Caption tone="secondary">{romanization}</Caption>

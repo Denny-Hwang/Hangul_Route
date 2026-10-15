@@ -1,4 +1,4 @@
-import { Body, Button, Card, Heading, Icon, Screen, Spacer, borderWidth, colors, layout, radii, spacing, touchTarget, typography } from '@hangul-route/design-system';
+import { Body, Button, Card, Heading, Icon, Screen, Spacer, borderWidth, colors, layout, radii, spacing, touchTarget, typography, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
 import { NOTE_REPORT_REASONS, type NoteReportReason } from '@hangul-route/content-schema';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
@@ -205,7 +205,7 @@ export function NoteReportScreen({ navigation, route }: Props): React.ReactEleme
           </Body>
           <Body weight="bold">{row.preset}</Body>
           {row.text !== null ? (
-            <Text {...langProps} style={{ fontSize: typography.size.body, color: colors.text.primary }}>
+            <Text {...KOREAN_LINE_BREAK} {...langProps} style={{ fontSize: typography.size.body, color: colors.text.primary }}>
               {row.text}
             </Text>
           ) : null}
@@ -260,7 +260,7 @@ export function NoteReportScreen({ navigation, route }: Props): React.ReactEleme
                 >
                   {selected ? <View style={{ width: spacing.md, height: spacing.md, borderRadius: radii.circle, backgroundColor: colors.brand.primary }} /> : null}
                 </View>
-                <Text style={{ flex: 1, fontSize: typography.size.body, color: colors.text.primary, fontWeight: selected ? typography.weight.bold : typography.weight.regular }}>{label}</Text>
+                <Text {...KOREAN_LINE_BREAK} style={{ flex: 1, fontSize: typography.size.body, color: colors.text.primary, fontWeight: selected ? typography.weight.bold : typography.weight.regular }}>{label}</Text>
               </Pressable>
             );
           })}
@@ -278,7 +278,7 @@ export function NoteReportScreen({ navigation, route }: Props): React.ReactEleme
           testID="note-report-submit"
         />
         <Spacer size="xs" />
-        <Text nativeID={LINE_ID} testID="note-report-line" style={{ fontSize: typography.size.body, color: colors.text.secondary }}>
+        <Text {...KOREAN_LINE_BREAK} nativeID={LINE_ID} testID="note-report-line" style={{ fontSize: typography.size.body, color: colors.text.secondary }}>
           {r.line(name)}
         </Text>
         {canJustHide ? (

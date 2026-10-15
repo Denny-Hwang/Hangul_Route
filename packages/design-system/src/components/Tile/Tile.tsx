@@ -3,6 +3,7 @@ import { Pressable, Text, View } from 'react-native';
 import { colors, radii, shadows, spacing, typography } from '../../tokens';
 import { tileMetrics } from './metrics';
 import type { TileProps, TileState } from './types';
+import { KOREAN_LINE_BREAK } from '../../line-break';
 
 const stateBg: Record<TileState, string> = {
   idle: colors.surface.paper,
@@ -46,7 +47,7 @@ export function Tile({
         paddingHorizontal: spacing.sm,
       }}
     >
-      <Text
+      <Text {...KOREAN_LINE_BREAK}
         style={{
           fontSize: glyph,
           fontWeight: typography.weight.bold,
@@ -57,7 +58,7 @@ export function Tile({
         {label}
       </Text>
       {romanization ? (
-        <Text
+        <Text {...KOREAN_LINE_BREAK}
           style={{
             marginTop: spacing.xxs,
             fontSize: typography.size.bodySm,

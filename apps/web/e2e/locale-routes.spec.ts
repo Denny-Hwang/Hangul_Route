@@ -3,10 +3,19 @@ import { expect, test } from '@playwright/test';
 
 /**
  * F-I18N-001 PR 11b, §3.4: the site's route groups over the static export. English is at `/` with
- * `<html lang="en">`; `/es` and `/ko` are rendered by every build but a locale that has not shipped is taken
- * out of the export (`scripts/prune-hidden-locales.mjs`), so the Worker answers with the 404 page.
+ * `<html lang="en">`; `/es` and `/ko` are rendered by every build, and both ship (F-I18N-001 rows 15b / 16b), so
+ * they are served. A locale that has not shipped is taken out of the export (`scripts/prune-hidden-locales.mjs`).
  */
-const HIDDEN = ['/es', '/es/', '/es/about', '/es/privacy', '/es/terms', '/ko', '/ko/about'] as const;
+/** The locale pages, served since es and ko shipped (F-I18N-001 rows 15b / 16b). */
+const LOCALE_PAGES = [
+  ['/es', 'es'],
+  ['/es/about', 'es'],
+  ['/es/privacy', 'es'],
+  ['/es/terms', 'es'],
+  ['/ko', 'ko'],
+  ['/ko/about', 'ko'],
+  ['/ko/learners', 'ko'],
+] as const;
 
 test.describe('locale routes', () => {
   for (const path of ['/', '/about', '/privacy', '/terms', '/learners', '/parents', '/teachers', '/teach']) {
@@ -38,11 +47,11 @@ test.describe('locale routes', () => {
     });
   }
 
-  for (const path of HIDDEN) {
-    test(`${path} is not served while the locale is hidden`, async ({ page }) => {
-      test.skip(process.env.NEXT_PUBLIC_SHOW_ALL_LOCALES === '1', 'a QA build exports every locale');
+  for (const [path, lang] of LOCALE_PAGES) {
+    test(`${path} is served as a ${lang} document`, async ({ page }) => {
       const response = await page.goto(path);
-      expect(response?.status()).toBe(404);
+      expect(response?.status()).toBe(200);
+      await expect(page.locator('html')).toHaveAttribute('lang', lang);
     });
   }
 

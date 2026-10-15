@@ -67,4 +67,10 @@ export const common = {
     date: { today: '오늘', yesterday: '어제' },
     new: { pill: '새' },
   },
+  /** 읽기 수준 (F-LEARN-001 §3.7): 얼마나 읽는지를 말하고, 나이는 말하지 않아요. */
+  levels: {
+    pictures: { label: '그림 먼저', description: '큰 타일과 그림으로 배우고, 읽을 글은 아주 적어요.' },
+    someReading: { label: '조금 읽어요', description: '짧은 낱말과 짧은 문장을 읽어요.' },
+    readsEasily: { label: '술술 읽어요', description: '더 긴 글과 이야기, 대화를 읽어요.' },
+  },
 } satisfies DeepPartial<Messages['common']>;

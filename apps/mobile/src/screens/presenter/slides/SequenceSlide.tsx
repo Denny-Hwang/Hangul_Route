@@ -1,4 +1,4 @@
-import { colors, presenter, radii, spacing, typography } from '@hangul-route/design-system';
+import { colors, presenter, radii, spacing, typography, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
 import React from 'react';
 import { Text, View } from 'react-native';
 import type { SequenceStep } from '../../../logic/lecture/build-steps';
@@ -28,7 +28,7 @@ export function SequenceSlide({ slide, reveal }: { slide: SequenceBody; reveal: 
   if (view.mode === 'order') {
     return (
       <View testID="presenter-sequence-order" style={{ flex: 1, justifyContent: 'center', gap: units(unit, STAGE_GAP_INNER) }}>
-        <Text role="heading" style={{ fontSize: titleSize, lineHeight: Math.round(titleSize * typography.leading.tight), fontWeight: typography.weight.bold, color: colors.text.primary }}>
+        <Text {...KOREAN_LINE_BREAK} role="heading" style={{ fontSize: titleSize, lineHeight: Math.round(titleSize * typography.leading.tight), fontWeight: typography.weight.bold, color: colors.text.primary }}>
           {messages.learner.presenter.slide.order}
         </Text>
         <StepGrid>
@@ -76,12 +76,12 @@ function StepRow({ step, lead, rom, on }: { step: SequenceStep; lead: React.Reac
     >
       {lead}
       <View style={{ flex: 1, gap: units(unit, spacing.xs) }}>
-        <Text style={{ fontSize: bodySize, lineHeight: Math.round(bodySize * typography.leading.tight), fontWeight: typography.weight.bold, color: colors.text.primary }}>{step.gloss}</Text>
+        <Text {...KOREAN_LINE_BREAK} style={{ fontSize: bodySize, lineHeight: Math.round(bodySize * typography.leading.tight), fontWeight: typography.weight.bold, color: colors.text.primary }}>{step.gloss}</Text>
         {step.ko !== undefined && step.romanization !== undefined ? (
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'baseline', columnGap: units(unit, spacing.lg) }}>
             <TaughtKo size={promptSize}>{step.ko}</TaughtKo>
             <View {...revealProps(rom)}>
-              <Text style={{ fontSize: bodySize, fontWeight: typography.weight.semibold, color: colors.text.secondary }}>{step.romanization}</Text>
+              <Text {...KOREAN_LINE_BREAK} style={{ fontSize: bodySize, fontWeight: typography.weight.semibold, color: colors.text.secondary }}>{step.romanization}</Text>
             </View>
           </View>
         ) : null}
@@ -107,7 +107,7 @@ function StepNumber({ n }: { n: number }): React.ReactElement {
         justifyContent: 'center',
       }}
     >
-      <Text style={{ fontSize: size(presenter.size.body), fontWeight: typography.weight.bold, color: colors.text.primary }}>{String(n)}</Text>
+      <Text {...KOREAN_LINE_BREAK} style={{ fontSize: size(presenter.size.body), fontWeight: typography.weight.bold, color: colors.text.primary }}>{String(n)}</Text>
     </View>
   );
 }

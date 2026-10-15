@@ -23,6 +23,7 @@ import {
   useLayoutClass,
   resolveScene,
   useMediaSize,
+  KOREAN_LINE_BREAK,
 } from '@hangul-route/design-system';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Text, View, type LayoutChangeEvent } from 'react-native';
@@ -405,7 +406,7 @@ export function StorySequenceGame({ scope, onFinish, sequenceId = '', nonce }: P
                 backgroundColor: card ? colors.feedback.successLight : colors.surface.sunken,
               }}
             >
-              <Text
+              <Text {...KOREAN_LINE_BREAK}
                 style={{
                   fontSize: typography.size.bodySm,
                   fontWeight: typography.weight.bold,
@@ -417,7 +418,7 @@ export function StorySequenceGame({ scope, onFinish, sequenceId = '', nonce }: P
               {card ? (
                 <>
                   <Icon name="check" size={spacing.lg} color={colors.feedback.success} />
-                  <Text style={{ fontSize: typography.size.bodySm, color: colors.text.primary }}>{card.caption}</Text>
+                  <Text {...KOREAN_LINE_BREAK} style={{ fontSize: typography.size.bodySm, color: colors.text.primary }}>{card.caption}</Text>
                 </>
               ) : null}
             </View>

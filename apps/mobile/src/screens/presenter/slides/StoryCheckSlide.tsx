@@ -1,4 +1,4 @@
-import { colors, koreanTextLabel, presenter, spacing, typography } from '@hangul-route/design-system';
+import { colors, koreanTextLabel, presenter, spacing, typography, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
 import type { RomanizationMode } from '@hangul-route/content-schema';
 import React from 'react';
 import { Text, View } from 'react-native';
@@ -40,7 +40,7 @@ export function StoryCheckSlide({ slide, shown, romanization }: { slide: StoryCh
   const targetRom = optionRomShown(romanization, revealed);
   const targetGloss = slide.prompt.glossAtAnswer !== true || revealed;
   const chip = (word: KoLine) => (
-    <Text
+    <Text {...KOREAN_LINE_BREAK}
       testID="presenter-check-target"
       // The romanization is named only once it shows, so a screen reader never says it early (D2).
       accessibilityLabel={targetRom ? koreanTextLabel(word.ko, word.romanization) : word.ko}
@@ -56,14 +56,14 @@ export function StoryCheckSlide({ slide, shown, romanization }: { slide: StoryCh
       {' '}
       <TaughtKo size={promptSize}>{word.ko}</TaughtKo>
       {/* text.secondary misses 7:1 on brand.secondaryLight (presenter.v1.md), so the romanization is text.primary here. */}
-      <Text style={{ fontSize: bodySize, fontWeight: typography.weight.semibold, color: colors.text.primary, opacity: targetRom ? 1 : 0 }} aria-hidden={!targetRom}>{` ${word.romanization} `}</Text>
+      <Text {...KOREAN_LINE_BREAK} style={{ fontSize: bodySize, fontWeight: typography.weight.semibold, color: colors.text.primary, opacity: targetRom ? 1 : 0 }} aria-hidden={!targetRom}>{` ${word.romanization} `}</Text>
     </Text>
   );
   return (
     <View testID="presenter-check" style={{ flex: 1, gap: units(unit, STAGE_GAP_INNER) }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: units(unit, STAGE_GAP_INNER) }}>
         <View style={{ flex: 1, minWidth: 0, gap: units(unit, spacing.xs) }}>
-          <Text
+          <Text {...KOREAN_LINE_BREAK}
             role="heading"
             testID="presenter-check-prompt"
             style={{ fontSize: promptSize, fontWeight: typography.weight.bold, color: colors.text.primary, lineHeight: Math.round(promptSize * typography.leading.normal) }}
@@ -71,10 +71,10 @@ export function StoryCheckSlide({ slide, shown, romanization }: { slide: StoryCh
             {parts.map((part, i) => ('target' in part ? <React.Fragment key={i}>{chip(part.target)}</React.Fragment> : <React.Fragment key={i}>{part.text}</React.Fragment>))}
           </Text>
           {target !== undefined && !inline ? (
-            <Text style={{ fontSize: promptSize, lineHeight: Math.round(promptSize * typography.leading.normal) }}>{chip(target)}</Text>
+            <Text {...KOREAN_LINE_BREAK} style={{ fontSize: promptSize, lineHeight: Math.round(promptSize * typography.leading.normal) }}>{chip(target)}</Text>
           ) : null}
           {target !== undefined ? (
-            <Text testID="presenter-check-gloss" aria-hidden={!targetGloss} style={{ fontSize: bodySize, fontWeight: typography.weight.bold, color: colors.text.secondary, opacity: targetGloss ? 1 : 0 }}>
+            <Text {...KOREAN_LINE_BREAK} testID="presenter-check-gloss" aria-hidden={!targetGloss} style={{ fontSize: bodySize, fontWeight: typography.weight.bold, color: colors.text.secondary, opacity: targetGloss ? 1 : 0 }}>
               {target.gloss}
             </Text>
           ) : null}
@@ -83,7 +83,7 @@ export function StoryCheckSlide({ slide, shown, romanization }: { slide: StoryCh
       </View>
       <QuizOptions options={slide.options} revealed={revealed} romanization={romanization} />
       {slide.explain !== undefined ? (
-        <Text
+        <Text {...KOREAN_LINE_BREAK}
           testID="presenter-check-explain"
           accessibilityElementsHidden={!revealed}
           aria-hidden={!revealed}

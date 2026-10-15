@@ -13,7 +13,7 @@ import {
   spacing,
   touchTarget,
 } from '@hangul-route/design-system';
-import { levelLabel } from '@hangul-route/content-schema';
+import { levelWords } from '@hangul-route/i18n';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useRef, useState } from 'react';
@@ -134,7 +134,7 @@ export function ProfileScreen(): React.ReactElement {
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md }}>
         {profiles.map((p) => {
           const isActive = p.id === active?.id;
-          const level = levelLabel(p.ageGroup);
+          const level = levelWords(m, p.ageGroup)?.label ?? null;
           return (
             <View
               key={p.id}

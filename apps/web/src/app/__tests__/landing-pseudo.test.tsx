@@ -1,3 +1,4 @@
+import { LOCALE_META } from '@hangul-route/i18n';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
 import { CONTACT_EMAIL } from '../../data/contact';
@@ -31,6 +32,8 @@ const CONTENT: readonly string[] = [
   CONTACT_EMAIL,
   ...stage1Cards.flatMap((card) => [card.ko, card.romanization, card.title, card.en, card.blurb]),
   ...minigameCatalog.flatMap((game) => [game.title, game.blurb]),
+  // The footer's locale switcher names each locale by its endonym, a constant (LOCALE_META), never a message.
+  ...Object.values(LOCALE_META).map((meta) => meta.endonym),
 ];
 
 const decode = (s: string): string =>

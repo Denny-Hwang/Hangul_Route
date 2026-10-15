@@ -13,6 +13,7 @@ import {
   spacing,
   touchTarget,
   typography,
+  KOREAN_LINE_BREAK,
 } from '@hangul-route/design-system';
 import { CommonActions } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -192,7 +193,7 @@ function WallTileView({ tile, label }: { tile: WallTile; label: string }): React
         borderColor: colors.brand.secondary,
       }}
     >
-      <Text
+      <Text {...KOREAN_LINE_BREAK}
         style={{
           fontFamily: typography.family.sansKr,
           fontSize: typography.size.title,

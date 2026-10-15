@@ -73,4 +73,13 @@ export const common = {
     /** The pill on a new note, the Home card and a grown-up row: a word, never only a dot (section 6.12). */
     new: { pill: 'New' },
   },
+  /**
+   * The learner level's words (F-LEARN-001 §3.7, content-schema `LEARNER_LEVELS`) in level order: how much the learner
+   * reads, never an age. `levelWords` (levels.ts) finds them by the stored level id.
+   */
+  levels: {
+    pictures: { label: 'Pictures first', description: 'Big tiles and pictures, very little to read.' },
+    someReading: { label: 'Some reading', description: 'Short words and short sentences.' },
+    readsEasily: { label: 'Reads easily', description: 'Longer text, stories and conversations.' },
+  },
 } as const;

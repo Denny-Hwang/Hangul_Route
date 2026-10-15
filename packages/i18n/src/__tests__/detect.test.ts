@@ -32,7 +32,9 @@ describe('detectLocale', () => {
     expect(detectLocale(['ko', 'es'], ['en', 'es'])).toBe('es');
   });
 
-  it('defaults to the shipped locales (Spanish phone sees English today)', () => {
-    expect(detectLocale(['es-MX'])).toBe('en');
+  it('defaults to the shipped locales: a Spanish or Korean phone gets its language (rows 15b / 16b)', () => {
+    expect(detectLocale(['es-MX'])).toBe('es');
+    expect(detectLocale(['ko-KR'])).toBe('ko');
+    expect(detectLocale(['fr-FR'])).toBe('en');
   });
 });

@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { answerForkNew, completeChildForm, keepSidewaysIfAsked, readStored, waitForSaved } from './helpers';
+import { answerForkNew, completeChildForm, keepSidewaysIfAsked, readStored, waitForSaved, passPlacementLanguage } from './helpers';
 import { next } from './story-reader-helpers';
 
 /**
@@ -103,6 +103,7 @@ test.describe('practice sessions (F-REPORT-001 section 3.3.2)', () => {
 
     await page.waitForFunction(() => Boolean((window as E2eWindow).__hrPlacementE2E), undefined, { timeout: 10_000 });
     await page.evaluate(() => (window as E2eWindow).__hrPlacementE2E?.open('home'));
+    await passPlacementLanguage(page);
     await expect(page.getByTestId('placement-options')).toBeVisible();
     await expect.poll(async () => timeOnly(await saved()).length).toBe(1);
     expect(timeOnly(await saved())[0]?.endedAt).toBeUndefined();

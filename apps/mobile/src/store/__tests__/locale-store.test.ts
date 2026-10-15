@@ -24,10 +24,24 @@ vi.mock('../../platform/locale', () => ({
   setDocumentLang: vi.fn(),
 }));
 
+// es and ko ship (F-I18N-001 rows 15b / 16b), so nothing is hidden in the real `LOCALE_STATUS`. A fixture keeps
+// the hidden-locale paths tested: here es and ko stand in for a locale that has not shipped, available only
+// with the QA flag (F-I18N-001 §3.1), the way a future locale starts.
+vi.mock('@hangul-route/i18n', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@hangul-route/i18n')>();
+  const availableLocales = (showAll: boolean = actual.showAllLocalesEnabled()): import('@hangul-route/i18n').UiLocale[] =>
+    showAll ? [...actual.LOCALES] : ['en'];
+  return {
+    ...actual,
+    availableLocales,
+    detectLocale: (languages: readonly string[], available = availableLocales()) => actual.detectLocale(languages, available),
+  };
+});
+
 import { activeLocale, detectInitialLocale, useLocaleStore } from '../locale-store';
 import { useProfileStore } from '../profile-store';
 
-// Hidden locales (es, ko) are only available when the QA flag is set (F-I18N-001 §3.1).
+// The fixture's hidden locales (es, ko) are only available when the QA flag is set.
 const showAll = (on: boolean): void => {
   if (on) process.env.EXPO_PUBLIC_SHOW_ALL_LOCALES = '1';
   else delete process.env.EXPO_PUBLIC_SHOW_ALL_LOCALES;

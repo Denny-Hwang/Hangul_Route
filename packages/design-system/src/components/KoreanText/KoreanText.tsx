@@ -4,6 +4,7 @@ import { borderWidth, colors, radii, spacing, touchTarget, typography } from '..
 import { KOREAN_LANGUAGE, koreanTextView } from '../../korean-text';
 import { Icon } from '../Icon';
 import type { KoreanTextProps } from './types';
+import { KOREAN_LINE_BREAK } from '../../line-break';
 
 // Speech language for assistive tech: iOS reads the label with the Korean voice;
 // react-native-web forwards `lang` to the DOM (verify on device). Spread so the
@@ -54,7 +55,7 @@ export function KoreanText({
           paddingHorizontal: spacing.lg,
         }}
       >
-        <Text
+        <Text {...KOREAN_LINE_BREAK}
           {...koreanSpeech}
           style={{
             fontFamily: typography.family.sansKr,
@@ -79,7 +80,7 @@ export function KoreanText({
           }}
         >
           {view.showRomanization ? (
-            <Text
+            <Text {...KOREAN_LINE_BREAK}
               style={{
                 fontSize: view.romanizationSize,
                 fontWeight: typography.weight.medium,
@@ -94,7 +95,7 @@ export function KoreanText({
         </View>
       ) : null}
       {view.showGloss ? (
-        <Text
+        <Text {...KOREAN_LINE_BREAK}
           style={{
             marginTop: spacing.xxs,
             fontSize: typography.size.body,

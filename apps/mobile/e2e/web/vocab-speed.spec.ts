@@ -653,9 +653,9 @@ test.describe('Speed Round, Challenge (fixture bundle)', () => {
   });
 
   // The Challenge sheet (the wrapping scale chips) and the two-line round header at the narrowest phone, in each
-  // UI locale the build ships (es and ko with EXPO_PUBLIC_SHOW_ALL_LOCALES=1 and E2E_ALL_LOCALES=1). Test ids only,
+  // UI locale the build ships (en, es and ko since F-I18N-001 rows 15b / 16b). Test ids only,
   // so the walk does not depend on the locale's words.
-  for (const locale of availableLocales(process.env.E2E_ALL_LOCALES === '1')) {
+  for (const locale of availableLocales()) {
     test(`320 x 568, ${locale}: the Challenge sheet and the round header fit; Pause stays on screen`, async ({ page }) => {
       await page.setViewportSize({ width: 320, height: 568 });
       await newLearner(page);

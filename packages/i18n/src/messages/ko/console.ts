@@ -1473,8 +1473,8 @@ export const consoleMsgs = {
       joined: (name: string) => `${name} 학생이 이 반에 들어왔어요.`,
       ended: '이 반 옮기기는 끝났어요.',
       noRoom: '지금은 이 반에 자리가 없어요.',
-      accept: { cta: '받기' },
-      notNow: { cta: '지금은 안 돼요' },
+      accept: { cta: '받아들이기' },
+      notNow: { cta: '지금은 안 함' },
       cancel: { cta: '취소' },
       tryAgain: { cta: '다시 해 보기' },
       failed: '잘 안 됐어요. 다시 해 보세요.',
@@ -1487,9 +1487,9 @@ export const consoleMsgs = {
     failed: '저장하지 못했어요. 다시 해 보세요.',
     notice: (name: string, cls: string) => `${name} 학습자가 새 반으로 옮겼어요: ${cls}`,
   },
-  /** [TV] 학습 보고서의 단어와 설정 (TV-D2, TV-D12). */
+  /** [TV] 학습 보고서의 낱말과 설정 (TV-D2, TV-D12). */
   reportScope: {
-    words: '단어',
+    words: '낱말',
     firstTry: (percent: number) => `첫 시도 정답률: ${percent}%`,
     settings: '설정',
     classNotes: {
@@ -1497,6 +1497,6 @@ export const consoleMsgs = {
       presets: '반에서 오는 쪽지: 정해진 메시지만',
       off: '반에서 오는 쪽지: 받지 않기',
     },
-    baseScope: '가족이 안내를 읽으면 단어와 다른 정보도 보여요.',
+    baseScope: '가족이 안내를 읽으면 낱말과 다른 정보도 보여요.',
   },
 } satisfies DeepPartial<Messages['console']>;

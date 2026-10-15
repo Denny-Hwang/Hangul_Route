@@ -1,4 +1,4 @@
-import { HeritageCardArt, WORD_ART_KEYS, WordArt, colors, presenter, supportedCardIds, typography } from '@hangul-route/design-system';
+import { HeritageCardArt, WORD_ART_KEYS, WordArt, colors, presenter, supportedCardIds, typography, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
 import React from 'react';
 import { Text, View } from 'react-native';
 import type { Slide } from '../../../logic/lecture/deck-builder';
@@ -34,12 +34,12 @@ export function VocabSlide({ slide, reveal }: { slide: VocabBody; reveal: number
           </TaughtKo>
         </View>
         <View {...revealProps(romShown(slide.builds, shown, 'ko'))}>
-          <Text testID="presenter-word-rom" style={{ fontSize: promptSize, lineHeight: lead(promptSize), fontWeight: typography.weight.semibold, color: colors.text.secondary }}>
+          <Text {...KOREAN_LINE_BREAK} testID="presenter-word-rom" style={{ fontSize: promptSize, lineHeight: lead(promptSize), fontWeight: typography.weight.semibold, color: colors.text.secondary }}>
             {slide.word.romanization}
           </Text>
         </View>
         <View {...revealProps(shown.has('gloss'))}>
-          <Text testID="presenter-word-gloss" style={{ fontSize: promptSize, lineHeight: lead(promptSize), color: colors.text.primary }}>
+          <Text {...KOREAN_LINE_BREAK} testID="presenter-word-gloss" style={{ fontSize: promptSize, lineHeight: lead(promptSize), color: colors.text.primary }}>
             {slide.word.gloss}
           </Text>
         </View>

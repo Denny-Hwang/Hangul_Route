@@ -3,6 +3,7 @@ import { Text, View } from 'react-native';
 import { colors, typography } from '../../tokens';
 import { syllableBlockView, syllableCellLook } from './layout';
 import type { SyllableBlockProps } from './types';
+import { KOREAN_LINE_BREAK } from '../../line-break';
 
 /**
  * SyllableBlock — one Hangul syllable drawn as its boxes (initial, vowel, an
@@ -47,7 +48,7 @@ export function SyllableBlock({
                 }}
               >
                 {cell.text !== undefined ? (
-                  <Text
+                  <Text {...KOREAN_LINE_BREAK}
                     style={{
                       fontFamily: typography.family.sansKr,
                       fontSize: typography.size.display,

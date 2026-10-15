@@ -1,6 +1,6 @@
 import { createBottomTabNavigator, type BottomTabNavigationOptions } from '@react-navigation/bottom-tabs';
 import { useIsFocused } from '@react-navigation/native';
-import { Icon, borderWidth, colors, spacing, tabBarMetrics, typography, useLayoutClass } from '@hangul-route/design-system';
+import { Icon, borderWidth, colors, spacing, tabBarMetrics, typography, useLayoutClass, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
 import React, { useEffect } from 'react';
 import { Platform, Text, type TextStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -34,7 +34,7 @@ const LABEL_BESIDE: TextStyle = { marginLeft: spacing.lg + spacing.xs, marginTop
 function fittedLabel(text: string): NonNullable<BottomTabNavigationOptions['tabBarLabel']> {
   return function FittedTabLabel({ color, position }) {
     return (
-      <Text {...FOUR_TAB_LABEL_FIT} style={[{ textAlign: 'center', color }, position === 'beside-icon' ? LABEL_BESIDE : null, LABEL_STYLE]}>
+      <Text {...KOREAN_LINE_BREAK} {...FOUR_TAB_LABEL_FIT} style={[{ textAlign: 'center', color }, position === 'beside-icon' ? LABEL_BESIDE : null, LABEL_STYLE]}>
         {text}
       </Text>
     );

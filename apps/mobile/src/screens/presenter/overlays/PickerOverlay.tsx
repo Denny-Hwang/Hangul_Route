@@ -1,5 +1,5 @@
 import type { PickerMode } from '@hangul-route/content-schema';
-import { Hoya, borderWidth, colors, motion, presenter, spacing, typography } from '@hangul-route/design-system';
+import { Hoya, borderWidth, colors, motion, presenter, spacing, typography, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
 import React, { useEffect, useRef } from 'react';
 import { Animated, Text, View } from 'react-native';
 import type { PickerEvent, PickerState } from '../../../logic/lecture/picker';
@@ -49,7 +49,7 @@ export function PickerOverlay({
   return (
     <Cover label={m.title} testID="presenter-picker" initialFocus={draw}>
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', gap: units(unit, STAGE_GAP_INNER), padding: units(unit, spacing.xxxl) }}>
-        <Text role="heading" style={{ fontSize: size(presenter.size.prompt), fontWeight: typography.weight.bold, color: colors.text.primary, textAlign: 'center' }}>
+        <Text {...KOREAN_LINE_BREAK} role="heading" style={{ fontSize: size(presenter.size.prompt), fontWeight: typography.weight.bold, color: colors.text.primary, textAlign: 'center' }}>
           {m.title}
         </Text>
         <View
@@ -68,7 +68,7 @@ export function PickerOverlay({
           }}
         >
           {empty ? <Hoya pose="cheering" size={units(unit, QUIZ_ANSWER_HOYA)} accessibilityLabel={messages.a11y.hoya('cheering')} /> : null}
-          <Animated.Text
+          <Animated.Text {...KOREAN_LINE_BREAK}
             testID="presenter-picker-label"
             aria-live="polite"
             accessibilityLiveRegion="polite"

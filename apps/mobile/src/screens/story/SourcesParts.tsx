@@ -12,6 +12,7 @@ import {
   spacing,
   touchTarget,
   typography,
+  KOREAN_LINE_BREAK,
 } from '@hangul-route/design-system';
 import React from 'react';
 import { Platform, Pressable, Text, View, type LayoutChangeEvent } from 'react-native';
@@ -43,7 +44,7 @@ export function SourcesHeading({
 }): React.ReactElement {
   const size = level === 1 ? typography.size.title : level === 2 ? typography.size.prompt : typography.size.body;
   return (
-    <Text
+    <Text {...KOREAN_LINE_BREAK}
       {...headingLevel(level)}
       accessibilityRole="header"
       testID={testID}
@@ -149,7 +150,7 @@ export function CitationText({
 }): React.ReactElement {
   const fontSize = size === 'sm' ? typography.size.bodySm : typography.size.body;
   return (
-    <Text
+    <Text {...KOREAN_LINE_BREAK}
       {...korean(text)}
       selectable={selectable}
       testID={testID}
@@ -223,15 +224,15 @@ export function SourceBlock({
         borderTopColor: colors.border.subtle,
       }}
     >
-      <Text
+      <Text {...KOREAN_LINE_BREAK}
         {...korean(source.title)}
         {...(Platform.OS === 'web' ? {} : { accessibilityLabel: source.label })}
         style={{ fontSize: typography.size.body, fontWeight: typography.weight.semibold, color: colors.text.primary }}
       >
         {source.title}
       </Text>
-      <Text style={{ fontSize: typography.size.bodySm, color: colors.text.secondary }}>
-        <Text {...korean(source.publisher)}>{source.publisher}</Text>
+      <Text {...KOREAN_LINE_BREAK} style={{ fontSize: typography.size.bodySm, color: colors.text.secondary }}>
+        <Text {...KOREAN_LINE_BREAK} {...korean(source.publisher)}>{source.publisher}</Text>
         {` · ${source.accessedLabel}`}
       </Text>
       <CitationText text={source.quoteOrLocator} size="sm" />

@@ -8,11 +8,20 @@ afterEach(() => {
 });
 
 describe('console header language select (F-I18N-001 §3.3, wireframe language-picker.md §C)', () => {
-  it('is absent while only English ships (the same LOCALE_STATUS rule as the mobile pickers)', () => {
-    expect(renderToStaticMarkup(<LanguageSelect />)).toBe('');
+  it('shows by default now that es and ko ship (the same LOCALE_STATUS rule as the mobile pickers)', () => {
+    const html = renderToStaticMarkup(
+      <LocaleProvider>
+        <LanguageSelect />
+      </LocaleProvider>,
+    );
+    expect(html).toContain('<option value="es" lang="es">Español</option>');
+    expect(html).toContain('<option value="ko" lang="ko">한국어</option>');
+  });
+
+  it('is absent when only one locale is available', () => {
     expect(
       renderToStaticMarkup(
-        <LocaleProvider>
+        <LocaleProvider available={['en']}>
           <LanguageSelect />
         </LocaleProvider>,
       ),

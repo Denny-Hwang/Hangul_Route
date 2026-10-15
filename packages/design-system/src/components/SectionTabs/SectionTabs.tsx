@@ -3,6 +3,7 @@ import { AccessibilityInfo, Platform, Pressable, Text, View, findNodeHandle } fr
 import { colors, spacing, typography } from '../../tokens';
 import { sectionTabId, sectionTabStyle } from './style';
 import type { SectionTabsProps } from './types';
+import { KOREAN_LINE_BREAK } from '../../line-break';
 
 /**
  * SectionTabs — a wrapping row of pill tabs that switch sections of one screen
@@ -77,7 +78,7 @@ export function SectionTabs<T extends string>({
               borderRadius: look.borderRadius,
             })}
           >
-            <Text
+            <Text {...KOREAN_LINE_BREAK}
               style={{
                 color: look.textColor,
                 fontSize: look.fontSize,

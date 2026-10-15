@@ -1,4 +1,4 @@
-import { KOREAN_LANGUAGE, colors, presenter, typography } from '@hangul-route/design-system';
+import { KOREAN_LANGUAGE, colors, presenter, typography, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
 import type { Messages, UiLocale } from '@hangul-route/i18n';
 import React, { createContext, useContext } from 'react';
 import { Text, type TextStyle } from 'react-native';
@@ -49,7 +49,7 @@ const koreanSpeech = { accessibilityLanguage: KOREAN_LANGUAGE, lang: KOREAN_LANG
  */
 export function TaughtKo({ children, size, style, testID }: { children: string; size: number; style?: TextStyle; testID?: string }): React.ReactElement {
   return (
-    <Text
+    <Text {...KOREAN_LINE_BREAK}
       {...koreanSpeech}
       testID={testID}
       style={[

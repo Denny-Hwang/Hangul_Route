@@ -1,4 +1,4 @@
-import { Icon, colors, motion, presenter, spacing, typography } from '@hangul-route/design-system';
+import { Icon, colors, motion, presenter, spacing, typography, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Text, View } from 'react-native';
 import type { Slide } from '../../../logic/lecture/deck-builder';
@@ -92,7 +92,7 @@ export function SyllableSlide({
               {partsRow(spacing.xxl, promptSize, false)}
             </View>
             <View {...revealProps(view.rom)}>
-              <Text testID="presenter-syllable-rom" style={{ fontSize: promptSize, fontWeight: typography.weight.semibold, color: colors.text.secondary }}>
+              <Text {...KOREAN_LINE_BREAK} testID="presenter-syllable-rom" style={{ fontSize: promptSize, fontWeight: typography.weight.semibold, color: colors.text.secondary }}>
                 {slide.split}
               </Text>
             </View>

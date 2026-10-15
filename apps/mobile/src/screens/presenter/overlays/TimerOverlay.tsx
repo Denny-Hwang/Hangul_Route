@@ -1,4 +1,4 @@
-import { Hoya, colors, motion, presenter, radii, shadows, spacing, typography } from '@hangul-route/design-system';
+import { Hoya, colors, motion, presenter, radii, shadows, spacing, typography, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
 import React, { useEffect, useRef } from 'react';
 import { Animated, Text, View } from 'react-native';
 import { HOYA_STAGE, RING_STAGE, units } from '../../../logic/lecture/stage-constants';
@@ -93,7 +93,7 @@ function CornerTimer({ view, timer, showNumbers, controls }: { view: View_; time
           label={messages.a11y.presenter.timerLeft(view.text)}
         />
         {view.done ? (
-          <Text testID="presenter-timer-done" role="status" style={{ fontSize: typography.size.title, fontWeight: typography.weight.bold, color: colors.text.primary }}>
+          <Text {...KOREAN_LINE_BREAK} testID="presenter-timer-done" role="status" style={{ fontSize: typography.size.title, fontWeight: typography.weight.bold, color: colors.text.primary }}>
             {m.done}
           </Text>
         ) : null}
@@ -135,12 +135,12 @@ function FullTimer({ view, timer, showNumbers, controls }: { view: View_; timer:
           {view.done ? (
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: units(unit, spacing.xl) }}>
               <Hoya pose="cheering" size={units(unit, HOYA_STAGE / 2)} accessibilityLabel={messages.a11y.hoya('cheering')} />
-              <Text testID="presenter-timer-done" role="status" style={{ fontSize: size(presenter.size.title), fontWeight: typography.weight.bold, color: colors.text.primary }}>
+              <Text {...KOREAN_LINE_BREAK} testID="presenter-timer-done" role="status" style={{ fontSize: size(presenter.size.title), fontWeight: typography.weight.bold, color: colors.text.primary }}>
                 {m.done}
               </Text>
             </View>
           ) : (
-            <Text role="heading" style={{ fontSize: typography.size.title, fontWeight: typography.weight.bold, color: colors.text.primary }}>
+            <Text {...KOREAN_LINE_BREAK} role="heading" style={{ fontSize: typography.size.title, fontWeight: typography.weight.bold, color: colors.text.primary }}>
               {m.title}
             </Text>
           )}

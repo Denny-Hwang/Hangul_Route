@@ -53,7 +53,7 @@ export const learner = {
   /**
    * Create a profile, in three steps (F-LEARN-001 §3.2, §3.3, §3.15): Who is learning, the profile
    * (name, reading level, cub) and Privacy. Step 1 names no age: the "13 or older" statement lives
-   * only in the Privacy step's checkbox. Level labels come from `LEARNER_LEVELS`, cub labels from `avatars`.
+   * only in the Privacy step's checkbox. Level labels come from `common.levels` (read with `levelWords`, packages/i18n/src/levels.ts), cub labels from `avatars`.
    */
   createProfile: {
     nameHint: {
@@ -208,7 +208,7 @@ export const learner = {
 
   /**
    * Edit profile (F-LEARN-001 §3.11): name, reading level, cub and who is learning. Level labels
-   * come from `LEARNER_LEVELS`, cub labels from `avatars`. The consent lines repeat the create
+   * come from `common.levels` (read with `levelWords`, packages/i18n/src/levels.ts), cub labels from `avatars`. The consent lines repeat the create
    * form's wording on purpose: a change of who is learning asks the same question.
    */
   editProfile: {

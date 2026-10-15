@@ -1,4 +1,4 @@
-import { borderWidth, colors, layout, radii, spacing, touchTarget, typography } from '@hangul-route/design-system';
+import { borderWidth, colors, layout, radii, spacing, touchTarget, typography, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
 import React, { useRef } from 'react';
 import { Pressable, ScrollView, Text, View, type ViewStyle } from 'react-native';
 import type { GridItem } from '../../../logic/lecture/tools';
@@ -20,12 +20,12 @@ export function GridOverlay({ items, onGoto, onToggle, onClose }: { items: reado
   return (
     <Cover label={m.title} testID="presenter-grid" sunken initialFocus={now}>
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.lg, paddingHorizontal: layout.gutter.regular, paddingTop: spacing.lg }}>
-        <Text role="heading" aria-level={2} style={{ fontSize: typography.size.title, fontWeight: typography.weight.bold, color: colors.text.primary }}>
+        <Text {...KOREAN_LINE_BREAK} role="heading" aria-level={2} style={{ fontSize: typography.size.title, fontWeight: typography.weight.bold, color: colors.text.primary }}>
           {m.title}
         </Text>
         <ToolButton testID="presenter-grid-close" label={messages.common.buttons.close} onPress={onClose} />
       </View>
-      <Text style={{ fontSize: typography.size.body, color: colors.text.secondary, paddingHorizontal: layout.gutter.regular, paddingVertical: spacing.sm }}>{m.hint}</Text>
+      <Text {...KOREAN_LINE_BREAK} style={{ fontSize: typography.size.body, color: colors.text.secondary, paddingHorizontal: layout.gutter.regular, paddingVertical: spacing.sm }}>{m.hint}</Text>
       <ScrollView contentContainerStyle={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md, paddingHorizontal: layout.gutter.regular, paddingBottom: spacing.lg }}>
         {items.map((item) => (
           <Thumb key={item.key} item={item} innerRef={item.now ? now : undefined} onGoto={onGoto} onToggle={onToggle} />
@@ -44,7 +44,7 @@ function Thumb({ item, innerRef, onGoto, onToggle }: { item: GridItem; innerRef?
   const label = [String(item.n), kind, item.title, item.now ? m.now : '', item.hidden ? m.hidden : ''].filter((part) => part !== '').join(', ');
   const pill = (text: string): React.ReactElement => (
     <View style={{ borderRadius: radii.pill, borderWidth: borderWidth.base, borderColor: colors.border.strong, backgroundColor: colors.surface.paper, paddingHorizontal: spacing.sm }}>
-      <Text style={{ fontSize: typography.size.body, fontWeight: typography.weight.bold, color: colors.text.primary }}>{text}</Text>
+      <Text {...KOREAN_LINE_BREAK} style={{ fontSize: typography.size.body, fontWeight: typography.weight.bold, color: colors.text.primary }}>{text}</Text>
     </View>
   );
   return (
@@ -70,13 +70,13 @@ function Thumb({ item, innerRef, onGoto, onToggle }: { item: GridItem; innerRef?
         style={(state) => ({ flex: 1, padding: spacing.md, gap: spacing.xs, minHeight: touchTarget.min, ...focus((state as PressState).focused === true) })}
       >
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, flexWrap: 'wrap' }}>
-          <Text style={{ fontSize: typography.size.body, fontWeight: typography.weight.bold, color: colors.text.primary, fontVariant: ['tabular-nums'] }}>{item.n}</Text>
-          <Text style={{ fontSize: typography.size.body, fontWeight: typography.weight.semibold, color: colors.text.secondary }}>{kind}</Text>
+          <Text {...KOREAN_LINE_BREAK} style={{ fontSize: typography.size.body, fontWeight: typography.weight.bold, color: colors.text.primary, fontVariant: ['tabular-nums'] }}>{item.n}</Text>
+          <Text {...KOREAN_LINE_BREAK} style={{ fontSize: typography.size.body, fontWeight: typography.weight.semibold, color: colors.text.secondary }}>{kind}</Text>
           {item.now ? pill(m.now) : null}
           {item.hidden ? pill(m.hidden) : null}
         </View>
         {item.title !== '' ? (
-          <Text numberOfLines={2} style={{ fontSize: typography.size.body, color: colors.text.primary }}>
+          <Text {...KOREAN_LINE_BREAK} numberOfLines={2} style={{ fontSize: typography.size.body, color: colors.text.primary }}>
             {item.title}
           </Text>
         ) : null}
@@ -96,7 +96,7 @@ function Thumb({ item, innerRef, onGoto, onToggle }: { item: GridItem; innerRef?
             ...focus((state as PressState).focused === true),
           })}
         >
-          <Text style={{ fontSize: typography.size.body, fontWeight: typography.weight.bold, color: colors.text.primary }}>{item.hidden ? m.show.cta : m.hide.cta}</Text>
+          <Text {...KOREAN_LINE_BREAK} style={{ fontSize: typography.size.body, fontWeight: typography.weight.bold, color: colors.text.primary }}>{item.hidden ? m.show.cta : m.hide.cta}</Text>
         </Pressable>
       ) : null}
     </View>

@@ -5,6 +5,7 @@ import { LicensesPage } from '../../components/landing/LicensesPage';
 import { THIRD_PARTY_NOTICES, assetLicenses, licenseGroups, type ThirdPartyNotices } from '../../lib/third-party-notices';
 import EnLicensesPage from '../(en)/licenses/page';
 import LocLicensesPage from '../(loc)/[locale]/licenses/page';
+import { withoutSwitcher } from './locale-switcher-html';
 
 /**
  * `/licenses` (owner decision 2026-10-14: the proprietary LICENSE; wireframe design/wireframes/site/licenses.md):
@@ -73,9 +74,9 @@ describe('LicensesPage', () => {
     expect(html).toContain('SIL OPEN FONT LICENSE Version 1.1');
     expect(html).toContain(escapeText(en.licenses.noticesTitle));
     expect(html).toContain('A lib\nCopyright 2019 A');
-    // English page: no English-authoritative line, no lang marks.
+    // English page: no English-authoritative line, no lang marks (the footer's locale switcher aside).
     expect(html).not.toContain('data-testid="english-authoritative"');
-    expect(html).not.toContain('lang="en"');
+    expect(withoutSwitcher(html)).not.toContain('lang="en"');
   });
 
   it('leaves out the NOTICE section when no package ships a NOTICE file', () => {

@@ -1,4 +1,4 @@
-import { colors, layout, radii, shadows, spacing, typography, z } from '@hangul-route/design-system';
+import { colors, layout, radii, shadows, spacing, typography, z, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
 import React, { useEffect, useRef } from 'react';
 import { Text, View } from 'react-native';
 import { trapFocus } from '../../platform/presenter';
@@ -51,10 +51,10 @@ export function ExitConfirm({ onKeepGoing, onExit }: { onKeepGoing: () => void; 
           ...shadows.modal,
         }}
       >
-        <Text nativeID="presenter-exit-title" role="heading" style={{ fontSize: typography.size.title, fontWeight: typography.weight.bold, color: colors.text.primary }}>
+        <Text {...KOREAN_LINE_BREAK} nativeID="presenter-exit-title" role="heading" style={{ fontSize: typography.size.title, fontWeight: typography.weight.bold, color: colors.text.primary }}>
           {m.exit.title}
         </Text>
-        <Text style={{ fontSize: typography.size.body, color: colors.text.secondary, lineHeight: Math.round(typography.size.body * typography.leading.normal) }}>{m.exit.line}</Text>
+        <Text {...KOREAN_LINE_BREAK} style={{ fontSize: typography.size.body, color: colors.text.secondary, lineHeight: Math.round(typography.size.body * typography.leading.normal) }}>{m.exit.line}</Text>
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md, justifyContent: 'flex-end' }}>
           <GhostButton ref={exit} testID="presenter-exit-confirm" label={m.bar.exit.cta} onPress={onExit} />
           <PrimaryButton ref={keep} testID="presenter-keep-going" label={m.exit.keepGoing.cta} onPress={onKeepGoing} />

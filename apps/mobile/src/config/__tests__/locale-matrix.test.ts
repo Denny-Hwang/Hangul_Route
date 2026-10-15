@@ -48,21 +48,17 @@ describe('matrix shape (§3.11)', () => {
 });
 
 describe('matrixLocales', () => {
-  it('a default build runs English only', () => {
-    expect(matrixLocales({})).toEqual(['en']);
-  });
-
-  it('a build with every language shown adds es and ko', () => {
-    expect(matrixLocales({ E2E_ALL_LOCALES: '1' })).toEqual(['en', 'es', 'ko']);
+  it('a default build runs en, es and ko (es and ko shipped, F-I18N-001 rows 15b / 16b)', () => {
+    expect(matrixLocales({})).toEqual(['en', 'es', 'ko']);
   });
 
   it('a pseudo build draws English as en-XA, so it runs en-XA in its place', () => {
-    expect(matrixLocales({ E2E_PSEUDO_LOCALE: '1' })).toEqual(['en-XA']);
-    expect(matrixLocales({ E2E_PSEUDO_LOCALE: '1', E2E_ALL_LOCALES: '1' })).toEqual(['en-XA', 'es', 'ko']);
+    expect(matrixLocales({ E2E_PSEUDO_LOCALE: '1' })).toEqual(['en-XA', 'es', 'ko']);
   });
 
-  it('only the value 1 turns a flag on', () => {
-    expect(matrixLocales({ E2E_ALL_LOCALES: 'true', E2E_PSEUDO_LOCALE: '0' })).toEqual(['en']);
+  it('only the value 1 turns the pseudo flag on', () => {
+    expect(matrixLocales({ E2E_PSEUDO_LOCALE: 'true' })).toEqual(['en', 'es', 'ko']);
+    expect(matrixLocales({ E2E_PSEUDO_LOCALE: '0' })).toEqual(['en', 'es', 'ko']);
   });
 });
 

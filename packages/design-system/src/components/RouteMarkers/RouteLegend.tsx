@@ -4,6 +4,7 @@ import Svg from 'react-native-svg';
 import { colors, spacing, typography } from '../../tokens';
 import { PipParts } from '../PipRow/Pip';
 import { ROUTE_MARK_ORDER, TAG_MARK_SIZE, tagMarkParts, type RouteMarkKind } from './geometry';
+import { KOREAN_LINE_BREAK } from '../../line-break';
 
 export interface TagMarkProps {
   kind: RouteMarkKind;
@@ -58,7 +59,7 @@ export function RouteLegend({ items, testID }: RouteLegendProps): React.ReactEle
       {ordered.map((item) => (
         <View key={item.kind} style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
           <TagMark kind={item.kind} />
-          <Text
+          <Text {...KOREAN_LINE_BREAK}
             style={{
               fontSize: typography.size.bodySm,
               lineHeight: typography.size.bodySm * typography.leading.normal,

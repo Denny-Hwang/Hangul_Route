@@ -17,6 +17,7 @@ import { learnerStart, signIn } from '../../lib/site-links';
 import { SITE_PAGES } from '../../lib/site-metadata';
 import { sitePath } from '../../lib/site-path';
 import { SITE_BREAKPOINTS } from '../../lib/site-style';
+import { withoutSwitcher } from './locale-switcher-html';
 
 /**
  * The site's shared header and footer (F-SITE-002 §3.2, §6; wireframe design/wireframes/site/header-footer.md; mock
@@ -53,6 +54,9 @@ function controls(html: string): Control[] {
   }));
 }
 const hrefOf = (c: Control | undefined): string => /href="([^"]*)"/.exec(c?.attrs ?? '')?.[1] ?? '';
+/** True for a link of the footer's locale switcher (it carries hrefLang and marks the current locale's page). */
+const isSwitcherLink = (c: Control): boolean => c.attrs.includes('hrefLang=');
+
 /** The shipped persona pages' labels and paths, in nav order (S-4a: Learners; S-4b adds Parents and Teachers). */
 const personaLabels = SHIPPED_PERSONA_PAGES.map((page) => t.nav[page]);
 const personaPaths = (locale: 'en' | 'es'): string[] => SHIPPED_PERSONA_PAGES.map((page) => sitePath(locale, `/${page}`));
@@ -68,7 +72,8 @@ describe('every internal site link in the header and footer resolves to an expor
   const external = (href: string): boolean => /^(https?:|mailto:|#)/.test(href) || href === signIn() || href.startsWith('/signin');
   for (const locale of ['en', 'es'] as const) {
     it(`${locale}: each one is sitePath(locale, page) for a page in SITE_PAGES`, () => {
-      const pages = new Set(SITE_PAGES.map((page) => sitePath(locale, page)));
+      // The locale switcher links the same page in every shipped locale (es and ko ship, rows 15b / 16b).
+      const pages = new Set((['en', 'es', 'ko'] as const).flatMap((l) => SITE_PAGES.map((page) => sitePath(l, page))));
       const html = [
         renderToStaticMarkup(<SiteHeader locale={locale} />),
         renderToStaticMarkup(<SiteHeader locale={locale} variant="legal" />),
@@ -172,6 +177,9 @@ describe('SiteFooter', () => {
       t.footer.terms,
       `${t.footer.contact}${CONTACT_EMAIL}`,
       t.footer.licenses,
+      'English',
+      'Español',
+      '한국어',
     ]);
     expect(items.map(hrefOf)).toEqual([
       ...personaPaths('en'),
@@ -182,6 +190,9 @@ describe('SiteFooter', () => {
       '/terms',
       `mailto:${CONTACT_EMAIL}`,
       '/licenses',
+      '/learners',
+      '/es/learners',
+      '/ko/learners',
     ]);
   });
 
@@ -212,9 +223,9 @@ describe('SiteFooter', () => {
   });
 
   it('marks the current persona page in Guide (the header nav is hidden on phones), bold and not by colour alone', () => {
-    expect(html).not.toContain('aria-current="page"');
-    const marked = controls(renderToStaticMarkup(<SiteFooter locale="en" page="/learners" current="learners" />)).filter((c) =>
-      c.attrs.includes('aria-current="page"'),
+    expect(withoutSwitcher(html)).not.toContain('aria-current="page"');
+    const marked = controls(renderToStaticMarkup(<SiteFooter locale="en" page="/learners" current="learners" />)).filter(
+      (c) => !isSwitcherLink(c) && c.attrs.includes('aria-current="page"'),
     );
     expect(marked.map((c) => c.text)).toEqual([t.nav.learners]);
     expect(marked[0]?.attrs).toContain('font-weight:700');
@@ -246,11 +257,13 @@ describe('SiteFooter', () => {
     expect(es).toEqual(expect.arrayContaining(['/es/learners', '/es/about', '/es/privacy', learnerStart('es')]));
   });
 
-  it('the locale switcher shows once a second locale ships and keeps the page', () => {
-    expect(html).not.toContain('hrefLang');
-    vi.stubEnv('NEXT_PUBLIC_SHOW_ALL_LOCALES', '1');
-    const qa = renderToStaticMarkup(<SiteFooter locale="en" page="/learners" />);
-    expect(qa).toContain('href="/es/learners" hrefLang="es"');
+  it('the locale switcher shows now that es and ko ship, keeps the page and marks the current locale', () => {
+    expect(html).toContain('href="/es/learners" hrefLang="es"');
+    expect(html).toContain('href="/ko/learners" hrefLang="ko"');
+    const switcher = controls(html).filter(isSwitcherLink);
+    expect(switcher.filter((c) => c.attrs.includes('aria-current="page"')).map((c) => c.text)).toEqual(['English']);
+    const ko = controls(renderToStaticMarkup(<SiteFooter locale="ko" page="/learners" />)).filter(isSwitcherLink);
+    expect(ko.filter((c) => c.attrs.includes('aria-current="page"')).map(hrefOf)).toEqual(['/ko/learners']);
   });
 });
 
@@ -285,7 +298,7 @@ describe('About, Privacy, Terms and the 404 page get the site chrome (F-SITE-002
     const items = controls(about);
     expect(items.map((c) => c.text)).toEqual(expect.arrayContaining([t.nav.start, t.nav.signIn, t.about.backHome]));
     expect(about).toMatch(/<main id="content"[\s\S]*<h1[^>]*>[^<]*<\/h1>/);
-    expect(about).not.toContain('aria-current="page"');
+    expect(withoutSwitcher(about)).not.toContain('aria-current="page"');
     expect(about.match(/<h1\b/g)).toHaveLength(1);
     expect(about.match(/<main\b/g)).toHaveLength(1);
   });
