@@ -344,6 +344,12 @@ export const learner = {
     storiesNote: 'Heritage stories are open in the cells with the books icon.',
     /** The count mark in a cell's corner: how many heritage stories call the cell home, "5+" from 6 (F-STORY-005 §3.6). */
     countMark: (value: number, more: boolean) => (more ? `${value}+` : `${value}`),
+    /**
+     * The theme word under each cell's glyph and each column label (owner request 2026-10-14;
+     * design/components/Icon/theme-glyphs.md "Cell word"). One short word that fits one line of a
+     * 320 px cell (length-budget: journey theme words); decorative, the cell label names the theme.
+     */
+    themeWord: { letters: 'Letters', life: 'Food', rites: 'Holiday', nature: 'Nature', crafts: 'Play' },
     /** Beside the Stage 1 pill once the stage is complete (F-QUEST-002 §3.9): opens the Hangul Check. */
     hangulCheck: { cta: 'Hangul Check' },
     /** Landmark names of the two panes on a wide window (F-LAYOUT-001 §3.13). */

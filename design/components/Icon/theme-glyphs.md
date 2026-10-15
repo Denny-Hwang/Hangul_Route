@@ -1,6 +1,6 @@
 # Icon: theme glyphs `hangul-tile`, `rice-bowl`, `lantern`, `leaf`, `spinning-top` (component spec v1)
 
-Owner decision 2026-10-14: the Heritage Journey grid stops drawing the single letters L, F, H, N and P in its cells. Learners could not decode them. Each cell now shows its theme's glyph, and each column label shows the same glyph above its word, so the link between them is easy to see.
+Owner decision 2026-10-14: the Heritage Journey grid stops drawing the single letters L, F, H, N and P in its cells. Learners could not decode them. Each cell now shows its theme's glyph with the theme word under it (owner request 2026-10-14, "Cell word" below), and each column label shows the same glyph above the same word, so the link between them is easy to see.
 
 Spec:
 - the grid: F-STORY-005 §3.5 and §3.6 (cells and count marks);
@@ -53,14 +53,33 @@ The glyph test checks these rules, and also checks that each glyph stays inside 
 - **Tokens only.**
   - Cell art: `text.primary`, the same ink the letter used.
   - Column header: `text.muted`, the header word's tint.
-  - Sizes: cell glyph `spacing.xl` (24), scaled by `useMediaSize` (29 on regular, 34 on wide; `Math.round`), the same way as the ring around it. Header glyph `spacing.lg + spacing.xs` (20).
+  - Sizes: cell glyph `spacing.lg + spacing.xs` (20), scaled by `useMediaSize` (24 on regular, 28 on wide), the same way as the ring around it. It was 24 (29, 34) until the cell word below took the room. Header glyph `spacing.lg + spacing.xs` (20).
 - **Decorative.** The words carry the meaning:
   - Every cell's accessible label already names its theme in words (`a11y.journeyCell`, the theme title in the UI locale; en, es and ko exist).
   - The column header keeps its word under the glyph, and screen readers still read the word.
   - A glyph is never read on its own. Inside a cell, the cell's single accessible element groups it. In the header, the glyph sits in a view hidden from screen readers.
 - **Nothing else changes.** The count mark, the start pin, the placed-out check, the Next triangle, the In your plan and Not open yet rings, and the complete, coming-later and stories-only looks keep their places and colours. A stories-only cell keeps the books glyph (`library`). A coming-later cell stays empty.
-- **The count mark keeps its corner.** On the narrowest grid (320 px) the story count mark (20 dp, top right) covers the top-right corner of the glyph box, at most 9 x 9 dp of 24 x 24. Only a frame corner (the tile, the flat top of the top) may sit under it: the part that names the theme stays clear (the leaf tip points up-left). The glyph test (`keeps the part that names each theme clear of the story count mark`) and the e2e spec check this. At 768 px the mark clears the glyph. The start pin (top left) appears on one cell only and may cover the leaf tip there; the cell label still names the theme.
-- **No new strings.** The theme names already exist in every locale.
+- **Nothing covers the glyph.** The corner marks (start pin top left, story count mark top right, placed-out check top right) sit in a 22 dp band at the top of the cell, and the glyph starts under it, at every width. This replaces the v1 rule that let the count mark cover up to 9 x 9 dp of the glyph at 320 px, and fixes the start pin covering the leaf's tip (the tip points up-left, into the pin's corner). On a placed-out cell the count mark moves to the top left (a cell is never both placed out and the start). `logic/journey-cell-layout.ts` holds the geometry; its unit test and the e2e spec check that no mark overlaps the glyph or the word.
+
+## Cell word (owner request 2026-10-14)
+
+Each cell shows its theme word under the glyph, so the cells read without the header row.
+
+| Theme | en | es | ko |
+|---|---|---|---|
+| `letters` | Letters | Letras | 글자 |
+| `life` | Food | Comida | 음식 |
+| `rites` | Holiday | Fiestas | 명절 |
+| `nature` | Nature | Campo | 자연 |
+| `crafts` | Play | Juegos | 놀이 |
+
+- **Strings:** `learner.journey.themeWord` in `packages/i18n` (en, es, ko). The column labels show the same word, so the header and the cells always match (before this, the header took the first word of the English theme title in every locale).
+- **Short forms:** a 320 px cell is 54 dp wide (50 inside its border). "Holidays" (52 dp) and "Naturaleza" (66 dp) do not fit one line, so English uses "Holiday" and Spanish "Campo" (the countryside: animals, mountains, sky). The Korean words are the glossary theme names (`learner.weeklyPlan.setup.likes.themeNames`).
+- **Budget:** one word, at most 7 Latin letters or 3 Hangul syllables (`journey-theme-word-messages.test.ts`); the e2e spec measures one line and no clipping at 320 and 768 px in every locale.
+- **Type:** `typography.size.caption`, `weight.regular`, `tracking.tight`, line height `leading.tight`, `text.secondary` (at least 4.5:1 on paper, the complete tint and sunken). It keeps its size at large text (`maxFontSizeMultiplier` 1), like the count mark: it is decorative.
+- **Accessibility:** hidden from screen readers. The cell's label already names the theme (`a11y.journeyCell`), so the theme is read once.
+- **Layout:** the glyph box is the ring's size, so the In your plan and Not open yet rings go round the glyph and end above the word. At 320 px the cell grows taller than wide (about 74 dp); at 768 px it stays square.
+- **Stories-only cells** show the books glyph with the theme word. Coming-later cells stay empty.
 - **No lock, no price, no speaking glyph** in this set.
 
 ## Where else the letters were

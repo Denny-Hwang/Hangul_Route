@@ -6,6 +6,7 @@ import {
   Icon,
   NextMarker,
   Pill,
+  ROUTE_RING_SIZE,
   RouteLegend,
   RouteRing,
   StickerIcon,
@@ -21,7 +22,8 @@ import React from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { useLocale, useMessages } from '../i18n/use-messages';
 import { localizeEpisode } from '../logic/content-locale';
-import { stagePillLabel, stagePillState, themeColumnLabel, themeGlyph } from '../logic/journey';
+import { stagePillLabel, stagePillState, themeGlyph } from '../logic/journey';
+import { countMarkSlot, journeyCellLayout, journeyCellMetrics } from '../logic/journey-cell-layout';
 import { cellLabel, cellTestId, countMarkOf } from '../logic/journey-cells';
 import {
   journeyGridRows,
@@ -43,27 +45,24 @@ import type { StoryIndexEntry } from '../logic/story/story-index';
  * The route marks (F-ENT-003 E3-5; `design/wireframes/journey/grid-plan-and-access.md`,
  * `design/components/RouteMarkers/spec.md`): the legend line above the column labels, the Next triangle,
  * the In your plan solid ring and the Not open yet dotted ring, and no lock glyph on any cell.
- * The theme glyphs (`design/components/Icon/theme-glyphs.md`): each lesson cell draws its theme's glyph and
- * each column label shows it over the word; the glyphs are decorative (the words name the theme).
+ * The theme glyphs (`design/components/Icon/theme-glyphs.md`): each lesson cell draws its theme's glyph with
+ * the theme word under it (owner request 2026-10-14, "Cell word"), and each column label shows the glyph over
+ * the same word; the glyphs and the cell word are decorative (the cell label names the theme). Where each part
+ * sits in a cell is `logic/journey-cell-layout.ts`.
  * It reads no learner store and no navigation: what a learner has done arrives through `marksOf`,
  * `quests` and `access` (none: nothing done, no mark), a tap goes to `onOpen`, and a stories-only
  * cell to `onOpenStories`.
  */
 
-/** The start pin and the placed-out check sit in the cell's corners. */
+/** The stories-note glyph under a stage row. */
 const MARK_SIZE = spacing.lg;
-/** The story count mark: a 20 dp circle in the top-right corner (F-STORY-005 §3.6). */
-const COUNT_MARK = spacing.lg + spacing.xs;
-/** The glyph a stories-only cell draws in place of its theme glyph (books), and the column header's theme glyph. A coming-later cell is empty (E3-D D5). */
+/** The column header's theme glyph. A coming-later cell is empty (E3-D D5). */
 const CELL_GLYPH = spacing.lg + spacing.xs;
-/**
- * A lesson cell's theme glyph (design/components/Icon/theme-glyphs.md; owner decision 2026-10-14
- * replaced the letters L / F / H / N / P): 24 dp, scaled with the ring around it by `useMediaSize`.
- */
-const THEME_GLYPH = spacing.xl;
 const STAGE_RING = 32;
+/** The cell's corner band, glyph, ring, edge and word line from the tokens (logic/journey-cell-layout.ts). */
+const CELL = journeyCellMetrics({ spacing, borderWidth, typography });
 /** A cell's border (`border.focus` at `borderWidth.thick` when selected in two panes). */
-const CELL_EDGE = borderWidth.base;
+const CELL_EDGE = CELL.edge;
 
 export interface JourneyGridProps {
   /** Stage definitions in the UI locale. */
@@ -150,7 +149,7 @@ export function JourneyGrid({
               <Icon name={themeGlyph(t.key)} size={CELL_GLYPH} color={colors.text.muted} testID={`theme-glyph-${themeGlyph(t.key)}`} />
             </View>
             <Caption tone="muted" align="center">
-              {themeColumnLabel(t)}
+              {m.themeWord[t.key]}
             </Caption>
           </View>
         ))}
@@ -275,7 +274,9 @@ function GridCell({ cell, stage, theme, paneMode, onOpen, onOpenStories, episode
   const episodeId = cell.episodeId;
   const disabled = cell.disabled || (storiesOnly && !onOpenStories);
   const count = countMarkOf(model.storyCount);
-  const glyphSize = useMediaSize(THEME_GLYPH);
+  const glyphSize = useMediaSize(CELL.glyph);
+  const cellLayout = journeyCellLayout(CELL, glyphSize, useMediaSize(ROUTE_RING_SIZE));
+  const countSlot = countMarkSlot(CELL, { placedOut, isStart });
 
   const press = (): void => {
     if (disabled) return;
@@ -310,49 +311,87 @@ function GridCell({ cell, stage, theme, paneMode, onOpen, onOpenStories, episode
             : completed
               ? colors.feedback.success
               : tone,
+        // The corner band on top, the glyph box (the ring's size) under it, then one line of the theme word
+        // (logic/journey-cell-layout.ts): square where that fits, taller than wide at 320 px.
+        minHeight: cellLayout.minHeight,
         alignItems: 'center',
         justifyContent: 'center',
-        padding: spacing.xs,
+        paddingTop: cellLayout.padTop,
+        paddingBottom: cellLayout.padBottom,
+        paddingHorizontal: spacing.none,
       }}
     >
-      {storiesOnly ? (
-        <Icon name="library" size={CELL_GLYPH} color={colors.text.secondary} />
-      ) : isLater ? null : (
+      {isLater && ring === null ? null : (
         // A coming-later cell stays sunken and empty (E3-D D5, OD-6): no lock glyph on a learner screen.
-        // The theme glyph is decorative: the cell's label names the theme in words.
+        <View style={{ width: cellLayout.glyphBox, height: cellLayout.glyphBox, alignItems: 'center', justifyContent: 'center' }}>
+          {storiesOnly ? (
+            <Icon name="library" size={glyphSize} color={colors.text.secondary} />
+          ) : isLater ? null : (
+            // The theme glyph is decorative: the cell's label names the theme in words.
+            <View
+              testID={`journey-glyph-${cell.stage}-${cell.theme}`}
+              aria-hidden
+              importantForAccessibility="no-hide-descendants"
+              accessibilityElementsHidden
+            >
+              <Icon name={themeGlyph(theme.key)} size={glyphSize} color={colors.text.primary} testID={`theme-glyph-${themeGlyph(theme.key)}`} />
+            </View>
+          )}
+          {ring !== null ? (
+            // Around the theme glyph: the solid ring (In your plan) or the dotted ring (Not open yet). Never both.
+            <View pointerEvents="none" style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, alignItems: 'center', justifyContent: 'center' }}>
+              <RouteRing kind={ring} testID={`journey-ring-${ring}-${cell.stage}-${cell.theme}`} />
+            </View>
+          ) : null}
+        </View>
+      )}
+      {isLater ? null : (
+        // The theme word under the glyph (owner request 2026-10-14), one line at the caption size. Decorative:
+        // the cell's label already names the theme, so a screen reader never reads it twice.
         <View
-          testID={`journey-glyph-${cell.stage}-${cell.theme}`}
+          testID={`journey-word-${cell.stage}-${cell.theme}`}
           aria-hidden
           importantForAccessibility="no-hide-descendants"
           accessibilityElementsHidden
+          style={{ alignSelf: 'stretch' }}
         >
-          <Icon name={themeGlyph(theme.key)} size={glyphSize} color={colors.text.primary} testID={`theme-glyph-${themeGlyph(theme.key)}`} />
+          <Text
+            maxFontSizeMultiplier={1}
+            style={{
+              fontSize: typography.size.caption,
+              lineHeight: CELL.wordLine,
+              fontWeight: typography.weight.regular,
+              letterSpacing: typography.tracking.tight,
+              color: colors.text.secondary,
+              textAlign: 'center',
+            }}
+          >
+            {messages.learner.journey.themeWord[cell.theme]}
+          </Text>
         </View>
       )}
-      {ring !== null ? (
-        // Around the theme glyph: the solid ring (In your plan) or the dotted ring (Not open yet). Never both.
-        <View pointerEvents="none" style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, alignItems: 'center', justifyContent: 'center' }}>
-          <RouteRing kind={ring} testID={`journey-ring-${ring}-${cell.stage}-${cell.theme}`} />
-        </View>
-      ) : null}
       {/* Corner glyphs sit over a ring as paper stickers (E3-D D3). */}
       {isStart ? (
-        <View pointerEvents="none" style={{ position: 'absolute', top: spacing.xxs, left: spacing.xxs }}>
+        <View pointerEvents="none" style={{ position: 'absolute', top: CELL.inset, left: CELL.inset }}>
           {ring !== null ? (
-            <StickerIcon name="pin" size={MARK_SIZE} color={colors.brand.primary} />
+            <StickerIcon name="pin" size={CELL.markSize} color={colors.brand.primary} />
           ) : (
-            <Icon name="pin" size={MARK_SIZE} color={colors.brand.primary} />
+            <Icon name="pin" size={CELL.markSize} color={colors.brand.primary} />
           )}
         </View>
       ) : null}
       {placedOut ? (
-        <View pointerEvents="none" style={{ position: 'absolute', top: spacing.xxs, right: spacing.xxs }}>
-          {ring !== null ? <StickerIcon name="check-circle" size={MARK_SIZE} color={tone} /> : <Icon name="check-circle" size={MARK_SIZE} color={tone} />}
+        <View pointerEvents="none" style={{ position: 'absolute', top: CELL.inset, right: CELL.inset }}>
+          {ring !== null ? (
+            <StickerIcon name="check-circle" size={CELL.markSize} color={tone} />
+          ) : (
+            <Icon name="check-circle" size={CELL.markSize} color={tone} />
+          )}
         </View>
       ) : null}
-      {count !== null ? (
+      {count !== null && countSlot !== null ? (
         // Not a target and not read on its own: the number is in the cell's label (F-STORY-005 §3.6).
-        // The placed-out check owns the top-right corner, so the mark moves down when both are drawn.
+        // Top right; top left when the placed-out check owns that corner (the theme word is at the bottom).
         <View
           pointerEvents="none"
           aria-hidden
@@ -361,10 +400,9 @@ function GridCell({ cell, stage, theme, paneMode, onOpen, onOpenStories, episode
           testID={`journey-count-${cell.stage}-${cell.theme}`}
           style={{
             position: 'absolute',
-            ...(placedOut ? { bottom: spacing.xxs } : { top: spacing.xxs }),
-            right: spacing.xxs,
-            minWidth: COUNT_MARK,
-            minHeight: COUNT_MARK,
+            ...countSlot,
+            minWidth: CELL.countMark,
+            minHeight: CELL.countMark,
             paddingHorizontal: spacing.xxs,
             borderRadius: radii.pill,
             backgroundColor: colors.surface.sunken,

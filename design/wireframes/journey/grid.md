@@ -21,10 +21,11 @@ Then: they can see where they are, which cells are open right now, and pick one 
 |  Heritage Journey                |  <- title + 1 muted line ("draw your route")
 |                                  |
 |   [가] [bowl][lant][leaf][top]   |  <- theme glyph over each column label
-|   Letters Food Holidays Nat. Play|  <- 5 column labels: first word of each theme title
+|   Letters Food Holiday Nature Play| <- 5 column labels: learner.journey.themeWord
 |  (1) Hangul            [open]    |  <- stage row header: number badge, title,
 |      1-liner                     |     1-liner, status pill
 |      [가*][bowl][lant][leaf][top] |  <- 5 cells = the column's theme glyph; * = completed
+|      Letters Food Holiday Nature Play  <- the theme word under each glyph, inside the cell
 |                                  |
 |  (2) Words             [soon]    |
 |      [ # ][bowl][ # ][leaf][ # ]  |  <- # = coming later (sunken, empty)
@@ -41,6 +42,24 @@ Then: they can see where they are, which cells are open right now, and pick one 
 |  +----------------------------+  |
 +----------------------------------+
 ```
+
+One cell, top to bottom (owner request 2026-10-14; `logic/journey-cell-layout.ts`, `design/components/Icon/theme-glyphs.md` "Cell word"):
+
+```
++------------+
+|pin  ▼  [5] |  <- corner band (22 dp): start pin top left, count mark top right
+|            |     (top left on a placed-out cell, whose check owns top right);
+|    (gl)    |     the Next triangle over the top edge
+|            |  <- glyph box = the ring's size (40 / 48 / 56); the ring goes round the glyph
+|   Letters  |  <- the theme word, one line, caption size, decorative
++------------+
+```
+
+- Nothing covers the glyph or the word: the glyph starts under the corner band, and the ring ends above the word.
+- 320 px: the cell is 54 dp wide and about 74 dp tall (taller than wide so the word fits). 768 px: square (112 dp).
+- The glyph is 20 dp on a phone (24 regular, 28 wide); the word is `typography.size.caption` with `tracking.tight`, `text.secondary`.
+- Every word fits one line of a 320 px cell in en, es and ko (`journey-theme-word-messages.test.ts`, e2e `journey-theme-glyphs`).
+- A stories-only cell shows the books glyph with the theme word; a coming-later cell stays empty.
 
 Cell looks (4): **shipped** (its column's theme glyph — `logic/journey.themeGlyph`, `design/components/Icon/theme-glyphs.md`; owner decision 2026-10-14 replaced the single letters L / F / H / N / P, which learners could not decode; stage-tinted border; the glyph is decorative and the cell label names the theme in words) · **completed** (success tint) · **preview** (lock glyph, disabled) · **premium-locked** (lock glyph + tappable, future — see below).
 
