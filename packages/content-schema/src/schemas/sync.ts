@@ -5,7 +5,7 @@ import { TierSourceSchema } from './entitlement';
 import { InboxPlanSchema, type InboxPlan } from './plan';
 import { LearnerMembershipSchema } from './space';
 import { AvatarKindSchema } from './profile';
-import { DisplayNameSchema } from './display-name';
+import { LegacyDisplayNameSchema } from './display-name';
 import { LearnerLevelIdSchema } from './learner-level';
 import { PlacementSummarySchema } from './placement';
 import { InboxClassMoveSchema, InboxClassScopeSchema } from './class-scope';
@@ -179,7 +179,7 @@ export const LearnerRegisterSchema = z.object({
   deviceId: z.string().min(8).max(64),
   learner: z.object({
     id: z.string().regex(/^profile:[a-z0-9-]+$/).optional(),
-    displayName: DisplayNameSchema,
+    displayName: LegacyDisplayNameSchema,
     ageGroup: LearnerLevelIdSchema,
     avatar: z.string().min(1),
   }),
@@ -192,11 +192,14 @@ export type LearnerRegister = z.infer<typeof LearnerRegisterSchema>;
  * fields that stay on the device (who is learning, the grown-up PIN, consent;
  * F-LEARN-001 decision L2) are refused, never stored. `at` is when the device
  * made the change: the server keeps the newest edit, so a queued older edit
- * that arrives late does not undo a newer one.
+ * that arrives late does not undo a newer one. The name takes the lenient
+ * server rule (`LegacyDisplayNameSchema`, trim, 1-20), so the app's one-time
+ * push of a legacy name it already holds is never refused on every retry; the
+ * strict rule applies to a newly typed name in the app's edit screen.
  */
 export const LearnerProfilePatchSchema = z
   .object({
-    displayName: DisplayNameSchema.optional(),
+    displayName: LegacyDisplayNameSchema.optional(),
     ageGroup: LearnerLevelIdSchema.optional(),
     avatar: AvatarKindSchema.optional(),
     at: z.string().datetime({ offset: true }),

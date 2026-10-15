@@ -150,9 +150,19 @@ describe('PATCH /api/sync/learners/:id — the reported rename (test -> Sungjoo)
     expect(await storedName(learner.learnerId)).toBe('Sungjoo');
   });
 
+  it('takes a legacy name the device already holds (lenient rule, 1-20), so a re-push of the current name applies', async () => {
+    const { learner } = await reportedWorld();
+    for (const name of ['Alexandria Mae', 'Mina_K', 'A'.repeat(20)]) {
+      const r = await patch(learner, { displayName: name, at: at() });
+      expect(r.status, name).toBe(200);
+      expect(r.body.data?.applied).toBe(true);
+      expect(await storedName(learner.learnerId)).toBe(name);
+    }
+  });
+
   it('refuses bad names with 422 and keeps the stored one', async () => {
     const { learner } = await reportedWorld();
-    for (const displayName of ['', '   ', 'A'.repeat(13), 'Sung<joo>', 'Sung\u{1F600}', 'Сунджу', 'line\nbreak']) {
+    for (const displayName of ['', '   ', 'A'.repeat(21), 'Alexandria Mae Smithe']) {
       const r = await patch(learner, { displayName, at: at() });
       expect(r.status, JSON.stringify(displayName)).toBe(422);
       expect(r.body.error?.code).toBe('bad_request');
@@ -219,10 +229,10 @@ describe('PATCH /api/sync/learners/:id — the reported rename (test -> Sungjoo)
     const logged: unknown[] = [];
     for (const level of ['log', 'info', 'warn', 'error', 'debug'] as const) vi.spyOn(console, level).mockImplementation((...args) => void logged.push(args));
     expect((await patch(learner, { displayName: 'Sungjoo', at: at() })).status).toBe(200);
-    expect((await patch(learner, { displayName: 'Bad<Name', at: at() })).status).toBe(422);
+    expect((await patch(learner, { displayName: 'Alexandria Mae Smithe', at: at() })).status).toBe(422);
     expect((await join(cls, learner, 'Sungjooo')).status).toBe(200);
     const seen = JSON.stringify([store.events, logged]);
-    for (const name of ['Sungjoo', 'Bad<Name']) expect(seen).not.toContain(name);
+    for (const name of ['Sungjoo', 'Alexandria Mae Smithe']) expect(seen).not.toContain(name);
   });
 });
 
@@ -253,6 +263,17 @@ describe('GET /api/sync/learners/:id/inbox — the learner block', () => {
   });
 });
 
+describe('POST /api/sync/learners — legacy names always register', () => {
+  it('registers names apps already hold under the lenient rule (1-20) and refuses 21 characters', async () => {
+    for (const [i, name] of ['Alexandria Mae', 'Mina_K'].entries()) {
+      const learner = await registerLearner(`device-legacy000${i}`, name);
+      expect(await storedName(learner.learnerId)).toBe(name);
+    }
+    const long = await post('/api/sync/learners', json, { deviceId: 'device-legacy0009', learner: { displayName: 'A'.repeat(21), ageGroup: '5-7', avatar: 'hoya-orange' } });
+    expect(long.status).toBe(422);
+  });
+});
+
 describe('POST /api/spaces/:id/join — the device name repairs the roster', () => {
   it('a join again with a new name updates the row (the repair path on the current app)', async () => {
     const world = await reportedWorld();
@@ -271,20 +292,20 @@ describe('POST /api/spaces/:id/join — the device name repairs the roster', () 
     expect(await storedName(learner.learnerId)).toBe('Sungjoo');
   });
 
-  it('a name that fails the rule never fails the join: the learner joins and the stored name is kept', async () => {
+  it('a legacy name the device keeps (up to 20 free-text characters) joins and applies as sent', async () => {
     const learner = await registerLearner('device-test0001', 'test');
     const cls = await createSpace('teacher', 'class', 'Kpccw class1');
     // a shipped app's join field takes 20 free-text characters
-    const first = await join(cls, learner, 'A'.repeat(15));
+    const first = await join(cls, learner, 'Alexandria Mae');
     expect(first.status).toBe(201);
     expect(first.body.data?.alreadyMember).toBe(false);
-    expect(await storedName(learner.learnerId)).toBe('test');
-    for (const name of ['<b>', 'Zoë & Mia', 'A'.repeat(20)]) {
+    expect(await storedName(learner.learnerId)).toBe('Alexandria Mae');
+    for (const name of ['Mina_K', 'Zoë & Mia', 'A'.repeat(20)]) {
       const again = await join(cls, learner, name);
       expect(again.status).toBe(200);
       expect(again.body.data?.alreadyMember).toBe(true);
+      expect(await storedName(learner.learnerId)).toBe(name);
     }
-    expect(await storedName(learner.learnerId)).toBe('test');
     // over the body limit is still a bad body, as before
     expect((await join(cls, learner, 'A'.repeat(21))).status).toBe(422);
   });

@@ -85,8 +85,8 @@ export type SpaceLookup = z.infer<typeof SpaceLookupSchema>;
 
 /**
  * POST /api/spaces/:id/join body. Devices send `learnerId` (siblings share a device); `displayName` is the roster
- * name. Lenient on purpose (trim, 1-20, as shipped apps send it): a name never fails the join. The Worker applies
- * the name only when it passes the shared learner name rule (`DisplayNameSchema`) and otherwise keeps the stored one.
+ * name. Lenient on purpose (trim, 1-20, as shipped apps send it; the same bound as `LegacyDisplayNameSchema`, used
+ * by registration and PATCH): a legacy name the device keeps never fails the join and applies as sent.
  */
 export const SpaceJoinSchema = z.object({
   code: JoinCodeFieldSchema,
