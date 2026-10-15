@@ -1,4 +1,4 @@
-# Classroom/Lecture-presets — start a ready-made lesson in one tap, on the presenter home and the console setup page (wireframe v1)
+# Classroom/Lecture-presets — start a ready-made lesson without picking items, on the presenter home and the console setup page (wireframe v1)
 
 Spec: `docs/specs/AMENDMENTS-LECTURE-V2.md` sections 4 (presets), 6 (parents), 10 (accessibility) · amends `classroom/lecture-presenter.md` A (presenter home), B (start screen) and K (console setup page)
 Audience: **teacher, parent or caregiver, any grown-up presenting** (first-time presenters first)
@@ -24,7 +24,7 @@ Panel A — presenter home, phone or small tablet, 320 wide (one column; also 20
 | (Hoya) Lecture mode   [Help]   |  <- h1; Help = Keys and help
 | (English)(Español)(한국어)      |  <- language chips (only when the build offers 2+)
 |--------------------------------|
-| Start in one tap          (h2) |
+| Ready-made lessons        (h2) |
 | "Pick a ready lesson. You can  |
 |  look at it before you start." |
 | +----------------------------+ |
@@ -63,7 +63,7 @@ Panel B — the same home at 768 (tablet portrait): preset cards in a two-column
 | (Hoya) Lecture mode                 [Keys and help]  |
 | (English)(Español)(한국어)                            |
 |------------------------------------------------------|
-| Start in one tap                                     |
+| Ready-made lessons                                   |
 | +------------------------+ +------------------------+ |
 | | Next lesson            | | Start from zero:       | |
 | | line                   | | Hangul week 1          | |
@@ -88,7 +88,7 @@ Panel C — the same home at 1180 (laptop, tablet landscape, classroom PC): thre
 +------------------------------------------------------------------------------------------+
 | (Hoya) Lecture mode                                       (English)(Español)(한국어) [Help]|
 |------------------------------------------------------------------------------------------|
-| Start in one tap                                              | Recent lessons           |
+| Ready-made lessons                                            | Recent lessons           |
 | +------------------+ +------------------+ +------------------+ | | Week 3 letters       | |
 | | Next lesson      | | Start from zero: | | Stage by stage   | | | Yesterday            | |
 | | line             | | Hangul week 1    | | Pick a stage...  | | | [[Resume]][Start over]|
@@ -106,7 +106,7 @@ Panel D — a preset card chosen: it opens in place (one card open at a time); t
 
 ```
 | +--------------------------------------------+ |
-| | Stage by stage                    (chosen) | |  <- thick outline + aria-pressed
+| | Stage by stage                      (open) | |  <- button, aria-expanded=true, aria-controls = this panel; thick outline
 | | Choose a stage                             | |
 | | (Stage 1)(Stage 2)(Stage 3)(Stage 4)       | |  <- radio group, only stages with a ready cell
 | | (Stage 5)(Stage 6)(Stage 7)                | |
@@ -152,7 +152,7 @@ Panel F — console setup page, presets first (teacher; the family page is the s
 | "Show a slide lesson on a projector or TV, in class or at |
 |  home."                                                   |
 |                                                           |
-| Start in one tap (h2)                                     |
+| Ready-made lessons (h2)                                   |
 | [card Next lesson: "From this week's plan: Week 3"]      |
 | [card Start from zero] [card Stage by stage]              |
 | [card Story time] [card Word review] [card Warm-up]       |
@@ -169,7 +169,7 @@ Panel F — console setup page, presets first (teacher; the family page is the s
 
 ## Interaction points
 
-- Preset card → opens in place (Panel D); a second tap on the open card closes it; arrow keys do not move between cards (each is one tab stop).
+- Preset card → opens in place (Panel D, disclosure pattern: the card button has `aria-expanded` and `aria-controls` naming its panel; opening one closes the others, so their `aria-expanded` becomes false); a second tap on the open card closes it; arrow keys do not move between cards (each is one tab stop).
 - Stage chip, length chip → select (radio groups, `radioAfter`); the outline under the card re-resolves at once.
 - [[ Start ]] on the presenter home → the start screen of the resolved deck (Panel E), saved to Recent only at Start on Panel E (as Quick lesson).
 - [[ Start ]] on Panel E → the lesson (`classroom/lecture-presenter.md` C), unchanged.
@@ -189,7 +189,7 @@ Exit to: start screen → lesson (`classroom/lecture-presenter.md` B, C) · Quic
 - **success**: Panels A-F.
 - **nothing to follow** (no plan, no route position, no Recent): Hangul week 1 is the first card; Next lesson is last with its fallback line.
 - **no words this week**: Word review shows "No words this week yet, so this is the warm-up instead." and resolves to the warm-up.
-- **every story shown**: Story time shows the restart line.
+- **every story shown**: Story time shows the restart line. Story time decks are always titled "Story time" in the UI language (never a story's own title) and are filled to the chosen length with the next stories.
 - **empty Recent**: the dashed empty line (`learner.presenter.home.recent.empty`), as today.
 - **storage off**: Recent shows `recent.storageOff`; presets still work (Next lesson falls back, no history).
 - **console: roster or plans failed to load**: Next lesson and Word review show their fallback lines; the other four work; the page's error notice stays as today.
