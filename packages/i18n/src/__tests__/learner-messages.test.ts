@@ -177,7 +177,7 @@ describe('one learner name everywhere (F-LEARN-001 section 3.11), en, ko and es'
 
   it('the join name field says it is the same name everywhere', () => {
     expect(m.caregiver.join.confirm.sameEverywhere).toBe('This name is the same everywhere, not just here.');
-    expect(ko.caregiver.join.confirm.sameEverywhere).toBe('이 이름은 여기만이 아니라 어디서나 같아요.');
+    expect(ko.caregiver.join.confirm.sameEverywhere).toBe('이 이름은 여기뿐 아니라 어디서나 같아요.');
     expect(es.caregiver.join.confirm.sameEverywhere).toBe('Este nombre es el mismo en todas partes, no solo aquí.');
   });
 
