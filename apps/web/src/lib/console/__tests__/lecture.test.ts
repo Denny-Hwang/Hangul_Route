@@ -160,15 +160,21 @@ describe('about-minutes from the catalogue (F-TCH-004 §3.11)', () => {
     expect(LETTERS_CELL.minutes).toBeGreaterThan(0);
     expect(blockMinutes({ kind: 'quiz', from: 'previous', rounds: 5 })).toBe(5);
     expect(blockMinutes({ kind: 'activity', preset: 'air-write', minutes: 3 })).toBe(3);
-    expect(blockMinutes({ kind: 'revisit', chars: ['ㄱ', 'ㄴ'] })).toBe(4);
+    // Rule 12 as amended (AMENDMENTS-LECTURE-V2 4.4): ceil(slides / 2) plus 1 per quiz round.
+    expect(blockMinutes({ kind: 'revisit', chars: ['ㄱ', 'ㄴ'] })).toBe(3);
+    expect(blockMinutes({ kind: 'revisit', chars: ['ㄱ', 'ㄴ', 'ㄷ', 'ㅏ', 'ㅓ', 'ㅗ'] })).toBe(7);
     expect(blockMinutes({ kind: 'class-code', code: 'ABC234' })).toBe(0);
     expect(blockMinutes({ kind: 'quest', id: 'quest:unknown' })).toBeNull();
     expect(blockMinutes({ kind: 'episode', id: 'episode:unknown' })).toBeNull();
     expect(blockMinutes({ kind: 'story', storyId: 'story:unknown', checks: true })).toBeNull();
     expect(blockMinutes({ kind: 'vocab', topicId: 'vocab-topic:food' })).toBe(5);
     expect(blockMinutes({ kind: 'vocab', topicId: 'vocab-topic:unknown' })).toBeNull();
-    expect(blockMinutes({ kind: 'jamo-set', jamoIds: ['jamo:giyeok', 'jamo:a'] })).toBe(2);
+    expect(blockMinutes({ kind: 'jamo-set', jamoIds: ['jamo:giyeok', 'jamo:a'] })).toBe(1);
+    expect(blockMinutes({ kind: 'jamo-set', jamoIds: ['jamo:giyeok', 'jamo:a', 'jamo:eo'] })).toBe(2);
     expect(blockMinutes({ kind: 'cards', cardIds: ['card:book'] })).toBe(1);
+    expect(blockMinutes({ kind: 'cards', cardIds: ['card:book', 'card:hanbok', 'card:kimchi'] })).toBe(2);
+    // v2 (AMENDMENTS-LECTURE-V2 4.4): 10 cards halved plus 5 quiz rounds, as the presets count it.
+    expect(blockMinutes({ kind: 'word-review', questIds: ['quest:stage1-life-q1'], vocabIds: [], rounds: 5 })).toBe(10);
   });
 
   it('a story from the catalogue counts its minutes', () => {

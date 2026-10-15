@@ -1,5 +1,8 @@
 import {
+  CATALOG,
   LectureDeckSchema,
+  presetDeck,
+  resolvePreset,
   type Episode,
   type HeritageCard,
   type LectureDeckInput,
@@ -987,5 +990,38 @@ describe('expandDeck: review fixes (never a crash, trace-stroke order, chosen wo
     const { slides, skipped } = expand([{ kind: 'story', storyId: 'story:bad-check' }], {}, bundle({ story: () => bad }));
     expect(only(slides, 'quiz')).toHaveLength(1);
     expect(skipped).toEqual([{ blockIndex: 0, ref: 'story:bad-check/check-c1', reason: 'no-romanization' }]);
+  });
+});
+
+describe('expandDeck: a v2 word-review block before LV-2 (AMENDMENTS-LECTURE-V2 4.5)', () => {
+  it('is a counted skip, never a silent drop, and the rest of the deck still builds', () => {
+    const { slides, skipped } = expand(
+      [{ kind: 'quest', id: 'quest:letters' }, { kind: 'word-review', questIds: ['quest:letters'], vocabIds: [], rounds: 5 }],
+      { v: 2 },
+    );
+    expect(slides[0]?.kind).toBe('title');
+    expect(skipped).toContainEqual({ blockIndex: 1, ref: 'word-review', reason: 'unsupported-step' });
+  });
+});
+
+describe('expandDeck: the warm-up preset (AMENDMENTS-LECTURE-V2 4.2 U, section 14)', () => {
+  // Recent with 0, 1, 3 and 6 letters (presenter, app) and a console roll-up of 1 letter with no plan.
+  const cases: [string, string[]][] = [
+    ['0 letters', []],
+    ['1 letter', ['ㅎ']],
+    ['3 letters', ['ㄴ', 'ㅑ', 'ㄱ']],
+    ['6 letters', ['ㅂ', 'ㅅ', 'ㅈ', 'ㅊ', 'ㅋ', 'ㅌ']],
+    ['console roll-up of 1 letter, no plan', ['ㄱ']],
+  ];
+  it.each(cases)('%s: the expanded deck has exactly 4 sound-quiz slides and no scope-too-small skip', (_, revisitChars) => {
+    const resolved = resolvePreset('warm-up', 10, { catalog: CATALOG, revisitChars, plan: null });
+    const deck = LectureDeckSchema.parse(
+      presetDeck(resolved, { id: 'lecture:warm0001', title: 'Quick warm-up', createdAt: '2026-10-15T09:00:00Z', seed: 7, source: 'quick' }),
+    );
+    const { slides, skipped } = expandDeck(deck, bundle(), VOICE);
+    expect(only(slides, 'quiz')).toHaveLength(4);
+    expect(only(slides, 'letter').length).toBeGreaterThanOrEqual(4);
+    expect(skipped.filter((s) => s.reason === 'scope-too-small')).toEqual([]);
+    expect(skipped.filter((s) => s.reason === 'unknown-id')).toEqual([]);
   });
 });

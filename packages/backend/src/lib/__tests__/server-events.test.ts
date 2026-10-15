@@ -1,4 +1,4 @@
-import { REPORT_TELEMETRY_PAYLOAD, type TelemetryEventName } from '@hangul-route/content-schema';
+import { LECTURE_DECODE_FAILURES, LECTURE_PRESETS, REPORT_TELEMETRY_PAYLOAD, type TelemetryEventName } from '@hangul-route/content-schema';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { store } from '../../store';
 import { MAX_EVENTS, appendEvent, keptEventFields, recordServerEvent } from '../server-events';
@@ -193,6 +193,74 @@ describe('billing home events (F-BILL-002 B-4, section 10)', () => {
     expect(keptEventFields('billing.summary_viewed', { ...smuggled, cards: 3, payerCards: 1, mode: 'test' }, 'profile:a')).toEqual({ profileId: undefined, payload: { cards: 3, payerCards: 1, mode: 'test' } });
     expect(keptEventFields('billing.receipts_viewed', { ...smuggled, rows: 50 }, undefined).payload).toEqual({ rows: 50 });
     for (const bad of [-1, 1.5, '3', Number.NaN, null]) expect(keptEventFields('billing.receipts_viewed', { rows: bad }, undefined).payload).toBeUndefined();
+  });
+});
+
+describe('lecture events (AMENDMENTS-LECTURE-V2 section 11: codes and bounded counts only, no profile id)', () => {
+  // What the shipped presenter sends (apps/mobile/src/logic/lecture/shell.ts startPayload / completePayload,
+  // tools.ts TOOL_NAMES, PresenterApp.tsx lecture.deck_rejected), plus the LV-3 `preset` source.
+  const start = { source: 'console', blocks: 4, slides: 61, skipped: 2, picker: 'numbers', romanization: 'always', voice: 'ready', offlineReady: true };
+
+  it('every key the shipped client sends survives, for every documented value', () => {
+    expect(keptEventFields('lecture.start', start, 'profile:a')).toEqual({ profileId: undefined, payload: start });
+    for (const source of ['console', 'quick', 'recent']) expect(keptEventFields('lecture.start', { ...start, source }, undefined).payload).toEqual({ ...start, source });
+    for (const picker of ['none', 'names', 'initials', 'numbers']) expect(keptEventFields('lecture.start', { ...start, picker }, undefined).payload?.picker).toBe(picker);
+    for (const voice of ['ready', 'none', 'unknown']) expect(keptEventFields('lecture.start', { ...start, voice }, undefined).payload?.voice).toBe(voice);
+    expect(keptEventFields('lecture.start', { ...start, romanization: 'tap', offlineReady: false }, undefined).payload).toEqual({ ...start, romanization: 'tap', offlineReady: false });
+    for (const preset of LECTURE_PRESETS) {
+      expect(keptEventFields('lecture.start', { ...start, source: 'preset', preset }, undefined).payload).toEqual({ ...start, source: 'preset', preset });
+    }
+    const complete = { slidesShown: 40, minutes: 22, reveals: 130 };
+    expect(keptEventFields('lecture.complete', complete, 'profile:a')).toEqual({ profileId: undefined, payload: complete });
+    for (const tool of ['timer', 'picker', 'blank', 'pause', 'grid', 'fullscreen']) {
+      expect(keptEventFields('lecture.tool_used', { tool }, undefined).payload).toEqual({ tool });
+    }
+    for (const reason of LECTURE_DECODE_FAILURES) expect(keptEventFields('lecture.deck_rejected', { reason }, undefined).payload).toEqual({ reason });
+  });
+
+  it('the bounds: 0 to 30 blocks, 0 to 10000 slides and skips, 600 minutes, 100000 reveals, whole numbers only', () => {
+    const edge = { ...start, blocks: 30, slides: 10_000, skipped: 10_000 };
+    expect(keptEventFields('lecture.start', edge, undefined).payload).toEqual(edge);
+    expect(keptEventFields('lecture.start', { ...start, blocks: 0, slides: 0, skipped: 0 }, undefined).payload).toMatchObject({ blocks: 0, slides: 0, skipped: 0 });
+    expect(keptEventFields('lecture.complete', { slidesShown: 10_000, minutes: 600, reveals: 100_000 }, undefined).payload).toEqual({
+      slidesShown: 10_000,
+      minutes: 600,
+      reveals: 100_000,
+    });
+    for (const bad of [-1, 2.5, '4', Number.NaN, Number.POSITIVE_INFINITY, null, true]) {
+      expect(keptEventFields('lecture.start', { ...start, blocks: bad }, undefined).payload).not.toHaveProperty('blocks');
+      expect(keptEventFields('lecture.complete', { slidesShown: bad, minutes: 1, reveals: 1 }, undefined).payload).toEqual({ minutes: 1, reveals: 1 });
+    }
+    // One past each bound is dropped.
+    expect(keptEventFields('lecture.start', { ...start, blocks: 31, slides: 10_001, skipped: 10_001 }, undefined).payload).toEqual({
+      source: 'console',
+      picker: 'numbers',
+      romanization: 'always',
+      voice: 'ready',
+      offlineReady: true,
+    });
+    expect(keptEventFields('lecture.complete', { slidesShown: 10_001, minutes: 601, reveals: 100_001 }, undefined).payload).toBeUndefined();
+    expect(keptEventFields('lecture.complete', { slidesShown: 1, minutes: 601, reveals: 100_001 }, undefined).payload).toEqual({ slidesShown: 1 });
+  });
+
+  it('preset is kept only with source preset', () => {
+    expect(keptEventFields('lecture.start', { ...start, source: 'preset', preset: 'warm-up' }, undefined).payload).toEqual({ ...start, source: 'preset', preset: 'warm-up' });
+    for (const source of ['console', 'quick', 'recent', 'plan', undefined]) {
+      expect(keptEventFields('lecture.start', { ...start, source, preset: 'warm-up' }, undefined).payload).not.toHaveProperty('preset');
+    }
+    expect(keptEventFields('lecture.start', { preset: 'warm-up' }, undefined).payload).toBeUndefined();
+  });
+
+  it('drops an extra key (a name, a deck title or id), the profile id, and codes off their lists', () => {
+    const smuggled = { name: 'Minho', title: 'Week 3 with Minho', deckId: 'lecture:abc123', labels: ['Minho', 'Sora'], profileId: 'profile:a' };
+    expect(keptEventFields('lecture.start', { ...start, ...smuggled }, 'profile:a')).toEqual({ profileId: undefined, payload: start });
+    expect(keptEventFields('lecture.complete', { slidesShown: 3, ...smuggled }, 'profile:a')).toEqual({ profileId: undefined, payload: { slidesShown: 3 } });
+    expect(keptEventFields('lecture.tool_used', { tool: 'Minho', ...smuggled }, undefined).payload).toBeUndefined();
+    expect(keptEventFields('lecture.deck_rejected', { reason: 'Minho' }, undefined).payload).toBeUndefined();
+    const off = keptEventFields('lecture.start', { ...start, source: 'plan', preset: 'everything', picker: 'Minho', romanization: 'never', voice: 'loud', offlineReady: 'yes' }, undefined);
+    expect(off.payload).toEqual({ blocks: 4, slides: 61, skipped: 2 });
+    expect(keptEventFields('lecture.start', undefined, 'profile:a')).toEqual({ profileId: undefined, payload: undefined });
+    expect(JSON.stringify(keptEventFields('lecture.start', { ...start, ...smuggled }, 'profile:a'))).not.toContain('Minho');
   });
 });
 

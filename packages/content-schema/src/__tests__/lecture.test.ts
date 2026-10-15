@@ -4,7 +4,12 @@ import {
   DECK_ID_RE,
   LECTURE_CONSOLE_ORIGINS,
   LECTURE_DECK_VERSION,
+  LECTURE_DECK_VERSIONS,
   LECTURE_MAX_BLOCKS,
+  LECTURE_PRESETS,
+  WORD_REVIEW_MAX_QUESTS,
+  WORD_REVIEW_MAX_WORDS,
+  deckVersion,
   LECTURE_MAX_FRAGMENT_CHARS,
   LECTURE_MAX_JSON_BYTES,
   LECTURE_CREATED_AT_RE,
@@ -435,9 +440,11 @@ describe('deck codec', () => {
     });
 
     it('unsupported_version: a later prefix or a later deck version', () => {
-      expect(decodeDeck(`2.${encodeDeck(baseDeck()).slice(2)}`)).toEqual({ ok: false, reason: 'unsupported_version' });
+      expect(decodeDeck(`3.${encodeDeck(baseDeck()).slice(2)}`)).toEqual({ ok: false, reason: 'unsupported_version' });
       expect(decodeDeck(`10.${encodeDeck(baseDeck()).slice(2)}`)).toEqual({ ok: false, reason: 'unsupported_version' });
-      expect(decodeDeck(fragmentOfJson(JSON.stringify({ ...baseDeck(), v: 2 })))).toEqual({ ok: false, reason: 'unsupported_version' });
+      expect(decodeDeck(`01.${encodeDeck(baseDeck()).slice(2)}`)).toEqual({ ok: false, reason: 'unsupported_version' });
+      expect(decodeDeck(`0.${encodeDeck(baseDeck()).slice(2)}`)).toEqual({ ok: false, reason: 'unsupported_version' });
+      expect(decodeDeck(fragmentOfJson(JSON.stringify({ ...baseDeck(), v: 3 })))).toEqual({ ok: false, reason: 'unsupported_version' });
     });
 
     it('bad_json', () => {
@@ -482,5 +489,147 @@ describe('deck codec', () => {
       const json = JSON.stringify({ ...baseDeck(), title: 'x', pad: 'p'.repeat(6145) });
       expect(decodeDeck(fragmentOfJson(json))).toEqual({ ok: false, reason: 'too_large' });
     });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Deck v2 (AMENDMENTS-LECTURE-V2 section 4.5)
+// ---------------------------------------------------------------------------
+
+const wordReview = (over: Record<string, unknown> = {}) => ({
+  kind: 'word-review' as const,
+  questIds: ['quest:stage1-life-q1'],
+  vocabIds: ['vocab:apple'],
+  rounds: 5,
+  ...over,
+});
+const v2Deck = (over: Partial<LectureDeckInput> = {}): LectureDeckInput =>
+  baseDeck({ v: 2, blocks: [wordReview()], ...over });
+const fragmentOfJsonV = (v: number, json: string): string => `${v}.${b64url(new TextEncoder().encode(json))}`;
+
+describe('deck v2 grammar', () => {
+  it('pins the versions, the presets and the word-review limits', () => {
+    expect(LECTURE_DECK_VERSIONS).toEqual([1, 2]);
+    expect(LECTURE_PRESETS).toEqual(['next-lesson', 'hangul-week-1', 'by-stage', 'story-time', 'word-review', 'warm-up']);
+    expect(WORD_REVIEW_MAX_QUESTS).toBe(12);
+    expect(WORD_REVIEW_MAX_WORDS).toBe(24);
+  });
+
+  it('deckVersion is 2 only for a deck holding a word-review block', () => {
+    expect(deckVersion(baseDeck())).toBe(1);
+    expect(deckVersion(v2Deck())).toBe(2);
+    expect(deckVersion(baseDeck({ blocks: [{ kind: 'quest', id: 'quest:s1-meet-1' }, wordReview()] }))).toBe(2);
+    expect(deckVersion({})).toBe(1);
+    expect(deckVersion({ blocks: [null, 3, 'word-review', { kind: 'quiz' }] })).toBe(1);
+  });
+
+  it('a v2 deck holds word-review and may carry a preset', () => {
+    expect(LectureDeckSchema.safeParse(v2Deck()).success).toBe(true);
+    for (const preset of LECTURE_PRESETS) expect(LectureDeckSchema.safeParse(v2Deck({ preset })).success).toBe(true);
+    expect(LectureDeckSchema.safeParse(v2Deck({ preset: 'everything' as never })).success).toBe(false);
+  });
+
+  it('only v2 may hold word-review or a preset, and a v2 deck must hold word-review', () => {
+    const paths = (deck: unknown) => {
+      const r = LectureDeckSchema.safeParse(deck);
+      return r.success ? null : r.error.issues.map((i) => i.path.join('.'));
+    };
+    expect(paths({ ...v2Deck(), v: 1 })).toEqual(['v']);
+    expect(paths({ ...baseDeck(), v: 2 })).toEqual(['v']);
+    expect(paths({ ...baseDeck(), preset: 'warm-up' })).toEqual(['preset']);
+    expect(paths({ ...baseDeck(), v: 3 })).toEqual(['v']);
+  });
+
+  it('word-review bounds: quest and word id grammars, at most 12 and 24, at least one id, 1-10 rounds, strict', () => {
+    const ok = (block: unknown) => LectureDeckSchema.safeParse(v2Deck({ blocks: [block as never] })).success;
+    expect(ok(wordReview({ questIds: Array.from({ length: 12 }, (_, i) => `quest:q${i}`), vocabIds: [] }))).toBe(true);
+    expect(ok(wordReview({ questIds: Array.from({ length: 13 }, (_, i) => `quest:q${i}`) }))).toBe(false);
+    expect(ok(wordReview({ questIds: [], vocabIds: Array.from({ length: 24 }, (_, i) => `vocab:w${i}`) }))).toBe(true);
+    expect(ok(wordReview({ vocabIds: Array.from({ length: 25 }, (_, i) => `vocab:w${i}`) }))).toBe(false);
+    expect(ok(wordReview({ questIds: [], vocabIds: [] }))).toBe(false);
+    expect(ok(wordReview({ questIds: ['Minho'] }))).toBe(false);
+    expect(ok(wordReview({ questIds: ['quest:Stage1'] }))).toBe(false);
+    expect(ok(wordReview({ questIds: [`quest:${'a'.repeat(59)}`] }))).toBe(false);
+    expect(ok(wordReview({ vocabIds: ['vocab:Apple'] }))).toBe(false);
+    expect(ok(wordReview({ vocabIds: [`vocab:${'a'.repeat(43)}`] }))).toBe(false);
+    for (const rounds of [0, 11, 2.5]) expect(ok(wordReview({ rounds }))).toBe(false);
+    for (const rounds of [1, 10]) expect(ok(wordReview({ rounds }))).toBe(true);
+    expect(ok(wordReview({ labels: ['Minho'] }))).toBe(false);
+    expect(ok({ kind: 'word-review', questIds: ['quest:a'], rounds: 5 })).toBe(false);
+  });
+});
+
+describe('deck codec v2', () => {
+  it('a v1 deck encodes as v1 byte-for-byte (the fragment the codec wrote before v2)', () => {
+    const deck = baseDeck({
+      title: '한글 Week 3: first letters',
+      blocks: [
+        { kind: 'quest', id: 'quest:s1-meet-1' },
+        { kind: 'story', storyId: 'story:sun-and-moon' },
+        { kind: 'activity', preset: 'air-write', minutes: 3 },
+      ],
+      options: { romanization: 'tap' },
+      picker: { mode: 'numbers', count: 12 },
+      source: 'quick',
+    });
+    // Captured from the pre-v2 encoder (origin/main 3b52a3969).
+    const before =
+      '1.eyJ2IjoxLCJpZCI6ImxlY3R1cmU6YWJjMTIzIiwidGl0bGUiOiLtlZzquIAgV2VlayAzOiBmaXJzdCBsZXR0ZXJzIiwiY3JlYXRlZEF0IjoiMjAyNi0xMC0xMVQwOTowMDowMC4wMDBaIiwic2VlZCI6NDIsImJsb2NrcyI6W3sia2luZCI6InF1ZXN0IiwiaWQiOiJxdWVzdDpzMS1tZWV0LTEifSx7ImtpbmQiOiJzdG9yeSIsInN0b3J5SWQiOiJzdG9yeTpzdW4tYW5kLW1vb24iLCJjaGVja3MiOnRydWV9LHsia2luZCI6ImFjdGl2aXR5IiwicHJlc2V0IjoiYWlyLXdyaXRlIiwibWludXRlcyI6M31dLCJvcHRpb25zIjp7InJvbWFuaXphdGlvbiI6InRhcCIsInN0cm9rZUd1aWRlIjp0cnVlLCJxdWl6Um91bmRzIjo1LCJzb3VuZCI6dHJ1ZX0sInBpY2tlciI6eyJtb2RlIjoibnVtYmVycyIsImNvdW50IjoxMn0sInNvdXJjZSI6InF1aWNrIn0';
+    expect(encodeDeck(deck)).toBe(before);
+    // An author's `v: 2` on a deck without a v2 feature still writes the v1 link.
+    expect(encodeDeck({ ...deck, v: 2 })).toBe(before);
+  });
+
+  it('writes the lowest version the deck needs and round-trips a v2 deck', () => {
+    const deck = v2Deck({ preset: 'word-review', source: 'quick' });
+    const fragment = encodeDeck(deck);
+    expect(fragment).toMatch(/^2\.[A-Za-z0-9_-]+$/);
+    expect(decodeDeck(fragment)).toEqual({ ok: true, deck: LectureDeckSchema.parse(deck) });
+    // An author's `v: 1` on a word-review deck is raised to v2, never an invalid link.
+    expect(encodeDeck({ ...deck, v: 1 })).toBe(fragment);
+  });
+
+  it('a v1 fragment holding a v2 feature is invalid, and so is a prefix that is not the deck version', () => {
+    const v2Json = JSON.stringify(LectureDeckSchema.parse(v2Deck()));
+    expect(decodeDeck(fragmentOfJsonV(1, JSON.stringify({ ...JSON.parse(v2Json), v: 1 })))).toMatchObject({ ok: false, reason: 'invalid' });
+    expect(decodeDeck(fragmentOfJsonV(1, JSON.stringify({ ...baseDeck(), preset: 'warm-up' })))).toMatchObject({ ok: false, reason: 'invalid' });
+    expect(decodeDeck(fragmentOfJsonV(1, v2Json))).toEqual({ ok: false, reason: 'invalid', issues: [{ path: ['v'], code: 'custom' }] });
+    expect(decodeDeck(fragmentOfJsonV(2, JSON.stringify(LectureDeckSchema.parse(baseDeck()))))).toEqual({
+      ok: false,
+      reason: 'invalid',
+      issues: [{ path: ['v'], code: 'custom' }],
+    });
+    expect(decodeDeck(fragmentOfJsonV(2, JSON.stringify({ ...baseDeck(), v: 2 })))).toMatchObject({ ok: false, reason: 'invalid' });
+  });
+
+  it('keeps the v2 worst case under both limits: 29 long blocks, a word review of 12 quest ids and 24 word ids', () => {
+    const id = `episode:${'a'.repeat(56)}`;
+    const deck = baseDeck({
+      v: 2,
+      id: 'lecture:abcdefghijkl',
+      title: '가'.repeat(60),
+      seed: 2_147_483_647,
+      blocks: [
+        ...Array.from({ length: 29 }, () => ({ kind: 'episode' as const, id })),
+        {
+          kind: 'word-review',
+          questIds: Array.from({ length: 12 }, (_, i) => `quest:${'q'.repeat(54)}-${String(i).padStart(3, '0')}`),
+          vocabIds: Array.from({ length: 24 }, (_, i) => `vocab:${'w'.repeat(37)}-${String(i).padStart(4, '0')}`),
+          rounds: 10,
+        },
+      ],
+      options: { romanization: 'tap', strokeGuide: false, quizRounds: 10, sound: false, uiLocale: 'es' },
+      picker: { mode: 'initials', count: 60 },
+      source: 'catalogue',
+      preset: 'word-review',
+    });
+    const parsed = LectureDeckSchema.parse(deck);
+    const review = parsed.blocks[29];
+    expect(review?.kind === 'word-review' && review.questIds.every((q) => q.length === 64)).toBe(true);
+    expect(review?.kind === 'word-review' && review.vocabIds.every((w) => w.length === 48)).toBe(true);
+    const fragment = encodeDeck(deck);
+    expect(fragment.length).toBeLessThan(LECTURE_MAX_FRAGMENT_CHARS);
+    expect(new TextEncoder().encode(JSON.stringify(parsed)).length).toBeLessThan(LECTURE_MAX_JSON_BYTES);
+    expect(decodeDeck(fragment).ok).toBe(true);
   });
 });

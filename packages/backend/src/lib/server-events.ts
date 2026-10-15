@@ -8,6 +8,8 @@ import {
   ClassMoveCompletedViaSchema,
   ClassMoveSeenOnSchema,
   ClassScopeBasisSchema,
+  LECTURE_DECODE_FAILURES,
+  LECTURE_PRESETS,
   LearnerBasisSchema,
   NOTES_MODES,
   NOTE_PRESET_IDS,
@@ -192,6 +194,43 @@ const BILLING_PAYLOAD_RULES: Readonly<Record<string, Readonly<Record<string, Fie
   'billing.receipts_viewed': { rows: isCount },
 };
 
+/**
+ * Lecture events (F-TCH-004 section 3.14 as amended by AMENDMENTS-LECTURE-V2
+ * section 11) carry no profile id and, per name, only the documented keys:
+ * codes from their lists, booleans, and whole-number counts within bounds that
+ * hold the largest deck the schema allows (`LECTURE_MAX_BLOCKS` 30 episode blocks
+ * of the largest cell, 172 slides today, is about 5200 slides; reveals are several
+ * builds a slide). `preset` is kept only beside `source: 'preset'`. A deck title,
+ * a picker label, a deck id or any other key is dropped. Worker first: this rule
+ * ships before any presenter sends `source: 'preset'`.
+ */
+const LECTURE_EVENT_PREFIX = 'lecture.';
+
+const wholeUpTo =
+  (max: number): FieldRule =>
+  (value) =>
+    typeof value === 'number' && Number.isInteger(value) && value >= 0 && value <= max;
+const LECTURE_SLIDES_MAX = 10_000;
+const LECTURE_REVEALS_MAX = 100_000;
+const isLecturePreset = oneOf(LECTURE_PRESETS);
+
+const LECTURE_PAYLOAD_RULES: Readonly<Record<string, Readonly<Record<string, FieldRule>>>> = {
+  'lecture.start': {
+    source: oneOf(['console', 'quick', 'recent', 'preset']),
+    preset: (value, payload) => payload.source === 'preset' && isLecturePreset(value, payload),
+    blocks: wholeUpTo(30),
+    slides: wholeUpTo(LECTURE_SLIDES_MAX),
+    skipped: wholeUpTo(LECTURE_SLIDES_MAX),
+    picker: oneOf(['none', 'names', 'initials', 'numbers']),
+    romanization: oneOf(['always', 'tap']),
+    voice: oneOf(['ready', 'none', 'unknown']),
+    offlineReady: isBoolean,
+  },
+  'lecture.complete': { slidesShown: wholeUpTo(LECTURE_SLIDES_MAX), minutes: wholeUpTo(600), reveals: wholeUpTo(LECTURE_REVEALS_MAX) },
+  'lecture.tool_used': { tool: oneOf(['timer', 'picker', 'blank', 'pause', 'grid', 'fullscreen']) },
+  'lecture.deck_rejected': { reason: oneOf(LECTURE_DECODE_FAILURES) },
+};
+
 /** Only the payload fields that fit their rule; a name without rules keeps none. */
 function ruledPayload(
   rules: Readonly<Record<string, FieldRule>> | undefined,
@@ -210,7 +249,8 @@ function ruledPayload(
  * string profile id and its payload as given; a codes-only event keeps only its
  * codes and never a profile id; a `browse.*` event keeps only its documented
  * fields (F-BROWSE-001 section 9) and never a profile id; so does a `notes.*`
- * event (F-FEEDBACK-001 section 10) and a `billing.*` event (F-BILL-002 section 10).
+ * event (F-FEEDBACK-001 section 10), a `billing.*` event (F-BILL-002 section 10)
+ * and a `lecture.*` event (AMENDMENTS-LECTURE-V2 section 11).
  */
 export function keptEventFields(
   name: TelemetryEventName,
@@ -220,6 +260,7 @@ export function keptEventFields(
   if (name.startsWith(BROWSE_EVENT_PREFIX)) return { profileId: undefined, payload: ruledPayload(BROWSE_PAYLOAD_RULES[name], payload) };
   if (name.startsWith(NOTES_EVENT_PREFIX)) return { profileId: undefined, payload: ruledPayload(NOTES_PAYLOAD_RULES[name], payload) };
   if (name.startsWith(BILLING_TELEMETRY_PREFIX)) return { profileId: undefined, payload: ruledPayload(BILLING_PAYLOAD_RULES[name], payload) };
+  if (name.startsWith(LECTURE_EVENT_PREFIX)) return { profileId: undefined, payload: ruledPayload(LECTURE_PAYLOAD_RULES[name], payload) };
   const codesOnly = codesOnlyValues(name);
   if (codesOnly) return { profileId: undefined, payload: codesOnlyPayload(payload, codesOnly) };
   return { profileId: typeof profileId === 'string' ? profileId : undefined, payload };
