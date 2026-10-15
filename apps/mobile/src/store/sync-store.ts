@@ -276,6 +276,7 @@ export const useSyncStore = create<State & Actions>((set, get) => {
       return null;
     }
     if (result.status === 'scope_limited' || result.status === 'invalid') {
+      // Never retried: the same body would be refused again. Only a fixed code is recorded, never the value sent.
       settlePending(learnerId, pending.at);
       return result.status === 'scope_limited' ? 'scope_limited' : 'profile_invalid';
     }

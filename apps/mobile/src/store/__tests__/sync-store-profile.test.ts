@@ -123,6 +123,22 @@ describe('profile edits reach the server (F-PROF-001)', () => {
     expect((await useSyncStore.getState().syncNow(A)).pendingProfile).toBeNull();
   });
 
+  it('applied false adopts the server learner (a legacy name too), clears the edit and never retries', async () => {
+    registered(A);
+    const server = { displayName: 'Alexandria Mae', ageGroup: '8-9', avatar: 'hoya-blue' };
+    const api = fakeApi({ updateLearnerProfile: vi.fn(async () => ({ status: 'ok', applied: false, profileUpdatedAt: '2026-10-14T10:00:00.000Z', learner: server })) });
+    setSyncApiForTests(api as never);
+    useProfileStore.getState().updateProfile(A, { displayName: 'Sungjoo' });
+    await vi.waitFor(() => expect(useSyncStore.getState().byLearner[A]?.pendingProfile).not.toBeNull());
+    const state = await useSyncStore.getState().syncNow(A);
+    expect(state.pendingProfile).toBeNull();
+    expect(useProfileStore.getState().profiles[0]).toMatchObject(server);
+    await flush();
+    expect(useSyncStore.getState().byLearner[A]?.pendingProfile ?? null).toBeNull();
+    await useSyncStore.getState().syncNow(A);
+    expect(api.updateLearnerProfile).toHaveBeenCalledTimes(1);
+  });
+
   it('a class tablet (403 scope_limited) drops the edit with no retry and records it', async () => {
     registered(A);
     const api = fakeApi({ updateLearnerProfile: vi.fn(async () => ({ status: 'scope_limited' })) });
@@ -135,7 +151,7 @@ describe('profile edits reach the server (F-PROF-001)', () => {
     expect(api.updateLearnerProfile).toHaveBeenCalledTimes(1);
   });
 
-  it('a value the Worker refuses (422) is dropped with no retry', async () => {
+  it('a value the Worker refuses (422) is dropped with no retry, recorded as a fixed code only', async () => {
     registered(A);
     const api = fakeApi({ updateLearnerProfile: vi.fn(async () => ({ status: 'invalid', code: 'bad_request' })) });
     setSyncApiForTests(api as never);
@@ -143,6 +159,10 @@ describe('profile edits reach the server (F-PROF-001)', () => {
     const state = await useSyncStore.getState().syncNow(A);
     expect(state.pendingProfile).toBeNull();
     expect(state.lastError).toBe('profile_invalid');
+    expect(JSON.stringify(useSyncStore.getState().byLearner[A])).not.toContain('Sungjoo');
+    await useSyncStore.getState().syncNow(A);
+    await useSyncStore.getState().syncAll();
+    expect(api.updateLearnerProfile).toHaveBeenCalledTimes(1);
   });
 
   it('a 5xx keeps the edit for the next sync', async () => {
@@ -187,11 +207,20 @@ describe('profile edits reach the server (F-PROF-001)', () => {
     expect(state.pendingProfile).toBeNull();
   });
 
-  it('a name an older build stored that the shared rule refuses stays on the device; the rest goes up', async () => {
+  it('a legacy name an older build stored (longer than the edit-screen rule) still goes up', async () => {
     registered(A);
     const api = fakeApi();
     setSyncApiForTests(api as never);
-    await useSyncStore.getState().markProfileDirty(A, { displayName: 'A name far too long', ageGroup: '8-9' });
+    await useSyncStore.getState().markProfileDirty(A, { displayName: 'Alexandria Mae' });
+    await useSyncStore.getState().syncNow(A);
+    expect(api.updateLearnerProfile.mock.calls[0]?.[3]).toEqual({ displayName: 'Alexandria Mae', at: expect.any(String) });
+  });
+
+  it('a name no server rule takes stays on the device; the rest goes up', async () => {
+    registered(A);
+    const api = fakeApi();
+    setSyncApiForTests(api as never);
+    await useSyncStore.getState().markProfileDirty(A, { displayName: 'Sun\u202EJoo', ageGroup: '8-9' });
     await useSyncStore.getState().syncNow(A);
     const body = api.updateLearnerProfile.mock.calls[0]?.[3];
     expect(body).toEqual({ ageGroup: '8-9', at: expect.any(String) });
@@ -401,8 +430,8 @@ describe('the server name comes down (inbox pull, restore)', () => {
     expect(useProfileStore.getState().profiles[0]?.displayName).toBe('test');
   });
 
-  it('a server name the local rule refuses is skipped; the other fields still apply', async () => {
-    await useSyncStore.getState().applyInboxLearner(A, row('A name far too long'));
+  it('a server name no server rule takes is skipped; the other fields still apply', async () => {
+    await useSyncStore.getState().applyInboxLearner(A, row('Sun\u202EJoo'));
     expect(useProfileStore.getState().profiles[0]).toMatchObject({ displayName: 'test', ageGroup: '8-9' });
   });
 

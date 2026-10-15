@@ -1,5 +1,4 @@
-import { AvatarKindSchema, isLearnerLevelId, type AvatarKind, type LearnerLevelId, type Profile } from '@hangul-route/content-schema';
-import { validateDisplayName } from '../profiles/profile-model';
+import { AvatarKindSchema, LegacyDisplayNameSchema, isLearnerLevelId, type AvatarKind, type LearnerLevelId, type Profile } from '@hangul-route/content-schema';
 
 /**
  * The learner fields the server keeps a copy of (F-PROF-001, F-SYNC-001): the name class and family rosters show,
@@ -79,22 +78,34 @@ function withoutKeys(fields: ProfileServerFields, drop: ProfileServerFields): Pr
 }
 
 /**
- * Only values the shared rules accept go up (the same name rule as the Worker's, `DisplayNameSchema`): a name a
- * build before that rule stored stays on the device rather than earning a refusal for the whole edit.
+ * A name as the server takes it, trimmed, or null. The rule is the Worker's own for registration, a join and PATCH
+ * (`LegacyDisplayNameSchema`: 1-20, no control, zero-width or direction characters, F-SYNC-001 section 3.7
+ * SYNC-PROF-1), not the stricter edit-screen rule: a name an older build stored (for example "Alexandria Mae")
+ * still goes up and still comes down.
+ */
+export function serverName(raw: string): string | null {
+  const parsed = LegacyDisplayNameSchema.safeParse(raw);
+  return parsed.success ? parsed.data : null;
+}
+
+/**
+ * Only values the Worker accepts go up: a name no server rule takes (a control character, over 20 characters)
+ * stays on the device rather than earning a refusal for the whole edit.
  */
 export function sendableFields(fields: ProfileServerFields): ProfileServerFields {
   const out: ProfileServerFields = {};
-  if (fields.displayName !== undefined && validateDisplayName(fields.displayName) === null) out.displayName = fields.displayName.trim();
+  const name = fields.displayName === undefined ? null : serverName(fields.displayName);
+  if (name !== null) out.displayName = name;
   if (fields.ageGroup !== undefined && isLearnerLevelId(fields.ageGroup)) out.ageGroup = fields.ageGroup;
   if (fields.avatar !== undefined && AvatarKindSchema.safeParse(fields.avatar).success) out.avatar = fields.avatar;
   return out;
 }
 
-/** The server values that differ from the local profile and pass the local rules; anything else is skipped. */
+/** The server values that differ from the local profile and pass the same rules; anything else is skipped. */
 export function serverProfileChanges(profile: Profile, server: ServerLearnerFields): ProfileServerFields {
   const out: ProfileServerFields = {};
-  const name = server.displayName.trim();
-  if (name !== profile.displayName && validateDisplayName(name) === null) out.displayName = name;
+  const name = serverName(server.displayName);
+  if (name !== null && name !== profile.displayName) out.displayName = name;
   if (server.ageGroup !== null && server.ageGroup !== profile.ageGroup && isLearnerLevelId(server.ageGroup)) out.ageGroup = server.ageGroup;
   if (server.avatar !== profile.avatar) {
     const avatar = AvatarKindSchema.safeParse(server.avatar);
