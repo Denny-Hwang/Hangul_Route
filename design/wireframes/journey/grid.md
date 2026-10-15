@@ -47,7 +47,7 @@ One cell, top to bottom (owner request 2026-10-14; `logic/journey-cell-layout.ts
 
 ```
 +------------+
-|pin  ▼  [5] |  <- corner band (22 dp): start pin top left, count mark top right
+|pin  v  [5] |  <- corner band (22 dp): start pin top left, count mark top right
 |            |     (top left on a placed-out cell, whose check owns top right);
 |    (gl)    |     the Next triangle over the top edge
 |            |  <- glyph box = the ring's size (40 / 48 / 56); the ring goes round the glyph
@@ -55,11 +55,11 @@ One cell, top to bottom (owner request 2026-10-14; `logic/journey-cell-layout.ts
 +------------+
 ```
 
-A cell with both the start pin and the placed-out check (pin from the stored level check, check from live progress) keeps its count mark, under the check, in a second band row; the glyph starts under it and that cell's row grows by the row (about 96 dp tall at 320 px):
+A cell with both the start pin and the placed-out check (pin from the stored level check, check from live progress) keeps its count mark, under the check, in a second band row; the glyph starts under it, and every cell in that grid row takes the same deeper band, so the whole row grows by one band row together (about 96 dp tall at 320 px) and stays one height:
 
 ```
 +------------+
-|pin  ▼   ok |  <- corner band: start pin top left, placed-out check top right
+|pin  v   ok |  <- corner band: start pin top left, placed-out check top right
 |        [5] |  <- second band row: the count mark under the check
 |    (gl)    |
 |   Letters  |

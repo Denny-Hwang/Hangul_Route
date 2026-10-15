@@ -34,7 +34,7 @@ import {
   type JourneyCellView,
   type JourneyMarksOf,
 } from '../logic/journey-grid';
-import { journeyGridMaxWidth } from '../logic/layout/pane-sizes';
+import { journeyCellSize, journeyGridMaxWidth } from '../logic/layout/pane-sizes';
 import type { StoryIndexEntry } from '../logic/story/story-index';
 
 /**
@@ -122,6 +122,11 @@ export function JourneyGrid({
   const gridMax = journeyGridMaxWidth(spacing.xs, layout.columns.journeyCellMax);
   const rows = journeyGridRows({ stages, themes, gridEpisodes, paneMode, selectedId, marksOf, storyEntries, quests, access });
   const themeOf = new Map(themes.map((t) => [t.key, t]));
+  // The grid's width, from the column-label row (the same geometry as every cell row): each cell then gets
+  // an explicit height, max(its width, its smallest height), so no platform has to settle aspectRatio
+  // against minHeight. Before the first layout a cell is square (aspectRatio) with that smallest height.
+  const [gridWidth, setGridWidth] = React.useState<number | null>(null);
+  const cellWidth = gridWidth === null ? null : journeyCellSize(gridWidth, spacing.xs, layout.columns.journeyCellMax);
   // Each mark's word, so the words are on the page (section 3.14); the cell labels carry them for screen readers.
   const words = { next: messages.learner.routeNext.tag.next, inPlan: messages.learner.routeNext.tag.inPlan, notOpen: messages.learner.access.notOpen };
   const legend = journeyLegend(rows).map((kind) => ({ kind, label: words[kind] }));
@@ -136,7 +141,11 @@ export function JourneyGrid({
       <RouteLegend items={legend} testID="journey-legend" />
 
       {/* Same row geometry as the cells below, so each label sits over its column. */}
-      <View style={{ flexDirection: 'row', gap: spacing.xs, marginBottom: spacing.sm, width: '100%', maxWidth: gridMax }}>
+      <View
+        testID="journey-col-row"
+        onLayout={(e) => setGridWidth(e.nativeEvent.layout.width)}
+        style={{ flexDirection: 'row', gap: spacing.xs, marginBottom: spacing.sm, width: '100%', maxWidth: gridMax }}
+      >
         {themes.map((t) => (
           <View key={t.key} testID={`journey-col-${t.key}`} style={{ flex: 1, alignItems: 'center', gap: spacing.xxs }}>
             {/* The same glyph the column's cells draw, so the mapping is plain; the word under it is what is read. */}
@@ -159,6 +168,10 @@ export function JourneyGrid({
         const stage = stages.find((s) => s.key === row.stage) as StageDef;
         const isLocked = row.availability === 'soon';
         const pill = stagePillState(row.availability, completeStages?.has(row.stage) ?? false);
+        // A cell with the start pin and the placed-out check needs a deeper corner band (its count mark sits
+        // under the check); every cell in its row takes the same band, so the row stays one height and the
+        // glyphs and words stay on one line.
+        const deepBand = row.cells.some((c) => c.marks.placedOut && c.marks.isStart);
         return (
           <View
             key={row.stage}
@@ -219,6 +232,8 @@ export function JourneyGrid({
                   stage={stage}
                   theme={themeOf.get(cell.theme) as ThemeDef}
                   paneMode={paneMode}
+                  deepBand={deepBand}
+                  cellWidth={cellWidth}
                   onOpen={onOpen}
                   onOpenStories={onOpenStories}
                   // A closed cell's label names its episode in the UI locale (a11y.access.notOpen).
@@ -256,13 +271,17 @@ interface GridCellProps {
   stage: StageDef;
   theme: ThemeDef;
   paneMode: boolean;
+  /** The row has a cell with both corner marks: every cell in it reserves the count mark's second band row. */
+  deepBand: boolean;
+  /** The cell's width from the grid's measured width; null before the first layout. */
+  cellWidth: number | null;
   onOpen: (episodeId: string) => void;
   onOpenStories?: (stage: StageKey, theme: ThemeKey) => void;
   /** The episode title in the UI locale, for a closed cell's label; empty otherwise. */
   episodeTitle: string;
 }
 
-function GridCell({ cell, stage, theme, paneMode, onOpen, onOpenStories, episodeTitle }: GridCellProps): React.ReactElement {
+function GridCell({ cell, stage, theme, paneMode, deepBand, cellWidth, onOpen, onOpenStories, episodeTitle }: GridCellProps): React.ReactElement {
   const messages = useMessages();
   const { completed, placedOut, isStart } = cell.marks;
   const { next, inPlan, notOpen } = cell.access;
@@ -275,7 +294,12 @@ function GridCell({ cell, stage, theme, paneMode, onOpen, onOpenStories, episode
   const disabled = cell.disabled || (storiesOnly && !onOpenStories);
   const count = countMarkOf(model.storyCount);
   const glyphSize = useMediaSize(CELL.glyph);
-  const cellLayout = journeyCellLayout(CELL, glyphSize, useMediaSize(ROUTE_RING_SIZE), { placedOut, isStart });
+  const cellLayout = journeyCellLayout(
+    CELL,
+    glyphSize,
+    useMediaSize(ROUTE_RING_SIZE),
+    deepBand ? { placedOut: true, isStart: true } : { placedOut, isStart },
+  );
   const countSlot = countMarkSlot(CELL, { placedOut, isStart });
 
   const press = (): void => {
@@ -299,7 +323,9 @@ function GridCell({ cell, stage, theme, paneMode, onOpen, onOpenStories, episode
       testID={cellTestId(model.kind, cell.stage, cell.theme, cell.marks)}
       style={{
         flex: 1,
-        aspectRatio: 1,
+        // Square where that fits, taller than wide at 320 px (logic/journey-cell-layout.ts). With the grid
+        // measured the height is explicit; before that, aspectRatio with the smallest height below.
+        ...(cellWidth === null ? { aspectRatio: 1 } : { height: Math.max(cellWidth, cellLayout.minHeight) }),
         borderRadius: radii.md,
         backgroundColor: isLater ? colors.surface.sunken : completed ? colors.feedback.successLight : colors.surface.paper,
         borderStyle: placedOut && !cell.selected ? 'dashed' : 'solid',
@@ -311,8 +337,7 @@ function GridCell({ cell, stage, theme, paneMode, onOpen, onOpenStories, episode
             : completed
               ? colors.feedback.success
               : tone,
-        // The corner band on top, the glyph box (the ring's size) under it, then one line of the theme word
-        // (logic/journey-cell-layout.ts): square where that fits, taller than wide at 320 px.
+        // The corner band on top, the glyph box (the ring's size) under it, then one line of the theme word.
         minHeight: cellLayout.minHeight,
         alignItems: 'center',
         justifyContent: 'center',
@@ -321,12 +346,12 @@ function GridCell({ cell, stage, theme, paneMode, onOpen, onOpenStories, episode
         paddingHorizontal: spacing.none,
       }}
     >
-      {isLater && ring === null ? null : (
+      {isLater ? null : (
         // A coming-later cell stays sunken and empty (E3-D D5, OD-6): no lock glyph on a learner screen.
         <View style={{ width: cellLayout.glyphBox, height: cellLayout.glyphBox, alignItems: 'center', justifyContent: 'center' }}>
           {storiesOnly ? (
             <Icon name="library" size={glyphSize} color={colors.text.secondary} />
-          ) : isLater ? null : (
+          ) : (
             // The theme glyph is decorative: the cell's label names the theme in words.
             <View
               testID={`journey-glyph-${cell.stage}-${cell.theme}`}

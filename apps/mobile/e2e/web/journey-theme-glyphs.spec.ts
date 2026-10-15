@@ -296,6 +296,17 @@ for (const [width, height] of [
     expect(n.y).toBeGreaterThanOrEqual(k.y + k.height);
     // the label still names the stories
     expect(String(await cell.getAttribute('aria-label'))).toMatch(/stor/i);
+    // every cell in that row is one height, its words on one line
+    const row = await Promise.all(
+      THEMES.map(async (t) => {
+        const rc = page.getByRole('button').filter({ has: page.getByTestId(`journey-word-stage1-${t.key}`) });
+        return { c: await boxOf(rc), w: await boxOf(page.getByTestId(`journey-word-stage1-${t.key}`)) };
+      }),
+    );
+    for (const r of row) {
+      expect(Math.abs(r.c.height - c.height)).toBeLessThanOrEqual(0.5);
+      expect(Math.abs(r.w.y - w.y)).toBeLessThanOrEqual(0.5);
+    }
     await expectNoHorizontalOverflow(page);
     await shot(page, `journey-cell-pin-check-count-${width}`);
   });

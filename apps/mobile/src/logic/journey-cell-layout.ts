@@ -8,7 +8,8 @@ import type { borderWidth, spacing, typography } from '@hangul-route/design-syst
  * - the corner band on top holds the start pin (top left), the placed-out check (top right) and the
  *   story count mark; the theme glyph starts under it, so no corner mark covers any part of a glyph
  *   (the leaf's tip points up-left, under the start pin, so it needs this); a cell with both the pin and
- *   the check gets a second band row for the count mark, under the check (`countMarkSlot`);
+ *   the check gets a second band row for the count mark, under the check (`countMarkSlot`), and JourneyGrid
+ *   gives every cell in that cell's grid row the same deeper band, so the row stays one height;
  * - the glyph box is as tall as the In your plan / Not open yet ring, so the ring is drawn around the
  *   glyph and never through the word under it;
  * - the theme word sits under the glyph box on one line (`typography.size.caption`, `leading.tight`);
@@ -107,7 +108,8 @@ function bandBottom(m: CellMetrics, marks: CellCornerMarks): number {
 
 /**
  * The layout for a glyph of `glyph` dp inside a ring of `ring` dp (both after `useMediaSize`). Only a cell that
- * draws both corner marks (`marks`) grows, by the count mark's row; every other cell keeps the same height.
+ * draws both corner marks (`marks`) grows, by the count mark's row; JourneyGrid passes those marks for every
+ * cell in such a cell's row, so the whole row grows together and every other row keeps the same height.
  */
 export function journeyCellLayout(m: CellMetrics, glyph: number, ring: number, marks: CellCornerMarks = NO_MARKS): CellLayout {
   const glyphBox = Math.max(glyph, ring);

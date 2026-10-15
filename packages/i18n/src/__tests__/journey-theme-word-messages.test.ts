@@ -19,7 +19,8 @@ const THEME_KEYS = ['letters', 'life', 'rites', 'nature', 'crafts'] as const;
  * base letter's width) and no tracking, which reads a little wider than the drawn word ("Comida" estimates
  * 48.2 dp and draws 47, "Holidays" 53.7 and 52, "Naturaleza" 67.7 and 66), so a word that passes here fits;
  * a letter outside the table counts as the widest (W). A Hangul syllable is one em. The e2e spec
- * `journey-theme-glyphs` then measures the drawn word in the browser.
+ * `journey-theme-glyphs` then measures the drawn word in the browser. Both numbers are pinned to the tokens
+ * by apps/mobile/src/logic/__tests__/journey-cell-layout.test.ts, so a token change fails there.
  */
 const CAPTION = 14;
 const CELL_INNER = 50;

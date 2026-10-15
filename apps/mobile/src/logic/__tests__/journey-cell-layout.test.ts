@@ -149,6 +149,13 @@ describe('journeyCellLayout', () => {
     expect(cellRects(CELL_WIDE_MASTER, layout.mediaScale.wide).height).toBeLessThan(CELL_WIDE_MASTER * 1.3);
   });
 
+  it('matches the theme word budget in packages/i18n (journey-theme-word-messages.test.ts: 14 dp caption, 50 dp line)', () => {
+    // That test cannot import the tokens; if the caption size or the 320 px cell changes, this fails so its
+    // CAPTION and CELL_INNER are updated with it.
+    expect(typography.size.caption).toBe(14);
+    expect(CELL_320 - 2 * CELL_EDGE).toBe(50);
+  });
+
   it('reserves the selected border in the smallest height, so selecting a cell never changes its size', () => {
     for (const { width, scale } of SIZES) {
       expect(cellRects(width, scale, borderWidth.thick).height).toBe(cellRects(width, scale, borderWidth.base).height);

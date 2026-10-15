@@ -1,4 +1,4 @@
-import type { ReactTestInstance } from 'react-test-renderer';
+import { act, type ReactTestInstance } from 'react-test-renderer';
 import React from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { UiLocale } from '@hangul-route/content-schema';
@@ -311,11 +311,30 @@ describe('JourneyGrid cell word (owner request 2026-10-14)', () => {
     expect(style).toMatchObject({ top: `${2 * M.inset + M.markSize}px`, right: `${M.inset}px` });
     expect(style.left).toBeUndefined();
     expect(style.bottom).toBeUndefined();
-    // only this cell grows; its row neighbour keeps the plain height
-    const heightOf = (n: ReactTestInstance): number => parseFloat(String(Object.assign({}, ...[n.props.style].flat()).minHeight));
-    const [lifeGlyph] = byTestId(r.root, 'journey-glyph-stage1-life');
-    const neighbour = buttonOf(lifeGlyph as ReactTestInstance) as ReactTestInstance;
-    expect(heightOf(cell)).toBeGreaterThan(heightOf(neighbour));
+    // the whole row takes the deeper band, so every cell in it is one height; other rows keep the plain height
+    const styleOf = (n: ReactTestInstance): Record<string, unknown> => Object.assign({}, ...[n.props.style].flat());
+    const heightOf = (n: ReactTestInstance): number => parseFloat(String(styleOf(n).minHeight));
+    const cellsOfRow = (stage: string): ReactTestInstance[] =>
+      themes.map((t) => byTestId(r.root, `journey-word-${stage}-${t.key}`)[0]).filter(Boolean).map((w) => buttonOf(w as ReactTestInstance) as ReactTestInstance);
+    const row1 = cellsOfRow('stage1');
+    expect(row1.length).toBe(themes.length);
+    for (const c of row1) expect(heightOf(c)).toBe(heightOf(cell));
+    const row2 = cellsOfRow('stage2');
+    expect(row2.length).toBeGreaterThan(0);
+    for (const c of row2) expect(heightOf(c)).toBeLessThan(heightOf(cell));
+    // once the grid is measured, every cell in the row gets the same explicit height (no aspectRatio to settle)
+    // react-native-web's View element (not its DOM node) carries onLayout
+    const [colRow] = r.root.findAll((n) => n.props.testID === 'journey-col-row' && typeof n.props.onLayout === 'function');
+    expect(colRow).toBeDefined();
+    await act(async () => {
+      colRow?.props.onLayout({ nativeEvent: { layout: { x: 0, y: 0, width: 288, height: 40 } } });
+    });
+    const heights = cellsOfRow('stage1').map((c) => styleOf(c));
+    for (const st of heights) {
+      expect(st.aspectRatio).toBeUndefined();
+      expect(st.height).toBe(heights[0]?.height);
+    }
+    expect(parseFloat(String(heights[0]?.height))).toBe(heightOf(cell));
     // the label still says the count
     expect(String(cell.props['aria-label'])).toMatch(/stor/i);
   });
