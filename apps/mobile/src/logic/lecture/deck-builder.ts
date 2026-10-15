@@ -177,6 +177,8 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
   const skipped: SkippedItem[] = [];
   const taught: TaughtItem[] = [];
   const seenJamo = new Set<string>();
+  // One card per word per deck (AMENDMENTS-LECTURE-V2 section 5.1), by Korean text: a repeat is not a skip.
+  const seenWords = new Set<string>();
   const usedKeys = new Map<string, number>();
   const blockKeys = new Map<string, number>();
   let quizFrom = 0;
@@ -195,6 +197,14 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
     slides.push({ ...body, key: nthKey(usedKeys, key), builds: buildsFor(body, opts) });
   };
   const seed = (): number => deck.seed + slides.length;
+  /** A word card, once per deck; the word is taught either way (a later gloss still upgrades it). */
+  const wordCard = (key: string, word: KoLine, extra: Partial<Extract<SlideBody, { kind: 'vocab' }>> = {}): void => {
+    if (!seenWords.has(word.ko)) {
+      seenWords.add(word.ko);
+      push(key, { kind: 'vocab', word, ...extra });
+    }
+    teachWord(word);
+  };
   const teachWord = (word: KoLine): void => {
     const met = taught.find((t): t is Extract<TaughtItem, { kind: 'word' }> => t.kind === 'word' && t.ko === word.ko);
     if (!met) {
@@ -309,26 +319,29 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
         }
         return;
       case 'card-match':
-        for (const pair of listOf(scope.cardPairs)) {
+      case 'pic-word-match': {
+        // Every word on every board, in board order (F-QUEST-002 §3.11): KoText always carries romanization and a gloss.
+        const words: Array<KoLine & { gloss: string }> = [];
+        const pairs =
+          scope.kind === 'card-match'
+            ? listOf(scope.cardPairs)
+            : listOf(scope.picWord?.boards).flatMap((board) => board.pairs.map((pair) => pair.word));
+        for (const pair of pairs) {
           if (pair.romanization === undefined) {
             skip(`${path}/${pair.ko}`, 'no-romanization');
             continue;
           }
-          const word = { ko: pair.ko, romanization: pair.romanization, gloss: pair.en };
-          push(`${path}/${pair.ko}`, { kind: 'vocab', word });
-          teachWord(word);
+          if (!words.some((w) => w.ko === pair.ko)) words.push({ ko: pair.ko, romanization: pair.romanization, gloss: pair.en });
         }
-        return;
-      case 'pic-word-match':
-        // Every word on every board, in board order (F-QUEST-002 §3.11): KoText always carries romanization and a gloss.
-        for (const board of listOf(scope.picWord?.boards)) {
-          for (const pair of board.pairs) {
-            const word = { ko: pair.word.ko, romanization: pair.word.romanization, gloss: pair.word.en };
-            push(`${path}/${pair.word.ko}`, { kind: 'vocab', word });
-            teachWord(word);
-          }
+        // Every word already had its card in this deck: a board of 4 or more becomes a word-to-meaning quiz (section 5.1).
+        if (words.length >= QUIZ_MIN_ITEMS && words.every((w) => seenWords.has(w.ko))) {
+          const cardPairs: CardMatchPair[] = words.map((w) => ({ ko: w.ko, en: w.gloss, romanization: w.romanization }));
+          meaningQuiz(path, ref, () => buildCultureQuizRounds({ cardPairs, rounds, seed: seed() }));
+          return;
         }
+        for (const word of words) wordCard(`${path}/${word.ko}`, word);
         return;
+      }
       case 'story-sequence': {
         const steps: SequenceStep[] = [];
         for (const step of listOf(scope.storySteps)) {
@@ -398,11 +411,7 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
         letterById(path, item.jamoId);
         continue;
       }
-      for (const text of discoverItemTexts(item)) {
-        const word = { ko: text.ko, romanization: text.romanization, gloss: text.en };
-        push(`${path}/${word.ko}`, { kind: 'vocab', word });
-        teachWord(word);
-      }
+      for (const text of discoverItemTexts(item)) wordCard(`${path}/${text.ko}`, { ko: text.ko, romanization: text.romanization, gloss: text.en });
     }
   };
 
@@ -586,15 +595,11 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
         })
       : topic.words;
     for (const w of words) {
-      const word = { ko: w.ko, romanization: w.romanization, gloss: w.gloss };
-      push(`${path}/${w.id}`, {
-        kind: 'vocab',
-        word,
-        wordId: w.id,
-        ...(w.cardId !== undefined ? { cardId: w.cardId } : {}),
-        ...(w.wordArt !== undefined ? { wordArt: w.wordArt } : {}),
-      });
-      teachWord(word);
+      wordCard(
+        `${path}/${w.id}`,
+        { ko: w.ko, romanization: w.romanization, gloss: w.gloss },
+        { wordId: w.id, ...(w.cardId !== undefined ? { cardId: w.cardId } : {}), ...(w.wordArt !== undefined ? { wordArt: w.wordArt } : {}) },
+      );
     }
     // The quiz asks only words that had a slide: under 4 shown (all of a small topic, or a short chosen list), no quiz.
     if (words.length < QUIZ_MIN_ITEMS) return;
@@ -664,6 +669,17 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
 
   // ---- the deck -------------------------------------------------------------------
 
+  /**
+   * Rule 12 as amended (AMENDMENTS-LECTURE-V2 section 4.4): a block of letters, cards or words
+   * counts one minute per two of its non-quiz slides, rounded up; its quiz slides keep 1 each
+   * (counted with every quiz slide at the end).
+   */
+  const bySlides = (expandBlock: () => void): void => {
+    const from = slides.length;
+    expandBlock();
+    minutes += Math.ceil(slides.slice(from).filter((s) => s.kind !== 'quiz').length / 2);
+  };
+
   let classCode: string | undefined;
   deck.blocks.forEach((block, i) => {
     blockIndex = i;
@@ -679,10 +695,12 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
         return;
       }
       case 'jamo-set':
-        for (const id of block.jamoIds) letterById(key, id);
+        bySlides(() => {
+          for (const id of block.jamoIds) letterById(key, id);
+        });
         return;
       case 'revisit':
-        revisitBlock(key, block.chars);
+        bySlides(() => revisitBlock(key, block.chars));
         return;
       case 'vocab':
         vocabBlock(key, block.topicId, block.wordIds);
@@ -691,7 +709,9 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
         storyBlock(key, block.storyId, block.level, block.checks);
         return;
       case 'cards':
-        for (const id of block.cardIds) card(key, id);
+        bySlides(() => {
+          for (const id of block.cardIds) card(key, id);
+        });
         return;
       case 'quiz':
         quizBlock(key, block.from, block.rounds);
