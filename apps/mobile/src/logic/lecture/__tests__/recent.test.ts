@@ -12,6 +12,7 @@ import {
   readRecent,
   commitRecent,
   setLastSlide,
+  storedRecent,
   type RecentList,
   type RecentStore,
 } from '../recent';
@@ -196,5 +197,84 @@ describe('readRecent and commitRecent (a failed read never overwrites Recent)', 
     expect(read.writable).toBe(true);
     expect(read.list.items[0]!.deck.id).toBe('lecture:deck002');
     expect(await loadRecent(kept)).toEqual(read.list);
+  });
+});
+
+describe('Recent keeps items a newer build saved (AMENDMENTS-LECTURE-V2 section 4.5, LV-2)', () => {
+  const future = (n: number) => ({
+    deck: { v: 9, id: `lecture:future${n}`, title: 'Later lesson', blocks: [{ kind: 'something-new' }] },
+    savedAt: at(n),
+  });
+  const memory = (initial: unknown) => {
+    let value: unknown = initial;
+    return {
+      get value() {
+        return value;
+      },
+      store: {
+        readJson: vi.fn(async () => value),
+        writeJson: vi.fn(async (_key: string, next: unknown) => {
+          value = next;
+        }),
+      } satisfies RecentStore,
+    };
+  };
+
+  it('an item with an unknown deck version is not shown, and a Start keeps it, unchanged, in its place', async () => {
+    const mem = memory({ v: 1, items: [{ deck: deck(1), savedAt: at(1) }, future(2), { deck: deck(3), savedAt: at(3) }] });
+    const loaded = await readRecent(mem.store);
+    expect(loaded.list.items.map((i) => i.deck.id)).toEqual(['lecture:deck001', 'lecture:deck003']);
+    expect(loaded.writable).toBe(true);
+    await commitRecent(mem.store, loaded, (list) => rememberDeck(list, deck(4), at(4)));
+    expect(mem.value).toEqual({
+      v: 1,
+      items: [{ deck: deck(4), savedAt: at(4) }, { deck: deck(1), savedAt: at(1) }, future(2), { deck: deck(3), savedAt: at(3) }],
+    });
+    // The next load (and the next Start) still holds it.
+    const again = await readRecent(mem.store);
+    await commitRecent(mem.store, again, (list) => setLastSlide(list, 'lecture:deck004', 'end'));
+    expect((mem.value as { items: unknown[] }).items[2]).toEqual(future(2));
+  });
+
+  it('kept items count toward the 10 by place, and fall off the end like any other', () => {
+    let list = parseRecent({ v: 1, items: [future(1), ...Array.from({ length: 12 }, (_, i) => ({ deck: deck(10 + i), savedAt: at(10 + i) }))] });
+    expect(list.items).toHaveLength(9);
+    expect(list.unread).toEqual([{ at: 0, raw: future(1) }]);
+    for (let i = 0; i < 9; i += 1) list = rememberDeck(list, deck(30 + i), at(30 + i));
+    expect(storedRecent(list).items).toHaveLength(10);
+    expect(storedRecent(list).items).toContainEqual(future(1));
+    list = rememberDeck(list, deck(40), at(40));
+    expect(list.unread).toBeUndefined();
+    expect(storedRecent(list).items).not.toContainEqual(future(1));
+  });
+
+  it('removing a deck keeps the kept items in their order', () => {
+    const list = parseRecent({ v: 1, items: [{ deck: deck(1), savedAt: at(1) }, future(2), { deck: deck(3), savedAt: at(3) }, future(4)] });
+    const after = forgetDeck(list, 'lecture:deck001');
+    expect(storedRecent(after).items).toEqual([future(2), { deck: deck(3), savedAt: at(3) }, future(4)]);
+    expect(after.items.map((i) => i.deck.id)).toEqual(['lecture:deck003']);
+  });
+
+  it('a list with nothing from a newer build is stored exactly as before', () => {
+    const list = rememberDeck(emptyRecent(), deck(1), at(1));
+    expect(storedRecent(list)).toEqual(list);
+    expect(list).not.toHaveProperty('unread');
+  });
+
+  it('only a newer version is kept: a broken v1 item, a non-object, an oversized or versionless item is dropped', () => {
+    for (const bad of [
+      { deck: { ...deck(1), title: '' }, savedAt: at(1) },
+      'text',
+      null,
+      [future(1)],
+      { savedAt: at(1) },
+      { deck: null, savedAt: at(1) },
+      { deck: { v: '9', id: 'lecture:x' } },
+      { deck: { v: 1.5, id: 'lecture:x' } },
+      { deck: { v: 0, id: 'lecture:x' } },
+      { deck: { v: 9, id: 'lecture:x', pad: 'x'.repeat(13_000) } },
+    ]) {
+      expect(parseRecent({ v: 1, items: [bad] }), JSON.stringify(bad).slice(0, 60)).toEqual(emptyRecent());
+    }
   });
 });
