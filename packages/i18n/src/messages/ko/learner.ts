@@ -681,7 +681,7 @@ export const learner = {
       revealWord: (ko: string) => `읽는 법 보기: ${ko}`,
     },
     sequence: {
-      title: '이야기 순서대로 놓기',
+      title: '이야기 순서 맞추기',
       hint: '처음 일어난 일부터 그림을 하나씩 눌러요.',
       stepHint: '처음 일어난 일부터 하나씩 눌러요.',
       skip: { cta: '이건 건너뛰기' },
