@@ -145,8 +145,9 @@ interface StoredVocab {
   vocab?: { items: Array<{ id: string; seen: number; box: number }>; topics: Array<{ topic: string; sessions: number }> };
 }
 
-async function voicedSpeech(page: Page): Promise<void> {
-  await page.addInitScript(() => {
+/** A Korean voice. `answersBlank: false`: the engine gives the silent unlock (`' '`) no event at all and holds nothing. */
+async function voicedSpeech(page: Page, opts: { answersBlank?: boolean } = {}): Promise<void> {
+  await page.addInitScript((answersBlank: boolean) => {
     const spoken: string[] = [];
     (window as E2eWindow).__spoken = spoken;
     const v = (name: string, lang: string, isDefault = false) => ({ name, lang, voiceURI: name, localService: true, default: isDefault });
@@ -170,6 +171,7 @@ async function voicedSpeech(page: Page): Promise<void> {
         pending: false,
         speak: (u: Utterance) => {
           if (u.volume !== 0) spoken.push(u.text);
+          if (!answersBlank && u.text.trim() === '') return;
           setTimeout(() => {
             u.onstart?.();
             u.onend?.();
@@ -181,7 +183,7 @@ async function voicedSpeech(page: Page): Promise<void> {
         removeEventListener: () => undefined,
       },
     });
-  });
+  }, opts.answersBlank ?? true);
 }
 
 const spoken = (page: Page): Promise<string[]> => page.evaluate(() => [...((window as E2eWindow).__spoken ?? [])]);
@@ -396,6 +398,15 @@ test.describe('Words flashcards (fixture bundle)', () => {
     const before = (await spoken(page)).length;
     await turnOn.click();
     await expect.poll(async () => (await spoken(page)).length).toBe(before + 1);
+  });
+
+  test('an engine that gives the silent unlock no event still autoplays the first front after a tap (F-AUDIO-004 section 3.6 fail-safe)', async ({ page }) => {
+    await voicedSpeech(page, { answersBlank: false });
+    await newLearner(page);
+    await learnFood(page);
+    // The taps that opened the cards sent the unlock; no answer came, but the browser said they were activations.
+    await expect.poll(async () => (await spoken(page)).length, { timeout: 5000 }).toBe(1);
+    await expect(page.getByTestId('vocab-card-no-sound')).toHaveCount(0);
   });
 
   test('a collected wall tile opens its card on the back; a chunk already collected ends with Review these (behaviour 12)', async ({ page }) => {

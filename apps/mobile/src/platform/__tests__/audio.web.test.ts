@@ -114,7 +114,15 @@ interface ClipRigOptions {
 }
 
 function rig(
-  opts: { voices?: FakeVoice[]; noSynth?: boolean; requireGesture?: boolean; online?: boolean; clips?: ClipRigOptions } = {},
+  opts: {
+    voices?: FakeVoice[];
+    noSynth?: boolean;
+    requireGesture?: boolean;
+    online?: boolean;
+    clips?: ClipRigOptions;
+    /** `navigator.userActivation.isActive` as the browser reports it (absent: a browser with no such API). */
+    userActive?: () => boolean | null;
+  } = {},
 ): Rig {
   const synth = new FakeSpeechSynthesis();
   synth.setVoices(opts.voices ?? [...APPLE_KO, YUNA, SAMANTHA]);
@@ -129,6 +137,7 @@ function rig(
     win: win as unknown as WebAudioEnv['win'],
     isOnline: () => online.value,
   };
+  if (opts.userActive) env.userActive = opts.userActive;
   if (opts.clips) {
     const refs = new Set(opts.clips.refs ?? [GIYEOK_CLIP]);
     const enabled = opts.clips.enabled ?? true;
@@ -497,7 +506,116 @@ describe('platform/audio.web: first-gesture unlock (AD8, §3.6)', () => {
     audio.dispose();
   });
 
-  it('a prompt asked in the unlocking tap queues behind the silent unlock: no cancel, and it plays', async () => {
+  it('a prompt asked in the unlocking tap queues behind the silent unlock, and its clock waits for it: every utterance 2 s cold, no cancel, played', async () => {
+    vi.useFakeTimers();
+    const { synth, doc, audio } = rig();
+    // A cold engine that holds every utterance 2 s before it starts, the unlock and the prompt alike.
+    synth.startDelayMs = 2000;
+    synth.endDelayMs = 400;
+    audio.installGestureUnlock();
+    await vi.advanceTimersByTimeAsync(0);
+    doc.dispatchEvent(new Event('touchend'));
+    const result = audio.playPrompt({ text: '안녕하세요', kind: 'word', source: 'presenter-check' });
+    let settled: string | null = null;
+    void result.then((v) => (settled = v));
+    await vi.advanceTimersByTimeAsync(0);
+    expect(synth.spoken.map((u) => u.text)).toEqual([' ', '안녕하세요']);
+    // The engine took the unlock (it still holds it a second later): unlocked, before any event.
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(useAudioStore.getState().unlocked).toBe(true);
+    // The unlock starts at 2 s and ends at 2.4 s; the prompt then waits its own 2 s and starts at 4.4 s,
+    // past the 4 s a prompt gets on its own: the unlock's cold start was not counted against it.
+    await vi.advanceTimersByTimeAsync(3300);
+    expect(settled).toBeNull();
+    await vi.advanceTimersByTimeAsync(500);
+    expect(settled).toBe('played');
+    expect(synth.cancelCount).toBe(0);
+    expect(useAudioStore.getState().lastFailure).toBeNull();
+    audio.dispose();
+  });
+
+  it('an engine that gives the blank unlock no event but speaks a prompt: unlocked once the prompt starts, and the listeners go', async () => {
+    const { synth, doc, audio } = rig();
+    synth.blank = 'ignore';
+    audio.installGestureUnlock();
+    await flush();
+    doc.dispatchEvent(new Event('touchend'));
+    expect(synth.spoken.map((u) => u.text)).toEqual([' ']);
+    expect(useAudioStore.getState().unlocked).toBe(false);
+    await expect(audio.playPrompt({ text: '가' })).resolves.toBe('played');
+    expect(useAudioStore.getState().unlocked).toBe(true);
+    // Unlocked: a later tap sends no more unlocks.
+    for (const type of ['pointerup', 'touchend', 'click', 'keydown']) doc.dispatchEvent(new Event(type));
+    expect(synth.spoken.map((u) => u.text)).toEqual([' ', '가']);
+    audio.dispose();
+  });
+
+  it('an engine that holds the blank unlock with no event (speaking, a stuck queue): the prompt asked in that tap is cleared once and plays, never blocked', async () => {
+    vi.useFakeTimers();
+    const { synth, doc, audio } = rig();
+    synth.blank = 'hang';
+    audio.installGestureUnlock();
+    await vi.advanceTimersByTimeAsync(0);
+    doc.dispatchEvent(new Event('touchend'));
+    const first = audio.playPrompt({ text: '안녕하세요', source: 'presenter-check' });
+    await vi.advanceTimersByTimeAsync(0);
+    expect(synth.spoken.map((u) => u.text)).toEqual([' ', '안녕하세요']);
+    expect(synth.speaking).toBe(true);
+    // The engine held it for a second without refusing: unlocked.
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(useAudioStore.getState().unlocked).toBe(true);
+    // At 3 s the queue has not moved: it is cleared and the prompt is asked again.
+    await vi.advanceTimersByTimeAsync(2100);
+    await expect(first).resolves.toBe('played');
+    expect(synth.cancelCount).toBe(1);
+    expect(synth.spoken.map((u) => u.text)).toEqual([' ', '안녕하세요', '안녕하세요']);
+    expect(useAudioStore.getState().lastFailure).toBeNull();
+    // The next tap's prompt plays at once.
+    const second = audio.playPrompt({ text: '가' });
+    await vi.advanceTimersByTimeAsync(10);
+    await expect(second).resolves.toBe('played');
+    expect(synth.cancelCount).toBe(1);
+    expect(tracked.filter((e) => e.name === 'audio.playback_failed')).toEqual([]);
+    audio.dispose();
+  });
+
+  it('an ignored unlock leaves nothing ahead: a later prompt that starts late gets the plain wait and grace, not the warm-up wait', async () => {
+    vi.useFakeTimers();
+    const { synth, doc, audio } = rig({ userActive: () => true });
+    synth.blank = 'ignore';
+    audio.installGestureUnlock();
+    await vi.advanceTimersByTimeAsync(0);
+    doc.dispatchEvent(new Event('touchend'));
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(useAudioStore.getState().unlocked).toBe(true);
+    // A cold engine now: the prompt is held 3.5 s, inside 1.5 s and the 2.5 s grace; never cancelled.
+    synth.startDelayMs = 3500;
+    const result = audio.playPrompt({ text: '가' });
+    await vi.advanceTimersByTimeAsync(3600);
+    await expect(result).resolves.toBe('played');
+    expect(synth.cancelCount).toBe(0);
+    expect(synth.spoken.map((u) => u.text)).toEqual([' ', '가']);
+    audio.dispose();
+  });
+
+  it('a held unlock older than half a second counts as busy: a prompt from a later tap cancels it and plays at once', async () => {
+    vi.useFakeTimers();
+    const { synth, doc, audio } = rig();
+    synth.blank = 'hang';
+    audio.installGestureUnlock();
+    await vi.advanceTimersByTimeAsync(0);
+    doc.dispatchEvent(new Event('touchend'));
+    await vi.advanceTimersByTimeAsync(2000);
+    const result = audio.playPrompt({ text: '가' });
+    await vi.advanceTimersByTimeAsync(0);
+    expect(synth.cancelCount).toBe(1);
+    await vi.advanceTimersByTimeAsync(60);
+    await expect(result).resolves.toBe('played');
+    expect(synth.spoken.map((u) => u.text)).toEqual([' ', '가']);
+    audio.dispose();
+  });
+
+  it('an unlock that has started and is still ending is not cancelled by a prompt from a later tap: the prompt queues behind it', async () => {
     vi.useFakeTimers();
     const { synth, doc, audio } = rig();
     synth.startDelayMs = 2000;
@@ -505,18 +623,39 @@ describe('platform/audio.web: first-gesture unlock (AD8, §3.6)', () => {
     audio.installGestureUnlock();
     await vi.advanceTimersByTimeAsync(0);
     doc.dispatchEvent(new Event('touchend'));
-    const result = audio.playPrompt({ text: '안녕하세요', kind: 'word', source: 'presenter-check' });
-    await vi.advanceTimersByTimeAsync(0);
-    expect(synth.spoken.map((u) => u.text)).toEqual([' ', '안녕하세요']);
-    // The unlock wakes the cold engine at 2 s; warm now, it starts the prompt soon after the unlock ends.
-    await vi.advanceTimersByTimeAsync(2000);
-    expect(useAudioStore.getState().unlocked).toBe(true);
-    synth.startDelayMs = 100;
-    await vi.advanceTimersByTimeAsync(3000);
+    await vi.advanceTimersByTimeAsync(2200);
+    expect(synth.speaking).toBe(true);
+    const result = audio.playPrompt({ text: '가' });
+    await vi.advanceTimersByTimeAsync(4500);
     await expect(result).resolves.toBe('played');
     expect(synth.cancelCount).toBe(0);
-    expect(useAudioStore.getState().unlocked).toBe(true);
     audio.dispose();
+  });
+
+  it('an unlock with no answer and an idle engine: unlocked when the browser said the tap was a user activation; otherwise the next tap sends again', async () => {
+    vi.useFakeTimers();
+    const active = rig({ userActive: () => true });
+    active.synth.blank = 'ignore';
+    active.audio.installGestureUnlock();
+    active.doc.dispatchEvent(new Event('touchend'));
+    await vi.advanceTimersByTimeAsync(999);
+    expect(useAudioStore.getState().unlocked).toBe(false);
+    await vi.advanceTimersByTimeAsync(1);
+    expect(useAudioStore.getState().unlocked).toBe(true);
+    active.doc.dispatchEvent(new Event('touchend'));
+    expect(active.synth.spoken).toHaveLength(1);
+    active.audio.dispose();
+
+    useAudioStore.setState({ unlocked: false });
+    const unknown = rig();
+    unknown.synth.blank = 'ignore';
+    unknown.audio.installGestureUnlock();
+    unknown.doc.dispatchEvent(new Event('touchend'));
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(useAudioStore.getState().unlocked).toBe(false);
+    unknown.doc.dispatchEvent(new Event('touchend'));
+    expect(unknown.synth.spoken.map((u) => u.text)).toEqual([' ', ' ']);
+    unknown.audio.dispose();
   });
 
   it('installing twice registers once', () => {
@@ -597,6 +736,46 @@ describe('platform/audio.web: the engine (F-AUDIO-004 section 3.5, 2026-10-17)',
     await expect(result).resolves.toBe('played');
     expect(synth.cancelCount).toBe(0);
     expect(synth.resumeCount).toBe(1);
+    audio.dispose();
+  });
+
+  it('a prompt cancelled while speaking keeps the engine busy until its own interrupted arrives: the next one is spoken then, not at 50 ms', async () => {
+    vi.useFakeTimers();
+    const { synth, audio } = rig();
+    await vi.advanceTimersByTimeAsync(0);
+    synth.autoEnd = false;
+    synth.cancelErrorDelayMs = 150;
+    const a = audio.playPrompt({ text: '가' });
+    await vi.advanceTimersByTimeAsync(10);
+    const b = audio.playPrompt({ text: '나' });
+    await expect(a).resolves.toBe('played');
+    // Past the 50 ms floor: the platform has not said the first one stopped.
+    await vi.advanceTimersByTimeAsync(100);
+    expect(synth.spoken.map((u) => u.text)).toEqual(['가']);
+    // Its canceled arrives at 160 ms; the next poll speaks.
+    await vi.advanceTimersByTimeAsync(80);
+    expect(synth.spoken.map((u) => u.text)).toEqual(['가', '나']);
+    synth.endCurrent();
+    await expect(b).resolves.toBe('played');
+    audio.dispose();
+  });
+
+  it('a cancelled prompt whose interrupted never comes holds the next one at most 300 ms', async () => {
+    vi.useFakeTimers();
+    const { synth, audio } = rig();
+    await vi.advanceTimersByTimeAsync(0);
+    synth.autoEnd = false;
+    synth.cancelError = null;
+    const a = audio.playPrompt({ text: '가' });
+    await vi.advanceTimersByTimeAsync(10);
+    const b = audio.playPrompt({ text: '나' });
+    await expect(a).resolves.toBe('played');
+    await vi.advanceTimersByTimeAsync(280);
+    expect(synth.spoken.map((u) => u.text)).toEqual(['가']);
+    await vi.advanceTimersByTimeAsync(40);
+    expect(synth.spoken.map((u) => u.text)).toEqual(['가', '나']);
+    synth.endCurrent();
+    await expect(b).resolves.toBe('played');
     audio.dispose();
   });
 
