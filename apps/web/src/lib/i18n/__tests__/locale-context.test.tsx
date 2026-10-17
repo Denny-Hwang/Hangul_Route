@@ -1,7 +1,8 @@
 import { mergeDeviceSettings, type DeviceSettings } from '@hangul-route/content-schema';
 import { getMessages } from '@hangul-route/i18n';
+import { useEffect } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { act, create, type ReactTestRenderer } from 'react-test-renderer';
+import { act, create, type ReactTestRenderer, type TestRendererOptions } from 'react-test-renderer';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { DeviceSettingsRead } from '../device-settings';
 import { LocaleProvider, RECORD_WAIT_MS, useConsoleLocale, useLocale, useMessages, withoutLang, type ConsoleLocale, type LocaleProviderDeps } from '../locale-context';
@@ -165,6 +166,30 @@ describe('console LocaleProvider: the device record (owner items 6 and 7)', () =
     expect(b.local.get('hr:console:uiLocale')).toBe('ko');
     expect(b.local.get('hr:console:textSize')).toBe('larger');
     expect(b.writes).toEqual([]);
+  });
+
+  it('the root language and size are set before any page effect runs (layout effects): no frame paints at the old size', async () => {
+    const b = browser({ record: { uiLocale: 'ko', textSize: 'largest' } });
+    const seen: { lang: string; scale: string | undefined }[] = [];
+    function Page(): null {
+      const { ready } = useConsoleLocale();
+      // A passive effect of the page that shows once ready runs after every layout effect of that commit.
+      useEffect(() => {
+        if (ready) seen.push({ lang: b.doc.documentElement.lang, scale: b.style.get('--hr-text-scale') });
+      }, [ready]);
+      return null;
+    }
+    // A concurrent root, as the browser's: the record read's updates land in one commit, as they do there.
+    await act(async () => {
+      mounted = create(
+        <LocaleProvider available={['en', 'es', 'ko']} deps={b.deps}>
+          <Page />
+        </LocaleProvider>,
+        // Not in @types/react-test-renderer; react-test-renderer 18 reads it.
+        { unstable_isConcurrent: true } as unknown as TestRendererOptions,
+      );
+    });
+    expect(seen).toEqual([{ lang: 'ko', scale: '1.5' }]);
   });
 
   it('an English learner app beats a console that stored ko', async () => {
