@@ -86,8 +86,9 @@ export const caregiver = {
   },
 
   dashboard: {
-    title: '가족 대시보드',
+    persona: '부모님 또는 보호자',
     readOnly: '보기 전용 — 이 기기의 학습자예요.',
+    aboutRows: { cta: '이 항목 안내' },
     noProfiles: '아직 프로필이 없어요.',
     stats: { quests: '퀘스트', cards: '카드', sessions: '학습 횟수', minutes: '분' },
     recent: '최근 기록',
@@ -142,6 +143,7 @@ export const caregiver = {
     backToJourney: { cta: '여정으로 돌아가기' },
     backToLibrary: { cta: '라이브러리로 돌아가기' },
     backHome: { cta: '홈으로 돌아가기' },
+    back: { cta: '돌아가기' },
     freePlan: {
       line: (lessons: number, letters: number, minutes: number) =>
         `1단계는 무료예요: 레슨 ${lessons}개, 글자 ${letters}개, 약 ${minutes}분. 끝낸 것은 사라지지 않아요.`,
@@ -470,9 +472,7 @@ export const caregiver = {
   grownUpHome: {
     noPin: '이 기기에는 어른용 PIN이 없어요. 대신 어른용 페이지에서 로그인해 주세요.',
     continue: { cta: '계속' },
-    title: '어른용 홈',
-    line: '가족, 반, 결제를 한곳에서 봐요.',
-    cta: '열기',
+    signIn: { family: '로그인해서 가족과 반 도구 쓰기', self: '로그인해서 내 계정 보기' },
   },
   access: {
     freeEnd: (name: string, product: string) => `${name}: 무료 레슨을 모두 끝냈어요. 2단계부터는 다음으로 열려요: ${product}.`,
@@ -699,7 +699,7 @@ export const caregiver = {
     card: {
       classScope: '먼저 복구 코드를 사용해 주세요.',
       askConsole: '계정이 있는 어른에게 콘솔에서 답해 달라고 해 주세요.',
-      needsPin: '먼저 어른이 PIN을 만들어야 해요. 프로필에서 어른 공간을 열어 주세요.',
+      needsPin: '먼저 어른이 PIN을 만들어야 해요. 프로필에서 어른용 설정을 펼치고 어른 공간을 열어 주세요.',
       pinTooNew: 'PIN을 만들고 하루가 지나면 이동할 수 있어요.',
       sourceAsked: (source: string) => `${source}에서 반 이동을 물어봤어요.`,
       learnerAsked: (destination: string) => `요청한 이동: ${destination}.`,

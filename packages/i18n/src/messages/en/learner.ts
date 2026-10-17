@@ -161,10 +161,15 @@ export const learner = {
     addProfileName: 'Add a profile',
     statsTitle: (name: string | null) => `${name ?? 'Your'} stats`,
     stats: { quests: 'Quests done', cards: 'Cards', threeStar: '3-star quests' },
+    /** The two groups under the stats (owner request 2026-10-16, item 8): the learner's own, then the grown-ups', collapsed. */
+    groups: { mine: 'My settings', grownUps: 'For grown-ups' },
     sound: { label: 'Sound', on: 'On', off: 'Off' },
     plan: {
       free: 'Free plan',
-      freeNote: 'Stage 1 is free. More stages are on the way.',
+      /** Content gating on: the free tier is all of Stage 1 (owner decision 2026-10-11). */
+      freeNote: 'All of Stage 1 is free.',
+      /** Content gating off: every lesson is open, whatever the tier (owner request 2026-10-16, item 8). */
+      allOpen: 'Everything is open right now.',
       pillActive: 'Active',
       pillFree: 'Free',
       /** F-BILL-002 B-6 (§6.3): the card's words for every tier (B-9 removed Premium, unlocked and Unlock the journey). */
@@ -426,6 +431,20 @@ export const learner = {
     },
     /** Landmark names of the two panes on a wide window (F-LAYOUT-001 §3.13). */
     panes: { master: 'Card gallery', detail: 'Card details' },
+    /** The first shelf (owner request 2026-10-16, item 8): the cards the learner holds. */
+    yours: { title: 'Your cards', empty: 'Your first card is waiting. Finish a quest to earn it.' },
+    /**
+     * The second shelf: cards still to find, one row per episode, story, stage or set (`logic/library/shelves.ts`),
+     * with one Next card hint for the shelf. Never a count of what is left (D3).
+     */
+    toFind: {
+      title: 'Cards to find',
+      next: 'Next card',
+      stage: (stage: number) => `Stage ${stage}`,
+      other: 'More cards',
+      /** A group row's name: its title and that it holds cards to find. */
+      a11y: (title: string) => `${title}: cards to find`,
+    },
     /** How to earn a locked card, one line per award rule (F-STORY-006 §3.7): never how far along. */
     earnHint: {
       /** `title` is the episode's title (content). */
@@ -1643,6 +1662,9 @@ export const learner = {
       collected: (n: number) => `${n} collected`,
       tileA11y: (title: string, n: number) =>
         `${title}. ${plural('en', n, { one: '1 word collected', other: `${n} words collected` })}.`,
+      /** A topic with no word collected yet says New, never "0 collected" (owner request 2026-10-16, item 8). */
+      fresh: 'New',
+      freshA11y: (title: string) => `${title}. New topic.`,
       empty: 'Words are on their way.',
       back: 'Back',
       /** A closed topic tile (only with content gating on, D5): the closed-lesson words of F-ENT-003 OD-6, no lock, no price. */

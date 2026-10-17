@@ -19,7 +19,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useRef, useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { ProfileAvatar } from '../../components/ProfileAvatar';
-import { bundleOs, flags, routeEnabledFor } from '../../config/flags';
+import { bundleOs, flags, gatingActive, routeEnabledFor } from '../../config/flags';
 import { placementEntriesOn } from '../../logic/placement/entry';
 import { effectiveLearnerType } from '../../logic/profiles/learner-type';
 import { profileRowOpens } from '../../logic/route/proposal-flow';
@@ -65,7 +65,8 @@ export function ProfileScreen(): React.ReactElement {
   const snap = useProgressStore((s) => (active ? s.byProfile[active.id] : undefined));
   const cachedTier = useTierStore((s) => (active ? s.byLearner[active.id] : undefined));
   const entitled = effectiveTier(active?.id ?? '', new Date());
-  const card = planCardView(entitled.tier, entitled.source, t.plan);
+  // The free line follows the real tier model: everything is open while content gating is off (owner request 2026-10-16, item 8).
+  const card = planCardView(entitled.tier, entitled.source, t.plan, gatingActive(flags, bundleOs()));
   void cachedTier; // subscribe so the card re-renders when the inbox updates the tier
   // Mute is a persisted device preference (F-AUDIO-004 AD7); the switch shows its inverse.
   const soundOn = useAudioStore((s) => !s.muted);
@@ -77,6 +78,8 @@ export function ProfileScreen(): React.ReactElement {
   const [displayOpen, setDisplayOpen] = useState(false);
   const textSize = useLocaleStore((s) => s.textSize);
   const displayLine = t.display.line(LOCALE_META[locale].endonym, m.common.display.size[textSize]);
+  // For grown-ups starts collapsed (owner request 2026-10-16, item 8).
+  const [grownUpsOpen, setGrownUpsOpen] = useState(false);
   const parentGateOpenedAt = useUiStore((s) => s.parentGateOpenedAt);
   const forceInstallGuide = usePwaStore((s) => s.force);
   const installed = usePwaStore((s) => s.installed);
@@ -210,182 +213,215 @@ export function ProfileScreen(): React.ReactElement {
         </View>
       </Card>
 
-      {active && placementEntriesOn(flags.placementEnabled) ? (
-        <>
-          {/* F-PLC-001 section 3.10: not behind the PIN (a learner may do this alone; the result is only a start). */}
-          <Spacer size="lg" />
-          <Card padding="md">
-            <Pressable
-              testID="profile-placement-row"
-              onPress={() => navigation.navigate('Placement', { source: 'profile' })}
-              accessibilityRole="button"
-              accessibilityLabel={m.learner.placement.profileRow}
-              style={{ minHeight: touchTarget.min, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.md }}
-            >
-              <Body weight="semibold" style={{ flex: 1 }}>
-                {m.learner.placement.profileRow}
-              </Body>
-              <Icon name="arrow-right" size={24} color={colors.text.muted} />
-            </Pressable>
-          </Card>
-        </>
-      ) : null}
+      {/* Owner request 2026-10-16 (item 8): two groups. My settings, open: what the learner changes alone. */}
+      <Spacer size="xxl" />
+      <View testID="profile-group-mine" role="group" aria-labelledby="profile-group-mine-title">
+        <View id="profile-group-mine-title">
+          <Heading level="prompt">{t.groups.mine}</Heading>
+        </View>
 
-      {active && routeEnabledFor(locale) ? (
-        <>
-          {/* F-PLAN-002 section 3.9: always here (a Not now on Home never hides it); a child's plan goes through the gate. */}
-          <Spacer size="lg" />
-          <Card padding="md">
-            <Pressable
-              testID="profile-plan-row"
-              onPress={() => {
-                if (profileRowOpens({ learnerType: effectiveLearnerType(active), opensDirectly: opensDirectly(parentSessionOpen) }) === 'proposal') {
-                  navigation.navigate('RouteProposal', { source: 'profile', profileId: active.id });
-                } else {
-                  navigation.navigate('PinEntry', { next: 'RouteProposal', profileId: active.id });
-                }
-              }}
-              accessibilityRole="button"
-              accessibilityLabel={activeSelfRoute(snap) ? m.learner.weeklyPlan.profileRow.open : m.learner.weeklyPlan.profileRow.make}
-              style={{ minHeight: touchTarget.min, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.md }}
-            >
-              <Body weight="semibold" style={{ flex: 1 }}>
-                {activeSelfRoute(snap) ? m.learner.weeklyPlan.profileRow.open : m.learner.weeklyPlan.profileRow.make}
-              </Body>
-              <Icon name="arrow-right" size={24} color={colors.text.muted} />
-            </Pressable>
-          </Card>
-        </>
-      ) : null}
-
-      <Spacer size="lg" />
-      <Card padding="md">
-        <Pressable
-          onPress={() => {
-            setMuted(soundOn, 'profile');
-          }}
-          accessibilityRole="switch"
-          accessibilityState={{ checked: soundOn }}
-          accessibilityLabel={soundSwitchLabel(voice, !soundOn, m.learner.audio, m.a11y.soundSwitch)}
-          style={{ minHeight: touchTarget.min, justifyContent: 'center' }}
-        >
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.md }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, flex: 1 }}>
-              <Icon name={soundCard.glyph} size={24} color={soundOn ? colors.brand.primary : colors.text.muted} />
-              <View style={{ flex: 1 }}>
-                <Body weight="semibold">{t.sound.label}</Body>
-                <Caption tone="muted" testID="sound-voice-status">{soundCard.statusLine}</Caption>
+        <Spacer size="sm" />
+        <Card padding="md">
+          <Pressable
+            onPress={() => {
+              setMuted(soundOn, 'profile');
+            }}
+            accessibilityRole="switch"
+            accessibilityState={{ checked: soundOn }}
+            accessibilityLabel={soundSwitchLabel(voice, !soundOn, m.learner.audio, m.a11y.soundSwitch)}
+            style={{ minHeight: touchTarget.min, justifyContent: 'center' }}
+          >
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.md }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, flex: 1 }}>
+                <Icon name={soundCard.glyph} size={24} color={soundOn ? colors.brand.primary : colors.text.muted} />
+                <View style={{ flex: 1 }}>
+                  <Body weight="semibold">{t.sound.label}</Body>
+                  <Caption tone="muted" testID="sound-voice-status">{soundCard.statusLine}</Caption>
+                </View>
               </View>
+              <Pill tone={soundOn ? 'success' : 'neutral'} label={soundOn ? t.sound.on : t.sound.off} size="sm" />
             </View>
-            <Pill tone={soundOn ? 'success' : 'neutral'} label={soundOn ? t.sound.on : t.sound.off} size="sm" />
-          </View>
-        </Pressable>
-        {soundCard.showHowTo ? (
+          </Pressable>
+          {soundCard.showHowTo ? (
+            <>
+              <Spacer size="sm" />
+              <Button label={soundCard.howToLabel} tone="ghost" size="md" onPress={() => setVoiceHelpOpen(true)} testID="sound-how-to-add" />
+            </>
+          ) : null}
+        </Card>
+        <VoiceHelpSheet visible={voiceHelpOpen} onClose={() => setVoiceHelpOpen(false)} />
+
+        {/* Display: the one UI language and text size of this device (owner items 6 and 7), directly under Sound. */}
+        <Spacer size="lg" />
+        <Card padding="md">
+          <Pressable
+            testID="profile-display-row"
+            onPress={() => setDisplayOpen(true)}
+            accessibilityRole="button"
+            aria-haspopup="dialog"
+            accessibilityLabel={m.common.display.a11y}
+            accessibilityHint={displayLine}
+            style={{ minHeight: touchTarget.min, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.md }}
+          >
+            <View style={{ flex: 1 }}>
+              <Body weight="semibold">{t.display.row}</Body>
+              <Caption tone="muted">{displayLine}</Caption>
+            </View>
+            <Icon name="arrow-right" size={24} color={colors.text.muted} />
+          </Pressable>
+        </Card>
+        <DeviceDisplaySheet visible={displayOpen} onClose={() => setDisplayOpen(false)} />
+
+        {active ? (
           <>
-            <Spacer size="sm" />
-            <Button label={soundCard.howToLabel} tone="ghost" size="md" onPress={() => setVoiceHelpOpen(true)} testID="sound-how-to-add" />
+            <Spacer size="lg" />
+            <ReadingPracticeCard profileId={active.id} />
           </>
         ) : null}
-      </Card>
-      <VoiceHelpSheet visible={voiceHelpOpen} onClose={() => setVoiceHelpOpen(false)} />
 
-      {/* Display: the one UI language and text size of this device (owner items 6 and 7), directly under Sound. */}
-      <Spacer size="lg" />
-      <Card padding="md">
+        {active && wordsOffered() ? (
+          <>
+            {/* F-VOC-004 S-6: the Speed Round's Challenge opt-in; only where Words (and so the Speed Round) is offered. */}
+            <Spacer size="lg" />
+            <ChallengeCard profileId={active.id} />
+          </>
+        ) : null}
+
+        {active && placementEntriesOn(flags.placementEnabled) ? (
+          <>
+            {/* F-PLC-001 section 3.10: not behind the PIN (a learner may do this alone; the result is only a start). */}
+            <Spacer size="lg" />
+            <Card padding="md">
+              <Pressable
+                testID="profile-placement-row"
+                onPress={() => navigation.navigate('Placement', { source: 'profile' })}
+                accessibilityRole="button"
+                accessibilityLabel={m.learner.placement.profileRow}
+                style={{ minHeight: touchTarget.min, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.md }}
+              >
+                <Body weight="semibold" style={{ flex: 1 }}>
+                  {m.learner.placement.profileRow}
+                </Body>
+                <Icon name="arrow-right" size={24} color={colors.text.muted} />
+              </Pressable>
+            </Card>
+          </>
+        ) : null}
+
+        {active && routeEnabledFor(locale) ? (
+          <>
+            {/* F-PLAN-002 section 3.9: always here (a Not now on Home never hides it); a child's plan goes through the gate. */}
+            <Spacer size="lg" />
+            <Card padding="md">
+              <Pressable
+                testID="profile-plan-row"
+                onPress={() => {
+                  if (profileRowOpens({ learnerType: effectiveLearnerType(active), opensDirectly: opensDirectly(parentSessionOpen) }) === 'proposal') {
+                    navigation.navigate('RouteProposal', { source: 'profile', profileId: active.id });
+                  } else {
+                    navigation.navigate('PinEntry', { next: 'RouteProposal', profileId: active.id });
+                  }
+                }}
+                accessibilityRole="button"
+                accessibilityLabel={activeSelfRoute(snap) ? m.learner.weeklyPlan.profileRow.open : m.learner.weeklyPlan.profileRow.make}
+                style={{ minHeight: touchTarget.min, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.md }}
+              >
+                <Body weight="semibold" style={{ flex: 1 }}>
+                  {activeSelfRoute(snap) ? m.learner.weeklyPlan.profileRow.open : m.learner.weeklyPlan.profileRow.make}
+                </Body>
+                <Icon name="arrow-right" size={24} color={colors.text.muted} />
+              </Pressable>
+            </Card>
+          </>
+        ) : null}
+
+        {/* F-FEEDBACK-001 FB-8 (section 6.5 item 2): My notes; no gate (the learner's own notes). */}
+        <MyNotesRow onOpen={() => navigation.navigate('Notes')} />
+      </View>
+
+      {/* For grown-ups, collapsed: classes and family first, then the plan, backup, install, the grown-up area and the notices. */}
+      <Spacer size="xxl" />
+      <View testID="profile-group-grown-ups" role="group" aria-labelledby="profile-group-grown-ups-title">
         <Pressable
-          testID="profile-display-row"
-          onPress={() => setDisplayOpen(true)}
+          testID="profile-group-grown-ups-toggle"
+          onPress={() => setGrownUpsOpen((v) => !v)}
           accessibilityRole="button"
-          aria-haspopup="dialog"
-          accessibilityLabel={m.common.display.a11y}
-          accessibilityHint={displayLine}
+          accessibilityState={{ expanded: grownUpsOpen }}
+          aria-expanded={grownUpsOpen}
           style={{ minHeight: touchTarget.min, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.md }}
         >
-          <View style={{ flex: 1 }}>
-            <Body weight="semibold">{t.display.row}</Body>
-            <Caption tone="muted">{displayLine}</Caption>
+          <View id="profile-group-grown-ups-title" style={{ flex: 1 }}>
+            <Heading level="prompt">{t.groups.grownUps}</Heading>
           </View>
-          <Icon name="arrow-right" size={24} color={colors.text.muted} />
+          <View style={{ transform: [{ rotate: grownUpsOpen ? '90deg' : '0deg' }] }}>
+            <Icon name="arrow-right" size={24} color={colors.text.secondary} />
+          </View>
         </Pressable>
-      </Card>
-      <DeviceDisplaySheet visible={displayOpen} onClose={() => setDisplayOpen(false)} />
 
-      {active && wordsOffered() ? (
-        <>
-          {/* F-VOC-004 S-6: the Speed Round's Challenge opt-in; only where Words (and so the Speed Round) is offered. */}
-          <Spacer size="lg" />
-          <ChallengeCard profileId={active.id} />
-        </>
-      ) : null}
+        {grownUpsOpen ? (
+          <>
+            {active ? (
+              <>
+                <Spacer size="sm" />
+                <SpacesCard profile={active} onJoin={() => navigation.navigate('JoinSpace')} />
+              </>
+            ) : null}
 
-      {active ? (
-        <>
-          <Spacer size="lg" />
-          <ReadingPracticeCard profileId={active.id} />
-        </>
-      ) : null}
+            <Spacer size="lg" />
+            {/* The plan card (F-BILL-002 §4.7, §6.3; mock design/screens/billing/plan-status.md): every tier opens the Plan screen, no PIN. */}
+            <Card padding="md" tone={card.tone === 'success' ? 'success' : 'sunken'}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.md }}>
+                <View style={{ flex: 1 }}>
+                  <Body weight="semibold">{card.title}</Body>
+                  <Caption tone="muted">{card.note}</Caption>
+                </View>
+                <Pill tone={card.tone} label={card.pill} size="sm" />
+              </View>
+              <Spacer size="sm" />
+              <Button label={card.cta} tone="ghost" size="md" onPress={() => navigation.navigate('Paywall', { from: 'settings' })} />
+            </Card>
 
-      <Spacer size="lg" />
-      {/* The plan card (F-BILL-002 §4.7, §6.3; mock design/screens/billing/plan-status.md): every tier opens the Plan screen, no PIN. */}
-      <Card padding="md" tone={card.tone === 'success' ? 'success' : 'sunken'}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.md }}>
-          <View style={{ flex: 1 }}>
-            <Body weight="semibold">{card.title}</Body>
-            <Caption tone="muted">{card.note}</Caption>
-          </View>
-          <Pill tone={card.tone} label={card.pill} size="sm" />
-        </View>
-        <Spacer size="sm" />
-        <Button label={card.cta} tone="secondary" size="md" onPress={() => navigation.navigate('Paywall', { from: 'settings' })} />
-      </Card>
+            <Spacer size="lg" />
+            {active ? <BackupCard profile={active} onRestore={() => openGrownUps('Restore')} onSaveProgress={() => openGrownUps('SaveProgress')} /> : null}
 
-      <Spacer size="lg" />
-      {active ? <BackupCard profile={active} onRestore={() => openGrownUps('Restore')} onSaveProgress={() => openGrownUps('SaveProgress')} /> : null}
+            {canOfferInstall ? (
+              <>
+                <Spacer size="lg" />
+                <Button
+                  label={t.install.label}
+                  tone="ghost"
+                  size="md"
+                  accessibilityLabel={t.install.a11yLabel}
+                  onPress={() => {
+                    forceInstallGuide();
+                    navigation.navigate('Main', { screen: 'Home' });
+                  }}
+                />
+              </>
+            ) : null}
 
-      {active ? (
-        <>
-          <Spacer size="lg" />
-          <SpacesCard profile={active} onJoin={() => navigation.navigate('JoinSpace')} />
-        </>
-      ) : null}
+            {grownUpHome ? (
+              <>
+                <Spacer size="lg" />
+                <GrownUpHomeRow onOpen={openGrownUpHome} />
+              </>
+            ) : null}
 
-      {canOfferInstall ? (
-        <>
-          <Spacer size="lg" />
-          <Button
-            label={t.install.label}
-            tone="secondary"
-            size="md"
-            accessibilityLabel={t.install.a11yLabel}
-            onPress={() => {
-              forceInstallGuide();
-              navigation.navigate('Main', { screen: 'Home' });
-            }}
-          />
-        </>
-      ) : null}
-
-      {grownUpHome ? (
-        <>
-          <Spacer size="lg" />
-          <GrownUpHomeRow onOpen={openGrownUpHome} />
-        </>
-      ) : null}
-
-      {/* F-FEEDBACK-001 FB-8 (section 6.5 item 2): My notes, below Grown-up home; no gate (the learner's own notes). */}
-      <MyNotesRow onOpen={() => navigation.navigate('Notes')} />
-
-      <Spacer size="lg" />
-      <Button
-        label={copy.zoneLabel}
-        tone="ghost"
-        size="md"
-        accessibilityLabel={copy.gatedA11y(copy.zoneLabel, pinSet)}
-        onPress={() => openGrownUps('ParentDashboard')}
-      />
-      <Spacer size="lg" />
-      {/* Leaving the app: through the grown-up gate where the device has one (F-STORY-002 §3.8). */}
-      <LicensesLink onGate={(url) => navigation.navigate('PinEntry', { next: 'ExternalLink', url })} />
+            <Spacer size="lg" />
+            <Button
+              label={copy.zoneLabel}
+              tone="ghost"
+              size="md"
+              accessibilityLabel={copy.gatedA11y(copy.zoneLabel, pinSet)}
+              onPress={() => openGrownUps('ParentDashboard')}
+              testID="profile-grown-up-area"
+            />
+            <Spacer size="lg" />
+            {/* Leaving the app: through the grown-up gate where the device has one (F-STORY-002 §3.8). */}
+            <LicensesLink onGate={(url) => navigation.navigate('PinEntry', { next: 'ExternalLink', url })} />
+          </>
+        ) : null}
+      </View>
       <Spacer size="xl" />
     </Screen>
   );

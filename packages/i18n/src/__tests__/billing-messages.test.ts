@@ -424,7 +424,8 @@ describe('learner.profile.plan: the Profile plan card (F-BILL-002 §6.3)', () =>
 
   it('keeps free, freeNote and the pills', () => {
     expect(card.free).toBe('Free plan');
-    expect(card.freeNote).toBe('Stage 1 is free. More stages are on the way.');
+    expect(card.freeNote).toBe('All of Stage 1 is free.');
+    expect(card.allOpen).toBe('Everything is open right now.');
     expect(card.pillActive).toBe('Active');
     expect(card.pillFree).toBe('Free');
   });
@@ -564,7 +565,8 @@ const WIREFRAME_STRINGS: ReadonlyArray<{ wireframe: string; text: string; drawn?
   { wireframe: 'plan-status', text: 'Opens the billing page', path: 'caregiver.plan.openBilling.a11yHint' },
   { wireframe: 'plan-status', text: 'Mina: Free plan.', drawn: '<Name>: <state>.', path: 'a11y.planStatus', args: ['Mina', 'Free plan'] },
   { wireframe: 'plan-status', text: 'Free plan', path: 'learner.profile.plan.free' },
-  { wireframe: 'plan-status', text: 'Stage 1 is free. More stages are on the way.', drawn: 'Stage 1 is free. More stages are on', path: 'learner.profile.plan.freeNote' },
+  { wireframe: 'plan-status', text: 'All of Stage 1 is free.', path: 'learner.profile.plan.freeNote' },
+  { wireframe: 'plan-status', text: 'Everything is open right now.', path: 'learner.profile.plan.allOpen' },
   { wireframe: 'plan-status', text: 'Full route', path: 'learner.profile.plan.fullRoute' },
   { wireframe: 'plan-status', text: 'Everything is open, from Maple Class.', drawn: 'Everything is open, from <space>.', path: 'learner.profile.plan.open', args: ['Maple Class'] },
   { wireframe: 'plan-status', text: 'Plan details', path: 'learner.profile.plan.details.cta' },
@@ -766,6 +768,7 @@ const LEARNER_PATHS = [
   ...A11Y_ADDED,
   'learner.profile.plan.free',
   'learner.profile.plan.freeNote',
+  'learner.profile.plan.allOpen',
   'learner.profile.plan.pillActive',
   'learner.profile.plan.pillFree',
 ];

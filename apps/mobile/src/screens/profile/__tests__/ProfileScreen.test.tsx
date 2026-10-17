@@ -42,7 +42,8 @@ interface TierCase {
   note: string;
   pill: string;
 }
-const FREE: TierCase = { key: 'free', tier: 'free', source: null, title: 'Free plan', note: 'Stage 1 is free. More stages are on the way.', pill: 'Free' };
+// Content gating is off in this build, so the free card says everything is open (owner request 2026-10-16, item 8).
+const FREE: TierCase = { key: 'free', tier: 'free', source: null, title: 'Free plan', note: 'Everything is open right now.', pill: 'Free' };
 const TIERS: readonly TierCase[] = [
   FREE,
   { key: 'premium-family', tier: 'premium', source: family, title: 'Full route', note: 'Everything is open, from Kim family.', pill: 'Active' },
@@ -84,6 +85,13 @@ beforeEach(() => {
   navigation.goBack.mockReset();
 });
 
+/** Opens Profile's "For grown-ups" group, collapsed on arrival (owner request 2026-10-16, item 8). */
+async function openGrownUps(root: ReactTestInstance): Promise<void> {
+  const toggle = byTestId(root, 'profile-group-grown-ups-toggle')[0] as ReactTestInstance;
+  expect(toggle.props['aria-expanded']).toBe(false);
+  await press(toggle);
+}
+
 afterEach(() => {
   resetPlatform();
 });
@@ -96,6 +104,8 @@ describe('ProfileScreen plan card (F-BILL-002 section 11, B-13)', () => {
           setPlatform(platform);
           seed(audience, tier);
           const renderer = await render(<ProfileScreen />);
+          expect(buttonsNamed(renderer.root, 'Plan details')).toHaveLength(0);
+          await openGrownUps(renderer.root);
           const details = buttonsNamed(renderer.root, 'Plan details');
           expect(details).toHaveLength(1);
           await press(details[0] as ReactTestInstance);
@@ -125,12 +135,13 @@ describe('ProfileScreen plan card (F-BILL-002 section 11, B-13)', () => {
         for (const audience of AUDIENCES) {
           for (const locale of LOCALES) {
             const key = `${platform} / ${audience} / ${locale}`;
-            const card = planCardView(tier.tier, tier.source, getMessages(locale).learner.profile.plan);
+            const card = planCardView(tier.tier, tier.source, getMessages(locale).learner.profile.plan, false);
             if (locale === 'en') expect([card.title, card.note, card.pill], key).toEqual([tier.title, tier.note, tier.pill]);
-            const other = planCardView(tier.tier === 'free' ? 'premium' : 'free', null, getMessages(locale).learner.profile.plan);
+            const other = planCardView(tier.tier === 'free' ? 'premium' : 'free', null, getMessages(locale).learner.profile.plan, false);
             setPlatform(platform);
             seed(audience, tier, locale);
             const renderer = await render(<ProfileScreen />);
+            await openGrownUps(renderer.root);
             const texts = screenTexts(renderer.root);
             expect(texts, key).toContain(card.title);
             expect(texts, key).toContain(card.note);
@@ -158,6 +169,7 @@ describe('ProfileScreen open-source notices link (owner decision 2026-10-14)', (
       setPlatform(platform);
       seed(audience, FREE);
       const renderer = await render(<ProfileScreen />);
+      await openGrownUps(renderer.root);
       const links = byTestId(renderer.root, 'profile-licenses-link');
       expect(links, audience).toHaveLength(1);
       expect(links[0]!.props['aria-label']).toBe(getMessages('en').learner.profile.licenses.label);
@@ -171,8 +183,40 @@ describe('ProfileScreen open-source notices link (owner decision 2026-10-14)', (
       setPlatform(platform);
       seed(audience, FREE);
       const renderer = await render(<ProfileScreen />);
+      await openGrownUps(renderer.root);
       await press(byTestId(renderer.root, 'profile-licenses-link')[0] as ReactTestInstance);
       expect(navigation.navigate, audience).toHaveBeenCalledWith('PinEntry', { next: 'ExternalLink', url: expect.stringMatching(/\/licenses$/) });
+      await unmount(renderer);
+    }
+  });
+});
+
+describe('ProfileScreen groups (owner request 2026-10-16, item 8)', () => {
+  afterEach(() => resetPlatform());
+
+  it.each(PLATFORMS)('%s: My settings is open, For grown-ups starts collapsed and opens on a tap; one filled button', async (platform) => {
+    for (const locale of LOCALES) {
+      setPlatform(platform);
+      seed('family', FREE, locale);
+      const t = getMessages(locale).learner.profile;
+      const renderer = await render(<ProfileScreen />);
+      const mine = byTestId(renderer.root, 'profile-group-mine');
+      expect(mine, locale).toHaveLength(1);
+      expect(screenTexts(mine[0] as ReactTestInstance), locale).toContain(t.groups.mine);
+      expect(screenTexts(mine[0] as ReactTestInstance), locale).toContain(t.sound.label);
+      const grown = byTestId(renderer.root, 'profile-group-grown-ups')[0] as ReactTestInstance;
+      expect(screenTexts(grown), locale).toContain(t.groups.grownUps);
+      // Collapsed: the classes card, the plan card, backup and the grown-up area are not drawn yet.
+      expect(byTestId(grown, 'spaces-card'), locale).toHaveLength(0);
+      expect(byTestId(grown, 'profile-grown-up-area'), locale).toHaveLength(0);
+      await openGrownUps(renderer.root);
+      expect(byTestId(renderer.root, 'profile-group-grown-ups-toggle')[0]?.props['aria-expanded']).toBe(true);
+      // Classes and family comes first in the group, before the plan card and the grown-up area.
+      const order = screenTexts(byTestId(renderer.root, 'profile-group-grown-ups')[0] as ReactTestInstance);
+      const zone = getMessages(locale).caregiver.audience.family.zoneLabel;
+      expect(order.indexOf(getMessages(locale).caregiver.spaces.title), locale).toBeGreaterThan(-1);
+      expect(order.indexOf(getMessages(locale).caregiver.spaces.title), locale).toBeLessThan(order.indexOf(t.plan.details.cta));
+      expect(order.indexOf(t.plan.details.cta), locale).toBeLessThan(order.indexOf(zone));
       await unmount(renderer);
     }
   });

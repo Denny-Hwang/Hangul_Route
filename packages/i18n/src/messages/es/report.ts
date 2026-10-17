@@ -78,6 +78,7 @@ export const report = {
     thisPeriod: 'Este periodo',
     moreDetail: 'Más detalles',
   },
+  scope: { device: 'En este dispositivo', allDevices: 'Todos los dispositivos' },
   figure: {
     days: 'Días de práctica',
     minutes: 'Minutos',

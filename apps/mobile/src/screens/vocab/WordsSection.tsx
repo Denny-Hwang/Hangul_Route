@@ -27,10 +27,15 @@ export function WordsSection(): React.ReactElement {
   return (
     <View testID="library-words">
       <Body tone="secondary">{copy.library.line}</Body>
-      <Spacer size="xs" />
-      <Body weight="semibold" testID="library-words-count">
-        {copy.library.collected(collected)}
-      </Body>
+      {/* The count waits for the first word: never "0 collected" (owner request 2026-10-16, item 8). */}
+      {collected > 0 ? (
+        <>
+          <Spacer size="xs" />
+          <Body weight="semibold" testID="library-words-count">
+            {copy.library.collected(collected)}
+          </Body>
+        </>
+      ) : null}
       <Spacer size="lg" />
       <TopicGrid topics={topics} source="library" width="full" />
     </View>

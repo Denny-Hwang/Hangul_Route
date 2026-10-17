@@ -399,6 +399,9 @@ function ReportBody({ profileId, name, voice, navigation, locale, messages }: Bo
         <View testID="learner-report-this-period">
           <Spacer size="lg" />
           <ReportHeading level={2}>{view.thisPeriod.heading}</ReportHeading>
+          <Caption tone="muted" testID="learner-report-scope">
+            {view.thisPeriod.scope}
+          </Caption>
           <Spacer size="sm" />
           {view.thisPeriod.figures !== null ? (
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>

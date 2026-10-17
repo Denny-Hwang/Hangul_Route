@@ -108,6 +108,13 @@ describe('topicTileView (section 3.3)', () => {
     expect(`${v.countLine} ${v.accessibilityLabel}`).not.toMatch(/%|\d+\s*\/\s*\d+|\bof\b/);
   });
 
+  it('a topic with no word collected yet says New, never "0 collected" (owner request 2026-10-16, item 8)', () => {
+    const v = topicTileView({ ...base, progress: progress([]) });
+    expect(v.countLine).toBe('New');
+    expect(v.accessibilityLabel).toBe('Food. New topic.');
+    expect(`${v.countLine} ${v.accessibilityLabel}`).not.toMatch(/\b0\b/);
+  });
+
   it('says one word in the singular', () => {
     expect(topicTileView({ ...base, progress: progress([state('a')]) }).accessibilityLabel).toBe('Food. 1 word collected.');
   });

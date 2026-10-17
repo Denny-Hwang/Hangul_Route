@@ -251,7 +251,14 @@ export function PaywallScreen({ navigation, route }: Props): React.ReactElement 
       ) : (
         <Spacer size="xl" />
       )}
-      <Button label={view.back} tone="primary" size="lg" fullWidth onPress={() => navigation.navigate('Main', { screen: view.backTo })} />
+      <Button
+        label={view.back}
+        tone="primary"
+        size="lg"
+        fullWidth
+        onPress={() => (view.backTo === 'Back' ? back() : navigation.navigate('Main', { screen: view.backTo }))}
+        testID="plan-back"
+      />
       <Spacer size="xl" />
     </Screen>
   );

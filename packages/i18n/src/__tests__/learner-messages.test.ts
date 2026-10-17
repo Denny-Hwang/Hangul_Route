@@ -137,7 +137,8 @@ describe('learner.profile (English wording as shipped)', () => {
     expect(p.plan.free).toBe('Free plan');
     expect(p.plan.fullRoute).toBe('Full route');
     expect(p.plan.open(null)).toBe('Everything is open.');
-    expect(p.plan.freeNote).toBe('Stage 1 is free. More stages are on the way.');
+    expect(p.plan.freeNote).toBe('All of Stage 1 is free.');
+    expect(p.plan.allOpen).toBe('Everything is open right now.');
     expect([p.plan.pillActive, p.plan.pillFree, p.plan.details.cta]).toEqual(['Active', 'Free', 'Plan details']);
     for (const gone of ['premium', 'unlocked', 'unlock']) expect(gone in p.plan, gone).toBe(false);
     expect([p.install.label, p.install.a11yLabel]).toEqual(['Install on this device', 'Install Hangul Route on this device']);

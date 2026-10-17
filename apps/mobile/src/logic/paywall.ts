@@ -67,15 +67,16 @@ export interface PlanViewInput {
 /** Every surface that opens the Plan screen (the `Paywall` route's `from`). */
 export type PlanFrom = 'journey' | 'settings' | AskFrom;
 
-/** The tab the way back opens. */
-export type PlanBackTarget = 'Journey' | 'Library' | 'Home';
+/** The tab the way back opens; `Back` returns to the screen that opened the Plan screen (Profile). */
+export type PlanBackTarget = 'Journey' | 'Library' | 'Home' | 'Back';
 
 /**
  * The way back names where it goes (F-ENT-003 E3-6, seen in F-STORY-004 PR 4.8b): the Library for
- * a closed Library tile, Home for the Home and Results asks, else the Journey (the Journey, the
- * lesson page, Settings and no `from`).
+ * a closed Library tile, Home for the Home and Results asks, plain Back to Profile when Profile's plan card
+ * opened it (owner request 2026-10-16, item 8), else the Journey (the Journey, the lesson page and no `from`).
  */
 export function planBack(from: PlanFrom | undefined, m: Messages['caregiver']['plan']): { label: string; target: PlanBackTarget } {
+  if (from === 'settings') return { label: m.back.cta, target: 'Back' };
   if (from === 'library') return { label: m.backToLibrary.cta, target: 'Library' };
   if (from === 'home' || from === 'results') return { label: m.backHome.cta, target: 'Home' };
   return { label: m.backToJourney.cta, target: 'Journey' };
@@ -219,12 +220,16 @@ export interface PlanCardView {
   cta: string;
 }
 
-/** The Profile plan card (section 4.7, 6.3): Free plan or Full route, and Plan details on every tier. */
-export function planCardView(tier: Tier, source: TierSource | null, m: Messages['learner']['profile']['plan']): PlanCardView {
+/**
+ * The Profile plan card (section 4.7, 6.3): Free plan or Full route, and Plan details on every tier. The free line
+ * follows the real tier model (owner request 2026-10-16, item 8): while content gating is off (`gating` false)
+ * everything is open, so it says so; with gating on, the free tier is all of Stage 1 (owner decision 2026-10-11).
+ */
+export function planCardView(tier: Tier, source: TierSource | null, m: Messages['learner']['profile']['plan'], gating = true): PlanCardView {
   const full = tier === 'premium';
   return {
     title: full ? m.fullRoute : m.free,
-    note: full ? m.open(named(source?.name)) : m.freeNote,
+    note: full ? m.open(named(source?.name)) : gating ? m.freeNote : m.allOpen,
     pill: full ? m.pillActive : m.pillFree,
     tone: full ? 'success' : 'neutral',
     cta: m.details.cta,

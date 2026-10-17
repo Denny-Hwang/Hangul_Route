@@ -87,8 +87,9 @@ export const caregiver = {
   },
 
   dashboard: {
-    title: 'Panel familiar',
+    persona: 'Familia o quien cuida',
     readOnly: 'Solo lectura: estudiantes de este dispositivo.',
+    aboutRows: { cta: 'Sobre estas filas' },
     noProfiles: 'Aún no hay perfiles.',
     stats: { quests: 'Misiones', cards: 'Tarjetas', sessions: 'Sesiones', minutes: 'Minutos' },
     recent: 'Reciente',
@@ -146,6 +147,7 @@ export const caregiver = {
     backToJourney: { cta: 'Volver al recorrido' },
     backToLibrary: { cta: 'Volver a la colección' },
     backHome: { cta: 'Ir al inicio' },
+    back: { cta: 'Volver' },
     freePlan: {
       line: (lessons: number, letters: number, minutes: number) =>
         `La Etapa 1 es gratis: ${plural('es', lessons, { one: `${lessons} lección`, other: `${lessons} lecciones` })}, ${plural('es', letters, {
@@ -501,9 +503,7 @@ export const caregiver = {
   grownUpHome: {
     noPin: 'Este dispositivo no tiene PIN de adultos. Inicia sesión en la página para adultos.',
     continue: { cta: 'Continuar' },
-    title: 'Inicio para adultos',
-    line: 'Tu familia, tus clases y la facturación.',
-    cta: 'Abrir',
+    signIn: { family: 'Inicia sesión: herramientas de familia y clase', self: 'Inicia sesión en tu cuenta' },
   },
   access: {
     freeEnd: (name: string, product: string) => `${name} terminó las lecciones gratuitas. La Etapa 2 y las siguientes se abren con ${product}.`,
@@ -587,7 +587,7 @@ export const caregiver = {
     card: {
       classScope: 'Primero usa tu código de rescate.',
       askConsole: 'Pide al adulto que tiene la cuenta que responda en la consola.',
-      needsPin: 'Primero un adulto debe crear un PIN. Abre Perfil y luego Zona de adultos.',
+      needsPin: 'Primero un adulto debe crear un PIN. En Perfil, abre Para adultos y luego Zona de adultos.',
       pinTooNew: 'Los cambios se abren un día después de crear el PIN.',
       sourceAsked: (source: string) => `${source} preguntó por un cambio.`,
       learnerAsked: (destination: string) => `Pedido: un cambio a ${destination}.`,

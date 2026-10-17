@@ -37,6 +37,8 @@ const ES_LENGTH_ALLOW_LIST: Readonly<Record<string, string>> = {
   'landing.waitlist.privacyLink': 'the document name "Política de privacidad", one letter over, a link inside the consent line',
   'console.saveDraft': '"Guardar borrador", one letter over; the button wraps',
   'console.relink.device': 'the one word "dispositivo" (11) against "device" (6)',
+  'learner.library.toFind.next': 'the standard Spanish word "Siguiente" (9) against "Next" (4), with its noun ("Siguiente tarjeta"); a label above the card that wraps',
+  'report.scope.allDevices': 'the plural "dispositivos" (12) against "devices" (7) needs its article ("Todos los dispositivos"); a caption under a heading that wraps',
   'console.planCounts.items': '"1 elemento" against "1 item": the Spanish noun is longer; the count line wraps',
   'console.billing.promo.formLabel': 'the field label "Código promocional", a form label above its field',
   'console.curriculum.next.cta': 'the standard Spanish button word "Siguiente" (9) against "Next" (4), inside the 28-character cta budget; it wraps',

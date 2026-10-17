@@ -17,6 +17,7 @@ import {
   layout,
   radii,
   spacing,
+  touchTarget,
   typography,
   useLayoutClass,
   useMediaSize,
@@ -33,6 +34,7 @@ import { themes } from '../../content';
 import { awardWorld } from '../../content/award-world';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { earnHint } from '../../logic/awards/earn-hint';
+import { libraryShelves } from '../../logic/library/shelves';
 import { libraryExplainer } from '../../logic/awards/explainer';
 import { obtainableCards } from '../../logic/awards/obtainable';
 import { cardTitleIsKo } from '../../logic/card-art';
@@ -145,6 +147,11 @@ export function LibraryScreen(): React.ReactElement {
   const visible = useMemo(() => {
     return filter === 'all' ? listed : listed.filter((c) => c.theme === filter);
   }, [filter, listed]);
+  // Two shelves (owner request 2026-10-16, item 8): the learner's cards first, then the cards to find by what earns
+  // them, one row each, with one Next card hint for the shelf.
+  const shelves = useMemo(() => libraryShelves(visible, unlockedIds, hintWorld, messages.learner), [visible, unlockedIds, hintWorld, messages]);
+  const cardOf = useMemo(() => new Map(visible.map((c) => [c.id, c])), [visible]);
+  const [openGroup, setOpenGroup] = useState<string | null>(null);
 
   // Two panes (wide window, F-LAYOUT-001 §3.6, §3.7): a card tap selects it and the right pane shows the
   // card page; one pane: a tap opens the card screen as always. 3 columns on regular and in the master pane.
@@ -177,6 +184,13 @@ export function LibraryScreen(): React.ReactElement {
   const gridWidth = phoneGallery ? fallbackWidth : galleryGridWidth(measured, galleryMode, fallbackWidth);
   const artSize = cardThumbArtSize(useMediaSize(THUMB_ART), gridCellWidth(gridWidth, columns, GALLERY_GAP), THUMB_CHROME);
 
+  const openCard = (card: HeritageCard): void => {
+    // Opening an owned card clears its New pill (wireframe library/earn-hints).
+    if (unlockedIds.has(card.id) && profile) markCardsSeen(profile.id, [card.id]);
+    if (paneMode) setSelected(card.id);
+    else navigation.navigate('CardDetail', { cardId: card.id });
+  };
+
   const thumb = (card: HeritageCard, cellStyle: ViewStyle): React.ReactElement => {
     const unlocked = unlockedIds.has(card.id);
     return (
@@ -190,15 +204,27 @@ export function LibraryScreen(): React.ReactElement {
         artSize={artSize}
         narrow={paneMode}
         selected={paneMode ? card.id === selectedId : undefined}
-        onPress={() => {
-          // Opening an owned card clears its New pill (wireframe library/earn-hints).
-          if (unlocked && profile) markCardsSeen(profile.id, [card.id]);
-          if (paneMode) setSelected(card.id);
-          else navigation.navigate('CardDetail', { cardId: card.id });
-        }}
+        onPress={() => openCard(card)}
       />
     );
   };
+
+  /** A grid of cards: two to a row on a phone, rows of `columns` equal cells elsewhere (the last row padded). */
+  const cardGrid = (cards: readonly HeritageCard[], testID: string, measure = false): React.ReactElement =>
+    phoneGallery ? (
+      <View testID={testID} style={{ flexDirection: 'row', flexWrap: 'wrap', gap: GALLERY_GAP }}>
+        {cards.map((card) => thumb(card, PHONE_CELL))}
+      </View>
+    ) : (
+      <View testID={testID} style={{ gap: GALLERY_GAP }} onLayout={measure ? onGridLayout : undefined}>
+        {gridRows([...cards], columns).map((row, r) => (
+          <View key={r} style={{ flexDirection: 'row', gap: GALLERY_GAP }}>
+            {row.map((card, i) => (card ? thumb(card, ROW_CELL) : <View key={`pad-${i}`} style={ROW_CELL} />))}
+          </View>
+        ))}
+      </View>
+    );
+  const nextCard = shelves.next ? cardOf.get(shelves.next.cardId) : undefined;
 
   const gallery = (
     <>
@@ -222,20 +248,70 @@ export function LibraryScreen(): React.ReactElement {
           </View>
 
           <Spacer size="lg" />
-          {phoneGallery ? (
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: GALLERY_GAP }}>
-              {visible.map((card) => thumb(card, PHONE_CELL))}
-            </View>
+          {/* Your cards: the first thing the Library shows (owner request 2026-10-16, item 8). */}
+          <Heading level="prompt">{m.yours.title}</Heading>
+          <Spacer size="sm" />
+          {shelves.yours.length > 0 ? (
+            cardGrid(shelves.yours, 'library-your-cards', true)
           ) : (
-            // Rows of `columns` equal cells; the last row is padded so its cards keep the same width.
-            <View style={{ gap: GALLERY_GAP }} onLayout={onGridLayout}>
-              {gridRows(visible, columns).map((row, r) => (
-                <View key={r} style={{ flexDirection: 'row', gap: GALLERY_GAP }}>
-                  {row.map((card, i) => (card ? thumb(card, ROW_CELL) : <View key={`pad-${i}`} style={ROW_CELL} />))}
-                </View>
-              ))}
-            </View>
+            <Body tone="secondary" testID="library-your-cards-empty">
+              {m.yours.empty}
+            </Body>
           )}
+
+          {shelves.toFind.length > 0 ? (
+            <View testID="library-to-find">
+              <Spacer size="xl" />
+              <Heading level="prompt">{m.toFind.title}</Heading>
+              {nextCard && shelves.next ? (
+                <>
+                  <Spacer size="sm" />
+                  <NextCardRow label={m.toFind.next} hint={shelves.next.hint} onPress={() => openCard(nextCard)} />
+                </>
+              ) : null}
+              <Spacer size="sm" />
+              <View style={{ gap: spacing.xs }}>
+                {shelves.toFind.map((group) => {
+                  const open = openGroup === group.key;
+                  const cards = group.cardIds.map((id) => cardOf.get(id)).filter((c): c is HeritageCard => c !== undefined);
+                  return (
+                    <View key={group.key}>
+                      <Pressable
+                        testID={`library-group-${group.key}`}
+                        onPress={() => setOpenGroup(open ? null : group.key)}
+                        accessibilityRole="button"
+                        accessibilityLabel={m.toFind.a11y(group.title)}
+                        accessibilityState={{ expanded: open }}
+                        aria-expanded={open}
+                        style={({ pressed }) => ({
+                          minHeight: touchTarget.min,
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          gap: spacing.md,
+                          paddingHorizontal: spacing.md,
+                          borderRadius: radii.md,
+                          backgroundColor: pressed ? colors.surface.sunken : colors.surface.paper,
+                          borderWidth: borderWidth.thin,
+                          borderColor: colors.border.subtle,
+                        })}
+                      >
+                        <CardSilhouette size={spacing.xl} />
+                        <Body weight="semibold" style={{ flex: 1 }}>
+                          {group.title}
+                        </Body>
+                        <View style={{ transform: [{ rotate: open ? '90deg' : '0deg' }] }}>
+                          <Icon name="arrow-right" size={spacing.xl} color={colors.text.secondary} />
+                        </View>
+                      </Pressable>
+                      {open ? (
+                        <View style={{ paddingTop: spacing.sm }}>{cardGrid(cards, `library-group-${group.key}-cards`)}</View>
+                      ) : null}
+                    </View>
+                  );
+                })}
+              </View>
+            </View>
+          ) : null}
           <Spacer size="xl" />
 
           <Card padding="md" tone="brand">
@@ -366,21 +442,10 @@ function CardThumb({
       }}
     >
       {!unlocked ? (
-        <View style={{ alignItems: 'center', justifyContent: 'center', flex: 1, gap: spacing.xs }}>
-          <Icon name="lock" size={32} color={colors.text.muted} />
-          {/* The earn hint, at most two lines; the full text is in the label and on the card page. */}
-          <Text {...KOREAN_LINE_BREAK}
-            numberOfLines={2}
-            style={{
-              fontSize: textScale.size.caption,
-              lineHeight: textScale.size.caption * typography.leading.normal,
-              fontWeight: typography.weight.medium,
-              color: colors.text.muted,
-              textAlign: 'center',
-            }}
-          >
-            {hint}
-          </Text>
+        // A card to find is a silhouette, never a lock (owner request 2026-10-16, item 8); its earn hint is in the
+        // label and on the card page, and the shelf shows one Next card hint.
+        <View style={{ alignItems: 'center', justifyContent: 'center', flex: 1 }}>
+          <CardSilhouette size={artSize} />
         </View>
       ) : (
         <>
@@ -404,6 +469,62 @@ function CardThumb({
           {cardTitleIsKo(card) ? null : <Caption tone="secondary">{card.titleEn}</Caption>}
         </>
       )}
+    </Pressable>
+  );
+}
+
+/**
+ * A card still to find: the card's outline, dashed, with the card glyph faint inside (owner request 2026-10-16,
+ * item 8). Decorative; the caller's label says what it is.
+ */
+function CardSilhouette({ size }: { size: number }): React.ReactElement {
+  return (
+    <View
+      aria-hidden
+      importantForAccessibility="no-hide-descendants"
+      accessibilityElementsHidden
+      style={{
+        width: size,
+        height: Math.round(size * 1.3),
+        borderRadius: radii.sm,
+        borderWidth: borderWidth.base,
+        borderStyle: 'dashed',
+        borderColor: colors.border.shape,
+        backgroundColor: colors.surface.sunken,
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
+    >
+      <Icon name="card" size={Math.max(spacing.lg, Math.round(size / 2))} color={colors.text.muted} />
+    </View>
+  );
+}
+
+/** The one Next card hint of the Cards to find shelf: a silhouette, "Next card" and how to earn it. */
+function NextCardRow({ label, hint, onPress }: { label: string; hint: string; onPress: () => void }): React.ReactElement {
+  return (
+    <Pressable
+      testID="library-next-card"
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={`${label}. ${hint}`}
+      style={({ pressed }) => ({
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: spacing.md,
+        minHeight: touchTarget.min,
+        padding: spacing.md,
+        borderRadius: radii.lg,
+        backgroundColor: pressed ? colors.surface.sunken : colors.brand.secondaryLight,
+      })}
+    >
+      <CardSilhouette size={spacing.xxl} />
+      <View style={{ flex: 1, gap: spacing.xxs }}>
+        <Caption tone="secondary" weight="semibold">
+          {label}
+        </Caption>
+        <Body weight="semibold">{hint}</Body>
+      </View>
     </Pressable>
   );
 }

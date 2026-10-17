@@ -112,7 +112,10 @@ export function planOpenBlocked(entriesOn: boolean, online: boolean): boolean {
   return entriesOn && !online;
 }
 
-/** The dashboard card's title: "Account home" on a self-only device, as the Profile row says (D9). */
-export function dashboardCardTitle(audience: DeviceAudience, m: Messages): string {
-  return audience === 'self' ? m.learner.profile.grownUpHome.selfTitle : m.caregiver.grownUpHome.title;
+/**
+ * The dashboard's sign-in row (owner request 2026-10-16, item 8; was the "Grown-up home" card): what it opens, in
+ * one line, for the device's audience (a self-only device never says "family", D9).
+ */
+export function dashboardSignInLabel(audience: DeviceAudience, m: Messages): string {
+  return audience === 'self' ? m.caregiver.grownUpHome.signIn.self : m.caregiver.grownUpHome.signIn.family;
 }

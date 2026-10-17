@@ -413,6 +413,8 @@ export interface ReportGrowthView {
 
 export interface ReportThisPeriodView {
   heading: string;
+  /** Where the figures come from: "On this device" (owner request 2026-10-16, item 8). */
+  scope: string;
   figures: ReportFigureTile[] | null;
   calendar: ReportCalendarView | null;
   growth: ReportGrowthView | null;
@@ -677,7 +679,7 @@ export function inAppReportView(input: InAppReportInput): InAppReportView {
         : { text: headline, horizon: report.horizon?.partial && report.headline?.code !== 'none_saved' ? m.report.horizon(dayText(report.horizon.asOf, w.locale, today)) : null },
     wentWell: section(m.report.section.wentWell, wentWell(ctx)),
     practiceNext: section(m.report.section.practiceNext, practiceNext(ctx)),
-    thisPeriod: ready ? { heading: m.report.section.thisPeriod, figures: figuresView(report, w), calendar: calendarView(report, w), growth: growthView(report, w) } : null,
+    thisPeriod: ready ? { heading: m.report.section.thisPeriod, scope: m.report.scope.device, figures: figuresView(report, w), calendar: calendarView(report, w), growth: growthView(report, w) } : null,
     moreDetail: summary === null ? null : detailView(report, summary, w),
     previewStage: (summary === null ? null : emptyStageOf(summary))?.stage ?? 'stage1',
   };

@@ -68,6 +68,7 @@ export const report = {
     thisPeriod: '이 기간',
     moreDetail: '자세히 보기',
   },
+  scope: { device: '이 기기에서', allDevices: '모든 기기에서' },
   figure: {
     days: '연습한 날',
     minutes: '연습 시간',

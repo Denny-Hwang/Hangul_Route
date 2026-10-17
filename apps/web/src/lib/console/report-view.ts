@@ -554,6 +554,8 @@ export interface ReportGrowthView {
 
 export interface ReportThisPeriod {
   heading: string;
+  /** Where the figures come from: "All devices", what every device of the learner saved (owner request 2026-10-16, item 8). */
+  scope: string;
   /** Null when the whole window is after the last save: zeros would read as "did not practice". */
   figures: ReportFigureTile[] | null;
   calendar: ReportCalendarView | null;
@@ -892,7 +894,7 @@ export function learnerReportView(input: LearnerReportViewInput): LearnerReportV
     wentWell: section(m.report.section.wentWell, wentWell(ctx)),
     practiceNext: section(m.report.section.practiceNext, practiceNext(ctx)),
     thisPeriod: ready
-      ? { heading: m.report.section.thisPeriod, figures: figuresView(report, w), calendar: calendarView(report, w), growth: growthView(report, w) }
+      ? { heading: m.report.section.thisPeriod, scope: m.report.scope.allDevices, figures: figuresView(report, w), calendar: calendarView(report, w), growth: growthView(report, w) }
       : null,
     moreDetail: summary === null ? null : detailView(report, summary, w),
   };

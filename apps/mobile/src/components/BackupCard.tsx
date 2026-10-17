@@ -45,8 +45,8 @@ export function BackupCard({ profile, onRestore, onSaveProgress }: BackupCardPro
       <Caption tone="muted">{cloudStatusLine(syncState, new Date(), messages.caregiver.sync)}</Caption>
       <Spacer size="md" />
       <View style={{ gap: spacing.sm }}>
-        <Button label={m.save.cta} tone="primary" size="md" accessibilityLabel={copy.gatedA11y(m.save.cta, pinSet, m.save.detail)} onPress={onSaveProgress} />
-        <Button label={m.file.cta} tone="secondary" size="md" onPress={() => void exportFile()} />
+        <Button label={m.save.cta} tone="ghost" size="md" accessibilityLabel={copy.gatedA11y(m.save.cta, pinSet, m.save.detail)} onPress={onSaveProgress} />
+        <Button label={m.file.cta} tone="ghost" size="md" onPress={() => void exportFile()} />
         <Button label={m.restore.cta} tone="ghost" size="md" accessibilityLabel={copy.gatedA11y(m.restore.cta, pinSet)} onPress={onRestore} />
       </View>
       {note ? (
