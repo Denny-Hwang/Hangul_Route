@@ -15,8 +15,8 @@ const DISABLED_OPACITY = 0.6;
  * `design/screens/app-shell/learner-entry.md`, decisions D9 and D11). Web only, behind
  * `flags.grownUpHomeEnabled`; the caller places it directly above the zone button.
  *
- * "Grown-up home" ("Account home" on a self-only device) with the line "Your family, classes and
- * billing"; its accessible name is the title and the line it shows, plus "(PIN required)" on a
+ * "Account pages" (one grown-up name, AMENDMENTS-DISPLAY-NAV 9.4: the gated area is the Grown-up area) with the line
+ * "Your family, classes and billing"; its accessible name is the title and the line it shows, plus "(PIN required)" on a
  * gated device. Offline (Panel C) the row is disabled, its title and glyphs at 0.6, and the line
  * becomes "Needs the internet" at full contrast (so the name says it too).
  */

@@ -246,3 +246,47 @@ describe('ProfileScreen groups on a self-only device', () => {
     }
   });
 });
+
+describe('ProfileScreen: one grown-up name (AMENDMENTS-DISPLAY-NAV 9.4) and the group heading', () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    resetPlatform();
+  });
+
+  it.each(LOCALES)('%s, web family device: the row is Account pages; no drawn line names a second grown-up place', async (locale) => {
+    setPlatform('web');
+    seed('family', FREE, locale);
+    // The Account pages row is the web build's (F-APP-001 A-7, `grownUpEntriesOn`).
+    vi.stubEnv('EXPO_OS', 'web');
+    const m = getMessages(locale);
+    const renderer = await render(<ProfileScreen />);
+    await openGrownUps(renderer.root);
+    const row = byTestId(renderer.root, 'profile-grown-up-home');
+    expect(row.length, locale).toBeGreaterThan(0);
+    const texts = screenTexts(renderer.root);
+    expect(texts, locale).toContain(m.learner.profile.grownUpHome.title);
+    // The device's one grown-up name is the zone label ("Grown-up area"); the group heading "For grown-ups" says who the
+    // group is for. Nothing else drawn on Profile names a grown-up place ("Grown-up home" is gone).
+    const word = { en: /grown-up/i, es: /adultos/i, ko: /어른/ }[locale];
+    const allowed = [m.caregiver.audience.family.zoneLabel, m.learner.profile.groups.grownUps];
+    for (const text of texts.filter((x) => word.test(x))) {
+      expect(allowed.some((name) => text.includes(name)), `${locale}: ${text}`).toBe(true);
+    }
+    await unmount(renderer);
+  });
+
+  it.each(PLATFORMS)('%s: the For grown-ups heading holds its disclosure button, never the other way round', async (platform) => {
+    setPlatform(platform);
+    seed('family', FREE);
+    const renderer = await render(<ProfileScreen />);
+    const heading = byTestId(renderer.root, 'profile-group-grown-ups-heading')[0] as ReactTestInstance;
+    expect(heading.props.role).toBe('heading');
+    const toggle = byTestId(heading, 'profile-group-grown-ups-toggle')[0] as ReactTestInstance;
+    expect(toggle.props.role).toBe('button');
+    expect(toggle.props['aria-label']).toBe(getMessages('en').learner.profile.groups.grownUps);
+    expect(toggle.props['aria-expanded']).toBe(false);
+    // No heading role inside the button: a button's content is presentational.
+    expect(toggle.findAll((n) => typeof n.type === 'string' && n.props.role === 'heading')).toHaveLength(0);
+    await unmount(renderer);
+  });
+});

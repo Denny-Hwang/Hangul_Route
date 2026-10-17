@@ -12,8 +12,9 @@ import type { GrownUpHandoffRequest } from './handoff-rules';
  * - Welcome (no learner profile yet): a row under "I already have progress", "Here to support a
  *   learner?" with Parent or caregiver and Teacher (to `/signin?persona=…`), or Continue as the
  *   persona this browser remembers (to `/signin`) and a Someone else link.
- * - Profile: the first row of the grown-up zone, "Grown-up home" ("Account home" on a self-only
- *   device, D9); ParentDashboard: a card at the top. Both call `openGrownUpArea`.
+ * - Profile: the row "Account pages" in the For grown-ups group (Account & more on a self-only device, D9;
+ *   one grown-up name, AMENDMENTS-DISPLAY-NAV 9.4); ParentDashboard: the sign-in row at the top. Both call
+ *   `openGrownUpArea`.
  * - Offline: the buttons stay, disabled, with "Needs the internet".
  */
 
@@ -57,7 +58,7 @@ export function personaChosen(persona: Persona, from: PersonaChosenFrom): Person
   return { name: 'shell.persona_chosen', payload: { persona, from } };
 }
 
-/** The Profile row's title: "Account home" on a self-only device, whose zone says "Account & backup" (D9). */
+/** The Profile row's title: `selfTitle` on a self-only device (D9), `title` elsewhere; both read "Account pages" (DN 9.4). */
 export function grownUpRowTitle(audience: DeviceAudience, m: Messages['learner']['profile']['grownUpHome']): string {
   return audience === 'self' ? m.selfTitle : m.title;
 }
@@ -81,7 +82,7 @@ export function startEvent(grownUps: boolean): PersonaChosenEvent | null {
 export type GrownUpEntryVia = Extract<GrownUpHandoffRequest['via'], 'profile' | 'dashboard'>;
 
 /**
- * One tap of Grown-up home (Profile) or Open (dashboard), section 3.6 and behaviour 22: the hand-off
+ * One tap of Account pages (Profile) or the sign-in row (dashboard), section 3.6 and behaviour 22: the hand-off
  * goes on when the PIN is fresh (or the device has none) and otherwise asks for the grown-up area's
  * PIN with the same `via`. `busy` is a ref, checked and set before the first await, so two taps in one
  * render run it once. A hand-off that throws settles quietly and frees the entry for another tap.

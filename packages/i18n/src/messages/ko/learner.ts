@@ -148,9 +148,9 @@ export const learner = {
       off: '꺼짐',
     },
     grownUpHome: {
-      title: '어른용 홈',
+      title: '계정 페이지',
       line: '가족, 반, 결제',
-      selfTitle: '계정 홈',
+      selfTitle: '계정 페이지',
     },
   },
 

@@ -283,7 +283,8 @@ export async function seedRescueCode(page: Page, code: string): Promise<void> {
 
 /**
  * Profile's "For grown-ups" group starts collapsed (owner request 2026-10-16, item 8): open it. Classes and
- * family, the plan card, backup, install, Grown-up home, the Grown-up area and the notices are inside.
+ * Classes and family sit above it, under the stats (owner decision 2026-10-17); the plan card, backup, install,
+ * Account pages, the Grown-up area and the notices are inside.
  */
 export async function openForGrownUps(page: Page): Promise<void> {
   const toggle = page.getByTestId('profile-group-grown-ups-toggle');

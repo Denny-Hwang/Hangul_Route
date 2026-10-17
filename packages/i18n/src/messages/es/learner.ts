@@ -152,9 +152,9 @@ export const learner = {
       off: 'No',
     },
     grownUpHome: {
-      title: 'Inicio para adultos',
+      title: 'Páginas de la cuenta',
       line: 'Tu familia, tus clases y la facturación',
-      selfTitle: 'Mi cuenta',
+      selfTitle: 'Páginas de la cuenta',
     },
   },
 

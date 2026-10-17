@@ -33,12 +33,19 @@ describe('learner.welcome.grownUps (Welcome persona row, Panels A to C)', () => 
 });
 
 describe('learner.profile.grownUpHome (Profile row, D9 and D11)', () => {
-  it('has the row title, its line and the self-only title', () => {
+  it('has the row title, its line and the self-only title: "Account pages" everywhere (one grown-up name, DN 9.4)', () => {
     expect(profileRow).toEqual({
-      title: 'Grown-up home',
+      title: 'Account pages',
       line: 'Your family, classes and billing',
-      selfTitle: 'Account home',
+      selfTitle: 'Account pages',
     });
+  });
+
+  it.each(['es', 'ko'] as const)('%s: the row says the account pages, never a second grown-up name', (locale) => {
+    const row = getMessages(locale).learner.profile.grownUpHome;
+    expect(row.title).toBe(locale === 'es' ? 'Páginas de la cuenta' : '계정 페이지');
+    expect(row.selfTitle).toBe(row.title);
+    expect(row.title).not.toMatch(/adult|어른/i);
   });
 });
 

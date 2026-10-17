@@ -278,7 +278,7 @@ test.describe('the grown-up shell on the release build (flag on by default, A-10
     await signedInOnGrownUpPages(context);
     const pinSetAt = await familyDevice(page);
     await openProfile(page);
-    const row = page.getByRole('button', { name: /^Grown-up home, / });
+    const row = page.getByRole('button', { name: /^Account pages, / });
     const zone = page.getByRole('button', { name: 'Grown-up area (PIN required)' });
     expect((await row.boundingBox())?.y ?? Infinity).toBeLessThan((await zone.boundingBox())?.y ?? 0);
 
@@ -424,7 +424,7 @@ test.describe('the family home with data (an API address, GROWN_UP_SHELL_E2E=1)'
     await familyDevice(page);
     await seedShell(page, { lastPersona: { v: 1, persona: 'parent' } });
     await openProfile(page);
-    await page.getByRole('button', { name: /^Grown-up home, / }).click();
+    await page.getByRole('button', { name: /^Account pages, / }).click();
     await unlockWithPin(page);
     await expect(page).toHaveURL(/\/parent$/);
     await expectOpen(page);

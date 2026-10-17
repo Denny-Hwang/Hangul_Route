@@ -26,7 +26,7 @@ const ON = process.env.E2E_GROWN_UP_HOME === '1';
 const OFF = process.env.E2E_GROWN_UP_HOME === '0';
 const UNLOCK = 'hr:grownup:unlock';
 const JOIN_HANDOFF = 'hr:shell:joinCode';
-const PROFILE_ROW = /^Grown-up home, Your family, classes and billing/;
+const PROFILE_ROW = /^Account pages, Your family, classes and billing/;
 
 /** Serves a plain page at `/signin`, the grown-up sign-in router the entries open. */
 async function standInSignIn(page: Page): Promise<void> {
@@ -275,11 +275,11 @@ test.describe('flag on (EXPO_PUBLIC_GROWN_UP_HOME=true)', () => {
     await expect(page.getByTestId('welcome-grown-ups-offline')).toHaveCount(0);
   });
 
-  test('Profile: Grown-up home is the row above the zone button; the PIN opens the grown-up area with a PIN unlock', async ({ page }) => {
+  test('Profile: Account pages is the row above the zone button; the PIN opens the grown-up area with a PIN unlock', async ({ page }) => {
     await standInSignIn(page);
     await onboardChild(page, { name: 'Mina' });
     await openProfile(page, 'Mina');
-    const row = page.getByRole('button', { name: 'Grown-up home, Your family, classes and billing (PIN required)' });
+    const row = page.getByRole('button', { name: 'Account pages, Your family, classes and billing (PIN required)' });
     await expect(row).toBeVisible();
     const rowBox = await row.boundingBox();
     const zoneBox = await page.getByRole('button', { name: 'Grown-up area (PIN required)' }).boundingBox();
@@ -296,11 +296,11 @@ test.describe('flag on (EXPO_PUBLIC_GROWN_UP_HOME=true)', () => {
     expect(JSON.parse(unlock ?? '{}')).toMatchObject({ v: 1, src: 'pin' });
   });
 
-  test('a self-only device says "Account home" and opens without a PIN', async ({ page }) => {
+  test('a self-only device says "Account pages" and opens without a PIN', async ({ page }) => {
     await standInSignIn(page);
     await onboardSelf(page, { name: 'Sam' });
     await openProfile(page, 'Sam');
-    const row = page.getByRole('button', { name: 'Account home, Your family, classes and billing' });
+    const row = page.getByRole('button', { name: 'Account pages, Your family, classes and billing' });
     await expect(row).toBeVisible();
     await row.click();
     await expect(page).toHaveURL(/\/signin\?lang=en$/);
@@ -345,7 +345,7 @@ test.describe('flag on (EXPO_PUBLIC_GROWN_UP_HOME=true)', () => {
     await onboardChild(page, { name: 'Mina' });
     await openProfile(page, 'Mina');
     await context.setOffline(true);
-    const row = page.getByRole('button', { name: 'Grown-up home, Needs the internet (PIN required)' });
+    const row = page.getByRole('button', { name: 'Account pages, Needs the internet (PIN required)' });
     await expect(row).toBeDisabled();
     await expect(page.getByTestId('profile-grown-up-home-line')).toHaveText('Needs the internet');
     await row.scrollIntoViewIfNeeded();

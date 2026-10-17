@@ -200,10 +200,14 @@ export const learner = {
      * parent/grown-up-home-card.md Panel A, learner-entry.md D9 and D11): opens the grown-up area
      * on the app host. `selfTitle` on a self-only device, whose zone is "Account & backup".
      */
+    /**
+     * The row that opens the web account pages (F-APP-001 A-7). One grown-up name (AMENDMENTS-DISPLAY-NAV 9.4): the
+     * gated area is "Grown-up area", so this row is "Account pages" on every device, never a second grown-up name.
+     */
     grownUpHome: {
-      title: 'Grown-up home',
+      title: 'Account pages',
       line: 'Your family, classes and billing',
-      selfTitle: 'Account home',
+      selfTitle: 'Account pages',
     },
   },
 

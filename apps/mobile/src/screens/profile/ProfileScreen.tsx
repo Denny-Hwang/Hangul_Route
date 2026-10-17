@@ -5,6 +5,7 @@ import {
   Card,
   Heading,
   Icon,
+  KOREAN_LINE_BREAK,
   Pill,
   Screen,
   Spacer,
@@ -12,12 +13,14 @@ import {
   radii,
   spacing,
   touchTarget,
+  typography,
+  useTypeScale,
 } from '@hangul-route/design-system';
 import { LOCALE_META, levelWords } from '@hangul-route/i18n';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useRef, useState } from 'react';
-import { Pressable, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 import { ProfileAvatar } from '../../components/ProfileAvatar';
 import { bundleOs, flags, gatingActive, routeEnabledFor } from '../../config/flags';
 import { placementEntriesOn } from '../../logic/placement/entry';
@@ -84,6 +87,9 @@ export function ProfileScreen(): React.ReactElement {
   const forceInstallGuide = usePwaStore((s) => s.force);
   const installed = usePwaStore((s) => s.installed);
   const { copy, pinSet, opensDirectly, audience } = useAudience();
+  // A self-only device never says "grown-up" (F-LEARN-001 L7).
+  const grownUpsTitle = audience === 'self' ? t.groups.account : t.groups.grownUps;
+  const textScale = useTypeScale();
   const canOfferInstall = !installed && installGuideVariant(installEnv()) !== 'none';
 
   // A verified grown-up may add another child without re-entering the PIN
@@ -351,22 +357,35 @@ export function ProfileScreen(): React.ReactElement {
       {/* For grown-ups, collapsed: the plan, backup, install, the account pages, the grown-up area and the notices. */}
       <Spacer size="xxl" />
       <View testID="profile-group-grown-ups" role="group" aria-labelledby="profile-group-grown-ups-title">
-        <Pressable
-          testID="profile-group-grown-ups-toggle"
-          onPress={() => setGrownUpsOpen((v) => !v)}
-          accessibilityRole="button"
-          accessibilityState={{ expanded: grownUpsOpen }}
-          aria-expanded={grownUpsOpen}
-          style={{ minHeight: touchTarget.min, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.md }}
-        >
-          <View id="profile-group-grown-ups-title" style={{ flex: 1 }}>
-            {/* A self-only device never says "grown-up" (F-LEARN-001 L7). */}
-            <Heading level="prompt">{audience === 'self' ? t.groups.account : t.groups.grownUps}</Heading>
-          </View>
-          <View style={{ transform: [{ rotate: grownUpsOpen ? '90deg' : '0deg' }] }}>
-            <Icon name="arrow-right" size={24} color={colors.text.secondary} />
-          </View>
-        </Pressable>
+        {/* The heading holds the group's disclosure button (the accordion pattern): heading navigation still finds the
+            group, and the button says whether it is open. A heading inside the button would lose its heading role. */}
+        <View accessibilityRole="header" id="profile-group-grown-ups-title" testID="profile-group-grown-ups-heading">
+          <Pressable
+            testID="profile-group-grown-ups-toggle"
+            onPress={() => setGrownUpsOpen((v) => !v)}
+            accessibilityRole="button"
+            accessibilityLabel={grownUpsTitle}
+            accessibilityState={{ expanded: grownUpsOpen }}
+            aria-expanded={grownUpsOpen}
+            style={{ minHeight: touchTarget.min, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.md }}
+          >
+            <Text
+              {...KOREAN_LINE_BREAK}
+              style={{
+                flex: 1,
+                fontSize: textScale.size.prompt,
+                lineHeight: textScale.size.prompt * typography.leading.tight,
+                fontWeight: typography.weight.bold,
+                color: colors.text.primary,
+              }}
+            >
+              {grownUpsTitle}
+            </Text>
+            <View style={{ transform: [{ rotate: grownUpsOpen ? '90deg' : '0deg' }] }}>
+              <Icon name="arrow-right" size={24} color={colors.text.secondary} />
+            </View>
+          </Pressable>
+        </View>
 
         {grownUpsOpen ? (
           <>

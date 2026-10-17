@@ -81,13 +81,13 @@ describe('personaChosen (shell.persona_chosen, section 3.18)', () => {
 describe('the Profile row (D9, D11)', () => {
   const row = en.learner.profile.grownUpHome;
 
-  it('says "Grown-up home" on a family device and "Account home" on a self-only device', () => {
-    expect(grownUpRowTitle('family', row)).toBe('Grown-up home');
-    expect(grownUpRowTitle('self', row)).toBe('Account home');
+  it('says "Account pages" on a family device and on a self-only device: one grown-up name (DN 9.4)', () => {
+    expect(grownUpRowTitle('family', row)).toBe('Account pages');
+    expect(grownUpRowTitle('self', row)).toBe('Account pages');
   });
 
   it('reads its title and line together, then the gate hint the caller adds', () => {
-    expect(grownUpRowLabel('Grown-up home', 'Your family, classes and billing')).toBe('Grown-up home, Your family, classes and billing');
+    expect(grownUpRowLabel('Account pages', 'Your family, classes and billing')).toBe('Account pages, Your family, classes and billing');
   });
 });
 
