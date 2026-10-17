@@ -34,7 +34,9 @@ const LABEL_BESIDE: TextStyle = { marginLeft: spacing.lg + spacing.xs, marginTop
 function fittedLabel(text: string): NonNullable<BottomTabNavigationOptions['tabBarLabel']> {
   return function FittedTabLabel({ color, position }) {
     // Native: drawn at the chosen text size with the 1.3 x caption cap kept as a budget for the step
-    // and the OS together (owner items 6 and 7). The web label stays at the caption size, as before.
+    // and the OS together (owner items 6 and 7), shrinking to fit. The web label stays at the caption
+    // size: react-native-web has no shrink-to-fit, so a label at the step would be cut off in a
+    // quarter of a 320 px bar ("Biblioteca" at Largest). Recorded in AMENDMENTS-DISPLAY-NAV section 4.
     const capped = useCappedFont('caption', FOUR_TAB_LABEL_FIT.maxFontSizeMultiplier);
     const native = Platform.OS !== 'web';
     return (

@@ -10,7 +10,7 @@ import {
   type Messages,
   type UiLocale,
 } from '@hangul-route/i18n';
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import {
   browserLanguages,
   clearStoredLocale,
@@ -24,6 +24,16 @@ import {
 } from './console-locale';
 import { HEAD_RATIO_CSS_VAR, ROOT_FONT_SIZE, headRatio } from '../console/rem';
 import { followDeviceSettings, readDeviceSettings, writeDeviceSettings, type DeviceSettingsRead } from './device-settings';
+
+/**
+ * A layout effect where there is a DOM, so the change lands before the browser paints the commit;
+ * a plain effect where there is none (the static export's prerender), where React would warn
+ * about a layout effect. The choice never changes during a page's life, so the hook order holds.
+ */
+function useRootEffect(effect: () => void | (() => void), deps: readonly unknown[]): void {
+  const runEffect = typeof document === 'undefined' ? useEffect : useLayoutEffect;
+  runEffect(effect, deps);
+}
 
 /**
  * Console locale and text size provider — F-I18N-001 §3.2; owner items 6 and 7 (one UI language
@@ -222,7 +232,9 @@ export function LocaleProvider({ children, available, deps }: { children: ReactN
     };
   }, [offered, show, keepRecord]);
 
-  useEffect(() => {
+  // Layout effects: `<html lang>` and the root text size are set before the browser paints the
+  // commit that shows the page, so no frame paints at the old language or size.
+  useRootEffect(() => {
     const root = document.documentElement;
     const previous = root.lang;
     root.lang = LOCALE_META[locale].htmlLang;
@@ -231,7 +243,7 @@ export function LocaleProvider({ children, available, deps }: { children: ReactN
     };
   }, [locale]);
 
-  useEffect(() => {
+  useRootEffect(() => {
     const style = document.documentElement.style;
     const f = textSizeFactor(textSize);
     style.setProperty(TEXT_SCALE_CSS_VAR, String(f));

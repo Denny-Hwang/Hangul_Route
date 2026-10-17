@@ -11,10 +11,16 @@ vi.mock('idb-keyval', () => ({
   }),
   keys: vi.fn(async () => [...mem.keys()]),
   clear: vi.fn(async () => mem.clear()),
+  // idb-keyval's update: the read and the write in one transaction; a throw from the callback writes nothing.
+  update: vi.fn(async (k: string, next: (old: string | undefined) => string) => {
+    await Promise.resolve();
+    mem.set(k, next(mem.get(k)));
+  }),
 }));
 
-import { get } from 'idb-keyval';
-import { listKeys, readJson, readJsonExact, readJsonStrict, removeKey, requestPersistence, writeJson } from '../storage.web';
+import { get, update } from 'idb-keyval';
+import { setWriteFence } from '../storage-fence';
+import { listKeys, readJson, readJsonExact, readJsonStrict, removeKey, requestPersistence, updateJson, writeJson } from '../storage.web';
 
 describe('platform/storage.web (IndexedDB via idb-keyval)', () => {
   beforeEach(() => mem.clear());
@@ -49,6 +55,44 @@ describe('platform/storage.web (IndexedDB via idb-keyval)', () => {
     await expect(readJsonExact('bad')).rejects.toThrow();
     vi.mocked(get).mockRejectedValueOnce(new Error('idb'));
     await expect(readJsonExact('q')).rejects.toThrow('idb');
+  });
+
+  it('updateJson reads and writes in one transaction: the stored value in, the new one out', async () => {
+    await writeJson('device:settings', { textSize: 'large' });
+    expect(await updateJson<Record<string, unknown>>('device:settings', (current) => ({ ...current, uiLocale: 'ko' }))).toBe(true);
+    expect(JSON.parse(mem.get('hr:device:settings')!)).toEqual({ textSize: 'large', uiLocale: 'ko' });
+    expect(vi.mocked(update)).toHaveBeenCalledWith('hr:device:settings', expect.any(Function));
+    // Missing and damaged values come in as null.
+    const seen: unknown[] = [];
+    await updateJson('fresh', (current) => (seen.push(current), 1));
+    mem.set('hr:bad', '{not json');
+    await updateJson('bad', (current) => (seen.push(current), 2));
+    expect(seen).toEqual([null, null]);
+    expect(mem.get('hr:bad')).toBe('2');
+  });
+
+  it('two updates at once both land: neither overwrites the other', async () => {
+    await writeJson('device:settings', {});
+    await Promise.all([
+      updateJson<Record<string, unknown>>('device:settings', (current) => ({ ...current, uiLocale: 'ko' })),
+      updateJson<Record<string, unknown>>('device:settings', (current) => ({ ...current, textSize: 'large' })),
+    ]);
+    expect(JSON.parse(mem.get('hr:device:settings')!)).toEqual({ uiLocale: 'ko', textSize: 'large' });
+  });
+
+  it('updateJson: undefined stores nothing; a failed transaction rejects; a fenced key is never read or written', async () => {
+    await writeJson('q', [1]);
+    expect(await updateJson('q', () => undefined)).toBe(false);
+    expect(mem.get('hr:q')).toBe('[1]');
+    vi.mocked(update).mockRejectedValueOnce(new Error('idb'));
+    await expect(updateJson('q', () => [2])).rejects.toThrow('idb');
+    expect(mem.get('hr:q')).toBe('[1]');
+    setWriteFence((key) => key !== 'q');
+    const next = vi.fn(() => [3]);
+    expect(await updateJson('q', next)).toBe(false);
+    expect(next).not.toHaveBeenCalled();
+    setWriteFence(null);
+    expect(mem.get('hr:q')).toBe('[1]');
   });
 
   it('listKeys strips the prefix and ignores foreign keys', async () => {

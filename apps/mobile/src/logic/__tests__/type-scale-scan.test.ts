@@ -6,8 +6,8 @@ import { describe, expect, it } from 'vitest';
  * AMENDMENTS-DISPLAY-NAV section 4 (rows DN-3 and DN-3b): text on the learner surfaces is drawn at
  * the device's chosen text size, read from `useTypeScale()` (or a design-system text component
  * that reads it). A raw `typography.size.*` draws at the standard size whatever the step, so this
- * source scan counts every raw use under `apps/mobile/src/screens`, `apps/mobile/src/components`
- * and `packages/design-system/src/components` (comments and tests aside) and holds each file to the
+ * source scan counts every raw use under `apps/mobile/src/screens`, `apps/mobile/src/components`,
+ * `apps/mobile/src/navigation` and `packages/design-system/src/components` (comments and tests aside) and holds each file to the
  * count written here. The list is a ratchet: a new raw use fails, and a file that loses one must
  * lower its number (or leave the list) in the same change, so the count only goes down. The
  * `DN-3b` entries reach zero in that row; the other reasons stay by design.
@@ -23,6 +23,12 @@ type Why =
   | 'keyboard'
   /** A style module's default for a caller that passes the scaled size. */
   | 'style'
+  /**
+   * The four-tab bar's label on the web: react-native-web has no shrink-to-fit (`adjustsFontSizeToFit`),
+   * so a label drawn at the step would be cut off in a quarter of a 320 px bar; native draws it at the
+   * step under the 1.3 x caption cap and shrinks it to fit (AMENDMENTS-DISPLAY-NAV section 4).
+   */
+  | 'fit'
   /** Not moved yet: row DN-3b moves it to `useTypeScale()`. */
   | 'DN-3b';
 
@@ -30,6 +36,7 @@ const ALLOWED: Readonly<Record<string, { count: number; why: Why }>> = {
   'apps/mobile/src/components/CardArt.tsx': { count: 1, why: 'media' },
   'apps/mobile/src/components/JourneyGrid.tsx': { count: 2, why: 'fixed' },
   'apps/mobile/src/components/StrokeHint.tsx': { count: 2, why: 'media' },
+  'apps/mobile/src/navigation/tabs.tsx': { count: 1, why: 'fit' },
   'apps/mobile/src/screens/library/StoryTile.tsx': { count: 2, why: 'media' },
   'apps/mobile/src/screens/minigames/BuildLetterGame.tsx': { count: 1, why: 'media' },
   'apps/mobile/src/screens/my-route/StageBadge.tsx': { count: 2, why: 'media' },
@@ -66,7 +73,7 @@ const ALLOWED: Readonly<Record<string, { count: number; why: Why }>> = {
 
 /** The repository root (this file is apps/mobile/src/logic/__tests__). */
 const ROOT = join(__dirname, '..', '..', '..', '..', '..');
-const SCANNED = ['apps/mobile/src/screens', 'apps/mobile/src/components', 'packages/design-system/src/components'];
+const SCANNED = ['apps/mobile/src/screens', 'apps/mobile/src/components', 'apps/mobile/src/navigation', 'packages/design-system/src/components'];
 
 function sourceFiles(dir: string): string[] {
   return readdirSync(dir, { withFileTypes: true }).flatMap((e) => {

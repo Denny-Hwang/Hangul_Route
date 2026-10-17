@@ -7,10 +7,10 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
  */
 const idb = vi.hoisted(() => ({
   get: vi.fn<(key: string, store?: unknown) => Promise<unknown>>(),
-  set: vi.fn<(key: string, value: string, store?: unknown) => Promise<void>>(),
+  update: vi.fn<(key: string, next: (stored: unknown) => string, store?: unknown) => Promise<void>>(),
   createStore: vi.fn<(db: string, store: string) => unknown>(() => 'fresh-store'),
 }));
-vi.mock('idb-keyval', () => ({ get: idb.get, set: idb.set, createStore: idb.createStore }));
+vi.mock('idb-keyval', () => ({ get: idb.get, update: idb.update, createStore: idb.createStore }));
 
 import {
   DEVICE_SETTINGS_STORAGE_KEY,
@@ -27,9 +27,13 @@ import {
 afterEach(() => {
   vi.unstubAllGlobals();
   idb.get.mockReset();
-  idb.set.mockReset();
+  idb.update.mockReset();
 });
 
+/**
+ * A store like idb-keyval's: `update` reads and writes in one step (one transaction), a throw from
+ * its callback ends it without a write, and a failed read or write rejects.
+ */
 function store(initial?: string, profiles?: string): IdbStore & { data: Map<string, string>; fail: { get: boolean; set: boolean } } {
   const data = new Map<string, string>(initial === undefined ? [] : [[DEVICE_SETTINGS_STORAGE_KEY, initial]]);
   if (profiles !== undefined) data.set('hr:profiles', profiles);
@@ -41,11 +45,26 @@ function store(initial?: string, profiles?: string): IdbStore & { data: Map<stri
       if (fail.get) throw new Error('closed');
       return data.get(key);
     },
-    set: async (key, value) => {
+    update: async (key, next) => {
+      await Promise.resolve();
+      if (fail.get) throw new Error('closed');
+      const value = next(data.get(key));
       if (fail.set) throw new Error('quota');
       data.set(key, value);
     },
   };
+}
+
+/** Resolves with the first message `listen` delivers, or rejects after a second. */
+function nextMessage(listen: (onData: (data: unknown) => void) => () => void): Promise<unknown> {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error('no message within 1 s')), 1000);
+    const stop = listen((data) => {
+      clearTimeout(timer);
+      stop();
+      resolve(data);
+    });
+  });
 }
 
 class FakeChannel {
@@ -191,12 +210,33 @@ describe('writeDeviceSettings', () => {
     expect(h.posted).toEqual([]);
   });
 
-  it('writes to the learner\'s default store by default', async () => {
+  it('writes to the learner\'s default store by default, read and write in one update', async () => {
     vi.stubGlobal('indexedDB', {});
-    idb.get.mockResolvedValueOnce(undefined);
-    idb.set.mockResolvedValueOnce(undefined);
+    const stored: string[] = [];
+    idb.update.mockImplementationOnce(async (_key, next) => void stored.push(next(undefined)));
     expect(await writeDeviceSettings(() => ({ textSize: 'large' }), { hub: fakeHub().hub })).toEqual({ textSize: 'large' });
-    expect(idb.set).toHaveBeenCalledWith(DEVICE_SETTINGS_STORAGE_KEY, JSON.stringify({ textSize: 'large' }));
+    expect(idb.update).toHaveBeenCalledWith(DEVICE_SETTINGS_STORAGE_KEY, expect.any(Function));
+    expect(stored).toEqual([JSON.stringify({ textSize: 'large' })]);
+    expect(idb.get).not.toHaveBeenCalled();
+  });
+
+  it('the fresh connection writes through its own store', async () => {
+    vi.stubGlobal('indexedDB', {});
+    idb.update.mockRejectedValueOnce(new Error('closed')).mockImplementationOnce(async (_key, next) => void next(JSON.stringify({ uiLocale: 'ko' })));
+    expect(await writeDeviceSettings(() => ({ textSize: 'large' }), { hub: fakeHub().hub })).toEqual({ uiLocale: 'ko', textSize: 'large' });
+    expect(idb.update).toHaveBeenLastCalledWith(DEVICE_SETTINGS_STORAGE_KEY, expect.any(Function), 'fresh-store');
+  });
+
+  it('two writes at once (two tabs, or a size tap right after Use) both land: neither overwrites the other', async () => {
+    const s = store(JSON.stringify({ uiLocale: 'en', uiLocaleAt: '2026-10-16T12:00:00.000Z' }));
+    const h = fakeHub();
+    await Promise.all([
+      writeDeviceSettings(() => ({ uiLocale: 'ko', uiLocaleAt: '2026-10-17T09:00:00.000Z' }), { open: () => s, hub: h.hub }),
+      writeDeviceSettings(() => ({ textSize: 'large' }), { open: () => s, hub: h.hub }),
+    ]);
+    expect(JSON.parse(s.data.get(DEVICE_SETTINGS_STORAGE_KEY)!)).toEqual({ uiLocale: 'ko', uiLocaleAt: '2026-10-17T09:00:00.000Z', textSize: 'large' });
+    // Each tab is told the record as it stood after its own write, so the last message holds both.
+    expect(h.posted.at(-1)).toEqual(message({ uiLocale: 'ko', uiLocaleAt: '2026-10-17T09:00:00.000Z', textSize: 'large' }));
   });
 });
 
@@ -235,9 +275,12 @@ describe('the prefs hub: one channel per tab, so a tab never receives its own wr
     const onB: unknown[] = [];
     tabA.listen((d) => onA.push(d));
     tabB.listen((d) => onB.push(d));
+    const delivered = nextMessage((fn) => tabB.listen(fn));
     postDeviceSettings({ uiLocale: 'ko' }, tabA);
-    await new Promise((r) => setTimeout(r, 30));
+    expect(await delivered).toEqual(message({ uiLocale: 'ko' }));
     expect(onB).toEqual([message({ uiLocale: 'ko' })]);
+    // Delivery is a task: one more task after it, and the writing tab still has nothing.
+    await new Promise((r) => setTimeout(r, 0));
     expect(onA).toEqual([]);
     for (const c of opened) c.close();
   });

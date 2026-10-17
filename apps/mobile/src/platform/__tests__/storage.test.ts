@@ -16,7 +16,8 @@ vi.mock('@react-native-async-storage/async-storage', () => ({
 }));
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { listKeys, readJson, readJsonExact, readJsonStrict, removeKey, writeJson } from '../storage';
+import { setWriteFence } from '../storage-fence';
+import { listKeys, readJson, readJsonExact, readJsonStrict, removeKey, updateJson, writeJson } from '../storage';
 
 describe('platform/storage (AsyncStorage wrapper)', () => {
   beforeEach(() => {
@@ -62,6 +63,32 @@ describe('platform/storage (AsyncStorage wrapper)', () => {
     await expect(readJsonExact('bad')).rejects.toThrow();
     vi.mocked(AsyncStorage.getItem).mockRejectedValueOnce(new Error('disk'));
     await expect(readJsonExact('q')).rejects.toThrow('disk');
+  });
+
+  it('updateJson: the stored value in, the new one out; undefined stores nothing; calls queue so none is lost', async () => {
+    await writeJson('device:settings', { textSize: 'large' });
+    expect(await updateJson<Record<string, unknown>>('device:settings', (current) => ({ ...current, uiLocale: 'ko' }))).toBe(true);
+    expect(await readJson('device:settings')).toEqual({ textSize: 'large', uiLocale: 'ko' });
+    expect(await updateJson('device:settings', () => undefined)).toBe(false);
+    await Promise.all([
+      updateJson<Record<string, unknown>>('device:settings', (current) => ({ ...current, uiLocale: 'es' })),
+      updateJson<Record<string, unknown>>('device:settings', (current) => ({ ...current, textSize: 'largest' })),
+    ]);
+    expect(await readJson('device:settings')).toEqual({ uiLocale: 'es', textSize: 'largest' });
+  });
+
+  it('updateJson never writes over a value it could not read, and a failure does not stop the next call', async () => {
+    await writeJson('q', [1]);
+    vi.mocked(AsyncStorage.getItem).mockRejectedValueOnce(new Error('disk'));
+    await expect(updateJson('q', () => [2])).rejects.toThrow('disk');
+    expect(await readJson('q')).toEqual([1]);
+    expect(await updateJson('q', () => [3])).toBe(true);
+    expect(await readJson('q')).toEqual([3]);
+    setWriteFence(() => false);
+    const next = vi.fn(() => [4]);
+    expect(await updateJson('q', next)).toBe(false);
+    expect(next).not.toHaveBeenCalled();
+    setWriteFence(null);
   });
 
   it('removeKey deletes only the prefixed key', async () => {

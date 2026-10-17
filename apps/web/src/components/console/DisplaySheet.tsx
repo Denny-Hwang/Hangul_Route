@@ -63,7 +63,7 @@ function RadioRow<T extends string>({
   render,
   steps = false,
 }: {
-  /** Text size: two per row on a phone, four equal columns from 45em; languages size to their endonym. */
+  /** Text size: two per row on a phone, four equal columns from 600 px (37.5em, the regular class); languages size to their endonym. */
   steps?: boolean;
   label: string;
   options: readonly { value: T; label: string; lang?: string }[];
