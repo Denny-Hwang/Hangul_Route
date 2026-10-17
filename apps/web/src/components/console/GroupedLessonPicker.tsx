@@ -1,23 +1,38 @@
 'use client';
 
-import { lessonChosen, rowState, searchChooser, toggleLesson, toggleRow, type ChooserEpisodeRow, type ChooserGroup, type ChooserRow, type ChooserSelection } from '@hangul-route/content-schema';
+import {
+  lessonChosen,
+  rowState,
+  searchChooser,
+  shownLessons,
+  toggleLesson,
+  toggleRow,
+  type ChooserEpisodeRow,
+  type ChooserGroup,
+  type ChooserRow,
+  type ChooserSelection,
+} from '@hangul-route/content-schema';
 import { borderWidth, colors, radii, spacing, touchTarget, typography } from '@hangul-route/design-system/tokens';
-import { useId, useMemo, useState, type ReactNode } from 'react';
+import { useId, useMemo, useRef, useState, type ReactNode } from 'react';
 import { addsItems, groupChip, groupHeading, initialGroup, rowDetail, visibleCount } from '@/lib/console/lesson-picker';
 import { useMessages } from '@/lib/i18n/locale-context';
 
 /**
- * The grouped lesson picker (owner report 2026-10-16 item 5; AMENDMENTS-LECTURE-V2 row LV-3;
- * design `design/screens/app-shell/lesson-picker.md`): the plan builder's Lessons panel and the
- * lecture page's Catalogue. One stage (or Stories, or Word topics) at a time behind a chip, one
- * row per episode with a checkbox that chooses the whole episode and a button that shows its
- * lessons, and a search across every group (titles in the console language, the Korean title,
- * its romanization). Nothing is chosen here that the page does not hold: the page owns the
- * selection (its plan items or outline blocks) and gets each change as an update.
+ * The grouped lesson picker (owner report 2026-10-16 item 5; spec
+ * `docs/specs/AMENDMENTS-LESSON-CHOOSER.md`, row LV-3a; wireframe
+ * `design/wireframes/console/plan-builder.md` G; design `design/screens/app-shell/lesson-picker.md`):
+ * the plan builder's Lessons panel and the lecture page's Catalogue. One stage (or Stories, or
+ * Word topics) at a time behind a chip, one row per episode with a checkbox that chooses the
+ * whole episode and a button that shows its lessons, and a search across every group (titles in
+ * the console language, the Korean title, its romanization). Nothing is chosen here that the page
+ * does not hold: the page owns the selection (its plan items or outline blocks) and gets each
+ * change as an update. Search results only narrow what is drawn: every press acts on the whole
+ * episode (`searchChooser` keeps `lessons` whole and names the `shown` ones).
  */
 
 const ROOT_FONT_PX = 16;
-const rem = (px: number): string => `${px / ROOT_FONT_PX}rem`;
+/** A token size in rem, so the browser's text size scales it (200 % text doubles it). */
+export const rem = (px: number): string => `${px / ROOT_FONT_PX}rem`;
 const px = (value: number): string => `${value}px`;
 const focusRing = `outline:${px(borderWidth.thick)} solid ${colors.border.focus};outline-offset:${px(borderWidth.base)}`;
 
@@ -41,7 +56,7 @@ export const PICKER_CSS = `
 .hr-pick-chip input,.hr-pick-check input{width:${px(spacing.xl)};height:${px(spacing.xl)};margin:0;flex:none;accent-color:${colors.brand.primary}}
 .hr-pick-chip:has(input:focus-visible),.hr-pick-check:has(input:focus-visible),.hr-pick-btn:focus-visible,.hr-pick-input:focus-visible{${focusRing}}
 .hr-pick-status{color:${colors.text.secondary};font-size:${rem(typography.size.bodySm)}}
-.hr-pick-status:empty{display:none}
+.hr-pick-input,.hr-pick-chip,.hr-pick-check,.hr-pick-btn{scroll-margin-bottom:var(--hr-sticky-clearance,0px)}
 .hr-pick-group{display:flex;flex-direction:column;gap:${rem(spacing.xs)}}
 .hr-pick-rows{display:flex;flex-direction:column;gap:${rem(spacing.xs)}}
 .hr-pick-line{display:flex;align-items:stretch;gap:${rem(spacing.xs)};min-width:0}
@@ -70,6 +85,20 @@ export interface GroupedLessonPickerProps {
   title: string;
   /** Drawn while nothing more fits. */
   fullNote?: ReactNode;
+  /** A line under the chips (the plan builder's stages line, AMENDMENTS-LESSON-CHOOSER section 4). */
+  notice?: ReactNode;
+  /**
+   * `false` on the plan builder: ticking a partly chosen episode adds its missing lessons and keeps
+   * the chosen lesson items with their dates and notes (`toggleRow` `merge: false`); default `true`
+   * (a deck outline: the whole episode becomes one block).
+   */
+  merge?: boolean;
+  /**
+   * Changes when the page replaces its list (another plan opened, a stored draft or a link's
+   * draft loaded): the picker opens again on the group of the first chosen item, with an empty
+   * search and every episode closed. An edit in the list never changes it.
+   */
+  resetKey?: string | number;
   testId: string;
 }
 
@@ -109,15 +138,32 @@ function Checkbox({
   );
 }
 
-export function GroupedLessonPicker({ groups, selection, onChange, room, title, fullNote, testId }: GroupedLessonPickerProps): JSX.Element {
+export function GroupedLessonPicker({ groups, selection, onChange, room, title, fullNote, notice, merge = true, resetKey, testId }: GroupedLessonPickerProps): JSX.Element {
   const w = useMessages().console.chooser;
   const uid = useId();
+  const searchRef = useRef<HTMLInputElement>(null);
   const [query, setQuery] = useState('');
   const [groupId, setGroupId] = useState<ChooserGroup['id'] | null>(() => initialGroup(groups, selection));
   const [open, setOpen] = useState<ReadonlySet<string>>(() => new Set());
+  // A new list from the page (resetKey): open on its first chosen item's group again (state adjusted while rendering).
+  const [seenKey, setSeenKey] = useState(resetKey);
+  if (seenKey !== resetKey) {
+    setSeenKey(resetKey);
+    setGroupId(initialGroup(groups, selection));
+    setQuery('');
+    setOpen(new Set());
+  }
+  // The chips change with the groups (the plan builder's stages load later): a chip that is gone falls back to the first group.
+  const groupShown = groups.some((g) => g.id === groupId) ? groupId : initialGroup(groups, selection);
   const results = useMemo(() => (query.trim().length > 0 ? searchChooser(groups, query) : null), [groups, query]);
-  const shown = results ?? groups.filter((g) => g.id === groupId);
-  const blocked = (row: ChooserRow, lessonKey?: string): boolean => addsItems(selection, row, lessonKey) > room;
+  const shown = results ?? groups.filter((g) => g.id === groupShown);
+  const options = { merge };
+  const blocked = (row: ChooserRow, lessonKey?: string): boolean => addsItems(selection, row, lessonKey, options) > room;
+  const clearSearch = (): void => {
+    setQuery('');
+    // Clear unmounts itself: keep the keyboard in the search field.
+    searchRef.current?.focus();
+  };
   const toggleOpen = (key: string): void =>
     setOpen((current) => {
       const next = new Set(current);
@@ -128,12 +174,13 @@ export function GroupedLessonPicker({ groups, selection, onChange, room, title, 
 
   const lessonList = (row: ChooserEpisodeRow, listId: string, visible: boolean): JSX.Element => (
     <ul id={listId} className="hr-pick-lessons" hidden={!visible}>
-      {row.lessons.map((lesson) => (
+      {shownLessons(row).map((lesson) => (
         <li key={lesson.key}>
           <Checkbox
             checked={lessonChosen(selection, row, lesson.key)}
             mixed={false}
-            disabled={!lessonChosen(selection, row, lesson.key) && blocked(row, lesson.key)}
+            // Off when the press would add more than fits, a chosen lesson's too: unticking one lesson of a whole episode adds the others.
+            disabled={blocked(row, lesson.key)}
             onChange={() => onChange((s) => toggleLesson(s, row, lesson.key))}
             title={lesson.title}
             detail={w.minutes(lesson.minutes)}
@@ -151,6 +198,7 @@ export function GroupedLessonPicker({ groups, selection, onChange, room, title, 
       <div className="hr-pick-search">
         <label htmlFor={`${uid}-search`}>{w.search.label}</label>
         <input
+          ref={searchRef}
           id={`${uid}-search`}
           className="hr-pick-input"
           type="search"
@@ -160,7 +208,7 @@ export function GroupedLessonPicker({ groups, selection, onChange, room, title, 
           data-testid={`${testId}-search`}
         />
         {query.length > 0 ? (
-          <button type="button" className="hr-pick-btn" onClick={() => setQuery('')} data-testid={`${testId}-clear`}>
+          <button type="button" className="hr-pick-btn" onClick={clearSearch} data-testid={`${testId}-clear`}>
             {w.clearSearch.cta}
           </button>
         ) : null}
@@ -173,15 +221,21 @@ export function GroupedLessonPicker({ groups, selection, onChange, room, title, 
           <legend className="hr-pick-hidden">{w.groups}</legend>
           {groups.map((g) => (
             <label key={g.id} className="hr-pick-chip">
-              <input type="radio" name={`${uid}-group`} checked={g.id === groupId} onChange={() => setGroupId(g.id)} data-testid={`${testId}-chip-${g.id}`} />
+              <input type="radio" name={`${uid}-group`} checked={g.id === groupShown} onChange={() => setGroupId(g.id)} data-testid={`${testId}-chip-${g.id}`} />
               {groupChip(g, w)}
             </label>
           ))}
         </fieldset>
       ) : null}
-      <p className="hr-pick-status" role="status" aria-live="polite" data-testid={`${testId}-status`}>
+      {/* Always in the accessibility tree (an empty live region is only visually hidden), so the first "n matches" is announced. */}
+      <p className={results === null ? 'hr-pick-status hr-pick-hidden' : 'hr-pick-status'} role="status" aria-live="polite" data-testid={`${testId}-status`}>
         {results === null ? '' : results.length > 0 ? w.found(visibleCount(results)) : w.noMatch}
       </p>
+      {notice ? (
+        <p className="hr-pick-note" data-testid={`${testId}-notice`}>
+          {notice}
+        </p>
+      ) : null}
       {room <= 0 && fullNote ? <p className="hr-pick-note">{fullNote}</p> : null}
       {shown.map((group) => (
         <div key={group.id} className="hr-pick-group" data-testid={`${testId}-group-${group.id}`}>
@@ -198,7 +252,7 @@ export function GroupedLessonPicker({ groups, selection, onChange, room, title, 
                       checked={state === 'all'}
                       mixed={state === 'some'}
                       disabled={state !== 'all' && blocked(row)}
-                      onChange={() => onChange((s) => toggleRow(s, row))}
+                      onChange={() => onChange((s) => toggleRow(s, row, options))}
                       title={row.title}
                       detail={rowDetail(row, w)}
                       testId={`${testId}-row-${row.key}`}

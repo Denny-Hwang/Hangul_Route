@@ -1,31 +1,44 @@
 import {
   CATALOG,
+  CURRICULUM_MAX_ITEMS,
+  PLAN_MAX_ITEMS,
+  StageKeySchema,
   applyChooserSelection,
+  cellIsReady,
   presetMinutesOf,
   chooserGroups,
-  lessonChosen,
-  rowState,
+  groupOfKey,
   selectionBlocks,
   selectionOf,
+  shownLessons,
+  toggleLesson,
+  toggleRow,
   type ChooserGroup,
   type ChooserRow,
   type ChooserSelection,
+  type CurriculumMeta,
   type LectureBlock,
   type PlanItem,
+  type SpaceKind,
+  type StageKey,
+  type ToggleRowOptions,
   type UiLocale,
 } from '@hangul-route/content-schema';
-import type { Messages } from '@hangul-route/i18n';
+import { getMessages, type Messages } from '@hangul-route/i18n';
 import { catalogTitle } from '@/data/catalog';
 import { CATALOGUE_TITLES } from '@/data/catalogue-titles.generated';
 import { LECTURE_STORIES, LECTURE_VOCAB_TOPICS } from '@/data/lecture-catalogue.generated';
+import type { SpaceCoverage } from './curriculum';
+import { ROUTES } from './routing';
 
 /**
- * The console's grouped lesson picker (owner report 2026-10-16 item 5, AMENDMENTS-LECTURE-V2
- * row LV-3): `chooserGroups` from content-schema, as the plan builder and the lecture page's
- * catalogue draw it. Titles are in the console's language (`catalogTitle`); the Korean title
- * is searched with its romanization in every language. The plan builder lists every ready
- * stage (episodes and lessons only, as a plan holds); the lecture catalogue adds the stories
- * and word topics the presenter can show (the lecture mirror's review gate).
+ * The console's grouped lesson picker (owner report 2026-10-16 item 5; spec
+ * `docs/specs/AMENDMENTS-LESSON-CHOOSER.md`, row LV-3a): `chooserGroups` from content-schema,
+ * as the plan builder and the lecture page's catalogue draw it. Titles are in the console's
+ * language (`catalogTitle`); the Korean title is searched with its romanization in every
+ * language. The plan builder lists the stages the space's learners can open (episodes and
+ * lessons only, as a plan holds; `planStages`); the lecture catalogue lists every ready stage
+ * and adds the stories and word topics the presenter can show (the lecture mirror's review gate).
  */
 
 export type PickerUse = 'plan' | 'lecture';
@@ -34,15 +47,64 @@ type ChooserWords = Messages['console']['chooser'];
 
 const koTitle = (id: string): string | null => CATALOGUE_TITLES.ko?.[id] ?? null;
 
-/** The groups the console draws for a use, in `locale`. */
-export function consoleChooserGroups(locale: UiLocale, use: PickerUse): ChooserGroup[] {
+/** The groups the console draws for a use, in `locale`; `stages` narrows the stage groups (default every stage). */
+export function consoleChooserGroups(locale: UiLocale, use: PickerUse, stages?: readonly StageKey[]): ChooserGroup[] {
   return chooserGroups({
     catalog: CATALOG,
     title: (id) => catalogTitle(id, locale),
     koTitle,
+    stages,
     stories: use === 'lecture' ? LECTURE_STORIES.map((s) => s.id) : null,
     topics: use === 'lecture' ? LECTURE_VOCAB_TOPICS.map((t) => t.id) : null,
   });
+}
+
+/**
+ * The stages the plan builder lists (AMENDMENTS-LESSON-CHOOSER section 4, the curriculum
+ * wizard's rule): `unlockedStagesForSpace` once the entitlement list is read, Stage 1 until
+ * then or when the read fails. Learner devices derive a plan item past Stage 1 only for a
+ * learner a Family Plan or a Group License covers (F-ENT-003 section 3.4), so a space this
+ * viewer cannot see covered is offered Stage 1 only, never items its learners would not get.
+ */
+export function planStages(unlocked: readonly StageKey[] | null): StageKey[] {
+  return unlocked === null ? ['stage1'] : StageKeySchema.options.filter((s) => unlocked.includes(s));
+}
+
+/** The lessons of the stages the plan builder does not list (Stage 2 and later for an uncovered space): the count its line names. */
+export function lessonsPastStages(stages: readonly StageKey[]): number {
+  const listed = new Set(stages);
+  return CATALOG.cells.filter((cell) => !listed.has(cell.stage) && cellIsReady(cell)).reduce((n, cell) => n + cell.questIds.length, 0);
+}
+
+export interface StagesNotice {
+  text: string;
+  /** The console's Billing route, named **Open billing** (free-plan words) or **See plans** (today's words); null for none. */
+  link: { label: string; href: string } | null;
+}
+
+/**
+ * The line under the plan builder's chips while it lists fewer stages than are ready
+ * (AMENDMENTS-LESSON-CHOOSER section 4): the curriculum wizard's left-out line, word for word,
+ * so the two grown-up planners say the same thing (F-ENT-003 sections 3.9.3 and 3.11). With
+ * the free-plan switch on, the owner of an uncovered space reads the free plan and the product
+ * by space kind with **Open billing**, anyone else the neutral product words and no link; with
+ * the switch off, today's wizard line, **See plans** for a class. Null before the entitlement
+ * list is read (`unlocked` null) and when every ready stage is listed. Never a price.
+ */
+export function planStagesNotice(
+  input: { unlocked: readonly StageKey[] | null; gating: boolean; coverage: SpaceCoverage; kind: SpaceKind | null },
+  locale: UiLocale,
+): StagesNotice | null {
+  if (input.unlocked === null) return null;
+  const count = lessonsPastStages(planStages(input.unlocked));
+  if (count === 0) return null;
+  const c = getMessages(locale).console;
+  const family = input.kind === 'family';
+  if (input.gating && input.coverage === 'uncovered') {
+    return { text: c.curriculum.freeDays.warningNoLessons(count, c.access.product[family ? 'family' : 'class']), link: { label: c.access.openBilling.cta, href: ROUTES.billing } };
+  }
+  if (input.gating) return { text: c.curriculum.freeDays.warningNeutral(count), link: null };
+  return { text: c.curriculum.preview.warnings.premium(count), link: family ? null : { label: c.curriculum.preview.warnings.seePlans.cta, href: ROUTES.billing } };
 }
 
 /** Every key the groups can choose (rows and their lessons). */
@@ -77,37 +139,29 @@ export function rowDetail(row: ChooserRow, words: ChooserWords): string {
   return row.kind === 'letters' ? '' : words.minutes(row.minutes);
 }
 
-/** How many checkboxes a list of groups draws: every row and every lesson under it ("4 matches"). */
+/** How many checkboxes a list of groups draws: every row and every lesson shown under it ("4 matches"). */
 export function visibleCount(groups: readonly ChooserGroup[]): number {
-  return groups.reduce((n, g) => n + g.rows.reduce((m, r) => m + 1 + (r.kind === 'episode' ? r.lessons.length : 0), 0), 0);
+  return groups.reduce((n, g) => n + g.rows.reduce((m, r) => m + 1 + (r.kind === 'episode' ? shownLessons(r).length : 0), 0), 0);
 }
 
-/** The chip the picker opens on: the group of the first chosen key, else the first group. */
+/** The chip the picker opens on: the group of the first chosen key (in the list's order) the groups hold, else the first group. */
 export function initialGroup(groups: readonly ChooserGroup[], selection: ChooserSelection): ChooserGroup['id'] | null {
-  const keys = new Set(selection);
-  for (const group of groups) {
-    for (const row of group.rows) {
-      if (keys.has(row.key)) return group.id;
-      if (row.kind === 'episode' && row.lessons.some((l) => keys.has(l.key))) return group.id;
-    }
+  for (const key of selection) {
+    const id = groupOfKey(groups, key);
+    if (id !== null) return id;
   }
   return groups[0]?.id ?? null;
 }
 
 /**
  * How many items a press adds to the list (one per key on the console: an episode, a lesson,
- * a story or a topic is one plan item or one deck block); zero or less for a press that
- * removes, which is always allowed.
+ * a story or a topic is one plan item or one deck block): the selection's length after the
+ * press minus before. Zero or less for a press that removes; more than the room left and the
+ * box is off, a chosen lesson's too (unticking one lesson of a whole episode adds the others).
  */
-export function addsItems(selection: ChooserSelection, row: ChooserRow, lessonKey?: string): number {
-  if (lessonKey === undefined || row.kind !== 'episode') {
-    const state = rowState(selection, row);
-    if (state === 'all') return -1;
-    const chosenLessons = row.kind === 'episode' ? row.lessons.filter((l) => selection.includes(l.key)).length : 0;
-    return 1 - chosenLessons;
-  }
-  if (selection.includes(row.key)) return row.lessons.filter((l) => l.key !== lessonKey && !selection.includes(l.key)).length - 1;
-  return lessonChosen(selection, row, lessonKey) ? -1 : 1;
+export function addsItems(selection: ChooserSelection, row: ChooserRow, lessonKey?: string, options: ToggleRowOptions = {}): number {
+  const next = lessonKey === undefined || row.kind !== 'episode' ? toggleRow(selection, row, options) : toggleLesson(selection, row, lessonKey);
+  return next.length - selection.length;
 }
 
 // ---- the plan builder ---------------------------------------------------------------------------
@@ -117,11 +171,42 @@ export function planSelection(items: readonly PlanItem[], keys: ReadonlySet<stri
   return selectionOf(items, (item) => (keys.has(item.id) ? item.id : null));
 }
 
-/** A plan with a new selection applied in place: other items keep their place, dates and notes. */
-export function applyToPlan(items: readonly PlanItem[], keys: ReadonlySet<string>, next: ChooserSelection): PlanItem[] {
-  return applyChooserSelection(items, (item) => (keys.has(item.id) ? item.id : null), next, (key): PlanItem[] =>
-    keys.has(key) ? [{ kind: key.startsWith('episode:') ? 'episode' : 'quest', id: key }] : [],
-  );
+/** An item's week and date (a route item's schedule), for an item that takes its place. */
+const scheduleOf = (item: PlanItem): Pick<PlanItem, 'targetDate' | 'week'> => ({
+  ...(item.targetDate === undefined ? {} : { targetDate: item.targetDate }),
+  ...(item.week === undefined ? {} : { week: item.week }),
+});
+
+/**
+ * A plan with a new selection applied in place: other items keep their place, dates and notes
+ * (AMENDMENTS-LESSON-CHOOSER section 5). An item that stands in for others carries their
+ * fields over: the lessons that come out of a whole episode each keep the episode item's date,
+ * week and note; a whole episode that takes the place of its lessons keeps the first one's (the
+ * plan builder never merges, `merge: false`, so that path is a deck's). A lesson added beside
+ * lessons of its own episode on a route takes the week and date of the last of them, so it
+ * lands in their week rather than under "Not in a week yet". `parentOf` is `lessonParents`.
+ */
+export function applyToPlan(items: readonly PlanItem[], keys: ReadonlySet<string>, next: ChooserSelection, parentOf: (key: string) => string | null): PlanItem[] {
+  const make = (key: string, replaced: readonly PlanItem[]): PlanItem[] => {
+    if (!keys.has(key)) return [];
+    const item: PlanItem = { kind: key.startsWith('episode:') ? 'episode' : 'quest', id: key };
+    const from = replaced[0];
+    if (from) return [{ ...item, ...scheduleOf(from), ...(from.note === undefined ? {} : { note: from.note }) }];
+    const parent = parentOf(key);
+    const sibling = parent === null ? undefined : [...items].reverse().find((i) => i.id !== key && i.week !== undefined && parentOf(i.id) === parent);
+    return [sibling ? { ...item, ...scheduleOf(sibling) } : item];
+  };
+  return applyChooserSelection(items, (item) => (keys.has(item.id) ? item.id : null), next, make, parentOf);
+}
+
+/** How many more items the open draft holds: a route (with `meta`) up to `CURRICULUM_MAX_ITEMS`, a classic plan up to `PLAN_MAX_ITEMS`. */
+export function planRoom(items: readonly PlanItem[], meta: CurriculumMeta | null): number {
+  return (meta ? CURRICULUM_MAX_ITEMS : PLAN_MAX_ITEMS) - items.length;
+}
+
+/** The sticky bar's count line: "2 chosen · about 17 min", the draft's items with their catalogue minutes. */
+export function planBarLine(items: readonly PlanItem[], words: ChooserWords): string {
+  return words.chosen(items.length, planMinutes(items));
 }
 
 /** About-minutes of a plan's items from the catalogue (an unknown id counts 0), for the builder's sticky bar. */
@@ -145,7 +230,7 @@ export function outlineSelection(blocks: readonly LectureBlock[], keys: Readonly
   return selectionOf(blocks, (b) => blockKey(b, keys));
 }
 
-/** An outline with a new selection applied in place: quizzes, activities and the class code keep their place. */
+/** An outline with a new selection applied in place: quizzes, activities and the class code keep their place (a block has no date or note to carry over). */
 export function applyToOutline(blocks: readonly LectureBlock[], groups: readonly ChooserGroup[], keys: ReadonlySet<string>, next: ChooserSelection): LectureBlock[] {
   return applyChooserSelection(blocks, (b) => blockKey(b, keys), next, (key) => selectionBlocks([key], groups));
 }

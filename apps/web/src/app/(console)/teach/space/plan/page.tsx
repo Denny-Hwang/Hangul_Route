@@ -1,21 +1,32 @@
 'use client';
 
 import { borderWidth, colors, radii, spacing, typography } from '@hangul-route/design-system/tokens';
-import { CURRICULUM_MAX_ITEMS, PLAN_MAX_ITEMS, type ChooserSelection, type CurriculumMeta, type PlanItem } from '@hangul-route/content-schema';
+import { lessonParents, type ChooserSelection, type CurriculumMeta, type PlanItem, type StageKey } from '@hangul-route/content-schema';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Button, Field, Muted, Notice, panelStyle } from '@/components/console/ui';
 import { AdultFrame } from '@/components/console/AdultFrame';
 import { useConsole } from '@/components/console/use-console';
-import { GroupedLessonPicker } from '@/components/console/GroupedLessonPicker';
+import { GroupedLessonPicker, rem } from '@/components/console/GroupedLessonPicker';
 import { PlanDraftItems, PlanReadout } from '@/components/console/PlanParts';
 import { PlanSwitcher, RouteDraftItems, RouteReadout } from '@/components/console/RoutePlanParts';
 import type { PlanView, Roster, SpaceListItem } from '@/lib/console/api';
-import { lectureModeEnabled } from '@/lib/console/config';
+import { contentGatingEnabled, lectureModeEnabled } from '@/lib/console/config';
 import { canComposeIn } from '@/lib/console/lecture';
-import { applyToPlan, chooserKeys, consoleChooserGroups, planMinutes, planSelection } from '@/lib/console/lesson-picker';
-import { type RepaceResult, repaceSaveBody, reweek, selectedPlan, swapRouteItems, withTargetDate } from '@/lib/console/curriculum';
+import { applyToPlan, chooserKeys, consoleChooserGroups, planBarLine, planRoom, planSelection, planStages, planStagesNotice } from '@/lib/console/lesson-picker';
+import {
+  type RepaceResult,
+  type SpaceCoverage,
+  repaceSaveBody,
+  reweek,
+  selectedPlan,
+  spaceCoverage,
+  swapRouteItems,
+  unlockedStagesForSpace,
+  withTargetDate,
+} from '@/lib/console/curriculum';
+import { useStickyClearance } from '@/components/console/use-sticky-clearance';
 import { builderOnLoad, suggestFrom, suggestionFor, suggestionNoticeShown } from '@/lib/console/placement';
 import { addFrom, draftForAdd, withQuest } from '@/lib/console/plan-add';
 import { type PlanError, dateKey, memberKind, moveItem, oneExplicitPerDay, planErrorText, planEveryone, planReadout, spreadDates } from '@/lib/console/plans';
@@ -80,13 +91,28 @@ function PlanInner(): JSX.Element {
   const localeRef = useRef(locale);
   localeRef.current = locale;
   const now = new Date();
-  // The grouped lesson picker (AMENDMENTS-LECTURE-V2 row LV-3): every ready stage, titles in the console language.
-  const pickerGroups = useMemo(() => consoleChooserGroups(locale, 'plan'), [locale]);
+  // The stages this space's learners can open (AMENDMENTS-LESSON-CHOOSER section 4, the wizard's rule): null until the
+  // entitlement list is read, then `unlockedStagesForSpace` (Stage 1 when the read fails).
+  const [unlocked, setUnlocked] = useState<StageKey[] | null>(null);
+  // F-ENT-003 section 3.9.3: whether this viewer knows the space is uncovered (read only while the free-plan switch is on).
+  const [coverage, setCoverage] = useState<SpaceCoverage>('unknown');
+  // Bumped whenever the draft is replaced rather than edited, so the picker opens on the new draft's first chosen group.
+  const [draftEpoch, setDraftEpoch] = useState(0);
+  // The grouped lesson picker (row LV-3a): the stages the space opens, titles in the console language.
+  const pickerGroups = useMemo(() => consoleChooserGroups(locale, 'plan', planStages(unlocked)), [locale, unlocked]);
   const pickerKeys = useMemo(() => chooserKeys(pickerGroups), [pickerGroups]);
+  const pickerParents = useMemo(() => lessonParents(pickerGroups), [pickerGroups]);
+  // The sticky bar's height, so a focused row is never scrolled under it (WCAG 2.4.11).
+  const [barRef, clearance] = useStickyClearance<HTMLDivElement>();
 
+  /** Replace the draft (a stored plan, a suggestion, a link's add): not an edit. */
+  const replaceDraft = (next: Draft): void => {
+    setDraftState(next);
+    setDraftEpoch((n) => n + 1);
+  };
   /** Replace the draft with a stored plan (not an edit). */
   const openDraft = (next: Draft): void => {
-    setDraftState(next);
+    replaceDraft(next);
     setDirty(false);
     suggestionOpen.current = false;
     addOpen.current = false;
@@ -102,7 +128,15 @@ function PlanInner(): JSX.Element {
   const load = useCallback(async (): Promise<void> => {
     if (!api) return;
     setError(null);
-    const [rosterRes, plansRes, spacesRes] = await Promise.all([api.roster(spaceId), api.listPlans(spaceId), lectureModeEnabled() ? api.listSpaces() : null]);
+    // A coverage from an earlier load never outlives it (as the curriculum page does).
+    setCoverage('unknown');
+    const gating = contentGatingEnabled();
+    const [rosterRes, plansRes, spacesRes, entitlementsRes] = await Promise.all([
+      api.roster(spaceId),
+      api.listPlans(spaceId),
+      lectureModeEnabled() || gating ? api.listSpaces() : null,
+      api.entitlements(),
+    ]);
     if (spacesRes?.ok) setSpaces(spacesRes.data);
     if (!rosterRes.ok || !plansRes.ok) {
       setError('cantReach');
@@ -110,6 +144,9 @@ function PlanInner(): JSX.Element {
     }
     setRoster(rosterRes.data);
     setPlans(plansRes.data);
+    // Without the entitlement list the builder lists Stage 1 only: honest, never more than the learners get.
+    setUnlocked(entitlementsRes.ok ? unlockedStagesForSpace(entitlementsRes.data, rosterRes.data.space, new Date()) : ['stage1']);
+    if (gating) setCoverage(spaceCoverage(entitlementsRes.ok ? entitlementsRes.data : null, spacesRes?.ok ? spacesRes.data : null, rosterRes.data.space, new Date()));
     const suggestion = suggestionFor(rosterRes.data.learners, suggestId, localeRef.current);
     const step = builderOnLoad({ suggestionApplied: suggestionApplied.current, suggestionOpen: suggestionOpen.current || addOpen.current, suggestionFound: suggestion !== null });
     if (step === 'keep') return;
@@ -121,7 +158,7 @@ function PlanInner(): JSX.Element {
       suggestionApplied.current = true;
       suggestionOpen.current = true;
       const items = addId ? withQuest(suggestion.draft.items, addId) : suggestion.draft.items;
-      setDraftState({ title: suggestion.draft.title, items, targets: suggestion.draft.targets, meta: null });
+      replaceDraft({ title: suggestion.draft.title, items, targets: suggestion.draft.targets, meta: null });
       setDirty(true);
       setEditing(true);
       setSuggestedFor(suggestId);
@@ -132,7 +169,7 @@ function PlanInner(): JSX.Element {
     if (addId) {
       // A link never publishes or saves: the quest joins the open classic draft, or a new draft holds it.
       const { draft: next, added } = draftForAdd(current, addId);
-      setDraftState(next);
+      replaceDraft(next);
       setDirty(added);
       setEditing(true);
       suggestionOpen.current = false;
@@ -166,7 +203,7 @@ function PlanInner(): JSX.Element {
 
   /** A press in the picker: the items it holds change in place; dates and notes of the others stay. */
   const pick = (update: (selection: ChooserSelection) => string[]): void => {
-    setDraft((d) => ({ ...d, items: applyToPlan(d.items, pickerKeys, update(planSelection(d.items, pickerKeys))) }));
+    setDraft((d) => ({ ...d, items: applyToPlan(d.items, pickerKeys, update(planSelection(d.items, pickerKeys)), pickerParents) }));
   };
   const updateItem = (index: number, patch: Partial<PlanItem>): void => {
     setDraft((d) => ({
@@ -256,6 +293,7 @@ function PlanInner(): JSX.Element {
   };
 
   const readout = current?.publishedAt && !editing ? planReadout(current.id, learners) : null;
+  const stagesNotice = planStagesNotice({ unlocked, gating: contentGatingEnabled(), coverage, kind }, locale);
   const suggestNotice = suggestionNoticeShown(draft, suggestedFor) ? (suggestionFor(learners, suggestedFor, locale)?.notice ?? null) : null;
 
   return (
@@ -302,7 +340,7 @@ function PlanInner(): JSX.Element {
           presentHref={presentable ? ROUTES.spaceLecture(spaceId, 'plan', current.id, roster?.space.kind) : undefined}
         />
       ) : (
-        <section aria-label={p.builderLabel}>
+        <section aria-label={p.builderLabel} style={clearance}>
           <h1 style={{ fontSize: typography.size.title, margin: `0 0 ${spacing.sm}px` }}>{draft.id ? p.editTitle : p.newTitle}</h1>
           {suggestNotice ? <Notice>{suggestNotice}</Notice> : null}
           {plans && plans.length === 0 ? (
@@ -320,9 +358,24 @@ function PlanInner(): JSX.Element {
                 groups={pickerGroups}
                 selection={planSelection(draft.items, pickerKeys)}
                 onChange={pick}
-                room={(draft.meta ? CURRICULUM_MAX_ITEMS : PLAN_MAX_ITEMS) - draft.items.length}
+                room={planRoom(draft.items, draft.meta)}
                 title={c.chooser.planTitle}
                 fullNote={c.chooser.full}
+                notice={
+                  stagesNotice ? (
+                    <>
+                      {stagesNotice.text}
+                      {stagesNotice.link ? (
+                        <>
+                          {' '}
+                          <Link href={stagesNotice.link.href}>{stagesNotice.link.label}</Link>
+                        </>
+                      ) : null}
+                    </>
+                  ) : undefined
+                }
+                merge={false}
+                resetKey={draftEpoch}
                 testId="plan-picker"
               />
             </div>
@@ -386,6 +439,7 @@ function PlanInner(): JSX.Element {
           <Muted>{c.draftNeverReaches}</Muted>
           {/* The sticky bar (LV-3): what is chosen and Publish plan stay in sight while the picker scrolls, above the home indicator. */}
           <div
+            ref={barRef}
             role="region"
             aria-label={c.chooser.bar}
             data-testid="plan-bar"
@@ -404,8 +458,8 @@ function PlanInner(): JSX.Element {
               backgroundColor: colors.surface.canvas,
             }}
           >
-            <span role="status" style={{ flex: '1 1 100%', color: colors.text.secondary }} data-testid="plan-bar-count">
-              {c.chooser.chosen(draft.items.length, planMinutes(draft.items))}
+            <span role="status" style={{ flex: '1 1 100%', color: colors.text.secondary, fontSize: rem(typography.size.body) }} data-testid="plan-bar-count">
+              {planBarLine(draft.items, c.chooser)}
             </span>
             <Button tone="primary" disabled={busy || !api || draft.items.length === 0 || draft.title.trim().length === 0 || (draft.targets !== null && draft.targets.length === 0)} onClick={() => void save(true)} testId="publish-plan">
               {busy ? p.saving.cta : c.publishPlan}

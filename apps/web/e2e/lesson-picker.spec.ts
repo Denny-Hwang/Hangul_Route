@@ -3,11 +3,12 @@ import { getMessages } from '@hangul-route/i18n';
 import { API, NOW, SESSION_KEY } from './report-fixtures';
 
 /**
- * The console's grouped lesson picker (owner report 2026-10-16 item 5; AMENDMENTS-LECTURE-V2 row LV-3; design
- * `design/screens/app-shell/lesson-picker.md`) at 360 x 640, on a mocked API: Stage 2 lessons go into a plan
- * through the stage chips and an episode's folded lessons, the sticky bar keeps **Publish plan** in sight, the
- * saved plan holds what was chosen, and the lecture page's catalogue is grouped (stages, stories, word topics) and
- * searchable. No sideways scroll.
+ * The console's grouped lesson picker (owner report 2026-10-16 item 5; `docs/specs/AMENDMENTS-LESSON-CHOOSER.md`
+ * row LV-3a; design `design/screens/app-shell/lesson-picker.md`) at 360 x 640, on a mocked API: in a class a Group
+ * License covers, Stage 2 lessons go into a plan through the stage chips and an episode's folded lessons, the sticky
+ * bar keeps **Publish plan** in sight, a focused row is never under it, and the saved plan holds what was chosen; an
+ * uncovered class is offered Stage 1 with the wizard's line (learner devices would not derive Stage 2 items there);
+ * the lecture page's catalogue is grouped (stages, stories, word topics) and searchable. No sideways scroll.
  *
  * Runs on the console e2e export (the same one as `curriculum.spec.ts` and `reports.spec.ts`), made with lecture
  * mode on so the lecture page draws its sections:
@@ -32,7 +33,10 @@ interface SavedBody {
 const json = (route: Route, status: number, data: unknown) =>
   route.fulfill({ status, contentType: 'application/json', headers: { 'access-control-allow-origin': '*' }, body: JSON.stringify(status < 300 ? { data } : { error: 'mocked' }) });
 
-async function mockClass(page: Page): Promise<{ saved: SavedBody[]; unexpected: string[] }> {
+/** A Group License on the class: Stage 2 and later reach its learners, so the builder lists them. */
+const LICENSE = { id: 'ent:e2e', subjectKind: 'space', subjectId: SPACE.id, planKey: 'group_license', status: 'active', provider: 'stripe', providerRef: null, customerRef: null, seats: null, expiresAt: '2099-01-01T00:00:00.000Z', promoCode: null, updatedAt: NOW, subjectName: SPACE.name };
+
+async function mockClass(page: Page, { covered = true }: { covered?: boolean } = {}): Promise<{ saved: SavedBody[]; unexpected: string[] }> {
   await page.clock.setFixedTime(new Date(NOW));
   await page.addInitScript(([key]) => window.sessionStorage.setItem(key as string, JSON.stringify({ token: 'acct-e2e', accountId: 'acct-e2e', displayName: 'Ms Kim' })), [SESSION_KEY]);
   const saved: SavedBody[] = [];
@@ -52,7 +56,7 @@ async function mockClass(page: Page): Promise<{ saved: SavedBody[]; unexpected: 
     }
     if (/\/plans$/.test(url.pathname)) return json(route, 200, { plans });
     if (url.pathname === '/api/spaces') return json(route, 200, { spaces: [{ space: SPACE, role: 'teacher', counts: { learners: 0, accounts: 1, classes: 0 } }] });
-    if (url.pathname === '/api/entitlements' && request.method() === 'GET') return json(route, 200, { entitlements: [] });
+    if (url.pathname === '/api/entitlements' && request.method() === 'GET') return json(route, 200, { entitlements: covered ? [LICENSE] : [] });
     unexpected.push(`${request.method()} ${url.pathname}`);
     return json(route, 404, null);
   });
@@ -64,7 +68,7 @@ async function noSidewaysScroll(page: Page): Promise<void> {
   expect(scroll).toBeLessThanOrEqual(inner);
 }
 
-test.describe('the plan builder\'s grouped lesson picker at 360 (LV-3)', () => {
+test.describe('the plan builder\'s grouped lesson picker at 360 (LV-3a)', () => {
   test.skip(!FULL, 'needs the console e2e export (CURRICULUM_E2E=1)');
   test.use({ viewport: { width: 360, height: 640 } });
 
@@ -95,11 +99,36 @@ test.describe('the plan builder\'s grouped lesson picker at 360 (LV-3)', () => {
     await expect(page.getByTestId('publish-plan')).toBeInViewport();
     await page.screenshot({ path: test.info().outputPath('plan-picker-360.png') });
 
+    // Keyboard focus on a row near the bottom stops above the bar (scroll-margin from the bar's height, WCAG 2.4.11).
+    await picker.getByTestId('plan-picker-row-episode:stage2-crafts').focus();
+    const row = await picker.getByTestId('plan-picker-row-episode:stage2-crafts').evaluate((el) => el.closest('label')!.getBoundingClientRect().bottom);
+    const barTop = await bar.evaluate((el) => el.getBoundingClientRect().top);
+    expect(row).toBeLessThanOrEqual(barTop);
+
     await page.getByLabel(en.console.plan.titleField.label).fill('Week 2 words');
     await expect(page.getByTestId('publish-plan')).toBeInViewport();
     await page.getByTestId('publish-plan').click();
     await expect.poll(() => saved.length).toBe(1);
     expect(saved[0]).toMatchObject({ title: 'Week 2 words', publish: true, items: [{ kind: 'quest', id: 'quest:stage2-letters-q1' }, { kind: 'episode', id: 'episode:stage2-life' }] });
+    await noSidewaysScroll(page);
+    expect(unexpected).toEqual([]);
+  });
+
+  test('an uncovered class: Stage 1 only, with the wizard\'s line; a Stage 1 plan still publishes', async ({ page }) => {
+    const { saved, unexpected } = await mockClass(page, { covered: false });
+    await page.goto(`/teach/space/plan?id=${encodeURIComponent(SPACE.id)}`);
+    const picker = page.getByTestId('plan-picker');
+    await expect(picker.getByRole('heading', { level: 3, name: 'Stage 1 · 15 lessons' })).toBeVisible();
+    await expect(picker.getByRole('radio')).toHaveCount(1);
+    await expect(picker.getByTestId('plan-picker-chip-stage2')).toHaveCount(0);
+    // The export is built with the free-plan switch off: the wizard's words for it, See plans for a class.
+    await expect(picker.getByTestId('plan-picker-notice')).toContainText(en.console.curriculum.preview.warnings.premium(92));
+    await expect(picker.getByTestId('plan-picker-notice').getByRole('link', { name: en.console.curriculum.preview.warnings.seePlans.cta })).toBeVisible();
+    await picker.getByTestId('plan-picker-row-episode:stage1-life').check();
+    await page.getByLabel(en.console.plan.titleField.label).fill('Week 1');
+    await page.getByTestId('publish-plan').click();
+    await expect.poll(() => saved.length).toBe(1);
+    expect(saved[0]).toMatchObject({ publish: true, items: [{ kind: 'episode', id: 'episode:stage1-life' }] });
     await noSidewaysScroll(page);
     expect(unexpected).toEqual([]);
   });
@@ -120,7 +149,7 @@ test.describe('the plan builder\'s grouped lesson picker at 360 (LV-3)', () => {
   });
 });
 
-test.describe('the plan builder\'s picker at 1280 and at 320 with 200 % text (LV-3)', () => {
+test.describe('the plan builder\'s picker at 1280 and at 320 with 200 % text (LV-3a)', () => {
   test.skip(!FULL, 'needs the console e2e export (CURRICULUM_E2E=1)');
 
   test('1280: the picker beside Your plan, a stage open', async ({ page }) => {
@@ -152,7 +181,7 @@ test.describe('the plan builder\'s picker at 1280 and at 320 with 200 % text (LV
   });
 });
 
-test.describe('the lecture page\'s catalogue is grouped at 360 (LV-3)', () => {
+test.describe('the lecture page\'s catalogue is grouped at 360 (LV-3a)', () => {
   test.skip(!FULL || !LECTURE, 'needs the console e2e export with lecture mode on (CURRICULUM_E2E=1 LECTURE_E2E=1)');
   test.use({ viewport: { width: 360, height: 640 } });
 
