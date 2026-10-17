@@ -407,10 +407,12 @@ describe('history bridge: a page that leaves for another document', () => {
   it('every hand-off that loads another page in this tab marks the leave first (source scan)', () => {
     const dir = join(__dirname, '..');
     const sites: string[] = [];
-    for (const name of readdirSync(dir).filter((n) => n.endsWith('.web.ts'))) {
+    // The presenter is its own root with its own history rules: the bridge runs for App and BrowseApp only.
+    const NO_BRIDGE = new Set(['presenter.web.ts']);
+    for (const name of readdirSync(dir).filter((n) => n.endsWith('.web.ts') && !NO_BRIDGE.has(n))) {
       const lines = readFileSync(join(dir, name), 'utf8').split('\n');
       lines.forEach((line, i) => {
-        if (!/location\??\.assign\??\.?\(|history\??\.go\??\.\(-closeDistance/.test(line) || /^\s*(\*|\/\/)/.test(line)) return;
+        if (!/location\??\.assign\??\.?\(|history\??\.go\??\.\(-closeDistance/.test(line) || /^\s*(\*|\/\/|\/\*)/.test(line)) return;
         sites.push(name);
         const before = lines.slice(Math.max(0, i - 20), i).join('\n');
         expect(before, `${name}:${i + 1} leaves without markLeaving()`).toMatch(/markLeaving\(\)/);

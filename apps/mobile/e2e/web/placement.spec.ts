@@ -148,7 +148,12 @@ async function storedResult(page: Page, profileId: string): Promise<{ mode?: str
 
 /** The Learning Route (the Route tab) shows the learner's own weekly plan: the week line and Open plan. */
 async function learningRouteShowsThePlan(page: Page, name: string): Promise<void> {
-  await page.goto('/');
+  // The history bridge may still be stepping back after the screen the plan opened (AMENDMENTS-DISPLAY-NAV section
+  // 7.2): a load started meanwhile is cancelled by that traversal (net::ERR_ABORTED), so it starts once more.
+  await page.goto('/').catch(async (error: unknown) => {
+    if (!/ERR_ABORTED/.test(String(error))) throw error;
+    await page.goto('/');
+  });
   await expect(page.getByText(hi(name))).toBeVisible();
   await closeInstallGuide(page);
   await page.getByRole('tablist').getByRole('link', { name: en.a11y.myRoute.tab }).click();
