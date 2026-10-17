@@ -2,6 +2,7 @@ import { ConfirmSheet, ConfirmSheetBody } from '@hangul-route/design-system';
 import { getMessages, type UiLocale } from '@hangul-route/i18n';
 import React from 'react';
 import { Modal } from 'react-native';
+import { SafeAreaInsetsContext } from 'react-native-safe-area-context';
 import TestRenderer, { act, type ReactTestInstance } from 'react-test-renderer';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { buttonsNamed, hostNodes, press, render, resetPlatform, screenTexts, setPlatform, unmount } from '../../../test-support/render';
@@ -58,14 +59,76 @@ describe('the leave confirm sheet in every UI language', () => {
     await unmount(leaveFirst);
   });
 
-  it('the modal closes as Keep: Escape and the Android back button call onKeep', async () => {
+  it('the modal closes as Keep: Escape and the Android back button call onKeep, once with every other way out', async () => {
     const onKeep = vi.fn();
+    const onConfirm = vi.fn();
     const copy = leaveCopy('ko');
-    const renderer = await render(<ConfirmSheet visible title={copy.title} keepLabel={copy.keep} confirmLabel={copy.leave} onKeep={onKeep} onConfirm={() => undefined} />);
+    const renderer = await render(<ConfirmSheet visible title={copy.title} keepLabel={copy.keep} confirmLabel={copy.leave} onKeep={onKeep} onConfirm={onConfirm} />);
     const modal = renderer.root.findByType(Modal);
-    expect(modal.props.onRequestClose).toBe(onKeep);
     expect(modal.props.transparent).toBe(true);
+    // Escape's keydown keeps, then the modal's own close asks again: one answer.
+    await act(async () => {
+      (modal.props.onRequestClose as () => void)();
+      (modal.props.onRequestClose as () => void)();
+    });
+    // The sheet's own buttons answer through the same guard (the body the modal is given).
+    const body = renderer.root.findByType(Modal).props.children as React.ReactElement<{ onKeep: () => void; onConfirm: () => void }>;
+    expect(body.type).toBe(ConfirmSheetBody);
+    await act(async () => {
+      body.props.onKeep();
+      body.props.onConfirm();
+    });
+    expect(onKeep).toHaveBeenCalledTimes(1);
+    expect(onConfirm).not.toHaveBeenCalled();
     await unmount(renderer);
+  });
+
+  it('a new opening takes a new answer', async () => {
+    const onKeep = vi.fn();
+    const copy = leaveCopy('en');
+    const sheet = (visible: boolean) => <ConfirmSheet visible={visible} title={copy.title} keepLabel={copy.keep} confirmLabel={copy.leave} onKeep={onKeep} onConfirm={() => undefined} />;
+    const renderer = await render(sheet(true));
+    await act(async () => (renderer.root.findByType(Modal).props.onRequestClose as () => void)());
+    await act(async () => renderer.update(sheet(false)));
+    await act(async () => renderer.update(sheet(true)));
+    await act(async () => (renderer.root.findByType(Modal).props.onRequestClose as () => void)());
+    expect(onKeep).toHaveBeenCalledTimes(2);
+    await unmount(renderer);
+  });
+
+  it('is labelled by its title and described by its message (section 8 anatomy); no message, no description', async () => {
+    const copy = leaveCopy('en');
+    const withLine = await render(<ConfirmSheetBody layout="sheet" title={copy.title} message={copy.message} keepLabel={copy.keep} confirmLabel={copy.leave} onKeep={() => undefined} onConfirm={() => undefined} />);
+    const dialog = hostNodes(withLine.root, (n) => n.props.role === 'alertdialog')[0] as ReactTestInstance;
+    const described = hostNodes(withLine.root, (n) => n.props.id === dialog.props['aria-describedby'])[0] as ReactTestInstance;
+    expect(screenTexts(described)).toEqual([copy.message]);
+    const labelled = hostNodes(withLine.root, (n) => n.props.id === dialog.props['aria-labelledby'])[0] as ReactTestInstance;
+    expect(screenTexts(labelled)).toEqual([copy.title]);
+    await unmount(withLine);
+    const titleOnly = await render(<ConfirmSheetBody layout="sheet" title={copy.title} keepLabel={copy.keep} confirmLabel={copy.leave} onKeep={() => undefined} onConfirm={() => undefined} />);
+    expect((hostNodes(titleOnly.root, (n) => n.props.role === 'alertdialog')[0] as ReactTestInstance).props['aria-describedby']).toBeUndefined();
+    await unmount(titleOnly);
+  });
+
+  it('the bottom sheet clears the home indicator (the safe-area bottom inset); the centred dialog needs none', async () => {
+    const copy = leaveCopy('en');
+    const bottom = 34;
+    const insets = { top: 47, right: 0, bottom, left: 0 };
+    const sheetOf = async (layout: 'sheet' | 'dialog'): Promise<number> => {
+      const renderer = await render(
+        <SafeAreaInsetsContext.Provider value={insets}>
+          <ConfirmSheetBody layout={layout} title={copy.title} keepLabel={copy.keep} confirmLabel={copy.leave} onKeep={() => undefined} onConfirm={() => undefined} />
+        </SafeAreaInsetsContext.Provider>,
+      );
+      const dialog = hostNodes(renderer.root, (n) => n.props.role === 'alertdialog')[0] as ReactTestInstance;
+      // react-native-web writes the style in px.
+      const padding = Number.parseFloat(String((dialog.props.style as { paddingBottom?: string }).paddingBottom));
+      await unmount(renderer);
+      return padding;
+    };
+    const sheet = await sheetOf('sheet');
+    const dialog = await sheetOf('dialog');
+    expect(sheet - dialog).toBe(bottom);
   });
 });
 

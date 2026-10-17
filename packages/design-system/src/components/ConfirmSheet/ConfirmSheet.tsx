@@ -1,5 +1,6 @@
-import React, { useEffect, useId, useRef } from 'react';
+import React, { useContext, useEffect, useId, useRef } from 'react';
 import { Modal, Platform, Pressable, View } from 'react-native';
+import { SafeAreaInsetsContext } from 'react-native-safe-area-context';
 import { colors, radii, shadows, spacing } from '../../tokens';
 import { Button } from '../Button';
 import { Body, Heading } from '../Heading';
@@ -43,12 +44,27 @@ const webDocument = (): KeyTarget | null => {
 
 export function ConfirmSheet(props: ConfirmSheetProps): React.ReactElement {
   const layout = confirmSheetLayout(useLayoutClass().width);
+  // One answer per opening across every way out: the buttons, the scrim, Escape and the modal's own close (Escape's
+  // keydown and then the modal's close, or the Android back button) all go through `once`.
+  const settled = useRef(false);
+  useEffect(() => {
+    if (props.visible) settled.current = false;
+  }, [props.visible]);
+  const once = (answer: () => void) => (): void => {
+    if (settled.current) return;
+    settled.current = true;
+    answer();
+  };
+  const onKeep = once(props.onKeep);
+  const onConfirm = once(props.onConfirm);
   return (
-    <Modal visible={props.visible} transparent animationType={layout === 'dialog' ? 'fade' : 'slide'} onRequestClose={props.onKeep}>
-      {props.visible ? <ConfirmSheetBody {...props} layout={layout} /> : null}
+    <Modal visible={props.visible} transparent animationType={layout === 'dialog' ? 'fade' : 'slide'} onRequestClose={onKeep}>
+      {props.visible ? <ConfirmSheetBody {...props} onKeep={onKeep} onConfirm={onConfirm} layout={layout} /> : null}
     </Modal>
   );
 }
+
+const NO_INSETS = { top: 0, right: 0, bottom: 0, left: 0 };
 
 /** The sheet itself, without the modal: what `ConfirmSheet` shows (exported for render tests). */
 export function ConfirmSheetBody({
@@ -62,6 +78,10 @@ export function ConfirmSheetBody({
   layout,
 }: Omit<ConfirmSheetProps, 'visible'> & { layout: ConfirmSheetLayout }): React.ReactElement {
   const titleId = `confirm-sheet-${useId().replace(/[^A-Za-z0-9_-]/g, '')}`;
+  const messageId = `${titleId}-message`;
+  // The bottom sheet sits above the home indicator of a notched phone or an iOS home-screen app (the nearest
+  // provider's insets, as Screen reads them); the centred dialog needs none.
+  const insets = useContext(SafeAreaInsetsContext) ?? NO_INSETS;
   const nodes = useRef<Record<ConfirmSheetAction, View | null>>({ keep: null, confirm: null });
   // One choice per opening: Escape's keydown and the modal's own keyup (or a double tap) never answer twice.
   const settled = useRef(false);
@@ -103,6 +123,7 @@ export function ConfirmSheetBody({
         role="alertdialog"
         aria-modal
         aria-labelledby={titleId}
+        aria-describedby={message ? messageId : undefined}
         testID={testID}
         style={{
           zIndex: 1,
@@ -114,7 +135,7 @@ export function ConfirmSheetBody({
           borderBottomLeftRadius: dialog ? radii.xl : 0,
           borderBottomRightRadius: dialog ? radii.xl : 0,
           paddingTop: spacing.xl,
-          paddingBottom: spacing.xl,
+          paddingBottom: dialog ? spacing.xl : spacing.xl + insets.bottom,
           paddingHorizontal: spacing.lg,
           ...shadows.modal,
         }}
@@ -125,7 +146,9 @@ export function ConfirmSheetBody({
         {message ? (
           <>
             <Spacer size="xs" />
-            <Body tone="secondary">{message}</Body>
+            <View id={messageId}>
+              <Body tone="secondary">{message}</Body>
+            </View>
           </>
         ) : null}
         <Spacer size="lg" />
