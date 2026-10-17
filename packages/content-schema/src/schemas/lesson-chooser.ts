@@ -49,7 +49,10 @@ interface RowBase {
 export interface ChooserEpisodeRow extends RowBase {
   kind: 'episode';
   minutes: number;
+  /** Every lesson of the episode, also in a search result (the selection rules need them all). */
   lessons: readonly ChooserLesson[];
+  /** In a search result: the keys of the lessons the search shows, when only some match; absent: all of them. */
+  shown?: readonly string[];
 }
 
 export interface ChooserLettersRow extends RowBase {
@@ -205,10 +208,17 @@ function matches(search: string, words: readonly string[]): boolean {
   return words.every((w) => search.includes(w));
 }
 
+/** The lessons of an episode row a list draws: the search's `shown` ones, else all of them. */
+export function shownLessons(row: ChooserEpisodeRow): readonly ChooserLesson[] {
+  const { shown } = row;
+  return shown === undefined ? row.lessons : row.lessons.filter((l) => shown.includes(l.key));
+}
+
 /**
  * The groups narrowed to a query: a row stays when it or one of its lessons matches
- * (a matching episode keeps all its lessons, otherwise only the matching ones);
- * empty groups drop out and counts follow what is left. An empty query changes nothing.
+ * (a matching episode shows all its lessons, otherwise `shown` names the matching ones;
+ * `lessons` always stays whole, so the selection rules see the real episode); empty
+ * groups drop out and counts follow what is shown. An empty query changes nothing.
  */
 export function searchChooser(groups: readonly ChooserGroup[], query: string): ChooserGroup[] {
   const words = normalizeSearch(query).split(' ').filter((w) => w.length > 0);
@@ -217,11 +227,11 @@ export function searchChooser(groups: readonly ChooserGroup[], query: string): C
     const rows = group.rows.flatMap((row): ChooserRow[] => {
       if (matches(row.search, words)) return [row];
       if (row.kind !== 'episode') return [];
-      const lessons = row.lessons.filter((l) => matches(l.search, words));
-      return lessons.length === 0 ? [] : [{ ...row, lessons }];
+      const shown = row.lessons.filter((l) => matches(l.search, words)).map((l) => l.key);
+      return shown.length === 0 ? [] : [{ ...row, shown }];
     });
     if (rows.length === 0) return [];
-    const count = group.stage === null ? rows.length : rows.reduce((n, r) => n + (r.kind === 'episode' ? r.lessons.length : 0), 0);
+    const count = group.stage === null ? rows.length : rows.reduce((n, r) => n + (r.kind === 'episode' ? shownLessons(r).length : 0), 0);
     return [{ ...group, rows, count }];
   });
 }
@@ -293,14 +303,32 @@ export function lessonChosen(selection: ChooserSelection, row: ChooserEpisodeRow
   return selection.includes(row.key) || selection.includes(lessonKey);
 }
 
+export interface ToggleRowOptions {
+  /**
+   * What ticking a partly chosen episode does: `true` (default, a deck) chooses the whole
+   * episode in place of its chosen lessons, one block; `false` (a plan, whose lesson items
+   * carry dates and notes) adds only the missing lessons and keeps the chosen ones as they are.
+   */
+  merge?: boolean;
+}
+
 /**
  * The row's checkbox: a fully chosen row is cleared (the episode and any of its
- * lessons); otherwise the whole episode is chosen, in place of the lessons already
- * chosen (at the first one's place, else at the end), so it is one deck block.
+ * lessons). An unchosen row chooses the whole episode at the end. A partly chosen one
+ * chooses the whole episode in place of the lessons already chosen (at the first one's
+ * place), so it is one deck block; with `merge: false` the missing lessons go right
+ * after the last chosen one instead, in cell order.
  */
-export function toggleRow(selection: ChooserSelection, row: ChooserRow): string[] {
+export function toggleRow(selection: ChooserSelection, row: ChooserRow, options: ToggleRowOptions = {}): string[] {
   const own = new Set([row.key, ...(row.kind === 'episode' ? row.lessons.map((l) => l.key) : [])]);
   if (rowState(selection, row) === 'all') return selection.filter((k) => !own.has(k));
+  if (options.merge === false && row.kind === 'episode') {
+    const last = Math.max(...row.lessons.map((l) => selection.indexOf(l.key)));
+    if (last >= 0) {
+      const missing = row.lessons.map((l) => l.key).filter((k) => !selection.includes(k));
+      return [...selection.slice(0, last + 1), ...missing, ...selection.slice(last + 1)];
+    }
+  }
   const at = selection.findIndex((k) => own.has(k));
   const rest = selection.filter((k) => !own.has(k));
   if (at < 0) return [...rest, row.key];
@@ -309,16 +337,28 @@ export function toggleRow(selection: ChooserSelection, row: ChooserRow): string[
 
 /**
  * A lesson's checkbox. While its whole episode is chosen, unticking one lesson keeps
- * the others, in cell order at the episode's place; otherwise the lesson is added at
- * the end or removed.
+ * the others, in cell order at the episode's place (a copy of that lesson chosen on its
+ * own as well goes too, so one press unticks it); otherwise the lesson is added at the
+ * end or removed.
  */
 export function toggleLesson(selection: ChooserSelection, row: ChooserEpisodeRow, lessonKey: string): string[] {
   const at = selection.indexOf(row.key);
   if (at >= 0) {
     const others = row.lessons.map((l) => l.key).filter((k) => k !== lessonKey && !selection.includes(k));
-    return [...selection.slice(0, at), ...others, ...selection.slice(at + 1)];
+    return [...selection.slice(0, at), ...others, ...selection.slice(at + 1)].filter((k) => k !== lessonKey);
   }
   return selection.includes(lessonKey) ? selection.filter((k) => k !== lessonKey) : [...selection, lessonKey];
+}
+
+/** The episode key of each lesson the groups hold, for `applyChooserSelection`'s `parentOf`. */
+export function lessonParents(groups: readonly ChooserGroup[]): (key: string) => string | null {
+  const parents = new Map<string, string>();
+  for (const group of groups) {
+    for (const row of group.rows) {
+      if (row.kind === 'episode') for (const lesson of row.lessons) parents.set(lesson.key, row.key);
+    }
+  }
+  return (key) => parents.get(key) ?? null;
 }
 
 /** The chosen things in order (keys the groups no longer hold drop out, e.g. after a language switch). */
@@ -379,19 +419,41 @@ export function selectionOf<T>(items: readonly T[], keyOf: (item: T) => string |
  * outline with quizzes and activities) with a new selection applied in place: what the
  * chooser does not hold stays where it is, a kept thing keeps its item and its place,
  * a thing chosen in place of others (a whole episode for its lessons, or the reverse)
- * takes the place of the first of them, and a new thing goes at the end. `make` builds
- * the items of a new key (none for a key it does not know).
+ * takes the place of the first of them, and a new thing goes at the end.
+ *
+ * `make(key, replaced)` builds the items of a new key (none for a key it does not know).
+ * `replaced` are the items this change drops that the new key stands in for: with
+ * `parentOf` (`lessonParents`), the items of its episode when a lesson comes out of a
+ * whole episode, or of its lessons when the whole episode takes their place; so a plan
+ * can carry their dates and notes over. Without `parentOf` it is always empty.
  */
-export function applyChooserSelection<T>(items: readonly T[], keyOf: (item: T) => string | null, next: ChooserSelection, make: (key: string) => readonly T[]): T[] {
+export function applyChooserSelection<T>(
+  items: readonly T[],
+  keyOf: (item: T) => string | null,
+  next: ChooserSelection,
+  make: (key: string, replaced: readonly T[]) => readonly T[],
+  parentOf?: (key: string) => string | null,
+): T[] {
   const before = new Set(selectionOf(items, keyOf));
   const chosen = new Set(next);
+  const dropped = items.filter((item) => {
+    const key = keyOf(item);
+    return key !== null && !chosen.has(key);
+  });
+  const replacedBy = (key: string): T[] =>
+    parentOf
+      ? dropped.filter((item) => {
+          const old = keyOf(item) as string;
+          return parentOf(key) === old || parentOf(old) === key;
+        })
+      : [];
   const emitted = new Set<string>();
   const out: T[] = [];
   let j = 0;
   const addNew = (): void => {
     while (j < next.length && !before.has(next[j]!)) {
       const key = next[j]!;
-      if (!emitted.has(key)) out.push(...make(key));
+      if (!emitted.has(key)) out.push(...make(key, replacedBy(key)));
       emitted.add(key);
       j += 1;
     }
@@ -415,10 +477,13 @@ export function applyChooserSelection<T>(items: readonly T[], keyOf: (item: T) =
     }
   }
   addNew();
-  // Kept keys the walk could not place in order (a reordered selection): rebuilt at the end.
+  // Kept keys the walk could not place in order (a reordered selection): their first item moves to the end, fields and all.
   for (; j < next.length; j += 1) {
     const key = next[j]!;
-    if (!emitted.has(key)) out.push(...make(key));
+    if (!emitted.has(key)) {
+      const own = items.find((item) => keyOf(item) === key);
+      out.push(...(own === undefined ? make(key, replacedBy(key)) : [own]));
+    }
     emitted.add(key);
   }
   return out;

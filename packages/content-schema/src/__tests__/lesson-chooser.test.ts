@@ -11,6 +11,7 @@ import {
   groupOfKey,
   jamoSetBlocks,
   lessonChosen,
+  lessonParents,
   normalizeSearch,
   presetMinutesOf,
   pruneSelection,
@@ -21,6 +22,7 @@ import {
   selectionFits,
   selectionMinutes,
   selectionOf,
+  shownLessons,
   toggleLesson,
   toggleRow,
   type Catalog,
@@ -203,7 +205,8 @@ describe('chooserGroups: the groups over CATALOG', () => {
 
 describe('searchChooser', () => {
   const en = groupsIn('en');
-  const visible = (groups: readonly ChooserGroup[]): string[] => keysOf(groups);
+  const visible = (groups: readonly ChooserGroup[]): string[] =>
+    groups.flatMap((g) => g.rows.flatMap((r: ChooserRow) => [r.key, ...(r.kind === 'episode' ? shownLessons(r).map((l) => l.key) : [])]));
 
   it('an empty or blank query changes nothing', () => {
     expect(searchChooser(en, '')).toEqual(en);
@@ -214,7 +217,7 @@ describe('searchChooser', () => {
     const hit = searchChooser(en, '  TIGERS,   mountains ');
     expect(hit.map((g) => g.id)).toEqual(['stage1']);
     const row = episode(hit, 'episode:stage1-nature');
-    expect(row.lessons).toHaveLength(3);
+    expect(shownLessons(row)).toHaveLength(3);
     expect(hit[0]!.count).toBe(3);
   });
 
@@ -223,13 +226,32 @@ describe('searchChooser', () => {
     expect(searchChooser(en, 'tigers kimchi-never-here')).toEqual([]);
   });
 
-  it('a lesson match keeps only the matching lessons of its episode, and the count follows', () => {
+  it('a lesson match shows only the matching lessons of its episode, keeps the whole episode for the selection, and the count follows', () => {
     const lesson = CATALOG.quests.find((q) => q.id === 'quest:stage2-letters-q4')!;
     const hit = searchChooser(en, lesson.title);
     const row = episode(hit, 'episode:stage2-letters');
-    expect(row.lessons.map((l) => l.key)).toContain(lesson.id);
-    expect(row.lessons.length).toBeLessThan(6);
-    expect(group(hit, 'stage2').count).toBe(row.lessons.length);
+    expect(row.shown).toContain(lesson.id);
+    expect(shownLessons(row).map((l) => l.key)).toEqual(row.shown);
+    expect(shownLessons(row).length).toBeLessThan(6);
+    // The row still holds all six lessons, so the selection rules see the real episode.
+    expect(row.lessons.map((l) => l.key)).toEqual(episode(en, 'episode:stage2-letters').lessons.map((l) => l.key));
+    expect(group(hit, 'stage2').count).toBe(shownLessons(row).length);
+  });
+
+  it('the selection rules on a search row act on the whole episode (unticking one lesson of a whole episode keeps the rest)', () => {
+    const full = episode(en, 'episode:stage2-letters');
+    const lesson = full.lessons[3]!;
+    const row = episode(searchChooser(en, CATALOG.quests.find((q) => q.id === lesson.key)!.title), full.key);
+    expect(row.shown).toEqual([lesson.key]);
+    expect(toggleLesson([full.key], row, lesson.key)).toEqual(full.lessons.filter((l) => l.key !== lesson.key).map((l) => l.key));
+    expect(rowState([lesson.key], row)).toBe('some');
+    expect(toggleRow([full.lessons[1]!.key], row)).toEqual([full.key]);
+  });
+
+  it('a matching episode shows all its lessons', () => {
+    const row = episode(searchChooser(en, 'tigers mountains'), 'episode:stage1-nature');
+    expect(row.shown).toBeUndefined();
+    expect(shownLessons(row)).toBe(row.lessons);
   });
 
   it('finds a Spanish title with or without its accents', () => {
@@ -317,6 +339,26 @@ describe('the selection', () => {
     expect(toggleLesson([q2, q1], letters, q2)).toEqual([q1]);
     // A lesson already chosen on its own beside the whole episode is not doubled.
     expect(toggleLesson([q3, letters.key], letters, q1)).toEqual([q3, q2]);
+    // An older plan holds the whole episode and one of its own lessons: one press unticks that lesson.
+    expect(toggleLesson([letters.key, story.key, q1], letters, q1)).toEqual([q2, q3, story.key]);
+    expect(toggleLesson([q1, letters.key], letters, q1)).toEqual([q2, q3]);
+  });
+
+  it('toggleRow with merge: false adds the missing lessons after the last chosen one and keeps the chosen ones', () => {
+    expect(toggleRow([q2, story.key], letters, { merge: false })).toEqual([q2, q1, q3, story.key]);
+    expect(toggleRow([q3, 'x', q1], letters, { merge: false })).toEqual([q3, 'x', q1, q2]);
+    // Nothing chosen yet: the whole episode, one item; fully chosen: cleared, as with merge.
+    expect(toggleRow([story.key], letters, { merge: false })).toEqual([story.key, letters.key]);
+    expect(toggleRow([q1, q2, q3, story.key], letters, { merge: false })).toEqual([story.key]);
+    expect(toggleRow([], story, { merge: false })).toEqual([story.key]);
+  });
+
+  it('lessonParents names the episode of a lesson, and nothing for any other key', () => {
+    const parentOf = lessonParents(groups);
+    expect(parentOf(q2)).toBe(letters.key);
+    expect(parentOf('quest:stage7-life-q2')).toBe('episode:stage7-life');
+    expect(parentOf(letters.key)).toBeNull();
+    expect(parentOf(story.key)).toBeNull();
   });
 
   it('lessonChosen: on its own or through its episode', () => {
@@ -408,7 +450,48 @@ describe('applyChooserSelection: a selection inside a plan or an outline', () =>
   it('a key with nothing to make adds nothing; a reordered selection rebuilds the out-of-order keys at the end', () => {
     expect(applyChooserSelection<Item>([quiz], keyOf, ['unknown', q1], make)).toEqual([quiz, { key: q1 }]);
     const items: Item[] = [{ key: q1, note: 'a' }, { key: q2, note: 'b' }];
-    expect(applyChooserSelection(items, keyOf, [q2, q1, 'unknown'], make)).toEqual([{ key: q2, note: 'b' }, { key: q1 }]);
-    expect(applyChooserSelection(items, keyOf, [q2, q1, q1], make)).toEqual([{ key: q2, note: 'b' }, { key: q1 }]);
+    // The out-of-order kept thing moves to the end with its own fields.
+    expect(applyChooserSelection(items, keyOf, [q2, q1, 'unknown'], make)).toEqual([{ key: q2, note: 'b' }, { key: q1, note: 'a' }]);
+    expect(applyChooserSelection(items, keyOf, [q2, q1, q1], make)).toEqual([{ key: q2, note: 'b' }, { key: q1, note: 'a' }]);
+    expect(applyChooserSelection(items, keyOf, [q2, q1, q3], make)).toEqual([{ key: q2, note: 'b' }, { key: q1, note: 'a' }, { key: q3 }]);
+  });
+
+  describe('replaced: what a new key stands in for (parentOf)', () => {
+    const parentOf = lessonParents(groups);
+    const seen: { key: string; replaced: Item[] }[] = [];
+    const record = (key: string, replaced: readonly Item[]): Item[] => {
+      seen.push({ key, replaced: [...replaced] });
+      return [{ key, note: replaced.map((r) => r.note).filter(Boolean).join('+') || undefined }];
+    };
+
+    it('a lesson out of a whole episode gets the episode item; a lesson unticked with it is not passed on', () => {
+      seen.length = 0;
+      const items: Item[] = [{ key: q2, note: 'unticked' }, { key: letters.key, note: 'Tue' }, quiz];
+      const next = toggleLesson(selectionOf(items, keyOf), letters, q2);
+      expect(next).toEqual([q1, q3]);
+      expect(applyChooserSelection(items, keyOf, next, record, parentOf)).toEqual([{ key: q1, note: 'Tue' }, { key: q3, note: 'Tue' }, quiz]);
+      expect(seen).toEqual([
+        { key: q1, replaced: [{ key: letters.key, note: 'Tue' }] },
+        { key: q3, replaced: [{ key: letters.key, note: 'Tue' }] },
+      ]);
+    });
+
+    it('a whole episode gets the lesson items it takes the place of', () => {
+      seen.length = 0;
+      const items: Item[] = [{ key: q2, note: 'Mon' }, quiz, { key: q1, note: 'Wed' }, { key: 'story:a', note: 'kept' }];
+      const next = toggleRow(selectionOf(items, keyOf), letters);
+      expect(applyChooserSelection(items, keyOf, next, record, parentOf)).toEqual([{ key: letters.key, note: 'Mon+Wed' }, quiz, { key: 'story:a', note: 'kept' }]);
+      expect(seen.map((s) => s.key)).toEqual([letters.key]);
+    });
+
+    it('a plain new key, or no parentOf, replaces nothing', () => {
+      seen.length = 0;
+      applyChooserSelection<Item>([{ key: letters.key, note: 'Tue' }], keyOf, ['story:a'], record, parentOf);
+      applyChooserSelection<Item>([{ key: letters.key, note: 'Tue' }], keyOf, [q1], record);
+      expect(seen).toEqual([
+        { key: 'story:a', replaced: [] },
+        { key: q1, replaced: [] },
+      ]);
+    });
   });
 });
