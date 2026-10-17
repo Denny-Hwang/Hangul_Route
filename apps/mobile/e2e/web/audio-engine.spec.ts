@@ -366,7 +366,8 @@ test.describe('(b) iOS Safari, a touch screen, the learner app', () => {
     await cdp.detach();
 
     // The first Match Sound round speaks its Korean prompt on its own, outside any gesture.
-    await page.getByRole('button', { name: /^Meet a, eo, g, n/ }).click();
+    // The first lesson, from Home's Next lesson hero (AMENDMENTS-DISPLAY-NAV 9.1).
+    await page.getByTestId('home-next-lesson-start').click();
     await page.getByRole('button', { name: 'Continue' }).click();
     await passDiscover(page);
     const roundAt = (await asked(page)).length;
