@@ -100,6 +100,11 @@ export interface CellRowView {
   /** The episode to open, or null when the cell is not a button (coming later). */
   episodeId: string | null;
   /**
+   * False: the state word is not drawn (it stays in the label). An open cell while nothing on the route is
+   * closed says nothing new (owner request 2026-10-16, item 8). Absent reads as true.
+   */
+  wordShown?: boolean;
+  /**
    * "In your plan" (F-ENT-003 `learner.routeNext.tag.inPlan`, the solid ring plus the word) when the
    * cell's episode is in the plan view (amendment section 4.5); the learner's own page only.
    */
@@ -114,6 +119,16 @@ export interface StageRowView {
   order: number;
   title: string;
   stateWord: string;
+  /**
+   * False: the state pill is not drawn (the label still says it). "Open" says nothing while nothing on the
+   * route is closed (owner request 2026-10-16, item 8). Absent reads as true.
+   */
+  pillShown?: boolean;
+  /**
+   * A stage the learner has not reached yet (after the stage they are on, nothing played): the header is one
+   * line (badge, title and its tags), with no pill, caption or pips; it still opens in place. Absent reads as false.
+   */
+  compact?: boolean;
   tone: PillTone;
   badge: BadgeLook;
   captions: string[];
@@ -323,6 +338,11 @@ export function stageGroups(row: StageRow): Pip[][] {
 function stageRowView(row: StageRow, ctx: CopyContext, i: MyRouteViewInput, fresh: ReadonlySet<string>): StageRowView {
   const m = i.messages.learner.myRoute;
   const inPlan = new Set(ctx.viewer === 'self' ? i.model.inPlanEpisodeIds : []);
+  // Owner request 2026-10-16, item 8: "Open" says nothing while nothing on the route is closed, and a stage the
+  // learner has not reached (after the one they are on, nothing played) is a one-line row.
+  const closed = routeHasClosed(i.model);
+  const hereAt = i.model.stages.findIndex((s) => s.here);
+  const at = i.model.stages.findIndex((s) => s.stage === row.stage);
   return {
     kind: 'stage',
     key: row.stage,
@@ -330,6 +350,8 @@ function stageRowView(row: StageRow, ctx: CopyContext, i: MyRouteViewInput, fres
     order: row.order,
     title: row.title,
     stateWord: stageStateWord(row, ctx),
+    pillShown: closed || row.state !== 'open' || row.availability === 'taste',
+    compact: hereAt >= 0 && at > hereAt && row.state === 'open' && row.done === 0,
     tone: row.state === 'open' ? (row.availability === 'taste' ? 'secondary' : 'primary') : TONE[row.state],
     badge: BADGE[row.state],
     captions: stageCaptions(row, ctx),
@@ -361,6 +383,7 @@ function stageRowView(row: StageRow, ctx: CopyContext, i: MyRouteViewInput, fres
             ? null
             : cell.episodeId,
         inPlan: planTag,
+        wordShown: closed || cell.state !== 'open',
         a11yLabel: planTag === null ? label : i.messages.a11y.myRoute.cellInPlan(label, planTag),
       };
     }),
@@ -441,6 +464,25 @@ function freshKeys(model: MyRouteModel, seen: SeenRecord | undefined): Set<strin
   return new Set(model.stages.flatMap((s) => [...s.pips, ...s.newPips]).filter((p) => p.state === 'done' && !had.has(p.key)).map((p) => p.key));
 }
 
+/** Some quest on the route is not open for this learner (F-ENT-003's switch on and a free learner past the free lessons). */
+export function routeHasClosed(model: Pick<MyRouteModel, 'stages'>): boolean {
+  return model.stages.some((s) => s.cells.some((c) => c.pips.some((p) => p.laterReason === 'notOpen')));
+}
+
+/**
+ * "Ready when you are" (or its grown-up twin) at most once: only the first stage row that has the line keeps it
+ * (owner request 2026-10-16, item 8; design/wireframes/journey/learning-route.md A).
+ */
+export function readyOnce(rows: readonly TrailRowView[], readyCaption: string): TrailRowView[] {
+  let seen = false;
+  return rows.map((row) => {
+    if (row.kind !== 'stage' || !row.captions.includes(readyCaption)) return row;
+    const captions = row.captions.filter((line) => line !== readyCaption || !seen);
+    seen = true;
+    return { ...row, captions };
+  });
+}
+
 export function myRouteView(i: MyRouteViewInput): MyRouteView {
   const { model, messages } = i;
   const ctx: CopyContext = { viewer: i.viewer, name: i.name, m: myRouteMessages(messages), goalStage: model.goal?.stage ?? null };
@@ -466,7 +508,7 @@ export function myRouteView(i: MyRouteViewInput): MyRouteView {
     pose: i.viewer === 'self' && i.firstReached === true ? 'cheering' : hoyaPoseFor(model, i.seen),
     viewing: viewingCopy(ctx),
     newQuests: newQuestsCopy(model, ctx),
-    trail: withConnectors(rows, model),
+    trail: withConnectors(readyOnce(rows, i.viewer === 'grownup' ? messages.caregiver.journey.ready(i.name) : messages.learner.myRoute.caption.ready), model),
     initialOpen: here.stage,
     skillsTitle: skillsTitle(ctx),
     skills: model.skills.map((row) => skillRowView(row, ctx, messages)),

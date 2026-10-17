@@ -4,6 +4,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React from 'react';
 import { View } from 'react-native';
 import { LanguageChips } from '../../components/LanguageChips';
+import { LinkButton } from '../../components/LinkButton';
 import { bundleOs, flags } from '../../config/flags';
 import { useMessages } from '../../i18n/use-messages';
 import { deviceChoice, languageOptions, showLanguagePickers } from '../../logic/locale/language-picker';
@@ -67,6 +68,9 @@ export function WelcomeScreen({ navigation }: Props): React.ReactElement {
           size="md"
           onPress={() => (navigation.getParent() as NavigationProp<RootStackParamList> | undefined)?.navigate('Restore', { from: 'welcome' })}
         />
+        {/* A quiet way in for a learner with a class code (owner request 2026-10-16, item 8): the profile and consent steps
+            run unchanged, then Join a class opens. */}
+        <LinkButton label={m.learner.home.classCode.cta} onPress={() => navigation.navigate('CreateProfile', { firstRun: true, then: 'join' })} testID="welcome-class-code" />
         {grownUps ? <WelcomeGrownUps /> : null}
         {showLanguagePickers(available) ? (
           <LanguageChips

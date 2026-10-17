@@ -211,7 +211,15 @@ export const learner = {
       pill: (days: number) => plural('es', days, { one: 'Racha de 1 día', other: `Racha de ${days} días` }),
     },
     cards: { pill: (cards: number) => plural('es', cards, { one: '1 tarjeta', other: `${cards} tarjetas` }) },
-    stars: { pill: (quests: number) => `${quests}★ misiones` },
+    /** "Three-star quests" as a count label: the full noun phrase ("misiones de tres estrellas") does not fit the 24-character pill. */
+    stars: { pill: (quests: number) => `Con tres estrellas: ${quests}` },
+    next: {
+      heading: 'Siguiente lección',
+      minutes: (n: number) => plural('es', n, { one: 'Cerca de 1 minuto', other: `Cerca de ${n} minutos` }),
+      start: { cta: 'Empezar' },
+      continue: { cta: 'Continuar' },
+      a11y: (cta: string, title: string) => `${cta}: ${title}`,
+    },
     mission: {
       heading: 'Hoy con Hoya',
       dailyTest: { title: 'Repaso rápido' },
@@ -234,10 +242,16 @@ export const learner = {
     },
     homework: {
       title: 'Tarea',
+      reviewTitle: 'Repaso',
       due: (count: number) => `${count} para hoy`,
       dueMany: 'Varias para hoy',
     },
-    tip: 'Consejo: ¡termina la misión de hoy para seguir tu racha!',
+    tip: {
+      first: 'Consejo: toca Empezar para jugar tu primera lección.',
+      doneToday: '¡Buen trabajo hoy! Tus tarjetas te esperan en la colección.',
+      daily: 'Consejo: un poco cada día te ayuda a aprender.',
+    },
+    classCode: { cta: '¿Tienes un código de clase?' },
     recentStars: 'Estrellas nuevas',
     catchUp: {
       line: (count: number) =>
@@ -333,6 +347,7 @@ export const learner = {
 
   episode: {
     notFound: 'No se encontró el episodio.',
+    introFresh: '¡Aprendamos esto paso a paso!',
     comingSoon: {
       pill: 'Muy pronto',
       title: 'Muy pronto',

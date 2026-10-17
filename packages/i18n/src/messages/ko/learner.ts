@@ -204,7 +204,14 @@ export const learner = {
       pill: (days: number) => `${days}일 연속`,
     },
     cards: { pill: (cards: number) => `카드 ${cards}장` },
-    stars: { pill: (quests: number) => `별 퀘스트 ${quests}개` },
+    stars: { pill: (quests: number) => `별 3개 퀘스트 ${quests}개` },
+    next: {
+      heading: '다음 레슨',
+      minutes: (n: number) => `약 ${n}분`,
+      start: { cta: '시작' },
+      continue: { cta: '계속' },
+      a11y: (cta: string, title: string) => `${cta}: ${title}`,
+    },
     mission: {
       heading: '오늘 호야와 함께',
       dailyTest: { title: '빠른 복습' },
@@ -227,10 +234,16 @@ export const learner = {
     },
     homework: {
       title: '숙제',
+      reviewTitle: '복습',
       due: (count: number) => `오늘 할 것 ${count}개`,
       dueMany: '오늘 할 것이 몇 개 있어요',
     },
-    tip: '팁 — 오늘의 퀘스트를 끝내면 연속 기록이 이어져요!',
+    tip: {
+      first: '팁: 시작을 누르고 첫 레슨을 해 봐요.',
+      doneToday: '오늘 잘했어요! 받은 카드는 라이브러리에 있어요.',
+      daily: '팁: 매일 조금씩 하면 배우는 데 도움이 돼요.',
+    },
+    classCode: { cta: '반 코드가 있나요?' },
     recentStars: '최근 받은 별',
     catchUp: {
       line: (count: number) => `이미 받은 카드 ${count}장을 호야가 찾았어요!`,
@@ -316,6 +329,7 @@ export const learner = {
 
   episode: {
     notFound: '에피소드를 찾을 수 없어요.',
+    introFresh: '한 걸음씩 같이 배워 봐요!',
     comingSoon: {
       pill: '곧 열려요',
       title: '곧 열려요',

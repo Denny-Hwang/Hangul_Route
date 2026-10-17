@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { PLACEMENT_BANK, PLACEMENT_WARMUP } from '../../../content/placement.generated';
 import {
   afterProfileCreated,
+  profileCreatedNext,
   inviteOutcome,
   placementBankReady,
   placementEntriesOn,
@@ -44,6 +45,11 @@ describe('the level check entry points (F-PLC-001 section 3.10, section 3.11)', 
   it('after CreateProfile: the fork when the check is on, else the first-quest preview as today', () => {
     expect(afterProfileCreated(true)).toBe('PlacementInvite');
     expect(afterProfileCreated(false)).toBe('FirstQuestPreview');
+    // Welcome's "Got a class code?" (owner request 2026-10-16, item 8): Join a class after the profile, whatever the check.
+    expect(profileCreatedNext('join', true)).toBe('JoinSpace');
+    expect(profileCreatedNext('join', false)).toBe('JoinSpace');
+    expect(profileCreatedNext(undefined, true)).toBe('PlacementInvite');
+    expect(profileCreatedNext(undefined, false)).toBe('FirstQuestPreview');
   });
 
   it('"I am new to Korean": no run, the first-quest preview, the decline recorded and placement.skipped', () => {

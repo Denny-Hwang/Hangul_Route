@@ -617,7 +617,8 @@ export const caregiver = {
     rest: (name: string) => `${name} did everything that is open right now. More is coming.`,
     beyond: (name: string) => `${name} knows a lot! More adventures are coming.`,
     hereTag: (name: string) => `${name} is here`,
-    ready: (name: string) => `Ready when ${name} is`,
+    /** A stage or skill with nothing played yet (owner request 2026-10-16, item 8): a plain fact, the name not needed. */
+    ready: (_name: string) => 'Not started yet',
     explored: (name: string) => `${name} explored everything that is open right now`,
     skillsTitle: (name: string) => `What ${name}'s quests practice`,
     /** The Learning Route row on each profile card of the in-app parent dashboard (R-9b, amendment LR-A6). */

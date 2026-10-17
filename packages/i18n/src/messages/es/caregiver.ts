@@ -485,7 +485,7 @@ export const caregiver = {
     rest: (name: string) => `${name} hizo todo lo que está abierto ahora. Viene más.`,
     beyond: (name: string) => `¡${name} sabe mucho! Vienen más aventuras.`,
     hereTag: (name: string) => `${name} está aquí`,
-    ready: (name: string) => `Para cuando ${name} quiera`,
+    ready: (_name: string) => 'Aún sin empezar',
     explored: (name: string) => `${name} exploró todo lo que está abierto ahora`,
     skillsTitle: (name: string) => `Qué practican las misiones de ${name}`,
     row: {

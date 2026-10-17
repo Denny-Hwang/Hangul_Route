@@ -268,8 +268,20 @@ export const learner = {
     streak: {
       pill: (days: number) => plural('en', days, { one: 'Streak 1 day', other: `Streak ${days} days` }),
     },
-    cards: { pill: (cards: number) => `${cards} cards` },
-    stars: { pill: (quests: number) => `${quests}★ quests` },
+    cards: { pill: (cards: number) => plural('en', cards, { one: '1 card', other: `${cards} cards` }) },
+    /** Quests finished with all three stars: words, never a star glyph. */
+    stars: { pill: (quests: number) => plural('en', quests, { one: '1 three-star quest', other: `${quests} three-star quests` }) },
+    /**
+     * The Next lesson hero above the three mission cards (owner request 2026-10-16, item 8): `routeNext`'s quest,
+     * its length and one full-width button. `a11y` names the button with the lesson ("Start: Meet a, eo, g, n").
+     */
+    next: {
+      heading: 'Next lesson',
+      minutes: (n: number) => plural('en', n, { one: 'About 1 minute', other: `About ${n} minutes` }),
+      start: { cta: 'Start' },
+      continue: { cta: 'Continue' },
+      a11y: (cta: string, title: string) => `${cta}: ${title}`,
+    },
     mission: {
       heading: 'Today with Hoya',
       /** The daily-test card names itself; every other card is titled by its quest or episode (content). */
@@ -298,11 +310,20 @@ export const learner = {
     },
     homework: {
       title: 'Homework',
+      /** The card's title when no grown-up or class assignment is open: it opens the reviews. */
+      reviewTitle: 'Review',
       due: (count: number) => `${count} to do today`,
       /** More due than the Homework list shows (F-PLAN-002 section 3.6): words, no number. */
       dueMany: 'A few to do today',
     },
-    tip: "Tip — finish today's quest to keep your streak alive!",
+    /** Hoya's tip by state (`homeTip`): never a streak to keep alive, never a loss. */
+    tip: {
+      first: 'Tip: tap Start to play your first lesson.',
+      doneToday: 'Nice work today! Your cards are waiting in the Library.',
+      daily: 'Tip: a little every day helps you learn.',
+    },
+    /** A quiet link on Welcome and on a new learner's Home: it opens Join a class. */
+    classCode: { cta: 'Got a class code?' },
     recentStars: 'Recent stars',
     /**
      * The one-time catch-up card (F-STORY-006 §3.5, PR 6.5c): cards the learner had already earned,
@@ -449,6 +470,11 @@ export const learner = {
 
   episode: {
     notFound: 'Episode not found.',
+    /**
+     * Hoya's intro on a cell whose own intro assumes an earlier stage ("You know 30 letters.") while the learner has
+     * not done it (owner request 2026-10-16, item 8; `logic/episode/intro.ts`): true for everyone.
+     */
+    introFresh: 'Let us learn this one step at a time!',
     comingSoon: {
       pill: 'Coming soon',
       title: 'Coming soon',

@@ -454,7 +454,7 @@ export const caregiver = {
     rest: (name: string) => `${name}: 지금 열린 것을 모두 했어요. 더 많은 내용이 곧 나와요.`,
     beyond: (name: string) => `${name}: 정말 많이 알아요! 더 많은 모험이 곧 와요.`,
     hereTag: (name: string) => `${name}: 지금 여기`,
-    ready: (name: string) => `${name}: 준비되면 언제든지`,
+    ready: (_name: string) => '아직 시작 전이에요',
     explored: (name: string) => `${name}: 지금 열린 것을 모두 둘러봤어요`,
     skillsTitle: (name: string) => `${name}의 퀘스트로 연습하는 것`,
     row: {

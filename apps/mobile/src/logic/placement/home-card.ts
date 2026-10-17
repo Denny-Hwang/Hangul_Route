@@ -1,6 +1,12 @@
+import type { RouteNext } from '../route-next';
+
 /**
  * The Home "Take the level check" card (F-PLC-001 section 3.10): a quiet
  * card below the mission cards. No streak or guilt copy; "Not now" hides it.
+ *
+ * Owner request 2026-10-16 (item 8, Home): the rest of Home's show-or-hide rules live here too, pure, so
+ * they are unit-tested: the Next lesson hero, the streak pill, the tip, Recent stars and the Homework card's
+ * title.
  */
 
 /** The card disappears once this many quests are complete. */
@@ -17,6 +23,8 @@ export interface LevelCheckCardInput {
   questsDone: number;
   /** `placement-ui:<profileId>.dismissedAt`. */
   dismissedAt: string | undefined;
+  /** `placement-ui:<profileId>.declinedAt`: the invite's "I am new to Korean". */
+  declinedAt?: string | undefined;
   /** A saved run can be offered as Continue. */
   resumable: boolean;
 }
@@ -26,6 +34,9 @@ export function levelCheckCard(input: LevelCheckCardInput): 'take' | 'continue' 
   if (!input.enabled || !input.bankReady || input.hasResult) return null;
   if (input.questsDone >= HOME_CARD_MAX_QUESTS) return null;
   if (input.dismissedAt !== undefined && input.dismissedAt !== '') return null;
+  // "I am new to Korean" was just said: the card stays away while the learner plays the first quests (and the
+  // rule above hides it for good once they are done), so Home never asks "Already know some Korean?" right after.
+  if (input.declinedAt !== undefined && input.declinedAt !== '' && input.questsDone < HOME_CARD_MAX_QUESTS) return null;
   return input.resumable ? 'continue' : 'take';
 }
 
@@ -39,4 +50,66 @@ export function homeQuietCard(
 ): 'level-check' | 'plan-prompt' | null {
   if (levelCheck !== null) return 'level-check';
   return planPromptEligible ? 'plan-prompt' : null;
+}
+
+/** The Next lesson hero above the three mission cards: F-ENT-003's one next, with its length and one button. */
+export interface HomeNextLesson {
+  questId: string;
+  episodeId: string;
+  /** "About n minutes": the quest's own estimate, at least 1. */
+  minutes: number;
+  /** Start before the first quest is done; Continue after. */
+  cta: 'start' | 'continue';
+}
+
+/**
+ * The hero names `routeNext`'s quest (the same quest as Home card 2, the Learning Route card and Results), so
+ * a brand-new learner's first card is the next lesson, not a story. Nothing when the one next is not a quest
+ * (the free-end and rest states keep their own cards) or the quest is not in this build.
+ */
+export function homeNextLesson(input: {
+  next: RouteNext | null;
+  questOf: (questId: string) => { estimatedMinutes: number } | undefined;
+  questsDone: number;
+}): HomeNextLesson | null {
+  const next = input.next;
+  if (next === null || next.kind !== 'quest') return null;
+  const quest = input.questOf(next.questId);
+  if (quest === undefined) return null;
+  return {
+    questId: next.questId,
+    episodeId: next.episodeId,
+    minutes: Math.max(1, Math.round(quest.estimatedMinutes)),
+    cta: input.questsDone === 0 ? 'start' : 'continue',
+  };
+}
+
+/** The streak pill waits for the first day: "Streak 0 days" is never shown. */
+export function showStreakPill(streak: number): boolean {
+  return streak >= 1;
+}
+
+/**
+ * Hoya's tip under the Homework card, by state; never "keep your streak alive" (no loss framing):
+ * `first` before any quest is done, `doneToday` once a quest session counted today, `daily` otherwise.
+ */
+export type HomeTip = 'first' | 'doneToday' | 'daily';
+
+export function homeTip(input: { questsDone: number; playedToday: boolean }): HomeTip {
+  if (input.questsDone === 0) return 'first';
+  return input.playedToday ? 'doneToday' : 'daily';
+}
+
+/** Recent stars: the stars of the newest quest that earned any; null (the card hides) until there is a star. */
+export function recentStarsOf(quests: readonly { stars: number }[]): 1 | 2 | 3 | null {
+  for (let i = quests.length - 1; i >= 0; i -= 1) {
+    const stars = quests[i]?.stars ?? 0;
+    if (stars >= 1) return Math.min(3, Math.floor(stars)) as 1 | 2 | 3;
+  }
+  return null;
+}
+
+/** The Homework card's title: Homework while a grown-up or class assignment is open, Review when nothing is assigned. */
+export function homeworkCardTitle(assignments: readonly { completedAt?: string | undefined }[] | undefined): 'homework' | 'review' {
+  return (assignments ?? []).some((a) => !a.completedAt) ? 'homework' : 'review';
 }

@@ -35,7 +35,7 @@ import { PLACEMENT_BANK } from '../../content/placement.generated';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { catchUpCard, takeCatchUpAnnouncement } from '../../logic/awards/catch-up';
 import { isContentLocked } from '../../logic/content-access';
-import { localizeMissionCard } from '../../logic/content-locale';
+import { localizeMissionCard, localizeQuest } from '../../logic/content-locale';
 import { cursorContext } from '../../logic/cursor-context';
 import {
   buildTodaysMission,
@@ -57,12 +57,21 @@ import { localizedRouteContent, routeModelInput, routeWeekOf } from '../../logic
 import { emptySnapshot } from '../../logic/my-route/view';
 import { placementEntriesOn, questsDoneOf } from '../../logic/placement/entry';
 import { skippedEvent } from '../../logic/placement/events';
-import { homeQuietCard, levelCheckCard } from '../../logic/placement/home-card';
+import {
+  homeNextLesson,
+  homeQuietCard,
+  homeTip,
+  homeworkCardTitle,
+  levelCheckCard,
+  recentStarsOf,
+  showStreakPill,
+  type HomeNextLesson,
+} from '../../logic/placement/home-card';
 import { DEFAULT_AVATAR } from '../../logic/profiles/avatar-catalog';
 import { askFor, askGate, helpAskedEvent, isClassOnly } from '../../logic/access-copy';
 import { favoriteReplay, freeEndPrimary, practiceTarget } from '../../logic/free-end';
 import { nextStartedEvent, qualifiesForNext, routeNext, routeNextInputOf } from '../../logic/route-next';
-import { streakSessionDates } from '../../logic/sessions/session-log';
+import { lastStreakDay, streakSessionDates } from '../../logic/sessions/session-log';
 import { computeStreak } from '../../logic/streak';
 import { emptyBookmarks } from '../../logic/story/bookmarks';
 import { storyCoverArt } from '../../logic/story/scene-view';
@@ -215,6 +224,31 @@ function MissionTile({
 }
 
 /**
+ * The Next lesson hero (owner request 2026-10-16, item 8): F-ENT-003's one next above the three mission cards,
+ * so a new learner's first card is a lesson, with its length and one full-width Start or Continue. The three
+ * F-HW-001 slots below it are unchanged.
+ */
+function NextLessonCard({ lesson, title, onStart }: { lesson: HomeNextLesson; title: string; onStart: () => void }): React.ReactElement {
+  const m = useMessages();
+  const copy = m.learner.home.next;
+  const cta = lesson.cta === 'start' ? copy.start.cta : copy.continue.cta;
+  return (
+    <View testID="home-next-lesson">
+      <Card padding="md" elevation="card">
+        <Caption tone="secondary" weight="semibold">
+          {copy.heading}
+        </Caption>
+        <Spacer size="xxs" />
+        <Heading level="prompt">{title}</Heading>
+        <Caption tone="muted">{copy.minutes(lesson.minutes)}</Caption>
+        <Spacer size="md" />
+        <Button label={cta} accessibilityLabel={copy.a11y(cta, title)} tone="primary" size="lg" fullWidth onPress={onStart} testID="home-next-lesson-start" />
+      </Card>
+    </View>
+  );
+}
+
+/**
  * The one-time catch-up card (F-STORY-006 §3.5, wireframe `home/cards-catch-up.md` E): cards the
  * learner had already earned, found by the reconcile at start. Hoya cheers (static: the pose never
  * changes while it shows), one line says how many cards, and one button opens the Library. No
@@ -292,7 +326,8 @@ export function HomeScreen(): React.ReactElement {
   const localToday = useToday('local');
   const homeworkDue = dueTodayCount(snap?.homework, today);
 
-  const recentStars = (snap?.quests.slice(-1)[0]?.stars ?? 0) as 0 | 1 | 2 | 3;
+  // Recent stars waits for a first star (owner request 2026-10-16, item 8): an empty row of stars is never shown.
+  const recentStars = recentStarsOf(snap?.quests ?? []);
 
   const streak = useMemo(() => {
     // Quest sessions only: story, game and level-check time never moves the streak (F-REPORT-001 OD-19).
@@ -353,6 +388,16 @@ export function HomeScreen(): React.ReactElement {
     [profile, snap, today, plans, tier, questOpen],
   );
   const next = useMemo(() => (routeInput ? routeNext(routeInput) : null), [routeInput]);
+  // Quests done (grid and shelf alike): the hero's Start or Continue, the tip and the class-code link read it.
+  const questsDone = questsDoneOf(snap?.quests);
+  const nextLesson = useMemo(
+    () => homeNextLesson({ next, questOf: (id) => questsAll.find((q) => q.id === id), questsDone }),
+    [next, questsDone],
+  );
+  const nextLessonTitle = useMemo(() => {
+    const quest = nextLesson ? questsAll.find((q) => q.id === nextLesson.questId) : undefined;
+    return quest ? localizeQuest(quest, locale).titleEn : '';
+  }, [nextLesson, locale]);
   const mission = useMemo(() => {
     if (!profile || !snap || !routeInput) return null;
     const today = routeInput.today;
@@ -525,6 +570,21 @@ export function HomeScreen(): React.ReactElement {
     }
   };
 
+  // The hero's Start or Continue: the one next, as card (2) starts it (F-ENT-003 section 3.12, `next.started`).
+  const startNextLesson = (): void => {
+    if (!profile || !nextLesson || next?.kind !== 'quest') return;
+    void track(nextStartedEvent(profile.id, next.source, 'home'));
+    navigation.navigate('QuestPlayer', { questId: nextLesson.questId, episodeId: nextLesson.episodeId });
+  };
+  const heroView = nextLesson ? <NextLessonCard lesson={nextLesson} title={nextLessonTitle} onStart={startNextLesson} /> : null;
+  // Home's empty state (no quest yet, in no class): a quiet way to a class code (owner request 2026-10-16, item 8).
+  const classCodeLink =
+    questsDone === 0 && (memberships ?? []).length === 0 ? (
+      <View style={{ alignItems: 'flex-start' }}>
+        <LinkButton label={m.learner.home.classCode.cta} onPress={() => navigation.navigate('JoinSpace')} testID="home-class-code" />
+      </View>
+    ) : null;
+
   // The level check card (F-PLC-001 section 3.10): at most one quiet card below the mission cards.
   const profileId = profile?.id ?? null;
   const entriesOn = placementEntriesOn(flags.placementEnabled);
@@ -551,8 +611,9 @@ export function HomeScreen(): React.ReactElement {
           enabled: flags.placementEnabled,
           bankReady: entriesOn,
           hasResult: (snap?.placements?.length ?? 0) > 0,
-          questsDone: questsDoneOf(snap?.quests),
+          questsDone,
           dismissedAt: placementUi.dismissedAt,
+          declinedAt: placementUi.declinedAt,
           resumable,
         });
   // F-PLAN-002's weekly plan card (prompt, check-in or moved line) shares the slot; the level check wins while it is eligible (AM-6).
@@ -615,6 +676,12 @@ export function HomeScreen(): React.ReactElement {
   const missions =
     mission && mission.cards.length > 0 ? (
       <>
+        {heroView ? (
+          <>
+            {heroView}
+            <Spacer size="lg" />
+          </>
+        ) : null}
         <Heading level="prompt">{m.learner.home.mission.heading}</Heading>
         <Spacer size="sm" />
         <View testID="home-missions" style={{ gap: spacing.sm }}>
@@ -682,7 +749,7 @@ export function HomeScreen(): React.ReactElement {
         <Card padding="md" tone="sunken">
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
             <View style={{ flex: 1 }}>
-              <Body weight="semibold">{m.learner.home.homework.title}</Body>
+              <Body weight="semibold">{homeworkCardTitle(snap?.homework) === 'review' ? m.learner.home.homework.reviewTitle : m.learner.home.homework.title}</Body>
               <Caption tone="muted">
                 {homeworkDue === 0 ? copy.homeReviewsIdle : showsTodayCount(homeworkDue) ? m.learner.home.homework.due(homeworkDue) : m.learner.home.homework.dueMany}
               </Caption>
@@ -693,21 +760,21 @@ export function HomeScreen(): React.ReactElement {
       </Pressable>
 
       <Spacer size="xl" />
-      <HoyaBubble tone="idle" message={m.learner.home.tip} />
+      <HoyaBubble tone="idle" message={m.learner.home.tip[homeTip({ questsDone, playedToday: lastStreakDay(snap?.sessions ?? []) === today })]} />
       {/* A class move the learner side must answer, or one that is planned (F-SPACE-002 T-7c); nothing while transfers are off. */}
       {profile ? <TransferHomeLine profileId={profile.id} learnerName={profile.displayName} /> : null}
       {/* [TV] A teacher move notice, shown once, and the class update when the family has not read it (AMENDMENTS-TEACHER-VISIBILITY-TRANSFER). */}
       {profile ? <ClassUpdateHomeLines profileId={profile.id} learnerName={profile.displayName} learnerType={profile.learnerType} /> : null}
-      <Spacer size="lg" />
-      <Card padding="md" tone="sunken">
-        <Heading level="prompt">{m.learner.home.recentStars}</Heading>
-        <Spacer size="sm" />
-        <StarRow
-          stars={recentStars}
-          size={28}
-          accessibilityLabel={m.a11y.stars(recentStars)}
-        />
-      </Card>
+      {recentStars !== null ? (
+        <>
+          <Spacer size="lg" />
+          <Card padding="md" tone="sunken" testID="home-recent-stars">
+            <Heading level="prompt">{m.learner.home.recentStars}</Heading>
+            <Spacer size="sm" />
+            <StarRow stars={recentStars} size={28} accessibilityLabel={m.a11y.stars(recentStars)} />
+          </Card>
+        </>
+      ) : null}
     </>
   );
 
@@ -750,7 +817,8 @@ export function HomeScreen(): React.ReactElement {
 
       <Spacer size="lg" />
       <View style={{ flexDirection: 'row', gap: spacing.sm, flexWrap: 'wrap' }}>
-        <Pill tone="primary" label={m.learner.home.streak.pill(streak)} />
+        {/* The streak pill waits for the first day: never "Streak 0 days". */}
+        {showStreakPill(streak) ? <Pill tone="primary" label={m.learner.home.streak.pill(streak)} /> : null}
         <Pill tone="secondary" label={m.learner.home.cards.pill(cardsUnlocked)} />
         <Pill tone="success" label={m.learner.home.stars.pill(stars3)} />
       </View>
@@ -765,6 +833,12 @@ export function HomeScreen(): React.ReactElement {
               {catchUpView}
               {catchUpGap}
               {missions}
+              {classCodeLink ? (
+                <>
+                  <Spacer size="sm" />
+                  {classCodeLink}
+                </>
+              ) : null}
               {quietCard ? (
                 <>
                   <Spacer size="lg" />
@@ -784,6 +858,12 @@ export function HomeScreen(): React.ReactElement {
           {catchUpView}
           {catchUpGap}
           {missions}
+          {classCodeLink ? (
+            <>
+              <Spacer size="sm" />
+              {classCodeLink}
+            </>
+          ) : null}
           {notesCard('after')}
           {quietCard ? (
             <>

@@ -108,7 +108,8 @@ export const DRAFT_EN: MyRouteMessages = {
     rest: (name) => `${name} did everything that is open right now. More is coming.`,
     beyond: (name) => `${name} knows a lot! More adventures are coming.`,
     hereTag: (name) => `${name} is here`,
-    ready: (name) => `Ready when ${name} is`,
+    // Owner request 2026-10-16 (item 8): a plain fact for a grown-up, no name needed.
+    ready: () => 'Not started yet',
     explored: (name) => `${name} explored everything that is open right now`,
     skillsTitle: (name) => `What ${name}'s quests practice`,
   },

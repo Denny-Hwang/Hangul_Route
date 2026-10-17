@@ -1,5 +1,16 @@
 import { describe, expect, it } from 'vitest';
-import { HOME_CARD_MAX_QUESTS, homeQuietCard, levelCheckCard, type LevelCheckCardInput } from '../home-card';
+import {
+  HOME_CARD_MAX_QUESTS,
+  homeNextLesson,
+  homeQuietCard,
+  homeTip,
+  homeworkCardTitle,
+  levelCheckCard,
+  recentStarsOf,
+  showStreakPill,
+  type LevelCheckCardInput,
+} from '../home-card';
+import type { RouteNext } from '../../route-next';
 
 const eligible: LevelCheckCardInput = {
   enabled: true,
@@ -35,5 +46,68 @@ describe('the Home level-check card (F-PLC-001 section 3.10)', () => {
     expect(homeQuietCard('continue', false)).toBe('level-check');
     expect(homeQuietCard(null, true)).toBe('plan-prompt');
     expect(homeQuietCard(null, false)).toBeNull();
+  });
+});
+
+describe('the level-check card after "I am new to Korean" (owner request 2026-10-16, item 8)', () => {
+  const declined = { ...eligible, declinedAt: '2026-10-16T09:00:00Z' };
+  it('stays hidden while the first quests are played, and the three-quest rule keeps it hidden after', () => {
+    for (let done = 0; done < HOME_CARD_MAX_QUESTS; done += 1) expect(levelCheckCard({ ...declined, questsDone: done }), `${done}`).toBeNull();
+    expect(levelCheckCard({ ...declined, questsDone: HOME_CARD_MAX_QUESTS })).toBeNull();
+    expect(levelCheckCard({ ...declined, resumable: true })).toBeNull();
+  });
+  it('an empty or absent decline changes nothing', () => {
+    expect(levelCheckCard({ ...eligible, declinedAt: '' })).toBe('take');
+    expect(levelCheckCard({ ...eligible, declinedAt: undefined })).toBe('take');
+  });
+});
+
+describe('the Next lesson hero', () => {
+  const quest: RouteNext = { kind: 'quest', questId: 'quest:q1', episodeId: 'episode:e1', stage: 'stage1', source: 'cursor', sourceId: null };
+  const questOf = (id: string) => (id === 'quest:q1' ? { estimatedMinutes: 4 } : id === 'quest:short' ? { estimatedMinutes: 0.4 } : undefined);
+
+  it("names routeNext's quest with its minutes: Start before the first quest is done, Continue after", () => {
+    expect(homeNextLesson({ next: quest, questOf, questsDone: 0 })).toEqual({ questId: 'quest:q1', episodeId: 'episode:e1', minutes: 4, cta: 'start' });
+    expect(homeNextLesson({ next: quest, questOf, questsDone: 2 })?.cta).toBe('continue');
+  });
+
+  it('never says less than one minute', () => {
+    expect(homeNextLesson({ next: { ...quest, questId: 'quest:short' }, questOf, questsDone: 0 })?.minutes).toBe(1);
+  });
+
+  it('nothing when the one next is not a quest or the quest is not in this build', () => {
+    expect(homeNextLesson({ next: null, questOf, questsDone: 0 })).toBeNull();
+    expect(homeNextLesson({ next: { kind: 'rest' }, questOf, questsDone: 5 })).toBeNull();
+    expect(homeNextLesson({ next: { kind: 'free-end', placedOut: false }, questOf, questsDone: 5 })).toBeNull();
+    expect(homeNextLesson({ next: { ...quest, questId: 'quest:gone' }, questOf, questsDone: 0 })).toBeNull();
+  });
+});
+
+describe('the streak pill, the tip, Recent stars and the Homework card', () => {
+  it('the streak pill waits for the first day', () => {
+    expect(showStreakPill(0)).toBe(false);
+    expect(showStreakPill(1)).toBe(true);
+    expect(showStreakPill(12)).toBe(true);
+  });
+
+  it('the tip follows the state: first lesson, done today, any other day', () => {
+    expect(homeTip({ questsDone: 0, playedToday: false })).toBe('first');
+    expect(homeTip({ questsDone: 0, playedToday: true })).toBe('first');
+    expect(homeTip({ questsDone: 3, playedToday: true })).toBe('doneToday');
+    expect(homeTip({ questsDone: 3, playedToday: false })).toBe('daily');
+  });
+
+  it('Recent stars hides until a quest earned a star, then shows the newest that did', () => {
+    expect(recentStarsOf([])).toBeNull();
+    expect(recentStarsOf([{ stars: 0 }])).toBeNull();
+    expect(recentStarsOf([{ stars: 2 }, { stars: 0 }])).toBe(2);
+    expect(recentStarsOf([{ stars: 1 }, { stars: 3 }])).toBe(3);
+  });
+
+  it('the Homework card says Review when nothing is assigned, Homework while an assignment is open', () => {
+    expect(homeworkCardTitle(undefined)).toBe('review');
+    expect(homeworkCardTitle([])).toBe('review');
+    expect(homeworkCardTitle([{ completedAt: '2026-10-15T00:00:00Z' }])).toBe('review');
+    expect(homeworkCardTitle([{ completedAt: '2026-10-15T00:00:00Z' }, {}])).toBe('homework');
   });
 });

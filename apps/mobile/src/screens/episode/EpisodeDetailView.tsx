@@ -53,6 +53,7 @@ import { buildsOnLine, prereqSheet, softPrerequisite, type PrereqSheet as Prereq
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { usePrereqSheetStore } from '../../store/prereq-sheet-store';
 import { useProgressStore } from '../../store/progress-store';
+import { episodeIntro } from '../../logic/episode/intro';
 import { storyEpisodeEntries } from '../../logic/story/story-episode';
 import { defaultStoryIndex } from '../../logic/story/story-index';
 import { lessonRowCount, type CellStoriesSource } from '../../logic/story/cell-stories';
@@ -303,7 +304,8 @@ export function EpisodeDetailView({
         ) : null}
 
         <Spacer size="lg" />
-        <HoyaBubble tone="idle" message={episode.hoyaIntroEn} />
+        {/* A cell intro that assumes an earlier stage reads the neutral line until the learner has done it (owner request 2026-10-16, item 8). */}
+        <HoyaBubble tone="idle" message={episodeIntro({ episode, snapshot: snap, episodes: episodesAll, fresh: m.introFresh })} />
 
         {isPreview ? (
           <>

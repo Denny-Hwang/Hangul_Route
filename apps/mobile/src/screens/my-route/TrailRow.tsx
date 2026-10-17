@@ -238,14 +238,17 @@ export function StageRowItem({ row, open, look, reducedMotion, onToggle, onOpenE
             <Body weight="bold" size="lg">
               {row.title}
             </Body>
-            <Pill label={row.stateWord} tone={row.tone} size="sm" />
+            {row.pillShown === false || row.compact === true ? null : <Pill label={row.stateWord} tone={row.tone} size="sm" />}
           </View>
-          {row.captions.map((line) => (
-            <Body key={line} tone="secondary">
-              {line}
-            </Body>
-          ))}
-          {row.groups.length > 0 ? (
+          {/* A stage not reached yet is one line: no caption and no pips (owner request 2026-10-16, item 8). */}
+          {row.compact === true
+            ? null
+            : row.captions.map((line) => (
+                <Body key={line} tone="secondary">
+                  {line}
+                </Body>
+              ))}
+          {row.groups.length > 0 && row.compact !== true ? (
             <FreshFill fresh={row.fresh} reducedMotion={reducedMotion}>
               {look === 'pips' || row.fill === null ? (
                 <PipRow groups={row.groups} context="stage" accent={accent} testID={`my-route-pips-${row.order}`} />
@@ -302,9 +305,11 @@ export function StageRowItem({ row, open, look, reducedMotion, onToggle, onOpenE
                       {cell.inPlan !== null ? <InPlanChip label={cell.inPlan} /> : null}
                     </View>
                     <View style={{ alignItems: 'flex-end', gap: spacing.xxs, maxWidth: '40%' }}>
-                      <Body size="sm" tone="secondary" align="right">
-                        {cell.word}
-                      </Body>
+                      {cell.wordShown === false ? null : (
+                        <Body size="sm" tone="secondary" align="right">
+                          {cell.word}
+                        </Body>
+                      )}
                       {cell.episodeId === null ? null : <Icon name="arrow-right" size={20} color={colors.text.muted} />}
                     </View>
                   </>

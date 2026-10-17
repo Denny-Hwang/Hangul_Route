@@ -49,11 +49,12 @@ import {
   type SetupStep,
 } from '../../logic/onboarding/setup-steps';
 import { submitProfile } from '../../logic/onboarding/submit-profile';
-import { afterProfileCreated, placementEntriesOn } from '../../logic/placement/entry';
+import { placementEntriesOn, profileCreatedNext } from '../../logic/placement/entry';
 import { AVATAR_PRESETS, DEFAULT_AVATAR } from '../../logic/profiles/avatar-catalog';
 import { createPinHash } from '../../logic/profiles/pin-hash';
 import { NAME_MAX } from '../../logic/profiles/profile-model';
-import type { OnboardingStackParamList } from '../../navigation/types';
+import type { OnboardingStackParamList, RootStackParamList } from '../../navigation/types';
+import type { NavigationProp } from '@react-navigation/native';
 import { pinHasher } from '../../platform/crypto';
 import { focusForScreenReader } from '../../platform/screen-reader';
 import { track } from '../../platform/telemetry';
@@ -257,8 +258,11 @@ export function CreateProfileScreen({ navigation, route }: Props): React.ReactEl
         },
       );
       if (result.ok) {
-        // The level check's fork when it is on (F-PLC-001 section 3.1 step 1, first and later profiles alike).
-        navigation.replace(afterProfileCreated(levelCheckOn), { profileId: result.profile.id });
+        // The level check's fork when it is on (F-PLC-001 section 3.1 step 1, first and later profiles alike); a first
+        // run begun at "Got a class code?" goes to Join a class instead, with Home under it (Back and Done land there).
+        const next = profileCreatedNext(route.params?.then, levelCheckOn);
+        if (next === 'JoinSpace') navigation.getParent<NavigationProp<RootStackParamList>>()?.reset({ index: 1, routes: [{ name: 'Main' }, { name: 'JoinSpace' }] });
+        else navigation.replace(next, { profileId: result.profile.id });
       } else if (result.reason === 'pin-failed') {
         setPinError(c.pinFailed);
       }
