@@ -40,6 +40,12 @@ interface TextProps extends CommonProps {
  */
 interface StatusProps extends CommonProps {
   variant: 'status';
+  /**
+   * One wrapping row with no card (the detail as a caption, the action and the help link as small
+   * buttons), for a screen that must keep its own controls on screen and must not shrink its drawing
+   * surface by a whole card: Trace Stroke and Trace a Word (design/components/PromptPanel/spec.md).
+   */
+  compact?: boolean;
 }
 
 type Props = TextProps | StatusProps;
@@ -48,6 +54,28 @@ export function PromptPanel(props: Props): React.ReactElement {
   const { view, onAction, onHelp, testID = 'prompt-panel' } = props;
   const status = props.variant === 'status';
   const shown = status ? view.statusShown : view.textShown;
+  if (props.variant === 'status' && props.compact === true) {
+    return (
+      <View accessibilityLiveRegion="polite" testID={testID}>
+        {shown ? (
+          // The row brings its own top space, so an empty panel takes none in a screen that counts its height.
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: spacing.sm, marginTop: spacing.sm }}>
+            {view.detail !== null ? (
+              <Caption tone="muted" testID={`${testID}-detail`}>
+                {view.detail}
+              </Caption>
+            ) : null}
+            {view.actionLabel !== null ? (
+              <Button label={view.actionLabel} tone="secondary" size="sm" onPress={() => onAction(view.action)} testID={`${testID}-action`} />
+            ) : null}
+            {view.helpLabel !== null && onHelp ? (
+              <Button label={view.helpLabel} tone="ghost" size="sm" onPress={onHelp} testID={`${testID}-help`} />
+            ) : null}
+          </View>
+        ) : null}
+      </View>
+    );
+  }
   return (
     <View accessibilityLiveRegion="polite" testID={testID}>
       {shown ? (
@@ -65,7 +93,9 @@ export function PromptPanel(props: Props): React.ReactElement {
               status ? (
                 <Body tone="muted" align="center" testID={`${testID}-detail`}>{view.detail}</Body>
               ) : (
-                <Caption tone="muted">{view.detail}</Caption>
+                <Caption tone="muted" testID={`${testID}-detail`}>
+                  {view.detail}
+                </Caption>
               )
             ) : null}
             {view.actionLabel !== null ? (

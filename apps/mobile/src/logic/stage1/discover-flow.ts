@@ -2,6 +2,7 @@ import { discoverItemTexts, type DiscoverItem, type DiscoverPage, type Jamo, typ
 import { romanizationShown, type Messages } from '@hangul-route/i18n';
 import { findJamo } from '../../content/jamo';
 import type { PlayResult } from '../../platform/audio';
+import type { PromptKind } from '../audio/rate';
 import { spokenFor } from '../audio/spoken';
 import { blockShape } from '../build-letter-view';
 import { localizeJamo } from '../content-locale';
@@ -26,11 +27,19 @@ export type DiscoverCopy = Messages['learner']['quest']['discover'];
 /** The screen-reader labels of a symbol (`a11y.discoverLetter`, `a11y.discoverFinal`). */
 export type DiscoverA11y = Pick<Messages['a11y'], 'discoverLetter' | 'discoverFinal'>;
 
+/** The surface id of Discover for the audio telemetry (`audio.fallback_shown`, F-AUDIO-004 §3.14). */
+export const DISCOVER_AUDIO_SOURCE = 'discover';
+
 /** What a Hear it button says: `text` is what the voice speaks, `audioRef` wins once a recording exists. */
 export interface HearAction {
   /** Stable per button: `<item key>|sound`, `|name` or `|example`. */
   id: string;
   spec: { text: string; audioRef?: string };
+  /**
+   * The speech rate (F-AUDIO-004 §3.3): `sound` for a symbol and its name, `sentence` for a
+   * sentence, a pattern example and an exchange line, `word` for everything else.
+   */
+  kind: PromptKind;
 }
 
 export interface DiscoverExampleView {
@@ -120,12 +129,12 @@ const SYLLABLE_SEPARATOR = '·';
 const teachingRomanization = (text: KoText): string =>
   text.syllables ? text.syllables.join(SYLLABLE_SEPARATOR) : text.romanization;
 
-function hear(id: string, text: string, audioRef: string | undefined): HearAction {
-  return { id, spec: audioRef === undefined ? { text } : { text, audioRef } };
+function hear(id: string, text: string, audioRef: string | undefined, kind: PromptKind): HearAction {
+  return { id, spec: audioRef === undefined ? { text } : { text, audioRef }, kind };
 }
 
-function wordSpec(key: string, suffix: string, word: KoText): HearAction {
-  return hear(`${key}|${suffix}`, word.spokenKo ?? word.ko, word.audioRef);
+function wordSpec(key: string, suffix: string, word: KoText, kind: PromptKind = 'word'): HearAction {
+  return hear(`${key}|${suffix}`, word.spokenKo ?? word.ko, word.audioRef, kind);
 }
 
 /** The example word with the first block that holds `jamoId` emphasised. */
@@ -199,16 +208,16 @@ function symbolItem(
     romanization,
     accessibilityLabel: symbolLabel(jamo, romanization, a11y),
     ...(jamo.soundHint ? { soundHint: jamo.soundHint } : {}),
-    hear: hear(`${key}|sound`, sound.text, sound.audioRef),
+    hear: hear(`${key}|sound`, sound.text, sound.audioRef, 'sound'),
     spokenRomanization: sound.romanization,
-    ...(name ? { letterName: { action: hear(`${key}|name`, name.text, name.audioRef), ko: name.text, romanization: name.romanization } } : {}),
+    ...(name ? { letterName: { action: hear(`${key}|name`, name.text, name.audioRef, 'sound'), ko: name.text, romanization: name.romanization } } : {}),
     ...(jamo.kind === 'batchim' ? { block: blockView(jamo.id, jamo, example), batchimLine: copy.batchimLine } : {}),
     example: exampleView(key, jamo.id, example),
     ...(item.picture ? { picture: item.picture } : {}),
   };
 }
 
-function wordItem(key: string, item: Extract<DiscoverItem, { type: 'word' }>): DiscoverItemView {
+function wordItem(key: string, item: Extract<DiscoverItem, { type: 'word' }>, kind: PromptKind = 'word'): DiscoverItemView {
   const { word } = item;
   return {
     key,
@@ -217,7 +226,7 @@ function wordItem(key: string, item: Extract<DiscoverItem, { type: 'word' }>): D
     romanization: teachingRomanization(word),
     gloss: word.en,
     accessibilityLabel: `${word.ko}, ${word.romanization}, ${word.en}`,
-    hear: wordSpec(key, 'sound', word),
+    hear: wordSpec(key, 'sound', word, kind),
     spokenRomanization: word.romanization,
     ...(item.noteEn ? { note: item.noteEn } : {}),
     ...(item.picture ? { picture: item.picture } : {}),
@@ -239,7 +248,7 @@ function exchangeItem(key: string, item: Extract<DiscoverItem, { type: 'exchange
         spokenRomanization: l.line.romanization,
         gloss: l.line.en,
         accessibilityLabel: `${l.speakerEn}: ${l.line.ko}, ${l.line.romanization}, ${l.line.en}`,
-        hear: hear(lineKey, l.line.spokenKo ?? l.line.ko, l.line.audioRef),
+        hear: hear(lineKey, l.line.spokenKo ?? l.line.ko, l.line.audioRef, 'sentence'),
       };
     }),
   };
@@ -282,8 +291,10 @@ export function buildDiscover(
         // F-CURR-001 upper-stage items (sentence, pattern, realia): until their own Discover
         // views land (S3-1, G-2 / S6-1), each taught text shows as a word card with Hear it.
         const picture = item.type === 'sentence' ? item.picture : undefined;
+        // A sentence and a pattern's examples are read as sentences; a realia key word is a word.
+        const kind: PromptKind = item.type === 'realia' ? 'word' : 'sentence';
         for (const word of discoverItemTexts(item)) {
-          items.push(wordItem(uniqueKey(`word:${word.ko}`), picture ? { type: 'word', word, picture } : { type: 'word', word }));
+          items.push(wordItem(uniqueKey(`word:${word.ko}`), picture ? { type: 'word', word, picture } : { type: 'word', word }, kind));
         }
         continue;
       }

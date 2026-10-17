@@ -16,7 +16,7 @@ import {
   useTypeScale,
 } from '@hangul-route/design-system';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { View } from 'react-native';
+import { ScrollView, View } from 'react-native';
 import { GestureDetector, Gesture } from 'react-native-gesture-handler';
 import { runOnJS } from 'react-native-reanimated';
 import Svg, { Path } from 'react-native-svg';
@@ -38,8 +38,13 @@ import {
   traceSidePanelWidth,
 } from '../../logic/trace-layout';
 import { TRACE_IDLE_MS, createTraceEvaluator, type TraceEvaluator } from '../../logic/trace-evaluator';
+import { PromptPanel } from '../../components/PromptPanel';
 import { StrokeHint } from '../../components/StrokeHint';
-import { playJamo } from '../../platform/audio';
+import { VoiceHelpSheet } from '../../components/VoiceHelpSheet';
+import { usePromptSlot } from '../../components/use-prompt-slot';
+import { playsOnOpen } from '../../logic/audio/opening-play';
+import { hasClip, playJamo, stop } from '../../platform/audio';
+import { useAudioStore } from '../../store/audio-store';
 import { nudge, success } from '../../platform/haptics';
 import { useQuestRunStore } from '../../store/quest-run-store';
 
@@ -86,6 +91,12 @@ export function TraceStrokeGame({
   const [roundIdx, setRoundIdx] = useState(0);
   const [strokes, setStrokes] = useState<JamoStrokePoint[][]>([]);
   const [feedback, setFeedback] = useState<Feedback>('idle');
+  // The letter's sound: the letter is the heading, so the panel only says why it is silent (F-AUDIO-004 A-5b).
+  const sound = usePromptSlot({ source: TRACE_STROKE_AUDIO_SOURCE, textOnScreen: true });
+  const { play: soundPlay, reset: soundReset } = sound;
+  const [helpOpen, setHelpOpen] = useState(false);
+  // Leaving the game mid-sound (Done on the last letter, Skip, Back) stops it.
+  useEffect(() => () => stop(), []);
   // Done and the idle timer share one gate; its idle timer calls the latest
   // evaluate() so it sees the current strokes.
   const evaluateRef = useRef<() => void>(() => {});
@@ -134,8 +145,12 @@ export function TraceStrokeGame({
     setDirectionNudge('none');
     setHintToken(0);
     setHintPlaying(false);
-    if (round) void playJamo(round.jamo, 'sound');
-  }, [roundIdx, round]);
+    // A new letter is a new prompt slot. With sound switched off, or nothing that could sound, it waits for
+    // Show me, so the learner is not told why it is silent on every letter.
+    soundReset();
+    const audio = useAudioStore.getState();
+    if (round && playsOnOpen(audio.muted, audio.tts, hasClip(round.jamo.audioRef))) void soundPlay(() => playJamo(round.jamo, 'sound'));
+  }, [roundIdx, round, soundPlay, soundReset]);
 
   if (!round) {
     return (
@@ -280,11 +295,22 @@ export function TraceStrokeGame({
   );
 
   const prompt = (
-    <View style={{ gap: spacing.xs }}>
-      <View accessible accessibilityRole="header" accessibilityLabel={traceTargetA11yText(round.jamo, m.a11y.minigame)}>
-        <Heading level="prompt">{traceHeadingText(round.jamo, copy.trace)}</Heading>
+    <View>
+      <View style={{ gap: spacing.xs }}>
+        <View accessible accessibilityRole="header" accessibilityLabel={traceTargetA11yText(round.jamo, m.a11y.minigame)}>
+          <Heading level="prompt">{traceHeadingText(round.jamo, copy.trace)}</Heading>
+        </View>
+        {stacked ? <Caption tone="muted">{copy.trace.instruction}</Caption> : null}
       </View>
-      {stacked ? <Caption tone="muted">{copy.trace.instruction}</Caption> : null}
+      {/* Why the letter did not sound, in one row (the canvas and Done / Skip keep their room). */}
+      <PromptPanel
+        variant="status"
+        compact
+        view={sound.view}
+        onAction={(action) => sound.act(action, () => void soundPlay(() => playJamo(round.jamo, 'sound')))}
+        onHelp={() => setHelpOpen(true)}
+        testID="trace-stroke-sound"
+      />
     </View>
   );
 
@@ -366,7 +392,7 @@ export function TraceStrokeGame({
           setHintToken((t) => t + 1);
           setHintPlaying(true);
           // F-009 §3.1 (revised) — narrate the SOUND of the jamo at demo start; muting is enforced inside the audio controller.
-          void playJamo(round.jamo, 'sound');
+          void soundPlay(() => playJamo(round.jamo, 'sound'));
         }}
       />
       <Button label={copy.trace.clear.cta} tone="ghost" size="sm" onPress={handleClear} disabled={strokes.length === 0} />
@@ -430,7 +456,8 @@ export function TraceStrokeGame({
           <View style={{ flex: 1, flexDirection: 'row', gap: spacing.lg }}>
             {canvasSlot}
             <View style={{ width: traceSidePanelWidth(box.width), justifyContent: 'center', gap: spacing.sm }}>
-              {prompt}
+              {/* The prompt scrolls if a status row makes the column too tall: Done and Skip stay on screen. */}
+              <ScrollView style={{ flexGrow: 0, flexShrink: 1 }}>{prompt}</ScrollView>
               {controls}
             </View>
           </View>
@@ -442,6 +469,7 @@ export function TraceStrokeGame({
           </View>
         )}
       </View>
+      <VoiceHelpSheet visible={helpOpen} onClose={() => setHelpOpen(false)} />
     </Screen>
   );
 }
@@ -450,6 +478,9 @@ interface Size {
   width: number;
   height: number;
 }
+
+/** The surface id of Trace Stroke for the audio telemetry (F-AUDIO-004 §3.14). */
+const TRACE_STROKE_AUDIO_SOURCE = 'trace-stroke';
 
 type HoyaTone = 'idle' | 'cheering' | 'thinking';
 

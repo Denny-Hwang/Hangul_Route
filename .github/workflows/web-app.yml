@@ -371,6 +371,10 @@ jobs:
             # Route tab, through the fixture bundle's level check hook; the spec's other groups run on
             # the release build.
             list route-tab -g "level check entry"
+            # F-AUDIO-004 (2026-10-17 learner audio pass): the story episode page, Culture notes, Trace a
+            # Word and the word cards never fail silently, through the fixture bundle's stories and hooks;
+            # the spec's Discover, Listen & Pick and presenter groups run on the release build.
+            list learner-audio -g "fixture bundle"
           } > "$RUNNER_TEMP/all-tests.txt"
           node ../../scripts/e2e-shard-list.mjs --shard "$SHARD" < "$RUNNER_TEMP/all-tests.txt" > "$RUNNER_TEMP/shard-tests.txt"
           # The list must select exactly one test per line (none lost, none doubled).

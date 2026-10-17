@@ -1,7 +1,8 @@
 import type { ListenPickRound, RomanizationMode } from '@hangul-route/content-schema';
 import type { Messages } from '@hangul-route/i18n';
-import type { PlayResult } from '../platform/audio';
+import type { PlayResult, PlaySpec } from '../platform/audio';
 import type { HostMode } from '../screens/minigames/host';
+import { koSpeech, promptKindOf } from './audio/ko-speech';
 
 /**
  * Listen & Pick flow (F-QUEST-002 §3.10): the reducer and view-models behind
@@ -18,6 +19,20 @@ import type { HostMode } from '../screens/minigames/host';
  * the scored one (the run store keeps later ones as retries, `first-try.ts`);
  * only the first touch in a 50 ms window counts (F-001 §3.4).
  */
+
+/** The surface id of Listen & Pick for the audio telemetry (`audio.fallback_shown`, F-AUDIO-004 §3.14). */
+export const LISTEN_PICK_AUDIO_SOURCE = 'listen-pick';
+
+/**
+ * What the round says (F-AUDIO-004 §3.5): `spokenKo ?? ko`, the recording when there is one, and
+ * the speech rate of what it is. A letter or syllable round (`lp:sym:`, `lp:syl:`) is a `sound`;
+ * any other round is read by its text (`promptKindOf`): a sentence is a `sentence`, else a `word`.
+ */
+export function listenPickSpeech(round: ListenPickRound): PlaySpec {
+  const sound = round.id.startsWith('lp:sym:') || round.id.startsWith('lp:syl:');
+  const kind = sound ? 'sound' : promptKindOf(round.prompt.spokenKo ?? round.prompt.ko);
+  return koSpeech(round.prompt, kind, LISTEN_PICK_AUDIO_SOURCE);
+}
 
 export const LISTEN_PICK_TIMING = {
   /** Wrong tap -> the prompt plays again. */
@@ -199,14 +214,16 @@ export interface PromptView {
  * its romanization (no gloss) as the no-sound fallback; the gloss once the
  * round resolved. The review gives no per-item feedback text, so it never
  * shows the gloss (it still shows the fallback text, so a missing voice does
- * not block the item).
+ * not block the item). `textFallback` is the prompt slot's `view.textShown`.
  */
-export function promptView(round: ListenPickRound, state: ListenPickFlowState, mode: HostMode): PromptView {
+export function promptView(round: ListenPickRound, state: ListenPickFlowState, mode: HostMode, textFallback = false): PromptView {
   const resolved = state.status === 'resolved' || state.status === 'done';
   const showGloss = resolved && mode !== 'review';
-  if (!state.textPrompt && !showGloss) return { showText: false, content: undefined };
+  // The prompt slot (F-AUDIO-004 §3.8) shows the text at once when sound is off or there is no Korean voice.
+  const showText = state.textPrompt || textFallback;
+  if (!showText && !showGloss) return { showText: false, content: undefined };
   return {
-    showText: state.textPrompt,
+    showText,
     content: {
       ko: round.prompt.ko,
       romanization: round.prompt.romanization,

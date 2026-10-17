@@ -26,10 +26,14 @@ import type { Messages } from '@hangul-route/i18n';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ScrollView, Text, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withSequence, withTiming } from 'react-native-reanimated';
+import { PromptPanel } from '../../components/PromptPanel';
+import { VoiceHelpSheet } from '../../components/VoiceHelpSheet';
+import { usePromptSlot, type PromptSlot } from '../../components/use-prompt-slot';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { useRomanizationMode } from '../../i18n/use-romanization-mode';
 import { hasPicture } from '../../logic/picture-ref';
 import {
+  DISCOVER_AUDIO_SOURCE,
   buildDiscover,
   pageRender,
   startDiscover,
@@ -42,7 +46,7 @@ import {
   type HearAction,
 } from '../../logic/stage1/discover-flow';
 import { clipRefsOf } from '../../logic/audio/clip-refs';
-import { playPrompt, stop as stopAudio, warmClips } from '../../platform/audio';
+import { hasClip, playPrompt, stop as stopAudio, warmClips } from '../../platform/audio';
 import { useReducedMotion } from '../../platform/motion';
 import { announceAndWait } from '../../platform/screen-reader';
 import { PICTURE_CONTEXT, PictureArt } from '../minigames/PictureArt';
@@ -55,7 +59,17 @@ import { PICTURE_CONTEXT, PictureArt } from '../minigames/PictureArt';
  * renders it and runs the effects.
  * Design: design/wireframes/quest/discover.md (S1, S2), design/components/SyllableBlock/spec.md;
  * the exchange page and its Read along: design/wireframes/quest/discover-sentences.md (S3).
+ * Each item card (and the exchange) is one prompt slot (F-AUDIO-004 §3.8, A-5b): the Korean is
+ * printed on the card, so a play that cannot sound shows the status panel with why and the one
+ * action (Turn sound on, Tap to hear, Try again), and leaving the step stops the voice.
  */
+
+/** A card's prompt slot, as the step reaches it to play one of the card's buttons. */
+interface CardSlot {
+  play: PromptSlot['play'];
+}
+/** The card an action id belongs to: `<item key>|sound`, `|name`, `|example` or `|line<n>`. */
+const cardKeyOf = (actionId: string): string => actionId.split('|')[0] ?? actionId;
 
 interface Props {
   pages: readonly DiscoverPage[];
@@ -112,12 +126,26 @@ export function DiscoverStep({ pages, hoyaLine, onDone }: Props): React.ReactEle
   const scrollRef = useRef<ScrollView | null>(null);
 
   const pauseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Leaving the step (Continue on the last page, Leave, Back) stops a word or sentence mid-way.
   useEffect(
     () => () => {
       if (pauseTimer.current !== null) clearTimeout(pauseTimer.current);
+      stopAudio();
     },
     [],
   );
+
+  // Each card's prompt slot, and the button it played last (its panel's action plays that one again).
+  const cardSlots = useRef(new Map<string, CardSlot>());
+  const lastPlayed = useRef(new Map<string, string>());
+  const registerSlot = useCallback((key: string, slot: CardSlot): (() => void) => {
+    cardSlots.current.set(key, slot);
+    return () => {
+      if (cardSlots.current.get(key) === slot) cardSlots.current.delete(key);
+    };
+  }, []);
+  const [helpOpen, setHelpOpen] = useState(false);
+  const openHelp = useCallback(() => setHelpOpen(true), []);
 
   /** Runs one effect; the returned promise settles when the next effect of the same batch may start. */
   const runEffect = useCallback(
@@ -139,7 +167,13 @@ export function DiscoverStep({ pages, hoyaLine, onDone }: Props): React.ReactEle
         case 'play': {
           const action = actions.get(effect.id);
           if (!action) return;
-          void playPrompt(action.spec).then((result) => dispatchRef.current({ type: 'audio', id: effect.id, result, ...(effect.run === undefined ? {} : { run: effect.run }) }));
+          const card = cardKeyOf(effect.id);
+          lastPlayed.current.set(card, effect.id);
+          const run = () => playPrompt({ ...action.spec, kind: action.kind, source: DISCOVER_AUDIO_SOURCE });
+          const slot = cardSlots.current.get(card);
+          void (slot ? slot.play(run) : run()).then((result) =>
+            dispatchRef.current({ type: 'audio', id: effect.id, result, ...(effect.run === undefined ? {} : { run: effect.run }) }),
+          );
           return;
         }
       }
@@ -177,6 +211,10 @@ export function DiscoverStep({ pages, hoyaLine, onDone }: Props): React.ReactEle
   }, [state.page]);
 
   const render = pageRender(model, state, romanizationMode, copy);
+  /** The card's panel action: play the button it played last again (the main Hear it before any). */
+  const replay = useCallback((card: string, fallbackId: string): void => {
+    dispatchRef.current({ type: 'hear', id: lastPlayed.current.get(card) ?? fallbackId });
+  }, []);
 
   return (
     <View style={{ flex: 1 }}>
@@ -217,10 +255,24 @@ export function DiscoverStep({ pages, hoyaLine, onDone }: Props): React.ReactEle
             <Spacer size="md" />
             <View key={state.page} style={{ gap: spacing.lg }}>
               {render.exchange ? (
-                <ExchangeCard render={render.exchange} dispatch={dispatch} copy={copy} m={m} scrollRef={scrollRef} />
+                <ExchangeCard
+                  render={render.exchange}
+                  dispatch={dispatch}
+                  copy={copy}
+                  m={m}
+                  scrollRef={scrollRef}
+                  audio={{ register: registerSlot, replay, onHelp: openHelp }}
+                />
               ) : null}
               {render.items.map((r) => (
-                <DiscoverItemCard key={r.item.key} render={r} dispatch={dispatch} copy={copy} a11y={m.a11y} />
+                <DiscoverItemCard
+                  key={r.item.key}
+                  render={r}
+                  dispatch={dispatch}
+                  copy={copy}
+                  a11y={m.a11y}
+                  audio={{ register: registerSlot, replay, onHelp: openHelp }}
+                />
               ))}
             </View>
           </>
@@ -238,8 +290,28 @@ export function DiscoverStep({ pages, hoyaLine, onDone }: Props): React.ReactEle
         />
         <Spacer size="lg" />
       </View>
+      <VoiceHelpSheet visible={helpOpen} onClose={() => setHelpOpen(false)} />
     </View>
   );
+}
+
+/** What a card needs to own its prompt slot: register it with the step, replay, open the voice help. */
+interface CardAudio {
+  register: (key: string, slot: CardSlot) => () => void;
+  replay: (card: string, fallbackId: string) => void;
+  onHelp: () => void;
+}
+
+/**
+ * One card's prompt slot (F-AUDIO-004 A-5b: the Korean is printed on the card, so the panel only says
+ * why there is no sound). The step plays the card's buttons through it.
+ */
+function useCardSlot(key: string, audioRef: string | undefined, audio: CardAudio): PromptSlot {
+  const slot = usePromptSlot({ source: DISCOVER_AUDIO_SOURCE, hasClip: hasClip(audioRef), textOnScreen: true });
+  const { play } = slot;
+  const { register } = audio;
+  useEffect(() => register(key, { play }), [register, key, play]);
+  return slot;
 }
 
 function HearButton({
@@ -290,13 +362,16 @@ function DiscoverItemCard({
   dispatch,
   copy,
   a11y,
+  audio,
 }: {
   render: DiscoverItemRender;
   dispatch: (event: DiscoverEvent) => void;
   copy: DiscoverMessages;
   a11y: Messages['a11y'];
+  audio: CardAudio;
 }): React.ReactElement {
   const { item } = render;
+  const slot = useCardSlot(item.key, item.hear.spec.audioRef, audio);
   const example = item.example;
   // The gloss each picture is given below, so "is there a picture" matches what PictureArt draws.
   const itemGloss = item.gloss ?? item.glyph;
@@ -378,6 +453,15 @@ function DiscoverItemCard({
             ))}
           </View>
         ) : null}
+        <View style={{ alignSelf: 'stretch' }}>
+          <PromptPanel
+            variant="status"
+            view={slot.view}
+            onAction={(action) => slot.act(action, () => audio.replay(item.key, item.hear.id))}
+            onHelp={audio.onHelp}
+            testID={`discover-sound-${item.key}`}
+          />
+        </View>
 
         {example ? (
           <View
@@ -480,16 +564,20 @@ function ExchangeCard({
   copy,
   m,
   scrollRef,
+  audio,
 }: {
   render: DiscoverExchangeRender;
   dispatch: (event: DiscoverEvent) => void;
   copy: DiscoverMessages;
   m: Messages;
   scrollRef: React.RefObject<ScrollView | null>;
+  audio: CardAudio;
 }): React.ReactElement {
   const ex = copy.exchange;
-  const status =
-    render.status === 'muted' ? m.learner.audio.soundIsOff : render.status === 'unavailable' ? m.learner.audio.noKoreanVoiceSentence : undefined;
+  const first = render.item.lines[0];
+  // One slot for the exchange: Read along and each line's own speaker. When a line cannot play, its panel
+  // says why (sound off, no Korean voice, a tap needed, a failure) with the one action; nothing stays lit.
+  const slot = useCardSlot(render.item.key, first?.hear.spec.audioRef, audio);
   return (
     <View style={{ gap: spacing.md }} testID={`discover-exchange-${render.item.key}`}>
       <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: spacing.md }}>
@@ -503,11 +591,13 @@ function ExchangeCard({
         />
         {render.heard ? <Pill tone="success" size="sm" label={copy.heard.pill} /> : null}
       </View>
-      {status ? (
-        <Body tone="secondary" weight="semibold" testID="discover-read-along-status">
-          {status}
-        </Body>
-      ) : null}
+      <PromptPanel
+        variant="status"
+        view={slot.view}
+        onAction={(action) => slot.act(action, () => audio.replay(render.item.key, first?.hear.id ?? ''))}
+        onHelp={audio.onHelp}
+        testID="discover-read-along-status"
+      />
       {/* The lit line, said politely; visually hidden (the line card carries the visible cues). */}
       <Text {...KOREAN_LINE_BREAK} aria-live="polite" accessibilityLiveRegion="polite" style={srOnly} testID="discover-read-along-live">
         {render.liveLine ?? ''}

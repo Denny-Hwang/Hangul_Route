@@ -19,6 +19,7 @@ import {
   sheetState,
   sparkLabel,
   speedAnswerEvent,
+  speedRoundCanPlay,
   speedSessionEvent,
 } from '../speed-round';
 import { initSession, reduce, type SessionConfig, type SpeedState } from '../speed-session';
@@ -150,6 +151,24 @@ describe('buildRound (§3.5: selectSpeedWords, then buildQuestions)', () => {
 
   it('no question at all (no picture resolves) is an empty round, never an error', () => {
     expect(buildRound(input(4, roundPlan(1, 'relaxed'), { canRender: () => false }))).toEqual([]);
+  });
+
+  it("with the voice list still unknown the round has its sound questions (speedRoundCanPlay, as the reader plays)", () => {
+    const unknown = { tts: { state: 'unknown' as const }, clips: false, unlocked: false };
+    const canPlay = speedRoundCanPlay(unknown, false);
+    expect(canPlay).toBe(true);
+    const questions = buildRound(input(4, roundPlan(1, 'relaxed'), { canPlay }));
+    expect(questions.some((q) => q.format === 'audio-to-image')).toBe(true);
+  });
+
+  it('speedRoundCanPlay: no sound only for no Korean voice and no clip, or sound off', () => {
+    const none = { tts: { state: 'none' as const, reason: 'no_korean_voice' as const }, clips: false, unlocked: true };
+    const ready = { tts: { state: 'ready' as const, voiceId: 'v', voiceName: 'Yuna', local: true, quality: 'enhanced' as const }, clips: false, unlocked: true };
+    expect(speedRoundCanPlay(none, false)).toBe(false);
+    expect(speedRoundCanPlay({ ...none, clips: true }, false)).toBe(true);
+    expect(speedRoundCanPlay(ready, false)).toBe(true);
+    expect(speedRoundCanPlay(ready, true)).toBe(false);
+    expect(speedRoundCanPlay({ tts: { state: 'unknown' }, clips: false, unlocked: false }, true)).toBe(false);
   });
 
   it('any other failure is not swallowed', () => {

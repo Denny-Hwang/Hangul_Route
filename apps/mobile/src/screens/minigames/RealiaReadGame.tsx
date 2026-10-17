@@ -42,6 +42,7 @@ import {
   type RealiaReadEvent,
   type RealiaReadState,
 } from '../../logic/realia-read-flow';
+import { koSpeech } from '../../logic/audio/ko-speech';
 import { playPrompt, stop } from '../../platform/audio';
 import { nudge, success, tapLight } from '../../platform/haptics';
 import { GameColumns } from './GameColumns';
@@ -110,12 +111,12 @@ export function RealiaReadGame({ scope, host, onBack }: Props): React.ReactEleme
       case 'play-line': {
         const entry = current?.realia.entries.find((e) => e.id === effect.entryId);
         // No voice: the line still shows its romanization (the reducer revealed it); nothing blocks.
-        if (entry) void playPrompt(lineSpeech(entry));
+        if (entry) void playPrompt({ ...lineSpeech(entry), kind: 'sentence', source: REALIA_AUDIO_SOURCE });
         return;
       }
       case 'play-option': {
         const option = current?.rounds[stateRef.current.roundIdx]?.options.find((o) => o.id === effect.optionId);
-        if (option?.text) void playPrompt({ text: option.text.spokenKo ?? option.text.ko, audioRef: option.text.audioRef });
+        if (option?.text) void playPrompt(koSpeech(option.text, 'sentence', REALIA_AUDIO_SOURCE));
         return;
       }
       case 'schedule-advance':
@@ -265,3 +266,6 @@ export function RealiaReadGame({ scope, host, onBack }: Props): React.ReactEleme
     </Screen>
   );
 }
+
+/** The surface id of Realia Read for the audio telemetry (F-AUDIO-004 §3.14). */
+const REALIA_AUDIO_SOURCE = 'realia-read';

@@ -1,5 +1,6 @@
 import type { ClockScale, RuntimeVocabItem, VocabProgress } from '@hangul-route/content-schema';
 import type { Messages } from '@hangul-route/i18n';
+import { canPlayKorean, type AudioCapability } from '../audio/capability';
 import { nudgeFor, type Nudge, type VocabSpeedCopy } from './nudges';
 import type { VocabEvent } from './progress';
 import { NotEnoughWords, buildQuestions, type VocabQuestion } from './question-builder';
@@ -55,6 +56,17 @@ export function roundPlan(levelOrder: RoundLevel | null, mode: SpeedMode): Round
 export function collectedWords(items: readonly RuntimeVocabItem[], progress: VocabProgress): RuntimeVocabItem[] {
   const known = new Set(progress.items.map((s) => s.id));
   return items.filter((item) => known.has(item.id));
+}
+
+/**
+ * Whether the round may ask sound questions (S7). While the voice list is still `unknown` it plays,
+ * as the story reader does (`useReaderAudio`): the first voice list often arrives after the start
+ * sheet, and a failed play falls back to text on the question itself. No sound only for no Korean
+ * voice and no clip, or sound switched off; the start sheet says so then (`copy.noSound`).
+ */
+export function speedRoundCanPlay(capability: AudioCapability, muted: boolean): boolean {
+  if (muted) return false;
+  return capability.tts.state === 'unknown' || canPlayKorean(capability);
 }
 
 /** §3.1: a round needs as many collected words as it has options; fewer is the learn-first card. */

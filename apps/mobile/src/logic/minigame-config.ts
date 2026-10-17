@@ -37,13 +37,17 @@ export interface MinigameScope {
   /** Match Sound: symbols asked at least once however the prompts fall (the quest's new symbols, F-QUEST-002 §3.4). */
   focusJamoIds?: string[];
   syllables?: Array<{ ko: string; romanization: string; jamoChars: string[]; jamoIds?: string[] }>;
-  cardPairs?: Array<{ ko: string; en: string; romanization?: string }>;
+  /** `spokenKo` / `audioRef` (F-AUDIO-004 §3.5) ride along when the content has them, so the pair is heard as recorded. */
+  cardPairs?: Array<{ ko: string; en: string; romanization?: string; spokenKo?: string; audioRef?: string }>;
   storySteps?: Array<{ id: string; labelEn: string; labelKo?: string; romanization?: string }>;
   dialogue?: Array<{
     npcKo: string;
     npcRomanization?: string;
     npcEn: string;
-    options: Array<{ ko: string; romanization?: string; en: string; isCorrect: boolean }>;
+    /** The line's spoken form and recording, when the content has them (F-AUDIO-004 §3.5). */
+    npcSpokenKo?: string;
+    npcAudioRef?: string;
+    options: Array<{ ko: string; romanization?: string; en: string; isCorrect: boolean; spokenKo?: string; audioRef?: string }>;
   }>;
   rounds?: number;
   /** Story minigames (story-read / story-check / story-sequence), from `storyScopeFor`. */

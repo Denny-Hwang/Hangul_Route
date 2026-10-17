@@ -2,8 +2,10 @@ import type { ListenPickRound } from '@hangul-route/content-schema';
 import { getMessages, pseudoLocalize, pseudoText } from '@hangul-route/i18n';
 import { describe, expect, it } from 'vitest';
 import {
+  LISTEN_PICK_AUDIO_SOURCE,
   LISTEN_PICK_TIMING,
   headerView as headerViewWith,
+  listenPickSpeech,
   optionColumns,
   optionView as optionViewWith,
   promptView,
@@ -344,6 +346,48 @@ describe('promptView', () => {
     const noSoundResolved = run(startFlow(2), [{ type: 'audio', round: 0, result: 'unavailable' }, tap('a', 100)]).state;
     expect(promptView(textRound, noSoundResolved, 'review').content?.gloss).toBeUndefined();
     expect(promptView(textRound, noSoundResolved, 'quest').content?.gloss).toBe('the letter giyeok');
+  });
+});
+
+describe('promptView: the prompt slot shows the text (F-AUDIO-004 §3.8)', () => {
+  it('shows the Korean as the fallback as soon as the slot shows its text, before any play result', () => {
+    expect(promptView(textRound, startFlow(2), 'quest', true)).toEqual({
+      showText: true,
+      content: { ko: '가', romanization: 'ga', gloss: undefined },
+    });
+    expect(promptView(textRound, startFlow(2), 'quest', false)).toEqual({ showText: false, content: undefined });
+  });
+});
+
+describe('listenPickSpeech: source and speech rate (F-AUDIO-004 §3.3)', () => {
+  const round = (id: string, ko: string, extra: Partial<ListenPickRound['prompt']> = {}): ListenPickRound => ({
+    id,
+    prompt: { ko, romanization: 'x', en: 'x', ...extra },
+    options: [
+      { id: 'a', text: { ko: '가', romanization: 'ga', en: 'a' } },
+      { id: 'b', text: { ko: '나', romanization: 'na', en: 'b' } },
+    ],
+    answerId: 'a',
+  });
+
+  it('a letter or syllable round is a sound, a sentence is a sentence, a word is a word', () => {
+    expect(listenPickSpeech(round('lp:sym:jamo:giyeok', '가')).kind).toBe('sound');
+    expect(listenPickSpeech(round('lp:syl:달', '달')).kind).toBe('sound');
+    expect(listenPickSpeech(round('lp:word:나무', '나무')).kind).toBe('word');
+    expect(listenPickSpeech(round('pic-gimbap', '김밥')).kind).toBe('word');
+    expect(listenPickSpeech(round('a1', '가방이에요.')).kind).toBe('sentence');
+    expect(listenPickSpeech(round('c1', '어디 가요?')).kind).toBe('sentence');
+  });
+
+  it('says the spoken form, keeps the recording and names the surface', () => {
+    expect(listenPickSpeech(round('lp:word:x', '숫자', { spokenKo: '숟짜', audioRef: 'audio/vocab/sutja.mp3' }))).toEqual({
+      text: '숟짜',
+      audioRef: 'audio/vocab/sutja.mp3',
+      kind: 'word',
+      source: 'listen-pick',
+    });
+    expect(LISTEN_PICK_AUDIO_SOURCE).toBe('listen-pick');
+    expect('audioRef' in listenPickSpeech(round('lp:word:x', '나무'))).toBe(false);
   });
 });
 

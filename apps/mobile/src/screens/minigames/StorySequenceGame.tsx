@@ -54,9 +54,9 @@ import {
   type SequenceState,
 } from '../../logic/story/sequence-player';
 import {
-  SEQUENCE_REPLAY_MS,
   SEQUENCE_WRONG_FLASH_MS,
   autoAdvanceDue,
+  replayAdvanceDelay,
   longestKoreanGlyphs,
   sequenceCardLabel,
   sequenceCardRomanization,
@@ -219,24 +219,48 @@ export function StorySequenceGame({ scope, onFinish, sequenceId = '', nonce }: P
     [],
   );
 
-  // Replay: speak the line of each card as it comes up (the text is always visible, so a silent browser loses nothing).
+  // Replay: speak the line of each card as it comes up (the text is always visible, so a silent browser loses
+  // nothing), at the sentence rate. The line's play is kept so the replay waits for it to end.
   const replayCard = state.phase === 'replay' ? cardById.get(state.solution[state.replayIndex] ?? '') : undefined;
+  const linePlay = useRef<{ index: number; startedAt: number; settled: Promise<void> } | null>(null);
+  const replayIndex = state.replayIndex;
   useEffect(() => {
-    if (!replayCard?.ko) return;
-    void playPrompt({
+    if (!replayCard?.ko) {
+      linePlay.current = null;
+      return;
+    }
+    const settled = playPrompt({
       text: replayCard.ko.spokenKo ?? replayCard.ko.ko,
       audioRef: replayCard.ko.audioRef,
+      kind: 'sentence',
       source: 'story-sequence',
-    });
+    }).then(
+      () => undefined,
+      () => undefined,
+    );
+    linePlay.current = { index: replayIndex, startedAt: Date.now(), settled };
+    // The index changes with the card; the card is what starts a line.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [replayCard]);
 
-  // Replay: move on by itself about every 2.5 s unless paused (never with reduced motion).
+  // Replay: move on by itself once the line has been said and a short gap has passed, never sooner than the
+  // replay interval from the line's start, unless paused (never with reduced motion).
   const advance = autoAdvanceDue(state, reducedMotion);
   useEffect(() => {
     if (!advance) return undefined;
-    const timer = setTimeout(() => dispatch({ type: 'replayNext' }), SEQUENCE_REPLAY_MS);
-    return () => clearTimeout(timer);
-  }, [advance, state.replayIndex, dispatch]);
+    let live = true;
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    const line = linePlay.current?.index === replayIndex ? linePlay.current : null;
+    const startedAt = line?.startedAt ?? Date.now();
+    void (line?.settled ?? Promise.resolve()).then(() => {
+      if (!live) return;
+      timer = setTimeout(() => dispatch({ type: 'replayNext' }), replayAdvanceDelay(Date.now() - startedAt));
+    });
+    return () => {
+      live = false;
+      if (timer) clearTimeout(timer);
+    };
+  }, [advance, replayIndex, dispatch]);
 
   const total = state.solution.length;
   const placedCount = state.placed.length;

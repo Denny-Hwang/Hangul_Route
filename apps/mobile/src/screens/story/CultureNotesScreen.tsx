@@ -17,6 +17,8 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, ScrollView, View, type LayoutChangeEvent } from 'react-native';
 import { CardArt } from '../../components/CardArt';
+import { PromptPanel } from '../../components/PromptPanel';
+import { VoiceHelpSheet } from '../../components/VoiceHelpSheet';
 import { usePromptSlot } from '../../components/use-prompt-slot';
 import { cardById, themeByKey } from '../../content';
 import { storiesAll } from '../../content/stories';
@@ -38,7 +40,7 @@ import { librarySectionTabs } from '../../logic/story/library-sections';
 import { shelfCopy } from '../../logic/story/shelf-copy';
 import { defaultStoryIndex } from '../../logic/story/story-index';
 import type { RootStackParamList } from '../../navigation/types';
-import { playPrompt, stop } from '../../platform/audio';
+import { playPrompt, stop, type PlaySpec } from '../../platform/audio';
 import { track } from '../../platform/telemetry';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
@@ -139,14 +141,35 @@ function CultureNotesContent({
   };
 
   // The term speakers (the card-detail pattern: the term is printed, so the panel only explains a silence).
+  // The status panel sits under the term that was tapped last; its action plays that term again.
   const slot = usePromptSlot({ source: CULTURE_NOTES_AUDIO_SOURCE, textOnScreen: true });
   useEffect(() => () => stop(), []);
+  const [helpOpen, setHelpOpen] = useState(false);
+  const [soundAt, setSoundAt] = useState<string | null>(null);
+  const lastSpec = useRef<PlaySpec | null>(null);
   const [revealed, setRevealed] = useState<ReadonlySet<string>>(() => new Set());
   const hear = (n: FoundNote): void => {
-    void slot.play(() => playPrompt(noteTermSpeech(n)));
+    const spec = noteTermSpeech(n);
+    lastSpec.current = spec;
+    setSoundAt(n.note.id);
+    void slot.play(() => playPrompt(spec));
     // Hearing the term shows how to say it (hide-until-tap, D2).
     setRevealed((r) => (r.has(n.note.id) ? r : new Set([...r, n.note.id])));
   };
+  const replayLast = (): void => {
+    const spec = lastSpec.current;
+    if (spec) void slot.play(() => playPrompt(spec));
+  };
+  /** A note's panel: quiet (nothing shown, the live region kept) unless its term was tapped last. */
+  const soundPanel = (noteId: string): React.ReactElement => (
+    <PromptPanel
+      variant="status"
+      view={soundAt === noteId ? slot.view : { ...slot.view, statusShown: false }}
+      onAction={(action) => slot.act(action, replayLast)}
+      onHelp={() => setHelpOpen(true)}
+      testID={`culture-note-sound-${noteId}`}
+    />
+  );
 
   // Scrolling to a deep-linked note: group offsets in the scroll content, each group's list offset in
   // its group (under the heading row), note offsets in their list.
@@ -239,6 +262,7 @@ function CultureNotesContent({
                         revealed={revealed}
                         onToggle={() => toggle(n)}
                         onHear={() => hear(n)}
+                        soundPanel={soundPanel(n.note.id)}
                         // Pushed: navigate would pop back to an episode page already in the stack.
                         onOpenStory={actions.storyLinks ? () => navigation.push('EpisodeDetail', { episodeId: n.episodeId }) : undefined}
                       />
@@ -250,6 +274,7 @@ function CultureNotesContent({
           })
         )}
       </ScrollView>
+      <VoiceHelpSheet visible={helpOpen} onClose={() => setHelpOpen(false)} />
     </Screen>
   );
 }
@@ -261,6 +286,7 @@ function NoteCard({
   revealed,
   onToggle,
   onHear,
+  soundPanel,
   onOpenStory,
 }: {
   note: FoundNote;
@@ -269,6 +295,8 @@ function NoteCard({
   revealed: ReadonlySet<string>;
   onToggle: () => void;
   onHear: () => void;
+  /** The screen's status panel, under this note's term (shown when this term was tapped last). */
+  soundPanel: React.ReactElement;
   /** "From the story"; not drawn over a running quest. */
   onOpenStory: (() => void) | undefined;
 }): React.ReactElement {
@@ -301,6 +329,7 @@ function NoteCard({
         </View>
         <SpeakerButton label={chip.hearLabel} onPress={onHear} testID={`culture-note-hear-${id}`} />
       </View>
+      {soundPanel}
       {card ? (
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
           <CardArt card={card} size={CARD_SIZE} accessibilityLabel={messages.a11y.cardArt(cardTitle)} style={{ borderRadius: radii.sm }} />
