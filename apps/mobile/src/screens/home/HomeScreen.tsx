@@ -842,7 +842,7 @@ export function HomeScreen(): React.ReactElement {
         <Card padding="md" tone="sunken">
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
             <View style={{ flex: 1 }}>
-              <Body weight="semibold">{homeworkCardTitle(snap?.homework) === 'review' ? m.learner.home.homework.reviewTitle : m.learner.home.homework.title}</Body>
+              <Body weight="semibold">{homeworkCardTitle(snap?.homework, profile?.id) === 'review' ? m.learner.home.homework.reviewTitle : m.learner.home.homework.title}</Body>
               <Caption tone="muted">
                 {homeworkDue === 0 ? copy.homeReviewsIdle : showsTodayCount(homeworkDue) ? m.learner.home.homework.due(homeworkDue) : m.learner.home.homework.dueMany}
               </Caption>

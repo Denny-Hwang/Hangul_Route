@@ -124,7 +124,14 @@ export function recentStarsOf(quests: readonly { stars: number }[]): 1 | 2 | 3 |
   return null;
 }
 
-/** The Homework card's title: Homework while a grown-up or class assignment is open, Review when nothing is assigned. */
-export function homeworkCardTitle(assignments: readonly { completedAt?: string | undefined }[] | undefined): 'homework' | 'review' {
-  return (assignments ?? []).some((a) => !a.completedAt) ? 'homework' : 'review';
+/**
+ * The Homework card's title: Homework while a grown-up's or a class's assignment for this learner is open, Review
+ * otherwise. The learner's own weekly plan (`assignedBy: 'system'`, `ASSIGNED_BY.self`) is not homework, and another
+ * profile's rows never count.
+ */
+export function homeworkCardTitle(
+  assignments: readonly { completedAt?: string | undefined; profileId: string; assignedBy: 'parent' | 'teacher' | 'system' }[] | undefined,
+  profileId: string | undefined,
+): 'homework' | 'review' {
+  return (assignments ?? []).some((a) => !a.completedAt && a.profileId === profileId && a.assignedBy !== 'system') ? 'homework' : 'review';
 }

@@ -124,10 +124,21 @@ describe('the streak pill, the tip, Recent stars and the Homework card', () => {
     expect(recentStarsOf([{ stars: 1 }, { stars: 3 }])).toBe(3);
   });
 
-  it('the Homework card says Review when nothing is assigned, Homework while an assignment is open', () => {
-    expect(homeworkCardTitle(undefined)).toBe('review');
-    expect(homeworkCardTitle([])).toBe('review');
-    expect(homeworkCardTitle([{ completedAt: '2026-10-15T00:00:00Z' }])).toBe('review');
-    expect(homeworkCardTitle([{ completedAt: '2026-10-15T00:00:00Z' }, {}])).toBe('homework');
+  it('the Homework card says Review when nothing is assigned, Homework while a grown-up or class assignment is open', () => {
+    const me = 'profile:mina';
+    expect(homeworkCardTitle(undefined, me)).toBe('review');
+    expect(homeworkCardTitle([], me)).toBe('review');
+    expect(homeworkCardTitle([{ profileId: me, assignedBy: 'teacher', completedAt: '2026-10-15T00:00:00Z' }], me)).toBe('review');
+    expect(homeworkCardTitle([{ profileId: me, assignedBy: 'teacher', completedAt: '2026-10-15T00:00:00Z' }, { profileId: me, assignedBy: 'teacher' }], me)).toBe('homework');
+    expect(homeworkCardTitle([{ profileId: me, assignedBy: 'parent' }], me)).toBe('homework');
+  });
+
+  it("the learner's own weekly plan is not homework, and another profile's rows never count", () => {
+    const me = 'profile:mina';
+    // ASSIGNED_BY.self: the learner's own plan items.
+    expect(homeworkCardTitle([{ profileId: me, assignedBy: 'system' }, { profileId: me, assignedBy: 'system' }], me)).toBe('review');
+    expect(homeworkCardTitle([{ profileId: 'profile:jun', assignedBy: 'teacher' }], me)).toBe('review');
+    expect(homeworkCardTitle([{ profileId: me, assignedBy: 'system' }, { profileId: me, assignedBy: 'teacher' }], me)).toBe('homework');
+    expect(homeworkCardTitle([{ profileId: me, assignedBy: 'teacher' }], undefined)).toBe('review');
   });
 });
