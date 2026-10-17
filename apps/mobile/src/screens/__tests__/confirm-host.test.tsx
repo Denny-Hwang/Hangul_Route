@@ -55,6 +55,28 @@ describe('ConfirmHost (the web confirm step)', () => {
     await unmount(renderer);
   });
 
+  it('each question is answered once: a second press on the same sheet does not answer the question behind it', async () => {
+    const renderer = await render(<ConfirmHost />);
+    let first: Promise<boolean> | null = null;
+    let second: Promise<boolean> | null = null;
+    await act(async () => {
+      first = dialog.confirm({ title: 'A?', confirmLabel: 'Yes A', cancelLabel: 'No' });
+      second = dialog.confirm({ title: 'B?', confirmLabel: 'Yes B', cancelLabel: 'No' });
+    });
+    const sheetA = sheetOf(renderer);
+    // A double tap on A's confirm: the first press answers A, the second (A's handler again) answers nothing.
+    await act(async () => {
+      sheetA.onConfirm();
+      sheetA.onConfirm();
+      sheetA.onCancel();
+    });
+    await expect(first).resolves.toBe(true);
+    expect(sheetOf(renderer)).toMatchObject({ visible: true, title: 'B?' });
+    await act(async () => sheetOf(renderer).onCancel());
+    await expect(second).resolves.toBe(false);
+    await unmount(renderer);
+  });
+
   it('one Escape press answers only the question it was pressed on: the next one waits for its own answer', async () => {
     const keydown: ((event: { key?: string; repeat?: boolean; stopPropagation?: () => void }) => void)[] = [];
     vi.stubGlobal('document', {

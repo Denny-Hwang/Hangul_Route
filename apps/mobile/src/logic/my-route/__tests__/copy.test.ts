@@ -176,7 +176,7 @@ describe('stage words, captions and tags (sections 3.3, 3.11)', () => {
     expect(stageStateWord(row(explored, 'stage2'), self)).toBe('Explored');
     expect(stageCaptions(row(explored, 'stage2'), self)).toEqual(['You explored everything that is open right now']);
     expect(stageCaptions(row(explored, 'stage2'), grownup)).toEqual(['Sam explored everything that is open right now']);
-    expect(stageCaptions(row(model([]), 'stage1'), grownup)).toEqual(['Ready when Sam is']);
+    expect(stageCaptions(row(model([]), 'stage1'), grownup)).toEqual(['Not started yet']);
     expect(stageTags(row(model([]), 'stage1'), grownup)).toEqual(['Sam is here']);
   });
 
@@ -264,7 +264,7 @@ describe('the other lines', () => {
     ]);
     expect(skillCopy(m.skills[0] as MyRouteModel['skills'][number], grownup)).toEqual({ label: 'Read', detail: 'In 4 quests Sam finished' });
     expect(skillCopy({ skill: 'write', marks: 0, nextReachable: true, quests: 0 }, self)).toEqual({ label: 'Write', detail: 'Ready when you are' });
-    expect(skillCopy({ skill: 'listen', marks: 0, nextReachable: true, quests: 0 }, grownup)).toEqual({ label: 'Listen', detail: 'Ready when Sam is' });
+    expect(skillCopy({ skill: 'listen', marks: 0, nextReachable: true, quests: 0 }, grownup)).toEqual({ label: 'Listen', detail: 'Not started yet' });
   });
 
   it('grown-up only: the skills note, the tiles line and the viewing line', () => {
@@ -747,7 +747,7 @@ describe('the goal tag and the goal pips in words (sections 4.3 and 10, LR-3b)',
     expect(goalPipsWord(row(model(APPENDIX_C), 'stage1').pips, self)).toBe('Some quests done, more are ready');
     expect(goalPipsWord(row(model(STAGE1_8), 'stage1').pips, self)).toBe('Every quest here is done');
     expect(goalPipsWord(row(model([], { route: seed(STAGE1_8) }), 'stage1').pips, self)).toBe('Every quest here is done');
-    expect(goalPipsWord(row(model([]), 'stage1').pips, grownup)).toBe('Ready when Sam is');
+    expect(goalPipsWord(row(model([]), 'stage1').pips, grownup)).toBe('Not started yet');
   });
 
   it('never says "ready" when nothing is: no quest pips, or no open or new pip left', () => {

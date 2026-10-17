@@ -1,7 +1,7 @@
 import type { BrowserContext, Page, Route } from '@playwright/test';
 import { CONSOLE_SESSION_KEY, FAMILY_LIFETIME_LEARNERS, SHELL_DB, SHELL_KEYS, SHELL_STORE, UNLOCK_SESSION_KEY, type BillingSummary } from '@hangul-route/content-schema';
 import { expect, test } from './fixtures';
-import { onboardChild, onboardSelf, readStored, unlockWithPin, headerBack } from './helpers';
+import { onboardChild, onboardSelf, openForGrownUps, readStored, unlockWithPin, headerBack } from './helpers';
 
 /**
  * F-BILL-002 B-11 (section 11, `plan-status.spec.ts`): the learner Plan screen and its hand-off to the real billing
@@ -128,6 +128,7 @@ async function openProfile(page: Page, name: string): Promise<void> {
     await guide.getByRole('button', { name: 'Not now' }).click();
   });
   await page.getByRole('button', { name: 'Profile and settings' }).click();
+  await openForGrownUps(page);
   await expect(page.getByRole('heading', { name: 'Profiles & settings' })).toBeVisible();
 }
 

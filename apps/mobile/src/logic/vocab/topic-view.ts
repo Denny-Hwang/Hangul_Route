@@ -52,7 +52,7 @@ export interface TopicTileView {
   tint: VocabTopic['tint'];
   total: number;
   collected: number;
-  /** "5 collected": a plain count; "Not open yet" on a locked tile (gating on only). */
+  /** "5 collected": a plain count; "New" before the first word (owner request 2026-10-16, item 8); "Not open yet" on a locked tile (gating on only). */
   countLine: string;
   /** "Food. 5 words collected."; "Food. Not open yet." on a locked tile. */
   accessibilityLabel: string;
@@ -79,8 +79,13 @@ export function topicTileView(i: TopicTileInput): TopicTileView {
     total: counts.total,
     collected: counts.collected,
     // A locked tile (gating on only, D5) says "Not open yet" (F-ENT-003 OD-6) and nothing else about progress.
-    countLine: i.locked ? i.copy.topics.locked : i.copy.topics.collected(counts.collected),
-    accessibilityLabel: i.locked ? i.copy.topics.lockedA11y(i.topic.titleEn) : i.copy.topics.tileA11y(i.topic.titleEn, counts.collected),
+    // A topic with no word yet says New, never "0 collected" (owner request 2026-10-16, item 8).
+    countLine: i.locked ? i.copy.topics.locked : counts.collected === 0 ? i.copy.topics.fresh : i.copy.topics.collected(counts.collected),
+    accessibilityLabel: i.locked
+      ? i.copy.topics.lockedA11y(i.topic.titleEn)
+      : counts.collected === 0
+        ? i.copy.topics.freshA11y(i.topic.titleEn)
+        : i.copy.topics.tileA11y(i.topic.titleEn, counts.collected),
     locked: i.locked,
   };
 }

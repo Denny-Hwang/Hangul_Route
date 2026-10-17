@@ -1,7 +1,7 @@
 import type { Page } from '@playwright/test';
 import { getMessages } from '@hangul-route/i18n';
 import { expect, test } from './fixtures';
-import { completeChildForm, completeSelfForm, readStored, unlockWithPin, waitForSaved, passPlacementLanguage, headerClose } from './helpers';
+import { completeChildForm, completeSelfForm, readStored, seedStored, unlockWithPin, waitForSaved, passPlacementLanguage, headerClose } from './helpers';
 import { shot } from './shots';
 import { controlsPastEdge, expectNoHorizontalOverflow } from './viewport';
 
@@ -88,6 +88,18 @@ async function selfToFork(page: Page, name: string, readingLevel?: string): Prom
   await page.goto('/');
   await page.getByRole('button', { name: START }).click();
   await completeSelfForm(page, { name, levelCheck: 'stop', ...(readingLevel ? { readingLevel } : {}) });
+}
+
+/**
+ * After "I am new to Korean" the Home card waits for three quests (owner request 2026-10-16, item 8): Home shows no
+ * card right away. The decline is then cleared (a profile from before the fork, which Home still offers the card),
+ * so the card's own behaviour can be checked; `seedStored` reloads Home.
+ */
+async function expectNoCardThenForgetDecline(page: Page, id: string, name: string): Promise<void> {
+  await expect(page.getByText(hi(name))).toBeVisible();
+  await expect(page.getByTestId('home-level-check')).toHaveCount(0);
+  await seedStored(page, `placement-ui:${id}`, {});
+  await expect(page.getByText(hi(name))).toBeVisible();
 }
 
 async function activeProfileId(page: Page): Promise<string> {
@@ -307,7 +319,7 @@ test.describe('the level check end to end (release build, flag on by default)', 
     const id = await activeProfileId(page);
     expect(await readStored<{ declinedAt?: string }>(page, `placement-ui:${id}`)).toMatchObject({ declinedAt: expect.any(String) });
     await page.goto('/');
-    await expect(page.getByText(hi('Lee'))).toBeVisible();
+    await expectNoCardThenForgetDecline(page, id, 'Lee');
     await closeInstallGuide(page);
 
     const card = page.getByTestId('home-level-check');
@@ -343,7 +355,7 @@ test.describe('the level check end to end (release build, flag on by default)', 
     await completeSelfForm(page, { name: 'Kim', startJourney: false });
     const id = await activeProfileId(page);
     await page.goto('/');
-    await expect(page.getByText(hi('Kim'))).toBeVisible();
+    await expectNoCardThenForgetDecline(page, id, 'Kim');
     await closeInstallGuide(page);
     await page.getByTestId('home-level-check-not-now').click();
     await expect(page.getByTestId('home-level-check')).toHaveCount(0);
@@ -358,6 +370,9 @@ test.describe('the level check end to end (release build, flag on by default)', 
     await page.getByRole('button', { name: START }).click();
     await completeSelfForm(page, { name: 'Ana', startJourney: false });
     const id = await activeProfileId(page);
+    // The decline keeps the card away (owner request 2026-10-16, item 8): clear it so the card shows (seedStored reloads).
+    await page.goto('/');
+    await expectNoCardThenForgetDecline(page, id, 'Ana');
     await expect
       .poll(
         () =>
@@ -419,8 +434,9 @@ test.describe('the level check end to end (release build, flag on by default)', 
       await page.goto('/');
       await page.getByRole('button', { name: START }).click();
       await completeSelfForm(page, { name: 'Yu', startJourney: false });
+      const id = await activeProfileId(page);
       await page.goto('/');
-      await expect(page.getByText(hi('Yu'))).toBeVisible();
+      await expectNoCardThenForgetDecline(page, id, 'Yu');
       await closeInstallGuide(page);
       const card = page.getByTestId('home-level-check');
       await expect(card).toBeVisible();

@@ -118,7 +118,7 @@ describe('dashboardRowView: the three mini rows', () => {
     const v = row(model([]));
     for (const s of v.skills) {
       expect(s.marks).toEqual([]);
-      expect(s.detail).toBe('Ready when Sam is');
+      expect(s.detail).toBe('Not started yet');
     }
   });
 

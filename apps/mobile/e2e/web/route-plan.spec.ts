@@ -62,9 +62,9 @@ async function selfLearnerWithAQuest(page: Page, name: string): Promise<string> 
   await seedStored(page, `progress:${profileId}`, snapshotWithOneQuest(profileId));
   await expect(page.getByText(`Hi, ${name}!`)).toBeVisible();
   await closeInstallGuide(page);
-  // The level-check card holds Home's one quiet slot while it is eligible (F-PLC-001 section 3.10, on since P-10);
-  // its Not now hands the slot to the weekly plan.
-  await page.getByTestId('home-level-check-not-now').click();
+  // After "I am new to Korean" the level-check card waits for three quests (owner request 2026-10-16, item 8), so
+  // Home's quiet slot is the weekly plan's already.
+  await expect(page.getByTestId('home-level-check')).toHaveCount(0);
   return profileId;
 }
 
@@ -246,8 +246,9 @@ test.describe('weekly plan set-up, preview and overview (flag on)', () => {
     await seedStored(page, `progress:${profileId}`, snapshotWithOneQuest(profileId));
     await expect(page.getByText('Hi, Dani!')).toBeVisible();
     await closeInstallGuide(page);
-    // Not now on the level-check card leaves Home's quiet slot to the plan (F-PLC-001 section 3.10).
-    await page.getByTestId('home-level-check-not-now').click();
+    // After "I am new to Korean" the level-check card waits for three quests (owner request 2026-10-16, item 8), so
+    // Home's quiet slot is the weekly plan's already.
+    await expect(page.getByTestId('home-level-check')).toHaveCount(0);
     // The grown-up makes the plan through the gate.
     await page.getByRole('button', { name: /profile/i }).first().click();
     await page.getByTestId('profile-plan-row').click();

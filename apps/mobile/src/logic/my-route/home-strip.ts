@@ -30,6 +30,11 @@ export interface HomeStripView {
   title: string;
   here: string;
   goal: string | null;
+  /**
+   * The goal comes from a weekly plan (a class, school, family or the learner's own), not Hoya's default: Home's
+   * Next lesson hero shows the goal line only then (AMENDMENTS-DISPLAY-NAV section 9.1, "when a goal source exists").
+   */
+  goalFromPlan: boolean;
   week: string | null;
   /** Earned and open quest pips, coming-later cell pips, then the quests that joined later. */
   groups: Pip[][];
@@ -63,6 +68,7 @@ export function homeStripView(i: HomeStripInput): HomeStripView {
     title: strip.title,
     here: hereLine,
     goal,
+    goalFromPlan: goal !== null && i.model.goal !== null && i.model.goal.from !== 'default',
     week,
     groups: stageGroups(here),
     segments: i.model.stages.map((s) => ({ stage: s.stage, order: s.order, state: s.state, here: s.here })),

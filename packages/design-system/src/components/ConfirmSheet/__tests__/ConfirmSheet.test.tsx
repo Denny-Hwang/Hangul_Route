@@ -1,7 +1,7 @@
 import React from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import { typeScale } from '../../../text-size';
-import { borderWidth, colors, layout as tokensLayout, touchTarget } from '../../../tokens';
+import { borderWidth, colors, layout as tokensLayout, spacing, touchTarget } from '../../../tokens';
 import { ConfirmSheet } from '../ConfirmSheet';
 import { actionStyle, actionTextStyle, actionsStyle, backdropStyle, sheetStyle } from '../style';
 import type { ConfirmSheetProps } from '../types';
@@ -14,7 +14,9 @@ const platform = vi.hoisted(() => ({ OS: 'web' }));
 const layout = vi.hoisted(() => ({ width: 'compact' as 'compact' | 'regular' }));
 const effects = vi.hoisted(() => [] as (() => void | (() => void))[]);
 const refs = vi.hoisted(() => ({ store: [] as { current: unknown }[], at: 0 }));
+const safeArea = vi.hoisted(() => ({ insets: null as { top: number; right: number; bottom: number; left: number } | null }));
 vi.mock('react-native', () => ({ Modal: 'Modal', Platform: platform, Pressable: 'Pressable', Text: 'Text', View: 'View' }));
+vi.mock('react-native-safe-area-context', () => ({ SafeAreaInsetsContext: { name: 'insets' } }));
 vi.mock('../../Heading', () => ({ Body: 'Body', Heading: 'Heading' }));
 vi.mock('../../Layout', () => ({ useLayoutClass: () => ({ width: layout.width }) }));
 vi.mock('../../TextSize', async () => {
@@ -25,6 +27,7 @@ vi.mock('react', async (importOriginal) => {
   const actual = await importOriginal<typeof import('react')>();
   const hooks = {
     useId: (): string => ':r2:',
+    useContext: (): unknown => safeArea.insets,
     useEffect: (fn: () => void | (() => void)): void => {
       effects.push(fn);
     },
@@ -177,6 +180,19 @@ describe('ConfirmSheet', () => {
     expect(effects[0]!()).toBeUndefined();
     platform.OS = 'web';
     vi.unstubAllGlobals();
+  });
+
+  it('the bottom sheet clears the home indicator (the safe-area bottom inset); the centred dialog needs none', () => {
+    expect(sheetStyle(false, 34)).toMatchObject({ paddingBottom: spacing.xl + 34 });
+    expect(sheetStyle(true, 34)).toMatchObject({ paddingBottom: spacing.xl });
+    safeArea.insets = { top: 47, right: 0, bottom: 34, left: 0 };
+    expect((byTestId(render(props()), 'confirm-sheet')!.props.style as Record<string, unknown>).paddingBottom).toBe(spacing.xl + 34);
+    layout.width = 'regular';
+    expect((byTestId(render(props()), 'confirm-sheet')!.props.style as Record<string, unknown>).paddingBottom).toBe(spacing.xl);
+    layout.width = 'compact';
+    // No provider: no inset.
+    safeArea.insets = null;
+    expect((byTestId(render(props()), 'confirm-sheet')!.props.style as Record<string, unknown>).paddingBottom).toBe(spacing.xl);
   });
 
   it('the dialog from the regular class lays the buttons in one row', () => {

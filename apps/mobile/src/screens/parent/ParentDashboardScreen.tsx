@@ -57,7 +57,7 @@ export function ParentDashboardScreen({ navigation, route }: Props): React.React
   const profiles = useProfileStore((s) => s.profiles);
   const byProfile = useProgressStore((s) => s.byProfile);
   const parentGateOpenedAt = useUiStore((s) => s.parentGateOpenedAt);
-  const { opensDirectly } = useAudience();
+  const { opensDirectly, audience, copy } = useAudience();
 
   // See report (F-REPORT-001 section 3.9, RP-9): straight to the report while the grown-up gate opens directly,
   // else through the PIN screen when the 15-minute session has lapsed.
@@ -90,7 +90,13 @@ export function ParentDashboardScreen({ navigation, route }: Props): React.React
   return (
     <Screen tone="canvas" scrollable>
       <View>
-        <Heading level="title">{m.title}</Heading>
+        {/* One name for the Profile row, the PIN title and this page (owner request 2026-10-16, item 8), the persona under it. */}
+        <Heading level="title">{copy.zoneLabel}</Heading>
+        {audience === 'family' ? (
+          <Body tone="secondary" weight="semibold" testID="dashboard-persona">
+            {m.persona}
+          </Body>
+        ) : null}
         <Caption tone="muted">{m.readOnly}</Caption>
       </View>
 

@@ -426,7 +426,7 @@ export interface RouteCardExtra {
  * The goal pips in words, without digits: none filled, some, or every quest of
  * the stage. Known pips count as filled; only `open` and `new` pips count as
  * ready, so the words never promise a quest that is not open yet. About a
- * child, "none" reads "Ready when Sam is" (the other words never say "you").
+ * child, "none" reads "Not started yet" (the other words never say "you").
  * Null when the words would not be true: a stage with no quest pips, or none
  * filled and none ready.
  */

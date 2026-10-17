@@ -119,6 +119,7 @@ export const REPORT_CSS = `
 .hr-report-horizon{color:${colors.text.secondary}}
 .hr-report-section{display:flex;flex-direction:column;gap:${rem(spacing.sm)}}
 .hr-report-section h2{font-size:${rem(typography.size.bodyLg)};font-weight:${typography.weight.bold};line-height:${typography.leading.tight}}
+.hr-report-scope{margin:0;color:${colors.text.secondary};font-size:${rem(typography.size.bodySm)}}
 .hr-report-insights{display:flex;flex-direction:column;gap:${rem(spacing.sm)}}
 .hr-report-insights>li{display:flex;flex-wrap:wrap;align-items:center;column-gap:${rem(spacing.md)};row-gap:${rem(spacing.xs)};padding-left:${rem(spacing.lg)}}
 .hr-report-insight-text{position:relative;flex:1 1 ${INSIGHT_TEXT_MIN};min-width:0;display:flex;flex-direction:column;gap:${rem(spacing.xxs)}}
@@ -765,6 +766,9 @@ export function ReportThisPeriodBlock({ block, month }: { block: ReportThisPerio
   return (
     <section className="hr-report-section" data-testid="report-this-period">
       <h2>{block.heading}</h2>
+      <p className="hr-report-scope" data-testid="report-scope">
+        {block.scope}
+      </p>
       {block.figures && block.figures.length > 0 ? (
         <dl className="hr-report-figures">
           {block.figures.map((figure) => (

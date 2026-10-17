@@ -4,7 +4,7 @@ import { LESSON_EPISODES } from '../../src/content/__generated__/lessons-index';
 import { strokesForJamo } from '../../src/content/jamo-strokes';
 import { placeWordStrokes } from '../../src/logic/trace-word/block-strokes';
 import { expect, test } from './fixtures';
-import { completeChildForm, journeyCellName, keepSidewaysIfAsked, passDiscover, playCheckByIds, waitForNextListenPickRound, headerClose } from './helpers';
+import { completeChildForm, journeyCellName, keepSidewaysIfAsked, openGrownUpZone, passDiscover, playCheckByIds, readStored, unlockWithPin, waitForNextListenPickRound, headerClose } from './helpers';
 import { shot } from './shots';
 
 /**
@@ -12,7 +12,9 @@ import { shot } from './shots';
  * on the release bundle, offline-capable, a shipped upper-stage lesson cell opens
  * from the Journey grid, one of its quests plays to the reward step, and the
  * Learning Route gains the cell's day. Every cell in the generated lesson index
- * must have an entry here, so a cell cannot ship without its e2e path.
+ * must have an entry here, so a cell cannot ship without its e2e path. The stage trail is on the grown-up's
+ * read-only Learning Route page since the owner decision of 2026-10-17 (the learner's Route tab lists the next
+ * lessons), so the day is read there (`openRouteMap`), where a lesson group is a labelled row rather than a button.
  */
 
 interface UpperCell {
@@ -206,12 +208,26 @@ async function playTasteQ1(
   await page.screenshot({ path: test.info().outputPath(`${shot}-q1-results.png`), fullPage: true });
 }
 
-/** The Learning Route tab: the cell's stage row, opened, lists the cell by its title. */
+/**
+ * The learner's Learning Route with its stage trail: the grown-up's read-only page (Profile, For grown-ups, the
+ * Grown-up area behind the PIN, the learner's Learning Route row). The learner's own Route tab shows the next lessons
+ * since the owner decision of 2026-10-17; the trail and its days are on this page.
+ */
+async function openRouteMap(page: Page): Promise<void> {
+  const id = (await readStored<Array<{ id: string }>>(page, 'profiles'))?.[0]?.id ?? '';
+  await openGrownUpZone(page, 'Dami');
+  await unlockWithPin(page);
+  await page.getByTestId(`dashboard-route-${id}-open`).click();
+  await expect(page.getByTestId('my-route-screen')).toBeVisible();
+}
+
+/** The Learning Route's trail: the cell's stage row, opened, lists the cell by its title. */
 async function expectCellOnRoute(page: Page, stage: number, title: string): Promise<void> {
-  await page.getByRole('tablist').getByRole('link', { name: 'Learning Route' }).click();
+  await openRouteMap(page);
   const row = page.getByTestId(`my-route-stage-${stage}`);
   await expect(row).toBeVisible();
-  const cell = row.getByRole('button', { name: new RegExp(`: ${title.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\.`) }).first();
+  // On the grown-up page a lesson group is a labelled row, not a button (a grown-up never opens an episode there).
+  const cell = row.getByLabel(new RegExp(`: ${title.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\.`)).first();
   if (!(await cell.isVisible())) await row.getByRole('button', { name: new RegExp(`^Stage ${stage}, `) }).first().click();
   await expect(cell).toBeVisible();
 }
@@ -400,11 +416,10 @@ const CELLS: readonly UpperCell[] = [
       await expect(page.getByText('Next up')).toBeVisible();
     },
     expectRouteDay: async (page) => {
-      await page.goto('/');
-      await page.getByText('Learning Route', { exact: true }).last().click();
+      await openRouteMap(page);
       await page.getByRole('button', { name: /^Stage 2, Words\./ }).click();
       // A shipped, started cell is a button that reads "Playing"; a coming-later cell is no button.
-      await expect(page.getByRole('button', { name: /^Play & Crafts: Playground Words\. Playing\.$/ })).toBeVisible();
+      await expect(page.getByLabel(/^Play & Crafts: Playground Words\. Playing\.$/)).toBeVisible();
     },
   },
   // F-CURR-001 S3-1: First Sentences, q1 "It Is a Book" played through its real games.
@@ -434,10 +449,9 @@ const CELLS: readonly UpperCell[] = [
       await expect(page.getByText('Finish', { exact: true }).first()).toBeVisible();
     },
     expectRouteDay: async (page) => {
-      await page.goto('/');
-      await page.getByText('Learning Route', { exact: true }).last().click();
+      await openRouteMap(page);
       await page.getByRole('button', { name: /^Stage 3, Sentences\./ }).click();
-      await expect(page.getByRole('button', { name: /^Letters & Books: First Sentences\./ })).toBeVisible();
+      await expect(page.getByLabel(/^Letters & Books: First Sentences\./)).toBeVisible();
     },
   },
   // F-CURR-001 S4-1: Read Along, q1 "What Is This?" played through its real games.
@@ -461,10 +475,9 @@ const CELLS: readonly UpperCell[] = [
       await expect(page.getByText('Finish', { exact: true }).first()).toBeVisible();
     },
     expectRouteDay: async (page) => {
-      await page.goto('/');
-      await page.getByText('Learning Route', { exact: true }).last().click();
+      await openRouteMap(page);
       await page.getByRole('button', { name: /^Stage 4, Dialogue\./ }).click();
-      await expect(page.getByRole('button', { name: /^Letters & Books: Read Along\./ })).toBeVisible();
+      await expect(page.getByLabel(/^Letters & Books: Read Along\./)).toBeVisible();
     },
   },
   // F-CURR-001 S3-3: Festival Sentences, q1 "Grandma and Grandpa" at 320 px: Discover (three pages),
@@ -504,10 +517,9 @@ const CELLS: readonly UpperCell[] = [
       await shot(page, 's3-3-q1-reward-320');
     },
     expectRouteDay: async (page) => {
-      await page.goto('/');
-      await page.getByText('Learning Route', { exact: true }).last().click();
+      await openRouteMap(page);
       await page.getByRole('button', { name: /^Stage 3, Sentences\./ }).click();
-      await expect(page.getByRole('button', { name: /^Holidays & Traditions: Festival Sentences\./ })).toBeVisible();
+      await expect(page.getByLabel(/^Holidays & Traditions: Festival Sentences\./)).toBeVisible();
     },
   },
   // F-CURR-001 S3-5: Game Sentences, q1 "I Want to Play" played through its real games.
@@ -536,10 +548,9 @@ const CELLS: readonly UpperCell[] = [
       await expect(page.getByText('Finish', { exact: true }).first()).toBeVisible();
     },
     expectRouteDay: async (page) => {
-      await page.goto('/');
-      await page.getByText('Learning Route', { exact: true }).last().click();
+      await openRouteMap(page);
       await page.getByRole('button', { name: /^Stage 3, Sentences\./ }).click();
-      await expect(page.getByRole('button', { name: /^Play & Crafts: Game Sentences\./ })).toBeVisible();
+      await expect(page.getByLabel(/^Play & Crafts: Game Sentences\./)).toBeVisible();
     },
   },
   // F-CURR-001 S3-2: Daily Mini-Sentences, q1 "I Eat, I Drink" played through its real games.
@@ -567,10 +578,9 @@ const CELLS: readonly UpperCell[] = [
       await expect(page.getByText('Finish', { exact: true }).first()).toBeVisible();
     },
     expectRouteDay: async (page) => {
-      await page.goto('/');
-      await page.getByText('Learning Route', { exact: true }).last().click();
+      await openRouteMap(page);
       await page.getByRole('button', { name: /^Stage 3, Sentences\./ }).click();
-      await expect(page.getByRole('button', { name: /^Food & Daily Life: Daily Mini-Sentences\./ })).toBeVisible();
+      await expect(page.getByLabel(/^Food & Daily Life: Daily Mini-Sentences\./)).toBeVisible();
     },
   },
   // F-CURR-001 T-2: Greeting Dialogues, q1 "Nice to Meet You" (the taste quest's id, now a six-step lesson).
@@ -591,10 +601,9 @@ const CELLS: readonly UpperCell[] = [
       await expect(page.getByText('Finish', { exact: true }).first()).toBeVisible();
     },
     expectRouteDay: async (page) => {
-      await page.goto('/');
-      await page.getByText('Learning Route', { exact: true }).last().click();
+      await openRouteMap(page);
       await page.getByRole('button', { name: /^Stage 4, Dialogue\./ }).click();
-      await expect(page.getByRole('button', { name: /^Holidays & Traditions: Greeting Dialogues\./ })).toBeVisible();
+      await expect(page.getByLabel(/^Holidays & Traditions: Greeting Dialogues\./)).toBeVisible();
     },
   },
   // F-CURR-001 S2-1: Word Builder. q1 teaches ㅐ ㅔ ㅒ ㅖ; its six Pic-Word boards are played, its Card Match is
@@ -629,10 +638,9 @@ const CELLS: readonly UpperCell[] = [
       await shot(page, 's2-1-q1-results-320');
     },
     expectRouteDay: async (page) => {
-      await page.goto('/');
-      await page.getByText('Learning Route', { exact: true }).last().click();
+      await openRouteMap(page);
       await page.getByRole('button', { name: /^Stage 2, Words\./ }).click();
-      await expect(page.getByRole('button', { name: /^Letters & Books: Word Builder\./ })).toBeVisible();
+      await expect(page.getByLabel(/^Letters & Books: Word Builder\./)).toBeVisible();
     },
   },
   // F-CURR-001 S2-2: Holiday Words, q1 "Seollal Words": Discover, all six Pic-Word boards, Build a Letter
@@ -661,10 +669,9 @@ const CELLS: readonly UpperCell[] = [
       await shot(page, 's2-2-q1-results-320');
     },
     expectRouteDay: async (page) => {
-      await page.goto('/');
-      await page.getByText('Learning Route', { exact: true }).last().click();
+      await openRouteMap(page);
       await page.getByRole('button', { name: /^Stage 2, Words\./ }).click();
-      await expect(page.getByRole('button', { name: /^Holidays & Traditions: Holiday Words\./ })).toBeVisible();
+      await expect(page.getByLabel(/^Holidays & Traditions: Holiday Words\./)).toBeVisible();
     },
   },
   // F-CURR-001 S4-2: Kitchen Talk, q1 "Have You Eaten?": Discover, three Tap to Respond turns, the four-line
@@ -688,10 +695,9 @@ const CELLS: readonly UpperCell[] = [
       await shot(page, 's4-2-q1-reward-320');
     },
     expectRouteDay: async (page) => {
-      await page.goto('/');
-      await page.getByText('Learning Route', { exact: true }).last().click();
+      await openRouteMap(page);
       await page.getByRole('button', { name: /^Stage 4, Dialogue\./ }).click();
-      await expect(page.getByRole('button', { name: /^Food & Daily Life: Kitchen Talk\./ })).toBeVisible();
+      await expect(page.getByLabel(/^Food & Daily Life: Kitchen Talk\./)).toBeVisible();
     },
   },
   // F-CURR-001 S4-3: Park Conversations, q1 "Sky Watching": Discover, three Tap to Respond turns, the four-line
@@ -715,10 +721,9 @@ const CELLS: readonly UpperCell[] = [
       await shot(page, 's4-3-q1-reward-320');
     },
     expectRouteDay: async (page) => {
-      await page.goto('/');
-      await page.getByText('Learning Route', { exact: true }).last().click();
+      await openRouteMap(page);
       await page.getByRole('button', { name: /^Stage 4, Dialogue\./ }).click();
-      await expect(page.getByRole('button', { name: /^Nature & Animals: Park Conversations\./ })).toBeVisible();
+      await expect(page.getByLabel(/^Nature & Animals: Park Conversations\./)).toBeVisible();
     },
   },
   // F-CURR-001 S4-4: Playdate Talk, q1 "What Shall We Play?" at 320 px: Discover (two exchange pages),
@@ -752,10 +757,9 @@ const CELLS: readonly UpperCell[] = [
       await shot(page, 's4-4-q1-reward-320');
     },
     expectRouteDay: async (page) => {
-      await page.goto('/');
-      await page.getByText('Learning Route', { exact: true }).last().click();
+      await openRouteMap(page);
       await page.getByRole('button', { name: /^Stage 4, Dialogue\./ }).click();
-      await expect(page.getByRole('button', { name: /^Play & Crafts: Playdate Talk\./ })).toBeVisible();
+      await expect(page.getByLabel(/^Play & Crafts: Playdate Talk\./)).toBeVisible();
     },
   },
   // F-CURR-001 S6-1: Read the Menu, q1 "Dishes on the Menu" played through its real games.
@@ -790,10 +794,9 @@ const CELLS: readonly UpperCell[] = [
       await expect(page.getByText('Finish', { exact: true }).first()).toBeVisible();
     },
     expectRouteDay: async (page) => {
-      await page.goto('/');
-      await page.getByText('Learning Route', { exact: true }).last().click();
+      await openRouteMap(page);
       await page.getByRole('button', { name: /^Stage 6, Real-use\./ }).click();
-      await expect(page.getByRole('button', { name: /^Letters & Books: Read the Menu\./ })).toBeVisible();
+      await expect(page.getByLabel(/^Letters & Books: Read the Menu\./)).toBeVisible();
     },
   },
   // F-CURR-001 S6-2: Order Food, q1 "Excuse Me!": Realia Read on the table menu, Type Hangul, Listen & Pick.
@@ -815,10 +818,9 @@ const CELLS: readonly UpperCell[] = [
       await expect(page.getByText('Finish', { exact: true }).first()).toBeVisible();
     },
     expectRouteDay: async (page) => {
-      await page.goto('/');
-      await page.getByText('Learning Route', { exact: true }).last().click();
+      await openRouteMap(page);
       await page.getByRole('button', { name: /^Stage 6, Real-use\./ }).click();
-      await expect(page.getByRole('button', { name: /^Food & Daily Life: Order Food\./ })).toBeVisible();
+      await expect(page.getByLabel(/^Food & Daily Life: Order Food\./)).toBeVisible();
     },
   },
   // F-CURR-001 S6-3: Travel for Chuseok, q1 "The Train Ticket" played through its real games.
@@ -844,10 +846,9 @@ const CELLS: readonly UpperCell[] = [
       await expect(page.getByText('Finish', { exact: true }).first()).toBeVisible();
     },
     expectRouteDay: async (page) => {
-      await page.goto('/');
-      await page.getByText('Learning Route', { exact: true }).last().click();
+      await openRouteMap(page);
       await page.getByRole('button', { name: /^Stage 6, Real-use\./ }).click();
-      await expect(page.getByRole('button', { name: /^Holidays & Traditions: Travel for Chuseok\./ })).toBeVisible();
+      await expect(page.getByLabel(/^Holidays & Traditions: Travel for Chuseok\./)).toBeVisible();
     },
   },
   // F-CURR-001 S6-4: Hike & Ask, q1 "Trail Signs" at 320 px: Discover, Realia Read on the trail sign
@@ -869,10 +870,9 @@ const CELLS: readonly UpperCell[] = [
       await expect(page.getByText('Finish', { exact: true }).first()).toBeVisible();
     },
     expectRouteDay: async (page) => {
-      await page.goto('/');
-      await page.getByText('Learning Route', { exact: true }).last().click();
+      await openRouteMap(page);
       await page.getByRole('button', { name: /^Stage 6, Real-use\./ }).click();
-      await expect(page.getByRole('button', { name: /^Nature & Animals: Hike & Ask\./ })).toBeVisible();
+      await expect(page.getByLabel(/^Nature & Animals: Hike & Ask\./)).toBeVisible();
     },
   },
   // F-CURR-001 S6-5: Buy at Market, q1 "At the Stall" at 320 px: Discover, Realia Read on the three price
@@ -894,10 +894,9 @@ const CELLS: readonly UpperCell[] = [
       await expect(page.getByText('Finish', { exact: true }).first()).toBeVisible();
     },
     expectRouteDay: async (page) => {
-      await page.goto('/');
-      await page.getByText('Learning Route', { exact: true }).last().click();
+      await openRouteMap(page);
       await page.getByRole('button', { name: /^Stage 6, Real-use\./ }).click();
-      await expect(page.getByRole('button', { name: /^Play & Crafts: Buy at Market\./ })).toBeVisible();
+      await expect(page.getByLabel(/^Play & Crafts: Buy at Market\./)).toBeVisible();
     },
   },
   // F-CURR-001 S3-4: Animal Sentences, q1 "Where Is the Bird?" played through its real games.
@@ -926,10 +925,9 @@ const CELLS: readonly UpperCell[] = [
       await expect(page.getByText('Finish', { exact: true }).first()).toBeVisible();
     },
     expectRouteDay: async (page) => {
-      await page.goto('/');
-      await page.getByText('Learning Route', { exact: true }).last().click();
+      await openRouteMap(page);
       await page.getByRole('button', { name: /^Stage 3, / }).click();
-      await expect(page.getByRole('button', { name: /^Nature & Animals: Animal Sentences\./ })).toBeVisible();
+      await expect(page.getByLabel(/^Nature & Animals: Animal Sentences\./)).toBeVisible();
     },
   },
   // F-CURR-001 T-1: Lunch Box Words. q1 keeps its id and its card; its Card Match is skipped, the Check is the
@@ -983,10 +981,9 @@ const CELLS: readonly UpperCell[] = [
       await expect(page.getByText('Finish', { exact: true }).first()).toBeVisible();
     },
     expectRouteDay: async (page) => {
-      await page.goto('/');
-      await page.getByText('Learning Route', { exact: true }).last().click();
+      await openRouteMap(page);
       await page.getByRole('button', { name: /^Stage 7, / }).click();
-      await expect(page.getByRole('button', { name: /^Letters & Books: Write Your Name\./ })).toBeVisible();
+      await expect(page.getByLabel(/^Letters & Books: Write Your Name\./)).toBeVisible();
     },
   },
   // F-CURR-001 S7-2: My Day in Korean, q1 "Morning to Evening": Trace a Word (Skip is the
@@ -1029,10 +1026,9 @@ const CELLS: readonly UpperCell[] = [
       await expect(page.getByText('Finish', { exact: true }).first()).toBeVisible();
     },
     expectRouteDay: async (page) => {
-      await page.goto('/');
-      await page.getByText('Learning Route', { exact: true }).last().click();
+      await openRouteMap(page);
       await page.getByRole('button', { name: /^Stage 7, / }).click();
-      await expect(page.getByRole('button', { name: /^Food & Daily Life: My Day in Korean\./ })).toBeVisible();
+      await expect(page.getByLabel(/^Food & Daily Life: My Day in Korean\./)).toBeVisible();
     },
   },
   // F-CURR-001 S7-3: My Holiday Memory, q1 "I Ate Tteokguk" played through its real games at 320 px.
@@ -1067,10 +1063,9 @@ const CELLS: readonly UpperCell[] = [
       await expect(page.getByText('Finish', { exact: true }).first()).toBeVisible();
     },
     expectRouteDay: async (page) => {
-      await page.goto('/');
-      await page.getByText('Learning Route', { exact: true }).last().click();
+      await openRouteMap(page);
       await page.getByRole('button', { name: /^Stage 7, Self-expression\./ }).click();
-      await expect(page.getByRole('button', { name: /^Holidays & Traditions: My Holiday Memory\./ })).toBeVisible();
+      await expect(page.getByLabel(/^Holidays & Traditions: My Holiday Memory\./)).toBeVisible();
     },
   },
   // F-CURR-001 S7-4: My Favorite Animal, q1 "Animals I Like": Trace a Word, Type Hangul, the order-it Check.
@@ -1103,10 +1098,9 @@ const CELLS: readonly UpperCell[] = [
       await expect(page.getByText('Finish', { exact: true }).first()).toBeVisible();
     },
     expectRouteDay: async (page) => {
-      await page.goto('/');
-      await page.getByText('Learning Route', { exact: true }).last().click();
+      await openRouteMap(page);
       await page.getByRole('button', { name: /^Stage 7, / }).click();
-      await expect(page.getByRole('button', { name: /^Nature & Animals: My Favorite Animal\./ })).toBeVisible();
+      await expect(page.getByLabel(/^Nature & Animals: My Favorite Animal\./)).toBeVisible();
     },
   },
   // F-CURR-001 S7-5: Make & Share, q1 "Fold, Cut, Draw" played through its real games at 320 px.
@@ -1141,10 +1135,9 @@ const CELLS: readonly UpperCell[] = [
       await expect(page.getByText('Finish', { exact: true }).first()).toBeVisible();
     },
     expectRouteDay: async (page) => {
-      await page.goto('/');
-      await page.getByText('Learning Route', { exact: true }).last().click();
+      await openRouteMap(page);
       await page.getByRole('button', { name: /^Stage 7, Self-expression\./ }).click();
-      await expect(page.getByRole('button', { name: /^Play & Crafts: Make & Share\./ })).toBeVisible();
+      await expect(page.getByLabel(/^Play & Crafts: Make & Share\./)).toBeVisible();
     },
   },
 ];

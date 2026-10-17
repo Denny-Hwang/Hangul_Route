@@ -1,7 +1,7 @@
 import type { Page } from '@playwright/test';
 import { getMessages } from '@hangul-route/i18n';
 import { expect, test } from './fixtures';
-import { headerBack, headerClose, onboardSelf, openLettersEpisode, readStored, seedStored } from './helpers';
+import { headerBack, headerClose, onboardSelf, openForGrownUps, openLettersEpisode, readStored, seedStored } from './helpers';
 import { shot } from './shots';
 import { closeInstallGuide } from './text-fit';
 
@@ -50,8 +50,12 @@ test.describe('the way back (AMENDMENTS-DISPLAY-NAV section 7)', () => {
     expect(box.height).toBeGreaterThanOrEqual(64);
     await shot(page, 'dn4-profile-back-pixel5');
 
+    // The gated row sits in Profile's second group, collapsed on arrival (AMENDMENTS-DISPLAY-NAV 9.2); the page is
+    // titled with the device's one grown-up name (9.4: a self-only device's is Account & backup).
+    await openForGrownUps(page);
     await page.getByRole('button', { name: /^Account & backup/ }).click();
-    await expect(page.getByText(en.caregiver.dashboard.title, { exact: true }).filter({ visible: true })).toBeVisible();
+    const zone = page.getByRole('heading', { name: en.caregiver.audience.self.zoneLabel, exact: true }).filter({ visible: true });
+    await expect(zone).toBeVisible();
     expect(await entryDepth(page)).toBe(2);
 
     // The browser back from the grown-up area: Profile, exactly as the visible Back.
@@ -62,7 +66,7 @@ test.describe('the way back (AMENDMENTS-DISPLAY-NAV section 7)', () => {
     await page.goForward();
     await expect.poll(() => entryDepth(page)).toBe(1);
     await expect(page.getByRole('heading', { name: 'Profiles & settings' })).toBeVisible();
-    await expect(page.getByText(en.caregiver.dashboard.title, { exact: true }).filter({ visible: true })).toHaveCount(0);
+    await expect(zone).toHaveCount(0);
 
     // The visible Back, then the browser back has nothing dead in between: Home is the app's first entry.
     await headerBack(page).click();

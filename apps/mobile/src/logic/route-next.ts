@@ -213,6 +213,28 @@ export function routeNext(i: RouteNextInput): RouteNext {
   return endOf(i, false);
 }
 
+/** A `routeNext` result that names a quest. */
+export type RouteNextQuestResult = Extract<RouteNext, { kind: 'quest' }>;
+
+/**
+ * The next lessons in order, at most `count` (owner decision 2026-10-17: the Route tab shows where you are, the
+ * next three lessons and the goal). The first is always `routeNext(i)` itself, so the Route tab, the route card,
+ * Home's hero and card (2) name the same quest; each later one is the quest `routeNext` would name if every
+ * earlier one were done (it reads as not open for the next pick, never as done, so no star, stage or plan record
+ * moves). The list ends early at `free-end` or `rest`. Pure; reads no store and no clock.
+ */
+export function upcomingLessons(i: RouteNextInput, count: number): RouteNextQuestResult[] {
+  const out: RouteNextQuestResult[] = [];
+  const taken = new Set<string>();
+  while (out.length < count) {
+    const next = routeNext(taken.size === 0 ? i : { ...i, isQuestOpen: (questId) => !taken.has(questId) && i.isQuestOpen(questId) });
+    if (next.kind !== 'quest') break;
+    out.push(next);
+    taken.add(next.questId);
+  }
+  return out;
+}
+
 /**
  * Step 1's qualification as a predicate: known, playable, open and not done.
  * Home passes it to `mergeAssignments`, so an assignment card (2) shows is

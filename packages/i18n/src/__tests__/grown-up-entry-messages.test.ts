@@ -33,21 +33,26 @@ describe('learner.welcome.grownUps (Welcome persona row, Panels A to C)', () => 
 });
 
 describe('learner.profile.grownUpHome (Profile row, D9 and D11)', () => {
-  it('has the row title, its line and the self-only title', () => {
+  it('has the row title, its line and the self-only title: "Account pages" everywhere (one grown-up name, DN 9.4)', () => {
     expect(profileRow).toEqual({
-      title: 'Grown-up home',
+      title: 'Account pages',
       line: 'Your family, classes and billing',
-      selfTitle: 'Account home',
+      selfTitle: 'Account pages',
     });
+  });
+
+  it.each(['es', 'ko'] as const)('%s: the row says the account pages, never a second grown-up name', (locale) => {
+    const row = getMessages(locale).learner.profile.grownUpHome;
+    expect(row.title).toBe(locale === 'es' ? 'Páginas de la cuenta' : '계정 페이지');
+    expect(row.selfTitle).toBe(row.title);
+    expect(row.title).not.toMatch(/adult|어른/i);
   });
 });
 
 describe('caregiver.grownUpHome (dashboard card and the PIN screen without a PIN)', () => {
-  it('adds the card title, line and Open to the A-6 keys', () => {
-    expect(card.title).toBe('Grown-up home');
-    expect(card.line).toBe('Your family, classes and billing.');
-    expect(card.cta).toBe('Open');
-    expect(leafPaths(card).sort()).toEqual(['continue.cta', 'cta', 'line', 'noPin', 'title']);
+  it('adds the sign-in row to the A-6 keys (owner request 2026-10-16, item 8: was a card with Open)', () => {
+    expect(card.signIn).toEqual({ family: 'Sign in for family and class tools', self: 'Sign in to your account' });
+    expect(leafPaths(card).sort()).toEqual(['continue.cta', 'noPin', 'signIn.family', 'signIn.self']);
   });
 });
 
@@ -71,7 +76,7 @@ describe('every A-7 entry string', () => {
   });
 
   it('keeps the persona buttons and Open within the 28-character button budget', () => {
-    for (const s of [welcome.parent, welcome.teacher, welcome.continueParent, welcome.continueTeacher, welcome.someoneElse, card.cta]) {
+    for (const s of [welcome.parent, welcome.teacher, welcome.continueParent, welcome.continueTeacher, welcome.someoneElse]) {
       expect(s.length, s).toBeLessThanOrEqual(28);
     }
   });

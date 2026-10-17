@@ -42,7 +42,8 @@ interface TierCase {
   note: string;
   pill: string;
 }
-const FREE: TierCase = { key: 'free', tier: 'free', source: null, title: 'Free plan', note: 'Stage 1 is free. More stages are on the way.', pill: 'Free' };
+// Content gating is off in this build, so the free card says everything is open (owner request 2026-10-16, item 8).
+const FREE: TierCase = { key: 'free', tier: 'free', source: null, title: 'Free plan', note: 'Everything is open right now.', pill: 'Free' };
 const TIERS: readonly TierCase[] = [
   FREE,
   { key: 'premium-family', tier: 'premium', source: family, title: 'Full route', note: 'Everything is open, from Kim family.', pill: 'Active' },
@@ -84,6 +85,13 @@ beforeEach(() => {
   navigation.goBack.mockReset();
 });
 
+/** Opens Profile's "For grown-ups" group, collapsed on arrival (owner request 2026-10-16, item 8). */
+async function openGrownUps(root: ReactTestInstance): Promise<void> {
+  const toggle = byTestId(root, 'profile-group-grown-ups-toggle')[0] as ReactTestInstance;
+  expect(toggle.props['aria-expanded']).toBe(false);
+  await press(toggle);
+}
+
 afterEach(() => {
   resetPlatform();
 });
@@ -96,6 +104,8 @@ describe('ProfileScreen plan card (F-BILL-002 section 11, B-13)', () => {
           setPlatform(platform);
           seed(audience, tier);
           const renderer = await render(<ProfileScreen />);
+          expect(buttonsNamed(renderer.root, 'Plan details')).toHaveLength(0);
+          await openGrownUps(renderer.root);
           const details = buttonsNamed(renderer.root, 'Plan details');
           expect(details).toHaveLength(1);
           await press(details[0] as ReactTestInstance);
@@ -125,12 +135,13 @@ describe('ProfileScreen plan card (F-BILL-002 section 11, B-13)', () => {
         for (const audience of AUDIENCES) {
           for (const locale of LOCALES) {
             const key = `${platform} / ${audience} / ${locale}`;
-            const card = planCardView(tier.tier, tier.source, getMessages(locale).learner.profile.plan);
+            const card = planCardView(tier.tier, tier.source, getMessages(locale).learner.profile.plan, false);
             if (locale === 'en') expect([card.title, card.note, card.pill], key).toEqual([tier.title, tier.note, tier.pill]);
-            const other = planCardView(tier.tier === 'free' ? 'premium' : 'free', null, getMessages(locale).learner.profile.plan);
+            const other = planCardView(tier.tier === 'free' ? 'premium' : 'free', null, getMessages(locale).learner.profile.plan, false);
             setPlatform(platform);
             seed(audience, tier, locale);
             const renderer = await render(<ProfileScreen />);
+            await openGrownUps(renderer.root);
             const texts = screenTexts(renderer.root);
             expect(texts, key).toContain(card.title);
             expect(texts, key).toContain(card.note);
@@ -158,6 +169,7 @@ describe('ProfileScreen open-source notices link (owner decision 2026-10-14)', (
       setPlatform(platform);
       seed(audience, FREE);
       const renderer = await render(<ProfileScreen />);
+      await openGrownUps(renderer.root);
       const links = byTestId(renderer.root, 'profile-licenses-link');
       expect(links, audience).toHaveLength(1);
       expect(links[0]!.props['aria-label']).toBe(getMessages('en').learner.profile.licenses.label);
@@ -171,10 +183,111 @@ describe('ProfileScreen open-source notices link (owner decision 2026-10-14)', (
       setPlatform(platform);
       seed(audience, FREE);
       const renderer = await render(<ProfileScreen />);
+      await openGrownUps(renderer.root);
       await press(byTestId(renderer.root, 'profile-licenses-link')[0] as ReactTestInstance);
       expect(navigation.navigate, audience).toHaveBeenCalledWith('PinEntry', { next: 'ExternalLink', url: expect.stringMatching(/\/licenses$/) });
       await unmount(renderer);
     }
+  });
+});
+
+describe('ProfileScreen groups (owner request 2026-10-16, item 8)', () => {
+  afterEach(() => resetPlatform());
+
+  it.each(PLATFORMS)('%s: Classes and family under the stats, My settings open, For grown-ups collapsed until a tap; one filled button', async (platform) => {
+    for (const locale of LOCALES) {
+      setPlatform(platform);
+      seed('family', FREE, locale);
+      const t = getMessages(locale).learner.profile;
+      const renderer = await render(<ProfileScreen />);
+      const mine = byTestId(renderer.root, 'profile-group-mine');
+      expect(mine, locale).toHaveLength(1);
+      expect(screenTexts(mine[0] as ReactTestInstance), locale).toContain(t.groups.mine);
+      expect(screenTexts(mine[0] as ReactTestInstance), locale).toContain(t.sound.label);
+      const grown = byTestId(renderer.root, 'profile-group-grown-ups')[0] as ReactTestInstance;
+      expect(screenTexts(grown), locale).toContain(t.groups.grownUps);
+      expect(screenTexts(grown), locale).not.toContain(t.groups.account);
+      // Collapsed: the plan card, backup and the grown-up area are not drawn yet.
+      expect(byTestId(grown, 'profile-grown-up-area'), locale).toHaveLength(0);
+      // Classes and family is moved up (owner decision 2026-10-17): drawn under the stats, above both groups,
+      // outside the collapsed group, with its Join a class.
+      const spacesTitle = getMessages(locale).caregiver.spaces.title;
+      expect(screenTexts(grown), locale).not.toContain(spacesTitle);
+      const page = screenTexts(renderer.root);
+      expect(page.indexOf(spacesTitle), locale).toBeGreaterThan(page.indexOf(t.statsTitle('Mina')));
+      expect(page.indexOf(spacesTitle), locale).toBeLessThan(page.indexOf(t.groups.mine));
+      expect(buttonsNamed(renderer.root, getMessages(locale).caregiver.spaces.join.cta), locale).not.toHaveLength(0);
+      await openGrownUps(renderer.root);
+      expect(byTestId(renderer.root, 'profile-group-grown-ups-toggle')[0]?.props['aria-expanded']).toBe(true);
+      // In the group: the plan card before the grown-up area.
+      const order = screenTexts(byTestId(renderer.root, 'profile-group-grown-ups')[0] as ReactTestInstance);
+      const zone = getMessages(locale).caregiver.audience.family.zoneLabel;
+      expect(order.indexOf(t.plan.details.cta), locale).toBeGreaterThan(-1);
+      expect(order.indexOf(t.plan.details.cta), locale).toBeLessThan(order.indexOf(zone));
+      await unmount(renderer);
+    }
+  });
+});
+
+describe('ProfileScreen groups on a self-only device', () => {
+  afterEach(() => resetPlatform());
+
+  it.each(PLATFORMS)('%s: the second group never says "grown-up" (F-LEARN-001 L7)', async (platform) => {
+    for (const locale of LOCALES) {
+      setPlatform(platform);
+      seed('self', FREE, locale);
+      const t = getMessages(locale).learner.profile;
+      const renderer = await render(<ProfileScreen />);
+      const grown = byTestId(renderer.root, 'profile-group-grown-ups')[0] as ReactTestInstance;
+      expect(screenTexts(grown), locale).toContain(t.groups.account);
+      expect(screenTexts(grown), locale).not.toContain(t.groups.grownUps);
+      if (locale === 'en') for (const text of screenTexts(renderer.root)) expect(text).not.toMatch(/grown-up/i);
+      await unmount(renderer);
+    }
+  });
+});
+
+describe('ProfileScreen: one grown-up name (AMENDMENTS-DISPLAY-NAV 9.4) and the group heading', () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    resetPlatform();
+  });
+
+  it.each(LOCALES)('%s, web family device: the row is Account pages; no drawn line names a second grown-up place', async (locale) => {
+    setPlatform('web');
+    seed('family', FREE, locale);
+    // The Account pages row is the web build's (F-APP-001 A-7, `grownUpEntriesOn`).
+    vi.stubEnv('EXPO_OS', 'web');
+    const m = getMessages(locale);
+    const renderer = await render(<ProfileScreen />);
+    await openGrownUps(renderer.root);
+    const row = byTestId(renderer.root, 'profile-grown-up-home');
+    expect(row.length, locale).toBeGreaterThan(0);
+    const texts = screenTexts(renderer.root);
+    expect(texts, locale).toContain(m.learner.profile.grownUpHome.title);
+    // The device's one grown-up name is the zone label ("Grown-up area"); the group heading "For grown-ups" says who the
+    // group is for. Nothing else drawn on Profile names a grown-up place ("Grown-up home" is gone).
+    const word = { en: /grown-up/i, es: /adultos/i, ko: /어른/ }[locale];
+    const allowed = [m.caregiver.audience.family.zoneLabel, m.learner.profile.groups.grownUps];
+    for (const text of texts.filter((x) => word.test(x))) {
+      expect(allowed.some((name) => text.includes(name)), `${locale}: ${text}`).toBe(true);
+    }
+    await unmount(renderer);
+  });
+
+  it.each(PLATFORMS)('%s: the For grown-ups heading holds its disclosure button, never the other way round', async (platform) => {
+    setPlatform(platform);
+    seed('family', FREE);
+    const renderer = await render(<ProfileScreen />);
+    const heading = byTestId(renderer.root, 'profile-group-grown-ups-heading')[0] as ReactTestInstance;
+    expect(heading.props.role).toBe('heading');
+    const toggle = byTestId(heading, 'profile-group-grown-ups-toggle')[0] as ReactTestInstance;
+    expect(toggle.props.role).toBe('button');
+    expect(toggle.props['aria-label']).toBe(getMessages('en').learner.profile.groups.grownUps);
+    expect(toggle.props['aria-expanded']).toBe(false);
+    // No heading role inside the button: a button's content is presentational.
+    expect(toggle.findAll((n) => typeof n.type === 'string' && n.props.role === 'heading')).toHaveLength(0);
+    await unmount(renderer);
   });
 });
 

@@ -192,7 +192,7 @@ export function SpacesCard({ profile, onJoin }: SpacesCardProps): React.ReactEle
         </>
       ) : null}
       <Spacer size="md" />
-      <Button label={m.join.cta} tone="secondary" size="md" onPress={onJoin} />
+      <Button label={m.join.cta} tone="ghost" size="md" onPress={onJoin} />
     </Card>
   );
 }

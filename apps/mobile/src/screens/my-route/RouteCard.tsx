@@ -46,6 +46,11 @@ export interface RouteCardProps {
   onAction: () => void;
   /** The page's focus count: focus moves to the summary on each focus (0 before the first). */
   focusToken: number;
+  /**
+   * False: the drawn "Next: ..." line is left out, because the Route tab's next lessons list names that lesson first
+   * (owner decision 2026-10-17). The summary label still reads it. Absent reads as true.
+   */
+  showNext?: boolean;
   testID?: string;
 }
 
@@ -85,7 +90,7 @@ function Decorative({ children }: { children: React.ReactNode }): React.ReactEle
   );
 }
 
-export function RouteCard({ copy, pips, goalStage, cta, pose, onAction, focusToken, testID = 'my-route-card' }: RouteCardProps): React.ReactElement {
+export function RouteCard({ copy, pips, goalStage, cta, pose, onAction, focusToken, showNext = true, testID = 'my-route-card' }: RouteCardProps): React.ReactElement {
   const { windowWidth } = useLayoutClass();
   // Below 360 the compact card (LR-11): Continue (or Start) stays above the tab bar at 320 x 568.
   const look = routeCardLook(windowWidth, cta !== null);
@@ -165,7 +170,7 @@ export function RouteCard({ copy, pips, goalStage, cta, pose, onAction, focusTok
           <PipRow groups={[[...pips]]} context="stage" accent={colors.stage[goalStage]} bandsPerLine testID={`${testID}-pips`} />
         ) : null}
 
-        {copy.next !== null ? (
+        {copy.next !== null && showNext ? (
           copy.hoya === null ? (
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
               <Decorative>

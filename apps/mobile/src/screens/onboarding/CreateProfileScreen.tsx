@@ -48,11 +48,12 @@ import {
   type SetupStep,
 } from '../../logic/onboarding/setup-steps';
 import { submitProfile } from '../../logic/onboarding/submit-profile';
-import { afterProfileCreated, placementEntriesOn } from '../../logic/placement/entry';
+import { placementEntriesOn, profileCreatedNext } from '../../logic/placement/entry';
 import { AVATAR_PRESETS, DEFAULT_AVATAR } from '../../logic/profiles/avatar-catalog';
 import { createPinHash } from '../../logic/profiles/pin-hash';
 import { NAME_MAX } from '../../logic/profiles/profile-model';
-import type { OnboardingStackParamList } from '../../navigation/types';
+import type { OnboardingStackParamList, RootStackParamList } from '../../navigation/types';
+import type { NavigationProp } from '@react-navigation/native';
 import { pinHasher } from '../../platform/crypto';
 import { focusForScreenReader } from '../../platform/screen-reader';
 import { track } from '../../platform/telemetry';
@@ -252,11 +253,18 @@ export function CreateProfileScreen({ navigation, route }: Props): React.ReactEl
         },
       );
       if (result.ok) {
-        // The level check's fork when it is on (F-PLC-001 section 3.1 step 1, first and later profiles alike). The
-        // onboarding stack is reset to it alone: nothing of setup is left under the end of setup, so no back (the
-        // browser's or the phone's, through the history bridge) can land on Welcome and start a second profile
-        // (AMENDMENTS-DISPLAY-NAV section 7.1, the exception list).
-        navigation.reset({ index: 0, routes: [{ name: afterProfileCreated(levelCheckOn), params: { profileId: result.profile.id } }] });
+        // The level check's fork when it is on (F-PLC-001 section 3.1 step 1, first and later profiles alike); a first
+        // run begun at "Got a class code?" goes to Join a class instead, with Home under it (Back and Done land there).
+        const next = profileCreatedNext(route.params?.then, levelCheckOn);
+        if (next === 'JoinSpace') {
+          // The class join link's code rides along (owner decision 2026-10-17); Welcome's link has none.
+          const code = route.params?.code;
+          navigation.getParent<NavigationProp<RootStackParamList>>()?.reset({ index: 1, routes: [{ name: 'Main' }, { name: 'JoinSpace', params: code === undefined ? undefined : { code } }] });
+        }
+        // Otherwise the onboarding stack is reset to the fork alone: nothing of setup is left under the end of setup, so
+        // no back (the browser's or the phone's, through the history bridge) can land on Welcome and start a second
+        // profile (AMENDMENTS-DISPLAY-NAV section 7.1, the exception list).
+        else navigation.reset({ index: 0, routes: [{ name: next, params: { profileId: result.profile.id } }] });
       } else if (result.reason === 'pin-failed') {
         setPinError(c.pinFailed);
       }

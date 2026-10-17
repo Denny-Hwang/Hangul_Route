@@ -2,7 +2,7 @@ import type { BrowserContext, Page, Route } from '@playwright/test';
 import { CONSOLE_SESSION_KEY, GROWN_UP_IDLE_MS, SHELL_DB, SHELL_KEYS, SHELL_STORE, UNLOCK_SESSION_KEY } from '@hangul-route/content-schema';
 import { getMessages } from '@hangul-route/i18n';
 import { expect, test } from './fixtures';
-import { forgetPin, onboardChild, readStored, unlockWithPin } from './helpers';
+import { forgetPin, onboardChild, openForGrownUps, readStored, unlockWithPin } from './helpers';
 import { shot } from './shots';
 
 /**
@@ -134,7 +134,8 @@ async function openProfile(page: Page): Promise<void> {
     await guide.getByRole('button', { name: 'Not now' }).click();
   });
   await page.getByRole('button', { name: 'Profile and settings' }).click();
-  await expect(page.getByRole('button', { name: /^Grown-up zone/ })).toBeVisible();
+  await openForGrownUps(page);
+  await expect(page.getByRole('button', { name: /^Grown-up area/ })).toBeVisible();
 }
 
 test.describe('the grown-up shell on the release build (flag on by default, A-10)', () => {
@@ -261,13 +262,13 @@ test.describe('the grown-up shell on the release build (flag on by default, A-10
     await page.clock.install();
     await familyDevice(page);
     await openProfile(page);
-    await page.getByRole('button', { name: 'Grown-up zone (PIN required)' }).click();
+    await page.getByRole('button', { name: 'Grown-up area (PIN required)' }).click();
     await unlockWithPin(page);
     const card = page.getByTestId('dashboard-grown-up-home');
     await expect(card).toBeVisible();
 
     await page.clock.fastForward(10 * 60_000);
-    await card.getByRole('button', { name: 'Open' }).click();
+    await card.getByRole('button', { name: 'Sign in for family and class tools' }).click();
     await expect(page.getByText('Enter your 4-digit PIN to continue.')).toBeVisible();
     await expect(page.getByRole('button', { name: 'Forgot PIN?' })).toHaveCount(0);
   });
@@ -276,8 +277,8 @@ test.describe('the grown-up shell on the release build (flag on by default, A-10
     await signedInOnGrownUpPages(context);
     const pinSetAt = await familyDevice(page);
     await openProfile(page);
-    const row = page.getByRole('button', { name: /^Grown-up home, / });
-    const zone = page.getByRole('button', { name: 'Grown-up zone (PIN required)' });
+    const row = page.getByRole('button', { name: /^Account pages, / });
+    const zone = page.getByRole('button', { name: 'Grown-up area (PIN required)' });
     expect((await row.boundingBox())?.y ?? Infinity).toBeLessThan((await zone.boundingBox())?.y ?? 0);
 
     await row.click();
@@ -422,7 +423,7 @@ test.describe('the family home with data (an API address, GROWN_UP_SHELL_E2E=1)'
     await familyDevice(page);
     await seedShell(page, { lastPersona: { v: 1, persona: 'parent' } });
     await openProfile(page);
-    await page.getByRole('button', { name: /^Grown-up home, / }).click();
+    await page.getByRole('button', { name: /^Account pages, / }).click();
     await unlockWithPin(page);
     await expect(page).toHaveURL(/\/parent$/);
     await expectOpen(page);

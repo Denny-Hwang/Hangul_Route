@@ -1,6 +1,6 @@
 import { LOCALES, findBannedWord, getMessages, type Messages } from '@hangul-route/i18n';
 import { describe, expect, it } from 'vitest';
-import { CODE_GLYPH_EM, cleanJoinCode, codeFieldFontSize, isCodeError, isCompleteJoinCode, joinErrorMessage, type JoinErrorCode } from '../join-code';
+import { CODE_GLYPH_EM, cleanJoinCode, codeFieldFontSize, isCodeError, isCompleteJoinCode, joinErrorMessage, joinPrefill, type JoinErrorCode } from '../join-code';
 
 const ALL: JoinErrorCode[] = ['code_not_found', 'code_expired', 'cap_learner', 'cap_class', 'not_joinable', 'learner_not_found', 'already_bound', 'too_many_attempts', 'network', 'invalid', 'unknown', 'off'];
 const m = getMessages('en').caregiver;
@@ -73,6 +73,23 @@ describe('joinErrorMessage takes its words from the message subtree (F-I18N-001 
       }
     });
   }
+});
+
+describe('joinPrefill (the class join link, owner decision 2026-10-17)', () => {
+  it('the link code wins over the family home hand-off', () => {
+    expect(joinPrefill('ABC234', 'XYZ789')).toBe('ABC234');
+  });
+
+  it('falls back to the hand-off, then to nothing', () => {
+    expect(joinPrefill(undefined, 'XYZ789')).toBe('XYZ789');
+    expect(joinPrefill(undefined, null)).toBeNull();
+  });
+
+  it('cleans what it is given as typed keys are; a value with nothing usable is skipped', () => {
+    expect(joinPrefill('abc-234', null)).toBe('ABC234');
+    expect(joinPrefill('!!!', 'XYZ789')).toBe('XYZ789');
+    expect(joinPrefill('', null)).toBeNull();
+  });
 });
 
 describe('codeFieldFontSize: the code field fits a whole code at every text size (AMENDMENTS-DISPLAY-NAV section 4, DN-3b review)', () => {

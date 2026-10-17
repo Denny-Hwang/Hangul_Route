@@ -12,8 +12,9 @@ interface Request {
  * The web's confirm step (AMENDMENTS-DISPLAY-NAV section 8, row DN-4): `App` and `BrowseApp` mount
  * one host, and `platform/dialog`'s `confirm()` draws its question here as the design-system
  * `ConfirmSheet`, in the UI language, with the caller's labels. One question at a time; a second
- * waits for the first. While a sheet is open the history bridge holds one entry, so the browser or
- * phone back answers Cancel. On native the host registers nothing (the platform `Alert` stays).
+ * waits for the first, and each question is answered once. While a sheet is open the history bridge
+ * holds one entry, so the browser or phone back answers Cancel. On native the host registers nothing
+ * (the platform `Alert` stays).
  */
 export function ConfirmHost(): React.ReactElement {
   const [current, setCurrent] = useState<Request | null>(null);
@@ -43,16 +44,17 @@ export function ConfirmHost(): React.ReactElement {
     };
   }, []);
 
-  const answer = useCallback((yes: boolean): void => {
-    const request = showing.current;
-    if (request === null) return;
+  // One answer per question: the handlers are bound to the question they were drawn for, so a second press (a
+  // double tap, or Escape and then the modal's own close) answers nothing, never the question waiting behind it.
+  const answer = useCallback((request: Request | null, yes: boolean): void => {
+    if (request === null || showing.current !== request) return;
     const next = waiting.current.shift() ?? null;
     showing.current = next;
     setCurrent(next);
     request.resolve(yes);
   }, []);
-  const cancel = useCallback(() => answer(false), [answer]);
-  const accept = useCallback(() => answer(true), [answer]);
+  const cancel = useCallback(() => answer(current, false), [answer, current]);
+  const accept = useCallback(() => answer(current, true), [answer, current]);
 
   useHistorySheet(current !== null, cancel);
 

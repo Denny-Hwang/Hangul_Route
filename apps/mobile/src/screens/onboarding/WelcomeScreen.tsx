@@ -1,9 +1,10 @@
-import { Body, Button, Heading, Hoya, Screen, Spacer, spacing } from '@hangul-route/design-system';
+import { Body, Button, Card, Heading, Hoya, Screen, Spacer, spacing } from '@hangul-route/design-system';
 import { availableLocales } from '@hangul-route/i18n';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React from 'react';
 import { View } from 'react-native';
 import { LanguageChips } from '../../components/LanguageChips';
+import { LinkButton } from '../../components/LinkButton';
 import { bundleOs, flags } from '../../config/flags';
 import { useMessages } from '../../i18n/use-messages';
 import { deviceChoice, languageOptions, showLanguagePickers } from '../../logic/locale/language-picker';
@@ -25,8 +26,13 @@ type Props = NativeStackScreenProps<OnboardingStackParamList, 'Welcome'>;
  * grown-ups' row sits under the restore link, so "Let's start" stays the only filled button, in
  * its place; Let's start then also sends `shell.persona_chosen { persona: 'learner' }`. Native
  * builds and the flag off: today's screen (OD-6).
+ *
+ * The class join link on a device with no profile (owner decision 2026-10-17; review of #734) opens this screen with
+ * `classLink` and the link's code: a card shows the code and what Start does, and tells a learner who already plays in
+ * the installed app (whose storage the browser does not share on iOS) to type the code there. Start then runs the
+ * class-code first run with the code; "I already have progress" stays next to it.
  */
-export function WelcomeScreen({ navigation }: Props): React.ReactElement {
+export function WelcomeScreen({ navigation, route }: Props): React.ReactElement {
   const m = useMessages();
   const w = m.learner.welcome;
   const available = availableLocales();
@@ -34,6 +40,15 @@ export function WelcomeScreen({ navigation }: Props): React.ReactElement {
   const device = useLocaleStore((s) => s.device);
   const setDeviceLocale = useLocaleStore((s) => s.setDeviceLocale);
   const grownUps = grownUpEntriesOn(flags.grownUpHomeEnabled, bundleOs());
+  const classLink = route.params?.classLink === true;
+  const linkCode = route.params?.code;
+  // Start (and "Got a class code?") is the learner's way in: `shell.persona_chosen { learner }` on the grown-up entries'
+  // build, then the first run (with Join a class after it for a class code).
+  const startFirstRun = (params: OnboardingStackParamList['CreateProfile']): void => {
+    const event = startEvent(grownUps);
+    if (event) void track(event);
+    navigation.navigate('CreateProfile', params);
+  };
 
   return (
     <Screen tone="canvas">
@@ -50,16 +65,29 @@ export function WelcomeScreen({ navigation }: Props): React.ReactElement {
       </View>
 
       <View style={{ paddingBottom: spacing.xl, alignItems: 'center', gap: spacing.md }}>
+        {classLink ? (
+          <View style={{ alignSelf: 'stretch' }}>
+            <Card padding="md" tone="sunken" testID="welcome-class-link">
+              {linkCode !== undefined ? (
+                <Body weight="semibold" size="lg" testID="welcome-class-link-code">
+                  {w.classLink.code(linkCode)}
+                </Body>
+              ) : null}
+              <Body tone="secondary">{w.classLink.next}</Body>
+              <Spacer size="xs" />
+              <Body tone="secondary" size="sm">
+                {w.classLink.inApp}
+              </Body>
+            </Card>
+          </View>
+        ) : null}
         <Button
           label={w.cta}
           tone="primary"
           size="hero"
           fullWidth
-          onPress={() => {
-            const event = startEvent(grownUps);
-            if (event) void track(event);
-            navigation.navigate('CreateProfile', { firstRun: true });
-          }}
+          onPress={() => startFirstRun(classLink ? { firstRun: true, then: 'join', ...(linkCode === undefined ? {} : { code: linkCode }) } : { firstRun: true })}
+          testID="welcome-start"
         />
         <Button
           label={w.restore}
@@ -67,6 +95,11 @@ export function WelcomeScreen({ navigation }: Props): React.ReactElement {
           size="md"
           onPress={() => (navigation.getParent() as NavigationProp<RootStackParamList> | undefined)?.navigate('Restore', { from: 'welcome' })}
         />
+        {/* A quiet way in for a learner with a class code (owner request 2026-10-16, item 8): the profile and consent steps
+            run unchanged, then Join a class opens. The join link's card already says it, so the link then stays away. */}
+        {classLink ? null : (
+          <LinkButton label={m.learner.home.classCode.cta} onPress={() => startFirstRun({ firstRun: true, then: 'join' })} testID="welcome-class-code" />
+        )}
         {grownUps ? <WelcomeGrownUps /> : null}
         {showLanguagePickers(available) ? (
           <LanguageChips

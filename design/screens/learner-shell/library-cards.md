@@ -12,3 +12,14 @@ Spec: AMENDMENTS-DISPLAY-NAV section 9.3 · wireframe `design/wireframes/library
 ## States
 
 Two collected (`library-cards.html`), the disclosure open (`library-cards-open.html`), nothing collected yet (`library-cards-empty.html`: the count line and the disclosure open by default). All collected: no disclosure. The theme chips filter both groups.
+
+## As built (row OR-UX, 2026-10-17)
+
+Spec section 9.8 deviation table, row "Library Cards" · code `apps/mobile/src/logic/library/shelves.ts` (`libraryShelves`), `apps/mobile/src/screens/library/LibraryScreen.tsx` · tests `logic/library/__tests__/shelves.test.ts`, e2e `learner-ux.spec.ts` (Library), `library-earn-hints.spec.ts` · shots of the build `shots/library-cards-as-built-360.png` (a new learner with the welcome card, 360 x 640) and `shots/library-cards-to-find-as-built-360.png` (Cards to find with the Next card row and the first group open).
+
+1. **Your cards** (`learner.library.yours.title`) first: the held tiles, the most recently earned first (`cards[].unlockedAt`; cards earned together keep gallery order), unchanged faces and New pills. With none yet: "Your first card is waiting. Finish a quest to earn it." (`.yours.empty`).
+2. **Cards to find** (`learner.library.toFind.title`), always visible while any card is still to find, in place of the Cards to earn disclosure:
+   - **Next card** (`.toFind.next`): one row with a silhouette and the earn hint of the first card to find (named `.toFind.nextA11y(hint)`); it opens that card's page.
+   - One closed row per episode, story, stage or set that earns cards (`.toFind.a11y(title)`, `aria-expanded`), titled with the episode or story title in the UI language, "Stage n" or the set's name; open, it shows those cards as silhouettes.
+   - **No count** of what is left, and no hint repeated on every tile: each locked tile keeps its earn hint in its accessible name (`a11y.lockedCardHint`) and on its card page (F-STORY-006 section 3.7, pointer line).
+3. The theme chips filter both shelves. Every row and tile is at least `touchTarget.min`; tokens only (`surface.sunken`, `border.shape` dashed silhouettes, `brand.secondaryLight` Next card row).

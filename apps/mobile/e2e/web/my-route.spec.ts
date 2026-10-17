@@ -2,7 +2,7 @@ import type { Locator, Page } from '@playwright/test';
 import { CATALOG, generateCurriculum, toMeta } from '@hangul-route/content-schema';
 import { getMessages } from '@hangul-route/i18n';
 import { expect, test } from './fixtures';
-import { onboardChild, readStored, seedStored, headerBack, headerClose } from './helpers';
+import { onboardChild, openGrownUpZone, readStored, seedStored, unlockWithPin, headerBack, headerClose } from './helpers';
 import { shot } from './shots';
 
 /**
@@ -162,7 +162,7 @@ async function openRouteTab(page: Page): Promise<Locator> {
 test.describe('the Route tab and its route card (LR-10)', () => {
 
   for (const size of VIEWPORTS) {
-    test(`${size.width} x ${size.height}: four tabs, the route card's words, the goal tag on the trail, no side scroll`, async ({ page }) => {
+    test(`${size.width} x ${size.height}: four tabs, the route card's words, the next lessons, no side scroll`, async ({ page }) => {
       await page.setViewportSize(size);
       await learnerOnHome(page);
       await expect(page.getByRole('tablist').getByRole('link')).toHaveCount(4);
@@ -170,12 +170,16 @@ test.describe('the Route tab and its route card (LR-10)', () => {
 
       const card = page.getByTestId('my-route-card');
       await expect(card).toBeVisible();
-      // A new learner: the start line, the goal (Hoya's suggestion, Stage 1), the one Next and Start.
+      // A new learner: the start line, the goal (Hoya's suggestion, Stage 1) and Start; the one next is the first
+      // of the next lessons under the card (owner decision 2026-10-17), so the card does not repeat it.
       await expect(card.getByText(m.hero.start, { exact: true })).toBeVisible();
       await expect(page.getByTestId('my-route-card-from')).toHaveText(m.goal.from.default);
-      await expect(page.getByTestId('my-route-card-next')).toHaveText(/^Next: /);
       await expect(page.getByTestId('my-route-card-cta')).toBeVisible();
-      await expect(page.getByTestId('my-route-stage-1').getByText(m.tag.goal, { exact: true })).toBeVisible();
+      await expect(page.getByTestId('my-route-card-next')).toHaveCount(0);
+      const next = page.getByTestId('my-route-next-lessons').getByRole('button');
+      await expect(next).toHaveCount(3);
+      await expect(next.first()).toHaveAccessibleName(new RegExp(`^${escapeRe(en.learner.routeNext.tag.next)}: `));
+      await expect(page.getByTestId('my-route-trail')).toHaveCount(0);
       // Fill-only: no digits, no "of", no ratio anywhere on the card.
       expect(await card.innerText()).not.toMatch(/\d\s*\/\s*\d|\bof \d/);
       expect(await noSideScroll(page)).toBe(true);
@@ -188,15 +192,21 @@ test.describe('the Route tab and its route card (LR-10)', () => {
     });
   }
 
-  test('320 x 568: here, goal and start on one stage take at most two rows, nothing cut off', async ({ page }) => {
+  test('320 x 568: here, goal and start on one stage take at most two rows, nothing cut off (the grown-up page)', async ({ page }) => {
+    // The stage trail is on the grown-up page since the owner decision of 2026-10-17 (the learner's tab lists the
+    // next lessons), so the three tags are measured there, in the grown-up's words.
     await page.setViewportSize({ width: 320, height: 568 });
     const id = await learnerOnHome(page);
     await seedStartedLearner(page, id);
     await closeInstallGuide(page);
-    await openRouteTab(page);
+    await openGrownUpZone(page, 'Dani');
+    await unlockWithPin(page);
+    await page.getByTestId(`dashboard-route-${id}-open`).click();
+    await expect(page.getByTestId('my-route-screen')).toBeVisible();
 
+    const g = en.caregiver.journey;
     const row = page.getByTestId('my-route-stage-1');
-    const tags = [m.tag.here, m.tag.goal, m.tag.start].map((t) => row.getByText(t, { exact: true }));
+    const tags = [g.hereTag('Dani'), g.goalTag('Dani'), g.started('Dani')].map((t) => row.getByText(t, { exact: true }));
     const boxes = [];
     for (const tag of tags) {
       await tag.scrollIntoViewIfNeeded();
@@ -224,13 +234,17 @@ test.describe('the Route tab and its route card (LR-10)', () => {
 
   test('a class plan: its source line, the longest Stage 1 title as Next, the same quest as Home card (2), and Continue opens it', async ({ page }) => {
     await classPlanOnRoute(page);
-    // Home card (2) names the plan's quest (F-ENT-003 section 3.5).
-    const homeCard = page.getByTestId('home-missions').getByRole('button').nth(1);
-    await expect(homeCard).toHaveAccessibleName(new RegExp(LONGEST_STAGE1.title.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+    // Home card (2) names the plan's quest (F-ENT-003 section 3.5): the hero's own lesson, so card (2) is its compact
+    // row and the hero's Start is the way in (AMENDMENTS-DISPLAY-NAV 9.1).
+    await expect(page.getByTestId('home-mission-same-as-hero-2')).toContainText(LONGEST_STAGE1.title);
+    await expect(page.getByTestId('home-next-lesson')).toContainText(LONGEST_STAGE1.title);
 
     await openRouteTab(page);
     await expect(page.getByTestId('my-route-card-from')).toHaveText(m.goal.from.class);
-    await expect(page.getByTestId('my-route-card-next')).toHaveText(m.hero.next(LONGEST_STAGE1.title));
+    // The plan's quest is the first of the next lessons, tagged Next (owner decision 2026-10-17).
+    await expect(page.getByTestId('my-route-next-lessons').getByRole('button').first()).toHaveAccessibleName(
+      new RegExp(`^${escapeRe(`${en.learner.routeNext.tag.next}: ${LONGEST_STAGE1.title}.`)}`),
+    );
     const cta = page.getByTestId('my-route-card-cta');
     await expect(cta).toHaveAccessibleName(m.hero.cta.continue);
     expect(await noSideScroll(page)).toBe(true);
@@ -246,7 +260,7 @@ test.describe('the Route tab and its route card (LR-10)', () => {
     await page.goto('/');
     await expect(page.getByText('Hi, Dani!')).toBeVisible();
     await closeInstallGuide(page);
-    await page.getByTestId('home-missions').getByRole('button').nth(1).click();
+    await page.getByTestId('home-next-lesson-start').click();
     expect(await firstStep(page)).toEqual(fromRoute);
   });
 
@@ -269,7 +283,9 @@ test.describe('the Route tab and its route card (LR-10)', () => {
     // back onto the first screen: one tap away without scrolling.
     await classPlanOnRoute(page);
     await openRouteTab(page);
-    await expect(page.getByTestId('my-route-card-next')).toHaveText(m.hero.next(LONGEST_STAGE1.title));
+    await expect(page.getByTestId('my-route-next-lessons').getByRole('button').first()).toHaveAccessibleName(
+      new RegExp(`^${escapeRe(`${en.learner.routeNext.tag.next}: ${LONGEST_STAGE1.title}.`)}`),
+    );
     const cta = page.getByTestId('my-route-card-cta');
     await expect(cta).toHaveAccessibleName(m.hero.cta.continue);
     expect(await ctaOverlap(page, cta), 'Continue ends under the tab bar at 320 x 568').toBeLessThanOrEqual(0);
@@ -304,8 +320,12 @@ test.describe('the Route tab and its route card (LR-10)', () => {
     });
     test.skip(both === undefined, 'every grid cell has shipped (F-CURR-001 S7-5): no "Coming later" cell is left beside a "Not open yet" one');
     await page.setViewportSize({ width: 320, height: 568 });
-    await learnerOnHome(page);
-    await openRouteTab(page);
+    const id = await learnerOnHome(page);
+    // The stage trail is on the grown-up page since the owner decision of 2026-10-17.
+    await openGrownUpZone(page, 'Dani');
+    await unlockWithPin(page);
+    await page.getByTestId(`dashboard-route-${id}-open`).click();
+    await expect(page.getByTestId('my-route-screen')).toBeVisible();
 
     expect(m.state.notOpen).not.toBe(m.state.later);
     expect(m.legend.notOpen).not.toBe(m.legend.later);
@@ -333,73 +353,62 @@ test.describe('the Route tab and its route card (LR-10)', () => {
 });
 
 /**
- * The Home strip entry (F-ROUTE-001 R-10; R-4b, section 3.1 entry 2, OD-3; amendment LR-A6 and section 5.2): with
- * the flag on, Home shows one tappable Learning Route card where the "Stage 1 progress" bar was, read as one button,
- * and a tap opens the Route tab. The page then sends `route_map.viewed` with `source: 'tab'`: since LR-4 every
- * entry of the active learner opens the tab, and the tab sends `'tab'` on each focus (amendment section 5.1, LR-A7);
- * the R-10 row's older `source: 'home'` named the root-stack page the strip opened before LR-4.
+ * The Home entry (F-ROUTE-001 R-10; R-4b; amendment LR-A6 and section 5.2) as folded into the Next lesson hero
+ * (AMENDMENTS-DISPLAY-NAV section 9.1, and the seven stages stay in Journey, owner decision 2026-10-17): while a
+ * next lesson exists Home has no route strip and no seven segments; the hero says where the lesson sits and its
+ * "See your Learning Route" opens the Route tab. The page then sends `route_map.viewed` with `source: 'tab'`, as
+ * every entry of the active learner does since LR-4 (amendment section 5.1, LR-A7).
  *
  * The telemetry case needs a build with an API address, so `track` posts (the route below answers it; nothing
  * leaves the machine):
  *
  *   EXPO_PUBLIC_API_BASE_URL=https://api.e2e.invalid pnpm --filter @hangul-route/mobile build:web
- *   E2E_TELEMETRY=1 pnpm --filter @hangul-route/mobile exec playwright test my-route -g "Home strip"
+ *   E2E_TELEMETRY=1 pnpm --filter @hangul-route/mobile exec playwright test my-route -g "Home entry"
  *
- * Without E2E_TELEMETRY=1 that case is reported as skipped, not passed. The flip PR's evidence run is the full
- * command in the file header, which sets both.
+ * Without E2E_TELEMETRY=1 that case is reported as skipped, not passed.
  */
 const TELEMETRY_BUILD = process.env.E2E_TELEMETRY === '1';
 
-test.describe('the Home strip entry (R-10)', () => {
+test.describe('the Home entry, folded into the Next lesson hero (R-10, AMENDMENTS-DISPLAY-NAV 9.1)', () => {
   test.use({ serviceWorkers: 'block' });
 
   for (const size of [
     { width: 320, height: 568 },
     { width: 844, height: 390 },
   ] as const) {
-    test(`${size.width} x ${size.height}: the strip in place of "Stage 1 progress", one button with one label, no side scroll`, async ({ page }) => {
+    test(`${size.width} x ${size.height}: the hero in place of the strip, with where the lesson sits and one link to the route`, async ({ page }) => {
       await page.setViewportSize(size);
       await learnerOnHome(page);
 
-      const strip = page.getByTestId('home-route-strip');
-      await strip.scrollIntoViewIfNeeded();
-      await expect(strip).toBeVisible();
+      const hero = page.getByTestId('home-next-lesson');
+      await expect(hero).toBeVisible();
+      await expect(page.getByTestId('home-route-strip')).toHaveCount(0);
+      await expect(page.getByText(m.home.strip.stages, { exact: true })).toHaveCount(0);
       await expect(page.getByText(en.learner.home.progress.heading, { exact: true })).toHaveCount(0);
-      // Its words: the page name and where the learner is (a new learner: Stage 1), Hoya's goal for Stage 1.
-      // The here line is `hero.here` for Stage 1 with the stage's title from the bundle.
-      const here = new RegExp(`^${escapeRe(m.hero.here(1, '<t>')).replace('<t>', '[^.]+')}$`);
-      await expect(strip.getByText(m.home.strip.title, { exact: true })).toBeVisible();
-      await expect(strip.getByText(here)).toBeVisible();
-      await expect(strip.getByText(m.home.strip.stages, { exact: true })).toBeVisible();
-
-      // One button: the whole card, named by one label that starts with the page name and says where the learner
-      // is; nothing inside it is a second button or link, and the drawn pips are hidden from screen readers.
-      const hereText = (await strip.getByText(here).innerText()).trim();
-      await expect(page.getByRole('button', { name: new RegExp(`^${escapeRe(`${m.home.strip.title}. ${hereText}`)}`) })).toHaveCount(1);
-      expect(await strip.getAttribute('role')).toBe('button');
-      await expect(strip.getByRole('button')).toHaveCount(0);
-      await expect(strip.getByRole('link')).toHaveCount(0);
-      await expect(page.getByRole('button', { name: m.home.strip.title, exact: true })).toHaveCount(0);
-
+      // Where the lesson sits: Stage 1, its episode and its place among the episode's lessons (Home only).
+      await expect(page.getByTestId('home-next-lesson-where')).toHaveText(/^Stage 1 · .+ · lesson \d+ of \d+$/);
+      // One link to the whole route, named by its own words.
+      const link = page.getByTestId('home-next-lesson-route');
+      await expect(link).toHaveAccessibleName(en.learner.home.next.route.cta);
+      await expect(page.getByRole('button', { name: en.learner.home.next.route.cta, exact: true })).toHaveCount(1);
       expect(await noSideScroll(page)).toBe(true);
-      await shot(page, `home-route-strip-${size.width}`);
+      await shot(page, `home-hero-route-link-${size.width}`);
     });
   }
 
-  test('a tap opens the Route tab: the page, its purpose line, no back button', async ({ page }) => {
+  test('See your Learning Route opens the Route tab: the page, its purpose line, no back button', async ({ page }) => {
     await page.setViewportSize({ width: 320, height: 568 });
     await learnerOnHome(page);
 
-    const strip = page.getByTestId('home-route-strip');
-    await strip.scrollIntoViewIfNeeded();
-    await strip.click();
+    const link = page.getByTestId('home-next-lesson-route');
+    await link.scrollIntoViewIfNeeded();
+    await link.click();
     const screen = page.getByTestId('my-route-screen');
     await expect(screen).toBeVisible();
     await expect(screen.getByText(m.purpose, { exact: true })).toBeVisible();
     await expect(headerBack(page)).toHaveCount(0);
     await expect(page.getByRole('tablist').getByRole('link')).toHaveCount(4);
-    await expect(page.getByTestId('home-route-strip')).toBeHidden();
-    await shot(page, 'home-route-strip-opens-route-320');
+    await shot(page, 'home-hero-opens-route-320');
   });
 
   test('a tap sends route_map.viewed exactly once, with source tab', async ({ page }) => {
@@ -413,9 +422,9 @@ test.describe('the Home strip entry (R-10)', () => {
     await page.setViewportSize({ width: 320, height: 568 });
     await learnerOnHome(page);
 
-    const strip = page.getByTestId('home-route-strip');
-    await strip.scrollIntoViewIfNeeded();
-    await strip.click();
+    const link = page.getByTestId('home-next-lesson-route');
+    await link.scrollIntoViewIfNeeded();
+    await link.click();
     await expect(page.getByTestId('my-route-screen')).toBeVisible();
 
     await expect.poll(() => viewed.length).toBe(1);

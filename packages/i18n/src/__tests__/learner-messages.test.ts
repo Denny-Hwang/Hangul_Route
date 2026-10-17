@@ -17,7 +17,21 @@ describe('learner.welcome (English wording as shipped)', () => {
       trust: 'Start Korean from zero. Built with kids, parents, and grandparents in mind.',
       // F-APP-001 A-7: the persona row (grown-up-entry-messages.test.ts owns its wording).
       grownUps: m.learner.welcome.grownUps,
+      classLink: m.learner.welcome.classLink,
     });
+  });
+
+  it('the class join link card on a device with no profile: the code, what Start does, where to type it in the app (review of #734)', () => {
+    const c = m.learner.welcome.classLink;
+    expect(c.code('ABC234')).toBe('Class code: ABC234');
+    expect(c.next).toBe('Make your profile first. Then Join a class opens.');
+    expect(c.inApp).toBe('Already learning in the Hangul Route app? Open it, go to Profile and tap Join a class.');
+    // The button names it points at are the shipped ones, in every language.
+    for (const locale of ['en', 'es', 'ko'] as const) {
+      const words = getMessages(locale);
+      expect(words.learner.welcome.classLink.inApp, locale).toContain(words.caregiver.spaces.join.cta);
+      expect(words.learner.welcome.classLink.inApp, locale).toContain(words.learner.home.profileLabel);
+    }
   });
 });
 
@@ -137,7 +151,8 @@ describe('learner.profile (English wording as shipped)', () => {
     expect(p.plan.free).toBe('Free plan');
     expect(p.plan.fullRoute).toBe('Full route');
     expect(p.plan.open(null)).toBe('Everything is open.');
-    expect(p.plan.freeNote).toBe('Stage 1 is free. More stages are on the way.');
+    expect(p.plan.freeNote).toBe('All of Stage 1 is free.');
+    expect(p.plan.allOpen).toBe('Everything is open right now.');
     expect([p.plan.pillActive, p.plan.pillFree, p.plan.details.cta]).toEqual(['Active', 'Free', 'Plan details']);
     for (const gone of ['premium', 'unlocked', 'unlock']) expect(gone in p.plan, gone).toBe(false);
     expect([p.install.label, p.install.a11yLabel]).toEqual(['Install on this device', 'Install Hangul Route on this device']);

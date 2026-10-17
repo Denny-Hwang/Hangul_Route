@@ -6246,6 +6246,15 @@
    ]
   },
   {
+   "name": "qrcode-generator",
+   "version": "2.0.4",
+   "license": "MIT",
+   "copyright": "Copyright (c) 2009 Kazuhiko Arase",
+   "usedIn": [
+    "web"
+   ]
+  },
+  {
    "name": "qrcode-terminal",
    "version": "0.11.0",
    "license": "Apache-2.0",

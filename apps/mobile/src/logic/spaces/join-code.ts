@@ -17,6 +17,19 @@ export function isCompleteJoinCode(value: string): boolean {
 }
 
 /**
+ * What the Join screen's code field starts with: the class join link's code (owner decision 2026-10-17), else the
+ * family home's hand-off, each cleaned as typed keys are; null when neither holds anything.
+ */
+export function joinPrefill(linkCode: string | undefined, handoff: string | null): string | null {
+  for (const raw of [linkCode, handoff]) {
+    if (raw === undefined || raw === null) continue;
+    const code = cleanJoinCode(raw);
+    if (code !== '') return code;
+  }
+  return null;
+}
+
+/**
  * The widest a code character draws, in ems: a bold W, the alphabet's widest letter, is just under one em in the
  * system fonts, so one em is the worst case.
  */

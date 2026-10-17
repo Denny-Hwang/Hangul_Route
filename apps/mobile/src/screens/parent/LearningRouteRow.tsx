@@ -3,7 +3,7 @@ import type { ProgressSnapshot } from '@hangul-route/content-schema';
 import { formatDate } from '@hangul-route/i18n';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { View } from 'react-native';
 import { bundleOs, flags, gatingActive } from '../../config/flags';
 import { episodesAll, questsAll } from '../../content';
@@ -44,6 +44,8 @@ const srOnly = { position: 'absolute', width: 1, height: 1, margin: -1, overflow
 const frame = { marginTop: spacing.md, paddingTop: spacing.sm, borderTopWidth: borderWidth.thin, borderTopColor: colors.border.subtle } as const;
 
 export function LearningRouteRowView({ view, onOpen, testID }: { view: DashboardRowView; onOpen: () => void; testID: string }): React.ReactElement {
+  const aboutRows = useMessages().caregiver.dashboard.aboutRows.cta;
+  const [aboutOpen, setAboutOpen] = useState(false);
   const segments = view.segments.map((s) => ({ key: s.stage, state: s.state, here: s.here, accent: colors.stage[s.stage] }));
   return (
     <View testID={testID} style={frame}>
@@ -96,11 +98,19 @@ export function LearningRouteRowView({ view, onOpen, testID }: { view: Dashboard
           <Body tone="secondary">{view.tiles}</Body>
         </>
       ) : null}
-      <Spacer size="xs" />
-      <Caption tone="muted">{view.note}</Caption>
-      <Spacer size="sm" />
+      {/* The level-check note opens behind "About these rows" (owner request 2026-10-16, item 8). */}
       <View style={{ alignItems: 'flex-start' }}>
-        <Button label={view.cta} tone="secondary" size="md" onPress={onOpen} testID={`${testID}-open`} />
+        <Button label={aboutRows} tone="ghost" size="sm" expanded={aboutOpen} onPress={() => setAboutOpen((v) => !v)} testID={`${testID}-about`} />
+      </View>
+      {aboutOpen ? (
+        <Caption tone="muted" testID={`${testID}-note`}>
+          {view.note}
+        </Caption>
+      ) : null}
+      <Spacer size="sm" />
+      {/* An outline button: See report is the card's one filled button. */}
+      <View style={{ alignItems: 'flex-start' }}>
+        <Button label={view.cta} tone="ghost" size="md" onPress={onOpen} testID={`${testID}-open`} />
       </View>
     </View>
   );
@@ -116,7 +126,7 @@ export function LearningRouteRowFallback({ title, cta, onOpen, testID }: { title
       <Caption tone="muted">{title}</Caption>
       <Spacer size="sm" />
       <View style={{ alignItems: 'flex-start' }}>
-        <Button label={cta} tone="secondary" size="md" onPress={onOpen} testID={`${testID}-open`} />
+        <Button label={cta} tone="ghost" size="md" onPress={onOpen} testID={`${testID}-open`} />
       </View>
     </View>
   );

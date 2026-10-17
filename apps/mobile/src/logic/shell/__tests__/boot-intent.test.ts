@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { openBootIntentWhenReady, parseBootIntent } from '../boot-intent';
+import { joinIntentTarget, openBootIntentWhenReady, parseBootIntent, parseJoinBootIntent } from '../boot-intent';
 
 /**
  * F-APP-001 section 3.9 (PIN path in the learner app) and section 3.11 (boot intents): the
@@ -226,6 +226,69 @@ describe('the gate=browse boot intent', () => {
   it('with no browse hand-off given (a build that cannot open All lessons), the intent is taken and nothing opens', () => {
     const nav = readyNavigator();
     const src = browseSource();
+    openBootIntentWhenReady(nav, src);
+    expect(nav.navigate).not.toHaveBeenCalled();
+    expect(src.consume).toHaveBeenCalledTimes(1);
+  });
+});
+
+/**
+ * The class join link (owner decision 2026-10-17): `/join#c=<code>` opens Join a class with the code filled in, and the
+ * address loses the path and the fragment (the code never stays in the address or the history), keeping the query.
+ */
+describe('the join link boot intent', () => {
+  it('reads /join with its code and writes back the app root, the query kept, no fragment', () => {
+    expect(parseJoinBootIntent({ pathname: '/join', search: '', hash: '#c=ABC234' })).toEqual({ intent: { kind: 'join', code: 'ABC234' }, address: '/' });
+    expect(parseJoinBootIntent({ pathname: '/join/', search: '?lang=ko', hash: '#c=abc234' })).toEqual({ intent: { kind: 'join', code: 'ABC234' }, address: '/?lang=ko' });
+  });
+
+  it('a /join with no valid code still opens Join a class, empty', () => {
+    expect(parseJoinBootIntent({ pathname: '/join', search: '', hash: '' })).toEqual({ intent: { kind: 'join', code: null }, address: '/' });
+    expect(parseJoinBootIntent({ pathname: '/join', search: '', hash: '#c=O0O0O0' })).toEqual({ intent: { kind: 'join', code: null }, address: '/' });
+  });
+
+  it('is no intent on any other path', () => {
+    for (const pathname of ['/', '/joins', '/teach/join', '/present']) expect(parseJoinBootIntent({ pathname, search: '', hash: '#c=ABC234' }), pathname).toBeNull();
+  });
+
+  it('opens Join a class on a device with a profile, else Welcome with the code (Start, or I already have progress)', () => {
+    expect(joinIntentTarget({ kind: 'join', code: 'ABC234' }, true)).toEqual({ screen: 'JoinSpace', params: { code: 'ABC234' } });
+    expect(joinIntentTarget({ kind: 'join', code: null }, true)).toEqual({ screen: 'JoinSpace', params: {} });
+    expect(joinIntentTarget({ kind: 'join', code: 'ABC234' }, false)).toEqual({
+      screen: 'Onboarding',
+      params: { screen: 'Welcome', params: { classLink: true, code: 'ABC234' } },
+    });
+    expect(joinIntentTarget({ kind: 'join', code: null }, false)).toEqual({ screen: 'Onboarding', params: { screen: 'Welcome', params: { classLink: true } } });
+  });
+
+  function joinSource(code: string | null) {
+    let intent: { kind: 'join'; code: string | null } | null = { kind: 'join', code };
+    return {
+      peek: vi.fn(() => intent),
+      consume: vi.fn(() => {
+        intent = null;
+      }),
+    };
+  }
+  const readyNavigator = () => ({ isReady: vi.fn(() => true), navigate: vi.fn(), addListener: vi.fn(() => () => undefined) });
+
+  it('navigates once to its target when the navigator is ready', () => {
+    const nav = readyNavigator();
+    const src = joinSource('ABC234');
+    openBootIntentWhenReady(nav, src, undefined, { hasProfile: () => true });
+    openBootIntentWhenReady(nav, src, undefined, { hasProfile: () => true });
+    expect(nav.navigate).toHaveBeenCalledTimes(1);
+    expect(nav.navigate).toHaveBeenCalledWith('JoinSpace', { code: 'ABC234' });
+    expect(src.consume).toHaveBeenCalledTimes(1);
+
+    const fresh = readyNavigator();
+    openBootIntentWhenReady(fresh, joinSource('ABC234'), undefined, { hasProfile: () => false });
+    expect(fresh.navigate).toHaveBeenCalledWith('Onboarding', { screen: 'Welcome', params: { classLink: true, code: 'ABC234' } });
+  });
+
+  it('with no join hand-off given, the intent is taken and nothing opens', () => {
+    const nav = readyNavigator();
+    const src = joinSource('ABC234');
     openBootIntentWhenReady(nav, src);
     expect(nav.navigate).not.toHaveBeenCalled();
     expect(src.consume).toHaveBeenCalledTimes(1);

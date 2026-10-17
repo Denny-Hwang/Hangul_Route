@@ -237,7 +237,15 @@ export function PaywallScreen({ navigation, route }: Props): React.ReactElement 
       ) : (
         <Spacer size="xl" />
       )}
-      <Button label={view.back} tone="primary" size="lg" fullWidth onPress={() => navigation.navigate('Main', { screen: view.backTo })} />
+      <Button
+        label={view.back}
+        tone="primary"
+        size="lg"
+        fullWidth
+        // Plain Back (Profile's plan card opened it) goes where the route's ScreenHeader Back goes.
+        onPress={() => (view.backTo === 'Back' ? navigation.goBack() : navigation.navigate('Main', { screen: view.backTo }))}
+        testID="plan-back"
+      />
       <Spacer size="xl" />
     </Screen>
   );

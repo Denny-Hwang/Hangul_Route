@@ -192,7 +192,8 @@ test('sound switched off: the text prompt shows at once, Turn sound on plays it,
   await expect.poll(() => savedAudioPrefs(page)).toBe(JSON.stringify({ muted: true }));
   await page.reload();
 
-  await page.getByRole('button', { name: /^Meet a, eo, g, n/ }).click();
+  // The first lesson, from Home's Next lesson hero (card 2 names the same lesson as a quiet row, AMENDMENTS-DISPLAY-NAV 9.1).
+  await page.getByTestId('home-next-lesson-start').click();
   await page.getByRole('button', { name: 'Continue' }).click();
   await passDiscover(page);
   await page.getByRole('button', { name: 'Play minigame' }).click();
@@ -348,7 +349,8 @@ test('Build a Letter with sound off: a tap says sound is off, and Turn sound on 
   await page.getByRole('switch', { name: /^Sound/ }).click();
   await expect.poll(() => savedAudioPrefs(page)).toBe(JSON.stringify({ muted: true }));
   await page.reload();
-  await page.getByRole('button', { name: /^Meet a, eo, g, n/ }).click();
+  // The first lesson, from Home's Next lesson hero (card 2 names the same lesson as a quiet row, AMENDMENTS-DISPLAY-NAV 9.1).
+  await page.getByTestId('home-next-lesson-start').click();
   await openBuildLetter(page);
   await expect(page.getByTestId('prompt-panel-detail')).toHaveCount(0);
 
@@ -622,7 +624,8 @@ test.describe('bundled clips (A-6)', () => {
     await page.reload();
     await expect(page.getByText('Hi, Dami!')).toBeVisible();
 
-    await page.getByRole('button', { name: /^Meet a, eo, g, n/ }).click();
+    // The first lesson, from Home's Next lesson hero (card 2 names the same lesson as a quiet row, AMENDMENTS-DISPLAY-NAV 9.1).
+    await page.getByTestId('home-next-lesson-start').click();
     await openMatchSound(page);
 
     // A clip started, served by the service worker.

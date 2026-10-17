@@ -13,6 +13,7 @@ const SAMPLE_ARGS: Record<string, readonly (readonly unknown[])[]> = {
   'topics.collected': [[0], [5]],
   'topics.tileA11y': [['Food', 1], ['Food', 5]],
   'topics.lockedA11y': [['Food']],
+  'topics.freshA11y': [['Food']],
   'topic.collected': [[0], [5]],
   'topic.speed.needMore': [[1], [3], [4]],
   'cards.summary.newlyCollected': [[0], [1], [3]],

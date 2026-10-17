@@ -135,9 +135,12 @@ test.describe(`a self plan leads Next (${GATED ? 'switch on' : 'release build, s
     const page = await learnerWithPlan(first, errors);
     await page.setViewportSize({ width: 320, height: 568 });
 
-    // Home card (2): the plan's next lesson with "Next in your plan".
-    const card = page.getByRole('button', { name: new RegExp(`^${literal(PLAN_NEXT_TITLE)}\\. ${literal(learner.routeNext.home.subtitle)}\\.`) });
-    await expect(card).toBeVisible();
+    // Home: the plan's next lesson is the Next lesson hero's, so card (2), which names it, is the hero's quiet row
+    // (AMENDMENTS-DISPLAY-NAV 9.1); the hero's Start names the lesson.
+    await expect(page.getByRole('button', { name: `${learner.home.next.start.cta}: ${PLAN_NEXT_TITLE}`, exact: true })).toBeVisible();
+    const card = page.getByTestId('home-mission-same-as-hero-2');
+    await expect(card).toContainText(PLAN_NEXT_TITLE);
+    await expect(card).toContainText(learner.home.mission.sameAsHero);
     await shot(page, 'plan-next-home-320');
 
     // Journey: Next on the plan's lesson cell (one Next only), In your plan on the plan's cell.

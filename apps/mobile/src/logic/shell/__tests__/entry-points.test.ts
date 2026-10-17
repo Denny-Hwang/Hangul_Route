@@ -2,7 +2,7 @@ import { SHELL_TELEMETRY_PAYLOADS, TELEMETRY_EVENT_NAMES } from '@hangul-route/c
 import { getMessages } from '@hangul-route/i18n';
 import { describe, expect, it, vi } from 'vitest';
 import {
-  dashboardCardTitle,
+  dashboardSignInLabel,
   entryLine,
   grownUpEntriesOn,
   grownUpRowLabel,
@@ -81,13 +81,13 @@ describe('personaChosen (shell.persona_chosen, section 3.18)', () => {
 describe('the Profile row (D9, D11)', () => {
   const row = en.learner.profile.grownUpHome;
 
-  it('says "Grown-up home" on a family device and "Account home" on a self-only device', () => {
-    expect(grownUpRowTitle('family', row)).toBe('Grown-up home');
-    expect(grownUpRowTitle('self', row)).toBe('Account home');
+  it('says "Account pages" on a family device and on a self-only device: one grown-up name (DN 9.4)', () => {
+    expect(grownUpRowTitle('family', row)).toBe('Account pages');
+    expect(grownUpRowTitle('self', row)).toBe('Account pages');
   });
 
   it('reads its title and line together, then the gate hint the caller adds', () => {
-    expect(grownUpRowLabel('Grown-up home', 'Your family, classes and billing')).toBe('Grown-up home, Your family, classes and billing');
+    expect(grownUpRowLabel('Account pages', 'Your family, classes and billing')).toBe('Account pages, Your family, classes and billing');
   });
 });
 
@@ -157,9 +157,10 @@ describe('planOpenBlocked (Plan screen Open billing offline, sections 3.6, 3.12,
   });
 });
 
-describe('dashboardCardTitle (D9 on the dashboard card)', () => {
-  it('says "Account home" on a self-only device and "Grown-up home" otherwise', () => {
-    expect(dashboardCardTitle('self', en)).toBe(en.learner.profile.grownUpHome.selfTitle);
-    expect(dashboardCardTitle('family', en)).toBe(en.caregiver.grownUpHome.title);
+describe('dashboardSignInLabel (D9 on the dashboard row; owner request 2026-10-16, item 8)', () => {
+  it('says what it opens: family and class tools on a family device, the account on a self-only device', () => {
+    expect(dashboardSignInLabel('family', en)).toBe('Sign in for family and class tools');
+    expect(dashboardSignInLabel('self', en)).toBe('Sign in to your account');
+    expect(dashboardSignInLabel('self', en)).not.toMatch(/family|grown-up/i);
   });
 });

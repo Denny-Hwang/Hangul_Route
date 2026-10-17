@@ -1,7 +1,7 @@
 import { devices, type Page, type Playwright } from '@playwright/test';
 import { en } from '@hangul-route/i18n';
 import { expect, test } from './fixtures';
-import { onboardChild, onboardSelf, openGrownUpZone, readStored, typeDigits, unlockWithPin, headerBack } from './helpers';
+import { onboardChild, onboardSelf, openForGrownUps, openGrownUpZone, readStored, typeDigits, unlockWithPin, headerBack } from './helpers';
 import { shot } from './shots';
 import { expectNoHorizontalOverflow } from './viewport';
 
@@ -52,7 +52,8 @@ async function familyDashboard(page: Page, name = 'Mina'): Promise<string> {
   const id = await profileIdOf(page, name);
   await page.clock.setSystemTime(new Date(now));
   await page.goto('/');
-  await page.getByRole('button', { name: /^Meet a, eo, g, n/ }).click();
+  // The first lesson, from Home's Next lesson hero (card 2 names the same lesson as a quiet row, AMENDMENTS-DISPLAY-NAV 9.1).
+  await page.getByTestId('home-next-lesson-start').click();
   await expect.poll(async () => (await readStored<{ sessions: unknown[] }>(page, `progress:${id}`))?.sessions.length ?? 0).toBe(2);
   await openGrownUpZone(page, name);
   await unlockWithPin(page);
@@ -219,6 +220,7 @@ test.describe('the in-app report on a self-only device', () => {
     await guide.waitFor({ state: 'visible', timeout: 1500 }).catch(() => undefined);
     if (await guide.isVisible()) await guide.getByRole('button', { name: 'Not now' }).click();
     await page.getByRole('button', { name: 'Profile and settings' }).click();
+    await openForGrownUps(page);
     await page.getByRole('button', { name: /^Account & backup/ }).click();
     await page.getByTestId(`dashboard-see-report-${id}`).click();
 

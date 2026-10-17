@@ -25,10 +25,18 @@ describe('learner.home (English wording as shipped)', () => {
     expect(h.streak.pill(5)).toBe('Streak 5 days');
   });
 
-  it('keeps the card and star pills exactly as they were', () => {
-    expect(h.cards.pill(1)).toBe('1 cards');
+  it('counts cards and three-star quests in words, singular and plural (owner request 2026-10-16, item 8)', () => {
+    expect(h.cards.pill(1)).toBe('1 card');
     expect(h.cards.pill(12)).toBe('12 cards');
-    expect(h.stars.pill(3)).toBe('3★ quests');
+    expect(h.stars.pill(1)).toBe('1 three-star quest');
+    expect(h.stars.pill(3)).toBe('3 three-star quests');
+    for (const locale of ['es', 'ko'] as const) {
+      const pills = getMessages(locale).learner.home;
+      expect(pills.stars.pill(3), locale).not.toContain('★');
+      expect(pills.stars.pill(3), locale).toContain('3');
+    }
+    expect(getMessages('es').learner.home.cards.pill(1)).toBe('1 tarjeta');
+    expect(getMessages('ko').learner.home.cards.pill(1)).toBe('카드 1장');
   });
 
   it('keeps the section headings, progress, homework and tip lines', () => {
@@ -36,8 +44,17 @@ describe('learner.home (English wording as shipped)', () => {
     expect(h.progress.heading).toBe('Stage 1 progress');
     expect(h.progress.label(1, 24)).toBe('1 of 24 quests');
     expect(h.homework.title).toBe('Homework');
+    expect(h.homework.reviewTitle).toBe('Review');
     expect(h.homework.due(2)).toBe('2 to do today');
-    expect(h.tip).toBe("Tip — finish today's quest to keep your streak alive!");
+    // The tip follows the state (owner request 2026-10-16, item 8) and never frames a streak as something to lose.
+    expect(h.tip).toEqual({
+      first: 'Tip: tap Start to play your first lesson.',
+      doneToday: 'Nice work today! Your cards are waiting in the Library.',
+      daily: 'Tip: a little every day helps you learn.',
+    });
+    for (const locale of ['en', 'es', 'ko'] as const) {
+      for (const line of Object.values(getMessages(locale).learner.home.tip)) expect(line, locale).not.toMatch(/alive|racha|연속/i);
+    }
     expect(h.recentStars).toBe('Recent stars');
   });
 });

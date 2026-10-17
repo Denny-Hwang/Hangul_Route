@@ -73,6 +73,18 @@ describe('homeStripView', () => {
     expect(strip(model([]), { goalStage: 'stage1' }).goal).toBe('Goal: Stage 1 · Hangul');
   });
 
+  it('says whether the goal comes from a weekly plan (the hero shows the goal line only then, AMENDMENTS-DISPLAY-NAV 9.1)', () => {
+    const base = model([]);
+    expect(strip(base, { goalStage: 'stage2' }).goalFromPlan).toBe(base.goal !== null && base.goal.from !== 'default');
+    const planned: MyRouteModel = { ...base, goal: { stage: 'stage2', from: 'class', sourceId: 'plan:1', endsOn: null, reached: false, taste: false } };
+    expect(strip(planned, { goalStage: 'stage2' }).goalFromPlan).toBe(true);
+    const fallback: MyRouteModel = { ...base, goal: { stage: 'stage1', from: 'default', sourceId: null, endsOn: null, reached: false, taste: false } };
+    expect(strip(fallback, { goalStage: 'stage1' }).goalFromPlan).toBe(false);
+    // No goal line, no plan goal to show.
+    expect(strip(planned, { goalStage: null }).goalFromPlan).toBe(false);
+    expect(strip({ ...base, goal: null }, { goalStage: 'stage2' }).goalFromPlan).toBe(false);
+  });
+
   it('drops a goal stage the route does not know', () => {
     expect(strip(model([]), { goalStage: 'stage9' as never }).goal).toBeNull();
   });

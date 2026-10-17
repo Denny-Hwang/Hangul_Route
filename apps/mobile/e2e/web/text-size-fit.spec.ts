@@ -2,18 +2,7 @@ import type { Page } from '@playwright/test';
 import type { ProgressSnapshot } from '@hangul-route/content-schema';
 import { getMessages } from '@hangul-route/i18n';
 import { expect, test } from './fixtures';
-import {
-  journeyCellName,
-  onboardChild,
-  onboardSelf,
-  openGrownUpZone,
-  openLettersEpisode,
-  passDiscover,
-  readStored,
-  seedRescueCode,
-  seedStored,
-  unlockWithPin,
-} from './helpers';
+import { onboardSelf, openForGrownUps, openLettersEpisode, passDiscover, readStored, seedStored, journeyCellName, onboardChild, openGrownUpZone, seedRescueCode, unlockWithPin } from './helpers';
 import { shot } from './shots';
 import { closeInstallGuide, expectTextFits, fontSizeOf } from './text-fit';
 
@@ -106,6 +95,8 @@ test.describe('text size Largest at 320 x 568: the screens of row DN-3b', () => 
     const id = await profileIdOf(page, 'Dani');
 
     await openProfile(page);
+    // The grown-up rows sit in Profile's second group, closed until tapped (Account & more on a self-only device).
+    await openForGrownUps(page);
     await page.getByRole('button', { name: /^Account & backup/ }).click();
     await expect(page.getByTestId(`dashboard-see-report-${id}`)).toBeVisible();
     await expectTextFits(page, 'the grown-up area');
@@ -246,6 +237,8 @@ test.describe('text size Largest at 320 x 568: the screens of row DN-3b', () => 
 
     // Restore: Profile, the PIN, then the Rescue Code path; the code pasted with its hyphens.
     await openProfile(page);
+    // Backup sits in Profile's For grown-ups group, collapsed on arrival (AMENDMENTS-DISPLAY-NAV 9.2).
+    await openForGrownUps(page);
     await page.getByRole('button', { name: 'Restore from a file (PIN required)' }).click();
     await unlockWithPin(page);
     await page.getByRole('button', { name: 'I have a rescue code' }).click();

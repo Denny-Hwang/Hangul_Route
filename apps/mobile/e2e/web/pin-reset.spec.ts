@@ -1,5 +1,5 @@
 import { expect, test } from './fixtures';
-import { answerForkNew, E2E_PIN, onboardChild, openGrownUpZone, readStored, seedRescueCode, seedStored, typeDigits, unlockWithPin, headerBack } from './helpers';
+import { answerForkNew, E2E_PIN, onboardChild, openForGrownUps, openGrownUpZone, readStored, seedRescueCode, seedStored, typeDigits, unlockWithPin, headerBack } from './helpers';
 
 /**
  * F-LEARN-001 §3.5, §3.14: Forgot PIN. The Rescue Code path is covered in
@@ -120,6 +120,7 @@ for (const vp of VIEWPORTS) {
       await page.goto('/');
       await expect(page.getByText('Hi, Soo!')).toBeVisible();
       await page.getByRole('button', { name: 'Profile and settings' }).click();
+      await openForGrownUps(page);
       await page.getByRole('button', { name: /^Account & backup/ }).first().click();
       await expect(page.getByRole('heading', { name: 'Settings PIN' })).toBeVisible();
       await expect(page.getByText(/grown-up/i)).toHaveCount(0);

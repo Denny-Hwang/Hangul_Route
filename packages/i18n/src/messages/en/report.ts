@@ -113,6 +113,11 @@ export const report = {
     thisPeriod: 'This period',
     moreDetail: 'More detail',
   },
+  /**
+   * Under "This period" (owner request 2026-10-16, item 8): where the figures come from. The in-app report reads
+   * this device only; the console's report reads what every device of the learner saved.
+   */
+  scope: { device: 'On this device', allDevices: 'All devices' },
   /** Figure labels (layer 2). `up` sits under a figure only when it grew (OD-11); nothing says less. */
   figure: {
     days: 'Practice days',

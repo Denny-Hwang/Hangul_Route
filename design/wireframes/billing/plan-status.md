@@ -79,10 +79,11 @@ Profile card entry (every tier; no PIN for Plan details):
 ```
 | Plan                      [ Free ]  |      | Plan                    [ Active ] |
 | Free plan                           |      | Full route                         |
-| Stage 1 is free. More stages are on |      | Everything is open, from <space>.  |
-| the way.                            |      |                                    |
-| [ Plan details ]                    |      | [ Plan details ]                   |
+| All of Stage 1 is free.             |      | Everything is open, from <space>.  |
+| ( Plan details )                    |      | ( Plan details )                   |
 ```
+
+Owner request 2026-10-16 (item 8): the free line follows the real tier model. While content gating is off, the free card reads "Everything is open right now." (`learner.profile.plan.allOpen`); with gating on, "All of Stage 1 is free." (`freeNote`, owner decision 2026-10-11). "More stages are on the way" is gone. Plan details is an outline button (one filled button per screen); the card sits in Profile's "For grown-ups" group.
 
 ## Interaction points
 

@@ -95,3 +95,67 @@ Exit to: the Journey at a cell · Display sheet · the other tabs
 ## Open questions
 
 - None blocking.
+
+---
+
+## Revision 2026-10-17: owner decision (where you are now, the next three lessons, the goal)
+
+Owner decision 2026-10-17 (row OR-UX): keep the four learner tabs, and simplify the Route tab to **where you are now + the next three lessons + the goal**; the full map of the seven stages stays only in the Journey tab. **Panel D replaces Panels A to C on the learner's Route tab.** Panels A to C (one open stage, the others one row each, no "Open", no ratio) now describe the trail of the grown-up's read-only Learning Route page (`MyRoute`, behind the gate), which keeps the trail, the skills, the gains and the stories note.
+
+Panel D — 360 x 740, a learner in Stage 1 with a class plan
+
+```
++--------------------------------+
+| Learning Route (h1)     ( Aa ) |  <- root header, as before
+| Where you are and where you    |
+| are going.                     |
+| +----------------------------+ |
+| | (pin)(flag) Stage 1 ·      | |  <- route card: where you are and the goal (unchanged words and pips)
+| |   Hangul: you are in your  | |
+| |   goal stage               | |
+| | From your class's weekly   | |
+| |   plan                     | |
+| | (o)( )( )( )( )( )...      | |  <- goal pips that only fill
+| | [        Continue        ] | |  <- the one button: starts the first lesson below
+| +----------------------------+ |  <- the card no longer repeats "Next: <title>" (the list names it)
+| Week 1 of your weekly plan     |  <- unchanged; Open plan for the learner's own plan
+|                                |
+| Your next lessons (h2)         |
+| +----------------------------+ |
+| | (Next)                     | |  <- the card's lesson (routeNext), brand outline
+| | Meet o, u, m and the    >  | |
+| |   circle                   | |
+| | Stage 1 · Meet the Letters | |  <- stage and episode only: never "lesson 2 of 3" on the Route page
+| +----------------------------+ |
+| | Meet eu, i, d, r        >  | |  <- the lesson after it (upcomingLessons)
+| | Stage 1 · Meet the Letters | |
+| +----------------------------+ |
+| | (In your plan)             | |  <- a later row the plan holds
+| | Around the Korean Table >  | |
+| | Stage 1 · Food & Daily Life| |
+| +----------------------------+ |
+| ( Letter wall )                |  <- Stage 1 only: the R-7c wall, closed until tapped
+| (journey) See every stage in   |  <- the one way to the whole map
+|   Journey                      |
+|================================|
+| Today | Route | Journey | Library |
++--------------------------------+
+```
+
+### Interaction points (Panel D)
+
+- The card's **Continue** (or **Start**) opens the first lesson of the list (unchanged: `route_map.continue_tapped`, `route.next_started`).
+- A lesson row (the whole row, at least `touchTarget.min`) opens its lesson in the quest player; the first row counts as `route.next_started { surface: 'route' }`, the others send nothing.
+- **Letter wall** opens and closes the wall in place (R-7c, unchanged).
+- **See every stage in Journey** opens the Journey tab (the seven stages and every lesson).
+
+### States (Panel D)
+
+- **a new learner**: the card's start line, the goal (Hoya's suggestion) and Start; the three lessons of Meet the Letters.
+- **fewer than three lessons left**: as many rows as there are; **rest** or **the end of the free lessons**: no list, the card shows that state's line and button.
+- **a learner past Stage 1**: no letter wall (it belongs to Stage 1).
+- **Largest text at 320**: titles and the stage and episode line wrap; the chevron keeps its size; nothing scrolls sideways.
+
+### Data needs (Panel D)
+
+- `upcomingLessons(input, 3)` (`logic/route-next.ts`): `routeNext` and the quests it would name next if each earlier one were done; `planView(input).inPlanQuestIds` for "In your plan". Copy: `learner.myRoute.nextLessons.title`, `.where`, `.row` (the row's accessible name), `learner.myRoute.journey.cta`, `learner.routeNext.tag.next` / `.inPlan`.

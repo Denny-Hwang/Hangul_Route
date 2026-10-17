@@ -1,6 +1,6 @@
 import type { BrowserContext, Page, Route } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { onboardSelf, readStored, seedStored } from './helpers';
+import { onboardSelf, openForGrownUps, readStored, seedStored } from './helpers';
 import { shot } from './shots';
 
 /**
@@ -131,8 +131,9 @@ test('a join under a changed name makes it the profile name, and the field says 
     await guide.getByRole('button', { name: 'Not now' }).click();
   });
   await page.getByRole('button', { name: 'Profile and settings' }).click();
+  await openForGrownUps(page);
   await page.getByRole('button', { name: 'Join a class' }).click();
-  await page.getByLabel('Class code').fill('K7M2X9');
+  await page.getByLabel('Class code', { exact: true }).fill('K7M2X9');
   await page.getByRole('button', { name: 'Join', exact: true }).click();
 
   const field = page.getByLabel('Name your teacher will see');

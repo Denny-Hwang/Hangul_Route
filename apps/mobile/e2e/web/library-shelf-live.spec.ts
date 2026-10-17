@@ -93,7 +93,9 @@ test.describe('Library and Home with the reviewed launch stories (regular build)
   test('Home has a story card on day one, and nothing reads locked', async ({ page }) => {
     await onboard(page);
     const missions = page.getByTestId('home-missions');
-    await expect(missions.getByRole('button')).toHaveCount(3);
+    // Card 2 is the hero's lesson as a quiet row (AMENDMENTS-DISPLAY-NAV 9.1); the other two slots are buttons.
+    await expect(missions.getByRole('button')).toHaveCount(2);
+    await expect(missions.getByTestId('home-mission-same-as-hero-2')).toBeVisible();
     const labels = await missions.getByRole('button').evaluateAll((els) => els.map((el) => el.getAttribute('aria-label') ?? ''));
     expect(labels.some((label) => label.endsWith('A short story.'))).toBe(true);
     for (const label of labels) expect(label).not.toMatch(GATING_WORDS);

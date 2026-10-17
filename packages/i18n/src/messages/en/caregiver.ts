@@ -41,11 +41,14 @@ export const caregiver = {
       joinCodeNotForLearners: "That code isn't for joining as a learner. Ask for a class code.",
       profileSwitchHint: 'Tap a profile to switch.',
     },
-    /** "Grown-up zone" stays a family caregiver surface (CLAUDE.md §1). */
+    /**
+     * "Grown-up area" stays a family caregiver surface (CLAUDE.md §1). One name (owner request 2026-10-16, item 8)
+     * for the Profile row, the PIN title and the dashboard's page title.
+     */
     family: {
       installGuideHelp: 'A grown-up can help.',
-      zoneLabel: 'Grown-up zone',
-      pinVerifyTitle: 'Grown-up zone',
+      zoneLabel: 'Grown-up area',
+      pinVerifyTitle: 'Grown-up area',
       pinCreateTitle: 'Create a grown-up PIN',
       pinCreateSubtitle: 'Pick 4 digits only grown-ups will know. It protects settings and grown-up pages.',
     },
@@ -111,10 +114,14 @@ export const caregiver = {
     },
   },
 
+  /** The page is titled with the device's one grown-up name (`audience.*.zoneLabel`, owner request 2026-10-16, item 8). */
   dashboard: {
-    title: 'Family Dashboard',
+    /** Under the title on a family device: who the page is for. A self-only device shows none. */
+    persona: 'Parent or caregiver',
     /** The dashboard lists the learners saved on this device; their progress is also backed up (see `privacy.body`). */
     readOnly: 'Read-only — learners on this device.',
+    /** The skills note of a Learning Route row opens behind this link (owner request 2026-10-16, item 8). */
+    aboutRows: { cta: 'About these rows' },
     noProfiles: 'No profiles yet.',
     stats: { quests: 'Quests', cards: 'Cards', sessions: 'Sessions', minutes: 'Minutes' },
     recent: 'Recent',
@@ -193,6 +200,8 @@ export const caregiver = {
     /** The way back when the Plan screen was opened from the Library or from the Home and Results asks (F-ENT-003 E3-6): it names where it goes. */
     backToLibrary: { cta: 'Back to library' },
     backHome: { cta: 'Back home' },
+    /** Opened from Profile (owner request 2026-10-16, item 8): it goes back to Profile, so it says only Back. */
+    back: { cta: 'Back' },
     /**
      * F-ENT-003 section 3.9.1 (E3-8; wireframe billing/plan-status-free-lessons): the lines on what
      * is free, shown in the Plan screen's slots only while F-ENT-003's effective switch is on. `line`
@@ -617,7 +626,8 @@ export const caregiver = {
     rest: (name: string) => `${name} did everything that is open right now. More is coming.`,
     beyond: (name: string) => `${name} knows a lot! More adventures are coming.`,
     hereTag: (name: string) => `${name} is here`,
-    ready: (name: string) => `Ready when ${name} is`,
+    /** A stage or skill with nothing played yet (owner request 2026-10-16, item 8): a plain fact, the name not needed. */
+    ready: (_name: string) => 'Not started yet',
     explored: (name: string) => `${name} explored everything that is open right now`,
     skillsTitle: (name: string) => `What ${name}'s quests practice`,
     /** The Learning Route row on each profile card of the in-app parent dashboard (R-9b, amendment LR-A6). */
@@ -642,10 +652,11 @@ export const caregiver = {
   grownUpHome: {
     noPin: 'This device has no grown-up PIN. Sign in on the grown-up page instead.',
     continue: { cta: 'Continue' },
-    /** A-7: the card at the top of the local dashboard (Panel B), web only, flag on. */
-    title: 'Grown-up home',
-    line: 'Your family, classes and billing.',
-    cta: 'Open',
+    /**
+     * A-7: the row at the top of the local dashboard (Panel B), web only, flag on. Owner request 2026-10-16 (item 8):
+     * an outline row that says what it does, never a second filled button above the learners.
+     */
+    signIn: { family: 'Sign in for family and class tools', self: 'Sign in to your account' },
   },
   /**
    * The free-lessons line on the device's grown-up screens (F-ENT-003 section 3.9.2 and the
@@ -951,7 +962,7 @@ export const caregiver = {
     card: {
       classScope: 'Use your rescue code first.',
       askConsole: 'Ask the grown-up with the account to answer this in the console.',
-      needsPin: 'A grown-up needs to set up a PIN first. Open Profile, then Grown-up zone.',
+      needsPin: 'A grown-up needs to set up a PIN first. In Profile, open For grown-ups, then Grown-up area.',
       pinTooNew: 'Moves open one day after the PIN is set.',
       /** Teacher-started (`initiator: 'source'`). */
       sourceAsked: (source: string) => `${source} asked about a move.`,

@@ -37,6 +37,16 @@ export const learner = {
       someoneElse: 'Someone else',
       needsInternet: 'Needs the internet',
     },
+    /**
+     * The class join link on a device with no profile yet (owner decision 2026-10-17; review of #734): Welcome shows
+     * the link's code and what Start does. On iOS a QR code scanned with the camera opens the browser, which does not
+     * share storage with the installed app, so `inApp` tells a learner who already plays there where to type the code.
+     */
+    classLink: {
+      code: (code: string) => `Class code: ${code}`,
+      next: 'Make your profile first. Then Join a class opens.',
+      inApp: 'Already learning in the Hangul Route app? Open it, go to Profile and tap Join a class.',
+    },
   },
 
   /** The Welcome language chips (the device's one language; the Display sheet's words are `common.display`). */
@@ -161,10 +171,18 @@ export const learner = {
     addProfileName: 'Add a profile',
     statsTitle: (name: string | null) => `${name ?? 'Your'} stats`,
     stats: { quests: 'Quests done', cards: 'Cards', threeStar: '3-star quests' },
+    /**
+     * The two groups under the stats (owner request 2026-10-16, item 8): the learner's own, then the grown-ups', collapsed.
+     * A self-only device never says "grown-up" (F-LEARN-001 L7): its second group is `account`.
+     */
+    groups: { mine: 'My settings', grownUps: 'For grown-ups', account: 'Account & more' },
     sound: { label: 'Sound', on: 'On', off: 'Off' },
     plan: {
       free: 'Free plan',
-      freeNote: 'Stage 1 is free. More stages are on the way.',
+      /** Content gating on: the free tier is all of Stage 1 (owner decision 2026-10-11). */
+      freeNote: 'All of Stage 1 is free.',
+      /** Content gating off: every lesson is open, whatever the tier (owner request 2026-10-16, item 8). */
+      allOpen: 'Everything is open right now.',
       pillActive: 'Active',
       pillFree: 'Free',
       /** F-BILL-002 B-6 (§6.3): the card's words for every tier (B-9 removed Premium, unlocked and Unlock the journey). */
@@ -192,10 +210,14 @@ export const learner = {
      * parent/grown-up-home-card.md Panel A, learner-entry.md D9 and D11): opens the grown-up area
      * on the app host. `selfTitle` on a self-only device, whose zone is "Account & backup".
      */
+    /**
+     * The row that opens the web account pages (F-APP-001 A-7). One grown-up name (AMENDMENTS-DISPLAY-NAV 9.4): the
+     * gated area is "Grown-up area", so this row is "Account pages" on every device, never a second grown-up name.
+     */
     grownUpHome: {
-      title: 'Grown-up home',
+      title: 'Account pages',
       line: 'Your family, classes and billing',
-      selfTitle: 'Account home',
+      selfTitle: 'Account pages',
     },
   },
 
@@ -278,10 +300,34 @@ export const learner = {
     streak: {
       pill: (days: number) => plural('en', days, { one: 'Streak 1 day', other: `Streak ${days} days` }),
     },
-    cards: { pill: (cards: number) => `${cards} cards` },
-    stars: { pill: (quests: number) => `${quests}★ quests` },
+    cards: { pill: (cards: number) => plural('en', cards, { one: '1 card', other: `${cards} cards` }) },
+    /** Quests finished with all three stars: words, never a star glyph. */
+    stars: { pill: (quests: number) => plural('en', quests, { one: '1 three-star quest', other: `${quests} three-star quests` }) },
+    /**
+     * The Next lesson hero above the three mission cards (owner request 2026-10-16, item 8): `routeNext`'s quest,
+     * its length and one full-width button. `a11y` names the button with the lesson ("Start: Meet a, eo, g, n").
+     */
+    next: {
+      heading: 'Next lesson',
+      minutes: (n: number) => plural('en', n, { one: 'About 1 minute', other: `About ${n} minutes` }),
+      start: { cta: 'Start' },
+      continue: { cta: 'Continue' },
+      a11y: (cta: string, title: string) => `${cta}: ${title}`,
+      /**
+       * Where the hero's lesson sits (AMENDMENTS-DISPLAY-NAV section 9.1): `episode` is the episode's title (content),
+       * `i` of `n` its place among the episode's lessons.
+       */
+      where: (stage: number, episode: string, i: number, n: number) => `Stage ${stage} · ${episode} · lesson ${i} of ${n}`,
+      /** Under the hero's button (AMENDMENTS-DISPLAY-NAV section 9.1): the Route tab, the whole Learning Route. */
+      route: { cta: 'See your Learning Route' },
+    },
     mission: {
       heading: 'Today with Hoya',
+      /**
+       * Card (2) when it names the hero's lesson (section 9.1): one quiet row, not a button, so Home never offers
+       * the same lesson twice. It still shows done and still collects, as F-HW-001 says.
+       */
+      sameAsHero: 'Same as your next lesson above',
       /** The daily-test card names itself; every other card is titled by its quest or episode (content). */
       dailyTest: { title: 'Quick review' },
       /** Keyed by `MissionSubtitle`, the code a mission card carries instead of prose. */
@@ -308,11 +354,20 @@ export const learner = {
     },
     homework: {
       title: 'Homework',
+      /** The card's title when no grown-up or class assignment is open: it opens the reviews. */
+      reviewTitle: 'Review',
       due: (count: number) => `${count} to do today`,
       /** More due than the Homework list shows (F-PLAN-002 section 3.6): words, no number. */
       dueMany: 'A few to do today',
     },
-    tip: "Tip — finish today's quest to keep your streak alive!",
+    /** Hoya's tip by state (`homeTip`): never a streak to keep alive, never a loss. */
+    tip: {
+      first: 'Tip: tap Start to play your first lesson.',
+      doneToday: 'Nice work today! Your cards are waiting in the Library.',
+      daily: 'Tip: a little every day helps you learn.',
+    },
+    /** A quiet link on Welcome and on a new learner's Home: it opens Join a class. */
+    classCode: { cta: 'Got a class code?' },
     recentStars: 'Recent stars',
     /**
      * The one-time catch-up card (F-STORY-006 §3.5, PR 6.5c): cards the learner had already earned,
@@ -415,6 +470,22 @@ export const learner = {
     },
     /** Landmark names of the two panes on a wide window (F-LAYOUT-001 §3.13). */
     panes: { master: 'Card gallery', detail: 'Card details' },
+    /** The first shelf (owner request 2026-10-16, item 8): the cards the learner holds. */
+    yours: { title: 'Your cards', empty: 'Your first card is waiting. Finish a quest to earn it.' },
+    /**
+     * The second shelf: cards still to find, one row per episode, story, stage or set (`logic/library/shelves.ts`),
+     * with one Next card hint for the shelf. Never a count of what is left (D3).
+     */
+    toFind: {
+      title: 'Cards to find',
+      next: 'Next card',
+      stage: (stage: number) => `Stage ${stage}`,
+      other: 'More cards',
+      /** A group row's name: its title and that it holds cards to find. */
+      a11y: (title: string) => `${title}: cards to find`,
+      /** The Next card row's name: "Next card" and how to earn it (the earn hint). */
+      nextA11y: (hint: string) => `Next card. ${hint}`,
+    },
     /** How to earn a locked card, one line per award rule (F-STORY-006 §3.7): never how far along. */
     earnHint: {
       /** `title` is the episode's title (content). */
@@ -459,6 +530,11 @@ export const learner = {
 
   episode: {
     notFound: 'Episode not found.',
+    /**
+     * Hoya's intro on a cell whose own intro assumes an earlier stage ("You know 30 letters.") while the learner has
+     * not done it (owner request 2026-10-16, item 8; `logic/episode/intro.ts`): true for everyone.
+     */
+    introFresh: "Let's learn this one step at a time!",
     comingSoon: {
       pill: 'Coming soon',
       title: 'Coming soon',
@@ -1477,6 +1553,19 @@ export const learner = {
      */
     plan: { open: 'Open plan' },
     /**
+     * The Route tab's next lessons (owner decision 2026-10-17: where you are, the next three lessons and the goal;
+     * the seven stages stay in the Journey tab). `row` is a row's accessible name: its tag when it has one ("Next"
+     * or "In your plan"), the lesson and where it sits.
+     */
+    nextLessons: {
+      title: 'Your next lessons',
+      /** Where the lesson sits: its stage and episode. No "lesson 2 of 3" here: the Route page never shows an "n of N" (F-ROUTE-001). */
+      where: (stage: number, episode: string) => `Stage ${stage} · ${episode}`,
+      row: (tag: string | null, title: string, where: string) => (tag === null ? `${title}. ${where}` : `${tag}: ${title}. ${where}`),
+    },
+    /** The Route tab's way to the whole map (owner decision 2026-10-17): the Journey tab. */
+    journey: { cta: 'See every stage in Journey' },
+    /**
      * The Home route strip (R-4b, section 3.1 entry 2; amendment LR-A6): the page's name, the goal
      * line from the goal source and the weekly plan week. No count of what is left, no date.
      */
@@ -1627,6 +1716,9 @@ export const learner = {
       collected: (n: number) => `${n} collected`,
       tileA11y: (title: string, n: number) =>
         `${title}. ${plural('en', n, { one: '1 word collected', other: `${n} words collected` })}.`,
+      /** A topic with no word collected yet says New, never "0 collected" (owner request 2026-10-16, item 8). */
+      fresh: 'New',
+      freshA11y: (title: string) => `${title}. New topic.`,
       empty: 'Words are on their way.',
       back: 'Back',
       /** A closed topic tile (only with content gating on, D5): the closed-lesson words of F-ENT-003 OD-6, no lock, no price. */

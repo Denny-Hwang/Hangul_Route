@@ -1,5 +1,6 @@
-import React, { useEffect, useId, useRef } from 'react';
+import React, { useContext, useEffect, useId, useRef } from 'react';
 import { Modal, Platform, Pressable, Text, View } from 'react-native';
+import { SafeAreaInsetsContext } from 'react-native-safe-area-context';
 import { KOREAN_LINE_BREAK } from '../../line-break';
 import { Body, Heading } from '../Heading';
 import { useLayoutClass } from '../Layout';
@@ -27,6 +28,8 @@ interface DocumentLike {
 /** react-native-web's Modal answers Escape on keyup with `onRequestClose`; the sheet answers it once, on keydown. */
 const ignore = (): void => undefined;
 
+const NO_INSETS = { top: 0, right: 0, bottom: 0, left: 0 };
+
 const webDocument = (): DocumentLike | undefined => (Platform.OS === 'web' ? (globalThis as { document?: DocumentLike }).document : undefined);
 
 /**
@@ -41,7 +44,8 @@ const webDocument = (): DocumentLike | undefined => (Platform.OS === 'web' ? (gl
  * are ignored) and stops it there, so a page's own Escape (an All lessons card page closing) does
  * not also run under the sheet; react-native-web's Modal would answer the same press again on
  * keyup, so its `onRequestClose` is the system back of native only. The backdrop is hidden from
- * assistive tech: the sheet's own Cancel is the one control with that name.
+ * assistive tech: the sheet's own Cancel is the one control with that name. The bottom sheet sits above the home
+ * indicator (the nearest provider's safe-area insets, as `Screen` reads them).
  */
 export function ConfirmSheet({ visible, title, message, cancelLabel, confirmLabel, onCancel, onConfirm, testID = 'confirm-sheet' }: ConfirmSheetProps): React.ReactElement {
   const id = useId().replace(/[^a-zA-Z0-9_-]/g, '');
@@ -49,6 +53,7 @@ export function ConfirmSheet({ visible, title, message, cancelLabel, confirmLabe
   const messageId = `${testID}-message-${id}`;
   const dialog = useLayoutClass().width !== 'compact';
   const scale = useTypeScale();
+  const insets = useContext(SafeAreaInsetsContext) ?? NO_INSETS;
   const cancelRef = useRef<Focusable>(null);
   const openerRef = useRef<Focusable>(null);
 
@@ -112,7 +117,7 @@ export function ConfirmSheet({ visible, title, message, cancelLabel, confirmLabe
           aria-labelledby={titleId}
           {...(message ? { 'aria-describedby': messageId } : {})}
           testID={testID}
-          style={sheetStyle(dialog)}
+          style={sheetStyle(dialog, insets.bottom)}
         >
           <View nativeID={titleId} {...{ id: titleId }}>
             <Heading level="prompt">{title}</Heading>

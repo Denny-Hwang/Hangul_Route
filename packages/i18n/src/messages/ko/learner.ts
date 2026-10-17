@@ -24,6 +24,11 @@ export const learner = {
       someoneElse: '다른 사람',
       needsInternet: '인터넷이 필요해요',
     },
+    classLink: {
+      code: (code: string) => `반 코드: ${code}`,
+      next: '먼저 프로필을 만들어요. 그다음 반에 참여하기 화면이 열려요.',
+      inApp: '이미 Hangul Route 앱에서 배우고 있나요? 앱을 열고 프로필에서 반에 참여하기를 눌러요.',
+    },
   },
 
   language: {
@@ -123,10 +128,12 @@ export const learner = {
     addProfileName: '프로필 추가',
     statsTitle: (name: string | null) => (name === null ? '내 기록' : `${name}의 기록`),
     stats: { quests: '끝낸 퀘스트', cards: '카드', threeStar: '별 3개 퀘스트' },
+    groups: { mine: '내 설정', grownUps: '어른용 설정', account: '계정 설정' },
     sound: { label: '소리', on: '켜짐', off: '꺼짐' },
     plan: {
       free: '무료 플랜',
-      freeNote: '1단계는 무료예요. 더 많은 단계가 준비되고 있어요.',
+      freeNote: '1단계는 모두 무료예요.',
+      allOpen: '지금은 모두 열려 있어요.',
       pillActive: '이용 중',
       pillFree: '무료',
       fullRoute: '전체 루트',
@@ -146,9 +153,9 @@ export const learner = {
       off: '꺼짐',
     },
     grownUpHome: {
-      title: '어른용 홈',
+      title: '계정 페이지',
       line: '가족, 반, 결제',
-      selfTitle: '계정 홈',
+      selfTitle: '계정 페이지',
     },
   },
 
@@ -210,9 +217,19 @@ export const learner = {
       pill: (days: number) => `${days}일 연속`,
     },
     cards: { pill: (cards: number) => `카드 ${cards}장` },
-    stars: { pill: (quests: number) => `별 퀘스트 ${quests}개` },
+    stars: { pill: (quests: number) => `별 3개 퀘스트 ${quests}개` },
+    next: {
+      heading: '다음 레슨',
+      minutes: (n: number) => `약 ${n}분`,
+      start: { cta: '시작' },
+      continue: { cta: '계속' },
+      a11y: (cta: string, title: string) => `${cta}: ${title}`,
+      where: (stage: number, episode: string, i: number, n: number) => `${stage}단계 · ${episode} · 레슨 ${n}개 중 ${i}번째`,
+      route: { cta: '학습 루트 보기' },
+    },
     mission: {
       heading: '오늘 호야와 함께',
+      sameAsHero: '위에 있는 다음 레슨과 같아요',
       dailyTest: { title: '빠른 복습' },
       subtitle: {
         replay: '호야와 한 번 더',
@@ -233,10 +250,16 @@ export const learner = {
     },
     homework: {
       title: '숙제',
+      reviewTitle: '복습',
       due: (count: number) => `오늘 할 것 ${count}개`,
       dueMany: '오늘 할 것이 몇 개 있어요',
     },
-    tip: '팁 — 오늘의 퀘스트를 끝내면 연속 기록이 이어져요!',
+    tip: {
+      first: '팁: 시작을 누르고 첫 레슨을 해 봐요.',
+      doneToday: '오늘 잘했어요! 받은 카드는 라이브러리에 있어요.',
+      daily: '팁: 매일 조금씩 하면 배우는 데 도움이 돼요.',
+    },
+    classCode: { cta: '반 코드가 있나요?' },
     recentStars: '최근 받은 별',
     catchUp: {
       line: (count: number) => `이미 받은 카드 ${count}장을 호야가 찾았어요!`,
@@ -295,6 +318,15 @@ export const learner = {
       welcome: '호야의 호랑이 카드는 환영 선물이에요.',
     },
     panes: { master: '카드 목록', detail: '카드 정보' },
+    yours: { title: '내 카드', empty: '첫 카드가 기다리고 있어요. 퀘스트를 끝내면 받아요.' },
+    toFind: {
+      title: '찾을 카드',
+      next: '다음 카드',
+      stage: (stage: number) => `${stage}단계`,
+      other: '다른 카드',
+      a11y: (title: string) => `${title}: 찾을 카드`,
+      nextA11y: (hint: string) => `다음 카드. ${hint}`,
+    },
     earnHint: {
       episode: (title: string) => `에피소드 끝내기: ${title}`,
       story: (title: string) => `이야기 끝내기: ${title}`,
@@ -322,6 +354,7 @@ export const learner = {
 
   episode: {
     notFound: '에피소드를 찾을 수 없어요.',
+    introFresh: '한 걸음씩 같이 배워 봐요!',
     comingSoon: {
       pill: '곧 열려요',
       title: '곧 열려요',
@@ -1112,6 +1145,12 @@ export const learner = {
     gains: { stars: '별', cards: '카드', stories: '읽은 이야기' },
     storiesNote: '문화 이야기는 언제든지 열려 있어요.',
     plan: { open: '계획 열기' },
+    nextLessons: {
+      title: '다음에 할 레슨',
+      where: (stage: number, episode: string) => `${stage}단계 · ${episode}`,
+      row: (tag: string | null, title: string, where: string) => (tag === null ? `${title}. ${where}` : `${tag}: ${title}. ${where}`),
+    },
+    journey: { cta: '여정에서 모든 단계 보기' },
     home: {
       strip: {
         title: '학습 루트',
@@ -1218,6 +1257,8 @@ export const learner = {
       line: '좋아하는 주제를 골라요.',
       collected: (n: number) => `모은 낱말 ${n}개`,
       tileA11y: (title: string, n: number) => `${title}. 모은 낱말 ${n}개.`,
+      fresh: '새 주제',
+      freshA11y: (title: string) => `${title}. 새 주제.`,
       empty: '낱말이 곧 와요.',
       back: '뒤로',
       locked: '아직 안 열렸어요',

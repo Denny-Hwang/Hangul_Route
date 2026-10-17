@@ -15,8 +15,12 @@ export function backdropStyle(dialog: boolean): Record<string, unknown> {
   return { flex: 1, justifyContent: dialog ? 'center' : 'flex-end', alignItems: dialog ? 'center' : 'stretch', backgroundColor: colors.surface.overlay, padding: dialog ? spacing.lg : 0 };
 }
 
-/** The sheet itself: paper, rounded top corners (all four as a dialog), the gutter inside. */
-export function sheetStyle(dialog: boolean): Record<string, unknown> {
+/**
+ * The sheet itself: paper, rounded top corners (all four as a dialog), the gutter inside. The bottom sheet adds the
+ * safe-area bottom inset to its bottom padding, so its last button never sits under a notched iPhone's home
+ * indicator or an iOS home-screen app's; the centred dialog needs none.
+ */
+export function sheetStyle(dialog: boolean, bottomInset = 0): Record<string, unknown> {
   return {
     width: '100%',
     maxWidth: dialog ? layout.maxWidth.reading : undefined,
@@ -26,7 +30,7 @@ export function sheetStyle(dialog: boolean): Record<string, unknown> {
     borderBottomLeftRadius: dialog ? radii.xl : 0,
     borderBottomRightRadius: dialog ? radii.xl : 0,
     paddingTop: spacing.xl,
-    paddingBottom: spacing.xl,
+    paddingBottom: dialog ? spacing.xl : spacing.xl + bottomInset,
     paddingHorizontal: spacing.lg,
     gap: spacing.md,
     ...shadows.modal,

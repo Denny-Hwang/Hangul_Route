@@ -1,5 +1,5 @@
 import { expect, test } from './fixtures';
-import { onboardChild, unlockWithPin } from './helpers';
+import { onboardChild, openForGrownUps, unlockWithPin } from './helpers';
 
 /**
  * F-SYNC-002 §3.3 — the server-less path: export a backup file, then
@@ -15,6 +15,7 @@ test('backup file round-trips a learner between two devices', async ({ browser }
 
   // Settings → Back up to a file → a .hangulroute.json download.
   await a.getByRole('button', { name: 'Profile and settings' }).click();
+  await openForGrownUps(a);
   const download = a.waitForEvent('download');
   await a.getByRole('button', { name: 'Back up to a file' }).click();
   const file = await download;
@@ -30,6 +31,7 @@ test('backup file round-trips a learner between two devices', async ({ browser }
   await onboardChild(b, { name: 'Bo' });
   await b.goto('/');
   await b.getByRole('button', { name: 'Profile and settings' }).click();
+  await openForGrownUps(b);
   await b.getByRole('button', { name: 'Restore from a file (PIN required)' }).click();
   // The grown-up PIN was created in the onboarding form (F-LEARN-001 §3.3): the gate asks for it.
   await unlockWithPin(b);

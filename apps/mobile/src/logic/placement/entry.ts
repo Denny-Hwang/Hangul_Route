@@ -33,6 +33,15 @@ export function afterProfileCreated(entriesOn: boolean): 'PlacementInvite' | 'Fi
   return entriesOn ? 'PlacementInvite' : 'FirstQuestPreview';
 }
 
+/**
+ * The same, for a first run that began at Welcome's "Got a class code?" (owner request 2026-10-16, item 8):
+ * the profile and consent steps run unchanged, then Join a class opens with the new profile active (Home under
+ * it). The level check stays in Profile for later. Any other start goes on as `afterProfileCreated`.
+ */
+export function profileCreatedNext(then: 'join' | undefined, entriesOn: boolean): 'JoinSpace' | 'PlacementInvite' | 'FirstQuestPreview' {
+  return then === 'join' ? 'JoinSpace' : afterProfileCreated(entriesOn);
+}
+
 export type InviteChoice = 'new' | 'knowSome';
 
 export type InviteOutcome =

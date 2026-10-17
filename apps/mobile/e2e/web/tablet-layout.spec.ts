@@ -88,12 +88,18 @@ for (const vp of [
       expect(Math.abs(side.y - missions.y)).toBeLessThan(1);
       expect(missions.width / side.width).toBeCloseTo(1.5, 1);
 
-      const progress = (await page.getByTestId('home-route-strip').boundingBox())!;
-      const tip = (await page.getByText(/^Tip — finish today/).boundingBox())!;
+      // The route strip is folded into the hero while a next lesson exists (AMENDMENTS-DISPLAY-NAV 9.1): the right
+      // column holds Homework and the tip. The tip follows the state: a new learner's is the first-lesson tip.
+      await expect(page.getByTestId('home-route-strip')).toHaveCount(0);
+      const tip = (await page.getByText(/^Tip: /).boundingBox())!;
       const homework = (await page.getByRole('button', { name: 'Open homework' }).boundingBox())!;
-      for (const box of [progress, tip, homework]) expect(box.x).toBeGreaterThanOrEqual(side.x - 1);
-      // The three mission cards keep their slot order, one under the other, in the left column.
-      const cards = await page.getByTestId('home-missions-column').getByTestId('home-missions').getByRole('button').all();
+      for (const box of [tip, homework]) expect(box.x).toBeGreaterThanOrEqual(side.x - 1);
+      // The Next lesson hero heads the left column, above the three mission cards (owner request 2026-10-16, item 8).
+      const hero = (await page.getByTestId('home-missions-column').getByTestId('home-next-lesson').boundingBox())!;
+      expect(hero.y).toBeLessThan((await page.getByTestId('home-missions').boundingBox())!.y);
+      // The three mission cards keep their slot order, one under the other, in the left column (card 2 is the hero's
+      // lesson as a quiet row, not a button).
+      const cards = await page.getByTestId('home-missions-column').getByTestId('home-missions').locator(':scope > *').all();
       expect(cards.length).toBe(3);
       const tops = await Promise.all(cards.map(async (c) => (await c.boundingBox())!.y));
       expect([...tops].sort((a, b) => a - b)).toEqual(tops);
@@ -116,9 +122,10 @@ for (const vp of [
     test('one column in today\'s order, Hoya at its phone size, no sideways scrolling', async ({ page }) => {
       await openHomeColumns(page);
       await expect(page.getByTestId('home-side-column')).toHaveCount(0);
-      const lastMission = (await page.getByTestId('home-missions').getByRole('button').last().boundingBox())!;
-      const progress = (await page.getByTestId('home-route-strip').boundingBox())!;
-      expect(progress.y).toBeGreaterThan(lastMission.y + lastMission.height);
+      const lastMission = (await page.getByTestId('home-missions').locator(':scope > *').last().boundingBox())!;
+      // Homework follows the mission cards (the route strip is folded into the hero, AMENDMENTS-DISPLAY-NAV 9.1).
+      const homework = (await page.getByRole('button', { name: 'Open homework' }).boundingBox())!;
+      expect(homework.y).toBeGreaterThan(lastMission.y + lastMission.height);
       expect(Math.round((await greetingHoya(page).boundingBox())!.width)).toBe(72);
       expect(await overflowsSideways(page)).toBe(false);
     });
@@ -131,17 +138,18 @@ test.describe('Home at 1180x820, then 200 % zoom (590x410) live', () => {
   test('two columns reflow to one column in the same order, with no sideways scrolling (§5)', async ({ page }) => {
     await openHomeColumns(page);
     await expect(page.getByTestId('home-side-column')).toBeVisible();
-    const missionNames = page.getByTestId('home-missions').getByRole('button');
-    const before = await missionNames.evaluateAll((els) => els.map((el) => el.getAttribute('aria-label')));
+    // The three slots: two cards and card 2's quiet row under the hero (AMENDMENTS-DISPLAY-NAV 9.1), by their words.
+    const missionNames = page.getByTestId('home-missions').locator(':scope > *');
+    const before = await missionNames.evaluateAll((els) => els.map((el) => (el as HTMLElement).innerText));
     expect(before.length).toBe(3);
 
     await page.setViewportSize({ width: 590, height: 410 });
     await expect(page.getByTestId('home-side-column')).toHaveCount(0);
-    const after = await missionNames.evaluateAll((els) => els.map((el) => el.getAttribute('aria-label')));
+    const after = await missionNames.evaluateAll((els) => els.map((el) => (el as HTMLElement).innerText));
     expect(after).toEqual(before);
     const lastMission = (await missionNames.last().boundingBox())!;
-    const progress = (await page.getByTestId('home-route-strip').boundingBox())!;
-    expect(progress.y).toBeGreaterThan(lastMission.y + lastMission.height);
+    const homework = (await page.getByRole('button', { name: 'Open homework' }).boundingBox())!;
+    expect(homework.y).toBeGreaterThan(lastMission.y + lastMission.height);
     expect(Math.round((await greetingHoya(page).boundingBox())!.width)).toBe(72);
     expect(await overflowsSideways(page)).toBe(false);
   });
@@ -273,7 +281,8 @@ test.describe('Journey at 1180x820: two panes', () => {
     await openJourney(page);
     await cell(page, 'Food', 1).click(); // a different selection first
     await tab(page, 'Today').click();
-    await page.getByRole('button', { name: /^Meet a, eo, g, n\./ }).click();
+    // The first lesson, from Home's Next lesson hero (card 2 names the same lesson as a quiet row, AMENDMENTS-DISPLAY-NAV 9.1).
+    await page.getByTestId('home-next-lesson-start').click();
     await expect(headerClose(page)).toBeVisible();
     await headerClose(page).click();
 
@@ -288,7 +297,8 @@ test.describe('Journey at 1180x820: two panes', () => {
     await openJourney(page);
     const leaveFromHome = async (): Promise<void> => {
       await tab(page, 'Today').click();
-      await page.getByRole('button', { name: /^Meet a, eo, g, n\./ }).click();
+      // The first lesson, from Home's Next lesson hero (card 2 names the same lesson as a quiet row, AMENDMENTS-DISPLAY-NAV 9.1).
+      await page.getByTestId('home-next-lesson-start').click();
       await headerClose(page).click();
       await expect(mapPane(page)).toBeVisible();
     };
@@ -528,6 +538,17 @@ const cardPane = (page: Page) => page.getByRole('region', { name: 'Card details'
 /** Gallery thumbs in content order: the first row is Book, then two locked Letters cards. */
 const thumbs = (scope: Page | ReturnType<Page['locator']>) => scope.getByRole('button', { name: /^(Book|Kimchi|Paper Folding|Locked card\. .+)$/ });
 
+/**
+ * The cards to find sit in one row per episode or stage, closed on arrival (owner request 2026-10-16, item 8):
+ * opens the row of `title` and returns its first card (in content order).
+ */
+async function firstToFind(scope: Page | ReturnType<Page['locator']>, title: string): Promise<ReturnType<Page['locator']>> {
+  const row = scope.getByRole('button', { name: `${title}: cards to find` });
+  if ((await row.getAttribute('aria-expanded')) !== 'true') await row.click();
+  await expect(row).toHaveAttribute('aria-expanded', 'true');
+  return scope.getByRole('button', { name: /^Locked card\. / }).first();
+}
+
 /** How many thumbs share the first row (same top edge). */
 async function firstRowColumns(scope: Page | ReturnType<Page['locator']>): Promise<number> {
   const boxes = await Promise.all((await thumbs(scope).all()).slice(0, 4).map((t) => t.boundingBox()));
@@ -600,7 +621,7 @@ test.describe('Library at 1180x820: two panes', () => {
     await expect(cardPane(page).getByText('tap to flip back')).toBeVisible();
 
     // A locked card names itself, with how it is earned, on press and shows no flip hint.
-    await thumbs(galleryPane(page)).nth(1).click();
+    await (await firstToFind(galleryPane(page), 'Meet the Letters')).click();
     const locked = cardPane(page).getByRole('button', { name: 'Locked card. Finish the episode: Meet the Letters' });
     await expect(locked).toBeVisible();
     await locked.click({ force: true });
@@ -623,9 +644,10 @@ test.describe('Library at 1180x820: two panes', () => {
 
   test('a locked card shows where it is earned, with no paywall', async ({ page }) => {
     await openLibrary(page);
-    // The second Letters card (Hanji Paper) is the reward of the second Letters quest.
-    await thumbs(galleryPane(page)).nth(1).click();
-    await expect(thumbs(galleryPane(page)).nth(1)).toHaveAttribute('aria-selected', 'true');
+    // The first Letters card to find (Hanji Paper) is the reward of the second Letters quest.
+    const hanji = await firstToFind(galleryPane(page), 'Meet the Letters');
+    await hanji.click();
+    await expect(hanji).toHaveAttribute('aria-selected', 'true');
     await expect(cardPane(page).getByRole('heading', { name: 'Hanji Paper' })).toBeVisible();
     await expect(cardPane(page).getByText('How to earn it')).toBeVisible();
     // Its earn hint (F-STORY-006 §3.7): what to do, never how far along.
@@ -633,7 +655,7 @@ test.describe('Library at 1180x820: two panes', () => {
     await expect(cardPane(page).getByText('Premium')).toHaveCount(0);
     await expect(cardPane(page).getByRole('button', { name: 'Hear it' })).toHaveCount(0);
     // A stage card names its stage.
-    await thumbs(galleryPane(page)).nth(5).click(); // Hangul Day (stage1-complete)
+    await (await firstToFind(galleryPane(page), 'Stage 1')).click(); // Hangul Day (stage1-complete)
     await expect(cardPane(page).getByRole('heading', { name: 'Hangul Day' })).toBeVisible();
     await expect(cardPane(page).getByText('Finish every quest in Stage 1')).toBeVisible();
   });
@@ -668,7 +690,7 @@ test.describe('Library at 768x1024: 3 columns, one pane, a tap navigates', () =>
 
   test('the card screen of a locked card says how to earn it too (F-STORY-006 §3.7, wireframe library/earn-hints F2)', async ({ page }) => {
     await openLibrary(page);
-    await thumbs(page).nth(1).click(); // Hanji Paper, locked
+    await (await firstToFind(page, 'Meet the Letters')).click(); // Hanji Paper, locked
     await expect(page.getByRole('heading', { name: 'Hanji Paper' })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Heritage Library' })).toBeHidden();
     await expect(page.getByText('How to earn it')).toBeVisible();

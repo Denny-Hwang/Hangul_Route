@@ -109,7 +109,7 @@ test.describe('free plan switch on (web)', () => {
     await finishedFreeLessons(page, 'Mina');
     await home(page, 'Mina', false);
     await page.getByTestId('home-free-end-ask').click();
-    await expect(page.getByRole('heading', { name: 'Grown-up zone' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Grown-up area' })).toBeVisible();
     await unlockWithPin(page);
     await expect(page.getByText('Mina is on the free plan.')).toBeVisible();
   });

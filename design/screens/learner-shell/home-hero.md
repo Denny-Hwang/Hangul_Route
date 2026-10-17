@@ -18,3 +18,12 @@ Spec: AMENDMENTS-DISPLAY-NAV section 9.1 · wireframe `design/wireframes/home/ne
 ## Accessibility
 
 The hero is a `section` labelled by its eyebrow; Start is the first button after the header; the first screen at 360 x 740 shows the whole hero with Start (`home-hero-360-first.png`); at 320 with 200 % text everything wraps (`home-hero-320-text200.png`).
+
+## As built (row OR-UX, 2026-10-17)
+
+Shot of the build: `shots/home-hero-as-built-360.png` (a new learner, 360 x 640).
+
+- The hero keeps the eyebrow "Next lesson" (`learner.home.next.heading`), the title, **where it sits** (`learner.home.next.where`, "Stage 1 · Meet the Letters · lesson 1 of 3", `Caption` secondary), "About 5 minutes" (`learner.home.next.minutes`, the quest's own estimate, kept from the first OR-UX pass), the plan's **goal line** and **week** folded in from the route strip (only when a weekly plan set the goal: `HomeStripView.goalFromPlan`), the full-width **Start** / **Continue** (`size="hero"`, `touchTarget.hero` 96; the hero is a region named by its eyebrow), and **See your Learning Route** (`learner.home.next.route.cta`, the shared `LinkButton` with the `route` glyph; only while the Learning Route is on).
+- Keys live under `learner.home.next.*` (the hero shipped there in the first OR-UX pass) instead of the planned `learner.home.hero.*`; the values are the section 10 values.
+- **Card ② compact** (`isSameAsHero`): sunken, no art, the title and "Same as your next lesson above", not a button; Home's mission list then has one button fewer. A card that names another quest, a collected card or a replay card is drawn as before.
+- **The route strip** draws only when there is no next lesson (rest, the end of the free lessons); with a hero it is folded in. The seven segments are therefore off Home whenever a lesson is next (the seven stages stay in Journey, owner decision 2026-10-17).

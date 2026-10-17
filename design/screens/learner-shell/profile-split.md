@@ -15,3 +15,14 @@ Removed from Profile: the Language card (the Display sheet replaces it; Reading 
 ## Measured
 
 Profile at 360: about 1 565 px (was 2 895 px on `426384b45`); Grown-up area under two screens; no sideways scroll at 320 with 200 % text; every row and button at least 64 px.
+
+## As built (row OR-UX, 2026-10-17)
+
+Shot of the build: `shots/profile-as-built-360.png` (a new learner, 360 x 640, the top of Profile).
+
+The first OR-UX pass split Profile into two groups on the same page instead of moving the grown-up blocks to the Grown-up area screen, and the owner decision of 2026-10-17 moved the class and family card up. As built:
+
+- Profile (no gate): the profiles and stats; then **Classes & family** (`SpacesCard`, with **Join a class** and **Leave**, both as before), right under the stats; then **My settings**, open (Sound, Display, Reading practice, Challenge, Find my starting spot, the weekly plan, My notes); then **For grown-ups** (`learner.profile.groups.grownUps`; **Account & more** on a self-only device, which never says "grown-up"), collapsed until tapped (the heading holds its disclosure button, so heading navigation still finds the group): the Plan card, Progress backup, Install, **Account pages** (`learner.profile.grownUpHome.title`, the row that opens the web account pages; the one grown-up name stays "Grown-up area", section 9.4), **Grown-up area** (the gated dashboard, `zoneLabel`) and the notices.
+- Each block keeps its action and its gate; **Leave a class or a family keeps today's behaviour** (no gate), because the card is on Profile again (DN-0 section 9.2 had put it behind the gate together with the Join card's move to the Grown-up area; with the card moved up, Join and Leave stay together where a learner finds them).
+- **Got a class code?** is on Welcome (both panels) and on a brand-new learner's Home (no quest yet, in no class); on Profile the card's own Join a class is the way in, so Profile has no second row for it.
+- The console's "Write it on the board. Students join from Profile → Classes & family → Join a class." is true again word for word.

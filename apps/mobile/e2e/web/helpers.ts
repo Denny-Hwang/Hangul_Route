@@ -281,7 +281,19 @@ export async function seedRescueCode(page: Page, code: string): Promise<void> {
   await seedStored(page, `sync:${id}`, { secret: null, rev: 0, lastSyncedAt: null, rescueCode: code });
 }
 
-/** Home to the Grown-up zone PIN screen (verify mode) of a family device. */
+/**
+ * Profile's "For grown-ups" group starts collapsed (owner request 2026-10-16, item 8): open it. Classes and
+ * Classes and family sit above it, under the stats (owner decision 2026-10-17); the plan card, backup, install,
+ * Account pages, the Grown-up area and the notices are inside.
+ */
+export async function openForGrownUps(page: Page): Promise<void> {
+  const toggle = page.getByTestId('profile-group-grown-ups-toggle');
+  await expect(toggle).toBeVisible();
+  if ((await toggle.getAttribute('aria-expanded')) !== 'true') await toggle.click();
+  await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+}
+
+/** Home to the Grown-up area PIN screen (verify mode) of a family device. */
 export async function openGrownUpZone(page: Page, name: string): Promise<void> {
   await page.goto('/');
   await expect(page.getByText(`Hi, ${name}!`)).toBeVisible();
@@ -290,7 +302,8 @@ export async function openGrownUpZone(page: Page, name: string): Promise<void> {
   await page.waitForTimeout(800);
   if (await guide.isVisible()) await guide.getByRole('button', { name: 'Not now' }).click();
   await page.getByRole('button', { name: 'Profile and settings' }).click();
-  await page.getByRole('button', { name: 'Grown-up zone (PIN required)' }).click();
+  await openForGrownUps(page);
+  await page.getByRole('button', { name: 'Grown-up area (PIN required)' }).click();
   await expect(page.getByText('Enter your 4-digit PIN to continue.')).toBeVisible();
 }
 

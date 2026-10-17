@@ -18,7 +18,21 @@ const SYMBOL = /[\p{Extended_Pictographic}←-⇿⌀-⏿■-◿☀-➿️]/u;
 describe('screens/my-route sources', () => {
   it('has the screen and its parts', () => {
     // LR-5a: the route card replaces the hero card.
-    expect(files.sort()).toEqual(['GainsCard.tsx', 'LetterWall.tsx', 'MyRouteScreen.tsx', 'RouteCard.tsx', 'SkillsCard.tsx', 'StageBadge.tsx', 'TrailRow.tsx']);
+    // Owner decision 2026-10-17: the Route tab's next lessons.
+    expect(files.sort()).toEqual(['GainsCard.tsx', 'LetterWall.tsx', 'MyRouteScreen.tsx', 'NextLessons.tsx', 'RouteCard.tsx', 'SkillsCard.tsx', 'StageBadge.tsx', 'TrailRow.tsx']);
+  });
+
+  it('the Route tab is where you are, the next three lessons and the goal; the seven stages stay on the grown-up page and in Journey', () => {
+    const src = read(join(SCREEN_DIR, 'MyRouteScreen.tsx'));
+    expect(src).toContain('NEXT_LESSON_COUNT = 3');
+    expect(src).toContain('upcomingLessons(next, NEXT_LESSON_COUNT)');
+    // The tab branch draws the next lessons and the Journey link; the trail, skills, gains and stories note sit in the other branch.
+    const tabBranch = src.slice(src.indexOf("{variant === 'tab' ? ("), src.indexOf(') : (', src.indexOf("{variant === 'tab' ? (")));
+    expect(tabBranch).toContain('<NextLessons ');
+    expect(tabBranch).toContain("navigation.navigate('Main', { screen: 'Journey' })");
+    for (const part of ['my-route-trail', '<SkillsCard ', '<GainsCard ', '<StoriesNote ']) expect(tabBranch).not.toContain(part);
+    const rest = src.slice(src.indexOf(') : (', src.indexOf("{variant === 'tab' ? (")));
+    for (const part of ['my-route-trail', '<SkillsCard ', '<GainsCard ', '<StoriesNote ']) expect(rest).toContain(part);
   });
 
   for (const file of files) {

@@ -56,8 +56,9 @@ export function GateLessonsButton({
 
   return (
     <View style={{ gap: spacing.xs }}>
+      {/* An outline button: on the dashboard See report is each learner's one filled button (owner request 2026-10-16, item 8). */}
       {kind === 'open' ? (
-        <Button label={label} tone="secondary" size="md" fullWidth onPress={open} testID={testID} />
+        <Button label={label} tone="ghost" size="md" fullWidth onPress={open} testID={testID} />
       ) : (
         <Pressable
           onPress={open}

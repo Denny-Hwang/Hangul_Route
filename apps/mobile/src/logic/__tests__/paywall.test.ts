@@ -304,8 +304,13 @@ describe('Open billing through the gate (§4.7: destination Billing)', () => {
 describe('planCardView: the Profile plan card for every tier (§4.7, §6.3)', () => {
   const card = en.learner.profile.plan;
 
-  it('free: Free plan, the free note, the Free pill, Plan details', () => {
-    expect(planCardView('free', null, card)).toEqual({ title: 'Free plan', note: 'Stage 1 is free. More stages are on the way.', pill: 'Free', tone: 'neutral', cta: 'Plan details' });
+  it('free: Free plan, the free note from the tier model, the Free pill, Plan details', () => {
+    // Content gating on: the free tier is all of Stage 1 (owner decision 2026-10-11).
+    expect(planCardView('free', null, card)).toEqual({ title: 'Free plan', note: 'All of Stage 1 is free.', pill: 'Free', tone: 'neutral', cta: 'Plan details' });
+    expect(planCardView('free', null, card, true).note).toBe('All of Stage 1 is free.');
+    // Gating off (owner request 2026-10-16, item 8): everything is open, never "more stages are on the way".
+    expect(planCardView('free', null, card, false).note).toBe('Everything is open right now.');
+    expect(planCardView('premium', null, card, false).note).toBe('Everything is open.');
   });
 
   it('full route: Full route, "Everything is open" with the source when it has a name, the Active pill', () => {
@@ -318,7 +323,7 @@ describe('planCardView: the Profile plan card for every tier (§4.7, §6.3)', ()
   it('never says Premium, unlock or buy, in any locale (§4.8 rule 2)', () => {
     for (const locale of LOCALES) {
       const c = getMessages(locale).learner.profile.plan;
-      for (const v of [planCardView('free', null, c), planCardView('premium', klass, c), planCardView('premium', null, c)]) {
+      for (const v of [planCardView('free', null, c), planCardView('free', null, c, false), planCardView('premium', klass, c), planCardView('premium', null, c)]) {
         for (const text of [v.title, v.note, v.pill, v.cta]) {
           expect(text, locale).not.toMatch(/premium|unlock|\bbuy\b|desbloque|프리미엄|잠금 해제|구매/i);
           expect(findBannedWord(text, locale, 'learner'), `${locale}: ${text}`).toBeNull();
@@ -382,12 +387,21 @@ describe('the way back names the surface that opened the Plan screen (F-ENT-003 
     }
   });
 
-  it('the Journey, the lesson page, Settings and no from keep Back to journey', () => {
-    for (const from of ['journey', 'episode', 'settings', undefined] as const) {
+  it('the Journey, the lesson page and no from keep Back to journey', () => {
+    for (const from of ['journey', 'episode', undefined] as const) {
       const v = planView({ ...base, ...(from === undefined ? {} : { from }) }, en);
       expect(v.back, String(from)).toBe('Back to journey');
       expect(v.backTo, String(from)).toBe('Journey');
     }
+  });
+
+  it("opened from Profile's plan card it reads Back and goes back to Profile (owner request 2026-10-16, item 8)", () => {
+    for (const locale of ['en', 'es', 'ko'] as const) {
+      const v = planView({ ...base, from: 'settings' }, getMessages(locale));
+      expect(v.back, locale).toBe(getMessages(locale).caregiver.plan.back.cta);
+      expect(v.backTo, locale).toBe('Back');
+    }
+    expect(planView({ ...base, from: 'settings' }, en).back).toBe('Back');
   });
 
   it('planTexts carries the back label, so the deny-list scan reads it', () => {

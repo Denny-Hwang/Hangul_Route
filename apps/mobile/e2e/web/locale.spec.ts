@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { LOCALE_META, pseudoText, type Messages } from '@hangul-route/i18n';
 import type { Locator, Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { answerForkNew, onboardChild, readStored, waitForSaved } from './helpers';
+import { answerForkNew, onboardChild, openForGrownUps, readStored, waitForSaved } from './helpers';
 import {
   allowedSmall,
   BROWSER_LOCALE,
@@ -323,9 +323,11 @@ async function walkMatrix(page: Page, locale: MatrixLocale): Promise<void> {
   await expect(page.getByText(n((m) => m.learner.home.greeting('Dani')))).toBeVisible();
   await checkScreen(page, locale, 'Home', page.getByTestId('home-missions').getByRole('button').first());
 
-  // Profile: the grown-up zone is its way on.
+  // Profile: the grown-up area is its way on, inside the "For grown-ups" group (collapsed on arrival; owner request
+  // 2026-10-16, item 8).
   await button((m) => m.a11y.profileEntry).click();
   await expect(page.getByRole('heading', { name: n((m) => m.learner.profile.title) })).toBeVisible();
+  await openForGrownUps(page);
   const zone = button((m) => m.caregiver.audience.gated(m.caregiver.audience.family.zoneLabel, true));
   await checkScreen(page, locale, 'Profile', zone);
   await zone.click();

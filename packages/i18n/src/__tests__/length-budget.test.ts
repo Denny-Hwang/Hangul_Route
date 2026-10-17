@@ -37,6 +37,8 @@ const ES_LENGTH_ALLOW_LIST: Readonly<Record<string, string>> = {
   'landing.waitlist.privacyLink': 'the document name "Política de privacidad", one letter over, a link inside the consent line',
   'console.saveDraft': '"Guardar borrador", one letter over; the button wraps',
   'console.relink.device': 'the one word "dispositivo" (11) against "device" (6)',
+  'learner.library.toFind.next': 'the standard Spanish word "Siguiente" (9) against "Next" (4), with its noun ("Siguiente tarjeta"); a label above the card that wraps',
+  'report.scope.allDevices': 'the plural "dispositivos" (12) against "devices" (7) needs its article ("Todos los dispositivos"); a caption under a heading that wraps',
   'console.planCounts.items': '"1 elemento" against "1 item": the Spanish noun is longer; the count line wraps',
   'console.billing.promo.formLabel': 'the field label "Código promocional", a form label above its field',
   // AMENDMENTS-DISPLAY-NAV DN-6 (section 10, MAR 2026-10-17).
@@ -72,6 +74,10 @@ const ES_LENGTH_ALLOW_LIST: Readonly<Record<string, string>> = {
   'common.display.size.larger': '"Más grande" (10) against "Larger" (6): Spanish has no one-word comparative here; a segment label that wraps',
   // AMENDMENTS-LECTURE-V2 section 18.4: a select label, which wraps.
   'console.lecture.options.language': '"Idioma de las diapositivas" (26) against "Slides language" (15); a select label that wraps',
+  // AMENDMENTS-DISPLAY-NAV section 10 (the candidates it names): the "Got a class code?" link on Welcome and Home.
+  'learner.home.classCode.cta': '"¿Tienes un código de clase?" (27) against "Got a class code?" (17): Spanish opens the question with "¿" and needs the article; inside the 28-character cta budget, a link that wraps',
+  // Owner decision 2026-10-17: the class join link's caption on the roster.
+  'console.space.joinLink.title': '"Enlace para unirse" (18) against "Join link" (9): Spanish names what the link is for with "para"; an upper-case caption that wraps',
 };
 
 const BUDGETS: Readonly<Record<string, number>> = { tab: 12, pill: 24, cta: 28 };
@@ -362,7 +368,7 @@ describe('length budgets (F-I18N-001 §3.11)', () => {
       ['label', 20, ['report.figure', 'report.growth.quests', 'report.growth.cards', 'report.growth.month', 'report.strand.status', 'report.class.band']],
       ['up marker', 36, ['report.figure.up']],
       ['words inside a sentence', 32, ['report.when', 'report.previous']],
-      ['at-a-glance line', 48, ['report.glance.nowOn', 'report.glance.lastPractice']],
+      ['at-a-glance line', 48, ['report.glance.nowOn', 'report.glance.lastPractice', 'report.scope']],
       [
         'line',
         100,

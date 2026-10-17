@@ -398,7 +398,7 @@ No names, labels, ids of people or the deck title; no `profileId` (there is none
 
 - **Server-saved decks and a lecture code**: D1 table `lectures` per space, `GET/PUT /api/spaces/:id/lectures` (`plan.write`), a 6-character code from `JOIN_CODE_ALPHABET`, opened at `/present?code=…` without sign-in; the code never carries names (the picker stays a fragment / in-memory concern). Additive migration only.
 - **Dual-screen**: a notes window on the teacher's laptop over `BroadcastChannel` (same origin, offline), with the next-slide preview, private notes and the picker list.
-- MP3 audio (T-017) needs nothing here; Stage 2 / 4 `tap-respond` dialogue slides; a printable handout (F-TCH-003); QR code for the class code (needs a `/join` deep link).
+- MP3 audio (T-017) needs nothing here; Stage 2 / 4 `tap-respond` dialogue slides; a printable handout (F-TCH-003); QR code for the class code: shipped on the class roster with the join link `app.hangulroute.com/join#c=<code>` (AMENDMENTS-DISPLAY-NAV section 9.8, row OR-UX); a QR on a lecture slide is not built.
 
 ## 4. Out of scope
 

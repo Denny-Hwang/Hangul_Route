@@ -195,6 +195,8 @@ No server change: cards already ride in `snapshot.cards`; the Worker validates t
 
 **Earn hints.** `earnHint(card, world)` returns `{ kind, text }` used by Library tiles, `CardDetail` (locked) and the episode page; text is short, never a progress judgement:
 
+> Pointer (AMENDMENTS-DISPLAY-NAV section 9.8, row OR-UX, 2026-10-17): the Library's locked tiles now sit under **Cards to find**, one row per episode, story, stage or set, and are drawn as silhouettes; the shelf's one **Next card** row shows the earn hint of the first card to find, and each tile keeps its hint in its accessible name and on its card page. The hint texts below are unchanged.
+
 | Rule | Text |
 |---|---|
 | episode (lesson) | "Finish the episode: `<episode title>`" |

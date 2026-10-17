@@ -24,6 +24,11 @@ export const learner = {
       someoneElse: 'Otra persona',
       needsInternet: 'Necesita internet',
     },
+    classLink: {
+      code: (code: string) => `Código de clase: ${code}`,
+      next: 'Primero crea tu perfil. Luego se abre Unirme a una clase.',
+      inApp: '¿Ya aprendes en la app de Hangul Route? Ábrela, ve a Perfil y toca Unirme a una clase.',
+    },
   },
 
   language: {
@@ -127,10 +132,12 @@ export const learner = {
     addProfileName: 'Añadir un perfil',
     statsTitle: (name: string | null) => (name === null ? 'Tus datos' : `Datos de ${name}`),
     stats: { quests: 'Misiones', cards: 'Tarjetas', threeStar: 'Misiones 3★' },
+    groups: { mine: 'Mis ajustes', grownUps: 'Para adultos', account: 'Cuenta y más' },
     sound: { label: 'Sonido', on: 'Sí', off: 'No' },
     plan: {
       free: 'Plan gratuito',
-      freeNote: 'La Etapa 1 es gratis. Vienen más etapas.',
+      freeNote: 'Toda la Etapa 1 es gratis.',
+      allOpen: 'Ahora todo está abierto.',
       pillActive: 'Activo',
       pillFree: 'Gratis',
       fullRoute: 'Ruta completa',
@@ -150,9 +157,9 @@ export const learner = {
       off: 'No',
     },
     grownUpHome: {
-      title: 'Inicio para adultos',
+      title: 'Páginas de la cuenta',
       line: 'Tu familia, tus clases y la facturación',
-      selfTitle: 'Mi cuenta',
+      selfTitle: 'Páginas de la cuenta',
     },
   },
 
@@ -217,9 +224,20 @@ export const learner = {
       pill: (days: number) => plural('es', days, { one: 'Racha de 1 día', other: `Racha de ${days} días` }),
     },
     cards: { pill: (cards: number) => plural('es', cards, { one: '1 tarjeta', other: `${cards} tarjetas` }) },
-    stars: { pill: (quests: number) => `${quests}★ misiones` },
+    /** "Three-star quests" as a count label: the full noun phrase ("misiones de tres estrellas") does not fit the 24-character pill. */
+    stars: { pill: (quests: number) => `Con tres estrellas: ${quests}` },
+    next: {
+      heading: 'Siguiente lección',
+      minutes: (n: number) => plural('es', n, { one: 'Cerca de 1 minuto', other: `Cerca de ${n} minutos` }),
+      start: { cta: 'Empezar' },
+      continue: { cta: 'Continuar' },
+      a11y: (cta: string, title: string) => `${cta}: ${title}`,
+      where: (stage: number, episode: string, i: number, n: number) => `Etapa ${stage} · ${episode} · lección ${i} de ${n}`,
+      route: { cta: 'Ver tu Ruta de aprendizaje' },
+    },
     mission: {
       heading: 'Hoy con Hoya',
+      sameAsHero: 'Igual que tu siguiente lección de arriba',
       dailyTest: { title: 'Repaso rápido' },
       subtitle: {
         replay: 'Otra vuelta con Hoya',
@@ -240,10 +258,16 @@ export const learner = {
     },
     homework: {
       title: 'Tarea',
+      reviewTitle: 'Repaso',
       due: (count: number) => `${count} para hoy`,
       dueMany: 'Varias para hoy',
     },
-    tip: 'Consejo: ¡termina la misión de hoy para seguir tu racha!',
+    tip: {
+      first: 'Consejo: toca Empezar para jugar tu primera lección.',
+      doneToday: '¡Buen trabajo hoy! Tus tarjetas te esperan en la colección.',
+      daily: 'Consejo: un poco cada día te ayuda a aprender.',
+    },
+    classCode: { cta: '¿Tienes un código de clase?' },
     recentStars: 'Estrellas nuevas',
     catchUp: {
       line: (count: number) =>
@@ -308,6 +332,15 @@ export const learner = {
       welcome: 'La tarjeta del tigre Hoya es un regalo de bienvenida.',
     },
     panes: { master: 'Galería', detail: 'Detalle de tarjeta' },
+    yours: { title: 'Tus tarjetas', empty: 'Tu primera tarjeta te espera. Termina una misión para ganarla.' },
+    toFind: {
+      title: 'Por encontrar',
+      next: 'Siguiente tarjeta',
+      stage: (stage: number) => `Etapa ${stage}`,
+      other: 'Más tarjetas',
+      a11y: (title: string) => `${title}: tarjetas por encontrar`,
+      nextA11y: (hint: string) => `Siguiente tarjeta. ${hint}`,
+    },
     earnHint: {
       episode: (title: string) => `Termina el episodio: ${title}`,
       story: (title: string) => `Termina la historia: ${title}`,
@@ -339,6 +372,7 @@ export const learner = {
 
   episode: {
     notFound: 'No se encontró el episodio.',
+    introFresh: '¡Aprendamos esto paso a paso!',
     comingSoon: {
       pill: 'Muy pronto',
       title: 'Muy pronto',
@@ -1140,6 +1174,12 @@ export const learner = {
     gains: { stars: 'Estrellas', cards: 'Tarjetas', stories: 'Historias leídas' },
     storiesNote: 'Las historias del patrimonio están abiertas siempre.',
     plan: { open: 'Abrir el plan' },
+    nextLessons: {
+      title: 'Tus próximas lecciones',
+      where: (stage: number, episode: string) => `Etapa ${stage} · ${episode}`,
+      row: (tag: string | null, title: string, where: string) => (tag === null ? `${title}. ${where}` : `${tag}: ${title}. ${where}`),
+    },
+    journey: { cta: 'Ver las etapas en Recorrido' },
     home: {
       strip: {
         title: 'Ruta de aprendizaje',
@@ -1246,6 +1286,8 @@ export const learner = {
       line: 'Elige un tema que te guste.',
       collected: (n: number) => plural('es', n, { one: `${n} conseguida`, other: `${n} conseguidas` }),
       tileA11y: (title: string, n: number) => `${title}. ${plural('es', n, { one: '1 palabra conseguida', other: `${n} palabras conseguidas` })}.`,
+      fresh: 'Nuevo',
+      freshA11y: (title: string) => `${title}. Tema nuevo.`,
       empty: 'Las palabras vienen en camino.',
       back: 'Atrás',
       locked: 'Aún sin abrir',

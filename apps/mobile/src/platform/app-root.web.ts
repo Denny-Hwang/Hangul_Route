@@ -1,5 +1,5 @@
 import { isLearnerRoot } from '@hangul-route/content-schema';
-import { parseBootIntent, type BootIntent } from '../logic/shell/boot-intent';
+import { parseBootIntent, parseJoinBootIntent, type BootIntent } from '../logic/shell/boot-intent';
 import { bounceFor } from '../logic/shell/bounce';
 import { clearGrownUpTab, forgetFreshPin, sessionArea, trackThenLeave, type SessionArea } from './grown-up-handoff.web';
 import { track, type TelemetryEvent } from './telemetry';
@@ -11,7 +11,9 @@ import { track, type TelemetryEvent } from './telemetry';
  * `/browse`, the grown-up bounce, else the app.
  *
  * - **app**: reads the boot intent once and takes it out of the address (`history.replaceState`,
- *   keeping every other key, `?lang=` included). It removes the grown-up unlock and the console
+ *   keeping every other key, `?lang=` included). The class join link `/join#c=<code>` (owner decision
+ *   2026-10-17) is a boot intent too: the address becomes the app root with the query kept and no
+ *   fragment, so the code never stays in the address, in the history entry or in a reload. It removes the grown-up unlock and the console
  *   session of this tab, with a `gate=grown-up` intent too: the lock that sent the tab here
  *   already removed the console session, and the unlock it could not use is replaced after the
  *   PIN, so nothing of value is lost and an intent typed by hand keeps nothing either. A page
@@ -88,6 +90,16 @@ function browserEnv(): RootEnv {
 }
 
 function readIntent(env: RootEnv, location: NonNullable<RootEnv['location']>): void {
+  const join = parseJoinBootIntent(location);
+  if (join !== null) {
+    intent = join.intent;
+    try {
+      env.history?.replaceState(env.history.state, '', join.address);
+    } catch {
+      // A history that refuses (a sandboxed frame) must not lose the intent.
+    }
+    return;
+  }
   const parsed = parseBootIntent(location.search);
   intent = parsed.intent;
   if (!parsed.changed) return;

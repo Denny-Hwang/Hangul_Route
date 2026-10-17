@@ -3,7 +3,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useEffect, useState } from 'react';
 import { TextInput, View } from 'react-native';
 import { useMessages } from '../../i18n/use-messages';
-import { codeFieldFontSize, cleanJoinCode, isCodeError, isCompleteJoinCode, joinErrorMessage } from '../../logic/spaces/join-code';
+import { codeFieldFontSize, cleanJoinCode, isCodeError, isCompleteJoinCode, joinErrorMessage, joinPrefill } from '../../logic/spaces/join-code';
 import { nameHint } from '../../logic/onboarding/create-profile-form';
 import { NAME_MAX, validateDisplayName } from '../../logic/profiles/profile-model';
 import { relinkNotice } from '../../logic/sync/restore';
@@ -30,7 +30,8 @@ export const RELINK_POLL_MS = 4000;
  *
  * Join prefill (F-APP-001 A-7, sections 3.6 and 3.8, web): a family join code the family home's
  * "Open the app on this device" left in this tab fills the field the next time this screen is
- * shown within 30 minutes (read once); every step after it is unchanged.
+ * shown within 30 minutes (read once); every step after it is unchanged. The class join link
+ * (`/join#c=<code>`, owner decision 2026-10-17) passes its code as the `code` param, which wins.
  *
  * The name (F-LEARN-001 section 3.11): the field starts from the profile name and follows the profile rule
  * (`validateDisplayName`, the create form's hints). The Worker writes the join name over the learner's name for the
@@ -40,7 +41,7 @@ export const RELINK_POLL_MS = 4000;
  * keeps the profile name too, with Edit profile's class-device line. The store decides again when the join is sent
  * (`membership-store.join`), so a session that ends between this render and the tap renames nothing anywhere.
  */
-export function JoinSpaceScreen({ navigation }: Props): React.ReactElement {
+export function JoinSpaceScreen({ navigation, route }: Props): React.ReactElement {
   const textScale = useTypeScale();
   const [codeFieldWidth, setCodeFieldWidth] = useState(0);
   const messages = useMessages();
@@ -85,10 +86,14 @@ export function JoinSpaceScreen({ navigation }: Props): React.ReactElement {
   const nameLocked = gateClosed || classDevice;
   const joinName = nameLocked ? (profile?.displayName ?? '') : name;
 
+  // The class join link's code (owner decision 2026-10-17) first, else the family home's hand-off; read once. The
+  // hand-off is always taken, so a code left in the tab never fills a later Join screen.
+  const linkCode = route.params?.code;
   useEffect(() => {
     const handed = takeJoinHandoff();
-    if (handed !== null) setCode(handed);
-  }, []);
+    const prefill = joinPrefill(linkCode, handed);
+    if (prefill !== null) setCode(prefill);
+  }, [linkCode]);
 
   const find = async (): Promise<void> => {
     setMessage(null);

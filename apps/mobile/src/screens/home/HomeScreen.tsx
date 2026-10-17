@@ -30,12 +30,12 @@ import { ProfileAvatar } from '../../components/ProfileAvatar';
 import type { SceneArt } from '@hangul-route/content-schema';
 import { welcomeCardIds } from '../../content/award-world';
 import { bundleOs, flags, gatingActive } from '../../config/flags';
-import { episodesAll, questsAll } from '../../content';
+import { episodesAll, questsAll, stages } from '../../content';
 import { PLACEMENT_BANK } from '../../content/placement.generated';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { catchUpCard, takeCatchUpAnnouncement } from '../../logic/awards/catch-up';
 import { isContentLocked } from '../../logic/content-access';
-import { localizeMissionCard } from '../../logic/content-locale';
+import { localizeEpisode, localizeMissionCard, localizeQuest } from '../../logic/content-locale';
 import { cursorContext } from '../../logic/cursor-context';
 import {
   buildTodaysMission,
@@ -55,14 +55,25 @@ import { homeStripView, type HomeStripView } from '../../logic/my-route/home-str
 import { buildMyRoute } from '../../logic/my-route/model';
 import { localizedRouteContent, routeModelInput, routeWeekOf } from '../../logic/my-route/route-input';
 import { emptySnapshot } from '../../logic/my-route/view';
+import { lessonPlace } from '../../logic/my-route/next-lessons';
 import { placementEntriesOn, questsDoneOf } from '../../logic/placement/entry';
 import { skippedEvent } from '../../logic/placement/events';
-import { homeQuietCard, levelCheckCard } from '../../logic/placement/home-card';
+import {
+  homeNextLesson,
+  homeQuietCard,
+  homeTip,
+  homeworkCardTitle,
+  isSameAsHero,
+  levelCheckCard,
+  recentStarsOf,
+  showStreakPill,
+  type HomeNextLesson,
+} from '../../logic/placement/home-card';
 import { DEFAULT_AVATAR } from '../../logic/profiles/avatar-catalog';
 import { askFor, askGate, helpAskedEvent, isClassOnly } from '../../logic/access-copy';
 import { favoriteReplay, freeEndPrimary, practiceTarget } from '../../logic/free-end';
 import { nextStartedEvent, qualifiesForNext, routeNext, routeNextInputOf } from '../../logic/route-next';
-import { streakSessionDates } from '../../logic/sessions/session-log';
+import { lastStreakDay, streakSessionDates } from '../../logic/sessions/session-log';
 import { computeStreak } from '../../logic/streak';
 import { emptyBookmarks } from '../../logic/story/bookmarks';
 import { storyCoverArt } from '../../logic/story/scene-view';
@@ -145,6 +156,7 @@ function MissionTile({
   picture,
   locked,
   askHint,
+  sameAsHero = false,
   onPress,
 }: {
   card: MissionCard;
@@ -156,11 +168,31 @@ function MissionTile({
   locked: boolean;
   /** The ask (`askFor`), read as the hint of a locked card. */
   askHint: string;
+  /**
+   * The card names the hero's own lesson (`isSameAsHero`, AMENDMENTS-DISPLAY-NAV section 9.1): one quiet row that is
+   * not a button, so Home never offers the same lesson twice; the hero's Start is the one way in.
+   */
+  sameAsHero?: boolean;
   onPress: () => void;
 }): React.ReactElement {
   const m = useMessages();
   const locale = useLocale();
   const { title, subtitle } = missionCardText(localizeMissionCard(card, locale), m.learner);
+  if (sameAsHero) {
+    return (
+      <Card padding="md" tone="sunken" testID={`home-mission-same-as-hero-${card.slot}`}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md, minHeight: touchTarget.min }}>
+          <View style={{ width: COVER_THUMB, alignItems: 'center' }}>
+            <Icon name={ICON_FOR[card.kind]} size={24} color={colors.text.muted} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Body weight="semibold">{title}</Body>
+            <Caption tone="muted">{m.learner.home.mission.sameAsHero}</Caption>
+          </View>
+        </View>
+      </Card>
+    );
+  }
   const look = homeTileLook({
     collected: card.collected,
     locked,
@@ -211,6 +243,78 @@ function MissionTile({
         {look.sparkle ? <Icon name="sparkle" size={28} color={colors.brand.primary} /> : null}
       </View>
     </Card>
+  );
+}
+
+/** The hero's eyebrow, which names its region. */
+const HERO_EYEBROW_ID = 'home-next-lesson-eyebrow';
+
+/**
+ * The Next lesson hero (owner request 2026-10-16, item 8): F-ENT-003's one next above the three mission cards,
+ * so a new learner's first card is a lesson, with its length and one full-width Start or Continue. The three
+ * F-HW-001 slots below it are unchanged.
+ */
+function NextLessonCard({
+  lesson,
+  title,
+  where,
+  goal,
+  week,
+  onStart,
+  onRoute,
+}: {
+  lesson: HomeNextLesson;
+  title: string;
+  /** "Stage 1 · Meet the Letters · lesson 1 of 3" (section 9.1); null when the lesson's place is unknown. */
+  where: string | null;
+  /** The weekly plan's goal line ("Goal: Stage 2 · Words"), folded in from the Home route strip; null without a plan goal. */
+  goal: string | null;
+  /** "Week 3 of your weekly plan"; null without a running plan. */
+  week: string | null;
+  onStart: () => void;
+  /** See your Learning Route (the Route tab); null while the Learning Route is off. */
+  onRoute: (() => void) | null;
+}): React.ReactElement {
+  const m = useMessages();
+  const copy = m.learner.home.next;
+  const cta = lesson.cta === 'start' ? copy.start.cta : copy.continue.cta;
+  return (
+    // A region named by its eyebrow ("Next lesson"), so a screen reader's landmarks find it (home-hero.md).
+    <View testID="home-next-lesson" role="region" aria-labelledby={HERO_EYEBROW_ID}>
+      <Card padding="md" elevation="card">
+        <View id={HERO_EYEBROW_ID}>
+          <Caption tone="secondary" weight="semibold">
+            {copy.heading}
+          </Caption>
+        </View>
+        <Spacer size="xxs" />
+        <Heading level="prompt">{title}</Heading>
+        {where !== null ? (
+          <Caption tone="secondary" testID="home-next-lesson-where">
+            {where}
+          </Caption>
+        ) : null}
+        <Caption tone="muted">{copy.minutes(lesson.minutes)}</Caption>
+        {goal !== null ? (
+          <Caption tone="muted" testID="home-next-lesson-goal">
+            {goal}
+          </Caption>
+        ) : null}
+        {week !== null ? (
+          <Caption tone="muted" testID="home-next-lesson-week">
+            {week}
+          </Caption>
+        ) : null}
+        <Spacer size="md" />
+        {/* touchTarget.hero (96): the one big way in on Home (section 9.1). */}
+        <Button label={cta} accessibilityLabel={copy.a11y(cta, title)} tone="primary" size="hero" fullWidth onPress={onStart} testID="home-next-lesson-start" />
+        {onRoute !== null ? (
+          <View style={{ alignSelf: 'flex-start' }}>
+            <LinkButton label={copy.route.cta} icon="route" onPress={onRoute} testID="home-next-lesson-route" />
+          </View>
+        ) : null}
+      </Card>
+    </View>
   );
 }
 
@@ -292,7 +396,8 @@ export function HomeScreen(): React.ReactElement {
   const localToday = useToday('local');
   const homeworkDue = dueTodayCount(snap?.homework, today);
 
-  const recentStars = (snap?.quests.slice(-1)[0]?.stars ?? 0) as 0 | 1 | 2 | 3;
+  // Recent stars waits for a first star (owner request 2026-10-16, item 8): an empty row of stars is never shown.
+  const recentStars = recentStarsOf(snap?.quests ?? []);
 
   const streak = useMemo(() => {
     // Quest sessions only: story, game and level-check time never moves the streak (F-REPORT-001 OD-19).
@@ -353,6 +458,23 @@ export function HomeScreen(): React.ReactElement {
     [profile, snap, today, plans, tier, questOpen],
   );
   const next = useMemo(() => (routeInput ? routeNext(routeInput) : null), [routeInput]);
+  // Quests done (grid and shelf alike): the hero's Start or Continue, the tip and the class-code link read it.
+  const questsDone = questsDoneOf(snap?.quests);
+  const nextLesson = useMemo(
+    () => homeNextLesson({ next, questOf: (id) => questsAll.find((q) => q.id === id), questsDone }),
+    [next, questsDone],
+  );
+  const nextLessonTitle = useMemo(() => {
+    const quest = nextLesson ? questsAll.find((q) => q.id === nextLesson.questId) : undefined;
+    return quest ? localizeQuest(quest, locale).titleEn : '';
+  }, [nextLesson, locale]);
+  // Where the hero's lesson sits (AMENDMENTS-DISPLAY-NAV section 9.1): its stage, episode and place among the episode's lessons.
+  const nextLessonWhere = useMemo(() => {
+    if (!nextLesson) return null;
+    const place = lessonPlace(nextLesson.questId, episodesAll, (stage) => stages.find((s) => s.key === stage)?.order ?? null, nextLesson.episodeId);
+    const episode = place ? episodesAll.find((e) => e.id === place.episodeId) : undefined;
+    return place && episode ? m.learner.home.next.where(place.stage, localizeEpisode(episode, locale).titleEn, place.index, place.total) : null;
+  }, [nextLesson, locale, m]);
   const mission = useMemo(() => {
     if (!profile || !snap || !routeInput) return null;
     const today = routeInput.today;
@@ -525,6 +647,33 @@ export function HomeScreen(): React.ReactElement {
     }
   };
 
+  // The hero's Start or Continue: the one next, as card (2) starts it (F-ENT-003 section 3.12, `next.started`).
+  const startNextLesson = (): void => {
+    if (!profile || !nextLesson || next?.kind !== 'quest') return;
+    void track(nextStartedEvent(profile.id, next.source, 'home'));
+    navigation.navigate('QuestPlayer', { questId: nextLesson.questId, episodeId: nextLesson.episodeId });
+  };
+  // The Home route strip is folded into the hero (AMENDMENTS-DISPLAY-NAV section 9.1): its goal line (a weekly plan's
+  // goal only) and plan week sit under the hero's where line, and See your Learning Route is the way to the whole route.
+  const heroView = nextLesson ? (
+    <NextLessonCard
+      lesson={nextLesson}
+      title={nextLessonTitle}
+      where={nextLessonWhere}
+      goal={routeStrip?.goalFromPlan ? routeStrip.goal : null}
+      week={routeStrip?.week ?? null}
+      onStart={startNextLesson}
+      onRoute={flags.myRouteEnabled ? () => navigation.navigate('Main', { screen: 'Route' }) : null}
+    />
+  ) : null;
+  // Home's empty state (no quest yet, in no class): a quiet way to a class code (owner request 2026-10-16, item 8).
+  const classCodeLink =
+    questsDone === 0 && (memberships ?? []).length === 0 ? (
+      <View style={{ alignItems: 'flex-start' }}>
+        <LinkButton label={m.learner.home.classCode.cta} onPress={() => navigation.navigate('JoinSpace')} testID="home-class-code" />
+      </View>
+    ) : null;
+
   // The level check card (F-PLC-001 section 3.10): at most one quiet card below the mission cards.
   const profileId = profile?.id ?? null;
   const entriesOn = placementEntriesOn(flags.placementEnabled);
@@ -551,8 +700,9 @@ export function HomeScreen(): React.ReactElement {
           enabled: flags.placementEnabled,
           bankReady: entriesOn,
           hasResult: (snap?.placements?.length ?? 0) > 0,
-          questsDone: questsDoneOf(snap?.quests),
+          questsDone,
           dismissedAt: placementUi.dismissedAt,
+          declinedAt: placementUi.declinedAt,
           resumable,
         });
   // F-PLAN-002's weekly plan card (prompt, check-in or moved line) shares the slot; the level check wins while it is eligible (AM-6).
@@ -615,6 +765,12 @@ export function HomeScreen(): React.ReactElement {
   const missions =
     mission && mission.cards.length > 0 ? (
       <>
+        {heroView ? (
+          <>
+            {heroView}
+            <Spacer size="lg" />
+          </>
+        ) : null}
         <Heading level="prompt">{m.learner.home.mission.heading}</Heading>
         <Spacer size="sm" />
         <View testID="home-missions" style={{ gap: spacing.sm }}>
@@ -643,6 +799,8 @@ export function HomeScreen(): React.ReactElement {
                 picture={topicCover ?? null}
                 locked={isHomeCardLocked({ card, entries: storyIndex, isQuestOpen: questOpen, isStoryLocked })}
                 askHint={ask.label}
+                // Card (2) is compact while it names the hero's own lesson (section 9.1); it still collects as F-HW-001 says.
+                sameAsHero={heroView !== null && isSameAsHero(card, nextLesson)}
                 onPress={() => openCard(card)}
               />
             );
@@ -655,9 +813,11 @@ export function HomeScreen(): React.ReactElement {
   const catchUpGap = catchUp && missions ? <Spacer size="lg" /> : null;
 
   // Block 5 of the Home stack (F-ROUTE-001 section 6.4): the route strip replaces the
-  // "Stage 1 progress" bar when the flag is on (OD-3); with the flag off Home is unchanged.
+  // "Stage 1 progress" bar when the flag is on (OD-3); with the flag off Home is unchanged. While the hero shows, the
+  // strip is folded into it (AMENDMENTS-DISPLAY-NAV section 9.1; and the seven stages stay in Journey, owner decision
+  // 2026-10-17), so the strip draws only at rest or at the end of the free lessons, when there is no next lesson.
   const progressBlock = flags.myRouteEnabled ? (
-    routeStrip ? <RouteStrip view={routeStrip} onPress={() => navigation.navigate('Main', { screen: 'Route' })} /> : null
+    routeStrip && heroView === null ? <RouteStrip view={routeStrip} onPress={() => navigation.navigate('Main', { screen: 'Route' })} /> : null
   ) : (
     <>
       <Heading level="prompt">{m.learner.home.progress.heading}</Heading>
@@ -682,7 +842,7 @@ export function HomeScreen(): React.ReactElement {
         <Card padding="md" tone="sunken">
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
             <View style={{ flex: 1 }}>
-              <Body weight="semibold">{m.learner.home.homework.title}</Body>
+              <Body weight="semibold">{homeworkCardTitle(snap?.homework, profile?.id) === 'review' ? m.learner.home.homework.reviewTitle : m.learner.home.homework.title}</Body>
               <Caption tone="muted">
                 {homeworkDue === 0 ? copy.homeReviewsIdle : showsTodayCount(homeworkDue) ? m.learner.home.homework.due(homeworkDue) : m.learner.home.homework.dueMany}
               </Caption>
@@ -693,21 +853,21 @@ export function HomeScreen(): React.ReactElement {
       </Pressable>
 
       <Spacer size="xl" />
-      <HoyaBubble tone="idle" message={m.learner.home.tip} />
+      <HoyaBubble tone="idle" message={m.learner.home.tip[homeTip({ questsDone, playedToday: lastStreakDay(snap?.sessions ?? []) === today })]} />
       {/* A class move the learner side must answer, or one that is planned (F-SPACE-002 T-7c); nothing while transfers are off. */}
       {profile ? <TransferHomeLine profileId={profile.id} learnerName={profile.displayName} /> : null}
       {/* [TV] A teacher move notice, shown once, and the class update when the family has not read it (AMENDMENTS-TEACHER-VISIBILITY-TRANSFER). */}
       {profile ? <ClassUpdateHomeLines profileId={profile.id} learnerName={profile.displayName} learnerType={profile.learnerType} /> : null}
-      <Spacer size="lg" />
-      <Card padding="md" tone="sunken">
-        <Heading level="prompt">{m.learner.home.recentStars}</Heading>
-        <Spacer size="sm" />
-        <StarRow
-          stars={recentStars}
-          size={28}
-          accessibilityLabel={m.a11y.stars(recentStars)}
-        />
-      </Card>
+      {recentStars !== null ? (
+        <>
+          <Spacer size="lg" />
+          <Card padding="md" tone="sunken" testID="home-recent-stars">
+            <Heading level="prompt">{m.learner.home.recentStars}</Heading>
+            <Spacer size="sm" />
+            <StarRow stars={recentStars} size={28} accessibilityLabel={m.a11y.stars(recentStars)} />
+          </Card>
+        </>
+      ) : null}
     </>
   );
 
@@ -750,7 +910,8 @@ export function HomeScreen(): React.ReactElement {
 
       <Spacer size="lg" />
       <View style={{ flexDirection: 'row', gap: spacing.sm, flexWrap: 'wrap' }}>
-        <Pill tone="primary" label={m.learner.home.streak.pill(streak)} />
+        {/* The streak pill waits for the first day: never "Streak 0 days". */}
+        {showStreakPill(streak) ? <Pill tone="primary" label={m.learner.home.streak.pill(streak)} /> : null}
         <Pill tone="secondary" label={m.learner.home.cards.pill(cardsUnlocked)} />
         <Pill tone="success" label={m.learner.home.stars.pill(stars3)} />
       </View>
@@ -765,6 +926,12 @@ export function HomeScreen(): React.ReactElement {
               {catchUpView}
               {catchUpGap}
               {missions}
+              {classCodeLink ? (
+                <>
+                  <Spacer size="sm" />
+                  {classCodeLink}
+                </>
+              ) : null}
               {quietCard ? (
                 <>
                   <Spacer size="lg" />
@@ -784,6 +951,12 @@ export function HomeScreen(): React.ReactElement {
           {catchUpView}
           {catchUpGap}
           {missions}
+          {classCodeLink ? (
+            <>
+              <Spacer size="sm" />
+              {classCodeLink}
+            </>
+          ) : null}
           {notesCard('after')}
           {quietCard ? (
             <>

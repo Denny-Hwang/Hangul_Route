@@ -7,7 +7,10 @@ import { shot } from './shots';
  * F-STORY-006 PR 6.5b (wireframe library/earn-hints F): the Library counts
  * the cards collected with no total, every locked tile says how it is earned,
  * a card earned since the last visit wears "New" until it is opened, and the
- * explainer says only what this build can do.
+ * explainer says only what this build can do. Owner request 2026-10-16 (item 8):
+ * Your cards come first; the cards to find sit in one row per episode (closed
+ * until tapped) as silhouettes whose names say how they are earned, and the
+ * shelf shows one Next card hint.
  */
 
 /** A new learner (who holds Hoya's welcome card), on the Library tab. */
@@ -22,6 +25,14 @@ async function newLearnerLibrary(page: Page): Promise<void> {
   if (await guide.isVisible()) await guide.getByRole('button', { name: 'Not now' }).click();
   await page.getByText('Library', { exact: true }).last().click();
   await expect(page.getByRole('heading', { name: 'Heritage Library' })).toBeVisible();
+}
+
+/** Opens the cards-to-find row of `title` (closed on arrival). */
+async function openGroup(page: Page, title: string): Promise<void> {
+  const row = page.getByRole('button', { name: `${title}: cards to find` });
+  await row.scrollIntoViewIfNeeded();
+  if ((await row.getAttribute('aria-expanded')) !== 'true') await row.click();
+  await expect(row).toHaveAttribute('aria-expanded', 'true');
 }
 
 /** The saved progress record's "New" flag of the welcome card, read straight from IndexedDB (idb-keyval). */
@@ -61,10 +72,16 @@ test('a plain count, earn hints on locked tiles, an honest explainer, and New un
   await expect(page.getByText('1 card collected', { exact: true })).toBeVisible();
   await expect(page.getByText(/\d+ of \d+ collected|^\d+\/\d+$/)).toHaveCount(0);
 
-  // A locked tile says how it is earned, in its label and on the tile.
+  // One Next card hint for the shelf; each card to find says how it is earned in its name, inside its episode's row.
+  await expect(page.getByTestId('library-next-card')).toContainText('Finish the episode: Meet the Letters');
+  await expect(page.getByText('Finish the episode: Meet the Letters', { exact: true })).toHaveCount(1);
+  await expect(page.getByRole('button', { name: 'Locked card. Finish the episode: Meet the Letters' })).toHaveCount(0);
+  await openGroup(page, 'Meet the Letters');
   const hanji = page.getByRole('button', { name: 'Locked card. Finish the episode: Meet the Letters' }).first();
   await expect(hanji).toBeVisible();
-  await expect(hanji).toContainText('Finish the episode: Meet the Letters');
+  // A silhouette, never the hint again on every tile.
+  await expect(hanji).not.toContainText('Finish the episode');
+  await openGroup(page, 'Stage 1');
   await expect(page.getByRole('button', { name: 'Locked card. Finish every quest in Stage 1' }).first()).toBeVisible();
   await expect(page.getByText('Locked', { exact: true })).toHaveCount(0);
 
@@ -100,6 +117,7 @@ test('a plain count, earn hints on locked tiles, an honest explainer, and New un
   await expect(page.getByRole('button', { name: 'Tiger. New', exact: true })).toHaveCount(0);
 
   // A locked card page names its hint and says how to earn it.
+  await openGroup(page, 'Meet the Letters');
   await page.getByRole('button', { name: 'Locked card. Finish the episode: Meet the Letters' }).first().click();
   await expect(page.getByText('How to earn it')).toBeVisible();
   // The Library stays mounted under the card page: look at what is on screen.
@@ -115,6 +133,7 @@ test('320 wide: tiles and hints fit with no sideways scroll', async ({ page }) =
   await page.setViewportSize({ width: 320, height: 720 });
   await newLearnerLibrary(page);
   await expect(page.getByText('1 card collected', { exact: true })).toBeVisible();
+  await openGroup(page, 'Meet the Letters');
   const scroll = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
   expect(scroll).toBeLessThanOrEqual(0);
   const tile = page.getByRole('button', { name: 'Locked card. Finish the episode: Meet the Letters' }).first();

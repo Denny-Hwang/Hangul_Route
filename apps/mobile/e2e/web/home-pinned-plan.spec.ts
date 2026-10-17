@@ -34,12 +34,17 @@ test('Back home after the slot-2 Journey quest: the same card reads collected, s
   page.on('pageerror', (e) => errors.push(String(e)));
   await newLearnerAtHome(page);
 
-  const before = await cardNames(page);
-  // Slot 2 is the Journey cursor: the first quest, not collected yet.
-  expect(before[1]).toMatch(/\. Something new today\.$/);
+  // Slot 2 is the Journey cursor, the first quest: the hero's own lesson, so it is a quiet row, not a button
+  // (AMENDMENTS-DISPLAY-NAV 9.1); slots 1 and 3 are the two buttons.
+  await expect(missionCards(page)).toHaveCount(2);
+  const before = await missionCards(page).evaluateAll((els) => els.map((el) => el.getAttribute('aria-label') ?? ''));
+  const slot2 = page.getByTestId('home-mission-same-as-hero-2');
+  await expect(slot2).toBeVisible();
+  const title = (await page.getByTestId('home-next-lesson').getByRole('heading').innerText()).trim();
+  await expect(slot2).toContainText(title);
 
-  // Finish it from Home: Discover read, the two games skipped, the Check played.
-  await missionCards(page).nth(1).click();
+  // Finish it from the hero's Start (the one way in): Discover read, the two games skipped, the Check played.
+  await page.getByTestId('home-next-lesson-start').click();
   await page.getByRole('button', { name: 'Continue' }).click();
   await passDiscover(page);
   await page.getByRole('button', { name: 'Skip for now' }).click();
@@ -49,10 +54,11 @@ test('Back home after the slot-2 Journey quest: the same card reads collected, s
   await page.getByRole('button', { name: 'Back home' }).click();
   await expect(page.getByText('Hi, Dami!')).toBeVisible();
 
-  // The pinned plan: slot 2 keeps the quest just finished, collected; slots 1 and 3 are unchanged.
-  await expect(missionCards(page).nth(1)).toHaveAccessibleName(`${before[1]} Collected.`);
+  // The pinned plan: slot 2 keeps the quest just finished, now collected and a card again (the hero moved on to the
+  // next lesson); slots 1 and 3 are unchanged.
   const after = await cardNames(page);
+  expect(after[1]).toBe(`${title}. Something new today. Collected.`);
   expect(after[0]).toBe(before[0]);
-  expect(after[2]).toBe(before[2]);
+  expect(after[2]).toBe(before[1]);
   expect(errors).toEqual([]);
 });

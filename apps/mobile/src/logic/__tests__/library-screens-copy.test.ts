@@ -45,12 +45,15 @@ describe('Library screens (F-STORY-006 PR 6.1)', () => {
     expect(src).not.toContain('heritageCardsAll.length');
   });
 
-  it('the Library lists only obtainable or owned cards, and a locked tile shows its earn hint', () => {
+  it('the Library lists only obtainable or owned cards; a card to find is a silhouette with its earn hint in its name, and the shelf shows one Next card hint (owner request 2026-10-16, item 8)', () => {
     const src = read('LibraryScreen.tsx');
     expect(src).toContain('obtainableCards(');
     expect(src).toContain('earnHint(');
     expect(src).toContain('a11y.lockedCardHint(');
-    expect(src).toContain('numberOfLines={2}');
+    expect(src).toContain('libraryShelves(');
+    expect(src).toContain('<CardSilhouette');
+    expect(src).toContain('m.toFind.next');
+    expect(src).not.toContain('name="lock"');
     expect(src).not.toContain('m.locked}');
   });
 

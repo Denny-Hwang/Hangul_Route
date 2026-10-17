@@ -45,7 +45,7 @@ describe('caregiver.transfer (English, F-SPACE-002 section 4.12)', () => {
     expect(t.actions.setUpPin.cta).toBe('Set up PIN');
     expect(t.card.classScope).toBe('Use your rescue code first.');
     expect(t.card.askConsole).toBe('Ask the grown-up with the account to answer this in the console.');
-    expect(t.card.needsPin).toBe('A grown-up needs to set up a PIN first. Open Profile, then Grown-up zone.');
+    expect(t.card.needsPin).toBe('A grown-up needs to set up a PIN first. In Profile, open For grown-ups, then Grown-up area.');
     expect(t.card.pinTooNew).toBe('Moves open one day after the PIN is set.');
   });
 
