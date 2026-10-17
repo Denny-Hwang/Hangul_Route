@@ -6,7 +6,7 @@ import { optionViews, promptView } from '../../logic/placement/item-view';
 import { playPrompt } from '../../platform/audio';
 import { PictureArt } from '../minigames/PictureArt';
 import { usePlacement } from './context';
-import { ChoiceGrid, ExitButton, FootstepTrail, SpeakerButton } from './parts';
+import { ChoiceGrid, FootstepTrail, SpeakerButton } from './parts';
 
 const WARMUP_QUESTION = { id: PLACEMENT_WARMUP.id, ...PLACEMENT_WARMUP.question };
 
@@ -18,11 +18,11 @@ const WARMUP_QUESTION = { id: PLACEMENT_WARMUP.id, ...PLACEMENT_WARMUP.question 
  * sound-needed screen instead; sound switched off (`muted`) counts the same
  * for the draw. The pictures wait for that check; any answer
  * opens the first scored question. Hoya's line is spoken on open (the
- * hand-off tap unlocked audio), never over a screen reader. The exit leaves
- * with nothing recorded (no run has begun). Nothing here is recorded.
+ * hand-off tap unlocked audio), never over a screen reader. The exit (the
+ * route's ScreenHeader Close) leaves with nothing recorded (no run has begun). Nothing here is recorded.
  */
 export function WarmupScreen(): React.ReactElement {
-  const { m, flow, dispatch, markGesture, say, screenReader, leave } = usePlacement();
+  const { m, flow, dispatch, markGesture, say, screenReader } = usePlacement();
   const copy = m.learner.placement;
   const [busy, setBusy] = useState(false);
   const pictureSize = useMediaSize(touchTarget.hero);
@@ -51,7 +51,6 @@ export function WarmupScreen(): React.ReactElement {
 
   return (
     <Screen tone="canvas" testID="placement-warmup">
-      <ExitButton onPress={leave} label={copy.item.exit} testID="placement-warmup-exit" />
       <HoyaBubble tone="idle" message={copy.warmup.line} />
       <Spacer size="lg" />
       <View style={{ alignItems: 'center' }}>

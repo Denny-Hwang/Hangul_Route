@@ -32,6 +32,7 @@ import { usePlanStore } from '../../store/plan-store';
 import { RadioTile } from '../placement/parts';
 import { A_SUNDAY, DayChip, StepButton, WIDE_CHIP, dayLabel } from './parts';
 import { usePlanBasis } from './use-plan-basis';
+import { useBackGuard } from '../use-back-guard';
 
 /**
  * **Change the plan** (F-PLAN-002 section 3.9, wireframe console/curriculum-planner.md G1 as
@@ -97,24 +98,16 @@ export function RouteSetupScreen({ route, navigation }: Props): React.ReactEleme
     if (navigation.canGoBack()) navigation.goBack();
     else navigation.navigate('Main', { screen: 'Home' });
   };
-  const back = (): void => {
-    if (index === 0) leave();
-    else setStep(SETUP_STEPS[index - 1] as SetupStep);
-  };
+  // Back steps back through the setup steps, then leaves: the header's Back, the browser and the phone back alike
+  // (AMENDMENTS-DISPLAY-NAV section 7.1).
+  useBackGuard(navigation, () => {
+    if (index === 0) return false;
+    setStep(SETUP_STEPS[index - 1] as SetupStep);
+    return true;
+  });
 
   const header = (
     <>
-      <Pressable
-        onPress={back}
-        hitSlop={spacing.md}
-        accessibilityRole="button"
-        accessibilityLabel={m.a11y.goBack}
-        style={{ alignSelf: 'flex-start', padding: spacing.xs }}
-        testID="route-setup-back"
-      >
-        <Icon name="arrow-left" size={28} />
-      </Pressable>
-      <Spacer size="sm" />
       <Heading level="title">{t.title}</Heading>
       <Caption tone="secondary" testID="route-setup-step">
         {t.stepOf(index + 1, SETUP_STEPS.length)}

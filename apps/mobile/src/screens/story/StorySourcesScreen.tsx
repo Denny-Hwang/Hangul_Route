@@ -183,7 +183,6 @@ export function StorySourcesScreen({ route, navigation, ...exitProps }: Props): 
     void copyText(source.url).then((ok) => setNote(key, ok ? copy.linkCopied : copy.copyUnavailable));
   };
 
-  const back = exits.back;
   const openLink = exits.openLink;
 
   const jumpTo = (id: string): void => {
@@ -194,7 +193,7 @@ export function StorySourcesScreen({ route, navigation, ...exitProps }: Props): 
   if (!view) {
     return (
       <Screen tone="canvas" testID="story-sources">
-        <SourcesHeader copy={copy} onBack={back} />
+        <SourcesHeader copy={copy} />
         <Body testID="story-sources-empty">{copy.noSources}</Body>
       </Screen>
     );
@@ -202,7 +201,7 @@ export function StorySourcesScreen({ route, navigation, ...exitProps }: Props): 
 
   return (
     <Screen tone="canvas" scrollable={false} testID="story-sources">
-      <SourcesHeader copy={copy} onBack={back} />
+      <SourcesHeader copy={copy} />
       <ScrollView
         ref={scrollRef}
         style={{ flex: 1 }}

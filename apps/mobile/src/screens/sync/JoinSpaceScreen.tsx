@@ -1,7 +1,7 @@
-import { Body, Button, Caption, Card, Heading, HoyaBubble, Icon, Screen, Spacer, colors, radii, spacing, touchTarget, useTypeScale } from '@hangul-route/design-system';
+import { Body, Button, Caption, Card, Heading, HoyaBubble, Screen, Spacer, colors, radii, spacing, touchTarget, useTypeScale } from '@hangul-route/design-system';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useEffect, useState } from 'react';
-import { Pressable, TextInput, View } from 'react-native';
+import { TextInput, View } from 'react-native';
 import { useMessages } from '../../i18n/use-messages';
 import { cleanJoinCode, isCodeError, isCompleteJoinCode, joinErrorMessage } from '../../logic/spaces/join-code';
 import { nameHint } from '../../logic/onboarding/create-profile-form';
@@ -171,10 +171,6 @@ export function JoinSpaceScreen({ navigation }: Props): React.ReactElement {
 
   return (
     <Screen tone="canvas" scrollable>
-      <Pressable onPress={() => navigation.goBack()} hitSlop={spacing.md} accessibilityRole="button" accessibilityLabel={messages.a11y.goBack} style={{ alignSelf: 'flex-start', padding: spacing.xs }}>
-        <Icon name="arrow-left" size={28} />
-      </Pressable>
-      <Spacer size="sm" />
       <Heading level="title">{m.title}</Heading>
       <Spacer size="md" />
       <HoyaBubble tone={done ? 'cheering' : 'idle'} message={done ? m.bubble.done(done.name) : found ? m.bubble.found(found.name) : m.bubble.idle} />

@@ -1,23 +1,7 @@
-import { Icon, Pill, colors, spacing, touchTarget } from '@hangul-route/design-system';
+import { Pill, colors } from '@hangul-route/design-system';
 import React from 'react';
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
 import { useMessages } from '../../i18n/use-messages';
-
-/** The back control of the notes screens: the arrow the Profile screen uses, `touchTarget.min` square. */
-export function BackButton({ onPress }: { onPress: () => void }): React.ReactElement {
-  const m = useMessages();
-  return (
-    <Pressable
-      onPress={onPress}
-      accessibilityRole="button"
-      accessibilityLabel={m.a11y.goBack}
-      testID="notes-back"
-      style={{ alignSelf: 'flex-start', minWidth: touchTarget.min, minHeight: touchTarget.min, justifyContent: 'center', padding: spacing.xs }}
-    >
-      <Icon name="arrow-left" size={28} />
-    </Pressable>
-  );
-}
 
 /** "New": a word in the secondary pill, never only a dot and never amber or red (mock N2). */
 export function NewPill(): React.ReactElement {

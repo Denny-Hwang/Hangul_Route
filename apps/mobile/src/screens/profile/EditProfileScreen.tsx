@@ -132,18 +132,9 @@ export function EditProfileScreen({ navigation, route }: Props): React.ReactElem
     };
   }, [profileId, deviceScope]);
 
+  // The way back is the route's ScreenHeader (AMENDMENTS-DISPLAY-NAV section 7.1); the title stays in the screen.
   const back = (
     <>
-      <Pressable
-        onPress={() => navigation.goBack()}
-        hitSlop={spacing.md}
-        accessibilityRole="button"
-        accessibilityLabel={messages.a11y.goBack}
-        style={{ alignSelf: 'flex-start', padding: spacing.xs }}
-      >
-        <Icon name="arrow-left" size={28} />
-      </Pressable>
-      <Spacer size="sm" />
       <Heading level="title">{e.title}</Heading>
     </>
   );

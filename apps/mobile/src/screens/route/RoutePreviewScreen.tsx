@@ -1,10 +1,10 @@
-import { Body, Button, Heading, Icon, Screen, Spacer, spacing } from '@hangul-route/design-system';
+import { Body, Button, Heading, Screen, Spacer, spacing } from '@hangul-route/design-system';
 import { CATALOG, generateCurriculum, type CurriculumDraft, type SelfRoute } from '@hangul-route/content-schema';
 import type { Messages } from '@hangul-route/i18n';
 import { CommonActions } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useMemo, useState } from 'react';
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { draftWeeks, learnerNotices, previewStats, previewWeeks, type LearnerNotice } from '../../logic/route/plan-view';
 import { routesAfterStart, setupParams } from '../../logic/route/setup-flow';
@@ -95,17 +95,6 @@ export function RoutePreviewScreen({ route, navigation }: Props): React.ReactEle
 
   return (
     <Screen tone="canvas" scrollable>
-      <Pressable
-        onPress={back}
-        hitSlop={spacing.md}
-        accessibilityRole="button"
-        accessibilityLabel={m.a11y.goBack}
-        style={{ alignSelf: 'flex-start', padding: spacing.xs }}
-        testID="route-preview-back"
-      >
-        <Icon name="arrow-left" size={28} />
-      </Pressable>
-      <Spacer size="sm" />
       <Heading level="title">{t.title}</Heading>
       <Spacer size="sm" />
       {stats !== null && ready ? (

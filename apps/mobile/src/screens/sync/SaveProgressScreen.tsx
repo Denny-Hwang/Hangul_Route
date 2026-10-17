@@ -1,7 +1,7 @@
-import { Body, Button, Caption, Card, Heading, HoyaBubble, Icon, Screen, Spacer, colors, radii, spacing } from '@hangul-route/design-system';
+import { Body, Button, Caption, Card, Heading, HoyaBubble, Screen, Spacer, colors, radii, spacing } from '@hangul-route/design-system';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useEffect, useState } from 'react';
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
 import { useMessages } from '../../i18n/use-messages';
 import { rescueCodeHint, rescueCodeLines } from '../../logic/sync/rescue-code';
 import { cloudStatusLine, saveNowNote } from '../../logic/sync/status-line';
@@ -61,10 +61,6 @@ export function SaveProgressScreen({ navigation }: Props): React.ReactElement {
 
   return (
     <Screen tone="canvas" scrollable>
-      <Pressable onPress={() => navigation.goBack()} hitSlop={spacing.md} accessibilityRole="button" accessibilityLabel={messages.a11y.goBack} style={{ alignSelf: 'flex-start', padding: spacing.xs }}>
-        <Icon name="arrow-left" size={28} />
-      </Pressable>
-      <Spacer size="sm" />
       <Heading level="title">{m.title}</Heading>
       <Spacer size="md" />
       <HoyaBubble tone="idle" message={code ? m.bubble.code(profile?.displayName ?? null) : m.bubble.noCode} />

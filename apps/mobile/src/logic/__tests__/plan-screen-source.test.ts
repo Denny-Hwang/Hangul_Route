@@ -95,11 +95,11 @@ describe('Plan screen (screens/paywall/PaywallScreen.tsx)', () => {
     expect(plan).toContain('accessibilityLiveRegion="polite"');
   });
 
-  it('the summary heading comes first and carries a11y.planStatus; the button carries the hint', () => {
+  it('the summary heading comes first in the body and carries a11y.planStatus; the button carries the hint', () => {
     const summary = plan.indexOf('accessibilityLabel={view.summary}');
-    const back = plan.indexOf('accessibilityLabel={messages.a11y.goBack}');
     expect(summary).toBeGreaterThan(-1);
-    expect(back).toBeGreaterThan(summary);
+    // The way back is the route's ScreenHeader above the body (AMENDMENTS-DISPLAY-NAV section 7.1), not a control here.
+    expect(plan).not.toContain('accessibilityLabel={messages.a11y.goBack}');
     expect(plan).toMatch(/accessibilityHint=\{offline \? needsInternet : view\.billing\.hint\}/);
   });
 

@@ -1,4 +1,4 @@
-import { Screen, TextSizeProvider } from '@hangul-route/design-system';
+import { Screen, ScreenHeaderSlotContext, TextSizeProvider } from '@hangul-route/design-system';
 import { NavigationContainer, createNavigationContainerRef } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -26,6 +26,9 @@ import type { ResolvedPass } from './src/logic/browse/pass';
 import { resolveEntry } from './src/logic/browse/target';
 import { BROWSE_REGISTERED_ROUTES, BrowseNavigator, type BrowseStackParamList } from './src/navigation/browse';
 import { PortraitGuard } from './src/components/PortraitGuard';
+import { ConfirmHost } from './src/components/ConfirmHost';
+import { LearnerScreenHeader } from './src/components/LearnerScreenHeader';
+import { installHistoryBridge } from './src/platform/history-bridge';
 import { OopsScreen } from './src/screens/system/OopsScreen';
 import { BrowseSessionProvider, type BrowseSession } from './src/screens/browse/browse-session';
 import { BrowseSettingsProvider } from './src/screens/browse/BrowseSettings';
@@ -250,6 +253,22 @@ export default function BrowseApp(): React.ReactElement {
     [reenter],
   );
 
+  // The web history bridge (AMENDMENTS-DISPLAY-NAV section 7.2): the browser back steps back one screen, and Close
+  // still goes back past every entry this page added (`1 + hrBrowseDepth + hrNav`, platform/browse-env).
+  const stopBridge = useRef<(() => void) | null>(null);
+  const onReady = useCallback(() => {
+    stopBridge.current?.();
+    stopBridge.current = installHistoryBridge(navigation);
+    onNavigate();
+  }, [onNavigate]);
+  useEffect(
+    () => () => {
+      stopBridge.current?.();
+      stopBridge.current = null;
+    },
+    [],
+  );
+
   const session: BrowseSession | null = useMemo(
     () =>
       visit.status === 'ready'
@@ -266,16 +285,19 @@ export default function BrowseApp(): React.ReactElement {
           {visit.status === 'ready' && session ? (
             <BrowseSessionProvider value={session}>
               <BrowseSettingsProvider>
-                <NavigationContainer
-                  ref={navigation}
-                  initialState={routesOf(visit.initial)}
-                  documentTitle={{ formatter: () => messages.caregiver.browse.documentTitle }}
-                  onReady={onNavigate}
-                  onStateChange={onNavigate}
-                >
-                  <BrowseNavigator />
-                  <StatusBar style="dark" />
-                </NavigationContainer>
+                <ScreenHeaderSlotContext.Provider value={LearnerScreenHeader}>
+                  <NavigationContainer
+                    ref={navigation}
+                    initialState={routesOf(visit.initial)}
+                    documentTitle={{ formatter: () => messages.caregiver.browse.documentTitle }}
+                    onReady={onReady}
+                    onStateChange={onNavigate}
+                  >
+                    <BrowseNavigator />
+                    <StatusBar style="dark" />
+                  </NavigationContainer>
+                </ScreenHeaderSlotContext.Provider>
+                <ConfirmHost />
               </BrowseSettingsProvider>
             </BrowseSessionProvider>
           ) : (

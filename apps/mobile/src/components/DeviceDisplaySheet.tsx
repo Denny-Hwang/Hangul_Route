@@ -4,6 +4,7 @@ import type { TextSize } from '@hangul-route/content-schema';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useLocale, useMessages } from '../i18n/use-messages';
 import { languageOptions } from '../logic/locale/language-picker';
+import { useHistorySheet } from '../platform/history-bridge';
 import { useLocaleStore } from '../store/locale-store';
 
 /**
@@ -29,6 +30,8 @@ export function DeviceDisplaySheet({ visible, onClose, testID }: DeviceDisplaySh
   const setDeviceLocale = useLocaleStore((s) => s.setDeviceLocale);
   const setTextSize = useLocaleStore((s) => s.setTextSize);
   const [pending, setPending] = useState<UiLocale | null>(null);
+  // One history level while open: the browser or phone back closes the sheet (AMENDMENTS-DISPLAY-NAV section 7.2).
+  useHistorySheet(visible, onClose);
   // A confirm step belongs to the sheet that asked it; closing the sheet drops it.
   useEffect(() => {
     if (!visible) setPending(null);

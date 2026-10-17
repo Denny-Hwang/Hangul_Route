@@ -1,4 +1,4 @@
-import { Body, Button, Card, Heading, Icon, Screen, Spacer, borderWidth, colors, layout, radii, spacing, touchTarget, typography, KOREAN_LINE_BREAK, useTypeScale } from '@hangul-route/design-system';
+import { Body, Button, Card, Heading, Screen, Spacer, borderWidth, colors, layout, radii, spacing, touchTarget, typography, KOREAN_LINE_BREAK, useTypeScale } from '@hangul-route/design-system';
 import { NOTE_REPORT_REASONS, type NoteReportReason } from '@hangul-route/content-schema';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
@@ -129,22 +129,9 @@ export function NoteReportScreen({ navigation, route }: Props): React.ReactEleme
     else setFailed(true);
   };
 
-  const header = (
-    <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
-      <View style={{ flex: 1 }}>
-        <Heading level="title">{r.title}</Heading>
-      </View>
-      <Pressable
-        onPress={close}
-        accessibilityRole="button"
-        accessibilityLabel={r.close}
-        testID="note-report-close"
-        style={{ minWidth: touchTarget.min, minHeight: touchTarget.min, alignItems: 'center', justifyContent: 'center' }}
-      >
-        <Icon name="close" size={24} color={colors.text.secondary} />
-      </Pressable>
-    </View>
-  );
+  // Close is the route's ScreenHeader (AMENDMENTS-DISPLAY-NAV section 7.1); leaving ends the gate session through the
+  // beforeRemove listener above, however the sheet is left.
+  const header = <Heading level="title">{r.title}</Heading>;
 
   if (shown !== null) {
     const lines: string[] =

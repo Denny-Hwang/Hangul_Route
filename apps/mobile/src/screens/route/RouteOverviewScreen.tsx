@@ -1,10 +1,10 @@
-import { Body, Button, Card, Heading, Hoya, Icon, Screen, Spacer, spacing } from '@hangul-route/design-system';
+import { Body, Button, Card, Heading, Hoya, Screen, Spacer, spacing } from '@hangul-route/design-system';
 import { CATALOG } from '@hangul-route/content-schema';
 import { formatDate } from '@hangul-route/i18n';
 import { useFocusEffect } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { movedLineVisible } from '../../logic/route/home-slot';
 import { planOverview } from '../../logic/route/plan-view';
@@ -154,17 +154,6 @@ export function RouteOverviewScreen({ route, navigation }: Props): React.ReactEl
 
   const header = (
     <>
-      <Pressable
-        onPress={leave}
-        hitSlop={spacing.md}
-        accessibilityRole="button"
-        accessibilityLabel={m.a11y.goBack}
-        style={{ alignSelf: 'flex-start', padding: spacing.xs }}
-        testID="route-overview-back"
-      >
-        <Icon name="arrow-left" size={28} />
-      </Pressable>
-      <Spacer size="sm" />
       <Heading level="title">{t.title}</Heading>
       <Spacer size="md" />
     </>

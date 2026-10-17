@@ -6,7 +6,7 @@ import { episodeOutline } from '../../logic/browse/facts';
 import { accessOf, itemViewedEvent } from '../../logic/browse/home-view';
 import type { BrowseStackParamList } from '../../navigation/browse';
 import { EpisodeOutlineView } from './EpisodeOutlineView';
-import { HeaderBack, HeaderRow, useItemViewed } from './browse-ui';
+import { useItemViewed } from './browse-ui';
 import { useBrowseSession } from './browse-session';
 
 /**
@@ -31,15 +31,8 @@ export function BrowseEpisodeScreen({ route, navigation }: Props): React.ReactEl
     if (!known) navigation.replace('BrowseHome', { note: 'not-in-version' });
   }, [known, navigation]);
 
-  const back = (): void => {
-    if (navigation.canGoBack()) navigation.goBack();
-    else navigation.navigate('BrowseHome', {});
-  };
-
   return (
     <Screen tone="canvas" scrollable width={wide ? 'full' : 'reading'} testID="browse-episode-screen">
-      <HeaderRow back={<HeaderBack label={m.episode.back} showLabel={false} onPress={back} testID="browse-back" />} />
-      <Spacer size="sm" />
       {known ? (
         <EpisodeOutlineView
           episodeId={episodeId}

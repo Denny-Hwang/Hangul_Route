@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { answerForkNew, onboardChild, readStored, seedStored, waitForSaved, passPlacementLanguage } from './helpers';
+import { answerForkNew, onboardChild, readStored, seedStored, waitForSaved, passPlacementLanguage, headerBack, headerClose } from './helpers';
 import { shot } from './shots';
 
 /**
@@ -138,7 +138,7 @@ test.describe('placement report (fixture bundle)', () => {
     await expect(page.getByTestId('placement-no-sound-note')).toBeVisible();
     await page.getByTestId('placement-warmup-option-rice').click();
     await page.locator('[data-testid^="placement-option-"]').first().click();
-    await page.getByTestId('placement-exit').click();
+    await headerClose(page).click();
     await page.getByTestId('placement-enough').click();
     await expect(page.getByTestId('placement-result')).toBeVisible();
 
@@ -186,7 +186,7 @@ test.describe('placement report (fixture bundle)', () => {
     ]);
 
     // Back returns to the result underneath.
-    await page.getByTestId('placement-report-back').click();
+    await headerBack(page).click();
     await expect(page.getByTestId('placement-result')).toBeVisible();
   });
 

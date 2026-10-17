@@ -1,8 +1,8 @@
-import { Button, Caption, Card, Heading, Hoya, HoyaBubble, Icon, Screen, Spacer, colors, radii, spacing, touchTarget, useTypeScale } from '@hangul-route/design-system';
+import { Button, Caption, Card, Heading, Hoya, HoyaBubble, Screen, Spacer, colors, radii, spacing, touchTarget, useTypeScale } from '@hangul-route/design-system';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { normalizeRescueCode } from '@hangul-route/content-schema';
 import React, { useState } from 'react';
-import { Pressable, TextInput, View } from 'react-native';
+import { TextInput, View } from 'react-native';
 import { useMessages } from '../../i18n/use-messages';
 import { decodeBackup } from '../../logic/sync/backup';
 import { RESCUE_INPUT_MAX, claimErrorMessage, cleanRescueInput, rescueInputRows } from '../../logic/sync/rescue-code';
@@ -99,10 +99,6 @@ export function RestoreScreen({ navigation, route }: Props): React.ReactElement 
 
   return (
     <Screen tone="canvas" scrollable>
-      <Pressable onPress={() => navigation.goBack()} hitSlop={spacing.md} accessibilityRole="button" accessibilityLabel={messages.a11y.goBack} style={{ alignSelf: 'flex-start', padding: spacing.xs }}>
-        <Icon name="arrow-left" size={28} />
-      </Pressable>
-      <Spacer size="sm" />
       <Heading level="title">{m.title}</Heading>
       <Spacer size="md" />
       <HoyaBubble tone="thinking" message={copy.restorePrompt} />

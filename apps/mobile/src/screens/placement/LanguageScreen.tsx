@@ -6,7 +6,7 @@ import { languageTiles, type LanguageTile } from '../../logic/placement/flow';
 import { speechLangOf } from '../../logic/placement/options-view';
 import { hasVoiceFor, playPrompt } from '../../platform/audio';
 import { usePlacement } from './context';
-import { BackArrow, Note, RadioTile } from './parts';
+import { Note, RadioTile } from './parts';
 
 /**
  * Test language (F-PLC-001 section 3.1 step 2, wireframe placement B): shown
@@ -17,7 +17,7 @@ import { BackArrow, Note, RadioTile } from './parts';
  * is then unavailable. The choice is for this check only.
  */
 export function LanguageScreen(): React.ReactElement {
-  const { m, flow, dispatch, capability, leave, screenReader } = usePlacement();
+  const { m, flow, dispatch, capability, screenReader } = usePlacement();
   const copy = m.learner.placement.language;
   const tiles = languageTiles(flow.locales, flow.testLocale, flow.koreanAudio, (l) => hasVoiceFor(speechLangOf(l)));
 
@@ -36,12 +36,7 @@ export function LanguageScreen(): React.ReactElement {
 
   return (
     <Screen tone="canvas" testID="placement-language">
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
-        <BackArrow onPress={leave} label={m.a11y.goBack} />
-        <View style={{ flex: 1 }}>
-          <Heading level="title">{copy.title}</Heading>
-        </View>
-      </View>
+      <Heading level="title">{copy.title}</Heading>
       <Spacer size="lg" />
       <View style={{ gap: spacing.md }}>
         {tiles.map((tile) => {

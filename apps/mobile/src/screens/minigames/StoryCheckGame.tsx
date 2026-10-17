@@ -4,15 +4,12 @@ import {
   ChoiceCard,
   Heading,
   HoyaBubble,
-  Icon,
   KOREAN_LANGUAGE,
   KoreanText,
   Pill,
   Progress,
   Screen,
   Spacer,
-  colors,
-  radii,
   spacing,
   supportedCardIds,
   touchTarget,
@@ -21,7 +18,7 @@ import {
   KOREAN_LINE_BREAK,
 } from '@hangul-route/design-system';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { AccessibilityInfo, Platform, Pressable, Text, View } from 'react-native';
+import { AccessibilityInfo, Platform, Text, View } from 'react-native';
 import { storyById } from '../../content/stories';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { useRomanizationMode } from '../../i18n/use-romanization-mode';
@@ -70,14 +67,13 @@ import { useQuestRunStore } from '../../store/quest-run-store';
 import { SpeakerButton } from '../story/ReaderParts';
 import { StoryWordRecap } from '../story/StoryWordRecap';
 import { useReaderAudio } from '../story/use-reader-audio';
+import { useRouteBackGuard } from '../use-back-guard';
 import { PictureArt } from './PictureArt';
 
 interface Props {
   scope: MinigameScope;
   /** The shell's close (`minigame.finished`, then back); called after the step is marked complete. */
   onFinish: () => void;
-  /** Close: back to the quest step without completing it; answers already scored stay scored. */
-  onBack: () => void;
 }
 
 /** Taught Korean inside an English line: read in a Korean voice (spec §3.10; web `lang`, iOS `accessibilityLanguage`). */
@@ -105,7 +101,7 @@ function announce(line: string, queue: boolean): void {
  * word recap (`StoryWordRecap`, §3.6, PR 3.4b) when the story has words to
  * recap; its Done (or Close) ends the step. Without words, Next ends the step at once.
  */
-export function StoryCheckGame({ scope, onFinish, onBack }: Props): React.ReactElement {
+export function StoryCheckGame({ scope, onFinish }: Props): React.ReactElement {
   const locale = useLocale();
   const m = useMessages();
   const copy = m.learner.story.check;
@@ -207,6 +203,15 @@ export function StoryCheckGame({ scope, onFinish, onBack }: Props): React.ReactE
     [playerView, answerRound, copy, profileId, finish, resetForScene, stopAudio],
   );
 
+  // Close is the route's ScreenHeader (wireframe check.md A; AMENDMENTS-DISPLAY-NAV section 7.1): back to the quest step,
+  // scored answers stay scored. On the recap every item is answered and nothing is scored, so a back there ends the
+  // step like Done (no replay of the items): the header's Close, the browser and the phone back alike.
+  useRouteBackGuard(() => {
+    if (stateRef.current.phase !== 'recap') return false;
+    void Promise.resolve().then(() => dispatch({ type: 'finishRecap' }));
+    return true;
+  });
+
   // Focus follows the resolved item to Next (web: the DOM focus; native: the screen reader's focus),
   // then native hears "Correct" with the explanation (iOS has no live regions).
   const resolvedKey = state.phase === 'explained' ? state.index : -1;
@@ -277,24 +282,6 @@ export function StoryCheckGame({ scope, onFinish, onBack }: Props): React.ReactE
   return (
     <Screen tone="canvas" scrollable>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md, minHeight: touchTarget.min }}>
-        {/* Close (wireframe check.md A): back to the quest step; scored answers stay scored. On the recap every
-            item is answered and nothing is scored, so Close ends the step like Done (no replay of the items). */}
-        <Pressable
-          onPress={inRecap ? () => dispatch({ type: 'finishRecap' }) : onBack}
-          accessibilityRole="button"
-          accessibilityLabel={m.learner.story.reader.close}
-          testID="story-check-close"
-          style={({ pressed }) => ({
-            width: touchTarget.min,
-            height: touchTarget.min,
-            alignItems: 'center',
-            justifyContent: 'center',
-            borderRadius: radii.pill,
-            backgroundColor: pressed ? colors.surface.sunken : 'transparent',
-          })}
-        >
-          <Icon name="close" size={spacing.xxl} color={colors.text.secondary} />
-        </Pressable>
         {/* The bar carries no value a screen reader can say; the labelled position does (§3.10). */}
         <View style={{ flex: 1 }} {...a11yHidden}>
           <Progress

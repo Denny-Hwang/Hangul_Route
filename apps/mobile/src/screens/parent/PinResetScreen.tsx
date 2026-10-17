@@ -4,7 +4,6 @@ import {
   Caption,
   Card,
   Heading,
-  Icon,
   Screen,
   Spacer,
   colors,
@@ -34,6 +33,7 @@ import { track } from '../../platform/telemetry';
 import { useAccountStore } from '../../store/account-store';
 import { useProfileStore } from '../../store/profile-store';
 import { useSyncStore } from '../../store/sync-store';
+import { useBackGuard } from '../use-back-guard';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'PinReset'>;
 
@@ -127,22 +127,19 @@ export function PinResetScreen({ route, navigation }: Props): React.ReactElement
     }
   };
 
+  // Back returns to the PIN screen this one replaced (the header's Back, the browser and the phone back alike,
+  // AMENDMENTS-DISPLAY-NAV section 7.1); the replace is the screen's own way on, so the guard lets it through.
+  useBackGuard(navigation, () => {
+    void Promise.resolve().then(() => navigation.replace('PinEntry', { next, profileId }));
+    return true;
+  });
+
   const codeRows = rescueInputRows(codeInput);
   const codeLine = locked ? m.cooldown(Math.ceil(cooldownMs / 1000)) : message;
   const showWait = !hasCode || waitOpen || wait.status !== 'idle';
 
   return (
     <Screen tone="canvas">
-      <Pressable
-        onPress={() => navigation.replace('PinEntry', { next, profileId })}
-        hitSlop={spacing.md}
-        accessibilityRole="button"
-        accessibilityLabel={messages.a11y.goBack}
-        style={{ alignSelf: 'flex-start', padding: spacing.xs }}
-      >
-        <Icon name="arrow-left" size={28} />
-      </Pressable>
-      <Spacer size="sm" />
       <Heading level="title">{m.reset.title}</Heading>
       <Spacer size="xs" />
       <Body tone="secondary">{m.reset.subtitle}</Body>

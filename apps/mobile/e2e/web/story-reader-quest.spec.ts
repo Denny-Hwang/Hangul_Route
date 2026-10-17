@@ -1,6 +1,6 @@
 import type { Locator, Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { completeChildForm, keepSidewaysIfAsked, readStored } from './helpers';
+import { completeChildForm, keepSidewaysIfAsked, readStored, headerClose } from './helpers';
 import { back, filledDots, fullyVisible, next, nextPage, position, primaryButtons } from './story-reader-helpers';
 
 /**
@@ -130,7 +130,7 @@ test.describe('story reader, quest step (fixture bundle)', () => {
     await expect(position(page)).toHaveText('3 / 5');
 
     // No confirmation: reading records no score, so nothing is lost by leaving (§3.3).
-    await page.getByTestId('story-reader-close').click();
+    await headerClose(page).click();
     await expect(page.getByTestId('story-reader')).toHaveCount(0);
     await expect(stepHeading(page, 'Read the story')).toBeVisible();
     await expect(page.getByText('2 / 5', { exact: true })).toBeVisible();
@@ -149,7 +149,7 @@ test.describe('story reader, quest step (fixture bundle)', () => {
     expect(resumed[0]?.payload).toEqual({ storyId: 'story:hangul-day', sceneIndex: 2 });
 
     // Skip for now still moves the quest on without reading (the launcher is unchanged).
-    await page.getByTestId('story-reader-close').click();
+    await headerClose(page).click();
     await page.getByRole('button', { name: 'Skip for now' }).click();
     await expect(stepHeading(page, 'A few questions')).toBeVisible();
   });

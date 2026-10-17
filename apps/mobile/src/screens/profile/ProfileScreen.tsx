@@ -122,16 +122,6 @@ export function ProfileScreen(): React.ReactElement {
 
   return (
     <Screen tone="canvas" scrollable>
-      <Pressable
-        onPress={() => navigation.goBack()}
-        hitSlop={spacing.md}
-        accessibilityRole="button"
-        accessibilityLabel={m.a11y.goBack}
-        style={{ alignSelf: 'flex-start', padding: spacing.xs }}
-      >
-        <Icon name="arrow-left" size={28} />
-      </Pressable>
-      <Spacer size="sm" />
       <Heading level="title">{t.title}</Heading>
       <Spacer size="xs" />
       <Body tone="secondary">{copy.profileSwitchHint}</Body>

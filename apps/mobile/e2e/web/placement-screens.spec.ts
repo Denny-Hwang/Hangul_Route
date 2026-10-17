@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { answerForkNew, readStored, waitForSaved, passPlacementLanguage } from './helpers';
+import { answerForkNew, readStored, waitForSaved, passPlacementLanguage, headerClose } from './helpers';
 import { shot } from './shots';
 
 /**
@@ -193,7 +193,7 @@ test.describe('level check screens (fixture bundle)', () => {
     await expect(page.getByTestId('placement-got-it')).toBeVisible();
 
     // The exit opens the pause sheet; Keep going closes it.
-    await page.getByTestId('placement-exit').click();
+    await headerClose(page).click();
     await expect(page.getByTestId('placement-pause')).toBeVisible();
     await expect(page.getByText('Need a break?')).toBeVisible();
     await shot(page, 'placement-pause');
@@ -201,7 +201,7 @@ test.describe('level check screens (fixture bundle)', () => {
     await expect(page.getByTestId('placement-pause')).toHaveCount(0);
 
     // "That is enough" ends the run with the answers so far.
-    await page.getByTestId('placement-exit').click();
+    await headerClose(page).click();
     await page.getByTestId('placement-enough').click();
     await expect(page.getByTestId('placement-result')).toBeVisible();
     await expect(page.getByTestId('placement-headline')).toHaveText('Hoya found your starting spot!');
@@ -233,7 +233,7 @@ test.describe('level check screens (fixture bundle)', () => {
     await expect(page.getByTestId('placement-result-primary')).toHaveCount(0);
     await page.getByTestId('placement-plan-just-start').click();
     await expect(page.getByTestId('placement-result')).toHaveCount(0);
-    await expect(page.getByRole('button', { name: 'Leave quest' })).toBeVisible();
+    await expect(headerClose(page)).toBeVisible();
   });
 
   test('Pictures first with sound: the Short card, the hand-off, the Short item in portrait and landscape', async ({ page }) => {
@@ -263,9 +263,9 @@ test.describe('level check screens (fixture bundle)', () => {
     await expect(page.getByTestId('placement-no-sound-note')).toHaveCount(0);
     await page.getByTestId('placement-warmup-option-tiger').click();
 
-    // Short item: the icon exit, a 2 x 2 grid, "I am not sure" on its own row, no "Got it", no reveal.
+    // Short item: the header's Close, a 2 x 2 grid, "I am not sure" on its own row, no "Got it", no reveal.
     await expect(page.getByTestId('placement-item')).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Let us start learning' })).toBeVisible();
+    await expect(headerClose(page)).toBeVisible();
     await expect(page.locator('[data-testid^="placement-option-"]')).toHaveCount(4);
     await expect(page.getByTestId('placement-reveal')).toHaveCount(0);
     await shot(page, 'placement-item-short-320x568');
@@ -294,12 +294,12 @@ test.describe('level check screens (fixture bundle)', () => {
     await shot(page, 'placement-item-short-568x320');
     const box = await page.getByTestId('placement-not-sure').boundingBox();
     expect((box?.y ?? 0) + (box?.height ?? 0)).toBeLessThanOrEqual(320);
-    const exit = await page.getByTestId('placement-exit').boundingBox();
+    const exit = await headerClose(page).boundingBox();
     const first = await page.locator('[data-testid^="placement-option-"]').first().boundingBox();
     expect(first?.x ?? 0).toBeGreaterThan((exit?.x ?? 0) + (exit?.width ?? 0));
 
     // The pause sheet fits a phone on its side: both buttons inside the window.
-    await page.getByTestId('placement-exit').click();
+    await headerClose(page).click();
     await expect(page.getByTestId('placement-pause')).toBeVisible();
     await shot(page, 'placement-pause-568x320');
     for (const id of ['placement-keep-going', 'placement-enough']) {
@@ -483,7 +483,7 @@ test.describe('level check screens (fixture bundle)', () => {
     await passPlacementLanguage(page);
     await page.getByTestId('placement-start').click();
     await expect(page.getByTestId('placement-handoff')).toBeVisible();
-    await page.getByTestId('placement-handoff-exit').click();
+    await headerClose(page).click();
     await expect(page.getByText('Hi, Sam!')).toBeVisible();
 
     await openCheck(page);
@@ -491,8 +491,8 @@ test.describe('level check screens (fixture bundle)', () => {
     await page.getByTestId('placement-start').click();
     await page.getByTestId('placement-hoya-start').click();
     await expect(page.getByTestId('placement-warmup')).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Let us start learning' })).toBeVisible();
-    await page.getByTestId('placement-warmup-exit').click();
+    await expect(headerClose(page)).toBeVisible();
+    await headerClose(page).click();
     await expect(page.getByText('Hi, Sam!')).toBeVisible();
     const profileId = (await readStored<Array<{ id: string }>>(page, 'profiles'))?.[0]?.id ?? '';
     expect(await readStored(page, `placement-run:${profileId}`)).toBeNull();

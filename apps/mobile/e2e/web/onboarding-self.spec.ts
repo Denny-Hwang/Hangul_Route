@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { WHO_CHILD, WHO_SELF, agreeOnPrivacy, answerForkNew, fillWhoAndProfile, readStored, typeDigits, waitForSaved } from './helpers';
+import { WHO_CHILD, WHO_SELF, agreeOnPrivacy, answerForkNew, fillWhoAndProfile, readStored, typeDigits, waitForSaved, headerBack } from './helpers';
 
 /**
  * F-LEARN-001 §3.2, §3.3, §3.14, §3.15: the "Me" path in three steps. Step 1
@@ -126,7 +126,7 @@ for (const vp of VIEWPORTS) {
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 
       // The statement is latched: Back to the question cannot bring the "13 or older" box again.
-      const back = page.getByRole('button', { name: 'Go back' });
+      const back = headerBack(page);
       await back.click();
       // Still the learner's own profile (first person), with the name and cub kept.
       await expect(page.getByRole('heading', { name: 'Your profile' })).toBeVisible();
@@ -166,7 +166,7 @@ for (const vp of VIEWPORTS) {
       await fillWhoAndProfile(page, 'self', { name: 'Soo', avatar: 'Craft Tiger' });
       await expect(page.getByRole('heading', { name: 'Privacy' })).toBeVisible();
 
-      const back = page.getByRole('button', { name: 'Go back' });
+      const back = headerBack(page);
       await back.click();
       await expect(page.getByRole('heading', { name: 'Your profile' })).toBeVisible();
       await expect(page.getByPlaceholder('Type a name')).toHaveValue('Soo');
@@ -174,8 +174,9 @@ for (const vp of VIEWPORTS) {
       await back.click();
       await expect(page.getByRole('heading', { name: 'Who is learning?' })).toBeVisible();
       await expect(page.getByRole('radio', { name: WHO_SELF })).toHaveAttribute('aria-checked', 'true');
-      // First run: the question has no back control of its own.
-      await expect(page.getByRole('button', { name: 'Go back' })).toHaveCount(0);
+      // First run: the question is the first step, so its Back (the route's ScreenHeader, AMENDMENTS-DISPLAY-NAV
+      // section 7.1) goes to Welcome, and every answer stays where it was when the setup opens again.
+      await expect(headerBack(page)).toHaveCount(1);
 
       await page.getByRole('button', { name: 'Continue' }).click();
       await expect(page.getByPlaceholder('Type a name')).toHaveValue('Soo');

@@ -27,7 +27,7 @@ import type { RootStackParamList } from '../../navigation/types';
 import { track } from '../../platform/telemetry';
 import { useAudience } from '../../store/audience';
 import { NoteDetailPane } from './NoteDetailPane';
-import { BackButton, NewPill, ROW_GLYPH, glyphColor } from './parts';
+import { NewPill, ROW_GLYPH, glyphColor } from './parts';
 import { useActiveNotes } from './use-notes';
 
 const REACTION_GLYPH = { thanks: 'heart', will_try: 'pencil', did_it: 'check-circle', happy: 'sparkle' } as const;
@@ -88,7 +88,6 @@ export function NotesScreen(): React.ReactElement {
     else navigation.navigate('NoteDetail', { noteId: id });
   };
 
-  const back = (): void => (navigation.canGoBack() ? navigation.goBack() : navigation.navigate('Main', { screen: 'Home' }));
   const failed = status === 'error';
   const empty = rows.length === 0;
 
@@ -123,7 +122,6 @@ export function NotesScreen(): React.ReactElement {
 
   const header = (
     <>
-      <BackButton onPress={back} />
       <Heading level="title">{t.list.title}</Heading>
       <Spacer size="lg" />
     </>

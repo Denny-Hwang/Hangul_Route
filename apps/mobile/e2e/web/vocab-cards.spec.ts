@@ -1,6 +1,6 @@
 import type { BrowserContext, Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { completeChildForm, keepSidewaysIfAsked, readStored, seedStored } from './helpers';
+import { completeChildForm, keepSidewaysIfAsked, readStored, seedStored, headerClose } from './helpers';
 import { shot } from './shots';
 import { controlsPastEdge, expectNoHorizontalOverflow } from './viewport';
 
@@ -314,14 +314,14 @@ test.describe('Words flashcards (fixture bundle)', () => {
     await flip(page);
     await mark(page, 'got-it');
     await flip(page);
-    await page.getByTestId('vocab-cards').getByTestId('vocab-back').click();
+    await headerClose(page.getByTestId('vocab-cards')).click();
     await expect(page.getByText('Keep going or stop for now?')).toBeVisible();
     await shot(page, 'vocab-cards-leave');
     await page.getByTestId('vocab-cards-keep').click();
     await expect(page.getByTestId('vocab-cards-leave')).toHaveCount(0);
     await expect(page.getByTestId('vocab-card-back')).toBeVisible();
 
-    await page.getByTestId('vocab-cards').getByTestId('vocab-back').click();
+    await headerClose(page.getByTestId('vocab-cards')).click();
     await page.getByTestId('vocab-cards-stop').click();
     await expect(page.getByTestId('vocab-topic')).toBeVisible();
     await expect(page.getByTestId('vocab-topic-count')).toHaveText('2 collected');

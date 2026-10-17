@@ -2,7 +2,7 @@ import type { BrowserContext, Page } from '@playwright/test';
 import { CONSOLE_SESSION_KEY, encodeDeck, type LectureDeckInput } from '@hangul-route/content-schema';
 import { getMessages } from '@hangul-route/i18n';
 import { expect, test } from './fixtures';
-import { onboardSelf, openLettersEpisode, readStored, seedStored, waitForSaved } from './helpers';
+import { onboardSelf, openLettersEpisode, readStored, seedStored, waitForSaved, headerClose } from './helpers';
 import { shot } from './shots';
 import { closeInstallGuide, expectNoSidewaysScroll } from './text-fit';
 
@@ -284,7 +284,7 @@ test.describe('text size Largest at 320 x 568 (the fit rule, AMENDMENTS-DISPLAY-
     await learnerAtLargest(page);
     await openLettersEpisode(page);
     await page.getByRole('button', { name: 'Start', exact: true }).first().click();
-    await expect(page.getByRole('button', { name: 'Leave quest' })).toBeVisible();
+    await expect(headerClose(page)).toBeVisible();
     await expectNoSidewaysScroll(page, 'the quest intro');
     await shot(page, 'or67-quest-intro-largest-320x568');
     await page.getByRole('button', { name: 'Continue' }).click();

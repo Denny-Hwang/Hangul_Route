@@ -16,11 +16,9 @@ import {
   useCappedFont,
   useTypeScale,
 } from '@hangul-route/design-system';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { Pressable, Text, View, type PressableStateCallbackType, type ViewStyle } from 'react-native';
 import { CardArt } from '../../components/CardArt';
-import { DeviceDisplaySheet } from '../../components/DeviceDisplaySheet';
-import { DisplayButton } from '../../components/DisplayButton';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { cardKoLine } from '../../logic/card-art';
 import { localizeCard } from '../../logic/content-locale';
@@ -198,47 +196,6 @@ export function CardRow({
   );
 }
 
-/** The header's one fixed top-left position: [ < Close ] on home, the back arrow (named) on the other pages. */
-export function HeaderBack({
-  label,
-  showLabel,
-  onPress,
-  testID,
-}: {
-  label: string;
-  /** Home shows "Close" beside the arrow; the outline and the item page show the arrow alone, named. */
-  showLabel: boolean;
-  onPress: () => void;
-  testID: string;
-}): React.ReactElement {
-  const textScale = useTypeScale();
-  return (
-    <Pressable
-      testID={testID}
-      onPress={onPress}
-      accessibilityRole="button"
-      accessibilityLabel={showLabel ? undefined : label}
-      style={({ focused }: FocusState) => ({
-        minHeight: touchTarget.min,
-        minWidth: touchTarget.min,
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: showLabel ? 'flex-start' : 'center',
-        gap: spacing.xs,
-        paddingLeft: spacing.xs,
-        paddingRight: showLabel ? spacing.sm : spacing.xs,
-        borderRadius: radii.md,
-        ...focusRing(focused),
-      })}
-    >
-      <Icon name="arrow-left" size={spacing.xl} color={colors.text.primary} />
-      {showLabel ? (
-        <Text {...KOREAN_LINE_BREAK} style={{ color: colors.text.primary, fontSize: textScale.size.body, fontWeight: typography.weight.semibold }}>{label}</Text>
-      ) : null}
-    </Pressable>
-  );
-}
-
 /** [ Lesson display ]: the pill chip at the right of the header row. */
 export function LessonDisplayButton({ onPress }: { onPress: () => void }): React.ReactElement {
   const m = useMessages().caregiver.browse.home;
@@ -267,25 +224,6 @@ export function LessonDisplayButton({ onPress }: { onPress: () => void }): React
         {m.lessonDisplay.cta}
       </Text>
     </Pressable>
-  );
-}
-
-/**
- * The header row: the back position at the left; at the right [ Lesson display ] when given, then the
- * Aa button (AMENDMENTS-DISPLAY-NAV section 6: All lessons speaks the device's language, set on the
- * shared Display sheet, which also holds the text size). Wraps at large text.
- */
-export function HeaderRow({ back, onDisplay }: { back: React.ReactNode; onDisplay?: () => void }): React.ReactElement {
-  const [displayOpen, setDisplayOpen] = useState(false);
-  return (
-    <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: spacing.sm }}>
-      {back}
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: spacing.sm, marginLeft: 'auto' }}>
-        {onDisplay ? <LessonDisplayButton onPress={onDisplay} /> : null}
-        <DisplayButton onPress={() => setDisplayOpen(true)} testID="browse-display-open" />
-      </View>
-      <DeviceDisplaySheet visible={displayOpen} onClose={() => setDisplayOpen(false)} testID="browse-device-display" />
-    </View>
   );
 }
 

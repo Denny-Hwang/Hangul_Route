@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { completeChildForm, keepSidewaysIfAsked, readStored } from './helpers';
+import { completeChildForm, keepSidewaysIfAsked, readStored, headerBack, headerClose } from './helpers';
 import { shot } from './shots';
 import { controlsPastEdge, expectNoHorizontalOverflow } from './viewport';
 
@@ -71,7 +71,7 @@ test.describe('Words Match (fixture bundle)', () => {
     await openTopic(page, 'food');
     // Below 3 collected words Match is not drawn (spec section 9 item 3).
     await expect(page.getByTestId('vocab-activity-match')).toHaveCount(0);
-    await page.getByTestId('vocab-back').click();
+    await headerBack(page).click();
 
     await collect(page, WORDS);
     await openTopic(page, 'food');
@@ -79,7 +79,7 @@ test.describe('Words Match (fixture bundle)', () => {
     await page.getByTestId('vocab-activity-match').click();
     await expect(page.getByText('Match each picture')).toBeVisible();
     expect((await boardPairs(page)).sort()).toEqual([...WORDS].sort());
-    await expect(page.getByRole('button', { name: 'Go back' })).toBeVisible();
+    await expect(headerClose(page)).toBeVisible();
     expect(await page.locator('body').innerText()).not.toMatch(SHAME);
     await expectNoHorizontalOverflow(page);
     expect(await page.evaluate(controlsPastEdge)).toEqual([]);
@@ -136,7 +136,7 @@ test.describe('Words Match (fixture bundle)', () => {
       await page.getByTestId(`pic-word-word-${pair}`).click();
     }
     // Inside the game's 700 ms pause before it reports the end.
-    await page.getByRole('button', { name: 'Go back' }).click();
+    await headerClose(page).click();
     await expect(page.getByTestId('vocab-topic')).toBeVisible();
     const id = await profileId(page);
     await expect
@@ -187,7 +187,7 @@ test.describe('Words Match (fixture bundle)', () => {
     const pairs = await boardPairs(page);
     await page.getByTestId(`pic-word-picture-${pairs[0]}`).click();
     await page.getByTestId(`pic-word-word-${pairs[0]}`).click();
-    await page.getByRole('button', { name: 'Go back' }).click();
+    await headerClose(page).click();
     await expect(page.getByTestId('vocab-topic')).toBeVisible();
     const id = await profileId(page);
     await page.waitForTimeout(500);

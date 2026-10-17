@@ -1,6 +1,6 @@
 import type { Locator, Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { completeChildForm, keepSidewaysIfAsked, readStored, seedStored } from './helpers';
+import { completeChildForm, keepSidewaysIfAsked, readStored, seedStored, headerBack, headerClose } from './helpers';
 import { shot } from './shots';
 import { back, fullyVisible, next, nextPage, position, primaryButtons } from './story-reader-helpers';
 
@@ -132,7 +132,7 @@ test.describe('story reader extras (fixture bundle)', () => {
 
     // A fresh open of scene 1 shows it again. Closed before any page turn, so no bookmark is saved and this
     // stays a fresh open once F-STORY-004 PR 4.4b wires the bookmark (a resume past scene 1 shows no note).
-    await page.getByTestId('story-reader-close').click();
+    await headerClose(page).click();
     await page.getByRole('button', { name: 'Play minigame' }).click();
     await expect(position(page)).toHaveText('1 / 5');
     await expect(advisory(page)).toBeVisible();
@@ -216,7 +216,7 @@ test.describe('story reader extras (fixture bundle)', () => {
     await expect.poll(viewed).toEqual([{ noteId: NOTE, storyId: STORY }]);
 
     // Back is the reader, on the scene it was on.
-    await page.getByTestId('culture-notes-back').click();
+    await headerBack(page).click();
     await expect(next(page)).toBeVisible();
     await expect(position(page)).toHaveText('1 / 5');
     expect(await viewed()).toHaveLength(1);
@@ -237,7 +237,7 @@ test.describe('story reader extras (fixture bundle)', () => {
     // Nothing on the screen can unwind the running quest: no story link, no Story Time button.
     await expect(page.getByTestId(`culture-note-story-${NOTE}`)).toHaveCount(0);
     await expect(page.getByTestId('culture-notes-to-story-time')).toHaveCount(0);
-    await page.getByTestId('culture-notes-back').click();
+    await headerBack(page).click();
     // Back in the same quest run, on the reader.
     await expect(next(page)).toBeVisible();
     await expect(position(page)).toHaveText('1 / 5');

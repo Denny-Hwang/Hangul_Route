@@ -42,7 +42,8 @@ import { focusForScreenReader } from '../../platform/screen-reader';
 import { PictureArt } from '../minigames/PictureArt';
 import { usePlacement } from './context';
 import { PauseSheet } from './PauseSheet';
-import { ChoiceGrid, ExitButton, FootstepTrail, SpeakerButton } from './parts';
+import { LearnerScreenHeader } from '../../components/LearnerScreenHeader';
+import { ChoiceGrid, FootstepTrail, SpeakerButton } from './parts';
 
 /** How long the neutral "Got it" stays (Standard and Deep). */
 const ACK_MS = 900;
@@ -205,10 +206,6 @@ function ItemView({ question, ack, onAck }: { question: AssessmentQuestion; ack:
     stop();
     applyRun({ type: 'notSure' });
   };
-  const exit = (): void => {
-    stop();
-    applyRun({ type: 'exit' });
-  };
 
   const layout = useLayoutClass();
   const window = useWindowDimensions();
@@ -221,12 +218,6 @@ function ItemView({ question, ack, onAck }: { question: AssessmentQuestion; ack:
   const artSize = useMediaSize(short ? (arrangement === 'portrait' ? touchTarget.child : spacing.xxxl) : touchTarget.hero);
   // Standard and Deep: the speaker grows with the window like the games' speakers.
   const speakerSize = useMediaSize(touchTarget.hero);
-
-  const exitControl = short ? (
-    <ExitButton onPress={exit} label={copy.exit} testID="placement-exit" />
-  ) : (
-    <Button label={copy.exit} tone="ghost" size="md" onPress={exit} testID="placement-exit" />
-  );
 
   /** Focus lands here on each question: "Question, 4 choices" and the instruction. */
   const announced = (children: React.ReactNode): React.ReactElement => (
@@ -334,29 +325,30 @@ function ItemView({ question, ack, onAck }: { question: AssessmentQuestion; ack:
       </View>,
     )
   );
-  const topBar = (
-    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.md }}>
-      {exitControl}
-      <View style={{ flexShrink: 1, flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
-        {ack ? (
-          <Body tone="secondary" testID="placement-got-it">
-            {copy.gotIt}
-          </Body>
-        ) : null}
-        <FootstepTrail answered={answered} />
-      </View>
+  // The route's ScreenHeader holds Close (the exit sheet through the check's back guard, AMENDMENTS-DISPLAY-NAV
+  // section 7.1) and, as its middle part, the footsteps; its Display control hides while an item is timed.
+  const trail = (
+    <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'flex-end', gap: spacing.sm }}>
+      {ack ? (
+        <Body tone="secondary" testID="placement-got-it">
+          {copy.gotIt}
+        </Body>
+      ) : null}
+      <FootstepTrail answered={answered} />
     </View>
   );
+  const header = { middle: trail, displayHidden: true };
 
   const pause = sheet === null ? null : <PauseSheet sheet={sheet} />;
 
   if (arrangement !== 'portrait') {
     const grid = <ChoiceGrid columns={2}>{cards}</ChoiceGrid>;
     return (
-      <Screen tone="canvas" scrollable={false} testID="placement-item">
+      // Side by side, the header sits at the top of the left column, so the choices keep the whole height.
+      <Screen tone="canvas" scrollable={false} testID="placement-item" header={{ ...header, drawnByScreen: true }}>
         <View style={{ flex: 1, flexDirection: 'row', gap: spacing.lg }}>
           <View style={{ flex: 1, gap: spacing.md }}>
-            {topBar}
+            <LearnerScreenHeader options={header} inLayout />
             {hoya}
           </View>
           <View style={{ flex: 1, gap: spacing.md }}>
@@ -370,9 +362,7 @@ function ItemView({ question, ack, onAck }: { question: AssessmentQuestion; ack:
   }
 
   return (
-    <Screen tone="canvas" testID="placement-item">
-      {topBar}
-      <Spacer size={short ? 'sm' : 'md'} />
+    <Screen tone="canvas" testID="placement-item" header={header}>
       {hoya}
       {short ? null : (
         <>

@@ -1,7 +1,7 @@
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
 import { nextPage } from './story-reader-helpers';
-import { completeChildForm, completeSelfForm, keepSidewaysIfAsked, seedStored, typeDigits, unlockWithPin } from './helpers';
+import { completeChildForm, completeSelfForm, keepSidewaysIfAsked, seedStored, typeDigits, unlockWithPin, headerBack } from './helpers';
 
 /**
  * F-STORY-002 PR 2.7: the Sources screen (`StorySources`), reached from the
@@ -200,7 +200,7 @@ test.describe('story Sources (fixture bundle)', () => {
     expect(opens.map((e) => e.payload)).toEqual([{ storyId: STORY, from: 'reader' }]);
 
     // Back returns to the same scene of the reader.
-    await page.getByTestId('story-sources-back').click();
+    await headerBack(page).click();
     await expect(page.getByTestId('story-reader-position')).toHaveText('2 / 5');
   });
 
@@ -214,7 +214,7 @@ test.describe('story Sources (fixture bundle)', () => {
     await expect.poll(() => inViewport(page, 'story-sources-checked')).toBe(true);
     const opens = (await events(page)).filter((e) => e.name === 'story.sources.opened');
     expect(opens.map((e) => e.payload)).toEqual([{ storyId: STORY, from: 'end' }]);
-    await page.getByTestId('story-sources-back').click();
+    await headerBack(page).click();
     await expect(page.getByRole('heading', { name: 'The End' })).toBeVisible();
   });
 
@@ -400,7 +400,7 @@ test.describe('story Sources (fixture bundle)', () => {
       const text = await page.getByTestId('story-sources').innerText();
       expect(text, story.id).not.toMatch(EMOJI);
       expect(await sidewaysOverflow(page), story.id).toEqual([]);
-      await page.getByTestId('story-sources-back').click();
+      await headerBack(page).click();
       await expect(page.getByTestId('story-sources')).toHaveCount(0);
     }
   });
