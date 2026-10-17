@@ -276,8 +276,8 @@ test.describe('the Route tab (LR-4)', () => {
     const title = (await rows.nth(1).getAttribute('aria-label'))?.split('. ')[0] ?? '';
     await rows.nth(1).click();
     await expect(page.getByTestId('my-route-screen')).toBeHidden();
-    // The quest player: its Leave control, and the lesson's own title on its first step.
-    await expect(page.getByRole('button', { name: en.a11y.leaveQuest, exact: true })).toBeVisible();
+    // The quest player: its Close (the route's ScreenHeader, AMENDMENTS-DISPLAY-NAV section 7.1).
+    await expect(headerClose(page)).toBeVisible();
     expect(title.length).toBeGreaterThan(0);
   });
 

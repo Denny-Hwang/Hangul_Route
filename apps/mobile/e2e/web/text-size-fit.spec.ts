@@ -237,6 +237,8 @@ test.describe('text size Largest at 320 x 568: the screens of row DN-3b', () => 
 
     // Restore: Profile, the PIN, then the Rescue Code path; the code pasted with its hyphens.
     await openProfile(page);
+    // Backup sits in Profile's For grown-ups group, collapsed on arrival (AMENDMENTS-DISPLAY-NAV 9.2).
+    await openForGrownUps(page);
     await page.getByRole('button', { name: 'Restore from a file (PIN required)' }).click();
     await unlockWithPin(page);
     await page.getByRole('button', { name: 'I have a rescue code' }).click();
