@@ -2,10 +2,10 @@ import { formatDate as realFormatDate, getMessages, type UiLocale } from '@hangu
 import { renderToStaticMarkup } from 'react-dom/server';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { PlanDraftItems, PlanReadout } from '@/components/console/PlanParts';
-import { builderEpisodes, questsOf } from '@/data/catalog';
 import type { PlanView } from '@/lib/console/api';
 import type { ReadoutRow } from '@/lib/console/plans';
 import { expectAllPseudo } from './pseudo-text';
+import { STAGE1_EPISODES, STAGE1_TITLES, questsOfCell } from './stage1-catalog';
 
 /**
  * F-I18N-001 PR 10b, §3.11: the loaded states of the plan page — the published readout and
@@ -35,9 +35,9 @@ afterAll(() => {
 });
 
 const now = new Date('2026-10-11T12:00:00.000Z');
-const contentTitles = builderEpisodes().flatMap((e) => [e.title, ...questsOf(e.episodeId).map((q) => q.title)]);
-const episode = builderEpisodes()[0]!;
-const quest = questsOf(episode.episodeId)[0]!;
+const contentTitles = [...STAGE1_TITLES];
+const episode = STAGE1_EPISODES[0]!;
+const quest = questsOfCell(episode)[0]!;
 
 const plan = (over: Partial<PlanView>): PlanView => ({
   id: 'plan:1',

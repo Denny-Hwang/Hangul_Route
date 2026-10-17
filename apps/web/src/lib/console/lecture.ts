@@ -17,9 +17,11 @@ import {
   type LecturePicker,
   type LectureRosterMessage,
   type PlanItem,
+  type UiLocale,
   type WeekMeta,
 } from '@hangul-route/content-schema';
-import { itemTitle } from '@/data/catalog';
+import { DEFAULT_LOCALE } from '@hangul-route/i18n';
+import { catalogTitleEntry, itemTitle } from '@/data/catalog';
 import { LECTURE_STORIES, LECTURE_VOCAB_TOPICS, type LectureCatalogueStory } from '@/data/lecture-catalogue.generated';
 import type { PlanView, Roster, SpaceListItem } from './api';
 import { findBannedWord } from './banned-text';
@@ -140,16 +142,27 @@ export function updateBlock(blocks: readonly LectureBlock[], index: number, bloc
   return blocks.map((b, i) => (i === index ? block : b));
 }
 
-/** A content block's title from the shared catalogue and the lecture mirror (titles are content); an unknown id shows itself. Null for other blocks. */
-export function catalogueTitle(block: LectureBlock, stories: readonly LectureCatalogueStory[] = LECTURE_STORIES): string | null {
+/**
+ * A content block's title in `locale` (owner report 2026-10-16: the console showed English titles in es and ko) from the
+ * shared catalogue and the lecture mirror (titles are content); an unknown id shows itself. Null for other blocks.
+ */
+export function catalogueTitle(block: LectureBlock, stories: readonly LectureCatalogueStory[] = LECTURE_STORIES, locale: UiLocale = DEFAULT_LOCALE): string | null {
   switch (block.kind) {
     case 'quest':
     case 'episode':
-      return itemTitle(block.kind, block.id);
-    case 'story':
-      return stories.find((s) => s.id === block.storyId)?.titleEn ?? block.storyId;
-    case 'vocab':
-      return LECTURE_VOCAB_TOPICS.find((t) => t.id === block.topicId)?.titleEn ?? block.topicId;
+      return itemTitle(block.kind, block.id, CATALOG, locale);
+    case 'story': {
+      const listed = stories.find((s) => s.id === block.storyId);
+      if (!listed) return block.storyId;
+      const entry = catalogTitleEntry(block.storyId, locale);
+      return entry.fallback ? listed.titleEn : entry.title;
+    }
+    case 'vocab': {
+      const listed = LECTURE_VOCAB_TOPICS.find((t) => t.id === block.topicId);
+      if (!listed) return block.topicId;
+      const entry = catalogTitleEntry(block.topicId, locale);
+      return entry.fallback ? listed.titleEn : entry.title;
+    }
     default:
       return null;
   }

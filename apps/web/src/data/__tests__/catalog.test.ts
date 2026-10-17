@@ -1,7 +1,8 @@
 import { CATALOG, type Catalog } from '@hangul-route/content-schema';
 import { getMessages } from '@hangul-route/i18n';
 import { describe, expect, it } from 'vitest';
-import { builderEpisodes, catalogLabel, itemCategory, itemTitle, plannableQuest, questsOf } from '../catalog';
+import { CATALOGUE_TITLES } from '../catalogue-titles.generated';
+import { catalogLabel, catalogTitle, catalogTitleEntry, itemCategory, itemTitle, plannableQuest } from '../catalog';
 
 /**
  * Every grid cell has shipped since F-CURR-001, so the coming-soon cases read a copy of the catalogue
@@ -34,34 +35,16 @@ describe('console catalogue adapter over the shared catalogue', () => {
     expect(itemTitle('episode', 'episode:nope')).toBe('episode:nope');
   });
 
-  it('takes the words around the title from the locale (titles are content)', () => {
+  it('takes the words around the title from the locale and the title itself in the locale (owner report 2026-10-16)', () => {
+    const title = { en: 'Around the Korean Table', es: 'En la mesa coreana', ko: '한국의 식탁에서' } as const;
     for (const locale of ['en', 'es', 'ko'] as const) {
-      expect(catalogLabel('episode', 'episode:stage1-life', locale)).toBe(getMessages(locale).console.plan.catalog.episodeLabel('Around the Korean Table', 3));
+      expect(catalogLabel('episode', 'episode:stage1-life', locale)).toBe(getMessages(locale).console.plan.catalog.episodeLabel(title[locale], 3));
     }
+    expect(catalogLabel('quest', 'quest:stage1-letters-q1', 'ko')).toBe(CATALOGUE_TITLES.ko!['quest:stage1-letters-q1']);
+    expect(itemTitle('episode', 'episode:stage1-life', CATALOG, 'es')).toBe('En la mesa coreana');
+    expect(catalogLabel('episode', 'episode:stage7-crafts', 'ko', SOON)).toBe(getMessages('ko').console.curriculum.catalog.comingSoon(CATALOGUE_TITLES.ko!['episode:stage7-crafts']!));
   });
 
-  it('lists the quests of an episode in catalogue order', () => {
-    expect(questsOf('episode:stage1-life').map((q) => q.id)).toEqual(['quest:stage1-life-q1', 'quest:stage1-life-q2', 'quest:stage1-life-q3']);
-    expect(questsOf('episode:stage1-life').map((q) => [q.title, q.minutes])).toEqual([
-      ['Hello Kimchi & Rice', 4],
-      ['Family at the Table', 4],
-      ['Picnic Snacks', 4],
-    ]);
-    expect(questsOf('episode:stage1-letters').map((q) => q.minutes)).toEqual([5, 5, 5]);
-    expect(questsOf('episode:stage7-crafts', SOON)).toEqual([]);
-    expect(questsOf('episode:nope')).toEqual([]);
-  });
-
-  it('offers the builder the ready Stage 1 episodes in grid order', () => {
-    expect(builderEpisodes().map((cell) => cell.episodeId)).toEqual([
-      'episode:stage1-letters',
-      'episode:stage1-life',
-      'episode:stage1-rites',
-      'episode:stage1-nature',
-      'episode:stage1-crafts',
-    ]);
-    expect(builderEpisodes('stage2').map((cell) => cell.episodeId)).toEqual(['episode:stage2-letters', 'episode:stage2-life', 'episode:stage2-rites', 'episode:stage2-nature', 'episode:stage2-crafts']);
-  });
 
   it('sorts an item into lesson, story, coming soon or unknown', () => {
     expect(itemCategory('quest', 'quest:stage1-letters-q1')).toBe('lesson');
@@ -110,5 +93,49 @@ describe('plannableQuest', () => {
     expect(plannableQuest(story.questId, signed)).toBe(true);
     const unlisted: Catalog = { ...CATALOG, stories: CATALOG.stories.filter((s) => s.id !== story.id) };
     expect(plannableQuest(story.questId, unlisted)).toBe(false);
+  });
+});
+
+/**
+ * The console's content titles in the UI language (owner report 2026-10-16; AMENDMENTS-LECTURE-V2 row LV-3): every
+ * catalogue id resolves in Korean and Spanish from the generated `CATALOGUE_TITLES`, else falls back to English with
+ * the `fallback` marker set, so a missing overlay title shows here by name.
+ */
+describe('catalogTitle', () => {
+  const ids = [
+    ...CATALOG.cells.map((c) => c.episodeId),
+    ...CATALOG.quests.map((q) => q.id),
+    ...CATALOG.stories.map((s) => s.id),
+    ...CATALOG.topics.map((t) => t.id),
+    ...CATALOG.topics.map((t) => `vocab-topic:${t.key}`),
+  ];
+
+  it.each(['ko', 'es'] as const)('every catalogue id resolves in %s, none falls back', (locale) => {
+    const missing = ids.filter((id) => catalogTitleEntry(id, locale).fallback);
+    expect(missing).toEqual([]);
+    for (const id of ids) {
+      const { title } = catalogTitleEntry(id, locale);
+      expect(title.trim().length, id).toBeGreaterThan(0);
+      expect(title, id).not.toBe(id);
+    }
+  });
+
+  it('English is the catalogue title, never a fallback', () => {
+    for (const id of ids) expect(catalogTitleEntry(id, 'en').fallback, id).toBe(false);
+    expect(catalogTitle('episode:stage1-letters', 'en')).toBe('Meet the Letters');
+    expect(catalogTitle('topic:food')).toBe(CATALOG.topics.find((t) => t.key === 'food')!.title);
+    expect(catalogTitle('vocab-topic:food', 'ko')).toBe(CATALOGUE_TITLES.ko!['vocab-topic:food']);
+    expect(catalogTitle('topic:food', 'ko')).toBe(CATALOGUE_TITLES.ko!['vocab-topic:food']);
+    expect(catalogTitle('story:hangeul-day', 'ko')).toBe('즐거운 한글날!');
+  });
+
+  it('falls back with the marker: English for a locale with no title, the id for an unknown id', () => {
+    const only: Catalog = { ...CATALOG, quests: [...CATALOG.quests, { ...CATALOG.quests[0]!, id: 'quest:only-english', title: 'Only English' }] };
+    expect(catalogTitleEntry('quest:only-english', 'ko', only)).toEqual({ title: 'Only English', fallback: true });
+    expect(catalogTitleEntry('quest:only-english', 'en', only)).toEqual({ title: 'Only English', fallback: false });
+    for (const id of ['quest:nope', 'episode:nope', 'story:nope', 'topic:nope', 'vocab-topic:nope', 'card:nope']) {
+      expect(catalogTitleEntry(id, 'ko')).toEqual({ title: id, fallback: true });
+      expect(catalogTitleEntry(id, 'en')).toEqual({ title: id, fallback: true });
+    }
   });
 });

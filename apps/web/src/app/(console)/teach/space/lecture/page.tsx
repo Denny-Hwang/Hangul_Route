@@ -248,7 +248,7 @@ function LectureInner(): JSX.Element {
           <Muted>{l.intro}</Muted>
 
           <LectureSourceSection source={source} plan={plan} revisit={revisit} plansFailed={plansFailed} omitted={omitted} onChoose={pickSource} onRetry={() => void load()} />
-          {source === 'catalogue' ? <LectureCatalogueSection blocks={blocks} onAdd={add} /> : null}
+          {source === 'catalogue' ? <LectureCatalogueSection blocks={blocks} onChange={edit} /> : null}
           <LectureOutlineSection blocks={blocks} codeBlock={codeBlock} onChange={edit} onAdd={add} />
           <LectureOptionsSection value={options} available={available} onChange={setOptions} />
           <LecturePickerSection offered={choices.offered} value={picker} anonymized={roster.space.settings.anonymizeRoster} onChange={setPicker} />

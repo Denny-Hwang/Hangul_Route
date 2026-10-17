@@ -585,7 +585,7 @@ export function NoteComposer({
             <div className="hr-compose-quest">
               <IconSvg name="book" size={GLYPH_ROW} color={colors.brand.primaryDark} />
               <span className="hr-compose-quest-title" id={`${ids}-quest`} data-testid="compose-quest">
-                {questTitleOf(questId)}
+                {questTitleOf(questId, locale)}
               </span>
               {previewShown ? (
                 <BrowseLink target={{ kind: 'quest', id: questId }} source="notes" label={m.console.browse.preview.cta} describedBy={`${ids}-quest`} testId="compose-quest-preview" env={browseEnv} onOpen={keepDraft} onStay={dropDraft} />
@@ -612,7 +612,7 @@ export function NoteComposer({
                 <option value="" disabled>
                   {c.quest.choose.cta}
                 </option>
-                {questOptions(stageTitle).map((group) => (
+                {questOptions(stageTitle, undefined, locale).map((group) => (
                   <optgroup key={group.stage} label={group.title}>
                     {group.quests.map((quest) => (
                       <option key={quest.id} value={quest.id}>
@@ -692,9 +692,9 @@ export function NoteComposer({
   );
 }
 
-/** A catalogue quest's title (content, not a dictionary string). */
-function questTitleOf(questId: string): string {
-  for (const group of questOptions(stageTitle)) {
+/** A catalogue quest's title (content, not a dictionary string), in the console language. */
+function questTitleOf(questId: string, locale: UiLocale): string {
+  for (const group of questOptions(stageTitle, undefined, locale)) {
     const quest = group.quests.find((q) => q.id === questId);
     if (quest) return quest.title;
   }

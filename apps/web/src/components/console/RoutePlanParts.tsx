@@ -72,7 +72,7 @@ export function PlanSwitcher({ plans, selectedId, onSelect, locale }: { plans: r
 /** The week groups of a route's items, read-only (the readout's week list). */
 function WeekList({ meta, items, locale }: { meta: CurriculumMeta; items: readonly PlanItem[]; locale: UiLocale }): JSX.Element {
   const unscheduledLabel = useMessages().console.curriculum.builder.unscheduled;
-  const { rows, unscheduled } = weekGroups(meta.weeks, items);
+  const { rows, unscheduled } = weekGroups(meta.weeks, items, undefined, locale);
   const list = (entries: (typeof rows)[number]['items']): JSX.Element | null =>
     entries.length === 0 ? null : (
       <ul style={{ margin: `0 0 ${spacing.sm}px`, paddingLeft: spacing.lg, color: colors.text.secondary, fontSize: typography.size.bodySm }}>
@@ -123,7 +123,7 @@ export function RouteDraftItems({
   onUpdate: (index: number, patch: Partial<PlanItem>) => void;
 }): JSX.Element {
   const c = useMessages().console;
-  const groups = weekGroups(meta.weeks, items);
+  const groups = weekGroups(meta.weeks, items, undefined, locale);
   const shown = routeShownOrder(groups);
   const row = (index: number): JSX.Element | null => {
     const item = items[index];
@@ -198,7 +198,7 @@ export function RouteReadout({
   const stale = isStaleCatalog(plan.meta);
   const where = thisWeekOf(plan.meta.weeks, today);
   const planned = plan.items.length;
-  const thisWeek = where.status === 'in' ? weekGroups([where.week], plan.items).rows[0] : undefined;
+  const thisWeek = where.status === 'in' ? weekGroups([where.week], plan.items, undefined, locale).rows[0] : undefined;
 
   useEffect(() => {
     if (step.at === 'confirm') confirmText.current?.focus();

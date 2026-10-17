@@ -1,7 +1,7 @@
 # Console/Plan-builder — pick, order, pace, publish a plan (wireframe v1)
 
 Spec: `docs/roadmap/multi-persona-sync-platform.md` §2 (`plans`), §3.3 (`summary.planProgress`), §4 (plan → homework derived on device), §6 step 3–4 · `docs/specs/F-TCH-001-teacher-classroom.md` §3.3, §3.5 · `docs/specs/F-HW-001-homework-page.md` §3.4 (1 explicit assignment / day, gating) · `docs/specs/F-PAR-001-parent-dashboard.md` §3.6
-Code (F-PLAN-001, 2026-09-21): `apps/web/src/app/teach/space/[id]/plan/page.tsx` — builder (catalog · ordered items with ↑↓× · date/note · Spread dates · everyone/only · Publish / Save draft) and the published readout (Edit · Archive · New plan · per-learner done / total · not ready yet · last active). Not drawn-as-shipped: drag handle (buttons instead), gating warning (Stage 1 only for now), "send to ready learners only", daily-test / story items, learner-detail tap.
+Code (F-PLAN-001, 2026-09-21): `apps/web/src/app/teach/space/[id]/plan/page.tsx` — builder (catalog · ordered items with ↑↓× · date/note · Spread dates · everyone/only · Publish / Save draft) and the published readout (Edit · Archive · New plan · per-learner done / total · not ready yet · last active). Not drawn-as-shipped: drag handle (buttons instead), gating warning (Stage 1 only for now; since LV-3a the builder lists only the stages the space opens, panels G and H below), "send to ready learners only", daily-test / story items, learner-detail tap.
 Audience: **teacher** (class space) · **parent** (family space) — same screen, space kind sets the wording ("students" / "kids")
 
 ## Scenario (Given-When-Then)
@@ -148,3 +148,60 @@ F. Published readout and re-pace
 - States: **success** as drawn; **empty** (no plans) shows **Start from a template** -> `console/curriculum-wizard`; **error** on save or re-pace: one line, the plan unchanged; **offline**: saving needs the API.
 - Checked end to end by `apps/web/e2e/curriculum.spec.ts` (P2-8): draft, week groups, publish, readout, at 320 and 1280.
 - **Open question (found by P2-8):** the readout lists every learner of the space even for a plan made "only" for one learner, so the other learners read "waiting for the next sync" for a plan they never receive. Default proposal: list only the plan's `targetLearnerIds` when it has them (F-PLAN-001 readout; a follow-up fix, not in P2-8).
+
+---
+
+## AMENDMENTS-LESSON-CHOOSER: the grouped lesson picker and the sticky bar (row LV-3a, 2026-10-17)
+
+Spec `docs/specs/AMENDMENTS-LESSON-CHOOSER.md` (sections 4 to 6). Replaces the box diagram's left column ("Catalog (Stage 1)" with every quest open and `[ + add ]` rows) and its "locked Stage 2+ items shown dimmed" note. Mock and shots: `design/screens/app-shell/lesson-picker.md`. Code: `apps/web/src/components/console/GroupedLessonPicker.tsx`, `apps/web/src/lib/console/lesson-picker.ts`, `app/(console)/teach/space/plan/page.tsx`.
+
+G. Builder with the grouped picker (360 wide, a class a Group License covers)
+
+```
+┌──────────────────────────────────────┐
+│ ← Back to Sunflower                   │
+│ New plan                              │
+│ Plan title [ Week 2 words           ] │
+│ Lessons                               │  <- h2 (chooser.planTitle)
+│ Search lessons                        │
+│ [                              ]      │  <- type="search"; title, Hangul, romanization
+│ Type a title, Hangul or romanization. │  <- hint (aria-describedby)
+│ (Stage 1)(Stage 2)(Stage 3)(Stage 4)  │  <- radio chips, one group at a time;
+│ (Stage 5)(Stage 6)(Stage 7)           │     the chosen one has a thick border
+│ Stage 2 · 18 lessons                  │  <- h3
+│ [-] Word Builder                 [v]  │  <- whole-episode box, mixed: 1 of 6 chosen;
+│     6 lessons · about 26 min          │     [v] shows its lessons (aria-expanded)
+│   │ [x] <lesson 1>   about 5 min      │
+│   │ [ ] <lesson 2>   about 4 min      │
+│   │ ...                               │
+│ [x] Around the House             [>]  │  <- whole episode chosen: one plan item
+│     3 lessons · about 12 min          │
+│ [ ] <episode>                    [>]  │
+│ ...                                   │
+│ Your plan (2)                         │
+│  1. <lesson 1>  [date] [note] [^][v][x]│
+│  2. Around the House (3 quests) ...   │
+│ ...                                   │
+╞══════════════════════════════════════╡  <- sticky bar (labelled region "Your choices"),
+│ 2 chosen · about 17 min               │     above the home indicator; a focused row
+│ [[ Publish plan ]] [ Save draft ]     │     scrolls to stop above it
+└──────────────────────────────────────┘
+```
+
+H. A class no plan covers (the free-plan switch off)
+
+```
+│ Lessons                               │
+│ Search lessons [                    ] │
+│ (Stage 1)                             │  <- only the stages its learners can open
+│ ┃ 92 lessons need Premium and are not │  <- the wizard's left-out line, word for word;
+│ ┃ in the plan. See plans              │     switch on: the free plan + Open billing
+│ Stage 1 · 15 lessons                  │     (owner), neutral words (anyone else)
+│ [ ] Meet the Letters             [>]  │
+```
+
+- **Search** (any text): the chips hide, every matching group shows under its heading with only its matching lessons drawn, and a polite status says "4 matches" or "Nothing matches. Try another word, or type it in Hangul.". A press still acts on the whole episode. **Clear** empties the field and keeps focus in it.
+- **Ticking a partly chosen episode** on a plan adds its missing lessons next to the chosen ones; the chosen lesson items keep their dates and notes. **Unticking one lesson of a whole episode** puts the other lessons at its place, each with the episode's date, week and note.
+- **Full** (a classic plan holds 30 items, a route 260): a box that would add more is off, and "This is full. Remove something to add more." shows. A chosen lesson whose untick would add the episode's other lessons is off too. Removing is never off.
+- **States**: loading: Stage 1 only, no line (the entitlement list is not read yet); a stored draft opens on the stage of its first item; error: the page's own error line; a search with no hit: the no-match line.
+- Checked by `apps/web/e2e/lesson-picker.spec.ts` (360 covered and uncovered, 1280, 320 with 200 % text) and `plan-builder-wiring.test.tsx`.
