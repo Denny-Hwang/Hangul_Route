@@ -405,20 +405,13 @@ export const consoleMsgs = {
     newTitle: 'New plan',
     titleField: { label: 'Plan title', placeholder: 'Week 3' },
     catalog: {
-      label: 'Catalog',
-      title: 'Catalog (Stage 1)',
-      addEpisode: { cta: '+ episode' },
-      /** A quest row; `minutes` is null for a quest the catalog does not know. */
-      questLine: (title: string, minutes: number | null) => `${title} · ${minutes ?? '?'} min`,
-      add: { cta: '+ add' },
-      added: { cta: 'added' },
       /** An episode as a plan item (`catalogLabel`). */
       episodeLabel: (title: string, quests: number) => `${title} (${plural('en', quests, { one: `${quests} quest`, other: `${quests} quests` })})`,
     },
     yours: {
       label: 'Your plan',
       title: (items: number) => `Your plan (${items})`,
-      empty: 'Add quests or whole episodes from the catalog.',
+      empty: 'Choose lessons or whole episodes under Lessons.',
       /** The reorder and remove buttons on each item (glyphs; a locale may swap them). */
       moveUp: { cta: '↑' },
       moveDown: { cta: '↓' },
@@ -961,16 +954,6 @@ export const consoleMsgs = {
     },
     catalogue: {
       title: 'Catalogue',
-      stage1: 'Stage 1',
-      stories: 'Stories',
-      vocab: 'Vocabulary',
-      add: { cta: '+ add' },
-      added: { cta: 'Added' },
-      line: (title: string, minutes: number | null) => `${title} · ${minutes === null ? '?' : minutes} min`,
-      topicLine: (title: string, words: number, minutes: number | null) => {
-        const time = `${minutes === null ? '?' : minutes} min`;
-        return plural('en', words, { one: `${title} · ${words} word · ${time}`, other: `${title} · ${words} words · ${time}` });
-      },
     },
     outline: {
       title: 'Outline',
@@ -1914,5 +1897,38 @@ export const consoleMsgs = {
       off: 'Notes from the class: off',
     },
     baseScope: 'Words and more show once the family has read the update.',
+  },
+  /**
+   * The grouped lesson picker (owner report 2026-10-16 item 5, AMENDMENTS-LECTURE-V2 row LV-3) on the plan
+   * builder and the lecture page's catalogue: a search, stage chips, one row per episode with its lessons
+   * folded under it, and the count of what is chosen. Content titles are data (`catalogTitle`).
+   */
+  chooser: {
+    planTitle: 'Lessons',
+    search: { label: 'Search lessons', hint: 'Type a title, Hangul or romanization.' },
+    clearSearch: { cta: 'Clear' },
+    /** The chip group's name. */
+    groups: 'Choose what to see',
+    chip: {
+      stage: (n: number) => `Stage ${n}`,
+      stories: 'Stories',
+      topics: 'Word topics',
+    },
+    heading: {
+      stage: (n: number, lessons: number) => plural('en', lessons, { one: `Stage ${n} · ${lessons} lesson`, other: `Stage ${n} · ${lessons} lessons` }),
+      stories: (n: number) => plural('en', n, { one: `Stories · ${n} story`, other: `Stories · ${n} stories` }),
+      topics: (n: number) => plural('en', n, { one: `Word topics · ${n} topic`, other: `Word topics · ${n} topics` }),
+    },
+    episodeDetail: (lessons: number, minutes: number) =>
+      plural('en', lessons, { one: `${lessons} lesson · about ${minutes} min`, other: `${lessons} lessons · about ${minutes} min` }),
+    minutes: (n: number) => `about ${n} min`,
+    /** The button that shows or hides an episode's lessons (its state is `aria-expanded`). */
+    lessonsOf: (title: string) => `Lessons: ${title}`,
+    found: (n: number) => plural('en', n, { one: '1 match', other: `${n} matches` }),
+    noMatch: 'Nothing matches. Try another word, or type it in Hangul.',
+    chosen: (n: number, minutes: number) => plural('en', n, { one: `1 chosen · about ${minutes} min`, other: `${n} chosen · about ${minutes} min` }),
+    full: 'This is full. Remove something to add more.',
+    /** The sticky bar under the plan builder (its count and Publish plan). */
+    bar: 'Your choices',
   },
 } as const;

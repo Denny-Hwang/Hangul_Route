@@ -328,19 +328,13 @@ export const consoleMsgs = {
     newTitle: 'Nuevo plan',
     titleField: { label: 'Título del plan', placeholder: 'Semana 3' },
     catalog: {
-      label: 'Catálogo',
-      title: 'Catálogo (Etapa 1)',
-      addEpisode: { cta: '+ episodio' },
-      questLine: (title: string, minutes: number | null) => `${title} · ${minutes ?? '?'} min`,
-      add: { cta: '+ añadir' },
-      added: { cta: 'añadido' },
       episodeLabel: (title: string, quests: number) =>
         `${title} (${plural('es', quests, { one: `${quests} misión`, other: `${quests} misiones` })})`,
     },
     yours: {
       label: 'Tu plan',
       title: (items: number) => `Tu plan (${items})`,
-      empty: 'Añade misiones o episodios completos desde el catálogo.',
+      empty: 'Elige lecciones o episodios completos en Lecciones.',
       moveUp: { cta: '↑' },
       moveDown: { cta: '↓' },
       remove: { cta: '×' },
@@ -794,16 +788,6 @@ export const consoleMsgs = {
     },
     catalogue: {
       title: 'Catálogo',
-      stage1: 'Etapa 1',
-      stories: 'Historias',
-      vocab: 'Vocabulario',
-      add: { cta: '+ añadir' },
-      added: { cta: 'Añadido' },
-      line: (title: string, minutes: number | null) => `${title} · ${minutes === null ? '?' : minutes} min`,
-      topicLine: (title: string, words: number, minutes: number | null) => {
-        const time = `${minutes === null ? '?' : minutes} min`;
-        return plural('es', words, { one: `${title} · ${words} palabra · ${time}`, other: `${title} · ${words} palabras · ${time}` });
-      },
     },
     outline: {
       title: 'Esquema',
@@ -1588,5 +1572,30 @@ export const consoleMsgs = {
       off: 'Notas de la clase: no',
     },
     baseScope: 'Las palabras y más aparecen cuando la familia lea las novedades.',
+  },
+  chooser: {
+    planTitle: 'Lecciones',
+    search: { label: 'Buscar lecciones', hint: 'Busca por título, hangul o romanización.' },
+    clearSearch: { cta: 'Borrar' },
+    groups: 'Elige qué ver',
+    chip: {
+      stage: (n: number) => `Etapa ${n}`,
+      stories: 'Historias',
+      topics: 'Temas de palabras',
+    },
+    heading: {
+      stage: (n: number, lessons: number) => plural('es', lessons, { one: `Etapa ${n} · ${lessons} lección`, other: `Etapa ${n} · ${lessons} lecciones` }),
+      stories: (n: number) => plural('es', n, { one: `Historias · ${n} historia`, other: `Historias · ${n} historias` }),
+      topics: (n: number) => plural('es', n, { one: `Temas de palabras · ${n} tema`, other: `Temas de palabras · ${n} temas` }),
+    },
+    episodeDetail: (lessons: number, minutes: number) =>
+      plural('es', lessons, { one: `${lessons} lección · aprox. ${minutes} min`, other: `${lessons} lecciones · aprox. ${minutes} min` }),
+    minutes: (n: number) => `aprox. ${n} min`,
+    lessonsOf: (title: string) => `Lecciones: ${title}`,
+    found: (n: number) => plural('es', n, { one: '1 resultado', other: `${n} resultados` }),
+    noMatch: 'No hay resultados. Prueba otra palabra o escríbela en hangul.',
+    chosen: (n: number, minutes: number) => `Elegiste ${n} · aprox. ${minutes} min`,
+    full: 'Ya está lleno. Quita algo para añadir más.',
+    bar: 'Tu selección',
   },
 } satisfies DeepPartial<Messages['console']>;
