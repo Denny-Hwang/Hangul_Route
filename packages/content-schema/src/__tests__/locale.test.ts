@@ -9,11 +9,14 @@ import {
   DEFAULT_TEXT_SIZE,
   DEVICE_SETTINGS_KEY,
   DeviceSettingsSchema,
+  MIGRATED_AT,
   PREFS_CHANNEL,
   PrefsMessageSchema,
   TEXT_SIZES,
   mergeAccountLocale,
+  mergeDeviceSettings,
   prefsMessage,
+  rawDeviceSettings,
   ProfileSettingsSchema,
   RomanizationModeSchema,
   UI_LOCALES,
@@ -122,10 +125,10 @@ describe('UI locale schemas (F-I18N-001 §3.2)', () => {
     expect(ProfileSettingsSchema.parse(withChallenge)).toEqual(withChallenge);
   });
 
-  it('DeviceSettings: locale optional (absent = never chosen), unknown rejected', () => {
+  it('DeviceSettings: locale optional (absent = never chosen), an unknown one reads as never chosen', () => {
     expect(DeviceSettingsSchema.parse({})).toEqual({});
     expect(DeviceSettingsSchema.parse({ uiLocale: 'es' })).toEqual({ uiLocale: 'es' });
-    expect(DeviceSettingsSchema.safeParse({ uiLocale: 'de' }).success).toBe(false);
+    expect(DeviceSettingsSchema.parse({ uiLocale: 'de' })).toEqual({});
   });
 
   it('DeviceSettings: uiLocaleAt and textSize are optional and additive (a record stored before them parses unchanged)', () => {
@@ -146,6 +149,18 @@ describe('UI locale schemas (F-I18N-001 §3.2)', () => {
     expect(JSON.parse(JSON.stringify(read))).toEqual({ uiLocale: 'es' });
     expect(DeviceSettingsSchema.parse({ textSize: 3 }).textSize).toBeUndefined();
   });
+
+  it('DeviceSettings: a locale this version does not know reads as absent and keeps the text size and time', () => {
+    const read = DeviceSettingsSchema.parse({ uiLocale: 'fr', uiLocaleAt: '2026-10-16T09:30:00.000Z', textSize: 'large' });
+    expect(read).toEqual({ uiLocaleAt: '2026-10-16T09:30:00.000Z', textSize: 'large' });
+    expect(DeviceSettingsSchema.parse({ uiLocale: 7 }).uiLocale).toBeUndefined();
+  });
+
+  it('MIGRATED_AT is the epoch: older than any real choice', () => {
+    expect(MIGRATED_AT).toBe('1970-01-01T00:00:00.000Z');
+    expect(Date.parse(MIGRATED_AT)).toBe(0);
+    expect(DeviceSettingsSchema.parse({ uiLocale: 'ko', uiLocaleAt: MIGRATED_AT }).uiLocaleAt).toBe(MIGRATED_AT);
+  });
 });
 
 describe('F-I18N-001 telemetry names (§3.12)', () => {
@@ -158,14 +173,22 @@ describe('F-I18N-001 telemetry names (§3.12)', () => {
 });
 
 describe('the display record across tabs (owner items 6 and 7)', () => {
-  it('one key, one channel, one message shape', () => {
+  it('one key, one channel, one strict message shape', () => {
     expect(DEVICE_SETTINGS_KEY).toBe('device:settings');
     expect(PREFS_CHANNEL).toBe('hr-prefs');
     const message = prefsMessage({ uiLocale: 'ko', textSize: 'large' });
-    expect(message).toEqual({ v: 1, kind: 'device-settings', value: { uiLocale: 'ko', textSize: 'large' } });
+    expect(message).toEqual({ ns: 'hr-prefs', v: 1, type: 'device-settings', settings: { uiLocale: 'ko', textSize: 'large' } });
     expect(PrefsMessageSchema.safeParse(message).success).toBe(true);
-    expect(PrefsMessageSchema.safeParse({ v: 2, kind: 'device-settings', value: {} }).success).toBe(false);
-    expect(PrefsMessageSchema.safeParse({ v: 1, kind: 'other', value: {} }).success).toBe(false);
+    expect(PrefsMessageSchema.safeParse({ ...message, v: 2 }).success).toBe(false);
+    expect(PrefsMessageSchema.safeParse({ ...message, type: 'other' }).success).toBe(false);
+    expect(PrefsMessageSchema.safeParse({ ...message, ns: 'hr-tabs' }).success).toBe(false);
+    // Strict: an extra key (another channel's message, a later shape) is not this message.
+    expect(PrefsMessageSchema.safeParse({ ...message, from: 'tab-1' }).success).toBe(false);
+  });
+
+  it('prefsMessage carries only the fields this version knows', () => {
+    const message = prefsMessage({ uiLocale: 'es', later: 1 } as never);
+    expect(message.settings).toEqual({ uiLocale: 'es' });
   });
 
   it('AccountLocale is lenient: a damaged value reads as no language', () => {
@@ -177,62 +200,91 @@ describe('the display record across tabs (owner items 6 and 7)', () => {
   });
 });
 
+describe('mergeDeviceSettings: read-modify-write keeps what this version does not know (section 3.1)', () => {
+  it('rawDeviceSettings is the stored object, or {} for anything that is not one', () => {
+    expect(rawDeviceSettings({ uiLocale: 'ko', later: true })).toEqual({ uiLocale: 'ko', later: true });
+    for (const junk of [null, undefined, 'ko', 3, ['ko']]) expect(rawDeviceSettings(junk)).toEqual({});
+  });
+
+  it('changes only the named fields; a later key and a later value survive', () => {
+    const stored = { uiLocale: 'fr', uiLocaleAt: '2026-10-16T09:30:00.000Z', textSize: 'huge', later: { a: 1 } };
+    expect(mergeDeviceSettings(stored, { textSize: 'large' })).toEqual({ ...stored, textSize: 'large' });
+    expect(mergeDeviceSettings(stored, { uiLocale: 'ko', uiLocaleAt: MIGRATED_AT })).toEqual({ ...stored, uiLocale: 'ko', uiLocaleAt: MIGRATED_AT });
+    // The input is not changed.
+    expect(stored.textSize).toBe('huge');
+  });
+
+  it('clearing the language removes the language and its time only (the record is never removed)', () => {
+    expect(mergeDeviceSettings({ uiLocale: 'ko', uiLocaleAt: MIGRATED_AT, textSize: 'larger', later: 1 }, { clearLocale: true })).toEqual({ textSize: 'larger', later: 1 });
+    expect(mergeDeviceSettings(null, { clearLocale: true })).toEqual({});
+  });
+});
+
 describe('mergeAccountLocale: newer wins after a sign-in (owner items 6 and 7)', () => {
-  const NOW = '2026-10-16T12:00:00.000Z';
   const OLD = '2026-10-01T00:00:00.000Z';
   const NEW = '2026-10-15T00:00:00.000Z';
 
   it('neither side has a language: nothing to do', () => {
-    expect(mergeAccountLocale({}, null, NOW)).toEqual({ device: null, account: null });
-    expect(mergeAccountLocale({ textSize: 'large' }, {}, NOW)).toEqual({ device: null, account: null });
+    expect(mergeAccountLocale({}, null)).toEqual({ device: null, account: null });
+    expect(mergeAccountLocale({ textSize: 'large' }, {})).toEqual({ device: null, account: null });
   });
 
-  it('only the account: it seeds the device with its timestamp, keeping the text size', () => {
-    expect(mergeAccountLocale({ textSize: 'larger' }, { uiLocale: 'ko', uiLocaleAt: OLD }, NOW)).toEqual({
-      device: { textSize: 'larger', uiLocale: 'ko', uiLocaleAt: OLD },
+  it('only the account: it seeds the device with its time (MIGRATED_AT when it has none)', () => {
+    expect(mergeAccountLocale({ textSize: 'larger' }, { uiLocale: 'ko', uiLocaleAt: OLD })).toEqual({ device: { uiLocale: 'ko', uiLocaleAt: OLD }, account: null });
+    expect(mergeAccountLocale({}, { uiLocale: 'es' })).toEqual({ device: { uiLocale: 'es', uiLocaleAt: MIGRATED_AT }, account: null });
+  });
+
+  it('only the device: the account takes it with the device time, never now', () => {
+    expect(mergeAccountLocale({ uiLocale: 'es', uiLocaleAt: OLD }, null)).toEqual({ device: null, account: { uiLocale: 'es', uiLocaleAt: OLD } });
+    expect(mergeAccountLocale({ uiLocale: 'es' }, {})).toEqual({ device: null, account: { uiLocale: 'es', uiLocaleAt: MIGRATED_AT } });
+  });
+
+  it('both agree: nothing to write, unless a real device time fills an account with none', () => {
+    expect(mergeAccountLocale({ uiLocale: 'ko', uiLocaleAt: NEW }, { uiLocale: 'ko', uiLocaleAt: OLD })).toEqual({ device: null, account: null });
+    expect(mergeAccountLocale({ uiLocale: 'ko', uiLocaleAt: NEW }, { uiLocale: 'ko' })).toEqual({ device: null, account: { uiLocale: 'ko', uiLocaleAt: NEW } });
+    expect(mergeAccountLocale({ uiLocale: 'ko' }, { uiLocale: 'ko' })).toEqual({ device: null, account: null });
+    expect(mergeAccountLocale({ uiLocale: 'ko', uiLocaleAt: MIGRATED_AT }, { uiLocale: 'ko' })).toEqual({ device: null, account: null });
+  });
+
+  it('both differ: the later choice wins on both sides; a tie keeps each side', () => {
+    expect(mergeAccountLocale({ uiLocale: 'en', uiLocaleAt: OLD, textSize: 'large' }, { uiLocale: 'ko', uiLocaleAt: NEW })).toEqual({
+      device: { uiLocale: 'ko', uiLocaleAt: NEW },
       account: null,
     });
-    // An account language without a timestamp seeds the device without one.
-    expect(mergeAccountLocale({}, { uiLocale: 'es' }, NOW)).toEqual({ device: { uiLocale: 'es' }, account: null });
+    expect(mergeAccountLocale({ uiLocale: 'en', uiLocaleAt: NEW }, { uiLocale: 'ko', uiLocaleAt: OLD })).toEqual({ device: null, account: { uiLocale: 'en', uiLocaleAt: NEW } });
+    expect(mergeAccountLocale({ uiLocale: 'en', uiLocaleAt: NEW }, { uiLocale: 'ko', uiLocaleAt: NEW })).toEqual({ device: null, account: null });
+    expect(mergeAccountLocale({ uiLocale: 'en' }, { uiLocale: 'ko' })).toEqual({ device: null, account: null });
   });
 
-  it('only the device: the account takes it, stamped now when the device choice has no timestamp', () => {
-    expect(mergeAccountLocale({ uiLocale: 'es', uiLocaleAt: OLD }, null, NOW)).toEqual({ device: null, account: { uiLocale: 'es', uiLocaleAt: OLD } });
-    expect(mergeAccountLocale({ uiLocale: 'es' }, {}, NOW)).toEqual({ device: null, account: { uiLocale: 'es', uiLocaleAt: NOW } });
+  it('a missing time counts as MIGRATED_AT: a device language with no time loses to any stamped account choice', () => {
+    expect(mergeAccountLocale({ uiLocale: 'en' }, { uiLocale: 'ko', uiLocaleAt: NEW })).toEqual({ device: { uiLocale: 'ko', uiLocaleAt: NEW }, account: null });
+    // An account choice without a time loses to a stamped device choice.
+    expect(mergeAccountLocale({ uiLocale: 'en', uiLocaleAt: OLD }, { uiLocale: 'ko' })).toEqual({ device: null, account: { uiLocale: 'en', uiLocaleAt: OLD } });
   });
 
-  it('both agree: nothing to write, unless the account lacks a timestamp', () => {
-    expect(mergeAccountLocale({ uiLocale: 'ko', uiLocaleAt: NEW }, { uiLocale: 'ko', uiLocaleAt: OLD }, NOW)).toEqual({ device: null, account: null });
-    expect(mergeAccountLocale({ uiLocale: 'ko', uiLocaleAt: NEW }, { uiLocale: 'ko' }, NOW)).toEqual({ device: null, account: { uiLocale: 'ko', uiLocaleAt: NEW } });
-  });
-
-  it('both differ: the newer choice wins on both sides', () => {
-    expect(mergeAccountLocale({ uiLocale: 'en', uiLocaleAt: OLD, textSize: 'large' }, { uiLocale: 'ko', uiLocaleAt: NEW }, NOW)).toEqual({
-      device: { uiLocale: 'ko', uiLocaleAt: NEW, textSize: 'large' },
+  it('a migrated or seeded device language (1970) loses to a stamped account choice', () => {
+    expect(mergeAccountLocale({ uiLocale: 'en', uiLocaleAt: MIGRATED_AT }, { uiLocale: 'ko', uiLocaleAt: OLD })).toEqual({
+      device: { uiLocale: 'ko', uiLocaleAt: OLD },
       account: null,
     });
-    expect(mergeAccountLocale({ uiLocale: 'en', uiLocaleAt: NEW }, { uiLocale: 'ko', uiLocaleAt: OLD }, NOW)).toEqual({
-      device: null,
-      account: { uiLocale: 'en', uiLocaleAt: NEW },
-    });
-    // A tie keeps the device.
-    expect(mergeAccountLocale({ uiLocale: 'en', uiLocaleAt: NEW }, { uiLocale: 'ko', uiLocaleAt: NEW }, NOW).device).toBeNull();
   });
 
-  it('a missing timestamp means the device wins', () => {
-    // A device choice stored before timestamps existed beats a newer account choice.
-    expect(mergeAccountLocale({ uiLocale: 'en' }, { uiLocale: 'ko', uiLocaleAt: NEW }, NOW)).toEqual({
-      device: null,
-      account: { uiLocale: 'en', uiLocaleAt: NOW },
-    });
-    // An account choice without a timestamp loses to a stamped device choice.
-    expect(mergeAccountLocale({ uiLocale: 'en', uiLocaleAt: OLD }, { uiLocale: 'ko' }, NOW)).toEqual({
-      device: null,
-      account: { uiLocale: 'en', uiLocaleAt: OLD },
-    });
+  it('a time that does not parse counts as missing', () => {
+    expect(mergeAccountLocale({ uiLocale: 'en', uiLocaleAt: OLD }, { uiLocale: 'ko', uiLocaleAt: 'not a date' })).toEqual({ device: null, account: { uiLocale: 'en', uiLocaleAt: OLD } });
+    expect(mergeAccountLocale({ uiLocale: 'en', uiLocaleAt: 'not a date' }, null)).toEqual({ device: null, account: { uiLocale: 'en', uiLocaleAt: MIGRATED_AT } });
   });
 
-  it('an account timestamp that does not parse counts as missing', () => {
-    expect(mergeAccountLocale({ uiLocale: 'en', uiLocaleAt: OLD }, { uiLocale: 'ko', uiLocaleAt: 'not a date' }, NOW).device).toBeNull();
+  it('two devices: an unstamped device A takes a newer choice made on device B, and never flips B back', () => {
+    // A: a pre-timestamp choice. B: no account yet.
+    const deviceA = { uiLocale: 'en' as const };
+    const first = mergeAccountLocale(deviceA, null);
+    expect(first.account).toEqual({ uiLocale: 'en', uiLocaleAt: MIGRATED_AT });
+    // The grown-up picks Korean on B later.
+    const account = { uiLocale: 'ko' as const, uiLocaleAt: NEW };
+    // A loads next: it takes Korean and writes nothing to the account.
+    const onA = mergeAccountLocale(deviceA, account);
+    expect(onA).toEqual({ device: { uiLocale: 'ko', uiLocaleAt: NEW }, account: null });
+    // B loads again: its choice and the account agree, nothing changes.
+    expect(mergeAccountLocale({ uiLocale: 'ko', uiLocaleAt: NEW }, account)).toEqual({ device: null, account: null });
   });
 });
