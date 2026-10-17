@@ -138,7 +138,14 @@ export interface ExpandedDeck {
   slides: Slide[];
   skipped: SkippedItem[];
   taught: TaughtItem[];
+  /** About-minutes (rule 12 as amended, AMENDMENTS-LECTURE-V2 section 4.4): at least 1 for a deck that has slides. */
   minutes: number;
+  /**
+   * The keys of the quiz slides that counted 1 minute each (outside a quest's or story's own slides),
+   * so a slide this build cannot draw gives back only a minute it counted (`runDeck`). Absent: every
+   * quiz slide counted one.
+   */
+  timedQuizKeys?: readonly string[];
 }
 
 const listOf = <T>(items: readonly T[] | undefined): readonly T[] => items ?? [];
@@ -191,7 +198,7 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
   // Rule 12 (AMENDMENTS-LECTURE-V2 section 4.4, LV-0b O1): a quest's or story's catalogue minutes
   // already hold its own quiz and check slides, so only quiz slides outside them count 1 each.
   let ownMinutesDepth = 0;
-  let outsideQuizSlides = 0;
+  const timedQuizKeys: string[] = [];
   let blockIndex = 0;
 
   const skip = (ref: string, reason: SkipReason): void => {
@@ -203,8 +210,9 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
     return n === 1 ? key : `${key}#${n}`;
   };
   const push = (key: string, body: SlideBody): void => {
-    slides.push({ ...body, key: nthKey(usedKeys, key), builds: buildsFor(body, opts) });
-    if (body.kind === 'quiz' && ownMinutesDepth === 0) outsideQuizSlides += 1;
+    const slideKey = nthKey(usedKeys, key);
+    slides.push({ ...body, key: slideKey, builds: buildsFor(body, opts) });
+    if (body.kind === 'quiz' && ownMinutesDepth === 0) timedQuizKeys.push(slideKey);
   };
   /** Pushes a quest's or story's own slides: its quiz slides are inside its catalogue minutes. */
   const insideOwnMinutes = (expand: () => void): void => {
@@ -756,6 +764,15 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
     expandBlock();
     minutes += Math.ceil(slides.slice(from).filter((s) => s.kind !== 'quiz').length / 2);
   };
+  /**
+   * A vocabulary topic (rule 12 as amended, LV-M1): one minute per two of its word cards, rounded
+   * up (its title slide is not a word slide); its meaning-quiz slides keep 1 each, counted at the end.
+   */
+  const byWordSlides = (expandBlock: () => void): void => {
+    const from = slides.length;
+    expandBlock();
+    minutes += Math.ceil(slides.slice(from).filter((s) => s.kind === 'vocab').length / 2);
+  };
 
   let classCode: string | undefined;
   deck.blocks.forEach((block, i) => {
@@ -780,7 +797,7 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
         bySlides(() => revisitBlock(key, block.chars));
         return;
       case 'vocab':
-        vocabBlock(key, block.topicId, block.wordIds);
+        byWordSlides(() => vocabBlock(key, block.topicId, block.wordIds));
         return;
       case 'story':
         storyBlock(key, block.storyId, block.level, block.checks, true);
@@ -815,6 +832,6 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
     words: taught.filter((t) => t.kind === 'word').map(kept),
     ...(classCode !== undefined ? { classCode } : {}),
   });
-  minutes += outsideQuizSlides;
-  return { slides, skipped, taught, minutes };
+  // A deck that has slides is never "about 0 minutes" (rule 12 as amended, LV-M1).
+  return { slides, skipped, taught, minutes: Math.max(1, minutes + timedQuizKeys.length), timedQuizKeys };
 }

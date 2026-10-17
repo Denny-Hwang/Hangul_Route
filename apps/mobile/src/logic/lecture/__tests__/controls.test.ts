@@ -177,17 +177,17 @@ describe('overlays swallow navigation', () => {
   });
 
   it('a covering overlay over the corner timer still swallows navigation; blank over it clears first', () => {
-    const picker = at(1, 1, { overlay: 'picker', timerOpen: true, timerMode: 'corner' });
-    expect(run(picker, 'next')).toEqual(picker);
+    const grid = at(1, 1, { overlay: 'grid', timerOpen: true, timerMode: 'corner' });
+    expect(run(grid, 'next')).toEqual(grid);
     expect(run(at(1, 1, { overlay: 'blank', timerOpen: true }), 'next')).toMatchObject({ slideIdx: 1, reveal: 1, overlay: null, timerOpen: true });
   });
 
-  it.each(['grid', 'help', 'exit', 'picker'] as const)('%s swallows next / prev / first / last', (overlay) => {
+  it.each(['grid', 'help', 'exit'] as const)('%s swallows next / prev / first / last', (overlay) => {
     const s = at(1, 1, { overlay });
     for (const ev of ['next', 'prev', 'first', 'last'] as const) expect(run(s, ev)).toEqual(s);
   });
 
-  it.each(['help', 'exit', 'picker'] as const)('%s swallows goto too (only the grid jumps)', (overlay) => {
+  it.each(['help', 'exit'] as const)('%s swallows goto too (only the grid jumps)', (overlay) => {
     const s = at(1, 1, { overlay });
     expect(run(s, { goto: 3 })).toEqual(s);
   });
@@ -206,7 +206,7 @@ describe('opening and closing overlays', () => {
   });
 
   it('close and Esc close the open overlay without touching the slide', () => {
-    for (const overlay of ['picker', 'blank', 'pause', 'grid', 'help', 'exit'] as const) {
+    for (const overlay of ['blank', 'pause', 'grid', 'help', 'exit'] as const) {
       expect(run(at(1, 2, { overlay }), 'close')).toMatchObject({ slideIdx: 1, reveal: 2, overlay: null });
       expect(run(at(1, 2, { overlay }), 'escape')).toMatchObject({ slideIdx: 1, reveal: 2, overlay: null });
     }
@@ -243,7 +243,7 @@ describe('opening and closing overlays', () => {
     expect(run(at(1, 0, { overlay: 'help' }), { overlay: 'timer' })).toMatchObject({ overlay: null, timerOpen: true });
   });
 
-  it.each(['picker', 'blank', 'pause', 'grid', 'help'] as const)('opening an empty timer full screen over %s brings it forward', (overlay) => {
+  it.each(['blank', 'pause', 'grid', 'help'] as const)('opening an empty timer full screen over %s brings it forward', (overlay) => {
     expect(run(at(1, 0, { overlay }), { timerMode: 'full' })).toMatchObject({ overlay: null, timerOpen: true, timerMode: 'full' });
   });
 
@@ -252,8 +252,8 @@ describe('opening and closing overlays', () => {
   });
 });
 
-describe('a running corner timer survives other overlays (activity slide: Start timer, then P)', () => {
-  it.each(['picker', 'blank', 'pause', 'grid', 'help', 'exit'] as const)('%s opens over the corner timer and closing it shows the timer again', (overlay) => {
+describe('a running corner timer survives other overlays (activity slide: Start timer, then G)', () => {
+  it.each(['blank', 'pause', 'grid', 'help', 'exit'] as const)('%s opens over the corner timer and closing it shows the timer again', (overlay) => {
     const timing = run(at(3), { startTimer: 180_000 });
     expect(timing).toMatchObject({ timerOpen: true, overlay: null });
     const covered = run(timing, { overlay });
@@ -264,7 +264,7 @@ describe('a running corner timer survives other overlays (activity slide: Start 
   });
 
   it('Esc closes the covering overlay first, then a full-screen timer, then asks to exit', () => {
-    const s = at(1, 0, { overlay: 'picker', timerOpen: true, timerMode: 'full' });
+    const s = at(1, 0, { overlay: 'help', timerOpen: true, timerMode: 'full' });
     const afterOne = run(s, 'escape');
     expect(afterOne).toMatchObject({ overlay: null, timerOpen: true });
     const afterTwo = run(afterOne, 'escape');
@@ -275,8 +275,8 @@ describe('a running corner timer survives other overlays (activity slide: Start 
 
 describe('close-timer: the timer card\'s own Close (PR 9)', () => {
   it('closes the timer and leaves a covering overlay where it is', () => {
-    const covered = at(1, 0, { overlay: 'picker', timerOpen: true });
-    expect(run(covered, 'close-timer')).toMatchObject({ overlay: 'picker', timerOpen: false });
+    const covered = at(1, 0, { overlay: 'grid', timerOpen: true });
+    expect(run(covered, 'close-timer')).toMatchObject({ overlay: 'grid', timerOpen: false });
     expect(run(at(1, 0, { timerOpen: true, timerMode: 'full' }), 'close-timer')).toMatchObject({ overlay: null, timerOpen: false, slideIdx: 1 });
   });
 
@@ -298,12 +298,12 @@ describe('effects stay outside the reducer', () => {
       type: 'play-sound',
       slideKey: 'l',
     });
-    for (const overlay of ['blank', 'pause', 'grid', 'help', 'exit', 'picker'] as const) {
+    for (const overlay of ['blank', 'pause', 'grid', 'help', 'exit'] as const) {
       expect(reduce(at(1, 0, { overlay }), 'replay-sound', DECK).effect).toBeUndefined();
       expect(reduce(at(1, 0, { overlay }), 'replay-stroke', DECK).effect).toBeUndefined();
     }
     expect(reduce(at(1, 0, { timerOpen: true, timerMode: 'full' }), 'replay-stroke', DECK).effect).toBeUndefined();
-    expect(reduce(at(1, 0, { overlay: 'picker', timerOpen: true, timerMode: 'corner' }), 'replay-sound', DECK).effect).toBeUndefined();
+    expect(reduce(at(1, 0, { overlay: 'grid', timerOpen: true, timerMode: 'corner' }), 'replay-sound', DECK).effect).toBeUndefined();
   });
 
   it('start timer opens the timer and returns a start-timer effect with the minutes as ms', () => {

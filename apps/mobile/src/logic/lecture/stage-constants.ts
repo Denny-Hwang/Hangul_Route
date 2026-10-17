@@ -56,9 +56,6 @@ export const RING_CORNER_FACTOR = 10;
  * their cards; stacked at 64 the question row stays one speaker high (slide-quiz.md).
  */
 export const QUIZ_ANSWER_HOYA = 64;
-/** The picker's label box: at least 480 x 140 units, so a 20-character label fits on one line. */
-export const PICKER_BOX_WIDTH = 480;
-export const PICKER_BOX_HEIGHT = 140;
 /** Grid thumbnails: at least 13 x 8 rem (`--thumb-w`, `--thumb-h`). */
 export const THUMB_W_REM = 13;
 export const THUMB_H_REM = 8;
@@ -84,16 +81,18 @@ export const STATE_HOYA_FACTOR = 1.5;
 /** Rem counts of the teacher pages (README Constants), in multiples of the 16 px root size (`typography.size.bodySm`). */
 export const READABLE_LINE_REM = 32;
 export const EXIT_DIALOG_REM = 40;
-export const PICKER_LABEL_REM = 14;
-
-/** The numbers picker's count stepper: the deck schema's `picker.count` bounds. */
-export const PICKER_COUNT_MIN = 1;
-export const PICKER_COUNT_MAX = 60;
 
 /** The start screen waits this long at most for the presenter font (spec section 3.6). */
 export const FONT_WAIT_MS = 1500;
 /** SVG text does not read React Native's 'System' family; the stroke diagram's numerals use the browser's UI stack. */
 export const SVG_UI_FONT = 'system-ui, sans-serif';
+
+/**
+ * The control bar takes the pointer again only this long after it shows (owner report 2026-10-16):
+ * a touch on a hidden bar brings it back, and its press, which lands after the bar is drawn, must
+ * not press the button that appeared under the finger.
+ */
+export const BAR_SHOW_GRACE_MS = 400;
 
 /** Touch: a horizontal swipe of at least 60 px with |dx| >= 1.5 |dy| (spec section 3.5). */
 export const SWIPE_MIN = 60;
@@ -106,14 +105,53 @@ export function barBand(hero: number, gap: number): number {
   return hero + 2 * gap;
 }
 
-/** The stage box: the window minus the docked bar band, which stays when the bar hides (README D1). */
-export function stageBox(window: WindowSize, band: number): WindowSize {
-  return { width: Math.max(0, window.width), height: Math.max(0, window.height - band) };
+/**
+ * `PHONE_STAGE_MIN`, the phone gate (F-TCH-004 section 3.6 phone exception; README Constants): in a
+ * phone window the stage is judged too small only below this width, so 568 x 320, the smallest
+ * landscape phone in use, draws slides, while every other window keeps `layout.breakpoint.regular`
+ * (600). Text keeps the 18 px floor either way.
+ */
+export const PHONE_STAGE_MIN = 560;
+
+/**
+ * The compact bar's strip at the bottom of a phone stage (section 3.6): as tall as the bar's own
+ * footprint, its `touchTarget.min` row and `spacing.sm` padding (`min + 2 x gap`). A tap there shows
+ * or hides the bar instead of stepping.
+ */
+export function phoneBarStrip(min: number, gap: number): number {
+  return min + 2 * gap;
 }
 
-/** A control drawn on the stage (the speaker) never drops below the bar's target size `hero`. */
-export function stageButtonSize(unit: number, hero: number): number {
-  return Math.max(hero, Math.round(unit * hero));
+/** The safe-area insets of the window (the notch and the home indicator), in window pixels. */
+export interface StageInsets {
+  readonly top: number;
+  readonly right: number;
+  readonly bottom: number;
+  readonly left: number;
+}
+
+export const NO_INSETS: StageInsets = { top: 0, right: 0, bottom: 0, left: 0 };
+
+const inset = (n: number): number => (Number.isFinite(n) && n > 0 ? n : 0);
+
+/**
+ * The stage box: the window minus the safe-area insets and the docked bar band, which stays when
+ * the bar hides (README D1). A phone window passes a band of 0: its compact bar floats over the
+ * stage's bottom edge instead.
+ */
+export function stageBox(window: WindowSize, band: number, insets: StageInsets): WindowSize {
+  return {
+    width: Math.max(0, window.width - inset(insets.left) - inset(insets.right)),
+    height: Math.max(0, window.height - band - inset(insets.top) - inset(insets.bottom)),
+  };
+}
+
+/**
+ * A control drawn on the stage (the speaker) is `hero` stage units, never below the bar's target
+ * size `hero`; in a phone window the floor is the phone's touch target (`floor`, `touchTarget.min`).
+ */
+export function stageButtonSize(unit: number, hero: number, floor: number = hero): number {
+  return Math.max(floor, Math.round(unit * hero));
 }
 
 /** `n` stage units in window pixels (geometry, not text: text goes through `stageText`). */

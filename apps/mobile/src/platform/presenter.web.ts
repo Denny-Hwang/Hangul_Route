@@ -1,7 +1,6 @@
-import { isLearnerRoot, type LectureDeck } from '@hangul-route/content-schema';
+import { isLearnerRoot } from '@hangul-route/content-schema';
+import { bootPlan, entryState, pushPlan, readEntry, stepsToHome, type HistoryEntry } from '../logic/lecture/history';
 import { commandForKey, type KeyCommand } from '../logic/lecture/keymap';
-import { receiveRoster } from '../logic/lecture/picker-labels';
-import { consoleOrigins, readyMessage, readyTargets, wantsRoster } from '../logic/lecture/roster-message';
 
 /**
  * The presenter's web platform layer (F-TCH-004 sections 3.1, 3.2, 3.5, 3.8). Everything that
@@ -11,9 +10,12 @@ import { consoleOrigins, readyMessage, readyTargets, wantsRoster } from '../logi
  * - **Route and fragment**: `takeDeckFragment` reads the `#d=` deck and replaces the address with
  *   `/present` before the first paint, so the deck leaves the address bar and the session history
  *   entry; `setPresenterDocTitle` writes the fixed catalogue title (never the deck title).
- * - **Roster hand-off** (TD3): `announceReady` posts `ready` to `window.opener` once per allowed
- *   console origin; `listenForRoster` holds a roster's labels in memory (`picker-labels.ts`) only
- *   when it comes from the opener, from an allowed origin, and matches the open deck.
+ * - **The way back** (section 3.5 "History", owner report 2026-10-16 item 3): one history entry per
+ *   phase, the home (`hrPresenter: 'home'`), the start screen (`'ready'`) and the lesson
+ *   (`'running'`), with `hrIndex`, the deck held in the start screen's and the lesson's entries so a
+ *   reload still resumes. The plan is pure (`logic/lecture/history.ts`); this layer applies it, runs
+ *   the presenter's own steps one at a time and ignores their popstates (`subscribePresenterPop`
+ *   reports only the browser's), and decides the home's Back once at boot (`leavePresenter`).
  * - **Keys**: `subscribeKeys` turns a `keydown` into a key-map command and prevents the browser
  *   default only for a mapped key.
  * - **Start tap**: fullscreen, the screen wake lock (re-requested when the page is shown again),
@@ -41,6 +43,7 @@ interface ElementLike {
 
 interface DocumentLike extends Partial<EventTargetLike> {
   title?: string;
+  referrer?: string;
   documentElement?: ElementLike;
   fullscreenEnabled?: boolean;
   webkitFullscreenEnabled?: boolean;
@@ -57,19 +60,25 @@ interface WakeLockSentinelLike {
 }
 
 export interface PresenterEnv {
-  location?: { pathname: string; hash: string; search?: string } | null;
+  location?: { pathname: string; hash: string; search?: string; origin?: string } | null;
   /** `location.reload()`. */
   reload?: () => void;
-  history?: { state?: unknown; replaceState: (state: unknown, unused: string, url: string) => void } | null;
+  /** `location.assign(url)`: leaves for another page of this origin. */
+  assign?: (url: string) => void;
+  history?: {
+    state?: unknown;
+    length?: number;
+    replaceState: (state: unknown, unused: string, url: string) => void;
+    pushState?: (state: unknown, unused: string, url: string) => void;
+    go?: (delta: number) => void;
+  } | null;
   document?: DocumentLike | null;
   /** The target `keydown` is read from (the document). */
   keyTarget?: EventTargetLike | null;
   /** `document.activeElement`. */
   activeElement?: () => unknown;
-  /** The window `message` events arrive on. */
+  /** The window `hashchange` and activity events arrive on. */
   window?: EventTargetLike | null;
-  opener?: unknown;
-  consoleOrigins?: readonly string[];
   navigator?: { wakeLock?: { request: (type: 'screen') => Promise<WakeLockSentinelLike> } } | null;
   screen?: { orientation?: { lock?: (o: string) => Promise<void>; unlock?: () => void } } | null;
   /** Makes the Web Audio context the timer chime plays on; null without Web Audio. */
@@ -133,7 +142,6 @@ type Globals = {
   location?: PresenterEnv['location'];
   history?: PresenterEnv['history'];
   document?: DocumentLike & { activeElement?: unknown };
-  opener?: unknown;
   navigator?: PresenterEnv['navigator'] & { serviceWorker?: ServiceWorkerContainerLike };
   screen?: PresenterEnv['screen'];
   addEventListener?: EventTargetLike['addEventListener'];
@@ -147,13 +155,12 @@ function browserEnv(): PresenterEnv {
   return {
     location: g.location ?? null,
     reload: () => (g.location as { reload?: () => void } | undefined)?.reload?.(),
+    assign: (url) => (g.location as { assign?: (to: string) => void } | undefined)?.assign?.(url),
     history: g.history ?? null,
     document: doc,
     keyTarget: doc && typeof doc.addEventListener === 'function' ? (doc as EventTargetLike) : null,
     activeElement: () => doc?.activeElement ?? null,
     window: win,
-    opener: g.opener ?? null,
-    consoleOrigins: presenterConsoleOrigins(process.env.EXPO_PUBLIC_CONSOLE_ORIGINS),
     navigator: g.navigator ?? null,
     screen: g.screen ?? null,
     createAudioContext: browserAudioContext,
@@ -186,11 +193,6 @@ function deckParam(hash: string): string | null {
   return null;
 }
 
-/** The history-state key holding the open deck's encoded fragment (ids, a seed and options; never a name). */
-const DECK_STATE = 'hrLectureFragment';
-/** Set by Start over from the home: a reload before Start opens the deck fresh, not at its saved slide. */
-const FRESH_STATE = 'hrLectureFresh';
-
 export interface DeckAddress {
   /** The encoded deck, for `decodeDeck`. */
   raw: string;
@@ -200,21 +202,7 @@ export interface DeckAddress {
   fresh?: true;
 }
 
-function freshState(env: PresenterEnv): boolean {
-  const state = env.history?.state;
-  return state !== null && typeof state === 'object' && (state as Record<string, unknown>)[FRESH_STATE] === true;
-}
-
-function heldState(raw: string, fresh: boolean): Record<string, unknown> {
-  return fresh ? { [DECK_STATE]: raw, [FRESH_STATE]: true } : { [DECK_STATE]: raw };
-}
-
-function stateFragment(env: PresenterEnv): string | null {
-  const state = env.history?.state;
-  if (state === null || typeof state !== 'object') return null;
-  const raw = (state as Record<string, unknown>)[DECK_STATE];
-  return typeof raw === 'string' ? raw : null;
-}
+export type { HistoryEntry } from '../logic/lecture/history';
 
 /** `/present`, keeping only a `?lang=` hand-off, which the locale store takes (and strips) next. */
 function cleanAddress(env: PresenterEnv): string {
@@ -226,50 +214,268 @@ function cleanAddress(env: PresenterEnv): string {
   }
 }
 
-function replaceAddress(env: PresenterEnv, state: unknown): void {
+function replaceEntry(env: PresenterEnv, entry: HistoryEntry | null): void {
   try {
-    env.history?.replaceState(state, '', cleanAddress(env));
+    env.history?.replaceState(entry === null ? null : entryState(entry), '', cleanAddress(env));
   } catch {
     // A history that refuses (a sandboxed frame) must not lose the deck.
   }
 }
 
+/** Pushes `entry`; without `pushState` (or when it refuses) the entry is written over the current one, so the deck is still held. */
+function pushEntry(env: PresenterEnv, entry: HistoryEntry): void {
+  if (typeof env.history?.pushState !== 'function') {
+    replaceEntry(env, entry);
+    return;
+  }
+  try {
+    env.history.pushState(entryState(entry), '', cleanAddress(env));
+  } catch {
+    replaceEntry(env, entry);
+  }
+}
+
+/** The presenter entry this tab is on (null: none of the presenter's). */
+export function currentPresenterEntry(env: PresenterEnv = browserEnv()): HistoryEntry | null {
+  return readEntry(env.history?.state);
+}
+
+function referrerSameOrigin(env: PresenterEnv): boolean {
+  try {
+    const referrer = env.document?.referrer ?? '';
+    const origin = env.location?.origin ?? '';
+    return referrer !== '' && origin !== '' && new URL(referrer).origin === origin;
+  } catch {
+    return false;
+  }
+}
+
 /**
  * Reads the deck and cleans the address to `/present` before the first paint (section 3.2), so
- * neither the deck nor an unknown sub-path stays in the address bar. A `#d=<encoded deck>` link
- * wins; its value moves into this tab's history-entry state, which a reload keeps and a new tab
- * or a typed address does not, so a reload reopens the same lesson (`reloaded: true`) and the
- * console can hand the names over again (section 3.2 step 2). The state holds only the encoded
- * deck, which carries no name by construction (TD3). Null: no deck (the presenter home).
+ * neither the deck nor an unknown sub-path stays in the address bar, and lays out this tab's
+ * history entries (section 3.5 "History", rules 1, 5 and 6; the plan is `logic/lecture/history.ts`).
+ * A `#d=<encoded deck>` link wins: the entry becomes the presenter home and a start-screen entry
+ * holding the deck is pushed over it, so the first back lands on the home; a link `accepts` refuses
+ * (it does not decode) pushes nothing. A reload reopens the deck its entry holds (`reloaded: true`);
+ * a reload in a lesson first steps back to its start-screen entry. The home's Back is decided here,
+ * once, from this tab's own history (`presenterHomeBack`). The entries hold only the encoded deck,
+ * which carries no name by construction. Null: no deck (the presenter home).
  */
-export function takeDeckFragment(env: PresenterEnv = browserEnv()): DeckAddress | null {
+export function takeDeckFragment(env: PresenterEnv = browserEnv(), accepts: (raw: string) => boolean = () => true): DeckAddress | null {
   const location = env.location;
   if (!location) return null;
-  const linked = location.hash ? deckParam(location.hash) : null;
-  if (linked !== null) {
-    replaceAddress(env, { [DECK_STATE]: linked });
-    return { raw: linked, reloaded: false };
-  }
-  const kept = stateFragment(env);
-  const fresh = kept !== null && freshState(env);
-  if (location.hash || location.pathname !== PRESENTER_PATH) replaceAddress(env, kept === null ? null : heldState(kept, fresh));
-  if (kept === null) return null;
-  return fresh ? { raw: kept, reloaded: true, fresh: true } : { raw: kept, reloaded: true };
+  const link = location.hash ? deckParam(location.hash) : null;
+  const entry = readEntry(env.history?.state);
+  const homeBack = referrerSameOrigin(env) && typeof env.history?.length === 'number' && env.history.length > 1;
+  const plan = bootPlan({ link, entry, accepts, homeBack });
+  if (plan.replace !== null) replaceEntry(env, plan.replace);
+  else if (location.hash || location.pathname !== PRESENTER_PATH) replaceEntry(env, entry);
+  if (plan.push !== null) pushEntry(env, plan.push);
+  if (plan.back) void queue(() => goIgnored(env, -1));
+  if (plan.deck === null) return null;
+  const { raw, reloaded, fresh } = plan.deck;
+  return fresh ? { raw, reloaded, fresh } : { raw, reloaded };
 }
 
-/** Forgets the open deck of this tab (Exit, an invalid link): a reload then shows the presenter home. */
+/** Whether the home's Back goes back to the page before `/present` (rule 5): a same-origin page before it at boot. */
+export function presenterHomeBack(env: PresenterEnv = browserEnv()): boolean {
+  return readEntry(env.history?.state)?.homeBack === true;
+}
+
+/** Forgets the open deck of this tab's entry (an invalid link): the entry is the home again and a reload shows the home. */
 export function forgetOpenDeck(env: PresenterEnv = browserEnv()): void {
-  replaceAddress(env, null);
+  const here = readEntry(env.history?.state);
+  replaceEntry(env, { step: 'home', index: here?.index ?? 0, ...(here?.homeBack !== undefined ? { homeBack: here.homeBack } : {}) });
 }
 
 /**
- * Holds a deck started from the presenter home (Resume, Start over, Build lesson) in this tab's
- * history entry, the same state a `#d=` link leaves, so a reload reopens that lesson; the address
- * stays `/present` and the state holds only the encoded deck (no name, TD3). `fresh` (Start over)
- * marks it to open at its first slide on a reload before Start; Start holds it again without the mark.
+ * Holds a deck in this tab's entry as a start screen at the entry's own place (rule 6: the
+ * stale-presenter Reload writes `{ ready, hrIndex: 0 }` over the invalid page's home entry, which
+ * the next boot opens as a link). `fresh` (Start over) opens it at its first slide on a reload
+ * before Start.
  */
 export function holdOpenDeck(raw: string, options: { fresh?: boolean } = {}, env: PresenterEnv = browserEnv()): void {
-  replaceAddress(env, heldState(raw, options.fresh === true));
+  const here = readEntry(env.history?.state);
+  replaceEntry(env, {
+    step: 'ready',
+    index: here?.index ?? 0,
+    fragment: raw,
+    ...(options.fresh === true ? { fresh: true as const } : {}),
+    ...(here?.homeBack !== undefined ? { homeBack: here.homeBack } : {}),
+  });
+}
+
+// --- the way back (section 3.5 "History"; owner report 2026-10-16 item 3) --------------------------
+
+/** How long a step the presenter takes itself waits for its own `popstate` before it stops expecting one. */
+export const RETURN_WAIT_MS = 1000;
+/** How long the home's Back waits for the page to start leaving before it leaves for `/` instead. */
+export const LEAVE_WAIT_MS = 1000;
+
+/**
+ * The presenter's own history steps run one after another (a push never lands on an entry a step
+ * back is still leaving), each after the last one's `popstate`.
+ */
+let chain: Promise<void> = Promise.resolve();
+function queue(op: () => void | Promise<void>): Promise<void> {
+  const next = chain.then(op, op);
+  chain = next.catch(() => undefined);
+  return chain;
+}
+
+interface PopHub {
+  /** The presenter's own steps still waiting for their `popstate`, oldest first. */
+  own: { done: () => void; timer: ReturnType<typeof setTimeout> }[];
+  handlers: Set<(landed: HistoryEntry | null) => void>;
+}
+
+/** One `popstate` listener per window: it answers the presenter's own steps first, then reports the browser's. */
+const hubs = new WeakMap<object, PopHub>();
+
+function hubOf(env: PresenterEnv): PopHub | null {
+  const target = env.window;
+  if (!target) return null;
+  const known = hubs.get(target);
+  if (known) return known;
+  const hub: PopHub = { own: [], handlers: new Set() };
+  hubs.set(target, hub);
+  target.addEventListener('popstate', () => {
+    const own = hub.own.shift();
+    if (own) {
+      clearTimeout(own.timer);
+      own.done();
+      return;
+    }
+    const landed = readEntry(env.history?.state);
+    for (const handler of [...hub.handlers]) handler(landed);
+  });
+  return hub;
+}
+
+/** `history.go(delta)`, resolved on its own `popstate` (never reported as the browser's) or after `RETURN_WAIT_MS`. */
+function goIgnored(env: PresenterEnv, delta: number): Promise<void> {
+  const history = env.history;
+  if (delta === 0 || typeof history?.go !== 'function') return Promise.resolve();
+  const hub = hubOf(env);
+  return new Promise<void>((resolve) => {
+    if (hub === null) {
+      try {
+        history.go?.(delta);
+      } catch {
+        // Nothing to wait for.
+      }
+      resolve();
+      return;
+    }
+    const item = {
+      done: resolve,
+      timer: setTimeout(() => {
+        const at = hub.own.indexOf(item);
+        if (at >= 0) hub.own.splice(at, 1);
+        resolve();
+      }, RETURN_WAIT_MS),
+    };
+    hub.own.push(item);
+    try {
+      history.go?.(delta);
+    } catch {
+      clearTimeout(item.timer);
+      hub.own.splice(hub.own.indexOf(item), 1);
+      resolve();
+    }
+  });
+}
+
+/**
+ * Rule 2: Start on the home pushes the start screen's entry; Start on the start screen pushes the
+ * lesson's (both inside the tap). An entry already on that step is written over. `raw`: the deck's
+ * fragment (null: a deck too long for a link, which still runs; a reload then shows the home).
+ */
+export function pushPresenterEntry(step: 'ready' | 'running', raw: string | null, options: { fresh?: boolean } = {}, env: PresenterEnv = browserEnv()): Promise<void> {
+  return queue(() => {
+    const { mode, entry } = pushPlan(readEntry(env.history?.state), step, {
+      ...(raw !== null ? { fragment: raw } : {}),
+      ...(options.fresh === true ? { fresh: true as const } : {}),
+    });
+    if (mode === 'push') pushEntry(env, entry);
+    else replaceEntry(env, entry);
+  });
+}
+
+/** Rule 7: on the home, a placeholder entry is pushed and stepped back from, so the entries ahead (and their deck) are gone. */
+async function clearForward(env: PresenterEnv): Promise<void> {
+  const here = readEntry(env.history?.state);
+  replaceEntry(env, { step: 'home', index: 0, ...(here?.homeBack !== undefined ? { homeBack: here.homeBack } : {}) });
+  if (typeof env.history?.pushState !== 'function') return;
+  try {
+    env.history.pushState(entryState({ step: 'home', index: 1, ...(here?.homeBack !== undefined ? { homeBack: here.homeBack } : {}) }), '', cleanAddress(env));
+  } catch {
+    return;
+  }
+  await goIgnored(env, -1);
+}
+
+/**
+ * Back to the home entry from the start screen or the lesson (Back to lessons, the phone footer's
+ * Back, Exit, an invalid deck): `history.go(-hrIndex)`, then the entries ahead are cleared (rule 7),
+ * so neither the home nor any entry ahead keeps a deck and the browser's Back on the home then
+ * leaves the presenter. Its own popstates are not reported to `subscribePresenterPop`.
+ */
+export function returnToPresenterHome(env: PresenterEnv = browserEnv()): Promise<void> {
+  return queue(async () => {
+    await goIgnored(env, -stepsToHome(readEntry(env.history?.state)));
+    await clearForward(env);
+  });
+}
+
+/** The browser landed on the home from a deck (a back from the start screen): clear the entries ahead (rule 7). */
+export function clearPresenterForward(env: PresenterEnv = browserEnv()): Promise<void> {
+  return queue(() => clearForward(env));
+}
+
+/** One step back (ignored): a lesson not yet begun back to its start screen, or a Forward onto an entry the screen is not on. */
+export function stepBackPresenter(env: PresenterEnv = browserEnv()): Promise<void> {
+  return queue(() => goIgnored(env, -1));
+}
+
+/** Calls `handler` with the entry the browser's Back (or Forward) landed on; the presenter's own steps are not reported. */
+export function subscribePresenterPop(handler: (landed: HistoryEntry | null) => void, env: PresenterEnv = browserEnv()): () => void {
+  const hub = hubOf(env);
+  if (hub === null) return () => undefined;
+  hub.handlers.add(handler);
+  return () => {
+    hub.handlers.delete(handler);
+  };
+}
+
+/**
+ * The home's Back (rule 5): back to the page before `/present` when the tab came from a page of
+ * this origin (`presenterHomeBack`), with a fallback to `/` when the page has not started to leave
+ * after `LEAVE_WAIT_MS`; otherwise (every new tab the console, All lessons and E5 open) to `/`.
+ */
+export function leavePresenter(env: PresenterEnv = browserEnv()): void {
+  const toRoot = (): void => env.assign?.('/');
+  const history = env.history;
+  if (!presenterHomeBack(env) || typeof history?.go !== 'function') {
+    toRoot();
+    return;
+  }
+  let left = false;
+  const onLeave = (): void => {
+    left = true;
+  };
+  env.window?.addEventListener('pagehide', onLeave);
+  env.window?.addEventListener('beforeunload', onLeave);
+  setTimeout(() => {
+    env.window?.removeEventListener('pagehide', onLeave);
+    env.window?.removeEventListener('beforeunload', onLeave);
+    if (!left) toRoot();
+  }, LEAVE_WAIT_MS);
+  try {
+    history.go(-(1 + stepsToHome(readEntry(history.state))));
+  } catch {
+    // The timer leaves by address.
+  }
 }
 
 /**
@@ -435,51 +641,6 @@ export function setPresenterDocTitle(title: string, env: PresenterEnv = browserE
   if (env.document) env.document.title = title;
 }
 
-// --- roster hand-off --------------------------------------------------------------------------
-
-/** The shared console origins plus the build-time preview list (`EXPO_PUBLIC_CONSOLE_ORIGINS`). */
-export function presenterConsoleOrigins(extraCsv: string | undefined): readonly string[] {
-  return consoleOrigins(extraCsv ?? null);
-}
-
-type DeckPick = Pick<LectureDeck, 'id' | 'picker'>;
-
-/** A console tab opened this one (`window.opener`); a copied, typed or bookmarked link has none. */
-export function hasOpener(env: PresenterEnv = browserEnv()): boolean {
-  return env.opener !== null && env.opener !== undefined;
-}
-
-/** Posts `ready` to the opener, once per allowed origin; returns how many posts went out. */
-export function announceReady(deck: DeckPick, env: PresenterEnv = browserEnv()): number {
-  const opener = env.opener as { postMessage?: (message: unknown, targetOrigin: string) => void } | null | undefined;
-  const targets = readyTargets(deck, opener, env.consoleOrigins ?? consoleOrigins(null));
-  let sent = 0;
-  for (const origin of targets) {
-    try {
-      opener?.postMessage?.(readyMessage(deck.id), origin);
-      sent += 1;
-    } catch {
-      // A closed or cross-origin opener: nothing to deliver to.
-    }
-  }
-  return sent;
-}
-
-/**
- * Listens for the console's `roster` answer. A message that passes every check is held in memory
- * (`picker-labels.ts`) and `onRoster` runs; anything else is ignored without a trace.
- */
-export function listenForRoster(deck: DeckPick, onRoster: () => void, env: PresenterEnv = browserEnv()): () => void {
-  const target = env.window;
-  if (!target || env.opener === null || env.opener === undefined || !wantsRoster(deck)) return () => undefined;
-  const ctx = { opener: env.opener, allowedOrigins: env.consoleOrigins ?? consoleOrigins(null), deck };
-  const onMessage = (event: { origin: string; source: unknown; data: unknown }): void => {
-    if (receiveRoster(event, ctx)) onRoster();
-  };
-  target.addEventListener('message', onMessage as Listener);
-  return () => target.removeEventListener('message', onMessage as Listener);
-}
-
 // --- keys -------------------------------------------------------------------------------------
 
 const FIELDS: ReadonlySet<string> = new Set(['INPUT', 'TEXTAREA', 'SELECT']);
@@ -611,6 +772,26 @@ export function subscribeActivity(handler: () => void, env: PresenterEnv = brows
   for (const type of types) target.addEventListener(type, onActivity);
   return () => {
     for (const type of types) target.removeEventListener(type, onActivity);
+  };
+}
+
+/**
+ * The kind of the last input on the page: a pointer (mouse, touch, pen) or a key. A focus that
+ * follows a pointer press, or that a dialog gives back after one, is the pointer's; one that follows
+ * a key is a keyboard or switch user's (the phone bar stays on screen for those, section 3.6).
+ */
+export function subscribeInputKind(handler: (kind: 'pointer' | 'key') => void, env: PresenterEnv = browserEnv()): () => void {
+  const target = env.window;
+  if (!target) return () => undefined;
+  const onPointer = (): void => handler('pointer');
+  const onKey = (): void => handler('key');
+  target.addEventListener('pointerdown', onPointer);
+  target.addEventListener('touchstart', onPointer);
+  target.addEventListener('keydown', onKey);
+  return () => {
+    target.removeEventListener('pointerdown', onPointer);
+    target.removeEventListener('touchstart', onPointer);
+    target.removeEventListener('keydown', onKey);
   };
 }
 

@@ -1365,7 +1365,7 @@ test('BR-13: a lesson with a full pass shows Present this under the preview and 
     v: 1,
     title: 'Meet a, eo, g, n',
     blocks: [{ kind: 'quest', id: 'quest:stage1-letters-q1' }],
-    picker: { mode: 'numbers', count: 12 },
+    picker: null,
     source: 'catalogue',
     options: { uiLocale: 'en' },
   });

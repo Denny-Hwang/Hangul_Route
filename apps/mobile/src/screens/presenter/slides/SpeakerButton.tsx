@@ -3,16 +3,16 @@ import React from 'react';
 import { Pressable } from 'react-native';
 import { stageButtonSize, units } from '../../../logic/lecture/stage-constants';
 import { STAGE_BORDER, STAGE_BORDER_MIN } from '../stage-metrics';
-import { usePresenterView } from '../presenter-context';
+import { usePresenterView, useStageControlFloor } from '../presenter-context';
 
 /**
  * The round speaker on the stage (slide-letter.md, slide-syllable.md): a `brand.secondary` ring
- * and a `brand.secondaryDark` glyph on paper, never below `touchTarget.hero`, named "Play the
- * sound". Disabled while its build is not reached.
+ * and a `brand.secondaryDark` glyph on paper, never below `touchTarget.hero` (`touchTarget.min`
+ * in a phone window), named "Play the sound". Disabled while its build is not reached.
  */
 export function SpeakerButton({ enabled, onPress, testID }: { enabled: boolean; onPress: () => void; testID?: string }): React.ReactElement {
   const { unit, messages, soundBlocked } = usePresenterView();
-  const size = stageButtonSize(unit, touchTarget.hero);
+  const size = stageButtonSize(unit, touchTarget.hero, useStageControlFloor());
   return (
     <Pressable
       testID={testID}

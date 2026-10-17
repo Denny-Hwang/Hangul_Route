@@ -780,9 +780,6 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'learner.presenter.start.voiceLocal': [['Yuna']],
   'learner.presenter.start.voiceNetwork': [['Yuna']],
   'learner.presenter.start.skipped': [[1], [6]],
-  'learner.presenter.start.picker.names': [[1], [12]],
-  'learner.presenter.start.picker.initials': [[1], [12]],
-  'learner.presenter.start.picker.numbers': [[12]],
   'learner.presenter.home.quick.minutes': [[1], [15]],
   'learner.presenter.home.quick.letters': [[1], [14]],
   'learner.presenter.home.quick.chosen': [[1], [3]],
@@ -847,4 +844,6 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'console.chooser.lessonsOf': [['Meet the Letters']],
   'console.chooser.found': [[1], [12]],
   'console.chooser.chosen': [[1, 5], [3, 40]],
+  // The Slides language hint with a chosen language (AMENDMENTS-LECTURE-V2 section 18.4).
+  'console.lecture.options.languageHintChosen': [['English'], ['Español']],
 };

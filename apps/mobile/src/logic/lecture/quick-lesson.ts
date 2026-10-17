@@ -11,7 +11,8 @@ import {
 /**
  * Quick lesson on the presenter home (F-TCH-004 §3.12, design `home.md`): a
  * grouped list from the bundle, multi-select, and [ Build lesson ] -> a deck
- * with `source: 'quick'`, a time seed and a numbers picker. Pure: the content
+ * with `source: 'quick'`, a time seed and no helper picker (`picker: null`,
+ * LV-H). Pure: the content
  * comes in as a `QuickSource` (`quick-source.ts` reads the bundle), so a group
  * appears only when the bundle has items for it (stories with PR 11, word
  * topics with PR 12). No name can be entered here; the deck has no field for one.
@@ -24,7 +25,6 @@ const JAMO_SET_MAX = 12;
 const TITLE_MAX = 60;
 const ID_CHARS = 'abcdefghijklmnopqrstuvwxyz0123456789';
 const DECK_ID_LENGTH = 10;
-const QUICK_PICKER = { mode: 'numbers', count: 12 } as const;
 
 export type QuickGroupId = 'episodes' | 'lessons' | 'letterSets' | 'topics' | 'stories';
 
@@ -217,7 +217,7 @@ export function buildQuickDeck(chosen: readonly string[], items: readonly QuickI
     seed: input.now.getTime() % 2 ** 31,
     blocks,
     options: input.uiLocale ? { uiLocale: input.uiLocale } : {},
-    picker: QUICK_PICKER,
+    picker: null,
     source: 'quick',
   });
   return parsed.success ? parsed.data : null;

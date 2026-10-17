@@ -55,6 +55,9 @@ Numbers that are not tokens, each named once in the second `:root` block of `moc
 | Name | Value | Derived from |
 |---|---|---|
 | `--bar-h` (bar band) | `touchTarget.hero + 2 x spacing.md` = 120 px | one row of hero buttons with `spacing.md` above and below; the band grows when chips wrap above the buttons |
+| `PHONE_STAGE_MIN` | 560 px | the phone gate (F-TCH-004 section 3.6 phone exception): in a phone window (`isPhoneWindow`: the window's short side under `layout.phoneShortSide` and long side at most `layout.phoneMaxLongSide`, on a phone-sized screen, with a coarse pointer) the stage is the window less the safe-area insets with no band, too small only below this width; 568 x 320, the smallest phone sideways, draws slides. Every other window keeps `layout.breakpoint.regular` (600) |
+| `PHONE_BAR_STRIP` | `touchTarget.min + 2 x spacing.sm` = 80 px | the compact bar's strip at the bottom of a phone stage: a tap there shows or hides the bar instead of stepping (section 3.6); the grabber (`spacing.xxxl` x `spacing.xs`, `border.strong`, `radii.pill`) marks it in the stage's bottom margin |
+| `BAR_SHOW_GRACE_MS` | 400 ms | the control bar takes the pointer again only this long after it shows, so the touch that brings a hidden bar back never presses the button that appears under the finger |
 | `--u` (stage unit) | `min(box width / 1280, box height / 600)` | `stageScale` (PR 4) on the stage box, the window minus the band; `presenter.stage.width`, `presenter.stage.minHeight` |
 | stage padding | `spacing.xxxl` x unit (48 units) | every slide keeps this margin; at 1280 x 720 the content area is 1184 x 504 |
 | gaps | `spacing.xxxl` x unit between slide parts, `spacing.xl` x unit inside a part | |
@@ -86,6 +89,12 @@ Numbers that are not tokens, each named once in the second `:root` block of `moc
 | `builds-board.html` frames | 640 x 420 / 520 px | mock scaffolding only, never a presenter surface |
 | Teacher page columns | one column below 900 px (`layout.breakpoint.wide`), two from it; gutters `layout.gutter.*` at 600 / 900 | the app's window classes |
 | Font stacks | system stack for UI (`typography.family.sans` 'System'); `"HR Presenter KR", system` for taught Korean (`presenter.font`, web only) | PR 3 review note 2 |
+
+## As built on phones (row LV-M1; F-TCH-004 sections 3.5 and 3.6 as amended)
+
+- **Stage and bar** follow `stage-and-bar.md` "Phone": no band, the compact bar (Previous, Next / Reveal, Sound, More) floats over the stage bottom and is out of the way whenever the slide changes (every step hides it at once, a stage tap never shows it); it shows at the start of the lesson, on a tap in its strip and while keyboard or screen-reader focus is inside it. While a covering tool (Blank, Pause, Slides, Help, the full timer) is open, a touch brings it back over the tool. More is a sheet: Lesson controls, Close, the status chips, Slides, Timer, Blank, Full screen where the browser has it, Keys and help, Exit. A control the device cannot use is never drawn, on any window.
+- **Pages** follow `states.md` (the rotate page, Back top-left: the Exit confirm once the lesson began, else the same start screen) and `start-screen.md` "Phone". The slide step reads Previous on both bars and in Help.
+- **Shots.** `shots/phone-iphone-*` (WebKit, iPhone 14 in Safari) and `shots/phone-android-*` (Chromium, Pixel 7) are screenshots of the built presenter, not mocks.
 
 ## Measured on the mocks (Chromium)
 

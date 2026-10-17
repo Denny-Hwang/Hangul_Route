@@ -2,20 +2,17 @@ import {
   CATALOG,
   JOIN_CODE_RE,
   LECTURE_MAX_BLOCKS,
-  LECTURE_MESSAGE_NS,
   LECTURE_REVISIT_CHAR_RE,
   LECTURE_TITLE_RE,
   LectureBlockSchema,
   LectureDeckSchema,
-  PICKER_LABEL_RE,
+  LectureOptionsSchema,
   encodeDeck,
   presetBlockMinutes,
   rosterAlias,
   type LectureBlock,
   type LectureDeck,
   type LectureOptions,
-  type LecturePicker,
-  type LectureRosterMessage,
   type PlanItem,
   type UiLocale,
   type WeekMeta,
@@ -30,27 +27,16 @@ import { type PlanLike, latestPublished } from './plans';
 
 /**
  * Lecture setup, the pure half (F-TCH-004 §3.10, §3.11). The console composes a
- * deck (ids, a seed, options, the picker mode and count) that travels in the
- * presenter link; picker labels never do. They are built here for the
- * `roster` message the console tab posts to the presenter tab (`lecture-link.ts`).
- *
- * Names: `anonymizeRoster` means the roster already holds aliases ("M. K."),
- * so `names` is never offered and an alias is never reversed. Otherwise the
- * label is the first token of the display name (kept as typed: Hangul and
- * accents too). A label outside the picker's name class becomes its roster
- * position number. No summary, age, level, avatar or id is ever sent.
+ * deck (ids, a seed and options) that travels in the presenter link. The helper
+ * picker is gone (LV-H): a deck names none, and no learner name, summary, age,
+ * level, avatar or id ever leaves this page; the roster is read only to keep
+ * names out of the deck title (`titleProblem`).
  */
 
 export type LectureSource = 'plan' | 'catalogue' | 'revisit';
-export type PickerChoice = 'names' | 'initials' | 'numbers' | 'none';
 export type TitleProblem = 'empty' | 'chars' | 'banned' | 'name';
 export type OutlineProblem = 'empty' | 'too-many';
 
-/** A class with no learners yet runs its picker over 1..12. */
-export const NO_ROSTER_COUNT = 12;
-/** The picker and the roster message hold at most this many labels. */
-export const PICKER_MAX = 60;
-const LABEL_MAX = 20;
 const REVISIT_MAX = 6;
 const TITLE_MAX = 60;
 const ID_CHARS = 'abcdefghijklmnopqrstuvwxyz0123456789';
@@ -170,18 +156,29 @@ export function catalogueTitle(block: LectureBlock, stories: readonly LectureCat
 
 const questMinutes = new Map(CATALOG.quests.map((q) => [q.id, q.minutes]));
 const episodeMinutes = new Map(CATALOG.cells.map((c) => [c.episodeId, c.minutes]));
-// The deck names a topic `vocab-topic:<key>`; the shared catalogue names it `topic:<key>`.
-const topicMinutes = new Map(CATALOG.topics.map((t) => [`vocab-topic:${t.key}`, t.minutes]));
+const topicWords = new Map(LECTURE_VOCAB_TOPICS.map((t) => [t.id, t.words]));
+/** The deck default the console writes (`LectureOptionsSchema`): a topic's meaning quiz asks this many words at most. */
+const QUIZ_ROUNDS = LectureOptionsSchema.parse({}).quizRounds;
+/** The presenter asks a topic's meaning quiz only over at least this many shown words. */
+const TOPIC_QUIZ_MIN_WORDS = 4;
 
-/** A vocabulary topic's about-minutes from the shared catalogue (null when it does not know the topic). */
-export function vocabMinutes(topicId: string): number | null {
-  return topicMinutes.get(topicId) ?? null;
+/**
+ * A vocabulary block's about-minutes from its size (rule 12 as amended, AMENDMENTS-LECTURE-V2 4.4,
+ * LV-M1), the count the presenter makes: one minute per two word cards, rounded up, plus one per
+ * meaning-quiz question (at most `QUIZ_ROUNDS`, none under 4 words). `words`: the chosen words,
+ * else the whole topic. Null when the generated catalogue does not know the topic.
+ */
+export function vocabMinutes(topicId: string, words?: number): number | null {
+  const count = words ?? topicWords.get(topicId);
+  if (count === undefined || !topicWords.has(topicId)) return null;
+  return Math.ceil(count / 2) + (count >= TOPIC_QUIZ_MIN_WORDS ? Math.min(QUIZ_ROUNDS, count) : 0);
 }
 
 /**
  * About-minutes for the outline from the shared catalogue (F-PLAN-002) and the lecture
  * mirror (the console has no content bundle; exact slide counts appear on the presenter
- * start screen). Null when the catalogue does not know the item.
+ * start screen). Null when the catalogue does not know the item. Letters, cards and words count
+ * from the block size and a story its catalogue minutes, as the presenter does (rule 12 as amended).
  */
 export function blockMinutes(block: LectureBlock, stories: readonly LectureCatalogueStory[] = LECTURE_STORIES): number | null {
   switch (block.kind) {
@@ -192,7 +189,7 @@ export function blockMinutes(block: LectureBlock, stories: readonly LectureCatal
     case 'story':
       return stories.find((s) => s.id === block.storyId)?.minutes ?? null;
     case 'vocab':
-      return vocabMinutes(block.topicId);
+      return vocabMinutes(block.topicId, block.wordIds?.length);
     case 'quiz':
       return block.rounds;
     case 'activity':
@@ -209,8 +206,10 @@ export function blockMinutes(block: LectureBlock, stories: readonly LectureCatal
   }
 }
 
+/** The outline's about-minutes: never 0 for an outline that has something to show (rule 12 as amended, LV-M1). */
 export function aboutMinutes(blocks: readonly LectureBlock[]): number {
-  return blocks.reduce((sum, b) => sum + (blockMinutes(b) ?? 0), 0);
+  const sum = blocks.reduce((total, b) => total + (blockMinutes(b) ?? 0), 0);
+  return blocks.some((b) => b.kind !== 'class-code') ? Math.max(1, sum) : sum;
 }
 
 // ---- quiz scope (§3.3 rule 7) ------------------------------------------------------
@@ -271,61 +270,6 @@ export function canComposeIn(spaces: readonly SpaceListItem[] | null, spaceId: s
   return false;
 }
 
-// ---- helper picker ---------------------------------------------------------------
-
-export function pickerChoices(roster: RosterPick): { offered: PickerChoice[]; initial: PickerChoice } {
-  const n = roster.learners.length;
-  if (n === 0 || n > PICKER_MAX) return { offered: ['numbers', 'none'], initial: 'numbers' };
-  if (roster.space.settings.anonymizeRoster) return { offered: ['initials', 'numbers', 'none'], initial: 'initials' };
-  return { offered: ['names', 'initials', 'numbers', 'none'], initial: 'names' };
-}
-
-/** The first whitespace-separated token. */
-function firstToken(text: string): string {
-  return text.trim().replace(/\s[\s\S]*$/, '');
-}
-
-function asLabel(candidate: string): string | null {
-  const label = candidate.trim().slice(0, LABEL_MAX).trim();
-  return label.length > 0 && PICKER_LABEL_RE.test(label) ? label : null;
-}
-
-/** The first token of a display name, at most 20 characters, if it fits the picker's name class. */
-export function firstName(displayName: string): string | null {
-  return asLabel(firstToken(displayName));
-}
-
-/** The mode the deck may use: an anonymized roster never runs in names. */
-function effectiveMode(choice: 'names' | 'initials', roster: RosterPick): 'names' | 'initials' {
-  return roster.space.settings.anonymizeRoster ? 'initials' : choice;
-}
-
-export function pickerLabels(roster: RosterPick, choice: 'names' | 'initials'): string[] {
-  const mode = effectiveMode(choice, roster);
-  const anonymized = roster.space.settings.anonymizeRoster;
-  return roster.learners.map((l, i) => {
-    const label = mode === 'names' ? firstName(l.displayName) : asLabel(anonymized ? l.displayName : rosterAlias(l.displayName));
-    return label ?? String(i + 1);
-  });
-}
-
-/** What the deck carries: the mode and the count, never a label. */
-export function deckPicker(choice: PickerChoice, roster: RosterPick): LecturePicker | null {
-  if (choice === 'none') return null;
-  const n = roster.learners.length;
-  if (choice === 'numbers' || n === 0 || n > PICKER_MAX) {
-    return { mode: 'numbers', count: Math.min(PICKER_MAX, n === 0 ? NO_ROSTER_COUNT : n) };
-  }
-  return { mode: effectiveMode(choice, roster), count: n };
-}
-
-/** The console -> presenter message: only the labels of the chosen mode; none for numbers. */
-export function rosterMessage(deckId: string, choice: PickerChoice, roster: RosterPick): LectureRosterMessage | null {
-  const picker = deckPicker(choice, roster);
-  if (picker === null || picker.mode === 'numbers') return null;
-  return { ns: LECTURE_MESSAGE_NS, v: 1, type: 'roster', deckId, mode: picker.mode, labels: pickerLabels(roster, picker.mode) };
-}
-
 // ---- title guard -----------------------------------------------------------------
 
 function escapeRegExp(text: string): string {
@@ -376,7 +320,6 @@ export interface DeckInput {
   title: string;
   blocks: readonly LectureBlock[];
   options: Partial<LectureOptions>;
-  picker: LecturePicker | null;
   source: LectureSource;
   now: Date;
   /** Uniform in [0, 1): the deck id and the quiz seed. */
@@ -394,7 +337,7 @@ export function buildDeck(input: DeckInput): LectureDeck {
     seed: Math.floor(input.rng() * 2_147_483_647),
     blocks: input.blocks,
     options: input.options,
-    picker: input.picker,
+    picker: null,
     source: input.source,
   });
 }
