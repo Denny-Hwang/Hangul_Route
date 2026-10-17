@@ -497,6 +497,7 @@ Parallel lanes: LV-S1 to LV-S4 can run beside LV-3 / LV-4 / LV-5 once LV-2 is in
 - **Upper-stage pace.** Catalogue minutes are a learner's pace, not a room's; a 20-minute preset of Stage 2 words may run long. The start screen shows the slide count, and the teacher can skip slides in the grid (§3.5). After LV-S4, if the slide counts per preset length run more than 50 % over (measured by `deck-coverage.test.ts`), a follow-up adds a per-preset slide cap. Not blocking.
 - **`say-together` and `pair-share`** stay in Customize as shipped (F-TCH-004 PR 7); presets never use them (LV-D9). Whether to retire them from the catalogue is an owner call; nothing here depends on it.
 - **N2 is an approximation**: `done` is a count, not a position, so a class that skipped around the stage starts at the earliest open lesson of the route order. The resolved outline is always shown before Start.
+- **The grouped lesson chooser, console half (row LV-3a, 2026-10-17).** The shared chooser model (`lesson-chooser.ts`), console titles in the UI language and the grouped picker on the plan builder and on this setup page's Catalogue section land ahead of LV-3 and LV-4 in row LV-3a, specified in `AMENDMENTS-LESSON-CHOOSER.md`. LV-3 (as LV-3b) builds the presenter's Customize on the same model; LV-4 keeps the console picker, reorders the setup page presets-first and may restyle its chips (LC-D2 there).
 
 ## 17. Review log
 
