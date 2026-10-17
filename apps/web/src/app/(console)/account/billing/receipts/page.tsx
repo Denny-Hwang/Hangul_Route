@@ -154,9 +154,9 @@ function ReceiptsInner(): JSX.Element {
         <h1>{title}</h1>
         {!api ? <Notice tone="info">{m.console.shell.noApi}</Notice> : null}
         {failure === 'notYours' ? (
+          // The way back is the page's one PageBack at the top left (Back to Billing), not a second link in the panel.
           <div className="hr-bill-panel" data-testid="receipts-not-yours">
             <p>{r.notYours}</p>
-            <BackToBilling href={APP_ROUTES.billing} />
           </div>
         ) : panel ? (
           <FailPanel text={panel} retry={m.console.billing.retry.cta} onRetry={() => void load()} />

@@ -350,7 +350,12 @@ describe('states', () => {
     expect(root.findAll((n) => n.type === 'h1').map(textOf)).toEqual([r.title]);
     expect(pageText()).toContain(r.notYours);
     expect(root.findAll((n) => n.type === 'table')).toEqual([]);
-    expect(root.findAll((n) => n.type === 'a' && textOf(n) === r.back.cta).length).toBeGreaterThanOrEqual(1);
+    // One way back, the page's PageBack at the top left: the panel draws no second Back to Billing (DN-6 review).
+    const backs = root.findAll((n) => n.type === 'a' && textOf(n) === r.back.cta);
+    expect(backs).toHaveLength(1);
+    expect(backs[0]!.props['data-testid']).toBe('receipts-back');
+    const panel = root.findAll((n) => typeof n.type === 'string' && n.props['data-testid'] === 'receipts-not-yours')[0]!;
+    expect(panel.findAll((n) => n.type === 'a')).toEqual([]);
   });
 
   it('an unknown space (404) or no id reads the same', async () => {

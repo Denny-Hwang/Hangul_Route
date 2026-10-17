@@ -106,6 +106,7 @@ const FRAME_CSS = `
 .hr-frame-mark{width:${spacing.xxxl}px;height:${spacing.xxxl}px;border-radius:${radii.circle}px;background:${colors.brand.primary};color:${colors.text.inverse};display:inline-flex;align-items:center;justify-content:center;font-size:${rem(typography.size.bodyLg)};font-weight:${typography.weight.bold};flex:none}
 .hr-frame-name,.hr-frame-hidden{position:absolute;width:${borderWidth.thin}px;height:${borderWidth.thin}px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
 .hr-frame-brand{display:none}
+.hr-frame-bar.hr-no-nav .hr-frame-brand{display:inline-flex}
 .hr-frame-persona{display:inline-flex;align-items:center;min-height:${touchTarget.min}px;color:${colors.text.secondary};font-weight:${typography.weight.semibold}}
 .hr-frame-switch{display:inline-flex;border:${borderWidth.base}px solid ${colors.brand.secondaryDark};border-radius:${radii.pill}px;background:${colors.surface.paper};overflow:hidden}
 .hr-frame-switch [role="radio"]{min-height:${touchTarget.min}px;min-width:${touchTarget.min}px;padding:${spacing.xs}px ${spacing.sm}px;border:none;background:transparent;color:${colors.brand.secondaryDark};font-size:${rem(typography.size.bodySm)};font-weight:${typography.weight.bold};cursor:pointer}
@@ -324,7 +325,8 @@ export function AdultFrame({
     <div className="hr-frame" data-testid="adult-frame">
       <style>{FRAME_CSS}</style>
       <header className="hr-frame-top">
-        <div className={withSwitch ? 'hr-frame-bar hr-has-switch' : 'hr-frame-bar'}>
+        {/* Below 45em the nav's first item is the persona home and the brand hides; with no nav (a failed spaces read) the brand stays. */}
+        <div className={['hr-frame-bar', withSwitch ? 'hr-has-switch' : null, items.length === 0 ? 'hr-no-nav' : null].filter(Boolean).join(' ')}>
           <Link className="hr-frame-brand" href={brandHref} data-testid="frame-brand">
             <span className="hr-frame-mark" aria-hidden="true">
               {m.landing.brand.mark}

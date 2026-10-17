@@ -230,6 +230,18 @@ describe('the active persona and the navigation (section 3.8)', () => {
     expect(byTestId(r, 'frame-persona')).toHaveLength(0);
     expect(byTestId(r, 'frame-learner-app')).toHaveLength(1);
     expect(byTestId(r, 'frame-brand')[0]?.props.href).toBe('/signin');
+    // On a phone the brand hides because the nav's first item is the persona home; with no nav it stays (DN-6 review).
+    const bar = r.root.findAll((n) => typeof n.type === 'string' && typeof n.props.className === 'string' && n.props.className.split(' ').includes('hr-frame-bar'))[0]!;
+    expect(bar.props.className.split(' ')).toContain('hr-no-nav');
+    const css = r.root.findAll((n) => n.type === 'style').map((n) => String(n.children.join(''))).join('');
+    expect(css).toMatch(/\.hr-frame-brand\{display:none\}\s*\.hr-frame-bar\.hr-no-nav \.hr-frame-brand\{display:inline-flex\}/);
+  });
+
+  it('with its nav the bar hides the brand below 45em (the nav\'s first item is the persona home)', async () => {
+    const r = await render(fakeEnv({ pathname: '/parent' }), [family]);
+    expect(navIds(r)[0]).toBe('home');
+    const bar = r.root.findAll((n) => typeof n.type === 'string' && typeof n.props.className === 'string' && n.props.className.split(' ').includes('hr-frame-bar'))[0]!;
+    expect(bar.props.className.split(' ')).not.toContain('hr-no-nav');
   });
 
   it('draws every sibling item when its flag is on: Reports, Notes and Lessons (a link to All lessons, same tab)', async () => {
