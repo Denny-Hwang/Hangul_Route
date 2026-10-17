@@ -190,10 +190,12 @@ test.describe('presenter at 1280 x 720', () => {
     await page.goto(link());
     await expect(page.getByTestId('presenter-start')).toBeVisible();
     // The deck left the address and the entry's URL and stays only in this tab's history state,
-    // for a reload; the tab title is fixed (section 3.2).
+    // for a reload; the start screen has its own entry (the way back, owner report 2026-10-16);
+    // the tab title is fixed (section 3.2).
     expect(new URL(page.url()).pathname).toBe('/present');
     expect(new URL(page.url()).hash).toBe('');
-    expect(await page.evaluate(() => Object.keys((history.state ?? {}) as object))).toEqual(['hrLectureFragment']);
+    expect(await page.evaluate(() => Object.keys((history.state ?? {}) as object).sort())).toEqual(['hrLectureFragment', 'hrPresenter', 'hrPresenterDepth']);
+    expect(await page.evaluate(() => (history.state as { hrPresenter?: string }).hrPresenter)).toBe('start');
     await expect(page).toHaveTitle('Hangul Route lecture');
     // `#root` is not capped (F-LAYOUT-001).
     expect(await page.evaluate(() => document.getElementById('root')?.getBoundingClientRect().width)).toBe(1280);
@@ -238,9 +240,10 @@ test.describe('presenter at 1280 x 720', () => {
     await expect(page.getByText('Tap “Join a class” in Hangul Route and type this code.')).toBeVisible();
     await shot(page, 'presenter-end-1280x720');
 
-    // Next on the End slide does nothing but say how to finish.
+    // Next on the End slide does nothing but move focus to its Finish (owner report 2026-10-16).
     await page.keyboard.press('ArrowRight');
-    await expect(page.getByTestId('presenter-end-hint')).toHaveText('To finish, choose Exit.');
+    await expect(page.getByTestId('presenter-finish')).toBeFocused();
+    await expect(page.getByTestId('presenter-finish')).toHaveAccessibleName('Finish');
     expect(await counter(page)).toBe(`${total} / ${total}`);
 
     // Esc opens the Exit confirm; Keep going closes it; Exit goes home.
@@ -867,7 +870,9 @@ test.describe('presenter in a small window', () => {
     const start = page.getByTestId('presenter-start-button');
     await expect(start).toBeEnabled({ timeout: 10_000 });
     await start.click();
-    await expect(page.getByText('Make the window bigger or turn the screen.')).toBeVisible();
+    // A window, not a phone in the hand (no touch): no turn-the-screen advice (owner report 2026-10-16).
+    await expect(page.getByText('Make the window bigger.', { exact: true })).toBeVisible();
+    await expect(page.getByTestId('presenter-rotate')).toHaveCount(0);
     await shot(page, 'presenter-too-small-375x667');
   });
 });
@@ -880,7 +885,7 @@ test.describe('presenter at the narrowest phone, 320 x 568', () => {
     await expect(page.getByTestId('presenter-start')).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(320);
     await startLesson320(page);
-    await expect(page.getByText('Make the window bigger or turn the screen.')).toBeVisible();
+    await expect(page.getByText('Make the window bigger.', { exact: true })).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(320);
   });
 });
@@ -1466,5 +1471,313 @@ test.describe('PR 9 with no Korean voice at 1280 x 720', () => {
     await shot(page, 'presenter-bar-chips-1280x720');
     await page.getByTestId('presenter-turn-sound-on').click();
     await expect(page.getByTestId('presenter-chip-sound-off')).toHaveCount(0);
+  });
+});
+
+// ---- Owner report 2026-10-16 items 1 to 4: lecture mode on phones, a way back, honest minutes ----------
+
+/** Every slide family: letters, syllables, a card, words, an order slide, a topic, a story with its checks, a quiz, an activity, End with the code. */
+const PHONE_DECK: LectureDeckInput = {
+  ...DECK,
+  id: 'lecture:e2e016',
+  title: 'Phone lesson',
+  blocks: [
+    { kind: 'quest', id: 'quest:stage1-letters-q1' },
+    { kind: 'quest', id: 'quest:stage1-life-q1' },
+    { kind: 'quest', id: 'quest:stage1-rites-q3' },
+    { kind: 'vocab', topicId: 'vocab-topic:food', wordIds: ['vocab:sagwa-apple', 'vocab:uyu', 'vocab:ppang', 'vocab:gimchi'] },
+    { kind: 'story', storyId: 'story:sejong-new-letters', checks: true },
+    { kind: 'quiz', from: 'all', rounds: 2 },
+    { kind: 'activity', preset: 'air-write', minutes: 3 },
+    { kind: 'class-code', code: 'HYRA42' },
+  ],
+  picker: null,
+};
+
+/**
+ * The history step of this tab's entry. The lesson's entry is pushed in the same step as Recent is
+ * written and `lecture.start` is sent (`begin` in PresenterApp), so it shows whether a lesson began;
+ * the e2e build sends no telemetry to look at.
+ */
+function historyStep(page: Page): Promise<string | null> {
+  return page.evaluate(() => (history.state as { hrPresenter?: string } | null)?.hrPresenter ?? null);
+}
+
+/** Every slide, every build revealed, stays inside the stage (the counter included). */
+async function walkInsideStage(page: Page, label: string): Promise<Set<string>> {
+  const kinds = new Set<string>();
+  const total = Number((await counter(page)).split('/')[1]);
+  for (let n = 1; n <= total; n++) {
+    await expect.poll(() => counter(page)).toBe(`${n} / ${total}`);
+    await revealAll(page);
+    const kind = /^Slide \d+ of \d+, ([A-Za-z]+)/.exec(await liveText(page))?.[1] ?? '?';
+    kinds.add(kind);
+    // Polled: a slide that fits itself (End's rows, a quiz's long meanings) settles over a few frames.
+    const outside = async (): Promise<string[]> => {
+      const stage = (await page.getByTestId('presenter-stage').boundingBox())!;
+      return page.getByTestId('presenter-stage').evaluate((root, box) => {
+        const out: string[] = [];
+        for (const el of Array.from(root.querySelectorAll('*'))) {
+          const r = el.getBoundingClientRect();
+          if (r.width === 0 || r.height === 0) continue;
+          if (r.left < box.x - 1 || r.top < box.y - 1 || r.right > box.x + box.width + 1 || r.bottom > box.y + box.height + 1) out.push(`${el.tagName} ${el.getAttribute('data-testid') ?? ''} ${(el.textContent ?? '').slice(0, 30)}`);
+        }
+        return out;
+      }, stage);
+    };
+    await expect.poll(outside, { message: `${label}: slide ${n} (${kind})`, timeout: 3000 }).toEqual([]);
+    if (n < total) await page.keyboard.press('ArrowRight');
+  }
+  return kinds;
+}
+
+const PHONES = [
+  { width: 640, height: 360 },
+  { width: 568, height: 320 },
+  { width: 844, height: 390 },
+  { width: 932, height: 430 },
+] as const;
+
+for (const size of PHONES) {
+  test.describe(`a phone in landscape, ${size.width} x ${size.height} (owner report 2026-10-16 item 1)`, () => {
+    test.use({ viewport: size, isMobile: true, hasTouch: true });
+
+    test('the lesson shows: the stage fills the window, every slide family fits, the compact bar floats over it', async ({ page }) => {
+      const errors: string[] = [];
+      page.on('pageerror', (e) => errors.push(String(e)));
+      await page.goto(link(PHONE_DECK));
+      await expect(page.getByTestId('presenter-start-footer')).toBeVisible();
+      await startLesson(page);
+      await expect(page.getByTestId('presenter-too-small')).toHaveCount(0);
+      await expect(page.getByTestId('presenter-rotate')).toHaveCount(0);
+      await expect(page.getByTestId('presenter-counter')).toBeVisible();
+      await expect(page.getByTestId('presenter-bar-compact')).toBeVisible();
+      await expect(page.getByTestId('presenter-bar-band')).toHaveCount(0);
+      const stage = (await page.getByTestId('presenter-stage').boundingBox())!;
+      // No band: the stage takes the whole window in one direction.
+      expect(Math.max(stage.width / size.width, stage.height / size.height)).toBeGreaterThan(0.99);
+      // Every bar button is at least a touch target, in one row inside the window.
+      for (const id of ['presenter-back', 'presenter-next', 'presenter-sound', 'presenter-grid-button', 'presenter-more', 'presenter-exit']) {
+        const box = (await page.getByTestId(id).boundingBox())!;
+        expect(box.height, id).toBeGreaterThanOrEqual(64);
+        expect(box.width, id).toBeGreaterThanOrEqual(64);
+        expect(box.x + box.width, id).toBeLessThanOrEqual(size.width);
+      }
+      const next = (await page.getByTestId('presenter-next').boundingBox())!;
+      expect(next.width).toBeGreaterThanOrEqual(96);
+      const rows = new Set<number>();
+      for (const id of ['presenter-back', 'presenter-exit']) rows.add(Math.round((await page.getByTestId(id).boundingBox())!.y));
+      expect(rows.size).toBe(1);
+      await shot(page, `presenter-phone-title-${size.width}x${size.height}`);
+      const kinds = await walkInsideStage(page, `${size.width}x${size.height}`);
+      for (const kind of ['Title', 'Letter', 'Syllable', 'Word', 'Order', 'Card', 'Story', 'Question', 'Activity', 'End']) expect([...kinds]).toContain(kind);
+      await shot(page, `presenter-phone-end-${size.width}x${size.height}`);
+      expect(errors).toEqual([]);
+    });
+
+    test('the bar shows on a touch and hides after 3 s; a tap on the hidden bar presses nothing', async ({ page }) => {
+      await page.goto(link(PHONE_DECK));
+      await startLesson(page);
+      const bar = page.getByTestId('presenter-bar-compact');
+      await expect(bar).toHaveCSS('opacity', '1');
+      await expect(bar).toHaveCSS('opacity', '0', { timeout: 6000 });
+      const before = await counter(page);
+      const exit = (await page.getByTestId('presenter-exit').boundingBox())!;
+      const nextBox = (await page.getByTestId('presenter-next').boundingBox())!;
+      // A tap where Exit is hidden: no Exit confirm, no slide change; the bar comes back.
+      await page.touchscreen.tap(exit.x + exit.width / 2, exit.y + exit.height / 2);
+      await expect(bar).toHaveCSS('opacity', '1');
+      await expect(page.getByTestId('presenter-exit-dialog')).toHaveCount(0);
+      expect(await counter(page)).toBe(before);
+      // Shown (and past the moment the bar ignores, so the touch that brought it back pressed nothing), it takes the tap.
+      await expect(page.getByTestId('presenter-next')).not.toHaveCSS('pointer-events', 'none');
+      await page.touchscreen.tap(nextBox.x + nextBox.width / 2, nextBox.y + nextBox.height / 2);
+      await expect.poll(() => counter(page)).not.toBe(before);
+      await expect(bar).toHaveCSS('opacity', '0', { timeout: 6000 });
+      // Hidden again: a tap on the hidden Next presses nothing either.
+      const after = await counter(page);
+      await page.touchscreen.tap(nextBox.x + nextBox.width / 2, nextBox.y + nextBox.height / 2);
+      await expect(bar).toHaveCSS('opacity', '1');
+      expect(await counter(page)).toBe(after);
+    });
+  });
+}
+
+test.describe('the compact bar on a phone, 640 x 360 (owner report 2026-10-16 item 1)', () => {
+  test.use({ viewport: { width: 640, height: 360 }, isMobile: true, hasTouch: true });
+
+  test('More opens Timer and Blank (Full screen only where the browser has it); a sheet item closes the sheet', async ({ page }) => {
+    await page.goto(link(PHONE_DECK));
+    await startLesson(page);
+    await expect(page.getByTestId('presenter-more-sheet')).toHaveCount(0);
+    await page.getByTestId('presenter-more').tap();
+    const sheet = page.getByTestId('presenter-more-sheet');
+    await expect(sheet).toBeVisible();
+    await expect(page.getByTestId('presenter-more')).toHaveAttribute('aria-expanded', 'true');
+    await expect(sheet.getByTestId('presenter-timer')).toBeVisible();
+    await expect(sheet.getByTestId('presenter-blank-button')).toBeVisible();
+    const fullscreen = await page.evaluate(() => document.fullscreenEnabled === true);
+    await expect(sheet.getByTestId('presenter-fullscreen')).toHaveCount(fullscreen ? 1 : 0);
+    // Never drawn disabled.
+    await expect(page.locator('[aria-disabled="true"]')).toHaveCount(0);
+    await shot(page, 'presenter-phone-more-640x360');
+    await sheet.getByTestId('presenter-blank-button').tap();
+    await expect(sheet).toHaveCount(0);
+    await expect(page.getByTestId('presenter-blank')).toBeVisible();
+    // The bar floats over Blank, so a touch can always clear it.
+    await page.getByTestId('presenter-next').tap();
+    await expect(page.getByTestId('presenter-blank')).toHaveCount(0);
+  });
+
+  test('Help starts with How to use on a touch device', async ({ page }) => {
+    await page.goto(link(PHONE_DECK));
+    await startLesson(page);
+    await page.keyboard.press('h');
+    const help = page.getByTestId('presenter-help');
+    await expect(help.getByTestId('presenter-help-touch')).toBeVisible();
+    await expect(help.getByRole('heading', { name: 'How to use' })).toBeVisible();
+    const how = (await help.getByTestId('presenter-help-touch').boundingBox())!;
+    const keys = (await help.getByText('First and last slide', { exact: true }).boundingBox())!;
+    expect(how.y).toBeLessThan(keys.y);
+    await shot(page, 'presenter-phone-help-640x360');
+  });
+
+  test('the start screen: one Ready line, Details for what to act on, a pinned Start with Back beside it', async ({ page }) => {
+    await page.goto(link(PHONE_DECK));
+    await expect(page.getByTestId('presenter-start-ready')).toHaveText('Ready to start');
+    await expect(page.getByText('Before you start')).toHaveCount(0);
+    const footer = (await page.getByTestId('presenter-start-footer').boundingBox())!;
+    expect(footer.y + footer.height).toBeLessThanOrEqual(360 + 1);
+    const back = (await page.getByTestId('presenter-start-back').boundingBox())!;
+    const start = (await page.getByTestId('presenter-start-button').boundingBox())!;
+    expect(Math.abs(back.y + back.height / 2 - (start.y + start.height / 2))).toBeLessThan(4);
+    // Landscape: no turn-sideways line.
+    await expect(page.getByTestId('presenter-start-sideways')).toHaveCount(0);
+    await shot(page, 'presenter-phone-start-640x360');
+  });
+});
+
+test.describe('a phone held upright, 360 x 640 (owner report 2026-10-16 item 1)', () => {
+  test.use({ viewport: { width: 360, height: 640 }, isMobile: true, hasTouch: true });
+
+  test('the turn page has Back to the same start screen; nothing is started or stored until the first slide shows', async ({ page }) => {
+    await page.goto(link(PHONE_DECK));
+    await expect(page.getByTestId('presenter-start-sideways')).toHaveText('Turn your phone sideways when you start.');
+    await shot(page, 'presenter-phone-start-360x640');
+    await startLesson320(page);
+    const rotate = page.getByTestId('presenter-rotate');
+    await expect(rotate).toBeVisible();
+    await expect(rotate.getByText('Turn your phone sideways to see the lesson.')).toBeVisible();
+    await expect(page.getByTestId('presenter-rotate-hint')).toHaveText('If the screen does not turn, turn off rotation lock in your phone settings.');
+    await expect(page.getByTestId('presenter-rotate-cta')).toHaveAccessibleName('Back');
+    await expect(page.getByTestId('presenter-rotate-exit')).toHaveAccessibleName('Exit');
+    await shot(page, 'presenter-phone-rotate-360x640');
+    // Back: the start screen, with the same deck; no lesson began.
+    await page.getByTestId('presenter-rotate-cta').tap();
+    await expect(page.getByRole('heading', { name: 'Phone lesson' })).toBeVisible();
+    await expect(page.getByTestId('presenter-start-button')).toBeVisible();
+    expect(await readStored(page, 'lecture:recent')).toBeNull();
+    expect(await historyStep(page)).toBe('start');
+    // Start again, then turn the phone: slide 1, and only now the lesson starts.
+    await startLesson320(page);
+    await expect(rotate).toBeVisible();
+    await page.setViewportSize({ width: 640, height: 360 });
+    await expect(page.getByTestId('presenter-stage')).toBeVisible();
+    await expect.poll(() => counter(page)).toMatch(/^1 \//);
+    await expect.poll(() => historyStep(page)).toBe('lesson');
+    await expect.poll(async () => ((await readStored<{ items: unknown[] }>(page, 'lecture:recent'))?.items ?? []).length).toBe(1);
+  });
+
+  test('Exit on the turn page goes home; nothing was stored', async ({ page }) => {
+    await page.goto(link(PHONE_DECK));
+    await startLesson320(page);
+    await page.getByTestId('presenter-rotate-exit').tap();
+    await expect(page.getByTestId('presenter-home')).toBeVisible();
+    expect(await readStored(page, 'lecture:recent')).toBeNull();
+    expect(await page.evaluate(() => history.state)).toBeNull();
+  });
+});
+
+test.describe('the way back (owner report 2026-10-16 item 3)', () => {
+  test.use({ viewport: { width: 1280, height: 720 }, isMobile: false, hasTouch: false });
+
+  test("the browser's Back: on a slide it asks first and a second Back confirms; on the start screen it shows the home", async ({ page }) => {
+    await page.goto(link());
+    await startLesson(page);
+    await page.keyboard.press('ArrowRight');
+    await page.goBack();
+    await expect(page.getByTestId('presenter-exit-dialog')).toBeVisible();
+    await expect(page.getByTestId('presenter-stage')).toBeVisible();
+    // Keep going keeps the lesson, at its own history entry.
+    await page.getByTestId('presenter-keep-going').click();
+    await expect(page.getByTestId('presenter-exit-dialog')).toHaveCount(0);
+    await page.goBack();
+    await expect(page.getByTestId('presenter-exit-dialog')).toBeVisible();
+    await page.goBack();
+    await expect(page.getByTestId('presenter-home')).toBeVisible();
+    expect(await page.evaluate(() => history.state)).toBeNull();
+
+    // A link opened again: Back on its start screen shows the home, with no deck held.
+    await page.goto(link());
+    await expect(page.getByTestId('presenter-start')).toBeVisible();
+    await page.goBack();
+    await expect(page.getByTestId('presenter-home')).toBeVisible();
+    expect(await page.evaluate(() => history.state)).toBeNull();
+  });
+
+  test('the start screen keeps the deck language after Back and Exit (one language per session)', async ({ page }) => {
+    await page.goto(link({ ...DECK, options: { uiLocale: 'es' } }));
+    await expect(page.getByTestId('presenter-start-back')).toHaveText('Volver a las lecciones');
+    await page.getByTestId('presenter-start-back').click();
+    await expect(page.getByTestId('presenter-home-title')).toHaveText('Proyección');
+  });
+
+  test('the home Back returns to the page before it; with nothing before it lands on /', async ({ page }) => {
+    await page.goto('/browse');
+    await expect(page.getByTestId('browse-access')).toBeVisible();
+    await page.evaluate(() => window.location.assign('/present'));
+    await expect(page.getByTestId('presenter-home')).toBeVisible();
+    await expect(page.getByTestId('presenter-home-back')).toHaveAccessibleName('Back');
+    await shot(page, 'presenter-home-back-1280');
+    await page.getByTestId('presenter-home-back').click();
+    await expect(page).toHaveURL(/\/browse$/);
+
+    const fresh = await page.context().newPage();
+    await fresh.goto('/present');
+    await expect(fresh.getByTestId('presenter-home')).toBeVisible();
+    await fresh.getByTestId('presenter-home-back').click();
+    await expect.poll(() => new URL(fresh.url()).pathname).toBe('/');
+    await fresh.close();
+  });
+
+  test('Finish on the End slide ends the lesson without the Exit confirm', async ({ page }) => {
+    await page.goto(link());
+    await startLesson(page);
+    await page.keyboard.press('End');
+    await expect(page.getByText('Today we met')).toBeVisible();
+    // The bar stays on screen on End.
+    await page.waitForTimeout(3500);
+    await expect(page.getByRole('toolbar').locator('..')).toHaveCSS('opacity', '1');
+    await page.getByTestId('presenter-finish').click();
+    await expect(page.getByTestId('presenter-exit-dialog')).toHaveCount(0);
+    await expect(page.getByTestId('presenter-home')).toBeVisible();
+    expect(await page.evaluate(() => history.state)).toBeNull();
+  });
+});
+
+test.describe('honest minutes (owner report 2026-10-16 item 4)', () => {
+  test.use({ viewport: { width: 1280, height: 720 }, isMobile: false, hasTouch: false });
+
+  test('Consonants and Vowels from Quick lesson: 25 slides and a non-zero estimate', async ({ page }) => {
+    await page.goto('/present');
+    const quick = page.getByTestId('presenter-home-quick');
+    await quick.getByRole('checkbox', { name: /^Consonants/ }).click();
+    await quick.getByRole('checkbox', { name: /^Vowels/ }).click();
+    await page.getByTestId('presenter-home-build').click();
+    const facts = page.getByTestId('presenter-start-facts');
+    await expect(facts).toHaveText(/^25 slides · about \d+ minutes$/);
+    const minutes = Number(/about (\d+) minutes/.exec((await facts.textContent()) ?? '')?.[1]);
+    expect(minutes).toBeGreaterThan(0);
+    await shot(page, 'presenter-start-letters-1280');
   });
 });

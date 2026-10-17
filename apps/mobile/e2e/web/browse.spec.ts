@@ -1274,28 +1274,14 @@ test('BR-9b: the preview events: started with kind vocab-topic per run, ended on
  * ------------------------------------------------------------------------------------------- */
 
 /** Records every `window.open` address before it opens, so the deck can be read before the presenter strips it. */
-function recordOpens(page: Page): Promise<void> {
+/** The deck the presenter holds in its history entry (`hrLectureFragment`), decoded: ids, a seed and options only. */
+function heldDeck(page: Page): Promise<Record<string, unknown>> {
   return page.evaluate(() => {
-    const w = window as unknown as { __opened: string[]; open: typeof window.open };
-    w.__opened = [];
-    const original = window.open.bind(window);
-    w.open = (url?: string | URL, target?: string, features?: string) => {
-      w.__opened.push(String(url));
-      return original(url, target, features);
-    };
-  });
-}
-
-function openedHrefs(page: Page): Promise<string[]> {
-  return page.evaluate(() => (window as unknown as { __opened: string[] }).__opened);
-}
-
-function decodeHref(page: Page, href: string): Promise<Record<string, unknown>> {
-  return page.evaluate((value) => {
-    const b64 = value.replace(/-/g, '+').replace(/_/g, '/');
+    const raw = ((history.state ?? {}) as { hrLectureFragment?: string }).hrLectureFragment ?? '';
+    const b64 = raw.slice('1.'.length).replace(/-/g, '+').replace(/_/g, '/');
     const bin = atob(b64 + '='.repeat((4 - (b64.length % 4)) % 4));
     return JSON.parse(new TextDecoder().decode(Uint8Array.from(bin, (c) => c.charCodeAt(0)))) as Record<string, unknown>;
-  }, href.slice('/present#d=1.'.length));
+  });
 }
 
 /** The learner's stored values, the presenter's own Recent lessons and the browse root's keys aside. */
@@ -1303,7 +1289,7 @@ function learnerStored(all: Stored): Stored {
   return Object.fromEntries(Object.entries(all).filter(([k]) => !k.includes('lecture:') && !k.startsWith('hr:browse:')));
 }
 
-test('BR-13: a lesson with a full pass shows Present this under the preview and opens a one-block deck in the presenter, in a new tab that opens no learner', async ({ page, context }) => {
+test('BR-13: a lesson with a full pass shows Present this under the preview and opens a one-block deck in the presenter, in this tab, opening no learner', async ({ page }) => {
   await onboardChild(page, { name: 'Mina' });
   await page.goto('/');
   await expect(page.getByText('Hi, Mina!')).toBeVisible();
@@ -1324,13 +1310,12 @@ test('BR-13: a lesson with a full pass shows Present this under the preview and 
   expect(presentBox?.height ?? 0).toBeGreaterThanOrEqual(64);
   await shot(page, 'br13-present-this-393');
 
-  await recordOpens(page);
-  const [tab] = await Promise.all([context.waitForEvent('page'), present.click()]);
-  const opened = await openedHrefs(page);
-  expect(opened).toHaveLength(1);
-  const href = opened[0] ?? '';
-  expect(href.startsWith('/present#d=1.')).toBe(true);
-  expect(await decodeHref(page, href)).toMatchObject({
+  // The presenter opens in this tab (owner report 2026-10-16: its home has a Back here), no pop-up.
+  await present.click();
+  await expect(page.getByTestId('presenter-start')).toBeVisible();
+  expect(new URL(page.url()).pathname).toBe('/present');
+  await expect.poll(() => page.evaluate(() => window.location.hash)).toBe('');
+  expect(await heldDeck(page)).toMatchObject({
     v: 1,
     title: 'Meet a, eo, g, n',
     blocks: [{ kind: 'quest', id: 'quest:stage1-letters-q1' }],
@@ -1338,29 +1323,36 @@ test('BR-13: a lesson with a full pass shows Present this under the preview and 
     source: 'catalogue',
     options: { uiLocale: 'en' },
   });
-
-  // The tab is the presenter, not the learner app: its start screen, the deck taken out of the
-  // address, no learner greeting, no browse pass, no handle back to All lessons.
-  await expect(tab.getByTestId('presenter-start')).toBeVisible();
-  expect(new URL(tab.url()).pathname).toBe('/present');
-  await expect.poll(() => tab.evaluate(() => window.location.hash)).toBe('');
-  await expect(tab.getByText('Hi, Mina!')).toHaveCount(0);
-  expect(await tab.evaluate((key) => sessionStorage.getItem(key), PASS_KEY)).toBeNull();
-  expect(await tab.evaluate(() => window.opener)).toBeNull();
+  // The presenter, not the learner app: no learner greeting, and this tab's grown-up access is gone
+  // (a classroom screen holds none, F-APP-001 section 3.9).
+  await expect(page.getByText('Hi, Mina!')).toHaveCount(0);
+  expect(await page.evaluate((key) => sessionStorage.getItem(key), PASS_KEY)).toBeNull();
   // No learner value changed on the device: the presenter keeps only its own Recent lessons.
-  expect(learnerStored(await readAllStored(tab))).toEqual(learnerBefore);
-  expect((await readAllStored(tab))[LEARNER_QUEUE]).toBe(SEEDED_QUEUE);
-  await tab.close();
+  expect(learnerStored(await readAllStored(page))).toEqual(learnerBefore);
+  expect((await readAllStored(page))[LEARNER_QUEUE]).toBe(SEEDED_QUEUE);
+});
 
-  // The item page stays where it was, and a second press is a fresh deck.
+test('BR-13: Back from the presenter asks for the grown-up gate again, then lands on the same item (owner report 2026-10-16)', async ({ page }) => {
+  await onboardChild(page, { name: 'Mina' });
+  await openLessonPage(page, 'quest:stage1-letters-q1');
+  await bootSettled(page);
+  await page.getByTestId('browse-present').click();
+  await expect(page.getByTestId('presenter-start')).toBeVisible();
+  // The browser's Back on the start screen: the presenter home; its own Back: the page before it.
+  await page.goBack();
+  await expect(page.getByTestId('presenter-home')).toBeVisible();
+  await page.getByTestId('presenter-home-back').click();
+  // All lessons again, behind the gate: the presenter took this tab's grown-up access.
+  await expect(accessTitle(page)).toBeVisible();
+  await expect(page).toHaveURL(/\/browse$/);
+  await page.getByRole('button', { name: 'Back to the grown-up area' }).click();
+  await unlockWithPin(page);
+  // The same item, with a fresh gate pass.
+  await expect(page.getByRole('heading', { name: 'Meet a, eo, g, n' })).toBeVisible();
   await expect(page.getByTestId('browse-item')).toBeVisible();
-  const [second] = await Promise.all([context.waitForEvent('page'), present.click()]);
-  const both = await openedHrefs(page);
-  expect(both).toHaveLength(2);
-  const firstDeck = await decodeHref(page, both[0] ?? '');
-  const secondDeck = await decodeHref(page, both[1] ?? '');
-  expect(secondDeck.id).not.toBe(firstDeck.id);
-  await second.close();
+  const pass = JSON.parse((await page.evaluate((k) => sessionStorage.getItem(k), PASS_KEY)) ?? 'null') as Record<string, unknown> | null;
+  expect(pass).toMatchObject({ v: 1, source: 'gate' });
+  await shot(page, 'br13-back-same-item-393');
 });
 
 test('BR-13: Present this is not shown with a sampler pass; a story page shows it now the story slides have landed', async ({ page }) => {
@@ -1375,19 +1367,6 @@ test('BR-13: Present this is not shown with a sampler pass; a story page shows i
   await openLessonPage(page, STORY_ID);
   await expect(page.getByTestId('browse-preview')).toHaveText('Preview this story');
   await expect(page.getByTestId('browse-present')).toBeVisible();
-});
-
-test('BR-13: when the browser gives no new tab, one line under Present this says to allow pop-ups, and the page stays', async ({ page }) => {
-  await openLessonPage(page, 'quest:stage1-letters-q1');
-  await bootSettled(page);
-  await page.evaluate(() => {
-    (window as unknown as { open: () => null }).open = () => null;
-  });
-  await expect(page.getByTestId('browse-present-blocked')).toHaveCount(0);
-  await page.getByTestId('browse-present').click();
-  await expect(page.getByTestId('browse-present-blocked')).toHaveText('The new tab did not open. Allow pop-ups for this site, then try again.');
-  await expect(page.getByTestId('browse-item')).toBeVisible();
-  expect(new URL(page.url()).pathname).toBe('/browse');
 });
 
 test('BR-13: at 1280 wide Present this sits under the preview inside the action width', async ({ page }) => {
