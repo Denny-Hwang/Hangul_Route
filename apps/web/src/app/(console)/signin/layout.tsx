@@ -10,5 +10,5 @@ export const metadata: Metadata = {
 
 /** `/signin` (F-APP-001 A-4b): the shared grown-up layout, where this page is exempt from the sign-in check and the lock. */
 export default function SignInLayout({ children }: { children: ReactNode }): JSX.Element {
-  return <GrownUpLayout>{children}</GrownUpLayout>;
+  return <GrownUpLayout title="signIn">{children}</GrownUpLayout>;
 }

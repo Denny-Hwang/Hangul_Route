@@ -21,11 +21,11 @@ Platform-specific binary builds (for example `@esbuild/linux-x64`) are published
 | CC-BY-4.0 | 1 |
 | CC0-1.0 | 1 |
 | ISC | 63 |
-| MIT | 739 |
+| MIT | 740 |
 | MPL-2.0 | 1 |
 | Python-2.0 | 1 |
 | Unlicense | 3 |
-| **Total** | **882** |
+| **Total** | **883** |
 
 ## Packages
 
@@ -166,9 +166,10 @@ Platform-specific binary builds (for example `@esbuild/linux-x64`) are published
 | @clerk/backend | 2.33.3 | MIT | Copyright (c) 2022 Clerk, Inc. | server |
 | @clerk/backend | 3.4.12 | MIT | Copyright (c) 2022 Clerk, Inc. | server |
 | @clerk/clerk-react | 5.61.3 | MIT | Copyright (c) 2022 Clerk, Inc. | web |
+| @clerk/localizations | 3.37.2 | MIT | Copyright (c) 2022 Clerk, Inc. | web |
 | @clerk/shared | 3.47.5 | MIT | Copyright (c) 2022 Clerk Inc | server, web |
 | @clerk/shared | 4.13.0 | MIT | Copyright (c) 2022 Clerk Inc | server |
-| @clerk/types | 4.101.23 | MIT | Copyright (c) 2022 Clerk, Inc. | server |
+| @clerk/types | 4.101.23 | MIT | Copyright (c) 2022 Clerk, Inc. | server, web |
 | @egjs/hammerjs | 2.0.17 | MIT | Copyright (c) 2018-present NAVER Corp.; Copyright (C) 2011-2017 by Jorik Tangelder (Eight Media) | app |
 | @expo/bunyan | 4.0.1 | MIT | Copyright 2016 Trent Mick; Copyright 2016 Joyent Inc. | app |
 | @expo/cli | 0.22.28 | MIT | (no copyright line in the package; author: Expo) | app |

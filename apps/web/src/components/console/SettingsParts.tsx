@@ -8,6 +8,7 @@ import type { MemberView, Roster } from '@/lib/console/api';
 import { canDeleteLearnerData } from '@/lib/console/relink';
 import { codeExpiry, relativeDay } from '@/lib/console/rollup';
 import { useConsoleLocale } from '@/lib/i18n/locale-context';
+import { rem } from '@/lib/console/rem';
 
 /**
  * The sections of console/space-settings (F-TCH-001 §10.3) once the roster and members have
@@ -46,7 +47,7 @@ export interface SettingsSectionsProps {
   notesPanel?: ReactNode;
 }
 
-const h2Style = { fontSize: typography.size.bodyLg, margin: `0 0 ${spacing.xs}px` } as const;
+const h2Style = { fontSize: rem(typography.size.bodyLg), margin: `0 0 ${spacing.xs}px` } as const;
 const rowStyle = { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: spacing.sm, padding: `${spacing.xs}px 0` } as const;
 
 export function SettingsSections({
@@ -85,7 +86,7 @@ export function SettingsSections({
       {!archived ? (
         <section style={{ ...panelStyle, marginBottom: spacing.lg }} aria-label={s.joinCode.title}>
           <h2 style={h2Style}>{s.joinCode.title}</h2>
-          <div style={{ fontSize: typography.size.display, fontWeight: typography.weight.bold, letterSpacing: spacing.sm, fontFamily: typography.family.mono }}>{roster.joinCode ?? '—'}</div>
+          <div style={{ fontSize: rem(typography.size.display), fontWeight: typography.weight.bold, letterSpacing: spacing.sm, fontFamily: typography.family.mono }}>{roster.joinCode ?? '—'}</div>
           <Muted>{codeExpiry(roster.joinCodeExpiresAt, now, locale)}</Muted>
           <Button disabled={busy} onClick={onRegenerate}>
             {roster.joinCode ? s.joinCode.regenerate.cta : s.joinCode.create.cta}
@@ -163,7 +164,7 @@ export function SettingsSections({
           <Muted>{c.archiveKeeps}</Muted>
         </div>
         <div>
-          <h3 style={{ fontSize: typography.size.body, margin: `0 0 ${spacing.xs}px` }}>{s.danger.deleteTitle}</h3>
+          <h3 style={{ fontSize: rem(typography.size.body), margin: `0 0 ${spacing.xs}px` }}>{s.danger.deleteTitle}</h3>
           {!mayDelete ? (
             <Muted>{c.deleteAskParent}</Muted>
           ) : (

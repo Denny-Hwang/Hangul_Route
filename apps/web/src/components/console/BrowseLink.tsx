@@ -17,6 +17,7 @@ import {
 import { browserStorage, type KeyValueStorage } from '@/lib/i18n/safe-storage';
 import { letterLabel } from '@/lib/console/report-view';
 import { useConsole } from './use-console';
+import { rem } from '@/lib/console/rem';
 
 /**
  * Console entries to All lessons (F-BROWSE-001 sections 4.3 and 4.11; wireframe
@@ -130,7 +131,7 @@ const actionStyle: CSSProperties = {
   border: `${borderWidth.thin}px solid ${colors.border.strong}`,
   backgroundColor: colors.surface.paper,
   color: colors.text.primary,
-  fontSize: typography.size.bodySm,
+  fontSize: rem(typography.size.bodySm),
   fontWeight: typography.weight.bold,
   cursor: 'pointer',
 };
@@ -150,10 +151,10 @@ export function BrowseNoticeLine({
   return (
     <span role="status" aria-live="polite" data-testid={`${testId}-notice`} style={inline && opener.notice === null ? { display: 'inline' } : { display: 'block', flexBasis: '100%' }}>
       {opener.notice === 'storage_blocked' ? (
-        <span style={{ display: 'block', margin: `${spacing.xs}px 0`, color: colors.text.primary, fontSize: typography.size.bodySm }}>{t.storageBlocked}</span>
+        <span style={{ display: 'block', margin: `${spacing.xs}px 0`, color: colors.text.primary, fontSize: rem(typography.size.bodySm) }}>{t.storageBlocked}</span>
       ) : opener.notice === 'check_failed' ? (
         <span style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: spacing.sm, margin: `${spacing.xs}px 0` }}>
-          <span style={{ display: 'block', margin: 0, flexBasis: '100%', color: colors.text.primary, fontSize: typography.size.bodySm }}>{t.checkFailed}</span>
+          <span style={{ display: 'block', margin: 0, flexBasis: '100%', color: colors.text.primary, fontSize: rem(typography.size.bodySm) }}>{t.checkFailed}</span>
           <button type="button" style={actionStyle} onClick={opener.retry} data-testid={`${testId}-retry`}>
             {t.tryAgain.cta}
           </button>
@@ -257,7 +258,7 @@ export function RevisitLetterLinks({ chars, shown }: { chars: readonly string[];
         const { romanization } = letterLabel(char);
         return (
           <BrowseLink key={char} target={{ kind: 'char', char }} source="roster" describedBy={describedId} testId={`roster-revisit-${index}`} style={{ gap: spacing.xs }}>
-            <span lang="ko" style={{ fontSize: typography.size.bodyLg }}>{char}</span>
+            <span lang="ko" style={{ fontSize: rem(typography.size.bodyLg) }}>{char}</span>
             {romanization ? <span style={{ color: colors.text.secondary, fontWeight: typography.weight.regular }}>{romanization}</span> : null}
           </BrowseLink>
         );

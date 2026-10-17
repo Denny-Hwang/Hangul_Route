@@ -3,6 +3,7 @@
 import { IconSvg } from '@hangul-route/design-system/icon-glyphs/dom';
 import { colors, spacing, typography } from '@hangul-route/design-system/tokens';
 import type { ClassGoalLine } from '@/lib/console/class-goal-line';
+import { rem } from '@/lib/console/rem';
 
 /**
  * The class plan goal line on the class roster header (AMENDMENTS-ROUTE-LEARNING-ROUTE section 6.3,
@@ -21,7 +22,7 @@ export function ClassGoalLineView({ line }: { line: ClassGoalLine | null }): JSX
       </span>
       <div>
         <p style={{ margin: 0, fontWeight: typography.weight.semibold, lineHeight: typography.leading.normal }}>{line.line}</p>
-        {line.planEnds ? <p style={{ margin: 0, fontSize: typography.size.bodySm, color: colors.text.secondary }}>{line.planEnds}</p> : null}
+        {line.planEnds ? <p style={{ margin: 0, fontSize: rem(typography.size.bodySm), color: colors.text.secondary }}>{line.planEnds}</p> : null}
       </div>
     </div>
   );

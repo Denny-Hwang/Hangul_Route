@@ -18,6 +18,7 @@
   },
   "dependencies": {
     "@clerk/clerk-react": "^5.61.3",
+    "@clerk/localizations": "3.37.2",
     "@hangul-route/content-schema": "workspace:*",
     "@hangul-route/design-system": "workspace:*",
     "@hangul-route/i18n": "workspace:*",

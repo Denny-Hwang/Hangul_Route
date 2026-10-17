@@ -24,7 +24,7 @@ vi.mock('@/lib/i18n/locale-context', async () => {
   return { useConsoleLocale: view, useMessages: () => view().messages, useLocale: () => 'en', useSetLocale: () => () => undefined };
 });
 vi.mock('@/components/console/AdultFrame', () => ({ AdultFrame: ({ children }: { children: ReactNode }) => <>{children}</> }));
-vi.mock('@/components/console/LanguageSelect', () => ({ LanguageSelect: () => null }));
+vi.mock('@/components/console/DisplaySheet', () => ({ DisplayButton: () => null }));
 // The family home's class-scope cards read their own routes; this test is about the learner names only.
 vi.mock('@/components/console/FamilyClassCards', () => ({ FamilyClassCards: () => null }));
 vi.mock('next/link', () => ({

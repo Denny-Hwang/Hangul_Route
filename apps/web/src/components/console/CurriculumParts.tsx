@@ -9,6 +9,7 @@ import { Button, Notice } from '@/components/console/ui';
 import { dateRangeText, dayText, extraText, warningText, weekLabel, type FreePlanWording, type WeekItem, type WeekRow } from '@/lib/console/curriculum';
 import { ROUTES } from '@/lib/console/routing';
 import { useMessages } from '@/lib/i18n/locale-context';
+import { rem } from '@/lib/console/rem';
 
 /**
  * Building blocks of the curriculum planner (F-PLAN-002 section 3.8; wireframe
@@ -50,7 +51,7 @@ export function Chip({
         border: `${selected ? borderWidth.base : borderWidth.thin}px solid ${selected ? colors.brand.primary : colors.border.strong}`,
         backgroundColor: selected ? colors.brand.primaryLight : colors.surface.paper,
         color: colors.text.primary,
-        fontSize: typography.size.bodySm,
+        fontSize: rem(typography.size.bodySm),
         fontWeight: selected ? typography.weight.bold : typography.weight.regular,
         textAlign: wide ? 'left' : 'center',
         cursor: disabled ? 'default' : 'pointer',
@@ -92,7 +93,7 @@ export function ChipGroup({ label, children, role = 'radiogroup', grid = false }
     : { display: 'flex', flexWrap: 'wrap' as const, gap: spacing.sm };
   return (
     <div style={{ marginBottom: spacing.lg }}>
-      <div style={{ fontSize: typography.size.caption, color: colors.text.muted, marginBottom: spacing.xs }}>{label}</div>
+      <div style={{ fontSize: rem(typography.size.caption), color: colors.text.muted, marginBottom: spacing.xs }}>{label}</div>
       <div role={role} aria-label={label} onKeyDown={role === 'radiogroup' ? onRadioKeys : undefined} style={layoutStyle}>
         {children}
       </div>
@@ -113,7 +114,7 @@ export function SuggestedTag(): JSX.Element {
       style={{
         display: 'inline-block',
         marginLeft: spacing.sm,
-        fontSize: typography.size.caption,
+        fontSize: rem(typography.size.caption),
         fontWeight: typography.weight.bold,
         padding: `${spacing.xxs}px ${spacing.sm}px`,
         borderRadius: radii.pill,
@@ -136,7 +137,7 @@ export function KindBadge({ kind }: { kind: WeekKind }): JSX.Element {
     <span
       style={{
         display: 'inline-block',
-        fontSize: typography.size.caption,
+        fontSize: rem(typography.size.caption),
         padding: `${spacing.xxs}px ${spacing.sm}px`,
         borderRadius: radii.pill,
         border: `${borderWidth.thin}px solid ${colors.border.subtle}`,
@@ -178,7 +179,7 @@ export function WeekTable({ rows, locale }: { rows: readonly WeekRow[]; locale: 
           <li key={row.week.index} data-testid="week-card" style={{ borderTop: row.week.index === rows[0]?.week.index ? 'none' : `${borderWidth.thin}px solid ${colors.border.subtle}` }}>
             <WeekHeading row={row} locale={locale} />
             {row.items.length > 0 ? (
-              <ul style={{ margin: `0 0 ${spacing.sm}px`, paddingLeft: spacing.lg, color: colors.text.secondary, fontSize: typography.size.bodySm }}>
+              <ul style={{ margin: `0 0 ${spacing.sm}px`, paddingLeft: spacing.lg, color: colors.text.secondary, fontSize: rem(typography.size.bodySm) }}>
                 {row.items.map((item) => (
                   <li key={`${item.kind}:${item.id}:${item.index}`}>
                     <ItemText item={item} locale={locale} />
@@ -196,10 +197,10 @@ export function WeekTable({ rows, locale }: { rows: readonly WeekRow[]; locale: 
 function WeekGrid({ rows, locale }: { rows: readonly WeekRow[]; locale: UiLocale }): JSX.Element {
   const preview = useMessages().console.curriculum.preview;
   const cell = { padding: `${spacing.sm}px`, borderTop: `${borderWidth.thin}px solid ${colors.border.subtle}`, verticalAlign: 'top' as const, textAlign: 'left' as const };
-  const head = { ...cell, color: colors.text.muted, fontSize: typography.size.caption, fontWeight: typography.weight.semibold, borderTop: 'none' };
+  const head = { ...cell, color: colors.text.muted, fontSize: rem(typography.size.caption), fontWeight: typography.weight.semibold, borderTop: 'none' };
   return (
     <div style={{ overflowX: 'auto', maxWidth: '100%' }}>
-      <table aria-label={preview.table.label} style={{ borderCollapse: 'collapse', width: '100%', fontSize: typography.size.bodySm, color: colors.text.secondary }}>
+      <table aria-label={preview.table.label} style={{ borderCollapse: 'collapse', width: '100%', fontSize: rem(typography.size.bodySm), color: colors.text.secondary }}>
         <thead>
           <tr>
             <th scope="col" style={head}>{preview.table.week}</th>
@@ -306,7 +307,7 @@ export function ShortPlanLine({
   const words = useMessages().console.curriculum.freeDays;
   return (
     <div data-testid="route-short-plan" style={{ display: 'flex', alignItems: 'center', gap: spacing.sm, flexWrap: 'wrap', margin: `${spacing.sm}px 0 ${spacing.md}px` }}>
-      <p style={{ margin: 0, color: colors.text.secondary, fontSize: typography.size.bodySm, lineHeight: typography.leading.relaxed }}>
+      <p style={{ margin: 0, color: colors.text.secondary, fontSize: rem(typography.size.bodySm), lineHeight: typography.leading.relaxed }}>
         {storiesAfter ? words.shortPlan(lastWeek) : words.shortPlanPractice(lastWeek)}
         {soonAfter ? ` ${words.shortPlanSoon}` : null}
       </p>
@@ -325,15 +326,15 @@ export function WeekHeading({ row, locale }: { row: WeekRow; locale: UiLocale })
   const extras = row.week.extras.map((extra) => extraText(extra, locale)).join(' · ');
   return (
     <div style={{ padding: `${spacing.sm}px 0 ${spacing.xs}px` }}>
-      <h3 style={{ fontSize: typography.size.bodySm, margin: 0, color: colors.text.primary }}>
+      <h3 style={{ fontSize: rem(typography.size.bodySm), margin: 0, color: colors.text.primary }}>
         {c.builder.weekHeader(row.week.index, dateRangeText(row.week.startDate, row.endDate, locale), c.preview.kind[row.week.kind])}
       </h3>
-      <div style={{ fontSize: typography.size.caption, color: colors.text.muted }}>
+      <div style={{ fontSize: rem(typography.size.caption), color: colors.text.muted }}>
         {weekLabel(row, locale)}
         {extras ? ` · ${extras}` : ''}
       </div>
       {row.items.length === 0 ? (
-        <div style={{ fontSize: typography.size.caption, color: colors.text.muted }}>
+        <div style={{ fontSize: rem(typography.size.caption), color: colors.text.muted }}>
           {row.week.kind === 'review' ? c.builder.reviewWeek : row.week.kind === 'break' ? c.builder.breakWeek : c.builder.emptyWeek}
         </div>
       ) : null}

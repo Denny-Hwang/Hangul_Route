@@ -11,6 +11,7 @@ import type { PlanView } from '@/lib/console/api';
 import { aboutMinutes, blockMinutes, canAdd, catalogueTitle, moveBlock, quizWarnings, updateBlock, vocabMinutes, type LectureSource, type PickerChoice } from '@/lib/console/lecture';
 import { useMessages } from '@/lib/i18n/locale-context';
 import { aroundSlot } from '@/lib/i18n/slot';
+import { rem } from '@/lib/console/rem';
 
 /**
  * The sections of the lecture setup page (F-TCH-004 §3.11, wireframe
@@ -24,10 +25,10 @@ type LectureMessages = Messages['console']['lecture'];
 const QUIZ_ROUNDS = [3, 5, 8, 10] as const;
 const ACTIVITY_MINUTES = [1, 2, 3, 5, 10, 15] as const;
 
-export const lectureH2Style: CSSProperties = { fontSize: typography.size.bodyLg, margin: `0 0 ${spacing.sm}px` };
+export const lectureH2Style: CSSProperties = { fontSize: rem(typography.size.bodyLg), margin: `0 0 ${spacing.sm}px` };
 export const lectureSectionStyle: CSSProperties = { ...panelStyle, marginBottom: spacing.lg };
 const fieldsetStyle: CSSProperties = { ...lectureSectionStyle, minWidth: 0 };
-const legendStyle: CSSProperties = { fontSize: typography.size.bodyLg, fontWeight: typography.weight.bold, padding: `0 ${spacing.xs}px` };
+const legendStyle: CSSProperties = { fontSize: rem(typography.size.bodyLg), fontWeight: typography.weight.bold, padding: `0 ${spacing.xs}px` };
 const rowStyle: CSSProperties = { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: spacing.sm, flexWrap: 'wrap', padding: `${spacing.xs}px 0` };
 const selectStyle: CSSProperties = { minHeight: spacing.xxxl, padding: spacing.xs, borderRadius: radii.sm, border: `1px solid ${colors.border.strong}`, backgroundColor: colors.surface.paper, color: colors.text.primary };
 const rowButtonStyle: CSSProperties = {
@@ -38,13 +39,13 @@ const rowButtonStyle: CSSProperties = {
   border: `1px solid ${colors.border.strong}`,
   backgroundColor: colors.surface.paper,
   color: colors.text.primary,
-  fontSize: typography.size.bodySm,
+  fontSize: rem(typography.size.bodySm),
   fontWeight: typography.weight.bold,
   cursor: 'pointer',
 };
 const choiceStyle: CSSProperties = { display: 'inline-flex', alignItems: 'center', gap: spacing.xs, marginRight: spacing.lg, minHeight: spacing.xxl };
 const blockChoiceStyle: CSSProperties = { ...choiceStyle, display: 'flex' };
-const h3Style: CSSProperties = { fontSize: typography.size.body, margin: `${spacing.sm}px 0` };
+const h3Style: CSSProperties = { fontSize: rem(typography.size.body), margin: `${spacing.sm}px 0` };
 
 /** "Revisit together: ㄱ ㅓ" as one message, the jamo marked Korean. */
 function RevisitLine({ l, chars }: { l: LectureMessages; chars: readonly string[] }): JSX.Element {
@@ -145,7 +146,7 @@ export function LectureCatalogueSection({ blocks, onAdd }: { blocks: readonly Le
             {addButton(has((b) => b.kind === 'episode' && b.id === e.episodeId), { kind: 'episode', id: e.episodeId })}
           </div>
           {questsOf(e.episodeId).map((q) => (
-            <div key={q.id} style={{ ...rowStyle, paddingLeft: spacing.md, color: colors.text.secondary, fontSize: typography.size.bodySm }}>
+            <div key={q.id} style={{ ...rowStyle, paddingLeft: spacing.md, color: colors.text.secondary, fontSize: rem(typography.size.bodySm) }}>
               <span>{l.catalogue.line(q.title, q.minutes)}</span>
               {addButton(has((b) => b.kind === 'quest' && b.id === q.id), { kind: 'quest', id: q.id })}
             </div>
@@ -240,7 +241,7 @@ export function LectureOutlineSection({
               <div style={rowStyle}>
                 <span style={{ display: 'flex', gap: spacing.sm, alignItems: 'center', flexWrap: 'wrap', minWidth: 0 }}>{label(block, index)}</span>
                 <span style={{ display: 'flex', gap: spacing.xs, alignItems: 'center', flexWrap: 'wrap', justifyContent: 'flex-end', marginLeft: 'auto' }}>
-                  <span style={{ color: colors.text.muted, fontSize: typography.size.bodySm }}>{l.outline.minutes(blockMinutes(block))}</span>
+                  <span style={{ color: colors.text.muted, fontSize: rem(typography.size.bodySm) }}>{l.outline.minutes(blockMinutes(block))}</span>
                   <button type="button" aria-label={l.outline.upItem(text)} disabled={first} onClick={() => onChange(moveBlock(blocks, index, index - 1))} style={{ ...rowButtonStyle, opacity: first ? 0.5 : 1 }}>
                     {l.outline.upGlyph}
                   </button>
@@ -253,7 +254,7 @@ export function LectureOutlineSection({
                 </span>
               </div>
               {warned.has(index) ? (
-                <p data-testid="quiz-too-small" style={{ margin: `0 0 ${spacing.xs}px`, padding: spacing.sm, borderRadius: radii.md, backgroundColor: colors.feedback.nudgeLight, color: colors.text.primary, fontSize: typography.size.bodySm }}>
+                <p data-testid="quiz-too-small" style={{ margin: `0 0 ${spacing.xs}px`, padding: spacing.sm, borderRadius: radii.md, backgroundColor: colors.feedback.nudgeLight, color: colors.text.primary, fontSize: rem(typography.size.bodySm) }}>
                   {l.outline.quizTooSmall}
                 </p>
               ) : null}
@@ -279,12 +280,18 @@ export function LectureOutlineSection({
   );
 }
 
+/** The Slides language select's default option: no language in the deck. */
+const SAME_AS_DEVICE = '';
+
 export interface LectureOptionValues {
   romanization: RomanizationMode;
   strokeGuide: boolean;
   sound: boolean;
-  /** The presenter language in the deck (the console's locale until the teacher picks another). */
-  uiLocale: UiLocale;
+  /**
+   * The slides' language in the deck; null = "Same as this device" (the default): the deck carries no
+   * language and the presenter speaks the presenting device's (owner items 6 and 7).
+   */
+  uiLocale: UiLocale | null;
 }
 
 export function LectureOptionsSection({
@@ -293,7 +300,7 @@ export function LectureOptionsSection({
   onChange,
 }: {
   value: LectureOptionValues;
-  /** The locales that have shipped; the language select shows only when there is a choice. */
+  /** The locales that have shipped; the Slides language select shows only when there is a choice. */
   available: readonly UiLocale[];
   onChange: (next: LectureOptionValues) => void;
 }): JSX.Element {
@@ -323,8 +330,14 @@ export function LectureOptionsSection({
       </label>
       {available.length > 1 ? (
         <label style={blockChoiceStyle}>
-          <span>{l.options.language}</span>
-          <select value={value.uiLocale} style={selectStyle} onChange={(e) => onChange({ ...value, uiLocale: available.find((a) => a === e.target.value) ?? value.uiLocale })}>
+          <span>{l.options.slidesLanguage}</span>
+          <select
+            value={value.uiLocale ?? SAME_AS_DEVICE}
+            style={selectStyle}
+            data-testid="lecture-slides-language"
+            onChange={(e) => onChange({ ...value, uiLocale: available.find((a) => a === e.target.value) ?? null })}
+          >
+            <option value={SAME_AS_DEVICE}>{l.options.sameAsDevice}</option>
             {available.map((option) => (
               <option key={option} value={option} lang={LOCALE_META[option].htmlLang}>
                 {LOCALE_META[option].endonym}

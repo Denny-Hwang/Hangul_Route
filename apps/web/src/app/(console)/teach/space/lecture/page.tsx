@@ -41,6 +41,7 @@ import { dateKey } from '@/lib/console/plans';
 import { classRollup } from '@/lib/console/rollup';
 import { ROUTES, type SpaceError, spaceErrorText, spaceIdFrom } from '@/lib/console/routing';
 import { useConsoleLocale } from '@/lib/i18n/locale-context';
+import { rem } from '@/lib/console/rem';
 
 const TITLE_MAX = 60;
 
@@ -85,7 +86,6 @@ function LectureInner(): JSX.Element {
 
   const rollup = roster ? classRollup(roster.learners, now) : null;
   const revisit = rollup ? revisitBlock(rollup.revisit) : null;
-  const presenterLocale = uiLocale ?? locale;
 
   const choose = useCallback((next: LectureSource, from: { plan: PlanView | null; revisit: LectureBlock | null }): void => {
     setSource(next);
@@ -142,7 +142,7 @@ function LectureInner(): JSX.Element {
   // "Link copied" describes the deck that was copied: any change to it clears the label.
   useEffect(() => {
     setCopied(false);
-  }, [title, blocks, romanization, strokeGuide, sound, presenterLocale, picker]);
+  }, [title, blocks, romanization, strokeGuide, sound, uiLocale, picker]);
 
   if (!ready || !session) return <AdultFrame>{null}</AdultFrame>;
 
@@ -156,7 +156,7 @@ function LectureInner(): JSX.Element {
     return (
       <AdultFrame onSignOut={signOut} title={l.title}>
         {back}
-        <h1 style={{ fontSize: typography.size.title, margin: `0 0 ${spacing.xs}px` }}>{l.title}</h1>
+        <h1 style={{ fontSize: rem(typography.size.title), margin: `0 0 ${spacing.xs}px` }}>{l.title}</h1>
         <Notice>{l.comingSoon}</Notice>
       </AdultFrame>
     );
@@ -168,13 +168,14 @@ function LectureInner(): JSX.Element {
   const hasCode = blocks.some((b) => b.kind === 'class-code');
   const codeBlock = roster ? classCodeBlock(roster.joinCode) : null;
   const namesMode = picker === 'names' || picker === 'initials';
-  const options: LectureOptionValues = { romanization, strokeGuide, sound, uiLocale: presenterLocale };
+  // "Same as this device" (null, the default) puts no language in the deck (owner items 6 and 7).
+  const options: LectureOptionValues = { romanization, strokeGuide, sound, uiLocale };
 
   const linkFor = (r: Roster) =>
     presenterLink(appUrl(), {
       title,
       blocks,
-      options: { romanization, strokeGuide, sound, uiLocale: presenterLocale },
+      options: { romanization, strokeGuide, sound, ...(uiLocale !== null ? { uiLocale } : {}) },
       picker: deckPicker(picker, r),
       source,
       now: new Date(),
@@ -244,7 +245,7 @@ function LectureInner(): JSX.Element {
 
       {roster && choices ? (
         <>
-          <h1 style={{ fontSize: typography.size.title, margin: `0 0 ${spacing.xs}px` }}>{l.title}</h1>
+          <h1 style={{ fontSize: rem(typography.size.title), margin: `0 0 ${spacing.xs}px` }}>{l.title}</h1>
           <Muted>{l.intro}</Muted>
 
           <LectureSourceSection source={source} plan={plan} revisit={revisit} plansFailed={plansFailed} omitted={omitted} onChoose={pickSource} onRetry={() => void load()} />

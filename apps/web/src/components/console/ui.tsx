@@ -4,6 +4,7 @@ import { colors, radii, spacing, typography } from '@hangul-route/design-system/
 import type { CSSProperties, ReactNode } from 'react';
 import type { LoadError } from '@/lib/console/routing';
 import { useMessages } from '@/lib/i18n/locale-context';
+import { rem } from '@/lib/console/rem';
 
 /** Token-only building blocks for the console — F-CONSOLE-001. */
 export const panelStyle: CSSProperties = {
@@ -18,7 +19,7 @@ export const buttonBase: CSSProperties = {
   padding: `${spacing.sm}px ${spacing.lg}px`,
   borderRadius: radii.pill,
   fontWeight: typography.weight.bold,
-  fontSize: typography.size.bodySm,
+  fontSize: rem(typography.size.bodySm),
   border: `1px solid ${colors.border.strong}`,
   backgroundColor: colors.surface.paper,
   color: colors.text.primary,
@@ -42,7 +43,7 @@ export function Button({ children, tone = 'secondary', disabled, onClick, type =
 export function Field({ label, value, onChange, placeholder, type = 'text', maxLength, required, name }: { label: string; value: string; onChange: (v: string) => void; placeholder?: string; type?: 'text' | 'email'; maxLength?: number; required?: boolean; name: string }): JSX.Element {
   return (
     <label style={{ display: 'block', marginBottom: spacing.md }}>
-      <span style={{ display: 'block', fontSize: typography.size.caption, color: colors.text.muted, marginBottom: spacing.xxs }}>{label}</span>
+      <span style={{ display: 'block', fontSize: rem(typography.size.caption), color: colors.text.muted, marginBottom: spacing.xxs }}>{label}</span>
       <input
         name={name}
         type={type}
@@ -55,7 +56,7 @@ export function Field({ label, value, onChange, placeholder, type = 'text', maxL
           width: '100%',
           boxSizing: 'border-box',
           padding: `${spacing.sm}px ${spacing.md}px`,
-          fontSize: typography.size.body,
+          fontSize: rem(typography.size.body),
           borderRadius: radii.md,
           border: `1px solid ${colors.border.strong}`,
           backgroundColor: colors.surface.paper,
@@ -67,7 +68,7 @@ export function Field({ label, value, onChange, placeholder, type = 'text', maxL
 }
 
 export function Muted({ children }: { children: ReactNode }): JSX.Element {
-  return <p style={{ color: colors.text.muted, fontSize: typography.size.bodySm, margin: `${spacing.xs}px 0` }}>{children}</p>;
+  return <p style={{ color: colors.text.muted, fontSize: rem(typography.size.bodySm), margin: `${spacing.xs}px 0` }}>{children}</p>;
 }
 
 export function Notice({ children, tone = 'info' }: { children: ReactNode; tone?: 'info' | 'nudge' | 'success' }): JSX.Element {

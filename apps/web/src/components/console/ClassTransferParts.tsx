@@ -11,6 +11,7 @@ import { levelPillLabel } from '@/lib/console/level-label';
 import { canCancel, daysLeft, daysSince, isOpenTransfer, slotLabel, statusLine, stepWord } from '@/lib/console/transfer';
 import { actionOutcome, canAgreeBoth, classMoveGroups, historyDate, ownAnswerWaits, retryShown, type ClassView } from '@/lib/console/transfer-requests';
 import { useConsoleLocale } from '@/lib/i18n/locale-context';
+import { rem } from '@/lib/console/rem';
 
 /**
  * The class requests page's body (F-SPACE-002 section 4.8 "Requests page", PR T-6b): *Leaving this class* (source)
@@ -60,10 +61,10 @@ const cardStyle: CSSProperties = {
   flexDirection: 'column',
   gap: spacing.md,
 };
-const h2Style: CSSProperties = { fontSize: typography.size.bodyLg, fontWeight: typography.weight.bold, margin: `${spacing.lg}px 0 ${spacing.sm}px` };
+const h2Style: CSSProperties = { fontSize: rem(typography.size.bodyLg), fontWeight: typography.weight.bold, margin: `${spacing.lg}px 0 ${spacing.sm}px` };
 const rowStyle: CSSProperties = { display: 'flex', flexWrap: 'wrap', gap: spacing.sm, alignItems: 'center' };
-const metaStyle: CSSProperties = { ...rowStyle, columnGap: spacing.md, fontSize: typography.size.bodySm, color: colors.text.secondary };
-const lineStyle: CSSProperties = { margin: 0, fontSize: typography.size.body, lineHeight: typography.leading.relaxed, color: colors.text.primary };
+const metaStyle: CSSProperties = { ...rowStyle, columnGap: spacing.md, fontSize: rem(typography.size.bodySm), color: colors.text.secondary };
+const lineStyle: CSSProperties = { margin: 0, fontSize: rem(typography.size.body), lineHeight: typography.leading.relaxed, color: colors.text.primary };
 const sunkenStyle: CSSProperties = { margin: `0 0 ${spacing.md}px`, padding: spacing.md, borderRadius: radii.md, backgroundColor: colors.surface.sunken, color: colors.text.primary };
 const roomBlockStyle: CSSProperties = {
   ...rowStyle,
@@ -90,13 +91,13 @@ const quietButton: CSSProperties = {
   border: 'none',
   background: 'none',
   color: colors.text.secondary,
-  fontSize: typography.size.body,
+  fontSize: rem(typography.size.body),
   fontWeight: typography.weight.bold,
   cursor: 'pointer',
   marginInlineStart: 'auto',
 };
 const pillStyle: CSSProperties = {
-  fontSize: typography.size.caption,
+  fontSize: rem(typography.size.caption),
   color: colors.text.muted,
   padding: `${spacing.xxs}px ${spacing.sm}px`,
   backgroundColor: colors.surface.sunken,
@@ -214,7 +215,7 @@ function SourceCard({ view, now, busy, online, readOnly, direct, note, run, api,
       <div style={{ ...rowStyle, justifyContent: 'space-between' }}>
         <span style={rowStyle}>
           {view.learner ? <AvatarChip avatar={view.learner.avatar} /> : null}
-          <strong id={whoId} style={{ fontSize: typography.size.bodyLg }}>
+          <strong id={whoId} style={{ fontSize: rem(typography.size.bodyLg) }}>
             {view.learner?.name ?? ''}
           </strong>
         </span>
@@ -282,7 +283,7 @@ function DestinationCard({ view, now, busy, online, readOnly, note, run, api, sp
     <article style={cardStyle} aria-labelledby={whoId} data-testid="move-card" data-move-card="">
       <div style={rowStyle}>
         {view.learner ? <AvatarChip avatar={view.learner.avatar} /> : null}
-        <strong id={whoId} style={{ fontSize: typography.size.bodyLg, letterSpacing: typography.tracking.wide }}>
+        <strong id={whoId} style={{ fontSize: rem(typography.size.bodyLg), letterSpacing: typography.tracking.wide }}>
           {view.learner?.name ?? ''}
         </strong>
         {level ? <span style={pillStyle}>{level}</span> : null}
@@ -314,7 +315,7 @@ function DestinationCard({ view, now, busy, online, readOnly, note, run, api, sp
                 border: `${borderWidth.thin}px solid ${colors.border.strong}`,
                 backgroundColor: reasons ? colors.surface.sunken : colors.surface.paper,
                 color: colors.text.primary,
-                fontSize: typography.size.body,
+                fontSize: rem(typography.size.body),
                 fontWeight: typography.weight.bold,
                 cursor: 'pointer',
               }}
@@ -362,7 +363,7 @@ function History({ views }: { views: ClassView[] }): JSX.Element | null {
           style={{ ...rowStyle, justifyContent: 'space-between', minHeight: touchTarget.min, borderTop: i === 0 ? 'none' : `${borderWidth.thin}px solid ${colors.border.subtle}` }}
         >
           <span>{statusLine(view, new Date(), locale)}</span>
-          <span style={{ color: colors.text.muted, fontSize: typography.size.bodySm }}>{formatDate(locale, historyDate(view), 'monthDay')}</span>
+          <span style={{ color: colors.text.muted, fontSize: rem(typography.size.bodySm) }}>{formatDate(locale, historyDate(view), 'monthDay')}</span>
         </li>
       ))}
     </ul>

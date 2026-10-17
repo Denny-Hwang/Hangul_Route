@@ -1,5 +1,5 @@
 import { CONSOLE_SESSION_KEY, UNLOCK_SESSION_KEY, type GrownUpUnlock } from '@hangul-route/content-schema';
-import { getMessages, type UiLocale } from '@hangul-route/i18n';
+import { en, getMessages, type UiLocale } from '@hangul-route/i18n';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { DeviceGateRead, LockDecision } from '@/lib/console/grown-up-lock';
@@ -512,9 +512,11 @@ describe('GrownUpLockScreen (wireframe Panels A and B)', () => {
 
   it('Panel A: PIN path first as the primary, Sign in again second, Back to learning first in tab order', () => {
     const html = screen({ state: 'locked', pinPath: true, line: 'default' });
-    expect(text(html)).toBe(`${lock.backToLearning.cta} ${lock.title} ${lock.line} ${lock.usePin.cta} ${lock.signInAgain.cta}`);
+    // The Aa button (owner items 6 and 7) comes last: its sign is drawn, its name is "Display".
+    expect(text(html)).toBe(`${lock.backToLearning.cta} ${lock.title} ${lock.line} ${lock.usePin.cta} ${lock.signInAgain.cta} ${en.common.display.glyph}`);
     const buttons = [...html.matchAll(/<button[^>]*data-testid="([^"]+)"/g)].map((m) => m[1]);
-    expect(buttons).toEqual(['grown-up-lock-back', 'grown-up-lock-pin', 'grown-up-lock-signin']);
+    expect(buttons).toEqual(['grown-up-lock-back', 'grown-up-lock-pin', 'grown-up-lock-signin', 'grown-up-lock-display']);
+    expect(html).toMatch(/<button[^>]*aria-label="Display"[^>]*aria-haspopup="dialog"[^>]*data-testid="grown-up-lock-display"/);
     expect(html).toMatch(/<button[^>]*data-tone="primary"[^>]*data-testid="grown-up-lock-pin"/);
     expect(html).toMatch(/<button[^>]*data-tone="secondary"[^>]*data-testid="grown-up-lock-signin"/);
   });
@@ -522,7 +524,7 @@ describe('GrownUpLockScreen (wireframe Panels A and B)', () => {
   it('Panel B: sign-in only with the line of its case, Sign in again becomes the primary', () => {
     for (const line of ['pinChanged', 'firstSignIn', 'pinRenew', 'signInOnly', 'noPin'] as const) {
       const html = screen({ state: 'locked', pinPath: false, line });
-      expect(text(html)).toBe(`${lock.backToLearning.cta} ${lock.title} ${lock[line]} ${lock.signInAgain.cta}`);
+      expect(text(html)).toBe(`${lock.backToLearning.cta} ${lock.title} ${lock[line]} ${lock.signInAgain.cta} ${en.common.display.glyph}`);
       expect(html).not.toContain('grown-up-lock-pin');
       expect(html).toMatch(/<button[^>]*data-tone="primary"[^>]*data-testid="grown-up-lock-signin"/);
     }
@@ -540,7 +542,7 @@ describe('GrownUpLockScreen (wireframe Panels A and B)', () => {
   it('every button meets the 64 px touch target and uses type="button"', () => {
     const html = screen({ state: 'locked', pinPath: true, line: 'default' });
     const buttons = [...html.matchAll(/<button[^>]*>/g)].map((m) => m[0]);
-    expect(buttons).toHaveLength(3);
+    expect(buttons).toHaveLength(4);
     for (const b of buttons) {
       expect(b).toContain('type="button"');
       expect(b).toMatch(/min-height:64px/);

@@ -1,6 +1,17 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { KeyValueStorage } from '../safe-storage';
-import { CONSOLE_LOCALE_KEY, browserLanguages, pickConsoleLocale, queryLocale, readStoredLocale, writeStoredLocale } from '../console-locale';
+import {
+  CONSOLE_LOCALE_KEY,
+  CONSOLE_TEXT_SIZE_KEY,
+  browserLanguages,
+  firstPaintLocale,
+  queryLocale,
+  readStoredLocale,
+  readStoredTextSize,
+  resolveConsoleDisplay,
+  writeStoredLocale,
+  writeStoredTextSize,
+} from '../console-locale';
 
 function fakeStorage(initial: Record<string, string> = {}): KeyValueStorage & { map: Map<string, string> } {
   const map = new Map<string, string>(Object.entries(initial));
@@ -34,39 +45,54 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-describe('pickConsoleLocale: stored choice > navigator > en (F-I18N-001 §3.2)', () => {
-  it('a stored, available choice wins over the browser languages', () => {
-    expect(pickConsoleLocale({ stored: 'ko', languages: ['es-MX'], available: ALL })).toBe('ko');
+const NO_MIRROR = { locale: null, textSize: null } as const;
+const readable = (value: Record<string, unknown> = {}) => ({ readable: true as const, value });
+const UNREADABLE = { readable: false as const };
+
+describe('resolveConsoleDisplay: the device record wins (owner items 6 and 7)', () => {
+  it('the device language wins over ?lang=, the mirror (an old console choice) and the browser', () => {
+    const picked = resolveConsoleDisplay({ device: readable({ uiLocale: 'en' }), mirror: { locale: 'ko', textSize: 'largest' }, query: 'es', languages: ['ko-KR'], available: ALL });
+    expect(picked).toEqual({ locale: 'en', textSize: 'standard', seed: null });
   });
 
-  it('without a stored choice, detection walks the browser languages', () => {
-    expect(pickConsoleLocale({ stored: null, languages: ['fr', 'es-MX', 'en'], available: ALL })).toBe('es');
-    expect(pickConsoleLocale({ stored: null, languages: ['ko_KR'], available: ALL })).toBe('ko');
+  it('an English learner app with a console that stored ko opens the console in English', () => {
+    // The learner app chose English (or handed off lang=en); the console's old stored ko is only a mirror.
+    expect(resolveConsoleDisplay({ device: readable({ uiLocale: 'en', uiLocaleAt: '2026-10-16T00:00:00.000Z' }), mirror: { locale: 'ko', textSize: null }, query: null, languages: ['ko-KR'], available: ALL }).locale).toBe('en');
+    expect(resolveConsoleDisplay({ device: readable({}), mirror: { locale: 'ko', textSize: null }, query: queryLocale('?lang=en'), languages: ['ko-KR'], available: ALL }).locale).toBe('en');
   });
 
-  it('falls back to English when nothing matches', () => {
-    expect(pickConsoleLocale({ stored: null, languages: [], available: ALL })).toBe('en');
-    expect(pickConsoleLocale({ stored: null, languages: ['fr', 'de'], available: ALL })).toBe('en');
+  it('the record\'s text size applies; standard when it has none', () => {
+    expect(resolveConsoleDisplay({ device: readable({ textSize: 'larger' }), mirror: NO_MIRROR, query: null, languages: [], available: ALL }).textSize).toBe('larger');
+    expect(resolveConsoleDisplay({ device: readable({}), mirror: { locale: null, textSize: 'large' }, query: null, languages: [], available: ALL }).textSize).toBe('standard');
   });
 
-  it('never picks a hidden locale: a stored or detected es is ignored while only en ships', () => {
-    expect(pickConsoleLocale({ stored: 'es', languages: ['es-MX'], available: ['en'] })).toBe('en');
-    expect(pickConsoleLocale({ stored: 'ko', languages: ['es-MX', 'en'], available: ['en', 'es'] })).toBe('es');
+  it('?lang= seeds only a device that never chose', () => {
+    expect(resolveConsoleDisplay({ device: readable({}), mirror: NO_MIRROR, query: 'ko', languages: ['en'], available: ALL })).toEqual({ locale: 'ko', textSize: 'standard', seed: 'ko' });
+    expect(resolveConsoleDisplay({ device: readable({ uiLocale: 'es' }), mirror: NO_MIRROR, query: 'ko', languages: [], available: ALL })).toEqual({ locale: 'es', textSize: 'standard', seed: null });
+  });
+
+  it('a device that never chose and no ?lang=: the browser languages, then English (the mirror does not count)', () => {
+    expect(resolveConsoleDisplay({ device: readable({}), mirror: { locale: 'ko', textSize: null }, query: null, languages: ['fr', 'es-MX'], available: ALL }).locale).toBe('es');
+    expect(resolveConsoleDisplay({ device: readable({}), mirror: NO_MIRROR, query: null, languages: ['fr'], available: ALL }).locale).toBe('en');
+  });
+
+  it('a record that cannot be read: ?lang= > the mirror > the browser, the mirrored size, and nothing is seeded', () => {
+    expect(resolveConsoleDisplay({ device: UNREADABLE, mirror: { locale: 'ko', textSize: 'large' }, query: 'es', languages: [], available: ALL })).toEqual({ locale: 'es', textSize: 'large', seed: null });
+    expect(resolveConsoleDisplay({ device: UNREADABLE, mirror: { locale: 'ko', textSize: null }, query: null, languages: ['es'], available: ALL })).toEqual({ locale: 'ko', textSize: 'standard', seed: null });
+    expect(resolveConsoleDisplay({ device: UNREADABLE, mirror: NO_MIRROR, query: null, languages: ['es'], available: ALL }).locale).toBe('es');
+  });
+
+  it('never picks a hidden locale at any step', () => {
+    expect(resolveConsoleDisplay({ device: readable({ uiLocale: 'ko' }), mirror: NO_MIRROR, query: 'es', languages: ['ko'], available: ['en'] })).toEqual({ locale: 'en', textSize: 'standard', seed: null });
+    expect(resolveConsoleDisplay({ device: UNREADABLE, mirror: { locale: 'ko', textSize: null }, query: 'es', languages: [], available: ['en'] }).locale).toBe('en');
   });
 });
 
-// F-APP-001 A-4b, section 3.7: the console reads a valid `?lang=` first (the F-I18N-001 hand-off
-// convention: the learner app, the site and the bounce append it), then the stored choice.
-describe('pickConsoleLocale: ?lang= first (F-APP-001 section 3.7)', () => {
-  it('a valid, available ?lang= wins over the stored choice and the browser', () => {
-    expect(pickConsoleLocale({ query: 'es', stored: 'ko', languages: ['ko'], available: ALL })).toBe('es');
-    // The learner app now hands off English too (lang=en), so a console that once stored Korean opens in English.
-    expect(pickConsoleLocale({ query: queryLocale('?lang=en'), stored: 'ko', languages: ['ko-KR'], available: ALL })).toBe('en');
-  });
-
-  it('a hidden or missing ?lang= falls through to the stored choice, then the browser', () => {
-    expect(pickConsoleLocale({ query: 'es', stored: 'ko', languages: [], available: ['en', 'ko'] })).toBe('ko');
-    expect(pickConsoleLocale({ query: null, stored: null, languages: ['ko-KR'], available: ALL })).toBe('ko');
+describe('firstPaintLocale: before the record is read', () => {
+  it('the mirror, else the browser languages; never a hidden locale', () => {
+    expect(firstPaintLocale({ mirror: 'ko', languages: ['es'], available: ALL })).toBe('ko');
+    expect(firstPaintLocale({ mirror: null, languages: ['es-MX'], available: ALL })).toBe('es');
+    expect(firstPaintLocale({ mirror: 'ko', languages: [], available: ['en'] })).toBe('en');
   });
 });
 
@@ -85,9 +111,22 @@ describe('queryLocale: the ?lang= of a URL', () => {
   });
 });
 
-describe('the stored console locale (hr:console:uiLocale)', () => {
-  it('uses the documented key', () => {
+describe('the mirrors (hr:console:uiLocale, hr:console:textSize)', () => {
+  it('uses the documented keys', () => {
     expect(CONSOLE_LOCALE_KEY).toBe('hr:console:uiLocale');
+    expect(CONSOLE_TEXT_SIZE_KEY).toBe('hr:console:textSize');
+  });
+
+  it('round-trips a text size and ignores a value that is not a step', () => {
+    const storage = fakeStorage();
+    expect(readStoredTextSize(storage)).toBeNull();
+    expect(writeStoredTextSize('largest', storage)).toBe(true);
+    expect(readStoredTextSize(storage)).toBe('largest');
+    expect(readStoredTextSize(fakeStorage({ [CONSOLE_TEXT_SIZE_KEY]: 'huge' }))).toBeNull();
+    expect(readStoredTextSize(blocked)).toBeNull();
+    expect(writeStoredTextSize('large', blocked)).toBe(false);
+    expect(readStoredTextSize()).toBeNull();
+    expect(writeStoredTextSize('large')).toBe(false);
   });
 
   it('round-trips a locale', () => {

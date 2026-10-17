@@ -1,14 +1,17 @@
 'use client';
 
 import { ClerkProvider, useAuth, useClerk, useReverification, useUser } from '@clerk/clerk-react';
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { signInMerge, withAccountLocale, type UnsafeMetadata } from '@/lib/console/account-locale';
 import { sessionFromClerkUser } from '@/lib/console/clerk';
+import { clerkLocalization } from '@/lib/console/clerk-localization';
 import { clerkPublishableKey } from '@/lib/console/config';
 import { ROUTES } from '@/lib/console/routing';
 import { readSession, writeSession, type ConsoleSession } from '@/lib/console/session';
 import { browserOnline, clerkUiOpen, guardReverify, settleReverify, type ReverifyOutcome } from '@/lib/console/step-up';
 import { clearSignInTab } from '@/lib/console/signin-record';
 import { clearGrownUpTab } from '@/lib/console/unlock';
+import { useConsoleLocale } from '@/lib/i18n/locale-context';
 
 /**
  * One sign-in surface for the console — F-AUTH-002 §3.1. With a publishable key
@@ -66,6 +69,43 @@ export function useConsoleAuth(): ConsoleAuth {
   return useContext(ConsoleAuthContext);
 }
 
+/** The Clerk user methods the language sync uses (`user.update` replaces `unsafeMetadata` whole). */
+interface LocaleUser {
+  id: string;
+  unsafeMetadata?: UnsafeMetadata;
+  update: (params: { unsafeMetadata: Record<string, unknown> }) => Promise<unknown>;
+}
+
+/**
+ * One UI language per account (owner items 6 and 7), Clerk builds only (a dev-auth build keeps the
+ * device record alone). Right after a sign-in, once the device record is read: the newer-wins merge
+ * of the record and the account (`signInMerge`; a missing timestamp means the device wins). An
+ * account that wins is written into the device record, which tells every open tab; a device that
+ * wins is copied to the account. Then every language chosen in this tab while signed in goes to
+ * the account. Every write merges into the existing `unsafeMetadata` (the adult step's
+ * `adultAffirmedAt`). A failed write only loses the account copy; the device keeps the choice.
+ */
+export function AccountLocaleSync({ user, now = () => new Date().toISOString() }: { user: LocaleUser | null; now?: () => string }): null {
+  const { ready, record, lastChoice, applyRecord } = useConsoleLocale();
+  const merged = useRef<string | null>(null);
+  const sent = useRef<string | null>(null);
+  useEffect(() => {
+    if (!user || !ready || merged.current === user.id) return;
+    merged.current = user.id;
+    const result = signInMerge(record, user.unsafeMetadata, now());
+    if (result.device) applyRecord(result.device);
+    if (result.account) void user.update({ unsafeMetadata: withAccountLocale(user.unsafeMetadata, result.account) }).catch(() => undefined);
+  }, [user, ready, record, applyRecord, now]);
+  useEffect(() => {
+    if (!user || !lastChoice || merged.current !== user.id) return;
+    const key = `${lastChoice.uiLocale}|${lastChoice.uiLocaleAt}`;
+    if (sent.current === key) return;
+    sent.current = key;
+    void user.update({ unsafeMetadata: withAccountLocale(user.unsafeMetadata, lastChoice) }).catch(() => undefined);
+  }, [user, lastChoice]);
+  return null;
+}
+
 function ClerkBridge({ children }: { children: ReactNode }): JSX.Element {
   const { isLoaded, user } = useUser();
   const { getToken, sessionId } = useAuth();
@@ -100,7 +140,12 @@ function ClerkBridge({ children }: { children: ReactNode }): JSX.Element {
     }),
     [isLoaded, user, sessionId, getToken, clerk, reverify],
   );
-  return <ConsoleAuthContext.Provider value={value}>{children}</ConsoleAuthContext.Provider>;
+  return (
+    <ConsoleAuthContext.Provider value={value}>
+      <AccountLocaleSync user={isLoaded && user ? (user as unknown as LocaleUser) : null} />
+      {children}
+    </ConsoleAuthContext.Provider>
+  );
 }
 
 function DevBridge({ children }: { children: ReactNode }): JSX.Element {
@@ -140,9 +185,18 @@ const CREATE_ACCOUNT_URL = `${ROUTES.signIn}?mode=create`;
 
 export function ConsoleAuthProvider({ children }: { children: ReactNode }): JSX.Element {
   const publishableKey = clerkPublishableKey();
+  // The Clerk widget speaks the console's language (owner items 6 and 7); a change re-localizes it in place.
+  const { locale } = useConsoleLocale();
+  const localization = useMemo(() => clerkLocalization(locale), [locale]);
   if (publishableKey) {
     return (
-      <ClerkProvider publishableKey={publishableKey} afterSignOutUrl={ROUTES.signIn} signInUrl={ROUTES.signIn} signUpUrl={CREATE_ACCOUNT_URL}>
+      <ClerkProvider
+        publishableKey={publishableKey}
+        afterSignOutUrl={ROUTES.signIn}
+        signInUrl={ROUTES.signIn}
+        signUpUrl={CREATE_ACCOUNT_URL}
+        localization={localization}
+      >
         <ClerkBridge>{children}</ClerkBridge>
       </ClerkProvider>
     );

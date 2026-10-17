@@ -8,6 +8,7 @@ import type { ApiResult, ConsoleApi, TransferPreview, TransferView } from '@/lib
 import { startError, startErrorText, type StartError } from '@/lib/console/transfer';
 import { subscribeTransferLock, transfersShown } from '@/lib/console/transfer-lock';
 import { useConsoleLocale } from '@/lib/i18n/locale-context';
+import { rem } from '@/lib/console/rem';
 
 /**
  * Class-move parts of the console (F-SPACE-002 section 4.8, PR T-6c): the settings row's Move button, the sheet frame
@@ -61,7 +62,7 @@ const btnBase: CSSProperties = {
   borderColor: colors.border.strong,
   backgroundColor: colors.surface.paper,
   color: colors.text.primary,
-  fontSize: typography.size.body,
+  fontSize: rem(typography.size.body),
   fontWeight: typography.weight.bold,
   cursor: 'pointer',
 };
@@ -206,7 +207,7 @@ export function TransferSheet({
             ref={(el) => {
               headingRef.current = el as FocusTarget | null;
             }}
-            style={{ fontSize: typography.size.prompt, fontWeight: typography.weight.bold, margin: 0, color: colors.text.primary, outline: 'none' }}
+            style={{ fontSize: rem(typography.size.prompt), fontWeight: typography.weight.bold, margin: 0, color: colors.text.primary, outline: 'none' }}
           >
             {title}
           </h2>
@@ -249,7 +250,7 @@ export function ClassCodeField({
   const errorId = useId();
   return (
     <div style={{ marginBottom: spacing.md }}>
-      <label htmlFor={inputId} style={{ display: 'block', fontSize: typography.size.body, fontWeight: typography.weight.bold, marginBottom: spacing.xs, color: colors.text.primary }}>
+      <label htmlFor={inputId} style={{ display: 'block', fontSize: rem(typography.size.body), fontWeight: typography.weight.bold, marginBottom: spacing.xs, color: colors.text.primary }}>
         {label}
       </label>
       <input
@@ -271,7 +272,7 @@ export function ClassCodeField({
           boxSizing: 'border-box',
           minHeight: touchTarget.hero,
           padding: `0 ${spacing.md}px`,
-          fontSize: typography.size.display,
+          fontSize: rem(typography.size.display),
           fontWeight: typography.weight.bold,
           letterSpacing: spacing.sm,
           textAlign: 'center',
@@ -282,11 +283,11 @@ export function ClassCodeField({
           color: colors.text.primary,
         }}
       />
-      <p id={rulesId} style={{ margin: `${spacing.xs}px 0 0`, fontSize: typography.size.bodySm, color: colors.text.muted }}>
+      <p id={rulesId} style={{ margin: `${spacing.xs}px 0 0`, fontSize: rem(typography.size.bodySm), color: colors.text.muted }}>
         {rules}
       </p>
       {error ? (
-        <p id={errorId} role="alert" style={{ margin: `${spacing.xs}px 0 0`, fontSize: typography.size.body, fontWeight: typography.weight.semibold, color: colors.text.primary }}>
+        <p id={errorId} role="alert" style={{ margin: `${spacing.xs}px 0 0`, fontSize: rem(typography.size.body), fontWeight: typography.weight.semibold, color: colors.text.primary }}>
           {error}
         </p>
       ) : null}
@@ -399,7 +400,7 @@ export function StartMoveSheet({ spaceId, learner, api, online, onClose, onSent,
 
   return (
     <TransferSheet title={t.start.title(learner.name)} onClose={onClose} testId="move-start-sheet">
-      <p style={{ margin: `0 0 ${spacing.md}px`, fontSize: typography.size.body, color: colors.text.primary }}>
+      <p style={{ margin: `0 0 ${spacing.md}px`, fontSize: rem(typography.size.body), color: colors.text.primary }}>
         <strong>1.</strong> {t.start.step1}
       </p>
       <ClassCodeField
@@ -420,7 +421,7 @@ export function StartMoveSheet({ spaceId, learner, api, online, onClose, onSent,
       </MoveButton>
       {found ? (
         <section style={foundStyle} aria-labelledby={foundTitleId} data-testid="move-found">
-          <h3 id={foundTitleId} style={{ margin: `0 0 ${spacing.sm}px`, fontSize: typography.size.bodyLg, fontWeight: typography.weight.bold }}>
+          <h3 id={foundTitleId} style={{ margin: `0 0 ${spacing.sm}px`, fontSize: rem(typography.size.bodyLg), fontWeight: typography.weight.bold }}>
             2. {t.start.found(found.name)}
           </h3>
           <ul style={{ margin: 0, paddingInlineStart: spacing.lg, color: colors.text.secondary, lineHeight: typography.leading.relaxed }}>
@@ -457,7 +458,7 @@ export function MoveRowAction({ name, online, onMove, family }: { name: string; 
         {family ? t.start.move.family.cta : t.start.move.class.cta}
       </MoveButton>
       {!online ? (
-        <span id={helpId} style={{ flexBasis: '100%', fontSize: typography.size.bodySm, color: colors.text.secondary }}>
+        <span id={helpId} style={{ flexBasis: '100%', fontSize: rem(typography.size.bodySm), color: colors.text.secondary }}>
           {t.states.offline}
         </span>
       ) : null}

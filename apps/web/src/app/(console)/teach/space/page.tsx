@@ -36,6 +36,7 @@ import { dateKey, livePublished, planReaches, planReadout, readoutLine, rosterPl
 import { ROUTES, type SpaceError, spaceErrorText, spaceIdFrom } from '@/lib/console/routing';
 import { consoleWords, studentWords } from '@/lib/console/vocab-words';
 import { aroundSlot } from '@/lib/i18n/slot';
+import { rem } from '@/lib/console/rem';
 
 /** console/roster — F-CONSOLE-001 §3.5. Summaries only; the API never sends payloads here. */
 function SpaceInner(): JSX.Element {
@@ -167,10 +168,10 @@ function SpaceInner(): JSX.Element {
       {roster ? (
         <>
           <section style={{ ...panelStyle, marginBottom: spacing.lg, textAlign: empty ? 'center' : 'left' }} aria-label={c.space.joinCodeLabel}>
-            <div style={{ fontSize: typography.size.caption, color: colors.text.muted, textTransform: 'uppercase' }}>
+            <div style={{ fontSize: rem(typography.size.caption), color: colors.text.muted, textTransform: 'uppercase' }}>
               {c.space.codeLabel[roster.space.kind]}
             </div>
-            <div data-testid="join-code" style={{ fontSize: empty ? typography.size.hero : typography.size.display, fontWeight: typography.weight.bold, letterSpacing: spacing.sm, fontFamily: typography.family.mono, margin: `${spacing.xs}px 0` }}>
+            <div data-testid="join-code" style={{ fontSize: rem(empty ? typography.size.hero : typography.size.display), fontWeight: typography.weight.bold, letterSpacing: spacing.sm, fontFamily: typography.family.mono, margin: `${spacing.xs}px 0` }}>
               {roster.joinCode ?? '—'}
             </div>
             <Muted>{codeExpiry(roster.joinCodeExpiresAt, now, locale)}</Muted>
@@ -194,7 +195,7 @@ function SpaceInner(): JSX.Element {
 
           {rollup && !empty ? (
             <section style={{ ...panelStyle, marginBottom: spacing.lg }} aria-label={c.space.week.title}>
-              <h2 style={{ fontSize: typography.size.bodyLg, margin: `0 0 ${spacing.sm}px` }}>{c.space.week.title}</h2>
+              <h2 style={{ fontSize: rem(typography.size.bodyLg), margin: `0 0 ${spacing.sm}px` }}>{c.space.week.title}</h2>
               <ul style={{ margin: 0, paddingLeft: spacing.lg, color: colors.text.secondary, lineHeight: typography.leading.relaxed }}>
                 <li>{c.space.week.practiced(rollup.practicedThisWeek, rollup.students)}</li>
                 <li>{c.space.week.anchor(percent(rollup.anchorAccuracy))}</li>
@@ -207,7 +208,7 @@ function SpaceInner(): JSX.Element {
                       <Link
                         href={ROUTES.spaceLecture(spaceId, 'revisit', undefined, roster.space.kind)}
                         data-testid="revisit-together"
-                        style={{ display: 'inline-flex', alignItems: 'center', minHeight: spacing.xxxl, fontSize: typography.size.caption, fontWeight: typography.weight.bold, padding: `0 ${spacing.md}px`, borderRadius: radii.pill, border: `1px solid ${colors.border.strong}`, color: colors.text.primary, textDecoration: 'none', whiteSpace: 'nowrap' }}
+                        style={{ display: 'inline-flex', alignItems: 'center', minHeight: spacing.xxxl, fontSize: rem(typography.size.caption), fontWeight: typography.weight.bold, padding: `0 ${spacing.md}px`, borderRadius: radii.pill, border: `1px solid ${colors.border.strong}`, color: colors.text.primary, textDecoration: 'none', whiteSpace: 'nowrap' }}
                       >
                         {c.lecture.revisitChip.cta}
                       </Link>
@@ -254,7 +255,7 @@ function SpaceInner(): JSX.Element {
 
           {!empty ? (
             <section aria-label={c.space.studentsLabel}>
-              <h2 style={{ fontSize: typography.size.bodyLg, margin: `0 0 ${spacing.sm}px` }}>{c.space.recentFirst}</h2>
+              <h2 style={{ fontSize: rem(typography.size.bodyLg), margin: `0 0 ${spacing.sm}px` }}>{c.space.recentFirst}</h2>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: spacing.md }}>
                 {roster.learners.map((l, index) => (
                   <article key={l.id} style={panelStyle} data-testid="student-card">
@@ -264,13 +265,13 @@ function SpaceInner(): JSX.Element {
                         <strong id={`roster-learner-${index}`}>{l.displayName}</strong>
                       </span>
                       {levelPillLabel(l.ageGroup, locale) ? (
-                        <span style={{ fontSize: typography.size.caption, color: colors.text.muted, padding: `${spacing.xxs}px ${spacing.sm}px`, backgroundColor: colors.surface.sunken, borderRadius: radii.pill }}>
+                        <span style={{ fontSize: rem(typography.size.caption), color: colors.text.muted, padding: `${spacing.xxs}px ${spacing.sm}px`, backgroundColor: colors.surface.sunken, borderRadius: radii.pill }}>
                           {levelPillLabel(l.ageGroup, locale)}
                         </span>
                       ) : null}
                     </div>
                     {l.summary ? (
-                      <div style={{ color: colors.text.secondary, fontSize: typography.size.bodySm, marginTop: spacing.xs, lineHeight: typography.leading.relaxed }}>
+                      <div style={{ color: colors.text.secondary, fontSize: rem(typography.size.bodySm), marginTop: spacing.xs, lineHeight: typography.leading.relaxed }}>
                         <div>{c.space.learner.lastActive(relativeDay(l.summary.lastActiveAt, now, locale))}</div>
                         <StartingSpot summary={l.summary} spaceId={spaceId} learnerId={l.id} learnerName={l.displayName} kind={roster.space.kind} />
                         <PlanUpdateLine kind={roster.space.kind} learner={l} plans={plans} today={today} api={api} spaceId={spaceId} onSaved={() => void load()} />

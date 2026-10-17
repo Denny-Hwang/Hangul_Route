@@ -3,7 +3,7 @@
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useMemo, type ReactNode } from 'react';
 import { CLERK_LOAD_TIMEOUT_MS, signedOutTarget } from '@/lib/console/signin-flow';
-import { LocaleProvider } from '@/lib/i18n/locale-context';
+import { LocaleProvider, useConsoleLocale } from '@/lib/i18n/locale-context';
 import { ConsoleAuthProvider, useConsoleAuth } from './auth-context';
 import { GrownUpLocationContext } from './grown-up-location';
 import { GrownUpLock } from './GrownUpLock';
@@ -16,6 +16,9 @@ import { GrownUpLock } from './GrownUpLock';
  * every page that calls the API sits inside the lock, as `GrownUpLock` requires. When the session
  * stays unknown for `CLERK_LOAD_TIMEOUT_MS` (Clerk cannot load), the page goes to `/signin` the
  * same way, where the unreachable line and Try again live (section 3.19): never a blank page.
+ * Before any of that, every grown-up page (`/signin` too) waits on the same empty canvas until the
+ * device's display record is read (owner items 6 and 7), so no frame paints in English or at the
+ * standard size first; `document.title` comes from the dictionary in that language.
  */
 const SIGN_IN_PAGE = /^\/signin(?:\/|\.html)?$/;
 
@@ -28,7 +31,24 @@ function Pending(): JSX.Element {
   return <div aria-busy="true" data-testid="grown-up-lock-pending" />;
 }
 
-export function GrownUpGate({ children }: { children: ReactNode }): JSX.Element {
+/** Which grown-up title the tab shows (`console.docTitle`); a page may set a more specific one over it. */
+export type GrownUpTitle = 'console' | 'signIn';
+
+/**
+ * `document.title` in the console's language. Drawn before the page, so a page that sets its own
+ * title (a report) sets it after this one and wins; the static English `metadata` title is only the
+ * HTML's.
+ */
+function DocumentTitle({ kind }: { kind: GrownUpTitle }): null {
+  const { messages, ready } = useConsoleLocale();
+  const title = messages.console.docTitle[kind];
+  useEffect(() => {
+    if (ready && typeof document !== 'undefined') document.title = title;
+  }, [ready, title]);
+  return null;
+}
+
+export function GrownUpGate({ children, title = 'console' }: { children: ReactNode; title?: GrownUpTitle }): JSX.Element {
   const pathname = usePathname() ?? '';
   const search = useSearchParams()?.toString() ?? '';
   const router = useRouter();
@@ -48,11 +68,22 @@ export function GrownUpGate({ children }: { children: ReactNode }): JSX.Element 
   }, [waiting, router, pathname, search]);
 
   const location = useMemo(() => ({ pathname, search }), [pathname, search]);
+  // The device's language and text size resolve during this wait (owner items 6 and 7).
+  const localeReady = useConsoleLocale().ready;
 
-  if (exempt) return <>{children}</>;
+  if (!localeReady) return <Pending />;
+  if (exempt) {
+    return (
+      <>
+        <DocumentTitle kind={title} />
+        {children}
+      </>
+    );
+  }
   if (!auth.ready || !auth.session) return <Pending />;
   return (
     <GrownUpLocationContext.Provider value={location}>
+      <DocumentTitle kind={title} />
       <GrownUpLock pathname={pathname} search={search} onSignInAgain={(url) => void auth.signOut(url)}>
         {children}
       </GrownUpLock>
@@ -60,13 +91,13 @@ export function GrownUpGate({ children }: { children: ReactNode }): JSX.Element 
   );
 }
 
-export function GrownUpLayout({ children }: { children: ReactNode }): JSX.Element {
+export function GrownUpLayout({ children, title }: { children: ReactNode; title?: GrownUpTitle }): JSX.Element {
   return (
     <LocaleProvider>
       <ConsoleAuthProvider>
         {/* useSearchParams in a static export needs a Suspense boundary; its fallback is the same empty canvas. */}
         <Suspense fallback={<Pending />}>
-          <GrownUpGate>{children}</GrownUpGate>
+          <GrownUpGate title={title}>{children}</GrownUpGate>
         </Suspense>
       </ConsoleAuthProvider>
     </LocaleProvider>

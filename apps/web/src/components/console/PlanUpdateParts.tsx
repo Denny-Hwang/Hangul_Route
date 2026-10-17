@@ -6,6 +6,7 @@ import { Button } from '@/components/console/ui';
 import type { ConsoleApi, PlanView, RosterLearner } from '@/lib/console/api';
 import { planUpdateOffer, reseedSaveBody, updateAskText } from '@/lib/console/curriculum';
 import { useConsoleLocale } from '@/lib/i18n/locale-context';
+import { rem } from '@/lib/console/rem';
 
 /**
  * **Update the plan** on a family learner card (F-PLAN-002 section 3.8 step 4, FP-B5, PR P2-6b;
@@ -77,7 +78,7 @@ export function PlanUpdateLine({
         {words.cta}
       </Button>
       {/* Always in the DOM so the failed line is announced when its text arrives. */}
-      <span role="status" aria-live="polite" style={{ display: 'block', width: '100%', color: colors.text.secondary, fontSize: typography.size.caption }}>
+      <span role="status" aria-live="polite" style={{ display: 'block', width: '100%', color: colors.text.secondary, fontSize: rem(typography.size.caption) }}>
         {status === 'failed' ? words.failed : null}
       </span>
     </div>

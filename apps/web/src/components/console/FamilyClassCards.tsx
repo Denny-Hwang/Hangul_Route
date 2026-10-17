@@ -7,6 +7,7 @@ import type { ConsoleApi } from '@/lib/console/api';
 import type { ClassScopeState, MoveNotice } from '@/lib/console/class-moves';
 import { useConsoleLocale } from '@/lib/i18n/locale-context';
 import { MoveButton } from './TransferParts';
+import { rem } from '@/lib/console/rem';
 
 /**
  * [TV] The family's cards on the parent home (AMENDMENTS-TEACHER-VISIBILITY-TRANSFER TV-D4, TV-D5, TV-D10; wireframe
@@ -33,7 +34,7 @@ const card: CSSProperties = {
   flexDirection: 'column',
   gap: spacing.sm,
 };
-const line: CSSProperties = { margin: 0, fontSize: typography.size.body, color: colors.text.primary, lineHeight: typography.leading.relaxed };
+const line: CSSProperties = { margin: 0, fontSize: rem(typography.size.body), color: colors.text.primary, lineHeight: typography.leading.relaxed };
 
 const fill = (text: string, name: string): string => text.split('{learner}').join(name);
 
@@ -107,7 +108,7 @@ export function FamilyClassCards({ familyId, api, movesShown }: { familyId: stri
       ))}
       {needed.map((l) => (
         <section key={l.learnerId} style={card} data-testid="class-scope-card" lang={textLocale} aria-labelledby={`${listId}-${l.learnerId}`}>
-          <h3 id={`${listId}-${l.learnerId}`} style={{ margin: 0, fontSize: typography.size.bodyLg, fontWeight: typography.weight.bold }}>
+          <h3 id={`${listId}-${l.learnerId}`} style={{ margin: 0, fontSize: rem(typography.size.bodyLg), fontWeight: typography.weight.bold }}>
             {t.title(l.name)}
           </h3>
           {CLASS_SCOPE_LINE_IDS.map((id) =>

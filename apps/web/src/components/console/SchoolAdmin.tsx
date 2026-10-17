@@ -13,6 +13,7 @@ import { ROUTES, loadErrorKey, type LoadError } from '@/lib/console/routing';
 import { assignableTeachers, limitNote, limitState, usageLine, weekLine } from '@/lib/console/school';
 import { useConsoleLocale } from '@/lib/i18n/locale-context';
 import { aroundSlot } from '@/lib/i18n/slot';
+import { rem } from '@/lib/console/rem';
 
 type SchoolNote = keyof Messages['console']['school']['notes'];
 
@@ -162,8 +163,8 @@ export function SchoolAdminView({
       </section>
 
       <section style={{ ...panelStyle, marginBottom: spacing.lg, textAlign: empty ? 'center' : 'left' }} aria-label={s.invite.title}>
-        <h2 style={{ fontSize: typography.size.bodyLg, margin: `0 0 ${spacing.xs}px` }}>{s.invite.title}</h2>
-        <div data-testid="invite-code" style={{ fontSize: empty ? typography.size.hero : typography.size.display, fontWeight: typography.weight.bold, letterSpacing: spacing.sm, fontFamily: typography.family.mono }}>
+        <h2 style={{ fontSize: rem(typography.size.bodyLg), margin: `0 0 ${spacing.xs}px` }}>{s.invite.title}</h2>
+        <div data-testid="invite-code" style={{ fontSize: rem(empty ? typography.size.hero : typography.size.display), fontWeight: typography.weight.bold, letterSpacing: spacing.sm, fontFamily: typography.family.mono }}>
           {view.invite.joinCode ?? '—'}
         </div>
         <Muted>{s.invite.role(codeExpiry(view.invite.joinCodeExpiresAt, now, locale))}</Muted>
@@ -180,13 +181,13 @@ export function SchoolAdminView({
         <Notice>{c.schoolEmpty}</Notice>
       ) : (
         <section style={{ ...panelStyle, marginBottom: spacing.lg }} aria-label={s.week.label}>
-          <h2 style={{ fontSize: typography.size.bodyLg, margin: `0 0 ${spacing.xs}px` }}>{s.week.title}</h2>
+          <h2 style={{ fontSize: rem(typography.size.bodyLg), margin: `0 0 ${spacing.xs}px` }}>{s.week.title}</h2>
           <Muted>{weekLine(view.thisWeek, locale)}</Muted>
         </section>
       )}
 
       <section aria-label={s.classes.title} style={{ marginBottom: spacing.lg }}>
-        <h2 style={{ fontSize: typography.size.bodyLg, margin: `0 0 ${spacing.sm}px` }}>{s.classes.title}</h2>
+        <h2 style={{ fontSize: rem(typography.size.bodyLg), margin: `0 0 ${spacing.sm}px` }}>{s.classes.title}</h2>
         <div style={{ display: 'grid', gap: spacing.sm }}>
           {view.classes.map((row) => (
             <article key={row.space.id} style={{ ...panelStyle, display: 'flex', justifyContent: 'space-between', gap: spacing.md, flexWrap: 'wrap', alignItems: 'center', opacity: row.space.archivedAt ? 0.6 : 1 }} data-testid="class-row">

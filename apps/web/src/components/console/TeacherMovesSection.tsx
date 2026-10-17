@@ -9,6 +9,7 @@ import { levelPillLabel } from '@/lib/console/level-label';
 import { relativeDay } from '@/lib/console/rollup';
 import { useConsoleLocale } from '@/lib/i18n/locale-context';
 import { MoveButton } from './TransferParts';
+import { rem } from '@/lib/console/rem';
 
 /**
  * [TV] "Teacher moves" on the class moves page (AMENDMENTS-TEACHER-VISIBILITY-TRANSFER TV-D8; wireframe
@@ -44,8 +45,8 @@ const card: CSSProperties = {
   gap: spacing.sm,
 };
 const row: CSSProperties = { display: 'flex', flexWrap: 'wrap', gap: spacing.sm, alignItems: 'center' };
-const h3: CSSProperties = { margin: `${spacing.lg}px 0 ${spacing.sm}px`, fontSize: typography.size.body, fontWeight: typography.weight.bold };
-const muted: CSSProperties = { margin: 0, color: colors.text.secondary, fontSize: typography.size.body };
+const h3: CSSProperties = { margin: `${spacing.lg}px 0 ${spacing.sm}px`, fontSize: rem(typography.size.body), fontWeight: typography.weight.bold };
+const muted: CSSProperties = { margin: 0, color: colors.text.secondary, fontSize: rem(typography.size.body) };
 const nudge: CSSProperties = { margin: 0, color: colors.text.primary, fontWeight: typography.weight.semibold, borderInlineStart: `${borderWidth.thick}px solid ${colors.feedback.nudge}`, paddingInlineStart: spacing.sm };
 
 export function TeacherMovesSection({ spaceId, api, online, readOnly, refreshMs, onPageState }: TeacherMovesSectionProps): JSX.Element | null {
@@ -140,7 +141,7 @@ export function TeacherMovesSection({ spaceId, api, online, readOnly, refreshMs,
 
   return (
     <section aria-labelledby={titleId} data-testid="teacher-moves" style={{ marginBottom: spacing.xl }}>
-      <h2 id={titleId} style={{ margin: `${spacing.md}px 0 ${spacing.sm}px`, fontSize: typography.size.bodyLg, fontWeight: typography.weight.bold }}>
+      <h2 id={titleId} style={{ margin: `${spacing.md}px 0 ${spacing.sm}px`, fontSize: rem(typography.size.bodyLg), fontWeight: typography.weight.bold }}>
         {t.title}
       </h2>
 
@@ -154,8 +155,8 @@ export function TeacherMovesSection({ spaceId, api, online, readOnly, refreshMs,
             <article key={m.id} style={card} data-testid="teacher-move-incoming">
               <div style={row}>
                 {alias ? <AvatarChip avatar={alias.avatar} /> : null}
-                <strong style={{ fontSize: typography.size.bodyLg }}>{alias?.alias ?? ''}</strong>
-                {level ? <span style={{ ...muted, fontSize: typography.size.bodySm }}>{level}</span> : null}
+                <strong style={{ fontSize: rem(typography.size.bodyLg) }}>{alias?.alias ?? ''}</strong>
+                {level ? <span style={{ ...muted, fontSize: rem(typography.size.bodySm) }}>{level}</span> : null}
               </div>
               <p style={muted}>{t.from(m.from.name)}</p>
               <p style={muted}>{t.asked(relativeDay(m.createdAt, now, locale))}</p>
@@ -183,7 +184,7 @@ export function TeacherMovesSection({ spaceId, api, online, readOnly, refreshMs,
           <article key={m.id} style={card} data-testid="teacher-move-outgoing">
             <div style={row}>
               {m.learner ? <AvatarChip avatar={m.learner.avatar} /> : null}
-              <strong style={{ fontSize: typography.size.bodyLg }}>{m.learner?.name ?? ''}</strong>
+              <strong style={{ fontSize: rem(typography.size.bodyLg) }}>{m.learner?.name ?? ''}</strong>
             </div>
             <p style={muted}>{t.to(m.to.name)}</p>
             <p style={muted}>{t.waitingOther}</p>

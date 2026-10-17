@@ -11,6 +11,7 @@ import type { RelinkView, Roster } from '@/lib/console/api';
 import { RELINK_REFRESH_MS, type RelinkNote, canReissueRescueCode, expiresLabel, relinkNoteText, requestedLabel } from '@/lib/console/relink';
 import { ROUTES, spaceIdFrom } from '@/lib/console/routing';
 import { aroundSlot } from '@/lib/i18n/slot';
+import { rem } from '@/lib/console/rem';
 
 /** console/relink-approval — F-TCH-001 §10.1. Identity and timing only; no progress numbers. */
 function RelinkInner(): JSX.Element {
@@ -98,7 +99,7 @@ function RelinkInner(): JSX.Element {
       <div style={{ display: 'grid', gap: spacing.md, marginBottom: spacing.xl }}>
         {(requests ?? []).map((req) => (
           <article key={req.id} style={panelStyle} data-testid="relink-card">
-            <div style={{ fontSize: typography.size.bodyLg }}>
+            <div style={{ fontSize: rem(typography.size.bodyLg) }}>
               {asking.before}
               <strong>{req.learnerName}</strong>
               {asking.after}
@@ -118,12 +119,12 @@ function RelinkInner(): JSX.Element {
       {/* A rescue code opens the whole snapshot: only a family re-issues one (SEC-4). */}
       {roster === null ? null : canReissueRescueCode(roster.space.kind) ? (
         <section style={panelStyle} aria-label={c.relink.anotherWay}>
-          <h2 style={{ fontSize: typography.size.bodyLg, margin: `0 0 ${spacing.xs}px` }}>{c.relink.anotherWay}</h2>
+          <h2 style={{ fontSize: rem(typography.size.bodyLg), margin: `0 0 ${spacing.xs}px` }}>{c.relink.anotherWay}</h2>
           <Muted>{c.relinkAnotherWay}</Muted>
           {issued ? (
             <div style={{ margin: `${spacing.md}px 0` }}>
-              <div style={{ fontSize: typography.size.caption, color: colors.text.muted }}>{issued.name}</div>
-              <div data-testid="rescue-code" style={{ fontSize: typography.size.display, fontWeight: typography.weight.bold, letterSpacing: spacing.xs, fontFamily: typography.family.mono, overflowWrap: 'anywhere' }}>{issued.code}</div>
+              <div style={{ fontSize: rem(typography.size.caption), color: colors.text.muted }}>{issued.name}</div>
+              <div data-testid="rescue-code" style={{ fontSize: rem(typography.size.display), fontWeight: typography.weight.bold, letterSpacing: spacing.xs, fontFamily: typography.family.mono, overflowWrap: 'anywhere' }}>{issued.code}</div>
               <Muted>{c.rescueIssued}</Muted>
               <Button onClick={() => setIssued(null)}>{c.relink.done.cta}</Button>
             </div>

@@ -27,7 +27,7 @@ vi.mock('@/lib/i18n/locale-context', async () => {
   return { useConsoleLocale: view, useMessages: () => view().messages, useLocale: () => 'en', useSetLocale: () => () => undefined };
 });
 
-vi.mock('@/components/console/LanguageSelect', () => ({ LanguageSelect: () => null }));
+vi.mock('@/components/console/DisplaySheet', () => ({ DisplayButton: () => null }));
 vi.mock('next/link', () => ({ default: ({ href, children }: { href: string; children: ReactNode }) => <a href={href}>{children}</a> }));
 vi.mock('@/components/console/AdultFrame', () => ({ AdultFrame: ({ children }: { children: ReactNode }) => <>{children}</> }));
 vi.mock('next/navigation', () => ({
