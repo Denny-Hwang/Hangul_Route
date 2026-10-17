@@ -280,7 +280,7 @@ export function HeaderRow({ back, onDisplay }: { back: React.ReactNode; onDispla
         {onDisplay ? <LessonDisplayButton onPress={onDisplay} /> : null}
         <DisplayButton onPress={() => setDisplayOpen(true)} testID="browse-display-open" />
       </View>
-      <DeviceDisplaySheet visible={displayOpen} onClose={() => setDisplayOpen(false)} testID="browse-device-display" />
+      <DeviceDisplaySheet visible={displayOpen} onClose={() => setDisplayOpen(false)} testID="browse-device-display" reportLocale={false} />
     </View>
   );
 }
