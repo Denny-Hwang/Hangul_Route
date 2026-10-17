@@ -405,8 +405,9 @@ function PlanInner(): JSX.Element {
               {draft.meta ? null : (
                 <div style={{ marginTop: spacing.md, display: 'flex', gap: spacing.sm, alignItems: 'center', flexWrap: 'wrap' }}>
                   <span style={{ color: colors.text.muted, fontSize: rem(typography.size.caption) }}>{p.pace.title}</span>
-                  <input type="date" value={start} onChange={(e) => setStart(e.target.value || dateKey(new Date()))} aria-label={p.pace.start} style={{ padding: spacing.xs, borderRadius: radii.sm, border: `1px solid ${colors.border.strong}` }} />
-                  <select value={perWeek} onChange={(e) => setPerWeek(Number(e.target.value))} aria-label={p.pace.perWeekLabel} style={{ padding: spacing.xs, borderRadius: radii.sm, border: `1px solid ${colors.border.strong}` }}>
+                  {/* Never wider than the row: at a large text size (a 300 % root at 320) a date field would push the page sideways (AMENDMENTS-DISPLAY-NAV section 4). */}
+                  <input type="date" value={start} onChange={(e) => setStart(e.target.value || dateKey(new Date()))} aria-label={p.pace.start} style={{ padding: spacing.xs, borderRadius: radii.sm, border: `1px solid ${colors.border.strong}`, maxWidth: '100%', minWidth: 0, boxSizing: 'border-box' }} />
+                  <select value={perWeek} onChange={(e) => setPerWeek(Number(e.target.value))} aria-label={p.pace.perWeekLabel} style={{ padding: spacing.xs, borderRadius: radii.sm, border: `1px solid ${colors.border.strong}`, maxWidth: '100%', minWidth: 0, boxSizing: 'border-box' }}>
                     {[1, 2, 3, 5, 7].map((n) => (
                       <option key={n} value={n}>{p.pace.perWeek(n)}</option>
                     ))}
