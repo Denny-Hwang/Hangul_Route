@@ -4,7 +4,7 @@ import { getMessages } from '@hangul-route/i18n';
 import { expect, test } from './fixtures';
 import { onboardSelf, openLettersEpisode, readStored, seedStored, waitForSaved } from './helpers';
 import { shot } from './shots';
-import { closeInstallGuide, expectNoSidewaysScroll } from './text-fit';
+import { closeInstallGuide, expectNoSidewaysScroll, expectTextFits } from './text-fit';
 
 /**
  * Owner items 6 and 7: one UI language per device (and per account), and a text size on every page,
@@ -263,9 +263,9 @@ test.describe('text size Largest at 360 x 640', () => {
 test.describe('text size Largest at 320 x 568 (the fit rule, AMENDMENTS-DISPLAY-NAV section 4)', () => {
   test.use({ viewport: { width: 320, height: 568 } });
 
-  test('the four tabs, Profile and the open Display sheet: no sideways scroll, no text past the edge', async ({ page }) => {
+  test('the four tabs, Profile and the open Display sheet: no sideways scroll, no text past the edge or clipped', async ({ page }) => {
     await learnerAtLargest(page);
-    await expectNoSidewaysScroll(page, 'Home');
+    await expectTextFits(page, 'Home');
     await shot(page, 'or67-home-largest-320x568');
     const tabs = page.getByRole('tablist').getByRole('link');
     await expect(tabs).toHaveCount(4);
@@ -276,29 +276,29 @@ test.describe('text size Largest at 320 x 568 (the fit rule, AMENDMENTS-DISPLAY-
     ] as const) {
       await tabs.nth(index).click();
       await page.waitForTimeout(400);
-      await expectNoSidewaysScroll(page, name);
+      await expectTextFits(page, name);
       await shot(page, `or67-${name.toLowerCase()}-largest-320x568`);
     }
     await tabs.nth(0).click();
     await page.getByRole('button', { name: 'Profile and settings' }).click();
     await expect(page.getByRole('heading', { name: 'Profiles & settings' })).toBeVisible();
-    await expectNoSidewaysScroll(page, 'Profile');
+    await expectTextFits(page, 'Profile');
     await page.getByTestId('profile-display-row').click();
     await expect(page.getByTestId('display-sheet')).toBeVisible();
-    await expectNoSidewaysScroll(page, 'the Display sheet');
+    await expectTextFits(page, 'the Display sheet');
     await shot(page, 'or67-display-sheet-largest-320x568');
   });
 
-  test('the quest player\'s first steps: no sideways scroll, no text past the edge', async ({ page }) => {
+  test('the quest player\'s first steps: no sideways scroll, no text past the edge or clipped', async ({ page }) => {
     await learnerAtLargest(page);
     await openLettersEpisode(page);
     await page.getByRole('button', { name: 'Start', exact: true }).first().click();
     await expect(page.getByRole('button', { name: 'Leave quest' })).toBeVisible();
-    await expectNoSidewaysScroll(page, 'the quest intro');
+    await expectTextFits(page, 'the quest intro');
     await shot(page, 'or67-quest-intro-largest-320x568');
     await page.getByRole('button', { name: 'Continue' }).click();
     await expect(page.getByText('Look and learn', { exact: true })).toBeVisible();
-    await expectNoSidewaysScroll(page, 'the Discover step');
+    await expectTextFits(page, 'the Discover step');
     await shot(page, 'or67-quest-discover-largest-320x568');
   });
 });
