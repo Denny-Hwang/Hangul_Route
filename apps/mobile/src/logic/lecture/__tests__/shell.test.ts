@@ -13,7 +13,9 @@ import {
   completePayload,
   endLetters,
   fitShown,
+  barOverlap,
   gestureCommand,
+  inBarStrip,
   homeStart,
   presenterLocale,
   resolveBoot,
@@ -27,7 +29,7 @@ import {
   nextStrokePlay,
   strokeTokenFor,
 } from '../shell';
-import { barBand, stageBox, stageButtonSize, units } from '../stage-constants';
+import { NO_INSETS, barBand, stageBox, stageButtonSize, units } from '../stage-constants';
 import { stageScale } from '../stage-scale';
 import { layout, presenter, spacing, touchTarget } from '@hangul-route/design-system/tokens';
 
@@ -259,6 +261,31 @@ describe('runDeck: the slides this build draws', () => {
     expect(run.minutes).toBe(3);
   });
 
+  it('an undrawn quiz gives its minute back only when it counted one: a quiz block, never a story check (rule 12)', () => {
+    const pictures: Slide = {
+      kind: 'quiz',
+      prompt: { ask: 'check', text: 'Which one?' },
+      options: [{ gloss: 'A sun', art: 'art/sun', correct: true }, { gloss: 'A moon', correct: false }],
+      textPrompt: false,
+      key: 'story:x/check-c2',
+      builds: ['question', 'answer'],
+    };
+    const letter = expandDeck(deckOf([{ kind: 'jamo-set', jamoIds: ['jamo:giyeok'] }]), lectureBundle('en'), { canPlayKorean: true }).slides;
+    const deck = deckOf([{ kind: 'story', storyId: 'story:x', checks: true }, { kind: 'quiz', from: 'all', rounds: 1 }, { kind: 'jamo-set', jamoIds: ['jamo:giyeok'] }]);
+    const story = runDeck(deck, { slides: [pictures, ...letter], skipped: [], taught: [], minutes: 5, timedQuizKeys: [] });
+    expect(story.minutes).toBe(5);
+    const quizBlockSlide: Slide = { ...pictures, key: 'quiz/q1' };
+    const quiz = runDeck(deck, { slides: [quizBlockSlide, ...letter], skipped: [], taught: [], minutes: 5, timedQuizKeys: ['quiz/q1'] }, new Set(['letter', 'end']));
+    expect(quiz.minutes).toBe(4);
+  });
+
+  it('a run with slides is at least 1 minute, even after every counted minute is given back', () => {
+    const letter = expandDeck(deckOf([{ kind: 'jamo-set', jamoIds: ['jamo:giyeok'] }]), lectureBundle('en'), { canPlayKorean: true }).slides;
+    const activity: Slide = { kind: 'activity', preset: 'air-write', minutes: 3, key: 'activity:air-write', builds: ['prompt'] };
+    const deck = deckOf([{ kind: 'activity', preset: 'air-write', minutes: 3 }, { kind: 'jamo-set', jamoIds: ['jamo:giyeok'] }]);
+    expect(runDeck(deck, { slides: [activity, ...letter], skipped: [], taught: [], minutes: 3 }, new Set(['letter', 'end'])).minutes).toBe(1);
+  });
+
   it('a story check with picture options stays one not-shown part (no projected option draws art yet)', () => {
     const pictures: Slide = {
       kind: 'quiz',
@@ -382,16 +409,17 @@ describe('slideDetail', () => {
 });
 
 describe('telemetry payloads', () => {
-  it('lecture.start carries counts and modes, nothing about a person or the title', () => {
+  it('lecture.start carries counts and modes, nothing about a person or the title; picker is always none (LV-H)', () => {
+    // A cached console link may still carry a picker: the presenter has none, so it reports none.
     const deck = deckOf([{ kind: 'episode', id: 'episode:stage1-letters' }], { picker: { mode: 'names', count: 12 }, options: { romanization: 'tap' } });
     const run = runDeck(deck, expandDeck(deck, lectureBundle('en'), { canPlayKorean: true }));
-    const payload = startPayload({ deck, run, source: 'console', pickerMode: 'numbers', capability: ready, offlineReady: true });
+    const payload = startPayload({ deck, run, source: 'console', capability: ready, offlineReady: true });
     expect(payload).toEqual({
       source: 'console',
       blocks: 1,
       slides: run.slides.length,
       skipped: run.parts.length,
-      picker: 'numbers',
+      picker: 'none',
       romanization: 'tap',
       voice: 'ready',
       offlineReady: true,
@@ -423,21 +451,53 @@ describe('telemetry payloads', () => {
 describe('stage box (README D1)', () => {
   it('the bar band is touchTarget.hero + 2 x spacing.md = 120, and the stage box is the window minus it', () => {
     expect(BAR_BAND).toBe(120);
-    expect(stageBox({ width: 1280, height: 720 }, BAR_BAND)).toEqual({ width: 1280, height: 600 });
-    expect(stageBox({ width: 100, height: 50 }, BAR_BAND)).toEqual({ width: 100, height: 0 });
+    expect(stageBox({ width: 1280, height: 720 }, BAR_BAND, NO_INSETS)).toEqual({ width: 1280, height: 600 });
+    expect(stageBox({ width: 100, height: 50 }, BAR_BAND, NO_INSETS)).toEqual({ width: 100, height: 0 });
   });
 
   it('1280 x 720 gives unit 1; 1920 x 1080 unit 1.5; 2560 x 1080 unit 1.6 (not the window 1.8)', () => {
-    expect(stageScale(stageBox({ width: 1280, height: 720 }, BAR_BAND), BOUNDS).unit).toBe(1);
-    expect(stageScale(stageBox({ width: 1920, height: 1080 }, BAR_BAND), BOUNDS).unit).toBe(1.5);
-    expect(stageScale(stageBox({ width: 2560, height: 1080 }, BAR_BAND), BOUNDS).unit).toBeCloseTo(1.6);
-    expect(stageScale(stageBox({ width: 1024, height: 768 }, BAR_BAND), BOUNDS).unit).toBeCloseTo(0.8);
+    expect(stageScale(stageBox({ width: 1280, height: 720 }, BAR_BAND, NO_INSETS), BOUNDS).unit).toBe(1);
+    expect(stageScale(stageBox({ width: 1920, height: 1080 }, BAR_BAND, NO_INSETS), BOUNDS).unit).toBe(1.5);
+    expect(stageScale(stageBox({ width: 2560, height: 1080 }, BAR_BAND, NO_INSETS), BOUNDS).unit).toBeCloseTo(1.6);
+    expect(stageScale(stageBox({ width: 1024, height: 768 }, BAR_BAND, NO_INSETS), BOUNDS).unit).toBeCloseTo(0.8);
   });
 
   it('a stage button never drops below the hero target; units round to whole pixels', () => {
     expect(stageButtonSize(0.6, touchTarget.hero)).toBe(touchTarget.hero);
     expect(stageButtonSize(1.5, touchTarget.hero)).toBe(144);
     expect(units(1.5, 360)).toBe(540);
+  });
+
+  it('in a phone window a stage button floors at the touch target instead (F-TCH-004 section 3.6 phone exception)', () => {
+    expect(stageButtonSize(0.44, touchTarget.hero, touchTarget.min)).toBe(touchTarget.min);
+    expect(stageButtonSize(0.8, touchTarget.hero, touchTarget.min)).toBe(Math.round(0.8 * touchTarget.hero));
+  });
+});
+
+describe("the compact bar's strip on a phone stage (F-TCH-004 section 3.6)", () => {
+  it('a tap in the strip shows or hides the bar instead of stepping; above it the stage takes the tap', () => {
+    expect(inBarStrip({ y: 300, height: 320, strip: 60, dx: 0, dy: 0 })).toBe(true);
+    expect(inBarStrip({ y: 260, height: 320, strip: 60, dx: 2, dy: 3 })).toBe(true);
+    expect(inBarStrip({ y: 259, height: 320, strip: 60, dx: 0, dy: 0 })).toBe(false);
+  });
+
+  it('a swipe that starts in the strip still moves the slide', () => {
+    expect(inBarStrip({ y: 300, height: 320, strip: 60, dx: -80, dy: 0 })).toBe(false);
+    expect(inBarStrip({ y: 300, height: 320, strip: 60, dx: 0, dy: -70 })).toBe(false);
+  });
+
+  it('no strip, or a stage before layout, takes no tap', () => {
+    expect(inBarStrip({ y: 300, height: 320, strip: 0, dx: 0, dy: 0 })).toBe(false);
+    expect(inBarStrip({ y: 0, height: 0, strip: 60, dx: 0, dy: 0 })).toBe(false);
+    expect(inBarStrip({ y: 300, height: 320, strip: Number.NaN, dx: 0, dy: 0 })).toBe(false);
+  });
+
+  it('the strip is what of the bar reaches above the bottom inset and the letterbox', () => {
+    expect(barOverlap(80, 0, 0)).toBe(80);
+    expect(barOverlap(101, 21, 0)).toBe(80);
+    expect(barOverlap(80, 0, 30)).toBe(50);
+    expect(barOverlap(80, 40, 50)).toBe(0);
+    expect(barOverlap(80, -5, -5)).toBe(80);
   });
 });
 

@@ -25,7 +25,12 @@ describe('HELP_KEYS (the Keys and controls overlay, section 3.5)', () => {
     for (const c of ['next', 'prev', 'first', 'replay-sound', 'replay-stroke', 'toggle-romanization', 'fullscreen', 'escape']) {
       expect(commands).toContain(JSON.stringify(c));
     }
-    for (const o of ['blank', 'timer', 'picker', 'grid', 'help']) expect(commands).toContain(JSON.stringify({ overlay: o }));
+    for (const o of ['blank', 'timer', 'grid', 'help']) expect(commands).toContain(JSON.stringify({ overlay: o }));
+  });
+
+  it('has no helper picker row (LV-H)', () => {
+    expect(HELP_KEYS.map((r) => r.row)).not.toContain('picker');
+    expect(HELP_KEYS.flatMap((r) => r.keys)).not.toContain('p');
   });
 
   it('the next and back rows show the up and down arrows too (README review)', () => {

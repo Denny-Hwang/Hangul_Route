@@ -1,4 +1,4 @@
-import { KOREAN_LANGUAGE, colors, presenter, typography, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
+import { KOREAN_LANGUAGE, colors, presenter, touchTarget, typography, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
 import type { Messages, UiLocale } from '@hangul-route/i18n';
 import React, { createContext, useContext } from 'react';
 import { Text, type TextStyle } from 'react-native';
@@ -19,6 +19,14 @@ export interface PresenterView {
   reducedMotion: boolean;
   /** The browser blocked the last sound (a long idle): the speaker reads "Tap to hear" (section 3.7). */
   soundBlocked?: boolean;
+  /** A phone window: a control on the stage floors at `touchTarget.min`, not `touchTarget.hero` (F-TCH-004 section 3.6 phone exception). */
+  phone?: boolean;
+}
+
+/** The smallest a control drawn on the stage may be: `touchTarget.hero`, or `touchTarget.min` in a phone window. */
+export function useStageControlFloor(): number {
+  const { phone } = usePresenterView();
+  return phone ? touchTarget.min : touchTarget.hero;
 }
 
 const PresenterViewContext = createContext<PresenterView | null>(null);

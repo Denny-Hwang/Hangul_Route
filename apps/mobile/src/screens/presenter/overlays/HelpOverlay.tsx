@@ -15,6 +15,8 @@ import { ChipRadios, Cover, ToolButton, type ChipOption } from './OverlayParts';
  * opened from the presenter home, where no lesson is open); the Presenter
  * language chips (section 3.12: session only, the device locale is never written; drawn only when
  * the build offers two or more locales); Keep controls visible (section 3.5); Close. Real pixels; it scrolls inside the stage box when taller.
+ * In a phone window (`phone`, F-TCH-004 section 3.6) one line under the title says how to show
+ * the controls: a tap at the bottom of the slide, the bar's strip.
  */
 export function HelpOverlay({
   romanization,
@@ -25,6 +27,7 @@ export function HelpOverlay({
   keepVisible,
   onKeepVisible,
   onClose,
+  phone,
 }: {
   /** The open lesson's romanization; null (Help opened from the home, no lesson open) draws no switch. */
   romanization: RomanizationMode | null;
@@ -36,6 +39,8 @@ export function HelpOverlay({
   keepVisible: boolean;
   onKeepVisible: (on: boolean) => void;
   onClose: () => void;
+  /** A phone window: the bar's strip line under the title (`help.phoneBar`). */
+  phone?: boolean;
 }): React.ReactElement {
   const { messages } = usePresenterView();
   const m = messages.learner.presenter.help;
@@ -77,6 +82,11 @@ export function HelpOverlay({
             </Text>
             <ToolButton ref={close} testID="presenter-help-close" label={messages.common.buttons.close} onPress={onClose} />
           </View>
+          {phone ? (
+            <Text {...KOREAN_LINE_BREAK} testID="presenter-help-phone-bar" style={{ fontSize: typography.size.body, color: colors.text.secondary, lineHeight: Math.round(typography.size.body * typography.leading.normal) }}>
+              {m.phoneBar}
+            </Text>
+          ) : null}
           <View role="list" style={{ flexDirection: 'row', flexWrap: 'wrap', rowGap: spacing.sm, columnGap: spacing.xl }}>
             {HELP_KEYS.map((row) => (
               <View key={row.row} role="listitem" style={{ width: twoColumns ? '47%' : '100%', flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>

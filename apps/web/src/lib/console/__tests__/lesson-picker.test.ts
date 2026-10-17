@@ -38,7 +38,9 @@ import {
   planStagesNotice,
   rowDetail,
   visibleCount,
+  withLectureTopicMinutes,
 } from '../lesson-picker';
+import { blockMinutes, vocabMinutes } from '../lecture';
 import { ROUTES } from '../routing';
 
 /**
@@ -92,9 +94,26 @@ describe('labels', () => {
   it('rowDetail for an episode, a story, a topic and a letter set (the console draws none)', () => {
     expect(rowDetail(row(plan, 'episode:stage1-letters'), w)).toBe('3 lessons · about 15 min');
     expect(rowDetail(row(lecture, 'story:hangeul-day'), w)).toBe(`about ${CATALOG.stories.find((s) => s.id === 'story:hangeul-day')!.minutes} min`);
-    expect(rowDetail(row(lecture, 'vocab-topic:food'), w)).toBe('about 5 min');
+    // A word topic says what the outline counts for it (rule 12 as amended, LV-M1): 12 words = 6 + 5 quiz questions.
+    expect(rowDetail(row(lecture, 'vocab-topic:food'), w)).toBe('about 11 min');
     const withLetters = chooserGroups({ catalog: CATALOG, title: (id) => id, letters: { consonants: ['jamo:g'], vowels: [], titles: { consonants: 'C', vowels: 'V' } } });
     expect(rowDetail(row(withLetters, 'letters:consonants'), w)).toBe('');
+  });
+
+  it('a lecture word topic row has the minutes the outline gives its block; other rows keep the catalogue minutes', () => {
+    const minutesOf = (r: ChooserRow): number | null => ('minutes' in r ? r.minutes : null);
+    for (const t of LECTURE_VOCAB_TOPICS) {
+      expect(minutesOf(row(lecture, t.id)), t.id).toBe(vocabMinutes(t.id));
+      expect(minutesOf(row(lecture, t.id)), t.id).toBe(blockMinutes({ kind: 'vocab', topicId: t.id }));
+    }
+    const story = row(lecture, 'story:hangeul-day');
+    expect(minutesOf(story)).toBe(CATALOG.stories.find((s) => s.id === 'story:hangeul-day')!.minutes);
+    expect(minutesOf(row(lecture, 'episode:stage1-letters'))).toBe(minutesOf(row(plan, 'episode:stage1-letters')));
+    // A topic the lecture mirror does not know keeps its catalogue minutes; a row of another kind is left as it is.
+    const odd: ChooserGroup = { ...group(lecture, 'topics'), rows: [{ kind: 'topic', key: 'vocab-topic:none', title: 'None', minutes: 5, search: '' }, story] };
+    expect(withLectureTopicMinutes(odd).rows.map(minutesOf)).toEqual([5, minutesOf(story)]);
+    const stage = group(lecture, 'stage1');
+    expect(withLectureTopicMinutes(stage)).toBe(stage);
   });
 
   it('visibleCount counts every row and every lesson shown', () => {

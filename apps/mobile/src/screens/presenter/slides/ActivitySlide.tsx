@@ -1,11 +1,11 @@
-import { Hoya, borderWidth, colors, presenter, radii, spacing, touchTarget, typography, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
+import { Hoya, borderWidth, colors, presenter, radii, spacing, typography, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
 import React from 'react';
 import { Pressable, Text, View } from 'react-native';
 import type { Slide } from '../../../logic/lecture/deck-builder';
 import { activityTimerMs } from '../../../logic/lecture/slide-view';
 import { HOYA_STAGE, STAGE_CTA_HEIGHT, units } from '../../../logic/lecture/stage-constants';
 import { STAGE_GAP, STAGE_GAP_INNER } from '../stage-metrics';
-import { usePresenterView, useStageText } from '../presenter-context';
+import { usePresenterView, useStageControlFloor, useStageText } from '../presenter-context';
 
 type ActivityBody = Extract<Slide, { kind: 'activity' }>;
 
@@ -24,6 +24,7 @@ export function ActivitySlide({ slide, onStartTimer }: { slide: ActivityBody; on
   const titleSize = size(presenter.size.title);
   const promptSize = size(presenter.size.prompt);
   const enabled = onStartTimer !== undefined;
+  const floor = useStageControlFloor();
   return (
     <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: units(unit, STAGE_GAP) }}>
       <Hoya pose="cheering" size={units(unit, HOYA_STAGE)} accessibilityLabel={messages.a11y.hoya('cheering')} />
@@ -43,7 +44,7 @@ export function ActivitySlide({ slide, onStartTimer }: { slide: ActivityBody; on
           style={(state) => {
             const focused = (state as { focused?: boolean }).focused === true;
             return {
-              minHeight: Math.max(touchTarget.hero, units(unit, STAGE_CTA_HEIGHT)),
+              minHeight: Math.max(floor, units(unit, STAGE_CTA_HEIGHT)),
               paddingVertical: units(unit, spacing.lg),
               paddingHorizontal: units(unit, spacing.xxxl),
               borderRadius: radii.pill,

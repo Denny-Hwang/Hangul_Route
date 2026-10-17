@@ -1,12 +1,12 @@
-import { WORD_ART_KEYS, colors, presenter, supportedCardIds } from '@hangul-route/design-system';
+import { WORD_ART_KEYS, borderWidth, colors, layout, presenter, radii, spacing, supportedCardIds, typography, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
 import { LOCALE_META, availableLocales, dictionaryLocale, getMessages, type UiLocale } from '@hangul-route/i18n';
-import { encodeDeck, type LectureDeck, type PickerMode } from '@hangul-route/content-schema';
+import { decodeDeck, encodeDeck, type LectureDeck } from '@hangul-route/content-schema';
 import { StatusBar } from 'expo-status-bar';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
-import { View, useWindowDimensions } from 'react-native';
+import { Text, View, useWindowDimensions } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { canPlayKorean, type AudioCapability } from './src/logic/audio/capability';
 import { lectureBundle } from './src/logic/lecture/content';
 import { lectureStories } from './src/logic/lecture/sources/story';
@@ -15,8 +15,6 @@ import { createAudioRunner } from './src/logic/story/audio-runner';
 import { initialPresenterState, reduce, type PresenterEvent, type PresenterState } from './src/logic/lecture/controls';
 import { expandDeck, withBuilds, type Slide } from './src/logic/lecture/deck-builder';
 import type { KeyCommand } from './src/logic/lecture/keymap';
-import { createPicker, reducePicker, type PickerEvent, type PickerState } from './src/logic/lecture/picker';
-import { clearPickerLabels, heldLabels } from './src/logic/lecture/picker-labels';
 import { recentView } from './src/logic/lecture/home-view';
 import { quickSource } from './src/logic/lecture/quick-source';
 import { commitRecent, emptyRecent, forgetDeck, readRecent, rememberDeck, setLastSlide, type LoadedRecent, type RecentList, type RecentStore } from './src/logic/lecture/recent';
@@ -42,35 +40,40 @@ import {
   voiceState,
 } from './src/logic/lecture/shell';
 import { FONT_WAIT_MS, TIMER_TICK_MS, stageBox } from './src/logic/lecture/stage-constants';
+import { popPlan, type HistoryEntry } from './src/logic/lecture/history';
 import { initialTimer, justFinished, reduceTimer, type TimerEvent, type TimerState } from './src/logic/lecture/timer';
-import { firstUses, fullscreenToggle, gridItems, helpLanguageChips, narrationStops, pickerModes, sayItShown, statusChips, timerOpenEvent, toolsOpened, type LectureTool } from './src/logic/lecture/tools';
-import { BAR_BAND, STAGE_BOUNDS } from './src/screens/presenter/stage-metrics';
+import { firstUses, fullscreenToggle, gridItems, helpLanguageChips, narrationStops, sayItShown, statusChips, timerOpenEvent, toolsOpened, type LectureTool } from './src/logic/lecture/tools';
+import { BAR_BAND, PHONE_BAR_STRIP, PHONE_RULE, PHONE_STAGE_BOUNDS, STAGE_BOUNDS } from './src/screens/presenter/stage-metrics';
 import { slideSound } from './src/logic/lecture/slide-view';
-import { stageScale } from './src/logic/lecture/stage-scale';
+import { isPhoneWindow, stageScale, stageView } from './src/logic/lecture/stage-scale';
 import { getCapability, playPrompt, refreshCapability, stop as stopAudio, subscribeCapability, unlockAudio } from './src/platform/audio';
 import { setDocumentLang } from './src/platform/locale';
+import { coarsePointer, deviceScreen } from './src/platform/orientation';
 import { isOnline, subscribeOnline } from './src/platform/online';
 import { useReducedMotion } from './src/platform/motion';
 import {
-  announceReady,
   checkForUpdate,
+  clearPresenterForward,
   enterFullscreenLandscape,
   exitFullscreen,
   fullscreenSupported,
-  hasOpener,
   isFullscreen,
   keepScreenAwake,
-  listenForRoster,
   forgetOpenDeck,
-  holdOpenDeck,
+  leavePresenter,
   playChime,
+  pushPresenterEntry,
   releaseScreenAwake,
   reloadForUpdate,
   reloadOnDeckLink,
+  returnToPresenterHome,
   setPresenterDocTitle,
+  stepBackPresenter,
   subscribeActivity,
   subscribeFullscreen,
+  subscribeInputKind,
   subscribeKeys,
+  subscribePresenterPop,
   takeDeckFragment,
   unlockChime,
   unlockOrientation,
@@ -87,11 +90,10 @@ import { PresenterHomeScreen } from './src/screens/presenter/HomeScreen';
 import { BlankOverlay, PauseOverlay } from './src/screens/presenter/overlays/BlankOverlay';
 import { GridOverlay } from './src/screens/presenter/overlays/GridOverlay';
 import { HelpOverlay } from './src/screens/presenter/overlays/HelpOverlay';
-import { PickerOverlay } from './src/screens/presenter/overlays/PickerOverlay';
 import { TimerOverlay, type TimerControls } from './src/screens/presenter/overlays/TimerOverlay';
 import { PresenterViewProvider, type PresenterView } from './src/screens/presenter/presenter-context';
 import { Stage, StageHint } from './src/screens/presenter/Stage';
-import { StartScreen, type PickerRow } from './src/screens/presenter/StartScreen';
+import { StartScreen } from './src/screens/presenter/StartScreen';
 import { StatePage } from './src/screens/presenter/StatePage';
 import { useAudioStore } from './src/store/audio-store';
 import { activeLocale, useLocaleStore } from './src/store/locale-store';
@@ -106,14 +108,29 @@ import { activeLocale, useLocaleStore } from './src/store/locale-store';
  * Boot: the `#d=` deck fragment is read and taken out of the address before the first paint; a
  * reload reopens the tab's open lesson from Recent at its slide. It hydrates the audio settings
  * and the device locale only (section 3.9). The start screen checks the device, waits for the
- * presenter font, and its Start tap unlocks audio and asks for fullscreen, the wake lock and
- * landscape. Writes: `lecture:recent` (a deck has no name field) and the telemetry queue.
- * Picker labels arrive only from the console tab that opened this one and stay in memory.
+ * presenter font, and its Start tap runs the gestures that need one (audio, fullscreen and then
+ * landscape, the screen wake lock; section 3.5) and pushes the lesson's history entry. Recent is
+ * written and `lecture.start` sent only when the first slide is actually shown, so a Start on a
+ * phone held upright (the rotate page) or in a window too small is neither counted nor stored until
+ * the stage appears. Writes: `lecture:recent` (a deck has no name field) and the telemetry queue.
  *
- * The class tools (PR 9): the timer (corner or full), the helper picker, Blank and its Pause, the
- * slide grid and Keys and controls, each reported once per lecture as `lecture.tool_used` (the
- * tool name only). The picker's bag and the timer live in memory for this lecture and are dropped
- * on Exit; nothing about who was drawn is kept, shown or sent.
+ * Phones (F-TCH-004 section 3.6 phone exception; owner report 2026-10-16 item 1): in a phone window
+ * (`isPhoneWindow`: window, screen and a coarse pointer) the stage is the whole window less the
+ * safe-area insets, judged too small only below `PHONE_STAGE_MIN`; upright, a lesson shows the
+ * rotate page. The compact bar floats over the stage bottom and never covers a new slide: every
+ * step hides it at once, a stage tap never shows it; it shows at the start of the lesson, on a tap
+ * in its strip (the grabber marks it) and while keyboard or screen-reader focus is inside it.
+ *
+ * The way back (section 3.5 "History"; item 3): one history entry per phase (`logic/lecture/
+ * history.ts`), so the browser or phone back goes lesson -> Exit confirm (a covering overlay closes
+ * first; a second back exits), start screen -> home, home -> the page before; the home has its own
+ * Back. After a back in a lesson the lesson's entry is pushed again only at the next user
+ * activation (Keep going, a stage tap, a bar button, a key).
+ *
+ * The class tools (PR 9): the timer (corner or full), Blank and its Pause, the slide grid and Keys
+ * and controls, each reported once per lecture as `lecture.tool_used` (the tool name only). The
+ * timer lives in memory for this lecture and is dropped on Exit. The helper picker is gone (LV-H):
+ * a deck from an older link may still name one, and the presenter ignores it.
  */
 
 // The strict read throws on a failed or damaged read, so Recent is then never written over (`readRecent`).
@@ -123,29 +140,54 @@ let bootRead: { address: DeckAddress | null } | null = null;
 
 /** The address is read once per page, before the first paint (the fragment then leaves it). */
 function readAddress(): DeckAddress | null {
-  if (bootRead === null) bootRead = { address: takeDeckFragment() };
+  // A link that does not decode pushes no start-screen entry (section 3.5 "History" rule 6).
+  if (bootRead === null) bootRead = { address: takeDeckFragment(undefined, (raw) => decodeDeck(raw).ok) };
   return bootRead.address;
 }
+
+/** `fresh`: Start over held the deck to open at its first slide on a reload before Start. */
+type ReadyPhase = { kind: 'ready'; deck: LectureDeck; source: StartSource; resumeKey?: string; fresh?: true };
 
 type Phase =
   | { kind: 'boot' }
   | { kind: 'invalid'; stale?: true }
   | { kind: 'home' }
-  | { kind: 'ready'; deck: LectureDeck; source: StartSource; resumeKey?: string }
-  | { kind: 'running'; deck: LectureDeck; source: StartSource };
+  | ReadyPhase
+  /** `from`: the start screen it came from, for the turn-sideways page's Back. */
+  | { kind: 'running'; deck: LectureDeck; source: StartSource; from: ReadyPhase };
 
-function phaseOf(result: BootResult): Phase {
-  if (result.kind === 'deck') return { kind: 'ready', deck: result.deck, source: result.source, ...(result.resumeKey !== undefined ? { resumeKey: result.resumeKey } : {}) };
+function phaseOf(result: BootResult, address: DeckAddress | null): Phase {
+  if (result.kind === 'deck') {
+    return {
+      kind: 'ready',
+      deck: result.deck,
+      source: result.source,
+      ...(result.resumeKey !== undefined ? { resumeKey: result.resumeKey } : {}),
+      ...(address?.fresh === true ? { fresh: true as const } : {}),
+    };
+  }
   // A link from a newer presenter (AMENDMENTS-LECTURE-V2 section 4.5): the page offers Reload.
   if (result.kind === 'invalid') return result.reason === 'unsupported_version' ? { kind: 'invalid', stale: true } : { kind: 'invalid' };
   return { kind: result.kind };
 }
 
+/** The presenter root: the gesture and safe-area providers, then the presenter (`useSafeAreaInsets` needs the provider above it). */
 export default function PresenterApp(): React.ReactElement {
+  return (
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaProvider>
+        <Presenter />
+        <StatusBar style="dark" />
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
+  );
+}
+
+function Presenter(): React.ReactElement {
   const address = useMemo(readAddress, []);
   // A link opens at once; a reloaded deck waits for Recent (it may resume at its slide); no deck is the home.
   const [phase, setPhase] = useState<Phase>(() =>
-    address === null ? { kind: 'home' } : address.reloaded ? { kind: 'boot' } : phaseOf(resolveBoot(address, emptyRecent())),
+    address === null ? { kind: 'home' } : address.reloaded ? { kind: 'boot' } : phaseOf(resolveBoot(address, emptyRecent()), address),
   );
   // Recent lessons, read once at boot; every change chains on the read, so a fast Start never saves over it.
   const recent = useRef<Promise<LoadedRecent>>(Promise.resolve({ list: emptyRecent(), writable: false }));
@@ -168,7 +210,20 @@ export default function PresenterApp(): React.ReactElement {
   const messages = useMemo(() => getMessages(dictionaryLocale(locale)), [locale]);
   const reducedMotion = useReducedMotion();
   const window = useWindowDimensions();
+  const insets = useSafeAreaInsets();
+  // A phone window (F-TCH-004 section 3.6): a phone-sized window on a phone-sized screen with a coarse pointer.
+  const coarse = useMemo(coarsePointer, []);
+  const screen = deviceScreen();
+  const phone = isPhoneWindow({ w: window.width, h: window.height, screenW: screen?.width ?? null, screenH: screen?.height ?? null, coarse }, PHONE_RULE);
+  const phoneRef = useRef(phone);
+  phoneRef.current = phone;
+  const upright = window.height > window.width;
+  // A short window (a phone sideways): the phone start screen steps its title and Start down.
+  const short = window.height < layout.shortHeight;
   const [band, setBand] = useState<number>(BAR_BAND);
+  const [moreOpen, setMoreOpen] = useState(false);
+  const moreOpenRef = useRef(moreOpen);
+  moreOpenRef.current = moreOpen;
   const [capability, setCapability] = useState<AudioCapability>(getCapability);
   const [voiceChecked, setVoiceChecked] = useState(false);
   const muted = useAudioStore((s) => s.muted);
@@ -202,7 +257,7 @@ export default function PresenterApp(): React.ReactElement {
     });
     if (address?.reloaded) {
       void recent.current.then(({ list }) => {
-        if (live) setPhase(phaseOf(resolveBoot(address, list)));
+        if (live) setPhase(phaseOf(resolveBoot(address, list), address));
       });
     }
     const offLink = reloadOnDeckLink();
@@ -250,21 +305,11 @@ export default function PresenterApp(): React.ReactElement {
         rejected.current = true;
         void track({ name: 'lecture.deck_rejected', payload: { reason: 'invalid' } });
       }
-      forgetOpenDeck();
+      // Its start-screen entry goes: the invalid page sits on the home entry (rule 6).
+      void returnToPresenterHome();
       setPhase({ kind: 'invalid' });
     }
   }, [phase, run, address]);
-
-  // Roster hand-off: tell the opener we are ready (again on every load) and hold a valid answer in memory.
-  const [rosterTick, setRosterTick] = useState(0);
-  useEffect(() => {
-    if (!deck) return undefined;
-    const stop = listenForRoster(deck, () => setRosterTick((n) => n + 1));
-    announceReady(deck);
-    return stop;
-  }, [deck]);
-  const labels = useMemo(() => (deck ? heldLabels(deck) : null), [deck, rosterTick]);
-  const [pickerCount, setPickerCount] = useState<number | null>(null);
 
   const view: PresenterView = useMemo(() => ({ messages, locale, unit: 0, reducedMotion, soundBlocked }), [messages, locale, reducedMotion, soundBlocked]);
 
@@ -287,9 +332,17 @@ export default function PresenterApp(): React.ReactElement {
   const tally = useRef<RunTally | null>(null);
   const [romanization, setRomanization] = useState<'always' | 'tap' | null>(null);
   const [strokePlay, setStrokePlay] = useState<StrokePlay | null>(null);
-  const [endHint, setEndHint] = useState(false);
   const [fullscreen, setFullscreen] = useState(isFullscreen);
+  // Next on the End slide: the hint, and focus on the docked bar's Exit or the compact bar's More (which holds Exit).
   const exitRef = useRef<View>(null);
+  const [endHint, setEndHint] = useState(false);
+  // On a phone the no-voice chip shows for a moment at the top of the stage when a sound build cannot play (section 3.6).
+  const [noVoiceFlash, setNoVoiceFlash] = useState(0);
+  // The lesson began: its first slide was shown (Recent written, lecture.start sent).
+  const begun = useRef(false);
+  // After a browser back in the lesson (section 3.5 "History" rule 4) the lesson's entry is pushed
+  // again at the next user activation, never from the popstate itself.
+  const repush = useRef(false);
 
   // ---- the class tools (PR 9; TD5: teacher tools, nothing about a learner is kept or sent) ----
   const toolsUsed = useRef<ReadonlySet<LectureTool>>(new Set());
@@ -320,30 +373,41 @@ export default function PresenterApp(): React.ReactElement {
   const [keepVisible, setKeepVisible] = useState(false);
   const keepVisibleRef = useRef(keepVisible);
   keepVisibleRef.current = keepVisible;
-  // The helper picker's bag, for this lecture only: made when the picker first opens.
-  const [picker, setPicker] = useState<PickerState | null>(null);
-  const pickerOpen = pstate?.overlay === 'picker';
-  useEffect(() => {
-    if (!pickerOpen || picker !== null || !deck?.picker) return;
-    const count = pickerCount ?? deck.picker.count;
-    setPicker(createPicker({ mode: labels !== null ? deck.picker.mode : 'numbers', count, labels }, Math.random));
-  }, [pickerOpen, picker, deck, labels, pickerCount]);
-  // Names delivered again (the console re-sends them after a reload) make a new bag.
-  useEffect(() => setPicker(null), [labels]);
-  const onPickerEvent = useCallback((event: PickerEvent) => setPicker((current) => (current ? reducePicker(current, event, Math.random) : current)), []);
-  const onPickerMode = useCallback(
-    (mode: PickerMode) => {
-      if (!deck?.picker) return;
-      setPicker(createPicker({ mode, count: pickerCount ?? deck.picker.count, labels }, Math.random));
-    },
-    [deck, labels, pickerCount],
-  );
-
   const slides: Slide[] = useMemo(() => {
     if (!deck || !run) return [];
     const mode = romanization ?? deck.options.romanization;
     return mode === deck.options.romanization ? run.slides : withBuilds(run.slides, { romanization: mode, strokeGuide: deck.options.strokeGuide });
   }, [deck, run, romanization]);
+
+  // ---- the control bar's visibility (README D3; F-TCH-004 section 3.6 on a phone) ----
+  const [barHidden, setBarHidden] = useState(false);
+  // A keyboard, switch or screen-reader focus inside the bar holds it on screen (a press's own focus does not, on a phone).
+  const barHeld = useRef(false);
+  // The last input on the page: a focus given back after a tap (More's sheet closing) is the pointer's too.
+  const lastInput = useRef<'pointer' | 'key' | null>(null);
+  useEffect(() => subscribeInputKind((kind) => (lastInput.current = kind)), []);
+  const barTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const clearBarTimer = useCallback(() => {
+    if (barTimer.current) clearTimeout(barTimer.current);
+    barTimer.current = null;
+  }, []);
+  /** Shows the bar and hides it again after `presenter.autoHideMs` unless something holds it. */
+  const showBar = useCallback(() => {
+    setBarHidden(false);
+    clearBarTimer();
+    barTimer.current = setTimeout(() => {
+      barTimer.current = null;
+      if (barHeld.current || keepVisibleRef.current || moreOpenRef.current) return;
+      setBarHidden(true);
+    }, presenter.autoHideMs);
+  }, [clearBarTimer]);
+  /** A phone step: the bar goes at once, so the new slide is seen whole (unless Keep controls visible or a focus holds it). */
+  const hideBarNow = useCallback(() => {
+    if (keepVisibleRef.current || barHeld.current) return;
+    clearBarTimer();
+    setBarHidden(true);
+  }, [clearBarTimer]);
+  useEffect(() => clearBarTimer, [clearBarTimer]);
 
   const playSound = useCallback(
     (slide: Slide | undefined) => {
@@ -380,22 +444,55 @@ export default function PresenterApp(): React.ReactElement {
       if (tally.current) tally.current = tallyStep(tally.current, before, state, slides);
       // A story's Read-to-me never runs on into the next slide, nor under an overlay or the full timer.
       if (narrationStops(before, state)) narrator.stop();
-      if (state.slideIdx !== before.slideIdx && deck) {
+      if (state.slideIdx !== before.slideIdx && deck && begun.current) {
         const key = slides[state.slideIdx]!.key;
         updateRecent((list) => setLastSlide(list, deck.id, key));
       }
+      // A phone step hides the compact bar at once: it never covers a new slide or build (section 3.6).
+      const stepped = event === 'next' || event === 'prev' || event === 'first' || event === 'last' || (typeof event === 'object' && 'goto' in event);
+      if (phoneRef.current && stepped) hideBarNow();
+      // Next on the End slide: the hint, and focus on Exit (the docked bar) or More, which holds it (the phone bar, shown).
       const atEnd = event === 'next' && state === before && before.overlay === null && before.slideIdx === slides.length - 1;
       setEndHint(atEnd);
-      if (atEnd) exitRef.current?.focus?.();
+      if (atEnd) {
+        if (phoneRef.current) showBar();
+        exitRef.current?.focus?.();
+      }
       // The stroke guide plays only on a forward stroke reveal or a replay; any other slide change
       // drops it, so going back to a complete slide is silent (section 3.5 amendment point 2).
       const revealedBuild = effect?.type === 'revealed' ? slides[state.slideIdx]?.builds[effect.build] : undefined;
       const playStroke = revealedBuild === 'stroke' || effect?.type === 'play-stroke';
       const slideKey = slides[state.slideIdx]!.key;
       setStrokePlay((current) => nextStrokePlay(current, { slideKey, play: playStroke }));
-      if (revealedBuild === 'sound' || effect?.type === 'play-sound') playSound(slides[state.slideIdx]);
+      const sound = revealedBuild === 'sound' || effect?.type === 'play-sound';
+      if (sound) playSound(slides[state.slideIdx]);
+      if (sound && phoneRef.current && !canPlay) setNoVoiceFlash(Date.now());
     },
-    [slides, deck, playSound, updateRecent, reportTools, stepTimer, narrator],
+    [slides, deck, playSound, updateRecent, reportTools, stepTimer, narrator, hideBarNow, showBar, canPlay],
+  );
+
+  /** The lesson's raw fragment for its history entry (null: a deck too long for a link, which still runs). */
+  const rawOf = useCallback((of: LectureDeck): string | null => {
+    try {
+      return encodeDeck(of);
+    } catch {
+      return null;
+    }
+  }, []);
+
+  /** A user activation in the lesson: the lesson's entry is pushed again if a browser back took it (rule 4). */
+  const activate = useCallback(() => {
+    if (!repush.current || phase.kind !== 'running') return;
+    repush.current = false;
+    void pushPresenterEntry('running', rawOf(phase.deck));
+  }, [phase, rawOf]);
+  /** A press, a tap or a key in the lesson: an activation, then the event. */
+  const userDispatch = useCallback(
+    (event: PresenterEvent) => {
+      activate();
+      dispatch(event);
+    },
+    [activate, dispatch],
   );
 
   const toggleFullscreen = useCallback(() => {
@@ -407,75 +504,118 @@ export default function PresenterApp(): React.ReactElement {
 
   useEffect(() => subscribeFullscreen(() => setFullscreen(isFullscreen())), []);
 
-  const pickerMode = deck?.picker == null ? 'none' : labels !== null ? deck.picker.mode : 'numbers';
-
   const onStart = useCallback(() => {
     if (phase.kind !== 'ready' || !run || slides.length === 0) return;
-    // Gesture-bound requests first, in the tap itself (section 3.5); each is feature-detected and may be refused.
+    // Gesture-bound requests in the tap itself (section 3.5): audio, the chime, fullscreen and then
+    // landscape once it settles (Android Chrome locks only in fullscreen, and turns an upright phone
+    // sideways), and the screen wake lock; each is feature-detected and may be refused.
     unlockAudio();
     unlockChime();
-    // Landscape is asked for once fullscreen settles (Android Chrome locks only in fullscreen).
     void enterFullscreenLandscape();
     void keepScreenAwake();
+    // The lesson's own history entry, pushed in the tap: the browser's Back now asks before leaving.
+    void pushPresenterEntry('running', rawOf(phase.deck));
+    repush.current = false;
     const state = initialPresenterState({ slides }, phase.resumeKey);
     stateRef.current = state;
     setPstate(state);
     toolsUsed.current = new Set();
-    tally.current = startTally(Date.now(), slides[state.slideIdx]?.key);
-    const savedAt = new Date().toISOString();
-    const firstKey = slides[state.slideIdx]!.key;
-    const { deck: started } = phase;
-    // Every start, a resumed one too, moves the lesson to the top of Recent with today's day (section 3.12).
-    updateRecent((list) => setLastSlide(rememberDeck(list, started, savedAt), started.id, firstKey));
-    // From now on a reload resumes at the open slide, also after Start over (which held the deck as fresh).
-    try {
-      holdOpenDeck(encodeDeck(started));
-    } catch {
-      // A deck too long for a link still runs; a reload then shows the home.
-    }
-    void track({
-      name: 'lecture.start',
-      payload: { ...startPayload({ deck: phase.deck, run, source: phase.source, pickerMode, capability, offlineReady: isOfflineReady() }) },
-    });
-    setPhase({ kind: 'running', deck: phase.deck, source: phase.source });
+    begun.current = false;
+    setMoreOpen(false);
+    setEndHint(false);
+    setPhase({ kind: 'running', deck: phase.deck, source: phase.source, from: phase });
     const first = slides[state.slideIdx]!;
     setStrokePlay(first.builds[0] === 'stroke' ? nextStrokePlay(null, { slideKey: first.key, play: true }) : null);
-  }, [phase, run, slides, pickerMode, capability, updateRecent]);
+  }, [phase, run, slides, rawOf]);
 
-  const onExit = useCallback(() => {
-    narrator.stop();
+  /**
+   * The lesson begins when its first slide is actually on screen: only then it is saved to Recent
+   * and `lecture.start` sent, so a Start the window could not show (a phone held upright, a window
+   * too small) is neither counted nor stored.
+   */
+  const begin = useCallback(() => {
+    if (phase.kind !== 'running' || begun.current || !run || !stateRef.current) return;
+    begun.current = true;
+    const state = stateRef.current;
+    tally.current = startTally(Date.now(), slides[state.slideIdx]?.key);
+    const savedAt = new Date().toISOString();
+    const key = slides[state.slideIdx]!.key;
+    const { deck: started } = phase;
+    // Every start, a resumed one too, moves the lesson to the top of Recent with today's day (section 3.12).
+    updateRecent((list) => setLastSlide(rememberDeck(list, started, savedAt), started.id, key));
+    void track({
+      name: 'lecture.start',
+      payload: { ...startPayload({ deck: started, run, source: phase.source, capability, offlineReady: isOfflineReady() }) },
+    });
+  }, [phase, run, slides, capability, updateRecent]);
+
+  /** What the Start tap asked of the device, given back. */
+  const releaseDevice = useCallback(() => {
     void exitFullscreen();
     void releaseScreenAwake();
     unlockOrientation();
-    const payload = tally.current ? completePayload(tally.current, Date.now()) : { slidesShown: 0, minutes: 0, reveals: 0 };
-    tally.current = null;
-    clearPickerLabels();
-    forgetOpenDeck();
+  }, []);
+
+  /** Out of the lesson (or the page that stood in for it) to the home: the class tools go, the history goes back to the home. */
+  const leaveLesson = useCallback(() => {
+    narrator.stop();
     stateRef.current = null;
     setPstate(null);
-    // The class tools end with the lesson: the bag, the timer and the tool tally are dropped.
-    setPicker(null);
+    // The class tools end with the lesson: the timer and the tool tally are dropped.
     timerRef.current = initialTimer();
     setTimer(timerRef.current);
     setShowNumbers(true);
     toolsUsed.current = new Set();
     setRomanization(null);
+    setMoreOpen(false);
     setEndHint(false);
+    repush.current = false;
+    void returnToPresenterHome();
     setHomeFocus(true);
     setPhase({ kind: 'home' });
+  }, [narrator]);
+
+  const onExit = useCallback(() => {
+    const started = begun.current;
+    begun.current = false;
+    leaveLesson();
+    releaseDevice();
+    // A Start the window never showed was not a lesson: nothing to count or apply.
+    if (!started) return;
+    const payload = tally.current ? completePayload(tally.current, Date.now()) : { slidesShown: 0, minutes: 0, reveals: 0 };
+    tally.current = null;
     void track({ name: 'lecture.complete', payload }).finally(() => {
       // A waiting update applies only now, never mid-lesson (section 3.8).
       if (updateWaiting) applyUpdate();
     });
-  }, [updateWaiting, narrator]);
+  }, [updateWaiting, leaveLesson, releaseDevice]);
+
+  /**
+   * A lesson not yet begun (the rotate page or the too-small page before the first slide) back to
+   * its start screen, with the same deck: nothing was counted or stored. `fromPop`: the browser is
+   * already on the start screen's entry.
+   */
+  const backToStart = useCallback(
+    (fromPop: boolean) => {
+      if (phase.kind !== 'running' || begun.current) return;
+      stateRef.current = null;
+      setPstate(null);
+      setMoreOpen(false);
+      releaseDevice();
+      if (!fromPop) void stepBackPresenter();
+      setPhase(phase.from);
+    },
+    [phase, releaseDevice],
+  );
 
   // Leaving the page stops Read-to-me too.
   useEffect(() => () => narrator.stop(), [narrator]);
 
-  // Keys (section 3.5), the class tools included.
+  // Keys (section 3.5), the class tools included. A key is a user activation (rule 4).
   useEffect(() => {
     if (phase.kind !== 'running') return undefined;
     return subscribeKeys((command: KeyCommand) => {
+      activate();
       // An open overlay takes no romanization or fullscreen key; the Exit confirm takes no tool key.
       const overlayOpen = stateRef.current?.overlay != null;
       if ((command === 'toggle-romanization' || command === 'fullscreen') && overlayOpen) return;
@@ -487,9 +627,14 @@ export default function PresenterApp(): React.ReactElement {
         toggleFullscreen();
         return;
       }
+      // Esc closes the compact bar's More sheet first.
+      if (command === 'escape' && moreOpenRef.current) {
+        setMoreOpen(false);
+        showBar();
+        return;
+      }
       if (typeof command === 'object') {
         if (stateRef.current?.overlay === 'exit') return;
-        if (command.overlay === 'picker' && phase.deck.picker === null) return;
         if (command.overlay === 'timer') {
           if (stateRef.current) dispatch(timerOpenEvent(stateRef.current, timerRef.current));
           return;
@@ -499,7 +644,7 @@ export default function PresenterApp(): React.ReactElement {
       }
       dispatch(command);
     });
-  }, [phase, dispatch, toggleFullscreen]);
+  }, [phase, dispatch, toggleFullscreen, activate, showBar]);
 
   // The home's Help overlay closes with Esc or H, as in a lesson. Every other key keeps its browser
   // meaning (arrows, PageDown and Space scroll the overlay on a short viewport).
@@ -512,60 +657,100 @@ export default function PresenterApp(): React.ReactElement {
     });
   }, [phase.kind, homeHelp]);
 
-  // The bar hides after `presenter.autoHideMs` without pointer, touch or key, unless a bar button has focus.
-  const [barHidden, setBarHidden] = useState(false);
-  const barFocused = useRef(false);
+  // A covering overlay (blank, pause, grid, help, the full timer) or the phone's More sheet: the browser's Back closes it first.
+  const covering = pstate !== null && ((pstate.overlay !== null && pstate.overlay !== 'exit') || (pstate.timerOpen && pstate.timerMode === 'full'));
+  const coveringRef = useRef(covering);
+  coveringRef.current = covering;
+
+  // The docked bar hides after `presenter.autoHideMs` without pointer, touch or key and returns on any
+  // of them (README D3). The phone bar does not follow page activity (a stage tap never shows it):
+  // only while a covering tool is open, which changes no slide, does a touch bring it back, so the
+  // tool can be cleared or left.
   useEffect(() => {
-    if (phase.kind !== 'running') return undefined;
-    let timer: ReturnType<typeof setTimeout> | null = null;
-    const arm = (): void => {
-      setBarHidden(false);
-      if (timer) clearTimeout(timer);
-      timer = setTimeout(() => {
-        if (!barFocused.current && !keepVisibleRef.current) setBarHidden(true);
-      }, presenter.autoHideMs);
-    };
-    arm();
-    const stop = subscribeActivity(arm);
-    return () => {
-      stop();
-      if (timer) clearTimeout(timer);
-    };
-  }, [phase.kind]);
+    if (phase.kind !== 'running' || (phone && !covering)) return undefined;
+    showBar();
+    return subscribeActivity(showBar);
+  }, [phase.kind, phone, covering, showBar]);
 
   // ---- the presenter home (section 3.12) ----
   const quick = useMemo(() => quickSource(locale), [locale]);
   const languages = useMemo(() => languageOptions(available), [available]);
-  const openFromHome = useCallback((choice: HomeChoice) => {
-    const next = homeStart(choice);
-    // The tab holds the deck, as a link does, so a reload reopens this lesson (section 3.2).
-    try {
-      holdOpenDeck(encodeDeck(next.deck), { fresh: choice.kind === 'start-over' });
-    } catch {
-      // A deck too long for a link still runs; a reload then shows the home.
-    }
-    rejected.current = false;
-    setPickerCount(null);
-    setHomeFocus(false);
-    setHomeHelp(false);
-    setPhase(next);
-  }, []);
-  // Back to lessons on the start screen: nothing started, so nothing is saved or sent (design start-screen.md).
+  const openFromHome = useCallback(
+    (choice: HomeChoice) => {
+      const next = homeStart(choice);
+      // The start screen's history entry holds the deck, as a link does, so a reload reopens it (rule 2, section 3.2).
+      void pushPresenterEntry('ready', rawOf(next.deck), { fresh: choice.kind === 'start-over' });
+      rejected.current = false;
+      setHomeFocus(false);
+      setHomeHelp(false);
+      setPhase(choice.kind === 'start-over' ? { ...next, fresh: true } : next);
+    },
+    [rawOf],
+  );
+  // Back to lessons and the phone footer's Back: nothing started, so nothing is saved or sent (rule 3).
   const backToHome = useCallback(() => {
-    clearPickerLabels();
-    forgetOpenDeck();
-    setPickerCount(null);
+    void returnToPresenterHome();
     setHomeFocus(true);
     setPhase({ kind: 'home' });
   }, []);
 
+  // The browser's or phone's back (section 3.5 "History", `popPlan`).
+  const onPop = useRef<(landed: HistoryEntry | null) => void>(() => undefined);
+  onPop.current = (landed) => {
+    const overlay = moreOpenRef.current || coveringRef.current ? 'covering' : stateRef.current?.overlay === 'exit' ? 'exit' : 'none';
+    const action = popPlan(landed, { phase: phase.kind, begun: begun.current, overlay });
+    switch (action.kind) {
+      case 'home':
+        void clearPresenterForward();
+        setHomeFocus(true);
+        setPhase({ kind: 'home' });
+        return;
+      case 'exit':
+        onExit();
+        return;
+      case 'close-overlay':
+        repush.current = true;
+        if (moreOpenRef.current) setMoreOpen(false);
+        else dispatch('close');
+        return;
+      case 'confirm':
+        repush.current = true;
+        if (stateRef.current?.overlay !== 'exit') dispatch({ overlay: 'exit' });
+        return;
+      case 'ready':
+        backToStart(true);
+        return;
+      case 'resume':
+        repush.current = false;
+        if (stateRef.current?.overlay === 'exit') dispatch('close');
+        return;
+      case 'step-back':
+        void stepBackPresenter();
+        return;
+      case 'none':
+        return;
+    }
+  };
+  useEffect(() => subscribePresenterPop((landed) => onPop.current(landed)), []);
+
   // ---- render ----
-  const box = stageBox(window, band);
-  const scale = stageScale(box, STAGE_BOUNDS);
-  // Too small is judged on the one-row band, so a bar that wraps on a phone cannot decide it; then the
-  // hint page takes the whole window with its own Exit, and the bar is not drawn (states.md).
-  const tooSmall = stageScale(stageBox(window, BAR_BAND), STAGE_BOUNDS).tooSmall || scale.tooSmall;
-  const stageView: PresenterView = { ...view, unit: scale.unit };
+  // A phone window has no band: its compact bar floats over the stage, so the stage is the window less
+  // the safe area, judged on the phone gate alone. Elsewhere too small is judged on the one-row band, so
+  // a bar that wraps cannot decide it; then the too-small page takes the whole window, and no bar is drawn.
+  const box = stageBox(window, phone ? 0 : band, insets);
+  const scale = stageScale(box, phone ? PHONE_STAGE_BOUNDS : STAGE_BOUNDS);
+  const tooSmall = phone ? scale.tooSmall : stageScale(stageBox(window, BAR_BAND, insets), STAGE_BOUNDS).tooSmall || scale.tooSmall;
+  const stageShows = stageView({ phone, window, tooSmall });
+  const stageViewContext: PresenterView = { ...view, unit: scale.unit, phone };
+  // The first slide is on screen: the lesson begins (see `begin`).
+  const slideShown = phase.kind === 'running' && stageShows === 'slide' && pstate !== null && slides[pstate.slideIdx] !== undefined;
+  useEffect(() => {
+    if (slideShown) begin();
+  }, [slideShown, begin]);
+  // On a phone the bar shows when the slide does (the start of the lesson, or back from the rotate page), so its place is learned.
+  useEffect(() => {
+    if (slideShown && phone) showBar();
+  }, [slideShown, phone, showBar]);
 
   const partTitle = useCallback(
     (blockIndex: number | null): string | null => {
@@ -623,6 +808,7 @@ export default function PresenterApp(): React.ReactElement {
           quick={quick}
           onBuild={(built) => openFromHome({ kind: 'quick', deck: built })}
           onHelp={() => setHomeHelp(true)}
+          onBack={() => leavePresenter()}
           focusTitle={homeFocus}
         />
         {homeHelp ? (
@@ -635,22 +821,12 @@ export default function PresenterApp(): React.ReactElement {
             keepVisible={keepVisible}
             onKeepVisible={setKeepVisible}
             onClose={() => setHomeHelp(false)}
+            phone={phone}
           />
         ) : null}
       </View>
     );
   } else if (phase.kind === 'ready') {
-    const count = pickerCount ?? phase.deck.picker?.count ?? 0;
-    const pickerRow: PickerRow =
-      phase.deck.picker === null
-        ? null
-        : labels !== null && phase.deck.picker.mode !== 'numbers'
-          ? { kind: 'received', mode: phase.deck.picker.mode, count: labels.length }
-          : {
-              kind: 'numbers',
-              count,
-              line: phase.deck.picker.mode === 'numbers' ? null : phase.source === 'recent' ? 'notKept' : hasOpener() ? null : 'noOpener',
-            };
     body =
       run === null || run.slides.length === 0 ? (
         <StatePage testID="presenter-loading" pose="idle" status={messages.learner.presenter.state.loading} />
@@ -665,11 +841,12 @@ export default function PresenterApp(): React.ReactElement {
           voice={voiceCheck(capability, voiceChecked)}
           fullscreenSupported={fullscreenSupported()}
           wakeLockSupported={wakeLockSupported()}
-          picker={pickerRow}
-          onPickerCount={setPickerCount}
           fontReady={fontReady}
           onStart={onStart}
           onBack={backToHome}
+          phone={phone}
+          portrait={upright}
+          short={short}
         />
       );
   } else {
@@ -687,141 +864,238 @@ export default function PresenterApp(): React.ReactElement {
       onPause: () => stepTimer({ type: 'pause', now: Date.now() }),
       onResume: () => stepTimer({ type: 'resume', now: Date.now() }),
       onReset: () => stepTimer({ type: 'reset' }),
-      onMode: (mode) => dispatch({ timerMode: mode }),
-      onClose: () => dispatch('close-timer'),
+      onMode: (mode) => userDispatch({ timerMode: mode }),
+      onClose: () => userDispatch('close-timer'),
       onToggleNumbers: () => setShowNumbers((on) => !on),
     };
-    const bar = tooSmall ? null : (
-      <ControlBar
-        hidden={barHidden}
-        revealNext={revealNext}
-        muted={muted}
-        fullscreenSupported={fullscreenSupported()}
-        fullscreen={fullscreen}
-        onBack={() => dispatch('prev')}
-        onNext={() => dispatch('next')}
-        onSound={() => dispatch('replay-sound')}
-        onFullscreen={toggleFullscreen}
-        onExit={() => dispatch({ overlay: 'exit' })}
-        onTimer={() => dispatch(timerOpenEvent(p, timerRef.current))}
-        {...(deckNow.picker !== null ? { onPicker: () => dispatch({ overlay: 'picker' }) } : {})}
-        onBlank={() => dispatch({ overlay: 'blank' })}
-        onGrid={() => dispatch({ overlay: 'grid' })}
-        chips={chips}
-        onTurnSoundOn={() => useAudioStore.getState().setMuted(false, 'fallback_panel')}
-        onFocusWithin={(focused) => {
-          barFocused.current = focused;
-          if (focused) setBarHidden(false);
-        }}
-        onBandHeight={setBand}
-        exitRef={exitRef}
-      />
+    const state = messages.learner.presenter.state;
+    const page =
+      stageShows === 'rotate' ? (
+        // A phone held upright during a lesson (section 3.6): turn it; turning back returns to the same
+        // slide and build. Back opens the Exit confirm (rule 4), or before the first slide was shown,
+        // returns to the start screen with the same deck (nothing started, so nothing was counted or stored).
+        <StatePage
+          testID="presenter-rotate"
+          pose="idle"
+          title={state.rotate.title}
+          line={state.rotate.line}
+          back={{
+            label: messages.common.buttons.back,
+            onPress: () => (begun.current ? userDispatch({ overlay: 'exit' }) : backToStart(false)),
+            testID: 'presenter-rotate-back',
+          }}
+        />
+      ) : stageShows === 'too-small' || !slide ? (
+        <StatePage testID="presenter-too-small" pose="thinking" line={state.tooSmall} cta={messages.learner.presenter.bar.exit.cta} onCta={() => userDispatch({ overlay: 'exit' })} />
+      ) : null;
+    const bar =
+      page !== null ? null : (
+        <ControlBar
+          hidden={phone ? barHidden || moreOpen : barHidden}
+          revealNext={revealNext}
+          muted={muted}
+          fullscreenSupported={fullscreenSupported()}
+          fullscreen={fullscreen}
+          onPrev={() => userDispatch('prev')}
+          onNext={() => userDispatch('next')}
+          onSound={() => userDispatch('replay-sound')}
+          onFullscreen={() => {
+            activate();
+            toggleFullscreen();
+          }}
+          onExit={() => userDispatch({ overlay: 'exit' })}
+          onTimer={() => userDispatch(timerOpenEvent(p, timerRef.current))}
+          onBlank={() => userDispatch({ overlay: 'blank' })}
+          onGrid={() => userDispatch({ overlay: 'grid' })}
+          onHelp={() => userDispatch({ overlay: 'help' })}
+          chips={chips}
+          onTurnSoundOn={() => {
+            activate();
+            useAudioStore.getState().setMuted(false, 'fallback_panel');
+          }}
+          onFocusWithin={(focused, pointer) => {
+            // A keyboard, switch or screen-reader focus holds the bar on every device; on a phone a
+            // press's own focus does not (the step it made hides the bar), on the docked bar it does.
+            barHeld.current = focused && (!phone || !(pointer || lastInput.current === 'pointer'));
+            if (!focused) {
+              if (!barHidden) showBar();
+              return;
+            }
+            if (barHeld.current) {
+              clearBarTimer();
+              setBarHidden(false);
+            }
+          }}
+          {...(phone ? {} : { onBandHeight: setBand })}
+          exitRef={exitRef}
+          compact={phone}
+          insets={insets}
+          moreOpen={moreOpen}
+          onMore={(open) => {
+            activate();
+            setMoreOpen(open);
+            if (!open) showBar();
+          }}
+        />
+      );
+    const stageAndTools = (
+      <>
+        {page ?? (
+          <PresenterViewProvider value={stageViewContext}>
+            <Stage
+              scale={scale}
+              slides={slides}
+              slideIdx={p.slideIdx}
+              reveal={reveal}
+              deckTitle={phase.deck.title}
+              strokeToken={strokeTokenFor(strokePlay, slide?.key)}
+              joinCta={messages.caregiver.spaces.join.cta}
+              onCommand={userDispatch}
+              onPlaySound={() => userDispatch('replay-sound')}
+              onStartTimer={(ms) => userDispatch({ startTimer: ms })}
+              romanization={romanizationNow}
+              sayIt={sayIt}
+              storyScene={stories.scene}
+              {...(phone
+                ? {
+                    barStrip: PHONE_BAR_STRIP,
+                    onStripTap: () => {
+                      activate();
+                      if (barHidden) showBar();
+                      else hideBarNow();
+                    },
+                  }
+                : {})}
+            />
+          </PresenterViewProvider>
+        )}
+        {scale.portrait && page === null ? <StageHint text={state.portrait} /> : null}
+        {endHint && page === null ? <StageHint text={messages.learner.presenter.slide.end.exitHint} bottom={!phone} /> : null}
+        {phone && page === null && noVoiceFlash > 0 ? <NoVoiceFlash key={noVoiceFlash} text={messages.learner.presenter.bar.noVoice} /> : null}
+        {/* Class tools over the stage box (the bar stays): the full timer, a covering tool, then the
+            corner timer, which stays on screen over a covering tool (section 3.5 amendment 1). */}
+        {page === null ? (
+          <PresenterViewProvider value={stageViewContext}>
+            {p.timerOpen && p.timerMode === 'full' ? <TimerOverlay mode="full" timer={timer} showNumbers={showNumbers} controls={timerControls} /> : null}
+            {p.overlay === 'blank' ? <BlankOverlay onPause={() => userDispatch({ overlay: 'pause' })} /> : null}
+            {p.overlay === 'pause' ? <PauseOverlay /> : null}
+            {p.overlay === 'grid' ? (
+              <GridOverlay
+                items={gridItems(slides, p, { activity: (preset) => messages.learner.presenter.activity[preset] })}
+                onGoto={(idx) => userDispatch({ goto: idx })}
+                onToggle={(key) => userDispatch({ toggleSkip: key })}
+                onClose={() => userDispatch('close')}
+              />
+            ) : null}
+            {p.overlay === 'help' ? (
+              <HelpOverlay
+                romanization={romanizationNow}
+                onRomanization={setRomanization}
+                languages={helpLanguageChips(languages)}
+                locale={locale}
+                onLanguage={setSessionLocale}
+                keepVisible={keepVisible}
+                onKeepVisible={(on) => {
+                  setKeepVisible(on);
+                  if (on) setBarHidden(false);
+                }}
+                onClose={() => userDispatch('close')}
+                phone={phone}
+              />
+            ) : null}
+            {p.timerOpen && p.timerMode === 'corner' ? <TimerOverlay mode="corner" timer={timer} showNumbers={showNumbers} controls={timerControls} /> : null}
+          </PresenterViewProvider>
+        ) : null}
+      </>
     );
-    // The bar comes first in the DOM, so focus order is the bar, then the stage (README D3, section
-    // 3.13); `column-reverse` still draws it in its band under the stage.
-    body = (
+    const exitConfirm = p.overlay === 'exit' ? <ExitConfirm onKeepGoing={() => userDispatch('close')} onExit={onExit} /> : null;
+    body = phone ? (
+      // The whole window, less the safe area, is the stage box; the compact bar floats over its
+      // bottom edge, after the class tools, so a touch can always clear or leave them.
+      <View style={{ flex: 1, backgroundColor: colors.surface.paper }}>
+        <View
+          style={{
+            flex: 1,
+            alignItems: 'center',
+            justifyContent: 'center',
+            paddingTop: insets.top,
+            paddingBottom: insets.bottom,
+            paddingLeft: insets.left,
+            paddingRight: insets.right,
+          }}
+        >
+          {stageAndTools}
+        </View>
+        {bar}
+        {exitConfirm}
+      </View>
+    ) : (
+      // The bar comes first in the DOM, so focus order is the bar, then the stage (README D3, section
+      // 3.13); `column-reverse` still draws it in its band under the stage.
       <View style={{ flex: 1, flexDirection: 'column-reverse', backgroundColor: colors.surface.paper }}>
         {bar}
-        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-          {tooSmall || !slide ? (
-            <StatePage
-              testID="presenter-too-small"
-              pose="thinking"
-              line={messages.learner.presenter.state.tooSmall}
-              cta={messages.learner.presenter.bar.exit.cta}
-              onCta={() => dispatch({ overlay: 'exit' })}
-            />
-          ) : (
-            <PresenterViewProvider value={stageView}>
-              <Stage
-                scale={scale}
-                slides={slides}
-                slideIdx={p.slideIdx}
-                reveal={reveal}
-                deckTitle={phase.deck.title}
-                strokeToken={strokeTokenFor(strokePlay, slide.key)}
-                joinCta={messages.caregiver.spaces.join.cta}
-                onCommand={dispatch}
-                onPlaySound={() => dispatch('replay-sound')}
-                onStartTimer={(ms) => dispatch({ startTimer: ms })}
-                romanization={romanizationNow}
-                sayIt={sayIt}
-                storyScene={stories.scene}
-              />
-            </PresenterViewProvider>
-          )}
-          {scale.portrait && !tooSmall ? <StageHint text={messages.learner.presenter.state.portrait} /> : null}
-          {endHint ? <StageHint text={messages.learner.presenter.slide.end.exitHint} bottom /> : null}
-          {/* Class tools over the stage box (the bar stays): the full timer, a covering tool, then the
-              corner timer, which stays on screen over a covering tool (section 3.5 amendment 1). */}
-          {!tooSmall ? (
-            <PresenterViewProvider value={stageView}>
-              {p.timerOpen && p.timerMode === 'full' ? <TimerOverlay mode="full" timer={timer} showNumbers={showNumbers} controls={timerControls} /> : null}
-              {p.overlay === 'blank' ? <BlankOverlay onPause={() => dispatch({ overlay: 'pause' })} /> : null}
-              {p.overlay === 'pause' ? <PauseOverlay /> : null}
-              {p.overlay === 'picker' && picker !== null ? (
-                <PickerOverlay
-                  picker={picker}
-                  modes={deckNow.picker ? pickerModes(deckNow.picker.mode, labels !== null) : ['numbers']}
-                  onEvent={onPickerEvent}
-                  onMode={onPickerMode}
-                  onClose={() => dispatch('close')}
-                />
-              ) : null}
-              {p.overlay === 'grid' ? (
-                <GridOverlay
-                  items={gridItems(slides, p, { activity: (preset) => messages.learner.presenter.activity[preset] })}
-                  onGoto={(idx) => dispatch({ goto: idx })}
-                  onToggle={(key) => dispatch({ toggleSkip: key })}
-                  onClose={() => dispatch('close')}
-                />
-              ) : null}
-              {p.overlay === 'help' ? (
-                <HelpOverlay
-                  romanization={romanizationNow}
-                  onRomanization={setRomanization}
-                  languages={helpLanguageChips(languages)}
-                  locale={locale}
-                  onLanguage={setSessionLocale}
-                  keepVisible={keepVisible}
-                  onKeepVisible={(on) => {
-                    setKeepVisible(on);
-                    if (on) setBarHidden(false);
-                  }}
-                  onClose={() => dispatch('close')}
-                />
-              ) : null}
-              {p.timerOpen && p.timerMode === 'corner' ? <TimerOverlay mode="corner" timer={timer} showNumbers={showNumbers} controls={timerControls} /> : null}
-            </PresenterViewProvider>
-          ) : null}
+        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingTop: insets.top, paddingLeft: insets.left, paddingRight: insets.right }}>
+          {stageAndTools}
         </View>
-        {p.overlay === 'exit' ? <ExitConfirm onKeepGoing={() => dispatch('close')} onExit={onExit} /> : null}
+        {exitConfirm}
       </View>
     );
   }
 
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <SafeAreaProvider>
-        <PresenterViewProvider value={view}>
-          {/* The presenter's own fallback, in the presenter locale (not the app's OopsScreen, which reads the profile locale). */}
-          <ErrorBoundary
-            fallbackRender={({ resetErrorBoundary }) => (
-              <StatePage
-                testID="presenter-oops"
-                pose="thinking"
-                title={messages.learner.oops.title}
-                line={messages.learner.oops.body}
-                cta={messages.common.buttons.tryAgain}
-                onCta={resetErrorBoundary}
-              />
-            )}
-          >
-            <View style={{ flex: 1, backgroundColor: colors.surface.paper }}>{body}</View>
-          </ErrorBoundary>
-        </PresenterViewProvider>
-        <StatusBar style="dark" />
-      </SafeAreaProvider>
-    </GestureHandlerRootView>
+    <PresenterViewProvider value={view}>
+      {/* The presenter's own fallback, in the presenter locale (not the app's OopsScreen, which reads the profile locale). */}
+      <ErrorBoundary
+        fallbackRender={({ resetErrorBoundary }) => (
+          <StatePage
+            testID="presenter-oops"
+            pose="thinking"
+            title={messages.learner.oops.title}
+            line={messages.learner.oops.body}
+            cta={messages.common.buttons.tryAgain}
+            onCta={resetErrorBoundary}
+          />
+        )}
+      >
+        <View style={{ flex: 1, backgroundColor: colors.surface.paper }}>{body}</View>
+      </ErrorBoundary>
+    </PresenterViewProvider>
+  );
+}
+
+/**
+ * The no-voice chip at the top of a phone stage, for `presenter.autoHideMs`, when a sound build
+ * cannot play there (F-TCH-004 section 3.6; the bar, where the chip lives, is hidden). Status only:
+ * it takes no touch.
+ */
+function NoVoiceFlash({ text }: { text: string }): React.ReactElement | null {
+  const [on, setOn] = useState(true);
+  useEffect(() => {
+    const timer = setTimeout(() => setOn(false), presenter.autoHideMs);
+    return () => clearTimeout(timer);
+  }, []);
+  if (!on) return null;
+  return (
+    <View
+      testID="presenter-no-voice-flash"
+      role="status"
+      pointerEvents="none"
+      style={{
+        position: 'absolute',
+        top: spacing.md,
+        alignSelf: 'center',
+        maxWidth: '90%',
+        backgroundColor: colors.surface.paper,
+        borderRadius: radii.pill,
+        borderWidth: borderWidth.base,
+        borderColor: colors.border.strong,
+        paddingVertical: spacing.xs,
+        paddingHorizontal: spacing.lg,
+      }}
+    >
+      <Text {...KOREAN_LINE_BREAK} style={{ fontSize: typography.size.body, color: colors.text.primary }}>
+        {text}
+      </Text>
+    </View>
   );
 }

@@ -126,6 +126,9 @@ export function runDeck(
   const parts: SkipPart[] = expanded.skipped.map((s) => ({ blockIndex: s.blockIndex, reason: s.reason }));
   const slides: Slide[] = [];
   let minutes = expanded.minutes;
+  // Only a quiz slide that counted a minute gives it back (rule 12): a quest's or story's own quiz
+  // and check slides are inside its catalogue minutes.
+  const timed = expanded.timedQuizKeys === undefined ? null : new Set(expanded.timedQuizKeys);
   let last: { blockIndex: number | null; kind: SlideKind } | null = null;
   for (const slide of expanded.slides) {
     if (drawable(slide, kinds)) {
@@ -133,7 +136,7 @@ export function runDeck(
       last = null;
       continue;
     }
-    if (slide.kind === 'quiz') minutes -= 1;
+    if (slide.kind === 'quiz' && (timed === null || timed.has(slide.key))) minutes -= 1;
     if (slide.kind === 'activity') minutes -= slide.minutes;
     const blockIndex = blockIndexOfSlide(deck, slide.key);
     if (last === null || last.blockIndex !== blockIndex || last.kind !== slide.kind) {
@@ -142,7 +145,8 @@ export function runDeck(
     last = { blockIndex, kind: slide.kind };
   }
   const empty = !slides.some((s) => s.kind !== 'end');
-  return { slides: empty ? [] : slides, parts, minutes: Math.max(0, minutes) };
+  // A run that has slides is never "about 0 minutes" (rule 12 as amended, LV-M1).
+  return { slides: empty ? [] : slides, parts, minutes: empty ? 0 : Math.max(1, minutes) };
 }
 
 function withoutUndrawnArt(slide: Slide, drawnCardIds?: readonly string[], drawnWordArtKeys?: readonly string[]): Slide {
@@ -217,6 +221,23 @@ export function gestureCommand(g: { x: number; width: number; dx: number; dy: nu
   if (ax >= SWIPE_MIN && ax >= SWIPE_RATIO * ay) return g.dx < 0 ? 'next' : 'prev';
   if (ax >= SWIPE_MIN || ay >= SWIPE_MIN || !(g.width > 0)) return null;
   return g.x < g.width * TAP_BACK_FRACTION ? 'prev' : 'next';
+}
+
+/**
+ * A tap in the compact bar's strip at the bottom of a phone stage (F-TCH-004 section 3.6): it shows
+ * the bar (or hides it while it shows) instead of stepping, so the bar is never brought up by a
+ * step and a tap on a hidden bar presses nothing. A swipe that starts there still moves. `strip`:
+ * the strip's height on the stage, in stage pixels (0: none).
+ */
+export function inBarStrip(g: { y: number; height: number; strip: number; dx: number; dy: number }): boolean {
+  if (!(g.strip > 0) || !(g.height > 0)) return false;
+  const swipe = Math.abs(g.dx) >= SWIPE_MIN || Math.abs(g.dy) >= SWIPE_MIN;
+  return !swipe && g.y >= g.height - g.strip;
+}
+
+/** How much of the stage the bar's strip of `barHeight` covers: the strip sits on the window bottom, the stage `insetBottom + offsetY` above it. */
+export function barOverlap(barHeight: number, insetBottom: number, offsetY: number): number {
+  return Math.max(0, barHeight - Math.max(0, insetBottom) - Math.max(0, offsetY));
 }
 
 // --- accessibility -------------------------------------------------------------------------------
@@ -295,7 +316,8 @@ export interface StartPayload {
   blocks: number;
   slides: number;
   skipped: number;
-  picker: 'none' | 'names' | 'initials' | 'numbers';
+  /** Always `'none'`: the helper picker is gone (LV-H); the field stays for the Worker's payload rule. */
+  picker: 'none';
   romanization: 'always' | 'tap';
   voice: 'ready' | 'none' | 'unknown';
   offlineReady: boolean;
@@ -306,12 +328,11 @@ export function voiceState(capability: AudioCapability): StartPayload['voice'] {
   return capability.tts.state === 'none' ? 'none' : 'unknown';
 }
 
-/** `lecture.start` (section 3.14): counts and modes only. `picker` is the mode the lesson runs with. */
+/** `lecture.start` (section 3.14): counts and modes only. `picker` is always `'none'` (LV-H). */
 export function startPayload(input: {
-  deck: Pick<LectureDeck, 'blocks' | 'options' | 'picker'>;
+  deck: Pick<LectureDeck, 'blocks' | 'options'>;
   run: RunDeck;
   source: StartSource;
-  pickerMode: StartPayload['picker'];
   capability: AudioCapability;
   offlineReady: boolean;
 }): StartPayload {
@@ -320,7 +341,7 @@ export function startPayload(input: {
     blocks: input.deck.blocks.length,
     slides: input.run.slides.length,
     skipped: input.run.parts.length,
-    picker: input.pickerMode,
+    picker: 'none',
     romanization: input.deck.options.romanization,
     voice: voiceState(input.capability),
     offlineReady: input.offlineReady,
