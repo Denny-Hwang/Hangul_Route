@@ -13,6 +13,7 @@ import {
   qualifiesForNext,
   routeNext,
   routeNextInputOf,
+  upcomingLessons,
   type PlanBefore,
   type PlanView,
   type RouteNextInput,
@@ -490,5 +491,56 @@ describe('off-plan and telemetry', () => {
   it('route.next_started carries the source and the surface', () => {
     expect(nextStartedEvent(P, 'family', 'home')).toEqual({ name: 'route.next_started', profileId: P, payload: { source: 'family', surface: 'home' } });
     expect(nextStartedEvent(undefined, 'cursor', 'placement')).toEqual({ name: 'route.next_started', payload: { source: 'cursor', surface: 'placement' } });
+  });
+});
+
+describe('upcomingLessons (owner decision 2026-10-17: the Route tab\'s next three lessons)', () => {
+  it('starts with routeNext itself, then the quests after it in route order', () => {
+    const i = input({ snapshot: snap(['q1']) });
+    const list = upcomingLessons(i, 3);
+    expect(list[0]).toEqual(routeNext(i));
+    expect(list.map((n) => n.questId)).toEqual(['quest:q2', 'quest:q3', 'quest:q4']);
+    expect(list.map((n) => n.episodeId)).toEqual(['episode:s1-letters', 'episode:s1-letters', 'episode:s1-life']);
+    expect(list.every((n) => n.source === 'cursor')).toBe(true);
+  });
+
+  it('follows the plan: due today first, then the leading source in its order, then the cursor', () => {
+    const s = snap([], [hw('plan:fam', 'q4', TODAY, { assignedBy: 'parent' }), hw('plan:cls', 'q5', '2026-10-15')]);
+    const sources = [source('plan:cls', 'class', ['q5']), source('plan:fam', 'family', ['q4'])];
+    const list = upcomingLessons(input({ snapshot: s, sources }), 3);
+    expect(list.map((n) => [n.questId, n.source])).toEqual([
+      ['quest:q4', 'family'],
+      ['quest:q5', 'class'],
+      ['quest:q1', 'cursor'],
+    ]);
+  });
+
+  it('never names a closed, done or unshipped quest, and stops early when nothing open is left', () => {
+    const list = upcomingLessons(input({ snapshot: snap(['q1', 'q2', 'q3', 'q4']), isQuestOpen: closed('q6') }), 3);
+    expect(list.map((n) => n.questId)).toEqual(['quest:q5', 'quest:q8']);
+  });
+
+  it('is empty at rest and at the end of the free lessons', () => {
+    const all = ['q1', 'q2', 'q3', 'q4', 'q5', 'q6', 'q8'];
+    expect(upcomingLessons(input({ snapshot: snap(all) }), 3)).toEqual([]);
+    const free = input({ snapshot: snap(['q1', 'q2', 'q3', 'q4', 'q5']), isQuestOpen: closed('q6', 'q8'), gating: { active: true, tier: 'free' } });
+    expect(routeNext(free)).toEqual({ kind: 'free-end', placedOut: false });
+    expect(upcomingLessons(free, 3)).toEqual([]);
+  });
+
+  it('gives at most count lessons, none for a count of 0, and never repeats one', () => {
+    expect(upcomingLessons(input(), 1).map((n) => n.questId)).toEqual(['quest:q1']);
+    expect(upcomingLessons(input(), 0)).toEqual([]);
+    const ids = upcomingLessons(input(), 10).map((n) => n.questId);
+    expect(new Set(ids).size).toBe(ids.length);
+    expect(ids).toEqual(['quest:q1', 'quest:q2', 'quest:q3', 'quest:q4', 'quest:q5', 'quest:q6', 'quest:q8']);
+  });
+
+  it('marks nothing done: the input snapshot and its open rule are unchanged', () => {
+    const i = input({ snapshot: snap(['q1']) });
+    const before = JSON.stringify(i.snapshot);
+    upcomingLessons(i, 3);
+    expect(JSON.stringify(i.snapshot)).toBe(before);
+    expect(i.isQuestOpen('quest:q2')).toBe(true);
   });
 });

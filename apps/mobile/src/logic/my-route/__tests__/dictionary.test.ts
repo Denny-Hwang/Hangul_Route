@@ -97,6 +97,15 @@ const SAMPLES: Record<string, unknown[][]> = {
     ['ㄱ', 'g/k', 'Coming up in a quest'],
     ['ㄴ', 'n, at the end', 'Already known'],
   ],
+  // The Route tab's next lessons (owner decision 2026-10-17).
+  'learner.myRoute.nextLessons.where': [
+    [1, 'Meet the Letters'],
+    [2, 'Lunch Box Words'],
+  ],
+  'learner.myRoute.nextLessons.row': [
+    [null, 'Meet the First Letters', 'Stage 1 · Meet the Letters'],
+    ['Next', 'Family at the Table', 'Stage 2 · Lunch Box Words'],
+  ],
   // F-ENT-003 E3-7: the practice card's word topic title.
   'learner.access.practice.topicTitle': [['Food'], ['Animals'], ['Family']],
 };
@@ -127,7 +136,7 @@ function renderLocale(locale: UiLocale): { rendered: Rendered[]; unsampled: stri
 
 /** The pill and button words (F-I18N-001 budgets: pill 24, cta 28). */
 const PILL_PATHS = /^learner\.myRoute\.(state|tag|cell)\./;
-const CTA_PATHS = /^learner\.(myRoute\.(open\.cta|hero\.cta\.|cta\.)|access\.practiceWords\.cta)/;
+const CTA_PATHS = /^learner\.(myRoute\.(open\.cta|hero\.cta\.|cta\.|journey\.cta)|access\.practiceWords\.cta)/;
 
 describe('the real My route dictionary keeps the copy rules (F-ROUTE-001 section 3.13)', () => {
   for (const locale of LOCALES) {

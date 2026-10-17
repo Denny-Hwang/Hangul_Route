@@ -280,6 +280,7 @@ const KO_LITERALLY_SHARED: readonly string[] = [
   'learner.story.reader.position.pill',
   'learner.storyShelf.episode.rowLabel',
   'learner.home.next.a11y',
+  'learner.myRoute.nextLessons.row', // tag, title and where joined by ": " and ". " (owner decision 2026-10-17)
   'learner.storyShelf.cultureNotes.source',
   'learner.storyShelf.heroLabel',
   'console.space.learner.planReadout',

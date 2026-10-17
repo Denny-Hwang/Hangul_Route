@@ -30,12 +30,12 @@ import { ProfileAvatar } from '../../components/ProfileAvatar';
 import type { SceneArt } from '@hangul-route/content-schema';
 import { welcomeCardIds } from '../../content/award-world';
 import { bundleOs, flags, gatingActive } from '../../config/flags';
-import { episodesAll, questsAll } from '../../content';
+import { episodesAll, questsAll, stages } from '../../content';
 import { PLACEMENT_BANK } from '../../content/placement.generated';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { catchUpCard, takeCatchUpAnnouncement } from '../../logic/awards/catch-up';
 import { isContentLocked } from '../../logic/content-access';
-import { localizeMissionCard, localizeQuest } from '../../logic/content-locale';
+import { localizeEpisode, localizeMissionCard, localizeQuest } from '../../logic/content-locale';
 import { cursorContext } from '../../logic/cursor-context';
 import {
   buildTodaysMission,
@@ -55,6 +55,7 @@ import { homeStripView, type HomeStripView } from '../../logic/my-route/home-str
 import { buildMyRoute } from '../../logic/my-route/model';
 import { localizedRouteContent, routeModelInput, routeWeekOf } from '../../logic/my-route/route-input';
 import { emptySnapshot } from '../../logic/my-route/view';
+import { lessonPlace } from '../../logic/my-route/next-lessons';
 import { placementEntriesOn, questsDoneOf } from '../../logic/placement/entry';
 import { skippedEvent } from '../../logic/placement/events';
 import {
@@ -62,6 +63,7 @@ import {
   homeQuietCard,
   homeTip,
   homeworkCardTitle,
+  isSameAsHero,
   levelCheckCard,
   recentStarsOf,
   showStreakPill,
@@ -154,6 +156,7 @@ function MissionTile({
   picture,
   locked,
   askHint,
+  sameAsHero = false,
   onPress,
 }: {
   card: MissionCard;
@@ -165,11 +168,31 @@ function MissionTile({
   locked: boolean;
   /** The ask (`askFor`), read as the hint of a locked card. */
   askHint: string;
+  /**
+   * The card names the hero's own lesson (`isSameAsHero`, AMENDMENTS-DISPLAY-NAV section 9.1): one quiet row that is
+   * not a button, so Home never offers the same lesson twice; the hero's Start is the one way in.
+   */
+  sameAsHero?: boolean;
   onPress: () => void;
 }): React.ReactElement {
   const m = useMessages();
   const locale = useLocale();
   const { title, subtitle } = missionCardText(localizeMissionCard(card, locale), m.learner);
+  if (sameAsHero) {
+    return (
+      <Card padding="md" tone="sunken" testID={`home-mission-same-as-hero-${card.slot}`}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md, minHeight: touchTarget.min }}>
+          <View style={{ width: COVER_THUMB, alignItems: 'center' }}>
+            <Icon name={ICON_FOR[card.kind]} size={24} color={colors.text.muted} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Body weight="semibold">{title}</Body>
+            <Caption tone="muted">{m.learner.home.mission.sameAsHero}</Caption>
+          </View>
+        </View>
+      </Card>
+    );
+  }
   const look = homeTileLook({
     collected: card.collected,
     locked,
@@ -228,7 +251,27 @@ function MissionTile({
  * so a new learner's first card is a lesson, with its length and one full-width Start or Continue. The three
  * F-HW-001 slots below it are unchanged.
  */
-function NextLessonCard({ lesson, title, onStart }: { lesson: HomeNextLesson; title: string; onStart: () => void }): React.ReactElement {
+function NextLessonCard({
+  lesson,
+  title,
+  where,
+  goal,
+  week,
+  onStart,
+  onRoute,
+}: {
+  lesson: HomeNextLesson;
+  title: string;
+  /** "Stage 1 · Meet the Letters · lesson 1 of 3" (section 9.1); null when the lesson's place is unknown. */
+  where: string | null;
+  /** The weekly plan's goal line ("Goal: Stage 2 · Words"), folded in from the Home route strip; null without a plan goal. */
+  goal: string | null;
+  /** "Week 3 of your weekly plan"; null without a running plan. */
+  week: string | null;
+  onStart: () => void;
+  /** See your Learning Route (the Route tab); null while the Learning Route is off. */
+  onRoute: (() => void) | null;
+}): React.ReactElement {
   const m = useMessages();
   const copy = m.learner.home.next;
   const cta = lesson.cta === 'start' ? copy.start.cta : copy.continue.cta;
@@ -240,9 +283,29 @@ function NextLessonCard({ lesson, title, onStart }: { lesson: HomeNextLesson; ti
         </Caption>
         <Spacer size="xxs" />
         <Heading level="prompt">{title}</Heading>
+        {where !== null ? (
+          <Caption tone="secondary" testID="home-next-lesson-where">
+            {where}
+          </Caption>
+        ) : null}
         <Caption tone="muted">{copy.minutes(lesson.minutes)}</Caption>
+        {goal !== null ? (
+          <Caption tone="muted" testID="home-next-lesson-goal">
+            {goal}
+          </Caption>
+        ) : null}
+        {week !== null ? (
+          <Caption tone="muted" testID="home-next-lesson-week">
+            {week}
+          </Caption>
+        ) : null}
         <Spacer size="md" />
         <Button label={cta} accessibilityLabel={copy.a11y(cta, title)} tone="primary" size="lg" fullWidth onPress={onStart} testID="home-next-lesson-start" />
+        {onRoute !== null ? (
+          <View style={{ alignSelf: 'flex-start' }}>
+            <LinkButton label={copy.route.cta} icon="route" onPress={onRoute} testID="home-next-lesson-route" />
+          </View>
+        ) : null}
       </Card>
     </View>
   );
@@ -398,6 +461,13 @@ export function HomeScreen(): React.ReactElement {
     const quest = nextLesson ? questsAll.find((q) => q.id === nextLesson.questId) : undefined;
     return quest ? localizeQuest(quest, locale).titleEn : '';
   }, [nextLesson, locale]);
+  // Where the hero's lesson sits (AMENDMENTS-DISPLAY-NAV section 9.1): its stage, episode and place among the episode's lessons.
+  const nextLessonWhere = useMemo(() => {
+    if (!nextLesson) return null;
+    const place = lessonPlace(nextLesson.questId, episodesAll, (stage) => stages.find((s) => s.key === stage)?.order ?? null, nextLesson.episodeId);
+    const episode = place ? episodesAll.find((e) => e.id === place.episodeId) : undefined;
+    return place && episode ? m.learner.home.next.where(place.stage, localizeEpisode(episode, locale).titleEn, place.index, place.total) : null;
+  }, [nextLesson, locale, m]);
   const mission = useMemo(() => {
     if (!profile || !snap || !routeInput) return null;
     const today = routeInput.today;
@@ -576,7 +646,19 @@ export function HomeScreen(): React.ReactElement {
     void track(nextStartedEvent(profile.id, next.source, 'home'));
     navigation.navigate('QuestPlayer', { questId: nextLesson.questId, episodeId: nextLesson.episodeId });
   };
-  const heroView = nextLesson ? <NextLessonCard lesson={nextLesson} title={nextLessonTitle} onStart={startNextLesson} /> : null;
+  // The Home route strip is folded into the hero (AMENDMENTS-DISPLAY-NAV section 9.1): its goal line (a weekly plan's
+  // goal only) and plan week sit under the hero's where line, and See your Learning Route is the way to the whole route.
+  const heroView = nextLesson ? (
+    <NextLessonCard
+      lesson={nextLesson}
+      title={nextLessonTitle}
+      where={nextLessonWhere}
+      goal={routeStrip?.goalFromPlan ? routeStrip.goal : null}
+      week={routeStrip?.week ?? null}
+      onStart={startNextLesson}
+      onRoute={flags.myRouteEnabled ? () => navigation.navigate('Main', { screen: 'Route' }) : null}
+    />
+  ) : null;
   // Home's empty state (no quest yet, in no class): a quiet way to a class code (owner request 2026-10-16, item 8).
   const classCodeLink =
     questsDone === 0 && (memberships ?? []).length === 0 ? (
@@ -710,6 +792,8 @@ export function HomeScreen(): React.ReactElement {
                 picture={topicCover ?? null}
                 locked={isHomeCardLocked({ card, entries: storyIndex, isQuestOpen: questOpen, isStoryLocked })}
                 askHint={ask.label}
+                // Card (2) is compact while it names the hero's own lesson (section 9.1); it still collects as F-HW-001 says.
+                sameAsHero={heroView !== null && isSameAsHero(card, nextLesson)}
                 onPress={() => openCard(card)}
               />
             );
@@ -722,9 +806,11 @@ export function HomeScreen(): React.ReactElement {
   const catchUpGap = catchUp && missions ? <Spacer size="lg" /> : null;
 
   // Block 5 of the Home stack (F-ROUTE-001 section 6.4): the route strip replaces the
-  // "Stage 1 progress" bar when the flag is on (OD-3); with the flag off Home is unchanged.
+  // "Stage 1 progress" bar when the flag is on (OD-3); with the flag off Home is unchanged. While the hero shows, the
+  // strip is folded into it (AMENDMENTS-DISPLAY-NAV section 9.1; and the seven stages stay in Journey, owner decision
+  // 2026-10-17), so the strip draws only at rest or at the end of the free lessons, when there is no next lesson.
   const progressBlock = flags.myRouteEnabled ? (
-    routeStrip ? <RouteStrip view={routeStrip} onPress={() => navigation.navigate('Main', { screen: 'Route' })} /> : null
+    routeStrip && heroView === null ? <RouteStrip view={routeStrip} onPress={() => navigation.navigate('Main', { screen: 'Route' })} /> : null
   ) : (
     <>
       <Heading level="prompt">{m.learner.home.progress.heading}</Heading>

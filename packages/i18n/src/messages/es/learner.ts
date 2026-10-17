@@ -221,9 +221,12 @@ export const learner = {
       start: { cta: 'Empezar' },
       continue: { cta: 'Continuar' },
       a11y: (cta: string, title: string) => `${cta}: ${title}`,
+      where: (stage: number, episode: string, i: number, n: number) => `Etapa ${stage} · ${episode} · lección ${i} de ${n}`,
+      route: { cta: 'Ver tu Ruta de aprendizaje' },
     },
     mission: {
       heading: 'Hoy con Hoya',
+      sameAsHero: 'Igual que tu siguiente lección de arriba',
       dailyTest: { title: 'Repaso rápido' },
       subtitle: {
         replay: 'Otra vuelta con Hoya',
@@ -1159,6 +1162,12 @@ export const learner = {
     gains: { stars: 'Estrellas', cards: 'Tarjetas', stories: 'Historias leídas' },
     storiesNote: 'Las historias del patrimonio están abiertas siempre.',
     plan: { open: 'Abrir el plan' },
+    nextLessons: {
+      title: 'Tus próximas lecciones',
+      where: (stage: number, episode: string) => `Etapa ${stage} · ${episode}`,
+      row: (tag: string | null, title: string, where: string) => (tag === null ? `${title}. ${where}` : `${tag}: ${title}. ${where}`),
+    },
+    journey: { cta: 'Ver las etapas en Recorrido' },
     home: {
       strip: {
         title: 'Ruta de aprendizaje',

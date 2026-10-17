@@ -6,21 +6,22 @@ import type { NativeStackNavigationProp, NativeStackScreenProps } from '@react-n
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { bundleOs, flags, gatingActive, routeEnabledFor } from '../../config/flags';
-import { episodesAll, questsAll } from '../../content';
+import { episodesAll, questsAll, stages } from '../../content';
 import { vocabTopics } from '../../content/vocab';
 import { useLocale, useMessages } from '../../i18n/use-messages';
-import { localizeQuest } from '../../logic/content-locale';
+import { localizeEpisode, localizeQuest } from '../../logic/content-locale';
 import { myRouteAccess, myRouteEntryOf, selfEntryTab } from '../../logic/my-route/access';
 import { firstGoalReachedFor, focusEffects, goalRecordFor, seenForView, seenReadAfter } from '../../logic/my-route/focus';
 import { practiceTopicOf } from '../../logic/my-route/free-end';
 import { buildMyRoute } from '../../logic/my-route/model';
+import { nextLessonRows, type NextLessonRowView } from '../../logic/my-route/next-lessons';
 import { localizedRouteContent, routeLetterWall, routeModelInput, routeWeekOf } from '../../logic/my-route/route-input';
 import { readSeen, seenFrom, withGoalReached, writeSeen } from '../../logic/my-route/seen';
 import { continueTappedEvent, goalReachedEvent, stageOpenedEvent, viewedEvent } from '../../logic/my-route/telemetry';
 import type { MyRouteModel, SeenRecord } from '../../logic/my-route/types';
 import { emptySnapshot, myRouteView, stageRowLook } from '../../logic/my-route/view';
 import { isParentSessionValid } from '../../logic/profiles/session';
-import { nextStartedEvent, routeNextInputOf } from '../../logic/route-next';
+import { nextStartedEvent, planView, routeNextInputOf, upcomingLessons, type RouteNextQuestResult } from '../../logic/route-next';
 import { defaultStoryIndex } from '../../logic/story/story-index';
 import type { RootStackParamList } from '../../navigation/types';
 import { useReducedMotion } from '../../platform/motion';
@@ -34,6 +35,7 @@ import { questOpenFor, useAccessTier, useQuestAccess } from '../../store/tier-st
 import { useUiStore } from '../../store/ui-store';
 import { LinkButton } from '../../components/LinkButton';
 import { GainsCard, StoriesNote } from './GainsCard';
+import { NextLessons } from './NextLessons';
 import { useToday } from '../route/use-today';
 import { RouteCard } from './RouteCard';
 import { SkillsCard } from './SkillsCard';
@@ -55,7 +57,12 @@ import { GateLessonsButton } from '../parent/GateLessonsButton';
  * `design/screens/learning-route/mock/route-tab.html`):
  * - `tab`: the learner's Route tab (`MyRouteTabScreen`), the active profile's
  *   own page. No back button; the title "Learning Route" over the purpose line.
- *   `route_map.viewed` with `source: 'tab'` once per focus.
+ *   `route_map.viewed` with `source: 'tab'` once per focus. Owner decision
+ *   2026-10-17: the tab shows where you are now (the route card), the next
+ *   three lessons (`upcomingLessons`, `NextLessons`) and the goal (the card's
+ *   goal line and pips, the weekly plan line), then one link to the Journey
+ *   tab; the trail of seven stages, the skills, gains and stories note stay on
+ *   the grown-up page and the whole map in Journey.
  * - `stack`: the root-stack `MyRoute` screen (`MyRouteScreen`), grown-up only
  *   and always read-only, behind the gate. It sends nothing.
  *
@@ -73,6 +80,12 @@ type Navigation = NativeStackNavigationProp<RootStackParamList>;
 type Variant = 'tab' | 'stack';
 
 const STORAGE = { readJson, writeJson };
+
+/** How many lessons the Route tab lists under its card (owner decision 2026-10-17). */
+export const NEXT_LESSON_COUNT = 3;
+
+/** Stage numbers by key, for the where line ("Stage 1 · ..."). */
+const STAGE_ORDER = new Map(stages.map((s) => [s.key, s.order]));
 
 /** The root-stack screen: one learner's page for a grown-up, read-only (section 5.1). */
 export function MyRouteScreen({ route, navigation }: Props): React.ReactElement {
@@ -181,7 +194,7 @@ function MyRouteBody({ profileId, readOnly, variant, navigation }: BodyProps): R
   // Today's UTC day, read again at midnight, on focus and on foreground (F-ROUTE-001 R-7e), so the plan line and
   // the card's one next move to the new day on a page left open across the boundary.
   const today = useToday();
-  const built = useMemo((): { model: MyRouteModel; week: number | null } | { error: true } => {
+  const built = useMemo((): { model: MyRouteModel; week: number | null; upcoming: RouteNextQuestResult[]; inPlan: ReadonlySet<string> } | { error: true } => {
     try {
       const snapshot = snap ?? emptySnapshot(profileId);
       const now = new Date();
@@ -198,14 +211,37 @@ function MyRouteBody({ profileId, readOnly, variant, navigation }: BodyProps): R
         isQuestOpen: readOnly ? questOpenFor(profileId, now, snapshot) : activeQuestOpen,
       });
       const model = buildMyRoute(routeModelInput({ snapshot, tier, localized, seen, now, next }));
-      return { model, week: routeWeekOf(model, next) };
+      // The tab's next lessons start with the card's own one next (`upcomingLessons`); the grown-up page lists none.
+      const upcoming = variant === 'tab' ? upcomingLessons(next, NEXT_LESSON_COUNT) : [];
+      return { model, week: routeWeekOf(model, next), upcoming, inPlan: variant === 'tab' ? planView(next).inPlanQuestIds : new Set<string>() };
     } catch {
       return { error: true };
     }
     // `attempt` is the retry.
-  }, [snap, profileId, today, tier, plans, readOnly, activeQuestOpen, localized, seen, attempt]);
+  }, [snap, profileId, today, tier, plans, readOnly, activeQuestOpen, localized, seen, attempt, variant]);
   const model = 'model' in built ? built.model : null;
   const week = 'model' in built ? built.week : null;
+  const upcoming = 'model' in built ? built.upcoming : null;
+  const inPlan = 'model' in built ? built.inPlan : null;
+  const nextRows = useMemo((): NextLessonRowView[] => {
+    if (upcoming === null || inPlan === null) return [];
+    const r = messages.learner;
+    return nextLessonRows({
+      lessons: upcoming,
+      episodes: episodesAll,
+      stageOrder: (stage) => STAGE_ORDER.get(stage) ?? null,
+      questTitle: (questId) => {
+        const quest = questsAll.find((q) => q.id === questId);
+        return quest ? localizeQuest(quest, locale).titleEn : null;
+      },
+      episodeTitle: (episodeId) => {
+        const episode = episodesAll.find((e) => e.id === episodeId);
+        return episode ? localizeEpisode(episode, locale).titleEn : '';
+      },
+      inPlanQuestIds: inPlan,
+      copy: { where: r.myRoute.nextLessons.where, row: r.myRoute.nextLessons.row, next: r.routeNext.tag.next, inPlan: r.routeNext.tag.inPlan },
+    });
+  }, [upcoming, inPlan, messages, locale]);
   // The first visit that shows a reached plan goal (LR-5c, section 4.3): Hoya cheers and the card says so for this
   // visit only; the effect below records the goal and sends route_map.goal_reached. Never read-only.
   const firstReached = firstGoalReachedFor({ focusKey, seenFor, focused, readOnly, goal: model?.goal ?? null, seen: seenRead });
@@ -284,6 +320,11 @@ function MyRouteBody({ profileId, readOnly, variant, navigation }: BodyProps): R
   const look = stageRowLook(windowWidth);
 
   const openLibrary = (): void => navigation.navigate('Main', { screen: 'Library' });
+  // A next-lesson row opens its lesson; the first is the card's own one next, so it counts as `route.next_started`.
+  const openNextLesson = (row: NextLessonRowView): void => {
+    if (row.first && !readOnly) void track(nextStartedEvent(profileId, row.source, 'route'));
+    navigation.navigate('QuestPlayer', { questId: row.questId, episodeId: row.episodeId });
+  };
   const back = (
     <Pressable
       onPress={() => navigation.goBack()}
@@ -378,6 +419,8 @@ function MyRouteBody({ profileId, readOnly, variant, navigation }: BodyProps): R
         pose={view.pose}
         onAction={onHero}
         focusToken={focusKey}
+        // The tab's next lessons name the card's lesson first (owner decision 2026-10-17), so the card does not repeat it.
+        showNext={variant !== 'tab' || nextRows.length === 0}
       />
 
       {view.planLine !== null ? (
@@ -396,7 +439,8 @@ function MyRouteBody({ profileId, readOnly, variant, navigation }: BodyProps): R
         </>
       ) : null}
 
-      {view.newQuests !== null ? (
+      {/* "New quests joined" stays on the grown-up page: the tab keeps to where you are, what is next and the goal. */}
+      {view.newQuests !== null && variant !== 'tab' ? (
         <>
           <Spacer size="md" />
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }} accessibilityLiveRegion="polite">
@@ -408,43 +452,61 @@ function MyRouteBody({ profileId, readOnly, variant, navigation }: BodyProps): R
         </>
       ) : null}
 
-      <Spacer size="xl" />
-      <View accessibilityRole="list" accessibilityLabel={messages.a11y.myRoute.trail} testID="my-route-trail">
-        {view.trail.map((row) =>
-          row.kind === 'stage' ? (
-            <StageRowItem
-              key={row.key}
-              row={row}
-              open={current === row.key}
-              look={look}
-              reducedMotion={reducedMotion}
-              onToggle={() => toggle(row.key, row.stage)}
-              onOpenEpisode={(episodeId) => navigation.navigate('EpisodeDetail', { episodeId, from: 'route' })}
-              // F-BROWSE-001 BR-12a (section 4.11 item 3): the grown-up read-only page only, web only; the learner's own Route tab never shows it.
-              action={readOnly ? <GateLessonsButton kind="preview" target={{ kind: 'stage', stage: row.stage }} testID={`my-route-preview-${row.order}`} /> : undefined}
-            />
-          ) : (
-            <LaterRowItem key={row.key} row={row} open={current === row.key} onToggle={() => toggle(row.key, row.stage)} />
-          ),
-        )}
-      </View>
-
-      <Spacer size="md" />
-      <SkillsCard title={view.skillsTitle} rows={view.skills} tiles={view.tiles} note={view.skillsNote} />
-
-      {view.gains.length > 0 ? (
+      {variant === 'tab' ? (
         <>
+          {/* Owner decision 2026-10-17: the next three lessons, then the way to the whole map in the Journey tab. */}
+          {nextRows.length > 0 ? (
+            <>
+              <Spacer size="xl" />
+              <NextLessons title={m.nextLessons.title} rows={nextRows} onOpen={openNextLesson} />
+            </>
+          ) : null}
           <Spacer size="lg" />
-          <GainsCard tiles={view.gains} onOpenLibrary={openLibrary} />
+          <View style={{ alignSelf: 'flex-start' }}>
+            <LinkButton label={m.journey.cta} icon="journey" onPress={() => navigation.navigate('Main', { screen: 'Journey' })} testID="my-route-journey" />
+          </View>
         </>
-      ) : null}
-
-      {view.storiesNote !== null ? (
+      ) : (
         <>
+          <Spacer size="xl" />
+          <View accessibilityRole="list" accessibilityLabel={messages.a11y.myRoute.trail} testID="my-route-trail">
+            {view.trail.map((row) =>
+              row.kind === 'stage' ? (
+                <StageRowItem
+                  key={row.key}
+                  row={row}
+                  open={current === row.key}
+                  look={look}
+                  reducedMotion={reducedMotion}
+                  onToggle={() => toggle(row.key, row.stage)}
+                  onOpenEpisode={(episodeId) => navigation.navigate('EpisodeDetail', { episodeId, from: 'route' })}
+                  // F-BROWSE-001 BR-12a (section 4.11 item 3): the grown-up read-only page only, web only; the learner's own Route tab never shows it.
+                  action={readOnly ? <GateLessonsButton kind="preview" target={{ kind: 'stage', stage: row.stage }} testID={`my-route-preview-${row.order}`} /> : undefined}
+                />
+              ) : (
+                <LaterRowItem key={row.key} row={row} open={current === row.key} onToggle={() => toggle(row.key, row.stage)} />
+              ),
+            )}
+          </View>
+
           <Spacer size="md" />
-          <StoriesNote text={view.storiesNote} cta={m.cta.stories} onOpen={openLibrary} />
+          <SkillsCard title={view.skillsTitle} rows={view.skills} tiles={view.tiles} note={view.skillsNote} />
+
+          {view.gains.length > 0 ? (
+            <>
+              <Spacer size="lg" />
+              <GainsCard tiles={view.gains} onOpenLibrary={openLibrary} />
+            </>
+          ) : null}
+
+          {view.storiesNote !== null ? (
+            <>
+              <Spacer size="md" />
+              <StoriesNote text={view.storiesNote} cta={m.cta.stories} onOpen={openLibrary} />
+            </>
+          ) : null}
         </>
-      ) : null}
+      )}
       <Spacer size="xl" />
     </Screen>
   );

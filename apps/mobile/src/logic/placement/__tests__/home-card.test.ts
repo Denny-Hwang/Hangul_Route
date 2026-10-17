@@ -5,6 +5,7 @@ import {
   homeQuietCard,
   homeTip,
   homeworkCardTitle,
+  isSameAsHero,
   levelCheckCard,
   recentStarsOf,
   showStreakPill,
@@ -84,6 +85,21 @@ describe('the Next lesson hero', () => {
     expect(homeNextLesson({ next: { kind: 'rest' }, questOf, questsDone: 5 })).toBeNull();
     expect(homeNextLesson({ next: { kind: 'free-end', placedOut: false }, questOf, questsDone: 5 })).toBeNull();
     expect(homeNextLesson({ next: { ...quest, questId: 'quest:gone' }, questOf, questsDone: 0 })).toBeNull();
+  });
+});
+
+describe('card (2) in its compact form under the hero (AMENDMENTS-DISPLAY-NAV section 9.1)', () => {
+  const hero = { questId: 'quest:q1' };
+  it('is compact only while it names the hero\'s own lesson and is not collected', () => {
+    expect(isSameAsHero({ kind: 'new', questId: 'quest:q1', collected: false }, hero)).toBe(true);
+    expect(isSameAsHero({ kind: 'new', questId: 'quest:q2', collected: false }, hero)).toBe(false);
+    expect(isSameAsHero({ kind: 'new', questId: 'quest:q1', collected: true }, hero)).toBe(false);
+  });
+
+  it('never for a replay card, a card with no quest, or a Home with no hero', () => {
+    expect(isSameAsHero({ kind: 'replay', questId: 'quest:q1', collected: false }, hero)).toBe(false);
+    expect(isSameAsHero({ kind: 'daily-test', collected: false }, hero)).toBe(false);
+    expect(isSameAsHero({ kind: 'new', questId: 'quest:q1', collected: false }, null)).toBe(false);
   });
 });
 

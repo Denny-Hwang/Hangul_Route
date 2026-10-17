@@ -213,9 +213,12 @@ export const learner = {
       start: { cta: '시작' },
       continue: { cta: '계속' },
       a11y: (cta: string, title: string) => `${cta}: ${title}`,
+      where: (stage: number, episode: string, i: number, n: number) => `${stage}단계 · ${episode} · 레슨 ${n}개 중 ${i}번째`,
+      route: { cta: '학습 루트 보기' },
     },
     mission: {
       heading: '오늘 호야와 함께',
+      sameAsHero: '위에 있는 다음 레슨과 같아요',
       dailyTest: { title: '빠른 복습' },
       subtitle: {
         replay: '호야와 한 번 더',
@@ -1130,6 +1133,12 @@ export const learner = {
     gains: { stars: '별', cards: '카드', stories: '읽은 이야기' },
     storiesNote: '문화 이야기는 언제든지 열려 있어요.',
     plan: { open: '계획 열기' },
+    nextLessons: {
+      title: '다음에 할 레슨',
+      where: (stage: number, episode: string) => `${stage}단계 · ${episode}`,
+      row: (tag: string | null, title: string, where: string) => (tag === null ? `${title}. ${where}` : `${tag}: ${title}. ${where}`),
+    },
+    journey: { cta: '여정에서 모든 단계 보기' },
     home: {
       strip: {
         title: '학습 루트',

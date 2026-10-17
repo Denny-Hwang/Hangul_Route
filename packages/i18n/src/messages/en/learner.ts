@@ -289,9 +289,21 @@ export const learner = {
       start: { cta: 'Start' },
       continue: { cta: 'Continue' },
       a11y: (cta: string, title: string) => `${cta}: ${title}`,
+      /**
+       * Where the hero's lesson sits (AMENDMENTS-DISPLAY-NAV section 9.1): `episode` is the episode's title (content),
+       * `i` of `n` its place among the episode's lessons.
+       */
+      where: (stage: number, episode: string, i: number, n: number) => `Stage ${stage} · ${episode} · lesson ${i} of ${n}`,
+      /** Under the hero's button (AMENDMENTS-DISPLAY-NAV section 9.1): the Route tab, the whole Learning Route. */
+      route: { cta: 'See your Learning Route' },
     },
     mission: {
       heading: 'Today with Hoya',
+      /**
+       * Card (2) when it names the hero's lesson (section 9.1): one quiet row, not a button, so Home never offers
+       * the same lesson twice. It still shows done and still collects, as F-HW-001 says.
+       */
+      sameAsHero: 'Same as your next lesson above',
       /** The daily-test card names itself; every other card is titled by its quest or episode (content). */
       dailyTest: { title: 'Quick review' },
       /** Keyed by `MissionSubtitle`, the code a mission card carries instead of prose. */
@@ -496,7 +508,7 @@ export const learner = {
      * Hoya's intro on a cell whose own intro assumes an earlier stage ("You know 30 letters.") while the learner has
      * not done it (owner request 2026-10-16, item 8; `logic/episode/intro.ts`): true for everyone.
      */
-    introFresh: 'Let us learn this one step at a time!',
+    introFresh: "Let's learn this one step at a time!",
     comingSoon: {
       pill: 'Coming soon',
       title: 'Coming soon',
@@ -1514,6 +1526,19 @@ export const learner = {
      * learner's own weekly plan. Its accessible name is these same words.
      */
     plan: { open: 'Open plan' },
+    /**
+     * The Route tab's next lessons (owner decision 2026-10-17: where you are, the next three lessons and the goal;
+     * the seven stages stay in the Journey tab). `row` is a row's accessible name: its tag when it has one ("Next"
+     * or "In your plan"), the lesson and where it sits.
+     */
+    nextLessons: {
+      title: 'Your next lessons',
+      /** Where the lesson sits: its stage and episode. No "lesson 2 of 3" here: the Route page never shows an "n of N" (F-ROUTE-001). */
+      where: (stage: number, episode: string) => `Stage ${stage} · ${episode}`,
+      row: (tag: string | null, title: string, where: string) => (tag === null ? `${title}. ${where}` : `${tag}: ${title}. ${where}`),
+    },
+    /** The Route tab's way to the whole map (owner decision 2026-10-17): the Journey tab. */
+    journey: { cta: 'See every stage in Journey' },
     /**
      * The Home route strip (R-4b, section 3.1 entry 2; amendment LR-A6): the page's name, the goal
      * line from the goal source and the weekly plan week. No count of what is left, no date.

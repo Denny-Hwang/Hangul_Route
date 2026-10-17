@@ -89,6 +89,16 @@ export function homeNextLesson(input: {
   };
 }
 
+/**
+ * Card (2) drawn in its compact form (AMENDMENTS-DISPLAY-NAV section 9.1): a mission card that names the hero's own
+ * lesson, not yet collected, is one quiet row that is not a button ("Same as your next lesson above"), so Home never
+ * offers the same lesson twice. The slots, their order and their completion stay F-HW-001's; a replay card (a quest
+ * already done) is never the hero's lesson, and a collected card keeps its collected look.
+ */
+export function isSameAsHero(card: { kind: string; questId?: string; collected: boolean }, hero: Pick<HomeNextLesson, 'questId'> | null): boolean {
+  return hero !== null && card.questId === hero.questId && !card.collected && card.kind !== 'replay';
+}
+
 /** The streak pill waits for the first day: "Streak 0 days" is never shown. */
 export function showStreakPill(streak: number): boolean {
   return streak >= 1;
