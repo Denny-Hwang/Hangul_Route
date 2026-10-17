@@ -67,6 +67,7 @@ F-XXX-<slug>.md
 
 ### Spec wave 2026-10 (ready — implementation follows the PR order in `docs/roadmap/spec-wave-2026-10.md`)
 - `F-I18N-001-ui-locales.md` — UI in English (default), Korean and Spanish · **ready**
+  - amended 2026-10-16 by `AMENDMENTS-DISPLAY-NAV.md` (rows DN-0 to DN-9; owner report 2026-10-16): one language and one text size per device (`hr:device:settings`, Display (Aa) sheet), the account copy in Clerk, a top-left Back on every non-root screen (`ScreenHeader`, console `PageBack`, a web history bridge), `ConfirmSheet` instead of native `confirm()`, and the learner UX pass (Home next-lesson hero, Profile split, Library collected first, one Grown-up area name, Got a class code?, a quieter Route tab); also amends F-AUTH-002, F-APP-001, F-BROWSE-001, F-LAYOUT-001, F-LEARN-001 · **ready** · wireframes `design/wireframes/shell/display-sheet.md`, `shell/screen-header.md`, `home/next-lesson-hero.md`, `profile/profile-split.md`, `library/cards-collected-first.md`
 - `F-LEARN-001-all-ages-onboarding.md` — who is learning, reading level, consent, grown-up PIN, avatar variants · **ready**
 - `F-CNT-002-romanization-policy.md` — Revised Romanization policy and validator over shipped content · **ready**
 - `F-QUEST-002-discover-check-stage1-complete.md` — Discover/Check steps, full Stage 1 (15 quests, 30 symbols), Listen & Pick, Pic-Word Match · **ready**
@@ -91,6 +92,7 @@ F-XXX-<slug>.md
 - `F-PLAN-002-curriculum-planner.md` — curriculum generator by level and duration, console wizard, self-route · **ready**
 - `F-TCH-004-lecture-mode.md` — teacher lecture mode for tablets and projectors · **ready**
   - amended 2026-10-15 by `AMENDMENTS-LECTURE-V2.md` (rows LV-0b to LV-7, LV-S1 to LV-S4): parents and teachers alike, on by default with a kill switch, entry cards on both homes, a nav item and a learner-app grown-up card, six ready-made presets with Customize optional, deck v2 (`word-review`), presenter slides for every Stage 2-7 step kind (measured skip table), also amends F-APP-001 (entry points) and F-SITE-002 (claim lines) · **ready** · wireframes `design/wireframes/classroom/lecture-presets.md`, `lecture-big-screen-v2.md`, `lecture-entry-points.md`
+  - amended 2026-10-16 by `AMENDMENTS-LECTURE-V2.md` section 18 (owner report; row LV-M1, LV-3 and LV-4 widened): slides on phones in landscape with a rotate page upright, one history entry per phase, the helper picker removed, honest minutes, a grouped Customize chooser, the device language for the presenter's chrome and a Slides language on the console · **ready** · wireframes `design/wireframes/classroom/lecture-phone.md`, `lecture-presets.md` (Panels C, E, F revised)
 - `F-LAYOUT-001-responsive-tablet-landscape.md` — tablet, landscape and split-pane layout · **ready**
 - `F-SPACE-002-class-transfer.md` — move a learner between classes with learner-side, releasing and receiving consent (flag-locked) · **ready**
   - amended 2026-10-11 by `AMENDMENTS-BILLING-FAMILY-YEARLY.md` ([BY] premium note: learners keep everything they earned, access follows the active plan; follow-up docs PR #385)

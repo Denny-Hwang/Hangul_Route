@@ -1,6 +1,9 @@
 # F-AUTH-002 — Console sign-in with Clerk (web)
 
 **Status**: `ready` (shipped 2026-10-07)
+
+> **Amended 2026-10-16 by `AMENDMENTS-DISPLAY-NAV.md`** (section 5): Clerk `unsafeMetadata` carries `{ uiLocale, uiLocaleAt }`, merged with `adultAffirmedAt`, the newer choice winning against the device record; Clerk's widgets get `localization` `enUS`, `koKR` or `esMX` by the resolved locale (row DN-5).
+
 **Scope**: `apps/web` (`/teach` sign-in, auth provider, API client token provider) · docs. `packages/backend` is unchanged: F-AUTH-001 already verifies Clerk session JWTs when `CLERK_SECRET_KEY` is bound.
 **Owner**: solo dev
 **Rollout**: after the owner created the Clerk application (Development instance, Consumer, Email + Google — 2026-10-07). Keys live only in the Cloudflare dashboard: `CLERK_SECRET_KEY` as an API Worker Secret, `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` as a `hangul-route-web` build variable. Nothing in the repository.

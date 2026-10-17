@@ -1,5 +1,7 @@
 Status: ready
 
+> **Amended 2026-10-16 by `AMENDMENTS-DISPLAY-NAV.md`** (section 4): LD4's "text does not scale" becomes a device text size (Standard 1.0, Large 1.15, Larger 1.3, Largest 1.5; caption to prompt by the factor, title, display and hero by half of it; effective scale = OS `fontScale` x the factor; the console through an html font-size variable; presenter slides keep stage units). Rows DN-2, DN-3, DN-3b, DN-5.
+
 # F-LAYOUT-001 — Responsive layout: tablets, landscape, a wide layout instead of a 480 px column
 
 **Scope**: `packages/design-system` (layout tokens, `layoutClassFor`, `useLayoutClass`, `LayoutProvider`, `Screen` width, `SplitPane`, tab-bar side insets) · `apps/mobile` (web shell `scripts/pwa-postbuild.mjs`, `public/manifest.webmanifest`, orientation platform module + guard, Home / Journey / Library / EpisodeDetail / CardDetail views, game sizing, e2e) · `design/tokens/layout.v1.md` (new) · `scripts/check-token-drift.mjs` · wireframe `design/wireframes/layout/wide.md`

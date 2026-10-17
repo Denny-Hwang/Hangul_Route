@@ -1,0 +1,7 @@
+/*
+ * All lessons on the device language (owner report 2026-10-16, design pass DN-0 review 2026-10-17;
+ * docs/specs/AMENDMENTS-DISPLAY-NAV.md sections 3.6 and 6, row DN-7). Design mock, not shipped code.
+ * Loaded after browse.css; every value is a token of that sheet's :root block.
+ */
+.topbar .tools { display: inline-flex; flex-wrap: wrap; align-items: center; gap: var(--spacing-sm); margin-left: auto; }
+.aa-btn { display: inline-flex; align-items: center; justify-content: center; min-width: var(--touch-min); min-height: var(--touch-min); padding: var(--spacing-xs) var(--spacing-md); border-radius: var(--radii-pill); border: var(--border-width-base) solid var(--colors-border-strong); background: var(--colors-surface-paper); color: var(--colors-text-primary); font-size: var(--size-bodyLg); font-weight: var(--weight-bold); font-family: inherit; }

@@ -17,3 +17,10 @@ Opened from [ Lesson display ] on home and on the item page. It is a bottom shee
 - Escape, the scrim and Done close the sheet; focus returns to [ Lesson display ].
 - A choice applies at once; Done only closes.
 - It writes `browse:prefs` only when the keep switch is on; never a profile or the device locale.
+
+## Revision 2026-10-17: the Romanization sheet (DN-7)
+
+Spec: `docs/specs/AMENDMENTS-DISPLAY-NAV.md` sections 6 and 10 (F-BROWSE-001 §4.9 as amended) · mock `mock/romanization-sheet.html` (rules `mock/browse-dn7.css`) · shots `shots/romanization-sheet-375.png`, `-1280.png`, `-320-text200.png`
+
+All lessons follows the device language, so the Language row goes and the sheet holds only the romanization choice. It is renamed for it: the header chip and the title read **Romanization** (`caregiver.browse.home.lessonDisplay.cta`, `caregiver.browse.display.title`, changed), because "Lesson display" next to the device-wide **Display** sheet read as one thing. The bold group label goes (the title names the radio group, `aria-labelledby`), so `caregiver.browse.display.romanization` is no longer drawn. The note, the two radio rows and Done are unchanged. The header gains the **Display (Aa)** control at the right (`.aa-btn`, accessible name "Aa, Display: language and text size"), which opens the shared Display sheet. The other browse shots (home, item, topic) still show the old chip name and no Aa; DN-7's PR attaches new screenshots of those pages.
+
