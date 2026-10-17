@@ -1,5 +1,7 @@
 Status: ready
 
+> **Amended 2026-10-16 by `AMENDMENTS-DISPLAY-NAV.md`** (section 6): All lessons uses the device language; the Lesson display sheet keeps Romanization only, `setSessionLocale` goes and `device:settings` joins `BROWSE_WRITABLE_KEYS` (sections 4.9 and 4.10 here; row DN-7).
+
 # F-BROWSE-001 — All lessons: parents and teachers see every lesson the way a learner does
 
 **Scope**: `packages/content-schema` (`schemas/browse.ts`: targets, fragment codec, pass schema, scope response; exported content-id regexes; 5 telemetry names) · `packages/backend` (`adultCoveredAny` in `lib/entitlement.ts`, with F-BILL-002 §5.3's card set; `GET /api/entitlements/browse`; server-side payload allow-list for `browse.*` telemetry) · `apps/mobile` (a third root of the learner web build at `/browse`: `BrowseApp`, `screens/browse/`, `logic/browse/`, `platform/browse(.web).ts`; a storage write fence, a telemetry fence and a configurable telemetry queue key in `platform/`; extractions from `QuestPlayerScreen`, `JourneyScreen`, `CardDetailView`, the route `TrailRow`, every romanization call site and a navigation adapter for the reused story and minigame screens; one button on the in-app grown-up dashboard and one boot intent) · `apps/web` (the **Lessons** item in F-APP-001's adult navigation, `lib/console/browse-link.ts`, `browseEnabled()`, deep links from the plan builder, the roster revisit chips, the Learning Route summary page and the report action slot) · `packages/i18n` (`caregiver.browse`, `console.browse`) · wireframes `design/wireframes/browse/*.md`
