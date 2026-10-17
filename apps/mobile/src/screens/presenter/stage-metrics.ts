@@ -13,7 +13,9 @@ import {
   THUMB_W_REM,
   START_BUTTON_FACTOR,
   STATE_HOYA_FACTOR,
+  PHONE_COMPACT_WIDTH,
   barBand,
+  type PhoneRule,
 } from '../../logic/lecture/stage-constants';
 import type { StageBounds } from '../../logic/lecture/stage-scale';
 
@@ -25,6 +27,10 @@ import type { StageBounds } from '../../logic/lecture/stage-scale';
 
 /** `presenter.stage` and the compact breakpoint for `stageScale` (spec section 3.6 amendment). */
 export const STAGE_BOUNDS: StageBounds = { ...presenter.stage, compactWidth: layout.breakpoint.regular };
+/** A phone window's stage: the same stage, judged too small only below `PHONE_COMPACT_WIDTH` (README Constants). */
+export const PHONE_STAGE_BOUNDS: StageBounds = { ...presenter.stage, compactWidth: PHONE_COMPACT_WIDTH };
+/** The design system's phone form factor (`layout.phoneShortSide`, `layout.phoneMaxLongSide`). */
+export const PHONE_RULE: PhoneRule = { shortSide: layout.phoneShortSide, maxLongSide: layout.phoneMaxLongSide };
 /** No text below `typography.size.body` anywhere (README D2). */
 export const TEXT_FLOOR = typography.size.body;
 /** 120 px: `touchTarget.hero + 2 x spacing.md` (README D1). */
@@ -43,6 +49,8 @@ export const STAGE_BORDER_MIN = borderWidth.base;
 
 export const CTL_MAX_WIDTH = CTL_MAX_FACTOR * touchTarget.hero;
 export const NEXT_MIN_WIDTH = NEXT_MIN_FACTOR * touchTarget.hero;
+/** The compact (phone) bar's Next / Reveal: 1.5 x `touchTarget.min`. */
+export const NEXT_MIN_WIDTH_COMPACT = NEXT_MIN_FACTOR * touchTarget.min;
 export const START_BUTTON_HEIGHT = START_BUTTON_FACTOR * touchTarget.hero;
 export const STATE_HOYA = STATE_HOYA_FACTOR * touchTarget.hero;
 /** A teacher page's readable column (the start screen). */

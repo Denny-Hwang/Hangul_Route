@@ -1,8 +1,16 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import * as native from '../presenter';
 import {
+  CLOSE_WAIT_MS,
+  LEAVE_WAIT_MS,
   PRESENTER_PATH,
+  RETURN_WAIT_MS,
   checkForUpdate,
+  currentPresenterStep,
+  enterPresenterStep,
+  leavePresenter,
+  returnToPresenterHome,
+  subscribePresenterPop,
   enterFullscreen,
   enterFullscreenLandscape,
   exitFullscreen,
@@ -85,6 +93,11 @@ describe('route', () => {
     expect(native.wakeLockSupported()).toBe(false);
     native.forgetOpenDeck();
     native.holdOpenDeck('1.abc');
+    expect(native.currentPresenterStep()).toEqual({ step: 'home', depth: 0 });
+    native.enterPresenterStep('start', '1.abc');
+    native.returnToPresenterHome();
+    native.subscribePresenterPop(() => undefined)();
+    native.leavePresenter();
     native.reloadOnDeckLink()();
     await native.checkForUpdate();
     await native.reloadForUpdate('2.abc');
@@ -253,6 +266,234 @@ describe('document title', () => {
     setPresenterDocTitle('Hangul Route lecture', env({ document: doc }));
     expect(doc.title).toBe('Hangul Route lecture');
     expect(() => setPresenterDocTitle('x', env())).not.toThrow();
+  });
+});
+
+/** A tab's session history: entries, the current index, pushState, replaceState and go (which fires popstate). */
+function fakeHistory(first: unknown = null, win = fakeTarget()) {
+  const entries: unknown[] = [first];
+  const h = {
+    index: 0,
+    entries,
+    get state(): unknown {
+      return entries[h.index];
+    },
+    get length(): number {
+      return entries.length;
+    },
+    replaceState: vi.fn((next: unknown) => {
+      entries[h.index] = next;
+    }),
+    pushState: vi.fn((next: unknown) => {
+      entries.splice(h.index + 1);
+      entries.push(next);
+      h.index = entries.length - 1;
+    }),
+    go: vi.fn((delta: number) => {
+      const to = Math.max(0, Math.min(entries.length - 1, h.index + delta));
+      if (to === h.index) return;
+      h.index = to;
+      win.fire('popstate', {});
+    }),
+  };
+  return { history: h, win };
+}
+
+describe('the way back: one history entry per step (owner report 2026-10-16 item 3)', () => {
+  const location = { pathname: '/present', hash: '', origin: 'https://app.example' };
+
+  it('the start screen and the lesson each push one entry holding the deck; a reload of the step keeps it', () => {
+    const { history, win } = fakeHistory({ hrLectureFragment: '1.abc' });
+    const e = env({ location, history, window: win });
+    enterPresenterStep('start', '1.abc', {}, e);
+    expect(history.entries).toEqual([{ hrLectureFragment: '1.abc' }, { hrLectureFragment: '1.abc', hrPresenter: 'start', hrPresenterDepth: 1 }]);
+    expect(currentPresenterStep(e)).toEqual({ step: 'start', depth: 1 });
+    enterPresenterStep('start', '1.abc', {}, e);
+    expect(history.entries).toHaveLength(2);
+    enterPresenterStep('lesson', '1.abc', {}, e);
+    expect(history.entries[2]).toEqual({ hrLectureFragment: '1.abc', hrPresenter: 'lesson', hrPresenterDepth: 2 });
+    // A reload on the lesson entry opens the start screen: that entry becomes the start entry, at its depth.
+    enterPresenterStep('start', '1.abc', { fresh: true }, e);
+    expect(history.entries).toHaveLength(3);
+    expect(history.state).toEqual({ hrLectureFragment: '1.abc', hrLectureFresh: true, hrPresenter: 'start', hrPresenterDepth: 2 });
+    // The deck stays in the entry, so a reload still resumes.
+    expect(takeDeckFragment(e)).toEqual({ raw: '1.abc', reloaded: true, fresh: true });
+  });
+
+  it('holdOpenDeck and forgetOpenDeck keep the step; the home entry with no deck holds nothing', () => {
+    const { history, win } = fakeHistory(null);
+    const e = env({ location, history, window: win });
+    enterPresenterStep('start', null, {}, e);
+    expect(history.state).toEqual({ hrPresenter: 'start', hrPresenterDepth: 1 });
+    holdOpenDeck('1.abc', {}, e);
+    expect(history.state).toEqual({ hrLectureFragment: '1.abc', hrPresenter: 'start', hrPresenterDepth: 1 });
+    forgetOpenDeck(e);
+    expect(history.state).toEqual({ hrPresenter: 'start', hrPresenterDepth: 1 });
+    history.index = 0;
+    forgetOpenDeck(e);
+    expect(history.state).toBeNull();
+  });
+
+  it('a history without pushState keeps one entry; a refusing pushState still holds the deck', () => {
+    const replaced: unknown[] = [];
+    const flat = env({ location, history: { state: null, replaceState: (next: unknown) => replaced.push(next) } });
+    enterPresenterStep('lesson', '1.abc', {}, flat);
+    expect(replaced).toEqual([{ hrLectureFragment: '1.abc', hrPresenter: 'lesson', hrPresenterDepth: 2 }]);
+    const refusing = { state: null as unknown, replaceState: vi.fn(), pushState: vi.fn(() => {
+      throw new Error('denied');
+    }) };
+    enterPresenterStep('start', '1.abc', {}, env({ location, history: refusing }));
+    expect(refusing.replaceState).toHaveBeenCalledWith({ hrLectureFragment: '1.abc', hrPresenter: 'start', hrPresenterDepth: 1 }, '', PRESENTER_PATH);
+  });
+
+  it('a broken step or depth reads as the home, or as the step at its own depth', () => {
+    expect(currentPresenterStep(env({ history: { state: { hrPresenter: 'other' }, replaceState: vi.fn() } }))).toEqual({ step: 'home', depth: 0 });
+    expect(currentPresenterStep(env({ history: { state: { hrPresenter: 'lesson', hrPresenterDepth: -3 }, replaceState: vi.fn() } }))).toEqual({ step: 'lesson', depth: 2 });
+    expect(currentPresenterStep(env({ history: { state: 'x', replaceState: vi.fn() } }))).toEqual({ step: 'home', depth: 0 });
+    expect(currentPresenterStep(env())).toEqual({ step: 'home', depth: 0 });
+  });
+
+  it("returnToPresenterHome goes back past the presenter's own entries, clears the deck there, and its popstate is not the browser's Back", () => {
+    const { history, win } = fakeHistory({ hrLectureFragment: '1.abc' });
+    const e = env({ location, history, window: win });
+    const onPop = vi.fn();
+    const stop = subscribePresenterPop(onPop, e);
+    enterPresenterStep('start', '1.abc', {}, e);
+    enterPresenterStep('lesson', '1.abc', {}, e);
+    returnToPresenterHome(e);
+    expect(history.go).toHaveBeenCalledWith(-2);
+    expect(history.index).toBe(0);
+    expect(history.state).toBeNull();
+    expect(onPop).not.toHaveBeenCalled();
+    stop();
+    expect(win.count('popstate')).toBe(0);
+  });
+
+  it("the browser's Back is reported with the entry it landed on", () => {
+    const { history, win } = fakeHistory(null);
+    const e = env({ location, history, window: win });
+    const onPop = vi.fn();
+    subscribePresenterPop(onPop, e);
+    enterPresenterStep('start', '1.abc', {}, e);
+    enterPresenterStep('lesson', '1.abc', {}, e);
+    history.go(-1);
+    expect(onPop).toHaveBeenLastCalledWith({ step: 'start', depth: 1 });
+    history.go(-1);
+    expect(onPop).toHaveBeenLastCalledWith({ step: 'home', depth: 0 });
+  });
+
+  it('at the home, or with no go, returnToPresenterHome only clears the entry; a go that throws clears it too', () => {
+    const { history, win } = fakeHistory({ hrLectureFragment: '1.abc' });
+    returnToPresenterHome(env({ location, history, window: win }));
+    expect(history.go).not.toHaveBeenCalled();
+    expect(history.state).toBeNull();
+    const flat = { state: { hrLectureFragment: '1.abc', hrPresenter: 'start', hrPresenterDepth: 1 } as unknown, replaceState: vi.fn() };
+    returnToPresenterHome(env({ location, history: flat }));
+    expect(flat.replaceState).toHaveBeenCalledWith(null, '', PRESENTER_PATH);
+    const throwing = { ...fakeHistory({ hrPresenter: 'start', hrPresenterDepth: 1 }).history, go: vi.fn(() => {
+      throw new Error('no');
+    }) };
+    returnToPresenterHome(env({ location, history: throwing }));
+    expect(throwing.replaceState).toHaveBeenCalledWith(null, '', PRESENTER_PATH);
+  });
+
+  it('a return whose popstate never comes stops being expected, so a later Back is reported', () => {
+    vi.useFakeTimers();
+    const win = fakeTarget();
+    const history = { state: { hrPresenter: 'start', hrPresenterDepth: 1 } as unknown, replaceState: vi.fn(), go: vi.fn() };
+    const e = env({ location, history, window: win });
+    const onPop = vi.fn();
+    subscribePresenterPop(onPop, e);
+    returnToPresenterHome(e);
+    vi.advanceTimersByTime(RETURN_WAIT_MS);
+    win.fire('popstate', {});
+    expect(onPop).toHaveBeenCalledTimes(1);
+  });
+
+  it('without a window nothing is listened to', () => {
+    expect(() => subscribePresenterPop(vi.fn(), env())()).not.toThrow();
+  });
+});
+
+describe("leavePresenter: the home's Back", () => {
+  const location = { pathname: '/present', hash: '', origin: 'https://app.example' };
+  const doc = (referrer: string) => ({ referrer });
+
+  it('goes back to a page of this origin before the presenter (the Navigation API knows)', () => {
+    const { history, win } = fakeHistory(null);
+    const assign = vi.fn();
+    // Index 1 at the home: one page of this origin before it, whatever the referrer says.
+    leavePresenter(env({ location, history, window: win, assign, navigation: { currentEntry: { index: 1 } }, document: doc('') }));
+    expect(history.go).toHaveBeenCalledWith(-1);
+    expect(assign).not.toHaveBeenCalled();
+    // Index 2 on the start entry (depth 1): back past it too.
+    const start = fakeHistory({ hrPresenter: 'start', hrPresenterDepth: 1 });
+    leavePresenter(env({ location, history: start.history, window: start.win, assign, navigation: { currentEntry: { index: 2 } } }));
+    expect(start.history.go).toHaveBeenCalledWith(-2);
+  });
+
+  it('goes back past its own entries; leaves for / when the page does not start to leave', () => {
+    vi.useFakeTimers();
+    const win = fakeTarget();
+    const go = vi.fn();
+    const assign = vi.fn();
+    const history = { state: null as unknown, length: 3, replaceState: vi.fn(), go };
+    leavePresenter(env({ location, history, window: win, assign, document: doc('https://app.example/browse') }));
+    expect(go).toHaveBeenCalledWith(-1);
+    vi.advanceTimersByTime(LEAVE_WAIT_MS);
+    expect(assign).toHaveBeenCalledWith('/');
+    expect(win.count('pagehide')).toBe(0);
+  });
+
+  it('once the page starts to leave, the fallback stays away', () => {
+    vi.useFakeTimers();
+    const win = fakeTarget();
+    const assign = vi.fn();
+    const history = { state: null as unknown, length: 2, replaceState: vi.fn(), go: vi.fn(() => win.fire('pagehide', {})) };
+    leavePresenter(env({ location, history, window: win, assign, navigation: { currentEntry: { index: 1 } } }));
+    vi.advanceTimersByTime(LEAVE_WAIT_MS);
+    expect(assign).not.toHaveBeenCalled();
+  });
+
+  it('closes a tab a script opened (a same-origin referrer, nothing before it), then leaves for / if the browser refuses', () => {
+    vi.useFakeTimers();
+    const close = vi.fn();
+    const assign = vi.fn();
+    const history = { state: null as unknown, length: 1, replaceState: vi.fn(), go: vi.fn() };
+    leavePresenter(env({ location, history, close, assign, navigation: { currentEntry: { index: 0 } }, document: doc('https://app.example/teach/space/lecture') }));
+    expect(history.go).not.toHaveBeenCalled();
+    expect(close).toHaveBeenCalledTimes(1);
+    expect(assign).not.toHaveBeenCalled();
+    vi.advanceTimersByTime(CLOSE_WAIT_MS);
+    expect(assign).toHaveBeenCalledWith('/');
+  });
+
+  it('a typed address or a link from elsewhere leaves for /', () => {
+    const assign = vi.fn();
+    const close = vi.fn();
+    leavePresenter(env({ location, history: { state: null, length: 1, replaceState: vi.fn() }, close, assign, document: doc('') }));
+    leavePresenter(env({ location, history: { state: null, length: 4, replaceState: vi.fn(), go: vi.fn() }, close, assign, document: doc('https://other.example/') }));
+    expect(close).not.toHaveBeenCalled();
+    expect(assign.mock.calls).toEqual([['/'], ['/']]);
+    // A broken referrer counts as none.
+    leavePresenter(env({ location, history: { state: null, length: 2, replaceState: vi.fn() }, assign, document: doc('not a url') }));
+    expect(assign).toHaveBeenCalledTimes(3);
+  });
+
+  it('a close or a go that throws still leaves', () => {
+    vi.useFakeTimers();
+    const assign = vi.fn();
+    leavePresenter(env({ location, history: { state: null, length: 1, replaceState: vi.fn() }, assign, close: () => {
+      throw new Error('no');
+    }, document: doc('https://app.example/x') }));
+    vi.advanceTimersByTime(CLOSE_WAIT_MS);
+    expect(assign).toHaveBeenCalledWith('/');
+    const win = fakeTarget();
+    leavePresenter(env({ location, window: win, assign, history: { state: null, length: 3, replaceState: vi.fn(), go: () => {
+      throw new Error('no');
+    } }, navigation: { currentEntry: { index: 2 } } }));
+    vi.advanceTimersByTime(LEAVE_WAIT_MS);
+    expect(assign).toHaveBeenCalledTimes(2);
   });
 });
 

@@ -6,14 +6,16 @@ import { usePresenterView } from './presenter-context';
 
 /**
  * The presenter's state pages (design/screens/presenter/states.md): the invalid link, loading,
- * too small, and the presenter home of this build. Teacher pages in real pixels on paper: Hoya,
- * a title, one line, and at most one action, focused on arrival. A link from a newer presenter
- * (AMENDMENTS-LECTURE-V2 section 4.5) adds a second, quieter one (`secondary`) under Reload.
+ * too small, turn the phone, and the presenter home of this build. Teacher pages in real pixels on
+ * paper: Hoya, a title, one line (and a quieter `hint` under it), and one action, focused on
+ * arrival. A link from a newer presenter (AMENDMENTS-LECTURE-V2 section 4.5) and the turn-the-phone
+ * page add a second, quieter action (`secondary`) under it.
  */
 export function StatePage({
   pose,
   title,
   line,
+  hint,
   cta,
   onCta,
   status,
@@ -23,6 +25,8 @@ export function StatePage({
   pose: HoyaPose;
   title?: string;
   line?: string;
+  /** A quieter line under `line` (the rotation-lock hint). */
+  hint?: string;
   cta?: string;
   onCta?: () => void;
   /** A status line ("Loading lesson") instead of a title. */
@@ -63,6 +67,11 @@ export function StatePage({
       {line !== undefined ? (
         <Text {...KOREAN_LINE_BREAK} style={{ fontSize: typography.size.body, color: colors.text.secondary, textAlign: 'center', maxWidth: READABLE_LINE, lineHeight: Math.round(typography.size.body * typography.leading.normal) }}>
           {line}
+        </Text>
+      ) : null}
+      {hint !== undefined ? (
+        <Text {...KOREAN_LINE_BREAK} testID={testID ? `${testID}-hint` : undefined} style={{ fontSize: typography.size.body, color: colors.text.secondary, textAlign: 'center', maxWidth: READABLE_LINE, lineHeight: Math.round(typography.size.body * typography.leading.normal) }}>
+          {hint}
         </Text>
       ) : null}
       {cta !== undefined && onCta !== undefined ? <PrimaryButton ref={action} label={cta} onPress={onCta} testID={testID ? `${testID}-cta` : undefined} /> : null}

@@ -13,7 +13,8 @@ import type { LanguageOption } from '../../logic/locale/language-picker';
  * mocks `home.html` and `home-empty.html`, README D2, D14, D19): Recent lessons
  * and Quick lesson on a teacher page in real pixels (not stage-scaled).
  *
- * Header: Hoya, the h1, the session language chips (a radiogroup: one tab stop,
+ * Header: Back (top left, owner report 2026-10-16 item 3: every screen has a way
+ * back), Hoya, the h1, the session language chips (a radiogroup: one tab stop,
  * arrows move and select) and Keys and help. Below 900 px one column with Recent
  * first; from 900 px Recent left and Quick lesson right. Recent rows show the
  * deck title and the day only: a deck has no name field, so no row can hold a
@@ -35,6 +36,8 @@ export interface PresenterHomeProps {
   onLanguage: (locale: UiLocale) => void;
   /** Opens the Help overlay (PR 9); without it the Keys and help button is not drawn, so it never leads nowhere. */
   onHelp?: () => void;
+  /** Leaves the presenter for the page before it (`leavePresenter`); without it Back is not drawn. */
+  onBack?: () => void;
   recent: RecentState;
   onResume: (item: RecentItem) => void;
   onStartOver: (item: RecentItem) => void;
@@ -172,6 +175,7 @@ export function PresenterHomeScreen(props: PresenterHomeProps): React.ReactEleme
       >
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: spacing.md }}>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: spacing.md, maxWidth: '100%' }}>
+            {props.onBack ? <HomeButton label={m.home.back.cta} onPress={props.onBack} compact testID="presenter-home-back" /> : null}
             <Hoya pose="waving" size={touchTarget.min} />
             <Text {...KOREAN_LINE_BREAK} ref={titleRef} role="heading" aria-level={1} {...{ tabIndex: -1 }} testID="presenter-home-title" style={{ ...text(typography.size.title, 'bold', colors.text.primary), flexShrink: 1 }}>
               {m.home.title}

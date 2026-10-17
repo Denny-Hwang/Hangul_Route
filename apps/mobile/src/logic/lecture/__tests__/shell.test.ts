@@ -13,7 +13,9 @@ import {
   completePayload,
   endLetters,
   fitShown,
+  barOverlap,
   gestureCommand,
+  tapGuarded,
   homeStart,
   presenterLocale,
   resolveBoot,
@@ -27,7 +29,7 @@ import {
   nextStrokePlay,
   strokeTokenFor,
 } from '../shell';
-import { barBand, stageBox, stageButtonSize, units } from '../stage-constants';
+import { NO_INSETS, barBand, stageBox, stageButtonSize, units } from '../stage-constants';
 import { stageScale } from '../stage-scale';
 import { layout, presenter, spacing, touchTarget } from '@hangul-route/design-system/tokens';
 
@@ -424,21 +426,53 @@ describe('telemetry payloads', () => {
 describe('stage box (README D1)', () => {
   it('the bar band is touchTarget.hero + 2 x spacing.md = 120, and the stage box is the window minus it', () => {
     expect(BAR_BAND).toBe(120);
-    expect(stageBox({ width: 1280, height: 720 }, BAR_BAND)).toEqual({ width: 1280, height: 600 });
-    expect(stageBox({ width: 100, height: 50 }, BAR_BAND)).toEqual({ width: 100, height: 0 });
+    expect(stageBox({ width: 1280, height: 720 }, BAR_BAND, NO_INSETS)).toEqual({ width: 1280, height: 600 });
+    expect(stageBox({ width: 100, height: 50 }, BAR_BAND, NO_INSETS)).toEqual({ width: 100, height: 0 });
   });
 
   it('1280 x 720 gives unit 1; 1920 x 1080 unit 1.5; 2560 x 1080 unit 1.6 (not the window 1.8)', () => {
-    expect(stageScale(stageBox({ width: 1280, height: 720 }, BAR_BAND), BOUNDS).unit).toBe(1);
-    expect(stageScale(stageBox({ width: 1920, height: 1080 }, BAR_BAND), BOUNDS).unit).toBe(1.5);
-    expect(stageScale(stageBox({ width: 2560, height: 1080 }, BAR_BAND), BOUNDS).unit).toBeCloseTo(1.6);
-    expect(stageScale(stageBox({ width: 1024, height: 768 }, BAR_BAND), BOUNDS).unit).toBeCloseTo(0.8);
+    expect(stageScale(stageBox({ width: 1280, height: 720 }, BAR_BAND, NO_INSETS), BOUNDS).unit).toBe(1);
+    expect(stageScale(stageBox({ width: 1920, height: 1080 }, BAR_BAND, NO_INSETS), BOUNDS).unit).toBe(1.5);
+    expect(stageScale(stageBox({ width: 2560, height: 1080 }, BAR_BAND, NO_INSETS), BOUNDS).unit).toBeCloseTo(1.6);
+    expect(stageScale(stageBox({ width: 1024, height: 768 }, BAR_BAND, NO_INSETS), BOUNDS).unit).toBeCloseTo(0.8);
   });
 
   it('a stage button never drops below the hero target; units round to whole pixels', () => {
     expect(stageButtonSize(0.6, touchTarget.hero)).toBe(touchTarget.hero);
     expect(stageButtonSize(1.5, touchTarget.hero)).toBe(144);
     expect(units(1.5, 360)).toBe(540);
+  });
+
+  it('in a phone window a stage button floors at the touch target instead (F-TCH-004 section 3.6 phone exception)', () => {
+    expect(stageButtonSize(0.44, touchTarget.hero, touchTarget.min)).toBe(touchTarget.min);
+    expect(stageButtonSize(0.8, touchTarget.hero, touchTarget.min)).toBe(Math.round(0.8 * touchTarget.hero));
+  });
+});
+
+describe('the strip under the hidden compact bar (a phone window, owner report 2026-10-16)', () => {
+  it('a tap on the strip only brings the bar back; above it the stage takes the tap', () => {
+    expect(tapGuarded({ y: 300, height: 320, guard: 60, dx: 0, dy: 0 })).toBe(true);
+    expect(tapGuarded({ y: 260, height: 320, guard: 60, dx: 2, dy: 3 })).toBe(true);
+    expect(tapGuarded({ y: 259, height: 320, guard: 60, dx: 0, dy: 0 })).toBe(false);
+  });
+
+  it('a swipe that starts on the strip still moves the slide', () => {
+    expect(tapGuarded({ y: 300, height: 320, guard: 60, dx: -80, dy: 0 })).toBe(false);
+    expect(tapGuarded({ y: 300, height: 320, guard: 60, dx: 0, dy: -70 })).toBe(false);
+  });
+
+  it('no guard, or a stage before layout, guards nothing', () => {
+    expect(tapGuarded({ y: 300, height: 320, guard: 0, dx: 0, dy: 0 })).toBe(false);
+    expect(tapGuarded({ y: 0, height: 0, guard: 60, dx: 0, dy: 0 })).toBe(false);
+    expect(tapGuarded({ y: 300, height: 320, guard: Number.NaN, dx: 0, dy: 0 })).toBe(false);
+  });
+
+  it('the strip is what of the bar reaches above the bottom inset and the letterbox', () => {
+    expect(barOverlap(80, 0, 0)).toBe(80);
+    expect(barOverlap(101, 21, 0)).toBe(80);
+    expect(barOverlap(80, 0, 30)).toBe(50);
+    expect(barOverlap(80, 40, 50)).toBe(0);
+    expect(barOverlap(80, -5, -5)).toBe(80);
   });
 });
 

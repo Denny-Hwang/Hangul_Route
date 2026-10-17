@@ -1,10 +1,11 @@
 import { colors, presenter, radii, spacing, typography, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
 import React, { useRef } from 'react';
 import { Text, View, type GestureResponderEvent, type ViewStyle } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { RomanizationMode } from '@hangul-route/content-schema';
 import type { BuildName } from '../../logic/lecture/build-steps';
 import type { Slide } from '../../logic/lecture/deck-builder';
-import { gestureCommand, slideDetail } from '../../logic/lecture/shell';
+import { barOverlap, gestureCommand, slideDetail, tapGuarded } from '../../logic/lecture/shell';
 import type { LectureSceneView } from '../../logic/lecture/sources/story';
 import { units } from '../../logic/lecture/stage-constants';
 import { STAGE_PADDING } from './stage-metrics';
@@ -27,6 +28,8 @@ import { VocabSlide } from './slides/VocabSlide';
  * centred in the stage box and letterboxed in paper, with the counter in its top-right padding and
  * a polite live region naming the slide. A tap on the left third goes back, elsewhere forward; a
  * horizontal swipe moves too (section 3.5). `touch-action: manipulation`: double taps never zoom.
+ * In a phone window the compact bar floats over the stage's bottom edge: while it is hidden, a tap
+ * on that strip (`tapGuarded`) only brings it back.
  */
 export interface StageProps {
   scale: StageScale;
@@ -46,6 +49,14 @@ export interface StageProps {
   sayIt: boolean;
   /** A listed story's scene: its art, theme and accessible name (`sources/story.ts`). */
   storyScene: (storyId: string, sceneId: string) => LectureSceneView | undefined;
+  /**
+   * A phone window: the compact bar's height while it is hidden, or was a moment ago (0 when it is
+   * shown and taking taps). Read as a touch begins, so its strip of the stage takes no tap. Absent: none.
+   */
+  hiddenBarHeight?: () => number;
+  /** The End slide's [ Finish ]: ends the lesson without the Exit confirm. */
+  onFinish?: () => void;
+  finishRef?: React.Ref<View>;
 }
 
 export function Stage(props: StageProps): React.ReactElement {
@@ -54,7 +65,11 @@ export function Stage(props: StageProps): React.ReactElement {
   const size = useStageText();
   const slide = slides[slideIdx]!;
   const shown = new Set<BuildName>(slide.builds.slice(0, reveal + 1));
-  const start = useRef<{ x: number; y: number; locationX: number } | null>(null);
+  const start = useRef<{ x: number; y: number; locationX: number; guard: number } | null>(null);
+  // In a phone window the stage is centred inside the safe area: its top is the top inset plus the
+  // letterbox, and the hidden bar's strip is what of the bar reaches above the bottom inset.
+  const insets = useSafeAreaInsets();
+  const stageTop = insets.top + scale.offsetY;
 
   const kind = messages.learner.presenter.grid.kind[slide.kind];
   const detail = slideDetail(slide, { activity: (preset) => messages.learner.presenter.activity[preset] });
@@ -62,13 +77,18 @@ export function Stage(props: StageProps): React.ReactElement {
 
   const onGrant = (event: GestureResponderEvent): void => {
     const { pageX, pageY, locationX } = event.nativeEvent;
-    start.current = { x: pageX, y: pageY, locationX };
+    // The strip of the hidden bar is read now, as the touch begins: the touch itself brings the bar back.
+    const guard = props.hiddenBarHeight === undefined ? 0 : barOverlap(props.hiddenBarHeight(), insets.bottom, scale.offsetY);
+    start.current = { x: pageX, y: pageY, locationX, guard };
   };
   const onRelease = (event: GestureResponderEvent): void => {
     const from = start.current;
     start.current = null;
     if (from === null) return;
-    const command = gestureCommand({ x: from.locationX, width: scale.stageWidth, dx: event.nativeEvent.pageX - from.x, dy: event.nativeEvent.pageY - from.y });
+    const dx = event.nativeEvent.pageX - from.x;
+    const dy = event.nativeEvent.pageY - from.y;
+    if (tapGuarded({ y: from.y - stageTop, height: scale.stageHeight, guard: from.guard, dx, dy })) return;
+    const command = gestureCommand({ x: from.locationX, width: scale.stageWidth, dx, dy });
     if (command !== null) props.onCommand(command);
   };
 
@@ -134,7 +154,7 @@ export function Stage(props: StageProps): React.ReactElement {
         ) : slide.kind === 'story' ? (
           <StorySlide slide={slide} shown={shown} scene={props.storyScene(slide.storyId, slide.sceneId)} />
         ) : slide.kind === 'end' ? (
-          <EndSlide slide={slide} joinCta={props.joinCta} />
+          <EndSlide slide={slide} joinCta={props.joinCta} {...(props.onFinish ? { onFinish: props.onFinish } : {})} {...(props.finishRef ? { finishRef: props.finishRef } : {})} />
         ) : null}
       </View>
     </View>
@@ -154,18 +174,18 @@ const visuallyHidden = {
 };
 
 /**
- * A non-blocking pill over the stage box: at the top for the portrait hint (section 3.8), at the
- * bottom, above the bar, for the End slide's "To finish, choose Exit." (slide-end.md).
+ * A non-blocking pill at the top of the stage box: the portrait hint (section 3.8). The End slide's
+ * old "To finish, choose Exit." pill is gone: its [ Finish ] takes focus instead.
  */
-export function StageHint({ text, bottom }: { text: string; bottom?: boolean }): React.ReactElement {
+export function StageHint({ text }: { text: string }): React.ReactElement {
   return (
     <View
-      testID={bottom ? 'presenter-end-hint' : 'presenter-portrait-hint'}
+      testID="presenter-portrait-hint"
       role="status"
       pointerEvents="none"
       style={{
         position: 'absolute',
-        ...(bottom ? { bottom: spacing.md } : { top: spacing.md }),
+        top: spacing.md,
         alignSelf: 'center',
         backgroundColor: colors.surface.sunken,
         borderRadius: radii.pill,

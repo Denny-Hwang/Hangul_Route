@@ -15,6 +15,8 @@ import { ChipRadios, Cover, ToolButton, type ChipOption } from './OverlayParts';
  * opened from the presenter home, where no lesson is open); the Presenter
  * language chips (section 3.12: session only, the device locale is never written; drawn only when
  * the build offers two or more locales); Keep controls visible (section 3.5); Close. Real pixels; it scrolls inside the stage box when taller.
+ * On a touch-only device (`touch`, owner report 2026-10-16 item 3) it starts with How to use: tap
+ * the right or left side, swipe, and the bar a tap brings back; the key table follows.
  */
 export function HelpOverlay({
   romanization,
@@ -25,6 +27,7 @@ export function HelpOverlay({
   keepVisible,
   onKeepVisible,
   onClose,
+  touch,
 }: {
   /** The open lesson's romanization; null (Help opened from the home, no lesson open) draws no switch. */
   romanization: RomanizationMode | null;
@@ -36,6 +39,8 @@ export function HelpOverlay({
   keepVisible: boolean;
   onKeepVisible: (on: boolean) => void;
   onClose: () => void;
+  /** A touch-only device: How to use comes first. */
+  touch?: boolean;
 }): React.ReactElement {
   const { messages } = usePresenterView();
   const m = messages.learner.presenter.help;
@@ -77,6 +82,20 @@ export function HelpOverlay({
             </Text>
             <ToolButton ref={close} testID="presenter-help-close" label={messages.common.buttons.close} onPress={onClose} />
           </View>
+          {touch ? (
+            <View testID="presenter-help-touch" style={{ gap: spacing.sm }}>
+              <Text {...KOREAN_LINE_BREAK} role="heading" aria-level={3} style={{ fontSize: typography.size.bodyLg, fontWeight: typography.weight.bold, color: colors.text.primary }}>
+                {m.touch.title}
+              </Text>
+              <View role="list" style={{ gap: spacing.xs }}>
+                {[m.touch.tap, m.touch.swipe, m.touch.bar].map((line) => (
+                  <Text {...KOREAN_LINE_BREAK} key={line} role="listitem" style={{ fontSize: typography.size.body, color: colors.text.primary, lineHeight: Math.round(typography.size.body * typography.leading.normal) }}>
+                    {line}
+                  </Text>
+                ))}
+              </View>
+            </View>
+          ) : null}
           <View role="list" style={{ flexDirection: 'row', flexWrap: 'wrap', rowGap: spacing.sm, columnGap: spacing.xl }}>
             {HELP_KEYS.map((row) => (
               <View key={row.row} role="listitem" style={{ width: twoColumns ? '47%' : '100%', flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>

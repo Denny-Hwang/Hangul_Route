@@ -35,6 +35,34 @@ export function holdOpenDeck(_raw: string, _options: { fresh?: boolean } = {}): 
   // No history on native.
 }
 
+/** The presenter's history steps (owner report 2026-10-16 item 3); web only. */
+export type PresenterStep = 'home' | 'start' | 'lesson';
+
+export interface StepEntry {
+  step: PresenterStep;
+  depth: number;
+}
+
+export function currentPresenterStep(): StepEntry {
+  return { step: 'home', depth: 0 };
+}
+
+export function enterPresenterStep(_step: 'start' | 'lesson', _raw: string | null, _options: { fresh?: boolean } = {}): void {
+  // No history on native.
+}
+
+export function returnToPresenterHome(): void {
+  // No history on native.
+}
+
+export function subscribePresenterPop(_handler: (landed: StepEntry) => void): () => void {
+  return () => undefined;
+}
+
+export function leavePresenter(): void {
+  // A native build never presents.
+}
+
 /** The stale-presenter update check (AMENDMENTS-LECTURE-V2 section 4.5); web only. */
 export async function checkForUpdate(): Promise<void> {}
 

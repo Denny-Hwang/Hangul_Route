@@ -1,5 +1,6 @@
-import { layout, typography } from '@hangul-route/design-system/tokens';
+import { layout, presenter, spacing, touchTarget, typography } from '@hangul-route/design-system/tokens';
 import { describe, expect, it } from 'vitest';
+import { NO_INSETS, PHONE_COMPACT_WIDTH, barBand, isPhoneWindow, stageBox, type PhoneRule } from '../stage-constants';
 import { stageScale, stageText, type StageBounds } from '../stage-scale';
 
 // The presenter passes `presenter.stage` and the compact breakpoint from the design tokens (F-TCH-004 §3.6).
@@ -99,8 +100,88 @@ describe('stageScale (F-TCH-004 §3.6)', () => {
   });
 });
 
+/** What the presenter does in a phone window (owner report 2026-10-16 item 1): no bar band, the safe area out, the phone width. */
+const PHONE: StageBounds = { ...STAGE, compactWidth: PHONE_COMPACT_WIDTH };
+const PHONE_RULE: PhoneRule = { shortSide: layout.phoneShortSide, maxLongSide: layout.phoneMaxLongSide };
+const phoneStage = (width: number, height: number, insets = NO_INSETS) => stageScale(stageBox({ width, height }, 0, insets), PHONE);
+
+describe('a phone window (owner report 2026-10-16 item 1)', () => {
+  it.each([
+    [568, 320],
+    [640, 360],
+    [667, 375],
+    [740, 360],
+    [844, 390],
+    [932, 430],
+  ])('landscape %i x %i gets a stage, with text never below the 18 px floor', (width, height) => {
+    expect(isPhoneWindow(width, height, PHONE_RULE)).toBe(true);
+    const s = phoneStage(width, height);
+    expect(s.tooSmall).toBe(false);
+    expect(s.portrait).toBe(false);
+    expect(s.stageWidth).toBeLessThanOrEqual(width);
+    expect(s.stageHeight).toBeLessThanOrEqual(height);
+    expect(stageText(s.unit, presenter.size.caption, FLOOR)).toBeGreaterThanOrEqual(typography.size.body);
+  });
+
+  it('640 x 360 was too small with the fixed 120 px band (unit 0.4, a 512 px stage); without it, unit 0.5 and the whole window', () => {
+    const band = barBand(touchTarget.hero, spacing.md);
+    expect(band).toBe(120);
+    const old = stageScale(stageBox({ width: 640, height: 360 }, band, NO_INSETS), STAGE);
+    expect(old.unit).toBeCloseTo(0.4);
+    expect(old.stageWidth).toBeCloseTo(512);
+    expect(old.tooSmall).toBe(true);
+    expect(phoneStage(640, 360)).toMatchObject({ unit: 0.5, stageWidth: 640, stageHeight: 360, tooSmall: false });
+  });
+
+  it('portrait 360 x 640 is still too small (the presenter asks to turn the phone)', () => {
+    expect(isPhoneWindow(360, 640, PHONE_RULE)).toBe(true);
+    const s = phoneStage(360, 640);
+    expect(s.tooSmall).toBe(true);
+    expect(s.portrait).toBe(true);
+    expect(phoneStage(320, 568).tooSmall).toBe(true);
+  });
+
+  it('the safe-area insets come out of the stage box, and the phone width is judged inside them', () => {
+    expect(stageBox({ width: 844, height: 390 }, 0, { top: 0, right: 47, bottom: 21, left: 47 })).toEqual({ width: 750, height: 369 });
+    expect(stageBox({ width: 1280, height: 720 }, 120, { top: 10, right: 0, bottom: 20, left: 0 })).toEqual({ width: 1280, height: 570 });
+    expect(stageBox({ width: 100, height: 50 }, 0, { top: 40, right: 60, bottom: 40, left: 60 })).toEqual({ width: 0, height: 0 });
+    // A bad inset (NaN, negative) counts as none.
+    expect(stageBox({ width: 640, height: 360 }, 0, { top: Number.NaN, right: -4, bottom: 0, left: 0 })).toEqual({ width: 640, height: 360 });
+    const notch = phoneStage(844, 390, { top: 0, right: 47, bottom: 21, left: 47 });
+    expect(notch.tooSmall).toBe(false);
+    expect(notch.stageWidth).toBeLessThanOrEqual(750);
+    // 568 wide with notch insets on both sides leaves 474: too small even for a phone.
+    expect(phoneStage(568, 320, { top: 0, right: 47, bottom: 0, left: 47 }).tooSmall).toBe(true);
+  });
+});
+
+describe('isPhoneWindow: the design system phone rule (short side below 600, long side at most 1000)', () => {
+  it('reads the layout tokens', () => {
+    expect(PHONE_RULE).toEqual({ shortSide: 600, maxLongSide: 1000 });
+  });
+
+  it.each([
+    [568, 320, true],
+    [320, 568, true],
+    [844, 390, true],
+    [932, 430, true],
+    [1000, 599, true],
+    [1001, 500, false],
+    [1100, 500, false],
+    [600, 1000, false],
+    [768, 1024, false],
+    [1280, 720, false],
+    [1920, 1080, false],
+    [0, 0, false],
+    [Number.NaN, 300, false],
+    [-1, 300, false],
+  ])('%i x %i -> %s', (width, height, phone) => {
+    expect(isPhoneWindow(width, height, PHONE_RULE)).toBe(phone);
+  });
+});
+
 describe('tooSmall: the stage is narrower than the compact breakpoint (§3.6 "about 640 px")', () => {
-  it('a phone in portrait or landscape is too small: the presenter shows the bigger-window hint', () => {
+  it('a desktop window below the breakpoint is too small: the presenter asks for a bigger window', () => {
     expect(stageScale({ width: 320, height: 568 }, STAGE).tooSmall).toBe(true);
     expect(stageScale({ width: 568, height: 320 }, STAGE).tooSmall).toBe(true);
   });

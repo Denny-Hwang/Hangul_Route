@@ -9,6 +9,11 @@ import { commandForKey, type KeyCommand } from '../logic/lecture/keymap';
  * - **Route and fragment**: `takeDeckFragment` reads the `#d=` deck and replaces the address with
  *   `/present` before the first paint, so the deck leaves the address bar and the session history
  *   entry; `setPresenterDocTitle` writes the fixed catalogue title (never the deck title).
+ * - **The way back** (owner report 2026-10-16 item 3): one history entry per step, the home, then
+ *   the start screen (`hrPresenter: 'start'`), then the lesson (`'lesson'`), each holding the deck
+ *   so a reload still resumes; the browser's Back walks them (`subscribePresenterPop`), the
+ *   presenter's own Back, Exit and Finish go back through them (`returnToPresenterHome`), and the
+ *   home's Back leaves for the page before (`leavePresenter`).
  * - **Keys**: `subscribeKeys` turns a `keydown` into a key-map command and prevents the browser
  *   default only for a mapped key.
  * - **Start tap**: fullscreen, the screen wake lock (re-requested when the page is shown again),
@@ -36,6 +41,7 @@ interface ElementLike {
 
 interface DocumentLike extends Partial<EventTargetLike> {
   title?: string;
+  referrer?: string;
   documentElement?: ElementLike;
   fullscreenEnabled?: boolean;
   webkitFullscreenEnabled?: boolean;
@@ -52,10 +58,22 @@ interface WakeLockSentinelLike {
 }
 
 export interface PresenterEnv {
-  location?: { pathname: string; hash: string; search?: string } | null;
+  location?: { pathname: string; hash: string; search?: string; origin?: string } | null;
   /** `location.reload()`. */
   reload?: () => void;
-  history?: { state?: unknown; replaceState: (state: unknown, unused: string, url: string) => void } | null;
+  /** `location.assign(url)`: leaves for another page of this origin. */
+  assign?: (url: string) => void;
+  /** `window.close()`: honoured only for a tab a script opened. */
+  close?: () => void;
+  /** The Navigation API (`window.navigation`), where the browser has it: the index of this entry among the tab's same-origin ones. */
+  navigation?: { currentEntry?: { index?: number } | null } | null;
+  history?: {
+    state?: unknown;
+    length?: number;
+    replaceState: (state: unknown, unused: string, url: string) => void;
+    pushState?: (state: unknown, unused: string, url: string) => void;
+    go?: (delta: number) => void;
+  } | null;
   document?: DocumentLike | null;
   /** The target `keydown` is read from (the document). */
   keyTarget?: EventTargetLike | null;
@@ -139,6 +157,9 @@ function browserEnv(): PresenterEnv {
   return {
     location: g.location ?? null,
     reload: () => (g.location as { reload?: () => void } | undefined)?.reload?.(),
+    assign: (url) => (g.location as { assign?: (to: string) => void } | undefined)?.assign?.(url),
+    close: () => (g as { close?: () => void }).close?.(),
+    navigation: (g as { navigation?: PresenterEnv['navigation'] }).navigation ?? null,
     history: g.history ?? null,
     document: doc,
     keyTarget: doc && typeof doc.addEventListener === 'function' ? (doc as EventTargetLike) : null,
@@ -190,13 +211,53 @@ export interface DeckAddress {
   fresh?: true;
 }
 
+/** The step of a history entry (`'start'` or `'lesson'`; none is the home). */
+const STEP_STATE = 'hrPresenter';
+/** How many presenter entries the entry is above the home one. */
+const DEPTH_STATE = 'hrPresenterDepth';
+
+/** One history entry of the presenter: the home (depth 0), the start screen or the lesson. */
+export type PresenterStep = 'home' | 'start' | 'lesson';
+
+export interface StepEntry {
+  step: PresenterStep;
+  /** Entries above the home one (0 at the home). */
+  depth: number;
+}
+
+const HOME: StepEntry = { step: 'home', depth: 0 };
+
 function freshState(env: PresenterEnv): boolean {
   const state = env.history?.state;
   return state !== null && typeof state === 'object' && (state as Record<string, unknown>)[FRESH_STATE] === true;
 }
 
-function heldState(raw: string, fresh: boolean): Record<string, unknown> {
-  return fresh ? { [DECK_STATE]: raw, [FRESH_STATE]: true } : { [DECK_STATE]: raw };
+/** The step a history state names; an entry with none (or a broken one) is the home. */
+function stepOf(state: unknown): StepEntry {
+  if (state === null || typeof state !== 'object') return HOME;
+  const record = state as Record<string, unknown>;
+  const step = record[STEP_STATE] === 'start' || record[STEP_STATE] === 'lesson' ? record[STEP_STATE] : 'home';
+  const depth = record[DEPTH_STATE];
+  if (step === 'home') return HOME;
+  return { step, depth: typeof depth === 'number' && Number.isInteger(depth) && depth > 0 ? depth : step === 'start' ? 1 : 2 };
+}
+
+/** A history state: the deck (ids, a seed and options; never a name) and the step; null when it holds neither. */
+function entryState(deck: { raw: string; fresh?: boolean } | null, entry: StepEntry): Record<string, unknown> | null {
+  const out: Record<string, unknown> = {};
+  if (deck !== null) {
+    out[DECK_STATE] = deck.raw;
+    if (deck.fresh === true) out[FRESH_STATE] = true;
+  }
+  if (entry.step !== 'home') {
+    out[STEP_STATE] = entry.step;
+    out[DEPTH_STATE] = entry.depth;
+  }
+  return Object.keys(out).length === 0 ? null : out;
+}
+
+function heldState(raw: string, fresh: boolean, entry: StepEntry = HOME): Record<string, unknown> | null {
+  return entryState({ raw, fresh }, entry);
 }
 
 function stateFragment(env: PresenterEnv): string | null {
@@ -242,14 +303,15 @@ export function takeDeckFragment(env: PresenterEnv = browserEnv()): DeckAddress 
   }
   const kept = stateFragment(env);
   const fresh = kept !== null && freshState(env);
-  if (location.hash || location.pathname !== PRESENTER_PATH) replaceAddress(env, kept === null ? null : heldState(kept, fresh));
+  const entry = stepOf(env.history?.state);
+  if (location.hash || location.pathname !== PRESENTER_PATH) replaceAddress(env, kept === null ? entryState(null, entry) : heldState(kept, fresh, entry));
   if (kept === null) return null;
   return fresh ? { raw: kept, reloaded: true, fresh: true } : { raw: kept, reloaded: true };
 }
 
-/** Forgets the open deck of this tab (Exit, an invalid link): a reload then shows the presenter home. */
+/** Forgets the open deck of this tab's entry (Exit, an invalid link): a reload then shows the presenter home. */
 export function forgetOpenDeck(env: PresenterEnv = browserEnv()): void {
-  replaceAddress(env, null);
+  replaceAddress(env, entryState(null, stepOf(env.history?.state)));
 }
 
 /**
@@ -259,7 +321,154 @@ export function forgetOpenDeck(env: PresenterEnv = browserEnv()): void {
  * marks it to open at its first slide on a reload before Start; Start holds it again without the mark.
  */
 export function holdOpenDeck(raw: string, options: { fresh?: boolean } = {}, env: PresenterEnv = browserEnv()): void {
-  replaceAddress(env, heldState(raw, options.fresh === true));
+  replaceAddress(env, heldState(raw, options.fresh === true, stepOf(env.history?.state)));
+}
+
+// --- the way back (owner report 2026-10-16 item 3) ------------------------------------------------
+
+/** How long a `returnToPresenterHome` waits for its own `popstate` before it stops expecting one. */
+export const RETURN_WAIT_MS = 1000;
+/** How long the home's Back waits for a closing tab before it leaves for `/` instead. */
+export const CLOSE_WAIT_MS = 300;
+
+/** The presenter's own trip back to the home, so its `popstate` is not taken for the browser's Back. */
+let returning: { timer: ReturnType<typeof setTimeout> } | null = null;
+
+/** The step of this tab's history entry now. */
+export function currentPresenterStep(env: PresenterEnv = browserEnv()): StepEntry {
+  return stepOf(env.history?.state);
+}
+
+/**
+ * Enters the start screen or the lesson: pushes one history entry for it, holding the deck, so the
+ * browser's Back comes back here first. The entry already this step (a reload) is kept; a reload on
+ * the lesson entry, which opens the start screen, turns it into the start entry at its own depth.
+ * A history without `pushState` keeps one entry (the deck is still held).
+ */
+export function enterPresenterStep(step: 'start' | 'lesson', raw: string | null, options: { fresh?: boolean } = {}, env: PresenterEnv = browserEnv()): void {
+  const here = stepOf(env.history?.state);
+  const deck = raw === null ? null : { raw, fresh: options.fresh === true };
+  if (here.step === step || (here.step === 'lesson' && step === 'start') || typeof env.history?.pushState !== 'function') {
+    replaceAddress(env, entryState(deck, { step, depth: here.step === 'home' ? (step === 'start' ? 1 : 2) : here.depth }));
+    return;
+  }
+  try {
+    env.history.pushState(entryState(deck, { step, depth: here.depth + 1 }), '', cleanAddress(env));
+  } catch {
+    replaceAddress(env, entryState(deck, { step, depth: here.depth + 1 }));
+  }
+}
+
+/**
+ * Back to the home entry from the start screen or the lesson (Back to lessons, Exit, Finish): goes
+ * back through the entries the presenter pushed, so the browser's Back on the home then leaves the
+ * presenter, and the home entry holds no deck (a reload shows the home). Its own `popstate` is not
+ * reported to `subscribePresenterPop`.
+ */
+export function returnToPresenterHome(env: PresenterEnv = browserEnv()): void {
+  const here = stepOf(env.history?.state);
+  if (here.depth === 0 || typeof env.history?.go !== 'function') {
+    replaceAddress(env, null);
+    return;
+  }
+  if (returning) clearTimeout(returning.timer);
+  returning = { timer: setTimeout(() => (returning = null), RETURN_WAIT_MS) };
+  try {
+    env.history.go(-here.depth);
+  } catch {
+    clearTimeout(returning.timer);
+    returning = null;
+    replaceAddress(env, null);
+  }
+}
+
+/**
+ * Calls `handler` with the entry the browser's Back (or Forward) landed on; the presenter's own
+ * `returnToPresenterHome` is not reported (its landing entry is cleared of the deck instead).
+ */
+export function subscribePresenterPop(handler: (landed: StepEntry) => void, env: PresenterEnv = browserEnv()): () => void {
+  const target = env.window;
+  if (!target) return () => undefined;
+  const onPop = (): void => {
+    if (returning) {
+      clearTimeout(returning.timer);
+      returning = null;
+      replaceAddress(env, null);
+      return;
+    }
+    handler(stepOf(env.history?.state));
+  };
+  target.addEventListener('popstate', onPop);
+  return () => target.removeEventListener('popstate', onPop);
+}
+
+/** How long the home's Back waits for the page to start leaving before it leaves by address instead. */
+export const LEAVE_WAIT_MS = 1000;
+
+function referrerSameOrigin(env: PresenterEnv): boolean {
+  try {
+    const referrer = env.document?.referrer ?? '';
+    const origin = env.location?.origin ?? '';
+    return referrer !== '' && origin !== '' && new URL(referrer).origin === origin;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Whether there is a page of this origin before the presenter's home entry: the Navigation API's
+ * index of this entry among the tab's same-origin entries, past the presenter's own; without the
+ * API, a same-origin referrer and an entry before this one.
+ */
+function pageBefore(env: PresenterEnv, depth: number): boolean {
+  const index = env.navigation?.currentEntry?.index;
+  if (typeof index === 'number') return index > depth;
+  return referrerSameOrigin(env) && typeof env.history?.length === 'number' && env.history.length > 1 + depth;
+}
+
+/** A tab a script opened (the console's new tab): a same-origin referrer and nothing of this origin before it. */
+function closeOrRoot(env: PresenterEnv): void {
+  if (referrerSameOrigin(env) && typeof env.close === 'function') {
+    try {
+      env.close();
+    } catch {
+      // Refused: the address below.
+    }
+    setTimeout(() => env.assign?.('/'), CLOSE_WAIT_MS);
+    return;
+  }
+  env.assign?.('/');
+}
+
+/**
+ * The home's Back: back to the page before the presenter when it is a page of this origin (All
+ * lessons, the learner app); else closes a tab a script opened (the console's new tab); else
+ * leaves for `/`. When going back does not start leaving the page in `LEAVE_WAIT_MS` (a history
+ * that goes nowhere), or the browser refuses to close the tab, it leaves for `/` too, so Back
+ * never leads nowhere.
+ */
+export function leavePresenter(env: PresenterEnv = browserEnv()): void {
+  const depth = stepOf(env.history?.state).depth;
+  if (!pageBefore(env, depth) || typeof env.history?.go !== 'function') {
+    closeOrRoot(env);
+    return;
+  }
+  let left = false;
+  const onLeave = (): void => {
+    left = true;
+  };
+  env.window?.addEventListener('pagehide', onLeave);
+  env.window?.addEventListener('beforeunload', onLeave);
+  setTimeout(() => {
+    env.window?.removeEventListener('pagehide', onLeave);
+    env.window?.removeEventListener('beforeunload', onLeave);
+    if (!left) closeOrRoot(env);
+  }, LEAVE_WAIT_MS);
+  try {
+    env.history.go(-(1 + depth));
+  } catch {
+    // The timer leaves by address.
+  }
 }
 
 /**
