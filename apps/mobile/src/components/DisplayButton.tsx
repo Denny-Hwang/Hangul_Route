@@ -5,9 +5,10 @@ import { useMessages } from '../i18n/use-messages';
 
 /**
  * The Aa button (AMENDMENTS-DISPLAY-NAV section 3.6): opens the Display sheet (language and text
- * size). A pill of one touch target that draws the dictionary's sign ("Aa"; "가가" in Korean),
- * hidden from assistive tech; its accessible name says what it opens ("Display: language and text
- * size"). Used on Home, All lessons, the presenter home and the start screen.
+ * size). A pill of one touch target that draws the dictionary's sign (`common.display.button`:
+ * "Aa" in English, its own sign in each locale), hidden from assistive tech; its accessible name
+ * begins with that sign and says what it opens ("Aa, Display: language and text size"). Used on
+ * Home, All lessons, the presenter home and the start screen.
  */
 export function DisplayButton({ onPress, testID = 'display-button' }: { onPress: () => void; testID?: string }): React.ReactElement {
   const d = useMessages().common.display;
