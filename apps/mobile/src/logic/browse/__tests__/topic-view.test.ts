@@ -33,12 +33,17 @@ describe('topicHearSpec (section 4.7: audio through playPrompt)', () => {
     });
   });
 
-  it('with no recording the device voice says it (the playPrompt fallback): no audioRef key at all', () => {
+  it('a shipped word passes its planned clip path; playPrompt falls back to the device voice while no file is bundled', () => {
     const food = itemFacts({ kind: 'vocab-topic', id: 'vocab-topic:food' }, bundle) as TopicFacts;
     const [first] = food.words;
     if (!first) throw new Error('the food topic has words');
-    const spec = topicHearSpec(first);
-    expect(spec).toEqual({ text: first.ko, kind: 'word', source: TOPIC_HEAR_SOURCE });
+    expect(topicHearSpec(first)).toEqual({ text: first.ko, audioRef: first.speech.audioRef, kind: 'word', source: TOPIC_HEAR_SOURCE });
+    expect(first.speech.audioRef).toMatch(/^audio\/vocab\/[a-z0-9-]+\.mp3$/);
+  });
+
+  it('with no clip path the device voice says it: no audioRef key at all', () => {
+    const spec = topicHearSpec({ speech: { text: '사과' } });
+    expect(spec).toEqual({ text: '사과', kind: 'word', source: TOPIC_HEAR_SOURCE });
     expect('audioRef' in spec).toBe(false);
   });
 

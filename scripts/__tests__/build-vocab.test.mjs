@@ -15,7 +15,7 @@ const SCRIPT = join(REPO, "scripts", "build-vocab.mjs");
 const MOBILE_REL = join("apps", "mobile", "src", "content", "__generated__", "vocab.ts");
 const WEB_REL = join("apps", "web", "src", "data", "vocab-catalog.ts");
 
-const { GENERATED_HEADER, buildVocab, renderMobile, renderWeb } = await import(SCRIPT);
+const { GENERATED_HEADER, buildVocab, renderMobile, renderWeb, vocabAudioRef } = await import(SCRIPT);
 
 const roots = [];
 function makeRoot() {
@@ -200,6 +200,23 @@ describe("build-vocab.mjs: shaping", () => {
     assert.deepEqual(Object.keys(topics[0]), [
       "id", "key", "order", "titleEn", "titleKo", "blurbEn", "hoyaIntroEn", "tint", "coverItemId", "status", "fixedOrder",
     ]);
+  });
+
+  test("every item carries its audioRef: the one path the schema allows, derived from the id when the file has none", () => {
+    assert.equal(vocabAudioRef("vocab:sagwa-apple"), "audio/vocab/sagwa-apple.mp3");
+    const { items } = buildVocab({
+      topicFiles: [
+        topicFile("food", 1, [
+          item("vocab:sagwa", "사과", "sagwa", "apple"),
+          item("vocab:bae-pear", "배", "bae", "pear", { audioRef: "audio/vocab/bae-pear.mp3" }),
+        ]),
+      ],
+      senses: null,
+      overlays: { es: new Map(), ko: new Map() },
+    });
+    assert.deepEqual(items.map((i) => i.audioRef), ["audio/vocab/sagwa.mp3", "audio/vocab/bae-pear.mp3"]);
+    // The derived ref sits where a written one would (schema order), so the output does not reorder.
+    assert.deepEqual(Object.keys(items[0]), ["id", "ko", "romanization", "en", "pos", "topics", "level", "visual", "audioRef", "glosses"]);
   });
 
   test("web catalog holds id, ko, romanization, en, primary topic, visual and the glosses only", () => {

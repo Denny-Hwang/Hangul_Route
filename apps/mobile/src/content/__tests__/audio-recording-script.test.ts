@@ -1,7 +1,8 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { nameRows, recordingRows, renderRecordingScript, vocabRecordingRows } from '../../../scripts/audio/lib.mjs';
+import { nameRows, recordingRows, renderRecordingScript, vocabClipRefs, vocabRecordingRows } from '../../../scripts/audio/lib.mjs';
+import { VOCAB_ITEMS } from '../__generated__/vocab';
 import { jamoAll } from '../jamo';
 
 /**
@@ -25,6 +26,15 @@ describe('docs/launch/audio-recording-script.md', () => {
 
   it('is the script the content records generate (run audio:script when it fails)', () => {
     expect(committed).toBe(renderRecordingScript(recordingRows(jamoAll), nameRows(jamoAll), vocabRecordingRows(vocabTopics())));
+  });
+
+  it('lists every vocabulary word: the same clip paths the generated loader gives the app', () => {
+    const fromFiles = vocabClipRefs(vocabTopics());
+    expect([...fromFiles].sort()).toEqual(VOCAB_ITEMS.map((item) => item.audioRef).sort());
+    for (const ref of fromFiles) {
+      const id = ref.replace(/^audio\/vocab\//, '').replace(/\.mp3$/, '');
+      expect(committed).toMatch(new RegExp(`\\| ${id} \\|`));
+    }
   });
 
   it('lists every jamo clip the app refers to, by its file id', () => {
