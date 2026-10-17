@@ -47,6 +47,7 @@ import {
 } from '@/lib/console/curriculum';
 import { dateKey } from '@/lib/console/plans';
 import { ROUTES, spaceIdFrom } from '@/lib/console/routing';
+import { spaceSubPageBack } from '@/lib/console/page-back';
 import { headRem, rem } from '@/lib/console/rem';
 
 const STEPS = 4;
@@ -238,10 +239,7 @@ function CurriculumInner(): JSX.Element {
   };
 
   return (
-    <AdultFrame onSignOut={signOut} title={roster ? c.pageTitle(roster.space.name) : c.title}>
-      <Muted>
-        <Link href={ROUTES.space(spaceId, roster?.space.kind)}>{c.back(roster?.space.name ?? null)}</Link>
-      </Muted>
+    <AdultFrame onSignOut={signOut} back={spaceSubPageBack(spaceId, roster?.space.kind, c.back(roster?.space.name ?? null))} title={roster ? c.pageTitle(roster.space.name) : c.title}>
       {!api ? <Notice tone="nudge">{m.console.shell.noApi}</Notice> : null}
       {error === 'cantReach' ? (
         <div style={{ ...panelStyle, marginBottom: spacing.md }}>

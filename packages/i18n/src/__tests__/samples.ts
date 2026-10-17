@@ -243,6 +243,7 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'learner.storyShelf.heroLabel': [['Start', 'The Sun and the Moon'], ['Read it again', 'Hangul Day']],
   'console.plan.titleFor': [['Class A']],
   'console.plan.back': [['Class A'], [null]],
+  'console.pageBack.to': [['Classes'], ['Home']],
   'console.plan.summary.everyone.family': [[1], [4]],
   'console.plan.summary.everyone.class': [[1], [4]],
   'console.plan.summary.everyone.school': [[1], [4]],

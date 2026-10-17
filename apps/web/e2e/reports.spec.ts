@@ -431,8 +431,9 @@ test.describe('Add to a plan opens the builder with the quest pre-added (RP-10)'
     await expect(page.locator('[data-testid="plan-chip"][aria-current]')).toHaveCount(0);
     // Leaving the unsaved draft asks first; Cancel is not offered, so the quest is never dropped silently.
     await expect(page.getByRole('button', { name: 'Cancel' })).toHaveCount(0);
-    page.once('dialog', (dialog) => void dialog.accept());
     await page.getByTestId('plan-chip').filter({ hasText: 'This week' }).click();
+    // The ConfirmSheet asks first (AMENDMENTS-DISPLAY-NAV section 8); its verb drops the unsaved draft.
+    await page.getByRole('alertdialog').getByRole('button', { name: 'Discard changes', exact: true }).click();
     await expect(page.locator('[data-testid="plan-chip"][aria-current]')).toContainText('This week');
     await expect(page.getByRole('heading', { name: 'Your plan (1)' })).toHaveCount(0);
     expect(writes).toEqual([]);

@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useId, type ReactNode } from 'react';
 import type { BillingAccountCardView, BillingCardView, BillingHomeView, BillingOfferView, ContactRowView, ReceiptRowView } from '@/lib/console/billing-summary';
 import { useMessages } from '@/lib/i18n/locale-context';
+import { PageBack } from './PageBack';
 import { headRem } from '@/lib/console/rem';
 
 /**
@@ -447,15 +448,10 @@ export function ReturnNoticeRegion({ notice, done, checking, onAction }: { notic
   );
 }
 
-/** Back to Billing (the receipts page): the back-link look with the `arrow-left` glyph. */
+/** Back to Billing (the receipts page): the console's one PageBack (AMENDMENTS-DISPLAY-NAV section 7.3). */
 export function BackToBilling({ href }: { href: string }): JSX.Element {
   const b = useMessages().console.billing;
-  return (
-    <Link className="hr-bill-link" href={href}>
-      <IconSvg name="arrow-left" size={GLYPH} color={colors.brand.secondaryDark} />
-      <span>{b.receipts.back.cta}</span>
-    </Link>
-  );
+  return <PageBack href={href} label={b.receipts.back.cta} testId="receipts-back" />;
 }
 
 /** Loading on the receipts page: three grey row outlines, nothing moves. */

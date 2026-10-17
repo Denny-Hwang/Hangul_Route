@@ -31,7 +31,9 @@ const fieldsetStyle: CSSProperties = { ...lectureSectionStyle, minWidth: 0 };
 const legendStyle: CSSProperties = { fontSize: rem(typography.size.bodyLg), fontWeight: typography.weight.bold, padding: `0 ${spacing.xs}px` };
 const rowStyle: CSSProperties = { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: spacing.sm, flexWrap: 'wrap', padding: `${spacing.xs}px 0` };
 // A select draws at the browser's own fixed size unless told: in rem, it follows the chosen text size.
-const selectStyle: CSSProperties = { minHeight: spacing.xxxl, padding: spacing.xs, borderRadius: radii.sm, border: `1px solid ${colors.border.strong}`, backgroundColor: colors.surface.paper, color: colors.text.primary, fontSize: rem(typography.size.body) };
+// Never wider than its row: a select is as wide as its longest option, which at a large text size (Largest, or a
+// 300 % root at 320) pushes the page sideways (AMENDMENTS-DISPLAY-NAV section 4).
+const selectStyle: CSSProperties = { minHeight: spacing.xxxl, padding: spacing.xs, borderRadius: radii.sm, border: `1px solid ${colors.border.strong}`, backgroundColor: colors.surface.paper, color: colors.text.primary, fontSize: rem(typography.size.body), maxWidth: '100%', minWidth: 0, boxSizing: 'border-box' };
 const rowButtonStyle: CSSProperties = {
   minWidth: spacing.xxxl,
   minHeight: spacing.xxxl,

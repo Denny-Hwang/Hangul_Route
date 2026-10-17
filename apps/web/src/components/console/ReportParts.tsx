@@ -34,6 +34,7 @@ import type {
   ReportThisPeriod,
 } from '@/lib/console/report-view';
 import { useMessages } from '@/lib/i18n/locale-context';
+import { PageBack } from './PageBack';
 import { headRem } from '@/lib/console/rem';
 
 /**
@@ -86,7 +87,6 @@ export const REPORT_CSS = `
 .hr-report ul,.hr-report ol{list-style:none}
 .hr-report-hidden{position:absolute;width:${px(borderWidth.thin)};height:${px(borderWidth.thin)};margin:-${px(borderWidth.thin)};padding:0;overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0}
 .hr-report-top{display:flex;flex-direction:column;align-items:flex-start;gap:${rem(spacing.xs)}}
-.hr-report-back{display:inline-flex;align-items:center;gap:${rem(spacing.xs)};min-height:${px(touchTarget.min)};padding-right:${rem(spacing.md)};color:${colors.brand.secondaryDark};font-weight:${typography.weight.semibold};text-decoration:underline}
 .hr-report-buttons{display:flex;flex-wrap:wrap;align-items:center;column-gap:${rem(spacing.xs)};row-gap:${rem(spacing.xxs)}}
 .hr-report-hint{flex:1 1 ${PRINT_HINT_MIN};font-size:${rem(typography.size.caption)};color:${colors.text.muted};line-height:${typography.leading.tight}}
 .hr-report-link-button{display:inline-flex;align-items:center;justify-content:center;min-height:${px(touchTarget.min)};padding:${rem(spacing.sm)} ${rem(spacing.lg)};border-radius:${px(radii.pill)};border:${px(borderWidth.thin)} solid ${colors.border.strong};background:${colors.surface.paper};color:${colors.text.primary};font:inherit;font-size:${rem(typography.size.bodySm)};font-weight:${typography.weight.bold};text-decoration:none;cursor:pointer}
@@ -106,7 +106,7 @@ export const REPORT_CSS = `
 .hr-report-tab{min-height:${px(touchTarget.min)};padding:${rem(spacing.xs)} ${rem(spacing.sm)};border-radius:${px(radii.md)};border:${px(borderWidth.base)} solid transparent;background:transparent;color:${colors.text.secondary};font:inherit;font-size:${rem(typography.size.bodySm)};font-weight:${typography.weight.semibold};line-height:${typography.leading.tight};text-align:center;cursor:pointer}
 .hr-report-tab[aria-selected="true"]{background:${colors.surface.paper};border-color:${colors.brand.primary};color:${colors.text.primary};font-weight:${typography.weight.bold}}
 .hr-report-tab:disabled{color:${colors.text.muted};cursor:default}
-.hr-report-tab:focus-visible,.hr-report-step:focus-visible,.hr-report-disclosure:focus-visible,.hr-report-link-button:focus-visible,.hr-report-ghost:focus-visible,.hr-report-back:focus-visible{${focusRing}}
+.hr-report-tab:focus-visible,.hr-report-step:focus-visible,.hr-report-disclosure:focus-visible,.hr-report-link-button:focus-visible,.hr-report-ghost:focus-visible{${focusRing}}
 .hr-report-stepper{display:flex;flex-wrap:wrap;align-items:center;column-gap:${rem(spacing.sm)};row-gap:${rem(spacing.xxs)}}
 .hr-report-step{display:inline-flex;align-items:center;gap:${rem(spacing.xs)};min-height:${px(touchTarget.min)};padding:${rem(spacing.xs)} ${rem(spacing.md)};border-radius:${px(radii.pill)};border:${px(borderWidth.thin)} solid ${colors.border.strong};background:${colors.surface.paper};color:${colors.text.primary};font:inherit;font-size:${rem(typography.size.bodySm)};font-weight:${typography.weight.bold};cursor:pointer}
 .hr-report-step-next{margin-left:auto}
@@ -213,14 +213,12 @@ export const REPORT_CSS = `
 // ---------------------------------------------------------------------------------------------
 // Header, title and glance
 
-/** "Back to home" with the arrow glyph: on a phone the header's first row to itself (a long space name wraps in it). */
+/**
+ * The report's way back ("Back to home"): the console's one PageBack (AMENDMENTS-DISPLAY-NAV section 7.3), first in
+ * the page; on a phone the header's first row to itself (a long space name wraps in it).
+ */
 export function ReportBack({ link }: { link: ReportLink }): JSX.Element {
-  return (
-    <Link className="hr-report-back" href={link.href} data-testid="report-back">
-      <IconSvg name="arrow-left" size={GLYPH} color={colors.brand.secondaryDark} />
-      <span>{link.text}</span>
-    </Link>
-  );
+  return <PageBack href={link.href} label={link.text} testId="report-back" />;
 }
 
 /**

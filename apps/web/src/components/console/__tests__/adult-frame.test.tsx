@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 import { act, create, type ReactTestInstance, type ReactTestRenderer } from 'react-test-renderer';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { SpaceListItem } from '@/lib/console/api';
-import type { DeviceGateRead } from '@/lib/console/grown-up-lock';
+import type { PageBackLink } from '../PageBack';
 import { resetBrowseScopeCache } from '@/lib/console/browse-link';
 
 /**
@@ -54,7 +54,7 @@ vi.mock('@/lib/i18n/locale-context', async () => {
   };
 });
 
-import { AdultFrame, opensLearnerApp, resetFrameMemory, type AdultFrameEnvironment, type FrameSpaces } from '../AdultFrame';
+import { AdultFrame, resetFrameMemory, type AdultFrameEnvironment, type FrameSpaces } from '../AdultFrame';
 import { GrownUpLocationContext } from '../grown-up-location';
 
 const en = getMessages('en');
@@ -78,13 +78,12 @@ interface FakeEnv extends AdultFrameEnvironment {
   cleared: number;
 }
 
-function fakeEnv(over: { pathname?: string; search?: string; origin?: string; device?: DeviceGateRead; last?: 'parent' | 'teacher' | null } = {}): FakeEnv {
+function fakeEnv(over: { pathname?: string; search?: string; origin?: string; last?: 'parent' | 'teacher' | null } = {}): FakeEnv {
   const env: FakeEnv = {
     written: [],
     assigned: [],
     cleared: 0,
     location: () => ({ origin: over.origin ?? 'https://app.hangulroute.com', pathname: over.pathname ?? '/teach/home', search: over.search ?? '' }),
-    readDevice: async () => over.device ?? { readable: true, marker: { v: 1, gate: 'pin', pinEpoch: 5 }, hasProfiles: true },
     readLastPersona: async () => over.last ?? null,
     writeLastPersona: (persona) => {
       env.written.push(persona);
@@ -124,10 +123,10 @@ afterEach(() => {
   vi.unstubAllEnvs();
 });
 
-async function render(env: FakeEnv, spaces?: FrameSpaces, children: ReactNode = <p>page</p>): Promise<ReactTestRenderer> {
+async function render(env: FakeEnv, spaces?: FrameSpaces, children: ReactNode = <p>page</p>, frame: { back?: PageBackLink; title?: string } = {}): Promise<ReactTestRenderer> {
   await act(async () => {
     mounted = create(
-      <AdultFrame env={env} spaces={spaces} title={undefined}>
+      <AdultFrame env={env} spaces={spaces} title={frame.title} back={frame.back}>
         {children}
       </AdultFrame>,
     );
@@ -225,12 +224,24 @@ describe('the active persona and the navigation (section 3.8)', () => {
     expect(navIds(r)).toEqual(['home', 'billing']);
   });
 
-  it('spaces fetch failed: the brand, the way back and Sign out only; no persona, no nav', async () => {
+  it('spaces fetch failed: the brand, the Learner app exit and Sign out only; no persona, no nav', async () => {
     const r = await render(fakeEnv(), 'failed');
     expect(byTestId(r, 'frame-nav')).toHaveLength(0);
     expect(byTestId(r, 'frame-persona')).toHaveLength(0);
-    expect(byTestId(r, 'frame-way-back')).toHaveLength(1);
+    expect(byTestId(r, 'frame-learner-app')).toHaveLength(1);
     expect(byTestId(r, 'frame-brand')[0]?.props.href).toBe('/signin');
+    // On a phone the brand hides because the nav's first item is the persona home; with no nav it stays (DN-6 review).
+    const bar = r.root.findAll((n) => typeof n.type === 'string' && typeof n.props.className === 'string' && n.props.className.split(' ').includes('hr-frame-bar'))[0]!;
+    expect(bar.props.className.split(' ')).toContain('hr-no-nav');
+    const css = r.root.findAll((n) => n.type === 'style').map((n) => String(n.children.join(''))).join('');
+    expect(css).toMatch(/\.hr-frame-brand\{display:none\}\s*\.hr-frame-bar\.hr-no-nav \.hr-frame-brand\{display:inline-flex\}/);
+  });
+
+  it('with its nav the bar hides the brand below 45em (the nav\'s first item is the persona home)', async () => {
+    const r = await render(fakeEnv({ pathname: '/parent' }), [family]);
+    expect(navIds(r)[0]).toBe('home');
+    const bar = r.root.findAll((n) => typeof n.type === 'string' && typeof n.props.className === 'string' && n.props.className.split(' ').includes('hr-frame-bar'))[0]!;
+    expect(bar.props.className.split(' ')).not.toContain('hr-no-nav');
   });
 
   it('draws every sibling item when its flag is on: Reports, Notes and Lessons (a link to All lessons, same tab)', async () => {
@@ -351,37 +362,51 @@ describe('the active persona and the navigation (section 3.8)', () => {
   });
 });
 
-describe('the way back (sections 3.8, 3.9)', () => {
-  it('Back to learning clears the unlock and the console session, then opens the learner app on this origin', async () => {
+describe('the Learner app exit and PageBack (sections 3.8, 3.9; AMENDMENTS-DISPLAY-NAV section 7.3)', () => {
+  it('Learner app clears the unlock and the console session, then opens the learner app on this origin', async () => {
     const env = fakeEnv();
     const r = await render(env, [klass]);
-    const back = byTestId(r, 'frame-way-back')[0] as ReactTestInstance;
-    expect(textOf(back)).toBe(en.console.shell.backToLearning);
-    await act(async () => back.props.onClick());
+    const exit = byTestId(r, 'frame-learner-app')[0] as ReactTestInstance;
+    expect(textOf(exit)).toBe(en.console.shell.backToLearning);
+    expect(textOf(exit)).toBe('Learner app');
+    await act(async () => exit.props.onClick());
     expect(env.cleared).toBe(1);
     expect(env.assigned).toEqual(['/?lang=en']);
   });
 
-  it('from the site origin (before F-SITE-002 S-10) the way back goes to the app host', async () => {
+  it('from the site origin (before F-SITE-002 S-10) the exit goes to the app host', async () => {
     const env = fakeEnv({ origin: 'https://hangulroute.com' });
     const r = await render(env, [klass]);
-    await act(async () => byTestId(r, 'frame-way-back')[0]?.props.onClick());
+    await act(async () => byTestId(r, 'frame-learner-app')[0]?.props.onClick());
     expect(env.assigned).toEqual(['https://app.hangulroute.com/?lang=en']);
   });
 
-  it('reads Open the learner app on a device with no learner profile (a teacher laptop)', async () => {
-    const r = await render(fakeEnv({ device: { readable: true, marker: null, hasProfiles: false } }), [klass]);
-    expect(textOf(byTestId(r, 'frame-way-back')[0] as ReactTestInstance)).toBe('Open the learner app');
+  it('the exit is the last control of the header row, after the Aa button and Sign out, with the glyph after its label; nothing that leaves sits top left', async () => {
+    const r = await render(fakeEnv(), [klass]);
+    const bar = r.root.findAll((n) => typeof n.type === 'string' && String(n.props.className ?? '').startsWith('hr-frame-bar'))[0]!;
+    const end = bar.findAll((n) => n.props.className === 'hr-frame-end')[0]!;
+    const ids = end.findAll((n) => typeof n.type === 'string' && typeof n.props['data-testid'] === 'string').map((n) => n.props['data-testid'] as string);
+    expect(ids.filter((id) => id.startsWith('frame-'))).toEqual(['frame-display', 'frame-sign-out', 'frame-learner-app']);
+    const exit = byTestId(r, 'frame-learner-app')[0]!;
+    const kids = exit.children as ReactTestInstance[];
+    expect(kids[0]?.type).toBe('span');
+    expect(byTestId(r, 'frame-way-back')).toHaveLength(0);
   });
 
-  it('opensLearnerApp: absent or none marker without profiles, or no IndexedDB; never on a failed read or with profiles', () => {
-    expect(opensLearnerApp(null)).toBe(false);
-    expect(opensLearnerApp({ readable: true, marker: { v: 1, gate: 'none' }, hasProfiles: false })).toBe(true);
-    expect(opensLearnerApp({ readable: true, marker: null, hasProfiles: false })).toBe(true);
-    expect(opensLearnerApp({ readable: true, marker: { v: 1, gate: 'none' }, hasProfiles: true })).toBe(false);
-    expect(opensLearnerApp({ readable: true, marker: { v: 1, gate: 'nopin' }, hasProfiles: false })).toBe(false);
-    expect(opensLearnerApp({ readable: false, reason: 'unavailable' })).toBe(true);
-    expect(opensLearnerApp({ readable: false, reason: 'failed' })).toBe(false);
+  it('PageBack draws first in the content, before the context line, as a link to the page above', async () => {
+    const r = await render(fakeEnv({ pathname: '/teach/space/plan', search: '?id=sp_c' }), [klass], <p>page</p>, { back: { href: '/teach/space?id=sp_c', label: 'Back to sp_c' }, title: 'Plan the week' });
+    const main = r.root.findAll((n) => n.type === 'main')[0]!;
+    const first = (main.children as ReactTestInstance[])[0]!;
+    const back = byTestId(r, 'page-back')[0]!;
+    expect(first.findAll((n) => n === back).length + (first === back ? 1 : 0)).toBeGreaterThan(0);
+    expect(back.props.href).toBe('/teach/space?id=sp_c');
+    expect(textOf(back)).toBe('Back to sp_c');
+    expect(byTestId(r, 'frame-title')).toHaveLength(1);
+  });
+
+  it('a persona home draws no PageBack', async () => {
+    const r = await render(fakeEnv(), [klass]);
+    expect(byTestId(r, 'page-back')).toHaveLength(0);
   });
 });
 
