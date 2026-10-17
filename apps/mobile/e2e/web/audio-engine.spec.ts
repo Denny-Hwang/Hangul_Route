@@ -242,6 +242,50 @@ test.describe('(a) Android Chrome, a phone sideways, the presenter', () => {
   });
 });
 
+test.describe('(a2) a browser that has its voices at once (Safari, a warm Chrome), the presenter at 1280 x 720', () => {
+  test.use({ viewport: { width: 1280, height: 720 }, isMobile: false, hasTouch: false });
+
+  test('the start screen names the Korean voice before any tap (the list landed before the presenter subscribed)', async ({ page }) => {
+    await page.addInitScript(() => {
+      const voices = [{ name: 'Yuna', lang: 'ko-KR', voiceURI: 'Yuna', localService: true, default: false }];
+      class Utterance {
+        lang = '';
+        rate = 1;
+        pitch = 1;
+        volume = 1;
+        voice: unknown = null;
+        onstart: (() => void) | null = null;
+        onend: (() => void) | null = null;
+        onerror: (() => void) | null = null;
+        constructor(public text: string) {}
+      }
+      Object.defineProperty(window, 'SpeechSynthesisUtterance', { configurable: true, writable: true, value: Utterance });
+      Object.defineProperty(window, 'speechSynthesis', {
+        configurable: true,
+        value: {
+          speaking: false,
+          pending: false,
+          speak: (u: Utterance) => {
+            setTimeout(() => {
+              u.onstart?.();
+              u.onend?.();
+            }, 20);
+          },
+          cancel: () => undefined,
+          getVoices: () => voices,
+          addEventListener: () => undefined,
+          removeEventListener: () => undefined,
+        },
+      });
+    });
+    await page.goto(`/present#d=${encodeDeck(DECK)}`);
+    await expect(page.getByTestId('presenter-check-voice')).toBeVisible();
+    await page.waitForTimeout(500);
+    await expect(page.getByTestId('presenter-check-voice')).toContainText('Korean voice: Yuna, on this device');
+    await expect(page.getByText(NO_VOICE_LINE)).toHaveCount(0);
+  });
+});
+
 /** (b) iOS Safari: a speak outside a gesture is dropped without a word until one inside a gesture was accepted. */
 async function iosSafari(page: Page): Promise<void> {
   await page.addInitScript(() => {
