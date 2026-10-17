@@ -122,6 +122,8 @@ async function answerAsks(answer: boolean): Promise<string[]> {
 async function clickArchive(answer = false): Promise<string[]> {
   const confirm = vi.fn(() => answer);
   vi.stubGlobal('window', { confirm, addEventListener: () => undefined, removeEventListener: () => undefined });
+  // A browser that draws a modal <dialog> (Safari 15.4 and later, every current browser).
+  vi.stubGlobal('HTMLDialogElement', class { showModal(): void {} });
   await act(async () => {
     renderer = create(<SettingsPage />);
   });

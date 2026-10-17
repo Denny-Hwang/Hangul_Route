@@ -197,6 +197,28 @@ describe('Update the plan on a family learner card', () => {
     expect(textOf(root)).toContain(words.failed);
   });
 
+  it('in a browser that draws a modal dialog, the console dialog asks in the console language; OK saves, never the browser confirm', async () => {
+    vi.stubGlobal('HTMLDialogElement', class { showModal(): void {} });
+    try {
+      const root = await rosterPage();
+      await press(root);
+      const dialog = root.find((n) => n.type === 'dialog');
+      expect(textOf(dialog.find((n) => n.type === 'p')).startsWith('Update the plan? It moves ahead from today and keeps the same end date.')).toBe(true);
+      expect(saved).toHaveLength(0);
+      const okButton = dialog.find((n) => n.type === 'button' && n.props['data-testid'] === 'console-confirm-ok');
+      expect(textOf(okButton)).toBe(getMessages('en').common.buttons.ok);
+      await act(async () => {
+        (okButton.props.onClick as () => void)();
+      });
+      await act(async () => undefined);
+      expect(confirm).not.toHaveBeenCalled();
+      expect(saved).toHaveLength(1);
+      expect(root.findAll((n) => n.type === 'dialog')).toHaveLength(0);
+    } finally {
+      vi.stubGlobal('HTMLDialogElement', undefined);
+    }
+  });
+
   it('never shows on a class card', async () => {
     kind = 'class';
     const root = await rosterPage();

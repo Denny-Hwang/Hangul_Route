@@ -3,6 +3,7 @@
 import { colors, spacing, typography } from '@hangul-route/design-system/tokens';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Button } from '@/components/console/ui';
+import { useConfirmDialog } from '@/components/console/ConfirmDialog';
 import type { ConsoleApi, PlanView, RosterLearner } from '@/lib/console/api';
 import { planUpdateOffer, reseedSaveBody, updateAskText } from '@/lib/console/curriculum';
 import { useConsoleLocale } from '@/lib/i18n/locale-context';
@@ -36,6 +37,8 @@ export function PlanUpdateLine({
 }): JSX.Element | null {
   const { messages, locale } = useConsoleLocale();
   const words = messages.console.curriculum.update;
+  // The page's own confirm in the console language (a `<dialog>`, never the browser's confirm()).
+  const confirmDialog = useConfirmDialog({ ok: messages.common.buttons.ok, cancel: messages.common.buttons.cancel });
   const offer = useMemo(() => planUpdateOffer(kind, learner, plans, today), [kind, learner, plans, today]);
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState<'done' | 'failed' | null>(null);
@@ -55,7 +58,7 @@ export function PlanUpdateLine({
   const name = learner.displayName.trim();
 
   const apply = async (): Promise<void> => {
-    if (!api || busy || !window.confirm(updateAskText(offer.diff, locale))) return;
+    if (!api || busy || !(await confirmDialog.ask(updateAskText(offer.diff, locale)))) return;
     setBusy(true);
     setStatus(null);
     let ok = false;
@@ -81,6 +84,7 @@ export function PlanUpdateLine({
       <span role="status" aria-live="polite" style={{ display: 'block', width: '100%', color: colors.text.secondary, fontSize: rem(typography.size.caption) }}>
         {status === 'failed' ? words.failed : null}
       </span>
+      {confirmDialog.dialog}
     </div>
   );
 }

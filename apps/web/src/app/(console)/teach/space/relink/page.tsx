@@ -6,6 +6,7 @@ import { useSearchParams } from 'next/navigation';
 import { Suspense, useCallback, useEffect, useState } from 'react';
 import { Button, Muted, Notice, panelStyle } from '@/components/console/ui';
 import { AdultFrame } from '@/components/console/AdultFrame';
+import { useConfirmDialog } from '@/components/console/ConfirmDialog';
 import { useConsole } from '@/components/console/use-console';
 import type { RelinkView, Roster } from '@/lib/console/api';
 import { RELINK_REFRESH_MS, type RelinkNote, canReissueRescueCode, expiresLabel, relinkNoteText, requestedLabel } from '@/lib/console/relink';
@@ -27,6 +28,8 @@ function RelinkInner(): JSX.Element {
   const [pick, setPick] = useState('');
   const [issued, setIssued] = useState<{ name: string; code: string } | null>(null);
   const [now, setNow] = useState(() => new Date());
+  // The page's own confirm in the console language (a `<dialog>`, never the browser's confirm()).
+  const confirmDialog = useConfirmDialog({ ok: m.common.buttons.ok, cancel: m.common.buttons.cancel });
 
   const load = useCallback(async (): Promise<void> => {
     if (!api) return;
@@ -65,7 +68,7 @@ function RelinkInner(): JSX.Element {
 
   const issue = async (): Promise<void> => {
     const learner = roster?.learners.find((l) => l.id === pick);
-    if (!api || !learner || !window.confirm(`${c.relink.issueAsk(learner.displayName)} ${c.oldCodeStops}`)) return;
+    if (!api || !learner || !(await confirmDialog.ask(`${c.relink.issueAsk(learner.displayName)} ${c.oldCodeStops}`))) return;
     setBusy(true);
     const result = await api.issueRescueCode(learner.id);
     setBusy(false);
@@ -145,6 +148,7 @@ function RelinkInner(): JSX.Element {
           <Muted>{c.relinkCardsComeBack}</Muted>
         </section>
       )}
+      {confirmDialog.dialog}
     </AdultFrame>
   );
 }

@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
 import { Button, Field, LoadErrorPanel, Muted, Notice, panelStyle } from '@/components/console/ui';
 import { AdultFrame } from '@/components/console/AdultFrame';
+import { useConfirmDialog } from '@/components/console/ConfirmDialog';
 import type { ConsoleApi, MemberView, SchoolView } from '@/lib/console/api';
 import { planTitle, statusLine as entitlementStatus } from '@/lib/console/billing';
 import { codeExpiry, relativeDay } from '@/lib/console/rollup';
@@ -29,8 +30,11 @@ export function SchoolAdmin({ api, spaceId, onSignOut }: { api: ConsoleApi; spac
   const [newClass, setNewClass] = useState('');
   const [assigning, setAssigning] = useState<string | null>(null);
   const now = new Date();
-  const c = useConsoleLocale().messages.console;
+  const { messages } = useConsoleLocale();
+  const c = messages.console;
   const s = c.school;
+  // The page's own confirm in the console language (a `<dialog>`, never the browser's confirm()).
+  const confirmDialog = useConfirmDialog({ ok: messages.common.buttons.ok, cancel: messages.common.buttons.cancel });
 
   const load = useCallback(async (): Promise<void> => {
     const [v, m] = await Promise.all([api.school(spaceId), api.members(spaceId)]);
@@ -82,7 +86,10 @@ export function SchoolAdmin({ api, spaceId, onSignOut }: { api: ConsoleApi; spac
           newClass={newClass}
           onCopy={() => void copy()}
           onRegenerate={() => {
-            if (!view.invite.joinCode || window.confirm(`${s.invite.regenerateAsk} ${c.oldCodeStops}`)) void run(() => api.regenerateCode(spaceId), 'codeReady', 'codeFailed');
+            void (async () => {
+              if (view.invite.joinCode && !(await confirmDialog.ask(`${s.invite.regenerateAsk} ${c.oldCodeStops}`))) return;
+              await run(() => api.regenerateCode(spaceId), 'codeReady', 'codeFailed');
+            })();
           }}
           onAssigning={setAssigning}
           onAssign={(classId, accountId) => void run(() => api.addMember(classId, accountId), 'assigned', 'assignFailed').then(() => setAssigning(null))}
@@ -90,6 +97,7 @@ export function SchoolAdmin({ api, spaceId, onSignOut }: { api: ConsoleApi; spac
           onCreateClass={(name) => void run(() => api.createSpace({ kind: 'class', name, parentSpaceId: spaceId }), 'classCreated', 'createFailed').then(() => setNewClass(''))}
         />
       ) : null}
+      {confirmDialog.dialog}
     </AdultFrame>
   );
 }
