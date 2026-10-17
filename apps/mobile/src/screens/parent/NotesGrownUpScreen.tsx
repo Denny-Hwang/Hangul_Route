@@ -33,7 +33,7 @@ import { useNotesStore } from '../../store/notes-store';
 import { useProfileStore } from '../../store/profile-store';
 import { HideConfirmSheet } from '../notes/HideConfirmSheet';
 import { hideNoteNow, putNotePrefsNow } from '../notes/note-actions';
-import { BackButton, ROW_GLYPH, glyphColor } from '../notes/parts';
+import { ROW_GLYPH, glyphColor } from '../notes/parts';
 import { useProfileNotes } from '../notes/use-notes';
 import { useGateLapse } from './use-gate-lapse';
 
@@ -167,7 +167,6 @@ export function NotesGrownUpScreen({ navigation, route }: Props): React.ReactEle
 
   return (
     <Screen tone="canvas" scrollable testID="notes-grown-up">
-      <BackButton onPress={() => (navigation.canGoBack() ? navigation.goBack() : navigation.replace('ParentDashboard'))} />
       <Heading level="title">{t.title(name)}</Heading>
       <Spacer size="lg" />
 

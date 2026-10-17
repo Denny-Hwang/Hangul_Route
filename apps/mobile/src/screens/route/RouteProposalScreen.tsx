@@ -5,7 +5,6 @@ import {
   Card,
   Heading,
   Hoya,
-  Icon,
   Pill,
   Screen,
   Spacer,
@@ -231,17 +230,6 @@ export function RouteProposalScreen({ route, navigation }: Props): React.ReactEl
 
   const header = (
     <>
-      <Pressable
-        onPress={leave}
-        hitSlop={spacing.md}
-        accessibilityRole="button"
-        accessibilityLabel={m.a11y.goBack}
-        style={{ alignSelf: 'flex-start', padding: spacing.xs }}
-        testID="route-proposal-back"
-      >
-        <Icon name="arrow-left" size={28} />
-      </Pressable>
-      <Spacer size="sm" />
       <Heading level="title">{t.title}</Heading>
       <Spacer size="md" />
     </>

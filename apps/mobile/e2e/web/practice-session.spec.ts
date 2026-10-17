@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { answerForkNew, completeChildForm, keepSidewaysIfAsked, readStored, waitForSaved, passPlacementLanguage } from './helpers';
+import { answerForkNew, completeChildForm, keepSidewaysIfAsked, readStored, waitForSaved, passPlacementLanguage, headerClose } from './helpers';
 import { next } from './story-reader-helpers';
 
 /**
@@ -74,7 +74,7 @@ test.describe('practice sessions (F-REPORT-001 section 3.3.2)', () => {
     await expect.poll(async () => timeOnly(await saved()).length).toBe(2);
     expect(timeOnly(await saved())[1]?.endedAt).toBeUndefined();
 
-    await page.getByTestId('story-reader-close').click();
+    await headerClose(page).click();
     await expect(page.getByTestId('story-reader')).toHaveCount(0);
     await expect.poll(async () => timeOnly(await saved()).every((s) => s.endedAt !== undefined)).toBe(true);
     const after = await saved();
@@ -114,7 +114,7 @@ test.describe('practice sessions (F-REPORT-001 section 3.3.2)', () => {
     await expect(page.getByTestId('placement-no-sound-note')).toBeVisible();
     await page.getByTestId('placement-warmup-option-rice').click();
     await page.locator('[data-testid^="placement-option-"]').first().click();
-    await page.getByTestId('placement-exit').click();
+    await headerClose(page).click();
     await page.getByTestId('placement-enough').click();
     await expect(page.getByTestId('placement-result')).toBeVisible();
 

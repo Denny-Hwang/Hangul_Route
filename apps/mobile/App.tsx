@@ -1,18 +1,22 @@
-import { Screen, TextSizeProvider } from '@hangul-route/design-system';
-import { NavigationContainer } from '@react-navigation/native';
+import { Screen, ScreenHeaderSlotContext, TextSizeProvider } from '@hangul-route/design-system';
+import { NavigationContainer, createNavigationContainerRef } from '@react-navigation/native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { StatusBar } from 'expo-status-bar';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { AppState } from 'react-native';
 import { ErrorBoundary } from 'react-error-boundary';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useDocumentLang } from './src/i18n/use-messages';
 import { RootNavigator } from './src/navigation/root';
+import type { RootStackParamList } from './src/navigation/types';
+import { ConfirmHost } from './src/components/ConfirmHost';
+import { LearnerScreenHeader } from './src/components/LearnerScreenHeader';
 import { PortraitGuard } from './src/components/PortraitGuard';
 import { PwaBanners } from './src/components/PwaBanners';
 import { OopsScreen } from './src/screens/system/OopsScreen';
 import { installGestureUnlock } from './src/platform/audio';
+import { installHistoryBridge } from './src/platform/history-bridge';
 import { subscribePwa } from './src/platform/pwa';
 import { flushQueue } from './src/platform/telemetry';
 import { bindAudioLevelToProfiles } from './src/store/audio-store';
@@ -30,6 +34,9 @@ const queryClient = new QueryClient({
   },
 });
 
+/** The root navigator's container, for the web history bridge (AMENDMENTS-DISPLAY-NAV section 7.2). */
+const navigation = createNavigationContainerRef<RootStackParamList>();
+
 export default function App(): React.ReactElement {
   // <html lang> follows the UI locale on web (F-I18N-001 §3.4); no-op on native.
   useDocumentLang();
@@ -42,6 +49,19 @@ export default function App(): React.ReactElement {
   // (audit UX-01 / L16). The account and every cached tier load in the same
   // pass, before the first derivation (F-ENT-003 section 3.4).
   const [ready, setReady] = useState(false);
+  // The web history bridge runs once the navigator is up, and again after Try again remounts it.
+  const stopBridge = useRef<(() => void) | null>(null);
+  const startBridge = useCallback(() => {
+    stopBridge.current?.();
+    stopBridge.current = installHistoryBridge(navigation);
+  }, []);
+  useEffect(
+    () => () => {
+      stopBridge.current?.();
+      stopBridge.current = null;
+    },
+    [],
+  );
 
   useEffect(() => {
     let live = true;
@@ -104,10 +124,15 @@ export default function App(): React.ReactElement {
           {/* Production crash guard — a thrown render error shows OopsScreen
               instead of closing the app; Try again remounts the navigator. */}
           <ErrorBoundary fallbackRender={({ resetErrorBoundary }) => <OopsScreen onRetry={resetErrorBoundary} />}>
-            <NavigationContainer>
-              {ready ? <RootNavigator /> : <Screen tone="canvas">{null}</Screen>}
-              <StatusBar style="dark" />
-            </NavigationContainer>
+            {/* Every screen's top row (Back, its title, the Aa control) comes from its route (AMENDMENTS-DISPLAY-NAV section 7.1). */}
+            <ScreenHeaderSlotContext.Provider value={LearnerScreenHeader}>
+              <NavigationContainer ref={navigation} onReady={startBridge}>
+                {ready ? <RootNavigator /> : <Screen tone="canvas">{null}</Screen>}
+                <StatusBar style="dark" />
+              </NavigationContainer>
+            </ScreenHeaderSlotContext.Provider>
+            {/* The web's confirm step in the UI language, in place of the browser's confirm() (section 8). */}
+            <ConfirmHost />
             <PwaBanners />
             {/* F-LAYOUT-001 §3.4: a touch phone held sideways is asked, once, to turn upright. */}
             <PortraitGuard />

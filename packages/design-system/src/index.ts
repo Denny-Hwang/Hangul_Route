@@ -25,6 +25,10 @@ export * from './components/SparkMeter';
 export * from './text-size';
 export * from './components/TextSize';
 export * from './components/DisplaySheet';
+// The one top row of every learner screen, its route-aware slot and the Display control (AMENDMENTS-DISPLAY-NAV section 7.1).
+export * from './components/ScreenHeader';
+// The confirm step of the learner web build, in place of the browser's confirm() (AMENDMENTS-DISPLAY-NAV section 8).
+export * from './components/ConfirmSheet';
 // WordArt and its key list are in this barrel because Metro (Expo SDK 52, no metro.config.js) does not read
 // package `exports`, so the app cannot import '@hangul-route/design-system/components/WordArt' at runtime
 // (apps/mobile metro-subpaths.test.ts). PictureArt (F-VOC-002 W-7) is the app's one caller; the web contact

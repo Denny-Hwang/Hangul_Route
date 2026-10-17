@@ -5,7 +5,7 @@ vi.mock('react-native', () => ({
 }));
 
 import { Alert } from 'react-native';
-import { confirm } from '../dialog';
+import { confirm, setConfirmPresenter } from '../dialog';
 
 type Buttons = Array<{ text: string; style?: string; onPress?: () => void }>;
 type Options = { cancelable?: boolean; onDismiss?: () => void };
@@ -38,5 +38,9 @@ describe('platform/dialog confirm', () => {
     expect(lastCall().buttons[1]?.style).toBe('default');
     lastCall().options.onDismiss?.();
     await expect(b).resolves.toBe(false);
+  });
+
+  it('native keeps the platform Alert: there is no sheet host to register', () => {
+    expect(setConfirmPresenter(async () => true)()).toBeUndefined();
   });
 });

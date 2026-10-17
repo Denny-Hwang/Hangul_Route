@@ -74,7 +74,6 @@ import { useProgressStore } from '../../store/progress-store';
 import { useAccessTier } from '../../store/tier-store';
 import type { MinigameHost } from '../minigames/host';
 import { PictureArt } from '../minigames/PictureArt';
-import { BackButton } from './BackButton';
 import { canRenderPicture, pickerTopic, topicWords } from './topic-data';
 import { topicTintColor } from './TopicTile';
 import { VocabQuestionView } from './VocabQuestionView';
@@ -280,7 +279,8 @@ export function CardsSession({ source, params, ports, exits, leavingRef }: Cards
     exits.done?.();
   }, [state, ports, exits, topicKey, run.index, collectedBefore, check]);
 
-  // Leaving before the summary asks first (§3.5); what was turned is already written.
+  // Leaving before the summary asks first (§3.5); what was turned is already written. Every back reaches this guard:
+  // the route's ScreenHeader Close, the browser and the phone back, a swipe (AMENDMENTS-DISPLAY-NAV section 7.1).
   const [asking, setAsking] = useState(false);
   const ownLeaving = useRef(false);
   const leaving = leavingRef ?? ownLeaving;
@@ -306,13 +306,6 @@ export function CardsSession({ source, params, ports, exits, leavingRef }: Cards
     if (action) exits.dispatch(action);
     else back();
   };
-  const onBack = (): void => {
-    if (stateRef.current.phase === 'done') back();
-    else {
-      pending.current = null;
-      setAsking(true);
-    }
-  };
 
   const go = (next: () => void): void => {
     leaving.current = true;
@@ -323,11 +316,9 @@ export function CardsSession({ source, params, ports, exits, leavingRef }: Cards
   return (
     <>
       {state.phase === 'cards' ? (
-        <CardsPhase state={state} dispatch={dispatch} run={run} tint={tint} onBack={onBack} readingPractice={ports.readingPractice ? profile : null} />
+        <CardsPhase state={state} dispatch={dispatch} run={run} tint={tint} readingPractice={ports.readingPractice ? profile : null} />
       ) : state.phase === 'check' ? (
         <Screen tone="canvas" scrollable testID="vocab-cards-check">
-          <BackButton onPress={onBack} />
-          <Spacer size="sm" />
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
             <Heading level="title">{copy.checkTitle}</Heading>
             <View {...HIDDEN}>
@@ -356,7 +347,6 @@ export function CardsSession({ source, params, ports, exits, leavingRef }: Cards
           collectedBefore={collectedBefore}
           optionCount={optionCount}
           profileId={profileId}
-          onBack={back}
           onNext={(chunk) =>
             // -1: "Review these" on an `ids` run opens the same words again, not chunk 0.
             go(() => exits.next(chunk < 0 ? { topicKey, ids: run.inOrder.map((w) => w.id) } : { topicKey, chunk }))
@@ -376,14 +366,12 @@ function CardsPhase({
   dispatch,
   run,
   tint,
-  onBack,
   readingPractice: profile,
 }: {
   state: FlashState;
   dispatch: (event: FlashEvent) => void;
   run: CardsRun<RuntimeVocabItem>;
   tint: string;
-  onBack: () => void;
   /** The profile whose reading practice switch is offered, or `null` (no profile, or a preview: no switch). */
   readingPractice: { id: string } | null;
 }): React.ReactElement {
@@ -486,8 +474,7 @@ function CardsPhase({
 
   return (
     <Screen tone="canvas" scrollable testID="vocab-cards" footer={marks}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.sm, flexWrap: 'wrap' }}>
-        <BackButton onPress={onBack} />
+      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: spacing.sm, flexWrap: 'wrap' }}>
         {profile ? (
           <Pressable
             testID="vocab-cards-reading-practice"
@@ -618,7 +605,6 @@ function Summary({
   collectedBefore,
   optionCount,
   profileId,
-  onBack,
   onNext,
   onSpeed,
   onTopic,
@@ -629,7 +615,6 @@ function Summary({
   collectedBefore: ReadonlySet<string>;
   optionCount: 3 | 4;
   profileId: string | null;
-  onBack: () => void;
   onNext: (chunk: number) => void;
   /** The Speed round, or `null` where the session has none (All lessons). */
   onSpeed: (() => void) | null;
@@ -651,8 +636,6 @@ function Summary({
 
   return (
     <Screen tone="canvas" scrollable testID="vocab-cards-summary">
-      <BackButton onPress={onBack} />
-      <Spacer size="md" />
       <HoyaBubble tone="cheering" message={copy.summary.newlyCollected(tally.newlyCollected)} testID="vocab-cards-summary-line" />
       <Spacer size="md" />
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }} {...HIDDEN}>

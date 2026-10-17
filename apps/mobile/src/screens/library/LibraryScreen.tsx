@@ -200,10 +200,12 @@ export function LibraryScreen(): React.ReactElement {
     );
   };
 
+  // A tab root: no Back; its name sits in its header row beside the Display (Aa) control (AMENDMENTS-DISPLAY-NAV
+  // sections 3.6 and 7.1), on every section.
+  const rootHeader = { title: m.title, titleInline: true };
   const gallery = (
     <>
       {/* A plain count, no N/M pill: the total grows with every release (F-STORY-006 §3.7, decision 3). */}
-      <Heading level="title">{m.title}</Heading>
       <Caption tone="muted">{m.collected.line(collected)}</Caption>
       {tabs}
       {panel(
@@ -262,8 +264,7 @@ export function LibraryScreen(): React.ReactElement {
   if (active === 'theme-packs') {
     // Words (F-VOC-003 T1): the picker's grid inline, full width with no detail pane, like the story sections.
     return (
-      <Screen tone="canvas" edges={TAB_SCREEN_EDGES} width="full" scrollable>
-        <Heading level="title">{m.title}</Heading>
+      <Screen tone="canvas" edges={TAB_SCREEN_EDGES} width="full" scrollable header={rootHeader}>
         {tabs}
         {panel(
           <>
@@ -279,8 +280,7 @@ export function LibraryScreen(): React.ReactElement {
   if (active === 'story-time' || active === 'culture') {
     // Story sections use the full width with no detail pane on every window (F-LAYOUT-001 §3.6).
     return (
-      <Screen tone="canvas" edges={TAB_SCREEN_EDGES} width="full" scrollable>
-        <Heading level="title">{m.title}</Heading>
+      <Screen tone="canvas" edges={TAB_SCREEN_EDGES} width="full" scrollable header={rootHeader}>
         {tabs}
         {panel(
           <>
@@ -294,7 +294,7 @@ export function LibraryScreen(): React.ReactElement {
   }
 
   return (
-    <Screen tone="canvas" edges={TAB_SCREEN_EDGES} width={screenWidth} scrollable={!paneMode}>
+    <Screen tone="canvas" edges={TAB_SCREEN_EDGES} width={screenWidth} scrollable={!paneMode} header={rootHeader}>
       <SplitPane master={gallery} detail={detail} masterLabel={m.panes.master} detailLabel={m.panes.detail} detailScrolls={false} />
     </Screen>
   );

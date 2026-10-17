@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { completeChildForm, journeyCellName, keepSidewaysIfAsked, playCheckByIds } from './helpers';
+import { completeChildForm, journeyCellName, keepSidewaysIfAsked, playCheckByIds, headerClose } from './helpers';
 
 /**
  * F-QUEST-002 Q-7b: the Holidays quests 7-9 bring the first final letters. Quest 7
@@ -29,7 +29,7 @@ async function openRitesEpisode(page: Page): Promise<void> {
 async function startQuest(page: Page, nth: number): Promise<void> {
   await page.getByRole('button', { name: 'Start', exact: true }).nth(nth).click();
   await page.getByRole('button', { name: 'Play anyway' }).click();
-  await expect(page.getByRole('button', { name: 'Leave quest' })).toBeVisible();
+  await expect(headerClose(page)).toBeVisible();
 }
 
 /** Quest 7's Build a Letter blocks, in round order: the initial and the vowel, then the final as its batchim tile. */

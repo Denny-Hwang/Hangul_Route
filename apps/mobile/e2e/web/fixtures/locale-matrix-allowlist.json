@@ -1,6 +1,4 @@
 {
-  "note": "F-I18N-001 §3.11 locale layout matrix (locale.spec.ts). Controls on the matrix screens the touch-target ratchet (touch-target-allowlist.json) does not walk that are under touchTarget.min (64) today, at every width and in every locale. Never add a line: a new small control fails the matrix until it is at least 64 x 64. When a listed control is fixed, the matrix fails until its line is removed, so this list only shrinks. A repeat of a listed control is numbered (#2, #3) and needs its own line. Making the PinEntry close control 64 x 64 is an open item (F-I18N-001 §10).",
-  "offenders": [
-    "PinEntry | button | Close"
-  ]
+  "note": "F-I18N-001 §3.11 locale layout matrix (locale.spec.ts). Controls on the matrix screens the touch-target ratchet (touch-target-allowlist.json) does not walk that are under touchTarget.min (64) today, at every width and in every locale. Never add a line: a new small control fails the matrix until it is at least 64 x 64. When a listed control is fixed, the matrix fails until its line is removed, so this list only shrinks. A repeat of a listed control is numbered (#2, #3) and needs its own line. The PinEntry close control became the ScreenHeader's 64 x 64 Close (AMENDMENTS-DISPLAY-NAV section 7.1, row DN-4).",
+  "offenders": []
 }

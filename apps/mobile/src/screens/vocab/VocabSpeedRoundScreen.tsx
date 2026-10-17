@@ -65,7 +65,6 @@ import { useProgressStore } from '../../store/progress-store';
 import { useAccessTier } from '../../store/tier-store';
 import { speedHost, useVocabRunStore } from '../../store/vocab-run-store';
 import { PictureArt } from '../minigames/PictureArt';
-import { BackButton } from './BackButton';
 import { ChoiceChips, ClockBar, ClockDigits, PausedPanel, ScaleChips, SwitchRow } from './ChallengeControls';
 import { canRenderPicture, pickerTopic, topicWords } from './topic-data';
 import { VocabQuestionView } from './VocabQuestionView';
@@ -260,8 +259,6 @@ function StartSheet({
 
   return (
     <Screen tone="canvas" scrollable testID="vocab-speed-sheet">
-      <BackButton onPress={onBack} />
-      <Spacer size="sm" />
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
         {cover ? <PictureArt pictureRef={cover.visual} gloss={localizedGloss(cover, locale)} size={touchTarget.hero} decorative /> : null}
         <View style={{ flex: 1, gap: spacing.xs }}>
@@ -463,7 +460,7 @@ function RoundPlay({
     [],
   );
 
-  // Leaving before the end any other way (system back, a swipe) asks "Stop for now?" first. During the time-up
+  // Leaving before the end any way (the header's Close, the browser or phone back, a swipe) asks "Stop for now?" first. During the time-up
   // beat the round is over and saved: leaving lands on the results at once instead of skipping them.
   useEffect(
     () =>
@@ -520,13 +517,13 @@ function RoundPlay({
   );
 
   return (
-    <Screen tone="canvas" scrollable testID="vocab-speed-round">
+    // The way out is the route's ScreenHeader Close (AMENDMENTS-DISPLAY-NAV section 7.1), which reaches the guard above
+    // (Stop for now?, or the results during the time-up beat); its Display control hides while the Challenge clock runs.
+    <Screen tone="canvas" scrollable testID="vocab-speed-round" header={{ displayHidden: clock !== null }}>
       {clock ? (
-        // Challenge (frame G): two lines at any width; Back, the digits and Pause, then the meter and the bar.
+        // Challenge (frame G): two lines at any width; the digits and Pause, then the meter and the bar.
         <View style={{ gap: spacing.sm }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
-            {/* The time-up beat (frame G''): the round is over and saved, so there is nothing to stop. */}
-            {timeUp ? null : <BackButton onPress={askStop} />}
             <View style={{ flex: 1 }} />
             <ClockDigits view={clock} />
             {paused || timeUp ? null : (
@@ -544,7 +541,6 @@ function RoundPlay({
         </View>
       ) : (
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
-          <BackButton onPress={askStop} />
           <View style={{ flexShrink: 1, gap: spacing.xs }}>
             {meter}
             <View {...HIDDEN} testID="vocab-speed-dots">

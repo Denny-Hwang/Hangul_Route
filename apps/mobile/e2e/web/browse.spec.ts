@@ -1,7 +1,7 @@
 import { getMessages } from '@hangul-route/i18n';
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { answerCheckRounds, onboardChild, openGrownUpZone, passDiscover, unlockWithPin } from './helpers';
+import { answerCheckRounds, onboardChild, openGrownUpZone, passDiscover, unlockWithPin, headerBack, headerClose } from './helpers';
 import { shot } from './shots';
 import { nextPage, position } from './story-reader-helpers';
 
@@ -457,7 +457,7 @@ test('Close shows the border.focus ring on keyboard focus', async ({ page }) => 
   await writeGatePass(page);
   await page.goto('/browse');
   await expect(home(page)).toBeVisible();
-  const close = page.getByTestId('browse-close');
+  const close = headerClose(page);
   const ring = () => close.evaluate((el) => getComputedStyle(el).borderTopColor);
   const atRest = await ring();
   await close.focus();
@@ -660,7 +660,8 @@ test('Journey cell, episode outline, item page with Where it sits, See on the Jo
   await page.getByRole('radio', { name: 'Journey' }).click();
   await page.getByTestId('journey-stage-stage1').getByRole('button').first().click();
   await expect(page.getByTestId('browse-episode-screen')).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Back to all lessons' })).toBeVisible();
+  // Back is the route's ScreenHeader (AMENDMENTS-DISPLAY-NAV section 7.1): the arrow and the word, top left.
+  await expect(headerBack(page)).toHaveAccessibleName('Back');
   await expect(page.getByRole('heading', { name: 'Lessons' })).toBeVisible();
   await expect(page.getByText(/^About \d+ minutes$/).first()).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Cards in this episode' })).toBeVisible();
@@ -684,7 +685,13 @@ test('Journey cell, episode outline, item page with Where it sits, See on the Jo
   await page.keyboard.press('Escape');
   await expect(page.getByTestId('browse-card-screen')).toHaveCount(0);
   await page.getByTestId('browse-item-card').click();
-  await page.getByTestId('browse-card-back').click();
+  // Escape that closes the Display (Aa) sheet over the card closes only the sheet: the card page stays.
+  await page.getByTestId('screen-header-display').filter({ visible: true }).click();
+  await expect(page.getByTestId('display-sheet')).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(page.getByTestId('display-sheet')).toHaveCount(0);
+  await expect(page.getByTestId('browse-card-screen')).toBeVisible();
+  await headerClose(page).click();
   await expect(page.getByTestId('browse-card-screen')).toHaveCount(0);
   await expect(page.getByTestId('browse-item')).toBeVisible();
 
@@ -755,12 +762,48 @@ test('Romanization (formerly Lesson display): the choices apply at once, Done an
   await expect(opener).toBeFocused();
 });
 
+test('a header that only just fits one row: focus keeps every control in place, and the first tap on Romanization opens it', async ({ page }) => {
+  // The header row wraps only when its controls cannot share one line (AMENDMENTS-DISPLAY-NAV section 7.1). If
+  // focus grew a control, a press at that edge would focus it, move it to the next line before the release, and
+  // the tap would do nothing. The window is set so the row has one pixel to spare, on every machine's fonts.
+  await openBrowse(page, 'account');
+  const close = headerClose(page);
+  const aa = page.getByTestId('screen-header-display').filter({ visible: true }).first();
+  const chip = page.getByRole('button', { name: 'Romanization', exact: true });
+  const box = async (l: typeof chip) => {
+    const b = await l.boundingBox();
+    expect(b).not.toBeNull();
+    return b ?? { x: 0, y: 0, width: 0, height: 0 };
+  };
+  const [closeBox, aaBox] = [await box(close), await box(aa)];
+  expect(aaBox.y, 'Close, Aa and Romanization share one row at the Pixel 5 width').toBe(closeBox.y);
+  // Between Close and Aa: two row gaps (spacing.sm) around the empty middle; what is left is the row's spare width.
+  const spare = aaBox.x - (closeBox.x + closeBox.width) - 2 * 8;
+  const viewport = page.viewportSize() ?? { width: 393, height: 851 };
+  await page.setViewportSize({ width: viewport.width - Math.floor(spare) + 1, height: viewport.height });
+  await expect.poll(async () => (await box(chip)).y).toBe((await box(close)).y);
+  const before = { aa: await box(aa), chip: await box(chip) };
+
+  // A pointer press focuses the chip before it is released: the release must still land on it.
+  await chip.click();
+  const sheet = page.getByRole('dialog', { name: 'Romanization', exact: true });
+  await expect(sheet).toBeVisible();
+  await sheet.getByRole('button', { name: 'Done' }).click();
+  await expect(sheet).toHaveCount(0);
+  await expect(chip).toBeFocused();
+  expect(await box(chip), 'focus leaves Romanization where it was').toEqual(before.chip);
+  await aa.focus();
+  await expect(aa).toBeFocused();
+  expect(await box(aa), 'focus leaves Aa where it was').toEqual(before.aa);
+  expect(await box(chip)).toEqual(before.chip);
+});
+
 test('the Aa button beside Romanization opens the device Display sheet: the language reaches the whole device', async ({ page }) => {
   await openBrowse(page, 'account');
-  const aa = page.getByTestId('browse-display-open').first();
+  const aa = page.getByTestId('screen-header-display').filter({ visible: true }).first();
   await expect(aa).toHaveAccessibleName('Aa, Display: language and text size');
   await aa.click();
-  const sheet = page.getByTestId('browse-device-display');
+  const sheet = page.getByTestId('display-sheet').filter({ visible: true });
   await expect(sheet.getByRole('radiogroup', { name: 'Language' }).getByRole('radio')).toHaveText(['English', 'Español', '한국어']);
   await expect(sheet.getByRole('radiogroup', { name: 'Text size' }).getByRole('radio')).toHaveCount(4);
   await sheet.getByRole('radio', { name: 'Español' }).click();
@@ -811,7 +854,7 @@ test('the catalogue writes nothing of a learner: home, an outline, an item page 
   await bootSettled(page);
   await page.getByRole('button', { name: 'Open Meet a, eo, g, n' }).click();
   await page.getByTestId('browse-item-card').click();
-  await page.getByTestId('browse-card-back').click();
+  await headerClose(page).click();
   await page.getByRole('button', { name: 'Romanization', exact: true }).click();
   await page.getByRole('radio', { name: 'Hidden until tap' }).click();
   await page.getByRole('button', { name: 'Done' }).click();
@@ -881,8 +924,8 @@ test('a full Stage 1 lesson, its end screen and its card write nothing of a lear
   await expect(page.getByTestId('browse-end-next')).toHaveText('Next lesson');
   await shot(page, 'br8-browse-preview-end-pixel5');
   await page.getByTestId('browse-end-card').click();
-  await expect(page.getByTestId('browse-card-back')).toBeVisible();
-  await page.getByTestId('browse-card-back').click();
+  await expect(headerClose(page)).toBeVisible();
+  await headerClose(page).click();
   await page.getByTestId('browse-end-back').click();
   await expect(page.getByRole('heading', { name: 'Meet a, eo, g, n' })).toBeVisible();
 
@@ -896,7 +939,7 @@ test('a full Stage 1 lesson, its end screen and its card write nothing of a lear
   expect(stored[LEARNER_QUEUE]).toBe(SEEDED_QUEUE);
 });
 
-test('Leave preview asks once: Keep going stays, Leave goes back to the lesson page with no end screen', async ({ page }) => {
+test('Leave preview asks once (the strip, the header Close and the browser back alike): Keep going stays, Leave goes back to the lesson page with no end screen', async ({ page }) => {
   await openLessonPage(page, 'quest:stage1-letters-q1');
   await page.getByTestId('browse-preview').click();
   await page.getByRole('button', { name: 'Continue' }).click();
@@ -906,6 +949,17 @@ test('Leave preview asks once: Keep going stays, Leave goes back to the lesson p
   await page.getByTestId('browse-leave-keep').click();
   await expect(page.getByRole('alertdialog')).toHaveCount(0);
   await expect(strip(page)).toBeVisible();
+  // The header's Close and the browser back ask the same question as Leave preview (one leave, F-BROWSE-001 §4.8),
+  // never the learner's quest sheet; the browser back while it is open answers Keep going.
+  await headerClose(page).click();
+  await expect(page.getByRole('alertdialog', { name: 'Leave this preview?' })).toBeVisible();
+  await expect(page.getByRole('alertdialog')).toHaveCount(1);
+  await page.goBack();
+  await expect(page.getByRole('alertdialog')).toHaveCount(0);
+  await expect(strip(page)).toBeVisible();
+  await page.goBack();
+  await expect(page.getByRole('alertdialog', { name: 'Leave this preview?' })).toBeVisible();
+  await page.getByTestId('browse-leave-keep').click();
   await page.getByTestId('preview-leave').click();
   await page.getByTestId('browse-leave-confirm').click();
   await expect(page.getByRole('heading', { name: 'Meet a, eo, g, n' })).toBeVisible();
@@ -935,7 +989,7 @@ test('the preview strip at 320 wide: at most PREVIEW_STRIP_MAX_HEIGHT, text and 
     expect(await page.getByTestId(id).evaluate((el) => el.scrollWidth <= el.clientWidth + 1 && el.scrollHeight <= el.clientHeight + 1)).toBe(true);
   }
   // The learner close control starts below the strip: the strip pushes the lesson down, never covers it.
-  const close = await page.getByRole('button', { name: 'Leave quest' }).boundingBox();
+  const close = await headerClose(page).boundingBox();
   expect((close?.y ?? 0) + 0.5).toBeGreaterThanOrEqual((box?.y ?? 0) + (box?.height ?? 0));
   expect(await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth)).toBe(false);
   await shot(page, 'br8-browse-preview-320');
@@ -977,7 +1031,7 @@ test('a story plays as the learner replay reader under the strip, ends on the st
   await expect(page.getByTestId('story-sources-title')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Open link' })).toHaveCount(0);
   await expect(page.getByTestId('preview-strip')).toHaveCount(0);
-  await page.getByTestId('story-sources-back').click();
+  await headerBack(page).click();
   await expect(page.getByTestId('browse-preview')).toHaveText('Preview this story');
   await expect(page.getByTestId('browse-preview-questions')).toBeVisible();
 
@@ -1195,7 +1249,7 @@ test('BR-9b: Preview the flashcards plays the learner cards under the strip, lea
   // Started again, the cards' own back keeps the learner question; Stop returns to the topic page too.
   await page.getByTestId('browse-preview').click();
   await expect(page.getByTestId('vocab-cards')).toBeVisible();
-  await page.getByTestId('vocab-back').click();
+  await headerClose(page).click();
   await expect(page.getByRole('heading', { name: 'Keep going or stop for now?' })).toBeVisible();
   await page.getByTestId('vocab-cards-stop').click();
   await expect(topicTitle).toBeVisible();

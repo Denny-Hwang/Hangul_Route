@@ -1,7 +1,7 @@
 import type { Page } from '@playwright/test';
 import { getMessages } from '@hangul-route/i18n';
 import { expect, test } from './fixtures';
-import { completeChildForm, completeSelfForm, readStored, unlockWithPin, waitForSaved, passPlacementLanguage } from './helpers';
+import { completeChildForm, completeSelfForm, readStored, unlockWithPin, waitForSaved, passPlacementLanguage, headerClose } from './helpers';
 import { shot } from './shots';
 import { controlsPastEdge, expectNoHorizontalOverflow } from './viewport';
 
@@ -32,7 +32,6 @@ const en = getMessages('en');
 const t = en.learner.placement;
 /** The PIN screen's line: on screen only while the grown-up gate asks for the PIN. */
 const PIN_LINE = en.caregiver.pin.entry.verifySubtitle;
-const LEAVE_QUEST = en.a11y.leaveQuest;
 const START = en.learner.welcome.cta;
 const hi = (name: string): string => en.learner.home.greeting(name);
 const EMOJI = /\p{Extended_Pictographic}/u;
@@ -132,7 +131,7 @@ async function runWithoutSound(
   await expect(page.getByTestId('placement-item')).toBeVisible();
   await check?.('item');
   await page.locator('[data-testid^="placement-option-"]').first().click();
-  await page.getByTestId('placement-exit').click();
+  await headerClose(page).click();
   await expect(page.getByTestId('placement-pause')).toBeVisible();
   await check?.('pause');
   await page.getByTestId('placement-enough').click();
@@ -149,7 +148,12 @@ async function storedResult(page: Page, profileId: string): Promise<{ mode?: str
 
 /** The Learning Route (the Route tab) shows the learner's own weekly plan: the week line and Open plan. */
 async function learningRouteShowsThePlan(page: Page, name: string): Promise<void> {
-  await page.goto('/');
+  // The history bridge may still be stepping back after the screen the plan opened (AMENDMENTS-DISPLAY-NAV section
+  // 7.2): a load started meanwhile is cancelled by that traversal (net::ERR_ABORTED), so it starts once more.
+  await page.goto('/').catch(async (error: unknown) => {
+    if (!/ERR_ABORTED/.test(String(error))) throw error;
+    await page.goto('/');
+  });
   await expect(page.getByText(hi(name))).toBeVisible();
   await closeInstallGuide(page);
   await page.getByRole('tablist').getByRole('link', { name: en.a11y.myRoute.tab }).click();
@@ -192,7 +196,7 @@ test.describe('the level check end to end (release build, flag on by default)', 
     await page.getByTestId('placement-plan-use').click();
     await expect(page.getByTestId('placement-result')).toHaveCount(0);
     await expect(page.getByText(PIN_LINE)).toHaveCount(0);
-    await expect(page.getByRole('button', { name: LEAVE_QUEST })).toBeVisible();
+    await expect(headerClose(page)).toBeVisible();
     await expect
       .poll(async () => (await readStored<{ selfRoute?: { meta: { params: { sessionsPerWeek: number } } } }>(page, `progress:${id}`))?.selfRoute?.meta.params.sessionsPerWeek)
       .toBe(3);
@@ -227,7 +231,7 @@ test.describe('the level check end to end (release build, flag on by default)', 
     expect(await storedResult(page, id)).toMatchObject({ source: 'onboarding' });
     await expect(page.getByTestId('placement-plan-strip')).toBeVisible();
     await page.getByTestId('placement-plan-use').click();
-    await expect(page.getByRole('button', { name: LEAVE_QUEST })).toBeVisible();
+    await expect(headerClose(page)).toBeVisible();
     await expect(page.getByText(PIN_LINE)).toHaveCount(0);
     await expect.poll(async () => (await readStored<{ selfRoute?: unknown }>(page, `progress:${id}`))?.selfRoute ?? null).not.toBeNull();
     await learningRouteShowsThePlan(page, 'Rae');
@@ -394,7 +398,7 @@ test.describe('the level check end to end (release build, flag on by default)', 
       await page.getByTestId('placement-plan-use').scrollIntoViewIfNeeded();
       await shot(page, 'placement-e2e-320-result');
       await page.getByTestId('placement-plan-use').click();
-      await expect(page.getByRole('button', { name: LEAVE_QUEST })).toBeVisible();
+      await expect(headerClose(page)).toBeVisible();
     });
 
     test('a child profile: the fork and the result with For grown-ups keep every control inside the window', async ({ page }) => {

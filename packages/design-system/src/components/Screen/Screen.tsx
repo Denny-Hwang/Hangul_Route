@@ -4,6 +4,7 @@ import { SafeAreaInsetsContext } from 'react-native-safe-area-context';
 import { ALL_SCREEN_EDGES, NO_INSETS, screenFrame } from '../../layout';
 import { colors } from '../../tokens';
 import { useLayoutClass } from '../Layout';
+import { ScreenHeaderSlotContext } from '../ScreenHeader/slot';
 import type { ScreenProps } from './types';
 
 const toneBg = {
@@ -20,12 +21,16 @@ export function Screen({
   edges = ALL_SCREEN_EDGES,
   width = 'reading',
   footer,
+  header,
   testID,
 }: ScreenProps): React.ReactElement {
   // The nearest provider's context (modal screens get their own, navigation/with-own-safe-area),
   // not useSafeAreaInsets, so a missing SafeAreaProvider degrades
   // to plain padding instead of throwing.
   const insets = useContext(SafeAreaInsetsContext) ?? NO_INSETS;
+  // The surface's route-aware header (AMENDMENTS-DISPLAY-NAV section 7.1): first in the content, inside
+  // the insets, the gutter and the width cap, on every state of the screen. None without a provider.
+  const HeaderSlot = useContext(ScreenHeaderSlotContext);
   const { width: widthClass } = useLayoutClass();
   const hasFooter = footer !== undefined && footer !== null && footer !== false;
   // All the math (gutter, insets, cap, footer padding) is pure: layout.ts `screenFrame`.
@@ -38,7 +43,12 @@ export function Screen({
   // Scrolling content grows to at least the screen height (a bottom-pinned CTA stays put).
   // Fixed content must also SHRINK to the space it is given (`flex: 1`), as its children
   // did when they sat directly in the padded container: a measuring child (Trace) sizes itself from it.
-  const content = <View style={{ ...capped, ...(scrollable ? { flexGrow: 1 } : { flex: 1 }) }}>{children}</View>;
+  const content = (
+    <View style={{ ...capped, ...(scrollable ? { flexGrow: 1 } : { flex: 1 }) }}>
+      {HeaderSlot ? <HeaderSlot options={header} /> : null}
+      {children}
+    </View>
+  );
 
   const body = scrollable ? (
     <ScrollView

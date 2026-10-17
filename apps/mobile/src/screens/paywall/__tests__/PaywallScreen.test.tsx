@@ -208,9 +208,10 @@ describe('PaywallScreen on native builds (section 4.8)', () => {
           expect(hostNodes(root, (n) => n.props.href !== undefined), key).toHaveLength(0);
           expect(byTestId(root, 'plan-open-billing'), key).toHaveLength(0);
           expect(buttonsNamed(root, 'Open billing'), key).toHaveLength(0);
-          // The only buttons are the two ways back: the arrow and "Back to ...".
+          // The only button is the way back, "Back to ..." (the top-left Back is the route's ScreenHeader, drawn by the
+          // app's header slot, AMENDMENTS-DISPLAY-NAV section 7.1).
           const buttons = hostNodes(root, (n) => n.props.role === 'button');
-          expect(buttons, key).toHaveLength(2);
+          expect(buttons, key).toHaveLength(1);
           await done();
         }
       }

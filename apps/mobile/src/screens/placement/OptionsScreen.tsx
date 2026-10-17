@@ -17,11 +17,11 @@ import {
 } from '@hangul-route/design-system';
 import React from 'react';
 import { Pressable, Switch, View } from 'react-native';
-import { canProceed, controlsFor, flowReducer, showSoundGuideQuestion, type FlowControl } from '../../logic/placement/flow';
+import { canProceed, controlsFor, showSoundGuideQuestion, type FlowControl } from '../../logic/placement/flow';
 import { MOTIVATION_CHOICES, modeTiles, modeTilesSideBySide } from '../../logic/placement/options-view';
 import { usePlacement } from './context';
 import { LinkButton } from '../../components/LinkButton';
-import { BackArrow, Note, RadioTile } from './parts';
+import { Note, RadioTile } from './parts';
 
 /**
  * Options (F-PLC-001 section 3.1 step 3, wireframe placement C1 / C2): a
@@ -35,7 +35,7 @@ import { BackArrow, Note, RadioTile } from './parts';
  * Korean?*. The profile's own sound-guide setting is never written.
  */
 export function OptionsScreen(): React.ReactElement {
-  const { m, flow, dispatch, say, leave, screenReader } = usePlacement();
+  const { m, flow, dispatch, say, screenReader } = usePlacement();
   const copy = m.learner.placement.options;
   const layout = useLayoutClass();
   // OS text size x the chosen Display text size (owner items 6 and 7).
@@ -47,19 +47,9 @@ export function OptionsScreen(): React.ReactElement {
     if (!screenReader) void say(label);
     act();
   };
-  const back = (): void => {
-    if (flowReducer(flow, { type: 'back' }) !== flow) dispatch({ type: 'back' });
-    else leave();
-  };
-
-  const header = (title: string): React.ReactElement => (
-    <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
-      <BackArrow onPress={back} label={m.a11y.goBack} />
-      <View style={{ flex: 1 }}>
-        <Heading level="title">{title}</Heading>
-      </View>
-    </View>
-  );
+  // Back (the route's ScreenHeader, the browser or phone back) steps back to the language screen through the check's
+  // back guard, else leaves the check (AMENDMENTS-DISPLAY-NAV section 7.1).
+  const header = (title: string): React.ReactElement => <Heading level="title">{title}</Heading>;
 
   if (flow.optionsLayout === 'card') {
     const short = copy.mode.short;

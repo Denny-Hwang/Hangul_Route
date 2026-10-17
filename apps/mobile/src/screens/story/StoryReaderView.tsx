@@ -102,7 +102,7 @@ export interface StoryReaderViewProps {
   onAnswer: (roundKey: string, correct: boolean) => void;
   /** End page primary (Continue / Done) and the fallback's Continue (quest mode). */
   onFinish: () => void;
-  /** Close, the device back gesture and the fallback's Back. */
+  /** The fallback's Back. Close and the device back are the route's ScreenHeader and its history (AMENDMENTS-DISPLAY-NAV section 7). */
   onClose: () => void;
   /** Opens Sources (PR 2.7); without it the Sources buttons are not drawn. */
   onOpenSources?: (from: 'reader' | 'end', sceneIndex: number) => void;
@@ -158,7 +158,6 @@ function ReaderBody({
   onSceneChange,
   onAnswer,
   onFinish,
-  onClose,
   onOpenSources,
   narrationLangs,
   onOpenCultureNote,
@@ -771,23 +770,31 @@ function ReaderBody({
     </ScrollView>
   );
 
+  const topBar = (
+    <ReaderTopBar
+      copy={copy}
+      furthest={state.furthest}
+      total={state.sceneCount}
+      position={end ? null : view.labels.position}
+      positionLabel={view.labels.scene}
+      onSources={sources}
+    />
+  );
+  // From the regular width up (a phone held sideways, a tablet) the bar rides in the ScreenHeader, between Close and
+  // Display, so a short window keeps the text area; on a narrow phone it has its own row under the header
+  // (AMENDMENTS-DISPLAY-NAV DN-4).
+  const topBarInHeader = lc.width !== 'compact';
+
   return (
     <Screen
       tone="canvas"
       scrollable={false}
       width={side && !atCheckpoint ? 'full' : 'reading'}
       footer={!end && !columns ? bottomBar : undefined}
+      header={topBarInHeader ? { middle: topBar } : undefined}
       testID="story-reader"
     >
-      <ReaderTopBar
-        copy={copy}
-        furthest={state.furthest}
-        total={state.sceneCount}
-        position={end ? null : view.labels.position}
-        positionLabel={view.labels.scene}
-        onClose={onClose}
-        onSources={sources}
-      />
+      {topBarInHeader ? null : topBar}
       {advisoryRow !== null ? (
         <AdvisoryRow
           text={copy.advisory(advisoryRow)}

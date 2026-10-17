@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { completeChildForm, keepSidewaysIfAsked, readStored, seedStored } from './helpers';
+import { completeChildForm, keepSidewaysIfAsked, readStored, seedStored, headerBack } from './helpers';
 import { shot } from './shots';
 import { controlsPastEdge, expectNoHorizontalOverflow } from './viewport';
 
@@ -174,7 +174,7 @@ test.describe('Words picker and topic page (fixture bundle)', () => {
       expect.objectContaining({ name: 'vocab.topic_opened', payload: { topicKey: 'food', source: 'library' } }),
     ]);
     // Back returns to the picker (it stays mounted under the topic page, so the topic page's own Back).
-    await page.getByTestId('vocab-topic').getByTestId('vocab-back').click();
+    await headerBack(page.getByTestId('vocab-topic')).click();
     await expect(page.getByTestId('vocab-topics')).toBeVisible();
     expect(errors).toEqual([]);
   });
@@ -235,11 +235,11 @@ test.describe('Words picker and topic page (fixture bundle)', () => {
     await newLearner(page);
     await openTopic(page, 'numbers');
     await expect(page.getByTestId('vocab-topic-hoya')).toContainText("Let's count together, one by one.");
-    await page.getByTestId('vocab-back').click();
+    await headerBack(page).click();
     await openTopic(page, 'numbers');
     await expect(page.getByTestId('vocab-topic-title')).toHaveText('Numbers');
     await expect(page.getByTestId('vocab-topic-hoya')).toHaveCount(0);
-    await page.getByTestId('vocab-back').click();
+    await headerBack(page).click();
     await openTopic(page, 'colors');
     await expect(page.getByTestId('vocab-topic-hoya')).toBeVisible();
   });
@@ -250,7 +250,7 @@ test.describe('Words picker and topic page (fixture bundle)', () => {
       await openTopic(page, key);
       await expect(page.getByTestId('vocab-topic-not-found')).toBeVisible();
       await expect(page.getByText('Topic not found')).toBeVisible();
-      await page.getByRole('button', { name: 'Back', exact: true }).click();
+      await headerBack(page).click();
       await expect(page.getByTestId('vocab-topic-not-found')).toHaveCount(0);
       await expect(page.getByText('Hi, Dami!')).toBeVisible();
     }
@@ -306,7 +306,7 @@ test.describe('Words picker and topic page (fixture bundle)', () => {
     expect(skyGloss!.x + skyGloss!.width).toBeLessThanOrEqual(skyBox!.x + skyBox!.width);
     expect(skyGloss!.y + skyGloss!.height).toBeLessThanOrEqual(skyBox!.y + skyBox!.height);
     // Back is a full touch target on the web too (hitSlop does not apply there).
-    const backBox = await page.getByTestId('vocab-topic').getByTestId('vocab-back').boundingBox();
+    const backBox = await headerBack(page.getByTestId('vocab-topic')).boundingBox();
     expect(backBox!.width).toBeGreaterThanOrEqual(64);
     expect(backBox!.height).toBeGreaterThanOrEqual(64);
     await expectFits(page);
@@ -355,7 +355,7 @@ test.describe('the Library Words tab (the release build and the fixture bundle; 
 
     await page.getByTestId('vocab-topic-tile-numbers').click();
     await expect(page.getByTestId('vocab-topic-title')).toHaveText('Numbers');
-    await page.getByTestId('vocab-back').click();
+    await headerBack(page).click();
     await expect(page.getByTestId('library-words')).toBeVisible();
     expect(errors).toEqual([]);
   });

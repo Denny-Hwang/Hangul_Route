@@ -177,30 +177,9 @@ function CultureNotesContent({
     tryScroll();
   };
 
-  const back = (): void => {
-    if (navigation.canGoBack()) navigation.goBack();
-    else navigation.navigate('Main', { screen: 'Library', params: { section: 'culture' } });
-  };
-
   return (
     <Screen tone="canvas" scrollable={false} testID="culture-notes">
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, minHeight: touchTarget.min }}>
-        <Pressable
-          onPress={back}
-          accessibilityRole="button"
-          accessibilityLabel={messages.a11y.goBack}
-          testID="culture-notes-back"
-          style={({ pressed }) => ({
-            width: touchTarget.min,
-            height: touchTarget.min,
-            alignItems: 'center',
-            justifyContent: 'center',
-            borderRadius: radii.pill,
-            backgroundColor: pressed ? colors.surface.sunken : 'transparent',
-          })}
-        >
-          <Icon name="arrow-left" size={spacing.xxl} color={colors.text.secondary} />
-        </Pressable>
         <View style={{ flexShrink: 1 }}>
           <SourcesHeading level={1} testID="culture-notes-title">
             {c.title}
@@ -209,7 +188,7 @@ function CultureNotesContent({
       </View>
       {/* A count of what was found, never a fraction; under the title so a long title never pushes it off. */}
       {view.count > 0 ? (
-        <View style={{ alignSelf: 'flex-start', marginLeft: touchTarget.min + spacing.sm, marginBottom: spacing.sm }}>
+        <View style={{ alignSelf: 'flex-start', marginBottom: spacing.sm }}>
           <Pill tone="neutral" size="sm" label={c.found.pill(view.count)} testID="culture-notes-count" />
         </View>
       ) : null}

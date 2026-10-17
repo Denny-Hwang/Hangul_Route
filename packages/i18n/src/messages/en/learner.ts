@@ -257,6 +257,16 @@ export const learner = {
     /** The profile was removed while the screen was open. */
     notFound: 'This profile is no longer on this device.',
     save: { cta: 'Save' },
+    /**
+     * Back (the header's, the browser's or the phone's) with changes not saved yet asks first, in a
+     * ConfirmSheet (AMENDMENTS-DISPLAY-NAV sections 7.1 and 8): the safe choice comes first.
+     */
+    leave: {
+      title: 'Leave without saving?',
+      message: 'Your changes to this profile are not saved yet.',
+      keep: { cta: 'Keep editing' },
+      confirm: { cta: 'Leave' },
+    },
   },
 
   home: {

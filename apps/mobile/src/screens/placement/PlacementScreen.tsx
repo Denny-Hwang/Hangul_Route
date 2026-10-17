@@ -46,6 +46,7 @@ import { nextStartedEvent, routeNext } from '../../logic/route-next';
 import { resolvePicture } from '../../logic/picture-ref';
 import { effectiveLearnerType, gateRequired } from '../../logic/profiles/learner-type';
 import type { PlacementStackParamList, RootStackParamList } from '../../navigation/types';
+import { isBackAction } from '../../logic/navigation/back-action';
 import { getCapability, hasVoiceFor, playPrompt, stop } from '../../platform/audio';
 import { isScreenReaderEnabled, subscribeScreenReader } from '../../platform/screen-reader';
 import { CONTENT_VERSION } from '../../platform/sync-api';
@@ -419,7 +420,9 @@ export function PlacementScreen({ route, navigation }: Props): React.ReactElemen
     }
   }, [profiles, parentPinHash, navigation, applyRun]);
 
-  // Back: the exit sheet while a run is open; the language screen from the options.
+  // Back (the route's ScreenHeader Close, the browser and the phone back through the history bridge, a swipe; AMENDMENTS-
+  // DISPLAY-NAV section 7.1): the exit sheet while a run is open; the language screen from the options; otherwise the
+  // check is left the way its own Leave leaves it (from onboarding, on to the first quest).
   useEffect(
     () =>
       navigation.addListener('beforeRemove', (e) => {
@@ -428,6 +431,7 @@ export function PlacementScreen({ route, navigation }: Props): React.ReactElemen
         const open = runRef.current;
         if (open !== null && open.stop === null) {
           e.preventDefault();
+          stop();
           applyRun({ type: 'exit' });
           return;
         }
@@ -435,9 +439,14 @@ export function PlacementScreen({ route, navigation }: Props): React.ReactElemen
         if (current !== null && current.screen === 'options' && flowReducer(current, { type: 'back' }) !== current) {
           e.preventDefault();
           dispatch({ type: 'back' });
+          return;
+        }
+        if (source === 'onboarding' && isBackAction(e.data.action.type)) {
+          e.preventDefault();
+          void Promise.resolve().then(leave);
         }
       }),
-    [navigation, applyRun, dispatch],
+    [navigation, applyRun, dispatch, source, leave],
   );
 
   // The flow's own exits ("Start learning" on the sound-needed screen).

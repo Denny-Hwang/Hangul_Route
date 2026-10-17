@@ -4,6 +4,7 @@ import { activeLocale, useLocaleStore } from '../store/locale-store';
 import { useProfileStore } from '../store/profile-store';
 import { accessTier } from '../store/tier-store';
 import { sessionArea, type SessionArea } from './grown-up-handoff.web';
+import { markLeaving } from './history-bridge.web';
 
 /**
  * The gate hand-off into All lessons (F-BROWSE-001 section 4.3, BR-12a), web only: the learner app, after the
@@ -44,6 +45,8 @@ function browserEnv(): GateHandoffEnv {
     locale: () => activeLocale(useLocaleStore.getState()),
     origin: () => (globalThis as { location?: { origin?: string } }).location?.origin ?? '',
     assign: (url) => {
+      // The history bridge writes nothing from here on: a traversal would cancel this navigation (AMENDMENTS-DISPLAY-NAV 7.2).
+      markLeaving();
       (globalThis as { location?: { assign: (to: string) => void } }).location?.assign(url);
     },
   };

@@ -366,6 +366,8 @@ export function TraceWordGame({ scope, host, onBack }: Props): React.ReactElemen
     </View>
   );
 
+  // The round's progress rides in the ScreenHeader, between Close and Display (AMENDMENTS-DISPLAY-NAV DN-4), so the
+  // canvas keeps the height the header would otherwise take.
   const progressRow = (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
       <View style={{ flex: 1 }}>
@@ -479,7 +481,7 @@ export function TraceWordGame({ scope, host, onBack }: Props): React.ReactElemen
   );
 
   return (
-    <Screen tone="canvas" scrollable={false} width={traceScreenWidth(layoutClass)}>
+    <Screen tone="canvas" scrollable={false} width={traceScreenWidth(layoutClass)} header={{ middle: progressRow }}>
       <View
         onLayout={(e: LayoutChangeEvent) => {
           const { width, height } = e.nativeEvent.layout;
@@ -491,7 +493,6 @@ export function TraceWordGame({ scope, host, onBack }: Props): React.ReactElemen
           <View style={{ flex: 1, flexDirection: 'row', gap: spacing.lg }}>
             {canvasSlot}
             <View style={{ width: traceSidePanelWidth(box.width), justifyContent: 'center', gap: spacing.sm }}>
-              {progressRow}
               {heading}
               {strip}
               {controls}
@@ -499,7 +500,6 @@ export function TraceWordGame({ scope, host, onBack }: Props): React.ReactElemen
           </View>
         ) : (
           <View style={{ flex: 1, gap: spacing.md }}>
-            {progressRow}
             {heading}
             {strip}
             {canvasSlot}

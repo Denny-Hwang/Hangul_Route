@@ -42,7 +42,6 @@ import { useAudience } from '../../store/audience';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
 import { useAccessTier } from '../../store/tier-store';
-import { BackButton } from './BackButton';
 import { canRenderPicture, pickerTopic, topicIntroMemory, topicWords } from './topic-data';
 import { WordWall } from './WordWall';
 
@@ -87,7 +86,7 @@ export function VocabTopicScreen({ route, navigation }: Props): React.ReactEleme
   if (access === 'locked') return <Screen tone="canvas" testID="vocab-topic-gate">{null}</Screen>;
   // Keyed by topic: a navigate to another topic over this one starts a fresh page (Hoya's memory, the reveal).
   return topic && access === 'open' ? (
-    <TopicPage key={topic.key} source={topic} navigation={navigation} onBack={back} />
+    <TopicPage key={topic.key} source={topic} navigation={navigation} />
   ) : (
     <TopicNotFound onBack={back} />
   );
@@ -97,8 +96,6 @@ function TopicNotFound({ onBack }: { onBack: () => void }): React.ReactElement {
   const copy = vocabCopyOf(useMessages());
   return (
     <Screen tone="canvas" testID="vocab-topic-not-found">
-      <BackButton onPress={onBack} />
-      <Spacer size="md" />
       <Body>{copy.topic.notFound}</Body>
       <Spacer size="lg" />
       <Button label={copy.topic.back} tone="secondary" size="md" onPress={onBack} />
@@ -106,7 +103,7 @@ function TopicNotFound({ onBack }: { onBack: () => void }): React.ReactElement {
   );
 }
 
-function TopicPage({ source, navigation, onBack }: { source: VocabTopic; navigation: Navigation; onBack: () => void }): React.ReactElement {
+function TopicPage({ source, navigation }: { source: VocabTopic; navigation: Navigation }): React.ReactElement {
   const messages = useMessages();
   const copy = vocabCopyOf(messages);
   const locale = useLocale();
@@ -165,8 +162,6 @@ function TopicPage({ source, navigation, onBack }: { source: VocabTopic; navigat
 
   return (
     <Screen tone="canvas" scrollable testID="vocab-topic">
-      <BackButton onPress={onBack} />
-      <Spacer size="sm" />
       <Heading level="display" testID="vocab-topic-title">
         {topic.titleEn}
       </Heading>

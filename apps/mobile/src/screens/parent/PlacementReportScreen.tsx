@@ -13,14 +13,13 @@ import {
   colors,
   radii,
   spacing,
-  touchTarget,
   useLayoutClass,
 } from '@hangul-route/design-system';
 import { RUNG_TABLE, type PlacementStrand, type StageKey } from '@hangul-route/content-schema';
 import { LOCALE_META, formatDate, type Messages } from '@hangul-route/i18n';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useEffect, useMemo, useState } from 'react';
-import { Modal, Pressable, ScrollView, View, useWindowDimensions } from 'react-native';
+import { Modal, ScrollView, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { episodesAll, jamoAll, questsAll, stages } from '../../content';
 import { PLACEMENT_BANK } from '../../content/placement.generated';
@@ -145,11 +144,6 @@ export function PlacementReportScreen({ route, navigation }: Props): React.React
     return stage === undefined ? '' : localizeStage(stage, locale).titleEn;
   };
 
-  const back = (): void => {
-    if (navigation.canGoBack()) navigation.goBack();
-    else navigation.replace('ParentDashboard');
-  };
-
   /** A new check for this learner: it becomes the active profile (the check always runs for the active one). */
   const retake = (retakeMode?: 'standard' | 'deep'): void => {
     const profiles = useProfileStore.getState();
@@ -181,20 +175,9 @@ export function PlacementReportScreen({ route, navigation }: Props): React.React
         />
       }
     >
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
-        <Pressable
-          onPress={back}
-          accessibilityRole="button"
-          accessibilityLabel={messages.common.buttons.back}
-          testID="placement-report-back"
-          style={{ minWidth: touchTarget.min, minHeight: touchTarget.min, alignItems: 'center', justifyContent: 'center' }}
-        >
-          <Icon name="arrow-left" size={spacing.xl} />
-        </Pressable>
-        <View style={{ flex: 1 }}>
-          {profile === null ? null : <Caption tone="muted">{profile.displayName}</Caption>}
-          <Heading level="title">{m.title}</Heading>
-        </View>
+      <View>
+        {profile === null ? null : <Caption tone="muted">{profile.displayName}</Caption>}
+        <Heading level="title">{m.title}</Heading>
       </View>
       <Spacer size="md" />
 
