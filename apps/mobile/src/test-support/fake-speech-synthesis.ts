@@ -5,7 +5,11 @@
  * a test helper, imported only from `__tests__`. It models the behaviours the
  * audit found in real browsers: an empty voice list until `voiceschanged`
  * (Chrome), a silent drop outside a user gesture (iOS Safari), `cancel()`
- * raising `onerror` (Chromium and WebKit), a mute engine, an engine failure.
+ * raising `onerror` (Chromium and WebKit), a mute engine, an engine failure;
+ * and (F-AUDIO-004, 2026-10-17) a cold engine that holds an utterance before it
+ * starts, a paused engine, Chrome's `not-allowed` refusal before any user
+ * activation, a `speak()` dropped right after `cancel()`, a voice list that
+ * lands late.
  *
  * Events are asynchronous like the real thing: microtasks by default, or
  * `setTimeout` when `endDelayMs > 0` so `vi.useFakeTimers()` controls them.
@@ -51,21 +55,49 @@ export class FakeSpeechSynthesis {
   neverStart = false;
   /** What `cancel()` raises on the running and queued utterances; `null` raises nothing. */
   cancelError: 'canceled' | 'interrupted' | null = 'canceled';
+  /**
+   * A cold engine (Android Chrome's Korean voice): an utterance waits this long before `onstart`,
+   * with `speaking` and `pending` true meanwhile. > 0 uses `setTimeout`.
+   */
+  startDelayMs = 0;
+  /** Chrome's autoplay rule: before `activate()` a `speak` queues nothing and raises `onerror('not-allowed')`. */
+  requireActivation = false;
+  /** Chromium: a `speak` within this many ms after `cancel()` is dropped with no event at all (0 = off). */
+  dropSpeakWithinMsOfCancel = 0;
+  /** `setVoices` lands only after this delay, then fires `voiceschanged` (Chrome's late list); 0 = at once. */
+  voicesLoadDelayMs = 0;
+  /** `pause()` was called and `resume()` not yet: nothing starts. */
+  paused = false;
+  resumeCount = 0;
 
   readonly spoken: FakeUtterance[] = [];
   readonly dropped: FakeUtterance[] = [];
+  /** Utterances refused with `not-allowed` (`requireActivation`). */
+  readonly refused: FakeUtterance[] = [];
   cancelCount = 0;
 
   private voices: FakeVoice[] = [];
   private readonly listeners = new Set<VoicesListener>();
   private gestured = false;
+  private activated = false;
+  private lastCancelAt = Number.NEGATIVE_INFINITY;
   private failure: string | null = null;
   private hold: Promise<void> | null = null;
   private current: FakeUtterance | null = null;
+  /** The current utterance once its start delay is over but the engine is paused. */
+  private waitingForResume: { u: FakeUtterance; failure: string | null } | null = null;
   private queue: FakeUtterance[] = [];
 
   /** Chrome returns `[]` until the list is loaded; tests load it with this. */
   setVoices(list: readonly FakeVoice[]): void {
+    if (this.voicesLoadDelayMs > 0) {
+      const next = [...list];
+      setTimeout(() => {
+        this.voices = next;
+        this.fireVoicesChanged();
+      }, this.voicesLoadDelayMs);
+      return;
+    }
     this.voices = [...list];
   }
 
@@ -89,6 +121,23 @@ export class FakeSpeechSynthesis {
     this.gestured = true;
   }
 
+  /** A user activation happened (Chrome's sticky activation): `requireActivation` refuses no more. */
+  activate(): void {
+    this.activated = true;
+  }
+
+  pause(): void {
+    this.paused = true;
+  }
+
+  resume(): void {
+    this.resumeCount += 1;
+    this.paused = false;
+    const waiting = this.waitingForResume;
+    this.waitingForResume = null;
+    if (waiting) queueMicrotask(() => this.start(waiting.u, waiting.failure));
+  }
+
   /** The next utterance to start raises `onerror` with this code after `onstart`. */
   failNext(error: string): void {
     this.failure = error;
@@ -109,6 +158,15 @@ export class FakeSpeechSynthesis {
       this.dropped.push(u);
       return;
     }
+    if (this.requireActivation && !this.activated) {
+      this.refused.push(u);
+      queueMicrotask(() => u.onerror?.({ error: 'not-allowed' }));
+      return;
+    }
+    if (this.dropSpeakWithinMsOfCancel > 0 && Date.now() - this.lastCancelAt < this.dropSpeakWithinMsOfCancel) {
+      this.dropped.push(u);
+      return;
+    }
     this.spoken.push(u);
     if (this.current) {
       this.queue.push(u);
@@ -120,8 +178,10 @@ export class FakeSpeechSynthesis {
 
   cancel(): void {
     this.cancelCount += 1;
+    this.lastCancelAt = Date.now();
     const all = this.current ? [this.current, ...this.queue] : [...this.queue];
     this.current = null;
+    this.waitingForResume = null;
     this.queue = [];
     this.speaking = false;
     this.pending = false;
@@ -137,22 +197,35 @@ export class FakeSpeechSynthesis {
     if (this.neverStart) return;
     const failure = this.failure;
     this.failure = null;
-    queueMicrotask(() => {
-      if (this.current !== u) return;
-      u.onstart?.({});
-      if (failure !== null) {
-        this.current = null;
-        this.speaking = false;
-        u.onerror?.({ error: failure });
-        this.next();
-        return;
-      }
-      if (!this.autoEnd) return;
-      const hold = this.hold;
-      if (hold) void hold.then(() => this.endIfCurrent(u));
-      else if (this.endDelayMs > 0) setTimeout(() => this.endIfCurrent(u), this.endDelayMs);
-      else queueMicrotask(() => this.endIfCurrent(u));
-    });
+    if (this.startDelayMs > 0) {
+      // A cold engine reports the held utterance as pending until it starts.
+      this.pending = true;
+      setTimeout(() => this.start(u, failure), this.startDelayMs);
+      return;
+    }
+    queueMicrotask(() => this.start(u, failure));
+  }
+
+  private start(u: FakeUtterance, failure: string | null): void {
+    if (this.current !== u) return;
+    if (this.paused) {
+      this.waitingForResume = { u, failure };
+      return;
+    }
+    this.pending = this.queue.length > 0;
+    u.onstart?.({});
+    if (failure !== null) {
+      this.current = null;
+      this.speaking = false;
+      u.onerror?.({ error: failure });
+      this.next();
+      return;
+    }
+    if (!this.autoEnd) return;
+    const hold = this.hold;
+    if (hold) void hold.then(() => this.endIfCurrent(u));
+    else if (this.endDelayMs > 0) setTimeout(() => this.endIfCurrent(u), this.endDelayMs);
+    else queueMicrotask(() => this.endIfCurrent(u));
   }
 
   private endIfCurrent(u: FakeUtterance): void {

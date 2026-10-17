@@ -411,12 +411,16 @@ describe('platform/audio (native): results', () => {
     audio.dispose();
   });
 
-  it('a prompt that never starts is blocked after 1.5 s', async () => {
+  it('a prompt that never starts is blocked after the start wait and its grace (the engine still holds it at 1.5 s)', async () => {
     vi.useFakeTimers();
     const { speech, audio } = rig();
     speech.mode = 'never';
     const result = audio.playPrompt({ text: '가' });
-    await vi.advanceTimersByTimeAsync(1600);
+    let settled = false;
+    void result.then(() => (settled = true));
+    await vi.advanceTimersByTimeAsync(3999);
+    expect(settled).toBe(false);
+    await vi.advanceTimersByTimeAsync(1);
     await expect(result).resolves.toBe('unavailable');
     expect(useAudioStore.getState().lastFailure?.reason).toBe('blocked');
     audio.dispose();
@@ -546,7 +550,7 @@ describe('platform/audio (native): bundled clips (A-7, AD4: clip > voice > text)
     await expect(audio.playPrompt({ text: '가', audioRef: GIYEOK_CLIP })).resolves.toBe('played');
     expect(speech.calls.map((c) => c.text)).toEqual(['가']);
     expect(tracked.filter((e) => e.name === 'audio.playback_failed')).toEqual([
-      { name: 'audio.playback_failed', payload: { kind: 'clip', reason: 'decode' } },
+      { name: 'audio.playback_failed', payload: { kind: 'clip', reason: 'decode', code: 'none', source: 'unknown' } },
     ]);
     audio.dispose();
   });

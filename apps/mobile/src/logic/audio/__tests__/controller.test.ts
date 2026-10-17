@@ -7,6 +7,7 @@ import {
   type NetworkLike,
 } from '../capability';
 import {
+  classifySpeechError,
   createAudioController,
   type AudioController,
   type AudioTelemetryEvent,
@@ -28,21 +29,44 @@ const YUNA: VoiceCandidate = { id: 'yuna', name: 'Yuna', lang: 'ko-KR', local: t
 const GOOGLE: VoiceCandidate = { id: 'google', name: 'Google 한국의', lang: 'ko-KR', local: false, isDefault: false, quality: 'standard' };
 const SAMANTHA: VoiceCandidate = { id: 'sam', name: 'Samantha', lang: 'en-US', local: true, isDefault: true, quality: 'standard' };
 
-type EngineStep = 'ok' | 'error' | 'interrupted' | 'never' | 'start-only';
+/**
+ * `held`: the engine takes the utterance and reports busy, and never starts it (a stuck queue);
+ * `{ startAfterMs }`: a cold engine that reports busy until it starts the utterance that late;
+ * `not-allowed`: Chrome refusing before any user activation; `{ error }`: an engine error with that code.
+ */
+type EngineStep =
+  | 'ok'
+  | 'error'
+  | 'interrupted'
+  | 'never'
+  | 'start-only'
+  | 'held'
+  | 'not-allowed'
+  | { error: string }
+  | { startAfterMs: number; endAfterMs: number };
 
 /** A scriptable TtsEngine: each speak() consumes the next step (default 'ok'). */
 class ScriptEngine implements TtsEngine {
   requests: TtsRequest[] = [];
+  /** `Date.now()` at each speak (fake timers move it). */
+  spokeAt: number[] = [];
   handlers: TtsHandlers[] = [];
   cancelled: TtsRequest[] = [];
   cancelAllCount = 0;
+  resumeCount = 0;
   busyFlag = false;
+  /** busy() stays true this long after cancelAll(): an engine that drains its queue slowly. */
+  busyAfterCancelMs = 0;
   script: EngineStep[] = [];
+  private held = 0;
+  private busyUntil = Number.NEGATIVE_INFINITY;
 
   speak(req: TtsRequest, h: TtsHandlers): { cancel(): void } {
     this.requests.push(req);
+    this.spokeAt.push(Date.now());
     this.handlers.push(h);
     const step = this.script.shift() ?? 'ok';
+    let release = (): void => undefined;
     if (step === 'ok') {
       queueMicrotask(() => {
         h.onStart();
@@ -54,16 +78,54 @@ class ScriptEngine implements TtsEngine {
       queueMicrotask(() => h.onError('error'));
     } else if (step === 'interrupted') {
       queueMicrotask(() => h.onError('interrupted'));
+    } else if (step === 'not-allowed') {
+      queueMicrotask(() => h.onError('blocked', 'not-allowed'));
+    } else if (step === 'held') {
+      release = this.hold();
+    } else if (typeof step === 'object' && 'error' in step) {
+      queueMicrotask(() => h.onError('error', classifySpeechError(step.error).code));
+    } else if (typeof step === 'object') {
+      release = this.hold();
+      setTimeout(() => {
+        h.onStart();
+        setTimeout(() => {
+          release();
+          h.onEnd();
+        }, step.endAfterMs);
+      }, step.startAfterMs);
     }
-    return { cancel: () => void this.cancelled.push(req) };
+    return {
+      cancel: () => {
+        release();
+        this.cancelled.push(req);
+      },
+    };
   }
 
   cancelAll(): void {
     this.cancelAllCount += 1;
+    this.busyFlag = false;
+    this.held = 0;
+    this.busyUntil = Date.now() + this.busyAfterCancelMs;
   }
 
   busy(): boolean {
-    return this.busyFlag;
+    return this.busyFlag || this.held > 0 || Date.now() < this.busyUntil;
+  }
+
+  resume(): void {
+    this.resumeCount += 1;
+  }
+
+  /** The engine holds one more utterance until the returned release runs (once). */
+  private hold(): () => void {
+    this.held += 1;
+    let done = false;
+    return () => {
+      if (done) return;
+      done = true;
+      this.held = Math.max(0, this.held - 1);
+    };
   }
 }
 
@@ -165,14 +227,14 @@ describe('controller: clip first (AD4)', () => {
     r.clips.script = ['decode'];
     await expect(r.ctl.playPrompt({ text: '가', audioRef: 'audio/jamo/giyeok.mp3', kind: 'sound' })).resolves.toBe('played');
     expect(r.engine.requests.map((q) => q.text)).toEqual(['가']);
-    expect(r.events).toEqual([{ name: 'audio.playback_failed', payload: { kind: 'clip', reason: 'decode' } }]);
+    expect(r.events).toEqual([{ name: 'audio.playback_failed', payload: { kind: 'clip', reason: 'decode', code: 'none', source: 'unknown' } }]);
   });
 
   it.each(['missing', 'fetch', 'blocked'] as const)('a clip failure of %s also falls through to TTS', async (reason) => {
     const r = rig();
     r.clips.script = [reason];
-    await expect(r.ctl.playPrompt({ text: '가', audioRef: 'audio/jamo/giyeok.mp3' })).resolves.toBe('played');
-    expect(r.events[0]).toEqual({ name: 'audio.playback_failed', payload: { kind: 'clip', reason } });
+    await expect(r.ctl.playPrompt({ text: '가', audioRef: 'audio/jamo/giyeok.mp3', source: 'match-sound' })).resolves.toBe('played');
+    expect(r.events[0]).toEqual({ name: 'audio.playback_failed', payload: { kind: 'clip', reason, code: 'none', source: 'match-sound' } });
   });
 
   it('a ref that is not in the asset map is skipped silently (a ref may exist before its file)', async () => {
@@ -304,7 +366,7 @@ describe('controller: TTS request', () => {
 });
 
 describe('controller: TTS outcomes', () => {
-  it('no onstart and no onend within 1.5 s is unavailable/blocked and the dead utterance is cancelled', async () => {
+  it('idle and never started: unavailable/blocked at 1.5 s and the dead utterance is cancelled (the iOS silent drop)', async () => {
     const r = rig();
     r.engine.script = ['never'];
     const p = r.ctl.playPrompt({ text: '가' });
@@ -314,7 +376,66 @@ describe('controller: TTS outcomes', () => {
     await expect(p).resolves.toBe('unavailable');
     expect(r.failures).toEqual(['blocked']);
     expect(r.engine.cancelled).toHaveLength(1);
-    expect(r.events).toEqual([{ name: 'audio.playback_failed', payload: { kind: 'tts', reason: 'blocked' } }]);
+    expect(r.engine.resumeCount).toBe(0);
+    expect(r.events).toEqual([{ name: 'audio.playback_failed', payload: { kind: 'tts', reason: 'blocked', code: 'timeout', source: 'unknown' } }]);
+  });
+
+  it('a busy engine that starts at 2 s (a cold Korean voice) is nudged with resume() and played, never cancelled', async () => {
+    const r = rig();
+    r.engine.script = [{ startAfterMs: 2000, endAfterMs: 400 }];
+    let result: string | null = null;
+    void r.ctl.playPrompt({ text: '가', source: 'presenter' }).then((v) => (result = v));
+    await vi.advanceTimersByTimeAsync(1500);
+    expect(r.engine.resumeCount).toBe(1);
+    expect(result).toBeNull();
+    await vi.advanceTimersByTimeAsync(500);
+    expect(result).toBeNull();
+    await vi.advanceTimersByTimeAsync(400);
+    expect(result).toBe('played');
+    expect(r.engine.cancelled).toEqual([]);
+    expect(r.engine.cancelAllCount).toBe(0);
+    expect(r.failures).toEqual([]);
+    expect(r.events).toEqual([]);
+  });
+
+  it('busy but never started: blocked only after the 2.5 s grace, at 4 s, and then cancelled', async () => {
+    const r = rig();
+    r.engine.script = ['held'];
+    const p = r.ctl.playPrompt({ text: '가' });
+    let settled = false;
+    void p.then(() => (settled = true));
+    await vi.advanceTimersByTimeAsync(3999);
+    expect(settled).toBe(false);
+    expect(r.engine.cancelled).toEqual([]);
+    expect(r.engine.resumeCount).toBe(1);
+    await vi.advanceTimersByTimeAsync(1);
+    await expect(p).resolves.toBe('unavailable');
+    expect(r.failures).toEqual(['blocked']);
+    expect(r.engine.cancelled).toHaveLength(1);
+    expect(r.events).toEqual([{ name: 'audio.playback_failed', payload: { kind: 'tts', reason: 'blocked', code: 'timeout', source: 'unknown' } }]);
+  });
+
+  it('an engine with no resume() still gets the grace', async () => {
+    const r = rig();
+    r.engine.script = [{ startAfterMs: 2000, endAfterMs: 10 }];
+    (r.engine as { resume?: () => void }).resume = undefined;
+    const p = r.ctl.playPrompt({ text: '가' });
+    await vi.advanceTimersByTimeAsync(2100);
+    await expect(p).resolves.toBe('played');
+  });
+
+  it('not-allowed is unavailable/blocked at once, with no network-voice retry and its code in the payload', async () => {
+    const r = rig();
+    r.tracker.setVoices([GOOGLE, { ...YUNA, name: 'Plain', local: null, isDefault: false }]);
+    expect(r.tracker.ranked('ko-KR')[0]?.id).toBe('google');
+    r.events.length = 0;
+    r.engine.script = ['not-allowed'];
+    await expect(r.ctl.playPrompt({ text: '가', source: 'discover' })).resolves.toBe('unavailable');
+    expect(r.engine.requests).toHaveLength(1);
+    expect(r.failures).toEqual(['blocked']);
+    // The voice did nothing wrong: it stays ranked.
+    expect(r.tracker.ranked('ko-KR')[0]?.id).toBe('google');
+    expect(r.events).toEqual([{ name: 'audio.playback_failed', payload: { kind: 'tts', reason: 'blocked', code: 'not-allowed', source: 'discover' } }]);
   });
 
   it('started but no onend: played at 2000 + 400 * chars / rate ms, without cutting the audio', async () => {
@@ -331,7 +452,7 @@ describe('controller: TTS outcomes', () => {
     await vi.advanceTimersByTimeAsync(Math.ceil(limit) - Math.floor(limit) + 1);
     await expect(p).resolves.toBe('played');
     expect(r.engine.cancelled).toEqual([]);
-    expect(r.events).toEqual([{ name: 'audio.playback_failed', payload: { kind: 'tts', reason: 'timeout' } }]);
+    expect(r.events).toEqual([{ name: 'audio.playback_failed', payload: { kind: 'tts', reason: 'timeout', code: 'timeout', source: 'unknown' } }]);
   });
 
   it('onend before onstart still counts as played', async () => {
@@ -369,7 +490,14 @@ describe('controller: TTS outcomes', () => {
     await expect(r.ctl.playPrompt({ text: '가' })).resolves.toBe('unavailable');
     expect(r.engine.requests).toHaveLength(1);
     expect(r.failures).toEqual(['error']);
-    expect(r.events).toEqual([{ name: 'audio.playback_failed', payload: { kind: 'tts', reason: 'engine' } }]);
+    expect(r.events).toEqual([{ name: 'audio.playback_failed', payload: { kind: 'tts', reason: 'engine', code: 'none', source: 'unknown' } }]);
+  });
+
+  it('an engine error carries its Web Speech code in the payload', async () => {
+    const r = rig();
+    r.engine.script = [{ error: 'synthesis-failed' }];
+    await expect(r.ctl.playPrompt({ text: '가', source: 'trace' })).resolves.toBe('unavailable');
+    expect(r.events).toEqual([{ name: 'audio.playback_failed', payload: { kind: 'tts', reason: 'engine', code: 'synthesis-failed', source: 'trace' } }]);
   });
 
   it('an error on a network voice marks it failed and retries once with the next candidate', async () => {
@@ -446,6 +574,61 @@ describe('controller: supersede', () => {
     await vi.advanceTimersByTimeAsync(1);
     expect(r.engine.requests).toHaveLength(1);
     await expect(p).resolves.toBe('played');
+  });
+
+  it('after a cancel it waits for the engine to drain: spoken once, after busy clears, and A\'s late interrupted never settles B', async () => {
+    const r = rig();
+    r.engine.busyAfterCancelMs = 120;
+    r.engine.script = ['start-only', 'start-only'];
+    const a = r.ctl.playPrompt({ text: '가' });
+    await vi.advanceTimersByTimeAsync(10);
+    const b = r.ctl.playPrompt({ text: '나' });
+    await expect(a).resolves.toBe('played');
+    // Cancelled at 10 ms, busy until 130 ms: polled at 60, 85, 110 (busy) and 135 ms (idle).
+    await vi.advanceTimersByTimeAsync(124);
+    expect(r.engine.requests.map((q) => q.text)).toEqual(['가']);
+    await vi.advanceTimersByTimeAsync(1);
+    expect(r.engine.requests.map((q) => q.text)).toEqual(['가', '나']);
+    expect(r.engine.spokeAt[1]).toBeGreaterThanOrEqual(130);
+    let settled = false;
+    void b.then(() => (settled = true));
+    // The cancelled utterance reports its interruption late: B is untouched.
+    r.engine.handlers[0]?.onError('interrupted');
+    await vi.advanceTimersByTimeAsync(0);
+    expect(settled).toBe(false);
+    r.engine.handlers[1]?.onEnd();
+    await expect(b).resolves.toBe('played');
+    expect(r.engine.requests).toHaveLength(2);
+    expect(r.failures).toEqual([]);
+  });
+
+  it('an engine that never drains is waited for at most 300 ms after the cancel', async () => {
+    const r = rig();
+    r.engine.busyAfterCancelMs = 10_000;
+    r.engine.script = ['start-only', 'ok'];
+    void r.ctl.playPrompt({ text: '가' });
+    await vi.advanceTimersByTimeAsync(0);
+    const b = r.ctl.playPrompt({ text: '나' });
+    await vi.advanceTimersByTimeAsync(299);
+    expect(r.engine.requests).toHaveLength(1);
+    await vi.advanceTimersByTimeAsync(1);
+    expect(r.engine.requests).toHaveLength(2);
+    await expect(b).resolves.toBe('played');
+  });
+
+  it('a call superseded while it waits for the engine to drain never speaks', async () => {
+    const r = rig();
+    r.engine.busyAfterCancelMs = 200;
+    r.engine.script = ['start-only', 'ok'];
+    void r.ctl.playPrompt({ text: '가' });
+    await vi.advanceTimersByTimeAsync(0);
+    const b = r.ctl.playPrompt({ text: '나' });
+    await vi.advanceTimersByTimeAsync(100);
+    const c = r.ctl.playPrompt({ text: '다' });
+    await expect(b).resolves.toBe('played');
+    await vi.advanceTimersByTimeAsync(400);
+    await expect(c).resolves.toBe('played');
+    expect(r.engine.requests.map((q) => q.text)).toEqual(['가', '다']);
   });
 
   it('an idle engine is started at once, with no cancel and no delay', async () => {
@@ -613,7 +796,7 @@ describe('controller: telemetry', () => {
     ]);
   });
 
-  it('audio.playback_failed is capped at 3 per session', async () => {
+  it('audio.playback_failed is capped at 3 per (kind, reason, code)', async () => {
     const r = rig();
     r.events.length = 0;
     for (let i = 0; i < 5; i++) {
@@ -621,6 +804,59 @@ describe('controller: telemetry', () => {
       await r.ctl.playPrompt({ text: '가', audioRef: 'audio/jamo/giyeok.mp3' });
     }
     expect(r.events.filter((e) => e.name === 'audio.playback_failed')).toHaveLength(3);
+    // Another key still reports: a different reason, and the same reason with another code.
+    r.clips.script = ['fetch'];
+    await r.ctl.playPrompt({ text: '가', audioRef: 'audio/jamo/giyeok.mp3' });
+    r.engine.script = ['error', { error: 'network' }];
+    r.clips.script = [];
+    r.state.assets.clear();
+    await r.ctl.playPrompt({ text: '가' });
+    await r.ctl.playPrompt({ text: '가' });
+    expect(r.events.map((e) => (e.name === 'audio.playback_failed' ? `${e.payload.kind}/${e.payload.reason}/${e.payload.code}` : e.name))).toEqual([
+      'clip/decode/none',
+      'clip/decode/none',
+      'clip/decode/none',
+      'clip/fetch/none',
+      'tts/engine/none',
+      'tts/engine/network',
+    ]);
+  });
+
+  it('audio.playback_failed sends at most 12 events per page, whatever the keys', async () => {
+    const r = rig();
+    r.events.length = 0;
+    for (const reason of ['missing', 'fetch', 'decode', 'blocked'] as const) {
+      for (let i = 0; i < 4; i++) {
+        r.clips.script = [reason];
+        await r.ctl.playPrompt({ text: '가', audioRef: 'audio/jamo/giyeok.mp3' });
+      }
+    }
+    expect(r.events).toHaveLength(12);
+    r.state.assets.clear();
+    r.engine.script = ['error'];
+    await r.ctl.playPrompt({ text: '가' });
+    expect(r.events).toHaveLength(12);
+  });
+
+  it('classifySpeechError maps every Web Speech code to a kind, and an unknown one to other', () => {
+    expect(classifySpeechError('canceled')).toEqual({ kind: 'interrupted', code: 'canceled' });
+    expect(classifySpeechError('interrupted')).toEqual({ kind: 'interrupted', code: 'interrupted' });
+    expect(classifySpeechError('not-allowed')).toEqual({ kind: 'blocked', code: 'not-allowed' });
+    for (const code of [
+      'audio-busy',
+      'audio-hardware',
+      'network',
+      'synthesis-unavailable',
+      'synthesis-failed',
+      'language-unavailable',
+      'voice-unavailable',
+      'text-too-long',
+      'invalid-argument',
+    ]) {
+      expect(classifySpeechError(code)).toEqual({ kind: 'error', code });
+    }
+    expect(classifySpeechError('made-up')).toEqual({ kind: 'error', code: 'other' });
+    expect(classifySpeechError(undefined)).toEqual({ kind: 'error', code: 'other' });
   });
 
   it('never puts text, voice names or ids in a payload', async () => {
@@ -653,12 +889,16 @@ function webEngine(synth: FakeSpeechSynthesis): TtsEngine {
       u.voice = synth.getVoices().find((v) => v.voiceURI === req.voice?.id) ?? null;
       u.onstart = () => h.onStart();
       u.onend = () => h.onEnd();
-      u.onerror = (ev) => h.onError(ev.error === 'canceled' || ev.error === 'interrupted' ? 'interrupted' : 'error');
+      u.onerror = (ev) => {
+        const { kind, code } = classifySpeechError(ev.error);
+        h.onError(kind, code);
+      };
       synth.speak(u);
       return { cancel: () => synth.cancel() };
     },
     cancelAll: () => synth.cancel(),
     busy: () => synth.speaking || synth.pending,
+    resume: () => synth.resume(),
   };
 }
 
@@ -724,14 +964,66 @@ describe('controller with FakeSpeechSynthesis', () => {
     await expect(ctl.playPrompt({ text: '가', kind: 'sound' })).resolves.toBe('played');
   });
 
-  it('an engine mute (neverStart) is blocked as well', async () => {
+  it('an engine mute (neverStart: busy, never starting) is blocked after the grace, at 4 s', async () => {
     const { synth, ctl, failures } = web();
     await vi.advanceTimersByTimeAsync(0);
     synth.neverStart = true;
     const p = ctl.playPrompt({ text: '가' });
     await vi.advanceTimersByTimeAsync(1500);
+    expect(failures).toEqual([]);
+    expect(synth.resumeCount).toBe(1);
+    await vi.advanceTimersByTimeAsync(2500);
     await expect(p).resolves.toBe('unavailable');
     expect(failures).toEqual(['blocked']);
+  });
+
+  it('a cold engine that starts at 2 s plays, with no cancel at all', async () => {
+    const { synth, ctl, failures } = web();
+    await vi.advanceTimersByTimeAsync(0);
+    synth.startDelayMs = 2000;
+    synth.endDelayMs = 400;
+    const p = ctl.playPrompt({ text: '가' });
+    await vi.advanceTimersByTimeAsync(2400);
+    await expect(p).resolves.toBe('played');
+    expect(synth.cancelCount).toBe(0);
+    expect(failures).toEqual([]);
+  });
+
+  it('a paused engine is resumed at 1.5 s and the prompt plays', async () => {
+    const { synth, ctl, failures } = web();
+    await vi.advanceTimersByTimeAsync(0);
+    synth.pause();
+    const p = ctl.playPrompt({ text: '가' });
+    await vi.advanceTimersByTimeAsync(1500);
+    await expect(p).resolves.toBe('played');
+    expect(failures).toEqual([]);
+  });
+
+  it('Chrome before any user activation: not-allowed is blocked at once, not after 1.5 s', async () => {
+    const { synth, ctl, failures } = web();
+    await vi.advanceTimersByTimeAsync(0);
+    synth.requireActivation = true;
+    const p = ctl.playPrompt({ text: '가' });
+    await vi.advanceTimersByTimeAsync(0);
+    await expect(p).resolves.toBe('unavailable');
+    expect(failures).toEqual(['blocked']);
+    synth.activate();
+    await expect(ctl.playPrompt({ text: '가' })).resolves.toBe('played');
+  });
+
+  it('Chromium dropping a speak made right after cancel: the drain wait keeps the second prompt from being lost', async () => {
+    const { synth, ctl } = web();
+    await vi.advanceTimersByTimeAsync(0);
+    synth.autoEnd = false;
+    synth.dropSpeakWithinMsOfCancel = 40;
+    void ctl.playPrompt({ text: '가' });
+    await vi.advanceTimersByTimeAsync(0);
+    synth.autoEnd = true;
+    const b = ctl.playPrompt({ text: '나' });
+    await vi.advanceTimersByTimeAsync(100);
+    await expect(b).resolves.toBe('played');
+    expect(synth.dropped).toEqual([]);
+    expect(synth.spoken.map((u) => u.text)).toEqual(['가', '나']);
   });
 
   it('only the novelty voices installed: the engine is never called', async () => {
