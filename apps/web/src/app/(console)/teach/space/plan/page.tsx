@@ -8,7 +8,7 @@ import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'rea
 import { Button, Field, Muted, Notice, panelStyle } from '@/components/console/ui';
 import { AdultFrame } from '@/components/console/AdultFrame';
 import { useConsole } from '@/components/console/use-console';
-import { GroupedLessonPicker, rem } from '@/components/console/GroupedLessonPicker';
+import { GroupedLessonPicker } from '@/components/console/GroupedLessonPicker';
 import { PlanDraftItems, PlanReadout } from '@/components/console/PlanParts';
 import { PlanSwitcher, RouteDraftItems, RouteReadout } from '@/components/console/RoutePlanParts';
 import type { PlanView, Roster, SpaceListItem } from '@/lib/console/api';
@@ -32,6 +32,7 @@ import { addFrom, draftForAdd, withQuest } from '@/lib/console/plan-add';
 import { type PlanError, dateKey, memberKind, moveItem, oneExplicitPerDay, planErrorText, planEveryone, planReadout, spreadDates } from '@/lib/console/plans';
 import { relativeDay } from '@/lib/console/rollup';
 import { ROUTES, spaceIdFrom } from '@/lib/console/routing';
+import { headRem, rem } from '@/lib/console/rem';
 
 interface Draft {
   id?: string;
@@ -341,7 +342,7 @@ function PlanInner(): JSX.Element {
         />
       ) : (
         <section aria-label={p.builderLabel}>
-          <h1 style={{ fontSize: typography.size.title, margin: `0 0 ${spacing.sm}px` }}>{draft.id ? p.editTitle : p.newTitle}</h1>
+          <h1 style={{ fontSize: headRem(typography.size.title), margin: `0 0 ${spacing.sm}px` }}>{draft.id ? p.editTitle : p.newTitle}</h1>
           {suggestNotice ? <Notice>{suggestNotice}</Notice> : null}
           {plans && plans.length === 0 ? (
             <Notice>
@@ -380,7 +381,7 @@ function PlanInner(): JSX.Element {
               />
             </div>
             <div style={panelStyle} aria-label={p.yours.label}>
-              <h2 style={{ fontSize: typography.size.bodyLg, margin: `0 0 ${spacing.sm}px` }}>{p.yours.title(draft.items.length)}</h2>
+              <h2 style={{ fontSize: rem(typography.size.bodyLg), margin: `0 0 ${spacing.sm}px` }}>{p.yours.title(draft.items.length)}</h2>
               {draft.meta ? (
                 <RouteDraftItems
                   meta={draft.meta}
@@ -401,7 +402,7 @@ function PlanInner(): JSX.Element {
               {/* A route's dates come from its calendar (F-PLAN-002 section 3.8 step 5), so Spread dates is for a classic plan only. */}
               {draft.meta ? null : (
                 <div style={{ marginTop: spacing.md, display: 'flex', gap: spacing.sm, alignItems: 'center', flexWrap: 'wrap' }}>
-                  <span style={{ color: colors.text.muted, fontSize: typography.size.caption }}>{p.pace.title}</span>
+                  <span style={{ color: colors.text.muted, fontSize: rem(typography.size.caption) }}>{p.pace.title}</span>
                   <input type="date" value={start} onChange={(e) => setStart(e.target.value || dateKey(new Date()))} aria-label={p.pace.start} style={{ padding: spacing.xs, borderRadius: radii.sm, border: `1px solid ${colors.border.strong}` }} />
                   <select value={perWeek} onChange={(e) => setPerWeek(Number(e.target.value))} aria-label={p.pace.perWeekLabel} style={{ padding: spacing.xs, borderRadius: radii.sm, border: `1px solid ${colors.border.strong}` }}>
                     {[1, 2, 3, 5, 7].map((n) => (
@@ -412,7 +413,7 @@ function PlanInner(): JSX.Element {
                 </div>
               )}
               <div style={{ marginTop: spacing.md }}>
-                <span style={{ color: colors.text.muted, fontSize: typography.size.caption }}>{p.who.title}</span>
+                <span style={{ color: colors.text.muted, fontSize: rem(typography.size.caption) }}>{p.who.title}</span>
                 <label style={{ display: 'block' }}>
                   <input type="radio" name="targets" checked={draft.targets === null} onChange={() => setDraft((d) => ({ ...d, targets: null }))} /> {planEveryone(kind, locale)}
                 </label>

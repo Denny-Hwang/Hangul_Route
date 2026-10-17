@@ -1,4 +1,4 @@
-import { Icon, borderWidth, colors, layout, radii, spacing, touchTarget, typography, z, type IconName, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
+import { Icon, borderWidth, colors, layout, radii, spacing, touchTarget, typography, useTypeScale, z, type IconName, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
 import React, { useEffect, useRef, useState } from 'react';
 import { ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -6,17 +6,21 @@ import { distinctParts, type SkipPart, type VoiceCheck } from '../../logic/lectu
 import { START_BUTTON_HEIGHT, TEACHER_COLUMN } from './stage-metrics';
 import { usePresenterView } from './presenter-context';
 import { GhostButton, PrimaryButton } from './StatePage';
+import { DisplayButton } from '../../components/DisplayButton';
 
 /**
  * The start screen (design/screens/presenter/start-screen.md, README D10, D15): a teacher page in
  * real pixels on paper, not stage-scaled. The deck title (teacher text), the facts, the device
  * checks (none blocks Start), the skipped parts with [ See which ], and one big Start, disabled
  * while the presenter font loads (at most 1.5 s) and focused when it is ready. Back to lessons,
- * above the title, returns to the home.
+ * above the title, returns to the home; the Aa button beside it opens the Display sheet (owner
+ * items 6 and 7). The page's type follows the chosen text size (`useTypeScale`); the slides keep
+ * their stage units.
  *
  * In a phone window (F-TCH-004 section 3.5 amendment; start-screen.md "Phone") the page is short:
  * under the title and the facts, one "Ready to start" line, with "Some checks need a look: see
- * Details." under it when a device check is not ready, and a Details disclosure that opens the check
+ * Details." under it when a device check is not ready (the Aa button sits at the top right, beside
+ * "Lecture mode"), and a Details disclosure that opens the check
  * list and the skipped parts exactly as on the wide page; while the phone is upright, the hint to
  * turn it sideways (information, never a blocker); and a sticky footer with Back beside Start, clear
  * of the bottom safe-area inset.
@@ -39,6 +43,8 @@ export interface StartScreenProps {
   onStart: () => void;
   /** Back to lessons (the phone footer's Back): the presenter home, before anything starts (nothing is saved or sent). */
   onBack?: () => void;
+  /** Opens the Display (Aa) sheet (owner items 6 and 7); without it the Aa button is not drawn. */
+  onDisplay?: () => void;
   /** A phone window: the short page with the sticky footer. */
   phone?: boolean;
   /** Taller than wide (a phone held upright): the turn hint. */
@@ -60,7 +66,8 @@ function Check({ ok, children, testID }: { ok: boolean; children: React.ReactNod
 }
 
 function Line({ children, secondary, bold, large }: { children: React.ReactNode; secondary?: boolean; bold?: boolean; large?: boolean }): React.ReactElement {
-  const size = large ? typography.size.bodyLg : typography.size.body;
+  const ts = useTypeScale().size;
+  const size = large ? ts.bodyLg : ts.body;
   return (
     <Text {...KOREAN_LINE_BREAK}
       style={{
@@ -99,18 +106,28 @@ function useVoiceLine(voice: VoiceCheck): { ok: boolean; text: string } | null {
   }
 }
 
-function DeckHead({ deckTitle, slides, minutes, compact }: { deckTitle: string; slides: number; minutes: number; compact?: boolean }): React.ReactElement {
+function DeckHead({ deckTitle, slides, minutes, compact, onDisplay }: { deckTitle: string; slides: number; minutes: number; compact?: boolean; onDisplay?: () => void }): React.ReactElement {
+  const ts = useTypeScale().size;
   const { messages } = usePresenterView();
   const m = messages.learner.presenter.start;
-  const titleSize = compact ? typography.size.title : typography.size.hero;
+  const titleSize = compact ? ts.title : ts.hero;
+  const lecture = <Text {...KOREAN_LINE_BREAK} style={{ flexShrink: 1, fontSize: ts.body, color: colors.text.secondary }}>{messages.learner.presenter.home.title}</Text>;
   return (
     <>
-      <Text {...KOREAN_LINE_BREAK} style={{ fontSize: typography.size.body, color: colors.text.secondary }}>{messages.learner.presenter.home.title}</Text>
+      {onDisplay ? (
+        // The phone's top row: "Lecture mode" and the Aa button at the top right (start-screen.md "Phone").
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: spacing.sm }}>
+          {lecture}
+          <DisplayButton onPress={onDisplay} testID="presenter-start-display" />
+        </View>
+      ) : (
+        lecture
+      )}
       {/* The deck title is the teacher's own text (TD8): shown here, never in document.title. */}
       <Text {...KOREAN_LINE_BREAK} role="heading" aria-level={1} style={{ fontSize: titleSize, fontWeight: typography.weight.bold, color: colors.text.primary, lineHeight: Math.round(titleSize * typography.leading.tight) }}>
         {deckTitle}
       </Text>
-      <Text {...KOREAN_LINE_BREAK} testID="presenter-start-facts" style={{ fontSize: typography.size.bodyLg, color: colors.text.secondary }}>
+      <Text {...KOREAN_LINE_BREAK} testID="presenter-start-facts" style={{ fontSize: ts.bodyLg, color: colors.text.secondary }}>
         {`${m.slides(slides)} · ${m.minutes(minutes)}`}
       </Text>
     </>
@@ -129,13 +146,14 @@ function FontWait(): React.ReactElement {
 
 /** Before you start: the device checks and the skipped parts with [ See which ] (the same list on the wide page and in the phone's Details). */
 function Checks(props: StartScreenProps): React.ReactElement {
+  const ts = useTypeScale().size;
   const { messages } = usePresenterView();
   const m = messages.learner.presenter.start;
   const [listOpen, setListOpen] = useState(false);
   const voiceLine = useVoiceLine(props.voice);
   return (
     <View style={{ gap: spacing.md }}>
-      <Text {...KOREAN_LINE_BREAK} role="heading" aria-level={2} style={{ fontSize: typography.size.bodyLg, fontWeight: typography.weight.bold, color: colors.text.primary }}>
+      <Text {...KOREAN_LINE_BREAK} role="heading" aria-level={2} style={{ fontSize: ts.bodyLg, fontWeight: typography.weight.bold, color: colors.text.primary }}>
         {m.checks}
       </Text>
       <Check ok={props.offlineReady} testID="presenter-check-offline">
@@ -207,7 +225,7 @@ function PhoneStart(props: StartScreenProps): React.ReactElement {
         }}
       >
         <View style={{ width: '100%', maxWidth: TEACHER_COLUMN, alignSelf: 'center', gap: props.short ? spacing.sm : spacing.md }}>
-          <DeckHead deckTitle={props.deckTitle} slides={props.slides} minutes={props.minutes} compact={props.short === true} />
+          <DeckHead deckTitle={props.deckTitle} slides={props.slides} minutes={props.minutes} compact={props.short === true} {...(props.onDisplay ? { onDisplay: props.onDisplay } : {})} />
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: spacing.sm }}>
             <View testID="presenter-start-ready" style={{ flexShrink: 1, gap: spacing.xs }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
@@ -282,9 +300,10 @@ function WideStart(props: StartScreenProps): React.ReactElement {
     <ScrollView testID="presenter-start" style={{ flex: 1, backgroundColor: colors.surface.paper }} contentContainerStyle={{ paddingVertical: spacing.xxl, paddingHorizontal: layout.gutter.compact }}>
       <View style={{ width: '100%', maxWidth: TEACHER_COLUMN, alignSelf: 'center', gap: spacing.xl }}>
         <View style={{ gap: spacing.md }}>
-          {props.onBack ? (
-            <View style={{ alignItems: 'flex-start' }}>
-              <GhostButton testID="presenter-start-back" label={m.back.cta} onPress={props.onBack} />
+          {props.onBack || props.onDisplay ? (
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: spacing.sm }}>
+              {props.onBack ? <GhostButton testID="presenter-start-back" label={m.back.cta} onPress={props.onBack} /> : <View />}
+              {props.onDisplay ? <DisplayButton onPress={props.onDisplay} testID="presenter-start-display" /> : null}
             </View>
           ) : null}
           <DeckHead deckTitle={props.deckTitle} slides={props.slides} minutes={props.minutes} />

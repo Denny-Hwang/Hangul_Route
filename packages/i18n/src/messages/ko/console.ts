@@ -222,8 +222,9 @@ export const consoleMsgs = {
     closed: '이 요청은 이미 닫혔어요 — 학습자가 다시 요청할 수 있어요.',
     failed: '처리되지 않았어요. 다시 해 보세요.',
   },
-  language: {
-    label: '언어',
+  docTitle: {
+    console: '콘솔 — Hangul Route',
+    signIn: '어른 로그인 — Hangul Route',
   },
   codeExpiry: {
     none: '아직 코드 없음',
@@ -763,7 +764,10 @@ export const consoleMsgs = {
       strokeGuide: '획순 안내',
       strokeNote: '간단히 나타낸 거예요: 서예 기준이 아니에요.',
       sound: '소리 재생',
-      language: '발표 언어',
+      language: '슬라이드 언어',
+      languageSame: '이 기기와 같게',
+      languageHint: '복사한 링크는 링크를 여는 기기의 언어로 보여요.',
+      languageHintChosen: (endonym: string) => `슬라이드 언어: ${endonym}. 복사한 링크도 어느 기기에서나 같아요.`,
     },
     titleField: { label: '수업 제목', placeholder: '3주차 글자', hint: '제목에 학생 이름을 넣지 마세요.' },
     titleProblem: {

@@ -3,6 +3,7 @@ import { Pressable, Text, View } from 'react-native';
 import { colors, radii, spacing, touchTarget, typography } from '../../tokens';
 import { Icon } from '../Icon';
 import { KoreanText } from '../KoreanText';
+import { useTypeScale } from '../TextSize';
 import { choiceCardStyle } from './style';
 import type { ChoiceCardProps } from './types';
 import { KOREAN_LINE_BREAK } from '../../line-break';
@@ -31,6 +32,7 @@ export function ChoiceCard({
   testID,
 }: ChoiceCardProps): React.ReactElement {
   const look = choiceCardStyle(state, { wrongMark });
+  const bodySize = useTypeScale().size.body;
   const tile = layout === 'tile';
   const hasArt = art !== undefined && art !== null && art !== false;
   const hasKorean = ko !== undefined && ko.trim().length > 0;
@@ -63,9 +65,9 @@ export function ChoiceCard({
         {hasLabel ? (
           <Text {...KOREAN_LINE_BREAK}
             style={{
-              fontSize: typography.size.body,
+              fontSize: bodySize,
               fontWeight: typography.weight.semibold,
-              lineHeight: typography.size.body * typography.leading.normal,
+              lineHeight: bodySize * typography.leading.normal,
               color: look.textColor,
               textAlign: 'left',
             }}

@@ -1,4 +1,4 @@
-import { Screen } from '@hangul-route/design-system';
+import { Screen, TextSizeProvider } from '@hangul-route/design-system';
 import { NavigationContainer, createNavigationContainerRef } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -39,7 +39,7 @@ import { startBrowse as runBrowseStart, type BrowseStart } from './src/platform/
 import { isOfflineReady, subscribePwa } from './src/platform/pwa';
 import { flushQueue } from './src/platform/telemetry';
 import { useAudioStore } from './src/store/audio-store';
-import { useLocaleStore } from './src/store/locale-store';
+import { followDeviceSettings, useLocaleStore } from './src/store/locale-store';
 
 /**
  * All lessons, the third root of the learner web build at `/browse`
@@ -64,8 +64,11 @@ import { useLocaleStore } from './src/store/locale-store';
 
 let started: BrowseStart | null = null;
 
-/** The pass's UI language for this tab only (memory, never stored; F-BROWSE-001 section 4.9). */
-const applyLocale = (locale: UiLocale): void => useLocaleStore.getState().setSessionLocale(locale);
+/**
+ * The pass's UI language (the console's, at the hand-off): a seed for a device that never chose,
+ * like `?lang=` (owner items 6 and 7: one UI language per device, so there is no tab-only language).
+ */
+const applyLocale = (locale: UiLocale): void => useLocaleStore.getState().seedDeviceLocale(locale);
 
 /** Runs once per page, during the first render (`platform/browse-start.ts`). */
 function startBrowse(): BrowseStart {
@@ -91,6 +94,8 @@ export default function BrowseApp(): React.ReactElement {
   const start = useMemo(startBrowse, []);
   useDocumentLang();
   const messages = useMessages();
+  // The device record's text size (owner items 6 and 7).
+  const textSize = useLocaleStore((s) => s.textSize);
   const bundle = useMemo(() => defaultBrowseBundle(canRenderPicture), []);
   // The effective switch, read once (BD6): never the raw flag.
   const gatingEnabled = useMemo(() => gatingActive(flags, bundleOs()), []);
@@ -125,6 +130,8 @@ export default function BrowseApp(): React.ReactElement {
     const uninstallUnlock = installGestureUnlock();
     const audioReady = useAudioStore.getState().hydrate().catch(() => undefined);
     localeReady.current = useLocaleStore.getState().hydrate([]).catch(() => undefined);
+    // The device record changed in another tab (the learner app, the grown-up pages): follow it live.
+    const unfollow = followDeviceSettings();
     const opened = (resolved: ResolvedPass): Promise<void> =>
       announceBrowseOpened({ source: fragmentRef.current.source, resolved, offlineReady: isOfflineReady(), localeReady: localeReady.current, applyLocale });
     let booted: Promise<unknown>;
@@ -159,6 +166,7 @@ export default function BrowseApp(): React.ReactElement {
     return () => {
       live = false;
       uninstallUnlock();
+      unfollow();
       offPwa();
     };
   }, [start, stackFor]);
@@ -253,6 +261,7 @@ export default function BrowseApp(): React.ReactElement {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
+        <TextSizeProvider step={textSize}>
         <ErrorBoundary fallbackRender={({ resetErrorBoundary }) => <OopsScreen onRetry={resetErrorBoundary} />}>
           {visit.status === 'ready' && session ? (
             <BrowseSessionProvider value={session}>
@@ -275,6 +284,7 @@ export default function BrowseApp(): React.ReactElement {
           {/* F-LAYOUT-001 §3.4: a touch phone held sideways is asked, once, to turn upright. */}
           <PortraitGuard />
         </ErrorBoundary>
+        </TextSizeProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );

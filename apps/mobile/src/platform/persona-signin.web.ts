@@ -2,7 +2,6 @@ import type { UiLocale } from '@hangul-route/i18n';
 import { personaChosen, personaSignInPath, type PersonaChoice } from '../logic/shell/entry-points';
 import { handoffUrl } from '../logic/shell/handoff-rules';
 import { activeLocale, useLocaleStore } from '../store/locale-store';
-import { useProfileStore } from '../store/profile-store';
 import { trackThenLeave } from './grown-up-handoff.web';
 import { track as sendEvent, type TelemetryEvent } from './telemetry';
 
@@ -12,8 +11,8 @@ import { track as sendEvent, type TelemetryEvent } from './telemetry';
  * (the router sends a signed-in grown-up home), both **in the same tab**, after
  * `shell.persona_chosen { persona, from }` is sent (or a short wait). Sign-in only: creating an
  * account is behind the adult step on that page. No unlock is written (Welcome shows only on a
- * device without a learner profile, where the console has no lock). `?lang=` follows a UI locale
- * that is not the default (F-I18N-001 hand-off).
+ * device without a learner profile, where the console has no lock). `?lang=` always carries the UI
+ * locale, English included (F-I18N-001 hand-off).
  */
 export interface PersonaSignInEnv {
   track: (event: TelemetryEvent) => Promise<boolean>;
@@ -26,7 +25,7 @@ function browserEnv(): PersonaSignInEnv {
   return {
     track: (event) => sendEvent(event),
     assign: (url) => (globalThis as { location?: { assign: (to: string) => void } }).location?.assign(url),
-    locale: () => activeLocale(useLocaleStore.getState(), useProfileStore.getState().activeId),
+    locale: () => activeLocale(useLocaleStore.getState()),
   };
 }
 

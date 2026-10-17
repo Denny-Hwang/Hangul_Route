@@ -16,6 +16,7 @@ import { borderWidth, colors, radii, spacing, touchTarget, typography } from '@h
 import { useId, useMemo, useRef, useState, type ReactNode } from 'react';
 import { addsItems, groupChip, groupHeading, initialGroup, rowDetail, visibleCount } from '@/lib/console/lesson-picker';
 import { useMessages } from '@/lib/i18n/locale-context';
+import { rem } from '@/lib/console/rem';
 
 /**
  * The grouped lesson picker (owner report 2026-10-16 item 5; spec
@@ -30,9 +31,6 @@ import { useMessages } from '@/lib/i18n/locale-context';
  * episode (`searchChooser` keeps `lessons` whole and names the `shown` ones).
  */
 
-const ROOT_FONT_PX = 16;
-/** A token size in rem, so the browser's text size scales it (200 % text doubles it). */
-export const rem = (px: number): string => `${px / ROOT_FONT_PX}rem`;
 const px = (value: number): string => `${value}px`;
 const focusRing = `outline:${px(borderWidth.thick)} solid ${colors.border.focus};outline-offset:${px(borderWidth.base)}`;
 

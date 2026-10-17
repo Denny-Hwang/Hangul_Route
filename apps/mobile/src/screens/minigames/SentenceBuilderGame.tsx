@@ -22,6 +22,7 @@ import {
   useLayoutClass,
   useMediaSize,
   KOREAN_LINE_BREAK,
+  useTypeScale,
 } from '@hangul-route/design-system';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Platform, Pressable, Text, View, type TextStyle } from 'react-native';
@@ -102,6 +103,7 @@ const wholeWord = (Platform.OS === 'web' ? { whiteSpace: 'nowrap' } : {}) as unk
 const srOnly = { position: 'absolute', width: 1, height: 1, margin: -1, overflow: 'hidden' } as const;
 
 export function SentenceBuilderGame({ scope, host, patternNote, onBack }: Props): React.ReactElement {
+  const textScale = useTypeScale();
   const [seed] = useState(() => Math.floor(Math.random() * 0x7fffffff));
   const rounds = useMemo(() => buildRounds(scope.orderIt?.rounds, seed), [scope, seed]);
   const m = useMessages();
@@ -265,7 +267,7 @@ export function SentenceBuilderGame({ scope, host, patternNote, onBack }: Props)
             <Caption tone="secondary">{copy.sentenceBuilder.meaning}</Caption>
             <Text {...KOREAN_LINE_BREAK}
               testID="sentence-builder-gloss"
-              style={{ fontSize: typography.size.bodyLg, fontWeight: typography.weight.semibold, color: colors.text.primary, lineHeight: typography.size.bodyLg * typography.leading.normal }}
+              style={{ fontSize: textScale.size.bodyLg, fontWeight: typography.weight.semibold, color: colors.text.primary, lineHeight: textScale.size.bodyLg * typography.leading.normal }}
             >
               {gloss}
             </Text>
@@ -353,6 +355,7 @@ export function SentenceBuilderGame({ scope, host, patternNote, onBack }: Props)
 
 /** The Korean of a tile (or a placed word) with its romanization line under it. */
 function TileFace({ ko, romanization }: { ko: string; romanization: string }): React.ReactElement {
+  const textScale = useTypeScale();
   return (
     <>
       <Text {...KOREAN_LINE_BREAK}
@@ -360,16 +363,16 @@ function TileFace({ ko, romanization }: { ko: string; romanization: string }): R
         style={{
           ...wholeWord,
           fontFamily: typography.family.sansKr,
-          fontSize: typography.size.prompt,
+          fontSize: textScale.size.prompt,
           fontWeight: typography.weight.bold,
           color: colors.text.primary,
-          lineHeight: typography.size.prompt * typography.leading.tight,
+          lineHeight: textScale.size.prompt * typography.leading.tight,
         }}
       >
         {ko}
       </Text>
       {romanization !== '' ? (
-        <Text {...KOREAN_LINE_BREAK} style={{ fontSize: typography.size.caption, color: colors.text.muted, fontWeight: typography.weight.medium }}>{romanization}</Text>
+        <Text {...KOREAN_LINE_BREAK} style={{ fontSize: textScale.size.caption, color: colors.text.muted, fontWeight: typography.weight.medium }}>{romanization}</Text>
       ) : null}
     </>
   );
@@ -529,10 +532,11 @@ function TrayTile({ tile, tileMin, reducedMotion, onPress }: { tile: TileView; t
  * Korean (Hangul on a sunken chip) followed by its romanization, so the line wraps like a sentence.
  */
 function NoteLine({ parts }: { parts: NotePart[] }): React.ReactElement {
+  const textScale = useTypeScale();
   return (
     <Text {...KOREAN_LINE_BREAK}
       testID="sentence-builder-note"
-      style={{ marginTop: spacing.sm, fontSize: typography.size.bodySm, color: colors.text.secondary, lineHeight: typography.size.bodySm * typography.leading.relaxed }}
+      style={{ marginTop: spacing.sm, fontSize: textScale.size.bodySm, color: colors.text.secondary, lineHeight: textScale.size.bodySm * typography.leading.relaxed }}
     >
       {parts.map((part, i) =>
         'text' in part ? (
@@ -542,7 +546,7 @@ function NoteLine({ parts }: { parts: NotePart[] }): React.ReactElement {
             <Text {...KOREAN_LINE_BREAK} {...koreanSpeech} style={{ fontWeight: typography.weight.semibold, color: colors.text.primary, backgroundColor: colors.surface.sunken }}>
               {` ${part.ko} `}
             </Text>
-            {part.romanization !== '' ? <Text {...KOREAN_LINE_BREAK} style={{ fontSize: typography.size.caption }}>{` ${part.romanization}`}</Text> : null}
+            {part.romanization !== '' ? <Text {...KOREAN_LINE_BREAK} style={{ fontSize: textScale.size.caption }}>{` ${part.romanization}`}</Text> : null}
           </Text>
         ),
       )}

@@ -1216,6 +1216,15 @@
    ]
   },
   {
+   "name": "@clerk/localizations",
+   "version": "3.37.2",
+   "license": "MIT",
+   "copyright": "Copyright (c) 2022 Clerk, Inc.",
+   "usedIn": [
+    "web"
+   ]
+  },
+  {
    "name": "@clerk/shared",
    "version": "3.47.5",
    "license": "MIT",
@@ -1240,7 +1249,8 @@
    "license": "MIT",
    "copyright": "Copyright (c) 2022 Clerk, Inc.",
    "usedIn": [
-    "server"
+    "server",
+    "web"
    ]
   },
   {

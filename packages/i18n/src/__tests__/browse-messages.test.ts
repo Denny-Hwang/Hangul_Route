@@ -50,10 +50,8 @@ const BR7_KEYS = [
   'keep.label',
   'keep.failed',
   'display.title',
-  'display.romanization',
   'display.always',
   'display.tap',
-  'display.language',
   'display.note',
   'display.done.cta',
   'episode.back',
@@ -228,7 +226,11 @@ describe('caregiver.browse (BR-7)', () => {
     expect(`${browse.item.where.stage(1)} · Letters · ${browse.item.where.lesson(1, 3)}`).toBe('Stage 1 · Letters · lesson 1 of 3');
     expect(browse.minutes(5)).toBe('About 5 minutes');
     expect(browse.minutes(1)).toBe('About 1 minute');
+    // The sheet holds Romanization only and is named for it (AMENDMENTS-DISPLAY-NAV sections 6 and 10, DN-7): the note stays true as it was.
     expect(browse.display.note).toBe("These choices change only this preview. No learner's settings change.");
+    expect([browse.display.title, browse.home.lessonDisplay.cta]).toEqual(['Romanization', 'Romanization']);
+    expect([getMessages('es').caregiver.browse.display.title, getMessages('es').caregiver.browse.home.lessonDisplay.cta]).toEqual(['Romanización', 'Romanización']);
+    expect([getMessages('ko').caregiver.browse.display.title, getMessages('ko').caregiver.browse.home.lessonDisplay.cta]).toEqual(['로마자 표기', '로마자 표기']);
   });
 });
 

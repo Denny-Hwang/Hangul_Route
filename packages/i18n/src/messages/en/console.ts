@@ -304,9 +304,10 @@ export const consoleMsgs = {
     failed: "Didn't go through. Try again.",
   },
 
-  /** Header language select (`LanguageSelect`); hidden while only English ships. */
-  language: {
-    label: 'Language',
+  /** `document.title` of the grown-up pages, in the console's language (owner items 6 and 7). */
+  docTitle: {
+    console: 'Console — Hangul Route',
+    signIn: 'Grown-ups sign in — Hangul Route',
   },
   /** Join-code expiry (`codeExpiry`). */
   codeExpiry: {
@@ -1000,7 +1001,12 @@ export const consoleMsgs = {
       strokeGuide: 'Stroke guide',
       strokeNote: 'Simplified: not a calligraphy reference.',
       sound: 'Play sounds',
-      language: 'Presenter language',
+      /** The deck's slide language (AMENDMENTS-LECTURE-V2 section 18.4); the default writes no `options.uiLocale`. */
+      language: 'Slides language',
+      languageSame: 'Same as this device',
+      languageHint: 'A copied link uses the language of the device that opens it.',
+      /** Under the select while a language is chosen: the language then travels in the deck (AMENDMENTS-LECTURE-V2 section 18.4). */
+      languageHintChosen: (endonym: string) => `Slides show in ${endonym} on every device, a copied link too.`,
     },
     titleField: { label: 'Lesson title', placeholder: 'Week 3 letters', hint: "Do not put a student's name in the title." },
     titleProblem: {

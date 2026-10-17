@@ -13,7 +13,7 @@ import {
   spacing,
   touchTarget,
 } from '@hangul-route/design-system';
-import { levelWords } from '@hangul-route/i18n';
+import { LOCALE_META, levelWords } from '@hangul-route/i18n';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useRef, useState } from 'react';
@@ -34,12 +34,14 @@ import { useAudioStore } from '../../store/audio-store';
 import { useTierStore } from '../../store/tier-store';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
+import { useLocaleStore } from '../../store/locale-store';
 import { usePwaStore } from '../../store/pwa-store';
 import { useAudience } from '../../store/audience';
 import { useUiStore } from '../../store/ui-store';
 import { VoiceHelpSheet } from '../../components/VoiceHelpSheet';
 import { soundCardView, soundSwitchLabel } from '../../logic/audio/voice-help';
-import { LanguageCard } from '../../components/LanguageCard';
+import { DeviceDisplaySheet } from '../../components/DeviceDisplaySheet';
+import { ReadingPracticeCard } from '../../components/ReadingPracticeCard';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { BackupCard } from '../../components/BackupCard';
 import { SpacesCard } from '../../components/SpacesCard';
@@ -71,6 +73,10 @@ export function ProfileScreen(): React.ReactElement {
   const voice = useAudioStore((s) => s.tts);
   const soundCard = soundCardView(voice, !soundOn, m.learner.audio);
   const [voiceHelpOpen, setVoiceHelpOpen] = useState(false);
+  // The Display (Aa) sheet: the device's language and text size (owner items 6 and 7); not behind the grown-up gate.
+  const [displayOpen, setDisplayOpen] = useState(false);
+  const textSize = useLocaleStore((s) => s.textSize);
+  const displayLine = t.display.line(LOCALE_META[locale].endonym, m.common.display.size[textSize]);
   const parentGateOpenedAt = useUiStore((s) => s.parentGateOpenedAt);
   const forceInstallGuide = usePwaStore((s) => s.force);
   const installed = usePwaStore((s) => s.installed);
@@ -187,16 +193,17 @@ export function ProfileScreen(): React.ReactElement {
       <Heading level="prompt">{t.statsTitle(active?.displayName ?? null)}</Heading>
       <Spacer size="sm" />
       <Card padding="md">
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-          <View>
+        {/* The three figures wrap to a second line, and a long label wraps in its column, at a large text size. */}
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', columnGap: spacing.md, rowGap: spacing.sm }}>
+          <View style={{ flexShrink: 1, minWidth: 0 }}>
             <Caption tone="muted">{t.stats.quests}</Caption>
             <Heading level="prompt">{snap?.quests.filter((q) => q.completedAt).length ?? 0}</Heading>
           </View>
-          <View>
+          <View style={{ flexShrink: 1, minWidth: 0 }}>
             <Caption tone="muted">{t.stats.cards}</Caption>
             <Heading level="prompt">{snap?.cards.length ?? 0}</Heading>
           </View>
-          <View>
+          <View style={{ flexShrink: 1, minWidth: 0 }}>
             <Caption tone="muted">{t.stats.threeStar}</Caption>
             <Heading level="prompt">{snap?.quests.filter((q) => q.stars === 3).length ?? 0}</Heading>
           </View>
@@ -282,6 +289,28 @@ export function ProfileScreen(): React.ReactElement {
       </Card>
       <VoiceHelpSheet visible={voiceHelpOpen} onClose={() => setVoiceHelpOpen(false)} />
 
+      {/* Display: the one UI language and text size of this device (owner items 6 and 7), directly under Sound. */}
+      <Spacer size="lg" />
+      <Card padding="md">
+        <Pressable
+          testID="profile-display-row"
+          onPress={() => setDisplayOpen(true)}
+          accessibilityRole="button"
+          aria-haspopup="dialog"
+          // The current language and size are part of the name: react-native-web drops a hint, and the
+          // label replaces the row's visible text, so on the web a hint would never be read.
+          accessibilityLabel={`${m.common.display.a11y}. ${displayLine}`}
+          style={{ minHeight: touchTarget.min, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.md }}
+        >
+          <View style={{ flex: 1 }}>
+            <Body weight="semibold">{t.display.row}</Body>
+            <Caption tone="muted">{displayLine}</Caption>
+          </View>
+          <Icon name="arrow-right" size={24} color={colors.text.muted} />
+        </Pressable>
+      </Card>
+      <DeviceDisplaySheet visible={displayOpen} onClose={() => setDisplayOpen(false)} />
+
       {active && wordsOffered() ? (
         <>
           {/* F-VOC-004 S-6: the Speed Round's Challenge opt-in; only where Words (and so the Speed Round) is offered. */}
@@ -293,7 +322,7 @@ export function ProfileScreen(): React.ReactElement {
       {active ? (
         <>
           <Spacer size="lg" />
-          <LanguageCard profileId={active.id} />
+          <ReadingPracticeCard profileId={active.id} />
         </>
       ) : null}
 

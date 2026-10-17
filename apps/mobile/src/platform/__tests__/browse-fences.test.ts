@@ -5,7 +5,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 /**
  * F-BROWSE-001 §4.10 (BR-3): what the browse root fences. Writes only to
- * `browse:pass`, `browse:prefs`, `browse:telemetry-queue` and `device:audio`;
+ * `browse:pass`, `browse:prefs`, `browse:telemetry-queue`, `device:audio` and the device display
+ * record `device:settings` (owner items 6 and 7: one UI language and text size per device);
  * telemetry only for the five `browse.*` names; its own telemetry queue key.
  */
 vi.mock('../../config/flags', () => ({
@@ -35,15 +36,15 @@ afterEach(() => {
 });
 
 describe('browse fences', () => {
-  it('lists exactly the four keys Browse may write', () => {
-    expect([...BROWSE_WRITABLE_KEYS]).toEqual(['browse:pass', 'browse:prefs', 'browse:telemetry-queue', 'device:audio']);
+  it('lists exactly the five keys Browse may write', () => {
+    expect([...BROWSE_WRITABLE_KEYS]).toEqual(['browse:pass', 'browse:prefs', 'browse:telemetry-queue', 'device:audio', 'device:settings']);
     expect(BROWSE_TELEMETRY_QUEUE_KEY).toBe('browse:telemetry-queue');
     expect(BROWSE_WRITABLE_KEYS).toContain(AUDIO_PREFS_KEY);
   });
 
   it('allows the listed keys only', () => {
     for (const key of BROWSE_WRITABLE_KEYS) expect(isBrowseWritableKey(key), key).toBe(true);
-    for (const key of ['telemetry:queue', 'device:settings', 'profiles', 'profiles:active', 'progress:p1', 'account:session', 'settings:p1', 'browse:other', 'shell:lastPersona', 'browse:pass:x']) {
+    for (const key of ['telemetry:queue', 'profiles', 'profiles:active', 'progress:p1', 'account:session', 'settings:p1', 'browse:other', 'shell:lastPersona', 'browse:pass:x']) {
       expect(isBrowseWritableKey(key), key).toBe(false);
     }
   });

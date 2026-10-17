@@ -6,6 +6,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 const mem = vi.hoisted(() => new Map<string, unknown>());
 vi.mock('../../platform/storage', () => ({
   readJson: vi.fn(async (k: string) => mem.get(k) ?? null),
+  readJsonStrict: vi.fn(async (k: string) => mem.get(k) ?? null),
   writeJson: vi.fn(async (k: string, v: unknown) => {
     mem.set(k, v);
   }),
@@ -168,9 +169,19 @@ describe('cold start (audit UX-01 / L16)', () => {
 
     const locale = useLocaleStore.getState();
     expect(locale.hydrated).toBe(true);
+    // One UI language per device (owner items 6 and 7): the device chose, so the old override is only stripped.
     expect(locale.device).toBe('ko');
-    expect(locale.byProfile['profile:a']).toEqual({ uiLocale: 'es', romanizationMode: 'tap' });
+    expect(locale.byProfile['profile:a']).toEqual({ romanizationMode: 'tap' });
     expect(locale.byProfile['profile:b']).toBeUndefined();
+  });
+
+  it('a device that never chose takes the active profile\'s old language once (owner items 6 and 7)', async () => {
+    mem.set('profiles', [profile('profile:a', 'Suni'), profile('profile:b', 'Bo')]);
+    mem.set('profiles:active', 'profile:b');
+    mem.set('settings:profile:a', { uiLocale: 'ko', romanizationMode: 'always' });
+    mem.set('settings:profile:b', { uiLocale: 'es', romanizationMode: 'always' });
+    await hydrateLearnerData();
+    expect(useLocaleStore.getState().device).toBe('es');
   });
 
   it('a fresh install still marks the locale store hydrated', async () => {

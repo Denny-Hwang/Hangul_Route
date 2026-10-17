@@ -41,7 +41,7 @@ function browserEnv(): GateHandoffEnv {
       const now = new Date();
       return useProfileStore.getState().profiles.map((p) => accessTier(p.id, now));
     },
-    locale: () => activeLocale(useLocaleStore.getState(), useProfileStore.getState().activeId),
+    locale: () => activeLocale(useLocaleStore.getState()),
     origin: () => (globalThis as { location?: { origin?: string } }).location?.origin ?? '',
     assign: (url) => {
       (globalThis as { location?: { assign: (to: string) => void } }).location?.assign(url);

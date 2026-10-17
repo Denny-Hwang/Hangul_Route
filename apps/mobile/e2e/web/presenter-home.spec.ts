@@ -157,21 +157,23 @@ test.describe('presenter home, wide (two columns)', () => {
     await expect(rows.first()).toContainText('Today');
   });
 
-  test('language chips: one tab stop, arrows move and select, the device locale is not written', async ({ page }) => {
+  test('no language chips: the Aa button opens the Display sheet, which sets the device language (owner items 6 and 7)', async ({ page }) => {
     await page.goto('/present');
-    const group = page.getByRole('radiogroup', { name: 'Presenter language' });
-    if ((await group.count()) === 0) test.skip(true, 'one UI locale in this build: no chips are drawn');
-    const english = group.getByRole('radio', { name: 'English' });
-    await expect(english).toHaveAttribute('aria-checked', 'true');
-    await english.focus();
-    await page.keyboard.press('ArrowRight');
-    // The group's own name is now Spanish too, so it is found by its test id.
-    const chips = page.getByTestId('presenter-home-language');
-    await expect(chips.getByRole('radio', { name: 'Español' })).toHaveAttribute('aria-checked', 'true');
-    await expect(chips.getByRole('radio', { name: 'Español' })).toBeFocused();
+    await expect(page.getByRole('radiogroup', { name: 'Presenter language' })).toHaveCount(0);
+    const aa = page.getByTestId('presenter-home-display');
+    await expect(aa).toHaveAccessibleName('Aa, Display: language and text size');
+    await aa.click();
+    const sheet = page.getByTestId('presenter-display-sheet');
+    await sheet.getByRole('radiogroup', { name: 'Language' }).getByRole('radio', { name: 'Español' }).click();
+    await sheet.getByRole('button', { name: 'Usar Español' }).click();
+    // The home speaks the device's language at once, and the choice is the device's (stored with its time).
     await expect(page.getByRole('heading', { level: 1, name: 'Proyección' })).toBeVisible();
-    expect(await readStored(page, 'device:settings')).toBeNull();
+    await expect.poll(() => readStored(page, 'device:settings')).toEqual({ uiLocale: 'es', uiLocaleAt: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T/) });
+    await sheet.getByRole('button', { name: 'Listo' }).click();
+    await page.reload();
+    await expect(page.getByRole('heading', { level: 1, name: 'Proyección' })).toBeVisible();
   });
+
 });
 
 test.describe('presenter home, Keys and help', () => {

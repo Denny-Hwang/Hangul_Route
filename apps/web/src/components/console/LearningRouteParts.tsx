@@ -17,6 +17,7 @@ import { useMessages } from '@/lib/i18n/locale-context';
 import { BrowseLink, useBrowseLinksShown } from './BrowseLink';
 import { PipShape, stageStateParts } from './JourneyParts';
 import { Notice, panelStyle } from './ui';
+import { headRem, rem } from '@/lib/console/rem';
 
 /**
  * The grown-up Learning Route (AMENDMENTS-ROUTE-LEARNING-ROUTE section 6.1, LR-8; screen spec
@@ -45,8 +46,8 @@ export const readingColumn: CSSProperties = {
 const reset: CSSProperties = { margin: 0 };
 const lineRow: CSSProperties = { ...reset, display: 'flex', gap: spacing.sm, alignItems: 'flex-start' };
 const glyphBox: CSSProperties = { flex: 'none', display: 'inline-flex', marginTop: spacing.xxs, lineHeight: 0 };
-const strongLine: CSSProperties = { fontSize: typography.size.bodyLg, fontWeight: typography.weight.bold, lineHeight: typography.leading.tight };
-const secondaryLine: CSSProperties = { ...reset, fontSize: typography.size.bodySm, color: colors.text.secondary, lineHeight: typography.leading.normal };
+const strongLine: CSSProperties = { fontSize: rem(typography.size.bodyLg), fontWeight: typography.weight.bold, lineHeight: typography.leading.tight };
+const secondaryLine: CSSProperties = { ...reset, fontSize: rem(typography.size.bodySm), color: colors.text.secondary, lineHeight: typography.leading.normal };
 
 /** "Back to the class" with the arrow glyph: `touchTarget.min` tall, underlined `brand.secondaryDark` (stage-list.md, Layout 2). */
 export function BackLink({ link }: { link: LearningRouteLink }): JSX.Element {
@@ -99,7 +100,7 @@ function GoalDetails({ goal }: { goal: LearningRouteGoal }): JSX.Element {
       {goal.reached ? <p style={reset}>{goal.reached}</p> : null}
       {goal.canDoLead && goal.canDo ? (
         <div>
-          <p style={{ ...reset, fontSize: typography.size.caption, fontWeight: typography.weight.semibold, color: colors.text.muted }}>{goal.canDoLead}</p>
+          <p style={{ ...reset, fontSize: rem(typography.size.caption), fontWeight: typography.weight.semibold, color: colors.text.muted }}>{goal.canDoLead}</p>
           <p style={reset}>{goal.canDo}</p>
         </div>
       ) : null}
@@ -164,7 +165,7 @@ function Tag({ tag }: { tag: LearningRouteTag }): JSX.Element {
         gap: spacing.xxs,
         padding: `${spacing.xxs}px ${spacing.sm}px`,
         borderRadius: radii.pill,
-        fontSize: typography.size.caption,
+        fontSize: rem(typography.size.caption),
         fontWeight: typography.weight.semibold,
         color: colors.text.primary,
         backgroundColor: glyph ? colors.surface.sunken : colors.brand.primaryLight,
@@ -238,8 +239,8 @@ function StageRowItem({ row, preview, previewLabel }: { row: LearningRouteRow; p
   );
 }
 
-const headingStyle: CSSProperties = { fontSize: typography.size.title, margin: 0, lineHeight: typography.leading.tight };
-const updatedStyle: CSSProperties = { ...reset, fontSize: typography.size.bodySm, color: colors.text.muted };
+const headingStyle: CSSProperties = { fontSize: headRem(typography.size.title), margin: 0, lineHeight: typography.leading.tight };
+const updatedStyle: CSSProperties = { ...reset, fontSize: rem(typography.size.bodySm), color: colors.text.muted };
 
 /**
  * The stage list page body for one learner (section 6.1, Layout): back link, `h1`, "Updated {date}",
@@ -278,7 +279,7 @@ export function LearningRouteContent({ view, preview }: { view: LearningRouteVie
     <div style={readingColumn}>
       {head}
       <GrownUpRouteCard card={view.card} />
-      <h2 style={{ fontSize: typography.size.bodyLg, margin: `${spacing.sm}px 0 0` }}>{view.stagesTitle}</h2>
+      <h2 style={{ fontSize: rem(typography.size.bodyLg), margin: `${spacing.sm}px 0 0` }}>{view.stagesTitle}</h2>
       {/* role="list": WebKit drops the list semantics of an unstyled list, and VoiceOver must still say "list, 7 items" (section 10). */}
       <ol role="list" style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: spacing.sm }}>
         {view.stages.map((row) => (

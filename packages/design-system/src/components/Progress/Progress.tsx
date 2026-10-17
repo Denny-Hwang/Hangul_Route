@@ -1,6 +1,7 @@
 import React from 'react';
 import { Text, View } from 'react-native';
 import { colors, radii, spacing, typography } from '../../tokens';
+import { useTypeScale } from '../TextSize';
 import type { ProgressProps } from './types';
 import { KOREAN_LINE_BREAK } from '../../line-break';
 
@@ -19,6 +20,7 @@ export function Progress({
   label,
   testID,
 }: ProgressProps): React.ReactElement {
+  const textScale = useTypeScale();
   const clamped = Math.max(0, Math.min(value, max));
   const pct = max <= 0 ? 0 : clamped / max;
 
@@ -46,7 +48,7 @@ export function Progress({
             style={{
               marginLeft: spacing.sm,
               color: colors.text.muted,
-              fontSize: typography.size.caption,
+              fontSize: textScale.size.caption,
             }}
           >
             {label}
@@ -81,7 +83,7 @@ export function Progress({
           style={{
             marginTop: spacing.xs,
             color: colors.text.muted,
-            fontSize: typography.size.caption,
+            fontSize: textScale.size.caption,
             textAlign: 'right',
           }}
         >

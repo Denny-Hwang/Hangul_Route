@@ -10,6 +10,7 @@ import { useConsole } from '@/components/console/use-console';
 import { homeOfHint } from '@/lib/console/personas';
 import { codeExpiry } from '@/lib/console/rollup';
 import { ROUTES, landingAfterCreate, prefillName, presetKind, roleCards } from '@/lib/console/routing';
+import { headRem, rem } from '@/lib/console/rem';
 
 type Step = { at: 'role' } | { at: 'name'; kind: SpaceKind } | { at: 'code'; spaceId: string; code: string; expiresAt: string | null };
 
@@ -65,7 +66,7 @@ function StartInner(): JSX.Element {
       <div style={{ maxWidth: 560, margin: '0 auto' }}>
         {step.at === 'role' ? (
           <>
-            <h1 style={{ fontSize: typography.size.title, margin: `0 0 ${spacing.md}px` }}>{c.start.roleTitle}</h1>
+            <h1 style={{ fontSize: headRem(typography.size.title), margin: `0 0 ${spacing.md}px` }}>{c.start.roleTitle}</h1>
             <div style={{ display: 'grid', gap: spacing.sm }} role="radiogroup" aria-label={c.start.roleLabel}>
               {roleCards(locale).map((card) => {
                 const selected = kind === card.kind;
@@ -85,7 +86,7 @@ function StartInner(): JSX.Element {
                     }}
                   >
                     <div style={{ fontWeight: typography.weight.bold }}>{card.title}</div>
-                    <div style={{ color: colors.text.secondary, fontSize: typography.size.bodySm }}>{card.line}</div>
+                    <div style={{ color: colors.text.secondary, fontSize: rem(typography.size.bodySm) }}>{card.line}</div>
                   </button>
                 );
               })}
@@ -112,7 +113,7 @@ function StartInner(): JSX.Element {
               void create();
             }}
           >
-            <h1 style={{ fontSize: typography.size.title, margin: `0 0 ${spacing.md}px` }}>{c.start.nameTitle[step.kind]}</h1>
+            <h1 style={{ fontSize: headRem(typography.size.title), margin: `0 0 ${spacing.md}px` }}>{c.start.nameTitle[step.kind]}</h1>
             <Field name="name" label={c.start.nameLabel} value={name} onChange={setName} required maxLength={40} />
             {step.kind === 'class' ? <Muted>{c.start.classJoinHint}</Muted> : null}
             {!api ? <Muted>{c.shell.noApi}</Muted> : null}
@@ -126,9 +127,9 @@ function StartInner(): JSX.Element {
           </form>
         ) : (
           <>
-            <h1 style={{ fontSize: typography.size.title, margin: `0 0 ${spacing.md}px` }}>{c.start.codeTitle}</h1>
+            <h1 style={{ fontSize: headRem(typography.size.title), margin: `0 0 ${spacing.md}px` }}>{c.start.codeTitle}</h1>
             <div style={{ ...panelStyle, textAlign: 'center' }}>
-              <div data-testid="class-code" style={{ fontSize: typography.size.hero, fontWeight: typography.weight.bold, letterSpacing: spacing.sm, fontFamily: typography.family.mono, borderRadius: radii.md }}>
+              <div data-testid="class-code" style={{ fontSize: headRem(typography.size.hero), fontWeight: typography.weight.bold, letterSpacing: spacing.sm, fontFamily: typography.family.mono, borderRadius: radii.md }}>
                 {step.code}
               </div>
               <Muted>{codeExpiry(step.expiresAt, new Date(), locale)}</Muted>

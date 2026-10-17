@@ -1,6 +1,6 @@
 'use client';
 
-import { unlockActive, type GrownUpUnlock } from '@hangul-route/content-schema';
+import { unlockActive, type GrownUpUnlock, type UiLocale } from '@hangul-route/content-schema';
 import { IconSvg } from '@hangul-route/design-system/icon-glyphs/dom';
 import { borderWidth, colors, layout, radii, spacing, touchTarget, typography, z } from '@hangul-route/design-system/tokens';
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
@@ -10,7 +10,9 @@ import { decideGrownUpLock, learnerHome, pinPathUrl, signInAgainUrl, type Device
 import { clearSession } from '@/lib/console/session';
 import { readTrustedEpoch } from '@/lib/console/shell-store';
 import { clearGrownUpTab, readUnlock, touchUnlock } from '@/lib/console/unlock';
-import { useMessages } from '@/lib/i18n/locale-context';
+import { useLocale, useMessages } from '@/lib/i18n/locale-context';
+import { DisplayButton } from './DisplaySheet';
+import { headRem, rem } from '@/lib/console/rem';
 
 /**
  * The grown-up lock (F-APP-001 section 3.9, OD-3; wireframe design/wireframes/shell/grown-up-lock.md).
@@ -252,14 +254,14 @@ interface LockHandlers {
   onBackToLearning: () => void;
 }
 
-/** The three lock buttons for the page at `path` (pathname and query). */
-export function lockActions(env: GrownUpLockEnvironment, path: string, onSignInAgain: (signInUrl: string) => void): LockHandlers {
+/** The three lock buttons for the page at `path` (pathname and query); Back to learning carries the console's language. */
+export function lockActions(env: GrownUpLockEnvironment, path: string, onSignInAgain: (signInUrl: string) => void, locale: UiLocale): LockHandlers {
   return {
     onUsePin: () => env.assign(pinPathUrl(path)),
     onSignInAgain: () => onSignInAgain(signInAgainUrl(path)),
     onBackToLearning: () => {
       env.clearGrownUpTab();
-      env.assign(learnerHome(env.origin()));
+      env.assign(learnerHome(env.origin(), locale));
     },
   };
 }
@@ -304,6 +306,7 @@ export interface GrownUpLockProps {
 }
 
 export function GrownUpLock({ children, pathname, search = '', exempt = false, onSignInAgain, environment }: GrownUpLockProps): JSX.Element {
+  const locale = useLocale();
   const [state, setState] = useState<LockState | null>(null);
   const pathRef = useRef(pathname);
   const decidedPathRef = useRef<string | null>(null);
@@ -342,7 +345,7 @@ export function GrownUpLock({ children, pathname, search = '', exempt = false, o
 
   if (exempt) return <>{children}</>;
   return (
-    <GrownUpLockGate view={lockView(state, pathname)} {...lockActions(envOf(), returnPath(pathname, search), onSignInAgain)}>
+    <GrownUpLockGate view={lockView(state, pathname)} {...lockActions(envOf(), returnPath(pathname, search), onSignInAgain, locale)}>
       {children}
     </GrownUpLockGate>
   );
@@ -382,7 +385,7 @@ const buttonBase: CSSProperties = {
   boxSizing: 'border-box',
   padding: `${spacing.sm}px ${spacing.xl}px`,
   borderRadius: radii.pill,
-  fontSize: typography.size.body,
+  fontSize: rem(typography.size.body),
   fontWeight: typography.weight.bold,
   cursor: 'pointer',
 };
@@ -414,18 +417,19 @@ export function GrownUpLockScreen({ decision, onUsePin, onSignInAgain, onBackToL
   }, []);
   const line = decision.line === 'default' ? lock.line : lock[decision.line];
   return (
-    <main style={pageStyle}>
-      <div style={columnStyle}>
+    <main style={{ ...pageStyle, position: 'relative' }}>
+      {/* The column starts below the Aa row, so Back to learning never runs under the button. */}
+      <div style={{ ...columnStyle, marginTop: touchTarget.min + spacing.sm }}>
         <LockButton tone="quiet" onClick={onBackToLearning} testId="grown-up-lock-back">
           <IconSvg name="arrow-left" size={spacing.xl} color={colors.text.secondary} />
           {lock.backToLearning.cta}
         </LockButton>
         <section role="region" aria-labelledby={TITLE_ID} data-testid="grown-up-lock" style={sectionStyle}>
           <IconSvg name="lock" size={spacing.xxxl} color={colors.text.secondary} />
-          <h1 id={TITLE_ID} tabIndex={-1} ref={headingRef} style={{ margin: 0, fontSize: typography.size.title, fontWeight: typography.weight.bold, lineHeight: typography.leading.tight, outline: 'none' }}>
+          <h1 id={TITLE_ID} tabIndex={-1} ref={headingRef} style={{ margin: 0, fontSize: headRem(typography.size.title), fontWeight: typography.weight.bold, lineHeight: typography.leading.tight, outline: 'none' }}>
             {lock.title}
           </h1>
-          <p style={{ margin: 0, marginBottom: spacing.sm, fontSize: typography.size.body, lineHeight: typography.leading.relaxed, color: colors.text.secondary }}>{line}</p>
+          <p style={{ margin: 0, marginBottom: spacing.sm, fontSize: rem(typography.size.body), lineHeight: typography.leading.relaxed, color: colors.text.secondary }}>{line}</p>
           {decision.pinPath ? (
             <LockButton tone="primary" onClick={onUsePin} testId="grown-up-lock-pin">
               {lock.usePin.cta}
@@ -435,6 +439,11 @@ export function GrownUpLockScreen({ decision, onUsePin, onSignInAgain, onBackToL
             {lock.signInAgain.cta}
           </LockButton>
         </section>
+      </div>
+      {/* The Aa button (owner items 6 and 7): the device's language and text size, drawn top right; last in the
+          tab order, after the lock's own actions. */}
+      <div style={{ position: 'absolute', top: spacing.lg, right: layout.gutter.compact }}>
+        <DisplayButton testId="grown-up-lock-display" />
       </div>
     </main>
   );

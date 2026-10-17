@@ -74,6 +74,30 @@ export const common = {
     new: { pill: 'New' },
   },
   /**
+   * The Display (Aa) sheet (owner items 6 and 7): the device's one UI language and text size, read by
+   * the learner app, All lessons, the presenter and the grown-up pages, so every surface words it the
+   * same way (AMENDMENTS-DISPLAY-NAV section 10). Done and the scrim reuse `buttons.done` and `buttons.close`.
+   */
+  display: {
+    /** The Aa button: the sign it draws (hidden from assistive tech) and its accessible name. */
+    button: 'Aa',
+    // Begins with the visible label (WCAG 2.5.3 Label in Name), so "tap Aa" works for voice control.
+    a11y: 'Aa, Display: language and text size',
+    title: 'Display',
+    language: 'Language',
+    textSize: 'Text size',
+    size: { standard: 'Standard', large: 'Large', larger: 'Larger', largest: 'Largest' },
+    /** The live preview line, drawn at the chosen size. */
+    preview: 'This is how text looks.',
+    note: 'For everyone on this device. Change it any time.',
+    /** Choosing another language: the confirm step, drawn in the language chosen (F-I18N-001 §3.3 safety rule). */
+    confirm: {
+      question: (endonym: string) => `Use ${endonym} on this device?`,
+      use: (endonym: string) => `Use ${endonym}`,
+      back: (endonym: string) => `Back to ${endonym}`,
+    },
+  },
+  /**
    * The learner level's words (F-LEARN-001 §3.7, content-schema `LEARNER_LEVELS`) in level order: how much the learner
    * reads, never an age. `levelWords` (levels.ts) finds them by the stored level id.
    */

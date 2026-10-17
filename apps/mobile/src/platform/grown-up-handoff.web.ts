@@ -15,7 +15,6 @@ import {
 } from '../logic/shell/handoff-rules';
 import { currentDeviceGateMarker } from '../store/device-gate';
 import { activeLocale, useLocaleStore } from '../store/locale-store';
-import { useProfileStore } from '../store/profile-store';
 import { useUiStore } from '../store/ui-store';
 import { track as sendEvent, type TelemetryEvent } from './telemetry';
 
@@ -87,7 +86,7 @@ function browserEnv(): HandoffEnv {
     state: () => ({
       marker: currentDeviceGateMarker(),
       lastPinVerifiedAt: useUiStore.getState().lastPinVerifiedAt,
-      locale: activeLocale(useLocaleStore.getState(), useProfileStore.getState().activeId),
+      locale: activeLocale(useLocaleStore.getState()),
     }),
     track: (event) => sendEvent(event),
     assign: browserAssign,
@@ -129,8 +128,7 @@ function writeUnlock(env: HandoffEnv, value: string): void {
  * nothing and goes (the console asks for a sign-in); `pin` needs a PIN verified in the last 2
  * minutes, else it returns `'pin'` and writes nothing. Then it writes the PIN unlock with the
  * marker epoch, emits `shell.grown_up_handoff { via, target }` and opens the target (a grown-up
- * path, `safeNextPath`) or the sign-in router, with `?lang=` for a UI locale that is not the
- * default.
+ * path, `safeNextPath`) or the sign-in router, always with `?lang=` (English included).
  */
 export async function openGrownUpArea(request: GrownUpHandoffRequest, env: HandoffEnv = browserEnv()): Promise<HandoffResult> {
   const { marker, lastPinVerifiedAt, locale } = env.state();

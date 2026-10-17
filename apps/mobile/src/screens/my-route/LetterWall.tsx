@@ -1,6 +1,6 @@
-import { Body, Button, Icon, KoreanText, borderWidth, colors, radii, spacing } from '@hangul-route/design-system';
+import { Body, Button, Icon, KoreanText, borderWidth, colors, radii, spacing, useEffectiveFontScale } from '@hangul-route/design-system';
 import React, { useState } from 'react';
-import { View, useWindowDimensions } from 'react-native';
+import { View } from 'react-native';
 import { letterTileWidth, type LetterState, type LetterWallView } from '../../logic/my-route/letter-wall';
 
 /**
@@ -63,7 +63,8 @@ function Swatch({ state }: { state: LetterState }): React.ReactElement {
 
 export function LetterWall({ wall }: { wall: LetterWallView }): React.ReactElement {
   const [open, setOpen] = useState(false);
-  const { fontScale } = useWindowDimensions();
+  // OS text size x the chosen Display text size (owner items 6 and 7).
+  const fontScale = useEffectiveFontScale();
   const tileWidth = letterTileWidth(TILE_WIDTH, fontScale);
   return (
     <View testID="my-route-letter-wall">

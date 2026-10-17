@@ -69,8 +69,8 @@ const FITS_TABLET = 5;
  * Chip columns by window width: one at 320 dp, two from 360 dp (the reading
  * column keeps it at two). `longestKorean` (`longestRecapGlyphs`) keeps one
  * column when a half-width chip would break a Korean word across lines (the
- * same measure as Story Order's cards). `fontScale` is the device text size
- * (`useWindowDimensions().fontScale`): larger text counts as a narrower window,
+ * same measure as Story Order's cards). `fontScale` is the effective text size
+ * (`useEffectiveFontScale()`: OS text size x the Display step): larger text counts as a narrower window,
  * so a word that fits at 100 % does not break at 130 % or 200 % (wireframe
  * word-recap: "200 % text, 320 wide: one column"); smaller text never widens it.
  */

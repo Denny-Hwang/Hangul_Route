@@ -3,6 +3,7 @@ import { Pressable, Text, View } from 'react-native';
 import { borderWidth, colors, radii, spacing, touchTarget, typography } from '../../tokens';
 import { KOREAN_LANGUAGE, koreanTextView } from '../../korean-text';
 import { Icon } from '../Icon';
+import { useTypeScale } from '../TextSize';
 import type { KoreanTextProps } from './types';
 import { KOREAN_LINE_BREAK } from '../../line-break';
 
@@ -29,7 +30,9 @@ export function KoreanText({
   accessibilityLabel,
   testID,
 }: KoreanTextProps): React.ReactElement {
+  const scale = useTypeScale().size;
   const view = koreanTextView({
+    scale,
     ko,
     romanization,
     gloss,
@@ -98,7 +101,7 @@ export function KoreanText({
         <Text {...KOREAN_LINE_BREAK}
           style={{
             marginTop: spacing.xxs,
-            fontSize: typography.size.body,
+            fontSize: view.glossSize,
             color: colors.text.secondary,
             textAlign: 'center',
           }}

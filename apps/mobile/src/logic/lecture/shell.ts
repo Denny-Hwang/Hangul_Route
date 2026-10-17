@@ -55,15 +55,23 @@ export function homeStart(choice: HomeChoice): { kind: 'ready'; deck: LectureDec
 }
 
 /**
- * The presenter's language (sections 3.12 and 3.13): a language chip chosen in this session
- * (memory only, the device locale is never written), else the deck's `options.uiLocale`, else
- * the device locale. A locale this build does not offer is passed over at every step.
+ * The presenter's own language, for its chrome (home, start screen, bar, overlays, Exit; owner items
+ * 6 and 7): the device record's language, as everywhere else on this device. The chrome never
+ * follows the deck. A locale this build does not offer falls back to English.
  */
-export function presenterLocale(input: { deck: LectureDeck | null; session: UiLocale | null; device: UiLocale; available: readonly UiLocale[] }): UiLocale {
-  if (input.session !== null && input.available.includes(input.session)) return input.session;
+export function presenterLocale(input: { device: UiLocale; available: readonly UiLocale[] }): UiLocale {
+  return input.available.includes(input.device) ? input.device : 'en';
+}
+
+/**
+ * The language the slides speak: the deck's `options.uiLocale` only when the deck was given one
+ * explicitly (the console's Slides language, a deck saved with one), else the presenter's own
+ * language. A deck language this build does not offer is passed over.
+ */
+export function slideLocale(input: { deck: LectureDeck | null; device: UiLocale; available: readonly UiLocale[] }): UiLocale {
   const fromDeck = input.deck?.options.uiLocale;
   if (fromDeck !== undefined && input.available.includes(fromDeck)) return fromDeck;
-  return input.device;
+  return presenterLocale(input);
 }
 
 // --- the slides this build draws ------------------------------------------------------------------

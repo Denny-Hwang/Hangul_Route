@@ -1,4 +1,4 @@
-import { Hoya, Icon, borderWidth, colors, layout, radii, spacing, touchTarget, typography, type HoyaPose, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
+import { Hoya, Icon, borderWidth, colors, layout, radii, spacing, touchTarget, typography, useTypeScale, type HoyaPose, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
 import { READABLE_LINE, STATE_HOYA } from './stage-metrics';
 import React, { useEffect, useRef } from 'react';
 import { Pressable, Text, View } from 'react-native';
@@ -36,6 +36,7 @@ export function StatePage({
   /** A top-left Back (the rotate page's way out, `common.buttons.back`). */
   back?: { label: string; onPress: () => void; testID?: string };
 }): React.ReactElement {
+  const ts = useTypeScale().size;
   const { messages } = usePresenterView();
   const action = useRef<View>(null);
   const backRef = useRef<View>(null);
@@ -65,17 +66,17 @@ export function StatePage({
       ) : null}
       <Hoya pose={pose} size={STATE_HOYA} accessibilityLabel={messages.a11y.hoya(pose)} />
       {title !== undefined ? (
-        <Text {...KOREAN_LINE_BREAK} role="heading" style={{ fontSize: typography.size.display, fontWeight: typography.weight.bold, color: colors.text.primary, textAlign: 'center' }}>
+        <Text {...KOREAN_LINE_BREAK} role="heading" style={{ fontSize: ts.display, fontWeight: typography.weight.bold, color: colors.text.primary, textAlign: 'center' }}>
           {title}
         </Text>
       ) : null}
       {status !== undefined ? (
-        <Text {...KOREAN_LINE_BREAK} role="status" style={{ fontSize: typography.size.bodyLg, color: colors.text.primary, textAlign: 'center' }}>
+        <Text {...KOREAN_LINE_BREAK} role="status" style={{ fontSize: ts.bodyLg, color: colors.text.primary, textAlign: 'center' }}>
           {status}
         </Text>
       ) : null}
       {line !== undefined ? (
-        <Text {...KOREAN_LINE_BREAK} style={{ fontSize: typography.size.body, color: colors.text.secondary, textAlign: 'center', maxWidth: READABLE_LINE, lineHeight: Math.round(typography.size.body * typography.leading.normal) }}>
+        <Text {...KOREAN_LINE_BREAK} style={{ fontSize: ts.body, color: colors.text.secondary, textAlign: 'center', maxWidth: READABLE_LINE, lineHeight: Math.round(ts.body * typography.leading.normal) }}>
           {line}
         </Text>
       ) : null}
@@ -90,6 +91,7 @@ type PressState = { pressed: boolean; focused?: boolean };
 /** The presenter's primary pill (real pixels, `touchTarget.hero` tall): `brand.primaryDark` with `text.onPrimary` (7.65:1). */
 export const PrimaryButton = React.forwardRef<View, { label: string; onPress: () => void; disabled?: boolean; large?: boolean; testID?: string; minHeight?: number; grow?: boolean }>(
   function PrimaryButton({ label, onPress, disabled, large, testID, minHeight, grow }, ref) {
+    const ts = useTypeScale().size;
     return (
       <Pressable
         ref={ref}
@@ -115,7 +117,7 @@ export const PrimaryButton = React.forwardRef<View, { label: string; onPress: ()
           };
         }}
       >
-        <Text {...KOREAN_LINE_BREAK} style={{ fontSize: large ? typography.size.display : typography.size.bodyLg, fontWeight: typography.weight.bold, color: colors.text.onPrimary }}>{label}</Text>
+        <Text {...KOREAN_LINE_BREAK} style={{ fontSize: large ? ts.display : ts.bodyLg, fontWeight: typography.weight.bold, color: colors.text.onPrimary }}>{label}</Text>
       </Pressable>
     );
   },
@@ -126,6 +128,7 @@ export const GhostButton = React.forwardRef<View, { label: string; onPress: () =
   { label, onPress, testID, expanded },
   ref,
 ) {
+  const ts = useTypeScale().size;
   return (
     <Pressable
       ref={ref}
@@ -148,7 +151,7 @@ export const GhostButton = React.forwardRef<View, { label: string; onPress: () =
         };
       }}
     >
-      <Text {...KOREAN_LINE_BREAK} style={{ fontSize: typography.size.bodyLg, fontWeight: typography.weight.bold, color: colors.text.primary }}>{label}</Text>
+      <Text {...KOREAN_LINE_BREAK} style={{ fontSize: ts.bodyLg, fontWeight: typography.weight.bold, color: colors.text.primary }}>{label}</Text>
     </Pressable>
   );
 });
@@ -158,6 +161,7 @@ export const GhostButton = React.forwardRef<View, { label: string; onPress: () =
  * tall, bold body text, a pill focus ring.
  */
 export const BackLink = React.forwardRef<View, { label: string; onPress: () => void; testID?: string }>(function BackLink({ label, onPress, testID }, ref) {
+  const ts = useTypeScale().size;
   return (
     <Pressable
       ref={ref}
@@ -183,7 +187,7 @@ export const BackLink = React.forwardRef<View, { label: string; onPress: () => v
       }}
     >
       <Icon name="arrow-left" size={spacing.xl} color={colors.text.primary} />
-      <Text {...KOREAN_LINE_BREAK} style={{ fontSize: typography.size.body, fontWeight: typography.weight.bold, color: colors.text.primary }}>{label}</Text>
+      <Text {...KOREAN_LINE_BREAK} style={{ fontSize: ts.body, fontWeight: typography.weight.bold, color: colors.text.primary }}>{label}</Text>
     </Pressable>
   );
 });

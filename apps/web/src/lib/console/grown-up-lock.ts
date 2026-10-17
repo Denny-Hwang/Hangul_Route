@@ -1,4 +1,4 @@
-import { APP_ORIGIN, APP_ROUTES, SITE_ORIGIN, safeNextPath, unlockActive, type DeviceGateMarker, type GrownUpUnlock } from '@hangul-route/content-schema';
+import { APP_ORIGIN, APP_ROUTES, SITE_ORIGIN, safeNextPath, unlockActive, type DeviceGateMarker, type GrownUpUnlock, type UiLocale } from '@hangul-route/content-schema';
 
 /**
  * The grown-up lock decision (F-APP-001 section 3.9, OD-3; wireframe shell/grown-up-lock.md).
@@ -112,10 +112,13 @@ const SITE_ORIGINS: ReadonlySet<string> = new Set([SITE_ORIGIN, SITE_ORIGIN.repl
 /**
  * The learner app: the app host itself while the console is still served on the site, `/`
  * everywhere else (the app host, a merged-build preview, a local build), so a preview or a test
- * never leaves for production (A-4a review 2026-10-12, refines section 3.8).
+ * never leaves for production (A-4a review 2026-10-12, refines section 3.8). It always carries
+ * `?lang=<the console's language>`, English included (AMENDMENTS-DISPLAY-NAV section 6): the
+ * learner app uses it only to seed a device that never chose.
  */
-export function learnerHome(origin: string): string {
-  return isSiteOrigin(origin) ? `${APP_ORIGIN}${APP_ROUTES.learn}` : APP_ROUTES.learn;
+export function learnerHome(origin: string, locale: UiLocale): string {
+  const home = isSiteOrigin(origin) ? `${APP_ORIGIN}${APP_ROUTES.learn}` : APP_ROUTES.learn;
+  return `${home}?lang=${locale}`;
 }
 
 /** Whether this page runs on a site origin (the console there until F-SITE-002 S-10), not on the learner app's origin. */

@@ -21,14 +21,41 @@ describe('learner.welcome (English wording as shipped)', () => {
   });
 });
 
-describe('learner.language (shared by the Welcome row and the Profile card)', () => {
-  it('names the group and builds the sheet sentences from an endonym', () => {
-    expect(m.learner.language.groupLabel).toBe('Language');
-    expect(m.learner.language.sameAsDevice('English')).toBe('Same as this device (English)');
-    expect(m.learner.language.confirmProfile('Español')).toBe('Use Español for this profile?');
-    expect(m.learner.language.confirmDevice('한국어')).toBe('Use 한국어 on this device?');
-    expect(m.learner.language.confirmUse('English')).toBe('Use English');
-    expect(m.learner.language.confirmBack('English')).toBe('Back to English');
+describe('learner.language (the Welcome row) and common.display (the Display sheet, owner items 6 and 7)', () => {
+  it('names the Welcome group; the per-profile sentences are gone', () => {
+    expect(m.learner.language).toEqual({ groupLabel: 'Language' });
+  });
+
+  it('words the Display sheet once for every surface (AMENDMENTS-DISPLAY-NAV section 10)', () => {
+    const d = m.common.display;
+    expect([d.button, d.a11y, d.title, d.language, d.textSize]).toEqual(['Aa', 'Aa, Display: language and text size', 'Display', 'Language', 'Text size']);
+    expect(d.size).toEqual({ standard: 'Standard', large: 'Large', larger: 'Larger', largest: 'Largest' });
+    expect(d.preview).toBe('This is how text looks.');
+    expect(d.note).toBe('For everyone on this device. Change it any time.');
+    expect([d.confirm.question('Español'), d.confirm.use('Español'), d.confirm.back('English')]).toEqual(['Use Español on this device?', 'Use Español', 'Back to English']);
+    expect(m.learner.profile.display.row).toBe('Display');
+    expect(m.learner.profile.display.line('English', 'Largest')).toBe('English · Text: Largest');
+  });
+
+  it('the Aa name begins with the visible sign in every locale (WCAG 2.5.3 Label in Name)', () => {
+    for (const locale of ['en', 'es', 'ko'] as const) {
+      const d = getMessages(locale).common.display;
+      expect(d.a11y.startsWith(`${d.button}, `)).toBe(true);
+    }
+  });
+
+  it('the Profile display line keeps each size label as the control writes it (a label after its colon)', () => {
+    expect(getMessages('es').learner.profile.display.line('Español', 'Máximo')).toBe('Español · Texto: Máximo');
+    expect(getMessages('ko').learner.profile.display.line('한국어', '가장 크게')).toBe('한국어 · 글자 크기: 가장 크게');
+  });
+
+  it('Spanish and Korean word the sheet too, with no particle on the endonym', () => {
+    expect(getMessages('es').common.display.confirm.back('English')).toBe('Volver a English');
+    expect(getMessages('ko').common.display.confirm.back('English')).toBe('돌아가기: English');
+    expect(getMessages('ko').common.display.confirm.question('Español')).toBe('이 기기의 언어를 바꿀까요? (Español)');
+    expect(getMessages('ko').common.display.size).toEqual({ standard: '보통', large: '크게', larger: '더 크게', largest: '가장 크게' });
+    // Ordered beyond doubt: "Más grande" then "Máximo" (MAR: "Muy grande" read as possibly smaller than "Más grande").
+    expect(getMessages('es').common.display.size).toEqual({ standard: 'Normal', large: 'Grande', larger: 'Más grande', largest: 'Máximo' });
   });
 });
 
@@ -116,10 +143,8 @@ describe('learner.profile (English wording as shipped)', () => {
     expect([p.install.label, p.install.a11yLabel]).toEqual(['Install on this device', 'Install Hangul Route on this device']);
   });
 
-  it('has the Language card and the reading-practice switch', () => {
-    expect(p.language.title).toBe('Language');
-    expect(p.language.thisProfile).toBe('This profile');
-    expect(p.language.deviceDefault).toBe('New profiles and this device start in:');
+  it('has the reading-practice switch; the language lives on the Display sheet', () => {
+    expect('language' in p).toBe(false);
     expect(p.reading.title).toBe('Reading practice');
     expect(p.reading.hideUntilTap).toBe('Hide romanization until I tap');
   });

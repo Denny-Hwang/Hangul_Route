@@ -650,7 +650,7 @@ export const caregiver = {
       title: 'Las lecciones',
       close: { cta: 'Cerrar' },
       howTo: 'Toca una lección para ver qué enseña y luego pruébala. No se guarda nada.',
-      lessonDisplay: { cta: 'Vista de la lección' },
+      lessonDisplay: { cta: 'Romanización' },
       offline: 'Sin red',
       scope: {
         sampler: 'Las lecciones gratis de tu estudiante están abiertas. Las demás muestran lo que enseñan.',
@@ -688,11 +688,9 @@ export const caregiver = {
       failed: 'No se pudieron guardar las lecciones en este dispositivo.',
     },
     display: {
-      title: 'Vista de la lección',
-      romanization: 'Romanización',
+      title: 'Romanización',
       always: 'Siempre visible',
       tap: 'Oculta hasta tocar',
-      language: 'Idioma',
       note: 'Estas opciones cambian solo esta vista previa. La configuración de los estudiantes no cambia.',
       done: { cta: 'Listo' },
     },

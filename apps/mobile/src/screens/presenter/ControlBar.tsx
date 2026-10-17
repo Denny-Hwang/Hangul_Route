@@ -1,4 +1,4 @@
-import { Icon, borderWidth, colors, layout, motion, radii, shadows, spacing, touchTarget, typography, z, type IconName, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
+import { Icon, borderWidth, colors, layout, motion, radii, shadows, spacing, touchTarget, typography, z, type IconName, KOREAN_LINE_BREAK, useTypeScale } from '@hangul-route/design-system';
 import React, { forwardRef, useEffect, useRef, useState } from 'react';
 import { Animated, Pressable, ScrollView, Text, View, type LayoutChangeEvent, type ViewStyle } from 'react-native';
 import { BAR_SHOW_GRACE_MS, NO_INSETS, type StageInsets } from '../../logic/lecture/stage-constants';
@@ -107,6 +107,7 @@ function useFocusTracker(onFocusWithin: (focused: boolean, pointer: boolean) => 
 }
 
 const Ctl = forwardRef<View, CtlProps>(function Ctl({ label, icon, primary, pressed, small, expanded, popup, onPress, focus, testID }, ref) {
+  const textScale = useTypeScale();
   const fg = primary ? colors.text.onPrimary : colors.text.primary;
   const target = small ? touchTarget.min : touchTarget.hero;
   return (
@@ -144,7 +145,7 @@ const Ctl = forwardRef<View, CtlProps>(function Ctl({ label, icon, primary, pres
       }}
     >
       {icon !== undefined ? <Icon name={icon} size={small ? spacing.xl : spacing.xxl} color={fg} /> : null}
-      <Text {...KOREAN_LINE_BREAK} style={{ fontSize: typography.size.body, fontWeight: typography.weight.bold, color: fg, textAlign: 'center', lineHeight: Math.round(typography.size.body * typography.leading.tight) }}>
+      <Text {...KOREAN_LINE_BREAK} style={{ fontSize: textScale.size.body, fontWeight: typography.weight.bold, color: fg, textAlign: 'center', lineHeight: Math.round(textScale.size.body * typography.leading.tight) }}>
         {label}
       </Text>
     </Pressable>
@@ -285,6 +286,7 @@ function CompactBar(props: BarParts): React.ReactElement {
  * back to More when it closes. A control runs its tool and closes the sheet.
  */
 function MoreSheet(props: BarParts & { insets: StageInsets }): React.ReactElement {
+  const textScale = useTypeScale();
   const { messages } = usePresenterView();
   const m = messages.learner.presenter.bar;
   const self = useRef<View>(null);
@@ -338,7 +340,7 @@ function MoreSheet(props: BarParts & { insets: StageInsets }): React.ReactElemen
       >
         <ScrollView contentContainerStyle={{ padding: spacing.md, gap: spacing.sm }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.md }}>
-            <Text {...KOREAN_LINE_BREAK} role="heading" aria-level={2} style={{ flexShrink: 1, fontSize: typography.size.bodyLg, fontWeight: typography.weight.bold, color: colors.text.primary }}>
+            <Text {...KOREAN_LINE_BREAK} role="heading" aria-level={2} style={{ flexShrink: 1, fontSize: textScale.size.bodyLg, fontWeight: typography.weight.bold, color: colors.text.primary }}>
               {m.label}
             </Text>
             <SheetButton ref={close} testID="presenter-more-close" label={messages.common.buttons.close} onPress={() => props.onMore?.(false)} />
@@ -364,6 +366,7 @@ function MoreSheet(props: BarParts & { insets: StageInsets }): React.ReactElemen
 
 /** A More sheet button: `touchTarget.min` tall, paper with a `border.strong` outline, the label at body size. */
 const SheetButton = forwardRef<View, { label: string; onPress: () => void; pressed?: boolean; testID: string }>(function SheetButton({ label, onPress, pressed, testID }, ref) {
+  const textScale = useTypeScale();
   return (
     <Pressable
       ref={ref}
@@ -388,7 +391,7 @@ const SheetButton = forwardRef<View, { label: string; onPress: () => void; press
         };
       }}
     >
-      <Text {...KOREAN_LINE_BREAK} style={{ fontSize: typography.size.body, fontWeight: typography.weight.bold, color: colors.text.primary, textAlign: 'center' }}>
+      <Text {...KOREAN_LINE_BREAK} style={{ fontSize: textScale.size.body, fontWeight: typography.weight.bold, color: colors.text.primary, textAlign: 'center' }}>
         {label}
       </Text>
     </Pressable>
@@ -400,6 +403,7 @@ const SheetButton = forwardRef<View, { label: string; onPress: () => void; press
  * `text.primary` at 18 px. Sound is off carries a bordered Turn sound on button.
  */
 function Chip({ chip, onTurnSoundOn, focus }: { chip: StatusChip; onTurnSoundOn: () => void; focus: FocusTracker }): React.ReactElement {
+  const textScale = useTypeScale();
   const { messages } = usePresenterView();
   const m = messages.learner.presenter.bar;
   const text = chip === 'sound-off' ? messages.learner.audio.soundIsOff : chip === 'no-voice' ? m.noVoice : chip === 'offline' ? m.offline : m.update;
@@ -421,7 +425,7 @@ function Chip({ chip, onTurnSoundOn, focus }: { chip: StatusChip; onTurnSoundOn:
       }}
     >
       {chip === 'no-voice' || chip === 'sound-off' ? <Icon name="speaker-off" size={spacing.xl} color={colors.text.primary} /> : null}
-      <Text {...KOREAN_LINE_BREAK} style={{ flexShrink: 1, fontSize: typography.size.body, color: colors.text.primary }}>{text}</Text>
+      <Text {...KOREAN_LINE_BREAK} style={{ flexShrink: 1, fontSize: textScale.size.body, color: colors.text.primary }}>{text}</Text>
       {chip === 'sound-off' ? (
         <Pressable
           testID="presenter-turn-sound-on"
@@ -444,7 +448,7 @@ function Chip({ chip, onTurnSoundOn, focus }: { chip: StatusChip; onTurnSoundOn:
             };
           }}
         >
-          <Text {...KOREAN_LINE_BREAK} style={{ fontSize: typography.size.body, fontWeight: typography.weight.bold, color: colors.text.primary }}>{messages.learner.audio.action.turn_on.cta}</Text>
+          <Text {...KOREAN_LINE_BREAK} style={{ fontSize: textScale.size.body, fontWeight: typography.weight.bold, color: colors.text.primary }}>{messages.learner.audio.action.turn_on.cta}</Text>
         </Pressable>
       ) : null}
     </View>

@@ -1,28 +1,49 @@
 import {
   DEFAULT_CHALLENGE_MODE,
   DEFAULT_CLOCK_SCALE,
+  DEFAULT_TEXT_SIZE,
+  DEVICE_SETTINGS_KEY,
   DeviceSettingsSchema,
+  MIGRATED_AT,
   ProfileSettingsSchema,
+  mergeDeviceSettings,
   type ClockScale,
+  type DeviceSettings,
+  type DeviceSettingsPatch,
   type ProfileSettings,
   type RomanizationMode,
+  type TextSize,
 } from '@hangul-route/content-schema';
 import { availableLocales, detectLocale, resolveLocale, type UiLocale } from '@hangul-route/i18n';
 import { create } from 'zustand';
 import { deviceLanguages, takeLangHandoff } from '../platform/locale';
-import { readJson, removeKey, writeJson } from '../platform/storage';
+import { postDeviceSettings, subscribeDeviceSettings } from '../platform/prefs-channel';
+import { readJson, readJsonStrict, removeKey, updateJson, writeJson } from '../platform/storage';
 import { track } from '../platform/telemetry';
 import { onProfileRemoved } from './profile-removal';
 
 /**
- * UI locale and romanization display setting (F-I18N-001 §3.2). A local-first
- * device preference, never part of the synced `Profile`: it lives under
- * `device:settings` and `settings:${profileId}` and only locale codes reach
- * telemetry. Resolution is profile override > device choice > detection > `en`; a
- * tab-only session override (All lessons, memory only) sits above them all.
+ * UI locale, text size and romanization display settings (F-I18N-001 §3.2; owner items 6 and 7:
+ * one UI language per device and per account). A local-first device preference, never part of
+ * the synced `Profile`.
+ *
+ * - The device record `device:settings` holds the language (`uiLocale`, `uiLocaleAt`) and the
+ *   text size. Every surface of the origin reads and writes it: the learner app, All lessons,
+ *   the presenter and the grown-up pages (which may seed it from a signed-in grown-up's
+ *   account). Resolution is device > account seed (written into the record by the grown-up
+ *   pages) > detection > `en`; there is no per-profile language and no tab-only override.
+ * - `settings:${profileId}` keeps the per-profile settings that are not about the UI language
+ *   (romanization, Read to me, Challenge). A language stored there by an older version is the
+ *   language the active profile saw (the old resolution put it above the device), so it is
+ *   promoted to the device (stamped `MIGRATED_AT`) and then stripped (AMENDMENTS-DISPLAY-NAV
+ *   section 3.3).
+ *
+ * Only locale codes reach telemetry (`locale.changed`, scope `device`), and only from the learner
+ * app: the presenter's and All lessons' Display sheets report nothing (AMENDMENTS-DISPLAY-NAV
+ * section 11). The text size is not reported.
  */
 
-const DEVICE_KEY = 'device:settings';
+const DEVICE_KEY = DEVICE_SETTINGS_KEY;
 const profileKey = (profileId: string): string => `settings:${profileId}`;
 
 /** Where a locale change came from (telemetry payload `source`). */
@@ -31,35 +52,59 @@ export type LocaleChangeSource = 'welcome' | 'settings' | 'handoff';
 /** Where a Challenge change came from (`vocab.challenge_toggled` payload `source`, F-VOC-004 §3.10). */
 export type ChallengeSource = 'profile' | 'start_sheet';
 
+/** What a root does with a `?lang=` hand-off: seed a device that never chose, or only clean the address (the presenter). */
+export type HandoffUse = 'seed' | 'ignore';
+
+/**
+ * The time a migrated or seeded language is stamped with (AMENDMENTS-DISPLAY-NAV sections 3.3 and
+ * 3.4: older than any real choice), so a signed-in account's choice always wins the merge over it.
+ */
+export { MIGRATED_AT };
+
 interface State {
   /** What the platform prefers (hidden locales excluded); a default, not a choice. */
   detected: UiLocale;
-  /** The device-level choice; `null` = never chosen. */
+  /** The device record's language; `null` = never chosen. */
   device: UiLocale | null;
-  /**
-   * A tab-only override (F-BROWSE-001 §4.9): All lessons shows its chosen UI language without a
-   * learner profile and without touching the device choice. Never stored; `null` = none.
-   */
-  session: UiLocale | null;
+  /** When the device language was chosen (ISO); `null` for a choice stored before timestamps; `MIGRATED_AT` for a migrated one. */
+  deviceAt: string | null;
+  /** The device record's text size. */
+  textSize: TextSize;
   byProfile: Record<string, ProfileSettings>;
   hydrated: boolean;
 }
 
 interface Actions {
   /**
-   * `handoff: 'session'` (the presenter, F-TCH-004 section 3.9) holds a `?lang=` hand-off for this
-   * page only and writes nothing; the default makes it the stored device choice.
+   * Reads the device record and the profiles' settings. `activeProfileId` names the profile whose
+   * old language override is promoted to the device (with no active profile, the only one): it is
+   * what that profile saw, unless the record holds a choice made with its time (section 3.3).
+   * `handoff: 'ignore'` (the presenter) takes a `?lang=` out of the address without using it; the
+   * default seeds a device that never chose.
    */
-  hydrate: (profileIds: string[], options?: { handoff?: 'device' | 'session' }) => Promise<void>;
-  setDeviceLocale: (locale: UiLocale | null, source?: LocaleChangeSource) => void;
-  /** Sets the active UI locale in memory only: no `device:settings` write, no event (F-BROWSE-001 §4.9). */
-  setSessionLocale: (locale: UiLocale | null) => void;
-  setProfileLocale: (profileId: string, locale: UiLocale | null, source?: LocaleChangeSource) => void;
+  hydrate: (profileIds: string[], options?: { handoff?: HandoffUse; activeProfileId?: string | null }) => Promise<void>;
+  /**
+   * The person chose a language on this device: stored with its time, told to the other tabs, and
+   * reported as `locale.changed` with `source`. `null` reports nothing: the presenter and All
+   * lessons send no event for a display choice (AMENDMENTS-DISPLAY-NAV section 11).
+   */
+  setDeviceLocale: (locale: UiLocale, source?: LocaleChangeSource | null) => void;
+  /**
+   * A `?lang=` or All lessons pass language: only for a device that never chose, stamped
+   * `MIGRATED_AT` (AMENDMENTS-DISPLAY-NAV section 3.4): it is not a choice made here, so a
+   * signed-in account's choice beats it and it never overwrites the account.
+   */
+  seedDeviceLocale: (locale: UiLocale) => void;
+  setTextSize: (size: TextSize) => void;
+  /** A record another tab wrote (BroadcastChannel) or a re-read found: applied in memory, never written back. */
+  applyDeviceRecord: (record: DeviceSettings) => void;
+  /** Re-reads the device record (a page back in front); a failed read keeps what is in memory. */
+  rereadDevice: () => Promise<void>;
   setRomanizationMode: (profileId: string, mode: RomanizationMode) => void;
   /** The story reader's Read to me switch (F-STORY-002 §3.4); no telemetry. */
   setReadToMe: (profileId: string, readToMe: boolean) => void;
-  /** The Speed Round's Challenge opt-in (F-VOC-004 S8); reports `vocab.challenge_toggled` when it changes. */
   /**
+   * The Speed Round's Challenge opt-in (F-VOC-004 S8); reports `vocab.challenge_toggled` when it changes.
    * `scale`, when given, is written with the mode in one step (the screen-reader opt-in pre-selects 2x, §3.8),
    * so one `vocab.challenge_toggled` reports the clock the learner will actually get.
    */
@@ -85,111 +130,186 @@ function visible(locale: UiLocale | null | undefined): UiLocale | undefined {
 }
 
 /** `resolveLocale` over the levels that are currently visible; a hidden level falls through to the next one. */
-function effectiveLocale(levels: {
-  session?: UiLocale | null;
-  profile?: UiLocale | null;
-  device?: UiLocale | null;
-  detected?: UiLocale | null;
-}): UiLocale {
-  // A visible session override wins over every stored level; it is never persisted.
-  const session = visible(levels.session);
-  if (session !== undefined) return session;
-  return resolveLocale({
-    profile: visible(levels.profile),
-    device: visible(levels.device),
-    detected: visible(levels.detected),
-  });
+function effectiveLocale(levels: { device?: UiLocale | null; detected?: UiLocale | null }): UiLocale {
+  return resolveLocale({ device: visible(levels.device), detected: visible(levels.detected) });
 }
 
-/** The locale the UI renders in for the active profile (`null` = no profile yet). */
-export function activeLocale(
-  state: Pick<State, 'detected' | 'device' | 'byProfile'> & Partial<Pick<State, 'session'>>,
-  activeProfileId: string | null,
-): UiLocale {
-  return effectiveLocale({
-    session: state.session,
-    profile: activeProfileId === null ? undefined : state.byProfile[activeProfileId]?.uiLocale,
-    device: state.device,
-    detected: state.detected,
-  });
+/**
+ * The locale every screen renders in: the device record, else detection, else English. The same
+ * for every profile (one UI language per device); the profile id parameter is gone.
+ */
+export function activeLocale(state: Pick<State, 'detected' | 'device'>): UiLocale {
+  return effectiveLocale({ device: state.device, detected: state.detected });
+}
+
+/** Whether the device record holds a language that counts now (a hidden one does not). */
+export function deviceChose(state: Pick<State, 'device'>): boolean {
+  return visible(state.device) !== undefined;
+}
+
+/** The store's fields for a record. */
+function fieldsOf(record: DeviceSettings): Pick<State, 'device' | 'deviceAt' | 'textSize'> {
+  return { device: record.uiLocale ?? null, deviceAt: record.uiLocale !== undefined ? (record.uiLocaleAt ?? null) : null, textSize: record.textSize ?? DEFAULT_TEXT_SIZE };
+}
+
+/** A stored value as a record: a field this version does not know reads as absent. */
+function settingsOf(raw: unknown): DeviceSettings {
+  const parsed = DeviceSettingsSchema.safeParse(raw ?? {});
+  return parsed.success ? parsed.data : {};
 }
 
 /** Storage is best effort: a failed write keeps the in-memory choice for the session. */
-function persist(write: Promise<void>): void {
+function persist(write: Promise<unknown>): void {
   write.catch(() => undefined);
 }
 
-function reportLocaleChange(
-  from: UiLocale,
-  to: UiLocale,
-  scope: 'device' | 'profile',
-  source: LocaleChangeSource,
-  profileId?: string,
-): void {
-  if (from === to) return;
-  void track({
-    name: 'locale.changed',
-    ...(profileId === undefined ? {} : { profileId }),
-    payload: { from, to, scope, source },
+/** A language chosen on a device with its time: not a migrated or seeded one (`MIGRATED_AT`), and not one stored before times. */
+function timedChoice(record: DeviceSettings): boolean {
+  return record.uiLocale !== undefined && record.uiLocaleAt !== undefined && record.uiLocaleAt !== MIGRATED_AT;
+}
+
+/** What a record write found: the record as stored now, and whether this call wrote it. */
+interface RecordWrite {
+  record: DeviceSettings;
+  wrote: boolean;
+}
+
+/**
+ * Read-modify-write of the device record (AMENDMENTS-DISPLAY-NAV section 3.1), in one step
+ * (`updateJson`: one IndexedDB transaction on the web), so a field another tab or another call
+ * writes in between is never lost. `decide` sees what is stored now and returns the fields to
+ * change, or null to change nothing. Only those fields change, so a key this build does not know
+ * (a newer build's field or value) survives. A record that cannot be read is never written: the
+ * write rejects and the change stays in this tab's memory. A written record is told to the other
+ * tabs; resolves to the record as stored now.
+ */
+async function writeRecord(decide: (stored: DeviceSettings) => DeviceSettingsPatch | null): Promise<RecordWrite> {
+  let record: DeviceSettings = {};
+  const wrote = await updateJson<unknown>(DEVICE_KEY, (raw) => {
+    record = settingsOf(raw);
+    const patch = decide(record);
+    if (patch === null) return undefined;
+    const next = mergeDeviceSettings(raw, patch);
+    record = settingsOf(next);
+    return next;
   });
+  if (wrote) postDeviceSettings(record);
+  return { record, wrote };
+}
+
+function reportLocaleChange(from: UiLocale, to: UiLocale, source: LocaleChangeSource | null): void {
+  if (from === to || source === null) return;
+  void track({ name: 'locale.changed', payload: { from, to, scope: 'device', source } });
 }
 
 function reportChallenge(profileId: string, on: boolean, source: ChallengeSource, clockScale: ClockScale): void {
   void track({ name: 'vocab.challenge_toggled', profileId, payload: { on, source, clockScale } });
 }
 
-/** The profile's settings minus the locale override; every other field (romanization, readToMe) is kept. */
-function withoutLocale(settings: ProfileSettings | undefined): ProfileSettings {
-  const fallback: ProfileSettings = { romanizationMode: 'always' };
-  const { uiLocale: _dropped, ...rest } = settings ?? fallback;
+/** The profile's settings minus a retired language override; every other field is kept. */
+function withoutLocale(settings: ProfileSettings): ProfileSettings {
+  const { uiLocale: _dropped, ...rest } = settings;
   return rest;
+}
+
+/** The profile whose old override may become the device language: the active one, else the only one. */
+function promotionSource(profileIds: readonly string[], activeProfileId: string | null | undefined): string | null {
+  if (activeProfileId != null && profileIds.includes(activeProfileId)) return activeProfileId;
+  return profileIds.length === 1 ? profileIds[0]! : null;
 }
 
 export const useLocaleStore = create<State & Actions>((set, get) => ({
   detected: detectInitialLocale(),
   device: null,
-  session: null,
+  deviceAt: null,
+  textSize: DEFAULT_TEXT_SIZE,
   byProfile: {},
   hydrated: false,
 
   hydrate: async (profileIds, options) => {
-    const storedDevice = DeviceSettingsSchema.safeParse(await readJson<unknown>(DEVICE_KEY));
+    // A failed read is not "never chose": the migration then waits for a boot that can read it.
+    let readable = true;
+    let raw: unknown = null;
+    try {
+      raw = await readJsonStrict<unknown>(DEVICE_KEY);
+    } catch {
+      readable = false;
+    }
+    let record = settingsOf(raw);
     const byProfile: Record<string, ProfileSettings> = {};
+    const overrides: Record<string, UiLocale> = {};
     for (const id of profileIds) {
       const parsed = ProfileSettingsSchema.safeParse(await readJson<unknown>(profileKey(id)));
-      if (parsed.success) byProfile[id] = parsed.data;
+      if (!parsed.success) continue;
+      if (parsed.data.uiLocale !== undefined) overrides[id] = parsed.data.uiLocale;
+      byProfile[id] = withoutLocale(parsed.data);
     }
-    // Always taken so the address bar is cleaned; it only counts when the device never chose.
+    // Migration (AMENDMENTS-DISPLAY-NAV section 3.3): the active (or only) profile's old override
+    // is the language that profile saw (the old resolution put it above the device), so it becomes
+    // the device's, stamped older than any real choice, whatever language the record held, unless
+    // the record holds a choice made with its time: that one was made on this build, after the
+    // override (a leftover from a strip cut short, or one written again by a cached older build,
+    // which has no time), so it stays and the override is only stripped. Only after the fold is
+    // stored is every profile's override stripped, so a failed write loses nothing.
+    const source = promotionSource(profileIds, options?.activeProfileId);
+    const promoted = readable && source !== null ? overrides[source] : undefined;
+    const fold = promoted !== undefined && promoted !== record.uiLocale && !timedChoice(record);
+    if (fold) record = { ...record, uiLocale: promoted, uiLocaleAt: MIGRATED_AT };
+    const strip = readable ? Object.keys(overrides) : [];
+    if (fold || strip.length > 0) {
+      persist(
+        (async () => {
+          // Decided again on what is stored when the write runs: a timed choice another tab stored meanwhile stays.
+          if (fold) await writeRecord((stored) => (timedChoice(stored) ? null : { uiLocale: promoted, uiLocaleAt: MIGRATED_AT }));
+          for (const id of strip) await writeJson(profileKey(id), byProfile[id]!);
+        })(),
+      );
+    }
+    // Always taken so the address bar is cleaned; it only counts when the device never chose. On a
+    // record that could not be read it holds for this page only: the seed's write reads the record
+    // again and changes nothing it finds chosen, and writes nothing when it still cannot read it.
     const handoff = takeLangHandoff();
-    const device = (storedDevice.success ? storedDevice.data.uiLocale : undefined) ?? null;
-    set({ device, byProfile, hydrated: true });
-    // A stored choice in a currently hidden locale is ignored, so it does not block the hand-off either.
-    if (visible(device) === undefined && handoff !== null) {
-      if (options?.handoff === 'session') set({ session: handoff });
-      else get().setDeviceLocale(handoff, 'handoff');
-    }
+    set({ ...fieldsOf(record), byProfile, hydrated: true });
+    if (handoff !== null && options?.handoff !== 'ignore') get().seedDeviceLocale(handoff);
   },
 
   setDeviceLocale: (locale, source = 'settings') => {
-    const { detected, device } = get();
-    const from = effectiveLocale({ device, detected });
-    set({ device: locale });
-    persist(locale === null ? removeKey(DEVICE_KEY) : writeJson(DEVICE_KEY, { uiLocale: locale }));
-    reportLocaleChange(from, effectiveLocale({ device: locale, detected }), 'device', source);
+    const from = activeLocale(get());
+    const at = new Date().toISOString();
+    set({ device: locale, deviceAt: at });
+    persist(writeRecord(() => ({ uiLocale: locale, uiLocaleAt: at })));
+    reportLocaleChange(from, activeLocale(get()), source);
   },
 
-  setSessionLocale: (locale) => {
-    set({ session: locale });
+  seedDeviceLocale: (locale) => {
+    // A stored choice in a currently hidden locale is ignored, so it does not block the seed either.
+    if (deviceChose(get()) || visible(locale) === undefined) return;
+    const from = activeLocale(get());
+    set({ device: locale, deviceAt: MIGRATED_AT });
+    // A choice stored meanwhile (another tab, or one this tab's first read could not see) is kept and shown.
+    persist(
+      writeRecord((stored) => (visible(stored.uiLocale) !== undefined ? null : { uiLocale: locale, uiLocaleAt: MIGRATED_AT })).then(({ record, wrote }) => {
+        if (!wrote && visible(record.uiLocale) !== undefined) get().applyDeviceRecord(record);
+      }),
+    );
+    reportLocaleChange(from, activeLocale(get()), 'handoff');
   },
 
-  setProfileLocale: (profileId, locale, source = 'settings') => {
-    const { detected, device, byProfile } = get();
-    const previous = byProfile[profileId];
-    const from = effectiveLocale({ profile: previous?.uiLocale, device, detected });
-    const next: ProfileSettings = locale === null ? withoutLocale(previous) : { ...withoutLocale(previous), uiLocale: locale };
-    set({ byProfile: { ...byProfile, [profileId]: next } });
-    persist(writeJson(profileKey(profileId), next));
-    reportLocaleChange(from, effectiveLocale({ profile: locale, device, detected }), 'profile', source, profileId);
+  setTextSize: (size) => {
+    if (get().textSize === size) return;
+    set({ textSize: size });
+    persist(writeRecord(() => ({ textSize: size })));
+  },
+
+  applyDeviceRecord: (record) => {
+    set(fieldsOf(record));
+  },
+
+  rereadDevice: async () => {
+    const raw = await readJson<unknown>(DEVICE_KEY);
+    // A missing or failed read (both null), or a damaged value, is not "never chose": keep what this tab already shows.
+    if (raw === null || typeof raw !== 'object' || Array.isArray(raw)) return;
+    set(fieldsOf(settingsOf(raw)));
   },
 
   setRomanizationMode: (profileId, mode) => {
@@ -239,6 +359,23 @@ export const useLocaleStore = create<State & Actions>((set, get) => ({
     persist(removeKey(profileKey(profileId)));
   },
 }));
+
+/**
+ * Follows the device record across tabs: a record another tab posted is applied, and the page
+ * re-reads the record when it comes back to the front. Each root (learner app, All lessons, the
+ * presenter) calls this once at boot; returns the unsubscribe.
+ */
+export function followDeviceSettings(): () => void {
+  return subscribeDeviceSettings(
+    (record) => useLocaleStore.getState().applyDeviceRecord(record),
+    () => {
+      void useLocaleStore
+        .getState()
+        .rereadDevice()
+        .catch(() => undefined);
+    },
+  );
+}
 
 // Removing a profile also removes its `settings:${profileId}` (F-I18N-001 §3.2).
 onProfileRemoved((profileId) => useLocaleStore.getState().forgetProfile(profileId));

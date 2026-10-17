@@ -13,9 +13,10 @@ import {
   spacing,
   touchTarget,
   useLayoutClass,
+  useEffectiveFontScale,
 } from '@hangul-route/design-system';
 import React from 'react';
-import { Pressable, Switch, View, useWindowDimensions } from 'react-native';
+import { Pressable, Switch, View } from 'react-native';
 import { canProceed, controlsFor, flowReducer, showSoundGuideQuestion, type FlowControl } from '../../logic/placement/flow';
 import { MOTIVATION_CHOICES, modeTiles, modeTilesSideBySide } from '../../logic/placement/options-view';
 import { usePlacement } from './context';
@@ -37,7 +38,8 @@ export function OptionsScreen(): React.ReactElement {
   const { m, flow, dispatch, say, leave, screenReader } = usePlacement();
   const copy = m.learner.placement.options;
   const layout = useLayoutClass();
-  const { fontScale } = useWindowDimensions();
+  // OS text size x the chosen Display text size (owner items 6 and 7).
+  const fontScale = useEffectiveFontScale();
   const contentWidth = Math.min(layout.windowWidth - 2 * layout.gutter, layout.maxWidth.reading);
 
   /** Taps speak the label first, then act; with a screen reader on, it reads the label instead. */

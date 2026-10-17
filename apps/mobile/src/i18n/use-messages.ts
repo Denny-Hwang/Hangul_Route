@@ -2,7 +2,6 @@ import { dictionaryLocale, getMessages, LOCALE_META, type Messages, type UiLocal
 import { useEffect, useMemo } from 'react';
 import { setDocumentLang } from '../platform/locale';
 import { activeLocale, useLocaleStore } from '../store/locale-store';
-import { useProfileStore } from '../store/profile-store';
 
 /**
  * Hooks over the tested locale store and `getMessages` (F-I18N-001 §3.2). No unit
@@ -11,10 +10,9 @@ import { useProfileStore } from '../store/profile-store';
  * logic never imports these: it takes a message subtree or a locale as a parameter.
  */
 
-/** The UI locale of the active profile (override > device choice > detection > `en`). */
+/** The device's UI locale (device record > detection > `en`; one language per device, owner items 6 and 7). */
 export function useLocale(): UiLocale {
-  const activeId = useProfileStore((s) => s.activeId);
-  return useLocaleStore((s) => activeLocale(s, activeId));
+  return useLocaleStore(activeLocale);
 }
 
 /**

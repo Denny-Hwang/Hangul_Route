@@ -1,6 +1,8 @@
 import React, { useCallback, useEffect, useId, useRef, type MutableRefObject } from 'react';
 import { Platform, Pressable, Text, View } from 'react-native';
 import { colors, radii, spacing, touchTarget, typography } from '../../tokens';
+import type { TypeSizeName } from '../../text-size';
+import { useTypeScale } from '../TextSize';
 import type { ButtonProps, ButtonSize, ButtonTone } from './types';
 import { KOREAN_LINE_BREAK } from '../../line-break';
 
@@ -42,11 +44,12 @@ const sizeHeight: Record<ButtonSize, number> = {
   hero: touchTarget.hero,
 };
 
-const sizeFont: Record<ButtonSize, number> = {
-  sm: typography.size.bodySm,
-  md: typography.size.body,
-  lg: typography.size.bodyLg,
-  hero: typography.size.prompt,
+/** The label's type size per button size; the size itself follows the chosen text size (`useTypeScale`). */
+const sizeFont: Record<ButtonSize, TypeSizeName> = {
+  sm: 'bodySm',
+  md: 'body',
+  lg: 'bodyLg',
+  hero: 'prompt',
 };
 
 const sizePaddingX: Record<ButtonSize, number> = {
@@ -82,6 +85,7 @@ export function Button({
   pressableRef,
 }: ButtonProps): React.ReactElement {
   const hintId = useId();
+  const fontSize = useTypeScale().size[sizeFont[size]];
   // react-native-web drops accessibilityHint: describe the button by a hidden copy of the hint instead.
   const webHint = accessibilityHint !== undefined && Platform.OS === 'web';
   const describedBy: Record<string, string> = webHint ? { 'aria-describedby': hintId } : {};
@@ -149,7 +153,7 @@ export function Button({
           <Text {...KOREAN_LINE_BREAK}
             style={{
               color: looksDisabled ? colors.text.muted : pressed ? tonePressedFg[tone] : toneFg[tone],
-              fontSize: sizeFont[size],
+              fontSize,
               fontWeight: typography.weight.semibold,
               letterSpacing: typography.tracking.normal,
             }}

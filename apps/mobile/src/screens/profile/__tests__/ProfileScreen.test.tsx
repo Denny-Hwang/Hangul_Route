@@ -1,5 +1,5 @@
 import type { Profile, TierSource } from '@hangul-route/content-schema';
-import { LOCALES, getMessages, type UiLocale } from '@hangul-route/i18n';
+import { LOCALES, LOCALE_META, getMessages, type UiLocale } from '@hangul-route/i18n';
 import React from 'react';
 import type { ReactTestInstance } from 'react-test-renderer';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -72,7 +72,7 @@ function seed(audience: Audience, tier: TierCase, locale: UiLocale = 'en'): void
   useProfileStore.setState({ profiles: [learner(audience)], activeId: LEARNER_ID });
   useAccountStore.setState({ parentPinHash: 'pin-hash', subscription: null });
   useUiStore.setState({ parentGateOpenedAt: null });
-  useLocaleStore.setState({ device: locale, session: null, byProfile: {} });
+  useLocaleStore.setState({ device: locale, byProfile: {} });
   useTierStore.setState({
     byLearner: { [LEARNER_ID]: { tier: tier.tier, source: tier.source, validUntil: null, fetchedAt: '2026-10-14T00:00:00.000Z' } },
     spaceMembers: {},
@@ -173,6 +173,24 @@ describe('ProfileScreen open-source notices link (owner decision 2026-10-14)', (
       const renderer = await render(<ProfileScreen />);
       await press(byTestId(renderer.root, 'profile-licenses-link')[0] as ReactTestInstance);
       expect(navigation.navigate, audience).toHaveBeenCalledWith('PinEntry', { next: 'ExternalLink', url: expect.stringMatching(/\/licenses$/) });
+      await unmount(renderer);
+    }
+  });
+});
+
+describe('ProfileScreen Display row (AMENDMENTS-DISPLAY-NAV section 3.6)', () => {
+  afterEach(() => resetPlatform());
+
+  it.each(PLATFORMS)('%s: the row is named with its current language and size, in every locale (on the web a hint is never read)', async (platform) => {
+    for (const locale of LOCALES) {
+      setPlatform(platform);
+      seed('self', FREE, locale);
+      const m = getMessages(locale);
+      const renderer = await render(<ProfileScreen />);
+      const row = byTestId(renderer.root, 'profile-display-row');
+      expect(row, locale).toHaveLength(1);
+      const line = m.learner.profile.display.line(LOCALE_META[locale].endonym, m.common.display.size.standard);
+      expect(row[0]!.props['aria-label'], locale).toBe(`${m.common.display.a11y}. ${line}`);
       await unmount(renderer);
     }
   });

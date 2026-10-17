@@ -32,9 +32,9 @@ describe('console: the former COPY, keys and wording unchanged', () => {
 
   // PR 10a added one group per console page and retired four fragments (practicedThisWeek, anchor,
   // revisitTogether, notSyncedWeek) for whole-sentence messages under `space.week`; PR 10b added `plan` and `billing`;
-  // F-TCH-004 PR 10 added `lecture`; F-I18N-001 PR 10c added `settings`, `school` and `parent`; F-PLC-001 P-9 added `placement`; F-ROUTE-001 R-9a added `journey`; F-APP-001 A-2 added `offline`; F-APP-001 A-4a added `lock`; F-ENT-003 E3-9 added `access`; Learning Route LR-7 added `learningRoute`; F-FEEDBACK-001 FB-5 added `notes`; F-SPACE-002 T-6a added `transfer`; F-APP-001 A-4b removed `whySignIn`, `kidsNoAccount` and `clerkIntro` (design pass D14); F-APP-001 A-5b replaced the `/parent` demo's `parent` with `parentHome` (OD-4); F-BILL-002 B-8c removed `billingKidsLine`, `billingPastDue`, `billingSuccess` and `billingNotConfigured` with the old billing page; AMENDMENTS-LECTURE-V2 LV-3 added `chooser` (the grouped lesson picker).
+  // F-TCH-004 PR 10 added `lecture`; F-I18N-001 PR 10c added `settings`, `school` and `parent`; F-PLC-001 P-9 added `placement`; F-ROUTE-001 R-9a added `journey`; F-APP-001 A-2 added `offline`; F-APP-001 A-4a added `lock`; F-ENT-003 E3-9 added `access`; Learning Route LR-7 added `learningRoute`; F-FEEDBACK-001 FB-5 added `notes`; F-SPACE-002 T-6a added `transfer`; F-APP-001 A-4b removed `whySignIn`, `kidsNoAccount` and `clerkIntro` (design pass D14); F-APP-001 A-5b replaced the `/parent` demo's `parent` with `parentHome` (OD-4); F-BILL-002 B-8c removed `billingKidsLine`, `billingPastDue`, `billingSuccess` and `billingNotConfigured` with the old billing page; owner items 6 and 7 replaced the header select's `language` with `docTitle`; AMENDMENTS-LECTURE-V2 LV-3 added `chooser` (the grouped lesson picker).
   it('has exactly the 47 remaining COPY keys plus the formatter and page groups', () => {
-    const groups = ['language', 'codeExpiry', 'spaceCounts', 'planCounts', 'planStatus', 'entitlementStatus', 'price', 'promoPrice'];
+    const groups = ['docTitle', 'codeExpiry', 'spaceCounts', 'planCounts', 'planStatus', 'entitlementStatus', 'price', 'promoPrice'];
     const pages = ['shell', 'kind', 'joinCode', 'signIn', 'start', 'home', 'space', 'relink', 'plan', 'billing', 'curriculum', 'lecture', 'settings', 'school', 'parentHome', 'placement', 'journey', 'offline', 'lock', 'access', 'learningRoute', 'notes', 'transfer', 'browse', 'teacherMove', 'classScope', 'reportScope', 'chooser'];
     const copyKeys = Object.keys(en.console).filter((k) => !groups.includes(k) && !pages.includes(k));
     expect(copyKeys).toHaveLength(47);
@@ -44,8 +44,10 @@ describe('console: the former COPY, keys and wording unchanged', () => {
 });
 
 describe('console: formatter words', () => {
-  it('names the header language select', () => {
-    expect(c.language.label).toBe('Language');
+  it('titles the grown-up pages in the console language (owner items 6 and 7)', () => {
+    expect(c.docTitle.console).toBe('Console — Hangul Route');
+    expect(c.docTitle.signIn).toBe('Grown-ups sign in — Hangul Route');
+    expect('language' in c).toBe(false);
   });
 
   it('words join-code expiry with plural', () => {

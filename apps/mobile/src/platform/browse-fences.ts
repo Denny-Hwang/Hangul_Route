@@ -15,10 +15,12 @@ export const BROWSE_TELEMETRY_QUEUE_KEY = 'browse:telemetry-queue';
 
 /**
  * The only storage keys Browse writes: the kept pass and Lesson display
- * settings (keep switch only), its telemetry queue, and the device mute
- * (`AUDIO_PREFS_KEY`, the trade-off F-TCH-004 section 8 records).
+ * settings (keep switch only), its telemetry queue, the device mute
+ * (`AUDIO_PREFS_KEY`, the trade-off F-TCH-004 section 8 records) and the device
+ * display record (`device:settings`: the one UI language and text size of the
+ * device, owner items 6 and 7; never a learner's record).
  */
-export const BROWSE_WRITABLE_KEYS = ['browse:pass', 'browse:prefs', BROWSE_TELEMETRY_QUEUE_KEY, 'device:audio'] as const;
+export const BROWSE_WRITABLE_KEYS = ['browse:pass', 'browse:prefs', BROWSE_TELEMETRY_QUEUE_KEY, 'device:audio', 'device:settings'] as const;
 
 const WRITABLE: ReadonlySet<string> = new Set(BROWSE_WRITABLE_KEYS);
 const EVENT_NAMES: ReadonlySet<string> = new Set(BROWSE_EVENT_NAMES);

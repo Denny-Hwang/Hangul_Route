@@ -2,6 +2,7 @@ import React from 'react';
 import { Text, View } from 'react-native';
 import Svg from 'react-native-svg';
 import { colors, spacing, typography } from '../../tokens';
+import { useTypeScale } from '../TextSize';
 import { PipParts } from '../PipRow/Pip';
 import { ROUTE_MARK_ORDER, TAG_MARK_SIZE, tagMarkParts, type RouteMarkKind } from './geometry';
 import { KOREAN_LINE_BREAK } from '../../line-break';
@@ -46,6 +47,7 @@ export interface RouteLegendProps {
  * control and no background. Hidden from screen readers, because every cell label carries them.
  */
 export function RouteLegend({ items, testID }: RouteLegendProps): React.ReactElement | null {
+  const textScale = useTypeScale();
   if (items.length === 0) return null;
   const ordered = [...items].sort((a, b) => ROUTE_MARK_ORDER.indexOf(a.kind) - ROUTE_MARK_ORDER.indexOf(b.kind));
   return (
@@ -61,8 +63,8 @@ export function RouteLegend({ items, testID }: RouteLegendProps): React.ReactEle
           <TagMark kind={item.kind} />
           <Text {...KOREAN_LINE_BREAK}
             style={{
-              fontSize: typography.size.bodySm,
-              lineHeight: typography.size.bodySm * typography.leading.normal,
+              fontSize: textScale.size.bodySm,
+              lineHeight: textScale.size.bodySm * typography.leading.normal,
               fontWeight: typography.weight.semibold,
               color: colors.text.secondary,
             }}

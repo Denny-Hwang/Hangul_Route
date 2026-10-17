@@ -6,6 +6,7 @@ import type { LearnerReportBody } from '@/lib/console/api';
 import { studentWords } from '@/lib/console/vocab-words';
 import { useConsoleLocale } from '@/lib/i18n/locale-context';
 import { StudentWordsLines } from './VocabWordsParts';
+import { rem } from '@/lib/console/rem';
 
 /**
  * [TV] The learner report's Words and Settings blocks (AMENDMENTS-TEACHER-VISIBILITY-TRANSFER TV-D2, TV-D12; wireframe
@@ -24,10 +25,10 @@ const block: CSSProperties = {
   flexDirection: 'column',
   gap: spacing.xs,
   marginTop: spacing.lg,
-  fontSize: typography.size.body,
+  fontSize: rem(typography.size.body),
   color: colors.text.primary,
 };
-const heading: CSSProperties = { margin: `0 0 ${spacing.xs}px`, fontSize: typography.size.bodyLg, fontWeight: typography.weight.bold };
+const heading: CSSProperties = { margin: `0 0 ${spacing.xs}px`, fontSize: rem(typography.size.bodyLg), fontWeight: typography.weight.bold };
 
 export function ReportScopeBlock({ data }: { data: LearnerReportBody }): JSX.Element | null {
   const { messages, locale } = useConsoleLocale();
@@ -36,7 +37,7 @@ export function ReportScopeBlock({ data }: { data: LearnerReportBody }): JSX.Ele
   const settingsId = useId();
   if (data.scope === 'base') {
     return (
-      <p data-testid="report-base-scope" style={{ margin: `${spacing.lg}px 0 0`, color: colors.text.muted, fontSize: typography.size.body }}>
+      <p data-testid="report-base-scope" style={{ margin: `${spacing.lg}px 0 0`, color: colors.text.muted, fontSize: rem(typography.size.body) }}>
         {t.baseScope}
       </p>
     );

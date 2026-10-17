@@ -6,11 +6,6 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'a11y.cardArt': [['Book']],
   'a11y.tabPosition': [['Learning Route', 2, 4]],
   'a11y.koreanItem': [[{ ko: 'x', romanization: 'g', gloss: 'dog' }], [{ ko: 'x', romanization: 'g' }]],
-  'learner.language.sameAsDevice': [['English']],
-  'learner.language.confirmProfile': [['English']],
-  'learner.language.confirmDevice': [['English']],
-  'learner.language.confirmUse': [['English']],
-  'learner.language.confirmBack': [['English']],
   'learner.createProfile.nameHint.tooLong': [[12]],
   'learner.createProfile.step': [[1, 3], [2, 2]],
   'learner.firstQuest.summary': [[1, 1, 1], [3, 12, 2]],
@@ -834,6 +829,10 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'console.classScope.notice': [['Mina', 'Saturday Class B']],
   'console.reportScope.firstTry': [[0], [76], [100]],
   'learner.classUpdate.moved': [['Mina', 'Saturday Class B']],
+  'common.display.confirm.question': [['English'], ['Español']],
+  'common.display.confirm.use': [['English'], ['Español']],
+  'common.display.confirm.back': [['English'], ['Español']],
+  'learner.profile.display.line': [['English', 'Standard'], ['Español', 'Largest']],
 
   // The grouped lesson picker (AMENDMENTS-LECTURE-V2 row LV-3).
   'console.chooser.chip.stage': [[1], [7]],
@@ -845,4 +844,6 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'console.chooser.lessonsOf': [['Meet the Letters']],
   'console.chooser.found': [[1], [12]],
   'console.chooser.chosen': [[1, 5], [3, 40]],
+  // The Slides language hint with a chosen language (AMENDMENTS-LECTURE-V2 section 18.4).
+  'console.lecture.options.languageHintChosen': [['English'], ['Español']],
 };

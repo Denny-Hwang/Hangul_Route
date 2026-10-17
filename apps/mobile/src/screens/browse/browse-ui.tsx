@@ -13,10 +13,13 @@ import {
   typography,
   type IconName,
   KOREAN_LINE_BREAK,
+  useCappedFont,
 } from '@hangul-route/design-system';
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Pressable, Text, View, type PressableStateCallbackType, type ViewStyle } from 'react-native';
 import { CardArt } from '../../components/CardArt';
+import { DeviceDisplaySheet } from '../../components/DeviceDisplaySheet';
+import { DisplayButton } from '../../components/DisplayButton';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { cardKoLine } from '../../logic/card-art';
 import { localizeCard } from '../../logic/content-locale';
@@ -235,6 +238,8 @@ export function HeaderBack({
 /** [ Lesson display ]: the pill chip at the right of the header row. */
 export function LessonDisplayButton({ onPress }: { onPress: () => void }): React.ReactElement {
   const m = useMessages().caregiver.browse.home;
+  // Drawn at the chosen text size; the native 1.3 cap stays a budget for the step and the OS together.
+  const capped = useCappedFont('body', 1.3);
   return (
     <Pressable
       testID="browse-lesson-display"
@@ -254,19 +259,28 @@ export function LessonDisplayButton({ onPress }: { onPress: () => void }): React
       })}
     >
       <Icon name="settings" size={spacing.lg + spacing.xxs} color={colors.text.primary} />
-      <Text {...KOREAN_LINE_BREAK} maxFontSizeMultiplier={1.3} style={{ color: colors.text.primary, fontSize: typography.size.body, fontWeight: typography.weight.semibold }}>
+      <Text {...KOREAN_LINE_BREAK} maxFontSizeMultiplier={capped.maxFontSizeMultiplier} style={{ color: colors.text.primary, fontSize: capped.fontSize, fontWeight: typography.weight.semibold }}>
         {m.lessonDisplay.cta}
       </Text>
     </Pressable>
   );
 }
 
-/** The header row: the back position at the left, [ Lesson display ] at the right when given. Wraps at large text. */
+/**
+ * The header row: the back position at the left; at the right [ Lesson display ] when given, then the
+ * Aa button (AMENDMENTS-DISPLAY-NAV section 6: All lessons speaks the device's language, set on the
+ * shared Display sheet, which also holds the text size). Wraps at large text.
+ */
 export function HeaderRow({ back, onDisplay }: { back: React.ReactNode; onDisplay?: () => void }): React.ReactElement {
+  const [displayOpen, setDisplayOpen] = useState(false);
   return (
     <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: spacing.sm }}>
       {back}
-      {onDisplay ? <LessonDisplayButton onPress={onDisplay} /> : null}
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: spacing.sm, marginLeft: 'auto' }}>
+        {onDisplay ? <LessonDisplayButton onPress={onDisplay} /> : null}
+        <DisplayButton onPress={() => setDisplayOpen(true)} testID="browse-display-open" />
+      </View>
+      <DeviceDisplaySheet visible={displayOpen} onClose={() => setDisplayOpen(false)} testID="browse-device-display" reportLocale={false} />
     </View>
   );
 }

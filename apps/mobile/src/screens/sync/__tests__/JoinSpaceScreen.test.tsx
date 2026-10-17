@@ -41,7 +41,7 @@ function seed(profile: Profile, gated = false, scope: 'full' | 'class' = 'full')
   useProfileStore.setState({ profiles: [profile], activeId: LEARNER_ID });
   useAccountStore.setState({ parentPinHash: gated ? 'pin-hash' : null });
   useUiStore.setState({ parentGateOpenedAt: null });
-  useLocaleStore.setState({ device: 'en', session: null, byProfile: {} });
+  useLocaleStore.setState({ device: 'en', byProfile: {} });
   useMembershipStore.setState({
     lookup: vi.fn(async () => ({ ok: true as const, space: { id: 'space:c', kind: 'class' as const, name: 'Sunflower' }, full: false, roster: [] })),
     join: join as never,

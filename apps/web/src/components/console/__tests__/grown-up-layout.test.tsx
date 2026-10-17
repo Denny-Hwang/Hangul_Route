@@ -18,6 +18,7 @@ vi.mock('next/navigation', () => ({
 const auth = vi.hoisted(() => ({ ready: true, session: null as { accountId: string } | null, signOuts: [] as Array<string | undefined> }));
 vi.mock('../auth-context', () => ({
   ConsoleAuthProvider: ({ children }: { children: ReactNode }) => children,
+  AccountLocaleSlot: () => null,
   useConsoleAuth: () => ({
     ready: auth.ready,
     session: auth.session,
@@ -26,7 +27,14 @@ vi.mock('../auth-context', () => ({
     },
   }),
 }));
-vi.mock('@/lib/i18n/locale-context', () => ({ LocaleProvider: ({ children }: { children: ReactNode }) => children }));
+const locale = vi.hoisted(() => ({ ready: true, locale: 'en' as 'en' | 'ko' }));
+vi.mock('@/lib/i18n/locale-context', async () => {
+  const { getMessages } = await import('@hangul-route/i18n');
+  return {
+    LocaleProvider: ({ children }: { children: ReactNode }) => children,
+    useConsoleLocale: () => ({ ready: locale.ready, messages: getMessages(locale.locale) }),
+  };
+});
 
 const lock = vi.hoisted(() => ({ props: [] as Array<{ pathname: string; search: string; onSignInAgain: (url: string) => void }> }));
 vi.mock('../GrownUpLock', () => ({
@@ -51,16 +59,18 @@ beforeEach(() => {
   auth.session = null;
   auth.signOuts = [];
   lock.props = [];
+  locale.ready = true;
+  locale.locale = 'en';
 });
 afterEach(() => {
   act(() => mounted?.unmount());
   mounted = null;
 });
 
-function render(): ReactTestRenderer {
+function render(title?: 'console' | 'signIn'): ReactTestRenderer {
   act(() => {
     mounted = create(
-      <GrownUpLayout>
+      <GrownUpLayout title={title}>
         <p>page</p>
       </GrownUpLayout>,
     );
@@ -147,6 +157,44 @@ describe('the shared grown-up layout (F-APP-001 A-4b)', () => {
     expect(nav.replaced).toEqual([]);
     expect(pageShown(r)).toBe(true);
     expect(lock.props).toHaveLength(0);
+  });
+
+  it('holds the empty canvas on every page, /signin too, until the device record is read (owner items 6 and 7)', () => {
+    locale.ready = false;
+    auth.session = { accountId: 'user_1' };
+    for (const path of ['/teach/space', '/signin']) {
+      nav.pathname = path;
+      const r = render();
+      expect(pageShown(r), path).toBe(false);
+      expect(r.root.findAll((n) => n.props['data-testid'] === 'grown-up-lock-pending' && n.type === 'div'), path).toHaveLength(1);
+      expect(lock.props, path).toHaveLength(0);
+      act(() => mounted?.unmount());
+      mounted = null;
+    }
+  });
+
+  it('titles the tab from the dictionary in the console language, once the record is read', () => {
+    const doc = { title: 'Console — Hangul Route' };
+    vi.stubGlobal('document', doc);
+    try {
+      auth.session = { accountId: 'user_1' };
+      locale.locale = 'ko';
+      render();
+      expect(doc.title).toBe('콘솔 — Hangul Route');
+      act(() => mounted?.unmount());
+      mounted = null;
+      nav.pathname = '/signin';
+      render('signIn');
+      expect(doc.title).toBe('어른 로그인 — Hangul Route');
+      act(() => mounted?.unmount());
+      mounted = null;
+      locale.ready = false;
+      doc.title = 'static';
+      render('signIn');
+      expect(doc.title).toBe('static');
+    } finally {
+      vi.unstubAllGlobals();
+    }
   });
 
   it('knows the sign-in page by path', () => {

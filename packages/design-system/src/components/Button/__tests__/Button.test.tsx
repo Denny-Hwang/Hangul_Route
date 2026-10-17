@@ -15,6 +15,12 @@ const platform = vi.hoisted(() => ({ OS: 'web' }));
 /** The effects of the last call, kept so a test can run them after handing the Pressable its node. */
 const effects = vi.hoisted(() => [] as (() => void)[]);
 vi.mock('react-native', () => ({ View: 'View', Text: 'Text', Pressable: 'Pressable', Platform: platform }));
+/** The chosen text size step's factor, read through `useTypeScale` (owner items 6 and 7). */
+const textSize = vi.hoisted(() => ({ factor: 1 }));
+vi.mock('../../TextSize', async () => {
+  const { typeScale } = await import('../../../text-size');
+  return { useTypeScale: () => typeScale(textSize.factor) };
+});
 vi.mock('react', async (importOriginal) => {
   const actual = await importOriginal<typeof import('react')>();
   const useId = (): string => ':hint:';
@@ -192,5 +198,25 @@ describe('Button softDisabled on the web host node (react-native-web exposes set
     platform.OS = 'web';
     expect(() => mount({ softDisabled: true }, {})).not.toThrow();
     expect(() => mount({ softDisabled: true }, null)).not.toThrow();
+  });
+});
+
+describe('Button label size follows the chosen text size (owner items 6 and 7)', () => {
+  const labelSize = (props: Partial<ButtonProps>): number => {
+    const label = body(pressable(props)).find((c) => c.type === 'Text') as El;
+    return (label.props.style as { fontSize: number }).fontSize;
+  };
+
+  it('standard draws the token sizes; largest scales the reading sizes by 1.5, rounded', () => {
+    platform.OS = 'web';
+    textSize.factor = 1;
+    expect(labelSize({ size: 'md' })).toBe(18);
+    expect(labelSize({ size: 'hero' })).toBe(22);
+    textSize.factor = 1.5;
+    expect(labelSize({ size: 'sm' })).toBe(24);
+    expect(labelSize({ size: 'md' })).toBe(27);
+    expect(labelSize({ size: 'lg' })).toBe(30);
+    expect(labelSize({ size: 'hero' })).toBe(33);
+    textSize.factor = 1;
   });
 });

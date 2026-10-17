@@ -25,6 +25,7 @@ import {
   useLayoutClass,
   useMediaSize,
   KOREAN_LINE_BREAK,
+  useTypeScale,
 } from '@hangul-route/design-system';
 import { romanizationShown } from '@hangul-route/i18n';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -80,6 +81,7 @@ export function focusPanel(node: Focusable | null): void {
 }
 
 export function TypeHangulGame({ scope, host, onBack }: Props): React.ReactElement {
+  const textScale = useTypeScale();
   const m = useMessages();
   const copy = m.learner.minigame;
   const t = copy.typeHangul;
@@ -109,7 +111,7 @@ export function TypeHangulGame({ scope, host, onBack }: Props): React.ReactEleme
   const romanizationMode = useRomanizationMode();
   const [revealed, setRevealed] = useState(false);
   const pictureSize = useMediaSize(compactRow ? spacing.xxxl : touchTarget.hero);
-  const fieldFont = lc.mediaScale > 1 ? typography.size.display : typography.size.title;
+  const fieldFont = lc.mediaScale > 1 ? textScale.size.display : textScale.size.title;
 
   const runEffect = useCallback((effect: TypeHangulEffect): void => {
     switch (effect.type) {
@@ -280,7 +282,7 @@ export function TypeHangulGame({ scope, host, onBack }: Props): React.ReactEleme
       }}
     >
       {field.empty ? (
-        <Text {...KOREAN_LINE_BREAK} style={{ flex: 1, fontSize: typography.size.bodySm, color: colors.text.muted }}>{instruction}</Text>
+        <Text {...KOREAN_LINE_BREAK} style={{ flex: 1, fontSize: textScale.size.bodySm, color: colors.text.muted }}>{instruction}</Text>
       ) : (
         <Text {...KOREAN_LINE_BREAK} {...koreanSpeech} style={{ flexShrink: 1, fontSize: fieldFont, color: colors.text.primary }}>
           {state.phase === 'typing' ? field.settled : field.text}
@@ -525,6 +527,7 @@ interface WordLineProps {
 
 /** A word on one line, as the mock draws it: the Korean, its romanization and `· gloss`, read as one item. */
 function WordLine({ round, romanizationVisible, onReveal, testID }: WordLineProps): React.ReactElement {
+  const textScale = useTypeScale();
   const m = useMessages();
   const { ko, romanization, en } = round.target;
   const hidden = !romanizationVisible;
@@ -539,11 +542,11 @@ function WordLine({ round, romanizationVisible, onReveal, testID }: WordLineProp
       >
         {/* `lang="ko"` (koreanSpeech) also gives the web its keep-all wrapping: the PWA shell's `:lang(ko)`
             rule breaks a sentence at its spaces, never inside a word (F-I18N-001 PR 16). */}
-        <Text {...KOREAN_LINE_BREAK} {...koreanSpeech} style={{ fontSize: typography.size.prompt, fontWeight: typography.weight.bold, color: colors.text.primary }}>
+        <Text {...KOREAN_LINE_BREAK} {...koreanSpeech} style={{ fontSize: textScale.size.prompt, fontWeight: typography.weight.bold, color: colors.text.primary }}>
           {ko}
         </Text>
-        {hidden ? null : <Text {...KOREAN_LINE_BREAK} style={{ fontSize: typography.size.bodySm, fontStyle: 'italic', color: colors.text.secondary }}>{romanization}</Text>}
-        <Text {...KOREAN_LINE_BREAK} style={{ fontSize: typography.size.bodySm, color: colors.text.secondary }}>{`· ${en}`}</Text>
+        {hidden ? null : <Text {...KOREAN_LINE_BREAK} style={{ fontSize: textScale.size.bodySm, fontStyle: 'italic', color: colors.text.secondary }}>{romanization}</Text>}
+        <Text {...KOREAN_LINE_BREAK} style={{ fontSize: textScale.size.bodySm, color: colors.text.secondary }}>{`· ${en}`}</Text>
       </View>
       {hidden && onReveal ? (
         <Button label={m.learner.minigame.typeHangul.showRomanization.cta} tone="ghost" size="sm" onPress={onReveal} testID="type-hangul-reveal" />

@@ -15,6 +15,7 @@ import {
   typography,
   useMediaSize,
   KOREAN_LINE_BREAK,
+  useTypeScale,
 } from '@hangul-route/design-system';
 import React, { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
@@ -41,6 +42,7 @@ interface Props {
  * to listen, repeat aloud, and tap "I said it" — honor system.
  */
 export function VoiceEchoGame({ scope: _scope, onFinish }: Props): React.ReactElement {
+  const textScale = useTypeScale();
   const m = useMessages();
   const copy = m.learner.minigame.voiceEcho;
   const answerRound = useQuestRunStore((s) => s.answerRound);
@@ -93,7 +95,7 @@ export function VoiceEchoGame({ scope: _scope, onFinish }: Props): React.ReactEl
           }}
         >
           <Icon name="speaker" size={speakerIcon} />
-          <Text {...KOREAN_LINE_BREAK} style={{ fontSize: typography.size.title, fontWeight: '700', marginTop: spacing.sm }}>{target}</Text>
+          <Text {...KOREAN_LINE_BREAK} style={{ fontSize: textScale.size.title, fontWeight: '700', marginTop: spacing.sm }}>{target}</Text>
           {targetRomanization ? <Caption tone="secondary">{targetRomanization}</Caption> : null}
         </Pressable>
       </View>

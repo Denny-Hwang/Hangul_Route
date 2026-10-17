@@ -17,6 +17,7 @@ import {
   typography,
   useLayoutClass,
   KOREAN_LINE_BREAK,
+  useCappedFont,
 } from '@hangul-route/design-system';
 import React, { useMemo, useRef, useState } from 'react';
 import { Pressable, Text, View, type LayoutChangeEvent } from 'react-native';
@@ -63,6 +64,8 @@ export interface OpenTargets {
 export function SectionControl({ sections, value, onChange }: { sections: readonly BrowseSection[]; value: BrowseSection; onChange: (s: BrowseSection) => void }): React.ReactElement {
   const m = useMessages().caregiver.browse.home.section;
   const regular = useLayoutClass().width !== 'compact';
+  // Drawn at the chosen text size; the native cap stays a budget for the step and the OS together.
+  const capped = useCappedFont('body', SEGMENT_FONT_CAP);
   const refs = useRef(new Map<BrowseSection, View | null>());
   const move = (key: string): void => {
     const next = sectionAfter(sections, value, key);
@@ -119,9 +122,9 @@ export function SectionControl({ sections, value, onChange }: { sections: readon
             <Text {...KOREAN_LINE_BREAK}
               numberOfLines={1}
               adjustsFontSizeToFit
-              maxFontSizeMultiplier={SEGMENT_FONT_CAP}
+              maxFontSizeMultiplier={capped.maxFontSizeMultiplier}
               style={{
-                fontSize: typography.size.body,
+                fontSize: capped.fontSize,
                 fontWeight: selected ? typography.weight.bold : typography.weight.semibold,
                 color: selected ? colors.text.onPrimary : colors.text.primary,
               }}

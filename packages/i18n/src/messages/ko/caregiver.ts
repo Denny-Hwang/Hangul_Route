@@ -543,7 +543,7 @@ export const caregiver = {
       title: '모든 레슨',
       close: { cta: '닫기' },
       howTo: '레슨을 누르면 무엇을 배우는지 보고 직접 해 볼 수 있어요. 아무것도 저장되지 않아요.',
-      lessonDisplay: { cta: '레슨 보기 설정' },
+      lessonDisplay: { cta: '로마자 표기' },
       offline: '오프라인',
       scope: {
         sampler: '학습자가 무료로 여는 레슨이 열려 있어요. 다른 레슨은 무엇을 배우는지 보여 줘요.',
@@ -578,11 +578,9 @@ export const caregiver = {
       failed: '이 기기에 레슨을 두지 못했어요.',
     },
     display: {
-      title: '레슨 보기 설정',
-      romanization: '로마자 표기',
+      title: '로마자 표기',
       always: '항상 보이기',
       tap: '누를 때까지 숨기기',
-      language: '언어',
       note: '이 설정은 이 미리 보기에만 적용돼요. 학습자의 설정은 바뀌지 않아요.',
       done: { cta: '완료' },
     },

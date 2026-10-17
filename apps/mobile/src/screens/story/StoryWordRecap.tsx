@@ -7,9 +7,10 @@ import {
   Spacer,
   spacing,
   useLayoutClass,
+  useEffectiveFontScale,
 } from '@hangul-route/design-system';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Platform, View, useWindowDimensions } from 'react-native';
+import { Platform, View } from 'react-native';
 import { useMessages } from '../../i18n/use-messages';
 import { useRomanizationMode } from '../../i18n/use-romanization-mode';
 import type { PlaySpec } from '../../logic/audio/controller';
@@ -59,7 +60,8 @@ export function StoryWordRecap({ words, storyId, profileId, sayIt, play, onDone 
   const copy = m.learner.story.recap;
   const width = useLayoutClass().windowWidth;
   // Larger device text needs more room per chip (web reports 1).
-  const { fontScale } = useWindowDimensions();
+  // OS text size x the chosen Display text size (owner items 6 and 7).
+  const fontScale = useEffectiveFontScale();
   const columns = recapColumns(width, longestRecapGlyphs(words), fontScale);
   const [revealed, setRevealed] = useState<ReadonlySet<string>>(() => new Set());
   const played = useRef<ReadonlySet<string>>(new Set());

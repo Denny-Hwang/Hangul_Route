@@ -7,6 +7,7 @@ import { buttonBase } from '@/components/console/ui';
 import type { RosterSummary } from '@/lib/console/api';
 import { startingSpotChanged, startingSpotLine, suggestStartHref } from '@/lib/console/placement';
 import { useConsoleLocale } from '@/lib/i18n/locale-context';
+import { rem } from '@/lib/console/rem';
 
 /**
  * The starting-spot line on a roster card (F-PLC-001 section 3.9, P-9; wireframe
@@ -39,7 +40,7 @@ export function StartingSpot({
     <div data-testid="starting-spot" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: spacing.xs, margin: `${spacing.xxs}px 0` }}>
       <span style={{ minWidth: 0 }}>
         <span style={{ display: 'block' }}>{line}</span>
-        {changed ? <span style={{ display: 'block', color: colors.text.muted, fontSize: typography.size.caption }}>{changed}</span> : null}
+        {changed ? <span style={{ display: 'block', color: colors.text.muted, fontSize: rem(typography.size.caption) }}>{changed}</span> : null}
       </span>
       <Link
         href={suggestStartHref(spaceId, learnerId, kind)}

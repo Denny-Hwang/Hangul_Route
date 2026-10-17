@@ -26,6 +26,7 @@ import { codeExpiry, relativeDay } from '@/lib/console/rollup';
 import { ROUTES, spaceErrorText } from '@/lib/console/routing';
 import { writeLastPersona } from '@/lib/console/shell-store';
 import { START_CLASS, START_FAMILY } from '@/lib/console/teacher-home';
+import { headRem, rem } from '@/lib/console/rem';
 
 /**
  * The family home `/parent` (F-APP-001 A-5b, section 3.8; design mock design/screens/app-shell/parent-home.md,
@@ -81,7 +82,7 @@ const button: CSSProperties = {
   textAlign: 'center',
   textDecoration: 'none',
 };
-const primary: CSSProperties = { ...button, fontSize: typography.size.body, backgroundColor: colors.brand.primary, borderColor: colors.brand.primary, color: colors.text.onPrimary };
+const primary: CSSProperties = { ...button, fontSize: rem(typography.size.body), backgroundColor: colors.brand.primary, borderColor: colors.brand.primary, color: colors.text.onPrimary };
 const pressed: CSSProperties = { ...button, backgroundColor: colors.surface.sunken };
 const textLink: CSSProperties = {
   display: 'inline-flex',
@@ -91,7 +92,7 @@ const textLink: CSSProperties = {
   padding: `0 ${spacing.sm}px`,
   color: colors.brand.secondaryDark,
   fontWeight: typography.weight.semibold,
-  fontSize: typography.size.body,
+  fontSize: rem(typography.size.body),
   textDecoration: 'underline',
   textUnderlineOffset: spacing.xs,
   background: 'none',
@@ -103,7 +104,7 @@ const textLink: CSSProperties = {
 const cardShadow = `0 ${shadows.card.shadowOffset.height}px ${shadows.card.shadowRadius}px ${shadows.card.shadowColor}${Math.round(shadows.card.shadowOpacity * 255)
   .toString(16)
   .padStart(2, '0')}`;
-const familyHeading: CSSProperties = { margin: 0, fontSize: typography.size.title, lineHeight: typography.leading.tight, fontWeight: typography.weight.bold, overflowWrap: 'anywhere' };
+const familyHeading: CSSProperties = { margin: 0, fontSize: headRem(typography.size.title), lineHeight: typography.leading.tight, fontWeight: typography.weight.bold, overflowWrap: 'anywhere' };
 const cardStyle: CSSProperties = {
   backgroundColor: colors.surface.paper,
   border: `${borderWidth.thin}px solid ${colors.border.subtle}`,
@@ -115,7 +116,7 @@ const cardStyle: CSSProperties = {
   gap: spacing.md,
   minWidth: 0,
 };
-const facts: CSSProperties = { display: 'flex', flexDirection: 'column', gap: spacing.xxs, color: colors.text.secondary, fontSize: typography.size.bodySm };
+const facts: CSSProperties = { display: 'flex', flexDirection: 'column', gap: spacing.xxs, color: colors.text.secondary, fontSize: rem(typography.size.bodySm) };
 const skeleton: CSSProperties = { ...cardStyle, boxShadow: 'none', backgroundColor: colors.surface.sunken, minHeight: touchTarget.min * 3 };
 
 export default function ParentHomePage(): JSX.Element {
@@ -265,10 +266,10 @@ export default function ParentHomePage(): JSX.Element {
     const id = family.space.id;
     return (
       <section data-testid="join-panel" aria-label={c.space.codeLabel.family} style={{ ...panelStyle, margin: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: spacing.sm, padding: `${spacing.xl}px ${spacing.lg}px`, textAlign: 'center' }}>
-        <span style={{ fontSize: typography.size.caption, fontWeight: typography.weight.semibold, color: colors.text.muted }}>{c.space.codeLabel.family}</span>
+        <span style={{ fontSize: rem(typography.size.caption), fontWeight: typography.weight.semibold, color: colors.text.muted }}>{c.space.codeLabel.family}</span>
         {roster.joinCode ? (
           <>
-            <span data-testid="join-code" aria-hidden={true} style={{ fontFamily: typography.family.mono, fontSize: typography.size.display, fontWeight: typography.weight.bold, letterSpacing: typography.tracking.wide }}>
+            <span data-testid="join-code" aria-hidden={true} style={{ fontFamily: typography.family.mono, fontSize: headRem(typography.size.display), fontWeight: typography.weight.bold, letterSpacing: typography.tracking.wide }}>
               {roster.joinCode}
             </span>
             <span className="hr-ph-hidden">{roster.joinCode.split('').join(' ')}</span>
@@ -316,7 +317,7 @@ export default function ParentHomePage(): JSX.Element {
       <article key={learner.id} data-testid="learner-card" aria-label={learner.displayName} style={cardStyle}>
         <div style={{ display: 'flex', alignItems: 'center', gap: spacing.sm, minWidth: 0 }}>
           <AvatarChip avatar={learner.avatar} />
-          <h3 style={{ margin: 0, fontSize: typography.size.bodyLg, fontWeight: typography.weight.bold, overflowWrap: 'anywhere' }}>{learner.displayName}</h3>
+          <h3 style={{ margin: 0, fontSize: rem(typography.size.bodyLg), fontWeight: typography.weight.bold, overflowWrap: 'anywhere' }}>{learner.displayName}</h3>
         </div>
         <div style={facts}>
           <span>{c.space.learner.lastActive(relativeDay(learner.lastActiveAt, now, locale))}</span>
@@ -393,7 +394,7 @@ export default function ParentHomePage(): JSX.Element {
         <div className="hr-ph-main" aria-busy={entry.state === 'loading' ? true : undefined}>
           <h2 id={headingId} style={familyHeading}>
             {family.space.name}
-            {archived ? <span style={{ color: colors.text.muted, fontSize: typography.size.bodySm, fontWeight: typography.weight.semibold }}> {c.home.archived}</span> : null}
+            {archived ? <span style={{ color: colors.text.muted, fontSize: rem(typography.size.bodySm), fontWeight: typography.weight.semibold }}> {c.home.archived}</span> : null}
           </h2>
           {api && !archived ? <FamilyClassCards familyId={id} api={api} movesShown={movesShown} /> : null}
           {entry.state === 'loading' ? (
@@ -420,7 +421,7 @@ export default function ParentHomePage(): JSX.Element {
                   type="button"
                   style={{ ...primary, width: '100%', maxWidth: layout.pane.master, alignSelf: 'center' }}
                   data-testid="open-app"
-                  onClick={() => openAppWithJoinCode({ code: entry.roster.joinCode as string, now: Date.now() })}
+                  onClick={() => openAppWithJoinCode({ code: entry.roster.joinCode as string, now: Date.now(), locale })}
                 >
                   {p.empty.openApp}
                 </button>
@@ -477,7 +478,7 @@ export default function ParentHomePage(): JSX.Element {
       ) : null}
       {view?.state === 'noFamily' ? (
         <div style={{ ...panelStyle, display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: spacing.md, padding: `${spacing.xl}px ${spacing.lg}px`, maxWidth: layout.maxWidth.reading }}>
-          <h1 style={{ margin: 0, fontSize: typography.size.prompt, lineHeight: typography.leading.tight, fontWeight: typography.weight.bold }}>{p.noFamily.title}</h1>
+          <h1 style={{ margin: 0, fontSize: rem(typography.size.prompt), lineHeight: typography.leading.tight, fontWeight: typography.weight.bold }}>{p.noFamily.title}</h1>
           <Link href={START_FAMILY} style={primary} data-testid="no-family-set-up">
             {p.noFamily.setUp}
           </Link>

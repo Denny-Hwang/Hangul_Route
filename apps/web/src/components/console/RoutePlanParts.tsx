@@ -22,6 +22,7 @@ import {
 } from '@/lib/console/curriculum';
 import { planStatusLabel, type ReadoutRow } from '@/lib/console/plans';
 import { useMessages } from '@/lib/i18n/locale-context';
+import { rem } from '@/lib/console/rem';
 
 /**
  * The plan page's route views (F-PLAN-002 section 3.8 steps 5-6; wireframe
@@ -38,7 +39,7 @@ export function PlanSwitcher({ plans, selectedId, onSelect, locale }: { plans: r
   const activeRoute = ordered[0]?.meta && ordered[0].publishedAt ? ordered[0].id : null;
   return (
     <nav aria-label={c.plans} style={{ display: 'flex', flexWrap: 'wrap', gap: spacing.sm, alignItems: 'center', marginBottom: spacing.lg }}>
-      <span style={{ color: colors.text.muted, fontSize: typography.size.caption }}>{c.plans}</span>
+      <span style={{ color: colors.text.muted, fontSize: rem(typography.size.caption) }}>{c.plans}</span>
       {ordered.map((plan) => {
         const selected = plan.id === selectedId;
         const status = plan.id === activeRoute ? c.activeRoute : planStatusLabel(plan, locale);
@@ -56,7 +57,7 @@ export function PlanSwitcher({ plans, selectedId, onSelect, locale }: { plans: r
               border: `${selected ? borderWidth.base : borderWidth.thin}px solid ${selected ? colors.brand.primary : colors.border.strong}`,
               backgroundColor: selected ? colors.brand.primaryLight : colors.surface.paper,
               color: colors.text.primary,
-              fontSize: typography.size.caption,
+              fontSize: rem(typography.size.caption),
               fontWeight: selected ? typography.weight.bold : typography.weight.regular,
               cursor: 'pointer',
             }}
@@ -75,7 +76,7 @@ function WeekList({ meta, items, locale }: { meta: CurriculumMeta; items: readon
   const { rows, unscheduled } = weekGroups(meta.weeks, items, undefined, locale);
   const list = (entries: (typeof rows)[number]['items']): JSX.Element | null =>
     entries.length === 0 ? null : (
-      <ul style={{ margin: `0 0 ${spacing.sm}px`, paddingLeft: spacing.lg, color: colors.text.secondary, fontSize: typography.size.bodySm }}>
+      <ul style={{ margin: `0 0 ${spacing.sm}px`, paddingLeft: spacing.lg, color: colors.text.secondary, fontSize: rem(typography.size.bodySm) }}>
         {entries.map((item) => (
           <li key={`${item.kind}:${item.id}:${item.index}`}>
             <ItemText item={item} locale={locale} />
@@ -93,7 +94,7 @@ function WeekList({ meta, items, locale }: { meta: CurriculumMeta; items: readon
       ))}
       {unscheduled.length > 0 ? (
         <div style={{ borderTop: `${borderWidth.thin}px solid ${colors.border.subtle}` }}>
-          <h3 style={{ fontSize: typography.size.bodySm, margin: `${spacing.sm}px 0 ${spacing.xs}px` }}>{unscheduledLabel}</h3>
+          <h3 style={{ fontSize: rem(typography.size.bodySm), margin: `${spacing.sm}px 0 ${spacing.xs}px` }}>{unscheduledLabel}</h3>
           {list(unscheduled)}
         </div>
       ) : null}
@@ -156,7 +157,7 @@ export function RouteDraftItems({
       ))}
       {groups.unscheduled.length > 0 ? (
         <div style={{ borderTop: `${borderWidth.thin}px solid ${colors.border.subtle}` }}>
-          <h3 style={{ fontSize: typography.size.bodySm, margin: `${spacing.sm}px 0 ${spacing.xs}px` }}>{c.curriculum.builder.unscheduled}</h3>
+          <h3 style={{ fontSize: rem(typography.size.bodySm), margin: `${spacing.sm}px 0 ${spacing.xs}px` }}>{c.curriculum.builder.unscheduled}</h3>
           {groups.unscheduled.map((entry) => row(entry.index))}
         </div>
       ) : null}
@@ -224,14 +225,14 @@ export function RouteReadout({
   return (
     <div>
       <div style={{ ...panelStyle, marginBottom: spacing.md }} data-testid="route-this-week">
-        <h2 style={{ fontSize: typography.size.bodyLg, margin: `0 0 ${spacing.xs}px` }}>
+        <h2 style={{ fontSize: rem(typography.size.bodyLg), margin: `0 0 ${spacing.xs}px` }}>
           {where.status === 'in' ? c.readout.thisWeek(where.week.index) : where.status === 'before' ? c.readout.notStarted(dayText(where.startDate, locale)) : c.readout.ended}
         </h2>
         {thisWeek ? (
           <>
             <WeekHeading row={thisWeek} locale={locale} />
             {thisWeek.items.length > 0 ? (
-              <ul style={{ margin: `0 0 ${spacing.sm}px`, paddingLeft: spacing.lg, color: colors.text.secondary, fontSize: typography.size.bodySm }}>
+              <ul style={{ margin: `0 0 ${spacing.sm}px`, paddingLeft: spacing.lg, color: colors.text.secondary, fontSize: rem(typography.size.bodySm) }}>
                 {thisWeek.items.map((item) => (
                   <li key={`${item.kind}:${item.id}:${item.index}`}>
                     <ItemText item={item} locale={locale} />

@@ -1,4 +1,4 @@
-import { Hoya, colors, motion, presenter, radii, shadows, spacing, typography, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
+import { Hoya, colors, motion, presenter, radii, shadows, spacing, typography, KOREAN_LINE_BREAK, useTypeScale } from '@hangul-route/design-system';
 import React, { useEffect, useRef } from 'react';
 import { Animated, Text, View } from 'react-native';
 import { HOYA_STAGE, RING_STAGE, units } from '../../../logic/lecture/stage-constants';
@@ -62,6 +62,7 @@ function RunButton({ view, timer, controls }: { view: View_; timer: TimerState; 
 }
 
 function CornerTimer({ view, timer, showNumbers, controls }: { view: View_; timer: TimerState; showNumbers: boolean; controls: TimerControls }): React.ReactElement {
+  const textScale = useTypeScale();
   const { messages } = usePresenterView();
   const m = messages.learner.presenter.timer;
   const pulse = useDonePulse(view.done);
@@ -93,7 +94,7 @@ function CornerTimer({ view, timer, showNumbers, controls }: { view: View_; time
           label={messages.a11y.presenter.timerLeft(view.text)}
         />
         {view.done ? (
-          <Text {...KOREAN_LINE_BREAK} testID="presenter-timer-done" role="status" style={{ fontSize: typography.size.title, fontWeight: typography.weight.bold, color: colors.text.primary }}>
+          <Text {...KOREAN_LINE_BREAK} testID="presenter-timer-done" role="status" style={{ fontSize: textScale.size.title, fontWeight: typography.weight.bold, color: colors.text.primary }}>
             {m.done}
           </Text>
         ) : null}
@@ -109,6 +110,7 @@ function CornerTimer({ view, timer, showNumbers, controls }: { view: View_; time
 }
 
 function FullTimer({ view, timer, showNumbers, controls }: { view: View_; timer: TimerState; showNumbers: boolean; controls: TimerControls }): React.ReactElement {
+  const textScale = useTypeScale();
   const { unit, messages } = usePresenterView();
   const size = useStageText();
   const m = messages.learner.presenter.timer;
@@ -140,7 +142,7 @@ function FullTimer({ view, timer, showNumbers, controls }: { view: View_; timer:
               </Text>
             </View>
           ) : (
-            <Text {...KOREAN_LINE_BREAK} role="heading" style={{ fontSize: typography.size.title, fontWeight: typography.weight.bold, color: colors.text.primary }}>
+            <Text {...KOREAN_LINE_BREAK} role="heading" style={{ fontSize: textScale.size.title, fontWeight: typography.weight.bold, color: colors.text.primary }}>
               {m.title}
             </Text>
           )}

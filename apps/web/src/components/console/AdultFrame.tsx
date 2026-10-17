@@ -17,8 +17,9 @@ import { clearGrownUpTab } from '@/lib/console/unlock';
 import { browserStorage, type KeyValueStorage } from '@/lib/i18n/safe-storage';
 import { BrowseNoticeLine, useBrowseOpener } from './BrowseLink';
 import { useGrownUpLocation } from './grown-up-location';
-import { LanguageSelect } from './LanguageSelect';
+import { DisplayButton } from './DisplaySheet';
 import { useConsole } from './use-console';
+import { rem } from '@/lib/console/rem';
 
 /**
  * The adult frame of every grown-up page (F-APP-001 A-5a, section 3.8; design mock
@@ -26,8 +27,9 @@ import { useConsole } from './use-console';
  * Replaces `ConsoleShell`: no "Back to site", no disabled Account button, no "Console" title.
  *
  * - Header: the brand mark (to the active persona's home), the persona switch for an account that
- *   holds both personas (otherwise the persona name), the way back to the learner app; Language and
- *   Sign out from 45em (they sit in the footer below it, so the phone header is one row).
+ *   holds both personas (otherwise the persona name), the way back to the learner app, the Aa button
+ *   (the Display sheet: the device's one language and text size, owner items 6 and 7) at every
+ *   width, and Sign out from 45em (it sits in the footer below it, so the phone header stays short).
  * - The active persona comes from the page: its own on a home, the kind of the page's space on a
  *   space page under either prefix (looked up in the spaces list the frame reads), never the path.
  * - The navigation is `ADULT_NAV` filtered by the active persona and the sibling predicates.
@@ -110,21 +112,21 @@ const FRAME_CSS = `
 .hr-frame-top{background:${colors.surface.paper};border-bottom:${borderWidth.thin}px solid ${colors.border.subtle}}
 .hr-frame-bar,.hr-frame-nav,.hr-frame-main,.hr-frame-foot-inner{box-sizing:border-box;width:100%;max-width:${layout.maxWidth.full}px;margin:0 auto;padding-left:${layout.gutter.compact}px;padding-right:${layout.gutter.compact}px}
 .hr-frame-bar{padding-top:${spacing.sm}px;padding-bottom:${spacing.sm}px;display:flex;flex-wrap:wrap;align-items:center;column-gap:${spacing.sm}px;row-gap:${spacing.xs}px}
-.hr-frame-brand{display:inline-flex;align-items:center;gap:${spacing.sm}px;min-height:${touchTarget.min}px;min-width:${touchTarget.min}px;text-decoration:none;font-size:${typography.size.bodyLg}px;font-weight:${typography.weight.bold};color:${colors.text.primary}}
-.hr-frame-mark{width:${spacing.xxxl}px;height:${spacing.xxxl}px;border-radius:${radii.circle}px;background:${colors.brand.primary};color:${colors.text.inverse};display:inline-flex;align-items:center;justify-content:center;font-size:${typography.size.bodyLg}px;font-weight:${typography.weight.bold};flex:none}
+.hr-frame-brand{display:inline-flex;align-items:center;gap:${spacing.sm}px;min-height:${touchTarget.min}px;min-width:${touchTarget.min}px;text-decoration:none;font-size:${rem(typography.size.bodyLg)};font-weight:${typography.weight.bold};color:${colors.text.primary}}
+.hr-frame-mark{width:${spacing.xxxl}px;height:${spacing.xxxl}px;border-radius:${radii.circle}px;background:${colors.brand.primary};color:${colors.text.inverse};display:inline-flex;align-items:center;justify-content:center;font-size:${rem(typography.size.bodyLg)};font-weight:${typography.weight.bold};flex:none}
 .hr-frame-name,.hr-frame-hidden{position:absolute;width:${borderWidth.thin}px;height:${borderWidth.thin}px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
 .hr-frame-bar.hr-has-switch .hr-frame-brand{display:none}
 .hr-frame-persona{display:inline-flex;align-items:center;min-height:${touchTarget.min}px;color:${colors.text.secondary};font-weight:${typography.weight.semibold}}
 .hr-frame-switch{display:inline-flex;border:${borderWidth.base}px solid ${colors.brand.secondaryDark};border-radius:${radii.pill}px;background:${colors.surface.paper};overflow:hidden}
-.hr-frame-switch [role="radio"]{min-height:${touchTarget.min}px;min-width:${touchTarget.min}px;padding:${spacing.xs}px ${spacing.sm}px;border:none;background:transparent;color:${colors.brand.secondaryDark};font-size:${typography.size.bodySm}px;font-weight:${typography.weight.bold};cursor:pointer}
+.hr-frame-switch [role="radio"]{min-height:${touchTarget.min}px;min-width:${touchTarget.min}px;padding:${spacing.xs}px ${spacing.sm}px;border:none;background:transparent;color:${colors.brand.secondaryDark};font-size:${rem(typography.size.bodySm)};font-weight:${typography.weight.bold};cursor:pointer}
 .hr-frame-switch [role="radio"][aria-checked="true"]{background:${colors.brand.secondaryDark};color:${colors.text.onSecondary}}
-.hr-frame-back{margin-left:auto;flex:1 1 ${WAY_BACK_BASIS};max-width:max-content;display:inline-flex;align-items:center;gap:${spacing.xs}px;min-height:${touchTarget.min}px;padding:${spacing.xs}px ${spacing.md}px ${spacing.xs}px ${spacing.sm}px;border-radius:${radii.pill}px;border:${borderWidth.thin}px solid ${colors.border.strong};background:${colors.surface.paper};color:${colors.text.primary};font-size:${typography.size.bodySm}px;font-weight:${typography.weight.bold};line-height:${typography.leading.tight};text-align:left;cursor:pointer}
+.hr-frame-back{margin-left:auto;flex:1 1 ${WAY_BACK_BASIS};max-width:max-content;display:inline-flex;align-items:center;gap:${spacing.xs}px;min-height:${touchTarget.min}px;padding:${spacing.xs}px ${spacing.md}px ${spacing.xs}px ${spacing.sm}px;border-radius:${radii.pill}px;border:${borderWidth.thin}px solid ${colors.border.strong};background:${colors.surface.paper};color:${colors.text.primary};font-size:${rem(typography.size.bodySm)};font-weight:${typography.weight.bold};line-height:${typography.leading.tight};text-align:left;cursor:pointer}
 .hr-frame-wide{display:none}
 .hr-frame-list{display:flex;flex-wrap:wrap;list-style:none;margin:0;padding:0}
 .hr-frame-list li{flex:1 0 ${touchTarget.min}px;display:flex}
-.hr-frame-item{flex:1;display:inline-flex;align-items:center;justify-content:center;min-height:${touchTarget.min}px;padding:0 ${spacing.xs}px;border:none;border-bottom:${borderWidth.thick}px solid transparent;background:transparent;color:${colors.text.secondary};font-size:${typography.size.bodySm}px;font-weight:${typography.weight.semibold};text-decoration:none;white-space:nowrap;cursor:pointer}
+.hr-frame-item{flex:1;display:inline-flex;align-items:center;justify-content:center;min-height:${touchTarget.min}px;padding:0 ${spacing.xs}px;border:none;border-bottom:${borderWidth.thick}px solid transparent;background:transparent;color:${colors.text.secondary};font-size:${rem(typography.size.bodySm)};font-weight:${typography.weight.semibold};text-decoration:none;white-space:nowrap;cursor:pointer}
 .hr-frame-item[aria-current="page"]{color:${colors.text.primary};font-weight:${typography.weight.bold};border-bottom-color:${colors.brand.primary}}
-.hr-frame-main{flex:1;padding-top:${spacing.lg}px;padding-bottom:${spacing.xxl}px}
+.hr-frame-main{flex:1;padding-top:${spacing.lg}px;padding-bottom:${spacing.xxl}px;overflow-wrap:anywhere}
 .hr-frame-foot{background:${colors.surface.sunken}}
 .hr-frame-foot-inner{padding-top:${spacing.sm}px;padding-bottom:${spacing.lg}px;display:flex;flex-direction:column;gap:${spacing.xs}px}
 .hr-frame-links{display:flex;flex-wrap:wrap;column-gap:${spacing.lg}px}
@@ -157,7 +159,7 @@ const quietButton = {
   border: `${borderWidth.thin}px solid transparent`,
   backgroundColor: 'transparent',
   color: colors.text.secondary,
-  fontSize: typography.size.bodySm,
+  fontSize: rem(typography.size.bodySm),
   fontWeight: typography.weight.bold,
   cursor: 'pointer',
 } as const;
@@ -322,7 +324,7 @@ export function AdultFrame({
   };
   const goBack = (): void => {
     browser.clearGrownUpTab();
-    browser.assign(learnerHome(origin));
+    browser.assign(learnerHome(origin, locale));
   };
 
   return (
@@ -347,9 +349,7 @@ export function AdultFrame({
             <IconSvg name="arrow-left" size={spacing.lg + spacing.xs} color={colors.text.primary} />
             <span>{opensLearnerApp(device) ? shell.openLearnerApp : shell.backToLearning}</span>
           </button>
-          <span className="hr-frame-wide">
-            <LanguageSelect />
-          </span>
+          <DisplayButton testId="frame-display" />
           <button type="button" className="hr-frame-wide" style={quietButton} onClick={doSignOut} data-testid="frame-sign-out">
             {shell.signOut.cta}
           </button>
@@ -391,7 +391,6 @@ export function AdultFrame({
             <a href={`${SITE_ORIGIN}/terms`}>{shell.terms}</a>
           </div>
           <div className="hr-frame-tools" data-testid="frame-foot-tools">
-            <LanguageSelect />
             <button type="button" style={footButton} onClick={doSignOut} data-testid="frame-foot-sign-out">
               {shell.signOut.cta}
             </button>

@@ -1,4 +1,4 @@
-import { Body, Caption, Card, Icon, PipRow, Spacer, StageSegments, colors, spacing, touchTarget, typography } from '@hangul-route/design-system';
+import { Body, Caption, Card, Icon, PipRow, Spacer, StageSegments, colors, spacing, touchTarget, typography, useTypeScale } from '@hangul-route/design-system';
 import React from 'react';
 import { View } from 'react-native';
 import type { HomeStripView } from '../../logic/my-route/home-strip';
@@ -14,16 +14,15 @@ import type { HomeStripView } from '../../logic/my-route/home-strip';
  * pips and segments are hidden from screen readers (the label carries the words,
  * including the here stage's progress caption).
  */
-const TITLE = { fontSize: typography.size.prompt, lineHeight: typography.size.prompt * typography.leading.tight } as const;
-
 export function RouteStrip({ view, onPress }: { view: HomeStripView; onPress: () => void }): React.ReactElement {
+  const textScale = useTypeScale();
   const segments = view.segments.map((s) => ({ key: s.stage, state: s.state, here: s.here, accent: colors.stage[s.stage] }));
   return (
     <Card padding="md" tone="paper" onPress={onPress} accessibilityLabel={view.a11yLabel} testID="home-route-strip">
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, minHeight: touchTarget.min }}>
         <View style={{ flex: 1, minWidth: 0, gap: spacing.xxs }}>
           {/* Not a Heading: a header role inside the button would hide it from heading navigation. */}
-          <Body weight="bold" style={TITLE}>
+          <Body weight="bold" style={{ fontSize: textScale.size.prompt, lineHeight: textScale.size.prompt * typography.leading.tight }}>
             {view.title}
           </Body>
           <Body weight="semibold">{view.here}</Body>

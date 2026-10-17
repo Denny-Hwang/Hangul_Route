@@ -1,5 +1,5 @@
 import { expect, test, type Page, type Route } from '@playwright/test';
-import { getMessages } from '@hangul-route/i18n';
+import { LOCALE_META, getMessages } from '@hangul-route/i18n';
 import { API, NOW, SESSION_KEY } from './report-fixtures';
 
 /**
@@ -8,7 +8,8 @@ import { API, NOW, SESSION_KEY } from './report-fixtures';
  * License covers, Stage 2 lessons go into a plan through the stage chips and an episode's folded lessons, the sticky
  * bar keeps **Publish plan** in sight, a focused row is never under it, and the saved plan holds what was chosen; an
  * uncovered class is offered Stage 1 with the wizard's line (learner devices would not derive Stage 2 items there);
- * the lecture page's catalogue is grouped (stages, stories, word topics) and searchable. No sideways scroll.
+ * the lecture page's catalogue is grouped (stages, stories, word topics) and searchable; the lecture page's Slides
+ * language hint follows the choice (AMENDMENTS-LECTURE-V2 section 18.4). No sideways scroll.
  *
  * Runs on the console e2e export (the same one as `curriculum.spec.ts` and `reports.spec.ts`), made with lecture
  * mode on so the lecture page draws its sections:
@@ -177,8 +178,14 @@ test.describe('the plan builder\'s picker at 1280 and at 320 with 200 % text (LV
   test('320 with the text at 200 %: chips and rows wrap, nothing scrolls sideways', async ({ page }) => {
     await page.setViewportSize({ width: 320, height: 640 });
     await mockClass(page);
-    await page.addInitScript(() => document.addEventListener('DOMContentLoaded', () => (document.documentElement.style.fontSize = '200%')));
     await page.goto(`/teach/space/plan?id=${encodeURIComponent(SPACE.id)}`);
+    // 200 % text is the browser's default font size (CDP `Page.setFontSizes`, as in `site-budgets.spec.ts`), never an
+    // inline `html` font-size: the console's text size provider owns that one (`calc(100% * var(--hr-text-scale))`,
+    // AMENDMENTS-DISPLAY-NAV section 4), so the browser setting and the device's step multiply. Chromium drops the CDP
+    // sizes on a resize, so the viewport is set first.
+    const client = await page.context().newCDPSession(page);
+    await client.send('Page.setFontSizes', { fontSizes: { standard: 32, fixed: 32 } });
+    await expect.poll(() => page.evaluate(() => getComputedStyle(document.documentElement).fontSize)).toBe('32px');
     const picker = page.getByTestId('plan-picker');
     await picker.getByTestId('plan-picker-chip-stage2').check();
     await picker.getByRole('button', { name: w.lessonsOf('Word Builder') }).click();
@@ -217,6 +224,36 @@ test.describe('the lecture page\'s catalogue is grouped at 360 (LV-3a)', () => {
     await expect(outline).toContainText('Happy Hangul Day!');
     await page.screenshot({ path: test.info().outputPath('lecture-picker-360.png'), fullPage: true });
     await noSidewaysScroll(page);
+    expect(unexpected).toEqual([]);
+  });
+
+  test('the Slides language hint follows the choice: the device\'s language by default, the chosen one on every device (AMENDMENTS-LECTURE-V2 section 18.4)', async ({ page }) => {
+    const { unexpected } = await mockClass(page);
+    await page.goto(`/teach/space/lecture?id=${encodeURIComponent(SPACE.id)}`);
+    const o = en.console.lecture.options;
+    const select = page.getByTestId('lecture-slides-language');
+    const hint = page.getByTestId('lecture-slides-language-hint');
+    // Same as this device is first and chosen: no language in the deck, so a copied link follows the device that opens it.
+    await expect(select).toHaveValue('');
+    await expect(hint).toHaveText(o.languageHint);
+    for (const locale of ['ko', 'es', 'en'] as const) {
+      const { endonym, htmlLang } = LOCALE_META[locale];
+      await select.selectOption(locale);
+      await expect(hint).toHaveText(o.languageHintChosen(endonym));
+      await expect(hint.locator(`span[lang="${htmlLang}"]`)).toHaveText(endonym);
+      await expect(page.getByText(o.languageHint, { exact: true })).toHaveCount(0);
+      if (locale === 'ko') {
+        await hint.scrollIntoViewIfNeeded();
+        await page.screenshot({ path: test.info().outputPath('lecture-slides-language-ko-360.png') });
+        await noSidewaysScroll(page);
+      }
+    }
+    // Back to Same as this device: the copied-link hint returns.
+    await select.selectOption('');
+    await expect(hint).toHaveText(o.languageHint);
+    await expect(hint.locator('span[lang]')).toHaveCount(0);
+    await hint.scrollIntoViewIfNeeded();
+    await page.screenshot({ path: test.info().outputPath('lecture-slides-language-same-360.png') });
     expect(unexpected).toEqual([]);
   });
 });

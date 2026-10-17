@@ -47,19 +47,20 @@ import {
 } from '@/lib/console/curriculum';
 import { dateKey } from '@/lib/console/plans';
 import { ROUTES, spaceIdFrom } from '@/lib/console/routing';
+import { headRem, rem } from '@/lib/console/rem';
 
 const STEPS = 4;
 
 const inputStyle: CSSProperties = {
   padding: `${spacing.sm}px ${spacing.md}px`,
-  fontSize: typography.size.bodySm,
+  fontSize: rem(typography.size.bodySm),
   borderRadius: radii.md,
   border: `${borderWidth.thin}px solid ${colors.border.strong}`,
   backgroundColor: colors.surface.paper,
   color: colors.text.primary,
 };
 
-const labelStyle: CSSProperties = { display: 'block', fontSize: typography.size.caption, color: colors.text.muted, marginBottom: spacing.xs };
+const labelStyle: CSSProperties = { display: 'block', fontSize: rem(typography.size.caption), color: colors.text.muted, marginBottom: spacing.xs };
 
 /**
  * console/curriculum-wizard — F-PLAN-002 section 3.8 (wireframe console/curriculum-planner A-D).
@@ -250,8 +251,8 @@ function CurriculumInner(): JSX.Element {
       ) : null}
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: spacing.md, flexWrap: 'wrap', marginBottom: spacing.md }}>
-        <h1 ref={heading} tabIndex={-1} style={{ fontSize: typography.size.title, margin: 0 }}>{step === STEPS ? c.preview.title : c.title}</h1>
-        <span style={{ color: colors.text.muted, fontSize: typography.size.bodySm }}>{c.step(step, STEPS)}</span>
+        <h1 ref={heading} tabIndex={-1} style={{ fontSize: headRem(typography.size.title), margin: 0 }}>{step === STEPS ? c.preview.title : c.title}</h1>
+        <span style={{ color: colors.text.muted, fontSize: rem(typography.size.bodySm) }}>{c.step(step, STEPS)}</span>
       </div>
 
       {step === 1 ? (
@@ -269,12 +270,12 @@ function CurriculumInner(): JSX.Element {
               </select>
             </label>
           ) : null}
-          <h2 style={{ fontSize: typography.size.bodyLg, margin: `0 0 ${spacing.sm}px` }}>{c.start.title}</h2>
+          <h2 style={{ fontSize: rem(typography.size.bodyLg), margin: `0 0 ${spacing.sm}px` }}>{c.start.title}</h2>
           <div role="radiogroup" aria-label={c.start.label} onKeyDown={onRadioKeys} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: spacing.sm }}>
             {STARTING_POINT_IDS.map((id) => (
               <Chip key={id} wide selected={state.start === id} disabled={loading} onClick={() => updateAndFollow({ start: id })} testId={`start-${id}`}>
                 <span style={{ display: 'block', fontWeight: typography.weight.bold }}>{c.start.points[id].title}</span>
-                <span style={{ display: 'block', color: colors.text.secondary, fontSize: typography.size.caption }}>{c.start.points[id].line}</span>
+                <span style={{ display: 'block', color: colors.text.secondary, fontSize: rem(typography.size.caption) }}>{c.start.points[id].line}</span>
               </Chip>
             ))}
           </div>
@@ -294,7 +295,7 @@ function CurriculumInner(): JSX.Element {
 
       {step === 2 ? (
         <section aria-label={c.rhythm.title}>
-          <h2 style={{ fontSize: typography.size.bodyLg, margin: `0 0 ${spacing.md}px` }}>{c.rhythm.title}</h2>
+          <h2 style={{ fontSize: rem(typography.size.bodyLg), margin: `0 0 ${spacing.md}px` }}>{c.rhythm.title}</h2>
           <ChipGroup label={c.rhythm.pace}>
             {PACE_CHOICES.map((id: PaceId) => (
               <Chip key={id} selected={pace === id} onClick={() => updateAndFollow({ ...pacePatch(id), rhythmPicked: true })} testId={`pace-${id}`}>
@@ -318,7 +319,7 @@ function CurriculumInner(): JSX.Element {
                     {proposal?.defaultId === choice ? <SuggestedTag /> : null}
                   </span>
                   {option ? (
-                    <span style={{ display: 'block', color: colors.text.secondary, fontSize: typography.size.caption, fontWeight: typography.weight.regular }} data-testid={`length-line-${choice}`}>
+                    <span style={{ display: 'block', color: colors.text.secondary, fontSize: rem(typography.size.caption), fontWeight: typography.weight.regular }} data-testid={`length-line-${choice}`}>
                       {lengthPreviewText(option, locale)}
                     </span>
                   ) : null}
@@ -408,7 +409,7 @@ function CurriculumInner(): JSX.Element {
 
       {step === 3 ? (
         <section aria-label={c.goals.title}>
-          <h2 style={{ fontSize: typography.size.bodyLg, margin: `0 0 ${spacing.md}px` }}>{c.goals.title}</h2>
+          <h2 style={{ fontSize: rem(typography.size.bodyLg), margin: `0 0 ${spacing.md}px` }}>{c.goals.title}</h2>
           <ChipGroup label={c.goals.focusLabel}>
             {FOCUS_CHOICES.map((focus) => (
               <Chip key={focus} selected={state.focus === focus} onClick={() => update({ focus, focusPicked: true })}>

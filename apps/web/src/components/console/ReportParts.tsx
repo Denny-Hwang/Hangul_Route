@@ -34,6 +34,7 @@ import type {
   ReportThisPeriod,
 } from '@/lib/console/report-view';
 import { useMessages } from '@/lib/i18n/locale-context';
+import { headRem } from '@/lib/console/rem';
 
 /**
  * The learner report page body (F-REPORT-001 RP-7a2; screen spec `design/screens/reports/learner-report.md`, mocks
@@ -92,7 +93,7 @@ export const REPORT_CSS = `
 .hr-report-link-button:disabled{background:${colors.surface.sunken};color:${colors.text.muted};cursor:default}
 .hr-report-ghost{display:inline-flex;align-items:center;gap:${rem(spacing.xs)};min-height:${px(touchTarget.min)};padding:${rem(spacing.xs)} ${rem(spacing.lg)};border-radius:${px(radii.pill)};background:${colors.brand.primaryLight};color:${colors.brand.primaryDark};font-size:${rem(typography.size.bodySm)};font-weight:${typography.weight.bold};text-decoration:none}
 .hr-report-glance{display:flex;flex-direction:column;gap:${rem(spacing.xs)}}
-.hr-report-title{display:flex;align-items:center;gap:${rem(spacing.sm)};font-size:${rem(typography.size.title)};font-weight:${typography.weight.bold};line-height:${typography.leading.tight};overflow-wrap:anywhere}
+.hr-report-title{display:flex;align-items:center;gap:${rem(spacing.sm)};font-size:${headRem(typography.size.title)};font-weight:${typography.weight.bold};line-height:${typography.leading.tight};overflow-wrap:anywhere}
 .hr-report-state-title{font-size:${rem(typography.size.bodyLg)};font-weight:${typography.weight.bold};line-height:${typography.leading.tight}}
 .hr-report-chip{flex:none;width:${px(AVATAR_CHIP)};height:${px(AVATAR_CHIP)};border-radius:${px(radii.circle)};border:${px(borderWidth.base)} solid ${colors.surface.paper};box-shadow:0 0 0 ${px(borderWidth.thin)} ${colors.border.strong}}
 .hr-report-region{display:flex;flex-direction:column;align-items:flex-start;gap:${rem(spacing.xs)}}
@@ -136,7 +137,7 @@ export const REPORT_CSS = `
 .hr-report-figures{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,${FIGURE_MIN}),1fr));gap:${rem(spacing.sm)}}
 .hr-report-figure{display:flex;flex-direction:column;gap:${rem(spacing.xxs)};padding:${rem(spacing.sm)} ${rem(spacing.md)};border-radius:${px(radii.md)};background:${colors.surface.paper};border:${px(borderWidth.thin)} solid ${colors.border.subtle}}
 .hr-report-figure dt{order:1;font-size:${rem(typography.size.bodySm)};color:${colors.text.secondary}}
-.hr-report-figure-value{order:0;font-size:${rem(typography.size.title)};font-weight:${typography.weight.bold};line-height:${typography.leading.tight}}
+.hr-report-figure-value{order:0;font-size:${headRem(typography.size.title)};font-weight:${typography.weight.bold};line-height:${typography.leading.tight}}
 .hr-report-figure-up{order:2;font-size:${rem(typography.size.caption)};font-weight:${typography.weight.semibold};color:${colors.feedback.successDark}}
 .hr-report-calendar-block{display:flex;flex-direction:column;gap:${rem(spacing.sm)}}
 .hr-report-calendar{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:${rem(spacing.xs)};max-width:${px(layout.maxWidth.reading)}}
@@ -184,7 +185,7 @@ export const REPORT_CSS = `
 .hr-report-chooser a>span:not(.hr-report-chip){flex:1;min-width:0;overflow-wrap:anywhere}
 .hr-report-skeleton{height:${rem(spacing.xxxl)};border-radius:${px(radii.md)};background:${colors.surface.sunken}}
 .hr-report-skeleton-tall{height:calc(3 * ${rem(spacing.xxxl)})}
-.hr-report-skeleton-title{display:inline-block;width:50%;height:${rem(typography.size.title)};border-radius:${px(radii.sm)};background:${colors.surface.sunken}}
+.hr-report-skeleton-title{display:inline-block;width:50%;height:${headRem(typography.size.title)};border-radius:${px(radii.sm)};background:${colors.surface.sunken}}
 @media screen{.hr-report-print-footer{display:none}}
 @media print{
 @page{margin:0}

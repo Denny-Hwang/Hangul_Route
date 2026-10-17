@@ -65,3 +65,11 @@ describe('sectionTabId (a tab\'s DOM id, named by its panel\'s aria-labelledby)'
     expect(sectionTabId('a', 'cards')).not.toBe(sectionTabId('b', 'cards'));
   });
 });
+
+describe('sectionTabStyle at the chosen text size (owner items 6 and 7)', () => {
+  it('the label takes the body size it is given; the token body without one', () => {
+    expect(sectionTabStyle(true).fontSize).toBe(typography.size.body);
+    expect(sectionTabStyle(false, 27).fontSize).toBe(27);
+    expect(sectionTabStyle(true, 27).minHeight).toBe(touchTarget.min);
+  });
+});

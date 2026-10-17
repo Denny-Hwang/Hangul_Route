@@ -15,6 +15,7 @@ import { personaHome } from '@/lib/console/personas';
 import { ROUTES, statusLine } from '@/lib/console/routing';
 import { writeLastPersona } from '@/lib/console/shell-store';
 import { START_CLASS, START_FAMILY, classRowLinks, teacherHomeView } from '@/lib/console/teacher-home';
+import { headRem, rem } from '@/lib/console/rem';
 
 /**
  * The teacher home `/teach/home` (F-APP-001 A-5a, section 3.8; design mock
@@ -48,14 +49,14 @@ const textLink: CSSProperties = {
   textUnderlineOffset: spacing.xs,
   background: 'none',
   border: 'none',
-  fontSize: typography.size.body,
+  fontSize: rem(typography.size.body),
   cursor: 'pointer',
 };
 const columnStyle: CSSProperties = { display: 'flex', flexDirection: 'column', gap: spacing.xl, maxWidth: layout.maxWidth.reading };
 const rowsStyle: CSSProperties = { display: 'flex', flexDirection: 'column', gap: spacing.sm };
 const headStyle: CSSProperties = { display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: spacing.sm };
-const h1Style: CSSProperties = { margin: 0, fontSize: typography.size.title, lineHeight: typography.leading.tight, fontWeight: typography.weight.bold };
-const groupTitle: CSSProperties = { margin: 0, fontSize: typography.size.bodyLg, fontWeight: typography.weight.bold };
+const h1Style: CSSProperties = { margin: 0, fontSize: headRem(typography.size.title), lineHeight: typography.leading.tight, fontWeight: typography.weight.bold };
+const groupTitle: CSSProperties = { margin: 0, fontSize: rem(typography.size.bodyLg), fontWeight: typography.weight.bold };
 
 export default function HomePage(): JSX.Element {
   const { ready, session, api, signOut, m, locale } = useConsole();
@@ -113,9 +114,9 @@ export default function HomePage(): JSX.Element {
           <div>
             <p style={{ margin: 0, fontWeight: typography.weight.bold, overflowWrap: 'anywhere', color: archived ? colors.text.secondary : colors.text.primary }}>
               {item.space.name}
-              {archived ? <span style={{ color: colors.text.muted, fontSize: typography.size.bodySm }}> {c.home.archived}</span> : null}
+              {archived ? <span style={{ color: colors.text.muted, fontSize: rem(typography.size.bodySm) }}> {c.home.archived}</span> : null}
             </p>
-            <p style={{ margin: 0, color: colors.text.secondary, fontSize: typography.size.bodySm }}>{statusLine(item, locale)}</p>
+            <p style={{ margin: 0, color: colors.text.secondary, fontSize: rem(typography.size.bodySm) }}>{statusLine(item, locale)}</p>
           </div>
           <Link href={ROUTES.space(item.space.id, item.space.kind)} style={smallButton}>
             {c.home.open.cta}
@@ -192,7 +193,7 @@ export default function HomePage(): JSX.Element {
       {view?.state === 'noClass' ? (
         <div style={columnStyle}>
           <div style={{ ...panelStyle, display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: spacing.md, padding: `${spacing.xl}px ${spacing.lg}px` }}>
-            <h1 style={{ ...h1Style, fontSize: typography.size.prompt }}>{c.home.noClass.title}</h1>
+            <h1 style={{ ...h1Style, fontSize: rem(typography.size.prompt) }}>{c.home.noClass.title}</h1>
             <Link href={START_CLASS} style={primaryButton} data-testid="no-class-set-up">
               {c.home.noClass.setUp}
             </Link>

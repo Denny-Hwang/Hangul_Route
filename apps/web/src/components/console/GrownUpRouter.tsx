@@ -12,7 +12,7 @@ import { readLastPersona } from '@/lib/console/shell-store';
 import { finishReverify, grantSignInUnlock, resolveDestination, settleSignIn, type RouteIo, type SignInIo } from '@/lib/console/signin-flow';
 import { clearSignInRecord, readSignInRecord } from '@/lib/console/signin-record';
 import { clearGrownUpTab } from '@/lib/console/unlock';
-import { useMessages } from '@/lib/i18n/locale-context';
+import { useLocale, useMessages } from '@/lib/i18n/locale-context';
 import { useConsoleAuth } from './auth-context';
 import { ReverifyPanel, RetryPanel, RouterPanel } from './SignInParts';
 
@@ -67,6 +67,7 @@ export interface GrownUpRouterProps {
 export function GrownUpRouter({ next, hint, reverify, environment }: GrownUpRouterProps): JSX.Element {
   const auth = useConsoleAuth();
   const m = useMessages();
+  const locale = useLocale();
   const s = m.console.signIn;
   const envRef = useRef<RouterEnvironment | null>(environment ?? null);
   const env = (envRef.current ??= browserRouterEnvironment());
@@ -128,7 +129,7 @@ export function GrownUpRouter({ next, hint, reverify, environment }: GrownUpRout
         backLabel={m.console.lock.backToLearning.cta}
         onBack={() => {
           env.clearGrownUpTab();
-          env.assign(learnerHome(env.origin()));
+          env.assign(learnerHome(env.origin(), locale));
         }}
       >
         {reverify ? reverify({ onDone: done }) : <CancelNow onDone={done} />}

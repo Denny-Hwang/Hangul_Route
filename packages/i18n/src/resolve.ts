@@ -12,13 +12,17 @@ export type MessageLocale = UiLocale | typeof PSEUDO_LOCALE;
 
 const OVERLAYS: Record<UiLocale, DeepPartial<Messages>> = { en: {}, es, ko };
 
-/** First defined of profile, device, detected; else `en` (F-I18N-001 §3.1). */
+/**
+ * First defined of device, account, detected; else `en` (F-I18N-001 §3.1; one UI language per
+ * device and per account since owner items 6 and 7, so there is no per-profile level). `account`
+ * is a signed-in grown-up's language, a seed for a device that never chose.
+ */
 export function resolveLocale(input: {
-  profile?: UiLocale | null;
   device?: UiLocale | null;
+  account?: UiLocale | null;
   detected?: UiLocale | null;
 }): UiLocale {
-  return input.profile ?? input.device ?? input.detected ?? 'en';
+  return input.device ?? input.account ?? input.detected ?? 'en';
 }
 
 const cache = new Map<MessageLocale, Messages>();

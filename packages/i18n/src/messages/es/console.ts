@@ -249,8 +249,9 @@ export const consoleMsgs = {
     failed: 'No se realizó. Reintenta.',
   },
 
-  language: {
-    label: 'Idioma',
+  docTitle: {
+    console: 'Consola — Hangul Route',
+    signIn: 'Acceso para adultos — Hangul Route',
   },
   codeExpiry: {
     none: 'aún sin código',
@@ -831,7 +832,10 @@ export const consoleMsgs = {
       strokeGuide: 'Guía de trazos',
       strokeNote: 'Simplificada: no es una referencia de caligrafía.',
       sound: 'Con sonido',
-      language: 'Idioma de la presentación',
+      language: 'Idioma de las diapositivas',
+      languageSame: 'Igual que este dispositivo',
+      languageHint: 'Un enlace copiado usa el idioma del dispositivo que lo abre.',
+      languageHintChosen: (endonym: string) => `Se ven en ${endonym} en cualquier dispositivo, también con un enlace copiado.`,
     },
     titleField: { label: 'Título', placeholder: 'Letras de la semana 3', hint: 'No pongas el nombre de un estudiante en el título.' },
     titleProblem: {

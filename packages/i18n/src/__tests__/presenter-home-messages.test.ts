@@ -44,7 +44,8 @@ describe('learner.presenter home strings (F-TCH-004 PR 8)', () => {
     expect(p.home.quick.minutes(15)).toBe('about 15 min');
     expect(p.home.quick.full).toBe('This lesson is full. Remove one to add another.');
     expect(p.start.back.cta).toBe('Back to lessons');
-    expect(p.language.title).toBe('Presenter language');
+    // No presenter language of its own (owner items 6 and 7): the Aa sheet sets the device's.
+    expect('language' in p).toBe(false);
     expect(en.a11y.presenter.removeRecent('Week 3 letters')).toBe('Remove: Week 3 letters');
   });
 

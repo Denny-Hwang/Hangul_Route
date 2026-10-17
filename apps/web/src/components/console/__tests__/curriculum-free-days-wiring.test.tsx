@@ -25,7 +25,7 @@ vi.mock('@/lib/i18n/locale-context', async () => {
   return { useConsoleLocale: view, useMessages: () => view().messages, useLocale: () => 'en', useSetLocale: () => () => undefined };
 });
 
-vi.mock('@/components/console/LanguageSelect', () => ({ LanguageSelect: () => null }));
+vi.mock('@/components/console/DisplaySheet', () => ({ DisplayButton: () => null }));
 
 // next/link needs the app router's context; a plain anchor keeps its href and text.
 vi.mock('next/link', () => ({ default: ({ href, children }: { href: string; children: ReactNode }) => <a href={href}>{children}</a> }));

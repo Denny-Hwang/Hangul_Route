@@ -1,4 +1,5 @@
 import { colors, typography } from '@hangul-route/design-system/tokens';
+import { rem } from '../lib/console/rem';
 import type { ReactNode } from 'react';
 
 export interface SiteDocumentProps {
@@ -33,7 +34,8 @@ export function SiteDocument({ lang, children, htmlAttrs }: SiteDocumentProps): 
           backgroundColor: colors.surface.canvas,
           color: colors.text.primary,
           fontFamily: typography.family.sans === 'System' ? SYSTEM_SANS : typography.family.sans,
-          fontSize: typography.size.body,
+          // In rem (18 px at the default root), so the console's chosen text size reaches inherited text too.
+          fontSize: rem(typography.size.body),
           lineHeight: typography.leading.normal,
         }}
       >

@@ -34,7 +34,7 @@ async function refocus(): Promise<void> {
 afterEach(() => {
   vi.restoreAllMocks();
   vi.unstubAllEnvs();
-  useLocaleStore.setState({ device: 'en', session: null, byProfile: {} });
+  useLocaleStore.setState({ device: 'en', byProfile: {} });
 });
 
 const URL = 'https://hangulroute.com/licenses';
@@ -111,7 +111,7 @@ describe('LicensesLink', () => {
 
   it.each(['es', 'ko'] as const)('reads in %s', async (locale) => {
     vi.stubEnv('EXPO_PUBLIC_SHOW_ALL_LOCALES', '1');
-    useLocaleStore.setState({ device: locale, session: null, byProfile: {} });
+    useLocaleStore.setState({ device: locale, byProfile: {} });
     const r = await render(<LicensesLink url={URL} onGate={() => undefined} opensDirectly={() => true} open={vi.fn().mockResolvedValue('opened')} />);
     expect(screenTexts(r.root)).toContain(getMessages(locale).learner.profile.licenses.label);
     await unmount(r);

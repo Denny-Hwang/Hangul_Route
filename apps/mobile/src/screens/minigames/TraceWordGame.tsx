@@ -19,6 +19,7 @@ import {
   typography,
   useLayoutClass,
   KOREAN_LINE_BREAK,
+  useTypeScale,
 } from '@hangul-route/design-system';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, Text, View, type LayoutChangeEvent, type ViewStyle } from 'react-native';
@@ -100,6 +101,7 @@ const borderOf: Record<Look, string> = {
  * Order and direction coach, never fail; the round scores once, when the word is done.
  */
 export function TraceWordGame({ scope, host, onBack }: Props): React.ReactElement {
+  const textScale = useTypeScale();
   const m = useMessages();
   const copy = m.learner.minigame;
   const a11y = m.a11y.minigame;
@@ -381,7 +383,7 @@ export function TraceWordGame({ scope, host, onBack }: Props): React.ReactElemen
       style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'baseline', columnGap: spacing.sm }}
     >
       <Heading level="prompt">{copy.traceWord.heading}</Heading>
-      <Text {...KOREAN_LINE_BREAK} {...koreanSpeech} style={koreanWordStyle}>
+      <Text {...KOREAN_LINE_BREAK} {...koreanSpeech} style={[koreanWordStyle, { fontSize: textScale.size.title }]}>
         {round.word.ko}
       </Text>
     </View>
@@ -406,7 +408,7 @@ export function TraceWordGame({ scope, host, onBack }: Props): React.ReactElemen
         <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={{ flexDirection: 'row', gap: spacing.xs, alignItems: 'center' }}>
           {block.placed.letters.map((l, i) => (
             <View key={l.role} style={{ flexDirection: 'row', alignItems: 'center' }}>
-              <Text {...KOREAN_LINE_BREAK} {...koreanSpeech} style={[partMarkStyle, i === state.letter && phase === 'drawing' ? { fontWeight: typography.weight.bold, color: colors.text.primary } : null]}>
+              <Text {...KOREAN_LINE_BREAK} {...koreanSpeech} style={[partMarkStyle, { fontSize: textScale.size.bodyLg }, i === state.letter && phase === 'drawing' ? { fontWeight: typography.weight.bold, color: colors.text.primary } : null]}>
                 {l.char}
               </Text>
               {i < lettersDone ? <Icon name="check" size={16} color={colors.feedback.success} /> : null}
@@ -517,16 +519,15 @@ interface Size {
 // Speech language for assistive tech on the Hangul (as KoreanText does); spread for the web-only `lang`.
 const koreanSpeech = { accessibilityLanguage: KOREAN_LANGUAGE, lang: KOREAN_LANGUAGE };
 
+// The sizes come from the chosen text size (`useTypeScale`) where these are drawn.
 const koreanWordStyle = {
   fontFamily: typography.family.sansKr,
-  fontSize: typography.size.title,
   fontWeight: typography.weight.bold,
   color: colors.text.primary,
 } as const;
 
 const partMarkStyle = {
   fontFamily: typography.family.sansKr,
-  fontSize: typography.size.bodyLg,
   color: colors.text.secondary,
 } as const;
 
@@ -622,6 +623,7 @@ function BlockChip({
   label: string;
   onPress: () => void;
 }): React.ReactElement {
+  const textScale = useTypeScale();
   const look: Look = state === 'current' ? 'live' : state === 'done' ? 'pass' : 'waiting';
   return (
     <Pressable
@@ -648,7 +650,7 @@ function BlockChip({
           ))}
         </Svg>
       ) : (
-        <Text {...KOREAN_LINE_BREAK} {...koreanSpeech} style={{ fontFamily: typography.family.sansKr, fontSize: typography.size.title, fontWeight: typography.weight.bold, color: colors.text.primary }}>
+        <Text {...KOREAN_LINE_BREAK} {...koreanSpeech} style={{ fontFamily: typography.family.sansKr, fontSize: textScale.size.title, fontWeight: typography.weight.bold, color: colors.text.primary }}>
           {block.syllable}
         </Text>
       )}
@@ -671,10 +673,10 @@ const stripBorder: Record<TraceWordTone, string> = {
   cheering: colors.feedback.success,
   thinking: colors.feedback.nudge,
 };
-const STRIP_LINE = Math.ceil(typography.size.bodySm * typography.leading.normal);
 
 /** Hoya's line in a strip of fixed height (Trace Stroke's), so a longer line never moves the canvas. */
 function HoyaStrip({ tone, message, lines, showHoya }: { tone: TraceWordTone; message: string; lines: number; showHoya: boolean }): React.ReactElement {
+  const textScale = useTypeScale();
   return (
     <View
       accessibilityLiveRegion="polite"
@@ -683,7 +685,8 @@ function HoyaStrip({ tone, message, lines, showHoya }: { tone: TraceWordTone; me
         flexDirection: 'row',
         alignItems: 'center',
         gap: spacing.sm,
-        height: lines * STRIP_LINE + 2 * spacing.sm + 2 * borderWidth.base,
+        // A line of the strip's text at the chosen text size, so a longer message is never clipped.
+        height: lines * Math.ceil(textScale.size.bodySm * typography.leading.normal) + 2 * spacing.sm + 2 * borderWidth.base,
         paddingHorizontal: spacing.md,
         paddingVertical: spacing.sm,
         borderRadius: radii.lg,

@@ -1,4 +1,5 @@
-import { colors, presenter, radii, spacing, typography, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
+import { colors, presenter, radii, spacing, typography, KOREAN_LINE_BREAK, useTypeScale } from '@hangul-route/design-system';
+import { LOCALE_META } from '@hangul-route/i18n';
 import React, { useRef } from 'react';
 import { Text, View, type GestureResponderEvent, type ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -31,7 +32,9 @@ import { VocabSlide } from './slides/VocabSlide';
  * In a phone window the compact bar floats over the stage's bottom edge and is out of the way
  * whenever the slide changes (F-TCH-004 section 3.6): a tap in its strip (`inBarStrip`) shows or
  * hides it instead of stepping, and a short grabber in the stage's bottom margin, where no slide
- * draws, marks the strip.
+ * draws, marks the strip. The stage is marked with the slide language (`lang`), which may differ
+ * from the chrome's (`<html lang>`, the device's) when the deck names one, so a screen reader reads
+ * the slides in their own voice (WCAG 3.1.2).
  */
 export interface StageProps {
   scale: StageScale;
@@ -59,9 +62,10 @@ export interface StageProps {
 
 export function Stage(props: StageProps): React.ReactElement {
   const { scale, slides, slideIdx, reveal } = props;
-  const { unit, messages } = usePresenterView();
+  const { unit, messages, locale } = usePresenterView();
   const size = useStageText();
   const slide = slides[slideIdx]!;
+  const lang = LOCALE_META[locale].htmlLang;
   const shown = new Set<BuildName>(slide.builds.slice(0, reveal + 1));
   const start = useRef<{ x: number; y: number; locationX: number } | null>(null);
   // In a phone window the stage is centred inside the safe area: its top is the top inset plus the
@@ -96,6 +100,7 @@ export function Stage(props: StageProps): React.ReactElement {
     <View
       testID="presenter-stage"
       role="main"
+      {...{ lang, accessibilityLanguage: lang }}
       onStartShouldSetResponder={() => true}
       onResponderGrant={onGrant}
       onResponderRelease={onRelease}
@@ -204,6 +209,7 @@ const visuallyHidden = {
  * End hint sits at the top too, clear of the bar's strip.
  */
 export function StageHint({ text, bottom }: { text: string; bottom?: boolean }): React.ReactElement {
+  const textScale = useTypeScale();
   return (
     <View
       testID={bottom === undefined ? 'presenter-portrait-hint' : 'presenter-end-hint'}
@@ -219,7 +225,7 @@ export function StageHint({ text, bottom }: { text: string; bottom?: boolean }):
         paddingHorizontal: spacing.lg,
       }}
     >
-      <Text {...KOREAN_LINE_BREAK} style={{ fontSize: typography.size.body, color: colors.text.primary }}>{text}</Text>
+      <Text {...KOREAN_LINE_BREAK} style={{ fontSize: textScale.size.body, color: colors.text.primary }}>{text}</Text>
     </View>
   );
 }

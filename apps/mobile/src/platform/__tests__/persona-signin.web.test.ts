@@ -16,7 +16,7 @@ import type { TelemetryEvent } from '../telemetry';
 /**
  * F-APP-001 section 3.6 (A-7), behaviours 1 and 2: a Welcome persona button sends
  * `shell.persona_chosen` and opens sign-in in the same tab, with the persona hint for a button of
- * Panel A and none for Continue (Panel B); `?lang=` follows the UI locale when it is not English.
+ * Panel A and none for Continue (Panel B); `?lang=` always follows the UI locale, English included.
  */
 function harness(locale: UiLocale = 'en'): { env: PersonaSignInEnv; events: TelemetryEvent[]; assigned: string[] } {
   const events: TelemetryEvent[] = [];
@@ -41,20 +41,20 @@ describe('openPersonaSignIn (web)', () => {
     const h = harness();
     await openPersonaSignIn({ persona: 'teacher', from: 'welcome' }, h.env);
     expect(h.events).toEqual([{ name: 'shell.persona_chosen', payload: { persona: 'teacher', from: 'welcome' } }]);
-    expect(h.assigned).toEqual(['/signin?persona=teacher']);
+    expect(h.assigned).toEqual(['/signin?persona=teacher&lang=en']);
   });
 
   it('Parent or caregiver on Welcome: /signin?persona=parent', async () => {
     const h = harness();
     await openPersonaSignIn({ persona: 'parent', from: 'welcome' }, h.env);
-    expect(h.assigned).toEqual(['/signin?persona=parent']);
+    expect(h.assigned).toEqual(['/signin?persona=parent&lang=en']);
   });
 
   it('Continue as family: the remembered persona in the event, the plain router in the address', async () => {
     const h = harness();
     await openPersonaSignIn({ persona: 'parent', from: 'welcome-continue' }, h.env);
     expect(h.events[0]?.payload).toEqual({ persona: 'parent', from: 'welcome-continue' });
-    expect(h.assigned).toEqual(['/signin']);
+    expect(h.assigned).toEqual(['/signin?lang=en']);
   });
 
   it('carries a UI locale that is not the default', async () => {
@@ -72,7 +72,7 @@ describe('openPersonaSignIn (web)', () => {
       throw new Error('offline');
     };
     await openPersonaSignIn({ persona: 'parent', from: 'welcome' }, h.env);
-    expect(h.assigned).toEqual(['/signin?persona=parent']);
+    expect(h.assigned).toEqual(['/signin?persona=parent&lang=en']);
   });
 
   it('reads the browser by default: the locale store and location.assign', async () => {
@@ -83,7 +83,7 @@ describe('openPersonaSignIn (web)', () => {
       return 0;
     });
     await openPersonaSignIn({ persona: 'teacher', from: 'welcome' });
-    expect(assign).toHaveBeenCalledWith('/signin?persona=teacher');
+    expect(assign).toHaveBeenCalledWith('/signin?persona=teacher&lang=en');
     vi.unstubAllGlobals();
   });
 });

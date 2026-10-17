@@ -3,6 +3,8 @@
 import { IconSvg } from '@hangul-route/design-system/icon-glyphs/dom';
 import { borderWidth, colors, layout, radii, shadows, spacing, touchTarget, typography } from '@hangul-route/design-system/tokens';
 import { useEffect, useId, useState, type CSSProperties, type ReactNode } from 'react';
+import { DisplayButton } from './DisplaySheet';
+import { headRem, rem } from '@/lib/console/rem';
 
 /**
  * The parts of `/signin` and the grown-up routers (F-APP-001 A-4b; design mock
@@ -27,7 +29,7 @@ const pageStyle: CSSProperties = {
 };
 
 /** The page gutter: `layout.gutter.compact`, `.regular` from 45em (mock token table). */
-const GUTTER_CSS = `.hr-signin-page{padding-inline:${layout.gutter.compact}px}@media (min-width:45em){.hr-signin-page{padding-inline:${layout.gutter.regular}px}}`;
+const GUTTER_CSS = `.hr-signin-page{padding-inline:${layout.gutter.compact}px}.hr-signin-display{right:${layout.gutter.compact}px}@media (min-width:45em){.hr-signin-page{padding-inline:${layout.gutter.regular}px}.hr-signin-display{right:${layout.gutter.regular}px}}`;
 
 const columnStyle: CSSProperties = {
   display: 'flex',
@@ -37,14 +39,26 @@ const columnStyle: CSSProperties = {
   maxWidth: layout.maxWidth.reading,
   margin: '0 auto',
   textAlign: 'center',
+  // A long token (the no-API line's variable name, an email address) breaks instead of pushing the
+  // page past a 320 px window at a large text size, as the adult frame's main does.
+  overflowWrap: 'anywhere',
 };
 
 /** The single centred column of `/signin` and the router pages. */
 export function SignInColumn({ children }: { children: ReactNode }): JSX.Element {
   return (
-    <main className="hr-signin-page" style={pageStyle}>
+    <main className="hr-signin-page" style={{ ...pageStyle, position: 'relative' }}>
       <style>{GUTTER_CSS}</style>
-      <div style={columnStyle}>{children}</div>
+      {/* The column starts below the Aa row, so a long first line never runs under the button. */}
+      <div style={children ? { ...columnStyle, marginTop: touchTarget.min + spacing.sm } : columnStyle}>{children}</div>
+      {/* The Aa button (owner items 6 and 7): the device's language and text size, drawn top right outside the
+          column; last in the tab order, after the page's own controls. An empty column (a router page still
+          deciding) stays an empty canvas. */}
+      {children ? (
+        <div className="hr-signin-display" style={{ position: 'absolute', top: spacing.lg }}>
+          <DisplayButton testId="signin-display" />
+        </div>
+      ) : null}
     </main>
   );
 }
@@ -58,7 +72,7 @@ const buttonBase: CSSProperties = {
   boxSizing: 'border-box',
   padding: `${spacing.sm}px ${spacing.xl}px`,
   borderRadius: radii.pill,
-  fontSize: typography.size.body,
+  fontSize: rem(typography.size.body),
   fontWeight: typography.weight.bold,
   cursor: 'pointer',
 };
@@ -93,14 +107,14 @@ export function SignInHead({ mark, title, intro }: { mark: string; title: string
           borderRadius: radii.circle,
           backgroundColor: colors.brand.primary,
           color: colors.text.inverse,
-          fontSize: typography.size.bodyLg,
+          fontSize: rem(typography.size.bodyLg),
           fontWeight: typography.weight.bold,
           flex: 'none',
         }}
       >
         {mark}
       </span>
-      <h1 style={{ margin: 0, fontSize: typography.size.title, fontWeight: typography.weight.bold, lineHeight: typography.leading.tight }}>{title}</h1>
+      <h1 style={{ margin: 0, fontSize: headRem(typography.size.title), fontWeight: typography.weight.bold, lineHeight: typography.leading.tight }}>{title}</h1>
       {intro ? <p style={{ margin: 0, color: colors.text.secondary, lineHeight: typography.leading.relaxed }}>{intro}</p> : null}
     </>
   );
@@ -162,7 +176,7 @@ export function BelowWidget(props: { createHref: string; createLabel: string; le
       <TextLink href={props.createHref} testId="signin-create">
         {props.createLabel}
       </TextLink>
-      <p style={{ margin: 0, maxWidth: layout.pane.master, color: colors.text.muted, fontSize: typography.size.bodySm, lineHeight: typography.leading.relaxed }}>{props.learnersLine}</p>
+      <p style={{ margin: 0, maxWidth: layout.pane.master, color: colors.text.muted, fontSize: rem(typography.size.bodySm), lineHeight: typography.leading.relaxed }}>{props.learnersLine}</p>
       <TextLink href={props.learnHref} testId="signin-learn">
         {props.learnLabel}
       </TextLink>
@@ -201,7 +215,7 @@ export function AdultStep(props: { lead: string; affirm: string; continueLabel: 
       }}
       style={{ width: '100%', maxWidth: layout.pane.master, display: 'flex', flexDirection: 'column', gap: spacing.md, textAlign: 'left' }}
     >
-      <p id={leadId} style={{ margin: 0, fontSize: typography.size.bodyLg, fontWeight: typography.weight.bold, lineHeight: typography.leading.normal }}>
+      <p id={leadId} style={{ margin: 0, fontSize: rem(typography.size.bodyLg), fontWeight: typography.weight.bold, lineHeight: typography.leading.normal }}>
         {props.lead}
       </p>
       <label
@@ -259,7 +273,7 @@ export function RouterPanel({ line, goNowLabel, href }: { line: string; goNowLab
 
 const smallButtonStyle: CSSProperties = {
   ...buttonBase,
-  fontSize: typography.size.bodySm,
+  fontSize: rem(typography.size.bodySm),
   backgroundColor: colors.surface.paper,
   color: colors.text.primary,
   border: `${borderWidth.thin}px solid ${colors.border.strong}`,
@@ -326,7 +340,7 @@ export function ReverifyPanel(props: { title: string; line: string; backLabel: s
         borderRadius: radii.lg,
       }}
     >
-      <h1 id={titleId} style={{ margin: 0, fontSize: typography.size.title, fontWeight: typography.weight.bold, lineHeight: typography.leading.tight }}>
+      <h1 id={titleId} style={{ margin: 0, fontSize: headRem(typography.size.title), fontWeight: typography.weight.bold, lineHeight: typography.leading.tight }}>
         {props.title}
       </h1>
       <p style={{ margin: 0, color: colors.text.secondary, lineHeight: typography.leading.relaxed }}>{props.line}</p>

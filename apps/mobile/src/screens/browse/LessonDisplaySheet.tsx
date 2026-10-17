@@ -1,21 +1,24 @@
 import type { RomanizationMode } from '@hangul-route/content-schema';
-import { Body, Button, Heading, Spacer, borderWidth, colors, radii, shadows, spacing, touchTarget, typography, useLayoutClass, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
-import { LOCALE_META } from '@hangul-route/i18n';
+import { Body, Button, Heading, Spacer, borderWidth, colors, radii, shadows, spacing, touchTarget, useLayoutClass } from '@hangul-route/design-system';
 import React, { useEffect } from 'react';
-import { Modal, Pressable, ScrollView, Text, View } from 'react-native';
-import { useLocale, useMessages } from '../../i18n/use-messages';
+import { Modal, Pressable, ScrollView, View } from 'react-native';
+import { useMessages } from '../../i18n/use-messages';
 import { onEscape } from '../../platform/browse-env';
 import { useBrowseSettings } from './BrowseSettings';
 import { focusRing, type FocusState } from './browse-ui';
 import { BROWSE_DIALOG_MAX } from '../../logic/browse/layout';
 
 /**
- * The Lesson display sheet (F-BROWSE-001 section 4.9; wireframe
+ * The Romanization sheet, formerly Lesson display (F-BROWSE-001 section 4.9 as amended by
+ * AMENDMENTS-DISPLAY-NAV section 6; mock `design/screens/browse/lesson-display.md` "Revision
+ * 2026-10-17"; wireframe
  * `browse/show-as.md`; mock `design/screens/browse/lesson-display.md`): how
- * lessons show romanization in this preview and, once more than English
- * ships, the UI language. A bottom sheet on phones and a centred dialog from
- * the regular class. A choice applies at once; Done only closes. It changes
- * no learner's settings and never the device locale.
+ * lessons show romanization in this preview. A bottom sheet on phones and a
+ * centred dialog from the regular class. A choice applies at once; Done only
+ * closes. It changes no learner's settings. The UI language and the text size
+ * are the device's one record, on the shared Display (Aa) sheet the header's
+ * Aa button opens (AMENDMENTS-DISPLAY-NAV section 6), so this sheet has no
+ * Language row any more.
  */
 
 /** The radio ring and its dot (mock: a 24 ring with a 12 dot). */
@@ -31,8 +34,7 @@ const MODES: readonly RomanizationMode[] = ['always', 'tap'];
 export function LessonDisplaySheet({ visible, onClose }: { visible: boolean; onClose: () => void }): React.ReactElement {
   const messages = useMessages();
   const m = messages.caregiver.browse.display;
-  const locale = useLocale();
-  const { romanization, setRomanization, languages, setLanguage } = useBrowseSettings();
+  const { romanization, setRomanization } = useBrowseSettings();
   const dialog = useLayoutClass().width !== 'compact';
   const label = { always: m.always, tap: m.tap } as const;
   // Escape closes the sheet (section 7); the web Modal does not do it by itself.
@@ -73,8 +75,8 @@ export function LessonDisplaySheet({ visible, onClose }: { visible: boolean; onC
               <Heading level="prompt">{m.title}</Heading>
             </View>
             <Spacer size="md" />
-            <Body weight="bold">{m.romanization}</Body>
-            <View role="radiogroup" aria-label={m.romanization}>
+            {/* The sheet holds only this choice, so its title names the group (AMENDMENTS-DISPLAY-NAV section 6). */}
+            <View role="radiogroup" aria-labelledby="browse-display-title">
               {MODES.map((mode) => {
                 const selected = romanization === mode;
                 return (
@@ -113,45 +115,6 @@ export function LessonDisplaySheet({ visible, onClose }: { visible: boolean; onC
                 );
               })}
             </View>
-            {languages.length > 1 ? (
-              <>
-                <Spacer size="md" />
-                <Body weight="bold">{m.language}</Body>
-                <Spacer size="xs" />
-                <View role="radiogroup" aria-label={m.language} style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs }}>
-                  {languages.map((l) => {
-                    const selected = l === locale;
-                    return (
-                      <Pressable
-                        key={l}
-                        role="radio"
-                        aria-checked={selected}
-                        accessibilityState={{ checked: selected }}
-                        onPress={() => setLanguage(l)}
-                        testID={`browse-display-language-${l}`}
-                        style={({ focused }: FocusState) => ({
-                          minHeight: touchTarget.min,
-                          minWidth: touchTarget.min,
-                          justifyContent: 'center',
-                          paddingHorizontal: spacing.lg,
-                          borderRadius: radii.pill,
-                          backgroundColor: selected ? colors.brand.primary : colors.surface.paper,
-                          ...focusRing(focused, selected ? colors.brand.primary : colors.border.strong),
-                          borderWidth: focused ? borderWidth.thick : borderWidth.base,
-                        })}
-                      >
-                        <Text {...KOREAN_LINE_BREAK}
-                          {...{ lang: LOCALE_META[l].htmlLang }}
-                          style={{ fontSize: typography.size.body, fontWeight: typography.weight.semibold, color: selected ? colors.text.onPrimary : colors.text.primary }}
-                        >
-                          {LOCALE_META[l].endonym}
-                        </Text>
-                      </Pressable>
-                    );
-                  })}
-                </View>
-              </>
-            ) : null}
             <Spacer size="md" />
             <Body tone="secondary">{m.note}</Body>
             <Spacer size="lg" />

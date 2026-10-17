@@ -10,6 +10,7 @@ import type { ApiResult, ConsoleApi, TransferLearnerSideView, TransferOption, Tr
 import { canCancel, daysSince, isOpenTransfer, slotLabel, startError, startErrorText, statusLine, stepWord, type StartError } from '@/lib/console/transfer';
 import { consentLines, consentRecord, identityLines, type ConsentLine, type ConsentSheetData } from '@/lib/console/transfer-consent';
 import { useConsoleLocale } from '@/lib/i18n/locale-context';
+import { rem } from '@/lib/console/rem';
 
 /**
  * The family side of class moves (F-SPACE-002 section 4.8 "Family page" and 4.11, PR T-6d): the consent sheet, the
@@ -72,7 +73,7 @@ export function useSeenOnce(resetKey: string): [(el: Element | null) => void, bo
 // ---------------------------------------------------------------------------
 // The consent sheet (consent-sheet.md)
 
-const lineStyle: CSSProperties = { margin: `0 0 ${spacing.md}px`, fontSize: typography.size.body, lineHeight: typography.leading.relaxed, color: colors.text.primary };
+const lineStyle: CSSProperties = { margin: `0 0 ${spacing.md}px`, fontSize: rem(typography.size.body), lineHeight: typography.leading.relaxed, color: colors.text.primary };
 const listStyle: CSSProperties = { margin: `0 0 ${spacing.md}px`, paddingInlineStart: spacing.lg, color: colors.text.secondary, lineHeight: typography.leading.relaxed };
 const conditionalStyle: CSSProperties = { borderInlineStart: `${borderWidth.thick}px solid ${colors.border.strong}`, paddingInlineStart: spacing.md };
 const noticeStyle: CSSProperties = { margin: `0 0 ${spacing.md}px`, padding: spacing.md, borderRadius: radii.md, backgroundColor: colors.surface.sunken, color: colors.text.primary };
@@ -87,7 +88,7 @@ const selectStyle: CSSProperties = {
   borderColor: colors.border.strong,
   backgroundColor: colors.surface.paper,
   color: colors.text.primary,
-  fontSize: typography.size.body,
+  fontSize: rem(typography.size.body),
 };
 
 function LineView({ line }: { line: ConsentLine }): JSX.Element | null {
@@ -187,7 +188,7 @@ export function ConsentSheet({ data, initialLocale, notNowEnds, busy, failed, up
               i === typedAt ? (
                 <section key={line.id} aria-label={c.who} style={{ border: `${borderWidth.thin}px solid ${colors.border.subtle}`, borderRadius: radii.md, padding: spacing.lg, marginBottom: spacing.md }}>
                   <p style={{ margin: `0 0 ${spacing.xs}px`, fontWeight: typography.weight.bold }}>{c.who}</p>
-                  <p style={{ margin: `0 0 ${spacing.xs}px`, fontSize: typography.size.bodyLg, fontWeight: typography.weight.semibold }}>{data.destination.name}</p>
+                  <p style={{ margin: `0 0 ${spacing.xs}px`, fontSize: rem(typography.size.bodyLg), fontWeight: typography.weight.semibold }}>{data.destination.name}</p>
                   {identity.map((text) => (
                     <p key={text} style={{ margin: `0 0 ${spacing.xs}px`, color: colors.text.secondary }}>
                       {text}
@@ -247,7 +248,7 @@ const panel: CSSProperties = {
   padding: spacing.lg,
   marginBottom: spacing.md,
 };
-const h2Style: CSSProperties = { fontSize: typography.size.bodyLg, margin: `${spacing.lg}px 0 ${spacing.sm}px` };
+const h2Style: CSSProperties = { fontSize: rem(typography.size.bodyLg), margin: `${spacing.lg}px 0 ${spacing.sm}px` };
 const rowStyle: CSSProperties = { display: 'flex', flexWrap: 'wrap', gap: spacing.sm, alignItems: 'center' };
 const roomBlockStyle: CSSProperties = {
   ...rowStyle,
@@ -369,8 +370,8 @@ export function FamilyRequestCard({ view, now, busy, answersHidden, onReview, on
   return (
     <article style={{ ...panel, ...(moved ? { backgroundColor: colors.feedback.successLight } : {}) }} data-testid="family-move-card">
       <div style={{ ...rowStyle, justifyContent: 'space-between' }}>
-        <strong style={{ fontSize: typography.size.bodyLg }}>{view.learner.name}</strong>
-        {needsAnswer ? <span style={{ color: colors.text.secondary, fontSize: typography.size.bodySm }}>{teacherStarted ? t.meta.askedByClass(view.from.name, days) : t.meta.askedByFamily(days)}</span> : null}
+        <strong style={{ fontSize: rem(typography.size.bodyLg) }}>{view.learner.name}</strong>
+        {needsAnswer ? <span style={{ color: colors.text.secondary, fontSize: rem(typography.size.bodySm) }}>{teacherStarted ? t.meta.askedByClass(view.from.name, days) : t.meta.askedByFamily(days)}</span> : null}
       </div>
       <p style={{ ...rowStyle, margin: `${spacing.xs}px 0`, fontWeight: typography.weight.semibold }}>
         <span>{view.from.name}</span>
@@ -410,7 +411,7 @@ export function FamilyRequestCard({ view, now, busy, answersHidden, onReview, on
         ) : null}
       </div>
       {needsAnswer && teacherStarted ? (
-        <p id={notNowId} style={{ margin: `${spacing.sm}px 0 0`, color: colors.text.secondary, fontSize: typography.size.bodySm }}>
+        <p id={notNowId} style={{ margin: `${spacing.sm}px 0 0`, color: colors.text.secondary, fontSize: rem(typography.size.bodySm) }}>
           {t.lines.notNowEnds}
         </p>
       ) : null}

@@ -359,14 +359,14 @@ describe('the way back (sections 3.8, 3.9)', () => {
     expect(textOf(back)).toBe(en.console.shell.backToLearning);
     await act(async () => back.props.onClick());
     expect(env.cleared).toBe(1);
-    expect(env.assigned).toEqual(['/']);
+    expect(env.assigned).toEqual(['/?lang=en']);
   });
 
   it('from the site origin (before F-SITE-002 S-10) the way back goes to the app host', async () => {
     const env = fakeEnv({ origin: 'https://hangulroute.com' });
     const r = await render(env, [klass]);
     await act(async () => byTestId(r, 'frame-way-back')[0]?.props.onClick());
-    expect(env.assigned).toEqual(['https://app.hangulroute.com/']);
+    expect(env.assigned).toEqual(['https://app.hangulroute.com/?lang=en']);
   });
 
   it('reads Open the learner app on a device with no learner profile (a teacher laptop)', async () => {
@@ -386,12 +386,18 @@ describe('the way back (sections 3.8, 3.9)', () => {
 });
 
 describe('the phone layout and the footer (section 3.8)', () => {
-  it('puts Language and Sign out in the footer tools, shown only below 45em; the header copies only from 45em', async () => {
+  it('puts Sign out in the footer tools below 45em (the header copy only from 45em); the Aa button sits in the header at every width', async () => {
     locales.available = ['en', 'es', 'ko'];
     const r = await render(fakeEnv(), [klass]);
     const tools = byTestId(r, 'frame-foot-tools')[0] as ReactTestInstance;
     expect(tools.props.className).toBe('hr-frame-tools');
-    expect(tools.findAll((n) => n.type === 'select')).toHaveLength(1);
+    // No language select anywhere (owner items 6 and 7): the Display (Aa) sheet replaces it.
+    expect(r.root.findAll((n) => n.type === 'select')).toHaveLength(0);
+    const aa = byTestId(r, 'frame-display').filter((n) => n.type === 'button');
+    expect(aa).toHaveLength(1);
+    expect(aa[0]?.props['aria-label']).toBe('Aa, Display: language and text size');
+    expect(aa[0]?.props['aria-haspopup']).toBe('dialog');
+    expect(aa[0]?.props.className).toBeUndefined();
     expect(textOf(byTestId(r, 'frame-foot-sign-out')[0] as ReactTestInstance)).toBe('Sign out');
     expect(byTestId(r, 'frame-sign-out')[0]?.props.className).toBe('hr-frame-wide');
     const css = String(r.root.findByType('style').children[0]);

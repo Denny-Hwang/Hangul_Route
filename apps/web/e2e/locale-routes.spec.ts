@@ -77,7 +77,8 @@ test.describe('locale routes', () => {
     await page.goto('/signin');
     await expect(page.locator('html')).toHaveAttribute('lang', 'en');
     await expect.poll(() => announcerConnected(page)).toBe(true);
-    await page.locator('a[href="/"]').first().click();
+    // The way to the learner app always carries the console's language (AMENDMENTS-DISPLAY-NAV section 6).
+    await page.locator('a[href="/?lang=en"]').first().click();
     await page.waitForURL((url) => url.pathname === '/');
     await expect(page.locator('html')).toHaveAttribute('lang', 'en');
     await expect.poll(() => announcerConnected(page)).toBe(true);

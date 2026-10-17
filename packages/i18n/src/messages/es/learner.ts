@@ -28,11 +28,6 @@ export const learner = {
 
   language: {
     groupLabel: 'Idioma',
-    sameAsDevice: (endonym: string) => `Igual que el dispositivo (${endonym})`,
-    confirmProfile: (endonym: string) => `¿Usar ${endonym} en este perfil?`,
-    confirmDevice: (endonym: string) => `¿Usar ${endonym} en este dispositivo?`,
-    confirmUse: (endonym: string) => `Usar ${endonym}`,
-    confirmBack: (endonym: string) => `Volver a ${endonym}`,
   },
 
   createProfile: {
@@ -144,10 +139,9 @@ export const learner = {
     },
     install: { label: 'Instalar aquí', a11yLabel: 'Instalar Hangul Route en este dispositivo' },
     licenses: { label: 'Avisos de código abierto', fallback: 'Abre hangulroute.com/licenses en un navegador.', gateDone: 'Revisión de adultos lista. Toca Avisos de código abierto otra vez para abrir la página.' },
-    language: {
-      title: 'Idioma',
-      thisProfile: 'Este perfil',
-      deviceDefault: 'Perfiles nuevos y este dispositivo empiezan en:',
+    display: {
+      row: 'Pantalla',
+      line: (language: string, size: string) => `${language} · Texto: ${size}`,
     },
     reading: {
       title: 'Práctica de lectura',
@@ -1771,10 +1765,6 @@ export const learner = {
       tooSmall: 'Agranda la ventana o gira la pantalla.',
       rotate: { title: 'Gira el teléfono de lado', line: 'La lección se ve con el teléfono de lado. No se pierde nada.' },
       portrait: 'Gira la pantalla para verlo más grande',
-    },
-    language: {
-      title: 'Idioma de la presentación',
-      note: 'Solo para esta sesión. El coreano siempre muestra la romanización y el significado.',
     },
   },
   /** [TV] Líneas de Inicio sobre las clases (TV-D5, TV-D10). */

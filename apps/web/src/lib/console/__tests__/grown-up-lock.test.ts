@@ -199,15 +199,19 @@ describe('lock screen targets', () => {
   });
 
   it('learnerHome is the app host only while the console is still served on the site (hangulroute.com, www)', () => {
-    expect(learnerHome('https://hangulroute.com')).toBe('https://app.hangulroute.com/');
-    expect(learnerHome('https://www.hangulroute.com')).toBe('https://app.hangulroute.com/');
+    expect(learnerHome('https://hangulroute.com', 'en')).toBe('https://app.hangulroute.com/?lang=en');
+    expect(learnerHome('https://www.hangulroute.com', 'ko')).toBe('https://app.hangulroute.com/?lang=ko');
   });
 
   it('learnerHome is / on the app host and on every other origin, so previews and local builds never leave for production', () => {
-    expect(learnerHome('https://app.hangulroute.com')).toBe('/');
-    expect(learnerHome('https://hangul-route-app-preview.example.workers.dev')).toBe('/');
-    expect(learnerHome('http://localhost:4173')).toBe('/');
-    expect(learnerHome('http://127.0.0.1:3000')).toBe('/');
-    expect(learnerHome('')).toBe('/');
+    expect(learnerHome('https://app.hangulroute.com', 'en')).toBe('/?lang=en');
+    expect(learnerHome('https://hangul-route-app-preview.example.workers.dev', 'en')).toBe('/?lang=en');
+    expect(learnerHome('http://localhost:4173', 'es')).toBe('/?lang=es');
+    expect(learnerHome('http://127.0.0.1:3000', 'en')).toBe('/?lang=en');
+    expect(learnerHome('', 'en')).toBe('/?lang=en');
+  });
+
+  it('learnerHome always carries the console language, English included (AMENDMENTS-DISPLAY-NAV section 6)', () => {
+    for (const locale of ['en', 'es', 'ko'] as const) expect(learnerHome('https://app.hangulroute.com', locale)).toBe(`/?lang=${locale}`);
   });
 });

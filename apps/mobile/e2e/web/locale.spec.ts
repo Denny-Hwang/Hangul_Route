@@ -87,6 +87,9 @@ async function dismissInstallGuideWhenShown(page: Page): Promise<void> {
   });
 }
 
+/** An ISO 8601 time, as `device:settings.uiLocaleAt` stores it. */
+const ISO = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;
+
 test.describe('every language shown (es and ko ship)', () => {
   test.skip(PSEUDO, 'runs against a build with no pseudo flag');
 
@@ -103,7 +106,8 @@ test.describe('every language shown (es and ko ship)', () => {
       await page.getByRole('radio', { name: 'English' }).click();
       await expect(page.locator('html')).toHaveAttribute('lang', 'en');
       await waitForSaved(page, ['device:settings']);
-      expect(await readStored(page, 'device:settings')).toEqual({ uiLocale: 'en' });
+      // A choice is stored with its time (owner items 6 and 7: the account merge reads it).
+      expect(await readStored(page, 'device:settings')).toEqual({ uiLocale: 'en', uiLocaleAt: expect.stringMatching(ISO) });
 
       await page.reload();
       await expect(page.getByRole('radio', { name: 'English' })).toHaveAttribute('aria-checked', 'true');
@@ -123,48 +127,42 @@ test.describe('every language shown (es and ko ship)', () => {
     // Only `lang` leaves the address bar.
     await expect(page).toHaveURL(/\?from=site$/);
     await waitForSaved(page, ['device:settings']);
-    expect(await readStored(page, 'device:settings')).toEqual({ uiLocale: 'ko' });
+    // A hand-off seeds a device that never chose, stamped when it seeds (AMENDMENTS-DISPLAY-NAV section 3.4).
+    const seeded = await readStored<{ uiLocale: string; uiLocaleAt: string }>(page, 'device:settings');
+    expect(seeded).toEqual({ uiLocale: 'ko', uiLocaleAt: expect.stringMatching(ISO) });
 
     // The device has chosen now, so a later hand-off does not change it.
     await page.goto('/?lang=es');
     await expect(page.getByRole('radio', { name: '한국어' })).toHaveAttribute('aria-checked', 'true');
     await expect(page.locator('html')).toHaveAttribute('lang', 'ko');
     await expect(page).not.toHaveURL(/lang=/);
-    await expectStoredStays(page, 'device:settings', { uiLocale: 'ko' }, 'ko');
+    await expectStoredStays(page, 'device:settings', seeded, 'ko');
   });
 
-  test("a profile's own language wins over the device's, and both survive a reload", async ({ page }) => {
+  test('one language per device: the Display sheet on Profile switches every screen, and it survives a reload (owner items 6 and 7)', async ({ page }) => {
     await dismissInstallGuideWhenShown(page);
     await onboardChild(page, { name: 'Dani', startJourney: false });
     const id = (await readStored<Array<{ id: string }>>(page, 'profiles'))?.[0]?.id ?? '';
     await page.goto('/');
     await page.getByRole('button', { name: 'Profile and settings' }).click();
 
-    // This profile reads Spanish.
-    await page.getByRole('radio', { name: 'Español' }).first().click();
-    await page.getByRole('button', { name: nameIn('es', (m) => m.learner.language.confirmUse('Español')) }).click();
+    await page.getByTestId('profile-display-row').click();
+    const sheet = page.getByTestId('display-sheet');
+    await expect(sheet).toBeVisible();
+    await sheet.getByRole('radio', { name: 'Español' }).click();
+    await sheet.getByRole('button', { name: nameIn('es', (m) => m.common.display.confirm.use('Español')) }).click();
     await expect(page.locator('html')).toHaveAttribute('lang', 'es');
-
-    // The device default moves to Korean; the profile keeps Spanish.
-    await page.getByTestId('language-device-ko').click();
-    await page.getByRole('button', { name: nameIn('ko', (m) => m.learner.language.confirmUse('한국어')) }).click();
-    await expect(page.getByTestId('language-device-ko')).toHaveAttribute('aria-checked', 'true');
-    await expect(page.locator('html')).toHaveAttribute('lang', 'es');
-    await waitForSaved(page, ['device:settings', `settings:${id}`]);
-    expect(await readStored(page, 'device:settings')).toEqual({ uiLocale: 'ko' });
-    expect(await readStored(page, `settings:${id}`)).toEqual({ uiLocale: 'es', romanizationMode: 'always' });
+    await waitForSaved(page, ['device:settings']);
+    expect(await readStored(page, 'device:settings')).toEqual({ uiLocale: 'es', uiLocaleAt: expect.stringMatching(ISO) });
+    // No profile holds a language of its own any more.
+    expect((await readStored<Record<string, unknown>>(page, `settings:${id}`)) ?? {}).not.toHaveProperty('uiLocale');
+    await sheet.getByRole('button', { name: nameIn('es', (m) => m.common.buttons.done) }).click();
 
     await page.reload();
     await expect(page.getByText(nameIn('es', (m) => m.learner.home.greeting('Dani')))).toBeVisible();
     await expect(page.locator('html')).toHaveAttribute('lang', 'es');
-
-    // Back to "Same as this device": the profile now follows the device, in Korean.
-    await page.getByRole('button', { name: nameIn('es', (m) => m.a11y.profileEntry) }).click();
-    await page.getByRole('radio', { name: nameIn('es', (m) => m.learner.language.sameAsDevice('한국어')) }).click();
-    await page.getByRole('button', { name: nameIn('ko', (m) => m.learner.language.confirmUse('한국어')) }).click();
-    await expect(page.locator('html')).toHaveAttribute('lang', 'ko');
-    await expect.poll(() => readStored(page, `settings:${id}`)).toEqual({ romanizationMode: 'always' });
   });
+
 });
 
 /**

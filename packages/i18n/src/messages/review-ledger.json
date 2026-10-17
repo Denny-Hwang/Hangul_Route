@@ -1,9 +1,9 @@
 {
   "es": {
     "common": {
-      "enSha": "7cc2ec402ad12367003032ff9294b962f33044626136dd179edfdee9a3509ab3",
+      "enSha": "984ca4a3697f2e436779a223def5a7905188835e1b1894b3ed3cc164955ffa13",
       "reviewedBy": "MAR",
-      "reviewedAt": "2026-10-14"
+      "reviewedAt": "2026-10-17"
     },
     "a11y": {
       "enSha": "aec19c93bd3c12839e6771b81bff6d8b7a9f13b85aefbc4a0bf0f6507277477a",
@@ -11,17 +11,17 @@
       "reviewedAt": "2026-10-14"
     },
     "learner": {
-      "enSha": "71dd3f6f9abe8f6bbc78fd0d8891e418273ff4994bc3d0ed95549752fa927016",
+      "enSha": "8ae6e40d1343bca575912e943dcd94c6fcd368f6a5a5854916e428171d93466e",
       "reviewedBy": "MAR",
       "reviewedAt": "2026-10-17"
     },
     "caregiver": {
-      "enSha": "556e1d44d46d4d7b7275e2e11cfc72ea2c4b9b902be9c6ba0331d77b6dd50b18",
+      "enSha": "ed2e849e19eef51245dbd41e6fe87d36689602cdf364f19be856eb60c4003564",
       "reviewedBy": "MAR",
-      "reviewedAt": "2026-10-14"
+      "reviewedAt": "2026-10-17"
     },
     "console": {
-      "enSha": "6f746f366468beb472a90179a2fd261d70f5efc0d844bbd7d1acc3107458e88b",
+      "enSha": "6cb3c7478648fb36650e754eac8de8278afb0922add11dcb67589cbee7574414",
       "reviewedBy": "MAR",
       "reviewedAt": "2026-10-17"
     },
@@ -38,9 +38,9 @@
   },
   "ko": {
     "common": {
-      "enSha": "7cc2ec402ad12367003032ff9294b962f33044626136dd179edfdee9a3509ab3",
+      "enSha": "984ca4a3697f2e436779a223def5a7905188835e1b1894b3ed3cc164955ffa13",
       "reviewedBy": "MAR",
-      "reviewedAt": "2026-10-14"
+      "reviewedAt": "2026-10-17"
     },
     "a11y": {
       "enSha": "aec19c93bd3c12839e6771b81bff6d8b7a9f13b85aefbc4a0bf0f6507277477a",
@@ -48,17 +48,17 @@
       "reviewedAt": "2026-10-14"
     },
     "learner": {
-      "enSha": "71dd3f6f9abe8f6bbc78fd0d8891e418273ff4994bc3d0ed95549752fa927016",
+      "enSha": "8ae6e40d1343bca575912e943dcd94c6fcd368f6a5a5854916e428171d93466e",
       "reviewedBy": "MAR",
       "reviewedAt": "2026-10-17"
     },
     "caregiver": {
-      "enSha": "556e1d44d46d4d7b7275e2e11cfc72ea2c4b9b902be9c6ba0331d77b6dd50b18",
+      "enSha": "ed2e849e19eef51245dbd41e6fe87d36689602cdf364f19be856eb60c4003564",
       "reviewedBy": "MAR",
-      "reviewedAt": "2026-10-14"
+      "reviewedAt": "2026-10-17"
     },
     "console": {
-      "enSha": "6f746f366468beb472a90179a2fd261d70f5efc0d844bbd7d1acc3107458e88b",
+      "enSha": "6cb3c7478648fb36650e754eac8de8278afb0922add11dcb67589cbee7574414",
       "reviewedBy": "MAR",
       "reviewedAt": "2026-10-17"
     },

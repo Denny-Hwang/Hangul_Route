@@ -20,7 +20,7 @@ vi.mock('@/lib/i18n/locale-context', async () => {
   return { useConsoleLocale: view, useMessages: () => view().messages, useLocale: () => 'en', useSetLocale: () => () => undefined };
 });
 
-vi.mock('@/components/console/LanguageSelect', () => ({ LanguageSelect: () => null }));
+vi.mock('@/components/console/DisplaySheet', () => ({ DisplayButton: () => null }));
 
 // The adult frame (F-APP-001 A-5a) reads the spaces list and draws its own links; adult-frame.test.tsx covers it.
 // Here it passes the page through, so the calls and the links below are the page's own.

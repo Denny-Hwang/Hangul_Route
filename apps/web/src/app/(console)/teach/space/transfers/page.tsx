@@ -16,6 +16,7 @@ import { signInAgainUrl } from '@/lib/console/grown-up-lock';
 import { ROUTES, isKnownSpaceKind, spaceIdFrom } from '@/lib/console/routing';
 import { TRANSFER_REFRESH_MS } from '@/lib/console/transfer';
 import { directClassIds } from '@/lib/console/transfer-requests';
+import { rem } from '@/lib/console/rem';
 
 /**
  * console/class-moves, F-SPACE-002 section 4.8 (wireframe `console/class-transfer.md` screen 3; mockups
@@ -79,7 +80,7 @@ function TransfersInner(): JSX.Element {
       <p style={{ margin: `0 0 ${spacing.sm}px` }}>
         <Link href={ROUTES.space(spaceId, space?.kind)}>{space ? t.back(space.name) : t.actions.backToRoster.cta}</Link>
       </p>
-      <h1 style={{ fontSize: typography.size.prompt, margin: 0 }}>{t.title}</h1>
+      <h1 style={{ fontSize: rem(typography.size.prompt), margin: 0 }}>{t.title}</h1>
       {space ? <p style={{ margin: `0 0 ${spacing.md}px`, color: colors.text.secondary, fontWeight: typography.weight.semibold }}>{space.name}</p> : null}
       {stateText ? (
         <FamilyPageStateLine>{stateText}</FamilyPageStateLine>

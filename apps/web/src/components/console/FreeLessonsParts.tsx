@@ -4,6 +4,7 @@ import { colors, spacing, touchTarget, typography } from '@hangul-route/design-s
 import Link from 'next/link';
 import { useId } from 'react';
 import type { RosterFreeLine } from '@/lib/console/free-lessons-line-view';
+import { rem } from '@/lib/console/rem';
 
 /**
  * The free-lessons line on a console roster card (F-ENT-003 section 3.9.2, E3-12; wireframe
@@ -17,7 +18,7 @@ export function FreeLessonsLine({ line }: { line: RosterFreeLine | null }): JSX.
   const id = useId();
   if (!line) return null;
   return (
-    <div data-testid="free-lessons-line" style={{ marginTop: spacing.sm, color: colors.text.primary, fontSize: typography.size.bodySm, lineHeight: typography.leading.relaxed }}>
+    <div data-testid="free-lessons-line" style={{ marginTop: spacing.sm, color: colors.text.primary, fontSize: rem(typography.size.bodySm), lineHeight: typography.leading.relaxed }}>
       <p id={id} style={{ margin: 0 }}>{line.text}</p>
       <Link href={line.billing.href} aria-describedby={id} style={{ display: 'inline-flex', alignItems: 'center', minHeight: touchTarget.min, fontWeight: typography.weight.bold, color: colors.text.primary, textDecoration: 'underline' }}>
         {line.billing.label}

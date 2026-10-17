@@ -6,7 +6,6 @@ import {
   firstUses,
   fullscreenToggle,
   gridItems,
-  helpLanguageChips,
   narrationStops,
   optionContent,
   optionRomShown,
@@ -123,22 +122,6 @@ describe('fullscreenToggle (lecture.tool_used, section 3.14)', () => {
     const first = firstUses(new Set(), fullscreenToggle(true).tools);
     expect(first.fresh).toEqual(['fullscreen']);
     expect(firstUses(first.used, fullscreenToggle(false).tools).fresh).toEqual([]);
-  });
-});
-
-describe('helpLanguageChips (section 3.12, overlays.md Help)', () => {
-  const en = { locale: 'en' as const, endonym: 'English', htmlLang: 'en' };
-  const es = { locale: 'es' as const, endonym: 'Espa\u00f1ol', htmlLang: 'es' };
-  it('draws no chips when the build offers one locale', () => {
-    expect(helpLanguageChips([en])).toBeNull();
-    expect(helpLanguageChips([])).toBeNull();
-  });
-
-  it('gives each offered locale a chip named by its endonym, in its own language', () => {
-    expect(helpLanguageChips([en, es])).toEqual([
-      { value: 'en', label: 'English', lang: 'en' },
-      { value: 'es', label: 'Espa\u00f1ol', lang: 'es' },
-    ]);
   });
 });
 

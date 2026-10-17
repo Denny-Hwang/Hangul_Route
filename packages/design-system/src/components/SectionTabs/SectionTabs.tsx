@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { AccessibilityInfo, Platform, Pressable, Text, View, findNodeHandle } from 'react-native';
 import { colors, spacing, typography } from '../../tokens';
+import { useTypeScale } from '../TextSize';
 import { sectionTabId, sectionTabStyle } from './style';
 import type { SectionTabsProps } from './types';
 import { KOREAN_LINE_BREAK } from '../../line-break';
@@ -26,6 +27,7 @@ export function SectionTabs<T extends string>({
   focusSelected = false,
 }: SectionTabsProps<T>): React.ReactElement {
   const selectedRef = useRef<View>(null);
+  const bodySize = useTypeScale().size.body;
   useEffect(() => {
     if (!focusSelected) return undefined;
     const node = selectedRef.current;
@@ -52,7 +54,7 @@ export function SectionTabs<T extends string>({
     >
       {items.map((item) => {
         const selected = item.id === value;
-        const look = sectionTabStyle(selected);
+        const look = sectionTabStyle(selected, bodySize);
         // Web-only ARIA link to the panel; spread so native props need no type for it.
         const controls = panelId !== undefined ? { 'aria-controls': panelId } : {};
         return (

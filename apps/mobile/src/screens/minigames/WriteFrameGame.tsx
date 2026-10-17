@@ -25,6 +25,7 @@ import {
   typography,
   useLayoutClass,
   KOREAN_LINE_BREAK,
+  useTypeScale,
 } from '@hangul-route/design-system';
 import { romanizationShown } from '@hangul-route/i18n';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -93,6 +94,7 @@ function focusNode(node: Focusable | null): void {
 }
 
 export function WriteFrameGame({ scope, host, onBack, inPreview = false }: Props): React.ReactElement {
+  const textScale = useTypeScale();
   const m = useMessages();
   const copy = m.learner.minigame;
   const w = copy.writeFrame;
@@ -122,7 +124,7 @@ export function WriteFrameGame({ scope, host, onBack, inPreview = false }: Props
   const phone = lc.width === 'compact' || lc.short;
   const keyboardClass = compactRow && lc.mediaScale !== 1 ? { ...lc, mediaScale: 1 } : lc;
   const kb = keyboardLayout(kbWidth, keyboardClass);
-  const fieldFont = lc.mediaScale > 1 ? typography.size.display : typography.size.title;
+  const fieldFont = lc.mediaScale > 1 ? textScale.size.display : textScale.size.title;
 
   const runEffect = useCallback(
     (effect: WriteFrameEffect): void => {
@@ -455,7 +457,7 @@ export function WriteFrameGame({ scope, host, onBack, inPreview = false }: Props
       }}
     >
       {field.empty ? (
-        <Text {...KOREAN_LINE_BREAK} style={{ flex: 1, fontSize: typography.size.bodySm, color: colors.text.muted }}>{placeholder}</Text>
+        <Text {...KOREAN_LINE_BREAK} style={{ flex: 1, fontSize: textScale.size.bodySm, color: colors.text.muted }}>{placeholder}</Text>
       ) : (
         <Text {...KOREAN_LINE_BREAK} {...koreanSpeech} style={{ flexShrink: 1, fontSize: fieldFont, color: colors.text.primary }}>
           {typing ? field.settled : field.text}
@@ -566,7 +568,7 @@ export function WriteFrameGame({ scope, host, onBack, inPreview = false }: Props
 
   // The answer row and the keyboard are pinned to the bottom when the window holds them with a row
   // left for the frame (as Type Hangul); a shorter window scrolls them with the frame instead.
-  const answerRow = touchTarget.min + (lc.short ? spacing.xs : spacing.sm) + (helper ? typography.size.bodySm * 2 : 0);
+  const answerRow = touchTarget.min + (lc.short ? spacing.xs : spacing.sm) + (helper ? textScale.size.bodySm * 2 : 0);
   const tabsRow = nameTabs ? touchTarget.min + spacing.sm : 0;
   const underKeyboard = skipIn === 'bottom' ? spacing.md + (inlineDone ? 0 : touchTarget.min + spacing.sm) + touchTarget.min : 0;
   const pinned = lc.windowHeight <= 0 || lc.windowHeight >= answerRow + tabsRow + kb.height + underKeyboard + touchTarget.min;
@@ -612,19 +614,20 @@ interface FrameLineProps {
 
 /** The Korean frame on one line (it wraps at 200 %): text, the slots and the fitted endings. */
 function FrameLine({ parts, current, writing }: FrameLineProps): React.ReactElement {
+  const textScale = useTypeScale();
   return (
     <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'flex-end' }} {...{ 'aria-hidden': true }} importantForAccessibility="no-hide-descendants">
       {parts.map((part, i) => {
         if (part.kind === 'text') {
           return (
-            <Text {...KOREAN_LINE_BREAK} key={i} {...koreanSpeech} style={{ fontSize: typography.size.prompt, fontWeight: typography.weight.bold, color: colors.text.primary }}>
+            <Text {...KOREAN_LINE_BREAK} key={i} {...koreanSpeech} style={{ fontSize: textScale.size.prompt, fontWeight: typography.weight.bold, color: colors.text.primary }}>
               {part.text}
             </Text>
           );
         }
         if (part.kind === 'ending') {
           return (
-            <Text {...KOREAN_LINE_BREAK} key={i} {...koreanSpeech} testID="write-frame-ending" style={{ fontSize: typography.size.prompt, fontWeight: typography.weight.bold, color: colors.brand.secondaryDark }}>
+            <Text {...KOREAN_LINE_BREAK} key={i} {...koreanSpeech} testID="write-frame-ending" style={{ fontSize: textScale.size.prompt, fontWeight: typography.weight.bold, color: colors.brand.secondaryDark }}>
               {part.text}
             </Text>
           );
@@ -649,7 +652,7 @@ function FrameLine({ parts, current, writing }: FrameLineProps): React.ReactElem
           >
             <Text {...KOREAN_LINE_BREAK}
               {...koreanSpeech}
-              style={{ fontSize: typography.size.prompt, fontWeight: typography.weight.bold, color: ghost ? colors.text.muted : colors.brand.secondaryDark }}
+              style={{ fontSize: textScale.size.prompt, fontWeight: typography.weight.bold, color: ghost ? colors.text.muted : colors.brand.secondaryDark }}
             >
               {part.word ?? ' '}
             </Text>
@@ -662,10 +665,11 @@ function FrameLine({ parts, current, writing }: FrameLineProps): React.ReactElem
 
 /** A finished sentence: the Korean, its romanization (converter) and the gloss with the picks. */
 function Sentence({ ko, romanization, gloss }: { ko: string; romanization: string; gloss: string }): React.ReactElement {
+  const textScale = useTypeScale();
   const m = useMessages();
   return (
     <View accessible accessibilityLabel={m.a11y.koreanItem({ ko, romanization, gloss })} style={{ gap: spacing.xxs }} testID="write-frame-sentence-text">
-      <Text {...KOREAN_LINE_BREAK} {...koreanSpeech} style={{ fontSize: typography.size.prompt, fontWeight: typography.weight.bold, color: colors.text.primary }}>
+      <Text {...KOREAN_LINE_BREAK} {...koreanSpeech} style={{ fontSize: textScale.size.prompt, fontWeight: typography.weight.bold, color: colors.text.primary }}>
         {ko}
       </Text>
       <Caption tone="secondary">{romanization}</Caption>
@@ -685,6 +689,7 @@ interface WordCardProps {
 
 /** A word-bank card: the Korean, romanization and gloss. Any pick is right: no card has a wrong look. */
 function WordCard({ word, selected, romanizationVisible, columns, onPress, testID }: WordCardProps): React.ReactElement {
+  const textScale = useTypeScale();
   const m = useMessages();
   const label = m.a11y.koreanItem({ ko: word.ko, romanization: word.romanization, gloss: word.en });
   return (
@@ -709,7 +714,7 @@ function WordCard({ word, selected, romanizationVisible, columns, onPress, testI
         backgroundColor: selected ? colors.brand.secondaryLight : colors.surface.paper,
       })}
     >
-      <Text {...KOREAN_LINE_BREAK} {...koreanSpeech} style={{ fontSize: typography.size.prompt, fontWeight: typography.weight.bold, color: colors.text.primary }}>
+      <Text {...KOREAN_LINE_BREAK} {...koreanSpeech} style={{ fontSize: textScale.size.prompt, fontWeight: typography.weight.bold, color: colors.text.primary }}>
         {word.ko}
       </Text>
       {romanizationVisible ? <Caption tone="secondary">{word.romanization}</Caption> : null}
@@ -732,6 +737,7 @@ interface SoundPanelProps {
 
 /** The name round's Blocks tab: the sound table as tiles, its own Del; scrolls inside the keyboard's height. */
 function SoundPanel({ table, width, height, gutter, onTile, onDelete }: SoundPanelProps): React.ReactElement {
+  const textScale = useTypeScale();
   const m = useMessages();
   const w = m.learner.minigame.writeFrame.name;
   const a = m.a11y.minigame;
@@ -754,7 +760,7 @@ function SoundPanel({ table, width, height, gutter, onTile, onDelete }: SoundPan
         backgroundColor: final ? colors.surface.sunken : colors.surface.paper,
       })}
     >
-      <Text {...KOREAN_LINE_BREAK} {...koreanSpeech} style={{ fontSize: typography.size.prompt, fontWeight: typography.weight.bold, color: colors.text.primary }}>
+      <Text {...KOREAN_LINE_BREAK} {...koreanSpeech} style={{ fontSize: textScale.size.prompt, fontWeight: typography.weight.bold, color: colors.text.primary }}>
         {ko}
       </Text>
       <Caption tone="secondary">{romanization}</Caption>

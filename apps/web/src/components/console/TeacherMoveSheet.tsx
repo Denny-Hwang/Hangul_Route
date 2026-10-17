@@ -7,6 +7,7 @@ import type { ApiResult, ConsoleApi } from '@/lib/console/api';
 import { moveError, type ClassMoveDestination, type MoveError, type MoveErrorKey, type OutgoingMove } from '@/lib/console/class-moves';
 import { useConsoleLocale } from '@/lib/i18n/locale-context';
 import { ClassCodeField, MoveButton, TransferSheet } from './TransferParts';
+import { rem } from '@/lib/console/rem';
 
 /**
  * [TV] The teacher's Move sheet (AMENDMENTS-TEACHER-VISIBILITY-TRANSFER TV-D7, TV-D8; wireframe
@@ -47,12 +48,12 @@ const radioRow: CSSProperties = {
   border: `${borderWidth.thin}px solid ${colors.border.subtle}`,
   borderRadius: radii.md,
   backgroundColor: colors.surface.paper,
-  fontSize: typography.size.body,
+  fontSize: rem(typography.size.body),
   color: colors.text.primary,
   cursor: 'pointer',
 };
 const rowStyle: CSSProperties = { display: 'flex', flexWrap: 'wrap', gap: spacing.sm, alignItems: 'center', marginTop: spacing.lg };
-const lineStyle: CSSProperties = { margin: `0 0 ${spacing.sm}px`, fontSize: typography.size.body, color: colors.text.primary, lineHeight: typography.leading.relaxed };
+const lineStyle: CSSProperties = { margin: `0 0 ${spacing.sm}px`, fontSize: rem(typography.size.body), color: colors.text.primary, lineHeight: typography.leading.relaxed };
 
 export function TeacherMoveSheet({ spaceId, learner, api, online, onClose, onDone, onPageState }: TeacherMoveSheetProps): JSX.Element {
   const { messages } = useConsoleLocale();
@@ -186,7 +187,7 @@ export function TeacherMoveSheet({ spaceId, learner, api, online, onClose, onDon
     return (
       <TransferSheet title={t.sheetTitle(learner.name)} onClose={onClose} testId="teacher-move-sheet">
         <section data-testid="teacher-move-confirm">
-          <h3 style={{ margin: `0 0 ${spacing.sm}px`, fontSize: typography.size.bodyLg, fontWeight: typography.weight.bold }}>
+          <h3 style={{ margin: `0 0 ${spacing.sm}px`, fontSize: rem(typography.size.bodyLg), fontWeight: typography.weight.bold }}>
             {direct ? t.confirmDirect(learner.name, target.destination.name) : t.confirmAccept(learner.name, target.destination.name)}
           </h3>
           <p style={lineStyle}>{direct ? t.directLine : t.acceptLine(target.destination.name)}</p>
@@ -217,11 +218,11 @@ export function TeacherMoveSheet({ spaceId, learner, api, online, onClose, onDon
         </p>
       ) : (
         <fieldset aria-labelledby={legendId} style={{ border: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: spacing.sm }}>
-          <legend id={legendId} style={{ padding: 0, marginBottom: spacing.sm, fontSize: typography.size.bodyLg, fontWeight: typography.weight.bold }}>
+          <legend id={legendId} style={{ padding: 0, marginBottom: spacing.sm, fontSize: rem(typography.size.bodyLg), fontWeight: typography.weight.bold }}>
             {t.whereTo}
           </legend>
           {destinations && destinations.length > 0 ? (
-            <p style={{ margin: 0, fontSize: typography.size.bodySm, color: colors.text.secondary, fontWeight: typography.weight.semibold }}>{t.yourClasses}</p>
+            <p style={{ margin: 0, fontSize: rem(typography.size.bodySm), color: colors.text.secondary, fontWeight: typography.weight.semibold }}>{t.yourClasses}</p>
           ) : (
             <p style={{ margin: 0, color: colors.text.secondary }} data-testid="teacher-move-no-class">
               {t.noOtherClass}
