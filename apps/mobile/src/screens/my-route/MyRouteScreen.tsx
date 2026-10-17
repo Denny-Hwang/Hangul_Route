@@ -40,6 +40,7 @@ import { useToday } from '../route/use-today';
 import { RouteCard } from './RouteCard';
 import { SkillsCard } from './SkillsCard';
 import { LaterRowItem, StageRowItem } from './TrailRow';
+import { LetterWall } from './LetterWall';
 import { GateLessonsButton } from '../parent/GateLessonsButton';
 
 /**
@@ -375,6 +376,10 @@ function MyRouteBody({ profileId, readOnly, variant, navigation }: BodyProps): R
   }
 
   const current = openKey === undefined ? view.initialOpen : openKey;
+  // Where you are now, on the tab: the letter wall of the stage the learner is on (Stage 1, R-7c), closed until tapped.
+  const hereStage = model.stages.find((s) => s.here)?.stage;
+  const hereRow = view.trail.find((row) => row.kind === 'stage' && row.stage === hereStage);
+  const hereWall = hereRow?.kind === 'stage' ? hereRow.letterWall : null;
   const toggle = (key: string, stage: MyRouteModel['stages'][number]['stage']): void => {
     if (current === key) {
       setOpenKey(null);
@@ -454,11 +459,18 @@ function MyRouteBody({ profileId, readOnly, variant, navigation }: BodyProps): R
 
       {variant === 'tab' ? (
         <>
-          {/* Owner decision 2026-10-17: the next three lessons, then the way to the whole map in the Journey tab. */}
+          {/* Owner decision 2026-10-17: the next three lessons, the letter wall of the stage you are on (closed until
+              tapped), then the way to the whole map in the Journey tab. */}
           {nextRows.length > 0 ? (
             <>
               <Spacer size="xl" />
               <NextLessons title={m.nextLessons.title} rows={nextRows} onOpen={openNextLesson} />
+            </>
+          ) : null}
+          {hereWall !== null ? (
+            <>
+              <Spacer size="lg" />
+              <LetterWall wall={hereWall} />
             </>
           ) : null}
           <Spacer size="lg" />
