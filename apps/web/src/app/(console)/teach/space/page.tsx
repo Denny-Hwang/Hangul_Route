@@ -22,7 +22,9 @@ import { useConsole } from '@/components/console/use-console';
 import { useConfirmDialog } from '@/components/console/ConfirmDialog';
 import { useVisibleRefresh } from '@/components/console/use-visible-refresh';
 import type { PlanView, Roster, SpaceListItem } from '@/lib/console/api';
-import { contentGatingEnabled, lectureModeEnabled, notesEnabled, reportsEnabled } from '@/lib/console/config';
+import { appUrl, contentGatingEnabled, lectureModeEnabled, notesEnabled, reportsEnabled } from '@/lib/console/config';
+import { rosterJoinLink } from '@/lib/console/join-link';
+import { JoinLinkPanel } from '@/components/console/JoinLinkParts';
 import { canComposeIn } from '@/lib/console/lecture';
 import { rosterNotesLinks } from '@/lib/console/notes-page';
 import { levelPillLabel } from '@/lib/console/level-label';
@@ -141,6 +143,8 @@ function SpaceInner(): JSX.Element {
   };
 
   const rollup = roster ? classRollup(roster.learners, now) : null;
+  // The class join link and its QR code (owner decision 2026-10-17): a class with a code only, the code alone in the fragment.
+  const joinLink = roster ? rosterJoinLink({ kind: roster.space.kind, code: roster.joinCode, origin: appUrl() }) : null;
   const cap = roster ? capState(roster.space.kind, roster.learners.length) : null;
   const empty = roster !== null && roster.learners.length === 0;
   // The newest plan for everyone: a plan for one learner (a suggested start) never takes over the roster.
@@ -185,6 +189,7 @@ function SpaceInner(): JSX.Element {
               </Button>
             </div>
             {empty ? <Muted>{c.writeOnBoard}</Muted> : null}
+            {joinLink !== null ? <JoinLinkPanel key={joinLink} url={joinLink} copy={c.space.joinLink} centered={empty} /> : null}
           </section>
 
           <ClassGoalLineView line={goalLine} />

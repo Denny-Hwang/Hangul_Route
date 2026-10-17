@@ -166,6 +166,18 @@ export const consoleMsgs = {
     regenerateFailed: '지금은 새 코드를 만들 수 없어요.',
     joinCodeLabel: '참여 코드',
     codeLabel: { family: '가족 코드', class: '반 코드', school: '학교 코드' },
+    joinLink: {
+      title: '참여 링크',
+      note: '반에 참여하기 화면이 이 코드가 채워진 채로 열려요. 링크에는 코드만 있고 이름은 없어요.',
+      copy: { cta: '링크 복사' },
+      copied: { cta: '링크 복사됨' },
+      qr: {
+        show: { cta: 'QR 코드 보기' },
+        hide: { cta: 'QR 코드 숨기기' },
+        label: '참여 링크 QR 코드',
+        caption: '휴대폰이나 태블릿 카메라로 스캔해요.',
+      },
+    },
     regenerate: { cta: '새로 만들기' },
     createCode: { cta: '코드 만들기' },
     upgrade: '업그레이드',

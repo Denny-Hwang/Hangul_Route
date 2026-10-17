@@ -227,6 +227,23 @@ export const consoleMsgs = {
     regenerateFailed: "Couldn't make a new code right now.",
     joinCodeLabel: 'Join code',
     codeLabel: { family: 'Family code', class: 'Class code', school: 'School code' },
+    /**
+     * The class join link and its QR code under the class code (owner decision 2026-10-17): the link holds the code
+     * alone, in the address fragment, and opens the learner app's Join a class with the code filled in.
+     */
+    joinLink: {
+      title: 'Join link',
+      note: 'It opens Join a class with this code filled in. It holds the code only, never a name.',
+      copy: { cta: 'Copy link' },
+      copied: { cta: 'Link copied' },
+      qr: {
+        show: { cta: 'Show QR code' },
+        hide: { cta: 'Hide QR code' },
+        /** The QR image's accessible name. */
+        label: 'QR code of the join link',
+        caption: 'Scan it with the camera of a phone or tablet.',
+      },
+    },
     regenerate: { cta: 'Regenerate' },
     createCode: { cta: 'Create a code' },
     upgrade: 'Upgrade',

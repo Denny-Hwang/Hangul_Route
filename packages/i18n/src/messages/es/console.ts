@@ -190,6 +190,18 @@ export const consoleMsgs = {
     regenerateFailed: 'Ahora no se pudo crear un código nuevo.',
     joinCodeLabel: 'Código',
     codeLabel: { family: 'Código familiar', class: 'Código de clase', school: 'Código escolar' },
+    joinLink: {
+      title: 'Enlace para unirse',
+      note: 'Abre Unirme a una clase con este código ya escrito. Solo lleva el código, nunca un nombre.',
+      copy: { cta: 'Copiar enlace' },
+      copied: { cta: 'Enlace copiado' },
+      qr: {
+        show: { cta: 'Mostrar código QR' },
+        hide: { cta: 'Ocultar código QR' },
+        label: 'Código QR del enlace para unirse',
+        caption: 'Escanéalo con la cámara de un teléfono o una tableta.',
+      },
+    },
     regenerate: { cta: 'Crear otro' },
     createCode: { cta: 'Crear un código' },
     upgrade: 'Mejorar',
