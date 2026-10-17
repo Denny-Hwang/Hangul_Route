@@ -2,6 +2,7 @@ import {
   discoverItemTexts,
   parseNarration,
   syllableSplit,
+  wordReviewCardCap,
   type CheckKind,
   type Discover,
   type Episode,
@@ -87,6 +88,8 @@ export interface LectureStory {
   coverSceneId: string;
   keywords: ReadonlyArray<StoryKo & { id: string }>;
   tiers: readonly LectureStoryTier[];
+  /** The story's minutes (the catalogue's); its check slides are inside them (rule 12, section 4.4). */
+  minutes: number;
 }
 
 /** A vocabulary topic as the vocab adapter gives it (`sources/vocab.ts`, PR 12). */
@@ -109,6 +112,8 @@ export interface LectureBundle {
   story?(id: string): LectureStory | 'not-ready' | undefined;
   /** A topic the presenter may show; `'not-ready'` for a draft or preview one. Absent: none yet. */
   vocabTopic?(id: string): LectureVocabTopic | 'not-ready' | undefined;
+  /** One word by id (a Word review's `vocabIds`); `'not-ready'` when no topic of it is ready. Absent: none yet. */
+  vocabWord?(id: string): LectureVocabTopic['words'][number] | 'not-ready' | undefined;
 }
 
 export interface VoiceInfo {
@@ -177,10 +182,16 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
   const skipped: SkippedItem[] = [];
   const taught: TaughtItem[] = [];
   const seenJamo = new Set<string>();
+  // One card per word per deck (AMENDMENTS-LECTURE-V2 section 5.1), by Korean text: a repeat is not a skip.
+  const seenWords = new Set<string>();
   const usedKeys = new Map<string, number>();
   const blockKeys = new Map<string, number>();
   let quizFrom = 0;
   let minutes = 0;
+  // Rule 12 (AMENDMENTS-LECTURE-V2 section 4.4, LV-0b O1): a quest's or story's catalogue minutes
+  // already hold its own quiz and check slides, so only quiz slides outside them count 1 each.
+  let ownMinutesDepth = 0;
+  let outsideQuizSlides = 0;
   let blockIndex = 0;
 
   const skip = (ref: string, reason: SkipReason): void => {
@@ -193,8 +204,26 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
   };
   const push = (key: string, body: SlideBody): void => {
     slides.push({ ...body, key: nthKey(usedKeys, key), builds: buildsFor(body, opts) });
+    if (body.kind === 'quiz' && ownMinutesDepth === 0) outsideQuizSlides += 1;
+  };
+  /** Pushes a quest's or story's own slides: its quiz slides are inside its catalogue minutes. */
+  const insideOwnMinutes = (expand: () => void): void => {
+    ownMinutesDepth += 1;
+    try {
+      expand();
+    } finally {
+      ownMinutesDepth -= 1;
+    }
   };
   const seed = (): number => deck.seed + slides.length;
+  /** A word card, once per deck; the word is taught either way (a later gloss still upgrades it). */
+  const wordCard = (key: string, word: KoLine & { gloss: string }, extra: { wordId?: string; cardId?: string; wordArt?: string } = {}): void => {
+    if (!seenWords.has(word.ko)) {
+      seenWords.add(word.ko);
+      push(key, { kind: 'vocab', word, ...extra });
+    }
+    teachWord(word);
+  };
   const teachWord = (word: KoLine): void => {
     const met = taught.find((t): t is Extract<TaughtItem, { kind: 'word' }> => t.kind === 'word' && t.ko === word.ko);
     if (!met) {
@@ -309,26 +338,29 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
         }
         return;
       case 'card-match':
-        for (const pair of listOf(scope.cardPairs)) {
+      case 'pic-word-match': {
+        // Every word on every board, in board order (F-QUEST-002 §3.11): KoText always carries romanization and a gloss.
+        const words: Array<KoLine & { gloss: string }> = [];
+        const pairs =
+          scope.kind === 'card-match'
+            ? listOf(scope.cardPairs)
+            : listOf(scope.picWord?.boards).flatMap((board) => board.pairs.map((pair) => pair.word));
+        for (const pair of pairs) {
           if (pair.romanization === undefined) {
             skip(`${path}/${pair.ko}`, 'no-romanization');
             continue;
           }
-          const word = { ko: pair.ko, romanization: pair.romanization, gloss: pair.en };
-          push(`${path}/${pair.ko}`, { kind: 'vocab', word });
-          teachWord(word);
+          if (!words.some((w) => w.ko === pair.ko)) words.push({ ko: pair.ko, romanization: pair.romanization, gloss: pair.en });
         }
-        return;
-      case 'pic-word-match':
-        // Every word on every board, in board order (F-QUEST-002 §3.11): KoText always carries romanization and a gloss.
-        for (const board of listOf(scope.picWord?.boards)) {
-          for (const pair of board.pairs) {
-            const word = { ko: pair.word.ko, romanization: pair.word.romanization, gloss: pair.word.en };
-            push(`${path}/${pair.word.ko}`, { kind: 'vocab', word });
-            teachWord(word);
-          }
+        // Every word already had its card in this deck: a board of 4 or more becomes a word-to-meaning quiz (section 5.1).
+        if (words.length >= QUIZ_MIN_ITEMS && words.every((w) => seenWords.has(w.ko))) {
+          const cardPairs: CardMatchPair[] = words.map((w) => ({ ko: w.ko, en: w.gloss, romanization: w.romanization }));
+          meaningQuiz(path, ref, () => buildCultureQuizRounds({ cardPairs, rounds, seed: seed() }));
+          return;
         }
+        for (const word of words) wordCard(`${path}/${word.ko}`, word);
         return;
+      }
       case 'story-sequence': {
         const steps: SequenceStep[] = [];
         for (const step of listOf(scope.storySteps)) {
@@ -398,16 +430,16 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
         letterById(path, item.jamoId);
         continue;
       }
-      for (const text of discoverItemTexts(item)) {
-        const word = { ko: text.ko, romanization: text.romanization, gloss: text.en };
-        push(`${path}/${word.ko}`, { kind: 'vocab', word });
-        teachWord(word);
-      }
+      for (const text of discoverItemTexts(item)) wordCard(`${path}/${text.ko}`, { ko: text.ko, romanization: text.romanization, gloss: text.en });
     }
   };
 
   const questBlock = (path: string, quest: Quest): void => {
     minutes += quest.estimatedMinutes;
+    insideOwnMinutes(() => questSlides(path, quest));
+  };
+
+  const questSlides = (path: string, quest: Quest): void => {
     const intro = quest.steps.find((s) => s.kind === 'intro');
     push(`${path}/title`, {
       kind: 'title',
@@ -440,7 +472,7 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
         // story-read / -check / -seq of one story: the story block once per quest (checks and order are in it).
         if (!storiesDone.has(scope.story.storyId)) {
           storiesDone.add(scope.story.storyId);
-          storyBlock(`${path}/${scope.story.storyId}`, scope.story.storyId, scope.story.level, true);
+          storyBlock(`${path}/${scope.story.storyId}`, scope.story.storyId, scope.story.level, true, false);
         }
         continue;
       }
@@ -472,7 +504,7 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
       line: episode.hoyaIntroEn,
     });
     if (episode.format === 'story' && episode.storyIds && episode.storyIds.length > 0) {
-      for (const storyId of episode.storyIds) storyBlock(`${path}/${storyId}`, storyId, undefined, true);
+      for (const storyId of episode.storyIds) storyBlock(`${path}/${storyId}`, storyId, undefined, true, false);
       // Rule 12: the episode's quests still count their estimated minutes.
       for (const questId of episode.questIds) minutes += bundle.questById(questId)?.estimatedMinutes ?? 0;
       return;
@@ -480,7 +512,15 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
     for (const questId of episode.questIds) questById(`${path}/`, questId);
   };
 
-  const storyBlock = (key: string, storyId: string, level: StoryLevel | undefined, checks: boolean): void => {
+  /**
+   * A story's slides. `ownMinutes`: a story block counts the story's catalogue minutes, which hold
+   * its check slides (rule 12, section 4.2 m(block)); a story inside a quest or a story episode is
+   * inside their minutes. A skipped story counts none.
+   */
+  const storyBlock = (key: string, storyId: string, level: StoryLevel | undefined, checks: boolean, ownMinutes: boolean): void =>
+    insideOwnMinutes(() => storySlides(key, storyId, level, checks, ownMinutes));
+
+  const storySlides = (key: string, storyId: string, level: StoryLevel | undefined, checks: boolean, ownMinutes: boolean): void => {
     const found = bundle.story ? bundle.story(storyId) : 'not-ready';
     if (found === undefined) {
       skip(storyId, 'unknown-id');
@@ -511,6 +551,7 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
       ...(found.hoyaIntroEn !== undefined ? { line: found.hoyaIntroEn } : {}),
       cover: { storyId, sceneId: found.coverSceneId },
     });
+    if (ownMinutes) minutes += found.minutes;
     tier.scenes.forEach((scene, i) => {
       const ko = sceneKo(scene);
       const korean = ko ? { ko: ko.ko, romanization: ko.romanization, gloss: ko.en } : undefined;
@@ -586,20 +627,61 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
         })
       : topic.words;
     for (const w of words) {
-      const word = { ko: w.ko, romanization: w.romanization, gloss: w.gloss };
-      push(`${path}/${w.id}`, {
-        kind: 'vocab',
-        word,
-        wordId: w.id,
-        ...(w.cardId !== undefined ? { cardId: w.cardId } : {}),
-        ...(w.wordArt !== undefined ? { wordArt: w.wordArt } : {}),
-      });
-      teachWord(word);
+      wordCard(
+        `${path}/${w.id}`,
+        { ko: w.ko, romanization: w.romanization, gloss: w.gloss },
+        { wordId: w.id, ...(w.cardId !== undefined ? { cardId: w.cardId } : {}), ...(w.wordArt !== undefined ? { wordArt: w.wordArt } : {}) },
+      );
     }
     // The quiz asks only words that had a slide: under 4 shown (all of a small topic, or a short chosen list), no quiz.
     if (words.length < QUIZ_MIN_ITEMS) return;
     const pairs: CardMatchPair[] = words.map((w) => ({ ko: w.ko, en: w.gloss, romanization: w.romanization }));
     meaningQuiz(path, topicId, () => buildCultureQuizRounds({ cardPairs: pairs, rounds: deck.options.quizRounds, seed: seed() }));
+  };
+
+  /**
+   * Word review (v2, AMENDMENTS-LECTURE-V2 section 4.5): the words each quest teaches (the quest
+   * expanded on its own, no slides), then the `vocabIds` words, one per Korean text, the first
+   * `wordReviewCardCap(rounds)` of them (words not yet shown in this deck first) as word cards, then `rounds` word-to-meaning questions over
+   * them. Unknown ids are counted skips; under 4 words, the quiz is a counted `scope-too-small`.
+   */
+  const wordReviewBlock = (path: string, questIds: readonly string[], vocabIds: readonly string[], rounds: number): void => {
+    type ReviewWord = KoLine & { gloss: string; extra?: { wordId: string; cardId?: string; wordArt?: string } };
+    const words: ReviewWord[] = [];
+    const add = (word: ReviewWord): void => {
+      const known = words.find((w) => w.ko === word.ko);
+      if (!known) words.push(word);
+      // A word a quest already taught keeps its place; the vocab entry still gives it its picture.
+      else if (known.extra === undefined && word.extra !== undefined) known.extra = word.extra;
+    };
+    for (const id of questIds) {
+      if (!bundle.questById(id)) {
+        skip(id, 'unknown-id');
+        continue;
+      }
+      const alone = expandDeck({ ...deck, blocks: [{ kind: 'quest', id }] }, bundle, voice);
+      for (const t of alone.taught) if (t.kind === 'word' && t.gloss !== undefined) add({ ko: t.ko, romanization: t.romanization, gloss: t.gloss });
+    }
+    for (const id of vocabIds) {
+      const found = bundle.vocabWord ? bundle.vocabWord(id) : 'not-ready';
+      if (found === undefined || found === 'not-ready') {
+        skip(id, found ?? 'unknown-id');
+        continue;
+      }
+      const extra = { wordId: found.id, ...(found.cardId !== undefined ? { cardId: found.cardId } : {}), ...(found.wordArt !== undefined ? { wordArt: found.wordArt } : {}) };
+      add({ ko: found.ko, romanization: found.romanization, gloss: found.gloss, extra });
+    }
+    // Words an earlier block of this deck already showed have no card here (`seenWords`), so
+    // unseen words fill the cap first; the quiz still asks the seen ones that made the cut.
+    const ordered = [...words.filter((w) => !seenWords.has(w.ko)), ...words.filter((w) => seenWords.has(w.ko))];
+    const shown = ordered.slice(0, wordReviewCardCap(rounds));
+    for (const { extra, ...word } of shown) wordCard(`${path}/${word.ko}`, word, extra);
+    if (shown.length < QUIZ_MIN_ITEMS) {
+      skip(`${path}/quiz`, 'scope-too-small');
+      return;
+    }
+    const cardPairs: CardMatchPair[] = shown.map((w) => ({ ko: w.ko, en: w.gloss, romanization: w.romanization }));
+    meaningQuiz(path, `${path}/quiz`, () => buildCultureQuizRounds({ cardPairs, rounds, seed: seed() }));
   };
 
   const revisitBlock = (path: string, chars: readonly string[]): void => {
@@ -664,6 +746,17 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
 
   // ---- the deck -------------------------------------------------------------------
 
+  /**
+   * Rule 12 as amended (AMENDMENTS-LECTURE-V2 section 4.4): a block of letters, cards or words
+   * counts one minute per two of its non-quiz slides, rounded up; its quiz slides keep 1 each
+   * (counted at the end with every quiz slide outside a quest or story).
+   */
+  const bySlides = (expandBlock: () => void): void => {
+    const from = slides.length;
+    expandBlock();
+    minutes += Math.ceil(slides.slice(from).filter((s) => s.kind !== 'quiz').length / 2);
+  };
+
   let classCode: string | undefined;
   deck.blocks.forEach((block, i) => {
     blockIndex = i;
@@ -679,19 +772,23 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
         return;
       }
       case 'jamo-set':
-        for (const id of block.jamoIds) letterById(key, id);
+        bySlides(() => {
+          for (const id of block.jamoIds) letterById(key, id);
+        });
         return;
       case 'revisit':
-        revisitBlock(key, block.chars);
+        bySlides(() => revisitBlock(key, block.chars));
         return;
       case 'vocab':
         vocabBlock(key, block.topicId, block.wordIds);
         return;
       case 'story':
-        storyBlock(key, block.storyId, block.level, block.checks);
+        storyBlock(key, block.storyId, block.level, block.checks, true);
         return;
       case 'cards':
-        for (const id of block.cardIds) card(key, id);
+        bySlides(() => {
+          for (const id of block.cardIds) card(key, id);
+        });
         return;
       case 'quiz':
         quizBlock(key, block.from, block.rounds);
@@ -704,8 +801,7 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
         classCode = block.code;
         return;
       case 'word-review':
-        // v2 (AMENDMENTS-LECTURE-V2 4.5): expanded by LV-2; until then a counted skip, never a silent drop.
-        skip(key, 'unsupported-step');
+        bySlides(() => wordReviewBlock(key, block.questIds, block.vocabIds, block.rounds));
         return;
     }
   });
@@ -719,6 +815,6 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
     words: taught.filter((t) => t.kind === 'word').map(kept),
     ...(classCode !== undefined ? { classCode } : {}),
   });
-  minutes += slides.filter((s) => s.kind === 'quiz').length;
+  minutes += outsideQuizSlides;
   return { slides, skipped, taught, minutes };
 }

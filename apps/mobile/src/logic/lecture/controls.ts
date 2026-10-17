@@ -94,8 +94,25 @@ export function revealsOf(slide: ControlSlide): number {
   return Math.max(0, slide.builds.length - 1);
 }
 
+/**
+ * Where a saved slide key resumes: that slide, or, when this build no longer makes it (LV-2 shows
+ * one card per word, so a saved repeat card is gone), the first slide of its nearest step or block
+ * (`<block>/<quest>/<step>/...`, the key cut back one segment at a time); else -1.
+ */
+export function resumeIndex(slides: readonly { key: string }[], key: string): number {
+  const exact = slides.findIndex((s) => s.key === key);
+  if (exact !== -1) return exact;
+  const parts = key.split('/');
+  for (let n = parts.length - 1; n >= 1; n -= 1) {
+    const prefix = `${parts.slice(0, n).join('/')}/`;
+    const at = slides.findIndex((s) => s.key.startsWith(prefix));
+    if (at !== -1) return at;
+  }
+  return -1;
+}
+
 export function initialPresenterState(deck: ControlDeck, startKey?: string): PresenterState {
-  const found = startKey === undefined ? -1 : deck.slides.findIndex((s) => s.key === startKey);
+  const found = startKey === undefined ? -1 : resumeIndex(deck.slides, startKey);
   const slideIdx = Math.max(0, found);
   return {
     slideIdx,

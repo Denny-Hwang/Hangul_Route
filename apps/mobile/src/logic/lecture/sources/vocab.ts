@@ -25,13 +25,18 @@ import type { LectureVocabTopic } from '../deck-builder';
 
 export interface LectureVocabSource {
   vocabTopic(id: string): LectureVocabTopic | 'not-ready' | undefined;
+  /**
+   * One word by its id, for a Word review (AMENDMENTS-LECTURE-V2 section 4.5): `'not-ready'` when
+   * none of its topics is ready or shipped, `undefined` for an id the bundle does not know.
+   */
+  vocabWord(id: string): LectureWord | 'not-ready' | undefined;
 }
 
 const WORD_REF = 'word:';
 
 const EXPANDABLE: ReadonlySet<VocabTopic['status']> = new Set(['ready', 'shipped']);
 
-type LectureWord = LectureVocabTopic['words'][number];
+export type LectureWord = LectureVocabTopic['words'][number];
 
 function wordOf(item: RuntimeVocabItem, locale: UiLocale): LectureWord {
   const word: LectureWord = { id: item.id, ko: item.ko, romanization: item.romanization, gloss: localizedGloss(item, locale) };
@@ -50,7 +55,17 @@ export function lectureVocabTopicsFrom(
   // Drafts are looked up too, so a draft topic in a link is counted as not ready rather than unknown.
   const catalog = createVocabCatalog(topics, items, { showDrafts: true });
   const byId = new Map(topics.map((t) => [t.id as string, t]));
+  const byKey = new Map(topics.map((t) => [t.key as string, t]));
   return {
+    vocabWord: (id) => {
+      const item = catalog.vocabItem(id);
+      if (item === undefined) return undefined;
+      const ready = (item.topics as readonly string[]).some((key) => {
+        const topic = byKey.get(key);
+        return topic !== undefined && EXPANDABLE.has(topic.status);
+      });
+      return ready ? wordOf(item, locale) : 'not-ready';
+    },
     vocabTopic: (id) => {
       const topic = byId.get(id);
       if (topic === undefined) return undefined;
