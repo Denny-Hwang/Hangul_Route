@@ -11,6 +11,10 @@ import { expect, test as base } from '@playwright/test';
  * runs. The auto fixture installs a silent engine before any page script
  * runs: it has no voices (like CI's Linux Chromium, so the app shows its text
  * prompt), speaks nothing and keeps what it was asked in `window.__silentSpeech`.
+ * Like a real engine it answers every utterance (it starts and ends at once):
+ * the first-gesture unlock counts only once the engine answers (F-AUDIO-004
+ * section 3.6, 2026-10-17), and an engine that never answers is the iOS silent
+ * drop, which `audio-engine.spec.ts` models on purpose.
  *
  * A spec that needs to hear utterances defines its own fake with
  * `Object.defineProperty(window, 'speechSynthesis', ...)` in its own init
@@ -41,6 +45,10 @@ export const test = base.extend<{ silentSpeech: void }>({
             pending: false,
             speak: (u: SilentUtterance) => {
               asked.push(u.text);
+              setTimeout(() => {
+                u.onstart?.();
+                u.onend?.();
+              }, 0);
             },
             cancel: () => undefined,
             getVoices: () => [],
